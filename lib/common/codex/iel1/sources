@@ -1,0 +1,13 @@
+!include $(PROJECT_ROOT)\inetcore.pathdefinitions.sources.inc
+!include $(PROJECT_ROOT)\common.inc
+
+TARGETNAME =    codex_iel1
+
+INCLUDES =      $(INCLUDES); \
+                $(INETCORE_DIR)\inc; \
+                $(SHELL_INC_PATH); \
+                
+SOURCES =       \
+                ..\Utf8Codex.cpp 
+
+!include ..\..\lib.sources.post.inc
