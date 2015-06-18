@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ChakraBuildConfigDir>..\..\..\..\Build</ChakraBuildConfigDir>
+  </PropertyGroup>
+  <Import Project="$(ChakraBuildConfigDir)\Chakra.Build.ProjectConfiguration.props" />
+  <ItemGroup>
+    <ClCompile Include="Utf8Codex.cpp" />
+    <ClInclude Include="Utf8Codex.h" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{1876E800-AD77-48C4-A2F7-E5265F24AC38}</ProjectGuid>
+  </PropertyGroup>
+  <Import Project="$(ChakraBuildConfigDir)\Chakra.Build.Default.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>    
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />  
+  <Import Project="$(ChakraBuildConfigDir)\Chakra.Build.props" />
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);INC_OLE2</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

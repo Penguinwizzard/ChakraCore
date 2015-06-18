@@ -1,8 +1,0 @@
-FILE *
-$Owner: shkamat
-$Module: 
-$Keywords: 
-$Documentation: 
-$intOrigin: 
-$IPRefs: 
-$ENDTAG
