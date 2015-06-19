@@ -1,4 +1,7 @@
 DIRS = \
     common \
+    parser \
+    runtime \
+    backend \
     
     
