@@ -3,6 +3,7 @@
 //
 #pragma once
 #include <windows.h>
+#include <wtypes.h>
 
 typedef unsigned __int32 uint32;
 
