@@ -1,0 +1,35 @@
+//----------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+//----------------------------------------------------------------------------
+
+
+#ifdef DBGHELP_SYMBOL_MANAGER
+#define DBGHELP_TRANSLATE_TCHAR
+#include <dbghelp.h>
+class DbgHelpSymbolManager
+{
+public:
+    static void EnsureInitialized() { Instance.Initialize(); }
+    static BOOL SymFromAddr(PVOID address, DWORD64 * dwDisplacement, PSYMBOL_INFO pSymbol);
+    static BOOL SymGetLineFromAddr64(_In_ PVOID address, _Out_ PDWORD pdwDisplacement, _Out_ PIMAGEHLP_LINEW64 pLine);
+
+    static size_t PrintSymbol(PVOID address);
+private:
+    DbgHelpSymbolManager() : isInitialized(false), hDbgHelpModule(null), pfnSymFromAddrW(null) {}
+    ~DbgHelpSymbolManager();
+
+    static DbgHelpSymbolManager Instance;
+    void Initialize();
+
+    bool isInitialized;
+    CriticalSection cs;
+    HANDLE hProcess;
+    HMODULE hDbgHelpModule;
+
+    typedef BOOL(__stdcall *PfnSymFromAddrW)(HANDLE, DWORD64, PDWORD64, PSYMBOL_INFOW);
+    PfnSymFromAddrW pfnSymFromAddrW;
+
+    typedef BOOL(__stdcall *PfnSymGetLineFromAddr64W)(HANDLE, DWORD64, PDWORD, PIMAGEHLP_LINEW64);
+    PfnSymGetLineFromAddr64W pfnSymGetLineFromAddr64W;
+};
+#endif
