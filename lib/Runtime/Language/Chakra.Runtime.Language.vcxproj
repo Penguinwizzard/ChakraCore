@@ -224,7 +224,7 @@
     <Midl Include="$(MSBuildThisFileDirectory)..\publish\MutatorsHost.idl" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\publish\Publish.vcxproj">
+    <ProjectReference Include="..\..\..\..\publish\Publish.vcxproj">
       <Project>{1876e800-ad77-48c4-a2f7-e5265f24ac35}</Project>
     </ProjectReference>
   </ItemGroup>

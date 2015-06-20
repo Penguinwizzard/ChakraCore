@@ -29,7 +29,12 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)..;$(ChakraManifestsIncludeDirectory);$(ManifestsInboxIncludeDirectory);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>
+        $(MSBuildThisFileDirectory)..;
+        $(ChakraManifestsIncludeDirectory);
+        $(ManifestsInboxIncludeDirectory);
+        %(AdditionalIncludeDirectories)
+      </AdditionalIncludeDirectories>
       <!-- For windowsdatetimep.h -->
       <AdditionalIncludeDirectories>$(ComIncPath)\winrt;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -86,7 +91,7 @@
     </ARMASM>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\dep\manifests-inbox.vcxproj">
+    <ProjectReference Include="..\..\..\..\dep\manifests-inbox.vcxproj">
       <Project>{14bbb4b1-da6a-4c69-bf07-f8d4865e0815}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\..\Manifests\Manifests.vcxproj">

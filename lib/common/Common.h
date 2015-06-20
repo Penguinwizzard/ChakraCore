@@ -418,7 +418,7 @@ private:
 #include "Core\AllocSizeMath.h"
 #include "Common\DaylightTimeHelper.h"
 #include "Common\DateUtilities.h"
-#include "..\static\base\NumberUtilitiesBase.h"
+#include "..\..\..\private\lib\StaticLib\base\NumberUtilitiesBase.h"
 #include "Common\NumberUtilities.h"
 #include "core\FaultInjection.h"
 #include <codex\Utf8Codex.h>
@@ -454,7 +454,7 @@ namespace Memory{}
 using namespace Memory;
 #include "Memory\Allocator.h"
 #ifdef INTERNAL_MEM_PROTECT_HEAP_ALLOC
-#include "..\MemProtectHeap\MemProtectHeap.h"
+#include "..\..\..\private\lib\MemProtectHeap\MemProtectHeap.h"
 #endif
 #include "Memory\HeapAllocator.h"
 #include "Memory\AutoPtr.h"
@@ -494,8 +494,7 @@ using namespace Memory;
 #include "DataStructures\ContinuousPageStack.h"
 #include "DataStructures\LargeStack.h"
 #include "DataStructures\HashTable.h"
-
-#include "..\static\base\FinalizableObject.h"
+#include "..\..\..\private\lib\StaticLib\base\FinalizableObject.h"
 #include "Memory\RecyclerWriteBarrierManager.h"
 #include "Memory\HeapConstants.h"
 #include "Memory\HeapBlock.h"

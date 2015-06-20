@@ -494,7 +494,7 @@ enum JsNativeValueType;
 #include "Library\JavascriptObject.h"
 #include "Library\BuiltInFlags.h"
 #include "Library\CharStringCache.h"
-#include "..\static\base\JavascriptLibraryBase.h"
+#include "..\..\..\private\lib\staticlib\base\JavascriptLibraryBase.h"
 #include "Library\JavascriptLibrary.h"
 
 #ifdef SIMD_JS_ENABLED
