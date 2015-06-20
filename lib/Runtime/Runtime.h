@@ -566,8 +566,9 @@ enum JsNativeValueType;
 #include "Library\threadservicewrapper.h"
 #include "Library\StackProber.h"
 #include "Library\Telemetry.h"
-#include "Telemetry\ScriptContextTelemetry.h"
-#include "Telemetry\ScriptEngineTelemetry.h"
+// REVIEW: ChakraCore Dependency
+#include "..\..\..\private\lib\Telemetry\ScriptContextTelemetry.h"
+#include "..\..\..\private\lib\Telemetry\ScriptEngineTelemetry.h"
 #include "Library\ThreadContext.h"
 #include "Library\ThreadContextTLSEntry.h"
 #include "Library\ThreadBoundThreadContextManager.h"
@@ -579,7 +580,8 @@ enum JsNativeValueType;
 #define ORIGINAL_CDECL CDECL
 #undef CDECL
 #endif
-#include "..\..\tools\external\inc\jitProfiling.h"
+// REVIEW: ChakraCore Dependency
+#include "..\..\..\tools\external\inc\jitProfiling.h"
 #ifdef ORIGINAL_CDECL
 #undef CDECL
 #endif
@@ -591,7 +593,8 @@ enum JsNativeValueType;
 #include "Language\diagobjectmodel.h"
 #include "Language\ScriptContextProfiler.h"
 #include "Language\ScriptContextOptimizationOverrideInfo.h"
-#include "..\static\base\scriptContextbase.h"
+// REVIEW: ChakraCore Dependency
+#include "..\..\..\private\lib\staticlib\base\scriptContextbase.h"
 #include "Language\ScriptContext.h"
 
 #include "Language\JavascriptFunctionArgIndex.h"

@@ -418,6 +418,7 @@ private:
 #include "Core\AllocSizeMath.h"
 #include "Common\DaylightTimeHelper.h"
 #include "Common\DateUtilities.h"
+// REVIEW: ChakraCore Dependency
 #include "..\..\..\private\lib\StaticLib\base\NumberUtilitiesBase.h"
 #include "Common\NumberUtilities.h"
 #include "core\FaultInjection.h"
@@ -454,6 +455,7 @@ namespace Memory{}
 using namespace Memory;
 #include "Memory\Allocator.h"
 #ifdef INTERNAL_MEM_PROTECT_HEAP_ALLOC
+// REVIEW: ChakraCore Dependency
 #include "..\..\..\private\lib\MemProtectHeap\MemProtectHeap.h"
 #endif
 #include "Memory\HeapAllocator.h"
@@ -494,6 +496,7 @@ using namespace Memory;
 #include "DataStructures\ContinuousPageStack.h"
 #include "DataStructures\LargeStack.h"
 #include "DataStructures\HashTable.h"
+// REVIEW: ChakraCore Dependency
 #include "..\..\..\private\lib\StaticLib\base\FinalizableObject.h"
 #include "Memory\RecyclerWriteBarrierManager.h"
 #include "Memory\HeapConstants.h"
