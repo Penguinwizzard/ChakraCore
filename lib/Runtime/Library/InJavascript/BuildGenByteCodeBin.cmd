@@ -2,7 +2,7 @@ setlocal
 call %*
 
 
-cd %~dp0\..\..\..\..
+cd %~dp0\..\..\..\..\..
 echo %CD%
 set JSCRIPT_ROOT=%CD%
 call :GetName %CD%
@@ -13,7 +13,7 @@ echo OBJECT_JSCRIPT_DIR=%OBJECT_JSCRIPT_DIR%
 
 
 set _SKIP_BYTE_CODE_VERIFY=1
-build -cz -dir %JSCRIPT_ROOT%\manifests;%JSCRIPT_ROOT%\lib\author;%JSCRIPT_ROOT%\lib\backend;%JSCRIPT_ROOT%\lib\common;%JSCRIPT_ROOT%\lib\parser\release;%JSCRIPT_ROOT%\lib\runtime\bytecode\release;%JSCRIPT_ROOT%\lib\runtime\math;%JSCRIPT_ROOT%\lib\runtime\language;%JSCRIPT_ROOT%\lib\runtime\library;%JSCRIPT_ROOT%\lib\runtime\types;%JSCRIPT_ROOT%\lib\winrt;%JSCRIPT_ROOT%\dll\jscript\test;%JSCRIPT_ROOT%\exe\common;%JSCRIPT_ROOT%\exe\jshost\release;%JSCRIPT_ROOT%\lib\memprotectheap\release
+build -cz -dir %JSCRIPT_ROOT%\core\manifests;%JSCRIPT_ROOT%\core\lib\backend;%JSCRIPT_ROOT%\core\lib\common;%JSCRIPT_ROOT%\core\lib\parser\release;%JSCRIPT_ROOT%\core\lib\runtime\bytecode\release;%JSCRIPT_ROOT%\core\lib\runtime\math;%JSCRIPT_ROOT%\core\lib\runtime\language;%JSCRIPT_ROOT%\core\lib\runtime\library;%JSCRIPT_ROOT%\core\lib\runtime\types;%JSCRIPT_ROOT%\private\lib\winrt;%JSCRIPT_ROOT%\private\bin\chakra\test;%JSCRIPT_ROOT%\private\bin\jshost;%JSCRIPT_ROOT%\private\lib\memprotectheap\release
 
 exit /B 0
 
