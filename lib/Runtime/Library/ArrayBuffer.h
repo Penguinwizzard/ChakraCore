@@ -16,12 +16,13 @@ namespace Js
     public:
         // we need to install cross-site thunk on the nested arraybuffer when marshalling
         // typed array.
-        DEFINE_VTABLE_CTOR(ArrayBuffer, DynamicObject);
-        DEFINE_MARSHAL_OBJECT_TO_SCRIPT_CONTEXT(ArrayBuffer);
+        DEFINE_VTABLE_CTOR_ABSTRACT(ArrayBuffer, DynamicObject);
+        virtual void MarshalToScriptContext(Js::ScriptContext * scriptContext) = 0;
 #define MAX_ASMJS_ARRAYBUFFER_LENGTH 0x100000000 //4GB
     private:
         bool GetPropertyBuiltIns(PropertyId propertyId, Var* value, BOOL* result);
         void ClearParentsLength(ArrayBufferParent* parent);
+        static uint32 GetByteLengthFromVar(ScriptContext* scriptContext, Var length);
     public:
         template <typename FreeFN>
         class ArrayBufferDetachedState : public ArrayBufferDetachedStateBase
@@ -68,6 +69,7 @@ namespace Js
             static FunctionInfo IsView;
             static FunctionInfo GetterByteLength;
             static FunctionInfo GetterSymbolSpecies;
+            static FunctionInfo Transfer;
         };
         
         static Var NewInstance(RecyclableObject* function, CallInfo callInfo, ...);
@@ -75,65 +77,11 @@ namespace Js
         static Var EntryIsView(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryGetterByteLength(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryGetterSymbolSpecies(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryTransfer(RecyclableObject* function, CallInfo callInfo, ...);
 
         static bool Is(Var aValue);
         static ArrayBuffer* NewFromDetachedState(DetachedStateBase* state, JavascriptLibrary *library);
         static ArrayBuffer* FromVar(Var aValue);
-
-        static bool IsValidAsmJsBufferLength(uint length, bool forceCheck = false)
-        {
-#if _WIN64 
-            /*
-            1. length >= 2^16
-            2. length is power of 2 or (length > 2^24 and length is multiple of 2^24)
-            3. length is a multiple of 4K
-            */
-            return ((length >= 0x10000) &&
-                ( ((length & (~length + 1)) == length) || 
-                (length >= 0x1000000 && ((length & 0xFFFFFF) == 0))
-                ) && 
-                ((length % AutoSystemInfo::PageSize) == 0)
-                );
-
-#else
-            if (forceCheck)
-            {
-                return ( (length >= 0x10000) && 
-                         ( ((length & (~length + 1)) == length) || 
-                           (length >= 0x1000000 && ((length & 0xFFFFFF) == 0))
-                         ) && 
-                         ((length & 0x0FFF) == 0)
-                        );
-            }
-            return false;
-#endif
-
-        }
-
-        static bool IsValidVirtualBufferLength(uint length)
-        {
-            
-#if _WIN64 
-            /*
-            1. length >= 2^16
-            2. length is power of 2 or (length > 2^24 and length is multiple of 2^24)
-            3. length is a multiple of 4K
-            */           
-            return ( !PHASE_OFF1(Js::TypedArrayVirtualPhase) &&
-                     (length >= 0x10000) &&
-                     ( ( (length & (~length + 1)) == length) || 
-                       ( length >= 0x1000000 && 
-                         ((length & 0xFFFFFF) == 0)
-                       )
-                     ) &&
-                     ((length % AutoSystemInfo::PageSize) == 0)
-                   );
-
-#else
-            return false;
-#endif
-        }
-
         virtual BOOL HasProperty(Js::PropertyId propertyId) override;
         virtual BOOL GetProperty(Js::Var originalInstance, Js::PropertyId propertyId, Js::Var* value, Js::PropertyValueInfo* info, Js::ScriptContext* requestContext) override;
         virtual BOOL GetProperty(Js::Var originalInstance, Js::JavascriptString* propertyNameString, Js::Var* value, Js::PropertyValueInfo* info, Js::ScriptContext* requestContext) override;
@@ -172,11 +120,6 @@ namespace Js
 
         void AddParent(ArrayBufferParent* parent);
         void RemoveParent(ArrayBufferParent* parent);
-        static void FreeMemAlloc(Var ptr)
-        {
-           BOOL fSuccess = VirtualFree((LPVOID)ptr, 0, MEM_RELEASE);
-           Assert(fSuccess);
-        }
 #if _WIN64
         //maximum 2G -1  for amd64
         static const uint32 MaxArrayBufferLength = 0x7FFFFFFF;
@@ -184,9 +127,12 @@ namespace Js
         // maximum 1G to avoid arithmatic overflow.
         static const uint32 MaxArrayBufferLength = 1 << 30;
 #endif
+        virtual bool IsValidAsmJsBufferLength(uint length, bool forceCheck = false) { return false; }
+        virtual bool IsValidVirtualBufferLength(uint length) { return false; }
     protected:
         typedef void __cdecl FreeFn(void* ptr);   
-        virtual ArrayBufferDetachedStateBase* CreateDetachedState(BYTE* buffer, uint32 bufferLength);
+        virtual ArrayBufferDetachedStateBase* CreateDetachedState(BYTE* buffer, uint32 bufferLength) = 0;
+        virtual ArrayBuffer * TransferInternal(uint32 newBufferLength) = 0;
 
         inline BOOL IsBuiltinProperty(PropertyId);
         static uint32 GetIndexFromVar(Js::Var arg, uint32 length, ScriptContext* scriptContext);
@@ -281,10 +227,22 @@ namespace Js
             Assert(false);
             return nullptr;
 #endif
-        };
+        }
+
+        static void FreeMemAlloc(Var ptr)
+        {
+            BOOL fSuccess = VirtualFree((LPVOID)ptr, 0, MEM_RELEASE);
+            Assert(fSuccess);
+        }
+
+        virtual bool IsValidAsmJsBufferLength(uint length, bool forceCheck = false) override;
+
+        virtual bool IsValidVirtualBufferLength(uint length) override;
 
     protected:
         JavascriptArrayBuffer(DynamicType * type);
+        virtual ArrayBufferDetachedStateBase* CreateDetachedState(BYTE* buffer, uint32 bufferLength) override;
+        virtual ArrayBuffer * TransferInternal(uint32 newBufferLength) override;
     private:
         JavascriptArrayBuffer(uint32 length, DynamicType * type);
         JavascriptArrayBuffer(byte* buffer, uint32 length, DynamicType * type);
@@ -302,6 +260,7 @@ namespace Js
         { 
             return HeapNew(ArrayBufferDetachedState<FreeFn>, buffer, bufferLength, CoTaskMemFree, ArrayBufferAllocationType::CoTask);
         }
+        virtual ArrayBuffer * TransferInternal(uint32 newBufferLength) override;
 
     public:
         // Create constructor. script engine creates a buffer allocated via CoTaskMemAlloc.
@@ -323,6 +282,9 @@ namespace Js
         DEFINE_MARSHAL_OBJECT_TO_SCRIPT_CONTEXT(ExternalArrayBuffer);
     public:
         ExternalArrayBuffer(byte *buffer, uint32 length, DynamicType *type);
+    protected:
+        virtual ArrayBufferDetachedStateBase* CreateDetachedState(BYTE* buffer, uint32 bufferLength) override { Assert(UNREACHED); Throw::InternalError(); };
+        virtual ArrayBuffer * TransferInternal(uint32 newBufferLength) override { Assert(UNREACHED); Throw::InternalError(); };
     };
 }
 

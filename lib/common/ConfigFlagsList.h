@@ -515,6 +515,7 @@ PHASE(All)
 #define DEFAULT_CONFIG_ES6RegExChanges         (false)
 #define DEFAULT_CONFIG_NativeADS               (true)
 #define DEFAULT_CONFIG_ScriptADS               (false)
+#define DEFAULT_CONFIG_ArrayBufferTransfer     (false)
 
 #define DEFAULT_CONFIG_ES6Verbose              (false)
 #define DEFAULT_CONFIG_ES6All                  (false)
@@ -900,6 +901,7 @@ FLAGPR           (Boolean, ES6, ES6Unscopables         , "Enable ES6 With Statem
 FLAGPR           (Boolean, ES6, ES6WeakSet             , "Enable ES6 WeakSet"                                       , DEFAULT_CONFIG_ES6WeakSet)
 FLAGPR_REGOVR_EXP(Boolean, ES6, ES6RegExChanges        , "Enable ES6 RegEx changes"                                 , DEFAULT_CONFIG_ES6RegExChanges)
 FLAGPR           (Boolean, ES6, ES6Verbose             , "Enable ES6 verbose trace"                                 , DEFAULT_CONFIG_ES6Verbose)
+FLAGPR_REGOVR_EXP(Boolean, ES6, ArrayBufferTransfer    , "Enable ArrayBuffer.transfer"                              , DEFAULT_CONFIG_ArrayBufferTransfer)
 // /ES6 (BLUE+1) features/flags
 
 FLAGNR(Boolean, WinRTDelegateInterfaces , "Treat WinRT Delegates as Interfaces when determing their resolvability.", DEFAULT_CONFIG_WinRTDelegateInterfaces)

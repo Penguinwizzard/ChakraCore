@@ -845,7 +845,7 @@ namespace Js
         AssertMsg(arrayBuffer->GetByteLength() >= byteOffset, "invalid offset");
         AssertMsg(mappedLength*sizeof(TypeName)+byteOffset <= arrayBuffer->GetByteLength(), "invalid length");
         buffer = arrayBuffer->GetBuffer() + byteOffset;
-        if (ArrayBuffer::IsValidVirtualBufferLength(arrayBuffer->GetByteLength()) &&
+        if (arrayBuffer->IsValidVirtualBufferLength(arrayBuffer->GetByteLength()) &&
              (byteOffset == 0) && 
              (mappedLength == (arrayBuffer->GetByteLength() / sizeof(TypeName)))
            )

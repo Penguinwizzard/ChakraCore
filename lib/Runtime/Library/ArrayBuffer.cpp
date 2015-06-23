@@ -99,22 +99,6 @@ namespace Js
         return arrayBufferState.Detach();
     }
 
-    ArrayBufferDetachedStateBase* ArrayBuffer::CreateDetachedState(BYTE* buffer, uint32 bufferLength)
-    {
-#if _WIN64     
-        if (IsValidVirtualBufferLength(bufferLength))
-        {
-            return HeapNew(ArrayBufferDetachedState<FreeFn>, buffer, bufferLength, FreeMemAlloc, ArrayBufferAllocationType::MemAlloc);
-        }
-        else
-        {
-            return HeapNew(ArrayBufferDetachedState<FreeFn>, buffer, bufferLength, free, ArrayBufferAllocationType::Heap);
-        }
-#else
-        return HeapNew(ArrayBufferDetachedState<FreeFn>, buffer, bufferLength, free, ArrayBufferAllocationType::Heap);
-#endif
-    }
-
     void ArrayBuffer::AddParent(ArrayBufferParent* parent)
     {
         if (BinaryFeatureControl::LanguageService())
@@ -174,6 +158,25 @@ namespace Js
         }
     }
 
+    uint32 ArrayBuffer::GetByteLengthFromVar(ScriptContext* scriptContext, Var length)
+    {
+        Var firstArgument = length;
+        if (TaggedInt::Is(firstArgument))
+        {
+            int32 byteCount = TaggedInt::ToInt32(firstArgument);
+            if (byteCount < 0)
+            {
+                JavascriptError::ThrowRangeError(
+                    scriptContext, JSERR_ArrayLengthConstructIncorrect);
+            }
+            return byteCount;
+        }
+        else
+        {
+            return JavascriptConversion::ToUInt32(firstArgument, scriptContext);
+        }
+    }
+
     Var ArrayBuffer::NewInstance(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -188,21 +191,7 @@ namespace Js
         uint32 byteLength = 0;
         if (args.Info.Count > 1)
         {
-            Var firstArgument = args[1];
-            if (TaggedInt::Is(firstArgument))
-            {
-                int32 byteCount = TaggedInt::ToInt32(firstArgument);
-                if (byteCount < 0)
-                {
-                    JavascriptError::ThrowRangeError(
-                        scriptContext, JSERR_ArrayLengthConstructIncorrect);
-                }
-                byteLength = byteCount;
-            }
-            else
-            {
-                byteLength = JavascriptConversion::ToUInt32(firstArgument, scriptContext);
-            }
+            byteLength = GetByteLengthFromVar(scriptContext, args[1]);
         }
 
         Var newArr = scriptContext->GetLibrary()->CreateArrayBuffer(byteLength);
@@ -265,6 +254,45 @@ namespace Js
         }
 
         return library->GetFalse();
+    }
+
+    // ArrayBuffer.transfer as described in Luke Wagner's proposal: https://gist.github.com/lukewagner/2735af7eea411e18cf20
+    Var ArrayBuffer::EntryTransfer(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        ScriptContext* scriptContext = function->GetScriptContext();
+
+        PROBE_STACK(scriptContext, Js::Constants::MinStackDefault);
+
+        ARGUMENTS(args, callInfo);
+
+        Assert(!(callInfo.Flags & CallFlags_New));
+
+        CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(ArrayBufferTransfer);
+
+        if (args.Info.Count < 2 || !ArrayBuffer::Is(args[1]))
+        {
+            JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedArrayBufferObject);
+        }
+
+        ArrayBuffer* arrayBuffer = ArrayBuffer::FromVar(args[1]);
+
+        if (arrayBuffer->IsDetached())
+        {
+            JavascriptError::ThrowTypeError(scriptContext, JSERR_DetachedTypedArray, L"ArrayBuffer.transfer");
+        }
+
+        uint32 newBufferLength = arrayBuffer->bufferLength;
+        if (args.Info.Count >= 3)
+        {
+            newBufferLength = GetByteLengthFromVar(scriptContext, args[2]);
+        }
+
+        if (newBufferLength > MaxArrayBufferLength)
+        {
+            JavascriptError::ThrowTypeError(scriptContext, JSERR_FunctionArgument_Invalid);
+        }
+
+        return arrayBuffer->TransferInternal(newBufferLength);
     }
 
     // ArrayBuffer.prototype.slice as described in ES6 draft #19 section 24.1.4.3.
@@ -758,6 +786,75 @@ namespace Js
         return result;
     }
 
+    ArrayBufferDetachedStateBase* JavascriptArrayBuffer::CreateDetachedState(BYTE* buffer, uint32 bufferLength)
+    {
+#if _WIN64     
+        if (IsValidVirtualBufferLength(bufferLength))
+        {
+            return HeapNew(ArrayBufferDetachedState<FreeFn>, buffer, bufferLength, FreeMemAlloc, ArrayBufferAllocationType::MemAlloc);
+        }
+        else
+        {
+            return HeapNew(ArrayBufferDetachedState<FreeFn>, buffer, bufferLength, free, ArrayBufferAllocationType::Heap);
+        }
+#else
+        return HeapNew(ArrayBufferDetachedState<FreeFn>, buffer, bufferLength, free, ArrayBufferAllocationType::Heap);
+#endif
+    }
+
+    bool JavascriptArrayBuffer::IsValidAsmJsBufferLength(uint length, bool forceCheck)
+    {
+#if _WIN64 
+        /*
+        1. length >= 2^16
+        2. length is power of 2 or (length > 2^24 and length is multiple of 2^24)
+        3. length is a multiple of 4K
+        */
+        return ((length >= 0x10000) &&
+            (((length & (~length + 1)) == length) ||
+            (length >= 0x1000000 && ((length & 0xFFFFFF) == 0))
+            ) &&
+            ((length % AutoSystemInfo::PageSize) == 0)
+            );
+
+#else
+        if (forceCheck)
+        {
+            return ((length >= 0x10000) &&
+                (((length & (~length + 1)) == length) ||
+                (length >= 0x1000000 && ((length & 0xFFFFFF) == 0))
+                ) &&
+                ((length & 0x0FFF) == 0)
+                );
+        }
+        return false;
+#endif
+
+    }
+
+    bool JavascriptArrayBuffer::IsValidVirtualBufferLength(uint length)
+    {
+
+#if _WIN64 
+        /*
+        1. length >= 2^16
+        2. length is power of 2 or (length > 2^24 and length is multiple of 2^24)
+        3. length is a multiple of 4K
+        */
+        return (!PHASE_OFF1(Js::TypedArrayVirtualPhase) &&
+            (length >= 0x10000) &&
+            (((length & (~length + 1)) == length) ||
+            (length >= 0x1000000 &&
+            ((length & 0xFFFFFF) == 0)
+            )
+            ) &&
+            ((length % AutoSystemInfo::PageSize) == 0)
+            );
+#else
+        return false;
+#endif
+    }
+
     void JavascriptArrayBuffer::Finalize(bool isShutdown)
     {
             // In debugger scenario, ScriptAuthor can create scriptContxt and delete scriptContext
@@ -834,6 +931,79 @@ namespace Js
         return result;
     }
 
+    ArrayBuffer * JavascriptArrayBuffer::TransferInternal(uint32 newBufferLength)
+    {
+        ArrayBuffer* newArrayBuffer;
+        if (newBufferLength == 0 || GetByteLength() == 0)
+        {
+            newArrayBuffer = GetLibrary()->CreateArrayBuffer(newBufferLength);
+        }
+        else
+        {
+            BYTE * newBuffer = nullptr;
+            if (IsValidVirtualBufferLength(this->bufferLength))
+            {
+                if (IsValidVirtualBufferLength(newBufferLength))
+                {
+                    // we are transferring between an optimized buffer using a length that can be optimized
+                    if (newBufferLength < this->bufferLength)
+                    {
+#pragma prefast(suppress:6250, "Calling 'VirtualFree' without the MEM_RELEASE flag might free memory but not address descriptors (VADs).")
+                        VirtualFree(this->buffer + newBufferLength, this->bufferLength - newBufferLength, MEM_DECOMMIT);
+                    }
+                    else if (newBufferLength > this->bufferLength)
+                    {
+                        LPVOID newMem = VirtualAlloc(this->buffer + this->bufferLength, newBufferLength - this->bufferLength, MEM_COMMIT, PAGE_READWRITE);
+                        if (!newMem)
+                        {
+                            JavascriptError::ThrowOutOfMemoryError(GetScriptContext());
+                        }
+                    }
+                    newBuffer = this->buffer;
+                }
+                else
+                {
+                    // we are transferring from an optimized buffer, but the new length isn't compatible, so start over and copy to new memory
+                    newBuffer = (BYTE*)malloc(newBufferLength);
+                    if (!newBuffer)
+                    {
+                        JavascriptError::ThrowOutOfMemoryError(GetScriptContext());
+                    }
+                    js_memcpy_s(newBuffer, newBufferLength, this->buffer, newBufferLength);
+                }
+            }
+            else
+            {
+                if (IsValidVirtualBufferLength(newBufferLength))
+                {
+                    // we are transferring from an unoptimized buffer, but new length can be optimized, so move to that
+                    newBuffer = (BYTE*)JavascriptArrayBuffer::AllocWrapper(newBufferLength);
+                    js_memcpy_s(newBuffer, newBufferLength, this->buffer, newBufferLength);
+                }
+                else if (newBufferLength != this->bufferLength)
+                {
+                    // both sides will just be regular ArrayBuffer, so realloc
+                    newBuffer = (BYTE*)realloc(this->buffer, newBufferLength);
+                    if (!newBuffer)
+                    {
+                        JavascriptError::ThrowOutOfMemoryError(GetScriptContext());
+                    }
+                }
+                else
+                {
+                    newBuffer = this->buffer;
+                }
+            }
+            newArrayBuffer = GetLibrary()->CreateArrayBuffer(newBuffer, newBufferLength);
+        }
+
+
+        AutoDiscardPTR<Js::ArrayBufferDetachedStateBase> state(DetachAndGetState());
+        state->MarkAsClaimed();
+
+        return newArrayBuffer;
+    }
+
     ProjectionArrayBuffer::ProjectionArrayBuffer(uint32 length, DynamicType * type) :
         ArrayBuffer(length, type, CoTaskMemAlloc)
     {
@@ -863,6 +1033,29 @@ namespace Js
     void ProjectionArrayBuffer::Dispose(bool isShutdown)
     {
         CoTaskMemFree(buffer);
+    }
+
+    ArrayBuffer * ProjectionArrayBuffer::TransferInternal(uint32 newBufferLength)
+    {
+        ArrayBuffer* newArrayBuffer;
+        if (newBufferLength == 0 || this->bufferLength == 0)
+        {
+            newArrayBuffer = GetLibrary()->CreateProjectionArraybuffer(newBufferLength);
+        }
+        else
+        {
+            BYTE * newBuffer = (BYTE*)CoTaskMemRealloc(this->buffer, newBufferLength);
+            if (!newBuffer)
+            {
+                JavascriptError::ThrowOutOfMemoryError(GetScriptContext());
+            }
+            newArrayBuffer = GetLibrary()->CreateProjectionArraybuffer(newBuffer, newBufferLength);
+        }
+
+        AutoDiscardPTR<Js::ArrayBufferDetachedStateBase> state(DetachAndGetState());
+        state->MarkAsClaimed();
+
+        return newArrayBuffer;
     }
 
     ExternalArrayBuffer::ExternalArrayBuffer(byte *buffer, uint32 length, DynamicType *type)

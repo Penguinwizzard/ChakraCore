@@ -13,6 +13,7 @@
         uint parseCount;
     };
 
+// Array builtins
 ENTRY_BUILTIN(ArrayisArrayCount)
 ENTRY_BUILTIN(ArrayIndexOfCount)
 ENTRY_BUILTIN(ArrayEveryCount)
@@ -23,6 +24,9 @@ ENTRY_BUILTIN(ArrayMapCount)
 ENTRY_BUILTIN(ArrayReduceCount)
 ENTRY_BUILTIN(ArrayReduceRightCount)
 ENTRY_BUILTIN(ArraySomeCount)
+
+// ArrayBuffer builtins
+ENTRY_BUILTIN(ArrayBufferTransfer)
 
 // Object builtins
 ENTRY_BUILTIN(ObjectDefinePropertiesCount)
