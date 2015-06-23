@@ -473,6 +473,12 @@ struct PnWith : PnStmt
     Scope        *scope;
 };
 
+struct PnObjPattern
+{
+    ParseNodePtr pnodeNext; // It is planned to be used for Function parameters pattern.
+    ParseNodePtr pnode1;
+};
+
 struct PnIf : PnStmt
 {
     ParseNodePtr pnodeCond;
@@ -607,6 +613,7 @@ struct ParseNode
         PnVar           sxVar;          // variable declaration
         PnWhile         sxWhile;        // while and do-while loops
         PnWith          sxWith;         // with
+        PnObjPattern    sxObj;          // Object pattern - destructuring
     };
 
     IdentPtr name()
@@ -718,6 +725,7 @@ const int kcbPnUniSlot      = kcbPnNone + sizeof(PnUniSlot);
 const int kcbPnVar          = kcbPnNone + sizeof(PnVar);
 const int kcbPnWhile        = kcbPnNone + sizeof(PnWhile);
 const int kcbPnWith         = kcbPnNone + sizeof(PnWith);
+const int kcbPnObjPattern = kcbPnNone + sizeof(PnObjPattern);
 
 #define AssertNodeMem(pnode) AssertPvCb(pnode, kcbPnNone)
 #define AssertNodeMemN(pnode) AssertPvCbN(pnode, kcbPnNone)

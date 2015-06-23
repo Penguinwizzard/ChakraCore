@@ -4623,12 +4623,8 @@ void EmitReference(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncI
     case knopName:
         break;
 
-    case knopArray:
-        if (byteCodeGenerator->GetScriptContext()->GetConfig()->IsES6DestructuringEnabled())
-        {
-            break;
-        }
-        Emit(pnode, byteCodeGenerator, funcInfo, false);
+    case knopArrayPattern:
+    case knopObjectPattern:
         break;
 
     case knopCall:
@@ -4692,6 +4688,7 @@ void EmitGetIterator(Js::RegSlot iteratorLocation, Js::RegSlot iterableLocation,
 void EmitIteratorNext(Js::RegSlot itemLocation, Js::RegSlot iteratorLocation, Js::RegSlot nextInputLocation, ByteCodeGenerator* byteCodeGenerator, FuncInfo* funcInfo);
 void EmitIteratorComplete(Js::RegSlot doneLocation, Js::RegSlot iteratorResultLocation, ByteCodeGenerator* byteCodeGenerator, FuncInfo* funcInfo);
 void EmitIteratorValue(Js::RegSlot valueLocation, Js::RegSlot iteratorResultLocation, ByteCodeGenerator* byteCodeGenerator, FuncInfo* funcInfo);
+void EmitDestructuredObject(ParseNode *lhs, Js::RegSlot rhsLocation, ByteCodeGenerator *byteCodeGenerator, FuncInfo *funcInfo);
 
 void EmitDestructuredElement(ParseNode *elem, Js::RegSlot sourceLocation, ByteCodeGenerator* byteCodeGenerator, FuncInfo *funcInfo)
 {
@@ -4801,7 +4798,7 @@ void EmitDestructuredArray(
 
     EmitGetIterator(iteratorLocation, rhsLocation, byteCodeGenerator, funcInfo);
 
-    Assert(lhs->nop == knopArray);
+    Assert(lhs->nop == knopArrayPattern);
     ParseNode *list = lhs->sxArrLit.pnode1;
 
     if (list == nullptr)
@@ -4891,27 +4888,27 @@ void EmitDestructuredArray(
         // beforeDefaultAssign:
         byteCodeGenerator->Writer()->MarkLabel(beforeDefaultAssign);
 
-        if (elem->nop == knopArray)
+        if (elem->nop == knopArrayPattern || elem->nop == knopObjectPattern)
         {
 
             // If we get an undefined value and have an initializer, use it in place of undefined.
             if (init != nullptr)
             {
                 /*
-                  the IR builder uses two symbols for a temp register in the if else path
-                  R9 <- R3
-                  if(...)
-                  R9 <- R2
-                  R10 = R9.<property>  // error -> IR creates a new lifetime for the if path, and the direct path dest is not referenced
-                  hence we have to create a new temp
+                the IR builder uses two symbols for a temp register in the if else path
+                R9 <- R3
+                if(...)
+                R9 <- R2
+                R10 = R9.<property>  // error -> IR creates a new lifetime for the if path, and the direct path dest is not referenced
+                hence we have to create a new temp
 
-                  TEMP REG USED TO FIX THIS PRODUCES THIS
-                  R9 <- R3
-                  if(BrEq_A R9, R3)
-                  R10 <- R2                               :
-                  else
-                  R10 <- R9               : skipdefault
-                  ...  = R10[@@iterator]     : loadIter
+                TEMP REG USED TO FIX THIS PRODUCES THIS
+                R9 <- R3
+                if(BrEq_A R9, R3)
+                R10 <- R2                               :
+                else
+                R10 <- R9               : skipdefault
+                ...  = R10[@@iterator]     : loadIter
                 */
 
                 // Temp Register
@@ -4922,7 +4919,7 @@ void EmitDestructuredArray(
                 Js::ByteCodeLabel loadIter = byteCodeGenerator->Writer()->DefineLabel();
 
                 // check value is undefined
-                byteCodeGenerator->Writer()->BrReg2(Js::OpCode::BrNeq_A, skipDefault, valueLocation, funcInfo->undefinedConstantRegister);
+                byteCodeGenerator->Writer()->BrReg2(Js::OpCode::BrSrNeq_A, skipDefault, valueLocation, funcInfo->undefinedConstantRegister);
 
                 // Evaluate the default expression and assign it.
                 Emit(init, byteCodeGenerator, funcInfo, false);
@@ -4941,14 +4938,29 @@ void EmitDestructuredArray(
                 byteCodeGenerator->Writer()->MarkLabel(loadIter);
                 byteCodeGenerator->EndStatement(init);
 
-                // Recursively emit a destructured array using the current .next() as the RHS.
-                EmitDestructuredArray(elem, valueLocationTmp, byteCodeGenerator, funcInfo);
+                if (elem->nop == knopObjectPattern)
+                {
+                    EmitDestructuredObject(elem, valueLocationTmp, byteCodeGenerator, funcInfo);
+                }
+                else
+                {
+                    // Recursively emit a destructured array using the current .next() as the RHS.
+                    EmitDestructuredArray(elem, valueLocationTmp, byteCodeGenerator, funcInfo);
+                }
+
                 funcInfo->ReleaseTmpRegister(valueLocationTmp);
             }
             else
             {
-                // Recursively emit a destructured array using the current .next() as the RHS.
-                EmitDestructuredArray(elem, valueLocation, byteCodeGenerator, funcInfo);
+                if (elem->nop == knopObjectPattern)
+                {
+                    EmitDestructuredObject(elem, valueLocation, byteCodeGenerator, funcInfo);
+                }
+                else
+                {
+                    // Recursively emit a destructured array using the current .next() as the RHS.
+                    EmitDestructuredArray(elem, valueLocation, byteCodeGenerator, funcInfo);
+                }
             }
         }
         else
@@ -4962,7 +4974,7 @@ void EmitDestructuredArray(
                 useDefault = byteCodeGenerator->Writer()->DefineLabel();
                 end = byteCodeGenerator->Writer()->DefineLabel();
 
-                byteCodeGenerator->Writer()->BrReg2(Js::OpCode::BrEq_A, useDefault, valueLocation, funcInfo->undefinedConstantRegister);
+                byteCodeGenerator->Writer()->BrReg2(Js::OpCode::BrSrEq_A, useDefault, valueLocation, funcInfo->undefinedConstantRegister);
             }
 
             EmitDestructuredElement(elem, valueLocation, byteCodeGenerator, funcInfo);
@@ -5011,6 +5023,130 @@ void EmitDestructuredArray(
 
     byteCodeGenerator->EndStatement(lhs);
 }
+void EmitNameInvoke(Js::RegSlot lhsLocation,
+    Js::RegSlot objectLocation,
+    ParseNodePtr nameNode,
+    ByteCodeGenerator* byteCodeGenerator,
+    FuncInfo* funcInfo)
+{
+    Assert(nameNode != nullptr);
+    if (nameNode->nop == knopComputedName)
+    {
+        ParseNodePtr pnode1 = nameNode->sxUni.pnode1;
+        Emit(pnode1, byteCodeGenerator, funcInfo, false/*isConstructorCall*/);
+
+        byteCodeGenerator->Writer()->Element(Js::OpCode::LdElemI_A, lhsLocation, objectLocation, pnode1->location);
+        funcInfo->ReleaseLoc(pnode1);
+    }
+    else
+    {
+        Assert(nameNode->nop == knopName || nameNode->nop == knopStr);
+        Symbol *sym = nameNode->sxPid.sym;
+        Js::PropertyId propertyId = sym ? sym->EnsurePosition(byteCodeGenerator) : nameNode->sxPid.pid->GetPropertyId();
+
+        uint cacheId = funcInfo->FindOrAddInlineCacheId(objectLocation, propertyId, false/*isLoadMethod*/, false/*isStore*/);
+        byteCodeGenerator->Writer()->PatchableProperty(Js::OpCode::LdFld, lhsLocation, objectLocation, cacheId);
+    }
+}
+
+void EmitDestructuredObjectMember(ParseNode *memberNode,
+    Js::RegSlot rhsLocation,
+    ByteCodeGenerator *byteCodeGenerator,
+    FuncInfo *funcInfo)
+{
+    Assert(memberNode->nop == knopObjectPatternMember);
+
+    Js::RegSlot nameLocation = funcInfo->AcquireTmpRegister();
+    EmitNameInvoke(nameLocation, rhsLocation, memberNode->sxBin.pnode1, byteCodeGenerator, funcInfo);
+
+    // Imagine we are transforming
+    // {x:x1} = {} to x1 = {}.x  (here x1 is the second node of the member but that is our lhsnode)
+
+    ParseNodePtr lhsElementNode = memberNode->sxBin.pnode2;
+    ParseNodePtr init = nullptr;
+    if (lhsElementNode->nop == knopVarDecl || lhsElementNode->nop == knopLetDecl || lhsElementNode->nop == knopConstDecl)
+    {
+        init = lhsElementNode->sxVar.pnodeInit;
+    }
+    else if (lhsElementNode->nop == knopAsg)
+    {
+        init = lhsElementNode->sxBin.pnode2;
+        lhsElementNode = lhsElementNode->sxBin.pnode1;
+    }
+
+    // If we have initializer we need to see if the destructured value is undefined or not - if it is undefined we need to assign initializer
+
+    Js::ByteCodeLabel useDefault = -1;
+    Js::ByteCodeLabel end = -1;
+    Js::RegSlot nameLocationTmp = nameLocation;
+
+    if (init != nullptr)
+    {
+        nameLocationTmp = funcInfo->AcquireTmpRegister();
+
+        useDefault = byteCodeGenerator->Writer()->DefineLabel();
+        end = byteCodeGenerator->Writer()->DefineLabel();
+
+        byteCodeGenerator->Writer()->BrReg2(Js::OpCode::BrSrEq_A, useDefault, nameLocation, funcInfo->undefinedConstantRegister);
+        byteCodeGenerator->Writer()->Reg2(Js::OpCode::Ld_A, nameLocationTmp, nameLocation);
+
+        byteCodeGenerator->Writer()->Br(end);
+        byteCodeGenerator->Writer()->MarkLabel(useDefault);
+
+        Emit(init, byteCodeGenerator, funcInfo, false/*isContructorCall*/);
+        byteCodeGenerator->Writer()->Reg2(Js::OpCode::Ld_A, nameLocationTmp, init->location);
+        funcInfo->ReleaseLoc(init);
+
+        byteCodeGenerator->Writer()->MarkLabel(end);
+    }
+
+    if (lhsElementNode->nop == knopArrayPattern)
+    {
+        EmitDestructuredArray(lhsElementNode, nameLocationTmp, byteCodeGenerator, funcInfo);
+    }
+    else if (lhsElementNode->nop == knopObjectPattern)
+    {
+        EmitDestructuredObject(lhsElementNode, nameLocationTmp, byteCodeGenerator, funcInfo);
+    }
+    else
+    {
+        EmitDestructuredElement(lhsElementNode, nameLocationTmp, byteCodeGenerator, funcInfo);
+    }
+
+    if (init != nullptr)
+    {
+        funcInfo->ReleaseTmpRegister(nameLocationTmp);
+    }
+
+    funcInfo->ReleaseTmpRegister(nameLocation);
+}
+
+void EmitDestructuredObject(ParseNode *lhs,
+    Js::RegSlot rhsLocation,
+    ByteCodeGenerator *byteCodeGenerator,
+    FuncInfo *funcInfo)
+{
+    Assert(lhs->nop == knopObjectPattern);
+    ParseNodePtr pnode1 = lhs->sxObj.pnode1;
+    if (pnode1 != nullptr)
+    {
+        Assert(pnode1->nop == knopList || pnode1->nop == knopObjectPatternMember);
+
+        byteCodeGenerator->StartStatement(lhs);
+
+        ParseNodePtr current = pnode1;
+        while (current->nop == knopList)
+        {
+            ParseNodePtr memberNode = current->sxBin.pnode1;
+            EmitDestructuredObjectMember(memberNode, rhsLocation, byteCodeGenerator, funcInfo);
+            current = current->sxBin.pnode2;
+        }
+        EmitDestructuredObjectMember(current, rhsLocation, byteCodeGenerator, funcInfo);
+
+        byteCodeGenerator->EndStatement(lhs);
+    }
+}
+
 
 void EmitAssignment(
     ParseNode *asgnNode,
@@ -5068,17 +5204,29 @@ void EmitAssignment(
         EmitCall(lhs, rhsLocation, byteCodeGenerator, funcInfo, false, false);
         break;
 
-    case knopArray:
-        if (byteCodeGenerator->GetScriptContext()->GetConfig()->IsES6DestructuringEnabled())
+    case knopObjectPattern:
+    {
+        Assert(byteCodeGenerator->IsES6DestructuringEnabled());
+        // Copy the rhs value to be the result of the assignment if needed.
+        if (asgnNode != nullptr)
         {
-            // Copy the rhs value to be the result of the assignment if needed.
-            if (asgnNode != nullptr)
-            {
-                byteCodeGenerator->Writer()->Reg2(Js::OpCode::Ld_A, asgnNode->location, rhsLocation);
-            }
-            return EmitDestructuredArray(lhs, rhsLocation, byteCodeGenerator, funcInfo);
+            byteCodeGenerator->Writer()->Reg2(Js::OpCode::Ld_A, asgnNode->location, rhsLocation);
         }
-        // fall through
+        return EmitDestructuredObject(lhs, rhsLocation, byteCodeGenerator, funcInfo);
+    }
+
+    case knopArrayPattern:
+    {
+        Assert(byteCodeGenerator->IsES6DestructuringEnabled());
+        // Copy the rhs value to be the result of the assignment if needed.
+        if (asgnNode != nullptr)
+        {
+            byteCodeGenerator->Writer()->Reg2(Js::OpCode::Ld_A, asgnNode->location, rhsLocation);
+        }
+        return EmitDestructuredArray(lhs, rhsLocation, byteCodeGenerator, funcInfo);
+    }
+
+    // fall through
     default:
         byteCodeGenerator->Writer()->W1(Js::OpCode::RuntimeReferenceError, SCODE_CODE(JSERR_CantAssignTo));
         break;
@@ -8372,7 +8520,7 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
                 EmitAssignment(NULL, lhs, rhs->location, byteCodeGenerator, funcInfo);
             }
             funcInfo->ReleaseLoc(rhs);
-            if (!(byteCodeGenerator->GetScriptContext()->GetConfig()->IsES6DestructuringEnabled() && lhs->nop == knopArray))
+            if (!(byteCodeGenerator->IsES6DestructuringEnabled() && (lhs->nop == knopArrayPattern || lhs->nop == knopObjectPattern)))
             {
                 funcInfo->ReleaseReference(lhs);
             }

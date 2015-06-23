@@ -675,6 +675,37 @@ public:
         return m_phtbl->Contains(name, len);
     }
 
+    template <typename THandler>
+    static void ForEachItemRefInList(ParseNodePtr *list, THandler handler)
+    {
+        ParseNodePtr *current = list;
+        while (current != nullptr && (*current) != nullptr)
+        {
+            if ((*current)->nop == knopList)
+            {
+                handler(&(*current)->sxBin.pnode1);
+
+                // Advance to the next node
+                current = &(*current)->sxBin.pnode2;
+            }
+            else
+            {
+                // The last node
+                handler(current);
+                current = nullptr;
+            }
+        }
+    }
+
+    template <typename THandler>
+    static void ForEachItemInList(ParseNodePtr list, THandler handler)
+    {
+        ForEachItemRefInList(&list, [&](ParseNodePtr * item) {
+            Assert(item != nullptr);
+            handler(*item);
+        });
+    }
+
 private:
     struct IdentToken
     {
@@ -706,7 +737,7 @@ private:
 
     template<bool buildAST> ParseNodePtr ParseArrayLiteral(ERROR_RECOVERY_FORMAL);
 
-    template<bool buildAST> ParseNodePtr ParseStatement(ERROR_RECOVERY_FORMAL_ bool isSourceElement = false);
+    template<bool buildAST> ParseNodePtr ParseStatement(ERROR_RECOVERY_FORMAL_ bool isSourceElement = false, bool checkForPossibleObjectPattern = false);
     template<bool buildAST> ParseNodePtr ParseVariableDeclaration(
         ERROR_RECOVERY_FORMAL_ tokens declarationType, charcount_t ichMin,
 #if PARSENODE_EXTENSIONS
@@ -715,7 +746,8 @@ private:
         BOOL fAllowIn = TRUE,
         BOOL* pfForInOk = nullptr,
         BOOL singleDefOnly = FALSE,
-        BOOL allowInit = TRUE);
+        BOOL allowInit = TRUE,
+        BOOL isTopVarParse = TRUE);
 
     template<bool buildAST>
     void ParseStmtList(
@@ -759,7 +791,7 @@ private:
         const bool isSourceElementList = false);
     template<bool buildAST> ParseNodePtr ParseArgList(ERROR_RECOVERY_FORMAL_ bool *pCallOfConstants, uint16 *pSpreadArgCount, uint16 * pCount);
     template<bool buildAST> ParseNodePtr ParseArrayList(ERROR_RECOVERY_FORMAL_ bool *pArrayOfTaggedInts, bool *pArrayOfInts, bool *pArrayOfNumbers, bool *pHasMissingValues, uint *count, uint *spreadCount);
-    template<bool buildAST> ParseNodePtr ParseMemberList(ERROR_RECOVERY_FORMAL_ LPCOLESTR pNameHint, ulong *pHintLength);
+    template<bool buildAST> ParseNodePtr ParseMemberList(ERROR_RECOVERY_FORMAL_ LPCOLESTR pNameHint, ulong *pHintLength, tokens declarationType = tkNone, SymbolType symbolType = STUnknown);
     template<bool buildAST> ParseNodePtr ParseSuper(ERROR_RECOVERY_FORMAL_ ParseNodePtr pnode);
 
     // Used to determine the type of JavaScript object member.
@@ -868,6 +900,19 @@ private:
     BOOL IsConstantInFunctionCall(ParseNodePtr pnode);
     BOOL IsConstantInArrayLiteral(ParseNodePtr pnode);
 
+    ParseNodePtr CreateObjectPatternNode(charcount_t ichMin, ParseNodePtr pnode1);
+
+    ParseNodePtr ConvertMemberToMemberPattern(ParseNodePtr pnodeMember);
+    ParseNodePtr ConvertObjectToObjectPattern(ParseNodePtr pnodeMemberList);
+    ParseNodePtr GetRightSideNodeFromPattern(ParseNodePtr pnode);
+    ParseNodePtr ConvertArrayToArrayPattern(ParseNodePtr pnode);
+    ParseNodePtr ConvertToPattern(ParseNodePtr pnode);
+
+    void AppendToList(ParseNodePtr * node, ParseNodePtr nodeToAppend);
+
+    bool IsES6DestructuringEnabled() const;
+    bool IsPossibleObjectPatternExpression();
+
     template<bool buildAST> ParseNodePtr ParseTryCatchFinally(ERROR_RECOVERY_FORMAL);
     template<bool buildAST> ParseNodePtr ParseTry(ERROR_RECOVERY_FORMAL);
     template<bool buildAST> ParseNodePtr ParseCatch(ERROR_RECOVERY_FORMAL);
@@ -878,6 +923,18 @@ private:
 
     template <bool buildAST>
     ParseNodePtr ParseDestructuredArrayLiteral(ERROR_RECOVERY_FORMAL_ tokens declarationType, bool isDecl, bool topLevel = true);
+
+    template <bool buildAST>
+    ParseNodePtr ParseDestructuredObjectLiteral(ERROR_RECOVERY_FORMAL_ tokens declarationType, SymbolType symbolType, bool isDecl, bool topLevel = true);
+
+    template <bool buildAST>
+    ParseNodePtr ParseDestructuredLiteral(ERROR_RECOVERY_FORMAL_ tokens declarationType, SymbolType symbolType, bool isDecl, bool topLevel = true);
+
+    template <bool buildAST>
+    ParseNodePtr ParseDestructuredVarDecl(ERROR_RECOVERY_FORMAL_ tokens declarationType, SymbolType symbolType, bool isDecl, bool *hasSeenRest, bool topLevel = true);
+
+    template <bool buildAST>
+    ParseNodePtr ParseDestructuredInitializer(ERROR_RECOVERY_FORMAL_ ParseNodePtr lhsNode, bool isDecl, bool topLevel);
 
     template<bool CheckForNegativeInfinity> static bool IsNaNOrInfinityLiteral(LPCOLESTR str);
 
@@ -989,8 +1046,6 @@ private:
     template <class Fn>
     void VisitFunctionsInScope(ParseNodePtr pnodeScopeList, Fn fn);
     void FinishDeferredFunction(ParseNodePtr pnodeScopeList);
-
-
 
     /***********************************************************************
     Misc

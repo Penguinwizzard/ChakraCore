@@ -155,6 +155,10 @@ void Visit(ParseNode *pnode, ByteCodeGenerator* byteCodeGenerator, PrefixFn pref
     }
         break;
 
+    case knopObjectPattern:
+        Visit(pnode->sxObj.pnode1, byteCodeGenerator, prefix, postfix);
+        break;
+
     case knopCall:
         Visit(pnode->sxCall.pnodeTarget, byteCodeGenerator, prefix, postfix);
         Visit(pnode->sxCall.pnodeArgs, byteCodeGenerator, prefix, postfix);
@@ -171,8 +175,8 @@ void Visit(ParseNode *pnode, ByteCodeGenerator* byteCodeGenerator, PrefixFn pref
     }
 
     case knopAsg:
-        if (byteCodeGenerator->GetScriptContext()->GetConfig()->IsES6DestructuringEnabled()
-            && pnode->sxBin.pnode1->nop == knopArray
+        if (byteCodeGenerator->IsES6DestructuringEnabled()
+            && pnode->sxBin.pnode1->nop == knopArrayPattern
             && byteCodeGenerator->InDestructuredArray() == false)
         {
             byteCodeGenerator->SetInDestructuredArray(true);
@@ -665,6 +669,11 @@ bool ByteCodeGenerator::IsLanguageServiceEnabled() const
 bool ByteCodeGenerator::UseParserBindings() const
 {
     return !IsLanguageServiceEnabled() && IsInNonDebugMode() && !PHASE_OFF1(Js::ParserBindPhase);
+}
+
+bool ByteCodeGenerator::IsES6DestructuringEnabled() const
+{
+    return scriptContext->GetConfig()->IsES6DestructuringEnabled();
 }
 
 // ByteCodeGenerator debug mode means we are generating debug mode user-code. Library code is always in non-debug mode.
@@ -3754,6 +3763,7 @@ void Bind(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
         break;
     case knopMember:
     case knopMemberShort:
+    case knopObjectPatternMember:
         if (pnode->sxBin.pnode1->nop == knopComputedName)
         {
             // Computed property name - cannot bind yet
@@ -4105,7 +4115,7 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
                 CheckMaybeEscapedUse(pnode->sxBin.pnode1, byteCodeGenerator);
             }
 
-            if (byteCodeGenerator->GetScriptContext()->GetConfig()->IsES6DestructuringEnabled() && pnode->sxBin.pnode1->nop == knopArray)
+            if (byteCodeGenerator->IsES6DestructuringEnabled() && (pnode->sxBin.pnode1->nop == knopArrayPattern || pnode->sxBin.pnode1->nop == knopObjectPattern))
             {
                 // Destructured arrays may have default values and need undefined.
                 byteCodeGenerator->AssignUndefinedConstRegister();

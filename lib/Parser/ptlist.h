@@ -147,6 +147,10 @@ PTNODE(knopTry        , "try"              , Nop      , Try         , fnopNotExp
 PTNODE(knopThrow      , "throw"            , Nop      , Uni         , fnopNotExprStmt        , "ThrowStmt"                     , apnkThrow      )
 PTNODE(knopFinally    , "finally"          , Nop      , Finally     , fnopNotExprStmt|fnopCleanup, "FinallyStmt"                   , apnkFinally    )
 PTNODE(knopTryFinally , "try-finally"      , Nop      , TryFinally  , fnopNotExprStmt        , "TryFinallyStmt"                , apnkTryFinally )
+PTNODE(knopObjectPattern, "{} = "          , Nop      , Uni         , fnopUni                , "ObjectAssignmentPattern", apnkObject)
+PTNODE(knopObjectPatternMember, "{:} = "   , Nop      , Bin         , fnopBin                , "ObjectAssignmentPatternMember", apnkMember)
+PTNODE(knopArrayPattern, "[] = "           , Nop      , ArrLit      , fnopUni                , "ArrayAssignmentPattern", apnkArray)
+
 
 /***************************************************************************
 Extra node kinds used by the LanguageService

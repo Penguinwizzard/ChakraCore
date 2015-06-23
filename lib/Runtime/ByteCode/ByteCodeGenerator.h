@@ -387,6 +387,7 @@ public:
 
     bool IsLanguageServiceEnabled() const;
     bool UseParserBindings() const;
+    bool IsES6DestructuringEnabled() const;
 
     // Debugger methods.
     bool IsInDebugMode() const;

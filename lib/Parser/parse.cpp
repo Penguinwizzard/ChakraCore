@@ -27,6 +27,11 @@ bool Parser::BindDeferredPidRefs() const
     return m_scriptContext->GetConfig()->BindDeferredPidRefs();
 }
 
+bool Parser::IsES6DestructuringEnabled() const
+{
+    return m_scriptContext->GetConfig()->IsES6DestructuringEnabled();
+}
+
 #if ERROR_RECOVERY
 static ErrorRecoverySet ErrorRecoverySetOf(tokens token)
 {
@@ -3843,7 +3848,7 @@ RecoverFromERRnoMemberIdent:
 Parse a list of object members. e.g. { x:foo, 'y me':bar }
 ***************************************************************************/
 template<bool buildAST>
-ParseNodePtr Parser::ParseMemberList(ERROR_RECOVERY_FORMAL_ LPCOLESTR pNameHint, ulong* pNameHintLength)
+ParseNodePtr Parser::ParseMemberList(ERROR_RECOVERY_FORMAL_ LPCOLESTR pNameHint, ulong* pNameHintLength, tokens declarationType, SymbolType symbolType)
 {
     ParseNodePtr pnodeArg;
     ParseNodePtr pnodeName = NULL;
@@ -3852,6 +3857,9 @@ ParseNodePtr Parser::ParseMemberList(ERROR_RECOVERY_FORMAL_ LPCOLESTR pNameHint,
     LPCOLESTR pFullNameHint = NULL;       // A calculated fullname
     ulong fullNameHintLength = pNameHintLength ? *pNameHintLength : 0;
     bool isProtoDeclared = false;
+
+    // we get declaration tkLCurly - when the possible object pattern found under under the expression.
+    bool isObjectPattern = (declarationType == tkVAR || declarationType == tkLET || declarationType == tkCONST || declarationType == tkLCurly) && IsES6DestructuringEnabled();
 
     // Check for an empty list
     if (tkRCurly == m_token.tk)
@@ -4027,7 +4035,24 @@ RecoverFromERRnoMemberIdent:
             }
 
             m_pscan->Scan();
-            ParseNodePtr pnodeExpr = ParseExpr<buildAST>(ERROR_RECOVERY_ACTUAL_(ersComma | ers) koplCma, NULL, TRUE, FALSE, pFullNameHint, &fullNameHintLength);
+            ParseNodePtr pnodeExpr = nullptr;
+            if (isObjectPattern)
+            {
+                pnodeExpr = ParseDestructuredVarDecl<buildAST>(ERROR_RECOVERY_ACTUAL_(ersComma | ers) declarationType, symbolType, declarationType != tkLCurly, nullptr/* *hasSeenRest*/, false /*topLevel*/);
+
+                if (m_token.tk != tkComma && m_token.tk != tkRCurly)
+                {
+                    if (m_token.IsOperator())
+                    {
+                        Error(ERRDestructNoOper);
+                    }
+                    Error(ERRsyntax);
+                }
+            }
+            else
+            {
+                pnodeExpr = ParseExpr<buildAST>(ERROR_RECOVERY_ACTUAL_(ersComma | ers) koplCma, NULL, TRUE, FALSE, pFullNameHint, &fullNameHintLength);
+            }
 #if DEBUG
             if((m_grfscr & fscrEnforceJSON) && !IsJSONValid(pnodeExpr))
             {
@@ -4036,7 +4061,7 @@ RecoverFromERRnoMemberIdent:
 #endif
             if (buildAST)
             {
-                pnodeArg = CreateBinNode(knopMember, pnodeName, pnodeExpr);
+                pnodeArg = CreateBinNode(isObjectPattern ? knopObjectPatternMember : knopMember, pnodeName, pnodeExpr);
                 if (pnodeArg->sxBin.pnode1->nop == knopStr)
                 {
                     pnodeArg->sxBin.pnode1->sxPid.pid->PromoteAssignmentState();
@@ -4114,8 +4139,9 @@ RecoverFromERRnoMemberIdent:
 #if ERROR_RECOVERY
                 pidHint != m_pidError && 
 #endif
-                (m_token.tk == tkRCurly || m_token.tk == tkComma) && m_scriptContext->GetConfig()->IsES6ObjectLiteralsEnabled()) {
+                (m_token.tk == tkRCurly || m_token.tk == tkComma || (isObjectPattern && m_token.tk == tkAsg)) && m_scriptContext->GetConfig()->IsES6ObjectLiteralsEnabled()) {
                 // Shorthand {foo} -> {foo:foo} syntax.
+                // {foo = <initializer>} supported only when on object pattern rules are being applied
 #if PARSENODE_EXTENSIONS
                 ichDeadRangeLim = m_pscan->IchMinTok();
 #endif
@@ -4135,13 +4161,35 @@ RecoverFromERRnoMemberIdent:
                 if (buildAST)
                 {
                     CheckArgumentsUse(pidHint, GetCurrentFunctionNode());
+                }
 
-                    ParseNodePtr pnodeIdent = CreateNameNode(pidHint, idHintIchMin, idHintIchLim);
-                    BlockInfoStack *blockInfo = GetCurrentFunctionBlockInfo();
-                    PidRefStack *ref = this->FindOrAddPidRef(pidHint, blockInfo->pnodeBlock->sxBlock.blockId);
-                    pnodeIdent->sxPid.SetSymRef(ref);
+                ParseNodePtr pnodeIdent = nullptr;
+                if (isObjectPattern)
+                {
+                    m_pscan->SeekTo(atPid);
+                    pnodeIdent = ParseDestructuredVarDecl<buildAST>(ERROR_RECOVERY_ACTUAL_(ersComma | ers) declarationType, symbolType, declarationType != tkLCurly, nullptr/* *hasSeenRest*/, false /*topLevel*/);
 
-                    pnodeArg = CreateBinNode(knopMemberShort, pnodeName, pnodeIdent);
+                    if (m_token.tk != tkComma && m_token.tk != tkRCurly)
+                    {
+                        if (m_token.IsOperator())
+                        {
+                            Error(ERRDestructNoOper);
+                        }
+                        Error(ERRsyntax);
+                    }
+                }
+
+                if (buildAST)
+                {
+                    if (!isObjectPattern)
+                    {
+                        pnodeIdent = CreateNameNode(pidHint, idHintIchMin, idHintIchLim);
+                        BlockInfoStack *blockInfo = GetCurrentFunctionBlockInfo();
+                        PidRefStack *ref = this->FindOrAddPidRef(pidHint, blockInfo->pnodeBlock->sxBlock.blockId);
+                        pnodeIdent->sxPid.SetSymRef(ref);
+                    }
+
+                    pnodeArg = CreateBinNode(isObjectPattern ? knopObjectPatternMember : knopMemberShort, pnodeName, pnodeIdent);
                 }
             }
             else
@@ -7852,13 +7900,18 @@ ParseNodePtr Parser::ParseExpr(ERROR_RECOVERY_FORMAL_ int oplMin, BOOL *pfCanAss
         ichMin = m_pscan->IchMinTok();
         pnode = ParseTerm<buildAST>(ERROR_RECOVERY_ACTUAL_((ersBinOp | ersAddOp) | ers) TRUE, pNameHint, &hintLength, &term, fUnaryOrParen);
 
-        if (m_scriptContext->GetConfig()->IsES6DestructuringEnabled() && beforeToken == tkLBrack && m_token.tk == tkAsg)
+        if (IsES6DestructuringEnabled()
+            && m_token.tk == tkAsg && (beforeToken == tkLBrack || beforeToken == tkLCurly)
+            && pnode != nullptr
+            && (pnode->nop == knopArray || pnode->nop == knopObject))
         {
-            // Possible destructuring literal. Rewind and verify the parse tree.
             m_pscan->SeekTo(termStart);
-
-            // No need to rebuild the nodes, we only need to verify the destructuring syntax rules.
-            ParseDestructuredArrayLiteral<false>(ERROR_RECOVERY_ACTUAL_(ers) tkNone, false);
+            // Possible destructuring literal. Rewind and verify the parse tree.
+            ParseDestructuredLiteral<false>(ERROR_RECOVERY_ACTUAL_(ers) tkLCurly, STUnknown, false/*isDecl*/, false/*topLevel*/);
+            if (buildAST)
+            {
+                pnode = ConvertToPattern(pnode);
+            }
         }
 
         if (buildAST)
@@ -8272,14 +8325,15 @@ ParseNodePtr Parser::ParseVariableDeclaration(
 #if PARSENODE_EXTENSIONS
     charcount_t ichDeadRangeMin,
 #endif
-    BOOL fAllowIn,
-    BOOL* pfForInOk,
-    BOOL singleDefOnly,
-    BOOL allowInit)
+    BOOL fAllowIn/* = TRUE*/,
+    BOOL* pfForInOk/* = nullptr*/,
+    BOOL singleDefOnly/* = FALSE*/,
+    BOOL allowInit/* = TRUE*/,
+    BOOL isTopVarParse/* = TRUE*/)
 {
-    if (m_scriptContext->GetConfig()->IsES6DestructuringEnabled() && (m_token.tk == tkLBrack || m_token.tk == tkLCurly))
+    if (IsES6DestructuringEnabled() && (m_token.tk == tkLBrack || m_token.tk == tkLCurly))
     {
-        return ParseDestructuredArrayLiteral<buildAST>(ERROR_RECOVERY_ACTUAL_(ers | ersSColon | ersVar) declarationType, true);
+        return ParseDestructuredLiteral<buildAST>(ERROR_RECOVERY_ACTUAL_(ers | ersRCurly | ersRBrack) declarationType, STVariable, !!isTopVarParse);
     }
 
     ParseNodePtr pnodeThis = nullptr;
@@ -8902,7 +8956,7 @@ ParseNodePtr Parser::ParseCase(ERROR_RECOVERY_FORMAL_ ParseNodePtr *ppnodeBody)
 Parse a single statement. Digest a trailing semicolon.
 ***************************************************************************/
 template<bool buildAST>
-ParseNodePtr Parser::ParseStatement(ERROR_RECOVERY_FORMAL_ bool isSourceElement)
+ParseNodePtr Parser::ParseStatement(ERROR_RECOVERY_FORMAL_ bool isSourceElement/* = false*/, bool checkForPossibleObjectPattern/* = false*/)
 {
     ParseNodePtr *ppnodeT;
     ParseNodePtr pnodeT;
@@ -9126,21 +9180,13 @@ LRestart:
                 m_pscan->Scan();
                 if (this->NextTokenConfirmsLetDecl() && m_token.tk != tkIN)
                 {
-                    if (m_scriptContext->GetConfig()->IsES6DestructuringEnabled() && (m_token.tk == tkLBrack || m_token.tk == tkLCurly))
-                    {
-                        pnodeT = ParseDestructuredArrayLiteral<buildAST>(ERROR_RECOVERY_ACTUAL_(ers | ersSColon | ersVar) tkLET, true);
-                        break;
-                    }
-                    else
-                    {
-                        pnodeT = ParseVariableDeclaration<buildAST>(ERROR_RECOVERY_ACTUAL_((ersSColon | ersIn) | ers) tkLET, ichMin
+                    pnodeT = ParseVariableDeclaration<buildAST>(ERROR_RECOVERY_ACTUAL_((ersSColon | ersIn) | ers) tkLET, ichMin
 #if PARSENODE_EXTENSIONS
-                                                                    , ichDeadRangeMin
+                                                                , ichDeadRangeMin
 #endif
-                                                                    , /*fAllowIn = */FALSE
-                                                                    , /*pfForInOk = */&fForInOrOfOkay);
-                        break;
-                    }
+                                                                , /*fAllowIn = */FALSE
+                                                                , /*pfForInOk = */&fForInOrOfOkay);
+                    break;
                 }
                 m_pscan->SeekTo(parsedLet);
             }
@@ -9158,20 +9204,12 @@ LRestart:
                 ichDeadRangeMin = m_pscan->IchLimTok();
 #endif
                 m_pscan->Scan();
-                if (m_scriptContext->GetConfig()->IsES6DestructuringEnabled() && (m_token.tk == tkLBrack || m_token.tk == tkLCurly))
-                {
-                    pnodeT = ParseDestructuredArrayLiteral<buildAST>(ERROR_RECOVERY_ACTUAL_(ers | ersSColon | ersVar) tkVAR, true);
-                    break;
-                }
-                else
-                {
-                    pnodeT = ParseVariableDeclaration<buildAST>(ERROR_RECOVERY_ACTUAL_((ersSColon | ersIn) | ers) tok, ichMin
+                pnodeT = ParseVariableDeclaration<buildAST>(ERROR_RECOVERY_ACTUAL_((ersSColon | ersIn) | ers) tok, ichMin
 #if PARSENODE_EXTENSIONS
-                                                                , ichDeadRangeMin
+                                                            , ichDeadRangeMin
 #endif
-                                                                , /*fAllowIn = */FALSE
-                                                                , /*pfForInOk = */&fForInOrOfOkay);
-                }
+                                                            , /*fAllowIn = */FALSE
+                                                            , /*pfForInOk = */&fForInOrOfOkay);
             }
             break;
         case tkSColon:
@@ -9179,11 +9217,25 @@ LRestart:
             fForInOrOfOkay = FALSE;
             break;
         default:
-LDefaultTokenFor:
-            pnodeT = ParseExpr<buildAST>(ERROR_RECOVERY_ACTUAL_((ersSColon | ersIn) | ers) koplNo, &fForInOrOfOkay, /*fAllowIn = */FALSE);
-            if (buildAST)
             {
-                pnodeT->isUsed=false;
+LDefaultTokenFor:
+               RestorePoint exprStart;
+                tokens beforeToken = tok;
+                m_pscan->Capture(&exprStart);
+                pnodeT = ParseExpr<buildAST>(ERROR_RECOVERY_ACTUAL_((ersSColon | ersIn) | ers) koplNo, &fForInOrOfOkay, /*fAllowIn = */FALSE);
+                if (IsES6DestructuringEnabled() && pnodeT != nullptr && (beforeToken == tkLBrack || beforeToken == tkLCurly))
+                {
+                    m_pscan->SeekTo(exprStart);
+                    ParseDestructuredLiteral<false>(ERROR_RECOVERY_ACTUAL_((ersSColon | ersIn) | ers) tkNone, STVariable, false/*isDecl*/, false/*topLevel*/);
+                    if (buildAST)
+                    {
+                        pnodeT = ConvertToPattern(pnodeT);
+                    }
+                }
+                if (buildAST)
+                {
+                    pnodeT->isUsed = false;
+                }
             }
             break;
         }
@@ -9788,7 +9840,14 @@ LEndSwitch:
     }
 
     case tkLCurly:
-        pnode = ParseBlock<buildAST>(ERROR_RECOVERY_ACTUAL_(ers) pnodeLabel, pLabelIdList);
+        if (checkForPossibleObjectPattern && IsPossibleObjectPatternExpression()) // check for {...} = 
+        {
+            pnode = ParseExpr<buildAST>(ERROR_RECOVERY_ACTUAL(ersRCurly | ers));
+        }
+        else
+        {
+            pnode = ParseBlock<buildAST>(ERROR_RECOVERY_ACTUAL_(ers) pnodeLabel, pLabelIdList);
+        }
         break;
 
     case tkSColon:
@@ -10443,7 +10502,7 @@ void Parser::ParseStmtList(ERROR_RECOVERY_FORMAL_ ParseNodePtr *ppnodeList, Pars
         // However, if ersElse is in the recovery set it will not be skipped by Skip(). This
         // means the scanner will not advance and this loop will be called again with the
         // scanner still on "else". A similar situation arises with ')', ':', catch, and finally.
-        if (NULL != (pnodeStmt = ParseStatement<buildAST>(ERROR_RECOVERY_ACTUAL_(ers & (~(ersElse | ersRParen | ersCatch | ersColon))) isSourceElementList)))
+        if (NULL != (pnodeStmt = ParseStatement<buildAST>(ERROR_RECOVERY_ACTUAL_(ers & (~(ersElse | ersRParen | ersCatch | ersColon))) isSourceElementList, IsES6DestructuringEnabled())))
         {
             Assert(buildAST || BindDeferredPidRefs());
             if (buildAST)
@@ -11949,143 +12008,99 @@ LErrorRecovery:
 #endif
 }
 
-template <bool buildAST>
-ParseNodePtr Parser::ParseDestructuredArrayLiteral(ERROR_RECOVERY_FORMAL_ tokens declarationType, bool isDecl, bool topLevel)
+void Parser::AppendToList(ParseNodePtr *node, ParseNodePtr nodeToAppend)
 {
-    Assert(m_token.tk == tkLBrack);
-
-    m_pscan->Scan();
-
-    ParseNodePtr pnodeDestructAsg = nullptr;
-    ParseNodePtr pnodeDestructArr = nullptr;
-    ParseNodePtr pnodeDefault = nullptr;
-
-    ParseNodePtr pnodeList = nullptr;
-    ParseNodePtr *lastNodeRef = nullptr;
-    uint count = 0;
-    int parenCount = 0;
-    bool hasMissingValues = false;
-    bool seenRest = false;
-    charcount_t ichMin = m_pscan->IchMinTok();
-    charcount_t ichLim;
-#if PARSENODE_EXTENSIONS
-    charcount_t ichDeadRangeMin;
-#endif
-
-    for (;;)
+    Assert(nodeToAppend);
+    ParseNodePtr* lastPtr = node;
+    while ((*lastPtr) && (*lastPtr)->nop == knopList)
     {
-        ParseNodePtr pnodeElem = nullptr;
+        lastPtr = &(*lastPtr)->sxBin.pnode2;
+    }
+    auto last = (*lastPtr);
+    if (last)
+    {
+        *lastPtr = CreateBinNode(knopList, last, nodeToAppend, last->ichMin, nodeToAppend->ichLim);
+    }
+    else
+    {
+        *lastPtr = nodeToAppend;
+    }
+}
 
-        switch (m_token.tk)
+ParseNodePtr Parser::ConvertArrayToArrayPattern(ParseNodePtr pnode)
+{
+    Assert(pnode->nop == knopArray);
+    pnode->nop = knopArrayPattern;
+
+    ForEachItemRefInList(&pnode->sxArrLit.pnode1, [&](ParseNodePtr *itemRef) {
+        ParseNodePtr item = *itemRef;
+        if (item->nop == knopAsg)
         {
-        case tkLParen:
-            // Swallow parens, they have no effect.
-            m_pscan->Scan();
-            ++parenCount;
-            continue;
+            itemRef = &item->sxBin.pnode1;
+            item = *itemRef;
+        }
 
-        case tkRParen:
-            m_pscan->Scan();
-            --parenCount;
-            continue;
-
-        // Missing values
-        case tkRBrack:
-            if (count == 0)
-            {
-                break;
-            }
-            // fall through
-        case tkComma:
-            hasMissingValues = true;
-            if (buildAST)
-            {
-                pnodeElem = CreateNodeWithScanner<knopEmpty>();
-            }
-            ++count;
-            break;
-
-        // Nested array literal
-        case tkLBrack:
-            if (isDecl)
-            {
-                pnodeElem = ParseDestructuredArrayLiteral<buildAST>(ERROR_RECOVERY_ACTUAL_(ersComma | ers) declarationType, isDecl, false);
-            }
-            else
-            {
-                pnodeElem = ParseExpr<buildAST>(ERROR_RECOVERY_ACTUAL_(ersComma | ers) koplCma);
-            }
-            ++count;
-            break;
-
-        // Nested object literal
-        case tkLCurly:
-            AssertMsg(false, "Not implemented");
-            break;
-
-        case tkEllipsis:
-            seenRest = true;
-            m_pscan->Scan();
-            if (m_token.tk != tkID && m_token.tk != tkSUPER)
-            {
-                Error(ERRsyntax);
-#if ERROR_RECOVERY                
-                m_token.SetIdentifier(m_pidError);
-#endif
-            }
-            // fall through
-
-        case tkSUPER:
-        case tkID:
+        if (item->nop == knopArray)
         {
-            if (isDecl)
-            {
-                ichMin = m_pscan->IchMinTok();
-#if PARSENODE_EXTENSIONS
-                ichDeadRangeMin = m_pscan->IchLimTok();
-#endif
-                pnodeElem = ParseVariableDeclaration<buildAST>(ERROR_RECOVERY_ACTUAL_(ersComma | ers) declarationType, ichMin
-#if PARSENODE_EXTENSIONS
-                                                               , ichDeadRangeMin
-#endif
-                ,/* fAllowIn */false, /* pfForInOk */nullptr, /* singleDefOnly */true, /* allowInit */!seenRest);
-            }
-            else
-            {
-                // We aren't declaring anything, so scan the ID reference manually.
-                pnodeElem = ParseTerm<buildAST>(ERROR_RECOVERY_ACTUAL_(ersAsg | ersComma | ers) /* fAllowCall */ m_token.tk != tkSUPER);
+            ConvertArrayToArrayPattern(item);
+        }
+        else if (item->nop == knopObject)
+        {
+            *itemRef = ConvertObjectToObjectPattern(item);
+        }
+    });
 
-                // Swallow RParens before a default expression, if any.
-                while (m_token.tk == tkRParen)
-                {
-                    m_pscan->Scan();
-                    --parenCount;
-                }
+    return pnode;
+}
 
-                if (m_token.tk != tkAsg)
-                {
-                    break;
-                }
+ParseNodePtr Parser::CreateObjectPatternNode(charcount_t ichMin, ParseNodePtr pnode1)
+{
+    ParseNodePtr objectPatternNode = CreateNode(knopObjectPattern, ichMin);
+    objectPatternNode->sxObj.pnode1 = pnode1;
+    objectPatternNode->sxObj.pnodeNext = nullptr;
+    return objectPatternNode;
+}
 
-                // Parse the initializer.
-                if (seenRest)
-                {
-                    Error(ERRRestWithDefault);
-                }
-                m_pscan->Scan();
+ParseNodePtr Parser::ConvertObjectToObjectPattern(ParseNodePtr pnodeMemberList)
+{
+    charcount_t ichMin = m_pscan->IchMinTok();
+    ParseNodePtr pnodeMemberNodeList = nullptr;
+    if (pnodeMemberList != nullptr && pnodeMemberList->nop == knopObject)
+    {
+        ichMin = pnodeMemberList->ichMin;
+        pnodeMemberList = pnodeMemberList->sxUni.pnode1;
+    }
 
-                ParseNodePtr pnodeInit = ParseExpr<buildAST>(ERROR_RECOVERY_ACTUAL_(ersComma | ers) koplCma);
+    ForEachItemInList(pnodeMemberList, [&](ParseNodePtr item) {
+        ParseNodePtr memberNode = ConvertMemberToMemberPattern(item);
+        AppendToList(&pnodeMemberNodeList, memberNode);
+    });
 
-                if (buildAST)
-                {
-                    pnodeElem = CreateBinNode(knopAsg, pnodeElem, pnodeInit);
-                }
-            }
-            ++count;
-            break;
-         }
+    return CreateObjectPatternNode(ichMin, pnodeMemberNodeList);
+}
 
-        default:
+ParseNodePtr Parser::GetRightSideNodeFromPattern(ParseNodePtr pnode)
+{
+    Assert(pnode != nullptr);
+    ParseNodePtr rightNode = nullptr;
+    OpCode op = pnode->nop;
+    if (op == knopObject)
+    {
+        rightNode = ConvertObjectToObjectPattern(pnode);
+    }
+    else if (op == knopArray)
+    {
+        rightNode = ConvertArrayToArrayPattern(pnode);
+    }
+    else
+    {
+        // we should allow
+        // references (name/string/knopdots and knopindex)
+        // Allow assignment operator for initializer
+        // rest is syntax error.
+
+        if (!(op == knopName || op == knopStr || op == knopDot || op == knopIndex || op == knopAsg))
+        {
             if (m_token.IsOperator())
             {
                 Error(ERRDestructNoOper);
@@ -12093,63 +12108,317 @@ ParseNodePtr Parser::ParseDestructuredArrayLiteral(ERROR_RECOVERY_FORMAL_ tokens
             Error(ERRDestructIDRef);
         }
 
-        if (buildAST && count > 0)
+        rightNode = pnode;
+    }
+
+    return rightNode;
+}
+
+ParseNodePtr Parser::ConvertMemberToMemberPattern(ParseNodePtr pnodeMember)
+{
+    Assert(pnodeMember->nop == knopMember || pnodeMember->nop == knopMemberShort);
+
+    ParseNodePtr rightNode = GetRightSideNodeFromPattern(pnodeMember->sxBin.pnode2);
+    ParseNodePtr resultNode = CreateBinNode(knopObjectPatternMember, pnodeMember->sxBin.pnode1, rightNode);
+    resultNode->ichMin = pnodeMember->ichMin;
+    resultNode->ichLim = pnodeMember->ichLim;
+    return resultNode;
+}
+
+ParseNodePtr Parser::ConvertToPattern(ParseNodePtr pnode)
+{
+    if (pnode != nullptr)
+    {
+        if (pnode->nop == knopArray)
         {
-            if (seenRest)
+            ConvertArrayToArrayPattern(pnode);
+        }
+        else if (pnode->nop == knopObject)
+        {
+            pnode = ConvertObjectToObjectPattern(pnode);
+        }
+    }
+    return pnode;
+}
+
+bool Parser::IsPossibleObjectPatternExpression()
+{
+    // Goal of this function to achieve if the current text satisfies
+    // { ..<bunch of expression ...} = 
+
+    Assert(m_token.tk == tkLCurly);
+
+    int curlyCount = 1;
+    bool isValid = false;
+
+    RestorePoint begin;
+    m_pscan->Capture(&begin);
+
+    while (m_token.tk != tkEOF)
+    {
+        m_pscan->Scan();
+        if (m_token.tk == tkLCurly)
+        {
+            curlyCount++;
+        }
+        else if (m_token.tk == tkRCurly)
+        {
+            curlyCount--;
+            if (curlyCount == 0)
             {
-                ParseNodePtr pnodeRest = CreateNodeWithScanner<knopEllipsis>();
-                pnodeRest->sxUni.pnode1 = pnodeElem;
-                pnodeElem = pnodeRest;
+                m_pscan->Scan();
+                isValid = (m_token.tk == tkAsg);
+                break;
             }
-            AddToNodeListEscapedUse(&pnodeList, &lastNodeRef, pnodeElem);
-#if PARSENODE_EXTENSIONS
-            if (LanguageServiceMode() && pnodeList && pnodeList->nop == knopList)
-            {
-                pnodeList->ichLim = pnodeElem->ichLim;          // update the ichLim of the list
-                pnodeList->grfpn |= PNodeFlags::fpnDclList;  // this is a var, let, or const decl list, mark it
-            }
-#endif
+        }
+        else if (m_token.tk == tkStrTmplBasic || m_token.tk == tkStrTmplBegin)
+        {
+            // String template has it's own state machine - let's re-use that.
+            ParseStringTemplateDecl<false>(ERROR_RECOVERY_ACTUAL_(ersRCurly) nullptr /*pnodeTagFnc*/);
         }
 
-        // Swallow RParens.
-        while (m_token.tk == tkRParen)
+        Assert(curlyCount != 0);
+    }
+    m_pscan->SeekTo(begin);
+    return isValid;
+}
+
+template <bool buildAST>
+ParseNodePtr Parser::ParseDestructuredLiteral(ERROR_RECOVERY_FORMAL_ tokens declarationType, SymbolType symbolType, bool isDecl, bool topLevel/* = true*/)
+{
+    ParseNodePtr pnode = nullptr;
+    Assert(m_token.tk == tkLCurly || m_token.tk == tkLBrack);
+    if (m_token.tk == tkLCurly)
+    {
+        pnode = ParseDestructuredObjectLiteral<buildAST>(ERROR_RECOVERY_ACTUAL_(ersComma | ers) declarationType, symbolType, isDecl, topLevel);
+    }
+    else
+    {
+        pnode = ParseDestructuredArrayLiteral<buildAST>(ERROR_RECOVERY_ACTUAL_(ersComma | ers) declarationType, isDecl, topLevel);
+    }
+
+    return pnode;
+}
+
+template <bool buildAST>
+ParseNodePtr Parser::ParseDestructuredInitializer(ERROR_RECOVERY_FORMAL_ ParseNodePtr lhsNode, bool isDecl, bool topLevel)
+{
+    m_pscan->Scan();
+
+    if (topLevel && m_token.tk != tkAsg
+        // Check for For-in or for-of
+        && !(m_token.tk == tkIN || m_scriptContext->GetConfig()->IsES6IteratorsEnabled() && m_token.tk == tkID && m_token.GetIdentifier(m_phtbl) == wellKnownPropertyPids.of))
+    {
+        Error(ERRDestructInit);
+    }
+
+    if (!isDecl || m_token.tk != tkAsg)
+    {
+        return lhsNode;
+    }
+
+    m_pscan->Scan();
+
+    ParseNodePtr pnodeDefault = ParseExpr<buildAST>(ERROR_RECOVERY_ACTUAL_(ers) koplCma);
+    ParseNodePtr pnodeDestructAsg = nullptr;
+    if (buildAST)
+    {
+        Assert(lhsNode != nullptr);
+
+        pnodeDestructAsg = CreateNodeWithScanner<knopAsg>();
+        pnodeDestructAsg->sxBin.pnode1 = lhsNode;
+        pnodeDestructAsg->sxBin.pnode2 = pnodeDefault;
+        pnodeDestructAsg->ichMin = lhsNode->ichMin;
+        pnodeDestructAsg->ichLim = pnodeDefault->ichLim;
+    }
+    return pnodeDestructAsg;
+}
+
+template <bool buildAST>
+ParseNodePtr Parser::ParseDestructuredObjectLiteral(ERROR_RECOVERY_FORMAL_ tokens declarationType, SymbolType symbolType, bool isDecl, bool topLevel/* = true*/)
+{
+    Assert(m_token.tk == tkLCurly);
+    m_pscan->Scan();
+
+    charcount_t ichMin = m_pscan->IchMinTok();
+    if (!isDecl)
+    {
+        declarationType = tkLCurly;
+    }
+    ParseNodePtr pnodeMemberList = ParseMemberList<buildAST>(ERROR_RECOVERY_ACTUAL_(ersRCurly | ers) nullptr/*pNameHint*/, nullptr/*pHintLength*/, declarationType, symbolType);
+    Assert(m_token.tk == tkRCurly);
+
+    ParseNodePtr objectPatternNode = nullptr;
+    if (buildAST)
+    {
+        objectPatternNode = CreateObjectPatternNode(ichMin, pnodeMemberList);
+    }
+    return ParseDestructuredInitializer<buildAST>(ERROR_RECOVERY_ACTUAL_(ersRCurly | ers) objectPatternNode, isDecl, topLevel);
+}
+
+template <bool buildAST>
+ParseNodePtr Parser::ParseDestructuredVarDecl(ERROR_RECOVERY_FORMAL_ tokens declarationType, SymbolType symbolType, bool isDecl, bool *hasSeenRest, bool topLevel/* = true*/)
+{
+    ParseNodePtr pnodeElem = nullptr;
+    int parenCount = 0;
+    bool seenRest = false;
+
+    while (m_token.tk == tkLParen)
+    {
+        m_pscan->Scan();
+        ++parenCount;
+    }
+
+    if (m_token.tk == tkLCurly || m_token.tk == tkLBrack)
+    {
+        // Go recursively
+        pnodeElem = ParseDestructuredLiteral<buildAST>(ERROR_RECOVERY_ACTUAL_(ersComma | ers) declarationType, symbolType, isDecl, false /*topLevel*/);
+    }
+    else if (m_token.tk == tkEllipsis || m_token.tk == tkSUPER || m_token.tk == tkID)
+    {
+        if (m_token.tk == tkEllipsis)
         {
+            seenRest = true;
             m_pscan->Scan();
-            --parenCount;
-        }
-        if (parenCount != 0)
-        {
-            Error(ERRnoRparen);
-        }
-
-        if (m_token.tk == tkRBrack)
-        {
-            break;
+            if (m_token.tk != tkID && m_token.tk != tkSUPER)
+            {
+                Error(ERRsyntax);
+            }
         }
 
-        // Rest must be in the last position.
+        if (isDecl)
+        {
+            charcount_t ichMin = m_pscan->IchMinTok();
+#if PARSENODE_EXTENSIONS
+            charcount_t ichDeadRangeMin = m_pscan->IchLimTok();
+#endif
+            pnodeElem = ParseVariableDeclaration<buildAST>(ERROR_RECOVERY_ACTUAL_(ersComma | ers) declarationType, ichMin
+#if PARSENODE_EXTENSIONS
+                , ichDeadRangeMin
+#endif
+                ,/* fAllowIn */false, /* pfForInOk */nullptr, /* singleDefOnly */true, /* allowInit */!seenRest, false /*topLevelParse*/);
+
+        }
+        else
+        {
+            // We aren't declaring anything, so scan the ID reference manually.
+            pnodeElem = ParseTerm<buildAST>(ERROR_RECOVERY_ACTUAL_(ersAsg | ersComma | ers) /* fAllowCall */ m_token.tk != tkSUPER);
+        }
+    }
+    else if (!(m_token.tk == tkComma || m_token.tk == tkRBrack || m_token.tk == tkRCurly))
+    {
+        if (m_token.IsOperator())
+        {
+            Error(ERRDestructNoOper);
+        }
+        Error(ERRDestructIDRef);
+    }
+
+    // Swallow RParens before a default expression, if any.
+    while (m_token.tk == tkRParen)
+    {
+        m_pscan->Scan();
+        --parenCount;
+    }
+
+    if (hasSeenRest != nullptr)
+    {
+        *hasSeenRest = seenRest;
+    }
+
+    if (m_token.tk == tkAsg)
+    {
+        // Parse the initializer.
         if (seenRest)
+        {
+            Error(ERRRestWithDefault);
+        }
+        m_pscan->Scan();
+
+        ParseNodePtr pnodeInit = ParseExpr<buildAST>(ERROR_RECOVERY_ACTUAL_(ersComma | ers) koplCma);
+
+        if (buildAST)
+        {
+            pnodeElem = CreateBinNode(knopAsg, pnodeElem, pnodeInit);
+        }
+    }
+
+    if (buildAST && seenRest)
+    {
+        ParseNodePtr pnodeRest = CreateNodeWithScanner<knopEllipsis>();
+        pnodeRest->sxUni.pnode1 = pnodeElem;
+        pnodeElem = pnodeRest;
+    }
+
+    while (m_token.tk == tkRParen)
+    {
+        m_pscan->Scan();
+        --parenCount;
+    }
+
+    if (!(m_token.tk == tkComma || m_token.tk == tkRBrack || m_token.tk == tkRCurly))
+    {
+        if (m_token.IsOperator())
+        {
+            Error(ERRDestructNoOper);
+        }
+        Error(ERRsyntax);
+    }
+
+    if (parenCount != 0)
+    {
+        Error(ERRnoRparen);
+    }
+    return pnodeElem;
+}
+
+template <bool buildAST>
+ParseNodePtr Parser::ParseDestructuredArrayLiteral(ERROR_RECOVERY_FORMAL_ tokens declarationType, bool isDecl, bool topLevel)
+{
+    Assert(m_token.tk == tkLBrack);
+
+    m_pscan->Scan();
+
+    ParseNodePtr pnodeDestructArr = nullptr;
+    ParseNodePtr pnodeList = nullptr;
+    ParseNodePtr *lastNodeRef = nullptr;
+    uint count = 0;
+    bool hasMissingValues = false;
+    bool seenRest = false;
+    charcount_t ichMin = m_pscan->IchMinTok();
+
+    while (true)
+    {
+        if (seenRest) // Rest must be in the last position.
         {
             Error(ERRDestructRestLast);
         }
 
-        if (m_token.tk != tkComma)
+        ParseNodePtr pnodeElem = ParseDestructuredVarDecl<buildAST>(ERROR_RECOVERY_ACTUAL_(ersComma | ers) declarationType, STVariable, isDecl, &seenRest, topLevel);
+        if (buildAST)
         {
-            if (m_token.IsOperator())
+            if (pnodeElem == nullptr && buildAST)
             {
-                Error(ERRDestructNoOper);
+                pnodeElem = CreateNodeWithScanner<knopEmpty>();
+                hasMissingValues = true;
             }
-            Error(ERRsyntax);
+            AddToNodeListEscapedUse(&pnodeList, &lastNodeRef, pnodeElem);
+        }
+        count++;
+
+        if (m_token.tk == tkRBrack)
+        {
+            // Done
+            break;
         }
 
+        Assert(m_token.tk == tkComma);
         m_pscan->Scan();
     }
 
-    ichLim = m_pscan->IchLimTok();
-
     if (buildAST)
     {
-        pnodeDestructArr = CreateNodeWithScanner<knopArray>();
+        pnodeDestructArr = CreateNodeWithScanner<knopArrayPattern>();
         pnodeDestructArr->sxArrLit.pnode1 = pnodeList;
         pnodeDestructArr->sxArrLit.arrayOfTaggedInts = false;
         pnodeDestructArr->sxArrLit.arrayOfInts = false;
@@ -12158,7 +12427,7 @@ ParseNodePtr Parser::ParseDestructuredArrayLiteral(ERROR_RECOVERY_FORMAL_ tokens
         pnodeDestructArr->sxArrLit.count = count;
         pnodeDestructArr->sxArrLit.spreadCount = seenRest ? 1 : 0;
         pnodeDestructArr->ichMin = ichMin;
-        pnodeDestructArr->ichLim = ichLim;
+        pnodeDestructArr->ichLim = m_pscan->IchLimTok();
 
         if (pnodeDestructArr->sxArrLit.pnode1)
         {
@@ -12166,34 +12435,7 @@ ParseNodePtr Parser::ParseDestructuredArrayLiteral(ERROR_RECOVERY_FORMAL_ tokens
         }
     }
 
-    m_pscan->Scan();
-
-    if (topLevel
-        && m_token.tk != tkAsg
-        // Check for For-in or for-of
-        && !(m_token.tk == tkIN || m_scriptContext->GetConfig()->IsES6IteratorsEnabled() && m_token.tk == tkID && m_token.GetIdentifier(m_phtbl) == wellKnownPropertyPids.of))
-    {
-        Error(ERRDestructInit);
-    }
-
-    if (!isDecl || (isDecl && m_token.tk != tkAsg))
-    {
-        return pnodeDestructArr;
-    }
-
-    m_pscan->Scan();
-    pnodeDefault = ParseExpr<buildAST>(ERROR_RECOVERY_ACTUAL_(ers) koplCma);
-
-    if (buildAST)
-    {
-        pnodeDestructAsg = CreateNodeWithScanner<knopAsg>();
-        pnodeDestructAsg->sxBin.pnode1 = pnodeDestructArr;
-        pnodeDestructAsg->sxBin.pnode2 = pnodeDefault;
-        pnodeDestructAsg->ichMin = ichMin;
-        pnodeDestructAsg->ichLim = m_pscan->IchLimTok();
-    }
-
-    return pnodeDestructAsg;
+    return ParseDestructuredInitializer<buildAST>(ERROR_RECOVERY_ACTUAL_(ersRBrack | ers) pnodeDestructArr, isDecl, topLevel);
 }
 
 void Parser::CaptureContext(ParseContext *parseContext) const
@@ -12428,6 +12670,19 @@ void PrintPnodeWIndent(ParseNode *pnode,int indentAmt) {
       PrintPnodeWIndent(pnode->sxUni.pnode1,indentAmt+INDENT_SIZE);
       break;
       //PTNODE(knopArray      , "arr cnst"    ,None    ,Uni  ,fnopUni)
+
+  case knopArrayPattern:
+      Indent(indentAmt);
+      Output::Print(L"Array Pattern\n");
+      PrintPnodeListWIndent(pnode->sxUni.pnode1, indentAmt + INDENT_SIZE);
+      break;
+
+  case knopObjectPattern:
+      Indent(indentAmt);
+      Output::Print(L"Object Pattern\n");
+      PrintPnodeListWIndent(pnode->sxObj.pnode1, indentAmt + INDENT_SIZE);
+      break;
+
   case knopArray:
       Indent(indentAmt);
       Output::Print(L"Array Literal\n");
@@ -12735,9 +12990,17 @@ void PrintPnodeWIndent(ParseNode *pnode,int indentAmt) {
       PrintPnodeWIndent(pnode->sxBin.pnode1,indentAmt+INDENT_SIZE);
       // TODO: print associated identifier
       break;
+
+  case knopComputedName:
+      Indent(indentAmt);
+      Output::Print(L"ComputedProperty\n");
+      PrintPnodeWIndent(pnode->sxUni.pnode1, indentAmt + INDENT_SIZE);
+      break;
+
       //PTNODE(knopMember     , ":"            ,None    ,Bin  ,fnopBin)
   case knopMember:
   case knopMemberShort:
+  case knopObjectPatternMember:
       Indent(indentAmt);
       Output::Print(L":\n");
       PrintPnodeWIndent(pnode->sxBin.pnode1,indentAmt+INDENT_SIZE);
