@@ -1939,6 +1939,7 @@ void BindReference(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
     // where the "this" instance must be found dynamically.
 
     bool isCallNode = false;
+    bool funcEscapes = false;
     switch (pnode->nop)
     {
     case knopCall:
@@ -1949,10 +1950,12 @@ void BindReference(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
     case knopTypeof:
         pnode = pnode->sxUni.pnode1;
         break;
-    case knopAsg:
     case knopDot:
     case knopIndex:
     case knopScope:
+        funcEscapes = true;
+        // fall through
+    case knopAsg:
         pnode = pnode->sxBin.pnode1;
         break;
     default:
@@ -1963,6 +1966,16 @@ void BindReference(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
     if (pnode->nop == knopName)
     {
         pnode->sxPid.sym = byteCodeGenerator->FindSymbol(pnode->sxPid.symRef, pnode->sxPid.pid, isCallNode);
+
+        if (funcEscapes && 
+            pnode->sxPid.sym &&
+            pnode->sxPid.sym->GetSymbolType() == STFunction &&
+            (!pnode->sxPid.sym->GetIsGlobal() || (byteCodeGenerator->GetFlags() & fscrEval)))
+        {
+            // Dot, index, and scope ops can cause a local function on the LHS to escape.
+            // Make sure scopes are not cached in this case.
+            byteCodeGenerator->FuncEscapes(pnode->sxPid.sym->GetScope());
+        }
     }
 }
 
