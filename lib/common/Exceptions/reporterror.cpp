@@ -43,6 +43,12 @@ __declspec(noinline) void CustomHeap_BadPageState_fatal_error(
     ReportFatalException(context, E_UNEXPECTED, CustomHeap_MEMORYCORRUPTION, scenario);
 };
 
+__declspec(noinline) void MarkStack_OOM_fatal_error()
+{
+    int scenario = 1;
+    ReportFatalException(NULL, E_OUTOFMEMORY, MarkStack_OUTOFMEMORY, scenario);
+};
+
 __declspec(noinline) void Amd64StackWalkerOutOfContexts_fatal_error(
     __in ULONG_PTR context)
 {

@@ -14,7 +14,8 @@ enum ErrorReason
     WriteBarrier_OUTOFMEMORY = 7,
     CustomHeap_MEMORYCORRUPTION = 8,
     LargeHeapBlock_Metadata_Corrupt = 9,
-    Fatal_Version_Inconsistency = 10
+    Fatal_Version_Inconsistency = 10,
+    MarkStack_OUTOFMEMORY = 11
 };
 
 EXTERN_C void ReportFatalException(
@@ -39,6 +40,8 @@ void X64WriteBarrier_OOM_fatal_error();
 #endif
 
 void DebugHeap_OOM_fatal_error();
+
+void MarkStack_OOM_fatal_error();
 
 void Binary_Inconsistency_fatal_error();
 void Version_Inconsistency_fatal_error();

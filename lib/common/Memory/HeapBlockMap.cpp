@@ -831,12 +831,15 @@ HeapBlockMap32::Rescan(Recycler * recycler, bool resetWriteWatch)
     return scannedPageCount;
 }
 
-void
+bool
 HeapBlockMap32::OOMRescan(Recycler * recycler)
 {
+    this->anyHeapBlockRescannedDuringOOM = false;
+    bool noHeapBlockNeedsRescan = true;
+
     // Loop through segments and find pages that need OOM Rescan.
     
-    this->ForEachSegment(recycler, [=] (char * segmentStart, size_t segmentLength, Segment * currentSegment, PageAllocator * segmentPageAllocator) {
+    this->ForEachSegment(recycler, [=, &noHeapBlockNeedsRescan] (char * segmentStart, size_t segmentLength, Segment * currentSegment, PageAllocator * segmentPageAllocator) {
         Assert(segmentLength % AutoSystemInfo::PageSize == 0);
         
         // Process Small non-leaf segments (including write barrier blocks).
@@ -871,6 +874,8 @@ HeapBlockMap32::OOMRescan(Recycler * recycler)
                     {
                         if (heapBlock->GetAndClearNeedOOMRescan())
                         {
+                            noHeapBlockNeedsRescan = false;
+
                             HeapBlock::HeapBlockType blockType = chunk->blockInfo[id2].blockType;
 
                             // Determine block type and process as appropriate
@@ -929,6 +934,13 @@ HeapBlockMap32::OOMRescan(Recycler * recycler)
                 segmentPageAllocator == recycler->GetRecyclerLargeBlockPageAllocator());
         }
     });
+
+    // TODO: Enable this assert post-Win10
+    // Assert(this->anyHeapBlockRescannedDuringOOM);
+    // Success if:
+    //  No heap block needs OOM rescan OR
+    //  A single heap block was rescanned
+    return noHeapBlockNeedsRescan || this->anyHeapBlockRescannedDuringOOM;
 }
 
 template bool HeapBlockMap32::RescanHeapBlockOnOOM<SmallNormalHeapBlock>(SmallNormalHeapBlock* heapBlock, char* pageAddress, HeapBlock::HeapBlockType blockType, uint bucketIndex, L2MapChunk * chunk, Recycler * recycler);
@@ -968,6 +980,7 @@ HeapBlockMap32::RescanHeapBlockOnOOM(TBlockType* heapBlock, char* pageAddress, H
         }
     }
 
+    this->anyHeapBlockRescannedDuringOOM = true;
 
     return true;
 }
@@ -1287,15 +1300,20 @@ HeapBlockMap64::Rescan(Recycler * recycler, bool resetWriteWatch)
     return scannedPageCount;
 }
 
-void
+bool
 HeapBlockMap64::OOMRescan(Recycler * recycler)
 {
     Node * node = this->list;
     while (node != null)
     {
-        node->map.OOMRescan(recycler);
+        if (!node->map.OOMRescan(recycler))
+        {
+            return false;
+        }
+
         node = node->next;
     }
+    return true;
 }
 
 void 

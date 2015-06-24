@@ -18,10 +18,12 @@ private:
     };   
 
 public:
+    static const int MarkCandidateSize = sizeof(MarkCandidate);
+
     MarkContext(Recycler * recycler, PagePool * pagePool);
     ~MarkContext();
 
-    void Init();
+    void Init(uint reservedPageCount);
     void Clear();
     
     Recycler * GetRecycler() { return this->recycler; }
@@ -65,7 +67,14 @@ public:
         Assert(!GetPageAllocator()->DisableAllocationOutOfMemory());
         return true;
     }
-    
+
+#if DBG
+    void VerifyPostMarkState()
+    {
+        Assert(this->markStack.HasChunk());
+    }
+#endif
+
     void Cleanup() 
     {
         Assert(!HasPendingObjects());

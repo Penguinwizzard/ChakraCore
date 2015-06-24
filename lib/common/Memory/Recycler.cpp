@@ -737,7 +737,8 @@ Recycler::Initialize(const bool forceInThread, JsUtil::ThreadService *threadServ
         );
 #endif
 
-    markContext.Init();
+    markContext.Init(Recycler::PrimaryMarkStackReservedPageCount);
+
 #if defined(RECYCLER_DUMP_OBJECT_GRAPH) || defined(LEAK_REPORT) || defined(CHECK_MEMORY_LEAK)
     isPrimaryMarkContextInitialized = true;
 #endif
@@ -1898,6 +1899,8 @@ Recycler::ProcessMark(bool background)
     {
         GCETW(GC_MARK_STOP, (this));
     }
+
+    DebugOnly(this->markContext.VerifyPostMarkState());
 }
 
 
@@ -2474,7 +2477,15 @@ Recycler::EndMarkOnLowMemory()
         this->isProcessingRescan = true;
 #endif
 
-        heapBlockMap.OOMRescan(this);
+        if (!heapBlockMap.OOMRescan(this))
+        {
+            // Kill the process- we couldn't even rescan a single block
+            // We are in pretty low memory state at this point
+            // The fail-fast is present for two reasons:
+            // 1) Defense-in-depth for cases we hadn't thought about
+            // 2) Deal with cases like -MaxMarkStackPageCount:1 which can still hang without the fail-fast
+            MarkStack_OOM_fatal_error();
+        }
 
         autoHeap.Rescan(RescanFlags_None);
         

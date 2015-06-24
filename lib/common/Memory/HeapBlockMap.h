@@ -74,7 +74,7 @@ public:
 
     void Cleanup(bool concurrentFindImplicitRoot);
 
-    void OOMRescan(Recycler * recycler);
+    bool OOMRescan(Recycler * recycler);
 
 #ifdef RECYCLER_STRESS
     void InduceFalsePositives(Recycler * recycler);
@@ -193,7 +193,8 @@ private:
     bool RescanPage(void * dirtyPage, bool* anyObjectsMarkedOnPage, Recycler * recycler);
 
     uint count;
-    L2MapChunk * map[L1Count];    
+    L2MapChunk * map[L1Count];
+    bool anyHeapBlockRescannedDuringOOM;
 
 #if defined(_M_X64_OR_ARM64)
     // On 64 bit, this structure only maps one particular 32 bit space.
@@ -257,7 +258,7 @@ public:
 
     void Cleanup(bool concurrentFindImplicitRoot);
 
-    void OOMRescan(Recycler * recycler);
+    bool OOMRescan(Recycler * recycler);
 
 #ifdef RECYCLER_STRESS
     void InduceFalsePositives(Recycler * recycler);

@@ -769,6 +769,18 @@ private:
     void ClearMarkMap();
 #endif
 
+    // Number of pages to reserve for the primary mark stack
+    // This is the minimum number of pages to guarantee that a single heap block 
+    // can be rescanned in the worst possible case where every object in a heap block
+    // in the smallest bucket needs to be rescanned
+    // These many pages being reserved guarantees that in OOM Rescan, we can make progress
+    // on every rescan iteration
+    // We add one because there is a small amount of the page reserved for page pool metadata
+    // so we need to allocate an additional page to be sure
+    // Currently, this works out to 2 pages on 32-bit and 5 pages on 64-bit
+    static const int PrimaryMarkStackReservedPageCount =
+        ((SmallAllocationBlockAttributes::PageCount * MarkContext::MarkCandidateSize) / SmallAllocationBlockAttributes::MinObjectSize) + 1;
+
     MarkContext markContext;
 
     // Contexts for parallel marking.  

@@ -15,9 +15,10 @@ class PagePoolPage
 private:
     PageAllocator * pageAllocator;
     PageSegment * pageSegment;
+    bool isReserved;
 
 public:
-    static PagePoolPage * New(PageAllocator * pageAllocator)
+    static PagePoolPage * New(PageAllocator * pageAllocator, bool isReserved = false)
     {
         PageSegment * pageSegment;
         PagePoolPage * newPage = (PagePoolPage *)pageAllocator->AllocPages(1, &pageSegment);
@@ -28,6 +29,8 @@ public:
 
         newPage->pageAllocator = pageAllocator;
         newPage->pageSegment = pageSegment;
+        newPage->isReserved = isReserved;
+
         return newPage;
     }
 
@@ -35,8 +38,12 @@ public:
     {
         this->pageAllocator->ReleasePages(this, 1, this->pageSegment);
     }
-};
 
+    bool IsReserved()
+    {
+        return isReserved;
+    }
+};
 
 class PagePool
 {
@@ -50,26 +57,65 @@ private:
     PageAllocator pageAllocator;
     PagePoolFreePage * freePageList;
 
+    // List of pre-allocated pages that are 
+    // freed only when the page pool is destroyed
+    PagePoolFreePage * reservedPageList;
+
 public:
     PagePool(Js::ConfigFlagsTable& flagsTable) :
         pageAllocator(NULL, flagsTable, PageAllocatorType_GCThread, PageAllocator::DefaultMaxFreePageCount, false, null, PageAllocator::DefaultMaxAllocPageCount, 0, true),
-        freePageList(null)
+        freePageList(null),
+        reservedPageList(null)
     {
+    }
+
+    void ReservePages(uint reservedPageCount)
+    {
+        for (uint i = 0; i < reservedPageCount; i++)
+        {
+            PagePoolPage* page = PagePoolPage::New(&pageAllocator, true);
+
+            if (page == nullptr)
+            {
+                Js::Throw::OutOfMemory();
+            }
+            FreeReservedPage(page);
+        }
     }
 
     ~PagePool()
     {
         Assert(freePageList == null);
+
+        if (reservedPageList != nullptr)
+        {
+            while (reservedPageList != nullptr)
+            {
+                PagePoolFreePage * page = reservedPageList;
+                Assert(page->IsReserved());
+                reservedPageList = reservedPageList->nextFreePage;
+                page->Free();
+            }
+        }
     }
 
     PageAllocator * GetPageAllocator() { return &this->pageAllocator; }
     
-    PagePoolPage * GetPage()
+    PagePoolPage * GetPage(bool useReservedPages = false)
     {
-        if (freePageList != null)
+        if (freePageList != nullptr)
         {
             PagePoolPage * page = freePageList;
             freePageList = freePageList->nextFreePage;
+            Assert(!page->IsReserved());
+            return page;
+        }
+
+        if (useReservedPages && reservedPageList != nullptr)
+        {
+            PagePoolPage * page = reservedPageList;
+            reservedPageList = reservedPageList->nextFreePage;
+            Assert(page->IsReserved());
             return page;
         }
 
@@ -79,6 +125,12 @@ public:
     void FreePage(PagePoolPage * page)
     {
         PagePoolFreePage * freePage = (PagePoolFreePage *)page;
+        if (freePage->IsReserved())
+        {
+            return FreeReservedPage(page);
+
+        }
+
         freePage->nextFreePage = freePageList;
         freePageList = freePage;
     }
@@ -88,6 +140,7 @@ public:
         while (freePageList != null)
         {
             PagePoolFreePage * page = freePageList;
+            Assert(!page->IsReserved());
             freePageList = freePageList->nextFreePage;
             page->Free();
         }
@@ -101,5 +154,15 @@ public:
 #if DBG
     bool IsEmpty() const { return (freePageList == null); }
 #endif
-};
+
+private:
+    void FreeReservedPage(PagePoolPage * page)
+    {
+        Assert(page->IsReserved());
+        PagePoolFreePage * freePage = (PagePoolFreePage *)page;
+
+        freePage->nextFreePage = reservedPageList;
+        reservedPageList = freePage;
+    }
+ };
 }

@@ -19,7 +19,7 @@ public:
     PageStack(PagePool * pagePool);
     ~PageStack();
 
-    void Init();
+    void Init(uint reservedPageCount = 0);
     void Clear();
 
     bool Pop(T * item);
@@ -31,6 +31,12 @@ public:
     void Release();
 
     bool IsEmpty() const;
+#if DBG 
+    bool HasChunk() const
+    {
+        return this->currentChunk != nullptr;
+    }
+#endif
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
     void SetMaxPageCount(size_t maxPageCount) { this->maxPageCount = max<size_t>(maxPageCount, 1); }
@@ -48,7 +54,8 @@ private:
     T * chunkEnd;
     Chunk * currentChunk; 
     PagePool * pagePool;
-    
+    bool usesReservedPages;
+
 #if DBG
     size_t count;    
 #endif
@@ -137,7 +144,8 @@ PageStack<T>::PageStack(PagePool * pagePool) :
     currentChunk(null), 
     nextEntry(null),
     chunkStart(null),
-    chunkEnd(null)
+    chunkEnd(null),
+    usesReservedPages(false)
 {
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
     pageCount = 0;
@@ -161,8 +169,14 @@ PageStack<T>::~PageStack()
 
 
 template <typename T>
-void PageStack<T>::Init()
+void PageStack<T>::Init(uint reservedPageCount)
 {
+    if (reservedPageCount > 0)
+    {
+        this->usesReservedPages = true;
+        this->pagePool->ReservePages(reservedPageCount);
+    }
+
     // Preallocate one chunk.
     Assert(currentChunk == null);
     currentChunk = CreateChunk();
@@ -171,7 +185,6 @@ void PageStack<T>::Init()
         Js::Throw::OutOfMemory();
     }
     currentChunk->nextChunk = null;
-
     chunkStart = currentChunk->entries;
     chunkEnd = &currentChunk->entries[EntriesPerChunk];
     nextEntry = chunkStart;
@@ -199,7 +212,8 @@ typename PageStack<T>::Chunk * PageStack<T>::CreateChunk()
         return null;
     }
 #endif
-    Chunk * newChunk = (Chunk *)this->pagePool->GetPage();
+    Chunk * newChunk = (Chunk *)this->pagePool->GetPage(usesReservedPages);
+
     if (newChunk == null)
     {
         return null;

@@ -34,9 +34,9 @@ void MarkContext::OnObjectMarked(void* object, void* parent)
 }
 #endif
 
-void MarkContext::Init()
+void MarkContext::Init(uint reservedPageCount)
 {
-    markStack.Init();
+    markStack.Init(reservedPageCount);
     trackStack.Init();
 }
 
