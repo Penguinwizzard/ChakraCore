@@ -617,6 +617,7 @@ class Recycler
     friend class RecyclerSweep;
     friend class MarkContext;
     friend class HeapBlock;
+    friend class HeapBlockMap32;
     friend class RecyclerParallelThread;
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
     friend class AutoProtectPages;

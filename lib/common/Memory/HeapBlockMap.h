@@ -181,7 +181,7 @@ private:
     bool MarkInternal(L2MapChunk * chunk, void * candidate);
 
     template <bool interlocked, bool updateChunk>
-    bool MarkInteriorInternal(L2MapChunk *& chunk, void * originalCandidate, void * realCandidate);
+    bool MarkInteriorInternal(MarkContext * markContext, L2MapChunk *& chunk, void * originalCandidate, void * realCandidate);
 
     template <typename TBlockType>
     TBlockType* GetHeapBlockForRescan(L2MapChunk* chunk, uint id2) const;
@@ -268,6 +268,7 @@ public:
 #endif
 
 private:
+    friend class HeapBlockMap32;
 #ifdef JD_PRIVATE
     friend class HeapBlockHelper;
 #endif
