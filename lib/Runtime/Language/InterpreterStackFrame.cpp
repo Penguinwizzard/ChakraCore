@@ -6396,12 +6396,6 @@ namespace Js
     }
 
     template <class T>
-    void InterpreterStackFrame::OP_BindEvt(const unaligned T * playout)
-    {
-        JavascriptOperators::OP_BindEvent(GetReg(playout->Instance), m_functionBody->GetReferencedPropertyId(playout->PropertyIdIndex), GetReg(playout->Value));
-    }
-
-    template <class T>
     void InterpreterStackFrame::OP_InitGetFld(const unaligned T * playout)
     {
         JavascriptOperators::OP_InitGetter(GetReg(playout->Instance), m_functionBody->GetReferencedPropertyId(playout->PropertyIdIndex), GetReg(playout->Value));

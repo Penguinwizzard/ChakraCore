@@ -57,7 +57,6 @@ enum ErrorRecoverySet
     ersLCurly    = 1u << 11, // tkLCurly
     ersLParen    = 1u << 12, // tkLParen
     ersLBrack    = 1u << 13, // tkLBrack
-    ersScope     = 1u << 14, // tkScope
     ersIn        = 1u << 15, // tkIN
     ersSCase     = 1u << 16, // tkCASE, tkDEFAULT
     ersElse      = 1u << 17, // tkELSE
@@ -814,9 +813,9 @@ private:
     template<bool buildAST> void ParseComputedName(ERROR_RECOVERY_FORMAL_ ParseNodePtr* ppnodeName, LPCOLESTR* ppNameHint, LPCOLESTR* ppFullNameHint = nullptr, ulong *returnLength = nullptr);
     template<bool buildAST> ParseNodePtr ParseMemberGetSet(ERROR_RECOVERY_FORMAL_ OpCode nop, LPCOLESTR* ppNameHint);
     template<bool buildAST> ParseNodePtr ParseFncDecl(ERROR_RECOVERY_FORMAL_ ushort flags, LPCOLESTR pNameHint = NULL, const bool isSourceElement = false, const bool needsPIDOnRCurlyScan = false, bool fUnaryOrParen = false);
-    template<bool buildAST> bool ParseFncNames(ERROR_RECOVERY_FORMAL_ ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncParent, ushort flags, bool isSourceElement, ParseNodePtr **pLastNodeRef);
+    template<bool buildAST> bool ParseFncNames(ERROR_RECOVERY_FORMAL_ ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncParent, ushort flags, ParseNodePtr **pLastNodeRef);
     template<bool buildAST> void ParseFncFormals(ERROR_RECOVERY_FORMAL_ ParseNodePtr pnodeFnc, ushort flags);
-    template<bool buildAST> bool ParseFncDeclHelper(ERROR_RECOVERY_FORMAL_ ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncParent, LPCOLESTR pNameHint, ushort flags, bool *pHasName, bool isSourceElement, bool fUnaryOrParen, bool *pNeedScanRCurly);
+    template<bool buildAST> bool ParseFncDeclHelper(ERROR_RECOVERY_FORMAL_ ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncParent, LPCOLESTR pNameHint, ushort flags, bool *pHasName, bool fUnaryOrParen, bool *pNeedScanRCurly);
     template<bool buildAST> void ParseExpressionLambdaBody(ERROR_RECOVERY_FORMAL_ ParseNodePtr pnodeFnc);
     void FinishFncDecl(ERROR_RECOVERY_FORMAL_ ParseNodePtr pnodeFnc, LPCOLESTR pNameHint, ParseNodePtr *lastNodeRef);
     void ParseTopLevelDeferredFunc(ERROR_RECOVERY_FORMAL_ ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncParent, LPCOLESTR pNameHint);

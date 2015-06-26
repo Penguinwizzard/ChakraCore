@@ -105,7 +105,6 @@ void FuncInfo::ReleaseLoad(ParseNode *pnode)
     switch (pnode->nop)
     {
     case knopDot:
-    case knopScope:
     case knopIndex:
     case knopCall:
         this->ReleaseReference(pnode);
@@ -120,7 +119,6 @@ void FuncInfo::ReleaseReference(ParseNode *pnode)
     switch (pnode->nop)
     {
     case knopDot:
-    case knopScope:
         this->ReleaseLoc(pnode->sxBin.pnode1);
         break;
 
@@ -184,7 +182,6 @@ void FuncInfo::ReleaseReference(ParseNode *pnode)
         switch (pnode->sxCall.pnodeTarget->nop)
         {
         case knopDot:
-        case knopScope:
         case knopIndex:
             this->ReleaseReference(pnode->sxCall.pnodeTarget);
             this->ReleaseLoc(pnode->sxCall.pnodeTarget);

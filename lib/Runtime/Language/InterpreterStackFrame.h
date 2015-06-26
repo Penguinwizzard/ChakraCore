@@ -553,7 +553,6 @@ namespace Js
         template <class T> void OP_ScopedLdInst(const unaligned T * playout);
         template <typename T> void OP_ScopedInitFunc(const unaligned OpLayoutT_ElementC<T> * playout);
         template <class T> void OP_ClearAttributes(const unaligned T * playout);
-        template <class T> void OP_BindEvt(const unaligned T * playout);
         template <class T> void OP_InitGetFld(const unaligned T * playout);
         template <class T> void OP_InitSetFld(const unaligned T * playout);
         template <class T> void OP_InitSetElemI(const unaligned T * playout);

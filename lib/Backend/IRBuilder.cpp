@@ -3434,7 +3434,6 @@ IRBuilder::BuildElementC(Js::OpCode newOpcode, uint32 offset, Js::RegSlot fieldR
         instr = IR::Instr::New(newOpcode, regOpnd, fieldSymOpnd, m_func);
         break;
 
-    case Js::OpCode::BindEvt:
     case Js::OpCode::InitSetFld:
     case Js::OpCode::InitGetFld:
     case Js::OpCode::InitProto:

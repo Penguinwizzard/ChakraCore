@@ -108,7 +108,6 @@ PTNODE(knopAsgRsh     , ">>="              , Shr_A    , Bin         , fnopBin|fn
 PTNODE(knopAsgRs2     , ">>>="             , ShrU_A   , Bin         , fnopBin|fnopAsg       , "UnsignedRightShiftAssignExpr"   , apnkAsgRs2     )
 //___end range
 
-PTNODE(knopScope      , "::"               , Nop      , Bin         , fnopNotExprStmt|fnopBin, "ScopeOper"                      , apnkScope     )
 PTNODE(knopMember     , ":"                , Nop      , Bin         , fnopNotExprStmt|fnopBin, "MemberOper"                     , apnkMember    )
 PTNODE(knopMemberShort, "membShort"        , Nop      , Bin         , fnopNotExprStmt|fnopBin, "ShorthandMember"                , apnkMember    )
 PTNODE(knopSetMember  , "set"              , Nop      , Bin         , fnopBin                , "SetDecl"                        , apnkSetMember )

@@ -499,7 +499,6 @@ namespace Js
                         data->Value);
                 break;
             }
-            case OpCode::BindEvt:
             case OpCode::StFuncExpr:
             case OpCode::InitProto:
             {

@@ -651,11 +651,6 @@ ReturnTrue:
         return NULL;
     }
 
-    void RecyclableObject::BindEvent(Var eventHandler, PropertyId propertyId)
-    {
-        JavascriptError::ThrowTypeError(GetScriptContext(), JSERR_NeedObject /* TODO-ERROR: get arg name - instance */);
-    }
-
     BOOL RecyclableObject::HasInstance(Var instance, ScriptContext* scriptContext, IsInstInlineCache* inlineCache)
     {
         JavascriptError::ThrowTypeError(scriptContext, JSERR_Operand_Invalid_NeedFunction, L"instanceof" /* TODO-ERROR: get arg name - aClass */);

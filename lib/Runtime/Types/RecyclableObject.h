@@ -342,8 +342,6 @@ namespace Js {
         // don't need crosssite:  get the HostDispatch for global object/module root. don't need marshalling. 
         virtual Var GetHostDispatchVar();
 
-        // don't need crosssite: we'll wrap a JavascriptDispatch and put it to a IDispatch.
-        virtual void BindEvent(Var eventHandler, PropertyId propertyId);        
         virtual RecyclableObject * CloneToScriptContext(ScriptContext* requestContext);
 
         // If dtor is called, that means that OOM happened (mostly), then the vtable might not be initalized

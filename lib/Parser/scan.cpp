@@ -2137,11 +2137,6 @@ LIdentifier:
 
         case ':':
             token = tkColon;
-            if (PeekFirst(p, last) == ':')
-            {
-                p++;
-                token = tkScope;
-            }
             break;
 
         case '=':

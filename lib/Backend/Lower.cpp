@@ -234,10 +234,6 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             instrPrev = this->LowerStFld(instr, IR::HelperOP_InitProto, IR::HelperOP_InitProto, false);
             break;
 
-        case Js::OpCode::BindEvt:
-            instrPrev = this->LowerStFld(instr, IR::HelperOP_BindEvent, IR::HelperOP_BindEvent, false);
-            break;
-
         case Js::OpCode::LdArgCnt:
             this->LoadArgumentCount(instr);
             break;

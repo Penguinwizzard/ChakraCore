@@ -270,11 +270,11 @@ public:
 //    void PrintFuncInfo();
     void EmitTopLevelStatement(ParseNode *stmt, FuncInfo *funcInfo, BOOL fReturnValue);
     void EmitInvertedLoop(ParseNode* outerLoop,ParseNode* invertedLoop,FuncInfo* funcInfo);
-    bool DefineFunctions(FuncInfo *funcInfoParent, bool userVarsDefined);
+    void DefineFunctions(FuncInfo *funcInfoParent);
     Js::RegSlot DefineOneFunction(ParseNode *pnodeFnc, FuncInfo *funcInfoParent, bool generateAssignment=true, Js::RegSlot regEnv = Js::Constants::NoRegister, Js::RegSlot frameDisplayTemp = Js::Constants::NoRegister);
     Js::RegSlot DefineOneFunctionHandleBoxedFD(ParseNode *pnodeFnc, FuncInfo *funcInfo, bool generateAssignment, Js::RegSlot regEnv = Js::Constants::NoRegister);
     void DefineCachedFunctions(FuncInfo *funcInfoParent);
-    bool DefineUncachedFunctions(FuncInfo *funcInfoParent, bool userVarsDefined);
+    void DefineUncachedFunctions(FuncInfo *funcInfoParent);
     void DefineUserVars(FuncInfo *funcInfo);
     void InitBlockScopedNonTemps(ParseNode *pnode, FuncInfo *funcInfo);
     // temporarily load all constants and special registers in a single block
@@ -482,26 +482,6 @@ template <class Fn>
 void MapFormals(ParseNode *pnodeFunc, Fn fn)
 {
     return MapFormalsImpl<Fn, true>(pnodeFunc, fn);
-}
-
-// Perform the given action once for each name in the pnodeNames list of a given funcdecl node,
-// with/without funcInfo.
-template <class Fn>
-void VisitFncNames(
-    ParseNode *pnodeFnc,
-    Fn action)
-{
-    Assert(pnodeFnc && pnodeFnc->nop == knopFncDecl);
-    ParseNode *pnodeNames = pnodeFnc->sxFnc.pnodeNames;
-    if (pnodeNames)
-    {
-        while (pnodeNames->nop == knopList)
-        {
-            action(pnodeFnc, pnodeNames->sxBin.pnode1);
-            pnodeNames = pnodeNames->sxBin.pnode2;
-        }
-    }
-    action(pnodeFnc, pnodeNames);
 }
 
 template<class Fn> void ByteCodeGenerator::IterateBlockScopedVariables(ParseNode *pnodeBlock, Fn fn)

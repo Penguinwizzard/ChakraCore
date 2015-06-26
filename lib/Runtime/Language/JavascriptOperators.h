@@ -412,8 +412,6 @@ namespace Js
         static void TraceUseConstructorCache(const ConstructorCache* ctorCache, const JavascriptFunction* ctor, bool isHit);
         static void TraceUpdateConstructorCache(const ConstructorCache* ctorCache, const FunctionBody* ctorBody, bool updated, const wchar_t* reason);
 
-        static void OP_BindEvent(Var object, PropertyId propertyId,Var eventHandler);
-
         static Js::GlobalObject * OP_LdRoot(ScriptContext* scriptContext);
         static Js::ModuleRoot * GetModuleRoot(int moduleID, ScriptContext* scriptContext);
         static Js::Var OP_LoadModuleRoot(int moduleID, ScriptContext* scriptContext);

@@ -6030,15 +6030,6 @@ CommonNumber:
         }
     }
 
-    void JavascriptOperators::OP_BindEvent(Var object, PropertyId propertyId, Var eventHandler)
-    {
-        if (TaggedNumber::Is(object))
-        {
-            JavascriptError::ThrowTypeError(RecyclableObject::FromVar(eventHandler)->GetScriptContext(), JSERR_NeedObject);
-        }
-        RecyclableObject::FromVar(object)->BindEvent(eventHandler, propertyId);
-    }
-
     Var JavascriptOperators::LoadHeapArguments(JavascriptFunction *funcCallee, uint32 paramCount, Var *paramAddr, Var frameObj, Var vArray, ScriptContext* scriptContext, bool formalsAreLetDecls)
     {
         AssertMsg(paramCount != (unsigned int)-1, "Loading the arguments object in the global function?");

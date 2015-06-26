@@ -378,7 +378,6 @@ MACRO_WMS(              StArrSegItem_CI4,       ElementUnsigned1,      OpSideEff
 MACRO(                  StArrSegItem_A,         Auxiliary,      OpSideEffect)
 MACRO_WMS(              DeleteElemI_A,          ElementI,       OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                   // Remove from instance's indirect element / field, checked
 MACRO_WMS(              DeleteElemIStrict_A,    ElementI,       OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                   // Remove from instance's indirect element / field, checked
-MACRO_EXTEND_WMS(       BindEvt,                ElementC,       OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                   // Add a new event handler in :: syntax
 MACRO_EXTEND_WMS(       InitSetFld,             ElementC,       OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut)   // Set in Object Literal Syntax {set prop(args){}};
 MACRO_EXTEND_WMS(       InitGetFld,             ElementC,       OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut)   // Get in Object Literal Syntax {get prop(){}};
 MACRO_EXTEND_WMS(       InitSetElemI,           ElementI,       OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Set in Object Literal Syntax {set [expr](args){}};

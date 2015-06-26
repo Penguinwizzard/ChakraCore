@@ -217,7 +217,7 @@ struct DeferredFunctionStub;
 struct PnFnc
 {
     ParseNodePtr pnodeNext;
-    ParseNodePtr pnodeNames;
+    ParseNodePtr pnodeName;
     IdentPtr pid;
     LPCOLESTR hint;
     ulong hintLength;

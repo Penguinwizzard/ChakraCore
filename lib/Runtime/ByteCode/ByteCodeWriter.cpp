@@ -1277,7 +1277,6 @@ StoreCommon:
 #if DBG
         switch (op)
         {
-            case OpCode::BindEvt:
             case OpCode::InitSetFld:
             case OpCode::InitGetFld:
             case OpCode::InitProto:

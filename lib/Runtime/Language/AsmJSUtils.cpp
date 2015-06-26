@@ -69,9 +69,9 @@ namespace Js
         if( node->nop == knopFncDecl )
         {
             PnFnc function = node->sxFnc;
-            if( function.pnodeNames && function.pnodeNames->nop == knopVarDecl )
+            if( function.pnodeName && function.pnodeName->nop == knopVarDecl )
             {
-                return function.pnodeNames->sxVar.pid;
+                return function.pnodeName->sxVar.pid;
             }
         }
         return null;

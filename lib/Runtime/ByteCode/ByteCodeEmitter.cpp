@@ -901,21 +901,17 @@ void ByteCodeGenerator::EmitTopLevelStatement(ParseNode *stmt, FuncInfo *funcInf
 // Emit byte code for scope-wide function definitions before any calls in the scope, regardless of lexical
 // order. Note that stores to the closure array are not emitted until we see the knopFncDecl in the tree
 // to make sure that sources of the stores have been defined.
-//
-// This returns true if there were userVar dependent functions that couldn't be defined at the point DefineFunctions
-// was called. If true is returned, DefineFunctions must be called again once userVars have been defined.
-bool ByteCodeGenerator::DefineFunctions(FuncInfo *funcInfoParent, bool userVarsDeclared)
+void ByteCodeGenerator::DefineFunctions(FuncInfo *funcInfoParent)
 {
     // DefineCachedFunctions doesn't depend on whether the user vars are declared or not, so
     // we'll just overload this variable to mean that the functions getting called again and we don't need to do anything
     if (funcInfoParent->GetHasCachedScope())
     {
         this->DefineCachedFunctions(funcInfoParent);
-        return false;
     }
     else
     {
-        return this->DefineUncachedFunctions(funcInfoParent, userVarsDeclared);
+        this->DefineUncachedFunctions(funcInfoParent);
     }
 }
 
@@ -1029,55 +1025,9 @@ void ByteCodeGenerator::DefineCachedFunctions(FuncInfo *funcInfoParent)
     AdeletePlus(alloc, extraBytes, info);
 }
 
-//
-// This method checks if a parse node has either a dot or a scope operator
-//
-inline bool IsUserVarDependentParseNode(ParseNode* pNode, bool clearHasInit)
-{
-    if (pNode != NULL && (pNode->nop == knopDot || pNode->nop == knopScope)) {
-        if (clearHasInit)
-        {
-            ParseNode* pNodeTarget = pNode->sxBin.pnode1;
-            while (pNodeTarget->nop == knopDot)
-            {
-                pNodeTarget = pNodeTarget->sxBin.pnode1;
-            }
-            if (pNodeTarget->nop == knopName && pNodeTarget->sxPid.sym)
-            {
-                pNodeTarget->sxPid.sym->SetHasInit(false);
-            }
-        }
-
-        return true;
-    }
-
-    return false;
-}
-//
-// This method indicates whether a function declaration ParseNode is dependent on the user vars being declared
-// The heuristic is to check if the function declaration is of the form x::y or x.y- here method x depends on y
-// clearHasInit is an optional flag. If its set, we clear the hasInit flag of the x's associated
-// symbol iff pFuncNode is a user var dependent function
-inline bool IsUserVarDependentFunctionDeclaration(ParseNode* pFuncNode, bool clearHasInit = false)
-{
-    ParseNodePtr pNode = pFuncNode->sxFnc.pnodeNames;
-    bool retVal = false;
-
-    if (pNode != NULL) {
-        while(pNode->nop == knopList) {
-            retVal |= IsUserVarDependentParseNode(pNode->sxBin.pnode1, clearHasInit);
-            pNode = pNode->sxBin.pnode2;
-        }
-        retVal |= IsUserVarDependentParseNode(pNode, clearHasInit);
-    }
-
-    return retVal;
-}
-bool ByteCodeGenerator::DefineUncachedFunctions(FuncInfo *funcInfoParent, bool userVarsDeclared)
+void ByteCodeGenerator::DefineUncachedFunctions(FuncInfo *funcInfoParent)
 {
     ParseNode *pnodeParent = funcInfoParent->root;
-    bool callFunctionAgain = false;
-
     auto defineCheck = [&](ParseNode *pnodeFnc)
     {
         Assert(pnodeFnc->nop == knopFncDecl);
@@ -1094,102 +1044,67 @@ bool ByteCodeGenerator::DefineUncachedFunctions(FuncInfo *funcInfoParent, bool u
         //    after the assignment. Might save register
         //
 
-        // We pass in true for clearHasInit if the user vars haven't been declared so that the target will be initialized to undefined
-        // in DefineUserVars.
-        bool isUserVarDependentFunctionDeclaration = IsUserVarDependentFunctionDeclaration(pnodeFnc, !userVarsDeclared);
-
         if (pnodeFnc->sxFnc.IsDeclaration())
         {
-            // * If userVars are not declared, we'll define *only* functions
-            // not dependent on the user vars being declared
-            // * If userVars are declared, we'll define *only* functions
-            // dependent on the user vars being declared, since the rest
-            // would have been defined earlier
-            if (isUserVarDependentFunctionDeclaration == userVarsDeclared) {
-                this->DefineOneFunction(pnodeFnc, funcInfoParent);
-                // The "x = function() {...}" case is being generated on the fly, during emission,
-                // so the caller expects to be able to release this register.
-                funcInfoParent->ReleaseLoc(pnodeFnc);
-                pnodeFnc->location = Js::Constants::NoRegister;
-            }
-            else {
-                callFunctionAgain = true;
-            }
+            this->DefineOneFunction(pnodeFnc, funcInfoParent);
+            // The "x = function() {...}" case is being generated on the fly, during emission,
+            // so the caller expects to be able to release this register.
+            funcInfoParent->ReleaseLoc(pnodeFnc);
+            pnodeFnc->location = Js::Constants::NoRegister;
         }
     };
     MapContainerScopeFunctions(pnodeParent, defineCheck);
-
-    return callFunctionAgain;
 }
 
 void EmitAssignmentToFuncName(ParseNode *pnodeFnc, ByteCodeGenerator *byteCodeGenerator, FuncInfo *funcInfoParent)
 {
-    VisitFncNames(pnodeFnc, [byteCodeGenerator, funcInfoParent](ParseNode *pnodeFnc, ParseNode *pnodeName)
+    // Assign the location holding the func object reference to the given name.
+    Symbol *sym = pnodeFnc->sxFnc.pnodeName->sxVar.sym;
+
+    if (sym != nullptr && !sym->GetFuncExpr())
     {
-        // Assign the location holding the func object reference to the given name.
-        Symbol *sym;
-        switch (pnodeName->nop)
+        if (sym->GetIsGlobal())
         {
-        case knopVarDecl:
-            sym = pnodeName->sxVar.sym;
-            if (sym != NULL && !sym->GetFuncExpr())
+            Js::PropertyId propertyId = sym->GetPosition();
+            byteCodeGenerator->EmitGlobalFncDeclInit(pnodeFnc->location, propertyId, funcInfoParent);
+            if (byteCodeGenerator->GetScriptContext()->GetConfig()->IsBlockScopeEnabled() &&
+                byteCodeGenerator->GetFlags() & fscrEval && !funcInfoParent->GetIsStrictMode())
             {
-                if (sym->GetIsGlobal())
+                byteCodeGenerator->EmitPropStore(pnodeFnc->location, sym, null, funcInfoParent);
+            }
+        }
+        else
+        {
+            if (sym->NeedsSlotAlloc(funcInfoParent))
+            {
+                if (!sym->GetHasNonCommittedReference() ||
+                    (funcInfoParent->GetParsedFunctionBody()->DoStackNestedFunc()))
                 {
-                    Js::PropertyId propertyId = sym->GetPosition();
+                    // No point in trying to optimize if there are no references before we have to commit to slot.
+                    // And not safe to delay putting a stack function in the slot, since we may miss boxing.
+                    sym->SetIsCommittedToSlot();
+                }
+            }
+
+            byteCodeGenerator->EmitLocalPropInit(pnodeFnc->location, sym, funcInfoParent);
+            Symbol * fncScopeSym = sym->GetFuncScopeVarSym();
+
+            if (fncScopeSym)
+            {
+                Assert(byteCodeGenerator->GetScriptContext()->GetConfig()->IsBlockScopeEnabled());
+
+                if (fncScopeSym->GetIsGlobal() && byteCodeGenerator->GetFlags() & fscrEval)
+                {
+                    Js::PropertyId propertyId = fncScopeSym->GetPosition();
                     byteCodeGenerator->EmitGlobalFncDeclInit(pnodeFnc->location, propertyId, funcInfoParent);
-                    if (byteCodeGenerator->GetScriptContext()->GetConfig()->IsBlockScopeEnabled() &&
-                        byteCodeGenerator->GetFlags() & fscrEval && !funcInfoParent->GetIsStrictMode())
-                    {
-                        byteCodeGenerator->EmitPropStore(pnodeFnc->location, sym, null, funcInfoParent);
-                    }
                 }
                 else
                 {
-                    if (sym->NeedsSlotAlloc(funcInfoParent))
-                    {
-                        if (!sym->GetHasNonCommittedReference() ||
-                            (funcInfoParent->GetParsedFunctionBody()->DoStackNestedFunc()))
-                        {
-                            // No point in trying to optimize if there are no references before we have to commit to slot.
-                            // And not safe to delay putting a stack function in the slot, since we may miss boxing.
-                            sym->SetIsCommittedToSlot();
-                        }
-                    }
-
-                    byteCodeGenerator->EmitLocalPropInit(pnodeFnc->location, sym, funcInfoParent);
-                    Symbol * fncScopeSym = sym->GetFuncScopeVarSym();
-
-                    if (fncScopeSym)
-                    {
-                        Assert(byteCodeGenerator->GetScriptContext()->GetConfig()->IsBlockScopeEnabled());
-
-                        if (fncScopeSym->GetIsGlobal() && byteCodeGenerator->GetFlags() & fscrEval)
-                        {
-                            Js::PropertyId propertyId = fncScopeSym->GetPosition();
-                            byteCodeGenerator->EmitGlobalFncDeclInit(pnodeFnc->location, propertyId, funcInfoParent);
-                        }
-                        else
-                        {
-                            byteCodeGenerator->EmitPropStore(pnodeFnc->location, fncScopeSym, null, funcInfoParent, false, false, /* isFncDeclVar */true);
-                        }
-                    }
+                    byteCodeGenerator->EmitPropStore(pnodeFnc->location, fncScopeSym, null, funcInfoParent, false, false, /* isFncDeclVar */true);
                 }
             }
-            break;
-
-        case knopScope:
-        case knopDot:
-            EmitReference(pnodeName, byteCodeGenerator, funcInfoParent);
-            EmitAssignment(NULL, pnodeName, pnodeFnc->location, byteCodeGenerator, funcInfoParent);
-            funcInfoParent->ReleaseReference(pnodeName);
-            break;
-
-        default:
-            AssertMsg(0, "Unexpected opcode on function name");
-            break;
         }
-    });
+    }
 }
 
 Js::RegSlot ByteCodeGenerator::DefineOneFunctionHandleBoxedFD(
@@ -1308,7 +1223,7 @@ Js::RegSlot ByteCodeGenerator::DefineOneFunction(ParseNode *pnodeFnc, FuncInfo *
         }
     }
 
-    if (pnodeFnc->sxFnc.pnodeNames == NULL || !generateAssignment)
+    if (pnodeFnc->sxFnc.pnodeName == nullptr || !generateAssignment)
     {
         return regEnv;
     }
@@ -1461,7 +1376,7 @@ void ByteCodeGenerator::InitBlockScopedNonTemps(ParseNode *pnode, FuncInfo *func
                 if (this->scriptContext->GetConfig()->IsBlockScopeEnabled())
                 {
                     // If this is a block-scoped function, initialize it.
-                    ParseNode *pnodeName = pnode->sxFnc.pnodeNames;
+                    ParseNode *pnodeName = pnode->sxFnc.pnodeName;
                     if (!pnode->sxFnc.IsMethod() && pnodeName && pnodeName->nop == knopVarDecl)
                     {
                         Symbol *sym = pnodeName->sxVar.sym;
@@ -1596,7 +1511,7 @@ void ByteCodeGenerator::EmitScopeObjectInit(FuncInfo *funcInfo)
     {
         if (pnodeFunction->sxFnc.IsDeclaration())
         {
-            ParseNode *pnodeName = pnodeFunction->sxFnc.pnodeNames;
+            ParseNode *pnodeName = pnodeFunction->sxFnc.pnodeName;
             if (pnodeName != nullptr)
             {
                 while (pnodeName->nop == knopList)
@@ -2610,10 +2525,9 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
         // Note, global eval scope is a fake local scope and is handled as if it were
         // a lexical block instead of a true global scope, so do not define the functions
         // here. The will be defined during BeginEmitBlock.
-        bool fFunctionsUndefined = false;
         if (!(funcInfo->IsGlobalFunction() && this->IsEvalWithBlockScopingNoParentScopeInfo()))
         {
-            fFunctionsUndefined = DefineFunctions(funcInfo, false);
+            DefineFunctions(funcInfo);
         }
         DefineUserVars(funcInfo);
 
@@ -2656,10 +2570,6 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
             pnode->sxFnc.pnodeRest->sxVar.sym->SetNeedDeclaration(false);
         }
 
-        if (fFunctionsUndefined)
-        {
-            DefineFunctions(funcInfo, true);
-        }
         DefineLabels(funcInfo);
 
         this->inPrologue = false;
@@ -2941,34 +2851,30 @@ void ByteCodeGenerator::EmitScopeList(ParseNode *pnode)
 void
 EnsureFncDeclScopeSlot(ParseNode *pnodeFnc, FuncInfo *funcInfo)
 {
-    VisitFncNames(pnodeFnc, [funcInfo](ParseNode *pnodeFnc, ParseNode *pnodeName)
+    if (pnodeFnc->sxFnc.pnodeName)
     {
-        if (pnodeName && pnodeName->nop == knopVarDecl)
+        Assert(pnodeFnc->sxFnc.pnodeName->nop == knopVarDecl);
+        Symbol *sym = pnodeFnc->sxFnc.pnodeName->sxVar.sym;
+        if (sym)
         {
-            Symbol *sym = pnodeName->sxVar.sym;
-            if (sym)
-            {
-                sym->EnsureScopeSlot(funcInfo);
-            }
+            sym->EnsureScopeSlot(funcInfo);
         }
-    });
+    }
 }
 
 // Similar to EnsureFncScopeSlot visitor function, but verifies that a slot is needed before assigning it.
 void
 CheckFncDeclScopeSlot(ParseNode *pnodeFnc, FuncInfo *funcInfo)
 {
-    VisitFncNames(pnodeFnc, [funcInfo](ParseNode *pnodeFnc, ParseNode *pnodeName)
+    if (pnodeFnc->sxFnc.pnodeName && pnodeFnc->sxFnc.pnodeName->nop == knopVarDecl)
     {
-        if (pnodeName && pnodeName->nop == knopVarDecl)
+        Assert(pnodeFnc->sxFnc.pnodeName->nop == knopVarDecl);
+        Symbol *sym = pnodeFnc->sxFnc.pnodeName->sxVar.sym;
+        if (sym && sym->NeedsSlotAlloc(funcInfo))
         {
-            Symbol *sym = pnodeName->sxVar.sym;
-            if (sym && sym->NeedsSlotAlloc(funcInfo))
-            {
-                sym->EnsureScopeSlot(funcInfo);
-            }
+            sym->EnsureScopeSlot(funcInfo);
         }
-    });
+    }
 }
 
 void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
@@ -4611,7 +4517,6 @@ void EmitReference(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncI
     switch (pnode->nop)
     {
     case knopDot:
-    case knopScope:
         Emit(pnode->sxBin.pnode1, byteCodeGenerator, funcInfo, false);
         break;
 
@@ -4636,7 +4541,6 @@ void EmitReference(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncI
         switch (pnode->sxCall.pnodeTarget->nop)
         {
         case knopDot:
-        case knopScope:
         case knopIndex:
             funcInfo->AcquireLoc(pnode->sxCall.pnodeTarget);
             EmitReference(pnode->sxCall.pnodeTarget, byteCodeGenerator, funcInfo);
@@ -5183,14 +5087,6 @@ void EmitAssignment(
             uint cacheId = funcInfo->FindOrAddInlineCacheId(lhs->sxBin.pnode1->location, propertyId, false, true);
             byteCodeGenerator->Writer()->PatchableProperty(
                 ByteCodeGenerator::GetStFldOpCode(funcInfo, false, false, false), rhsLocation, lhs->sxBin.pnode1->location, cacheId);
-            break;
-        }
-    case knopScope:
-        {
-            // BindEvt(x,"y",rhs)
-            Js::PropertyId propertyId = lhs->sxBin.pnode2->sxPid.PropertyIdFromNameNode();
-            byteCodeGenerator->Writer()->Property(Js::OpCode::BindEvt,rhsLocation,lhs->sxBin.pnode1->location,
-                funcInfo->FindOrAddReferencedPropertyId(propertyId));
             break;
         }
     case knopIndex:
@@ -6350,7 +6246,7 @@ void EmitMemberNode(ParseNode *memberNode, Js::RegSlot objectLocation, ByteCodeG
                 Js::OpCode::InitComputedProperty,
                 exprNode->location, objectLocation, nameNode->location, true);
         }
-        if (exprNode->nop == knopFncDecl && (exprNode->sxFnc.pnodeNames == nullptr || exprNode->sxFnc.pnodeNames->nop != knopVarDecl))
+        if (exprNode->nop == knopFncDecl && (exprNode->sxFnc.pnodeName == nullptr || exprNode->sxFnc.pnodeName->nop != knopVarDecl))
         {
             byteCodeGenerator->Writer()->Reg2(Js::OpCode::SetComputedNameVar, exprNode->location, nameNode->location);
         }
@@ -7632,7 +7528,7 @@ void EmitSuperFieldPatch(FuncInfo* funcInfo, ParseNode* pnode, ByteCodeGenerator
     uint cacheId = funcInfo->FindOrAddInlineCacheId(superLoc, propertyId, true, false);
     byteCodeGenerator->Writer()->PatchableProperty(Js::OpCode::LdMethodFld, superPropLoc, superLoc, cacheId);
 
-    propFuncNode->sxFnc.pnodeNames =  nullptr;
+    propFuncNode->sxFnc.pnodeName =  nullptr;
 }
 
 struct ByteCodeGenerator::TryScopeRecord : public JsUtil::DoublyLinkedListElement<TryScopeRecord>
@@ -8467,7 +8363,6 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         break;
          // this is MemberExpression as rvalue
     case knopDot:
-    case knopScope:
         {
             Emit(pnode->sxBin.pnode1, byteCodeGenerator, funcInfo, false);
             funcInfo->ReleaseLoc(pnode->sxBin.pnode1);
@@ -8821,23 +8716,6 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         // The "function declarations" were emitted in DefineFunctions()
         if (!pnode->sxFnc.IsDeclaration())
         {
-            //
-            // - For "function expressions", in some scenarios (see comments in DefineFunctions()), they were emitted there also.
-            //   That caters to following scenario
-            //     - Only in IE8 compat mode.
-            //     - In ES5 mode, "second" f doesn't affect the enclosing scope
-            //
-            //   function f() { write("first"); }
-            //   f();       // ----------------------------> Should print "second" in IE8 mode
-            //              // ----------------------------> Should print "first"  in ES5 mode
-            //   var x = function f() { write("second"); }
-            //
-            // - But function expressions should be emitted on the fly as well, as each invocation results in a new function object
-            //
-            //   var a={}; for (i=0;i<2;i++) { g=function f(){...}; a[i] = f; }
-            //   a[0] is different from a[1]
-            //
-
             byteCodeGenerator->DefineOneFunctionHandleBoxedFD(pnode, funcInfo, false);
             RECORD_LOAD(pnode);
         }
