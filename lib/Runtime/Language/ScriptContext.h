@@ -229,6 +229,7 @@ namespace Js
         bool IsES6SuperEnabled()                const { return CONFIG_FLAG_RELEASE(ES6Super) || BinaryFeatureControl::LanguageService(); } // Need to remove the LanguageService check once the feature is enabled by default
         bool IsES6SymbolEnabled()               const { return CONFIG_FLAG_RELEASE(ES6Symbol); }
         bool IsES6ToPrimitiveEnabled()          const { return CONFIG_FLAG_RELEASE(ES6ToPrimitive); }
+        bool IsES6ToLengthEnabled()             const { return CONFIG_FLAG_RELEASE(ES6ToLength); }
         bool IsES6ToStringTagEnabled()          const { return CONFIG_FLAG_RELEASE(ES6ToStringTag); }
         bool IsES6TypedArrayExtensionsEnabled() const { return CONFIG_FLAG_RELEASE(ES6TypedArrayExtensions); }
         bool IsES6UnicodeExtensionsEnabled()    const { return CONFIG_FLAG_RELEASE(ES6Unicode); }

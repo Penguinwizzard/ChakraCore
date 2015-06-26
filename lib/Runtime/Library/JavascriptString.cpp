@@ -1604,7 +1604,23 @@ case_2:
             }           
             else
             {
-                limit = JavascriptConversion::ToUInt32(args[2], scriptContext);
+                int64 raw_limit = JavascriptConversion::ToLength(args[2], scriptContext);
+                if (scriptContext->GetConfig()->IsES6ToLengthEnabled())
+                {
+                    if (raw_limit < UINT_MAX)
+                    {
+                        limit = static_cast<uint32>(raw_limit);
+                    }
+                    else
+                    {
+                        // TODO: clipping is incorrect here, will fix
+                        limit = UINT_MAX;
+                    }
+                }
+                else
+                {
+                    limit = JavascriptConversion::ToUInt32(args[2], scriptContext);
+                }
             }
 
             if (JavascriptRegExp::Is(args[1]))

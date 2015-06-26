@@ -2876,10 +2876,21 @@ namespace Js
                 if (DynamicObject::IsAnyArray(aItem) || remoteTypeIds[idxArg] == TypeIds_Array || spreadable)
                 {
                     //TODO: Consider enumerating remote array instead of walking all indices
-                    uint len = JavascriptConversion::ToUInt32(JavascriptOperators::OP_GetLength(aItem, scriptContext), scriptContext);
+                    uint length = 0;
+                    
+                    if (scriptContext->GetConfig()->IsES6ToLengthEnabled())
+                    {
+                        int64 len64 = JavascriptConversion::ToLength(JavascriptOperators::OP_GetLength(aItem, scriptContext), scriptContext);
+                        length = len64 > UINT_MAX ? UINT_MAX : (uint)len64; // TODO: clipping is incorrect here, will fix
+                    }
+                    else
+                    {
+                        length = JavascriptConversion::ToUInt32(JavascriptOperators::OP_GetLength(aItem, scriptContext), scriptContext);
+                    }
+
                     RecyclableObject* itemObject = RecyclableObject::FromVar(aItem);
                     Var subItem;
-                    for (uint32 idxSubItem = 0; idxSubItem <len; idxSubItem++)
+                    for (uint32 idxSubItem = 0; idxSubItem < length; idxSubItem++)
                     {
                         if (JavascriptOperators::HasItem(itemObject, idxSubItem))
                         {
@@ -3370,8 +3381,15 @@ namespace Js
         // If source object is not an array, we fall back to this behavior anyway.
         if (scriptContext->GetConfig()->IsES6TypedArrayExtensionsEnabled() || pArr == nullptr)
         {
-            Var lenValue = JavascriptOperators::OP_GetLength(obj, scriptContext);
-            length = JavascriptConversion::ToUInt32(lenValue, scriptContext);
+            if (scriptContext->GetConfig()->IsES6ToLengthEnabled())
+            {
+                int64 len64 = JavascriptConversion::ToLength(JavascriptOperators::OP_GetLength(obj, scriptContext), scriptContext);
+                length = len64 > UINT_MAX ? UINT_MAX : (uint)len64; // TODO: clipping is incorrect here, will fix
+            }
+            else
+            {
+                length = JavascriptConversion::ToUInt32(JavascriptOperators::OP_GetLength(obj, scriptContext), scriptContext);
+            }
         }
         else
         {
@@ -4637,8 +4655,15 @@ Case0:
         // If source object is not an array, we fall back to this behavior anyway.
         if (scriptContext->GetConfig()->IsES6TypedArrayExtensionsEnabled() || pArr == nullptr)
         {
-            Var lenValue = JavascriptOperators::OP_GetLength(obj, scriptContext);
-            length = JavascriptConversion::ToUInt32(lenValue, scriptContext);
+            if (scriptContext->GetConfig()->IsES6ToLengthEnabled())
+            {
+                int64 len64 = JavascriptConversion::ToLength(JavascriptOperators::OP_GetLength(obj, scriptContext), scriptContext);
+                length = len64 > UINT_MAX ? UINT_MAX : (uint)len64; // TODO: clipping is incorrect here, will fix
+            }
+            else
+            {
+                length = JavascriptConversion::ToUInt32(JavascriptOperators::OP_GetLength(obj, scriptContext), scriptContext);
+            }
         }
         else
         {
@@ -5082,7 +5107,18 @@ Case0:
             }
 
             ThrowTypeErrorOnFailureHelper h(scriptContext, L"Array.prototype.shift");
-            uint length = JavascriptConversion::ToUInt32(JavascriptOperators::OP_GetLength(dynamicObject, scriptContext), scriptContext);
+
+            uint length = 0;
+            if (scriptContext->GetConfig()->IsES6ToLengthEnabled())
+            {
+                int64 len64 = JavascriptConversion::ToLength(JavascriptOperators::OP_GetLength(dynamicObject, scriptContext), scriptContext);
+                length = len64 > UINT_MAX ? UINT_MAX : (uint)len64; // TODO: clipping is incorrect here, will fix
+            }
+            else
+            {
+                length = JavascriptConversion::ToUInt32(JavascriptOperators::OP_GetLength(dynamicObject, scriptContext), scriptContext);
+            }
+
             if (length == 0)
             {
                 // If length is 0, return 'undefined'
@@ -5255,7 +5291,22 @@ Case0:
         if (scriptContext->GetConfig()->IsES6TypedArrayExtensionsEnabled() || pArr == nullptr)
         {
             Var lenValue = JavascriptOperators::OP_GetLength(obj, scriptContext);
-            length = JavascriptConversion::ToUInt32(lenValue, scriptContext);
+            if (scriptContext->GetConfig()->IsES6ToLengthEnabled())
+            {
+                int64 len64 = JavascriptConversion::ToLength(lenValue, scriptContext);
+                if (len64 > UINT_MAX)
+                {
+                    JavascriptError::ThrowRangeError(scriptContext, JSERR_ArrayLengthConstructIncorrect);
+                }
+                else
+                {
+                    length = (uint)len64;
+                }
+            }
+            else
+            {
+                length = JavascriptConversion::ToUInt32(lenValue, scriptContext);
+            }
         }
         else
         {
@@ -6016,7 +6067,16 @@ Case0:
             {
                 JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NullOrUndefined, L"Array.prototype.splice");
             }
-            len = JavascriptConversion::ToUInt32(JavascriptOperators::OP_GetLength(pObj, scriptContext), scriptContext);
+
+            if (scriptContext->GetConfig()->IsES6ToLengthEnabled())
+            {
+                int64 len64 = JavascriptConversion::ToLength(JavascriptOperators::OP_GetLength(pObj, scriptContext), scriptContext);
+                len = len64 > UINT_MAX ? UINT_MAX : (uint)len64; // TODO: clipping is incorrect here, will fix
+            }
+            else
+            {
+                len = JavascriptConversion::ToUInt32(JavascriptOperators::OP_GetLength(pObj, scriptContext), scriptContext);
+            }
         }
 
         switch (args.Info.Count)
@@ -7516,8 +7576,15 @@ Case0:
         // If source object is not an array, we fall back to this behavior anyway.
         if (scriptContext->GetConfig()->IsES6TypedArrayExtensionsEnabled() || pArr == nullptr)
         {
-            Var lenValue = JavascriptOperators::OP_GetLength(obj, scriptContext);
-            length = JavascriptConversion::ToUInt32(lenValue, scriptContext);
+            if (scriptContext->GetConfig()->IsES6ToLengthEnabled())
+            {
+                int64 len64 = JavascriptConversion::ToLength(JavascriptOperators::OP_GetLength(obj, scriptContext), scriptContext);
+                length = len64 > UINT_MAX ? UINT_MAX : (uint)len64; // TODO: clipping is incorrect here, will fix
+            }
+            else
+            {
+                length = JavascriptConversion::ToUInt32(JavascriptOperators::OP_GetLength(obj, scriptContext), scriptContext);
+            }
         }
         else
         {
@@ -7676,8 +7743,15 @@ Case0:
         // If source object is not an array, we fall back to this behavior anyway.
         if (scriptContext->GetConfig()->IsES6TypedArrayExtensionsEnabled() || pArr == nullptr)
         {
-            Var lenValue = JavascriptOperators::OP_GetLength(obj, scriptContext);
-            length = JavascriptConversion::ToUInt32(lenValue, scriptContext);
+            if (scriptContext->GetConfig()->IsES6ToLengthEnabled())
+            {
+                int64 len64 = JavascriptConversion::ToLength(JavascriptOperators::OP_GetLength(obj, scriptContext), scriptContext);
+                length = len64 > UINT_MAX ? UINT_MAX : (uint)len64; // TODO: clipping is incorrect here, will fix
+            }
+            else
+            {
+                length = JavascriptConversion::ToUInt32(JavascriptOperators::OP_GetLength(obj, scriptContext), scriptContext);
+            }
         }
         else
         {
@@ -7865,8 +7939,15 @@ Case0:
         // If source object is not an array, we fall back to this behavior anyway.
         if (scriptContext->GetConfig()->IsES6TypedArrayExtensionsEnabled() || pArr == nullptr)
         {
-            Var lenValue = JavascriptOperators::OP_GetLength(dynamicObject, scriptContext);
-            length = JavascriptConversion::ToUInt32(lenValue, scriptContext);
+            if (scriptContext->GetConfig()->IsES6ToLengthEnabled())
+            {
+                int64 len64 = JavascriptConversion::ToLength(JavascriptOperators::OP_GetLength(dynamicObject, scriptContext), scriptContext);
+                length = len64 > UINT_MAX ? UINT_MAX : (uint)len64; // TODO: clipping is incorrect here, will fix
+            }
+            else
+            {
+                length = JavascriptConversion::ToUInt32(JavascriptOperators::OP_GetLength(dynamicObject, scriptContext), scriptContext);
+            }
         }
         else
         {
@@ -8250,8 +8331,15 @@ Case0:
         // If source object is not an array, we fall back to this behavior anyway.
         if (scriptContext->GetConfig()->IsES6TypedArrayExtensionsEnabled() || pArr == nullptr)
         {
-            Var lenValue = JavascriptOperators::OP_GetLength(obj, scriptContext);
-            length = JavascriptConversion::ToUInt32(lenValue, scriptContext);
+            int64 len64 = JavascriptConversion::ToLength(JavascriptOperators::OP_GetLength(obj, scriptContext), scriptContext);
+            if (len64 > UINT_MAX)
+            {
+                JavascriptError::ThrowRangeError(scriptContext, JSERR_ArrayLengthConstructIncorrect);
+            }
+            else
+            {
+                length = (uint)len64;
+            }
         }
         else
         {
@@ -8493,8 +8581,15 @@ Case0:
         // If source object is not an array, we fall back to this behavior anyway.
         if (scriptContext->GetConfig()->IsES6TypedArrayExtensionsEnabled() || pArr == nullptr)
         {
-            Var lenValue = JavascriptOperators::OP_GetLength(dynamicObject, scriptContext);
-            length = JavascriptConversion::ToUInt32(lenValue, scriptContext);
+            if (scriptContext->GetConfig()->IsES6ToLengthEnabled())
+            {
+                int64 len64 = JavascriptConversion::ToLength(JavascriptOperators::OP_GetLength(dynamicObject, scriptContext), scriptContext);
+                length = len64 > UINT_MAX ? UINT_MAX : (uint)len64; // TODO: clipping is incorrect here, will fix
+            }
+            else
+            {
+                length = JavascriptConversion::ToUInt32(JavascriptOperators::OP_GetLength(dynamicObject, scriptContext), scriptContext);
+            }
         }
         else
         {
@@ -8640,8 +8735,15 @@ Case0:
                 JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NullOrUndefined, L"Array.prototype.reduce");
             }
 
-            Var lenValue = JavascriptOperators::OP_GetLength(obj, scriptContext);
-            length = JavascriptConversion::ToUInt32(lenValue, scriptContext);
+            if (scriptContext->GetConfig()->IsES6ToLengthEnabled())
+            {
+                int64 len64 = JavascriptConversion::ToLength(JavascriptOperators::OP_GetLength(obj, scriptContext), scriptContext);
+                length = len64 > UINT_MAX ? UINT_MAX : (uint)len64; // TODO: clipping is incorrect here, will fix
+            }
+            else
+            {
+                length = JavascriptConversion::ToUInt32(JavascriptOperators::OP_GetLength(obj, scriptContext), scriptContext);
+            }
         }
 
         return JavascriptArray::ReduceHelper(pArr, nullptr, obj, length, args, scriptContext);
@@ -8836,8 +8938,15 @@ Case0:
         // If source object is not an array, we fall back to this behavior anyway.
         if (scriptContext->GetConfig()->IsES6TypedArrayExtensionsEnabled() || pArr == nullptr)
         {
-            Var lenValue = JavascriptOperators::OP_GetLength(obj, scriptContext);
-            length = JavascriptConversion::ToUInt32(lenValue, scriptContext);
+            if (scriptContext->GetConfig()->IsES6ToLengthEnabled())
+            {
+                int64 len64 = JavascriptConversion::ToLength(JavascriptOperators::OP_GetLength(obj, scriptContext), scriptContext);
+                length = len64 > UINT_MAX ? UINT_MAX : (uint)len64; // TODO: clipping is incorrect here, will fix
+            }
+            else
+            {
+                length = JavascriptConversion::ToUInt32(JavascriptOperators::OP_GetLength(obj, scriptContext), scriptContext);
+            }
         }
         else
         {
