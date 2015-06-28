@@ -1513,7 +1513,6 @@ namespace Js
             InterpreterStackFrame::Setup setup(function, args);
             size_t varAllocCount = setup.GetAllocationVarCount();
             size_t varSizeInBytes = varAllocCount * sizeof(Var);
-            PROBE_STACK_PARTIAL_INITIALIZED_INTERPRETER_FRAME(functionScriptContext, Js::Constants::MinStackInterpreter + varSizeInBytes);
 
             //
             // Allocate a new InterpreterStackFrame instance on the interpreter's virtual stack.
@@ -1531,6 +1530,7 @@ namespace Js
             }
             else
             {
+                PROBE_STACK_PARTIAL_INITIALIZED_INTERPRETER_FRAME(functionScriptContext, Js::Constants::MinStackInterpreter + varSizeInBytes);
                 allocation = (Var*)_alloca(varSizeInBytes);
                 stackAddr = reinterpret_cast<DWORD_PTR>(allocation);
             }
@@ -2457,7 +2457,6 @@ namespace Js
         InterpreterStackFrame::Setup setup(funcObj, m_inParams, m_inSlotsCount);
         size_t varAllocCount = setup.GetAllocationVarCount();
         size_t varSizeInBytes = varAllocCount * sizeof(Var);
-        PROBE_STACK_PARTIAL_INITIALIZED_INTERPRETER_FRAME(GetScriptContext(), Js::Constants::MinStackInterpreter + varSizeInBytes);
 
         Var* allocation = nullptr;
         DWORD_PTR stackAddr;
@@ -2473,6 +2472,7 @@ namespace Js
         }
         else
         {
+            PROBE_STACK_PARTIAL_INITIALIZED_INTERPRETER_FRAME(GetScriptContext(), Js::Constants::MinStackInterpreter + varSizeInBytes);
             allocation = (Var*)_alloca(varSizeInBytes);
             stackAddr = reinterpret_cast<DWORD_PTR>(allocation);
         }
