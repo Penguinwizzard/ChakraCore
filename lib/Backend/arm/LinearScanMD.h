@@ -40,7 +40,6 @@ public:
 
     void        GenerateBailOut(IR::Instr * instr, __in_ecount(registerSaveSymsCount) StackSym ** registerSaveSyms, uint registerSaveSymsCount);
     IR::Instr  *GenerateBailInForGeneratorYield(IR::Instr * resumeLabelInstr, BailOutInfo * bailOutInfo);
-    IR::Instr * InsertMove(IR::Opnd *dst, IR::Opnd *src, IR::Instr *const insertBeforeInstr);
 private:
     static void SaveAllRegisters(BailOutRecord *const bailOutRecord);
 public:

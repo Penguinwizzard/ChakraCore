@@ -70,7 +70,7 @@ Encoder::Encode()
     
     FOREACH_INSTR_IN_FUNC(instr, m_func)
     {        
-        Assert(Lowerer::ValidOpcodeAfterLower(instr));
+        Assert(Lowerer::ValidOpcodeAfterLower(instr, m_func));
 
         if (GetCurrentOffset() + MachMaxInstrSize < m_encodeBufferSize)
         {

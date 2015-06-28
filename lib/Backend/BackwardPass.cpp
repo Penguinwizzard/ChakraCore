@@ -2112,7 +2112,7 @@ BackwardPass::ProcessBailOutInfo(IR::Instr * instr, BailOutInfo * bailOutInfo)
     BVSparse<JitArenaAllocator>* bailoutReferencedArgSymsBv = JitAnew(this->tempAlloc, BVSparse<JitArenaAllocator>, this->tempAlloc);
     if (!this->IsPrePass())
     {
-        bailOutInfo->IterateArgSyms([=](uint index, StackSym* sym) {
+        bailOutInfo->IterateArgOutSyms([=](uint, uint, StackSym* sym) {
             if (!sym->IsArgSlotSym())
             {
                 bailoutReferencedArgSymsBv->Set(sym->m_id);
@@ -2241,7 +2241,7 @@ BackwardPass::ProcessBailOutInfo(IR::Instr * instr, BailOutInfo * bailOutInfo)
 
     if (!this->IsPrePass())
     {
-        bailOutInfo->IterateArgSyms([=](uint index, StackSym* sym) {
+        bailOutInfo->IterateArgOutSyms([=](uint index, uint, StackSym* sym) {
             if (sym->IsArgSlotSym() || bailoutReferencedArgSymsBv->Test(sym->m_id))
             {
                 bailOutInfo->argOutSyms[index]->m_isBailOutReferenced = true;

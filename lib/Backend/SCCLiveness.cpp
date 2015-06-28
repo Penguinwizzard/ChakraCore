@@ -400,7 +400,7 @@ SCCLiveness::ProcessBailOutUses(IR::Instr * instr)
     NEXT_SLISTBASE_ENTRY;
 
 
-    bailOutInfo->IterateArgSyms([=] (uint index, StackSym* sym) {
+    bailOutInfo->IterateArgOutSyms([=] (uint, uint, StackSym* sym) {
         if(!sym->IsArgSlotSym() && sym->m_isBailOutReferenced)
         {
             ProcessStackSymUse(sym, instr);

@@ -353,6 +353,17 @@ LowererMDArch::LoadHeapArguments(IR::Instr *instrArgs, bool force /* = false */,
             StackSym * paramSym = StackSym::New(TyMisc, func);
             this->m_func->SetArgOffset(paramSym, 2 * MachPtr);
             IR::Opnd * srcOpnd = IR::SymOpnd::New(paramSym, TyMachReg, func);
+
+            if (this->m_func->GetJnFunction()->IsGenerator())
+            {
+                // the function object for generator calls is a GeneratorVirtualScriptFunction object
+                // and we need to pass the real JavascriptGeneratorFunction object so grab it instead
+                IR::RegOpnd *tmpOpnd = IR::RegOpnd::New(TyMachReg, func);
+                LowererMD::CreateAssign(tmpOpnd, srcOpnd, instrArgs);
+
+                srcOpnd = IR::IndirOpnd::New(tmpOpnd, Js::GeneratorVirtualScriptFunction::GetRealFunctionOffset(), TyMachPtr, func);
+            }
+
             this->LoadHelperArgument(instrArgs, srcOpnd);
 
             // Save the newly-created args object to its dedicated stack slot.
@@ -393,9 +404,20 @@ LowererMDArch::LoadFuncExpression(IR::Instr *instrFuncExpr)
         paramOpnd = IR::SymOpnd::New(paramSym, TyMachReg, this->m_func);
     }
 
-    // mov dst, [rbp + 16]
-    instrFuncExpr->m_opcode = Js::OpCode::MOV;
+    if (this->m_func->GetJnFunction()->IsGenerator())
+    {
+        // the function object for generator calls is a GeneratorVirtualScriptFunction object
+        // and we need to return the real JavascriptGeneratorFunction object so grab it before
+        // assigning to the dst
+        IR::RegOpnd *tmpOpnd = IR::RegOpnd::New(TyMachReg, func);
+        LowererMD::CreateAssign(tmpOpnd, paramOpnd, instrFuncExpr);
+
+        paramOpnd = IR::IndirOpnd::New(tmpOpnd, Js::GeneratorVirtualScriptFunction::GetRealFunctionOffset(), TyMachPtr, func);
+    }
+
+    // mov dst, param
     instrFuncExpr->SetSrc1(paramOpnd);
+    LowererMD::ChangeToAssign(instrFuncExpr);
 
     return instrFuncExpr;
 }

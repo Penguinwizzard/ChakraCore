@@ -212,4 +212,6 @@ private:
     void                DynamicStatsInstrument();
 #endif
 
+    static IR::Instr *  InsertMove(IR::Opnd *dst, IR::Opnd *src, IR::Instr *const insertBeforeInstr);
+
 };

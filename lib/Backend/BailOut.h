@@ -121,7 +121,7 @@ public:
     IR::Opnd * branchConditionOpnd;
 
     template<class Fn>
-    void IterateArgSyms(Fn callback)
+    void IterateArgOutSyms(Fn callback)
     {
         uint argOutIndex = 0;
         for(uint i = 0; i < this->startCallCount; i++)
@@ -132,7 +132,7 @@ public:
                 StackSym* sym = this->argOutSyms[argOutIndex];
                 if(sym)
                 {
-                    callback(argOutIndex, sym);
+                    callback(argOutIndex, i + sym->GetArgSlotNum(), sym);
                 }
                 argOutIndex++;
             }

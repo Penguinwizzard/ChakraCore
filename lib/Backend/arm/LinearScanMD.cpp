@@ -347,17 +347,3 @@ RegNum LinearScanMD::GetRegisterFromSaveIndex(uint offset)
 {
     return (RegNum)(offset >= RegD0 ? (offset - RegD0) / 2  + RegD0 : offset);
 }
-
-IR::Instr* LinearScanMD::InsertMove(IR::Opnd *dst, IR::Opnd *src, IR::Instr *const insertBeforeInstr)
-{
-    IR::Instr *instrPrev = insertBeforeInstr->m_prev;
-
-    IR::Instr *instrRet =   Lowerer::InsertMove(dst, src, insertBeforeInstr);
-
-    for (IR::Instr *instr = instrPrev->m_next; instr != insertBeforeInstr; instr = instr->m_next)
-    {
-        instr->CopyNumber(insertBeforeInstr);
-    }
-
-    return instrRet;
-}

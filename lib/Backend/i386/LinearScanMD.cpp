@@ -214,7 +214,7 @@ LinearScanMD::GenerateBailInForGeneratorYield(IR::Instr * resumeLabelInstr, Bail
 
         if (lifetime->isSpilled)
         {
-            // stack restores require an extra register since we can move an indir to an indir on x86
+            // stack restores require an extra register since we can't move an indir directly to an indir on x86
             IR::Instr * instr = IR::Instr::New(Js::OpCode::MOV, ecxRegOpnd, srcOpnd, this->func);
             instrInsertStackSym->InsertBefore(instr);
 

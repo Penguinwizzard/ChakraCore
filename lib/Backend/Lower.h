@@ -72,7 +72,7 @@ public:
     static bool     HasSideEffects(IR::Instr *instr);
 
 #if DBG
-    static bool     ValidOpcodeAfterLower(IR::Instr* instr, Func * func = null);
+    static bool     ValidOpcodeAfterLower(IR::Instr* instr, Func * func);
 #endif
 private:
     IR::Instr *     LowerNewRegEx(IR::Instr * instr);
