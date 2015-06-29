@@ -224,7 +224,7 @@ LinearScanMD::GenerateBailOut(
         // Load the register save space address for the specified register into the scratch register:
         //     ldimm SCRATCH_REG, regSaveSpace
         // RELOCJIT: Profiling/bailout is not currently supported for relocatable JIT
-        LinearScanMD::InsertMove(
+        LinearScan::InsertMove(
             IR::RegOpnd::New(null, SCRATCH_REG, TyMachPtr, func),
             IR::AddrOpnd::New(&registerSaveSpace[reg - 1], IR::AddrOpndKindDynamicMisc, func),
             instr);
@@ -238,7 +238,7 @@ LinearScanMD::GenerateBailOut(
         //     mov  [SCRATCH_REG], reg
         LoadRegSaveSpaceIntoScratch(reg);
         const IRType regType = RegTypes[reg];
-        LinearScanMD::InsertMove(
+        LinearScan::InsertMove(
             IR::IndirOpnd::New(
                 IR::RegOpnd::New(null, SCRATCH_REG, TyMachPtr, func),
                 0,
@@ -286,7 +286,7 @@ LinearScanMD::GenerateBailOut(
         // Pass in the branch condition
         //     mov  r1, condition
         IR::Instr *const newInstr =
-            LinearScanMD::InsertMove(
+            LinearScan::InsertMove(
                 IR::RegOpnd::New(null, RegR1, bailOutInfo->branchConditionOpnd->GetType(), func),
                 bailOutInfo->branchConditionOpnd,
                 instr);
@@ -295,7 +295,7 @@ LinearScanMD::GenerateBailOut(
 
     // Pass in the bailout record
     //     ldimm r0, bailOutRecord
-    LinearScanMD::InsertMove(
+    LinearScan::InsertMove(
         IR::RegOpnd::New(null, RegR0, TyMachPtr, func),
         // RELOCJIT: Bailouts not supported.
         IR::AddrOpnd::New(bailOutInfo->bailOutRecord, IR::AddrOpndKindDynamicBailOutRecord, func, true),
@@ -319,7 +319,7 @@ LinearScanMD::GenerateBailOut(
     //     ldimm lr, BailOut
     //     blx  lr
     Assert(instr->GetSrc1()->IsHelperCallOpnd());
-    LinearScanMD::InsertMove(IR::RegOpnd::New(null, RegLR, TyMachPtr, func), instr->GetSrc1(), instr);
+    LinearScan::InsertMove(IR::RegOpnd::New(null, RegLR, TyMachPtr, func), instr->GetSrc1(), instr);
     instr->ReplaceSrc1(IR::RegOpnd::New(null, RegLR, TyMachPtr, func));
 }
 
