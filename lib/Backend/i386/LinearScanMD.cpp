@@ -467,9 +467,10 @@ LinearScanMD::InsertOpHelperSpillsAndRestores(OpHelperBlock const& opHelperBlock
         }
         else
         {
-            IR::RegOpnd * regOpnd = IR::RegOpnd::New(NULL, opHelperSpilledLifetime.reg, TyMachPtr, this->func);
+            IR::RegOpnd * regOpnd;
             if (!sym)
             {
+                regOpnd = IR::RegOpnd::New(NULL, opHelperSpilledLifetime.reg, TyMachPtr, this->func);
                 IR::Instr * pushInstr = IR::Instr::New(Js::OpCode::PUSH, this->func);
                 pushInstr->SetSrc1(regOpnd);
                 opHelperBlock.opHelperLabel->InsertAfter(pushInstr);
@@ -483,11 +484,12 @@ LinearScanMD::InsertOpHelperSpillsAndRestores(OpHelperBlock const& opHelperBlock
             }
             else
             {
-                IR::Instr* instr = LowererMD::CreateAssign(IR::SymOpnd::New(sym, TyMachReg, func), regOpnd, opHelperBlock.opHelperLabel->m_next);
+                regOpnd = IR::RegOpnd::New(NULL, opHelperSpilledLifetime.reg, sym->GetType(), this->func);
+                IR::Instr* instr = LowererMD::CreateAssign(IR::SymOpnd::New(sym, sym->GetType(), func), regOpnd, opHelperBlock.opHelperLabel->m_next);
                 instr->CopyNumber(opHelperBlock.opHelperLabel);
                 if (opHelperSpilledLifetime.reload)
                 {
-                    instr = LowererMD::CreateAssign(regOpnd, IR::SymOpnd::New(sym, TyMachReg, func), opHelperBlock.opHelperEndInstr);
+                    instr = LowererMD::CreateAssign(regOpnd, IR::SymOpnd::New(sym, sym->GetType(), func), opHelperBlock.opHelperEndInstr);
                     instr->CopyNumber(opHelperBlock.opHelperEndInstr);
                 }
             }

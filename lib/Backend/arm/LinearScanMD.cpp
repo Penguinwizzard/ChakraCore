@@ -142,15 +142,15 @@ LinearScanMD::InsertOpHelperSpillsAndRestores(const OpHelperBlock& opHelperBlock
                 func->StackAllocate(sym, MachRegInt);
             }
     
-            IR::RegOpnd * regOpnd = IR::RegOpnd::New(sym, opHelperSpilledLifetime.reg, TyMachReg, func);
-            IR::Instr * saveInstr = IR::Instr::New(Js::OpCode::STR, IR::SymOpnd::New(sym, TyMachReg, func), regOpnd, func);
+            IR::RegOpnd * regOpnd = IR::RegOpnd::New(sym, opHelperSpilledLifetime.reg, sym->GetType(), func);
+            IR::Instr * saveInstr = IR::Instr::New(Js::OpCode::STR, IR::SymOpnd::New(sym, sym->GetType(), func), regOpnd, func);
             opHelperBlock.opHelperLabel->InsertAfter(saveInstr);
             saveInstr->CopyNumber(opHelperBlock.opHelperLabel);
             this->LegalizeDef(saveInstr);
     
             if (opHelperSpilledLifetime.reload)
             {
-                IR::Instr * restoreInstr = IR::Instr::New(Js::OpCode::LDR, regOpnd, IR::SymOpnd::New(sym, TyMachReg, func), func);
+                IR::Instr * restoreInstr = IR::Instr::New(Js::OpCode::LDR, regOpnd, IR::SymOpnd::New(sym, sym->GetType(), func), func);
                 opHelperBlock.opHelperEndInstr->InsertBefore(restoreInstr);
                 restoreInstr->CopyNumber(opHelperBlock.opHelperEndInstr);
                 this->LegalizeUse(restoreInstr, restoreInstr->GetSrc1());

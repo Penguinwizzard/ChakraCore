@@ -191,11 +191,11 @@ LinearScanMD::InsertOpHelperSpillsAndRestores(const OpHelperBlock& opHelperBlock
                 Assert(sym);
                 func->StackAllocate(sym, MachRegInt);
             }
-            IR::RegOpnd * regOpnd = IR::RegOpnd::New(NULL, opHelperSpilledLifetime.reg, TyMachReg, func);
-            LowererMD::CreateAssign(IR::SymOpnd::New(sym, TyMachReg, func), regOpnd, opHelperBlock.opHelperLabel->m_next);
+            IR::RegOpnd * regOpnd = IR::RegOpnd::New(NULL, opHelperSpilledLifetime.reg, sym->GetType(), func);
+            LowererMD::CreateAssign(IR::SymOpnd::New(sym, sym->GetType(), func), regOpnd, opHelperBlock.opHelperLabel->m_next);
             if (opHelperSpilledLifetime.reload)
             {
-                LowererMD::CreateAssign(regOpnd, IR::SymOpnd::New(sym, TyMachReg, func), opHelperBlock.opHelperEndInstr);
+                LowererMD::CreateAssign(regOpnd, IR::SymOpnd::New(sym, sym->GetType(), func), opHelperBlock.opHelperEndInstr);
             }
         }
     }

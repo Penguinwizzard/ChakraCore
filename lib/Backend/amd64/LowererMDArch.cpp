@@ -1321,6 +1321,8 @@ LowererMDArch::LowerEntryInstr(IR::EntryInstr * entryInstr)
 
     uint32 stackArgsSize    = MachPtr * (argSlotsForFunctionsCalled + 1);
 
+    this->m_func->m_localStackHeight = Math::Align<int32>(this->m_func->m_localStackHeight, 8);
+
     // Allocate the inlined arg out stack in the locals. Allocate an additional slot so that
     // we can unconditionally clear the first slot past the current frame.
     this->m_func->m_localStackHeight += ((this->m_func->GetMaxInlineeArgOutCount() + 1) * MachPtr);

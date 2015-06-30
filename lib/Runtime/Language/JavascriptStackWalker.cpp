@@ -43,6 +43,18 @@ namespace Js
         return *dblPtr;
     }
 
+    int32 JavascriptCallStackLayout::GetInt32AtOffset(int offset) const
+    {
+        int32 *intPtr = (int32 *)(((char *)this) + offset);
+#ifdef ENABLE_DEBUG_CONFIG_OPTIONS
+        if (Js::Configuration::Global.flags.IsEnabled(Js::CheckAlignmentFlag))
+        {
+            Assert((int32*)AlignIt(intPtr, int32) == intPtr);
+        }
+#endif
+        return *intPtr;
+    }
+
     char * JavascriptCallStackLayout::GetValueChangeOffset(int offset) const
     {
         Js::Var *varPtr = (Js::Var *)(((char *)this) + offset);

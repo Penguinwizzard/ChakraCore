@@ -846,11 +846,9 @@ LinearScan::SetDstReg(IR::Instr *instr)
                         this->tempRegs.Clear(reg);
                     }
 
-                    RegNum srcReg = instr->GetSrc1()->AsRegOpnd()->GetReg();
-                    IRType srcType = instr->GetSrc1()->GetType() == TyFloat32 ? TyFloat32 : RegTypes[srcReg];
+                    IRType srcType = instr->GetSrc1()->GetType();
 
                     instr->ReplaceDst(IR::SymOpnd::New(stackSym, srcType, this->func));
-                    instr->GetSrc1()->SetType(srcType);
                     this->linearScanMD.LegalizeDef(instr);
                     return; 
                 }
@@ -2777,9 +2775,6 @@ LinearScan::AllocateStackSpace(Lifetime *spilledRange)
 
     uint32 size = TySize[spilledRange->sym->GetType()];
 
-    // We seem to have dependencies in many places on the minimum size of the stack allocation being equal to the pointer size
-    size = max(size, static_cast<uint32>(MachRegInt));
-
     // For the bytecodereg syms instead of spilling to the any other location lets re-use the already created slot.
     if (IsSymNonTempLocalVar(spilledRange->sym))
     {
@@ -2964,15 +2959,8 @@ LinearScan::InsertStore(IR::Instr *instr, StackSym *sym, RegNum reg)
    
     Assert(reg != RegNOREG);
 
-    // only for float32 do we need to make sure that we give the type of the sym
-    // because we want to be able to spill/reload as float32 without having to do
-    // any conversions
-    IRType type = sym->GetType() == TyFloat32 ? TyFloat32 : RegTypes[reg];
+    IRType type = sym->GetType();
 
-    if (sym->GetType() == TySimd128)
-    {
-        type = TySimd128;
-    }
     IR::Instr *store = IR::Instr::New(LowererMD::GetStoreOp(type),
         IR::SymOpnd::New(sym, type, this->func), 
         IR::RegOpnd::New(sym, reg, type, this->func), this->func);
@@ -2997,12 +2985,7 @@ LinearScan::InsertLoad(IR::Instr *instr, StackSym *sym, RegNum reg)
     IR::Opnd *src;
     // The size of loads and stores to memory need to match. See the comment
     // around type in InsertStore above.
-    IRType type = sym->GetType() == TyFloat32 ? TyFloat32 : RegTypes[reg];
-
-    if (sym->GetType() == TySimd128)
-    {
-        type = TySimd128;
-    }
+    IRType type = sym->GetType();
 
     bool isMovSDZero = false;
     if (sym->IsConst())
@@ -3037,14 +3020,13 @@ LinearScan::InsertLoad(IR::Instr *instr, StackSym *sym, RegNum reg)
     {
         load = IR::Instr::New(Js::OpCode::MOVSD_ZERO,
             IR::RegOpnd::New(sym, reg, type, this->func), this->func);
+        instr->InsertBefore(load);
     }
     else
 #endif
     {
-        load = IR::Instr::New(LowererMD::GetLoadOp(type),
-            IR::RegOpnd::New(sym, reg, type, this->func), src, this->func);
+        load = Lowerer::InsertMove(IR::RegOpnd::New(sym, reg, type, this->func), src, instr);
     }
-    instr->InsertBefore(load);
     load->CopyNumber(instr);
     if (!isMovSDZero)
     {

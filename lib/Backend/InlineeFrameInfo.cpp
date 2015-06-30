@@ -277,6 +277,10 @@ Js::Var InlineeFrameRecord::Restore(int offset, bool isFloat64, bool isInt32, Js
             value = Js::JavascriptNumber::New(dblValue, functionBody->GetScriptContext());
             BAILOUT_VERBOSE_TRACE(functionBody, L", value: %f (ToVar: 0x%p)", dblValue, value);
         }
+        else if (isInt32)
+        {
+            value = (Js::Var)layout->GetInt32AtOffset(offset);
+        }
         else
         {
             value = layout->GetOffset(offset);

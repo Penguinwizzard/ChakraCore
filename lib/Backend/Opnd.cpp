@@ -22,6 +22,15 @@ Opnd::UseWithNewType(IRType type, Func * func)
 {
     Opnd * res = this->Use(func);
     res->SetType(type);
+    StackSym* sym = res->GetStackSym();
+    if (sym)
+    {
+        if (TySize[sym->GetType()] < TySize[type])
+        {
+            Assert(!sym->IsAllocated());
+            sym->m_type = type;
+        }
+    }
     return res;
 }
 

@@ -7562,15 +7562,17 @@ void LowererMD::ConvertFloatToInt32(IR::Opnd* intOpnd, IR::Opnd* floatOpnd, IR::
 
     {
 #ifdef _M_X64
-        intOpnd = intOpnd->UseWithNewType(TyInt64, this->m_func);
+        IR::Opnd* dstOpnd = IR::RegOpnd::New(TyInt64, m_func);
+#else
+        IR::Opnd* dstOpnd = intOpnd;
 #endif
         // CVTTSD2SI dst, floatOpnd
-        IR::Instr* instr = IR::Instr::New(floatOpnd->IsFloat64() ? Js::OpCode::CVTTSD2SI : Js::OpCode::CVTTSS2SI, intOpnd, floatOpnd, this->m_func);
+        IR::Instr* instr = IR::Instr::New(floatOpnd->IsFloat64() ? Js::OpCode::CVTTSD2SI : Js::OpCode::CVTTSS2SI, dstOpnd, floatOpnd, this->m_func);
         instInsert->InsertBefore(instr);
 
         // CMP dst, 0x80000000 {0x8000000000000000 on x64}    -- Check for overflow
         instr = IR::Instr::New(Js::OpCode::CMP, this->m_func);
-        instr->SetSrc1(intOpnd);
+        instr->SetSrc1(dstOpnd);
         instr->SetSrc2(IR::AddrOpnd::New((Js::Var)MachSignBit, IR::AddrOpndKindConstant, this->m_func, true));
         instInsert->InsertBefore(instr);
         Legalize(instr);
@@ -7578,9 +7580,8 @@ void LowererMD::ConvertFloatToInt32(IR::Opnd* intOpnd, IR::Opnd* floatOpnd, IR::
 #ifdef _M_X64
         // Truncate to int32 for x64.  We still need to go to helper though if we have int64 overflow.
 
-        // MOV_TRUNC int32Opnd, int32Opnd
-        IR::Opnd* int32Opnd = intOpnd->UseWithNewType(TyInt32, this->m_func);
-        instr = IR::Instr::New(Js::OpCode::MOV_TRUNC, int32Opnd, int32Opnd, this->m_func);
+        // MOV_TRUNC intOpnd, tmpOpnd
+        instr = IR::Instr::New(Js::OpCode::MOV_TRUNC, intOpnd, dstOpnd, this->m_func);
         instInsert->InsertBefore(instr);
 #endif
     }

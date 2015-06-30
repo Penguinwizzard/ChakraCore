@@ -471,13 +471,6 @@ Func::StackAllocate(StackSym *stackSym, int size)
     {        
         return stackSym->m_offset;
     }
-#ifdef  DBG
-    if (stackSym->m_type != TyMisc)
-    {
-        int stackSymSize = max(stackSym->GetSymSize(), MachRegInt);
-        Assert(stackSymSize == size);
-    }
-#endif
     Assert(stackSym->m_offset == 0);
     stackSym->m_allocated = true;
     stackSym->m_offset = StackAllocate(size);

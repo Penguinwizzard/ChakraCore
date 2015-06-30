@@ -717,6 +717,7 @@ BailOutRecord::RestoreValues(IR::BailOutKind bailOutKind, Js::JavascriptCallStac
         int offset = offsets[i];
         Js::Var value = 0;
         double dblValue = 0.0;
+        int32 int32Value = 0;
 
         // The variables below determine whether we have a Var or native float/int.
         bool isFloat64;
@@ -734,6 +735,10 @@ BailOutRecord::RestoreValues(IR::BailOutKind bailOutKind, Js::JavascriptCallStac
                 {
                     dblValue = layout->GetDoubleAtOffset(offset);
                 }
+                else if (isInt32)
+                {
+                    int32Value = layout->GetInt32AtOffset(offset);
+                }
                 else
                 {
                     value = layout->GetOffset(offset);
@@ -749,6 +754,10 @@ BailOutRecord::RestoreValues(IR::BailOutKind bailOutKind, Js::JavascriptCallStac
                 if (isFloat64)
                 {
                     dblValue = *((double *)(((char *)argoutRestoreAddress) + i * MachPtr));
+                }
+                else if (isInt32)
+                {
+                    int32Value = *((int32 *)(((char *)argoutRestoreAddress) + i * MachPtr));
                 }
                 else
                 {
@@ -783,7 +792,14 @@ BailOutRecord::RestoreValues(IR::BailOutKind bailOutKind, Js::JavascriptCallStac
                 else
                 {
                     Assert(RegTypes[LinearScanMD::GetRegisterFromSaveIndex(offset)] != TyFloat64);
-                    value = registerSaveSpace[offset - 1];
+                    if (isInt32)
+                    {
+                        int32Value = (int32)registerSaveSpace[offset - 1];
+                    }
+                    else
+                    {
+                        value = registerSaveSpace[offset - 1];
+                    }
 
                     BAILOUT_VERBOSE_TRACE(newInstance->function->GetFunctionBody(), bailOutKind, L"Register %-4S  %4d", RegNames[offset], offset);
                 }
@@ -804,13 +820,19 @@ BailOutRecord::RestoreValues(IR::BailOutKind bailOutKind, Js::JavascriptCallStac
             }
             else
             {
-                Assert(!isFloat64);                
                 // Constants offset starts from max bail out register save slot count;
                 uint constantIndex = offset - (GetBailOutRegisterSaveSlotCount() + GetBailOutReserveSlotCount()) - 1;
-                value = this->constants[constantIndex]; 
-                BAILOUT_VERBOSE_TRACE(newInstance->function->GetFunctionBody(), bailOutKind, L"Constant index %4d", constantIndex);                        
+                if (isInt32)
+                {
+                    int32Value = (int32)this->constants[constantIndex];
+                }
+                else
+                {
+                    value = this->constants[constantIndex];
+                }
+                BAILOUT_VERBOSE_TRACE(newInstance->function->GetFunctionBody(), bailOutKind, L"Constant index %4d", constantIndex);
                 boxStackInstance = false;
-            }        
+            }
         }
         else
         {
@@ -825,7 +847,7 @@ BailOutRecord::RestoreValues(IR::BailOutKind bailOutKind, Js::JavascriptCallStac
         }
         else if (isInt32)
         {
-            int32 int32Value = (int32)value;
+            Assert(!value);
             value = Js::JavascriptNumber::ToVar(int32Value, scriptContext);
             BAILOUT_VERBOSE_TRACE(newInstance->function->GetFunctionBody(), bailOutKind, L", value: %10d (ToVar: 0x%p)", int32Value, value);          
         }    
