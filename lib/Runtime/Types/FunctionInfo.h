@@ -31,6 +31,7 @@ namespace Js
             Lambda                     = 1 << 10,
             CapturesThis               = 1 << 11, // Only lambdas will set this; denotes whether the lambda referred to this, used by debugger
             Generator                  = 1 << 12,
+            ClassConstructor           = 1 << 13,
         };
         FunctionInfo(JavascriptMethod entryPoint, Attributes attributes = None, LocalFunctionId functionId = Js::Constants::NoFunctionId, FunctionBody* functionBodyImpl = NULL);
 
@@ -45,6 +46,7 @@ namespace Js
         BOOL IsLambda() const { return ((this->attributes & Lambda) != 0); }
         BOOL IsConstructor() const { return ((this->attributes & ErrorOnNew) == 0); }
         BOOL IsGenerator() const { return ((this->attributes & Generator) != 0); }
+        BOOL IsClassConstructor() const { return ((this->attributes & ClassConstructor) != 0); }
 
         BOOL HasBody() const { return functionBodyImpl != NULL; }
         BOOL HasParseableInfo() const { return this->HasBody() && !this->IsDeferredDeserializeFunction(); }

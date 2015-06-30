@@ -54,24 +54,27 @@ namespace Js
             void InitializeParamsAndUndef(InterpreterStackFrame * newInstance, Fn callback, Var **pprestDest);
             void InitializeRestParam(InterpreterStackFrame * newInstance, Var *dest);
             void SetupInternal();
-            int inSlotsCount;
+
             Var * inParams;
-            uint localCount;
-            uint varAllocCount;
             ScriptFunction * const function;
             FunctionBody * const executeFunction;
             void** inlineCaches;
+            int inSlotsCount;
+            uint localCount;
+            uint varAllocCount;
             uint inlineCacheCount;
+            Js::CallFlags callFlags;
         };
     private:
         ByteCodeReader m_reader;        // Reader for current function
         int m_inSlotsCount;             // Count of actual incoming parameters to this function
-        Var* m_inParams;               // Range of 'in' parameters        
-        Var* m_outParams;              // Range of 'out' parameters (offset in m_localSlots)
-        Var* m_outIntParams;              // Range of 'out' parameters (offset in m_localSlots)
-        Var* m_outSp;                  // Stack pointer for next outparam
-        Var* m_outIntSp;                  // Stack pointer for next outparam
-        Var  m_arguments;              // Dedicated location for this frame's arguments object
+        Js::CallFlags m_callFlags;      // CallFlags passed to the current function
+        Var* m_inParams;                // Range of 'in' parameters        
+        Var* m_outParams;               // Range of 'out' parameters (offset in m_localSlots)
+        Var* m_outIntParams;            // Range of 'out' parameters (offset in m_localSlots)
+        Var* m_outSp;                   // Stack pointer for next outparam
+        Var* m_outIntSp;                // Stack pointer for next outparam
+        Var  m_arguments;               // Dedicated location for this frame's arguments object
         StackScriptFunction * stackNestedFunctions;
         FrameDisplay * localFrameDisplay;
         Var * localScopeSlots;
@@ -79,14 +82,10 @@ namespace Js
         ScriptFunction * function;
         FunctionBody * m_functionBody;
         void** inlineCaches;
-        uint inlineCacheCount;
         void * returnAddress;
         void * addressOfReturnAddress;  // Tag this frame with stack position, used by (remote) stack walker to test partially initialized interpreter stack frame.
         InterpreterStackFrame *previousInterpreterFrame;
-        uint currentLoopNum;
         Var  loopHeaderArray;          // Keeps alive any JITted loop bodies while the function is being interpreted
-        uint currentLoopCounter;       // This keeps tracks of loopiteration, how many times the current loop is executed. Its hit only in cases where jitloopbodies are not hit
-                                       // such as loops inside try\catch.
 
         // 'stack address' of the frame, used for recursion detection during stepping.
         // For frames created via interpreter path, we use 'this', for frames created by bailout we use stack addr of actual jitted frame
@@ -94,15 +93,22 @@ namespace Js
         DWORD_PTR m_stackAddress;
 
         ImplicitCallFlags * savedLoopImplicitCallFlags;
+
+        uint inlineCacheCount;
+        uint currentLoopNum;
+        uint currentLoopCounter;       // This keeps tracks of loopiteration, how many times the current loop is executed. Its hit only in cases where jitloopbodies are not hit
+                                       // such as loops inside try\catch.
+
         UINT16 m_flags;                // based on InterpreterStackFrameFlags
 
-        bool switchProfileMode;
-        bool isAutoProfiling;
+        bool switchProfileMode : 1;
+        bool isAutoProfiling : 1;
         uint32 switchProfileModeOnLoopEndNumber;
         int16 nestedTryDepth;
         int16 nestedCatchDepth;
-        int16 nestedFinallyDepth;
         uint retOffset;
+        int16 nestedFinallyDepth;
+
 
         void (InterpreterStackFrame::*opLoopBodyStart)(uint32 loopNumber, LayoutSize layoutSize, bool isFirstIteration);
         void (InterpreterStackFrame::*opProfiledLoopBodyStart)(uint32 loopNumber, LayoutSize layoutSize, bool isFirstIteration);
@@ -436,8 +442,13 @@ namespace Js
 
         template <class T> void OP_LdArrayHeadSegment(const unaligned T* playout);
 
+        inline Var GetFunctionExpression();
+
         template <class T> inline void OP_LdFunctionExpression(const unaligned T* playout);
         template <class T> inline void OP_StFunctionExpression(const unaligned T* playout);
+
+        template <class T> inline void OP_LdNewTarget(const unaligned T* playout);
+
         inline Var OP_Ld_A(Var aValue);
         void OP_ChkUndecl(Var aValue);
         void OP_EnsureNoRootProperty(uint propertyIdIndex);

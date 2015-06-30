@@ -28,6 +28,7 @@ PTNODE(knopStr        , "str const"        , Nop      , Pid         , fnopLeaf|f
 PTNODE(knopRegExp     , "reg expr"         , Nop      , Pid         , fnopLeaf|fnopConst    , "RegExprLit"                      , apnkRegExp     )
 PTNODE(knopThis       , "this"             , Nop      , None        , fnopLeaf              , "ThisExpr"                        , apnkThis       )
 PTNODE(knopSuper      , "super"            , Nop      , None        , fnopLeaf              , "SuperExpr"                       , apnkSuper      )
+PTNODE(knopNewTarget  , "new.target"       , Nop      , None        , fnopLeaf              , "NewTargetExpr"                   , apnkNewTarget  )
 PTNODE(knopNull       , "null"             , Nop      , None        , fnopLeaf              , "NullLit"                         , apnkNull       )
 PTNODE(knopFalse      , "false"            , Nop      , None        , fnopLeaf              , "FalseLit"                        , apnkFalse      )
 PTNODE(knopTrue       , "true"             , Nop      , None        , fnopLeaf              , "TrueLit"                         , apnkTrue       )

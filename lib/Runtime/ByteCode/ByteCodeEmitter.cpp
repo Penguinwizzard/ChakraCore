@@ -1667,6 +1667,10 @@ void ByteCodeGenerator::InitScopeSlotArray(FuncInfo * funcInfo)
     {
         propertyIdsForScopeSlotArray[funcInfo->superScopeSlot] = Js::PropertyIds::_superReferenceSymbol;
     }
+    if (funcInfo->newTargetScopeSlot != Js::Constants::NoRegister)
+    {
+        propertyIdsForScopeSlotArray[funcInfo->newTargetScopeSlot] = Js::PropertyIds::_lexicalNewTargetSymbol;
+    }
 
 #if DEBUG
     for (UINT i = 0; i < scopeSlotCount; i++)
@@ -1827,12 +1831,16 @@ void ByteCodeGenerator::LoadAllConstants(FuncInfo *funcInfo)
         }
     }
 
+    if (funcInfo->newTargetRegister != Js::Constants::NoRegister)
+    {
+        this->LoadNewTargetObject(funcInfo);
+    }
+
     if (funcInfo->frameDisplayRegister != Js::Constants::NoRegister)
     {
         m_writer.RecordFrameDisplayRegister(funcInfo->frameDisplayRegister);
         this->LoadFrameDisplay(funcInfo);
     }
-
 
     this->RecordAllIntConstants(funcInfo);
     this->RecordAllStrConstants(funcInfo);
@@ -1958,7 +1966,16 @@ void ByteCodeGenerator::LoadThisObject(FuncInfo *funcInfo, bool thisLoadedFromPa
         // thisLoadedFromParams would be true for the event Handler case,
         // "this" would have been loaded from parameters to put in the environment
         //
-        if (!thisLoadedFromParams && !funcInfo->IsLambda())
+        // "this" is not loaded from ArgIn0 in class constructors
+        //
+        Js::RegSlot thisLocation = funcInfo->thisPointerRegister;
+
+        if (this->scriptContext->GetConfig()->IsES6NewTargetEnabled() && funcInfo->IsClassConstructor())
+        {
+            // TODO[tawoll] - this should be 'uninitialized' as part of the temporal-dead-zone for class constructors
+            thisLocation = funcInfo->undefinedConstantRegister;
+        }
+        else if (!thisLoadedFromParams && !funcInfo->IsLambda())
         {
             m_writer.ArgIn0(funcInfo->thisPointerRegister);
         }
@@ -1967,7 +1984,7 @@ void ByteCodeGenerator::LoadThisObject(FuncInfo *funcInfo, bool thisLoadedFromPa
             // we don't want to emit 'this' for eval, because 'this' value in eval is equal to 'this' value of caller
             // and does not depend on "use strict" inside of eval.
             // so we pass 'this' dirrectly in GlobalObject::EntryEval()
-            EmitThis(funcInfo, funcInfo->thisPointerRegister);
+            EmitThis(funcInfo, thisLocation);
         }
     }
     else
@@ -1975,6 +1992,40 @@ void ByteCodeGenerator::LoadThisObject(FuncInfo *funcInfo, bool thisLoadedFromPa
         Assert(funcInfo->IsGlobalFunction());
         Js::RegSlot root = funcInfo->nullConstantRegister;
         EmitThis(funcInfo, root);
+    }
+}
+
+void ByteCodeGenerator::LoadNewTargetObject(FuncInfo *funcInfo)
+{
+    if (funcInfo->IsClassConstructor())
+    {
+        Assert(!funcInfo->IsLambda());
+
+        m_writer.ArgIn0(funcInfo->newTargetRegister);
+    }
+    else if (funcInfo->IsLambda())
+    {
+        Scope *scope;
+        Js::PropertyId envIndex = -1;
+        GetEnclosingNonLambdaScope(funcInfo, scope, envIndex);
+
+        if (scope->GetFunc()->IsGlobalFunction())
+        {
+            m_writer.Reg1(Js::OpCode::LdUndef, funcInfo->newTargetRegister);
+        }
+        else
+        {
+            Js::PropertyId slot = scope->GetFunc()->newTargetScopeSlot;
+            EmitInternalScopedSlotLoad(funcInfo, scope, envIndex, slot, funcInfo->newTargetRegister);
+        }
+    }
+    else if (funcInfo->IsGlobalFunction())
+    {
+        m_writer.Reg1(Js::OpCode::LdUndef, funcInfo->newTargetRegister);
+    }
+    else
+    {
+        m_writer.Reg1(Js::OpCode::LdNewTarget, funcInfo->newTargetRegister);
     }
 }
 
@@ -2271,7 +2322,22 @@ void ByteCodeGenerator::EmitInitCapturedThis(FuncInfo* funcInfo, Scope* scope)
         Js::OpCode op = scope->IsBlockScope(funcInfo) ? Js::OpCode::StObjSlot : Js::OpCode::StSlot;
         this->m_writer.Slot(op, funcInfo->thisPointerRegister, scope->GetLocation(), funcInfo->thisScopeSlot + Js::ScopeSlots::FirstSlotIndex);
     }
-};
+}
+
+void ByteCodeGenerator::EmitInitCapturedNewTarget(FuncInfo* funcInfo, Scope* scope)
+{
+    if (scope->GetIsObject())
+    {
+        // Ensure space for the new.target slot
+        uint cacheId = funcInfo->FindOrAddInlineCacheId(scope->GetLocation(), Js::PropertyIds::_lexicalNewTargetSymbol, false, true);
+        this->m_writer.PatchableProperty(Js::OpCode::InitFld, funcInfo->newTargetRegister, scope->GetLocation(), cacheId);
+    }
+    else
+    {
+        Js::OpCode op = scope->IsBlockScope(funcInfo) ? Js::OpCode::StObjSlot : Js::OpCode::StSlot;
+        this->m_writer.Slot(op, funcInfo->newTargetRegister, scope->GetLocation(), funcInfo->newTargetScopeSlot + Js::ScopeSlots::FirstSlotIndex);
+    }
+}
 
 void ByteCodeGenerator::EmitDefaultArgs(FuncInfo *funcInfo, ParseNode *pnode)
 {
@@ -2445,6 +2511,11 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
         if (funcInfo->thisScopeSlot != Js::Constants::NoRegister && !(funcInfo->IsLambda() || (funcInfo->IsGlobalFunction() && this->flags & fscrEval)))
         {
             EmitInitCapturedThis(funcInfo, funcInfo->bodyScope);
+        }
+
+        if (funcInfo->newTargetScopeSlot != Js::Constants::NoRegister && !funcInfo->IsGlobalFunction())
+        {
+            EmitInitCapturedNewTarget(funcInfo, funcInfo->bodyScope);
         }
 
         // TODO: (suwc) To implement Function.prototype.toMethod(), remove pre-emptive LdSuper or remove BadSuperReference throwing from Op_LdSuper
@@ -3036,6 +3107,11 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
                 funcInfo->EnsureSuperScopeSlot();
             }
 
+            if (funcInfo->isNewTargetLexicallyCaptured)
+            {
+                funcInfo->EnsureNewTargetScopeSlot();
+            }
+
             auto ensureFncDeclScopeSlots = [&](ParseNode *pnodeScope) {
                 for (pnode = pnodeScope; pnode;)
                 {
@@ -3102,6 +3178,10 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
             if (funcInfo->isSuperLexicallyCaptured)
             {
                 funcInfo->EnsureSuperScopeSlot();
+            }
+            if (funcInfo->isNewTargetLexicallyCaptured)
+            {
+                funcInfo->EnsureNewTargetScopeSlot();
             }
 
             pnodeFnc->sxFnc.MapContainerScopes([&](ParseNode *pnodeScope) { this->EnsureFncScopeSlots(pnodeScope, funcInfo); });
@@ -5830,7 +5910,15 @@ void EmitCallTargetES5(
     case knopSuper:
     {
         Emit(pnodeTarget, byteCodeGenerator, funcInfo, false);
-        *thisLocation = funcInfo->thisPointerRegister;
+
+        if (byteCodeGenerator->GetScriptContext()->GetConfig()->IsES6NewTargetEnabled())
+        {
+            *thisLocation = funcInfo->newTargetRegister;
+        }
+        else
+        {
+            *thisLocation = funcInfo->thisPointerRegister;
+        }
         break;
     }
 
@@ -7846,6 +7934,10 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         break;          //PTNODE(knopThis       , "this"        ,None    ,None ,fnopLeaf)
     case knopThis:
         // enregistered
+        RECORD_LOAD(pnode);
+        break;
+        //PTNODE(knopNewTarget      , "new.target"       ,None    , None        , fnopLeaf)
+    case knopNewTarget:
         RECORD_LOAD(pnode);
         break;
         //PTNODE(knopSuper      , "super"       ,None    , None        , fnopLeaf)

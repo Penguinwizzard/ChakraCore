@@ -2356,6 +2356,10 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             }
             break;
 
+        case Js::OpCode::LdNewTarget:
+            this->GenerateLoadNewTarget(instr);
+            break;
+
         case Js::OpCode::StFuncExpr:
             // object.propid = src
             LowerStFld(instr, IR::HelperOp_StFunctionExpression, IR::HelperOp_StFunctionExpression, false);
@@ -19953,6 +19957,63 @@ Lowerer::GenerateFastCmTypeOf(IR::Instr *compare, IR::RegOpnd *object, IR::IntCo
     InsertMove(dst, LoadLibraryValueOpnd(done, LibraryValue::ValueFalse), done);
 
     // $done:
+}
+
+void
+Lowerer::GenerateLoadNewTarget(IR::Instr* instrInsert)
+{
+    IR::Instr * instr;
+    IR::RegOpnd * dstOpnd;
+    IR::SymOpnd * srcOpnd;
+    IR::LabelInstr * labelLoadFuncExpr = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, false);
+    IR::LabelInstr * labelDone = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, false);
+
+    // MOV s1, [ebp + 4]                        // s1 = call info
+    // AND s1, Js::CallFlags_New                // s1 &= Js::CallFlags_New
+    // CMP s1, 0
+    // JNE $L1
+    // MOV dst, undefined                       // dst = undefined
+    // JMP $L2
+    // $L1
+    // MOV dst, [ebp + 8]                       // dst = function object
+    // $L2
+
+    srcOpnd = Lowerer::LoadCallInfo(instrInsert);
+    dstOpnd = IR::RegOpnd::New(StackSym::New(TyMachReg, this->m_func), TyMachReg, this->m_func);
+    LowererMD::CreateAssign(dstOpnd, srcOpnd, instrInsert);
+
+    Assert(Js::CallInfo::ksizeofCount == 24);
+
+    instr = IR::Instr::New(Js::OpCode::AND, dstOpnd, dstOpnd,
+        IR::IntConstOpnd::New(Js::CallFlags_New << Js::CallInfo::ksizeofCount, TyUint32, this->m_func, true), this->m_func);
+    instrInsert->InsertBefore(instr);
+
+    InsertCompareBranch(
+        dstOpnd,
+        IR::IntConstOpnd::New(0, TyUint32, this->m_func, true),
+        Js::OpCode::BrNeq_A,
+        true,
+        labelLoadFuncExpr,
+        instrInsert);
+
+    IR::Opnd* opndUndefAddress = this->LoadLibraryValueOpnd(instrInsert, LibraryValue::ValueUndefined);
+    IR::Opnd* opndUndef = IR::RegOpnd::New(TyMachPtr, this->m_func);
+    LowererMD::CreateAssign(opndUndef, opndUndefAddress, instrInsert);
+
+    dstOpnd = instrInsert->GetDst()->AsRegOpnd();
+    LowererMD::CreateAssign(dstOpnd, opndUndef, instrInsert);
+
+    InsertBranch(Js::OpCode::Br, labelDone, instrInsert);
+
+    instrInsert->InsertBefore(labelLoadFuncExpr);
+
+    m_lowererMD.LoadFuncExpression(instrInsert);
+    if (instr->m_func->IsInMemory())
+    {
+        this->GenerateGetCurrentFunctionObject(instrInsert);
+    }
+
+    instrInsert->InsertAfter(labelDone);
 }
 
 void

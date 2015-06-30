@@ -557,6 +557,7 @@ private:
         IdentPtr prototype; //m_pidPrototype;
         IdentPtr __proto__; // m_pid__proto__;
         IdentPtr of; //m_pidOf;
+        IdentPtr target; // m_pidTarget;
     };
 
     WellKnownPropertyPids wellKnownPropertyPids;
@@ -878,6 +879,11 @@ private:
     template<bool buildAST> ParseNodePtr ParsePostfixOperators(ERROR_RECOVERY_FORMAL_ ParseNodePtr pnode,
         BOOL fAllowCall, BOOL fInNew, _Inout_ IdentToken* pToken);
 
+    template<bool buildAST> ParseNodePtr ParseMetaProperty(
+        ERROR_RECOVERY_FORMAL_
+        tokens metaParentKeyword,
+        charcount_t ichMin);
+
     BOOL NodeIsIdent(ParseNodePtr pnode, IdentPtr pid);
     BOOL NodeIsEvalName(ParseNodePtr pnode);        
     BOOL IsJSONValid(ParseNodePtr pnodeExpr)
@@ -946,6 +952,7 @@ public:
 
     IdentPtr GetArgumentsPid() const { return wellKnownPropertyPids.arguments; }
     IdentPtr GetEvalPid() const { return wellKnownPropertyPids.eval; }
+    IdentPtr GetTargetPid() const { return wellKnownPropertyPids.target; }
 #if ERROR_RECOVERY
     IdentPtr GetErrorPid() const { return m_pidError; }
     IdentPtr GetDeclErrorPid() const { return m_pidDeclError; }

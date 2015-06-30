@@ -1166,9 +1166,14 @@ FuncInfo * ByteCodeGenerator::StartBindFunction(const wchar_t *name, int nameLen
         {
             attributes = (Js::FunctionInfo::Attributes)(attributes | Js::FunctionInfo::Attributes::HasSuperReference);
         }
-        if (pnode->sxFnc.IsClassConstructor() && pnode->sxFnc.IsGeneratedDefault())
+        if (pnode->sxFnc.IsClassConstructor())
         {
-            attributes = (Js::FunctionInfo::Attributes)(attributes | Js::FunctionInfo::Attributes::IsDefaultConstructor);
+            attributes = (Js::FunctionInfo::Attributes)(attributes | Js::FunctionInfo::Attributes::ClassConstructor);
+
+            if (pnode->sxFnc.IsGeneratedDefault())
+            {
+                attributes = (Js::FunctionInfo::Attributes)(attributes | Js::FunctionInfo::Attributes::IsDefaultConstructor);
+            }
         }
         if (pnode->sxFnc.IsGenerator())
         {
@@ -4240,6 +4245,12 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
                     byteCodeGenerator->AssignNullConstRegister();
                 }
             }
+            if (func->IsClassConstructor())
+            {
+                // TODO[tawoll]
+                // Class constructor call needs undefined const register for 'this' argument until we fix the super [[construct]] behavior
+                func->AssignUndefinedConstRegister();
+            }
             // "this" should be loaded for both global and non global functions
             if (func->IsGlobalFunction() && !(byteCodeGenerator->GetFlags() & fscrEval))
             {
@@ -4249,6 +4260,27 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
             }
             break;
         }
+    case knopNewTarget:
+    {
+        FuncInfo* func = byteCodeGenerator->TopFuncInfo();
+        pnode->location = func->AssignNewTargetRegister();
+
+        FuncInfo* nonLambdaFunc = func;
+
+        if (func->IsLambda())
+        {
+            nonLambdaFunc = byteCodeGenerator->FindEnclosingNonLambda();
+
+            nonLambdaFunc->root->sxFnc.SetHasNewTargetReferene();
+            nonLambdaFunc->AssignNewTargetRegister();
+            nonLambdaFunc->SetIsNewTargetLexicallyCaptured();
+            nonLambdaFunc->GetBodyScope()->SetHasLocalInClosure(true);
+
+            func->SetHasClosureReference(true);
+        }
+
+        break;
+    }
     case knopSuper:
     {
         FuncInfo* func = byteCodeGenerator->TopFuncInfo();
@@ -4265,8 +4297,25 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
             nonLambdaFunc->AssignSuperRegister();
             nonLambdaFunc->AssignThisRegister();
             nonLambdaFunc->SetIsSuperLexicallyCaptured();
+
+            if (nonLambdaFunc->IsClassConstructor())
+            {
+                func->AssignNewTargetRegister();
+
+                nonLambdaFunc->root->sxFnc.SetHasNewTargetReferene();
+                nonLambdaFunc->AssignNewTargetRegister();
+                nonLambdaFunc->SetIsNewTargetLexicallyCaptured();
+            }
+
             nonLambdaFunc->GetBodyScope()->SetHasLocalInClosure(true);
             func->SetHasClosureReference(true);
+        }
+        else
+        {
+            if (func->IsClassConstructor())
+            {
+                func->AssignNewTargetRegister();
+            }
         }
 
         if (nonLambdaFunc->IsGlobalFunction())

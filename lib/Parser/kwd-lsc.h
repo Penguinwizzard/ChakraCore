@@ -113,6 +113,7 @@ KEYWORD(tkOF          ,4, No, knopNone   , No, knopNone   , of)
 
 S_KEYWORD(LEval        ,3, eval)
 S_KEYWORD(LArguments   ,3, arguments)
+S_KEYWORD(LTarget      ,3, target)
 
 #undef KEYWORD
 

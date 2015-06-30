@@ -100,6 +100,7 @@ public:
     Js::RegSlot falseConstantRegister; // location, if any, of enregistered false constant
     Js::RegSlot thisPointerRegister;  // location, if any, of this pointer
     Js::RegSlot superRegister; // location, if any, of the super reference
+    Js::RegSlot newTargetRegister; // location, if any, of the new.target reference
 private:
     Js::RegSlot envRegister; // location, if any, of the closure environment
 public:
@@ -169,8 +170,10 @@ public:
     SlotProfileIdMap slotProfileIdMap;
     Js::PropertyId thisScopeSlot;
     Js::PropertyId superScopeSlot;
+    Js::PropertyId newTargetScopeSlot;
     bool isThisLexicallyCaptured;
     bool isSuperLexicallyCaptured;
+    bool isNewTargetLexicallyCaptured;
     Symbol *argumentsSymbol;
     JsUtil::List<Js::RegSlot, ArenaAllocator> nonUserNonTempRegistersToInitialize;
 
@@ -200,6 +203,7 @@ public:
         falseConstantRegister(Js::Constants::NoRegister),
         thisPointerRegister(Js::Constants::NoRegister),
         superRegister(Js::Constants::NoRegister),
+        newTargetRegister(Js::Constants::NoRegister),
         envRegister(Js::Constants::NoRegister),
         frameObjRegister(Js::Constants::NoRegister),
         frameSlotsRegister(Js::Constants::NoRegister),
@@ -240,8 +244,10 @@ public:
         sameNameArgsPlaceHolderSlotCount(0),
         thisScopeSlot(Js::Constants::NoProperty),
         superScopeSlot(Js::Constants::NoProperty),
+        newTargetScopeSlot(Js::Constants::NoProperty),
         isThisLexicallyCaptured(false),
         isSuperLexicallyCaptured(false),
+        isNewTargetLexicallyCaptured(false),
         inlineCacheCount(0),
         rootObjectLoadInlineCacheCount(0),
         rootObjectLoadMethodInlineCacheCount(0),
@@ -517,6 +523,10 @@ public:
         return root->sxFnc.IsLambda();
     }
 
+    BOOL IsClassConstructor() const {
+        return root->sxFnc.IsClassConstructor();
+    }
+
     void RemoveTargetStmt(ParseNode* pnodeStmt) {
         targetStatements.Remove(pnodeStmt);
     }
@@ -571,6 +581,15 @@ public:
             this->superRegister = NextVarRegister();
         }
         return this->superRegister;
+    }
+
+    Js::RegSlot AssignNewTargetRegister()
+    {
+        if (this->newTargetRegister == Js::Constants::NoRegister)
+        {
+            this->newTargetRegister = NextVarRegister();
+        }
+        return this->newTargetRegister;
     }
 
     Js::RegSlot AssignNullConstRegister()
@@ -829,6 +848,14 @@ public:
         }
     }
 
+    void EnsureNewTargetScopeSlot()
+    {
+        if (this->newTargetScopeSlot == Js::Constants::NoRegister)
+        {
+            this->newTargetScopeSlot = this->bodyScope->AddScopeSlot();
+        }
+    }
+
     void SetIsThisLexicallyCaptured()
     {
         this->isThisLexicallyCaptured = true;
@@ -837,6 +864,11 @@ public:
     void SetIsSuperLexicallyCaptured()
     {
         this->isSuperLexicallyCaptured = true;
+    }
+
+    void SetIsNewTargetLexicallyCaptured()
+    {
+        this->isNewTargetLexicallyCaptured = true;
     }
 
     Scope * GetGlobalBlockScope() const;

@@ -2579,6 +2579,29 @@ void Parser::EnsureStackAvailable()
     }
 }
 
+template<bool buildAST>
+ParseNodePtr Parser::ParseMetaProperty(ERROR_RECOVERY_FORMAL_ tokens metaParentKeyword, charcount_t ichMin)
+{
+    AssertMsg(metaParentKeyword == tkNEW, "Only supported for tkNEW parent keywords");
+    AssertMsg(this->m_token.tk == tkDot, "We must be currently sitting on the dot after the parent keyword");
+
+    m_pscan->Scan();
+
+    if (this->m_token.tk == tkID && this->m_token.GetIdentifier(m_phtbl) == this->GetTargetPid())
+    {
+        if (buildAST)
+        {
+            return CreateNodeWithScanner<knopNewTarget>(ichMin);
+        }
+    }
+    else
+    {
+        Error(ERRsyntax);
+    }
+
+    return nullptr;
+}
+
 /***************************************************************************
 Parse an expression term.
 ***************************************************************************/
@@ -2801,13 +2824,23 @@ ParseNodePtr Parser::ParseTerm(ERROR_RECOVERY_FORMAL_ BOOL fAllowCall, LPCOLESTR
     {
         ichMin = m_pscan->IchMinTok();
         m_pscan->Scan();
-        ParseNodePtr pnodeExpr = ParseTerm<buildAST>(ERROR_RECOVERY_ACTUAL_(ers) FALSE, pNameHint, pHintLength);
-        if (buildAST)
+
+        if (m_token.tk == tkDot && m_scriptContext->GetConfig()->IsES6NewTargetEnabled())
         {
-            pnode = CreateCallNode(knopNew, pnodeExpr, NULL);
-            pnode->ichMin = ichMin;
+            pnode = ParseMetaProperty<buildAST>(ERROR_RECOVERY_ACTUAL_(ers) tkNEW, ichMin);
+
+            m_pscan->Scan();
         }
-        fInNew = TRUE;
+        else
+        {
+            ParseNodePtr pnodeExpr = ParseTerm<buildAST>(ERROR_RECOVERY_ACTUAL_(ers) FALSE, pNameHint, pHintLength);
+            if (buildAST)
+            {
+                pnode = CreateCallNode(knopNew, pnodeExpr, NULL);
+                pnode->ichMin = ichMin;
+            }
+            fInNew = TRUE;
+        }
         break;
     }
 
@@ -10664,6 +10697,7 @@ void Parser::InitPids()
     wellKnownPropertyPids.prototype = m_phtbl->PidHashNameLen(g_ssym_prototype.sz, g_ssym_prototype.cch);
     wellKnownPropertyPids.__proto__ = m_phtbl->PidHashNameLen(L"__proto__", sizeof("__proto__") - 1);
     wellKnownPropertyPids.of = m_phtbl->PidHashNameLen(L"of", sizeof("of") - 1);
+    wellKnownPropertyPids.target = m_phtbl->PidHashNameLen(L"target", sizeof("target") - 1);
 #if ERROR_RECOVERY
     m_pidError = m_phtbl->PidHashNameLen(L"?", sizeof("?") - 1);
     m_pidDeclError = m_phtbl->PidHashNameLen(L"??", sizeof("??") - 1);
@@ -12477,6 +12511,11 @@ void PrintPnodeWIndent(ParseNode *pnode,int indentAmt) {
   case knopSuper:
       Indent(indentAmt);
       Output::Print(L"super\n");
+      break;
+      //PTNODE(knopNewTarget  , "new.target"  ,None    ,None ,fnopLeaf)
+  case knopNewTarget:
+      Indent(indentAmt);
+      Output::Print(L"new.target\n");
       break;
       //PTNODE(knopNull       , "null"        ,Null    ,None ,fnopLeaf)
   case knopNull:

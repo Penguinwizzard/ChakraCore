@@ -5319,9 +5319,15 @@ CommonNumber:
     Var JavascriptOperators::NewScObjectNoCtor(Var instance, ScriptContext * requestContext)
     {
         FunctionInfo* functionInfo = JavascriptOperators::GetConstructorFunctionInfo(instance, requestContext);
-        return functionInfo != null ?
-            JavascriptOperators::NewScObjectCommon(RecyclableObject::FromVar(instance), functionInfo, requestContext) :
-            JavascriptOperators::NewScObjectHostDispatchOrProxy(RecyclableObject::FromVar(instance), requestContext);
+
+        if (functionInfo)
+        {
+            return JavascriptOperators::NewScObjectCommon(RecyclableObject::FromVar(instance), functionInfo, requestContext);
+        }
+        else
+        {
+            return JavascriptOperators::NewScObjectHostDispatchOrProxy(RecyclableObject::FromVar(instance), requestContext);
+        }
     }
 
     Var JavascriptOperators::NewScObjectHostDispatchOrProxy(RecyclableObject * function, ScriptContext * requestContext)
@@ -5363,6 +5369,13 @@ CommonNumber:
         if (BinaryFeatureControl::LanguageService() && constructor->IsScriptFunction() && functionInfo->IsDeferred())
         {
             ((ScriptFunction *)constructor)->EnsureCopyFunction();
+        }
+
+        if (requestContext->GetConfig()->IsES6NewTargetEnabled() && functionInfo->IsClassConstructor())
+        {
+            // If we are calling new on a class constructor, the contract is that we pass new.target as the 'this' argument.
+            // function is the constructor on which we called new - this is new.target.
+            return function;
         }
 
         ConstructorCache* constructorCache = constructor->GetConstructorCache();

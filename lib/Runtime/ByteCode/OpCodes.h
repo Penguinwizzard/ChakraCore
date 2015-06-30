@@ -427,6 +427,7 @@ MACRO_WMS(              LdElemUndefScoped,  ElementU,       OpSideEffect)   // L
 MACRO_WMS(              LdFuncExpr,         Reg1,           None)   // Load the function expression to it's location
 MACRO(                  LdPropIds,          Auxiliary,      None)           // Load the property id array
 MACRO_WMS(              StFuncExpr,         ElementC,       OpSideEffect)   // Store the function expression to it's activation object with attributes
+MACRO_EXTEND_WMS(       LdNewTarget,        Reg1,           None)       // Load new.target in an ordinary function call or construct call
 
 // Instancing operations
 MACRO_EXTEND_WMS(LdCustomSpreadIteratorList, Reg2,          OpHasImplicitCall|OpSideEffect) // Runs the iterator on a function spread Argument

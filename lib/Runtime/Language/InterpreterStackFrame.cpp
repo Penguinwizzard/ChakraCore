@@ -800,13 +800,13 @@ namespace Js
 {
     const int k_stackFrameVarCount = (sizeof(InterpreterStackFrame) + sizeof(Var) - 1) / sizeof(Var);
     InterpreterStackFrame::Setup::Setup(Js::ScriptFunction * function, Js::Arguments& args)
-        : function(function), inParams(args.Values), inSlotsCount(args.Info.Count), executeFunction(function->GetFunctionBody())
+        : function(function), inParams(args.Values), inSlotsCount(args.Info.Count), executeFunction(function->GetFunctionBody()), callFlags(args.Info.Flags)
     {
         SetupInternal();
     }
 
     InterpreterStackFrame::Setup::Setup(Js::ScriptFunction * function, Var * inParams, int inSlotsCount)
-        : function(function), inParams(inParams), inSlotsCount(inSlotsCount), executeFunction(function->GetFunctionBody())
+        : function(function), inParams(inParams), inSlotsCount(inSlotsCount), executeFunction(function->GetFunctionBody()), callFlags(CallFlags_None)
     {
         SetupInternal();
     }
@@ -881,6 +881,7 @@ namespace Js
         newInstance->scriptContext  = this->executeFunction->GetScriptContext();
         newInstance->m_inSlotsCount = this->inSlotsCount;
         newInstance->m_inParams     = this->inParams;
+        newInstance->m_callFlags    = this->callFlags;
         newInstance->m_outParams    = newInstance->m_localSlots + localCount;
         newInstance->m_outSp        = newInstance->m_outParams;
         newInstance->m_arguments    = NULL;

@@ -22,6 +22,7 @@
 #endif
 ENTRY_INTERNAL_SYMBOL(_lexicalThisSlotSymbol)
 ENTRY_INTERNAL_SYMBOL(_superReferenceSymbol)
+ENTRY_INTERNAL_SYMBOL(_lexicalNewTargetSymbol)
 ENTRY_SYMBOL(_symbolHasInstance, L"Symbol.hasInstance")
 ENTRY_SYMBOL(_symbolIsConcatSpreadable, L"Symbol.isConcatSpreadable")
 ENTRY_SYMBOL(_symbolIterator, L"Symbol.iterator")

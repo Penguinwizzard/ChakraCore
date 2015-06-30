@@ -329,11 +329,16 @@ namespace Js
         SetReg(playout->R0, length);
     }
 
+    inline Var InterpreterStackFrame::GetFunctionExpression()
+    {
+        // Make sure we get the boxed function object if is there, (or the function itself)
+        return StackScriptFunction::GetCurrentFunctionObject(this->function->GetRealFunctionObject());
+    }
+
     template <class T>
     inline void InterpreterStackFrame::OP_LdFunctionExpression(const unaligned T * playout)
     {
-        // Make sure we get the boxed function object if is there, (or the function itself)
-        SetRegAllowStackVar(playout->R0, StackScriptFunction::GetCurrentFunctionObject(this->function->GetRealFunctionObject()));
+        SetRegAllowStackVar(playout->R0, this->GetFunctionExpression());
     }
 
     template <class T>
@@ -343,6 +348,19 @@ namespace Js
 
         JavascriptOperators::OP_StFunctionExpression(instance,
             this->m_functionBody->GetReferencedPropertyId(playout->PropertyIdIndex), GetReg(playout->Value));
+    }
+
+    template <class T> 
+    inline void InterpreterStackFrame::OP_LdNewTarget(const unaligned T* playout)
+    {
+        if (this->m_callFlags & CallFlags_New)
+        {
+            SetRegAllowStackVar(playout->R0, this->GetFunctionExpression());
+        }
+        else
+        {
+            SetReg(playout->R0, this->GetScriptContext()->GetLibrary()->GetUndefined());
+        }
     }
 
     inline Var InterpreterStackFrame::OP_Ld_A(Var aValue)

@@ -356,6 +356,12 @@
                     goto LReserved;
                 }
                 break;
+            case 'a':
+                if (p[1] == 'r' && p[2] == 'g' && p[3] == 'e' && p[4] == 't' && !IsIdContinueNext(p+5, last)) {
+                    p += 5;
+                    goto LTarget ;
+                }
+                break;
             }
         }
         goto LIdentifier;

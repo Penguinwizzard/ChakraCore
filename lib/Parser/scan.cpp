@@ -2084,6 +2084,14 @@ LArguments:
                 goto LDone;
             }
 
+LTarget:
+            {
+                token = tkID;
+                if (!this->m_parser) goto LIdentifier;
+                m_ptoken->SetIdentifier(this->m_parser->GetTargetPid());
+                goto LDone;
+            }
+
 #include "kwd-swtch.h"
         case 'A': case 'B': case 'C': case 'D': case 'E':
         case 'F': case 'G': case 'H': case 'I': case 'J':

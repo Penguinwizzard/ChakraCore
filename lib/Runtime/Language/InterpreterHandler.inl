@@ -249,6 +249,7 @@ EXDEF3_WMS(CUSTOM,                  InitProto,                  OP_InitProto, El
   DEF3_WMS(CUSTOM,                  LdElemUndefScoped,          OP_LdElementUndefinedScoped, ElementU)
   DEF3_WMS(CUSTOM_L_R0,             LdFuncExpr,                 OP_LdFunctionExpression, Reg1)
   DEF3_WMS(CUSTOM,                  StFuncExpr,                 OP_StFunctionExpression, ElementC)
+EXDEF3_WMS(CUSTOM_L_R0,             LdNewTarget,                OP_LdNewTarget, Reg1)
   DEF2_WMS(XXtoA1Mem,               NewScopeObject,             JavascriptOperators::OP_NewScopeObject)
   DEF2_WMS(XXtoA1Mem,               NewBlockScope,              JavascriptOperators::OP_NewBlockScope)
   DEF2_WMS(XXtoA1Mem,               NewPseudoScope,             JavascriptOperators::OP_NewPseudoScope)

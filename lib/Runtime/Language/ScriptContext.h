@@ -214,6 +214,7 @@ namespace Js
         bool IsES6IsConcatSpreadableEnabled()   const { return CONFIG_FLAG_RELEASE(ES6IsConcatSpreadable); }
         bool IsES6LambdaEnabled()               const { return CONFIG_FLAG_RELEASE(ES6Lambda); }
         bool IsES6MathExtensionsEnabled()       const { return CONFIG_FLAG_RELEASE(ES6Math); }
+        bool IsES6NewTargetEnabled()            const { return CONFIG_FLAG_RELEASE(ES6NewTarget); }
         bool IsES6ObjectExtensionsEnabled()     const { return CONFIG_FLAG_RELEASE(ES6Object); }
         bool IsES6NumberExtensionsEnabled()     const { return CONFIG_FLAG_RELEASE(ES6Number); }
         bool IsES6NumericLiteralEnabled()       const { return CONFIG_FLAG_RELEASE(ES6NumericLiterals); }

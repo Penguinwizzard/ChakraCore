@@ -285,6 +285,7 @@ public:
     void LoadCachedHeapArguments(FuncInfo *funcInfo);
     void LoadThisObject(FuncInfo *funcInfo, bool thisLoadedFromParams = false);
     void EmitThis(FuncInfo *funcInfo, Js::RegSlot fromRegister);
+    void LoadNewTargetObject(FuncInfo *funcInfo);
     void GetEnclosingNonLambdaScope(FuncInfo *funcInfo, Scope * &scope, Js::PropertyId &envIndex);
     void EmitInternalScopedSlotLoad(FuncInfo *funcInfo, Scope *scope, Js::PropertyId envIndex, Js::RegSlot slot, Js::RegSlot symbolRegister);
 
@@ -420,6 +421,7 @@ public:
     void MarkThisUsedInLambda();
 
     void EmitInitCapturedThis(FuncInfo* funcInfo, Scope* scope);
+    void EmitInitCapturedNewTarget(FuncInfo* funcInfo, Scope* scope);
 
     static bool NeedScopeObjectForArguments(FuncInfo *funcInfo, ParseNode *pnodeFnc)
     {
