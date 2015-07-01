@@ -1306,14 +1306,8 @@ namespace Js
         
         if (scriptContext->GetConfig()->IsES6ArrayUseConstructorEnabled())
         {
-            Var constructorVar = JavascriptOperators::GetProperty(this, Js::PropertyIds::constructor, scriptContext);
-
-            if (!JavascriptFunction::IsConstructor(constructorVar))
-            {
-                JavascriptError::ThrowTypeError(scriptContext, JSERR_FunctionArgument_NeedFunction, L"[TypedArray].prototype.subarray");
-            }
-
-            JavascriptFunction* constructor = JavascriptFunction::FromVar(constructorVar);
+            JavascriptFunction* constructor =
+                JavascriptFunction::FromVar(JavascriptOperators::SpeciesConstructor(this, TypedArrayBase::GetDefaultConstructor(this, scriptContext), scriptContext));
 
             Js::Var constructorArgs[] = { constructor, buffer, JavascriptNumber::ToVar(beginByteOffset, scriptContext), JavascriptNumber::ToVar(newLength, scriptContext) };
             Js::CallInfo constructorCallInfo(Js::CallFlags_New, _countof(constructorArgs));
@@ -1692,13 +1686,9 @@ namespace Js
             thisArg = scriptContext->GetLibrary()->GetUndefined();
         }
 
-        Var constructor = JavascriptOperators::GetProperty(typedArrayBase, PropertyIds::constructor, scriptContext);
-
         // We won't construct the return object until after walking over the elements of the TypedArray
-        if (!JavascriptFunction::IsConstructor(constructor))
-        {
-            JavascriptError::ThrowTypeError(scriptContext, JSERR_NotAConstructor, L"[TypedArray].prototype.filter");
-        }
+        Var constructor = JavascriptOperators::SpeciesConstructor(
+            typedArrayBase, TypedArrayBase::GetDefaultConstructor(args[0], scriptContext), scriptContext);
 
         // The correct flag value is CallFlags_Value but we pass CallFlags_None in compat modes
         CallFlags flags = CallFlags_Value;
@@ -2563,6 +2553,46 @@ namespace Js
             }
             return uint32Index;
         }
+    }
+
+    // static
+    Var TypedArrayBase::GetDefaultConstructor(Var object, ScriptContext* scriptContext)
+    {
+        TypeId typeId = JavascriptOperators::GetTypeId(object);
+        Var defaultConstructor = nullptr;
+        switch (typeId)
+        {
+        case TypeId::TypeIds_Int8Array:
+            defaultConstructor = scriptContext->GetLibrary()->GetInt8ArrayConstructor();
+            break;
+        case TypeId::TypeIds_Uint8Array:
+            defaultConstructor = scriptContext->GetLibrary()->GetUint8ArrayConstructor();
+            break;
+        case TypeId::TypeIds_Uint8ClampedArray:
+            defaultConstructor = scriptContext->GetLibrary()->GetUint8ClampedArrayConstructor();
+            break;
+        case TypeId::TypeIds_Int16Array:
+            defaultConstructor = scriptContext->GetLibrary()->GetInt16ArrayConstructor();
+            break;
+        case TypeId::TypeIds_Uint16Array:
+            defaultConstructor = scriptContext->GetLibrary()->GetUint16ArrayConstructor();
+            break;
+        case TypeId::TypeIds_Int32Array:
+            defaultConstructor = scriptContext->GetLibrary()->GetInt32ArrayConstructor();
+            break;
+        case TypeId::TypeIds_Uint32Array:
+            defaultConstructor = scriptContext->GetLibrary()->GetUint32ArrayConstructor();
+            break;
+        case TypeId::TypeIds_Float32Array:
+            defaultConstructor = scriptContext->GetLibrary()->GetFloat32ArrayConstructor();
+            break;
+        case TypeId::TypeIds_Float64Array:
+            defaultConstructor = scriptContext->GetLibrary()->GetFloat32ArrayConstructor();
+            break;
+        default:
+            Assert(false);
+        }
+        return defaultConstructor;
     }
 
     template<> BOOL Uint8ClampedArray::Is(Var aValue)

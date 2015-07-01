@@ -157,6 +157,8 @@ namespace Js
         Var GetUndeclBlockVar() const { return undeclBlockVarSentinel; }
         bool IsUndeclBlockVar(Var var) const { return var == undeclBlockVarSentinel; }
 
+        static bool IsTypedArrayConstructor(Var constructor, ScriptContext* scriptContext);
+
     private:
         Recycler * recycler;
 

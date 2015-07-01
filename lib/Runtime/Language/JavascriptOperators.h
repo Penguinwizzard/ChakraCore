@@ -573,6 +573,9 @@ namespace Js
             __out_xcount(length*elementSize) byte* contentBuffer,
             Js::ScriptContext* scriptContext);
 
+        static Var SpeciesConstructor(RecyclableObject* object, Var defaultConstructor, ScriptContext* scriptContext);
+        static Var GetSpecies(Var constructor, ScriptContext* scriptContext);
+
     private:
         static BOOL RelationalComparsionHelper(Var aLeft, Var aRight, ScriptContext* scriptContext, bool leftFirst, bool undefinedAs);
 
@@ -637,7 +640,6 @@ namespace Js
 
         static BOOL ToPropertyDescriptorForProxyObjects(Var propertySpec, PropertyDescriptor* descriptor, ScriptContext* scriptContext);
         static BOOL ToPropertyDescriptorForGenericObjects(Var propertySpec, PropertyDescriptor* descriptor, ScriptContext* scriptContext);
-
     };
 
 } // namespace Js

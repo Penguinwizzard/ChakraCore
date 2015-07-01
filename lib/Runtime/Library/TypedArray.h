@@ -24,6 +24,8 @@ namespace Js
         BOOL GetPropertyBuiltIns(Js::PropertyId propertyId, Js::Var* value);
 
     public:
+        static Var GetDefaultConstructor(Var object, ScriptContext* scriptContext);
+
         class EntryInfo
         {
         public:

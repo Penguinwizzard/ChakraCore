@@ -5372,9 +5372,9 @@ Case0:
 
         // If the entry point is %TypedArray%.prototype.slice or the source object is an Array exotic object we should try to load the constructor property
         // and use it to construct the return object.
-        if (isTypedArrayEntryPoint || (scriptContext->GetConfig()->IsES6ArrayUseConstructorEnabled() && pArr != nullptr))
+        if (isTypedArrayEntryPoint)
         {
-            Var constructor = JavascriptOperators::GetProperty(obj, PropertyIds::constructor, scriptContext);
+            Var constructor = JavascriptOperators::SpeciesConstructor(typedArrayBase, TypedArrayBase::GetDefaultConstructor(args[0], scriptContext), scriptContext);
 
             // If we have an array source object, we need to make sure to do the right thing if it's a native array.
             // The helpers below which do the element copying require the source and destination arrays to have the same native type.
@@ -5385,7 +5385,7 @@ Case0:
                 newArr = CreateNewArrayHelper(newLen, isIntArray, isFloatArray, pArr, scriptContext);
                 newObj = newArr;
             }
-            else if (JavascriptFunction::IsConstructor(constructor))
+            else if (JavascriptFunction::IsConstructor(constructor) && JavascriptLibrary::IsTypedArrayConstructor(constructor, scriptContext))
             {
                 if (pArr)
                 {
@@ -5398,14 +5398,14 @@ Case0:
                 Js::CallInfo constructorCallInfo(Js::CallFlags_New, _countof(constructorArgs));
                 newObj = RecyclableObject::FromVar(JavascriptOperators::NewScObject(constructor, Js::Arguments(constructorCallInfo, constructorArgs), scriptContext));
             }
-            else if (isTypedArrayEntryPoint)
+            else
             {
                 // We only need to throw a TypeError when the constructor property is not an actual constructor if %TypedArray%.prototype.slice was called
-                JavascriptError::ThrowTypeError(scriptContext, JSERR_NotAConstructor, L"[TypedArray].prototype.slice");
+                JavascriptError::ThrowTypeError(scriptContext, JSERR_InvalidTypedArray_Constructor, L"[TypedArray].prototype.slice");
             }
         }
         // skip the typed array and "pure" array case, we still need to handle special arrays like es5array, remote array, and proxy of array.
-        else if (pArr == nullptr)
+        else if (pArr == nullptr || scriptContext->GetConfig()->IsES6ArrayUseConstructorEnabled())
         {
             newObj = ArraySpeciesCreate(obj, length, scriptContext);
         }
@@ -8388,9 +8388,10 @@ Case0:
 
         // If the entry point is %TypedArray%.prototype.map or the source object is an Array exotic object we should try to load the constructor property
         // and use it to construct the return object.
-        if (isTypedArrayEntryPoint || (scriptContext->GetConfig()->IsES6ArrayUseConstructorEnabled() && pArr != nullptr))
+        if (isTypedArrayEntryPoint)
         {
-            Var constructor = JavascriptOperators::GetProperty(obj, PropertyIds::constructor, scriptContext);
+            Var constructor = JavascriptOperators::SpeciesConstructor(
+                typedArrayBase, TypedArrayBase::GetDefaultConstructor(args[0], scriptContext), scriptContext);
 
             if (JavascriptFunction::IsConstructor(constructor))
             {
@@ -8405,7 +8406,7 @@ Case0:
             }
         }
         // skip the typed array and "pure" array case, we still need to handle special arrays like es5array, remote array, and proxy of array.
-        else if (pArr == nullptr)
+        else if (pArr == nullptr || scriptContext->GetConfig()->IsES6ArrayUseConstructorEnabled())
         {
             newObj = ArraySpeciesCreate(obj, length, scriptContext);
         }
@@ -10809,27 +10810,60 @@ JavascriptNativeFloatArray::BoxStackInstance(JavascriptNativeFloatArray * instan
 RecyclableObject*
 JavascriptArray::ArraySpeciesCreate(Var originalArray, uint32 length, ScriptContext* scriptContext)
 {
-    if (originalArray != nullptr && JavascriptOperators::IsArray(originalArray))
+    if (originalArray == nullptr || !scriptContext->GetConfig()->IsES6ArrayUseConstructorEnabled())
     {
-        if (scriptContext->GetConfig()->IsES6ArrayUseConstructorEnabled())
-        {
-            Var constructor = JavascriptOperators::GetProperty(RecyclableObject::FromVar(originalArray), PropertyIds::constructor, scriptContext);
+        return nullptr;
+    }
 
-            //if the constructor has not changed, do the default behavior
-            if (!JavascriptFunction::IsConstructor(constructor) || constructor == scriptContext->GetLibrary()->GetArrayConstructor())
+    Var constructor = scriptContext->GetLibrary()->GetUndefined();
+
+    if (JavascriptOperators::IsArray(originalArray))
+    {
+        if (!JavascriptOperators::GetProperty(RecyclableObject::FromVar(originalArray), PropertyIds::constructor, &constructor, scriptContext))
+        {
+            return nullptr;
+        }
+
+        if (JavascriptFunction::IsConstructor(constructor))
+        {
+            ScriptContext* constructorScriptContext = RecyclableObject::FromVar(constructor)->GetScriptContext();
+            if (constructorScriptContext != scriptContext)
+            {
+                if (constructorScriptContext->GetLibrary()->GetArrayConstructor() == constructor)
+                {
+                    constructor = scriptContext->GetLibrary()->GetUndefined();
+                }
+            }
+        }
+
+        if (JavascriptOperators::IsObject(constructor))
+        {
+            if (!JavascriptOperators::GetProperty((RecyclableObject*)constructor, PropertyIds::_symbolSpecies, &constructor, scriptContext))
             {
                 return nullptr;
             }
-
-            // TODO: add @@species support.
-            Js::Var constructorArgs[] = { constructor, JavascriptNumber::ToVar( length, scriptContext) };
-            Js::CallInfo constructorCallInfo(Js::CallFlags_New, _countof(constructorArgs));
-
-            return RecyclableObject::FromVar(JavascriptOperators::NewScObject(constructor, Js::Arguments(constructorCallInfo, constructorArgs), scriptContext));
+            if (constructor == scriptContext->GetLibrary()->GetNull())
+            {
+                constructor = scriptContext->GetLibrary()->GetUndefined();
+            }
         }
     }
 
-    return nullptr;
+    if (constructor == scriptContext->GetLibrary()->GetUndefined())
+    {
+        // TODO: ES6 ArrayCreate(length) throws RangeError for length > 2^32-1
+        return scriptContext->GetLibrary()->CreateArray(length);
+    }
+
+    if (!JavascriptFunction::IsConstructor(constructor))
+    {
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_NotAConstructor, L"[@@species]");
+    }
+
+    Js::Var constructorArgs[] = { constructor, JavascriptNumber::ToVar( length, scriptContext) };
+    Js::CallInfo constructorCallInfo(Js::CallFlags_New, _countof(constructorArgs));
+
+    return RecyclableObject::FromVar(JavascriptOperators::NewScObject(constructor, Js::Arguments(constructorCallInfo, constructorArgs), scriptContext));
 }
 
 } //namespace Js

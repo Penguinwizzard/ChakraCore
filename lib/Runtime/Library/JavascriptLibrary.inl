@@ -935,6 +935,21 @@ namespace Js
         // Js::SCAEngine::Clone() to convert JavascriptCopyOnAccessNativeIntArray only if src is a 'Var'
     }
 
+    // static
+    inline bool JavascriptLibrary::IsTypedArrayConstructor(Var constructor, ScriptContext* scriptContext)
+    {
+        JavascriptLibrary* library = scriptContext->GetLibrary();
+        return constructor == library->GetInt8ArrayConstructor()
+            || constructor == library->GetUint8ArrayConstructor()
+            || constructor == library->GetUint8ClampedArrayConstructor()
+            || constructor == library->GetInt16ArrayConstructor()
+            || constructor == library->GetUint16ArrayConstructor()
+            || constructor == library->GetInt32ArrayConstructor()
+            || constructor == library->GetUint32ArrayConstructor()
+            || constructor == library->GetFloat32ArrayConstructor()
+            || constructor == library->GetFloat64ArrayConstructor();
+    }
+
 #ifdef ENABLE_NATIVE_CODEGEN
     inline JavascriptFunction ** JavascriptLibrary::GetBuiltinFunctions()
     {

@@ -160,7 +160,7 @@ namespace Js
         JavascriptLibrary* library = scriptContext->GetLibrary();
         Var undefinedVar = library->GetUndefined();
 
-        Var constructor = args[0];
+        Var constructor = JavascriptOperators::GetSpecies(args[0], scriptContext);
         Var iterable;
 
         if (args.Info.Count > 1)
@@ -333,7 +333,7 @@ namespace Js
         AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Promise.race");
 
         Var undefinedVar = scriptContext->GetLibrary()->GetUndefined();
-        Var constructor = args[0];
+        Var constructor = JavascriptOperators::GetSpecies(args[0], scriptContext);
         Var iterable;
 
         if (args.Info.Count > 1)
@@ -427,7 +427,7 @@ namespace Js
         ScriptContext* scriptContext = function->GetScriptContext();
         Var undefinedVar = scriptContext->GetLibrary()->GetUndefined();
         Var r;
-        Var constructor = args[0];
+        Var constructor = JavascriptOperators::GetSpecies(args[0], scriptContext);
 
         if (args.Info.Count > 1)
         {
@@ -466,7 +466,7 @@ namespace Js
 
         Var undefinedVar = scriptContext->GetLibrary()->GetUndefined();
         Var x;
-        Var constructor = args[0];
+        Var constructor = JavascriptOperators::GetSpecies(args[0], scriptContext);
 
         if (args.Info.Count > 1)
         {
@@ -518,7 +518,7 @@ namespace Js
         promise = JavascriptPromise::FromVar(args[0]);
 
         JavascriptLibrary* library = scriptContext->GetLibrary();
-        Var constructor = JavascriptOperators::GetProperty(promise, Js::PropertyIds::constructor, scriptContext);
+        Var constructor = JavascriptOperators::SpeciesConstructor(promise, scriptContext->GetLibrary()->GetPromiseConstructor(), scriptContext);
         JavascriptPromiseCapability* promiseCapability = NewPromiseCapability(constructor, scriptContext);
         RecyclableObject* rejectionHandler;
         RecyclableObject* fulfillmentHandler;

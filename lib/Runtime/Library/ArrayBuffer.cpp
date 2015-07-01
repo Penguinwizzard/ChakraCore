@@ -358,12 +358,7 @@ namespace Js
 
         if (scriptContext->GetConfig()->IsES6ArrayUseConstructorEnabled())
         {
-            Var constructorVar = JavascriptOperators::GetProperty(arrayBuffer, Js::PropertyIds::constructor, scriptContext);
-
-            if (!JavascriptFunction::IsConstructor(constructorVar))
-            {
-                JavascriptError::ThrowTypeError(scriptContext, JSERR_FunctionArgument_NeedFunction, L"ArrayBuffer.prototype.slice");
-            }
+            Var constructorVar = JavascriptOperators::SpeciesConstructor(arrayBuffer, scriptContext->GetLibrary()->GetArrayBufferConstructor(), scriptContext);
 
             JavascriptFunction* constructor = JavascriptFunction::FromVar(constructorVar);
 

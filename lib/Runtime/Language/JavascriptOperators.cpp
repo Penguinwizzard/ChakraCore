@@ -9053,4 +9053,30 @@ CommonNumber:
             }
         }
     }
+
+    Var JavascriptOperators::SpeciesConstructor(RecyclableObject* object, Var defaultConstructor, ScriptContext* scriptContext)
+    {
+        Assert(JavascriptOperators::IsObject(object));
+        Var constructor = JavascriptOperators::GetProperty(object, PropertyIds::constructor, scriptContext);
+        if (constructor == scriptContext->GetLibrary()->GetUndefined())
+        {
+            return defaultConstructor;
+        }
+        if (!JavascriptOperators::IsObject(constructor))
+        {
+            JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedObject, L"[constructor]");
+        }
+        Var species = nullptr;
+        if (!JavascriptOperators::GetProperty((RecyclableObject*)constructor, PropertyIds::_symbolSpecies, &species, scriptContext)
+            || species == scriptContext->GetLibrary()->GetUndefined()
+            || species == scriptContext->GetLibrary()->GetNull())
+        {
+            return defaultConstructor;
+        }
+        if (!JavascriptFunction::IsConstructor(species))
+        {
+            JavascriptError::ThrowTypeError(scriptContext, JSERR_NotAConstructor, L"[@@species]");
+        }
+        return species;
+    }
 } // namespace Js
