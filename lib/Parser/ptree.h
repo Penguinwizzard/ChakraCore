@@ -359,7 +359,7 @@ public:
     }
 
     template<typename Fn>
-    MapContainerScopes(Fn fn)
+    void MapContainerScopes(Fn fn)
     {
         fn(this->pnodeScopes->sxBlock.pnodeScopes);
         if (this->pnodeBodyScope != nullptr)

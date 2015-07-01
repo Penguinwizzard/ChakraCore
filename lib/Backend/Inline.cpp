@@ -3194,7 +3194,7 @@ Inline::InlineGetterSetterFunction(IR::Instr *accessorInstr, const Js::FunctionC
 
     Assert(!accessorInstr->GetSrc2());
 
-    JSETW(EventWriteJSCRIPT_BACKEND_INLINE(
+    JS_ETW(EventWriteJSCRIPT_BACKEND_INLINE(
         funcCaller->GetFunctionNumber(), funcBody->GetFunctionNumber(),
         funcCaller->GetExternalDisplayName(), funcBody->GetExternalDisplayName()));
 
@@ -3486,7 +3486,7 @@ Inline::InlineScriptFunction(IR::Instr *callInstr, const Js::FunctionCodeGenJitT
     // We are committed to inlining, optimize the call instruction for fixed fields now and don't attempt it later.
     bool isFixed = false;
 
-    JSETW(EventWriteJSCRIPT_BACKEND_INLINE(
+    JS_ETW(EventWriteJSCRIPT_BACKEND_INLINE(
         funcCaller->GetFunctionNumber(), funcBody->GetFunctionNumber(),
         funcCaller->GetExternalDisplayName(), funcBody->GetExternalDisplayName()));
 

@@ -718,9 +718,10 @@ private:
     Js::DelayLoadWinRtFoundation delayLoadWinRtFoundationLibrary;
     Js::WindowsFoundationAdapter windowsFoundationAdapter;
 #endif
-
+#ifdef _CONTROL_FLOW_GUARD
     Js::DelayLoadWinCoreMemory delayLoadWinCoreMemoryLibrary;
     Js::DelayLoadWinCoreProcessThreads delayLoadWinCoreProcessThreads;
+#endif
 
     // Number of script context attached with probe manager.
     // This counter will be used as addref when the script context is created, this way we maintain the life of diagnostic object.
@@ -810,9 +811,10 @@ public:
     Js::DelayLoadWinRtFoundation *GetWinRtFoundationLibrary();
     Js::WindowsFoundationAdapter *GetWindowsFoundationAdapter();
 #endif
-
+#ifdef _CONTROL_FLOW_GUARD
     Js::DelayLoadWinCoreMemory * GetWinCoreMemoryLibrary();
     Js::DelayLoadWinCoreProcessThreads * GetWinCoreProcessThreads();
+#endif
 
     JITTimer JITTelemetry;
     ParserTimer ParserTelemetry;
@@ -1037,7 +1039,7 @@ public:
     Js::PropertyRecord const * UncheckedAddPropertyId(JsUtil::CharacterBuffer<WCHAR> const& propertyName, bool bind, bool isSymbol = false);
     Js::PropertyRecord const * UncheckedAddPropertyId(__in LPCWSTR propertyName, __in int propertyNameLength, bool bind = false, bool isSymbol = false);
 
-#ifdef F_JSETW
+#ifdef ENABLE_JS_ETW
     void EtwLogPropertyIdList();
 #endif
 

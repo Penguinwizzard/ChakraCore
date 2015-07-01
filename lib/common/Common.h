@@ -16,7 +16,7 @@
 //#define WIN32_LEAN_AND_MEAN      /* for windows.h */
 #include <windows.h>
 #include <wincrypt.h>
-#include <ntassert.h>
+
 
 #undef Yield /* winbase.h defines this but we want to use it for Js::OpCode::Yield; it is Win16 legacy, no harm undef'ing it */
 
@@ -348,7 +348,7 @@ namespace Js
 const Js::ModuleID kmodGlobal = 0;
 extern int TotalNumberOfBuiltInProperties;
 
-#ifdef F_JSETW
+#ifdef ENABLE_JS_ETW
 #define PAIR(a,b) a ## b
 
 #define GCETW(e, args)                          \
@@ -361,12 +361,12 @@ extern int TotalNumberOfBuiltInProperties;
         PAIR(EventWriteJSCRIPT_ ## e, args);    \
     }
 
-#define JSETW(s) s
-#define INCLUDE_IERESP_MSHTML #include <IERESP_mshtml.h>
+#define JS_ETW(s) s
+#define IS_JS_ETW(s) s
 #else
 #define GCETW(e, ...)
-#define JSETW(s)
-#define INCLUDE_IERESP_MSHTML
+#define JS_ETW(s)
+#define IS_JS_ETW(s) (false)
 #endif
 
 /*

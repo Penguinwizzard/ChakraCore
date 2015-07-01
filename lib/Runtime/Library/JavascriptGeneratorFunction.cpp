@@ -57,7 +57,7 @@ namespace Js
         scriptFunction->SetEnvironment(environment);
         scriptFunction->SetHasSuperReference(hasSuperReference);
 
-        JSETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_FUNCTION(scriptFunction, EtwTrace::GetFunctionId(functionProxy)));
+        JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_FUNCTION(scriptFunction, EtwTrace::GetFunctionId(functionProxy)));
 
         JavascriptGeneratorFunction* genFunc = scriptContext->GetLibrary()->CreateGeneratorFunction(functionInfo.GetOriginalEntryPoint(), scriptFunction);
         scriptFunction->SetRealGeneratorFunction(genFunc);
@@ -161,7 +161,7 @@ namespace Js
         GeneratorVirtualScriptFunction* scriptFunction = scriptContext->GetLibrary()->CreateGeneratorVirtualScriptFunction(proxy);
         scriptFunction->SetEnvironment(this->scriptFunction->GetEnvironment());
         scriptFunction->SetHasSuperReference(this->scriptFunction->HasSuperReference());
-        JSETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_FUNCTION(scriptFunction, EtwTrace::GetFunctionId(proxy)));
+        JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_FUNCTION(scriptFunction, EtwTrace::GetFunctionId(proxy)));
         
         JavascriptGeneratorFunction* genFunc = scriptContext->GetLibrary()->CreateGeneratorFunction(this->GetFunctionInfo()->GetOriginalEntryPoint(), scriptFunction);
         scriptFunction->SetRealGeneratorFunction(genFunc);

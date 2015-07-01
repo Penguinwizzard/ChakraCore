@@ -3,9 +3,9 @@
 //----------------------------------------------------------------------------
 
 #include "stdafx.h"
-#include "microsoft-scripting-jscript9.internalevents.h"
 
 #ifdef ETW_MEMORY_TRACKING
+#include "microsoft-scripting-jscript9.internalevents.h"
 
 enum ArenaType: unsigned short
 {

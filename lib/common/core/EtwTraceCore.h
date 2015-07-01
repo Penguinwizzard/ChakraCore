@@ -4,6 +4,7 @@
 
 #pragma once
 
+#ifdef ENABLE_JS_ETW
 // C-style callback
 extern "C" {
     void EtwCallback(
@@ -42,3 +43,5 @@ public:
 
     static bool s_registered;
 };
+
+#endif

@@ -9,7 +9,12 @@
 
 #undef DBGHELP_TRANSLATE_TCHAR
 #define _NO_CVCONST_H
-#include "Dbghelp.h"
+
+// dbghelp.h is not clean with warning 4091
+#pragma warning(push)
+#pragma warning(disable: 4091) /* warning C4091: 'typedef ': ignored on left of '' when no variable is declared */
+#include <dbghelp.h>
+#pragma warning(pop)
 
 namespace Js
 {

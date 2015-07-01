@@ -4,6 +4,7 @@
 
 #include "StdAfx.h"
 
+#ifdef ENABLE_JS_ETW
 using namespace Js;
 
 //
@@ -101,11 +102,11 @@ void EtwTrace::PerformRundown(bool start)
     ThreadContext * threadContext = ThreadContext::GetThreadContextList();   
     if(start)
     {
-        JSETW(EventWriteDCStartInit());
+        JS_ETW(EventWriteDCStartInit());
     }
     else
     {
-        JSETW(EventWriteDCEndInit());
+        JS_ETW(EventWriteDCEndInit());
     }
 
     while(threadContext != null)
@@ -123,7 +124,7 @@ void EtwTrace::PerformRundown(bool start)
             }
             if(start)
             {
-                JSETW(EventWriteScriptContextDCStart(scriptContext));
+                JS_ETW(EventWriteScriptContextDCStart(scriptContext));
 
                 if(scriptContext->GetSourceContextInfoMap() != null)
                 {
@@ -131,7 +132,7 @@ void EtwTrace::PerformRundown(bool start)
                     {
                         if (sourceContext != Constants::NoHostSourceContext)
                         {
-                            JSETW(LogSourceEvent(EventWriteSourceDCStart,
+                            JS_ETW(LogSourceEvent(EventWriteSourceDCStart,
                                 sourceContext,
                                 scriptContext,
                                 /* sourceFlags*/ 0,
@@ -142,7 +143,7 @@ void EtwTrace::PerformRundown(bool start)
             }
             else
             {
-                JSETW(EventWriteScriptContextDCEnd(scriptContext));
+                JS_ETW(EventWriteScriptContextDCEnd(scriptContext));
 
                 if(scriptContext->GetSourceContextInfoMap() != null)
                 {
@@ -150,7 +151,7 @@ void EtwTrace::PerformRundown(bool start)
                     {
                         if (sourceContext != Constants::NoHostSourceContext)
                         {
-                            JSETW(LogSourceEvent(EventWriteSourceDCEnd,
+                            JS_ETW(LogSourceEvent(EventWriteSourceDCEnd,
                                 sourceContext,
                                 scriptContext,
                                 /* sourceFlags*/ 0,
@@ -219,11 +220,11 @@ void EtwTrace::PerformRundown(bool start)
     }
     if(start)
     {
-        JSETW(EventWriteDCStartComplete());
+        JS_ETW(EventWriteDCStartComplete());
     }
     else
     {
-        JSETW(EventWriteDCEndComplete());
+        JS_ETW(EventWriteDCEndComplete());
     }
 }
 
@@ -259,7 +260,7 @@ void EtwTrace::LogSourceUnloadEvents(ScriptContext* scriptContext)
         {
             if(sourceContext != Constants::NoHostSourceContext)
             {
-                JSETW(LogSourceEvent(EventWriteSourceUnload,
+                JS_ETW(LogSourceEvent(EventWriteSourceUnload,
                     sourceContext,
                     scriptContext,
                     /* sourceFlags*/ 0,
@@ -268,7 +269,7 @@ void EtwTrace::LogSourceUnloadEvents(ScriptContext* scriptContext)
         });
     }
 
-    JSETW(EventWriteScriptContextUnload(scriptContext));
+    JS_ETW(EventWriteScriptContextUnload(scriptContext));
 }
 
 void EtwTrace::LogMethodInterpreterThunkLoadEvent(FunctionBody* body)
@@ -414,7 +415,7 @@ void EtwTrace::LogLoopBodyUnloadEvent(FunctionBody* body, LoopHeader* loopHeader
 //
 void EtwTrace::LogScriptContextLoadEvent(ScriptContext* scriptContext)
 {
-    JSETW(EventWriteScriptContextLoad(
+    JS_ETW(EventWriteScriptContextLoad(
         scriptContext));
 }
 
@@ -425,7 +426,7 @@ void EtwTrace::LogSourceModuleLoadEvent(ScriptContext* scriptContext, DWORD_PTR 
 {
     AssertMsg(sourceContext != Constants::NoHostSourceContext, "We should not be logged this if there is no source code available");
 
-    JSETW(LogSourceEvent(EventWriteSourceLoad,
+    JS_ETW(LogSourceEvent(EventWriteSourceLoad,
         sourceContext,
         scriptContext,
         /* sourceFlags*/ 0,
@@ -504,3 +505,4 @@ utf8char_t* EtwTrace::GetUrl( FunctionBody* body, uint* urlLength )
 }
 #endif
 
+#endif

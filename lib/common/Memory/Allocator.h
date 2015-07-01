@@ -764,7 +764,9 @@ void AssertValue(void * mem, T value, uint byteCount)
 }
 
 // For the debugger extension, we don't need the placement news
-#ifndef JD_PRIVATE
+#ifndef __PLACEMENT_NEW_INLINE
+#define __PLACEMENT_NEW_INLINE
+
 __inline void * __cdecl
 operator new(
 size_t byteSize,
@@ -782,6 +784,7 @@ void * previousAllocation               // Previously allocated memory
 {
 
 }
+
 #endif
 
 //----------------------------------------

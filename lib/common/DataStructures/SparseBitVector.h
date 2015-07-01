@@ -72,7 +72,7 @@ struct BVSparseNode
     //X64 the order changed to make sure it fits in 16 bytes
     SparseBVUnit    data;
     BVSparseNode *  next;
-#else //_M_X86 and _M_ARM32
+#else //_M_IX86 and _M_ARM32
     BVSparseNode *  next;
     SparseBVUnit    data;
 #endif

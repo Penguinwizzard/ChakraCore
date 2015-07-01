@@ -7,7 +7,7 @@
 #if PROFILE_DICTIONARY
 #include "DictionaryStats.h"
 #endif
-#ifdef F_JSETW
+#ifdef ENABLE_JS_ETW
 #include <IERESP_mshtml.h>
 #include "microsoft-scripting-jscript9.internalevents.h"
 #endif
@@ -662,7 +662,7 @@ namespace Js
             Output::Flush();
         }
 #endif
-#if F_JSETW
+#ifdef ENABLE_JS_ETW
         EventWriteJSCRIPT_HOST_SCRIPT_CONTEXT_CLOSE(this);
 #endif
 
@@ -711,7 +711,7 @@ namespace Js
             }
         }
 
-        EtwTrace::LogSourceUnloadEvents(this);
+        JS_ETW(EtwTrace::LogSourceUnloadEvents(this));
 
         this->GetThreadContext()->SubSourceSize(this->GetSourceSize());
 
@@ -1152,8 +1152,8 @@ namespace Js
             SourceCodeAllocator(), Js::InterpreterStackFrame::InterpreterAsmThunk);
 #endif
 
-        EtwTrace::LogScriptContextLoadEvent(this);
-        EventWriteJSCRIPT_HOST_SCRIPT_CONTEXT_START(this);
+        JS_ETW(EtwTrace::LogScriptContextLoadEvent(this));
+        JS_ETW(EventWriteJSCRIPT_HOST_SCRIPT_CONTEXT_START(this));
 
 #ifdef PROFILE_EXEC
         if (profiler != null)
@@ -2165,7 +2165,7 @@ namespace Js
         if (url != null)
         {
             sourceContextInfo->url = CopyString(url, len, this->SourceCodeAllocator());
-            EtwTrace::LogSourceModuleLoadEvent(this, sourceContext, url);
+            JS_ETW(EtwTrace::LogSourceModuleLoadEvent(this, sourceContext, url));
         }
         if (sourceMapUrl != null && sourceMapUrlLen != 0)
         {
@@ -2212,7 +2212,7 @@ namespace Js
                 bool profileLoaded = sourceContextInfo->sourceDynamicProfileManager->LoadFromProfileCache(profileDataCache, sourceContextInfo->url);
                 if (profileLoaded)
                 {
-                    JSETW(EventWriteJSCRIPT_PROFILE_LOAD(sourceContextInfo->dwHostSourceContext, this));
+                    JS_ETW(EventWriteJSCRIPT_PROFILE_LOAD(sourceContextInfo->dwHostSourceContext, this));
                 }
             }
             return sourceContextInfo;
@@ -5379,7 +5379,7 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
     {
         // Uncomment the assert below once bug 522912 is fixed.
         //AssertMsg(!startupComplete, "Startup complete - invoked twice?");
-        JSETW(EventWriteJSCRIPT_ON_STARTUP_COMPLETE(this));
+        JS_ETW(EventWriteJSCRIPT_ON_STARTUP_COMPLETE(this));
 
         SaveStartupProfileAndRelease();
     }
@@ -5394,7 +5394,7 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
                 uint bytesWritten = info->sourceDynamicProfileManager->SaveToProfileCacheAndRelease(info);
                 if (bytesWritten > 0)
                 {
-                    JSETW(EventWriteJSCRIPT_PROFILE_SAVE(info->dwHostSourceContext, this, bytesWritten, isSaveOnClose));
+                    JS_ETW(EventWriteJSCRIPT_PROFILE_SAVE(info->dwHostSourceContext, this, bytesWritten, isSaveOnClose));
                     OUTPUT_TRACE(Js::DynamicProfilePhase, L"Profile saving succeeded\n");
                 }
             });
@@ -5696,7 +5696,7 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
                     body->MapLoopHeaders([&](uint loopNumber, LoopHeader* header)
                     {
                         wchar_t loopBodyName[256];
-                        EtwTrace::GetLoopBodyName(body, header, loopBodyName, _countof(loopBodyName));
+                        JS_ETW(EtwTrace::GetLoopBodyName(body, header, loopBodyName, _countof(loopBodyName)));
                         header->MapEntryPoints([&](int index, LoopEntryPointInfo * entryPoint)
                         {
                             if (entryPoint->IsNativeCode())
@@ -6199,6 +6199,7 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
         }
     }
 
+#ifdef ENABLE_JS_ETW
     void ScriptContext::EmitStackTraceEvent(__in UINT64 operationID, __in USHORT maxFrameCount, bool emitV2AsyncStackEvent)
     {
         // If call root level is zero, there is no EntryExitRecord and the stack walk will fail.
@@ -6285,11 +6286,11 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
 
                 if (emitV2AsyncStackEvent)
                 {
-                    JSETW(EventWriteJSCRIPT_ASYNCCAUSALITY_STACKTRACE_V2(operationID, frameCount, nameBufferLength, sizeof(StackFrameInfo), &stackFrames.Item(0), nameBufferString));
+                    JS_ETW(EventWriteJSCRIPT_ASYNCCAUSALITY_STACKTRACE_V2(operationID, frameCount, nameBufferLength, sizeof(StackFrameInfo), &stackFrames.Item(0), nameBufferString));
                 }
                 else
                 {
-                    JSETW(EventWriteJSCRIPT_STACKTRACE(operationID, frameCount, nameBufferLength, sizeof(StackFrameInfo), &stackFrames.Item(0), nameBufferString));
+                    JS_ETW(EventWriteJSCRIPT_STACKTRACE(operationID, frameCount, nameBufferLength, sizeof(StackFrameInfo), &stackFrames.Item(0), nameBufferString));
                 }
             }
         }
@@ -6297,6 +6298,7 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
 
         OUTPUT_FLUSH();
     }
+#endif
 
     bool ScriptConfiguration::IsIntlEnabled() const
     {

@@ -4855,7 +4855,7 @@ CommonNumber:
             scriptContext->objectLiteralCacheCount++;
         }
 #endif
-        JSETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(instance));
+        JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(instance));
         // can't autoproxy here as object literal is not exactly "new" object and cannot be intercepted as proxy.
         return instance;
     }
@@ -5038,7 +5038,7 @@ CommonNumber:
             func = scriptContext->GetLibrary()->CreateScriptFunction(proxy);
 
             func->SetEnvironment(pDisplay);
-            JSETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_FUNCTION(func, EtwTrace::GetFunctionId(proxy)));
+            JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_FUNCTION(func, EtwTrace::GetFunctionId(proxy)));
 
             scopeObj->SetCachedFunc(i, func);
             if (scopeSlot != Constants::NoProperty)
@@ -5171,7 +5171,7 @@ CommonNumber:
     Var JavascriptOperators::NewJavascriptObjectNoArg(ScriptContext* requestContext)
     {
         DynamicObject * newObject = requestContext->GetLibrary()->CreateObject(true);
-        JSETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(newObject));
+        JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(newObject));
 #if ENABLE_DEBUG_CONFIG_OPTIONS
         if (Js::Configuration::Global.flags.IsEnabled(Js::autoProxyFlag))
         {
@@ -5184,7 +5184,7 @@ CommonNumber:
     Var JavascriptOperators::NewJavascriptArrayNoArg(ScriptContext* requestContext)
     {
         JavascriptArray * newArray = requestContext->GetLibrary()->CreateArray();
-        JSETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(newArray));
+        JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(newArray));
 #if ENABLE_DEBUG_CONFIG_OPTIONS
         if (Js::Configuration::Global.flags.IsEnabled(Js::autoProxyFlag))
         {
@@ -5225,7 +5225,7 @@ CommonNumber:
             JavascriptLibrary* library = object->GetLibrary();
 
             DynamicObject * newObject = library->CreateObject(true);
-            JSETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(newObject));
+            JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(newObject));
 #if ENABLE_DEBUG_CONFIG_OPTIONS
             if (Js::Configuration::Global.flags.IsEnabled(Js::autoProxyFlag))
             {
@@ -5257,7 +5257,7 @@ CommonNumber:
             JavascriptLibrary* library = object->GetLibrary();
 
             JavascriptArray * newArray = library->CreateArray();
-            JSETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(newArray));
+            JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(newArray));
 #if ENABLE_DEBUG_CONFIG_OPTIONS
             if (Js::Configuration::Global.flags.IsEnabled(Js::autoProxyFlag))
             {
@@ -5344,7 +5344,7 @@ CommonNumber:
         RecyclableObject * prototype = JavascriptOperators::GetPrototypeObject(function, functionScriptContext);
         prototype = RecyclableObject::FromVar(CrossSite::MarshalVar(requestContext, prototype));
         Var object = requestContext->GetLibrary()->CreateObject(prototype);
-        JSETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(object));
+        JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(object));
 #if ENABLE_DEBUG_CONFIG_OPTIONS
         if (Js::Configuration::Global.flags.IsEnabled(Js::autoProxyFlag))
         {
@@ -5397,7 +5397,7 @@ CommonNumber:
             TraceUseConstructorCache(constructorCache, constructor, true);
 #endif
             Var object = DynamicObject::New(requestContext->GetRecycler(), type);
-            JSETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(object));
+            JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(object));
 #if ENABLE_DEBUG_CONFIG_OPTIONS
             if (Js::Configuration::Global.flags.IsEnabled(Js::autoProxyFlag))
             {
@@ -5477,7 +5477,7 @@ CommonNumber:
 
         DynamicObject* newObject = requestContext->GetLibrary()->CreateObject(prototype, 8);
 
-        JSETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(newObject));
+        JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(newObject));
 #if ENABLE_DEBUG_CONFIG_OPTIONS
         if (Js::Configuration::Global.flags.IsEnabled(Js::autoProxyFlag))
         {

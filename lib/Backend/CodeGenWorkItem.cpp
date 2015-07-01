@@ -120,7 +120,7 @@ void InMemoryCodeGenWorkItem::OnAddToJitQueue()
     VerifyJitMode();
 
     this->entryPointInfo->SetCodeGenQueued();
-    if(EventEnabledJSCRIPT_FUNCTION_JIT_QUEUED())
+    if(IS_JS_ETW(EventEnabledJSCRIPT_FUNCTION_JIT_QUEUED()))
     {
         WCHAR displayNameBuffer[256];
         WCHAR* displayName = displayNameBuffer;
@@ -130,7 +130,7 @@ void InMemoryCodeGenWorkItem::OnAddToJitQueue()
             displayName = HeapNewArray(WCHAR, sizeInChars);
             this->GetDisplayName(displayName, 256);
         }
-        JSETW(EventWriteJSCRIPT_FUNCTION_JIT_QUEUED(
+        JS_ETW(EventWriteJSCRIPT_FUNCTION_JIT_QUEUED(
             this->GetFunctionNumber(),
             displayName,
             this->GetScriptContext(),
@@ -152,7 +152,7 @@ void InMemoryCodeGenWorkItem::OnRemoveFromJitQueue(NativeCodeGenerator* generato
     functionBody->GetScriptContext()->GetThreadContext()->UnregisterCodeGenRecyclableData(this->recyclableData);
     this->recyclableData = null;
 
-    if(EventEnabledJSCRIPT_FUNCTION_JIT_DEQUEUED())
+    if(IS_JS_ETW(EventEnabledJSCRIPT_FUNCTION_JIT_DEQUEUED()))
     {
         WCHAR displayNameBuffer[256];
         WCHAR* displayName = displayNameBuffer;
@@ -162,7 +162,7 @@ void InMemoryCodeGenWorkItem::OnRemoveFromJitQueue(NativeCodeGenerator* generato
             displayName = HeapNewArray(WCHAR, sizeInChars);
             this->GetDisplayName(displayName, 256);
         }
-        JSETW(EventWriteJSCRIPT_FUNCTION_JIT_DEQUEUED(
+        JS_ETW(EventWriteJSCRIPT_FUNCTION_JIT_DEQUEUED(
             this->GetFunctionNumber(),
             displayName,
             this->GetScriptContext(),

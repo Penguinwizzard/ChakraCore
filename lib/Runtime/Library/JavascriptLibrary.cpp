@@ -4,7 +4,7 @@
 
 #include "StdAfx.h"
 
-#ifdef F_JSETW
+#ifdef ENABLE_JS_ETW
 #include <IERESP_mshtml.h>
 #include "microsoft-scripting-jscript9.internalevents.h"
 #endif
@@ -5298,8 +5298,8 @@ namespace Js
         function->SetHeapEnumValidationCookie(HEAP_ENUMERATION_LIBRARY_OBJECT_COOKIE);
 #endif
 
-#ifdef F_JSETW
-        JSETW(EventWriteJSCRIPT_BUILD_DIRECT_FUNCTION(scriptContext, function, nameId));
+#ifdef ENABLE_JS_ETW
+        JS_ETW(EventWriteJSCRIPT_BUILD_DIRECT_FUNCTION(scriptContext, function, nameId));
 #endif
 #if DBG_DUMP
         if (Js::Configuration::Global.flags.Trace.IsEnabled(Js::HostPhase))

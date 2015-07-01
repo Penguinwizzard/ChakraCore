@@ -258,7 +258,7 @@ size_t __cdecl
 Output::PrintBuffer(const wchar_t * buf, size_t size)
 {
     Output::s_Column += size;
-    wchar_t * endbuf = wcschr(buf, '\n');
+    const wchar_t * endbuf = wcschr(buf, '\n');
     while (endbuf != null)
     {
         Output::s_Column = size - (endbuf - buf) - 1;

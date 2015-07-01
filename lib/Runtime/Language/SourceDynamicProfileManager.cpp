@@ -313,7 +313,7 @@ SourceDynamicProfileManager *
         bool profileLoaded = manager->LoadFromProfileCache(profileDataCache, info->url);
         if(profileLoaded)
         {
-            JSETW(EventWriteJSCRIPT_PROFILE_LOAD(info->dwHostSourceContext, scriptContext));
+            JS_ETW(EventWriteJSCRIPT_PROFILE_LOAD(info->dwHostSourceContext, scriptContext));
         }
     }
     return manager;

@@ -223,7 +223,7 @@ namespace Js
             const size_t functionNameCharLength = functionBody->GetDisplayNameLength();
             wcscpy_s(functionNameArray, 256, functionName);
             wcscpy_s(&functionNameArray[functionNameCharLength], 256 - functionNameCharLength, suffix);
-            JSETW(EventWriteMethodLoad(functionBody->GetScriptContext(),
+            JS_ETW(EventWriteMethodLoad(functionBody->GetScriptContext(),
                 (void *)buffer,
                 codeSize,
                 EtwTrace::GetFunctionId(functionBody),

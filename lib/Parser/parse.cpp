@@ -844,7 +844,7 @@ HRESULT Parser::ParseSourceInternal(
 #ifdef PROFILE_EXEC
     m_scriptContext->ProfileBegin(Js::ParsePhase);
 #endif
-    JSETW(EventWriteJSCRIPT_PARSE_START(m_scriptContext,0));
+    JS_ETW(EventWriteJSCRIPT_PARSE_START(m_scriptContext,0));
 
     *parseTree = NULL;
     m_sourceLim = 0;
@@ -968,7 +968,7 @@ HRESULT Parser::ParseSourceInternal(
 #ifdef PROFILE_EXEC
     m_scriptContext->ProfileEnd(Js::ParsePhase);
 #endif
-    JSETW(EventWriteJSCRIPT_PARSE_STOP(m_scriptContext, 0));
+    JS_ETW(EventWriteJSCRIPT_PARSE_STOP(m_scriptContext, 0));
 
     ThreadContext *threadContext = m_scriptContext->GetThreadContext();
     threadContext->ParserTelemetry.LogTime(threadContext->ParserTelemetry.Now() - startTime);
@@ -6555,16 +6555,16 @@ void Parser::FinishFncNode(ParseNodePtr pnodeFnc)
 void Parser::FinishFncDecl(ERROR_RECOVERY_FORMAL_ ParseNodePtr pnodeFnc, LPCOLESTR pNameHint, ParseNodePtr *lastNodeRef)
 {
     LPCOLESTR name = NULL;
-    long startAstSize = *m_pCurrentAstSize;
-    if(EventEnabledJSCRIPT_PARSE_METHOD_START() || PHASE_TRACE1(Js::DeferParsePhase))
+    JS_ETW(long startAstSize = *m_pCurrentAstSize);
+    if(IS_JS_ETW(EventEnabledJSCRIPT_PARSE_METHOD_START()) || PHASE_TRACE1(Js::DeferParsePhase))
     {
         name = GetFunctionName(pnodeFnc, pNameHint);
         m_functionBody = NULL;  // for nested functions we do not want to get the name of the top deferred function return name;
-        JSETW(EventWriteJSCRIPT_PARSE_METHOD_START(m_sourceContextInfo->dwHostSourceContext, GetScriptContext(), pnodeFnc->sxFnc.functionId, 0, m_parseType, name));
+        JS_ETW(EventWriteJSCRIPT_PARSE_METHOD_START(m_sourceContextInfo->dwHostSourceContext, GetScriptContext(), pnodeFnc->sxFnc.functionId, 0, m_parseType, name));
         OUTPUT_TRACE(Js::DeferParsePhase, L"Parsing function (%s) : %s (%d)\n", GetParseType(), name, pnodeFnc->sxFnc.functionId);
     }
 
-    JSETW(EventWriteJSCRIPT_PARSE_FUNC(GetScriptContext(), pnodeFnc->sxFnc.functionId, /*Undefer*/FALSE));
+    JS_ETW(EventWriteJSCRIPT_PARSE_FUNC(GetScriptContext(), pnodeFnc->sxFnc.functionId, /*Undefer*/FALSE));
 
 
     // Do the work of creating an AST for a function body.
@@ -6623,8 +6623,10 @@ void Parser::FinishFncDecl(ERROR_RECOVERY_FORMAL_ ParseNodePtr pnodeFnc, LPCOLES
     // NOTE: Eze makes no use of this.
     //pnodeFnc->sxFnc.pnodeTmps = *m_ppnodeVar;
 
+#ifdef ENABLE_JS_ETW
     long astSize = *m_pCurrentAstSize - startAstSize;
-    JSETW(EventWriteJSCRIPT_PARSE_METHOD_STOP(m_sourceContextInfo->dwHostSourceContext, GetScriptContext(), pnodeFnc->sxFnc.functionId, astSize, m_parseType, name));
+    EventWriteJSCRIPT_PARSE_METHOD_STOP(m_sourceContextInfo->dwHostSourceContext, GetScriptContext(), pnodeFnc->sxFnc.functionId, astSize, m_parseType, name);
+#endif
 }
 
 void Parser::AddArgumentsNodeToVars(ParseNodePtr pnodeFnc)
@@ -10586,7 +10588,7 @@ void Parser::FinishDeferredFunction(ParseNodePtr pnodeScopeList)
         if (pnodeFnc->sxFnc.pnodeBody == NULL)
         {
             // Go back and generate an AST for this function.
-            JSETW(EventWriteJSCRIPT_PARSE_FUNC(this->GetScriptContext(), pnodeFnc->sxFnc.functionId, /*Undefer*/TRUE));
+            JS_ETW(EventWriteJSCRIPT_PARSE_FUNC(this->GetScriptContext(), pnodeFnc->sxFnc.functionId, /*Undefer*/TRUE));
 
             ParseNodePtr pnodeFncSave = this->m_currentNodeFunc;
             this->m_currentNodeFunc = pnodeFnc;
@@ -10872,7 +10874,7 @@ ParseNodePtr Parser::Parse(LPCUTF8 pszSrc, size_t offset, size_t length, charcou
 
     if(m_parseType != ParseType_Deferred)
     {
-        JSETW(EventWriteJSCRIPT_PARSE_METHOD_START(m_sourceContextInfo->dwHostSourceContext, GetScriptContext(), *m_nextFunctionId, 0, m_parseType, Js::Constants::GlobalFunction));
+        JS_ETW(EventWriteJSCRIPT_PARSE_METHOD_START(m_sourceContextInfo->dwHostSourceContext, GetScriptContext(), *m_nextFunctionId, 0, m_parseType, Js::Constants::GlobalFunction));
         OUTPUT_TRACE(Js::DeferParsePhase, L"Parsing function (%s) : %s (%d)\n", GetParseType(), Js::Constants::GlobalFunction, *m_nextFunctionId);
     }
 
@@ -11083,7 +11085,7 @@ ParseNodePtr Parser::Parse(LPCUTF8 pszSrc, size_t offset, size_t length, charcou
 
     if(!m_parseType != ParseType_Deferred)
     {
-        JSETW(EventWriteJSCRIPT_PARSE_METHOD_STOP(m_sourceContextInfo->dwHostSourceContext, GetScriptContext(), pnodeProg->sxFnc.functionId, *m_pCurrentAstSize, false, Js::Constants::GlobalFunction));
+        JS_ETW(EventWriteJSCRIPT_PARSE_METHOD_STOP(m_sourceContextInfo->dwHostSourceContext, GetScriptContext(), pnodeProg->sxFnc.functionId, *m_pCurrentAstSize, false, Js::Constants::GlobalFunction));
     }
     return pnodeProg;
 }

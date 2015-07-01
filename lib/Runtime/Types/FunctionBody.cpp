@@ -1827,7 +1827,7 @@ namespace Js
             {
                 this->originalEntryPoint = this->m_scriptContext->GetNextDynamicInterpreterThunk(&this->m_dynamicInterpreterThunk);
             }
-            EtwTrace::LogMethodInterpreterThunkLoadEvent(this);
+            JS_ETW(EtwTrace::LogMethodInterpreterThunkLoadEvent(this));
         }
         else
         {
@@ -1960,7 +1960,7 @@ namespace Js
                         0xffu));
         }
 
-        EtwTrace::LogMethodNativeLoadEvent(this, entryPointInfo);
+        JS_ETW(EtwTrace::LogMethodNativeLoadEvent(this, entryPointInfo));
 
 #ifdef _M_ARM
         // For ARM we need to make sure that pipeline is synchronized with memory/cache for newly jitted code.
@@ -2010,7 +2010,7 @@ namespace Js
         {
             loopHeader->interpretCount = entryPointInfo->GetFunctionBody()->GetLoopInterpretCount(loopHeader) - 1;
         }
-        EtwTrace::LogLoopBodyLoadEvent(this, loopHeader, ((LoopEntryPointInfo*) entryPointInfo));
+        JS_ETW(EtwTrace::LogLoopBodyLoadEvent(this, loopHeader, ((LoopEntryPointInfo*) entryPointInfo)));
     }
 
     void FunctionBody::MarkScript(ByteBlock *byteCodeBlock, ByteBlock* auxBlock, ByteBlock* auxContextBlock,
@@ -6263,7 +6263,7 @@ namespace Js
 
         if (this->HasInterpreterThunkGenerated())
         {
-            EtwTrace::LogMethodInterpreterThunkUnloadEvent(this);
+            JS_ETW(EtwTrace::LogMethodInterpreterThunkUnloadEvent(this));
 
             if (!isScriptContextClosing)
             {
@@ -7597,7 +7597,7 @@ namespace Js
 
             if(nativeEntryPointProcessed)
             {
-                EtwTrace::LogMethodNativeUnloadEvent(this->functionProxy->GetFunctionBody(), this);
+                JS_ETW(EtwTrace::LogMethodNativeUnloadEvent(this->functionProxy->GetFunctionBody(), this));
             }
 
             FunctionBody* functionBody = this->functionProxy->GetFunctionBody();
@@ -7866,7 +7866,7 @@ namespace Js
     {
         if (this->IsCodeGenDone() && !this->GetIsTJMode())
         {
-            EtwTrace::LogLoopBodyUnloadEvent(this->loopHeader->functionBody, this->loopHeader, this);
+            JS_ETW(EtwTrace::LogLoopBodyUnloadEvent(this->loopHeader->functionBody, this->loopHeader, this));
 
             if (!isShutdown)
             {

@@ -90,7 +90,9 @@
 #define ENABLE_PROJECTION 1
 
 // ETW support
-#define F_JSETW 1
+#ifdef NTBUILD
+#define ENABLE_JS_ETW 
+#endif
 
 // Telemetry features (non-DEBUG related)
 //#define TELEMETRY
@@ -147,7 +149,9 @@
 #define DYNAMIC_PROFILE_STORAGE
 #define DYNAMIC_PROFILE_MUTATOR
 #define RUNTIME_DATA_COLLECTION
+#ifdef ENABLE_JS_ETW
 #define TEST_ETW_EVENTS
+#endif
 #define SECURITY_TESTING
 #define PROFILE_EXEC
 
@@ -163,7 +167,10 @@
 #define ENABLE_IR_VIEWER_DBG_DUMP  // TODO (t-doilij) disable this before check-in
 #endif
 
+#ifdef NTBUILD
 #define PERF_COUNTERS
+#endif
+
 #if defined(_M_IX86) || defined(_M_X64)
 #define VTUNE_PROFILING
 #endif 
@@ -269,7 +276,9 @@
 // Special build features
 //  - features that can be enabled on private builds for debugging
 //----------------------------------------------------------------------------------------------------
+#ifdef ENABLE_JS_ETW
 // #define ETW_MEMORY_TRACKING          // ETW events for internal allocations
+#endif
 // #define OLD_ITRACKER                 // Switch to the old IE8 ITracker GUID
 // #define LOG_BYTECODE_AST_RATIO       // log the ratio between AST size and bytecode generated.
 // #define DUMP_FRAGMENTATION_STATS        // Display HeapBucket fragmentation stats after sweep

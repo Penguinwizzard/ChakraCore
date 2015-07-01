@@ -3,7 +3,7 @@
 //----------------------------------------------------------------------------
 
 // INL files
-#ifdef F_JSETW
+#ifdef ENABLE_JS_ETW
 // Recycler.inl needs this.
 #include <IERESP_mshtml.h>
 #include <Microsoft-Scripting-ChakraEvents.h>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);NOMINMAX;USE_EDGEMODE_JSRT</PreprocessorDefinitions>
+      <!-- Some of our STDMETHOD can throw
+           TODO: Code review STDMETHOD and separate out API that can throw and those that can't -->
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);COM_STDMETHOD_CAN_THROW</PreprocessorDefinitions>
+      
+      <!-- /W4 -->
+      <WarningLevel>Level4</WarningLevel>
+      <!-- /WX -->
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <!-- /GR- -->
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <!-- /Zi -->
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <!-- /EHsc- -->
+      <ExceptionHandling>SyncCThrow</ExceptionHandling>
+      <!-- TODO: clean up 4267 -->
+      <DisableSpecificWarnings>4100;4127;4267;4481</DisableSpecificWarnings>
+      <!-- /Gz -->
+      <CallingConvention Condition="'$(Platform)'=='Win32'">StdCall</CallingConvention>
+      <!-- /Zp8 -->
+      <StructMemberAlignment>8Bytes</StructMemberAlignment>
+      <!-- /GS -->
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <!-- /Gy -->
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <!-- /GF -->
+      <StringPooling>true</StringPooling>
+      <!-- /Zl -->
+      <OmitDefaultLibName>true</OmitDefaultLibName>
+      <!-- We don't use any metadata -->
+      <AdditionalUsingDirectories />
+
+      <AdditionalOptions>%(AdditionalOptions) /Yl$(TargetName)</AdditionalOptions>
+      <!-- Separate global variable for linker -->
+      <AdditionalOptions>%(AdditionalOptions) /Gw</AdditionalOptions>    
+
+      <ProgramDataBaseFileName Condition="'$(ConfigurationType)'=='StaticLibrary'">$(IntDir)$(TargetName).pdb</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName Condition="'$(ConfigurationType)'!='StaticLibrary'">$(IntDir)</ProgramDataBaseFileName>
+    </ClCompile>    
+    <MASM>
+      <!-- /Cx -->
+      <PreserveIdentifierCase>3</PreserveIdentifierCase>
+      <PreprocessorDefinitions>%(ClCompile.PreprocessorDefinitions)</PreprocessorDefinitions>
+      <IncludePaths>%(ClCompile.AdditionalIncludeDirectories)</IncludePaths>
+    </MASM>
+    <Link>
+      <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding Condition="'$(OptimiziedBuild)'=='true'">true</EnableCOMDATFolding>
+      <OptimizeReferences Condition="'$(OptimiziedBuild)'=='true'">true</OptimizeReferences>
+      <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
+    </Link>
+  </ItemDefinitionGroup>
+  <!-- chk build flags -->
+  <ItemDefinitionGroup Condition="'$(OptimiziedBuild)'!='true'">
+    <ClCompile>
+      <!-- ========= From inetcore\jscript\project.mk ========= -->
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);_DEBUG;DBG;DBG_DUMP</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <!-- fre and fretest build flags -->
+  <ItemDefinitionGroup Condition="'$(OptimiziedBuild)'=='true'">
+    <ClCompile>
+      <!-- ========= From inetcore\jscript\project.mk ========= -->
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);NDEBUG</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)'=='fretest'">%(PreprocessorDefinitions);ENABLE_DEBUG_CONFIG_OPTIONS=1</PreprocessorDefinitions>
+      <Optimization>MaxSpeed</Optimization>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+    </ClCompile>
+  </ItemDefinitionGroup>
+</Project> 

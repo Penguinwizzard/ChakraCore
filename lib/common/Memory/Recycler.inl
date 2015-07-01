@@ -486,7 +486,7 @@ Recycler::NotifyFree(__in char *address, size_t size)
     }
 #endif
 
-#if F_JSETW
+#ifdef ENABLE_JS_ETW
     if (EventEnabledJSCRIPT_RECYCLER_FREE_MEMORY())
     {
         AppendFreeMemoryETWRecord(address, (UINT)size);

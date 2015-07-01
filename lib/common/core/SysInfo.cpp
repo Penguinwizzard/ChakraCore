@@ -296,11 +296,13 @@ AutoSystemInfo::IsWin8OrLater()
     return (versionInfo.dwMajorVersion == 6 && versionInfo.dwMinorVersion >= 2) || versionInfo.dwMajorVersion > 6;
 }
 
+#if defined(_CONTROL_FLOW_GUARD)
 bool
 AutoSystemInfo::IsWinThresholdOrLater()
 {
     return IsWindowsThresholdOrGreater();
 }
+#endif
 
 DWORD AutoSystemInfo::SaveModuleFileName(HANDLE hMod)
 {

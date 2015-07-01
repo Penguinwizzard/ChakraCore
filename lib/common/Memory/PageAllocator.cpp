@@ -512,8 +512,10 @@ PageSegmentBase<T>::DecommitFreePages(size_t pageToDecommit)
  * per process for performance tooling. This is reported through the 
  * JSCRIPT_PAGE_ALLOCATOR_USED_SIZE ETW event.
  */
+
 static size_t totalUsedBytes = 0;
 static size_t maxUsedBytes = 0;
+
 
 template<typename T>
 size_t PageAllocatorBase<T>::GetAndResetMaxUsedBytes()
@@ -1859,7 +1861,10 @@ PageAllocatorBase<T>::AddUsedBytes(size_t bytes)
     // ETW events from different threads may be reported out of order, producing an 
     // incorrect representation of current used bytes in the process. We've determined that this is an
     // acceptable issue, which will be mitigated at the level of the application consuming the event.
-    JSETW(EventWriteJSCRIPT_PAGE_ALLOCATOR_USED_SIZE(lastTotalUsedBytes + bytes));
+    JS_ETW(EventWriteJSCRIPT_PAGE_ALLOCATOR_USED_SIZE(lastTotalUsedBytes + bytes));
+#ifndef ENABLE_JS_ETW
+    Unused(lastTotalUsedBytes);
+#endif
 
 #ifdef PERF_COUNTERS
     GetUsedSizeCounter() += bytes;
@@ -1875,6 +1880,7 @@ PageAllocatorBase<T>::SubUsedBytes(size_t bytes)
     Assert(bytes <= totalUsedBytes);
 
     usedBytes -= bytes;
+    
 #if defined(_M_X64_OR_ARM64)
     size_t lastTotalUsedBytes = ::InterlockedExchangeAdd64((volatile LONG64 *)&totalUsedBytes, -(LONG64)bytes);
 #else
@@ -1884,7 +1890,10 @@ PageAllocatorBase<T>::SubUsedBytes(size_t bytes)
     // ETW events from different threads may be reported out of order, producing an 
     // incorrect representation of current used bytes in the process. We've determined that this is an
     // acceptable issue, which will be mitigated at the level of the application consuming the event.
-    JSETW(EventWriteJSCRIPT_PAGE_ALLOCATOR_USED_SIZE(lastTotalUsedBytes - bytes));
+    JS_ETW(EventWriteJSCRIPT_PAGE_ALLOCATOR_USED_SIZE(lastTotalUsedBytes - bytes));
+#ifndef ENABLE_JS_ETW
+    Unused(lastTotalUsedBytes);
+#endif
 
 #ifdef PERF_COUNTERS
     GetUsedSizeCounter() -= bytes;

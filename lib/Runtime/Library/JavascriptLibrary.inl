@@ -53,7 +53,7 @@ namespace Js
     {
         AssertMsg(arrayType, "Where's arrayType?");
         JavascriptArray* arr = JavascriptArray::New<Var, JavascriptArray, 0>(length, arrayType, this->GetRecycler());
-        JSETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_ARRAY(arr));
+        JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_ARRAY(arr));
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
         arr->CheckForceES5Array();
@@ -76,7 +76,7 @@ namespace Js
     {
         AssertMsg(nativeIntArrayType, "Where's nativeIntArrayType?");
         JavascriptNativeIntArray* arr = JavascriptArray::New<int32, JavascriptNativeIntArray, 0>(length, nativeIntArrayType, this->GetRecycler());
-        JSETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_ARRAY(arr));
+        JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_ARRAY(arr));
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
         arr->CheckForceES5Array();
@@ -94,7 +94,7 @@ namespace Js
     {
         AssertMsg(nativeFloatArrayType, "Where's nativeIntArrayType?");
         JavascriptNativeFloatArray* arr = JavascriptArray::New<double, JavascriptNativeFloatArray, 0>(length, nativeFloatArrayType, this->GetRecycler());
-        JSETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_ARRAY(arr));
+        JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_ARRAY(arr));
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
         arr->CheckForceES5Array();
@@ -106,7 +106,7 @@ namespace Js
     {
         AssertMsg(arrayType, "Where's arrayType?");
         JavascriptArray* arr = JavascriptArray::NewLiteral<Var, JavascriptArray, 0>(length, arrayType, this->GetRecycler());
-        JSETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_ARRAY(arr));
+        JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_ARRAY(arr));
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
         arr->CheckForceES5Array();
@@ -118,7 +118,7 @@ namespace Js
     {
         AssertMsg(nativeIntArrayType, "Where's arrayType?");
         JavascriptNativeIntArray* arr = JavascriptArray::NewLiteral<int32, JavascriptNativeIntArray, 0>(length, nativeIntArrayType, this->GetRecycler());
-        JSETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_ARRAY(arr));
+        JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_ARRAY(arr));
 
         return arr;
     }
@@ -127,7 +127,7 @@ namespace Js
     {
         AssertMsg(copyOnAccessNativeIntArrayType, "Where's arrayType?");
         JavascriptNativeIntArray* arr = JavascriptArray::NewCopyOnAccessLiteral<int32, JavascriptCopyOnAccessNativeIntArray, 0>(copyOnAccessNativeIntArrayType, arrayInfo, functionBody, ints, this->GetRecycler());
-        JSETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_ARRAY(arr));
+        JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_ARRAY(arr));
 
         return arr;
     }
@@ -136,7 +136,7 @@ namespace Js
     {
         AssertMsg(nativeFloatArrayType, "Where's arrayType?");
         JavascriptNativeFloatArray* arr = JavascriptArray::NewLiteral<double, JavascriptNativeFloatArray, 0>(length, nativeFloatArrayType, this->GetRecycler());
-        JSETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_ARRAY(arr));
+        JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_ARRAY(arr));
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
         arr->CheckForceES5Array();
@@ -148,7 +148,7 @@ namespace Js
     {
         AssertMsg(arrayType, "Where's arrayType?");
         JavascriptArray* arr = RecyclerNew(this->GetRecycler(), JavascriptArray, length, size, arrayType);
-        JSETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_ARRAY(arr));
+        JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_ARRAY(arr));
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
         arr->CheckForceES5Array();
@@ -171,14 +171,14 @@ namespace Js
     inline ArrayBuffer* JavascriptLibrary::CreateProjectionArraybuffer(uint32 length)
     {
         ArrayBuffer* arr = ProjectionArrayBuffer::Create(length, arrayBufferType);
-        JSETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(arr));
+        JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(arr));
         return arr;
     }
 
     inline ArrayBuffer* JavascriptLibrary::CreateProjectionArraybuffer(byte* buffer, uint32 length)
     {
         ArrayBuffer* arr = ProjectionArrayBuffer::Create(buffer, length, arrayBufferType);
-        JSETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(arr));
+        JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(arr));
         return arr;
     }
 

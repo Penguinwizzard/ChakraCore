@@ -3,9 +3,6 @@
 //----------------------------------------------------------------------------
 
 #include "BackEnd.h"
-#ifdef F_JSETW
-#include <IERESP_mshtml.h>
-#endif
 
 bool
 Func::IsLoopBody() const
@@ -34,7 +31,7 @@ Func::Codegen()
     Js::ScriptContext* scriptContext = this->GetScriptContext();
 
     {
-        if(EventEnabledJSCRIPT_FUNCTION_JIT_START())
+        if(IS_JS_ETW(EventEnabledJSCRIPT_FUNCTION_JIT_START()))
         {
             WCHAR displayNameBuffer[256];
             WCHAR* displayName = displayNameBuffer;
@@ -44,7 +41,7 @@ Func::Codegen()
                 displayName = new WCHAR[sizeInChars];
                 this->m_workItem->GetDisplayName(displayName, 256);
             }
-            JSETW(EventWriteJSCRIPT_FUNCTION_JIT_START(
+            JS_ETW(EventWriteJSCRIPT_FUNCTION_JIT_START(
                 this->GetFunctionNumber(),
                 displayName,
                 this->GetScriptContext(),
@@ -375,7 +372,7 @@ Func::Codegen()
 
     {
 
-        if(EventEnabledJSCRIPT_FUNCTION_JIT_STOP())
+        if(IS_JS_ETW(EventEnabledJSCRIPT_FUNCTION_JIT_STOP()))
         {
             WCHAR displayNameBuffer[256];
             WCHAR* displayName = displayNameBuffer;
@@ -388,7 +385,7 @@ Func::Codegen()
             void* entryPoint;
             ptrdiff_t codeSize;
             this->m_workItem->GetEntryPointAddress(&entryPoint, &codeSize);
-            JSETW(EventWriteJSCRIPT_FUNCTION_JIT_STOP(
+            JS_ETW(EventWriteJSCRIPT_FUNCTION_JIT_STOP(
                 this->GetFunctionNumber(),
                 displayName,
                 scriptContext,

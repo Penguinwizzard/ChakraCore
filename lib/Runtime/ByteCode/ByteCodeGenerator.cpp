@@ -1709,7 +1709,7 @@ void ByteCodeGenerator::Generate( __in ParseNode *pnode, ulong grfscr, __in Byte
     if (scriptContext->authoringData && scriptContext->authoringData->Callbacks())
         scriptContext->authoringData->Callbacks()->GeneratingByteCode();
 #endif
-    JSETW(EventWriteJSCRIPT_BYTECODEGEN_START(scriptContext,0));
+    JS_ETW(EventWriteJSCRIPT_BYTECODEGEN_START(scriptContext,0));
 
     ThreadContext * threadContext = scriptContext->GetThreadContext();
     Js::Utf8SourceInfo * utf8SourceInfo = scriptContext->GetSource(sourceIndex);
@@ -1750,7 +1750,7 @@ void ByteCodeGenerator::Generate( __in ParseNode *pnode, ulong grfscr, __in Byte
 #ifdef PROFILE_EXEC
     scriptContext->ProfileEnd(Js::ByteCodePhase);
 #endif
-    JSETW(EventWriteJSCRIPT_BYTECODEGEN_STOP(scriptContext,0));
+    JS_ETW(EventWriteJSCRIPT_BYTECODEGEN_STOP(scriptContext,0));
 
 #if defined(ENABLE_NATIVE_CODEGEN) && defined(ENABLE_PREJIT)
     if (!byteCodeGenerator->forceNoNative && !scriptContext->GetConfig()->IsNoNative()

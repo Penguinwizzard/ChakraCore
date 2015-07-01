@@ -327,7 +327,9 @@ PHASE(All)
         PHASE(ByteCodeConcatExprOpt)
         PHASE(TraceInlineCacheInvalidation)
         PHASE(TracePropertyGuards)
+#ifdef ENABLE_JS_ETW
         PHASE(StackFramesEvent)
+#endif
         PHASE(PerfHint)
         PHASE(DeferSourceLoad)
         PHASE(ObjectMutationBreakpoint)

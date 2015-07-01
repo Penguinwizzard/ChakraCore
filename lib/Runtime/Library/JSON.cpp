@@ -76,7 +76,7 @@ namespace JSON
             if(reviver)
             {
                 Js::DynamicObject* root = scriptContext->GetLibrary()->CreateObject();
-                JSETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(root));
+                JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(root));
                 Js::PropertyRecord const * propertyRecord;
                 scriptContext->GetOrAddPropertyRecord(L"", 0, &propertyRecord);
                 Js::PropertyId propertyId = propertyRecord->GetPropertyId();
@@ -320,7 +320,7 @@ namespace JSON
             stringifySession.CompleteInit(space, tempAlloc);
 
             Js::DynamicObject* wrapper = scriptContext->GetLibrary()->CreateObject();
-            JSETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(wrapper));
+            JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(wrapper));
             Js::PropertyRecord const * propertyRecord;
             scriptContext->GetOrAddPropertyRecord(L"", 0, &propertyRecord);
             Js::PropertyId propertyId = propertyRecord->GetPropertyId();

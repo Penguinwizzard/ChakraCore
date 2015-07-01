@@ -3,7 +3,6 @@
 //----------------------------------------------------------------------------
 
 #include "BackEnd.h"
-#include "DisassembleX86.h"
 
 ///----------------------------------------------------------------------------
 ///
@@ -476,13 +475,6 @@ Encoder::Encode()
     m_func->m_codeSize = codeSize;
     if (PHASE_DUMP(Js::EncoderPhase, m_func) || PHASE_DUMP(Js::BackEndPhase, m_func))
     {
-#if defined(_M_X86)
-        if (Js::Configuration::Global.flags.Trace.IsEnabled(Js::EncoderPhase, m_func->GetSourceContextId(), m_func->GetLocalFunctionId()))
-        {
-            Output::Print(L"-----------------------------------------------------------------------------\n");
-            print_raw_as_insns((BYTE *)workItem->GetCodeAddress(), (int)codeSize, (unsigned int)workItem->GetCodeAddress());
-        }
-#endif
         bool dumpIRAddressesValue = Js::Configuration::Global.flags.DumpIRAddresses;
         Js::Configuration::Global.flags.DumpIRAddresses = true;
 

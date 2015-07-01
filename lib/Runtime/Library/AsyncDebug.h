@@ -114,7 +114,7 @@ public:
 
 protected:
 
-#ifdef F_JSETW
+#ifdef ENABLE_JS_ETW
 // Make this struct fully packed because ETW treats the buffer of frames as a single un-padded byte buffer.
 #pragma pack(push, 1)
     struct ETWStackFrame
@@ -125,13 +125,14 @@ protected:
         UINT16 nameIndex;
     };
 #pragma pack(pop)
+
+    static void EmitStackWalk(Js::ScriptContext* scriptContext, AsyncDebug::AsyncOperationId operationId);
 #endif
 
     static AsyncOperationId nextAsyncOperationId;
     static char isDownlevel;
 
     static charcount_t AppendWithEscapeCharacters(Js::StringBuilder<ArenaAllocator>* stringBuilder, const WCHAR* sourceString, charcount_t sourceStringLen, WCHAR escapeChar, WCHAR charToEscape);
-    static void EmitStackWalk(Js::ScriptContext* scriptContext, AsyncDebug::AsyncOperationId operationId);
 
     // Look to see if we need to use the downlevel async debug API or the WinRT interface for win8+.
     static bool IsDownlevel(Js::ScriptContext* scriptContext);

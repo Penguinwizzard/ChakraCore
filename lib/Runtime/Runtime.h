@@ -590,6 +590,8 @@ enum JsNativeValueType;
 
 #include "Language\EvalMapRecord.h"
 #include "Language\JavascriptConversion.h"
+// REVIEW: ChakraCore Dependency
+#include "activdbg_private.h"
 #include "Language\diagobjectmodel.h"
 #include "Language\ScriptContextProfiler.h"
 #include "Language\ScriptContextOptimizationOverrideInfo.h"

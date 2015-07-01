@@ -33,7 +33,7 @@
       <PrecompiledHeaderFile>BackEnd.h</PrecompiledHeaderFile>
     </ClCompile>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(FreeBuild)'!='true'">
+  <ItemDefinitionGroup Condition="'$(OptimiziedBuild)'!='true'">
     <ClCompile>      
       <!-- /Ob1 -->
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>      
@@ -48,9 +48,6 @@
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)LowerMDSharedSimd128.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'!='Win32' AND '$(Platform)'!='x64'">true</ExcludedFromBuild>      
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)DisassembleX86.cpp">
-      <ExcludedFromBuild Condition="'$(Platform)'!='Win32'">true</ExcludedFromBuild>      
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)i386\EncoderMD.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'!='Win32'">true</ExcludedFromBuild>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="Common.Build.props"/>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <!-- TODO: Clean up the warnings? -->
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
+
+      <!-- TODO: Clean up warning from upgrade to Dev14 tools -->
+      <AdditionalOptions>%(AdditionalOptions) /Wv:18</AdditionalOptions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+</Project>

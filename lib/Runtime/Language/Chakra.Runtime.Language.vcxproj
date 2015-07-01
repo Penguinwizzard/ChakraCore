@@ -71,7 +71,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)AsmJSTypes.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)AsmJSUtils.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ByteCodeSerializer.cpp">      
-      <AdditionalIncludeDirectories Condition="'$(FreeBuild)'=='true'">$(PublicInternalPath)\base\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(OptimiziedBuild)'=='true'">$(PublicInternalPath)\base\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)CacheOperators.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)CallInfo.cpp" />

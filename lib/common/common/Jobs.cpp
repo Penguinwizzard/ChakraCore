@@ -2,7 +2,7 @@
 
 #include "StdAfx.h"
 #include <process.h>
-#ifdef F_JSETW
+#ifdef ENABLE_JS_ETW
 #include <IERESP_mshtml.h>
 #endif
 
@@ -979,7 +979,7 @@ namespace JsUtil
 
     void BackgroundJobProcessor::Run(ParallelThreadData* threadData)
     {
-        JSETW(EventWriteJSCRIPT_NATIVECODEGEN_START(this, 0));
+        JS_ETW(EventWriteJSCRIPT_NATIVECODEGEN_START(this, 0));
 
         ArenaAllocator threadArena(L"ThreadArena", threadData->GetPageAllocator(), Js::Throw::OutOfMemory);
         threadData->threadArena = &threadArena;
@@ -1013,7 +1013,7 @@ namespace JsUtil
                     Assert(!threadData->isWaitingForJobs);
                     threadData->isWaitingForJobs = true;
                     criticalSection.Leave();
-                    JSETW(EventWriteJSCRIPT_NATIVECODEGEN_STOP(this, 0));
+                    JS_ETW(EventWriteJSCRIPT_NATIVECODEGEN_STOP(this, 0));
 
                     if (threadService->HasCallback())
                     {
@@ -1024,7 +1024,7 @@ namespace JsUtil
                 
                     WaitForJobReadyOrShutdown(threadData);
 
-                    JSETW(EventWriteJSCRIPT_NATIVECODEGEN_START(this, 0));
+                    JS_ETW(EventWriteJSCRIPT_NATIVECODEGEN_START(this, 0));
                     criticalSection.Enter();
                     threadData->isWaitingForJobs = false;
                     continue;
@@ -1063,7 +1063,7 @@ namespace JsUtil
             }
             criticalSection.Leave();
 
-            JSETW(EventWriteJSCRIPT_NATIVECODEGEN_STOP(this, 0));
+            JS_ETW(EventWriteJSCRIPT_NATIVECODEGEN_STOP(this, 0));
         }
     }
 

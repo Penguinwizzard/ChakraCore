@@ -24,7 +24,6 @@
 
 #include "activdbg.h"
 #include "activdbg100.h"
-#include "activdbg_private.h"
 #include "activaut.h"
 // From Common.lib
 #include "Common.h"

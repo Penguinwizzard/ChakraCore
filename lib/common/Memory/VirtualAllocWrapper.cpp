@@ -11,9 +11,10 @@
 LPVOID VirtualAllocWrapper::Alloc(LPVOID lpAddress, size_t dwSize, DWORD allocationType, DWORD protectFlags, bool isCustomHeapAllocation)
 {
     Assert(this == nullptr);
-    LPVOID address = nullptr;
-    DWORD oldProtectFlags;
+    LPVOID address = nullptr;    
 
+#if defined(_CONTROL_FLOW_GUARD)
+    DWORD oldProtectFlags;
     if (AutoSystemInfo::Data.IsCFGEnabled() && isCustomHeapAllocation)
     {
         //We do the allocation in two steps - CFG Bitmap in kernel will be created only on allocation with EXECUTE flag.
@@ -22,6 +23,7 @@ LPVOID VirtualAllocWrapper::Alloc(LPVOID lpAddress, size_t dwSize, DWORD allocat
         VirtualProtect(address, dwSize, protectFlags, &oldProtectFlags);
     }
     else
+#endif
     {
         address = VirtualAlloc(lpAddress, dwSize, allocationType, protectFlags);
     }
@@ -153,12 +155,15 @@ LPVOID PreReservedVirtualAllocWrapper::Alloc(LPVOID lpAddress, size_t dwSize, DW
         {
             //PreReserve a (bigger) segment
             size_t bytes = PreReservedAllocationSegmentCount * AutoSystemInfo::Data.GetAllocationGranularityPageSize();
+#if defined(_CONTROL_FLOW_GUARD)
             if (AutoSystemInfo::Data.IsCFGEnabled())
             {
                 preReservedStartAddress = VirtualAlloc(NULL, bytes, MEM_RESERVE, PAGE_EXECUTE_READWRITE | PAGE_TARGETS_INVALID);
                 PreReservedHeapTrace(L"Reserving PreReservedSegment For the first time(CFG Enabled). Address: 0x%p\n", preReservedStartAddress);
             }
-            else if (PHASE_FORCE1(Js::PreReservedHeapAllocPhase))
+            else 
+#endif
+            if (PHASE_FORCE1(Js::PreReservedHeapAllocPhase))
             {
                 //This code is used for debugging purposes on a non-threshold machine (where CFG is not available, but still PreReserve optimization for CFG can be tested)
                 preReservedStartAddress = VirtualAlloc(NULL, bytes, MEM_RESERVE, protectFlags);

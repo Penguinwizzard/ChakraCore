@@ -5,10 +5,6 @@
 ********************************************************/
 #include "stdafx.h"
 
-#if ENABLE_DEBUG_CONFIG_OPTIONS
-#include "microsoft-scripting-jscript9.internalevents.h"
-#endif
-
 //=====================================================================================================
 // Initialization
 //=====================================================================================================
@@ -184,11 +180,13 @@ LargeHeapBucket::PageHeapAlloc(Recycler * recycler, size_t size, ObjectInfoBits 
     LargeAllocationVerboseTrace(recycler->GetRecyclerFlagsTable(), L"Allocated new large heap block 0x%p for sizeCat 0x%x\n", heapBlock, sizeCat);
 #endif
 
+#ifdef ENABLE_JS_ETW
 #if ENABLE_DEBUG_CONFIG_OPTIONS
     if (segment->GetPageCount() > recycler->GetRecyclerLargeBlockPageAllocator()->GetMaxAllocPageCount())
     {
         EventWriteJSCRIPT_INTERNAL_RECYCLER_EXTRALARGE_OBJECT_ALLOC(size);
     }
+#endif
 #endif
 
 #ifdef PARTIAL_GC_ENABLED
@@ -270,11 +268,13 @@ LargeHeapBucket::AddLargeHeapBlock(size_t size, bool nothrow)
     LargeAllocationVerboseTrace(recycler->GetRecyclerFlagsTable(), L"Allocated new large heap block 0x%p for sizeCat 0x%x\n", heapBlock, sizeCat);
 #endif
 
+#ifdef ENABLE_JS_ETW
 #if ENABLE_DEBUG_CONFIG_OPTIONS
     if (segment->GetPageCount() > recycler->GetRecyclerLargeBlockPageAllocator()->GetMaxAllocPageCount())
     {
         EventWriteJSCRIPT_INTERNAL_RECYCLER_EXTRALARGE_OBJECT_ALLOC(size);
     }
+#endif
 #endif
     if (!heapBlock)
     {

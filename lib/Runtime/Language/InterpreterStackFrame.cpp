@@ -4893,7 +4893,7 @@ namespace Js
     Var InterpreterStackFrame::OP_NewScObjectSimple()
     {
         Var object = scriptContext->GetLibrary()->CreateObject(true);
-        JSETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(object));
+        JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(object));
 #if ENABLE_DEBUG_CONFIG_OPTIONS
         if (Js::Configuration::Global.flags.IsEnabled(Js::autoProxyFlag))
         {
@@ -5540,7 +5540,7 @@ namespace Js
         Var newVarInstance = JavascriptOperators::NewScObject(target, args, GetScriptContext(), spreadIndices);
 
         PopOut(ArgCount);
-        JSETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(newVarInstance));
+        JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(newVarInstance));
 #if ENABLE_DEBUG_CONFIG_OPTIONS
         if (Js::Configuration::Global.flags.IsEnabled(Js::autoProxyFlag))
         {
@@ -5571,7 +5571,7 @@ namespace Js
                 spreadIndices);
 
         PopOut(ArgCount);
-        JSETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(newVarInstance));
+        JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(newVarInstance));
 #if ENABLE_DEBUG_CONFIG_OPTIONS
         if (Js::Configuration::Global.flags.IsEnabled(Js::autoProxyFlag))
         {

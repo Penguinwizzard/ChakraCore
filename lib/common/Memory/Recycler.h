@@ -1725,7 +1725,7 @@ private:
 
     void CleanupPendingUnroot();
 
-#ifdef F_JSETW
+#ifdef ENABLE_JS_ETW
     ULONG EventWriteFreeMemoryBlock(HeapBlock* heapBlock);
     void FlushFreeRecord();
     void AppendFreeMemoryETWRecord(__in char *address, size_t size);
@@ -2184,7 +2184,7 @@ Recycler::NotifyFree(T * heapBlock)
 #endif
         RECYCLER_STATS_INC(this, heapBlockFreeCount[heapBlock->GetHeapBlockType()]);
     }
-    EventWriteFreeMemoryBlock(heapBlock);
+    JS_ETW(EventWriteFreeMemoryBlock(heapBlock));
 #ifdef RECYCLER_PERF_COUNTERS
     if (forceSweepObject)
     {

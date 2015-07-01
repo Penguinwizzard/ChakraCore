@@ -3239,7 +3239,7 @@ HRESULT ByteCodeSerializer::DeserializeFromBuffer(ScriptContext * scriptContext,
 HRESULT ByteCodeSerializer::DeserializeFromBufferInternal(ScriptContext * scriptContext, ulong scriptFlags, LPCUTF8 utf8Source, ISourceHolder* sourceHolder, SRCINFO const * srcInfo, byte * buffer, NativeModule *nativeModule, FunctionBody** function, uint sourceIndex)
 {
     //ETW Event start
-    JSETW(EventWriteJSCRIPT_BYTECODEDESERIALIZE_START(scriptContext, 0));
+    JS_ETW(EventWriteJSCRIPT_BYTECODEDESERIALIZE_START(scriptContext, 0));
 
     auto alloc = scriptContext->SourceCodeAllocator();
     bool isLibraryCode = ((scriptFlags & fscrIsLibraryCode) == fscrIsLibraryCode);
@@ -3285,7 +3285,7 @@ HRESULT ByteCodeSerializer::DeserializeFromBufferInternal(ScriptContext * script
     hr = reader->ReadTopFunctionBody(function, sourceInfo, cache, ((scriptFlags & fscrAllowFunctionProxy) == fscrAllowFunctionProxy), nativeModule);
 
     //ETW Event stop
-    JSETW(EventWriteJSCRIPT_BYTECODEDESERIALIZE_STOP(scriptContext,0));
+    JS_ETW(EventWriteJSCRIPT_BYTECODEDESERIALIZE_STOP(scriptContext,0));
 
     LEAVE_PINNED_SCOPE();
     LEAVE_PINNED_SCOPE();

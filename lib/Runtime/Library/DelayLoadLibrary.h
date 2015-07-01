@@ -238,6 +238,7 @@ namespace Js
         virtual BOOL RoOriginateLanguageException(__in HRESULT error, __in_opt HSTRING message, __in IUnknown * languageException);
     };
 
+#if defined(_CONTROL_FLOW_GUARD)
     class DelayLoadWinCoreMemory sealed : public DelayLoadLibrary
     {
     private:
@@ -282,7 +283,7 @@ namespace Js
             __in SIZE_T nLength
             );
     };
-
+#endif
     // Implement this function inlined so that WinRT.lib can be used without the runtime.
     inline HRESULT DelayLoadWinRtRoParameterizedIID::RoGetParameterizedTypeInstanceIID(
             __in UINT32 nameElementCount,

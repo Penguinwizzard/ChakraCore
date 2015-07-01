@@ -3,7 +3,7 @@
 //----------------------------------------------------------------------------
 
 #include "BackEnd.h"
-#ifdef F_JSETW
+#ifdef ENABLE_JS_ETW
 #include <IERESP_mshtml.h>
 #include "microsoft-scripting-jscript9.internalevents.h"
 #endif
@@ -401,7 +401,7 @@ bool NativeCodeGenerator::DeserializeFunction(Js::FunctionBody *function, Js::Na
         return false;
     }
 
-    EventWriteJSCRIPT_NATIVE_FUNCTION_LOAD(nativeModule->base, function->GetSerializationIndex(), function->GetDisplayName(), exportTable[index], exportTable[index + 1] - exportTable[index]);
+    JS_ETW(EventWriteJSCRIPT_NATIVE_FUNCTION_LOAD(nativeModule->base, function->GetSerializationIndex(), function->GetDisplayName(), exportTable[index], exportTable[index + 1] - exportTable[index]));
 
     function->SetIsFromNativeCodeModule(true);
     Js::FunctionEntryPointInfo * entryPoint = function->GetDefaultFunctionEntryPointInfo();
@@ -2777,7 +2777,7 @@ NativeCodeGenerator::EnterScriptStart()
     public:
         AutoCleanup(Js::ScriptContextProfiler *const codeGenProfiler) : codeGenProfiler(codeGenProfiler)
         {
-            JSETW(EventWriteJSCRIPT_NATIVECODEGEN_DELAY_START(this, 0));
+            JS_ETW(EventWriteJSCRIPT_NATIVECODEGEN_DELAY_START(this, 0));
 #ifdef PROFILE_EXEC
             ProfileBegin(codeGenProfiler, Js::DelayPhase);
             ProfileBegin(codeGenProfiler, Js::SpeculationPhase);
@@ -2790,7 +2790,7 @@ NativeCodeGenerator::EnterScriptStart()
             ProfileEnd(codeGenProfiler, Js::SpeculationPhase);
             ProfileEnd(codeGenProfiler, Js::DelayPhase);
 #endif
-            JSETW(EventWriteJSCRIPT_NATIVECODEGEN_DELAY_STOP(this, 0));
+            JS_ETW(EventWriteJSCRIPT_NATIVECODEGEN_DELAY_STOP(this, 0));
         }
     } autoCleanup(
 #ifdef PROFILE_EXEC

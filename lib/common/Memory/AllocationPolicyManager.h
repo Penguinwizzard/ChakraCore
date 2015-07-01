@@ -12,8 +12,8 @@
 
 class AllocationPolicyManager
 {
-public:
-    typedef enum MemoryAllocateEvent
+public:    
+    enum MemoryAllocateEvent
     {
         MemoryAllocate = 0,
         MemoryFree = 1,

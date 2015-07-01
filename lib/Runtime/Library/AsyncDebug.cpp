@@ -175,7 +175,7 @@ HRESULT AsyncDebug::WrapperForTraceOperationCreation(Js::ScriptContext* scriptCo
         operationName = L"";
     }
 
-#if F_JSETW
+#ifdef ENABLE_JS_ETW
     // Walk the stack if debugger is attached and the listener is active for the ETW event or if we are tracing async calls.
     // Tracing should only be enabled for unit tests or manually troubleshooting and is easier to configure than an ETW consumer.
     if (scriptContext->IsInDebugMode() && (EventEnabledJSCRIPT_ASYNCCAUSALITY_STACKTRACE() || CONFIG_FLAG(TraceAsyncDebugCalls)))
@@ -761,6 +761,7 @@ charcount_t AsyncDebug::AppendWithEscapeCharacters(Js::StringBuilder<ArenaAlloca
     return sourceStringLen + charsPadding;
 }
 
+#ifdef ENABLE_JS_ETW
 // Info:        Walk the JavaScript stack and emit it via an ETW event.
 // Parameters:  scriptContext - The ScriptContext of the executing script.
 //              operationId - The async operation id used to correlate the stack to an outstanding operation.
@@ -848,10 +849,11 @@ void AsyncDebug::EmitStackWalk(Js::ScriptContext* scriptContext, AsyncDebug::Asy
         // Account for the terminating null character.
         nameBufferLength++;
         
-        JSETW(EventWriteJSCRIPT_ASYNCCAUSALITY_STACKTRACE(operationId, frameCount, nameBufferLength, sizeof(AsyncDebug::ETWStackFrame), frames, nameBufferString));
+        JS_ETW(EventWriteJSCRIPT_ASYNCCAUSALITY_STACKTRACE(operationId, frameCount, nameBufferLength, sizeof(AsyncDebug::ETWStackFrame), frames, nameBufferString));
     }
     END_TEMP_ALLOCATOR(tempAllocator, scriptContext);
 }
+#endif
 
 /*static*/
 ushort AsyncDebug::ProcessNameAndGetLength(Js::StringBuilder<ArenaAllocator>* nameBuffer, const WCHAR* name)

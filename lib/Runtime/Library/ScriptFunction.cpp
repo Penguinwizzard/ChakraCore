@@ -79,7 +79,7 @@ namespace Js
             Js::FunctionBody * functionBody = functionProxy->GetFunctionBody();
             ScriptFunctionWithInlineCache* pfuncScriptWithInlineCache = scriptContext->GetLibrary()->CreateScriptFunctionWithInlineCache(functionProxy);
             pfuncScriptWithInlineCache->SetEnvironment(environment);
-            JSETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_FUNCTION(pfuncScriptWithInlineCache, EtwTrace::GetFunctionId(functionProxy)));
+            JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_FUNCTION(pfuncScriptWithInlineCache, EtwTrace::GetFunctionId(functionProxy)));
 
             Assert(functionBody->GetInlineCacheCount() + functionBody->GetIsInstInlineCacheCount());
 
@@ -117,7 +117,7 @@ namespace Js
             pfuncScript->SetHasSuperReference(hasSuperReference);
             pfuncScript->SetIsDefaultConstructor(isDefaultConstructor);
 
-            JSETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_FUNCTION(pfuncScript, EtwTrace::GetFunctionId(functionProxy)));
+            JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_FUNCTION(pfuncScript, EtwTrace::GetFunctionId(functionProxy)));
 
             return pfuncScript;
         }
@@ -728,7 +728,7 @@ namespace Js
         ScriptFunction* cloneScriptFunc = scriptContext->GetLibrary()->CreateScriptFunction(proxy);
         cloneScriptFunc->SetEnvironment(this->GetEnvironment());
         cloneScriptFunc->SetHasSuperReference(this->HasSuperReference());
-        JSETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_FUNCTION(cloneScriptFunc, EtwTrace::GetFunctionId(proxy)));
+        JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_FUNCTION(cloneScriptFunc, EtwTrace::GetFunctionId(proxy)));
         cloneScriptFunc->SetHomeObj(newHome);
 
         *pnewMethod = cloneScriptFunc;

@@ -5,7 +5,7 @@
 #include "stdafx.h"
 #include "BackEndAPI.h"
 #include "ThreadBoundThreadContextManager.h"
-#ifdef F_JSETW
+#ifdef ENABLE_JS_ETW
 #include <IERESP_mshtml.h>
 #include "microsoft-scripting-jscript9.internalevents.h"
 #endif
@@ -592,7 +592,7 @@ Recycler* ThreadContext::EnsureRecycler()
             throw;
         }
 
-        JSETW(EventWriteJSCRIPT_GC_INIT(this->recycler, this->GetHiResTimer()->Now()));    
+        JS_ETW(EventWriteJSCRIPT_GC_INIT(this->recycler, this->GetHiResTimer()->Now()));    
     }
 
 #if DBG
@@ -873,7 +873,7 @@ ThreadContext::AddPropertyRecordInternal(const Js::PropertyRecord * propertyReco
     // We will still be able to lookup the symbol property by the property id, so go ahead and check that.
     Assert(GetPropertyName(propertyRecord->GetPropertyId()) == propertyRecord);
 #endif
-    EventWriteJSCRIPT_HOSTING_PROPERTYID_LIST(propertyRecord, propertyRecord->GetBuffer());   
+    JS_ETW(EventWriteJSCRIPT_HOSTING_PROPERTYID_LIST(propertyRecord, propertyRecord->GetBuffer()));   
 }
 
 void
@@ -1160,7 +1160,7 @@ ThreadContext::EnterScriptStart(Js::ScriptEntryExitRecord * record, bool doClean
 {
     Recycler * recycler = this->GetRecycler();
     Assert(recycler->IsReentrantState());
-    JSETW(EventWriteJSCRIPT_RUN_START(this,0));
+    JS_ETW(EventWriteJSCRIPT_RUN_START(this,0));
 
     // Increment the callRootLevel early so that Dispose ran during FinishConcurrent will not close the current scriptContext
     uint oldCallRootLevel = this->callRootLevel++;
@@ -1300,7 +1300,7 @@ ThreadContext::EnterScriptEnd(Js::ScriptEntryExitRecord * record, bool doCleanup
         }
     }
 
-    JSETW(EventWriteJSCRIPT_RUN_STOP(this,0));
+    JS_ETW(EventWriteJSCRIPT_RUN_STOP(this,0));
 }
 
 void 
@@ -1551,7 +1551,7 @@ ThreadContext::LeaveScriptStart(void * frameAddress)
     }
 #endif
 
-    JSETW(EventWriteJSCRIPT_CALL_OUT_START(this,0));
+    JS_ETW(EventWriteJSCRIPT_CALL_OUT_START(this,0));
 
     Js::ScriptEntryExitRecord * entryExitRecord = this->GetScriptEntryExit();
 
@@ -1611,7 +1611,7 @@ ThreadContext::LeaveScriptEnd(void * frameAddress)
     }
 #endif
 
-    JSETW(EventWriteJSCRIPT_CALL_OUT_STOP(this,0));
+    JS_ETW(EventWriteJSCRIPT_CALL_OUT_STOP(this,0));
     Js::ScriptEntryExitRecord * entryExitRecord = this->GetScriptEntryExit();
 
     AssertMsg(entryExitRecord && entryExitRecord->frameIdOfScriptExitFunction,
@@ -3534,7 +3534,7 @@ ThreadServiceWrapper* ThreadContext::GetThreadServiceWrapper()
     return threadServiceWrapper;
 }
 
-#ifdef F_JSETW
+#ifdef ENABLE_JS_ETW
 void ThreadContext::EtwLogPropertyIdList()
 {
     propertyMap->Map([&](const Js::PropertyRecord* propertyRecord){
@@ -3773,6 +3773,7 @@ HCRYPTPROV ThreadContext::EnsureCryptoContext()
 }
 #endif
 
+#ifdef _CONTROL_FLOW_GUARD
 Js::DelayLoadWinCoreMemory * ThreadContext::GetWinCoreMemoryLibrary()
 {
     delayLoadWinCoreMemoryLibrary.EnsureFromSystemDirOnly();
@@ -3784,6 +3785,7 @@ Js::DelayLoadWinCoreProcessThreads * ThreadContext::GetWinCoreProcessThreads()
     delayLoadWinCoreProcessThreads.EnsureFromSystemDirOnly();
     return &delayLoadWinCoreProcessThreads;
 }
+#endif
 
 Js::DelayLoadWinRtString * ThreadContext::GetWinRTStringLibrary()
 {

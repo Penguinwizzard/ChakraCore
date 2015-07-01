@@ -218,7 +218,7 @@ Recycler::Recycler(AllocationPolicyManager * policyManager, IdleDecommitPageAllo
     ,pfPostHeapEnumScanCallback(nullptr)
 #endif
     , telemetryBlock(&localTelemetryBlock)
-#ifdef F_JSETW
+#ifdef ENABLE_JS_ETW
     ,bulkFreeMemoryWrittenCount(0)
 #endif
 #ifdef RECYCLER_PAGE_HEAP
@@ -344,7 +344,7 @@ Recycler::LogMemProtectHeapSize(bool fromGC)
 {
     Assert(IsMemProtectMode());
 
-    if (EventEnabledMEMPROTECT_GC_HEAP_SIZE())
+    if (IS_JS_ETW(EventEnabledMEMPROTECT_GC_HEAP_SIZE()))
     {
         IdleDecommitPageAllocator* recyclerPageAllocator = GetRecyclerPageAllocator();
         IdleDecommitPageAllocator* recyclerLeafPageAllocator = GetRecyclerLeafPageAllocator();
@@ -370,7 +370,7 @@ Recycler::LogMemProtectHeapSize(bool fromGC)
         numberOfSegments += recyclerWithBarrierPageAllocator->numberOfSegments;
 #endif
 
-        EventWriteMEMPROTECT_GC_HEAP_SIZE(this, usedBytes, reservedBytes, committedBytes, numberOfSegments, fromGC);
+        JS_ETW(EventWriteMEMPROTECT_GC_HEAP_SIZE(this, usedBytes, reservedBytes, committedBytes, numberOfSegments, fromGC));
     }
 }
 
@@ -422,7 +422,7 @@ Recycler::~Recycler()
     this->ResetThreadId();
 #endif
 
-#if F_JSETW
+#ifdef ENABLE_JS_ETW
     FlushFreeRecord();
 #endif
 
@@ -2677,12 +2677,14 @@ Recycler::Sweep(size_t rescanRootBytes, bool concurrent, bool adjustPartialHeuri
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
 void Recycler::DisplayMemStats()
 {
+#ifdef PERF_COUNTERS
 #if DBG_DUMP
     printf("Recycler Live Object Count  %u\n", PerfCounter::RecyclerCounterSet::GetLiveObjectCounter().GetValue());
     printf("Recycler Live Object Size   %u\n", PerfCounter::RecyclerCounterSet::GetLiveObjectSizeCounter().GetValue());
 #endif
 
     printf("Recycler Used Page Size %u\n", PerfCounter::PageAllocatorCounterSet::GetUsedSizeCounter(PageAllocatorType::PageAllocatorType_Recycler).GetValue());
+#endif
 }
 #endif
 
@@ -3722,11 +3724,13 @@ Recycler::IsReentrantState() const
 }
 #endif
 
+#ifdef ENABLE_JS_ETW
 template <Js::Phase phase> static ETWEventGCActivationKind GetETWEventGCActivationKind();
 template <> static ETWEventGCActivationKind GetETWEventGCActivationKind<Js::GarbageCollectPhase>() { return ETWEvent_GarbageCollect; }
 template <> static ETWEventGCActivationKind GetETWEventGCActivationKind<Js::ThreadCollectPhase>() { return ETWEvent_ThreadCollect; }
 template <> static ETWEventGCActivationKind GetETWEventGCActivationKind<Js::ConcurrentCollectPhase>() { return ETWEvent_ConcurrentCollect; }
 template <> static ETWEventGCActivationKind GetETWEventGCActivationKind<Js::PartialCollectPhase>() { return ETWEvent_PartialCollect; }
+#endif
 
 template <Js::Phase phase>
 void
@@ -5270,12 +5274,14 @@ Recycler::StaticBackgroundWorkCallback(void * callbackData)
     recycler->DoBackgroundWork(true);
 }
 
+#ifdef ENABLE_JS_ETW
 static ETWEventGCActivationKind
 BackgroundMarkETWEventGCActivationKind(CollectionState collectionState)
 {
     return collectionState == CollectionStateConcurrentFinishMark? 
         ETWEvent_ConcurrentFinishMark : ETWEvent_ConcurrentMark;
 }
+#endif
 
 void
 Recycler::DoBackgroundWork(bool forceForeground)
@@ -5417,10 +5423,12 @@ Recycler::ThreadProc()
         dllHandle = NULL;
     }
 
+#ifdef ENABLE_JS_ETW
     // Create an ETW ActivityId for this thread, to help tools correlate ETW events we generate
     GUID activityId;
     auto result = EventActivityIdControl(EVENT_ACTIVITY_CTRL_CREATE_SET_ID, &activityId);
     Assert(result == ERROR_SUCCESS);
+#endif
 
     // Signal that the thread has started
     SetEvent(this->concurrentWorkDoneEvent);
@@ -5574,7 +5582,7 @@ Recycler::FinishCollection()
     autoHeap.VerifyFinalize();
 #endif
 
-#if F_JSETW
+#ifdef ENABLE_JS_ETW
     FlushFreeRecord();
 #endif
 
@@ -5943,10 +5951,12 @@ RecyclerParallelThread::StaticThreadProc(LPVOID lpParameter)
             dllHandle = NULL;
         }
 
+#ifdef ENABLE_JS_ETW
         // Create an ETW ActivityId for this thread, to help tools correlate ETW events we generate
         GUID activityId;
         auto result = EventActivityIdControl(EVENT_ACTIVITY_CTRL_CREATE_SET_ID, &activityId);
         Assert(result == ERROR_SUCCESS);
+#endif
 
         // If this thread is created on demand we already have work to process and do not need to wait
         bool mustWait = parallelThread->synchronizeOnStartup;
@@ -7644,7 +7654,7 @@ Recycler::SetInDetachProcess()
 }
 #endif
 
-#ifdef F_JSETW
+#ifdef ENABLE_JS_ETW
 
 ULONG Recycler::EventWriteFreeMemoryBlock(HeapBlock* heapBlock)
 {
@@ -7703,7 +7713,7 @@ ULONG Recycler::EventWriteFreeMemoryBlock(HeapBlock* heapBlock)
 void Recycler::FlushFreeRecord()
 {
     Assert(bulkFreeMemoryWrittenCount <= Recycler::BulkFreeMemoryCount);
-    JSETW(EventWriteJSCRIPT_RECYCLER_FREE_MEMORY(bulkFreeMemoryWrittenCount, sizeof(Recycler::ETWFreeRecord), etwFreeRecords));
+    JS_ETW(EventWriteJSCRIPT_RECYCLER_FREE_MEMORY(bulkFreeMemoryWrittenCount, sizeof(Recycler::ETWFreeRecord), etwFreeRecords));
     bulkFreeMemoryWrittenCount = 0;
 }
 

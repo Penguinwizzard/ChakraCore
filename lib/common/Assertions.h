@@ -23,6 +23,14 @@ extern bool CheckIsDebuggerPresent(void);
 #define LOG_ASSERT() 
 #endif
 
+#ifdef NTBUILD
+#include <ntassert.h>
+#define RAISE_ASSERTION(comment) NT_ASSERTMSG(comment, FALSE)
+#else
+#include <assert.h>
+#define RAISE_ASSERTION(comment) _wassert(_CRT_WIDE(comment), _CRT_WIDE(__FILE__), __LINE__)
+#endif
+
 #define AssertMsg(f, comment) \
     { \
         if (!(f)) \
@@ -32,7 +40,7 @@ extern bool CheckIsDebuggerPresent(void);
             IsInAssert = TRUE; \
             if (!REPORT_ASSERT(f, comment)) \
             { \
-                NT_ASSERTMSG(comment, FALSE); \
+                RAISE_ASSERTION(comment); \
             } \
             IsInAssert = FALSE; \
         } \
@@ -47,10 +55,17 @@ extern bool CheckIsDebuggerPresent(void);
 
 #define AssertMsg(f, comment) ((void) 0)
 #define Assert(exp)           ((void) 0)
+#ifdef NTBUILD
+#include <ntassert.h>
 #define AssertVerify(exp)     NT_VERIFY(exp) // Execute the expression but don't do anything with the result in non-debug builds
+#else
+#define AssertVerify(exp)     (exp)
+#endif
 #define Assume(x)             __assume(x)
 #define DebugOnly(x)
 #endif // DBG
+
+#define AnalysisAssert(x)     Assert(x); __analysis_assume(x)
 
 #define Unused(var) var;
 

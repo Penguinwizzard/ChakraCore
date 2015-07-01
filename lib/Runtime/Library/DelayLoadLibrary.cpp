@@ -364,6 +364,7 @@ namespace Js
         return FALSE;
     }
 
+#ifdef _CONTROL_FLOW_GUARD
 // Note. __declspec(guard(nocf)) causes the CFG check to be removed
 // inside this function, and is needed only for test binaries (chk and FRETEST)
 #if defined(DELAYLOAD_SET_CFG_TARGET)
@@ -432,7 +433,7 @@ namespace Js
         return BinaryFeatureControl::GetMitigationPolicyForProcess(hProcess, MitigationPolicy, lpBuffer, nLength);
 #endif // ENABLE_DEBUG_CONFIG_OPTIONS
     }
-
+#endif
     // Implement this function inlined so that WinRT.lib can be used without the runtime.
     HRESULT DelayLoadWinType::RoGetMetaDataFile(
         _In_ const HSTRING name,

@@ -4,6 +4,8 @@
 
 #pragma once
 
+#ifdef ENABLE_JS_ETW
+
 //
 // ETW (Event Tracing for Windows) is a high-performance, low overhead and highly scalable
 // tracing facility provided by the Windows Operating System. There are
@@ -59,7 +61,7 @@ enum MethodType : uint16
 // Helper macro to log all the method level events
 
 #define LogSourceEvent(Function, SourceContext, ScriptContext, SourceFlags, Url) \
-    JSETW(Function(SourceContext,           \
+    JS_ETW(Function(SourceContext,           \
         ScriptContext,                      \
         SourceFlags,                        \
         Url));                              \
@@ -109,7 +111,7 @@ enum MethodType : uint16
     {                                                                                               \
         functionName = GetFunctionName(Body);                                                       \
     }                                                                                               \
-    JSETW(Function(                                                                                 \
+    JS_ETW(Function(                                                                                 \
         Body->GetScriptContext(),                                                                   \
         (void *)entryPoint->GetNativeAddress(),                                                     \
         entryPoint->GetCodeSize(),                                                                  \
@@ -138,7 +140,7 @@ enum MethodType : uint16
 
 #define LogMethodInterpretedThunkEvent(Function, Body)                        \
     Assert(Body->GetDynamicInterpreterEntryPoint() != null);                  \
-    JSETW(Function(Body->GetScriptContext(),                                  \
+    JS_ETW(Function(Body->GetScriptContext(),                                  \
     Body->GetDynamicInterpreterEntryPoint(),                                  \
     Body->GetDynamicInterpreterThunkSize(),                                   \
     GetFunctionId(Body),                                                      \
@@ -180,7 +182,7 @@ enum MethodType : uint16
             loopBodyName = loopBodyNameArray;                                                              \
         }                                                                                                  \
     }                                                                                                      \
-    JSETW(Function(Body->GetScriptContext(),                                                               \
+    JS_ETW(Function(Body->GetScriptContext(),                                                               \
         (void *)entryPoint->GetNativeAddress(),                                                            \
         entryPoint->GetCodeSize(),                                                                         \
         GetFunctionId(Body),                                                                               \
@@ -253,3 +255,5 @@ private:
     static utf8char_t* GetUrl(Js::FunctionBody* body, uint* urlLength);
 #endif
 };
+
+#endif

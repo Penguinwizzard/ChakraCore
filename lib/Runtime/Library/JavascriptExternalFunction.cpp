@@ -5,7 +5,7 @@
 ********************************************************/
 #include "StdAfx.h"
 
-#ifdef F_JSETW
+#ifdef ENABLE_JS_ETW
 #include <IERESP_mshtml.h>
 #include "microsoft-scripting-jscript9.internalevents.h"
 #endif
@@ -103,7 +103,7 @@ namespace Js
         Js::TypeId typeId = Js::JavascriptOperators::GetTypeId(thisVar);
         // TODO: JIT heuristic
         this->callCount++;
-        if (EventEnabledJSCRIPT_HOSTING_EXTERNAL_FUNCTION_CALL_START())
+        if (IS_JS_ETW(EventEnabledJSCRIPT_HOSTING_EXTERNAL_FUNCTION_CALL_START()))
         {
             JavascriptFunction* caller = nullptr;
 
@@ -142,7 +142,7 @@ namespace Js
                         }
                         outString[j] = L'\0';
                     }
-                    JSETW(EventWriteJSCRIPT_HOSTING_CALLER_TO_EXTERNAL(scriptContext, this, typeId, outString, callCount));
+                    JS_ETW(EventWriteJSCRIPT_HOSTING_CALLER_TO_EXTERNAL(scriptContext, this, typeId, outString, callCount));
                     if (outString != callerString)
                     {
                         HeapDeleteArray(length+1, outString);
@@ -156,7 +156,7 @@ namespace Js
 #endif
                 }
             }
-            JSETW(EventWriteJSCRIPT_HOSTING_EXTERNAL_FUNCTION_CALL_START(scriptContext, this, typeId));
+            JS_ETW(EventWriteJSCRIPT_HOSTING_EXTERNAL_FUNCTION_CALL_START(scriptContext, this, typeId));
 #if DBG_DUMP
             if (Js::Configuration::Global.flags.Trace.IsEnabled(Js::HostPhase))
             {
@@ -231,9 +231,9 @@ namespace Js
         {
             result = CrossSite::MarshalVar(scriptContext, result);
         }
-        if (EventEnabledJSCRIPT_HOSTING_EXTERNAL_FUNCTION_CALL_STOP())
+        if (IS_JS_ETW(EventEnabledJSCRIPT_HOSTING_EXTERNAL_FUNCTION_CALL_STOP()))
         {
-            JSETW(EventWriteJSCRIPT_HOSTING_EXTERNAL_FUNCTION_CALL_STOP(scriptContext, this, 0));
+            JS_ETW(EventWriteJSCRIPT_HOSTING_EXTERNAL_FUNCTION_CALL_STOP(scriptContext, this, 0));
         }
         return result;
     }

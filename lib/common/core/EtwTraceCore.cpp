@@ -4,6 +4,7 @@
 
 #include "stdafx.h"
 
+#ifdef ENABLE_JS_ETW
 extern "C" {
     ETW_INLINE
         VOID EtwCallback(
@@ -25,9 +26,9 @@ void EtwTraceCore::Register()
     if (!s_registered)
     {
         s_registered = true;
-        JSETW(EventRegisterMicrosoft_IE());
-        JSETW(EventRegisterMicrosoft_JScript());
-        JSETW(EventRegisterMicrosoft_JScript_Internal());
+        JS_ETW(EventRegisterMicrosoft_IE());
+        JS_ETW(EventRegisterMicrosoft_JScript());
+        JS_ETW(EventRegisterMicrosoft_JScript_Internal());
 
         // This will be used to distinguish the provider we are getting the callback for.
         PROVIDER_JSCRIPT9_Context.RegistrationHandle = Microsoft_JScriptHandle;
@@ -44,8 +45,10 @@ void EtwTraceCore::UnRegister()
     {
         s_registered = false;
 
-        JSETW(EventUnregisterMicrosoft_IE());
-        JSETW(EventUnregisterMicrosoft_JScript());
-        JSETW(EventUnregisterMicrosoft_JScript_Internal());
+        JS_ETW(EventUnregisterMicrosoft_IE());
+        JS_ETW(EventUnregisterMicrosoft_JScript());
+        JS_ETW(EventUnregisterMicrosoft_JScript_Internal());
     }
 }
+
+#endif

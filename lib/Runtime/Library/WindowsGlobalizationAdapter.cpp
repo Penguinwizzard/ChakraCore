@@ -6,9 +6,7 @@
 #include "strsafe.h"
 
 //Messy hack to get rid of the new/delete operators; as we still need implements.h
-#define __PLACEMENT_NEW_INLINE
 #include <wrl\implements.h>
-#undef __PLACEMENT_NEW_INLINE
 
 //#include <wrl\wrappers\corewrappers.h>
 
