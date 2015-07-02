@@ -291,15 +291,6 @@
     <ClInclude Include="UriHelper.h" />
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="$(MSBuildThisFileDirectory)..\publish\MutatorsHost.idl" />
-  </ItemGroup>
-  <ItemGroup>
-    <MASM Include="amd64\javascriptfunctiona.asm" />
-    <MASM Include="arm\arm_DeferredDeserializeThunk.asm">
-      <Filter>arm</Filter>
-    </MASM>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="CharStringCache.inl" />
     <None Include="ConcatString.inl" />
     <None Include="InJavascript\BuildGenByteCodeBin.cmd" />
@@ -332,16 +323,41 @@
     <None Include="JavascriptRegularExpression.inl" />
     <None Include="JavascriptString.inl" />
     <None Include="JavascriptVariantDate.inl" />
-    <None Include="arm\arm_DeferredParsingThunk.asm">
-      <Filter>arm</Filter>
-    </None>
-    <None Include="arm\arm_CallFunction.asm">
-      <Filter>arm</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="arm">
       <UniqueIdentifier>{e2d5f4c7-798a-4858-98a0-1bf69c372d9e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="arm64">
+      <UniqueIdentifier>{0e8e06d3-8fea-442d-84f0-6671de131c81}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="amd64">
+      <UniqueIdentifier>{228e8099-3856-4653-98f0-0a477608a8a3}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ARMASM Include="$(MSBuildThisFileDirectory)arm\arm_CallFunction.asm">
+      <Filter>arm</Filter>
+    </ARMASM>
+    <ARMASM Include="$(MSBuildThisFileDirectory)arm\arm_DeferredDeserializeThunk.asm">
+      <Filter>arm</Filter>
+    </ARMASM>
+    <ARMASM Include="$(MSBuildThisFileDirectory)arm\arm_DeferredParsingThunk.asm">
+      <Filter>arm</Filter>
+    </ARMASM>
+    <ARMASM Include="$(MSBuildThisFileDirectory)arm64\arm64_DeferredParsingThunk.asm">
+      <Filter>arm64</Filter>
+    </ARMASM>
+    <ARMASM Include="$(MSBuildThisFileDirectory)arm64\arm64_CallFunction.asm">
+      <Filter>arm64</Filter>
+    </ARMASM>
+    <ARMASM Include="$(MSBuildThisFileDirectory)arm64\arm64_DeferredDeserializeThunk.asm">
+      <Filter>arm64</Filter>
+    </ARMASM>
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="$(MSBuildThisFileDirectory)amd64\javascriptfunctiona.asm">
+      <Filter>amd64</Filter>
+    </MASM>
   </ItemGroup>
 </Project>

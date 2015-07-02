@@ -40,13 +40,11 @@
 
       <ProgramDataBaseFileName Condition="'$(ConfigurationType)'=='StaticLibrary'">$(IntDir)$(TargetName).pdb</ProgramDataBaseFileName>
       <ProgramDataBaseFileName Condition="'$(ConfigurationType)'!='StaticLibrary'">$(IntDir)</ProgramDataBaseFileName>
-    </ClCompile>    
+    </ClCompile>
     <MASM>
       <!-- /Cx -->
-      <PreserveIdentifierCase>3</PreserveIdentifierCase>
-      <PreprocessorDefinitions>%(ClCompile.PreprocessorDefinitions)</PreprocessorDefinitions>
-      <IncludePaths>%(ClCompile.AdditionalIncludeDirectories)</IncludePaths>
-    </MASM>
+      <PreserveIdentifierCase>3</PreserveIdentifierCase>    
+    </MASM>    
     <Link>
       <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -62,6 +60,9 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);_DEBUG;DBG;DBG_DUMP</PreprocessorDefinitions>
     </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);DBG</PreprocessorDefinitions>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <!-- fre and fretest build flags -->
   <ItemDefinitionGroup Condition="'$(OptimiziedBuild)'=='true'">
@@ -73,4 +74,5 @@
       <WholeProgramOptimization>true</WholeProgramOptimization>
     </ClCompile>
   </ItemDefinitionGroup>
+
 </Project> 
