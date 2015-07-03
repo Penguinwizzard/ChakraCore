@@ -563,6 +563,15 @@ namespace Js
     {
         FunctionProxy* proxy = this->GetFunctionProxy();
         ParseableFunctionInfo * pFuncBody = proxy->EnsureDeserialized();
+        const wchar_t * inputStr = inputString->GetString();
+        const wchar_t * paramStr = wcschr(inputStr, L'(');
+
+        if (paramStr == nullptr || wcscmp(pFuncBody->GetDisplayName(), Js::Constants::EvalCode) == 0)
+        {
+            Assert(pFuncBody->IsEval());
+            return inputString;
+        }
+
         ScriptContext * scriptContext = this->GetScriptContext();
         JavascriptLibrary *javascriptLibrary = scriptContext->GetLibrary();
         bool isClassMethod = this->GetHomeObj() != nullptr;
@@ -571,8 +580,7 @@ namespace Js
         const wchar_t* name = L"";
         size_t nameLength = 0;
         Var returnStr = nullptr;
-        ENTER_PINNED_SCOPE(JavascriptString, computedName);
-
+        
         if (!isClassMethod)
         {
             prefixString = javascriptLibrary->GetFunctionPrefixString();
@@ -601,13 +609,8 @@ namespace Js
         }
         else
         {
-            computedName = this->GetComputedName();
-            if (computedName != nullptr)
-            {
-                name = computedName->GetString();
-                nameLength = computedName->GetLength();
-            }
-            else if (IsClassConstructor())
+            
+            if (IsClassConstructor())
             {
                 name = L"constructor";
                 nameLength = _countof(L"constructor") -1; //subtract off \0
@@ -618,9 +621,15 @@ namespace Js
             }
         }
         
-        const wchar_t * inputStr = inputString->GetString();
-        const wchar_t * paramStr = wcschr(inputStr, L'(');
-        Assert(paramStr != nullptr);
+        ENTER_PINNED_SCOPE(JavascriptString, computedName);
+        computedName = this->GetComputedName();
+        if (computedName != nullptr)
+        {
+            prefixString = nullptr;
+            prefixStringLength = 0;
+            name = computedName->GetString();
+            nameLength = computedName->GetLength();
+        }
 
         //Length is a uint32 so max length of functionBody can't be more than that even if we are using 64bit pointers
         uint functionBodyLength = inputString->GetLength() - ((uint)(paramStr - inputStr)); 
