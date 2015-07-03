@@ -565,6 +565,12 @@ namespace Js
 
         PropertyDescriptor proxyPropertyDescriptor;
         ScriptContext* scriptContext = GetScriptContext();
+
+        // Set implicit call flag so we bailout and not do copy-prop on field
+        ThreadContext* threadContext = scriptContext->GetThreadContext();
+        Js::ImplicitCallFlags saveImplicitCallFlags = threadContext->GetImplicitCallFlags();
+        threadContext->SetImplicitCallFlags((Js::ImplicitCallFlags)(saveImplicitCallFlags | ImplicitCall_Accessor));
+
         if (!JavascriptOperators::GetOwnPropertyDescriptor(this, propertyId, scriptContext, &proxyPropertyDescriptor))
         {
             PropertyDescriptor resultDescriptor;
@@ -1898,7 +1904,7 @@ namespace Js
             // in [[construct]] case, we don't need to check if the function is a constructor: the function should throw there.
             if (args.Info.Flags & CallFlags_New)
             {
-                if (!JavascriptFunction::IsConstructor(proxy->target))
+                if (!JavascriptOperators::IsConstructor(proxy->target))
                 {
                     JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NeedFunction, L"construct");
                 }

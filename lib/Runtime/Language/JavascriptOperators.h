@@ -130,6 +130,7 @@ namespace Js
         static void FreeTemp(Var aValue);
 
         static BOOL IsArray(Var instanceVar);
+        static BOOL IsConstructor(Var instanceVar);
         static BOOL IsConcatSpreadable(Var instanceVar);
         static Var ToObject(Var aRight,ScriptContext* scriptContext);
         static Var ToWithObject(Var aRight, ScriptContext* scriptContext);

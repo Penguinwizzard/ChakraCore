@@ -1335,12 +1335,12 @@ namespace Js
         Assert(!(callInfo.Flags & CallFlags_New));
         CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(TAFromCount);
 
-        if (args.Info.Count < 1 || !JavascriptFunction::IsConstructor(args[0]))
+        if (args.Info.Count < 1 || !JavascriptOperators::IsConstructor(args[0]))
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NeedFunction, L"[TypedArray].from");
         }
 
-        JavascriptFunction* constructor = JavascriptFunction::FromVar(args[0]);
+        RecyclableObject* constructor = RecyclableObject::FromVar(args[0]);
         RecyclableObject* items = nullptr;
 
         if (args.Info.Count < 2 || !JavascriptConversion::ToObject(args[1], scriptContext, &items))

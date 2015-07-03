@@ -93,7 +93,6 @@ namespace Js
         static Var CallAsConstructor(Var v, Arguments args, ScriptContext* scriptContext, const Js::AuxArray<uint32> *spreadIndices = nullptr);
         static Var FinishConstructor(const Var constructorReturnValue, Var newObject, JavascriptFunction *const function);
 
-        static BOOL IsConstructor(Var obj);
 #if DBG
         static void CheckValidDebugThunk(ScriptContext* scriptContext, RecyclableObject *function);
 #endif

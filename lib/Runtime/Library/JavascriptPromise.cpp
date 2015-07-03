@@ -863,7 +863,7 @@ namespace Js
     // NewPromiseCapability as described in ES6.0 (draft 29) Section 25.4.1.6
     JavascriptPromiseCapability* JavascriptPromise::NewPromiseCapability(Var constructor, ScriptContext* scriptContext)
     {
-        if (!JavascriptFunction::IsConstructor(constructor))
+        if (!JavascriptOperators::IsConstructor(constructor))
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedFunction);
         }

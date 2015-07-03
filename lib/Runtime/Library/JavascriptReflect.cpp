@@ -266,7 +266,7 @@ namespace Js
         }
         Var target = args[1];
 
-        return JavascriptObject::CreateOwnStringSymbolPropertiesHelper(RecyclableObject::FromVar(target), scriptContext);
+        return JavascriptOperators::GetOwnPropertyKeys(target, scriptContext);
     }
 
     Var JavascriptReflect::EntryPreventExtensions(RecyclableObject* function, CallInfo callInfo, ...)
@@ -404,7 +404,7 @@ namespace Js
 
         Var target = args.Info.Count > 1 ? args[1] : undefinedValue;
 
-        if (!JavascriptFunction::IsConstructor(target))
+        if (!JavascriptOperators::IsConstructor(target))
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NeedFunction, L"Reflect.construct");
         }

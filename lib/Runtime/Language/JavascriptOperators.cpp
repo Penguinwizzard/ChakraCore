@@ -1185,6 +1185,24 @@ CommonNumber:
         return FALSE;
     }
 
+    BOOL JavascriptOperators::IsConstructor(Var instanceVar)
+    {
+        if (!RecyclableObject::Is(instanceVar))
+        {
+            return FALSE;
+        }
+        if (JavascriptProxy::Is(instanceVar))
+        {
+            JavascriptProxy* proxy = JavascriptProxy::FromVar(instanceVar);
+            return IsConstructor(proxy->GetTarget());
+        }
+        if (!JavascriptFunction::Is(instanceVar))
+        {
+            return FALSE;
+        }
+        return JavascriptFunction::FromVar(instanceVar)->IsConstructor();
+    }
+
     BOOL JavascriptOperators::IsConcatSpreadable(Var instanceVar)
     {
         // an object is spreadable under two condition, either it is a JsArray
@@ -9114,7 +9132,7 @@ CommonNumber:
         {
             return defaultConstructor;
         }
-        if (!JavascriptFunction::IsConstructor(species))
+        if (!JavascriptOperators::IsConstructor(species))
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_NotAConstructor, L"[@@species]");
         }

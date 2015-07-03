@@ -735,16 +735,6 @@ namespace Js
         return newObject;
     }
 
-    BOOL JavascriptFunction::IsConstructor(Var obj)
-    {
-        if (!JavascriptFunction::Is(obj))
-        {
-            return false;
-        }
-
-        return JavascriptFunction::FromVar(obj)->IsConstructor();
-    }
-
     Var JavascriptFunction::EntrySpreadCall(const Js::AuxArray<uint32> *spreadIndices, RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);

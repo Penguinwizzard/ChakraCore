@@ -5385,7 +5385,7 @@ Case0:
                 newArr = CreateNewArrayHelper(newLen, isIntArray, isFloatArray, pArr, scriptContext);
                 newObj = newArr;
             }
-            else if (JavascriptFunction::IsConstructor(constructor) && JavascriptLibrary::IsTypedArrayConstructor(constructor, scriptContext))
+            else if (JavascriptOperators::IsConstructor(constructor) && JavascriptLibrary::IsTypedArrayConstructor(constructor, scriptContext))
             {
                 if (pArr)
                 {
@@ -8393,7 +8393,7 @@ Case0:
             Var constructor = JavascriptOperators::SpeciesConstructor(
                 typedArrayBase, TypedArrayBase::GetDefaultConstructor(args[0], scriptContext), scriptContext);
 
-            if (JavascriptFunction::IsConstructor(constructor))
+            if (JavascriptOperators::IsConstructor(constructor))
             {
                 Js::Var constructorArgs[] = { constructor, JavascriptNumber::ToVar(length, scriptContext) };
                 Js::CallInfo constructorCallInfo(Js::CallFlags_New, _countof(constructorArgs));
@@ -9118,11 +9118,11 @@ Case0:
         Assert(!(callInfo.Flags & CallFlags_New));
 
         JavascriptLibrary* library = scriptContext->GetLibrary();
-        JavascriptFunction* constructor = nullptr;
+        RecyclableObject* constructor = nullptr;
 
-        if (JavascriptFunction::IsConstructor(args[0]))
+        if (JavascriptOperators::IsConstructor(args[0]))
         {
-            constructor = JavascriptFunction::FromVar(args[0]);
+            constructor = RecyclableObject::FromVar(args[0]);
         }
 
         RecyclableObject* items = nullptr;
@@ -9326,9 +9326,9 @@ Case0:
         JavascriptArray* newArr = nullptr;
         TypedArrayBase* newTypedArray = nullptr;
 
-        if (JavascriptFunction::IsConstructor(args[0]))
+        if (JavascriptOperators::IsConstructor(args[0]))
         {
-            JavascriptFunction* constructor = JavascriptFunction::FromVar(args[0]);
+            RecyclableObject* constructor = RecyclableObject::FromVar(args[0]);
 
             Js::Var constructorArgs[] = { constructor, JavascriptNumber::ToVar(len, scriptContext) };
             Js::CallInfo constructorCallInfo(Js::CallFlags_New, _countof(constructorArgs));
@@ -10824,7 +10824,7 @@ JavascriptArray::ArraySpeciesCreate(Var originalArray, uint32 length, ScriptCont
             return nullptr;
         }
 
-        if (JavascriptFunction::IsConstructor(constructor))
+        if (JavascriptOperators::IsConstructor(constructor))
         {
             ScriptContext* constructorScriptContext = RecyclableObject::FromVar(constructor)->GetScriptContext();
             if (constructorScriptContext != scriptContext)
@@ -10855,7 +10855,7 @@ JavascriptArray::ArraySpeciesCreate(Var originalArray, uint32 length, ScriptCont
         return scriptContext->GetLibrary()->CreateArray(length);
     }
 
-    if (!JavascriptFunction::IsConstructor(constructor))
+    if (!JavascriptOperators::IsConstructor(constructor))
     {
         JavascriptError::ThrowTypeError(scriptContext, JSERR_NotAConstructor, L"[@@species]");
     }

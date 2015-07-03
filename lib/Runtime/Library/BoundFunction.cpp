@@ -237,11 +237,17 @@ namespace Js
 
     JavascriptFunction * BoundFunction::GetTargetFunction() const
     {
-        if (targetFunction != null)
+        if (targetFunction != nullptr)
         {
-            if (JavascriptFunction::Is(targetFunction))
+            RecyclableObject* _targetFunction = targetFunction;
+            while (JavascriptProxy::Is(_targetFunction))
             {
-                return JavascriptFunction::FromVar(targetFunction);
+                _targetFunction = JavascriptProxy::FromVar(_targetFunction)->GetTarget();
+            }
+
+            if (JavascriptFunction::Is(_targetFunction))
+            {
+                return JavascriptFunction::FromVar(_targetFunction);
             }
 
             // targetfunction should always be a javascriptfunction.
@@ -284,7 +290,7 @@ namespace Js
     {
         if (this->targetFunction != nullptr)
         {
-            return this->GetTargetFunction()->IsConstructor();
+            return JavascriptOperators::IsConstructor(this->GetTargetFunction());
         }
 
         return false;
