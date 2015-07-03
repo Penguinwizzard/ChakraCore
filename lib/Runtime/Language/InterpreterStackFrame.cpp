@@ -4002,6 +4002,12 @@ namespace Js
     }
 
     template <class T>
+    void InterpreterStackFrame::OP_ConsoleSetPropertyScoped(unaligned T* playout)
+    {
+        OP_SetPropertyScoped(playout, PropertyOperation_AllowUndeclInConsoleScope);
+    }
+
+    template <class T>
     __inline bool InterpreterStackFrame::TrySetPropertyLocalFastPath(unaligned T* playout, PropertyId pid, Var instance, InlineCache*& inlineCache, PropertyOperationFlags flags)
     {
         Assert(!TaggedNumber::Is(instance));
@@ -4346,6 +4352,24 @@ namespace Js
         Var instance = this->GetRootObject();
         PropertyId propertyId = this->m_functionBody->GetReferencedPropertyId(propertyIdIndex);
         JavascriptOperators::OP_InitUndeclRootConstProperty(instance, propertyId);
+    }
+
+    template <class T>
+    void InterpreterStackFrame::OP_InitUndeclConsoleLetProperty(unaligned T* playout)
+    {
+        FrameDisplay* pScope = (FrameDisplay*)GetNonVarReg(playout->Instance);
+        AssertMsg(ConsoleScopeActivationObject::Is((DynamicObject*)pScope->GetItem(pScope->GetLength() - 1)), "How come we got this opcode without ConsoleScopeActivationObject?");
+        PropertyId propertyId = m_functionBody->GetReferencedPropertyId(playout->PropertyIdIndex);
+        JavascriptOperators::OP_InitLetProperty(pScope->GetItem(0), propertyId, this->scriptContext->GetLibrary()->GetUndeclBlockVar());
+    }
+
+    template <class T>
+    void InterpreterStackFrame::OP_InitUndeclConsoleConstProperty(unaligned T* playout)
+    {
+        FrameDisplay* pScope = (FrameDisplay*)GetNonVarReg(playout->Instance);
+        AssertMsg(ConsoleScopeActivationObject::Is((DynamicObject*)pScope->GetItem(pScope->GetLength() - 1)), "How come we got this opcode without ConsoleScopeActivationObject?");
+        PropertyId propertyId = m_functionBody->GetReferencedPropertyId(playout->PropertyIdIndex);
+        JavascriptOperators::OP_InitConstProperty(pScope->GetItem(0), propertyId, this->scriptContext->GetLibrary()->GetUndeclBlockVar());
     }
 
     template <class T>

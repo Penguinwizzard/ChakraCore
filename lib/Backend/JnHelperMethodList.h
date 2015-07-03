@@ -143,6 +143,8 @@ HELPERCALL(Op_GetInstanceScoped, Js::JavascriptOperators::OP_GetInstanceScoped, 
 HELPERCALL(Op_StFunctionExpression, Js::JavascriptOperators::OP_StFunctionExpression, 0)
 HELPERCALL(Op_InitUndeclRootLetFld, Js::JavascriptOperators::OP_InitUndeclRootLetProperty, AttrCanThrow)
 HELPERCALL(Op_InitUndeclRootConstFld, Js::JavascriptOperators::OP_InitUndeclRootConstProperty, AttrCanThrow)
+HELPERCALL(Op_InitUndeclConsoleLetFld, Js::JavascriptOperators::OP_InitUndeclConsoleLetProperty, AttrCanThrow)
+HELPERCALL(Op_InitUndeclConsoleConstFld, Js::JavascriptOperators::OP_InitUndeclConsoleConstProperty, AttrCanThrow)
 HELPERCALL(Op_InitLetFld, Js::JavascriptOperators::OP_InitLetProperty, AttrCanThrow)
 HELPERCALL(Op_InitConstFld, Js::JavascriptOperators::OP_InitConstProperty, AttrCanThrow)
 HELPERCALL(Op_InitFuncScoped, Js::JavascriptOperators::OP_InitFuncScoped, AttrCanThrow)
@@ -212,6 +214,7 @@ HELPERCALL(Op_PatchPutRootValueNoLocalFastPath, ((void (*)(Js::FunctionBody *con
 HELPERCALL(Op_PatchPutRootValueNoLocalFastPathPolymorphic, ((void (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutRootValueNoLocalFastPath<true, Js::PolymorphicInlineCache>), AttrCanThrow)
 
 HELPERCALL(Op_PatchSetPropertyScoped, ((void (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::FrameDisplay*, Js::PropertyId, Js::Var, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchSetPropertyScoped<true, Js::InlineCache>), AttrCanThrow)
+HELPERCALL(Op_ConsolePatchSetPropertyScoped, ((void(*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::FrameDisplay*, Js::PropertyId, Js::Var, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchSetPropertyScoped<true, Js::InlineCache>), AttrCanThrow)
 
 HELPERCALL(Op_PatchGetMethod, ((Js::Var (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, bool))Js::JavascriptOperators::PatchGetMethod<true, Js::InlineCache>), AttrCanThrow)
 HELPERCALL(Op_PatchGetMethodPolymorphic, ((Js::Var (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, bool))Js::JavascriptOperators::PatchGetMethod<true, Js::PolymorphicInlineCache>), AttrCanThrow)

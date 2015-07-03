@@ -70,6 +70,19 @@ namespace Js
         }
     };
 
+    class ConsoleScopeActivationObject : public ActivationObject
+    {
+    private:
+        DEFINE_VTABLE_CTOR(ConsoleScopeActivationObject, ActivationObject);
+        DEFINE_MARSHAL_OBJECT_TO_SCRIPT_CONTEXT(ConsoleScopeActivationObject);
+    public:
+        ConsoleScopeActivationObject(DynamicType * type) : ActivationObject(type) {}
+        static bool Is(void* instance)
+        {
+            return VirtualTableInfo<Js::ConsoleScopeActivationObject>::HasVirtualTable(instance);
+        }
+    };
+
     class ActivationObjectEx : public ActivationObject
     {
     private:

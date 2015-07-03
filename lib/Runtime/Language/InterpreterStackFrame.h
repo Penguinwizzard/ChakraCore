@@ -385,6 +385,7 @@ namespace Js
         template <class T> void OP_SetPropertyScoped(unaligned T* playout, PropertyOperationFlags flags = PropertyOperation_None);
         template <class T> void OP_SetPropertyScoped_NoFastPath(unaligned T* playout, PropertyOperationFlags flags);
         template <class T> void OP_SetPropertyScopedStrict(unaligned T* playout);
+        template <class T> void OP_ConsoleSetPropertyScoped(unaligned T* playout);
 
         template <class T> void DoSetProperty(unaligned T* playout, Var instance, PropertyOperationFlags flags);
         template <class T> void DoSetProperty_NoFastPath(unaligned T* playout, Var instance, PropertyOperationFlags flags);
@@ -396,6 +397,8 @@ namespace Js
         void OP_InitUndeclRootLetProperty(uint propertyIdIndex);
         template <class T> void OP_InitUndeclConstProperty(unaligned T* playout);
         void OP_InitUndeclRootConstProperty(uint propertyIdIndex);
+        template <class T> void OP_InitUndeclConsoleLetProperty(unaligned T* playout);
+        template <class T> void OP_InitUndeclConsoleConstProperty(unaligned T* playout);
         template <class T> void OP_ProfiledInitProperty(unaligned T* playout);
         template <class T> void OP_ProfiledInitRootProperty(unaligned T* playout);
         template <class T> void OP_ProfiledInitUndeclProperty(unaligned T* playout);

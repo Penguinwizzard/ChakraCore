@@ -464,6 +464,17 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
                 instr->m_opcode == Js::OpCode::ScopedStFld ? Js::PropertyOperation_None : Js::PropertyOperation_StrictMode);
             break;
 
+        case Js::OpCode::ConsoleScopedStFld:
+        {
+            if (!noFieldFastPath)
+            {
+                m_lowererMD.GenerateFastScopedStFld(instr);
+            }
+            Js::PropertyOperationFlags flags = static_cast<Js::PropertyOperationFlags>(Js::PropertyOperation_None | Js::PropertyOperation_AllowUndeclInConsoleScope);
+            instrPrev = this->LowerScopedStFld(instr, IR::HelperOp_ConsolePatchSetPropertyScoped, true, true, flags);
+            break;
+        }
+
         case Js::OpCode::LdStr:
             m_lowererMD.ChangeToAssign(instr);
             break;
@@ -2381,6 +2392,14 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
 
         case Js::OpCode::InitUndeclRootConstFld:
             LowerElementUndefined(instr, IR::HelperOp_InitUndeclRootConstFld);
+            break;
+
+        case Js::OpCode::InitUndeclConsoleLetFld:
+            LowerElementUndefined(instr, IR::HelperOp_InitUndeclConsoleLetFld);
+            break;
+
+        case Js::OpCode::InitUndeclConsoleConstFld:
+            LowerElementUndefined(instr, IR::HelperOp_InitUndeclConsoleConstFld);
             break;
 
         case Js::OpCode::NewStackFrameDisplay:

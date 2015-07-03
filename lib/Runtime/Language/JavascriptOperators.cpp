@@ -2500,6 +2500,28 @@ CommonNumber:
         return TRUE;
     }
 
+    BOOL JavascriptOperators::OP_InitUndeclConsoleLetProperty(Var obj, PropertyId propertyId)
+    {
+        FrameDisplay *pScope = (FrameDisplay*)obj;
+        AssertMsg(ConsoleScopeActivationObject::Is((DynamicObject*)pScope->GetItem(pScope->GetLength() - 1)), "How come we got this opcode without ConsoleScopeActivationObject?");
+        RecyclableObject* instance = RecyclableObject::FromVar(pScope->GetItem(0));
+        PropertyOperationFlags flags = static_cast<PropertyOperationFlags>(PropertyOperation_SpecialValue | PropertyOperation_AllowUndecl);
+        PropertyAttributes attributes = PropertyLetDefaults;
+        instance->SetPropertyWithAttributes(propertyId, instance->GetLibrary()->GetUndeclBlockVar(), attributes, NULL, flags);
+        return TRUE;
+    }
+
+    BOOL JavascriptOperators::OP_InitUndeclConsoleConstProperty(Var obj, PropertyId propertyId)
+    {
+        FrameDisplay *pScope = (FrameDisplay*)obj;
+        AssertMsg(ConsoleScopeActivationObject::Is((DynamicObject*)pScope->GetItem(pScope->GetLength() - 1)), "How come we got this opcode without ConsoleScopeActivationObject?");
+        RecyclableObject* instance = RecyclableObject::FromVar(pScope->GetItem(0));
+        PropertyOperationFlags flags = static_cast<PropertyOperationFlags>(PropertyOperation_SpecialValue | PropertyOperation_AllowUndecl);
+        PropertyAttributes attributes = PropertyConstDefaults;
+        instance->SetPropertyWithAttributes(propertyId, instance->GetLibrary()->GetUndeclBlockVar(), attributes, NULL, flags);
+        return TRUE;
+    }
+
     BOOL JavascriptOperators::InitProperty(RecyclableObject* instance, PropertyId propertyId, Var newValue, PropertyOperationFlags flags)
     {
         return instance && instance->InitProperty(propertyId, newValue, flags);
@@ -2605,9 +2627,15 @@ CommonNumber:
 
         PropertyValueInfo info;
         PropertyValueInfo::SetCacheInfo(&info, functionBody, inlineCache, inlineCacheIndex, !IsFromFullJit);
+
+        bool allowUndecInConsoleScope = (propertyOperationFlags & PropertyOperation_AllowUndeclInConsoleScope) == PropertyOperation_AllowUndeclInConsoleScope;
+
         for (uint16 i = 0; i < length; i++)
         {
             object = (DynamicObject*)pDisplay->GetItem(i);
+
+            AssertMsg(!ConsoleScopeActivationObject::Is(object) || (i == length - 1), "Invalid location for ConsoleScopeActivationObject");
+
             Type* type = object->GetType();
             if (CacheOperators::TrySetProperty<true, true, true, true, true, !TInlineCache::IsPolymorphic, TInlineCache::IsPolymorphic, false>(
                     object, false, propertyId, newValue, scriptContext, propertyOperationFlags, nullptr, &info))
@@ -2651,11 +2679,14 @@ CommonNumber:
                 else
                 {
                     Assert((flags & Data) == Data && (flags & Writable) == None);
-                    if (flags & Const)
+                    if (!allowUndecInConsoleScope)
                     {
-                        JavascriptError::ThrowReferenceError(scriptContext, ERRAssignmentToConst);
+                        if (flags & Const)
+                        {
+                            JavascriptError::ThrowReferenceError(scriptContext, ERRAssignmentToConst);
+                        }
+                        return;
                     }
-                    return;
                 }
             }
             else if (!JavascriptOperators::IsObject(object))
@@ -2680,14 +2711,15 @@ CommonNumber:
 
                     scriptContext->GetThreadContext()->SetDisableImplicitFlags(disableImplicitFlags);
 
-                    if (result && scriptContext->IsUndeclBlockVar(value))
+                    if (result && scriptContext->IsUndeclBlockVar(value) && !allowUndecInConsoleScope)
                     {
                         JavascriptError::ThrowReferenceError(scriptContext, JSERR_UseBeforeDeclaration);
                     }
                 }
                 PropertyValueInfo info;
                 PropertyValueInfo::SetCacheInfo(&info, functionBody, inlineCache, inlineCacheIndex, !IsFromFullJit);
-                object->SetProperty(propertyId, newValue, PropertyOperation_None, &info);
+                PropertyOperationFlags setPropertyOpFlags = allowUndecInConsoleScope ? PropertyOperation_AllowUndeclInConsoleScope : PropertyOperation_None;
+                object->SetProperty(propertyId, newValue, setPropertyOpFlags, &info);
 
 #if DBG_DUMP
                 if (PHASE_VERBOSE_TRACE1(Js::InlineCachePhase))
@@ -2695,12 +2727,21 @@ CommonNumber:
                     CacheOperators::TraceCache(inlineCache, L"PatchSetPropertyScoped", propertyId, scriptContext, object);
                 }
 #endif
-                if (!JavascriptProxy::Is(object))
+                if (!JavascriptProxy::Is(object) && !allowUndecInConsoleScope)
                 {
                     CacheOperators::CachePropertyWrite(object, false, type, propertyId, &info, scriptContext);
                 }
                 return;
             }
+        }
+
+        // If we have console scope and no one in the scope had the property add it to console scope
+        if ((length > 0) && ConsoleScopeActivationObject::Is(pDisplay->GetItem(length - 1)))
+        {
+            RecyclableObject* obj = RecyclableObject::FromVar((DynamicObject*)pDisplay->GetItem(length - 1));
+            OUTPUT_TRACE(Js::ConsoleScopePhase, L"Adding property '%s' to console scope object\n", scriptContext->GetPropertyName(propertyId)->GetBuffer());
+            JavascriptOperators::SetProperty(obj, obj, propertyId, newValue, scriptContext, propertyOperationFlags);
+            return;
         }
 
         // No one in the scope stack has the property, so add it to the default instance provided by the caller.

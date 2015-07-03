@@ -18,6 +18,11 @@ namespace Js
     }
     void ByteCodeDumper::Dump(FunctionBody* dumpFunction)
     {
+        if (!CONFIG_FLAG(DumpDbgControllerBytecode) && dumpFunction->GetSourceContextInfo() &&
+            _wcsicmp(dumpFunction->GetSourceContextInfo()->url, L"dbgcontroller.js") == 0)
+        {
+            return;
+        }
         ByteCodeReader reader;
         reader.Create(dumpFunction);
         StatementReader statementReader;
@@ -422,6 +427,8 @@ namespace Js
                 break;
             }
             case OpCode::LdElemUndef:
+            case OpCode::InitUndeclConsoleLetFld:
+            case OpCode::InitUndeclConsoleConstFld:
             {
                 Output::Print(L" R%d.%s = undefined", data->Instance, pPropertyName->GetBuffer());
                 break;
@@ -640,6 +647,7 @@ namespace Js
                 break;
             }
             case OpCode::ScopedStFld:
+            case OpCode::ConsoleScopedStFld:
             case OpCode::ScopedStFldStrict:
             {
                 Output::Print(L" R%d.%s = R%d, R%d #%d", data->Instance, pPropertyName->GetBuffer(), data->Value,

@@ -206,6 +206,7 @@ namespace Js
         // a unique number, which will be used to sync all probecontainer when on break
         ulong debugSessionNumber;
 
+        RecyclerRootPtr<Js::DynamicObject> pConsoleScope;
 #if DBG
         void * dispatchHaltFrameAddress;
 #endif
@@ -243,6 +244,10 @@ namespace Js
         ulong GetDebugSessionNumber() const { return debugSessionNumber; }
 
         MutationBreakpoint* GetActiveMutationBreakpoint() const;
+
+        DynamicObject* GetConsoleScope(ScriptContext* scriptContext);
+        FrameDisplay *GetFrameDisplay(ScriptContext* scriptContext, DynamicObject* scopeAtZero, DynamicObject* scopeAtOne, bool addGlobalThisAtScopeTwo);
+        void UpdateConsoleScope(DynamicObject* copyFromScope, ScriptContext* scriptContext);
 
 #if DBG
     void SetDispatchHaltFrameAddress(void * returnAddress) { this->dispatchHaltFrameAddress = returnAddress; }

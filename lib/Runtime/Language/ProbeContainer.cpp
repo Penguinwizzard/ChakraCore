@@ -51,9 +51,9 @@ namespace Js
         {
             pProbeManager->stepController.Deactivate();
         }
+        this->RemoveMutationBreakpointListIfNeeded();
         pScriptContext = NULL;
         pProbeManager = NULL;
-
     }
 
     void ProbeContainer::Initialize(ScriptContext* pScriptContext)

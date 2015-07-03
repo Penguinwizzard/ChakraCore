@@ -1590,6 +1590,7 @@ StoreCommon:
         case OpCode::ScopedLdFldForTypeOf:
         case OpCode::ScopedLdMethodFld:
         case OpCode::ScopedStFld:
+        case OpCode::ConsoleScopedStFld:
         case OpCode::ScopedStFldStrict:
             break;
         default:

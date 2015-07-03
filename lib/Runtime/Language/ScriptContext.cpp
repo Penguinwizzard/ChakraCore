@@ -460,8 +460,6 @@ namespace Js
         this->isClosed = true;
         bool closed = Close(true);
 
-        diagProbesContainer.RemoveMutationBreakpointListIfNeeded();
-
         // JIT may access number allocator. Need to close the script context first,
         // which will close the native code generator and abort any current job on this generator.
         numberAllocator.Uninitialize();
@@ -729,6 +727,9 @@ namespace Js
 
         // Stop profiling if present
         DeRegisterProfileProbe(S_OK, nullptr);
+
+        // Close the diagProbesContainer
+        this->diagProbesContainer.Close();
 
         // Need to print this out beform the native code gen is deleted
         // which will delete the codegenProfiler

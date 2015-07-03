@@ -777,6 +777,7 @@ namespace Js
         DynamicObject* CreateActivationObject();
         DynamicObject* CreatePseudoActivationObject();
         DynamicObject* CreateBlockActivationObject();
+        DynamicObject* CreateConsoleScopeActivationObject();
         DynamicType* CreateObjectType(RecyclableObject* prototype, Js::TypeId typeId, uint16 requestedInlineSlotCapacity);
         DynamicType* CreateObjectTypeNoCache(RecyclableObject* prototype, Js::TypeId typeId);
         DynamicType* CreateObjectType(RecyclableObject* prototype, uint16 requestedInlineSlotCapacity);

@@ -332,6 +332,7 @@ namespace Js
                     {
                         if (!activeScopeObject->HasOwnProperty(resolveObject.propId))
                         {
+                            OUTPUT_TRACE(Js::ConsoleScopePhase, L"Adding '%s' property to activeScopeObject\n", resolveObject.scriptContext->GetPropertyName(resolveObject.propId)->GetBuffer());
                             if (resolveObject.IsInDeadZone())
                             {
                                 PropertyOperationFlags flags = static_cast<PropertyOperationFlags>(PropertyOperation_SpecialValue | PropertyOperation_AllowUndecl);

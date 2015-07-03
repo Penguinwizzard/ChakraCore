@@ -1602,7 +1602,7 @@ Symbol * ByteCodeGenerator::AddSymbolToScope(Scope *scope, const wchar_t *key, i
             // on such compiles, so we essentially have to migrate the symbol to the new scope.
             // We check fscrEvalCode, not fscrEval, because the same thing can happen in indirect eval,
             // when fscrEval is not set.
-            Assert((this->flags & fscrEvalCode) && sym->GetIsGlobal() && sym->GetSymbolType() == STFunction);
+            Assert(((this->flags & fscrEvalCode) && sym->GetIsGlobal() && sym->GetSymbolType() == STFunction) || this->IsConsoleScopeEval());
             Assert(scope->GetScopeType() == ScopeType_Global);
             scope->AddNewSymbol(sym);
         }
@@ -2998,6 +2998,15 @@ void PreVisitBlock(ParseNode *pnodeBlock, ByteCodeGenerator *byteCodeGenerator)
     if (!isGlobalEvalBlockScope && !isGlobalScope)
     {
         AddFunctionsToScope(pnodeBlock->sxBlock.pnodeScopes, byteCodeGenerator);
+    }
+
+    // We can skip this check by not creating the GlobalEvalBlock above and in Parser::Parse for console eval but that seems to break couple of places
+    // as we heavily depend on BlockHasOwnScope function. Once we clean up the creation of GlobalEvalBlock for evals we can clean this as well
+    if (byteCodeGenerator->IsConsoleScopeEval() && isGlobalEvalBlockScope && !isGlobalScope)
+    {
+        AssertMsg(scope->GetEnclosingScope()->GetScopeType() == ScopeType_Global, "Additional scope between Global and GlobalEvalBlock?");
+        scope = scope->GetEnclosingScope();
+        isGlobalScope = true;
     }
 
     auto addSymbolToScope = [scope, byteCodeGenerator, isGlobalScope](ParseNode *pnode)

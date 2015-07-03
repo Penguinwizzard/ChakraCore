@@ -576,14 +576,19 @@ void ByteCodeGenerator::InitBlockScopedContent(ParseNode *pnodeBlock, Js::Debugg
 
             if (sym->GetIsGlobal())
             {
-                AssertMsg(!(this->flags & fscrEval), "Let/consts cannot be globals in eval");
-
                 Js::PropertyId propertyId = sym->EnsurePosition(this);
-
-                Js::OpCode op = (sym->GetDecl()->nop == knopConstDecl) ?
-                    Js::OpCode::InitUndeclRootConstFld : Js::OpCode::InitUndeclRootLetFld;
-
-                this->m_writer.ElementRootU(op, funcInfo->FindOrAddReferencedPropertyId(propertyId));
+                if (this->flags & fscrEval)
+                {
+                    AssertMsg(this->IsConsoleScopeEval(), "Let/Consts cannot be in global scope outside of console eval");
+                    Js::OpCode op = (sym->GetDecl()->nop == knopConstDecl) ? Js::OpCode::InitUndeclConsoleConstFld : Js::OpCode::InitUndeclConsoleLetFld;
+                    this->m_writer.ElementU(op, funcInfo->GetEnvRegister(), funcInfo->FindOrAddReferencedPropertyId(propertyId));
+                }
+                else
+                {
+                    Js::OpCode op = (sym->GetDecl()->nop == knopConstDecl) ?
+                        Js::OpCode::InitUndeclRootConstFld : Js::OpCode::InitUndeclRootLetFld;
+                    this->m_writer.ElementRootU(op, funcInfo->FindOrAddReferencedPropertyId(propertyId));
+                }
             }
             else if (sym->IsInSlot(funcInfo))
             {
@@ -3774,9 +3779,9 @@ void ByteCodeGenerator::EmitPropStore(Js::RegSlot rhsLocation, Symbol *sym, Iden
             else
             {
                 uint cacheId = funcInfo->FindOrAddInlineCacheId(funcInfo->GetEnvRegister(), propertyId, false, true);
-
+                bool isConsoleScopeLetConst = this->IsConsoleScopeEval() && (isLetDecl || isConstDecl);
                 // In "eval", store to a symbol with unknown scope goes through the closure environment.
-                this->m_writer.PatchableProperty(GetScopedStFldOpCode(funcInfo), rhsLocation, funcInfo->GetEnvRegister(), cacheId);
+                this->m_writer.PatchableProperty(GetScopedStFldOpCode(funcInfo, isConsoleScopeLetConst), rhsLocation, funcInfo->GetEnvRegister(), cacheId);
             }
         }
         else if (this->flags & (fscrImplicitThis | fscrImplicitParents))

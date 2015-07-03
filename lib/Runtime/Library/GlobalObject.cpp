@@ -509,7 +509,8 @@ namespace Js
             isIndirect = !PHASE_OFF1(Js::FastIndirectEvalPhase);
         }
 
-        return GlobalObject::VEval(function->GetLibrary(), environment, moduleID, !!strictMode, !!isIndirect, args, /* isLibraryCode = */ false, /* registerDocument */ true);
+        return GlobalObject::VEval(function->GetLibrary(), environment, moduleID, !!strictMode, !!isIndirect, args,
+            /* isLibraryCode = */ false, /* registerDocument */ true, /*additionalGrfscr */ 0);
     }
 
     Var GlobalObject::EntryEvalRestrictedMode(RecyclableObject* function, CallInfo callInfo, ...)
@@ -542,7 +543,7 @@ namespace Js
     }
 
     Var GlobalObject::VEval(JavascriptLibrary* library, FrameDisplay* environment, ModuleID moduleID, bool strictMode, bool isIndirect, 
-        Arguments& args, bool isLibraryCode, bool registerDocument)
+        Arguments& args, bool isLibraryCode, bool registerDocument, ulong additionalGrfscr)
     {
         Assert(library);
         ScriptContext* scriptContext = library->GetScriptContext();
@@ -580,7 +581,7 @@ namespace Js
             if (BinaryFeatureControl::LanguageService() && scriptContext->authoringData && scriptContext->authoringData->Callbacks())
                 scriptContext->authoringData->Callbacks()->PreparingEval(sourceLen);
 
-            ulong grfscr = fscrReturnExpression | fscrEval | fscrEvalCode | fscrGlobalCode;
+            ulong grfscr = additionalGrfscr | fscrReturnExpression | fscrEval | fscrEvalCode | fscrGlobalCode;
             if (isLibraryCode)
             {
                 grfscr |= fscrIsLibraryCode;

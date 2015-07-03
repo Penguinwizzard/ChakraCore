@@ -3768,6 +3768,7 @@ IRBuilder::BuildElementCP(Js::OpCode newOpcode, uint32 offset, Js::RegSlot insta
     }
 
     case Js::OpCode::ScopedStFld:
+    case Js::OpCode::ConsoleScopedStFld:
     case Js::OpCode::ScopedStFldStrict:
     {
         Assert(!isProfiled);

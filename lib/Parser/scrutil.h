@@ -843,5 +843,7 @@ enum
     
     fscrDeferredClassMemberFnc          = 1 << 25,
 
-    fscrAll                             = (1 << 26) - 1
+    fscrConsoleScopeEval                = 1 << 26,  //  The eval string is console eval or debugEval, used to have top level
+                                                    //  let/const in global scope instaed of eval scope so that they can be preserved across console inputs
+    fscrAll                             = (1 << 27) - 1
 };

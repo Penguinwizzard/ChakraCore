@@ -11,7 +11,8 @@ namespace Js
         return VirtualTableInfo<Js::ActivationObject>::HasVirtualTable(instance) ||
             VirtualTableInfo<Js::ActivationObjectEx>::HasVirtualTable(instance) ||
             VirtualTableInfo<Js::PseudoActivationObject>::HasVirtualTable(instance) ||
-            VirtualTableInfo<Js::BlockActivationObject>::HasVirtualTable(instance);
+            VirtualTableInfo<Js::BlockActivationObject>::HasVirtualTable(instance) ||
+            VirtualTableInfo<Js::ConsoleScopeActivationObject>::HasVirtualTable(instance);
     }
 
     BOOL ActivationObject::HasOwnPropertyCheckNoRedecl(PropertyId propertyId)

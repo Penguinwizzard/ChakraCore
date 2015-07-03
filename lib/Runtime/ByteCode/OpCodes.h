@@ -278,7 +278,8 @@ MACRO_WMS(              InitUndeclLetFld,           ElementCP,      OpByteCodeOn
 MACRO_WMS(              InitUndeclRootLetFld,       ElementRootU,   OpSideEffect|OpHasImplicitCall)
 MACRO_WMS(              InitUndeclConstFld,         ElementCP,      OpByteCodeOnly|OpSideEffect|OpHasImplicitCall)
 MACRO_WMS(              InitUndeclRootConstFld,     ElementRootU,   OpSideEffect|OpHasImplicitCall)
-
+MACRO_EXTEND_WMS(       InitUndeclConsoleLetFld,    ElementU,       OpSideEffect|OpHasImplicitCall)
+MACRO_EXTEND_WMS(       InitUndeclConsoleConstFld,  ElementU,       OpSideEffect|OpHasImplicitCall)
 MACRO_WMS(              InitConst,                  Reg2,           OpTempNumberTransfer|OpTempObjectTransfer|OpNonIntTransfer|OpCanCSE)   // Create and initialize 'const' as property of global object
 MACRO_WMS(              InitConstSlot,              ElementSlot,    None)
 MACRO_WMS(              InitLetFld,                 ElementCP,      OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut)   // Declare a property with an initial value
@@ -332,6 +333,7 @@ MACRO_WMS(              ScopedLdMethodFld,          ElementCP,      OpSideEffect
 MACRO_WMS(              ScopedLdInst,               ElementC2,      OpSideEffect|OpHasImplicitCall)                                     // Load owning instance from function's scope stack (NOTE: HasProperty may call DOM)
 MACRO_WMS(              ScopedInitFunc,             ElementC,       OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Init on instance on scope stack
 MACRO_WMS(              ScopedStFld,                ElementCP,      OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Store to function's scope stack
+MACRO_EXTEND_WMS(       ConsoleScopedStFld,         ElementCP,      OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Store to function's scope stack
 MACRO_WMS(              ScopedStFldStrict,          ElementCP,      OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Store to function's scope stack
 MACRO_WMS(              ScopedDeleteFld,            ElementC,       OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Remove a property through a stack of scopes
 MACRO_WMS(              ScopedDeleteFldStrict,      ElementC,       OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Remove a property through a stack of scopes in strict mode

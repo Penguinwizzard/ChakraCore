@@ -48,13 +48,14 @@ namespace Js {
         {
         }
 
-        RecyclableObject* GetInstance() const   { return m_instance; }
-        PropertyIndex GetPropertyIndex() const  { return m_propertyIndex; }
-        bool IsWritable() const                 { return (m_attributes & PropertyWritable) != 0; }
-        bool IsEnumerable() const               { return (m_attributes & PropertyEnumerable) != 0; }
-        bool IsNoCache() const                  { return m_instance && m_propertyIndex == Constants::NoSlot; }
-        void AddFlags(InlineCacheFlags newFlag) { flags = (InlineCacheFlags)(flags | newFlag); }
-        InlineCacheFlags GetFlags() const       { return flags; }
+        RecyclableObject* GetInstance() const       { return m_instance; }
+        PropertyIndex GetPropertyIndex() const      { return m_propertyIndex; }
+        bool IsWritable() const                     { return (m_attributes & PropertyWritable) != 0; }
+        bool IsEnumerable() const                   { return (m_attributes & PropertyEnumerable) != 0; }
+        bool IsNoCache() const                      { return m_instance && m_propertyIndex == Constants::NoSlot; }
+        void AddFlags(InlineCacheFlags newFlag)     { flags = (InlineCacheFlags)(flags | newFlag); }
+        InlineCacheFlags GetFlags() const           { return flags; }
+        PropertyAttributes GetAttributes() const    { return m_attributes; }
 
         // Set property index and IsWritable cache info
         static void Set(PropertyValueInfo* info, RecyclableObject* instance, PropertyIndex propertyIndex, PropertyAttributes attributes = PropertyWritable,
@@ -152,32 +153,35 @@ namespace Js {
     // Normally, use: PropertyOperation_None.
     enum PropertyOperationFlags : int32 
     { 
-        PropertyOperation_None                 = 0x00,
-        PropertyOperation_StrictMode           = 0x01,
-        PropertyOperation_Root                 = 0x02,  // Operation doesn't specify base
+        PropertyOperation_None                          = 0x00,
+        PropertyOperation_StrictMode                    = 0x01,
+        PropertyOperation_Root                          = 0x02,  // Operation doesn't specify base
         
         // In particular, used by SetProperty/WithAttributes to throw, rather than return false, when then instance object is not extensible.
-        PropertyOperation_ThrowIfNotExtensible = 0x04,
+        PropertyOperation_ThrowIfNotExtensible          = 0x04,
         
         // Intent: avoid any checks and force the operation. 
         // In particular, used by SetProperty/WithAttributes to force adding a property when an object is not extensible.
-        PropertyOperation_Force                = 0x08,
+        PropertyOperation_Force                         = 0x08,
 
         // Initializing a property with a special internal value, which the user's code will never see.
-        PropertyOperation_SpecialValue         = 0x10,
+        PropertyOperation_SpecialValue                  = 0x10,
 
         // Pre-initializing a property value before the user's code actually does.
-        PropertyOperation_PreInit              = 0x20,
+        PropertyOperation_PreInit                       = 0x20,
 
         // Don't mark this fields as fixed in the type handler.
-        PropertyOperation_NonFixedValue        = 0x40,
+        PropertyOperation_NonFixedValue                 = 0x40,
 
-        PropertyOperation_PreInitSpecialValue  = PropertyOperation_PreInit | PropertyOperation_SpecialValue,
+        PropertyOperation_PreInitSpecialValue           = PropertyOperation_PreInit | PropertyOperation_SpecialValue,
 
-        PropertyOperation_StrictModeRoot       = PropertyOperation_StrictMode | PropertyOperation_Root,
+        PropertyOperation_StrictModeRoot                = PropertyOperation_StrictMode | PropertyOperation_Root,
 
         // No need to check for undeclared let/const (as this operation is initializing the let/const)
-        PropertyOperation_AllowUndecl          = 0x80
+        PropertyOperation_AllowUndecl                   = 0x80,
+
+        // No need to check for undeclared let/const in case of console scope (as this operation is initializing the let/const)
+        PropertyOperation_AllowUndeclInConsoleScope     = 0x100
     };
 
     class RecyclableObject : public FinalizableObject

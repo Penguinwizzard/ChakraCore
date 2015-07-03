@@ -1456,7 +1456,7 @@ Symbol* Parser::AddDeclForPid(ParseNodePtr pnode, IdentPtr pid, SymbolType symbo
             // Check for same-named decl in GlobalEvalBlock scope. Note that this is not necessary
             // if we're compiling a deferred nested function and the global scope was restored from cached info,
             // because in that case we don't need a GlobalEvalScope.
-            Assert(!fBlockScope);
+            Assert(!fBlockScope || (this->m_grfscr & fscrConsoleScopeEval) == fscrConsoleScopeEval);
             PidRefStack *pidRefOld = pid->GetPidRefForScopeId(1);
             if (pidRefOld && pidRefOld->GetSym())
             {

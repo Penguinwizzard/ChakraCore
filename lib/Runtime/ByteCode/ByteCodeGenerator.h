@@ -104,6 +104,11 @@ public:
         return flags;
     }
 
+    bool IsConsoleScopeEval(void)
+    {
+        return (flags & fscrConsoleScopeEval) == fscrConsoleScopeEval;
+    }
+
     bool IsBinding() const {
         return isBinding;
     }
@@ -342,8 +347,12 @@ public:
     {
         return isStrictMode ? Js::OpCode::ScopedStFldStrict : Js::OpCode::ScopedStFld;
     }
-    static Js::OpCode GetScopedStFldOpCode(FuncInfo* funcInfo)
+    static Js::OpCode GetScopedStFldOpCode(FuncInfo* funcInfo, bool isConsoleScopeLetConst = false)
     {
+        if (isConsoleScopeLetConst)
+        {
+            return Js::OpCode::ConsoleScopedStFld;
+        }
         return GetScopedStFldOpCode(funcInfo->GetIsStrictMode());
     }
     static Js::OpCode GetStElemIOpCode(bool isStrictMode)

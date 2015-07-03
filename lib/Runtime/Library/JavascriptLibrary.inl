@@ -727,6 +727,12 @@ namespace Js
         return RecyclerNew(this->GetRecycler(), BlockActivationObject, activationObjectType);
     }
 
+    inline DynamicObject* JavascriptLibrary::CreateConsoleScopeActivationObject()
+    {
+        AssertMsg(activationObjectType, "Where's activationObjectType?");
+        return RecyclerNew(this->GetRecycler(), ConsoleScopeActivationObject, activationObjectType);
+    }
+
     inline JavascriptString* JavascriptLibrary::GetEmptyString() const
     {
         AssertMsg(emptyString, "Where's emptyString?");

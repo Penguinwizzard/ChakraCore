@@ -1385,7 +1385,7 @@ namespace Js
             }
             descriptor->Attributes = PropertyDynamicTypeDefaults;
         }
-        else if (!(descriptor->Attributes & PropertyWritable))
+        else if (!(descriptor->Attributes & PropertyWritable) && !(flags & PropertyOperation_AllowUndeclInConsoleScope))
         {
             JavascriptError::ThrowCantAssignIfStrictMode(flags, scriptContext);
 
@@ -1402,7 +1402,7 @@ namespace Js
             if ((descriptor->Attributes & PropertyNoRedecl) && !(flags & PropertyOperation_AllowUndecl))
             {
                 Assert(scriptContext->GetConfig()->IsLetAndConstEnabled());
-                if (scriptContext->IsUndeclBlockVar(instance->GetSlot(descriptor->propertyIndex)))
+                if (scriptContext->IsUndeclBlockVar(instance->GetSlot(descriptor->propertyIndex)) && !(flags & PropertyOperation_AllowUndeclInConsoleScope))
                 {
                     JavascriptError::ThrowReferenceError(scriptContext, JSERR_UseBeforeDeclaration);
                 }

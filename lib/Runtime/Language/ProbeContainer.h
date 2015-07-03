@@ -64,6 +64,7 @@ namespace Js
         void InitMutationBreakpointListIfNeeded();
         void ClearMutationBreakpoints();
         static bool FetchTmpRegCount(Js::FunctionBody * functionBody, Js::ByteCodeReader * reader, int atOffset, uint32 *pTmpRegCount, Js::OpCode *pOp);
+        void RemoveMutationBreakpointListIfNeeded();
     public:
 
         bool isForcedToEnterScriptStart;
@@ -152,7 +153,6 @@ namespace Js
         RecyclerRootPtr<MutationBreakpointList> mutationBreakpointList;
         bool HasMutationBreakpoints();
         void InsertMutationBreakpoint(MutationBreakpoint *mutationBreakpoint);
-        void RemoveMutationBreakpointListIfNeeded();       
         static bool IsTmpRegCountIncreased(Js::FunctionBody* functionBody, ByteCodeReader* reader, int currentOffset, int nextStmOffset, bool restoreOffset);
     };
 } // namespace Js.
