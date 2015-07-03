@@ -141,7 +141,7 @@ LowererMDArch::LoadInputParamPtr(IR::Instr *instrInsert, IR::RegOpnd *optionalDs
     else
     {
         // Stack looks like (EBP chain)+0, (return addr)+4, (function object)+8, (arg count)+12, (this)+16, actual args
-        StackSym *paramSym = StackSym::New(TyMisc, this->m_func);
+        StackSym *paramSym = StackSym::New(TyMachReg, this->m_func);
         this->m_func->SetArgOffset(paramSym, 5 * MachPtr);
         IR::Instr *instr = this->lowererMD->LoadStackAddress(paramSym, optionalDstOpnd);
         instrInsert->InsertBefore(instr);
@@ -242,7 +242,7 @@ LowererMDArch::LoadHeapArgsCached(IR::Instr *instrArgs)
         this->LoadHelperArgument(instrArgs, instr->GetDst());
 
         // s1 = current function
-        StackSym *paramSym = StackSym::New(TyMisc, func);
+        StackSym *paramSym = StackSym::New(TyMachReg, func);
         this->m_func->SetArgOffset(paramSym, 2 * MachPtr);
         IR::Opnd * srcOpnd = IR::SymOpnd::New(paramSym, TyMachReg, func);
         this->LoadHelperArgument(instrArgs, srcOpnd);
@@ -350,7 +350,7 @@ LowererMDArch::LoadHeapArguments(IR::Instr *instrArgs, bool force /* = false */,
             this->LoadHelperArgument(instrArgs, opndInputParamCount);
 
             // s1 = current function
-            StackSym * paramSym = StackSym::New(TyMisc, func);
+            StackSym * paramSym = StackSym::New(TyMachReg, func);
             this->m_func->SetArgOffset(paramSym, 2 * MachPtr);
             IR::Opnd * srcOpnd = IR::SymOpnd::New(paramSym, TyMachReg, func);
 
@@ -399,7 +399,7 @@ LowererMDArch::LoadFuncExpression(IR::Instr *instrFuncExpr)
     }
     else
     {
-        StackSym *paramSym = StackSym::New(TyMisc, this->m_func);
+        StackSym *paramSym = StackSym::New(TyMachReg, this->m_func);
         this->m_func->SetArgOffset(paramSym, 2 * MachPtr);
         paramOpnd = IR::SymOpnd::New(paramSym, TyMachReg, this->m_func);
     }

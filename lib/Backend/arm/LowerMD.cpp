@@ -1939,7 +1939,7 @@ LowererMD::LowerTry(IR::Instr * tryInstr, IR::JnHelperMethod helperMethod)
 
     // Call the helper
     IR::RegOpnd *continuationAddr =
-        IR::RegOpnd::New(StackSym::New(TyMisc,this->m_func), RETURN_REG, TyMachReg, this->m_func);
+        IR::RegOpnd::New(StackSym::New(TyMachReg,this->m_func), RETURN_REG, TyMachReg, this->m_func);
     IR::Instr * callInstr = IR::Instr::New(
         Js::OpCode::Call, continuationAddr, IR::HelperCallOpnd::New(helperMethod, this->m_func), this->m_func);
     tryAddr->InsertBefore(callInstr);
@@ -6433,12 +6433,12 @@ LowererMD::EmitLoadFloat(IR::Opnd *dst, IR::Opnd *src, IR::Instr *insertInstr)
         IR::SymOpnd *symOpnd = null;
         if (dst->GetType() == TyFloat32)
         {
-            symOpnd = IR::SymOpnd::New(StackSym::New(TyMisc, this->m_func), TyFloat32, this->m_func);
+            symOpnd = IR::SymOpnd::New(StackSym::New(TyFloat32, this->m_func), TyFloat32, this->m_func);
             this->m_func->StackAllocate(symOpnd->m_sym->AsStackSym(), sizeof(float));
         }
         else
         {
-            symOpnd = IR::SymOpnd::New(StackSym::New(TyMisc,this->m_func), TyMachDouble, this->m_func);
+            symOpnd = IR::SymOpnd::New(StackSym::New(TyFloat64,this->m_func), TyMachDouble, this->m_func);
             this->m_func->StackAllocate(symOpnd->m_sym->AsStackSym(), sizeof(double));
         }
         memAddress = symOpnd;

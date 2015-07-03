@@ -950,7 +950,7 @@ RegOpnd::RegOpnd(const RegOpnd &other, StackSym *const sym)
 void RegOpnd::Initialize(StackSym *sym, RegNum reg, IRType type)
 {
     AssertMsg(sym || reg != RegNOREG, "A RegOpnd needs a valid symbol or register.");
-
+    Assert(!sym || sym->GetType() != TyMisc);
 
     m_kind = OpndKindReg;
 

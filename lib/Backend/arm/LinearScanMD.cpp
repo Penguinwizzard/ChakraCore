@@ -38,7 +38,7 @@ LinearScanMD::EnsureSpillSymForVFPReg(RegNum reg, Func *func)
 
     if (sym == NULL)
     {
-        sym = StackSym::New(TyMisc, func);
+        sym = StackSym::New(TyFloat64, func);
         func->StackAllocate(sym, MachRegDouble);
 
         __analysis_assume(reg - RegD0 < VFP_REGCOUNT);
@@ -132,7 +132,7 @@ LinearScanMD::InsertOpHelperSpillsAndRestores(const OpHelperBlock& opHelperBlock
                 // Lazily allocate only as many slots as we really need.
                 if (!helperSpillSlots[index])
                 {
-                    helperSpillSlots[index] = StackSym::New(TyMisc, func);
+                    helperSpillSlots[index] = StackSym::New(TyMachReg, func);
                 }
 
                 sym = helperSpillSlots[index];
