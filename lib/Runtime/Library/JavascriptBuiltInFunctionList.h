@@ -18,10 +18,6 @@ BUILTIN(GlobalObject, EncodeURI, EntryEncodeURI, FunctionInfo::ErrorOnNew)
 BUILTIN(GlobalObject, EncodeURIComponent, EntryEncodeURIComponent, FunctionInfo::ErrorOnNew)
 BUILTIN(GlobalObject, Escape, EntryEscape, FunctionInfo::ErrorOnNew)
 BUILTIN(GlobalObject, UnEscape, EntryUnEscape, FunctionInfo::ErrorOnNew)
-BUILTIN(GlobalObject, ScriptEngine, EntryScriptEngine, FunctionInfo::ErrorOnNew)
-BUILTIN(GlobalObject, ScriptEngineMajorVersion, EntryScriptEngineMajorVersion, FunctionInfo::ErrorOnNew)
-BUILTIN(GlobalObject, ScriptEngineMinorVersion, EntryScriptEngineMinorVersion, FunctionInfo::ErrorOnNew)
-BUILTIN(GlobalObject, ScriptEngineBuildVersion, EntryScriptEngineBuildVersion, FunctionInfo::ErrorOnNew)
 BUILTIN(GlobalObject, CollectGarbage, EntryCollectGarbage, FunctionInfo::ErrorOnNew)
 
 #ifdef IR_VIEWER

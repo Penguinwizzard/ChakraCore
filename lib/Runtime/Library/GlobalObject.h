@@ -49,10 +49,6 @@ namespace Js
             static FunctionInfo EncodeURIComponent;
             static FunctionInfo Escape;
             static FunctionInfo UnEscape;
-            static FunctionInfo ScriptEngine;
-            static FunctionInfo ScriptEngineMajorVersion;
-            static FunctionInfo ScriptEngineMinorVersion;
-            static FunctionInfo ScriptEngineBuildVersion;
             static FunctionInfo CollectGarbage;            
 
 #ifdef IR_VIEWER
@@ -75,10 +71,6 @@ namespace Js
         static Var EntryEscape(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryUnEscape(RecyclableObject* function, CallInfo callInfo, ...);
 
-        static Var EntryScriptEngine(RecyclableObject* function, CallInfo callInfo, ...);
-        static Var EntryScriptEngineMajorVersion(RecyclableObject* function, CallInfo callInfo, ...);
-        static Var EntryScriptEngineMinorVersion(RecyclableObject* function, CallInfo callInfo, ...);
-        static Var EntryScriptEngineBuildVersion(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryCollectGarbage(RecyclableObject* function, CallInfo callInfo, ...);        
 
 #ifdef IR_VIEWER

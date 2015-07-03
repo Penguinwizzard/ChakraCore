@@ -1489,10 +1489,6 @@ namespace Js
 
         if (scriptContext->GetConfig()->SupportsES3Extensions())
         {
-            AddFunctionToLibraryObject(globalObject, PropertyIds::ScriptEngine, &GlobalObject::EntryInfo::ScriptEngine, 0);
-            AddFunctionToLibraryObject(globalObject, PropertyIds::ScriptEngineMajorVersion, &GlobalObject::EntryInfo::ScriptEngineMajorVersion, 0);
-            AddFunctionToLibraryObject(globalObject, PropertyIds::ScriptEngineMinorVersion, &GlobalObject::EntryInfo::ScriptEngineMinorVersion, 0);
-            AddFunctionToLibraryObject(globalObject, PropertyIds::ScriptEngineBuildVersion, &GlobalObject::EntryInfo::ScriptEngineBuildVersion, 0);
             AddFunctionToLibraryObject(globalObject, PropertyIds::CollectGarbage, &GlobalObject::EntryInfo::CollectGarbage, 0);
         }
 

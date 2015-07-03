@@ -1490,45 +1490,7 @@ LHexError:
         }
 
         return bs;
-    }
-
-    //TODO review these extensions per spec . and version them
-    Var GlobalObject::EntryScriptEngine(RecyclableObject* function, CallInfo callInfo, ...)
-    {
-        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
-
-        Assert(!(callInfo.Flags & CallFlags_New));
-
-        ScriptContext* scriptContext = function->GetScriptContext();
-        return scriptContext->GetLibrary()->CreateStringFromCppLiteral(L"JScript");
-    }
-    Var GlobalObject::EntryScriptEngineMajorVersion(RecyclableObject* function, CallInfo callInfo, ...)
-    {
-        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
-
-        Assert(!(callInfo.Flags & CallFlags_New));
-
-        ScriptContext* scriptContext = function->GetScriptContext();
-        return Js::JavascriptNumber::ToVar(SCRIPT_ENGINE_MAJOR_VERSION, scriptContext);
-    }
-    Var GlobalObject::EntryScriptEngineMinorVersion(RecyclableObject* function, CallInfo callInfo, ...)
-    {
-        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
-
-        Assert(!(callInfo.Flags & CallFlags_New));
-
-        ScriptContext* scriptContext = function->GetScriptContext();
-        return Js::JavascriptNumber::ToVar(SCRIPT_ENGINE_MINOR_VERSION, scriptContext);
-    }
-    Var GlobalObject::EntryScriptEngineBuildVersion(RecyclableObject* function, CallInfo callInfo, ...)
-    {
-        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
-
-        Assert(!(callInfo.Flags & CallFlags_New));
-
-        ScriptContext* scriptContext = function->GetScriptContext();
-        return Js::JavascriptNumber::ToVar(SCRIPT_ENGINE_BUILDNUMBER, scriptContext);
-    }
+    }  
 
 #if DBG
     void DebugClearStack()

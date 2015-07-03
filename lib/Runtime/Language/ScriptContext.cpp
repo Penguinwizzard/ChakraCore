@@ -2850,10 +2850,6 @@ namespace Js
 
         if (config.SupportsES3Extensions())
         {
-            REG_GLOBAL_LIB_FUNC(ScriptEngine, GlobalObject::EntryScriptEngine);
-            REG_GLOBAL_LIB_FUNC(ScriptEngineMajorVersion, GlobalObject::EntryScriptEngineMajorVersion);
-            REG_GLOBAL_LIB_FUNC(ScriptEngineMinorVersion, GlobalObject::EntryScriptEngineMinorVersion);
-            REG_GLOBAL_LIB_FUNC(ScriptEngineBuildVersion, GlobalObject::EntryScriptEngineBuildVersion);
             REG_GLOBAL_LIB_FUNC(CollectGarbage, GlobalObject::EntryCollectGarbage);
         }
 
