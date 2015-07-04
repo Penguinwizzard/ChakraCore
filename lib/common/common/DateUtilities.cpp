@@ -7,7 +7,6 @@
 #include <intsafe.h>
 
 #include <Windows.Foundation.h>
-#include <WindowsDateTimeP.h>
 
 namespace Js
 {
@@ -180,7 +179,8 @@ namespace Js
         return S_OK;
     }
 
-#if defined(DEBUG) 
+#if defined(DEBUG) && defined(NTBUILD)
+#include <WindowsDateTimeP.h>
     void DateUtilities::DebugPrintWinRTDate(INT64 winrtDate)
     {
         INT64 dateTimeTicks = winrtDate % ticksPerDay;

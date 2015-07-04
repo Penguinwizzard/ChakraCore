@@ -4,6 +4,9 @@
 
 #include "stdafx.h"
 
+#ifdef ENABLE_WININET_PROFILE_DATA_CACHE
+#include "activscp_private.h"
+#endif
 namespace Js
 {
 ExecutionFlags
@@ -90,6 +93,7 @@ void SourceDynamicProfileManager::Reuse()
 //
 bool SourceDynamicProfileManager::LoadFromProfileCache(IActiveScriptDataCache* profileDataCache, LPCWSTR url)
 {
+#ifdef ENABLE_WININET_PROFILE_DATA_CACHE
     AssertMsg(CONFIG_FLAG(WininetProfileCache), "Profile caching should be enabled for us to get here");
     Assert(profileDataCache);
     AssertMsg(!IsProfileLoadedFromWinInet(), "Duplicate profile cache loading?");
@@ -154,6 +158,7 @@ bool SourceDynamicProfileManager::LoadFromProfileCache(IActiveScriptDataCache* p
     {
         OUTPUT_TRACE(Js::DynamicProfilePhase, L"Profile load failed. No read stream. %s\n", url);
     }
+#endif
     return false;
 }
 
@@ -163,6 +168,7 @@ bool SourceDynamicProfileManager::LoadFromProfileCache(IActiveScriptDataCache* p
 uint SourceDynamicProfileManager::SaveToProfileCacheAndRelease(SourceContextInfo* info)
 {
     uint bytesWritten = 0;
+#ifdef ENABLE_WININET_PROFILE_DATA_CACHE
     if(profileDataCache)
     {
         if(ShouldSaveToProfileCache(info))
@@ -180,6 +186,7 @@ uint SourceDynamicProfileManager::SaveToProfileCacheAndRelease(SourceContextInfo
         profileDataCache->Release();
         profileDataCache = NULL;
     }
+#endif
     return bytesWritten;
 }
 
@@ -192,6 +199,7 @@ uint SourceDynamicProfileManager::SaveToProfileCache()
     Assert(startupFunctions);
 
     uint bytesWritten = 0;
+#ifdef ENABLE_WININET_PROFILE_DATA_CACHE
     //TODO: Add some diffing logic to not write unless necessary
     IStream* writeStream;
     HRESULT hr = profileDataCache->GetWriteDataStream(&writeStream);
@@ -247,6 +255,7 @@ uint SourceDynamicProfileManager::SaveToProfileCache()
         }
 #endif
     }
+#endif
     return bytesWritten;
 }
 

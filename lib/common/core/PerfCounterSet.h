@@ -209,6 +209,7 @@ namespace PerfCounter
 #else
 #define DEFINE_RECYCLER_TRACKER_PERF_COUNTER(type)
 #define DEFINE_RECYCLER_TRACKER_ARRAY_PERF_COUNTER(type)
+#define DEFINE_RECYCLER_TRACKER_WEAKREF_PERF_COUNTER(type)
 #endif
 };
 
@@ -224,6 +225,7 @@ namespace PerfCounter
 #define PERF_COUNTER_SUB(CounterSetName, CounterName, value)
 #define DEFINE_RECYCLER_TRACKER_PERF_COUNTER(type)
 #define DEFINE_RECYCLER_TRACKER_ARRAY_PERF_COUNTER(type)
+#define DEFINE_RECYCLER_TRACKER_WEAKREF_PERF_COUNTER(type)
 #endif
 
 #ifdef HEAP_PERF_COUNTERS

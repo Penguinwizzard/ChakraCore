@@ -8,6 +8,9 @@
 
       <!-- TODO: Clean up warning from upgrade to Dev14 tools -->
       <AdditionalOptions>%(AdditionalOptions) /Wv:18</AdditionalOptions>
+      
+      <!-- TODO: Move EdgeJavascriptTypeId.h -->
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(MSBuildThisFileDirectory)..\..\publish0</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
 </Project>

@@ -51,7 +51,9 @@ namespace Js
         {
             pProbeManager->stepController.Deactivate();
         }
+#ifdef ENABLE_MUTATION_BREAKPOINT
         this->RemoveMutationBreakpointListIfNeeded();
+#endif
         pScriptContext = NULL;
         pProbeManager = NULL;
     }
@@ -625,10 +627,12 @@ namespace Js
 
     void ProbeContainer::RemoveAllProbes()
     {
+#ifdef ENABLE_MUTATION_BREAKPOINT
         if (HasMutationBreakpoints())
         {
             ClearMutationBreakpoints();
         }
+#endif
         for (int i = 0; i < diagProbeList->Count(); i++)
         {
             diagProbeList->Item(i)->Uninstall(NULL);
@@ -1019,7 +1023,7 @@ namespace Js
         Assert(propertyRecord);
         this->pinnedPropertyRecords->Add(propertyRecord);
     }
-
+#ifdef ENABLE_MUTATION_BREAKPOINT
     bool ProbeContainer::HasMutationBreakpoints()
     {
         return mutationBreakpointList && !mutationBreakpointList->Empty();
@@ -1081,4 +1085,5 @@ namespace Js
             mutationBreakpointList.Unroot(pScriptContext->GetRecycler());
         }
     }
+#endif
 } // namespace Js.

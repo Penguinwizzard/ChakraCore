@@ -5,11 +5,9 @@
 #include "StdAfx.h"
 #include "strsafe.h"
 
-//Messy hack to get rid of the new/delete operators; as we still need implements.h
 #include <wrl\implements.h>
 
 //#include <wrl\wrappers\corewrappers.h>
-
 
 #ifdef ENABLE_INTL_OBJECT
 

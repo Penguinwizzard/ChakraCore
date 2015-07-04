@@ -20,6 +20,8 @@ class LowererMD;
 class LowererMDArch;
 class ByteCodeGenerator;
 
+interface IActiveScriptDataCache;
+
 enum RegexOp {
   RegexOp_None,
   RegexOp_Replace,
@@ -33,7 +35,7 @@ namespace Js
 {
     //
     // Forward declarations
-    //
+    //    
     typedef int32 MessageId;
     /* enum */ struct PropertyIds;
     struct Utf8SourceInfo;
@@ -400,7 +402,6 @@ enum JsNativeValueType;
 #include "Types\PropertyDescriptor.h"
 #include "Types\ActivationObjectType.h"
 #include "Types\TempArenaAllocatorObject.h"
-#include "activscp_private.h"
 #include "Language\ValueType.h"
 #include "Language\DynamicProfileInfo.h"
 #include "Language\ReadOnlyDynamicProfileInfo.h"
@@ -565,10 +566,12 @@ enum JsNativeValueType;
 #include "Language\PropertyRecord.h"
 #include "Library\threadservicewrapper.h"
 #include "Library\StackProber.h"
-#include "Library\Telemetry.h"
+#ifdef ENABLE_BASIC_TELEMETRY
 // REVIEW: ChakraCore Dependency
+#include "..\..\..\private\lib\Telemetry\Telemetry.h"
 #include "..\..\..\private\lib\Telemetry\ScriptContextTelemetry.h"
 #include "..\..\..\private\lib\Telemetry\ScriptEngineTelemetry.h"
+#endif
 #include "Library\ThreadContext.h"
 #include "Library\ThreadContextTLSEntry.h"
 #include "Library\ThreadBoundThreadContextManager.h"
@@ -590,8 +593,10 @@ enum JsNativeValueType;
 
 #include "Language\EvalMapRecord.h"
 #include "Language\JavascriptConversion.h"
+#ifdef ENABLE_MUTATION_BREAKPOINT
 // REVIEW: ChakraCore Dependency
 #include "activdbg_private.h"
+#endif
 #include "Language\diagobjectmodel.h"
 #include "Language\ScriptContextProfiler.h"
 #include "Language\ScriptContextOptimizationOverrideInfo.h"
@@ -613,6 +618,8 @@ enum JsNativeValueType;
 #include "ByteCode\ScopeInfo.h"
 #include "ByteCode\StatementReader.h"
 
+#include "activdbg100.h"
+
 #include "Language\AsmJsTypes.h"
 #include "Language\AsmJsUtils.h"
 #include "Language\AsmJsLink.h"
@@ -631,7 +638,7 @@ enum JsNativeValueType;
 #include "Language\ByteCodeSerializer.h"
 #include "Language\ProfilingHelpers.h"
 
-#include "activdbg100.h"
+
 #include "Language\MutationBreakpoint.h"
 
 #ifdef DYNAMIC_PROFILE_STORAGE

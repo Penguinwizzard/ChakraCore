@@ -89,8 +89,13 @@
 #define ENABLE_NATIVE_CODEGEN 1
 #define ENABLE_PROJECTION 1
 
-// ETW support
+
 #ifdef NTBUILD
+#define ENABLE_EXPERIMENTAL_FLAGS
+#define ENABLE_WININET_PROFILE_DATA_CACHE
+#define ENABLE_BASIC_TELEMETRY
+
+// ETW support
 #define ENABLE_JS_ETW 
 #endif
 
@@ -149,9 +154,6 @@
 #define DYNAMIC_PROFILE_STORAGE
 #define DYNAMIC_PROFILE_MUTATOR
 #define RUNTIME_DATA_COLLECTION
-#ifdef ENABLE_JS_ETW
-#define TEST_ETW_EVENTS
-#endif
 #define SECURITY_TESTING
 #define PROFILE_EXEC
 
@@ -160,6 +162,11 @@
 #define PERF_HINT
 #define POLY_INLINE_CACHE_SIZE_STATS
 
+#define JS_PROFILE_DATA_INTERFACE 1
+#define EXCEPTION_RECOVERY 1
+#define RECYCLER_TEST_SUPPORT
+#define ARENA_ALLOCATOR_FREE_LIST_SIZE
+
 // TODO (t-doilij) combine IR_VIEWER and ENABLE_IR_VIEWER
 #ifdef _M_IX86
 #define IR_VIEWER
@@ -167,19 +174,18 @@
 #define ENABLE_IR_VIEWER_DBG_DUMP  // TODO (t-doilij) disable this before check-in
 #endif
 
+#ifdef ENABLE_JS_ETW
+#define TEST_ETW_EVENTS
+#endif
+
 #ifdef NTBUILD
 #define PERF_COUNTERS
+#define ENABLE_MUTATION_BREAKPOINT
 #endif
 
 #if defined(_M_IX86) || defined(_M_X64)
 #define VTUNE_PROFILING
 #endif 
-
-#define JS_PROFILE_DATA_INTERFACE 1
-#define EXCEPTION_RECOVERY 1
-#define RECYCLER_TEST_SUPPORT
-
-#define ARENA_ALLOCATOR_FREE_LIST_SIZE
 
 #ifdef _CONTROL_FLOW_GUARD
 #define CONTROL_FLOW_GUARD_LOGGER
@@ -200,7 +206,9 @@
 #ifdef DEBUG
 #define TEST_LOG
 #define BYTECODE_TESTING
+#ifdef NTBUILD
 #define MUTATORS
+#endif
 #define FAULT_INJECTION
 #define RECYCLER_NO_PAGE_REUSE
 #define INTERNAL_MEM_PROTECT_HEAP_ALLOC

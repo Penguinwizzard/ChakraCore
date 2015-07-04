@@ -225,7 +225,7 @@ DynamicProfileStorage::StorageInfo::GetFilename(wchar_t filename[_MAX_PATH]) con
 {
     wchar_t tempFile[_MAX_PATH];
     wcscpy_s(tempFile, L"jsdpcache_file");
-    _itow(this->fileId, tempFile + _countof(L"jsdpcache_file") - 1, 10);    
+    _itow_s(this->fileId, tempFile + _countof(L"jsdpcache_file") - 1, _countof(tempFile) - _countof(L"jsdpcache_file") + 1, 10);
     _wmakepath_s(filename, _MAX_PATH, cacheDrive, cacheDir, tempFile, L".dpd");
 }
 

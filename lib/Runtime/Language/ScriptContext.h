@@ -1716,9 +1716,11 @@ private:
         void SetNextPendingClose(ScriptContext * nextPendingClose);
         inline ScriptContext * GetNextPendingClose() const { return nextPendingClose; }
 
+#ifdef ENABLE_MUTATION_BREAKPOINT
         // Keep track of all breakpoints in order to properly clean up on debugger detach
         bool HasMutationBreakpoints();
         void InsertMutationBreakpoint(Js::MutationBreakpoint *mutationBreakpoint);
+#endif
     };
 
     class AutoDynamicCodeReference

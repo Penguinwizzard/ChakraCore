@@ -112,8 +112,7 @@
     <ClInclude Include="TextbookBoyerMoore.h" />
     <ClInclude Include="tokens.h" />
     <ClInclude Include="unicode.h" />
-    <ClInclude Include="var.h" />
-    <ClInclude Include="vers.h" />
+    <ClInclude Include="var.h" />    
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)jserr.gen">

@@ -467,11 +467,14 @@ namespace Js
         }
     }
 
+#ifdef ENABLE_MUTATION_BREAKPOINT
+
     MutationBreakpoint* ProbeManager::GetActiveMutationBreakpoint() const
     {
         Assert(this->pCurrentInterpreterLocation);
         return this->pCurrentInterpreterLocation->activeMutationBP;
     }
+#endif
 
     DynamicObject* ProbeManager::GetConsoleScope(ScriptContext* scriptContext)
     {

@@ -2610,8 +2610,6 @@ void Scanner<EncodingPolicy>::SeekTo(const RestorePoint& restorePoint, uint *nex
     *nextFunctionId += restorePoint.functionIdIncrement;
 }
 
-#include "vers.h"
-
 // Called by CompileScriptException::ProcessError to retrieve a BSTR for the line on which an error occurred.
 template<typename EncodingPolicy>
 HRESULT Scanner<EncodingPolicy>::SysAllocErrorLine(long ichMinLine, __out BSTR* pbstrLine)

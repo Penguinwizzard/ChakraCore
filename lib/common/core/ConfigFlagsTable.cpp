@@ -3,7 +3,9 @@
 //----------------------------------------------------------------------------
 
 #include "StdAfx.h"
+#ifdef ENABLE_EXPERIMENTAL_FLAGS
 #include <iesettings.h>
+#endif
 
 #include <initguid.h>
 // {17DC713D-8B3E-4434-9DC8-90C275C75194}
@@ -27,6 +29,7 @@ DEFINE_GUID(HybridDebuggingGuid, 0x17dc713d, 0x8b3e, 0x4434, 0x9d, 0xc8, 0x90, 0
 #pragma init_seg(".CRT$XCAM")
 namespace Js
 {
+#ifdef ENABLE_EXPERIMENTAL_FLAGS
     bool GetExperimentalFlag(const SettingStore::VALUEID<BOOL> id)
     {
         BOOL regValue;
@@ -36,6 +39,7 @@ namespace Js
         }
         return false;
     }
+#endif
 
     NumberSet::NumberSet() : set(&NoCheckHeapAllocator::Instance) {}
     
@@ -793,6 +797,12 @@ namespace Js
 #include "ConfigFlagsList.h"
 #undef FLAG
     }
+#ifdef ENABLE_EXPERIMENTAL_FLAGS
+#define GET_EXPERIMENTAL_FLAG(flag) \
+    (Boolean)(GetExperimentalFlag(SettingStore::IEVALUE_ExperimentalFeatures_##flag))
+#else
+#define GET_EXPERIMENTAL_FLAG(flag) false
+#endif
 
     ///----------------------------------------------------------------------------
     ///
@@ -812,12 +822,11 @@ namespace Js
 // flags with Parents
 #define FLAG_REGOVR_ASMJS(type, name, description, defaultValue, parentName, FALSE) FLAGPREGOVRASMJS##type(name, parentName)
             //   * and those we do care about
+
 #define FLAGPREGOVRASMJSBoolean(name, parentName) \
         case name##Flag: \
-        retValue = (Boolean)(GetExperimentalFlag(SettingStore::IEVALUE_ExperimentalFeatures_Asmjs)); \
-        break; \
-
-
+        retValue = GET_EXPERIMENTAL_FLAG(Asmjs); \
+        break;
 
 #define FLAG_REGOVR_EXP(type, name, description, defaultValue, ...) FLAGREGOVREXP##type(name)
 #define FLAGREGOVREXPPhases(name)
@@ -828,7 +837,7 @@ namespace Js
 #define FLAGREGOVREXPNumberPairSet(name)
 #define FLAGREGOVREXPBoolean(name) \
         case name##Flag: \
-            retValue = (Boolean)(GetExperimentalFlag(SettingStore::IEVALUE_ExperimentalFeatures_ExperimentalJS)); \
+            retValue = GET_EXPERIMENTAL_FLAG(ExperimentalJS); \
             break; \
 
 #define FLAG(type, name, description, defaultValue, ...) FLAGDEFAULT##type(name, defaultValue)

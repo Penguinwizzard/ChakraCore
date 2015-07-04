@@ -190,8 +190,10 @@ namespace Js
         static BOOL GetReturnedValue(int &index, DiagStackFrame* frame, ResolvedObject* pResolvedObject);
         static int  GetReturnedValueCount(DiagStackFrame* frame);
 
+#ifdef ENABLE_MUTATION_BREAKPOINT
         static BOOL GetBreakMutationBreakpointValue(int &index, DiagStackFrame* frame, ResolvedObject* pResolvedObject);
         static uint GetBreakMutationBreakpointsCount(DiagStackFrame* frame);
+#endif
 
         bool IsInGroup() const { return (groupType != UIGroupType::UIGroupType_None && groupType != UIGroupType::UIGroupType_InnerScope); }
         bool IsWalkerForCurrentFrame() const { return groupType == UIGroupType::UIGroupType_None; }
@@ -926,6 +928,7 @@ namespace Js
         virtual WeakArenaReference<IDiagObjectModelWalkerBase>* CreateWalker() override;
     };
 
+#ifdef ENABLE_MUTATION_BREAKPOINT
     // For Pending Mutation breakpoint
 
     class PendingMutationBreakpointDisplay : public RecyclableObjectDisplay
@@ -947,4 +950,5 @@ namespace Js
         virtual BOOL Get(int i, ResolvedObject* pResolvedObject) override;
         virtual ulong GetChildrenCount() override;
     };
+#endif
 }

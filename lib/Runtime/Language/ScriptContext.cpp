@@ -5957,6 +5957,7 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
         this->nextPendingClose = nextPendingClose;
     }
 
+#ifdef ENABLE_MUTATION_BREAKPOINT
     bool ScriptContext::HasMutationBreakpoints()
     {
         return this->diagProbesContainer.HasMutationBreakpoints();
@@ -5966,6 +5967,7 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
     {
         this->diagProbesContainer.InsertMutationBreakpoint(mutationBreakpoint);
     }
+#endif
 
 #ifdef REJIT_STATS
     void ScriptContext::LogDataForFunctionBody(Js::FunctionBody *body, uint idx, bool isRejit)

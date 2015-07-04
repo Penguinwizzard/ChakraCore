@@ -73,7 +73,6 @@ extern LCID GetUserLocale();
 #include "RegexFlags.h"
 
 #include "unicode.h"
-#include "vers.h"
 
 #include "Chars.h"
 #include "DebugWriter.h"

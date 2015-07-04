@@ -74,7 +74,7 @@ namespace Js
 
             double preciseTime = dBaseTime + elapsed;            
             
-            if (abs(preciseTime - time) < 25              // the time computed via perf counter is off by 25ms
+            if (fabs(preciseTime - time) < 25              // the time computed via perf counter is off by 25ms
                 && preciseTime >= dLastTime)              // the time computed via perf counter is running backwards
             {                
                 dLastTime = preciseTime;

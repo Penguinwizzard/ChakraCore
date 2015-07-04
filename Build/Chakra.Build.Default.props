@@ -1,15 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="Common.Build.Default.props"/>
-  
+  <Import Project="Common.Build.Default.props"/>  
   <PropertyGroup>
     <PlatformToolset Condition="'$(VisualStudioVersion)'=='11.0'">v110</PlatformToolset>
     <PlatformToolset Condition="'$(VisualStudioVersion)'=='12.0'">v120</PlatformToolset>
     <PlatformToolset Condition="'$(VisualStudioVersion)'=='14.0'">v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup>
+    <!-- TODO: We have dependency on new value in activdbg100 in Win10 SDK, will need to clean that up
+         to support Win8.1 SDK, add a dependency to the Win10 SDK install on my machine for now -->
+    <WindowsTargetPlatformVersion>10.0.10150.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <PropertyGroup>
     <PlatformPathName>$(Platform)</PlatformPathName>
     <PlatformPathName Condition="'$(Platform)'=='Win32'">x86</PlatformPathName>
+    <PlatformPathNameAlt>$(Platform)</PlatformPathNameAlt>
+    <PlatformPathNameAlt Condition="'$(Platform)'=='Win32'">i386</PlatformPathNameAlt>
+    <PlatformPathNameAlt Condition="'$(Platform)'=='x64'">amd64</PlatformPathNameAlt>
   </PropertyGroup>
   <!-- Output Path -->
   <PropertyGroup>

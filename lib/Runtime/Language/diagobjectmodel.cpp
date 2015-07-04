@@ -276,6 +276,7 @@ namespace Js
         return returnedValueList != nullptr && frame->IsTopFrame() ? returnedValueList->Count() : 0;
     }
 
+#ifdef ENABLE_MUTATION_BREAKPOINT
     BOOL VariableWalkerBase::GetBreakMutationBreakpointValue(int &index, DiagStackFrame* frame, ResolvedObject* pResolvedObject)
     {
         Assert(pResolvedObject);
@@ -311,7 +312,7 @@ namespace Js
 
         return frame->GetScriptContext()->diagProbesContainer.GetProbeManager()->GetActiveMutationBreakpoint() != nullptr ? 1 : 0;
     }
-
+#endif
     BOOL VariableWalkerBase::Get(int i, ResolvedObject* pResolvedObject)
     {
         AssertMsg(pResolvedObject, "Bad usage of VariableWalkerBase::Get");
@@ -1112,11 +1113,13 @@ namespace Js
             return TRUE;
         }
 
+#ifdef ENABLE_MUTATION_BREAKPOINT
         // Pending mutation display should be before any return value
         if (VariableWalkerBase::GetBreakMutationBreakpointValue(i, pFrame, pResolvedObject))
         {
             return TRUE;
         }
+#endif
 
         if (VariableWalkerBase::GetReturnedValue(i, pFrame, pResolvedObject))
         {
@@ -1238,8 +1241,9 @@ namespace Js
                 totalLocalsCount++;
             }
 
+#ifdef ENABLE_MUTATION_BREAKPOINT
             totalLocalsCount += VariableWalkerBase::GetBreakMutationBreakpointsCount(pFrame);
-
+#endif
             totalLocalsCount += VariableWalkerBase::GetReturnedValueCount(pFrame);
 
             // Check if needed to add fake arguments.
@@ -3803,7 +3807,7 @@ namespace Js
         }
         return nullptr;
     }
-
+#ifdef ENABLE_MUTATION_BREAKPOINT
     PendingMutationBreakpointDisplay::PendingMutationBreakpointDisplay(ResolvedObject* resolvedObject, MutationType _mutationType)
         : RecyclableObjectDisplay(resolvedObject), mutationType(_mutationType)
     {
@@ -3900,5 +3904,6 @@ namespace Js
         }
         return FALSE;
     }
+#endif
 }
 

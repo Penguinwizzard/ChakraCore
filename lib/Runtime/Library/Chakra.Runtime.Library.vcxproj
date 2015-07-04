@@ -29,8 +29,6 @@
   <ItemDefinitionGroup>
     <ClCompile>
       <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)..;$(MSBuildThisFileDirectory)..\..\Common;$(MSBuildThisFileDirectory)..\..\Parser;$(MSBuildThisFileDirectory)..\..\Backend;$(ChakraManifestsIncludeDirectory);$(ManifestsInboxIncludeDirectory);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <!-- For telemtry\MicrosoftTelemetry.h -->
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(MinWinPrivSdkIncPath)</AdditionalIncludeDirectories>
       <!-- For mscorlib.tlb used in JavascriptErrorDebug.cpp -->
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SdkLibPath)\clr45</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>%(DisableSpecificWarnings);4702</DisableSpecificWarnings>
@@ -125,7 +123,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)StackProber.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)StackScriptFunction.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)StringCopyInfo.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)Telemetry.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)TestEtwEventSink.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ThreadBoundThreadContextManager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ThreadContext.cpp" />

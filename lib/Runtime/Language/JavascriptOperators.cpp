@@ -2264,11 +2264,12 @@ CommonNumber:
                         {
                             CacheOperators::CachePropertyWrite(RecyclableObject::FromVar(receiver), isRoot, object->GetType(), propertyId, info, requestContext);
                         }
-
+#ifdef ENABLE_MUTATION_BREAKPOINT
                         if (MutationBreakpoint::IsFeatureEnabled(requestContext))
                         {
                             MutationBreakpoint::HandleSetProperty(requestContext, object, propertyId, newValue);
                         }
+#endif
                         JavascriptOperators::CallSetter(func, receiver, newValue, requestContext);
                     }
                     return TRUE;
@@ -2302,9 +2303,11 @@ CommonNumber:
                 return FALSE;
             }
 
+#ifdef ENABLE_MUTATION_BREAKPOINT
             // Break on mutation if needed
             bool doNotUpdateCacheForMbp = MutationBreakpoint::IsFeatureEnabled(requestContext) ?
                 MutationBreakpoint::HandleSetProperty(requestContext, object, propertyId, newValue) : false;
+#endif
 
             // Get the original type before setting the property
             Type *typeWithoutProperty = object->GetType();
@@ -2352,7 +2355,9 @@ CommonNumber:
                         updateCache = false;
                     }
                 }
+#ifdef ENABLE_MUTATION_BREAKPOINT
                 updateCache = updateCache && !doNotUpdateCacheForMbp;
+#endif
 
                 if (updateCache)
                 {
@@ -2570,13 +2575,14 @@ CommonNumber:
             }
             else
             {
+#ifdef ENABLE_MUTATION_BREAKPOINT
                 ScriptContext *scriptContext = instance->GetScriptContext();
                 if (MutationBreakpoint::IsFeatureEnabled(scriptContext)
                     && scriptContext->HasMutationBreakpoints())
                 {
                     MutationBreakpoint::HandleDeleteProperty(scriptContext, instance, propertyId);
                 }
-
+#endif
                 // !unscopables will hit the return statement on the first iteration
                 return instance->DeleteProperty(propertyId, propertyOperationFlags);
             }

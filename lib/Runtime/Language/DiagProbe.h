@@ -243,7 +243,9 @@ namespace Js
 
         ulong GetDebugSessionNumber() const { return debugSessionNumber; }
 
+#ifdef ENABLE_MUTATION_BREAKPOINT
         MutationBreakpoint* GetActiveMutationBreakpoint() const;
+#endif
 
         DynamicObject* GetConsoleScope(ScriptContext* scriptContext);
         FrameDisplay *GetFrameDisplay(ScriptContext* scriptContext, DynamicObject* scopeAtZero, DynamicObject* scopeAtOne, bool addGlobalThisAtScopeTwo);

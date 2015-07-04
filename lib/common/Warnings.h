@@ -16,6 +16,8 @@
 #pragma warning(disable: 4512)  // private operator= are good to have
 #pragma warning(disable: 4481)  // allow use of abstract and override keywords
 
+#pragma warning(disable: 4324)  // structure was padded due to alignment specifier
+
 // warnings caused by normal optimizations
 #if DBG
 #else // DBG

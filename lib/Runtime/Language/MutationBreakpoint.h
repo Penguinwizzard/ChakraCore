@@ -4,6 +4,7 @@
 
 #pragma once
 
+#ifdef ENABLE_MUTATION_BREAKPOINT
 namespace Js
 {
     class MutationBreakpoint;
@@ -108,3 +109,4 @@ namespace Js
         virtual void Mark(Recycler * recycler);
     };
 }
+#endif

@@ -6538,7 +6538,7 @@ namespace Js
     {
         // Note : We can use help from the wininet for cracking the url properly. but for now below logic will just do.
 
-        LPWSTR pchFile = wcsrchr(pchUrl, L'/');
+        LPCWSTR pchFile = wcsrchr(pchUrl, L'/');
         if (pchFile == NULL)
         {
             pchFile = wcsrchr(pchUrl, L'\\');

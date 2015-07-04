@@ -4,6 +4,7 @@
 
 #include "StdAfx.h"
 
+#ifdef ENABLE_MUTATION_BREAKPOINT
 Js::MutationBreakpoint::MutationBreakpoint(ScriptContext *scriptContext, DynamicObject *obj, const PropertyRecord *pr, MutationType type, Js::PropertyId parentPropertyId)
     : isValid(true)
     , didCauseBreak(false)
@@ -522,3 +523,4 @@ STDMETHODIMP Js::MutationBreakpointDelegate::DidCauseBreak(
     *didCauseBreak = this->m_breakpoint->GetDidCauseBreak();
     return S_OK;
 }
+#endif

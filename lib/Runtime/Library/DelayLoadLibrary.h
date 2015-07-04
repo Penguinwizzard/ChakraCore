@@ -4,9 +4,16 @@
 
 #pragma once
 
-#include <roapi.h>
+//#include <roapi.h>
+#include "activation.h"
 #include <winstring.h>
+
+// cor.h includes corhdr.h which is not clean with warning 4091
+#pragma warning(push)
+#pragma warning(disable: 4091) /* warning C4091: 'typedef ': ignored on left of '' when no variable is declared */
 #include <cor.h>
+#pragma warning(pop)
+
 #include "RoParameterizedIID.h"
 
 namespace Js

@@ -5,10 +5,12 @@
 #pragma once
 namespace Js
 {
+#ifdef ENABLE_MUTATION_BREAKPOINT
     class MutationBreakpoint;
+#endif
 
     // This class contains the probes and list of function bodies.
-    // The object of this class is maintained by Script context.
+    // ÎÐThe object of this class is maintained by Script context.
     class ProbeContainer
     {
         friend class RecyclableObjectDisplay;
@@ -61,10 +63,12 @@ namespace Js
 
         BOOL IsScriptDebuggerOptionsEnabled(SCRIPT_DEBUGGER_OPTIONS flag);
 
+#ifdef ENABLE_MUTATION_BREAKPOINT
         void InitMutationBreakpointListIfNeeded();
         void ClearMutationBreakpoints();
-        static bool FetchTmpRegCount(Js::FunctionBody * functionBody, Js::ByteCodeReader * reader, int atOffset, uint32 *pTmpRegCount, Js::OpCode *pOp);
         void RemoveMutationBreakpointListIfNeeded();
+#endif
+        static bool FetchTmpRegCount(Js::FunctionBody * functionBody, Js::ByteCodeReader * reader, int atOffset, uint32 *pTmpRegCount, Js::OpCode *pOp);
     public:
 
         bool isForcedToEnterScriptStart;
@@ -149,10 +153,12 @@ namespace Js
 
         ProbeManager *GetProbeManager() const { return this->pProbeManager; }
 
+#ifdef ENABLE_MUTATION_BREAKPOINT
         typedef JsUtil::List<RecyclerWeakReference<Js::MutationBreakpoint>*, Recycler, false, Js::WeakRefFreeListedRemovePolicy> MutationBreakpointList;
         RecyclerRootPtr<MutationBreakpointList> mutationBreakpointList;
         bool HasMutationBreakpoints();
         void InsertMutationBreakpoint(MutationBreakpoint *mutationBreakpoint);
+#endif
         static bool IsTmpRegCountIncreased(Js::FunctionBody* functionBody, ByteCodeReader* reader, int currentOffset, int nextStmOffset, bool restoreOffset);
     };
 } // namespace Js.
