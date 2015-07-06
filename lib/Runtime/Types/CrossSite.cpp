@@ -9,7 +9,7 @@ namespace Js
 
     BOOL CrossSite::NeedMarshalVar(Var instance, ScriptContext * requestContext)
     {
-        if (TaggedNumber::Is(instance) || BinaryFeatureControl::LanguageService())
+        if (TaggedNumber::Is(instance))
         {
             return FALSE;
         }
@@ -130,7 +130,7 @@ namespace Js
     {
         // value might be null from disable implicit call
         // no marshalling in the case of language service mode.
-        if (BinaryFeatureControl::LanguageService() || value == nullptr || Js::TaggedNumber::Is(value))
+        if (value == nullptr || Js::TaggedNumber::Is(value))
         {
             return value;
         }
@@ -427,10 +427,6 @@ namespace Js
     // scenario.
     void CrossSite::ForceCrossSiteThunkOnPrototypeChain(RecyclableObject* object)
     {
-        if (BinaryFeatureControl::LanguageService())
-        {
-            return;
-        }
         if (TaggedNumber::Is(object))
         {
             return;

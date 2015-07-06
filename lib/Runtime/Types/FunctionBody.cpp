@@ -410,7 +410,7 @@ namespace Js
         Recycler* recycler = this->m_scriptContext->GetRecycler();
         propertyRecordList = RecyclerNew(recycler, Js::PropertyRecordList, recycler);
 
-        bool isDebugReparse = !BinaryFeatureControl::LanguageService() && m_scriptContext->IsInDebugOrSourceRundownMode();
+        bool isDebugReparse = m_scriptContext->IsInDebugOrSourceRundownMode();
         bool isAsmJsReparse = false;
 
         FunctionBody* funcBody = NULL;
@@ -498,7 +498,6 @@ namespace Js
     #if DBG
                 Assert(
                     funcBody->IsReparsed()
-                    || m_scriptContext->GetThreadContext()->Diagnostics->languageServiceEnabled
                     || m_scriptContext->IsInDebugOrSourceRundownMode()
                     || m_isAsmjsMode);
     #endif
@@ -643,15 +642,6 @@ namespace Js
         else
         {
             fParsed = FALSE;
-        }
-
-
-        if (BinaryFeatureControl::LanguageService())
-        {
-            // Notify that langauge service that deferred parsing is complete and the
-            // deferred parsed function is now executing.
-            if (m_scriptContext->authoringData && m_scriptContext->authoringData->Callbacks())
-                m_scriptContext->authoringData->Callbacks()->Executing();
         }
 
         if (fParsed == TRUE)
@@ -2181,14 +2171,7 @@ namespace Js
         }
         else
         {
-            // TODO: Most byte code block are allocated in the recycler, so we don't really need to clone them
-            // But byte code serializer still create byte code block in the arena.  We should untangle that sometime
-            if (BinaryFeatureControl::LanguageService())
-                // The language service ensures that the lifetime of a function
-                // clone will live longer than the clone.
-                newFunctionBody->byteCodeBlock = this->byteCodeBlock;
-            else
-                newFunctionBody->byteCodeBlock = this->byteCodeBlock->Clone(this->m_scriptContext->GetRecycler());
+            newFunctionBody->byteCodeBlock = this->byteCodeBlock->Clone(this->m_scriptContext->GetRecycler());
 
             newFunctionBody->isByteCodeDebugMode = this->isByteCodeDebugMode;
             newFunctionBody->m_byteCodeCount = this->m_byteCodeCount;
@@ -2200,12 +2183,7 @@ namespace Js
 #endif
             if (this->auxBlock)
             {
-                if (BinaryFeatureControl::LanguageService())
-                    // The language service ensures that the lifetime of a function
-                    // clone will live longer than the clone.
-                    newFunctionBody->auxBlock = this->auxBlock;
-                else
-                    newFunctionBody->auxBlock = this->auxBlock->Clone(this->m_scriptContext->GetRecycler());
+                newFunctionBody->auxBlock = this->auxBlock->Clone(this->m_scriptContext->GetRecycler());
 
 #ifdef PERF_COUNTERS
                 byteCodeSize += this->auxBlock->GetLength();
@@ -2236,23 +2214,15 @@ namespace Js
             StatementMapList * pStatementMaps = this->GetStatementMaps();
             if (pStatementMaps != null)
             {
-                if (BinaryFeatureControl::LanguageService())
+                Recycler* recycler = newFunctionBody->GetScriptContext()->GetRecycler();
+                StatementMapList * newStatementMaps = RecyclerNew(recycler, StatementMapList, recycler);
+                newFunctionBody->pStatementMaps = newStatementMaps;
+                pStatementMaps->Map([recycler, newStatementMaps](int index, FunctionBody::StatementMap* oldStatementMap)
                 {
-                    // We don't need to copy this as the original function live longer than the cloned one.
-                    newFunctionBody->pStatementMaps = pStatementMaps;
-                }
-                else
-                {
-                    Recycler* recycler = newFunctionBody->GetScriptContext()->GetRecycler();
-                    StatementMapList * newStatementMaps = RecyclerNew(recycler, StatementMapList, recycler);
-                    newFunctionBody->pStatementMaps = newStatementMaps;
-                    pStatementMaps->Map([recycler, newStatementMaps](int index, FunctionBody::StatementMap* oldStatementMap)
-                    {
-                        FunctionBody::StatementMap* newStatementMap = StatementMap::New(recycler);
-                        *newStatementMap = *oldStatementMap;
-                        newStatementMaps->Add(newStatementMap);
-                    });
-                }
+                    FunctionBody::StatementMap* newStatementMap = StatementMap::New(recycler);
+                    *newStatementMap = *oldStatementMap;
+                    newStatementMaps->Add(newStatementMap);
+                });
             }
 
             if (this->m_sourceInfo.pSpanSequence != null)
@@ -2292,22 +2262,15 @@ namespace Js
                 continue;
             }
 
-            if (BinaryFeatureControl::LanguageService())
-            {
-                newFunctionBody->SetLiteralRegex(i, scriptContext->CopyPattern(literalRegex));
-            }
-            else
-            {
-                const auto source = literalRegex->GetSource();
-                newFunctionBody->SetLiteralRegex(
-                    i,
-                    RegexHelper::CompileDynamic(
-                        scriptContext,
-                        source.GetBuffer(),
-                        source.GetLength(),
-                        literalRegex->GetFlags(),
-                        true));
-            }
+            const auto source = literalRegex->GetSource();
+            newFunctionBody->SetLiteralRegex(
+                i,
+                RegexHelper::CompileDynamic(
+                    scriptContext,
+                    source.GetBuffer(),
+                    source.GetLength(),
+                    literalRegex->GetFlags(),
+                    true));
         }
 
         if (this->DoJITLoopBody())
@@ -2356,10 +2319,6 @@ namespace Js
                 , false
 #endif
                 );
-
-
-        if (BinaryFeatureControl::LanguageService())
-            scriptContext->RecordFunctionClone(this, newFunctionBody);
 
         if (this->m_scopeInfo != NULL)
         {
@@ -2457,21 +2416,16 @@ namespace Js
                 // TODO: may be we don't have to?
                 ParseableFunctionInfo* body = proxy->EnsureDeserialized();
                 FunctionProxy* newBody;
-                if (BinaryFeatureControl::LanguageService())
+
+                if (body->IsDeferredParseFunction())
                 {
-                    newBody = scriptContext->CopyFunction(body);
+                    newBody = body->Clone(scriptContext, sourceIndex);
                 }
                 else
                 {
-                    if (body->IsDeferredParseFunction())
-                    {
-                        newBody = body->Clone(scriptContext, sourceIndex);
-                    }
-                    else
-                    {
-                        newBody = body->GetFunctionBody()->Clone(scriptContext, sourceIndex);
-                    }
+                    newBody = body->GetFunctionBody()->Clone(scriptContext, sourceIndex);
                 }
+
                 // 0u is an empty value for the bit-mask 'flags', when initially parsing this is used to track defer-parse functions.
                 newFunctionInfo->SetNestedFunc(newBody, index, 0u);
             }
@@ -2505,9 +2459,6 @@ namespace Js
         }
 
         ParseableFunctionInfo* newFunctionInfo = ParseableFunctionInfo::New(scriptContext, this->m_nestedCount, this->GetLocalFunctionId(), sourceInfo, this->GetDisplayName(), this->GetDisplayNameLength(), this->m_boundPropertyRecords, this->GetAttributes());
-
-        if (BinaryFeatureControl::LanguageService())
-            scriptContext->RecordFunctionClone(this, newFunctionInfo);
 
         if (this->m_scopeInfo != NULL)
         {
@@ -6390,8 +6341,7 @@ namespace Js
     void FunctionBody::CheckAndRegisterFuncToDiag(ScriptContext *scriptContext)
     {
         // We will register function if, this is not host managed and it was not registered before.
-        if (!BinaryFeatureControl::LanguageService()
-            && GetHostSourceContext() == Js::Constants::NoHostSourceContext
+        if (GetHostSourceContext() == Js::Constants::NoHostSourceContext
             && !m_isFuncRegisteredToDiag
             && !scriptContext->diagProbesContainer.IsContextRegistered(GetSecondaryHostSourceContext()))
         {

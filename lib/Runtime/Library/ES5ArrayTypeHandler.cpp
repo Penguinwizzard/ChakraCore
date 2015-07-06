@@ -255,8 +255,6 @@ namespace Js
         }
         else
         {
-            // We shouldn't be here for the language service case.
-            Assert(!BinaryFeatureControl::LanguageService());
             // If instance was a cross-site JavascriptArray, convert to a cross-site ES5Array
             Assert(VirtualTableInfo<CrossSiteObject<JavascriptArray>>::HasVirtualTable(arrayInstance));
             VirtualTableInfo<CrossSiteObject<ES5Array>>::SetVirtualTable(arrayInstance);

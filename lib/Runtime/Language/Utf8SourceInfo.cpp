@@ -32,7 +32,7 @@ namespace Js
         debugModeSourceLength(0),
         callerUtf8SourceInfo(nullptr)
     {
-        if (!sourceHolder->IsDeferrable() || BinaryFeatureControl::LanguageService())
+        if (!sourceHolder->IsDeferrable())
         {
             this->debugModeSource = this->sourceHolder->GetSource(L"Entering Debug Mode");
             this->debugModeSourceLength = this->sourceHolder->GetByteLength(L"Entering Debug Mode");
@@ -99,39 +99,33 @@ namespace Js
 
     void Utf8SourceInfo::RemoveFunctionBody(FunctionBody* functionBody)
     {
-        if (!BinaryFeatureControl::LanguageService())
-        {
-            Assert(this->functionBodyDictionary);
+        Assert(this->functionBodyDictionary);
 
-            const LocalFunctionId functionId = functionBody->GetLocalFunctionId();
-            Assert(functionBodyDictionary->Item(functionId) == functionBody);
+        const LocalFunctionId functionId = functionBody->GetLocalFunctionId();
+        Assert(functionBodyDictionary->Item(functionId) == functionBody);
 
-            functionBodyDictionary->Remove(functionId);
-            functionBody->SetIsFuncRegistered(false);
-        }
+        functionBodyDictionary->Remove(functionId);
+        functionBody->SetIsFuncRegistered(false);
     }
 
     void Utf8SourceInfo::SetFunctionBody(FunctionBody * functionBody)
     {
-        if (!BinaryFeatureControl::LanguageService())
-        {
-            Assert(this->m_scriptContext == functionBody->GetScriptContext());
-            Assert(this->functionBodyDictionary);
+        Assert(this->m_scriptContext == functionBody->GetScriptContext());
+        Assert(this->functionBodyDictionary);
 
-            // Only register a function body when source info is ready. Note that m_pUtf8Source can still be null for lib script.
-            Assert(functionBody->GetSourceIndex() != Js::Constants::InvalidSourceIndex);
-            Assert(!functionBody->GetIsFuncRegistered());
+        // Only register a function body when source info is ready. Note that m_pUtf8Source can still be null for lib script.
+        Assert(functionBody->GetSourceIndex() != Js::Constants::InvalidSourceIndex);
+        Assert(!functionBody->GetIsFuncRegistered());
 
-            const LocalFunctionId functionId = functionBody->GetLocalFunctionId();
-            FunctionBody* oldFunctionBody = null;
-            if (functionBodyDictionary->TryGetValue(functionId, &oldFunctionBody)) {
-                Assert(oldFunctionBody != functionBody);
-                oldFunctionBody->SetIsFuncRegistered(false);
-            }
-
-            functionBodyDictionary->Item(functionId, functionBody);
-            functionBody->SetIsFuncRegistered(true);
+        const LocalFunctionId functionId = functionBody->GetLocalFunctionId();
+        FunctionBody* oldFunctionBody = null;
+        if (functionBodyDictionary->TryGetValue(functionId, &oldFunctionBody)) {
+            Assert(oldFunctionBody != functionBody);
+            oldFunctionBody->SetIsFuncRegistered(false);
         }
+
+        functionBodyDictionary->Item(functionId, functionBody);
+        functionBody->SetIsFuncRegistered(true);
     }
 
     void Utf8SourceInfo::EnsureInitialized(int initialFunctionCount)
@@ -139,16 +133,13 @@ namespace Js
         ThreadContext* threadContext = ThreadContext::GetContextForCurrentThread();
         Recycler* recycler = threadContext->GetRecycler();
 
-        if (!BinaryFeatureControl::LanguageService())
+        if (this->functionBodyDictionary == nullptr)
         {
-            if (this->functionBodyDictionary == nullptr)
-            {
-                // This collection is allocated with leaf allocation policy. The references to the function body
-                // here does not keep the function alive. However, the functions remove themselves at finalize
-                // so if a function actually is in this map, it means that it is alive.
-                this->functionBodyDictionary = RecyclerNew(recycler, FunctionBodyDictionary, recycler, 
-                    initialFunctionCount, threadContext->GetEtwRundownCriticalSection());
-            }
+            // This collection is allocated with leaf allocation policy. The references to the function body
+            // here does not keep the function alive. However, the functions remove themselves at finalize
+            // so if a function actually is in this map, it means that it is alive.
+            this->functionBodyDictionary = RecyclerNew(recycler, FunctionBodyDictionary, recycler, 
+                initialFunctionCount, threadContext->GetEtwRundownCriticalSection());
         }
 
         if (CONFIG_FLAG(DeferTopLevelTillFirstCall) && !m_deferredFunctionsInitialized)
@@ -342,7 +333,7 @@ namespace Js
     // Used if the caller want's any function in this source info
     Js::FunctionBody* Utf8SourceInfo::GetAnyParsedFunction()
     {
-        if (!BinaryFeatureControl::LanguageService() && this->functionBodyDictionary != null && this->functionBodyDictionary->Count() > 0)
+        if (this->functionBodyDictionary != null && this->functionBodyDictionary->Count() > 0)
         {
             FunctionBody* functionBody = null;
             int i = 0;

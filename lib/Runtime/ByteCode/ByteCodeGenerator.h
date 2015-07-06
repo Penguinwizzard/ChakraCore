@@ -395,7 +395,6 @@ public:
     void StartSubexpression(ParseNode* node);
     void EndSubexpression(ParseNode* node);
 
-    bool IsLanguageServiceEnabled() const;
     bool UseParserBindings() const;
     bool IsES6DestructuringEnabled() const;
 

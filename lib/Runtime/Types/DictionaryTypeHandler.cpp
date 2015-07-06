@@ -826,7 +826,7 @@ namespace Js
                 PropertyValueInfo::SetNoCache(info, instance);
                 return false;
             }
-            else if (isInit && descriptor->IsAccessor && !scriptContext->GetThreadContext()->Diagnostics->languageServiceEnabled)
+            else if (isInit && descriptor->IsAccessor)
             {
                 // When in Language service mode the break point can be inside a duplicate property. Removing the accessor makes the break point unreachable.
                 descriptor->ConvertToData();

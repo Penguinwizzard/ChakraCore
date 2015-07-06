@@ -366,7 +366,7 @@ namespace Js
     {
         Assert(JavascriptOperators::IsUndefinedObject(libraryUndefined));
 
-        return instance == libraryUndefined || (BinaryFeatureControl::LanguageService() && instance && JavascriptOperators::IsUndefinedObject(instance));
+        return instance == libraryUndefined;
     }
         
     __inline BOOL JavascriptOperators::IsUndefinedObject(Var instance, ScriptContext *scriptContext)

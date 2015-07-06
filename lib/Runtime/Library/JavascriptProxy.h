@@ -188,9 +188,6 @@ namespace Js
         Var ConstructorTrap(Arguments args, ScriptContext* scriptContext, const Js::AuxArray<uint32> *spreadIndices);
 
         
-
-        void SneakyUpdateTargetByLanguageService(RecyclableObject* target);
-
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
         static PropertyId EnsureHandlerPropertyId(ScriptContext* scriptContext);
         static RecyclableObject* AutoProxyWrapper(Var obj);

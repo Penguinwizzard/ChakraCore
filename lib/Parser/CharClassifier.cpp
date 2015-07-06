@@ -617,8 +617,6 @@ Js::CharClassifier::CharClassifier(CharClassifierModes overallSupport, bool code
 
 Js::CharClassifier::CharClassifier(ScriptContext * scriptContext) 
 {
-#ifdef LANGUAGE_SERVICE
-#else
     ThreadContext* threadContext = scriptContext->GetThreadContext();
     Js::WindowsGlobalizationAdapter* globalizationAdapter = threadContext->GetWindowsGlobalizationAdapter();
     Js::DelayLoadWindowsGlobalization* delayLoadLibrary = threadContext->GetWindowsGlobalizationLibrary();
@@ -627,7 +625,6 @@ Js::CharClassifier::CharClassifier(ScriptContext * scriptContext)
     bool codePointSupport = overallMode == CharClassifierModes::ES6;
     
     initClassifier(globalizationAdapter, delayLoadLibrary, overallMode, overallMode, overallMode, codePointSupport, CharClassifierModes::ES6); // no fallback for chk
-#endif
 }
 
 void Js::CharClassifier::initClassifier(Js::WindowsGlobalizationAdapter* globalizationAdapter, Js::DelayLoadWindowsGlobalization* globLibrary, CharClassifierModes identifierSupport, 
@@ -887,13 +884,6 @@ const LPCUTF8 Js::CharClassifier::SkipIdentifierSurrogateStartEnd(LPCUTF8 psz, L
 
     return psz;
 }
-
-#ifdef LANGUAGE_SERVICE
-    BOOL Js::CharClassifier::IsNameSpaceChar(codepoint_t codePoint) const
-    {
-        return codePoint == '.' || GetCharFlags(codePoint) & CharTypeFlags::NameSpaceCharGroup;
-    }
-#endif
 
 CharTypes Js::CharClassifier::GetCharType(codepoint_t ch) const
 {

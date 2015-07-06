@@ -101,12 +101,6 @@ namespace Js
 
     void ArrayBuffer::AddParent(ArrayBufferParent* parent)
     {
-        if (BinaryFeatureControl::LanguageService())
-        {
-            //Under LS, this is no-op
-            return;
-        }
-
         if (this->primaryParent == nullptr || this->primaryParent->Get() == nullptr)
         {
             this->primaryParent = this->GetRecycler()->CreateWeakReferenceHandle(parent);
@@ -123,12 +117,6 @@ namespace Js
 
     void ArrayBuffer::RemoveParent(ArrayBufferParent* parent)
     {
-        if (BinaryFeatureControl::LanguageService())
-        {
-            //Under LS, this is no-op
-            return;
-        }
-
         if (this->primaryParent != nullptr && this->primaryParent->Get() == parent)
         {
             this->primaryParent = nullptr;

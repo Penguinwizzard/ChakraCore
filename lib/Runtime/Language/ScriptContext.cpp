@@ -161,7 +161,6 @@ namespace Js
 #ifdef FIELD_ACCESS_STATS
         , fieldAccessStatsByFunctionNumber(nullptr)
 #endif
-        , authoringData(nullptr)
         , copyOnWriteMap(nullptr)
         , webWorkerId(Js::Constants::NonWebWorkerContextId)
         , url(L"")
@@ -305,14 +304,7 @@ namespace Js
     void ScriptContext::InitializeAllocations()
     {
         //Language service uses a predetermined ES6 mode, and silently falls back to ES5 in case Windows.Globalization.dll is missing.
-        if (BinaryFeatureControl::LanguageService())
-        {
-            this->charClassifier = Anew(GeneralAllocator(), CharClassifier, Js::CharClassifierModes::ES6, true);
-        }
-        else
-        {
-            this->charClassifier = Anew(GeneralAllocator(), CharClassifier, this);
-        }
+        this->charClassifier = Anew(GeneralAllocator(), CharClassifier, this);
 
         this->valueOfInlineCache = AllocatorNewZ(InlineCacheAllocator, GetInlineCacheAllocator(), InlineCache);
         this->toStringInlineCache = AllocatorNewZ(InlineCacheAllocator, GetInlineCacheAllocator(), InlineCache);
@@ -486,10 +478,6 @@ namespace Js
                 Assert(this->IsClosedNativeCodeGenerator());
 #endif
                 this->recycler->RootRelease(globalObject);
-                if (BinaryFeatureControl::LanguageService())
-                {
-                    globalObject = null;
-                }
             }
 
         }
@@ -825,10 +813,6 @@ namespace Js
             Assert(this->IsClosedNativeCodeGenerator());
 #endif
             GetRecycler()->RootRelease(globalObject);
-            if (BinaryFeatureControl::LanguageService())
-            {
-                globalObject = nullptr;
-            }
         }
 
         // A script context closing is a signal to the thread context that it
@@ -1097,11 +1081,8 @@ namespace Js
         this->backgroundParser = BackgroundParser::New(this);
 
 #if ENABLE_NATIVE_CODEGEN
-        if (BinaryFeatureControl::NativeCodeGen())
-        {
-            // Create the native code gen before the profiler
-            this->nativeCodeGen = NewNativeCodeGenerator(this);
-        }
+        // Create the native code gen before the profiler
+        this->nativeCodeGen = NewNativeCodeGenerator(this);
 #endif
 
 #ifdef PROFILE_EXEC
@@ -1598,7 +1579,7 @@ namespace Js
                 sourceContextInfo);
             (*ppSourceInfo)->SetParseFlags(grfscr);
 
-            if (FAILED(hr) || parseTree == null || (grfscr & fscrStmtCompletion) != 0)
+            if (FAILED(hr) || parseTree == null)
             {
                 return null;
             }
@@ -2677,7 +2658,7 @@ namespace Js
 
         } autoRestore(this->GetThreadContext());
 
-        if (BinaryFeatureControl::LanguageService() || !Js::Configuration::Global.EnableJitInDebugMode())
+        if (!Js::Configuration::Global.EnableJitInDebugMode())
         {
             if (attach)
             {
@@ -3257,35 +3238,6 @@ namespace Js
         return fork.Detach();
     }
 
-    Var ScriptContext::CopyTrackingValue(Var value, TypeId valueType)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED_RET();
-
-        auto originalTrackingKey = RecyclableObject::FromVar(value);
-        auto originalScriptContext = originalTrackingKey->GetScriptContext();
-        auto originalLibraryValue = valueType == TypeIds_Undefined ? originalScriptContext->GetLibrary()->GetUndefined() : originalScriptContext->GetLibrary()->GetNull();
-        if (originalTrackingKey != originalLibraryValue && originalScriptContext->authoringData && originalScriptContext->authoringData->Callbacks())
-        {
-            RecyclableObject *thisTrackingKey;
-
-            EnsureCopyOnWriteMap();
-            if (this->copyOnWriteMap->TryGetValue(originalTrackingKey, &thisTrackingKey))
-                return thisTrackingKey;
-            else
-            {
-                auto originalValue = originalScriptContext->authoringData->Callbacks()->GetTrackingValue(originalScriptContext, originalTrackingKey);
-                if (originalValue && !Js::JavascriptOperators::IsUndefinedOrNullType(Js::JavascriptOperators::GetTypeId(originalValue)))
-                {
-                    auto thisValue = this->CopyOnWrite(originalValue);
-                    thisTrackingKey = this->authoringData->Callbacks()->GetTrackingKey(this, thisValue, TypeIds_Undefined);
-                    RecordCopyOnWrite(originalTrackingKey, thisTrackingKey);
-                    return thisTrackingKey;
-                }
-            }
-        }
-        return valueType == TypeIds_Undefined ? GetLibrary()->GetUndefined() : GetLibrary()->GetNull();
-    }
-
     Var ScriptContext::CopyOnWrite(Var value)
     {
         VERIFY_COPY_ON_WRITE_ENABLED_RET();
@@ -3351,13 +3303,9 @@ namespace Js
         }
 
         case TypeIds_Null:
-            if (BinaryFeatureControl::LanguageService() && this->authoringData && this->authoringData->Callbacks())
-                return CopyTrackingValue(value, valueType);
             return GetLibrary()->GetNull();
 
         case TypeIds_Undefined:
-            if (BinaryFeatureControl::LanguageService() && this->authoringData && this->authoringData->Callbacks())
-                return CopyTrackingValue(value, valueType);
             return GetLibrary()->GetUndefined();
 
         default:
@@ -3465,18 +3413,6 @@ namespace Js
         }
 
         return result;
-    }
-
-    Js::Var ScriptContext::GetTrackingValue(Js::RecyclableObject *value)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED_RET();
-
-        if (authoringData && authoringData->Callbacks())
-        {
-            return authoringData->Callbacks()->GetTrackingValue(this, value);
-        }
-
-        return nullptr;
     }
 
     JavascriptMethod ScriptContext::GetProfileModeThunk(JavascriptMethod entryPoint)
@@ -3656,7 +3592,7 @@ namespace Js
         {
             forceNoNative = this->IsInterpreted();
         }
-        else if (BinaryFeatureControl::LanguageService() || !Js::Configuration::Global.EnableJitInDebugMode())
+        else if (!Js::Configuration::Global.EnableJitInDebugMode())
         {
             forceNoNative = true;
             this->ForceNoNative();
@@ -5087,10 +5023,7 @@ namespace Js
 
         // The language service expects the source index in the source list to never change
         // so to keep this invariant, we don't cleanup the source list during GC
-        if (!BinaryFeatureControl::LanguageService())
-        {
-            CleanSourceListInternal(true);
-        }
+        CleanSourceListInternal(true);
     }
 
 void ScriptContext::ClearInlineCaches()
@@ -5510,7 +5443,7 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
 #endif
 
 #ifdef PROFILE_MEM
-        if (profileMemoryDump && MemoryProfiler::IsTraceEnabled() && !BinaryFeatureControl::LanguageService())
+        if (profileMemoryDump && MemoryProfiler::IsTraceEnabled())
         {
             MemoryProfiler::PrintAll();
 #ifdef PROFILE_RECYCLER_ALLOC
@@ -6304,7 +6237,7 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
         // Intl is never enabled in the Language Service. The Language service includes Intl.js directly as a reference file and
         // initializes the Intl object with a mock version of the EngineInterfaceObject implemented in JS in IntlHelpers.js.
         // The Language Service should never use the actual runtime Intl object.
-        return !BinaryFeatureControl::LanguageService() && Js::Configuration::Global.flags.Intl;
+        return Js::Configuration::Global.flags.Intl;
     }
 
 } // End namespace Js

@@ -40,21 +40,6 @@ namespace Js
 
     Var TypedArrayEnumerator::GetCurrentValue()
     {
-#if DBG
-        // GetCurrentValue() is used in the language service.
-        AssertMsg(BinaryFeatureControl::LanguageService(), "shouldn't be called");
-#endif
-        if (BinaryFeatureControl::LanguageService())
-        {
-            if (index != JavascriptArray::InvalidIndex && !doneArray)
-            {
-                return typedArrayObject->DirectGetItem(index);
-            }
-            else if (!doneObject)
-            {
-                return objectEnumerator->GetCurrentValue();
-            }
-        }
         return GetLibrary()->GetUndefined();
     }
 

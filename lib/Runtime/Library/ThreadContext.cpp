@@ -101,7 +101,6 @@ ThreadContext::ThreadContext(AllocationPolicyManager * allocationPolicyManager, 
     recycler(nullptr),
     hasCollectionCallBack(false),
     callDispose(true),
-    m_fileAuthoringContext(nullptr), 
 #ifdef ENABLE_NATIVE_CODEGEN
     jobProcessor(nullptr),
 #endif
@@ -1276,15 +1275,11 @@ ThreadContext::EnterScriptEnd(Js::ScriptEntryExitRecord * record, bool doCleanup
  
         if (doCleanup)
         {
-            // Force a collection
-            if (!BinaryFeatureControl::LanguageService())
+            ThreadServiceWrapper* threadServiceWrapper = GetThreadServiceWrapper();
+            if (!threadServiceWrapper || !threadServiceWrapper->ScheduleNextCollectOnExit())
             {
-                ThreadServiceWrapper* threadServiceWrapper = GetThreadServiceWrapper();
-                if (!threadServiceWrapper || !threadServiceWrapper->ScheduleNextCollectOnExit())
-                {
-                    // Do the idle GC now if we fail schedule one.
-                    recycler->CollectNow<CollectOnScriptExit>();
-                }
+                // Do the idle GC now if we fail schedule one.
+                recycler->CollectNow<CollectOnScriptExit>();
             }
             recycler->LeaveIdleDecommit();
         }
@@ -1306,14 +1301,12 @@ ThreadContext::EnterScriptEnd(Js::ScriptEntryExitRecord * record, bool doCleanup
 void 
 ThreadContext::SetForceOneIdleCollection()
 {
-    if (!BinaryFeatureControl::LanguageService())
+    ThreadServiceWrapper* threadServiceWrapper = GetThreadServiceWrapper();
+    if (threadServiceWrapper)
     {
-        ThreadServiceWrapper* threadServiceWrapper = GetThreadServiceWrapper();
-        if (threadServiceWrapper)
-        {
-            threadServiceWrapper->SetForceOneIdleCollection();
-        }
+        threadServiceWrapper->SetForceOneIdleCollection();
     }
+
 }
 
 BOOLEAN

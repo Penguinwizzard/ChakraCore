@@ -51,35 +51,6 @@ public:
     SRCINFO* Clone(Js::ScriptContext* scriptContext) const;
 };
 
-class AuthoringData;
-
-class AuthoringCallbacks
-{
-public:
-    virtual void Parsing() = 0;
-    virtual void GeneratingByteCode() = 0;
-    virtual void Executing() = 0;
-    virtual void Progress() = 0;
-    virtual void PreparingEval(charcount_t length) = 0;
-    virtual Js::RecyclableObject *GetMissingPropertyResult(Js::ScriptContext *scriptContext, Js::RecyclableObject *instance, Js::PropertyId id, Js::TypeId typeId) = 0;
-    virtual Js::RecyclableObject *GetMissingItemResult(Js::ScriptContext *scriptContext, Js::RecyclableObject *instance, uint32 index, Js::TypeId typeId) = 0;
-    virtual Js::RecyclableObject *GetMissingParameterValue(Js::ScriptContext *scriptContext, Js::JavascriptFunction *function, uint32 paramIndex) = 0;
-    virtual Js::RecyclableObject *GetTrackingKey(Js::ScriptContext *scriptContext, Js::Var value, Js::TypeId typeId) = 0;
-    virtual Js::Var GetCallerName(Js::ScriptContext *scriptContext, int fileId, int offset) = 0;
-    virtual Js::Var GetTrackingValue(Js::ScriptContext *scriptContext, Js::RecyclableObject *value) = 0;
-    virtual bool HasThisStmt(Js::ScriptContext *scriptContext, Js::JavascriptFunction *function) = 0;
-    virtual Js::Var GetExecutingScriptFileName(Js::ScriptContext *scriptContext) = 0;
-    virtual bool CopyOnGet() = 0;
-    virtual int GetFileIdOfSourceIndex(Js::ScriptContext *scriptContext, int sourceIndex) = 0;
-    virtual DWORD_PTR GetAuthorSource(int sourceIndex, Js::ScriptContext *scriptContext) = 0;
-#ifdef ENABLE_DEBUG_CONFIG_OPTIONS
-    virtual void LogFunctionStart(Js::ScriptContext *scriptContext, Js::FunctionBody * functionBody) = 0;
-    virtual void LogFunctionEnd(Js::ScriptContext *scriptContext) = 0;
-    virtual bool IsCallGraphEnabled() const = 0;
-    virtual void SetCallGraph(bool enable) = 0;
-#endif
-};
-
 struct CustomExternalObjectOperations
 {
     size_t offsetOfOperationsUsage;
@@ -203,7 +174,7 @@ namespace Js
         bool IsIntlEnabled() const;
         bool IsKhronosInteropEnabled()          const { return CONFIG_FLAG(KhronosInterop); }
         bool IsES6ArrayUseConstructorEnabled()  const { return CONFIG_FLAG_RELEASE(ES6ArrayUseConstructor); }
-        bool IsES6ClassAndExtendsEnabled()      const { return CONFIG_FLAG_RELEASE(ES6Classes) || BinaryFeatureControl::LanguageService(); } // Need to remove the LanguageService check once the feature is enabled by default
+        bool IsES6ClassAndExtendsEnabled()      const { return CONFIG_FLAG_RELEASE(ES6Classes); } 
         bool IsES6DateParseFixEnabled()         const { return CONFIG_FLAG_RELEASE(ES6DateParseFix); }
         bool IsES6DefaultArgsEnabled()          const { return CONFIG_FLAG_RELEASE(ES6DefaultArgs); }
         bool IsES6DestructuringEnabled()        const { return CONFIG_FLAG_RELEASE(ES6Destructuring); }
@@ -227,7 +198,7 @@ namespace Js
         bool IsES6StringPrototypeFixEnabled()   const { return CONFIG_FLAG_RELEASE(ES6StringPrototypeFixes); }
         bool IsES6StringTemplateEnabled()       const { return CONFIG_FLAG_RELEASE(ES6StringTemplate); }
         bool IsES6PrototypeChain()              const { return CONFIG_FLAG_RELEASE(ES6PrototypeChain); }
-        bool IsES6SuperEnabled()                const { return CONFIG_FLAG_RELEASE(ES6Super) || BinaryFeatureControl::LanguageService(); } // Need to remove the LanguageService check once the feature is enabled by default
+        bool IsES6SuperEnabled()                const { return CONFIG_FLAG_RELEASE(ES6Super); }
         bool IsES6SymbolEnabled()               const { return CONFIG_FLAG_RELEASE(ES6Symbol); }
         bool IsES6ToPrimitiveEnabled()          const { return CONFIG_FLAG_RELEASE(ES6ToPrimitive); }
         bool IsES6ToLengthEnabled()             const { return CONFIG_FLAG_RELEASE(ES6ToLength); }
@@ -453,8 +424,6 @@ namespace Js
         static DWORD GetAsmSimdValOffset() { return offsetof(ScriptContext, retAsmSimdVal); }
 #endif
         ScriptContextOptimizationOverrideInfo optimizationOverrides;
-        AuthoringData *authoringData;
-        Js::Var GetTrackingValue(Js::RecyclableObject *value);
 
         Js::JavascriptMethod CurrentThunk;
         Js::JavascriptMethod CurrentCrossSiteThunk;
@@ -1320,7 +1289,6 @@ private:
         RecyclableObject* GetMissingParameterValue(Js::JavascriptFunction *function, uint32 paramIndex);
         RecyclableObject *GetNullPropertyResult(Js::RecyclableObject *instance, Js::PropertyId id);
         RecyclableObject *GetNullItemResult(Js::RecyclableObject *instance, uint32 index);
-        bool GetCopyOnGetEnabled();
 
         bool HasRecordedException() const { return threadContext->GetRecordedException() != null; }
         Js::JavascriptExceptionObject * GetAndClearRecordedException(bool *considerPassingToDebugger = nullptr);
@@ -1611,7 +1579,6 @@ private:
         BuiltinFunctionIdDictionary *m_pBuiltinFunctionIdMap;
         Js::PropertyId GetFunctionNumber(JavascriptMethod entryPoint);
         
-        Var CopyTrackingValue(Var value, TypeId valueType);
         static const wchar_t* CopyString(const wchar_t* str, size_t charCount, ArenaAllocator* alloc);
 
     public:

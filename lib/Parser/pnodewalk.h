@@ -428,9 +428,6 @@ private:
         // General nodes.
         //PTNODE(knopList       , "<list>"    ,None    ,Bin  ,fnopNone)
         case knopList:
-        case knopVarDeclList:
-        case knopConstDeclList:
-        case knopLetDeclList:
             return WalkList(NULL, pnode, context);
 
         //PTNODE(knopVarDecl    , "varDcl"    ,None    ,Var  ,fnopNone)
@@ -489,7 +486,6 @@ private:
 
         //PTNODE(knopCase       , "case"        ,None    ,Case ,fnopNone)
         case knopCase:
-        case knopDefaultCase:
             return WalkCase(pnode, context);
 
         //PTNODE(knopTryFinally,"try-finally",None,TryFinally,fnopCleanup)

@@ -641,14 +641,9 @@ ByteCodeGenerator::ByteCodeGenerator(Js::ScriptContext* scriptContext, Js::Scope
     m_writer.Create();
 }
 
-bool ByteCodeGenerator::IsLanguageServiceEnabled() const
-{
-    return BinaryFeatureControl::LanguageService() && scriptContext->GetThreadContext()->Diagnostics->languageServiceEnabled;
-}
-
 bool ByteCodeGenerator::UseParserBindings() const
 {
-    return !IsLanguageServiceEnabled() && IsInNonDebugMode() && !PHASE_OFF1(Js::ParserBindPhase);
+    return IsInNonDebugMode() && !PHASE_OFF1(Js::ParserBindPhase);
 }
 
 bool ByteCodeGenerator::IsES6DestructuringEnabled() const
@@ -670,7 +665,7 @@ bool ByteCodeGenerator::IsInNonDebugMode() const
 
 bool ByteCodeGenerator::ShouldTrackDebuggerMetadata() const
 {
-    return (IsInDebugMode() && !IsLanguageServiceEnabled())
+    return (IsInDebugMode())
 #if DBG_DUMP
         || (Js::Configuration::Global.flags.Debug)
 #endif
@@ -1223,9 +1218,6 @@ FuncInfo * ByteCodeGenerator::StartBindFunction(const wchar_t *name, int nameLen
         {
             scriptContext->optimizationOverrides.SetSideEffects(Js::SideEffects_Accessor);
         }
-#if LANGUAGE_SERVICE
-        parseableFunctionInfo->SetIsClassMember(pnode->sxFnc.IsClassMember() != 0);
-#endif
     }
 
     Scope *funcExprScope = null;
@@ -1313,11 +1305,6 @@ FuncInfo * ByteCodeGenerator::StartBindFunction(const wchar_t *name, int nameLen
         paramScope->SetIsObject();
         paramScope->SetMustInstantiate(true);
         paramScope->SetCapturesAll(true);
-    }
-    else if (BinaryFeatureControl::LanguageService() && IsLanguageServiceEnabled())
-    {
-        paramScope->SetIsObject();
-        bodyScope->SetIsObject();
     }
 
     PushFuncInfo(L"StartBindFunction", funcInfo);
@@ -1704,10 +1691,6 @@ void ByteCodeGenerator::Generate( __in ParseNode *pnode, ulong grfscr, __in Byte
 
 #ifdef PROFILE_EXEC
     scriptContext->ProfileBegin(Js::ByteCodePhase);
-#endif
-#ifdef LANGUAGE_SERVICE
-    if (scriptContext->authoringData && scriptContext->authoringData->Callbacks())
-        scriptContext->authoringData->Callbacks()->GeneratingByteCode();
 #endif
     JS_ETW(EventWriteJSCRIPT_BYTECODEGEN_START(scriptContext,0));
 
@@ -2154,7 +2137,7 @@ FuncInfo* PreVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerato
         Output::Print(L"function start %s\n",funcName);
     }
 
-    Assert(byteCodeGenerator->IsLanguageServiceEnabled() || pnode->sxFnc.funcInfo == nullptr);
+    Assert(pnode->sxFnc.funcInfo == nullptr);
 
     FuncInfo* funcInfo = pnode->sxFnc.funcInfo = byteCodeGenerator->StartBindFunction(funcName, funcNameLength, &funcExprWithName, pnode);
     funcInfo->byteCodeFunction->SetIsNamedFunctionExpression(funcExprWithName);
@@ -2186,7 +2169,7 @@ FuncInfo* PreVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerato
     {
         // The parser identified that there is a way to reference the built-in 'arguments' variable from this function. So, we
         // need to determine whether we need to create the variable or not. We need to create the variable iff:
-        if (pnode->sxFnc.CallsEval() || byteCodeGenerator->IsLanguageServiceEnabled())
+        if (pnode->sxFnc.CallsEval())
         {
             // 1. eval is called.
             // 2. when the debugging or language service is enabled, since user can seek arguments during breakpoint.
@@ -2974,8 +2957,7 @@ void PreVisitBlock(ParseNode *pnodeBlock, ByteCodeGenerator *byteCodeGenerator)
         // Consider optimizing this.
         scope->SetCanMerge(false);
 
-        if (isGlobalEvalBlockScope ||
-            (BinaryFeatureControl::LanguageService() && byteCodeGenerator->IsLanguageServiceEnabled()))
+        if (isGlobalEvalBlockScope)
         {
             scope->SetIsObject();
         }
@@ -3711,10 +3693,8 @@ void Bind(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
             {
                 // This is a named load, not just a reference, so if it's a nested function note that all
                 // the nested scopes escape.
-                Assert(byteCodeGenerator->IsLanguageServiceEnabled() ||
-                       !sym->GetDecl() || (pnode->sxPid.symRef && *pnode->sxPid.symRef));
-                Assert(byteCodeGenerator->IsLanguageServiceEnabled() ||
-                       !sym->GetDecl() || ((*pnode->sxPid.symRef)->GetDecl() == sym->GetDecl()));
+                Assert(!sym->GetDecl() || (pnode->sxPid.symRef && *pnode->sxPid.symRef));
+                Assert(!sym->GetDecl() || ((*pnode->sxPid.symRef)->GetDecl() == sym->GetDecl()));
 
                 pnode->sxPid.sym = sym;
                 if (sym->GetSymbolType() == STFunction &&
@@ -4462,7 +4442,7 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
 #if DBG
                     if (!sym->GetIsCatch())
                     {
-                        Assert(BinaryFeatureControl::LanguageService() || funcInfo->bodyScope != sym->GetScope() || !byteCodeGenerator->GetScriptContext()->GetConfig()->IsBlockScopeEnabled());  // catch cannot be at function scope and let and var at function scope is redeclaration error
+                        Assert(funcInfo->bodyScope != sym->GetScope() || !byteCodeGenerator->GetScriptContext()->GetConfig()->IsBlockScopeEnabled());  // catch cannot be at function scope and let and var at function scope is redeclaration error
                     }
 #endif                    
                     auto symName = sym->GetName();
@@ -4471,7 +4451,7 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
                     {
                         sym = funcInfo->paramScope->FindLocalSymbol(symName);
                     }
-                    Assert(BinaryFeatureControl::LanguageService() || (sym && !sym->GetIsCatch() && !sym->GetIsBlockVar()));
+                    Assert((sym && !sym->GetIsCatch() && !sym->GetIsBlockVar()));
                 }
                 // Don't give the declared var a register if it's in a closure, because the closure slot
                 // is its true "home". (Need to check "is global" again as the sym may have changed above.)

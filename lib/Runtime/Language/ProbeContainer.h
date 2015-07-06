@@ -54,7 +54,7 @@ namespace Js
         JsUtil::List<DWORD_PTR, ArenaAllocator> *registeredFuncContextList;
         JsUtil::List<const Js::PropertyRecord*> *pinnedPropertyRecords;
 
-        template <bool maySkipStack> void UpdateFramePointers(bool fMatchWithCurrentScriptContext);
+        void UpdateFramePointers(bool fMatchWithCurrentScriptContext);
         bool InitializeLocation(InterpreterHaltState* pHaltState, bool fMatchWithCurrentScriptContext = true);
         void DestroyLocation();
 

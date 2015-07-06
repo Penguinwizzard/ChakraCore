@@ -1307,9 +1307,6 @@ StoreCommon:
             }
             else if (op == OpCode::DeleteRootFld)
             {
-#ifndef LANGUAGE_SERVICE
-                AssertMsg(false, "Should have been a parse error to delete a object-less name in strict mode");
-#endif
                 // We will reach here when in the languauge service mode, since in that mode we have skipped that error.
                 op = OpCode::DeleteRootFldStrict;
             }
@@ -2358,32 +2355,6 @@ StoreCommon:
                 m_functionWrite->RecordStatementMap(pCurrentStatement);
             }
         }
-    }
-
-    void ByteCodeWriter::RecordNodeLoad(ParseNode* node)
-    {
-#if LANGUAGE_SERVICE
-        ScriptContext *scriptContext = m_functionWrite->GetScriptContext();
-        if (node && scriptContext->authoringData && ((LoadData *)scriptContext->authoringData)->dataType == LOAD_DATA_TYPE)
-        {
-            LoadData *loadData = (LoadData *)scriptContext->authoringData;
-            if (loadData->node == node)
-            {
-                loadData->loadLocation = m_byteCodeData.GetCurrentOffset();
-                loadData->loadBody = m_functionWrite;
-
-                // if the expression is a knopDot expression often the value of the left is loaded in a register but
-                // the value of evaluated DOT is not for performance reasons (e.g. for calls) so this is treated as a special
-                // case.
-                RegSlot reg = node->location;
-                if (reg == Js::Constants::NoRegister && node->nop == knopDot)
-                    reg = node->sxBin.pnode1->location;
-
-                loadData->reg = reg;
-                scriptContext->authoringData = NULL;
-            }
-        }
-#endif
     }
 
     // Pushes a new debugger scope onto the stack.  This information is used when determining

@@ -471,11 +471,4 @@
 #define PROFILE_DICTIONARY 0
 #endif
 
-// Software write barrier is disabled for the language service
-// on 64 bit builds. 64-bit write-barriers reserve several gigabytes
-// of contiguous address space for the write barrier card table
-// which could be a problem is jscript9 is loaded after the process
-// address space is significantly fragmented.
-#if !defined(LANGUAGE_SERVICE) || !defined(_M_X64_OR_ARM64)
 #define RECYCLER_WRITE_BARRIER
-#endif

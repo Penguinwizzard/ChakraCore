@@ -234,18 +234,6 @@ namespace Js
         ScriptFunction *original;
         bool isDelayFunctionInfo;
 
-        // Notify that langauge service that deferred parsing is complete and the
-        // deferred parsed function is now executing.
-        static void NotifyAuthoringExecuting(JavascriptFunction* function)
-        {
-            if (BinaryFeatureControl::LanguageService())
-            {
-                auto scriptContext = function->GetScriptContext();
-                if (scriptContext->authoringData && scriptContext->authoringData->Callbacks())
-                    scriptContext->authoringData->Callbacks()->Executing();
-            }
-        }
-
     public:
         CopyOnWriteScriptFunction(DynamicType *type, ScriptFunction *original, ScriptContext *scriptContext) : CopyOnWriteScriptFunctionBase(type, original, scriptContext), original(original), isDelayFunctionInfo(false) { }
 
@@ -327,7 +315,6 @@ namespace Js
                 FunctionBody * body = function->GetFunctionBody();
                 auto entryPoint = body->GetDirectEntryPoint(body->GetDefaultEntryPointInfo());
                 Assert(entryPoint != CopyOnWriteDeferredParsingThunk);
-                NotifyAuthoringExecuting(function);
                 return entryPoint;
             }
             else

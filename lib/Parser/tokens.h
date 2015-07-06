@@ -27,9 +27,5 @@ enum tokens
     tkStrCon,    // string literal
     tkRegExp,    // regular expression literal
 
-#ifdef LANGUAGE_SERVICE
-    tkExternalSourceStart,
-    tkExternalSourceEnd,
-#endif
     tkLim
 };

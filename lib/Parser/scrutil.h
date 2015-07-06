@@ -806,44 +806,39 @@ enum
     fscrMapQuote                        = 1 << 4,   // map single quote to double quote
     fscrDynamicCode                     = 1 << 5,   // The code is being generated dynamically (eval, new Function, etc.)
     fscrSyntaxColor                     = 1 << 6,   // used by the scanner for syntax coloring
-    fscrStmtCompletion                  = 1 << 7,   // parse for statement completion
-    fscrNoImplicitHandlers              = 1 << 8,   // same as Opt NoConnect at start of block
+    fscrNoImplicitHandlers              = 1 << 7,   // same as Opt NoConnect at start of block
 
     // hack to prevent a copy needed to strip off trailing html comments
     // - modifies the behavior of fscrHtmlComments
-    fscrDoNotHandleTrailingHtmlComments = 1 << 9, 
+    fscrDoNotHandleTrailingHtmlComments = 1 << 8, 
 
 #if DEBUG
-    fscrEnforceJSON                     = 1 << 10,  // used together with fscrReturnExpression 
+    fscrEnforceJSON                     = 1 << 9,  // used together with fscrReturnExpression 
     // enforces JSON semantics in the parsing.
 #endif
 
-    fscrEval                            = 1 << 11,  // this expression has eval semantics (i.e., run in caller's context 
-    fscrEvalCode                        = 1 << 12,  // this is an eval expression
-    fscrGlobalCode                      = 1 << 13,  // this is a global script
-    fscrDeferFncParse                   = 1 << 14,  // parser: defer creation of AST's for non-global code
-    fscrDeferredFncExpression           = 1 << 15,  // the function decl node we deferred is an expression,
+    fscrEval                            = 1 << 10,  // this expression has eval semantics (i.e., run in caller's context 
+    fscrEvalCode                        = 1 << 11,  // this is an eval expression
+    fscrGlobalCode                      = 1 << 12,  // this is a global script
+    fscrDeferFncParse                   = 1 << 13,  // parser: defer creation of AST's for non-global code
+    fscrDeferredFncExpression           = 1 << 14,  // the function decl node we deferred is an expression,
                                                     // i.e., not a declaration statement
-    fscrDeferredFnc                     = 1 << 16,  // the function we are parsing is deferred
-    fscrNoPreJit                        = 1 << 17,  // ignore prejit global flag
-#if ERROR_RECOVERY
-    fscrFunctionHeaderOnly              = 1 << 18,  // parse only the function header, not the body of the function
-#endif
-    fscrAllowFunctionProxy              = 1 << 19,  // Allow creation of function proxies instead of function bodies
-    fscrIsLibraryCode                   = 1 << 20,  // Current code is engine library code written in Javascript
-    fscrNoDeferParse                    = 1 << 21,  // Do not defer parsing
-    fscrIsNativeCode                    = 1 << 22,  // We are either serializing or deserializing native code
+    fscrDeferredFnc                     = 1 << 15,  // the function we are parsing is deferred
+    fscrNoPreJit                        = 1 << 16,  // ignore prejit global flag
+    fscrAllowFunctionProxy              = 1 << 17,  // Allow creation of function proxies instead of function bodies
+    fscrIsLibraryCode                   = 1 << 18,  // Current code is engine library code written in Javascript
+    fscrNoDeferParse                    = 1 << 19,  // Do not defer parsing
+    fscrIsNativeCode                    = 1 << 20,  // We are either serializing or deserializing native code
 #ifdef IR_VIEWER
-    fscrIrDumpEnable                    = 1 << 23,  // Allow parseIR to generate an IR dump
+    fscrIrDumpEnable                    = 1 << 21,  // Allow parseIR to generate an IR dump
 #endif /* IRVIEWER */
 
     // Throw a ReferenceError when the global 'this' is used (possibly in a lambda),
     // for debugger when broken in a lambda that doesn't capture 'this'
-    fscrDebuggerErrorOnGlobalThis       = 1 << 24,
+    fscrDebuggerErrorOnGlobalThis       = 1 << 22,
     
-    fscrDeferredClassMemberFnc          = 1 << 25,
-
-    fscrConsoleScopeEval                = 1 << 26,  //  The eval string is console eval or debugEval, used to have top level
+    fscrDeferredClassMemberFnc          = 1 << 23,
+    fscrConsoleScopeEval                = 1 << 24,  //  The eval string is console eval or debugEval, used to have top level
                                                     //  let/const in global scope instaed of eval scope so that they can be preserved across console inputs
-    fscrAll                             = (1 << 27) - 1
+    fscrAll                             = (1 << 25) - 1
 };

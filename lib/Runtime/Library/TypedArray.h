@@ -231,8 +231,6 @@ namespace Js
                 TypeName* typedBuffer = (TypeName*)buffer;
                 return JavascriptNumber::ToVar(typedBuffer[index], GetScriptContext());
             }
-            if (BinaryFeatureControl::LanguageService())
-                return GetScriptContext()->GetMissingItemResult(this, index);
             return GetLibrary()->GetUndefined();
         }
 
@@ -249,8 +247,6 @@ namespace Js
                 TypeName* typedBuffer = (TypeName*)buffer;
                 return JavascriptNumber::ToVarWithCheck(typedBuffer[index], GetScriptContext());
             }
-            if (BinaryFeatureControl::LanguageService())
-                return GetScriptContext()->GetMissingItemResult(this, index);
             return GetLibrary()->GetUndefined();
         }
 

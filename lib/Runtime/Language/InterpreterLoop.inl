@@ -17,30 +17,6 @@
 #else
 #define DEBUGGING_LOOP 0
 #endif
-#ifdef PROVIDE_LANGUAGESERVICE
-#define LANGUAGESERVICE_LOOP 1
-#define SETTARGET(r) target = r
-#define SETTARGET_Small(r) target = (RegSlot)r
-#define SETTARGET_Medium SETTARGET_Small
-#define SETTARGET_Large SETTARGET
-#define STARTCALL(a) popCount = a
-#define DONECALL() popCount = 0
-#define UNSETTARGET() target = Js::Constants::NoRegister
-#define INTERPRETERLOOP_PARAMETERS_FORMAL RegSlot& target, ArgSlot& popCount
-// The language service skips exceptions at the instruction level. These
-// language service specific definitions record the register that is supposed to
-// be initialized by these instructions and therefore which register should be
-// initialized when an exception is thrown.
-#define PROCESS_CUSTOM_LS(name, func, layout) \
-    case INTERPRETER_OPCODE::name: \
-    { \
-        AssertMsg(OpCodeUtil::GetOpCodeLayout(INTERPRETER_OPCODE::name) == OpLayoutType::layout, "Validate correct layout"); \
-        func##_LS(m_reader.layout(ip), target); \
-        break; \
-    }
-
-#else
-#define LANGUAGESERVICE_LOOP 0
 #define SETTARGET(r)
 #define SETTARGET_Small(r)
 #define SETTARGET_Medium(r)
@@ -50,7 +26,6 @@
 #define UNSETTARGET()
 #define INTERPRETERLOOP_PARAMETERS_FORMAL
 #define PROCESS_CUSTOM_LS(name, func, layout) PROCESS_CUSTOM(name, func, layout)
-#endif
 #ifdef PROVIDE_INTERPRETERPROFILE
 #define INTERPRETERPROFILE 1
 #define PROFILEDOP(prof, unprof) prof
@@ -111,7 +86,7 @@ Var Js::InterpreterStackFrame::INTERPRETERLOOPNAME(INTERPRETERLOOP_PARAMETERS_FO
         }
 #endif
         
-#if DEBUGGING_LOOP || LANGUAGESERVICE_LOOP
+#if DEBUGGING_LOOP
         if (this->scriptContext->GetThreadContext()->Diagnostics->stepController.IsActive() &&
             this->scriptContext->GetThreadContext()->Diagnostics->stepController.IsStepComplete_AllowingFalsePositives(this))
         {
@@ -139,12 +114,7 @@ Var Js::InterpreterStackFrame::INTERPRETERLOOPNAME(INTERPRETERLOOP_PARAMETERS_FO
             if (!InterpreterStackFrame::IsBrLong(op, ip) && !this->m_functionBody->GetUtf8SourceInfo()->GetIsLibraryCode())
             {
                 uint prevOffset = m_reader.GetCurrentOffset();
-#if LANGUAGESERVICE_LOOP
-                // Laungauge service does not handle ASYNCBREAK very well.
-                InterpreterHaltState haltState(STOP_BREAKPOINT, m_functionBody);
-#else
                 InterpreterHaltState haltState(STOP_ASYNCBREAK, m_functionBody);
-#endif
                 this->scriptContext->diagProbesContainer.DispatchAsyncBreak(&haltState);
                 if (prevOffset != m_reader.GetCurrentOffset())
                 {
@@ -203,11 +173,7 @@ SWAP_BP_FOR_OPCODE:
 
             case INTERPRETER_OPCODE::ExtendedOpcodePrefix:
             {
-                ip = [this
-#if LANGUAGESERVICE_LOOP
-                    , &target, &popCount
-#endif
-                ](const byte * ip) -> const byte *
+                ip = [this](const byte * ip) -> const byte *
                 {
                     INTERPRETER_OPCODE op = (INTERPRETER_OPCODE)(ReadByteOp<INTERPRETER_OPCODE>(ip
 #if DBG_DUMP
@@ -241,11 +207,7 @@ SWAP_BP_FOR_OPCODE:
             case INTERPRETER_OPCODE::MediumLayoutPrefix:
             {
                 Var yieldValue = nullptr;
-                ip = [this, &yieldValue
-#if LANGUAGESERVICE_LOOP
-                    , &target, &popCount
-#endif
-                ](const byte * ip) -> const byte *
+                ip = [this, &yieldValue](const byte * ip) -> const byte *
                 {
                     INTERPRETER_OPCODE op = ReadByteOp<INTERPRETER_OPCODE>(ip);
                     switch (op)
@@ -283,11 +245,7 @@ SWAP_BP_FOR_OPCODE:
             case INTERPRETER_OPCODE::ExtendedMediumLayoutPrefix:
             {
 #ifndef INTERPRETER_ASMJS  // Asmjs doesn't have any extended opcodes for now, remove that case
-                ip = [this
-#if LANGUAGESERVICE_LOOP
-                    , &target, &popCount
-#endif
-                ](const byte * ip) -> const byte *
+                ip = [this](const byte * ip) -> const byte *
                 {
                     INTERPRETER_OPCODE op = (INTERPRETER_OPCODE)(ReadByteOp<INTERPRETER_OPCODE>(ip
 #if DBG_DUMP
@@ -321,11 +279,7 @@ SWAP_BP_FOR_OPCODE:
             {
                 Var yieldValue = nullptr;
 
-                ip = [this, &yieldValue
-#if LANGUAGESERVICE_LOOP
-                    , &target, &popCount
-#endif
-                ](const byte * ip) -> const byte *
+                ip = [this, &yieldValue](const byte * ip) -> const byte *
                 {
                     INTERPRETER_OPCODE op = ReadByteOp<INTERPRETER_OPCODE>(ip);
                     switch (op)
@@ -363,11 +317,7 @@ SWAP_BP_FOR_OPCODE:
             case INTERPRETER_OPCODE::ExtendedLargeLayoutPrefix:
             {
 #ifndef INTERPRETER_ASMJS  // Asmjs doesn't have any extended opcodes for now, remove that case
-                ip = [this
-#if LANGUAGESERVICE_LOOP
-                    , &target, &popCount
-#endif
-                ](const byte * ip) -> const byte *
+                ip = [this](const byte * ip) -> const byte *
                 {
                     INTERPRETER_OPCODE op = (INTERPRETER_OPCODE)(ReadByteOp<INTERPRETER_OPCODE>(ip
 #if DBG_DUMP
@@ -412,7 +362,7 @@ SWAP_BP_FOR_OPCODE:
                 // - Functions should contain an "OpCode::Ret" instruction to organize an
                 //   orderly return.
                 //
-#if DEBUGGING_LOOP || LANGUAGESERVICE_LOOP
+#if DEBUGGING_LOOP
                 // However, during debugging an exception can be skipped which causes the
                 // statement that caused to exception to be skipped. If this statement is
                 // the statement that contains the OpCode::Ret then the EndOfBlock will
@@ -425,7 +375,7 @@ SWAP_BP_FOR_OPCODE:
 
             case INTERPRETER_OPCODE::Break:
             {
-#if DEBUGGING_LOOP || LANGUAGESERVICE_LOOP
+#if DEBUGGING_LOOP
                 // The reader has already advanced the IP:
                 if (this->m_functionBody->ProbeAtOffset(m_reader.GetCurrentOffset(), &op))
                 {
@@ -481,7 +431,6 @@ SWAP_BP_FOR_OPCODE:
 #pragma optimize("", on)
 #endif
 #undef DEBUGGING_LOOP
-#undef LANGUAGESERVICE_LOOP
 #undef SETTARGET
 #undef SETTARGET_Small
 #undef SETTARGET_Medium

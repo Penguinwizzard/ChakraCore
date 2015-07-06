@@ -85,7 +85,6 @@ namespace Js
         this->pProbeManager->stepController.EndRecordingCall(returnValue, function);
     }
 
-    template <bool maySkipStack>
     void ProbeContainer::UpdateFramePointers(bool fMatchWithCurrentScriptContext)
     {
         ArenaAllocator* pDiagArena = pProbeManager->GetDiagnosticArena()->Arena();
@@ -137,12 +136,6 @@ namespace Js
                 if (frm)
                 {
                     tempFramePointers->Push(frm);
-
-                    if (maySkipStack && BinaryFeatureControl::LanguageService())
-                    {
-                        // Optimization: early escape since AuthoringProbe used by the Language Service doesn't need the call stack info.
-                        return true;
-                    }
                 }
             }
 
@@ -162,7 +155,7 @@ namespace Js
         if (framePointers == nullptr || this->debugSessionNumber < pProbeManager->GetDebugSessionNumber())
         {
             // This is debugger code, no need to check Language Service optimization
-            UpdateFramePointers</*maySkipStack*/false>(/*fMatchWithCurrentScriptContext*/true);
+            UpdateFramePointers(/*fMatchWithCurrentScriptContext*/true);
             this->debugSessionNumber = pProbeManager->GetDebugSessionNumber();
         }
 
@@ -177,7 +170,7 @@ namespace Js
 
         ArenaAllocator* pDiagArena = pProbeManager->GetDiagnosticArena()->Arena();
 
-        UpdateFramePointers</*maySkipStack*/true>(fMatchWithCurrentScriptContext);
+        UpdateFramePointers(fMatchWithCurrentScriptContext);
         pHaltState->framePointers = framePointers;
         pHaltState->stringBuilder = Anew(pDiagArena, StringBuilder<ArenaAllocator>, pDiagArena);
 
@@ -339,10 +332,7 @@ namespace Js
             if (pHaltState->IsValid())
             {
 #if DBG
-                if (!BinaryFeatureControl::LanguageService())
-                {
-                    pHaltState->GetFunction()->MustBeInDebugMode();
-                }
+                pHaltState->GetFunction()->MustBeInDebugMode();
 #endif
 
                 // an inline breakpoint is being dispatched deactivate other stopping controllers
@@ -386,13 +376,10 @@ namespace Js
                 pHaltState, pHaltState->IsValid(), pHaltState->topFrame && pHaltState->topFrame->IsInterpreterFrame());
 
             // The bytecodereader should be available at this point, but because of possibility of garbled frame, we shouldn't hit AV
-            if (pHaltState->IsValid() && (BinaryFeatureControl::LanguageService() || pHaltState->GetFunction()->GetScriptContext()->IsInDebugMode()))
+            if (pHaltState->IsValid() && pHaltState->GetFunction()->GetScriptContext()->IsInDebugMode())
             {
 #if DBG
-                if (!BinaryFeatureControl::LanguageService())
-                {
-                    pHaltState->GetFunction()->MustBeInDebugMode();
-                }
+                pHaltState->GetFunction()->MustBeInDebugMode();
 #endif
 
                 // For interpreter frames, change the current location pointer of bytecode block, as it might be pointing to the next statement on the body.
@@ -947,12 +934,6 @@ namespace Js
         if (isThrowInternal)
         {
             return false;
-        }
-
-        if (BinaryFeatureControl::LanguageService())
-        {
-            // Always allow exceptions in the Language Service mode
-            return true;
         }
 
         bool fIsFirstChance = false;

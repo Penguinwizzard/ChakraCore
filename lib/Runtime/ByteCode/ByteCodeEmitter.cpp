@@ -17,12 +17,6 @@ bool EmitUseBeforeDeclaration(ParseNode *pnode, ByteCodeGenerator *byteCodeGener
 void EmitUseBeforeDeclarationRuntimeError(ByteCodeGenerator *byteCodeGenerator, Js::RegSlot location, bool fLoadUndef = true);
 void VisitClearTmpRegs(ParseNode * pnode, ByteCodeGenerator * byteCodeGenerator, FuncInfo * funcInfo);
 
-#ifdef LANGUAGE_SERVICE
-#define RECORD_LOAD(p) byteCodeGenerator->Writer()->RecordNodeLoad(p)
-#else
-#define RECORD_LOAD(p)
-#endif
-
 bool CallTargetIsArray(ParseNode *pnode)
 {
     return pnode->nop == knopName && pnode->sxPid.PropertyIdFromNameNode() == Js::PropertyIds::Array;
@@ -217,13 +211,13 @@ bool IsExpressionStatement(ParseNode* stmt, const Js::ScriptContext *const scrip
 static const Js::OpCode nopToOp[knopLim] =
 {
 #define OP(x) Br##x##_A
-#define PTNODE(nop,sn,pc,nk,grfnop,json,apnk) Js::OpCode::pc,
+#define PTNODE(nop,sn,pc,nk,grfnop,json) Js::OpCode::pc,
 #include "ptlist.h"
 };
 static const Js::OpCode nopToCMOp[knopLim] =
 {
 #define OP(x) Cm##x##_A
-#define PTNODE(nop,sn,pc,nk,grfnop,json,apnk) Js::OpCode::pc,
+#define PTNODE(nop,sn,pc,nk,grfnop,json) Js::OpCode::pc,
 #include "ptlist.h"
 };
 
@@ -1265,11 +1259,11 @@ void ByteCodeGenerator::DefineUserVars(FuncInfo *funcInfo)
 #if DBG
                 if (!sym->GetIsCatch())
                 {
-                    Assert(BinaryFeatureControl::LanguageService() || funcInfo->bodyScope != sym->GetScope() || !this->scriptContext->GetConfig()->IsBlockScopeEnabled());  // catch cannot be at function scope and let and var at function scope is redeclaration error
+                    Assert(funcInfo->bodyScope != sym->GetScope() || !this->scriptContext->GetConfig()->IsBlockScopeEnabled());  // catch cannot be at function scope and let and var at function scope is redeclaration error
                 }
 #endif                
                 sym = funcInfo->bodyScope->FindLocalSymbol(sym->GetName());
-                Assert(BinaryFeatureControl::LanguageService() || sym && !sym->GetIsCatch() && !sym->GetIsBlockVar());
+                Assert(sym && !sym->GetIsCatch() && !sym->GetIsBlockVar());
             }
 
             if (sym->GetSymbolType() == STVariable)
@@ -7381,7 +7375,6 @@ void EmitBinary(Js::OpCode opcode, ParseNode * pnode, ByteCodeGenerator *byteCod
         pnode->sxBin.pnode1->location,
         pnode->sxBin.pnode2->location);
     byteCodeGenerator->EndStatement(pnode);
-    RECORD_LOAD(pnode);
 }
 
 
@@ -7452,7 +7445,6 @@ void EmitConcat3(ParseNode * pnode, ParseNode * pnode1, ParseNode * pnode2, Pars
         pnode2->location,
         pnode3->location);
     byteCodeGenerator->EndStatement(pnode);
-    RECORD_LOAD(pnode);
 }
 
 void EmitNewConcatStrMulti(ParseNode * pnode, uint8 count, ParseNode * pnode1, ParseNode * pnode2,
@@ -7919,31 +7911,25 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         break;
     case knopInt:
         // currently, these are loaded at the top
-        RECORD_LOAD(pnode);
         break;
         //PTNODE(knopFlt        , "flt const"    ,None    ,Flt  ,fnopLeaf|fnopConst)
     case knopFlt:
         // currently, these are loaded at the top
-        RECORD_LOAD(pnode);
         break;
         //PTNODE(knopStr        , "str const"    ,None    ,Pid  ,fnopLeaf|fnopConst)
     case knopStr:
         // TODO: protocol for combining string constants
-        RECORD_LOAD(pnode);
         break;
         //PTNODE(knopRegExp     , "reg expr"    ,None    ,Pid  ,fnopLeaf|fnopConst)
     case knopRegExp:
         funcInfo->GetParsedFunctionBody()->SetLiteralRegex(pnode->sxPid.regexPatternIndex, pnode->sxPid.regexPattern);
         byteCodeGenerator->Writer()->Reg1Unsigned1(Js::OpCode::NewRegEx, funcInfo->AcquireLoc(pnode), pnode->sxPid.regexPatternIndex);
-        RECORD_LOAD(pnode);
         break;          //PTNODE(knopThis       , "this"        ,None    ,None ,fnopLeaf)
     case knopThis:
         // enregistered
-        RECORD_LOAD(pnode);
         break;
         //PTNODE(knopNewTarget      , "new.target"       ,None    , None        , fnopLeaf)
     case knopNewTarget:
-        RECORD_LOAD(pnode);
         break;
         //PTNODE(knopSuper      , "super"       ,None    , None        , fnopLeaf)
     case knopSuper:
@@ -7977,22 +7963,18 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
                 byteCodeGenerator->Writer()->MarkLabel(skipLabel);
             }
         }
-        RECORD_LOAD(pnode);
         break;
         //PTNODE(knopNull       , "null"        ,Null    ,None ,fnopLeaf)
     case knopNull:
         // enregistered
-        RECORD_LOAD(pnode);
         break;
         //PTNODE(knopFalse      , "false"        ,False   ,None ,fnopLeaf)
     case knopFalse:      
         // enregistered
-        RECORD_LOAD(pnode);
         break;
         //PTNODE(knopTrue       , "true"        ,True    ,None ,fnopLeaf)
     case knopTrue:
         // enregistered
-        RECORD_LOAD(pnode);
         break;
         //PTNODE(knopEmpty      , "empty"        ,Empty   ,None ,fnopLeaf)
     case knopEmpty:
@@ -8004,7 +7986,6 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         funcInfo->ReleaseLoc(pnode->sxUni.pnode1);
         byteCodeGenerator->Writer()->Reg2(
             Js::OpCode::Not_A, funcInfo->AcquireLoc(pnode), pnode->sxUni.pnode1->location);
-        RECORD_LOAD(pnode);
         break;
         //PTNODE(knopNeg        , "unary -"    ,Neg     ,Uni  ,fnopUni)
     case knopNeg:
@@ -8013,7 +7994,6 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         funcInfo->AcquireLoc(pnode);
         byteCodeGenerator->Writer()->Reg2(
             Js::OpCode::Neg_A, pnode->location, pnode->sxUni.pnode1->location);
-        RECORD_LOAD(pnode);
         break;
         //PTNODE(knopPos        , "unary +"    ,Pos     ,Uni  ,fnopUni)
     case knopPos:
@@ -8021,7 +8001,6 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         funcInfo->ReleaseLoc(pnode->sxUni.pnode1);
         byteCodeGenerator->Writer()->Reg2(
             Js::OpCode::Conv_Num, funcInfo->AcquireLoc(pnode), pnode->sxUni.pnode1->location);
-        RECORD_LOAD(pnode);
         break;
         //PTNODE(knopLogNot     , "!"            ,LogNot  ,Uni  ,fnopUni)
     case knopLogNot:
@@ -8046,7 +8025,6 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
                 byteCodeGenerator->Writer()->MarkLabel(doneLabel);
             }
             funcInfo->ReleaseLoc(pnode->sxUni.pnode1);
-            RECORD_LOAD(pnode);
             break;
         }
         //PTNODE(knopEllipsis     , "..."       ,Spread  ,Uni         , fnopUni)
@@ -8095,7 +8073,7 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
             }
             funcInfo->ReleaseLoad(pnode->sxUni.pnode1);
             byteCodeGenerator->EndStatement(pnode);
-            RECORD_LOAD(pnode);
+
             break;
         }
         else
@@ -8153,7 +8131,6 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         }
 
         byteCodeGenerator->EndStatement(pnode);
-        RECORD_LOAD(pnode);
         break;
                      }
                      //PTNODE(knopTypeof     , "typeof"    ,None    ,Uni  ,fnopUni)
@@ -8197,7 +8174,6 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
                     Js::OpCode::Typeof, funcInfo->AcquireLoc(pnode), pnodeOpnd->location);
                 break;
             }
-            RECORD_LOAD(pnode);
             break;
         }
         //PTNODE(knopVoid       , "void"        ,Void    ,Uni  ,fnopUni)
@@ -8209,13 +8185,11 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         //PTNODE(knopArray      , "arr cnst"    ,None    ,Uni  ,fnopUni)
     case knopArray:
         EmitArrayLiteral(pnode,byteCodeGenerator,funcInfo);
-        RECORD_LOAD(pnode);
         break;
         //PTNODE(knopObject     , "obj cnst"    ,None    ,Uni  ,fnopUni)
     case knopObject: {
         funcInfo->AcquireLoc(pnode);
         EmitObjectInitializers(pnode->sxUni.pnode1,pnode->location,byteCodeGenerator,funcInfo);
-        RECORD_LOAD(pnode);
         break;
         //PTNODE(knopComputedName, "[name]"      ,None    ,Uni  ,fnopUni)
     case knopComputedName:
@@ -8254,7 +8228,6 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
             byteCodeGenerator->Writer()->Reg3C(nopToOp[pnode->nop], pnode->location, pnode->sxBin.pnode1->location,
                 pnode->sxBin.pnode2->location, cacheId);
             byteCodeGenerator->EndStatement(pnode);
-            RECORD_LOAD(pnode);
         }
         break;
     case knopEq:
@@ -8273,7 +8246,6 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         byteCodeGenerator->Writer()->Reg3(nopToCMOp[pnode->nop],pnode->location,pnode->sxBin.pnode1->location,
             pnode->sxBin.pnode2->location);
         byteCodeGenerator->EndStatement(pnode);
-        RECORD_LOAD(pnode);
         break;
     case knopNew:
         {
@@ -8376,8 +8348,6 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
             funcInfo->EndRecordingOutArgs(argCount);
 
             byteCodeGenerator->EndStatement(pnode);
-            RECORD_LOAD(pnode);
-
             break;
         }
     case knopDelete:
@@ -8445,7 +8415,6 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
             EmitCall(pnode, Js::Constants::NoRegister, byteCodeGenerator, funcInfo, fReturnValue, true);
         }
         byteCodeGenerator->EndStatement(pnode);
-        RECORD_LOAD(pnode);
         break;
     case knopIndex:
         byteCodeGenerator->StartStatement(pnode);
@@ -8456,7 +8425,6 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         byteCodeGenerator->Writer()->Element(
             Js::OpCode::LdElemI_A,pnode->location,pnode->sxBin.pnode1->location, pnode->sxBin.pnode2->location);
         byteCodeGenerator->EndStatement(pnode);
-        RECORD_LOAD(pnode);
         break;
          // this is MemberExpression as rvalue
     case knopDot:
@@ -8488,7 +8456,6 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
                     }
                 }
             }
-            RECORD_LOAD(pnode);
             break;
         }
 
@@ -8517,14 +8484,12 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
                 funcInfo->ReleaseReference(lhs);
             }
             byteCodeGenerator->EndStatement(pnode);
-            RECORD_LOAD(pnode);
             break;
         }
 
     case knopName:
         funcInfo->AcquireLoc(pnode);
         byteCodeGenerator->EmitPropLoad(pnode->location, pnode->sxPid.sym, pnode->sxPid.pid, funcInfo);
-        RECORD_LOAD(pnode);
         break;
 
     case knopComma:
@@ -8580,7 +8545,6 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
             {
                 byteCodeGenerator->Writer()->Reg2(Js::OpCode::Ld_A, pnode->location, pnode->sxBin.pnode2->location);
             }
-            RECORD_LOAD(pnode);
         }
         break;
 
@@ -8605,7 +8569,6 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
             byteCodeGenerator->Writer()->Reg2(Js::OpCode::Ld_A, pnode->location, pnode->sxBin.pnode2->location);
             funcInfo->ReleaseLoc(pnode->sxBin.pnode2);
             byteCodeGenerator->Writer()->MarkLabel(doneLabel);
-            RECORD_LOAD(pnode);
             break;
         }
         //PTNODE(knopLogAnd     , "&&"        ,None    ,Bin  ,fnopBin)
@@ -8626,7 +8589,6 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
             byteCodeGenerator->Writer()->Reg2(Js::OpCode::Ld_A, pnode->location, pnode->sxBin.pnode2->location);
             funcInfo->ReleaseLoc(pnode->sxBin.pnode2);
             byteCodeGenerator->Writer()->MarkLabel(doneLabel);
-            RECORD_LOAD(pnode);
             break;
         }
         //PTNODE(knopQmark      , "?"            ,None    ,Tri  ,fnopBin)
@@ -8659,7 +8621,7 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
             funcInfo->ReleaseLoc(pnode->sxTri.pnode3);
 
             byteCodeGenerator->Writer()->MarkLabel(skipLabel);
-            RECORD_LOAD(pnode);
+
             break;
         }
     case knopAsgAdd:
@@ -8703,7 +8665,6 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         funcInfo->ReleaseLoad(pnode->sxBin.pnode1);
 
         byteCodeGenerator->EndStatement(pnode);
-        RECORD_LOAD(pnode);
         break;
         // General nodes.
 
@@ -8814,7 +8775,6 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         if (!pnode->sxFnc.IsDeclaration())
         {
             byteCodeGenerator->DefineOneFunctionHandleBoxedFD(pnode, funcInfo, false);
-            RECORD_LOAD(pnode);
         }
         break;
         //PTNODE(knopEndCode    , "<endcode>"    ,None    ,None ,fnopNone)

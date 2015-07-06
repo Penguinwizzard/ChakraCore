@@ -211,7 +211,6 @@ void Scanner<EncodingPolicy>::SetText(EncodedCharPtr pszSrc, size_t offset, size
     m_fHtmlComments = (grfscr & fscrHtmlComments) != 0;
     m_fHadEol = FALSE;
     m_fSyntaxColor = (grfscr & fscrSyntaxColor) != 0;
-    m_fStmtCompletion = 0 != (grfscr & fscrStmtCompletion);
     m_DeferredParseFlags = ScanFlagNone;
 }
 
@@ -1026,12 +1025,7 @@ tokens Scanner<EncodingPolicy>::ScanRegExpConstant(ArenaAllocator* alloc)
             return ScanError(m_currentCharacter + e.encodedPos, tkRegExp);
 
         m_currentCharacter += e.encodedPos;
-#if LANGUAGE_SERVICE
-        // Use the language service version to avoid reseting the token span to 0
-        Error(e.error, false);
-#else
         Error(e.error);
-#endif
         return m_ptoken->SetRegex(Js::RegexHelper::CompileDynamic(m_scriptContext, L"", 0, L"", 0, false), m_parser);
     }
 
@@ -1238,13 +1232,7 @@ LEcmaLineBreak:
                 *pp = p - 1;
                 return ScanError(p - 1, tkStrCon);
             }
-#if LANGUAGE_SERVICE
-            // Use the language service version to avoid reseting the token span to 0
-            Error(ERRnoStrEnd, false);
-#else
             Error(ERRnoStrEnd);
-#endif
-
             p--;
             goto LBreak;
 
@@ -1288,12 +1276,7 @@ LEcmaLineBreak:
                     *pp = p - 1;
                     return ScanError(p - 1, tkStrCon);
                 }
-#if LANGUAGE_SERVICE
-                // Use the language service version to avoid reseting the token span to 0
-                Error(ERRnoStrEnd, false);
-#else
                 Error(ERRnoStrEnd);
-#endif
                 p--;
 
                 goto LBreak;
@@ -1580,13 +1563,7 @@ ReturnScanError:
                         *pp = p - 1;
                         return ScanError(p - 1, tkStrCon);
                     }
-#if LANGUAGE_SERVICE
-                    // Use the language service version to avoid reseting the token span to 0
-                    Error(errorType, false);
-                    p--;
-#else
                     Error(errorType);
-#endif
                 }
                 else if (stringTemplateMode)
                 {
@@ -1660,10 +1637,6 @@ tokens Scanner<EncodingPolicy>::SkipComment(EncodedCharPtr *pp, /* out */ bool* 
     Assert(containTypeDef != nullptr);
     EncodedCharPtr p = *pp;
     *containTypeDef = false;
-#ifdef LANGUAGE_SERVICE
-    EncodedCharPtr start = p;
-    short type_def_parsing_state = 0;
-#endif
     EncodedCharPtr last = m_pchLast;
     OLECHAR ch;
 
@@ -1680,12 +1653,6 @@ tokens Scanner<EncodingPolicy>::SkipComment(EncodedCharPtr *pp, /* out */ bool* 
                     m_scanState = ScanStateNormal;
                     return tkComment;
                 }
-#ifdef LANGUAGE_SERVICE
-                if (m_parser->ExpectingExternalSource() && AorW<EncodedChar>::Test(" BEGIN EXTERNAL SOURCE *", L" BEGIN EXTERNAL SOURCE *", start, p))
-                    return tkExternalSourceStart;
-                if (m_parser->ExpectingExternalSource() && AorW<EncodedChar>::Test(" END EXTERNAL SOURCE *", L" END EXTERNAL SOURCE *", start, p))
-                    return tkExternalSourceEnd;
-#endif
                 return tkNone;
             }
             break;
@@ -1713,17 +1680,7 @@ LLineBreak:
                     m_scanState = ScanStateMultiLineComment;
                     return tkComment;
                 }
-#ifdef LANGUAGE_SERVICE
-                Error(ERRnoCmtEnd, false);
-                if(m_parser->GetLanguageServiceExtension())
-                {
-                    // Since the comment has no closing tag, disable completion for the whole comment region, including the lim position.
-                    // When closing tag exists, completion at lim position is enabled.
-                    m_parser->GetLanguageServiceExtension()->SetCompletionRange(IchMinTok(), IchLimTok(), LanguageServiceExtension::CompletionRangeMode::Others);
-                }
-#else
                 Error(ERRnoCmtEnd);
-#endif
                 return tkNone;
             }
             break;
@@ -1739,25 +1696,6 @@ LLineBreak:
                     goto LEcmaLineBreak;
                 }
             }
-#ifdef LANGUAGE_SERVICE
-            else
-            {
-                OLECHAR comment_character = (OLECHAR)ch;
-                switch (type_def_parsing_state)
-                {
-                case 0: if (comment_character == L'@') { type_def_parsing_state = 1;                         } else { type_def_parsing_state = 0; } break;
-                case 1: if (comment_character == L't') { type_def_parsing_state = 2;                         } else { type_def_parsing_state = 0; } break;
-                case 2: if (comment_character == L'y') { type_def_parsing_state = 3;                         } else { type_def_parsing_state = 0; } break;
-                case 3: if (comment_character == L'p') { type_def_parsing_state = 4;                         } else { type_def_parsing_state = 0; } break;
-                case 4: if (comment_character == L'e') { type_def_parsing_state = 5;                         } else { type_def_parsing_state = 0; } break;
-                case 5: if (comment_character == L'd') { type_def_parsing_state = 6;                         } else { type_def_parsing_state = 0; } break;
-                case 6: if (comment_character == L'e') { type_def_parsing_state = 7;                         } else { type_def_parsing_state = 0; } break;
-                case 7: if (comment_character == L'f') { type_def_parsing_state = 8; *containTypeDef = true; } else { type_def_parsing_state = 0; } break;
-                case 8: /* no-op */ break;
-                default: AssertMsg(false, "That's is just impossible - type_def_parsing_state must be [0 - 8]");
-                }
-            }
-#endif // LANGUAGE_SERVICE
             break;
         }
     }

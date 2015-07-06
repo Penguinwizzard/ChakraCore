@@ -568,7 +568,7 @@ namespace Js
             if (!hasCaller && !this->scriptContext->IsDiagnosticsScriptContext())
             {
 #ifdef CHECK_STACKWALK_EXCEPTION
-                if (!ignoreStackWalkException && !BinaryFeatureControl::LanguageService())
+                if (!ignoreStackWalkException)
                 {
                     AssertMsg(false, "walk pass no caller frame");
                 }

@@ -56,13 +56,6 @@ void LargeHeapBlock_Metadata_Corrupted(
 __inline LONG FatalExceptionFilter(
     __in LPEXCEPTION_POINTERS lpep)
 {
-    if (BinaryFeatureControl::LanguageService())
-    {
-        fwprintf(stderr, L"FATAL ERROR: jshost.exe failed due to exception code %x\n", lpep->ExceptionRecord->ExceptionCode);
-        fflush(stderr);
-        Js::Throw::GenerateDumpAndTerminateProcess(lpep);
-    }
-
     LONG rc = UnhandledExceptionFilter(lpep);
 
     // re == EXCEPTION_EXECUTE_HANDLER means there is no debugger attached, let's terminate

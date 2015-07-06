@@ -387,7 +387,6 @@ namespace Js
 
     ProbeManager::ProbeManager(ThreadContext* _pThreadContext)
         : pCurrentInterpreterLocation(NULL),
-          languageServiceEnabled(false),
           secondaryCurrentSourceContext(0),
           debugSessionNumber(0),
           pThreadContext(_pThreadContext),

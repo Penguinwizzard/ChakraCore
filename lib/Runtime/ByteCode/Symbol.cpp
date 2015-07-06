@@ -233,7 +233,7 @@ Symbol * Symbol::GetFuncScopeVarSym() const
         // We couldn't find the sym in the body scope, try finding it in the parameter scope.
         fncScopeSym = parentFuncInfo->GetParamScope()->FindLocalSymbol(this->GetName());
     }
-    Assert(BinaryFeatureControl::LanguageService() || fncScopeSym);
+    Assert(fncScopeSym);
     // Parser should have added a fake var decl node for block scoped functions in non-strict mode
     // IsBlockVar() indicates a user let declared variable at function scope which
     // shadows the function's var binding, thus only emit the var binding init if

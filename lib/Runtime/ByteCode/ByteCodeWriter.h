@@ -398,20 +398,6 @@ namespace Js
 #endif
     };
 
-#if LANGUAGE_SERVICE
-    #define LOAD_DATA_TYPE 1
-
-    struct LoadData: public AuthoringData
-    {
-        int dataType;
-        ParseNode *node;
-        int loadLocation;
-        Js::FunctionBody *loadBody;
-        Js::RegSlot reg;
-
-        LoadData(AuthoringCallbacks *callbacks, ParseNode *node): AuthoringData(callbacks), node(node), dataType(LOAD_DATA_TYPE), loadLocation(0), loadBody(nullptr), reg(Js::Constants::NoRegister) { }
-    };
-#endif
 }
 
 namespace JsUtil

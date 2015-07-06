@@ -47,7 +47,6 @@ namespace Js
 
         if (this == threadContext->GetPendingSOErrorObject())
         {
-            AssertMsg(!BinaryFeatureControl::LanguageService(), "Should never clone StackOverflow in the language service.");
             AssertMsg(this->thrownObject != NULL, "Here we should have allocated a thrown object");
 
             exceptionObject = RecyclerNew(scriptContext->GetRecycler(),
@@ -81,10 +80,8 @@ namespace Js
                     JavascriptError* jsErrorObject = JavascriptError::FromVar(rethrownObject);
                     if ( jsErrorObject->GetScriptContext() != requestingScriptContext )
                     {
-                        Assert(BinaryFeatureControl::LanguageService() || requestingScriptContext->GetHostScriptContext());
-                        HRESULT hr = BinaryFeatureControl::LanguageService() && !requestingScriptContext->GetHostScriptContext() ?
-                            E_FAIL :
-                            requestingScriptContext->GetHostScriptContext()->CheckCrossDomainScriptContext(jsErrorObject->GetScriptContext());
+                        Assert(requestingScriptContext->GetHostScriptContext());
+                        HRESULT hr = requestingScriptContext->GetHostScriptContext()->CheckCrossDomainScriptContext(jsErrorObject->GetScriptContext());
 
                         if ( S_OK != hr )
                         {
@@ -100,10 +97,8 @@ namespace Js
                     {
                         if (((RecyclableObject*)rethrownObject)->GetScriptContext() != requestingScriptContext)
                         {
-                            Assert(BinaryFeatureControl::LanguageService() || requestingScriptContext->GetHostScriptContext());
-                            HRESULT hrSecurityCheck = BinaryFeatureControl::LanguageService() && !requestingScriptContext->GetHostScriptContext() ?
-                                E_FAIL : 
-                                requestingScriptContext->GetHostScriptContext()->CheckCrossDomainScriptContext(((RecyclableObject*)rethrownObject)->GetScriptContext());
+                            Assert(requestingScriptContext->GetHostScriptContext());
+                            HRESULT hrSecurityCheck = requestingScriptContext->GetHostScriptContext()->CheckCrossDomainScriptContext(((RecyclableObject*)rethrownObject)->GetScriptContext());
 
                             if (hrSecurityCheck != S_OK)
                             {

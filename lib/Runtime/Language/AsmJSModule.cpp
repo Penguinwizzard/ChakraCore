@@ -575,8 +575,6 @@ namespace Js
             return Fail(fncNode, L"Function should always have parse nodes");
         }
 
-        Assert(!BinaryFeatureControl::LanguageService());
-
         // Check if this function requires a bigger Ast
         UpdateMaxAstSize(fncNode->sxFnc.astSize);
 
@@ -775,7 +773,7 @@ namespace Js
             while (varNode && varNode->nop != knopEndCode)
             {
                 ParseNode * decl;
-                if (varNode->nop == knopVarDeclList || varNode->nop == knopList)
+                if (varNode->nop == knopList)
                 {
                     decl = ParserWrapper::GetBinaryLeft(varNode);
                     varNode = ParserWrapper::GetBinaryRight(varNode);

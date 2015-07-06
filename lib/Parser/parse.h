@@ -36,70 +36,6 @@ enum ParseType
 enum ScopeType;
 enum SymbolType : byte;
 
-#if ERROR_RECOVERY
-// Error recovery sets
-enum ErrorRecoverySet
-{
-    ersNone      = 0u,
-    ersComma     = 1u <<  0, // tkComma
-    ersSColon    = 1u <<  1, // tkSColon
-    ersAsg       = 1u <<  2, // tkAsg
-    ersBinOp     = 1u <<  3, // tkLsh, tkRsh, tkRs2, tkLe, tkGe, tkINSTANCEOF, tkEQ, tkNE, tkEqv, tkNEqv, tkLogAnd, tkLogOr, tkAsgMul, tkAsgDiv
-                             // tkAsgMod, tkAsgAdd, tkAsgSub, tkAsgLsh, tkAsgRsh, tkAsgRs2, tkAsgAnd, tkAsgXor, tkAsgOr, tkQMark, tkStar, tkDiv,
-                             // tkPct, tkGT, tkLT, tkAnd, tkXor, tkOr
-    ersRBrack    = 1u <<  4, // tkRBrack
-    ersRCurly    = 1u <<  5, // tkRCurly
-    ersRParen    = 1u <<  6, // tkRParen
-    ersDot       = 1u <<  7, // tkDot
-    ersColon     = 1u <<  8, // tkColon
-    ersGetSet    = 1u <<  9, // get/set
-    ersAddOp     = 1u << 10, // tkAdd, tkSub
-    ersLCurly    = 1u << 11, // tkLCurly
-    ersLParen    = 1u << 12, // tkLParen
-    ersLBrack    = 1u << 13, // tkLBrack
-    ersIn        = 1u << 15, // tkIN
-    ersSCase     = 1u << 16, // tkCASE, tkDEFAULT
-    ersElse      = 1u << 17, // tkELSE
-    ersCatch     = 1u << 18, // tkCATCH, tkFINALLY
-    ersVar       = 1u << 19, // tkVAR
-    ersStmt      = 1u << 20, // tkBREAK, tkRETURN, tkTHROW, tkDEBUGGER, tkFOR, tkSWITCH, tkDO, tkIF, tkTRY, tkWITH
-    ersWhile     = 1u << 21, // tkWHILE
-    ersID        = 1u << 22, // tkID
-    ersFunc      = 1u << 23, // tkFUNCTION
-    ersEOF       = 1u << 24, // tkEOF
-    ersDArrow    = 1u << 25, // tkDArrow
-    ersExpr      = 1u << 26, // tkTilde, tkBang, tkInc, tkDec, tkEllipsis, tkRegExp, tkVOID, tkDELETE, tkTYPEOF, tkIntCon, tkFltCon, tkStrCon
-                             // tkTHIS, tkTRUE, tkFALSE, tkNULL, tkCLASS
-
-
-    ersExprStart = ersSColon | ersAddOp | ersLCurly | ersLParen | ersLBrack | ersID |  ersFunc | ersExpr,
-    ersStmtStart = ersExprStart | ersVar | ersStmt | ersWhile,
-    ersPostfix   = ersDot | ersLParen | ersLBrack,
-};
-
-#define ERROR_RECOVERY_FORMAL ErrorRecoverySet ers
-#define ERROR_RECOVERY_FORMAL_ ErrorRecoverySet ers,
-#define _ERROR_RECOVERY_FORMAL , ErrorRecoverySet ers
-#define ERROR_RECOVERY_ACTUAL(value) ErrorRecoverySet(value)
-#define ERROR_RECOVERY_ACTUAL_(value) ErrorRecoverySet(value),
-#define _ERROR_RECOVERY_ACTUAL(value) , ErrorRecoverySet(value)
-#define SKIP(set) Skip(set)
-#else
-#define ERROR_RECOVERY_FORMAL
-#define ERROR_RECOVERY_FORMAL_
-#define _ERROR_RECOVERY_FORMAL
-#define ERROR_RECOVERY_ACTUAL(value)
-#define ERROR_RECOVERY_ACTUAL_(value)
-#define _ERROR_RECOVERY_ACTUAL(value)
-#define SKIP(set)
-#endif
-
-#if PARSENODE_EXTENSIONS
-#define _PARSENODE_EXTENSIONS_ACTUAL(value) , value
-#else
-#define _PARSENODE_EXTENSIONS_ACTUAL(value)
-#endif
-
 // Representation of a label used when no AST is being built.
 struct LabelId
 {
@@ -114,35 +50,11 @@ Parser object.
 ***************************************************************************/
 class CompileScriptException;
 class Parser;
-struct LanguageServiceExtension;
 class SourceContextInfo;
 struct BlockIdsStack;
 class Span;
 class BackgroundParser;
 struct BackgroundParseItem;
-
-class AuthoringCallbacks;
-
-class AuthoringData
-{
-private:
-    AuthoringCallbacks *callbacks;
-public:
-    AuthoringData(AuthoringCallbacks *callbacks): callbacks(callbacks) { }
-    AuthoringCallbacks *Callbacks() { return callbacks; }
-};
-
-#if LANGUAGE_SERVICE_ONLY
-    #define RUNTIME_PARSE_CALLBACK_TYPE 2
-    typedef void (*RuntimeParseCallback)(void *context, Parser *parse, LPCUTF8 pszSrc, size_t offset, size_t length, ParseNodePtr pnodeProg);
-    struct RuntimeParseCallbackData: public AuthoringData
-    {
-        int dataType;
-        /* Authoring::RuntimeParsingContext* */ void *context;
-        RuntimeParseCallback callback;
-        RuntimeParseCallbackData(AuthoringCallbacks *callbacks, void *context, RuntimeParseCallback callback): AuthoringData(callbacks), dataType(RUNTIME_PARSE_CALLBACK_TYPE), context(context), callback(callback) { }
-    };
-#endif
 
 typedef void (*ParseErrorCallback)(void *data, charcount_t position, charcount_t length, HRESULT hr);
 
@@ -216,7 +128,7 @@ class Parser
 private:
 
     template <OpCode nop> static int GetNodeSize();
-#define PTNODE(nop,sn,pc,nk,ok,json,apnk) template <> static int GetNodeSize<nop>() { return kcbPn##nk; };
+#define PTNODE(nop,sn,pc,nk,ok,json) template <> static int GetNodeSize<nop>() { return kcbPn##nk; };
 #include "ptlist.h"
 
     template <OpCode nop> static ParseNodePtr StaticAllocNode(ArenaAllocator * alloc)
@@ -263,26 +175,6 @@ public:
     void RestorePidRefForSym(Symbol *sym);
 
     HRESULT ValidateSyntax(LPCUTF8 pszSrc, size_t encodedCharCount, bool isGenerator, CompileScriptException *pse, void (Parser::*validateFunction)());
-
-#if ERROR_RECOVERY
-    BOOL HasUncertainStructure() { return m_uncertainStructure; }
-    BOOL HasSubsumedFunction() { return m_hasSubsumedFunction; };
-
-    void SetErrorCallback(ParseErrorCallback callback, void *data) { m_errorCallback = callback; m_errorCallbackData = data; }
-
-    void ReportError(HRESULT hr);
-
-    void SetCommentCallback(CommentCallback callback, void *data)
-    {
-        if (m_pscan)
-            m_pscan->SetCommentCallback(callback, data);
-        else
-        {
-            m_commentCallback = callback;
-            m_commentCallbackData = data;
-        }
-    }
-#endif
 
     // Should be called when the UTF-8 source was produced from UTF-16. This is really CESU-8 source in that it encodes surragate pairs
     // as 2 three byte sequences instead of 4 bytes as required UTF-8. It also is is loss-less converison of invalid UTF-16 sequences.
@@ -349,7 +241,6 @@ private:
     CommentCallback     m_commentCallback;
     void*               m_commentCallbackData;    
     BOOL                m_uncertainStructure;
-    BOOL                m_hasSubsumedFunction;
     bool                m_hasParallelJob;
     bool                m_doingFastScan;    
     Span                m_asgToConst;
@@ -360,10 +251,6 @@ private:
     // arena for that purpose. This list is then unregistered from the guest arena at the end of parsing/scanning.
     SList<UnifiedRegex::RegexPattern *, ArenaAllocator> m_registeredRegexPatterns;
 
-    // Should be under #if ERROR_RECOVERY, but can't change the size of Parser for LS
-    IdentPtr            m_pidError;
-    IdentPtr            m_pidDeclError;     // Used for member declarations to avoid cases of infinite recursion due to interaction with missing ident errors
-
 protected:
     Js::ScriptContext* m_scriptContext;
 
@@ -371,23 +258,15 @@ private:
     void GenerateCode(ParseNodePtr pnode, void *pvUser, long cbUser,
         LPCOLESTR pszSrc, long cchSrc, LPCOLESTR pszTitle);
 
-#if ERROR_RECOVERY
-    void Error(HRESULT hr);
-    void Error(HRESULT hr, ParseNodePtr pnode);
-    void Error(HRESULT hr, charcount_t ichMin, charcount_t ichLim);
-#else
     __declspec(noreturn) void Error(HRESULT hr);
     __declspec(noreturn) void Error(HRESULT hr, ParseNodePtr pnode);
     __declspec(noreturn) void Error(HRESULT hr, charcount_t ichMin, charcount_t ichLim);
-#endif
     __declspec(noreturn) static void OutOfMemory();
 
 
     void EnsureStackAvailable();
 
     void IdentifierExpectedError(const Token& token);
-
-    void Skip(ERROR_RECOVERY_FORMAL);
 
     bool CheckForDirective(bool* pIsUseStrict, bool* pIsUseAsm, bool* pIsOctalInString);
     bool CheckStrictModeStrPid(IdentPtr pid);
@@ -440,16 +319,6 @@ public:
         pnode->sxPid.symRef=NULL;
         return pnode;
     }
-#if ERROR_RECOVERY
-    ParseNodePtr CreateErrorNameNode()
-    {
-        ParseNodePtr pnode = CreateNameNode(m_pidError);
-        PidRefStack *ref = this->PushPidRef(m_pidError);
-        pnode->sxPid.SetSymRef(ref);
-
-        return pnode;
-    }
-#endif
     ParseNodePtr CreateBlockNode(PnodeBlockType blockType = PnodeBlockType::Regular)
     {
         ParseNodePtr pnode = CreateNode(knopBlock);
@@ -735,14 +604,12 @@ private:
         SM_DeferedParse     // StrictMode used in defered parse cases
     };
 
-    template<bool buildAST> ParseNodePtr ParseArrayLiteral(ERROR_RECOVERY_FORMAL);
+    template<bool buildAST> ParseNodePtr ParseArrayLiteral();
 
-    template<bool buildAST> ParseNodePtr ParseStatement(ERROR_RECOVERY_FORMAL_ bool isSourceElement = false, bool checkForPossibleObjectPattern = false);
+    template<bool buildAST> ParseNodePtr ParseStatement(bool isSourceElement = false, bool checkForPossibleObjectPattern = false);
     template<bool buildAST> ParseNodePtr ParseVariableDeclaration(
-        ERROR_RECOVERY_FORMAL_ tokens declarationType, charcount_t ichMin,
-#if PARSENODE_EXTENSIONS
-        charcount_t ichDeadRangeMin,
-#endif
+        tokens declarationType, 
+        charcount_t ichMin,
         BOOL fAllowIn = TRUE,
         BOOL* pfForInOk = nullptr,
         BOOL singleDefOnly = FALSE,
@@ -751,7 +618,6 @@ private:
 
     template<bool buildAST>
     void ParseStmtList(
-        ERROR_RECOVERY_FORMAL_
         ParseNodePtr *ppnodeList,
         ParseNodePtr **pppnodeLast = NULL,
         StrictModeEnvironment smEnvironment = SM_NotUsed,
@@ -770,7 +636,7 @@ private:
     template<bool buildAST> ParseNodePtr StartParseBlockHelper(PnodeBlockType blockType, Scope *scope, ParseNodePtr pnodeLabel, LabelId* pLabelId);
     void PushFuncBlockScope(ParseNodePtr pnodeBlock, ParseNodePtr **ppnodeScopeSave, ParseNodePtr **ppnodeExprScopeSave);
     void PopFuncBlockScope(ParseNodePtr *ppnodeScopeSave, ParseNodePtr *ppnodeExprScopeSave);
-    template<bool buildAST> ParseNodePtr ParseBlock(ERROR_RECOVERY_FORMAL_ ParseNodePtr pnodeLabel, LabelId* pLabelId);
+    template<bool buildAST> ParseNodePtr ParseBlock(ParseNodePtr pnodeLabel, LabelId* pLabelId);
     void FinishParseBlock(ParseNode *pnodeBlock, bool needScanRCurly = true);
     void FinishParseFncExprScope(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncExprScope);
 
@@ -783,16 +649,10 @@ private:
     void PushScope(Scope *scope);
     void PopScope(Scope *scope);
 
-    void ParseLanguageServiceContent(
-        ERROR_RECOVERY_FORMAL_
-        ParseNodePtr *ppnodeList,
-        ParseNodePtr **pppnodeLast,
-        StrictModeEnvironment smEnvironment,
-        const bool isSourceElementList = false);
-    template<bool buildAST> ParseNodePtr ParseArgList(ERROR_RECOVERY_FORMAL_ bool *pCallOfConstants, uint16 *pSpreadArgCount, uint16 * pCount);
-    template<bool buildAST> ParseNodePtr ParseArrayList(ERROR_RECOVERY_FORMAL_ bool *pArrayOfTaggedInts, bool *pArrayOfInts, bool *pArrayOfNumbers, bool *pHasMissingValues, uint *count, uint *spreadCount);
-    template<bool buildAST> ParseNodePtr ParseMemberList(ERROR_RECOVERY_FORMAL_ LPCOLESTR pNameHint, ulong *pHintLength, tokens declarationType = tkNone, SymbolType symbolType = STUnknown);
-    template<bool buildAST> ParseNodePtr ParseSuper(ERROR_RECOVERY_FORMAL_ ParseNodePtr pnode);
+    template<bool buildAST> ParseNodePtr ParseArgList(bool *pCallOfConstants, uint16 *pSpreadArgCount, uint16 * pCount);
+    template<bool buildAST> ParseNodePtr ParseArrayList(bool *pArrayOfTaggedInts, bool *pArrayOfInts, bool *pArrayOfNumbers, bool *pHasMissingValues, uint *count, uint *spreadCount);
+    template<bool buildAST> ParseNodePtr ParseMemberList(LPCOLESTR pNameHint, ulong *pHintLength, tokens declarationType = tkNone, SymbolType symbolType = STUnknown);
+    template<bool buildAST> ParseNodePtr ParseSuper(ParseNodePtr pnode);
 
     // Used to determine the type of JavaScript object member.
     // The values can be combined using bitwise OR.
@@ -811,17 +671,17 @@ private:
 
     static MemberNameToTypeMap* CreateMemberNameMap(ArenaAllocator* pAllocator);
 
-    template<bool buildAST> void ParseComputedName(ERROR_RECOVERY_FORMAL_ ParseNodePtr* ppnodeName, LPCOLESTR* ppNameHint, LPCOLESTR* ppFullNameHint = nullptr, ulong *returnLength = nullptr);
-    template<bool buildAST> ParseNodePtr ParseMemberGetSet(ERROR_RECOVERY_FORMAL_ OpCode nop, LPCOLESTR* ppNameHint);
-    template<bool buildAST> ParseNodePtr ParseFncDecl(ERROR_RECOVERY_FORMAL_ ushort flags, LPCOLESTR pNameHint = NULL, const bool isSourceElement = false, const bool needsPIDOnRCurlyScan = false, bool fUnaryOrParen = false);
-    template<bool buildAST> bool ParseFncNames(ERROR_RECOVERY_FORMAL_ ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncParent, ushort flags, ParseNodePtr **pLastNodeRef);
-    template<bool buildAST> void ParseFncFormals(ERROR_RECOVERY_FORMAL_ ParseNodePtr pnodeFnc, ushort flags);
-    template<bool buildAST> bool ParseFncDeclHelper(ERROR_RECOVERY_FORMAL_ ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncParent, LPCOLESTR pNameHint, ushort flags, bool *pHasName, bool fUnaryOrParen, bool *pNeedScanRCurly);
-    template<bool buildAST> void ParseExpressionLambdaBody(ERROR_RECOVERY_FORMAL_ ParseNodePtr pnodeFnc);
-    void FinishFncDecl(ERROR_RECOVERY_FORMAL_ ParseNodePtr pnodeFnc, LPCOLESTR pNameHint, ParseNodePtr *lastNodeRef);
-    void ParseTopLevelDeferredFunc(ERROR_RECOVERY_FORMAL_ ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncParent, LPCOLESTR pNameHint);
-    void ParseNestedDeferredFunc(ERROR_RECOVERY_FORMAL_ ParseNodePtr pnodeFnc, bool fLambda, bool *pNeedScanRCurly, bool *pStrictModeTurnedOn);
-    void CheckStrictFormalParameters(ERROR_RECOVERY_FORMAL);
+    template<bool buildAST> void ParseComputedName(ParseNodePtr* ppnodeName, LPCOLESTR* ppNameHint, LPCOLESTR* ppFullNameHint = nullptr, ulong *returnLength = nullptr);
+    template<bool buildAST> ParseNodePtr ParseMemberGetSet(OpCode nop, LPCOLESTR* ppNameHint);
+    template<bool buildAST> ParseNodePtr ParseFncDecl(ushort flags, LPCOLESTR pNameHint = NULL, const bool isSourceElement = false, const bool needsPIDOnRCurlyScan = false, bool fUnaryOrParen = false);
+    template<bool buildAST> bool ParseFncNames(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncParent, ushort flags, ParseNodePtr **pLastNodeRef);
+    template<bool buildAST> void ParseFncFormals(ParseNodePtr pnodeFnc, ushort flags);
+    template<bool buildAST> bool ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncParent, LPCOLESTR pNameHint, ushort flags, bool *pHasName, bool fUnaryOrParen, bool *pNeedScanRCurly);
+    template<bool buildAST> void ParseExpressionLambdaBody(ParseNodePtr pnodeFnc);
+    void FinishFncDecl(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint, ParseNodePtr *lastNodeRef);
+    void ParseTopLevelDeferredFunc(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncParent, LPCOLESTR pNameHint);
+    void ParseNestedDeferredFunc(ParseNodePtr pnodeFnc, bool fLambda, bool *pNeedScanRCurly, bool *pStrictModeTurnedOn);
+    void CheckStrictFormalParameters();
     void AddArgumentsNodeToVars(ParseNodePtr pnodeFnc);
 
     LPCOLESTR GetFunctionName(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint);
@@ -829,10 +689,10 @@ private:
 
     template<bool buildAST> ParseNodePtr GenerateEmptyConstructor(bool extends = false);
 
-    IdentPtr ParseClassPropertyName(ERROR_RECOVERY_FORMAL_ IdentPtr * hint);
-    template<bool buildAST> ParseNodePtr ParseClassDecl(ERROR_RECOVERY_FORMAL_ BOOL isDeclaration, LPCOLESTR pNameHint, ulong *pHintLength);
+    IdentPtr ParseClassPropertyName(IdentPtr * hint);
+    template<bool buildAST> ParseNodePtr ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulong *pHintLength);
 
-    template<bool buildAST> ParseNodePtr ParseStringTemplateDecl(ERROR_RECOVERY_FORMAL_ ParseNodePtr pnodeTagFnc);
+    template<bool buildAST> ParseNodePtr ParseStringTemplateDecl(ParseNodePtr pnodeTagFnc);
 
     // This is used in the es6 class pattern.
     LPCOLESTR ConstructFinalHintNode(IdentPtr pClassName, IdentPtr pMemberName, IdentPtr pGetSet, bool isStatic, ulong* nameLength, bool isComputedName = false, LPCOLESTR pMemberNameHint = nullptr);
@@ -850,7 +710,6 @@ private:
     void FinishFncNode(ParseNodePtr pnodeFnc);
 
     template<bool buildAST> bool ParseOptionalExpr(
-        ERROR_RECOVERY_FORMAL_
         ParseNodePtr* pnode,
         int oplMin = koplNo,
         BOOL *pfCanAssign = NULL,
@@ -859,8 +718,8 @@ private:
         LPCOLESTR pHint = NULL,
         ulong *pHintLength = nullptr,
         _Inout_opt_ IdentToken* pToken = NULL);
+
     template<bool buildAST> ParseNodePtr ParseExpr(
-        ERROR_RECOVERY_FORMAL_
         int oplMin = koplNo,
         BOOL *pfCanAssign = NULL,
         BOOL fAllowIn = TRUE,
@@ -870,17 +729,15 @@ private:
         _Inout_opt_ IdentToken* pToken = NULL,
         bool fUnaryOrParen = false);
     template<bool buildAST> ParseNodePtr ParseTerm(
-        ERROR_RECOVERY_FORMAL_
         BOOL fAllowCall = TRUE,
         LPCOLESTR pNameHint = NULL,
         ulong *pHintLength = nullptr,
         _Inout_opt_ IdentToken* pToken = NULL,
         bool fUnaryOrParen = false);
-    template<bool buildAST> ParseNodePtr ParsePostfixOperators(ERROR_RECOVERY_FORMAL_ ParseNodePtr pnode,
+    template<bool buildAST> ParseNodePtr ParsePostfixOperators(ParseNodePtr pnode,
         BOOL fAllowCall, BOOL fInNew, _Inout_ IdentToken* pToken);
 
     template<bool buildAST> ParseNodePtr ParseMetaProperty(
-        ERROR_RECOVERY_FORMAL_
         tokens metaParentKeyword,
         charcount_t ichMin);
 
@@ -918,28 +775,28 @@ private:
     bool IsES6DestructuringEnabled() const;
     bool IsPossibleObjectPatternExpression();
 
-    template<bool buildAST> ParseNodePtr ParseTryCatchFinally(ERROR_RECOVERY_FORMAL);
-    template<bool buildAST> ParseNodePtr ParseTry(ERROR_RECOVERY_FORMAL);
-    template<bool buildAST> ParseNodePtr ParseCatch(ERROR_RECOVERY_FORMAL);
-    template<bool buildAST> ParseNodePtr ParseFinally(ERROR_RECOVERY_FORMAL);
+    template<bool buildAST> ParseNodePtr ParseTryCatchFinally();
+    template<bool buildAST> ParseNodePtr ParseTry();
+    template<bool buildAST> ParseNodePtr ParseCatch();
+    template<bool buildAST> ParseNodePtr ParseFinally();
 
-    template<bool buildAST> ParseNodePtr ParseCase(ERROR_RECOVERY_FORMAL_ ParseNodePtr *ppnodeBody);
+    template<bool buildAST> ParseNodePtr ParseCase(ParseNodePtr *ppnodeBody);
     template<bool buildAST> ParseNodePtr ParseRegExp();
 
     template <bool buildAST>
-    ParseNodePtr ParseDestructuredArrayLiteral(ERROR_RECOVERY_FORMAL_ tokens declarationType, bool isDecl, bool topLevel = true);
+    ParseNodePtr ParseDestructuredArrayLiteral(tokens declarationType, bool isDecl, bool topLevel = true);
 
     template <bool buildAST>
-    ParseNodePtr ParseDestructuredObjectLiteral(ERROR_RECOVERY_FORMAL_ tokens declarationType, SymbolType symbolType, bool isDecl, bool topLevel = true);
+    ParseNodePtr ParseDestructuredObjectLiteral(tokens declarationType, SymbolType symbolType, bool isDecl, bool topLevel = true);
 
     template <bool buildAST>
-    ParseNodePtr ParseDestructuredLiteral(ERROR_RECOVERY_FORMAL_ tokens declarationType, SymbolType symbolType, bool isDecl, bool topLevel = true);
+    ParseNodePtr ParseDestructuredLiteral(tokens declarationType, SymbolType symbolType, bool isDecl, bool topLevel = true);
 
     template <bool buildAST>
-    ParseNodePtr ParseDestructuredVarDecl(ERROR_RECOVERY_FORMAL_ tokens declarationType, SymbolType symbolType, bool isDecl, bool *hasSeenRest, bool topLevel = true);
+    ParseNodePtr ParseDestructuredVarDecl(tokens declarationType, SymbolType symbolType, bool isDecl, bool *hasSeenRest, bool topLevel = true);
 
     template <bool buildAST>
-    ParseNodePtr ParseDestructuredInitializer(ERROR_RECOVERY_FORMAL_ ParseNodePtr lhsNode, bool isDecl, bool topLevel);
+    ParseNodePtr ParseDestructuredInitializer(ParseNodePtr lhsNode, bool isDecl, bool topLevel);
 
     template<bool CheckForNegativeInfinity> static bool IsNaNOrInfinityLiteral(LPCOLESTR str);
 
@@ -953,10 +810,6 @@ public:
     IdentPtr GetArgumentsPid() const { return wellKnownPropertyPids.arguments; }
     IdentPtr GetEvalPid() const { return wellKnownPropertyPids.eval; }
     IdentPtr GetTargetPid() const { return wellKnownPropertyPids.target; }
-#if ERROR_RECOVERY
-    IdentPtr GetErrorPid() const { return m_pidError; }
-    IdentPtr GetDeclErrorPid() const { return m_pidDeclError; }
-#endif
     BackgroundParseItem *GetCurrBackgroundParseItem() const { return currBackgroundParseItem; }
     void SetCurrBackgroundParseItem(BackgroundParseItem *item) { currBackgroundParseItem = item; }
 
@@ -983,71 +836,30 @@ private:
     void AddToNodeList(ParseNode ** ppnodeList, ParseNode *** pppnodeLast, ParseNode * pnodeAdd);
     void AddToNodeListEscapedUse(ParseNode ** ppnodeList, ParseNode *** pppnodeLast, ParseNode * pnodeAdd);
 
-#ifdef LANGUAGE_SERVICE
-    void AppendToNodeList(ParseNode ** ppnodeList, ParseNode *** pppnodeLast,
-        ParseNode * pnodeAdd, ParseNode ***pppnodeAddLast);
-#endif
-
-    void ChkCurTokNoScan(int tk, int wErr _ERROR_RECOVERY_FORMAL)
+    void ChkCurTokNoScan(int tk, int wErr)
     {
         if (m_token.tk != tk)
         {
             Error(wErr);
-            SKIP(ERROR_RECOVERY_ACTUAL(ers));
         }
     }
 
-    void ChkCurTok(int tk, int wErr _ERROR_RECOVERY_FORMAL)
+    void ChkCurTok(int tk, int wErr)
     {
         if (m_token.tk != tk)
         {
             Error(wErr);
-            SKIP(ERROR_RECOVERY_ACTUAL(ers));
         }
         else
         {
             m_pscan->Scan();
         }
     }
-    void ChkNxtTok(int tk, int wErr _ERROR_RECOVERY_FORMAL)
+    void ChkNxtTok(int tk, int wErr)
     {
         m_pscan->Scan();
-        ChkCurTok(tk, wErr _ERROR_RECOVERY_ACTUAL(ers));
+        ChkCurTok(tk, wErr);
     }
-#if PARSENODE_EXTENSIONS
-    void ChkCurTok(int tk, int wErr, ERROR_RECOVERY_FORMAL_ charcount_t& tkMin)
-    {
-        if (m_token.tk != tk)
-        {
-            tkMin = 0;
-            Error(wErr);
-            SKIP(ERROR_RECOVERY_ACTUAL(ers));
-        }
-        else
-        {
-            tkMin = m_pscan->IchMinTok();
-            m_pscan->Scan();
-        }
-    }
-    void ChkCurTokNoScan(int tk, int wErr, ERROR_RECOVERY_FORMAL_ charcount_t& tkMin)
-    {
-        if (m_token.tk != tk)
-        {
-            tkMin = 0;
-            Error(wErr);
-            SKIP(ERROR_RECOVERY_ACTUAL(ers));
-        }
-        else
-        {
-            tkMin = m_pscan->IchMinTok();
-        }
-    }
-    void ChkNxtTok(int tk, int wErr, ERROR_RECOVERY_FORMAL_ charcount_t& tkMin)
-    {
-        m_pscan->Scan();
-        ChkCurTok(tk, wErr, ERROR_RECOVERY_ACTUAL_(ers) tkMin);
-    }
-#endif
 
     template <class Fn>
     void VisitFunctionsInScope(ParseNodePtr pnodeScopeList, Fn fn);
@@ -1117,133 +929,4 @@ public:
     charcount_t GetSourceIchLim() { return m_sourceLim; }
     static BOOL NodeEqualsName(ParseNodePtr pnode, LPCOLESTR sz, ulong cch);
 
-private:
-#if PARSENODE_EXTENSIONS | ERROR_RECOVERY
-    inline bool LanguageServiceMode()
-    {
-        return (fscrStmtCompletion & m_grfscr) != 0;
-    }
-
-#endif
-
-    inline bool PerformingErrorRecovery()
-    {
-#if ERROR_RECOVERY
-        return LanguageServiceMode();
-#else
-        return false;
-#endif
-    }
-private:
-    LanguageServiceExtension* m_languageServiceExtension;
-public:
-    LanguageServiceExtension* GetLanguageServiceExtension();
 };
-
-#if PARSENODE_EXTENSIONS
-struct LanguageServiceExtension
-{
-public:
-    enum CompletionRangeMode : char
-    {
-        // A value reserved to mean it is not a completion dead range
-        None,
-        /*
-         * Normally we don't want to provide intellisense for object literal names because they are no good information we can use for help
-         * But if the literal is instantiated at an offset where we can make sense of the 'type' of the literal, then we should help.
-         */
-        ObjectLiteralNames,
-
-        // TODO (andrewau) consider classify the other completion dead ranges so that we document them and potentially useful for future
-        // scenarios
-        Others
-    };
-
-    struct CompletionRange
-    {
-        charcount_t ichMin;
-        charcount_t ichLim;
-        CompletionRangeMode mode;
-
-        CompletionRange(charcount_t ichMin, charcount_t ichLim, CompletionRangeMode mode)
-            : ichMin(ichMin), ichLim(ichLim), mode(mode)
-        {
-        }
-
-        bool Contains(charcount_t offset)
-        {
-            return offset >= ichMin && offset <= ichLim;
-        }
-    };
-
-private:
-    struct ExtensionData
-    {
-        uint ichAsg;
-        uint ichLCurly;
-        uint ichRCurly;
-        uint ichLParen;
-        uint ichRParen;
-        uint ichLBrack;
-        uint ichRBrack;
-        uint ichWhileMin;
-        uint ichSwitchLim;
-        uint ichIdentMin;
-        uint ichIdentLim;
-        uint nestedCount;
-        uint ichColon;
-        uint ichArgLim;
-        uint ichtkFunctionMin;
-        ExtensionData() : ichAsg(0), ichLCurly(0), ichRCurly(0), ichLParen(0), ichRParen(0), ichWhileMin(0), ichSwitchLim(0), nestedCount(0), ichColon(0), ichIdentMin(0), ichIdentLim(0), ichArgLim(0), ichtkFunctionMin(0)  { }
-    };
-
-    ArenaAllocator* m_alloc;
-    JsUtil::BaseDictionary<ParseNode*, ExtensionData*, ArenaAllocator, PrimeSizePolicy>* m_parseNodeExtensions;
-    JsUtil::BaseDictionary<ParseNode*, wchar_t*, ArenaAllocator, PrimeSizePolicy>* m_labels;
-    JsUtil::BaseDictionary<ParseNode*, int, ArenaAllocator, PrimeSizePolicy>* m_parentheses;
-    JsUtil::List<CompletionRange*, ArenaAllocator>* m_completionRanges;
-
-public:
-    void AddLabel(ParseNodePtr pnodeJmpStatment, ParseNodePtr pnodeLabel);
-    LPCWSTR GetLabel(ParseNode* node);
-
-    void IncrementParenthesesCount(ParseNodePtr node);
-    int GetParenthesesCount(ParseNode* node);
-
-    HRESULT Init(ParseNodeAllocator* nodeAllocator, PageAllocator* pageAllocator);
-    void Clear();
-
-    void SetLCurly(ParseNodePtr node, uint ichLCurly);
-    void SetRCurly(ParseNodePtr node, uint ichRCurly);
-    void SetLParen(ParseNodePtr node, uint ichLParen);
-    void SetRParen(ParseNodePtr node, uint ichRParen);
-    void SetLBrack(ParseNodePtr node, uint ichLBrack);
-    void SetRBrack(ParseNodePtr node, uint ichRBrack);
-    void SetWhileMin(ParseNodePtr node, uint ichWhileMin);
-    void SetSwitchLim(ParseNodePtr node, uint ichSwitchLim);
-    void SetNestedCount(ParseNodePtr node, uint nestedCount);
-    void SetIdentMin(ParseNodePtr node, uint ichIdentMin);
-    void SetIdentLim(ParseNodePtr node, uint ichIdentLim);
-    void SetArgLim(ParseNodePtr node, uint ichArgMin);
-    void SetTkFunctionMin(ParseNodePtr node, uint ichtkFunctionMin);
-    void SetCompletionRange(uint min, uint lim, CompletionRangeMode completionRangeMode);
-
-    uint LCurly(ParseNodePtr node);
-    uint RCurly(ParseNodePtr node);
-    uint LParen(ParseNodePtr node);
-    uint RParen(ParseNodePtr node);
-    uint LBrack(ParseNodePtr node);
-    uint RBrack(ParseNodePtr node);
-    uint WhileMin(ParseNodePtr node);
-    uint SwitchLim(ParseNodePtr node);
-    uint NestedCount(ParseNodePtr node);
-    uint IdentMin(ParseNodePtr node);
-    uint IdentLim(ParseNodePtr node);
-    uint ArgLim(ParseNodePtr node);
-    uint TkFunctionMin(ParseNodePtr node);
-
-    JsUtil::List<CompletionRange*, ArenaAllocator>* CompletionRanges();
-private:
-    ExtensionData* NodeExtension(ParseNode* node, bool createIfNotExists = false);
-};
-#endif

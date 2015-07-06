@@ -34,7 +34,6 @@ private:
     Provider(HANDLE& handle);
     ~Provider();
 
-    bool IsEnabled() const { return BinaryFeatureControl::PerfCounter(); }
     bool IsInitialized() const { return isInitialized; }
     HANDLE GetHandler() { return handle; }
 
@@ -64,16 +63,13 @@ Provider::NotificationCallBack(ULONG RequestCode, PVOID Buffer, ULONG BufferSize
 Provider::Provider(HANDLE& handle) :
     handle(handle), isInitialized(false)
 {
-    if (IsEnabled())
-    {
-        PERFLIBREQUEST callback = NULL;
+    PERFLIBREQUEST callback = NULL;
 #ifdef ENABLE_COUNTER_NOTIFICATION_CALLBACK
-        callback = &NotificationCallBack;
+    callback = &NotificationCallBack;
 #endif
-        if (ERROR_SUCCESS == CounterInitialize(callback, NULL, NULL, NULL))
-        {
-            isInitialized = true;
-        }
+    if (ERROR_SUCCESS == CounterInitialize(callback, NULL, NULL, NULL))
+    {
+        isInitialized = true;
     }
 }
 
@@ -106,7 +102,7 @@ InstanceBase::IsProviderInitialized() const
 bool
 InstanceBase::IsEnabled() const
 {
-    return provider.IsEnabled() && instanceData != NULL;
+    return instanceData != NULL;
 }
 
 static const size_t GUID_LEN = 37;   // includes null
@@ -141,10 +137,6 @@ DWORD *
 InstanceBase::InitializeSharedMemory(DWORD numCounter, HANDLE& handle)
 {
     Assert(!IsEnabled());
-    if (!provider.IsEnabled())
-    {
-        return NULL;
-    }
 
     DWORD size = numCounter * sizeof(DWORD);
     wchar_t wszObjectName[OBJECT_NAME_LEN];

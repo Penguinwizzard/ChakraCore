@@ -580,7 +580,6 @@ private:
     bool callDispose;
     bool isAllJITCodeInPreReservedRegion;
 
-    IAuthorFileContext *m_fileAuthoringContext;
     AllocationPolicyManager * allocationPolicyManager;
 
     JsUtil::ThreadService threadService;
@@ -847,9 +846,6 @@ public:
         this->maxGlobalFunctionExecTime = 0.0;
         return res;
     }
-
-    IAuthorFileContext * GetAuthoringContext() const { return m_fileAuthoringContext; }
-    void SetAuthoringContext(IAuthorFileContext *fileAuthoringContext) { m_fileAuthoringContext = fileAuthoringContext; }
 
     bool IsCFGEnabled();
     void SetValidCallTargetForCFG(PVOID callTargetAddress, bool isSetValid = true);

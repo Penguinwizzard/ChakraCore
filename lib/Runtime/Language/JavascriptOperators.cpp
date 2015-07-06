@@ -1563,7 +1563,7 @@ CommonNumber:
                 }
             }
 #endif
-            if (BinaryFeatureControl::LanguageService() && value && !requestContext->IsUndeclBlockVar(*value) && (GetMissingPropertyValue(requestContext, propertyObject, *value, propertyId) || IsUndefinedOrNullType(GetTypeId(*value))))
+            if (IsUndefinedOrNullType(GetTypeId(*value)))
             {
                 // We cannot update the inline cache as it might mask the correct undefined in an instance of the same type.
                 return TRUE; // Avoid updating the cache for properties with the value undefined if in the language service.
@@ -1593,7 +1593,7 @@ CommonNumber:
 
             // Only cache missing property lookups for non-root field loads on objects that have PathTypeHandlers, because only these objects guarantee a type change when the property is added,
             // which obviates the need to explicitly invalidate missing property inline caches.
-            if (!PHASE_OFF1(MissingPropertyCachePhase) && !isRoot && !BinaryFeatureControl::LanguageService() && DynamicObject::Is(instance) && ((DynamicObject*)instance)->GetDynamicType()->GetTypeHandler()->IsPathTypeHandler())
+            if (!PHASE_OFF1(MissingPropertyCachePhase) && !isRoot && DynamicObject::Is(instance) && ((DynamicObject*)instance)->GetDynamicType()->GetTypeHandler()->IsPathTypeHandler())
             {
 #ifdef MISSING_PROPERTY_STATS
                 if (PHASE_STATS1(MissingPropertyCachePhase))
@@ -1666,18 +1666,6 @@ CommonNumber:
         *propertyObject = object;
         if (typeId == TypeIds_Null || typeId == TypeIds_Undefined)
         {
-            if (BinaryFeatureControl::LanguageService())
-            {
-                auto trackingValue = scriptContext->GetTrackingValue(object);
-                if(trackingValue)
-                {
-                    typeId = JavascriptOperators::GetTypeId(trackingValue);
-                    if (typeId != TypeIds_Null && typeId != TypeIds_Undefined)
-                    {
-                        return GetPropertyObject(trackingValue, scriptContext, propertyObject);
-                    }
-                }
-            }
             return FALSE;
         }
         return TRUE;
@@ -1723,15 +1711,6 @@ CommonNumber:
                 JavascriptError::ThrowReferenceError(scriptContext, JSERR_UseBeforeDeclaration);
             }
             return value;
-        }
-
-        if (BinaryFeatureControl::LanguageService())
-        {
-            auto authoringData = scriptContext->authoringData;
-            if (authoringData && authoringData->Callbacks())
-            {
-                return authoringData->Callbacks()->GetMissingPropertyResult(scriptContext, RecyclableObject::FromVar(instance), propertyId, Js::TypeIds_GlobalObject);
-            }
         }
 
         const wchar_t* propertyName = scriptContext->GetPropertyName(propertyId)->GetBuffer();
@@ -1915,7 +1894,7 @@ CommonNumber:
             }
         }
 #endif
-        if (BinaryFeatureControl::LanguageService() && value && GetMissingPropertyValue(requestContext, propertyObject, *value, propertyId))
+        if (value && GetMissingPropertyValue(requestContext, propertyObject, *value, propertyId))
         {
             return TRUE; // Avoid updating the cache for properties with the value undefined if in the language service.
         }
@@ -2345,16 +2324,6 @@ CommonNumber:
             if (didSetProperty)
             {
                 bool updateCache = true;
-                if (BinaryFeatureControl::LanguageService())
-                {
-                    TypeId typeId = JavascriptOperators::GetTypeId(newValue);
-                    if (typeId == TypeIds_Null || typeId == TypeIds_Undefined)
-                    {
-                        // Get might replace null and undefined with tracking values. Avoid updating
-                        // the cache to allow GetProperty() to trigger.
-                        updateCache = false;
-                    }
-                }
 #ifdef ENABLE_MUTATION_BREAKPOINT
                 updateCache = updateCache && !doNotUpdateCacheForMbp;
 #endif
@@ -2894,8 +2863,6 @@ CommonNumber:
         {
             if (object->GetItem(instance, index, value, requestContext))
             {
-                if (BinaryFeatureControl::LanguageService() && value)
-                    GetMissingItemValue(requestContext, propertyObject, *value, index);
                 return true;
             }
             if (object->SkipsPrototype())
@@ -2914,8 +2881,6 @@ CommonNumber:
         {
             if (object->GetItemReference(instance, index, value, requestContext))
             {
-                if (BinaryFeatureControl::LanguageService() && value)
-                    GetMissingItemValue(requestContext, propertyObject, *value, index);
                 return true;
             }
             if (object->SkipsPrototype())
@@ -3504,8 +3469,7 @@ CommonNumber:
                         value = DynamicObject::FromVar(object)->GetAuxSlot(cache->dataSlotIndex);
                     }
                     Assert(!CrossSite::NeedMarshalVar(value, scriptContext));
-                    Assert((BinaryFeatureControl::LanguageService() && JavascriptOperators::IsUndefinedOrNullType(JavascriptOperators::GetTypeId(value)))
-                        || value == JavascriptOperators::GetProperty(object, propertyString->GetPropertyRecord()->GetPropertyId(), scriptContext)
+                    Assert(value == JavascriptOperators::GetProperty(object, propertyString->GetPropertyRecord()->GetPropertyId(), scriptContext)
                         || value == JavascriptOperators::GetRootProperty(object, propertyString->GetPropertyRecord()->GetPropertyId(), scriptContext));
                     return value;
                 }
@@ -4126,11 +4090,8 @@ CommonNumber:
 
         RecyclableObject* object;
         BOOL isNullOrUndefined = !GetPropertyObject(instance, scriptContext, &object);
-        if (!BinaryFeatureControl::LanguageService())
-        {
-            // In the LS mode, we may get the different object (the one which tracked undefined has given to us)
-            Assert(object == instance || TaggedNumber::Is(instance));
-        }
+
+        Assert(object == instance || TaggedNumber::Is(instance));
 
         if (isNullOrUndefined)
         {
@@ -4171,10 +4132,7 @@ CommonNumber:
             }
         }
 
-        // REVIEW: Disable property string cache for language service, as the copy on write code
-        // doesn't marshal the property string to the correct script context
-        if (!BinaryFeatureControl::LanguageService() &&
-            !TaggedInt::Is(index) && JavascriptString::Is(index) &&
+        if (!TaggedInt::Is(index) && JavascriptString::Is(index) &&
             VirtualTableInfo<Js::PropertyString>::HasVirtualTable(JavascriptString::FromVar(index))) // fastpath for PropertyStrings
         {
             propertyString = (PropertyString *)JavascriptString::FromVar(index);
@@ -5431,18 +5389,12 @@ CommonNumber:
 
         JavascriptFunction* constructor = JavascriptFunction::FromVar(function);
 
-        if (BinaryFeatureControl::LanguageService() && constructor->IsScriptFunction() && functionInfo->IsDeferred())
-        {
-            ((ScriptFunction *)constructor)->EnsureCopyFunction();
-        }
-
         if (requestContext->GetConfig()->IsES6NewTargetEnabled() && functionInfo->IsClassConstructor())
         {
             // If we are calling new on a class constructor, the contract is that we pass new.target as the 'this' argument.
             // function is the constructor on which we called new - this is new.target.
             return function;
         }
-
         ConstructorCache* constructorCache = constructor->GetConstructorCache();
         AssertMsg(constructorCache->GetScriptContext() == null || constructorCache->GetScriptContext() == constructor->GetScriptContext(),
             "Why did we populate a constructor cache with a mismatched script context?");
@@ -6171,12 +6123,6 @@ CommonNumber:
                         // This is a default value. We need to delay the initialization until we hav processed the initializer. This enforces TDZ in situations with eval().
                         frameObject->SetSlot(SetSlotArguments(propIds->elements[i], i, scriptContext->GetLibrary()->GetUndeclBlockVar()));
                     }
-                    else if (BinaryFeatureControl::LanguageService())
-                    {
-                        // In the language service, determine if there is a tracking undefined value that can be used instead
-                        // of the library undefined.
-                        frameObject->SetSlot(SetSlotArguments(propIds->elements[i], i, scriptContext->GetMissingParameterValue(funcCallee, i)));
-                    }
                     else
                     {
                         frameObject->SetSlot(SetSlotArguments(propIds->elements[i], i, undef));
@@ -6292,7 +6238,7 @@ CommonNumber:
         {
             JavascriptOperators::SetProperty(argsObj, argsObj, PropertyIds::_symbolIterator, library->GetArrayPrototypeValuesFunction(), scriptContext);
         }
-        if (funcCallee->IsStrictMode() && !BinaryFeatureControl::LanguageService())
+        if (funcCallee->IsStrictMode())
         {
             PropertyDescriptor propertyDescriptorCaller;
             JavascriptFunction* callerAccessor = library->GetThrowTypeErrorCallerAccessorFunction();
@@ -7369,10 +7315,6 @@ CommonNumber:
 #endif
 
         Type *typeWithoutProperty = object->GetType();
-        if (BinaryFeatureControl::LanguageService() && scriptContext->GetLibrary()->GetUndeclBlockVar() == newValue)
-        {
-            newValue = scriptContext->GetLibrary()->GetUndefined();
-        }
 
         // This is a hack.  Ideally the lowerer would emit a call to the right flavor of PatchInitValue, so that we can ensure that we only
         // ever initialize to NULL in the right cases.  But the backend uses the StFld opcode for initialization, and threading the different
@@ -8679,12 +8621,6 @@ CommonNumber:
     void
     JavascriptOperators::SetConcatStrMultiItem(Var concatStr, Var str, uint index, ScriptContext * scriptContext)
     {
-        if (BinaryFeatureControl::LanguageService() && !ConcatStringMulti::Is(concatStr))
-        {
-            // This is possible in the LS, as NewConcatStrMulti could fail and we eat exception.
-            return;
-        }
-
         ConcatStringMulti::FromVar(concatStr)->SetItem(index,
             JavascriptConversion::ToPrimitiveString(str, scriptContext));
     }
@@ -8692,12 +8628,6 @@ CommonNumber:
     void
     JavascriptOperators::SetConcatStrMultiItem2(Var concatStr, Var str1, Var str2, uint index, ScriptContext * scriptContext)
     {
-        if (BinaryFeatureControl::LanguageService() && !ConcatStringMulti::Is(concatStr))
-        {
-            // This is possible in the LS, as NewConcatStrMulti could fail and we eat exception.
-            return;
-        }
-
         ConcatStringMulti * cs = ConcatStringMulti::FromVar(concatStr);
         cs->SetItem(index, JavascriptConversion::ToPrimitiveString(str1, scriptContext));
         cs->SetItem(index + 1, JavascriptConversion::ToPrimitiveString(str2, scriptContext));

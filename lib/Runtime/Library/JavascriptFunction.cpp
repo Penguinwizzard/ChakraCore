@@ -162,9 +162,6 @@ namespace Js
             }
         }
 
-        if (BinaryFeatureControl::LanguageService() && scriptContext->authoringData && scriptContext->authoringData->Callbacks())
-            scriptContext->authoringData->Callbacks()->Executing();
-
         JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_FUNCTION(pfuncScript, EtwTrace::GetFunctionId(pfuncScript->GetFunctionProxy())));
 
         if (isGenerator)

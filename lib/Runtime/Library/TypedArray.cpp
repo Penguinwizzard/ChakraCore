@@ -898,9 +898,11 @@ namespace Js
         result->BYTES_PER_ELEMENT = BYTES_PER_ELEMENT;
         result->byteOffset = byteOffset;
         result->length = length;
+        /* TODO - delete this function based on code coverage data. 
         // We don't support copy on write of ArrayBuffer's outside of LanguageService. 
         // For lanugage service, we don't support parent of ArrayBuffer tracking.
         Assert(BinaryFeatureControl::LanguageService());
+        */
         result->SetArrayBuffer((ArrayBuffer *)scriptContext->CopyOnWrite(GetArrayBuffer()));
         result->buffer = result->GetArrayBuffer()->GetBuffer() + result->byteOffset;
 

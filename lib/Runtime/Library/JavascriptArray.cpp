@@ -7903,29 +7903,7 @@ Case0:
         {            
             if (FALSE == JavascriptConversion::ToObject(args[0], scriptContext, &dynamicObject))
             {
-                if (BinaryFeatureControl::LanguageService())
-                {
-                    // In Language Service case, handle tracked undefined case to allow forEach on tracked undefined objects
-                    bool isThisNullOrUndefined = true;
-                    auto thisObj = Js::RecyclableObject::FromVar(args[0]);
-                    if(thisObj)
-                    {
-                        auto unwrapped = scriptContext->GetTrackingValue(thisObj);
-                        if(unwrapped && JavascriptConversion::ToObject(unwrapped, scriptContext, &dynamicObject))
-                        {
-                            isThisNullOrUndefined = false;
-                        }
-                    }
-
-                    if(isThisNullOrUndefined)
-                    {
-                        JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NullOrUndefined, L"Array.prototype.forEach");
-                    }
-                }
-                else
-                {
-                    JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NullOrUndefined, L"Array.prototype.forEach");
-                }
+                JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NullOrUndefined, L"Array.prototype.forEach");
             }
 
             if (JavascriptArray::Is(dynamicObject) && scriptContext == JavascriptArray::FromVar(dynamicObject)->GetScriptContext())
@@ -10388,7 +10366,7 @@ Case0:
                         {
                             // the type error thrown in OP_LdCustomSpreadIteratorList is absorbed by jsls, calling the code here aswell to throw a type error
                             // this assert should confirm this is only a jsls issue.
-                            Assert(scriptContext->GetThreadContext()->Diagnostics->languageServiceEnabled);
+                            Assert(false);
                             JavascriptError::ThrowTypeError(scriptContext, JSERR_InvalidSpreadArgument);  
                         }
 

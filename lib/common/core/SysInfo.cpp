@@ -282,9 +282,8 @@ bool
 AutoSystemInfo::IsCFGEnabled()
 {
 #if defined(_CONTROL_FLOW_GUARD)
-    return (IsWinThresholdOrLater() || PHASE_ON1(Js::CFGPhase)) 
-        && (Data.deviceInfoRetrived && (Data.DeviceFamily != 0x00000004 /*DEVICEFAMILYINFOENUM_MOBILE*/))
-        && !BinaryFeatureControl::LanguageService();
+    return (IsWinThresholdOrLater() || PHASE_ON1(Js::CFGPhase))
+        && (Data.deviceInfoRetrived && (Data.DeviceFamily != 0x00000004 /*DEVICEFAMILYINFOENUM_MOBILE*/));
 #else
     return false;
 #endif

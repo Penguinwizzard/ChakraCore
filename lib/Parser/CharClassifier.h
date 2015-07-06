@@ -31,10 +31,6 @@ enum CharTypeFlags : uint
     HexCharGroup = IdChar | IdLeadChar | HexChar,
     DecimalCharGroup = IdChar | DecimalChar,
 
-#ifdef LANGUAGE_SERVICE
-    NameSpaceCharGroup = IdChar | IdLeadChar | SpaceChar | DecimalChar,
-#endif
-
 };
 
 enum CharTypes
@@ -218,10 +214,6 @@ namespace Js
         {
             return FBigChar(ch) ? IsIdContinueFast<true>(ch) : IsIdContinueFast<false>(ch);
         }
-
-#ifdef LANGUAGE_SERVICE
-        BOOL IsNameSpaceChar(codepoint_t codePoint) const;
-#endif
 
         const size_t SkipBiDirectionalChars(_In_z_bytecount_(2 * length) LPCOLESTR psz, _In_ size_t startIndex, _In_ size_t length) const
         {

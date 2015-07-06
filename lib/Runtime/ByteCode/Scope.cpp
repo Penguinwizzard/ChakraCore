@@ -124,18 +124,6 @@ void Scope::MergeParamAndBodyScopes(ParseNode *pnodeScope, ByteCodeGenerator * b
             return;
         }
 
-#ifdef LANGUAGE_SERVICE
-        // The language service can have duplicate syms that are not 'arguments' in the symbol table.
-        // This can happen if we have error nodes in both parameter and body scope. In this case, the
-        // body scoped error node needs to win.
-        if (paramScope->symbolTable != nullptr && paramScope->symbolTable->ContainsKey(sym->GetName()))
-        {
-            Assert(sym->GetDecl()->sxVar.pid == byteCodeGenerator->GetParser()->GetErrorPid()
-                || sym->GetDecl()->sxVar.pid == byteCodeGenerator->GetParser()->GetDeclErrorPid());
-            paramScope->symbolTable->RemoveKey(sym->GetName());
-        }
-#endif
-
         Assert(paramScope->m_symList == nullptr || paramScope->FindLocalSymbol(sym->GetName()) == nullptr);
         paramScope->AddNewSymbol(sym);
     });

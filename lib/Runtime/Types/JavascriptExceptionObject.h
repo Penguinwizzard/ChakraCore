@@ -22,8 +22,8 @@ namespace Js {
         
         JavascriptExceptionObject(Var object, ScriptContext * scriptContext, JavascriptExceptionContext* exceptionContextIn, bool isPendingExceptionObject = false) : 
             thrownObject(object), isPendingExceptionObject(isPendingExceptionObject),
-            scriptContext(scriptContext), isDebuggerSkip(false), byteCodeOffsetAfterDebuggerSkip(Constants::InvalidByteCodeOffset), hasDebuggerLogged(false), canLanguageServiceSkip(false),
-            isFirstChance(false), isExceptionCaughtInNonUserCode(false), ignoreAdvanceToNextStatement(false), isForceCatchException(false), hostWrapperCreateFunc(null), isGeneratorReturnException(false)
+            scriptContext(scriptContext), isDebuggerSkip(false), byteCodeOffsetAfterDebuggerSkip(Constants::InvalidByteCodeOffset), hasDebuggerLogged(false),
+            isFirstChance(false), isExceptionCaughtInNonUserCode(false), ignoreAdvanceToNextStatement(false), hostWrapperCreateFunc(null), isGeneratorReturnException(false)
         { 
             if (exceptionContextIn)
             {
@@ -71,16 +71,6 @@ namespace Js {
         bool IsDebuggerSkip()
         {
             return isDebuggerSkip;
-        }
-
-        void SetForceCatchException(bool force)
-        {
-            isForceCatchException = force;
-        }
-
-        bool IsForceCatchException()
-        {
-            return isForceCatchException;
         }
 
         int GetByteCodeOffsetAfterDebuggerSkip()
@@ -152,16 +142,6 @@ namespace Js {
             exceptionContext.SetStackTrace(NULL);
         }
 
-        bool CanLanguageServiceSkip()
-        {
-            return this->canLanguageServiceSkip;
-        }
-
-        void SetCanLanguageServiceSkip(bool can)
-        {
-            this->canLanguageServiceSkip = can;
-        }
-
         bool IsPendingExceptionObject() const { return isPendingExceptionObject; }
 
         void SetIgnoreAdvanceToNextStatement(bool is)
@@ -194,12 +174,10 @@ namespace Js {
         bool     hasDebuggerLogged;
         bool     isFirstChance;      // Mentions whether the current exception is a handled exception or not
         bool     isExceptionCaughtInNonUserCode; // Mentions if in the caller chain the exception will be handled by the non-user code.
-        bool     canLanguageServiceSkip; // Only used by the language service to control skipping of stack overflows.
         bool     isPendingExceptionObject;
         bool     ignoreAdvanceToNextStatement;  // This will be set when user had setnext while sitting on the exception
                                                 // So the exception eating logic shouldn't try and advance to next statement again.
         bool     isGeneratorReturnException;
-        bool     isForceCatchException;         // Used only in Language service mode
         HostWrapperCreateFuncType hostWrapperCreateFunc;
 
         JavascriptExceptionContext exceptionContext;
@@ -217,7 +195,6 @@ namespace Js {
             : JavascriptExceptionObject(object, scriptContext, nullptr)
         {
             this->SetDebuggerSkip(true);
-            this->CanLanguageServiceSkip();
             this->SetIgnoreAdvanceToNextStatement(true);
             this->SetGeneratorReturnException(true);
         }

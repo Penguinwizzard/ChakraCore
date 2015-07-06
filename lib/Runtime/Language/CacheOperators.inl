@@ -46,7 +46,6 @@ namespace Js
                         requestContext,
                         operationInfo))
                 {
-                    if (BinaryFeatureControl::LanguageService() && !inlineCache->HasType_Flags(object->GetType()) && JavascriptOperators::IsUndefinedOrNullType(JavascriptOperators::GetTypeId(*propertyValue))) return false;
                     return true;
                 }
                 if(ReturnOperationInfo)
@@ -85,7 +84,6 @@ namespace Js
                             inlineCache
                         ))
                 {
-                    if (BinaryFeatureControl::LanguageService() && !polymorphicInlineCache->HasType_Flags(object->GetType()) && JavascriptOperators::IsUndefinedOrNullType(JavascriptOperators::GetTypeId(*propertyValue))) return false;
                     return true;
                 }
             }

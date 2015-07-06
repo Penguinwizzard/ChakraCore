@@ -278,7 +278,6 @@ namespace Js
 
         __declspec(noinline) Var ProcessThunk();
         __declspec(noinline) Var DebugProcessThunk();
-        __declspec(noinline) Var LanguageServiceProcessThunk();
 
         void AlignMemoryForAsmJs();
 
@@ -291,8 +290,6 @@ namespace Js
 
         Var ProcessWithDebugging();
         Var DebugProcess();
-        Var ProcessForLanguageService(RegSlot& target, ArgSlot& popCount);
-        Var LanguageServiceProcess();
 
         // This will be called for reseting outs when resume from break on error happened
         void ResetOut();
@@ -521,9 +518,8 @@ namespace Js
         Var NewScObject_Helper(Var target, ArgSlot ArgCount, const Js::AuxArray<uint32> *spreadIndices = nullptr);
         Var ProfiledNewScObject_Helper(Var target, ArgSlot ArgCount, ProfileId profileId, InlineCacheIndex inlineCacheIndex, const Js::AuxArray<uint32> *spreadIndices = nullptr);
         template <class T, bool Profiled, bool ICIndex> Var OP_NewScObjectNoArg_Impl(const unaligned T *playout, InlineCacheIndex inlineCacheIndex = Js::Constants::NoInlineCacheIndex);
-        template<bool LanguageService> void OP_NewScObject_A_Impl(const unaligned OpLayoutAuxiliary * playout, RegSlot *target = null);
-        void OP_NewScObject_A(const unaligned OpLayoutAuxiliary * playout) { return OP_NewScObject_A_Impl<false>(playout); }
-        void OP_NewScObject_A_LS(const unaligned OpLayoutAuxiliary * playout, RegSlot& target) { return OP_NewScObject_A_Impl<true>(playout, &target); }
+        void OP_NewScObject_A_Impl(const unaligned OpLayoutAuxiliary * playout, RegSlot *target = null);
+        void OP_NewScObject_A(const unaligned OpLayoutAuxiliary * playout) { return OP_NewScObject_A_Impl(playout); }
         void OP_InitCachedScope(const unaligned OpLayoutReg2Aux * playout);
         void OP_InitLetCachedScope(const unaligned OpLayoutReg2Aux * playout);
         void OP_InitCachedFuncs(const unaligned OpLayoutReg2Aux * playout);
@@ -574,8 +570,6 @@ namespace Js
         template <class T> void OP_InitComputedProperty(const unaligned T * playout);
         template <class T> void OP_InitProto(const unaligned T * playout);
 
-        inline void DisableLanguageServiceExceptionSkipping();
-        inline bool LanguageServiceExceptionSkippingEnabled();
         uint CallLoopBody(JavascriptMethod address);
         uint CallAsmJsLoopBody(JavascriptMethod address);
         void DoInterruptProbe();

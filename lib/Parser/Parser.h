@@ -12,16 +12,6 @@
 // #define USE_POPCNT_INSTRUCTION 1
 // #define USE_BITCOUNTS 1
 
-#ifdef LANGUAGE_SERVICE
-#define ERROR_RECOVERY 1
-#define PARSENODE_EXTENSIONS 1
-#define LANGUAGE_SERVICE_ONLY 1
-#else
-#define ERROR_RECOVERY 0
-#define PARSENODE_EXTENSIONS 0
-#define LANGUAGE_SERVICE_ONLY 0
-#endif
-
 #include "activdbg.h"
 #include "activdbg100.h"
 #include "activaut.h"

@@ -79,8 +79,6 @@ namespace Js
         Assert(requestContext);
         Assert(prototypeObjectWithProperty->GetScriptContext() == requestContext);
         DebugOnly(VerifyRegistrationForInvalidation(this, requestContext, propertyId));
-        // We don't want to optimize missing property accesses when running in the language service, because missing values are treated and tracked differently there.
-        Assert(!BinaryFeatureControl::LanguageService() || (!isMissing && prototypeObjectWithProperty != requestContext->GetLibrary()->GetMissingPropertyHolder()));
 
         // This is an interesting quirk.  In the browser Chakra's global object cannot be used directly as a prototype, because
         // the global object (referenced either as window or as this) always points to the host object.  Thus, when we retrieve
@@ -221,8 +219,7 @@ namespace Js
         {
             Assert(propertyObject->GetScriptContext() == requestContext); // we never cache a type from another script context
             *propertyValue = DynamicObject::FromVar(propertyObject)->GetInlineSlot(u.local.slotIndex);
-            Assert((BinaryFeatureControl::LanguageService() && JavascriptOperators::IsUndefinedOrNullType(JavascriptOperators::GetTypeId(*propertyValue))) ||
-                *propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext) || 
+            Assert(*propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext) || 
                 *propertyValue == JavascriptOperators::GetRootProperty(propertyObject, propertyId, requestContext));
             if (ReturnOperationInfo)
             {
@@ -236,8 +233,7 @@ namespace Js
         {
             Assert(propertyObject->GetScriptContext() == requestContext); // we never cache a type from another script context
             *propertyValue = DynamicObject::FromVar(propertyObject)->GetAuxSlot(u.local.slotIndex);
-            Assert((BinaryFeatureControl::LanguageService() && JavascriptOperators::IsUndefinedOrNullType(JavascriptOperators::GetTypeId(*propertyValue))) ||
-                *propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext) || 
+            Assert(*propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext) || 
                 *propertyValue == JavascriptOperators::GetRootProperty(propertyObject, propertyId, requestContext));
             if (ReturnOperationInfo)
             {
@@ -251,8 +247,7 @@ namespace Js
         {
             Assert(u.proto.prototypeObject->GetScriptContext() == requestContext); // we never cache a type from another script context
             *propertyValue = u.proto.prototypeObject->GetInlineSlot(u.proto.slotIndex);
-            Assert((BinaryFeatureControl::LanguageService() && JavascriptOperators::IsUndefinedOrNullType(JavascriptOperators::GetTypeId(*propertyValue))) ||
-                *propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext) ||
+            Assert(*propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext) ||
                 *propertyValue == JavascriptOperators::GetRootProperty(propertyObject, propertyId, requestContext));
             if (ReturnOperationInfo)
             {
@@ -268,8 +263,7 @@ namespace Js
             *propertyValue = u.proto.prototypeObject->GetAuxSlot(u.proto.slotIndex);
             // TODO: This assert often results in Assert(RootObjectBase::Is(object)) inside GetRootProperty, which is misleading 
             // when the problem is that GetProperty returned a different value than propertyValue. Consider reworking it here and elsewhere.
-            Assert((BinaryFeatureControl::LanguageService() && JavascriptOperators::IsUndefinedOrNullType(JavascriptOperators::GetTypeId(*propertyValue))) ||
-                *propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext) || 
+            Assert(*propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext) || 
                 *propertyValue == JavascriptOperators::GetRootProperty(propertyObject, propertyId, requestContext));
             if (ReturnOperationInfo)
             {
@@ -327,8 +321,7 @@ namespace Js
             *propertyValue = u.proto.prototypeObject->GetInlineSlot(u.proto.slotIndex);
             // TODO: This assert often results in Assert(RootObjectBase::Is(object)) inside GetRootProperty, which is misleading 
             // when the problem is that GetProperty returned a different value than propertyValue. Consider reworking it here and elsewhere.
-            Assert((BinaryFeatureControl::LanguageService() && JavascriptOperators::IsUndefinedOrNullType(JavascriptOperators::GetTypeId(*propertyValue))) ||
-                *propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext) ||
+            Assert(*propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext) ||
                 *propertyValue == JavascriptOperators::GetRootProperty(propertyObject, propertyId, requestContext));
 
 #ifdef MISSING_PROPERTY_STATS
@@ -352,8 +345,7 @@ namespace Js
             *propertyValue = u.proto.prototypeObject->GetAuxSlot(u.proto.slotIndex);
             // TODO: This assert often results in Assert(RootObjectBase::Is(object)) inside GetRootProperty, which is misleading 
             // when the problem is that GetProperty returned a different value than propertyValue. Consider reworking it here and elsewhere.
-            Assert((BinaryFeatureControl::LanguageService() && JavascriptOperators::IsUndefinedOrNullType(JavascriptOperators::GetTypeId(*propertyValue))) ||
-                *propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext) ||
+            Assert(*propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext) ||
                 *propertyValue == JavascriptOperators::GetRootProperty(propertyObject, propertyId, requestContext));
 
 #ifdef MISSING_PROPERTY_STATS

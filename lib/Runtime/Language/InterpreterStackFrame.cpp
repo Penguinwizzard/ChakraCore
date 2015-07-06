@@ -1581,15 +1581,9 @@ namespace Js
             {
 #if DYNAMIC_INTERPRETER_THUNK
                 PushPopFrameHelper pushPopFrameHelper(newInstance, returnAddress, addressOfReturnAddress);
-                if (BinaryFeatureControl::LanguageService() && threadContext->Diagnostics->languageServiceEnabled)
-                    aReturn = newInstance->LanguageServiceProcess();
-                else
-                    aReturn = newInstance->DebugProcess();
+                aReturn = newInstance->DebugProcess();
 #else
-                if (BinaryFeatureControl::LanguageService() && threadContext->Diagnostics->languageServiceEnabled)
-                    aReturn = newInstance->LanguageServiceProcessThunk();
-                else
-                    aReturn = newInstance->DebugProcessThunk();
+                aReturn = newInstance->DebugProcessThunk();
 #endif
             }
             else
@@ -1853,161 +1847,6 @@ namespace Js
         m_outParams    = m_localSlots + this->m_functionBody->GetLocalsCount();
 
         m_outSp        = m_outParams;
-    }
-
-    __declspec(noinline)
-    Var InterpreterStackFrame::LanguageServiceProcessThunk()
-    {
-        PushPopFrameHelper pushPopFrameHelper(this, _ReturnAddress(), _AddressOfReturnAddress());
-        return this->LanguageServiceProcess();
-    }
-
-#ifdef ENABLE_DEBUG_CONFIG_OPTIONS
-    class AutoLogFunctionStartEndMessage
-    {
-    public :
-        AutoLogFunctionStartEndMessage(InterpreterStackFrame * frame, bool logMessage)
-            : m_frame(frame),
-            m_shouldLogMessage(logMessage)
-        {
-            if (logMessage)
-            {
-                ScriptContext *scriptContext = frame->GetScriptContext();
-                scriptContext->authoringData->Callbacks()->LogFunctionStart(scriptContext, frame->GetFunctionBody());
-            }
-        }
-        ~AutoLogFunctionStartEndMessage()
-        {
-            if (m_shouldLogMessage)
-            {
-                ScriptContext *scriptContext = m_frame->GetScriptContext();
-                scriptContext->authoringData->Callbacks()->LogFunctionEnd(scriptContext);
-            }
-        }
-    private:
-        InterpreterStackFrame * m_frame;
-        bool m_shouldLogMessage;
-    };
-#endif
-
-    // When executing for the language service all exception are swallowed with execution
-    // continuing on the next instruction.
-    Var InterpreterStackFrame::LanguageServiceProcess()
-    {
-        RegSlot              target = Js::Constants::NoRegister;
-        ArgSlot              popCount = 0;
-        uint                 lastSkippedExceptionLocation = 0;
-
-        Assert(BinaryFeatureControl::LanguageService());
-        if (!BinaryFeatureControl::LanguageService())
-            return null;
-
-#ifdef ENABLE_DEBUG_CONFIG_OPTIONS
-        bool logFunction = function->IsScriptFunction()
-            && scriptContext->authoringData
-            && scriptContext->authoringData->Callbacks()
-            && scriptContext->authoringData->Callbacks()->IsCallGraphEnabled();
-
-        AutoLogFunctionStartEndMessage autoLogFunctionStartEndMessage(this, logFunction);
-#endif
-
-        while (true)
-        {
-            JavascriptExceptionObject *exception = null;
-            try
-            {
-                return this->ProcessForLanguageService(/*ref*/ target, /*ref*/ popCount);
-            }
-            catch (JavascriptExceptionObject *exception_)
-            {
-                Assert(exception_);
-                exception = exception_;
-            }
-            if (exception)
-            {
-                if (LanguageServiceExceptionSkippingEnabled() && !exception->IsForceCatchException())
-                {
-                    if (
-                        // We should only skip an exception if we have already exited out of first interpreter frame that saw the exception.
-                        // For example, if an allocation routine, such as NewActivationObject, detects a stack overflow we cannot replace its value with
-                        // and arbitrary object as the code generation assumes the object is an activation object, not a dynamic object. The only safe thing
-                        // to do is exit the function that first sees the stack overflow.
-                        (exception == scriptContext->GetThreadContext()->GetPendingSOErrorObject() && m_reader.GetCurrentOffset() > 0 && exception->CanLanguageServiceSkip()
-                        // If we didn't make progress don't try again, throw the exception to the parent.
-                        && lastSkippedExceptionLocation != m_reader.GetCurrentOffset()) ||
-                        // Skip the exception if it the debugger probe in the language service told us to.
-                        (exception->IsDebuggerSkip() ||
-                        // or, always for OOM exceptions as long as this is not the first frame to see it.
-                        (exception == scriptContext->GetThreadContext()->GetPendingOOMErrorObject() && exception->CanLanguageServiceSkip())))
-                    {
-                        // Ensure the target register of the instruction is set to a value before executing the next instruction
-                        if (target != Js::Constants::NoRegister)
-                        {
-                            auto emptyObject = this->scriptContext->GetLibrary()->CreateObject();
-                            Js::PropertyRecord const * propRecord;
-                            this->scriptContext->GetOrAddPropertyRecord(L"_$isExceptionObject",19, &propRecord);
-                            emptyObject->SetProperty(propRecord->GetPropertyId(), scriptContext->GetLibrary()->GetTrue(), Js::PropertyOperation_None, nullptr);
-                            SetReg(target, emptyObject);
-
-                            target = Js::Constants::NoRegister;
-                        }
-
-                        // If processing a call instruction, pop all arguments not popped by the call instruction that threw the exception.
-                        if (popCount > 0)
-                        {
-                            PopOut(popCount);
-                            popCount = 0;
-                        }
-
-                        // Store the location of the exception to avoid getting stuck in infinite loop trying to handle the exception while there is not
-                        // enough space on the stack.
-                        lastSkippedExceptionLocation = m_reader.GetCurrentOffset();
-
-                        continue;
-                    }
-                    if (exception == scriptContext->GetThreadContext()->GetPendingSOErrorObject() ||
-                        exception == scriptContext->GetThreadContext()->GetPendingOOMErrorObject())
-                    {
-                        // Mark the object to notify the parent frame it can skip this exception.
-                        exception->SetCanLanguageServiceSkip(true);
-
-                        // Ensure that, even in a try or finally, we skip completely out of the function.
-                        DisableLanguageServiceExceptionSkipping();
-                    }
-                    if (lastSkippedExceptionLocation == m_reader.GetCurrentOffset())
-                    {
-                        // If we didn't make progress from the last exception we should stop skipping exceptions for the entire function.
-                        // Typically this occurs at the beginning of the function so disabling exception skipping is a no-op, however
-                        // if it is the first instruction of a try or finally the catch blockes are not setup and could cause a LEAVE to be
-                        // executed outside a try or finally block. The only safe thing to do is disable exception skipping for the entire function.
-                        DisableLanguageServiceExceptionSkipping();
-                    }
-                }
-
-                // do not clone StackOverFlow Exceptions, and let them bubble up to the calling function to handle
-                if (exception != scriptContext->GetThreadContext()->GetPendingSOErrorObject())
-                {
-                    exception = exception->CloneIfStaticExceptionObject(scriptContext);
-                }
-                throw exception;
-            }
-        }
-
-    }
-
-    void InterpreterStackFrame::DisableLanguageServiceExceptionSkipping()
-    {
-        // Note: m_inSlotsCount is only used in OP_LdStackArguments before a function is called. We are recycling the same
-        //       member to flag to the Language Service loop that stackFrame cannot handle exceptions.
-        //       The stackFrame will be marked to skip exceptions only if there is an exception already raised; the combination
-        //       should end the execution of the current frame.
-        //       If the DisableLanguageServiceExceptionSkipping method is used under different constraints this design needs to be revisited
-        m_inSlotsCount = -1;
-    }
-
-    bool InterpreterStackFrame::LanguageServiceExceptionSkippingEnabled()
-    {
-        return m_inSlotsCount >= 0;
     }
 
     __declspec(noinline)
@@ -2831,12 +2670,6 @@ namespace Js
 #include "Interpreterloop.inl"
 #undef PROVIDE_INTERPRETERPROFILE
 #undef PROVIDE_DEBUGGING
-#undef INTERPRETERLOOPNAME
-
-#define INTERPRETERLOOPNAME ProcessForLanguageService
-#define PROVIDE_LANGUAGESERVICE
-#include "InterpreterLoop.inl"
-#undef PROVIDE_LANGUAGESERVICE
 #undef INTERPRETERLOOPNAME
 
     Var InterpreterStackFrame::Process()
@@ -4288,23 +4121,6 @@ namespace Js
     {
         Assert(playout->inlineCacheIndex >= this->m_functionBody->GetRootObjectLoadInlineCacheStart());
 
-        if (BinaryFeatureControl::LanguageService())
-        {
-            // Normally InitRootLetFld will be the first op to use the inline cache
-            // but in the language service we can have erroroneous code like this:
-            //    let c;
-            //    function c() { }
-            // such that InitRootFld and InitRootLetFld use the same inline cache
-            // and InitRootFld initializes it with the "var" binding slot on the
-            // global object, which DoInitLetFld() would then try to read from.
-            // Since this is supposed to be the first op that uses the inline cache
-            // the fix it to simply clear the cache before we call DoInitLetFld().
-            // Ditto for InitRootConstFld.
-            uint inlineCacheIndex = playout->inlineCacheIndex;
-            InlineCache * inlineCache = this->GetInlineCache(inlineCacheIndex);
-            memset(inlineCache, 0, sizeof(InlineCache));
-        }
-
         DoInitLetFld(playout, this->GetRootObject(), PropertyOperation_Root);
     }
 
@@ -4312,14 +4128,6 @@ namespace Js
     void InterpreterStackFrame::OP_InitRootConstFld(const unaligned T * playout)
     {
         Assert(playout->inlineCacheIndex >= this->m_functionBody->GetRootObjectLoadInlineCacheStart());
-
-        if (BinaryFeatureControl::LanguageService())
-        {
-            // See comment in OP_InitRootLetFld() above.
-            uint inlineCacheIndex = playout->inlineCacheIndex;
-            InlineCache * inlineCache = this->GetInlineCache(inlineCacheIndex);
-            memset(inlineCache, 0, sizeof(InlineCache));
-        }
 
         DoInitConstFld(playout, this->GetRootObject(), PropertyOperation_Root);
     }
@@ -5528,18 +5336,11 @@ namespace Js
         PopOut(playout->ArgCount);
     }
 
-    template<bool LanguageService>
     void InterpreterStackFrame::OP_NewScObject_A_Impl(const unaligned OpLayoutAuxiliary * playout, RegSlot *target)
     {
         const Js::VarArrayVarCount * vars = Js::ByteCodeReader::ReadVarArrayVarCount(playout->Offset, this->GetFunctionBody());
 
         int count = Js::TaggedInt::ToInt32(vars->count);
-
-        if(LanguageService)
-        {
-            Assert(target);
-            *target = playout->R0;
-        }
 
         // Push the parameters to stack
         for (int i=0;i<count; i++)
@@ -5550,11 +5351,6 @@ namespace Js
         Var newVarInstance = NewScObject_Helper(GetReg((RegSlot)playout->C1), (ArgSlot)count+1);
         SetReg((RegSlot)playout->R0, newVarInstance);
 
-        if(LanguageService)
-        {
-            Assert(target);
-            *target = Js::Constants::NoRegister;
-        }
     }
 
     Var InterpreterStackFrame::NewScObject_Helper(Var target, ArgSlot ArgCount, const Js::AuxArray<uint32> *spreadIndices)
@@ -5684,16 +5480,8 @@ namespace Js
 
             if (scriptContext->IsInDebugMode())
             {
-                if (BinaryFeatureControl::LanguageService() && scriptContext->GetThreadContext()->Diagnostics->languageServiceEnabled)
-                {
-                    this->LanguageServiceProcess();
-                    this->TrySetRetOffset();
-                }
-                else
-                {
-                    this->ProcessWithDebugging();
-                    this->TrySetRetOffset();
-                }
+                this->ProcessWithDebugging();
+                this->TrySetRetOffset();
             }
             else
             {
@@ -5721,17 +5509,6 @@ namespace Js
             {
                 // Generator return scenario, so no need to go into the catch block and we must rethrow to propogate the exception to down level
                 throw exception;
-            }
-
-            if (BinaryFeatureControl::LanguageService() && scriptContext->IsInDebugMode() && !exception->IsForceCatchException())
-            {
-                if (scriptContext->GetThreadContext()->Diagnostics->languageServiceEnabled)
-                {
-                    // Exceptions in try blocks should not be skipped, as there is no way to exit the try block correctly at this point.
-                    // Mark the current InterpreterStackFrame as poisoned to disable exception skipping.
-                    DisableLanguageServiceExceptionSkipping();
-                    throw exception;
-                }
             }
 
             exception = exception->CloneIfStaticExceptionObject(scriptContext);
@@ -5776,14 +5553,7 @@ namespace Js
     {        
         if (this->scriptContext->IsInDebugMode())
         {
-            if (BinaryFeatureControl::LanguageService() && this->scriptContext->GetThreadContext()->Diagnostics->languageServiceEnabled)
-            {
-                this->LanguageServiceProcess();
-            }
-            else
-            {
-                this->DebugProcess();
-            }
+            this->DebugProcess();
         }
         else
         {
@@ -5800,14 +5570,7 @@ namespace Js
         int newOffset = 0;
         if (scriptContext->IsInDebugMode())
         {
-            if (BinaryFeatureControl::LanguageService() && scriptContext->GetThreadContext()->Diagnostics->languageServiceEnabled)
-            {
-                newOffset = (int)this->LanguageServiceProcess();
-            }
-            else
-            {
-                newOffset = (int)this->DebugProcess();
-            }
+            newOffset = (int)this->DebugProcess();
         }
         else
         {
@@ -5844,16 +5607,8 @@ namespace Js
 
                 if (scriptContext->IsInDebugMode())
                 {
-                    if (BinaryFeatureControl::LanguageService() && scriptContext->GetThreadContext()->Diagnostics->languageServiceEnabled)
-                    {
-                        this->LanguageServiceProcess();
-                        this->TrySetRetOffset();
-                    }
-                    else
-                    {
-                        this->ProcessWithDebugging();
-                        this->TrySetRetOffset();
-                    }
+                    this->ProcessWithDebugging();
+                    this->TrySetRetOffset();
                 }
                 else
                 {
@@ -5901,17 +5656,6 @@ namespace Js
             {
                 // Generator return scenario, so no need to go into the catch block and we must rethrow to propogate the exception to down level
                 throw exception;
-            }
-
-            if (BinaryFeatureControl::LanguageService() && scriptContext->IsInDebugMode())
-            {
-                if (scriptContext->GetThreadContext()->Diagnostics->languageServiceEnabled)
-                {
-                    // Exceptions in try blocks should not be skipped, as there is no way to exit the try block correctly at this point.
-                    // Mark the current InterpreterStackFrame as poisoned to disable exception skipping.
-                    DisableLanguageServiceExceptionSkipping();
-                    throw exception;
-                }
             }
 
             exception = exception->CloneIfStaticExceptionObject(scriptContext);
@@ -5977,10 +5721,7 @@ namespace Js
 
         if (scriptContext->IsInDebugMode())
         {
-            if (BinaryFeatureControl::LanguageService() && scriptContext->GetThreadContext()->Diagnostics->languageServiceEnabled)
-                this->LanguageServiceProcess();
-            else
-                this->DebugProcess();
+            this->DebugProcess();
         }
         else
         {
@@ -6012,14 +5753,7 @@ namespace Js
 
             if (scriptContext->IsInDebugMode())
             {
-                if (BinaryFeatureControl::LanguageService() && scriptContext->GetThreadContext()->Diagnostics->languageServiceEnabled)
-                {
-                    result = this->LanguageServiceProcess();
-                }
-                else
-                {
-                    result = this->ProcessWithDebugging();
-                }
+                result = this->ProcessWithDebugging();
             }
             else
             {
@@ -6063,20 +5797,6 @@ namespace Js
 
         if (pExceptionObject && !pExceptionObject->IsGeneratorReturnException())
         {
-            if (BinaryFeatureControl::LanguageService())
-            {
-                if (scriptContext->IsInDebugMode())
-                {
-                    if (scriptContext->GetThreadContext()->Diagnostics->languageServiceEnabled)
-                    {
-                        // Exceptions in try blocks should not be skipped, as there is no way to exit the try block correctly at this point.
-                        // Mark the current InterpreterStackFrame as poisoned to disable exception skipping.
-                        DisableLanguageServiceExceptionSkipping();
-                        throw pExceptionObject;
-                    }
-                }
-            }
-
             // Clone static exception object early in case finally block overwrites it
             pExceptionObject = pExceptionObject->CloneIfStaticExceptionObject(scriptContext);
         }
@@ -6134,10 +5854,7 @@ namespace Js
         int newOffset = 0;
         if (scriptContext->IsInDebugMode())
         {
-            if (BinaryFeatureControl::LanguageService() && scriptContext->GetThreadContext()->Diagnostics->languageServiceEnabled)
-                newOffset = (int)this->LanguageServiceProcess();
-            else
-                newOffset = (int)this->DebugProcess();
+            newOffset = (int)this->DebugProcess();
         }
         else
         {

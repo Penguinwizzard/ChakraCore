@@ -211,8 +211,6 @@ namespace Js
         void * dispatchHaltFrameAddress;
 #endif
     public:
-        bool languageServiceEnabled;
-
         StepController stepController;
         AsyncBreakController asyncBreakController;
 

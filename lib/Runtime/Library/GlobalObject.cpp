@@ -578,10 +578,8 @@ namespace Js
         FastEvalMapString key(sourceString, sourceLen, moduleID, strictMode, isLibraryCode);
         if (!scriptContext->IsInEvalMap(key, isIndirect, &pfuncScript))
         {
-            if (BinaryFeatureControl::LanguageService() && scriptContext->authoringData && scriptContext->authoringData->Callbacks())
-                scriptContext->authoringData->Callbacks()->PreparingEval(sourceLen);
-
             ulong grfscr = additionalGrfscr | fscrReturnExpression | fscrEval | fscrEvalCode | fscrGlobalCode;
+
             if (isLibraryCode)
             {
                 grfscr |= fscrIsLibraryCode;
@@ -657,9 +655,6 @@ namespace Js
                 JavascriptError::ThrowSyntaxError(scriptContext, ERRSuperInIndirectEval, L"super");
             }
         }
-
-        if (BinaryFeatureControl::LanguageService() && scriptContext->authoringData && scriptContext->authoringData->Callbacks())
-            scriptContext->authoringData->Callbacks()->Executing();
 
         return library->GetGlobalObject()->ExecuteEvalParsedFunction(pfuncScript, environment, varThis);
     }

@@ -2240,18 +2240,4 @@ namespace Js
 
         return result;
     }
-
-    void JavascriptProxy::SneakyUpdateTargetByLanguageService(RecyclableObject* target)
-    {
-        AssertMsg(BinaryFeatureControl::LanguageService(), "SneakyUpdateTargetByLanguageService is expected to be called only in Language Service");
-        if (BinaryFeatureControl::LanguageService())
-        {
-            // Proxy Target need to be an object
-            AssertMsg(JavascriptOperators::IsObjectType(JavascriptOperators::GetTypeId(target)), "Proxy Target need to be an object");
-            AssertMsg(this->target == nullptr, "We should update target only if it was created without one.");
-            AssertMsg(this->handler == nullptr, "We should update handler only if it was created without one.");
-            this->target = target;
-            this->handler = this->GetLibrary()->GetNull();
-        }
-    }
 }

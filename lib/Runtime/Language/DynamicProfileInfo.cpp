@@ -203,7 +203,6 @@ bool DynamicProfileInfo::IsEnabled_OptionalFunctionBody(const FunctionBody *cons
     Assert(scriptContext);
 
     return
-        BinaryFeatureControl::DynamicProfile() &&
         !PHASE_OFF_OPTFUNC(DynamicProfilePhase, functionBody) &&
         (
 #if ENABLE_DEBUG_CONFIG_OPTIONS
@@ -262,8 +261,7 @@ bool DynamicProfileInfo::IsEnabled_OptionalFunctionBody(
 
     case Phase::InlinePhase:
         // TODO: disable for language service, as the function Id assignment is wrong.
-        return !PHASE_OFF_PROFILED_BYTE_CODE_OPTFUNC(Phase::InlinePhase, functionBody) 
-            && !BinaryFeatureControl::LanguageService();
+        return !PHASE_OFF_PROFILED_BYTE_CODE_OPTFUNC(Phase::InlinePhase, functionBody);
     }
     return false;
 }

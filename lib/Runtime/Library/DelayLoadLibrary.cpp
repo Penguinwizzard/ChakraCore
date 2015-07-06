@@ -394,13 +394,6 @@ namespace Js
         }
 
         return FALSE;
-#elif defined(LANGUAGE_SERVICE)
-        UNREFERENCED_PARAMETER(hProcess);
-        UNREFERENCED_PARAMETER(VirtualAddress);
-        UNREFERENCED_PARAMETER(RegionSize);
-        UNREFERENCED_PARAMETER(NumberOfOffets);
-        UNREFERENCED_PARAMETER(OffsetInformation);
-        return FALSE;
 #else
         return SetProcessValidCallTargets(hProcess, VirtualAddress, RegionSize, NumberOfOffets, OffsetInformation);
 #endif

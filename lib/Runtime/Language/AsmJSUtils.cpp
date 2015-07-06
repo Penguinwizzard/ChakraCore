@@ -87,7 +87,7 @@ namespace Js
             {
                 return var;
             }
-            else if (var->nop == knopVarDeclList || var->nop == knopList)
+            else if (var->nop == knopList)
             {
                 var = GetBinaryLeft(var);
                 if (var->nop == knopVarDecl)
@@ -112,7 +112,7 @@ namespace Js
                 pnode = GetBinaryRight( pnode );
                 continue;
             }
-            else if (var->nop == knopVarDeclList || var->nop == knopList)
+            else if (var->nop == knopList)
             {
                 var = GetBinaryLeft( var );
                 if (var->nop == knopVarDecl)

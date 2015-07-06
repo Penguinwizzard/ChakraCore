@@ -153,14 +153,7 @@ namespace Js {
             filePath = tempFilePath;
         }
 
-        if (BinaryFeatureControl::LanguageService())
-        {
-            StringCchPrintf(tempFileName, _countof(tempFileName), L"%s\\JSLS_%d_%d.dmp", filePath, GetCurrentProcessId(), GetCurrentThreadId());
-        }
-        else
-        {
-            StringCchPrintf(tempFileName, _countof(tempFileName), L"%s\\JC_%d_%d.dmp", filePath, GetCurrentProcessId(), GetCurrentThreadId());
-        }
+        StringCchPrintf(tempFileName, _countof(tempFileName), L"%s\\JC_%d_%d.dmp", filePath, GetCurrentProcessId(), GetCurrentThreadId());
         hTempFile = CreateFile(tempFileName, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 
             FILE_ATTRIBUTE_NORMAL, NULL);
         if (hTempFile == INVALID_HANDLE_VALUE)
@@ -177,7 +170,7 @@ namespace Js {
             MINIDUMP_TYPE dumpType = static_cast<MINIDUMP_TYPE>(MiniDumpWithDataSegs | MiniDumpWithPrivateReadWriteMemory);
 
             // Generating full dump for the TE process (reason : it contains both managed and native memory)
-            if (CONFIG_FLAG(FullMemoryDump) || (BinaryFeatureControl::LanguageService() && Throw::IsTEProcess()))
+            if (CONFIG_FLAG(FullMemoryDump))
             {
                 dumpType = static_cast<MINIDUMP_TYPE>(dumpType | MiniDumpWithFullMemory);
             }

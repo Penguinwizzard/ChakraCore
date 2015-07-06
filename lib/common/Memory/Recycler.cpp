@@ -1172,22 +1172,6 @@ Recycler::LargeAlloc(HeapInfo* heap, size_t size, ObjectInfoBits attributes)
 {
     Assert((attributes & InternalObjectInfoBitMask) == attributes);
     
-    if(BinaryFeatureControl::LanguageService())
-    {
-        if(size > LANGSVC_MAX_ALLOC_SIZE)
-        {
-            // REVIEW: Should nothrow allocs be supported in jscript9ls?
-            if (nothrow == false)
-            {
-                this->OutOfMemory();
-            }
-            else
-            {
-                return nullptr;
-            }
-        }
-    }
-
     char * addr = TryLargeAlloc(heap, size, attributes, nothrow);
     if (addr == null)
     {
@@ -3974,7 +3958,6 @@ template BOOL Recycler::FinishConcurrent<FinishConcurrentOnIdleAtRoot>();
 template BOOL Recycler::FinishConcurrent<FinishConcurrentOnExitScript>();
 template BOOL Recycler::FinishConcurrent<FinishConcurrentOnEnterScript>();
 template BOOL Recycler::FinishConcurrent<ForceFinishCollection>();
-template BOOL Recycler::FinishConcurrent<FinishConcurrentLanguageService>();
 
 template <CollectionFlags flags>
 BOOL

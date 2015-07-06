@@ -3,8 +3,8 @@
 
 #pragma once
 
-#define VERIFY_COPY_ON_WRITE_ENABLED() if (!BinaryFeatureControl::LanguageService() && !CONFIG_FLAG(CopyOnWriteTest)){ Assert(false); return; }
-#define VERIFY_COPY_ON_WRITE_ENABLED_RET_VALUE(b) if (!BinaryFeatureControl::LanguageService() && !CONFIG_FLAG(CopyOnWriteTest)){ Assert(false); return b; }
+#define VERIFY_COPY_ON_WRITE_ENABLED() if (!CONFIG_FLAG(CopyOnWriteTest)){ Assert(false); return; }
+#define VERIFY_COPY_ON_WRITE_ENABLED_RET_VALUE(b) if (!CONFIG_FLAG(CopyOnWriteTest)){ Assert(false); return b; }
 #define VERIFY_COPY_ON_WRITE_ENABLED_RET() VERIFY_COPY_ON_WRITE_ENABLED_RET_VALUE(nullptr)
 
 namespace Js {
@@ -206,10 +206,6 @@ namespace Js {
                 if (result)
                 {
                     auto scriptContext = GetScriptContext();
-                    if (scriptContext->GetCopyOnGetEnabled())
-                    {
-                        Detach();
-                    }
                     *value = scriptContext->CopyOnWrite(*value);
                     PropertyValueInfo::SetNoCache(info, this);
                     return true;
@@ -244,10 +240,6 @@ namespace Js {
                 if (result)
                 {
                     ScriptContext *scriptContext = GetScriptContext();
-                    if (scriptContext->GetCopyOnGetEnabled())
-                    {
-                        Detach();
-                    }
                     *value = scriptContext->CopyOnWrite(*value);
                     PropertyValueInfo::SetNoCache(info, this);
                     return true;
@@ -282,10 +274,6 @@ namespace Js {
                 if (result)
                 {
                     ScriptContext *scriptContext = GetScriptContext();
-                    if (scriptContext->GetCopyOnGetEnabled())
-                    {
-                        Detach();
-                    }
                     *value = scriptContext->CopyOnWrite(*value);
                     PropertyValueInfo::SetNoCache(info, this);
                     return true;

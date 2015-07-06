@@ -706,7 +706,6 @@ private:
     BOOL m_doubleQuoteOnLastTkStrCon :1;
     bool m_OctOrLeadingZeroOnLastTKNumber :1;
     BOOL m_fSyntaxColor : 1;            // whether we're just syntax coloring
-    BOOL m_fStmtCompletion : 1;         // we're trying to figure out statement completion
     BOOL m_EscapeOnLastTkStrCon:1;
     BOOL m_fNextStringTemplateIsTagged:1;   // the next string template scanned has a tag (must create raw strings)
     BYTE m_DeferredParseFlags:2;            // suppressStrPid and suppressIdPid    
@@ -755,17 +754,8 @@ private:
         m_cMinTokMultiUnits = m_cMultiUnits;
         AssertMem(m_perr);
         m_perr->Throw(hr);
-        AssertMsg(m_fStmtCompletion, "why did Throw return?");
+        AssertMsg(false, "why did Throw return?");
     }
-
-#ifdef LANGUAGE_SERVICE
-    void Error(HRESULT hr, bool singleCharacter)
-    {
-        Assert(FAILED(hr));
-        AssertMem(m_perr);
-        m_perr->Throw(hr);
-    }
-#endif
 
     const EncodedCharPtr PchBase(void)
     {

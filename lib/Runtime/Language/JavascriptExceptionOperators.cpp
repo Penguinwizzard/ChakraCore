@@ -559,18 +559,6 @@ namespace Js
     }
 #endif
 
-    void JavascriptExceptionOperators::ThrowForceCatchException(JavascriptError *jsError, ScriptContext* scriptContext)
-    {
-        Assert(jsError != nullptr);
-        Assert(scriptContext != nullptr);
-        Assert(BinaryFeatureControl::LanguageService());
-
-        JavascriptExceptionObject * exceptionObject = RecyclerNew(scriptContext->GetRecycler(), JavascriptExceptionObject, jsError, scriptContext, nullptr/*exceptionContextIn*/);
-        exceptionObject->SetForceCatchException(true);
-
-        throw exceptionObject;
-    }
-
     void JavascriptExceptionOperators::Throw(Var object, ScriptContext * scriptContext)
     {
 #if defined(DBG) && defined(_M_IX86)
@@ -780,9 +768,6 @@ namespace Js
 
         JavascriptExceptionObject *oom = JavascriptExceptionOperators::GetOutOfMemoryExceptionObject(scriptContext);
 
-        if (BinaryFeatureControl::LanguageService())
-            oom->SetCanLanguageServiceSkip(true);
-
         JavascriptExceptionOperators::ThrowExceptionObject(oom, scriptContext);
     }
 
@@ -799,9 +784,6 @@ namespace Js
 
         Var thrownObject = scriptContext->GetLibrary()->CreateStackOverflowError();
         so->SetThrownObject(thrownObject);
-
-        if (BinaryFeatureControl::LanguageService())
-            so->SetCanLanguageServiceSkip(false);
 
         // NOTE: Do not ClearDisableImplicitFlags() here. We still need to allocate StackTrace, etc. Keep implict call disabled till actual
         // throw (ThrowExceptionObjectInternal will ClearDisableImplicitFlags before throw). If anything wrong happens in between which throws

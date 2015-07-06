@@ -276,7 +276,6 @@ enum CollectionFlags
     FinishConcurrentOnIdleAtRoot    = CollectMode_Concurrent | CollectOverride_DisableIdleFinish | CollectOverride_SkipStack,
     FinishConcurrentOnExitScript    = CollectMode_Concurrent | CollectOverride_DisableIdleFinish | CollectOverride_BackgroundFinishMark,
     FinishConcurrentOnEnterScript   = CollectMode_Concurrent | CollectOverride_DisableIdleFinish | CollectOverride_BackgroundFinishMark,
-    FinishConcurrentLanguageService = CollectMode_Concurrent | CollectOverride_DisableIdleFinish | CollectOverride_BackgroundFinishMark | CollectOverride_AllowDispose,
     FinishConcurrentOnAllocation    = CollectMode_Concurrent | CollectOverride_DisableIdleFinish | CollectOverride_BackgroundFinishMark,    
     FinishDispose                   = CollectOverride_AllowDispose,
     FinishDisposeTimed              = CollectOverride_AllowDispose | CollectHeuristic_TimeIfScriptActive,
@@ -515,8 +514,6 @@ struct RecyclerWatsonTelemetryBlock
     FILETIME lastCollectionEndTime;
     DWORD exhaustiveRepeatedCount;
 };
-
-#define LANGSVC_MAX_ALLOC_SIZE 0x800000 // 8MB
 
 #ifdef RECYCLER_WRITE_BARRIER_ALLOC_SEPARATE_PAGE
 // Macro to be used within the recycler

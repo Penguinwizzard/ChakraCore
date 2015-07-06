@@ -67,15 +67,4 @@ StackProber::Initialize()
     SetThreadStackGuarantee(&stackGuarantee);
     stackLimit = stackBottom + guardPageSize + stackGuarantee + stackOverflowBuffer;
 
-    // In Language Service case, make the available stack size smaller to reduce the time for Stack Overflow if it happens.
-    if (BinaryFeatureControl::LanguageService())
-    {
-        // Calculate the current stack size
-        auto stackSize = (PBYTE)_AddressOfReturnAddress() - stackLimit;
-        // The new stack size should not be less than the current size. 
-        auto newStackSize = min<decltype(stackSize)>(1024 * LS_MAX_STACK_SIZE_KB, stackSize);
-        // Adjust the stackLimit up to reduce the available space
-        stackLimit = stackLimit + (stackSize - newStackSize);
-    }
-
 }

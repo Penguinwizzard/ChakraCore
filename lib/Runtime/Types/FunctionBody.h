@@ -1276,11 +1276,6 @@ namespace Js
         void SetIsNameIdentifierRef (const bool is) { m_isNameIdentifierRef  = is; }
         bool GetIsNameIdentifierRef () const { return m_isNameIdentifierRef ; }
 
-#if LANGUAGE_SERVICE
-        bool GetIsClassMember() const { return m_isClassMember; }
-        void SetIsClassMember(const bool is) { m_isClassMember = is; }
-#endif
-
         // Fake global ->
         //    1) new Function code's global code
         //    2) global code generated from the reparsing deferred parse function

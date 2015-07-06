@@ -14,7 +14,7 @@ namespace Js
         m_previousCatchHandlerExists = m_threadContext->HasCatchHandler();
         m_threadContext->SetHasCatchHandler(TRUE);
         m_previousCatchHandlerToUserCodeStatus = m_threadContext->IsUserCode();
-        if (scriptContext->IsInDebugMode() && !BinaryFeatureControl::LanguageService())
+        if (scriptContext->IsInDebugMode())
         {
             FetchNonUserCodeStatus(scriptContext);
         }

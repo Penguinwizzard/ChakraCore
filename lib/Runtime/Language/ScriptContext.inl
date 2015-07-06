@@ -176,54 +176,28 @@ namespace Js
 
     __inline RecyclableObject *ScriptContext::GetMissingPropertyResult(Js::RecyclableObject *instance, Js::PropertyId id)
     {
-        if (BinaryFeatureControl::LanguageService() && authoringData && authoringData->Callbacks())
-        {
-            return authoringData->Callbacks()->GetMissingPropertyResult(this, instance, id, Js::TypeIds_Undefined);
-        }
         return GetLibrary()->GetUndefined();
     }
 
     __inline RecyclableObject *ScriptContext::GetMissingItemResult(Js::RecyclableObject *instance, uint32 index)
     {
-        if (BinaryFeatureControl::LanguageService() && authoringData && authoringData->Callbacks())
-        {
-            return authoringData->Callbacks()->GetMissingItemResult(this, instance, index, Js::TypeIds_Undefined);
-        }
         return GetLibrary()->GetUndefined();
     }
 
     __inline RecyclableObject *ScriptContext::GetMissingParameterValue(Js::JavascriptFunction *function, uint32 paramIndex)
     {
-        if (BinaryFeatureControl::LanguageService() && authoringData && authoringData->Callbacks())
-        {
-            return authoringData->Callbacks()->GetMissingParameterValue(this, function, paramIndex);
-        }
         return GetLibrary()->GetUndefined();
     }
 
     __inline RecyclableObject *ScriptContext::GetNullPropertyResult(Js::RecyclableObject *instance, Js::PropertyId id)
     {
-        if (BinaryFeatureControl::LanguageService() && authoringData && authoringData->Callbacks())
-        {
-            return authoringData->Callbacks()->GetMissingPropertyResult(this, instance, id, Js::TypeIds_Null);
-        }
         return GetLibrary()->GetNull();
     }
 
     __inline RecyclableObject *ScriptContext::GetNullItemResult(Js::RecyclableObject *instance, uint32 index)
     {
-        if (BinaryFeatureControl::LanguageService() && authoringData && authoringData->Callbacks())
-        {
-            return authoringData->Callbacks()->GetMissingItemResult(this, instance, index, Js::TypeIds_Null);
-        }
         return GetLibrary()->GetUndefined();
     }
-
-    __inline bool ScriptContext::GetCopyOnGetEnabled() 
-    {
-        return BinaryFeatureControl::LanguageService() && authoringData && authoringData->Callbacks()->CopyOnGet();
-    }
-
 
     __inline SRCINFO *ScriptContext::AddHostSrcInfo(SRCINFO const *pSrcInfo)
     {

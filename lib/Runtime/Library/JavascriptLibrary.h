@@ -21,11 +21,6 @@ namespace Projection
 }
 #endif
 
-namespace Authoring
-{
-    class JavascriptLibraryAccessor;
-}
-
 namespace Js
 {
     typedef RecyclerFastAllocator<JavascriptNumber, LeafBit> RecyclerJavascriptNumberAllocator;
@@ -112,7 +107,6 @@ namespace Js
         friend class GlobalObject;
         friend class ScriptContext;
         friend class EngineInterfaceObject;
-        friend class Authoring::JavascriptLibraryAccessor;
 #ifdef ENABLE_PROJECTION
         friend class Projection::ProjectionContext;
 #endif

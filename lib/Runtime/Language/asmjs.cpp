@@ -731,7 +731,7 @@ namespace Js
             while (pnode && pnode->nop != knopEndCode)
             {
                 ParseNode * decl;
-                if (pnode->nop == knopConstDeclList || pnode->nop == knopVarDeclList || pnode->nop == knopList)
+                if (pnode->nop == knopList)
                 {
                     decl = ParserWrapper::GetBinaryLeft(pnode);
                     pnode = ParserWrapper::GetBinaryRight(pnode);

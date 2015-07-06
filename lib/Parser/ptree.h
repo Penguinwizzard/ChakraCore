@@ -14,7 +14,7 @@ Node operators (indicates semantics of the parse node)
 ***************************************************************************/
 enum OpCode : byte
 {
-#define PTNODE(nop,sn,pc,nk,ok,json,apnk)  nop,
+#define PTNODE(nop,sn,pc,nk,ok,json)  nop,
 #include "ptlist.h"
     knopLim
 };
@@ -378,9 +378,6 @@ struct PnClass
     ParseNodePtr pnodeMembers;
     ParseNodePtr pnodeStaticMembers;
     ParseNodePtr pnodeExtends;
-#ifdef LANGUAGE_SERVICE
-    bool isDeclaration;
-#endif
 };
 
 struct PnStrTemplate
