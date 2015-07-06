@@ -2,8 +2,6 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="$(MsBuildThisFileDirectory)..\StdAfx.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)amd64\stackframe.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)arm\stackframe.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)AsmJS.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)AsmJSBytecodeGenerator.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)AsmJSCodeGenerator.cpp" />
@@ -22,7 +20,6 @@
     <ClCompile Include="$(MsBuildThisFileDirectory)ExecutionMode.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)FunctionCodeGenJitTimeData.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)FunctionCodeGenRuntimeData.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)i386\stackframe.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)InlineCache.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptExceptionOperators.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptMathOperators.cpp" />
@@ -52,14 +49,23 @@
     <ClCompile Include="$(MsBuildThisFileDirectory)amd64\AsmJSJitTemplate.cpp">
       <Filter>amd64</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)arm64\stackframe.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)i386\AsmJSJitTemplate.cpp">
       <Filter>i386</Filter>
     </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)amd64\stackframe.cpp">
+      <Filter>amd64</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)i386\stackframe.cpp">
+      <Filter>i386</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)arm64\stackframe.cpp">
+      <Filter>arm64</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)arm\stackframe.cpp">
+      <Filter>arm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="amd64\stackframe.h" />
-    <ClInclude Include="arm\stackframe.h" />
     <ClInclude Include="AsmJS.h" />
     <ClInclude Include="AsmJSBytecodeGenerator.h" />
     <ClInclude Include="AsmJSCodeGenerator.h" />
@@ -70,7 +76,6 @@
     <ClInclude Include="AsmJSUtils.h" />
     <ClInclude Include="byteCodeCacheReleaseFileVersion.h" />
     <ClInclude Include="CacheOperators.h" />
-    <ClInclude Include="i386\AsmJsInstructionTemplate.h" />
     <ClInclude Include="InterpreterProcessOpCodeAsmJs.h" />
     <ClInclude Include="CodeGenRecyclableData.h" />
     <ClInclude Include="DynamicProfileInfo.h" />
@@ -81,7 +86,6 @@
     <ClInclude Include="ExecutionModes.h" />
     <ClInclude Include="FunctionCodeGenJitTimeData.h" />
     <ClInclude Include="FunctionCodeGenRuntimeData.h" />
-    <ClInclude Include="i386\stackframe.h" />
     <ClInclude Include="InlineCache.h" />
     <ClInclude Include="InlineCachePointerArray.h" />
     <ClInclude Include="JavascriptExceptionOperators.h" />
@@ -113,19 +117,31 @@
     <ClInclude Include="ScriptContext.h" />
     <ClInclude Include="ScriptContextProfiler.h" />
     <ClInclude Include="SourceMutator.h" />
+    <ClInclude Include="i386\AsmJsInstructionTemplate.h">
+      <Filter>i386</Filter>
+    </ClInclude>
+    <ClInclude Include="amd64\stackframe.h">
+      <Filter>amd64</Filter>
+    </ClInclude>
+    <ClInclude Include="i386\stackframe.h">
+      <Filter>i386</Filter>
+    </ClInclude>
+    <ClInclude Include="arm\stackframe.h">
+      <Filter>arm</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <MASM Include="$(MSBuildThisFileDirectory)amd64\JavascriptOperatorsA.asm" />
     <MASM Include="$(MSBuildThisFileDirectory)amd64\amd64_Thunks.asm">
-      <Filter>arm</Filter>
+      <Filter>amd64</Filter>
+    </MASM>
+    <MASM Include="$(MSBuildThisFileDirectory)amd64\JavascriptOperatorsA.asm">
+      <Filter>amd64</Filter>
     </MASM>
   </ItemGroup>
   <ItemGroup>
-    <None Include="amd64\stackframe.inl" />
     <None Include="AsmJSEncoder.inl" />
     <None Include="AsmJSEncoderHandler.inl" />
     <None Include="CacheOperators.inl" />
-    <None Include="i386\AsmJsInstructionTemplate.inl" />
     <None Include="InlineCache.inl" />
     <None Include="InlineCachePointerArray.inl" />
     <None Include="InterpreterHandler.inl" />
@@ -139,6 +155,12 @@
     <None Include="JavascriptOperators.inl" />
     <None Include="ScriptContext.inl" />
     <None Include="DiagHelperMethodWrapper.inl" />
+    <None Include="amd64\stackframe.inl">
+      <Filter>amd64</Filter>
+    </None>
+    <None Include="i386\AsmJsInstructionTemplate.inl">
+      <Filter>i386</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="amd64">

@@ -34,6 +34,7 @@
       <!-- We don't use any metadata -->
       <AdditionalUsingDirectories />
 
+      <AdditionalOptions>%(AdditionalOptions) /Zm150</AdditionalOptions>
       <AdditionalOptions>%(AdditionalOptions) /Yl$(TargetName)</AdditionalOptions>
       <!-- Separate global variable for linker -->
       <AdditionalOptions>%(AdditionalOptions) /Gw</AdditionalOptions>    

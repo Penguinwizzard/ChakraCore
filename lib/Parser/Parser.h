@@ -13,7 +13,6 @@
 // #define USE_BITCOUNTS 1
 
 #include "activdbg.h"
-#include "activdbg100.h"
 #include "activaut.h"
 // From Common.lib
 #include "Common.h"

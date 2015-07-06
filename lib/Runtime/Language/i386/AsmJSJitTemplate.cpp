@@ -3045,7 +3045,8 @@ namespace Js
             const int nbArgs = nbOffsets - 1;
             const int targetOffset = offsets[0];
             int* args = offsets + 1;
-            int stackSize = nbArgs << 3;
+            // REVIEW: 4 bytes per arg for floats, do we want to maintain 8 byte stack alignment?
+            int stackSize = nbArgs << 2;
             Assert(stackSize > nbArgs); // check for overflow
 
             if (nbArgs > 0)
@@ -3060,14 +3061,14 @@ namespace Js
                     size += SUB::EncodeInstruction<int>(buffer, InstrParamsRegImm<int32>(RegESP, stackSize));
                 }
 
-                int espOffset = stackSize - 8;
+                int espOffset = stackSize - 4;
                 for (int i = nbArgs - 1; i >= 0; i--)
                 {
                     // todo:: check for reg in template
                     int argOffset = args[i] - templateData->GetBaseOffSet();
                     size += MOVSS::EncodeInstruction<float>(buffer, InstrParamsRegAddr(reg, RegEBP, argOffset));
                     size += MOVSS::EncodeInstruction<float>(buffer, InstrParamsAddrReg(RegESP, espOffset, reg));
-                    espOffset -= 8;
+                    espOffset -= 4;
                 }
                 templateData->InvalidateReg(reg);
             }

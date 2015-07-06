@@ -903,7 +903,7 @@ private:
         typedef HRESULT (*DbgRegisterFunctionType)(ScriptContext *, FunctionBody *, LPCWSTR title);
         DbgRegisterFunctionType dbgRegisterFunction;
 
-        typedef void(*RaiseMessageToDebuggerFunctionType)(ScriptContext *, DWORD, LPCWSTR, LPCWSTR);
+        typedef void(*RaiseMessageToDebuggerFunctionType)(ScriptContext *, DEBUG_EVENT_INFO_TYPE, LPCWSTR, LPCWSTR);
         RaiseMessageToDebuggerFunctionType raiseMessageToDebuggerFunctionType;
 
         typedef void(*TransitionToDebugModeIfFirstSourceFn)(ScriptContext *, Utf8SourceInfo *);
@@ -1364,7 +1364,7 @@ private:
             raiseMessageToDebuggerFunctionType = function;
         }
 
-        void RaiseMessageToDebugger(DWORD messageType, LPCWSTR message, LPCWSTR url)
+        void RaiseMessageToDebugger(DEBUG_EVENT_INFO_TYPE messageType, LPCWSTR message, LPCWSTR url)
         {
             if (raiseMessageToDebuggerFunctionType != nullptr)
             {

@@ -164,8 +164,7 @@ namespace Js
     extern "C" double __cdecl __libm_sse2_pow(double, double);
 
     static const double d1_0 = 1.0;
-
-    __declspec(align(16))
+   
     __declspec(naked)
     double JavascriptNumber::DirectPow(double x, double y)
     {      

@@ -33,6 +33,12 @@
 #define EXDEF4_WMS(process, op, func, y, t)
 #endif
 
+#ifdef NTBUILD
+// NT header is missing __cdecl on these API
+#define _CRT_HAS_CDECL false
+#else
+#define _CRT_HAS_CDECL true
+#endif
 
   DEF3    ( CUSTOM     , Nop               , OP_Empty                , Empty         )
 EXDEF3    ( CUSTOM     , NopEx             , OP_Empty                , Empty         )
@@ -168,16 +174,16 @@ EXDEF3    ( CUSTOM     , NopEx             , OP_Empty                , Empty    
   DEF3_WMS( CALLDOUBLE2, Acos_Db           , Math::Acos              , false         )
   DEF3_WMS( CALLDOUBLE2, Atan_Db           , Math::Atan              , false         )
   DEF3_WMS( CALLDOUBLE2, Ceil_Db           , ::ceil                  , true          )
-  DEF3_WMS( CALLFLOAT2 , Ceil_Flt          , ::ceil                  , true          )
+  DEF3_WMS( CALLFLOAT2 , Ceil_Flt          , ::ceilf                 , _CRT_HAS_CDECL)
   DEF3_WMS( CALLDOUBLE2, Floor_Db          , ::floor                 , true          )
-  DEF3_WMS( CALLFLOAT2 , Floor_Flt         , ::floor                 , true          )
+  DEF3_WMS( CALLFLOAT2 , Floor_Flt         , ::floorf                , _CRT_HAS_CDECL)      
   DEF3_WMS( CALLDOUBLE2, Exp_Db            , Math::Exp               , false         )
   DEF3_WMS( CALLDOUBLE2, Log_Db            , Math::Log               , false         )
   DEF3_WMS( CALLDOUBLE3, Pow_Db            , Math::Pow               , false         )
-  DEF3_WMS(CALLDOUBLE2,  Sqrt_Db           , ::sqrt                  , true          )
-  DEF3_WMS( CALLFLOAT2,  Sqrt_Flt          , ::sqrt                  , true          )
-  DEF3_WMS( CALLDOUBLE2, Abs_Db            , ::abs                   , true          )
-  DEF3_WMS( CALLFLOAT2,  Abs_Flt           , ::abs                   , true          )
+  DEF3_WMS( CALLDOUBLE2, Sqrt_Db           , ::sqrt                  , true          )
+  DEF3_WMS( CALLFLOAT2,  Sqrt_Flt          , ::sqrtf                 , _CRT_HAS_CDECL)
+  DEF3_WMS( CALLDOUBLE2, Abs_Db            , ::fabs                  , true          )
+  DEF3_WMS( CALLFLOAT2 , Abs_Flt           , ::fabsf                 , _CRT_HAS_CDECL)
   DEF3_WMS( CALLDOUBLE3, Atan2_Db          , Math::Atan2             , false         )
   DEF3_WMS( CALLDOUBLE3, Min_Db            , AsmJsMath::Min<double>  , false         )
   DEF3_WMS( CALLDOUBLE3, Max_Db            , AsmJsMath::Max<double>  , false         )

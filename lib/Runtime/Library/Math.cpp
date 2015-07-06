@@ -89,7 +89,7 @@ namespace Js
             }
 
             double x = JavascriptConversion::ToNumber(args[1], scriptContext);
-            double result = ::abs(x);
+            double result = ::fabs(x);
             return JavascriptNumber::ToVarNoCheck(result, scriptContext);
         }
         else
@@ -929,7 +929,7 @@ LDone:
             // Result is 1 even if x is NaN.
             result = 1;
         }
-        else if( 1.0 == abs( x ) && !NumberUtilities::IsFinite( y ) )
+        else if( 1.0 == fabs( x ) && !NumberUtilities::IsFinite( y ) )
         {
             result = JavascriptNumber::NaN;
         }
@@ -1547,7 +1547,7 @@ LDone:
             {
                 return JavascriptNumber::ToVarNoCheck(ucrtC99MathApis->atanh(x), scriptContext);
             }
-            else if (::abs(x) < 1.0)
+            else if (::fabs(x) < 1.0)
             {
                 double result = (JavascriptNumber::IsNegZero(x)) ? x : Math::Log((1.0 + x) / (1.0 - x)) / 2.0;
 
@@ -1613,7 +1613,7 @@ LDone:
             }
             else
             {
-                result = ::abs(x1);
+                result = ::fabs(x1);
             } 
         }
         else if (args.Info.Count == 3)
@@ -1671,7 +1671,7 @@ LDone:
                 }
                 else
                 {
-                    doubleVal = ::abs(doubleVal);
+                    doubleVal = ::fabs(doubleVal);
                     if (scale < doubleVal)
                     {
                         sum = sum * (scale / doubleVal) * (scale / doubleVal) + 1; /* scale/scale === 1*/

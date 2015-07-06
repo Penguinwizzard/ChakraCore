@@ -11,7 +11,13 @@
 
 #ifdef ENABLE_INTL_OBJECT
 
+#ifdef NTBUILD
 using namespace Windows::Globalization;
+using namespace Windows::Foundation::Collections;
+#else
+using namespace ABI::Windows::Globalization;
+using namespace ABI::Windows::Foundation::Collections;
+#endif
 
 #define IfFailThrowHr(op) \
     if (FAILED(hr=(op))) \
@@ -59,7 +65,7 @@ namespace Js
 {
 
 
-    class HSTRINGIterator : public Microsoft::WRL::RuntimeClass<Windows::Foundation::Collections::IIterator<HSTRING>>
+    class HSTRINGIterator : public Microsoft::WRL::RuntimeClass<IIterator<HSTRING>>
     {
 
         HSTRING *items;
@@ -149,7 +155,7 @@ namespace Js
         }
     };
 
-    class HSTRINGIterable : public Microsoft::WRL::RuntimeClass<Windows::Foundation::Collections::IIterable<HSTRING>>
+    class HSTRINGIterable : public Microsoft::WRL::RuntimeClass<IIterable<HSTRING>>
     {
 
         HSTRING *items;
@@ -182,7 +188,7 @@ namespace Js
             }
         }
 
-        IFACEMETHODIMP First(_Outptr_result_maybenull_ Windows::Foundation::Collections::IIterator<HSTRING> **first)
+        IFACEMETHODIMP First(_Outptr_result_maybenull_ IIterator<HSTRING> **first)
         {
             return Microsoft::WRL::MakeAndInitialize<HSTRINGIterator>(first, this->items, this->length);
         }
@@ -346,7 +352,7 @@ namespace Js
             IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(localeStrings[i],  wcslen(localeStrings[i]), (headers + i), (arr + i)));
         }
 
-        Microsoft::WRL::ComPtr<Windows::Foundation::Collections::IIterable<HSTRING>> languages(nullptr);
+        Microsoft::WRL::ComPtr<IIterable<HSTRING>> languages(nullptr);
         IfFailedReturn(Microsoft::WRL::MakeAndInitialize<HSTRINGIterable>(&languages, arr, numLocaleStrings));
 
         HSTRING geoString;
@@ -369,7 +375,7 @@ namespace Js
             IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(localeStrings[i],  wcslen(localeStrings[i]), (headers + i), (arr + i)));
         }
 
-        Microsoft::WRL::ComPtr<Windows::Foundation::Collections::IIterable<HSTRING>> languages(nullptr);
+        Microsoft::WRL::ComPtr<IIterable<HSTRING>> languages(nullptr);
         IfFailedReturn(Microsoft::WRL::MakeAndInitialize<HSTRINGIterable>(&languages, arr, numLocaleStrings));
 
         HSTRING geoString;
@@ -391,7 +397,7 @@ namespace Js
             IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(localeStrings[i],  wcslen(localeStrings[i]), (headers + i), (arr + i)));
         }
 
-        Microsoft::WRL::ComPtr<Windows::Foundation::Collections::IIterable<HSTRING>> languages(nullptr);
+        Microsoft::WRL::ComPtr<IIterable<HSTRING>> languages(nullptr);
         IfFailedReturn(Microsoft::WRL::MakeAndInitialize<HSTRINGIterable>(&languages, arr, numLocaleStrings));
 
         HSTRING geoString;
@@ -424,7 +430,7 @@ namespace Js
             IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(localeStrings[i],  wcslen(localeStrings[i]), (headers + i), (arr + i)));
         }
 
-        Microsoft::WRL::ComPtr<Windows::Foundation::Collections::IIterable<HSTRING>> languages(nullptr);
+        Microsoft::WRL::ComPtr<IIterable<HSTRING>> languages(nullptr);
         IfFailedReturn(Microsoft::WRL::MakeAndInitialize<HSTRINGIterable>(&languages, arr, numLocaleStrings));
 
         if(clock == nullptr)
