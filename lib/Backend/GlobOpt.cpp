@@ -18712,14 +18712,6 @@ GlobOpt::TrackTempObjectSyms(IR::Instr * instr, IR::RegOpnd * opnd)
 
                 // duplicates are removed by parser
                 Assert(!propIds->hadDuplicates);
-
-                // This assertion was valid as of ES5, but is no longer now that we support
-                // ES6 object literals. In ES5 object literals, the only way to set __proto__
-                // was using { __proto__ : xyz }, which would cause an InitProto opcode.
-                // ES6 introduces shorthand literals, such as { __proto__ } which are defined
-                // by B.3.1 to create a new property on the object, rather than set the object's
-                // prototype.
-                // Assert(!propIds->has__proto__);
                 
                 if (globOptData.stackLiteralInitFldDataMap == nullptr)
                 {
@@ -18831,7 +18823,6 @@ GlobOpt::GenerateBailOutMarkTempObjectIfNeeded(IR::Instr * instr, IR::Opnd * opn
                 if (isDst && instr->m_opcode == Js::OpCode::InitFld)
                 {
                     const Js::PropertyId propertyId = propertySymOpnd->m_sym->AsPropertySym()->m_propertyId;
-                    Assert(propertyId != Js::PropertyIds::__proto__);
 
                     // We don't need to track numeric properies init
                     if (!this->func->GetScriptContext()->GetPropertyNameLocked(propertyId)->IsNumeric())
