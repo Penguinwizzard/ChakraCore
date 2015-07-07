@@ -181,7 +181,9 @@ namespace Js {
         PropertyOperation_AllowUndecl                   = 0x80,
 
         // No need to check for undeclared let/const in case of console scope (as this operation is initializing the let/const)
-        PropertyOperation_AllowUndeclInConsoleScope     = 0x100
+        PropertyOperation_AllowUndeclInConsoleScope     = 0x100,
+
+        PropertyOperation_ThrowIfNonWritable   = 0x300
     };
 
     class RecyclableObject : public FinalizableObject

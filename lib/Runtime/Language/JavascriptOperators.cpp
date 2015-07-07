@@ -2272,6 +2272,8 @@ CommonNumber:
                     {
                         JavascriptError::ThrowReferenceError(requestContext, ERRAssignmentToConst);
                     }
+
+                    JavascriptError::ThrowCantAssign(propertyOperationFlags, requestContext, propertyId);
                     JavascriptError::ThrowCantAssignIfStrictMode(propertyOperationFlags, requestContext);
                     return FALSE;
                 }
@@ -2930,6 +2932,7 @@ CommonNumber:
                     JavascriptError::ThrowTypeError(scriptContext, JSERR_NonExtensibleObject);
                 }
 
+                JavascriptError::ThrowCantAssign(propertyOperationFlags, scriptContext, index);
                 JavascriptError::ThrowCantAssignIfStrictMode(propertyOperationFlags, scriptContext);
                 return FALSE;
             }

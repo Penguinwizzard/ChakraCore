@@ -111,6 +111,8 @@ namespace Js
         static void SetErrorMessage(JavascriptError *pError, HRESULT hr, ScriptContext* scriptContext, va_list argList);
         static void SetErrorType(JavascriptError *pError, ErrorTypeEnum errorType);
 
+        static bool ThrowCantAssign(PropertyOperationFlags flags, ScriptContext* scriptContext, PropertyId propertyId);
+        static bool ThrowCantAssign(PropertyOperationFlags flags, ScriptContext* scriptContext, uint32 index);
         static bool ThrowCantAssignIfStrictMode(PropertyOperationFlags flags, ScriptContext* scriptContext);
         static bool ThrowCantExtendIfStrictMode(PropertyOperationFlags flags, ScriptContext* scriptContext);
         static bool ThrowCantDeleteIfStrictMode(PropertyOperationFlags flags, ScriptContext* scriptContext, PCWSTR varName);

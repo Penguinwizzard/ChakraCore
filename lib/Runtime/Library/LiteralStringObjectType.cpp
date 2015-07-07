@@ -7,7 +7,7 @@
 namespace Js
 {
     /*static*/
-    PropertyId JavascriptStringObject::specialPropertyIds[] = 
+    PropertyId JavascriptStringObject::specialPropertyIds[] =
     {
         PropertyIds::length
     };
@@ -45,6 +45,12 @@ namespace Js
             return flags;
         }
 
+        uint32 index;
+        if (requestContext->IsNumericPropertyId(propertyId, &index))
+        {
+            return JavascriptStringObject::GetItemSetter(index, setterValue, requestContext);
+        }
+
         return DynamicObject::GetSetter(propertyId, setterValue, info, requestContext);
     }
 
@@ -54,9 +60,19 @@ namespace Js
         PropertyRecord const* propertyRecord;
         this->GetScriptContext()->FindPropertyRecord(propertyNameString, &propertyRecord);
 
-        if (propertyRecord != null && GetSetterBuiltIns(propertyRecord->GetPropertyId(), info, &flags))
+        if (propertyRecord != null)
         {
-            return flags;
+            PropertyId propertyId = propertyRecord->GetPropertyId();
+            if (GetSetterBuiltIns(propertyId, info, &flags))
+            {
+                return flags;
+            }
+
+            uint32 index;
+            if (requestContext->IsNumericPropertyId(propertyId, &index))
+            {
+                return JavascriptStringObject::GetItemSetter(index, setterValue, requestContext);
+            }
         }
 
         return DynamicObject::GetSetter(propertyNameString, setterValue, info, requestContext);
@@ -281,7 +297,7 @@ namespace Js
     }
 
     BOOL JavascriptStringObject::GetItem(Var originalInstance, uint32 index, Var* value, ScriptContext* requestContext)
-    {        
+    {
         JavascriptString* str = JavascriptString::FromVar(CrossSite::MarshalVar(requestContext, this->InternalUnwrap()));
         if (str->GetItemAt(index, value))
         {
@@ -293,6 +309,15 @@ namespace Js
     BOOL JavascriptStringObject::GetItemReference(Var originalInstance, uint32 index, Var* value, ScriptContext* requestContext)
     {
         return this->GetItem(originalInstance, index, value, requestContext);
+    }
+
+    DescriptorFlags JavascriptStringObject::GetItemSetter(uint32 index, Var* setterValue, ScriptContext* requestContext)
+    {
+        if (index < (uint32)this->InternalUnwrap()->GetLength())
+        {
+            return DescriptorFlags::Data;
+        }
+        return DynamicObject::GetItemSetter(index, setterValue, requestContext);
     }
 
     BOOL JavascriptStringObject::SetItem(uint32 index, Var value, PropertyOperationFlags flags)

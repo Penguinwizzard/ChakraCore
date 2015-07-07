@@ -1528,7 +1528,7 @@ namespace Js
                 JavascriptError::ThrowTypeError(scriptContext, JSERR_Operand_Invalid_NeedObject, L"Object.assign");
             }
 
-            if (!JavascriptOperators::SetProperty(to, to, nextKey, propValue, scriptContext))
+            if (!JavascriptOperators::SetProperty(to, to, nextKey, propValue, scriptContext, PropertyOperationFlags::PropertyOperation_ThrowIfNonWritable))
             {
                 JavascriptError::ThrowTypeError(scriptContext, JSERR_Operand_Invalid_NeedObject, L"Object.assign");
             }

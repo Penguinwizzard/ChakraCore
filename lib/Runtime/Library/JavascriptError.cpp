@@ -792,6 +792,32 @@ namespace Js
         return MapError(scriptContext, errorType);
     }
 
+    bool JavascriptError::ThrowCantAssign(PropertyOperationFlags flags, ScriptContext* scriptContext, PropertyId propertyId)
+    {
+        if (flags == PropertyOperation_ThrowIfNonWritable)
+        {
+            if (scriptContext->GetThreadContext()->RecordImplicitException())
+            {
+                JavascriptError::ThrowTypeError(scriptContext, JSERR_DefineProperty_NotWritable, scriptContext->GetPropertyName(propertyId)->GetBuffer());
+            }
+            return true;
+        }
+        return false;
+    }
+
+    bool JavascriptError::ThrowCantAssign(PropertyOperationFlags flags, ScriptContext* scriptContext, uint32 index)
+    {
+        if (flags == PropertyOperation_ThrowIfNonWritable)
+        {
+            if (scriptContext->GetThreadContext()->RecordImplicitException())
+            {
+                JavascriptError::ThrowTypeError(scriptContext, JSERR_DefineProperty_NotWritable, JavascriptConversion::ToString(JavascriptNumber::ToVar(index, scriptContext), scriptContext)->GetSz());
+            }
+            return true;
+        }
+        return false;
+    }
+
     bool JavascriptError::ThrowCantAssignIfStrictMode(PropertyOperationFlags flags, ScriptContext* scriptContext)
     {
         if (flags & PropertyOperation_StrictMode)

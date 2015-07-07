@@ -32,6 +32,7 @@ namespace Js
 
         virtual bool HasReadOnlyPropertiesInvisibleToTypeHandler() override { return true; }
 
+        virtual DescriptorFlags GetItemSetter(uint32 index, Var* setterValue, ScriptContext* requestContext) override;
         virtual BOOL HasProperty(PropertyId propertyId) override;
         virtual BOOL IsConfigurable(PropertyId propertyId) override;
         virtual BOOL IsEnumerable(PropertyId propertyId) override;
