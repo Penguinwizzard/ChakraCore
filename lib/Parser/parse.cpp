@@ -94,6 +94,8 @@ Parser::Parser(Js::ScriptContext* scriptContext, BOOL strictMode, PageAllocator 
     m_parseType = ParseType_Upfront;
 
     m_deferEllipsisError = false;
+
+    m_parsingSuperRestrictionState = ParsingSuperRestrictionState_SuperDisallowed;
 }
 
 Parser::~Parser(void)
@@ -2576,7 +2578,7 @@ ParseNodePtr Parser::ParseTerm(BOOL fAllowCall, LPCOLESTR pNameHint, ulong *pHin
     case tkSUPER:
         if (m_scriptContext->GetConfig()->IsES6SuperEnabled())
         {
-            pnode = ParseSuper<buildAST>(pnode);
+            pnode = ParseSuper<buildAST>(pnode, !!fAllowCall);
         }
         else
         {
@@ -3741,8 +3743,14 @@ BOOL Parser::IsDeferredFnc()
 }
 
 template<bool buildAST>
-ParseNodePtr Parser::ParseFncDecl(ushort flags, LPCOLESTR pNameHint, const bool isSourceElement, const bool needsPIDOnRCurlyScan, bool fUnaryOrParen)
+ParseNodePtr Parser::ParseFncDecl(ushort flags, LPCOLESTR pNameHint, const bool isSourceElement, const bool needsPIDOnRCurlyScan, bool resetParsingSuperRestrictionState, bool fUnaryOrParen)
 {
+    if (resetParsingSuperRestrictionState)
+    {
+        //  ParseFncDecl will always reset m_parsingSuperRestrictionState to super disallowed unless explicitly disabled
+        this->m_parsingSuperRestrictionState = ParsingSuperRestrictionState_SuperDisallowed;
+    }
+
     ParseNodePtr pnodeFnc = nullptr;
     ParseNodePtr *ppnodeVarSave = nullptr;
     ParseNodePtr pnodeFncSave = nullptr;
@@ -5935,10 +5943,27 @@ LPCOLESTR Parser::ConstructFinalHintNode(IdentPtr pClassName, IdentPtr pMemberNa
     return pFinalName;
 }
 
+class AutoParsingSuperRestrictionStateResetter
+{
+public:
+    AutoParsingSuperRestrictionStateResetter(Parser* parser) : m_parser(parser)
+    {
+        AssertMsg(this->m_parser != nullptr, "This just should not happen");
+    }
+    ~AutoParsingSuperRestrictionStateResetter()
+    {
+        AssertMsg(this->m_parser != nullptr, "This just should not happen");
+        this->m_parser->m_parsingSuperRestrictionState = Parser::ParsingSuperRestrictionState_SuperDisallowed;
+    }
+private:
+    Parser* m_parser;
+};
+
 template<bool buildAST>
 ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulong *pHintLength)
 {
     bool hasConstructor = false;
+    bool hasExtends = false;
     IdentPtr name = nullptr;
     ParseNodePtr pnodeName = nullptr;
     ParseNodePtr pnodeConstructor = nullptr;
@@ -5979,6 +6004,7 @@ ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulo
     {
         m_pscan->Scan();
         pnodeExtends = ParseExpr<buildAST>();
+        hasExtends = true;
     }
 
     if (m_token.tk != tkLCurly)
@@ -6096,7 +6122,15 @@ ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulo
                 constructorNameLength = nameHintLength;
             }
 
-            pnodeConstructor = ParseFncDecl<buildAST>(fncDeclFlags, pConstructorName, false, /* needsPIDOnRCurlyScan */ true);
+            {
+                AutoParsingSuperRestrictionStateResetter autoParsingSuperRestrictionStateResetter(this);
+                if (hasExtends)
+                {
+                    this->m_parsingSuperRestrictionState = ParsingSuperRestrictionState_SuperCallAndPropertyAllowed;
+                }
+                pnodeConstructor = ParseFncDecl<buildAST>(fncDeclFlags, pConstructorName, false, /* needsPIDOnRCurlyScan */ true, /* resetParsingSuperRestrictionState = */false);
+            }
+
             // The constructor function will get the same name as class.
             pnodeConstructor->sxFnc.hint = pConstructorName;
             pnodeConstructor->sxFnc.hintLength = constructorNameLength;
@@ -6145,7 +6179,16 @@ ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulo
                     pnodeMemberName = CreateStrNodeWithScanner(memberPid);
                 }
 
-                ParseNodePtr pnodeFnc = ParseFncDecl<buildAST>((isGetter ? fFncNoArg : fFncSetter) | fncDeclFlags, pidHint ? pidHint->Psz() : nullptr, false, /* needsPIDOnRCurlyScan */ true);
+                ParseNodePtr pnodeFnc = nullptr;
+                {
+                    AutoParsingSuperRestrictionStateResetter autoParsingSuperRestrictionStateResetter(this);
+                    if (hasExtends)
+                    {
+                        this->m_parsingSuperRestrictionState = ParsingSuperRestrictionState_SuperPropertyAllowed;
+                    }
+                    pnodeFnc = ParseFncDecl<buildAST>((isGetter ? fFncNoArg : fFncSetter) | fncDeclFlags, pidHint ? pidHint->Psz() : nullptr, false, /* needsPIDOnRCurlyScan */ true, /* resetParsingSuperRestrictionState */false);
+                }
+
                 pnodeFnc->sxFnc.SetIsStaticMember(isStatic);
 
                 if (buildAST)
@@ -6162,12 +6205,20 @@ ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulo
                     Error(ERRsyntax);
                 }
 
-                ParseNodePtr pnodeFunc = ParseFncDecl<buildAST>(fncDeclFlags,  pidHint ? pidHint->Psz() : nullptr, false, /* needsPIDOnRCurlyScan */ true);
-                pnodeFunc->sxFnc.SetIsStaticMember(isStatic);
+                ParseNodePtr pnodeFnc = nullptr;
+                {
+                    AutoParsingSuperRestrictionStateResetter autoParsingSuperRestrictionStateResetter(this);
+                    if (hasExtends)
+                    {
+                        this->m_parsingSuperRestrictionState = ParsingSuperRestrictionState_SuperPropertyAllowed;
+                    }
+                    pnodeFnc = ParseFncDecl<buildAST>(fncDeclFlags, pidHint ? pidHint->Psz() : nullptr, false, /* needsPIDOnRCurlyScan */ true, /* resetParsingSuperRestrictionState */false);
+                }
+                pnodeFnc->sxFnc.SetIsStaticMember(isStatic);
 
                 if (buildAST)
                 {
-                    pnodeMember = CreateBinNode(knopMember, pnodeMemberName, pnodeFunc);
+                    pnodeMember = CreateBinNode(knopMember, pnodeMemberName, pnodeFnc);
                     pMemberNameHint = ConstructFinalHintNode(pClassNamePid, pidHint, nullptr /*pgetset*/, isStatic, &memberNameHintLength, isComputedName, pMemberNameHint);
                 }
             }
@@ -7038,7 +7089,7 @@ ParseNodePtr Parser::ParseExpr(int oplMin, BOOL *pfCanAssign, BOOL fAllowIn, BOO
         else if (nop == knopFncDecl)
         {
             m_pscan->SeekTo(termStart);
-            pnode = ParseFncDecl<buildAST>(fFncLambda, nullptr, false);
+            pnode = ParseFncDecl<buildAST>(fFncLambda, nullptr, /* isSourceElement = */ false, /* needsPIDOnRCurlyScan = */false, /* resetParsingSuperRestrictionState = */false);
         }
         else
         {
@@ -10300,7 +10351,7 @@ inline bool Parser::IsNaNOrInfinityLiteral(LPCOLESTR str)
 }
 
 template <bool buildAST>
-ParseNodePtr Parser::ParseSuper(ParseNodePtr pnode)
+ParseNodePtr Parser::ParseSuper(ParseNodePtr pnode, bool fAllowCall)
 {
     ParseNodePtr currentNodeFunc = GetCurrentFunctionNode();
 
@@ -10318,12 +10369,40 @@ ParseNodePtr Parser::ParseSuper(ParseNodePtr pnode)
         break;
 
     default:
-        if (!m_pscan->FHadNewLine())
+        Error(ERRInvalidSuper);
+        break;
+    }
+
+    if (!fAllowCall && (m_token.tk == tkLParen))
+    {
+        Error(ERRInvalidSuper); // new super() is not allowed
+    }
+    else if (this->m_parsingSuperRestrictionState == ParsingSuperRestrictionState_SuperCallAndPropertyAllowed)
+    {
+        // Any super access is good within a class constructor
+    }
+    else if (this->m_parsingSuperRestrictionState == ParsingSuperRestrictionState_SuperPropertyAllowed)
+    {
+        // Cannot call super within a class member
+        if (m_token.tk == tkLParen)
         {
             Error(ERRInvalidSuper);
         }
-        break;
     }
+    else if ((this->m_grfscr & fscrEvalCode) != 0)
+    {
+        if ((this->m_grfscr & fscrImmediatelyInsideLambdaBody) != 0)
+        {
+            // Any super is allowed except when it is immediately inside a lambda body
+            Error(ERRInvalidSuper);
+        }
+    }
+    else
+    {
+        // Anything else is an error
+        Error(ERRInvalidSuper);
+    }
+
     currentNodeFunc->sxFnc.SetHasSuperReference(TRUE);
     CHAKRATEL_LANGSTATS_INC_LANGFEATURECOUNT(SuperCount, m_scriptContext);
     return pnode;

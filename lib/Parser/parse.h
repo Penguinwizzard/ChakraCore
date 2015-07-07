@@ -443,6 +443,16 @@ private:
     charcount_t m_funcInArray;
     uint m_scopeCountNoAst;
 
+    
+    /*
+     * Parsing states for super restriction
+     */
+    static const uint ParsingSuperRestrictionState_SuperDisallowed = 0;
+    static const uint ParsingSuperRestrictionState_SuperCallAndPropertyAllowed = 1;
+    static const uint ParsingSuperRestrictionState_SuperPropertyAllowed = 2;
+    uint m_parsingSuperRestrictionState;
+    friend class AutoParsingSuperRestrictionStateResetter;
+
     // Used for issuing spread and rest errors when there is ambiguity with parameter list and parenthesized expressions
     uint m_parenDepth;
     bool m_deferEllipsisError;
@@ -652,7 +662,7 @@ private:
     template<bool buildAST> ParseNodePtr ParseArgList(bool *pCallOfConstants, uint16 *pSpreadArgCount, uint16 * pCount);
     template<bool buildAST> ParseNodePtr ParseArrayList(bool *pArrayOfTaggedInts, bool *pArrayOfInts, bool *pArrayOfNumbers, bool *pHasMissingValues, uint *count, uint *spreadCount);
     template<bool buildAST> ParseNodePtr ParseMemberList(LPCOLESTR pNameHint, ulong *pHintLength, tokens declarationType = tkNone, SymbolType symbolType = STUnknown);
-    template<bool buildAST> ParseNodePtr ParseSuper(ParseNodePtr pnode);
+    template<bool buildAST> ParseNodePtr ParseSuper(ParseNodePtr pnode, bool fAllowCall);
 
     // Used to determine the type of JavaScript object member.
     // The values can be combined using bitwise OR.
@@ -673,7 +683,7 @@ private:
 
     template<bool buildAST> void ParseComputedName(ParseNodePtr* ppnodeName, LPCOLESTR* ppNameHint, LPCOLESTR* ppFullNameHint = nullptr, ulong *returnLength = nullptr);
     template<bool buildAST> ParseNodePtr ParseMemberGetSet(OpCode nop, LPCOLESTR* ppNameHint);
-    template<bool buildAST> ParseNodePtr ParseFncDecl(ushort flags, LPCOLESTR pNameHint = NULL, const bool isSourceElement = false, const bool needsPIDOnRCurlyScan = false, bool fUnaryOrParen = false);
+    template<bool buildAST> ParseNodePtr ParseFncDecl(ushort flags, LPCOLESTR pNameHint = NULL, const bool isSourceElement = false, const bool needsPIDOnRCurlyScan = false, bool resetParsingSuperRestrictionState = true, bool fUnaryOrParen = false);
     template<bool buildAST> bool ParseFncNames(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncParent, ushort flags, ParseNodePtr **pLastNodeRef);
     template<bool buildAST> void ParseFncFormals(ParseNodePtr pnodeFnc, ushort flags);
     template<bool buildAST> bool ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncParent, LPCOLESTR pNameHint, ushort flags, bool *pHasName, bool fUnaryOrParen, bool *pNeedScanRCurly);

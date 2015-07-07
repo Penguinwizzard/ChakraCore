@@ -579,10 +579,17 @@ namespace Js
         if (!scriptContext->IsInEvalMap(key, isIndirect, &pfuncScript))
         {
             ulong grfscr = additionalGrfscr | fscrReturnExpression | fscrEval | fscrEvalCode | fscrGlobalCode;
+            JavascriptFunction* pfuncCaller;
+            JavascriptStackWalker::GetCaller(&pfuncCaller, scriptContext);
+            AssertMsg(pfuncCaller != nullptr, "External eval call is impossible");
 
             if (isLibraryCode)
             {
                 grfscr |= fscrIsLibraryCode;
+            }
+            if (pfuncCaller != nullptr && pfuncCaller->IsLambda())
+            {
+                grfscr |= fscrImmediatelyInsideLambdaBody;
             }
             pfuncScript = library->GetGlobalObject()->EvalHelper(scriptContext, argString->GetSz(), argString->GetLength(), moduleID, 
                 grfscr, Constants::EvalCode, doRegisterDocument, isIndirect, strictMode);
@@ -624,9 +631,9 @@ namespace Js
             // The eval expression refers to "this"
             if (args.Info.Flags & CallFlags_CallEval)
             {
-                // If we are non-hidden call to eval then look for the "this" object in the frame display if the caller is a lambda else get "this" from the caller's frame.
                 JavascriptFunction* pfuncCaller;
                 JavascriptStackWalker::GetCaller(&pfuncCaller, scriptContext);
+                // If we are non-hidden call to eval then look for the "this" object in the frame display if the caller is a lambda else get "this" from the caller's frame.
                 if (pfuncCaller->GetFunctionInfo() != nullptr && pfuncCaller->GetFunctionInfo()->IsLambda())
                 {
                     Var defaultInstance = (moduleID == kmodGlobal) ? JavascriptOperators::OP_LdRoot(scriptContext)->ToThis() : (Var)JavascriptOperators::GetModuleRoot(moduleID, scriptContext);

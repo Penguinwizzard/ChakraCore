@@ -836,9 +836,9 @@ enum
     // Throw a ReferenceError when the global 'this' is used (possibly in a lambda),
     // for debugger when broken in a lambda that doesn't capture 'this'
     fscrDebuggerErrorOnGlobalThis       = 1 << 22,
-    
     fscrDeferredClassMemberFnc          = 1 << 23,
     fscrConsoleScopeEval                = 1 << 24,  //  The eval string is console eval or debugEval, used to have top level
-                                                    //  let/const in global scope instaed of eval scope so that they can be preserved across console inputs
-    fscrAll                             = (1 << 25) - 1
+                                                    //  let/const in global scope instead of eval scope so that they can be preserved across console inputs
+    fscrImmediatelyInsideLambdaBody     = 1 << 25,
+    fscrAll                             = (1 << 26) - 1
 };

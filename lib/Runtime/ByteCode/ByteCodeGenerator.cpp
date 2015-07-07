@@ -4294,6 +4294,7 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
                 nonLambdaFunc->root->sxFnc.SetHasNewTargetReferene();
                 nonLambdaFunc->AssignNewTargetRegister();
                 nonLambdaFunc->SetIsNewTargetLexicallyCaptured();
+                nonLambdaFunc->AssignUndefinedConstRegister();
             }
 
             nonLambdaFunc->GetBodyScope()->SetHasLocalInClosure(true);
