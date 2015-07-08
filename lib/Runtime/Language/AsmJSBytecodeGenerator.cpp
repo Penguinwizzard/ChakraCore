@@ -2872,12 +2872,12 @@ namespace Js
 
         RegSlot regVal = GetAndReleaseUnaryLocations<int>( &valInfo );
         StartStatement(pnode);
-        mWriter.AsmReg2( OpCodeAsmJs::Ld_Int, regVal, valInfo.location );
+        mWriter.AsmReg2(OpCodeAsmJs::BeginSwitch_Int, regVal, valInfo.location);
         EndStatement(pnode);
 
         // TODO: if all cases are compile-time constants, emit a switch statement in the byte
         // code so the BE can optimize it.
-
+        
         ParseNode *pnodeCase;
         for( pnodeCase = pnode->sxSwitch.pnodeCases; pnodeCase; pnodeCase = pnodeCase->sxCase.pnodeNext )
         {
@@ -2896,14 +2896,14 @@ namespace Js
             }
 
             const EmitExpressionInfo& caseExprInfo = Emit( pnodeCase->sxCase.pnodeExpr );
-            mWriter.AsmBrReg2( OpCodeAsmJs::BrEq_Int, pnodeCase->sxCase.labelCase, regVal, caseExprInfo.location );
+            mWriter.AsmBrReg2( OpCodeAsmJs::Case_Int, pnodeCase->sxCase.labelCase, regVal, caseExprInfo.location );
             // do not need to release location because int constants cannot be released
         }
 
         // No explicit case value matches. Jump to the default arm (if any) or break out altogether.
         if( fHasDefault )
         {
-            mWriter.AsmBr( pnode->sxSwitch.pnodeDefault->sxCase.labelCase );
+            mWriter.AsmBr( pnode->sxSwitch.pnodeDefault->sxCase.labelCase, OpCodeAsmJs::EndSwitch_Int );
         }
         else
         {
@@ -2911,7 +2911,7 @@ namespace Js
             {
                 pnode->sxStmt.breakLabel = mWriter.DefineLabel();
             }
-            mWriter.AsmBr( pnode->sxStmt.breakLabel );
+            mWriter.AsmBr( pnode->sxStmt.breakLabel, OpCodeAsmJs::EndSwitch_Int );
         }
         // Now emit the case arms to which we jump on matching a case value.
         for( pnodeCase = pnode->sxSwitch.pnodeCases; pnodeCase; pnodeCase = pnodeCase->sxCase.pnodeNext )

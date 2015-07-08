@@ -62,7 +62,10 @@ EXDEF2    (NOPASMJS          , NopEx        , Empty                             
   DEF2_WMS( D1toD1Mem        , Return_Db    , (double)                                           ) // convert double to var
   DEF2_WMS( F1toF1Mem        , Return_Flt   , (float)                                            ) // convert float to var
   DEF2_WMS( I1toI1Mem        , Return_Int   , (int)                                              ) // convert int to var
-  
+
+  DEF2_WMS( I1toI1Mem        , BeginSwitch_Int, (int)                                            )
+  DEF2    ( BR_ASM           , EndSwitch_Int, OP_Br                                              )
+  DEF2_WMS( BR_ASM_Mem       , Case_Int     , AsmJsMath::CmpEq<int>                              )
   
   DEF2_WMS( I1toI1Mem        , Neg_Int      , AsmJsMath::Neg<int>                                ) // int unary '-'
   DEF2_WMS( I1toI1Mem        , Not_Int      , AsmJsMath::Not                                     ) // int unary '~'

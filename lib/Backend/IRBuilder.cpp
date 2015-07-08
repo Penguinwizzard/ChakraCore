@@ -369,11 +369,7 @@ IRBuilder::Build()
     longBranchMap = JitAnew(m_tempAlloc, LongBranchMap, m_tempAlloc);
 #endif
 
-    // caseNodes is a list of Case instructions
-    caseNodes = CaseNodeList::New(m_tempAlloc);
-    seenOnlySingleCharStrCaseNodes = true;
-    intConstSwitchCases = JitAnew(m_tempAlloc, BVSparse<JitArenaAllocator>, m_tempAlloc);
-    strConstSwitchCases = StrSwitchCaseList::New(m_tempAlloc);
+    m_switchBuilder.Init(m_func, m_tempAlloc, false);
 
     this->BuildRelocatableConstantLoads();
     this->BuildConstantLoads();
@@ -1126,756 +1122,6 @@ IRBuilder::BuildConstantLoads()
 
 }
 
-///----------------------------------------------------------------------------
-///
-/// IRBuilder::RefineCaseNodes
-///
-///     Filter IR instructions for case statements that contain no case blocks.
-///     Also sets upper bound and lower bound for case instructions that has a
-///     consecutive set of cases with just one case block.
-///----------------------------------------------------------------------------
-void IRBuilder::RefineCaseNodes()
-{
-    caseNodes->Sort();
-
-    CaseNodeList * tmpCaseNodes = CaseNodeList::New(m_tempAlloc);
-
-    for(int currCaseIndex = 1; currCaseIndex < caseNodes->Count(); currCaseIndex++)
-    {
-        CaseNode * prevCaseNode = caseNodes->Item(currCaseIndex-1);
-        CaseNode * currCaseNode = caseNodes->Item(currCaseIndex);
-        uint32 prevCaseTargetOffset = prevCaseNode->GetTargetOffset();
-        uint32 currCaseTargetOffset = currCaseNode->GetTargetOffset();
-        int prevCaseConstValue = prevCaseNode->GetSrc2IntConst();
-        int currCaseConstValue = currCaseNode->GetSrc2IntConst();
-
-        /*To handle empty case statements with/without repetition*/
-        if(prevCaseTargetOffset == currCaseTargetOffset &&
-            (prevCaseConstValue + 1 == currCaseConstValue || prevCaseConstValue == currCaseConstValue))
-        {
-            caseNodes->Item(currCaseIndex)->SetLowerBound(prevCaseNode->GetLowerBound());
-        }
-        else
-        {
-            if(tmpCaseNodes->Count() != 0)
-            {
-                int lastTmpCaseConstValue = tmpCaseNodes->Item(tmpCaseNodes->Count() - 1)->GetSrc2IntConst();
-                /*To handle duplicate non empty case statements*/
-                if(lastTmpCaseConstValue != prevCaseConstValue)
-                {
-                    tmpCaseNodes->Add(prevCaseNode);
-                }
-            }
-            else
-            {
-                tmpCaseNodes->Add(prevCaseNode); //Adding for the first time in tmpCaseNodes
-            }
-        }
-
-    }
-
-    //Adds the last caseNode in the caseNodes list.
-    tmpCaseNodes->Add(caseNodes->Item(caseNodes->Count() - 1));
-
-    caseNodes = tmpCaseNodes;
-}
-
-///--------------------------------------------------------------------------------------
-///
-/// IRBuilder::BuildBinaryTraverseInstr
-///
-///     Build IR instructions for case statements in a binary search traversal fashion.
-///     defaultLeafBranch: offset of the next instruction to be branched after
-///                        the set of case instructions under investigation
-///--------------------------------------------------------------------------------------
-void
-IRBuilder::BuildBinaryTraverseInstr(int start, int end, uint32 defaultLeafBranch)
-{
-    int mid;
-
-    if(start > end)
-    {
-        return;
-    }
-
-    if(end - start <= CONFIG_FLAG(MaxLinearIntCaseCount) - 1) // -1 for handling zero index as the base
-    {
-        //if only 3 elements, then do linear search on the elements
-        BuildLinearTraverseInstr(start,end,defaultLeafBranch);
-        return;
-    }
-
-    mid = start + ((end - start + 1) / 2);
-    CaseNode* currCaseNode = caseNodes->Item(mid);
-
-    //For right branch search
-    if(mid != end)
-    {
-        unsigned int targetOffset;
-        // Generating branch instructions for switchExpr>case const
-        int nextStart = mid+1;
-        if(end - nextStart <= CONFIG_FLAG(MaxLinearIntCaseCount) - 1)
-        {
-            // sets the target offset to the start of the next set of cases (this is for generating linear search branchInstrs)
-            targetOffset = caseNodes->Item(nextStart)->GetOffset();
-        }
-        else
-        {
-            // sets the target offset to the mid of the next set of cases (this is for generating binary branch instrs)
-            int nextMid = nextStart + ((end - nextStart + 1) /2);
-            targetOffset = caseNodes->Item(nextMid)->GetOffset();
-        }
-
-        IR::BranchInstr* caseInstr = currCaseNode->GetCaseInstr();
-        IR::BranchInstr* branchInstr = IR::BranchInstr::New(Js::OpCode::BrGt_A, NULL, caseInstr->GetSrc1(), caseInstr->GetSrc2(), m_func);
-        branchInstr->m_isSwitchBr = true;
-
-        BranchReloc* reloc = this->AddBranchInstr(branchInstr, currCaseNode->GetOffset(), targetOffset);
-
-        // The branch instructions are re-arranged to suit the binary search style. hence there might be label references lesser than its offset itself.
-        // This is actually not a LoopTop but intended rearrangement
-        reloc->SetNotBackEdge();
-    }
-
-    //Generate === IR instruction or instruction for lb/ub
-    int lowerBoundCaseConstValue = currCaseNode->GetLowerBound()->GetStackSym()->GetIntConstValue();
-    int upperBoundCaseConstValue = currCaseNode->GetUpperBound()->GetStackSym()->GetIntConstValue();
-    if(lowerBoundCaseConstValue == upperBoundCaseConstValue)
-    {
-        BranchReloc* reloc = this->AddBranchInstr(currCaseNode->GetCaseInstr(), currCaseNode->GetOffset(), currCaseNode->GetTargetOffset());
-        reloc->SetNotBackEdge();
-    }
-    else
-    {   //generate 2 branch instructions for empty case instructions with just 1 case block by calling DoEmptyCasesSearch()
-        int nextEnd = mid-1;
-        uint32 targetOffset;
-        if(nextEnd-start <= CONFIG_FLAG(MaxLinearIntCaseCount)-1)
-        {
-            //no more binary search in the next recursive call
-            targetOffset=caseNodes->Item(start)->GetOffset();
-        }
-        else
-        {
-            //set the target offset to the mid of the case instructions during the next recursive call
-            int nextMid = start + ((nextEnd - start + 1)/2);
-            targetOffset=caseNodes->Item(nextMid)->GetOffset();
-        }
-        BuildEmptyCasesInstr(currCaseNode, targetOffset);
-    }
-    BuildBinaryTraverseInstr(start, mid-1, defaultLeafBranch);
-    BuildBinaryTraverseInstr(mid+1, end, defaultLeafBranch);
-}
-
-///------------------------------------------------------------------------------------------
-///
-/// IRBuilder::BuildEmptyCasesInstr
-///
-///     Build IR instructions for Empty consecutive case statements (with only one case block).
-///     defaultLeafBranch: offset of the next instruction to be branched after
-///                        the set of case instructions under investigation
-///
-///------------------------------------------------------------------------------------------
-
-void
-IRBuilder::BuildEmptyCasesInstr(CaseNode* caseNode, uint32 fallThrOffset)
-{
-    BranchReloc* reloc;
-    IR::BranchInstr* branchInstr;
-    IR::Opnd* src1Opnd;
-
-    src1Opnd = caseNode->GetCaseInstr()->GetSrc1();
-
-    AssertMsg(caseNode->GetLowerBound()!=caseNode->GetUpperBound(),"The upper bound and lower bound should not be the same");
-
-    //Generate <lb instruction
-    branchInstr = IR::BranchInstr::New(Js::OpCode::BrLt_A, NULL, src1Opnd, caseNode->GetLowerBound(), m_func);
-    reloc = this->AddBranchInstr(branchInstr, caseNode->GetOffset(), fallThrOffset);
-    reloc->SetNotBackEdge();
-    branchInstr->m_isSwitchBr = true;
-    //Generate <=ub instruction
-    branchInstr = IR::BranchInstr::New(Js::OpCode::BrLe_A, NULL, src1Opnd, caseNode->GetUpperBound(), m_func);
-    reloc = this->AddBranchInstr(branchInstr, caseNode->GetOffset(), caseNode->GetTargetOffset());
-    reloc->SetNotBackEdge();
-    branchInstr->m_isSwitchBr = true;
-
-    BuildBailOnNotInteger();
-}
-
-///----------------------------------------------------------------------------
-///
-/// IRBuilder::BuildLinearTraverseInstr
-///
-///     Build IR instr for case statements less than a threshold.
-///     defaultLeafBranch: offset of the next instruction to be branched after
-///                        the set of case instructions under investigation
-///
-///----------------------------------------------------------------------------
-void
-IRBuilder::BuildLinearTraverseInstr(int start,int end,uint fallThrOffset)
-{
-    Assert(fallThrOffset);
-    for(int index = start; index <= end; index++)
-    {
-        CaseNode* currCaseNode=caseNodes->Item(index);
-
-        bool dontBuildEmptyCases = false;
-
-        if(currCaseNode->IsSrc2IntConst())
-        {
-            int lowerBoundCaseConstValue = currCaseNode->GetLowerBound()->GetStackSym()->GetIntConstValue();
-            int upperBoundCaseConstValue = currCaseNode->GetUpperBound()->GetStackSym()->GetIntConstValue();
-
-            if(lowerBoundCaseConstValue == upperBoundCaseConstValue)
-            {
-                dontBuildEmptyCases = true;
-            }
-        }
-        else if(currCaseNode->IsSrc2StrConst())
-        {
-            dontBuildEmptyCases = true;
-        }
-        else
-        {
-            AssertMsg(false, "An integer/String CaseNode is required for BuildLinearTraverseInstr");
-        }
-
-        if(dontBuildEmptyCases)
-        {
-            // only if the instruction is not part of a cluster of empty consecutive case statements.
-            this->AddBranchInstr(currCaseNode->GetCaseInstr(), currCaseNode->GetOffset(), currCaseNode->GetTargetOffset());
-        }
-        else
-        {
-            BuildEmptyCasesInstr(currCaseNode,fallThrOffset);
-        }
-    }
-
-    // Adds an unconditional branch instruction at the end
-
-    IR::BranchInstr* branchInstr = IR::BranchInstr::New(Js::OpCode::Br, NULL, m_func);
-    BranchReloc* reloc = this->AddBranchInstr(branchInstr, Js::Constants::NoByteCodeOffset, fallThrOffset);
-    branchInstr->m_isSwitchBr = true;
-    reloc->SetNotBackEdge();
-}
-
-void
-IRBuilder::ResetCaseNodes()
-{
-    caseNodes->Clear();
-    seenOnlySingleCharStrCaseNodes = true;
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////
-///
-///IRBuilder::BuildCaseBrInstr
-///     Generates the branch instructions to optimize the switch case execution flow
-///     -Sorts, Refines and generates instructions in binary traversal fashion
-////////////////////////////////////////////////////////////////////////////////////////////
-void
-IRBuilder::BuildCaseBrInstr(uint32 targetOffset)
-{
-    Assert(profiledSwitchInstr);
-
-    int start = 0;
-    int end = caseNodes->Count() - 1;
-
-    if(caseNodes->Count() <= CONFIG_FLAG(MaxLinearIntCaseCount))
-    {
-        BuildLinearTraverseInstr(start, end, targetOffset);
-        ResetCaseNodes();
-        return;
-    }
-
-    RefineCaseNodes();
-
-    BuildOptimizedIntegerCaseInstrs(targetOffset);
-
-    ResetCaseNodes(); // clear the list for the next new set of integers - or for a new switch case statement
-
-    //optimization is definitely performed when the number of cases is greater than the threshold
-    if(end - start > CONFIG_FLAG(MaxLinearIntCaseCount) - 1) // -1 for handling zero index as the base
-    {
-        BuildBailOnNotInteger();
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////
-///
-///IRBuilder::BuildOptimizedIntegerCaseInstrs
-///     Identify chunks of integers cases(consecutive integers)
-///     Apply  jump table or binary traversal based on the density of the case arms
-///
-////////////////////////////////////////////////////////////////////////////////////////////
-
-void
-IRBuilder::BuildOptimizedIntegerCaseInstrs(uint32 targetOffset)
-{
-    int startjmpTableIndex = 0;
-    int endjmpTableIndex = 0;
-    int startBinaryTravIndex = 0;
-    int endBinaryTravIndex = 0;
-
-    IR::MultiBranchInstr * multiBranchInstr = null;
-
-    /*
-    *   Algorithm to find chunks of consecutive integers in a given set of case arms(sorted)
-    *   -Start and end indices for jump table and binary tree are maintained.
-    *   -The corresponding start and end indices indicate that they are suitable candidate for their respective category(binaryTree/jumpTable)
-    *   -All holes are filled with an offset corresponding to the default fallthr instruction and each block is filled with an offset corresponding to the start of the next block
-    *    A Block here refers either to a jump table or to a binary tree.
-    *   -Blocks of BinaryTrav/Jump table are traversed in a linear fashion.
-    **/
-    for(int currentIndex = 0; currentIndex < caseNodes->Count() - 1; currentIndex++)
-    {
-        int nextIndex = currentIndex + 1;
-        //Check if there is no missing value between subsequent case arms
-        if(caseNodes->Item(currentIndex)->GetSrc2IntConst() + 1 != caseNodes->Item(nextIndex)->GetSrc2IntConst())
-        {
-            //value of the case nodes are guaranteed to be 32 bits or less than 32bits at this point(if it is more, the Switch Opt will not kick in)
-            Assert(nextIndex == endjmpTableIndex + 1);
-            int64 speculatedEndJmpCaseValue= caseNodes->Item(nextIndex)->GetSrc2IntConst();
-            int64 endJmpCaseValue = caseNodes->Item(endjmpTableIndex)->GetSrc2IntConst();
-            int64 startJmpCaseValue= caseNodes->Item(startjmpTableIndex)->GetSrc2IntConst();
-
-            int64 speculatedJmpTableSize = speculatedEndJmpCaseValue - startJmpCaseValue + 1;
-            int64 jmpTableSize = endJmpCaseValue - startJmpCaseValue + 1;
-
-            int numFilledEntries = nextIndex - startjmpTableIndex + 1;
-
-            //Checks if the % of filled entries(unique targets from the case arms) in the jump table is within the threshold
-            if(speculatedJmpTableSize != 0 && ((numFilledEntries) * 100 / speculatedJmpTableSize ) < (100 - CONFIG_FLAG(SwitchOptHolesThreshold)))
-            {
-                if(jmpTableSize >= CONFIG_FLAG(MinSwitchJumpTableSize))
-                {
-                    uint32 fallThrOffset = caseNodes->Item(endjmpTableIndex)->GetOffset();
-                    TryBuildBinaryTreeOrMultiBrForSwitchInts(multiBranchInstr, fallThrOffset, startjmpTableIndex, endjmpTableIndex, startBinaryTravIndex, targetOffset);
-
-                    //Reset start/end indices of BinaryTrav to the next index.
-                    startBinaryTravIndex = nextIndex;
-                    endBinaryTravIndex = nextIndex;
-                }
-
-                //Reset start/end indices of the jump table to the next index.
-                startjmpTableIndex = nextIndex;
-                endjmpTableIndex = nextIndex;
-            }
-            else
-            {
-                endjmpTableIndex++;
-            }
-        }
-        else
-        {
-            endjmpTableIndex++;
-        }
-    }
-
-    int64 endJmpCaseValue= caseNodes->Item(endjmpTableIndex)->GetSrc2IntConst();
-    int64 startJmpCaseValue= caseNodes->Item(startjmpTableIndex)->GetSrc2IntConst();
-    int64 jmpTableSize = endJmpCaseValue - startJmpCaseValue + 1;
-
-    if(jmpTableSize < CONFIG_FLAG(MinSwitchJumpTableSize))
-    {
-        endBinaryTravIndex = endjmpTableIndex;
-        BuildBinaryTraverseInstr(startBinaryTravIndex, endBinaryTravIndex, targetOffset);
-        if(multiBranchInstr)
-        {
-            FixUpMultiBrJumpTable(multiBranchInstr, multiBranchInstr->GetNextRealInstr()->GetByteCodeOffset());
-            multiBranchInstr = null;
-        }
-    }
-    else
-    {
-        uint32 fallthrOffset = caseNodes->Item(endjmpTableIndex)->GetOffset();
-        TryBuildBinaryTreeOrMultiBrForSwitchInts(multiBranchInstr, fallthrOffset, startjmpTableIndex, endjmpTableIndex, startBinaryTravIndex, targetOffset);
-        FixUpMultiBrJumpTable(multiBranchInstr, targetOffset);
-    }
-}
-
-void
-IRBuilder::TryBuildBinaryTreeOrMultiBrForSwitchInts(IR::MultiBranchInstr * &multiBranchInstr, uint32 fallthrOffset, int startjmpTableIndex, int endjmpTableIndex, int startBinaryTravIndex, uint32 defaultTargetOffset)
-{
-        int endBinaryTravIndex = startjmpTableIndex;
-
-        //Try Building Binary tree, if there are available case arms, as indicated by the boundary offsets
-        if(endBinaryTravIndex != startBinaryTravIndex)
-        {
-            endBinaryTravIndex = startjmpTableIndex - 1;
-            BuildBinaryTraverseInstr(startBinaryTravIndex, endBinaryTravIndex, fallthrOffset);
-            //Fix up the fallthrOffset for the previous multiBrInstr, if one existed
-            //Example => Binary tree immediately succeeds a MultiBr Instr
-            if(multiBranchInstr)
-            {
-                FixUpMultiBrJumpTable(multiBranchInstr, multiBranchInstr->GetNextRealInstr()->GetByteCodeOffset());
-                multiBranchInstr = null;
-            }
-        }
-
-        //Fix up the fallthrOffset for the previous multiBrInstr, if one existed
-        //Example -> A multiBr can be followed by another multiBr
-        if(multiBranchInstr)
-        {
-            FixUpMultiBrJumpTable(multiBranchInstr, fallthrOffset);
-            multiBranchInstr = null;
-        }
-        multiBranchInstr = BuildMultiBrCaseInstrForInts(startjmpTableIndex, endjmpTableIndex, defaultTargetOffset);
-
-        //We currently assign the offset of the multiBr Instr same as the offset of the last instruction of the case arm selected for building the jump table
-        AssertMsg(m_lastInstr->GetByteCodeOffset() == fallthrOffset, "The fallthr offset to the multi branch instruction is wrong");
-}
-////////////////////////////////////////////////////////////////////////////////////////////
-///
-///IRBuilder::FixUpMultiBrJumpTable
-///     Creates Reloc Records for the branch instructions that are generated with the MultiBr Instr
-///     Also calls FixMultiBrDefaultTarget to fix the target offset in the MultiBr Instr
-////////////////////////////////////////////////////////////////////////////////////////////
-
-void
-IRBuilder::FixUpMultiBrJumpTable(IR::MultiBranchInstr * multiBranchInstr, uint32 targetOffset)
-{
-    multiBranchInstr->FixMultiBrDefaultTarget(targetOffset);
-
-    uint32 offset = multiBranchInstr->GetByteCodeOffset();
-
-    IR::Instr * subInstr = multiBranchInstr->GetPrevRealInstr();
-    IR::Instr * upperBoundCheckInstr = subInstr->GetPrevRealInstr();
-    IR::Instr * lowerBoundCheckInstr = upperBoundCheckInstr->GetPrevRealInstr();
-
-    AssertMsg(subInstr->m_opcode == Js::OpCode::Sub_A, "Missing Offset Calculation instruction");
-    AssertMsg(upperBoundCheckInstr->IsBranchInstr() && lowerBoundCheckInstr->IsBranchInstr(), "Invalid boundary check instructions");
-    AssertMsg(upperBoundCheckInstr->m_opcode == Js::OpCode::BrGt_A && lowerBoundCheckInstr->m_opcode == Js::OpCode::BrLt_A, "Invalid boundary check instructions");
-
-    BranchReloc * reloc = null;
-    reloc = this->CreateRelocRecord(upperBoundCheckInstr->AsBranchInstr(), offset, targetOffset);
-    reloc->SetNotBackEdge();
-
-    reloc = this->CreateRelocRecord(lowerBoundCheckInstr->AsBranchInstr(), offset, targetOffset);
-    reloc->SetNotBackEdge();
-}
-
-void
-IRBuilder::BuildBailOnNotInteger()
-{
-    if(!switchOptBuildBail)
-    {
-        return;
-    }
-
-    profiledSwitchInstr = profiledSwitchInstr->ConvertToBailOutInstr(profiledSwitchInstr, IR::BailOutExpectingInteger);
-
-    Assert(profiledSwitchInstr->GetByteCodeOffset() < m_offsetToInstructionCount);
-    m_offsetToInstruction[profiledSwitchInstr->GetByteCodeOffset()] = profiledSwitchInstr;
-
-    switchOptBuildBail = false; // falsify this to avoid generating extra BailOuts when optimization is done again on the same switch statement
-#if ENABLE_DEBUG_CONFIG_OPTIONS
-    wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
-#endif
-    PHASE_PRINT_TESTTRACE1(Js::SwitchOptPhase, L"Func %s, Switch %d:Optimized for Integers\n", profiledSwitchInstr->m_func->GetJnFunction()->GetDebugNumberSet(debugStringBuffer),
-                                                                                    profiledSwitchInstr->AsProfiledInstr()->u.profileId);
-
-}
-
-void
-IRBuilder::BuildBailOnNotString()
-{
-    if(!switchOptBuildBail)
-    {
-        return;
-    }
-
-    profiledSwitchInstr = profiledSwitchInstr->ConvertToBailOutInstr(profiledSwitchInstr, IR::BailOutExpectingString);
-    Assert(profiledSwitchInstr->GetByteCodeOffset() < m_offsetToInstructionCount);
-    m_offsetToInstruction[profiledSwitchInstr->GetByteCodeOffset()] = profiledSwitchInstr;
-
-    switchOptBuildBail = false; // falsify this to avoid generating extra BailOuts when optimization is done again on the same switch statement
-#if ENABLE_DEBUG_CONFIG_OPTIONS
-    wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
-#endif
-    PHASE_PRINT_TESTTRACE1(Js::SwitchOptPhase, L"Func %s, Switch %d:Optimized for Strings\n", profiledSwitchInstr->m_func->GetJnFunction()->GetDebugNumberSet(debugStringBuffer),
-                                                                                                        profiledSwitchInstr->AsProfiledInstr()->u.profileId);
-}
-///----------------------------------------------------------------------------
-///
-/// IRBuilder::BuildEmpty
-///
-///     Build IR instr for a Empty instruction.
-///
-///----------------------------------------------------------------------------
-
-void
-IRBuilder::BuildEmpty(Js::OpCode newOpcode, uint32 offset)
-{
-    IR::Instr *instr;
-
-    m_jnReader.Empty();
-
-    instr = IR::Instr::New(newOpcode, m_func);
-
-    switch (newOpcode)
-    {
-    case Js::OpCode::Ret:
-        {
-            IR::RegOpnd *regOpnd = BuildDstOpnd(0);
-            instr->SetSrc1(regOpnd);
-            this->AddInstr(instr, offset);
-            break;
-        }
-
-    case Js::OpCode::Leave:
-        {
-            IR::BranchInstr * branchInstr;
-            IR::LabelInstr * labelInstr;
-
-            if (this->catchOffsetStack && !this->catchOffsetStack->Empty())
-            {
-                // If the try region has a break block, we dont want the Flowgraph to move all of that code out of the loop 
-                // because an exception will bring the control back into the loop. The branch out of the loop (which is the 
-                // reason for the code to be a break block) can still be moved out though. 
-                //
-                // "BrOnException $catch" is inserted before Leave's in the try region to instrument flow from the try region 
-                // to the catch region (which is in the loop). 
-                IR::BranchInstr * brOnException = IR::BranchInstr::New(Js::OpCode::BrOnException, nullptr, this->m_func);
-                this->AddBranchInstr(brOnException, offset, this->catchOffsetStack->Top());
-            }
-            
-            labelInstr = IR::LabelInstr::New(Js::OpCode::Label, this->m_func);
-            branchInstr = IR::BranchInstr::New(newOpcode, labelInstr, this->m_func);
-            this->AddInstr(branchInstr, offset);
-            this->AddInstr(labelInstr, Js::Constants::NoByteCodeOffset);
-
-            break;
-        }
-
-    case Js::OpCode::Break:
-        if (m_func->IsJitInDebugMode())
-        {
-            // Add explicit bailout.
-            this->InsertBailOutForDebugger(offset, IR::BailOutExplicit);
-        }
-        else
-        {
-            // Default behavior, let's keep it for now, removed in lowerer.
-            this->AddInstr(instr, offset);
-        }
-        break;
-
-    default:
-        this->AddInstr(instr, offset);
-        break;
-    }
-}
-
-/*
-*   TestAndAddStringCaseConst
-*   Checks if strConstSwitchCases already has the string constant
-*   - if yes, then return true
-*   - if no, then add the string to the list 'strConstSwitchCases' and return false
-*/
-bool
-IRBuilder::TestAndAddStringCaseConst(Js::JavascriptString * str)
-{
-    Assert(strConstSwitchCases);
-
-    if(strConstSwitchCases->Contains(str))
-    {
-        return true;
-    }
-    else
-    {
-        strConstSwitchCases->Add(str);
-        return false;
-    }
-}
-///----------------------------------------------------------------------------
-///
-/// IRBuilder::BuildMultiBrCaseInstrForStrings
-///
-///     Build Multi Branch IR instr for a set of Case statements(String case arms).
-///     - Builds the multibranch target and adds the instruction
-///
-///----------------------------------------------------------------------------
-void
-IRBuilder::BuildMultiBrCaseInstrForStrings(uint32 targetOffset)
-{
-    Assert(caseNodes && caseNodes->Count() && profiledSwitchInstr);
-
-    if(caseNodes->Count() < CONFIG_FLAG(MaxLinearStringCaseCount))
-    {
-        int start = 0;
-        int end = caseNodes->Count() - 1;
-        BuildLinearTraverseInstr(start, end, targetOffset);
-        ResetCaseNodes();
-        return;
-    }
-
-    IR::Opnd * srcOpnd = caseNodes->Item(0)->GetCaseInstr()->GetSrc1(); // Src1 is same in all the caseNodes
-    IR::MultiBranchInstr * multiBranchInstr = IR::MultiBranchInstr::New(Js::OpCode::MultiBr, srcOpnd, m_func);
-
-    uint32 lastCaseOffset = caseNodes->Item(caseNodes->Count() - 1)->GetOffset();    
-    uint caseCount = caseNodes->Count();
-
-    bool generateDictionary = true;
-    wchar_t minChar = USHORT_MAX;
-    wchar_t maxChar = 0;
-
-    // Either the jump table is within the limit (<= 128) or it is dense (<= 2 * case Count)
-    uint const maxJumpTableSize = max<uint>(CONFIG_FLAG(MaxSingleCharStrJumpTableSize), CONFIG_FLAG(MaxSingleCharStrJumpTableRatio) * caseCount);
-    if (this->seenOnlySingleCharStrCaseNodes)
-    { 
-        generateDictionary = false;
-        for (uint i = 0; i < caseCount; i++)
-        {
-            Js::JavascriptString * str = caseNodes->Item(i)->GetSrc2StringConst();
-            Assert(str->GetLength() == 1);
-            wchar_t currChar = str->GetString()[0];
-            minChar = min(minChar, currChar);
-            maxChar = max(maxChar, currChar);            
-            if ((uint)(maxChar - minChar) > maxJumpTableSize)
-            {
-                generateDictionary = true;
-                break;
-            }            
-        }       
-    }
-
-
-    if (generateDictionary)
-    {        
-        multiBranchInstr->CreateBranchTargetsAndSetDefaultTarget(caseCount, IR::MultiBranchInstr::StrDictionary, targetOffset);
-
-        //Adding normal cases to the instruction (except the default case, which we do it later)
-        for (uint i = 0; i < caseCount; i++)
-        {
-            Js::JavascriptString * str = caseNodes->Item(i)->GetSrc2StringConst();
-            uint32 caseTargetOffset = caseNodes->Item(i)->GetTargetOffset();
-            multiBranchInstr->AddtoDictionary(caseTargetOffset, str);
-        }
-    }
-    else
-    {
-        // If we are only going to save 16 entries, just start from 0 so we don't have to subtract
-        if (minChar < 16)
-        {
-            minChar = 0;
-        }
-        multiBranchInstr->m_baseCaseValue = minChar;
-        multiBranchInstr->m_lastCaseValue = maxChar;
-        uint jumpTableSize = maxChar - minChar + 1;
-        multiBranchInstr->CreateBranchTargetsAndSetDefaultTarget(jumpTableSize, IR::MultiBranchInstr::SingleCharStrJumpTable, targetOffset);
- 
-        for (uint i = 0; i < jumpTableSize; i++)
-        {
-            // Initialize all the entries to the default target first.
-            multiBranchInstr->AddtoJumpTable(targetOffset, i);
-        }
-        //Adding normal cases to the instruction (except the default case, which we do it later)
-        for (uint i = 0; i < caseCount; i++)
-        {
-            Js::JavascriptString * str = caseNodes->Item(i)->GetSrc2StringConst();
-            Assert(str->GetLength() == 1);
-            uint32 caseTargetOffset = caseNodes->Item(i)->GetTargetOffset();
-            multiBranchInstr->AddtoJumpTable(caseTargetOffset, str->GetString()[0] - minChar);
-        }
-    }
-    
-    multiBranchInstr->m_isSwitchBr = true;
-
-    this->CreateRelocRecord(multiBranchInstr, lastCaseOffset, targetOffset);
-    this->AddInstr(multiBranchInstr, lastCaseOffset);
-    BuildBailOnNotString();
-
-    ResetCaseNodes();
-}
-
-
-///----------------------------------------------------------------------------
-///
-/// IRBuilder::BuildMultiBrCaseInstrForInts
-///
-///     Build Multi Branch IR instr for a set of Case statements(Integer case arms).
-///     - Builds the multibranch target and adds the instruction
-///     - Add boundary checks for the jump table and calculates the offset in the jump table
-///
-///----------------------------------------------------------------------------
-IR::MultiBranchInstr *
-IRBuilder::BuildMultiBrCaseInstrForInts(uint32 start, uint32 end, uint32 targetOffset)
-{
-    Assert(caseNodes && caseNodes->Count() && profiledSwitchInstr);
-
-    IR::Opnd * srcOpnd = caseNodes->Item(start)->GetCaseInstr()->GetSrc1(); // Src1 is same in all the caseNodes
-    IR::MultiBranchInstr * multiBranchInstr = IR::MultiBranchInstr::New(Js::OpCode::MultiBr, srcOpnd, m_func);
-
-    uint32 lastCaseOffset = caseNodes->Item(end)->GetOffset();
-
-    IntConstType baseCaseValue = caseNodes->Item(start)->GetLowerBound()->GetStackSym()->GetIntConstValue();
-
-    IntConstType lastCaseValue = caseNodes->Item(end)->GetUpperBound()->GetStackSym()->GetIntConstValue();
-
-    multiBranchInstr->m_baseCaseValue = baseCaseValue;
-    multiBranchInstr->m_lastCaseValue = lastCaseValue;
-
-    uint32 jmpTableSize = lastCaseValue - baseCaseValue + 1;
-    multiBranchInstr->CreateBranchTargetsAndSetDefaultTarget(jmpTableSize, IR::MultiBranchInstr::IntJumpTable, targetOffset);
-
-    int caseIndex = end;
-    int lowerBoundCaseConstValue = 0;
-    int upperBoundCaseConstValue = 0;
-    uint32 caseTargetOffset = 0;
-
-    for(int jmpIndex = jmpTableSize - 1; jmpIndex >= 0 ; jmpIndex--)
-    {
-        if(caseIndex >=0 && jmpIndex == caseNodes->Item(caseIndex)->GetSrc2IntConst() - baseCaseValue)
-        {
-            lowerBoundCaseConstValue = caseNodes->Item(caseIndex)->GetLowerBound()->GetStackSym()->GetIntConstValue();
-            upperBoundCaseConstValue = caseNodes->Item(caseIndex)->GetUpperBound()->GetStackSym()->GetIntConstValue();
-            caseTargetOffset = caseNodes->Item(caseIndex--)->GetTargetOffset();
-            multiBranchInstr->AddtoJumpTable(caseTargetOffset, jmpIndex);
-        }
-        else
-        {
-            if(jmpIndex >= lowerBoundCaseConstValue - baseCaseValue && jmpIndex <= upperBoundCaseConstValue - baseCaseValue)
-            {
-                multiBranchInstr->AddtoJumpTable(caseTargetOffset, jmpIndex);
-            }
-            else
-            {
-                multiBranchInstr->AddtoJumpTable(targetOffset, jmpIndex);
-            }
-        }
-    }
-
-    //Insert Boundary checks for the jump table - Reloc records are created later for these instructions (in FixUpMultiBrJumpTable())
-    IR::BranchInstr* lowerBoundChk = IR::BranchInstr::New(Js::OpCode::BrLt_A, NULL, srcOpnd, caseNodes->Item(start)->GetLowerBound(), this->m_func);
-    this->AddInstr(lowerBoundChk, lastCaseOffset);
-    lowerBoundChk->m_isSwitchBr = true;
-
-    IR::BranchInstr* upperBoundChk = IR::BranchInstr::New(Js::OpCode::BrGt_A, NULL, srcOpnd, caseNodes->Item(end)->GetUpperBound(), this->m_func);
-    this->AddInstr(upperBoundChk, lastCaseOffset);
-    upperBoundChk->m_isSwitchBr = true;
-
-    //Calculate the offset inside the jump table using the switch operand value and the lowest case arm value (in the considered set of consecutive integers)
-    IR::IntConstOpnd *baseCaseValueOpnd = IR::IntConstOpnd::New(multiBranchInstr->m_baseCaseValue, TyInt32, this->m_func);
-
-    IR::RegOpnd * offset = IR::RegOpnd::New(TyVar, this->m_func);
-
-    IR::Instr * subInstr = IR::Instr::New(Js::OpCode::Sub_A, offset, multiBranchInstr->GetSrc1(),  baseCaseValueOpnd, this->m_func);
-
-    //We are sure that the SUB operation will not overflow the int range - It will either bailout or will not optimize if it finds a number that is out of the int range.
-    subInstr->ignoreIntOverflow = true;
-
-    this->AddInstr(subInstr, lastCaseOffset);
-
-    //Source of the multi branch instr will now have the calculated offset
-    multiBranchInstr->UnlinkSrc1();
-    multiBranchInstr->SetSrc1(offset);
-    multiBranchInstr->m_isSwitchBr = true;
-
-    this->AddInstr(multiBranchInstr, lastCaseOffset);
-
-    this->CreateRelocRecord(multiBranchInstr, lastCaseOffset, targetOffset);
-
-    return multiBranchInstr;
-}
 
 ///----------------------------------------------------------------------------
 ///
@@ -2324,8 +1570,7 @@ IRBuilder::BuildReg2(Js::OpCode newOpcode, uint32 offset, Js::RegSlot R0, Js::Re
         dstOpnd->SetValueType(ValueType::Boolean);
         break;
     case Js::OpCode::BeginSwitch:
-        intConstSwitchCases->ClearAll();
-        strConstSwitchCases->Clear();
+        m_switchBuilder.BeginSwitch();
         newOpcode = Js::OpCode::Ld_A;
         break;
     case Js::OpCode::LdHeapArgsCached:
@@ -2468,8 +1713,7 @@ IRBuilder::BuildProfiledReg2(Js::OpCode newOpcode, uint32 offset, Js::RegSlot ds
     const Js::LdElemInfo *ldElemInfo = null;
     if (newOpcode == Js::OpCode::BeginSwitch)
     {
-        intConstSwitchCases->ClearAll();
-        strConstSwitchCases->Clear();
+        m_switchBuilder.BeginSwitch();
         switchFound = true;
         newOpcode = Js::OpCode::Ld_A;   //BeginSwitch is originally equivalent to Ld_A
     }
@@ -2550,30 +1794,7 @@ IRBuilder::BuildProfiledReg2(Js::OpCode newOpcode, uint32 offset, Js::RegSlot ds
 
     if(switchFound && instr->IsProfiledInstr())
     {
-        profiledSwitchInstr = instr;
-        switchOptBuildBail = true;
-
-        //don't optimize if the switch expression is not an Integer (obtained via dynamic profiling data of the BeginSwitch opcode)
-
-        bool hasProfile = profiledSwitchInstr->IsProfiledInstr() && profiledSwitchInstr->m_func->HasProfileInfo();
-
-        if(hasProfile)
-        {
-            const ValueType valueType(profiledSwitchInstr->m_func->GetProfileInfo()->GetSwitchProfileInfo(profiledSwitchInstr->m_func->GetJnFunction(), profileId));
-            instr->AsProfiledInstr()->u.FldInfo().valueType = valueType;
-            switchIntDynProfile = valueType.IsLikelyTaggedInt();
-            switchStrDynProfile = valueType.IsLikelyString();
-            if(PHASE_TESTTRACE1(Js::SwitchOptPhase))
-            {
-                char valueTypeStr[VALUE_TYPE_MAX_STRING_SIZE];
-                valueType.ToString(valueTypeStr);
-#if ENABLE_DEBUG_CONFIG_OPTIONS
-                wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
-#endif
-                PHASE_PRINT_TESTTRACE1(Js::SwitchOptPhase, L"Func %s, Switch %d: Expression Type : %S\n", profiledSwitchInstr->m_func->GetJnFunction()->GetDebugNumberSet(debugStringBuffer),
-                                                                                                            profiledSwitchInstr->AsProfiledInstr()->u.profileId, valueTypeStr);
-            }
-        }
+        m_switchBuilder.SetProfiledInstruction(instr, profileId);
     }
 }
 
@@ -5661,117 +4882,95 @@ IRBuilder::BuildBrReg2(Js::OpCode newOpcode, uint32 offset, uint targetOffset, J
     src1Opnd = this->BuildSrcOpnd(R1);
     src2Opnd = this->BuildSrcOpnd(R2);
 
-    bool skip = false;
     if (newOpcode == Js::OpCode::Case)
     {
-        if(src2Opnd->m_sym->m_isIntConst && intConstSwitchCases->TestAndSet(src2Opnd->m_sym->GetIntConstValue()))
-        {
-            // We've already seen a case statement with the same int const value. No need to emit anything for this.
-            skip = true;
-        }
+        // generating branches for Cases is entirely handled
+        // by the SwitchIRBuilder
 
-        if(src2Opnd->m_sym->m_isStrConst && TestAndAddStringCaseConst(Js::JavascriptString::FromVar(src2Opnd->GetStackSym()->GetConstAddress())))
-        {
-            // We've already seen a case statement with the same string const value. No need to emit anything for this.
-            skip = true;
-        }
-    }
-
-    /*
-    //  Switch optimization
-    //  For Integers - Binary Search optimization technique is used
-    //  For Strings - Dictionary look up technique is used.
-    //  TODO : Implement jump table for consecutive Integers
-    //
-    //  For optimizing, the Load instruction corresponding to the switch instruction is profiled in the interpreter.
-    //  Based on the dynamic profile data, optimization technique is decided.
-    */
-
-    if(newOpcode == Js::OpCode::Case && GlobOpt::IsSwitchOptEnabled(m_func->GetTopFunc()))
-    {
-        if(switchStrDynProfile)
-        {
-            if (!skip)
-            {
-                newOpcode = Js::OpCode::BrSrEq_A;
-                branchInstr = IR::BranchInstr::New(newOpcode, NULL, src1Opnd, src2Opnd, m_func);
-                branchInstr->m_isSwitchBr = true;
-
-                if(src2Opnd->m_sym->m_isStrConst)
-                {
-                    CaseNode* caseNode = JitAnew(m_tempAlloc, CaseNode, branchInstr, offset, targetOffset, src2Opnd);
-                    caseNodes->Add(caseNode);
-                    seenOnlySingleCharStrCaseNodes = seenOnlySingleCharStrCaseNodes && caseNode->GetSrc2StringConst()->GetLength() == 1;
-                }
-                else
-                {
-                    if(caseNodes->Count() != 0)
-                    {
-                        BuildMultiBrCaseInstrForStrings(offset);
-                    }
-                    this->AddBranchInstr(branchInstr, offset, targetOffset);
-                }
-            }
+        m_switchBuilder.OnCase(src1Opnd, src2Opnd, offset, targetOffset);
 
 #ifdef BYTECODE_BRANCH_ISLAND
-            // Make sure that if there are branch island between the cases, we consume it first
-            EnsureConsumeBranchIsland();
+        // Make sure that if there are branch island between the cases, we consume it first
+        EnsureConsumeBranchIsland();
 #endif
-            //peeks the next opcode - to check if it is not a case statement (for example: the next instr can be a LdFld for objects)
-            Js::OpCode peekOpcode = m_jnReader.PeekOp();
-            if(caseNodes->Count() != 0 && peekOpcode != Js::OpCode::Case && peekOpcode != Js::OpCode::EndSwitch)
-            {
-                BuildMultiBrCaseInstrForStrings(m_jnReader.GetCurrentOffset());
-            }
 
-            return;
-        }
-        else if(switchIntDynProfile)
+        // some instructions can't be optimized past, such as LdFld for objects. In these cases we have
+        // to inform the SwitchBuilder to flush any optimized cases that it has stored up to this point
+        //peeks the next opcode - to check if it is not a case statement (for example: the next instr can be a LdFld for objects)
+        Js::OpCode peekOpcode = m_jnReader.PeekOp();
+        if (peekOpcode != Js::OpCode::Case && peekOpcode != Js::OpCode::EndSwitch)
         {
-            if (!skip)
-            {
-                newOpcode = Js::OpCode::BrSrEq_A;
-                branchInstr = IR::BranchInstr::New(newOpcode, NULL, src1Opnd, src2Opnd, m_func);
-                branchInstr->m_isSwitchBr = true;
-
-                if(src2Opnd->m_sym->IsIntConst())
-                {
-                    CaseNode* caseNode = JitAnew(m_tempAlloc,CaseNode,branchInstr,offset,targetOffset, src2Opnd);
-                    caseNodes->Add(caseNode);
-                }
-                else
-                {
-                    if(caseNodes->Count() != 0) //non integer case preceded by integer cases
-                    {
-                        BuildCaseBrInstr(offset);
-                    }
-                    this->AddBranchInstr(branchInstr, offset, targetOffset);
-                }
-            }
-
-#ifdef BYTECODE_BRANCH_ISLAND
-            // Make sure that if there are branch island between the cases, we consume it first
-            EnsureConsumeBranchIsland();
-#endif
-            //peeks the next opcode - to check if it is not a case statement (for example: the next instr can be a LdFld for objects)
-            Js::OpCode peekOpcode = m_jnReader.PeekOp();
-            if(caseNodes->Count() != 0 && peekOpcode != Js::OpCode::Case && peekOpcode != Js::OpCode::EndSwitch)
-            {
-                BuildCaseBrInstr(m_jnReader.GetCurrentOffset());
-            }
-            return;
+            m_switchBuilder.FlushCases(m_jnReader.GetCurrentOffset());
         }
     }
-
-    if (!skip)
+    else
     {
-        if(newOpcode == Js::OpCode::Case)
-        {
-            newOpcode = Js::OpCode::BrSrEq_A;
-        }
         branchInstr = IR::BranchInstr::New(newOpcode, NULL, src1Opnd, src2Opnd, m_func);
         branchInstr->m_isSwitchBr = true;
         this->AddBranchInstr(branchInstr, offset, targetOffset);
+    }
+}
+
+void
+IRBuilder::BuildEmpty(Js::OpCode newOpcode, uint32 offset)
+{
+    IR::Instr *instr;
+
+    m_jnReader.Empty();
+
+    instr = IR::Instr::New(newOpcode, m_func);
+
+    switch (newOpcode)
+    {
+    case Js::OpCode::Ret:
+    {
+        IR::RegOpnd *regOpnd = BuildDstOpnd(0);
+        instr->SetSrc1(regOpnd);
+        this->AddInstr(instr, offset);
+        break;
+    }
+
+    case Js::OpCode::Leave:
+    {
+        IR::BranchInstr * branchInstr;
+        IR::LabelInstr * labelInstr;
+
+        if (this->catchOffsetStack && !this->catchOffsetStack->Empty())
+        {
+            // If the try region has a break block, we dont want the Flowgraph to move all of that code out of the loop 
+            // because an exception will bring the control back into the loop. The branch out of the loop (which is the 
+            // reason for the code to be a break block) can still be moved out though. 
+            //
+            // "BrOnException $catch" is inserted before Leave's in the try region to instrument flow from the try region 
+            // to the catch region (which is in the loop). 
+            IR::BranchInstr * brOnException = IR::BranchInstr::New(Js::OpCode::BrOnException, nullptr, this->m_func);
+            this->AddBranchInstr(brOnException, offset, this->catchOffsetStack->Top());
+        }
+
+        labelInstr = IR::LabelInstr::New(Js::OpCode::Label, this->m_func);
+        branchInstr = IR::BranchInstr::New(newOpcode, labelInstr, this->m_func);
+        this->AddInstr(branchInstr, offset);
+        this->AddInstr(labelInstr, Js::Constants::NoByteCodeOffset);
+
+        break;
+    }
+
+    case Js::OpCode::Break:
+        if (m_func->IsJitInDebugMode())
+        {
+            // Add explicit bailout.
+            this->InsertBailOutForDebugger(offset, IR::BailOutExplicit);
+        }
+        else
+        {
+            // Default behavior, let's keep it for now, removed in lowerer.
+            this->AddInstr(instr, offset);
+        }
+        break;
+
+    default:
+        this->AddInstr(instr, offset);
+        break;
     }
 }
 
@@ -5941,27 +5140,9 @@ IRBuilder::BuildBr(Js::OpCode newOpcode, uint32 offset)
 
     if(newOpcode == Js::OpCode::EndSwitch)
     {
-        newOpcode = Js::OpCode::Br;
-
-        if(caseNodes->Count()!=0)
-        {
-            if(switchStrDynProfile)
-            {
-                BuildMultiBrCaseInstrForStrings(targetOffset);
-                switchStrDynProfile = false;
-            }
-            else if(switchIntDynProfile)
-            {
-                BuildCaseBrInstr(targetOffset);
-                switchIntDynProfile = false;
-            }
-            else
-            {
-                AssertMsg(false, "Switch expression must be either a string or an integer");
-            }
-            profiledSwitchInstr = null;
-            return;
-        }
+        m_switchBuilder.FlushCases(targetOffset);
+        m_switchBuilder.EndSwitch();
+        return;
     }
 #ifdef PERF_HINT
     else if (PHASE_TRACE1(Js::PerfHintPhase) && (newOpcode == Js::OpCode::TryCatch || newOpcode == Js::OpCode::TryFinally) )

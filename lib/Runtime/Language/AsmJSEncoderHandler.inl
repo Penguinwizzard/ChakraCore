@@ -67,6 +67,10 @@ EXDEF3    ( CUSTOM     , NopEx             , OP_Empty                , Empty    
   DEF3_WMS( CUSTOM     , BrTrue_Int        , OP_BrTrue               , BrInt1        )
   DEF3_WMS( CUSTOM     , BrEq_Int          , OP_BrEq                 , BrInt2        )
   
+// Switching
+  DEF3_WMS( INT2       , BeginSwitch_Int   , Ld_Int                  , Int2          )
+  DEF3    ( CUSTOM     , EndSwitch_Int     , OP_Br                   , AsmBr         )
+  DEF3_WMS( CUSTOM     , Case_Int          , OP_BrEq                 , BrInt2        )
 
   DEF3_WMS( CUSTOM     , Conv_DTI          , Op_Db_To_Int            , Int1Double1   )
   DEF3_WMS( CUSTOM     , Conv_ITD          , Op_Int_To_Db            , Double1Int1   )

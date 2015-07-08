@@ -56,6 +56,8 @@ public:
 
 class IRBuilder
 {
+    friend struct IRBuilderSwitchAdapter;
+
 public:
     IRBuilder(Func * func)
         : m_func(func)
@@ -63,13 +65,11 @@ public:
         , m_loopBodyRetIPSym(null)
         , m_ldSlots(null)
         , m_loopCounterSym(null)
-        , profiledSwitchInstr(null)
-        , switchOptBuildBail(false)
-        , switchIntDynProfile(false)
-        , switchStrDynProfile(false)
         , callTreeHasSomeProfileInfo(false)
         , m_saveLoopImplicitCallFlags(null)
         , catchOffsetStack(nullptr)
+        , m_switchAdapter(this)
+        , m_switchBuilder(&m_switchAdapter)
 #if DBG
         , m_callsOnStack(0)
         , m_usedAsTemp(null)
@@ -184,7 +184,7 @@ private:
     void                BuildBrReg1(Js::OpCode newOpcode, uint32 offset, uint targetOffset, Js::RegSlot srcRegSlot);
     void                BuildBrReg2(Js::OpCode newOpcode, uint32 offset, uint targetOffset, Js::RegSlot src1RegSlot, Js::RegSlot src2RegSlot);
     void                BuildBrBReturn(Js::OpCode newOpcode, uint32 offset, Js::RegSlot DestRegSlot, Js::RegSlot SrcRegSlot, uint32 targetOffset);
-
+    
     IR::IndirOpnd *     BuildIndirOpnd(IR::RegOpnd *baseReg, IR::RegOpnd *indexReg);
     IR::IndirOpnd *     BuildIndirOpnd(IR::RegOpnd *baseReg, uint32 offset);
 #if DBG_DUMP || defined(ENABLE_IR_VIEWER)
@@ -268,21 +268,7 @@ private:
     bool                IsLoopBodyReturnIPInstr(IR::Instr * instr) const;
     IR::Opnd *          InsertLoopBodyReturnIPInstr(uint targetOffset, uint offset);
     IR::Instr *         CreateLoopBodyReturnIPInstr(uint targetOffset, uint offset);
-    void                RefineCaseNodes();
-    void                ResetCaseNodes();
-    void                BuildCaseBrInstr(uint32 targetOffset);
-    void                BuildBinaryTraverseInstr(int start, int end, uint32 defaultLeafBranch);
-    void                BuildLinearTraverseInstr(int start, int end, uint32 defaultLeafBranch);
-    void                BuildEmptyCasesInstr(CaseNode* currCaseNode, uint32 defaultLeafBranch);
-    void                BuildOptimizedIntegerCaseInstrs(uint32 targetOffset);
-    void                BuildMultiBrCaseInstrForStrings(uint32 targetOffset);
-    void                FixUpMultiBrJumpTable(IR::MultiBranchInstr * multiBranchInstr, uint32 targetOffset);
-    void                TryBuildBinaryTreeOrMultiBrForSwitchInts(IR::MultiBranchInstr * &multiBranchInstr, uint32 fallthrOffset,
-                                    int startjmpTableIndex, int endjmpTableIndex, int startBinaryTravIndex, uint32 targetOffset);
-    bool                TestAndAddStringCaseConst(Js::JavascriptString * str);
-    void                BuildBailOnNotInteger();
-    void                BuildBailOnNotString();
-    IR::MultiBranchInstr * BuildMultiBrCaseInstrForInts(uint32 start, uint32 end, uint32 targetOffset);
+
 
     void                InsertBailOutForDebugger(uint offset, IR::BailOutKind kind, IR::Instr* insertBeforeInstr = NULL);
     void                InsertBailOnNoProfile(uint offset);
@@ -294,6 +280,8 @@ private:
     void                InsertDoneLoopBodyLoopCounter(uint32 lastOffset);
 
     IR::RegOpnd *       InsertConvPrimStr(IR::RegOpnd * srcOpnd, uint offset, bool forcePreOpBailOutIfNeeded);
+
+
 #ifdef BAILOUT_INJECTION
     void InjectBailOut(uint offset);
     void CheckBailOutInjection(Js::OpCode opcode);
@@ -317,6 +305,8 @@ private:
     SymID *             tempMap;
     BVFixed *           fbvTempUsed;
     Js::RegSlot         firstTemp;
+    IRBuilderSwitchAdapter m_switchAdapter;
+    SwitchIRBuilder     m_switchBuilder;
 
     BVFixed *           m_ldSlots;
     BVFixed *           m_stSlots;
@@ -325,16 +315,6 @@ private:
 #endif
     StackSym *          m_loopBodyRetIPSym;
     StackSym*           m_loopCounterSym;
-    typedef JsUtil::List<CaseNode*, JitArenaAllocator> CaseNodeList;
-    CaseNodeList*       caseNodes;
-    bool                seenOnlySingleCharStrCaseNodes;
-    IR::Instr *         profiledSwitchInstr;
-    bool                switchOptBuildBail; //bool refers to whether the bail out has to be generated or not
-    bool                switchIntDynProfile; // bool refers to whether dynamic profile info says that the switch expression is an integer or not
-    bool                switchStrDynProfile; // bool refers to whether dynamic profile info says that the switch expression is an string or not
-    BVSparse<JitArenaAllocator> * intConstSwitchCases;
-    typedef JsUtil::List<Js::JavascriptString *, JitArenaAllocator> StrSwitchCaseList;
-    StrSwitchCaseList * strConstSwitchCases;
     bool                callTreeHasSomeProfileInfo;
 
     // Keep track of how many args we have on the stack whenever

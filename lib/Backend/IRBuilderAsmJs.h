@@ -6,9 +6,14 @@
 
 class IRBuilderAsmJs
 {
+    friend struct IRBuilderAsmJsSwitchAdapter;
+
 public:
     IRBuilderAsmJs(Func * func)
-        : m_func(func), m_IsTJLoopBody(false)
+        : m_func(func)
+        , m_IsTJLoopBody(false)
+        , m_switchAdapter(this)
+        , m_switchBuilder(&m_switchAdapter)
     {
         func->m_workItem->InitializeReader(m_jnReader, m_statementReader);
         m_asmFuncInfo = m_func->GetJnFunction()->GetAsmJsFunctionInfo();
@@ -158,6 +163,8 @@ private:
     BVFixed *               m_ldSlots;
     BVFixed *               m_stSlots;
     BOOL                    m_IsTJLoopBody;
+    IRBuilderAsmJsSwitchAdapter m_switchAdapter;
+    SwitchIRBuilder         m_switchBuilder;
 #if DBG
     uint32                  m_offsetToInstructionCount;
 #endif

@@ -109,6 +109,7 @@ enum IRDumpFlags
 #include "PDataManager.h"
 
 #include "CaseNode.h"
+#include "SwitchIRBuilder.h"
 #include "IRBuilder.h"
 #include "IRBuilderAsmJs.h"
 #include "BackwardPass.h"

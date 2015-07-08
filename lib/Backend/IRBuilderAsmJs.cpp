@@ -23,6 +23,8 @@ IRBuilderAsmJs::Build()
 
     m_branchRelocList = JitAnew(m_tempAlloc, SList<BranchReloc *>, m_tempAlloc);
 
+    m_switchBuilder.Init(m_func, m_tempAlloc, true);
+
     m_firstVarConst = 0;
     // -1 because we are not reserving reg slot for script context
     m_firstIntConst = Js::AsmJsFunctionMemory::RequiredVarConstants + m_firstVarConst - 1;
@@ -921,6 +923,7 @@ IRBuilderAsmJs::InsertLabels()
 
     while (iter.Next())
     {
+        IR::LabelInstr * labelInstr;
         BranchReloc * reloc = iter.Data();
         IR::BranchInstr * branchInstr = reloc->GetBranchInstr();
         uint offset = reloc->GetOffset();
@@ -928,8 +931,22 @@ IRBuilderAsmJs::InsertLabels()
         
         Assert(!IsLoopBody() || offset <= GetLoopBodyExitInstrOffset());
 
-        IR::LabelInstr * labelInstr = CreateLabel(branchInstr, offset);
-        branchInstr->SetTarget(labelInstr);
+        if (branchInstr->m_opcode == Js::OpCode::MultiBr)
+        {
+            IR::MultiBranchInstr * multiBranchInstr = branchInstr->AsBranchInstr()->AsMultiBrInstr();
+
+            multiBranchInstr->UpdateMultiBrTargetOffsets([&](uint32 offset) -> IR::LabelInstr *
+            {
+                labelInstr = this->CreateLabel(branchInstr, offset);
+                multiBranchInstr->ChangeLabelRef(null, labelInstr);
+                return labelInstr;
+            });
+        }
+        else
+        {
+            labelInstr = CreateLabel(branchInstr, offset);
+            branchInstr->SetTarget(labelInstr);
+        }
 
         if (!reloc->IsNotBackEdge() && branchOffset >= offset)
         {
@@ -1695,6 +1712,12 @@ IRBuilderAsmJs::BuildAsmBr(Js::OpCodeAsmJs newOpcode, uint32 offset)
     const unaligned Js::OpLayoutAsmBr * branchInsn = m_jnReader.AsmBr();
     uint targetOffset = m_jnReader.GetCurrentOffset() + branchInsn->RelativeJumpOffset;
 
+    if (newOpcode == Js::OpCodeAsmJs::EndSwitch_Int)
+    {
+        m_switchBuilder.FlushCases(targetOffset);
+        m_switchBuilder.EndSwitch();
+    }
+
     IR::BranchInstr * branchInstr = IR::BranchInstr::New(Js::OpCode::Br, NULL, m_func);
     AddBranchInstr(branchInstr, offset, targetOffset);
 }
@@ -2390,6 +2413,9 @@ IRBuilderAsmJs::BuildInt2(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegSlot 
     IR::Instr * instr = nullptr;
     switch (newOpcode)
     {
+    case Js::OpCodeAsmJs::BeginSwitch_Int:
+        m_switchBuilder.BeginSwitch();
+        // fallthrough
     case Js::OpCodeAsmJs::Ld_Int:
         instr = IR::Instr::New(Js::OpCode::Ld_I4, dstOpnd, srcOpnd, m_func);
         break;
@@ -2917,7 +2943,6 @@ IRBuilderAsmJs::BuildBrInt2(Js::OpCodeAsmJs newOpcode, uint32 offset)
 void
 IRBuilderAsmJs::BuildBrInt2(Js::OpCodeAsmJs newOpcode, uint32 offset, int32 relativeOffset, Js::RegSlot src1, Js::RegSlot src2)
 {
-    Assert(newOpcode == Js::OpCodeAsmJs::BrEq_Int);
     Js::RegSlot src1RegSlot = GetRegSlotFromIntReg(src1);
     Js::RegSlot src2RegSlot = GetRegSlotFromIntReg(src2);
 
@@ -2929,8 +2954,21 @@ IRBuilderAsmJs::BuildBrInt2(Js::OpCodeAsmJs newOpcode, uint32 offset, int32 rela
 
     uint targetOffset = m_jnReader.GetCurrentOffset() + relativeOffset;
 
-    IR::BranchInstr * branchInstr = IR::BranchInstr::New(Js::OpCode::BrEq_I4, NULL, src1Opnd, src2Opnd, m_func);
-    AddBranchInstr(branchInstr, offset, targetOffset);
+    if (newOpcode == Js::OpCodeAsmJs::Case_Int)
+    {
+        // branches for cases are generated entirely by the switch builder
+        m_switchBuilder.OnCase(
+            src1Opnd,
+            src2Opnd,
+            offset,
+            targetOffset);
+    }
+    else
+    {
+        Assert(newOpcode == Js::OpCodeAsmJs::BrEq_Int);
+        IR::BranchInstr * branchInstr = IR::BranchInstr::New(Js::OpCode::BrEq_I4, NULL, src1Opnd, src2Opnd, m_func);
+        AddBranchInstr(branchInstr, offset, targetOffset);
+    }
 }
 
 ///Loop Body Code 
@@ -3299,6 +3337,7 @@ IR::Instr* IRBuilderAsmJs::GenerateStSlotForReturn(IR::RegOpnd* srcOpnd, IRType 
     IR::Instr * stSlotInstr = IR::Instr::New(opcode, fieldSymOpnd, srcOpnd, m_func);
     return stSlotInstr;
 }
+
 
 #ifdef SIMD_JS_ENABLED
 #define GET_SIMD_OPCODE(asmjsOpcode) m_simdOpcodesMap[(uint32)((Js::OpCodeAsmJs)asmjsOpcode - Js::OpCodeAsmJs::Simd128_Start)]

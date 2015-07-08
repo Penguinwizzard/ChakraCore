@@ -395,12 +395,11 @@ namespace Js {
         MULTISIZE_LAYOUT_WRITE(AsmReg2IntConst1, op, R0, R1, C2);
     }
 
-    void AsmJsByteCodeWriter::AsmBr( ByteCodeLabel labelID )
+    void AsmJsByteCodeWriter::AsmBr( ByteCodeLabel labelID, OpCodeAsmJs op )
     {
         CheckOpen();
         CheckLabel( labelID );
 
-        const OpCodeAsmJs op = OpCodeAsmJs::AsmBr;
         size_t const offsetOfRelativeJumpOffsetFromEnd = sizeof(OpLayoutAsmBr) - offsetof(OpLayoutAsmBr, RelativeJumpOffset);
         OpLayoutAsmBr data;
         data.RelativeJumpOffset = offsetOfRelativeJumpOffsetFromEnd;

@@ -70,6 +70,11 @@ MACRO       ( AsmBr                     , AsmBr        , OpNoFallThrough ) // Un
 MACRO_WMS   ( BrTrue_Int                , BrInt1       , None            ) // Jumps to offset if int value is not 0
 MACRO_WMS   ( BrEq_Int                  , BrInt2       , None            ) // Jumps to offset if both int are equals
 
+// Switching
+MACRO_WMS   ( BeginSwitch_Int           , Int2         , None            ) // Start of an integer switch statement, same function as Ld_Int
+MACRO       ( EndSwitch_Int             , AsmBr        , OpNoFallThrough ) // End of an integer switch statement, jumps to default case or past end of switch
+MACRO_WMS   ( Case_Int                  , BrInt2       , None            ) // Integer branch, same function as BrInt2
+
 // Type conversion
 MACRO_WMS   ( Conv_DTI                  , Int1Double1  , None            ) // convert double to int
 MACRO_WMS   ( Conv_FTI                  , Int1Float1   , None            ) // convert float to int
