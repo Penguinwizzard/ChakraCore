@@ -6131,6 +6131,11 @@ ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulo
                 pnodeConstructor = ParseFncDecl<buildAST>(fncDeclFlags, pConstructorName, false, /* needsPIDOnRCurlyScan */ true, /* resetParsingSuperRestrictionState = */false);
             }
 
+            if (pnodeConstructor->sxFnc.IsGenerator())
+            {
+                Error(ERRConstructorCannotBeGenerator);
+            }
+
             // The constructor function will get the same name as class.
             pnodeConstructor->sxFnc.hint = pConstructorName;
             pnodeConstructor->sxFnc.hintLength = constructorNameLength;

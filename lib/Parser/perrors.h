@@ -84,3 +84,4 @@ LSC_ERROR_MSG( 1072, ERRDestructIDRef, "Destructuring expressions can only have 
 
 LSC_ERROR_MSG( 1073, ERRYieldInTryCatchOrFinally, "'yield' expressions are not allowed in 'try', 'catch', or 'finally' blocks")
 
+LSC_ERROR_MSG( 1074, ERRConstructorCannotBeGenerator, "Class constructor may not be a generator")
