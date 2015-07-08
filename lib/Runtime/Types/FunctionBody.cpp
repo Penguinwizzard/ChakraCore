@@ -7959,4 +7959,19 @@ namespace Js
         maxDepth = maxDepth < maxRecursiveInlineDepth ? maxDepth : maxRecursiveInlineDepth;
         return depth < maxDepth;
     }
+    
+
+    static const wchar_t LoopWStr[] = L"Loop";
+    size_t FunctionBody::GetLoopBodyName(uint loopNumber, _Out_writes_opt_z_(size) wchar_t* nameBuffer, _In_ size_t size)
+    {
+        const wchar_t* functionName = this->GetExternalDisplayName();
+        size_t length = wcslen(functionName) + /*length of largest int32*/ 10 + _countof(LoopWStr) + /*NULL*/ 1;
+        if (size < length || nameBuffer == NULL)
+        {
+            return length;
+        }
+        int charsWritten = swprintf_s(nameBuffer, length, L"%s%s%d", functionName, LoopWStr, loopNumber + 1);
+        Assert(charsWritten != -1);
+        return charsWritten + /*NULL*/ 1;
+    }
 }

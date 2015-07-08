@@ -1387,7 +1387,7 @@ namespace Js
         virtual const wchar_t* GetDisplayName() const override;
         void SetDisplayName(const wchar_t* displayName);
         virtual void SetDisplayName(const wchar_t* displayName, uint displayNameLength, SetDisplayNameFlags flags = SetDisplayNameFlagsNone) override;
-
+        
         virtual void Finalize(bool isShutdown) override;
 
         Var GetCachedSourceString()
@@ -1867,6 +1867,8 @@ namespace Js
         void SetStackClosureRegister(RegSlot reg) { Assert(stackClosureRegister == Constants::NoRegister); stackClosureRegister = this->MapRegSlot(reg); }
         RegSlot GetStackScopeSlotsReg() const { return stackClosureRegister; }
         RegSlot GetStackFrameDisplayReg() const { return stackClosureRegister == Constants::NoRegister ? Constants::NoRegister : stackClosureRegister + 1; }
+
+        size_t GetLoopBodyName(uint loopNumber, _Out_writes_opt_z_(sizeInChars) WCHAR* displayName, _In_ size_t sizeInChars);
 
         void AllocateLoopHeaders();
         void ReleaseLoopHeaders();

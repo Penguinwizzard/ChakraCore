@@ -310,7 +310,7 @@ void IRtoJSObjectBuilder::SetProperty(Js::DynamicObject *obj, Js::PropertyId id,
     Js::JavascriptOperators::SetProperty(obj, obj, id, value, obj->GetScriptContext());
 }
 
-static enum STATEMENT_PARSE_T {
+enum STATEMENT_PARSE_T {
     STATEMENT_PARSE_NORMAL,
     STATEMENT_PARSE_QUOT,
     STATEMENT_PARSE_QQUOT,

@@ -5626,7 +5626,7 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
                     body->MapLoopHeaders([&](uint loopNumber, LoopHeader* header)
                     {
                         wchar_t loopBodyName[256];
-                        JS_ETW(EtwTrace::GetLoopBodyName(body, header, loopBodyName, _countof(loopBodyName)));
+                        body->GetLoopBodyName(loopNumber, loopBodyName, _countof(loopBodyName));
                         header->MapEntryPoints([&](int index, LoopEntryPointInfo * entryPoint)
                         {
                             if (entryPoint->IsNativeCode())

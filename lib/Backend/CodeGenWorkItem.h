@@ -530,7 +530,7 @@ struct JsLoopBodyCodeGen sealed : public InMemoryCodeGenWorkItem
 
     size_t GetDisplayName(_Out_writes_opt_z_(sizeInChars) WCHAR* displayName, _In_ size_t sizeInChars) override
     {
-         return EtwTrace::GetLoopBodyName(this->functionBody, this->loopHeader, displayName, sizeInChars);
+        return this->functionBody->GetLoopBodyName(this->GetLoopNumber(), displayName, sizeInChars);         
     }
 
     void GetEntryPointAddress(void** entrypoint, ptrdiff_t *size) override

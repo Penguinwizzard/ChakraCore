@@ -855,6 +855,8 @@ LowererMDArch::LowerAsmJsCallI(IR::Instr * callInstr)
     {
         this->lowererMD->GenerateCFGCheck(hoistedCallSrcInstr->GetDst(), callInstr);
     }
+#else
+    Unused(hoistedCallSrcInstr);
 #endif
 
     IR::Instr * retInstr = callInstr;

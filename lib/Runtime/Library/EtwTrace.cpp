@@ -443,15 +443,7 @@ const wchar_t* EtwTrace::GetFunctionName(FunctionBody* body)
 
 size_t EtwTrace::GetLoopBodyName(_In_ FunctionBody* body, _In_ LoopHeader* loopHeader, _Out_writes_opt_z_(size) wchar_t* nameBuffer, _In_ size_t size)
 {
-    const wchar_t* functionName = GetFunctionName(body);
-    size_t length = wcslen(functionName) + /*length of largest int32*/ 10 + _countof(LoopWStr) + /*NULL*/ 1;
-    if(size < length || nameBuffer == NULL)
-    {
-        return length;
-    }
-    int charsWritten = swprintf_s(nameBuffer, length, L"%s%s%d", functionName, LoopWStr, body->GetLoopNumber(loopHeader) + 1);
-    Assert(charsWritten != -1);
-    return charsWritten + /*NULL*/ 1;
+    return body->GetLoopBodyName(body->GetLoopNumber(loopHeader), nameBuffer, size);    
 }
 
 size_t EtwTrace::GetSimpleJitFunctionName(
