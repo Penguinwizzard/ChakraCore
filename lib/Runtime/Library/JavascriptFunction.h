@@ -191,7 +191,7 @@ namespace Js
 
         virtual bool CloneMethod(JavascriptFunction** pnewMethod, const Var newHome) { return false; }
 
-        static BOOL IsThrowTypeErrorFunction(JavascriptFunction* function, ScriptContext* scriptContext);
+        BOOL IsThrowTypeErrorFunction();
 
         void SetEntryPoint(JavascriptMethod method);
 #if DBG

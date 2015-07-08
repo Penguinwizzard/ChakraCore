@@ -26,11 +26,11 @@ namespace Js
         {
             if (zero)
             {
-                return JavascriptConversion::SameValueZero(x, y, nullptr);
+                return JavascriptConversion::SameValueZero(x, y);
             }
             else
             {
-                return JavascriptConversion::SameValue(x, y, nullptr);
+                return JavascriptConversion::SameValue(x, y);
             }
         }
 

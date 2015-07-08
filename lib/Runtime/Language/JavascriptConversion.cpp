@@ -53,7 +53,7 @@ namespace Js
 //6.    If Type(x) is Boolean, return true if x and y are both true or both false; otherwise, return false.
 //7.    Return true if x and y refer to the same object. Otherwise, return false.
     template<bool zero>
-    bool JavascriptConversion::SameValueCommon(Var aLeft, Var aRight, ScriptContext* scriptContext)
+    bool JavascriptConversion::SameValueCommon(Var aLeft, Var aRight)
     {
         TypeId leftType = JavascriptOperators::GetTypeId(aLeft);
         TypeId rightType = JavascriptOperators::GetTypeId(aRight);
@@ -219,8 +219,8 @@ CommonNumber:
             switch (rightType)
             {
             case TypeIds_Function:
-                if (JavascriptFunction::IsThrowTypeErrorFunction(JavascriptFunction::FromVar(aLeft), scriptContext) &&
-                    JavascriptFunction::IsThrowTypeErrorFunction(JavascriptFunction::FromVar(aRight), scriptContext))
+                if (JavascriptFunction::FromVar(aLeft)->IsThrowTypeErrorFunction() &&
+                    JavascriptFunction::FromVar(aRight)->IsThrowTypeErrorFunction())
                 {
                     return true;
                 }
@@ -230,8 +230,8 @@ CommonNumber:
         return aLeft == aRight;
     }
 
-    template bool JavascriptConversion::SameValueCommon<false>(Var aLeft, Var aRight, ScriptContext* scriptContext);
-    template bool JavascriptConversion::SameValueCommon<true>(Var aLeft, Var aRight, ScriptContext* scriptContext);
+    template bool JavascriptConversion::SameValueCommon<false>(Var aLeft, Var aRight);
+    template bool JavascriptConversion::SameValueCommon<true>(Var aLeft, Var aRight);
 
     //----------------------------------------------------------------------------
     // ToObject() takes a value and converts it to a Object type

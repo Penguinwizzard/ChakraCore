@@ -477,7 +477,7 @@ namespace Js
             x = undefinedVar;
         }
 
-        if (IsPromise(x) && JavascriptConversion::SameValue(constructor, JavascriptPromise::FromVar(x)->GetConstructor(), scriptContext))
+        if (IsPromise(x) && JavascriptConversion::SameValue(constructor, JavascriptPromise::FromVar(x)->GetConstructor()))
         {
             return x;
         }
@@ -601,7 +601,7 @@ namespace Js
         // We only need to check SameValue and check for thenable resolution in the Resolve function case (not Reject)
         if (!rejecting)
         {
-            if (JavascriptConversion::SameValue(resolution, promise, scriptContext))
+            if (JavascriptConversion::SameValue(resolution, promise))
             {
                 JavascriptError* selfResolutionError = scriptContext->GetLibrary()->CreateTypeError();
                 JavascriptError::SetErrorMessage(selfResolutionError, JSERR_PromiseSelfResolution, L"", scriptContext);
@@ -892,7 +892,7 @@ namespace Js
             JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedFunction, L"Promise");
         }
 
-        if (JavascriptOperators::IsObject(constructorResult) && !JavascriptConversion::SameValue(promise, constructorResult, scriptContext))
+        if (JavascriptOperators::IsObject(constructorResult) && !JavascriptConversion::SameValue(promise, constructorResult))
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_UnexpectedMetadataFailure, L"Promise");
         }

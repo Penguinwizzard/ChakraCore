@@ -1426,7 +1426,7 @@ namespace Js
         Var x = args.Info.Count > 1 ? args[1] : scriptContext->GetLibrary()->GetUndefined();
         Var y = args.Info.Count > 2 ? args[2] : scriptContext->GetLibrary()->GetUndefined();
 
-        return JavascriptBoolean::ToVar(JavascriptConversion::SameValue(x, y, scriptContext), scriptContext);
+        return JavascriptBoolean::ToVar(JavascriptConversion::SameValue(x, y), scriptContext);
     }
 
     //ES6 19.1.2.1

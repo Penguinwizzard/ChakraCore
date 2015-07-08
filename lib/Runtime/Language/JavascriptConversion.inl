@@ -191,14 +191,14 @@ namespace Js {
        return (float)ToNumber(aValue, scriptContext);
    }
 
-   __inline bool JavascriptConversion::SameValue(Var aValue, Var bValue, ScriptContext* scriptContext)
+   __inline bool JavascriptConversion::SameValue(Var aValue, Var bValue)
    {
-       return SameValueCommon<false>(aValue, bValue, scriptContext);
+       return SameValueCommon<false>(aValue, bValue);
    }
 
-   __inline bool JavascriptConversion::SameValueZero(Var aValue, Var bValue, ScriptContext* scriptContext)
+   __inline bool JavascriptConversion::SameValueZero(Var aValue, Var bValue)
    {
-       return SameValueCommon<true>(aValue, bValue, scriptContext);
+       return SameValueCommon<true>(aValue, bValue);
    }
 
 } // namespace Js

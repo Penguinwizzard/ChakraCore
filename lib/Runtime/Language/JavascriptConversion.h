@@ -56,8 +56,8 @@ namespace Js {
 
         static JavascriptString *JavascriptConversion::CoerseString(Var aValue, ScriptContext* scriptContext, const wchar_t* apiNameForErrorMsg);
         static BOOL CheckObjectCoercible(Var aValue, ScriptContext* scriptContext);
-        static bool SameValue(Var aValue, Var bValue, ScriptContext* scriptContext);
-        static bool SameValueZero(Var aValue, Var bValue, ScriptContext* scriptContext);
+        static bool SameValue(Var aValue, Var bValue);
+        static bool SameValueZero(Var aValue, Var bValue);
         static bool IsCallable(Var aValue);
 
         static BOOL ToInt32Finite(Var aValue, ScriptContext* scriptContext, int32* result);
@@ -69,6 +69,6 @@ namespace Js {
     private:
         static BOOL ToInt32Finite(double value, ScriptContext* scriptContext, int32* result);
         template<bool zero>
-        static bool SameValueCommon(Var aValue, Var bValue, ScriptContext* scriptContext);
+        static bool SameValueCommon(Var aValue, Var bValue);
     };
 } 

@@ -894,8 +894,8 @@ CommonNumber:
                 // In ES5 in certain cases (ES5 10.6.14(strict), 13.2.19(strict), 15.3.4.5.20-21) we return a function that throws type error.
                 // For different scenarios we return different instances of the function, which differ by exception/error message.
                 // According to ES5, this is the same [[ThrowTypeError]] (thrower) internal function, thus they should be equal.
-                if (JavascriptFunction::IsThrowTypeErrorFunction(JavascriptFunction::FromVar(aLeft), requestContext) &&
-                    JavascriptFunction::IsThrowTypeErrorFunction(JavascriptFunction::FromVar(aRight), requestContext))
+                if (JavascriptFunction::FromVar(aLeft)->IsThrowTypeErrorFunction() &&
+                    JavascriptFunction::FromVar(aRight)->IsThrowTypeErrorFunction())
                 {
                     return true;
                 }
@@ -7796,7 +7796,7 @@ CommonNumber:
                     {
                         if ((descriptor.WritableSpecified() && descriptor.IsWritable()) ||  // ES5 8.12.9.10.a.i
                             (descriptor.ValueSpecified() &&
-                                !JavascriptConversion::SameValue(descriptor.GetValue(), currentDescriptor->GetValue(), scriptContext))) // ES5 8.12.9.10.a.ii
+                                !JavascriptConversion::SameValue(descriptor.GetValue(), currentDescriptor->GetValue()))) // ES5 8.12.9.10.a.ii
                         {
                             return Reject(throwOnError, scriptContext, JSERR_DefineProperty_NotWritable, propId);
                         }
@@ -7813,13 +7813,11 @@ CommonNumber:
                     if ((descriptor.SetterSpecified() &&
                             !JavascriptConversion::SameValue(
                             JavascriptOperators::CanonicalizeAccessor(descriptor.GetSetter(), scriptContext),
-                                JavascriptOperators::CanonicalizeAccessor(currentDescriptor->GetSetter(), scriptContext),
-                                scriptContext)) ||
+                                JavascriptOperators::CanonicalizeAccessor(currentDescriptor->GetSetter(), scriptContext))) ||
                         (descriptor.GetterSpecified() &&
                             !JavascriptConversion::SameValue(
                             JavascriptOperators::CanonicalizeAccessor(descriptor.GetGetter(), scriptContext),
-                                JavascriptOperators::CanonicalizeAccessor(currentDescriptor->GetGetter(), scriptContext),
-                                scriptContext)))
+                                JavascriptOperators::CanonicalizeAccessor(currentDescriptor->GetGetter(), scriptContext))))
                     {
                         return Reject(throwOnError, scriptContext, JSERR_DefineProperty_NotConfigurable, propId);
                     }
@@ -8350,7 +8348,7 @@ CommonNumber:
 
             if (x->ValueSpecified())
             {
-                if (!y->ValueSpecified() || !JavascriptConversion::SameValue(x->GetValue(), y->GetValue(), scriptContext))
+                if (!y->ValueSpecified() || !JavascriptConversion::SameValue(x->GetValue(), y->GetValue()))
                 {
                     return false;
                 }
@@ -8367,7 +8365,7 @@ CommonNumber:
             {
                 if (!y->GetterSpecified() || !JavascriptConversion::SameValue(
                     JavascriptOperators::CanonicalizeAccessor(x->GetGetter(), scriptContext),
-                    JavascriptOperators::CanonicalizeAccessor(y->GetGetter(), scriptContext), scriptContext))
+                    JavascriptOperators::CanonicalizeAccessor(y->GetGetter(), scriptContext)))
                 {
                     return false;
                 }
@@ -8377,7 +8375,7 @@ CommonNumber:
             {
                 if (!y->SetterSpecified() || !JavascriptConversion::SameValue(
                     JavascriptOperators::CanonicalizeAccessor(x->GetSetter(), scriptContext),
-                    JavascriptOperators::CanonicalizeAccessor(y->GetSetter(), scriptContext), scriptContext))
+                    JavascriptOperators::CanonicalizeAccessor(y->GetSetter(), scriptContext)))
                 {
                     return false;
                 }

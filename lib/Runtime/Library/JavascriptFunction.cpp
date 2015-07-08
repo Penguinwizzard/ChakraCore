@@ -218,16 +218,16 @@ namespace Js
         return library->GetUndefined();
     }
 
-    BOOL JavascriptFunction::IsThrowTypeErrorFunction(JavascriptFunction* function, ScriptContext* scriptContext)
+    BOOL JavascriptFunction::IsThrowTypeErrorFunction()
     {
-        Assert(function);
+        ScriptContext* scriptContext = this->GetScriptContext();
         Assert(scriptContext);
 
         return
-            function == scriptContext->GetLibrary()->GetThrowTypeErrorAccessorFunction() ||
-            function == scriptContext->GetLibrary()->GetThrowTypeErrorCalleeAccessorFunction() ||
-            function == scriptContext->GetLibrary()->GetThrowTypeErrorCallerAccessorFunction() ||
-            function == scriptContext->GetLibrary()->GetThrowTypeErrorArgumentsAccessorFunction();
+            this == scriptContext->GetLibrary()->GetThrowTypeErrorAccessorFunction() ||
+            this == scriptContext->GetLibrary()->GetThrowTypeErrorCalleeAccessorFunction() ||
+            this == scriptContext->GetLibrary()->GetThrowTypeErrorCallerAccessorFunction() ||
+            this == scriptContext->GetLibrary()->GetThrowTypeErrorArgumentsAccessorFunction();
     }
 
     enum : unsigned { STACK_ARGS_ALLOCA_THRESHOLD = 8 }; // Number of stack args we allow before using _alloca

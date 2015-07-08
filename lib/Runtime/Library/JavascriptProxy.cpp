@@ -314,7 +314,7 @@ namespace Js
             JavascriptOperators::CompletePropertyDescriptor(&targetDescriptor, nullptr, requestContext);
             if (targetDescriptor.ValueSpecified() && !targetDescriptor.IsConfigurable() && !targetDescriptor.IsWritable())
             {
-                if (!JavascriptConversion::SameValue(getGetResult, targetDescriptor.GetValue(), requestContext))
+                if (!JavascriptConversion::SameValue(getGetResult, targetDescriptor.GetValue()))
                 {
                     JavascriptError::ThrowTypeError(requestContext, JSERR_InconsistentTrapResult, L"get");
                 }
@@ -1304,7 +1304,7 @@ namespace Js
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_InconsistentTrapResult, L"getPrototypeOf");
         }
-        if (!target->IsExtensible() && !JavascriptConversion::SameValue(getPrototypeOfResult, target->GetPrototype(), scriptContext))
+        if (!target->IsExtensible() && !JavascriptConversion::SameValue(getPrototypeOfResult, target->GetPrototype()))
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_InconsistentTrapResult, L"getPrototypeOf");
         }
@@ -1404,7 +1404,7 @@ namespace Js
             return prototypeSetted;
         }
         Var targetProto = target->GetPrototype();
-        if (!JavascriptConversion::SameValue(targetProto, newPrototype, scriptContext))
+        if (!JavascriptConversion::SameValue(targetProto, newPrototype))
         {
             if (shouldThrow)
             {
@@ -1699,7 +1699,7 @@ namespace Js
             if (targetDescriptor.ValueSpecified())
             {
                 if (!targetDescriptor.IsConfigurable() && !targetDescriptor.IsWritable() &&
-                    !JavascriptConversion::SameValue(newValue, targetDescriptor.GetValue(), requestContext))
+                    !JavascriptConversion::SameValue(newValue, targetDescriptor.GetValue()))
                 {
                     JavascriptError::ThrowTypeError(scriptContext, JSERR_InconsistentTrapResult, L"set");
                 }
