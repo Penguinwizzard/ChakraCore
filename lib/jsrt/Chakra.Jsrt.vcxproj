@@ -1,0 +1,57 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Condition="'$(ChakraBuildPathImported)'!='true'" Project="$(SolutionDir)Chakra.Build.Paths.props"/>
+  <Import Project="$(BuildConfig_ChakraBuildProjectConfigurationProps)" />
+  <PropertyGroup Label="Globals">
+    <TargetName>Chakra.Jsrt</TargetName>
+    <ProjectGuid>{706083F7-6AA4-4558-A153-6352EF9220F5}</ProjectGuid>
+    <RootNamespace>JS</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.Default.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.props" />
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)..;$(MSBuildThisFileDirectory)..\..\Common;$(MSBuildThisFileDirectory)..\..\Parser;$(MSBuildThisFileDirectory)..\..\Backend;$(ChakraManifestsIncludeDirectory);$(ManifestsInboxIncludeDirectory);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>%(DisableSpecificWarnings);4702</DisableSpecificWarnings>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)JsrtContextCore.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)JsrtCore.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)JsrtCustomEnumerator.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)JsrtExternalObject.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)JsrtRuntime.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)JsrtThreadService.cpp" />    
+    <ClCompile Include="$(MSBuildThisFileDirectory)JsrtPch.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="JsrtContextCore.h" />
+    <ClInclude Include="JsrtCustomEnumerator.h" />
+    <ClInclude Include="JsrtExternalObject.h" />
+    <ClInclude Include="JsrtRuntime.h" />
+    <ClInclude Include="JsrtThreadService.h" />
+    <ClInclude Include="JsrtPch.h" />  
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\publish\Publish.vcxproj">
+      <Project>{1876e800-ad77-48c4-a2f7-e5265f24ac35}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>
