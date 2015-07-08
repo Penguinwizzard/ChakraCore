@@ -4,7 +4,7 @@
 
 #include "StdAfx.h"
 
-unsigned long __stdcall GetUserLocale()
+LCID GetUserLocale()
 {
     return GetDefaultLocale();
 }

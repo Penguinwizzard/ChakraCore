@@ -1537,11 +1537,10 @@ namespace Js
             return scriptContext->GetLibrary()->GetUndefined();
         }
 
-        LCID lcid = GetUserLocale();
         const int strLength = 1024;
         OLECHAR errorString[strLength];
 
-        if(FGetResourceString(resourceId, errorString, strLength, lcid))
+        if(FGetResourceString(resourceId, errorString, strLength))
         {
             return Js::JavascriptString::NewCopySz(errorString, scriptContext);
         }

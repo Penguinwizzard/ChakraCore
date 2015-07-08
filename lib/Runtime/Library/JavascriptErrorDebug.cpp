@@ -145,11 +145,9 @@ namespace Js
         }
         else
         {
-            LCID lcid = GetUserLocale();
-
             if (FACILITY_CONTROL == HRESULT_FACILITY(hr))
             {
-                message = BstrGetResourceString(hr, lcid);
+                message = BstrGetResourceString(hr);
             }
             if (message == nullptr)
             {
@@ -171,7 +169,7 @@ namespace Js
             }
             if (message == nullptr)
             {
-                message = BstrGetResourceString(IDS_UNKNOWN_RUNTIME_ERROR, lcid);
+                message = BstrGetResourceString(IDS_UNKNOWN_RUNTIME_ERROR);
             }
             if (message != nullptr)
             {

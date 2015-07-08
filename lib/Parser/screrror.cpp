@@ -318,8 +318,6 @@ void CompileScriptException::Free()
 
 HRESULT  CompileScriptException::ProcessError(IScanner * pScan, HRESULT hr, ParseNode * pnodeBase)
 {    
-    LCID lcid;
-
     if (NULL == this)
         return hr;
 
@@ -328,10 +326,9 @@ HRESULT  CompileScriptException::ProcessError(IScanner * pScan, HRESULT hr, Pars
     ei.scode = GetScode(MapHr(hr));
 
     // get the error string
-    lcid = GetUserLocale();
     if (FACILITY_CONTROL != HRESULT_FACILITY(ei.scode) ||
         NULL == (ei.bstrDescription =
-        BstrGetResourceString(HRESULT_CODE(ei.scode), lcid)))
+        BstrGetResourceString(HRESULT_CODE(ei.scode))))
     {
         OLECHAR szT[50];
         _snwprintf_s(szT, ARRAYSIZE(szT), ARRAYSIZE(szT)-1, OLESTR("error %d"), ei.scode);
@@ -339,7 +336,7 @@ HRESULT  CompileScriptException::ProcessError(IScanner * pScan, HRESULT hr, Pars
             ei.scode = E_OUTOFMEMORY;
     }
 
-    ei.bstrSource = BstrGetResourceString(IDS_COMPILATION_ERROR_SOURCE, lcid);
+    ei.bstrSource = BstrGetResourceString(IDS_COMPILATION_ERROR_SOURCE);
     if (NULL == pnodeBase && NULL != pScan)
     {
         // parsing phase - get the line number from the scanner

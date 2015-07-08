@@ -483,7 +483,6 @@ namespace Js
     void JavascriptError::SetErrorMessage(JavascriptError *pError, HRESULT hr, ScriptContext* scriptContext, va_list argList)
     {
         Assert(FAILED(hr));
-        LCID lcid = GetUserLocale();
         wchar_t * allocatedString = null;
         
         // FACILITY_CONTROL is used for internal (activscp.idl) and legacy errors
@@ -494,7 +493,7 @@ namespace Js
             {
                 HRESULT hrAdjusted = GetAdjustedResourceStringHr(hr, /* isFormatString */ true);
 
-                BSTR message = BstrGetResourceString(hrAdjusted, lcid);
+                BSTR message = BstrGetResourceString(hrAdjusted);
                 if (message != null)
                 {
                     int len = _vscwprintf(message, argList);
@@ -516,10 +515,10 @@ namespace Js
             {
                 HRESULT hrAdjusted = GetAdjustedResourceStringHr(hr, /* isFormatString */ false);
 
-                BSTR message = BstrGetResourceString(hrAdjusted, lcid);
+                BSTR message = BstrGetResourceString(hrAdjusted);
                 if (message == null)
                 {
-                    message = BstrGetResourceString(IDS_UNKNOWN_RUNTIME_ERROR, lcid);
+                    message = BstrGetResourceString(IDS_UNKNOWN_RUNTIME_ERROR);
                 }
                 if (message != null)
                 {
@@ -594,7 +593,6 @@ namespace Js
     void JavascriptError::SetErrorMessage(JavascriptError *pError, HRESULT hr, PCWSTR varName, ScriptContext* scriptContext)
     {
         Assert(FAILED(hr));
-        LCID lcid = GetUserLocale();
         wchar_t * allocatedString = null;
 
         // FACILITY_CONTROL is used for internal (activscp.idl) and legacy errors
@@ -605,7 +603,7 @@ namespace Js
             {
                 HRESULT hrAdjusted = GetAdjustedResourceStringHr(hr, /* isFormatString */ true);
 
-                BSTR message = BstrGetResourceString(hrAdjusted, lcid);
+                BSTR message = BstrGetResourceString(hrAdjusted);
                 if (message != null)
                 {
                     uint32 msglen = SysStringLen(message);
@@ -642,10 +640,10 @@ namespace Js
             {
                 HRESULT hrAdjusted = GetAdjustedResourceStringHr(hr, /* isFormatString */ false);
 
-                BSTR message = BstrGetResourceString(hrAdjusted, lcid);
+                BSTR message = BstrGetResourceString(hrAdjusted);
                 if (message == null)
                 {
-                    message = BstrGetResourceString(IDS_UNKNOWN_RUNTIME_ERROR, lcid);
+                    message = BstrGetResourceString(IDS_UNKNOWN_RUNTIME_ERROR);
                 }
                 if (message != null)
                 {

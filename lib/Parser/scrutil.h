@@ -57,33 +57,6 @@ public: \
     return cref; \
 }
 
-
-// === IDispatch ===
-#define DECLARE_IDISPATCH() \
-public: \
-    STDMETHOD(GetTypeInfoCount)(UINT *pcti); \
-    STDMETHOD(GetTypeInfo)(UINT itinfo, LCID lcid, ITypeInfo **ppti); \
-    STDMETHOD(GetIDsOfNames)(REFIID riid, __in_ecount(cpsz) OLECHAR **prgpsz, UINT cpsz, \
-    LCID lcid, DISPID *prgid); \
-    STDMETHOD(Invoke)(DISPID id, REFIID riid, LCID lcid, WORD wFlags, \
-    DISPPARAMS *pdp, VARIANT *pvarRes, EXCEPINFO *pei, UINT *puArgErr);
-
-// === IDispatchEx ===
-#define DECLARE_IDISPATCHEX() \
-public: \
-    STDMETHOD(GetDispID)(BSTR bstrName, DWORD grfdex, DISPID *pdispid); \
-    STDMETHOD(InvokeEx)(DISPID dispid, LCID lcid, WORD wFlags, \
-    DISPPARAMS *pdp, VARIANT *pvarRes, EXCEPINFO *pei, \
-    IServiceProvider *pspCaller); \
-    STDMETHOD(DeleteMemberByName)(BSTR bstrName, DWORD grfdex); \
-    STDMETHOD(DeleteMemberByDispID)(DISPID dispid); \
-    STDMETHOD(GetMemberProperties)(DISPID dispid, DWORD grfdexFetch, \
-    DWORD *pgrfdex); \
-    STDMETHOD(GetMemberName)(DISPID dispid, BSTR *pbstrName); \
-    STDMETHOD(GetNextDispID)(DWORD grfdex, DISPID dispid, DISPID *pdispid); \
-    STDMETHOD(GetNameSpaceParent)(IUnknown **ppunk);
-
-
 #if _WIN64
 typedef unsigned __int64 uint64;
 #endif // _WIN64
@@ -120,27 +93,11 @@ struct __ALIGN_FOO__ {
 /***************************************************************************
 Misc macros and inline functions
 ***************************************************************************/
-#define CastTo(pv,typ) (*(UNALIGNED typ *)&(pv))
-#define MakePtr(pv,ib,typ) ((typ)((byte *)(pv) + (ib)))
 
 inline long LwMin(long lw1, long lw2)
 { return lw1 < lw2 ? lw1 : lw2; }
 inline long LwMax(long lw1, long lw2)
 { return lw1 < lw2 ? lw2 : lw1; }
-
-inline int WMin(int w1, int w2)
-{ return w1 < w2 ? w1 : w2; }
-inline int WMax(int w1, int w2)
-{ return w1 < w2 ? w2 : w1; }
-
-#define LCID_US_ENGLISH ((LCID)MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US))
-
-
-/***************************************************************************
-Type library functions
-***************************************************************************/
-//HRESULT GetStdOleTypeLib(ITypeLib **pptlib);
-//HRESULT GetDispatchTypeInfo(ITypeInfo **ppti);
 
 
 /***************************************************************************
@@ -523,64 +480,6 @@ public:
     { return m_fError; }
 };
 
-
-/***************************************************************************
-Misc BSTR functions. The parameters are LPCOLESTR instead of BSTR so
-we can pass const things.
-***************************************************************************/
-inline long CbBstr(LPCOLESTR bstr)
-{
-    if (bstr == NULL)
-        return 0;
-#if BSTR64
-    ULONG_PTR len = ((ULONG_PTR *)bstr)[-1];
-    Assert(len <= LONG_MAX);
-#else // BSTR64
-    ULONG len = ((ULONG *)bstr)[-1];
-#endif // BSTR64
-    return (long)len;
-}
-
-inline long CchRawBstr(LPCOLESTR bstr)
-{
-    if (bstr == NULL)
-        return 0;
-#if BSTR64
-    ULONG_PTR len = ((ULONG_PTR *)bstr)[-1] / sizeof(OLECHAR);
-    Assert(len <= LONG_MAX);
-#else // BSTR64
-    ULONG len = ((ULONG *)bstr)[-1] / sizeof(OLECHAR);
-#endif // BSTR64
-    return (long)len;
-}
-
-
-/***************************************************************************
-Creates a static constant bstr.
-***************************************************************************/
-#if BSTR64
-#define StaticBstr(name, str) \
-    struct StaticBstr_##name { \
-        ULONG_PTR cb; \
-        OLECHAR sz[sizeof(str)]; \
-    }; \
-    cosnt StaticBstr_##name name = { \
-    sizeof(OLESTR(str)) - sizeof(OLECHAR), \
-    OLESTR(str) \
-};
-#else // BSTR64
-#define StaticBstr(name, str) \
-    struct StaticBstr_##name { \
-        ULONG cb; \
-        OLECHAR sz[sizeof(str)]; \
-    }; \
-    const StaticBstr_##name name = { \
-    sizeof(OLESTR(str)) - sizeof(OLECHAR), \
-    OLESTR(str) \
-};
-#endif // BSTR64
-
-
 //
 // Floating point unit utility functions
 //
@@ -735,24 +634,6 @@ inline LCID GetDefaultLocale(void)
     //Assert(IsValidLocale(lcid, LCID_INSTALLED));
 
     return lcid;
-}
-
-
-
-// Get the hash value for a compiler generated string - stored in the
-// ulong immediately preceeding the bstr.
-inline ulong GetHash(LPCOLESTR psz)
-{
-#if BSTR64
-    ULONG_PTR hash = ((ULONG_PTR *)psz)[-2];
-#if _WIN64
-    return ((ulong *)&hash)[1];
-#else // _WIN64
-    return hash;
-#endif // _WIN64
-#else // BSTR64
-    return ((ulong *)psz)[-2];
-#endif // BSTR64
 }
 
 ULONG CaseInsensitiveComputeHash(LPCOLESTR posz);

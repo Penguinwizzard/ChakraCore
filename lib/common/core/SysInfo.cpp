@@ -49,10 +49,9 @@ AutoSystemInfo::Initialize()
     armDivAvailable = IsProcessorFeaturePresent(PF_ARM_DIVIDE_INSTRUCTION_AVAILABLE) ? true : false;
 #endif
     allocationGranularityPageCount = dwAllocationGranularity / dwPageSize;
+   
+    isWindows8OrGreater = IsWindows8OrGreater();
 
-    versionInfo.dwOSVersionInfoSize = sizeof(versionInfo);
-    BOOL success = GetVersionEx(&versionInfo);
-    Assert(success);
     binaryName[0] = L'\0';
 
     dllLoadAddress = (UINT_PTR)&__ImageBase;
@@ -292,7 +291,7 @@ AutoSystemInfo::IsCFGEnabled()
 bool 
 AutoSystemInfo::IsWin8OrLater()
 {
-    return (versionInfo.dwMajorVersion == 6 && versionInfo.dwMinorVersion >= 2) || versionInfo.dwMajorVersion > 6;
+    return isWindows8OrGreater;
 }
 
 #if defined(_CONTROL_FLOW_GUARD)

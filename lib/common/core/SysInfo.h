@@ -51,6 +51,7 @@ public:
 private:
     AutoSystemInfo() { Initialize(); }
     void Initialize();
+    bool isWindows8OrGreater;
     uint allocationGranularityPageCount;
     HANDLE processHandle;
 #if defined(_M_IX86) || defined(_M_X64)
@@ -59,7 +60,6 @@ private:
 #if defined(_M_ARM32_OR_ARM64)
     bool armDivAvailable;
 #endif
-    OSVERSIONINFO versionInfo;
     DWORD dwNumberOfPhyscialProcessors;
 
     bool disableDebugScopeCapture;

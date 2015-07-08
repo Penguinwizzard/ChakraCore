@@ -171,16 +171,15 @@ namespace Js
                 return ToStringNan(scriptContext); 
             }
 
-            BSTR bstr = null;
-            LCID lcid = GetUserLocale();
+            BSTR bstr = null;            
             if(IsPosInf(value))
             {
-                bstr = BstrGetResourceString(IDS_INFINITY, lcid);
+                bstr = BstrGetResourceString(IDS_INFINITY);
             }
             else 
             {
                 AssertMsg(IsNegInf(value), "bad handling of infinite number");
-                bstr = BstrGetResourceString(IDS_MINUSINFINITY, lcid);
+                bstr = BstrGetResourceString(IDS_MINUSINFINITY);
             }
 
             if (bstr == null)
