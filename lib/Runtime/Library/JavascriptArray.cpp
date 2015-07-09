@@ -5405,7 +5405,7 @@ Case0:
             }
         }
         // skip the typed array and "pure" array case, we still need to handle special arrays like es5array, remote array, and proxy of array.
-        else if (pArr == nullptr || scriptContext->GetConfig()->IsES6ArrayUseConstructorEnabled())
+        else if (pArr == nullptr || scriptContext->GetConfig()->IsES6SpeciesEnabled())
         {
             newObj = ArraySpeciesCreate(obj, length, scriptContext);
         }
@@ -8384,7 +8384,7 @@ Case0:
             }
         }
         // skip the typed array and "pure" array case, we still need to handle special arrays like es5array, remote array, and proxy of array.
-        else if (pArr == nullptr || scriptContext->GetConfig()->IsES6ArrayUseConstructorEnabled())
+        else if (pArr == nullptr || scriptContext->GetConfig()->IsES6SpeciesEnabled())
         {
             newObj = ArraySpeciesCreate(obj, length, scriptContext);
         }
@@ -10788,7 +10788,7 @@ JavascriptNativeFloatArray::BoxStackInstance(JavascriptNativeFloatArray * instan
 RecyclableObject*
 JavascriptArray::ArraySpeciesCreate(Var originalArray, uint32 length, ScriptContext* scriptContext)
 {
-    if (originalArray == nullptr || !scriptContext->GetConfig()->IsES6ArrayUseConstructorEnabled())
+    if (originalArray == nullptr || !scriptContext->GetConfig()->IsES6SpeciesEnabled())
     {
         return nullptr;
     }

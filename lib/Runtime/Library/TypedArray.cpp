@@ -1306,7 +1306,7 @@ namespace Js
         uint32 beginByteOffset = srcByteOffset + begin * BYTES_PER_ELEMENT;
         uint32 newLength = end - begin;
         
-        if (scriptContext->GetConfig()->IsES6ArrayUseConstructorEnabled())
+        if (scriptContext->GetConfig()->IsES6SpeciesEnabled())
         {
             JavascriptFunction* constructor =
                 JavascriptFunction::FromVar(JavascriptOperators::SpeciesConstructor(this, TypedArrayBase::GetDefaultConstructor(this, scriptContext), scriptContext));

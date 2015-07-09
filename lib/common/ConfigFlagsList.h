@@ -472,7 +472,7 @@ PHASE(All)
 #define DEFAULT_CONFIG_ES6                     (true)  // master flag to gate all P0-spec-test compliant ES6 features
 
 // ES6 sub-feature gate - to enable-disable ES6 subfeature when ES6 flag is enabled
-#define DEFAULT_CONFIG_ES6ArrayUseConstructor  (false)
+#define DEFAULT_CONFIG_ES6Species              (false)
 #define DEFAULT_CONFIG_ES6Classes              (false)
 #define DEFAULT_CONFIG_ES6DateParseFix         (true)
 #define DEFAULT_CONFIG_ES6DefaultArgs          (false)
@@ -861,7 +861,7 @@ FLAGNRC(Boolean, ES6Experimental           , "Enable all experimental features",
 
 // Per ES6 feature/flag
 
-FLAGPR           (Boolean, ES6, ES6ArrayUseConstructor , "Enable ES6 behavior for Array builtins to use the 'constructor' property instead of CreateArray()", DEFAULT_CONFIG_ES6ArrayUseConstructor)
+FLAGPR_REGOVR_EXP(Boolean, ES6, ES6Species             , "Enable ES6 '@@species' properties and built-in behaviors" , DEFAULT_CONFIG_ES6Species)
 FLAGPR_REGOVR_EXP(Boolean, ES6, ES6Classes             , "Enable ES6 'class' and 'extends' keywords"                , DEFAULT_CONFIG_ES6Classes)
 FLAGPR           (Boolean, ES6, ES6DateParseFix        , "Enable ES6 Date.parse fixes"                              , DEFAULT_CONFIG_ES6DateParseFix)
 FLAGPR_REGOVR_EXP(Boolean, ES6, ES6DefaultArgs         , "Enable ES6 Default Arguments"                             , DEFAULT_CONFIG_ES6DefaultArgs)

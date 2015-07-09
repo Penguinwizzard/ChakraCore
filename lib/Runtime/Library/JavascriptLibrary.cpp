@@ -1876,7 +1876,10 @@ namespace Js
 
         library->AddMember(arrayConstructor, PropertyIds::length, TaggedInt::ToVarUnchecked(1), PropertyNone);
         library->AddMember(arrayConstructor, PropertyIds::prototype, scriptContext->GetLibrary()->arrayPrototype, PropertyNone);
-        library->AddAccessorsToLibraryObject(arrayConstructor, PropertyIds::_symbolSpecies, &JavascriptArray::EntryInfo::GetterSymbolSpecies, nullptr);
+        if (scriptContext->GetConfig()->IsES6SpeciesEnabled())
+        {
+            library->AddAccessorsToLibraryObject(arrayConstructor, PropertyIds::_symbolSpecies, &JavascriptArray::EntryInfo::GetterSymbolSpecies, nullptr);
+        }
 
         if (scriptContext->GetConfig()->IsES6FunctionNameEnabled())
         {
@@ -1995,7 +1998,12 @@ namespace Js
         JavascriptLibrary* library = arrayBufferConstructor->GetLibrary();
         library->AddMember(arrayBufferConstructor, PropertyIds::length, TaggedInt::ToVarUnchecked(1), PropertyNone);
         library->AddMember(arrayBufferConstructor, PropertyIds::prototype, scriptContext->GetLibrary()->arrayBufferPrototype, PropertyNone);
-        library->AddAccessorsToLibraryObject(arrayBufferConstructor, PropertyIds::_symbolSpecies, &ArrayBuffer::EntryInfo::GetterSymbolSpecies, nullptr);
+
+        if (scriptContext->GetConfig()->IsES6SpeciesEnabled())
+        {
+            library->AddAccessorsToLibraryObject(arrayBufferConstructor, PropertyIds::_symbolSpecies, &ArrayBuffer::EntryInfo::GetterSymbolSpecies, nullptr);
+        }
+
         if (scriptContext->GetConfig()->IsES6FunctionNameEnabled())
         {
             library->AddMember(arrayBufferConstructor, PropertyIds::name, scriptContext->GetPropertyString(PropertyIds::ArrayBuffer), PropertyConfigurable);
@@ -2111,7 +2119,10 @@ namespace Js
 
         library->AddFunctionToLibraryObject(typedArrayConstructor, PropertyIds::from, &TypedArrayBase::EntryInfo::From, 1);
         library->AddFunctionToLibraryObject(typedArrayConstructor, PropertyIds::of, &TypedArrayBase::EntryInfo::Of, 0);
-        library->AddAccessorsToLibraryObject(typedArrayConstructor, PropertyIds::_symbolSpecies, &TypedArrayBase::EntryInfo::GetterSymbolSpecies, nullptr);
+        if (scriptContext->GetConfig()->IsES6SpeciesEnabled())
+        {
+            library->AddAccessorsToLibraryObject(typedArrayConstructor, PropertyIds::_symbolSpecies, &TypedArrayBase::EntryInfo::GetterSymbolSpecies, nullptr);
+        }
 
         typedArrayConstructor->SetHasNoEnumerableProperties(true);
     }
@@ -2452,7 +2463,10 @@ namespace Js
             library->AddMember(symbolConstructor, PropertyIds::isConcatSpreadable, library->GetSymbolIsConcatSpreadable(), PropertyNone);
         }
         library->AddMember(symbolConstructor, PropertyIds::iterator, library->GetSymbolIterator(), PropertyNone);
-        library->AddMember(symbolConstructor, PropertyIds::species, library->GetSymbolSpecies(), PropertyNone);
+        if (scriptContext->GetConfig()->IsES6SpeciesEnabled())
+        {
+            library->AddMember(symbolConstructor, PropertyIds::species, library->GetSymbolSpecies(), PropertyNone);
+        }
 
         if (scriptContext->GetConfig()->IsES6ToPrimitiveEnabled())
         {
@@ -2509,11 +2523,17 @@ namespace Js
         ScriptContext* scriptContext = promiseConstructor->GetScriptContext();
         library->AddMember(promiseConstructor, PropertyIds::length, TaggedInt::ToVarUnchecked(1), PropertyNone);
         library->AddMember(promiseConstructor, PropertyIds::prototype, library->promisePrototype, PropertyNone);
-        library->AddAccessorsToLibraryObject(promiseConstructor, PropertyIds::_symbolSpecies, &JavascriptPromise::EntryInfo::GetterSymbolSpecies, nullptr);
+
+        if (scriptContext->GetConfig()->IsES6SpeciesEnabled())
+        {
+            library->AddAccessorsToLibraryObject(promiseConstructor, PropertyIds::_symbolSpecies, &JavascriptPromise::EntryInfo::GetterSymbolSpecies, nullptr);
+        }
+
         if (scriptContext->GetConfig()->IsES6FunctionNameEnabled())
         {
             library->AddMember(promiseConstructor, PropertyIds::name, scriptContext->GetPropertyString(PropertyIds::Promise), PropertyConfigurable);
         }
+
         library->AddFunctionToLibraryObject(promiseConstructor, PropertyIds::all, &JavascriptPromise::EntryInfo::All, 1);
         library->AddFunctionToLibraryObject(promiseConstructor, PropertyIds::race, &JavascriptPromise::EntryInfo::Race, 1);
         library->AddFunctionToLibraryObject(promiseConstructor, PropertyIds::reject, &JavascriptPromise::EntryInfo::Reject, 1);
@@ -4175,7 +4195,12 @@ namespace Js
         // so that the update is in sync with profiler
         library->AddMember(regexConstructor, PropertyIds::length, TaggedInt::ToVarUnchecked(2), PropertyNone);
         library->AddMember(regexConstructor, PropertyIds::prototype, library->regexPrototype, PropertyNone);
-        library->AddAccessorsToLibraryObject(regexConstructor, PropertyIds::_symbolSpecies, &JavascriptRegExp::EntryInfo::GetterSymbolSpecies, nullptr);
+
+        if (scriptContext->GetConfig()->IsES6SpeciesEnabled())
+        {
+            library->AddAccessorsToLibraryObject(regexConstructor, PropertyIds::_symbolSpecies, &JavascriptRegExp::EntryInfo::GetterSymbolSpecies, nullptr);
+        }
+
         if (scriptContext->GetConfig()->IsES6FunctionNameEnabled())
         {
             library->AddMember(regexConstructor, PropertyIds::name, scriptContext->GetPropertyString(PropertyIds::RegExp), PropertyConfigurable);
@@ -4328,7 +4353,12 @@ namespace Js
         ScriptContext* scriptContext = mapConstructor->GetScriptContext();
         library->AddMember(mapConstructor, PropertyIds::length, TaggedInt::ToVarUnchecked(0), PropertyNone);
         library->AddMember(mapConstructor, PropertyIds::prototype, library->mapPrototype, PropertyNone);
-        library->AddAccessorsToLibraryObject(mapConstructor, PropertyIds::_symbolSpecies, &JavascriptMap::EntryInfo::GetterSymbolSpecies, nullptr);
+
+        if (scriptContext->GetConfig()->IsES6SpeciesEnabled())
+        {
+            library->AddAccessorsToLibraryObject(mapConstructor, PropertyIds::_symbolSpecies, &JavascriptMap::EntryInfo::GetterSymbolSpecies, nullptr);
+        }
+
         if (scriptContext->GetConfig()->IsES6FunctionNameEnabled())
         {
             library->AddMember(mapConstructor, PropertyIds::name, scriptContext->GetPropertyString(PropertyIds::Map), PropertyConfigurable);
@@ -4380,7 +4410,12 @@ namespace Js
         ScriptContext* scriptContext = setConstructor->GetScriptContext();
         library->AddMember(setConstructor, PropertyIds::length, TaggedInt::ToVarUnchecked(0), PropertyNone);
         library->AddMember(setConstructor, PropertyIds::prototype, library->setPrototype, PropertyNone);
-        library->AddAccessorsToLibraryObject(setConstructor, PropertyIds::_symbolSpecies, &JavascriptSet::EntryInfo::GetterSymbolSpecies, nullptr);
+        
+        if (scriptContext->GetConfig()->IsES6SpeciesEnabled())
+        {
+            library->AddAccessorsToLibraryObject(setConstructor, PropertyIds::_symbolSpecies, &JavascriptSet::EntryInfo::GetterSymbolSpecies, nullptr);
+        }
+
         if (scriptContext->GetConfig()->IsES6FunctionNameEnabled())
         {
             library->AddMember(setConstructor, PropertyIds::name, scriptContext->GetPropertyString(PropertyIds::Set), PropertyConfigurable);

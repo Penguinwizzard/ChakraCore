@@ -344,7 +344,7 @@ namespace Js
 
         ArrayBuffer* newBuffer = nullptr;
 
-        if (scriptContext->GetConfig()->IsES6ArrayUseConstructorEnabled())
+        if (scriptContext->GetConfig()->IsES6SpeciesEnabled())
         {
             Var constructorVar = JavascriptOperators::SpeciesConstructor(arrayBuffer, scriptContext->GetLibrary()->GetArrayBufferConstructor(), scriptContext);
 

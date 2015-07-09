@@ -665,16 +665,19 @@ namespace Js
     // static
     inline Var JavascriptOperators::GetSpecies(Var constructor, ScriptContext* scriptContext)
     {
-        if (!JavascriptOperators::IsObject(constructor))
+        if (scriptContext->GetConfig()->IsES6SpeciesEnabled())
         {
-            JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedFunction);
-        }
-        Var species = nullptr;
-        if (JavascriptOperators::GetProperty((RecyclableObject*)constructor, PropertyIds::_symbolSpecies, &species, scriptContext)
-            && species != scriptContext->GetLibrary()->GetUndefined()
-            && species != scriptContext->GetLibrary()->GetNull())
-        {
-            constructor = species;
+            if (!JavascriptOperators::IsObject(constructor))
+            {
+                JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedFunction);
+            }
+            Var species = nullptr;
+            if (JavascriptOperators::GetProperty((RecyclableObject*)constructor, PropertyIds::_symbolSpecies, &species, scriptContext)
+                && species != scriptContext->GetLibrary()->GetUndefined()
+                && species != scriptContext->GetLibrary()->GetNull())
+            {
+                constructor = species;
+            }
         }
         return constructor;
     }

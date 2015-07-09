@@ -9054,25 +9054,30 @@ CommonNumber:
     {
         Assert(JavascriptOperators::IsObject(object));
         Var constructor = JavascriptOperators::GetProperty(object, PropertyIds::constructor, scriptContext);
-        if (constructor == scriptContext->GetLibrary()->GetUndefined())
+
+        if (scriptContext->GetConfig()->IsES6SpeciesEnabled())
         {
-            return defaultConstructor;
+            if (constructor == scriptContext->GetLibrary()->GetUndefined())
+            {
+                return defaultConstructor;
+            }
+            if (!JavascriptOperators::IsObject(constructor))
+            {
+                JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedObject, L"[constructor]");
+            }
+            Var species = nullptr;
+            if (!JavascriptOperators::GetProperty((RecyclableObject*)constructor, PropertyIds::_symbolSpecies, &species, scriptContext)
+                || species == scriptContext->GetLibrary()->GetUndefined()
+                || species == scriptContext->GetLibrary()->GetNull())
+            {
+                return defaultConstructor;
+            }
+            constructor = species;
         }
-        if (!JavascriptOperators::IsObject(constructor))
-        {
-            JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedObject, L"[constructor]");
-        }
-        Var species = nullptr;
-        if (!JavascriptOperators::GetProperty((RecyclableObject*)constructor, PropertyIds::_symbolSpecies, &species, scriptContext)
-            || species == scriptContext->GetLibrary()->GetUndefined()
-            || species == scriptContext->GetLibrary()->GetNull())
-        {
-            return defaultConstructor;
-        }
-        if (!JavascriptOperators::IsConstructor(species))
+        if (!JavascriptOperators::IsConstructor(constructor))
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_NotAConstructor, L"[@@species]");
         }
-        return species;
+        return constructor;
     }
 } // namespace Js
