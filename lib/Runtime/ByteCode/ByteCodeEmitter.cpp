@@ -6314,8 +6314,8 @@ void EmitMemberNode(ParseNode *memberNode, Js::RegSlot objectLocation, ByteCodeG
     if (nameNode->nop == knopComputedName)
     {
         // Computed property name
-        Emit(exprNode, byteCodeGenerator, funcInfo, false);
         Emit(nameNode, byteCodeGenerator, funcInfo, false);
+        Emit(exprNode, byteCodeGenerator, funcInfo, false);
         if (memberNode->nop == knopGetMember)
         {
             byteCodeGenerator->Writer()->Element(
@@ -6344,8 +6344,8 @@ void EmitMemberNode(ParseNode *memberNode, Js::RegSlot objectLocation, ByteCodeG
             byteCodeGenerator->Writer()->Reg2(Js::OpCode::SetHomeObj, exprNode->location, objectLocation);
         }
 
-        funcInfo->ReleaseLoc(nameNode);
         funcInfo->ReleaseLoc(exprNode);
+        funcInfo->ReleaseLoc(nameNode);
 
         return;
     }
@@ -8288,7 +8288,7 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
                                  && CallTargetIsArray(pnode->sxCall.pnodeTarget))
                                     ? Js::OpCode::NewScObjArray : Js::OpCode::NewScObject;
                 Assert(argCount == 1);
-				
+
                 Js::ProfileId callSiteId = byteCodeGenerator->GetNextCallSiteId(op);
                 byteCodeGenerator->Writer()->StartCall(Js::OpCode::StartCall, argCount);
                 byteCodeGenerator->Writer()->CallI(op, funcInfo->AcquireLoc(pnode),
@@ -8309,11 +8309,11 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
                     Js::OpCode op;
                     if ((CreateNativeArrays(byteCodeGenerator, funcInfo) && CallTargetIsArray(pnode->sxCall.pnodeTarget)))
                     {
-	                    op = pnode->sxCall.spreadArgCount > 0 ? Js::OpCode::NewScObjArraySpread : Js::OpCode::NewScObjArray;
+                        op = pnode->sxCall.spreadArgCount > 0 ? Js::OpCode::NewScObjArraySpread : Js::OpCode::NewScObjArray;
                     }
                     else
                     {
-	                    op = pnode->sxCall.spreadArgCount > 0 ? Js::OpCode::NewScObjectSpread : Js::OpCode::NewScObject;
+                        op = pnode->sxCall.spreadArgCount > 0 ? Js::OpCode::NewScObjectSpread : Js::OpCode::NewScObject;
                     }
 
                     Js::ProfileId callSiteId = byteCodeGenerator->GetNextCallSiteId(op);
