@@ -451,7 +451,7 @@ private:
     static const uint ParsingSuperRestrictionState_SuperCallAndPropertyAllowed = 1;
     static const uint ParsingSuperRestrictionState_SuperPropertyAllowed = 2;
     uint m_parsingSuperRestrictionState;
-    friend class AutoParsingSuperRestrictionStateResetter;
+    friend class AutoParsingSuperRestrictionStateRestorer;
 
     // Used for issuing spread and rest errors when there is ambiguity with parameter list and parenthesized expressions
     uint m_parenDepth;

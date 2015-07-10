@@ -579,17 +579,9 @@ namespace Js
         if (!scriptContext->IsInEvalMap(key, isIndirect, &pfuncScript))
         {
             ulong grfscr = additionalGrfscr | fscrReturnExpression | fscrEval | fscrEvalCode | fscrGlobalCode;
-            JavascriptFunction* pfuncCaller;
-            JavascriptStackWalker::GetCaller(&pfuncCaller, scriptContext);
-            AssertMsg(pfuncCaller != nullptr, "External eval call is impossible");
-
             if (isLibraryCode)
             {
                 grfscr |= fscrIsLibraryCode;
-            }
-            if (pfuncCaller != nullptr && pfuncCaller->IsLambda())
-            {
-                grfscr |= fscrImmediatelyInsideLambdaBody;
             }
             pfuncScript = library->GetGlobalObject()->EvalHelper(scriptContext, argString->GetSz(), argString->GetLength(), moduleID, 
                 grfscr, Constants::EvalCode, doRegisterDocument, isIndirect, strictMode);

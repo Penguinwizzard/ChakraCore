@@ -653,6 +653,12 @@ HRESULT Parser::ParseSourceInternal(
     {
         this->PrepareScanner(fromExternal);
 
+        if ((grfscr & fscrEvalCode) != 0)
+        {
+            // This makes the parser to believe when eval() is called, it accept any super access in global scope.
+            this->m_parsingSuperRestrictionState = Parser::ParsingSuperRestrictionState_SuperCallAndPropertyAllowed;
+        }
+
         // parse the source
         pnodeBase = Parse(pszSrc, offsetInBytes, encodedCharCount, offsetInChars, grfscr, lineNumber, nextFunctionId, pse);
 
@@ -3745,6 +3751,7 @@ BOOL Parser::IsDeferredFnc()
 template<bool buildAST>
 ParseNodePtr Parser::ParseFncDecl(ushort flags, LPCOLESTR pNameHint, const bool isSourceElement, const bool needsPIDOnRCurlyScan, bool resetParsingSuperRestrictionState, bool fUnaryOrParen)
 {
+    AutoParsingSuperRestrictionStateRestorer restorer(this);
     if (resetParsingSuperRestrictionState)
     {
         //  ParseFncDecl will always reset m_parsingSuperRestrictionState to super disallowed unless explicitly disabled
@@ -5943,20 +5950,22 @@ LPCOLESTR Parser::ConstructFinalHintNode(IdentPtr pClassName, IdentPtr pMemberNa
     return pFinalName;
 }
 
-class AutoParsingSuperRestrictionStateResetter
+class AutoParsingSuperRestrictionStateRestorer
 {
 public:
-    AutoParsingSuperRestrictionStateResetter(Parser* parser) : m_parser(parser)
+    AutoParsingSuperRestrictionStateRestorer(Parser* parser) : m_parser(parser)
     {
         AssertMsg(this->m_parser != nullptr, "This just should not happen");
+        this->m_originalParsingSuperRestrictionState = this->m_parser->m_parsingSuperRestrictionState;
     }
-    ~AutoParsingSuperRestrictionStateResetter()
+    ~AutoParsingSuperRestrictionStateRestorer()
     {
         AssertMsg(this->m_parser != nullptr, "This just should not happen");
-        this->m_parser->m_parsingSuperRestrictionState = Parser::ParsingSuperRestrictionState_SuperDisallowed;
+        this->m_parser->m_parsingSuperRestrictionState = m_originalParsingSuperRestrictionState;
     }
 private:
     Parser* m_parser;
+    int m_originalParsingSuperRestrictionState;
 };
 
 template<bool buildAST>
@@ -6123,7 +6132,7 @@ ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulo
             }
 
             {
-                AutoParsingSuperRestrictionStateResetter autoParsingSuperRestrictionStateResetter(this);
+                AutoParsingSuperRestrictionStateRestorer restorer(this);
                 if (hasExtends)
                 {
                     this->m_parsingSuperRestrictionState = ParsingSuperRestrictionState_SuperCallAndPropertyAllowed;
@@ -6186,7 +6195,7 @@ ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulo
 
                 ParseNodePtr pnodeFnc = nullptr;
                 {
-                    AutoParsingSuperRestrictionStateResetter autoParsingSuperRestrictionStateResetter(this);
+                    AutoParsingSuperRestrictionStateRestorer restorer(this);
                     if (hasExtends)
                     {
                         this->m_parsingSuperRestrictionState = ParsingSuperRestrictionState_SuperPropertyAllowed;
@@ -6212,7 +6221,7 @@ ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulo
 
                 ParseNodePtr pnodeFnc = nullptr;
                 {
-                    AutoParsingSuperRestrictionStateResetter autoParsingSuperRestrictionStateResetter(this);
+                    AutoParsingSuperRestrictionStateRestorer restorer(this);
                     if (hasExtends)
                     {
                         this->m_parsingSuperRestrictionState = ParsingSuperRestrictionState_SuperPropertyAllowed;
@@ -10391,14 +10400,6 @@ ParseNodePtr Parser::ParseSuper(ParseNodePtr pnode, bool fAllowCall)
         // Cannot call super within a class member
         if (m_token.tk == tkLParen)
         {
-            Error(ERRInvalidSuper);
-        }
-    }
-    else if ((this->m_grfscr & fscrEvalCode) != 0)
-    {
-        if ((this->m_grfscr & fscrImmediatelyInsideLambdaBody) != 0)
-        {
-            // Any super is allowed except when it is immediately inside a lambda body
             Error(ERRInvalidSuper);
         }
     }
