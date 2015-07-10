@@ -4519,6 +4519,24 @@ Inline::MapFormals(Func *inlinee,
                 Assert(instr->GetSrc1() != null);
             }
             break;
+
+        case Js::OpCode::LdNewTarget:
+            if (instr->m_func == inlinee)
+            {
+                if (instr->m_func->IsInlinedConstructor())
+                {
+                    instr->SetSrc1(funcObjOpnd);
+                }
+                else
+                {
+                    instr->SetSrc1(IR::AddrOpnd::New(this->topFunc->GetScriptContext()->GetLibrary()->GetUndefined(),
+                        IR::AddrOpndKindDynamicVar, this->topFunc, true));
+                    instr->GetSrc1()->SetValueType(ValueType::Undefined);
+                }
+                instr->m_opcode = Js::OpCode::Ld_A;
+            }
+            break;
+
         case Js::OpCode::LdSuper:
             if (instr->m_func == inlinee)
             {

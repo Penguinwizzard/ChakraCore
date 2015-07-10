@@ -19981,59 +19981,36 @@ Lowerer::GenerateFastCmTypeOf(IR::Instr *compare, IR::RegOpnd *object, IR::IntCo
 void
 Lowerer::GenerateLoadNewTarget(IR::Instr* instrInsert)
 {
-    IR::Instr * instr;
-    IR::RegOpnd * dstOpnd;
-    IR::SymOpnd * srcOpnd;
-    IR::LabelInstr * labelLoadFuncExpr = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, false);
-    IR::LabelInstr * labelDone = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, false);
+    Func *func = instrInsert->m_func;
 
+    IR::LabelInstr * labelDone = IR::LabelInstr::New(Js::OpCode::Label, func, false);
+    IR::Opnd* opndUndefAddress = this->LoadLibraryValueOpnd(instrInsert, LibraryValue::ValueUndefined);
+
+    Assert(!func->IsInlinee());
+
+    // MOV dst, undefined                       // dst = undefined
     // MOV s1, [ebp + 4]                        // s1 = call info
     // AND s1, Js::CallFlags_New                // s1 &= Js::CallFlags_New
     // CMP s1, 0
-    // JNE $L1
-    // MOV dst, undefined                       // dst = undefined
-    // JMP $L2
-    // $L1
+    // JE $L2
     // MOV dst, [ebp + 8]                       // dst = function object
     // $L2
 
-    srcOpnd = Lowerer::LoadCallInfo(instrInsert);
-    dstOpnd = IR::RegOpnd::New(StackSym::New(TyMachReg, this->m_func), TyMachReg, this->m_func);
-    LowererMD::CreateAssign(dstOpnd, srcOpnd, instrInsert);
+    IR::Opnd * dstOpnd = instrInsert->GetDst();
+    Assert(dstOpnd->IsRegOpnd());
+    LowererMD::CreateAssign(dstOpnd, opndUndefAddress, instrInsert);
 
+    IR::SymOpnd * callInfoOpnd = Lowerer::LoadCallInfo(instrInsert);
     Assert(Js::CallInfo::ksizeofCount == 24);
 
-    instr = IR::Instr::New(Js::OpCode::AND, dstOpnd, dstOpnd,
-        IR::IntConstOpnd::New(Js::CallFlags_New << Js::CallInfo::ksizeofCount, TyUint32, this->m_func, true), this->m_func);
-    instrInsert->InsertBefore(instr);
-
-    InsertCompareBranch(
-        dstOpnd,
-        IR::IntConstOpnd::New(0, TyUint32, this->m_func, true),
-        Js::OpCode::BrNeq_A,
-        true,
-        labelLoadFuncExpr,
-        instrInsert);
-
-    IR::Opnd* opndUndefAddress = this->LoadLibraryValueOpnd(instrInsert, LibraryValue::ValueUndefined);
-    IR::Opnd* opndUndef = IR::RegOpnd::New(TyMachPtr, this->m_func);
-    LowererMD::CreateAssign(opndUndef, opndUndefAddress, instrInsert);
-
-    dstOpnd = instrInsert->GetDst()->AsRegOpnd();
-    LowererMD::CreateAssign(dstOpnd, opndUndef, instrInsert);
-
-    InsertBranch(Js::OpCode::Br, labelDone, instrInsert);
-
-    instrInsert->InsertBefore(labelLoadFuncExpr);
+    IR::RegOpnd *isNewFlagSetRegOpnd = IR::RegOpnd::New(TyUint32, func);
+    InsertAnd(isNewFlagSetRegOpnd, callInfoOpnd, IR::IntConstOpnd::New(Js::CallFlags_New << Js::CallInfo::ksizeofCount, TyUint32, func, true), instrInsert);
+    GenerateNotZeroTest(isNewFlagSetRegOpnd, labelDone, instrInsert);
 
     m_lowererMD.LoadFuncExpression(instrInsert);
-    if (instr->m_func->IsInMemory())
-    {
-        this->GenerateGetCurrentFunctionObject(instrInsert);
-    }
-
     instrInsert->InsertAfter(labelDone);
 }
+
 
 void
 Lowerer::GenerateGetCurrentFunctionObject(IR::Instr * instr)
