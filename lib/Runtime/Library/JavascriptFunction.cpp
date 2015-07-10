@@ -302,11 +302,11 @@ namespace Js
             argArray = args.Values[2];
         }
 
-        return CalloutHelper<false>(pFunc, thisVar, argArray, scriptContext);
+        return CalloutHelper<false>(pFunc, thisVar, /* overridingNewTarget = */nullptr, argArray, scriptContext);
     }
 
     template <bool isConstruct>
-    Var JavascriptFunction::CalloutHelper(RecyclableObject* pFunc, Var thisVar, Var argArray, ScriptContext* scriptContext)
+    Var JavascriptFunction::CalloutHelper(RecyclableObject* pFunc, Var thisVar, Var overridingNewTarget, Var argArray, ScriptContext* scriptContext)
     {
         CallFlags callFlag;
         if (isConstruct)
@@ -414,7 +414,7 @@ namespace Js
 
         if (isConstruct)
         {
-            return JavascriptFunction::CallAsConstructor(pFunc, outArgs, scriptContext);
+            return JavascriptFunction::CallAsConstructor(pFunc, overridingNewTarget, outArgs, scriptContext);
         }
         else
         {
@@ -424,14 +424,13 @@ namespace Js
 
     Var JavascriptFunction::ApplyHelper(RecyclableObject* function, Var thisArg, Var argArray, ScriptContext* scriptContext)
     {
-        return CalloutHelper<false>(function, thisArg, argArray, scriptContext);
+        return CalloutHelper<false>(function, thisArg, /* overridingNewTarget = */nullptr, argArray, scriptContext);
     }
 
-    Var JavascriptFunction::ConstructHelper(RecyclableObject* function, Var thisArg, Var argArray, ScriptContext* scriptContext)
+    Var JavascriptFunction::ConstructHelper(RecyclableObject* function, Var thisArg, Var overridingNewTarget, Var argArray, ScriptContext* scriptContext)
     {
-        return CalloutHelper<true>(function, thisArg, argArray, scriptContext);
+        return CalloutHelper<true>(function, thisArg, overridingNewTarget, argArray, scriptContext);
     }
-
 
     Var JavascriptFunction::EntryBind(RecyclableObject* function, CallInfo callInfo, ...)
     {
@@ -605,7 +604,7 @@ namespace Js
             {
                 varResult =
                     args.Info.Flags & CallFlags_New ?
-                    CallAsConstructor(this, args, scriptContext) :
+                    CallAsConstructor(this, /* overridingNewTarget = */nullptr, args, scriptContext) :
                     CallFunction<true>(this, this->GetEntryPoint(), args);
 
                 // Win8 976001: Temporary work around for post-Dev11 compiler bug 470304.
@@ -661,7 +660,7 @@ namespace Js
     }
 #endif
 
-    Var JavascriptFunction::CallAsConstructor(Var v, Arguments args, ScriptContext* scriptContext, const Js::AuxArray<uint32> *spreadIndices)
+    Var JavascriptFunction::CallAsConstructor(Var v, Var overridingNewTarget, Arguments args, ScriptContext* scriptContext, const Js::AuxArray<uint32> *spreadIndices)
     {
         Assert(v);
         Assert(args.Info.Flags & CallFlags_New);
@@ -690,8 +689,17 @@ namespace Js
 #endif
 
         // Call the constructor function:
-        // - Pass in the new empty object as the 'this' parameter. This can be null if an empty object was not created.
-        args.Values[0] = resultObject;
+        if (overridingNewTarget == nullptr)
+        {
+            // - Pass in the new empty object as the 'this' parameter. This can be null if an empty object was not created.
+            args.Values[0] = resultObject;
+        }
+        else
+        {
+            // - Pass in the overridingNewTarget as the 'this' parameter, we just checked, this cannot be nullptr
+            args.Values[0] = overridingNewTarget;
+        }
+
         Var functionResult;
         if (spreadIndices != nullptr)
         {

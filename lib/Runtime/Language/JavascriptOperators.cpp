@@ -5804,7 +5804,7 @@ CommonNumber:
         ThreadContext *const threadContext = scriptContext->GetThreadContext();
         const ImplicitCallFlags savedImplicitCallFlags = threadContext->GetImplicitCallFlags();
 
-        const Var newVarInstance = JavascriptFunction::CallAsConstructor(callee, args, scriptContext, spreadIndices);
+        const Var newVarInstance = JavascriptFunction::CallAsConstructor(callee, /* overridingNewTarget = */nullptr, args, scriptContext, spreadIndices);
 
         threadContext->SetImplicitCallFlags(savedImplicitCallFlags);
         return newVarInstance;

@@ -401,15 +401,32 @@ namespace Js
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_ErrorOnNew, L"Reflect.construct");
         }
-
+        
         Var target = args.Info.Count > 1 ? args[1] : undefinedValue;
 
         if (!JavascriptOperators::IsConstructor(target))
         {
-            JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NeedFunction, L"Reflect.construct");
+            JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedConstructor, L"target");
         }
-        Var argArray = args.Info.Count > 2 ? args[2] : undefinedValue;
-        return JavascriptFunction::ConstructHelper(RecyclableObject::FromVar(target), undefinedValue, argArray, scriptContext);
 
+        Var newTarget = nullptr;
+        if (scriptContext->GetConfig()->IsES6NewTargetEnabled())
+        {
+            if (args.Info.Count > 3)
+            {
+                newTarget = args[3];
+                if (!JavascriptOperators::IsConstructor(newTarget))
+                {
+                    JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedConstructor, L"newTarget");
+                }
+            }
+            else
+            {
+                newTarget = target;
+            }
+        }
+
+        Var argArray = args.Info.Count > 2 ? args[2] : undefinedValue;
+        return JavascriptFunction::ConstructHelper(RecyclableObject::FromVar(target), undefinedValue, newTarget, argArray, scriptContext);
     }
 }

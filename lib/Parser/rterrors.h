@@ -314,6 +314,8 @@ RT_ERROR_MSG(JSERR_SimdFloat64x2TypeMismatch, 5622, "SIMD.Float64x2.%s: Invalid 
 RT_ERROR_MSG(JSERR_SimdInt32x4TypeMismatch, 5623, "SIMD.Int32x4.%s: Invalid SIMD types for operation", "Expecting Int32x4 values", kjstTypeError, 0)
 #endif
 
+RT_ERROR_MSG(JSERR_NeedConstructor, 5624, "'%s' is not a constructor", "Constructor expected", kjstTypeError, 0)
+
 RT_ERROR_MSG(VBSERR_CantDisplayDate, 32812, "", "The specified date is not available in the current locale's calendar", kjstRangeError, 0)
 
 #ifndef VBSERR_UndefVariable

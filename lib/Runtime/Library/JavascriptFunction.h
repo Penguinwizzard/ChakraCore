@@ -84,13 +84,13 @@ namespace Js
         template <typename T>
         static T CallAsmJsFunction(RecyclableObject * function, void* entryPoint, uint argc, Var * argv);
         template <bool isConstruct>
-        static Var CalloutHelper(RecyclableObject* function, Var thisArg, Var argArray, ScriptContext* scriptContext);
+        static Var CalloutHelper(RecyclableObject* function, Var thisArg, Var overridingNewTarget, Var argArray, ScriptContext* scriptContext);
 
         static Var ApplyHelper(RecyclableObject* function, Var thisArg, Var argArray, ScriptContext* scriptContext);
-        static Var ConstructHelper(RecyclableObject* function, Var thisArg, Var argArray, ScriptContext* scriptContext);
+        static Var ConstructHelper(RecyclableObject* function, Var thisArg, Var overridingNewTarget, Var argArray, ScriptContext* scriptContext);
         static Var CallRootFunctionInScript(JavascriptFunction* func, Arguments args);
 
-        static Var CallAsConstructor(Var v, Arguments args, ScriptContext* scriptContext, const Js::AuxArray<uint32> *spreadIndices = nullptr);
+        static Var CallAsConstructor(Var v, Var overridingNewTarget, Arguments args, ScriptContext* scriptContext, const Js::AuxArray<uint32> *spreadIndices = nullptr);
         static Var FinishConstructor(const Var constructorReturnValue, Var newObject, JavascriptFunction *const function);
 
 #if DBG
