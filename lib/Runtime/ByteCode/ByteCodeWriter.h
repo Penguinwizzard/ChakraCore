@@ -331,7 +331,6 @@ namespace Js
         void EndStatement(ParseNode* node);
         void StartSubexpression(ParseNode* node);
         void EndSubexpression(ParseNode* node);
-        void RecordNodeLoad(ParseNode* node);
         void RecordFrameDisplayRegister(RegSlot slot);
         void RecordObjectRegister(RegSlot slot);
         uint GetCurrentOffset() const { return (uint)m_byteCodeData.GetCurrentOffset(); }

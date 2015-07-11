@@ -484,19 +484,6 @@
             }
         }
         goto LIdentifier;
-    case 'o':
-        if (identifyKwds)
-        {
-            if (p[0] == 'f' && !IsIdContinueNext(p+1, last)) {
-                p += 1;
-                if (!this->m_parser) {
-                    token = tkOF;
-                    goto LReserved;
-                }
-                goto LIdentifier;
-            }
-        }
-        goto LIdentifier;
     case 'a':
         if (identifyKwds)
         {
@@ -510,7 +497,7 @@
     // characters not in a reserved word
                                                       
               case 'g': case 'h':           case 'j': 
-    case 'k':           case 'm':                     
+    case 'k':           case 'm':           case 'o': 
               case 'q':                               
     case 'u':                     case 'x':           
     case 'z': 

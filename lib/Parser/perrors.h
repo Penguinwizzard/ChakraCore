@@ -34,16 +34,14 @@ LSC_ERROR_MSG( 1025, ERRbadLabel      , "Label redefined")
 LSC_ERROR_MSG( 1026, ERRnoLabel       , "Label not found")
 LSC_ERROR_MSG( 1027, ERRdupDefault    , "'default' can only appear once in a 'switch' statement")
 LSC_ERROR_MSG( 1028, ERRnoMemberIdent , "Expected identifier, string or number")
-// DEAD Cc no longer supported ;; LSC_ERROR_MSG( 1029, ERRnoCcEnd       , "Expected '@end'")
-// DEAD Cc no longer supported ;; LSC_ERROR_MSG( 1030, ERRccOff         , "Conditional compilation is turned off")
+// RETIRED Cc no longer supported ;; LSC_ERROR_MSG( 1029, ERRnoCcEnd       , "Expected '@end'")
+// RETIRED Cc no longer supported ;; LSC_ERROR_MSG( 1030, ERRccOff         , "Conditional compilation is turned off")
 LSC_ERROR_MSG( 1031, ERRnotConst      , "Expected constant")
-// DEAD Cc no longer supported ;; LSC_ERROR_MSG( 1032, ERRnoAt          , "Expected '@'")
+// RETIRED Cc no longer supported ;; LSC_ERROR_MSG( 1032, ERRnoAt          , "Expected '@'")
 LSC_ERROR_MSG( 1033, ERRnoCatch       , "Expected 'catch'")
 LSC_ERROR_MSG( 1034, ERRnoVar         , "Expected 'var'")
 LSC_ERROR_MSG( 1035, ERRdanglingThrow , "'throw' must be followed by an expression on the same source line")
-#if ECMACP
-LSC_ERROR_MSG( 1036, ERRWithNotInCP   , "'with' not available in the ECMA 327 Compact Profile")
-#endif // ECMACP
+// RETIRED ECMACP removed ;; LSC_ERROR_MSG( 1036, ERRWithNotInCP   , "'with' not available in the ECMA 327 Compact Profile")
 
 LSC_ERROR_MSG( 1037, ERRES5NoWith     , "'with' statements are not allowed in strict mode") // string 8
 LSC_ERROR_MSG( 1038, ERRES5ArgSame    , "Duplicate formal parameter names not allowed in strict mode") // string 9

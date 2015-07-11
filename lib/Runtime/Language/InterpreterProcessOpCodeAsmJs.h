@@ -46,10 +46,8 @@
     case OpCodeAsmJs::name: \
     { \
         PROCESS_READ_LAYOUT_ASMJS(name, AsmReg1, suffix); \
-        SETTARGET##suffix(playout->R0); \
         SetReg(playout->R0, \
                 func(GetScriptContext())); \
-        UNSETTARGET(); \
         break; \
     }
 

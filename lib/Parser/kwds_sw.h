@@ -321,9 +321,6 @@ L001F:
     // 003E for
         cmp eax, 0x00007AF7
         je LEqual_for
-    // ???? of
-        cmp eax, 0x000007C5
-        je LEqual_of
         jmp LDefault
 L003F:
     // 003F if
@@ -574,7 +571,6 @@ L001F:
     if (luHash == 0x00000767) goto LEqual_in;
     // 003E for
     if (luHash == 0x00007AF7) goto LEqual_for;
-    if (luHash == 0x000007C5) goto LEqual_of;
     goto LDefault;
 L003F:
     // 003F if

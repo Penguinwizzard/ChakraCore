@@ -81,9 +81,6 @@ Parser::Parser(Js::ScriptContext* scriptContext, BOOL strictMode, PageAllocator 
     backgroundParseItems = nullptr;
     fastScannedRegExpNodes = nullptr;
 
-#if ECMACP
-    m_fECMACP = FALSE;
-#endif // ECMACP
     m_fUseStrictMode = strictMode;
     m_InAsmMode = false;
     m_deferAsmJs = true;
@@ -642,10 +639,6 @@ HRESULT Parser::ParseSourceInternal(
     ParseNodePtr pnodeBase = NULL;
     HRESULT hr;
     SmartFPUControl smartFpuControl;
-
-#if ECMACP
-    m_fECMACP = pos->IsECMACP();
-#endif // ECMACP
 
     DebugOnly( m_err.fInited = TRUE; )
 
@@ -8387,10 +8380,6 @@ LEndSwitch:
 
     case tkWITH:
     {
-#if ECMACP
-        if (m_fECMACP)
-            Error(ERRWithNotInCP);
-#endif // ECMACP
         if ( IsStrictMode() )
         {
             Error(ERRES5NoWith);
@@ -8745,7 +8734,7 @@ LDefaultToken:
 
             expressionStmt = true;
 
-            pnode->isUsed=false;
+            pnode->isUsed = false;
         }
         else
         {
@@ -8768,21 +8757,6 @@ LDefaultToken:
     }
 
 LNeedTerminator:
-#if ECMACP
-    if (m_fECMACP)
-    {
-        if (buildAST)
-        {
-            ChkCurTok(tkSColon, ERRnoSemic);
-        }
-        else
-        {
-            ChkCurTok(tkSColon, ERRnoSemic);
-        }
-    }
-    else
-#endif
-    {
         // Need a semicolon, new-line, } or end-of-file.
         // We digest a semicolon if it's there.
         switch (m_token.tk)
@@ -8807,7 +8781,6 @@ LNeedTerminator:
             break;
         }
         break;
-    }
     }
 
     if (buildAST)

@@ -10362,13 +10362,7 @@ Case0:
                         // TODO if CopyAnyArrayElementsToVar is really more performant than the code below we should add a function like this
                         // for typed arrays, strings, & arguments.
                         
-                        if (!(JavascriptArray::Is(instance) || ArgumentsObject::Is(instance) || TypedArrayBase::Is(instance) || JavascriptString::Is(instance)))
-                        {
-                            // the type error thrown in OP_LdCustomSpreadIteratorList is absorbed by jsls, calling the code here aswell to throw a type error
-                            // this assert should confirm this is only a jsls issue.
-                            Assert(false);
-                            JavascriptError::ThrowTypeError(scriptContext, JSERR_InvalidSpreadArgument);  
-                        }
+                        Assert(JavascriptArray::Is(instance) || ArgumentsObject::Is(instance) || TypedArrayBase::Is(instance) || JavascriptString::Is(instance));
 
                         RecyclableObject *propertyObject;
                         if (!JavascriptOperators::GetPropertyObject(instance, scriptContext, &propertyObject))

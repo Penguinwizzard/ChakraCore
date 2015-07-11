@@ -25,19 +25,6 @@
 /// additional indirection would slow the main interpreter loop further by
 /// preventing the main 'switch' statement from using the OpCode to become a
 /// direct local-function jump.
-///
-/// SETTARGET and UNSETTARGET macros are used in the language service
-/// interpreture to ensure the register file is initialized after skipping
-/// an exception. Unlike the debugger, which skips statements, the register
-/// file is not ensured by the code generator to be initialized if an exception
-/// occurs during a statement. The code generator ensures registers are
-/// before the statement that could generate an exception is executed but no
-/// such guarentee exists between instruction in a statement.
-///
-/// STARTCALL and DONECALL macros are used to record the number of arguments
-/// currently on the call stack for the current call instruction. If the call
-/// instruction raises an exception, this is the number of arguments that need s
-/// to be popped on the call instructions behalf.
 ///----------------------------------------------------------------------------
 
 #define PROCESS_FALLTHROUGH(name, func) \
@@ -74,9 +61,7 @@
     case OpCode::name: \
     { \
         PROCESS_READ_LAYOUT(name, layout, suffix); \
-        SETTARGET(playout->regslot); \
         func(playout); \
-        UNSETTARGET(); \
         break; \
     }
 
@@ -123,11 +108,7 @@
     case OpCode::name: \
     { \
         PROCESS_READ_LAYOUT(name, layout, suffix); \
-        STARTCALL(playout->ArgCount); \
-        SETTARGET##suffix(playout->Return); \
         func(playout); \
-        UNSETTARGET(); \
-        DONECALL(); \
         break; \
     }
 
@@ -137,11 +118,7 @@
     case OpCode::name: \
     { \
         PROCESS_READ_LAYOUT(name, layout, suffix); \
-        STARTCALL(playout->ArgCount); \
-        SETTARGET##suffix(playout->Return); \
         func(playout, flags); \
-        UNSETTARGET(); \
-        DONECALL(); \
         break; \
     }
 
@@ -198,10 +175,8 @@
     case OpCode::name: \
     { \
         PROCESS_READ_LAYOUT(name, Reg1, suffix); \
-        SETTARGET##suffix(playout->R0); \
         SetReg(playout->R0, \
                 func()); \
-        UNSETTARGET(); \
         break; \
     }
 
@@ -222,10 +197,8 @@
     case OpCode::name: \
     { \
         PROCESS_READ_LAYOUT(name, Reg1, suffix); \
-        SETTARGET##suffix(playout->R0); \
         SetReg(playout->R0, \
                 func(GetScriptContext())); \
-        UNSETTARGET(); \
         break; \
     }
 
@@ -235,10 +208,8 @@
     case OpCode::name: \
     { \
         PROCESS_READ_LAYOUT(name, Reg2, suffix); \
-        SETTARGET##suffix(playout->R0); \
         SetRegAllowStackVar(playout->R0, \
                 func(GetRegAllowStackVar(playout->R1))); \
-        UNSETTARGET(); \
         break; \
     }
 
@@ -248,10 +219,8 @@
     case OpCode::name: \
     { \
         PROCESS_READ_LAYOUT(name, Reg2, suffix); \
-        SETTARGET##suffix(playout->R0); \
         SetReg(playout->R0, \
                 func(GetReg(playout->R1))); \
-        UNSETTARGET(); \
         break; \
     }
 
@@ -262,10 +231,8 @@
     case OpCode::name: \
     { \
         PROCESS_READ_LAYOUT(name, ProfiledReg2, suffix); \
-        SETTARGET##suffix(playout->R0); \
         SetReg(playout->R0, \
                 func(GetReg(playout->R1), playout->profileId)); \
-        UNSETTARGET(); \
         break; \
     }
 
@@ -275,12 +242,8 @@
     case OpCode::name: \
     { \
         PROCESS_READ_LAYOUT(name, layout, suffix); \
-        SETTARGET##suffix(playout->R0); \
-        STARTCALL(1); \
         SetReg(playout->R0, \
                 func(playout)); \
-        DONECALL(); \
-        UNSETTARGET(); \
         break; \
     }
 
@@ -290,10 +253,8 @@
     case OpCode::name: \
     { \
         PROCESS_READ_LAYOUT(name, Reg2, suffix); \
-        SETTARGET##suffix(playout->R0); \
         SetReg(playout->R0, \
                 func(GetReg(playout->R1),GetScriptContext())); \
-        UNSETTARGET(); \
         break; \
     }
 
@@ -303,10 +264,8 @@
     case OpCode::name: \
     { \
         PROCESS_READ_LAYOUT(name, Reg2, suffix); \
-        SETTARGET##suffix(playout->R0); \
         SetNonVarReg(playout->R0, \
                 func(GetNonVarReg(playout->R1))); \
-        UNSETTARGET(); \
         break; \
     }
 
@@ -316,10 +275,8 @@
     case OpCode::name: \
     { \
         PROCESS_READ_LAYOUT(name, Reg2, suffix); \
-        SETTARGET##suffix(playout->R0); \
         SetNonVarReg(playout->R0, \
                 func(GetNonVarReg(playout->R1),GetScriptContext())); \
-        UNSETTARGET(); \
         break; \
     }
 
@@ -329,10 +286,8 @@
     case OpCode::name: \
     { \
         PROCESS_READ_LAYOUT(name, Reg2Int1, suffix); \
-        SETTARGET##suffix(playout->R0); \
         SetReg(playout->R0, \
                 func(GetReg(playout->R1), playout->C1)); \
-        UNSETTARGET(); \
         break; \
     }
 
@@ -342,10 +297,8 @@
     case OpCode::name: \
     { \
         PROCESS_READ_LAYOUT(name, Reg2Int1, suffix); \
-        SETTARGET##suffix(playout->R0); \
         SetReg(playout->R0, \
                 func(GetReg(playout->R1), playout->C1, GetScriptContext())); \
-        UNSETTARGET(); \
         break; \
     }
 
@@ -355,10 +308,8 @@
     case OpCode::name: \
     { \
         PROCESS_READ_LAYOUT(name, Reg1Unsigned1, suffix); \
-        SETTARGET##suffix(playout->R0); \
         SetReg(playout->R0, \
                 func(this->m_functionBody->GetLiteralRegex(playout->C1), GetScriptContext())); \
-        UNSETTARGET(); \
         break; \
     }
 
@@ -376,10 +327,8 @@
     case OpCode::name: \
     { \
         PROCESS_READ_LAYOUT(name, Reg2, suffix); \
-        SETTARGET##suffix(playout->R0); \
         SetReg(playout->R0, \
             func(GetNonVarReg(playout->R1))); \
-        UNSETTARGET(); \
         break; \
     }
 
@@ -388,10 +337,8 @@
     case OpCode::name: \
     { \
         PROCESS_READ_LAYOUT(name, Reg3, suffix); \
-        SETTARGET##suffix(playout->R0); \
         SetReg(playout->R0, \
             func(GetNonVarReg(playout->R1), playout->R2)); \
-        UNSETTARGET(); \
         break; \
     }
 
@@ -401,10 +348,8 @@
     case OpCode::name: \
     { \
         PROCESS_READ_LAYOUT(name, Reg3, suffix); \
-        SETTARGET##suffix(playout->R0); \
         SetReg(playout->R0, \
                 func(GetReg(playout->R1), GetReg(playout->R2),GetScriptContext())); \
-        UNSETTARGET(); \
         break; \
     }
 
@@ -414,10 +359,8 @@
     case OpCode::name: \
     { \
         PROCESS_READ_LAYOUT(name, ProfiledReg3, suffix); \
-        SETTARGET##suffix(playout->R0); \
         SetReg(playout->R0, \
         func(GetReg(playout->R1), GetReg(playout->R2),GetScriptContext(), playout->profileId)); \
-        UNSETTARGET(); \
         break; \
     }
 
@@ -427,10 +370,8 @@
     case OpCode::name: \
     { \
         PROCESS_READ_LAYOUT(name, Reg3, suffix); \
-        SETTARGET##suffix(playout->R0); \
         SetNonVarReg(playout->R0, \
                 func(GetNonVarReg(playout->R1), GetNonVarReg(playout->R2))); \
-        UNSETTARGET(); \
         break; \
     }
 
@@ -440,10 +381,8 @@
     case OpCode::name: \
     { \
         PROCESS_READ_LAYOUT(name, Reg3, suffix); \
-        SETTARGET##suffix(playout->R0); \
         SetNonVarReg(playout->R0, \
                 func(GetNonVarReg(playout->R1), GetNonVarReg(playout->R2),GetScriptContext())); \
-        UNSETTARGET(); \
         break; \
     }
 
@@ -453,11 +392,9 @@
     case OpCode::name: \
     { \
         PROCESS_READ_LAYOUT(name, Reg3, suffix); \
-        SETTARGET##suffix(playout->R0); \
         SetReg(playout->R0, \
             func(GetReg(playout->R1), GetReg(playout->R2), GetScriptContext()) ? JavascriptBoolean::OP_LdTrue(GetScriptContext()) : \
                     JavascriptBoolean::OP_LdFalse(GetScriptContext())); \
-        UNSETTARGET(); \
         break; \
     }
 
@@ -487,10 +424,8 @@
     case OpCode::name: \
     { \
         PROCESS_READ_LAYOUT(name, ElementSlot, suffix); \
-        SETTARGET##suffix(playout->Value); \
         SetReg(playout->Value, \
                 func((FrameDisplay*)GetNonVarReg(playout->Instance), reinterpret_cast<Js::FunctionProxy**>(this->m_functionBody->GetNestedFuncReference(playout->SlotIndex)))); \
-        UNSETTARGET(); \
         break; \
     }
 
@@ -500,10 +435,8 @@
     case OpCode::name: \
     { \
         PROCESS_READ_LAYOUT(name, ElementI, suffix); \
-        SETTARGET(playout->Value); \
         SetReg(playout->Value, \
                 func(GetReg(playout->Instance), GetReg(playout->Element), GetScriptContext())); \
-        UNSETTARGET(); \
         break; \
     }
 
@@ -513,10 +446,8 @@
     case OpCode::name: \
     { \
         PROCESS_READ_LAYOUT(name, ElementI, suffix); \
-        SETTARGET(playout->Value); \
         SetReg(playout->Value, \
                 func(GetReg(playout->Instance), GetReg(playout->Element), GetScriptContext(), PropertyOperation_StrictMode)); \
-        UNSETTARGET(); \
         break; \
     }
 
@@ -594,9 +525,7 @@
     case OpCode::name: \
     { \
         PROCESS_READ_LAYOUT(name, BrReg2, suffix); \
-        SETTARGET(playout->R1); \
         SetReg(playout->R1, func((type)GetNonVarReg(playout->R2))); \
-        UNSETTARGET(); \
         if (!GetReg(playout->R1)) \
         { \
             ip = m_reader.SetCurrentRelativeOffset(ip, playout->RelativeJumpOffset); \
@@ -654,10 +583,8 @@
     case OpCode::name: \
     { \
         PROCESS_READ_LAYOUT(name, Reg1Unsigned1, suffix); \
-        SETTARGET(playout->R0); \
         SetReg(playout->R0, \
                 func(playout->C1,GetScriptContext())); \
-        UNSETTARGET(); \
         break; \
     }
 #define PROCESS_U1toA1(name, func) PROCESS_U1toA1_COMMON(name, func,)
@@ -666,10 +593,8 @@
     case OpCode::name: \
     { \
         PROCESS_READ_LAYOUT(name, Reg1Unsigned1, suffix); \
-        SETTARGET(playout->R0); \
         SetNonVarReg(playout->R0, \
                 func(playout->C1)); \
-        UNSETTARGET(); \
         break; \
     }
 #define PROCESS_U1toA1NonVar(name, func) PROCESS_U1toA1NonVar_COMMON(name, func,)
@@ -730,10 +655,8 @@
     case OpCode::name: \
     { \
         PROCESS_READ_LAYOUT(name, Reg4, suffix); \
-        SETTARGET##suffix(playout->R0); \
         SetReg(playout->R0, \
                 func(GetReg(playout->R1), GetReg(playout->R2), GetReg(playout->R3), GetScriptContext())); \
-        UNSETTARGET(); \
         break; \
     }
 
@@ -744,10 +667,8 @@
     case OpCode::name: \
     { \
         PROCESS_READ_LAYOUT(name, Reg3B1, suffix); \
-        SETTARGET##suffix(playout->R0); \
         SetReg(playout->R0, \
                 func(GetReg(playout->R1), GetReg(playout->R2), playout->B3, GetScriptContext())); \
-        UNSETTARGET(); \
         break; \
     }
 

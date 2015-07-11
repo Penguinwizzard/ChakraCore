@@ -17,15 +17,6 @@
 #else
 #define DEBUGGING_LOOP 0
 #endif
-#define SETTARGET(r)
-#define SETTARGET_Small(r)
-#define SETTARGET_Medium(r)
-#define SETTARGET_Large(r)
-#define STARTCALL(a)
-#define DONECALL()
-#define UNSETTARGET()
-#define INTERPRETERLOOP_PARAMETERS_FORMAL
-#define PROCESS_CUSTOM_LS(name, func, layout) PROCESS_CUSTOM(name, func, layout)
 #ifdef PROVIDE_INTERPRETERPROFILE
 #define INTERPRETERPROFILE 1
 #define PROFILEDOP(prof, unprof) prof
@@ -42,7 +33,7 @@
 // So, for DBG turn on optimizations to prevent this huge loss of stack.
 #pragma optimize("g", on)
 #endif
-Var Js::InterpreterStackFrame::INTERPRETERLOOPNAME(INTERPRETERLOOP_PARAMETERS_FORMAL)
+Var Js::InterpreterStackFrame::INTERPRETERLOOPNAME()
 {
     PROBE_STACK(scriptContext, Js::Constants::MinStackInterpreter);
 
@@ -431,15 +422,6 @@ SWAP_BP_FOR_OPCODE:
 #pragma optimize("", on)
 #endif
 #undef DEBUGGING_LOOP
-#undef SETTARGET
-#undef SETTARGET_Small
-#undef SETTARGET_Medium
-#undef SETTARGET_Large
-#undef STARTCALL
-#undef DONECALL
-#undef UNSETTARGET
-#undef INTERPRETERLOOP_PARAMETERS_FORMAL
 #undef INTERPRETERPROFILE
 #undef PROFILEDOP
-#undef PROCESS_CUSTOM_LS
 #undef INTERPRETER_OPCODE

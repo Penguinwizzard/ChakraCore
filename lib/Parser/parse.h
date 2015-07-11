@@ -880,9 +880,6 @@ private:
     ***********************************************************************/
     bool        m_UsesArgumentsAtGlobal; // "arguments" used at global code.
 
-#if ECMACP
-    BOOL m_fECMACP;  // ECMA Compact Profile (ECMA 327)
-#endif // ECMACP
     BOOL m_fUseStrictMode; // ES5 Use Strict mode. In AST mode this is a global flag; in NoAST mode it is pushed and popped.
     bool m_InAsmMode; // Currently parsing Asm.Js module
     bool m_isAsmJsDisabled; // we disable parsing as asm.js if we are reparsing due to link time validation failure or under debugger

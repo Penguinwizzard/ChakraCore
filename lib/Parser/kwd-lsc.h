@@ -2,10 +2,6 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#if QSWITCH
-#define KEYWORD(tk,f,prec2,nop2,prec1,nop1,name) name
-#endif //QSWITCH
-
 #ifndef KEYWORD
 #define KEYWORD(tk,f,prec2,nop2,prec1,nop1,name)
 #endif //!KEYWORD
@@ -107,9 +103,6 @@ KEYWORD(tkPRIVATE     ,2, No, knopNone   , No, knopNone   , private)
 KEYWORD(tkPROTECTED   ,2, No, knopNone   , No, knopNone   , protected)
 KEYWORD(tkPUBLIC      ,2, No, knopNone   , No, knopNone   , public)
 KEYWORD(tkSTATIC      ,2, No, knopNone   , No, knopNone   , static)
-
-// Contextual keywords -- identifiers to scan into distinct tokens for syntax coloring
-KEYWORD(tkOF          ,4, No, knopNone   , No, knopNone   , of)
 
 S_KEYWORD(LEval        ,3, eval)
 S_KEYWORD(LArguments   ,3, arguments)
