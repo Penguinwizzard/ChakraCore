@@ -45,7 +45,6 @@ SOURCES= \
     ..\ScriptContextOptimizationOverrideInfo.cpp \
     ..\ScriptContextProfiler.cpp \
     ..\SourceDynamicProfileManager.cpp \
-    ..\SourceMutator.cpp \
     ..\StackTraceArguments.cpp \
     ..\ValueType.cpp \
     ..\Utf8SourceInfo.cpp \

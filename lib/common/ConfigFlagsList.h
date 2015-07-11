@@ -1071,9 +1071,6 @@ FLAGNR(Number,  SkipFuncCountForBailOnNoProfile,  "Initial Number of functions i
 FLAGNR(Number,  MaxJITFunctionBytecodeSize, "The biggest function we'll JIT (bytecode size)", DEFAULT_CONFIG_MaxJITFunctionBytecodeSize)
 FLAGNR(Number,  MaxLoopsPerFunction   , "Maximum number of loops in any function in the script", DEFAULT_CONFIG_MaxLoopsPerFunction)
 FLAGNR(Number,  FuncObjectInlineCacheThreshold  , "Maximum number of inline caches a function body may have to allow for inline caches to be allocated on the function object", DEFAULT_CONFIG_FuncObjectInlineCacheThreshold)
-#ifdef MUTATORS
-FLAGNR(String,  Mutators              , "Enable source code mutators", NULL)
-#endif
 FLAGNR(Boolean, NoDeferParse          , "Disable deferred parsing", false)
 FLAGNR(Boolean, NoLogo                , "No logo, which we dont display anyways", false)
 #ifdef _ARM64_

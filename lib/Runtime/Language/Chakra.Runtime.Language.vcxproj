@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Condition="'$(ChakraBuildPathImported)'!='true'" Project="$(SolutionDir)Chakra.Build.Paths.props"/>
+  <Import Condition="'$(ChakraBuildPathImported)'!='true'" Project="$(SolutionDir)Chakra.Build.Paths.props" />
   <Import Project="$(BuildConfig_ChakraBuildProjectConfigurationProps)" />
   <PropertyGroup Label="Globals">
     <TargetName>Chakra.Runtime.Language</TargetName>
@@ -11,8 +11,8 @@
   <Import Project="$(BuildConfigPropsPath)Chakra.Build.Default.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>    
-  </PropertyGroup>    
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
@@ -21,16 +21,16 @@
   <Import Project="$(BuildConfigPropsPath)Chakra.Build.props" />
   <ImportGroup Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>  
+  </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>    
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
       <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)..;$(MSBuildThisFileDirectory)..\..\Common;$(MSBuildThisFileDirectory)..\..\Parser;$(MSBuildThisFileDirectory)..\..\Backend;$(ChakraManifestsIncludeDirectory);$(ManifestsInboxIncludeDirectory);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>%(DisableSpecificWarnings);4702</DisableSpecificWarnings>
-      <PrecompiledHeader>Use</PrecompiledHeader>        
+      <PrecompiledHeader>Use</PrecompiledHeader>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -70,7 +70,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)AsmJSModule.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)AsmJSTypes.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)AsmJSUtils.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)ByteCodeSerializer.cpp">      
+    <ClCompile Include="$(MSBuildThisFileDirectory)ByteCodeSerializer.cpp">
       <AdditionalIncludeDirectories Condition="'$(OptimiziedBuild)'=='true'">$(PublicInternalPath)\base\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)CacheOperators.cpp" />
@@ -107,14 +107,13 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptStackWalker.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ScriptContext.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ScriptContextProfiler.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)SourceMutator.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\StdAfx.cpp">
-      <PrecompiledHeader>Create</PrecompiledHeader>    
+      <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="amd64\stackframe.h">
-      <ExcludedFromBuild Condition="'$(Platform)'!='x64'">true</ExcludedFromBuild>      
+      <ExcludedFromBuild Condition="'$(Platform)'!='x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="arm\stackframe.h">
       <ExcludedFromBuild Condition="'$(Platform)'!='ARM'">true</ExcludedFromBuild>
@@ -177,7 +176,6 @@
     <ClInclude Include="JavascriptStackWalker.h" />
     <ClInclude Include="ScriptContext.h" />
     <ClInclude Include="ScriptContextProfiler.h" />
-    <ClInclude Include="SourceMutator.h" />
   </ItemGroup>
   <ItemGroup>
     <MASM Include="$(MSBuildThisFileDirectory)amd64\JavascriptOperatorsA.asm">
@@ -207,20 +205,17 @@
     <None Include="InlineCachePointerArray.inl" />
     <None Include="InterpreterHandler.inl" />
     <None Include="InterpreterHandlerAsmJs.inl" />
-    <None Include="InterpreterLoop.inl" />    
+    <None Include="InterpreterLoop.inl" />
     <None Include="JavascriptExceptionOperators.inl" />
     <None Include="JavascriptMathOperators.inl" />
-    <None Include="JavascriptObject.inl" />    
+    <None Include="JavascriptObject.inl" />
     <None Include="InterpreterStackFrame.inl" />
     <None Include="JavascriptConversion.inl" />
-    <None Include="JavascriptOperators.inl" />    
-    <None Include="ScriptContext.inl" />   
+    <None Include="JavascriptOperators.inl" />
+    <None Include="ScriptContext.inl" />
     <None Include="DiagHelperMethodWrapper.inl" />
   </ItemGroup>
   <!-- In Razzle build, we are still rely on the publish directory -->
-  <ItemGroup Condition="'$(BuildingWithBuildExe)'!='true'" >
-    <Midl Include="$(MSBuildThisFileDirectory)..\publish\MutatorsHost.idl" />
-  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\publish\Publish.vcxproj">
       <Project>{1876e800-ad77-48c4-a2f7-e5265f24ac35}</Project>

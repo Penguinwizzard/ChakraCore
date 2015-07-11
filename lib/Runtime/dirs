@@ -4,4 +4,3 @@ DIRS=\
     language \
     types    \
     library  \
-    publish \

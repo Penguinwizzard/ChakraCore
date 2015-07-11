@@ -553,10 +553,6 @@ enum JsNativeValueType;
 #include "Library\HostLogger.h"
 #endif
 
-#ifdef MUTATORS
-#include "Language\SourceMutator.h"
-#endif
-
 #ifdef _M_X64
 #include "Language\amd64\stackframe.h"
 #endif

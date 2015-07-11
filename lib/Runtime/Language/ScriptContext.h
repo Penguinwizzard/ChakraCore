@@ -7,7 +7,7 @@
 
 #include "activprof.h"
 
-#if DBG || ENABLE_REGEX_CONFIG_OPTIONS || defined(MUTATORS) || defined(ARRLOG) || defined(PROFILE_STRINGS)
+#if DBG || ENABLE_REGEX_CONFIG_OPTIONS || defined(ARRLOG) || defined(PROFILE_STRINGS)
 #define NEED_MISC_ALLOCATOR
 #endif
 
@@ -887,10 +887,6 @@ private:
 #if DEBUG
         static int scriptContextCount;
 #endif
-#ifdef MUTATORS
-        Js::SourceMutator *sourceMutator;
-#endif
-
         // List of weak reference dictionaries. We'll walk through them
         // and clean them up post-collection
         // IWeakReferenceDictionary objects are added to this list by calling
@@ -1637,10 +1633,6 @@ private:
         void AddDynamicProfileInfo(FunctionBody * functionBody, WriteBarrierPtr<DynamicProfileInfo>* dynamicProfileInfo);
 #if DBG || defined(RUNTIME_DATA_COLLECTION)
         uint allocId;
-#endif
-
-#ifdef MUTATORS
-        Js::SourceMutator* GetSourceMutator() { return sourceMutator; }
 #endif
 
 #ifdef PROFILE_EXEC

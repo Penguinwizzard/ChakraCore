@@ -180,9 +180,6 @@ namespace Js
         , nativeModules(nullptr)
         , intConstPropsOnGlobalObject(nullptr)
         , intConstPropsOnGlobalUserObject(nullptr)
-#ifdef MUTATORS
-        , sourceMutator(nullptr)
-#endif
 #ifdef ARRLOG
         , logTable(nullptr)
 #endif
@@ -319,13 +316,6 @@ namespace Js
 
 #ifdef TELEMETRY
         this->telemetry = Anew(this->TelemetryAllocator(), ScriptContextTelemetry, *this);
-#endif
-
-#ifdef MUTATORS
-        if (Js::Configuration::Global.flags.IsEnabled(Js::MutatorsFlag))
-        {
-            sourceMutator = Anew(MiscAllocator(), SourceMutator, this);
-        }
 #endif
 
 #ifdef ARRLOG

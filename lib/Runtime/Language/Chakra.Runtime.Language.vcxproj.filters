@@ -45,7 +45,6 @@
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptStackWalker.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)ScriptContext.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)ScriptContextProfiler.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)SourceMutator.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)amd64\AsmJSJitTemplate.cpp">
       <Filter>amd64</Filter>
     </ClCompile>
@@ -116,7 +115,6 @@
     <ClInclude Include="JavascriptStackWalker.h" />
     <ClInclude Include="ScriptContext.h" />
     <ClInclude Include="ScriptContextProfiler.h" />
-    <ClInclude Include="SourceMutator.h" />
     <ClInclude Include="i386\AsmJsInstructionTemplate.h">
       <Filter>i386</Filter>
     </ClInclude>
@@ -189,8 +187,5 @@
     <ARMASM Include="$(MSBuildThisFileDirectory)arm64\arm64_CallEhFrame.asm">
       <Filter>arm64</Filter>
     </ARMASM>
-  </ItemGroup>
-  <ItemGroup>
-    <Midl Include="$(MSBuildThisFileDirectory)..\publish\MutatorsHost.idl" />
   </ItemGroup>
 </Project>
