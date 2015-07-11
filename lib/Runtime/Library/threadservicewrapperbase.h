@@ -61,7 +61,7 @@ private:
 #define IDLE_COLLECT_TRACE(msg, ...) \
     if (Js::Configuration::Global.flags.Trace.IsEnabled(Js::IdleCollectPhase)) \
 		    {\
-        Output::Print(L"%04X> " ## msg, ::GetCurrentThreadId(), __VA_ARGS__); \
+        Output::Print(L"%04X> " msg, ::GetCurrentThreadId(), __VA_ARGS__); \
         Output::Flush(); \
 		    } 
 #else

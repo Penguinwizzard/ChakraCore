@@ -332,10 +332,6 @@ class ByteCodeBufferBuilder
     //For library code this will be set to _countJSOnlyProperty and for normal bytecode this will be TotalNumberOfBuiltInProperties
     int builtInPropertyCount;
 
-    // Defined in GenerateByteCodeConfig.h as well.
-#define GENERATE_BYTE_CODE_BUFFER_LIBRARY 0x00000001
-#define GENERATE_BYTE_CODE_FOR_NATIVE 0x00000002
-
     bool GenerateLibraryByteCode() const
     {
         return (dwFlags & GENERATE_BYTE_CODE_BUFFER_LIBRARY) != 0;

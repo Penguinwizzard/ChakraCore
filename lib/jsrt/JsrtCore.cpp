@@ -2,12 +2,10 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include <stdafx.h>
-#include "jsrtprivate.h"
+#include "JsrtPch.h"
 #include "jsrtInternal.h"
-#include "GenerateByteCodeConfig.h"
 #include "JsrtExternalObject.h"
-#include "JsrtComException.h"
+#include "JsrtExternalArrayBuffer.h"
 
 JsErrorCode CheckContext(JsrtContext *currentContext, bool verifyRuntimeState, bool allowInObjectBeforeCollectCallback)
 {
@@ -2830,7 +2828,7 @@ JsErrorCode RunScriptCore(const wchar_t *script, JsSourceContext sourceContext, 
             if (PHASE_FORCE1(Js::EvalCompilePhase))
             {
                 varThis = Js::JavascriptOperators::OP_GetThis(scriptContext->GetLibrary()->GetUndefined(), kmodGlobal, scriptContext);
-                args.Info.Flags = (Js::CallFlags)CallFlags_Eval;
+                args.Info.Flags = (Js::CallFlags)Js::CallFlags::CallFlags_Eval;
                 args.Info.Count = 1;
                 args.Values = &varThis;
             }

@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include <StdAfx.h>
+#include "JsrtPch.h"
 #include "JsrtExternalObject.h"
 #include "JsrtCustomEnumerator.h"
 
@@ -83,7 +83,7 @@ void JsrtExternalObject::SetSlotData(void * data)
     this->slot = data;
 }
 
-BOOL JsrtExternalObject::HasProperty(PropertyId propertyId)
+BOOL JsrtExternalObject::HasProperty(Js::PropertyId propertyId)
 {
     JsPropertyAttributes attributes = JsPropertyAttributeInvalid;
 
@@ -107,7 +107,7 @@ BOOL JsrtExternalObject::HasProperty(PropertyId propertyId)
     return DynamicObject::HasProperty(propertyId);
 }
 
-BOOL JsrtExternalObject::GetProperty(Var originalInstance, PropertyId propertyId, Var* value, Js::PropertyValueInfo* info, Js::ScriptContext* requestContext)
+BOOL JsrtExternalObject::GetProperty(Js::Var originalInstance, Js::PropertyId propertyId, Js::Var* value, Js::PropertyValueInfo* info, Js::ScriptContext* requestContext)
 {
     if (this->GetExternalType()->GetExternalTypeDescription()->getCallback)
     {
@@ -148,19 +148,19 @@ BOOL JsrtExternalObject::GetProperty(Var originalInstance, PropertyId propertyId
     return DynamicObject::GetProperty(originalInstance, propertyId, value, info, requestContext);
 }
 
-BOOL JsrtExternalObject::GetProperty(Var originalInstance, Js::JavascriptString* propertyNameString, Var* value, Js::PropertyValueInfo* info, Js::ScriptContext* requestContext)
+BOOL JsrtExternalObject::GetProperty(Js::Var originalInstance, Js::JavascriptString* propertyNameString, Js::Var* value, Js::PropertyValueInfo* info, Js::ScriptContext* requestContext)
 {
     Js::PropertyRecord const * propertyRecord;
     this->GetScriptContext()->GetOrAddPropertyRecord(propertyNameString->GetString(), propertyNameString->GetLength(), &propertyRecord);
     return JsrtExternalObject::GetProperty(originalInstance, propertyRecord->GetPropertyId(), value, info, requestContext);
 }
 
-BOOL JsrtExternalObject::GetPropertyReference(Var originalInstance, PropertyId propertyId, Var* value, Js::PropertyValueInfo* info, Js::ScriptContext* requestContext)
+BOOL JsrtExternalObject::GetPropertyReference(Js::Var originalInstance, Js::PropertyId propertyId, Js::Var* value, Js::PropertyValueInfo* info, Js::ScriptContext* requestContext)
 {
     return GetProperty(originalInstance, propertyId, value, info, requestContext);
 }
 
-BOOL JsrtExternalObject::SetProperty(PropertyId propertyId, Var value, Js::PropertyOperationFlags flags, Js::PropertyValueInfo* info)
+BOOL JsrtExternalObject::SetProperty(Js::PropertyId propertyId, Js::Var value, Js::PropertyOperationFlags flags, Js::PropertyValueInfo* info)
 {
     if (this->GetExternalType()->GetExternalTypeDescription()->setCallback)
     {
@@ -192,14 +192,14 @@ BOOL JsrtExternalObject::SetProperty(PropertyId propertyId, Var value, Js::Prope
     return DynamicObject::SetProperty(propertyId, value, flags, info);
 }
 
-BOOL JsrtExternalObject::SetProperty(Js::JavascriptString* propertyNameString, Var value, Js::PropertyOperationFlags flags, Js::PropertyValueInfo* info)
+BOOL JsrtExternalObject::SetProperty(Js::JavascriptString* propertyNameString, Js::Var value, Js::PropertyOperationFlags flags, Js::PropertyValueInfo* info)
 {
     Js::PropertyRecord const * propertyRecord;
     this->GetScriptContext()->GetOrAddPropertyRecord(propertyNameString->GetString(), propertyNameString->GetLength(), &propertyRecord);
     return JsrtExternalObject::SetProperty(propertyRecord->GetPropertyId(), value, flags, info);
 }
 
-BOOL JsrtExternalObject::SetPropertyWithAttributes(PropertyId propertyId, Var value, Js::PropertyAttributes attributes, Js::PropertyValueInfo* info, Js::PropertyOperationFlags flags, Js::SideEffects possibleSideEffects)
+BOOL JsrtExternalObject::SetPropertyWithAttributes(Js::PropertyId propertyId, Js::Var value, Js::PropertyAttributes attributes, Js::PropertyValueInfo* info, Js::PropertyOperationFlags flags, Js::SideEffects possibleSideEffects)
 {
     if (this->GetExternalType()->GetExternalTypeDescription()->setCallback)
     {
@@ -233,12 +233,12 @@ BOOL JsrtExternalObject::SetPropertyWithAttributes(PropertyId propertyId, Var va
     return DynamicObject::SetPropertyWithAttributes(propertyId, value, attributes, info);
 }
 
-BOOL JsrtExternalObject::InitProperty(PropertyId propertyId, Var value, Js::PropertyOperationFlags flags, Js::PropertyValueInfo* info)
+BOOL JsrtExternalObject::InitProperty(Js::PropertyId propertyId, Js::Var value, Js::PropertyOperationFlags flags, Js::PropertyValueInfo* info)
 {
     return JsrtExternalObject::SetProperty(propertyId, value, Js::PropertyOperation_None, info);
 }
 
-BOOL JsrtExternalObject::DeleteProperty(PropertyId propertyId, Js::PropertyOperationFlags flags)
+BOOL JsrtExternalObject::DeleteProperty(Js::PropertyId propertyId, Js::PropertyOperationFlags flags)
 {
     if (this->GetExternalType()->GetExternalTypeDescription()->deleteCallback)
     {
@@ -283,7 +283,7 @@ BOOL JsrtExternalObject::HasItem(uint32 index)
     return DynamicObject::HasItem(index);
 }
 
-BOOL JsrtExternalObject::GetItem(Var originalInstance, uint32 index, Var* value, Js::ScriptContext * requestContext)
+BOOL JsrtExternalObject::GetItem(Js::Var originalInstance, uint32 index, Js::Var* value, Js::ScriptContext * requestContext)
 {
     if (this->GetExternalType()->GetExternalTypeDescription()->getIndexedCallback)
     {
@@ -304,12 +304,12 @@ BOOL JsrtExternalObject::GetItem(Var originalInstance, uint32 index, Var* value,
     return DynamicObject::GetItem(originalInstance, index, value, requestContext);
 }
 
-BOOL JsrtExternalObject::GetItemReference(Var originalInstance, uint32 index, Var* value, Js::ScriptContext * requestContext)
+BOOL JsrtExternalObject::GetItemReference(Js::Var originalInstance, uint32 index, Js::Var* value, Js::ScriptContext * requestContext)
 {
     return JsrtExternalObject::GetItem(originalInstance, index, value, requestContext);
 }
 
-BOOL JsrtExternalObject::SetItem(uint32 index, Var value, Js::PropertyOperationFlags flags)
+BOOL JsrtExternalObject::SetItem(uint32 index, Js::Var value, Js::PropertyOperationFlags flags)
 {
     if (this->GetExternalType()->GetExternalTypeDescription()->setIndexedCallback)
     {
@@ -351,7 +351,7 @@ BOOL JsrtExternalObject::DeleteItem(uint32 index, Js::PropertyOperationFlags fla
     return DynamicObject::DeleteItem(index, flags);
 }
 
-BOOL JsrtExternalObject::GetEnumerator(BOOL enumNonEnumerable, Var* enumerator, Js::ScriptContext * requestContext, bool preferSnapshotSemantics, bool enumSymbols)
+BOOL JsrtExternalObject::GetEnumerator(BOOL enumNonEnumerable, Js::Var* enumerator, Js::ScriptContext * requestContext, bool preferSnapshotSemantics, bool enumSymbols)
 {
     if (this->GetExternalType()->GetExternalTypeDescription()->enumerateCallback)
     {
@@ -378,7 +378,7 @@ BOOL JsrtExternalObject::GetEnumerator(BOOL enumNonEnumerable, Var* enumerator, 
     return DynamicObject::GetEnumerator(enumNonEnumerable, enumerator, requestContext, preferSnapshotSemantics, enumSymbols);
 }
 
-BOOL JsrtExternalObject::IsEnumerable(PropertyId propertyId)
+BOOL JsrtExternalObject::IsEnumerable(Js::PropertyId propertyId)
 {
     JsPropertyAttributes attributes = JsPropertyAttributeInvalid;
 
@@ -402,7 +402,7 @@ BOOL JsrtExternalObject::IsEnumerable(PropertyId propertyId)
     return DynamicObject::IsEnumerable(propertyId);
 }
 
-BOOL JsrtExternalObject::IsWritable(PropertyId propertyId)
+BOOL JsrtExternalObject::IsWritable(Js::PropertyId propertyId)
 {
     JsPropertyAttributes attributes = JsPropertyAttributeInvalid;
 
@@ -426,7 +426,7 @@ BOOL JsrtExternalObject::IsWritable(PropertyId propertyId)
     return DynamicObject::IsWritable(propertyId);
 }
 
-BOOL JsrtExternalObject::IsConfigurable(PropertyId propertyId)
+BOOL JsrtExternalObject::IsConfigurable(Js::PropertyId propertyId)
 {
     JsPropertyAttributes attributes = JsPropertyAttributeInvalid;
 
@@ -450,7 +450,7 @@ BOOL JsrtExternalObject::IsConfigurable(PropertyId propertyId)
     return DynamicObject::IsConfigurable(propertyId);
 }
 
-BOOL JsrtExternalObject::SetEnumerable(PropertyId propertyId, BOOL value)
+BOOL JsrtExternalObject::SetEnumerable(Js::PropertyId propertyId, BOOL value)
 {
     JsPropertyAttributes attributes = JsPropertyAttributeInvalid;
 
@@ -490,7 +490,7 @@ BOOL JsrtExternalObject::SetEnumerable(PropertyId propertyId, BOOL value)
     return DynamicObject::SetEnumerable(propertyId, value);
 }
 
-BOOL JsrtExternalObject::SetWritable(PropertyId propertyId, BOOL value)
+BOOL JsrtExternalObject::SetWritable(Js::PropertyId propertyId, BOOL value)
 {
     JsPropertyAttributes attributes = JsPropertyAttributeInvalid;
 
@@ -530,7 +530,7 @@ BOOL JsrtExternalObject::SetWritable(PropertyId propertyId, BOOL value)
     return DynamicObject::SetWritable(propertyId, value);
 }
 
-BOOL JsrtExternalObject::SetConfigurable(PropertyId propertyId, BOOL value)
+BOOL JsrtExternalObject::SetConfigurable(Js::PropertyId propertyId, BOOL value)
 {
     JsPropertyAttributes attributes = JsPropertyAttributeInvalid;
 
@@ -571,7 +571,7 @@ BOOL JsrtExternalObject::SetConfigurable(PropertyId propertyId, BOOL value)
 }
 
 // TODO: WARNING: slow perf as it calls GetConfigurable/Enumerable/Writable individually.
-BOOL JsrtExternalObject::SetAttributes(PropertyId propertyId, Js::PropertyAttributes attributes)
+BOOL JsrtExternalObject::SetAttributes(Js::PropertyId propertyId, Js::PropertyAttributes attributes)
 {
     return
         this->SetConfigurable(propertyId, attributes & PropertyConfigurable) &&
@@ -583,7 +583,7 @@ BOOL JsrtExternalObject::SetAttributes(PropertyId propertyId, Js::PropertyAttrib
     // as this is low-level call.
 }
 
-BOOL JsrtExternalObject::SetAccessors(PropertyId propertyId, Var getter, Var setter, Js::PropertyOperationFlags flags)
+BOOL JsrtExternalObject::SetAccessors(Js::PropertyId propertyId, Js::Var getter, Js::Var setter, Js::PropertyOperationFlags flags)
 {
     JsPropertyAttributes attributes = JsPropertyAttributeInvalid;
 
@@ -607,7 +607,7 @@ BOOL JsrtExternalObject::SetAccessors(PropertyId propertyId, Var getter, Var set
     return DynamicObject::SetAccessors(propertyId, getter, setter);
 }
 
-BOOL JsrtExternalObject::GetAccessors(PropertyId propertyId, Var *getter, Var *setter, Js::ScriptContext * requestContext)
+BOOL JsrtExternalObject::GetAccessors(Js::PropertyId propertyId, Js::Var *getter, Js::Var *setter, Js::ScriptContext * requestContext)
 {
     JsPropertyAttributes attributes = JsPropertyAttributeInvalid;
 
@@ -631,7 +631,7 @@ BOOL JsrtExternalObject::GetAccessors(PropertyId propertyId, Var *getter, Var *s
     return DynamicObject::GetAccessors(propertyId, getter, setter, requestContext);
 }
 
-Js::DescriptorFlags JsrtExternalObject::GetSetter(PropertyId propertyId, Var* setterValue, Js::PropertyValueInfo* info, Js::ScriptContext* requestContext)
+Js::DescriptorFlags JsrtExternalObject::GetSetter(Js::PropertyId propertyId, Js::Var* setterValue, Js::PropertyValueInfo* info, Js::ScriptContext* requestContext)
 {
     JsPropertyAttributes attributes = JsPropertyAttributeInvalid;
 
@@ -666,14 +666,14 @@ Js::DescriptorFlags JsrtExternalObject::GetSetter(PropertyId propertyId, Var* se
     return DynamicObject::GetSetter(propertyId, setterValue, info, requestContext);
 }
 
-Js::DescriptorFlags JsrtExternalObject::GetSetter(Js::JavascriptString* propertyNameString, Var* setterValue, Js::PropertyValueInfo* info, Js::ScriptContext* requestContext)
+Js::DescriptorFlags JsrtExternalObject::GetSetter(Js::JavascriptString* propertyNameString, Js::Var* setterValue, Js::PropertyValueInfo* info, Js::ScriptContext* requestContext)
 {
     Js::PropertyRecord const * propertyRecord;
     this->GetScriptContext()->GetOrAddPropertyRecord(propertyNameString->GetString(), propertyNameString->GetLength(), &propertyRecord);
     return JsrtExternalObject::GetSetter(propertyRecord->GetPropertyId(), setterValue, info, requestContext);
 }
 
-Js::DescriptorFlags JsrtExternalObject::GetItemSetter(uint32 index, Var* setterValue, Js::ScriptContext* requestContext)
+Js::DescriptorFlags JsrtExternalObject::GetItemSetter(uint32 index, Js::Var* setterValue, Js::ScriptContext* requestContext)
 {
     JsPropertyAttributes attributes = JsPropertyAttributeInvalid;
 

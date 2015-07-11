@@ -495,6 +495,7 @@ enum JsNativeValueType;
 #include "Library\JavascriptObject.h"
 #include "Library\BuiltInFlags.h"
 #include "Library\CharStringCache.h"
+// REVIEW: ChakraCore Dependency
 #include "..\..\..\private\lib\staticlib\base\JavascriptLibraryBase.h"
 #include "Library\JavascriptLibrary.h"
 

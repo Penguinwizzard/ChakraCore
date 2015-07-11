@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "Library\ThreadServiceWrapperBase.h"
+
 class JsrtThreadService : public ThreadServiceWrapperBase
 {
 public:

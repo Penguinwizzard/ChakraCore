@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "JsrtExceptionBase.h"
+
 #define PARAM_NOT_NULL(p) \
     if (p == NULL) \
 	    { \
@@ -124,9 +126,9 @@ JsErrorCode GlobalAPIWrapper(Fn fn)
     {
         return JsErrorOutOfMemory;
     }
-    catch (JsrtComException e)
+    catch (JsrtExceptionBase& e)
     {
-        return e.GetJsErrorFromHResult();
+        return e.GetJsErrorCode();
     }
     catch (Js::ExceptionBase)
     {
@@ -207,9 +209,9 @@ JsErrorCode ContextAPIWrapper(Fn fn)
     {
         return JsErrorScriptEvalDisabled;
     }
-    catch (JsrtComException e)
+    catch (JsrtExceptionBase& e)
     {
-        return e.GetJsErrorFromHResult();
+        return e.GetJsErrorCode();
     }
     catch (Js::ExceptionBase)
     {
@@ -270,9 +272,9 @@ JsErrorCode ContextAPINoScriptWrapper(Fn fn)
     {
         return JsErrorOutOfMemory;
     }
-    catch (JsrtComException e)
+    catch (JsrtExceptionBase& e)
     {
-        return e.GetJsErrorFromHResult();
+        return e.GetJsErrorCode();
     }
     catch (Js::ExceptionBase)
     {

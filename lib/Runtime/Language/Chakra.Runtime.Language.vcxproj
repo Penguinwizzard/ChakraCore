@@ -128,6 +128,7 @@
     <ClInclude Include="AsmJSLink.h" />
     <ClInclude Include="AsmJSModule.h" />
     <ClInclude Include="AsmJSUtils.h" />
+    <ClInclude Include="ByteCodeSerializeFlags.h" />
     <ClInclude Include="byteCodeCacheReleaseFileVersion.h" />
     <ClInclude Include="CacheOperators.h" />
     <ClInclude Include="i386\AsmJsInstructionTemplate.h">

@@ -7,6 +7,8 @@
 // Turn this on to enable magic constants in byte code (useful for debugging)
 //#define BYTE_CODE_MAGIC_CONSTANTS
 
+#include "Language\ByteCodeSerializeFlags.h"
+
 namespace Js
 {
     // Some things are obscured by xor. This helps catch cases in which, for example, indirect property ids

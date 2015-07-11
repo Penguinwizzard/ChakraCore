@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include <stdafx.h>
+#include "JsrtPch.h"
 #include "jsrtThreadService.h"
 
 //
@@ -10,8 +10,8 @@
 //
 
 JsrtThreadService::JsrtThreadService() :
-ThreadServiceWrapperBase(),
-nextIdleTick(UINT_MAX)
+    ThreadServiceWrapperBase(),
+    nextIdleTick(UINT_MAX)
 {
 }
 

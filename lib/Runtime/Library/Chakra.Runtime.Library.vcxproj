@@ -190,6 +190,7 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)SubString.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)ThreadServiceWrapperBase.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)UriHelper.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -288,7 +289,8 @@
     <ClInclude Include="ThreadBoundThreadContextManager.h" />
     <ClInclude Include="ThreadContext.h" />
     <ClInclude Include="ThreadContextTLSEntry.h" />
-    <ClInclude Include="threadservicewrapper.h" />
+    <ClInclude Include="ThreadServiceWrapper.h" />
+    <ClInclude Include="ThreadServiceWrapperBase.h" />
     <ClInclude Include="ThrowErrorObject.h" />
     <ClInclude Include="typedarray.h" />
     <ClInclude Include="typedArrayEnumerator.h" />

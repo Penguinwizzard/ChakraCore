@@ -1,7 +1,8 @@
 //---------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
-#include "StdAfx.h"
+#include "JsrtPch.h"
+#include "JsrtExternalArrayBuffer.h"
 
 namespace Js
 {

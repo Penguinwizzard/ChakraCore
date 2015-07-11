@@ -3,5 +3,6 @@ DIRS = \
     parser \
     runtime \
     backend \
+    jsrt \
     
     

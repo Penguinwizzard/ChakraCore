@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#include <Stdafx.h>
+#include "JsrtPch.h"
 #include "JsrtExternalObject.h"
 #include "JsrtCustomEnumerator.h"
 
@@ -38,17 +38,17 @@ void JsrtCustomEnumerator::Finalize(bool isShutdown)
     }
 }
 
-Var JsrtCustomEnumerator::GetCurrentIndex()
+Js::Var JsrtCustomEnumerator::GetCurrentIndex()
 {
     Js::ScriptContext* scriptContext = GetScriptContext();
     Assert(scriptContext != nullptr);
-    Var index = nullptr;
+    Js::Var index = nullptr;
 
     if (this->getCurrent != null)
     {
         BEGIN_INTERCEPTOR(scriptContext)
         {
-            index = (Var)this->getCurrent(this->data);
+            index = (Js::Var)this->getCurrent(this->data);
         }
         END_INTERCEPTOR(scriptContext);
     }
@@ -62,13 +62,13 @@ Var JsrtCustomEnumerator::GetCurrentIndex()
     return scriptContext->GetLibrary()->GetUndefined();
 }
 
-Var JsrtCustomEnumerator::GetCurrentValue()
+Js::Var JsrtCustomEnumerator::GetCurrentValue()
 {
     Assert(GetScriptContext() != nullptr);
     return GetScriptContext()->GetLibrary()->GetUndefined();
 }
 
-PropertyId JsrtCustomEnumerator::GetPropertyIdOfIndex(Var index)
+Js::PropertyId JsrtCustomEnumerator::GetPropertyIdOfIndex(Js::Var index)
 {
     Js::ScriptContext* scriptContext = GetScriptContext();
 
@@ -88,24 +88,24 @@ PropertyId JsrtCustomEnumerator::GetPropertyIdOfIndex(Var index)
     return Js::Constants::NoProperty;
 }
 
-Var JsrtCustomEnumerator::GetCurrentAndMoveNext(PropertyId& propertyId, Js::PropertyAttributes* attributes)
+Js::Var JsrtCustomEnumerator::GetCurrentAndMoveNext(Js::PropertyId& propertyId, Js::PropertyAttributes* attributes)
 {
     propertyId = Js::Constants::NoProperty;
     if (MoveNext(attributes))
     {
-        Var currentIndex = GetCurrentIndex();
+        Js::Var currentIndex = GetCurrentIndex();
         propertyId = GetPropertyIdOfIndex(currentIndex);
         return currentIndex;
     }
     return NULL;
 }
 
-Var JsrtCustomEnumerator::GetCurrentBothAndMoveNext(PropertyId& propertyId, Var* currentValueRef)
+Js::Var JsrtCustomEnumerator::GetCurrentBothAndMoveNext(Js::PropertyId& propertyId, Js::Var* currentValueRef)
 {
     propertyId = Js::Constants::NoProperty;
     if (MoveNext())
     {
-        Var currentIndex = GetCurrentIndex();
+        Js::Var currentIndex = GetCurrentIndex();
         *currentValueRef = GetCurrentValue();
         propertyId = GetPropertyIdOfIndex(currentIndex);
         return currentIndex;

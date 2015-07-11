@@ -4,7 +4,10 @@
 
 #pragma once
 
-#include "jsrt.h"
+// REVIEW: ChakraCore Dependency
+#define _JSRT_
+#include "..\..\..\private\bin\chakra\chakrart.h"
+
 #include "JsrtThreadService.h"
 
 class JsrtRuntime

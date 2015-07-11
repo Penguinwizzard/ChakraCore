@@ -3,14 +3,15 @@
 //----------------------------------------------------------------------------
 
 #include <stdafx.h>
+#include "ThreadServiceWrapperbase.h"
 
 ThreadServiceWrapperBase::ThreadServiceWrapperBase() :
-threadContext(nullptr),
-needIdleCollect(false),
-inIdleCollect(false),
-hasScheduledIdleCollect(false),
-shouldScheduleIdleCollectOnExitIdle(false),
-forceIdleCollectOnce(false)
+    threadContext(nullptr),
+    needIdleCollect(false),
+    inIdleCollect(false),
+    hasScheduledIdleCollect(false),
+    shouldScheduleIdleCollectOnExitIdle(false),
+    forceIdleCollectOnce(false)
 {
 }
 
