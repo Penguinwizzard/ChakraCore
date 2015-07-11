@@ -597,23 +597,8 @@ namespace Js
 
     BOOL JavascriptProxy::SetInternalProperty(PropertyId internalPropertyId, Var value, PropertyOperationFlags flags, PropertyValueInfo* info)
     {
-        // We can't cache the property at this time. both target and handler can be changed outside of the proxy, so the inline cache needs to be
-        // invalidate when target, handler, or handler prototype has changed. We don't have a way to achieve this yet.
-        PropertyValueInfo::SetNoCache(info, this);
-        PropertyValueInfo::DisablePrototypeCache(info, this); // We can't cache prototype property either
-        if (this->target == nullptr)
-        {
-            // the proxy has been revoked; typeerror.
-            JavascriptError::ThrowTypeError(GetScriptContext(), JSERR_ErrorOnRevokedProxy, L"internal slot");
-        }
-        // Reject implicit call
-        ThreadContext* threadContext = GetScriptContext()->GetThreadContext();
-        if (threadContext->IsDisableImplicitCall())
-        {
-            threadContext->AddImplicitCallFlags(Js::ImplicitCall_External);
-            return FALSE;
-        }
-        return target->SetInternalProperty(internalPropertyId, value, flags, nullptr);
+        // the spec change to not recognizing internal slots in proxy. We should remove the ability to forward to internal slots.
+        return FALSE;
     }
 
     BOOL JavascriptProxy::InitProperty(PropertyId propertyId, Var value, PropertyOperationFlags flags, PropertyValueInfo* info)
