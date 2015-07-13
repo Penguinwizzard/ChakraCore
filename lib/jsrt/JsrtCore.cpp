@@ -151,6 +151,11 @@ STDAPI_(JsErrorCode) JsCreateRuntime(JsRuntimeAttributes attributes, JsThreadSer
             threadContext->SetThreadContextFlag(ThreadContextFlagNoJIT);
         }
 
+        if (attributes & JsRuntimeAttributeEnableExperimentalFeatures)
+        {
+            threadContext->SetThreadContextFlag(ThreadContextFlagExperimentalFeaturesEnabled);
+        }
+
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
         if (Js::Configuration::Global.flags.PrimeRecycler)
         {

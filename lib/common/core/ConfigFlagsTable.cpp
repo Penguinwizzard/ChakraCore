@@ -3,10 +3,6 @@
 //----------------------------------------------------------------------------
 
 #include "StdAfx.h"
-#ifdef ENABLE_EXPERIMENTAL_FLAGS
-#include <iesettings.h>
-#endif
-
 #include <initguid.h>
 // {17DC713D-8B3E-4434-9DC8-90C275C75194}
 DEFINE_GUID(HybridDebuggingGuid, 0x17dc713d, 0x8b3e, 0x4434, 0x9d, 0xc8, 0x90, 0xc2, 0x75, 0xc7, 0x51, 0x94);
@@ -29,18 +25,6 @@ DEFINE_GUID(HybridDebuggingGuid, 0x17dc713d, 0x8b3e, 0x4434, 0x9d, 0xc8, 0x90, 0
 #pragma init_seg(".CRT$XCAM")
 namespace Js
 {
-#ifdef ENABLE_EXPERIMENTAL_FLAGS
-    bool GetExperimentalFlag(const SettingStore::VALUEID<BOOL> id)
-    {
-        BOOL regValue;
-        if (SUCCEEDED(SettingStore::GetBOOL(id, &regValue)))
-        {
-            return (regValue != FALSE);
-        }
-        return false;
-    }
-#endif
-
     NumberSet::NumberSet() : set(&NoCheckHeapAllocator::Instance) {}
     
     void NumberSet::Add(uint32 x)
@@ -797,12 +781,6 @@ namespace Js
 #include "ConfigFlagsList.h"
 #undef FLAG
     }
-#ifdef ENABLE_EXPERIMENTAL_FLAGS
-#define GET_EXPERIMENTAL_FLAG(flag) \
-    (Boolean)(GetExperimentalFlag(SettingStore::IEVALUE_ExperimentalFeatures_##flag))
-#else
-#define GET_EXPERIMENTAL_FLAG(flag) false
-#endif
 
     ///----------------------------------------------------------------------------
     ///
@@ -819,27 +797,6 @@ namespace Js
 
         switch (flag)
         {
-// flags with Parents
-#define FLAG_REGOVR_ASMJS(type, name, description, defaultValue, parentName, FALSE) FLAGPREGOVRASMJS##type(name, parentName)
-            //   * and those we do care about
-
-#define FLAGPREGOVRASMJSBoolean(name, parentName) \
-        case name##Flag: \
-        retValue = GET_EXPERIMENTAL_FLAG(Asmjs); \
-        break;
-
-#define FLAG_REGOVR_EXP(type, name, description, defaultValue, ...) FLAGREGOVREXP##type(name)
-#define FLAGREGOVREXPPhases(name)
-#define FLAGREGOVREXPString(name)
-#define FLAGREGOVREXPNumber(name)
-#define FLAGREGOVREXPNumberSet(name)
-#define FLAGREGOVREXPNumberRange(name)
-#define FLAGREGOVREXPNumberPairSet(name)
-#define FLAGREGOVREXPBoolean(name) \
-        case name##Flag: \
-            retValue = GET_EXPERIMENTAL_FLAG(ExperimentalJS); \
-            break; \
-
 #define FLAG(type, name, description, defaultValue, ...) FLAGDEFAULT##type(name, defaultValue)
             // define an overload for each FlagTypes - type
             //   * all defaults we don't care about
@@ -1033,8 +990,8 @@ namespace Js
             {
                 Boolean childValue = value;
 
-			    Output::VerboseNote(L"FLAG %s = %d - setting child flag %s = %d\n", FlagNames[(int) parentFlag], value, FlagNames[(int) childFlag], childValue);
-			    this->SetAsBoolean(childFlag, childValue);
+                Output::VerboseNote(L"FLAG %s = %d - setting child flag %s = %d\n", FlagNames[(int) parentFlag], value, FlagNames[(int) childFlag], childValue);
+                this->SetAsBoolean(childFlag, childValue);
             }
 
             // get next child flag
@@ -1045,14 +1002,33 @@ namespace Js
     void
     ConfigFlagsTable::FlagSetCallback_ES6Experimental(Boolean value)
     {
+        if (value)
+        {
+            EnableExperimentalFlag();
+        }
+    }
+
+#endif
+
+    void
+    ConfigFlagsTable::EnableExperimentalFlag()
+    {
 #define FLAG(...) 
-#define FLAG_REGOVR_EXP(type, name, description, defaultValue, parentName, hasCallback) this->SetAsBoolean(Js::Flag::name##Flag, value);
+#define FLAG_REGOVR_EXP(type, name, description, defaultValue, parentName, hasCallback) this->SetAsBoolean(Js::Flag::name##Flag, true);
 #include "ConfigFlagsList.h"
 #undef FLAG
 #undef FLAG_REGOVR_EXP
     }
 
-#endif
+    void
+    ConfigFlagsTable::EnableAsmJsFlag()
+    {
+#define FLAG(...) 
+#define FLAG_REGOVR_ASMJS(type, name, description, defaultValue, parentName, hasCallback) this->SetAsBoolean(Js::Flag::name##Flag, true);
+#include "ConfigFlagsList.h"
+#undef FLAG
+#undef FLAG_REGOVR_ASMJS
+    }
 
     //
     // Configuration options

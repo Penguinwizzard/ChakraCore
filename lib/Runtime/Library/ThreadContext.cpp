@@ -3744,6 +3744,13 @@ bool ThreadContext::TestThreadContextFlag(ThreadContextFlags contextFlag) const
 void ThreadContext::SetThreadContextFlag(ThreadContextFlags contextFlag)
 {
     this->threadContextFlags = (ThreadContextFlags)(this->threadContextFlags | contextFlag);
+
+    // We have to enable the flag in ConfigFlagsTable too
+    if (contextFlag & ThreadContextFlagExperimentalFeaturesEnabled)
+    {
+        Js::Configuration::Global.flags.EnableExperimentalFlag();
+        Js::Configuration::Global.flags.EnableAsmJsFlag();
+    }
 }
 
 void ThreadContext::ClearThreadContextFlag(ThreadContextFlags contextFlag)

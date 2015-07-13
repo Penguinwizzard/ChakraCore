@@ -31,6 +31,7 @@ enum ThreadContextFlags
     ThreadContextFlagCanDisableExecution           = 0x00000001,
     ThreadContextFlagEvalDisabled                  = 0x00000002,
     ThreadContextFlagNoJIT                         = 0x00000004,
+    ThreadContextFlagExperimentalFeaturesEnabled   = 0x00000008,
 };
 
 const int LS_MAX_STACK_SIZE_KB = 300;
