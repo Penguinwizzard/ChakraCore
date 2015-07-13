@@ -33,7 +33,7 @@ public:
 #if _M_IX86_OR_ARM32
     static const size_t PreReservedAllocationSegmentCount = 256; // (256 * 64K) == 16 MB, if 64k is the AllocationGranularity
 #else // _M_X64_OR_ARM64
-    static const size_t PreReservedAllocationSegmentCount = 1024; //(1024 * 64K) == 64MB, if 64k is the AllocationGranularity
+    static const size_t PreReservedAllocationSegmentCount = 4096; //(4096 * 64K) == 256MB, if 64k is the AllocationGranularity
 #endif
     
 public:

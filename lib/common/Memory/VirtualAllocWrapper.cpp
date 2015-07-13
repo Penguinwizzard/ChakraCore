@@ -158,7 +158,7 @@ LPVOID PreReservedVirtualAllocWrapper::Alloc(LPVOID lpAddress, size_t dwSize, DW
 #if defined(_CONTROL_FLOW_GUARD)
             if (AutoSystemInfo::Data.IsCFGEnabled())
             {
-                preReservedStartAddress = VirtualAlloc(NULL, bytes, MEM_RESERVE, PAGE_EXECUTE_READWRITE | PAGE_TARGETS_INVALID);
+                preReservedStartAddress = VirtualAlloc(NULL, bytes, MEM_RESERVE, PAGE_READWRITE);
                 PreReservedHeapTrace(L"Reserving PreReservedSegment For the first time(CFG Enabled). Address: 0x%p\n", preReservedStartAddress);
             }
             else 
@@ -202,7 +202,7 @@ LPVOID PreReservedVirtualAllocWrapper::Alloc(LPVOID lpAddress, size_t dwSize, DW
 
             uint offset = freeSegmentsBVIndex * AutoSystemInfo::Data.GetAllocationGranularityPageSize();
             addressToCommit = (char*) preReservedStartAddress + offset;
-#if DBG
+
             //Check if the region is not already in MEM_COMMIT state.
             MEMORY_BASIC_INFORMATION memBasicInfo;
             size_t bytes = VirtualQuery(addressToCommit, &memBasicInfo, sizeof(memBasicInfo));
@@ -211,9 +211,9 @@ LPVOID PreReservedVirtualAllocWrapper::Alloc(LPVOID lpAddress, size_t dwSize, DW
                 || memBasicInfo.State == MEM_COMMIT
                 )
             {
-                AssertMsg(false, "Invalid Memory Region");
+                CustomHeap_BadPageState_fatal_error((ULONG_PTR)this);
+                return nullptr;
             }
-#endif
         }
         else
         {
@@ -233,7 +233,20 @@ LPVOID PreReservedVirtualAllocWrapper::Alloc(LPVOID lpAddress, size_t dwSize, DW
         AssertMsg(freeSegmentsBVIndex < PreReservedAllocationSegmentCount, "Invalid BitVector index calculation?");
         AssertMsg(dwSize % AutoSystemInfo::PageSize == 0, "COMMIT is managed at AutoSystemInfo::PageSize granularity");
 
-        char * commitedAddress = (char *) VirtualAlloc(addressToCommit, dwSize, MEM_COMMIT, protectFlags);
+        char * commitedAddress = nullptr;
+        if (AutoSystemInfo::Data.IsCFGEnabled())
+        {
+            DWORD oldProtect;
+            commitedAddress = (char *) VirtualAlloc(addressToCommit, dwSize, MEM_COMMIT, PAGE_EXECUTE_READWRITE | PAGE_TARGETS_INVALID);
+            AssertMsg(commitedAddress != nullptr, "If no space to allocate, then how did we fetch this address from the tracking bit vector?");
+            VirtualProtect(commitedAddress, dwSize, protectFlags, &oldProtect);
+            AssertMsg(oldProtect == (PAGE_EXECUTE_READWRITE), "CFG Bitmap gets allocated and bits will be set to invalid only upon passing these flags.");
+        }
+        else
+        {
+            commitedAddress = (char *) VirtualAlloc(addressToCommit, dwSize, MEM_COMMIT, protectFlags);
+        }
+
 
         //Keep track of the committed pages within the preReserved Memory Region
         if (lpAddress == nullptr && commitedAddress != nullptr)
