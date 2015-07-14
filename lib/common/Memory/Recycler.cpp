@@ -4787,6 +4787,7 @@ Recycler::BackgroundResetMarks()
     GCETW(GC_BACKGROUNDRESETMARKS_START, (this));
     Assert(IsMarkStackEmpty());
     this->scanPinnedObjectMap = true;
+    this->hasScannedInitialImplicitRoots = false;
 
     heapBlockMap.ResetMarks();
     
