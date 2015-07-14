@@ -2010,10 +2010,7 @@ Recycler::ResetMarkCollectionState()
         allocator.SetLockBlockList(false);
     }
 
-    if (this->DoQueueTrackedObject())
-    {   
-        this->queueTrackedObject = false;
-    }
+    this->queueTrackedObject = false;
 #endif
     ResetCollectionState();
 }
@@ -3561,7 +3558,7 @@ Recycler::PartialCollect(bool concurrent)
     Assert(collectionState == CollectionStateNotCollecting);
     // Rescan again
     collectionState = CollectionStateRescanFindRoots;
-    if (concurrent && this->partialConcurrentNextCollection)
+    if (concurrent && enableConcurrentMark && this->partialConcurrentNextCollection)
     {
         this->PrepareBackgroundFindRoots();
         if (StartConcurrent(CollectionStateConcurrentFinishMark))
