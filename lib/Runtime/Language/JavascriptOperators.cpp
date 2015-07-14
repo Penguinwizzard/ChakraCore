@@ -1563,11 +1563,6 @@ CommonNumber:
                 }
             }
 #endif
-            if (IsUndefinedOrNullType(GetTypeId(*value)))
-            {
-                // We cannot update the inline cache as it might mask the correct undefined in an instance of the same type.
-                return TRUE; // Avoid updating the cache for properties with the value undefined if in the language service.
-            }
             // Don't cache the information if the value is undecl block var
             // REVIEW: We might want to only check this if we need to (For LdRootFld or ScopedLdFld)
             //         Also we might want to throw here instead of checking it again in the caller
@@ -1894,10 +1889,7 @@ CommonNumber:
             }
         }
 #endif
-        if (value && GetMissingPropertyValue(requestContext, propertyObject, *value, propertyId))
-        {
-            return TRUE; // Avoid updating the cache for properties with the value undefined if in the language service.
-        }
+
         CacheOperators::CachePropertyRead(instance, object, isRoot, propertyId, false, info, requestContext);
         return TRUE;
     }

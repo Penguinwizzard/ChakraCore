@@ -19988,6 +19988,14 @@ Lowerer::GenerateLoadNewTarget(IR::Instr* instrInsert)
 
     Assert(!func->IsInlinee());
 
+    if (func->GetJnFunction()->IsGenerator())
+    {
+        //TODO: If generator can be instantiated through new, then we need to load the function object. 
+        instrInsert->SetSrc1(opndUndefAddress);
+        LowererMD::ChangeToAssign(instrInsert);
+        return;
+    }
+
     // MOV dst, undefined                       // dst = undefined
     // MOV s1, [ebp + 4]                        // s1 = call info
     // AND s1, Js::CallFlags_New                // s1 &= Js::CallFlags_New
