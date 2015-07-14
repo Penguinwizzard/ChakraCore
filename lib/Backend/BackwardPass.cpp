@@ -6224,13 +6224,6 @@ bool BackwardPass::ProcessInlineeStart(IR::Instr* inlineeStart)
             IR::ByteCodeUsesInstr *bytecodeUse = IR::ByteCodeUsesInstr::New(argInstr, sym->m_id);
             argInstr->InsertBefore(bytecodeUse);
         }
-        else if(!noImplicitCallsInInlinee)
-        {
-            Assert(inlineeStart->m_func->GetHasImplicitCalls());
-            IR::Instr * bytecodeArgOutUse = IR::Instr::New(Js::OpCode::BytecodeArgOutUse, argInstr->m_func);
-            bytecodeArgOutUse->SetSrc1(opnd);
-            argInstr->InsertBefore(bytecodeArgOutUse);
-        }
         startCallInstr = argInstr->GetSrc2()->GetStackSym()->m_instrDef;
         FlowGraph::SafeRemoveInstr(argInstr);
         return false;
