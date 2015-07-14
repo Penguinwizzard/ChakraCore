@@ -5140,8 +5140,7 @@ IRBuilder::BuildBr(Js::OpCode newOpcode, uint32 offset)
 
     if(newOpcode == Js::OpCode::EndSwitch)
     {
-        m_switchBuilder.FlushCases(targetOffset);
-        m_switchBuilder.EndSwitch();
+        m_switchBuilder.EndSwitch(offset, targetOffset);
         return;
     }
 #ifdef PERF_HINT

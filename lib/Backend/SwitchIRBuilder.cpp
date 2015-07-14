@@ -159,8 +159,15 @@ SwitchIRBuilder::BeginSwitch()
 ///----------------------------------------------------------------------------
 
 void
-SwitchIRBuilder::EndSwitch()
+SwitchIRBuilder::EndSwitch(uint32 offset, uint32 targetOffset)
 {
+    FlushCases(targetOffset);
+    AssertMsg(m_caseNodes->Count() == 0, "Not all switch case nodes built by end of switch");
+
+    // only generate the final unconditional jump at the end of the switch
+    IR::BranchInstr * branch = IR::BranchInstr::New(Js::OpCode::Br, NULL, m_func);
+    m_adapter->AddBranchInstr(branch, offset, targetOffset, true);
+
     m_profiledSwitchInstr = nullptr;
 }
 
@@ -285,9 +292,6 @@ SwitchIRBuilder::FlushCases(uint32 targetOffset)
 {
     if (m_caseNodes->Empty())
     {
-        // only generate the final unconditional jump at the end of the switch
-        IR::BranchInstr * branch = IR::BranchInstr::New(Js::OpCode::Br, NULL, m_func);
-        m_adapter->AddBranchInstr(branch, Js::Constants::NoByteCodeOffset, targetOffset, true);
         return;
     }
 

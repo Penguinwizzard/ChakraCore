@@ -1714,8 +1714,8 @@ IRBuilderAsmJs::BuildAsmBr(Js::OpCodeAsmJs newOpcode, uint32 offset)
 
     if (newOpcode == Js::OpCodeAsmJs::EndSwitch_Int)
     {
-        m_switchBuilder.FlushCases(targetOffset);
-        m_switchBuilder.EndSwitch();
+        m_switchBuilder.EndSwitch(offset, targetOffset);
+        return;
     }
 
     IR::BranchInstr * branchInstr = IR::BranchInstr::New(Js::OpCode::Br, NULL, m_func);

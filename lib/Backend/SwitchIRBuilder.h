@@ -98,7 +98,7 @@ public:
 
     void                Init(Func * func, JitArenaAllocator * tempAlloc, bool isAsmJs);
     void                BeginSwitch();
-    void                EndSwitch();
+    void                EndSwitch(uint32 offset, uint32 targetOffset);
     void                SetProfiledInstruction(IR::Instr * instr, Js::ProfileId profileId);
     void                OnCase(IR::RegOpnd * src1Opnd, IR::RegOpnd * src2Opnd, uint32 offset, uint32 targetOffset);
     void                FlushCases(uint32 targetOffset);
