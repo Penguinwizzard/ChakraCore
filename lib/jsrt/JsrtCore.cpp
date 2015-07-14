@@ -2768,8 +2768,6 @@ STDAPI_(JsErrorCode) JsSetPromiseContinuationCallback(JsPromiseContinuationCallb
     });
 }
 
-void JsrtOnLoadScript(Js::JavascriptFunction * scriptFunction, Js::Utf8SourceInfo* utf8SourceInfo);
-
 JsErrorCode RunScriptCore(const wchar_t *script, JsSourceContext sourceContext, const wchar_t *sourceUrl, bool parseOnly, JsValueRef *result)
 {
     Js::JavascriptFunction *scriptFunction;
@@ -2803,7 +2801,8 @@ JsErrorCode RunScriptCore(const wchar_t *script, JsSourceContext sourceContext, 
         Js::Utf8SourceInfo* utf8SourceInfo;
         scriptFunction = scriptContext->LoadScript(script, &si, &se, result != NULL, false, false, &utf8SourceInfo, Js::Constants::GlobalCode);
 
-        JsrtOnLoadScript(scriptFunction, utf8SourceInfo);
+        JsrtContext * context = JsrtContext::GetCurrent();
+        context->OnScriptLoad(scriptFunction, utf8SourceInfo);
        
         return JsNoError;
     });
@@ -3047,7 +3046,8 @@ JsErrorCode RunSerializedScriptCore(const wchar_t *script, unsigned char *buffer
 
         function = scriptContext->GetLibrary()->CreateScriptFunction(functionBody);
 
-        JsrtOnLoadScript(function, functionBody->GetUtf8SourceInfo());
+        JsrtContext * context = JsrtContext::GetCurrent();
+        context->OnScriptLoad(function, functionBody->GetUtf8SourceInfo());        
 
         return JsNoError;
     });
