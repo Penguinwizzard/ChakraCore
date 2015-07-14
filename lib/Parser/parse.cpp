@@ -2301,13 +2301,15 @@ ParseNodePtr Parser::ParseMetaProperty(tokens metaParentKeyword, charcount_t ich
 Parse an expression term.
 ***************************************************************************/
 template<bool buildAST>
-ParseNodePtr Parser::ParseTerm(BOOL fAllowCall, LPCOLESTR pNameHint, ulong *pHintLength,  _Inout_opt_ IdentToken* pToken/*= NULL*/, bool fUnaryOrParen)
+ParseNodePtr Parser::ParseTerm(BOOL fAllowCall, LPCOLESTR pNameHint, ulong *pHintLength, _Inout_opt_ IdentToken* pToken/*= NULL*/, bool fUnaryOrParen)
 {
     ParseNodePtr pnode = NULL;
     charcount_t ichMin;
     size_t iuMin;
     IdentToken term;
     BOOL fInNew = FALSE;
+    bool isAsyncExpr = false;
+    bool isLambdaExpr = false;
     Assert(pToken == NULL || pToken->tk == tkNone); // Must be empty initially
 
     if (this->IsBackgroundParser())
@@ -2325,6 +2327,29 @@ ParseNodePtr Parser::ParseTerm(BOOL fAllowCall, LPCOLESTR pNameHint, ulong *pHin
     {
         PidRefStack *ref = null;
         IdentPtr pid = m_token.GetIdentifier(m_phtbl);
+        charcount_t ichMin = m_pscan->IchMinTok();
+        charcount_t ichLim = m_pscan->IchLimTok();
+        size_t iecpMin  = m_pscan->IecpMinTok();
+        size_t iecpLim = m_pscan->IecpLimTok();
+
+        m_pscan->Scan();
+
+        // We search an Async expression (a function declaration or a async lambda expression)
+        if (pid == wellKnownPropertyPids.async && m_scriptContext->GetConfig()->IsES6AsyncAndAwaitEnabled())
+        {
+            if (m_token.tk == tkFUNCTION)
+            {
+                isAsyncExpr = true;
+                goto LFunction;
+            }
+            else if (m_token.tk == tkID)
+            {
+                isLambdaExpr = true;
+                isAsyncExpr = true;
+                goto LFunction;
+            }
+        }
+
         if (buildAST || BindDeferredPidRefs())
         {
             ref = this->PushPidRef(pid);
@@ -2332,6 +2357,8 @@ ParseNodePtr Parser::ParseTerm(BOOL fAllowCall, LPCOLESTR pNameHint, ulong *pHin
         if (buildAST)
         {
             pnode = CreateNameNode(pid);
+            pnode->ichMin = ichMin;
+            pnode->ichLim = ichLim;
             pnode->sxPid.SetSymRef(ref);
             CheckArgumentsUse(pid, m_currentNodeFunc);
         }
@@ -2340,10 +2367,9 @@ ParseNodePtr Parser::ParseTerm(BOOL fAllowCall, LPCOLESTR pNameHint, ulong *pHin
             // Remember the identifier start and end in case it turns out to be a statement label.
             term.tk = tkID;
             term.pid = pid; // Record the identifier for detection of eval
-            term.ichMin = static_cast<charcount_t>(m_pscan->IecpMinTok());
-            term.ichLim = static_cast<charcount_t>(m_pscan->IecpLimTok());
+            term.ichMin = static_cast<charcount_t>(iecpMin);
+            term.ichLim = static_cast<charcount_t>(iecpLim);
         }
-        m_pscan->Scan();
         break;
     }
 
@@ -2540,6 +2566,7 @@ ParseNodePtr Parser::ParseTerm(BOOL fAllowCall, LPCOLESTR pNameHint, ulong *pHin
 
     case tkFUNCTION:
     {
+LFunction :
         if (m_grfscr & fscrDeferredFncExpression)
         {
             // The top-level deferred function body was defined by a function expression whose parsing was deferred. We are now
@@ -2552,7 +2579,16 @@ ParseNodePtr Parser::ParseTerm(BOOL fAllowCall, LPCOLESTR pNameHint, ulong *pHin
             // in parentheses, where the legacy behavior was to include the parentheses in the function's source code.
             m_grfscr &= ~fscrDeferredFncExpression;
         }
-        pnode = ParseFncDecl<buildAST>(fFncNoFlgs, pNameHint, false, false, fUnaryOrParen);
+        ushort flags = fFncNoFlgs;
+        if (isLambdaExpr)
+        {
+            flags |= fFncLambda;
+        }
+        if (isAsyncExpr)
+        {
+            flags |= fFncAsync;
+        }
+        pnode = ParseFncDecl<buildAST>(flags, pNameHint, false, false, fUnaryOrParen);
         break;
     }
 
@@ -3387,16 +3423,37 @@ ParseNodePtr Parser::ParseMemberList(LPCOLESTR pNameHint, ulong* pNameHintLength
             Error(ERRsyntax);
         }
 #endif
+        bool isAsyncMethod = false;
+        if (m_token.tk == tkID && m_token.GetIdentifier(m_phtbl) == wellKnownPropertyPids.async && m_scriptContext->GetConfig()->IsES6AsyncAndAwaitEnabled())
+        {
+            RestorePoint parsedAsync;
+            m_pscan->Capture(&parsedAsync);
+
+            m_pscan->ScanForcingPid();
+            if (m_token.tk == tkLParen || m_token.tk == tkColon || m_token.tk == tkRCurly)
+            {
+                m_pscan->SeekTo(parsedAsync);
+            }
+            else
+            {
+                isAsyncMethod = true;
+            }
+        }
+
         bool isGenerator = m_scriptContext->GetConfig()->IsES6GeneratorsEnabled() &&
                            m_token.tk == tkStar;
         ushort fncDeclFlags = fFncNoName | fFncMethod;
         if (isGenerator)
         {
+            if (isAsyncMethod)
+            {
+                Error(ERRsyntax);
+            }
             m_pscan->ScanForcingPid();
             fncDeclFlags |= fFncGenerator;
         }
 
-        IdentPtr pidHint = NULL;              // A name scoped to current expression
+        IdentPtr pidHint = NULL;              // A name scoped to current expression 
         Token tkHint = m_token;
         charcount_t idHintIchMin = static_cast<charcount_t>(m_pscan->IecpMinTok());
         charcount_t idHintIchLim = static_cast< charcount_t >(m_pscan->IecpLimTok());
@@ -3559,7 +3616,7 @@ ParseNodePtr Parser::ParseMemberList(LPCOLESTR pNameHint, ulong* pNameHintLength
 
             // Rewind to the PID and parse a function expression.
             m_pscan->SeekTo(atPid);
-            ParseNodePtr pnodeFunc = ParseFncDecl<buildAST>(fncDeclFlags, pFullNameHint);
+            ParseNodePtr pnodeFunc = ParseFncDecl<buildAST>(fncDeclFlags | (isAsyncMethod ? fFncAsync : fFncNoFlgs), pFullNameHint);
 
             if (buildAST)
             {
@@ -5111,6 +5168,11 @@ bool Parser::ParseFncNames(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncParent, u
         pnodeFnc->sxFnc.SetIsGenerator();
     }
 
+    if ((flags & fFncAsync) != 0 && pnodeFnc->sxFnc.IsGenerator())
+    {
+        Error(ERRsyntax);
+    }
+
     if (pnodeFnc)
     {
         pnodeFnc->sxFnc.pnodeName = nullptr;
@@ -6129,6 +6191,29 @@ ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulo
         }
 
         ushort fncDeclFlags = fFncNoName | fFncMethod | fFncClassMember;
+        ParseNodePtr pnodeMemberName = nullptr;
+        IdentPtr pidHint = nullptr;
+        IdentPtr memberPid = nullptr;
+        LPCOLESTR pMemberNameHint = nullptr;
+        ulong     memberNameHintLength = 0;
+        bool isComputedName = false;
+        bool isAsyncMethod = false;
+
+        if (m_token.tk == tkID && m_token.GetIdentifier(m_phtbl) == wellKnownPropertyPids.async && m_scriptContext->GetConfig()->IsES6AsyncAndAwaitEnabled())
+        {
+            RestorePoint parsedAsync;
+            m_pscan->Capture(&parsedAsync);
+
+            m_pscan->Scan();
+            if (m_token.tk == tkLParen)
+            {
+                m_pscan->SeekTo(parsedAsync);
+            }
+            else
+            {
+                isAsyncMethod = true;
+            }
+        }
 
         bool isGenerator = m_scriptContext->GetConfig()->IsES6GeneratorsEnabled() &&
                            m_token.tk == tkStar;
@@ -6138,12 +6223,6 @@ ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulo
             m_pscan->ScanForcingPid();
         }
 
-        ParseNodePtr pnodeMemberName = nullptr;
-        IdentPtr pidHint = nullptr;
-        IdentPtr memberPid = nullptr;
-        LPCOLESTR pMemberNameHint = nullptr;
-        ulong     memberNameHintLength = 0;
-        bool isComputedName = false;
 
         if (m_token.tk == tkLBrack && m_scriptContext->GetConfig()->IsES6ObjectLiteralsEnabled())
         {
@@ -6169,7 +6248,7 @@ ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulo
 
         if (!isStatic && memberPid == wellKnownPropertyPids.constructor)
         {
-            if (hasConstructor)
+            if (hasConstructor || isAsyncMethod)
             {
                 Error(ERRsyntax);
             }
@@ -6240,7 +6319,7 @@ ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulo
                     memberPid = this->ParseClassPropertyName(&pidHint);
                 }
 
-                if (isStatic ? (memberPid == wellKnownPropertyPids.prototype) : (memberPid == wellKnownPropertyPids.constructor))
+                if ((isStatic ? (memberPid == wellKnownPropertyPids.prototype) : (memberPid == wellKnownPropertyPids.constructor)) || isAsyncMethod)
                 {
                     Error(ERRsyntax);
                 }
@@ -6270,7 +6349,7 @@ ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulo
             }
             else
             {
-                if (isStatic && memberPid == wellKnownPropertyPids.prototype)
+                if (isStatic && (memberPid == wellKnownPropertyPids.prototype))
                 {
                     Error(ERRsyntax);
                 }
@@ -6281,6 +6360,11 @@ ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulo
                     if (hasExtends)
                     {
                         this->m_parsingSuperRestrictionState = ParsingSuperRestrictionState_SuperPropertyAllowed;
+                    }
+
+                    if (isAsyncMethod)
+                    {
+                        fncDeclFlags |= fFncAsync;
                     }
                     pnodeFnc = ParseFncDecl<buildAST>(fncDeclFlags, pidHint ? pidHint->Psz() : nullptr, false, /* needsPIDOnRCurlyScan */ true, /* resetParsingSuperRestrictionState */false);
                 }
@@ -6297,7 +6381,7 @@ ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulo
             {
                 pnodeMember->sxBin.pnode2->sxFnc.hint = pMemberNameHint; // Fully qualified name
                 pnodeMember->sxBin.pnode2->sxFnc.hintLength = memberNameHintLength;
-                pnodeMember->sxBin.pnode2->sxFnc.pid  = memberPid; // Short name
+                pnodeMember->sxBin.pnode2->sxFnc.pid = memberPid; // Short name
 
                 AddToNodeList(isStatic ? &pnodeStaticMembers : &pnodeMembers, isStatic ? &lastStaticMemberNodeRef : &lastMemberNodeRef, pnodeMember);
             }
@@ -7158,8 +7242,14 @@ ParseNodePtr Parser::ParseExpr(int oplMin, BOOL *pfCanAssign, BOOL fAllowIn, BOO
         }
         else if (nop == knopFncDecl)
         {
+            ushort flags = fFncLambda;
             m_pscan->SeekTo(termStart);
-            pnode = ParseFncDecl<buildAST>(fFncLambda, nullptr, /* isSourceElement = */ false, /* needsPIDOnRCurlyScan = */false, /* resetParsingSuperRestrictionState = */false);
+            if (m_token.tk == tkID && m_token.GetIdentifier(m_phtbl) == wellKnownPropertyPids.async && m_scriptContext->GetConfig()->IsES6AsyncAndAwaitEnabled())
+            {
+                m_pscan->Scan();
+                flags |= fFncAsync;
+            }
+            pnode = ParseFncDecl<buildAST>(flags, nullptr, /* isSourceElement = */ false, /* needsPIDOnRCurlyScan = */false, /* resetParsingSuperRestrictionState = */false);
         }
         else
         {
@@ -7889,6 +7979,7 @@ ParseNodePtr Parser::ParseStatement(bool isSourceElement/* = false*/, bool check
     uint fnop;
     ParseNodePtr pnodeLabel = NULL;
     bool expressionStmt = false;
+    bool isAsyncMethod = false;
     tokens tok;
 #if EXCEPTION_RECOVERY
     ParseNodePtr pParentTryCatch = NULL;
@@ -7942,6 +8033,7 @@ ParseNodePtr Parser::ParseStatement(bool isSourceElement/* = false*/, bool check
 
 LRestart:
     tok = m_token.tk;
+
     switch (tok)
     {
     case tkEOF:
@@ -7953,17 +8045,18 @@ LRestart:
 
     case tkFUNCTION:
     {
+LFunctionStatement:
         if (m_grfscr & fscrDeferredFncExpression)
         {
             // The top-level deferred function body was defined by a function expression whose parsing was deferred. We are now
             // parsing it, so unset the flag so that any nested functions are parsed normally. This flag is only applicable the
             // first time we see it.
             m_grfscr &= ~fscrDeferredFncExpression;
-            pnode = ParseFncDecl<buildAST>(fFncNoFlgs, nullptr, isSourceElement);
+            pnode = ParseFncDecl<buildAST>(isAsyncMethod ? fFncAsync : fFncNoFlgs, nullptr, isSourceElement);
         }
         else
         {
-            pnode = ParseFncDecl<buildAST>(fFncDeclaration, nullptr, isSourceElement);
+            pnode = ParseFncDecl<buildAST>(fFncDeclaration | (isAsyncMethod ? fFncAsync : fFncNoFlgs), nullptr, isSourceElement);
         }
         break;
     }
@@ -7995,6 +8088,19 @@ LRestart:
                 goto LNeedTerminator;
             }
             m_pscan->SeekTo(parsedLet);
+        }
+        else if (m_token.GetIdentifier(m_phtbl) == wellKnownPropertyPids.async && m_scriptContext->GetConfig()->IsES6AsyncAndAwaitEnabled())
+        {
+            RestorePoint parsedAsync;
+            m_pscan->Capture(&parsedAsync); 
+
+            m_pscan->Scan();
+            if (m_token.tk == tkFUNCTION)
+            {
+                isAsyncMethod = true;
+                goto LFunctionStatement;
+            }
+            m_pscan->SeekTo(parsedAsync);
         }
         goto LDefaultToken;
 
@@ -9241,6 +9347,8 @@ void Parser::InitPids()
 {
     AssertMemN(m_phtbl);
     wellKnownPropertyPids.arguments = m_phtbl->PidHashNameLen(g_ssym_arguments.sz, g_ssym_arguments.cch);
+    wellKnownPropertyPids.async = m_phtbl->PidHashNameLen(g_ssym_async.sz, g_ssym_async.cch);
+    wellKnownPropertyPids.await = m_phtbl->PidHashNameLen(g_ssym_await.sz, g_ssym_await.cch);
     wellKnownPropertyPids.eval = m_phtbl->PidHashNameLen(g_ssym_eval.sz, g_ssym_eval.cch);
     wellKnownPropertyPids.getter = m_phtbl->PidHashNameLen(g_ssym_get.sz, g_ssym_get.cch);
     wellKnownPropertyPids.setter = m_phtbl->PidHashNameLen(g_ssym_set.sz, g_ssym_set.cch);

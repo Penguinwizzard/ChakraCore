@@ -174,6 +174,7 @@ namespace Js
         bool IsIntlEnabled() const;
         bool IsKhronosInteropEnabled()          const { return CONFIG_FLAG(KhronosInterop); }
         bool IsES6SpeciesEnabled()              const { return CONFIG_FLAG_RELEASE(ES6Species); }
+        bool IsES6AsyncAndAwaitEnabled()        const { return CONFIG_FLAG_RELEASE(ES6AsyncAwait); }
         bool IsES6ClassAndExtendsEnabled()      const { return CONFIG_FLAG_RELEASE(ES6Classes); } 
         bool IsES6DateParseFixEnabled()         const { return CONFIG_FLAG_RELEASE(ES6DateParseFix); }
         bool IsES6DefaultArgsEnabled()          const { return CONFIG_FLAG_RELEASE(ES6DefaultArgs); }

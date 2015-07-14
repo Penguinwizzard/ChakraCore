@@ -418,6 +418,8 @@ private:
     struct WellKnownPropertyPids
     {
         IdentPtr arguments; // m_pidArguments; // 'arguments' identifier
+        IdentPtr async; // m_pidAsync; 
+        IdentPtr await; // m_pidAwait;
         IdentPtr eval; // m_pidEval;
         IdentPtr setter; // m_pidSetter;
         IdentPtr getter; // m_pidGetter;
@@ -948,6 +950,7 @@ private:
         fFncClassMember = 1 << 6,
         fFncGenerator   = 1 << 7,
         fFncSetter      = 1 << 8,
+        fFncAsync       = 1 << 9,
     };
 
     //
