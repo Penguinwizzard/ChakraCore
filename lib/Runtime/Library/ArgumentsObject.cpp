@@ -247,7 +247,7 @@ namespace Js
         return this->deletedArgs != NULL && this->deletedArgs->Test(index);
     }
 
-    ES5HeapArgumentsObject* HeapArgumentsObject::ConvertToStrictModeArgumentsObject(bool overwriteArgsUsingFrameObject)
+    ES5HeapArgumentsObject* HeapArgumentsObject::ConvertToUnmappedArgumentsObject(bool overwriteArgsUsingFrameObject)
     {
         ES5HeapArgumentsObject* es5ArgsObj = ConvertToES5HeapArgumentsObject(overwriteArgsUsingFrameObject);
 

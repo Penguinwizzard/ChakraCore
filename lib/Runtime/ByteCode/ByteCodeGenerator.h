@@ -472,7 +472,7 @@ HRESULT GenerateByteCode(__in ParseNode *pnode, __in ulong grfscr, __in Js::Scri
 template <class Fn, bool mapRest>
 void MapFormalsImpl(ParseNode *pnodeFunc, Fn fn)
 {
-    for (ParseNode *pnode = pnodeFunc->sxFnc.pnodeArgs; pnode != nullptr; pnode = pnode->sxVar.pnodeNext)
+    for (ParseNode *pnode = pnodeFunc->sxFnc.pnodeArgs; pnode != nullptr; pnode = pnode->GetFormalNext())
     {
         fn(pnode);
     }
@@ -492,6 +492,18 @@ template <class Fn>
 void MapFormals(ParseNode *pnodeFunc, Fn fn)
 {
     return MapFormalsImpl<Fn, true>(pnodeFunc, fn);
+}
+
+template <class Fn>
+void MapFormalsFromPattern(ParseNode *pnodeFunc, Fn fn)
+{
+    for (ParseNode *pnode = pnodeFunc->sxFnc.pnodeArgs; pnode != nullptr; pnode = pnode->GetFormalNext())
+    {
+        if (pnode->nop == knopParamPattern)
+        {
+            Parser::MapBindIdentifier(pnode->sxParamPattern.pnode1, fn);
+        }
+    }
 }
 
 template<class Fn> void ByteCodeGenerator::IterateBlockScopedVariables(ParseNode *pnodeBlock, Fn fn)

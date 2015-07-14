@@ -198,7 +198,7 @@ enum FncFlags
     kFunctionHasWithStmt                        = 1 << 12, // function (or child) uses with
     kFunctionIsLambda                           = 1 << 13,
     kFunctionChildCallsEval                     = 1 << 14,
-    /* 1 << 15 available */
+    kFunctionHasDestructuringPattern            = 1 << 15,
     kFunctionHasSuperReference                  = 1 << 16,
     kFunctionIsMethod                           = 1 << 17,
     kFunctionIsClassConstructor                 = 1 << 18, // function is a class constructor
@@ -286,6 +286,7 @@ public:
     void SetDeclaration(bool set = true) { SetFlags(kFunctionDeclaration, set); }
     void SetDoesNotEscape(bool set = true) { SetFlags(kFunctionDoesNotEscape, set); }
     void SetHasDefaultArguments(bool set = true) { SetFlags(kFunctionHasDefaultArguments, set); }
+    void SetHasDestructuringPattern(bool set = true) { SetFlags(kFunctionHasDestructuringPattern, set); }
     void SetHasHeapArguments(bool set = true) { SetFlags(kFunctionHasHeapArguments, set); }
     void SetHasNonThisStmt(bool set = true) { SetFlags(kFunctionHasNonThisStmt, set); }
     void SetHasReferenceableBuiltInArguments(bool set = true) { SetFlags(kFunctionHasReferencableBuiltInArguments, set); }
@@ -314,6 +315,7 @@ public:
     bool GetAsmjsMode() const { return HasFlags(kFunctionAsmjsMode); }
     bool GetStrictMode() const { return HasFlags(kFunctionStrictMode); }
     bool HasDefaultArguments() const { return HasFlags(kFunctionHasDefaultArguments); }
+    bool HasDestructuringPattern() const { return HasFlags(kFunctionHasDestructuringPattern); }
     bool HasHeapArguments() const { return true; /* HasFlags(kFunctionHasHeapArguments); Disabling stack arguments. Always return HeapArguments as True */ }
     bool HasOnlyThisStmts() const { return !HasFlags(kFunctionHasNonThisStmt); }
     bool HasReferenceableBuiltInArguments() const { return HasFlags(kFunctionHasReferencableBuiltInArguments); }
@@ -335,10 +337,7 @@ public:
     bool NameIsHidden() const { return HasFlags(kFunctionNameIsHidden); }
     bool UsesArguments() const { return HasFlags(kFunctionUsesArguments); }
 
-    // ES6 Draft 22 14.1.9 - Any ES6 features used in the parameter list makes it non-simple
-    // TODO(tcare): Update when destructuring is implemented
-    bool IsSimpleParameterList() const { return !HasDefaultArguments() && pnodeRest == nullptr; }
-
+    bool IsSimpleParameterList() const { return !HasDefaultArguments() && !HasDestructuringPattern() && pnodeRest == nullptr; }
 
     size_t LengthInBytes()
     {
@@ -473,9 +472,10 @@ struct PnWith : PnStmt
     Scope        *scope;
 };
 
-struct PnObjPattern
+struct PnParamPattern
 {
-    ParseNodePtr pnodeNext; // It is planned to be used for Function parameters pattern.
+    ParseNodePtr pnodeNext;
+    Js::RegSlot location;
     ParseNodePtr pnode1;
 };
 
@@ -613,7 +613,7 @@ struct ParseNode
         PnVar           sxVar;          // variable declaration
         PnWhile         sxWhile;        // while and do-while loops
         PnWith          sxWith;         // with
-        PnObjPattern    sxObj;          // Object pattern - destructuring
+        PnParamPattern  sxParamPattern; // Destructure pattern for function parameter
     };
 
     IdentPtr name()
@@ -683,13 +683,36 @@ struct ParseNode
 
     bool IsCallApplyTargetLoad() { return isCallApplyTargetLoad; }
     void SetIsCallApplyTargetLoad() { isCallApplyTargetLoad = true; }
+    bool IsVarLetOrConst() const
+    {
+        return this->nop == knopVarDecl || this->nop == knopLetDecl || this->nop == knopConstDecl;
+    }
 
+    ParseNodePtr GetFormalNext()
+    {
+        ParseNodePtr pnodeNext = nullptr;
+
+        if (nop == knopParamPattern)
+        {
+            pnodeNext = this->sxParamPattern.pnodeNext;
+        }
+        else
+        {
+            Assert(IsVarLetOrConst());
+            pnodeNext = this->sxVar.pnodeNext;
+        }
+        return pnodeNext;
+    }
+
+    bool IsPattern() const
+    {
+        return nop == knopObjectPattern || nop == knopArrayPattern;
+    }
 
 #if DBG_DUMP
     void Dump();
 #endif
 };
-
 
 const int kcbPnNone         = offsetof(ParseNode, sxUni);
 const int kcbPnArrLit       = kcbPnNone + sizeof(PnArrLit);
@@ -725,7 +748,7 @@ const int kcbPnUniSlot      = kcbPnNone + sizeof(PnUniSlot);
 const int kcbPnVar          = kcbPnNone + sizeof(PnVar);
 const int kcbPnWhile        = kcbPnNone + sizeof(PnWhile);
 const int kcbPnWith         = kcbPnNone + sizeof(PnWith);
-const int kcbPnObjPattern = kcbPnNone + sizeof(PnObjPattern);
+const int kcbPnParamPattern = kcbPnNone + sizeof(PnParamPattern);
 
 #define AssertNodeMem(pnode) AssertPvCb(pnode, kcbPnNone)
 #define AssertNodeMemN(pnode) AssertPvCbN(pnode, kcbPnNone)

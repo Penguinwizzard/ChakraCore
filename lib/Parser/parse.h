@@ -585,6 +585,53 @@ public:
         });
     }
 
+    template <class THandler>
+    static void MapBindIdentifierFromElement(ParseNodePtr elementNode, THandler handler)
+    {
+        ParseNodePtr bindIdentNode = elementNode;
+        if (bindIdentNode->nop == knopAsg)
+        {
+            bindIdentNode = bindIdentNode->sxBin.pnode1;
+        }
+
+        if (bindIdentNode->IsPattern())
+        {
+            MapBindIdentifier(bindIdentNode, handler);
+        }
+        else if (bindIdentNode->IsVarLetOrConst())
+        {
+            handler(bindIdentNode);
+        }
+        else
+        {
+            AssertMsg(bindIdentNode->nop == knopEmpty, "Invalid bind identifier");
+        }
+    }
+
+    template <class THandler>
+    static void MapBindIdentifier(ParseNodePtr patternNode, THandler handler)
+    {
+        if (patternNode->nop == knopAsg)
+        {
+            patternNode = patternNode->sxBin.pnode1;
+        }
+
+        Assert(patternNode->IsPattern());
+        if (patternNode->nop == knopArrayPattern)
+        {
+            ForEachItemInList(patternNode->sxArrLit.pnode1, [&](ParseNodePtr item) {
+                MapBindIdentifierFromElement(item, handler);
+            });
+        }
+        else
+        {
+            ForEachItemInList(patternNode->sxUni.pnode1, [&](ParseNodePtr item) {
+                Assert(item->nop == knopObjectPatternMember);
+                MapBindIdentifierFromElement(item->sxBin.pnode2, handler);
+            });
+        }
+    }
+
 private:
     struct IdentToken
     {
@@ -661,7 +708,7 @@ private:
 
     template<bool buildAST> ParseNodePtr ParseArgList(bool *pCallOfConstants, uint16 *pSpreadArgCount, uint16 * pCount);
     template<bool buildAST> ParseNodePtr ParseArrayList(bool *pArrayOfTaggedInts, bool *pArrayOfInts, bool *pArrayOfNumbers, bool *pHasMissingValues, uint *count, uint *spreadCount);
-    template<bool buildAST> ParseNodePtr ParseMemberList(LPCOLESTR pNameHint, ulong *pHintLength, tokens declarationType = tkNone, SymbolType symbolType = STUnknown);
+    template<bool buildAST> ParseNodePtr ParseMemberList(LPCOLESTR pNameHint, ulong *pHintLength, tokens declarationType = tkNone);
     template<bool buildAST> ParseNodePtr ParseSuper(ParseNodePtr pnode, bool fAllowCall);
 
     // Used to determine the type of JavaScript object member.
@@ -693,6 +740,7 @@ private:
     void ParseNestedDeferredFunc(ParseNodePtr pnodeFnc, bool fLambda, bool *pNeedScanRCurly, bool *pStrictModeTurnedOn);
     void CheckStrictFormalParameters();
     void AddArgumentsNodeToVars(ParseNodePtr pnodeFnc);
+    void UpdateOrCheckForDuplicateInFormals(IdentPtr pid, SList<IdentPtr> *formals);
 
     LPCOLESTR GetFunctionName(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint);
     uint CalculateFunctionColumnNumber();
@@ -772,7 +820,7 @@ private:
     BOOL IsConstantInFunctionCall(ParseNodePtr pnode);
     BOOL IsConstantInArrayLiteral(ParseNodePtr pnode);
 
-    ParseNodePtr CreateObjectPatternNode(charcount_t ichMin, ParseNodePtr pnode1);
+    ParseNodePtr CreateParamPatternNode(charcount_t ichMin, ParseNodePtr pnode1);
 
     ParseNodePtr ConvertMemberToMemberPattern(ParseNodePtr pnodeMember);
     ParseNodePtr ConvertObjectToObjectPattern(ParseNodePtr pnodeMemberList);
@@ -797,13 +845,13 @@ private:
     ParseNodePtr ParseDestructuredArrayLiteral(tokens declarationType, bool isDecl, bool topLevel = true);
 
     template <bool buildAST>
-    ParseNodePtr ParseDestructuredObjectLiteral(tokens declarationType, SymbolType symbolType, bool isDecl, bool topLevel = true);
+    ParseNodePtr ParseDestructuredObjectLiteral(tokens declarationType, bool isDecl, bool topLevel = true);
 
     template <bool buildAST>
-    ParseNodePtr ParseDestructuredLiteral(tokens declarationType, SymbolType symbolType, bool isDecl, bool topLevel = true);
+    ParseNodePtr ParseDestructuredLiteral(tokens declarationType, bool isDecl, bool topLevel = true);
 
     template <bool buildAST>
-    ParseNodePtr ParseDestructuredVarDecl(tokens declarationType, SymbolType symbolType, bool isDecl, bool *hasSeenRest, bool topLevel = true);
+    ParseNodePtr ParseDestructuredVarDecl(tokens declarationType, bool isDecl, bool *hasSeenRest, bool topLevel = true);
 
     template <bool buildAST>
     ParseNodePtr ParseDestructuredInitializer(ParseNodePtr lhsNode, bool isDecl, bool topLevel);

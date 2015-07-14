@@ -155,8 +155,8 @@ void Visit(ParseNode *pnode, ByteCodeGenerator* byteCodeGenerator, PrefixFn pref
     }
         break;
 
-    case knopObjectPattern:
-        Visit(pnode->sxObj.pnode1, byteCodeGenerator, prefix, postfix);
+    case knopParamPattern:
+        Visit(pnode->sxParamPattern.pnode1, byteCodeGenerator, prefix, postfix);
         break;
 
     case knopCall:
@@ -1958,37 +1958,50 @@ void MarkFormal(ByteCodeGenerator *byteCodeGenerator, Symbol *formal, bool assig
     }
 }
 
-void AddArgsToScope(ParseNodePtr pnode, ByteCodeGenerator *byteCodeGenerator, bool assignLocation, bool isSimpleParameterList = false)
+void AddArgsToScope(ParseNodePtr pnode, ByteCodeGenerator *byteCodeGenerator, bool assignLocation)
 {
     Assert(byteCodeGenerator->TopFuncInfo()->varRegsCount == 0);
     Js::ArgSlot pos = 1;
-    auto addArgToScope = [&](ParseNode *vars)
+    bool isSimpleParameterList = pnode->sxFnc.IsSimpleParameterList();
+
+    auto addArgToScope = [&](ParseNode *arg)
     {
-        Symbol *formal = byteCodeGenerator->AddSymbolToScope(byteCodeGenerator->TopFuncInfo()->GetParamScope(),
-                                                             reinterpret_cast<const wchar_t*>(vars->sxVar.pid->Psz()),
-                                                             vars->sxVar.pid->Cch(),
-                                                             vars,
-                                                             STFormal);
-        if (byteCodeGenerator->Trace())
+        if (arg->IsVarLetOrConst())
         {
-            Output::Print(L"current context has declared arg %s of type %s at position %d\n", vars->sxVar.pid->Psz(), formal->GetSymbolTypeName(), pos);
-        }
+            Symbol *formal = byteCodeGenerator->AddSymbolToScope(byteCodeGenerator->TopFuncInfo()->GetParamScope(),
+                reinterpret_cast<const wchar_t*>(arg->sxVar.pid->Psz()),
+                arg->sxVar.pid->Cch(),
+                arg,
+                STFormal);
+            if (byteCodeGenerator->Trace())
+            {
+                Output::Print(L"current context has declared arg %s of type %s at position %d\n", arg->sxVar.pid->Psz(), formal->GetSymbolTypeName(), pos);
+            }
 
-        if (!pnode->sxFnc.IsSimpleParameterList())
+            if (!isSimpleParameterList)
+            {
+                formal->SetIsNonSimpleParameter(true);
+            }
+
+            arg->sxVar.sym = formal;
+            MarkFormal(byteCodeGenerator, formal, assignLocation || !isSimpleParameterList, !isSimpleParameterList);
+        }
+        else if (arg->nop == knopParamPattern)
         {
-            formal->SetIsNonSimpleParameter(true);
+            arg->sxParamPattern.location = byteCodeGenerator->NextVarRegister();
         }
-
-        vars->sxVar.sym = formal;
-        MarkFormal(byteCodeGenerator, formal, assignLocation || !pnode->sxFnc.IsSimpleParameterList(), !pnode->sxFnc.IsSimpleParameterList());
-
+        else
+        {
+            Assert(false);
+        }
         UInt16Math::Inc(pos);
     };
 
     // We process rest separately because the number of in args needs to exclude rest.
     MapFormalsWithoutRest(pnode, addArgToScope);
-
     byteCodeGenerator->SetNumberOfInArgs(pos);
+
+    MapFormalsFromPattern(pnode, addArgToScope);
 
     if (pnode->sxFnc.pnodeRest != nullptr)
     {
@@ -2160,7 +2173,7 @@ FuncInfo* PreVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerato
         }
         else
         {
-            AddArgsToScope(pnode, byteCodeGenerator, false, pnode->sxFnc.IsSimpleParameterList());
+            AddArgsToScope(pnode, byteCodeGenerator, false);
         }
         return funcInfo;
     }
@@ -2207,7 +2220,7 @@ FuncInfo* PreVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerato
     PreVisitBlock(pnode->sxFnc.pnodeScopes, byteCodeGenerator);
     // If we have arguments, we are going to need locations if the function is in strict mode or we have a non-simple parameter list. This is because we will not create a scope object.
     bool assignLocationForFormals = !(funcInfo->GetHasHeapArguments() && ByteCodeGenerator::NeedScopeObjectForArguments(funcInfo, funcInfo->root));
-    AddArgsToScope(pnode, byteCodeGenerator, assignLocationForFormals, pnode->sxFnc.IsSimpleParameterList());
+    AddArgsToScope(pnode, byteCodeGenerator, assignLocationForFormals);
     PreVisitBlock(pnode->sxFnc.pnodeBodyScope, byteCodeGenerator);
     AddVarsToScope(pnode->sxFnc.pnodeVars, byteCodeGenerator);
 
@@ -2461,19 +2474,23 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
                     uint i = 0;
                     auto setArgScopeSlot = [&](ParseNode *pnodeArg)
                     {
-                        Symbol* sym = pnodeArg->sxVar.sym;
-                        if (sym->GetScopeSlot() != Js::Constants::NoProperty)
+                        if (pnodeArg->IsVarLetOrConst())
                         {
-                            top->sameNameArgsPlaceHolderSlotCount++; // Same name args appeared before
+                            Symbol* sym = pnodeArg->sxVar.sym;
+                            if (sym->GetScopeSlot() != Js::Constants::NoProperty)
+                            {
+                                top->sameNameArgsPlaceHolderSlotCount++; // Same name args appeared before
+                            }
+                            sym->SetScopeSlot(i);
+                            i++;
                         }
-                        sym->SetScopeSlot(i);
-                        i++;
                     };
 
                     // We don't need to process the rest parameter here because it may not need a scope slot.
                     if (ByteCodeGenerator::NeedScopeObjectForArguments(top, pnode))
                     {
                         MapFormalsWithoutRest(pnode, setArgScopeSlot);
+                        MapFormalsFromPattern(pnode, setArgScopeSlot);
                     }
 
                     top->paramScope->SetScopeSlotCount(i);
@@ -4049,6 +4066,11 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
             }
         }
         break;
+
+    case knopParamPattern:
+        CheckMaybeEscapedUse(pnode->sxParamPattern.pnode1, byteCodeGenerator);
+        break;
+
     case knopDot:
         CheckMaybeEscapedUse(pnode->sxBin.pnode1, byteCodeGenerator);
         break;

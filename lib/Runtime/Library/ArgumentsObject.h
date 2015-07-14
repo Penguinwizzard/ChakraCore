@@ -114,7 +114,7 @@ namespace Js
             return this->formalCount;
         }
 
-        ES5HeapArgumentsObject* ConvertToStrictModeArgumentsObject(bool overwriteArgsUsingFrameObject = true);
+        ES5HeapArgumentsObject* ConvertToUnmappedArgumentsObject(bool overwriteArgsUsingFrameObject = true);
 
     private:
         ES5HeapArgumentsObject* ConvertToES5HeapArgumentsObject(bool overwriteArgsUsingFrameObject = true);

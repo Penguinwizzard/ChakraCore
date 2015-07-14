@@ -1027,7 +1027,7 @@ ParseNodePtr Parser::CreateDeclNode(OpCode nop, IdentPtr pid, SymbolType symbolT
 
 Symbol* Parser::AddDeclForPid(ParseNodePtr pnode, IdentPtr pid, SymbolType symbolType, bool errorOnRedecl)
 {
-    Assert(pnode->nop == knopLetDecl || pnode->nop == knopConstDecl || pnode->nop == knopVarDecl);
+    Assert(pnode->IsVarLetOrConst());
 
     PidRefStack *refForUse = nullptr, *refForDecl = nullptr;
 
@@ -1154,7 +1154,8 @@ Symbol* Parser::AddDeclForPid(ParseNodePtr pnode, IdentPtr pid, SymbolType symbo
             {
             case knopLetDecl:
             case knopConstDecl:
-                if (errorOnRedecl)
+                // Destructuring made possible to have the formals to be the let bind. But that shouldn't throw the error.
+                if (errorOnRedecl && (!IsES6DestructuringEnabled() || sym->GetSymbolType() != STFormal))
                 {
                     Error(ERRRedeclaration);
                 }
@@ -3356,7 +3357,7 @@ ParseNodePtr Parser::ParseMemberGetSet(OpCode nop, LPCOLESTR* ppNameHint)
 Parse a list of object members. e.g. { x:foo, 'y me':bar }
 ***************************************************************************/
 template<bool buildAST>
-ParseNodePtr Parser::ParseMemberList(LPCOLESTR pNameHint, ulong* pNameHintLength, tokens declarationType, SymbolType symbolType)
+ParseNodePtr Parser::ParseMemberList(LPCOLESTR pNameHint, ulong* pNameHintLength, tokens declarationType)
 {
     ParseNodePtr pnodeArg;
     ParseNodePtr pnodeName = NULL;
@@ -3522,7 +3523,7 @@ ParseNodePtr Parser::ParseMemberList(LPCOLESTR pNameHint, ulong* pNameHintLength
             ParseNodePtr pnodeExpr = nullptr;
             if (isObjectPattern)
             {
-                pnodeExpr = ParseDestructuredVarDecl<buildAST>(declarationType, symbolType, declarationType != tkLCurly, nullptr/* *hasSeenRest*/, false /*topLevel*/);
+                pnodeExpr = ParseDestructuredVarDecl<buildAST>(declarationType, declarationType != tkLCurly, nullptr/* *hasSeenRest*/, false /*topLevel*/);
 
                 if (m_token.tk != tkComma && m_token.tk != tkRCurly)
                 {
@@ -3629,7 +3630,7 @@ ParseNodePtr Parser::ParseMemberList(LPCOLESTR pNameHint, ulong* pNameHintLength
                 if (isObjectPattern)
                 {
                     m_pscan->SeekTo(atPid);
-                    pnodeIdent = ParseDestructuredVarDecl<buildAST>(declarationType, symbolType, declarationType != tkLCurly, nullptr/* *hasSeenRest*/, false /*topLevel*/);
+                    pnodeIdent = ParseDestructuredVarDecl<buildAST>(declarationType, declarationType != tkLCurly, nullptr/* *hasSeenRest*/, false /*topLevel*/);
 
                     if (m_token.tk != tkComma && m_token.tk != tkRCurly)
                     {
@@ -5199,6 +5200,31 @@ void Parser::ValidateSourceElementList()
     ParseStmtList<false>(NULL, NULL, SM_NotUsed, true);
 }
 
+void Parser::UpdateOrCheckForDuplicateInFormals(IdentPtr pid, SList<IdentPtr> *formals)
+{
+    bool isStrictMode = IsStrictMode();
+    if (isStrictMode)
+    {
+        CheckStrictModeEvalArgumentsUsage(pid);
+    }
+
+    if (formals->Has(pid))
+    {
+        if (isStrictMode)
+        {
+            Error(ERRES5ArgSame);
+        }
+        else
+        {
+            Error(ERRFormalSame);
+        }
+    }
+    else
+    {
+        formals->Prepend(pid);
+    }
+}
+
 template<bool buildAST>
 void Parser::ParseFncFormals(ParseNodePtr pnodeFnc, ushort flags)
 {
@@ -5250,6 +5276,7 @@ void Parser::ParseFncFormals(ParseNodePtr pnodeFnc, ushort flags)
         bool isNonSimpleParameterList = false;
         for (uint argPos = 0; ; ++argPos)
         {
+            bool isBindingPattern = false;
             if (m_scriptContext->GetConfig()->IsES6RestEnabled() && m_token.tk == tkEllipsis)
             {
                 // Possible rest parameter
@@ -5258,119 +5285,150 @@ void Parser::ParseFncFormals(ParseNodePtr pnodeFnc, ushort flags)
             }
             if (m_token.tk != tkID)
             {
-                IdentifierExpectedError(m_token);
-            }
+                if (IsES6DestructuringEnabled() && (m_token.tk == tkLCurly || m_token.tk == tkLBrack))
+                {
+                    ParseNodePtr *const ppnodeVarSave = m_ppnodeVar;
+                    m_ppnodeVar = &pnodeFnc->sxFnc.pnodeVars;
+                    ParseNodePtr paramPattern = nullptr;
+                    ParseNodePtr pnodePattern = ParseDestructuredLiteral<buildAST>(tkLET, true /*isDecl*/, false /*topLevel*/);
 
-            if (seenRestParameter)
-            {
-                if (flags & fFncSetter)
-                {
-                    // The parameter of a setter cannot be a rest parameter.
-                    Error(ERRUnexpectedEllipsis);
-                }
-                if (buildAST || BindDeferredPidRefs())
-                {
-                    pnodeT = CreateDeclNode(knopVarDecl, m_token.GetIdentifier(m_phtbl), STFormal, false);
-                    pnodeT->sxVar.sym->SetIsNonSimpleParameter(true);
                     if (buildAST)
                     {
-                        // When only validating formals, we won't have a function node.
-                        pnodeFnc->sxFnc.pnodeRest = pnodeT;
+                        // Instead of passing the STFormal all the way on many methods, it seems it is better to change the symbol type afterward.
+                        Parser::MapBindIdentifier(pnodePattern, [&](ParseNodePtr item) {
+                            Assert(item->IsVarLetOrConst());
+                            UpdateOrCheckForDuplicateInFormals(item->sxVar.pid, &formals);
+                            item->sxVar.sym->SetSymbolType(STFormal);
+                        });
+                        Assert(pnodePattern->IsPattern() || pnodePattern->nop == knopAsg);
                     }
-                    if (!isNonSimpleParameterList)
+
+                    m_ppnodeVar = ppnodeVarSave;
+                    if (buildAST)
                     {
-                        // This is the first non-simple parameter we've seen. We need to go back
-                        // and set the syms of all previous parameters.
-                        MapFormalsWithoutRest(m_currentNodeFunc, [&](ParseNodePtr pnodeArg) { pnodeArg->sxVar.sym->SetIsNonSimpleParameter(true); });
+                        paramPattern = CreateParamPatternNode(pnodePattern->ichMin, pnodePattern);
+
+                        // Linking the current formal parameter (which is pattern paramater) with other formals.
+                        *m_ppnodeVar = paramPattern;
+                        paramPattern->sxParamPattern.pnodeNext = nullptr;
+                        m_ppnodeVar = &paramPattern->sxParamPattern.pnodeNext;
                     }
-                }
-                else
-                {
+
+                    isBindingPattern = true;
                     isNonSimpleParameterList = true;
-                }
-            }
-            else
-            {
-                if (buildAST || BindDeferredPidRefs())
-                {
-                    pnodeT = CreateVarDeclNode(m_token.GetIdentifier(m_phtbl), STFormal, false, nullptr, false);
-                    if (isNonSimpleParameterList)
-                    {
-                        pnodeT->sxVar.sym->SetIsNonSimpleParameter(true);
-                    }
-                }
-            }
-
-            if (buildAST && m_token.GetIdentifier(m_phtbl) == wellKnownPropertyPids.arguments)
-            {
-                // This formal parameter overrides the built-in 'arguments' object
-                m_currentNodeFunc->grfpn |= PNodeFlags::fpnArguments_overriddenByDecl;
-            }
-
-            if (IsStrictMode())
-            {
-                IdentPtr pid = m_token.GetIdentifier(m_phtbl);
-                CheckStrictModeEvalArgumentsUsage(pid);
-                if (formals.Has(pid))
-                {
-                    Error(ERRES5ArgSame);
+                    m_currentNodeFunc->sxFnc.SetHasDestructuringPattern();
                 }
                 else
                 {
-                    formals.Prepend(pid);
+                    IdentifierExpectedError(m_token);
                 }
             }
 
-            m_pscan->Scan();
-
-            if (seenRestParameter && m_token.tk != tkRParen && m_token.tk != tkAsg)
+            if (!isBindingPattern)
             {
-                Error(ERRRestLastArg);
-            }
-
-            if (flags & fFncOneArg)
-            {
-                if (m_token.tk != tkRParen)
+                if (seenRestParameter)
                 {
-                    Error(ERRSetterMustHaveOneArgument);
-                }
-                break; //enforce only one arg
-            }
-
-            if (m_token.tk == tkAsg && m_scriptContext->GetConfig()->IsES6DefaultArgsEnabled())
-            {
-                if (seenRestParameter && m_scriptContext->GetConfig()->IsES6RestEnabled())
-                {
-                    Error(ERRRestWithDefault);
-                }
-                m_pscan->Scan();
-                ParseNodePtr pnodeInit = ParseExpr<buildAST>(koplCma);
-
-                if (buildAST || BindDeferredPidRefs())
-                {
-                    pnodeT->sxVar.sym->SetIsNonSimpleParameter(true);
-                    if (!isNonSimpleParameterList)
+                    if (flags & fFncSetter)
                     {
-                        // This is the first non-simple parameter we've seen. We need to go back
-                        // and set the syms of all previous parameters.
-                        MapFormalsWithoutRest(m_currentNodeFunc, [&](ParseNodePtr pnodeArg) { pnodeArg->sxVar.sym->SetIsNonSimpleParameter(true); });
-
-                        // There may be previous parameters that need to be checked for duplicates.
+                        // The parameter of a setter cannot be a rest parameter.
+                        Error(ERRUnexpectedEllipsis);
+                    }
+                    if (buildAST || BindDeferredPidRefs())
+                    {
+                        pnodeT = CreateDeclNode(knopVarDecl, m_token.GetIdentifier(m_phtbl), STFormal, false);
+                        pnodeT->sxVar.sym->SetIsNonSimpleParameter(true);
+                        if (buildAST)
+                        {
+                            // When only validating formals, we won't have a function node.
+                            pnodeFnc->sxFnc.pnodeRest = pnodeT;
+                        }
+                        if (!isNonSimpleParameterList)
+                        {
+                            // This is the first non-simple parameter we've seen. We need to go back
+                            // and set the syms of all previous parameters.
+                            MapFormalsWithoutRest(m_currentNodeFunc, [&](ParseNodePtr pnodeArg) { pnodeArg->sxVar.sym->SetIsNonSimpleParameter(true); });
+                        }
+                    }
+                    else
+                    {
                         isNonSimpleParameterList = true;
                     }
                 }
-
-
-                if (buildAST)
+                else
                 {
-                    if (!m_currentNodeFunc->sxFnc.HasDefaultArguments())
+                    if (buildAST || BindDeferredPidRefs())
                     {
-                        m_currentNodeFunc->sxFnc.SetHasDefaultArguments();
-                        m_currentNodeFunc->sxFnc.firstDefaultArg = argPos;
-                        CHAKRATEL_LANGSTATS_INC_LANGFEATURECOUNT(DefaultArgFunctionCount, m_scriptContext);
+                        pnodeT = CreateVarDeclNode(m_token.GetIdentifier(m_phtbl), STFormal, false, nullptr, false);
+                        if (isNonSimpleParameterList)
+                        {
+                            pnodeT->sxVar.sym->SetIsNonSimpleParameter(true);
+                        }
                     }
-                    pnodeT->sxVar.pnodeInit = pnodeInit;
-                    pnodeT->ichLim = m_pscan->IchLimTok();
+                }
+
+                if (buildAST && m_token.GetIdentifier(m_phtbl) == wellKnownPropertyPids.arguments)
+                {
+                    // This formal parameter overrides the built-in 'arguments' object
+                    m_currentNodeFunc->grfpn |= PNodeFlags::fpnArguments_overriddenByDecl;
+                }
+
+                if (IsStrictMode() || isNonSimpleParameterList)
+                {
+                    IdentPtr pid = m_token.GetIdentifier(m_phtbl);
+                    UpdateOrCheckForDuplicateInFormals(pid, &formals);
+                }
+
+                m_pscan->Scan();
+
+                if (seenRestParameter && m_token.tk != tkRParen && m_token.tk != tkAsg)
+                {
+                    Error(ERRRestLastArg);
+                }
+
+                if (flags & fFncOneArg)
+                {
+                    if (m_token.tk != tkRParen)
+                    {
+                        Error(ERRSetterMustHaveOneArgument);
+                    }
+                    break; //enforce only one arg
+                }
+
+                if (m_token.tk == tkAsg && m_scriptContext->GetConfig()->IsES6DefaultArgsEnabled())
+                {
+                    if (seenRestParameter && m_scriptContext->GetConfig()->IsES6RestEnabled())
+                    {
+                        Error(ERRRestWithDefault);
+                    }
+                    m_pscan->Scan();
+                    ParseNodePtr pnodeInit = ParseExpr<buildAST>(koplCma);
+
+                    if (buildAST || BindDeferredPidRefs())
+                    {
+                        pnodeT->sxVar.sym->SetIsNonSimpleParameter(true);
+                        if (!isNonSimpleParameterList)
+                        {
+                            // This is the first non-simple parameter we've seen. We need to go back
+                            // and set the syms of all previous parameters.
+                            MapFormalsWithoutRest(m_currentNodeFunc, [&](ParseNodePtr pnodeArg) { pnodeArg->sxVar.sym->SetIsNonSimpleParameter(true); });
+
+                            // There may be previous parameters that need to be checked for duplicates.
+                            isNonSimpleParameterList = true;
+                        }
+                    }
+
+
+                    if (buildAST)
+                    {
+                        if (!m_currentNodeFunc->sxFnc.HasDefaultArguments())
+                        {
+                            m_currentNodeFunc->sxFnc.SetHasDefaultArguments();
+                            m_currentNodeFunc->sxFnc.firstDefaultArg = argPos;
+                            CHAKRATEL_LANGSTATS_INC_LANGFEATURECOUNT(DefaultArgFunctionCount, m_scriptContext);
+                        }
+                        pnodeT->sxVar.pnodeInit = pnodeInit;
+                        pnodeT->ichLim = m_pscan->IchLimTok();
+                    }
                 }
             }
 
@@ -5687,24 +5745,29 @@ void Parser::FinishFncNode(ParseNodePtr pnodeFnc)
     {
         for (;;)
         {
-            switch (m_token.tk)
+            if (m_token.tk == tkEllipsis)
             {
-            case tkID:
-                break;
-            case tkEllipsis:
                 m_pscan->ScanNoKeywords();
-                break;
-
-            default:
-                AssertMsg(false, "Unexpected identifier prefix while fast-scanning formals");
             }
-            m_pscan->ScanNoKeywords();
 
-            if (m_token.tk == tkAsg)
+            if (m_token.tk == tkID)
             {
-                // Eat the default expression
                 m_pscan->ScanNoKeywords();
-                ParseExpr<false>(koplCma);
+
+                if (m_token.tk == tkAsg)
+                {
+                    // Eat the default expression
+                    m_pscan->ScanNoKeywords();
+                    ParseExpr<false>(koplCma);
+                }
+            }
+            else if (m_token.tk == tkLCurly || m_token.tk == tkLBrack)
+            {
+                ParseDestructuredLiteral<false>(tkLET, false/*isDecl*/, false /*topLevel*/);
+            }
+            else
+            {
+                AssertMsg(false, "Unexpected identifier prefix while fast-scanning formals");
             }
 
             if (m_token.tk != tkComma)
@@ -6947,7 +7010,7 @@ ParseNodePtr Parser::ParseExpr(int oplMin, BOOL *pfCanAssign, BOOL fAllowIn, BOO
         {
             m_pscan->SeekTo(termStart);
             // Possible destructuring literal. Rewind and verify the parse tree.
-            ParseDestructuredLiteral<false>(tkLCurly, STUnknown, false/*isDecl*/, false/*topLevel*/);
+            ParseDestructuredLiteral<false>(tkLCurly, false/*isDecl*/, false/*topLevel*/);
             if (buildAST)
             {
                 pnode = ConvertToPattern(pnode);
@@ -7366,7 +7429,7 @@ ParseNodePtr Parser::ParseVariableDeclaration(
 {
     if (IsES6DestructuringEnabled() && (m_token.tk == tkLBrack || m_token.tk == tkLCurly))
     {
-        return ParseDestructuredLiteral<buildAST>(declarationType, STVariable, !!isTopVarParse);
+        return ParseDestructuredLiteral<buildAST>(declarationType, !!isTopVarParse);
     }
 
     ParseNodePtr pnodeThis = nullptr;
@@ -8028,7 +8091,7 @@ LDefaultTokenFor:
                 if (IsES6DestructuringEnabled() && pnodeT != nullptr && (beforeToken == tkLBrack || beforeToken == tkLCurly))
                 {
                     m_pscan->SeekTo(exprStart);
-                    ParseDestructuredLiteral<false>(tkNone, STVariable, false/*isDecl*/, false/*topLevel*/);
+                    ParseDestructuredLiteral<false>(tkNone, false/*isDecl*/, false/*topLevel*/);
                     if (buildAST)
                     {
                         pnodeT = ConvertToPattern(pnodeT);
@@ -9103,22 +9166,26 @@ void Parser::FinishDeferredFunction(ParseNodePtr pnodeScopeList)
             // Add the args to the scope, since we won't re-parse those.
             Scope *scope = pnodeBlock->sxBlock.scope;
             auto addArgsToScope = [&](ParseNodePtr pnodeArg) {
-                PidRefStack *ref = this->PushPidRef(pnodeArg->sxVar.pid);
-                pnodeArg->sxVar.symRef = ref->GetSymRef();
-                if (ref->GetSym() != nullptr)
+                if (pnodeArg->IsVarLetOrConst())
                 {
-                    // Duplicate parameter in a configuration that allows them.
-                    // The symbol is already in the scope, just point it to the right declaration.
-                    Assert(ref->GetSym() == pnodeArg->sxVar.sym);
-                    ref->GetSym()->SetDecl(pnodeArg);
-                }
-                else
-                {
-                    ref->SetSym(pnodeArg->sxVar.sym);
-                    scope->AddNewSymbol(pnodeArg->sxVar.sym);
+                    PidRefStack *ref = this->PushPidRef(pnodeArg->sxVar.pid);
+                    pnodeArg->sxVar.symRef = ref->GetSymRef();
+                    if (ref->GetSym() != nullptr)
+                    {
+                        // Duplicate parameter in a configuration that allows them.
+                        // The symbol is already in the scope, just point it to the right declaration.
+                        Assert(ref->GetSym() == pnodeArg->sxVar.sym);
+                        ref->GetSym()->SetDecl(pnodeArg);
+                    }
+                    else
+                    {
+                        ref->SetSym(pnodeArg->sxVar.sym);
+                        scope->AddNewSymbol(pnodeArg->sxVar.sym);
+                    }
                 }
             };
             MapFormals(pnodeFnc, addArgsToScope);
+            MapFormalsFromPattern(pnodeFnc, addArgsToScope);
 
             ParseNodePtr pnodeInnerBlock = this->StartParseBlock<true>(PnodeBlockType::Function, ScopeType_FunctionBody);
             pnodeFnc->sxFnc.pnodeBodyScope = pnodeInnerBlock;
@@ -10413,7 +10480,20 @@ ParseNodePtr Parser::ConvertArrayToArrayPattern(ParseNodePtr pnode)
 
     ForEachItemRefInList(&pnode->sxArrLit.pnode1, [&](ParseNodePtr *itemRef) {
         ParseNodePtr item = *itemRef;
-        if (item->nop == knopAsg)
+        if (item->nop == knopEllipsis)
+        {
+            itemRef = &item->sxUni.pnode1;
+            item = *itemRef;
+            if (!(item->nop == knopName 
+                  || item->nop == knopDot
+                  || item->nop == knopIndex
+                  || item->nop == knopArray
+                  || item->nop == knopObject))
+            {
+                Error(ERRInvalidAssignmentTarget);
+            }
+        }
+        else if (item->nop == knopAsg)
         {
             itemRef = &item->sxBin.pnode1;
             item = *itemRef;
@@ -10432,21 +10512,24 @@ ParseNodePtr Parser::ConvertArrayToArrayPattern(ParseNodePtr pnode)
     return pnode;
 }
 
-ParseNodePtr Parser::CreateObjectPatternNode(charcount_t ichMin, ParseNodePtr pnode1)
+ParseNodePtr Parser::CreateParamPatternNode(charcount_t ichMin, ParseNodePtr pnode1)
 {
-    ParseNodePtr objectPatternNode = CreateNode(knopObjectPattern, ichMin);
-    objectPatternNode->sxObj.pnode1 = pnode1;
-    objectPatternNode->sxObj.pnodeNext = nullptr;
-    return objectPatternNode;
+    ParseNodePtr paramPatternNode = CreateNode(knopParamPattern, ichMin);
+    paramPatternNode->sxParamPattern.pnode1 = pnode1;
+    paramPatternNode->sxParamPattern.pnodeNext = nullptr;
+    paramPatternNode->sxParamPattern.location = Js::Constants::NoRegister;
+    return paramPatternNode;
 }
 
 ParseNodePtr Parser::ConvertObjectToObjectPattern(ParseNodePtr pnodeMemberList)
 {
     charcount_t ichMin = m_pscan->IchMinTok();
+    charcount_t ichLim = m_pscan->IchLimTok();
     ParseNodePtr pnodeMemberNodeList = nullptr;
     if (pnodeMemberList != nullptr && pnodeMemberList->nop == knopObject)
     {
         ichMin = pnodeMemberList->ichMin;
+        ichLim = pnodeMemberList->ichLim;
         pnodeMemberList = pnodeMemberList->sxUni.pnode1;
     }
 
@@ -10455,7 +10538,7 @@ ParseNodePtr Parser::ConvertObjectToObjectPattern(ParseNodePtr pnodeMemberList)
         AppendToList(&pnodeMemberNodeList, memberNode);
     });
 
-    return CreateObjectPatternNode(ichMin, pnodeMemberNodeList);
+    return CreateUniNode(knopObjectPattern, pnodeMemberNodeList, ichMin, ichLim);
 }
 
 ParseNodePtr Parser::GetRightSideNodeFromPattern(ParseNodePtr pnode)
@@ -10563,13 +10646,13 @@ bool Parser::IsPossibleObjectPatternExpression()
 }
 
 template <bool buildAST>
-ParseNodePtr Parser::ParseDestructuredLiteral(tokens declarationType, SymbolType symbolType, bool isDecl, bool topLevel/* = true*/)
+ParseNodePtr Parser::ParseDestructuredLiteral(tokens declarationType, bool isDecl, bool topLevel/* = true*/)
 {
     ParseNodePtr pnode = nullptr;
     Assert(m_token.tk == tkLCurly || m_token.tk == tkLBrack);
     if (m_token.tk == tkLCurly)
     {
-        pnode = ParseDestructuredObjectLiteral<buildAST>(declarationType, symbolType, isDecl, topLevel);
+        pnode = ParseDestructuredObjectLiteral<buildAST>(declarationType, isDecl, topLevel);
     }
     else
     {
@@ -10614,7 +10697,7 @@ ParseNodePtr Parser::ParseDestructuredInitializer(ParseNodePtr lhsNode, bool isD
 }
 
 template <bool buildAST>
-ParseNodePtr Parser::ParseDestructuredObjectLiteral(tokens declarationType, SymbolType symbolType, bool isDecl, bool topLevel/* = true*/)
+ParseNodePtr Parser::ParseDestructuredObjectLiteral(tokens declarationType, bool isDecl, bool topLevel/* = true*/)
 {
     Assert(m_token.tk == tkLCurly);
     m_pscan->Scan();
@@ -10624,19 +10707,20 @@ ParseNodePtr Parser::ParseDestructuredObjectLiteral(tokens declarationType, Symb
     {
         declarationType = tkLCurly;
     }
-    ParseNodePtr pnodeMemberList = ParseMemberList<buildAST>(nullptr/*pNameHint*/, nullptr/*pHintLength*/, declarationType, symbolType);
+    ParseNodePtr pnodeMemberList = ParseMemberList<buildAST>(nullptr/*pNameHint*/, nullptr/*pHintLength*/, declarationType);
     Assert(m_token.tk == tkRCurly);
 
     ParseNodePtr objectPatternNode = nullptr;
     if (buildAST)
     {
-        objectPatternNode = CreateObjectPatternNode(ichMin, pnodeMemberList);
+        charcount_t ichLim = m_pscan->IchLimTok();
+        objectPatternNode = CreateUniNode(knopObjectPattern, pnodeMemberList, ichMin, ichLim);
     }
     return ParseDestructuredInitializer<buildAST>(objectPatternNode, isDecl, topLevel);
 }
 
 template <bool buildAST>
-ParseNodePtr Parser::ParseDestructuredVarDecl(tokens declarationType, SymbolType symbolType, bool isDecl, bool *hasSeenRest, bool topLevel/* = true*/)
+ParseNodePtr Parser::ParseDestructuredVarDecl(tokens declarationType, bool isDecl, bool *hasSeenRest, bool topLevel/* = true*/)
 {
     ParseNodePtr pnodeElem = nullptr;
     int parenCount = 0;
@@ -10648,23 +10732,40 @@ ParseNodePtr Parser::ParseDestructuredVarDecl(tokens declarationType, SymbolType
         ++parenCount;
     }
 
+    if (m_token.tk == tkEllipsis)
+    {
+        // As per ES 2015 : Rest can have left-hand-side-expression when on assignment expression, but under declaration only binding identifier is allowed
+        // But spec is going to change for this one to allow lef-hand-side-expression both on expression and declaration - so making that happen early.
+
+        seenRest = true;
+        m_pscan->Scan();
+
+        while (m_token.tk == tkLParen)
+        {
+            m_pscan->Scan();
+            ++parenCount;
+        }
+
+        if (m_token.tk != tkID && m_token.tk != tkSUPER && m_token.tk != tkLCurly && m_token.tk != tkLBrack)
+        {
+            if (isDecl)
+            {
+                Error(ERRnoIdent);
+            }
+            else
+            {
+                Error(ERRInvalidAssignmentTarget);
+            }
+        }
+    }
+
     if (m_token.tk == tkLCurly || m_token.tk == tkLBrack)
     {
         // Go recursively
-        pnodeElem = ParseDestructuredLiteral<buildAST>(declarationType, symbolType, isDecl, false /*topLevel*/);
+        pnodeElem = ParseDestructuredLiteral<buildAST>(declarationType, isDecl, false /*topLevel*/);
     }
-    else if (m_token.tk == tkEllipsis || m_token.tk == tkSUPER || m_token.tk == tkID)
+    else if (m_token.tk == tkSUPER || m_token.tk == tkID)
     {
-        if (m_token.tk == tkEllipsis)
-        {
-            seenRest = true;
-            m_pscan->Scan();
-            if (m_token.tk != tkID && m_token.tk != tkSUPER)
-            {
-                Error(ERRsyntax);
-            }
-        }
-
         if (isDecl)
         {
             charcount_t ichMin = m_pscan->IchMinTok();
@@ -10767,7 +10868,7 @@ ParseNodePtr Parser::ParseDestructuredArrayLiteral(tokens declarationType, bool 
             Error(ERRDestructRestLast);
         }
 
-        ParseNodePtr pnodeElem = ParseDestructuredVarDecl<buildAST>(declarationType, STVariable, isDecl, &seenRest, topLevel);
+        ParseNodePtr pnodeElem = ParseDestructuredVarDecl<buildAST>(declarationType, isDecl, &seenRest, topLevel);
         if (buildAST)
         {
             if (pnodeElem == nullptr && buildAST)
@@ -10781,11 +10882,13 @@ ParseNodePtr Parser::ParseDestructuredArrayLiteral(tokens declarationType, bool 
 
         if (m_token.tk == tkRBrack)
         {
-            // Done
             break;
         }
 
-        Assert(m_token.tk == tkComma);
+        if (m_token.tk != tkComma)
+        {
+            Error(ERRDestructNoOper);
+        }
         m_pscan->Scan();
     }
 
@@ -10846,7 +10949,7 @@ class ByteCodeGenerator;
 #define INDENT_SIZE 2
 
 void PrintPnodeListWIndent(ParseNode *pnode,int indentAmt);
-
+void PrintFormalsWIndent(ParseNode *pnode, int indentAmt);
 
 
 void Indent(int indentAmt) {
@@ -11058,7 +11161,7 @@ void PrintPnodeWIndent(ParseNode *pnode,int indentAmt) {
   case knopObjectPattern:
       Indent(indentAmt);
       Output::Print(L"Object Pattern\n");
-      PrintPnodeListWIndent(pnode->sxObj.pnode1, indentAmt + INDENT_SIZE);
+      PrintPnodeListWIndent(pnode->sxUni.pnode1, indentAmt + INDENT_SIZE);
       break;
 
   case knopArray:
@@ -11416,7 +11519,7 @@ void PrintPnodeWIndent(ParseNode *pnode,int indentAmt) {
           Output::Print(L"fn decl %d nested %d anonymous (%d-%d)\n",pnode->sxFnc.IsDeclaration(),pnode->sxFnc.IsNested(),pnode->ichMin,pnode->ichLim);
       }
       PrintScopesWIndent(pnode, indentAmt+INDENT_SIZE);
-      PrintPnodeListWIndent(pnode->sxFnc.pnodeArgs, indentAmt+INDENT_SIZE);
+      PrintFormalsWIndent(pnode->sxFnc.pnodeArgs, indentAmt + INDENT_SIZE);
       PrintPnodeWIndent(pnode->sxFnc.pnodeRest, indentAmt + INDENT_SIZE);
       PrintPnodeWIndent(pnode->sxFnc.pnodeBody, indentAmt + INDENT_SIZE);
       break;
@@ -11630,6 +11733,14 @@ void PrintPnodeListWIndent(ParseNode *pnode,int indentAmt) {
             pnode = pnode->sxBin.pnode2;
         }
         PrintPnodeWIndent(pnode,indentAmt);
+    }
+}
+
+void PrintFormalsWIndent(ParseNode *pnodeArgs, int indentAmt)
+{
+    for (ParseNode *pnode = pnodeArgs; pnode != nullptr; pnode = pnode->GetFormalNext())
+    {
+        PrintPnodeWIndent(pnode->nop == knopParamPattern ? pnode->sxParamPattern.pnode1 : pnode, indentAmt);
     }
 }
 

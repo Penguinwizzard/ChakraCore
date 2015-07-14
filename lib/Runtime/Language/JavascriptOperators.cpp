@@ -6063,7 +6063,34 @@ CommonNumber:
         }
     }
 
-    Var JavascriptOperators::LoadHeapArguments(JavascriptFunction *funcCallee, uint32 paramCount, Var *paramAddr, Var frameObj, Var vArray, ScriptContext* scriptContext, bool formalsAreLetDecls)
+    Var JavascriptOperators::ConvertToUnmappedArguments(HeapArgumentsObject *argumentsObject,
+        uint32 paramCount,
+        Var *paramAddr,
+        DynamicObject* frameObject,
+        Js::PropertyIdArray *propIds,
+        uint32 formalsCount,
+        ScriptContext* scriptContext)
+    {
+        Var *paramIter = paramAddr;
+        uint32 i = 0;
+
+        for (paramIter = paramAddr + i; i < paramCount; i++, paramIter++)
+        {
+            JavascriptOperators::SetItem(argumentsObject, argumentsObject, i, *paramIter, scriptContext, PropertyOperation_None, /* skipPrototypeCheck = */ TRUE);
+        }
+
+        argumentsObject = argumentsObject->ConvertToUnmappedArgumentsObject();
+
+        // Now as the unmapping is done we need to fill those frame object with undecl
+        for (i = 0; i < formalsCount; i++)
+        {
+            frameObject->SetSlot(SetSlotArguments(propIds != nullptr ? propIds->elements[i] : Js::Constants::NoProperty, i, scriptContext->GetLibrary()->GetUndeclBlockVar()));
+        }
+
+        return argumentsObject;
+    }
+
+    Var JavascriptOperators::LoadHeapArguments(JavascriptFunction *funcCallee, uint32 paramCount, Var *paramAddr, Var frameObj, Var vArray, ScriptContext* scriptContext, bool nonSimpleParamList)
     {
         AssertMsg(paramCount != (unsigned int)-1, "Loading the arguments object in the global function?");
 
@@ -6092,7 +6119,7 @@ CommonNumber:
             // TODO (jedmiad): When we delay type sharing until the second instance is created, pass an argument indicating we want the types
             // and handlers created here to be marked as shared up-front. This is to ensure we don't get any fixed fields and that the handler
             // is ready for storing values directly to slots.
-            DynamicType* newType = PathTypeHandlerBase::CreateNewScopeObject(scriptContext, frameObject->GetDynamicType(), propIds, formalsAreLetDecls ? PropertyLetDefaults : PropertyNone);
+            DynamicType* newType = PathTypeHandlerBase::CreateNewScopeObject(scriptContext, frameObject->GetDynamicType(), propIds, nonSimpleParamList ? PropertyLetDefaults : PropertyNone);
 
             int oldSlotCapacity = frameObject->GetDynamicType()->GetTypeHandler()->GetSlotCapacity();
             int newSlotCapacity = newType->GetTypeHandler()->GetSlotCapacity();
@@ -6101,35 +6128,23 @@ CommonNumber:
             frameObject->EnsureSlots(oldSlotCapacity, newSlotCapacity, scriptContext, newType->GetTypeHandler());
             frameObject->ReplaceType(newType);
 
+            if (nonSimpleParamList)
+            {
+                return ConvertToUnmappedArguments(argsObj, paramCount, paramAddr, frameObject, propIds, formalsCount, scriptContext);
+            }
+
             for (i = 0; i < formalsCount && i < paramCount; i++, tmpAddr++)
             {
-                if (formalsAreLetDecls)
-                {
-                    // This is a default value. We need to delay the initialization until we have processed the initializer. This enforces TDZ in situations with eval().
-                    frameObject->SetSlot(SetSlotArguments(propIds->elements[i], i, scriptContext->GetLibrary()->GetUndeclBlockVar()));
-                }
-                else
-                {
-                    frameObject->SetSlot(SetSlotArguments(propIds->elements[i], i, *tmpAddr));
-                }
+                frameObject->SetSlot(SetSlotArguments(propIds->elements[i], i, *tmpAddr));
             }
 
             if (i < formalsCount)
             {
                 // The formals that weren't passed still need to be put in the frame object so that
                 // their names will be found. Initialize them to "undefined".
-                Var undef = scriptContext->GetLibrary()->GetUndefined();
                 for (; i < formalsCount; i++)
                 {
-                    if (formalsAreLetDecls)
-                    {
-                        // This is a default value. We need to delay the initialization until we hav processed the initializer. This enforces TDZ in situations with eval().
-                        frameObject->SetSlot(SetSlotArguments(propIds->elements[i], i, scriptContext->GetLibrary()->GetUndeclBlockVar()));
-                    }
-                    else
-                    {
-                        frameObject->SetSlot(SetSlotArguments(propIds->elements[i], i, undef));
-                    }
+                    frameObject->SetSlot(SetSlotArguments(propIds->elements[i], i, scriptContext->GetLibrary()->GetUndefined()));
                 }
             }
         }
@@ -6147,13 +6162,13 @@ CommonNumber:
         {
             // If the formals are let decls, then we just overwrote the frame object slots with
             // Undecl sentinels, and we can use the original arguments that were passed to the HeapArgumentsObject.
-            return argsObj->ConvertToStrictModeArgumentsObject(!formalsAreLetDecls);
+            return argsObj->ConvertToUnmappedArgumentsObject(!nonSimpleParamList);
         }
 
         return argsObj;
     }
 
-    Var JavascriptOperators::LoadHeapArgsCached(JavascriptFunction *funcCallee, uint32 actualsCount, uint32 formalsCount, Var *paramAddr, Var frameObj, ScriptContext* scriptContext, bool formalsAreLetDecls)
+    Var JavascriptOperators::LoadHeapArgsCached(JavascriptFunction *funcCallee, uint32 actualsCount, uint32 formalsCount, Var *paramAddr, Var frameObj, ScriptContext* scriptContext, bool nonSimpleParamList)
     {
         // Disregard the "this" param.
         AssertMsg(actualsCount != (uint32)-1 && formalsCount != (uint32)-1,
@@ -6172,37 +6187,25 @@ CommonNumber:
             DynamicObject* frameObject = DynamicObject::FromVar(frameObj);
             __analysis_assume((uint32)frameObject->GetDynamicType()->GetTypeHandler()->GetSlotCapacity() >= formalsCount);
 
+            if (nonSimpleParamList)
+            {
+                return ConvertToUnmappedArguments(argsObj, actualsCount, paramAddr, frameObject, nullptr /*propIds*/, formalsCount, scriptContext);
+            }
+
             for (i = 0; i < formalsCount && i < actualsCount; i++, tmpAddr++)
             {
-                if (formalsAreLetDecls)
-                {
-                    // This is a default value. We need to delay the initialization until we have processed the initializer. This enforces TDZ in situations with eval().
-                    frameObject->SetSlot(SetSlotArguments(Constants::NoProperty, i, scriptContext->GetLibrary()->GetUndeclBlockVar()));
-                }
-                else
-                {
-                    // We don't know the propertyId at this point.
-                    frameObject->SetSlot(SetSlotArguments(Constants::NoProperty, i, *tmpAddr));
-                }
+                // We don't know the propertyId at this point.
+                frameObject->SetSlot(SetSlotArguments(Constants::NoProperty, i, *tmpAddr));
             }
 
             if (i < formalsCount)
             {
                 // The formals that weren't passed still need to be put in the frame object so that
                 // their names will be found. Initialize them to "undefined".
-                Var undef = scriptContext->GetLibrary()->GetUndefined();
                 for (; i < formalsCount; i++)
                 {
-                    if (formalsAreLetDecls)
-                    {
-                        // This is a default value. We need to delay the initialization until we hav processed the initializer. This enforces TDZ in situations with eval().
-                        frameObject->SetSlot(SetSlotArguments(Constants::NoProperty, i, scriptContext->GetLibrary()->GetUndeclBlockVar()));
-                    }
-                    else
-                    {
-                        // We don't know the propertyId at this point.
-                        frameObject->SetSlot(SetSlotArguments(Constants::NoProperty, i, undef));
-                    }
+                    // We don't know the propertyId at this point.
+                    frameObject->SetSlot(SetSlotArguments(Constants::NoProperty, i, scriptContext->GetLibrary()->GetUndefined()));
                 }
             }
         }
@@ -6220,7 +6223,7 @@ CommonNumber:
         {
             // If the formals are let decls, then we just overwrote the frame object slots with
             // Undecl sentinels, and we can use the original arguments that were passed to the HeapArgumentsObject.
-            return argsObj->ConvertToStrictModeArgumentsObject(!formalsAreLetDecls);
+            return argsObj->ConvertToUnmappedArgumentsObject(!nonSimpleParamList);
         }
 
         return argsObj;
