@@ -3,7 +3,6 @@
 //----------------------------------------------------------------------------
 
 #pragma once
-#include <IEMSRCSettings.h>
 
 namespace Js
 {
@@ -288,10 +287,9 @@ namespace Js
         bool GetIsXDomain() const { return m_isXDomain; }
         void SetIsXDomain() { m_isXDomain = true; }
 
-#ifdef PRERELEASE_REL1507_MSRC21209
         bool GetIsXDomainString() const { return m_isXDomainString; }
         void SetIsXDomainString() { m_isXDomainString = true; }
-#endif
+
         DWORD_PTR GetHostSourceContext() const;
         bool IsDynamic() const;
         SourceContextInfo* GetSourceContextInfo() const;
@@ -446,10 +444,8 @@ namespace Js
         bool m_hasTridentBuffer : 1;
         bool m_isLibraryCode : 1;           // true, the current source belongs to the internal library code. Used for debug purpose to not show in debugger
         bool m_isXDomain : 1;
-#ifdef PRERELEASE_REL1507_MSRC21209
         // we found that m_isXDomain could cause regression without CORS, so the new flag is just for callee.caller in window.onerror
         bool m_isXDomainString : 1;
-#endif
         bool debugModeSourceIsEmpty : 1;
 
         uint m_sourceInfoId;
