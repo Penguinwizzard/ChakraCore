@@ -1,3 +1,5 @@
+!include $(_PROJECT_MK_PATH)\..\prerelease.inc
+
 TARGETNAME=JScript.Runtime.Library
 TARGETTYPE=LIBRARY
 

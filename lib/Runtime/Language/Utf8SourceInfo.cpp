@@ -23,6 +23,9 @@ namespace Js
         m_isCesu8(false),
         m_isLibraryCode(false),
         m_isXDomain(false),
+#ifdef PRERELEASE_REL1507_MSRC21209
+        m_isXDomainString(false),
+#endif
         m_scriptContext(scriptContext),
         m_lineOffsetCache(nullptr),
         m_deferredFunctionsDictionary(nullptr),
@@ -198,6 +201,9 @@ namespace Js
         Utf8SourceInfo* newSourceInfo = Utf8SourceInfo::NewWithHolder(scriptContext, sourceInfo->GetSourceHolder()->Clone(scriptContext), sourceInfo->m_cchLength, 
              SRCINFO::Copy(scriptContext->GetRecycler(), sourceInfo->GetSrcInfo()));
         newSourceInfo->m_isXDomain = sourceInfo->m_isXDomain;
+#ifdef PRERELEASE_REL1507_MSRC21209
+        newSourceInfo->m_isXDomainString = sourceInfo->m_isXDomainString;
+#endif
         newSourceInfo->m_isLibraryCode = sourceInfo->m_isLibraryCode;
         newSourceInfo->SetIsCesu8(sourceInfo->GetIsCesu8());
         newSourceInfo->m_lineOffsetCache = sourceInfo->m_lineOffsetCache;
@@ -214,6 +220,9 @@ namespace Js
         Utf8SourceInfo* newSourceInfo = Utf8SourceInfo::NewWithHolder(scriptContext, sourceInfo->GetSourceHolder(), sourceInfo->m_cchLength, 
              srcInfo ? srcInfo : sourceInfo->GetSrcInfo());
         newSourceInfo->m_isXDomain = sourceInfo->m_isXDomain;
+#ifdef PRERELEASE_REL1507_MSRC21209
+        newSourceInfo->m_isXDomainString = sourceInfo->m_isXDomainString;
+#endif
         newSourceInfo->m_isLibraryCode = sourceInfo->m_isLibraryCode;
         newSourceInfo->SetIsCesu8(sourceInfo->GetIsCesu8());
         if (sourceInfo->m_hasTridentBuffer)

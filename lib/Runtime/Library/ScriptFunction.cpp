@@ -3,6 +3,7 @@
 //----------------------------------------------------------------------------
 
 #include "StdAfx.h"
+#include <IEMSRCSettings.h>
 
 namespace Js
 {
@@ -673,7 +674,13 @@ namespace Js
             PCWSTR displayName = pFuncBody->GetShortDisplayName(&displayNameLength);
             cachedSourceString = JavascriptFunction::GetLibraryCodeDisplayString(scriptContext, displayName);
         }
-        else if (!pFuncBody->GetUtf8SourceInfo()->GetIsXDomain())
+        else if (!pFuncBody->GetUtf8SourceInfo()->GetIsXDomain()
+#ifdef PRERELEASE_REL1507_MSRC21209            
+            // To avoid backward compat issue, we will not give out sourceString for function if it is called from 
+            // window.onerror trying to retrieve arguments.callee.caller.
+            && !(pFuncBody->GetUtf8SourceInfo()->GetIsXDomainString() && scriptContext->GetThreadContext()->HasUnhandledException())
+#endif
+            )
         {
             // Decode UTF8 into Unicode
             // Consider: Should we have a JavascriptUtf8Substring class which defers decoding
