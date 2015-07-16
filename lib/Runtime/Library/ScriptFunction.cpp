@@ -737,11 +737,11 @@ namespace Js
 
 
     ScriptFunctionWithInlineCache::ScriptFunctionWithInlineCache(FunctionProxy * proxy, ScriptFunctionType* deferredPrototypeType) :
-        ScriptFunction(proxy, deferredPrototypeType)
+        ScriptFunction(proxy, deferredPrototypeType), hasOwnInlineCaches(false)
     {}
 
     ScriptFunctionWithInlineCache::ScriptFunctionWithInlineCache(DynamicType * type) :
-        ScriptFunction(type)
+        ScriptFunction(type), hasOwnInlineCaches(false)
     {}
 
     bool ScriptFunctionWithInlineCache::Is(Var func)
@@ -792,6 +792,75 @@ namespace Js
 
         SetHasInlineCaches(true);
         AllocateInlineCache();
+        hasOwnInlineCaches = true;
+    }
+
+    void ScriptFunctionWithInlineCache::Finalize(bool isShutdown)
+    {
+        if (isShutdown)
+        {
+            FreeOwnInlineCaches<true>();
+        }
+        else
+        {
+            FreeOwnInlineCaches<false>();
+        }
+    }
+    template<bool isShutdown>
+    void ScriptFunctionWithInlineCache::FreeOwnInlineCaches()
+    {
+        uint isInstInlineCacheStart = this->GetInlineCacheCount();
+        uint totalCacheCount = isInstInlineCacheStart + isInstInlineCacheCount;
+        if (this->GetHasInlineCaches() && this->m_inlineCaches && this->hasOwnInlineCaches)
+        {
+            Js::ScriptContext* scriptContext = this->GetFunctionBody()->GetScriptContext();
+            uint i = 0;
+            uint unregisteredInlineCacheCount = 0;
+            uint plainInlineCacheEnd = rootObjectLoadInlineCacheStart;
+            __analysis_assume(plainInlineCacheEnd < totalCacheCount);
+            for (; i < plainInlineCacheEnd; i++)
+            {
+                if (this->m_inlineCaches[i])
+                {
+                    InlineCache* inlineCache = (InlineCache*)this->m_inlineCaches[i];
+                    if (isShutdown)
+                    {
+                        memset(this->m_inlineCaches[i], 0, sizeof(InlineCache));
+                    }
+                    else
+                    {
+                        if (inlineCache->RemoveFromInvalidationList())
+                        {
+                            unregisteredInlineCacheCount++;
+                        }
+                        AllocatorDelete(InlineCacheAllocator, scriptContext->GetInlineCacheAllocator(), inlineCache);
+                    }
+                    this->m_inlineCaches[i] = nullptr;
+                }
+            }
+
+            i = isInstInlineCacheStart;
+            for (; i < totalCacheCount; i++)
+            {
+                if (this->m_inlineCaches[i])
+                {
+                    if (isShutdown)
+                    {
+                        memset(this->m_inlineCaches[i], 0, sizeof(IsInstInlineCache));
+                    }
+                    else
+                    {
+                        AllocatorDelete(IsInstInlineCacheAllocator, scriptContext->GetIsInstInlineCacheAllocator(), (IsInstInlineCache*)this->m_inlineCaches[i]);
+                    }
+                    this->m_inlineCaches[i] = nullptr;
+                }
+            }
+
+            if (!isShutdown && unregisteredInlineCacheCount > 0)
+            {
+                scriptContext->GetThreadContext()->NotifyInlineCacheBatchUnregistered(unregisteredInlineCacheCount);
+            }
+        }
     }
 
     void ScriptFunctionWithInlineCache::AllocateInlineCache()
@@ -956,6 +1025,7 @@ namespace Js
     {
         if (NULL != this->m_inlineCaches)
         {
+            FreeOwnInlineCaches<false>();
             this->m_inlineCaches = NULL;
             this->inlineCacheCount = 0;
             this->rootObjectLoadInlineCacheStart = 0;

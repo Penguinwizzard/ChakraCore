@@ -100,6 +100,9 @@ private:
     Recycler* recycler;
 };
 
+template<ObjectInfoBits infoBits>
+struct InfoBitsWrapper{};
+
 // Allocation macro
 #define RecyclerNew(recycler,T,...) AllocatorNewBase(Recycler, recycler, AllocInlined, T, __VA_ARGS__)
 #define RecyclerNewPlus(recycler,size,T,...) AllocatorNewPlus(Recycler, recycler, size, T, __VA_ARGS__)
@@ -127,6 +130,7 @@ private:
 #define RecyclerNewTrackedLeaf(recycler,T,...) static_cast<T *>(static_cast<FinalizableObject *>(AllocatorNewBase(Recycler, recycler, AllocTrackedLeafInlined, T, __VA_ARGS__)))
 #define RecyclerNewTrackedLeafPlusZ(recycler,size,T,...) static_cast<T *>(static_cast<FinalizableObject *>(AllocatorNewPlusBase(Recycler, recycler, AllocZeroTrackedLeafInlined, size, T, __VA_ARGS__)))
 #define RecyclerNewEnumClass(recycler, enumClass, T, ...) new (TRACK_ALLOC_INFO(static_cast<Recycler *>(recycler), T, Recycler, 0, (size_t)-1), enumClass) T(__VA_ARGS__)
+#define RecyclerNewWithInfoBits(recycler, infoBits, T, ...) new (TRACK_ALLOC_INFO(static_cast<Recycler *>(recycler), T, Recycler, 0, (size_t)-1), InfoBitsWrapper<infoBits>()) T(__VA_ARGS__)
 #define RecyclerNewFinalizedClientTracked(recycler,T,...) static_cast<T *>(static_cast<FinalizableObject *>(AllocatorNewBase(Recycler, recycler, AllocFinalizedClientTrackedInlined, T, __VA_ARGS__)))
 
 #ifdef RECYCLER_WRITE_BARRIER_ALLOC
@@ -1319,6 +1323,12 @@ public:
         return AllocWithAttributes<(ObjectInfoBits)(enumClass), /* nothrow = */ false>(size);
     }
 
+    template <ObjectInfoBits infoBits>
+    char * AllocWithInfoBits(size_t size)
+    {
+        return AllocWithAttributes<infoBits, /* nothrow = */ false>(size);
+    }
+
     template<typename T>
     RecyclerWeakReference<T>* CreateWeakReferenceHandle(T* pStrongReference);
     uint GetWeakReferenceCleanupId() const { return weakReferenceCleanupId; }
@@ -2441,6 +2451,18 @@ operator new(size_t byteSize, Recycler * recycler, ObjectInfoBits enumClassBits)
     Assert(byteSize != 0);
     Assert(enumClassBits == EnumClass_1_Bit);
     void * buffer = recycler->AllocEnumClass<EnumClass_1_Bit>(byteSize);
+    // All of our allocation should throw on out of memory
+    Assume(buffer != null);
+    return buffer;
+}
+
+template<ObjectInfoBits infoBits>
+inline void * __cdecl
+operator new(size_t byteSize, Recycler * recycler, const InfoBitsWrapper<infoBits>&)
+{
+    AssertCanHandleOutOfMemory();
+    Assert(byteSize != 0);
+    void * buffer = recycler->AllocWithInfoBits<infoBits>(byteSize);
     // All of our allocation should throw on out of memory
     Assume(buffer != null);
     return buffer;

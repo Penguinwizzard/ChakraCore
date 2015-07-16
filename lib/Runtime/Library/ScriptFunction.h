@@ -122,6 +122,7 @@ namespace Js
     {
     private:
         void** m_inlineCaches;
+        bool hasOwnInlineCaches;
 
 #if DBG
 #define InlineCacheTypeNone         0x00
@@ -153,5 +154,8 @@ namespace Js
         void** GetInlineCaches() { return m_inlineCaches; }
         void SetInlineCachesFromFunctionBody();
         static uint32 GetOffsetOfInlineCaches() { return offsetof(ScriptFunctionWithInlineCache, m_inlineCaches); };
+        template<bool isShutdown>
+        void FreeOwnInlineCaches();
+        virtual void Finalize(bool isShutdown) override;
     };
 } // namespace Js
