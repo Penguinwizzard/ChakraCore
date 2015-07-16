@@ -2057,9 +2057,7 @@ template<typename T>
 void
 PageAllocatorBase<T>::LogCommitPages(uint pageCount)
 {
-#ifdef PERF_COUNTERS
-    AddCommittedBytes(pageCount * AutoSystemInfo::PageSize);    
-#endif
+    AddCommittedBytes(pageCount * AutoSystemInfo::PageSize);
 #ifdef PROFILE_MEM
     if (this->memoryData)
     {                            
@@ -2073,9 +2071,7 @@ template<typename T>
 void
 PageAllocatorBase<T>::LogDecommitPages(uint pageCount)
 {
-#ifdef PERF_COUNTERS
     SubCommittedBytes(pageCount * AutoSystemInfo::PageSize);    
-#endif
 #ifdef PROFILE_MEM
     if (this->memoryData)
     {
