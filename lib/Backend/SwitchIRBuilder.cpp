@@ -392,61 +392,18 @@ SwitchIRBuilder::BuildBinaryTraverseInstr(int start, int end, uint32 defaultLeaf
     }
 
     mid = start + ((end - start + 1) / 2);
-    CaseNode* currCaseNode = m_caseNodes->Item(mid);
+    CaseNode* midNode = m_caseNodes->Item(mid);
+    CaseNode* startNode = m_caseNodes->Item(start);
 
-    //For right branch search
-    if (mid != end)
-    {
-        unsigned int targetOffset;
-        // Generating branch instructions for switchExpr>case const
-        int nextStart = mid + 1;
-        if (end - nextStart <= CONFIG_FLAG(MaxLinearIntCaseCount) - 1)
-        {
-            // sets the target offset to the start of the next set of cases (this is for generating linear search branchInstrs)
-            targetOffset = m_caseNodes->Item(nextStart)->GetOffset();
-        }
-        else
-        {
-            // sets the target offset to the mid of the next set of cases (this is for generating binary branch instrs)
-            int nextMid = nextStart + ((end - nextStart + 1) / 2);
-            targetOffset = m_caseNodes->Item(nextMid)->GetOffset();
-        }
+    // if the value that we are switching on is greater than the start case value
+    // then we branch right to the right half of the binary search
+    IR::BranchInstr* caseInstr = startNode->GetCaseInstr();
+    IR::BranchInstr* branchInstr = IR::BranchInstr::New(m_geOp, NULL, caseInstr->GetSrc1(), midNode->GetLowerBound(), m_func);
+    branchInstr->m_isSwitchBr = true;
+    m_adapter->AddBranchInstr(branchInstr, startNode->GetOffset(), midNode->GetOffset(), true);
 
-        IR::BranchInstr* caseInstr = currCaseNode->GetCaseInstr();
-        IR::BranchInstr* branchInstr = IR::BranchInstr::New(m_gtOp, NULL, caseInstr->GetSrc1(), caseInstr->GetSrc2(), m_func);
-        branchInstr->m_isSwitchBr = true;
-
-        // The branch instructions are re-arranged to suit the binary search style. hence there might be label references lesser than its offset itself.
-        // This is actually not a LoopTop but intended rearrangement
-        m_adapter->AddBranchInstr(branchInstr, currCaseNode->GetOffset(), targetOffset, true);
-    }
-
-    //Generate === IR instruction or instruction for lb/ub
-    int lowerBoundCaseConstValue = currCaseNode->GetLowerBound()->GetStackSym()->GetIntConstValue();
-    int upperBoundCaseConstValue = currCaseNode->GetUpperBound()->GetStackSym()->GetIntConstValue();
-    if (lowerBoundCaseConstValue == upperBoundCaseConstValue)
-    {
-        m_adapter->AddBranchInstr(currCaseNode->GetCaseInstr(), currCaseNode->GetOffset(), currCaseNode->GetTargetOffset(), true);
-    }
-    else
-    {   //generate 2 branch instructions for empty case instructions with just 1 case block by calling DoEmptyCasesSearch()
-        int nextEnd = mid - 1;
-        uint32 targetOffset;
-        if (nextEnd - start <= CONFIG_FLAG(MaxLinearIntCaseCount) - 1)
-        {
-            //no more binary search in the next recursive call
-            targetOffset = m_caseNodes->Item(start)->GetOffset();
-        }
-        else
-        {
-            //set the target offset to the mid of the case instructions during the next recursive call
-            int nextMid = start + ((nextEnd - start + 1) / 2);
-            targetOffset = m_caseNodes->Item(nextMid)->GetOffset();
-        }
-        BuildEmptyCasesInstr(currCaseNode, targetOffset);
-    }
     BuildBinaryTraverseInstr(start, mid - 1, defaultLeafBranch);
-    BuildBinaryTraverseInstr(mid + 1, end, defaultLeafBranch);
+    BuildBinaryTraverseInstr(mid, end, defaultLeafBranch);
 }
 
 ///------------------------------------------------------------------------------------------
