@@ -1427,6 +1427,7 @@ namespace Js
         bool m_isClassMember : 1;
         bool m_isStrictMode : 1;
         bool m_isAsmjsMode : 1;
+        bool m_isAsmJsFunction : 1;
         bool m_isGlobalFunc : 1;
         bool m_doBackendArgumentsOptimization :1;
         bool m_isEval : 1;              // Source code is in 'eval'
@@ -1728,7 +1729,6 @@ namespace Js
         bool m_isFromNativeCodeModule : 1;
         bool m_isPartialDeserializedFunction : 1;
         bool m_isAsmJsScheduledForFullJIT : 1;        
-        bool m_isAsmJsFunction : 1;
 #ifdef PERF_COUNTERS
         bool m_isDeserializedFunction : 1;
 #endif

@@ -401,7 +401,6 @@ namespace Js {
     recentlyBailedOutOfJittedLoopBody(false),
     serializationIndex(-1),
     m_isAsmJsScheduledForFullJIT(false),
-    m_isAsmJsFunction(false),
     m_asmJsTotalLoopCount(0),
 
         //
@@ -991,6 +990,7 @@ namespace Js {
         CopyDeferParseField(cachedSourceString);
         CopyDeferParseField(deferredStubs);
         CopyDeferParseField(m_isAsmjsMode);
+        CopyDeferParseField(m_isAsmJsFunction);
 #undef CopyDeferParseField
 
         other->CopySourceInfo(this);
@@ -1109,6 +1109,7 @@ namespace Js {
       cachedSourceString(null),
       m_boundPropertyRecords(propertyRecords),
       m_reparsed(false),
+      m_isAsmJsFunction(false),
 #if DBG
       m_wasEverAsmjsMode(false),
       scopeObjectSize(0),

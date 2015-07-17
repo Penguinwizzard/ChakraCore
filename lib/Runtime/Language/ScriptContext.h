@@ -1595,6 +1595,7 @@ private:
         JavascriptMethod GetNextDynamicInterpreterThunk(PVOID* ppDynamicInterpreterThunk);
         BOOL IsDynamicInterpreterThunk(void* address);
         void ReleaseDynamicInterpreterThunk(BYTE* address, bool addtoFreeList);
+        void ReleaseDynamicAsmJsInterpreterThunk(BYTE* address, bool addtoFreeList);
 
         void SetProfileMode(BOOL fSet);
         static JavascriptMethod GetProfileModeThunk(JavascriptMethod entryPoint);

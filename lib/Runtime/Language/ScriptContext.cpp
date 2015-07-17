@@ -5365,6 +5365,15 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
         this->interpreterThunkEmitter->Release(address, addtoFreeList);
     }
 
+    void ScriptContext::ReleaseDynamicAsmJsInterpreterThunk(BYTE* address, bool addtoFreeList)
+    {
+#ifdef ASMJS_PLAT
+        this->asmJsInterpreterThunkEmitter->Release(address, addtoFreeList);
+#else
+        Assert(UNREACHED);
+#endif
+    }
+
     bool ScriptContext::IsExceptionWrapperForBuiltInsEnabled()
     {
         return ScriptContext::IsExceptionWrapperForBuiltInsEnabled(this);

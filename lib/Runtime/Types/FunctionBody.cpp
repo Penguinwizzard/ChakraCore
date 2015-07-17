@@ -3396,6 +3396,12 @@ namespace Js
 
         this->entryPoints->ClearAndZero();
 
+        if (m_isAsmJsFunction && m_dynamicInterpreterThunk)
+        {
+            m_scriptContext->ReleaseDynamicAsmJsInterpreterThunk((BYTE*)this->m_dynamicInterpreterThunk, true);
+            this->m_dynamicInterpreterThunk = nullptr;
+        }
+
         // Store the originalEntryPoint to restore it back immediately.
         JavascriptMethod originalEntryPoint = this->originalEntryPoint;
         this->CreateNewDefaultEntryPoint();
@@ -6218,7 +6224,14 @@ namespace Js
 
             if (!isScriptContextClosing)
             {
-                m_scriptContext->ReleaseDynamicInterpreterThunk((BYTE*)this->m_dynamicInterpreterThunk, /*addtoFreeList*/!isScriptContextClosing);
+                if (m_isAsmJsFunction)
+                {
+                    m_scriptContext->ReleaseDynamicAsmJsInterpreterThunk((BYTE*)this->m_dynamicInterpreterThunk, /*addtoFreeList*/!isScriptContextClosing);
+                }
+                else
+                {
+                    m_scriptContext->ReleaseDynamicInterpreterThunk((BYTE*)this->m_dynamicInterpreterThunk, /*addtoFreeList*/!isScriptContextClosing);
+                }
             }
         }
 
