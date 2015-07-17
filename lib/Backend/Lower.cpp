@@ -10208,13 +10208,15 @@ Lowerer::LowerNewRegEx(IR::Instr * instr)
 }
 
 IR::Instr *
-Lowerer::GenerateRuntimeTypeError(IR::Instr * insertBeforeInstr, Js::MessageId errorCode)
+Lowerer::GenerateRuntimeError(IR::Instr * insertBeforeInstr, Js::MessageId errorCode, IR::JnHelperMethod helper /*= IR::JnHelperMethod::HelperOp_RuntimeTypeError*/)
 {
     IR::Instr * runtimeErrorInstr = IR::Instr::New(Js::OpCode::RuntimeTypeError, this->m_func);
     runtimeErrorInstr->SetSrc1(IR::IntConstOpnd::New(errorCode, TyInt32, this->m_func, true));
     insertBeforeInstr->InsertBefore(runtimeErrorInstr);
-    return this->LowerUnaryHelperMem(runtimeErrorInstr, IR::HelperOp_RuntimeTypeError);
+    return this->LowerUnaryHelperMem(runtimeErrorInstr, helper);
 }
+
+
 
 bool Lowerer::IsNullOrUndefRegOpnd(IR::RegOpnd *opnd) const
 {

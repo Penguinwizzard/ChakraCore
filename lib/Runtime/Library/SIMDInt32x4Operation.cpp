@@ -310,67 +310,7 @@ namespace Js
         return result;
     }
 
-    SIMDValue SIMDInt32x4Operation::OpShuffle(const SIMDValue& value, int mask)
-    {
-        SIMDValue result;
-
-        int x = mask        & 0x03;
-        int y = (mask >> 2) & 0x03;
-        int z = (mask >> 4) & 0x03;
-        int w = (mask >> 6) & 0x03;
-
-        Assert(x >= 0 && x < 4);
-        Assert(y >= 0 && y < 4);
-        Assert(z >= 0 && z < 4);
-        Assert(w >= 0 && w < 4);
-
-        int storage[4];
-        storage[0] = value.i32[SIMD_X];
-        storage[1] = value.i32[SIMD_Y];
-        storage[2] = value.i32[SIMD_Z];
-        storage[3] = value.i32[SIMD_W];
-
-        result.i32[SIMD_X] = storage[x];
-        result.i32[SIMD_Y] = storage[y];
-        result.i32[SIMD_Z] = storage[z];
-        result.i32[SIMD_W] = storage[w];
-
-        return result;
-    }
-
-    SIMDValue SIMDInt32x4Operation::OpShuffleMix(const SIMDValue& aValue, const SIMDValue& bValue, int mask)
-    {
-        SIMDValue result;
-
-        int x = mask & 0x03;
-        int y = (mask >> 2) & 0x03;
-        int z = (mask >> 4) & 0x03;
-        int w = (mask >> 6) & 0x03;
-
-        Assert(x >= 0 && x < 4);
-        Assert(y >= 0 && y < 4);
-        Assert(z >= 0 && z < 4);
-        Assert(w >= 0 && w < 4);
-
-        int storage[8];
-        storage[0] = aValue.i32[SIMD_X];
-        storage[1] = aValue.i32[SIMD_Y];
-        storage[2] = aValue.i32[SIMD_Z];
-        storage[3] = aValue.i32[SIMD_W];
-        storage[4] = bValue.i32[SIMD_X];
-        storage[5] = bValue.i32[SIMD_Y];
-        storage[6] = bValue.i32[SIMD_Z];
-        storage[7] = bValue.i32[SIMD_W];
-
-        result.i32[SIMD_X] = storage[0 + x];
-        result.i32[SIMD_Y] = storage[0 + y];
-        result.i32[SIMD_Z] = storage[4 + z];
-        result.i32[SIMD_W] = storage[4 + w];
-
-        return result;
-    }
-
-    SIMDValue SIMDInt32x4Operation::OpShiftLeft(const SIMDValue& value, int count)
+       SIMDValue SIMDInt32x4Operation::OpShiftLeft(const SIMDValue& value, int count)
     {
         SIMDValue result;
 

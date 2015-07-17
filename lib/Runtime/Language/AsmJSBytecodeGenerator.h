@@ -79,7 +79,10 @@ namespace Js
         EmitExpressionInfo Emit( ParseNode *pnode );
         EmitExpressionInfo EmitIdentifier( ParseNode * pnode );
         EmitExpressionInfo EmitLdArrayBuffer( ParseNode * pnode );
-        enum TypedArrayEmitType{ LoadTypedArray, StoreTypedArray };
+        enum TypedArrayEmitType{ 
+            LoadTypedArray, 
+            StoreTypedArray,
+        };
         EmitExpressionInfo EmitTypedArrayIndex(ParseNode* indexNode, OpCodeAsmJs &op, uint32 &indexSlot, ArrayBufferView::ViewType viewType, TypedArrayEmitType emitType);
         EmitExpressionInfo EmitAssignment( ParseNode * pnode );
         EmitExpressionInfo EmitReturn( ParseNode * pnode );
@@ -104,6 +107,7 @@ namespace Js
         bool ValidateSimdFieldAccess(PropertyName field, const AsmJsType& receiverType, OpCodeAsmJs &op, int &laneIndex, AsmJsType &laneType);
         EmitExpressionInfo EmitDotExpr(ParseNode* pnode);
         EmitExpressionInfo EmitSimdBuiltin(ParseNode* pnode, AsmJsSIMDFunction* simdFunction, AsmJsRetType expectedType);
+        EmitExpressionInfo EmitSimdLoadStoreBuiltin(ParseNode* pnode, AsmJsSIMDFunction* simdFunction, AsmJsRetType expectedType);
 #endif
         void FinalizeRegisters( FunctionBody* byteCodeFunction );
         void LoadAllConstants();

@@ -50,6 +50,18 @@ namespace Js
     inline bool operator>=(OpCodeAsmJs &o, uint i) { return ((uint)(o) >= i); }
     inline bool operator>=(uint i, OpCodeAsmJs &o) { return (i >= (uint)(o)); }
 
+
+#ifdef SIMD_JS_ENABLED
+    inline bool IsSimd128AsmJsOpcode(OpCodeAsmJs o) 
+    { 
+        return (o > Js::OpCodeAsmJs::Simd128_Start && o < Js::OpCodeAsmJs::Simd128_End) || (o > Js::OpCodeAsmJs::Simd128_Start_Extend && o < Js::OpCodeAsmJs::Simd128_End_Extend); 
+    }
+    inline uint Simd128AsmJsOpcodeCount() 
+    { 
+        return (uint)(Js::OpCodeAsmJs::Simd128_End - Js::OpCodeAsmJs::Simd128_Start) + 1 + (uint)(Js::OpCodeAsmJs::Simd128_End_Extend - Js::OpCodeAsmJs::Simd128_Start_Extend) + 1; 
+    }
+#endif
+
     ///----------------------------------------------------------------------------
     ///
     /// enum OpLayoutTypeAsmJs
@@ -151,8 +163,8 @@ namespace Js
         typename SizePolicy::RegSlotType     R1;
         typename int                         C2;
     };
-
 #endif
+
     template <typename SizePolicy>
     struct OpLayoutT_Int1Double1
     {
@@ -557,6 +569,29 @@ namespace Js
     };
 
     template <typename SizePolicy>
+    struct OpLayoutT_Int32x4_2Int4
+    {
+        typename SizePolicy::RegSlotType    I4_0;
+        typename SizePolicy::RegSlotType    I4_1;
+        typename SizePolicy::RegSlotType    I2;
+        typename SizePolicy::RegSlotType    I3;
+        typename SizePolicy::RegSlotType    I4;
+        typename SizePolicy::RegSlotType    I5;
+    };
+
+    template <typename SizePolicy>
+    struct OpLayoutT_Int32x4_3Int4
+    {
+        typename SizePolicy::RegSlotType    I4_0;
+        typename SizePolicy::RegSlotType    I4_1;
+        typename SizePolicy::RegSlotType    I4_2;
+        typename SizePolicy::RegSlotType    I3;
+        typename SizePolicy::RegSlotType    I4;
+        typename SizePolicy::RegSlotType    I5;
+        typename SizePolicy::RegSlotType    I6;
+    };
+
+    template <typename SizePolicy>
     struct OpLayoutT_Int32x4_2Int1
     {
         typename SizePolicy::RegSlotType    I4_0;
@@ -727,6 +762,16 @@ namespace Js
     {
         typename SizePolicy::RegSlotType    I0;
         typename SizePolicy::RegSlotType    D2_1;
+    };
+
+    template <typename SizePolicy>
+    struct OpLayoutT_AsmSimdTypedArr
+    {
+        // force encode 4 bytes because it can be a value
+        uint32                               SlotIndex;
+        typename SizePolicy::RegSlotType     Value;
+        int8                                 ViewType;
+        int8                                 DataWidth; // # of bytes to load/store
     };
 
 #endif

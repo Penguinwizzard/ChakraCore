@@ -894,6 +894,29 @@ namespace Js
     }
 
     template <class T>
+    void AsmJsByteCodeDumper::DumpInt32x4_2Int4(OpCodeAsmJs op, const unaligned T * data, FunctionBody * dumpFunction, ByteCodeReader& reader)
+    {
+        DumpInt32x4Reg(data->I4_0);
+        DumpInt32x4Reg(data->I4_1);
+        DumpIntReg(data->I2);
+        DumpIntReg(data->I3);
+        DumpIntReg(data->I4);
+        DumpIntReg(data->I5);
+    }
+
+    template <class T>
+    void AsmJsByteCodeDumper::DumpInt32x4_3Int4(OpCodeAsmJs op, const unaligned T * data, FunctionBody * dumpFunction, ByteCodeReader& reader)
+    {
+        DumpInt32x4Reg(data->I4_0);
+        DumpInt32x4Reg(data->I4_1);
+        DumpInt32x4Reg(data->I4_2);
+        DumpIntReg(data->I3);
+        DumpIntReg(data->I4);
+        DumpIntReg(data->I5);
+        DumpIntReg(data->I6);
+    }
+
+    template <class T>
     void AsmJsByteCodeDumper::DumpInt32x4_1Int1(OpCodeAsmJs op, const unaligned T * data, FunctionBody * dumpFunction, ByteCodeReader& reader)
     {
         DumpInt32x4Reg(data->I4_0);
@@ -1056,6 +1079,88 @@ namespace Js
         DumpFloat64x2Reg(data->D2_1);
     }
 
+    template <class T>
+    void AsmJsByteCodeDumper::DumpAsmSimdTypedArr(OpCodeAsmJs op, const unaligned T * data, FunctionBody * dumpFunction, ByteCodeReader& reader)
+    {
+        wchar_t* heapTag = nullptr;
+            
+        switch (data->ViewType)
+        {
+        case ArrayBufferView::TYPE_INT8:
+            heapTag = L"HEAP8"; break;
+        case ArrayBufferView::TYPE_UINT8:
+            heapTag = L"HEAPU8"; break;
+        case ArrayBufferView::TYPE_INT16:
+            heapTag = L"HEAP16"; break;
+        case ArrayBufferView::TYPE_UINT16:
+            heapTag = L"HEAPU16"; break;
+        case ArrayBufferView::TYPE_INT32:
+            heapTag = L"HEAP32"; break;
+        case ArrayBufferView::TYPE_UINT32:
+            heapTag = L"HEAPU32"; break;
+        case ArrayBufferView::TYPE_FLOAT32:
+            heapTag = L"HEAPF32"; break;
+        case ArrayBufferView::TYPE_FLOAT64:
+            heapTag = L"HEAPF64"; break;
+        default:
+            Assert(false);
+            __assume(false);
+            break;
+        }
+
+        switch (op)
+        {
+        case OpCodeAsmJs::Simd128_LdArrConst_I4:
+        case OpCodeAsmJs::Simd128_LdArrConst_F4:
+        case OpCodeAsmJs::Simd128_LdArrConst_D2:
+        case OpCodeAsmJs::Simd128_StArrConst_I4:
+        case OpCodeAsmJs::Simd128_StArrConst_F4:
+        case OpCodeAsmJs::Simd128_StArrConst_D2:
+            Output::Print(L" %s[%d] ", heapTag, data->SlotIndex);
+            break;
+        case OpCodeAsmJs::Simd128_LdArr_I4:
+        case OpCodeAsmJs::Simd128_LdArr_F4:
+        case OpCodeAsmJs::Simd128_LdArr_D2:
+        case OpCodeAsmJs::Simd128_StArr_I4:
+        case OpCodeAsmJs::Simd128_StArr_F4:
+        case OpCodeAsmJs::Simd128_StArr_D2:
+            Output::Print(L" %s[I%d] ", heapTag, data->SlotIndex);
+            break;
+        default:
+            Assert(false);
+            __assume(false);
+            break;
+        }
+
+        switch (op)
+        {
+        case OpCodeAsmJs::Simd128_LdArr_I4:
+        case OpCodeAsmJs::Simd128_LdArrConst_I4:
+        case OpCodeAsmJs::Simd128_StArr_I4:
+        case OpCodeAsmJs::Simd128_StArrConst_I4:
+            DumpInt32x4Reg(data->Value);
+            break;
+        case OpCodeAsmJs::Simd128_LdArr_F4:
+        case OpCodeAsmJs::Simd128_LdArrConst_F4:
+        case OpCodeAsmJs::Simd128_StArr_F4:
+        case OpCodeAsmJs::Simd128_StArrConst_F4:
+            DumpFloat32x4Reg(data->Value);
+            break;
+        case OpCodeAsmJs::Simd128_LdArr_D2:
+        case OpCodeAsmJs::Simd128_LdArrConst_D2:
+        case OpCodeAsmJs::Simd128_StArr_D2:
+        case OpCodeAsmJs::Simd128_StArrConst_D2:
+            DumpFloat64x2Reg(data->Value);
+            break;
+        default:
+            Assert(false);
+            __assume(false);
+            break;
+        }
+
+        // data width
+        Output::Print(L" %d bytes ", data->DataWidth);
+    }
 #endif
 
 }

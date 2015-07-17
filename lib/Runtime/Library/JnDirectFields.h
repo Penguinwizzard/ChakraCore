@@ -73,6 +73,7 @@ ENTRY(fround)
 
 #ifdef SIMD_JS_ENABLED
 // SIMD 
+ENTRY(check)
 ENTRY(signMask)
 ENTRY(float32x4)
 ENTRY(float64x2)
@@ -106,6 +107,14 @@ ENTRY(flagY)
 ENTRY(flagZ)
 ENTRY(flagW)
 //
+ENTRY(load)
+ENTRY(store)
+ENTRY(load1)
+ENTRY(store1)
+ENTRY(load2)
+ENTRY(store2)
+ENTRY(load3)
+ENTRY(store3)
 ENTRY(mul)
 ENTRY(div)
 ENTRY(and)
@@ -113,8 +122,8 @@ ENTRY(or)
 ENTRY(xor)
 ENTRY(neg)
 ENTRY(not)
+ENTRY(swizzle)
 ENTRY(shuffle)
-ENTRY(shuffleMix)
 ENTRY(clamp)
 ENTRY(select)
 ENTRY(reciprocal)
@@ -131,9 +140,6 @@ ENTRY(shiftLeft)
 ENTRY(shiftRightLogical)
 ENTRY(shiftRightArithmetic)
 
-// Shuffle Masks
-#define MACRO(maskName, maskValue) ENTRY(maskName)
-#include "SIMDShuffleMasks.h"
 // End SIMD
 #endif
 

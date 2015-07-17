@@ -98,6 +98,7 @@ namespace Js
         return pnodeBlock->sxBlock.scope != nullptr && ( !( pnodeBlock->grfpn & fpnSyntheticNode ) );
     }
 
+    // copy all constants from reg spaces to function body.
     void AsmJSByteCodeGenerator::LoadAllConstants()
     {        
     
@@ -328,6 +329,7 @@ namespace Js
         ParseNode *pnodeBody = mFunction->GetBodyNode();
         ParseNode *varStmts = pnodeBody;
 
+        // Emit local var declarations: Load of constants to variables. 
         while (varStmts->nop == knopList)
         {
             ParseNode * pnode = ParserWrapper::GetBinaryLeft(varStmts);
@@ -769,7 +771,7 @@ namespace Js
     EmitExpressionInfo AsmJSByteCodeGenerator::EmitReturn( ParseNode * pnode )
     {
         ParseNode* expr = pnode->sxReturn.pnodeExpr;
-        // return is always the beggining of a statement
+        // return is always the beginning of a statement
         AsmJsRetType retType;
         EmitExpressionInfo emitInfo( Constants::NoRegister, AsmJsType::Void );
         if( !expr )
@@ -964,7 +966,19 @@ namespace Js
         {
             if (sym->GetSymbolType() == AsmJsSymbol::SIMDBuiltinFunction)
             {
-                return EmitSimdBuiltin(pnode, sym->Cast<AsmJsSIMDFunction>(), expectedType);
+                // Special handling for .load*/.store* operations
+                AsmJsSIMDFunction *simdFun = sym->Cast<AsmJsSIMDFunction>();
+                
+                if (simdFun->IsSimdLoadFunc() || simdFun->IsSimdStoreFunc())
+                {
+                    return EmitSimdLoadStoreBuiltin(pnode, sym->Cast<AsmJsSIMDFunction>(), expectedType);
+                }
+                else
+                {
+                    return EmitSimdBuiltin(pnode, sym->Cast<AsmJsSIMDFunction>(), expectedType);
+                }
+
+                
             }
         }
 #endif
@@ -1293,17 +1307,17 @@ namespace Js
                         // REVIEW: Is this exactly according to spec ?
                         // This enforces Asm.js rule that all arg calls to user-functions have to be coerced.
                         // Generic calls have to be coerced unless used in a SIMD coercion.
-                        // For example, we cannot do f4add(foo(), bar()), but we can do f4add(f4(foo()), f4(bar()))
+                        // For example, we cannot do f4add(foo(), bar()), but we can do f4add(f4check(foo()), f4check(bar()))
                         //
                         // We are only allowed calls as args in similar cases:
                         //      Float32x4: 
-                        //          f4(foo());                      call coercion, any call is allowed
-                        //          f4(fround(), fround(), ...);    constructor, only fround is allowed
-                        //          f4add(f4sub(..),f4(..));        operation, only other SIMD functions are allowed (including coercion)
+                        //          f4check(foo());                call coercion, any call is allowed
+                        //          f4(fround(), fround(), ...);   constructor, only fround is allowed
+                        //          f4add(f4*(..),f4*(..));        operation, only other SIMD functions are allowed (including coercion)
                         //
                         //      Int32x4: 
-                        //          i4(foo());                      call coercion, any call is allowed
-                        //          i4add(i4sub(), i4());           operation, only other SIMD functions are allowed (including coercion)
+                        //          i4check(foo());                call coercion, any call is allowed
+                        //          i4add(i4*(), i4*());           operation, only other SIMD functions are allowed (including coercion)
                         //      
                         //      Float64x2: 
                         //          similar to Int32x4
@@ -1318,17 +1332,16 @@ namespace Js
 
                         EmitExpressionInfo argInfo;
 
-                        if (simdFunc->IsTypeCheck(argCount))
+                        if (simdFunc->IsTypeCheck())
                         {
                             // type check. Any call is allowed as argument.
-                            Assert(i == 0);
                             argInfo = EmitCall(arg, simdFunc->GetReturnType());
                         }
                         // special case for fround inside some float32x4 operations
                         // f4(fround(), ...) , f4splat(fround()), f4.withX/Y/Z/W(fround())
-                        else if ((simdFunc->IsConstructor(4) && simdFunc->GetSimdBuiltInFunction() == AsmJsSIMDBuiltinFunction::AsmJsSIMDBuiltin_float32x4) ||  /*float32x4 all args*/
-                            simdFunc->GetSimdBuiltInFunction() == AsmJsSIMDBuiltinFunction::AsmJsSIMDBuiltin_float32x4_splat ||                                 /*splat all args*/
-                            (i == 1 &&                                                                                                                          /*second arg to withX/Y/Z/W*/
+                        else if ((simdFunc->IsConstructor() && simdFunc->GetSimdBuiltInFunction() == AsmJsSIMDBuiltinFunction::AsmJsSIMDBuiltin_float32x4) ||  /*float32x4 all args*/
+                            simdFunc->GetSimdBuiltInFunction() == AsmJsSIMDBuiltinFunction::AsmJsSIMDBuiltin_float32x4_splat ||                                /*splat all args*/
+                            (i == 1 &&                                                                                                                         /*second arg to withX/Y/Z/W*/
                             (simdFunc->GetSimdBuiltInFunction() == AsmJsSIMDBuiltinFunction::AsmJsSIMDBuiltin_float32x4_withX ||
                             simdFunc->GetSimdBuiltInFunction() == AsmJsSIMDBuiltinFunction::AsmJsSIMDBuiltin_float32x4_withY ||
                             simdFunc->GetSimdBuiltInFunction() == AsmJsSIMDBuiltinFunction::AsmJsSIMDBuiltin_float32x4_withZ ||
@@ -1344,7 +1357,7 @@ namespace Js
                                 throw AsmJsCompilationException(L"Invalid call as SIMD argument. Expecting fround.");
                             }
                         }
-                        else if (AsmJsSIMDFunction::SameTypeOperations(simdFunc, argCall->Cast<AsmJsSIMDFunction>()))
+                        else if (argCall->GetSymbolType() == AsmJsSymbol::SIMDBuiltinFunction  &&  AsmJsSIMDFunction::SameTypeOperations(simdFunc, argCall->Cast<AsmJsSIMDFunction>()))
                         {
                             // any other simd operation. call arguments have to be SIMD operations of same type.
                             argInfo = EmitCall(arg, simdFunc->GetArgType(i).toRetType());
@@ -1360,15 +1373,62 @@ namespace Js
                         // arg already emitted
                         continue;
                     }
-                    else if (arg->nop == knopFlt && simdFunc->IsFloat32x4Func())
+                    else if (simdFunc->IsFloat32x4Func() && arg->nop == knopFlt)
                     {
                         // Any floating point constant as float32x4 op arg is considered DoubleLit
                         // For all float32x4 operations, if the arg type is DoubleLit, regSlot should be in Float reg space.
                         argsTypes[i] = AsmJsType::DoubleLit;
                         argsInfo[i].type = AsmJsType::DoubleLit;
                         argsInfo[i].location = mFunction->GetConstRegister<float>((float)arg->sxFlt.dbl);
-                        // no need to emit
+                        // no need to emit constant
                         continue;
+                    }
+                    else if ((simdFunc->IsShuffleFunc() || simdFunc->IsSwizzleFunc()) && simdFunc->GetArgType(i) == AsmJsType::Int)
+                    {
+                        /* Int args to shuffle/swizzle should be literals and in-range to match MD instruction*/
+                        if (arg->nop == knopInt)
+                        {
+                            // E.g. 
+                            // f4shuffle(v1, v2, [0-3], [0-3], [4-7], [4-7])
+                            // f4swizzle(v1, [0-3], [0-3], [0-3], [0-3])
+                            bool valid = true;
+                            long laneValue = (int) arg->sxInt.lw;
+                            int argPos = i;
+                            
+                            switch (simdFunc->GetSimdBuiltInFunction())
+                            {
+                            case AsmJsSIMDBuiltin_float32x4_shuffle:
+                            case AsmJsSIMDBuiltin_int32x4_shuffle:
+                                valid = ((argPos == 2 || argPos == 3) && (laneValue >= 0 && laneValue <= 3)) || ((argPos == 4 || argPos == 5) && (laneValue >= 4 && laneValue <= 7));
+                                break;
+                            case AsmJsSIMDBuiltin_float64x2_shuffle:
+                                valid = (argPos == 2 && (laneValue >= 0 && laneValue <= 1)) || (argPos == 3 && (laneValue >= 2 && laneValue <= 3));
+                                break;
+                            case AsmJsSIMDBuiltin_float32x4_swizzle:
+                            case AsmJsSIMDBuiltin_int32x4_swizzle:
+                                valid = (argPos >=1 && argPos <= 4) && (laneValue >= 0 && laneValue <= 3);
+                                break;
+                            case AsmJsSIMDBuiltin_float64x2_swizzle:
+                                valid = (argPos >= 1 && argPos <= 2) && (laneValue >= 0 && laneValue <= 1);
+                                break;
+                            default:
+                                Assert(UNREACHED);
+                            }
+                            if (!valid)
+                            {
+                                throw AsmJsCompilationException(L"Invalid arguments to shuffle, out of range lane indices.");
+                            }
+                            
+                            argsTypes[i] = AsmJsType::Int;
+                            argsInfo[i].type = AsmJsType::Int;
+                            argsInfo[i].location = mFunction->GetConstRegister<int>((int)laneValue);
+                            // no need to emit constant
+                            continue;
+                        }
+                        else
+                        {
+                            throw AsmJsCompilationException(L"Invalid arguments to swizzle/shuffle, expecting literals for lane indices.");
+                        }
                     }
                     
                 }
@@ -1504,6 +1564,7 @@ namespace Js
 
     EmitExpressionInfo AsmJSByteCodeGenerator::EmitSimdBuiltin(ParseNode* pnode, AsmJsSIMDFunction* simdFunction, AsmJsRetType expectedType)
     {
+        Assert(pnode->nop == knopCall);
         // StartCall
         const uint16 argCount = pnode->sxCall.argCount;
         
@@ -1563,13 +1624,166 @@ namespace Js
         case 5:
             mWriter.AsmReg6(op, dst, argsInfo[0].location, argsInfo[1].location, argsInfo[2].location, argsInfo[3].location, argsInfo[4].location);
             break;
-
+        case 6:
+            mWriter.AsmReg7(op, dst, argsInfo[0].location, argsInfo[1].location, argsInfo[2].location, argsInfo[3].location, argsInfo[4].location, argsInfo[5].location);
+            break;
         default:
             AssertMsg(UNREACHED, "Wrong argument count to SIMD function");
         }
         
         return emitInfo;
         
+    }
+
+    EmitExpressionInfo AsmJSByteCodeGenerator::EmitSimdLoadStoreBuiltin(ParseNode* pnode, AsmJsSIMDFunction* simdFunction, AsmJsRetType expectedType)
+    {
+        Assert(pnode->nop == knopCall);
+        Assert(simdFunction->IsSimdLoadFunc() || simdFunction->IsSimdStoreFunc());
+
+        const uint16 argCount = pnode->sxCall.argCount;
+
+        // Check number of arguments
+        if ( argCount != simdFunction->GetArgCount())
+        {
+            throw AsmJsCompilationException(L"SIMD builtin function doesn't support arguments");
+        }
+        
+        ParseNode *argNode = pnode->sxCall.pnodeArgs;
+
+        // Arg1 - tarray
+        ParseNode* arrayNameNode = ParserWrapper::GetBinaryLeft(argNode);
+        argNode = ParserWrapper::GetBinaryRight(argNode);
+
+        if (!ParserWrapper::IsNameDeclaration(arrayNameNode))
+        {
+            throw AsmJsCompilationException(L"Invalid symbol ");
+        }
+
+        PropertyName name = arrayNameNode->name();
+        
+        AsmJsSymbol* sym = mCompiler->LookupIdentifier(name, mFunction);
+        if (!sym || sym->GetSymbolType() != AsmJsSymbol::ArrayView)
+        {
+            throw AsmJsCompilationException(L"Invalid identifier %s", name->Psz());
+        }
+        AsmJsArrayView* arrayView = sym->Cast<AsmJsArrayView>();
+        ArrayBufferView::ViewType viewType = arrayView->GetViewType();
+        
+        // Arg2 - index
+        ParseNode* indexNode = argNode;
+        ParseNode* valueNode = null;
+        if (simdFunction->IsSimdStoreFunc())
+        {
+            indexNode = ParserWrapper::GetBinaryLeft(argNode);
+            valueNode = ParserWrapper::GetBinaryRight(argNode);
+        }
+        
+        OpCodeAsmJs op;
+        uint32 indexSlot = 0;
+        TypedArrayEmitType emitType = simdFunction->IsSimdLoadFunc() ? TypedArrayEmitType::LoadTypedArray : TypedArrayEmitType::StoreTypedArray;
+
+        // if changeHeap is implemented, calls are illegal in index expression
+        bool wasCallLegal = mIsCallLegal;
+        mIsCallLegal = !mCompiler->UsesChangeHeap();
+        EmitExpressionInfo indexInfo = EmitTypedArrayIndex(indexNode, op, indexSlot, viewType, emitType);
+        mIsCallLegal = wasCallLegal;
+        
+        EmitExpressionInfo valueInfo = { 0, AsmJsType::Void };
+        // convert opcode to const if needed
+        OpCodeAsmJs opcode = simdFunction->GetOpcode();
+        
+        if (op == OpCodeAsmJs::LdArrConst || op == OpCodeAsmJs::StArrConst)
+        {
+            switch (opcode)
+            {
+            case OpCodeAsmJs::Simd128_LdArr_I4:
+                opcode = OpCodeAsmJs::Simd128_LdArrConst_I4;
+                break;
+            case OpCodeAsmJs::Simd128_LdArr_F4:
+                opcode = OpCodeAsmJs::Simd128_LdArrConst_F4;
+                break;
+            case OpCodeAsmJs::Simd128_LdArr_D2:
+                opcode = OpCodeAsmJs::Simd128_LdArrConst_D2;
+                break;
+            case OpCodeAsmJs::Simd128_StArr_I4:
+                opcode = OpCodeAsmJs::Simd128_StArrConst_I4;
+                break;
+            case OpCodeAsmJs::Simd128_StArr_F4:
+                opcode = OpCodeAsmJs::Simd128_StArrConst_F4;
+                break;
+            case OpCodeAsmJs::Simd128_StArr_D2:
+                opcode = OpCodeAsmJs::Simd128_StArrConst_D2;
+                break;
+            default:
+                Assert(UNREACHED);
+            }
+        }
+        
+        
+        // Adjust dataWidth
+        int8 dataWidth = 0;
+        switch (simdFunction->GetSimdBuiltInFunction())
+        {
+        case AsmJsSIMDBuiltin_float32x4_load1:
+        case AsmJsSIMDBuiltin_float32x4_store1:
+        case AsmJsSIMDBuiltin_int32x4_load1:
+        case AsmJsSIMDBuiltin_int32x4_store1:
+            dataWidth = 4;
+            break;
+        case AsmJsSIMDBuiltin_float64x2_load1:
+        case AsmJsSIMDBuiltin_float64x2_store1:
+        case AsmJsSIMDBuiltin_float32x4_load2:
+        case AsmJsSIMDBuiltin_float32x4_store2:
+        case AsmJsSIMDBuiltin_int32x4_load2:
+        case AsmJsSIMDBuiltin_int32x4_store2:
+            dataWidth = 8;
+            break;
+        case AsmJsSIMDBuiltin_float32x4_load3:
+        case AsmJsSIMDBuiltin_float32x4_store3:
+        case AsmJsSIMDBuiltin_int32x4_load3:
+        case AsmJsSIMDBuiltin_int32x4_store3:
+            dataWidth = 12;
+            break;
+        case AsmJsSIMDBuiltin_int32x4_load:
+        case AsmJsSIMDBuiltin_int32x4_store:
+        case AsmJsSIMDBuiltin_float32x4_load:
+        case AsmJsSIMDBuiltin_float32x4_store:
+        case AsmJsSIMDBuiltin_float64x2_load:
+        case AsmJsSIMDBuiltin_float64x2_store:
+            dataWidth = 16;
+            break;
+        default:
+            Assert(UNREACHED);
+        }
+
+        EmitExpressionInfo emitInfo;
+        // Arg3 - Value to Store
+        if (simdFunction->IsSimdStoreFunc())
+        {
+            Assert(valueNode);
+            // Emit 3rd argument
+            valueInfo = Emit(valueNode);
+            if (valueInfo.type != simdFunction->GetArgType(2))
+            {
+                throw AsmJsCompilationException(L"Invalid value to SIMD store ");
+            }
+            // write opcode
+            mWriter.AsmSimdTypedArr(opcode, valueInfo.location, indexSlot, dataWidth, viewType);
+            mFunction->ReleaseLocation<AsmJsSIMDValue>(&valueInfo);
+            emitInfo.location = 0;
+            emitInfo.type = AsmJsType::Void;
+        }
+        else
+        {
+            // load
+            emitInfo.location = mFunction->AcquireTmpRegister<AsmJsSIMDValue>();
+            mWriter.AsmSimdTypedArr(opcode, emitInfo.location, indexSlot, dataWidth, viewType);
+            emitInfo.type = simdFunction->GetReturnType().toType();
+        }
+
+        mFunction->ReleaseLocationGeneric(&indexInfo);
+
+        return emitInfo;
     }
 #endif
    

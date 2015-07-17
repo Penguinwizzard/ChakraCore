@@ -363,66 +363,6 @@ namespace Js
         return result;
     }
 
-    SIMDValue SIMDFloat32x4Operation::OpShuffle(const SIMDValue& value, int mask)
-    {
-        SIMDValue result;
-
-        int x = mask        & 0x03;
-        int y = (mask >> 2) & 0x03;
-        int z = (mask >> 4) & 0x03;
-        int w = (mask >> 6) & 0x03;
-
-        Assert(x >= 0 && x < 4);
-        Assert(y >= 0 && y < 4);
-        Assert(z >= 0 && z < 4);
-        Assert(w >= 0 && w < 4);
-
-        float storage[4];
-        storage[0] = value.f32[SIMD_X];
-        storage[1] = value.f32[SIMD_Y];
-        storage[2] = value.f32[SIMD_Z];
-        storage[3] = value.f32[SIMD_W];
-
-        result.f32[SIMD_X] = storage[x];
-        result.f32[SIMD_Y] = storage[y];
-        result.f32[SIMD_Z] = storage[z];
-        result.f32[SIMD_W] = storage[w];
-
-        return result;
-    }
-
-    SIMDValue SIMDFloat32x4Operation::OpShuffleMix(const SIMDValue& aValue, const SIMDValue& bValue, int mask)
-    {
-        SIMDValue result;
-
-        int x = mask & 0x03;
-        int y = (mask >> 2) & 0x03;
-        int z = (mask >> 4) & 0x03;
-        int w = (mask >> 6) & 0x03;
-
-        Assert(x >= 0 && x < 4);
-        Assert(y >= 0 && y < 4);
-        Assert(z >= 0 && z < 4);
-        Assert(w >= 0 && w < 4);
-
-        float storage[8];
-        storage[0] = aValue.f32[SIMD_X];
-        storage[1] = aValue.f32[SIMD_Y];
-        storage[2] = aValue.f32[SIMD_Z];
-        storage[3] = aValue.f32[SIMD_W];
-        storage[4] = bValue.f32[SIMD_X];
-        storage[5] = bValue.f32[SIMD_Y];
-        storage[6] = bValue.f32[SIMD_Z];
-        storage[7] = bValue.f32[SIMD_W];
-
-        result.f32[SIMD_X] = storage[0 + x];
-        result.f32[SIMD_Y] = storage[0 + y];
-        result.f32[SIMD_Z] = storage[4 + z];
-        result.f32[SIMD_W] = storage[4 + w];
-
-        return result;
-    }
-
     SIMDValue SIMDFloat32x4Operation::OpClamp(const SIMDValue& value, const SIMDValue& lower, const SIMDValue& upper)
     { 
         SIMDValue result;

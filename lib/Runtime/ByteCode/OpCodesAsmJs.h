@@ -214,6 +214,10 @@ MACRO_WMS   ( Fround_Int                , Float1Int1    , None           )
 #define MACRO_SIMD(opcode, asmjsLayout, opCodeAttrAsmJs, OpCodeAttr) MACRO(opcode, asmjsLayout, opCodeAttrAsmJs)
 #define MACRO_SIMD_WMS(opcode, asmjsLayout, opCodeAttrAsmJs, OpCodeAttr) MACRO_WMS(opcode, asmjsLayout, opCodeAttrAsmJs)
 #define MACRO_SIMD_ASMJS_ONLY_WMS(opcode, asmjsLayout, opCodeAttrAsmJs, OpCodeAttr) MACRO_WMS(opcode, asmjsLayout, opCodeAttrAsmJs)
+
+#define MACRO_SIMD_EXTEND(opcode, asmjsLayout, opCodeAttrAsmJs, OpCodeAttr) MACRO_EXTEND(opcode, asmjsLayout, opCodeAttrAsmJs)
+#define MACRO_SIMD_EXTEND_WMS(opcode, asmjsLayout, opCodeAttrAsmJs, OpCodeAttr) MACRO_EXTEND_WMS(opcode, asmjsLayout, opCodeAttrAsmJs)
+#define MACRO_SIMD_ASMJS_ONLY_EXTEND_WMS(opcode, asmjsLayout, opCodeAttrAsmJs, OpCodeAttr) MACRO_EXTEND_WMS(opcode, asmjsLayout, opCodeAttrAsmJs)
 #include "OpCodesSimd.h"
 #endif
 

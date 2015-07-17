@@ -209,6 +209,88 @@ namespace Js
     {
         m_localSimdSlots[localRegisterID] = bValue;
     }
+
+    template <class T>
+    inline void InterpreterStackFrame::OP_SimdLdArrGeneric(const unaligned T* playout)
+    {
+        Assert(playout->ViewType < 8);
+        const uint32 index = (uint32)GetRegRawInt(playout->SlotIndex) & TypedArrayViewMask[playout->ViewType];
+        JavascriptArrayBuffer* arr = *(JavascriptArrayBuffer**)GetNonVarReg(AsmJsFunctionMemory::ArrayBufferRegister);
+        BYTE* buffer = arr->GetBuffer();
+        uint8 dataWidth = playout->DataWidth;
+        RegSlot dstReg = playout->Value;
+
+        if (index < 0 || index + dataWidth > arr->GetByteLength())
+        {
+            JavascriptError::ThrowRangeError(scriptContext, JSERR_ArgumentOutOfRange, L"Simd typed array access");
+        }
+        AsmJsSIMDValue *data = (AsmJsSIMDValue*)(buffer + index);
+        AsmJsSIMDValue value;
+
+        value = SIMDLdData(data, dataWidth);
+        SetRegRawSimd(dstReg, value);
+    }
+
+    template <class T>
+    inline void InterpreterStackFrame::OP_SimdLdArrConstIndex(const unaligned T* playout)
+    {
+        Assert(playout->ViewType < 8);
+        const uint32 index = playout->SlotIndex;
+        JavascriptArrayBuffer* arr = *(JavascriptArrayBuffer**)GetNonVarReg(AsmJsFunctionMemory::ArrayBufferRegister);
+        BYTE* buffer = arr->GetBuffer();
+        uint8 dataWidth = playout->DataWidth;
+        RegSlot dstReg = playout->Value;
+
+        if (index < 0 || index + dataWidth > arr->GetByteLength())
+        {
+            JavascriptError::ThrowRangeError(scriptContext, JSERR_ArgumentOutOfRange, L"Simd typed array access");
+        }
+        AsmJsSIMDValue *data = (AsmJsSIMDValue*)(buffer + index);
+        AsmJsSIMDValue value;
+
+        value = SIMDLdData(data, dataWidth);
+        SetRegRawSimd(dstReg, value);
+    }
+    
+    template <class T>
+    inline void InterpreterStackFrame::OP_SimdStArrGeneric(const unaligned T* playout)
+    {
+        Assert(playout->ViewType < 8);
+        const uint32 index = (uint32)GetRegRawInt(playout->SlotIndex) & TypedArrayViewMask[playout->ViewType];
+        JavascriptArrayBuffer* arr = *(JavascriptArrayBuffer**)GetNonVarReg(AsmJsFunctionMemory::ArrayBufferRegister);
+        BYTE* buffer = arr->GetBuffer();
+        uint8 dataWidth = playout->DataWidth;
+        RegSlot srcReg = playout->Value;
+
+        if (index < 0 || index + dataWidth > arr->GetByteLength())
+        {
+            JavascriptError::ThrowRangeError(scriptContext, JSERR_ArgumentOutOfRange, L"Simd typed array access");
+        }
+        AsmJsSIMDValue *data = (AsmJsSIMDValue*)(buffer + index);
+        AsmJsSIMDValue value = GetRegRawSimd(srcReg);
+        SIMDStData(data, value, dataWidth);
+    }
+
+    template <class T>
+    inline void InterpreterStackFrame::OP_SimdStArrConstIndex(const unaligned T* playout)
+    {
+        Assert(playout->ViewType < 8);
+        const uint32 index = playout->SlotIndex;
+        JavascriptArrayBuffer* arr = *(JavascriptArrayBuffer**)GetNonVarReg(AsmJsFunctionMemory::ArrayBufferRegister);
+        BYTE* buffer = arr->GetBuffer();
+        uint8 dataWidth = playout->DataWidth;
+        RegSlot srcReg = playout->Value;
+
+        if (index < 0 || index + dataWidth > arr->GetByteLength())
+        {
+            JavascriptError::ThrowRangeError(scriptContext, JSERR_ArgumentOutOfRange, L"Simd typed array access");
+        }
+        AsmJsSIMDValue *data = (AsmJsSIMDValue*)(buffer + index);
+        AsmJsSIMDValue value = GetRegRawSimd(srcReg);
+        SIMDStData(data, value, dataWidth);
+        
+    }
+
 #endif
     inline Var InterpreterStackFrame::GetNonVarReg(RegSlot localRegisterID) const
     {

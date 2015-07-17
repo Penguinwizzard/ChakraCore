@@ -18,15 +18,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
-        //Assert(!(callInfo.Flags & CallFlags_New));    //comment out due to -ls -stress run
-        if (args.Info.Count == 2)
-        {
-            if (JavascriptSIMDInt32x4::Is(args[1]))
-            {
-                return args[1];
-            }
-            JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt32x4TypeMismatch, L"int32x4");
-        }
+        Assert(!(callInfo.Flags & CallFlags_New));    //comment out due to -ls -stress run
 
         Var undefinedVar = scriptContext->GetLibrary()->GetUndefined();
 
@@ -38,6 +30,22 @@ namespace Js
         SIMDValue lanes = SIMDInt32x4Operation::OpInt32x4(intSIMDX, intSIMDY, intSIMDZ, intSIMDW); 
             
         return JavascriptSIMDInt32x4::New(&lanes, scriptContext);
+    }
+
+    Var SIMDInt32x4Lib::EntryCheck(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
+        Assert(!(callInfo.Flags & CallFlags_New));    //comment out due to -ls -stress run
+
+        if (args.Info.Count >= 2 && JavascriptSIMDInt32x4::Is(args[1]))
+        {
+            return args[1];
+        }
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt32x4TypeMismatch, L"int32x4");
     }
 
     Var SIMDInt32x4Lib::EntryZero(RecyclableObject* function, CallInfo callInfo, ...)
@@ -789,6 +797,37 @@ namespace Js
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt32x4TypeMismatch, L"greaterThan");
     }
 
+    Var SIMDInt32x4Lib::EntrySwizzle(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
+
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
+        Assert(!(callInfo.Flags & CallFlags_New));
+
+        // If any of the args are missing, then it is Undefined type which causes TypeError exception.
+        // strict type on both operands
+        if (args.Info.Count >= 2 && JavascriptSIMDInt32x4::Is(args[1]))
+        {
+            // type check on lane indices
+            if (args.Info.Count < 6)
+            {
+                // missing lane args
+                JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedNumber, L"Lane index");
+            }
+
+            Var lane0 = args[2];
+            Var lane1 = args[3];
+            Var lane2 = args[4];
+            Var lane3 = args[5];
+
+            return SIMD128SlowShuffle<JavascriptSIMDInt32x4>(args[1], args[1], lane0, lane1, lane2, lane3, 4, scriptContext);
+        }
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt32x4TypeMismatch, L"swizzle");
+    }
+
     Var SIMDInt32x4Lib::EntryShuffle(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -801,59 +840,24 @@ namespace Js
 
         // If any of the args are missing, then it is Undefined type which causes TypeError exception.
         // strict type on both operands
-        if (args.Info.Count >= 3 && JavascriptSIMDInt32x4::Is(args[1]))
+        if (args.Info.Count >= 3 && JavascriptSIMDInt32x4::Is(args[1]) && JavascriptSIMDInt32x4::Is(args[2]))
         {
-            JavascriptSIMDInt32x4 *a = JavascriptSIMDInt32x4::FromVar(args[1]);
-            Assert(a);
+            // type check on lane indices
+            if (args.Info.Count < 7)
+            {
+                // missing lane args
+                JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedNumber, L"Lane index");
+            }
 
-            Var maskVar = args[2];
-            int32 mask = JavascriptConversion::ToInt32(maskVar, scriptContext);
-            // only the lowest byte matters
-            mask &= 0xff;
+            Var lane0 = args[3];
+            Var lane1 = args[4];
+            Var lane2 = args[5];
+            Var lane3 = args[6];
 
-            SIMDValue source, result;
-
-            source = a->GetValue();
-            result = SIMDInt32x4Operation::OpShuffle(source, mask);
-
-            return JavascriptSIMDInt32x4::New(&result, scriptContext);
+            return SIMD128SlowShuffle<JavascriptSIMDInt32x4>(args[1], args[2], lane0, lane1, lane2, lane3, 8, scriptContext);
+            
         }
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt32x4TypeMismatch, L"shuffle");
-    }
-
-    Var SIMDInt32x4Lib::EntryShuffleMix(RecyclableObject* function, CallInfo callInfo, ...)
-    {
-        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
-
-        ARGUMENTS(args, callInfo);
-        ScriptContext* scriptContext = function->GetScriptContext();
-
-        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
-        Assert(!(callInfo.Flags & CallFlags_New));
-
-        // If any of the args are missing, then it is Undefined type which causes TypeError exception.
-        // strict type on both operands
-        if (args.Info.Count >= 4 && JavascriptSIMDInt32x4::Is(args[1]) && JavascriptSIMDInt32x4::Is(args[2]))
-        {
-            JavascriptSIMDInt32x4 *a = JavascriptSIMDInt32x4::FromVar(args[1]);
-            JavascriptSIMDInt32x4 *b = JavascriptSIMDInt32x4::FromVar(args[2]);
-            Assert(a && b);
-
-            Var maskVar = args[3];
-            int32 mask = JavascriptConversion::ToInt32(maskVar, scriptContext);
-
-            // only the lowest byte matters
-            mask &= 0xff;
-
-            SIMDValue source1, source2, result;
-            source1 = a->GetValue();
-            source2 = b->GetValue();
-
-            result = SIMDInt32x4Operation::OpShuffleMix(source1, source2, mask);
-
-            return JavascriptSIMDInt32x4::New(&result, scriptContext);
-        }
-        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt32x4TypeMismatch, L"shuffleMix");
     }
 
     Var SIMDInt32x4Lib::EntryShiftLeft(RecyclableObject* function, CallInfo callInfo, ...)
@@ -974,6 +978,131 @@ namespace Js
 
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt32x4TypeMismatch, L"select");
     }
+
+    Var SIMDInt32x4Lib::EntryLoad(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
+
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
+        Assert(!(callInfo.Flags & CallFlags_New));
+
+        return SIMD128TypedArrayLoad<JavascriptSIMDInt32x4>(args[1], args[2], 4 * TySize[TyInt32], scriptContext);
+    }
+
+    Var SIMDInt32x4Lib::EntryLoad1(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
+
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
+        Assert(!(callInfo.Flags & CallFlags_New));
+
+        return SIMD128TypedArrayLoad<JavascriptSIMDInt32x4>(args[1], args[2], 1 * TySize[TyInt32], scriptContext);
+    }
+
+    Var SIMDInt32x4Lib::EntryLoad2(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
+
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
+        Assert(!(callInfo.Flags & CallFlags_New));
+
+        return SIMD128TypedArrayLoad<JavascriptSIMDInt32x4>(args[1], args[2], 2 * TySize[TyInt32], scriptContext);
+    }
+
+    Var SIMDInt32x4Lib::EntryLoad3(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
+
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
+        Assert(!(callInfo.Flags & CallFlags_New));
+
+        return SIMD128TypedArrayLoad<JavascriptSIMDInt32x4>(args[1], args[2], 3 * TySize[TyInt32], scriptContext);
+    }
+
+    Var SIMDInt32x4Lib::EntryStore(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
+
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
+        Assert(!(callInfo.Flags & CallFlags_New));
+
+        if (args.Info.Count >= 4 && JavascriptSIMDInt32x4::Is(args[3]))
+        {
+            SIMD128TypedArrayStore<JavascriptSIMDInt32x4>(args[1], args[2], args[3], 4 * TySize[TyInt32], scriptContext);
+            return NULL;
+        }
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInvalidArgType, L"SIMD.int32x4.store");
+    }
+
+    Var SIMDInt32x4Lib::EntryStore1(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
+
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
+        Assert(!(callInfo.Flags & CallFlags_New));
+
+        if (args.Info.Count >= 4 && JavascriptSIMDInt32x4::Is(args[3]))
+        {
+            SIMD128TypedArrayStore<JavascriptSIMDInt32x4>(args[1], args[2], args[3], 1 * TySize[TyInt32], scriptContext);
+            return NULL;
+        }
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInvalidArgType, L"SIMD.int32x4.store");
+    }
+
+    Var SIMDInt32x4Lib::EntryStore2(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
+
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
+        Assert(!(callInfo.Flags & CallFlags_New));
+
+        if (args.Info.Count >= 4 && JavascriptSIMDInt32x4::Is(args[3]))
+        {
+            SIMD128TypedArrayStore<JavascriptSIMDInt32x4>(args[1], args[2], args[3], 2 * TySize[TyInt32], scriptContext);
+            return NULL;
+        }
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInvalidArgType, L"SIMD.int32x4.store");
+    }
+
+    Var SIMDInt32x4Lib::EntryStore3(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
+
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
+        Assert(!(callInfo.Flags & CallFlags_New));
+
+        if (args.Info.Count >= 4 && JavascriptSIMDInt32x4::Is(args[3]))
+        {
+            SIMD128TypedArrayStore<JavascriptSIMDInt32x4>(args[1], args[2], args[3], 3 * TySize[TyInt32], scriptContext);
+            return NULL;
+        }
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInvalidArgType, L"SIMD.int32x4.store");
+    }
+
 }
 
 #endif

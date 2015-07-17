@@ -320,6 +320,9 @@ public:
     IR::Instr*          Simd128LowerSelect(IR::Instr *instr);
     IR::Instr*          Simd128LowerNegI4(IR::Instr *instr);
     IR::Instr*          Simd128LowerMulI4(IR::Instr *instr);
+    IR::Instr*          Simd128LowerLoadElem(IR::Instr *instr);
+    IR::Instr*          Simd128LowerStoreElem(IR::Instr *instr);
+    IR::Instr*          Simd128LowerShuffle(IR::Instr *instr);
     IR::Opnd *          EnregisterIntConst(IR::Instr* instr, IR::Opnd *constOpnd);
     SList<IR::Opnd*>  * Simd128GetExtendedArgs(IR::Instr *instr);
 #endif

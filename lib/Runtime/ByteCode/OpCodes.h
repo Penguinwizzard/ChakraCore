@@ -657,9 +657,15 @@ MACRO_BACKEND_ONLY(     GeneratorResumeJumpTable, Reg1,     OpSideEffect)
 MACRO_BACKEND_ONLY(     RestoreOutParam,    Empty,          None)
 
 #ifdef SIMD_JS_ENABLED
+// All SIMD ops are backend only for non-asmjs.
 #define MACRO_SIMD(opcode, asmjsLayout, opCodeAttrAsmJs, OpCodeAttr) MACRO_BACKEND_ONLY(opcode, Empty, OpCodeAttr)
 #define MACRO_SIMD_WMS(opcode, asmjsLayout, opCodeAttrAsmJs, OpCodeAttr) MACRO_BACKEND_ONLY(opcode, Empty, OpCodeAttr)
 #define MACRO_SIMD_BACKEND_ONLY(opcode, asmjsLayout, opCodeAttrAsmJs, OpCodeAttr) MACRO_BACKEND_ONLY(opcode, Empty, OpCodeAttr)
+
+#define MACRO_SIMD_EXTEND(opcode, asmjsLayout, opCodeAttrAsmJs, OpCodeAttr) MACRO_BACKEND_ONLY(opcode, Empty, OpCodeAttr)
+#define MACRO_SIMD_EXTEND_WMS(opcode, asmjsLayout, opCodeAttrAsmJs, OpCodeAttr) MACRO_BACKEND_ONLY(opcode, Empty, OpCodeAttr)
+#define MACRO_SIMD_BACKEND_ONLY_EXTEND(opcode, asmjsLayout, opCodeAttrAsmJs, OpCodeAttr) MACRO_BACKEND_ONLY(opcode, Empty, OpCodeAttr)
+
 #include "OpCodesSimd.h"
 #endif
 

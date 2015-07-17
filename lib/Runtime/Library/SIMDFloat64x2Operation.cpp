@@ -323,48 +323,6 @@ namespace Js
         return result;
     }
 
-    SIMDValue SIMDFloat64x2Operation::OpShuffle(const SIMDValue& value, int mask)
-    {
-        SIMDValue result;
-
-        int x = mask & 0x1;
-        int y = (mask >> 1) & 0x1;
-
-        Assert(x >= 0 && x < 2);
-        Assert(y >= 0 && y < 2);
-
-        double storage[2];
-        storage[0] = value.f64[SIMD_X];
-        storage[1] = value.f64[SIMD_Y];
-
-        result.f64[SIMD_X] = storage[x];
-        result.f64[SIMD_Y] = storage[y];
-
-        return result;
-    }
-
-    SIMDValue SIMDFloat64x2Operation::OpShuffleMix(const SIMDValue& s1, const SIMDValue& s2, int mask)
-    {
-        SIMDValue result;
-
-        int x = mask & 0x1;
-        int y = (mask >> 1) & 0x1;
-
-        Assert(x >= 0 && x < 2);
-        Assert(y >= 0 && y < 2);
-
-        double storage[4];
-        storage[0] = s1.f64[SIMD_X];
-        storage[1] = s1.f64[SIMD_Y];
-        storage[2] = s2.f64[SIMD_X];
-        storage[3] = s2.f64[SIMD_Y];
-
-        result.f64[SIMD_X] = storage[0 + x];
-        result.f64[SIMD_Y] = storage[2 + y];
-
-        return result;
-    }
-
     SIMDValue SIMDFloat64x2Operation::OpClamp(const SIMDValue& value, const SIMDValue& lower, const SIMDValue& upper)
     { 
         SIMDValue result;

@@ -976,6 +976,11 @@ namespace Js
         JavascriptError::ThrowTypeError(scriptContext, MAKE_HR(messageId));
     }
 
+    Var JavascriptExceptionOperators::OP_RuntimeRangeError(MessageId messageId, ScriptContext *scriptContext)
+    {
+        JavascriptError::ThrowRangeError(scriptContext, MAKE_HR(messageId));
+    }
+
     Var JavascriptExceptionOperators::OP_RuntimeReferenceError(MessageId messageId, ScriptContext *scriptContext)
     {
         JavascriptError::ThrowReferenceError(scriptContext, MAKE_HR(messageId));
@@ -985,6 +990,7 @@ namespace Js
     {
         JavascriptError::ThrowTypeError(function->GetScriptContext(), VBSERR_ActionNotSupported);
     }
+
 
     // Throw type error on access on caller when strict mode
     Var JavascriptExceptionOperators::ThrowTypeErrorCallerAccessor(RecyclableObject* function, CallInfo callInfo, ...)

@@ -854,6 +854,11 @@ CommonNumber:
             case TypeIds_VariantDate:
                 return Js::DateImplementation::GetTvUtc(Js::DateImplementation::JsLocalTimeFromVarDate(JavascriptVariantDate::FromVar(aValue)->GetValue()), scriptContext);
 
+            case TypeIds_SIMDFloat32x4:
+            case TypeIds_SIMDInt32x4:
+            case TypeIds_SIMDFloat64x2:
+                JavascriptError::ThrowError(scriptContext, JSERR_NeedNumber);
+
             default:
                 {
                     AssertMsg(JavascriptOperators::IsObject(aValue), "bad type object in conversion ToInteger");

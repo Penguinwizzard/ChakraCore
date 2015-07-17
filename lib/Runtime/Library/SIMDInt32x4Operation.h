@@ -48,9 +48,6 @@ namespace Js {
         static SIMDValue OpEqual(const SIMDValue& aValue, const SIMDValue& bValue);
         static SIMDValue OpGreaterThan(const SIMDValue& aValue, const SIMDValue& bValue);
 
-        static SIMDValue OpShuffle(const SIMDValue& v, const int maskValue);
-        static SIMDValue OpShuffleMix(const SIMDValue& aValue, const SIMDValue& bValue, int mask);
-
         static SIMDValue OpShiftLeft(const SIMDValue& value, int count);
         static SIMDValue OpShiftRightLogical(const SIMDValue& value, int count);
         static SIMDValue OpShiftRightArithmetic(const SIMDValue& value, int count);

@@ -10,7 +10,6 @@
 namespace Js
 {
 
-    // Q: Are we allowed to call this as a constructor ? 
     Var SIMDFloat64x2Lib::EntryFloat64x2(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -18,16 +17,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
-        //Assert(!(callInfo.Flags & CallFlags_New));    // comment out to satisfy languager service -ls -stress run
-
-        if (args.Info.Count == 2)
-        {
-            if (JavascriptSIMDFloat64x2::Is(args[1]))
-            {
-                return args[1];
-            }
-            JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat64x2TypeMismatch, L"float64x2");
-        }
+        Assert(!(callInfo.Flags & CallFlags_New));    // comment out to satisfy languager service -ls -stress run
 
         Var undefinedVar = scriptContext->GetLibrary()->GetUndefined();
 
@@ -37,6 +27,22 @@ namespace Js
         SIMDValue lanes = SIMDFloat64x2Operation::OpFloat64x2(dSIMDX, dSIMDY);
 
         return JavascriptSIMDFloat64x2::New(&lanes, scriptContext);
+    }
+
+    Var SIMDFloat64x2Lib::EntryCheck(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
+        Assert(!(callInfo.Flags & CallFlags_New));    // comment out to satisfy languager service -ls -stress run
+
+        if (args.Info.Count >= 2 && JavascriptSIMDFloat64x2::Is(args[1]))
+        {
+            return args[1];
+        }
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat64x2TypeMismatch, L"float64x2");
     }
 
     Var SIMDFloat64x2Lib::EntryZero(RecyclableObject* function, CallInfo callInfo, ...)
@@ -832,6 +838,34 @@ namespace Js
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat64x2TypeMismatch, L"greaterThanOrEqual");
     }
 
+    Var SIMDFloat64x2Lib::EntrySwizzle(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
+
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
+        Assert(!(callInfo.Flags & CallFlags_New));
+
+        // If any of the args are missing, then it is Undefined type which causes TypeError exception.
+        // strict type on both operands
+        if (args.Info.Count >= 2 && JavascriptSIMDFloat64x2::Is(args[1]))
+        {
+            // type check on lane indices
+            if (args.Info.Count < 4)
+            {
+                // missing lane args
+                JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedNumber, L"Lane index");
+            }
+            Var lane0 = args[2];
+            Var lane1 = args[3];
+            
+            return SIMD128SlowShuffle<JavascriptSIMDFloat64x2, 2>(args[1], args[1], lane0, lane1, NULL, NULL, 2, scriptContext);
+        }
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat64x2TypeMismatch, L"swizzle");
+    }
+    
     Var SIMDFloat64x2Lib::EntryShuffle(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -844,35 +878,21 @@ namespace Js
 
         // If any of the args are missing, then it is Undefined type which causes TypeError exception.
         // strict type on both operands
-        if (args.Info.Count >= 3 && JavascriptSIMDFloat64x2::Is(args[1]))
+        if (args.Info.Count >= 3 && JavascriptSIMDFloat64x2::Is(args[1]) && JavascriptSIMDFloat64x2::Is(args[2]))
         {
-            return InnerShuffle(args[1], args[1], args[2], scriptContext);
-        }
+            // type check on lane indices
+            if (args.Info.Count < 5)
+            {
+                // missing lane args
+                JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedNumber, L"Lane index");
+            }
+            Var lane0 = args[3];
+            Var lane1 = args[4];
 
+            return SIMD128SlowShuffle<JavascriptSIMDFloat64x2, 2>(args[1], args[2], lane0, lane1, NULL, NULL, 4, scriptContext);
+        }
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat64x2TypeMismatch, L"shuffle");
     }
-    
-    Var SIMDFloat64x2Lib::EntryShuffleMix(RecyclableObject* function, CallInfo callInfo, ...)
-    {
-        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
-
-        ARGUMENTS(args, callInfo);
-        ScriptContext* scriptContext = function->GetScriptContext();
-
-        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
-        Assert(!(callInfo.Flags & CallFlags_New));
-
-        // If any of the args are missing, then it is Undefined type which causes TypeError exception.
-        // strict type on both operands
-        if (args.Info.Count >= 4 && JavascriptSIMDFloat64x2::Is(args[1]) && JavascriptSIMDFloat64x2::Is(args[2]))
-        {
-            return InnerShuffle(args[1], args[2], args[3], scriptContext);
-        }
-
-        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat64x2TypeMismatch, L"shuffleMix");
-    }
-
-    
 
     Var SIMDFloat64x2Lib::EntryClamp(RecyclableObject* function, CallInfo callInfo, ...)
     {
@@ -947,25 +967,72 @@ namespace Js
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat32x4TypeMismatch, L"select");
     }
 
-    Var SIMDFloat64x2Lib::InnerShuffle(Var src1, Var src2, Var maskVar, ScriptContext* scriptContext)
+
+    Var SIMDFloat64x2Lib::EntryLoad(RecyclableObject* function, CallInfo callInfo, ...)
     {
-        JavascriptSIMDFloat64x2 *a = JavascriptSIMDFloat64x2::FromVar(src1);
-        JavascriptSIMDFloat64x2 *b = JavascriptSIMDFloat64x2::FromVar(src2);
-        Assert(a && b);
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
 
-        int32 mask = JavascriptConversion::ToInt32(maskVar, scriptContext);
-        // only the lowest 2 bits matters, the rest has to be zeroed
-        mask &= 0x3;
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
 
-        SIMDValue source1, source2, result;
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
+        Assert(!(callInfo.Flags & CallFlags_New));
 
-        source1 = a->GetValue();
-        source2 = b->GetValue();
-
-        result = SIMDFloat64x2Operation::OpShuffleMix(source1, source2, mask);
-
-        return JavascriptSIMDFloat64x2::New(&result, scriptContext);
+        return SIMD128TypedArrayLoad<JavascriptSIMDFloat64x2>(args[1], args[2], 2 * TySize[TyFloat64], scriptContext);
     }
+
+    Var SIMDFloat64x2Lib::EntryLoad1(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
+
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
+        Assert(!(callInfo.Flags & CallFlags_New));
+        
+        return SIMD128TypedArrayLoad<JavascriptSIMDFloat64x2>(args[1], args[2], 1 * TySize[TyFloat64], scriptContext);
+    }
+
+    Var SIMDFloat64x2Lib::EntryStore(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
+
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
+        Assert(!(callInfo.Flags & CallFlags_New));
+
+        if (args.Info.Count >= 4 && JavascriptSIMDFloat64x2::Is(args[3]))
+        {
+            SIMD128TypedArrayStore<JavascriptSIMDFloat64x2>(args[1], args[2], args[3], 2 * TySize[TyFloat64], scriptContext);
+            return NULL;
+        }
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInvalidArgType, L"SIMD.float64x2.store");
+        
+    }
+
+    Var SIMDFloat64x2Lib::EntryStore1(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
+
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
+        Assert(!(callInfo.Flags & CallFlags_New));
+
+        if (args.Info.Count >= 4 && JavascriptSIMDFloat64x2::Is(args[3]))
+        {
+            SIMD128TypedArrayStore<JavascriptSIMDFloat64x2>(args[1], args[2], args[3], 1 * TySize[TyFloat64], scriptContext);
+            return NULL;
+        }
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInvalidArgType, L"SIMD.float64x2.store");
+        
+    }
+
+    
 }
 
 #endif

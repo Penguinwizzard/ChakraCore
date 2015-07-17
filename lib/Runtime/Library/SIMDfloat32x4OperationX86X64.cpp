@@ -350,45 +350,6 @@ namespace Js
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
 
-    SIMDValue SIMDFloat32x4Operation::OpShuffle(const SIMDValue& value, int mask)
-    { 
-        X86SIMDValue x86Result = { { 0, 0, 0, 0 } };
-        X86SIMDValue tmp = X86SIMDValue::ToX86SIMDValue(value);
-
-        switch (mask) {
-#define MACRO(maskName, maskValue) \
-        case maskValue: \
-            x86Result.m128_value = _mm_shuffle_ps(tmp.m128_value, tmp.m128_value, maskValue); \
-            break;
-#define MACRO2(maskName, maskValue)
-#include "SIMDShuffleMasks.h"
-        default:
-            Assert(UNREACHED);
-        }
-
-        return X86SIMDValue::ToSIMDValue(x86Result);
-    }
-
-    SIMDValue SIMDFloat32x4Operation::OpShuffleMix(const SIMDValue& aValue, const SIMDValue& bValue, int mask)
-    { 
-        X86SIMDValue x86Result = { { 0, 0, 0, 0 } };
-        X86SIMDValue source1 = X86SIMDValue::ToX86SIMDValue(aValue);
-        X86SIMDValue source2 = X86SIMDValue::ToX86SIMDValue(bValue);
-
-        switch (mask) {
-#define MACRO(maskName, maskValue) \
-        case maskValue: \
-            x86Result.m128_value = _mm_shuffle_ps(source1.m128_value, source2.m128_value, maskValue); \
-            break;
-#define MACRO2(maskName, maskValue)
-#include "SIMDShuffleMasks.h"
-        default:
-            Assert(UNREACHED);
-        }
-
-        return X86SIMDValue::ToSIMDValue(x86Result);
-    }
-
     SIMDValue SIMDFloat32x4Operation::OpClamp(const SIMDValue& value, const SIMDValue& lower, const SIMDValue& upper)
     { // SIMD review: do we have intrinsic for the implemenation?
         SIMDValue result;

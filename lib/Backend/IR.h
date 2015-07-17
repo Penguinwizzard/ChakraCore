@@ -403,7 +403,13 @@ private:
 
     void            SetBailOutKind_NoAssert(const IR::BailOutKind bailOutKind);
 
-public:    
+public:  
+#ifdef SIMD_JS_ENABLED
+    // used only for SIMD Ld/St from typed arrays.
+    // we keep these here to avoid increase in number of opcodes and to not use ExtendedArgs
+    uint8           dataWidth;
+#endif
+
 #ifdef BAILOUT_INJECTION
     uint            bailOutByteCodeLocation;
 #endif
@@ -447,6 +453,7 @@ protected:
     Opnd *          m_src1;
     Opnd *          m_src2;
     
+
 
     void Init(Js::OpCode opcode, IRKind kind, Func * func);       
     IR::Instr *     CloneInstr() const;

@@ -68,8 +68,10 @@ public:
             IR::Instr *         LowerStartCall(IR::Instr * instr);
             IR::Instr *         LowerAsmJsCallI(IR::Instr * callInstr);
             IR::Instr *         LowerAsmJsCallE(IR::Instr * callInstr);
-            IR::Instr *         LowerAsmJsLdElemHelper(IR::Instr * instr);
-            IR::Instr *         LowerAsmJsStElemHelper(IR::Instr * instr);
+
+            IR::Instr *         LowerAsmJsLdElemHelper(IR::Instr * instr, bool isSimdLoad = false, bool checkEndOffset = false);
+            IR::Instr *         LowerAsmJsStElemHelper(IR::Instr * instr, bool isSimdStore = false, bool checkEndOffset = false);
+
             IR::Instr *         LoadHelperArgument(IR::Instr * instr, IR::Opnd * opndArg);
             IR::Instr *         LoadDynamicArgument(IR::Instr * instr, uint argNumber);
             IR::Instr *         LoadDynamicArgumentUsingLength(IR::Instr *instr);

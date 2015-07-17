@@ -1133,11 +1133,22 @@ namespace Js
         }
     }
 
+    bool AsmJsSIMDFunction::IsTypeCheck()
+    {
+        return mBuiltIn == AsmJsSIMDBuiltin_int32x4_check || mBuiltIn == AsmJsSIMDBuiltin_float32x4_check || mBuiltIn == AsmJsSIMDBuiltin_float64x2_check;
+    }
+
+    AsmJsVarType AsmJsSIMDFunction::GetTypeCheckVarType()
+    {
+        Assert(this->IsTypeCheck());
+        return GetReturnType().toVarType();
+    }
     bool AsmJsSIMDFunction::IsConstructor()
     {
         return mBuiltIn == AsmJsSIMDBuiltin_int32x4 || mBuiltIn == AsmJsSIMDBuiltin_float32x4 || mBuiltIn == AsmJsSIMDBuiltin_float64x2;
     }
 
+    // Is a constructor with the correct argCount ?
     bool AsmJsSIMDFunction::IsConstructor(uint argCount)
     {
         if (!IsConstructor())

@@ -143,7 +143,8 @@ SOURCES= \
     ..\JavascriptSIMDFloat64x2.cpp \
 	..\SIMDFloat64x2Lib.cpp \
     ..\JavascriptSIMDInt32x4.cpp \
-    ..\SIMDInt32x4Lib.cpp 
+    ..\SIMDInt32x4Lib.cpp \
+    ..\SIMDUtils.cpp 
 
 
 AMD64_SOURCES=\

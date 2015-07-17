@@ -57,9 +57,6 @@ namespace Js {
         static SIMDValue OpGreaterThan(const SIMDValue& aValue, const SIMDValue& bValue);
         static SIMDValue OpGreaterThanOrEqual(const SIMDValue& aValue, const SIMDValue& bValue);
 
-        static SIMDValue OpShuffle(const SIMDValue& v, const int maskValue);
-        static SIMDValue OpShuffleMix(const SIMDValue& aValue, const SIMDValue& bValue, int mask);
-
         static SIMDValue OpClamp(const SIMDValue& value, const SIMDValue& upper, const SIMDValue& lower);
 
         static SIMDValue OpSelect(const SIMDValue& mV, const SIMDValue& tV, const SIMDValue& fV);

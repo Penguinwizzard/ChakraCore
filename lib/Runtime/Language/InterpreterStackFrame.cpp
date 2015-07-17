@@ -2450,17 +2450,17 @@ namespace Js
         // Move the arguments to the right location
         uint argCount = info->GetArgCount();
         
+#if _M_X64
+        uint homingAreaSize = 0;
+#endif
+
         uintptr argAddress = (uintptr)m_inParams;
         for (uint i = 0; i < argCount; i++)
         {
-            if (info->GetArgType(i).isInt())
-            {
-                *intArg = *(int*)argAddress;
-                ++intArg;
-                argAddress += MachPtr;
-            }
 #if _M_X64
-            else if (i < 3)
+            // 3rd Argument should be at the end of the homing area.
+            Assert(i != 3 || argAddress == (uintptr)m_inParams + homingAreaSize);
+            if (i < 3)
             {
                 // for x64 we spill the first 3 floating point args below the rest of the arguments on the stack
                 // m_inParams will be from DynamicInterpreterThunk's frame. Floats are in InterpreterAsmThunk's frame. Stack will be set up like so:
@@ -2477,20 +2477,27 @@ namespace Js
                 // IAT xmm3 spill
                 // IAT xmm2 spill
                 // IAT xmm1 spill <- floatSpillAddress for arg1
-                //uintptr floatSpillAddress = (uintptr)m_inParams - MachPtr * (12 - i);
+                
                 // floats are spilled as xmmwords
                 uintptr floatSpillAddress = (uintptr)m_inParams - MachPtr * (15 - 2*i);
-                if (info->GetArgType(i).isFloat())
+
+                if (info->GetArgType(i).isInt())
+                {
+                    *intArg = *(int*)argAddress;
+                    ++intArg;
+                    homingAreaSize += MachPtr;
+                }
+                else if (info->GetArgType(i).isFloat())
                 {
                     *floatArg = *(float*)floatSpillAddress;
                     ++floatArg;
-                    argAddress += MachPtr;
+                    homingAreaSize += MachPtr;
                 }
                 else if (info->GetArgType(i).isDouble())
                 {
                     *doubleArg = *(double*)floatSpillAddress;
                     ++doubleArg;
-                    argAddress += MachPtr;
+                    homingAreaSize += MachPtr;
                 }
 #ifdef SIMD_JS_ENABLED
                 else
@@ -2498,11 +2505,29 @@ namespace Js
                     Assert(info->GetArgType(i).isSIMD());
                     *simdArg = *(AsmJsSIMDValue*)floatSpillAddress;
                     ++simdArg;
-                    argAddress += sizeof(AsmJsSIMDValue);
+                    homingAreaSize += sizeof(AsmJsSIMDValue);
                 }
 #endif
+                if (SIMD_JS_FLAG && i == 2) // last argument ?
+                {
+                    // If we have simd arguments, the homing area in m_inParams can be larger than 3 64-bit slots. This is because SIMD values are unboxed there too.
+                    // After unboxing, the homing area is overwritten by rdx, r8 and r9, and we read/skip 64-bit slots from the homing area (argAddress += MachPtr). 
+                    // After the last argument of the 3 is read, we need to advance argAddress to skip over the possible extra space and to the start of the rest of the arguments.
+                    argAddress = (uintptr)m_inParams + homingAreaSize;
+                }
+                else
+                {
+                    argAddress += MachPtr;
+                }
             }
+            else 
 #endif
+            if (info->GetArgType(i).isInt())
+            {
+                *intArg = *(int*)argAddress;
+                ++intArg;
+                argAddress += MachPtr;
+            }
             else if (info->GetArgType(i).isFloat())
             {
                 *floatArg = *(float*)argAddress;

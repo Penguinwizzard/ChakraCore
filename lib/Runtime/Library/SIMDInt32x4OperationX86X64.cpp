@@ -352,45 +352,6 @@ namespace Js
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
 
-    SIMDValue SIMDInt32x4Operation::OpShuffle(const SIMDValue& value, int mask)
-    {
-        X86SIMDValue x86Result = { { 0, 0, 0, 0 } };
-        X86SIMDValue tmp = X86SIMDValue::ToX86SIMDValue(value);
-
-        switch (mask) {
-#define MACRO(maskName, maskValue) \
-        case maskValue: \
-            x86Result.m128i_value = _mm_shuffle_epi32(tmp.m128i_value, maskValue); \
-            break;
-#define MACRO2(maskName, maskValue)
-#include "SIMDShuffleMasks.h"
-        default:
-            Assert(UNREACHED);
-        }
-
-        return X86SIMDValue::ToSIMDValue(x86Result);
-    }
-
-    SIMDValue SIMDInt32x4Operation::OpShuffleMix(const SIMDValue& aValue, const SIMDValue& bValue, int mask)
-    { // SIMD Review: same implementation as SIMDFloat32x4Operation::OpShuffleMix 
-        X86SIMDValue x86Result = { { 0, 0, 0, 0 } };
-        X86SIMDValue source1 = X86SIMDValue::ToX86SIMDValue(aValue);
-        X86SIMDValue source2 = X86SIMDValue::ToX86SIMDValue(bValue);
-
-        switch (mask) {
-#define MACRO(maskName, maskValue) \
-        case maskValue: \
-            x86Result.m128_value = _mm_shuffle_ps(source1.m128_value, source2.m128_value, maskValue); \
-            break;
-#define MACRO2(maskName, maskValue)
-#include "SIMDShuffleMasks.h"
-        default:
-            Assert(UNREACHED);
-        }
-
-        return X86SIMDValue::ToSIMDValue(x86Result);
-    }
-
     SIMDValue SIMDInt32x4Operation::OpShiftLeft(const SIMDValue& value, int count)
     {
         X86SIMDValue x86Result;

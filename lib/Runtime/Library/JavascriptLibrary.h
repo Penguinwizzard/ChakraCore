@@ -372,8 +372,8 @@ namespace Js
         bool inDispatchProfileMode;
 
         JavascriptFunction * AddFunctionToLibraryObjectWithPrototype(GlobalObject * globalObject, PropertyId propertyId, FunctionInfo * functionInfo, int length, DynamicObject * prototype = null, DynamicType * functionType = null);
-
         JavascriptFunction * AddFunctionToLibraryObject(DynamicObject* object, PropertyId propertyId, FunctionInfo * functionInfo, int length, PropertyAttributes attributes = PropertyBuiltInMethodDefaults);
+
         JavascriptFunction * AddFunctionToLibraryObjectWithName(DynamicObject* object, PropertyId propertyId, PropertyId nameId, FunctionInfo * functionInfo, int length);
         void AddAccessorsToLibraryObject(DynamicObject* object, PropertyId propertyId, FunctionInfo * getterFunctionInfo, FunctionInfo * setterFunctionInfo);
         void AddAccessorsToLibraryObjectWithName(DynamicObject* object, PropertyId propertyId, PropertyId nameId, FunctionInfo * getterFunctionInfo, FunctionInfo * setterFunctionInfo);

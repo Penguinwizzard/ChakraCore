@@ -49,6 +49,7 @@ private:
     IR::Instr *             CreateLoopBodyReturnIPInstr(uint targetOffset, uint offset);
     IR::RegOpnd *           BuildDstOpnd(Js::RegSlot dstRegSlot, IRType type);
     IR::RegOpnd *           BuildSrcOpnd(Js::RegSlot srcRegSlot, IRType type);
+    IR::RegOpnd *           BuildIntConstOpnd(Js::RegSlot regSlot);
     SymID                   BuildSrcStackSymID(Js::RegSlot regSlot);
     IR::SymOpnd *           BuildFieldOpnd(Js::RegSlot reg, Js::PropertyId propertyId, Js::PropertyIdIndexType propertyIdIndex, PropertyKind propertyKind, IRType type);
     PropertySym *           BuildFieldSym(Js::RegSlot reg, Js::PropertyId propertyId, Js::PropertyIdIndexType propertyIdIndex, PropertyKind propertyKind);
@@ -68,6 +69,7 @@ private:
     Js::RegSlot             GetRegSlotFromDoubleReg(Js::RegSlot srcDoubleReg);
     Js::RegSlot             GetRegSlotFromVarReg(Js::RegSlot srcVarReg);
 #ifdef SIMD_JS_ENABLED
+    Js::OpCode              GetSimdOpcode(Js::OpCodeAsmJs asmjsOpcode);
     Js::RegSlot             GetRegSlotFromSimd128Reg(Js::RegSlot srcSimd128Reg);
     IR::Instr *             AddExtendedArg(IR::RegOpnd *src1, IR::RegOpnd *src2, uint32 offset);
     BOOL                    RegIsSimd128Var(Js::RegSlot reg);
@@ -92,6 +94,7 @@ private:
     void                    BuildElementSlot(Js::OpCodeAsmJs newOpcode, uint32 offset, int32 slotIndex, Js::RegSlot value, Js::RegSlot instance);
     void                    BuildAsmUnsigned1(Js::OpCodeAsmJs newOpcode, uint value);
     void                    BuildAsmTypedArr(Js::OpCodeAsmJs newOpcode, uint32 offset, uint32 slotIndex, Js::RegSlot value, int8 viewType);
+    void                    BuildAsmSimdTypedArr(Js::OpCodeAsmJs newOpcode, uint32 offset, uint32 slotIndex, Js::RegSlot value, int8 viewType, uint8 DataWidth);
     void                    BuildAsmCall(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::ArgSlot argCount, Js::RegSlot ret, Js::RegSlot function, int8 returnType);
     void                    BuildAsmReg1(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegSlot dstReg);
     void                    BuildInt1Double1(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegSlot dstIntReg, Js::RegSlot srcDoubleReg);

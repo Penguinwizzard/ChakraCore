@@ -17,9 +17,9 @@ namespace Js {
         public:
             // Float32x4
             static FunctionInfo Float32x4;
+            static FunctionInfo Check;
             static FunctionInfo Zero;
             static FunctionInfo Splat;
-
             static FunctionInfo FromFloat64x2;
             static FunctionInfo FromFloat64x2Bits;
             static FunctionInfo FromInt32x4;
@@ -51,8 +51,8 @@ namespace Js {
             static FunctionInfo GreaterThan;
             static FunctionInfo GreaterThanOrEqual;
 
+            static FunctionInfo Swizzle;
             static FunctionInfo Shuffle;
-            static FunctionInfo ShuffleMix;
             static FunctionInfo Clamp;
             static FunctionInfo Select;
             // WithX/Y/Z/W
@@ -60,11 +60,22 @@ namespace Js {
             static FunctionInfo WithY;
             static FunctionInfo WithZ;
             static FunctionInfo WithW;
+
+            static FunctionInfo Load;
+            static FunctionInfo Load1;
+            static FunctionInfo Load2;
+            static FunctionInfo Load3;
+            
+            static FunctionInfo Store;
+            static FunctionInfo Store1;
+            static FunctionInfo Store2;
+            static FunctionInfo Store3;
         };
 
         // Entry points to library
         // constructor
         static Var EntryFloat32x4(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryCheck(RecyclableObject* function, CallInfo callInfo, ...);
 
         static Var EntryZero(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntrySplat(RecyclableObject* function, CallInfo callInfo, ...);
@@ -105,10 +116,20 @@ namespace Js {
         static Var EntryGreaterThanOrEqual(RecyclableObject* function, CallInfo callInfo, ...);
         // Others
         static Var EntryCompareOp(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntrySwizzle(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryShuffle(RecyclableObject* function, CallInfo callInfo, ...);
-        static Var EntryShuffleMix(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryClamp(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntrySelect(RecyclableObject* function, CallInfo callInfo, ...);
+
+        static Var EntryLoad(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryLoad1(RecyclableObject* function, CallInfo callInfo, ...); // load X 
+        static Var EntryLoad2(RecyclableObject* function, CallInfo callInfo, ...); // load XY
+        static Var EntryLoad3(RecyclableObject* function, CallInfo callInfo, ...); // load XYZ
+
+        static Var EntryStore(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryStore1(RecyclableObject* function, CallInfo callInfo, ...); // store X 
+        static Var EntryStore2(RecyclableObject* function, CallInfo callInfo, ...); // store XY
+        static Var EntryStore3(RecyclableObject* function, CallInfo callInfo, ...); // store XYZ
         // End entry points
     };
 } // namespace Js

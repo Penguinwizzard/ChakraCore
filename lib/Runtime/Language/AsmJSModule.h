@@ -209,6 +209,7 @@ namespace Js {
 
         // Resolves a symbol name to SIMD constructor/operation and perform checks
         AsmJsSIMDFunction *LookupSimdConstructor(PropertyName name);
+        AsmJsSIMDFunction *LookupSimdTypeCheck(PropertyName name);
         AsmJsSIMDFunction *LookupSimdOperation(PropertyName name);
 
         void AddSimdBuiltinUse(int index){ mAsmSimdBuiltinUsedBV.Set(index); }

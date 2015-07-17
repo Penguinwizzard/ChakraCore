@@ -180,6 +180,11 @@ namespace Js
         template <typename RegSlotType> AsmJsSIMDValue GetRegRawSimd(RegSlotType localRegisterID) const;
         template <typename RegSlotType> void           SetRegRawSimd(RegSlotType localRegisterID, AsmJsSIMDValue bValue);
         static DWORD GetAsmSimdValOffSet(AsmJsCallStackLayout* stack);
+        template <class T> inline void OP_SimdLdArrGeneric(const unaligned T* playout);
+        template <class T> inline void OP_SimdLdArrConstIndex(const unaligned T* playout);
+        template <class T> inline void OP_SimdStArrGeneric(const unaligned T* playout);
+        template <class T> inline void OP_SimdStArrConstIndex(const unaligned T* playout);
+
 #endif
 
         template <typename RegSlotType>

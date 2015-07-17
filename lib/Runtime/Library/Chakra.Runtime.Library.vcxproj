@@ -192,6 +192,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)SubString.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ThreadServiceWrapperBase.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)UriHelper.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\DiagGlobalList.h" />
@@ -281,6 +282,7 @@
     <ClInclude Include="ScriptFunction.h" />
     <ClInclude Include="ScriptFunctionType.h" />
     <ClInclude Include="ScriptMemoryDumper.h" />
+    <ClInclude Include="SIMDUtils.h" />
     <ClInclude Include="SingleCharString.h" />
     <ClInclude Include="StackProber.h" />
     <ClInclude Include="StackScriptFunction.h" />

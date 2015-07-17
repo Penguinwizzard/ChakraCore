@@ -274,6 +274,7 @@ BUILTIN(Math, Clz32, Clz32, FunctionInfo::ErrorOnNew)
 #ifdef SIMD_JS_ENABLED
 // SIMDFloat32x4Lib entry points
 BUILTIN(SIMDFloat32x4Lib, Float32x4, EntryFloat32x4, FunctionInfo::None)
+BUILTIN(SIMDFloat32x4Lib, Check, EntryCheck, FunctionInfo::None)
 BUILTIN(SIMDFloat32x4Lib, Zero, EntryZero, FunctionInfo::None)
 BUILTIN(SIMDFloat32x4Lib, Splat, EntrySplat, FunctionInfo::None)
 // Conversions
@@ -312,13 +313,24 @@ BUILTIN(SIMDFloat32x4Lib, NotEqual, EntryNotEqual, FunctionInfo::None)
 BUILTIN(SIMDFloat32x4Lib, GreaterThan, EntryGreaterThan, FunctionInfo::None)
 BUILTIN(SIMDFloat32x4Lib, GreaterThanOrEqual, EntryGreaterThanOrEqual, FunctionInfo::None)
 // Others
+BUILTIN(SIMDFloat32x4Lib, Swizzle,    EntrySwizzle,    FunctionInfo::None)
 BUILTIN(SIMDFloat32x4Lib, Shuffle,    EntryShuffle,    FunctionInfo::None)
-BUILTIN(SIMDFloat32x4Lib, ShuffleMix, EntryShuffleMix, FunctionInfo::None)
 BUILTIN(SIMDFloat32x4Lib, Clamp,      EntryClamp,      FunctionInfo::None)
 BUILTIN(SIMDFloat32x4Lib, Select,     EntrySelect,     FunctionInfo::None)
 
+BUILTIN(SIMDFloat32x4Lib, Load,  EntryLoad,  FunctionInfo::None)
+BUILTIN(SIMDFloat32x4Lib, Load1, EntryLoad1, FunctionInfo::None)
+BUILTIN(SIMDFloat32x4Lib, Load2, EntryLoad2, FunctionInfo::None)
+BUILTIN(SIMDFloat32x4Lib, Load3, EntryLoad3, FunctionInfo::None)
+
+BUILTIN(SIMDFloat32x4Lib, Store,  EntryStore,  FunctionInfo::None)
+BUILTIN(SIMDFloat32x4Lib, Store1, EntryStore1, FunctionInfo::None)
+BUILTIN(SIMDFloat32x4Lib, Store2, EntryStore2, FunctionInfo::None)
+BUILTIN(SIMDFloat32x4Lib, Store3, EntryStore3, FunctionInfo::None)
+
 // SIMDInt32x4Lib entry points
 BUILTIN(SIMDInt32x4Lib, Int32x4, EntryInt32x4, FunctionInfo::None)
+BUILTIN(SIMDInt32x4Lib, Check,   EntryCheck,   FunctionInfo::None)
 BUILTIN(SIMDInt32x4Lib, Zero,    EntryZero,    FunctionInfo::None)
 BUILTIN(SIMDInt32x4Lib, Splat,   EntrySplat,   FunctionInfo::None)
 BUILTIN(SIMDInt32x4Lib, Bool,    EntryBool,    FunctionInfo::None)
@@ -359,15 +371,25 @@ BUILTIN(SIMDInt32x4Lib, ShiftLeft,            EntryShiftLeft,            Functio
 BUILTIN(SIMDInt32x4Lib, ShiftRightLogical,    EntryShiftRightLogical,    FunctionInfo::None)
 BUILTIN(SIMDInt32x4Lib, ShiftRightArithmetic, EntryShiftRightArithmetic, FunctionInfo::None)
 // Others
-BUILTIN(SIMDInt32x4Lib, Shuffle,    EntryShuffle,    FunctionInfo::None)
-BUILTIN(SIMDInt32x4Lib, ShuffleMix, EntryShuffleMix, FunctionInfo::None)
+BUILTIN(SIMDInt32x4Lib, Swizzle,    EntrySwizzle,    FunctionInfo::None)
+BUILTIN(SIMDInt32x4Lib, Shuffle,    EntryShuffle, FunctionInfo::None)
 BUILTIN(SIMDInt32x4Lib, Select,     EntrySelect,     FunctionInfo::None)
+
+BUILTIN(SIMDInt32x4Lib, Load,  EntryLoad, FunctionInfo::None)
+BUILTIN(SIMDInt32x4Lib, Load1, EntryLoad1, FunctionInfo::None)
+BUILTIN(SIMDInt32x4Lib, Load2, EntryLoad2, FunctionInfo::None)
+BUILTIN(SIMDInt32x4Lib, Load3, EntryLoad3, FunctionInfo::None)
+
+BUILTIN(SIMDInt32x4Lib, Store,  EntryStore, FunctionInfo::None)
+BUILTIN(SIMDInt32x4Lib, Store1, EntryStore1, FunctionInfo::None)
+BUILTIN(SIMDInt32x4Lib, Store2, EntryStore2, FunctionInfo::None)
+BUILTIN(SIMDInt32x4Lib, Store3, EntryStore3, FunctionInfo::None)
 
 // SIMDFloat64x2Lib entry points
 BUILTIN(SIMDFloat64x2Lib, Float64x2, EntryFloat64x2, FunctionInfo::None)
+BUILTIN(SIMDFloat64x2Lib, Check,     EntryCheck,     FunctionInfo::None)
 BUILTIN(SIMDFloat64x2Lib, Zero, EntryZero, FunctionInfo::None)
 BUILTIN(SIMDFloat64x2Lib, Splat, EntrySplat, FunctionInfo::None)
-
 BUILTIN(SIMDFloat64x2Lib, FromFloat32x4, EntryFromFloat32x4, FunctionInfo::None)
 BUILTIN(SIMDFloat64x2Lib, FromFloat32x4Bits, EntryFromFloat32x4Bits, FunctionInfo::None)
 BUILTIN(SIMDFloat64x2Lib, FromInt32x4, EntryFromInt32x4, FunctionInfo::None)
@@ -402,10 +424,17 @@ BUILTIN(SIMDFloat64x2Lib, NotEqual,           EntryNotEqual,           FunctionI
 BUILTIN(SIMDFloat64x2Lib, GreaterThan,        EntryGreaterThan,        FunctionInfo::None)
 BUILTIN(SIMDFloat64x2Lib, GreaterThanOrEqual, EntryGreaterThanOrEqual, FunctionInfo::None)
 // Others
-BUILTIN(SIMDFloat64x2Lib, Shuffle, EntryShuffle, FunctionInfo::None)
-BUILTIN(SIMDFloat64x2Lib, ShuffleMix, EntryShuffleMix, FunctionInfo::None)
-BUILTIN(SIMDFloat64x2Lib, Clamp, EntryClamp, FunctionInfo::None)
-BUILTIN(SIMDFloat64x2Lib, Select, EntrySelect, FunctionInfo::None)
+BUILTIN(SIMDFloat64x2Lib, Swizzle,  EntrySwizzle, FunctionInfo::None)
+BUILTIN(SIMDFloat64x2Lib, Shuffle,  EntryShuffle, FunctionInfo::None)
+BUILTIN(SIMDFloat64x2Lib, Clamp,    EntryClamp, FunctionInfo::None)
+BUILTIN(SIMDFloat64x2Lib, Select,   EntrySelect, FunctionInfo::None)
+
+BUILTIN(SIMDFloat64x2Lib, Load,  EntryLoad,  FunctionInfo::None)
+BUILTIN(SIMDFloat64x2Lib, Load1, EntryLoad1, FunctionInfo::None)
+
+BUILTIN(SIMDFloat64x2Lib, Store,  EntryStore,  FunctionInfo::None)
+BUILTIN(SIMDFloat64x2Lib, Store1, EntryStore1, FunctionInfo::None)
+
 
 // JavascriptFloat32x4 entry points
 BUILTIN(JavascriptSIMDFloat32x4, ToString, EntryToString, FunctionInfo::None)

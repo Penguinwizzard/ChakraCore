@@ -132,22 +132,21 @@ namespace Js
             if (SIMD_JS_FLAG)
             {
                 AsmJsSIMDFunction* simdSym;
-                simdSym = m.LookupSimdConstructor(target->name());
+                simdSym = m.LookupSimdTypeCheck(target->name());
                 // var x = f4(ffi.field)
                 if (simdSym)
                 {
-                    if (coercionNode->sxCall.argCount == 1)
+                    if (coercionNode->sxCall.argCount == simdSym->GetArgCount())
                     {
-
                         switch (simdSym->GetSimdBuiltInFunction())
                         {
-                        case AsmJsSIMDBuiltin_int32x4:
+                        case AsmJsSIMDBuiltin_int32x4_check:
                             *coercion = AsmJS_Int32x4;
                             break;
-                        case AsmJsSIMDBuiltin_float32x4:
+                        case AsmJsSIMDBuiltin_float32x4_check:
                             *coercion = AsmJS_Float32x4;
                             break;
-                        case AsmJsSIMDBuiltin_float64x2:
+                        case AsmJsSIMDBuiltin_float64x2_check:
                             *coercion = AsmJS_Float64x2;
                             break;
                         default:
@@ -166,6 +165,7 @@ namespace Js
                     }
 
                 }
+                // not a SIMD coercion, fall through
             }
 #endif
             *coercion = AsmJS_FRound;
@@ -685,13 +685,13 @@ namespace Js
                     // also checks if simd constructor
                     simdSym = m.LookupSimdConstructor(initNode->sxCall.pnodeTarget->name());
                     // call to simd constructor
-                    if (simdSym && initNode->sxCall.argCount != 1)
+                    if (simdSym)
                     {
                         // e.g. var x = f4(1.0, 2.0, 3.0, 4.0)
                         // validate args and define a SIMD symbol
                         return m.AddSimdValueVar(name, initNode, simdSym);
                     }
-                    // else it is FFI import: var x = f4(FFI.field), handled in CheckGlobalVariableInitImport
+                    // else it is FFI import: var x = f4check(FFI.field), handled in CheckGlobalVariableInitImport
                 }
             }
 #endif

@@ -441,7 +441,7 @@ LowererMD::GenerateFunctionObjectTest(IR::Instr * callInstr, IR::RegOpnd  *funct
             insertBeforeInstr = callLabel;
         }
 
-        this->m_lowerer->GenerateRuntimeTypeError(insertBeforeInstr, JSERR_NeedFunction);
+        this->m_lowerer->GenerateRuntimeError(insertBeforeInstr, JSERR_NeedFunction);
 
         if (continueAfterExLabel)
         {

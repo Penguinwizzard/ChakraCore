@@ -33,6 +33,7 @@ namespace Js
         void AsmCall         ( OpCodeAsmJs op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount, AsmJsRetType retType );
         void AsmSlot         ( OpCodeAsmJs op, RegSlot value, RegSlot instance, int32 slotId );
         void AsmTypedArr     ( OpCodeAsmJs op, RegSlot value, uint32 slotIndex, ArrayBufferView::ViewType viewType);
+        void AsmSimdTypedArr (OpCodeAsmJs op, RegSlot value, uint32 slotIndex, uint8 dataWidth, ArrayBufferView::ViewType viewType);
 
         void MarkAsmJsLabel(ByteCodeLabel labelID);
         void AsmJsUnsigned1(OpCodeAsmJs op, uint C1);
@@ -59,6 +60,7 @@ namespace Js
         template <typename SizePolicy> bool TryWriteAsmCall      ( OpCodeAsmJs op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount, AsmJsRetType retType );
         template <typename SizePolicy> bool TryWriteAsmSlot      ( OpCodeAsmJs op, RegSlot value, RegSlot instance, int32 slotId );
         template <typename SizePolicy> bool TryWriteAsmTypedArr  ( OpCodeAsmJs op, RegSlot value, uint32 slotIndex, ArrayBufferView::ViewType viewType);
+        template <typename SizePolicy> bool TryWriteAsmSimdTypedArr (OpCodeAsmJs op, RegSlot value, uint32 slotIndex, uint8 dataWidth, ArrayBufferView::ViewType viewType);
         template <typename SizePolicy> bool TryWriteAsmJsUnsigned1(OpCodeAsmJs op, uint C1);
         void AddJumpOffset(Js::OpCodeAsmJs op, ByteCodeLabel labelId, size_t fieldByteOffset);
     };

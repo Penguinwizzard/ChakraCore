@@ -163,7 +163,7 @@ EXDEF2    (NOPASMJS          , NopEx        , Empty                             
   //unary ops
   DEF2_WMS( SIMD_F4_1toF4_1  , Simd128_Ld_F4        , (AsmJsSIMDValue)                                   )
   DEF2_WMS( SIMD_I4_1toI4_1  , Simd128_Ld_I4        , (AsmJsSIMDValue)                                   )
-  DEF2_WMS( SIMD_D2_1toD2_1  , Simd128_Ld_D2        , (AsmJsSIMDValue)                                   )
+  EXDEF2_WMS( SIMD_D2_1toD2_1  , Simd128_Ld_D2        , (AsmJsSIMDValue)                                   )
                                
   DEF2_WMS( SIMD_F4toF4_1    , Simd128_FloatsToF4   , SIMDFloat32x4Operation::OpFloat32x4                )
   DEF2_WMS( SIMD_I4toI4_1    , Simd128_IntsToI4     , SIMDInt32x4Operation::OpInt32x4                    )
@@ -171,11 +171,11 @@ EXDEF2    (NOPASMJS          , NopEx        , Empty                             
                                
   DEF4_WMS( TEMPLATE_ASMJS   , Simd128_LdSlot_F4    , OP_LdSlotPrimitive          , ElementSlot, AsmJsSIMDValue)
   DEF4_WMS( TEMPLATE_ASMJS   , Simd128_LdSlot_I4    , OP_LdSlotPrimitive          , ElementSlot, AsmJsSIMDValue)
-  DEF4_WMS( TEMPLATE_ASMJS   , Simd128_LdSlot_D2    , OP_LdSlotPrimitive          , ElementSlot, AsmJsSIMDValue)
+  EXDEF4_WMS( TEMPLATE_ASMJS   , Simd128_LdSlot_D2    , OP_LdSlotPrimitive          , ElementSlot, AsmJsSIMDValue)
                                
   DEF4_WMS(TEMPLATE_ASMJS    , Simd128_StSlot_F4    , OP_StSlotPrimitive          , ElementSlot, AsmJsSIMDValue)
   DEF4_WMS(TEMPLATE_ASMJS    , Simd128_StSlot_I4    , OP_StSlotPrimitive          , ElementSlot, AsmJsSIMDValue)
-  DEF4_WMS(TEMPLATE_ASMJS    , Simd128_StSlot_D2    , OP_StSlotPrimitive          , ElementSlot, AsmJsSIMDValue)
+  EXDEF4_WMS(TEMPLATE_ASMJS    , Simd128_StSlot_D2    , OP_StSlotPrimitive          , ElementSlot, AsmJsSIMDValue)
 
   DEF2_WMS( SIMD_F4_1toF4_1  , Simd128_Return_F4    , (AsmJsSIMDValue)                                   )
   DEF2_WMS( SIMD_I4_1toI4_1  , Simd128_Return_I4    , (AsmJsSIMDValue)                                   )
@@ -307,5 +307,32 @@ EXDEF2    (NOPASMJS          , NopEx        , Empty                             
                                    
   DEF2_WMS   ( SIMD_F4_1toF4_1   , Simd128_I_Conv_VTF4     , (AsmJsSIMDValue)                            )       
   DEF2_WMS   ( SIMD_I4_1toI4_1   , Simd128_I_Conv_VTI4     , (AsmJsSIMDValue)                            )         
-  DEF2_WMS   ( SIMD_D2_1toD2_1   , Simd128_I_Conv_VTD2     , (AsmJsSIMDValue)                            )       
+  DEF2_WMS   ( SIMD_D2_1toD2_1   , Simd128_I_Conv_VTD2     , (AsmJsSIMDValue)                            )    
+
+
+  DEF2_WMS   ( SIMD_F4_1I4toF4_1   , Simd128_Swizzle_F4      , SIMD128InnerShuffle                       )
+  DEF2_WMS   ( SIMD_F4_2I4toF4_1   , Simd128_Shuffle_F4      , SIMD128InnerShuffle                       )
+  
+  DEF2_WMS   ( SIMD_I4_1I4toI4_1   , Simd128_Swizzle_I4      , SIMD128InnerShuffle                       )
+  DEF2_WMS   ( SIMD_I4_2I4toI4_1   , Simd128_Shuffle_I4      , SIMD128InnerShuffle                       )
+  
+  // Extended opcodes
+  
+  EXDEF2_WMS (  SIMD_D2_1I2toD2_1  , Simd128_Swizzle_D2      , SIMD128InnerShuffle                        )
+  EXDEF2_WMS (  SIMD_D2_2I2toD2_1  , Simd128_Shuffle_D2      , SIMD128InnerShuffle                        )
+  
+
+  EXDEF3_WMS   ( CUSTOM_ASMJS      , Simd128_LdArr_F4        , OP_SimdLdArrGeneric , AsmSimdTypedArr       )
+  EXDEF3_WMS   ( CUSTOM_ASMJS      , Simd128_LdArr_I4        , OP_SimdLdArrGeneric , AsmSimdTypedArr       )
+  EXDEF3_WMS   ( CUSTOM_ASMJS      , Simd128_LdArr_D2        , OP_SimdLdArrGeneric , AsmSimdTypedArr       )
+  EXDEF3_WMS   ( CUSTOM_ASMJS      , Simd128_StArr_F4        , OP_SimdStArrGeneric , AsmSimdTypedArr       )
+  EXDEF3_WMS   ( CUSTOM_ASMJS      , Simd128_StArr_I4        , OP_SimdStArrGeneric , AsmSimdTypedArr       )
+  EXDEF3_WMS   ( CUSTOM_ASMJS      , Simd128_StArr_D2        , OP_SimdStArrGeneric , AsmSimdTypedArr       )
+  
+  EXDEF3_WMS   ( CUSTOM_ASMJS      , Simd128_LdArrConst_F4        , OP_SimdLdArrConstIndex  , AsmSimdTypedArr       )
+  EXDEF3_WMS   ( CUSTOM_ASMJS      , Simd128_LdArrConst_I4        , OP_SimdLdArrConstIndex  , AsmSimdTypedArr       )
+  EXDEF3_WMS   ( CUSTOM_ASMJS      , Simd128_LdArrConst_D2        , OP_SimdLdArrConstIndex  , AsmSimdTypedArr       )
+  EXDEF3_WMS   ( CUSTOM_ASMJS      , Simd128_StArrConst_F4        , OP_SimdStArrConstIndex  , AsmSimdTypedArr       )
+  EXDEF3_WMS   ( CUSTOM_ASMJS      , Simd128_StArrConst_I4        , OP_SimdStArrConstIndex  , AsmSimdTypedArr       )
+  EXDEF3_WMS   ( CUSTOM_ASMJS      , Simd128_StArrConst_D2        , OP_SimdStArrConstIndex  , AsmSimdTypedArr       )
 #endif

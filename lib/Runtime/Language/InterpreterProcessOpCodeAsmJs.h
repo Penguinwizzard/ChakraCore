@@ -825,5 +825,66 @@ if (switchProfileMode) \
     break; \
     }
 #define PROCESS_SIMD_D2_1toI1(name, func, suffix) PROCESS_SIMD_D2_1toI1_COMMON(name, func, suffix)
+
+
+// f4swizzle
+#define PROCESS_SIMD_F4_1I4toF4_1_COMMON(name, func, suffix) \
+    case OpCodeAsmJs::name: \
+    { \
+    PROCESS_READ_LAYOUT_ASMJS(name, Float32x4_2Int4, suffix); \
+    SetRegRawSimd(playout->F4_0, func(GetRegRawSimd(playout->F4_1), GetRegRawSimd(playout->F4_1), GetRegRawInt(playout->I2), GetRegRawInt(playout->I3), GetRegRawInt(playout->I4), GetRegRawInt(playout->I5))); \
+    break; \
+    }
+#define PROCESS_SIMD_F4_1I4toF4_1(name, func, suffix) PROCESS_SIMD_F4_1I4toF4_1_COMMON(name, func, suffix)
+
+// f4shuffle
+#define PROCESS_SIMD_F4_2I4toF4_1_COMMON(name, func, suffix) \
+    case OpCodeAsmJs::name: \
+    { \
+    PROCESS_READ_LAYOUT_ASMJS(name, Float32x4_3Int4, suffix); \
+    SetRegRawSimd(playout->F4_0, func(GetRegRawSimd(playout->F4_1), GetRegRawSimd(playout->F4_2), GetRegRawInt(playout->I3), GetRegRawInt(playout->I4), GetRegRawInt(playout->I5), GetRegRawInt(playout->I6))); \
+    break; \
+    }
+#define PROCESS_SIMD_F4_1I4toF4_1(name, func, suffix) PROCESS_SIMD_F4_1I4toF4_1_COMMON(name, func, suffix)
+
+// i4swizzle
+#define PROCESS_SIMD_I4_1I4toI4_1_COMMON(name, func, suffix) \
+    case OpCodeAsmJs::name: \
+    { \
+    PROCESS_READ_LAYOUT_ASMJS(name, Int32x4_2Int4, suffix); \
+    SetRegRawSimd(playout->I4_0, func(GetRegRawSimd(playout->I4_1), GetRegRawSimd(playout->I4_1), GetRegRawInt(playout->I2), GetRegRawInt(playout->I3), GetRegRawInt(playout->I4), GetRegRawInt(playout->I5))); \
+    break; \
+    }
+#define PROCESS_SIMD_I4_1I4toI4_1(name, func, suffix) PROCESS_SIMD_I4_1I4toI4_1_COMMON(name, func, suffix)
+
+// i4shuffle
+#define PROCESS_SIMD_I4_2I4toI4_1_COMMON(name, func, suffix) \
+    case OpCodeAsmJs::name: \
+    { \
+    PROCESS_READ_LAYOUT_ASMJS(name, Int32x4_3Int4, suffix); \
+    SetRegRawSimd(playout->I4_0, func(GetRegRawSimd(playout->I4_1), GetRegRawSimd(playout->I4_2), GetRegRawInt(playout->I3), GetRegRawInt(playout->I4), GetRegRawInt(playout->I5), GetRegRawInt(playout->I6))); \
+    break; \
+    }
+#define PROCESS_SIMD_I4_1I4toI4_1(name, func, suffix) PROCESS_SIMD_I4_1I4toI4_1_COMMON(name, func, suffix)
+
+// d2swizzle
+#define PROCESS_SIMD_D2_1I2toD2_1_COMMON(name, func, suffix) \
+    case OpCodeAsmJs::name: \
+    { \
+    PROCESS_READ_LAYOUT_ASMJS(name, Float64x2_2Int2, suffix); \
+    SetRegRawSimd(playout->D2_0, func<2>(GetRegRawSimd(playout->D2_1), GetRegRawSimd(playout->D2_1), GetRegRawInt(playout->I2), GetRegRawInt(playout->I3), 0, 0)); \
+    break; \
+    }
+#define PROCESS_SIMD_D2_1I2toD2_1(name, func, suffix) PROCESS_SIMD_D2_1I2toD2_1_COMMON(name, func, suffix)
+
+// d2shuffle
+#define PROCESS_SIMD_D2_2I2toD2_1_COMMON(name, func, suffix) \
+    case OpCodeAsmJs::name: \
+    { \
+    PROCESS_READ_LAYOUT_ASMJS(name, Float64x2_3Int2, suffix); \
+    SetRegRawSimd(playout->D2_0, func<2>(GetRegRawSimd(playout->D2_1), GetRegRawSimd(playout->D2_2), GetRegRawInt(playout->I3), GetRegRawInt(playout->I4), 0, 0)); \
+    break; \
+    }
+#define PROCESS_SIMD_D2_2I4toD2_1(name, func, suffix) PROCESS_SIMD_D2_2I2toD2_1COMMON(name, func, suffix)
 #endif
 //////////////////////////////////////////////////////////////////////////

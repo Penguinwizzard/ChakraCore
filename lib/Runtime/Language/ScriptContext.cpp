@@ -4641,6 +4641,7 @@ namespace Js
 
         // Float32x4
         REG_OBJECTS_LIB_FUNC(float32x4, SIMDFloat32x4Lib::EntryFloat32x4);
+        REG_OBJECTS_LIB_FUNC(check, SIMDFloat32x4Lib::EntryCheck);
         REG_OBJECTS_LIB_FUNC(zero, SIMDFloat32x4Lib::EntryZero);
         REG_OBJECTS_LIB_FUNC(splat, SIMDFloat32x4Lib::EntrySplat);
         REG_OBJECTS_LIB_FUNC(withX, SIMDFloat32x4Lib::EntryWithX);
@@ -4673,12 +4674,13 @@ namespace Js
         REG_OBJECTS_LIB_FUNC(notEqual, SIMDFloat32x4Lib::EntryNotEqual);
         REG_OBJECTS_LIB_FUNC(greaterThan, SIMDFloat32x4Lib::EntryGreaterThan);
         REG_OBJECTS_LIB_FUNC(greaterThanOrEqual, SIMDFloat32x4Lib::EntryGreaterThanOrEqual);
+        REG_OBJECTS_LIB_FUNC(swizzle, SIMDFloat32x4Lib::EntrySwizzle);
         REG_OBJECTS_LIB_FUNC(shuffle, SIMDFloat32x4Lib::EntryShuffle);
-        REG_OBJECTS_LIB_FUNC(shuffleMix, SIMDFloat32x4Lib::EntryShuffleMix);
         REG_OBJECTS_LIB_FUNC(clamp, SIMDFloat32x4Lib::EntryClamp);
         REG_OBJECTS_LIB_FUNC(select, SIMDFloat32x4Lib::EntrySelect);
         // Float64x2
         REG_OBJECTS_LIB_FUNC(float64x2, SIMDFloat64x2Lib::EntryFloat64x2);
+        REG_OBJECTS_LIB_FUNC(check, SIMDFloat64x2Lib::EntryCheck);
         REG_OBJECTS_LIB_FUNC(zero, SIMDFloat64x2Lib::EntryZero);
         REG_OBJECTS_LIB_FUNC(splat, SIMDFloat64x2Lib::EntrySplat);
         REG_OBJECTS_LIB_FUNC(withX, SIMDFloat64x2Lib::EntryWithX);
@@ -4705,12 +4707,13 @@ namespace Js
         REG_OBJECTS_LIB_FUNC(notEqual, SIMDFloat64x2Lib::EntryNotEqual);
         REG_OBJECTS_LIB_FUNC(greaterThan, SIMDFloat64x2Lib::EntryGreaterThan);
         REG_OBJECTS_LIB_FUNC(greaterThanOrEqual, SIMDFloat64x2Lib::EntryGreaterThanOrEqual);
+        REG_OBJECTS_LIB_FUNC(swizzle, SIMDFloat64x2Lib::EntrySwizzle);
         REG_OBJECTS_LIB_FUNC(shuffle, SIMDFloat64x2Lib::EntryShuffle);
-        REG_OBJECTS_LIB_FUNC(shuffleMix, SIMDFloat64x2Lib::EntryShuffleMix);
         REG_OBJECTS_LIB_FUNC(clamp, SIMDFloat64x2Lib::EntryClamp);
         REG_OBJECTS_LIB_FUNC(select, SIMDFloat64x2Lib::EntrySelect);
         // Int32x4
         REG_OBJECTS_LIB_FUNC(int32x4, SIMDInt32x4Lib::EntryInt32x4);
+        REG_OBJECTS_LIB_FUNC(check, SIMDInt32x4Lib::EntryCheck);
         REG_OBJECTS_LIB_FUNC(zero, SIMDInt32x4Lib::EntryZero);
         REG_OBJECTS_LIB_FUNC(splat, SIMDInt32x4Lib::EntrySplat);
         REG_OBJECTS_LIB_FUNC(bool_, SIMDInt32x4Lib::EntryBool);
@@ -4737,8 +4740,8 @@ namespace Js
         REG_OBJECTS_LIB_FUNC(lessThan, SIMDInt32x4Lib::EntryLessThan);
         REG_OBJECTS_LIB_FUNC(equal, SIMDInt32x4Lib::EntryEqual);
         REG_OBJECTS_LIB_FUNC(greaterThan, SIMDInt32x4Lib::EntryGreaterThan);
+        REG_OBJECTS_LIB_FUNC(swizzle, SIMDInt32x4Lib::EntrySwizzle);
         REG_OBJECTS_LIB_FUNC(shuffle, SIMDInt32x4Lib::EntryShuffle);
-        REG_OBJECTS_LIB_FUNC(shuffleMix, SIMDInt32x4Lib::EntryShuffleMix);
         REG_OBJECTS_LIB_FUNC(shiftLeft, SIMDInt32x4Lib::EntryShiftLeft);
         REG_OBJECTS_LIB_FUNC(shiftRightLogical, SIMDInt32x4Lib::EntryShiftRightLogical);
         REG_OBJECTS_LIB_FUNC(shiftRightArithmetic, SIMDInt32x4Lib::EntryShiftRightArithmetic);
