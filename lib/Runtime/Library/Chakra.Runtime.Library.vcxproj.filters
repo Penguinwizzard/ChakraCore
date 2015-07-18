@@ -323,6 +323,7 @@
     <None Include="JavascriptRegularExpression.inl" />
     <None Include="JavascriptString.inl" />
     <None Include="JavascriptVariantDate.inl" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="arm">
@@ -359,5 +360,13 @@
     <MASM Include="$(MSBuildThisFileDirectory)amd64\javascriptfunctiona.asm">
       <Filter>amd64</Filter>
     </MASM>
+  </ItemGroup>
+  <ItemGroup>
+    <ARMASM Include="$(MSBuildThisFileDirectory)arm\arm_DeferredDeserializeThunk.asm" />
+    <ARMASM Include="$(MSBuildThisFileDirectory)arm\arm_CallFunction.asm" />
+    <ARMASM Include="$(MSBuildThisFileDirectory)arm\arm_DeferredParsingThunk.asm" />
+    <ARMASM Include="$(MSBuildThisFileDirectory)arm64\arm64_DeferredDeserializeThunk.asm" />
+    <ARMASM Include="$(MSBuildThisFileDirectory)arm64\arm64_CallFunction.asm" />
+    <ARMASM Include="$(MSBuildThisFileDirectory)arm64\arm64_DeferredParsingThunk.asm" />
   </ItemGroup>
 </Project>

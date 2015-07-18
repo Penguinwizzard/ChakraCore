@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Condition="'$(ChakraBuildPathImported)'!='true'" Project="$(SolutionDir)Chakra.Build.Paths.props"/>
+  <Import Condition="'$(ChakraBuildPathImported)'!='true'" Project="$(SolutionDir)Chakra.Build.Paths.props" />
   <Import Project="$(BuildConfig_ChakraBuildProjectConfigurationProps)" />
   <PropertyGroup Label="Globals">
     <TargetName>Chakra.Runtime.Library</TargetName>
@@ -82,7 +82,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptArrayIterator.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptBuiltInFunctions.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptEnumeratorIterator.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptErrorDebug.cpp" />      
+    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptErrorDebug.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptExternalFunction.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptGenerator.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptGeneratorFunction.cpp" />
@@ -398,7 +398,7 @@
     <None Include="JavascriptVariantDate.inl" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\publish\Publish.vcxproj">
+    <ProjectReference Condition="'$(USE_EXTERNAL_DEPENDENCIES)'!='yes'" Include="..\..\..\..\publish\Publish.vcxproj">
       <Project>{1876e800-ad77-48c4-a2f7-e5265f24ac35}</Project>
     </ProjectReference>
   </ItemGroup>

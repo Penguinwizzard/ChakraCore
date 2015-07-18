@@ -41,6 +41,7 @@
     <None Include="NumberUtilities.inl" />
     <None Include="Tick.inl" />
     <None Include="vtinfo.inl" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="arm">

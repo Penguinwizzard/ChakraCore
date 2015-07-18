@@ -12,7 +12,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />  
   <PropertyGroup Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
-  </PropertyGroup> 
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">    
     <Import Project="$(BuildConfig_ARMASM_Path)armasm.props" />
@@ -20,10 +20,10 @@
   <Import Project="$(BuildConfigPropsPath)Chakra.Build.props" />
   <ImportGroup Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup> 
+  </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>       
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
@@ -37,15 +37,15 @@
       <AdditionalIncludeDirectories>$(ComIncPath)\winrt;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
     </ClCompile>
-  </ItemDefinitionGroup>   
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)Api.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)cfglogger.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)DaylightTimeHelper.cpp" />    
+    <ClCompile Include="$(MSBuildThisFileDirectory)DaylightTimeHelper.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)DateUtilities.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Event.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Int32Math.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)Jobs.cpp" />    
+    <ClCompile Include="$(MSBuildThisFileDirectory)Jobs.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)MathUtil.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)NumberUtilities.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)NumberUtilities_strtod.cpp" />
@@ -53,8 +53,8 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Tick.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)vtinfo.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\StdAfx.cpp">
-      <PrecompiledHeader>Create</PrecompiledHeader>      
-    </ClCompile>    
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="commoninl.h" />
@@ -89,7 +89,7 @@
     </ARMASM>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\dep\manifests-inbox.vcxproj">
+    <ProjectReference Condition="'$(USE_EXTERNAL_DEPENDENCIES)'!='yes'" Include="..\..\..\..\dep\manifests-inbox.vcxproj">
       <Project>{14bbb4b1-da6a-4c69-bf07-f8d4865e0815}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\..\Manifests\Manifests.vcxproj">

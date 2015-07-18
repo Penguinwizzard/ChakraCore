@@ -153,6 +153,7 @@
     <None Include="JavascriptOperators.inl" />
     <None Include="ScriptContext.inl" />
     <None Include="DiagHelperMethodWrapper.inl" />
+    <None Include="packages.config" />
     <None Include="amd64\stackframe.inl">
       <Filter>amd64</Filter>
     </None>

@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Condition="'$(ChakraBuildPathImported)'!='true'" Project="$(SolutionDir)Chakra.Build.Paths.props"/>
+  <Import Condition="'$(ChakraBuildPathImported)'!='true'" Project="$(SolutionDir)Chakra.Build.Paths.props" />
   <Import Project="$(BuildConfig_ChakraBuildProjectConfigurationProps)" />
   <PropertyGroup Label="Globals">
     <TargetName>Chakra.Parser</TargetName>
@@ -123,7 +123,7 @@
       <LibCompiled>false</LibCompiled>
       <ForcedIncludeFiles></ForcedIncludeFiles>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>    
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="CharTrie.inl" />
@@ -133,7 +133,7 @@
     <ProjectReference Include="..\..\Manifests\Manifests.vcxproj">
       <Project>{bcc5c029-2f2c-4eaa-8e60-664d72766936}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\publish\Publish.vcxproj">
+    <ProjectReference Condition="'$(USE_EXTERNAL_DEPENDENCIES)'!='yes'" Include="..\..\..\publish\Publish.vcxproj">
       <Project>{1876e800-ad77-48c4-a2f7-e5265f24ac35}</Project>
     </ProjectReference>
   </ItemGroup>

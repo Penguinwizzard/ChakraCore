@@ -18,7 +18,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)BackEndOpcodeAttr.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)BackwardPass.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Debug.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)DisassembleX86.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)EmitBuffer.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Encoder.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)FlowGraph.cpp" />
@@ -314,6 +313,7 @@
     <None Include="IR.inl" />
     <None Include="Opnd.inl" />
     <None Include="Sym.inl" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="arm">

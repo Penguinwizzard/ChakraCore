@@ -24,10 +24,10 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)..;$(ChakraManifestsIncludeDirectory);$(ManifestsInboxIncludeDirectory);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>        
+      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)..;$(ChakraManifestsIncludeDirectory);$(ManifestsInboxIncludeDirectory);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
     </ClCompile>
-  </ItemDefinitionGroup>  
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)ExceptionCheck.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)reporterror.cpp" />
@@ -40,7 +40,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\dep\manifests-inbox.vcxproj">
+    <ProjectReference Condition="'$(USE_EXTERNAL_DEPENDENCIES)'!='yes'" Include="..\..\..\..\dep\manifests-inbox.vcxproj">
       <Project>{14bbb4b1-da6a-4c69-bf07-f8d4865e0815}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\..\Manifests\Manifests.vcxproj">

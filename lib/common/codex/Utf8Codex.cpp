@@ -2,7 +2,8 @@
 // Copyright (C) 1995 - 2009 by Microsoft Corporation.  All rights reserved.
 //----------------------------------------------------------------------------
 #include "Utf8Codex.h"
-#include <IEDebugBreak.h>
+
+extern void CodexAssert(bool condition);
 
 namespace utf8  
 {
@@ -25,7 +26,7 @@ namespace utf8
 
     inline size_t EncodedBytes(wchar_t prefix)
     {
-         ASSERT(0 == (prefix & 0xFF00)); // prefix must really be a byte. We use wchar_t for as a convience for the API.
+         CodexAssert(0 == (prefix & 0xFF00)); // prefix must really be a byte. We use wchar_t for as a convience for the API.
 
         // The number of bytes in an UTF8 encoding is determined by the 4 high-order bits of the first byte.
         // 0xxx -> 1

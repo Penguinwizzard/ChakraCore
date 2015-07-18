@@ -17,20 +17,21 @@
   <Import Project="$(BuildConfigPropsPath)Chakra.Build.props" />
   <ImportGroup Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>  
+  </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>    
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)..;$(ChakraManifestsIncludeDirectory);$(ManifestsInboxIncludeDirectory);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>        
+      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)..;$(ChakraManifestsIncludeDirectory);$(ManifestsInboxIncludeDirectory);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
     </ClCompile>
-  </ItemDefinitionGroup>  
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)BinaryFeatureControl.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)CmdParser.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)CodexAssert.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ConfigFlagsTable.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ConfigParser.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)DbgHelpSymbolManager.cpp" />
@@ -46,7 +47,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)StackBackTrace.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)SysInfo.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\StdAfx.cpp">
-      <PrecompiledHeader>Create</PrecompiledHeader>      
+      <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -71,13 +72,13 @@
     <ClInclude Include="ProfileMemory.h" />
     <ClInclude Include="StackBackTrace.h" />
     <ClInclude Include="SysInfo.h" />
-    <ClInclude Include="..\CriticalSection.h" />   
+    <ClInclude Include="..\CriticalSection.h" />
     <ClInclude Include="..\DictionaryStats.h" />
     <ClInclude Include="..\EnumClassHelp.h" />
     <ClInclude Include="..\Assertions.h" />
-    <ClInclude Include="..\BackEndAPI.h" />   
-    <ClInclude Include="..\Common.h" />    
-    <ClInclude Include="..\ConfigFlagsList.h" />   
+    <ClInclude Include="..\BackEndAPI.h" />
+    <ClInclude Include="..\Common.h" />
+    <ClInclude Include="..\ConfigFlagsList.h" />
     <ClInclude Include="..\EnumHelp.h" />
     <ClInclude Include="..\StdAfx.h" />
     <ClInclude Include="..\TargetVer.h" />
@@ -89,7 +90,7 @@
     <None Include="ProfileMemory.inl" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\dep\manifests-inbox.vcxproj">
+    <ProjectReference Condition="'$(USE_EXTERNAL_DEPENDENCIES)'!='yes'" Include="..\..\..\..\dep\manifests-inbox.vcxproj">
       <Project>{14bbb4b1-da6a-4c69-bf07-f8d4865e0815}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\..\Manifests\Manifests.vcxproj">
