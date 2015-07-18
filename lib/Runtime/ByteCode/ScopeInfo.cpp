@@ -268,28 +268,54 @@ namespace Js {
         }
 
         // Load scope symbols
+        // On first access to the scopeinfo, replace the ID's with PropertyRecord*'s to save the dictionary lookup
+        // on later accesses. Replace them all before allocating Symbol's to prevent inconsistency on OOM.
+        if (!this->areNamesCached && !PHASE_OFF1(Js::CacheScopeInfoNamesPhase))
+        {
+            for (int i = 0; i < symbolCount; i++)
+            {
+                PropertyId propertyId = GetSymbolId(i);
+                if (propertyId != 0) // There may be empty slots, e.g. "arguments" may have no slot
+                {
+                    PropertyRecord const* name = scriptContext->GetPropertyName(propertyId);
+                    this->SetPropertyName(i, name);
+                }
+            }
+            this->areNamesCached = true;
+        }
+
         for (int i = 0; i < symbolCount; i++)
         {
-            PropertyId propertyId = GetSymbolId(i);
-            if (propertyId != 0) // There may be empty slots, e.g. "arguments" may have no slot
+            PropertyRecord const* name = nullptr;
+            if (this->areNamesCached)
             {
-                PropertyRecord const* name = scriptContext->GetPropertyName(propertyId);
+                name = this->GetPropertyName(i);
+            }
+            else
+            {
+                PropertyId propertyId = GetSymbolId(i);
+                if (propertyId != 0) // There may be empty slots, e.g. "arguments" may have no slot
+                {
+                    name = scriptContext->GetPropertyName(propertyId);
+                }
+            }
 
+            if (name != nullptr)
+            {
                 SymbolType symbolType = GetSymbolType(i);
                 SymbolName symName(name->GetBuffer(), name->GetLength());
-                Symbol* sym = Anew(alloc, Symbol, symName, NULL, symbolType);
-
-                scope->AddNewSymbol(sym);
+                Symbol *sym = Anew(alloc, Symbol, symName, NULL, symbolType);
+                
                 sym->SetScopeSlot(static_cast<PropertyId>(i));
                 sym->SetIsBlockVar(GetIsBlockVariable(i));
-
-                if (parser)
-                {
-                    parser->RestorePidRefForSym(sym);
-                }
                 if (GetHasFuncAssignment(i))
                 {
                     sym->RestoreHasFuncAssignment();
+                }
+                scope->AddNewSymbol(sym);
+                if (parser)
+                {
+                    parser->RestorePidRefForSym(sym);
                 }
 
                 TRACE_BYTECODE(L"%12s %d\n", sym->GetName().GetBuffer(), sym->GetScopeSlot());

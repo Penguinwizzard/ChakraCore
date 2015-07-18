@@ -19,7 +19,11 @@ namespace Js {
 
         struct SymbolInfo
         {
-            PropertyId propertyId;
+            union
+            {
+                PropertyId propertyId;
+                PropertyRecord const* name;
+            };
             SymbolType symbolType;
             bool hasFuncAssignment;
             bool isBlockVariable;
@@ -35,6 +39,7 @@ namespace Js {
         BYTE mustInstantiate:1;         // The scope must be instantiated as an object/array
         BYTE isCached:1;                // indicates that local vars and functions are cached across invocations
         BYTE isGlobalEval:1;
+        BYTE areNamesCached:1;
 
         Scope *scope;
         int scopeId;
@@ -43,7 +48,7 @@ namespace Js {
 
     private:
         ScopeInfo(FunctionBody * parent, int symbolCount)
-            : parent(parent), funcExprScopeInfo(nullptr), paramScopeInfo(nullptr), symbolCount(symbolCount), scope(nullptr)
+            : parent(parent), funcExprScopeInfo(nullptr), paramScopeInfo(nullptr), symbolCount(symbolCount), scope(nullptr), areNamesCached(false)
         {
         }
 
@@ -59,30 +64,42 @@ namespace Js {
 
         void SetSymbolId(int i, PropertyId propertyId)
         {
+            Assert(!areNamesCached);
             Assert(i >= 0 && i < symbolCount);
             symbols[i].propertyId = propertyId;
         }
 
         void SetSymbolType(int i, SymbolType symbolType)
         {
+            Assert(!areNamesCached);
             Assert(i >= 0 && i < symbolCount);
             symbols[i].symbolType = symbolType;
         }
 
         void SetHasFuncAssignment(int i, bool has)
         {
+            Assert(!areNamesCached);
             Assert(i >= 0 && i < symbolCount);
             symbols[i].hasFuncAssignment = has;
         }
 
         void SetIsBlockVariable(int i, bool is)
         {
+            Assert(!areNamesCached);
             Assert(i >= 0 && i < symbolCount);
             symbols[i].isBlockVariable = is;
         }
 
+        void SetPropertyName(int i, PropertyRecord const* name)
+        {
+            Assert(!areNamesCached);
+            Assert(i >= 0 && i < symbolCount);
+            symbols[i].name = name;
+        }
+
         PropertyId GetSymbolId(int i) const
         {
+            Assert(!areNamesCached);
             Assert(i >= 0 && i < symbolCount);
             return symbols[i].propertyId;
         }
@@ -103,6 +120,13 @@ namespace Js {
         {
             Assert(i >= 0 && i < symbolCount);
             return symbols[i].isBlockVariable;
+        }
+
+        PropertyRecord const* GetPropertyName(int i)
+        {
+            Assert(areNamesCached);
+            Assert(i >= 0 && i < symbolCount);
+            return symbols[i].name;
         }
 
         void SaveSymbolInfo(Symbol* sym, MapSymbolData* mapSymbolData);
