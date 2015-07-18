@@ -75,7 +75,6 @@ Parser::Parser(Js::ScriptContext* scriptContext, BOOL strictMode, PageAllocator 
     m_originalLength = 0;
     m_nextFunctionId = null;
     m_errorCallback = NULL;
-    m_commentCallback = NULL;
     m_uncertainStructure = FALSE;
     currBackgroundParseItem = nullptr;
     backgroundParseItems = nullptr;

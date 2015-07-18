@@ -238,8 +238,6 @@ private:
 
     ParseErrorCallback  m_errorCallback;
     void *              m_errorCallbackData;
-    CommentCallback     m_commentCallback;
-    void*               m_commentCallbackData;    
     BOOL                m_uncertainStructure;
     bool                m_hasParallelJob;
     bool                m_doingFastScan;    

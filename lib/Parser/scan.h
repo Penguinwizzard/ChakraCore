@@ -570,12 +570,6 @@ public:
         m_line = lineNumber;
     }
 
-    void SetCommentCallback(CommentCallback callback, void *data)
-    {
-        m_commentCallback = callback;
-        m_commentCallbackData = data;
-    }
-
     // IScanner methods
     virtual void GetErrorLineInfo(__out long& ichMin, __out long& ichLim, __out long& line, __out long& ichMinLine)
     {
@@ -710,8 +704,6 @@ private:
     BOOL m_fNextStringTemplateIsTagged:1;   // the next string template scanned has a tag (must create raw strings)
     BYTE m_DeferredParseFlags:2;            // suppressStrPid and suppressIdPid    
     charcount_t m_ichCheck;             // character at which completion is to be computed.
-    CommentCallback m_commentCallback;  // Called whenever there is a comment
-    void *m_commentCallbackData;        // User specified data to pass to m_commentCallback;
     bool es6UnicodeMode;                // True if ES6Unicode Extensions are enabled.
     bool m_fYieldIsKeyword;             // Whether to treat 'yield' as an identifier or keyword
 

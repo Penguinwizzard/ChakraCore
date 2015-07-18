@@ -150,8 +150,6 @@ Scanner<EncodingPolicy>::Scanner(Parser* parser, HashTbl *phtbl, Token *ptoken, 
 
     m_ichMinError = 0;
     m_ichLimError = 0;
-
-    m_commentCallback = NULL;       
     
     m_tempChBuf.m_pscanner = this;
     m_tempChBufSecondary.m_pscanner = this;
@@ -1798,7 +1796,6 @@ tokens Scanner<EncodingPolicy>::ScanCore(bool identifyKwds)
     tokens token;
     m_fHadEol = FALSE;
     CharTypes chType;
-    bool commentSeen = false;
     charcount_t commentStartLine;
     
     if (m_scanState && *p != 0)
@@ -2269,15 +2266,7 @@ LCommentLineBreak:
 
                     break;
                 }
-                if (m_commentCallback)
-                {
-                    m_currentCharacter = p; // Set so IchLimTok() returns the correct value.
-                    // TODO (andrewau) handle XML comment typedef
-                    HRESULT cchr = m_commentCallback(m_commentCallbackData, firstChar, 0, false, IchMinTok(), IchLimTok(), commentSeen, false, m_line, m_line);
-                    if (FAILED(cchr))
-                        Error(cchr);
-                }
-                commentSeen = true;
+                
                 continue;
 
             case '*':
@@ -2303,14 +2292,6 @@ LMultiLineComment:
                     // of deciding whether to defer AST and byte code generation.
                     m_parser->ReduceDeferredScriptLength((ULONG)(pchT - m_pchMinTok));
                     p = pchT;
-                    if (m_commentCallback)
-                    {
-                        m_currentCharacter = p; // Set so IchLimTok() returns the correct value.
-                        HRESULT cchr = m_commentCallback(m_commentCallbackData, firstChar, secondChar, containTypeDef, IchMinTok(), IchLimTok(), commentSeen, true, commentStartLine, m_line);
-                        if (FAILED(cchr))
-                            Error(cchr);
-                    }
-                    commentSeen = true;
                     goto LLoop;
                 }
                 p = pchT;
