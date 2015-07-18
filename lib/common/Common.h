@@ -419,7 +419,7 @@ private:
 #include "Common\DaylightTimeHelper.h"
 #include "Common\DateUtilities.h"
 // REVIEW: ChakraCore Dependency
-#include "..\..\..\private\lib\StaticLib\base\NumberUtilitiesBase.h"
+#include "Common\NumberUtilitiesBase.h"
 #include "Common\NumberUtilities.h"
 #include "core\FaultInjection.h"
 #include <codex\Utf8Codex.h>
@@ -497,7 +497,7 @@ using namespace Memory;
 #include "DataStructures\LargeStack.h"
 #include "DataStructures\HashTable.h"
 // REVIEW: ChakraCore Dependency
-#include "..\..\..\private\lib\StaticLib\base\FinalizableObject.h"
+#include "Core\FinalizableObject.h"
 #include "Memory\RecyclerWriteBarrierManager.h"
 #include "Memory\HeapConstants.h"
 #include "Memory\HeapBlock.h"

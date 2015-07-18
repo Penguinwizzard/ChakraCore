@@ -496,7 +496,7 @@ enum JsNativeValueType;
 #include "Library\BuiltInFlags.h"
 #include "Library\CharStringCache.h"
 // REVIEW: ChakraCore Dependency
-#include "..\..\..\private\lib\staticlib\base\JavascriptLibraryBase.h"
+#include "Library\JavascriptLibraryBase.h"
 #include "Library\JavascriptLibrary.h"
 
 #ifdef SIMD_JS_ENABLED
@@ -615,7 +615,7 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Language\ScriptContextProfiler.h"
 #include "Language\ScriptContextOptimizationOverrideInfo.h"
 // REVIEW: ChakraCore Dependency
-#include "..\..\..\private\lib\staticlib\base\scriptContextbase.h"
+#include "Language\scriptContextbase.h"
 #include "Language\ScriptContext.h"
 
 #include "Language\JavascriptFunctionArgIndex.h"
