@@ -43,7 +43,7 @@ BOOL FSupportsErrorInfo(IUnknown *punk, REFIID riid)
     ISupportErrorInfo *psupport;
 
     fSupports = FALSE;
-    if(SUCCEEDED(punk->QueryInterface(IID_ISupportErrorInfo, (void **)&psupport)))
+    if(SUCCEEDED(punk->QueryInterface(__uuidof(ISupportErrorInfo), (void **)&psupport)))
     {
         if(NOERROR == psupport->InterfaceSupportsErrorInfo(riid))
             fSupports = TRUE;

@@ -4,6 +4,7 @@
 
 #include "stdafx.h"
 
+#ifdef _CONTROL_FLOW_GUARD
 #if !defined(DELAYLOAD_SET_CFG_TARGET)
 extern "C"
 WINBASEAPI
@@ -16,6 +17,7 @@ SetProcessValidCallTargets(
     _In_ ULONG NumberOfOffets,
     _In_reads_(NumberOfOffets) PCFG_CALL_TARGET_INFO OffsetInformation
     );
+#endif
 #endif
 
 namespace Js

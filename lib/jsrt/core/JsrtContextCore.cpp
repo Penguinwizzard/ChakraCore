@@ -2,8 +2,8 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include <stdafx.h>
-#include "jsrtprivate.h"
+#include "Runtime.h"
+#include "jsrtcontext.h"
 #include "jsrtcontextcore.h"
 
 JsrtContext *JsrtContext::New(JsrtRuntime * runtime)

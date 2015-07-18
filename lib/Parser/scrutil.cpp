@@ -592,20 +592,16 @@ Equal:
 }
 #pragma warning(default:4035)
 
-double StrToDbl(LPCOLESTR psz, const OLECHAR **ppchLim, Js::ScriptContext *const scriptContext)
+template <typename EncodedChar>
+double StrToDbl(const EncodedChar * psz, const EncodedChar **ppchLim, Js::ScriptContext *const scriptContext)
 {
     Assert(scriptContext);
     bool likelyInt = true;
-    return Js::NumberUtilities::StrToDbl<wchar_t>(psz, ppchLim, likelyInt);
+    return Js::NumberUtilities::StrToDbl<EncodedChar>(psz, ppchLim, likelyInt);
 }
 
-double StrToDbl(LPCUTF8 psz, const utf8char_t **ppchLim, Js::ScriptContext *const scriptContext)
-{
-    Assert(scriptContext);
-    bool likelyInt = true;
-    return Js::NumberUtilities::StrToDbl<utf8char_t>( psz, ppchLim, likelyInt );
-}
-
+template double StrToDbl<wchar_t>(const wchar_t * psz, const wchar_t **ppchLim, Js::ScriptContext *const scriptContext);
+template double StrToDbl<utf8char_t>(const utf8char_t * psz, const utf8char_t **ppchLim, Js::ScriptContext *const scriptContext);
 template double DblFromHex<wchar_t>(const wchar_t *psz, const wchar_t **ppchLim);
 template double DblFromHex<utf8char_t>(const utf8char_t *psz, const utf8char_t **ppchLim);
 template double DblFromBinary<wchar_t>(const wchar_t *psz, const wchar_t **ppchLim);

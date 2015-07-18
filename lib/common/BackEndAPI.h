@@ -107,7 +107,7 @@ inline BOOL IsAsmJsCodeGenThunk(Js::JavascriptMethod codeAddress) { return false
 #endif
 
 #if _M_X64
-extern "C" amd64_ReturnFromCallWithFakeFrame();
+extern "C" void * amd64_ReturnFromCallWithFakeFrame();
 #endif
 
 struct InlinedFrameLayout

@@ -225,7 +225,7 @@ namespace Js
             // pow(x, 0) = 1 even if x is NaN.
             return 1;
         }
-        else if (1.0 == abs(x) && !NumberUtilities::IsFinite(y))
+        else if (1.0 == fabs(x) && !NumberUtilities::IsFinite(y))
         {
             // pow([+/-] 1, Infinity) = NaN according to javascript, but not for CRT pow.
             return JavascriptNumber::NaN;

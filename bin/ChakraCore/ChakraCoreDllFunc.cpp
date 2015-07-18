@@ -1,4 +1,5 @@
-#include <stdafx.h>
+#include "Runtime.h"
+#include "jsrtcontext.h"
 
 static BOOL AttachProcess(HANDLE hmod)
 {
@@ -19,11 +20,15 @@ static BOOL AttachProcess(HANDLE hmod)
         ConfigParser::ParseOnModuleLoad(parser, hmod);
     }
 
+#ifdef ENABLE_JS_ETW
     EtwTrace::Register();
+#endif
     ValueType::Initialize();
     ThreadContext::GlobalInitialize();
 
+#ifdef ENABLE_BASIC_TELEMETRY
     g_TraceLoggingClient = NoCheckHeapNewStruct(TraceLoggingClient);
+#endif
 
 #ifdef DYNAMIC_PROFILE_STORAGE
     return DynamicProfileStorage::Initialize();
@@ -81,8 +86,10 @@ EXTERN_C BOOL WINAPI DllMain(HINSTANCE hmod, DWORD dwReason, PVOID pvReserved)
 #ifdef DYNAMIC_PROFILE_STORAGE    
         DynamicProfileStorage::Uninitialize();
 #endif
+#ifdef ENABLE_JS_ETW
         // Do this before DetachProcess() so that we won't have ETW rundown callbacks while destroying threadContexts.
         EtwTrace::UnRegister();
+#endif
 
         // don't do anything if we are in forceful shutdown
         // try to clean up handles in graceful shutdown

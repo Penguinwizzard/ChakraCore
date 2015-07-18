@@ -6,5 +6,5 @@
 #include "Runtime.h"
 
 // REVIEW: ChakraCore Dependency
-#include "..\..\..\private\bin\Chakra\JsrtContext.h"
+#include "JsrtContext.h"
 #include "..\..\..\private\bin\Chakra\jsrtprivate.h"

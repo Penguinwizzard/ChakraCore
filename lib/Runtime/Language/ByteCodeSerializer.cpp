@@ -4,7 +4,10 @@
 
 #include <StdAfx.h>
 
-#if !DBG
+#if DBG || !defined(NTBUILD)
+// __DATE__ and __TIME__ are only available in CHK or NTBUILD
+#define USE_DATE_TIME_MACRO
+#else
 #include <rtlfilever.c> // For RtlGetVersionResourceFromSelf in FRE builds
 #endif
 
@@ -84,7 +87,7 @@ enum FileVersionScheme
 
 const FileVersionScheme currentFileVersionScheme = EngineeringVersioningScheme;
 
-#if DBG // __DATE__ and __TIME__ are only available in CHK
+#ifdef USE_DATE_TIME_MACRO
 const DWORD buildDateHash = JsUtil::CharacterBuffer<char>::StaticGetHashCode(__DATE__, _countof(__DATE__));
 const DWORD buildTimeHash = JsUtil::CharacterBuffer<char>::StaticGetHashCode(__TIME__, _countof(__TIME__));
 #endif
@@ -409,7 +412,7 @@ public:
             if (!GenerateLibraryByteCode())
             {
                 V2.value = jscriptMinor;
-#if DBG
+#ifdef USE_DATE_TIME_MACRO
                 V3.value = buildDateHash;
                 V4.value = buildTimeHash;
 #else
@@ -2121,7 +2124,7 @@ public:
             }
             else
             {
-#if DBG
+#ifdef USE_DATE_TIME_MACRO
                 expectedV3 = buildDateHash;
                 expectedV4 = buildTimeHash;
 #else

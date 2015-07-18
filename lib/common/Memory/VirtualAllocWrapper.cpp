@@ -234,6 +234,7 @@ LPVOID PreReservedVirtualAllocWrapper::Alloc(LPVOID lpAddress, size_t dwSize, DW
         AssertMsg(dwSize % AutoSystemInfo::PageSize == 0, "COMMIT is managed at AutoSystemInfo::PageSize granularity");
 
         char * commitedAddress = nullptr;
+#if defined(_CONTROL_FLOW_GUARD)
         if (AutoSystemInfo::Data.IsCFGEnabled())
         {
             DWORD oldProtect;
@@ -243,6 +244,7 @@ LPVOID PreReservedVirtualAllocWrapper::Alloc(LPVOID lpAddress, size_t dwSize, DW
             AssertMsg(oldProtect == (PAGE_EXECUTE_READWRITE), "CFG Bitmap gets allocated and bits will be set to invalid only upon passing these flags.");
         }
         else
+#endif
         {
             commitedAddress = (char *) VirtualAlloc(addressToCommit, dwSize, MEM_COMMIT, protectFlags);
         }

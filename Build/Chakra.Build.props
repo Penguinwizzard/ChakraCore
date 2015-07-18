@@ -1,8 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="Common.Build.props"/>
+  <PropertyGroup>
+    <Win32_WinNTVersion Condition="'$(NtTargetVersion)'=='$(NtTargetVersion_Win7)'">0x0601</Win32_WinNTVersion>
+    <Win32_WinNTVersion Condition="'$(NtTargetVersion)'=='$(NtTargetVersion_Win8)'">0x0602</Win32_WinNTVersion>
+    <Win32_WinNTVersion Condition="'$(NtTargetVersion)'=='$(NtTargetVersion_Win10)'">0x0A00</Win32_WinNTVersion>
+  </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
+      <PreprocessorDefinitions>
+        %(PreprocessorDefinitions);
+        _WIN32_WINNT=$(Win32_WinNTVersion);
+        WINVER=$(Win32_WinNTVersion);
+        WIN32_LEAN_AND_MEAN=1
+      </PreprocessorDefinitions>
+      
       <!-- TODO: Clean up the warnings? -->
       <PreprocessorDefinitions>%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
 
@@ -12,5 +24,5 @@
       <!-- TODO: Move EdgeJavascriptTypeId.h -->
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(MSBuildThisFileDirectory)..\..\publish0</AdditionalIncludeDirectories>
     </ClCompile>
-  </ItemDefinitionGroup>
+  </ItemDefinitionGroup>  
 </Project>

@@ -23,7 +23,8 @@ class PrologEncoder
 {
 private:
 
-    __declspec(align(1)) struct UNWIND_CODE 
+#pragma pack(push, 1)
+    struct UNWIND_CODE 
     {
         /*
          * ntdll!UNWIND_CODE
@@ -60,7 +61,7 @@ private:
     };
 
 
-    __declspec(align(1)) struct UNWIND_INFO 
+    struct UNWIND_INFO 
     {
         /*
          * ntdll!UNWIND_INFO
@@ -81,7 +82,7 @@ private:
         UNWIND_CODE     unwindCodes[0];
     };
 
-    __declspec(align(1)) struct UnwindCode : public UNWIND_CODE
+    struct UnwindCode : public UNWIND_CODE
     {
     private:
         union {
@@ -106,11 +107,12 @@ private:
         }
     };
 
-    __declspec(align(1)) struct PData
+    struct PData
     {
         RUNTIME_FUNCTION runtimeFunction;
         UNWIND_INFO      unwindInfo;
     };
+#pragma pack(pop)
 
     PData            *pdata;
     ArenaAllocator   *alloc;

@@ -3,8 +3,8 @@
   <Import Condition="'$(ChakraBuildPathImported)'!='true'" Project="$(SolutionDir)Chakra.Build.Paths.props"/>
   <Import Project="$(BuildConfig_ChakraBuildProjectConfigurationProps)" />
   <PropertyGroup Label="Globals">
-    <TargetName>Chakra.Jsrt</TargetName>
-    <ProjectGuid>{706083F7-6AA4-4558-A153-6352EF9220F5}</ProjectGuid>
+    <TargetName>Chakra.Jsrt.Core</TargetName>
+    <ProjectGuid>{706083F7-6AA4-4558-A153-6352EF9220EE}</ProjectGuid>
     <RootNamespace>JS</RootNamespace>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
@@ -26,43 +26,25 @@
     <ClCompile>
       <AdditionalIncludeDirectories>
         $(MSBuildThisFileDirectory);
-        $(MSBuildThisFileDirectory)..\Runtime;
-        $(MSBuildThisFileDirectory)..\Common;
-        $(MSBuildThisFileDirectory)..\Parser;
-        $(MSBuildThisFileDirectory)..\Backend;
+        $(MSBuildThisFileDirectory)..;
+        $(MSBuildThisFileDirectory)..\..\Runtime;
+        $(MSBuildThisFileDirectory)..\..\Common;
+        $(MSBuildThisFileDirectory)..\..\Parser;
+        $(MSBuildThisFileDirectory)..\..\Backend;
         $(ChakraManifestsIncludeDirectory);
         $(ManifestsInboxIncludeDirectory);
         %(AdditionalIncludeDirectories)
       </AdditionalIncludeDirectories>      
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>JsrtPch.h</PrecompiledHeaderFile>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>    
-    <ClCompile Include="$(MSBuildThisFileDirectory)JsrtCore.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)JsrtContext.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)JsrtCustomEnumerator.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)JsrtExternalArrayBuffer.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)JsrtExternalObject.cpp" />    
-    <ClCompile Include="$(MSBuildThisFileDirectory)JsrtRuntime.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)JsrtThreadService.cpp" />    
-    <ClCompile Include="$(MSBuildThisFileDirectory)JsrtPch.cpp">
-      <PrecompiledHeader>Create</PrecompiledHeader>
-    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)JsrtContextCore.cpp" />
   </ItemGroup>
   <ItemGroup>    
-    <ClInclude Include="JsrtContext.h" />
-    <ClInclude Include="JsrtCustomEnumerator.h" />
-    <ClInclude Include="JsrtExternalArrayBuffer.h" />
-    <ClInclude Include="JsrtExternalObject.h" />    
-    <ClInclude Include="JsrtRuntime.h" />
-    <ClInclude Include="JsrtThreadService.h" />
-    <ClInclude Include="JsrtInternal.h" />
-    <ClInclude Include="JsrtExceptionBase.h" />
-    <ClInclude Include="JsrtPch.h" />  
+    <ClInclude Include="JsrtContextCore.h" /> 
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Condition="'$(USE_EXTERNAL_DEPENDENCIES)'!='yes'" Include="..\..\..\publish\Publish.vcxproj">
+    <ProjectReference Include="..\..\..\..\publish\Publish.vcxproj">
       <Project>{1876e800-ad77-48c4-a2f7-e5265f24ac35}</Project>
     </ProjectReference>
   </ItemGroup>

@@ -5,6 +5,8 @@
 #include "StdAfx.h"
 #include "strsafe.h"
 
+#define __WRL_ASSERT__(cond) Assert(cond)
+
 #include <wrl\implements.h>
 
 //#include <wrl\wrappers\corewrappers.h>

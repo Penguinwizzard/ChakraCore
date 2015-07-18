@@ -29,8 +29,8 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <!-- /GF -->
       <StringPooling>true</StringPooling>
-      <!-- /Zl -->
-      <OmitDefaultLibName>true</OmitDefaultLibName>
+      <!-- /MD -->
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <!-- We don't use any metadata -->
       <AdditionalUsingDirectories />
 
@@ -51,7 +51,13 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding Condition="'$(OptimiziedBuild)'=='true'">true</EnableCOMDATFolding>
       <OptimizeReferences Condition="'$(OptimiziedBuild)'=='true'">true</OptimizeReferences>
-      <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
+
+      <MinimumRequiredVersion Condition="'$(NtTargetVersion)'=='$(NtTargetVersion_Win7)'" >6.1</MinimumRequiredVersion>
+      <MinimumRequiredVersion Condition="'$(NtTargetVersion)'=='$(NtTargetVersion_Win8)'" >6.2</MinimumRequiredVersion>
+      <MinimumRequiredVersion Condition="'$(NtTargetVersion)'=='$(NtTargetVersion_Win10)'" >10.00</MinimumRequiredVersion>
+
+      <!-- Always set the checksum -->
+      <AdditionalOptions>%(AdditionalOptions) /release</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <!-- chk build flags -->
@@ -75,5 +81,10 @@
       <WholeProgramOptimization>true</WholeProgramOptimization>
     </ClCompile>
   </ItemDefinitionGroup>
-
+  <ItemGroup Condition="'$(ConfigurationType)'=='DynamicLibrary' OR '$(ConfigurationType)'=='Application'">
+    <Clean Include="$(OutDir)$(TargetName).lib" />
+    <Clean Include="$(OutDir)$(TargetName).exp" />
+    <Clean Include="$(OutDir)$(TargetName).ipdb" />
+    <Clean Include="$(OutDir)$(TargetName).iobj" />
+  </ItemGroup>
 </Project> 

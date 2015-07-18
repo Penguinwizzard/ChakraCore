@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <NtTargetVersion_Win7 >0x601</NtTargetVersion_Win7>
+    <NtTargetVersion_Win8 >0x602</NtTargetVersion_Win8>
+    <NtTargetVersion_Win10>0xA00</NtTargetVersion_Win10>
+  </PropertyGroup>
   <Import Project="Common.Build.Default.props"/>  
   <PropertyGroup>
     <PlatformToolset Condition="'$(VisualStudioVersion)'=='11.0'">v110</PlatformToolset>
@@ -19,5 +24,15 @@
     <OutDir>$(OutBaseDir)\$(PlatformPathName)_$(Configuration)\Binaries\</OutDir>
     <IntDir>$(OutBaseDir)\$(PlatformPathName)_$(Configuration)\Obj\$(MSBuildProjectName)\</IntDir>
     <OutputPath>$(OutDir)</OutputPath>
+
+    <ChakraParserIntDir>$(IntDir)..\Chakra.Parser</ChakraParserIntDir>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- Real branch name? -->
+    <BranchName>chakracore</BranchName>
+    <BuildMachine>$(BranchName)</BuildMachine>
+    <BuildMachine Condition="'$(OfficialBuild)'!='true'">$(BuildMachine)($(UserName))</BuildMachine>
+    <BuildDate>$([System.DateTime]::Now.ToString("yyMMdd-hhmm"))</BuildDate>
   </PropertyGroup>
 </Project> 

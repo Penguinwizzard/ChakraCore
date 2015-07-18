@@ -2,10 +2,8 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#include "stdafx.h"
+#include "JsrtPch.h"
 #include "JsrtRuntime.h"
-#include "JsrtContext.h"
-#include "jsrtprivate.h"
 
 DWORD JsrtContext::s_tlsSlot = TLS_OUT_OF_INDEXES;
 
