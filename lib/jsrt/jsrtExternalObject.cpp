@@ -41,7 +41,8 @@ bool JsrtExternalObject::Is(Js::Var value)
         return false;
     }
 
-    return (VirtualTableInfo<JsrtExternalObject>::HasVirtualTable(value));
+    return (VirtualTableInfo<JsrtExternalObject>::HasVirtualTable(value)) ||
+        (VirtualTableInfo<Js::CrossSiteObject<JsrtExternalObject>>::HasVirtualTable(value));
 }
 
 JsrtExternalObject * JsrtExternalObject::FromVar(Js::Var value)

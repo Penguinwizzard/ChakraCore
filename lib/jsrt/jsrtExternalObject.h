@@ -39,14 +39,11 @@ private:
 };
 AUTO_REGISTER_RECYCLER_OBJECT_DUMPER(JsrtExternalType, &Js::Type::DumpObjectFunction);
 
-class JsrtExternalObject sealed : public Js::DynamicObject
+class JsrtExternalObject : public Js::DynamicObject
 {
-private:
+protected:
     DEFINE_VTABLE_CTOR(JsrtExternalObject, Js::DynamicObject);    
-    virtual void MarshalToScriptContext(Js::ScriptContext * scriptContext) override
-    {
-        AssertMsg(false, "JsrtExternalObject should never get marshaled"); 
-    }  
+    DEFINE_MARSHAL_OBJECT_TO_SCRIPT_CONTEXT(JsrtExternalObject);
     
 public:
     JsrtExternalObject(JsrtExternalType * type, void *data);

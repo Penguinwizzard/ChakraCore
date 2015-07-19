@@ -29,6 +29,7 @@ protected:
     void Link();
     void Unlink();
     void SetScriptContext(Js::ScriptContext * scriptContext);
+    void PinCurrentJsrtContext();
 private:
     static DWORD s_tlsSlot;
     Js::ScriptContext * scriptContext;

@@ -14,8 +14,13 @@ JsrtContext::JsrtContext(JsrtRuntime * runtime) :
 
 void JsrtContext::SetScriptContext(Js::ScriptContext * scriptContext)
 {
-    Assert(this->scriptContext == nullptr || scriptContext == nullptr);
     this->scriptContext = scriptContext;
+}
+
+void JsrtContext::PinCurrentJsrtContext()
+{
+    Assert(this->scriptContext);
+    this->scriptContext->GetLibrary()->PinJsrtContextObject(this);
 }
 
 void JsrtContext::Link()

@@ -449,6 +449,7 @@ STDAPI_(JsErrorCode) JsCreateContext(JsRuntimeHandle runtimeHandle, JsContextRef
         }
 
         JsrtContext * context = JsrtContext::New(runtime);
+        
         *newContext = (JsContextRef)context;
         return JsNoError;
     });
@@ -894,6 +895,8 @@ STDAPI_(JsErrorCode) JsConvertValueToObject(JsValueRef value, JsValueRef *result
         *result = nullptr;
 
         *result = (JsValueRef)Js::JavascriptOperators::ToObject((Js::Var)value, scriptContext);
+        Assert(*result == nullptr || !Js::CrossSite::NeedMarshalVar(*result, scriptContext));
+        
         return JsNoError;
     });
 }
@@ -907,6 +910,7 @@ STDAPI_(JsErrorCode) JsGetPrototype(JsValueRef object, JsValueRef *prototypeObje
         *prototypeObject = nullptr;
 
         *prototypeObject = (JsValueRef)Js::JavascriptOperators::OP_GetPrototype(object, scriptContext);
+        Assert(*prototypeObject == nullptr || !Js::CrossSite::NeedMarshalVar(*prototypeObject, scriptContext));
 
         return JsNoError;
     });
@@ -963,12 +967,12 @@ STDAPI_(JsErrorCode) JsGetProperty(JsValueRef object, JsPropertyIdRef propertyId
     return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode { 
         PARAM_NOT_NULL(object);
         VALIDATE_INCOMING_OBJECT(object, scriptContext);
-        VALIDATE_INCOMING_PROPERTYID(propertyId, scriptContext);
+        VALIDATE_INCOMING_PROPERTYID(propertyId);
         PARAM_NOT_NULL(value);
         *value = nullptr;
 
         *value = Js::JavascriptOperators::OP_GetProperty((Js::Var)object, ((Js::PropertyRecord *)propertyId)->GetPropertyId(), scriptContext);
-
+        Assert(*value == nullptr || !Js::CrossSite::NeedMarshalVar(*value, scriptContext));
         return JsNoError;
     });
 }
@@ -978,7 +982,7 @@ STDAPI_(JsErrorCode) JsGetOwnPropertyDescriptor(JsValueRef object, JsPropertyIdR
     return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode { 
         PARAM_NOT_NULL(object);
         VALIDATE_INCOMING_OBJECT(object, scriptContext);
-        VALIDATE_INCOMING_PROPERTYID(propertyId, scriptContext);
+        VALIDATE_INCOMING_PROPERTYID(propertyId);
         PARAM_NOT_NULL(propertyDescriptor);
         *propertyDescriptor = nullptr;
 
@@ -991,7 +995,7 @@ STDAPI_(JsErrorCode) JsGetOwnPropertyDescriptor(JsValueRef object, JsPropertyIdR
         {
             *propertyDescriptor = scriptContext->GetLibrary()->GetUndefined();
         }
-
+        Assert(*propertyDescriptor == nullptr || !Js::CrossSite::NeedMarshalVar(*propertyDescriptor, scriptContext));
         return JsNoError;
     });
 }
@@ -1005,7 +1009,7 @@ STDAPI_(JsErrorCode) JsGetOwnPropertyNames(JsValueRef object, JsValueRef *proper
         *propertyNames = nullptr;
 
         *propertyNames = Js::JavascriptOperators::GetOwnPropertyNames(object, scriptContext);
-
+        Assert(*propertyNames == nullptr || !Js::CrossSite::NeedMarshalVar(*propertyNames, scriptContext));
         return JsNoError;
     });
 }
@@ -1018,7 +1022,7 @@ STDAPI_(JsErrorCode) JsGetOwnPropertySymbols(JsValueRef object, JsValueRef *prop
         PARAM_NOT_NULL(propertySymbols);
 
         *propertySymbols = Js::JavascriptOperators::GetOwnPropertySymbols(object, scriptContext);
-
+        Assert(*propertySymbols == nullptr || !Js::CrossSite::NeedMarshalVar(*propertySymbols, scriptContext));
         return JsNoError;
     });
 }
@@ -1028,7 +1032,7 @@ STDAPI_(JsErrorCode) JsSetProperty(JsValueRef object, JsPropertyIdRef propertyId
     return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode { 
         PARAM_NOT_NULL(object);
         VALIDATE_INCOMING_OBJECT(object, scriptContext);
-        VALIDATE_INCOMING_PROPERTYID(propertyId, scriptContext);
+        VALIDATE_INCOMING_PROPERTYID(propertyId);
         PARAM_NOT_NULL(value);
         VALIDATE_INCOMING_VALUE_CONTEXT(value, scriptContext);
 
@@ -1044,7 +1048,7 @@ STDAPI_(JsErrorCode) JsHasProperty(JsValueRef object, JsPropertyIdRef propertyId
     return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode { 
         PARAM_NOT_NULL(object);
         VALIDATE_INCOMING_OBJECT(object, scriptContext);
-        VALIDATE_INCOMING_PROPERTYID(propertyId, scriptContext);
+        VALIDATE_INCOMING_PROPERTYID(propertyId);
         PARAM_NOT_NULL(hasProperty);
         *hasProperty = nullptr;
 
@@ -1059,13 +1063,13 @@ STDAPI_(JsErrorCode) JsDeleteProperty(JsValueRef object, JsPropertyIdRef propert
     return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode { 
         PARAM_NOT_NULL(object);
         VALIDATE_INCOMING_OBJECT(object, scriptContext);
-        VALIDATE_INCOMING_PROPERTYID(propertyId, scriptContext);
+        VALIDATE_INCOMING_PROPERTYID(propertyId);
         PARAM_NOT_NULL(result);
         *result = nullptr;
 
-        *result = Js::JavascriptOperators::OP_DeleteProperty((Js::Var)object, ((Js::PropertyRecord *)propertyId)->GetPropertyId(), 
+        *result = Js::JavascriptOperators::OP_DeleteProperty((Js::Var)object, ((Js::PropertyRecord *)propertyId)->GetPropertyId(),
             scriptContext, useStrictRules ? Js::PropertyOperation_StrictMode : Js::PropertyOperation_None);
-
+        Assert(*result == nullptr || !Js::CrossSite::NeedMarshalVar(*result, scriptContext));
         return JsNoError;
     });
 }
@@ -1075,7 +1079,7 @@ STDAPI_(JsErrorCode) JsDefineProperty(JsValueRef object, JsPropertyIdRef propert
     return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode { 
         PARAM_NOT_NULL(object);
         VALIDATE_INCOMING_OBJECT(object, scriptContext);
-        VALIDATE_INCOMING_PROPERTYID(propertyId, scriptContext);
+        VALIDATE_INCOMING_PROPERTYID(propertyId);
         PARAM_NOT_NULL(propertyDescriptor);
         VALIDATE_INCOMING_OBJECT(propertyDescriptor, scriptContext);
         PARAM_NOT_NULL(result);
@@ -1790,11 +1794,11 @@ STDAPI_(JsErrorCode) JsCallFunction(JsValueRef function, JsValueRef *args, ushor
         Js::CallInfo callInfo(cargs);
         Js::Arguments jsArgs(callInfo, reinterpret_cast<Js::Var *>(args));
 
-        Js::Var varResult = Js::JavascriptFunction::CallFunction<true>(jsFunction, entryPoint, jsArgs);        
-
+        Js::Var varResult = Js::JavascriptFunction::CallFunction<true>(jsFunction, entryPoint, jsArgs);
         if (result != nullptr)
         {
             *result = varResult;
+            Assert(*result == nullptr || !Js::CrossSite::NeedMarshalVar(*result, scriptContext));
         }
 
         return JsNoError;
@@ -1823,9 +1827,8 @@ STDAPI_(JsErrorCode) JsConstructObject(JsValueRef function, JsValueRef *args, us
         Js::CallInfo callInfo(Js::CallFlags::CallFlags_New, cargs);
         Js::Arguments jsArgs(callInfo, reinterpret_cast<Js::Var *>(args));
 
-        Js::Var varResult = Js::JavascriptFunction::CallAsConstructor(jsFunction, /* overridingNewTarget = */nullptr, jsArgs, scriptContext);
-        *result = varResult;
-
+        *result = Js::JavascriptFunction::CallAsConstructor(jsFunction, /* overridingNewTarget = */nullptr, jsArgs, scriptContext);
+        Assert(*result == nullptr || !Js::CrossSite::NeedMarshalVar(*result, scriptContext));
         return JsNoError;
     });
 }
@@ -1862,8 +1865,8 @@ STDAPI_(JsErrorCode) JsCreateNamedFunction(JsValueRef name, JsNativeFunction nat
         }
 
         Js::JavascriptExternalFunction *externalFunction = scriptContext->GetLibrary()->CreateStdCallExternalFunction((Js::StdCallJavascriptMethod)nativeFunction, Js::JavascriptString::FromVar(name), callbackState);
-        *function = (JsValueRef)externalFunction;
 
+        *function = (JsValueRef)externalFunction;
         return JsNoError;
     });
 }
@@ -2246,7 +2249,7 @@ STDAPI_(JsErrorCode) JsGetPropertyIdFromSymbol(JsValueRef symbol, JsPropertyIdRe
 STDAPI_(JsErrorCode) JsGetSymbolFromPropertyId(JsPropertyIdRef propertyId, JsValueRef *symbol)
 {
     return ContextAPIWrapper<true>([&](Js::ScriptContext * scriptContext) -> JsErrorCode {
-        VALIDATE_INCOMING_PROPERTYID(propertyId, scriptContext);
+        VALIDATE_INCOMING_PROPERTYID(propertyId);
         PARAM_NOT_NULL(symbol);
         *symbol = nullptr;
 
@@ -2264,7 +2267,7 @@ STDAPI_(JsErrorCode) JsGetSymbolFromPropertyId(JsPropertyIdRef propertyId, JsVal
 STDAPI_(JsErrorCode) JsGetPropertyNameFromId(JsPropertyIdRef propertyId, const wchar_t **name)
 {
     return ContextAPIWrapper<true>([&] (Js::ScriptContext * scriptContext) -> JsErrorCode { 
-        VALIDATE_INCOMING_PROPERTYID(propertyId, scriptContext);
+        VALIDATE_INCOMING_PROPERTYID(propertyId);
         PARAM_NOT_NULL(name);
         *name = nullptr;
 
@@ -2283,7 +2286,7 @@ STDAPI_(JsErrorCode) JsGetPropertyNameFromId(JsPropertyIdRef propertyId, const w
 STDAPI_(JsErrorCode) JsGetPropertyIdType(JsPropertyIdRef propertyId, JsPropertyIdType* propertyIdType)
 {
     return ContextAPIWrapper<true>([&](Js::ScriptContext * scriptContext) -> JsErrorCode {
-        VALIDATE_INCOMING_PROPERTYID(propertyId, scriptContext);
+        VALIDATE_INCOMING_PROPERTYID(propertyId);
         PARAM_NOT_NULL(propertyIdType);
 
         Js::PropertyRecord const * propertyRecord = (Js::PropertyRecord const *)propertyId;
@@ -2359,7 +2362,7 @@ STDAPI_(JsErrorCode) JsCreateExternalType(JsExternalTypeDescription *typeDescrip
 
         if (typeDescription->className != JS_INVALID_REFERENCE)
         {
-            VALIDATE_INCOMING_PROPERTYID(typeDescription->className, scriptContext);
+            VALIDATE_INCOMING_PROPERTYID(typeDescription->className);
         }
         VALIDATE_INCOMING_OBJECT(typeDescription->prototype, scriptContext);
 

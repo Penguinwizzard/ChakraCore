@@ -8,91 +8,86 @@
 
 #define PARAM_NOT_NULL(p) \
     if (p == NULL) \
-	    { \
-    return JsErrorNullArgument; \
-	    }
+    { \
+        return JsErrorNullArgument; \
+    }
+
+#define MARSHAL_OBJECT(p, scriptContext, type) \
+        Js::##type * obj = Js::##type::FromVar(p); \
+        if (obj->GetScriptContext() != scriptContext) \
+        { \
+            if(obj->GetScriptContext()->GetThreadContext() != scriptContext->GetThreadContext()) \
+            {  \
+                return JsErrorWrongRuntime;  \
+            }  \
+            p = Js::CrossSite::MarshalVar(scriptContext, obj); \
+        }
 
 #define VALIDATE_INCOMING_RUNTIME_HANDLE(p) \
-	    { \
-        if (p == JS_INVALID_RUNTIME_HANDLE) \
-		        { \
-            return JsErrorInvalidArgument; \
-		        } \
-	    }
+        { \
+            if (p == JS_INVALID_RUNTIME_HANDLE) \
+            { \
+                return JsErrorInvalidArgument; \
+            } \
+        }
 
-#define VALIDATE_INCOMING_PROPERTYID(p, scriptContext) \
+#define VALIDATE_INCOMING_PROPERTYID(p) \
 	    { \
-    if (p == JS_INVALID_REFERENCE || \
-    Js::IsInternalPropertyId(((Js::PropertyRecord *)p)->GetPropertyId())) \
-		        { \
-        return JsErrorInvalidArgument; \
-		        } \
-	    }
+            if (p == JS_INVALID_REFERENCE || \
+                    Js::IsInternalPropertyId(((Js::PropertyRecord *)p)->GetPropertyId())) \
+            { \
+                return JsErrorInvalidArgument; \
+            } \
+        }
 
 #define VALIDATE_INCOMING_REFERENCE(p, scriptContext) \
-	    { \
-    if (p != JS_INVALID_REFERENCE && !Js::TaggedNumber::Is(p)) \
-	        { \
-        Js::RecyclableObject * obj = Js::RecyclableObject::FromVar(p); \
-        if (obj->GetScriptContext() != scriptContext) \
-		            { \
-            return JsErrorInvalidArgument; \
-		            } \
-	        } \
-	    }
+        { \
+            if (p != JS_INVALID_REFERENCE && !Js::TaggedNumber::Is(p)) \
+            { \
+                MARSHAL_OBJECT(p, scriptContext, RecyclableObject)   \
+            } \
+        }
 
 #define VALIDATE_INCOMING_OBJECT(p, scriptContext) \
-	    { \
-    if (p != JS_INVALID_REFERENCE) \
-	        { \
-        if (!Js::JavascriptOperators::IsObject(p)) \
-		            { \
-            return JsErrorArgumentNotObject; \
-		            } \
-            Js::RecyclableObject * obj = Js::RecyclableObject::FromVar(p); \
-            if (obj->GetScriptContext() != scriptContext) \
-			            { \
-            return JsErrorInvalidArgument; \
-			            } \
-	        } \
-	    }
+        { \
+            if (p != JS_INVALID_REFERENCE) \
+            { \
+                if (!Js::JavascriptOperators::IsObject(p)) \
+                { \
+                    return JsErrorArgumentNotObject; \
+                } \
+            } \
+        }
 
 #define VALIDATE_INCOMING_OBJECT_OR_NULL(p, scriptContext) \
-	    { \
-    if (p != JS_INVALID_REFERENCE) \
-	        { \
-        if (!Js::JavascriptOperators::IsObjectOrNull(p)) \
-		            { \
-            return JsErrorArgumentNotObject; \
-		            } \
-            Js::RecyclableObject * obj = Js::RecyclableObject::FromVar(p); \
-            if (obj->GetScriptContext() != scriptContext) \
-			            { \
-            return JsErrorInvalidArgument; \
-			            } \
-	        } \
-	    }
+        { \
+            if (p != JS_INVALID_REFERENCE) \
+            { \
+                if (!Js::JavascriptOperators::IsObjectOrNull(p)) \
+                { \
+                    return JsErrorArgumentNotObject; \
+                } \
+                MARSHAL_OBJECT(p, scriptContext, RecyclableObject)   \
+            } \
+        }
 
 #define VALIDATE_INCOMING_FUNCTION(p, scriptContext) \
-	    { \
-    if (p != JS_INVALID_REFERENCE) \
-	        { \
-        if (!Js::JavascriptFunction::Is(p)) \
-		            { \
-            return JsErrorInvalidArgument; \
-		            } \
-	        } \
-	    }
+        { \
+            if (p != JS_INVALID_REFERENCE) \
+            { \
+                if (!Js::JavascriptFunction::Is(p)) \
+                { \
+                    return JsErrorInvalidArgument; \
+                } \
+                MARSHAL_OBJECT(p, scriptContext, JavascriptFunction)   \
+            } \
+        }
 
 #define VALIDATE_INCOMING_VALUE_CONTEXT(p, scriptContext) \
         { \
-    if (Js::RecyclableObject::Is(p)) \
+            if (Js::RecyclableObject::Is(p)) \
             { \
-        Js::RecyclableObject* obj = Js::RecyclableObject::FromVar(p); \
-        if (obj->GetScriptContext() != scriptContext) \
-                    { \
-            return JsErrorInvalidArgument; \
-                    } \
+                MARSHAL_OBJECT(p, scriptContext, RecyclableObject)   \
             } \
         }
 

@@ -5174,6 +5174,14 @@ namespace Js
         this->nativeHostPromiseContinuationFunctionState = state;
     }
 
+    void JavascriptLibrary::PinJsrtContextObject(FinalizableObject* jsrtContext) 
+    {
+        // With JsrtContext supporting cross context, ensure that it doesn't get GCed
+        // prematurely. So pin the instance to javascriptLibrary so it will stay alive
+        // until any object of it are alive.
+        this->jsrtContextObject = jsrtContext;
+    }
+
     void JavascriptLibrary::EnqueueTask(Var taskVar)
     {
         // TODO: This function should take a parameter to declare the Task Queue in which to enqueue taskVar.

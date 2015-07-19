@@ -344,6 +344,8 @@ namespace Js
         PromiseContinuationCallback nativeHostPromiseContinuationFunction;
         void *nativeHostPromiseContinuationFunctionState;
 
+        FinalizableObject* jsrtContextObject;
+
         typedef JsUtil::BaseHashSet<RecyclerWeakReference<RecyclableObject>*, Recycler, PowerOf2SizePolicy, RecyclerWeakReference<RecyclableObject>*, StringTemplateCallsiteObjectComparer> StringTemplateCallsiteObjectList;
 
         // Used to store a list of template callsite objects.
@@ -646,6 +648,7 @@ namespace Js
         void InitializeHostPromiseContinuationFunction();
         JavascriptFunction* GetHostPromiseContinuationFunction();
         void SetNativeHostPromiseContinuationFunction(PromiseContinuationCallback function, void *state);
+        void PinJsrtContextObject(FinalizableObject* jsrtContext);
         void EnqueueTask(Var taskVar);
 
         HeapArgumentsObject* CreateHeapArguments(Var frameObj, uint formalCount);

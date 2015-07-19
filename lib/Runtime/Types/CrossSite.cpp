@@ -161,6 +161,7 @@ namespace Js
             return object;
         }
 
+        AssertMsg(scriptContext->GetThreadContext() == object->GetScriptContext()->GetThreadContext(), "ScriptContexts should belong to same threadcontext for marshalling.");
         // In heapenum, we are traversing through the object graph to dump out the content of recyclable objects. The content
         // of the objects are duplicated to the heapenum result, and we are not storing/changing the object graph during heap enum.
         // We don't actually need to do cross site thunk here.
@@ -169,7 +170,6 @@ namespace Js
             return object;
         }
 
-        Assert(scriptContext->GetThreadContext()->GetIsThreadBound());
         JavascriptLibrary::CheckAndConvertCopyOnAccessNativeIntArray<Var>(object);
         TypeId typeId = object->GetTypeId();
         AssertMsg(typeId != TypeIds_Enumerator, "enumerator shouldn't be marshalled here");

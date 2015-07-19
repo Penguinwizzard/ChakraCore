@@ -73,12 +73,19 @@ namespace Js
         if (requestingScriptContext && (thrownObject != nullptr))
         {
             Var rethrownObject = CrossSite::MarshalVar(requestingScriptContext, thrownObject);
+            // For now, there is no known host for which we need to support cross-domain
+            // scenario for JSRT. So skip the cross domain check for now.
+            if (!(scriptContext->GetThreadContext()->GetIsThreadBound())) 
+            {
+                return rethrownObject;
+            }
             if (rethrownObject)
             {
                 if (JavascriptError::Is(rethrownObject))
                 {
+                    
                     JavascriptError* jsErrorObject = JavascriptError::FromVar(rethrownObject);
-                    if ( jsErrorObject->GetScriptContext() != requestingScriptContext )
+                    if (jsErrorObject->GetScriptContext() != requestingScriptContext )
                     {
                         Assert(requestingScriptContext->GetHostScriptContext());
                         HRESULT hr = requestingScriptContext->GetHostScriptContext()->CheckCrossDomainScriptContext(jsErrorObject->GetScriptContext());
