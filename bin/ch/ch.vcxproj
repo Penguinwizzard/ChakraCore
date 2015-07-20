@@ -1,0 +1,93 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Condition="'$(BuildingWithBuildExe)'=='true'" Project="..\..\..\Build\Chakra.Build.Paths.props" />
+  <Import Condition="'$(ChakraBuildPathImported)'!='true'" Project="$(SolutionDir)Chakra.Build.Paths.props" />
+  <Import Project="$(BuildConfig_ChakraBuildProjectConfigurationProps)" />
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{0216C4BE-86CE-478D-A134-23EAEE545B9D}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.Default.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseStaticAtl>true</UseStaticAtl>
+    <AtlVersion>70</AtlVersion>
+    <BuildForCoreSystem>true</BuildForCoreSystem>
+    <UseStl>true</UseStl>
+    <StlVersion>70</StlVersion>
+    <TestCode Condition="'$(BuildingWithBuildExe)'=='true'">true</TestCode>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.props" />
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+     <!--
+           TODO: Remove dependency on HostCommon
+       -->
+      <AdditionalIncludeDirectories>
+        %(AdditionalIncludeDirectories);
+        $(ChakraRootDirectory)core\lib\common;
+        $(ChakraRootDirectory)private\bin\Chakra;
+        $(ChakraRootDirectory)private\lib\HostCommon;
+        $(SdkToolsIncPath)
+        </AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <AdditionalDependencies>
+        %(AdditionalDependencies);
+        $(SdkLibPath)\oleaut32.lib;
+        $(SdkLibPath)\ole32.lib;
+        $(SdkLibPath)\kernel32.lib;
+        $(InternalSdkLibPath)\nothrownew.lib
+      </AdditionalDependencies>
+    </Link>
+    <Link Condition="'$(BuildingWithBuildExe)'=='true'">
+      <AdditionalDependencies>
+        %(AdditionalDependencies);
+        <!--
+           TODO: Remove dependency on HostCommon
+        -->
+        $(RazzleJscriptObjectRoot)\private\lib\HostCommon\$(ObjectDirectory)\Chakra.Host.Common.lib;
+      </AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <!-- Razzle binplace -->
+  <ItemGroup Condition="'$(BuildingWithBuildExe)'=='true'">
+    <BinplaceLinked Include="$(ObjectPath)\$(ObjectDirectory)$(TargetFileName)">
+      <DestinationFolder>jscript</DestinationFolder>
+    </BinplaceLinked>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="chakrartinterface.h" />
+    <ClInclude Include="Helpers.h" />
+    <ClInclude Include="MessageQueue.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="WScriptJsrt.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="ch.cpp" />
+    <ClCompile Include="chakrartinterface.cpp" />
+    <ClCompile Include="Helpers.cpp" />
+    <ClCompile Include="WScriptJsrt.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ch.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\private\lib\HostCommon\HostCommon.vcxproj">
+      <Project>{f2e998aa-fb27-4f65-a6f7-4142be64294f}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
