@@ -421,6 +421,10 @@ MemoryLeakCheck::~MemoryLeakCheck()
             Output::Print(L"Total leaked: %d bytes (%d objects)\n", leakedBytes, leakedCount);
             Output::Flush();
         }
+        if (enableOutput)
+        {
+            Assert(false); // force to geenrate dump/fall into debugger.
+        }
     }
 }
 
