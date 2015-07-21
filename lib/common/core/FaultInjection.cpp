@@ -397,15 +397,17 @@ Label:
         {
             fprintf(stderr, "FaultInjection - Total Allocation Count:%d\n", countOfInjectionPoints);
             fflush(stderr);
-            FILE *fp = fopen("ChakraFaultInjectionCount.txt", "w");
-            if (fp)
+            FILE *fp;
+            if (fopen_s(&fp, "ChakraFaultInjectionCount.txt", "w") == 0)
             {
                 fprintf(fp, "FaultInjection - Total Allocation Count:%d\n", countOfInjectionPoints);
                 fflush(fp);
                 fclose(fp);
             }
-            for (int i = 0; i < MAX_FRAME_COUNT; i++){
-                if(stackMatchRank[i] == 0){
+            for (int i = 0; i < MAX_FRAME_COUNT; i++)
+            {
+                if(stackMatchRank[i] == 0)
+                {
                     break;
                 }
                 fwprintf(stderr, L"FaultInjection stack matching rank %d: %d\n", i+1, stackMatchRank[i]);
@@ -414,9 +416,10 @@ Label:
 
         }
 
-        if (globalFlags.FaultInjection == StackHashCountOnly){
-            FILE *fp = fopen("ChakraFaultInjectionHashes.txt", "w");
-            if (fp)
+        if (globalFlags.FaultInjection == StackHashCountOnly)
+        {
+            FILE *fp;
+            if (fopen_s(&fp, "ChakraFaultInjectionHashes.txt", "w") == 0)
             {
                 for (uint i = 0; i < countOfInjectionPoints; i++){
                     fprintf(fp, "%p\n", (void*)stackHashOfAllInjectionPoints[i]);

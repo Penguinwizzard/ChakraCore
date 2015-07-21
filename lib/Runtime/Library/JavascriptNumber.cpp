@@ -910,8 +910,7 @@ namespace Js
     }
 
     JavascriptString* JavascriptNumber::ToLocaleString(double value, ScriptContext* scriptContext)
-    {
-        const int bufSize = 256;
+    {        
         WCHAR   szRes[bufSize];
         WCHAR * pszRes = NULL;
         WCHAR * pszToBeFreed = NULL;

@@ -84,6 +84,7 @@
     <ClInclude Include="DynamicObjectSnapshotEnumerator.h" />
     <ClInclude Include="DynamicObjectSnapshotEnumeratorWPCache.h" />
     <ClInclude Include="DynamicType.h" />
+    <ClInclude Include="EdgeJavascriptTypeId.h" />
     <ClInclude Include="ExternalObject.h" />
     <ClInclude Include="FunctionBody.h" />
     <ClInclude Include="FunctionInfo.h" />

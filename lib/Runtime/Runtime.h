@@ -346,6 +346,22 @@ typedef struct JsNativeString
 enum JsNativeValueType;
 #endif
 
+#include "activdbg100.h"
+#ifndef NTDDI_WIN10
+// These are only defined SDK Win10+
+// TODO: Refactor to avoid needing these?
+typedef
+enum tagDEBUG_EVENT_INFO_TYPE
+{
+    DEIT_GENERAL = 0,
+    DEIT_ASMJS_IN_DEBUGGING = (DEIT_GENERAL + 1),
+    DEIT_ASMJS_SUCCEEDED = (DEIT_ASMJS_IN_DEBUGGING + 1),
+    DEIT_ASMJS_FAILED = (DEIT_ASMJS_SUCCEEDED + 1)
+} DEBUG_EVENT_INFO_TYPE;
+
+#define SDO_ENABLE_LIBRARY_STACK_FRAME ((SCRIPT_DEBUGGER_OPTIONS)0x8)
+#endif
+
 #include "Language\SourceHolder.h"
 #include "Language\Utf8SourceInfo.h"
 #include "Language\PropertyRecord.h"
@@ -557,24 +573,8 @@ enum JsNativeValueType;
 #ifdef _M_X64
 #include "Language\amd64\stackframe.h"
 #endif
+
 #include "Language\DiagProbe.h"
-#include "activdbg100.h"
-
-#ifndef NTDDI_WIN10
-// These are only defined SDK Win10+
-// TODO: Refactor to avoid needing these?
-typedef
-enum tagDEBUG_EVENT_INFO_TYPE
-{
-    DEIT_GENERAL = 0,
-    DEIT_ASMJS_IN_DEBUGGING = (DEIT_GENERAL + 1),
-    DEIT_ASMJS_SUCCEEDED = (DEIT_ASMJS_IN_DEBUGGING + 1),
-    DEIT_ASMJS_FAILED = (DEIT_ASMJS_SUCCEEDED + 1)
-} DEBUG_EVENT_INFO_TYPE;
-
-#define SDO_ENABLE_LIBRARY_STACK_FRAME ((SCRIPT_DEBUGGER_OPTIONS)0x8)
-#endif
-
 #include "Language\ProbeContainer.h"
 #include "Library\Entropy.h"
 #include "Language\PropertyRecord.h"

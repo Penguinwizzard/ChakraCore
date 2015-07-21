@@ -6,7 +6,7 @@
 
 // REVIEW: ChakraCore Dependency
 #define _JSRT_
-#include "..\..\..\private\bin\chakra\chakrart.h"
+#include "chakrart.h"
 
 #include "JsrtThreadService.h"
 

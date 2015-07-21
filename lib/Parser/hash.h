@@ -4,17 +4,12 @@
 
 #pragma once
 
-// allow unsized array members as last field of structs
-#pragma warning(disable:4200)
-
 /***************************************************************************
 Hashing functions. Definitions in core\hashfunc.cpp.
 ***************************************************************************/
-ULONG CaseSensitiveComputeHash(LPCOLESTR posz);
 ULONG CaseSensitiveComputeHashCch(LPCOLESTR prgch, long cch);
 ULONG CaseSensitiveComputeHashCch(LPCUTF8 prgch, long cch);
 ULONG CaseInsensitiveComputeHash(LPCOLESTR posz);
-ULONG CaseInsensitiveComputeHashCch(LPCOLESTR prgch, long cch);
 
 enum
 {

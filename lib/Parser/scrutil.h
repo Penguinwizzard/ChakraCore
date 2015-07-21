@@ -61,13 +61,6 @@ public: \
 typedef unsigned __int64 uint64;
 #endif // _WIN64
 
-// tristate values
-enum
-{
-    triNo = 0,
-    triYes = 1,
-    triMaybe = 2
-};
 
 
 /***************************************************************************
@@ -89,15 +82,6 @@ struct __ALIGN_FOO__ {
 
 #define AlignFull(VALUE) (~(~((VALUE) + (ALIGN_FULL-1)) | (ALIGN_FULL-1)))
 #define FAlignedFull(cb) (((cb) & (ALIGN_FULL-1)) == 0)
-
-/***************************************************************************
-Misc macros and inline functions
-***************************************************************************/
-
-inline long LwMin(long lw1, long lw2)
-{ return lw1 < lw2 ? lw1 : lw2; }
-inline long LwMax(long lw1, long lw2)
-{ return lw1 < lw2 ? lw2 : lw1; }
 
 
 /***************************************************************************
@@ -132,37 +116,6 @@ inline long LwFromDbl(double dbl)
     return (long)(((__int64)dbl)  & 0xFFFFFFFF);
 #endif // _M_PPC || _M_MRX000
 }
-inline long LwFromDblNearest(double dbl)
-{
-    if (Js::NumberUtilities::IsNan(dbl))
-        return 0;
-    if (dbl > 0x7FFFFFFFL)
-        return 0x7FFFFFFFL;
-    if (dbl < (long)0x80000000L)
-        return (long)0x80000000L;
-    return (long)dbl;
-}
-inline ulong LuFromDblNearest(double dbl)
-{
-    if (Js::NumberUtilities::IsNan(dbl))
-        return 0;
-    if (dbl > (ulong)0xFFFFFFFFUL)
-        return (ulong)0xFFFFFFFFUL;
-    if (dbl < 0)
-        return 0;
-    return (ulong)dbl;
-}
-
-inline BOOL FDblIsLong(double dbl, long *plw)
-{
-    AssertMem(plw);
-    double dblT;
-
-    *plw = (long)dbl;
-    dblT = (double)*plw;
-    return Js::NumberUtilities::LuHiDbl(dblT) == Js::NumberUtilities::LuHiDbl(dbl) && Js::NumberUtilities::LuLoDbl(dblT) == Js::NumberUtilities::LuLoDbl(dbl);
-}
-
 
 /***************************************************************************
 Parameter validation
@@ -196,44 +149,15 @@ Parameter validation
 /***************************************************************************
 Name mapping of crt functions
 ***************************************************************************/
-#define ATOI _wtoi
-#define ITOA _itow
-#define ISSPACE   iswspace
-#define ISALNUM   iswalnum
-typedef OLECHAR   UOLECHAR;
-
 #define ostrlen wcslen
-#define ostrcpy wcscpy
-#define ostrcat wcscat
-#define otolower towlower
-#define ostrtol wcstol
-#define oasctime _wasctime
-#define ostrftime wcsftime
-#define osprintf swprintf
 #define ostrdup _wcsdup
 #define ostrcmp wcscmp
 #define ostricmp _wcsicmp
-#define ostrnicmp _wcsnicmp
-#define ostrncmp wcsncmp
-#define ostrchr wcschr
-#define ostrcspn wcscspn
-#define osnprintf _snwprintf
-#define ovsnprintf _vsnwprintf
-#define ostrncpy wcsncpy
-#define ostrupr _wcsupr
-#define ostrlwr _wcslwr
 #define oltoa _ltow_s
-#define oultoa _ultow
-#define ostrstr wcsstr
+#define ostrchr wcschr
 
-
-// synonyms
 #define WIDE OLESTR
-#define STRICMP ostricmp
-
-#define ostrcmpCase ostrcmp
-
-inline BOOL FHexDigit(UOLECHAR ch, int *pw)
+inline BOOL FHexDigit(wchar_t ch, int *pw)
 {
     if ((ch -= '0') <= 9)
     {
@@ -636,19 +560,6 @@ inline LCID GetDefaultLocale(void)
     return lcid;
 }
 
-ULONG CaseInsensitiveComputeHash(LPCOLESTR posz);
-ULONG CaseInsensitiveComputeHashCch(LPCOLESTR prgch, long cch);
-ULONG CaseInsensitiveComputeHashCch(LPCUTF8 prgch, long cch);
-
-// ComputeHash and ComputeHashCch are the default hash functions.
-// JScript uses a case insensitive hash value so we can do either type of
-// lookup. See IDispatchEx::GetDispID.
-#define ComputeHash CaseInsensitiveComputeHash
-#define ComputeHashCch CaseInsensitiveComputeHashCch
-
-
-
-
 template<typename EncodedChar>
 double DblFromHex(const EncodedChar *psz, const EncodedChar **ppchLim);
 template <typename EncodedChar>
@@ -658,24 +569,6 @@ double DblFromOctal(const EncodedChar *psz, const EncodedChar **ppchLim);
 template<typename EncodedChar>
 double StrToDbl(const EncodedChar *psz, const EncodedChar **ppchLim, Js::ScriptContext *const scriptContext);
 
-
-/***************************************************************************
-Binding option flags
-***************************************************************************/
-enum
-{
-    fbindNil          = 0x0000,
-    fbindReadOnly     = 0x0001,
-    fbindErrorOnWrite = 0x0002,
-    fbindInternal     = 0x0004, // Don't expose through IDispatchEx.
-    fbindNoEnum       = 0x0008,
-    fbindDontDelete   = 0x0010,
-    fbindLim          = 0x0020
-
-};
-
-const ulong kgrfbindProtected = fbindReadOnly | fbindErrorOnWrite;
-const ulong kgrfbindAll       = fbindLim - 1;
 
 enum
 {

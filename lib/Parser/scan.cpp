@@ -1455,9 +1455,9 @@ LTwoHex:
 
                 ch -= '0';
                 wT = (c = ReadFirst(p, last)) - '0';
-                if ((UOLECHAR)wT > 7)
+                if ((wchar_t)wT > 7)
                 {
-                    if (ch != 0  || ((UOLECHAR)wT <= 9))
+                    if (ch != 0  || ((wchar_t)wT <= 9))
                     {
                         m_OctOrLeadingZeroOnLastTKNumber = true;
                     }
@@ -1494,7 +1494,7 @@ LTwoHex:
 
 LOneOctal:
                 wT = (c = ReadFirst(p, last)) - '0';
-                if ((UOLECHAR)wT > 7)
+                if ((wchar_t)wT > 7)
                 {
                     p--;
                     break;
@@ -1964,7 +1964,7 @@ LEof:
                 p = pchT;
 
                 long value;
-                if (likelyInt && FDblIsLong(dbl, &value))
+                if (likelyInt && Js::NumberUtilities::FDblIsLong(dbl, &value))
                 {
                     m_ptoken->SetLong(value);
                     token = tkIntCon;

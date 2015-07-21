@@ -320,13 +320,11 @@ namespace Js
     template <bool check__proto__>
     DynamicType* SimpleDictionaryTypeHandlerBase<TPropertyIndex, TMapKey, IsNotExtensibleSupported>::InternalCreateTypeForNewScObject(ScriptContext* scriptContext, DynamicType* type, const Js::PropertyIdArray *propIds, bool shareType)
     {
-        typedef SimpleDictionaryTypeHandlerBase<TPropertyIndex, TMapKey, IsNotExtensibleSupported> SimpleDictionaryTypeHandler;
-
         Recycler* recycler = scriptContext->GetRecycler();
         uint count = propIds->count;
         Assert(count <= static_cast<uint>(MaxPropertyIndexSize));
 
-        SimpleDictionaryTypeHandler* typeHandler = SimpleDictionaryTypeHandler::New(recycler, count,
+        SimpleDictionaryTypeHandlerBase* typeHandler = SimpleDictionaryTypeHandlerBase::New(recycler, count,
             type->GetTypeHandler()->GetInlineSlotCapacity(), type->GetTypeHandler()->GetOffsetOfInlineSlots(), true, shareType);
         if (!shareType) typeHandler->SetMayBecomeShared();
 

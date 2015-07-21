@@ -240,4 +240,38 @@ namespace Js
 
         return value;
     }
+
+
+    long NumberUtilities::LwFromDblNearest(double dbl)
+    {
+        if (Js::NumberUtilities::IsNan(dbl))
+            return 0;
+        if (dbl > 0x7FFFFFFFL)
+            return 0x7FFFFFFFL;
+        if (dbl < (long)0x80000000L)
+            return (long)0x80000000L;
+        return (long)dbl;
+    }
+    
+    ulong NumberUtilities::LuFromDblNearest(double dbl)
+    {
+        if (Js::NumberUtilities::IsNan(dbl))
+            return 0;
+        if (dbl >(ulong)0xFFFFFFFFUL)
+            return (ulong)0xFFFFFFFFUL;
+        if (dbl < 0)
+            return 0;
+        return (ulong)dbl;
+    }
+
+    BOOL NumberUtilities::FDblIsLong(double dbl, long *plw)
+    {
+        AssertMem(plw);
+        double dblT;
+
+        *plw = (long)dbl;
+        dblT = (double)*plw;
+        return Js::NumberUtilities::LuHiDbl(dblT) == Js::NumberUtilities::LuHiDbl(dbl) && Js::NumberUtilities::LuLoDbl(dblT) == Js::NumberUtilities::LuLoDbl(dbl);
+    }
+
 }

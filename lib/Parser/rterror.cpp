@@ -3,7 +3,6 @@
 //----------------------------------------------------------------------------
 
 #include <StdAfx.h>
-#include "activscp.h"
 #include "rtError.h"
 
 // PUBLIC ERROR codes

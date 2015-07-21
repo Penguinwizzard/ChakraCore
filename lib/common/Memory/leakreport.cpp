@@ -148,8 +148,12 @@ LeakReport::EnsureLeakReportFile()
     }
     Print(L"================================================================================\n");
     Print(L"Jscript9 Leak Report - PID: %d\n", ::GetCurrentProcessId());
-    time_t time_value = time(NULL);    
-    Print(_wasctime(localtime(&time_value)));
+    __time64_t time_value = _time64(NULL);
+    wchar_t time_string[26];
+    struct tm local_time;
+    _localtime64_s(&local_time, &time_value);
+    _wasctime_s(time_string, &local_time);
+    Print(time_string);
     Print(L"\n");
     return true;
 }
@@ -165,7 +169,7 @@ LeakReport::LogUrl(wchar_t const * url, void * globalObject)
     urlCopy[length - 1] = L'\0';
 
     record->url = urlCopy;
-    record->time = time(NULL);
+    record->time = _time64(NULL);
     record->tid = ::GetCurrentThreadId();
     record->next = null;       
     record->scriptEngine = null;
@@ -203,7 +207,10 @@ LeakReport::DumpUrl(DWORD tid)
     {
         if (curr->tid == tid)
         {
-            wchar_t * timeStr = _wasctime(localtime(&curr->time));
+            wchar_t timeStr[26];
+            struct tm local_time;
+            _localtime64_s(&local_time, &curr->time);
+            _wasctime_s(timeStr, &local_time);
             timeStr[wcslen(timeStr) - 1] = 0;                  
             Print(L"%s - (%p, %p) %s\n", timeStr, curr->scriptEngine, curr->globalObject, curr->url);
             *pprev = curr->next;   

@@ -443,8 +443,6 @@ namespace Js
 //                    }
             case OpCode::ClearAttributes:
             {
-                PropertyRecord const * pPropertyName = scriptContext->GetPropertyName(
-                    dumpFunction->GetReferencedPropertyId(data->PropertyIdIndex));
                 Output::Print(L" R%d.%s.writable/enumerable/configurable = 0", data->Instance, pPropertyName->GetBuffer());
                 break;
             }

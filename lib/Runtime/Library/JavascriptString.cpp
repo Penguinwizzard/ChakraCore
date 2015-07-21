@@ -2084,7 +2084,7 @@ case_2:
                     JavascriptError::ThrowRangeError(scriptContext, JSERR_ArgumentOutOfRange, L"String.prototype.repeat");
                 }
 
-                count = LuFromDblNearest(countDbl);
+                count = NumberUtilities::LuFromDblNearest(countDbl);
             }
         }
 
@@ -3260,7 +3260,7 @@ case_2:
         {
             return TaggedInt::ToInt32(varIndex);
         }
-        return LwFromDblNearest(JavascriptConversion::ToInteger(varIndex, scriptContext));
+        return NumberUtilities::LwFromDblNearest(JavascriptConversion::ToInteger(varIndex, scriptContext));
     }
 
     wchar_t* JavascriptString::GetNormalizedString(_NORM_FORM form, ArenaAllocator* tempAllocator, charcount_t& sizeOfNormalizedStringWithoutNullTerminator)

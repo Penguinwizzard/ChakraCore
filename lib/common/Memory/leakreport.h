@@ -18,7 +18,7 @@ public:
         void * scriptEngine;
     private:
         wchar_t const * url;
-        time_t time;
+        __time64_t time;
         DWORD tid;
         UrlRecord * next;          
         

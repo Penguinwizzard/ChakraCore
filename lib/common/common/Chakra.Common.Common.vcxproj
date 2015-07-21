@@ -68,6 +68,7 @@
     <ClInclude Include="Int32Math.h" />
     <ClInclude Include="MathUtil.h" />
     <ClInclude Include="NumberUtilities.h" />
+    <ClInclude Include="NumberUtilitiesBase.h" />
     <ClInclude Include="RejitReason.h" />
     <ClInclude Include="RejitReasons.h" />
     <ClInclude Include="StdAfx.h" />

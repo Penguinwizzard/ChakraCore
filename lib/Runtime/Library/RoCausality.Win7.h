@@ -417,7 +417,7 @@ Remarks:
 
 --*/
 {
-    ULONG Error;
+    ULONG errorCode;
 
 
     if (*RegHandle) {
@@ -427,9 +427,9 @@ Remarks:
         return ERROR_SUCCESS;
     }
 
-    Error = EventRegister( ProviderId, EnableCallback, CallbackContext, RegHandle); 
+    errorCode = EventRegister( ProviderId, EnableCallback, CallbackContext, RegHandle);
 
-    return Error;
+    return errorCode;
 }
 
 
@@ -449,7 +449,7 @@ Remarks:
             return ERROR_SUCCESS
 --*/
 {
-    ULONG Error;
+    ULONG errorCode;
 
 
     if(!(*RegHandle)) {
@@ -459,10 +459,10 @@ Remarks:
         return ERROR_SUCCESS;
     }
 
-    Error = EventUnregister(*RegHandle); 
+    errorCode = EventUnregister(*RegHandle);
     *RegHandle = (REGHANDLE)0;
     
-    return Error;
+    return errorCode;
 }
 #endif
 //

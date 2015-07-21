@@ -122,9 +122,9 @@ struct DefaultComparer<GUID>
         return x == y;
     }
 
-     __inline static hash_t GetHashCode(GUID const& i)
+     __inline static hash_t GetHashCode(GUID const& guid)
      {
-        char* p = (char*)&i;
+        char* p = (char*)&guid;
         int hash = 0;
         for (int i = 0; i < sizeof(GUID); i++)
         {

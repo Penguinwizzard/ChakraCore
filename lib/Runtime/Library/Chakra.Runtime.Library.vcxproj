@@ -317,6 +317,7 @@
     <ClInclude Include="JavascriptError.h" />
     <ClInclude Include="JavascriptFunction.h" />
     <ClInclude Include="JavascriptLibrary.h" />
+    <ClInclude Include="JavascriptLibraryBase.h" />
     <ClInclude Include="JavascriptNumber.h" />
     <ClInclude Include="JavascriptNumberObject.h" />
     <ClInclude Include="JavascriptObject.h" />

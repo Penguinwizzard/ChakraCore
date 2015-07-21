@@ -158,10 +158,6 @@ public:
 
     ParseNode* CopyPnode(ParseNode* pnode);
     IdentPtr GenerateIdentPtr(__ecount(len)wchar_t* name,long len);
-    HRESULT GetTextAttribs(LPCOLESTR pszSrc, size_t cEncoded,
-        SOURCE_TEXT_ATTR *prgsta, ulong cch, DWORD dwFlags, ulong grfscr);
-    HRESULT GetTextAttribsUTF8(LPCUTF8 pszSrc, size_t cEncoded,
-        SOURCE_TEXT_ATTR *prgsta, ulong cch, DWORD dwFlags, ulong grfscr);
 
     ArenaAllocator *GetAllocator() { return &m_nodeAllocator;}
 
@@ -197,22 +193,6 @@ public:
         SourceContextInfo * sourceContextInfo, Js::ParseableFunctionInfo* functionInfo, bool isReparse, bool isAsmJsDisabled);
 
 protected:
-    template <typename EncodingPolicy>
-    HRESULT GetTextAttribsImpl(typename EncodingPolicy::EncodedCharPtr pszSrc, size_t cEncoded,
-                               SOURCE_TEXT_ATTR *prgsta, ulong cch, DWORD dwFlags, ulong grfscr);
-    template <typename EncodingPolicy>
-    void GetTextAttribsImpl(Scanner< EncodingPolicy > *scanner, typename EncodingPolicy::EncodedCharPtr pstr, DWORD dwFlags,
-        __ecount(cch) SOURCE_TEXT_ATTR *prgsa, ulong cch);
-    template <typename EncodingPolicy>
-    void GetNormalTextAttribs(Scanner< EncodingPolicy > *scanner, typename EncodingPolicy::EncodedCharPtr pstr, DWORD dwFlags,
-        __out_ecount(cch) SOURCE_TEXT_ATTR *prgsa, ulong cch);
-    template <typename EncodingPolicy>
-    void GetDepScanTextAttribs(Scanner< EncodingPolicy > *scanner, typename EncodingPolicy::EncodedCharPtr pstr, DWORD dwFlags,
-        __out_ecount(cch) SOURCE_TEXT_ATTR *prgpsa, ulong cch);
-    template <typename EncodingPolicy>
-    void SetHumanTextForCurrentToken(Scanner< EncodingPolicy >* scanner, typename EncodingPolicy::EncodedCharPtr pstr,
-        SOURCE_TEXT_ATTR *prgsa);
-
     HRESULT ParseSourceInternal(
         __out ParseNodePtr* parseTree, LPCUTF8 pszSrc, size_t offsetInBytes,
         size_t lengthInCodePoints, charcount_t offsetInChars, bool fromExternal,
@@ -224,10 +204,8 @@ protected:
 private:
     /***********************************************************************
     Core members.
-    ***********************************************************************/
-    HashTbl *   m_phtbl;
-    ParseNodeAllocator m_nodeAllocator;
-    ErrHandler  m_err;
+    ***********************************************************************/    
+    ParseNodeAllocator m_nodeAllocator;    
     long        m_cactIdentToNodeLookup;
     ulong       m_grfscr;
     size_t      m_length;             // source length in characters excluding comments and literals
@@ -251,16 +229,19 @@ private:
 
 protected:
     Js::ScriptContext* m_scriptContext;
+    HashTbl *   m_phtbl;
+    ErrHandler  m_err;
 
-private:
-    void GenerateCode(ParseNodePtr pnode, void *pvUser, long cbUser,
-        LPCOLESTR pszSrc, long cchSrc, LPCOLESTR pszTitle);
+    static const uint HASH_TABLE_SIZE = 256;
 
     __declspec(noreturn) void Error(HRESULT hr);
+private:
     __declspec(noreturn) void Error(HRESULT hr, ParseNodePtr pnode);
     __declspec(noreturn) void Error(HRESULT hr, charcount_t ichMin, charcount_t ichLim);
     __declspec(noreturn) static void OutOfMemory();
 
+    void GenerateCode(ParseNodePtr pnode, void *pvUser, long cbUser,
+        LPCOLESTR pszSrc, long cchSrc, LPCOLESTR pszTitle);
 
     void EnsureStackAvailable();
 
@@ -284,9 +265,8 @@ private:
     /***********************************************************************
     Members needed just for parsing.
     ***********************************************************************/
-    Token       m_token;
-
 protected:
+    Token       m_token;
     Scanner_t*  m_pscan;
 
 public:

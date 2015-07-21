@@ -1421,7 +1421,7 @@ namespace Js
         }
 
         wchar_t chw;
-        UOLECHAR chT;
+        wchar_t chT;
         wchar_t * pchSrc;
         wchar_t * pchLim;
         wchar_t * pchMin;

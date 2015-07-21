@@ -95,6 +95,10 @@ namespace Js
         static bool IsSurrogateUpperPart(codepoint_t codePointValue);
         static bool IsSurrogateLowerPart(codepoint_t codePointValue);
 
+        static long LwFromDblNearest(double dbl);
+        static ulong LuFromDblNearest(double dbl);
+        static BOOL FDblIsLong(double dbl, long *plw);
+
         const NumberUtilitiesBase* GetNumberUtilitiesBase() const { return static_cast<const NumberUtilitiesBase*>(this); }
 
     };

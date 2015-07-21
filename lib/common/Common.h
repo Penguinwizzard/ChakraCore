@@ -4,7 +4,7 @@
 
 #pragma once
 
-#define _CRT_RAND_S
+#define _CRT_RAND_S         // Enable rand_s in the CRT
 
 #include "CommonDefines.h"
 #pragma warning(push)
@@ -102,48 +102,6 @@ extern "C" void * _AddressOfReturnAddress(void);
 #include <sys\timeb.h>
 
 #include <intrin.h>
-
-#ifndef USE_VC_CRT
-extern "C"
-{
-void __cpuid(int a[4], int b);
-}
-#if defined (_WIN64)
-#define localtime_s _localtime64_s
-#else
-#define localtime_s _localtime32_s
-#endif
-#else
-#ifndef MICROSOFT_WINDOWS_WINBASE_H_DEFINE_INTERLOCKED_CPLUSPLUS_OVERLOADS
-FORCEINLINE
-unsigned long
-InterlockedIncrement(
-    __inout unsigned long volatile *Addend
-    )
-{
-    return (unsigned long) InterlockedIncrement((volatile long*) Addend);
-}
-
-FORCEINLINE
-unsigned
-InterlockedIncrement(
-    __inout  unsigned volatile *Addend
-    )
-{
-    return (unsigned) InterlockedIncrement((volatile long*) Addend);
-}
-
-FORCEINLINE
-unsigned long
-InterlockedDecrement(
-    __inout unsigned long volatile *Addend
-    )
-{
-    return (unsigned long) InterlockedDecrement((volatile long*) Addend);
-}
-#endif
-#endif
-
 #include <malloc.h>
 
 #ifdef _M_AMD64
@@ -281,17 +239,6 @@ union uquad
 #define STRINGIZE(s) QUOTE(s)
 #define STRINGIZEW(s) TEXT(QUOTE(s))
 #define IsTrueOrFalse(value)     ((value) ? L"True" : L"False")
-//
-// Special tracing helpers
-//
-
-#define ENABLE_UNDEFINED_TRACING 0
-
-#if ENABLE_UNDEFINED_TRACING
-#define TRACE_UNDEFINED(x) OutputDebugStringW(x L"\r\n");
-#else
-#define TRACE_UNDEFINED(x)
-#endif
 
 template <class T> struct DefaultComparer;
 template <typename T> struct RecyclerPointerComparer;
@@ -315,14 +262,9 @@ namespace JsUtil
     template <class TKey, class TValue> class ImplicitKeyValueEntry;    
     template <class TKey, class TValue> class WeakRefValueDictionaryEntry;
 
-    //struct Interval;
     template <class TKey, class TValue> struct KeyValuePair;
     template <class T, class TAllocator, bool isLeaf, template <class TListType, bool clearOldEntries> class TRemovePolicy, template <typename Value> class TComparer> class List;
     template <class T, class TComparer> class QuickSort;
-    //template <class T> class Set;
-    //class String;
-    //class StringBuilder;
-    //class StringComparer;
     template <typename T> class CharacterBuffer;    
 }
 

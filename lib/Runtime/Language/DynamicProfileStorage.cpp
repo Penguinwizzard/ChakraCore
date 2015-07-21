@@ -528,7 +528,8 @@ DynamicProfileStorage::ImportFile(wchar_t const * filename, bool allowNonExistin
             {
                 Output::Print(L"ERROR: DynamicProfileStorage: Unable to open file '%s' to import (%d)\n", filename, e);
 
-                wchar_t const * const error_string = _wcserror(e);
+                wchar_t error_string[256];
+                _wcserror_s(error_string, e);
                 Output::Print(L"ERROR:   For file '%s': %s (%d)\n", filename, error_string, e);
                 Output::Flush();
             }

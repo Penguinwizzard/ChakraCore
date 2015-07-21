@@ -39,7 +39,7 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>    
-    <ClCompile Include="$(MSBuildThisFileDirectory)JsrtCore.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Jsrt.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JsrtContext.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JsrtCustomEnumerator.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JsrtExternalArrayBuffer.cpp" />
@@ -50,7 +50,8 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
-  <ItemGroup>    
+  <ItemGroup>
+    <ClInclude Include="chakrart.h" />
     <ClInclude Include="JsrtContext.h" />
     <ClInclude Include="JsrtCustomEnumerator.h" />
     <ClInclude Include="JsrtExternalArrayBuffer.h" />

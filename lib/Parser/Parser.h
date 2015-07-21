@@ -12,9 +12,6 @@
 // #define USE_POPCNT_INSTRUCTION 1
 // #define USE_BITCOUNTS 1
 
-#include "activdbg.h"
-#include "activaut.h"
-// From Common.lib
 #include "Common.h"
 
 // FORWARD
@@ -30,13 +27,6 @@ namespace UnifiedRegex {
     struct Program;
 }
 
-#pragma warning(push)
-#pragma warning(disable: 4995) /* 'function': name was marked as #pragma deprecated */
-#include <stdio.h>
-#include <mbstring.h>
-#include <activscp.h>
-#pragma warning(pop)
-
 // TODO: temporary workaround for getting at COleScript::GetUserLocale().
 // We need a better way to pass around config.
 extern LCID GetUserLocale();
@@ -48,7 +38,6 @@ extern LCID GetUserLocale();
 #include "errstr.h"
 #include "globals.h"
 #include "idiom.h"
-#include "var.h"
 #include "keywords.h"
 #include "ptree.h"
 #include "tokens.h"
@@ -60,8 +49,6 @@ extern LCID GetUserLocale();
 #include "parse.h"
 
 #include "RegexFlags.h"
-
-#include "unicode.h"
 
 #include "Chars.h"
 #include "DebugWriter.h"
