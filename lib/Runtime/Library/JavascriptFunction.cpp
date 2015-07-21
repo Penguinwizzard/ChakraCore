@@ -666,12 +666,6 @@ namespace Js
         Assert(args.Info.Flags & CallFlags_New);
         Assert(scriptContext);
 
-        if (JavascriptProxy::Is(v))
-        {
-            JavascriptProxy* proxy = JavascriptProxy::FromVar(v);
-            return proxy->ConstructorTrap(args, scriptContext, spreadIndices);
-        }
-
         // Create the empty object if necessary:
         // - Built-in constructor functions will return a new object of a specific type, so a new empty object does not need to
         //   be created
@@ -681,6 +675,51 @@ namespace Js
         // JavascriptOperators::NewScObject should have thrown if 'v' is not a constructor
         RecyclableObject* functionObj = RecyclableObject::FromVar(v);
 
+        Var* newValues = args.Values;
+        CallFlags newFlags = args.Info.Flags;
+        ushort newCount = args.Info.Count;
+        bool thisAlreadySpecified = false;
+        if (overridingNewTarget != nullptr)
+        {
+            if (ScriptFunction::Is(functionObj) && ScriptFunction::FromVar(functionObj)->IsClassConstructor())
+            {
+                thisAlreadySpecified = true;
+                args.Values[0] = overridingNewTarget;
+            }
+            else
+            {
+                newCount++;
+                newFlags = (CallFlags)(newFlags | CallFlags_NewTarget | CallFlags_ExtraArg); 
+                const unsigned STACK_ARGS_ALLOCA_THRESHOLD = 8; // Number of stack args we allow before using _alloca
+                Var stackArgs[STACK_ARGS_ALLOCA_THRESHOLD];
+                if (newCount > STACK_ARGS_ALLOCA_THRESHOLD)
+                {
+                    PROBE_STACK(scriptContext, newCount * sizeof(Var) + Js::Constants::MinStackDefault); // args + function call
+                    newValues = (Var*)_alloca(newCount * sizeof(Var));
+                }
+                else
+                {
+                    newValues = stackArgs;
+                }
+
+                for (unsigned int i = 0; i < args.Info.Count; i++)
+                {
+                    newValues[i] = args.Values[i];
+                }
+
+                newValues[args.Info.Count] = overridingNewTarget;
+            }
+        }
+
+        CallInfo newCallInfo(newFlags, newCount);
+        Arguments newArgs(newCallInfo, newValues);
+
+        if (JavascriptProxy::Is(v))
+        {
+            JavascriptProxy* proxy = JavascriptProxy::FromVar(v);
+            return proxy->ConstructorTrap(newArgs, scriptContext, spreadIndices);
+        }
+
 #if DBG
         if (scriptContext->IsInDebugMode())
         {
@@ -689,25 +728,22 @@ namespace Js
 #endif
 
         // Call the constructor function:
-        if (overridingNewTarget == nullptr)
+        // - If this is not already specified as the overriding new target in Reflect.construct a class case, then 
+        // - Pass in the new empty object as the 'this' parameter. This can be null if an empty object was not created.
+
+        if (!thisAlreadySpecified)
         {
-            // - Pass in the new empty object as the 'this' parameter. This can be null if an empty object was not created.
-            args.Values[0] = resultObject;
-        }
-        else
-        {
-            // - Pass in the overridingNewTarget as the 'this' parameter, we just checked, this cannot be nullptr
-            args.Values[0] = overridingNewTarget;
+            newValues[0] = resultObject;
         }
 
         Var functionResult;
         if (spreadIndices != nullptr)
         {
-            functionResult = CallSpreadFunction(functionObj, functionObj->GetEntryPoint(), args, spreadIndices);
+            functionResult = CallSpreadFunction(functionObj, functionObj->GetEntryPoint(), newArgs, spreadIndices);
         }
         else
         {
-            functionResult = CallFunction<true>(functionObj, functionObj->GetEntryPoint(), args);
+            functionResult = CallFunction<true>(functionObj, functionObj->GetEntryPoint(), newArgs);
         }
 
         return

@@ -473,7 +473,7 @@ namespace Js
         // TODO: Handle call from global scope, strict mode
         BOOL isIndirect = FALSE;
 
-        if (args.Info.Flags & CallFlags_CallEval)
+        if (args.Info.Flags & CallFlags_ExtraArg)
         {
             // This was recognized as an eval call at compile time. The last one or two args are internal to us.
             // Argcount will be one of the following when called from global code
@@ -621,7 +621,7 @@ namespace Js
         if (pfuncScript->GetFunctionBody()->GetHasThis())
         {
             // The eval expression refers to "this"
-            if (args.Info.Flags & CallFlags_CallEval)
+            if (args.Info.Flags & CallFlags_ExtraArg)
             {
                 JavascriptFunction* pfuncCaller;
                 JavascriptStackWalker::GetCaller(&pfuncCaller, scriptContext);
@@ -649,7 +649,7 @@ namespace Js
         if (pfuncScript->HasSuperReference())
         {
             // Indirect evals cannot have a super reference.
-            if (!(args.Info.Flags & CallFlags_CallEval))
+            if (!(args.Info.Flags & CallFlags_ExtraArg))
             {
                 JavascriptError::ThrowSyntaxError(scriptContext, ERRSuperInIndirectEval, L"super");
             }

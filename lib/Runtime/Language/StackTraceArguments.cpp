@@ -70,7 +70,7 @@ namespace Js {
         {
             int64 numberOfArguments = walker.GetCallInfo()->Count;
             if (numberOfArguments > 0) numberOfArguments --; // Don't consider 'this'
-            if (walker.GetCallInfo()->Flags & Js::CallFlags_CallEval)
+            if (walker.GetCallInfo()->Flags & Js::CallFlags_ExtraArg)
             {
                 Assert(numberOfArguments > 0 );
                 // skip the last FrameDisplay argument.

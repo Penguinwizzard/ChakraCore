@@ -435,7 +435,11 @@ namespace Js
     template <class T> 
     inline void InterpreterStackFrame::OP_LdNewTarget(const unaligned T* playout)
     {
-        if (this->m_callFlags & CallFlags_New)
+        if (this->m_callFlags & CallFlags_NewTarget)
+        {
+            SetRegAllowStackVar(playout->R0, (Js::RecyclableObject*)this->m_inParams[this->m_inSlotsCount]);
+        }
+        else if (this->m_callFlags & CallFlags_New)
         {
             SetRegAllowStackVar(playout->R0, this->GetFunctionExpression());
         }

@@ -1851,6 +1851,7 @@ namespace Js
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
 
+        bool hasOverridingNewTarget = ((callInfo.Flags & CallFlags_NewTarget) != 0);
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
@@ -1905,7 +1906,7 @@ namespace Js
             argList->DirectSetItemAt(i - 1, args[i]);
         }
 
-        ushort newCount = (ushort)(args.Info.Flags & CallFlags_New) ? 3 : 4;
+        ushort newCount = 4;
         CallInfo calleeInfo(CallFlags_Value, newCount);
         Var* varArgs;
         varArgs = (Var*)_alloca(newCount * sizeof(Var));
@@ -1916,6 +1917,14 @@ namespace Js
         if (args.Info.Flags & CallFlags_New)
         {
             varArgs[2] = argList;
+            if (hasOverridingNewTarget)
+            {
+                varArgs[3] = args.Values[callInfo.Count];
+            }
+            else
+            {
+                varArgs[3] = function;
+            }
         }
         else
         {

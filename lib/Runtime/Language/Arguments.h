@@ -40,7 +40,8 @@ namespace Js
         ArgumentReader(CallInfo *callInfo, Var *values)
             : Arguments(*callInfo, values)
         {
-            if (Info.Flags & Js::CallFlags_CallEval)
+            AssertMsg(!(Info.Flags & Js::CallFlags_NewTarget) || (Info.Flags & Js::CallFlags_ExtraArg), "NewTarget flag must be used together with ExtraArg.");
+            if (Info.Flags & Js::CallFlags_ExtraArg)
             {
                 // If "calling eval" is set, then the last param is the frame display, which only
                 // the eval built-in should see.
@@ -50,9 +51,9 @@ namespace Js
                 // to change all the caller to be aware of the id or somehow make sure they don't use
                 // the stack version. Both seem risky. It would be safer and more robust to just
                 // change the stack version.
-                Info.Flags = (CallFlags)(Info.Flags & ~Js::CallFlags_CallEval);
+                Info.Flags = (CallFlags)(Info.Flags & ~Js::CallFlags_ExtraArg);
                 Info.Count--;
-                callInfo->Flags = (CallFlags)(callInfo->Flags & ~Js::CallFlags_CallEval);
+                callInfo->Flags = (CallFlags)(callInfo->Flags & ~Js::CallFlags_ExtraArg);
                 callInfo->Count--;
             }
         }

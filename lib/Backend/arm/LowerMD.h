@@ -154,7 +154,7 @@ public:
 
             void LoadFloatValue(IR::RegOpnd * javascriptNumber, IR::RegOpnd * opndFloat, IR::LabelInstr * labelHelper, IR::Instr * instrInsert, const bool checkForNullInLoopBody = false);
 
-            IR::Instr *     LoadStackAddress(StackSym *sym);
+            IR::Instr *     LoadStackAddress(StackSym *sym, IR::RegOpnd *regDst = nullptr);
             IR::Instr *     LowerCatch(IR::Instr *instr);
 
             IR::Instr *     LowerGetCachedFunc(IR::Instr *instr);

@@ -130,8 +130,8 @@
 #define PROCESS_CALL_FLAGS_Value_COMMON(name, func, layout, suffix) PROCESS_CALL_FLAGS_COMMON(name, func, layout, CallFlags_Value, suffix)
 #define PROCESS_CALL_FLAGS_Value(name, func, layout) PROCESS_CALL_FLAGS_COMMON(name, func, layout, CallFlags_Value,)
 
-#define PROCESS_CALL_FLAGS_CallEval_COMMON(name, func, layout, suffix) PROCESS_CALL_FLAGS_COMMON(name, func, layout, CallFlags_CallEval, suffix)
-#define PROCESS_CALL_FLAGS_CallEval(name, func, layout) PROCESS_CALL_FLAGS_COMMON(name, func, layout, CallFlags_CallEval,)
+#define PROCESS_CALL_FLAGS_CallEval_COMMON(name, func, layout, suffix) PROCESS_CALL_FLAGS_COMMON(name, func, layout, CallFlags_ExtraArg, suffix)
+#define PROCESS_CALL_FLAGS_CallEval(name, func, layout) PROCESS_CALL_FLAGS_COMMON(name, func, layout, CallFlags_ExtraArg,)
 
 #define PROCESS_A1toXX_ALLOW_STACK_COMMON(name, func, suffix) \
     case OpCode::name: \
@@ -720,8 +720,8 @@
 namespace Js
 {
     const int k_stackFrameVarCount = (sizeof(InterpreterStackFrame) + sizeof(Var) - 1) / sizeof(Var);
-    InterpreterStackFrame::Setup::Setup(Js::ScriptFunction * function, Js::Arguments& args)
-        : function(function), inParams(args.Values), inSlotsCount(args.Info.Count), executeFunction(function->GetFunctionBody()), callFlags(args.Info.Flags)
+    InterpreterStackFrame::Setup::Setup(Js::ScriptFunction * function, Js::Arguments& args, CallFlags callFlags)
+        : function(function), inParams(args.Values), inSlotsCount(args.Info.Count), executeFunction(function->GetFunctionBody()), callFlags(callFlags)
     {
         SetupInternal();
     }
@@ -1258,23 +1258,25 @@ namespace Js
 #if DYNAMIC_INTERPRETER_THUNK
     Var InterpreterStackFrame::InterpreterThunk(JavascriptCallStackLayout* layout)
     {
+        CallFlags callFlags = layout->callInfo.Flags;
         Js::ScriptFunction * function = Js::ScriptFunction::FromVar(layout->functionObject);
         Js::ArgumentReader args(&layout->callInfo, layout->args);    
         void* localReturnAddress = _ReturnAddress();
         void* localAddressOfReturnAddress = _AddressOfReturnAddress();
-        return InterpreterHelper(function, args, localReturnAddress, localAddressOfReturnAddress);
+        return InterpreterHelper(function, args, callFlags, localReturnAddress, localAddressOfReturnAddress);
     }
 #else
     Var InterpreterStackFrame::InterpreterThunk(RecyclableObject* function, CallInfo callInfo, ...)
     {
-        ARGUMENTS(args, callInfo);  
+        CallFlags callFlags = layout->callInfo.Flags;
+        ARGUMENTS(args, callInfo);
         void* localReturnAddress = _ReturnAddress();
         void* localAddressOfReturnAddress = _AddressOfReturnAddress();
-        return InterpreterHelper(Js::ScriptFunction::FromVar(function), args, localReturnAddress, localAddressOfReturnAddress);
+        return InterpreterHelper(Js::ScriptFunction::FromVar(function), args, callFlags, localReturnAddress, localAddressOfReturnAddress);
     }
 #endif
 
-    Var InterpreterStackFrame::InterpreterHelper(ScriptFunction* function, ArgumentReader args, void* returnAddress, void* addressOfReturnAddress, const bool isAsmJs)
+    Var InterpreterStackFrame::InterpreterHelper(ScriptFunction* function, ArgumentReader args, CallFlags callFlags, void* returnAddress, void* addressOfReturnAddress, const bool isAsmJs)
     {
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
@@ -1408,7 +1410,7 @@ namespace Js
                 // It will live with the JavascriptGenerator object.
                 //
                 Arguments generatorArgs = generator->GetArguments();
-                InterpreterStackFrame::Setup setup(function, generatorArgs);
+                InterpreterStackFrame::Setup setup(function, generatorArgs, generatorArgs.Info.Flags);
                 size_t varAllocCount = setup.GetAllocationVarCount();
                 size_t varSizeInBytes = varAllocCount * sizeof(Var);
                 DWORD_PTR stackAddr = reinterpret_cast<DWORD_PTR>(&generator); // as mentioned above, use any stack address from this frame to ensure correct debugging functionality
@@ -1432,7 +1434,7 @@ namespace Js
         }
         else
         {
-            InterpreterStackFrame::Setup setup(function, args);
+            InterpreterStackFrame::Setup setup(function, args, callFlags);
             size_t varAllocCount = setup.GetAllocationVarCount();
             size_t varSizeInBytes = varAllocCount * sizeof(Var);
 
@@ -1549,7 +1551,7 @@ namespace Js
         void* returnAddress = _ReturnAddress();
         void* addressOfReturnAddress = _AddressOfReturnAddress();
         function->GetFunctionBody()->EnsureDynamicProfileInfo();
-        InterpreterStackFrame* newInstance = (InterpreterStackFrame*)InterpreterHelper(function, args, returnAddress, addressOfReturnAddress, true);
+        InterpreterStackFrame* newInstance = (InterpreterStackFrame*)InterpreterHelper(function, args, args.Info.Flags, returnAddress, addressOfReturnAddress, true);
 
         //Handle return value
         AsmJsRetType::Which retType = (AsmJsRetType::Which) GetRetType(function);
@@ -1665,7 +1667,7 @@ namespace Js
         void* returnAddress = _ReturnAddress();
         void* addressOfReturnAddress = _AddressOfReturnAddress();
         function->GetFunctionBody()->EnsureDynamicProfileInfo();
-        InterpreterStackFrame* newInstance = (InterpreterStackFrame*)InterpreterHelper(function, args, returnAddress, addressOfReturnAddress, true);
+        InterpreterStackFrame* newInstance = (InterpreterStackFrame*)InterpreterHelper(function, args, (CallFlags)flags, returnAddress, addressOfReturnAddress, true);
 
         return GetAsmJsRetVal<T>(newInstance);
     }

@@ -715,7 +715,7 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
 
         case Js::OpCode::CallIEval:
         {
-            Js::CallFlags flags = (Js::CallFlags)(Js::CallFlags_CallEval | (instr->GetDst() ? Js::CallFlags_Value : Js::CallFlags_NotUsed));
+            Js::CallFlags flags = (Js::CallFlags)(Js::CallFlags_ExtraArg | (instr->GetDst() ? Js::CallFlags_Value : Js::CallFlags_NotUsed));
             if (IsSpreadCall(instr))
             {
                 instrPrev = LowerSpreadCall(instr, flags);
@@ -19986,6 +19986,7 @@ Lowerer::GenerateLoadNewTarget(IR::Instr* instrInsert)
     Func *func = instrInsert->m_func;
 
     IR::LabelInstr * labelDone = IR::LabelInstr::New(Js::OpCode::Label, func, false);
+    IR::LabelInstr * labelLoadArgNewTarget = IR::LabelInstr::New(Js::OpCode::Label, func, false);
     IR::Opnd* opndUndefAddress = this->LoadLibraryValueOpnd(instrInsert, LibraryValue::ValueUndefined);
 
     Assert(!func->IsInlinee());
@@ -20000,11 +20001,19 @@ Lowerer::GenerateLoadNewTarget(IR::Instr* instrInsert)
 
     // MOV dst, undefined                       // dst = undefined
     // MOV s1, [ebp + 4]                        // s1 = call info
-    // AND s1, Js::CallFlags_New                // s1 &= Js::CallFlags_New
-    // CMP s1, 0
-    // JE $L2
+    // AND s2, s1, Js::CallFlags_NewTarget   // s2 = s1 & Js::CallFlags_NewTarget
+    // CMP s2, 0
+    // JNE $LoadLastArgument
+    // AND s2, s1, Js::CallFlags_New            // s2 = s1 & Js::CallFlags_New
+    // CMP s2, 0
+    // JE $Done
     // MOV dst, [ebp + 8]                       // dst = function object
-    // $L2
+    // JMP $L2
+    // $LoadLastArgument
+    // AND s2, s1, (0x00FFFFFF)
+    // MOV s3, ebp
+    // MOV dst, [s3 + 5 * sizeof(Var) + s2]     // s3 = last argument
+    // $Done
 
     IR::Opnd * dstOpnd = instrInsert->GetDst();
     Assert(dstOpnd->IsRegOpnd());
@@ -20014,11 +20023,39 @@ Lowerer::GenerateLoadNewTarget(IR::Instr* instrInsert)
     Assert(Js::CallInfo::ksizeofCount == 24);
 
     IR::RegOpnd *isNewFlagSetRegOpnd = IR::RegOpnd::New(TyUint32, func);
+
+    InsertAnd(isNewFlagSetRegOpnd, callInfoOpnd, IR::IntConstOpnd::New(Js::CallFlags_NewTarget << Js::CallInfo::ksizeofCount, TyUint32, func, true), instrInsert);
+    InsertTestBranch(isNewFlagSetRegOpnd, isNewFlagSetRegOpnd, Js::OpCode::BrNeq_A, labelLoadArgNewTarget, instrInsert);
+
     InsertAnd(isNewFlagSetRegOpnd, callInfoOpnd, IR::IntConstOpnd::New(Js::CallFlags_New << Js::CallInfo::ksizeofCount, TyUint32, func, true), instrInsert);
     GenerateNotZeroTest(isNewFlagSetRegOpnd, labelDone, instrInsert);
 
-    m_lowererMD.LoadFuncExpression(instrInsert);
-    instrInsert->InsertAfter(labelDone);
+    IR::Instr* loadFuncInstr = IR::Instr::New(Js::OpCode::AND, func);
+    loadFuncInstr->SetDst(instrInsert->GetDst());
+    m_lowererMD.LoadFuncExpression(loadFuncInstr);
+
+    instrInsert->InsertBefore(loadFuncInstr);
+    InsertBranch(Js::OpCode::Br, labelDone, instrInsert);
+    
+    instrInsert->InsertBefore(labelLoadArgNewTarget);
+
+    InsertAnd(isNewFlagSetRegOpnd, callInfoOpnd, IR::IntConstOpnd::New(0x00FFFFFF, TyUint32, func, true), instrInsert);
+
+    IR::RegOpnd *baseOpnd = IR::RegOpnd::New(TyMachReg, func);
+    StackSym *paramSym = StackSym::New(TyMachReg, this->m_func);
+    instrInsert->InsertBefore(this->m_lowererMD.LoadStackAddress(paramSym, baseOpnd));
+
+    const BYTE indirScale = this->m_lowererMD.GetDefaultIndirScale();
+    IR::IndirOpnd* argIndirOpnd = IR::IndirOpnd::New(baseOpnd->AsRegOpnd(), isNewFlagSetRegOpnd, indirScale, TyMachReg, this->m_func);
+
+    // Need to offset valueOpnd by 5. Instead of changing valueOpnd, we can just add an offset to the indir. Changing
+    // valueOpnd requires creation of a temp sym (if it's not already a temp) so that the value of the sym that
+    // valueOpnd represents is not changed.
+    uint16 actualOffset = m_func->GetJnFunction()->IsGenerator() ? 1 : GetFormalParamOffset() + 1; //5
+    argIndirOpnd->SetOffset(actualOffset << indirScale);
+    LowererMD::CreateAssign(dstOpnd, argIndirOpnd, instrInsert);    
+    instrInsert->InsertBefore(labelDone);
+    instrInsert->Remove();
 }
 
 

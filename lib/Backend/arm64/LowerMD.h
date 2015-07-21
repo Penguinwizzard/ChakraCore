@@ -153,7 +153,7 @@ public:
   
               void LoadFloatValue(IR::RegOpnd * javascriptNumber, IR::RegOpnd * opndFloat, IR::LabelInstr * labelHelper, IR::Instr * instrInsert) { __debugbreak(); }
   
-              IR::Instr *     LoadStackAddress(StackSym *sym) { __debugbreak(); return 0; }
+              IR::Instr *     LoadStackAddress(StackSym *sym, IR::RegOpnd* regDst = nullptr) { __debugbreak(); return 0; }
               IR::Instr *     LowerCatch(IR::Instr *instr) { __debugbreak(); return 0; }
   
               IR::Instr *     LowerGetCachedFunc(IR::Instr *instr) { __debugbreak(); return 0; }

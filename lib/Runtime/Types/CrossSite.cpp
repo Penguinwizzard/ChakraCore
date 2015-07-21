@@ -339,7 +339,7 @@ namespace Js
             Assert(JavascriptFunction::Is(function) && JavascriptFunction::FromVar(function)->GetFunctionInfo()->GetAttributes() & FunctionInfo::SkipDefaultNewObject);
         }
         uint count = args.Info.Count;
-        if (args.Info.Flags & CallFlags_CallEval)
+        if ((args.Info.Flags & CallFlags_ExtraArg) && ((args.Info.Flags & CallFlags_NewTarget) == 0))
         {
             // The final eval arg is a frame display that needs to be marshaled specially.
             args.Values[count-1] = CrossSite::MarshalFrameDisplay(targetScriptContext, (FrameDisplay*)args.Values[count-1]);

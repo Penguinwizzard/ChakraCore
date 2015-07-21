@@ -2080,7 +2080,7 @@ LowererMD::LoadInputParamCount(IR::Instr * instrInsert, int adjust, bool needFla
     IR::SymOpnd * srcOpnd;
 
     //  LDR Rz, CallInfo
-    //  LSL Rx, Rz, #28  //Get CallEval bit as bottom bit.
+    //  LSR Rx, Rz, #28  //Get CallEval bit as bottom bit.
     //  AND Rx, Rx, #1   //Mask higher 3 bits, Rx has 1 if Frameidsplay is present, zero otherwise
     //  LSL Rz, Rz, #8   //Mask higher 8 bits to get the number of arguments
     //  LSR Rz, Rz, #8
@@ -2097,7 +2097,7 @@ LowererMD::LoadInputParamCount(IR::Instr * instrInsert, int adjust, bool needFla
     // ("Calling eval" means the last param is the frame display, which only the eval built-in should see.)
 
     IR::RegOpnd * evalBitOpnd = IR::RegOpnd::New(TyMachReg, this->m_func);
-    instr = IR::Instr::New(Js::OpCode::LSR, evalBitOpnd, dstOpnd, IR::IntConstOpnd::New(Math::Log2(Js::CallFlags_CallEval) + Js::CallInfo::ksizeofCount, TyMachReg, this->m_func), this->m_func);
+    instr = IR::Instr::New(Js::OpCode::LSR, evalBitOpnd, dstOpnd, IR::IntConstOpnd::New(Math::Log2(Js::CallFlags_ExtraArg) + Js::CallInfo::ksizeofCount, TyMachReg, this->m_func), this->m_func);
     instrInsert->InsertBefore(instr);
 
     // Mask off other call flags from callinfo
@@ -7015,9 +7015,13 @@ bool LowererMD::GenerateFastCharAt(Js::BuiltinFunction index, IR::Opnd *dst, IR:
 }
 
 IR::Instr *
-LowererMD::LoadStackAddress(StackSym *sym)
+LowererMD::LoadStackAddress(StackSym *sym, IR::RegOpnd* regDst)
 {
-    IR::RegOpnd * regDst = IR::RegOpnd::New(TyMachReg, this->m_func);
+    if (regDst == nullptr)
+    {
+        regDst = IR::RegOpnd::New(TyMachReg, this->m_func);
+    }
+
     IR::SymOpnd * symSrc = IR::SymOpnd::New(sym, TyMachPtr, this->m_func);
     IR::Instr * lea = IR::Instr::New(Js::OpCode::LEA, regDst, symSrc, this->m_func);
 

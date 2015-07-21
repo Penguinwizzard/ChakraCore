@@ -12,10 +12,10 @@ namespace Js
         CallFlags_New     = 1,
         CallFlags_Value   = 2,
         CallFlags_Eval    = 4,
-        CallFlags_CallEval = 8,
+        CallFlags_ExtraArg = 8,
         CallFlags_NotUsed = 0x10,
         CallFlags_Wrapped = 0x20,
-        CallFlags_CallPut = 0x40,
+        CallFlags_NewTarget = 0x40,
         CallFlags_InternalFrame = 0x80
     };
 
