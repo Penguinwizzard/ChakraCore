@@ -20124,7 +20124,7 @@ Lowerer::GenerateLoadNewTarget(IR::Instr* instrInsert)
     // CMP s2, 0
     // JE $Done
     // MOV dst, [ebp + 8]                       // dst = function object
-    // JMP $L2
+    // JMP $Done
     // $LoadLastArgument
     // AND s2, s1, (0x00FFFFFF)
     // MOV s3, ebp
@@ -20135,10 +20135,10 @@ Lowerer::GenerateLoadNewTarget(IR::Instr* instrInsert)
     Assert(dstOpnd->IsRegOpnd());
     LowererMD::CreateAssign(dstOpnd, opndUndefAddress, instrInsert);
 
-    IR::SymOpnd * callInfoOpnd = Lowerer::LoadCallInfo(instrInsert);
+    IR::SymOpnd* callInfoOpnd = Lowerer::LoadCallInfo(instrInsert);
     Assert(Js::CallInfo::ksizeofCount == 24);
 
-    IR::RegOpnd *isNewFlagSetRegOpnd = IR::RegOpnd::New(TyUint32, func);
+    IR::RegOpnd* isNewFlagSetRegOpnd = IR::RegOpnd::New(TyUint32, func);
 
     InsertAnd(isNewFlagSetRegOpnd, callInfoOpnd, IR::IntConstOpnd::New(Js::CallFlags_NewTarget << Js::CallInfo::ksizeofCount, TyUint32, func, true), instrInsert);
     InsertTestBranch(isNewFlagSetRegOpnd, isNewFlagSetRegOpnd, Js::OpCode::BrNeq_A, labelLoadArgNewTarget, instrInsert);
@@ -20155,19 +20155,20 @@ Lowerer::GenerateLoadNewTarget(IR::Instr* instrInsert)
     
     instrInsert->InsertBefore(labelLoadArgNewTarget);
 
-    InsertAnd(isNewFlagSetRegOpnd, callInfoOpnd, IR::IntConstOpnd::New(0x00FFFFFF, TyUint32, func, true), instrInsert);
+    IR::RegOpnd* argCountOpnd = isNewFlagSetRegOpnd;
+    InsertAnd(argCountOpnd, callInfoOpnd, IR::IntConstOpnd::New(0x00FFFFFF, TyUint32, func, true), instrInsert);
 
     IR::RegOpnd *baseOpnd = IR::RegOpnd::New(TyMachReg, func);
     StackSym *paramSym = StackSym::New(TyMachReg, this->m_func);
     instrInsert->InsertBefore(this->m_lowererMD.LoadStackAddress(paramSym, baseOpnd));
 
     const BYTE indirScale = this->m_lowererMD.GetDefaultIndirScale();
-    IR::IndirOpnd* argIndirOpnd = IR::IndirOpnd::New(baseOpnd->AsRegOpnd(), isNewFlagSetRegOpnd, indirScale, TyMachReg, this->m_func);
+    IR::IndirOpnd* argIndirOpnd = IR::IndirOpnd::New(baseOpnd->AsRegOpnd(), argCountOpnd, indirScale, TyMachReg, this->m_func);
 
     // Need to offset valueOpnd by 5. Instead of changing valueOpnd, we can just add an offset to the indir. Changing
     // valueOpnd requires creation of a temp sym (if it's not already a temp) so that the value of the sym that
     // valueOpnd represents is not changed.
-    uint16 actualOffset = m_func->GetJnFunction()->IsGenerator() ? 1 : GetFormalParamOffset() + 1; //5
+    uint16 actualOffset = GetFormalParamOffset() + 1; //5
     argIndirOpnd->SetOffset(actualOffset << indirScale);
     LowererMD::CreateAssign(dstOpnd, argIndirOpnd, instrInsert);    
     instrInsert->InsertBefore(labelDone);

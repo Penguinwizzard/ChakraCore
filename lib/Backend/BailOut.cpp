@@ -1273,7 +1273,7 @@ BailOutRecord::BailOutHelper(Js::JavascriptCallStackLayout * layout, Js::ScriptF
             // It will live with the JavascriptGenerator object.
             //
             Js::Arguments generatorArgs = generator->GetArguments();
-            Js::InterpreterStackFrame::Setup setup(function, generatorArgs, generatorArgs.Info.Flags);
+            Js::InterpreterStackFrame::Setup setup(function, generatorArgs);
             size_t varAllocCount = setup.GetAllocationVarCount();
             size_t varSizeInBytes = varAllocCount * sizeof(Js::Var);
             DWORD_PTR stackAddr = reinterpret_cast<DWORD_PTR>(&generator); // as mentioned above, use any stack address from this frame to ensure correct debugging functionality
@@ -1298,7 +1298,7 @@ BailOutRecord::BailOutHelper(Js::JavascriptCallStackLayout * layout, Js::ScriptF
     }
     else
     {
-        Js::InterpreterStackFrame::Setup setup(function, args, args.Info.Flags);
+        Js::InterpreterStackFrame::Setup setup(function, args);
         size_t varAllocCount = setup.GetAllocationVarCount();
         size_t varSizeInBytes = varAllocCount * sizeof(Js::Var);
 

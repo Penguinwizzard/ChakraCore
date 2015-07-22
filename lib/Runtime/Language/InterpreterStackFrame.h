@@ -34,7 +34,7 @@ namespace Js
         class Setup
         {
         public:
-            Setup(ScriptFunction * function, Arguments& args, CallFlags callFlags);
+            Setup(ScriptFunction * function, Arguments& args);
             Setup(ScriptFunction * function, Var * inParams, int inSlotsCount);
             size_t GetAllocationVarCount() const { return varAllocCount; }
 
@@ -261,7 +261,7 @@ namespace Js
 #if DYNAMIC_INTERPRETER_THUNK
         static Var DelayDynamicInterpreterThunk(RecyclableObject* function, CallInfo callInfo, ...);
         __declspec(noinline) static Var InterpreterThunk(JavascriptCallStackLayout* layout);  
-        static Var InterpreterHelper(ScriptFunction* function, ArgumentReader args, CallFlags callFlags, void* returnAddress, void* addressOfReturnAddress, const bool isAsmJs = false);
+        static Var InterpreterHelper(ScriptFunction* function, ArgumentReader args, void* returnAddress, void* addressOfReturnAddress, const bool isAsmJs = false);
 #else
         __declspec(noinline) static Var InterpreterThunk(RecyclableObject* function, CallInfo callInfo, ...);     
         static Var InterpreterHelper(RecyclableObject* function, ArgumentReader args, CallFlags callFlags, void* returnAddress, void* addressOfReturnAddress, const bool isAsmJs = false);
