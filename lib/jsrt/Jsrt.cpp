@@ -485,6 +485,56 @@ STDAPI_(JsErrorCode) JsSetCurrentContext(JsContextRef newContext)
     });
 }
 
+STDAPI_(JsErrorCode) JsGetContextOfObject(JsValueRef object, JsContextRef *context)
+{
+    return GlobalAPIWrapper([&]() -> JsErrorCode {
+        PARAM_NOT_NULL(object);
+        *context = nullptr;
+        if (Js::TaggedNumber::Is(object)) 
+        {
+            return JsErrorNonNumericArgumentExpected;
+        }
+        if(!Js::RecyclableObject::Is(object))
+        {
+            return JsErrorArgumentNotObject;
+        }
+        Js::RecyclableObject* obj = Js::RecyclableObject::FromVar(object);
+        *context = (JsContextRef)obj->GetScriptContext()->GetLibrary()->GetPinnedJsrtContextObject();
+        return JsNoError;
+    });
+}
+
+STDAPI_(JsErrorCode) JsGetContextData(JsContextRef context, void **data)
+{
+    return GlobalAPIWrapper([&]() -> JsErrorCode {
+        PARAM_NOT_NULL(context);
+        PARAM_NOT_NULL(data);
+
+        if (!JsrtContext::Is(context))
+        {
+            return JsErrorInvalidArgument;
+        }
+
+        *data = static_cast<JsrtContext *>(context)->GetExternalData();
+        return JsNoError;
+    });
+}
+
+STDAPI_(JsErrorCode) JsSetContextData(_In_ JsContextRef context, _In_ void *data)
+{
+    return GlobalAPIWrapper([&]() -> JsErrorCode {
+        PARAM_NOT_NULL(context);
+
+        if (!JsrtContext::Is(context))
+        {
+            return JsErrorInvalidArgument;
+        }
+
+        static_cast<JsrtContext *>(context)->SetExternalData(data);
+        return JsNoError;
+    });
+}
+
 void HandleScriptCompileError(Js::ScriptContext * scriptContext, CompileScriptException * se)
 {
     HRESULT hr = se->ei.scode;           

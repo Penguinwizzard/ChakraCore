@@ -649,6 +649,7 @@ namespace Js
         JavascriptFunction* GetHostPromiseContinuationFunction();
         void SetNativeHostPromiseContinuationFunction(PromiseContinuationCallback function, void *state);
         void PinJsrtContextObject(FinalizableObject* jsrtContext);
+        FinalizableObject* GetPinnedJsrtContextObject();
         void EnqueueTask(Var taskVar);
 
         HeapArgumentsObject* CreateHeapArguments(Var frameObj, uint formalCount);

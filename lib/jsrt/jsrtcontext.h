@@ -12,6 +12,8 @@ public:
 
     Js::ScriptContext * GetScriptContext() const { return this->scriptContext; }
     JsrtRuntime * GetRuntime() const { return this->runtime; }
+    void* GetExternalData() const { return this->externalData; }
+    void SetExternalData(void * data) { this->externalData = data; }
 
     static bool Initialize();
     static void Uninitialize();
@@ -34,6 +36,7 @@ private:
     static DWORD s_tlsSlot;
     Js::ScriptContext * scriptContext;
     JsrtRuntime * runtime;
+    void * externalData = nullptr;
     JsrtContext * previous;
     JsrtContext * next;
 };

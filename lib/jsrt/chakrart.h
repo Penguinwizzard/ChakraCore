@@ -99,6 +99,10 @@
         /// </summary>
         JsErrorArgumentNotObject,
         /// <summary>
+        ///     A hosting API that operates on object values was called with a numeric value.
+        /// </summary>
+        JsErrorNonNumericArgumentExpected,
+        /// <summary>
         ///     A script context is in the middle of a profile callback.
         /// </summary>
         JsErrorInProfileCallback,
@@ -744,6 +748,45 @@
     STDAPI_(JsErrorCode)
         JsSetCurrentContext(
         _In_ JsContextRef context);
+
+    /// <summary>
+    ///     Gets the script context that the object belongs to.
+    /// </summary>
+    /// <param name="object">The object to get the context from.</param>
+    /// <param name="context">The context the object belongs to.</param>
+    /// <returns>
+    ///     The code <c>JsNoError</c> if the operation succeeded, a failure code otherwise.
+    /// </returns>
+    STDAPI_(JsErrorCode)
+        JsGetContextOfObject(
+            _In_ JsValueRef object,
+            _Out_ JsContextRef *context);
+
+    /// <summary>
+    ///     Gets the internal data set on JsrtContext.
+    /// </summary>
+    /// <param name="context">The context to get the data from.</param>
+    /// <param name="data">The pointer to the data where data will be returned.</param>
+    /// <returns>
+    ///     The code <c>JsNoError</c> if the operation succeeded, a failure code otherwise.
+    /// </returns>
+    STDAPI_(JsErrorCode)
+        JsGetContextData(
+            _In_ JsContextRef context,
+            _Out_ void **data);
+
+    /// <summary>
+    ///     Sets the interal data of JsrtContext.
+    /// </summary>
+    /// <param name="context">The context to set the data to.</param>
+    /// <param name="data">The pointer to the data to be set.</param>
+    /// <returns>
+    ///     The code <c>JsNoError</c> if the operation succeeded, a failure code otherwise.
+    /// </returns>
+    STDAPI_(JsErrorCode)
+        JsSetContextData(
+            _In_ JsContextRef context,
+            _In_ void *data);
 
     /// <summary>
     ///     Gets the runtime that the context belongs to.

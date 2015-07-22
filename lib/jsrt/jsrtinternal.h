@@ -56,6 +56,7 @@
                 { \
                     return JsErrorArgumentNotObject; \
                 } \
+                MARSHAL_OBJECT(p, scriptContext, RecyclableObject)   \
             } \
         }
 

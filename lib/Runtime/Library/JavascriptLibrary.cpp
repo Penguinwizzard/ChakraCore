@@ -5182,6 +5182,11 @@ namespace Js
         this->jsrtContextObject = jsrtContext;
     }
 
+    FinalizableObject* JavascriptLibrary::GetPinnedJsrtContextObject()
+    {
+        return this->jsrtContextObject;
+    }
+
     void JavascriptLibrary::EnqueueTask(Var taskVar)
     {
         // TODO: This function should take a parameter to declare the Task Queue in which to enqueue taskVar.
