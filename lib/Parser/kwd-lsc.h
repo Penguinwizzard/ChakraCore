@@ -19,6 +19,7 @@
 
 KEYWORD(tkABSTRACT    ,0, No, knopNone   , No, knopNone   , abstract)
 KEYWORD(tkASSERT      ,0, No, knopNone   , No, knopNone   , assert)
+KEYWORD(tkAWAIT       ,1, No, knopNone   ,Uni, knopAwait  , await)
 KEYWORD(tkBOOLEAN     ,0, No, knopNone   , No, knopNone   , boolean)
 KEYWORD(tkBREAK       ,1, No, knopNone   , No, knopNone   , break)
 KEYWORD(tkBYTE        ,0, No, knopNone   , No, knopNone   , byte)

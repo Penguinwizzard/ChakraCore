@@ -3,6 +3,29 @@
 // Generated with the following command line: wscript jsscan.js kwd-lsc.h kwd-swtch.h
 // This should be regenerated whenever the keywords change
 
+    case 'a':
+        if (identifyKwds)
+        {
+            switch (p[0]) {
+            case 'w':
+                if (p[1] == 'a' && p[2] == 'i' && p[3] == 't' && !IsIdContinueNext(p+4, last)) {
+                    p += 4;
+                    if (this->m_fAwaitIsKeyword || !this->m_parser || this->m_parser->IsStrictMode()) {
+                        token = tkAWAIT;
+                        goto LReserved;
+                    }
+                    goto LIdentifier;
+                }
+                break;
+            case 'r':
+                if (p[1] == 'g' && p[2] == 'u' && p[3] == 'm' && p[4] == 'e' && p[5] == 'n' && p[6] == 't' && p[7] == 's' && !IsIdContinueNext(p+8, last)) {
+                    p += 8;
+                    goto LArguments ;
+                }
+                break;
+            }
+        }
+        goto LIdentifier;
     case 'b':
         if (identifyKwds)
         {
@@ -481,15 +504,6 @@
                     goto LIdentifier;
                 }
                 break;
-            }
-        }
-        goto LIdentifier;
-    case 'a':
-        if (identifyKwds)
-        {
-            if (p[0] == 'r' && p[1] == 'g' && p[2] == 'u' && p[3] == 'm' && p[4] == 'e' && p[5] == 'n' && p[6] == 't' && p[7] == 's' && !IsIdContinueNext(p+8, last)) {
-                p += 8;
-                goto LArguments ;
             }
         }
         goto LIdentifier;

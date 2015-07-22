@@ -210,6 +210,7 @@ enum FncFlags
     kFunctionIsGenerator                        = 1 << 24, // Function is an ES6 generator function
     kFunctionAsmjsMode                          = 1 << 25,
     kFunctionHasNewTargetReference              = 1 << 26, // function has a reference to new.target
+    kFunctionIsAsync                            = 1 << 27, // function is async
 };
 
 struct RestorePoint;
@@ -295,6 +296,7 @@ public:
     void SetHasThisStmt(bool set = true) { SetFlags(kFunctionHasThisStmt, set); }
     void SetHasWithStmt(bool set = true) { SetFlags(kFunctionHasWithStmt, set); }
     void SetIsAccessor(bool set = true) { SetFlags(kFunctionIsAccessor, set); }
+    void SetIsAsync(bool set = true) { SetFlags(kFunctionIsAsync, set); }
     void SetIsClassConstructor(bool set = true) { SetFlags(kFunctionIsClassConstructor, set); }
     void SetIsClassMember(bool set = true) { SetFlags(kFunctionIsClassMember, set); }
     void SetIsGeneratedDefault(bool set = true) { SetFlags(kFunctionIsGeneratedDefault, set); }
@@ -324,6 +326,7 @@ public:
     bool HasThisStmt() const { return HasFlags(kFunctionHasThisStmt); }
     bool HasWithStmt() const { return HasFlags(kFunctionHasWithStmt); }
     bool IsAccessor() const { return HasFlags(kFunctionIsAccessor); }
+    bool IsAsync() const { return HasFlags(kFunctionIsAsync); }
     bool IsClassConstructor() const { return HasFlags(kFunctionIsClassConstructor); }
     bool IsClassMember() const { return HasFlags(kFunctionIsClassMember); }
     bool IsDeclaration() const { return HasFlags(kFunctionDeclaration); }

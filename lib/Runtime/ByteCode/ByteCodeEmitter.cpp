@@ -9464,6 +9464,11 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         EmitYieldStar(pnode, byteCodeGenerator, funcInfo);
         byteCodeGenerator->EndStatement(pnode);
         break;
+    case knopAwait:
+        Emit(pnode->sxUni.pnode1, byteCodeGenerator, funcInfo, false);
+        funcInfo->ReleaseLoc(pnode->sxUni.pnode1);
+        byteCodeGenerator->Writer()->Reg1(Js::OpCode::LdUndef, funcInfo->AcquireLoc(pnode));
+        break;
     default:
         AssertMsg(0, "emit unhandled pnode op");
         break;

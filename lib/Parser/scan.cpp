@@ -161,6 +161,7 @@ Scanner<EncodingPolicy>::Scanner(Parser* parser, HashTbl *phtbl, Token *ptoken, 
     this->es6UnicodeMode = scriptContext->GetConfig()->IsES6UnicodeExtensionsEnabled();
 
     m_fYieldIsKeyword = false;
+    m_fAwaitIsKeyword = false;
     
 #if NOTYET
     ClearFPUStatus();
@@ -536,12 +537,12 @@ tokens Scanner<EncodingPolicy>::ScanIdentifierContinue(bool identifyKwds, bool f
             // So we can just assume it is an ID
             DebugOnly(long cch = UnescapeToTempBuf(pchMin, p));
             DebugOnly(tokens tk = m_phtbl->TkFromNameLen(m_tempChBuf.m_prgch, cch, IsStrictMode()));
-            Assert(tk == tkID || (tk == tkYIELD && !m_fYieldIsKeyword));
+            Assert(tk == tkID || (tk == tkYIELD && !m_fYieldIsKeyword) || (tk == tkAWAIT && !m_fAwaitIsKeyword));
             return tkID;
         }
         long cch = UnescapeToTempBuf(pchMin, p);
         tokens tk = m_phtbl->TkFromNameLen(m_tempChBuf.m_prgch, cch, IsStrictMode());
-        return !m_fYieldIsKeyword && tk == tkYIELD ? tkID : tk;
+        return (!m_fYieldIsKeyword && tk == tkYIELD) || (!m_fAwaitIsKeyword && tk == tkAWAIT) ? tkID : tk;
     }
     else if (m_fSyntaxColor)
     {
@@ -562,7 +563,7 @@ tokens Scanner<EncodingPolicy>::ScanIdentifierContinue(bool identifyKwds, bool f
         // So we can just assume it is an ID
         DebugOnly(long cch = UnescapeToTempBuf(pchMin, p));
         DebugOnly(tokens tk = m_phtbl->TkFromNameLen(m_tempChBuf.m_prgch, cch, IsStrictMode()));
-        Assert(tk == tkID || (tk == tkYIELD && !m_fYieldIsKeyword));
+        Assert(tk == tkID || (tk == tkYIELD && !m_fYieldIsKeyword) || (tk == tkAWAIT && !m_fAwaitIsKeyword));
 
         m_ptoken->SetIdentifier(reinterpret_cast<const char *>(pchMin), (long)(p - pchMin));
         return tkID;
@@ -574,14 +575,16 @@ tokens Scanner<EncodingPolicy>::ScanIdentifierContinue(bool identifyKwds, bool f
     if (!fHasEscape)
     {
         // If it doesn't have escape, then Scan() should have taken care of keywords (except
-        // yield if m_fYieldIsKeyword is false, in which case yield is treated as an identifier).
+        // yield if m_fYieldIsKeyword is false, in which case yield is treated as an identifier, and except
+        // await if m_fAwaitIsKeyword is false, in which case await is treated as an identifier).
         // We don't have to check if the name is reserved word and return it as an Identifier
         Assert(pid->Tk(IsStrictMode()) == tkID
-            || (pid->Tk(IsStrictMode()) == tkYIELD && !m_fYieldIsKeyword));
+            || (pid->Tk(IsStrictMode()) == tkYIELD && !m_fYieldIsKeyword)
+            || (pid->Tk(IsStrictMode()) == tkAWAIT && !m_fAwaitIsKeyword));
         return tkID;
     }
     tokens tk = pid->Tk(IsStrictMode());
-    return tk == tkID || (tk == tkYIELD && !m_fYieldIsKeyword) ? tkID : tkNone;
+    return tk == tkID || (tk == tkYIELD && !m_fYieldIsKeyword) || (tk == tkAWAIT && !m_fAwaitIsKeyword) ? tkID : tkNone;
 }
 
 template <typename EncodingPolicy>

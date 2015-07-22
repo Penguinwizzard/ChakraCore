@@ -232,6 +232,9 @@ L0035:
     // 006B break
         cmp eax, 0x0085E995
         je LEqual_break
+    // await
+        cmp eax, 0x0084FF56
+        je LEqual_await
         jmp LDefault
 L001B:
     // 001B uint
@@ -503,6 +506,8 @@ L0035:
     if (luHash == 0x0085FAA3) goto LEqual_catch;
     // 006B break
     if (luHash == 0x0085E995) goto LEqual_break;
+    // await
+    if (luHash == 0x0084FF56) goto LEqual_await;
     goto LDefault;
 L001B:
     // 001B uint

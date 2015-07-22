@@ -397,7 +397,6 @@ private:
     {
         IdentPtr arguments; // m_pidArguments; // 'arguments' identifier
         IdentPtr async; // m_pidAsync; 
-        IdentPtr await; // m_pidAwait;
         IdentPtr eval; // m_pidEval;
         IdentPtr setter; // m_pidSetter;
         IdentPtr getter; // m_pidGetter;

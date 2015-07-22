@@ -2000,7 +2000,8 @@ template<bool buildAST>
 ParseNodePtr Parser::ParseTerm(BOOL fAllowCall, LPCOLESTR pNameHint, ulong *pHintLength, _Inout_opt_ IdentToken* pToken/*= NULL*/, bool fUnaryOrParen)
 {
     ParseNodePtr pnode = NULL;
-    charcount_t ichMin;
+    charcount_t ichMin = 0;
+    size_t iecpMin = 0;
     size_t iuMin;
     IdentToken term;
     BOOL fInNew = FALSE;
@@ -2023,10 +2024,10 @@ ParseNodePtr Parser::ParseTerm(BOOL fAllowCall, LPCOLESTR pNameHint, ulong *pHin
     {
         PidRefStack *ref = null;
         IdentPtr pid = m_token.GetIdentifier(m_phtbl);
-        charcount_t ichMin = m_pscan->IchMinTok();
         charcount_t ichLim = m_pscan->IchLimTok();
-        size_t iecpMin  = m_pscan->IecpMinTok();
         size_t iecpLim = m_pscan->IecpLimTok();
+        ichMin = m_pscan->IchMinTok();
+        iecpMin  = m_pscan->IecpMinTok();
 
         m_pscan->Scan();
 
@@ -2285,6 +2286,11 @@ LFunction :
             flags |= fFncAsync;
         }
         pnode = ParseFncDecl<buildAST>(flags, pNameHint, false, false, fUnaryOrParen);
+        if (isAsyncExpr)
+        {
+            pnode->sxFnc.cbMin = iecpMin;
+            pnode->ichMin = ichMin;
+        }
         break;
     }
 
@@ -3120,10 +3126,14 @@ ParseNodePtr Parser::ParseMemberList(LPCOLESTR pNameHint, ulong* pNameHintLength
         }
 #endif
         bool isAsyncMethod = false;
+        charcount_t ichMin = 0;
+        size_t iecpMin = 0;
         if (m_token.tk == tkID && m_token.GetIdentifier(m_phtbl) == wellKnownPropertyPids.async && m_scriptContext->GetConfig()->IsES6AsyncAndAwaitEnabled())
         {
             RestorePoint parsedAsync;
             m_pscan->Capture(&parsedAsync);
+            ichMin = m_pscan->IchMinTok();
+            iecpMin = m_pscan->IecpMinTok();
 
             m_pscan->ScanForcingPid();
             if (m_token.tk == tkLParen || m_token.tk == tkColon || m_token.tk == tkRCurly)
@@ -3314,6 +3324,11 @@ ParseNodePtr Parser::ParseMemberList(LPCOLESTR pNameHint, ulong* pNameHintLength
             m_pscan->SeekTo(atPid);
             ParseNodePtr pnodeFunc = ParseFncDecl<buildAST>(fncDeclFlags | (isAsyncMethod ? fFncAsync : fFncNoFlgs), pFullNameHint);
 
+            if (isAsyncMethod)
+            {
+                pnodeFunc->sxFnc.cbMin = iecpMin;
+                pnodeFunc->ichMin = ichMin;
+            }
             if (buildAST)
             {
                 pnodeArg = CreateBinNode(knopMember, pnodeName, pnodeFunc);
@@ -3667,6 +3682,7 @@ ParseNodePtr Parser::ParseFncDecl(ushort flags, LPCOLESTR pNameHint, const bool 
 
     if (buildAST || BindDeferredPidRefs())
     {
+        pnodeFnc->sxFnc.SetIsAsync((flags & fFncAsync) != 0);
         pnodeFnc->sxFnc.SetIsLambda((flags & fFncLambda) != 0);
         pnodeFnc->sxFnc.SetIsMethod((flags & fFncMethod) != 0);
         pnodeFnc->sxFnc.SetIsClassMember((flags & fFncClassMember) != 0);
@@ -3901,6 +3917,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
 {
     bool fDeclaration = (flags & fFncDeclaration) != 0;
     bool fLambda = (flags & fFncLambda) != 0;
+    bool fAsync = (flags & fFncAsync) != 0;
     bool fDeferred = false;
     StmtNest *pstmtSave;
     ParseNodePtr *lastNodeRef = nullptr;
@@ -3930,6 +3947,8 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
     // switch scanner to treat 'yield' as keyword in generator functions
     // or as an identifier in non-generator functions
     bool fPreviousYieldIsKeyword = m_pscan->SetYieldIsKeyword(pnodeFnc && pnodeFnc->sxFnc.IsGenerator());
+
+    bool fPreviousAwaitIsKeyword = m_pscan->SetAwaitIsKeyword(fAsync);
 
     if (pnodeFnc && pnodeFnc->sxFnc.IsGenerator())
     {
@@ -4328,6 +4347,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
 
 
     m_pscan->SetYieldIsKeyword(fPreviousYieldIsKeyword);
+    m_pscan->SetAwaitIsKeyword(fPreviousAwaitIsKeyword);
 
     return true;
 }
@@ -4805,6 +4825,7 @@ template<bool buildAST>
 bool Parser::ParseFncNames(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncParent, ushort flags, ParseNodePtr **pLastNodeRef)
 {
     BOOL fDeclaration = flags & fFncDeclaration;
+    BOOL fIsAsync = flags & fFncAsync;
     ParseNodePtr pnodeT;
     charcount_t ichMinNames, ichLimNames;
 
@@ -4864,9 +4885,13 @@ bool Parser::ParseFncNames(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncParent, u
         pnodeFnc->sxFnc.SetIsGenerator();
     }
 
-    if ((flags & fFncAsync) != 0 && pnodeFnc->sxFnc.IsGenerator())
+    if (fIsAsync)
     {
-        Error(ERRsyntax);
+        if (pnodeFnc->sxFnc.IsGenerator())
+        {
+            Error(ERRsyntax);
+        }
+        pnodeFnc->sxFnc.SetIsAsync();
     }
 
     if (pnodeFnc)
@@ -5489,6 +5514,8 @@ void Parser::FinishFncNode(ParseNodePtr pnodeFnc)
     // or as an identifier in non-generator functions
     bool fPreviousYieldIsKeyword = m_pscan->SetYieldIsKeyword(pnodeFnc && pnodeFnc->sxFnc.IsGenerator());
 
+    bool fPreviousAwaitIsKeyword = m_pscan->SetAwaitIsKeyword(pnodeFnc && pnodeFnc->sxFnc.IsAsync());
+
     // Skip the arg list.
     m_pscan->ScanNoKeywords();
     if (m_token.tk == tkStar)
@@ -5578,6 +5605,7 @@ void Parser::FinishFncNode(ParseNodePtr pnodeFnc)
     this->m_nextFunctionId = nextFunctionIdSave;
 
     m_pscan->SetYieldIsKeyword(fPreviousYieldIsKeyword);
+    m_pscan->SetAwaitIsKeyword(fPreviousAwaitIsKeyword);
 }
 
 void Parser::FinishFncDecl(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint, ParseNodePtr *lastNodeRef)
@@ -5887,6 +5915,8 @@ ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulo
         }
 
         ushort fncDeclFlags = fFncNoName | fFncMethod | fFncClassMember;
+        charcount_t ichMin = 0;
+        size_t iecpMin = 0;
         ParseNodePtr pnodeMemberName = nullptr;
         IdentPtr pidHint = nullptr;
         IdentPtr memberPid = nullptr;
@@ -5899,6 +5929,8 @@ ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulo
         {
             RestorePoint parsedAsync;
             m_pscan->Capture(&parsedAsync);
+            ichMin = m_pscan->IchMinTok();
+            iecpMin = m_pscan->IecpMinTok();
 
             m_pscan->Scan();
             if (m_token.tk == tkLParen)
@@ -6063,6 +6095,11 @@ ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulo
                         fncDeclFlags |= fFncAsync;
                     }
                     pnodeFnc = ParseFncDecl<buildAST>(fncDeclFlags, pidHint ? pidHint->Psz() : nullptr, false, /* needsPIDOnRCurlyScan */ true, /* resetParsingSuperRestrictionState */false);
+                    if (isAsyncMethod)
+                    {
+                        pnodeFnc->sxFnc.cbMin = iecpMin;
+                        pnodeFnc->ichMin = ichMin;
+                    }
                 }
                 pnodeFnc->sxFnc.SetIsStaticMember(isStatic);
 
@@ -6666,6 +6703,22 @@ ParseNodePtr Parser::ParseExpr(int oplMin, BOOL *pfCanAssign, BOOL fAllowIn, BOO
                 Error(ERRsyntax);
             }
         }
+        else if (nop == knopAwait)
+        {
+            if (!m_pscan->AwaitIsKeyword() || oplMin > opl)
+            {
+                // As 'yield' keyword, the case where 'await' is scanned as a keyword (tkAWAIT) but the scanner
+                // is not treating await as a keyword (!m_pscan->AwaitIsKeyword()) happens
+                // in strict mode non-generator function contexts.
+                //
+                // That is, 'await' is a keyword because of strict mode, but AwaitExpression
+                // is not a grammar production outside of generator functions.
+                //
+                // Otherwise it is an error for a yield to appear in the context of a higher level
+                // binding operator, be it unary or binary.
+                Error(ERRsyntax);
+            }
+        }
 
         m_pscan->Scan();
         fCanAssign = FALSE;
@@ -6939,13 +6992,23 @@ ParseNodePtr Parser::ParseExpr(int oplMin, BOOL *pfCanAssign, BOOL fAllowIn, BOO
         else if (nop == knopFncDecl)
         {
             ushort flags = fFncLambda;
+            size_t iecpMin = 0;
+            bool isAsyncMethod = false;
             m_pscan->SeekTo(termStart);
             if (m_token.tk == tkID && m_token.GetIdentifier(m_phtbl) == wellKnownPropertyPids.async && m_scriptContext->GetConfig()->IsES6AsyncAndAwaitEnabled())
             {
+                ichMin = m_pscan->IchMinTok();
+                iecpMin = m_pscan->IecpMinTok();
                 m_pscan->Scan();
                 flags |= fFncAsync;
+                isAsyncMethod = true;
             }
             pnode = ParseFncDecl<buildAST>(flags, nullptr, /* isSourceElement = */ false, /* needsPIDOnRCurlyScan = */false, /* resetParsingSuperRestrictionState = */false);
+            if (isAsyncMethod)
+            {
+                pnode->sxFnc.cbMin = iecpMin;
+                pnode->ichMin = ichMin;
+            }
         }
         else
         {
@@ -7667,7 +7730,8 @@ ParseNodePtr Parser::ParseStatement(bool isSourceElement/* = false*/, bool check
     ParseNodePtr pnodeT;
     ParseNodePtr pnode = NULL;
     LabelId* pLabelIdList = NULL;
-    charcount_t ichMin;
+    charcount_t ichMin = 0;
+    size_t iecpMin = 0;
     StmtNest stmt;
     StmtNest *pstmt;
     BOOL fForInOrOfOkay;
@@ -7754,6 +7818,11 @@ LFunctionStatement:
         {
             pnode = ParseFncDecl<buildAST>(fFncDeclaration | (isAsyncMethod ? fFncAsync : fFncNoFlgs), nullptr, isSourceElement);
         }
+        if (isAsyncMethod)
+        {
+            pnode->sxFnc.cbMin = iecpMin;
+            pnode->ichMin = ichMin;
+        }
         break;
     }
 
@@ -7788,7 +7857,9 @@ LFunctionStatement:
         else if (m_token.GetIdentifier(m_phtbl) == wellKnownPropertyPids.async && m_scriptContext->GetConfig()->IsES6AsyncAndAwaitEnabled())
         {
             RestorePoint parsedAsync;
-            m_pscan->Capture(&parsedAsync); 
+            m_pscan->Capture(&parsedAsync);
+            ichMin = m_pscan->IchMinTok();
+            iecpMin = m_pscan->IecpMinTok();
 
             m_pscan->Scan();
             if (m_token.tk == tkFUNCTION)
@@ -9044,7 +9115,6 @@ void Parser::InitPids()
     AssertMemN(m_phtbl);
     wellKnownPropertyPids.arguments = m_phtbl->PidHashNameLen(g_ssym_arguments.sz, g_ssym_arguments.cch);
     wellKnownPropertyPids.async = m_phtbl->PidHashNameLen(g_ssym_async.sz, g_ssym_async.cch);
-    wellKnownPropertyPids.await = m_phtbl->PidHashNameLen(g_ssym_await.sz, g_ssym_await.cch);
     wellKnownPropertyPids.eval = m_phtbl->PidHashNameLen(g_ssym_eval.sz, g_ssym_eval.cch);
     wellKnownPropertyPids.getter = m_phtbl->PidHashNameLen(g_ssym_get.sz, g_ssym_get.cch);
     wellKnownPropertyPids.setter = m_phtbl->PidHashNameLen(g_ssym_set.sz, g_ssym_set.cch);
@@ -9229,6 +9299,12 @@ ParseNodePtr Parser::Parse(LPCUTF8 pszSrc, size_t offset, size_t length, charcou
     pnodeProg->sxFnc.cbMin = m_pscan->IecpMinTok();
     pnodeProg->sxFnc.lineNumber = lineNumber;
     pnodeProg->sxFnc.columnNumber = 0;
+
+    if (m_token.tk == tkID && m_token.GetIdentifier(m_phtbl) == wellKnownPropertyPids.async)
+    {
+        Assert(m_scriptContext->GetConfig()->IsES6AsyncAndAwaitEnabled());
+        pnodeProg->sxFnc.SetIsAsync();
+    }
 
     if (!isDeferred || (isDeferred && grfscr & fscrGlobalCode))
     {
@@ -11522,6 +11598,11 @@ void PrintPnodeWIndent(ParseNode *pnode,int indentAmt) {
   case knopYieldLeaf:
       Indent(indentAmt);
       Output::Print(L"yield\n");
+      PrintPnodeListWIndent(pnode->sxUni.pnode1, indentAmt + INDENT_SIZE);
+      break;
+  case knopAwait:
+      Indent(indentAmt);
+      Output::Print(L"await\n");
       PrintPnodeListWIndent(pnode->sxUni.pnode1, indentAmt + INDENT_SIZE);
       break;
   default:
