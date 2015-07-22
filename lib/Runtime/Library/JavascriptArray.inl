@@ -710,6 +710,503 @@ SECOND_PASS:
     }
 
     template<typename T>
+    SparseArraySegment<T>* JavascriptArray::PrepareSegmentForMemOp(uint32 startIndex, uint32 length)
+    {
+        uint32 endIndex = startIndex + length - 1;
+        if (endIndex >= this->length)
+        {
+            if (endIndex < JavascriptArray::InvalidIndex)
+            {
+                this->length = endIndex + 1;
+            }
+            else
+            {
+                JavascriptError::ThrowRangeError(this->GetScriptContext(), JSERR_ArrayLengthAssignIncorrect);
+            }
+        }
+
+        this->EnsureHead<T>();
+
+        Recycler* recycler = GetRecycler();
+
+        //Find the segment where itemIndex is present or is at the boundary
+        SparseArraySegment<T>* current = (SparseArraySegment<T>*)this->GetBeginLookupSegment(startIndex, false);
+
+        SparseArraySegmentBase* prev = nullptr;
+        SparseArraySegmentBase* startSeg = nullptr;
+        SparseArraySegmentBase* endSeg = nullptr;
+        SparseArraySegmentBase* startPrev = nullptr;
+        uint32 growby, startOffset, endOffset;
+
+        const auto FindStartAndEndSegment = [&]()
+        {
+            if (endIndex >= current->left + current->size)
+            {
+                current = (SparseArraySegment<T>*)head;
+            }
+            else
+            {
+                startSeg = endSeg = current;
+                current = nullptr;
+            }
+
+            while (current != nullptr)
+            {
+                startOffset = startIndex - current->left;
+                endOffset = endIndex - current->left;
+                if (!startSeg)
+                {
+                    if (startIndex <= current->left)
+                    {
+                        startPrev = prev;
+                        startSeg = current;
+                    }
+                    else if (startOffset <= current->size)
+                    {
+                        if ((nullptr == current->next) || (startIndex < current->next->left))
+                        {
+                            startPrev = prev;
+                            startSeg = current;
+                        }
+                    }
+                }
+                if (!endSeg)
+                {
+                    if (endIndex <= current->left)
+                    {
+                        endSeg = current;
+                        break;
+                    }
+                    else if (endOffset <= current->size)
+                    {
+                        if ((nullptr == current->next) || (endIndex < current->next->left))
+                        {
+                            endSeg = current;
+                            break;
+                        }
+                    }
+                }
+                prev = current;
+                current = (SparseArraySegment<T>*)current->next;
+            }
+            if (!startSeg && !endSeg)
+            {
+                startPrev = prev;
+            }
+        };
+
+        const auto ResizeArrayIfStartIsOutsideArrayLength = [&]()
+        {
+            Assert(endSeg == nullptr);
+            Assert(startIndex >= head->size);
+            // Reallocate head if it meets a heuristics
+            if (startPrev == head                                               // prev segment is the head segment
+                && !head->next                                                  // There is only one head segment in the array
+                && startIndex - head->size <= MergeSegmentsLengthHeuristics     // Distance to next index is relatively small
+                )
+            {
+                current = ((Js::SparseArraySegment<T>*)head)->GrowByMin(recycler, startIndex + length - head->size);
+                current->length = endIndex + 1;
+                head = current;
+                SetHasNoMissingValues(false);
+            }
+            else
+            {
+                //itemIndex is greater than the (left + size) of last segment in the linked list
+                current = SparseArraySegment<T>::AllocateSegment(recycler, startIndex, length, (SparseArraySegment<T> *)nullptr);
+                LinkSegments((Js::SparseArraySegment<T>*)startPrev, current);
+                current->length = length;
+                if (current == head)
+                {
+                    Assert(startIndex == 0);
+                    Assert(current->length == length);
+                    SetHasNoMissingValues();
+                }
+            }
+        };
+
+        const auto ExtendStartSegmentForMemOp = [&]()
+        {
+            startOffset = startIndex - startSeg->left;
+            if ((startIndex >= startSeg->left) && (startOffset < startSeg->size))
+            {
+                // startIndex is within startSeg
+                if ((startOffset + length) > startSeg->size)
+                {
+                    // if we don't have enough space in startSeg
+                    growby = length - (startSeg->size - startOffset);
+                    current = ((Js::SparseArraySegment<T>*)startSeg)->GrowByMin(recycler, growby);
+                    LinkSegments((Js::SparseArraySegment<T>*)startPrev, current);
+                    if (current == head)
+                    {
+                        if (startIndex > current->length)
+                        {
+                            // if it's the head segment and memset starts after the segment length, missing value is introduced
+                            SetHasNoMissingValues(false);
+                        }
+                        else if (!HasNoMissingValues())
+                        {
+                            // Have we overwritten all the missing values?
+                            if (!ScanForMissingValues<T>(0, startOffset))
+                            {
+                                SetHasNoMissingValues();
+                            }
+                        }
+                    }
+                    current->length = startOffset + length;
+                }
+                else
+                {
+                    // if we have enough space in the startseg
+                    current = (Js::SparseArraySegment<T>*)startSeg;
+                    if (current == head)
+                    {
+                        if (startIndex > current->length)
+                        {
+                            // if it's the head segment and memset starts after the segment length, missing value is introduced
+                            SetHasNoMissingValues(false);
+                        }
+                        else if (!HasNoMissingValues())
+                        {
+                            // Have we overwritten all the missing values?
+                            if (!ScanForMissingValues<T>(0, startOffset))
+                            {
+                                SetHasNoMissingValues();
+                            }
+                        }
+                    }
+                    current->length = current->length >  (startOffset + length) ? current->length : (startOffset + length);
+                }
+            }
+            else if ((startIndex + 1) <= startSeg->left)
+            {
+                if (startIndex + 1 == startSeg->left && startPrev == head)
+                {
+                    current = ((Js::SparseArraySegment<T>*)head)->GrowByMin(recycler, startIndex + length - head->size);
+                    current->length = endIndex + 1;
+                    head = current;
+                }
+                else
+                {
+                    // startIndex is in between prev and startIndex
+                    current = SparseArraySegment<T>::AllocateSegment(recycler, startIndex, length, (SparseArraySegment<T> *)nullptr);
+                    LinkSegments((Js::SparseArraySegment<T>*)startPrev, current);
+                    if (current == head)
+                    {
+                        SetHasNoMissingValues();
+                    }
+                    current->length = length;
+                }
+            }
+            else
+            {
+                Assert(startIndex == startSeg->left + startSeg->size);
+
+                current = ((Js::SparseArraySegment<T>*)startSeg)->GrowByMin(recycler, length);
+                LinkSegments((Js::SparseArraySegment<T>*)startPrev, current);
+
+                if (current == head)
+                {
+                    if (startIndex > current->length)
+                    {
+
+                        // if it's the head segment and memset starts after the segment length, missing value is introduced
+                        SetHasNoMissingValues(false);
+                    }
+                }
+                current->length = startOffset + length;
+            }
+
+            startSeg = current;
+        };
+
+        const auto AppendLeftOverItemsFromEndSegment = [&]()
+        {
+            if (!endSeg)
+            {
+                // end is beyond the length of the array
+                Assert(endIndex == this->length - 1);
+                current->next = nullptr;
+            }
+            else
+            {
+                endOffset = endIndex - endSeg->left;
+                startOffset = startIndex - current->left;
+                if ((endIndex >= endSeg->left) && (endOffset < endSeg->size))
+                {
+                    // endIndex is within endSeg
+                    if (endSeg->length - 1 > endOffset)
+                    {
+                        if (startSeg != endSeg)
+                        {
+                            // we have some leftover items on endseg
+                            growby = (endSeg->length - endOffset - 1);
+                            current = ((Js::SparseArraySegment<T>*)current)->GrowByMin(recycler, growby);
+                            js_memcpy_s(((Js::SparseArraySegment<T>*)current)->elements + startOffset + length, sizeof(T)* growby, ((Js::SparseArraySegment<T>*)endSeg)->elements + endOffset + 1, sizeof(T)* growby);
+                            LinkSegments((Js::SparseArraySegment<T>*)startPrev, current);
+                            current->length = startOffset + length + growby;
+                        }
+                        if (current == head && HasNoMissingValues())
+                        {
+                            if (ScanForMissingValues<T>(startOffset + length, current->length))
+                            {
+                                SetHasNoMissingValues(false);
+                            }
+                        }
+                    }
+                    current->next = endSeg->next;
+                }
+                else if ((endIndex + 1) <= endSeg->left)
+                {
+                    // endIndex is between endSeg and the segment before
+                    if (endIndex + 1 == endSeg->left && current == head)
+                    {
+
+                        // extend current to hold endSeg
+                        growby = endSeg->length;
+                        current = ((Js::SparseArraySegment<T>*)current)->GrowByMin(recycler, growby);
+                        js_memcpy_s(((Js::SparseArraySegment<T>*)current)->elements + endIndex + 1, sizeof(T)* endSeg->length, ((Js::SparseArraySegment<T>*)endSeg)->elements, sizeof(T)* endSeg->length);
+                        LinkSegments((Js::SparseArraySegment<T>*)startPrev, current);
+                        if (HasNoMissingValues())
+                        {
+                            if (ScanForMissingValues<T>(endIndex + 1, endIndex + growby))
+                            {
+                                SetHasNoMissingValues(false);
+                            }
+                        }
+                        current->length = endIndex + growby + 1;
+                        current->next = endSeg->next;
+                    }
+                    else
+                    {
+                        current->next = endSeg;
+                    }
+                }
+                else
+                {
+                    //endIndex is at the boundary of endSeg segment at the left + size
+                    Assert(endIndex == endSeg->left + endSeg->size);
+                    current->next = endSeg->next;
+                }
+            }
+        };
+        FindStartAndEndSegment();
+        if (startSeg == nullptr)
+        {
+            // if start index is greater than array length then we can add a new segment (or extend the last segment based on some heuristics)
+            ResizeArrayIfStartIsOutsideArrayLength();
+        }
+        else
+        {
+            // once we found the start segment we extend the start segment until startIndex+length . We don't care about what was there
+            // as they will be overwritten by the memset/ memcopy. Then we need to append items from the (startIndex+length) to array.length
+            // from the end segment to the new array
+            ExtendStartSegmentForMemOp();
+            AppendLeftOverItemsFromEndSegment();
+        }
+
+        Assert(current);
+        Assert(current->left <= startIndex);
+        Assert((startIndex - current->left) < current->size);
+        return current;
+    }
+
+    template<typename T>
+    void JavascriptArray::DirectSetItemAtRangeFromArray(uint32 toStartIndex, uint32 length, JavascriptArray *fromArray, uint32 fromStartIndex)
+    {
+        if (length == 0)
+        {
+            return;
+        }
+
+        bool isBtree = false;
+
+#ifdef ENABLE_DEBUG_CONFIG_OPTIONS
+        isBtree = Js::Configuration::Global.flags.ForceArrayBTree;
+#endif
+        if (GetSegmentMap() || fromArray->GetSegmentMap() || isBtree)
+        {
+            for (uint i = 0; i < length; i++)
+            {
+                T val;
+                if (fromArray->DirectGetItemAt(fromStartIndex + i, &val))
+                {
+                    DirectSetItem_Full(toStartIndex + i, val);
+                }
+            }
+            return;
+        }
+
+        SparseArraySegment<T> *toSegment = PrepareSegmentForMemOp<T>(toStartIndex, length);
+
+        Assert(fromArray->head);
+        Assert(fromArray->length >= (fromStartIndex + length));
+
+
+        //Find the segment where itemIndex is present or is at the boundary
+        SparseArraySegmentBase* current = fromArray->GetBeginLookupSegment(fromStartIndex, false);
+        Assert(current);
+        Assert(GetSegmentMap() == nullptr  && fromArray->GetSegmentMap() == nullptr);
+
+        while (current && length)
+        {
+            int memcopySize = length;
+            int startOffset;
+            if (fromStartIndex >= current->left && fromStartIndex < (current->left + current->length))
+            {
+                startOffset = fromStartIndex - current->left;
+                if ((startOffset + length) > current->length)
+                {
+                    memcopySize = current->length - startOffset;
+                }
+
+
+                js_memcpy_s(toSegment->elements + toStartIndex, memcopySize * sizeof(T), (((Js::SparseArraySegment<T>*)current)->elements + startOffset), memcopySize * sizeof(T));
+
+                fromArray->SetLastUsedSegment(current);
+                fromStartIndex = fromStartIndex + memcopySize;
+                toStartIndex = toStartIndex + memcopySize;
+                length = length - memcopySize;
+
+            }
+            current = current->next;
+        }
+
+        Assert(length == 0);
+
+        this->SetLastUsedSegment(toSegment);
+#if DBG
+        if (Js::Configuration::Global.flags.MemOpMissingValueValidate)
+        {
+            if (toSegment == head)
+            {
+                Assert(ScanForMissingValues<T>(0, this->length) != HasNoMissingValues());
+            }
+        }
+#endif
+    }
+    template<typename T>
+    void JavascriptArray::DirectSetItemAtRange(uint32 startIndex, uint32 length, T newValue)
+    {
+        if (startIndex == 0 && head != EmptySegment && length < head->size)
+        {
+            if (newValue == (T)0 || newValue == (T)(-1))
+            {
+                memset(((Js::SparseArraySegment<T>*)head)->elements, ((int)newValue), sizeof(T)* length);
+            }
+            else
+            {
+                Js::SparseArraySegment<T>* headSegment = ((Js::SparseArraySegment<T>*)head);
+                for (uint32 i = 0; i < length; i++)
+                {
+                    headSegment->elements[i] = newValue;
+                }
+            }
+
+            if (length > this->length)
+            {
+                this->length = length;
+            }
+
+            if (length > head->length)
+            {
+                head->length = length;
+            }
+
+            if (!HasNoMissingValues())
+            {
+                if (ScanForMissingValues<T>(length, head->length) == false)
+                {
+                    SetHasNoMissingValues(true);
+                }
+            }
+            this->SetLastUsedSegment(head);
+        }
+        else if (startIndex == 0 && length > this->length && (head == EmptySegment || length > head->size))
+        {
+
+            Recycler *recycler = GetRecycler();
+            this->length = length;
+            this->EnsureHead<T>();
+            SparseArraySegmentBase* current = nullptr;
+
+            Assert(head->size < length);
+
+            current = SparseArraySegment<T>::AllocateSegment(recycler, 0, length, (SparseArraySegment<T> *)nullptr);
+            this->SetHeadAndLastUsedSegment(current);
+
+            Assert(!HasSegmentMap());
+
+            SetHasNoMissingValues(true);
+
+            if (newValue == (T)0 || newValue == (T)(-1))
+            {
+                memset(((Js::SparseArraySegment<T>*)current)->elements, ((int)newValue), sizeof(T)* length);
+            }
+            else
+            {
+                for (uint32 i = 0; i < length; i++)
+                {
+                    ((Js::SparseArraySegment<T>*)current)->elements[i] = newValue;
+                }
+            }
+            this->SetLastUsedSegment(current);
+        }
+        else
+        {
+            DirectSetItemAtRangeFull<T>(startIndex, length, newValue);
+        }
+    }
+
+    template<typename T>
+    void JavascriptArray::DirectSetItemAtRangeFull(uint32 startIndex, uint32 length, T newValue)
+    {
+        if (length == 0)
+        {
+            return;
+        }
+
+        bool isBtree = false;
+
+#ifdef ENABLE_DEBUG_CONFIG_OPTIONS
+        isBtree = Js::Configuration::Global.flags.ForceArrayBTree;
+#endif
+        if (GetSegmentMap() || isBtree)
+        {
+            for (uint i = startIndex; i < startIndex + length; i++)
+            {
+                DirectSetItem_Full<T>(i, newValue);
+            }
+            return;
+        }
+
+        SparseArraySegment<T> *current = PrepareSegmentForMemOp<T>(startIndex, length);
+
+        if (newValue == (T)0 || newValue == (T)(-1))
+        {
+            memset((((Js::SparseArraySegment<T>*)current)->elements + (startIndex - current->left)), ((int)newValue), sizeof(T)* length);
+        }
+        else
+        {
+            for (uint32 i = 0; i < length; i++)
+            {
+                ((Js::SparseArraySegment<T>*)current)->elements[startIndex - current->left + i] = newValue;
+            }
+        }
+        this->SetLastUsedSegment(current);
+#if DBG
+        if (Js::Configuration::Global.flags.MemOpMissingValueValidate)
+        {
+            if (current == head)
+            {
+                Assert(ScanForMissingValues<T>(0, this->length) != HasNoMissingValues());
+            }
+        }
+#endif
+
+    }
+
+    template<typename T>
     void JavascriptArray::DirectSetItem_Full(uint32 itemIndex, T newValue)
     {
         DebugOnly(VerifyNotNeedMarshal(newValue));
@@ -1119,6 +1616,24 @@ SECOND_PASS:
         }
 
         SetHasNoMissingValues();
+    }
+
+    template<typename T>
+    bool JavascriptArray::ScanForMissingValues(const uint startIndex, const uint endIndex)
+    {
+        Assert(head);
+        //Assert(!HasNoMissingValues());
+
+        SparseArraySegment<T> *const segment = (SparseArraySegment<T>*)head;
+        const T *const segmentElements = segment->elements;
+        for (uint i = startIndex; i < endIndex; ++i)
+        {
+            if (SparseArraySegment<T>::IsMissingItem(&segmentElements[i]))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     inline void JavascriptArray::DirectSetItemIfNotExist(uint32 index, Var newValue)

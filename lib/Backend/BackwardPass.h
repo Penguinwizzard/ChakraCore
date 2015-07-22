@@ -47,6 +47,14 @@ private:
     bool ProcessInlineeStart(IR::Instr* instr);
     void ProcessInlineeEnd(IR::Instr* instr);
     void MarkTempProcessInstr(IR::Instr * instr);
+
+    void RemoveEmptyLoopAfterMemOp(Loop *loop);
+    void RemoveEmptyLoops();
+    bool IsEmptyLoopAfterMemOp(Loop *loop);
+    void RestoreInductionVariableValuesAfterMemOp(Loop *loop);
+    bool DoDeadStoreLdStForMemop(IR::Instr *instr);
+    bool DeadStoreInstr(IR::Instr *instr);
+
 #if DBG_DUMP
     void DumpBlockData(BasicBlock * block);
     void DumpMarkTemp();

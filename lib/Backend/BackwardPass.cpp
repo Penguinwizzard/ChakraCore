@@ -298,6 +298,10 @@ BackwardPass::Optimize()
     }
     NEXT_BLOCK_BACKWARD_IN_FUNC_DEAD_OR_ALIVE;
 
+    if (this->tag == Js::DeadStorePhase && !PHASE_OFF(Js::MemOpPhase, this->func))
+    {
+        this->RemoveEmptyLoops();
+    }
     this->func->m_fg->hasBackwardPassInfo = true;
 
     if(DoTrackCompoundedIntOverflow())
@@ -420,6 +424,15 @@ BackwardPass::MergeSuccBlocksInfo(BasicBlock * block)
 
             wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
 #endif
+            // save the byteCodeUpwardExposedUsed from deleting for the block right after the memop loop
+            if (this->tag == Js::DeadStorePhase && !this->IsPrePass() && globOpt->DoMemop(block->loop) && blockSucc->loop != block->loop)
+            {
+                Assert(block->loop->memOpInfo->inductionVariablesUsedAfterLoop == nullptr);
+                block->loop->memOpInfo->inductionVariablesUsedAfterLoop = JitAnew(this->tempAlloc, BVSparse<JitArenaAllocator>, this->tempAlloc);
+                block->loop->memOpInfo->inductionVariablesUsedAfterLoop->Or(blockSucc->byteCodeUpwardExposedUsed);
+                block->loop->memOpInfo->inductionVariablesUsedAfterLoop->Or(blockSucc->upwardExposedUses);
+            }
+
             bool deleteData = false;
             if (!blockSucc->isLoopHeader && blockSucc->backwardPassCurrentLoop == this->currentPrePassLoop)
             {
@@ -2460,6 +2473,18 @@ BackwardPass::ProcessBlock(BasicBlock * block)
             #endif
             }
 
+            if (this->tag == Js::DeadStorePhase &&  !this->IsPrePass() && !PHASE_OFF(Js::MemOpPhase, this->func))
+            {
+                if (block->loop != nullptr &&  this->DoDeadStoreLdStForMemop(instr))
+                {
+                    //DeadStoreInstr(instr);
+                    block->RemoveInstr(instr);
+                    Assert(!preOpBailOutInstrToProcess || preOpBailOutInstrToProcess == instr);
+                    preOpBailOutInstrToProcess = nullptr;
+                    continue;
+                }
+            }
+
             DeadStoreTypeCheckBailOut(instr);
             DeadStoreImplicitCallBailOut(instr, hasLiveFields);
 
@@ -3507,7 +3532,8 @@ void BackwardPass::UpdateArrayBailOutKind(IR::Instr *const instr)
     Assert(instr);
     Assert(instr->HasBailOutInfo());
 
-    if(instr->m_opcode != Js::OpCode::StElemI_A && instr->m_opcode != Js::OpCode::StElemI_A_Strict ||
+    if (instr->m_opcode != Js::OpCode::StElemI_A && instr->m_opcode != Js::OpCode::StElemI_A_Strict &&
+        instr->m_opcode != Js::OpCode::Memcopy && instr->m_opcode != Js::OpCode::Memset ||
         !instr->GetDst()->IsIndirOpnd())
     {
         return;
@@ -6015,6 +6041,14 @@ BackwardPass::ProcessDef(IR::Opnd * opnd)
     }
 
     // Dead store
+    DeadStoreInstr(instr);
+    return true;
+}
+
+bool
+BackwardPass::DeadStoreInstr(IR::Instr *instr)
+{
+    BasicBlock * block = this->currentBlock;
 
 #if DBG_DUMP
     if (this->IsTraceEnabled())
@@ -6878,6 +6912,275 @@ bool BackwardPass::CheckWriteThroughSymInRegion(Region* region, StackSym* sym)
     }
     Assert(selfOrFirstTryAncestor->GetType() == RegionTypeTry);
     return selfOrFirstTryAncestor->writeThroughSymbolsSet && selfOrFirstTryAncestor->writeThroughSymbolsSet->Test(sym->m_id);
+}
+
+bool
+BackwardPass::DoDeadStoreLdStForMemop(IR::Instr *instr)
+{
+    Assert(this->tag == Js::DeadStorePhase && this->currentBlock->loop != nullptr);
+
+    Loop *loop = this->currentBlock->loop;
+
+    if (globOpt->DoMemset(loop))
+    {
+        if (instr->m_opcode == Js::OpCode::StElemI_A && instr->GetDst()->IsIndirOpnd())
+        {
+            SymID base = this->globOpt->GetVarSymID(instr->GetDst()->AsIndirOpnd()->GetBaseOpnd()->GetStackSym());
+            SymID index = this->globOpt->GetVarSymID(instr->GetDst()->AsIndirOpnd()->GetIndexOpnd()->GetStackSym());
+            FOREACH_SLISTCOUNTED_ENTRY(Loop::MemsetCandidate*, memsetCandidate, (SListCounted<Loop::MemsetCandidate*>*)loop->memOpInfo->memsetCandidates)
+            {
+                if (base == memsetCandidate->base  && index == memsetCandidate->index)
+                {
+                    return true;
+                }
+            } NEXT_SLISTCOUNTED_ENTRY;
+        }
+    }
+
+    if (globOpt->DoMemcopy(loop) && (instr->m_opcode == Js::OpCode::StElemI_A || instr->m_opcode == Js::OpCode::LdElemI_A))
+    {
+        FOREACH_SLISTCOUNTED_ENTRY(Loop::MemcopyCandidate*, memcopyCandidate, (SListCounted<Loop::MemcopyCandidate*>*)loop->memOpInfo->memcopyCandidates)
+        {
+            if (instr->m_opcode == Js::OpCode::StElemI_A && instr->GetDst()->IsIndirOpnd())
+            {
+                SymID base = this->globOpt->GetVarSymID(instr->GetDst()->AsIndirOpnd()->GetBaseOpnd()->GetStackSym());
+                SymID index = this->globOpt->GetVarSymID(instr->GetDst()->AsIndirOpnd()->GetIndexOpnd()->GetStackSym());
+
+                if (base == memcopyCandidate->stBase  && index == memcopyCandidate->stIndex)
+                {
+                    return true;
+                }
+            }
+            else if (instr->m_opcode == Js::OpCode::LdElemI_A &&  instr->GetSrc1()->IsIndirOpnd())
+            {
+                SymID base = this->globOpt->GetVarSymID(instr->GetSrc1()->AsIndirOpnd()->GetBaseOpnd()->GetStackSym());
+                SymID index = this->globOpt->GetVarSymID(instr->GetSrc1()->AsIndirOpnd()->GetIndexOpnd()->GetStackSym());
+
+                if ((base == memcopyCandidate->ldBase) && (index == memcopyCandidate->ldIndex))
+                {
+                    return true;
+                }
+            }
+        } NEXT_SLISTCOUNTED_ENTRY;
+    }
+    return false;
+}
+
+void
+BackwardPass::RestoreInductionVariableValuesAfterMemOp(Loop *loop)
+{
+    const auto RestoreInductionVariable = [&](SymID symId, Loop::InductionVariableChangeInfo inductionVariableChangeInfo, Loop *loop)
+    {
+        Js::OpCode opCode = Js::OpCode::Add_I4;
+        if (!inductionVariableChangeInfo.isIncremental)
+        {
+            opCode = Js::OpCode::Sub_I4;
+        }
+        Func *localFunc = loop->GetFunc();
+        StackSym *sym = localFunc->m_symTable->FindStackSym(symId)->GetInt32EquivSym(localFunc);
+
+        IR::Opnd *inductionVariableOpnd = IR::RegOpnd::New(sym, IRType::TyInt32, localFunc);
+        IR::Opnd *sizeOpnd = globOpt->GenerateInductionVariableChangeForMemOp(loop, inductionVariableChangeInfo.unroll);
+        loop->landingPad->InsertAfter(IR::Instr::New(opCode, inductionVariableOpnd, inductionVariableOpnd, sizeOpnd, loop->GetFunc()));
+    };
+
+    for (auto it = loop->memOpInfo->inductionVariableChangeInfoMap->GetIterator(); it.IsValid(); it.MoveNext())
+    {
+        Loop::InductionVariableChangeInfo iv = it.CurrentValue();
+        SymID sym = it.CurrentKey();
+        if (iv.unroll != Js::Constants::InvalidLoopUnrollFactor)
+        {
+            // if the variable is being used after the loop restore it
+            if (loop->memOpInfo->inductionVariablesUsedAfterLoop->Test(sym))
+            {
+                RestoreInductionVariable(sym, iv, loop);
+            }
+        }
+    }
+}
+
+bool
+BackwardPass::IsEmptyLoopAfterMemOp(Loop *loop)
+{
+    if (globOpt->DoMemop(loop))
+    {
+        const auto IsInductionVariableUse = [&](IR::Opnd *opnd) -> bool
+        {
+            Loop::InductionVariableChangeInfo  inductionVariableChangeInfo = { 0, 0 };
+            return (opnd &&
+                opnd->GetStackSym() &&
+                loop->memOpInfo->inductionVariableChangeInfoMap->ContainsKey(this->globOpt->GetVarSymID(opnd->GetStackSym())) &&
+                (((Loop::InductionVariableChangeInfo)
+                    loop->memOpInfo->inductionVariableChangeInfoMap->
+                    LookupWithKey(this->globOpt->GetVarSymID(opnd->GetStackSym()), inductionVariableChangeInfo)).unroll != Js::Constants::InvalidLoopUnrollFactor));
+        };
+
+        Assert(loop->blockList.HasTwo());
+
+        FOREACH_BLOCK_IN_LOOP(bblock, loop)
+        {
+
+            FOREACH_INSTR_IN_BLOCK_EDITING(instr, instrPrev, bblock)
+            {
+                if (instr->IsLabelInstr() || !instr->IsRealInstr() || instr->m_opcode == Js::OpCode::IncrLoopBodyCount || instr->m_opcode == Js::OpCode::StLoopBodyCount
+                    || (instr->IsBranchInstr() && instr->AsBranchInstr()->IsUnconditional()))
+                {
+                    continue;
+                }
+                else
+                {
+                    switch (instr->m_opcode)
+                    {
+                    case Js::OpCode::Ld_I4:
+                    case Js::OpCode::Add_I4:
+                    case Js::OpCode::Sub_I4:
+
+                        if (!IsInductionVariableUse(instr->GetDst()))
+                        {
+                            Assert(instr->GetDst());
+                            if (instr->GetDst()->GetStackSym()
+                                && loop->memOpInfo->inductionVariablesUsedAfterLoop->Test(globOpt->GetVarSymID(instr->GetDst()->GetStackSym())))
+                            {
+                                //we have use after the loop for a variable defined inside the loop. So the loop can't be removed
+                                return false;
+                            }
+                        }
+                        break;
+                    case Js::OpCode::Decr_A:
+                    case Js::OpCode::Incr_A:
+                        if (!IsInductionVariableUse(instr->GetSrc1()))
+                        {
+                            return false;
+                        }
+                        break;
+                    default:
+                        if (instr->IsBranchInstr())
+                        {
+                            if (IsInductionVariableUse(instr->GetSrc1()) || IsInductionVariableUse(instr->GetSrc2()))
+                            {
+                                break;
+                            }
+                        }
+                        return false;
+                    }
+                }
+
+            }
+            NEXT_INSTR_IN_BLOCK_EDITING;
+
+        }NEXT_BLOCK_IN_LIST;
+
+        return true;
+    }
+
+    return false;
+}
+
+void
+BackwardPass::RemoveEmptyLoops()
+{
+    if (PHASE_OFF(Js::MemOpPhase, this->func))
+    {
+        return;
+
+    }
+    const auto DeleteMemOpInfo = [&](Loop *loop)
+    {
+        JitArenaAllocator *alloc = this->func->GetTopFunc()->m_fg->alloc;
+
+        if (!loop->memOpInfo)
+        {
+            return;
+        }
+
+        if (loop->memOpInfo->memcopyCandidates)
+        {
+            loop->memOpInfo->memcopyCandidates->Clear();
+            JitAdelete(alloc, loop->memOpInfo->memcopyCandidates);
+        }
+
+        if (loop->memOpInfo->memsetCandidates)
+        {
+            loop->memOpInfo->memsetCandidates->Clear();
+            JitAdelete(alloc, loop->memOpInfo->memsetCandidates);
+        }
+
+        if (loop->memOpInfo->inductionVariableChangeInfoMap)
+        {
+            loop->memOpInfo->inductionVariableChangeInfoMap->Clear();
+            JitAdelete(alloc, loop->memOpInfo->inductionVariableChangeInfoMap);
+        }
+
+        if (loop->memOpInfo->memsetIgnore)
+        {
+            loop->memOpInfo->memsetIgnore->Clear();
+            JitAdelete(alloc, loop->memOpInfo->memsetIgnore);
+        }
+
+        if (loop->memOpInfo->memcopyIgnore)
+        {
+            loop->memOpInfo->memcopyIgnore->Clear();
+            JitAdelete(alloc, loop->memOpInfo->memcopyIgnore);
+        }
+
+        if (loop->memOpInfo->inductionVariablesUsedAfterLoop)
+        {
+            JitAdelete(this->tempAlloc, loop->memOpInfo->inductionVariablesUsedAfterLoop);
+        }
+        JitAdelete(alloc, loop->memOpInfo);
+    };
+
+    FOREACH_LOOP_IN_FUNC_EDITING(loop, this->func)
+    {
+        if (IsEmptyLoopAfterMemOp(loop))
+        {
+            RestoreInductionVariableValuesAfterMemOp(loop);
+            RemoveEmptyLoopAfterMemOp(loop);
+        }
+        // Remove memop info as wee don't need them after this point.
+        DeleteMemOpInfo(loop);
+
+    } NEXT_LOOP_IN_FUNC_EDITING;
+
+}
+
+void
+BackwardPass::RemoveEmptyLoopAfterMemOp(Loop *loop)
+{
+    BasicBlock *head = loop->GetHeadBlock();
+    BasicBlock *tail = head->next;
+    BasicBlock *landingPad = loop->landingPad;
+    BasicBlock *outerBlock = nullptr;
+    SListBaseCounted<FlowEdge *> *succList = head->GetSuccList();
+    Assert(succList->HasTwo());
+
+    // Between the two successors of head, one is tail and the other one is the outerblock
+    SListBaseCounted<FlowEdge *>::Iterator  iter(succList);
+    iter.Next();
+    if (iter.Data()->GetSucc() == tail)
+    {
+        iter.Next();
+        outerBlock = iter.Data()->GetSucc();
+    }
+    else
+    {
+        outerBlock = iter.Data()->GetSucc();
+#ifdef DBG
+        iter.Next();
+        Assert(iter.Data()->GetSucc() == tail);
+#endif
+    }
+
+    outerBlock->RemovePred(head, this->func->m_fg);
+    landingPad->RemoveSucc(head, this->func->m_fg);
+    this->func->m_fg->AddEdge(landingPad, outerBlock);
+
+    this->func->m_fg->RemoveBlock(head, nullptr);
+
+    if (head != tail)
+    {
+        this->func->m_fg->RemoveBlock(tail, nullptr);
+    }
 }
 
 #if DBG_DUMP

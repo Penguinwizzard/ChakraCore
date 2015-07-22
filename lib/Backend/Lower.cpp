@@ -1427,6 +1427,12 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
         case Js::OpCode::StFloat64ArrViewElem:
             instrPrev = LowerStArrViewElem(instr);
             break;
+        case Js::OpCode::Memset:
+        case Js::OpCode::Memcopy:
+        {
+            LowerMemOp(instr);
+            break;
+        }
         case Js::OpCode::ArrayDetachedCheck:
             instrPrev = LowerArrayDetachedCheck(instr);
             break;
@@ -8525,6 +8531,116 @@ Lowerer::LowerLdArrViewElem(IR::Instr * instr)
     return instrPrev;
 }
 
+void
+Lowerer::LowerMemset(IR::Instr * instr)
+{
+    IR::Opnd * dst = instr->UnlinkDst();
+    IR::Opnd * src1 = instr->UnlinkSrc1();
+
+    Assert(dst->IsIndirOpnd());
+    IR::Opnd *baseOpnd = dst->AsIndirOpnd()->UnlinkBaseOpnd();
+    IR::Opnd *indexOpnd = dst->AsIndirOpnd()->UnlinkIndexOpnd();
+
+    IR::Opnd *sizeOpnd = instr->UnlinkSrc2();
+
+    Assert(baseOpnd);
+    Assert(sizeOpnd);
+    Assert(indexOpnd);
+
+
+    IR::JnHelperMethod helperMethod = IR::HelperOp_Memset;
+
+    LoadScriptContext(instr);
+    m_lowererMD.LoadHelperArgument(instr, sizeOpnd);
+    m_lowererMD.LoadHelperArgument(instr, src1);
+    m_lowererMD.LoadHelperArgument(instr, indexOpnd);
+    m_lowererMD.LoadHelperArgument(instr, baseOpnd);
+    m_lowererMD.ChangeToHelperCall(instr, helperMethod);
+    dst->Free(m_func);
+}
+
+void
+Lowerer::LowerMemcopy(IR::Instr * instr)
+{
+    IR::Opnd * dst = instr->UnlinkDst();
+    IR::Opnd * src = instr->UnlinkSrc1();
+
+    Assert(dst->IsIndirOpnd());
+    Assert(src->IsIndirOpnd());
+
+    IR::Opnd *dstBaseOpnd = dst->AsIndirOpnd()->UnlinkBaseOpnd();
+    IR::Opnd *dstIndexOpnd = dst->AsIndirOpnd()->UnlinkIndexOpnd();
+
+    IR::Opnd *srcBaseOpnd = src->AsIndirOpnd()->UnlinkBaseOpnd();
+    IR::Opnd *srcIndexOpnd = src->AsIndirOpnd()->UnlinkIndexOpnd();
+
+    IR::Opnd *sizeOpnd = instr->UnlinkSrc2();
+
+    Assert(sizeOpnd);
+    Assert(dstBaseOpnd);
+    Assert(dstIndexOpnd);
+    Assert(srcBaseOpnd);
+    Assert(srcIndexOpnd);
+
+    IR::JnHelperMethod helperMethod = IR::HelperOp_Memcopy;
+    LoadScriptContext(instr);
+
+    m_lowererMD.LoadHelperArgument(instr, sizeOpnd);
+    m_lowererMD.LoadHelperArgument(instr, srcIndexOpnd);
+    m_lowererMD.LoadHelperArgument(instr, srcBaseOpnd);
+    m_lowererMD.LoadHelperArgument(instr, dstIndexOpnd);
+    m_lowererMD.LoadHelperArgument(instr, dstBaseOpnd);
+
+    m_lowererMD.ChangeToHelperCall(instr, helperMethod);
+    dst->Free(m_func);
+    src->Free(m_func);
+}
+
+IR::Instr *
+Lowerer::LowerMemOp(IR::Instr * instr)
+{
+    Assert(instr->m_opcode == Js::OpCode::Memset || instr->m_opcode == Js::OpCode::Memcopy);
+    IR::Instr *instrPrev = instr->m_prev;
+
+    if (instr->HasBailOutInfo())
+    {
+        bool isHelper = false;
+        IR::BailOutKind bailOutKind = instr->GetBailOutKind();
+        if (bailOutKind & IR::BailOutOnInvalidatedArrayHeadSegment)
+        {
+            Assert(!(bailOutKind & IR::BailOutOnMissingValue));
+            LowerBailOnInvalidatedArrayHeadSegment(instr, isHelper);
+            bailOutKind ^= IR::BailOutOnInvalidatedArrayHeadSegment;
+            Assert(!bailOutKind || instr->GetBailOutKind() == bailOutKind);
+        }
+        else if (bailOutKind & IR::BailOutOnMissingValue)
+        {
+            LowerBailOnCreatedMissingValue(instr, isHelper);
+            bailOutKind ^= IR::BailOutOnMissingValue;
+            Assert(!bailOutKind || instr->GetBailOutKind() == bailOutKind);
+        }
+        if (bailOutKind & IR::BailOutOnInvalidatedArrayLength)
+        {
+            LowerBailOnInvalidatedArrayLength(instr, isHelper);
+            bailOutKind ^= IR::BailOutOnInvalidatedArrayLength;
+            Assert(!bailOutKind || instr->GetBailOutKind() == bailOutKind);
+        }
+
+        instr->ClearBailOutInfo();
+    }
+
+
+    if (instr->m_opcode == Js::OpCode::Memset)
+    {
+        LowerMemset(instr);
+    }
+    else if (instr->m_opcode == Js::OpCode::Memcopy)
+    {
+        LowerMemcopy(instr);
+    }
+    return instrPrev;
+}
+
 IR::Instr *
 Lowerer::LowerStArrViewElem(IR::Instr * instr)
 {
@@ -11304,7 +11420,7 @@ void Lowerer::LowerBailOnInvalidatedArrayHeadSegment(IR::Instr *const instr, con
     */
 
     Assert(instr);
-    Assert(instr->m_opcode == Js::OpCode::StElemI_A || instr->m_opcode == Js::OpCode::StElemI_A_Strict);
+    Assert(instr->m_opcode == Js::OpCode::StElemI_A || instr->m_opcode == Js::OpCode::StElemI_A_Strict || instr->m_opcode == Js::OpCode::Memset || instr->m_opcode == Js::OpCode::Memcopy);
     Assert(instr->GetDst());
     Assert(instr->GetDst()->IsIndirOpnd());
 
@@ -11431,7 +11547,7 @@ void Lowerer::LowerBailOnInvalidatedArrayLength(IR::Instr *const instr, const bo
     */
 
     Assert(instr);
-    Assert(instr->m_opcode == Js::OpCode::StElemI_A || instr->m_opcode == Js::OpCode::StElemI_A_Strict);
+    Assert(instr->m_opcode == Js::OpCode::StElemI_A || instr->m_opcode == Js::OpCode::StElemI_A_Strict || instr->m_opcode == Js::OpCode::Memset || instr->m_opcode == Js::OpCode::Memcopy);
     Assert(instr->GetDst());
     Assert(instr->GetDst()->IsIndirOpnd());
 
@@ -11518,7 +11634,7 @@ void Lowerer::LowerBailOnCreatedMissingValue(IR::Instr *const instr, const bool 
     */
 
     Assert(instr);
-    Assert(instr->m_opcode == Js::OpCode::StElemI_A || instr->m_opcode == Js::OpCode::StElemI_A_Strict);
+    Assert(instr->m_opcode == Js::OpCode::StElemI_A || instr->m_opcode == Js::OpCode::StElemI_A_Strict || instr->m_opcode == Js::OpCode::Memset || instr->m_opcode == Js::OpCode::Memcopy);
     Assert(instr->GetDst());
     Assert(instr->GetDst()->IsIndirOpnd());
 

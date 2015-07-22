@@ -250,6 +250,72 @@ namespace Js
             return GetLibrary()->GetUndefined();
         }
 
+        __inline BOOL DirectSetItemAtRange(TypedArray *fromArray, __in uint32 srcStart, __in uint32 dstStart, __in uint32 length, TypeName(*convFunc)(Var value, ScriptContext* scriptContext))
+        {
+            TypeName* dstBuffer = (TypeName*)buffer;
+            TypeName* srcBuffer = (TypeName*)fromArray->buffer;
+
+            uint32 srcLength = (srcStart + length) < fromArray->GetLength() ? length : (fromArray->GetLength() > srcStart ? fromArray->GetLength() - srcStart : 0);
+            uint32 dstLength = (dstStart + length) < GetLength() ? length : GetLength() > dstStart ? GetLength() - dstStart : 0;
+
+            // length is the minimum of length, srcLength and dstLength
+            length = length < srcLength ? (length < dstLength ? length : dstLength) : (srcLength < dstLength ? srcLength : dstLength);
+
+            Assert(srcBuffer && dstBuffer);
+            js_memcpy_s(dstBuffer + dstStart, sizeof(TypeName)* length, srcBuffer + srcStart, sizeof(TypeName)* length);
+
+            if (dstLength > length)
+            {
+                TypeName undefinedValue = convFunc(GetLibrary()->GetUndefined(), GetScriptContext());
+                for (uint i = length; i < dstLength; i++)
+                {
+                    dstBuffer[i] = undefinedValue;
+                }
+            }
+
+            return true;
+        }
+
+        __inline BOOL DirectSetItemAtRange(__in uint32 start, __in uint32 length, __in Js::Var value, TypeName(*convFunc)(Var value, ScriptContext* scriptContext))
+        {
+            if (CrossSite::IsCrossSiteObjectTyped(this))
+            {
+                return false;
+            }
+            TypeName typedValue = convFunc(value, GetScriptContext());
+
+            if (this->IsDetachedBuffer()) //9.4.5.9 IntegerIndexedElementSet 
+            {
+                JavascriptError::ThrowTypeError(GetScriptContext(), JSERR_DetachedTypedArray);
+            }
+            uint32 newStart = start, newLength = length;
+
+            if (start < 0)
+            {
+                newStart = 0;
+            }
+            if (start + length >= GetLength())
+            {
+                newLength = GetLength() - newStart;
+            }
+
+            TypeName* typedBuffer = (TypeName*)buffer;
+
+            if (typedValue == 0 || sizeof(TypeName) == 1)
+            {
+                memset(typedBuffer + newStart, typedValue, sizeof(TypeName)* newLength);
+            }
+            else
+            {
+                for (uint32 i = 0; i < newLength; i++)
+                {
+                    typedBuffer[newStart + i] = typedValue;
+                }
+            }
+
+            return TRUE;
+        }
+
         __inline BOOL BaseTypedDirectSetItem(__in uint32 index, __in Js::Var value, __in bool skipSetElement, TypeName (*convFunc)(Var value, ScriptContext* scriptContext))
         {
             // This call can potentially invoke user code, and may end up detaching the underlying array (this).

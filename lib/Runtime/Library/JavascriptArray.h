@@ -166,6 +166,10 @@ namespace Js
         template<typename T> inline void DirectSetItemInLastUsedSegmentAt(const uint32 offset, const T newValue);
         template<typename T> inline void DirectProfiledSetItemInHeadSegmentAt(const uint32 offset, const T newValue, StElemInfo *const stElemInfo);
         template<typename T> void DirectSetItem_Full(uint32 itemIndex, T newValue);
+        template<typename T> SparseArraySegment<T>* PrepareSegmentForMemOp(uint32 startIndex, uint32 length);
+        template<typename T> void DirectSetItemAtRange(uint32 startIndex, uint32 length, T newValue);
+        template<typename T> void DirectSetItemAtRangeFull(uint32 startIndex, uint32 length, T newValue);
+        template<typename T> void DirectSetItemAtRangeFromArray(uint32 startIndex, uint32 length, JavascriptArray *fromArray, uint32 fromStartIndex);
 #if DBG
         template <typename T> void VerifyNotNeedMarshal(T value) {};
         template <> void VerifyNotNeedMarshal<Var>(Var value) { Assert(value == JavascriptArray::MissingItem || !CrossSite::NeedMarshalVar(value, this->GetScriptContext())); }
@@ -467,6 +471,7 @@ namespace Js
 
         template<typename T> bool NeedScanForMissingValuesUponSetItem(SparseArraySegment<T> *const segment, const uint32 offset) const;
         template<typename T> void ScanForMissingValues(const uint startIndex = 0);
+        template<typename T> bool ScanForMissingValues(const uint startIndex, const uint endIndex);
         template<typename T, uint InlinePropertySlots> static SparseArraySegment<typename T::TElement> *InitArrayAndHeadSegment(T *const array, const uint32 length, const uint32 size, const bool wasZeroAllocated);
         template<typename T> static void SliceHelper(JavascriptArray*pArr, JavascriptArray* pNewArr, uint32 start, uint32 newLen);
         

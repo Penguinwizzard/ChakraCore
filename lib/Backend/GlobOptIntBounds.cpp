@@ -1969,7 +1969,7 @@ void GlobOpt::DetermineLoopCount(Loop *const loop)
         {
             continue;
         }
-        void *const loopCountBuffer = JitAnewArray(alloc, byte, sizeof(LoopCount));
+        void *const loopCountBuffer = JitAnewArray(this->func->GetTopFunc()->m_fg->alloc, byte, sizeof(LoopCount));
         if(!rightSym)
         {
             if(!leftSym)

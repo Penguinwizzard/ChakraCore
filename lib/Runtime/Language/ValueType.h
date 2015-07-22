@@ -198,6 +198,9 @@ public:
     bool IsTypedArray() const;
     bool IsLikelyTypedArray() const;
 
+    bool IsTypedIntArray() const;
+    bool IsLikelyTypedIntArray() const;
+
     bool IsOptimizedTypedArray() const;
     bool IsLikelyOptimizedTypedArray() const;
     bool IsLikelyOptimizedVirtualTypedArray() const;

@@ -336,6 +336,8 @@ namespace Js
         static Var OP_DeleteElementI(Var instance, Var aElementIndex, ScriptContext* scriptContext, PropertyOperationFlags propertyOperationFlags = PropertyOperation_None);
         static Var OP_DeleteElementI_UInt32(Var instance, uint32 aElementIndex, ScriptContext* scriptContext, PropertyOperationFlags propertyOperationFlags = PropertyOperation_None);
         static Var OP_DeleteElementI_Int32(Var instance, int aElementIndex, ScriptContext* scriptContext, PropertyOperationFlags propertyOperationFlags = PropertyOperation_None);
+        static BOOL OP_Memset(Var instance, uint32 start, Var value, uint32 length, ScriptContext* scriptContext);
+        static BOOL OP_Memcopy(Var dstInstance, uint32 dstStart, Var srcInstance, uint32 srcStart, uint32 length, ScriptContext* scriptContext);
         static Var OP_GetLength(Var instance, ScriptContext* scriptContext);
         static Var OP_GetThis(Var thisVar, int moduleID, ScriptContext* scriptContext);
         static Var OP_GetThisNoFastPath(Var thisVar, int moduleID, ScriptContext* scriptContext);

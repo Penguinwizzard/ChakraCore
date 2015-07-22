@@ -157,6 +157,11 @@ private:
     IR::Instr *     LowerStElemI(IR::Instr *instr, Js::PropertyOperationFlags flags, bool isHelper, IR::JnHelperMethod helperMethod = IR::HelperOp_SetElementI);
     IR::Instr *     LowerLdElemI(IR::Instr *instr, IR::JnHelperMethod helperMethod, bool isHelper);
     void            LowerLdLen(IR::Instr *const instr, const bool isHelper);
+
+    IR::Instr *     LowerMemOp(IR::Instr * instr);
+    void            LowerMemset(IR::Instr * instr);
+    void            LowerMemcopy(IR::Instr * instr);
+
     IR::Instr *     LowerLdArrViewElem(IR::Instr * instr);
     IR::Instr *     LowerStArrViewElem(IR::Instr * instr);
     IR::Instr *     LowerArrayDetachedCheck(IR::Instr * instr);

@@ -577,6 +577,49 @@ public:
     bool                isLeaf : 1;
     bool                isProcessed : 1; // Set and reset at varying places according to the phase we're in. 
                                          // For example, in the lowerer, it'll be set to true when we process the loopTop for a certain loop
+    typedef struct {
+        SymID base;
+        SymID index;
+        int constant;
+        byte count;
+        bool bIndexAlreadyChanged;
+    } MemsetCandidate;
+
+    typedef struct {
+        SymID ldBase;
+        SymID ldIndex;
+        SymID stBase;
+        SymID stIndex;
+        SymID transferSym;
+        byte ldCount;
+        byte stCount;
+        bool bLdIndexAlreadyChanged;
+        bool bStIndexAlreadyChanged;
+    } MemcopyCandidate;
+
+    typedef struct
+    {
+        byte unroll : 7;
+        byte isIncremental : 1;
+    } InductionVariableChangeInfo;
+
+    typedef JsUtil::BaseDictionary<SymID, InductionVariableChangeInfo, JitArenaAllocator> InductionVariableChangeInfoMap;
+    typedef SListCounted<MemsetCandidate *>  MemsetList;
+    typedef SListCounted<MemcopyCandidate *>  MemcopyList;
+    typedef JsUtil::BaseHashSet<SymID, JitArenaAllocator> MemOpIgnoreSet;
+    typedef struct
+    {
+        MemsetList *memsetCandidates;
+        MemcopyList *memcopyCandidates;
+        MemOpIgnoreSet *memsetIgnore;
+        MemOpIgnoreSet *memcopyIgnore;
+        BVSparse<JitArenaAllocator> *inductionVariablesUsedAfterLoop;
+        InductionVariableChangeInfoMap *inductionVariableChangeInfoMap;
+        bool doMemset : 1;
+        bool doMemcopy : 1;
+    } MemOpInfo;
+
+    MemOpInfo *memOpInfo;
 
     struct RegAlloc
     {
@@ -626,7 +669,11 @@ public:
     void                SetHeadBlock(BasicBlock *block) { headBlock = block; }
     BasicBlock *        GetHeadBlock() const { Assert(headBlock == blockList.Head()); return headBlock; }
     bool                IsDescendentOrSelf(Loop const * loop) const;
-    
+
+    void                EnsureMemOpVariablesInitialized();
+    void                InvalidateMemsetCandidate(SymID symId, MemsetCandidate *memsetCandidate = nullptr);
+    void                InvalidateMemcopyCandidate(SymID);
+
     Js::ImplicitCallFlags GetImplicitCallFlags();
     void                SetImplicitCallFlags(Js::ImplicitCallFlags flags);    
     bool                CanHoistInvariants();

@@ -1000,6 +1000,9 @@ ObjectTemp::IsTempUseOpCodeSym(IR::Instr * instr, Js::OpCode opcode, Sym * sym)
     case Js::OpCode::StElemI_A:
     case Js::OpCode::StElemI_A_Strict:
         return instr->GetDst()->AsIndirOpnd()->GetBaseOpnd()->m_sym == sym;
+    case Js::OpCode::Memset:
+    case Js::OpCode::Memcopy:
+        return instr->GetDst()->AsIndirOpnd()->GetBaseOpnd()->m_sym == sym || instr->GetSrc1()->AsIndirOpnd()->GetBaseOpnd()->m_sym == sym;;
 
     // Special case FromVar for now until we can allow CallsValueOf opcode to be accept temp use
     case Js::OpCode::FromVar:

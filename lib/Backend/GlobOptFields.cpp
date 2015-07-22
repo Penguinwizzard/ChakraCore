@@ -263,6 +263,24 @@ GlobOpt::DoFieldPRE(Loop *loop) const
 }
 
 bool
+GlobOpt::DoMemset(Loop *loop)
+{
+    return loop && !PHASE_OFF(Js::MemSetPhase, this->func) && loop->memOpInfo && loop->memOpInfo->doMemset &&  loop->memOpInfo->memsetCandidates && !loop->memOpInfo->memsetCandidates->Empty();
+}
+
+bool
+GlobOpt::DoMemcopy(Loop *loop)
+{
+    return loop && !PHASE_OFF(Js::MemCopyPhase, this->func) && loop->memOpInfo && loop->memOpInfo->doMemcopy && loop->memOpInfo->memcopyCandidates && !loop->memOpInfo->memcopyCandidates->Empty();
+}
+
+bool
+GlobOpt::DoMemop(Loop *loop)
+{
+    return loop && DoMemcopy(loop) || DoMemset(loop);
+}
+
+bool
 GlobOpt::TrackHoistableFields() const
 {
     return this->IsLoopPrePass() && this->currentBlock->loop == this->prePassLoop;

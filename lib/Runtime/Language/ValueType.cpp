@@ -591,6 +591,16 @@ bool ValueType::IsLikelyNativeFloatArray() const
     return IsLikelyArrayOrObjectWithArray() && HasFloatElements();
 }
 
+bool ValueType::IsTypedIntArray() const
+{
+    return IsObject() && GetObjectType() >= ObjectType::Int8Array && GetObjectType() <= ObjectType::Uint32Array;
+}
+
+bool ValueType::IsLikelyTypedIntArray() const
+{
+    return IsLikelyObject() && GetObjectType() >= ObjectType::Int8Array && GetObjectType() <= ObjectType::Uint32Array;
+}
+
 bool ValueType::IsTypedArray() const
 {
     return IsObject() && GetObjectType() >= ObjectType::Int8Array && GetObjectType() <= ObjectType::CharArray;

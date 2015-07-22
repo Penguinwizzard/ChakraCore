@@ -1434,6 +1434,31 @@ private:
     bool                    ShouldExpectConventionalArrayIndexValue(IR::IndirOpnd *const indirOpnd);
     ValueType               GetDivValueType(IR::Instr* instr, Value* src1Val, Value* src2Val, bool specialize);
 
+    bool                    CollectMemOpInfo(IR::Instr *);
+    void                    CollectMemOpStElementI(IR::Instr *, Loop *);
+    void                    CollectMemsetStElementI(IR::Instr *, Loop *);
+    void                    CollectMemcopyStElementI(IR::Instr *, Loop *);
+    void                    CollectMemOpLdElementI(IR::Instr *, Loop *);
+    void                    CollectMemsetLdElementI(IR::Instr *, Loop *);
+    void                    CollectMemcopyLdElementI(IR::Instr *, Loop *);
+    SymID                   GetVarSymID(StackSym *);
+    SymID                   GetInductionVariableSymID(SymID, Loop *);
+    bool                    IsAllowedTypeForMemOpt(IR::Opnd *baseOpnd, IR::Opnd *indexOpnd);
+
+    void                    ProcessMemOp();
+    void                    ProcessMemset(Loop *loop);
+    void                    ProcessMemcopy(Loop *loop);
+    void                    HoistHeadSegmentForMemOp(IR::Instr *instr, IR::ArrayRegOpnd *arrayRegOpnd, IR::Instr *insertBeforeInstr);
+    bool                    EmitMemset(Loop * loop, LoopCount *loopcount, SymID base, SymID index, int constant, byte unroll, bool isInductionVariableChangeIncremental, bool bIndexAlreadyChanged);
+    bool                    EmitMemcopy(Loop * loop, LoopCount *loopcount, SymID ldBase, SymID ldIndex, SymID stBase, SymID stIndex, byte unroll, bool bLdIndexAlreadyChanged, bool bStIndexAlreadyChanged, bool isLdInductionVariableChangeIncremental, bool isStInductionVariableChangeIncremental);
+    IR::Opnd*               GenerateInductionVariableChangeForMemOp(Loop *loop, byte unroll, IR::Instr *insertBeforeInstr = nullptr);
+    IR::RegOpnd*            GenerateStartIndexOpndForMemop(Loop *loop, IR::Opnd *indexOpnd, IR::Opnd *sizeOpnd, bool isInductionVariableChangeIncremental, bool bIndexAlreadyChanged, IR::Instr *insertBeforeInstr = nullptr);
+    LoopCount*              GetOrGenerateLoopCountForMemOp(Loop *loop);
+
+    bool                    DoMemop(Loop * loop);
+    bool                    DoMemset(Loop * loop);
+    bool                    DoMemcopy(Loop * loop);
+
 private:
     void                    ChangeValueType(BasicBlock *const block, Value *const value, const ValueType newValueType, const bool preserveSubclassInfo, const bool allowIncompatibleType = false) const;
     void                    ChangeValueInfo(BasicBlock *const block, Value *const value, ValueInfo *const newValueInfo, const bool allowIncompatibleType = false) const;

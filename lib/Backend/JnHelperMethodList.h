@@ -184,6 +184,9 @@ HELPERCALL(Op_DeleteElementI, Js::JavascriptOperators::OP_DeleteElementI, AttrCa
 HELPERCALL(Op_DeleteElementI_UInt32, Js::JavascriptOperators::OP_DeleteElementI_UInt32, AttrCanThrow)
 HELPERCALL(Op_DeleteElementI_Int32, Js::JavascriptOperators::OP_DeleteElementI_Int32, AttrCanThrow)
 
+HELPERCALL(Op_Memset, Js::JavascriptOperators::OP_Memset, AttrCanThrow)
+HELPERCALL(Op_Memcopy, Js::JavascriptOperators::OP_Memcopy, AttrCanThrow)
+
 HELPERCALL(Op_PatchGetValue, ((Js::Var (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId))Js::JavascriptOperators::PatchGetValue<true, Js::InlineCache>), AttrCanThrow)
 HELPERCALL(Op_PatchGetValueWithThisPtr, ((Js::Var(*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var))Js::JavascriptOperators::PatchGetValueWithThisPtr<true, Js::InlineCache>), AttrCanThrow)
 HELPERCALL(Op_PatchGetValueForTypeOf, ((Js::Var(*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId))Js::JavascriptOperators::PatchGetValueForTypeOf<true, Js::InlineCache>), AttrCanThrow)

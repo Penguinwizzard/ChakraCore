@@ -747,7 +747,8 @@ FlowGraph::BuildLoop(BasicBlock *headBlock, BasicBlock *tailBlock, Loop *parentL
     }
     loop->hasDeadStoreCollectionPass = false;
     loop->hasDeadStorePrepass = false;
-   
+    loop->memOpInfo = nullptr;
+
     NoRecoverMemoryJitArenaAllocator tempAlloc(L"BE-LoopBuilder", this->func->m_alloc->GetPageAllocator(), Js::Throw::OutOfMemory);
 
     WalkLoopBlocks(tailBlock, loop, &tempAlloc);
@@ -766,6 +767,85 @@ FlowGraph::BuildLoop(BasicBlock *headBlock, BasicBlock *tailBlock, Loop *parentL
     {
         // Didn't collect profile information, don't do optimizations
         loop->SetImplicitCallFlags(Js::ImplicitCall_All);
+    }
+}
+
+void
+Loop::EnsureMemOpVariablesInitialized()
+{
+    if (this->memOpInfo == nullptr)
+    {
+        JitArenaAllocator *allocator = this->GetFunc()->GetTopFunc()->m_fg->alloc;
+        this->memOpInfo = JitAnewStruct(allocator, Loop::MemOpInfo);
+        this->memOpInfo->doMemcopy = true;
+        this->memOpInfo->doMemset = true;
+        this->memOpInfo->inductionVariablesUsedAfterLoop = nullptr;
+        this->memOpInfo->inductionVariableChangeInfoMap = JitAnew(allocator, Loop::InductionVariableChangeInfoMap, allocator);
+        this->memOpInfo->memcopyIgnore = JitAnew(allocator, Loop::MemOpIgnoreSet, allocator);
+        this->memOpInfo->memsetIgnore = JitAnew(allocator, Loop::MemOpIgnoreSet, allocator);
+        this->memOpInfo->memsetCandidates = JitAnew(allocator, Loop::MemsetList, allocator);
+        this->memOpInfo->memcopyCandidates = JitAnew(allocator, Loop::MemcopyList, allocator);
+    }
+}
+
+void
+Loop::InvalidateMemsetCandidate(SymID sym, MemsetCandidate *memsetInfo)
+{
+    Assert(this->memOpInfo->memsetIgnore);
+    if (this->memOpInfo->memsetIgnore->Contains(sym) == false)
+    {
+        this->memOpInfo->memsetIgnore->Add(sym);
+    }
+
+    if (this->memOpInfo->memsetCandidates && memsetInfo)
+    {
+        this->memOpInfo->memsetCandidates->Remove(memsetInfo);
+    }
+    else if (this->memOpInfo->memsetCandidates)
+    {
+        FOREACH_SLISTCOUNTED_ENTRY_EDITING(Loop::MemsetCandidate*, memsetCandidate, (SListCounted<Loop::MemsetCandidate*>*)this->memOpInfo->memsetCandidates, iter)
+        {
+            if (memsetCandidate->base == sym)
+            {
+                iter.RemoveCurrent();
+                break;
+            }
+        }
+        NEXT_SLISTCOUNTED_ENTRY_EDITING;
+    }
+}
+
+void
+Loop::InvalidateMemcopyCandidate(SymID sym)
+{
+    Assert(this->memOpInfo->memcopyIgnore);
+    if (this->memOpInfo->memcopyIgnore->Contains(sym) == false)
+    {
+        this->memOpInfo->memcopyIgnore->Add(sym);
+    }
+
+    if (this->memOpInfo->memcopyCandidates)
+    {
+        FOREACH_SLISTCOUNTED_ENTRY_EDITING(Loop::MemcopyCandidate*, memcopyCandidate, (SListCounted<Loop::MemcopyCandidate*>*)this->memOpInfo->memcopyCandidates, iter)
+        {
+            if (memcopyCandidate->ldBase == sym)
+            {
+                if (memcopyCandidate->stBase  && !this->memOpInfo->memcopyIgnore->Contains(memcopyCandidate->stBase))
+                {
+                    this->memOpInfo->memcopyIgnore->Add(memcopyCandidate->stBase);
+                }
+                iter.RemoveCurrent();
+            }
+            else if (memcopyCandidate->stBase == sym)
+            {
+                if (memcopyCandidate->ldBase  && !this->memOpInfo->memcopyIgnore->Contains(memcopyCandidate->ldBase))
+                {
+                    this->memOpInfo->memcopyIgnore->Add(memcopyCandidate->ldBase);
+                }
+                iter.RemoveCurrent();
+            }
+        }
+        NEXT_SLISTCOUNTED_ENTRY_EDITING;
     }
 }
 

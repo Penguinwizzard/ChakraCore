@@ -159,6 +159,9 @@ PHASE(All)
                     PHASE(FixedBuiltInMethodCalls)
                     PHASE(SplitNewScObject)
                 PHASE(OptTagChecks)
+                PHASE(MemOp)
+                    PHASE(MemSet)
+                    PHASE(MemCopy)
             PHASE(DeadStore)
                 PHASE(ReverseCopyProp)
                 PHASE(MarkTemp)
@@ -727,6 +730,7 @@ FLAGR(Boolean, AsmjsAll, "Enable all features dependent on Asmjs", true)
 #if DBG
 FLAGNR(Boolean, ArrayValidate         , "Validate each array for valid elements (default: false)", false)
 FLAGNR(Boolean, ArrayLog              , "Log array metrics (default: false)", false)
+FLAGNR(Boolean, MemOpMissingValueValidate, "Validate Missing Value Tracking on memset/memcopy", false)
 #endif
 #ifdef ARENA_MEMORY_VERIFY
 FLAGNR(Boolean, ArenaNoFreeList       , "Do not free list in arena", false)

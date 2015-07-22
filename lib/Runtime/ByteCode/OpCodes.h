@@ -369,6 +369,8 @@ MACRO_BACKEND_ONLY(     LdUInt8ArrViewElem,     ElementI,       OpCanCSE        
 MACRO_BACKEND_ONLY(     LdUInt16ArrViewElem,    ElementI,       OpCanCSE            )         // load UInt16 from typed array view
 MACRO_BACKEND_ONLY(     LdInt32ArrViewElem,     ElementI,       OpCanCSE            )          // load Int32 from typed array view
 MACRO_BACKEND_ONLY(     LdUInt32ArrViewElem,    ElementI,       OpCanCSE            )         // load UInt32 from typed array view
+MACRO_BACKEND_ONLY(     Memset,                 ElementI,       OpSideEffect)
+MACRO_BACKEND_ONLY(     Memcopy,                ElementI,       OpSideEffect)
 MACRO_BACKEND_ONLY(     ArrayDetachedCheck,     Reg1,           None)   // ensures that an ArrayBuffer has not been detached
 MACRO_WMS(              StArrItemI_CI4,         ElementUnsigned1,      OpSideEffect)
 MACRO_WMS(              StArrItemC_CI4,         ElementUnsigned1,      OpSideEffect)
