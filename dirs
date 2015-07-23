@@ -1,5 +1,4 @@
 DIRS = \
     manifests{!MOBILECORE} \
     lib \
-    
-    
+    bin \
