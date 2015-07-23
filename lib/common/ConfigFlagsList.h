@@ -1129,6 +1129,11 @@ FLAGNR(Boolean, ProfileTypes          , "Profile type statistics", false)
 #ifdef PROFILE_EVALMAP
 FLAGNR(Boolean, ProfileEvalMap        , "Profile eval map statistics", false)
 #endif
+
+#ifdef PROFILE_BAILOUT_RECORD_MEMORY
+FLAGNR(Boolean, ProfileBailOutRecordMemory, "Profile bailout record memory statistics", false)
+#endif
+
 FLAGNR(Number,  RejitMaxBailOutCount, "Maximum number of bailouts for a bailout record after which rejit is forced", DEFAULT_CONFIG_RejitMaxBailOutCount)
 FLAGNR(Number,  RejitRatioLimit,     "Rejit ratio (Percentage of bailouts per function after which rejit is queued)", DEFAULT_CONFIG_RejitRatioLimit)
 FLAGNR(Number,  MinBailOutsBeforeRejit, "Minimum number of bailouts for a single bailout record after which a rejit is considered", DEFAULT_CONFIG_MinBailOutsBeforeRejit)

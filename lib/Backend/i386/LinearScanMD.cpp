@@ -318,7 +318,8 @@ __declspec(naked) void LinearScanMD::SaveAllRegisters(BailOutRecord *const bailO
 
         push eax
         mov eax, [esp + 3 * 4] // bailOutRecord
-        mov eax, [eax] // bailOutRecord->registerSaveSpace
+        mov eax, [eax] // bailOutRecord->globalBailOutRecordDataTable
+        mov eax, [eax] // bailOutRecord->globalBailOutRecordDataTable->registerSaveSpace
 
         mov [eax + (RegECX - 1) * 4], ecx
         pop ecx // saved eax
@@ -354,7 +355,8 @@ __declspec(naked) void LinearScanMD::SaveAllRegistersNoSse2(BailOutRecord *const
 
         push eax
         mov eax, [esp + 3 * 4] // bailOutRecord
-        mov eax, [eax] // bailOutRecord->registerSaveSpace
+        mov eax, [eax] // bailOutRecord->globalBailOutRecordDataTable
+        mov eax, [eax] // bailOutRecord->globalBailOutRecordDataTable->registerSaveSpace
 
         mov [eax + (RegECX - 1) * 4], ecx
         pop ecx // saved eax

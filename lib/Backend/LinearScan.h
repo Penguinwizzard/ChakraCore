@@ -14,6 +14,8 @@ extern wchar_t const * const RegNamesW[];
 
 class OpHelperBlock;
 struct FillBailOutState;
+struct GlobalBailOutRecordDataTable;
+struct GlobalBailOutRecordDataRow;
 
 #define INT_REG_COUNT (FIRST_FLOAT_REG - 1)
 #define FLOAT_REG_COUNT (RegNumCount - FIRST_FLOAT_REG)
@@ -70,9 +72,12 @@ private:
     uint                intRegUsedCount;
     uint                floatRegUsedCount;
     int                 loopNest;
+    uint16              m_bailOutRecordCount;
     Loop *              curLoop;
     Region *            currentRegion;
     BVSparse<JitArenaAllocator> *liveOnBackEdgeSyms;
+    GlobalBailOutRecordDataTable **globalBailOutRecordTables;
+    uint             ** lastUpdatedRowIndices;      // A temporary array of indices keeping track of which entry on the global table was updated for a regSlot by the last bailout point
     LinearScanMD        linearScanMD;
 
     SList<OpHelperBlock> *  opHelperBlockList;
@@ -96,7 +101,8 @@ public:
     LinearScan(Func *func) : func(func), currentBlockNumber(0), loopNest(0), intRegUsedCount(0), floatRegUsedCount(0), activeLiveranges(NULL), 
         linearScanMD(func), opHelperSpilledLiveranges(NULL), currentOpHelperBlock(NULL),
         lastLabel(NULL), numInt32Regs(0), numFloatRegs(0), stackPackInUseLiveRanges(NULL), stackSlotsFreeList(NULL),
-        totalOpHelperFullVisitedLength(0), curLoop(NULL), currentBlock(nullptr), currentRegion(nullptr)
+        totalOpHelperFullVisitedLength(0), curLoop(NULL), currentBlock(nullptr), currentRegion(nullptr), m_bailOutRecordCount(0), 
+        globalBailOutRecordTables(nullptr), lastUpdatedRowIndices(nullptr)
     { 
         linearScanMD.Init(this);
     }
@@ -169,6 +175,8 @@ private:
 
     static void         AddLiveRange(SList<Lifetime *> * list, Lifetime * liverange);
     static Lifetime *   RemoveRegLiveRange(SList<Lifetime *> * list, RegNum reg);
+    
+    GlobalBailOutRecordDataTable * EnsureGlobalBailOutRecordTable(Func *func);
 
     void                FillBailOutRecord(IR::Instr * instr);
     void                FillBailOutOffset(int * offset, StackSym * stackSym, FillBailOutState * state, IR::Instr * instr);

@@ -124,6 +124,22 @@ LinearScan::RegAlloc()
 
     this->Init();
 
+    NativeCodeData::Allocator * nativeAllocator = this->func->GetNativeCodeDataAllocator();
+    if (func->hasBailout)
+    {
+        this->globalBailOutRecordTables = NativeCodeDataNewArrayZ(nativeAllocator, GlobalBailOutRecordDataTable *,  func->m_inlineeId + 1);
+        this->lastUpdatedRowIndices = JitAnewArrayZ(this->tempAlloc, uint *, func->m_inlineeId + 1);
+
+#ifdef PROFILE_BAILOUT_RECORD_MEMORY
+        if (Js::Configuration::Global.flags.ProfileBailOutRecordMemory)
+        {
+            this->func->GetScriptContext()->bailOutOffsetBytes += (sizeof(GlobalBailOutRecordDataTable *) * (func->m_inlineeId + 1));
+            this->func->GetScriptContext()->bailOutRecordBytes += (sizeof(GlobalBailOutRecordDataTable *) * (func->m_inlineeId + 1));
+        }
+#endif
+    }
+
+    m_bailOutRecordCount = 0;
     IR::Instr * insertBailInAfter = nullptr;
     BailOutInfo * bailOutInfoForBailIn = nullptr;
     bool endOfBasicBlock = true;
@@ -240,6 +256,23 @@ LinearScan::RegAlloc()
         }
     }NEXT_INSTR_EDITING;
 
+    if (func->hasBailout)
+    {
+        for (uint i = 0; i <= func->m_inlineeId; i++)
+        {
+            if (globalBailOutRecordTables[i] != nullptr)
+            {
+                globalBailOutRecordTables[i]->Finalize(nativeAllocator, &tempAlloc);
+#ifdef PROFILE_BAILOUT_RECORD_MEMORY
+                if (Js::Configuration::Global.flags.ProfileBailOutRecordMemory)
+                {
+                    func->GetScriptContext()->bailOutOffsetBytes += sizeof(GlobalBailOutRecordDataRow) * globalBailOutRecordTables[i]->length;
+                    func->GetScriptContext()->bailOutRecordBytes += sizeof(GlobalBailOutRecordDataRow) * globalBailOutRecordTables[i]->length;
+                }
+#endif
+            }
+        }
+    }
     // review: should we introduce a method LowererMD::GetUsedRegCountForRegAlloc ...
     AssertMsg((this->intRegUsedCount + this->floatRegUsedCount) == this->linearScanMD.UnAllocatableRegCount(this->func) , "RegUsedCount is wrong");
     AssertMsg(this->activeLiveranges->Empty(), "Active list not empty");
@@ -1167,7 +1200,7 @@ struct FuncBailOutData
     BVFixed * float64Syms;
 
     void Initialize(Func * func, JitArenaAllocator * tempAllocator);
-    void FinalizeLocalOffsets(NativeCodeData::Allocator * allocator);
+    void FinalizeLocalOffsets(JitArenaAllocator *allocator, GlobalBailOutRecordDataTable *table, uint **lastUpdatedRowIndices);
     void Clear(JitArenaAllocator * tempAllocator);
 };
 
@@ -1181,39 +1214,33 @@ FuncBailOutData::Initialize(Func * func, JitArenaAllocator * tempAllocator)
     this->float64Syms = BVFixed::New(localsCount, tempAllocator);
 }
 
-void
-FuncBailOutData::FinalizeLocalOffsets(NativeCodeData::Allocator * allocator)
+void 
+FuncBailOutData::FinalizeLocalOffsets(JitArenaAllocator *allocator, GlobalBailOutRecordDataTable *globalBailOutRecordDataTable, uint **lastUpdatedRowIndices)
 {
     Js::RegSlot localsCount = func->GetJnFunction()->GetLocalsCount();
-    Js::RegSlot minLocalSyms = 0;
-    Js::RegSlot maxLocalSyms = localsCount;
-    for (; minLocalSyms < localsCount; minLocalSyms++)
+    
+    Assert(globalBailOutRecordDataTable != nullptr);
+    Assert(lastUpdatedRowIndices != nullptr);
+    
+    if (*lastUpdatedRowIndices == nullptr)
     {
-        if (localOffsets[minLocalSyms] != 0)
+        *lastUpdatedRowIndices = JitAnewArrayZ(allocator, uint, localsCount);
+        memset(*lastUpdatedRowIndices, -1, sizeof(uint)*localsCount);
+    }
+    uint16 bailOutRecordId = bailOutRecord->m_bailOutRecordId;
+    bailOutRecord->localOffsetsCount = 0;
+    for (uint32 i = 0; i < localsCount; i++)
+    {
+        // if the sym is live
+        if (localOffsets[i] != 0)
         {
-            for (; maxLocalSyms > minLocalSyms; maxLocalSyms--)
-            {
-                if (localOffsets[maxLocalSyms - 1] != 0)
-                {
-                    break;
-                }
-            }
-            Assert(maxLocalSyms - minLocalSyms != 0);
-            Assert(minLocalSyms == 0 || minLocalSyms >= this->func->GetJnFunction()->GetConstantCount());
-            Js::RegSlot count = maxLocalSyms - minLocalSyms;
-            bailOutRecord->localOffsets = NativeCodeDataNewArrayZ(allocator, int, count);
-            bailOutRecord->losslessInt32Syms = BVFixed::New(count, allocator);
-            bailOutRecord->losslessInt32Syms->CopyBits(losslessInt32Syms, minLocalSyms);
-            bailOutRecord->float64Syms = BVFixed::New(count, allocator);
-            bailOutRecord->float64Syms->CopyBits(float64Syms, minLocalSyms);
-
-            size_t localOffsetsSizeInBytes = count * sizeof(int);
-            js_memcpy_s(bailOutRecord->localOffsets, localOffsetsSizeInBytes, localOffsets + minLocalSyms, localOffsetsSizeInBytes);  
-            bailOutRecord->minLocalSyms = minLocalSyms;
-            bailOutRecord->localOffsetsCount = count;            
-            break;
+            bool isFloat = float64Syms->Test(i) != 0;
+            bool isInt = losslessInt32Syms->Test(i) != 0;
+            globalBailOutRecordDataTable->AddOrUpdateRow(allocator, bailOutRecordId, i, isFloat, isInt, localOffsets[i], &((*lastUpdatedRowIndices)[i]));
+            Assert(globalBailOutRecordDataTable->globalBailOutRecordDataRows[(*lastUpdatedRowIndices)[i]].regSlot  == i);
+            bailOutRecord->localOffsetsCount++;
         }
-    } 
+    }
 }
 
 void
@@ -1225,10 +1252,43 @@ FuncBailOutData::Clear(JitArenaAllocator * tempAllocator)
     float64Syms->Delete(tempAllocator);
 }
 
+GlobalBailOutRecordDataTable *
+LinearScan::EnsureGlobalBailOutRecordTable(Func *func)
+{
+    Assert(globalBailOutRecordTables != nullptr);
+    Func *topFunc = func->GetTopFunc();
+    bool isTopFunc = (func == topFunc);
+    uint32 inlineeID = isTopFunc ? 0 : func->m_inlineeId;
+    NativeCodeData::Allocator * allocator = this->func->GetNativeCodeDataAllocator();
+
+    GlobalBailOutRecordDataTable *globalBailOutRecordDataTable = globalBailOutRecordTables[inlineeID];
+    if (globalBailOutRecordDataTable == nullptr)
+    {
+        globalBailOutRecordDataTable = globalBailOutRecordTables[inlineeID] = NativeCodeDataNew(allocator, GlobalBailOutRecordDataTable);
+        globalBailOutRecordDataTable->length = globalBailOutRecordDataTable->size = 0;
+        globalBailOutRecordDataTable->isInlinedFunction = !isTopFunc;
+        globalBailOutRecordDataTable->isInlinedConstructor = func->IsInlinedConstructor();
+        globalBailOutRecordDataTable->isLoopBody = func->IsLoopBody();
+        globalBailOutRecordDataTable->returnValueRegSlot = func->returnValueRegSlot;
+        globalBailOutRecordDataTable->firstActualStackOffset = -1;
+        globalBailOutRecordDataTable->registerSaveSpace = func->GetScriptContext()->GetThreadContext()->GetBailOutRegisterSaveSpace();
+        globalBailOutRecordDataTable->globalBailOutRecordDataRows = nullptr;
+
+#ifdef PROFILE_BAILOUT_RECORD_MEMORY
+        if (Js::Configuration::Global.flags.ProfileBailOutRecordMemory)
+        {
+            topFunc->GetScriptContext()->bailOutOffsetBytes += sizeof(GlobalBailOutRecordDataTable);
+            topFunc->GetScriptContext()->bailOutRecordBytes += sizeof(GlobalBailOutRecordDataTable);
+        }
+#endif
+    }
+    return globalBailOutRecordDataTable;
+}
+
 void
 LinearScan::FillBailOutRecord(IR::Instr * instr)
 {
-    BailOutInfo * bailOutInfo = instr->GetBailOutInfo();     
+    BailOutInfo * bailOutInfo = instr->GetBailOutInfo();
 
     if (this->func->HasTry())
     {
@@ -1240,13 +1300,15 @@ LinearScan::FillBailOutRecord(IR::Instr * instr)
     }
 
     BVSparse<JitArenaAllocator> * byteCodeUpwardExposedUsed = bailOutInfo->byteCodeUpwardExposedUsed;
-    
+
     Func * bailOutFunc = bailOutInfo->bailOutFunc;
     uint funcCount = bailOutFunc->inlineDepth + 1;
     FuncBailOutData * funcBailOutData = AnewArray(this->tempAlloc, FuncBailOutData, funcCount);
     uint index = funcCount - 1;    
     funcBailOutData[index].Initialize(bailOutFunc, this->tempAlloc);
     funcBailOutData[index].bailOutRecord = bailOutInfo->bailOutRecord;
+    bailOutInfo->bailOutRecord->m_bailOutRecordId = m_bailOutRecordCount++;
+    bailOutInfo->bailOutRecord->globalBailOutRecordTable = EnsureGlobalBailOutRecordTable(bailOutFunc);
 
     NativeCodeData::Allocator * allocator = this->func->GetNativeCodeDataAllocator();
 
@@ -1267,6 +1329,8 @@ LinearScan::FillBailOutRecord(IR::Instr * instr)
         Assert(index > 0);
         Assert(bailOutOffset != Js::Constants::NoByteCodeOffset);
         BailOutRecord * bailOutRecord = NativeCodeDataNewZ(allocator, BailOutRecord, bailOutOffset, (uint)-1, IR::BailOutInvalid, currentFunc);
+        bailOutRecord->m_bailOutRecordId = m_bailOutRecordCount++;
+        bailOutRecord->globalBailOutRecordTable = EnsureGlobalBailOutRecordTable(currentFunc);
 #if ENABLE_DEBUG_CONFIG_OPTIONS
         // To indicate this is a subsequent bailout from an inlinee
         bailOutRecord->bailOutOpcode = Js::OpCode::InlineeEnd;
@@ -1533,19 +1597,35 @@ LinearScan::FillBailOutRecord(IR::Instr * instr)
 
             FuncBailOutData& currentFuncBailOutData = funcBailOutData[currentStartCallFunc->inlineDepth];
             BailOutRecord * currentBailOutRecord = currentFuncBailOutData.bailOutRecord;
-
-            currentBailOutRecord->startCallCount++;
-            if (currentBailOutRecord->outParamOffsets == null)
+            if (currentBailOutRecord->argOutOffsetInfo == nullptr)
             {
-                Assert(currentBailOutRecord->startCallOutParamCounts == null);
-                currentBailOutRecord->startCallOutParamCounts = &startCallOutParamCounts[i];
+                currentBailOutRecord->argOutOffsetInfo = NativeCodeDataNew(allocator, BailOutRecord::ArgOutOffsetInfo);
+                currentBailOutRecord->argOutOffsetInfo->argOutFloat64Syms = nullptr;
+                currentBailOutRecord->argOutOffsetInfo->argOutLosslessInt32Syms = nullptr;
+                currentBailOutRecord->argOutOffsetInfo->argOutSymStart = 0;
+                currentBailOutRecord->argOutOffsetInfo->outParamOffsets = nullptr;
+                currentBailOutRecord->argOutOffsetInfo->startCallOutParamCounts = nullptr;
+
+#ifdef PROFILE_BAILOUT_RECORD_MEMORY
+                if (Js::Configuration::Global.flags.ProfileBailOutRecordMemory)
+                {
+                    this->func->GetScriptContext()->bailOutRecordBytes += sizeof(BailOutRecord::ArgOutOffsetInfo);
+                }
+#endif
+            }
+
+            currentBailOutRecord->argOutOffsetInfo->startCallCount++;
+            if (currentBailOutRecord->argOutOffsetInfo->outParamOffsets == null)
+            {
+                Assert(currentBailOutRecord->argOutOffsetInfo->startCallOutParamCounts == null);
+                currentBailOutRecord->argOutOffsetInfo->startCallOutParamCounts = &startCallOutParamCounts[i];
 #ifdef _M_IX86
                 currentBailOutRecord->startCallArgRestoreAdjustCounts = &startCallArgRestoreAdjustCounts[i];
 #endif
-                currentBailOutRecord->outParamOffsets = &outParamOffsets[outParamStart];
-                currentBailOutRecord->argOutSymStart = outParamStart;
-                currentBailOutRecord->argOutFloat64Syms = argOutFloat64Syms;
-                currentBailOutRecord->argOutLosslessInt32Syms = argOutLosslessInt32Syms;
+                currentBailOutRecord->argOutOffsetInfo->outParamOffsets = &outParamOffsets[outParamStart];
+                currentBailOutRecord->argOutOffsetInfo->argOutSymStart = outParamStart;
+                currentBailOutRecord->argOutOffsetInfo->argOutFloat64Syms = argOutFloat64Syms;
+                currentBailOutRecord->argOutOffsetInfo->argOutLosslessInt32Syms = argOutLosslessInt32Syms;
             }
 #if DBG_DUMP
             if (PHASE_DUMP(Js::BailOutPhase, this->func))
@@ -1789,7 +1869,8 @@ LinearScan::FillBailOutRecord(IR::Instr * instr)
         funcBailOutData[i].bailOutRecord->inlineDepth = funcBailOutData[i].func->inlineDepth;
         funcBailOutData[i].bailOutRecord->constantCount = constantCount;
 #endif
-        funcBailOutData[i].FinalizeLocalOffsets(allocator);
+        uint32 tableIndex = funcBailOutData[i].func->IsTopFunc() ? 0 : funcBailOutData[i].func->m_inlineeId;
+        funcBailOutData[i].FinalizeLocalOffsets(tempAlloc, this->globalBailOutRecordTables[tableIndex], &(this->lastUpdatedRowIndices[tableIndex]));
 #if DBG_DUMP
         if(PHASE_DUMP(Js::BailOutPhase, this->func))
         {
@@ -1799,6 +1880,13 @@ LinearScan::FillBailOutRecord(IR::Instr * instr)
         }
 #endif
         funcBailOutData[i].Clear(this->tempAlloc);
+
+#ifdef PROFILE_BAILOUT_RECORD_MEMORY
+        if (Js::Configuration::Global.flags.ProfileBailOutRecordMemory)
+        {
+            this->func->GetScriptContext()->bailOutRecordBytes += sizeof(BailOutRecord);
+        }
+#endif
     }
     JitAdeleteArray(this->tempAlloc, funcCount, funcBailOutData);
 }

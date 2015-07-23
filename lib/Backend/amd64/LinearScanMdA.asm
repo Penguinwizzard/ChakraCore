@@ -21,8 +21,9 @@ align 16
     ;; [rsp + 9 * 8] == saved rdx
     ;; rcx == bailOutRecord
     ;; rdx == condition
-
-    mov rax, [rcx] ;; bailOutRecord->registerSaveSpace
+    
+    mov rax, [rcx] ;; bailOutRecord->globalBailOutRecordDataTable
+    mov rax, [rax] ;; bailOutRecord->globalBailOutRecordDataTable->registerSaveSpace
 
     ;; Save r8 first to free up a register
     mov [rax + 8 * 8], r8

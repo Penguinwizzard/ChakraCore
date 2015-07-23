@@ -26,8 +26,9 @@
     ; lr == return address
 
     ; Save all registers except the above, which would have already been saved by jitted code if necessary
-    ldr r12, [r0] ; bailOutRecord->registerSaveSpace
-    add r12, r12, #192 ; &reinterpret_cast<byte *>(bailOutRecord->registerSaveSpace)[(RegD0 - 1) * 4 + VFP_REGCOUNT * 8]
+    ldr r12, [r0] ; bailOutRecord->globalBailOutRecordDataTable
+    ldr r12, [r12] ; bailOutRecord->globalBailOutRecordDataTable->registerSaveSpace
+    add r12, r12, #192 ; &reinterpret_cast<byte *>(bailOutRecord->globalBailOutRecordDataTable->registerSaveSpace)[(RegD0 - 1) * 4 + VFP_REGCOUNT * 8]
     vstmdb r12!, {d0 - d15}
     sub r12, r12, #16 ; skip r12-r15
     stmdb r12!, {r1 - r11}
@@ -46,8 +47,9 @@
     ; lr == return address
 
     ; Save all registers except the above, which would have already been saved by jitted code if necessary
-    ldr r12, [r0] ; bailOutRecord->registerSaveSpace
-    add r12, r12, #192 ; &bailOutRecord->registerSaveSpace[(RegD0 - 1) * 4 + VFP_REGCOUNT * 8]
+    ldr r12, [r0] ; bailOutRecord->globalBailOutRecordDataTable
+    ldr r12, [r12] ; bailOutRecord->globalBailOutRecordDataTable->registerSaveSpace
+    add r12, r12, #192 ; &bailOutRecord->globalBailOutRecordDataTable->registerSaveSpace[(RegD0 - 1) * 4 + VFP_REGCOUNT * 8]
     vstmdb r12!, {d0 - d15}
     sub r12, r12, #16 ; skip r12-r15
     stmdb r12!, {r2 - r11}

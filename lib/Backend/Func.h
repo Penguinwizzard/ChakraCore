@@ -71,6 +71,7 @@ public:
       m_runtimeData(runtimeData),
       m_polymorphicInlineCacheInfo(polymorphicInlineCacheInfo),
       m_codeGenAllocators(codeGenAllocators),
+      m_inlineeId(0),
       pinnedTypeRefs(null),
       singleTypeGuards(null),
       equivalentTypeGuards(null),
@@ -170,7 +171,11 @@ public:
       , lastConstantAddressRegLoadInstr(nullptr)    
     {
         Assert(this->IsInlined() == !!runtimeData);
-        
+
+        if (this->IsInlined())
+        {
+            m_inlineeId = ++(GetTopFunc()->m_inlineeId);
+        }
         m_jnFunction = m_workItem->GetFunctionBody();
         bool doStackNestedFunc = m_jnFunction->DoStackNestedFunc();
         bool doStackClosure = m_jnFunction->DoStackClosure() && !PHASE_OFF(Js::FrameDisplayFastPathPhase, this);
@@ -899,6 +904,8 @@ public:
     BVSparse<JitArenaAllocator> *  argObjSyms;
     BVSparse<JitArenaAllocator> *  m_nonTempLocalVars;  // Only populated in debug mode as part of IRBuilder. Used in GlobOpt and BackwardPass.
     InlineeFrameInfo*              frameInfo;
+    uint32 m_inlineeId;
+
 private:
 #ifdef PROFILE_EXEC
     Js::ScriptContextProfiler *const m_codeGenProfiler;
@@ -932,7 +939,7 @@ private:
     IR::SymOpnd *GetInlineeOpndAtOffset(int32 offset);
     bool HasLocalVarSlotCreated() const { return m_localVarSlotsOffset != Js::Constants::InvalidOffset; }
     void EnsureLocalVarSlots();
-    
+   
     SList<IR::RegOpnd *> constantAddressRegOpnd;
     IR::Instr * lastConstantAddressRegLoadInstr;
     bool canHoistConstantAddressLoad;

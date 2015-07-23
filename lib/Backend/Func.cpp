@@ -322,6 +322,13 @@ Func::Codegen()
     }
 #endif
 
+#ifdef PROFILE_BAILOUT_RECORD_MEMORY
+    if (Js::Configuration::Global.flags.ProfileBailOutRecordMemory)
+    {
+        scriptContext->codeSize += this->m_codeSize;
+    }
+#endif
+
     if (PHASE_TRACE(Js::BackEndPhase, GetJnFunction()))
     {
         LARGE_INTEGER freq;

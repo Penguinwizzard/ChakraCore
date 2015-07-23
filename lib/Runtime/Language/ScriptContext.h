@@ -656,6 +656,14 @@ public:
         int typeCount[TypeIds_Limit];
         int instanceCount[TypeIds_Limit];
 #endif
+
+
+#ifdef PROFILE_BAILOUT_RECORD_MEMORY
+        __int64 bailOutRecordBytes;
+        __int64 bailOutOffsetBytes;
+        __int64 codeSize;
+#endif
+
 #ifdef  PROFILE_OBJECT_LITERALS
         int objectLiteralInstanceCount;
         int objectLiteralPathCount;
