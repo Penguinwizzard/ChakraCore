@@ -22,7 +22,7 @@ namespace Js {
         
         JavascriptExceptionObject(Var object, ScriptContext * scriptContext, JavascriptExceptionContext* exceptionContextIn, bool isPendingExceptionObject = false) : 
             thrownObject(object), isPendingExceptionObject(isPendingExceptionObject),
-            scriptContext(scriptContext), isDebuggerSkip(false), byteCodeOffsetAfterDebuggerSkip(Constants::InvalidByteCodeOffset), hasDebuggerLogged(false),
+            scriptContext(scriptContext), tag(true), isDebuggerSkip(false), byteCodeOffsetAfterDebuggerSkip(Constants::InvalidByteCodeOffset), hasDebuggerLogged(false),
             isFirstChance(false), isExceptionCaughtInNonUserCode(false), ignoreAdvanceToNextStatement(false), hostWrapperCreateFunc(null), isGeneratorReturnException(false)
         { 
             if (exceptionContextIn)
@@ -168,16 +168,19 @@ namespace Js {
     private:
         Var      thrownObject;
         ScriptContext * scriptContext;
+        
+        int        byteCodeOffsetAfterDebuggerSkip;
+        const bool tag : 1;               // Tag the low bit to prevent possible GC false references
+        bool       isPendingExceptionObject : 1;
+        bool       isGeneratorReturnException : 1;
 
-        bool     isDebuggerSkip;
-        int      byteCodeOffsetAfterDebuggerSkip;
-        bool     hasDebuggerLogged;
-        bool     isFirstChance;      // Mentions whether the current exception is a handled exception or not
-        bool     isExceptionCaughtInNonUserCode; // Mentions if in the caller chain the exception will be handled by the non-user code.
-        bool     isPendingExceptionObject;
-        bool     ignoreAdvanceToNextStatement;  // This will be set when user had setnext while sitting on the exception
+        bool       isDebuggerSkip : 1;
+        bool       hasDebuggerLogged : 1;
+        bool       isFirstChance : 1;      // Mentions whether the current exception is a handled exception or not
+        bool       isExceptionCaughtInNonUserCode : 1; // Mentions if in the caller chain the exception will be handled by the non-user code.        
+        bool       ignoreAdvanceToNextStatement : 1;  // This will be set when user had setnext while sitting on the exception
                                                 // So the exception eating logic shouldn't try and advance to next statement again.
-        bool     isGeneratorReturnException;
+        
         HostWrapperCreateFuncType hostWrapperCreateFunc;
 
         JavascriptExceptionContext exceptionContext;
