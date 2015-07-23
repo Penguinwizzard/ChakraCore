@@ -8862,6 +8862,15 @@ IR::Instr* Lowerer::LowerMultiBr(IR::Instr * instr, IR::JnHelperMethod helperMet
 
     // Push the args in reverse order.
 
+    // The end and start labels for the function are used to guarantee
+    // that the dictionary jump destinations haven't been tampered with, so we
+    // will always jump to some location within this function
+    IR::LabelOpnd * endFuncOpnd = IR::LabelOpnd::New(m_func->EnsureFuncEndLabel(), m_func);
+    m_lowererMD.LoadHelperArgument(instr, endFuncOpnd);
+
+    IR::LabelOpnd * startFuncOpnd = IR::LabelOpnd::New(m_func->EnsureFuncStartLabel(), m_func);
+    m_lowererMD.LoadHelperArgument(instr, startFuncOpnd);
+
     //Load the address of the dictionary pair- Js::StringDictionaryWrapper
     // RELOCJIT: Relocatable JIT doesn't support profiling.
     IR::AddrOpnd* nativestringDictionaryOpnd = IR::AddrOpnd::New(instr->AsBranchInstr()->AsMultiBrInstr()->GetBranchDictionary(), IR::AddrOpndKindDynamicMisc, this->m_func);
@@ -18304,6 +18313,20 @@ void
 Lowerer::FinalLower()
 {
     this->m_lowererMD.FinalLower();
+
+    // ensure that the StartLabel and EndLabel are inserted
+    // before the prolog and after the epilog respectively
+    IR::LabelInstr * startLabel = m_func->GetFuncStartLabel();
+    if (startLabel != nullptr)
+    {
+        m_func->m_headInstr->InsertAfter(startLabel);
+    }
+
+    IR::LabelInstr * endLabel = m_func->GetFuncEndLabel();
+    if (endLabel != nullptr)
+    {
+        m_func->m_tailInstr->GetPrevRealInstr()->InsertBefore(endLabel);
+    }
 }
 
 void

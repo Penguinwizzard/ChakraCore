@@ -1226,6 +1226,38 @@ void Func::EnsureCallSiteToArgumentsOffsetFixupMap()
     }
 }
 
+IR::LabelInstr *
+Func::GetFuncStartLabel()
+{
+    return m_funcStartLabel;
+}
+
+IR::LabelInstr *
+Func::EnsureFuncStartLabel()
+{
+    if(m_funcStartLabel == nullptr)
+    {
+        m_funcStartLabel = IR::LabelInstr::New( Js::OpCode::Label, this );
+    }
+    return m_funcStartLabel;
+}
+
+IR::LabelInstr *
+Func::GetFuncEndLabel()
+{
+    return m_funcEndLabel;
+}
+
+IR::LabelInstr *
+Func::EnsureFuncEndLabel()
+{
+    if(m_funcEndLabel == nullptr)
+    {
+        m_funcEndLabel = IR::LabelInstr::New( Js::OpCode::Label, this );
+    }
+    return m_funcEndLabel;
+}
+
 void
 Cloner::AddInstr(IR::Instr * instrOrig, IR::Instr * instrClone)
 {

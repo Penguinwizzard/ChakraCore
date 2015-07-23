@@ -178,7 +178,7 @@ namespace Js
         static BOOL StrictEqualEmptyString(Var aLeft);
         static BOOL NotStrictEqual(Var aLeft, Var aRight,ScriptContext* scriptContext);
 
-        static void * Op_SwitchStringLookUp(JavascriptString* str, Js::BranchDictionaryWrapper<Js::JavascriptString*>* stringDictionary);
+        static void * Op_SwitchStringLookUp(JavascriptString* str, Js::BranchDictionaryWrapper<Js::JavascriptString*>* stringDictionary, uintptr funcStart, uintptr funcEnd);
 
         static BOOL HasOwnProperty(Var instance, PropertyId propertyId, ScriptContext * requestContext);
         static BOOL GetOwnProperty(Var instance, PropertyId propertyId, Var* value, ScriptContext* requestContext);

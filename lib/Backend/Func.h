@@ -151,6 +151,9 @@ public:
       ,m_ArgumentsOffset(0)
       ,m_epilogLabel(nullptr)
 #endif
+      , m_funcStartLabel(nullptr)
+      , m_funcEndLabel(nullptr)
+
 #ifdef _M_X64
       , m_prologEncoder(alloc)
 #endif
@@ -488,6 +491,11 @@ static const unsigned __int64 c_debugFillPattern8 = 0xcececececececece;
 
     void EnsureCallSiteToArgumentsOffsetFixupMap();
 
+    IR::LabelInstr * EnsureFuncStartLabel();
+    IR::LabelInstr * GetFuncStartLabel();
+    IR::LabelInstr * EnsureFuncEndLabel();
+    IR::LabelInstr * GetFuncEndLabel();
+
 #ifdef _M_X64
     void SetSpillSize(IntConstType spillSize)
     {
@@ -675,6 +683,8 @@ public:
     UnwindInfoManager   m_unwindInfo;
     IR::LabelInstr *    m_epilogLabel;
 #endif
+    IR::LabelInstr *    m_funcStartLabel;
+    IR::LabelInstr *    m_funcEndLabel;
 
     // Keep track of the maximum number of args on the stack.
     uint32              m_argSlotsForFunctionsCalled;    
