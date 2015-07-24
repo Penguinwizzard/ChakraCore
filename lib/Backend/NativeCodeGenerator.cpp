@@ -3,10 +3,7 @@
 //----------------------------------------------------------------------------
 
 #include "BackEnd.h"
-#ifdef ENABLE_JS_ETW
-#include <IERESP_mshtml.h>
-#include "microsoft-scripting-jscript9.internalevents.h"
-#endif
+
 
 #if DBG
 Js::JavascriptMethod checkCodeGenThunk;

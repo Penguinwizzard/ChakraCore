@@ -2,9 +2,6 @@
 
 #include "StdAfx.h"
 #include <process.h>
-#ifdef ENABLE_JS_ETW
-#include <IERESP_mshtml.h>
-#endif
 
 namespace JsUtil
 {

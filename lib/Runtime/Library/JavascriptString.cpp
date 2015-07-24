@@ -1180,7 +1180,7 @@ case_2:
         const wchar_t* pThatStr = pThat->GetString();
         int thatStrCount = pThat->GetLength();
 
-        LCID lcid = GetUserLocale();
+        LCID lcid = GetUserDefaultLCID();
         int result = CompareStringW(lcid, NULL, pThisStr, thisStrCount, pThatStr, thatStrCount );
         if (result == 0)
         {
@@ -2955,7 +2955,7 @@ case_2:
         DWORD dwFlags = toUpper ? LCMAP_UPPERCASE : LCMAP_LOWERCASE;
         dwFlags |= LCMAP_LINGUISTIC_CASING;
 
-        LCID lcid = GetUserLocale();
+        LCID lcid = GetUserDefaultLCID();
 
         const wchar_t* str = pThis->GetString();
 

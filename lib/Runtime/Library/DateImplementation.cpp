@@ -455,7 +455,7 @@ namespace Js {
 
         cch = 0;
 
-        LCID lcid = GetUserLocale();
+        LCID lcid = GetUserDefaultLCID();
         if( !(noDateTime & DateTimeFlag::NoDate))
         {
             DWORD dwFormat = DATE_LONGDATE;

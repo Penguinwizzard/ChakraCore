@@ -5,11 +5,6 @@
 ********************************************************/
 #include "StdAfx.h"
 
-#ifdef ENABLE_JS_ETW
-#include <IERESP_mshtml.h>
-#include "microsoft-scripting-jscript9.internalevents.h"
-#endif
-
 namespace Js
 {
     // This is a wrapper class for javascript functions that are added directly to the JS engine via BuildDirectFunction

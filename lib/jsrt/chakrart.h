@@ -320,6 +320,11 @@
         ///     Runtime will enable all experimental features.
         /// </summary>
         JsRuntimeAttributeEnableExperimentalFeatures = 0x00000020,
+        /// <summary>
+        ///     Calling <c>JsSetException</c> will also dispatch the exception to the script debugger
+        ///     (if any) giving the debugger a chance to break on the exception.
+        /// </summary>
+        JsRuntimeDispatchSetExceptionsToDebugger = 0x00000040
     } JsRuntimeAttributes;
 
     /// <summary>

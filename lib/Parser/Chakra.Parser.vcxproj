@@ -104,8 +104,7 @@
     <ClInclude Include="rterrors.h" />
     <ClInclude Include="rterrors_limits.h" />
     <ClInclude Include="scan.h" />
-    <ClInclude Include="screrror.h" />
-    <ClInclude Include="scrutil.h" />
+    <ClInclude Include="screrror.h" />  
     <ClInclude Include="StandardChars.h" />
     <ClInclude Include="StdAfx.h" />
     <ClInclude Include="TextbookBoyerMoore.h" />

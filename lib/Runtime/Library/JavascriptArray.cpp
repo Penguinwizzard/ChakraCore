@@ -7155,7 +7155,7 @@ Case0:
 
     JavascriptString* JavascriptArray::GetLocaleSeparator(ScriptContext* scriptContext)
     {
-        LCID lcid = GetUserLocale();
+        LCID lcid = GetUserDefaultLCID();
         int count = 0;
         wchar_t szSeparator[6];
 

@@ -3,11 +3,6 @@
 //----------------------------------------------------------------------------
 
 // INL files
-#ifdef ENABLE_JS_ETW
-// Recycler.inl needs this.
-#include <IERESP_mshtml.h>
-#include <Microsoft-Scripting-ChakraEvents.h>
-#endif
 #include "Common\Tick.inl"
 #include "core\ConfigFlagsTable.inl"
 #include "core\ProfileMemory.inl"

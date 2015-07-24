@@ -27,10 +27,6 @@ namespace UnifiedRegex {
     struct Program;
 }
 
-// TODO: temporary workaround for getting at COleScript::GetUserLocale().
-// We need a better way to pass around config.
-extern LCID GetUserLocale();
-
 #include "ParserCommon.h"
 #include "alloc.h"
 #include "cmperr.h"

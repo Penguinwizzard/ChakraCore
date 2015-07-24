@@ -4,11 +4,6 @@
 
 #include "StdAfx.h"
 
-#ifdef ENABLE_JS_ETW
-#include <IERESP_mshtml.h>
-#include "microsoft-scripting-jscript9.internalevents.h"
-#endif
-
 namespace Js
 {
     SimplePropertyDescriptor JavascriptLibrary::SharedFunctionPropertyDescriptors[2] =

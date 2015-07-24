@@ -5,10 +5,6 @@
 #include "stdafx.h"
 #include "BackEndAPI.h"
 #include "ThreadBoundThreadContextManager.h"
-#ifdef ENABLE_JS_ETW
-#include <IERESP_mshtml.h>
-#include "microsoft-scripting-jscript9.internalevents.h"
-#endif
 
 //Control Flow Guard - Related Structs and APIs
 #ifdef _CONTROL_FLOW_GUARD

@@ -7,10 +7,6 @@
 #if PROFILE_DICTIONARY
 #include "DictionaryStats.h"
 #endif
-#ifdef ENABLE_JS_ETW
-#include <IERESP_mshtml.h>
-#include "microsoft-scripting-jscript9.internalevents.h"
-#endif
 
 #define DEFINE_OBJECT_NAME(object) const wchar_t *pwszObjectName = L#object;
 

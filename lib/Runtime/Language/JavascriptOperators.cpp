@@ -4,11 +4,6 @@
 
 #include "StdAfx.h"
 
-LCID GetUserLocale()
-{
-    return GetUserDefaultLCID();
-}
-
 namespace Js
 {
     DEFINE_RECYCLER_TRACKER_ARRAY_PERF_COUNTER(Var);

@@ -6,17 +6,15 @@
 #include "BackEndAPI.h"
 extern "C" PVOID _ReturnAddress(VOID);
 #pragma intrinsic(_ReturnAddress)
-#ifdef ENABLE_JS_ETW
-#include <IERESP_mshtml.h>
-#endif
 
 #ifdef _M_IX86
 #ifdef _CONTROL_FLOW_GUARD
 extern "C" PVOID __guard_check_icall_fptr;
 #endif
+extern "C" void __cdecl _alloca_probe_16();
 #endif
 
-extern "C" void __cdecl _alloca_probe_16();
+
 namespace Js
 {
     DEFINE_RECYCLER_TRACKER_PERF_COUNTER(JavascriptFunction);
