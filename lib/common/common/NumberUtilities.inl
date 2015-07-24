@@ -6,9 +6,24 @@
 
 namespace Js
 {
-    bool NumberUtilities::IsDigit(int ch)
+    inline bool NumberUtilities::IsDigit(int ch)
     {
         return ch >= '0' && ch <= '9';
+    }
+
+    inline BOOL NumberUtilities::FHexDigit(wchar_t ch, int *pw)
+    {
+        if ((ch -= '0') <= 9)
+        {
+            *pw = ch;
+            return TRUE;
+        }
+        if ((ch -= 'A' - '0') <= 5 || (ch -= 'a' - 'A') <= 5)
+        {
+            *pw = 10 + ch;
+            return TRUE;
+        }
+        return FALSE;
     }
 
     /***************************************************************************
@@ -17,7 +32,7 @@ namespace Js
     ***************************************************************************/
     // Turn off warning that there is no return value
 #pragma warning(disable:4035)  // re-enable below
-    ulong NumberUtilities::MulLu(ulong lu1, ulong lu2, ulong *pluHi)
+    inline ulong NumberUtilities::MulLu(ulong lu1, ulong lu2, ulong *pluHi)
     {
 #if _WIN32 || _WIN64
 
@@ -45,13 +60,13 @@ namespace Js
     /***************************************************************************
     Add two unsigned longs and return the carry bit.
     ***************************************************************************/
-    int NumberUtilities::AddLu(ulong *plu1, ulong lu2)
+    inline int NumberUtilities::AddLu(ulong *plu1, ulong lu2)
     {
         *plu1 += lu2;
         return *plu1 < lu2;
     }
 
-    ulong &NumberUtilities::LuHiDbl(double &dbl)
+    inline ulong &NumberUtilities::LuHiDbl(double &dbl)
     {
 #ifdef BIG_ENDIAN
         return ((ulong *)&dbl)[0];
@@ -60,7 +75,7 @@ namespace Js
 #endif //!BIG_ENDIAN
     }
 
-    ulong &NumberUtilities::LuLoDbl(double &dbl)
+    inline ulong &NumberUtilities::LuLoDbl(double &dbl)
     {
 #ifdef BIG_ENDIAN
         return ((ulong *)&dbl)[1];

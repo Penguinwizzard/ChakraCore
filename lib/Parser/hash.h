@@ -327,7 +327,7 @@ public:
     IdentPtr PidFromTk(tokens tk);
     IdentPtr PidHashName(LPCOLESTR psz)
     {
-        size_t csz = ostrlen(psz);
+        size_t csz = wcslen(psz);
         Assert(csz <= ULONG_MAX);
         return PidHashNameLen(psz, static_cast<ulong>(csz));
     }

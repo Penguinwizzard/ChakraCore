@@ -1228,7 +1228,7 @@ namespace Js
         const wchar_t *pch = scriptContext->GetCharClassifier()->SkipWhiteSpace(str->GetSz());
 
         // perform the string -> float conversion
-        double result = StrToDbl(pch, &pch, scriptContext);
+        double result = NumberUtilities::StrToDbl(pch, &pch, scriptContext);
 
         return JavascriptNumber::ToVarNoCheck(result, scriptContext);
     }

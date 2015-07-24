@@ -226,14 +226,14 @@ namespace Js
         ScriptContext *const scriptContext;
         void *const frameAddress;
         bool leftScript;
-        SmartFPUControl savedFPUControl;
+        SmartFPUControlT<isFPUControlRestoreNeeded> savedFPUControl;
         DECLARE_EXCEPTION_CHECK_DATA;
 
     public:
         LeaveScriptObject(ScriptContext *const scriptContext, void *const frameAddress)
             : scriptContext(scriptContext),
             frameAddress(frameAddress),
-            savedFPUControl(isFPUControlRestoreNeeded)
+            savedFPUControl()
         {
 
             leftScript = scriptContext->LeaveScriptStart<stackProbe, leaveForHost>(frameAddress);

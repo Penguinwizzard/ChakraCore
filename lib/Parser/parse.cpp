@@ -2568,7 +2568,7 @@ ParseNodePtr Parser::ParsePostfixOperators(ParseNodePtr pnode,
                         if (!Parser::IsNaNOrInfinityLiteral<true>(str))
                         {
                             const OLECHAR* terminalChar;
-                            double dbl = StrToDbl(str, &terminalChar, m_scriptContext);
+                            double dbl = Js::NumberUtilities::StrToDbl(str, &terminalChar, m_scriptContext);
                             bool convertsToFloat = !Js::NumberUtilities::IsNan(dbl);
                             doConvertToProperty = !convertsToFloat;
                         }

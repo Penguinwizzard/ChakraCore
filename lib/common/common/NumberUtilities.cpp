@@ -274,4 +274,299 @@ namespace Js
         return Js::NumberUtilities::LuHiDbl(dblT) == Js::NumberUtilities::LuHiDbl(dbl) && Js::NumberUtilities::LuLoDbl(dblT) == Js::NumberUtilities::LuLoDbl(dbl);
     }
 
+
+    template<typename EncodedChar>
+    double NumberUtilities::DblFromHex(const EncodedChar *psz, const EncodedChar **ppchLim)
+    {
+        double dbl;
+        uint uT;
+        byte bExtra;
+        int cbit;
+
+        // Skip leading zeros.
+        while (*psz == '0')
+            psz++;
+
+        dbl = 0;
+        Assert(Js::NumberUtilities::LuHiDbl(dbl) == 0);
+        Assert(Js::NumberUtilities::LuLoDbl(dbl) == 0);
+
+        // Get the first digit.
+        if ((uT = *psz - '0') > 9)
+        {
+            if ((uT -= 'A' - '0') <= 5 || (uT -= 'a' - 'A') <= 5)
+                uT += 10;
+            else
+            {
+                *ppchLim = psz;
+                return dbl;
+            }
+        }
+        psz++;
+
+        if (uT & 0x08)
+        {
+            cbit = 4;
+            Js::NumberUtilities::LuHiDbl(dbl) |= (ulong)(uT & 0x07) << 17;
+        }
+        else if (uT & 0x04)
+        {
+            cbit = 3;
+            Js::NumberUtilities::LuHiDbl(dbl) |= (ulong)(uT & 0x03) << 18;
+        }
+        else if (uT & 0x02)
+        {
+            cbit = 2;
+            Js::NumberUtilities::LuHiDbl(dbl) |= (ulong)(uT & 0x01) << 19;
+        }
+        else
+        {
+            Assert(uT & 0x01);
+            cbit = 1;
+        }
+        bExtra = 0;
+
+        for (; ; psz++)
+        {
+            if ((uT = (*psz - '0')) > 9)
+            {
+                if ((uT -= 'A' - '0') <= 5 || (uT -= 'a' - 'A') <= 5)
+                    uT += 10;
+                else
+                    break;
+            }
+
+            if (cbit <= 17)
+                Js::NumberUtilities::LuHiDbl(dbl) |= (ulong)uT << (17 - cbit);
+            else if (cbit < 21)
+            {
+                Js::NumberUtilities::LuHiDbl(dbl) |= (ulong)uT >> (cbit - 17);
+                Js::NumberUtilities::LuLoDbl(dbl) |= (ulong)uT << (49 - cbit);
+            }
+            else if (cbit <= 49)
+                Js::NumberUtilities::LuLoDbl(dbl) |= (ulong)uT << (49 - cbit);
+            else if (cbit <= 53)
+            {
+                Js::NumberUtilities::LuLoDbl(dbl) |= (ulong)uT >> (cbit - 49);
+                bExtra = (byte)(uT << (57 - cbit));
+            }
+            else if (0 != uT)
+                bExtra |= 1;
+            cbit += 4;
+        }
+
+        // Set the lim.
+        *ppchLim = psz;
+
+        // Set the exponent.
+        cbit += 1022;
+        if (cbit > 2046)
+        {
+            // Overflow to Infinity
+            Js::NumberUtilities::LuHiDbl(dbl) = 0x7FF00000;
+            Js::NumberUtilities::LuLoDbl(dbl) = 0;
+            return dbl;
+        }
+        Js::NumberUtilities::LuHiDbl(dbl) |= (ulong)cbit << 20;
+
+        // Use bExtra to round.
+        if ((bExtra & 0x80) && ((bExtra & 0x7F) || (Js::NumberUtilities::LuLoDbl(dbl) & 1)))
+        {
+            // Round up. Note that this overflows the mantissa correctly,
+            // even to Infinity.
+            if (0 == ++Js::NumberUtilities::LuLoDbl(dbl))
+                ++Js::NumberUtilities::LuHiDbl(dbl);
+        }
+
+        return dbl;
+    }
+
+    template <typename EncodedChar>
+    double NumberUtilities::DblFromBinary(const EncodedChar *psz, const EncodedChar **ppchLim)
+    {
+        double dbl = 0;
+        Assert(Js::NumberUtilities::LuHiDbl(dbl) == 0);
+        Assert(Js::NumberUtilities::LuLoDbl(dbl) == 0);
+        uint uT;
+        byte bExtra = 0;
+        int cbit = 0;
+        // Skip leading zeros.
+        while (*psz == '0')
+            psz++;
+        // Get the first digit.
+        uT = *psz - '0';
+        if (uT > 1)
+        {
+            *ppchLim = psz;
+            return dbl;
+        }
+        //Now that leading zeros are skipped first bit should be one so lets 
+        //go ahead and count it and increment psz
+        cbit = 1;
+        psz++;
+
+        // According to the existing implementations these numbers 
+        // should n bits away from 21 and 53. The n bits are determined by the
+        // numerical type. for example since 4 bits are necessary to represent a
+        // hexadecimal number and 3 bits to represent an octal you will see that 
+        // the hex case is represented by 21-4 = 17 and the octal case is represented
+        // by 21-3 = 18, thus for binary where 1 bit is need to represent 2 numbers 21-1 = 20
+        const uint rightShiftValue = 20;
+        // Why 52? 52 is the last explicit bit and 1 bit away from 53 (max bits of precision
+        // for double precision floating point)
+        const uint leftShiftValue = 52;
+        for (; (uT = (*psz - '0')) <= 1; psz++)
+        {
+            if (cbit <= rightShiftValue)
+            {
+                Js::NumberUtilities::LuHiDbl(dbl) |= (ulong)uT << (rightShiftValue - cbit);
+
+            }
+            else if (cbit <= leftShiftValue)
+            {
+                Js::NumberUtilities::LuLoDbl(dbl) |= (ulong)uT << (leftShiftValue - cbit);
+            }
+            else if (cbit == leftShiftValue + 1)//53 bits
+            {
+                Js::NumberUtilities::LuLoDbl(dbl) |= (ulong)uT >> (cbit - leftShiftValue);
+                bExtra = (byte)(uT << (60 - cbit));
+            }
+            else if (0 != uT)
+            {
+                bExtra |= 1;
+            }
+            cbit++;
+        }
+        // Set the lim.
+        *ppchLim = psz;
+
+        // Set the exponent.
+        cbit += 1022;
+        if (cbit > 2046)
+        {
+            // Overflow to Infinity
+            Js::NumberUtilities::LuHiDbl(dbl) = 0x7FF00000;
+            Js::NumberUtilities::LuLoDbl(dbl) = 0;
+            return dbl;
+        }
+
+        Js::NumberUtilities::LuHiDbl(dbl) |= (ulong)cbit << 20;
+
+        // Use bExtra to round.
+        if ((bExtra & 0x80) && ((bExtra & 0x7F) || (Js::NumberUtilities::LuLoDbl(dbl) & 1)))
+        {
+            // Round up. Note that this overflows the mantissa correctly,
+            // even to Infinity.
+            if (0 == ++Js::NumberUtilities::LuLoDbl(dbl))
+                ++Js::NumberUtilities::LuHiDbl(dbl);
+        }
+        return dbl;
+    }
+
+    template <typename EncodedChar>
+    double NumberUtilities::DblFromOctal(const EncodedChar *psz, const EncodedChar **ppchLim)
+    {
+        double dbl;
+        uint uT;
+        byte bExtra;
+        int cbit;
+
+        // Skip leading zeros.
+        while (*psz == '0')
+            psz++;
+
+        dbl = 0;
+        Assert(Js::NumberUtilities::LuHiDbl(dbl) == 0);
+        Assert(Js::NumberUtilities::LuLoDbl(dbl) == 0);
+
+        // Get the first digit.
+        uT = *psz - '0';
+        if (uT > 7)
+        {
+            *ppchLim = psz;
+            return dbl;
+        }
+        psz++;
+
+        if (uT & 0x04)//is the 3rd bit set
+        {
+            cbit = 3;
+            Js::NumberUtilities::LuHiDbl(dbl) |= (ulong)(uT & 0x03) << 18;
+        }
+        else if (uT & 0x02)//is the 2nd bit set
+        {
+            cbit = 2;
+            Js::NumberUtilities::LuHiDbl(dbl) |= (ulong)(uT & 0x01) << 19;
+        }
+        else// then is the first bit set
+        {
+            Assert(uT & 0x01);
+            cbit = 1;
+        }
+        bExtra = 0;
+
+        for (; (uT = (*psz - '0')) <= 7; psz++)
+        {
+            if (cbit <= 18)
+                Js::NumberUtilities::LuHiDbl(dbl) |= (ulong)uT << (18 - cbit);
+            else if (cbit < 21)
+            {
+                Js::NumberUtilities::LuHiDbl(dbl) |= (ulong)uT >> (cbit - 18);
+                Js::NumberUtilities::LuLoDbl(dbl) |= (ulong)uT << (50 - cbit);
+            }
+            else if (cbit <= 50)
+                Js::NumberUtilities::LuLoDbl(dbl) |= (ulong)uT << (50 - cbit);
+            else if (cbit <= 53)
+            {
+                Js::NumberUtilities::LuLoDbl(dbl) |= (ulong)uT >> (cbit - 50);
+                bExtra = (byte)(uT << (58 - cbit));
+            }
+            else if (0 != uT)
+                bExtra |= 1;
+            cbit += 3;
+        }
+
+        // Set the lim.
+        *ppchLim = psz;
+
+        // Set the exponent.
+        cbit += 1022;
+        if (cbit > 2046)
+        {
+            // Overflow to Infinity
+            Js::NumberUtilities::LuHiDbl(dbl) = 0x7FF00000;
+            Js::NumberUtilities::LuLoDbl(dbl) = 0;
+            return dbl;
+
+        }
+        Js::NumberUtilities::LuHiDbl(dbl) |= (ulong)cbit << 20;
+
+        // Use bExtra to round.
+        if ((bExtra & 0x80) && ((bExtra & 0x7F) || (Js::NumberUtilities::LuLoDbl(dbl) & 1)))
+        {
+            // Round up. Note that this overflows the mantissa correctly,
+            // even to Infinity.
+            if (0 == ++Js::NumberUtilities::LuLoDbl(dbl))
+                ++Js::NumberUtilities::LuHiDbl(dbl);
+        }
+
+        return dbl;
+    }
+
+    template <typename EncodedChar>
+    double NumberUtilities::StrToDbl(const EncodedChar * psz, const EncodedChar **ppchLim, Js::ScriptContext *const scriptContext)
+    {
+        Assert(scriptContext);
+        bool likelyInt = true;
+        return Js::NumberUtilities::StrToDbl<EncodedChar>(psz, ppchLim, likelyInt);
+    }
+
+    template double NumberUtilities::StrToDbl<wchar_t>(const wchar_t * psz, const wchar_t **ppchLim, Js::ScriptContext *const scriptContext);
+    template double NumberUtilities::StrToDbl<utf8char_t>(const utf8char_t * psz, const utf8char_t **ppchLim, Js::ScriptContext *const scriptContext);
+    template double NumberUtilities::DblFromHex<wchar_t>(const wchar_t *psz, const wchar_t **ppchLim);
+    template double NumberUtilities::DblFromHex<utf8char_t>(const utf8char_t *psz, const utf8char_t **ppchLim);
+    template double NumberUtilities::DblFromBinary<wchar_t>(const wchar_t *psz, const wchar_t **ppchLim);
+    template double NumberUtilities::DblFromBinary<utf8char_t>(const utf8char_t *psz, const utf8char_t **ppchLim);
+    template double NumberUtilities::DblFromOctal<wchar_t>(const wchar_t *psz, const wchar_t **ppchLim);
+    template double NumberUtilities::DblFromOctal<utf8char_t>(const utf8char_t *psz, const utf8char_t **ppchLim);
 }

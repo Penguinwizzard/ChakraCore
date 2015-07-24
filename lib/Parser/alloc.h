@@ -23,8 +23,7 @@ private:
         NraBlock * pblkNext;
         // ... DATA ...
     };
-    NraBlock * m_pblkList;
-    static const long kcbHead = AlignFull(sizeof(NraBlock));
+    NraBlock * m_pblkList;    
     long m_ibCur;
     long m_ibMax;
     long m_cbMinBlock;

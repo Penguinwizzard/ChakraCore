@@ -50,6 +50,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)NumberUtilities.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)NumberUtilities_strtod.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)RejitReason.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)SmartFPUControl.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Tick.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)vtinfo.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\StdAfx.cpp">
@@ -71,6 +72,7 @@
     <ClInclude Include="NumberUtilitiesBase.h" />
     <ClInclude Include="RejitReason.h" />
     <ClInclude Include="RejitReasons.h" />
+    <ClInclude Include="SmartFPUControl.h" />
     <ClInclude Include="StdAfx.h" />
     <ClInclude Include="Tick.h" />
     <ClInclude Include="UInt16Math.h" />

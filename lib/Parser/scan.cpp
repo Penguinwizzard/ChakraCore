@@ -163,9 +163,6 @@ Scanner<EncodingPolicy>::Scanner(Parser* parser, HashTbl *phtbl, Token *ptoken, 
     m_fYieldIsKeyword = false;
     m_fAwaitIsKeyword = false;
     
-#if NOTYET
-    ClearFPUStatus();
-#endif
 }
 
 template <typename EncodingPolicy>
@@ -317,7 +314,7 @@ bool Scanner<EncodingPolicy>::TryReadEscape(EncodedCharPtr& startingLocation, En
 
     for(; i < maxHexDigits && currentLocation < endOfSource; i++)
     {
-        if (!FHexDigit(ch = ReadFirst(currentLocation, endOfSource), &hexValue))
+        if (!Js::NumberUtilities::FHexDigit(ch = ReadFirst(currentLocation, endOfSource), &hexValue))
         {
             break;
         }
@@ -671,7 +668,7 @@ typename Scanner<EncodingPolicy>::EncodedCharPtr Scanner<EncodingPolicy>::FScanN
         case 'x':
         case 'X':
             // Hex  
-            *pdbl = DblFromHex(p + 2, &pchT);
+            *pdbl = Js::NumberUtilities::DblFromHex(p + 2, &pchT);
             if (pchT == p + 2)
             {
                 // "Octal zero token "0" followed by an identifier token beginning with character 'x'/'X' 
@@ -687,7 +684,7 @@ typename Scanner<EncodingPolicy>::EncodedCharPtr Scanner<EncodingPolicy>::FScanN
                 goto LDefaultFScanNumber;
             }
             // Octal
-            *pdbl = DblFromOctal(p + 2, &pchT);
+            *pdbl = Js::NumberUtilities::DblFromOctal(p + 2, &pchT);
             if (pchT == p + 2)
             {
                 // "Octal zero token "0" followed by an identifier token beginning with character 'o'/'O' 
@@ -703,7 +700,7 @@ typename Scanner<EncodingPolicy>::EncodedCharPtr Scanner<EncodingPolicy>::FScanN
                 goto LDefaultFScanNumber;
             }
             // Binary
-            *pdbl = DblFromBinary(p + 2, &pchT);
+            *pdbl = Js::NumberUtilities::DblFromBinary(p + 2, &pchT);
             if (pchT == p + 2)
             {
                 // "Octal zero token "0" followed by an identifier token beginning with character 'b'/'B' 
@@ -715,7 +712,7 @@ typename Scanner<EncodingPolicy>::EncodedCharPtr Scanner<EncodingPolicy>::FScanN
         default:
 LDefaultFScanNumber :
             // Octal
-            *pdbl = DblFromOctal(p, &pchT);
+            *pdbl = Js::NumberUtilities::DblFromOctal(p, &pchT);
             Assert(pchT > p);
 
 #if !SOURCERELEASE
@@ -767,7 +764,7 @@ BOOL Scanner<EncodingPolicy>::oFScanNumber(double *pdbl, bool& likelyInt)
         case 'x':
         case 'X':
             // Hex.
-            *pdbl = DblFromHex<EncodedChar>(m_currentCharacter + 2, &pchT);
+            *pdbl = Js::NumberUtilities::DblFromHex<EncodedChar>(m_currentCharacter + 2, &pchT);
             if (pchT == m_currentCharacter + 2)
             {
                 // "Octal zero token "0" followed by an identifier token beginning with character 'x'/'X' 
@@ -783,7 +780,7 @@ BOOL Scanner<EncodingPolicy>::oFScanNumber(double *pdbl, bool& likelyInt)
             {
                 goto LDefaultoFScanNumber;
             }
-            *pdbl = DblFromOctal(m_currentCharacter + 2, &pchT);
+            *pdbl = Js::NumberUtilities::DblFromOctal(m_currentCharacter + 2, &pchT);
             if (pchT == m_currentCharacter + 2)
             {
                 // "Octal zero token "0" followed by an identifier token beginning with character 'o'/'O' 
@@ -801,7 +798,7 @@ BOOL Scanner<EncodingPolicy>::oFScanNumber(double *pdbl, bool& likelyInt)
                 goto LDefaultoFScanNumber;
             }
             
-            *pdbl = DblFromBinary(m_currentCharacter + 2, &pchT);
+            *pdbl = Js::NumberUtilities::DblFromBinary(m_currentCharacter + 2, &pchT);
             if (pchT == m_currentCharacter + 2)
             {
                 // "Octal zero token "0" followed by an identifier token beginning with character 'b'/'B' 
@@ -815,7 +812,7 @@ BOOL Scanner<EncodingPolicy>::oFScanNumber(double *pdbl, bool& likelyInt)
         default:
 LDefaultoFScanNumber :
             // Octal.
-            *pdbl = DblFromOctal(m_currentCharacter, &pchT);
+            *pdbl = Js::NumberUtilities::DblFromOctal(m_currentCharacter, &pchT);
             Assert(pchT > m_currentCharacter);
 
 
@@ -1345,7 +1342,7 @@ LMainDefault:
                 m_tempChBufSecondary.AppendCh<createRawString>(ch);
 
                 ch = 0;
-                if (FHexDigit(c = ReadFirst(p, last), &wT))
+                if (Js::NumberUtilities::FHexDigit(c = ReadFirst(p, last), &wT))
                     goto LFourHex;
                 else if (c != '{' || !this->es6UnicodeMode)
                     goto ReturnScanError;
@@ -1355,7 +1352,7 @@ LMainDefault:
                 m_tempChBufSecondary.AppendCh<createRawString>(c);
                 
                 //At least one digit is expected
-                if (!FHexDigit(c = ReadFirst(p, last), &wT))
+                if (!Js::NumberUtilities::FHexDigit(c = ReadFirst(p, last), &wT))
                 {
                     goto ReturnScanError;
                 }
@@ -1364,7 +1361,7 @@ LMainDefault:
 
                 codePoint = static_cast<codepoint_t>(wT);
 
-                while(FHexDigit(c = ReadFirst(p, last), &wT))
+                while(Js::NumberUtilities::FHexDigit(c = ReadFirst(p, last), &wT))
                 {
                     m_tempChBufSecondary.AppendCh<createRawString>(c);
                     codePoint <<= 4;
@@ -1407,7 +1404,7 @@ LFourHex:
                 m_tempChBufSecondary.AppendCh<createRawString>(c);
 
                 codePoint += static_cast<codepoint_t>(wT * 0x1000);
-                if (!FHexDigit(c = ReadFirst(p, last), &wT))
+                if (!Js::NumberUtilities::FHexDigit(c = ReadFirst(p, last), &wT))
                     goto ReturnScanError;
 
                 // Append fourth (or second) hex digit character to the raw string.
@@ -1417,7 +1414,7 @@ LFourHex:
 
 LTwoHex:            
                 // This code path doesn't expect curly.
-                if (!FHexDigit(c = ReadFirst(p, last), &wT))
+                if (!Js::NumberUtilities::FHexDigit(c = ReadFirst(p, last), &wT))
                     goto ReturnScanError;
 
                 // Append first hex digit character to the raw string.
@@ -1425,7 +1422,7 @@ LTwoHex:
 
                 codePoint += static_cast<codepoint_t>(wT * 0x0010);
 
-                if (!FHexDigit(c = ReadFirst(p, last), &wT))
+                if (!Js::NumberUtilities::FHexDigit(c = ReadFirst(p, last), &wT))
                     goto ReturnScanError;
 
                 codePoint += static_cast<codepoint_t>(wT);
@@ -2457,7 +2454,7 @@ IdentPtr Scanner<EncodingPolicy>::GetSecondaryBufferAsPid()
 template <typename EncodingPolicy>
 LPCOLESTR Scanner<EncodingPolicy>::StringFromLong(long lw)
 {
-    oltoa(lw, m_tempChBuf.m_prgch, m_tempChBuf.m_cchMax, 10);
+    _ltow_s(lw, m_tempChBuf.m_prgch, m_tempChBuf.m_cchMax, 10);
     return m_tempChBuf.m_prgch;
 }
 

@@ -2591,7 +2591,7 @@ case_2:
             case 'x':
             case 'X':
 
-                *result = DblFromHex(pchT, &pch);
+                *result = NumberUtilities::DblFromHex(pchT, &pch);
                 isNumericLiteral = true;
                 break;
             case 'o':
@@ -2600,7 +2600,7 @@ case_2:
                 {
                     break;
                 }
-                *result = DblFromOctal(pchT, &pch);
+                *result = NumberUtilities::DblFromOctal(pchT, &pch);
                 isNumericLiteral = true;
                 break;
             case 'b':
@@ -2609,7 +2609,7 @@ case_2:
                 {
                     break;
                 }
-                *result = DblFromBinary(pchT, &pch);
+                *result = NumberUtilities::DblFromBinary(pchT, &pch);
                 isNumericLiteral = true;
                 break;
             }
@@ -2621,7 +2621,7 @@ case_2:
         }
         if (!isNumericLiteral)
         {
-            *result = StrToDbl(pch, &pch, GetScriptContext());
+            *result = NumberUtilities::StrToDbl(pch, &pch, GetScriptContext());
         }
 
         while (IsWhiteSpaceCharacter(*pch))

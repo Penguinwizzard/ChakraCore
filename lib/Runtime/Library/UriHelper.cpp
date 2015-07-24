@@ -537,14 +537,14 @@ namespace Js
     bool UriHelper::DecodeByteFromHex(const wchar_t digit1, const wchar_t digit2, unsigned char &value)
     {
         int x;
-        if(!FHexDigit(digit1, &x))
+        if(!Js::NumberUtilities::FHexDigit(digit1, &x))
         {
             return false;
         }
         Assert(static_cast<unsigned int>(x) <= 0xfU);
         value = static_cast<unsigned char>(x) << 4;
 
-        if(!FHexDigit(digit2, &x))
+        if(!Js::NumberUtilities::FHexDigit(digit2, &x))
         {
             return false;
         }

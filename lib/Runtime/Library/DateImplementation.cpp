@@ -537,7 +537,7 @@ namespace Js {
             cch -= (c-1);
             if( !(noDateTime & DateTimeFlag::NoTime))
             {
-                *p++ = WIDE(' ');
+                *p++ = L' ';
                 cch--;
             }
 

@@ -516,6 +516,8 @@ using namespace Memory;
 #include "Common\vtregistry.h"
 #include "Memory\MemoryLogger.h"
 
+#include "common\SmartFPUControl.h"
+
 // This class is only used by AutoExp.dat
 class AutoExpDummyClass
 {

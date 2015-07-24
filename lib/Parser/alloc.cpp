@@ -13,6 +13,18 @@
 #define DEBUG_TRASHMEM
 #endif //DEBUG
 
+#if _WIN64
+struct __ALIGN_FOO__ {
+    int w1;
+    double dbl;
+};
+#define ALIGN_FULL (offsetof(__ALIGN_FOO__, dbl))
+#else 
+// Force check for 4 byte alignment to support Win98/ME
+#define ALIGN_FULL 4
+#endif // _WIN64
+
+#define AlignFull(VALUE) (~(~((VALUE) + (ALIGN_FULL-1)) | (ALIGN_FULL-1)))
 
 NoReleaseAllocator::NoReleaseAllocator(long cbFirst, long cbMax)
     : m_pblkList(NULL)
@@ -40,6 +52,7 @@ void * NoReleaseAllocator::Alloc(long cb)
     if (cb <= 0) 
         return NULL;
 
+    const long kcbHead = AlignFull(sizeof(NoReleaseAllocator::NraBlock));
     void * pv;
 
     if (cb > m_ibMax - m_ibCur)

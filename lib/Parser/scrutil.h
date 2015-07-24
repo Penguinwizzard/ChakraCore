@@ -4,8 +4,6 @@
 
 #pragma once
 
-#include <errno.h>
-
 // (BUG 1202468, 1202470, 1202471, 1202473, 1202474 - Windows OS Bugs)
 // SAL: TODO: Move to common header for SAL work
 #ifdef _PREFIX_
@@ -56,33 +54,6 @@ public: \
 } \
     return cref; \
 }
-
-#if _WIN64
-typedef unsigned __int64 uint64;
-#endif // _WIN64
-
-
-
-/***************************************************************************
-Alignment
-***************************************************************************/
-#if _WIN64
-struct __ALIGN_FOO__ {
-    int w1;
-    double dbl;
-};
-#define ALIGN_FULL (offsetof(__ALIGN_FOO__, dbl))
-#else 
-// Force check for 4 byte alignment to support Win98/ME
-#define ALIGN_FULL 4
-#endif // _WIN64
-
-#define AlignIt(VALUE, TYPE) (~(~((LONG_PTR)(VALUE) + (sizeof(TYPE)-1)) | (sizeof(TYPE)-1)))
-#define FAligned(VALUE, TYPE) (((VALUE) & (sizeof(TYPE)-1)) == 0)
-
-#define AlignFull(VALUE) (~(~((VALUE) + (ALIGN_FULL-1)) | (ALIGN_FULL-1)))
-#define FAlignedFull(cb) (((cb) & (ALIGN_FULL-1)) == 0)
-
 
 /***************************************************************************
 Floating point inline functions.
@@ -155,22 +126,6 @@ Name mapping of crt functions
 #define ostricmp _wcsicmp
 #define oltoa _ltow_s
 #define ostrchr wcschr
-
-#define WIDE OLESTR
-inline BOOL FHexDigit(wchar_t ch, int *pw)
-{
-    if ((ch -= '0') <= 9)
-    {
-        *pw = ch;
-        return TRUE;
-    }
-    if ((ch -= 'A' - '0') <= 5 || (ch -= 'a' - 'A') <= 5)
-    {
-        *pw = 10 + ch;
-        return TRUE;
-    }
-    return FALSE;
-}
 
 /***************************************************************************
 Debug output
@@ -352,9 +307,6 @@ public:
 };
 
 
-
-
-
 /***************************************************************************
 Class to build strings of unknown length
 ***************************************************************************/
@@ -402,216 +354,4 @@ public:
     }
     BOOL FError(void)
     { return m_fError; }
-};
-
-//
-// Floating point unit utility functions
-//
-
-
-inline errno_t GetFPUControl(unsigned int *pctrl)
-{
-    if (pctrl == NULL)
-    {
-        SetLastError(EINVAL);
-        return EINVAL;
-    }
-#if _M_IX86
-    *pctrl = _control87(0,0);
-    return 0;
-#else
-    return _controlfp_s(pctrl,0,0);
-#endif
-}
-
-inline errno_t SetFPUControl(unsigned int fpctrl)
-{
-#if _M_IX86
-    _control87(fpctrl, (unsigned int)(-1));
-    return 0;
-#else
-    return _controlfp_s(0, fpctrl, (unsigned int)(-1));
-#endif
-}
-
-inline errno_t SetFPUControlDefault(void)
-{
-#if _M_AMD64 || _M_IA64
-    return _controlfp_s(0, _RC_NEAR + _DN_SAVE + _EM_INVALID + _EM_ZERODIVIDE +
-        _EM_OVERFLOW + _EM_UNDERFLOW + _EM_INEXACT,
-        _MCW_EM | _MCW_DN | _MCW_PC | _MCW_RC | _MCW_IC);
-#elif _M_IX86
-    _control87(_CW_DEFAULT, _MCW_EM | _MCW_DN | _MCW_PC | _MCW_RC | _MCW_IC);
-    return 0;
-#else
-    return _controlfp_s(0, _CW_DEFAULT, _MCW_EM | _MCW_DN | _MCW_PC | _MCW_RC | _MCW_IC);
-#endif
-}
-
-
-inline unsigned int GetFPUStatus(void)
-{
-    return _statusfp();
-}
-
-inline void ClearFPUStatus(void)
-{
-    // WinSE 187789 
-    // _clearfp gives up the thread's time slice, so clear only if flags are set
-    if (_statusfp())
-        _clearfp();
-}
-
-// This class basically saves the FPU control word, and sets it to the default value
-// The default value will prevent all floating point exceptions other than denormal operand
-// from being generated
-// When the instance goes out of scope, the control word will be restored to the original value
-class SmartFPUControl
-{
-    static const uint INVALID_FPUCONTROL = (uint)-1;
-
-public:
-
-    SmartFPUControl(bool isRestoreFPUToDefaultValue) :
-        restoreFPUToDefaultValue(isRestoreFPUToDefaultValue),
-        m_oldFpuControl(INVALID_FPUCONTROL)
-    {
-        ClearFPUStatus(); // Clear pending exception status first (blue 555235)
-
-        m_err = GetFPUControl(&m_oldFpuControl);
-        if (m_err == 0)
-        {
-            if (restoreFPUToDefaultValue)
-            {
-                m_err = SetFPUControlDefault();
-            }
-#if DBG
-            else
-            {
-                m_oldFpuControlForConsistencyCheck = m_oldFpuControl;
-            }
-#endif
-        }
-    }
-
-    SmartFPUControl():
-        SmartFPUControl(true)
-    {
-    }
-
-    ~SmartFPUControl()
-    {
-        // If restoreFpuControlValue = false, then caller didn't opt for restoring FPU control to default value
-        // So don't restore the FPU control automatically. If needed caller should call RestoreFPUControl.
-        if (restoreFPUToDefaultValue)
-        {
-            RestoreFPUControl();
-        }
-#if DBG
-        else
-        {
-            uint currentFpuControl;
-            m_err = GetFPUControl(&currentFpuControl);
-            if (m_err == 0 && m_oldFpuControlForConsistencyCheck != INVALID_FPUCONTROL)
-            {
-                Assert(m_oldFpuControlForConsistencyCheck == currentFpuControl);
-            }
-        }
-#endif
-    }
-
-    bool HasErr() const
-    {
-        return m_err != 0;
-    }
-
-    HRESULT GetErr() const
-    {
-        Assert(HasErr());
-        return HRESULT_FROM_WIN32(m_err);
-    }
-
-    void RestoreFPUControl()
-    {
-        if (m_oldFpuControl != INVALID_FPUCONTROL)
-        {
-            m_err = SetFPUControl(m_oldFpuControl);
-            m_oldFpuControl = INVALID_FPUCONTROL; // Only restore once
-        }
-    }
-
-private:
-#if DBG
-    uint m_oldFpuControlForConsistencyCheck = INVALID_FPUCONTROL;
-#endif
-    uint m_oldFpuControl;
-    errno_t m_err;
-    bool restoreFPUToDefaultValue = true;
-};
-
-inline LCID GetDefaultLocale(void)
-{
-    LCID lcid;
-    lcid = GetUserDefaultLCID();
-
-    //Win8 858821: Remove the following assertion. IsValidLocale fails at system shutdown because registry is not available.
-    //Assert(IsValidLocale(lcid, LCID_INSTALLED));
-
-    return lcid;
-}
-
-template<typename EncodedChar>
-double DblFromHex(const EncodedChar *psz, const EncodedChar **ppchLim);
-template <typename EncodedChar>
-double DblFromBinary(const EncodedChar *psz, const EncodedChar **ppchLim);
-template<typename EncodedChar>
-double DblFromOctal(const EncodedChar *psz, const EncodedChar **ppchLim);
-template<typename EncodedChar>
-double StrToDbl(const EncodedChar *psz, const EncodedChar **ppchLim, Js::ScriptContext *const scriptContext);
-
-
-enum
-{
-    fscrNil                             = 0,
-    fscrHtmlComments                    = 1 << 0,   // throw away html style comments
-    fscrReturnExpression                = 1 << 1,   // call should return the last expression
-    fscrImplicitThis                    = 1 << 2,   // 'this.' is optional (for Call)
-    fscrImplicitParents                 = 1 << 3,   // the parents of 'this' are implicit
-    fscrMapQuote                        = 1 << 4,   // map single quote to double quote
-    fscrDynamicCode                     = 1 << 5,   // The code is being generated dynamically (eval, new Function, etc.)
-    fscrSyntaxColor                     = 1 << 6,   // used by the scanner for syntax coloring
-    fscrNoImplicitHandlers              = 1 << 7,   // same as Opt NoConnect at start of block
-
-    // hack to prevent a copy needed to strip off trailing html comments
-    // - modifies the behavior of fscrHtmlComments
-    fscrDoNotHandleTrailingHtmlComments = 1 << 8, 
-
-#if DEBUG
-    fscrEnforceJSON                     = 1 << 9,  // used together with fscrReturnExpression 
-    // enforces JSON semantics in the parsing.
-#endif
-
-    fscrEval                            = 1 << 10,  // this expression has eval semantics (i.e., run in caller's context 
-    fscrEvalCode                        = 1 << 11,  // this is an eval expression
-    fscrGlobalCode                      = 1 << 12,  // this is a global script
-    fscrDeferFncParse                   = 1 << 13,  // parser: defer creation of AST's for non-global code
-    fscrDeferredFncExpression           = 1 << 14,  // the function decl node we deferred is an expression,
-                                                    // i.e., not a declaration statement
-    fscrDeferredFnc                     = 1 << 15,  // the function we are parsing is deferred
-    fscrNoPreJit                        = 1 << 16,  // ignore prejit global flag
-    fscrAllowFunctionProxy              = 1 << 17,  // Allow creation of function proxies instead of function bodies
-    fscrIsLibraryCode                   = 1 << 18,  // Current code is engine library code written in Javascript
-    fscrNoDeferParse                    = 1 << 19,  // Do not defer parsing
-    fscrIsNativeCode                    = 1 << 20,  // We are either serializing or deserializing native code
-#ifdef IR_VIEWER
-    fscrIrDumpEnable                    = 1 << 21,  // Allow parseIR to generate an IR dump
-#endif /* IRVIEWER */
-
-    // Throw a ReferenceError when the global 'this' is used (possibly in a lambda),
-    // for debugger when broken in a lambda that doesn't capture 'this'
-    fscrDebuggerErrorOnGlobalThis       = 1 << 22,
-    fscrDeferredClassMemberFnc          = 1 << 23,
-    fscrConsoleScopeEval                = 1 << 24,  //  The eval string is console eval or debugEval, used to have top level
-                                                    //  let/const in global scope instead of eval scope so that they can be preserved across console inputs
-    fscrAll                             = (1 << 25) - 1
 };

@@ -43,14 +43,14 @@ namespace Js
     class NumberUtilities : public NumberUtilitiesBase
     {
     public:
-        static inline bool IsDigit(int ch);
+        static bool IsDigit(int ch);
+        static BOOL NumberUtilities::FHexDigit(wchar_t ch, int *pw);
+        static ulong MulLu(ulong lu1, ulong lu2, ulong *pluHi);
+        static int AddLu(ulong *plu1, ulong lu2);
 
-        static inline ulong MulLu(ulong lu1, ulong lu2, ulong *pluHi);
-        static inline int AddLu(ulong *plu1, ulong lu2);
-
-        static inline ulong &LuHiDbl(double &dbl);
-        static inline ulong &LuLoDbl(double &dbl);
-        static inline INT64 TryToInt64(double d);
+        static ulong &LuHiDbl(double &dbl);
+        static ulong &LuLoDbl(double &dbl);
+        static INT64 TryToInt64(double d);
         static bool IsValidTryToInt64(__int64 value);   // Whether TryToInt64 resulted in a valid value.
         
         static int CbitZeroLeft(ulong lu);
@@ -98,6 +98,15 @@ namespace Js
         static long LwFromDblNearest(double dbl);
         static ulong LuFromDblNearest(double dbl);
         static BOOL FDblIsLong(double dbl, long *plw);
+
+        template<typename EncodedChar>
+        static double DblFromHex(const EncodedChar *psz, const EncodedChar **ppchLim);
+        template <typename EncodedChar>
+        static double DblFromBinary(const EncodedChar *psz, const EncodedChar **ppchLim);
+        template<typename EncodedChar>
+        static double DblFromOctal(const EncodedChar *psz, const EncodedChar **ppchLim);
+        template<typename EncodedChar>
+        static double StrToDbl(const EncodedChar *psz, const EncodedChar **ppchLim, Js::ScriptContext *const scriptContext);
 
         const NumberUtilitiesBase* GetNumberUtilitiesBase() const { return static_cast<const NumberUtilitiesBase*>(this); }
 

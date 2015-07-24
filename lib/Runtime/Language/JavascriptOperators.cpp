@@ -6,7 +6,7 @@
 
 LCID GetUserLocale()
 {
-    return GetDefaultLocale();
+    return GetUserDefaultLCID();
 }
 
 namespace Js

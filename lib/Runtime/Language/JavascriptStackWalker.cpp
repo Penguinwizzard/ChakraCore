@@ -8,6 +8,10 @@
 #error Stack walker not defined for this arch
 #endif
 
+#define FAligned(VALUE, TYPE) ((((LONG_PTR)VALUE) & (sizeof(TYPE)-1)) == 0)
+
+#define AlignIt(VALUE, TYPE) (~(~((LONG_PTR)(VALUE) + (sizeof(TYPE)-1)) | (sizeof(TYPE)-1)))
+
 namespace Js
 {
     Js::ArgumentsObject * JavascriptCallStackLayout::GetArgumentsObject() const
@@ -28,7 +32,7 @@ namespace Js
     Js::Var JavascriptCallStackLayout::GetOffset(int offset) const
     {
         Js::Var *varPtr = (Js::Var *)(((char *)this) + offset);
-        Assert((Js::Var*)AlignIt(varPtr, Js::Var) == varPtr);
+        Assert(FAligned(varPtr, Js::Var));
         return *varPtr;
     }
     double JavascriptCallStackLayout::GetDoubleAtOffset(int offset) const
@@ -37,7 +41,7 @@ namespace Js
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
         if (Js::Configuration::Global.flags.IsEnabled(Js::CheckAlignmentFlag))
         {
-            Assert((double*)AlignIt(dblPtr, double) == dblPtr);
+            Assert(FAligned(dblPtr, double));
         }
 #endif
         return *dblPtr;
@@ -49,7 +53,7 @@ namespace Js
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
         if (Js::Configuration::Global.flags.IsEnabled(Js::CheckAlignmentFlag))
         {
-            Assert((int32*)AlignIt(intPtr, int32) == intPtr);
+            Assert(FAligned(intPtr, int32));
         }
 #endif
         return *intPtr;
@@ -58,7 +62,7 @@ namespace Js
     char * JavascriptCallStackLayout::GetValueChangeOffset(int offset) const
     {
         Js::Var *varPtr = (Js::Var *)(((char *)this) + offset);
-        Assert((Js::Var*)AlignIt(varPtr, Js::Var) == varPtr);
+        Assert(FAligned(varPtr, Js::Var));
         return (char *)varPtr;
     }
 

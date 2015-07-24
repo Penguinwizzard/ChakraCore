@@ -89,7 +89,7 @@ namespace JSON
                     currentChar = saveCurrentChar;
                     double val;
                     const wchar_t* end;
-                    val = StrToDbl(currentChar, &end, scriptContext);
+                    val = Js::NumberUtilities::StrToDbl(currentChar, &end, scriptContext);
                     if(currentChar == end)
                     {
                         Js::JavascriptError::ThrowSyntaxError(scriptContext, ERRbadNumber);
@@ -306,25 +306,25 @@ namespace JSON
                             Js::JavascriptError::ThrowSyntaxError(scriptContext, ERRnoStrEnd);
 
                         }
-                        if (!FHexDigit((WCHAR)ReadNextChar(), &tempHex))
+                        if (!Js::NumberUtilities::FHexDigit((WCHAR)ReadNextChar(), &tempHex))
                         {
                             Js::JavascriptError::ThrowSyntaxError(scriptContext, ERRbadHexDigit);
                         }
                         chcode = tempHex * 0x1000;
 
-                        if (!FHexDigit((WCHAR)ReadNextChar(), &tempHex))
+                        if (!Js::NumberUtilities::FHexDigit((WCHAR)ReadNextChar(), &tempHex))
                         {
                             Js::JavascriptError::ThrowSyntaxError(scriptContext, ERRbadHexDigit);
                         }
                         chcode += tempHex * 0x0100;
 
-                        if (!FHexDigit((WCHAR)ReadNextChar(), &tempHex))
+                        if (!Js::NumberUtilities::FHexDigit((WCHAR)ReadNextChar(), &tempHex))
                         {
                             Js::JavascriptError::ThrowSyntaxError(scriptContext, ERRbadHexDigit);
                         }
                         chcode += tempHex * 0x0010;
 
-                        if (!FHexDigit((WCHAR)ReadNextChar(), &tempHex))
+                        if (!Js::NumberUtilities::FHexDigit((WCHAR)ReadNextChar(), &tempHex))
                         {
                             Js::JavascriptError::ThrowSyntaxError(scriptContext, ERRbadHexDigit);
                         }

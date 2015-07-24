@@ -32,7 +32,6 @@ namespace UnifiedRegex {
 extern LCID GetUserLocale();
 
 #include "ParserCommon.h"
-#include "scrutil.h"
 #include "alloc.h"
 #include "cmperr.h"
 #include "errstr.h"
