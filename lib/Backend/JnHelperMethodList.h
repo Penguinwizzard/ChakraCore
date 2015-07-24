@@ -117,6 +117,7 @@ HELPERCALL(Op_CoerseRegex, (Js::JavascriptRegExp* (*) (Js::Var aValue, Js::Var o
 
 HELPERCALL(Op_ConvPrimitiveString, Js::JavascriptConversion::ToPrimitiveString, AttrCanThrow)
 HELPERCALL(Op_CompoundStringCloneForConcat, Js::CompoundString::JitClone, AttrCanThrow)
+HELPERCALL(Op_CompoundStringCloneForAppending, Js::CompoundString::JitCloneForAppending, AttrCanThrow)
 
 HELPERCALL(Op_Equal, Js::JavascriptOperators::Equal, 0)
 HELPERCALL(Op_Equal_Full, Js::JavascriptOperators::Equal_Full, 0)

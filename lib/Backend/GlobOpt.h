@@ -1521,6 +1521,7 @@ private:
     ValueInfo *             MergeLikelyIntValueInfo(Value *toDataVal, Value *fromDataVal, const ValueType newValueType);
     JsTypeValueInfo *       MergeJsTypeValueInfo(JsTypeValueInfo * toValueInfo, JsTypeValueInfo * fromValueInfo, bool isLoopBackEdge, bool sameValueNumber);
     ValueInfo *             MergeArrayValueInfo(const ValueType mergedValueType, const ArrayValueInfo *const toDataValueInfo, const ArrayValueInfo *const fromDataValueInfo, Sym *const arraySym, BVSparse<JitArenaAllocator> *const symsRequiringCompensation, BVSparse<JitArenaAllocator> *const symsCreatedForMerge);
+    void                    InsertCloneStrs(BasicBlock *toBlock, GlobOptBlockData *toData, GlobOptBlockData *fromData);
     void                    InsertValueCompensation(BasicBlock *const predecessor, const SymToValueInfoMap &symsRequiringCompensationToMergedValueInfoMap);
     IR::Instr *             ToVarUses(IR::Instr *instr, IR::Opnd *opnd, bool isDst, Value *val);
     void                    ToVar(BVSparse<JitArenaAllocator> *bv, BasicBlock *block);

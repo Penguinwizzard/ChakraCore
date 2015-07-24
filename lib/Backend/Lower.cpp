@@ -479,6 +479,13 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             m_lowererMD.ChangeToAssign(instr);
             break;
 
+        case Js::OpCode::CloneStr:
+        {
+            GenerateGetImmutableOrScriptUnreferencedString(instr->GetSrc1()->AsRegOpnd(), instr, IR::HelperOp_CompoundStringCloneForAppending, false);
+            instr->Remove();
+            break;
+        }
+
         case Js::OpCode::NewScObjArray:
             instrPrev = this->LowerNewScObjArray(instr);
             break;
@@ -8022,13 +8029,138 @@ Lowerer::LowerBinaryHelperMemWithTemp2(
 }
 
 IR::Instr *
+Lowerer::LowerAddLeftDeadForString(IR::Instr *instr)
+{
+    IR::Opnd *       opndLeft;
+    IR::Opnd *       opndRight;
+
+    opndLeft = instr->GetSrc1();
+    opndRight = instr->GetSrc2();
+
+    Assert(opndLeft && opndRight);
+
+    bool generateFastPath = this->m_func->DoFastPaths();
+    if (!generateFastPath 
+        || !opndLeft->IsRegOpnd() 
+        || !opndRight->IsRegOpnd()
+        || !instr->GetDst()->IsRegOpnd()
+        || !opndLeft->GetValueType().IsLikelyString()
+        || !opndRight->GetValueType().IsLikelyString()
+        || !opndLeft->IsEqual(instr->GetDst()->AsRegOpnd())
+        || opndLeft->IsEqual(opndRight))
+    {
+        return this->LowerBinaryHelperMemWithTemp(instr, IR::HelperOp_AddLeftDead);
+    }
+
+    IR::LabelInstr * labelHelper = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, true);
+    IR::LabelInstr * labelFallThrough = instr->GetOrCreateContinueLabel(false);
+    IR::LabelInstr *insertBeforeInstr = labelHelper;
+
+    instr->InsertBefore(labelHelper);
+
+    if (!opndLeft->IsNotTaggedValue())
+    {
+        this->m_lowererMD.GenerateObjectTest(opndLeft->AsRegOpnd(), insertBeforeInstr, labelHelper);
+    }
+
+    InsertCompareBranch(
+        IR::IndirOpnd::New(opndLeft->AsRegOpnd(), 0, TyMachPtr, m_func),
+        this->LoadVTableValueOpnd(insertBeforeInstr, VTableValue::VtableCompoundString),
+        Js::OpCode::BrNeq_A,
+        labelHelper,
+        insertBeforeInstr);
+
+    GenerateStringTest(opndRight->AsRegOpnd(), insertBeforeInstr, labelHelper);
+
+    // left->m_charLength <= JavascriptArray::MaxCharLength
+    IR::IndirOpnd *indirLeftCharLengthOpnd = IR::IndirOpnd::New(opndLeft->AsRegOpnd(), Js::JavascriptString::GetOffsetOfcharLength(), TyUint32, m_func);
+    IR::RegOpnd *regLeftCharLengthOpnd = IR::RegOpnd::New(TyUint32, m_func);
+    InsertMove(regLeftCharLengthOpnd, indirLeftCharLengthOpnd, insertBeforeInstr);
+    InsertCompareBranch(
+        regLeftCharLengthOpnd,
+        IR::IntConstOpnd::New(Js::JavascriptString::MaxCharLength, TyUint32, m_func),
+        Js::OpCode::BrGt_A,
+        labelHelper,
+        insertBeforeInstr);
+  
+    // left->m_pszValue == NULL   (!left->IsFinalized())
+    InsertCompareBranch(
+        IR::IndirOpnd::New(opndLeft->AsRegOpnd(), offsetof(Js::JavascriptString, m_pszValue), TyMachPtr, this->m_func),
+        IR::AddrOpnd::NewNull(m_func),
+        Js::OpCode::BrNeq_A,
+        labelHelper,
+        insertBeforeInstr);
+
+    // right->m_pszValue != NULL   (right->IsFinalized())
+    InsertCompareBranch(
+        IR::IndirOpnd::New(opndRight->AsRegOpnd(), offsetof(Js::JavascriptString, m_pszValue), TyMachPtr, this->m_func),
+        IR::AddrOpnd::NewNull(m_func),
+        Js::OpCode::BrEq_A,
+        labelHelper,
+        insertBeforeInstr);
+
+    // if ownsLastBlock != 0
+    InsertCompareBranch(
+        IR::IndirOpnd::New(opndLeft->AsRegOpnd(), Js::CompoundString::GetOffsetOfOwnsLastBlock(), TyUint8, m_func),
+        IR::IntConstOpnd::New(0, TyUint8, m_func),
+        Js::OpCode::BrEq_A,
+        labelHelper,
+        insertBeforeInstr);
+
+    // if right->m_charLength == 1
+    InsertCompareBranch(IR::IndirOpnd::New(opndRight->AsRegOpnd(), offsetof(Js::JavascriptString, m_charLength), TyUint32, m_func),
+        IR::IntConstOpnd::New(1, TyUint32, m_func),
+        Js::OpCode::BrNeq_A, labelHelper, insertBeforeInstr);
+
+
+    // if left->m_directCharLength == -1
+    InsertCompareBranch(IR::IndirOpnd::New(opndLeft->AsRegOpnd(), Js::CompoundString::GetOffsetOfDirectCharLength(), TyUint32, m_func),
+        IR::IntConstOpnd::New(-1, TyUint32, m_func), 
+        Js::OpCode::BrNeq_A, labelHelper, insertBeforeInstr);
+
+    // if lastBlockInfo.charLength < lastBlockInfo.charCapacity
+    IR::IndirOpnd *indirCharLength = IR::IndirOpnd::New(opndLeft->AsRegOpnd(), Js::CompoundString::GetOffsetOfLastBlockInfo()+ Js::CompoundString::GetOffsetOfLastBlockInfoCharLength(), TyMachPtr, m_func);
+    IR::RegOpnd *charLengthOpnd = IR::RegOpnd::New(TyUint32, this->m_func);
+    InsertMove(charLengthOpnd, indirCharLength, insertBeforeInstr);
+    InsertCompareBranch(charLengthOpnd, IR::IndirOpnd::New(opndLeft->AsRegOpnd(), Js::CompoundString::GetOffsetOfLastBlockInfo() + Js::CompoundString::GetOffsetOfLastBlockInfoCharCapacity(), TyMachPtr, m_func), Js::OpCode::BrGe_A, labelHelper, insertBeforeInstr);
+        
+    // load c= right->m_pszValue[0]
+    IR::RegOpnd *pszValue0Opnd = IR::RegOpnd::New(TyMachPtr, this->m_func);
+    IR::IndirOpnd *indirRightPszOpnd = IR::IndirOpnd::New(opndRight->AsRegOpnd(), offsetof(Js::JavascriptString, m_pszValue), TyMachPtr, this->m_func);
+    InsertMove(pszValue0Opnd, indirRightPszOpnd, insertBeforeInstr);
+    IR::RegOpnd *charResultOpnd = IR::RegOpnd::New(TyUint16, this->m_func);
+    InsertMove(charResultOpnd, IR::IndirOpnd::New(pszValue0Opnd, 0, TyUint16, this->m_func), insertBeforeInstr);
+
+
+    // lastBlockInfo.buffer[blockCharLength] = c;
+    IR::RegOpnd *baseOpnd = IR::RegOpnd::New(TyMachPtr, this->m_func);
+    InsertMove(baseOpnd, IR::IndirOpnd::New(opndLeft->AsRegOpnd(), Js::CompoundString::GetOffsetOfLastBlockInfo() + Js::CompoundString::GetOffsetOfLastBlockInfoBuffer(), TyMachPtr, m_func), insertBeforeInstr);
+    IR::IndirOpnd *indirBufferToStore = IR::IndirOpnd::New(baseOpnd, charLengthOpnd, (byte)Math::Log2(sizeof(wchar_t)), TyUint16, m_func);
+    InsertMove(indirBufferToStore, charResultOpnd, insertBeforeInstr);
+    
+  
+    // left->m_charLength++
+    InsertAdd(false, indirLeftCharLengthOpnd, regLeftCharLengthOpnd, IR::IntConstOpnd::New(1, TyUint32, this->m_func), insertBeforeInstr);
+
+    // lastBlockInfo.charLength++
+    InsertAdd(false, indirCharLength, indirCharLength, IR::IntConstOpnd::New(1, TyUint32, this->m_func), insertBeforeInstr);
+
+
+    InsertBranch(Js::OpCode::Br, labelFallThrough, insertBeforeInstr);
+
+    return this->LowerBinaryHelperMemWithTemp(instr, IR::HelperOp_AddLeftDead);
+}
+
+
+IR::Instr *
 Lowerer::LowerBinaryHelperMemWithTemp3(IR::Instr *instr, IR::JnHelperMethod helperMethod, IR::JnHelperMethod helperMethodWithTemp, IR::JnHelperMethod helperMethodLeftDead)
 {
     IR::Opnd *src1 = instr->GetSrc1();
 
     if (src1->IsRegOpnd() && src1->AsRegOpnd()->m_isTempLastUse && !src1->GetValueType().IsNotString())
     {
-        return this->LowerBinaryHelperMemWithTemp(instr, helperMethodLeftDead);
+        Assert(helperMethodLeftDead == IR::HelperOp_AddLeftDead);
+        return LowerAddLeftDeadForString(instr);
     }
     else
     {
@@ -20392,7 +20524,7 @@ Lowerer::LowerSetConcatStrMultiItem(IR::Instr * instr)
     
     Assert(concatStrOpnd->GetValueType().IsString());
     Assert(srcOpnd->GetValueType().IsString());
-    srcOpnd = GenerateGetImmutableOrScriptUnreferencedString(srcOpnd, instr);
+    srcOpnd = GenerateGetImmutableOrScriptUnreferencedString(srcOpnd, instr, IR::HelperOp_CompoundStringCloneForConcat);
     instr->SetSrc1(srcOpnd);
 
     IR::IndirOpnd * dstLength = IR::IndirOpnd::New(concatStrOpnd, Js::ConcatStringMulti::GetOffsetOfcharLength(), TyUint32, func);
@@ -20415,7 +20547,7 @@ Lowerer::LowerSetConcatStrMultiItem(IR::Instr * instr)
 }
 
 IR::RegOpnd *
-Lowerer::GenerateGetImmutableOrScriptUnreferencedString(IR::RegOpnd * strOpnd, IR::Instr * insertBeforeInstr)
+Lowerer::GenerateGetImmutableOrScriptUnreferencedString(IR::RegOpnd * strOpnd, IR::Instr * insertBeforeInstr, IR::JnHelperMethod helperMethod, bool reloadDst)
 {
     if (strOpnd->m_sym->m_isStrConst)
     {
@@ -20423,7 +20555,7 @@ Lowerer::GenerateGetImmutableOrScriptUnreferencedString(IR::RegOpnd * strOpnd, I
     }
 
     Func * const func = this->m_func;
-    IR::RegOpnd * dstOpnd = IR::RegOpnd::New(TyVar, func);
+    IR::RegOpnd  *dstOpnd = reloadDst == true ? IR::RegOpnd::New(TyVar, func) : strOpnd;
     IR::LabelInstr * helperLabel = IR::LabelInstr::New(Js::OpCode::Label, func, true);
     IR::LabelInstr * doneLabel = IR::LabelInstr::New(Js::OpCode::Label, func);
 
@@ -20435,14 +20567,18 @@ Lowerer::GenerateGetImmutableOrScriptUnreferencedString(IR::RegOpnd * strOpnd, I
         Js::OpCode::BrEq_A,
         helperLabel,
         insertBeforeInstr);
+    
+    if (reloadDst)
+    {
+        InsertMove(dstOpnd, strOpnd, insertBeforeInstr);
+    }
 
-    InsertMove(dstOpnd, strOpnd, insertBeforeInstr);
     InsertBranch(Js::OpCode::Br, doneLabel, insertBeforeInstr);
     insertBeforeInstr->InsertBefore(helperLabel);
 
     this->m_lowererMD.LoadHelperArgument(insertBeforeInstr, strOpnd);
     IR::Instr* callInstr = IR::Instr::New(Js::OpCode::Call, dstOpnd, func);
-    callInstr->SetSrc1(IR::HelperCallOpnd::New(IR::HelperOp_CompoundStringCloneForConcat, func));
+    callInstr->SetSrc1(IR::HelperCallOpnd::New(helperMethod, func));
     insertBeforeInstr->InsertBefore(callInstr);
     this->m_lowererMD.LowerCall(callInstr, 0);
 

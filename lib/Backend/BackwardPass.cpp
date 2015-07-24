@@ -232,6 +232,7 @@ BackwardPass::CleanupBackwardPassInfoInFlowGraph()
         block->stackSymToFinalType = null;
         block->stackSymToGuardedProperties = null;
         block->stackSymToWriteGuardsMap = null;
+        block->cloneStrCandidates = null;
         block->noImplicitCallUses = null;
         block->noImplicitCallNoMissingValuesUses = null;
         block->noImplicitCallNativeArrayUses = null;
@@ -345,6 +346,7 @@ BackwardPass::MergeSuccBlocksInfo(BasicBlock * block)
     HashTable<AddPropertyCacheBucket> * stackSymToFinalType = null;
     HashTable<ObjTypeGuardBucket> * stackSymToGuardedProperties = null;
     HashTable<ObjWriteGuardBucket> * stackSymToWriteGuardsMap = null;
+    BVSparse<JitArenaAllocator> * cloneStrCandidates = null;
     BVSparse<JitArenaAllocator> * noImplicitCallUses = null;
     BVSparse<JitArenaAllocator> * noImplicitCallNoMissingValuesUses = null;
     BVSparse<JitArenaAllocator> * noImplicitCallNativeArrayUses = null;
@@ -415,6 +417,10 @@ BackwardPass::MergeSuccBlocksInfo(BasicBlock * block)
             noImplicitCallNativeArrayUses = JitAnew(this->tempAlloc, BVSparse<JitArenaAllocator>, this->tempAlloc);
             noImplicitCallJsArrayHeadSegmentSymUses = JitAnew(this->tempAlloc, BVSparse<JitArenaAllocator>, this->tempAlloc);
             noImplicitCallArrayLengthSymUses = JitAnew(this->tempAlloc, BVSparse<JitArenaAllocator>, this->tempAlloc);
+            if (this->tag == Js::BackwardPhase)
+            {
+                cloneStrCandidates = JitAnew(this->globOpt->alloc, BVSparse<JitArenaAllocator>, this->globOpt->alloc);
+            }
         }
 
         bool firstSucc = true;
@@ -679,6 +685,16 @@ BackwardPass::MergeSuccBlocksInfo(BasicBlock * block)
             }
             if (tag == Js::BackwardPhase)
             {
+                if (blockSucc->cloneStrCandidates != nullptr)
+                {
+                    Assert(cloneStrCandidates != nullptr);
+                    cloneStrCandidates->Or(blockSucc->cloneStrCandidates);
+                    if (deleteData)
+                    {
+                        JitAdelete(this->globOpt->alloc, blockSucc->cloneStrCandidates);
+                        blockSucc->cloneStrCandidates = nullptr;
+                    }
+                }
 #if DBG_DUMP
                 if (PHASE_VERBOSE_TRACE(Js::TraceObjTypeSpecWriteGuardsPhase, this->func))
                 {
@@ -966,6 +982,7 @@ BackwardPass::MergeSuccBlocksInfo(BasicBlock * block)
             Assert(block->stackSymToFinalType == null);
             Assert(block->stackSymToGuardedProperties == null);
             Assert(block->stackSymToWriteGuardsMap == null);
+            Assert(block->cloneStrCandidates == null);
             Assert(block->noImplicitCallUses == null);
             Assert(block->noImplicitCallNoMissingValuesUses == null);
             Assert(block->noImplicitCallNativeArrayUses == null);
@@ -1016,6 +1033,7 @@ BackwardPass::MergeSuccBlocksInfo(BasicBlock * block)
     block->stackSymToFinalType = stackSymToFinalType;
     block->stackSymToGuardedProperties = stackSymToGuardedProperties;
     block->stackSymToWriteGuardsMap = stackSymToWriteGuardsMap;
+    block->cloneStrCandidates = cloneStrCandidates;
     block->noImplicitCallUses = noImplicitCallUses;
     block->noImplicitCallNoMissingValuesUses = noImplicitCallNoMissingValuesUses;
     block->noImplicitCallNativeArrayUses = noImplicitCallNativeArrayUses;
@@ -1118,6 +1136,12 @@ BackwardPass::DeleteBlockData(BasicBlock * block)
     {
         block->stackSymToWriteGuardsMap->Delete();
         block->stackSymToWriteGuardsMap = null;
+    }
+    if (block->cloneStrCandidates != null)
+    {
+        Assert(this->tag == Js::BackwardPhase);
+        JitAdelete(this->globOpt->alloc, block->cloneStrCandidates);
+        block->cloneStrCandidates = null;
     }
     if (block->noImplicitCallUses != null)
     {
@@ -4437,6 +4461,44 @@ bool BackwardPass::TransitionUndoesObjectHeaderInlining(AddPropertyCacheBucket *
 }
 
 void
+BackwardPass::CollectCloneStrCandidate(IR::Opnd * opnd)
+{
+    IR::RegOpnd *regOpnd = opnd->AsRegOpnd();
+    Assert(regOpnd != nullptr);
+    StackSym *sym = regOpnd->m_sym;
+
+    if (tag == Js::BackwardPhase
+        && currentInstr->m_opcode == Js::OpCode::Add_A
+        && currentInstr->GetSrc1() == opnd
+        && !this->IsPrePass()
+        && !this->IsCollectionPass()
+        &&  this->currentBlock->loop)
+    {
+        Assert(currentBlock->cloneStrCandidates != nullptr);
+
+        currentBlock->cloneStrCandidates->Set(sym->m_id);
+    }
+}
+
+void
+BackwardPass::InvalidateCloneStrCandidate(IR::Opnd * opnd)
+{
+    IR::RegOpnd *regOpnd = opnd->AsRegOpnd();
+    Assert(regOpnd != nullptr);
+    StackSym *sym = regOpnd->m_sym;
+
+    if (tag == Js::BackwardPhase &&
+        (currentInstr->m_opcode != Js::OpCode::Add_A || currentInstr->GetSrc1()->AsRegOpnd()->m_sym->m_id != sym->m_id) &&
+        !this->IsPrePass() &&
+        !this->IsCollectionPass() &&
+        this->currentBlock->loop)
+    {
+            currentBlock->cloneStrCandidates->Clear(sym->m_id);
+    }
+}
+
+
+void
 BackwardPass::ProcessUse(IR::Opnd * opnd)
 {
     switch (opnd->GetKind())
@@ -4446,14 +4508,15 @@ BackwardPass::ProcessUse(IR::Opnd * opnd)
             IR::RegOpnd *regOpnd = opnd->AsRegOpnd();
             StackSym *sym = regOpnd->m_sym;
 
-            if (!IsCollectionPass() && regOpnd->m_isTempLastUse)
+            if (!IsCollectionPass())
             {
                 // isTempLastUse is only used for string concat right now, so lets not mark it if it's not a string.
                 // If it's upward exposed, it is not it's last use.
-                if (regOpnd->GetValueType().IsNotString() || this->currentBlock->upwardExposedUses->Test(sym->m_id) || sym->m_mayNotBeTempLastUse)
+                if (regOpnd->m_isTempLastUse && (regOpnd->GetValueType().IsNotString() || this->currentBlock->upwardExposedUses->Test(sym->m_id) || sym->m_mayNotBeTempLastUse))
                 {
                     regOpnd->m_isTempLastUse = false;
                 }
+                this->CollectCloneStrCandidate(opnd);
             }
 
             if (!this->ProcessSymUse(sym, true, regOpnd->GetIsJITOptimizedReg()) && this->DoSetDead())
@@ -5027,7 +5090,7 @@ BackwardPass::TrackIntUsage(IR::Instr *const instr)
                 Assert(instr->GetSrc1()->IsRegOpnd() || instr->GetSrc1()->IsAddrOpnd());
                 Assert(instr->GetSrc2());
                 Assert(instr->GetSrc2()->IsRegOpnd() || instr->GetSrc2()->IsAddrOpnd());
-
+                
                 if(instr->ignoreNegativeZero || instr->GetSrc1()->IsAddrOpnd() || instr->GetSrc2()->IsAddrOpnd())
                 {
                     // -0 does not matter for dst, or this instruction does not generate -0 since one of the srcs is not -0
@@ -5839,6 +5902,10 @@ BackwardPass::ProcessDef(IR::Opnd * opnd)
     {
         sym = opnd->AsRegOpnd()->m_sym;
         isJITOptimizedReg = opnd->GetIsJITOptimizedReg();
+        if (!IsCollectionPass())
+        {
+            this->InvalidateCloneStrCandidate(opnd);
+        }
     }
     else if (opnd->IsSymOpnd())
     {

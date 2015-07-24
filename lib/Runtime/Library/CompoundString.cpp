@@ -614,6 +614,12 @@ namespace Js
         return cs->Clone(false);
     }
 
+    CompoundString * CompoundString::JitCloneForAppending(CompoundString * cs)
+    {
+        Assert(Is(cs));
+        return cs->Clone(true);
+    }
+
     bool CompoundString::Is(RecyclableObject *const object)
     {
         return VirtualTableInfo<CompoundString>::HasVirtualTable(object);

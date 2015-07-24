@@ -527,6 +527,8 @@ MACRO_WMS(              SetConcatStrMultiItem,   Reg2B1,    None) // Although th
 MACRO_BACKEND_ONLY(     SetConcatStrMultiItemBE, Reg2B1,    OpCanCSE) // Although the byte code version include the concat, and has value of/to string, the BE version doesn't
 MACRO_WMS(              SetConcatStrMultiItem2,  Reg3B1,         None) // Although the byte code version include the concat, and has value of/to string, the BE version doesn't
 MACRO_BACKEND_ONLY(     LdStr,              Empty,          OpTempNumberProducing|OpCanCSE)   // Load string literal
+MACRO_BACKEND_ONLY(     CloneStr,           Empty,          OpTempNumberSources | OpTempNumberProducing)   // Load string literal
+
 
 // Operation ToString(str)
 MACRO_BACKEND_ONLY(Conv_Str, Empty, OpCallsValueOf|OpHasImplicitCall|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut)

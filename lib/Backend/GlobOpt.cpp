@@ -473,6 +473,11 @@ GlobOpt::ForwardPass()
         }
 #endif
         block->SetDataUseCount(0);
+        if (block->cloneStrCandidates)
+        {
+            JitAdelete(this->alloc, block->cloneStrCandidates);
+            block->cloneStrCandidates = nullptr;
+        }
     } NEXT_BLOCK_IN_FUNC;
 
     // Make sure we free most of them.
@@ -1635,6 +1640,8 @@ GlobOpt::MergeBlockData(
     bool isLoopBackEdge = toBlock->isLoopHeader;
     this->MergeValueMaps(toData, toBlock, fromBlock, symsRequiringCompensation, symsCreatedForMerge);
 
+    this->InsertCloneStrs(toBlock, toData, fromData);
+
     toData->liveFields->And(fromData->liveFields);
     toData->liveArrayValues->And(fromData->liveArrayValues);
     toData->isTempSrc->And(fromData->isTempSrc);
@@ -2291,6 +2298,11 @@ GlobOpt::CleanUpValueMaps()
     this->currentBlock->upwardExposedUses = NULL;
     JitAdelete(this->alloc, upwardExposedFields);
     this->currentBlock->upwardExposedFields = NULL;
+    if (this->currentBlock->cloneStrCandidates)
+    {
+        JitAdelete(this->alloc, this->currentBlock->cloneStrCandidates);
+        this->currentBlock->cloneStrCandidates = NULL;
+    }
 }
 
 
@@ -2647,6 +2659,66 @@ void GlobOpt::FieldPRE(Loop *loop)
 
     candidates = this->FindPossiblePRECandidates(loop, alloc);
     this->PreloadPRECandidates(loop, candidates);
+}
+
+void GlobOpt::InsertCloneStrs(BasicBlock *toBlock, GlobOptBlockData *toData, GlobOptBlockData *fromData)
+{
+    if (toBlock->isLoopHeader   // isLoopBackEdge
+        && toBlock->cloneStrCandidates 
+        && !IsLoopPrePass())
+    {
+        Loop *loop = toBlock->loop;
+        BasicBlock *landingPad = loop->landingPad;
+        const SymTable *const symTable = func->m_symTable;
+        Assert(tempBv->IsEmpty());
+        tempBv->And(toBlock->cloneStrCandidates, fromData->isTempSrc);
+        FOREACH_BITSET_IN_SPARSEBV(id, tempBv)
+        {
+            StackSym *const sym = (StackSym *)symTable->Find(id);
+            Assert(sym);
+
+            if (!landingPad->globOptData.liveVarSyms->Test(id)
+                || !fromData->liveVarSyms->Test(id))
+            {
+                continue;
+            }
+
+            Value * landingPadValue = FindValue(landingPad->globOptData.symToValueMap, sym);
+            if (landingPadValue == nullptr)
+            {
+                continue;
+            }
+
+            Value * loopValue = FindValue(fromData->symToValueMap, sym);
+            if (loopValue == nullptr)
+            {
+                continue;
+            }
+
+            ValueInfo *landingPadValueInfo = landingPadValue->GetValueInfo();
+            ValueInfo *loopValueInfo = loopValue->GetValueInfo();
+
+            if (landingPadValueInfo->IsLikelyString()
+                && loopValueInfo->IsLikelyString())
+            {
+                IR::Instr *cloneStr = IR::Instr::New(Js::OpCode::CloneStr, this->func);
+                IR::RegOpnd *opnd = IR::RegOpnd::New(sym, IRType::TyVar, this->func);
+                cloneStr->SetDst(opnd);
+                cloneStr->SetSrc1(opnd);
+                if (loop->bailOutInfo->bailOutInstr)
+                {
+                    loop->bailOutInfo->bailOutInstr->InsertBefore(cloneStr);
+                }
+                else
+                {
+                    landingPad->InsertAfter(cloneStr);
+                }
+                toData->isTempSrc->Set(id);
+            }
+        }
+        NEXT_BITSET_IN_SPARSEBV;
+        tempBv->ClearAll();
+    }
 }
 
 #if !DBG

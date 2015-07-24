@@ -55,6 +55,8 @@ private:
     bool DoDeadStoreLdStForMemop(IR::Instr *instr);
     bool DeadStoreInstr(IR::Instr *instr);
 
+    void CollectCloneStrCandidate(IR::Opnd *opnd);
+    void InvalidateCloneStrCandidate(IR::Opnd *opnd);
 #if DBG_DUMP
     void DumpBlockData(BasicBlock * block);
     void DumpMarkTemp();

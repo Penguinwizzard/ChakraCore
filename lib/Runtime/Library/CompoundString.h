@@ -229,6 +229,9 @@ namespace Js
             void AllocateBuffer(const CharCount charCapacity, Recycler *const recycler);
             Block *CopyBuffer(const void *const buffer, const CharCount usedCharLength, const bool reserveMoreSpace, Recycler *const recycler);
             Block *Resize(Recycler *const recycler);
+            static size_t GetOffsetOfCharLength() { return offsetof(BlockInfo, charLength); }
+            static size_t GetOffsetOfCharCapacity() { return offsetof(BlockInfo, charCapacity); }
+            static size_t GetOffsetOfBuffer() { return offsetof(BlockInfo, buffer); }
 
         public:
             void CopyFrom(Block *const block);
@@ -356,11 +359,18 @@ namespace Js
     public:
         CompoundString *Clone(const bool forAppending);
         static CompoundString * JitClone(CompoundString * cs);
+        static CompoundString * JitCloneForAppending(CompoundString * cs);
     public:
         static bool Is(RecyclableObject *const object);
         static bool Is(const Var var);
         static CompoundString *FromVar(RecyclableObject *const object);
         static CompoundString *FromVar(const Var var);
+        static size_t GetOffsetOfOwnsLastBlock() { return offsetof(CompoundString, ownsLastBlock); }
+        static size_t GetOffsetOfDirectCharLength() { return offsetof(CompoundString, directCharLength); }
+        static size_t GetOffsetOfLastBlockInfo() { return offsetof(CompoundString, lastBlockInfo); }
+        static size_t GetOffsetOfLastBlockInfoCharLength() { return CompoundString::BlockInfo::GetOffsetOfCharLength(); }
+        static size_t GetOffsetOfLastBlockInfoCharCapacity() { return CompoundString::BlockInfo::GetOffsetOfCharCapacity(); }
+        static size_t GetOffsetOfLastBlockInfoBuffer() { return CompoundString::BlockInfo::GetOffsetOfBuffer(); }
 
     public:
         static JavascriptString *GetImmutableOrScriptUnreferencedString(JavascriptString *const s);
