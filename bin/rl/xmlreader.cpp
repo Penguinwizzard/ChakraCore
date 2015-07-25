@@ -6,8 +6,7 @@
 #include "rl.h"
 #include "HostSysInfo.h"
 
-#import "msxml6.dll" named_guids raw_interfaces_only
-
+#include <msxml6.h>
 
 #define CHECKHR(x) {hr = x; if (FAILED(hr)) goto CleanUp;}
 #define SAFERELEASE(p) {if (p) {(p)->Release(); p = NULL;}}
@@ -17,7 +16,7 @@ namespace Xml
 {
 
 
-MSXML2::IXMLDOMDocument *pDoc = NULL;
+IXMLDOMDocument *pDoc = NULL;
 
 
 Node * Node::TopNode;
@@ -181,13 +180,13 @@ ConvertBSTR
 Node *
 ConvertDoc
 (
-   MSXML2::IXMLDOMNode * pNode
+   IXMLDOMNode * pNode
 )
 {
-    MSXML2::IXMLDOMNode * pChild;
-    MSXML2::IXMLDOMNode * pNext;
+    IXMLDOMNode * pChild;
+    IXMLDOMNode * pNext;
     BSTR nodeName;
-    MSXML2::IXMLDOMNamedNodeMap * pattrs;
+    IXMLDOMNamedNodeMap * pattrs;
 
     pNode->get_nodeName(&nodeName);
 
@@ -297,12 +296,12 @@ Init()
    CoInitializeEx(NULL, HostSystemInfo::SupportsOnlyMultiThreadedCOM() ? COINIT_MULTITHREADED : COINIT_APARTMENTTHREADED);
    hr = CoCreateInstance(HostSystemInfo::SupportsOnlyMultiThreadedCOM() ? 
 #if defined (_M_AMD64) || defined(_M_ARM64)
-       MSXML2::CLSID_DOMDocument
+       CLSID_DOMDocument
 #else
-       MSXML2::CLSID_DOMDocument60
+       CLSID_DOMDocument60
 #endif       
-       : MSXML2::CLSID_DOMDocument, NULL, CLSCTX_INPROC_SERVER,
-       MSXML2::IID_IXMLDOMDocument, (void**)&pDoc);
+       : CLSID_DOMDocument, NULL, CLSCTX_INPROC_SERVER,
+       IID_IXMLDOMDocument, (void**)&pDoc);
 
    return hr == 0 ? true : false;
 }
@@ -313,7 +312,7 @@ ReadFile
    const char * fileName
 )
 {
-   MSXML2::IXMLDOMParseError * pXMLError = NULL;
+   IXMLDOMParseError * pXMLError = NULL;
    VARIANT         vURL;
    VARIANT_BOOL    vb;
    HRESULT         hr;
@@ -368,8 +367,8 @@ ReadFile
       // Convert the MSXML2 format to the RL XML format to minimize the impact
       // of this changeover.
 
-      MSXML2::IXMLDOMNode* pNode = NULL;
-      hr = pDoc->QueryInterface(MSXML2::IID_IXMLDOMNode,(void**)&pNode);
+      IXMLDOMNode* pNode = NULL;
+      hr = pDoc->QueryInterface(IID_IXMLDOMNode,(void**)&pNode);
       if (FAILED(hr))
       {
          return NULL;

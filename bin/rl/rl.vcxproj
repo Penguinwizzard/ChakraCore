@@ -39,11 +39,16 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
+      <!-- In general we need msxml6 for our XML reading functionality but we also 
+           need msxml2 since we try and instantiate CLSID_DOMDocument on OneCore platforms
+           and this symbol is defined only in msxml2.lib -->           
       <AdditionalDependencies>
         %(AdditionalDependencies);
         $(SdkLibPath)\oleaut32.lib;
         $(SdkLibPath)\ole32.lib;
         $(SdkLibPath)\kernel32.lib;
+        $(SdkLibPath)\msxml6.lib;
+        $(SdkLibPath)\msxml2.lib;
         $(InternalSdkLibPath)\nothrownew.lib
       </AdditionalDependencies>
     </Link>
