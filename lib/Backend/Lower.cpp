@@ -20559,6 +20559,10 @@ Lowerer::GenerateGetImmutableOrScriptUnreferencedString(IR::RegOpnd * strOpnd, I
     IR::LabelInstr * helperLabel = IR::LabelInstr::New(Js::OpCode::Label, func, true);
     IR::LabelInstr * doneLabel = IR::LabelInstr::New(Js::OpCode::Label, func);
 
+    if (!strOpnd->IsNotTaggedValue())
+    {
+        this->m_lowererMD.GenerateObjectTest(strOpnd, insertBeforeInstr, doneLabel);
+    }
     // CMP [strOpnd], Js::CompoundString::`vtable'
     // JEQ $helper
     InsertCompareBranch(
