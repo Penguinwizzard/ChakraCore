@@ -24,12 +24,8 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <!--
-           TODO: Remove dependency on HostCommon.lib.  RL is using HostSystemInfo.
-       -->
       <AdditionalIncludeDirectories>
         %(AdditionalIncludeDirectories);
-        $(ChakraRootDirectory)private\lib\HostCommon;
         $(SdkToolsIncPath)
       </AdditionalIncludeDirectories>
     </ClCompile>
@@ -37,7 +33,7 @@
       <SubSystem>Console</SubSystem>
       <!-- In general we need msxml6 for our XML reading functionality but we also 
            need msxml2 since we try and instantiate CLSID_DOMDocument on OneCore platforms
-           and this symbol is defined only in msxml2.lib -->           
+           and this symbol is defined only in msxml2.lib -->
       <AdditionalDependencies>
         %(AdditionalDependencies);
         $(SdkLibPath)\oleaut32.lib;
@@ -48,12 +44,6 @@
         $(InternalSdkLibPath)\nothrownew.lib
       </AdditionalDependencies>
     </Link>
-    <Link Condition="'$(BuildingWithBuildExe)'=='true'">
-      <AdditionalDependencies>
-        %(AdditionalDependencies);
-        $(RazzleJscriptObjectRoot)\private\lib\HostCommon\$(ObjectDirectory)\Chakra.Host.Common.lib;
-      </AdditionalDependencies>
-    </Link>
   </ItemDefinitionGroup>
   <!-- Razzle binplace -->
   <ItemGroup Condition="'$(BuildingWithBuildExe)'=='true'">
@@ -62,6 +52,7 @@
     </BinplaceLinked>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="HostSysInfo.cpp" />
     <ClCompile Include="rl.cpp" />
     <ClCompile Include="rlfeint.cpp" />
     <ClCompile Include="rlmp.cpp" />
@@ -70,14 +61,10 @@
     <ClCompile Include="xmlreader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="HostSysInfo.h" />
     <ClInclude Include="rl.h" />
     <ClInclude Include="rlfeint.h" />
     <ClInclude Include="xmlreader.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\private\lib\HostCommon\HostCommon.vcxproj">
-      <Project>{f2e998aa-fb27-4f65-a6f7-4142be64294f}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>
