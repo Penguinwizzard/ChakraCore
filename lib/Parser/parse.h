@@ -200,6 +200,12 @@ public:
     bool IsBackgroundParser() const { return m_isInBackground; }
     bool IsDoingFastScan() const { return m_doingFastScan; }
 
+    bool ShouldParseInitializer() const { return m_shouldParseInitializer; }
+    void SetShouldParseInitializer(bool set) { m_shouldParseInitializer = set; }
+
+    bool ShouldErrorOnInitializer() const { return m_shouldErrorOnInitializer; }
+    void SetShouldErrorOnInitializer(bool set) { m_shouldErrorOnInitializer = set; }
+
     static IdentPtr PidFromNode(ParseNodePtr pnode);
     static LPCOLESTR GetClassName(PnClass *pClass);
 
@@ -265,7 +271,9 @@ private:
     void *              m_errorCallbackData;
     BOOL                m_uncertainStructure;
     bool                m_hasParallelJob;
-    bool                m_doingFastScan;    
+    bool                m_doingFastScan;
+    bool                m_shouldParseInitializer;
+    bool                m_shouldErrorOnInitializer;
     Span                m_asgToConst;
     int                 m_nextBlockId;
 
@@ -858,6 +866,7 @@ private:
 
     bool IsES6DestructuringEnabled() const;
     bool IsPossibleObjectPatternExpression();
+    bool IsPossiblePatternStart() const { return m_token.tk == tkLCurly || m_token.tk == tkLBrack; }
 
     template<bool buildAST> ParseNodePtr ParseTryCatchFinally();
     template<bool buildAST> ParseNodePtr ParseTry();
@@ -883,6 +892,8 @@ private:
     ParseNodePtr ParseDestructuredInitializer(ParseNodePtr lhsNode, bool isDecl, bool topLevel);
 
     template<bool CheckForNegativeInfinity> static bool IsNaNOrInfinityLiteral(LPCOLESTR str);
+
+    void ParseDestructuredLiteralWithScopeSave(tokens declarationType, bool isDecl, bool topLevel);
 
 public:
     void ValidateSourceElementList();

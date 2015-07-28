@@ -221,7 +221,7 @@ static const Js::OpCode nopToCMOp[knopLim] =
 #include "ptlist.h"
 };
 
-// Tracks a register slot let/const property for the passed in debugger block scope.
+// Tracks a register slot let/const property for the passed in debugger block/catch scope.
 // debuggerScope         - The scope to add the variable to.
 // symbol                - The symbol that represents the register property.
 // funcInfo              - The function info used to store the property into the tracked debugger register slot list.
@@ -241,7 +241,7 @@ void ByteCodeGenerator::TrackRegisterPropertyForDebugger(
     Js::RegSlot location = symbol->GetLocation();
 
     Js::DebuggerScope *correctDebuggerScope = debuggerScope;
-    if (debuggerScope->scopeType != Js::DiagExtraScopesType::DiagBlockScopeDirect)
+    if (debuggerScope->scopeType != Js::DiagExtraScopesType::DiagBlockScopeDirect && debuggerScope->scopeType != Js::DiagExtraScopesType::DiagCatchScopeDirect)
     {
         // We have to get the appropiate scope and add property over there.
         // Make sure the scope is created whether we're in debug mode or not, because we
@@ -3364,7 +3364,6 @@ void ByteCodeGenerator::StartEmitCatch(ParseNode *pnodeCatch)
     Assert(pnodeCatch->nop == knopCatch);
 
     Scope *scope = pnodeCatch->sxCatch.scope;
-    Symbol *sym = pnodeCatch->sxCatch.pnodeParam->sxPid.sym;
     FuncInfo *funcInfo = scope->GetFunc();
 
     // Catch scope is a dynamic object if it can be passed to a scoped lookup helper (i.e., eval is present or we're in an event handler).
@@ -3372,29 +3371,65 @@ void ByteCodeGenerator::StartEmitCatch(ParseNode *pnodeCatch)
     {
         scope->SetIsObject();
     }
-    // Catch object is stored in the catch scope if there may be an ambiguous lookup or a var declaration that hides it.
-    scope->SetCapturesAll(funcInfo->GetCallsEval() || funcInfo->GetChildCallsEval() || sym->GetHasNonLocalReference());
-    scope->SetMustInstantiate(scope->GetCapturesAll() || funcInfo->IsGlobalFunction() || currentScope != funcInfo->GetBodyScope());
 
-    if (scope->GetMustInstantiate())
+    if (pnodeCatch->sxCatch.pnodeParam->nop == knopParamPattern)
     {
-        // Give slot 0 (the only one) to the catch symbol.
-        sym->SetScopeSlot(0);
+        scope->SetCapturesAll(funcInfo->GetCallsEval() || funcInfo->GetChildCallsEval());
+        scope->SetMustInstantiate(scope->GetMustInstantiate() || scope->GetCapturesAll() || funcInfo->IsGlobalFunction());
+
+        Parser::MapBindIdentifier(pnodeCatch->sxCatch.pnodeParam->sxParamPattern.pnode1, [&](ParseNodePtr item) {
+            Symbol *sym = item->sxVar.sym;
+            if (funcInfo->IsGlobalFunction())
+            {
+                sym->SetIsGlobalCatch(true);
+            }
+
+            Assert(sym->GetScopeSlot() == Js::Constants::NoProperty);
+            if (sym->NeedsSlotAlloc(funcInfo))
+            {
+                sym->EnsureScopeSlot(funcInfo);
+            }
+        });
+
+        // In the case of pattern we will always going to push the scope.
         PushScope(scope);
     }
     else
     {
-        // Add it to the parent function's scope and treat it like any other local.
-        // We can only do this if we don't need to get the symbol from a slot, though, because adding it to the
-        // parent's scope object on entry to the catch could re-size the slot array.
-        funcInfo->bodyScope->AddSymbol(sym);
+        Symbol *sym = pnodeCatch->sxCatch.pnodeParam->sxPid.sym;
+
+        // Catch object is stored in the catch scope if there may be an ambiguous lookup or a var declaration that hides it.
+        scope->SetCapturesAll(funcInfo->GetCallsEval() || funcInfo->GetChildCallsEval() || sym->GetHasNonLocalReference());
+        scope->SetMustInstantiate(scope->GetCapturesAll() || funcInfo->IsGlobalFunction() || currentScope != funcInfo->GetBodyScope());
+
+        if (funcInfo->IsGlobalFunction())
+        {
+            sym->SetIsGlobalCatch(true);
+        }
+
+        if (scope->GetMustInstantiate())
+        {
+            // Since there is only one symbol we are pushing to slot.
+            // Also in order to make IsInSlot to return true - forcing the sym-has-non-local-reference.
+            sym->SetHasNonLocalReference(true, this);
+            sym->EnsureScopeSlot(funcInfo);
+
+            PushScope(scope);
+        }
+        else
+        {
+            // Add it to the parent function's scope and treat it like any other local.
+            // We can only do this if we don't need to get the symbol from a slot, though, because adding it to the
+            // parent's scope object on entry to the catch could re-size the slot array.
+            funcInfo->bodyScope->AddSymbol(sym);
+        }
     }
 }
 
 void ByteCodeGenerator::EndEmitCatch(ParseNode *pnodeCatch)
 {
     Assert(pnodeCatch->nop == knopCatch);
-    if (pnodeCatch->sxCatch.scope->GetMustInstantiate())
+    if (pnodeCatch->sxCatch.scope->GetMustInstantiate() || pnodeCatch->sxCatch.pnodeParam->nop == knopParamPattern)
     {
         Assert(currentScope == pnodeCatch->sxCatch.scope);
         PopScope();
@@ -9255,76 +9290,120 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
             Js::RegSlot location;
             Js::RegSlot scopeLocation = Js::Constants::NoRegister;
 
-            bool fNeedsReg = false;
+            bool acquiredTempLocation = false;
 
-            Js::DiagExtraScopesType diagScopeType = Js::DiagCatchScopeInObject;
-
+            Js::DebuggerScope *debuggerScope = nullptr;
             Js::DebuggerScopePropertyFlags debuggerPropertyFlags = Js::DebuggerScopePropertyFlags_CatchObject;
 
+            bool isPattern = pnodeObj->nop == knopParamPattern;
 
-            location = pnodeObj->sxPid.sym->GetLocation();
+            if (isPattern)
+            {
+                location = pnodeObj->sxParamPattern.location;
+            }
+            else
+            {
+                location = pnodeObj->sxPid.sym->GetLocation();
+            }
+
             if (location == Js::Constants::NoRegister)
             {
                 location = funcInfo->AcquireLoc(pnodeObj);
-                fNeedsReg = true;
+                acquiredTempLocation = true;
             }
             byteCodeGenerator->Writer()->Reg1(Js::OpCode::Catch, location);
 
             Scope *scope = pnodeCatch->sxCatch.scope;
-            Symbol *sym = pnodeObj->sxPid.sym;
+
+            if (isPattern || scope->GetMustInstantiate())
+            {
+                byteCodeGenerator->PushScope(scope);
+            }
 
             if (scope->GetMustInstantiate())
             {
-                byteCodeGenerator->PushScope(scope);
                 scopeLocation = funcInfo->AcquireTmpRegister();
                 scope->SetLocation(scopeLocation);
+
                 if (scope->GetIsObject())
                 {
-                    diagScopeType = Js::DiagCatchScopeInObject;
-                    Js::DebuggerScope *debuggerScope = byteCodeGenerator->RecordStartScopeObject(pnode, diagScopeType, scopeLocation);
-
-                    if (byteCodeGenerator->ShouldTrackDebuggerMetadata())
-                    {
-                        byteCodeGenerator->Writer()->AddPropertyToDebuggerScope(debuggerScope, scopeLocation, sym->EnsurePosition(byteCodeGenerator), /*shouldConsumeRegister*/ true, debuggerPropertyFlags);
-                    }
-
+                    debuggerScope = byteCodeGenerator->RecordStartScopeObject(pnode, Js::DiagCatchScopeInObject, scopeLocation);
                     byteCodeGenerator->Writer()->Reg1(Js::OpCode::NewPseudoScope, scopeLocation);
-                    Js::PropertyId propertyId = sym->EnsurePosition(byteCodeGenerator);
-                    uint cacheId = funcInfo->FindOrAddInlineCacheId(scopeLocation, propertyId, false, true);
-                    byteCodeGenerator->Writer()->PatchableProperty(Js::OpCode::InitFld, location, scopeLocation, cacheId);
                 }
                 else
                 {
                     int index = Js::DebuggerScope::InvalidScopeIndex;
+                    debuggerScope = byteCodeGenerator->RecordStartScopeObject(pnode, Js::DiagCatchScopeInSlot, scopeLocation, &index);
 
-                    diagScopeType = Js::DiagCatchScopeInSlot;
-                    Js::DebuggerScope *debuggerScope = byteCodeGenerator->RecordStartScopeObject(pnode, diagScopeType, scopeLocation, &index);
-                    byteCodeGenerator->TrackSlotArrayPropertyForDebugger(debuggerScope, sym, sym->EnsurePosition(byteCodeGenerator), debuggerPropertyFlags);
-
-                    byteCodeGenerator->Writer()->Reg1Int2(Js::OpCode::NewScopeSlotsWithoutPropIds, scopeLocation, 1 + Js::ScopeSlots::FirstSlotIndex, index);
-                    byteCodeGenerator->Writer()->Slot(Js::OpCode::StSlot, location, scopeLocation, Js::ScopeSlots::FirstSlotIndex);
+                    byteCodeGenerator->Writer()->Reg1Int2(Js::OpCode::NewScopeSlotsWithoutPropIds, scopeLocation, scope->GetScopeSlotCount() + Js::ScopeSlots::FirstSlotIndex, index);
                 }
-                sym->SetIsGlobalCatch(true);
             }
             else
             {
-                diagScopeType = Js::DiagCatchScopeDirect;
-                Js::DebuggerScope *debuggerScope = byteCodeGenerator->RecordStartScopeObject(pnode, diagScopeType, location);
-
-                if (byteCodeGenerator->ShouldTrackDebuggerMetadata())
-                {
-                    byteCodeGenerator->Writer()->AddPropertyToDebuggerScope(debuggerScope, location, sym->EnsurePosition(byteCodeGenerator), /*shouldConsumeRegister*/ true, debuggerPropertyFlags);
-                }
-
-                byteCodeGenerator->EmitLocalPropInit(location, sym, funcInfo);
+                debuggerScope = byteCodeGenerator->RecordStartScopeObject(pnode, Js::DiagCatchScopeDirect, location);
             }
 
-            byteCodeGenerator->Writer()->RecordCrossFrameEntryExitRecord(true);
+            auto ParamTrackAndInitialization = [&](Symbol *sym, bool initializeParam, Js::RegSlot location) {
+                if (sym->IsInSlot(funcInfo))
+                {
+                    Assert(scope->GetMustInstantiate());
+                    if (scope->GetIsObject())
+                    {
+                        Js::OpCode op = (sym->GetDecl()->nop == knopLetDecl) ? Js::OpCode::InitUndeclLetFld : Js::OpCode::InitFld;
 
-            // Allow a debugger to stop on the 'catch(e)'
-            byteCodeGenerator->StartStatement(pnodeCatch);
-            byteCodeGenerator->Writer()->Empty(Js::OpCode::Nop);
-            byteCodeGenerator->EndStatement(pnodeCatch);
+                        Js::PropertyId propertyId = sym->EnsurePosition(byteCodeGenerator);
+                        uint cacheId = funcInfo->FindOrAddInlineCacheId(scopeLocation, propertyId, false, true);
+                        byteCodeGenerator->Writer()->PatchableProperty(op, location, scopeLocation, cacheId);
+
+                        byteCodeGenerator->TrackActivationObjectPropertyForDebugger(debuggerScope, sym, debuggerPropertyFlags);
+                    }
+                    else
+                    {
+                        byteCodeGenerator->TrackSlotArrayPropertyForDebugger(debuggerScope, sym, sym->EnsurePosition(byteCodeGenerator), debuggerPropertyFlags);
+                        if (initializeParam)
+                        {
+                            byteCodeGenerator->Writer()->Slot(Js::OpCode::StSlot, location, scopeLocation, Js::ScopeSlots::FirstSlotIndex);
+                        }
+                    }
+                }
+                else
+                {
+                    byteCodeGenerator->TrackRegisterPropertyForDebugger(debuggerScope, sym, funcInfo, debuggerPropertyFlags);
+                    if (initializeParam)
+                    {
+                        byteCodeGenerator->EmitLocalPropInit(location, sym, funcInfo);
+                    }
+                }
+            };
+
+            if (isPattern)
+            {
+                Parser::MapBindIdentifier(pnodeObj->sxParamPattern.pnode1, [&](ParseNodePtr item) {
+                    ParamTrackAndInitialization(item->sxVar.sym, false/*initializeParam*/, item->sxVar.sym->GetLocation());
+                });
+                byteCodeGenerator->Writer()->RecordCrossFrameEntryExitRecord(true);
+
+                // Now emitting bytecode for destructuring pattern
+                byteCodeGenerator->StartStatement(pnodeCatch);
+                ParseNodePtr pnode1 = pnodeObj->sxParamPattern.pnode1;
+                Assert(pnode1->IsPattern());
+                EmitAssignment(nullptr, pnode1, location, byteCodeGenerator, funcInfo);
+                byteCodeGenerator->EndStatement(pnodeCatch);
+            }
+            else
+            {
+                ParamTrackAndInitialization(pnodeObj->sxPid.sym, true/*initializeParam*/, location);
+                if (scope->GetMustInstantiate())
+                {
+                    pnodeObj->sxPid.sym->SetIsGlobalCatch(true);
+                }
+                byteCodeGenerator->Writer()->RecordCrossFrameEntryExitRecord(true);
+
+                // Allow a debugger to stop on the 'catch(e)'
+                byteCodeGenerator->StartStatement(pnodeCatch);
+                byteCodeGenerator->Writer()->Empty(Js::OpCode::Nop);
+                byteCodeGenerator->EndStatement(pnodeCatch);
+            }
 
             ByteCodeGenerator::TryScopeRecord tryRecForCatch(Js::OpCode::ResumeCatch, catchLabel);
             if (funcInfo->byteCodeFunction->IsGenerator())
@@ -9339,18 +9418,20 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
                 byteCodeGenerator->tryScopeRecordsList.UnlinkFromEnd();
             }
 
-
-            if (scope->GetMustInstantiate())
+            if (scope->GetMustInstantiate() || isPattern)
             {
                 byteCodeGenerator->PopScope();
-                funcInfo->ReleaseTmpRegister(scopeLocation);
+                if (scope->GetMustInstantiate())
+                {
+                    funcInfo->ReleaseTmpRegister(scopeLocation);
+                }
             }
 
             byteCodeGenerator->RecordEndScopeObject(pnode);
 
             funcInfo->ReleaseLoc(pnodeCatch->sxCatch.pnodeBody);
 
-            if (fNeedsReg)
+            if (acquiredTempLocation)
             {
                 funcInfo->ReleaseLoc(pnodeObj);
             }

@@ -11,6 +11,7 @@ enum ScopeType
     ScopeType_FuncExpr,
     ScopeType_Block,
     ScopeType_Catch,
+    ScopeType_CatchParamPattern,
     ScopeType_With,
     ScopeType_Parameter
 };

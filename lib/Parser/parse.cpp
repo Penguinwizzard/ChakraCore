@@ -31,6 +31,29 @@ bool Parser::IsES6DestructuringEnabled() const
     return m_scriptContext->GetConfig()->IsES6DestructuringEnabled();
 }
 
+class AutoInitializeStateDueToPattern
+{
+public:
+    AutoInitializeStateDueToPattern(Parser *parser, bool shouldParseInitializer, bool errorOnInitializer)
+        : m_parser(parser)
+    {
+        m_shouldNotParseInitializer = m_parser->ShouldParseInitializer();
+        m_parser->SetShouldParseInitializer(shouldParseInitializer);
+        m_errorOnInitializer = m_parser->ShouldErrorOnInitializer();
+        m_parser->SetShouldErrorOnInitializer(errorOnInitializer);
+    }
+
+    ~AutoInitializeStateDueToPattern()
+    {
+        m_parser->SetShouldParseInitializer(m_shouldNotParseInitializer);
+        m_parser->SetShouldErrorOnInitializer(m_errorOnInitializer);
+    }
+
+private:
+    Parser *m_parser;
+    bool m_shouldNotParseInitializer;
+    bool m_errorOnInitializer;
+};
 
 #if DEBUG
 Parser::Parser(Js::ScriptContext* scriptContext, BOOL strictMode, PageAllocator *alloc, bool isBackground, size_t size)
@@ -50,6 +73,8 @@ Parser::Parser(Js::ScriptContext* scriptContext, BOOL strictMode, PageAllocator 
     m_stoppedDeferredParse = FALSE;
     m_hasParallelJob = false;
     m_doingFastScan = false;
+    m_shouldParseInitializer = true;
+    m_shouldErrorOnInitializer = false;
     m_scriptContext = scriptContext;
     m_pCurrentAstSize = NULL;
     m_parsingDuplicate = 0;
@@ -792,6 +817,17 @@ Symbol* Parser::AddDeclForPid(ParseNodePtr pnode, IdentPtr pid, SymbolType symbo
     }
 
     int maxScopeId = blockInfo->pnodeBlock->sxBlock.blockId;
+
+    // The body of catch may have let declared variable. In the case of pattern, found at catch param level, we need to search the duplication
+    // at that scope level as well - thus extending the scope lookup range.
+    if (IsES6DestructuringEnabled()
+        && fBlockScope
+        && blockInfo->pBlockInfoOuter != nullptr
+        && blockInfo->pBlockInfoOuter->pnodeBlock->sxBlock.scope != nullptr
+        && blockInfo->pBlockInfoOuter->pnodeBlock->sxBlock.scope->GetScopeType() == ScopeType_CatchParamPattern)
+    {
+        maxScopeId = blockInfo->pBlockInfoOuter->pnodeBlock->sxBlock.blockId;
+    }
 
     if (blockInfo->pnodeBlock->sxBlock.scope != nullptr && blockInfo->pnodeBlock->sxBlock.scope->GetScopeType() == ScopeType_FunctionBody)
     {
@@ -5068,7 +5104,7 @@ void Parser::ParseFncFormals(ParseNodePtr pnodeFnc, ushort flags)
             }
             if (m_token.tk != tkID)
             {
-                if (IsES6DestructuringEnabled() && (m_token.tk == tkLCurly || m_token.tk == tkLBrack))
+                if (IsES6DestructuringEnabled() && IsPossiblePatternStart())
                 {
                     ParseNodePtr *const ppnodeVarSave = m_ppnodeVar;
                     m_ppnodeVar = &pnodeFnc->sxFnc.pnodeVars;
@@ -5546,9 +5582,9 @@ void Parser::FinishFncNode(ParseNodePtr pnodeFnc)
                     ParseExpr<false>(koplCma);
                 }
             }
-            else if (m_token.tk == tkLCurly || m_token.tk == tkLBrack)
+            else if (IsPossiblePatternStart())
             {
-                ParseDestructuredLiteral<false>(tkLET, false/*isDecl*/, false /*topLevel*/);
+                ParseDestructuredLiteralWithScopeSave(tkLET, false/*isDecl*/, false /*topLevel*/);
             }
             else
             {
@@ -6842,8 +6878,10 @@ ParseNodePtr Parser::ParseExpr(int oplMin, BOOL *pfCanAssign, BOOL fAllowIn, BOO
             && (pnode->nop == knopArray || pnode->nop == knopObject))
         {
             m_pscan->SeekTo(termStart);
-            // Possible destructuring literal. Rewind and verify the parse tree.
-            ParseDestructuredLiteral<false>(tkLCurly, false/*isDecl*/, false/*topLevel*/);
+
+            AutoInitializeStateDueToPattern autoInitializeStateDueToPattern(this, false/*shouldParseInitializer*/, m_shouldErrorOnInitializer);
+            ParseDestructuredLiteralWithScopeSave(tkLCurly, false/*isDecl*/, false /*topLevel*/);
+
             if (buildAST)
             {
                 pnode = ConvertToPattern(pnode);
@@ -7276,11 +7314,6 @@ ParseNodePtr Parser::ParseVariableDeclaration(
     BOOL allowInit/* = TRUE*/,
     BOOL isTopVarParse/* = TRUE*/)
 {
-    if (IsES6DestructuringEnabled() && (m_token.tk == tkLBrack || m_token.tk == tkLCurly))
-    {
-        return ParseDestructuredLiteral<buildAST>(declarationType, !!isTopVarParse);
-    }
-
     ParseNodePtr pnodeThis = nullptr;
     ParseNodePtr pnodeInit;
     ParseNodePtr pnodeList = nullptr;
@@ -7291,102 +7324,109 @@ ParseNodePtr Parser::ParseVariableDeclaration(
 
     for (;;)
     {
-        if (m_token.tk != tkID)
+        if (IsES6DestructuringEnabled() && IsPossiblePatternStart())
         {
-            IdentifierExpectedError(m_token);
+            pnodeThis = ParseDestructuredLiteral<buildAST>(declarationType, true, !!isTopVarParse);
         }
-
-        IdentPtr pid = m_token.GetIdentifier(m_phtbl);
-        Assert(pid);
-        pNameHint = pid->Psz();
-        nameHintLength = pid->Cch();
-
-        if (buildAST || BindDeferredPidRefs())
+        else
         {
-            if (declarationType == tkVAR)
+            if (m_token.tk != tkID)
             {
-                pnodeThis = CreateVarDeclNode(pid, STVariable);
+                IdentifierExpectedError(m_token);
             }
-            else if (declarationType == tkCONST)
-            {
-                pnodeThis = CreateBlockScopedDeclNode(pid, knopConstDecl);
-                CHAKRATEL_LANGSTATS_INC_LANGFEATURECOUNT(ConstCount, m_scriptContext);
-            }
-            else
-            {
-                pnodeThis = CreateBlockScopedDeclNode(pid, knopLetDecl);
-                CHAKRATEL_LANGSTATS_INC_LANGFEATURECOUNT(LetCount, m_scriptContext);
-            }
-        }
-        else if (!buildAST)
-        {
-            CheckPidIsValid(pid);
-        }
 
-        if (pid == wellKnownPropertyPids.arguments && m_currentNodeFunc)
-        {
-            // This var declaration may change the way an 'arguments' identifier in the function is resolved
-            if (declarationType == tkVAR)
+            IdentPtr pid = m_token.GetIdentifier(m_phtbl);
+            Assert(pid);
+            pNameHint = pid->Psz();
+            nameHintLength = pid->Cch();
+
+            if (buildAST || BindDeferredPidRefs())
             {
-                m_currentNodeFunc->grfpn |= PNodeFlags::fpnArguments_varDeclaration;
-            }
-            else
-            {
-                if (GetCurrentBlockInfo()->pnodeBlock->sxBlock.blockType == Function)
+                if (declarationType == tkVAR)
                 {
-                    // Only override arguments if we are at the function block level.
-                    m_currentNodeFunc->grfpn |= PNodeFlags::fpnArguments_overriddenByDecl;
+                    pnodeThis = CreateVarDeclNode(pid, STVariable);
                 }
-            }
-        }
-
-        if (pnodeThis)
-        {
-            pnodeThis->ichMin = ichMin;
-        }
-
-        m_pscan->Scan();
-
-        if (m_token.tk == tkAsg)
-        {
-            if (!allowInit)
-            {
-                Error(ERRUnexpectedDefault);
-            }
-            if (pfForInOk && (declarationType == tkLET || declarationType == tkCONST))
-            {
-                *pfForInOk = FALSE;
-            }
-
-            m_pscan->Scan();
-            pnodeInit = ParseExpr<buildAST>(koplCma, NULL, fAllowIn, FALSE, pNameHint, &nameHintLength);
-            if (buildAST)
-            {
-                pnodeThis->sxVar.pnodeInit = pnodeInit;
-                pnodeThis->ichLim = pnodeInit->ichLim;
-
-                if (pnodeInit->nop == knopFncDecl)
+                else if (declarationType == tkCONST)
                 {
-                    pnodeInit->sxFnc.hint = pNameHint;
-                    pnodeInit->sxFnc.hintLength = nameHintLength;
+                    pnodeThis = CreateBlockScopedDeclNode(pid, knopConstDecl);
+                    CHAKRATEL_LANGSTATS_INC_LANGFEATURECOUNT(ConstCount, m_scriptContext);
                 }
                 else
                 {
-                    this->CheckArguments(pnodeInit);
+                    pnodeThis = CreateBlockScopedDeclNode(pid, knopLetDecl);
+                    CHAKRATEL_LANGSTATS_INC_LANGFEATURECOUNT(LetCount, m_scriptContext);
                 }
-                pNameHint = NULL;
+            }
+            else if (!buildAST)
+            {
+                CheckPidIsValid(pid);
             }
 
-            //Track var a =, let a= , const a =
-            // This is for FixedFields Constant Heuristics
-            if (((pnodeThis)->sxVar).pnodeInit != nullptr)
+            if (pid == wellKnownPropertyPids.arguments && m_currentNodeFunc)
             {
-                pnodeThis->sxVar.sym->PromoteAssignmentState();
+                // This var declaration may change the way an 'arguments' identifier in the function is resolved
+                if (declarationType == tkVAR)
+                {
+                    m_currentNodeFunc->grfpn |= PNodeFlags::fpnArguments_varDeclaration;
+                }
+                else
+                {
+                    if (GetCurrentBlockInfo()->pnodeBlock->sxBlock.blockType == Function)
+                    {
+                        // Only override arguments if we are at the function block level.
+                        m_currentNodeFunc->grfpn |= PNodeFlags::fpnArguments_overriddenByDecl;
+                    }
+                }
             }
-        }
-        else if (declarationType == tkCONST /*pnodeThis->nop == knopConstDecl*/ && !singleDefOnly)
-        {
-            Error(ERRUninitializedConst);
+
+            if (pnodeThis)
+            {
+                pnodeThis->ichMin = ichMin;
+            }
+
+            m_pscan->Scan();
+
+            if (m_token.tk == tkAsg)
+            {
+                if (!allowInit)
+                {
+                    Error(ERRUnexpectedDefault);
+                }
+                if (pfForInOk && (declarationType == tkLET || declarationType == tkCONST))
+                {
+                    *pfForInOk = FALSE;
+                }
+
+                m_pscan->Scan();
+                pnodeInit = ParseExpr<buildAST>(koplCma, NULL, fAllowIn, FALSE, pNameHint, &nameHintLength);
+                if (buildAST)
+                {
+                    pnodeThis->sxVar.pnodeInit = pnodeInit;
+                    pnodeThis->ichLim = pnodeInit->ichLim;
+
+                    if (pnodeInit->nop == knopFncDecl)
+                    {
+                        pnodeInit->sxFnc.hint = pNameHint;
+                        pnodeInit->sxFnc.hintLength = nameHintLength;
+                    }
+                    else
+                    {
+                        this->CheckArguments(pnodeInit);
+                    }
+                    pNameHint = NULL;
+                }
+
+                //Track var a =, let a= , const a =
+                // This is for FixedFields Constant Heuristics
+                if (((pnodeThis)->sxVar).pnodeInit != nullptr)
+                {
+                    pnodeThis->sxVar.sym->PromoteAssignmentState();
+                }
+            }
+            else if (declarationType == tkCONST /*pnodeThis->nop == knopConstDecl*/ && !singleDefOnly)
+            {
+                Error(ERRUninitializedConst);
+            }
         }
 
         if (singleDefOnly)
@@ -7564,9 +7604,14 @@ ParseNodePtr Parser::ParseCatch()
         m_pscan->Scan(); //catch
         ChkCurTok(tkLParen, ERRnoLparen); //catch(
 
+        bool isPattern = false;
         if (tkID != m_token.tk)
         {
-            IdentifierExpectedError(m_token);
+            isPattern = IsES6DestructuringEnabled() && IsPossiblePatternStart();
+            if (!isPattern)
+            {
+                IdentifierExpectedError(m_token);
+            }
         }
 
         if (buildAST)
@@ -7578,57 +7623,79 @@ ParseNodePtr Parser::ParseCatch()
             *ppnode = NULL;
         }
 
-        if (IsStrictMode())
+        if (buildAST || BindDeferredPidRefs())
         {
-            IdentPtr pid = m_token.GetIdentifier(m_phtbl);
-            if (pid == wellKnownPropertyPids.eval)
+            pnodeCatchScope = StartParseBlock<buildAST>(PnodeBlockType::Regular, isPattern ? ScopeType_CatchParamPattern : ScopeType_Catch);
+        }
+
+        if (isPattern)
+        {
+            AutoInitializeStateDueToPattern autoInitializeStateDueToPattern(this, false/*shouldParseInitializer*/, true/*errorOnInitializer*/);
+            ParseNodePtr pnodePattern = ParseDestructuredLiteral<buildAST>(tkLET, true /*isDecl*/, true /*topLevel*/);
+            if (buildAST)
             {
-                Error(ERREvalUsage);
+                pnode->sxCatch.pnodeParam = CreateParamPatternNode(pnodePattern->ichMin, pnodePattern);
+                Scope *scope = pnodeCatchScope->sxBlock.scope;
+                pnode->sxCatch.scope = scope;
             }
-            else if (pid == wellKnownPropertyPids.arguments)
+        }
+        else
+        {
+            if (IsStrictMode())
             {
-                Error(ERRArgsUsage);
+                IdentPtr pid = m_token.GetIdentifier(m_phtbl);
+                if (pid == wellKnownPropertyPids.eval)
+                {
+                    Error(ERREvalUsage);
+                }
+                else if (pid == wellKnownPropertyPids.arguments)
+                {
+                    Error(ERRArgsUsage);
+                }
             }
+
+            if (buildAST)
+            {
+                pidCatch = m_token.GetIdentifier(m_phtbl);
+                PidRefStack *ref = this->PushPidRef(pidCatch);
+
+                if (!m_scriptContext->GetConfig()->IsBlockScopeEnabled())
+                {
+                    // Strange case: the catch adds a scope for the catch object, but function declarations
+                    // are hoisted out of the catch, so references within a function declaration to "x" do
+                    // not bind to "catch(x)". Extra bookkeeping is required.
+                    CatchPidRefList *list = this->EnsureCatchPidRefList();
+                    CatchPidRef *catchPidRef = list->PrependNode(&m_nodeAllocator);
+                    catchPidRef->pid = pidCatch;
+                    catchPidRef->ref = ref;
+                }
+
+                ParseNodePtr pnodeParam = CreateNameNode(pidCatch);
+                pnodeParam->sxPid.symRef = ref->GetSymRef();
+                pnode->sxCatch.pnodeParam = pnodeParam;
+
+                const wchar_t *name = reinterpret_cast<const wchar_t*>(pidCatch->Psz());
+                int nameLength = pidCatch->Cch();
+                SymbolName const symName(name, nameLength);
+                Symbol *sym = Anew(&m_nodeAllocator, Symbol, symName, pnodeParam, STVariable);
+                sym->SetPid(pidCatch);
+                if (sym == null)
+                {
+                    Error(ERRnoMemory);
+                }
+                Assert(ref->GetSym() == null);
+                ref->SetSym(sym);
+
+                Scope *scope = pnodeCatchScope->sxBlock.scope;
+                scope->AddNewSymbol(sym);
+                pnode->sxCatch.scope = scope;
+            }
+
+            m_pscan->Scan();
         }
 
         if (buildAST)
         {
-            pnodeCatchScope = StartParseBlock<buildAST>(PnodeBlockType::Regular, ScopeType_Catch);
-
-            pidCatch = m_token.GetIdentifier(m_phtbl);
-            PidRefStack *ref = this->PushPidRef(pidCatch);
-
-            if (!m_scriptContext->GetConfig()->IsBlockScopeEnabled())
-            {
-                // Strange case: the catch adds a scope for the catch object, but function declarations
-                // are hoisted out of the catch, so references within a function declaration to "x" do
-                // not bind to "catch(x)". Extra bookkeeping is required.
-                CatchPidRefList *list = this->EnsureCatchPidRefList();
-                CatchPidRef *catchPidRef = list->PrependNode(&m_nodeAllocator);
-                catchPidRef->pid = pidCatch;
-                catchPidRef->ref = ref;
-            }
-
-            ParseNodePtr pnodeParam = CreateNameNode(pidCatch);
-            pnodeParam->sxPid.symRef = ref->GetSymRef();
-            pnode->sxCatch.pnodeParam = pnodeParam;
-
-            const wchar_t *name = reinterpret_cast<const wchar_t*>(pidCatch->Psz());
-            int nameLength = pidCatch->Cch();
-            SymbolName const symName(name, nameLength);
-            Symbol *sym = Anew(&m_nodeAllocator, Symbol, symName, pnodeParam, STVariable);
-            sym->SetPid(pidCatch);
-            if (sym == null)
-            {
-                Error(ERRnoMemory);
-            }
-            Assert(ref->GetSym() == null);
-            ref->SetSym(sym);
-
-            Scope *scope = pnodeCatchScope->sxBlock.scope;
-            scope->AddNewSymbol(sym);
-            pnode->sxCatch.scope = scope;
-
             // Add this catch to the current scope list.
 
             if (m_ppnodeExprScope)
@@ -7651,7 +7718,6 @@ ParseNodePtr Parser::ParseCatch()
             m_ppnodeExprScope = &pnode->sxCatch.pnodeScopes;
             pnode->sxCatch.pnodeScopes = NULL;
         }
-        m_pscan->Scan(); //catch(id
 
         charcount_t ichLim = m_pscan->IchLimTok();
         ChkCurTok(tkRParen, ERRnoRparen); //catch(id[:expr])
@@ -7668,7 +7734,7 @@ ParseNodePtr Parser::ParseCatch()
             pnode->ichLim = ichLim;
         }
 
-        if (pnodeCatchScope)
+        if (pnodeCatchScope != nullptr)
         {
             FinishParseBlock(pnodeCatchScope);
         }
@@ -7910,6 +7976,7 @@ LFunctionStatement:
             }
         }
 
+        RestorePoint startExprOrIdentifier;
         fForInOrOfOkay = TRUE;
         tok = m_token.tk;
         switch (tok)
@@ -7924,11 +7991,18 @@ LFunctionStatement:
                 auto ichMin = m_pscan->IchMinTok();
 
                 m_pscan->Scan();
+                if (IsPossiblePatternStart())
+                {
+                    m_pscan->Capture(&startExprOrIdentifier);
+                }
                 if (this->NextTokenConfirmsLetDecl() && m_token.tk != tkIN)
                 {
                     pnodeT = ParseVariableDeclaration<buildAST>(tkLET, ichMin
                                                                 , /*fAllowIn = */FALSE
-                                                                , /*pfForInOk = */&fForInOrOfOkay);
+                                                                , /*pfForInOk = */&fForInOrOfOkay
+                                                                , /*singleDefOnly*/FALSE
+                                                                , /*allowInit*/TRUE
+                                                                , /*isTopVarParse*/FALSE);
                     break;
                 }
                 m_pscan->SeekTo(parsedLet);
@@ -7945,9 +8019,16 @@ LFunctionStatement:
                 auto ichMin = m_pscan->IchMinTok();
 
                 m_pscan->Scan();
+                if (IsPossiblePatternStart())
+                {
+                    m_pscan->Capture(&startExprOrIdentifier);
+                }
                 pnodeT = ParseVariableDeclaration<buildAST>(tok, ichMin
                                                             , /*fAllowIn = */FALSE
-                                                            , /*pfForInOk = */&fForInOrOfOkay);
+                                                            , /*pfForInOk = */&fForInOrOfOkay
+                                                            , /*singleDefOnly*/FALSE
+                                                            , /*allowInit*/TRUE
+                                                            , /*isTopVarParse*/FALSE);
             }
             break;
         case tkSColon:
@@ -7960,11 +8041,16 @@ LDefaultTokenFor:
                RestorePoint exprStart;
                 tokens beforeToken = tok;
                 m_pscan->Capture(&exprStart);
+                if (IsPossiblePatternStart())
+                {
+                    m_pscan->Capture(&startExprOrIdentifier);
+                }
                 pnodeT = ParseExpr<buildAST>(koplNo, &fForInOrOfOkay, /*fAllowIn = */FALSE);
                 if (IsES6DestructuringEnabled() && pnodeT != nullptr && (beforeToken == tkLBrack || beforeToken == tkLCurly))
                 {
                     m_pscan->SeekTo(exprStart);
-                    ParseDestructuredLiteral<false>(tkNone, false/*isDecl*/, false/*topLevel*/);
+                    ParseDestructuredLiteralWithScopeSave(tkNone, false/*isDecl*/, false /*topLevel*/);
+
                     if (buildAST)
                     {
                         pnodeT = ConvertToPattern(pnodeT);
@@ -7980,6 +8066,14 @@ LDefaultTokenFor:
 
         if (m_token.tk == tkIN || (m_scriptContext->GetConfig()->IsES6IteratorsEnabled() && m_token.tk == tkID && m_token.GetIdentifier(m_phtbl) == wellKnownPropertyPids.of))
         {
+            if (IsES6DestructuringEnabled() && pnodeT != nullptr && pnodeT->nop == knopAsg && pnodeT->sxBin.pnode1->IsPattern())
+            {
+                // This is an error condition - we will rewind to the restore point and find out where the error happend
+                m_pscan->SeekTo(startExprOrIdentifier);
+                AutoInitializeStateDueToPattern autoInitializeStateDueToPattern(this, m_shouldParseInitializer, true/*errorOnInitializer*/);
+                ParseDestructuredLiteral<false>(tkNone, false/*isDecl*/, true/*topLevel*/);
+            }
+
             bool isForOf = (m_token.tk != tkIN);
             Assert(!isForOf || (m_token.tk == tkID && m_token.GetIdentifier(m_phtbl) == wellKnownPropertyPids.of));
 
@@ -10525,11 +10619,28 @@ bool Parser::IsPossibleObjectPatternExpression()
     return isValid;
 }
 
+// This essentially be called for verifying the structure of the current tree with satisfying the destructuring grammer.
+void Parser::ParseDestructuredLiteralWithScopeSave(tokens declarationType, bool isDecl, bool topLevel)
+{
+    // Store the current scope and point the current scope to the some temp scope
+    // so that ParseDestrucuturedLiteral will not make the current scope dirty
+    ParseNodePtr * ppScopeSave = m_ppnodeScope;
+    ParseNodePtr newTempScope = nullptr;
+    m_ppnodeScope = &newTempScope;
+    // REVIEW: anything else we need to save?
+
+    ParseDestructuredLiteral<false>(declarationType, isDecl, topLevel);
+
+    // Restore this back
+    m_ppnodeScope = ppScopeSave;
+
+}
+
 template <bool buildAST>
 ParseNodePtr Parser::ParseDestructuredLiteral(tokens declarationType, bool isDecl, bool topLevel/* = true*/)
 {
     ParseNodePtr pnode = nullptr;
-    Assert(m_token.tk == tkLCurly || m_token.tk == tkLBrack);
+    Assert(IsPossiblePatternStart());
     if (m_token.tk == tkLCurly)
     {
         pnode = ParseDestructuredObjectLiteral<buildAST>(declarationType, isDecl, topLevel);
@@ -10546,15 +10657,29 @@ template <bool buildAST>
 ParseNodePtr Parser::ParseDestructuredInitializer(ParseNodePtr lhsNode, bool isDecl, bool topLevel)
 {
     m_pscan->Scan();
-
-    if (topLevel && m_token.tk != tkAsg
-        // Check for For-in or for-of
-        && !(m_token.tk == tkIN || m_scriptContext->GetConfig()->IsES6IteratorsEnabled() && m_token.tk == tkID && m_token.GetIdentifier(m_phtbl) == wellKnownPropertyPids.of))
+    if (topLevel)
     {
-        Error(ERRDestructInit);
+        if (!m_shouldErrorOnInitializer && m_token.tk != tkAsg)
+        {
+            //eg. var {x};
+            Error(ERRDestructInit);
+        }
+        else if (m_shouldErrorOnInitializer && m_token.tk == tkAsg)
+        {
+            if (isDecl)
+            {
+                // eg. catch([x] = [0])
+                Error(ERRDestructNotInit);
+            }
+            else
+            {
+                // eg. for ([x] = [0] of object)
+                Error(ERRDestructExprNotInit);
+            }
+        }
     }
 
-    if (!isDecl || m_token.tk != tkAsg)
+    if (m_token.tk != tkAsg || !m_shouldParseInitializer)
     {
         return lhsNode;
     }
@@ -10639,7 +10764,7 @@ ParseNodePtr Parser::ParseDestructuredVarDecl(tokens declarationType, bool isDec
         }
     }
 
-    if (m_token.tk == tkLCurly || m_token.tk == tkLBrack)
+    if (IsPossiblePatternStart())
     {
         // Go recursively
         pnodeElem = ParseDestructuredLiteral<buildAST>(declarationType, isDecl, false /*topLevel*/);

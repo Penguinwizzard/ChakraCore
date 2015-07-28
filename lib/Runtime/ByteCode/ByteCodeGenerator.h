@@ -38,7 +38,7 @@ private:
     bool trackEnvDepth;
     bool funcEscapes;
     bool inPrologue;
-    bool inDestructuredArray;
+    bool inDestructuredPattern;
     Parser* parser; // currently active parser (used for AST transformation)
 
     Js::Utf8SourceInfo *m_utf8SourceInfo;
@@ -50,8 +50,8 @@ public:
     // This points to the current function body which can be reused at the time parsing (called due to deffered parsing logic) a subtree.
     Js::FunctionBody * pCurrentFunction;
 
-    bool InDestructuredArray() const { return inDestructuredArray; }
-    void SetInDestructuredArray(bool in) { inDestructuredArray = in; }
+    bool InDestructuredPattern() const { return inDestructuredPattern; }
+    void SetInDestructuredPattern(bool in) { inDestructuredPattern = in; }
 
     bool InPrologue() const { return inPrologue; }
     void SetInPrologue(bool val) { inPrologue = val; }

@@ -176,12 +176,12 @@ void Visit(ParseNode *pnode, ByteCodeGenerator* byteCodeGenerator, PrefixFn pref
 
     case knopAsg:
         if (byteCodeGenerator->IsES6DestructuringEnabled()
-            && pnode->sxBin.pnode1->nop == knopArrayPattern
-            && byteCodeGenerator->InDestructuredArray() == false)
+            && pnode->sxBin.pnode1->IsPattern()
+            && !byteCodeGenerator->InDestructuredPattern())
         {
-            byteCodeGenerator->SetInDestructuredArray(true);
+            byteCodeGenerator->SetInDestructuredPattern(true);
             Visit(pnode->sxBin.pnode1, byteCodeGenerator, prefix, postfix);
-            byteCodeGenerator->SetInDestructuredArray(false);
+            byteCodeGenerator->SetInDestructuredPattern(false);
         }
         else
         {
@@ -636,7 +636,7 @@ ByteCodeGenerator::ByteCodeGenerator(Js::ScriptContext* scriptContext, Js::Scope
     dynamicScopeCount(0),
     isBinding(false),
     propertyRecords(nullptr),
-    inDestructuredArray(false)
+    inDestructuredPattern(false)
 {
     m_writer.Create();
 }
@@ -1357,7 +1357,7 @@ void ByteCodeGenerator::StartBindCatch(ParseNode *pnode)
     Assert(scope);
     if (scope == null || !UseParserBindings())
     {
-        scope = Anew(alloc, Scope, alloc, ScopeType_Catch, true);
+        scope = Anew(alloc, Scope, alloc, (pnode->sxCatch.pnodeParam->nop == knopParamPattern) ? ScopeType_CatchParamPattern : ScopeType_Catch, true);
         pnode->sxCatch.scope = scope;
     }
     Assert(currentScope);
@@ -2895,6 +2895,13 @@ void VisitNestedScopes(ParseNode* pnodeScopeList, ParseNode* pnodeParent, ByteCo
             PreVisitCatch(pnodeScope, byteCodeGenerator);
 
             Visit(pnodeScope->sxCatch.pnodeParam, byteCodeGenerator, prefix, postfix);
+            if (pnodeScope->sxCatch.pnodeParam->nop == knopParamPattern)
+            {
+                if (pnodeScope->sxCatch.pnodeParam->sxParamPattern.location == Js::Constants::NoRegister)
+                {
+                    pnodeScope->sxCatch.pnodeParam->sxParamPattern.location = byteCodeGenerator->NextVarRegister();
+                }
+            }
             pnodeParent->sxFnc.funcInfo->OnStartVisitScope(pnodeScope->sxCatch.scope);
             VisitNestedScopes(pnodeScope->sxCatch.pnodeScopes, pnodeParent, byteCodeGenerator, prefix, postfix, pIndex);
 
@@ -3054,23 +3061,43 @@ void PreVisitCatch(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
 {
     // Push the catch scope and add the catch expression to it.
     byteCodeGenerator->StartBindCatch(pnode);
-    Symbol *sym;
-    if (!byteCodeGenerator->UseParserBindings())
+    if (pnode->sxCatch.pnodeParam->nop == knopParamPattern)
     {
-        sym = byteCodeGenerator->AddSymbolToScope(pnode->sxCatch.scope, reinterpret_cast<const wchar_t*>(pnode->sxCatch.pnodeParam->sxPid.pid->Psz()), pnode->sxCatch.pnodeParam->sxPid.pid->Cch(), pnode->sxCatch.pnodeParam, STVariable);
+        Parser::MapBindIdentifier(pnode->sxCatch.pnodeParam->sxParamPattern.pnode1, [&](ParseNodePtr item) {
+            Symbol *sym = item->sxVar.sym;
+            if (!byteCodeGenerator->UseParserBindings())
+            {
+                sym = byteCodeGenerator->AddSymbolToScope(pnode->sxCatch.scope, reinterpret_cast<const wchar_t*>(item->sxVar.pid->Psz()), item->sxVar.pid->Cch(), item, STVariable);
+                item->sxVar.sym = sym;
+            }
+
+            if (byteCodeGenerator->Trace())
+            {
+                Output::Print(L"current context has declared catch var %s of type %s\n",
+                    item->sxVar.pid->Psz(), sym->GetSymbolTypeName());
+            }
+        });
     }
     else
     {
-        sym = *pnode->sxCatch.pnodeParam->sxPid.symRef;
+        Symbol *sym;
+        if (!byteCodeGenerator->UseParserBindings())
+        {
+            sym = byteCodeGenerator->AddSymbolToScope(pnode->sxCatch.scope, reinterpret_cast<const wchar_t*>(pnode->sxCatch.pnodeParam->sxPid.pid->Psz()), pnode->sxCatch.pnodeParam->sxPid.pid->Cch(), pnode->sxCatch.pnodeParam, STVariable);
+        }
+        else
+        {
+            sym = *pnode->sxCatch.pnodeParam->sxPid.symRef;
+        }
+        Assert(sym->GetScope() == pnode->sxCatch.scope);
+        if (byteCodeGenerator->Trace())
+        {
+            Output::Print(L"current context has declared catch var %s of type %s\n",
+                pnode->sxCatch.pnodeParam->sxPid.pid->Psz(), sym->GetSymbolTypeName());
+        }
+        sym->SetIsCatch(true);
+        pnode->sxCatch.pnodeParam->sxPid.sym = sym;
     }
-    Assert(sym->GetScope() == pnode->sxCatch.scope);
-    if (byteCodeGenerator->Trace())
-    {
-        Output::Print(L"current context has declared catch var %s of type %s\n",
-            pnode->sxCatch.pnodeParam->sxPid.pid->Psz(), sym->GetSymbolTypeName());
-    }
-    sym->SetIsCatch(true);
-    pnode->sxCatch.pnodeParam->sxPid.sym = sym;
     // This call will actually add the nested function symbols to the enclosing function scope (which is what we want).
     AddFunctionsToScope(pnode->sxCatch.pnodeScopes, byteCodeGenerator);
 }
@@ -4068,6 +4095,7 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
         break;
 
     case knopParamPattern:
+        byteCodeGenerator->AssignUndefinedConstRegister();
         CheckMaybeEscapedUse(pnode->sxParamPattern.pnode1, byteCodeGenerator);
         break;
 
@@ -4102,7 +4130,7 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
         }
         break;
     case knopEllipsis:
-        if (byteCodeGenerator->InDestructuredArray())
+        if (byteCodeGenerator->InDestructuredPattern())
         {
             // Get a register for the rest array counter.
             pnode->location = byteCodeGenerator->NextVarRegister();

@@ -3901,13 +3901,16 @@ namespace Js
     // Get the sibling for the current debugger scope.
     DebuggerScope * DebuggerScope::GetSiblingScope(RegSlot location, FunctionBody *functionBody)
     {
+        bool isBlockSlotOrObject = scopeType == Js::DiagExtraScopesType::DiagBlockScopeInSlot || scopeType == Js::DiagExtraScopesType::DiagBlockScopeInObject;
+        bool isCatchSlotOrObject = scopeType == Js::DiagExtraScopesType::DiagCatchScopeInSlot || scopeType == Js::DiagExtraScopesType::DiagCatchScopeInObject;
+
         // This is expected to be called only when the current scope is either slot or activation object.
-        Assert(scopeType == Js::DiagExtraScopesType::DiagBlockScopeInSlot || scopeType == Js::DiagExtraScopesType::DiagBlockScopeInObject);
+        Assert(isBlockSlotOrObject || isCatchSlotOrObject);
 
         if (siblingScope == nullptr)
         {
             // If the sibling isn't there, attempt to retrieve it if we're reparsing or create it anew if this is the first parse.
-            siblingScope = functionBody->RecordStartScopeObject(Js::DiagExtraScopesType::DiagBlockScopeDirect, GetStart(), location);
+            siblingScope = functionBody->RecordStartScopeObject(isBlockSlotOrObject ? Js::DiagExtraScopesType::DiagBlockScopeDirect : Js::DiagExtraScopesType::DiagCatchScopeDirect, GetStart(), location);
         }
 
         return siblingScope;

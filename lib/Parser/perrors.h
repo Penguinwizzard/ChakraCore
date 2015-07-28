@@ -74,7 +74,7 @@ LSC_ERROR_MSG( 1065, ERRRestLastArg, "The rest parameter must be the last parame
 LSC_ERROR_MSG( 1066, ERRRestWithDefault, "The rest parameter cannot have a default intializer.")
 LSC_ERROR_MSG( 1067, ERRUnexpectedEllipsis, "Unexpected ... operator")
 
-LSC_ERROR_MSG( 1068, ERRDestructInit, "Destructuring expressions must have an initializer")
+LSC_ERROR_MSG( 1068, ERRDestructInit, "Destructuring declarations must have an initializer")
 LSC_ERROR_MSG( 1069, ERRDestructRestLast, "Destructuring rest variables must be in the last position of the expression")
 LSC_ERROR_MSG( 1070, ERRUnexpectedDefault, "Unexpected default initializer")
 LSC_ERROR_MSG( 1071, ERRDestructNoOper, "Unexpected operator in destructuring expression")
@@ -84,3 +84,5 @@ LSC_ERROR_MSG( 1073, ERRYieldInTryCatchOrFinally, "'yield' expressions are not a
 LSC_ERROR_MSG( 1074, ERRConstructorCannotBeGenerator, "Class constructor may not be a generator")
 LSC_ERROR_MSG( 1075, ERRInvalidAssignmentTarget, "Invalid destructuring assignment target")
 LSC_ERROR_MSG( 1076, ERRFormalSame, "Duplicate formal parameter names not allowed in this context")
+LSC_ERROR_MSG( 1077, ERRDestructNotInit, "Destructuring declarations cannot have an initializer")
+LSC_ERROR_MSG( 1078, ERRDestructExprNotInit, "Destructuring expression cannot have an initializer")

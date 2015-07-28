@@ -616,7 +616,7 @@ struct ParseNode
         PnVar           sxVar;          // variable declaration
         PnWhile         sxWhile;        // while and do-while loops
         PnWith          sxWith;         // with
-        PnParamPattern  sxParamPattern; // Destructure pattern for function parameter
+        PnParamPattern  sxParamPattern; // Destructure pattern for function/catch parameter
     };
 
     IdentPtr name()
