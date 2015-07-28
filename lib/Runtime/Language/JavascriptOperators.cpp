@@ -9206,34 +9206,45 @@ CommonNumber:
         }
     }
 
+    // SpeciesConstructor abstract operation as described in ES6.0 Section 7.3.20
     Var JavascriptOperators::SpeciesConstructor(RecyclableObject* object, Var defaultConstructor, ScriptContext* scriptContext)
     {
+        //1.Assert: Type(O) is Object.
         Assert(JavascriptOperators::IsObject(object));
+
+        //2.Let C be Get(O, "constructor").
+        //3.ReturnIfAbrupt(C).
         Var constructor = JavascriptOperators::GetProperty(object, PropertyIds::constructor, scriptContext);
 
         if (scriptContext->GetConfig()->IsES6SpeciesEnabled())
         {
-            if (constructor == scriptContext->GetLibrary()->GetUndefined())
+            //4.If C is undefined, return defaultConstructor.
+            if (JavascriptOperators::IsUndefinedObject(constructor))
             {
                 return defaultConstructor;
             }
+            //5.If Type(C) is not Object, throw a TypeError exception.
             if (!JavascriptOperators::IsObject(constructor))
             {
                 JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedObject, L"[constructor]");
             }
+            //6.Let S be Get(C, @@species).
+            //7.ReturnIfAbrupt(S).
             Var species = nullptr;
-            if (!JavascriptOperators::GetProperty((RecyclableObject*)constructor, PropertyIds::_symbolSpecies, &species, scriptContext)
-                || species == scriptContext->GetLibrary()->GetUndefined()
-                || species == scriptContext->GetLibrary()->GetNull())
+            if (!JavascriptOperators::GetProperty(RecyclableObject::FromVar(constructor), PropertyIds::_symbolSpecies, &species, scriptContext)
+                || JavascriptOperators::IsUndefinedOrNullType(JavascriptOperators::GetTypeId(species)))
             {
+                //8.If S is either undefined or null, return defaultConstructor.
                 return defaultConstructor;
             }
             constructor = species;
         }
-        if (!JavascriptOperators::IsConstructor(constructor))
+        //9.If IsConstructor(S) is true, return S.
+        if (JavascriptOperators::IsConstructor(constructor))
         {
-            JavascriptError::ThrowTypeError(scriptContext, JSERR_NotAConstructor, L"[@@species]");
+            return constructor;
         }
-        return constructor;
+        //10.Throw a TypeError exception.
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_NotAConstructor, L"[@@species]");
     }
 } // namespace Js

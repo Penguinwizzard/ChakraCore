@@ -580,7 +580,7 @@ namespace Js
             Js::ScriptContext* scriptContext);
 
         static Var SpeciesConstructor(RecyclableObject* object, Var defaultConstructor, ScriptContext* scriptContext);
-        static Var GetSpecies(Var constructor, ScriptContext* scriptContext);
+        static Var GetSpecies(RecyclableObject* constructor, ScriptContext* scriptContext);
 
     private:
         static BOOL RelationalComparsionHelper(Var aLeft, Var aRight, ScriptContext* scriptContext, bool leftFirst, bool undefinedAs);

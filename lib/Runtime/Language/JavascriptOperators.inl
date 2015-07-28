@@ -670,23 +670,22 @@ namespace Js
         return false;
     }
 
-    // static
-    inline Var JavascriptOperators::GetSpecies(Var constructor, ScriptContext* scriptContext)
+    // Helper to fetch @@species from a constructor object
+    inline Var JavascriptOperators::GetSpecies(RecyclableObject* constructor, ScriptContext* scriptContext)
     {
         if (scriptContext->GetConfig()->IsES6SpeciesEnabled())
         {
-            if (!JavascriptOperators::IsObject(constructor))
-            {
-                JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedFunction);
-            }
             Var species = nullptr;
-            if (JavascriptOperators::GetProperty((RecyclableObject*)constructor, PropertyIds::_symbolSpecies, &species, scriptContext)
-                && species != scriptContext->GetLibrary()->GetUndefined()
-                && species != scriptContext->GetLibrary()->GetNull())
+
+            // Let S be Get(C, @@species)
+            if (JavascriptOperators::GetProperty(constructor, PropertyIds::_symbolSpecies, &species, scriptContext)
+                && !JavascriptOperators::IsUndefinedOrNullType(JavascriptOperators::GetTypeId(species)))
             {
-                constructor = species;
+                // If S is neither undefined nor null, let C be S
+                return species;
             }
         }
+
         return constructor;
     }
 }

@@ -231,9 +231,9 @@ namespace Js
         {
         }
 
-        virtual void Mark(Recycler *recycler) override 
-        { 
-            AssertMsg(false, "Mark called on object that isnt TrackableObject"); 
+        virtual void Mark(Recycler *recycler) override
+        {
+            AssertMsg(false, "Mark called on object that isnt TrackableObject");
         }
 
     private:
@@ -254,7 +254,7 @@ namespace Js
         {
         public:
             static FunctionInfo NewInstance;
-            
+
             static FunctionInfo All;
             static FunctionInfo Catch;
             static FunctionInfo Race;
@@ -301,11 +301,9 @@ namespace Js
         virtual BOOL GetDiagValueString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext) override;
         virtual BOOL GetDiagTypeString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext) override;
 
-        RecyclableObject* GetConstructor();
         JavascriptPromiseReactionList* GetResolveReactions();
         JavascriptPromiseReactionList* GetRejectReactions();
 
-        static bool IsPromise(Var promise);
         static JavascriptPromiseCapability* NewPromiseCapability(Var constructor, ScriptContext* scriptContext);
         static JavascriptPromiseCapability* CreatePromiseCapabilityRecord(Var promise, RecyclableObject* constructor, ScriptContext* scriptContext);
         static bool UpdatePromiseFromPotentialThenable(Var resolution, JavascriptPromiseCapability* promiseCapability, ScriptContext* scriptContext);
@@ -315,17 +313,16 @@ namespace Js
         static void InitializePromise(JavascriptPromise* promise, JavascriptPromiseResolveOrRejectFunction** resolve, JavascriptPromiseResolveOrRejectFunction** reject, ScriptContext* scriptContext);
 
     protected:
-        enum PromiseStatus 
-        { 
-            PromiseStatusCode_Undefined, 
-            PromiseStatusCode_Unresolved, 
-            PromiseStatusCode_HasResolution, 
-            PromiseStatusCode_HasRejection 
+        enum PromiseStatus
+        {
+            PromiseStatusCode_Undefined,
+            PromiseStatusCode_Unresolved,
+            PromiseStatusCode_HasResolution,
+            PromiseStatusCode_HasRejection
         };
 
         PromiseStatus status;
         Var result;
-        RecyclableObject* constructor;
         JavascriptPromiseReactionList* resolveReactions;
         JavascriptPromiseReactionList* rejectReactions;
     };
