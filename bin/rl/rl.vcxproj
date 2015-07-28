@@ -7,8 +7,6 @@
     <ProjectGuid>{80A70F57-0F89-458F-AFD3-CE2159EB9BB1}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
-  <Import Project="$(BuildConfigPropsPath)Chakra.Build.Default.props" />
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <BuildForCoreSystem>true</BuildForCoreSystem>
@@ -17,12 +15,10 @@
          does in a sources build so for now disable oacr directly -->
     <BUILD_OACR Condition="'$(BuildingWithBuildExe)'=='true'">0</BUILD_OACR>
   </PropertyGroup>
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.Default.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <Import Project="$(BuildConfigPropsPath)Chakra.Build.props" />
-  <ImportGroup Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
   </PropertyGroup>

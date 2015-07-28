@@ -2,7 +2,7 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <OptimiziedBuild />
-    <OptimiziedBuild Condition="'$(Configuration)'=='fre' or '$(Configuration)'=='fretest'">true</OptimiziedBuild>
+    <OptimiziedBuild Condition="'$(Configuration)'=='Release' or '$(Configuration)'=='Test'">true</OptimiziedBuild>
   </PropertyGroup>
   <PropertyGroup Label="Configuration">
     <CharacterSet>Unicode</CharacterSet>

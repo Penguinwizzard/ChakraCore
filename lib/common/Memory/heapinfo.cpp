@@ -304,7 +304,7 @@ HRESULT HeapInfo::ValidPointersMap<MediumAllocationBlockAttributes>::GenerateVal
 
     for (unsigned i = 0; i < HeapConstants::MediumBucketCount; ++i)
     {
-        IfErrorGotoCleanup(fwprintf(file, L"    // Bucket: %d, Size: %d\n", i, HeapConstants::MaxSmallObjectSize + ((i + 1) * MediumAllocationBlockAttributes::BucketGranularity)));
+        IfErrorGotoCleanup(fwprintf(file, L"    // Bucket: %d, Size: %d\n", i, (int)(HeapConstants::MaxSmallObjectSize + ((i + 1) * MediumAllocationBlockAttributes::BucketGranularity))));
         IfErrorGotoCleanup(fwprintf(file, L"    {\n"));
 
         for (unsigned j = 0; j < MediumAllocationBlockAttributes::PageCount; ++j)

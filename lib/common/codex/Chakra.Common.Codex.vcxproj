@@ -9,12 +9,12 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{1876E800-AD77-48C4-A2F7-E5265F24AC38}</ProjectGuid>
-  </PropertyGroup>
-  <Import Project="$(BuildConfigPropsPath)Chakra.Build.Default.props" />
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  </PropertyGroup>  
   <PropertyGroup Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
   </PropertyGroup>
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.Default.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <Import Project="$(BuildConfigPropsPath)Chakra.Build.Props" />
   <ImportGroup Label="PropertySheets">
