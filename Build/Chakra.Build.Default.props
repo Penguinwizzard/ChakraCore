@@ -17,6 +17,9 @@
     <PlatformPathNameAlt>$(Platform)</PlatformPathNameAlt>
     <PlatformPathNameAlt Condition="'$(Platform)'=='Win32'">i386</PlatformPathNameAlt>
     <PlatformPathNameAlt Condition="'$(Platform)'=='x64'">amd64</PlatformPathNameAlt>
+
+    <!-- Always use Platform SDK for core builds -->
+    <EventManifestXmlPath>$(WindowsSDK80Path)Include\um</EventManifestXmlPath>
   </PropertyGroup>
   <!-- Output Path -->
   <PropertyGroup>
