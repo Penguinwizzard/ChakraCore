@@ -131,7 +131,7 @@ namespace Js
         }
 
         BoundFunction *boundFunction = (BoundFunction *) function;
-        RecyclableObject* actualFunction = boundFunction->targetFunction;
+        Var targetFunction = boundFunction->targetFunction;
 
         //
         // var o = new boundFunction()
@@ -140,7 +140,16 @@ namespace Js
         Var newVarInstance = null;
         if (callInfo.Flags & CallFlags_New)
         {
-            args.Values[0] = newVarInstance = JavascriptOperators::NewScObjectNoCtor(actualFunction, scriptContext);
+          if (JavascriptProxy::Is(targetFunction))
+          {
+            JavascriptProxy* proxy = JavascriptProxy::FromVar(targetFunction);
+            Arguments proxyArgs(CallInfo(CallFlags_New, 1), &targetFunction);
+            args.Values[0] = newVarInstance = proxy->ConstructorTrap(proxyArgs, scriptContext, 0);
+          }
+          else 
+          {
+            args.Values[0] = newVarInstance = JavascriptOperators::NewScObjectNoCtor(targetFunction, scriptContext);
+          }
         }
 
         Js::Arguments actualArgs = args;
@@ -195,6 +204,7 @@ namespace Js
             }
         }
 
+        RecyclableObject* actualFunction = RecyclableObject::FromVar(targetFunction);
         Var aReturnValue = JavascriptFunction::CallFunction<true>(actualFunction, actualFunction->GetEntryPoint(), actualArgs);
 
         //

@@ -1888,17 +1888,25 @@ namespace Js
         if (nullptr == callMethod)
         {
             // in [[construct]] case, we don't need to check if the function is a constructor: the function should throw there.
-            if (args.Info.Flags & CallFlags_New)
-            {
-                if (!JavascriptOperators::IsConstructor(proxy->target))
-                {
-                    JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NeedFunction, L"construct");
-                }
-                Var newThisObject = JavascriptOperators::NewScObjectNoCtor(proxy->target, scriptContext);
-                args.Values[0] = newThisObject;
-            }
+          Var newThisObject = nullptr;
+          if (args.Info.Flags & CallFlags_New)
+          {
+              if (!JavascriptOperators::IsConstructor(proxy->target))
+              {
+                  JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NeedFunction, L"construct");
+              }
+              newThisObject = JavascriptOperators::NewScObjectNoCtor(proxy->target, scriptContext);
+              args.Values[0] = newThisObject;
+          }
 
-            return JavascriptFunction::CallFunction<true>(proxy->target, proxy->target->GetEntryPoint(), args);
+            Var aReturnValue = JavascriptFunction::CallFunction<true>(proxy->target, proxy->target->GetEntryPoint(), args);
+            // If this is constructor call, return the actual object instead of function result
+            if ((callInfo.Flags & CallFlags_New) && !JavascriptOperators::IsObject(aReturnValue))
+            {
+                aReturnValue = newThisObject;
+            }
+            return aReturnValue;
+
         }
         JavascriptArray* argList = scriptContext->GetLibrary()->CreateArray(callInfo.Count - 1);
         for (uint i = 1; i < callInfo.Count; i++)

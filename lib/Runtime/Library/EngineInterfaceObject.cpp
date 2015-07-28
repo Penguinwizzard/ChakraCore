@@ -533,9 +533,15 @@ namespace Js
             // Mark we are profiling library code already, so that any initialization library code called here won't be reported to profiler
             AutoProfilingUserCode autoProfilingUserCode(scriptContext->GetThreadContext(), /*isProfilingUserCode*/false);
 
+            
             Js::Var args[] = { scriptContext->GetLibrary()->GetUndefined(), this };
             Js::CallInfo callInfo(Js::CallFlags_Value, _countof(args));
+
+            // Clear disable implict call bit as initialization code doesn't have any side effect
+            Js::ImplicitCallFlags saveImplicitCallFlags = scriptContext->GetThreadContext()->GetImplicitCallFlags();
+            scriptContext->GetThreadContext()->ClearDisableImplicitFlags();
             JavascriptFunction::CallRootFunctionInScript(function, Js::Arguments(callInfo, args));
+            scriptContext->GetThreadContext()->SetImplicitCallFlags((Js::ImplicitCallFlags)(saveImplicitCallFlags));
 
             //Delete prototypes on functions
             deletePrototypePropertyHelper(scriptContext, intlObject, Js::PropertyIds::Collator, Js::PropertyIds::compare);
