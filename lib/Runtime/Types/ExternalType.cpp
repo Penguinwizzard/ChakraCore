@@ -374,7 +374,7 @@ namespace Js
 
     ExternalType::ExternalType(ScriptContext* scriptContext, TypeId typeId, RecyclableObject* prototype, JavascriptMethod entryPoint, 
         DynamicTypeHandler * typeHandler, bool isLocked, bool isShared, ITypeOperations * operations, PropertyId nameId) 
-        : DynamicType(scriptContext, typeId, prototype, entryPoint, typeHandler, isLocked, isShared), nameId(nameId), operations(operations)
+        : DynamicType(scriptContext, typeId, prototype, entryPoint, typeHandler, isLocked, isShared), nameId(nameId), operations(operations), hasInheritedTypeIds(false)
     {
         this->flags |= TypeFlagMask_External | TypeFlagMask_CanHaveInterceptors;
         Initialize(entryPoint);
@@ -442,6 +442,41 @@ namespace Js
         targetScriptContext->VerifyAliveWithHostContext(!dynamicObject->IsExternal(), 
             ThreadContext::GetContextForCurrentThread()->GetPreviousHostScriptContext());
         return CrossSite::CommonThunk(recyclableObject, ExternalType::ExternalEntryThunk, args);
+    }
+
+    ExternalTypeWithInheritedTypeIds::ExternalTypeWithInheritedTypeIds(ExternalType * type)
+        : ExternalType(type)
+    {
+        if (ExternalTypeWithInheritedTypeIds::Is(type))
+        {
+            inheritedTypeIdsCount = ((ExternalTypeWithInheritedTypeIds*)type)->inheritedTypeIdsCount;
+            inheritedTypeIds = ((ExternalTypeWithInheritedTypeIds*)type)->inheritedTypeIds;
+        }
+    }
+
+    ExternalTypeWithInheritedTypeIds::ExternalTypeWithInheritedTypeIds(ScriptContext* scriptContext, TypeId typeId, RecyclableObject* prototype, JavascriptMethod entryPoint,
+        DynamicTypeHandler * typeHandler, bool isLocked, bool isShared, ITypeOperations * operations, PropertyId nameId, const JavascriptTypeId* inheritedTypeIds, UINT inheritedTypeIdsCount)
+        : ExternalType(scriptContext, typeId, prototype, entryPoint, typeHandler, isLocked, isShared, operations, nameId), 
+            inheritedTypeIdsCount(inheritedTypeIdsCount), inheritedTypeIds(inheritedTypeIds)
+    {
+        this->hasInheritedTypeIds = true;
+    }
+
+    bool ExternalTypeWithInheritedTypeIds::InstanceOf(int typeId)
+    {
+        Assert(this->typeId != typeId); // this should have been checked in JavascriptTypedObjectSlotAccessorFunction::InstanceOf
+        if (inheritedTypeIds && ExternalTypeWithInheritedTypeIds::Is(this))
+        {
+            //TODO: check the strategy to get best perf, like binary search, reverse direction search?
+            for (UINT i = 0; i < inheritedTypeIdsCount; i++)
+            {
+                if (inheritedTypeIds[i] == typeId)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
 }

@@ -7,6 +7,8 @@ interface ITypeOperations;
 class JavascriptDispatch;
 // forward declcaration from edgescriptdirect.h as we don't want to include it in library.
 
+typedef int JavascriptTypeId;
+
 namespace Js
 {
     class ExternalType : public DynamicType
@@ -14,10 +16,12 @@ namespace Js
         friend class ExternalObject;
     protected:
         PropertyId nameId;
+        bool hasInheritedTypeIds:1; // put this field here to prevent allocating on higher bucket on amd64
         ITypeOperations * operations;
         JavascriptMethod nativeMethod;
 
-        ExternalType(ExternalType * type) : DynamicType(type),  nameId(type->nameId), operations(type->operations), nativeMethod(type->nativeMethod) {}
+        ExternalType(ExternalType * type) : DynamicType(type), nameId(type->nameId), operations(type->operations),
+            nativeMethod(type->nativeMethod), hasInheritedTypeIds(type->hasInheritedTypeIds){}
         ExternalType(ScriptContext* scriptContext, TypeId typeId, RecyclableObject* prototype, JavascriptMethod entryPoint,
             DynamicTypeHandler * typeHandler, bool isLocked, bool isShared, ITypeOperations * operations, PropertyId nameId);
     public:
@@ -25,6 +29,8 @@ namespace Js
             DynamicTypeHandler * typeHandler, bool isLocked, bool isShared, PropertyId nameId);
         PropertyId GetNameId() const { return nameId; }
         ITypeOperations * GetTypeOperations() { return operations; }
+
+        bool HasInheritedTypeIds(){ return hasInheritedTypeIds; }
 
         static size_t GetOffsetOfOperations() { return offsetof(ExternalType, operations); }
 
@@ -34,6 +40,20 @@ namespace Js
         void Initialize(JavascriptMethod entryPoint);
     };
     AUTO_REGISTER_RECYCLER_OBJECT_DUMPER(ExternalType, &RecyclableObject::DumpObjectFunction);
+
+
+    class ExternalTypeWithInheritedTypeIds : public ExternalType
+    {
+    public:
+        ExternalTypeWithInheritedTypeIds(ExternalType * type);
+        ExternalTypeWithInheritedTypeIds(ScriptContext* scriptContext, TypeId typeId, RecyclableObject* prototype, JavascriptMethod entryPoint,
+            DynamicTypeHandler * typeHandler, bool isLocked, bool isShared, ITypeOperations * operations, PropertyId nameId, const JavascriptTypeId* inheritedTypeIds, UINT inheritedTypeIdsCount);
+        bool InstanceOf(int typeId);
+        static bool Is(Type* type){ return type->IsExternal() && ((ExternalType*)type)->HasInheritedTypeIds(); }
+    protected:
+        UINT           inheritedTypeIdsCount;
+        const JavascriptTypeId* inheritedTypeIds;
+    };
 
     class ExternalObject : public DynamicObject
     {

@@ -29,11 +29,25 @@ namespace Js
 
     void JavascriptTypedObjectSlotAccessorFunction::ValidateThisInstance(Js::Var thisObj)
     {
-        Js::TypeId typeId = Js::JavascriptOperators::GetTypeId(thisObj);
-        if (typeId != GetAllowedTypeId())
+        if (!InstanceOf(thisObj))
         {
             Js::JavascriptError::ThrowTypeError(GetType()->GetScriptContext(), JSERR_FunctionArgument_NeedObject, L"DOM object");
         }
+    }
+
+    bool JavascriptTypedObjectSlotAccessorFunction::InstanceOf(Var thisObj)
+    {
+        int allowedTypeId = GetAllowedTypeId();
+        if (Js::JavascriptOperators::GetTypeId(thisObj) == allowedTypeId)
+        {
+            return true;
+        }
+        Type* type = RecyclableObject::FromVar(thisObj)->GetType();
+        if (ExternalTypeWithInheritedTypeIds::Is(type))
+        {
+            return ((Js::ExternalTypeWithInheritedTypeIds*)type)->InstanceOf(allowedTypeId);
+        }
+        return false;
     }
 
     JavascriptTypedObjectSlotAccessorFunction* JavascriptTypedObjectSlotAccessorFunction::FromVar(Var instance)

@@ -17,6 +17,7 @@ namespace Js
 
         int GetAllowedTypeId() const {return allowedTypeId; }
         void ValidateThisInstance(Var thisObject);
+        bool InstanceOf(Var thisObj);
 
         static JavascriptTypedObjectSlotAccessorFunction* FromVar(Var instance);
         static bool Is(Var instance);
