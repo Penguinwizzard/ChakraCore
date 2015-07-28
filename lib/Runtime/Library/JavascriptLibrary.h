@@ -756,8 +756,8 @@ namespace Js
 #endif
         JavascriptNumber* CreateNumber(double value, RecyclerJavascriptNumberAllocator * numberAllocator);
         JavascriptGeneratorFunction* CreateGeneratorFunction(JavascriptMethod entryPoint, GeneratorVirtualScriptFunction* scriptFunction);
-        JavascriptExternalFunction* CreateExternalFunction(JavascriptMethod entryPointer, PropertyId nameId, Var signature);
-        JavascriptExternalFunction* CreateExternalFunction(JavascriptMethod entryPointer, Var nameId, Var signature);
+        JavascriptExternalFunction* CreateExternalFunction(JavascriptMethod entryPointer, PropertyId nameId, Var signature, JavascriptTypeId prototypeTypeId, UINT64 flags);
+        JavascriptExternalFunction* CreateExternalFunction(JavascriptMethod entryPointer, Var nameId, Var signature, JavascriptTypeId prototypeTypeId, UINT64 flags);
         inline JavascriptExternalFunction* CreateStdCallExternalFunction(StdCallJavascriptMethod entryPointer, PropertyId nameId, void *callbackState);
         inline JavascriptExternalFunction* CreateStdCallExternalFunction(StdCallJavascriptMethod entryPointer, Var nameId, void *callbackState);
         inline JavascriptWinRTFunction* CreateWinRTFunction(JavascriptMethod entryPoint, PropertyId nameId, Var signature, bool fConstructor);

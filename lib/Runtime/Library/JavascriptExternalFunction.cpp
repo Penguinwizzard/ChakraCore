@@ -15,31 +15,36 @@ namespace Js
     // . wrap the result value with potential cross site access
 
     JavascriptExternalFunction::JavascriptExternalFunction(JavascriptMethod entryPoint, DynamicType* type)
-        : RuntimeFunction(type, &EntryInfo::ExternalFunctionThunk), nativeMethod(entryPoint), signature(nullptr), callbackState(nullptr), initMethod(nullptr), oneBit(1), typeSlots(0), hasAccessors(0), callCount(0)
+        : RuntimeFunction(type, &EntryInfo::ExternalFunctionThunk), nativeMethod(entryPoint), signature(nullptr), callbackState(nullptr), initMethod(nullptr), 
+        oneBit(1), typeSlots(0), hasAccessors(0), callCount(0), prototypeTypeId(-1), flags(0)
     {
         DebugOnly(VerifyEntryPoint());
     }
 
     JavascriptExternalFunction::JavascriptExternalFunction(JavascriptMethod entryPoint, DynamicType* type, InitializeMethod method, unsigned short deferredSlotCount, bool accessors)
-        : RuntimeFunction(type, &EntryInfo::ExternalFunctionThunk), nativeMethod(entryPoint), signature(nullptr), callbackState(nullptr), initMethod(method), oneBit(1), typeSlots(deferredSlotCount), hasAccessors(accessors), callCount(0)
+        : RuntimeFunction(type, &EntryInfo::ExternalFunctionThunk), nativeMethod(entryPoint), signature(nullptr), callbackState(nullptr), initMethod(method), 
+        oneBit(1), typeSlots(deferredSlotCount), hasAccessors(accessors), callCount(0), prototypeTypeId(-1), flags(0)
     {
         DebugOnly(VerifyEntryPoint());
     }
 
     JavascriptExternalFunction::JavascriptExternalFunction(JavascriptExternalFunction* entryPoint, DynamicType* type)
-        : RuntimeFunction(type, &EntryInfo::WrappedFunctionThunk), wrappedMethod(entryPoint), callbackState(nullptr), initMethod(nullptr), oneBit(1), typeSlots(0), hasAccessors(0), callCount(0)
+        : RuntimeFunction(type, &EntryInfo::WrappedFunctionThunk), wrappedMethod(entryPoint), callbackState(nullptr), initMethod(nullptr), 
+        oneBit(1), typeSlots(0), hasAccessors(0), callCount(0), prototypeTypeId(-1), flags(0)
     {
         DebugOnly(VerifyEntryPoint());
     }
 
     JavascriptExternalFunction::JavascriptExternalFunction(StdCallJavascriptMethod entryPoint, DynamicType* type)
-        : RuntimeFunction(type, &EntryInfo::StdCallExternalFunctionThunk), stdCallNativeMethod(entryPoint), signature(nullptr), callbackState(nullptr), initMethod(nullptr), oneBit(1), typeSlots(0), hasAccessors(0), callCount(0)
+        : RuntimeFunction(type, &EntryInfo::StdCallExternalFunctionThunk), stdCallNativeMethod(entryPoint), signature(nullptr), callbackState(nullptr), initMethod(nullptr), 
+        oneBit(1), typeSlots(0), hasAccessors(0), callCount(0), prototypeTypeId(-1), flags(0)
     {
         DebugOnly(VerifyEntryPoint());
     }
 
     JavascriptExternalFunction::JavascriptExternalFunction(DynamicType *type)
-        : RuntimeFunction(type, &EntryInfo::ExternalFunctionThunk), nativeMethod(nullptr), signature(nullptr), callbackState(nullptr), initMethod(nullptr), oneBit(1), typeSlots(0), hasAccessors(0), callCount(0)
+        : RuntimeFunction(type, &EntryInfo::ExternalFunctionThunk), nativeMethod(nullptr), signature(nullptr), callbackState(nullptr), initMethod(nullptr), 
+        oneBit(1), typeSlots(0), hasAccessors(0), callCount(0), prototypeTypeId(-1), flags(0)
     {
         DebugOnly(VerifyEntryPoint());
     }
@@ -355,7 +360,7 @@ namespace Js
     {
         ScriptContext* scriptContext = this->GetScriptContext();
         *pnewMethod = scriptContext->GetLibrary()->CreateExternalFunction(this->GetNativeMethod(),
-            this->functionNameId, this->GetSignature());
+            this->functionNameId, this->GetSignature(), this->prototypeTypeId, this->flags);
         return true;
     }
 }

@@ -5357,16 +5357,18 @@ namespace Js
     }
 
     JavascriptExternalFunction*
-    JavascriptLibrary::CreateExternalFunction(JavascriptMethod entryPoint, PropertyId nameId, Var signature)
+    JavascriptLibrary::CreateExternalFunction(JavascriptMethod entryPoint, PropertyId nameId, Var signature, JavascriptTypeId prototypeTypeId, UINT64 flags)
     {
         Assert(nameId == 0 || scriptContext->IsTrackedPropertyId(nameId));
-        return CreateExternalFunction(entryPoint, TaggedInt::ToVarUnchecked(nameId), signature);
+        return CreateExternalFunction(entryPoint, TaggedInt::ToVarUnchecked(nameId), signature, prototypeTypeId, flags);
     }
 
     JavascriptExternalFunction*
-    JavascriptLibrary::CreateExternalFunction(JavascriptMethod entryPoint, Var nameId, Var signature)
+    JavascriptLibrary::CreateExternalFunction(JavascriptMethod entryPoint, Var nameId, Var signature, JavascriptTypeId prototypeTypeId, UINT64 flags)
     {
         JavascriptExternalFunction* function = EnsureReadyIfHybridDebugging(this->CreateIdMappedExternalFunction(entryPoint, externalFunctionWithDeferredPrototypeType));
+        function->SetPrototypeTypeId(prototypeTypeId);
+        function->SetExternalFlags(flags);
         function->SetFunctionNameId(nameId);
         function->SetSignature(signature);
 #ifdef HEAP_ENUMERATION_VALIDATION

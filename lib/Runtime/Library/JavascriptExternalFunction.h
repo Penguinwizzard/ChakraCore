@@ -7,6 +7,7 @@
 namespace Js
 {
     typedef Var (__stdcall *StdCallJavascriptMethod)(RecyclableObject *callee, bool isConstructCall, Var *args, USHORT cargs, void *callbackState);
+    typedef int JavascriptTypeId;
 
     class JavascriptExternalFunction : public RuntimeFunction
     {
@@ -43,6 +44,9 @@ namespace Js
 
         virtual bool CloneMethod(JavascriptFunction** pnewMethod, const Var newHome) override;
 
+        void SetPrototypeTypeId(JavascriptTypeId prototypeTypeId) { this->prototypeTypeId = prototypeTypeId; }
+        void SetExternalFlags(UINT64 flags) { this->flags = flags; }
+
     private:
         Var signature;
         void *callbackState;
@@ -63,6 +67,9 @@ namespace Js
         // This is used for etw tracking for now; potentially we can use this as heuristic
         // to determine if when to JIT the method.
         unsigned int callCount:15;
+
+        JavascriptTypeId prototypeTypeId;
+        UINT64 flags;  // TODO: use 32 bit instead if the memory impact is significant and we don't need that many flag bits
 
         static Var ExternalFunctionThunk(RecyclableObject* function, CallInfo callInfo, ...);
         static Var WrappedFunctionThunk(RecyclableObject* function, CallInfo callInfo, ...);
