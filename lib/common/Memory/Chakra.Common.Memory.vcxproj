@@ -7,18 +7,22 @@
     <ProjectGuid>{BB4153FF-AC3E-4734-B562-FF23812DF31B}</ProjectGuid>
     <RootNamespace>JS</RootNamespace>
     <Keyword>Win32Proj</Keyword>
-  </PropertyGroup>  
-  <PropertyGroup Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
   </PropertyGroup>
   <Import Project="$(BuildConfigPropsPath)Chakra.Build.Default.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
     <Import Project="$(BuildConfig_ARMASM_Path)armasm.props" />
   </ImportGroup>
-  <Import Project="$(BuildConfigPropsPath)Chakra.Build.props" /> 
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.Props" />
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
   </PropertyGroup>
