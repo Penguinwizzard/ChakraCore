@@ -127,7 +127,7 @@
     <None Include="jsscan.js" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Condition="'$(USE_EXTERNAL_DEPENDENCIES)'!='yes'" Include="..\..\Manifests\Manifests.vcxproj">
+    <ProjectReference Include="..\..\Manifests\Manifests.vcxproj">
       <Project>{bcc5c029-2f2c-4eaa-8e60-664d72766936}</Project>
     </ProjectReference>
     <ProjectReference Condition="'$(USE_EXTERNAL_DEPENDENCIES)'!='yes'" Include="..\..\..\publish\Publish.vcxproj">
