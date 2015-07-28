@@ -1320,6 +1320,8 @@ FLAGNR(Boolean, InvalidateSolutionContextsForGetStructure, "To reduce memory con
 FLAGNR(Boolean, GCPauseTel, "Enable GC Pause telemetry in the product code.", false)
 FLAGNR(Boolean, ES5LangTel, "Print ES5 language telemetry output.", false)
 FLAGNR(Boolean, ES6LangTel, "Print ES6 language telemetry output.", false)
+FLAGNR(Boolean, ESBLangTel, "Print ES built-ins telemetry output.", false)
+FLAGNR(Boolean, DateParseTel, "Print Date.parse telemetry output.", false)
 
 FLAGNR(Number,  GCMemoryThreshold, "Threshold for allocation-based GC initiation (in MB)", 0)
 

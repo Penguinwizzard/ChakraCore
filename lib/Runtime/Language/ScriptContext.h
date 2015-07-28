@@ -567,7 +567,7 @@ namespace Js
         InstanceMap *copyOnWriteMap;
 
         ArenaAllocator generalAllocator;
-#ifdef TELEMETRY
+#ifdef ENABLE_BASIC_TELEMETRY
         ArenaAllocator telemetryAllocator;
 #endif
 
@@ -728,7 +728,7 @@ public:
         BailoutStatsMap *bailoutReasonCounts;
         uint *rejitReasonCounts;
 #endif
-#ifdef TELEMETRY
+#ifdef ENABLE_BASIC_TELEMETRY
         
     private:
         ScriptContextTelemetry* telemetry;
@@ -1215,7 +1215,7 @@ private:
 
         ArenaAllocator* GeneralAllocator() { return &generalAllocator; }
 
-#ifdef TELEMETRY
+#ifdef ENABLE_BASIC_TELEMETRY
         ArenaAllocator* TelemetryAllocator() { return &telemetryAllocator; }
 #endif
 

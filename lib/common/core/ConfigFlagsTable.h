@@ -582,7 +582,7 @@ namespace Js
 #define PHASE_TESTTRACE(phase, func) PHASE_TESTTRACE_RAW((phase), (func)->GetSourceContextId(), (func)->GetLocalFunctionId())
 #define PHASE_TESTTRACE_RAW(phase, sourceId, functionId) \
                                     Js::Configuration::Global.flags.TestTrace.IsEnabled((phase), (sourceId), (functionId))
-#ifdef TELEMETRY
+#ifdef ENABLE_BASIC_TELEMETRY
 #define PHASE_TESTTRACE1_TELEMETRY(phase) PHASE_TESTTRACE1((phase))
 #else
 #define PHASE_TESTTRACE1_TELEMETRY(phase) (false)

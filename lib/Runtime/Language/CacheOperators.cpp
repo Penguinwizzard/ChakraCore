@@ -57,6 +57,18 @@ namespace Js
             return;
         }
 
+#ifdef TELEMETRY_AddToCache
+        // For performance reasons, only execute this code in interpreted mode, not JIT.
+        // This method only returns true in interpreted mode and can be used to detect interpreted mode.
+        if (info->AllowResizingPolymorphicInlineCache())
+        {
+            if (TELEMETRY_PROPERTY_OPCODE_FILTER(propertyId))
+            {
+                requestContext->GetTelemetry().GetOpcodeTelemetry().GetProperty(objectWithProperty, propertyId, nullptr, !isMissing);
+            }
+        }
+#endif
+
         Cache<false, true, true>(
             isProto,
             DynamicObject::FromVar(objectWithProperty),
@@ -111,6 +123,17 @@ namespace Js
             // Don't need to cache if the beginning property is number etc.
             return;
         }
+
+#ifdef TELEMETRY_AddToCache
+        if (info->AllowResizingPolymorphicInlineCache()) // If in interpreted mode, not JIT.
+        {
+            if (TELEMETRY_PROPERTY_OPCODE_FILTER(propertyId))
+            {
+                requestContext->GetTelemetry().GetOpcodeTelemetry().GetProperty(info->GetInstance(), propertyId, nullptr, true /* true, because if a getter is being evaluated then the property does exist. */);
+            }
+        }
+#endif
+
 
         Cache<true, true, false>(
             isProto,

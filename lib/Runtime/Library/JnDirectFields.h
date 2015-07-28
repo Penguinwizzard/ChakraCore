@@ -659,8 +659,6 @@ ENTRY(observe)
 ENTRY(unobserve)
 ENTRY(setUInt16)
 ENTRY(getOwnPropertyDescriptors)
-ENTRY(sticky)
-ENTRY(unicode)
 ENTRY(__constructor) // represents an invocation of the constructor function rather than a use of the constructor property (i.e. `new Foo()` rather than `(new Foo()).constructor`).
 #endif
 

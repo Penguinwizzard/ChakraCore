@@ -2808,12 +2808,6 @@ namespace Js
             CacheOperators::TryGetProperty<true, true, false, false, false, false, true, false, false>(
                 obj, false, obj, propertyId, &aValue, GetScriptContext(), nullptr, &info))
         {
-#ifdef TELEMETRY
-            if (TELEMETRY_PROPERTY_OPCODE_FILTER(propertyId))
-            {
-                this->scriptContext->GetTelemetry().GetOpcodeTelemetry().GetMethodProperty(varInstance, propertyId, aValue, true);
-            }
-#endif
             SetReg(playout->Value, aValue);
             return;
         }
@@ -2836,7 +2830,7 @@ namespace Js
             propertyId
         );
         
-#ifdef TELEMETRY
+#ifdef TELEMETRY_INTERPRETER
         if (TELEMETRY_PROPERTY_OPCODE_FILTER(propertyId))
         {
             // `successful` will be true as PatchGetMethod throws an exception if not found.
@@ -2862,13 +2856,6 @@ namespace Js
         if (CacheOperators::TryGetProperty<true, true, false, false, false, false, true, false, false>(
                 obj, true, obj, propertyId, &aValue, GetScriptContext(), nullptr, &info))
         {
-#ifdef TELEMETRY
-            if (TELEMETRY_PROPERTY_OPCODE_FILTER(propertyId))
-            {
-                this->scriptContext->GetTelemetry().GetOpcodeTelemetry().GetMethodProperty(instance, propertyId, aValue, true);
-            }
-#endif
-
             SetReg(playout->Value, aValue);
             return;
         }
@@ -2891,7 +2878,7 @@ namespace Js
             propertyId
         );
 
-#ifdef TELEMETRY
+#ifdef TELEMETRY_INTERPRETER
         if (TELEMETRY_PROPERTY_OPCODE_FILTER(propertyId))
         {
             // `successful` will be true as PatchGetMethod throws an exception if not found.
@@ -2943,14 +2930,27 @@ namespace Js
     template <class T>
     __declspec(noinline) void InterpreterStackFrame::OP_GetMethodPropertyScoped_NoFastPath(unaligned T *playout)
     {
-        SetReg(
-            playout->Value,
-            JavascriptOperators::PatchScopedGetMethod<false>(
-                GetFunctionBody(),
-                GetInlineCache(playout->inlineCacheIndex),
-                playout->inlineCacheIndex,
-                GetReg(playout->Instance),
-                GetPropertyIdFromCacheId(playout->inlineCacheIndex)));
+        PropertyId propertyId = GetPropertyIdFromCacheId(playout->inlineCacheIndex);
+        Js::Var instance = GetReg(playout->Instance);
+
+        Js::Var value = JavascriptOperators::PatchScopedGetMethod<false>(
+            GetFunctionBody(),
+            GetInlineCache(playout->inlineCacheIndex),
+            playout->inlineCacheIndex,
+            instance,
+            propertyId
+        );
+        
+        SetReg(playout->Value, value);
+
+#ifdef TELEMETRY_INTERPRETER
+        if (TELEMETRY_PROPERTY_OPCODE_FILTER(propertyId))
+        {
+            // `successful` will be true as PatchGetMethod throws an exception if not found.
+            this->scriptContext->GetTelemetry().GetOpcodeTelemetry().GetMethodProperty(instance, propertyId, value, true);
+        }
+#endif
+
     }
 
     template <class T>
@@ -3301,13 +3301,6 @@ namespace Js
         if(CacheOperators::TryGetProperty<true, false, false, false, false, false, true, false, false>(
                 obj, true, obj, propertyId, &value, GetScriptContext(), nullptr, &info))
         {
-#ifdef TELEMETRY
-            if (TELEMETRY_PROPERTY_OPCODE_FILTER(propertyId))
-            {
-                this->scriptContext->GetTelemetry().GetOpcodeTelemetry().GetProperty(instance, propertyId, value, true);
-            }
-#endif
-
             SetReg(playout->Value, value);
             return;
         }
@@ -3331,7 +3324,7 @@ namespace Js
         
         SetReg(playout->Value, value);
 
-#ifdef TELEMETRY
+#ifdef TELEMETRY_INTERPRETER
         if (TELEMETRY_PROPERTY_OPCODE_FILTER(propertyId))
         {
             // `successful` will be true as PatchGetRootValue throws an exception if not found.
@@ -3356,7 +3349,7 @@ namespace Js
 
         SetReg(playout->Value, value);
 
-#ifdef TELEMETRY
+#ifdef TELEMETRY_INTERPRETER
         if (TELEMETRY_PROPERTY_OPCODE_FILTER(propertyId))
         {
             // `successful` will be true as PatchGetRootValue throws an exception if not found.
@@ -3414,7 +3407,7 @@ namespace Js
         
         SetReg(playout->Value, value);
 
-#ifdef TELEMETRY
+#ifdef TELEMETRY_INTERPRETER
         if (TELEMETRY_PROPERTY_OPCODE_FILTER(propertyId))
         {
             // `successful` will be true as PatchGetRootValue throws an exception if not found.
@@ -3443,7 +3436,7 @@ namespace Js
         
         SetReg(playout->Value, value);
 
-#ifdef TELEMETRY
+#ifdef TELEMETRY_INTERPRETER
         if (TELEMETRY_PROPERTY_OPCODE_FILTER(propertyId))
         {
             // `successful` will be true as PatchGetRootValue throws an exception if not found.
@@ -3467,7 +3460,7 @@ namespace Js
         
         SetReg(playout->Value, value);
         
-#ifdef TELEMETRY
+#ifdef TELEMETRY_INTERPRETER
         if (TELEMETRY_PROPERTY_OPCODE_FILTER(propertyId))
         {
             // `successful` will be true as PatchGetRootValue throws an exception if not found.
@@ -3493,12 +3486,6 @@ namespace Js
             if (CacheOperators::TryGetProperty<true, false, false, false, false, false, true, false, false>(
                     obj, false, obj, propertyId, &value, GetScriptContext(), nullptr, &info))
             {
-#ifdef TELEMETRY
-                if (TELEMETRY_PROPERTY_OPCODE_FILTER(propertyId))
-                {
-                    this->scriptContext->GetTelemetry().GetOpcodeTelemetry().GetProperty(instance, propertyId, value, true);
-                }
-#endif
                 SetReg(playout->Value, value);
                 return;
             }
@@ -3555,7 +3542,7 @@ namespace Js
                 propertyId
         );
         
-#ifdef TELEMETRY
+#ifdef TELEMETRY_INTERPRETER
         if (TELEMETRY_PROPERTY_OPCODE_FILTER(propertyId))
         {
             // `successful` will be true as PatchGetMethod throws an exception if not found.
@@ -3603,7 +3590,7 @@ namespace Js
 
         SetReg(playout->Value, value);
 
-#ifdef TELEMETRY
+#ifdef TELEMETRY_INTERPRETER
         if (TELEMETRY_PROPERTY_OPCODE_FILTER(propertyId))
         {
             // `successful` will be true as PatchGetMethod throws an exception if not found.
@@ -5315,7 +5302,7 @@ namespace Js
             newVarInstance = CrossSite::MarshalVar(GetScriptContext(), newVarInstance);
         }
 #endif
-#ifdef TELEMETRY
+#ifdef ENABLE_BASIC_TELEMETRY
         {
             this->scriptContext->GetTelemetry().GetOpcodeTelemetry().NewScriptObject( target, args, newVarInstance );
         }
@@ -5346,7 +5333,7 @@ namespace Js
             newVarInstance = CrossSite::MarshalVar(GetScriptContext(), newVarInstance);
         }
 #endif
-#ifdef TELEMETRY
+#ifdef TELEMETRY_PROFILED
         {
             this->scriptContext->GetTelemetry().GetOpcodeTelemetry().NewScriptObject( target, args, newVarInstance );
         }
@@ -5842,7 +5829,7 @@ namespace Js
 
         Var result = JavascriptOperators::OP_IsInst(instance, function, scriptContext, inlineCache);
 
-#ifdef TELEMETRY
+#ifdef ENABLE_BASIC_TELEMETRY
         {
             this->scriptContext->GetTelemetry().GetOpcodeTelemetry().IsInstanceOf(instance, function, result);
         }

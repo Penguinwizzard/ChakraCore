@@ -1565,6 +1565,12 @@ CommonNumber:
             {
                 CacheOperators::CachePropertyRead(instance, object, isRoot, propertyId, false, info, requestContext);
             }
+#ifdef TELEMETRY_JSO
+            if (TELEMETRY_PROPERTY_OPCODE_FILTER(propertyId))
+            {
+                requestContext->GetTelemetry().GetOpcodeTelemetry().GetProperty(instance, propertyId, value, /*successful: */true);
+            }
+#endif
 
             return TRUE;
         }
@@ -1599,7 +1605,15 @@ CommonNumber:
                 PropertyValueInfo::Set(info, requestContext->GetLibrary()->GetMissingPropertyHolder(), 0);
                 CacheOperators::CachePropertyRead(instance, requestContext->GetLibrary()->GetMissingPropertyHolder(), isRoot, propertyId, true, info, requestContext);
             }
-
+#if defined(TELEMETRY_JSO) || defined(TELEMETRY_AddToCache) // enabled for `TELEMETRY_AddToCache`, because this is the property-not-found codepath where the normal TELEMETRY_AddToCache code wouldn't be executed.
+            if (TELEMETRY_PROPERTY_OPCODE_FILTER(propertyId))
+            {
+                if (info && info->AllowResizingPolymorphicInlineCache()) // If in interpreted mode, not JIT.
+                {
+                    requestContext->GetTelemetry().GetOpcodeTelemetry().GetProperty(instance, propertyId, nullptr, /*successful: */false);
+                }
+            }
+#endif
             return FALSE;
         }
     }
@@ -1865,6 +1879,15 @@ CommonNumber:
 
         if (!foundProperty)
         {
+#if defined(TELEMETRY_JSO) || defined(TELEMETRY_AddToCache) // enabled for `TELEMETRY_AddToCache`, because this is the property-not-found codepath where the normal TELEMETRY_AddToCache code wouldn't be executed.
+            if (TELEMETRY_PROPERTY_OPCODE_FILTER(propertyId))
+            {
+                if (info && info->AllowResizingPolymorphicInlineCache()) // If in interpreted mode, not JIT.
+                {
+                    requestContext->GetTelemetry().GetOpcodeTelemetry().GetProperty(instance, propertyId, nullptr, /*successful: */false);
+                }
+            }
+#endif
             return foundProperty;
         }
 
@@ -6651,7 +6674,7 @@ CommonNumber:
             PropertyId propertyId = propertyRecord->GetPropertyId();
             result = JavascriptOperators::HasProperty( object, propertyId );
 
-#ifdef TELEMETRY
+#ifdef TELEMETRY_JSO
             {
                 Assert(indexType != Js::IndexType_JavascriptString);
                 if( indexType == Js::IndexType_PropertyId )
@@ -7003,6 +7026,13 @@ CommonNumber:
             }
             else
             {
+#ifdef TELEMETRY_JSO
+                if (TELEMETRY_PROPERTY_OPCODE_FILTER(propertyId))
+                {
+                    // `successful` will be true as PatchGetMethod throws an exception if not found.
+                    scriptContext->GetTelemetry().GetOpcodeTelemetry().GetMethodProperty(object, propertyId, value, /*successful:*/false);
+                }
+#endif
                 return scriptContext->GetLibrary()->GetUndefined();
             }
         }
@@ -7023,7 +7053,15 @@ CommonNumber:
         }
 #endif
 
-        return Js::JavascriptOperators::PatchGetMethodFromObject(instance, object, propertyId, &info, scriptContext, false);
+        value = Js::JavascriptOperators::PatchGetMethodFromObject(instance, object, propertyId, &info, scriptContext, false);
+#ifdef TELEMETRY_JSO
+        if (TELEMETRY_PROPERTY_OPCODE_FILTER(propertyId))
+        {
+            // `successful` will be true as PatchGetMethod throws an exception if not found.
+            scriptContext->GetTelemetry().GetOpcodeTelemetry().GetMethodProperty(object, propertyId, value, /*successful:*/true);
+        }
+#endif
+        return value;
     }
     template Var JavascriptOperators::PatchGetMethod<false, InlineCache>(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId);
     template Var JavascriptOperators::PatchGetMethod<true, InlineCache>(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId);
@@ -7055,7 +7093,15 @@ CommonNumber:
         }
 #endif
 
-        return Js::JavascriptOperators::PatchGetMethodFromObject(object, object, propertyId, &info, scriptContext, true);
+        value = Js::JavascriptOperators::PatchGetMethodFromObject(object, object, propertyId, &info, scriptContext, true);
+#ifdef TELEMETRY_JSO
+        if (TELEMETRY_PROPERTY_OPCODE_FILTER(propertyId))
+        {
+            // `successful` will be true as PatchGetMethod throws an exception if not found.
+            scriptContext->GetTelemetry().GetOpcodeTelemetry().GetMethodProperty(object, propertyId, value, /*succesful:*/ true);
+        }
+#endif
+        return value;
     }
     template Var JavascriptOperators::PatchGetRootMethod<false, InlineCache>(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, DynamicObject* object, PropertyId propertyId);
     template Var JavascriptOperators::PatchGetRootMethod<true, InlineCache>(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, DynamicObject* object, PropertyId propertyId);

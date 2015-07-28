@@ -115,7 +115,7 @@ namespace Js
         asmJsCodeGenerator(nullptr),
 #endif
         generalAllocator(L"SC-General", threadContext->GetPageAllocator(), Throw::OutOfMemory),
-#ifdef TELEMETRY
+#ifdef ENABLE_BASIC_TELEMETRY
         telemetryAllocator(L"SC-Telemetry", threadContext->GetPageAllocator(), Throw::OutOfMemory),
 #endif
         dynamicProfileInfoAllocator(L"SC-DynProfileInfo", threadContext->GetPageAllocator(), Throw::OutOfMemory),
@@ -148,7 +148,7 @@ namespace Js
 #ifdef REJIT_STATS
         , rejitStatsMap(nullptr)
 #endif
-#ifdef TELEMETRY
+#ifdef ENABLE_BASIC_TELEMETRY
         , telemetry(nullptr)
 #endif
 #ifdef INLINE_CACHE_STATS
@@ -315,7 +315,7 @@ namespace Js
         }
 #endif
 
-#ifdef TELEMETRY
+#ifdef ENABLE_BASIC_TELEMETRY
         this->telemetry = Anew(this->TelemetryAllocator(), ScriptContextTelemetry, *this);
 #endif
 
@@ -5797,12 +5797,6 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
         }
 #endif
 
-#ifdef TELEMETRY
-    {
-        this->GetTelemetry().OutputTelemetry();
-    }
-#endif
-
 #ifdef FIELD_ACCESS_STATS
     if (PHASE_STATS1(Js::ObjTypeSpecPhase))
     {
@@ -5893,6 +5887,10 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
         OUTPUT_STATS(Js::ParsePhase, L"Script Context: 0x%p Url: %s\n", this, this->url);
         OUTPUT_STATS(Js::ParsePhase, L"  Total ThreadContext source size %d\n", this->GetThreadContext()->GetSourceSize());
 
+#ifdef ENABLE_BASIC_TELEMETRY
+        this->telemetry->OutputTelemetry();
+#endif
+
         Output::Flush();
     }
     void ScriptContext::SetNextPendingClose(ScriptContext * nextPendingClose) {
@@ -5976,7 +5974,7 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
     }
 #endif
 
-#ifdef TELEMETRY
+#ifdef ENABLE_BASIC_TELEMETRY
     ScriptContextTelemetry& ScriptContext::GetTelemetry()
     {
         return *this->telemetry;

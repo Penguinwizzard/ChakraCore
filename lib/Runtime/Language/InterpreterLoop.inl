@@ -68,7 +68,7 @@ Var Js::InterpreterStackFrame::INTERPRETERLOOPNAME()
     {
         INTERPRETER_OPCODE op = ReadByteOp<INTERPRETER_OPCODE>(ip);
 
-#ifdef TELEMETRY
+#ifdef ENABLE_BASIC_TELEMETRY
         if( TELEMETRY_OPCODE_OFFSET_ENABLED )
         {
             OpcodeTelemetry& opcodeTelemetry = this->scriptContext->GetTelemetry().GetOpcodeTelemetry();
