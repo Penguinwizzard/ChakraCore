@@ -27,7 +27,16 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <io.h>
+
+#if defined(_DEBUG)
+#define JS_STL_DEBUG
+#undef _DEBUG
+#endif
 #include <map>
+#ifdef JS_STL_DEBUG
+#define _DEBUG
+#undef JS_STL_DEBUG
+#endif
 
 #ifdef Assert
 #undef Assert

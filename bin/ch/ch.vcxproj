@@ -1,6 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Condition="'$(BuildingWithBuildExe)'=='true'" Project="..\..\..\Build\Chakra.Build.Paths.props" />
   <Import Condition="'$(ChakraBuildPathImported)'!='true'" Project="$(SolutionDir)Chakra.Build.Paths.props" />
   <Import Project="$(BuildConfig_ChakraBuildProjectConfigurationProps)" />
   <PropertyGroup Label="Globals">
@@ -14,7 +13,6 @@
     <BuildForCoreSystem>true</BuildForCoreSystem>
     <UseStl>true</UseStl>
     <StlVersion>70</StlVersion>
-    <TestCode Condition="'$(BuildingWithBuildExe)'=='true'">true</TestCode>
   </PropertyGroup>
   <Import Project="$(BuildConfigPropsPath)Chakra.Build.Default.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -25,43 +23,25 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-     <!--
-           TODO: Remove dependency on HostCommon
-       -->
       <AdditionalIncludeDirectories>
         %(AdditionalIncludeDirectories);
-        $(ChakraCoreRootDirectory)lib\common;
-        $(ChakraRootDirectory)private\bin\Chakra;
-        $(ChakraRootDirectory)private\lib\HostCommon;
-        $(SdkToolsIncPath)
-        </AdditionalIncludeDirectories>
+        $(MSBuildThisFileDirectory);
+        $(ChakraCoreRootDirectory)Lib\Common;
+        $(ChakraCoreRootDirectory)Bin\ChakraCore;
+        $(IntDir);        
+        %(AdditionalIncludeDirectories);
+      </AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <AdditionalDependencies>
         %(AdditionalDependencies);
-        $(SdkLibPath)\oleaut32.lib;
-        $(SdkLibPath)\ole32.lib;
-        $(SdkLibPath)\kernel32.lib;
-        $(InternalSdkLibPath)\nothrownew.lib
-      </AdditionalDependencies>
-    </Link>
-    <Link Condition="'$(BuildingWithBuildExe)'=='true'">
-      <AdditionalDependencies>
-        %(AdditionalDependencies);
-        <!--
-           TODO: Remove dependency on HostCommon
-        -->
-        $(RazzleJscriptObjectRoot)\private\lib\HostCommon\$(ObjectDirectory)\Chakra.Host.Common.lib;
+        oleaut32.lib;
+        ole32.lib;
+        kernel32.lib;
       </AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
-  <!-- Razzle binplace -->
-  <ItemGroup Condition="'$(BuildingWithBuildExe)'=='true'">
-    <BinplaceLinked Include="$(ObjectPath)\$(ObjectDirectory)$(TargetFileName)">
-      <DestinationFolder>jscript</DestinationFolder>
-    </BinplaceLinked>
-  </ItemGroup>
   <ItemGroup>
     <ClInclude Include="chakrartinterface.h" />
     <ClInclude Include="Helpers.h" />
@@ -77,11 +57,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ch.def" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\private\lib\HostCommon\HostCommon.vcxproj">
-      <Project>{f2e998aa-fb27-4f65-a6f7-4142be64294f}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
