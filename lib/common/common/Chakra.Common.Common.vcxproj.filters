@@ -14,6 +14,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)cfglogger.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)DaylightTimeHelper.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)NumberUtilities_strtod.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)unicode.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\StdAfx.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -27,13 +28,14 @@
     <ClInclude Include="NumberUtilities.h" />
     <ClInclude Include="RejitReason.h" />
     <ClInclude Include="RejitReasons.h" />
-    <ClInclude Include="StdAfx.h" />
+    <ClInclude Include="..\StdAfx.h" />
     <ClInclude Include="Tick.h" />
     <ClInclude Include="UInt16Math.h" />
     <ClInclude Include="UInt32Math.h" />
     <ClInclude Include="vtinfo.h" />
     <ClInclude Include="cfglogger.h" />
     <ClInclude Include="DaylightTimeHelper.h" />
+    <ClInclude Include="unicode.h" />
     <ClInclude Include="vtregistry.h" />
   </ItemGroup>
   <ItemGroup>

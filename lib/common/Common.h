@@ -365,6 +365,7 @@ private:
 #include "Common\NumberUtilities.h"
 #include "core\FaultInjection.h"
 #include <codex\Utf8Codex.h>
+#include "Common\unicode.h"
 
 #include "Exceptions\Throw.h"
 

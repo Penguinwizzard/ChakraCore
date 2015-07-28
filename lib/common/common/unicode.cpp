@@ -1,6 +1,7 @@
 //---------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
+#include <StdAfx.h>
 
 //
 // This file contains tables used for operations on the Unicode character
@@ -8,13 +9,6 @@
 //
 // See "The Unicode Standard, Version 2.0" for complete documentation.
 //
-
-#if !SOURCERELEASE
-// The complete Unicode 2.0 uppercase-lowercase
-// language-neutral mapping table is in VBScript\Doc\Unicode.Txt
-#endif // !SOURCERELEASE
-
-#ifdef UNICODE_TABLES
 
 /***************************************************************************
 Mapping to uppercase.
@@ -396,55 +390,17 @@ static const wchar kchMinLower7 = 0xff21;
 static const wchar kchLimLower7 = 0xff3b;
 static const short kdchLower7 = 32;
 
-#undef UNICODE_TABLES
-#endif //UNICODE_TABLES
 
-#ifdef UNICODE_UPPER_CODE
+wchar_t CharToLowerCase(wchar_t chSrc)
+{
+    wchar_t chDst = chSrc;
 
-    if (chSrc < kchLimUpper1)
-    {
-        if (chSrc >= kchMinUpper1)
-            chDst = g_mpchchUpper1[chSrc - kchMinUpper1];
-    }
-    else if (chSrc < kchLimUpper4)
-    {
-        if (chSrc < kchMinUpper3)
-        {
-            if (chSrc < kchLimUpper2)
-            {
-                if (chSrc >= kchMinUpper2)
-                    chDst = g_mpchchUpper2[chSrc - kchMinUpper2];
-            }
-        }
-        else if (chSrc < kchLimUpper3)
-            chDst = g_mpchchUpper3[chSrc - kchMinUpper3];
-        else if (chSrc >= kchMinUpper4)
-            chDst = chSrc + kdchUpper4;
-    }
-    else if (chSrc < kchMinUpper6)
-    {
-        if (chSrc < kchLimUpper5)
-        {
-            if (chSrc >= kchMinUpper5)
-                chDst = chSrc + kdchUpper5;
-        }
-    }
-    else if (chSrc < kchLimUpper6)
-    chDst = chSrc + kdchUpper6;
-
-#undef chSrc
-#undef chDst
-#undef UNICODE_UPPER_CODE
-#endif //UNICODE_UPPER_CODE
-
-
-#ifdef UNICODE_LOWER_CODE
-
-    chSrc = chDst;
     if (chSrc < kchLimLower1)
     {
         if (chSrc >= kchMinLower1)
+        {
             chDst = g_mpchchLower1[chSrc - kchMinLower1];
+        }
     }
     else if (chSrc < kchLimLower4)
     {
@@ -453,32 +409,92 @@ static const short kdchLower7 = 32;
             if (chSrc < kchLimLower2)
             {
                 if (chSrc >= kchMinLower2)
+                {
                     chDst = g_mpchchLower2[chSrc - kchMinLower2];
+                }
             }
         }
         else if (chSrc < kchLimLower3)
+        {
             chDst = chSrc + kdchLower3;
+        }
         else if (chSrc >= kchMinLower4)
+        {
             chDst = g_mpchchLower4[chSrc - kchMinLower4];
+        }
     }
     else if (chSrc < kchLimLower6)
     {
         if (chSrc < kchLimLower5)
         {
             if (chSrc >= kchMinLower5)
+            {
                 chDst = chSrc + kdchLower5;
+            }
         }
         else if (chSrc >= kchMinLower6)
+        {
             chDst = chSrc + kdchLower6;
+        }
     }
     else if (chSrc < kchLimLower7)
     {
         if (chSrc >= kchMinLower7)
+        {
             chDst = chSrc + kdchLower7;
+        }
     }
 
-#undef chSrc
-#undef chDst
-#undef UNICODE_LOWER_CODE
-#endif //UNICODE_LOWER_CODE
+    return chDst;
+}
+
+wchar_t CharToUpperCase(wchar_t chSrc)
+{
+    wchar_t chDst = chSrc;
+
+    if (chSrc < kchLimUpper1)
+    {
+        if (chSrc >= kchMinUpper1)
+        {
+            chDst = g_mpchchUpper1[chSrc - kchMinUpper1];
+        }
+    }
+    else if (chSrc < kchLimUpper4)
+    {
+        if (chSrc < kchMinUpper3)
+        {
+            if (chSrc < kchLimUpper2)
+            {
+                if (chSrc >= kchMinUpper2)
+                {
+                    chDst = g_mpchchUpper2[chSrc - kchMinUpper2];
+                }
+            }
+        }
+        else if (chSrc < kchLimUpper3)
+        {
+            chDst = g_mpchchUpper3[chSrc - kchMinUpper3];
+        }
+        else if (chSrc >= kchMinUpper4)
+        {
+            chDst = chSrc + kdchUpper4;
+        }
+    }
+    else if (chSrc < kchMinUpper6)
+    {
+        if (chSrc < kchLimUpper5)
+        {
+            if (chSrc >= kchMinUpper5)
+            {
+                chDst = chSrc + kdchUpper5;
+            }
+        }
+    }
+    else if (chSrc < kchLimUpper6)
+    {
+        chDst = chSrc + kdchUpper6;
+    }
+
+    return chDst;
+}
 

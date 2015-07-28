@@ -1802,13 +1802,7 @@ case_2:
         if (pThis->GetLength() == 1)
         {
             wchar_t inChar = pThis->GetString()[0];
-            wchar_t outChar = inChar;
-#define UNICODE_TABLES
-#define chSrc inChar
-#define chDst outChar
-#define UNICODE_LOWER_CODE
-#include "unicode.h"
-#undef UNICODE_TABLES
+            wchar_t outChar = CharToLowerCase(inChar);
 
             return (inChar == outChar) ? pThis : scriptContext->GetLibrary()->GetCharStringCache().GetStringForChar(outChar);
         }
@@ -1865,13 +1859,7 @@ case_2:
         if (pThis->GetLength() == 1)
         {
             wchar_t inChar = pThis->GetString()[0];
-            wchar_t outChar = inChar;
-#define UNICODE_TABLES
-#define chSrc inChar
-#define chDst outChar
-#define UNICODE_UPPER_CODE
-#include "unicode.h"
-#undef UNICODE_TABLES
+            wchar_t outChar = CharToUpperCase(inChar);
 
             return (inChar == outChar) ? pThis : scriptContext->GetLibrary()->GetCharStringCache().GetStringForChar(outChar);
         }
@@ -1888,7 +1876,6 @@ case_2:
         wchar_t *outStr = builder.DangerousGetWritableBuffer();
 
         wchar_t* outStrLim = outStr + count;
-        wchar_t inChar, outChar;
 
         //TODO the mapping based on unicode tables needs review for ES5.
         // mapping is not always 1.1
@@ -1896,17 +1883,7 @@ case_2:
         {
             while (outStr < outStrLim)
             {
-                inChar = *inStr;
-                outChar = inChar;
-#define UNICODE_TABLES
-#define chSrc inChar
-#define chDst outChar
-#define UNICODE_UPPER_CODE
-#include "unicode.h"
-#undef UNICODE_TABLES
-                *outStr = outChar;
-                inStr++;
-                outStr++;
+                *outStr++ = CharToUpperCase(*inStr++);
             }
         }
         else
@@ -1914,17 +1891,7 @@ case_2:
             Assert(toCase == ToLower);
             while(outStr < outStrLim)
             {
-                inChar = *inStr;
-                outChar = inChar;
-#define UNICODE_TABLES
-#define chSrc inChar
-#define chDst outChar
-#define UNICODE_LOWER_CODE
-#include "unicode.h"
-#undef UNICODE_TABLES
-                *outStr = outChar;
-                outStr++;
-                inStr++;
+                *outStr++ = CharToLowerCase(*inStr++);
             }
         }
 

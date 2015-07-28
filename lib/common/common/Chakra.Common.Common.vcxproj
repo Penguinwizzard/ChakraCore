@@ -9,12 +9,12 @@
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
   <Import Project="$(BuildConfigPropsPath)Chakra.Build.Default.props" />
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />  
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <ImportGroup Label="ExtensionSettings">    
+  <ImportGroup Label="ExtensionSettings">
     <Import Project="$(BuildConfig_ARMASM_Path)armasm.props" />
   </ImportGroup>
   <Import Project="$(BuildConfigPropsPath)Chakra.Build.props" />
@@ -52,6 +52,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)RejitReason.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)SmartFPUControl.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Tick.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)unicode.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)vtinfo.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\StdAfx.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -77,6 +78,7 @@
     <ClInclude Include="Tick.h" />
     <ClInclude Include="UInt16Math.h" />
     <ClInclude Include="UInt32Math.h" />
+    <ClInclude Include="unicode.h" />
     <ClInclude Include="vtinfo.h" />
   </ItemGroup>
   <ItemGroup>
@@ -100,7 +102,7 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">    
+  <ImportGroup Label="ExtensionTargets">
     <Import Project="$(BuildConfig_ARMASM_Path)armasm.targets" />
   </ImportGroup>
 </Project>
