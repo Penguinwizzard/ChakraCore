@@ -12,20 +12,20 @@
     <PlatformToolset Condition="'$(VisualStudioVersion)'=='14.0'">v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup>
+    <!-- PlatformPathName is used in OutDir/IntDir name-->
     <PlatformPathName>$(Platform)</PlatformPathName>
     <PlatformPathName Condition="'$(Platform)'=='Win32'">x86</PlatformPathName>
+    <!-- PlatformPathNameAlt is used by Backend for architecture directory -->
     <PlatformPathNameAlt>$(Platform)</PlatformPathNameAlt>
     <PlatformPathNameAlt Condition="'$(Platform)'=='Win32'">i386</PlatformPathNameAlt>
     <PlatformPathNameAlt Condition="'$(Platform)'=='x64'">amd64</PlatformPathNameAlt>
-
-    <!-- Always use Platform SDK for core builds -->
-    <EventManifestXmlPath>$(WindowsSDK80Path)Include\um</EventManifestXmlPath>
   </PropertyGroup>
   <!-- Output Path -->
   <PropertyGroup>
-    <OutBaseDir Condition="'$(OutBaseDir)'==''">$(SolutionDir)VcBuild</OutBaseDir>
-    <OutDir>$(OutBaseDir)\$(PlatformPathName)_$(Configuration)\Binaries\</OutDir>
-    <IntDir>$(OutBaseDir)\$(PlatformPathName)_$(Configuration)\Obj\$(MSBuildProjectName)\</IntDir>
+    <OutBaseDir Condition="'$(OutBaseDir)'==''">$(SolutionDir)VcBuild</OutBaseDir>    
+    <OutDir>$(OutBaseDir)\bin\$(PlatformPathName.ToLower())_$(Configuration.ToLower())\</OutDir>    
+    <IntDir>$(OutBaseDir)\obj\$(PlatformPathName.ToLower())_$(Configuration.ToLower())\$(MSBuildProjectName)\</IntDir>
+    <OutDir Condition="'$(ConfigurationType)'=='StaticLibrary'">$(IntDir)</OutDir>
     <OutputPath>$(OutDir)</OutputPath>
 
     <ChakraParserIntDir>$(IntDir)..\Chakra.Parser</ChakraParserIntDir>

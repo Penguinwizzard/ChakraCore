@@ -7,22 +7,18 @@
     <ProjectGuid>{BB4153FF-AC3E-4734-B562-FF23812DF31B}</ProjectGuid>
     <RootNamespace>JS</RootNamespace>
     <Keyword>Win32Proj</Keyword>
-  </PropertyGroup>
-  <Import Project="$(BuildConfigPropsPath)Chakra.Build.Default.props" />
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  </PropertyGroup>  
   <PropertyGroup Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
   </PropertyGroup>
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.Default.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
     <Import Project="$(BuildConfig_ARMASM_Path)armasm.props" />
   </ImportGroup>
-  <Import Project="$(BuildConfigPropsPath)Chakra.Build.Props" />
-  <ImportGroup Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <PropertyGroup Label="UserMacros" />
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.props" /> 
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
   </PropertyGroup>
@@ -148,7 +144,7 @@
     <ProjectReference Condition="'$(USE_EXTERNAL_DEPENDENCIES)'!='yes'" Include="..\..\..\..\dep\manifests-inbox.vcxproj">
       <Project>{14bbb4b1-da6a-4c69-bf07-f8d4865e0815}</Project>
     </ProjectReference>
-    <ProjectReference Condition="'$(USE_EXTERNAL_DEPENDENCIES)'!='yes'" Include="..\..\..\Manifests\Manifests.vcxproj">
+    <ProjectReference Include="..\..\..\Manifests\Manifests.vcxproj">
       <Project>{bcc5c029-2f2c-4eaa-8e60-664d72766936}</Project>
     </ProjectReference>
   </ItemGroup>
