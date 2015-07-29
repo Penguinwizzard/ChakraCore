@@ -5,6 +5,7 @@
 ********************************************************/
 #include "StdAfx.h"
 
+#ifdef ENABLE_DOM_FAST_PATH
 namespace Js
 {
     JavascriptTypedObjectSlotAccessorFunction::JavascriptTypedObjectSlotAccessorFunction(DynamicType* type, FunctionInfo* functionInfo, int allowedTypeId, PropertyId nameId) : 
@@ -62,3 +63,4 @@ namespace Js
         func->ValidateThisInstance(thisObject);
     }
 }
+#endif

@@ -4,6 +4,7 @@
 
 #include "stdafx.h"
 
+#ifdef ENABLE_DOM_FAST_PATH
 DECLARE_SIMPLEACCESSOR_INFO(0)
 DECLARE_SIMPLEACCESSOR_INFO(1)
 DECLARE_SIMPLEACCESSOR_INFO(2)
@@ -99,4 +100,5 @@ bool DOMFastPathInfo::VerifyObjectSize(Js::RecyclableObject* obj, size_t objectS
     AssertMsg(false, "getter/setter for slotIndex called on object without enough slot extension");
     return false;
 }
+#endif
 #endif

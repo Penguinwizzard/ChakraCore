@@ -626,8 +626,10 @@ MACRO_BACKEND_ONLY(     CheckObjType,        Empty,          OpFastFldInstr|OpTe
 MACRO_BACKEND_ONLY(     AdjustObjType,       Empty,          OpSideEffect)
 
 // IE12 inline built-ins
+#ifdef ENABLE_DOM_FAST_PATH
 MACRO_BACKEND_ONLY(     DOMFastPathGetter,   Empty,          OpCanCSE)  // unlike other builtins, we don't know the return type
 MACRO_BACKEND_ONLY(     DOMFastPathSetter,   Empty,          OpSideEffect)
+#endif
 MACRO_BACKEND_ONLY(     ExtendArg_A,         Empty,          OpCanCSE)  // extend a list of arguments to be passed to functions.
 
 #ifdef _M_X64

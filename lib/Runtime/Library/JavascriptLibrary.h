@@ -746,8 +746,10 @@ namespace Js
         RuntimeFunction * CloneBuiltinFunction(RuntimeFunction* func);
         ScriptFunctionWithInlineCache * CreateScriptFunctionWithInlineCache(FunctionProxy* proxy);
         GeneratorVirtualScriptFunction * CreateGeneratorVirtualScriptFunction(FunctionProxy* proxy);
+#ifdef ENABLE_DOM_FAST_PATH
         JavascriptTypedObjectSlotAccessorFunction* CreateTypedObjectSlotGetterFunction(unsigned int slotIndex, FunctionInfo* functionInfo, int typeId, PropertyId nameId);
         JavascriptTypedObjectSlotAccessorFunction* CreateTypedObjectSlotSetterFunction(unsigned int slotIndex, FunctionInfo* functionInfo, int typeId, PropertyId nameId);
+#endif
         DynamicType * CreateGeneratorType(RecyclableObject* prototype);
 
         NullEnumerator * GetNullEnumerator() { return nullEnumerator; }

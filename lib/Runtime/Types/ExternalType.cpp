@@ -4,6 +4,7 @@
 
 #include "StdAfx.h"
 
+#ifdef NTBUILD
 namespace Js
 {
     // the name is per type. other external type can potentially add per-instance name
@@ -480,3 +481,4 @@ namespace Js
     }
 
 }
+#endif

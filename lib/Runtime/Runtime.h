@@ -410,8 +410,12 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Types\DictionaryTypeHandler.h"
 #include "Types\DynamicType.h"
 #include "Types\CopyOnWrite.h"
+#ifdef NTBUILD
 #include "Types\ExternalObject.h"
+#endif
+#ifdef ENABLE_DOM_FAST_PATH
 #include "Types\DOMFastPath.h"
+#endif
 #include "Types\SpreadArgument.h"
 #include "Language\StackTraceArguments.h"
 #include "Types\MissingPropertyTypeHandler.h"
@@ -564,7 +568,9 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
 #include "Library\ScriptMemoryDumper.h"
 #endif
+#ifdef ENABLE_DOM_FAST_PATH
 #include "Library\DOMFastPathInfo.h"
+#endif
 
 #ifdef TEST_LOG
 #include "Library\HostLogger.h"

@@ -5313,6 +5313,7 @@ namespace Js
     {
         Assert(function->GetDynamicType()->GetIsShared());
 
+#ifdef ENABLE_DOM_FAST_PATH
         if (useSlotAccessCrossSiteThunk)
         {
             Assert(!ScriptFunction::Is(function));
@@ -5322,7 +5323,11 @@ namespace Js
             function->ChangeType();
             function->SetEntryPoint(scriptContext->GetHostScriptContext()->GetSimpleSlotAccessCrossSiteThunk());
         }
-        else if (ScriptFunction::Is(function))
+        else
+#else
+        Assert(!useSlotAccessCrossSiteThunk);
+#endif
+            if (ScriptFunction::Is(function))
         {
             Assert(!function->GetFunctionInfo()->IsLambda() ?
                 function->GetDynamicType()->GetTypeHandler() == JavascriptLibrary::GetDeferredPrototypeFunctionTypeHandler(this->GetScriptContext()) :

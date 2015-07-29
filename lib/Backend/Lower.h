@@ -138,7 +138,9 @@ private:
     void            GeneratePrototypeCacheInvalidateCheck(IR::PropertySymOpnd *propertySymOpnd, IR::Instr *instrStFld);
     void            PinTypeRef(Js::Type* type, void* typeRef, IR::Instr* instr, Js::PropertyId propertyId);
     IR::RegOpnd *   GenerateIsBuiltinRecyclableObject(IR::RegOpnd *regOpnd, IR::Instr *insertInstr, IR::LabelInstr *labelHelper, bool checkObjectAndDynamicObject = true, IR::LabelInstr *labelFastExternal = nullptr);
+#ifdef NTBUILD
     void            GenerateFastExternalEqTest(CustomExternalObjectOperations *pData, IR::RegOpnd *typeRegOpnd, IR::BranchInstr *instrBranch, IR::LabelInstr *labelHelper, IR::LabelInstr *labelSuccess, bool isStrictBr, bool fallThroughOnSuccess);
+#endif
 
     void            EnsureStackFunctionListStackSym();
     void            EnsureZeroLastStackFunctionNext();
@@ -222,7 +224,9 @@ private:
     IR::Instr *     LowerArraySegmentVars(IR::Instr *instr);
     template <typename ArrayType>
     BOOL            IsSmallObject(uint32 length);
+#ifdef ENABLE_DOM_FAST_PATH
     void            LowerFastInlineDOMFastPathGetter(IR::Instr* getterInstr);
+#endif
     void            GenerateProfiledNewScIntArrayFastPath(IR::Instr *instr, Js::ArrayCallSiteInfo * arrayInfo, RecyclerWeakReference<Js::FunctionBody> * weakFuncRef);
     void            GenerateArrayInfoIsNativeIntArrayTest(IR::Instr * instr,  Js::ArrayCallSiteInfo * arrayInfo, IR::LabelInstr * helperLabel);
     void            GenerateProfiledNewScFloatArrayFastPath(IR::Instr *instr, Js::ArrayCallSiteInfo * arrayInfo, RecyclerWeakReference<Js::FunctionBody> * weakFuncRef);

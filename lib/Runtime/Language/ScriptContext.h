@@ -315,7 +315,9 @@ namespace Js
         }
     };
 
+#ifdef ENABLE_DOM_FAST_PATH
     typedef JsUtil::BaseDictionary<Js::FunctionInfo*, IR::JnHelperMethod, ArenaAllocator, PowerOf2SizePolicy> DOMFastPathIRHelperMap;
+#endif
 
     // valid if object!= NULL
     struct EnumeratedObjectCache {
@@ -944,10 +946,11 @@ private:
         inline HRESULT RegisterSIMD();
 #endif
 
+#ifdef ENABLE_DOM_FAST_PATH
         // Theoretically we can put this in ThreadContext; don't want to keep the dictionary forever, and preserve the possibility of
         // using JavascriptFunction as key.
         DOMFastPathIRHelperMap* domFastPathIRHelperMap;
-
+#endif
 #ifdef IR_VIEWER
         inline HRESULT RegisterIRViewer();
 #endif /* IR_VIEWER */
@@ -997,8 +1000,9 @@ private:
 
         TypePath* GetRootPath() { return cache->rootPath; }
 
+#ifdef ENABLE_DOM_FAST_PATH
         DOMFastPathIRHelperMap* EnsureDOMFastPathIRHelperMap();
-
+#endif
         wchar_t const * GetUrl() const { return url; }
         void SetUrl(BSTR bstr);
 #ifdef RUNTIME_DATA_COLLECTION
