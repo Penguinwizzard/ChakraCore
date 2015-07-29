@@ -459,6 +459,7 @@ HELPERCALL(SetHomeObj,    Js::JavascriptOperators::OP_SetHomeObj,    0)
 
 HELPERCALL(ResumeYield,   Js::JavascriptOperators::OP_ResumeYield,   AttrCanThrow)
 
+#ifdef ENABLE_DOM_FAST_PATH
 #define _ONE_SIMPLESLOT_RECORD(nameGetter, nameSetter, funcInfoGetter, funcInfoSetter, entryGetter, entrySetter, attributeGetter, attributeSetter) HELPERCALL(nameGetter, entryGetter, attributeGetter)
 #include "..\runtime\types\DomFastpathInfolist.h"
 #undef _ONE_SIMPLESLOT_RECORD
@@ -466,6 +467,7 @@ HELPERCALL(ResumeYield,   Js::JavascriptOperators::OP_ResumeYield,   AttrCanThro
 #define _ONE_SIMPLESLOT_RECORD(nameGetter, nameSetter, funcInfoGetter, funcInfoSetter, entryGetter, entrySetter, attribute, attributeSetter) HELPERCALL(nameSetter, entrySetter, attributeSetter)
 #include "..\runtime\types\DomFastpathInfolist.h"
 #undef _ONE_SIMPLESLOT_RECORD
+#endif
 
 #if !FLOATVAR
 HELPERCALL(BoxStackNumber, Js::JavascriptNumber::BoxStackNumber, 0)

@@ -110,6 +110,7 @@ Inline::Optimize(Func *func, IR::Instr *callerArgOuts[], Js::ArgSlot callerArgOu
                     Js::FunctionInfo* functionInfo = inlineeData->GetFunctionInfo();
                     if (!functionInfo->GetFunctionBody())
                     {
+#ifdef ENABLE_DOM_FAST_PATH
                         Assert(functionInfo->GetLocalFunctionId() == Js::JavascriptBuiltInFunction::DOMFastPathGetter ||
                             functionInfo->GetLocalFunctionId() == Js::JavascriptBuiltInFunction::DOMFastPathSetter);
                         if (PHASE_OFF1(Js::InlineHostCandidatePhase))
@@ -117,6 +118,7 @@ Inline::Optimize(Func *func, IR::Instr *callerArgOuts[], Js::ArgSlot callerArgOu
                             break;
                         }
                         this->InlineDOMGetterSetterFunction(instr, inlineeData, inlinerData);
+#endif
                         break;
                     }
 
@@ -3359,6 +3361,7 @@ Inline::InlineFunctionCommon(IR::Instr *callInstr, StackSym* originalCallTargetS
     return instrNext;
 }
 
+#ifdef ENABLE_DOM_FAST_PATH
 // we have ldfld, src1 obj, src2: null; dest: return value
 // We need to convert it to inlined method call.
 // We cannot do CallDirect as it requires ArgOut and that cannot be hoisted/copyproped
@@ -3428,7 +3431,7 @@ IR::Instr * Inline::InlineDOMGetterSetterFunction(IR::Instr *ldFldInstr, const J
 
     return ldInstr->m_next;
 }
-
+#endif
 void
 Inline::InsertStatementBoundary(IR::Instr * instrNext)
 {

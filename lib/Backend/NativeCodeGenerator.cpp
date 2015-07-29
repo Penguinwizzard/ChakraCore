@@ -2548,12 +2548,14 @@ NativeCodeGenerator::GatherCodeGenData(
                 const auto inlineeFunctionBody = inlinee->GetFunctionBody();
                 if(!inlineeFunctionBody)
                 {
+#ifdef ENABLE_DOM_FAST_PATH
                     if ((inlinee->GetLocalFunctionId() == Js::JavascriptBuiltInFunction::DOMFastPathGetter ||
                         inlinee->GetLocalFunctionId() == Js::JavascriptBuiltInFunction::DOMFastPathSetter) &&
                         !isJitTimeDataComputed)
                     {
                         jitTimeData->AddLdFldInlinee(recycler, inlineCacheIndex, inlinee);
                     }
+#endif
                     continue;
                 }
 

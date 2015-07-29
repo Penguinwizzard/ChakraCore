@@ -5,6 +5,8 @@
 //----------------------------------------------------------------------------
 #pragma once
 
+#ifdef ENABLE_DOM_FAST_PATH
+
 class DOMFastPathInfo
 {
 public:
@@ -22,5 +24,7 @@ public:
     static bool VerifyObjectSize(Js::RecyclableObject* obj, size_t objSize);
 #endif
 };
+
+#endif
 
 

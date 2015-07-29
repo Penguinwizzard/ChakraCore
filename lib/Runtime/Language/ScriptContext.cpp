@@ -172,7 +172,9 @@ namespace Js
         , nextPendingClose(nullptr)
         , debuggerMode(DebuggerMode::NotDebugging)
         , m_fTraceDomCall(FALSE)
+#ifdef ENABLE_DOM_FAST_PATH
         , domFastPathIRHelperMap(nullptr)
+#endif
         , nativeModules(nullptr)
         , intConstPropsOnGlobalObject(nullptr)
         , intConstPropsOnGlobalUserObject(nullptr)
@@ -5227,6 +5229,7 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
         return function;
     }
 
+#ifdef ENABLE_DOM_FAST_PATH
     DOMFastPathIRHelperMap* ScriptContext::EnsureDOMFastPathIRHelperMap()
     {
         if (domFastPathIRHelperMap == nullptr)
@@ -5238,6 +5241,7 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
 
         return domFastPathIRHelperMap;
     }
+#endif
 
     void ScriptContext::AddDynamicProfileInfo(FunctionBody * functionBody, WriteBarrierPtr<DynamicProfileInfo>* dynamicProfileInfo)
     {

@@ -563,13 +563,15 @@ bool InliningDecider::GetBuiltInInfo(
     case Js::JavascriptBuiltInFunction::CharArray_NewInstance:
         *returnType = ValueType::GetObject(ObjectType::CharArray);
         break;
-    
+
+#ifdef ENABLE_DOM_FAST_PATH
         // TODO: inline setter as well. 
     // TODO: returnType should be consistent, but we don't know from the type
     // How to get the return type from profileData?
     case Js::JavascriptBuiltInFunction::DOMFastPathGetter:
         *inlineCandidateOpCode = Js::OpCode::DOMFastPathGetter;
         break;
+#endif
     }
 
     return true;

@@ -435,6 +435,7 @@ namespace Js
         return EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, GeneratorVirtualScriptFunction, proxy, deferredPrototypeType));
     }
 
+#ifdef ENABLE_DOM_FAST_PATH
     inline JavascriptTypedObjectSlotAccessorFunction* JavascriptLibrary::CreateTypedObjectSlotGetterFunction(unsigned int slotIndex, FunctionInfo* functionInfo, int typeId, PropertyId nameId)
     {
         // GC should zero out the whole library; we shouldn't need to explicitly zero out
@@ -457,6 +458,7 @@ namespace Js
         return EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptTypedObjectSlotAccessorFunction, typedObjectSlotSetterFunctionTypes[slotIndex], functionInfo, typeId, nameId));
     }
 
+#endif
     inline DynamicType * JavascriptLibrary::CreateGeneratorType(RecyclableObject* prototype)
     {
         return DynamicType::New(scriptContext, TypeIds_Generator, prototype, nullptr, NullTypeHandler<false>::GetDefaultInstance());

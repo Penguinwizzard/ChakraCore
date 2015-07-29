@@ -17266,8 +17266,10 @@ swap_srcs:
     case Js::OpCode::NewConcatStrMulti:
     case Js::OpCode::NewConcatStrMultiBE:
     case Js::OpCode::ExtendArg_A:
+#ifdef ENABLE_DOM_FAST_PATH
     case Js::OpCode::DOMFastPathGetter:
     case Js::OpCode::DOMFastPathSetter:
+#endif
     case Js::OpCode::NewScopeSlots:
     case Js::OpCode::NewStackScopeSlots:
     case Js::OpCode::IsInst:
