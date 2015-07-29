@@ -1,5 +1,6 @@
 #include "Runtime.h"
 #include "jsrtcontext.h"
+#include "TestHooks.h"
 
 static BOOL AttachProcess(HANDLE hmod)
 {
@@ -14,6 +15,14 @@ static BOOL AttachProcess(HANDLE hmod)
     // Enable SSE2 math functions in CRT if SSE2 is available
     _set_SSE2_enable(TRUE);
 #endif
+
+#ifdef ENABLE_TEST_HOOKS
+    if (FAILED(OnChakraCoreLoaded()))
+    {
+        return FALSE;
+    }
+#endif
+
     {
         CmdLineArgsParser parser;
 

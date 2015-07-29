@@ -10,6 +10,7 @@
 
 #define Unused(var) var;
 
+#define IfFailedReturn(EXPR) do { hr = (EXPR); if (FAILED(hr)) { return hr; }} while(FALSE)
 #define IfFailedGoLabel(expr, label) do { hr = (expr); if (FAILED(hr)) { goto label; } } while (FALSE)
 #define IfFailGo(expr) IfFailedGoLabel(hr = (expr), Error)
 
@@ -29,13 +30,14 @@
 #include <io.h>
 
 #if defined(_DEBUG)
-#define JS_STL_DEBUG
+#define _DEBUG_WAS_DEFINED
 #undef _DEBUG
 #endif
 #include <map>
-#ifdef JS_STL_DEBUG
+#include <atlbase.h>
+#ifdef _DEBUG_WAS_DEFINED
 #define _DEBUG
-#undef JS_STL_DEBUG
+#undef _DEBUG_WAS_DEFINED
 #endif
 
 #ifdef Assert
@@ -70,6 +72,7 @@ if (!(exp)) \
 
 typedef void * Var;
 
+#include "TestHooks.h"
 #include "chakrartinterface.h"
 #include "Helpers.h"
 #include "MessageQueue.h"

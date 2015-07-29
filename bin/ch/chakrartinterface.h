@@ -80,11 +80,63 @@ struct JsAPIHooks
 
 class ChakraRTInterface
 {
+public:
+    typedef void(__stdcall * HostPrintUsageFuncPtr)();
+
+    struct ArgInfo
+    {
+        int argc;
+        LPWSTR* argv;
+        HostPrintUsageFuncPtr hostPrintUsage;
+        BSTR* filename;
+    };
+
+#define CHECKED_CALL_RETURN(func, retVal, ...) (m_testHooksSetup && m_testHooks.pf##func? m_testHooks.pf##func(__VA_ARGS__) : retVal)
+#define CHECKED_CALL(func, ...) (m_testHooksSetup && m_testHooks.pf##func? m_testHooks.pf##func(__VA_ARGS__) : E_NOTIMPL)
+
 private:
+    static bool m_testHooksSetup;
+    static bool m_testHooksInitialized;
+    static ArgInfo m_argInfo;
+    static TestHooks m_testHooks;
     static JsAPIHooks m_jsApiHooks;
 
+private:
+    static HRESULT ParseConfigFlags();
+
 public:
-    static void Initialize(HINSTANCE library);
+    static HRESULT OnChakraCoreLoaded(TestHooks& testHooks);
+
+    static HINSTANCE LoadChakraDll(ArgInfo& argInfo);
+    static void UnloadChakraDll(HINSTANCE library);
+
+    static HRESULT SetAssertToConsoleFlag(bool flag) { return CHECKED_CALL(SetAssertToConsoleFlag, flag); }
+    static HRESULT SetConfigFlags(__in int argc, __in_ecount(argc) LPWSTR argv[]) { return CHECKED_CALL(SetConfigFlags, argc, argv); }
+    static HRESULT GetFileNameFlag(BSTR * filename) { return CHECKED_CALL(GetFilenameFlag, filename); }
+    static HRESULT PrintConfigFlagsUsageString() { return CHECKED_CALL(PrintConfigFlagsUsageString); }
+
+#ifdef CHECK_MEMORY_LEAK
+    static bool IsEnabledCheckMemoryFlag() { return CHECKED_CALL_RETURN(IsEnabledCheckMemoryLeakFlag, FALSE); }
+    static HRESULT SetCheckMemoryLeakFlag(bool flag) { return CHECKED_CALL(SetCheckMemoryLeakFlag, flag); }
+    static HRESULT SetEnableCheckMemoryLeakOutput(bool flag) { return CHECKED_CALL(SetEnableCheckMemoryLeakOutput, flag); }
+#endif
+
+    static HRESULT GetCrashOnExceptionFlag(bool * flag)
+    {
+#ifdef SECURITY_TESTING
+        return CHECKED_CALL(GetCrashOnExceptionFlag, flag);
+#else
+        return E_UNEXPECTED;
+#endif
+    }
+
+    static void NotifyUnhandledException(PEXCEPTION_POINTERS exceptionInfo)
+    {
+        if (m_testHooksSetup && m_testHooks.pfnNotifyUnhandledException != NULL)
+        {
+            m_testHooks.pfnNotifyUnhandledException(exceptionInfo);
+        }
+    }
 
     static JsErrorCode WINAPI JsCreateRuntime(JsRuntimeAttributes attributes, JsThreadServiceCallback threadService, JsRuntimeHandle *runtime) { return m_jsApiHooks.pfJsrtCreateRuntime(attributes, threadService, runtime); }
     static JsErrorCode WINAPI JsCreateContext(JsRuntimeHandle runtime, JsContextRef *newContext) { return m_jsApiHooks.pfJsrtCreateContext(runtime, newContext); }

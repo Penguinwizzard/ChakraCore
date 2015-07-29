@@ -7,8 +7,11 @@ unsigned int MessageBase::s_messageCount = 0;
 
 LPCWSTR hostName = L"ch.exe";
 
-LPCWSTR chakratestDllName = L"chakracoretest.dll";
-LPCWSTR chakraDllName = L"chakracore.dll";
+extern "C"
+HRESULT __stdcall OnChakraCoreLoadedEntry(TestHooks& testHooks)
+{
+    return ChakraRTInterface::OnChakraCoreLoaded(testHooks);
+}
 
 JsRuntimeAttributes jsrtAttributes = JsRuntimeAttributeAllowScriptInterrupt;
 LPCWSTR JsErrorCodeToString(JsErrorCode jsErrorCode)
@@ -90,38 +93,14 @@ LPCWSTR JsErrorCodeToString(JsErrorCode jsErrorCode)
 }
 #define IfJsErrorFailLog(expr) do { JsErrorCode jsErrorCode = expr; if ((jsErrorCode) != JsNoError) { fwprintf(stderr, L"ERROR: " TEXT(#expr) L" failed. JsErrorCode=0x%x (%s)\n", jsErrorCode, JsErrorCodeToString(jsErrorCode)); fflush(stderr); goto Error; } } while (0)
 
-HINSTANCE LoadChakraDll(LPCWSTR dllName, LPCWSTR altDllName)
-{
-    HINSTANCE library = LoadLibraryEx(dllName, nullptr, 0);
-    if (library == nullptr)
-    {
-        library = LoadLibraryEx(altDllName, nullptr, 0);
-        if (library == nullptr)
-        {
-            int ret = GetLastError();
-            fwprintf(stderr, L"FATAL ERROR: Unable to load %ls and %ls GetLastError=0x%x\n", dllName, altDllName, ret);
-            return nullptr;
-        }
-    }
-
-    ChakraRTInterface::Initialize(library);
-    return library;
-}
-
-void UnloadChakraDll(HINSTANCE library)
-{
-    Assert(library != nullptr);
-    FARPROC pDllCanUnloadNow = GetProcAddress(library, "DllCanUnloadNow");
-    if (pDllCanUnloadNow != nullptr)
-    {
-        pDllCanUnloadNow();
-    }
-    FreeLibrary(library);
-}
-
 int HostExceptionFilter(int exceptionCode, _EXCEPTION_POINTERS *ep)
 {
-    if (exceptionCode == EXCEPTION_BREAKPOINT)
+    ChakraRTInterface::NotifyUnhandledException(ep);
+
+    bool crashOnException = false;
+    ChakraRTInterface::GetCrashOnExceptionFlag(&crashOnException);
+
+    if (exceptionCode == EXCEPTION_BREAKPOINT || (crashOnException && exceptionCode != 0xE06D7363))
     {
         return EXCEPTION_CONTINUE_SEARCH;
     }
@@ -130,6 +109,13 @@ int HostExceptionFilter(int exceptionCode, _EXCEPTION_POINTERS *ep)
     fflush(stderr);
 
     return EXCEPTION_EXECUTE_HANDLER;
+}
+
+
+void __stdcall PrintUsage()
+{
+    wprintf(L"\n\nUsage: ch.exe [flaglist] [filename]\n");
+    ChakraRTInterface::PrintConfigFlagsUsageString();
 }
 
 HRESULT ExecuteTest(LPCWSTR fileName)
@@ -201,28 +187,64 @@ Error:
     return hr;
 }
 
+HRESULT ExecuteTestWithMemoryCheck(BSTR fileName)
+{
+    HRESULT hr = E_FAIL;
+#ifdef CHECK_MEMORY_LEAK
+    // Always check memory leak, unless user specfied the flag already
+    if (!ChakraRTInterface::IsEnabledCheckMemoryFlag())
+    {
+        ChakraRTInterface::SetCheckMemoryLeakFlag(true);
+    }
+
+    // Disable the output in case an unhandled exception happens
+    // We will reenable it if there is no unhandled exceptions
+    ChakraRTInterface::SetEnableCheckMemoryLeakOutput(false);
+#endif
+
+    __try
+    {
+        hr = ExecuteTest(fileName);
+    }
+    __except (HostExceptionFilter(GetExceptionCode(), GetExceptionInformation()))
+    {
+        _flushall();
+
+        // Exception happened, so we probably didn't clean up properly, 
+        // Don't exit normally, just terminate
+        TerminateProcess(::GetCurrentProcess(), GetExceptionCode());
+    }
+
+    _flushall();
+
+#ifdef CHECK_MEMORY_LEAK
+    if (false) // TODO : there is one outstanding TLS Entry leak
+    {
+        ChakraRTInterface::SetEnableCheckMemoryLeakOutput(true);
+    }
+#endif
+    return hr;
+}
+
 int _cdecl wmain(int argc, __in_ecount(argc) LPWSTR argv[])
 {
-    HINSTANCE chakraLibrary = LoadChakraDll(chakraDllName, chakratestDllName);
+    if (argc < 2)
+    {
+        PrintUsage();
+        return EXIT_FAILURE;
+    }
+
+    CComBSTR fileName;
+    
+    ChakraRTInterface::ArgInfo argInfo = { argc, argv, PrintUsage, &fileName.m_str };
+    HINSTANCE chakraLibrary = ChakraRTInterface::LoadChakraDll(argInfo);
 
     if (chakraLibrary != nullptr)
     {
-        __try
-        {
-            LPCWSTR fileName = L"test.js"; // TODO : to have real file here 
-            ExecuteTest(fileName);
-        }
-        __except (HostExceptionFilter(GetExceptionCode(), GetExceptionInformation()))
-        {
-            _flushall();
-
-            // Exception happened, so we probably didn't clean up properly, 
-            // Don't exit normally, just terminate
-            TerminateProcess(::GetCurrentProcess(), GetExceptionCode());
-        }
-
-        UnloadChakraDll(chakraLibrary);
+        ExecuteTestWithMemoryCheck(fileName.m_str);
+        ChakraRTInterface::UnloadChakraDll(chakraLibrary);
     }
+
     return 0;
 }
 
