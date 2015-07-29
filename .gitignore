@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 *.log
 *.sdf
 *.suo
@@ -9,3 +10,16 @@ build_*.wrn
 build_*.err
 Build/swum-cache.txt
 *.tlog/
+=======
+*.log
+*.sdf
+*.suo
+*.opensdf
+Build/VCBuild/
+Build/ipch/
+build_*.log
+build_*.wrn
+build_*.err
+Build/swum-cache.txt
+*.tlog/
+>>>>>>> 28f9e3b7e3224b0ac234ae65b7e1c1fcc14b2c23
