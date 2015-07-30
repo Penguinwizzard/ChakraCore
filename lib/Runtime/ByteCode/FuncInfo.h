@@ -136,6 +136,7 @@ public:
     uint hasEscapedUseNestedFunc : 1;
     uint needEnvRegister : 1;
     uint hasCapturedThis : 1;
+    uint isThisInitialized : 1;
 
     typedef ResizableUIntHashTable<Js::RegSlot, ArenaAllocator, PrimePolicy> ConstantRegisterMap;
     ConstantRegisterMap constantToRegister; // maps uint constant to register
@@ -237,6 +238,7 @@ public:
         hasEscapedUseNestedFunc(false),
         needEnvRegister(false),
         hasCapturedThis(false),
+        isThisInitialized(false),
         staticFuncId(-1),
         inlineCacheMap(null),
         slotProfileIdMap(alloc),
@@ -509,6 +511,14 @@ public:
         hasCapturedThis = true;
     }
 
+    bool IsThisInitialized() const {
+        return this->isThisInitialized;
+    }
+
+    void SetThisInitialized() {
+        this->isThisInitialized = true;
+    }
+
     BOOL HasSuperReference() const
     {
         return root->sxFnc.HasSuperReference();
@@ -525,6 +535,10 @@ public:
 
     BOOL IsClassConstructor() const {
         return root->sxFnc.IsClassConstructor();
+    }
+
+    BOOL IsBaseClassConstructor() const {
+        return root->sxFnc.IsBaseClassConstructor();
     }
 
     void RemoveTargetStmt(ParseNode* pnodeStmt) {

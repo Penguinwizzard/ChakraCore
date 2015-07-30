@@ -5156,6 +5156,14 @@ namespace Js
             return newOffset;
         }
 
+    template <class T>
+    void InterpreterStackFrame::OP_NewScObjectNoCtorFull(const unaligned T* playout)
+    {
+        Var function = GetReg(playout->R1);
+        Var newObj = JavascriptOperators::NewScObjectNoCtorFull(function, GetScriptContext());
+        SetReg(playout->R0, newObj);
+    }
+
     ///----------------------------------------------------------------------------
     ///
     /// InterpreterStackFrame::OP_NewScObject

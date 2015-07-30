@@ -500,6 +500,10 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             instrPrev = this->LowerNewScObject(instr, false, true);
             break;
 
+        case Js::OpCode::NewScObjectNoCtorFull:
+            instrPrev = this->LowerNewScObject(instr, false, true, true);
+            break;
+
         case Js::OpCode::GetNewScObject:
             instrPrev = this->LowerGetNewScObject(instr);
             break;
@@ -4348,7 +4352,7 @@ IR::Instr* Lowerer::LowerProfiledNewArray(IR::JitProfilingInstr* instr, bool has
 ///----------------------------------------------------------------------------
 
 IR::Instr *
-Lowerer::LowerNewScObject(IR::Instr *newObjInstr, bool callCtor, bool hasArgs)
+Lowerer::LowerNewScObject(IR::Instr *newObjInstr, bool callCtor, bool hasArgs, bool isBaseClassConstructorNewScObject)
 {
     if (newObjInstr->IsJitProfilingInstr() && newObjInstr->AsJitProfilingInstr()->isNewArray)
     {
@@ -4432,7 +4436,9 @@ Lowerer::LowerNewScObject(IR::Instr *newObjInstr, bool callCtor, bool hasArgs)
             Assert(!newObjDst->CanStoreTemp());
             // createObjDst = NewScObject...(ctorOpnd)
             newScHelper = !callCtor ?
-                (hasArgs ? IR::HelperNewScObjectNoCtor : IR::HelperNewScObjectNoArgNoCtor) :
+                (isBaseClassConstructorNewScObject ?
+                    (hasArgs ? IR::HelperNewScObjectNoCtorFull : IR::HelperNewScObjectNoArgNoCtorFull) :
+                    (hasArgs ? IR::HelperNewScObjectNoCtor : IR::HelperNewScObjectNoArgNoCtor)) :
                 (hasArgs || usedFixedCtorCache ? IR::HelperNewScObjectNoCtor : IR::HelperNewScObjectNoArg);
 
             LoadScriptContext(newObjInstr);

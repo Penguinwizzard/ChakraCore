@@ -169,6 +169,7 @@ public:
     Js::RegSlot AssignTrueConstRegister();
     Js::RegSlot AssignFalseConstRegister();
     Js::RegSlot AssignThisRegister();
+    Js::RegSlot AssignNewTargetRegister();
     void SetNeedEnvRegister();
     void AssignFrameObjRegister();
     void AssignFrameSlotsRegister();
@@ -292,7 +293,14 @@ public:
     void EmitThis(FuncInfo *funcInfo, Js::RegSlot fromRegister);
     void LoadNewTargetObject(FuncInfo *funcInfo);
     void GetEnclosingNonLambdaScope(FuncInfo *funcInfo, Scope * &scope, Js::PropertyId &envIndex);
-    void EmitInternalScopedSlotLoad(FuncInfo *funcInfo, Scope *scope, Js::PropertyId envIndex, Js::RegSlot slot, Js::RegSlot symbolRegister);
+    void EmitInternalScopedSlotLoad(FuncInfo *funcInfo, Js::RegSlot slot, Js::RegSlot symbolRegister, bool chkUndecl = false);
+    void EmitInternalScopedSlotLoad(FuncInfo *funcInfo, Scope *scope, Js::PropertyId envIndex, Js::RegSlot slot, Js::RegSlot symbolRegister, bool chkUndecl = false);
+    void EmitInternalScopedSlotLoad(FuncInfo *funcInfo, Scope *scope, Js::RegSlot scopeLocation, Js::RegSlot slot, Js::RegSlot symbolRegister, bool chkUndecl = false);
+    void EmitInternalScopedSlotStore(FuncInfo *funcInfo, Js::RegSlot slot, Js::RegSlot symbolRegister);
+    void EmitPostSuperCall(FuncInfo *funcInfo, ParseNode* pnode);
+    void EmitScopeSlotLoadThis(FuncInfo *funcInfo, Js::RegSlot regLoc, bool chkUndecl = true);
+    void EmitClassConstructorEndCode(FuncInfo *funcInfo);
+    void EmitBaseClassConstructorThisObject(FuncInfo *funcInfo);
 
     // TODO: home the 'this' argument
     void EmitLoadFormalIntoRegister(ParseNode *pnodeFormal, Js::ArgSlot pos, FuncInfo *funcInfo);

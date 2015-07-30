@@ -5288,6 +5288,7 @@ ParseNodePtr Parser::GenerateEmptyConstructor(bool extends)
         pnodeFnc->sxFnc.SetIsMethod(TRUE);
         pnodeFnc->sxFnc.SetIsClassMember(TRUE);
         pnodeFnc->sxFnc.SetIsClassConstructor(TRUE);
+        pnodeFnc->sxFnc.SetIsBaseClassConstructor(!extends);
         pnodeFnc->sxFnc.SetIsGeneratedDefault(TRUE);
 
         pnodeFnc->ichLim = m_pscan->IchLimTok();
@@ -6049,6 +6050,7 @@ ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulo
             pnodeConstructor->sxFnc.hintLength = constructorNameLength;
             pnodeConstructor->sxFnc.pid = pnodeName && pnodeName->sxVar.pid ? pnodeName->sxVar.pid : wellKnownPropertyPids.constructor;
             pnodeConstructor->sxFnc.SetIsClassConstructor(TRUE);
+            pnodeConstructor->sxFnc.SetIsBaseClassConstructor(pnodeExtends == nullptr);
         }
         else
         {

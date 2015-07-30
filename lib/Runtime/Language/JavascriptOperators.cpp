@@ -5396,7 +5396,17 @@ CommonNumber:
         return newArray;
     }
 
-    Var JavascriptOperators::NewScObjectNoArgNoCtor(Var instance, ScriptContext * requestContext)
+    Var JavascriptOperators::NewScObjectNoArgNoCtorFull(Var instance, ScriptContext* requestContext)
+    {
+        return NewScObjectNoArgNoCtorCommon(instance, requestContext, true);
+    }
+
+    Var JavascriptOperators::NewScObjectNoArgNoCtor(Var instance, ScriptContext* requestContext)
+    {
+        return NewScObjectNoArgNoCtorCommon(instance, requestContext, false);
+    }
+
+    Var JavascriptOperators::NewScObjectNoArgNoCtorCommon(Var instance, ScriptContext* requestContext, bool isBaseClassConstructorNewScObject)
     {
         RecyclableObject * object = RecyclableObject::FromVar(instance);
         FunctionInfo* functionInfo = JavascriptOperators::GetConstructorFunctionInfo(instance, requestContext);
@@ -5404,7 +5414,7 @@ CommonNumber:
         Assert(functionInfo != &JavascriptArray::EntryInfo::NewInstance); // built-ins are not inlined
 
         return functionInfo != null ?
-            JavascriptOperators::NewScObjectCommon(object, functionInfo, requestContext) :
+            JavascriptOperators::NewScObjectCommon(object, functionInfo, requestContext, isBaseClassConstructorNewScObject) :
             JavascriptOperators::NewScObjectHostDispatchOrProxy(object, requestContext);
     }
 
@@ -5518,13 +5528,23 @@ CommonNumber:
         return newObject;
     }
 
+    Var JavascriptOperators::NewScObjectNoCtorFull(Var instance, ScriptContext* requestContext)
+    {
+        return NewScObjectNoCtorCommon(instance, requestContext, true);
+    }
+
     Var JavascriptOperators::NewScObjectNoCtor(Var instance, ScriptContext * requestContext)
+    {
+        return NewScObjectNoCtorCommon(instance, requestContext, false);
+    }
+
+    Var JavascriptOperators::NewScObjectNoCtorCommon(Var instance, ScriptContext* requestContext, bool isBaseClassConstructorNewScObject)
     {
         FunctionInfo* functionInfo = JavascriptOperators::GetConstructorFunctionInfo(instance, requestContext);
 
         if (functionInfo)
         {
-            return JavascriptOperators::NewScObjectCommon(RecyclableObject::FromVar(instance), functionInfo, requestContext);
+            return JavascriptOperators::NewScObjectCommon(RecyclableObject::FromVar(instance), functionInfo, requestContext, isBaseClassConstructorNewScObject);
         }
         else
         {
@@ -5556,7 +5576,7 @@ CommonNumber:
         return object;
     }
 
-    Var JavascriptOperators::NewScObjectCommon(RecyclableObject * function, FunctionInfo* functionInfo, ScriptContext * requestContext)
+    Var JavascriptOperators::NewScObjectCommon(RecyclableObject * function, FunctionInfo* functionInfo, ScriptContext * requestContext, bool isBaseClassConstructorNewScObject)
     {
         // TODO (jedmiad): Allow for the cache to be repopulated if the type got collected, and a new one got populated with
         // the same number of inlined slots. This requires that the JIT-ed code actually load the type from the cache
@@ -5567,11 +5587,12 @@ CommonNumber:
         // inlined slots.
 
         JavascriptFunction* constructor = JavascriptFunction::FromVar(function);
-
-        if (requestContext->GetConfig()->IsES6NewTargetEnabled() && functionInfo->IsClassConstructor())
+        if (requestContext->GetConfig()->IsES6NewTargetEnabled() && functionInfo->IsClassConstructor() && !isBaseClassConstructorNewScObject)
         {
             // If we are calling new on a class constructor, the contract is that we pass new.target as the 'this' argument.
-            // function is the constructor on which we called new - this is new.target.
+            // function is the constructor on which we called new - which is new.target.
+            // If we are trying to construct the object for a base class constructor as part of a super call, we should not 
+            // store new.target in the 'this' argument.
             return function;
         }
         ConstructorCache* constructorCache = constructor->GetConstructorCache();

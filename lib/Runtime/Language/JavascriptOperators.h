@@ -395,9 +395,13 @@ namespace Js
         static uint GetLiteralInlineSlotCapacity(Js::PropertyIdArray const * propIds, ScriptContext *const scriptContext);
         static Var NewJavascriptObjectNoArg(ScriptContext* requestContext);
         static Var NewJavascriptArrayNoArg(ScriptContext* requestContext);
-        static Var NewScObjectNoCtor(Var function, ScriptContext* requestContext);
-        static Var NewScObjectNoArgNoCtor(Var function, ScriptContext* requestContext);
-        static Var NewScObjectNoArg(Var function, ScriptContext* requestContext);
+        static Var NewScObjectNoCtorCommon(Var instance, ScriptContext* requestContext, bool isBaseClassConstructorNewScObject = false);
+        static Var NewScObjectNoCtor(Var instance, ScriptContext* requestContext);
+        static Var NewScObjectNoCtorFull(Var instance, ScriptContext* requestContext);
+        static Var NewScObjectNoArgNoCtorCommon(Var instance, ScriptContext* requestContext, bool isBaseClassConstructorNewScObject = false);
+        static Var NewScObjectNoArgNoCtor(Var instance, ScriptContext* requestContext);
+        static Var NewScObjectNoArgNoCtorFull(Var instance, ScriptContext* requestContext);
+        static Var NewScObjectNoArg(Var instance, ScriptContext* requestContext);
         static Var NewScObject(const Var callee, const Arguments args, ScriptContext *const scriptContext, const Js::AuxArray<uint32> *spreadIndices = nullptr);
         static Var AddVarsToArraySegment(SparseArraySegment<Var> * segment, const Js::VarArray *vars);
         static void AddIntsToArraySegment(SparseArraySegment<int32> * segment, const Js::AuxArray<int32> *ints);
@@ -606,7 +610,7 @@ namespace Js
         static RecyclableObject * GetPrototypeObjectForConstructorCache(RecyclableObject * constructor, ScriptContext * scriptContext, bool& canBeCached);
         static bool PrototypeObject(Var prototypeProperty, RecyclableObject * constructorFunction,  ScriptContext * scriptContext, RecyclableObject** prototypeObject);
         static Var NewScObjectHostDispatchOrProxy(RecyclableObject * function, ScriptContext * requestContext);
-        static Var NewScObjectCommon(RecyclableObject * functionObject, FunctionInfo * functionInfo, ScriptContext * scriptContext);
+        static Var NewScObjectCommon(RecyclableObject * functionObject, FunctionInfo * functionInfo, ScriptContext * scriptContext, bool isBaseClassConstructorNewScObject = false);
 
         static BOOL Reject(bool throwOnError, ScriptContext* scriptContext, long errorCode, PropertyId propertyId);
         static bool AreSamePropertyDescriptors(const PropertyDescriptor* x, const PropertyDescriptor* y, ScriptContext* scriptContext);

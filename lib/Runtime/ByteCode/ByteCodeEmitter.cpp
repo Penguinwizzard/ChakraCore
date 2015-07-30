@@ -1680,6 +1680,7 @@ void ByteCodeGenerator::InitScopeSlotArray(FuncInfo * funcInfo)
     {
         propertyIdsForScopeSlotArray[funcInfo->superScopeSlot] = Js::PropertyIds::_superReferenceSymbol;
     }
+
     if (funcInfo->newTargetScopeSlot != Js::Constants::NoRegister)
     {
         propertyIdsForScopeSlotArray[funcInfo->newTargetScopeSlot] = Js::PropertyIds::_lexicalNewTargetSymbol;
@@ -1786,10 +1787,10 @@ void ByteCodeGenerator::LoadAllConstants(FuncInfo *funcInfo)
         m_writer.Reg1(Js::OpCode::NewPseudoScope, funcInfo->funcExprScope->GetLocation());
     }
 
+    bool thisLoadedFromParams = false;
+
     if (funcInfo->GetIsEventHandler())
     {
-        bool thisLoadedFromParams = false;
-
         // The environment is the namespace hierarchy starting with "this".
         if (funcInfo->NeedEnvRegister())
         {
@@ -1800,13 +1801,6 @@ void ByteCodeGenerator::LoadAllConstants(FuncInfo *funcInfo)
             this->m_writer.ArgIn0(funcInfo->thisPointerRegister);
             this->m_writer.Reg2(Js::OpCode::LdHandlerScope, funcInfo->GetEnvRegister(), funcInfo->thisPointerRegister);
             this->InvalidateCachedOuterScopes(funcInfo);
-        }
-
-        // Top-level HTML event handler.
-        // "this" is required to load the environment
-        if (funcInfo->thisPointerRegister!=Js::Constants::NoRegister)
-        {
-            this->LoadThisObject(funcInfo, thisLoadedFromParams);
         }
     }
     else if (funcInfo->IsGlobalFunction() && !(this->flags & fscrEval))
@@ -1824,10 +1818,6 @@ void ByteCodeGenerator::LoadAllConstants(FuncInfo *funcInfo)
                 byteCodeFunction->RecordNullDisplayConstant(byteCodeFunction->MapRegSlot(funcInfo->GetEnvRegister()));
             }
         }
-        if (funcInfo->thisPointerRegister!=Js::Constants::NoRegister)
-        {
-            this->LoadThisObject(funcInfo);
-        }
     }
     else
     {
@@ -1838,15 +1828,17 @@ void ByteCodeGenerator::LoadAllConstants(FuncInfo *funcInfo)
             m_writer.Reg1(Js::OpCode::LdEnv, funcInfo->GetEnvRegister());
             this->InvalidateCachedOuterScopes(funcInfo);
         }
-        if (funcInfo->thisPointerRegister!=Js::Constants::NoRegister)
-        {
-            this->LoadThisObject(funcInfo);
-        }
     }
 
+    // new.target may be used to construct the 'this' register so make sure to load it first
     if (funcInfo->newTargetRegister != Js::Constants::NoRegister)
     {
         this->LoadNewTargetObject(funcInfo);
+    }
+
+    if (funcInfo->thisPointerRegister != Js::Constants::NoRegister)
+    {
+        this->LoadThisObject(funcInfo, thisLoadedFromParams);
     }
 
     if (funcInfo->frameDisplayRegister != Js::Constants::NoRegister)
@@ -1985,8 +1977,19 @@ void ByteCodeGenerator::LoadThisObject(FuncInfo *funcInfo, bool thisLoadedFromPa
 
         if (this->scriptContext->GetConfig()->IsES6NewTargetEnabled() && funcInfo->IsClassConstructor())
         {
-            // TODO[tawoll] - this should be 'uninitialized' as part of the temporal-dead-zone for class constructors
-            thisLocation = funcInfo->undefinedConstantRegister;
+            // Derived class constructors initialize 'this' to be undecl 
+            //   - we'll check this value during a super call and during 'this' access
+            // Base class constructors initialize 'this' to a new object using new.target
+            if (funcInfo->IsBaseClassConstructor())
+            {
+                EmitBaseClassConstructorThisObject(funcInfo);
+            }
+            else
+            {
+                this->m_writer.Reg1(Js::OpCode::InitUndecl, funcInfo->thisPointerRegister);
+            }
+
+            return;
         }
         else if (!thisLoadedFromParams && !funcInfo->IsLambda())
         {
@@ -2042,26 +2045,187 @@ void ByteCodeGenerator::LoadNewTargetObject(FuncInfo *funcInfo)
     }
 }
 
-void ByteCodeGenerator::EmitInternalScopedSlotLoad(FuncInfo *funcInfo, Scope *scope, Js::PropertyId envIndex, Js::RegSlot slot, Js::RegSlot symbolRegister)
+void ByteCodeGenerator::EmitScopeSlotLoadThis(FuncInfo *funcInfo, Js::RegSlot regLoc, bool chkUndecl)
 {
-    Assert(slot != Js::Constants::NoProperty);
+    FuncInfo* nonLambdaFunc = funcInfo;
+    if (funcInfo->IsLambda())
+    {
+        nonLambdaFunc = FindEnclosingNonLambda();
+    }
+
+    if (nonLambdaFunc->IsClassConstructor() && !nonLambdaFunc->IsBaseClassConstructor())
+    {
+        // If we are in a derived class constructor and we have a scope slot for 'this', 
+        // we need to load 'this' from the scope slot. This is to support the case where 
+        // the call to initialize 'this' via super() is inside a lambda since the lambda
+        // can't assign to the 'this' register of the parent constructor.
+        if (nonLambdaFunc->thisScopeSlot != Js::Constants::NoRegister)
+        {
+            Js::PropertyId slot = nonLambdaFunc->thisScopeSlot;
+
+            EmitInternalScopedSlotLoad(funcInfo, slot, regLoc, chkUndecl);
+        }
+        else if (!nonLambdaFunc->IsThisInitialized() && chkUndecl)
+        {
+            // If we don't have a scope slot for 'this' we know that super could not have 
+            // been called inside a lambda so we can check the flag to see if we called 
+            // super and assigned to the this register already. If not, this should trigger 
+            // a ReferenceError.
+            EmitUseBeforeDeclarationRuntimeError(this, regLoc, false);
+        }
+    }
+}
+
+void ByteCodeGenerator::EmitPostSuperCall(FuncInfo *funcInfo, ParseNode* pnode)
+{
+    FuncInfo* nonLambdaFunc = funcInfo;
+    if (funcInfo->IsLambda())
+    {
+        nonLambdaFunc = FindEnclosingNonLambda();
+    }
+
+    if (nonLambdaFunc->IsClassConstructor())
+    {
+        // We may need to load 'this' from the scope slot.
+        EmitScopeSlotLoadThis(funcInfo, funcInfo->thisPointerRegister, false);
+
+        // const temp = super();
+        // if (UndeclBlockVar !== this) {
+        //   throw ReferenceError;
+        // } else {
+        //   this = temp;
+        // }
+        Js::ByteCodeLabel errLabel = this->Writer()->DefineLabel();
+        Js::ByteCodeLabel skipLabel = this->Writer()->DefineLabel();
+        Js::RegSlot tmpUndeclReg = funcInfo->AcquireTmpRegister();
+        this->Writer()->Reg1(Js::OpCode::InitUndecl, tmpUndeclReg);
+        this->Writer()->BrReg2(Js::OpCode::BrSrNeq_A, errLabel, funcInfo->thisPointerRegister, tmpUndeclReg);
+        funcInfo->ReleaseTmpRegister(tmpUndeclReg);
+        this->Writer()->Br(Js::OpCode::Br, skipLabel);
+        this->Writer()->MarkLabel(errLabel);
+        this->Writer()->W1(Js::OpCode::RuntimeReferenceError, SCODE_CODE(JSERR_ClassThisAlreadyAssigned));
+        this->Writer()->MarkLabel(skipLabel);
+
+        funcInfo->AcquireLoc(pnode);
+        this->Writer()->Reg2(Js::OpCode::StrictLdThis, funcInfo->thisPointerRegister, pnode->location);
+
+        nonLambdaFunc->SetThisInitialized();
+
+        // We already assigned the result of super() to the 'this' register but we need to store it in the scope slot, too. If there is one.
+        if (nonLambdaFunc->thisScopeSlot != Js::Constants::NoRegister)
+        {
+            EmitInternalScopedSlotStore(funcInfo, nonLambdaFunc->thisScopeSlot, funcInfo->thisPointerRegister);
+        }
+    }
+}
+
+void ByteCodeGenerator::EmitClassConstructorEndCode(FuncInfo *funcInfo)
+{
+    if (funcInfo->thisPointerRegister != Js::Constants::NoRegister)
+    {
+        // We need to try and load 'this' from the scope slot, if there is one. 
+        EmitScopeSlotLoadThis(funcInfo, funcInfo->thisPointerRegister);
+        this->Writer()->Reg2(Js::OpCode::Ld_A, ByteCodeGenerator::ReturnRegister, funcInfo->thisPointerRegister);
+    }
+    else
+    {
+        // This is the case where we don't have any references to this or super in the constructor or any nested lambda functions.
+        // We know 'this' must be undecl so let's just emit the ReferenceError as part of the fallthrough.
+        EmitUseBeforeDeclarationRuntimeError(this, ByteCodeGenerator::ReturnRegister, true);
+    }
+}
+
+void ByteCodeGenerator::EmitBaseClassConstructorThisObject(FuncInfo *funcInfo)
+{
+    this->Writer()->Reg2(Js::OpCode::NewScObjectNoCtorFull, funcInfo->thisPointerRegister, funcInfo->newTargetRegister);
+}
+
+void ByteCodeGenerator::EmitInternalScopedSlotLoad(FuncInfo *funcInfo, Js::RegSlot slot, Js::RegSlot symbolRegister, bool chkUndecl)
+{
+    Scope* scope = nullptr;
+
+    if (funcInfo->IsLambda())
+    {
+        Js::PropertyId envIndex = -1;
+        GetEnclosingNonLambdaScope(funcInfo, scope, envIndex);
+
+        EmitInternalScopedSlotLoad(funcInfo, scope, envIndex, slot, symbolRegister, chkUndecl);
+    }
+    else
+    {
+        scope = funcInfo->GetBodyScope();
+        Js::RegSlot scopeLocation = scope->GetLocation();
+
+        EmitInternalScopedSlotLoad(funcInfo, scope, scopeLocation, slot, symbolRegister, chkUndecl);
+    }
+}
+
+void ByteCodeGenerator::EmitInternalScopedSlotLoad(FuncInfo *funcInfo, Scope *scope, Js::PropertyId envIndex, Js::RegSlot slot, Js::RegSlot symbolRegister, bool chkUndecl)
+{
     Js::RegSlot scopeLocation = funcInfo->AcquireTmpRegister();
     this->m_writer.Slot(Js::OpCode::LdSlotArr, scopeLocation, funcInfo->GetEnvRegister(), envIndex + Js::FrameDisplay::GetOffsetOfScopes()/sizeof(Js::Var));
     funcInfo->ReleaseTmpRegister(scopeLocation);
+
+    EmitInternalScopedSlotLoad(funcInfo, scope, scopeLocation, slot, symbolRegister, chkUndecl);
+}
+
+void ByteCodeGenerator::EmitInternalScopedSlotLoad(FuncInfo *funcInfo, Scope *scope, Js::RegSlot scopeLocation, Js::RegSlot slot, Js::RegSlot symbolRegister, bool chkUndecl)
+{
+    Assert(slot != Js::Constants::NoProperty);
     Js::ProfileId profileId = funcInfo->FindOrAddSlotProfileId(scope, symbolRegister);
     Js::OpCode opcode;
 
     if (scope->GetIsObject())
     {
-        opcode = (scope->IsBlockScope(funcInfo)) ? Js::OpCode::LdObjSlot : Js::OpCode::LdSlot;
+        opcode = (scope->IsBlockScope(funcInfo)) ?
+            (chkUndecl ? Js::OpCode::LdObjSlotChkUndecl : Js::OpCode::LdObjSlot) :
+            (chkUndecl ? Js::OpCode::LdSlotChkUndecl : Js::OpCode::LdSlot);
     }
     else
     {
-        opcode = Js::OpCode::LdSlot;
+        opcode = chkUndecl ? Js::OpCode::LdSlotChkUndecl : Js::OpCode::LdSlot;
         slot += Js::ScopeSlots::FirstSlotIndex;
     }
 
     this->m_writer.Slot(opcode, symbolRegister, scopeLocation, slot, profileId);
+}
+
+void ByteCodeGenerator::EmitInternalScopedSlotStore(FuncInfo *funcInfo, Js::RegSlot slot, Js::RegSlot symbolRegister)
+{
+    Assert(slot != Js::Constants::NoProperty);
+    
+    Scope* scope = nullptr;
+    Js::OpCode opcode;
+    Js::RegSlot scopeLocation;
+
+    if (funcInfo->IsLambda())
+    {
+        Js::PropertyId envIndex = -1;
+        GetEnclosingNonLambdaScope(funcInfo, scope, envIndex);
+
+        scopeLocation = funcInfo->AcquireTmpRegister();
+        this->Writer()->Slot(Js::OpCode::LdSlotArr, scopeLocation, funcInfo->GetEnvRegister(), envIndex + Js::FrameDisplay::GetOffsetOfScopes() / sizeof(Js::Var));
+        funcInfo->ReleaseTmpRegister(scopeLocation);
+    }
+    else
+    {
+        scope = funcInfo->GetBodyScope();
+        scopeLocation = scope->GetLocation();
+    }
+
+    Assert(scope != nullptr);
+    
+    if (scope->GetIsObject())
+    {
+        opcode = (scope->IsBlockScope(funcInfo)) ? Js::OpCode::StObjSlot : Js::OpCode::StSlot;
+    }
+    else
+    {
+        opcode = Js::OpCode::StSlot;
+        slot += Js::ScopeSlots::FirstSlotIndex;
+    }
+
+    this->Writer()->Slot(opcode, symbolRegister, scopeLocation, slot);
 }
 
 void ByteCodeGenerator::GetEnclosingNonLambdaScope(FuncInfo *funcInfo, Scope * &scope, Js::PropertyId &envIndex)
@@ -2093,7 +2257,7 @@ void ByteCodeGenerator::EmitThis(FuncInfo *funcInfo, Js::RegSlot fromRegister)
             {
                 scope = scope->GetFunc()->GetGlobalEvalBlockScope();
                 Js::PropertyId slot = scope->GetFunc()->thisScopeSlot;
-                EmitInternalScopedSlotLoad(funcInfo, scope, envIndex, slot, funcInfo->thisPointerRegister);
+                EmitInternalScopedSlotLoad(funcInfo, scope, envIndex, slot, funcInfo->thisPointerRegister, false);
             }
             else
             {
@@ -2101,10 +2265,13 @@ void ByteCodeGenerator::EmitThis(FuncInfo *funcInfo, Js::RegSlot fromRegister)
                 this->m_writer.Reg2Int1(Js::OpCode::LdThis, funcInfo->thisPointerRegister, funcInfo->nullConstantRegister, this->GetModuleID());
             }
         }
-        else
+        else if (!scope->GetFunc()->IsClassConstructor() || scope->GetFunc()->IsBaseClassConstructor())
         {
+            // In a lambda inside a derived class constructor, 'this' should be loaded from the scope slot whenever 'this' is accessed.
+            // It's safe to load 'this' into the register for base class constructors because there is no complex assignment to 'this'
+            // via super call chain.
             Js::PropertyId slot = scope->GetFunc()->thisScopeSlot;
-            EmitInternalScopedSlotLoad(funcInfo, scope, envIndex, slot, funcInfo->thisPointerRegister);
+            EmitInternalScopedSlotLoad(funcInfo, scope, envIndex, slot, funcInfo->thisPointerRegister, false);
         }
     }
     else if (funcInfo->byteCodeFunction->GetIsStrictMode() && (!funcInfo->IsGlobalFunction() || this->flags & fscrEval))
@@ -2609,7 +2776,6 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
         {
             this->m_writer.Slot(Js::OpCode::StSlot, funcInfo->superRegister, funcInfo->GetBodyScope()->GetLocation(), funcInfo->superScopeSlot + Js::ScopeSlots::FirstSlotIndex);
         }
-
 
         if (byteCodeFunction->DoStackNestedFunc())
         {
@@ -6009,7 +6175,10 @@ void EmitCallTargetES5(
     {
         Emit(pnodeTarget, byteCodeGenerator, funcInfo, false);
 
-        if (byteCodeGenerator->GetScriptContext()->GetConfig()->IsES6NewTargetEnabled())
+        // Super calls should always use the new.target register unless we don't have one.
+        // That could happen if we have an eval('super()') outside of a class constructor.
+        if (byteCodeGenerator->GetScriptContext()->GetConfig()->IsES6NewTargetEnabled()
+            && funcInfo->newTargetRegister != Js::Constants::NoRegister)
         {
             *thisLocation = funcInfo->newTargetRegister;
         }
@@ -8026,6 +8195,8 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         break;          //PTNODE(knopThis       , "this"        ,None    ,None ,fnopLeaf)
     case knopThis:
         // enregistered
+        // Try to load 'this' from a scope slot if we are in a derived class constructor with scope slots. Otherwise, this is a nop.
+        byteCodeGenerator->EmitScopeSlotLoadThis(funcInfo, funcInfo->thisPointerRegister);
         break;
         //PTNODE(knopNewTarget      , "new.target"       ,None    , None        , fnopLeaf)
     case knopNewTarget:
@@ -8499,22 +8670,47 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
             break;
         }
     case knopCall:
-        byteCodeGenerator->StartStatement(pnode);
-        if (pnode->sxCall.pnodeTarget->nop == knopSuper)
         {
-            EmitSuperFieldPatch(funcInfo, pnode, byteCodeGenerator);
+            byteCodeGenerator->StartStatement(pnode);
+            bool performCall = true;
+            if (pnode->sxCall.pnodeTarget->nop == knopSuper)
+            {
+                FuncInfo* nonLambdaFunc = funcInfo;
+                if (funcInfo->IsLambda())
+                {
+                    nonLambdaFunc = byteCodeGenerator->FindEnclosingNonLambda();
+                }
+                if (nonLambdaFunc->IsBaseClassConstructor())
+                {
+                    // super() is not allowed in base class constructors. If we detect this, emit a ReferenceError and skip making the call.
+                    byteCodeGenerator->Writer()->W1(Js::OpCode::RuntimeReferenceError, SCODE_CODE(JSERR_ClassSuperInBaseClass));
+                    performCall = false;
+                }
+                else
+                {
+                    EmitSuperFieldPatch(funcInfo, pnode, byteCodeGenerator);
+                    pnode->isUsed = true;
+                }
+            }
+            if (performCall)
+            {
+                if (pnode->sxCall.isApplyCall && funcInfo->GetApplyEnclosesArgs())
+                {
+                    // TODO[ianhall]: Can we remove the ApplyCall bytecode gen time optimization?
+                    EmitApplyCall(pnode, Js::Constants::NoRegister, byteCodeGenerator, funcInfo, fReturnValue, true);
+                }
+                else
+                {
+                    EmitCall(pnode, Js::Constants::NoRegister, byteCodeGenerator, funcInfo, fReturnValue, true);
+                }
+                if (pnode->sxCall.pnodeTarget->nop == knopSuper)
+                {
+                    byteCodeGenerator->EmitPostSuperCall(funcInfo, pnode);
+                }
+            }
+            byteCodeGenerator->EndStatement(pnode);
+            break;
         }
-        if (pnode->sxCall.isApplyCall && funcInfo->GetApplyEnclosesArgs())
-        {
-            // TODO[ianhall]: Can we remove the ApplyCall bytecode gen time optimization?
-            EmitApplyCall(pnode, Js::Constants::NoRegister, byteCodeGenerator, funcInfo, fReturnValue, true);
-        }
-        else
-        {
-            EmitCall(pnode, Js::Constants::NoRegister, byteCodeGenerator, funcInfo, fReturnValue, true);
-        }
-        byteCodeGenerator->EndStatement(pnode);
-        break;
     case knopIndex:
         byteCodeGenerator->StartStatement(pnode);
         EmitBinaryOpnds(pnode->sxBin.pnode1, pnode->sxBin.pnode2, byteCodeGenerator, funcInfo);
@@ -8876,7 +9072,7 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
             byteCodeGenerator->DefineOneFunctionHandleBoxedFD(pnode, funcInfo, false);
         }
         break;
-        //PTNODE(knopEndCode    , "<endcode>"    ,None    ,None ,fnopNone)
+    //PTNODE(knopClassDecl, "class"    ,None    ,None ,fnopLeaf)
     case knopClassDecl:
         {
             funcInfo->AcquireLoc(pnode);
@@ -8949,9 +9145,17 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         // load undefined for the fallthrough case:
         if (!funcInfo->IsGlobalFunction())
         {
-            // In the global function, implicit return values are copied to the return register, and if
-            // necessary the return register is initialized at the top. Don't clobber the value here.
-            byteCodeGenerator->Writer()->Reg1(Js::OpCode::LdUndef, ByteCodeGenerator::ReturnRegister);
+            if (funcInfo->IsClassConstructor())
+            {
+                // For class constructors, we need to explicitly load 'this' into the return register.
+                byteCodeGenerator->EmitClassConstructorEndCode(funcInfo);
+            }
+            else
+            {
+                // In the global function, implicit return values are copied to the return register, and if
+                // necessary the return register is initialized at the top. Don't clobber the value here.
+                byteCodeGenerator->Writer()->Reg1(Js::OpCode::LdUndef, ByteCodeGenerator::ReturnRegister);
+            }
         }
 
         // Label for non-fall through ret
@@ -9080,6 +9284,36 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         else
         {
             byteCodeGenerator->Writer()->Reg1(Js::OpCode::LdUndef, ByteCodeGenerator::ReturnRegister);
+        }
+        if (funcInfo->IsClassConstructor())
+        {
+            // return expr; // becomes like below:
+            //
+            // if (IsObject(expr)) {
+            //   return expr;
+            // } else if (IsBaseClassConstructor) {
+            //   return this;
+            // } else if (!IsUndefined(expr)) {
+            //   throw TypeError;
+            // }
+
+            Js::ByteCodeLabel returnExprLabel = byteCodeGenerator->Writer()->DefineLabel();
+            byteCodeGenerator->Writer()->BrReg1(Js::OpCode::BrOnObject_A, returnExprLabel, ByteCodeGenerator::ReturnRegister);
+
+            if (funcInfo->IsBaseClassConstructor())
+            {
+                byteCodeGenerator->Writer()->Reg2(Js::OpCode::Ld_A, ByteCodeGenerator::ReturnRegister, funcInfo->thisPointerRegister);
+            }
+            else
+            {
+                Js::ByteCodeLabel returnThisLabel = byteCodeGenerator->Writer()->DefineLabel();
+                byteCodeGenerator->Writer()->BrReg2(Js::OpCode::BrSrEq_A, returnThisLabel, ByteCodeGenerator::ReturnRegister, funcInfo->undefinedConstantRegister);
+                byteCodeGenerator->Writer()->W1(Js::OpCode::RuntimeTypeError, SCODE_CODE(JSERR_ClassDerivedConstructorInvalidReturnType));
+                byteCodeGenerator->Writer()->MarkLabel(returnThisLabel);
+                byteCodeGenerator->EmitClassConstructorEndCode(funcInfo);
+            }
+            
+            byteCodeGenerator->Writer()->MarkLabel(returnExprLabel);
         }
         if (pnode->sxStmt.grfnop & fnopCleanup)
         {

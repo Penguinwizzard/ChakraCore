@@ -759,6 +759,12 @@ Js::RegSlot ByteCodeGenerator::AssignThisRegister()
     return top->AssignThisRegister();
 }
 
+Js::RegSlot ByteCodeGenerator::AssignNewTargetRegister()
+{
+    FuncInfo *top = funcInfoStack->Top();
+    return top->AssignNewTargetRegister();
+}
+
 void ByteCodeGenerator::SetNeedEnvRegister()
 {
     FuncInfo *top = funcInfoStack->Top();
@@ -2648,6 +2654,22 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
         top->AssignSuperRegister();
     }
 
+    if (top->IsClassConstructor())
+    {
+        if (top->IsBaseClassConstructor())
+        {
+            // Base class constructor may not explicitly reference new.target but we always need to have it in order to construct the 'this' object.
+            top->AssignNewTargetRegister();
+            // Also must have a register to slot the 'this' object into.
+            top->AssignThisRegister();
+        }
+        else
+        {
+            // Derived class constructors need to check undefined against explicit return statements.
+            top->AssignUndefinedConstRegister();
+        }
+    }
+
     AssignFuncSymRegister(pnode, byteCodeGenerator, top);
 
     return top;
@@ -4278,12 +4300,6 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
                     byteCodeGenerator->AssignNullConstRegister();
                 }
             }
-            if (func->IsClassConstructor())
-            {
-                // TODO[tawoll]
-                // Class constructor call needs undefined const register for 'this' argument until we fix the super [[construct]] behavior
-                func->AssignUndefinedConstRegister();
-            }
             // "this" should be loaded for both global and non global functions
             if (func->IsGlobalFunction() && !(byteCodeGenerator->GetFlags() & fscrEval))
             {
@@ -4331,7 +4347,7 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
             nonLambdaFunc->AssignThisRegister();
             nonLambdaFunc->SetIsSuperLexicallyCaptured();
 
-            if (nonLambdaFunc->IsClassConstructor())
+            if (nonLambdaFunc->IsClassConstructor() && byteCodeGenerator->GetScriptContext()->GetConfig()->IsES6NewTargetEnabled())
             {
                 func->AssignNewTargetRegister();
 
@@ -4380,10 +4396,12 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
             // A super call requires 'this' to be available.
             byteCodeGenerator->SetNeedEnvRegister();
             byteCodeGenerator->AssignThisRegister();
+
+            FuncInfo* parent = funcInfo;
             if (funcInfo->IsLambda())
             {
                 // If this is a lambda inside a class member, the class member will need to load super.
-                FuncInfo *parent = byteCodeGenerator->FindEnclosingNonLambda();
+                parent = byteCodeGenerator->FindEnclosingNonLambda();
                 if (parent->root->sxFnc.IsClassMember())
                 {
                     // Set up super reference
@@ -4397,6 +4415,14 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
 
                 parent->AssignThisRegister();
                 byteCodeGenerator->MarkThisUsedInLambda();
+            }
+
+            // If this is a super call in a derived class constructor, we need to have new.target 
+            if (byteCodeGenerator->GetScriptContext()->GetConfig()->IsES6NewTargetEnabled()
+                && parent->IsClassConstructor()
+                && pnode->sxCall.pnodeTarget->nop == knopSuper)
+            {
+                byteCodeGenerator->AssignNewTargetRegister();
             }
         }
         if (pnode->sxCall.isEvalCall)

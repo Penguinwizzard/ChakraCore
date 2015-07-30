@@ -318,6 +318,10 @@ RT_ERROR_MSG(JSERR_NeedConstructor, 5626, "'%s' is not a constructor", "Construc
 
 RT_ERROR_MSG(VBSERR_CantDisplayDate, 32812, "", "The specified date is not available in the current locale's calendar", kjstRangeError, 0)
 
+RT_ERROR_MSG(JSERR_ClassThisAlreadyAssigned, 5627, "", "Multiple calls to 'super' in a class constructor are not allowed", kjstReferenceError, 0)
+RT_ERROR_MSG(JSERR_ClassSuperInBaseClass, 5628, "", "Unexpected call to 'super' in a base class constructor", kjstReferenceError, 0)
+RT_ERROR_MSG(JSERR_ClassDerivedConstructorInvalidReturnType, 5629, "", "Derived class constructor can return only object or undefined", kjstTypeError, 0)
+
 #ifndef VBSERR_UndefVariable
 #define VBSERR_UndefVariable JSERR_UndefVariable
 #endif
