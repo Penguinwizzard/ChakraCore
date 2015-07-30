@@ -227,7 +227,7 @@ Recycler::Recycler(AllocationPolicyManager * policyManager, IdleDecommitPageAllo
     , capturePageHeapFreeStack(false)
 #endif
     , objectBeforeCollectCallbackMap(nullptr)
-    , inObjectBeforeCollectCallback(false)
+    , objectBeforeCollectCallbackState(ObjectBeforeCollectCallback_None)
 {
 #ifdef RECYCLER_MARK_TRACK
     this->markMap = NoCheckHeapNew(MarkMap, &NoCheckHeapAllocator::Instance, 163, &markMapCriticalSection);
@@ -7738,6 +7738,11 @@ Recycler::SetProfiler(Js::Profiler * profiler, Js::Profiler * backgroundProfiler
 
 void Recycler::SetObjectBeforeCollectCallback(void* object, ObjectBeforeCollectCallback callback, void* callbackState)
 {
+    if (objectBeforeCollectCallbackState == ObjectBeforeCollectCallback_Shutdown)
+    {
+        return; // NOP at shutdown
+    }
+
     if (objectBeforeCollectCallbackMap == nullptr)
     {
         if (callback == nullptr) return;        
@@ -7747,7 +7752,7 @@ void Recycler::SetObjectBeforeCollectCallback(void* object, ObjectBeforeCollectC
     // only allow 1 callback per object
     objectBeforeCollectCallbackMap->Item(object, ObjectBeforeCollectCallbackData(callback, callbackState));
 
-    if (callback != nullptr && this->IsInObjectBeforeCollectCallback() && this->IsMarkState()) // revive
+    if (callback != nullptr && this->IsInObjectBeforeCollectCallback()) // revive
     {
         this->ScanMemory(&object, sizeof(object));
         this->ProcessMark(/*background*/false);
@@ -7762,8 +7767,9 @@ bool Recycler::ProcessObjectBeforeCollectCallbacks(bool atShutdown/*= false*/)
     }
     Assert(atShutdown || this->IsMarkState());
 
-    Assert(!inObjectBeforeCollectCallback);
-    AutoRestoreValue<bool> autoInObjectBeforeCollectCallback(&inObjectBeforeCollectCallback, true);
+    Assert(!this->IsInObjectBeforeCollectCallback());
+    AutoRestoreValue<ObjectBeforeCollectCallbackState> autoInObjectBeforeCollectCallback(&objectBeforeCollectCallbackState,
+        atShutdown ? ObjectBeforeCollectCallback_Shutdown: ObjectBeforeCollectCallback_Normal);
 
     // The callbacks may register/unregister callbacks while we are enumerating the current map. To avoid
     // conflicting usage of the callback map, we swap it out. New registration will go to a new map.
@@ -7823,4 +7829,5 @@ void Recycler::ClearObjectBeforeCollectCallbacks()
 {
     // This is called at shutting down. All objects will be gone. Invoke each registered callback if any.
     ProcessObjectBeforeCollectCallbacks(/*atShutdown*/true);
+    Assert(objectBeforeCollectCallbackMap == nullptr);
 }

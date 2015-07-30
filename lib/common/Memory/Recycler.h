@@ -1968,7 +1968,7 @@ public:
     typedef void (CALLBACK *ObjectBeforeCollectCallback)(void* object, void* callbackState); // same as jsrt JsObjectBeforeCollectCallback
     void SetObjectBeforeCollectCallback(void* object, ObjectBeforeCollectCallback callback, void* callbackState);
     void ClearObjectBeforeCollectCallbacks();
-    bool IsInObjectBeforeCollectCallback() const { return inObjectBeforeCollectCallback; }
+    bool IsInObjectBeforeCollectCallback() const { return objectBeforeCollectCallbackState != ObjectBeforeCollectCallback_None; }
 private:
     struct ObjectBeforeCollectCallbackData
     {
@@ -1981,7 +1981,14 @@ private:
     typedef JsUtil::BaseDictionary<void*, ObjectBeforeCollectCallbackData, HeapAllocator,
         PrimeSizePolicy, RecyclerPointerComparer, JsUtil::SimpleDictionaryEntry, JsUtil::NoResizeLock> ObjectBeforeCollectCallbackMap;
     ObjectBeforeCollectCallbackMap* objectBeforeCollectCallbackMap;
-    bool inObjectBeforeCollectCallback;
+
+    enum ObjectBeforeCollectCallbackState
+    {
+      ObjectBeforeCollectCallback_None,
+      ObjectBeforeCollectCallback_Normal,   // Normal GC BeforeCollect callback
+      ObjectBeforeCollectCallback_Shutdown, // At shutdown invoke all BeforeCollect callback
+    } objectBeforeCollectCallbackState;
+
     bool ProcessObjectBeforeCollectCallbacks(bool atShutdown = false);
 };
 
