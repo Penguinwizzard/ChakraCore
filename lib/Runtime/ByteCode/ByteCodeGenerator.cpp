@@ -977,29 +977,17 @@ FuncInfo * ByteCodeGenerator::StartBindGlobalStatements(ParseNode *pnode)
             byteCodeFunction->SetBoundPropertyRecords(EnsurePropertyRecordList());
         }
     }
+    else if ((this->flags & fscrDeferredFnc))
+    {
+        byteCodeFunction = this->EnsureFakeGlobalFuncForUndefer(pnode);
+    }
     else
     {
-        {
-            ENTER_PINNED_SCOPE(Js::PropertyRecordList, propertyRecordList);
-            propertyRecordList = EnsurePropertyRecordList();
-
-            byteCodeFunction = Js::FunctionBody::NewFromRecycler(scriptContext, Js::Constants::GlobalFunction, Js::Constants::GlobalFunctionLength, pnode->sxFnc.nestedCount, m_utf8SourceInfo,
-                m_utf8SourceInfo->GetSrcInfo()->sourceContextInfo->sourceContextId, pnode->sxFnc.functionId, propertyRecordList
-                , Js::FunctionInfo::Attributes::None
-#ifdef PERF_COUNTERS
-                , false /* is function from deferred deserialized proxy */
-#endif
-                );
-
-
-            scriptContext->RegisterDynamicFunctionReference(byteCodeFunction);
-            LEAVE_PINNED_SCOPE();
-        }
+        byteCodeFunction = this->MakeGlobalFunctionBody(pnode);
 
         // Mark this global function to required for register script event
         byteCodeFunction->SetIsTopLevel(true);
 
-        byteCodeFunction->SetIsGlobalFunc(TRUE);
         if (pnode->sxFnc.GetStrictMode() != 0)
         {
             byteCodeFunction->SetIsStrictMode();
@@ -1863,6 +1851,12 @@ void ByteCodeGenerator::Begin(
     else
     {
         this->propertyRecords = null;
+    }
+
+    Js::FunctionBody *fakeGlobalFunc = scriptContext->GetFakeGlobalFuncForUndefer();
+    if (fakeGlobalFunc)
+    {
+        fakeGlobalFunc->ClearBoundPropertyRecords();
     }
 }
 
@@ -4678,3 +4672,52 @@ void VisitClearTmpRegs(ParseNode * pnode, ByteCodeGenerator * byteCodeGenerator,
     VisitIndirect<FuncInfo>(pnode,byteCodeGenerator,funcInfo,&ClearTmpRegs,NULL);
 }
 
+Js::FunctionBody * ByteCodeGenerator::MakeGlobalFunctionBody(ParseNode *pnode)
+{
+    Js::FunctionBody * func;
+
+    ENTER_PINNED_SCOPE(Js::PropertyRecordList, propertyRecordList);
+    propertyRecordList = EnsurePropertyRecordList();
+
+    func = 
+        Js::FunctionBody::NewFromRecycler(
+            scriptContext, 
+            Js::Constants::GlobalFunction, 
+            Js::Constants::GlobalFunctionLength, 
+            pnode->sxFnc.nestedCount, 
+            m_utf8SourceInfo,
+            m_utf8SourceInfo->GetSrcInfo()->sourceContextInfo->sourceContextId, 
+            pnode->sxFnc.functionId, 
+            propertyRecordList,
+            Js::FunctionInfo::Attributes::None
+#ifdef PERF_COUNTERS
+            , false /* is function from deferred deserialized proxy */
+#endif
+            );
+
+    func->SetIsGlobalFunc(TRUE);
+    scriptContext->RegisterDynamicFunctionReference(func);        
+    LEAVE_PINNED_SCOPE();
+
+    return func;
+}
+
+Js::FunctionBody *ByteCodeGenerator::EnsureFakeGlobalFuncForUndefer(ParseNode *pnode)
+{
+    Js::FunctionBody *func = scriptContext->GetFakeGlobalFuncForUndefer();
+    if (!func)
+    {
+        func = this->MakeGlobalFunctionBody(pnode);
+        scriptContext->SetFakeGlobalFuncForUndefer(func);
+    }
+    else
+    {
+        func->SetBoundPropertyRecords(EnsurePropertyRecordList());
+    }
+    if (pnode->sxFnc.GetStrictMode() != 0)
+    {
+        func->SetIsStrictMode();
+    }
+
+    return func;
+}

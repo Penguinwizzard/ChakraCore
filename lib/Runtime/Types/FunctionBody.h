@@ -1315,6 +1315,10 @@ namespace Js
             Assert(this->m_boundPropertyRecords == NULL);
             this->m_boundPropertyRecords = boundPropertyRecords;
         }
+        void ClearBoundPropertyRecords()
+        {
+            this->m_boundPropertyRecords = nullptr;
+        }
         ParseableFunctionInfo* Clone(ScriptContext *scriptContext, uint sourceIndex = Js::Constants::InvalidSourceIndex);
         ParseableFunctionInfo* CopyFunctionInfoInto(ScriptContext *scriptContext, Js::ParseableFunctionInfo* functionInfo, uint sourceIndex = Js::Constants::InvalidSourceIndex);
         void CloneSourceInfo(ScriptContext* scriptContext, const ParseableFunctionInfo& other, ScriptContext* othersScriptContext, uint sourceIndex);

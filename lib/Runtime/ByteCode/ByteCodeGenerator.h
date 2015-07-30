@@ -431,6 +431,9 @@ public:
     void EmitInitCapturedThis(FuncInfo* funcInfo, Scope* scope);
     void EmitInitCapturedNewTarget(FuncInfo* funcInfo, Scope* scope);
 
+    Js::FunctionBody *EnsureFakeGlobalFuncForUndefer(ParseNode *pnode);
+    Js::FunctionBody *MakeGlobalFunctionBody(ParseNode *pnode);
+
     static bool NeedScopeObjectForArguments(FuncInfo *funcInfo, ParseNode *pnodeFnc)
     {
         // We can avoid creating a scope object with arguments present if:
