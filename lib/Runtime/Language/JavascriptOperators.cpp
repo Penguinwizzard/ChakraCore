@@ -6165,9 +6165,20 @@ CommonNumber:
     {
         AssertMsg(!TaggedNumber::Is(object), "SetMember on a non-object?");
 
-        JavascriptString * indexStr = JavascriptConversion::ToString(elementName, scriptContext);
         PropertyRecord const * propertyRecord = nullptr;
-        scriptContext->GetOrAddPropertyRecord(indexStr->GetString(), indexStr->GetLength(), &propertyRecord);
+        if (JavascriptSymbol::Is(elementName))
+        {
+            propertyRecord = JavascriptSymbol::FromVar(elementName)->GetValue();
+        }
+        else if (JavascriptSymbolObject::Is(elementName))
+        {
+            propertyRecord = JavascriptSymbolObject::FromVar(elementName)->GetValue();
+        }
+        else
+        {
+            JavascriptString * indexStr = JavascriptConversion::ToString(elementName, scriptContext);
+            scriptContext->GetOrAddPropertyRecord(indexStr->GetString(), indexStr->GetLength(), &propertyRecord);
+        }
 
         RecyclableObject::FromVar(object)->SetAccessors(propertyRecord->GetPropertyId(), nullptr, setter);
     }
@@ -6182,9 +6193,20 @@ CommonNumber:
     {
         AssertMsg(!TaggedNumber::Is(object), "GetMember on a non-object?");
 
-        JavascriptString * indexStr = JavascriptConversion::ToString(elementName, scriptContext);
         PropertyRecord const * propertyRecord = nullptr;
-        scriptContext->GetOrAddPropertyRecord(indexStr->GetString(), indexStr->GetLength(), &propertyRecord);
+        if (JavascriptSymbol::Is(elementName))
+        {
+            propertyRecord = JavascriptSymbol::FromVar(elementName)->GetValue();
+        }
+        else if (JavascriptSymbolObject::Is(elementName))
+        {
+            propertyRecord = JavascriptSymbolObject::FromVar(elementName)->GetValue();
+        }
+        else
+        {
+            JavascriptString * indexStr = JavascriptConversion::ToString(elementName, scriptContext);
+            scriptContext->GetOrAddPropertyRecord(indexStr->GetString(), indexStr->GetLength(), &propertyRecord);
+        }
 
         RecyclableObject::FromVar(object)->SetAccessors(propertyRecord->GetPropertyId(), getter, nullptr);
     }

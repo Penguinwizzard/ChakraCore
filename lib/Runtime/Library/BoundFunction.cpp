@@ -271,17 +271,10 @@ namespace Js
         JavascriptString* displayName = GetLibrary()->GetEmptyString();
         if (targetFunction != null)
         {
-            if (JavascriptProxy::Is(targetFunction))
+            Var value = JavascriptOperators::GetProperty(targetFunction, PropertyIds::name, targetFunction->GetScriptContext());
+            if (JavascriptString::Is(value))
             {
-                Var value = JavascriptOperators::GetProperty(targetFunction, PropertyIds::name, targetFunction->GetScriptContext());
-                if (JavascriptString::Is(value))
-                {
-                    displayName = JavascriptString::FromVar(value);
-                }
-            }
-            else
-            {
-                displayName = GetTargetFunction()->GetDisplayName(true);
+                displayName = JavascriptString::FromVar(value);
             }
         }
         return LiteralString::Concat(LiteralString::NewCopySz(L"bound ", this->GetScriptContext()), displayName);
