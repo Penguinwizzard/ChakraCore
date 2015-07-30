@@ -1,0 +1,4 @@
+$ENV{'SDXROOT'}/tools/perl/site/lib/PadWalker.pm
+$ENV{'SDXROOT'}/tools/perl/site/lib/auto/PadWalker/PadWalker.dll
+$ENV{'SDXROOT'}/tools/perl/site/lib/auto/PadWalker/PadWalker.exp
+$ENV{'SDXROOT'}/tools/perl/site/lib/auto/PadWalker/PadWalker.lib
