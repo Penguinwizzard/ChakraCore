@@ -1936,6 +1936,7 @@ static BOOL FormatDigits(byte *pbSrc, byte *pbLim, int wExp10, __out_ecount(cchD
     {
         // Just fractional stuff
         *pchDst++ = '0';
+#pragma prefast(suppress:26014, "We have calculate the check the buffer size above already")
         *pchDst++ = '.';
         for( ; wExp10 < 0; wExp10++)
             *pchDst++ = '0';
