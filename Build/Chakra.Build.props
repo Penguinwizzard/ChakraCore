@@ -28,6 +28,8 @@
         4311;     <!-- 'type cast': pointer truncation from '' to '' -->
         4312;     <!-- 'type cast': conversion from '' to '' of greater size -->
       </DisableSpecificWarnings>
+      <!-- Use the debug CRT in debug build -->
+      <RuntimeLibrary Condition="'$(Configuration)'=='Debug'">MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
   </ItemDefinitionGroup>  
 </Project>
