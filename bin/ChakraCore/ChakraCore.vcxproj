@@ -30,7 +30,6 @@
         $(IntDir);        
         %(AdditionalIncludeDirectories);
       </AdditionalIncludeDirectories>
-      <RuntimeLibrary Condition="'$(Configuration)'=='Debug'">MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>    
     <Link>
       <SubSystem>Console</SubSystem>
