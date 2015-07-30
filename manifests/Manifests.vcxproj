@@ -2,6 +2,17 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Condition="'$(ChakraBuildPathImported)'!='true'" Project="$(SolutionDir)Chakra.Build.Paths.props"/>
   <Import Project="$(BuildConfig_ChakraBuildProjectConfigurationProps)" />
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{BCC5C029-2F2C-4EAA-8E60-664D72766936}</ProjectGuid>
+    <RootNamespace>Manifests</RootNamespace>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+  </PropertyGroup>
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.Default.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.props" />
   <ItemGroup>
     <CustomBuild Include="Microsoft-Scripting-JScript9.InternalCounters.man">
       <FileType>Document</FileType>
@@ -17,17 +28,6 @@
       <Outputs>$(IntDir)\%(Filename)Events.rc;$(IntDir)\%(Filename)Events_MSG00001.bin;$(IntDir)\%(Filename)EventsTEMP.bin</Outputs>
     </CustomBuild>
   </ItemGroup>
-  <PropertyGroup Label="Globals">
-    <ProjectGuid>{BCC5C029-2F2C-4EAA-8E60-664D72766936}</ProjectGuid>
-    <RootNamespace>Manifests</RootNamespace>
-  </PropertyGroup>
-  <PropertyGroup Label="Configuration">
-    <ConfigurationType>Utility</ConfigurationType>
-  </PropertyGroup>
-  <Import Project="$(BuildConfigPropsPath)Chakra.Build.Default.props" />
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <Import Project="$(BuildConfigPropsPath)Chakra.Build.props" />
   <ImportGroup Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
