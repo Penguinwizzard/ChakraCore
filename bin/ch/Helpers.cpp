@@ -3,7 +3,10 @@
 //----------------------------------------------------------------------------
 #include "StdAfx.h"
 
-HRESULT LoadScriptFromFile(LPCWSTR filename, LPCWSTR& contents, bool* isUtf8Out, LPCWSTR* contentsRawOut, UINT* lengthBytesOut, bool printFileOpenError)
+LPWSTR* Helpers::argsVal;
+int Helpers::argsCount;
+
+HRESULT Helpers::LoadScriptFromFile(LPCWSTR filename, LPCWSTR& contents, bool* isUtf8Out, LPCWSTR* contentsRawOut, UINT* lengthBytesOut, bool printFileOpenError)
 {
     HRESULT hr = S_OK;
     LPCWSTR contentsRaw = nullptr;
@@ -134,3 +137,49 @@ Error:
 
     return hr;
 }
+
+void Helpers::HandleArgsFlag(int& argc, _Inout_updates_to_(argc, argc) LPWSTR argv[])
+{
+    const LPCWSTR argsFlag = L"-args";
+    const LPCWSTR endArgsFlag = L"-endargs";
+    int argsFlagLen = static_cast<int>(wcslen(argsFlag));
+    int i;
+    for (i = 1; i < argc; i++)
+    {
+        if (_wcsnicmp(argv[i], argsFlag, argsFlagLen) == 0)
+        {
+            break;
+        }
+    }
+    int argsStart = ++i;
+    for (; i < argc; i++)
+    {
+        if (_wcsnicmp(argv[i], endArgsFlag, argsFlagLen) == 0)
+        {
+            break;
+        }
+    }
+    int argsEnd = i;
+
+    int argsCount = argsEnd - argsStart;
+    if (argsCount == 0)
+    {
+        return;
+    }
+    Helpers::argsVal = new LPWSTR[argsCount];
+    Helpers::argsCount = argsCount;
+    int argIndex = argsStart;
+    for (i = 0; i < argsCount; i++)
+    {
+        Helpers::argsVal[i] = argv[argIndex++];
+    }
+
+    argIndex = argsStart - 1;
+    for (i = argsEnd + 1; i < argc; i++)
+    {
+        argv[argIndex++] = argv[i];
+    }
+    Assert(argIndex == argc - argsCount - 1 - (argsEnd < argc));
+    argc = argIndex;
+}
+

@@ -124,7 +124,7 @@ HRESULT ExecuteTest(LPCWSTR fileName)
     LPCWSTR fileContents = nullptr;
     JsRuntimeHandle runtime = JS_INVALID_RUNTIME_HANDLE;
     MessageQueue * messageQueue = nullptr;
-    hr = LoadScriptFromFile(fileName, fileContents);
+    hr = Helpers::LoadScriptFromFile(fileName, fileContents);
     IfFailGo(hr);
 
     IfJsErrorFailLog(ChakraRTInterface::JsCreateRuntime(jsrtAttributes, nullptr, &runtime));
@@ -233,6 +233,8 @@ int _cdecl wmain(int argc, __in_ecount(argc) LPWSTR argv[])
         PrintUsage();
         return EXIT_FAILURE;
     }
+
+    Helpers::HandleArgsFlag(argc, argv);
 
     CComBSTR fileName;
     

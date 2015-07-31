@@ -49,8 +49,10 @@ public:
     }
 
     static bool PrintException(LPCWSTR fileName, JsErrorCode jsErrorCode);
+    static JsValueRef LoadScript(LPCWSTR fileName, size_t fileNameLength, LPCWSTR fileContent, LPCWSTR scriptInjectType);
 
 private:
+    static bool CreateArgumentsObject(JsValueRef *argsObject);
     static JsValueRef __stdcall EchoCallback(JsValueRef callee, bool isConstructCall, JsValueRef *arguments, unsigned short argumentCount, void *callbackState);
     static JsValueRef __stdcall QuitCallback(JsValueRef callee, bool isConstructCall, JsValueRef *arguments, unsigned short argumentCount, void *callbackState);
     static JsValueRef __stdcall LoadScriptFileCallback(JsValueRef callee, bool isConstructCall, JsValueRef *arguments, unsigned short argumentCount, void *callbackState);

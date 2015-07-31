@@ -77,6 +77,7 @@ HINSTANCE ChakraRTInterface::LoadChakraDll(ArgInfo& argInfo)
     m_jsApiHooks.pfJsrtRelease = (JsAPIHooks::JsrtReleasePtr)GetProcAddress(library, "JsRelease");
     m_jsApiHooks.pfJsrtAddRef = (JsAPIHooks::JsrtAddRefPtr)GetProcAddress(library, "JsAddRef");
     m_jsApiHooks.pfJsrtGetValueType = (JsAPIHooks::JsrtGetValueType)GetProcAddress(library, "JsGetValueType");
+    m_jsApiHooks.pfJsrtSetIndexedProperty = (JsAPIHooks::JsrtSetIndexedPropertyPtr)GetProcAddress(library, "JsSetIndexedProperty");
 
     return library;
 }

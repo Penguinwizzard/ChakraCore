@@ -39,6 +39,7 @@ struct JsAPIHooks
     typedef JsErrorCode (WINAPI *JsrtReleasePtr)(JsRef ref, unsigned int* count);
     typedef JsErrorCode (WINAPI *JsrtAddRefPtr)(JsRef ref, unsigned int* count);
     typedef JsErrorCode (WINAPI *JsrtGetValueType)(JsValueRef value, JsValueType *type);
+    typedef JsErrorCode(WINAPI *JsrtSetIndexedPropertyPtr)(JsValueRef object, JsValueRef index, JsValueRef value);
 
     JsrtCreateRuntimePtr pfJsrtCreateRuntime;
     JsrtCreateContextPtr pfJsrtCreateContext;
@@ -76,6 +77,7 @@ struct JsAPIHooks
     JsrtReleasePtr pfJsrtRelease;
     JsrtAddRefPtr pfJsrtAddRef;
     JsrtGetValueType pfJsrtGetValueType;
+    JsrtSetIndexedPropertyPtr pfJsrtSetIndexedProperty;
 };
 
 class ChakraRTInterface
@@ -174,5 +176,7 @@ public:
     static JsErrorCode WINAPI JsRelease(JsRef ref, unsigned int* count) { return m_jsApiHooks.pfJsrtRelease(ref, count); }
     static JsErrorCode WINAPI JsAddRef(JsRef ref, unsigned int* count) { return m_jsApiHooks.pfJsrtAddRef(ref, count); }
     static JsErrorCode WINAPI JsGetValueType(JsValueRef value, JsValueType *type) { return m_jsApiHooks.pfJsrtGetValueType(value, type); }
+    static JsErrorCode WINAPI JsSetIndexedProperty(JsValueRef object, JsValueRef index, JsValueRef value) { return m_jsApiHooks.pfJsrtSetIndexedProperty(object, index, value); }
+
 };
 
