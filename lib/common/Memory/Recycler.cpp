@@ -297,7 +297,11 @@ Recycler::Recycler(AllocationPolicyManager * policyManager, IdleDecommitPageAllo
     memset(&localTelemetryBlock, 0, sizeof(localTelemetryBlock));
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
-    this->markContext.SetMaxPageCount(GetRecyclerFlagsTable().MaxMarkStackPageCount);
+    // recycler requires at least Recycler::PrimaryMarkStackReservedPageCount to function properly for the main mark context
+    this->markContext.SetMaxPageCount(max<size_t>(GetRecyclerFlagsTable().MaxMarkStackPageCount, Recycler::PrimaryMarkStackReservedPageCount));
+    this->parallelMarkContext1.SetMaxPageCount(GetRecyclerFlagsTable().MaxMarkStackPageCount);
+    this->parallelMarkContext2.SetMaxPageCount(GetRecyclerFlagsTable().MaxMarkStackPageCount);
+    this->parallelMarkContext3.SetMaxPageCount(GetRecyclerFlagsTable().MaxMarkStackPageCount);
 
     if (GetRecyclerFlagsTable().IsEnabled(Js::GCMemoryThresholdFlag))
     {

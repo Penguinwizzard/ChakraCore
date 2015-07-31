@@ -1,13 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Condition="'$(ChakraBuildPathImported)'!='true'" Project="$(SolutionDir)Chakra.Build.Paths.props"/>
+  <Import Condition="'$(ChakraBuildPathImported)'!='true'" Project="$(SolutionDir)Chakra.Build.Paths.props" />
   <Import Project="$(BuildConfig_ChakraBuildProjectConfigurationProps)" />
   <PropertyGroup Label="Globals">
     <TargetName>Chakra.Common.Exceptions</TargetName>
     <ProjectGuid>{FD8EEC40-4141-448A-BF4B-1589FBE4F60D}</ProjectGuid>
     <RootNamespace>JS</RootNamespace>
     <Keyword>Win32Proj</Keyword>
-  </PropertyGroup>  
+  </PropertyGroup>
   <PropertyGroup Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
   </PropertyGroup>
@@ -42,6 +43,20 @@
     <ProjectReference Include="..\..\..\Manifests\Manifests.vcxproj">
       <Project>{bcc5c029-2f2c-4eaa-8e60-664d72766936}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="EvalDisabledException.h" />
+    <ClInclude Include="ExceptionBase.h" />
+    <ClInclude Include="ExceptionCheck.h" />
+    <ClInclude Include="InternalErrorException.h" />
+    <ClInclude Include="NotImplementedException.h" />
+    <ClInclude Include="OperationAbortedException.h" />
+    <ClInclude Include="OutOfMemoryException.h" />
+    <ClInclude Include="RejitException.h" />
+    <ClInclude Include="reporterror.h" />
+    <ClInclude Include="ScriptAbortException.h" />
+    <ClInclude Include="StackOverflowException.h" />
+    <ClInclude Include="Throw.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>
