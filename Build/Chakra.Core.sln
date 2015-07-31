@@ -38,9 +38,6 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Chakra.Jsrt", "..\lib\jsrt\Chakra.Jsrt.vcxproj", "{706083F7-6AA4-4558-A153-6352EF9220F5}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Chakra.Jsrt.Core", "..\lib\jsrt\core\Chakra.Jsrt.Core.vcxproj", "{706083F7-6AA4-4558-A153-6352EF9220EE}"
-	ProjectSection(ProjectDependencies) = postProject
-		{706083F7-6AA4-4558-A153-6352EF9220F5} = {706083F7-6AA4-4558-A153-6352EF9220F5}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Chakra.Runtime.Math", "..\lib\Runtime\Math\Chakra.Runtime.Math.vcxproj", "{ABC904AD-9415-46F8-AA23-E33193F81F7C}"
 EndProject
