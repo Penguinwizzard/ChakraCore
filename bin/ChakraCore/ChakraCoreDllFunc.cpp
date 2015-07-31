@@ -2,6 +2,8 @@
 #include "jsrtcontext.h"
 #include "TestHooks.h"
 
+extern HANDLE g_hInstance;
+
 static BOOL AttachProcess(HANDLE hmod)
 {
     if (!ThreadContextTLSEntry::InitializeProcess() || !JsrtContext::Initialize())
@@ -9,6 +11,7 @@ static BOOL AttachProcess(HANDLE hmod)
         return FALSE;
     }
 
+    g_hInstance = hmod;
     AutoSystemInfo::SaveModuleFileName(hmod);
 
 #if defined(_M_IX86)
@@ -63,6 +66,8 @@ static void DetachProcess()
 #if PROFILE_DICTIONARY
     DictionaryStats::OutputStats();
 #endif
+
+    g_hInstance = NULL;
 }
 
 /****************************** Public Functions *****************************/
