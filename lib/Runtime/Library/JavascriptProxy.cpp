@@ -34,7 +34,11 @@ namespace Js
     {
         // SkipDefaultNewObject function flag should have revent the default object
         // being created, except when call true a host dispatch
-        Assert(!(args.Info.Flags & CallFlags_New) || args[0] == null
+
+        Var newTarget = args.Info.Flags & CallFlags_NewTarget ? args.Values[args.Info.Count] : args[0];
+
+        bool isCtorSuperCall = (args.Info.Flags & CallFlags_New) && newTarget != nullptr && RecyclableObject::Is(newTarget);
+        Assert(isCtorSuperCall || !(args.Info.Flags & CallFlags_New) || args[0] == null
             || JavascriptOperators::GetTypeId(args[0]) == TypeIds_HostDispatch);
 
         RecyclableObject* target, *handler;
@@ -63,7 +67,9 @@ namespace Js
             newProxy->ChangeType();
             newProxy->GetDynamicType()->SetEntryPoint(JavascriptProxy::FunctionCallTrap);
         }
-        return newProxy;
+        return isCtorSuperCall ?
+            JavascriptProxy::FromVar(JavascriptOperators::OrdinaryCreateFromConstructor(RecyclableObject::FromVar(newTarget), newProxy, nullptr, scriptContext)) :
+            newProxy;
     }
 
     Var JavascriptProxy::EntryRevocable(RecyclableObject* function, CallInfo callInfo, ...)
@@ -1852,9 +1858,11 @@ namespace Js
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
 
-        bool hasOverridingNewTarget = ((callInfo.Flags & CallFlags_NewTarget) != 0);
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
+
+        BOOL hasOverridingNewTarget = callInfo.Flags & CallFlags_NewTarget;
+        bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && args[0] != nullptr && RecyclableObject::Is(args[0]);
 
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         if (!JavascriptProxy::Is(function))
@@ -1926,15 +1934,9 @@ namespace Js
         if (args.Info.Flags & CallFlags_New)
         {
             varArgs[2] = argList;
-            if (hasOverridingNewTarget)
-            {
-                varArgs[3] = args.Values[callInfo.Count];
-            }
-            else
-            {
-                varArgs[3] = function;
-            }
-        }
+            varArgs[3] = hasOverridingNewTarget ? args.Values[callInfo.Count] :
+                isCtorSuperCall ? args[0] : proxy;
+         }
         else
         {
             varArgs[2] = args[0];

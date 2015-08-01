@@ -1002,9 +1002,12 @@ public:
                     }
 
                     CALLIEXTENDED_LAYOUT_WITH_ONEBYTE(CallIExtended)
+                    CALLIEXTENDED_LAYOUT_WITH_ONEBYTE(CallIExtendedFlags)
                     CALLIEXTENDED_LAYOUT_WITH_ONEBYTE(ProfiledCallIExtended)
+                    CALLIEXTENDED_LAYOUT_WITH_ONEBYTE(ProfiledCallIExtendedFlags)
                     CALLIEXTENDED_LAYOUT_WITH_ONEBYTE(Profiled2CallIExtended)
                     CALLIEXTENDED_LAYOUT_WITH_ONEBYTE(ProfiledCallIExtendedWithICIndex)
+                    CALLIEXTENDED_LAYOUT_WITH_ONEBYTE(ProfiledCallIExtendedFlagsWithICIndex)
 
                 default:
                     AssertMsg(false, "Unknown OpLayout");

@@ -17,7 +17,9 @@ namespace Js
 
         // SkipDefaultNewObject function flag should have revent the default object
         // being created, except when call true a host dispatch
-        Assert(!(callInfo.Flags & CallFlags_New) || args[0] == null
+        Var newTarget = callInfo.Flags & CallFlags_NewTarget ? args.Values[args.Info.Count] : args[0];
+        bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && newTarget != nullptr && RecyclableObject::Is(newTarget);
+        Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == null
             || JavascriptOperators::GetTypeId(args[0]) == TypeIds_HostDispatch);
 
         BOOL value;
@@ -31,12 +33,15 @@ namespace Js
             value = false;
         }
 
-        if (!(callInfo.Flags & CallFlags_New))
+        if (callInfo.Flags & CallFlags_New)
         {
-            return scriptContext->GetLibrary()->CreateBoolean(value);
+            RecyclableObject* pNew = scriptContext->GetLibrary()->CreateBooleanObject(value);
+            return isCtorSuperCall ?
+                JavascriptOperators::OrdinaryCreateFromConstructor(RecyclableObject::FromVar(newTarget), pNew, nullptr, scriptContext) :
+                pNew;
         }
 
-        return scriptContext->GetLibrary()->CreateBooleanObject(value);
+        return scriptContext->GetLibrary()->CreateBoolean(value);
     }
 
     // Boolean.prototype.valueOf as described in ES6 spec (draft 24) 19.3.3.3

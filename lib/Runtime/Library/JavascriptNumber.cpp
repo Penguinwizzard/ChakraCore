@@ -263,7 +263,9 @@ namespace Js
         //
 
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
-        Assert(!(callInfo.Flags & CallFlags_New) || args[0] == null
+        Var newTarget = callInfo.Flags & CallFlags_NewTarget ? args.Values[args.Info.Count] : args[0];
+        bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && newTarget != nullptr && RecyclableObject::Is(newTarget);
+        Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == null
             || JavascriptOperators::GetTypeId(args[0]) == TypeIds_HostDispatch);
 
         Var result;
@@ -294,7 +296,9 @@ namespace Js
             result = obj;
         }
     
-        return result;
+        return isCtorSuperCall ?
+            JavascriptOperators::OrdinaryCreateFromConstructor(RecyclableObject::FromVar(newTarget), RecyclableObject::FromVar(result), nullptr, scriptContext) :
+            result;
     }
 
     ///----------------------------------------------------------------------------

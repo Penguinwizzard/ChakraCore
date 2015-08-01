@@ -6238,7 +6238,13 @@ void EmitCallI(
 
     ParseNode *pnodeTarget = pnode->sxBin.pnode1;
     Js::OpCode op;
+    Js::CallFlags callFlags = Js::CallFlags::CallFlags_None;
     size_t spreadExtraAlloc = 0;
+    bool isSuperCall = pnodeTarget->nop == knopSuper;
+    if (isSuperCall)
+    {
+        callFlags = Js::CallFlags_New;
+    }
 
     if (fIsPut)
     {
@@ -6250,7 +6256,7 @@ void EmitCallI(
         }
         // Grab a tmp register for the call result.
         Js::RegSlot tmpReg = funcInfo->AcquireTmpRegister();
-        byteCodeGenerator->Writer()->CallI(Js::OpCode::CallIPut, tmpReg, pnodeTarget->location, actualArgCount, callSiteId);
+        byteCodeGenerator->Writer()->CallI(Js::OpCode::CallIFlags, tmpReg, pnodeTarget->location, actualArgCount, callSiteId, Js::CallFlags::CallFlags_NewTarget);
         funcInfo->ReleaseTmpRegister(tmpReg);
     }
     else
@@ -6268,20 +6274,21 @@ void EmitCallI(
         }
         if (fIsEval)
         {
-            op = Js::OpCode::CallIEval;
+            op = Js::OpCode::CallIExtendedFlags;
+            callFlags = Js::CallFlags::CallFlags_ExtraArg;
         }
         else if (pnode->sxCall.spreadArgCount > 0)
         {
-            op = Js::OpCode::CallIExtended;
+            op = isSuperCall ? Js::OpCode::CallIExtendedFlags : Js::OpCode::CallIExtended;
         }
         else
         {
-            op = Js::OpCode::CallI;
+            op = isSuperCall ? Js::OpCode::CallIFlags : Js::OpCode::CallI;
         }
 
-        if (op == Js::OpCode::CallI)
+        if (op == Js::OpCode::CallI || op == Js::OpCode::CallIFlags)
         {
-            byteCodeGenerator->Writer()->CallI(op, pnode->location, pnodeTarget->location, actualArgCount, callSiteId);
+            byteCodeGenerator->Writer()->CallI(op, pnode->location, pnodeTarget->location, actualArgCount, callSiteId, callFlags);
         }
         else
         {
@@ -6296,7 +6303,7 @@ void EmitCallI(
                 options = Js::CallIExtended_SpreadArgs;
             }
 
-            byteCodeGenerator->Writer()->CallIExtended(op, pnode->location, pnodeTarget->location, actualArgCount, options, spreadIndices, spreadIndicesSize, callSiteId);
+            byteCodeGenerator->Writer()->CallIExtended(op, pnode->location, pnodeTarget->location, actualArgCount, options, spreadIndices, spreadIndicesSize, callSiteId, callFlags);
         }
 
         if (pnode->sxCall.spreadArgCount > 0)

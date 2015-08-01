@@ -18,7 +18,9 @@ namespace Js
 
         // SkipDefaultNewObject function flag should have revent the default object
         // being created, except when call true a host dispatch
-        Assert(!(callInfo.Flags & CallFlags_New) || args[0] == null
+        Var newTarget = callInfo.Flags & CallFlags_NewTarget ? args.Values[args.Info.Count] : args[0];
+        bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && newTarget != nullptr && RecyclableObject::Is(newTarget);
+        Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == null
             || JavascriptOperators::GetTypeId(args[0]) == TypeIds_HostDispatch);
 
         if (callInfo.Flags & CallFlags_New)

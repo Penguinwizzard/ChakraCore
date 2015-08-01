@@ -4317,6 +4317,25 @@ IRBuilder::BuildCallI(Js::OpCode newOpcode, uint32 offset)
     BuildCallI_Helper(newOpcode, offset, layout->Return, layout->Function, layout->ArgCount, Js::Constants::NoProfileId);
 }
 
+template <typename SizePolicy>
+void
+IRBuilder::BuildCallIFlags(Js::OpCode newOpcode, uint32 offset)
+{
+    this->m_func->m_isLeaf = false;
+    Assert(Js::OpCodeUtil::IsCallOp(newOpcode) || newOpcode == Js::OpCode::NewScObject || newOpcode == Js::OpCode::NewScObjArray);
+    Assert(OpCodeAttr::HasMultiSizeLayout(newOpcode));
+    auto layout = m_jnReader.GetLayout<Js::OpLayoutT_CallIFlags<SizePolicy>>();
+    IR::Instr* instr = BuildCallI_Helper(newOpcode, offset, layout->Return, layout->Function, layout->ArgCount, Js::Constants::NoProfileId);
+    Assert(instr->m_opcode == Js::OpCode::CallIFlags);
+    if (instr->m_opcode == Js::OpCode::CallIFlags)
+    {
+        instr->m_opcode =
+            layout->callFlags == Js::CallFlags::CallFlags_NewTarget  ? Js::OpCode::CallIPut :
+            layout->callFlags == Js::CallFlags::CallFlags_New      ? Js::OpCode::CallINew :
+            instr->m_opcode;
+    }
+}
+
 void IRBuilder::BuildLdSpreadIndices(uint32 offset, uint32 spreadAuxOffset)
 {
     // Link up the LdSpreadIndices instr to be the first in the arg chain. This will allow us to find it in Lowerer easier.
@@ -4362,11 +4381,50 @@ IRBuilder::BuildCallIWithICIndex(Js::OpCode newOpcode, uint32 offset)
 
 template <typename SizePolicy>
 void
+IRBuilder::BuildCallIFlagsWithICIndex(Js::OpCode newOpcode, uint32 offset)
+{
+    AssertMsg(false, "NYI");
+}
+
+template <typename SizePolicy>
+void
+IRBuilder::BuildCallIExtendedFlags(Js::OpCode newOpcode, uint32 offset)
+{
+    AssertMsg(false, "NYI");
+}
+
+template <typename SizePolicy>
+void
 IRBuilder::BuildCallIExtendedWithICIndex(Js::OpCode newOpcode, uint32 offset)
 {
     AssertMsg(false, "NYI");
 }
 
+template <typename SizePolicy>
+void
+IRBuilder::BuildCallIExtendedFlagsWithICIndex(Js::OpCode newOpcode, uint32 offset)
+{
+    AssertMsg(false, "NYI");
+}
+
+template <typename SizePolicy>
+void
+IRBuilder::BuildProfiledCallIFlagsWithICIndex(Js::OpCode newOpcode, uint32 offset)
+{
+    this->m_func->m_isLeaf = false;
+    Assert(OpCodeAttr::IsProfiledOpWithICIndex(newOpcode) || Js::OpCodeUtil::IsProfiledCallOpWithICIndex(newOpcode));
+    Assert(OpCodeAttr::HasMultiSizeLayout(newOpcode));
+    auto layout = m_jnReader.GetLayout<Js::OpLayoutDynamicProfile<Js::OpLayoutT_CallIFlagsWithICIndex<SizePolicy>>>();
+    IR::Instr* instr = BuildProfiledCallIWithICIndex(newOpcode, offset, layout->Return, layout->Function, layout->ArgCount, layout->profileId, layout->inlineCacheIndex);
+    Assert(instr->m_opcode == Js::OpCode::CallIFlags);
+    if (instr->m_opcode == Js::OpCode::CallIFlags)
+    {
+        instr->m_opcode =
+            layout->callFlags == Js::CallFlags::CallFlags_NewTarget  ? Js::OpCode::CallIPut :
+            layout->callFlags == Js::CallFlags::CallFlags_New      ? Js::OpCode::CallINew :
+            instr->m_opcode;
+    }
+}
 
 template <typename SizePolicy>
 void
@@ -4379,11 +4437,31 @@ IRBuilder::BuildProfiledCallIWithICIndex(Js::OpCode newOpcode, uint32 offset)
     BuildProfiledCallIWithICIndex(newOpcode, offset, layout->Return, layout->Function, layout->ArgCount, layout->profileId, layout->inlineCacheIndex);
 }
 
-void
+IR::Instr*
 IRBuilder::BuildProfiledCallIWithICIndex(Js::OpCode opcode, uint32 offset, Js::RegSlot returnValue, Js::RegSlot function,
                             Js::ArgSlot argCount, Js::ProfileId profileId, Js::InlineCacheIndex inlineCacheIndex)
 {
-    BuildProfiledCallI(opcode, offset, returnValue, function, argCount, profileId, inlineCacheIndex);
+    return BuildProfiledCallI(opcode, offset, returnValue, function, argCount, profileId, inlineCacheIndex);
+}
+
+template <typename SizePolicy>
+void
+IRBuilder::BuildProfiledCallIExtendedFlags(Js::OpCode newOpcode, uint32 offset)
+{
+    this->m_func->m_isLeaf = false;
+    Assert(OpCodeAttr::IsProfiledOp(newOpcode) || Js::OpCodeUtil::IsProfiledCallOp(newOpcode)
+        || Js::OpCodeUtil::IsProfiledReturnTypeCallOp(newOpcode));
+    Assert(OpCodeAttr::HasMultiSizeLayout(newOpcode));
+    auto layout = m_jnReader.GetLayout<Js::OpLayoutDynamicProfile<Js::OpLayoutT_CallIExtendedFlags<SizePolicy>>>();
+    IR::Instr* instr = BuildProfiledCallIExtended(newOpcode, offset, layout->Return, layout->Function, layout->ArgCount, layout->profileId, layout->Options, layout->SpreadAuxOffset);
+    Assert(instr->m_opcode == Js::OpCode::CallIExtendedFlags);
+    if (instr->m_opcode == Js::OpCode::CallIExtendedFlags)
+    {
+        instr->m_opcode =
+            layout->callFlags == Js::CallFlags::CallFlags_ExtraArg ? Js::OpCode::CallIEval :
+            layout->callFlags == Js::CallFlags::CallFlags_New      ? Js::OpCode::CallIExtendedNew :
+            instr->m_opcode;
+    }
 }
 
 template <typename SizePolicy>
@@ -4406,6 +4484,25 @@ IRBuilder::BuildProfiledCallIExtendedWithICIndex(Js::OpCode opcode, uint32 offse
 
 template <typename SizePolicy>
 void
+IRBuilder::BuildProfiledCallIExtendedFlagsWithICIndex(Js::OpCode newOpcode, uint32 offset)
+{
+    this->m_func->m_isLeaf = false;
+    Assert(OpCodeAttr::IsProfiledOpWithICIndex(newOpcode) || Js::OpCodeUtil::IsProfiledCallOpWithICIndex(newOpcode));
+    Assert(OpCodeAttr::HasMultiSizeLayout(newOpcode));
+    auto layout = m_jnReader.GetLayout<Js::OpLayoutDynamicProfile<Js::OpLayoutT_CallIExtendedFlagsWithICIndex<SizePolicy>>>();
+    IR::Instr* instr = BuildProfiledCallIExtended(newOpcode, offset, layout->Return, layout->Function, layout->ArgCount, layout->profileId, layout->Options, layout->SpreadAuxOffset);
+    Assert(instr->m_opcode == Js::OpCode::CallIExtendedFlags);
+    if (instr->m_opcode == Js::OpCode::CallIExtendedFlags)
+    {
+        instr->m_opcode =
+            layout->callFlags == Js::CallFlags::CallFlags_ExtraArg ? Js::OpCode::CallIEval :
+            layout->callFlags == Js::CallFlags::CallFlags_New      ? Js::OpCode::CallIExtendedNew :
+            instr->m_opcode;
+    }
+}
+
+template <typename SizePolicy>
+void
 IRBuilder::BuildProfiledCallI(Js::OpCode newOpcode, uint32 offset)
 {
     this->m_func->m_isLeaf = false;
@@ -4416,7 +4513,28 @@ IRBuilder::BuildProfiledCallI(Js::OpCode newOpcode, uint32 offset)
     BuildProfiledCallI(newOpcode, offset, layout->Return, layout->Function, layout->ArgCount, layout->profileId);
 }
 
+template <typename SizePolicy>
 void
+IRBuilder::BuildProfiledCallIFlags(Js::OpCode newOpcode, uint32 offset)
+{
+    this->m_func->m_isLeaf = false;
+    Assert(OpCodeAttr::IsProfiledOp(newOpcode) || Js::OpCodeUtil::IsProfiledCallOp(newOpcode)
+        || Js::OpCodeUtil::IsProfiledReturnTypeCallOp(newOpcode));
+    Assert(OpCodeAttr::HasMultiSizeLayout(newOpcode));
+    auto layout = m_jnReader.GetLayout<Js::OpLayoutDynamicProfile<Js::OpLayoutT_CallIFlags<SizePolicy>>>();
+    IR::Instr* instr = BuildProfiledCallI(newOpcode, offset, layout->Return, layout->Function, layout->ArgCount, layout->profileId);
+    Assert(instr->m_opcode == Js::OpCode::CallIFlags);
+    if (instr->m_opcode == Js::OpCode::CallIFlags)
+    {
+        instr->m_opcode = Js::OpCode::CallIPut;
+        instr->m_opcode =
+            layout->callFlags == Js::CallFlags::CallFlags_NewTarget  ? Js::OpCode::CallIPut :
+            layout->callFlags == Js::CallFlags::CallFlags_New      ? Js::OpCode::CallINew :
+            instr->m_opcode;
+    }
+}
+
+IR::Instr *
 IRBuilder::BuildProfiledCallI(Js::OpCode opcode, uint32 offset, Js::RegSlot returnValue, Js::RegSlot function,
                             Js::ArgSlot argCount, Js::ProfileId profileId, Js::InlineCacheIndex inlineCacheIndex)
 {
@@ -4478,6 +4596,7 @@ IRBuilder::BuildProfiledCallI(Js::OpCode opcode, uint32 offset, Js::RegSlot retu
     {
         callInstr->GetDst()->SetValueType(returnType);
     }
+    return callInstr;
 }
 
 template <typename SizePolicy>
@@ -4492,7 +4611,7 @@ IRBuilder::BuildProfiledCallIExtended(Js::OpCode newOpcode, uint32 offset)
     BuildProfiledCallIExtended(newOpcode, offset, layout->Return, layout->Function, layout->ArgCount, layout->profileId, layout->Options, layout->SpreadAuxOffset);
 }
 
-void
+IR::Instr *
 IRBuilder::BuildProfiledCallIExtended(Js::OpCode opcode, uint32 offset, Js::RegSlot returnValue, Js::RegSlot function,
                                       Js::ArgSlot argCount, Js::ProfileId profileId, Js::CallIExtendedOptions options,
                                       uint32 spreadAuxOffset)
@@ -4501,7 +4620,7 @@ IRBuilder::BuildProfiledCallIExtended(Js::OpCode opcode, uint32 offset, Js::RegS
     {
         BuildLdSpreadIndices(offset, spreadAuxOffset);
     }
-    BuildProfiledCallI(opcode, offset, returnValue, function, argCount, profileId);
+    return BuildProfiledCallI(opcode, offset, returnValue, function, argCount, profileId);
 }
 
 template <typename SizePolicy>

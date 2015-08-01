@@ -17,7 +17,9 @@ namespace Js
 
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
 
-        Assert(!(callInfo.Flags & CallFlags_New) || args[0] == null);
+        Var newTarget = callInfo.Flags & CallFlags_NewTarget ? args.Values[args.Info.Count] : args[0];
+        bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && newTarget != nullptr && RecyclableObject::Is(newTarget);
+        Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == null);
         uint32 byteLength = 0;
         int32 mappedLength;
         int32 offset = 0;
@@ -138,7 +140,9 @@ namespace Js
         //18.   Set O's[[ByteOffset]] internal slot to offset.
         //19.   Return O.
         dataView = scriptContext->GetLibrary()->CreateDataView(arrayBuffer, offset, mappedLength);
-        return dataView;
+        return isCtorSuperCall ?
+            JavascriptOperators::OrdinaryCreateFromConstructor(RecyclableObject::FromVar(newTarget), dataView, nullptr, scriptContext) :
+            dataView;
     }
 
     DataView::DataView(ArrayBuffer* arrayBuffer, uint32 byteoffset, uint32 mappedLength, DynamicType* type)

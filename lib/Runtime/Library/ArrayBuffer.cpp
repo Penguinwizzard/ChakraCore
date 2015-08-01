@@ -174,7 +174,9 @@ namespace Js
 
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
 
-        Assert(!(callInfo.Flags & CallFlags_New) || args[0] == null);
+        Var newTarget = callInfo.Flags & CallFlags_NewTarget ? args.Values[args.Info.Count] : args[0];
+        bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && newTarget != nullptr && RecyclableObject::Is(newTarget);
+        Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == null);
 
         uint32 byteLength = 0;
         if (args.Info.Count > 1)
@@ -182,14 +184,16 @@ namespace Js
             byteLength = GetByteLengthFromVar(scriptContext, args[1]);
         }
 
-        Var newArr = scriptContext->GetLibrary()->CreateArrayBuffer(byteLength);
+        RecyclableObject* newArr = scriptContext->GetLibrary()->CreateArrayBuffer(byteLength);
 #if ENABLE_DEBUG_CONFIG_OPTIONS
         if (Js::Configuration::Global.flags.IsEnabled(Js::autoProxyFlag))
         {
             newArr = Js::JavascriptProxy::AutoProxyWrapper(newArr);
         }
 #endif
-        return newArr;
+        return isCtorSuperCall ?
+            JavascriptOperators::OrdinaryCreateFromConstructor(RecyclableObject::FromVar(newTarget), newArr, nullptr, scriptContext) :
+            newArr;
     }
 
     // ArrayBuffer.prototype.byteLength as described in ES6 draft #20 section 24.1.4.1

@@ -69,22 +69,22 @@ namespace Js
 
     bool OpCodeUtil::IsCallOp(OpCode op)
     {
-        return op >= Js::OpCode::CallI && op <= Js::OpCode::CallIEval;
+        return op >= Js::OpCode::CallI && op <= Js::OpCode::CallIExtendedFlags;
     }
 
     bool OpCodeUtil::IsProfiledCallOp(OpCode op)
     {
-        return op >= Js::OpCode::ProfiledCallI && op <= Js::OpCode::ProfiledCallIEval;
+        return op >= Js::OpCode::ProfiledCallI && op <= Js::OpCode::ProfiledCallIExtendedFlags;
     }
 
     bool OpCodeUtil::IsProfiledCallOpWithICIndex(OpCode op)
     {
-        return op >= Js::OpCode::ProfiledCallIWithICIndex && op <= Js::OpCode::ProfiledCallIEvalWithICIndex;
+        return op >= Js::OpCode::ProfiledCallIWithICIndex && op <= Js::OpCode::ProfiledCallIExtendedFlagsWithICIndex;
     }
 
     bool OpCodeUtil::IsProfiledReturnTypeCallOp(OpCode op)
     {
-        return op >= Js::OpCode::ProfiledReturnTypeCallI && op <= Js::OpCode::ProfiledReturnTypeCallIEval;
+        return op >= Js::OpCode::ProfiledReturnTypeCallI && op <= Js::OpCode::ProfiledReturnTypeCallIExtendedFlags;
     }
 
 #if DBG
@@ -95,12 +95,12 @@ namespace Js
         case Js::OpCode::ProfiledCallI:
         case Js::OpCode::ProfiledCallIWithICIndex:
             return Js::OpCode::CallI;
-        case Js::OpCode::ProfiledCallIPut:
-        case Js::OpCode::ProfiledCallIPutWithICIndex:
-            return Js::OpCode::CallIPut;
-        case Js::OpCode::ProfiledCallIEval:
-        case Js::OpCode::ProfiledCallIEvalWithICIndex:
-            return Js::OpCode::CallIEval;
+        case Js::OpCode::ProfiledCallIFlags:
+        case Js::OpCode::ProfiledCallIFlagsWithICIndex:
+            return Js::OpCode::CallIFlags;
+        case Js::OpCode::ProfiledCallIExtendedFlags:
+        case Js::OpCode::ProfiledCallIExtendedFlagsWithICIndex:
+            return Js::OpCode::CallIExtendedFlags;
         case Js::OpCode::ProfiledCallIExtended:
         case Js::OpCode::ProfiledCallIExtendedWithICIndex:
             return Js::OpCode::CallIExtended;
@@ -116,10 +116,10 @@ namespace Js
         {
         case Js::OpCode::ProfiledReturnTypeCallI:
             return Js::OpCode::CallI;
-        case Js::OpCode::ProfiledReturnTypeCallIPut:
-            return Js::OpCode::CallIPut;
-        case Js::OpCode::ProfiledReturnTypeCallIEval:
-            return Js::OpCode::CallIEval;
+        case Js::OpCode::ProfiledReturnTypeCallIFlags:
+            return Js::OpCode::CallIFlags;
+        case Js::OpCode::ProfiledReturnTypeCallIExtendedFlags:
+            return Js::OpCode::CallIExtendedFlags;
         case Js::OpCode::ProfiledReturnTypeCallIExtended:
             return Js::OpCode::CallIExtended;
         default:
@@ -178,8 +178,8 @@ namespace Js
         return (OpCode)(op - OpCode::CallI + OpCode::ProfiledReturnTypeCallI);
     }
 
-    CompileAssert(((int)Js::OpCode::CallIEval - (int)Js::OpCode::CallI) == ((int)Js::OpCode::ProfiledCallIEval - (int)Js::OpCode::ProfiledCallI));
-    CompileAssert(((int)Js::OpCode::CallIEval - (int)Js::OpCode::CallI) == ((int)Js::OpCode::ProfiledReturnTypeCallIEval - (int)Js::OpCode::ProfiledReturnTypeCallI));
+    CompileAssert(((int)Js::OpCode::CallIExtendedFlags - (int)Js::OpCode::CallI) == ((int)Js::OpCode::ProfiledCallIExtendedFlags - (int)Js::OpCode::ProfiledCallI));
+    CompileAssert(((int)Js::OpCode::CallIExtendedFlags - (int)Js::OpCode::CallI) == ((int)Js::OpCode::ProfiledReturnTypeCallIExtendedFlags - (int)Js::OpCode::ProfiledReturnTypeCallI));
 
     // Only include the opcode name on chk and fretest build
 #if DBG_DUMP || ENABLE_DEBUG_CONFIG_OPTIONS

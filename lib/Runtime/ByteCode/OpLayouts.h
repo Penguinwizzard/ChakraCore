@@ -258,15 +258,39 @@ namespace Js {
     };
 
     template <typename SizePolicy>
+    struct OpLayoutT_CallIFlags : public OpLayoutT_CallI<SizePolicy>
+    {
+        CallFlags callFlags;
+    };
+
+    template <typename SizePolicy>
     struct OpLayoutT_CallIWithICIndex : public OpLayoutT_CallI<SizePolicy>
     {
         InlineCacheIndex inlineCacheIndex;
     };
 
     template <typename SizePolicy>
+    struct OpLayoutT_CallIFlagsWithICIndex : public OpLayoutT_CallIWithICIndex<SizePolicy>
+    {
+        CallFlags callFlags;
+    };
+
+    template <typename SizePolicy>
+    struct OpLayoutT_CallIExtendedFlags : public OpLayoutT_CallIExtended<SizePolicy>
+    {
+        CallFlags callFlags;
+    };
+
+    template <typename SizePolicy>
     struct OpLayoutT_CallIExtendedWithICIndex : public OpLayoutT_CallIExtended<SizePolicy>
     {
         InlineCacheIndex inlineCacheIndex;
+    };
+
+    template <typename SizePolicy>
+    struct OpLayoutT_CallIExtendedFlagsWithICIndex : public OpLayoutT_CallIExtendedWithICIndex<SizePolicy>
+    {
+        CallFlags callFlags;
     };
 
     template <typename SizePolicy>

@@ -31,7 +31,9 @@ namespace Js
 
         // SkipDefaultNewObject function flag should have revent the default object
         // being created, except when call true a host dispatch
-        Assert(!(callInfo.Flags & CallFlags_New) || args[0] == nullptr
+        Var newTarget = callInfo.Flags & CallFlags_NewTarget ? args.Values[args.Info.Count] : args[0];
+        bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && newTarget != nullptr && RecyclableObject::Is(newTarget);
+        Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == nullptr
             || JavascriptOperators::GetTypeId(args[0]) == TypeIds_HostDispatch);
 
         AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Promise");
@@ -84,7 +86,9 @@ namespace Js
                 e->GetThrownObject(scriptContext));
         }
 
-        return promise;
+        return isCtorSuperCall ?
+            JavascriptOperators::OrdinaryCreateFromConstructor(RecyclableObject::FromVar(newTarget), promise, nullptr, scriptContext) :
+            promise;
     }
 
     void JavascriptPromise::InitializePromise(JavascriptPromise* promise, JavascriptPromiseResolveOrRejectFunction** resolve, JavascriptPromiseResolveOrRejectFunction** reject, ScriptContext* scriptContext)

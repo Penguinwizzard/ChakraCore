@@ -20,7 +20,9 @@ namespace Js
         ScriptContext* scriptContext = function->GetScriptContext();
         JavascriptLibrary* library = scriptContext->GetLibrary();
 
-        Assert(!(callInfo.Flags & CallFlags_New) || args[0] == nullptr);
+        Var newTarget = callInfo.Flags & CallFlags_NewTarget ? args.Values[args.Info.Count] : args[0];
+        bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && newTarget != nullptr && RecyclableObject::Is(newTarget);
+        Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == nullptr);
         CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(WeakSetCount);
 
         JavascriptWeakSet* weakSetObject = nullptr;
@@ -61,7 +63,9 @@ namespace Js
             }
         }
 
-        return weakSetObject;
+        return isCtorSuperCall ?
+            JavascriptOperators::OrdinaryCreateFromConstructor(RecyclableObject::FromVar(newTarget), weakSetObject, nullptr, scriptContext) :
+            weakSetObject;
     }
 
     Var JavascriptWeakSet::EntryAdd(RecyclableObject* function, CallInfo callInfo, ...)

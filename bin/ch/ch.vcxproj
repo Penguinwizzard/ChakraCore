@@ -29,7 +29,6 @@
       <RuntimeLibrary Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
-      <ModuleDefinitionFile>ch.def</ModuleDefinitionFile>
       <SubSystem>Console</SubSystem>
       <AdditionalDependencies>
         %(AdditionalDependencies);

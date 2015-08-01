@@ -325,10 +325,72 @@ namespace Js
         }
     }
     template <class T>
+    void ByteCodeDumper::DumpCallIFlags(OpCode op, const unaligned T * data, FunctionBody * dumpFunction, ByteCodeReader& reader)
+    {
+        DumpCallI(op, data, dumpFunction, reader);
+        Output::Print(L" <%04x> ", data->callFlags);
+    }
+    template <class T>
+    void ByteCodeDumper::DumpCallIExtendedFlags(OpCode op, const unaligned T * data, FunctionBody * dumpFunction, ByteCodeReader& reader)
+    {
+        DumpCallIFlags(op, data, dumpFunction, reader);
+        if (data->Options & Js::CallIExtended_SpreadArgs)
+        {
+            const Js::AuxArray<uint32> *arr = reader.ReadAuxArray<uint32>(data->SpreadAuxOffset, dumpFunction);
+            Output::Print(L" spreadArgs [", arr->count);
+            for (uint i = 0; i < arr->count; i++)
+            {
+                if (i > 10)
+                {
+                    Output::Print(L", ...");
+                    break;
+                }
+                if (i != 0)
+                {
+                    Output::Print(L", ");
+                }
+                Output::Print(L"%u", arr->elements[i]);
+            }
+            Output::Print(L"]");
+        }
+    }
+    template <class T>
+    void ByteCodeDumper::DumpCallIExtendedFlagsWithICIndex(OpCode op, const unaligned T * data, FunctionBody * dumpFunction, ByteCodeReader& reader)
+    {
+        DumpCallIFlags(op, data, dumpFunction, reader);
+        DumpCallIWithICIndex(op, data, dumpFunction, reader);
+        if (data->Options & Js::CallIExtended_SpreadArgs)
+        {
+            const Js::AuxArray<uint32> *arr = reader.ReadAuxArray<uint32>(data->SpreadAuxOffset, dumpFunction);
+            Output::Print(L" spreadArgs [", arr->count);
+            for (uint i = 0; i < arr->count; i++)
+            {
+                if (i > 10)
+                {
+                    Output::Print(L", ...");
+                    break;
+                }
+                if (i != 0)
+                {
+                    Output::Print(L", ");
+                }
+                Output::Print(L"%u", arr->elements[i]);
+            }
+            Output::Print(L"]");
+        }
+    }
+    template <class T>
     void ByteCodeDumper::DumpCallIWithICIndex(OpCode op, const unaligned T * data, FunctionBody * dumpFunction, ByteCodeReader& reader)
     {
         DumpCallI(op, data, dumpFunction, reader);
         Output::Print(L" <%d> ", data->inlineCacheIndex);
+    }
+    template <class T>
+    void ByteCodeDumper::DumpCallIFlagsWithICIndex(OpCode op, const unaligned T * data, FunctionBody * dumpFunction, ByteCodeReader& reader)
+    {
+        DumpCallI(op, data, dumpFunction, reader);
+        Output::Print(L" <%d> ", data->inlineCacheIndex);
+        Output::Print(L" <%d> ", data->callFlags);
     }
     template <class T>
     void ByteCodeDumper::DumpCallIExtendedWithICIndex(OpCode op, const unaligned T * data, FunctionBody * dumpFunction, ByteCodeReader& reader)

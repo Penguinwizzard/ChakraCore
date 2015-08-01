@@ -243,7 +243,9 @@ namespace Js
 
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
 
-        Assert(!(callInfo.Flags & CallFlags_New) || args[0] == null);
+        Var newTarget = callInfo.Flags & CallFlags_NewTarget ? args.Values[args.Info.Count] : args[0];
+        bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && newTarget != nullptr && RecyclableObject::Is(newTarget);
+        Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == null);
 
         JavascriptError::ThrowTypeError(scriptContext, JSERR_InvalidTypedArray_Constructor);
 
@@ -260,7 +262,9 @@ namespace Js
 
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
 
-        Assert(!(callInfo.Flags & CallFlags_New) || args[0] == null);
+        Var newTarget = callInfo.Flags & CallFlags_NewTarget ? args.Values[args.Info.Count] : args[0];
+        bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && newTarget != nullptr && RecyclableObject::Is(newTarget);
+        Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == null);
         Var object = TypedArrayBase::CreateNewInstance(args, scriptContext, sizeof(TypeName), TypedArray<TypeName, clamped, virtualAllocated>::Create);
 #if ENABLE_DEBUG_CONFIG_OPTIONS
         if (Js::Configuration::Global.flags.IsEnabled(Js::autoProxyFlag))
@@ -268,7 +272,9 @@ namespace Js
             object = Js::JavascriptProxy::AutoProxyWrapper(object);
         }
 #endif
-        return object;
+        return isCtorSuperCall ?
+            JavascriptOperators::OrdinaryCreateFromConstructor(RecyclableObject::FromVar(newTarget), RecyclableObject::FromVar(object), nullptr, scriptContext) :
+            object;
     };
     
     inline BOOL TypedArrayBase::IsBuiltinProperty(PropertyId propertyId)

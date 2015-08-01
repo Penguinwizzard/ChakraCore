@@ -265,8 +265,8 @@ namespace Js
         void BrReg2(OpCode op, ByteCodeLabel labelID, RegSlot R1, RegSlot R2);
         void BrProperty(OpCode op, ByteCodeLabel labelID, RegSlot R1, PropertyIdIndexType propertyIdIndex);
         void StartCall(OpCode op, ArgSlot ArgCount);
-        void CallI(OpCode op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount, ProfileId callSiteId);
-        void CallIExtended(OpCode op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount, CallIExtendedOptions options, const void *buffer, size_t byteCount, ProfileId callSiteId);
+        void CallI(OpCode op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount, ProfileId callSiteId, CallFlags callFlags = CallFlags_None);
+        void CallIExtended(OpCode op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount, CallIExtendedOptions options, const void *buffer, size_t byteCount, ProfileId callSiteId, CallFlags callFlags = CallFlags_None);
         void RemoveEntryForRegSlotFromCacheIdMap(RegSlot functionRegister);
         void Element(OpCode op, RegSlot value, RegSlot instance, RegSlot element, bool instanceAtReturnRegOK = false);
         void ElementUnsigned1(OpCode op, RegSlot value, RegSlot instance, uint32 element);
@@ -298,9 +298,13 @@ namespace Js
         template <typename SizePolicy> bool TryWriteBrReg1(OpCode op, ByteCodeLabel labelID, RegSlot R1);
         template <typename SizePolicy> bool TryWriteBrReg2(OpCode op, ByteCodeLabel labelID, RegSlot R1, RegSlot R2);
         template <typename SizePolicy> bool TryWriteCallI(OpCode op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount);
+        template <typename SizePolicy> bool TryWriteCallIFlags(OpCode op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount, CallFlags callFlags);
         template <typename SizePolicy> bool TryWriteCallIWithICIndex(OpCode op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount, uint32 inlineCacheIndex, bool isRootLoad);
+        template <typename SizePolicy> bool TryWriteCallIFlagsWithICIndex(OpCode op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount, uint32 inlineCacheIndex, bool isRootLoad, CallFlags callFlags);
         template <typename SizePolicy> bool TryWriteCallIExtended(OpCode op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount, CallIExtendedOptions options, uint32 spreadArgsOffset);
         template <typename SizePolicy> bool TryWriteCallIExtendedWithICIndex(OpCode op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount, InlineCacheIndex inlineCacheIndex, bool isRootLoad, CallIExtendedOptions options, uint32 spreadArgsOffset);
+        template <typename SizePolicy> bool TryWriteCallIExtendedFlags(OpCode op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount, CallIExtendedOptions options, uint32 spreadArgsOffset, CallFlags callFlags);
+        template <typename SizePolicy> bool TryWriteCallIExtendedFlagsWithICIndex(OpCode op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount, InlineCacheIndex inlineCacheIndex, bool isRootLoad, CallIExtendedOptions options, uint32 spreadArgsOffset, CallFlags callFlags);
         template <typename SizePolicy> bool TryWriteElementI(OpCode op, RegSlot Value, RegSlot Instance, RegSlot Element);
         template <typename SizePolicy> bool TryWriteElementUnsigned1(OpCode op, RegSlot Value, RegSlot Instance, uint32 Element);
         template <typename SizePolicy> bool TryWriteElementC(OpCode op, RegSlot value, RegSlot instance, PropertyIdIndexType propertyIdIndex);
@@ -359,7 +363,7 @@ namespace Js
 
         static bool DoProfileCallOp(OpCode op)
         {
-            return op >= OpCode::CallI && op <= OpCode::CallIEval;
+            return op >= OpCode::CallI && op <= OpCode::CallIExtendedFlags;
         }
 
         bool DoProfileNewScObjectOp(OpCode op)

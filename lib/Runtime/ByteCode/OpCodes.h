@@ -142,9 +142,13 @@ MACRO_BACKEND_ONLY(     Call,               Reg1,           OpSideEffect|OpUseAl
 MACRO_BACKEND_ONLY(     AsmJsCallI,         Reg1,           OpSideEffect|OpUseAllFields|OpCallInstr)        // call from asm.js to asm.js
 MACRO_BACKEND_ONLY(     AsmJsCallE,         Reg1,           OpSideEffect|OpUseAllFields|OpCallInstr)        // call from asm.js to javascript
 MACRO_WMS(              CallI,              CallI,          OpSideEffect|OpUseAllFields|OpCallInstr|OpInlineCallInstr)          // Return <- Call (indirect) Function(ArgCount)
+MACRO_WMS(              CallIFlags,         CallIFlags,     OpSideEffect|OpUseAllFields|OpCallInstr|OpInlineCallInstr)          // Return <- Call (indirect) Function(ArgCount)
 MACRO_WMS(              CallIExtended,      CallIExtended,  OpSideEffect|OpUseAllFields|OpCallInstr)
-MACRO_WMS(              CallIPut,           CallI,  OpSideEffect|OpUseAllFields|OpCallInstr)          // Call (indirect) Function(ArgCount) to put value
-MACRO_WMS(              CallIEval,          CallIExtended,  OpSideEffect|OpUseAllFields|OpCallInstr)
+MACRO_BACKEND_ONLY(     CallIPut,           CallIFlags,     OpSideEffect|OpUseAllFields|OpCallInstr)          // Call (indirect) Function(ArgCount) to put value
+MACRO_BACKEND_ONLY(     CallINew,           CallIFlags,     OpSideEffect|OpUseAllFields|OpCallInstr)
+MACRO_BACKEND_ONLY(     CallIExtendedNew,   CallIExtendedFlags, OpSideEffect|OpUseAllFields|OpCallInstr)
+MACRO_BACKEND_ONLY(     CallIEval,          CallIExtendedFlags, OpSideEffect|OpUseAllFields|OpCallInstr)
+MACRO_WMS(              CallIExtendedFlags, CallIExtendedFlags, OpSideEffect|OpUseAllFields|OpCallInstr)
 MACRO_BACKEND_ONLY(     CallIDynamic,       CallI,          OpSideEffect|OpUseAllFields|OpCallInstr)
 MACRO_BACKEND_ONLY(     CallIDynamicSpread, CallI,          OpSideEffect|OpUseAllFields|OpCallInstr)
 MACRO_BACKEND_ONLY(     CallDirect,         Empty,          OpTempNumberSources|OpCallInstr|OpSideEffect|OpHasImplicitCall|OpTempObjectProducing)     //For direct calls to helper (used in inlining built-ins)
@@ -501,20 +505,20 @@ MACRO_WMS(              ProfiledLoopEnd,        Unsigned1,             OpSideEff
 
 // The order of this need to be the same as the Call* order
 MACRO_WMS(              ProfiledCallI,          ProfiledCallI,         OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr|OpInlineCallInstr)          // Return <- Call (indirect) Function(ArgCount)
+MACRO_WMS(              ProfiledCallIFlags,     ProfiledCallIFlags,    OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr|OpInlineCallInstr)          // Return <- Call (indirect) Function(ArgCount)
 MACRO_WMS(              ProfiledCallIExtended,  ProfiledCallIExtended, OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr)
-MACRO_WMS(              ProfiledCallIPut,       ProfiledCallI, OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr)          // Call (indirect) Function(ArgCount) to put value
-MACRO_WMS(              ProfiledCallIEval,      ProfiledCallIExtended, OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr)
+MACRO_WMS(              ProfiledCallIExtendedFlags, ProfiledCallIExtendedFlags, OpByteCodeOnly|OpSideEffect|OpUseAllFields| OpCallInstr)
 
 MACRO_WMS(              ProfiledCallIWithICIndex,          ProfiledCallIWithICIndex,          OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr|OpInlineCallInstr)          // Return <- Call (indirect) Function(ArgCount)
+MACRO_WMS(              ProfiledCallIFlagsWithICIndex,     ProfiledCallIFlagsWithICIndex,     OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr|OpInlineCallInstr)          // Return <- Call (indirect) Function(ArgCount)
 MACRO_WMS(              ProfiledCallIExtendedWithICIndex,  ProfiledCallIExtendedWithICIndex,          OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr|OpInlineCallInstr)          // Return <- Call (indirect) Function(ArgCount)
-MACRO_WMS(              ProfiledCallIPutWithICIndex,       ProfiledCallIWithICIndex,          OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr)          // Call (indirect) Function(ArgCount) to put value
-MACRO_WMS(              ProfiledCallIEvalWithICIndex,      ProfiledCallIExtendedWithICIndex,          OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr)
+MACRO_WMS(              ProfiledCallIExtendedFlagsWithICIndex, ProfiledCallIExtendedFlagsWithICIndex,          OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr)
 
 // The order of this needs to be the same as the Call* order
 MACRO_WMS(              ProfiledReturnTypeCallI,          ProfiledCallI,          OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr|OpInlineCallInstr)          // Return <- Call (indirect) Function(ArgCount)
-MACRO_WMS(              ProfiledReturnTypeCallIExtended,  ProfiledCallIExtended, OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr)
-MACRO_WMS(              ProfiledReturnTypeCallIPut,       ProfiledCallI, OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr)          // Call (indirect) Function(ArgCount) to put value
-MACRO_WMS(              ProfiledReturnTypeCallIEval,      ProfiledCallIExtended,          OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr)
+MACRO_WMS(              ProfiledReturnTypeCallIFlags,     ProfiledCallIFlags,     OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr|OpInlineCallInstr)          // Return <- Call (indirect) Function(ArgCount)
+MACRO_WMS(              ProfiledReturnTypeCallIExtended,  ProfiledCallIExtended,  OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr)
+MACRO_WMS(              ProfiledReturnTypeCallIExtendedFlags, ProfiledCallIExtendedFlags, OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr)
 
 
 MACRO_EXTEND_WMS(       EmitTmpRegCount,    Reg1,           OpByteCodeOnly)

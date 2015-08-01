@@ -928,10 +928,56 @@ namespace Js {
         return false;
     }
 
-    void ByteCodeWriter::CallIExtended(OpCode op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount, CallIExtendedOptions options, const void *buffer, size_t byteCount, ProfileId callSiteId)
+
+    template <typename SizePolicy>
+    bool ByteCodeWriter::TryWriteCallIExtendedFlags(OpCode op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount, CallIExtendedOptions options, uint32 spreadArgsOffset, CallFlags callFlags)
+    {
+        OpLayoutT_CallIExtendedFlags<SizePolicy> layout;
+        if (SizePolicy::Assign(layout.Return, returnValueRegister) && SizePolicy::Assign(layout.Function, functionRegister)
+            && SizePolicy::Assign(layout.ArgCount, givenArgCount) && SizePolicy::Assign(layout.Options, options)
+            && SizePolicy::Assign(layout.SpreadAuxOffset, spreadArgsOffset) && SizePolicy::Assign(layout.callFlags, callFlags))
+        {
+            m_byteCodeData.EncodeT<SizePolicy::LayoutEnum>(op, &layout, sizeof(layout), this);
+            return true;
+        }
+        return false;
+    }
+
+    template <typename SizePolicy>
+    bool ByteCodeWriter::TryWriteCallIExtendedFlagsWithICIndex(OpCode op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount, InlineCacheIndex inlineCacheIndex, bool isRootLoad, CallIExtendedOptions options, uint32 spreadArgsOffset, CallFlags callFlags)
+    {
+        OpLayoutT_CallIExtendedFlagsWithICIndex<SizePolicy> layout;
+        if (SizePolicy::Assign(layout.Return, returnValueRegister) && SizePolicy::Assign(layout.Function, functionRegister)
+            && SizePolicy::Assign(layout.ArgCount, givenArgCount) && SizePolicy::Assign(layout.inlineCacheIndex, inlineCacheIndex)
+            && SizePolicy::Assign(layout.Options, options) && SizePolicy::Assign(layout.SpreadAuxOffset, spreadArgsOffset)
+            && SizePolicy::Assign(layout.callFlags, callFlags))
+        {
+            size_t offset = m_byteCodeData.EncodeT<SizePolicy::LayoutEnum>(op, &layout, sizeof(layout), this);
+
+            if (isRootLoad)
+            {
+                size_t inlineCacheOffset = offset + OpCodeUtil::EncodedSize(op, SizePolicy::LayoutEnum)
+                    + offsetof(OpLayoutT_CallIExtendedFlagsWithICIndex<SizePolicy>, inlineCacheIndex);
+
+                rootObjectLoadMethodInlineCacheOffsets.Prepend(m_labelOffsets->GetAllocator(), inlineCacheOffset);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    void ByteCodeWriter::CallIExtended(OpCode op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount, CallIExtendedOptions options, const void *buffer, size_t byteCount, ProfileId callSiteId, CallFlags callFlags)
     {
         CheckOpen();
-        CheckOp(op, OpLayoutType::CallIExtended);
+        bool hasCallFlags = !(callFlags == CallFlags_None);
+        if (hasCallFlags)
+        {
+            CheckOp(op, OpLayoutType::CallIExtendedFlags);
+        }
+        else
+        {
+            CheckOp(op, OpLayoutType::CallIExtended);
+        }
         Assert(OpCodeAttr::HasMultiSizeLayout(op));
 
         // givenArgCount could be <, ==, or > than Function's "InParams" count
@@ -1002,11 +1048,25 @@ namespace Js {
 
         if(isCallWithICIndex)
         {
-            MULTISIZE_LAYOUT_WRITE(CallIExtendedWithICIndex, op, returnValueRegister, functionRegister, givenArgCount, unit.cacheId, unit.isRootObjectCache, options, spreadArgsOffset);
+            if (hasCallFlags == true)
+            {
+                MULTISIZE_LAYOUT_WRITE(CallIExtendedFlagsWithICIndex, op, returnValueRegister, functionRegister, givenArgCount, unit.cacheId, unit.isRootObjectCache, options, spreadArgsOffset, callFlags);
+            }
+            else
+            {
+                MULTISIZE_LAYOUT_WRITE(CallIExtendedWithICIndex, op, returnValueRegister, functionRegister, givenArgCount, unit.cacheId, unit.isRootObjectCache, options, spreadArgsOffset);
+            }
         }
         else
         {
-            MULTISIZE_LAYOUT_WRITE(CallIExtended, op, returnValueRegister, functionRegister, givenArgCount, options, spreadArgsOffset);
+            if (hasCallFlags == true)
+            {
+                MULTISIZE_LAYOUT_WRITE(CallIExtendedFlags, op, returnValueRegister, functionRegister, givenArgCount, options, spreadArgsOffset, callFlags);
+            }
+            else
+            {
+                MULTISIZE_LAYOUT_WRITE(CallIExtended, op, returnValueRegister, functionRegister, givenArgCount, options, spreadArgsOffset);
+            }
         }
 
         if (isProfiled)
@@ -1041,11 +1101,46 @@ namespace Js {
     }
 
     template <typename SizePolicy>
+    bool ByteCodeWriter::TryWriteCallIFlagsWithICIndex(OpCode op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount, InlineCacheIndex inlineCacheIndex, bool isRootLoad, CallFlags callFlags)
+    {
+        OpLayoutT_CallIFlagsWithICIndex<SizePolicy> layout;
+        if (SizePolicy::Assign(layout.Return, returnValueRegister) && SizePolicy::Assign(layout.Function, functionRegister)
+            && SizePolicy::Assign(layout.ArgCount, givenArgCount) && SizePolicy::Assign(layout.inlineCacheIndex, inlineCacheIndex)
+            && SizePolicy::Assign(layout.callFlags, callFlags))
+        {
+            size_t offset = m_byteCodeData.EncodeT<SizePolicy::LayoutEnum>(op, &layout, sizeof(layout), this);
+
+            if (isRootLoad)
+            {
+                size_t inlineCacheOffset = offset + OpCodeUtil::EncodedSize(op, SizePolicy::LayoutEnum)
+                    + offsetof(OpLayoutT_CallIFlagsWithICIndex<SizePolicy>, inlineCacheIndex);
+
+                rootObjectLoadMethodInlineCacheOffsets.Prepend(m_labelOffsets->GetAllocator(), inlineCacheOffset);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    template <typename SizePolicy>
     bool ByteCodeWriter::TryWriteCallI(OpCode op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount)
     {
         OpLayoutT_CallI<SizePolicy> layout;
         if (SizePolicy::Assign(layout.Return, returnValueRegister) && SizePolicy::Assign(layout.Function, functionRegister)
             && SizePolicy::Assign(layout.ArgCount, givenArgCount))
+        {
+            m_byteCodeData.EncodeT<SizePolicy::LayoutEnum>(op, &layout, sizeof(layout), this);
+            return true;
+        }
+        return false;
+    }
+
+    template <typename SizePolicy>
+    bool ByteCodeWriter::TryWriteCallIFlags(OpCode op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount, CallFlags callFlags)
+    {
+        OpLayoutT_CallIFlags<SizePolicy> layout;
+        if (SizePolicy::Assign(layout.Return, returnValueRegister) && SizePolicy::Assign(layout.Function, functionRegister)
+            && SizePolicy::Assign(layout.ArgCount, givenArgCount) && SizePolicy::Assign(layout.callFlags, callFlags))
         {
             m_byteCodeData.EncodeT<SizePolicy::LayoutEnum>(op, &layout, sizeof(layout), this);
             return true;
@@ -1062,10 +1157,20 @@ namespace Js {
         callRegToLdFldCacheIndexMap->TryGetValueAndRemove(regSlot, &unit);
     }
 
-    void ByteCodeWriter::CallI(OpCode op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount, ProfileId callSiteId)
+    void ByteCodeWriter::CallI(OpCode op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount, ProfileId callSiteId, CallFlags callFlags)
     {
         CheckOpen();
-        CheckOp(op, OpLayoutType::CallI);
+        
+        bool hasCallFlags = !(callFlags == CallFlags_None);
+        if (hasCallFlags == true)
+        {
+            CheckOp(op, OpLayoutType::CallIFlags);
+        }
+        else
+        {
+            CheckOp(op, OpLayoutType::CallI);
+        }
+
         Assert(OpCodeAttr::HasMultiSizeLayout(op));
         // givenArgCount could be <, ==, or > than Function's "InParams" count
 
@@ -1136,11 +1241,25 @@ namespace Js {
 
         if(isCallWithICIndex)
         {
-            MULTISIZE_LAYOUT_WRITE(CallIWithICIndex, op, returnValueRegister, functionRegister, givenArgCount, unit.cacheId, unit.isRootObjectCache);
+            if (hasCallFlags == true)
+            {
+                MULTISIZE_LAYOUT_WRITE(CallIFlagsWithICIndex, op, returnValueRegister, functionRegister, givenArgCount, unit.cacheId, unit.isRootObjectCache, callFlags);
+            }
+            else
+            {
+                MULTISIZE_LAYOUT_WRITE(CallIWithICIndex, op, returnValueRegister, functionRegister, givenArgCount, unit.cacheId, unit.isRootObjectCache);
+            }
         }
         else
         {
-            MULTISIZE_LAYOUT_WRITE(CallI, op, returnValueRegister, functionRegister, givenArgCount);
+            if (hasCallFlags == true)
+            {
+                MULTISIZE_LAYOUT_WRITE(CallIFlags, op, returnValueRegister, functionRegister, givenArgCount, callFlags);
+            }
+            else
+            {
+                MULTISIZE_LAYOUT_WRITE(CallI, op, returnValueRegister, functionRegister, givenArgCount);
+            }
         }
         if (isProfiled)
         {

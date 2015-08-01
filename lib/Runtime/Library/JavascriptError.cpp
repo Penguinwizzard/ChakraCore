@@ -114,6 +114,8 @@ namespace Js
 
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
 
+        Var newTarget = callInfo.Flags & CallFlags_NewTarget ? args.Values[args.Info.Count] : args[0];
+        bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && (callInfo.Flags & (CallFlags_Value|CallFlags_NewTarget)) && newTarget != nullptr && RecyclableObject::Is(newTarget);
         JavascriptString* messageString = null;
         
         if (args.Info.Count >= 2 && !JavascriptOperators::GetTypeId(args[1]) == TypeIds_Undefined)
@@ -132,7 +134,9 @@ namespace Js
             JavascriptExceptionOperators::StackCrawlLimitOnThrow(pError, *scriptContext), /*returnAddress=*/ nullptr, /*isThrownException=*/ false, /*resetSatck=*/ false);
         JavascriptExceptionOperators::AddStackTraceToObject(pError, exceptionContext.GetStackTrace(), *scriptContext, /*isThrownException=*/ false, /*resetSatck=*/ false);
 
-        return pError;
+        return isCtorSuperCall ?
+            JavascriptOperators::OrdinaryCreateFromConstructor(RecyclableObject::FromVar(newTarget), pError, nullptr, scriptContext) :
+            pError;
     }
 
     Var JavascriptError::NewErrorInstance(RecyclableObject* function, CallInfo callInfo, ...)

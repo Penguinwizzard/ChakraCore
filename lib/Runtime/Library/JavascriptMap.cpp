@@ -20,7 +20,9 @@ namespace Js
         JavascriptLibrary* library = scriptContext->GetLibrary();
         AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Map");
 
-        Assert(!(callInfo.Flags & CallFlags_New) || args[0] == nullptr);
+        Var newTarget = callInfo.Flags & CallFlags_NewTarget ? args.Values[args.Info.Count] : args[0];
+        bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && newTarget != nullptr && RecyclableObject::Is(newTarget);
+        Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == nullptr);
         CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(MapCount);
 
         JavascriptMap* mapObject = nullptr;
@@ -97,7 +99,9 @@ namespace Js
             }
         }
 
-        return mapObject;
+        return isCtorSuperCall ?
+            JavascriptOperators::OrdinaryCreateFromConstructor(RecyclableObject::FromVar(newTarget), mapObject, nullptr, scriptContext) :
+            mapObject;
     }
 
     Var JavascriptMap::EntryClear(RecyclableObject* function, CallInfo callInfo, ...)

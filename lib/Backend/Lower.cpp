@@ -689,9 +689,10 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
         }
 
         case Js::OpCode::CallI:
+        case Js::OpCode::CallINew:
         case Js::OpCode::CallIFixed:
         {
-            Js::CallFlags flags = instr->isCtorCall ? Js::CallFlags_New :
+            Js::CallFlags flags = (instr->isCtorCall || instr->m_opcode == Js::OpCode::CallINew) ? Js::CallFlags_New :
                 instr->GetDst() ? Js::CallFlags_Value : Js::CallFlags_NotUsed;
 
             if (!PHASE_OFF(Js::CallFastPathPhase, this->m_func) && !noMathFastPath)
@@ -2664,6 +2665,14 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             // Currently, the only use for CallIExtended is a call that uses spread.
             Assert(IsSpreadCall(instr));
             instrPrev = this->LowerSpreadCall(instr, Js::CallFlags_None);
+            break;
+        }
+
+        case Js::OpCode::CallIExtendedNew:
+        {
+            // Currently, the only use for CallIExtended is a call that uses spread.
+            Assert(IsSpreadCall(instr));
+            instrPrev = this->LowerSpreadCall(instr, Js::CallFlags_New);
             break;
         }
 

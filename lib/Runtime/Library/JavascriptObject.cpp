@@ -17,7 +17,9 @@ namespace Js
 
         // SkipDefaultNewObject function flag should have revent the default object
         // being created, except when call true a host dispatch
-        Assert(!(callInfo.Flags & CallFlags_New) || args[0] == null 
+        Var newTarget = callInfo.Flags & CallFlags_NewTarget ? args.Values[args.Info.Count] : args[0];
+        bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && newTarget != nullptr && RecyclableObject::Is(newTarget);
+        Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == null
             || JavascriptOperators::GetTypeId(args[0]) == TypeIds_HostDispatch);
 
         if (args.Info.Count > 1)
@@ -43,7 +45,9 @@ namespace Js
             case TypeIds_Arguments:
             case TypeIds_ActivationObject:
             case TypeIds_SymbolObject:
-                return args[1];
+                return isCtorSuperCall ?
+                    JavascriptOperators::OrdinaryCreateFromConstructor(RecyclableObject::FromVar(newTarget), RecyclableObject::FromVar(args[1]), nullptr, scriptContext) :
+                    args[1];
 
             default:
                 RecyclableObject* result = null;
@@ -53,7 +57,9 @@ namespace Js
                     Assert(false);
                 }
 
-                return result;
+                return isCtorSuperCall ?
+                    JavascriptOperators::OrdinaryCreateFromConstructor(RecyclableObject::FromVar(newTarget), result, nullptr, scriptContext) :
+                    result;
             }
         }
 
@@ -61,7 +67,10 @@ namespace Js
         {
             return args[0];
         }
-        return scriptContext->GetLibrary()->CreateObject(true);
+        Var newObj = scriptContext->GetLibrary()->CreateObject(true);
+        return isCtorSuperCall ?
+            JavascriptOperators::OrdinaryCreateFromConstructor(RecyclableObject::FromVar(newTarget), RecyclableObject::FromVar(newObj), nullptr, scriptContext) :
+            newObj;
     }
 
     Var JavascriptObject::EntryHasOwnProperty(RecyclableObject* function, CallInfo callInfo, ...)
