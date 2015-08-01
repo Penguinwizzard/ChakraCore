@@ -51,6 +51,37 @@ namespace Js
                 JavascriptNumber::New((double) nValue,scriptContext);
     }
 
+    inline bool JavascriptNumber::TryToVarFast(int32 nValue, Var* result)
+    {
+        if (!TaggedInt::IsOverflow(nValue))
+        {
+            *result = TaggedInt::ToVarUnchecked(nValue);
+            return true;
+        }
+
+#if FLOATVAR
+        *result = JavascriptNumber::ToVar((double)nValue);
+        return true;
+#else
+        return false;
+#endif
+    }
+
+    inline bool JavascriptNumber::TryToVarFastWithCheck(double value, Var* result)
+    {
+#if FLOATVAR
+        if (IsNan(value))
+        {
+            value = JavascriptNumber::NaN;
+        }
+
+        *result = JavascriptNumber::ToVar(value);
+        return true;
+#else
+        return false;
+#endif
+    }
+
 #if FLOATVAR
     inline bool JavascriptNumber::Is(Var aValue) 
     {

@@ -7,8 +7,8 @@
 
 JsrtExternalType::JsrtExternalType(Js::ScriptContext* scriptContext, JsFinalizeCallback finalizeCallback) 
     : Js::DynamicType(
-        scriptContext, 
-        scriptContext->CreateTypeId(), 
+        scriptContext,
+        Js::TypeIds_Object,
         scriptContext->GetLibrary()->GetObjectPrototype(),
         nullptr, 
         Js::SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), 
@@ -16,13 +16,6 @@ JsrtExternalType::JsrtExternalType(Js::ScriptContext* scriptContext, JsFinalizeC
         true)
         , jsFinalizeCallback(finalizeCallback)
 {
-    // We don't know anything for certain about the type of properties an external object might have
-    this->GetTypeHandler()->ClearHasOnlyWritableDataProperties();
-    if (GetTypeHandler()->GetFlags() & Js::DynamicTypeHandler::IsPrototypeFlag)
-    {
-        scriptContext->GetLibrary()->NoPrototypeChainsAreEnsuredToHaveOnlyWritableDataProperties();
-    }
-    this->flags |= TypeFlagMask_CanHaveInterceptors;
 }
 
 JsrtExternalObject::JsrtExternalObject(JsrtExternalType * type, void *data) :

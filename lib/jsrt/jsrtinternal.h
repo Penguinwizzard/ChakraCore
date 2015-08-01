@@ -223,11 +223,12 @@ JsErrorCode ContextAPIWrapper(Fn fn)
     return errCode;
 }
 
+// allowInObjectBeforeCollectCallback only when current API is guaranteed not to do recycler allocation.
 template <class Fn>
-JsErrorCode ContextAPINoScriptWrapper(Fn fn)
+JsErrorCode ContextAPINoScriptWrapper(Fn fn, bool allowInObjectBeforeCollectCallback = false)
 {
     JsrtContext *currentContext = JsrtContext::GetCurrent();
-    JsErrorCode errCode = CheckContext(currentContext, /*verifyRuntimeState*/true, /*allowInObjectBeforeCollectCallback*/true);
+    JsErrorCode errCode = CheckContext(currentContext, /*verifyRuntimeState*/true, allowInObjectBeforeCollectCallback);
 
     if (errCode != JsNoError)
     {
@@ -287,3 +288,14 @@ JsErrorCode ContextAPINoScriptWrapper(Fn fn)
 }
 
 void HandleScriptCompileError(Js::ScriptContext * scriptContext, CompileScriptException * se);
+
+
+#if DBG
+#define _PREPARE_RETURN_NO_EXCEPTION __debugCheckNoException.hasException = false;
+#else
+#define _PREPARE_RETURN_NO_EXCEPTION
+#endif
+
+#define BEGIN_JSRT_NO_EXCEPTION  BEGIN_NO_EXCEPTION
+#define END_JSRT_NO_EXCEPTION    END_NO_EXCEPTION return JsNoError;
+#define RETURN_NO_EXCEPTION(x)   _PREPARE_RETURN_NO_EXCEPTION return x

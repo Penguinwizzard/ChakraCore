@@ -43,6 +43,9 @@ namespace Js
         static Var ToVar(uint64 nValue, ScriptContext* scriptContext);
         static double GetValue(Var aValue);
         static double DirectPow(double, double);
+
+        static bool TryToVarFast(int32 nValue, Var* result);
+        static bool TryToVarFastWithCheck(double value, Var* result);
         
         __inline static bool IsNan(double value) { return NumberUtilities::IsNan(value); }
         static bool IsZero(double value);

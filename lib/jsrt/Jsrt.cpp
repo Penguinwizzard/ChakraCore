@@ -342,7 +342,8 @@ STDAPI_(JsErrorCode) JsAddRef(JsRef ref, unsigned int *count)
 
             recycler->RootAddRef(ref, count);
             return JsNoError;
-        });
+        },
+        /*allowInObjectBeforeCollectCallback*/true);
     }
 }
 
@@ -386,7 +387,8 @@ STDAPI_(JsErrorCode) JsRelease(JsRef ref, unsigned int *count)
             }
             recycler->RootRelease(ref, count);
             return JsNoError;
-        });
+        },
+        /*allowInObjectBeforeCollectCallback*/true);
     }
 }
 
@@ -420,7 +422,8 @@ STDAPI_(JsErrorCode) JsSetObjectBeforeCollectCallback(JsRef ref, void *callbackS
 
             recycler->SetObjectBeforeCollectCallback(ref, reinterpret_cast<Recycler::ObjectBeforeCollectCallback>(objectBeforeCollectCallback), callbackState);
             return JsNoError;
-        });
+        },
+        /*allowInObjectBeforeCollectCallback*/true);
     }
 }
 
@@ -459,8 +462,12 @@ STDAPI_(JsErrorCode) JsCreateContext(JsRuntimeHandle runtimeHandle, JsContextRef
 STDAPI_(JsErrorCode) JsGetCurrentContext(JsContextRef *currentContext)
 {
     PARAM_NOT_NULL(currentContext);
-    *currentContext = (JsContextRef)JsrtContext::GetCurrent();
-    return JsNoError;
+
+    BEGIN_JSRT_NO_EXCEPTION
+    {
+      *currentContext = (JsContextRef)JsrtContext::GetCurrent();
+    }
+    END_JSRT_NO_EXCEPTION
 }
 
 STDAPI_(JsErrorCode) JsSetCurrentContext(JsContextRef newContext)
@@ -488,52 +495,56 @@ STDAPI_(JsErrorCode) JsSetCurrentContext(JsContextRef newContext)
 
 STDAPI_(JsErrorCode) JsGetContextOfObject(JsValueRef object, JsContextRef *context)
 {
-    return GlobalAPIWrapper([&]() -> JsErrorCode {
-        PARAM_NOT_NULL(object);
-        *context = nullptr;
+    PARAM_NOT_NULL(object);
+    PARAM_NOT_NULL(context);
+
+    BEGIN_JSRT_NO_EXCEPTION
+    {
         if (Js::TaggedNumber::Is(object)) 
         {
-            return JsErrorNonNumericArgumentExpected;
+            RETURN_NO_EXCEPTION(JsErrorNonNumericArgumentExpected);
         }
         if(!Js::RecyclableObject::Is(object))
         {
-            return JsErrorArgumentNotObject;
+            RETURN_NO_EXCEPTION(JsErrorArgumentNotObject);
         }
         Js::RecyclableObject* obj = Js::RecyclableObject::FromVar(object);
         *context = (JsContextRef)obj->GetScriptContext()->GetLibrary()->GetPinnedJsrtContextObject();
-        return JsNoError;
-    });
+    }
+    END_JSRT_NO_EXCEPTION
 }
 
 STDAPI_(JsErrorCode) JsGetContextData(JsContextRef context, void **data)
 {
-    return GlobalAPIWrapper([&]() -> JsErrorCode {
-        PARAM_NOT_NULL(context);
-        PARAM_NOT_NULL(data);
+    PARAM_NOT_NULL(context);
+    PARAM_NOT_NULL(data);
 
+    BEGIN_JSRT_NO_EXCEPTION
+    {
         if (!JsrtContext::Is(context))
         {
-            return JsErrorInvalidArgument;
+            RETURN_NO_EXCEPTION(JsErrorInvalidArgument);
         }
 
         *data = static_cast<JsrtContext *>(context)->GetExternalData();
-        return JsNoError;
-    });
+    }
+    END_JSRT_NO_EXCEPTION
 }
 
 STDAPI_(JsErrorCode) JsSetContextData(_In_ JsContextRef context, _In_ void *data)
 {
-    return GlobalAPIWrapper([&]() -> JsErrorCode {
-        PARAM_NOT_NULL(context);
+    PARAM_NOT_NULL(context);
 
+    BEGIN_JSRT_NO_EXCEPTION
+    {
         if (!JsrtContext::Is(context))
         {
-            return JsErrorInvalidArgument;
+            RETURN_NO_EXCEPTION(JsErrorInvalidArgument);
         }
 
         static_cast<JsrtContext *>(context)->SetExternalData(data);
-        return JsNoError;
-    });
+    }
+    END_JSRT_NO_EXCEPTION
 }
 
 void HandleScriptCompileError(Js::ScriptContext * scriptContext, CompileScriptException * se)
@@ -587,75 +598,79 @@ void HandleScriptCompileError(Js::ScriptContext * scriptContext, CompileScriptEx
 
 STDAPI_(JsErrorCode) JsGetUndefinedValue(JsValueRef *undefinedValue)
 {
-    return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode { 
+    return ContextAPINoScriptWrapper([&] (Js::ScriptContext *scriptContext) -> JsErrorCode { 
         PARAM_NOT_NULL(undefinedValue);
 
         *undefinedValue = scriptContext->GetLibrary()->GetUndefined();
 
         return JsNoError;
-    });
+    },
+    /*allowInObjectBeforeCollectCallback*/true);
 }
 
 STDAPI_(JsErrorCode) JsGetNullValue(JsValueRef *nullValue)
 {
-    return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode { 
+    return ContextAPINoScriptWrapper([&] (Js::ScriptContext *scriptContext) -> JsErrorCode {
         PARAM_NOT_NULL(nullValue);
 
         *nullValue = scriptContext->GetLibrary()->GetNull();
 
         return JsNoError;
-    });
+    },
+    /*allowInObjectBeforeCollectCallback*/true);
 }
 
 STDAPI_(JsErrorCode) JsGetTrueValue(JsValueRef *trueValue)
 {
-    return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode { 
+    return ContextAPINoScriptWrapper([&] (Js::ScriptContext *scriptContext) -> JsErrorCode {
         PARAM_NOT_NULL(trueValue);
 
         *trueValue = scriptContext->GetLibrary()->GetTrue();
 
         return JsNoError;
-    });
+    },
+    /*allowInObjectBeforeCollectCallback*/true);
 }
 
 STDAPI_(JsErrorCode) JsGetFalseValue(JsValueRef *falseValue)
 {
-    return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode { 
+    return ContextAPINoScriptWrapper([&] (Js::ScriptContext *scriptContext) -> JsErrorCode {
         PARAM_NOT_NULL(falseValue);
 
         *falseValue = scriptContext->GetLibrary()->GetFalse();
 
         return JsNoError;
-    });
+    },
+    /*allowInObjectBeforeCollectCallback*/true);
 }
 
 STDAPI_(JsErrorCode) JsBoolToBoolean(bool value, JsValueRef *booleanValue)
 {
-    return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode { 
+    return ContextAPINoScriptWrapper([&] (Js::ScriptContext *scriptContext) -> JsErrorCode {
         PARAM_NOT_NULL(booleanValue);
 
         *booleanValue = value ? scriptContext->GetLibrary()->GetTrue() :
             scriptContext->GetLibrary()->GetFalse();
         return JsNoError;
-    });
+    },
+    /*allowInObjectBeforeCollectCallback*/true);
 }
 
 STDAPI_(JsErrorCode) JsBooleanToBool(JsValueRef value, bool *boolValue)
 {
-    return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode { 
-        PARAM_NOT_NULL(value);
-        VALIDATE_INCOMING_REFERENCE(value, scriptContext);
-        PARAM_NOT_NULL(boolValue);
-        *boolValue = false;
+    PARAM_NOT_NULL(value);
+    PARAM_NOT_NULL(boolValue);
 
+    BEGIN_JSRT_NO_EXCEPTION
+    {
         if (!Js::JavascriptBoolean::Is(value))
         {
-            return JsErrorInvalidArgument;
+            RETURN_NO_EXCEPTION(JsErrorInvalidArgument);
         }
 
         *boolValue = Js::JavascriptBoolean::FromVar(value)->GetValue() ? true : false;
-        return JsNoError;
-    });
+    }
+    END_JSRT_NO_EXCEPTION
 }
 
 STDAPI_(JsErrorCode) JsConvertValueToBoolean(JsValueRef value, JsValueRef *result)
@@ -680,11 +695,11 @@ STDAPI_(JsErrorCode) JsConvertValueToBoolean(JsValueRef value, JsValueRef *resul
 
 STDAPI_(JsErrorCode) JsGetValueType(JsValueRef value, JsValueType *type)
 {    
-    return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode { 
-        PARAM_NOT_NULL(value);
-        VALIDATE_INCOMING_REFERENCE(value, scriptContext);
-        PARAM_NOT_NULL(type);
+    PARAM_NOT_NULL(value);
+    PARAM_NOT_NULL(type);
 
+    BEGIN_JSRT_NO_EXCEPTION
+    {
         Js::TypeId typeId = Js::JavascriptOperators::GetTypeId(value);
         switch (typeId)
         {
@@ -739,28 +754,32 @@ STDAPI_(JsErrorCode) JsGetValueType(JsValueRef value, JsValueType *type)
             }
             break;
         }
-
-        return JsNoError;
-    });
+    }
+    END_JSRT_NO_EXCEPTION
 }
 
 STDAPI_(JsErrorCode) JsDoubleToNumber(double dbl, JsValueRef *asValue)
 {
-    return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode { 
-        PARAM_NOT_NULL(asValue);
-        *asValue = nullptr;
+    PARAM_NOT_NULL(asValue);
+    if (Js::JavascriptNumber::TryToVarFastWithCheck(dbl, asValue)) {
+      return JsNoError;
+    }
 
-        *asValue = Js::JavascriptNumber::ToVarWithCheck(dbl, scriptContext);
+    return ContextAPINoScriptWrapper([&](Js::ScriptContext *scriptContext) -> JsErrorCode {
+        *asValue = Js::JavascriptNumber::ToVarNoCheck(dbl, scriptContext);
         return JsNoError;
     });
 }
 
 STDAPI_(JsErrorCode) JsIntToNumber(int intValue, JsValueRef *asValue)
 {
-    return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode { 
-        PARAM_NOT_NULL(asValue);
-        *asValue = nullptr;
+    PARAM_NOT_NULL(asValue);
+    if (Js::JavascriptNumber::TryToVarFast(intValue, asValue))
+    {
+        return JsNoError;
+    }
 
+    return ContextAPINoScriptWrapper([&](Js::ScriptContext *scriptContext) -> JsErrorCode {
         *asValue = Js::JavascriptNumber::ToVar(intValue, scriptContext);
         return JsNoError;
     });
@@ -768,12 +787,11 @@ STDAPI_(JsErrorCode) JsIntToNumber(int intValue, JsValueRef *asValue)
 
 STDAPI_(JsErrorCode) JsNumberToDouble(JsValueRef value, double *asDouble)
 {
-    return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode { 
-        PARAM_NOT_NULL(value);
-        VALIDATE_INCOMING_REFERENCE(value, scriptContext);
-        PARAM_NOT_NULL(asDouble);
-        *asDouble = 0;
+    PARAM_NOT_NULL(value);
+    PARAM_NOT_NULL(asDouble);
 
+    BEGIN_JSRT_NO_EXCEPTION
+    {
         if (Js::TaggedInt::Is(value))
         {
             *asDouble = Js::TaggedInt::ToDouble(value);
@@ -784,21 +802,20 @@ STDAPI_(JsErrorCode) JsNumberToDouble(JsValueRef value, double *asDouble)
         }
         else
         {
-            return JsErrorInvalidArgument;
+            *asDouble = 0;
+            RETURN_NO_EXCEPTION(JsErrorInvalidArgument);
         }
-
-        return JsNoError;
-    });
+    }
+    END_JSRT_NO_EXCEPTION
 }
 
 STDAPI_(JsErrorCode) JsNumberToInt(JsValueRef value, int *asInt)
 {
-    return ContextAPIWrapper<true>([&](Js::ScriptContext *scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(value);
-        VALIDATE_INCOMING_REFERENCE(value, scriptContext);
-        PARAM_NOT_NULL(asInt);
-        *asInt = 0;
+    PARAM_NOT_NULL(value);
+    PARAM_NOT_NULL(asInt);
 
+    BEGIN_JSRT_NO_EXCEPTION
+    {
         if (Js::TaggedInt::Is(value))
         {
             *asInt = Js::TaggedInt::ToInt32(value);
@@ -806,15 +823,15 @@ STDAPI_(JsErrorCode) JsNumberToInt(JsValueRef value, int *asInt)
         else if (Js::JavascriptNumber::Is_NoTaggedIntCheck(value))
         {
             *asInt = Js::JavascriptConversion::ToInt32(
-                Js::JavascriptNumber::GetValue(value), scriptContext);
+                Js::JavascriptNumber::GetValue(value), /*scriptContext, TODO: remove*/nullptr);
         }
         else
         {
-            return JsErrorInvalidArgument;
+            *asInt = 0;
+            RETURN_NO_EXCEPTION(JsErrorInvalidArgument);
         }
-
-        return JsNoError;
-    });
+    }
+    END_JSRT_NO_EXCEPTION
 }
 
 STDAPI_(JsErrorCode) JsConvertValueToNumber(JsValueRef value, JsValueRef *result)
@@ -823,7 +840,6 @@ STDAPI_(JsErrorCode) JsConvertValueToNumber(JsValueRef value, JsValueRef *result
         PARAM_NOT_NULL(value);
         VALIDATE_INCOMING_REFERENCE(value, scriptContext);
         PARAM_NOT_NULL(result);
-        *result = nullptr;
 
         *result = (JsValueRef)Js::JavascriptOperators::ToNumber((Js::Var)value, scriptContext);
         return JsNoError;
@@ -832,40 +848,36 @@ STDAPI_(JsErrorCode) JsConvertValueToNumber(JsValueRef value, JsValueRef *result
 
 STDAPI_(JsErrorCode) JsGetStringLength(JsValueRef value, int *length)
 {
-    return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode { 
-        PARAM_NOT_NULL(value);
-        VALIDATE_INCOMING_REFERENCE(value, scriptContext);
-        PARAM_NOT_NULL(length);
-        *length = 0;
+    PARAM_NOT_NULL(value);
+    PARAM_NOT_NULL(length);
 
+    BEGIN_JSRT_NO_EXCEPTION
+    {
         if (!Js::JavascriptString::Is(value))
         {
-            return JsErrorInvalidArgument;
+            RETURN_NO_EXCEPTION(JsErrorInvalidArgument);
         }
 
         *length = Js::JavascriptString::FromVar(value)->GetLengthAsSignedInt();
-        return JsNoError;
-    });
+    }
+    END_JSRT_NO_EXCEPTION
 }
 
 STDAPI_(JsErrorCode) JsPointerToString(const wchar_t *stringValue, size_t stringLength, JsValueRef *string)
 {
-    return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode { 
+    return ContextAPINoScriptWrapper([&](Js::ScriptContext *scriptContext) -> JsErrorCode {
         PARAM_NOT_NULL(stringValue);
         PARAM_NOT_NULL(string);
-        *string = nullptr;
 
         *string = Js::JavascriptString::NewCopyBuffer(stringValue, stringLength, scriptContext);
-
         return JsNoError;
     });
 }
 
 STDAPI_(JsErrorCode) JsStringToPointer(JsValueRef stringValue, const wchar_t **stringPtr, size_t *stringLength)
 {
-    return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode { 
+    return GlobalAPIWrapper([&]() -> JsErrorCode { 
         PARAM_NOT_NULL(stringValue);
-        VALIDATE_INCOMING_REFERENCE(stringValue, scriptContext);
         PARAM_NOT_NULL(stringPtr);
         *stringPtr = nullptr;
         PARAM_NOT_NULL(stringLength);
@@ -899,34 +911,31 @@ STDAPI_(JsErrorCode) JsConvertValueToString(JsValueRef value, JsValueRef *result
 
 STDAPI_(JsErrorCode) JsGetGlobalObject(JsValueRef *globalObject)
 {
-    return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode { 
+    return ContextAPINoScriptWrapper([&](Js::ScriptContext *scriptContext) -> JsErrorCode {
         PARAM_NOT_NULL(globalObject);
 
         *globalObject = (JsValueRef)scriptContext->GetGlobalObject();
         return JsNoError;
-    });
+    },
+    /*allowInObjectBeforeCollectCallback*/true);
 }
 
 STDAPI_(JsErrorCode) JsCreateObject(JsValueRef *object)
 {
-    return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode { 
+    return ContextAPINoScriptWrapper([&](Js::ScriptContext *scriptContext) -> JsErrorCode {
         PARAM_NOT_NULL(object);
-        *object = nullptr;
 
         *object = scriptContext->GetLibrary()->CreateObject();
-
         return JsNoError;
     });
 }
 
 STDAPI_(JsErrorCode) JsCreateExternalObject(void *data, JsFinalizeCallback finalizeCallback, JsValueRef *object)
 {
-    return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode { 
+    return ContextAPINoScriptWrapper([&](Js::ScriptContext *scriptContext) -> JsErrorCode {
         PARAM_NOT_NULL(object);
-        *object = nullptr;
 
         *object = RecyclerNewFinalized(scriptContext->GetRecycler(), JsrtExternalObject, RecyclerNew(scriptContext->GetRecycler(), JsrtExternalType, scriptContext, finalizeCallback), data);
-
         return JsNoError;
     });
 }
@@ -976,6 +985,20 @@ STDAPI_(JsErrorCode) JsSetPrototype(JsValueRef object, JsValueRef prototypeObjec
         }
 
         Js::JavascriptObject::ChangePrototype(Js::RecyclableObject::FromVar(object), Js::RecyclableObject::FromVar(prototypeObject), true, scriptContext);
+
+        return JsNoError;
+    });
+}
+
+STDAPI_(JsErrorCode) JsInstanceOf(JsValueRef object, JsValueRef constructor, bool *result) {
+    return ContextAPIWrapper<true>([&](Js::ScriptContext *scriptContext) -> JsErrorCode {
+        PARAM_NOT_NULL(object);
+        VALIDATE_INCOMING_REFERENCE(object, scriptContext);
+        PARAM_NOT_NULL(constructor);
+        VALIDATE_INCOMING_REFERENCE(constructor, scriptContext);
+        PARAM_NOT_NULL(result);
+
+        *result = Js::RecyclableObject::FromVar(constructor)->HasInstance(object, scriptContext) ? true : false;
 
         return JsNoError;
     });
@@ -1287,146 +1310,157 @@ STDAPI_(JsErrorCode) JsCreateDataView(JsValueRef arrayBuffer, unsigned int byteO
     });
 }
 
+
+C_ASSERT(JsArrayTypeUint8         - Js::TypeIds_Uint8Array        == JsArrayTypeInt8 - Js::TypeIds_Int8Array);
+C_ASSERT(JsArrayTypeUint8Clamped  - Js::TypeIds_Uint8ClampedArray == JsArrayTypeInt8 - Js::TypeIds_Int8Array);
+C_ASSERT(JsArrayTypeInt16         - Js::TypeIds_Int16Array        == JsArrayTypeInt8 - Js::TypeIds_Int8Array);
+C_ASSERT(JsArrayTypeUint16        - Js::TypeIds_Uint16Array       == JsArrayTypeInt8 - Js::TypeIds_Int8Array);
+C_ASSERT(JsArrayTypeInt32         - Js::TypeIds_Int32Array        == JsArrayTypeInt8 - Js::TypeIds_Int8Array);
+C_ASSERT(JsArrayTypeUint32        - Js::TypeIds_Uint32Array       == JsArrayTypeInt8 - Js::TypeIds_Int8Array);
+C_ASSERT(JsArrayTypeFloat32       - Js::TypeIds_Float32Array      == JsArrayTypeInt8 - Js::TypeIds_Int8Array);
+C_ASSERT(JsArrayTypeFloat64       - Js::TypeIds_Float64Array      == JsArrayTypeInt8 - Js::TypeIds_Int8Array);
+
+inline JsTypedArrayType GetTypedArrayType(Js::TypeId typeId)
+{
+    Assert(Js::TypedArrayBase::Is(typeId));
+    return static_cast<JsTypedArrayType>(typeId + (JsArrayTypeInt8 - Js::TypeIds_Int8Array));
+}
+
+STDAPI_(JsErrorCode) JsGetTypedArrayInfo(JsValueRef typedArray, JsTypedArrayType *arrayType, JsValueRef *arrayBuffer, unsigned int *byteOffset, unsigned int *byteLength)
+{
+    PARAM_NOT_NULL(typedArray);
+
+    BEGIN_JSRT_NO_EXCEPTION
+    {
+        const Js::TypeId typeId = Js::JavascriptOperators::GetTypeId(typedArray);
+
+        if (!Js::TypedArrayBase::Is(typeId))
+        {
+            RETURN_NO_EXCEPTION(JsErrorInvalidArgument);
+        }
+
+        if (arrayType != nullptr) {
+            *arrayType = GetTypedArrayType(typeId);
+        }
+        
+        Js::TypedArrayBase* typedArrayBase = Js::TypedArrayBase::FromVar(typedArray);
+        if (arrayBuffer != nullptr) {
+            *arrayBuffer = typedArrayBase->GetArrayBuffer();
+        }
+
+        if (byteOffset != nullptr) {
+            *byteOffset = typedArrayBase->GetByteOffset();
+        }
+
+        if (byteLength != nullptr) {
+            *byteLength = typedArrayBase->GetByteLength();
+        }
+    }
+    END_JSRT_NO_EXCEPTION
+}
+
 STDAPI_(JsErrorCode) JsGetArrayBufferStorage(JsValueRef instance, BYTE **buffer, unsigned int *bufferLength)
 {
-    return ContextAPIWrapper<true>([&](Js::ScriptContext *scriptContext) -> JsErrorCode {
-        VALIDATE_INCOMING_REFERENCE(instance, scriptContext);
-        PARAM_NOT_NULL(instance);
-        PARAM_NOT_NULL(buffer);
-        PARAM_NOT_NULL(bufferLength);
+    PARAM_NOT_NULL(instance);
+    PARAM_NOT_NULL(buffer);
+    PARAM_NOT_NULL(bufferLength);
 
+    BEGIN_JSRT_NO_EXCEPTION
+    {
         if (!Js::ArrayBuffer::Is(instance))
         {
-            return JsErrorInvalidArgument;
+            RETURN_NO_EXCEPTION(JsErrorInvalidArgument);
         }
 
         Js::ArrayBuffer* arrayBuffer = Js::ArrayBuffer::FromVar(instance);
         *buffer = arrayBuffer->GetBuffer();
         *bufferLength = arrayBuffer->GetByteLength();
-
-        return JsNoError;
-    });
+    }
+    END_JSRT_NO_EXCEPTION
 }
 
 STDAPI_(JsErrorCode) JsGetTypedArrayStorage(JsValueRef instance, BYTE **buffer, unsigned int *bufferLength, JsTypedArrayType *typedArrayType, int *elementSize)
 {
-    return ContextAPIWrapper<true>([&](Js::ScriptContext *scriptContext) -> JsErrorCode {
-        VALIDATE_INCOMING_REFERENCE(instance, scriptContext);
-        PARAM_NOT_NULL(instance);
-        PARAM_NOT_NULL(buffer);
-        PARAM_NOT_NULL(bufferLength);
+    PARAM_NOT_NULL(instance);
+    PARAM_NOT_NULL(buffer);
+    PARAM_NOT_NULL(bufferLength);
 
-        if (!Js::TypedArrayBase::Is(instance))
+    BEGIN_JSRT_NO_EXCEPTION
+    {
+        const Js::TypeId typeId = Js::JavascriptOperators::GetTypeId(instance);
+        if (!Js::TypedArrayBase::Is(typeId))
         {
-            return JsErrorInvalidArgument;
+            RETURN_NO_EXCEPTION(JsErrorInvalidArgument);
         }
 
-        *buffer = nullptr;
-        *bufferLength = 0;
-
+        Js::TypedArrayBase* typedArrayBase = Js::TypedArrayBase::FromVar(instance);
+        *buffer = typedArrayBase->GetByteBuffer();
+        *bufferLength = typedArrayBase->GetByteLength();
+        
         if (typedArrayType)
         {
-            *typedArrayType = JsArrayTypeInt8;
+            *typedArrayType = GetTypedArrayType(typeId);
         }
 
         if (elementSize)
         {
-            *elementSize = 0;
+            switch (typeId)
+            {
+                case Js::TypeIds_Int8Array:
+                    *elementSize = sizeof(int8);
+                    break;
+                case Js::TypeIds_Uint8Array:
+                    *elementSize = sizeof(uint8);
+                    break;
+                case Js::TypeIds_Uint8ClampedArray:
+                    *elementSize = sizeof(uint8);
+                    break;
+                case Js::TypeIds_Int16Array:
+                    *elementSize = sizeof(int16);
+                    break;
+                case Js::TypeIds_Uint16Array:
+                    *elementSize = sizeof(uint16);
+                    break;
+                case Js::TypeIds_Int32Array:
+                    *elementSize = sizeof(int32);
+                    break;
+                case Js::TypeIds_Uint32Array:
+                    *elementSize = sizeof(uint32);
+                    break;
+                case Js::TypeIds_Float32Array:
+                    *elementSize = sizeof(float);
+                    break;
+                case Js::TypeIds_Float64Array:
+                    *elementSize = sizeof(double);
+                    break;
+                default:
+                    AssertMsg(FALSE, "invalid typed array type");
+                    *elementSize = 1;
+                    RETURN_NO_EXCEPTION(JsErrorFatal);
+            }
         }
-
-        Js::ArrayBuffer* arrayBuffer = nullptr;
-        uint32 offset = 0;
-        uint32 length = 0;
-
-        if (FAILED(Js::TypedArrayBase::GetBuffer(instance, &arrayBuffer, &offset, &length)))
-        {
-            return JsErrorInvalidArgument;
-        }
-
-        *buffer = arrayBuffer->GetBuffer() + offset;
-        *bufferLength = length;
-
-        JsTypedArrayType arrayType;
-        INT tmpElementSize;
-
-        switch (Js::JavascriptOperators::GetTypeId(instance))
-        {
-        case Js::TypeIds_Int8Array:
-            arrayType = JsArrayTypeInt8;
-            tmpElementSize = sizeof(int8);
-            break;
-        case Js::TypeIds_Uint8Array:
-            arrayType = JsArrayTypeUint8;
-            tmpElementSize = sizeof(uint8);
-            break;
-        case Js::TypeIds_Uint8ClampedArray:
-            arrayType = JsArrayTypeUint8Clamped;
-            tmpElementSize = sizeof(uint8);
-            break;
-        case Js::TypeIds_Int16Array:
-            arrayType = JsArrayTypeInt16;
-            tmpElementSize = sizeof(int16);
-            break;
-        case Js::TypeIds_Uint16Array:
-            arrayType = JsArrayTypeUint16;
-            tmpElementSize = sizeof(uint16);
-            break;
-        case Js::TypeIds_Int32Array:
-            arrayType = JsArrayTypeInt32;
-            tmpElementSize = sizeof(int32);
-            break;
-        case Js::TypeIds_Uint32Array:
-            arrayType = JsArrayTypeUint32;
-            tmpElementSize = sizeof(uint32);
-            break;
-        case Js::TypeIds_Float32Array:
-            arrayType = JsArrayTypeFloat32;
-            tmpElementSize = sizeof(float);
-            break;
-        case Js::TypeIds_Float64Array:
-            arrayType = JsArrayTypeFloat64;
-            tmpElementSize = sizeof(double);
-            break;
-        default:
-            AssertMsg(FALSE, "invalid typed array type");
-            arrayType = JsTypedArrayType();
-            tmpElementSize = 1;
-            return JsErrorFatal;
-        }
-
-        if (typedArrayType)
-        {
-            *typedArrayType = arrayType;
-        }
-
-        if (elementSize)
-        {
-            *elementSize = tmpElementSize;
-        }
-
-        return JsNoError;
-    });
+    }
+    END_JSRT_NO_EXCEPTION
 }
 
 STDAPI_(JsErrorCode) JsGetDataViewStorage(JsValueRef instance, BYTE **buffer, unsigned int *bufferLength)
 {
-    return ContextAPIWrapper<true>([&](Js::ScriptContext *scriptContext) -> JsErrorCode {
-        VALIDATE_INCOMING_REFERENCE(instance, scriptContext);
-        PARAM_NOT_NULL(instance);
-        PARAM_NOT_NULL(buffer);
-        PARAM_NOT_NULL(bufferLength);
+    PARAM_NOT_NULL(instance);
+    PARAM_NOT_NULL(buffer);
+    PARAM_NOT_NULL(bufferLength);
 
+    BEGIN_JSRT_NO_EXCEPTION
+    {
         if (!Js::DataView::Is(instance))
         {
-            return JsErrorInvalidArgument;
+            RETURN_NO_EXCEPTION(JsErrorInvalidArgument);
         }
 
         Js::DataView* dataView = Js::DataView::FromVar(instance);
         *buffer = dataView->GetArrayBuffer()->GetBuffer() + dataView->GetByteOffset();
         *bufferLength = dataView->GetLength();
-
-        return JsNoError;
-    });
+    }
+    END_JSRT_NO_EXCEPTION
 }
 
 
@@ -1622,10 +1656,11 @@ STDAPI_(JsErrorCode) JsSetIndexedPropertiesToExternalData(
 
 STDAPI_(JsErrorCode) JsHasIndexedPropertiesExternalData(JsValueRef object, bool *value)
 {
-    // Use non-context api wrapper to support access after context reset
-    return GlobalAPIWrapper([&]() -> JsErrorCode {
-        PARAM_NOT_NULL(object);
-        PARAM_NOT_NULL(value);
+    PARAM_NOT_NULL(object);
+    PARAM_NOT_NULL(value);
+
+    BEGIN_JSRT_NO_EXCEPTION
+    {
         *value = false;
 
         if (Js::DynamicType::Is(Js::JavascriptOperators::GetTypeId(object)))
@@ -1634,9 +1669,8 @@ STDAPI_(JsErrorCode) JsHasIndexedPropertiesExternalData(JsValueRef object, bool 
             Js::ArrayObject* objectArray = dynamicObject->GetObjectArray();
             *value = (objectArray && !Js::DynamicObject::IsAnyArray(objectArray));
         }
-
-        return JsNoError;
-    });
+    }
+    END_JSRT_NO_EXCEPTION
 }
 
 STDAPI_(JsErrorCode) JsGetIndexedPropertiesExternalData(
@@ -1645,16 +1679,16 @@ STDAPI_(JsErrorCode) JsGetIndexedPropertiesExternalData(
     _Out_ JsTypedArrayType* arrayType,
     _Out_ unsigned int* elementLength)
 {
-    // Use non-context api wrapper to support access after context reset
-    return GlobalAPIWrapper([&]() -> JsErrorCode {
-        PARAM_NOT_NULL(object);
-        PARAM_NOT_NULL(buffer);
-        PARAM_NOT_NULL(arrayType);
-        PARAM_NOT_NULL(elementLength);
+    PARAM_NOT_NULL(object);
+    PARAM_NOT_NULL(buffer);
+    PARAM_NOT_NULL(arrayType);
+    PARAM_NOT_NULL(elementLength);
 
+    BEGIN_JSRT_NO_EXCEPTION
+    {
         if (!Js::DynamicType::Is(Js::JavascriptOperators::GetTypeId(object)))
         {
-            return JsErrorInvalidArgument;
+            RETURN_NO_EXCEPTION(JsErrorInvalidArgument);
         }
 
         *buffer = nullptr;
@@ -1665,7 +1699,7 @@ STDAPI_(JsErrorCode) JsGetIndexedPropertiesExternalData(
         Js::ArrayObject* objectArray = dynamicObject->GetObjectArray();
         if (!objectArray)
         {
-            return JsErrorInvalidArgument;
+            RETURN_NO_EXCEPTION(JsErrorInvalidArgument);
         }
 
         switch (Js::JavascriptOperators::GetTypeId(objectArray))
@@ -1698,11 +1732,10 @@ STDAPI_(JsErrorCode) JsGetIndexedPropertiesExternalData(
             GetObjectArrayData<double>(objectArray, buffer, arrayType, elementLength);
             break;
         default:
-            return JsErrorInvalidArgument;
+            RETURN_NO_EXCEPTION(JsErrorInvalidArgument);
         }
-
-        return JsNoError;
-    });
+    }
+    END_JSRT_NO_EXCEPTION
 }
 
 STDAPI_(JsErrorCode) JsEquals(JsValueRef object1, JsValueRef object2, bool *result)
@@ -1713,10 +1746,8 @@ STDAPI_(JsErrorCode) JsEquals(JsValueRef object1, JsValueRef object2, bool *resu
         PARAM_NOT_NULL(object2);
         VALIDATE_INCOMING_REFERENCE(object2, scriptContext);
         PARAM_NOT_NULL(result);
-        *result = false;
 
         *result = Js::JavascriptOperators::Equal((Js::Var)object1, (Js::Var)object2, scriptContext) != 0;
-
         return JsNoError;
     });
 }
@@ -1729,66 +1760,60 @@ STDAPI_(JsErrorCode) JsStrictEquals(JsValueRef object1, JsValueRef object2, bool
         PARAM_NOT_NULL(object2);
         VALIDATE_INCOMING_REFERENCE(object2, scriptContext);
         PARAM_NOT_NULL(result);
-        *result = false;
 
         *result = Js::JavascriptOperators::StrictEqual((Js::Var)object1, (Js::Var)object2, scriptContext) != 0;
-
         return JsNoError;
     });
 }
 
 STDAPI_(JsErrorCode) JsHasExternalData(JsValueRef object, bool *value)
 {
-    return ContextAPINoScriptWrapper([&] (Js::ScriptContext *scriptContext) -> JsErrorCode { 
-        PARAM_NOT_NULL(object);
-        VALIDATE_INCOMING_OBJECT(object, scriptContext);
-        PARAM_NOT_NULL(value);
-        *value = false;
+    PARAM_NOT_NULL(object);
+    PARAM_NOT_NULL(value);
 
+    BEGIN_JSRT_NO_EXCEPTION
+    {
         *value = JsrtExternalObject::Is(object);
-        return JsNoError;
-    });
+    }
+    END_JSRT_NO_EXCEPTION
 }
 
 STDAPI_(JsErrorCode) JsGetExternalData(JsValueRef object, void **data)
 {    
-    return ContextAPINoScriptWrapper([&] (Js::ScriptContext *scriptContext) -> JsErrorCode { 
-        PARAM_NOT_NULL(object);
-        VALIDATE_INCOMING_OBJECT(object, scriptContext);
-        PARAM_NOT_NULL(data);
+    PARAM_NOT_NULL(object);
+    PARAM_NOT_NULL(data);
 
-        *data = nullptr;
-
+    BEGIN_JSRT_NO_EXCEPTION
+    {
         if (JsrtExternalObject::Is(object))
         {
             *data = JsrtExternalObject::FromVar(object)->GetSlotData();
         }
         else
         {
-            return JsErrorInvalidArgument;
+            *data = nullptr;
+            RETURN_NO_EXCEPTION(JsErrorInvalidArgument);
         }
-
-        return JsNoError;
-    });
+    }
+    END_JSRT_NO_EXCEPTION
 }
 
 STDAPI_(JsErrorCode) JsSetExternalData(JsValueRef object, void *data)
 {    
-    return ContextAPINoScriptWrapper([&] (Js::ScriptContext *scriptContext) -> JsErrorCode { 
-        PARAM_NOT_NULL(object);
-        VALIDATE_INCOMING_OBJECT(object, scriptContext);
+    PARAM_NOT_NULL(object);
 
+    BEGIN_JSRT_NO_EXCEPTION
+    {
         if (JsrtExternalObject::Is(object))
         {
             JsrtExternalObject::FromVar(object)->SetSlotData(data);
         }
         else
         {
-            return JsErrorInvalidArgument;
+            RETURN_NO_EXCEPTION(JsErrorInvalidArgument);
         }
-
-        return JsNoError;
-    });
+    }
+    END_JSRT_NO_EXCEPTION
 }
 
 STDAPI_(JsErrorCode) JsCallFunction(JsValueRef function, JsValueRef *args, ushort cargs, JsValueRef *result)
@@ -2245,7 +2270,7 @@ STDAPI_(JsErrorCode) JsIsRuntimeExecutionDisabled(JsRuntimeHandle runtimeHandle,
 
 STDAPI_(JsErrorCode) JsGetPropertyIdFromName(const wchar_t *name, JsPropertyIdRef *propertyId)
 {
-    return ContextAPIWrapper<true>([&] (Js::ScriptContext * scriptContext) -> JsErrorCode { 
+    return ContextAPINoScriptWrapper([&](Js::ScriptContext * scriptContext) -> JsErrorCode {
         PARAM_NOT_NULL(name);
         PARAM_NOT_NULL(propertyId);
         *propertyId = nullptr;
@@ -2257,7 +2282,7 @@ STDAPI_(JsErrorCode) JsGetPropertyIdFromName(const wchar_t *name, JsPropertyIdRe
 
 STDAPI_(JsErrorCode) JsGetPropertyIdFromSymbol(JsValueRef symbol, JsPropertyIdRef *propertyId)
 {
-    return ContextAPIWrapper<true>([&](Js::ScriptContext * scriptContext) -> JsErrorCode {
+    return ContextAPINoScriptWrapper([&](Js::ScriptContext * scriptContext) -> JsErrorCode {
         VALIDATE_INCOMING_REFERENCE(symbol, scriptContext);
         PARAM_NOT_NULL(symbol);
         PARAM_NOT_NULL(propertyId);
@@ -2270,12 +2295,13 @@ STDAPI_(JsErrorCode) JsGetPropertyIdFromSymbol(JsValueRef symbol, JsPropertyIdRe
 
         *propertyId = (JsPropertyIdRef)Js::JavascriptSymbol::FromVar(symbol)->GetValue();
         return JsNoError;
-    });
+    },
+    /*allowInObjectBeforeCollectCallback*/true);
 }
 
 STDAPI_(JsErrorCode) JsGetSymbolFromPropertyId(JsPropertyIdRef propertyId, JsValueRef *symbol)
 {
-    return ContextAPIWrapper<true>([&](Js::ScriptContext * scriptContext) -> JsErrorCode {
+    return ContextAPINoScriptWrapper([&](Js::ScriptContext * scriptContext) -> JsErrorCode {
         VALIDATE_INCOMING_PROPERTYID(propertyId);
         PARAM_NOT_NULL(symbol);
         *symbol = nullptr;
@@ -2293,7 +2319,7 @@ STDAPI_(JsErrorCode) JsGetSymbolFromPropertyId(JsPropertyIdRef propertyId, JsVal
 
 STDAPI_(JsErrorCode) JsGetPropertyNameFromId(JsPropertyIdRef propertyId, const wchar_t **name)
 {
-    return ContextAPIWrapper<true>([&] (Js::ScriptContext * scriptContext) -> JsErrorCode { 
+    return GlobalAPIWrapper([&]() -> JsErrorCode {
         VALIDATE_INCOMING_PROPERTYID(propertyId);
         PARAM_NOT_NULL(name);
         *name = nullptr;
@@ -2312,7 +2338,7 @@ STDAPI_(JsErrorCode) JsGetPropertyNameFromId(JsPropertyIdRef propertyId, const w
 
 STDAPI_(JsErrorCode) JsGetPropertyIdType(JsPropertyIdRef propertyId, JsPropertyIdType* propertyIdType)
 {
-    return ContextAPIWrapper<true>([&](Js::ScriptContext * scriptContext) -> JsErrorCode {
+    return GlobalAPIWrapper([&]() -> JsErrorCode {
         VALIDATE_INCOMING_PROPERTYID(propertyId);
         PARAM_NOT_NULL(propertyIdType);
 
@@ -2382,12 +2408,13 @@ STDAPI_(JsErrorCode) JsIdle(unsigned int *nextIdleTick)
 
 STDAPI_(JsErrorCode) JsSetPromiseContinuationCallback(JsPromiseContinuationCallback promiseContinuationCallback, void *callbackState)
 {
-    return ContextAPIWrapper<true>([&](Js::ScriptContext * scriptContext) -> JsErrorCode {
+    return ContextAPINoScriptWrapper([&](Js::ScriptContext * scriptContext) -> JsErrorCode {
         PARAM_NOT_NULL(promiseContinuationCallback);
 
         scriptContext->GetLibrary()->SetNativeHostPromiseContinuationFunction((Js::JavascriptLibrary::PromiseContinuationCallback)promiseContinuationCallback, callbackState);
         return JsNoError;
-    });
+    },
+    /*allowInObjectBeforeCollectCallback*/true);
 }
 
 JsErrorCode RunScriptCore(const wchar_t *script, JsSourceContext sourceContext, const wchar_t *sourceUrl, bool parseOnly, JsValueRef *result)

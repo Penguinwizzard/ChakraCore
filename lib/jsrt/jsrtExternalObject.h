@@ -62,9 +62,6 @@ public:
     void * GetSlotData() const;
     void SetSlotData(void * data);
 
-#if DBG
-    virtual BOOL DbgCanHaveInterceptors() const override { return true; }
-#endif
 private:
     void * slot;
 };

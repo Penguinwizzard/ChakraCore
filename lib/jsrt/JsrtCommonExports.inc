@@ -9,7 +9,7 @@
     JsSetCurrentContext
     JsGetContextOfObject
     JsGetContextData
-    JsSetContextData    
+    JsSetContextData
     JsRunScript
     JsGetUndefinedValue
     JsGetNullValue
@@ -33,6 +33,7 @@
     JsConvertValueToObject
     JsGetPrototype
     JsSetPrototype
+    JsInstanceOf
     JsGetExtensionAllowed
     JsPreventExtension
     JsGetProperty
@@ -46,6 +47,7 @@
     JsCreateExternalArrayBuffer
     JsCreateTypedArray
     JsCreateDataView
+    JsGetTypedArrayInfo
     JsGetArrayBufferStorage
     JsGetTypedArrayStorage
     JsGetDataViewStorage

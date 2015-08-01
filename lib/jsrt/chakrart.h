@@ -1616,6 +1616,24 @@
         _In_ JsValueRef prototypeObject);
 
     /// <summary>
+    ///     Performs JavaScript "instanceof" operator test.
+    /// </summary>
+    /// <remarks>
+    ///     Requires an active script context.
+    /// </remarks>
+    /// <param name="object">The object to test.</param>
+    /// <param name="constructor">The constructor function to test against.</param>
+    /// <param name="result">Whether "object instanceof constructor" is true.</param>
+    /// <returns>
+    ///     The code <c>JsNoError</c> if the operation succeeded, a failure code otherwise.
+    /// </returns>
+    STDAPI_(JsErrorCode)
+        JsInstanceOf(
+        _In_ JsValueRef object,
+        _In_ JsValueRef constructor,
+        _Out_ bool *result);
+
+    /// <summary>
     ///     Returns a value that indicates whether an object is extensible or not.
     /// </summary>
     /// <remarks>
@@ -2113,6 +2131,25 @@
         _In_ unsigned int byteOffset,
         _In_ unsigned int byteLength,
         _Out_ JsValueRef *result);
+
+    /// <summary>
+    ///     Obtains frequently used properties of a typed array.
+    /// </summary>
+    /// <param name="typedArray">The typed array instance.</param>
+    /// <param name="arrayType">The type of the array.</param>
+    /// <param name="arrayBuffer">The ArrayBuffer backstore of the array.</param>
+    /// <param name="byteOffset">The offset in bytes from the start of arrayBuffer referenced by the array.</param>
+    /// <param name="byteLength">The number of bytes in the array.</param>
+    /// <returns>
+    ///     The code <c>JsNoError</c> if the operation succeeded, a failure code otherwise.
+    /// </returns>
+    STDAPI_(JsErrorCode)
+        JsGetTypedArrayInfo(
+        _In_ JsValueRef typedArray,
+        _Out_opt_ JsTypedArrayType *arrayType,
+        _Out_opt_ JsValueRef *arrayBuffer,
+        _Out_opt_ unsigned int *byteOffset,
+        _Out_opt_ unsigned int *byteLength);
 
     /// <summary>
     ///     Obtains the underlying memory storage used by an <c>ArrayBuffer</c>.
