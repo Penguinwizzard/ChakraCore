@@ -188,6 +188,10 @@ JsValueRef WScriptJsrt::LoadScript(LPCWSTR fileName, size_t fileNameLength, LPCW
         {
             PrintException(fileName, errorCode);
         }
+        else
+        {
+            errorCode = ChakraRTInterface::JsGetGlobalObject(&returnValue);
+        }
     }
     else if (wcscmp(scriptInjectType, L"samethread") == 0)
     {
@@ -209,6 +213,10 @@ JsValueRef WScriptJsrt::LoadScript(LPCWSTR fileName, size_t fileNameLength, LPCW
         if (errorCode != JsNoError)
         {
             PrintException(fileName, errorCode);
+        }
+        else
+        {
+            errorCode = ChakraRTInterface::JsGetGlobalObject(&returnValue);
         }
 
         // Set the context back to the old one
@@ -455,7 +463,7 @@ bool WScriptJsrt::PrintException(LPCWSTR fileName, JsErrorCode jsErrorCode)
                 IfJsrtErrorFail(ChakraRTInterface::JsGetProperty(exception, stackPropertyId, &stackProperty), false);
                 IfJsrtErrorFail(ChakraRTInterface::JsStringToPointer(stackProperty, &errorStack, &errorStackLength), false);
 
-                fwprintf(stderr, L"%ls: %ls\n%ls\n", errorTypeString, errorMessage, errorStack);
+                fwprintf(stderr, L"%ls\n", errorStack);
                 // TODO : we need to extract the stack and print it.
             }
         }
