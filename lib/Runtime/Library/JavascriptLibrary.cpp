@@ -5381,7 +5381,7 @@ namespace Js
 #endif
 
 #ifdef ENABLE_JS_ETW
-        JS_ETW(EventWriteJSCRIPT_BUILD_DIRECT_FUNCTION(scriptContext, function, nameId));
+        JS_ETW(EventWriteJSCRIPT_BUILD_DIRECT_FUNCTION(scriptContext, function, TaggedInt::Is(nameId) ? scriptContext->GetThreadContext()->GetPropertyName(TaggedInt::ToInt32(nameId))->GetBuffer() : ((JavascriptString *)nameId)->GetString()));
 #endif
 #if DBG_DUMP
         if (Js::Configuration::Global.flags.Trace.IsEnabled(Js::HostPhase))

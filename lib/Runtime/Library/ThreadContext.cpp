@@ -163,6 +163,10 @@ ThreadContext::ThreadContext(AllocationPolicyManager * allocationPolicyManager, 
     maxGlobalFunctionExecTime(0.0),
     isDebuggerAttaching(false),
     isAllJITCodeInPreReservedRegion(true)
+    , activityId(GUID_NULL)
+#ifdef ENABLE_DIRECTCALL_TELEMETRY
+    , directCallTelemetry(this)
+#endif
 {
 #if DBG
     // diagnostic page allocator may be used in multiple thread, but it's usage is synchronized.

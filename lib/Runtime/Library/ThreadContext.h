@@ -818,6 +818,11 @@ public:
 
     JITTimer JITTelemetry;
     ParserTimer ParserTelemetry;
+    GUID activityId;
+
+#ifdef ENABLE_DIRECTCALL_TELEMETRY
+    DirectCallTelemetry directCallTelemetry;
+#endif
 
     JITStats GetJITStats()
     {

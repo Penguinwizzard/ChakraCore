@@ -250,9 +250,13 @@ namespace Js
             return JavascriptFunction::CallFunction<true>(function, externalFunction->nativeMethod, args);
         }
 
-        externalFunction->PrepareExternalCall(&args);
-
         ScriptContext * scriptContext = externalFunction->type->GetScriptContext();
+
+#ifdef ENABLE_DIRECTCALL_TELEMETRY
+        DirectCallTelemetry::AutoLogger logger(scriptContext, externalFunction, &args);
+#endif
+        
+        externalFunction->PrepareExternalCall(&args);
 
         Var result = null;
         BEGIN_LEAVE_SCRIPT_WITH_EXCEPTION(scriptContext)

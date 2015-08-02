@@ -284,9 +284,8 @@
                 outType="win:HexInt64"
                 />
             <data
-                inType="win:Pointer"
-                name="PropertyRecord"
-                outType="win:HexInt64"
+                inType="win:UnicodeString"
+                name="PropertyName"
                 />
           </template>
           <template tid="JscriptHostScriptContext">
