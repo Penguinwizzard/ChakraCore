@@ -664,12 +664,6 @@ namespace Js
         }
 #endif
 
-        if (this->fakeGlobalFuncForUndefer)
-        {
-            this->fakeGlobalFuncForUndefer->Cleanup(true);
-            this->fakeGlobalFuncForUndefer.Unroot(this->GetRecycler());
-        }
-
         if (this->sourceList)
         {
             bool hasFunctions = false;

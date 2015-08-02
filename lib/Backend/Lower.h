@@ -80,7 +80,7 @@ private:
     void            LowerNewScObjectLiteral(IR::Instr *instr);
     IR::Instr *     LowerInitCachedFuncs(IR::Instr *instrInit);
 
-    IR::Instr *     LowerNewScObject(IR::Instr *instr, bool callCtor, bool hasArgs, bool isBaseClassConstructorNewScObject = false);
+    IR::Instr *     LowerNewScObject(IR::Instr *instr, bool callCtor, bool hasArgs);
     IR::Instr *     LowerNewScObjArray(IR::Instr *instr);
     IR::Instr *     LowerNewScObjArrayNoArg(IR::Instr *instr);
     bool            TryLowerNewScObjectWithFixedCtorCache(IR::Instr* newObjInstr, IR::RegOpnd* newObjDst, IR::LabelInstr* helperOrBailoutLabel, IR::LabelInstr* callCtorLabel,

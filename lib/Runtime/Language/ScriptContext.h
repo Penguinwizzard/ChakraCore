@@ -555,9 +555,6 @@ namespace Js
         InlineCache * GetValueOfInlineCache() const { return valueOfInlineCache;}
         InlineCache * GetToStringInlineCache() const { return toStringInlineCache; }
 
-        FunctionBody * GetFakeGlobalFuncForUndefer() const { return fakeGlobalFuncForUndefer; }
-        void SetFakeGlobalFuncForUndefer(FunctionBody * func) { fakeGlobalFuncForUndefer.Root(func, GetRecycler()); }
-
     private:
         PropertyStringMap* propertyStrings[80];        
 
@@ -633,8 +630,6 @@ namespace Js
 #ifdef PROFILE_STRINGS
         StringProfiler* stringProfiler;
 #endif
-
-        RecyclerRootPtr<FunctionBody> fakeGlobalFuncForUndefer;
 
 public:
 #ifdef PROFILE_TYPES

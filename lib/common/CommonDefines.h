@@ -100,10 +100,6 @@
 #define ENABLE_JS_ETW 
 #endif
 
-#ifdef ENABLE_BASIC_TELEMETRY
-#define ENABLE_DIRECTCALL_TELEMETRY
-#endif
-
 // Telemetry features (non-DEBUG related)
 #ifdef ENABLE_BASIC_TELEMETRY
 
@@ -145,10 +141,6 @@
     #define TELEMETRY_OPCODE_OFFSET_ENABLED false
     #define TELEMETRY_OPCODE_FILTER(propertyId) false
 
-#endif
-
-#if ENABLE_DEBUG_CONFIG_OPTIONS
-#define ENABLE_DIRECTCALL_TELEMETRY_STATS
 #endif
 
 // PageHeap support

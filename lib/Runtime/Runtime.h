@@ -591,7 +591,6 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "..\..\..\private\lib\Telemetry\Telemetry.h"
 #include "..\..\..\private\lib\Telemetry\ScriptContextTelemetry.h"
 #include "..\..\..\private\lib\Telemetry\ScriptEngineTelemetry.h"
-#include "..\..\..\private\lib\Telemetry\DirectCall.h"
 #endif
 #include "Library\ThreadContext.h"
 #include "Library\ThreadContextTLSEntry.h"

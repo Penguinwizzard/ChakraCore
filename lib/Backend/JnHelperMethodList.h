@@ -282,8 +282,6 @@ HELPERCALL(NewJavascriptObjectNoArg, Js::JavascriptOperators::NewJavascriptObjec
 HELPERCALL(NewJavascriptArrayNoArg, Js::JavascriptOperators::NewJavascriptArrayNoArg, 0)
 HELPERCALL(NewScObjectNoArg, Js::JavascriptOperators::NewScObjectNoArg, 0)
 HELPERCALL(NewScObjectNoCtor, Js::JavascriptOperators::NewScObjectNoCtor, 0)
-HELPERCALL(NewScObjectNoCtorFull, Js::JavascriptOperators::NewScObjectNoCtorFull, 0)
-HELPERCALL(NewScObjectNoArgNoCtorFull, Js::JavascriptOperators::NewScObjectNoArgNoCtorFull, 0)
 HELPERCALL(NewScObjectNoArgNoCtor, Js::JavascriptOperators::NewScObjectNoArgNoCtor, 0)
 HELPERCALL(UpdateNewScObjectCache, Js::JavascriptOperators::UpdateNewScObjectCache, 0)
 HELPERCALL(EnsureObjectLiteralType, Js::JavascriptOperators::EnsureObjectLiteralType, 0)
