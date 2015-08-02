@@ -815,6 +815,7 @@ public:
                 DEFAULT_LAYOUT(StartCall);
                 DEFAULT_LAYOUT_WITH_ONEBYTE(Profiled2CallI);
                 DEFAULT_LAYOUT_WITH_ONEBYTE_AND_PROFILED(CallI);
+                DEFAULT_LAYOUT_WITH_ONEBYTE_AND_PROFILED(CallIFlags);
                 DEFAULT_LAYOUT_WITH_ONEBYTE_AND_PROFILED(CallIWithICIndex);
                 DEFAULT_LAYOUT_WITH_ONEBYTE_AND_PROFILED(ElementI);
                 DEFAULT_LAYOUT_WITH_ONEBYTE(ElementUnsigned1);
