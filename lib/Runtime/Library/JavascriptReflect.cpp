@@ -47,7 +47,7 @@ namespace Js
         }
         else 
         {
-            defineResult = JavascriptObject::DefineOwnPropertyHelper(RecyclableObject::FromVar(target), propertyRecord->GetPropertyId(), propertyDescriptor, scriptContext);
+            defineResult = JavascriptObject::DefineOwnPropertyHelper(RecyclableObject::FromVar(target), propertyRecord->GetPropertyId(), propertyDescriptor, scriptContext, false);
         }
 
         return scriptContext->GetLibrary()->GetTrueOrFalse(defineResult);

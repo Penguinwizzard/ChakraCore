@@ -6,7 +6,7 @@
 
 namespace Js
 {
-    inline BOOL JavascriptObject::DefineOwnPropertyHelper(RecyclableObject* obj, PropertyId propId, const PropertyDescriptor& descriptor, ScriptContext* scriptContext)
+    inline BOOL JavascriptObject::DefineOwnPropertyHelper(RecyclableObject* obj, PropertyId propId, const PropertyDescriptor& descriptor, ScriptContext* scriptContext, bool throwOnError /* = true*/)
     {
         BOOL returnValue;
         obj->ThrowIfCannotDefineProperty(propId, descriptor);
@@ -21,11 +21,11 @@ namespace Js
             if (DynamicObject::IsAnyArray(obj))
             {
                 returnValue = JavascriptOperators::DefineOwnPropertyForArray(
-                    JavascriptArray::FromAnyArray(obj), propId, descriptor, true, scriptContext);
+                    JavascriptArray::FromAnyArray(obj), propId, descriptor, throwOnError, scriptContext);
             }
             else
             {
-                returnValue = JavascriptOperators::DefineOwnPropertyDescriptor(obj, propId, descriptor, true, scriptContext);
+                returnValue = JavascriptOperators::DefineOwnPropertyDescriptor(obj, propId, descriptor, throwOnError, scriptContext);
                 if (propId == PropertyIds::__proto__)
                 {
                     scriptContext->GetLibrary()->GetObjectPrototype()->PostDefineOwnProperty__proto__(obj);

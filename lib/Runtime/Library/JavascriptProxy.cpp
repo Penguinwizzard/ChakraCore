@@ -54,12 +54,26 @@ namespace Js
         }
         target = DynamicObject::FromVar(args[1]);
         JavascriptLibrary::CheckAndConvertCopyOnAccessNativeIntArray<Var>(target);
+        if (JavascriptProxy::Is(target)) 
+        {
+            if (JavascriptProxy::FromVar(target)->GetTarget() == nullptr) 
+            {
+                JavascriptError::ThrowTypeError(scriptContext, JSERR_InvalidProxyArgument, L"target");
+            }
+        }
 
         if (!JavascriptOperators::IsObjectType(JavascriptOperators::GetTypeId(args[2])))
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_InvalidProxyArgument, L"handler");
         }
         handler = DynamicObject::FromVar(args[2]);
+        if (JavascriptProxy::Is(handler))
+        {
+            if (JavascriptProxy::FromVar(handler)->GetHandler() == nullptr)
+            {
+                JavascriptError::ThrowTypeError(scriptContext, JSERR_InvalidProxyArgument, L"handler");
+            }
+        }
 
         JavascriptProxy* newProxy = RecyclerNew(scriptContext->GetRecycler(), JavascriptProxy, scriptContext->GetLibrary()->GetProxyType(), scriptContext, target, handler);
         if (JavascriptConversion::IsCallable(target))

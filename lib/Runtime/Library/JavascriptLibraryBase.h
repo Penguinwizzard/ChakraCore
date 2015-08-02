@@ -100,7 +100,6 @@ namespace Js
         DynamicObject* GetWeakMapPrototype() { return weakMapPrototype; }
         DynamicObject* GetWeakSetPrototype() { return weakSetPrototype; }
         DynamicObject* GetSymbolPrototype() { return symbolPrototype; }
-        DynamicObject* GetProxyPrototype() const { return functionPrototype; }
         DynamicObject* GetArrayIteratorPrototype() const { return arrayIteratorPrototype; }
         DynamicObject* GetMapIteratorPrototype() const { return mapIteratorPrototype; }
         DynamicObject* GetSetIteratorPrototype() const { return setIteratorPrototype; }
