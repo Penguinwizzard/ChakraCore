@@ -500,6 +500,10 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             instrPrev = this->LowerNewScObject(instr, false, true);
             break;
 
+        case Js::OpCode::NewScObjectNoCtorFull:
+            instrPrev = this->LowerNewScObject(instr, false, true, true);
+            break;
+
         case Js::OpCode::GetNewScObject:
             instrPrev = this->LowerGetNewScObject(instr);
             break;
@@ -685,9 +689,10 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
         }
 
         case Js::OpCode::CallI:
+        case Js::OpCode::CallINew:
         case Js::OpCode::CallIFixed:
         {
-            Js::CallFlags flags = instr->isCtorCall ? Js::CallFlags_New :
+            Js::CallFlags flags = (instr->isCtorCall || instr->m_opcode == Js::OpCode::CallINew) ? Js::CallFlags_New :
                 instr->GetDst() ? Js::CallFlags_Value : Js::CallFlags_NotUsed;
 
             if (!PHASE_OFF(Js::CallFastPathPhase, this->m_func) && !noMathFastPath)
@@ -2663,6 +2668,14 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             break;
         }
 
+        case Js::OpCode::CallIExtendedNew:
+        {
+            // Currently, the only use for CallIExtended is a call that uses spread.
+            Assert(IsSpreadCall(instr));
+            instrPrev = this->LowerSpreadCall(instr, Js::CallFlags_New);
+            break;
+        }
+
         case Js::OpCode::LdSpreadIndices:
             instr->Remove();
             break;
@@ -4348,7 +4361,7 @@ IR::Instr* Lowerer::LowerProfiledNewArray(IR::JitProfilingInstr* instr, bool has
 ///----------------------------------------------------------------------------
 
 IR::Instr *
-Lowerer::LowerNewScObject(IR::Instr *newObjInstr, bool callCtor, bool hasArgs)
+Lowerer::LowerNewScObject(IR::Instr *newObjInstr, bool callCtor, bool hasArgs, bool isBaseClassConstructorNewScObject)
 {
     if (newObjInstr->IsJitProfilingInstr() && newObjInstr->AsJitProfilingInstr()->isNewArray)
     {
@@ -4432,7 +4445,9 @@ Lowerer::LowerNewScObject(IR::Instr *newObjInstr, bool callCtor, bool hasArgs)
             Assert(!newObjDst->CanStoreTemp());
             // createObjDst = NewScObject...(ctorOpnd)
             newScHelper = !callCtor ?
-                (hasArgs ? IR::HelperNewScObjectNoCtor : IR::HelperNewScObjectNoArgNoCtor) :
+                (isBaseClassConstructorNewScObject ?
+                    (hasArgs ? IR::HelperNewScObjectNoCtorFull : IR::HelperNewScObjectNoArgNoCtorFull) :
+                    (hasArgs ? IR::HelperNewScObjectNoCtor : IR::HelperNewScObjectNoArgNoCtor)) :
                 (hasArgs || usedFixedCtorCache ? IR::HelperNewScObjectNoCtor : IR::HelperNewScObjectNoArg);
 
             LoadScriptContext(newObjInstr);
@@ -21241,12 +21256,37 @@ Lowerer::LowerDivI4Common(IR::Instr * instr)
 
     if (instr->GetSrc1()->GetType() == TyInt32)
     {
-        IR::LabelInstr * minIntLabel = InsertLabel(true, divLabel);
-        InsertCompareBranch(instr->GetSrc1(), IR::IntConstOpnd::New(0x80000000, TyInt32, m_func), Js::OpCode::BrEq_A, minIntLabel, div0Label);
-        InsertCompareBranch(instr->GetSrc2(), IR::IntConstOpnd::New(-1, TyInt32, m_func), Js::OpCode::BrNeq_A, divLabel, divLabel);
-
-        InsertMove(instr->GetDst(), instr->m_opcode == Js::OpCode::Div_I4 ? instr->GetSrc1() : IR::IntConstOpnd::New(0, TyInt32, m_func), divLabel);
-        InsertBranch(Js::OpCode::Br, doneLabel, divLabel);
+        IR::LabelInstr * minIntLabel = nullptr;
+        // we need to check for INT_MIN/-1 if divisor is either -1 or variable, and dividend is either INT_MIN or variable
+        bool needsMinOverNeg1Check = !(instr->GetSrc2()->IsIntConstOpnd() && instr->GetSrc2()->AsIntConstOpnd()->m_value != -1);
+        if (instr->GetSrc1()->IsIntConstOpnd())
+        {
+            if (needsMinOverNeg1Check && instr->GetSrc1()->AsIntConstOpnd()->m_value == INT_MIN)
+            {
+                minIntLabel = InsertLabel(true, divLabel);
+                InsertBranch(Js::OpCode::Br, minIntLabel, div0Label);
+            }
+            else
+            {
+                needsMinOverNeg1Check = false;
+            }
+        }
+        else if(needsMinOverNeg1Check)
+        {
+            minIntLabel = InsertLabel(true, divLabel);
+            InsertCompareBranch(instr->GetSrc1(), IR::IntConstOpnd::New(INT_MIN, TyInt32, m_func), Js::OpCode::BrEq_A, minIntLabel, div0Label);
+        }
+        if (needsMinOverNeg1Check)
+        {
+            Assert(minIntLabel);
+            Assert(!instr->GetSrc2()->IsIntConstOpnd() || instr->GetSrc2()->AsIntConstOpnd()->m_value == -1);
+            if (!instr->GetSrc2()->IsIntConstOpnd())
+            {
+                InsertCompareBranch(instr->GetSrc2(), IR::IntConstOpnd::New(-1, TyInt32, m_func), Js::OpCode::BrNeq_A, divLabel, divLabel);
+            }
+            InsertMove(instr->GetDst(), instr->m_opcode == Js::OpCode::Div_I4 ? instr->GetSrc1() : IR::IntConstOpnd::New(0, TyInt32, m_func), divLabel);
+            InsertBranch(Js::OpCode::Br, doneLabel, divLabel);
+        }
     }
     InsertBranch(Js::OpCode::Br, divLabel, div0Label);
 
