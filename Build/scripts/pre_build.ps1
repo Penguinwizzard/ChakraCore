@@ -21,13 +21,15 @@ if (Test-Path Env:\TF_BUILD_SOURCEGETVERSION)
     }
 
     $command = "$gitExe log -1 --name-status -p $commitHash"
-    $outputDir = $Env:TF_BUILD_SOURCESDIRECTORY
-    if (!(Test-Path $outputDir)) {
-        mdkir $outputDir
+    $sourcesDir = $Env:TF_BUILD_SOURCESDIRECTORY
+
+    $outputDir = $Env:TF_BUILD_DROPLOCATION
+    if (-not(Test-Path -Path $outputDir)) {
+        New-Item -Path $outputDir -ItemType Directory -Force
     }
 
-    Push-Location $outputDir
-    $outputFile = Join-Path -Path $Env:TF_BUILD_DROPLOCATION  -ChildPath "change.txt"
+    Push-Location $sourcesDir
+    $outputFile = Join-Path -Path $outputDir -ChildPath "change.txt"
     iex $command | Out-File $outputFile
     Pop-Location
 }
