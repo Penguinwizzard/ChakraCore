@@ -4,8 +4,10 @@
 
 #include "stdafx.h"
 
+#if defined(_M_IX86) || defined(_M_X64)
 // For prefetch
 #include <mmintrin.h>
+#endif
 
 
 MarkContext::MarkContext(Recycler * recycler, PagePool * pagePool) : 

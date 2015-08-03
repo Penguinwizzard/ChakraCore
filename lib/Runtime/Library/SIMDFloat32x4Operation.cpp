@@ -158,10 +158,10 @@ namespace Js
     {
         SIMDValue result;
 
-        result.f32[SIMD_X] = sqrt(value.f32[SIMD_X]);
-        result.f32[SIMD_Y] = sqrt(value.f32[SIMD_Y]);
-        result.f32[SIMD_Z] = sqrt(value.f32[SIMD_Z]);
-        result.f32[SIMD_W] = sqrt(value.f32[SIMD_W]);
+        result.f32[SIMD_X] = sqrtf(value.f32[SIMD_X]);
+        result.f32[SIMD_Y] = sqrtf(value.f32[SIMD_Y]);
+        result.f32[SIMD_Z] = sqrtf(value.f32[SIMD_Z]);
+        result.f32[SIMD_W] = sqrtf(value.f32[SIMD_W]);
 
         return result;
     }

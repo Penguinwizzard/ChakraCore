@@ -20,6 +20,8 @@
     <PlatformPathNameAlt Condition="'$(Platform)'=='Win32'">i386</PlatformPathNameAlt>
     <PlatformPathNameAlt Condition="'$(Platform)'=='x64'">amd64</PlatformPathNameAlt>
 
+    <WindowsTargetPlatformVersion Condition="'$(Platform)'=='ARM'">10.0.10240.0</WindowsTargetPlatformVersion>
+    
     <!-- Always use Platform SDK for core builds -->
     <EventManifestXmlPath>$(WindowsSDK80Path)Include\um</EventManifestXmlPath>
   </PropertyGroup>
