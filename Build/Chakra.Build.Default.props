@@ -25,6 +25,7 @@
   </PropertyGroup>
   <!-- Output Path -->
   <PropertyGroup>
+    <OutBaseDir Condition="'$(OutBaseDir)'=='' AND '$(TF_BUILD_BINARIESDIRECTORY)'!=''">$(TF_BUILD_BINARIESDIRECTORY)</OutBaseDir>
     <OutBaseDir Condition="'$(OutBaseDir)'==''">$(SolutionDir)VcBuild</OutBaseDir>    
     <OutDir>$(OutBaseDir)\bin\$(PlatformPathName.ToLower())_$(Configuration.ToLower())\</OutDir>    
     <IntDir>$(OutBaseDir)\obj\$(PlatformPathName.ToLower())_$(Configuration.ToLower())\$(MSBuildProjectName)\</IntDir>

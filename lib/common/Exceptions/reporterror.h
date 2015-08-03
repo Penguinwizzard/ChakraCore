@@ -9,7 +9,7 @@ enum ErrorReason
     Fatal_Internal_Error = 2,
     Fatal_Debug_Heap_OUTOFMEMORY = 3,
     Fatal_Amd64StackWalkerOutOfContexts = 4,
-    JsrtCOM_OUTOFMEMORY = 5,
+    // Unused = 5,
     Fatal_Binary_Inconsistency = 6,
     WriteBarrier_OUTOFMEMORY = 7,
     CustomHeap_MEMORYCORRUPTION = 8,
