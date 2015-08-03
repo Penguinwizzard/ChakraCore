@@ -29,7 +29,7 @@ namespace Js
         CallInfo(ushort count)
             : Flags(CallFlags_None)
             , Count(count)
-#if defined(_M_X64_OR_ARM64)
+#ifdef _WIN64
             , unused(0)
 #endif
         {
@@ -38,7 +38,7 @@ namespace Js
         CallInfo(CallFlags flags, ushort count)
             : Flags(flags)
             , Count(count)
-#if defined(_M_X64_OR_ARM64)
+#ifdef _WIN64
             , unused(0)
 #endif
         {
@@ -51,7 +51,7 @@ namespace Js
         //
         unsigned  Count : 24;
         CallFlags Flags : 8;
-#if defined(_M_X64_OR_ARM64)
+#ifdef _WIN64
         unsigned unused : 32;
 #endif
 
@@ -65,22 +65,13 @@ namespace Js
     {
         // Assumes big-endian layout. 
         size_t Count: 4;
-#if defined(_M_X64_OR_ARM64)
-        size_t InlineeStartOffset: 60;
-#else
-        size_t InlineeStartOffset: 28;
-#endif
+        size_t InlineeStartOffset: sizeof(void*) * CHAR_BIT - 4;
         static size_t const MaxInlineeArgoutCount = 0xF;
 
         static bool Encode(Js::Var &callInfo, size_t count, size_t offset)
         {
-#if defined(_M_X64_OR_ARM64)
-            const size_t offsetMask = 0x0FFFFFFFFFFFFFFF;
-            const size_t countMask  = 0x000000000000000F;
-#else
-            const size_t offsetMask = 0x0FFFFFFF;
+            const size_t offsetMask = (~(size_t)0) >> 4;
             const size_t countMask  = 0x0000000F;
-#endif
             if (count != (count & countMask))
             {
                 return false;
