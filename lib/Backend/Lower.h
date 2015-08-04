@@ -161,8 +161,8 @@ private:
     void            LowerLdLen(IR::Instr *const instr, const bool isHelper);
 
     IR::Instr *     LowerMemOp(IR::Instr * instr);
-    void            LowerMemset(IR::Instr * instr);
-    void            LowerMemcopy(IR::Instr * instr);
+    void            LowerMemset(IR::Instr * instr, IR::RegOpnd * helperRet);
+    void            LowerMemcopy(IR::Instr * instr, IR::RegOpnd * helperRet);
 
     IR::Instr *     LowerLdArrViewElem(IR::Instr * instr);
     IR::Instr *     LowerStArrViewElem(IR::Instr * instr);

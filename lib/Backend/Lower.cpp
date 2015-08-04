@@ -8408,7 +8408,7 @@ Lowerer::LowerLdArrViewElem(IR::Instr * instr)
 }
 
 void
-Lowerer::LowerMemset(IR::Instr * instr)
+Lowerer::LowerMemset(IR::Instr * instr, IR::RegOpnd * helperRet)
 {
     IR::Opnd * dst = instr->UnlinkDst();
     IR::Opnd * src1 = instr->UnlinkSrc1();
@@ -8423,9 +8423,9 @@ Lowerer::LowerMemset(IR::Instr * instr)
     Assert(sizeOpnd);
     Assert(indexOpnd);
 
-
     IR::JnHelperMethod helperMethod = IR::HelperOp_Memset;
 
+    instr->SetDst(helperRet);
     LoadScriptContext(instr);
     m_lowererMD.LoadHelperArgument(instr, sizeOpnd);
     m_lowererMD.LoadHelperArgument(instr, src1);
@@ -8436,7 +8436,7 @@ Lowerer::LowerMemset(IR::Instr * instr)
 }
 
 void
-Lowerer::LowerMemcopy(IR::Instr * instr)
+Lowerer::LowerMemcopy(IR::Instr * instr, IR::RegOpnd * helperRet)
 {
     IR::Opnd * dst = instr->UnlinkDst();
     IR::Opnd * src = instr->UnlinkSrc1();
@@ -8459,14 +8459,14 @@ Lowerer::LowerMemcopy(IR::Instr * instr)
     Assert(srcIndexOpnd);
 
     IR::JnHelperMethod helperMethod = IR::HelperOp_Memcopy;
-    LoadScriptContext(instr);
 
+    instr->SetDst(helperRet);
+    LoadScriptContext(instr);
     m_lowererMD.LoadHelperArgument(instr, sizeOpnd);
     m_lowererMD.LoadHelperArgument(instr, srcIndexOpnd);
     m_lowererMD.LoadHelperArgument(instr, srcBaseOpnd);
     m_lowererMD.LoadHelperArgument(instr, dstIndexOpnd);
     m_lowererMD.LoadHelperArgument(instr, dstBaseOpnd);
-
     m_lowererMD.ChangeToHelperCall(instr, helperMethod);
     dst->Free(m_func);
     src->Free(m_func);
@@ -8478,9 +8478,11 @@ Lowerer::LowerMemOp(IR::Instr * instr)
     Assert(instr->m_opcode == Js::OpCode::Memset || instr->m_opcode == Js::OpCode::Memcopy);
     IR::Instr *instrPrev = instr->m_prev;
 
+    IR::RegOpnd* helperRet = IR::RegOpnd::New(TyInt8, instr->m_func);
+    const bool isHelper = false;
+    AssertMsg(instr->HasBailOutInfo(), "Expected bailOut on MemOp instruction");
     if (instr->HasBailOutInfo())
     {
-        bool isHelper = false;
         IR::BailOutKind bailOutKind = instr->GetBailOutKind();
         if (bailOutKind & IR::BailOutOnInvalidatedArrayHeadSegment)
         {
@@ -8501,18 +8503,51 @@ Lowerer::LowerMemOp(IR::Instr * instr)
             bailOutKind ^= IR::BailOutOnInvalidatedArrayLength;
             Assert(!bailOutKind || instr->GetBailOutKind() == bailOutKind);
         }
+        /* TODO:: Figure out what to do with other bailouts that could come through here
+        if (bailOutKind & IR::BailOutConventionalNativeArrayAccessOnly)
+        {
+            
+            //LowerBailOnInvalidatedArrayLength(instr, isHelper);
+            bailOutKind ^= IR::BailOutConventionalNativeArrayAccessOnly;
+            Assert(!bailOutKind || instr->GetBailOutKind() == bailOutKind);
+        }
+        Assert(!bailOutKind);*/
 
+        AssertMsg(bailOutKind & IR::BailOutOnMemOpError, "Expected BailOutOnMemOpError on MemOp instruction");
+        if (bailOutKind & IR::BailOutOnMemOpError)
+        {
+            // Inserr or get continue label
+            IR::LabelInstr *const skipBailOutLabel = instr->GetOrCreateContinueLabel(isHelper);
+            Func *const func = instr->m_func;
+            LowerOneBailOutKind(instr, IR::BailOutOnMemOpError, isHelper);
+            IR::Instr *const insertBeforeInstr = instr->m_next;
+
+            //     test helperRet, helperRet
+            //     jz $skipBailOut
+            InsertCompareBranch(
+                helperRet,
+                IR::IntConstOpnd::New(0, TyInt8, func),
+                Js::OpCode::BrNeq_A,
+                skipBailOutLabel,
+                insertBeforeInstr);
+
+            //     (Bail out with IR::BailOutOnMemOpError)
+            //     $skipBailOut:
+
+            bailOutKind ^= IR::BailOutOnMemOpError;
+            Assert(!bailOutKind || instr->GetBailOutKind() == bailOutKind);
+        }
+        
         instr->ClearBailOutInfo();
     }
 
-
     if (instr->m_opcode == Js::OpCode::Memset)
     {
-        LowerMemset(instr);
+        LowerMemset(instr, helperRet);
     }
     else if (instr->m_opcode == Js::OpCode::Memcopy)
     {
-        LowerMemcopy(instr);
+        LowerMemcopy(instr, helperRet);
     }
     return instrPrev;
 }

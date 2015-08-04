@@ -4974,6 +4974,7 @@ GlobOpt::OptInstr(IR::Instr *&instr, bool* isInstrRemoved)
         !(instr->IsJitProfilingInstr()) &&
         this->currentBlock->loop && !IsLoopPrePass() &&
         !func->IsJitInDebugMode() &&
+        (func->HasProfileInfo() && !func->GetProfileInfo()->IsMemOpDisabled()) &&
         (!this->currentBlock->loop->memOpInfo || this->currentBlock->loop->memOpInfo->doMemcopy || this->currentBlock->loop->memOpInfo->doMemset))
     {
         CollectMemOpInfo(instr);
@@ -20662,6 +20663,7 @@ GlobOpt::EmitMemset(Loop * loop, LoopCount *loopCount, SymID base, SymID index, 
                     baseValueType = dstOpnd->AsIndirOpnd()->GetBaseOpnd()->GetValueType();
                     bailOutKind = instr->GetBailOutKind();
                     Assert(instr->IsProfiledInstr());
+                    // Clone instruction to keep array optimisation in case of bailout
                     memsetInstr = instr->AsProfiledInstr()->CloneProfiledInstr();
                     break;
                 }
@@ -20680,6 +20682,10 @@ GlobOpt::EmitMemset(Loop * loop, LoopCount *loopCount, SymID base, SymID index, 
     IR::RegOpnd *indexOpnd = dstOpnd->GetIndexOpnd();
     Assert(indexOpnd);
     Assert(bailOutKind != IR::BailOutInvalid);
+    // Keep only Array bits bailOuts. Consider handling these bailouts instead of simply ignoring them
+    bailOutKind &= IR::BailOutForArrayBits;
+    // Add our custom bailout to handle Op_MemSet return value.
+    bailOutKind |= IR::BailOutOnMemOpError;
 
     EnsureBailTarget(loop);
     BailOutInfo *const bailOutInfo = loop->bailOutInfo;
@@ -20693,6 +20699,7 @@ GlobOpt::EmitMemset(Loop * loop, LoopCount *loopCount, SymID base, SymID index, 
     memsetInstr->SetDst(dstOpnd);
     memsetInstr->SetSrc1(src1);
     memsetInstr->SetSrc2(sizeOpnd);
+    memsetInstr->SetBailOutKind(bailOutKind);
     insertBeforeInstr->InsertBefore(memsetInstr);
 
 #if DBG_DUMP
@@ -20711,7 +20718,7 @@ GlobOpt::EmitMemset(Loop * loop, LoopCount *loopCount, SymID base, SymID index, 
         {
             Output::Print(L"%u, ", loopCount->LoopCountMinusOneConstantValue());
         }
-        Output::Print(L", Constant: %d, Unrolled: %d, IsIndexChangedBeforeUse: %d\n", constant, unroll, bIndexAlreadyChanged);
+        Output::Print(L"Constant: %d, Unrolled: %d, IsIndexChangedBeforeUse: %d\n", constant, unroll, bIndexAlreadyChanged);
         Output::Flush();
     }
 #endif
@@ -20823,6 +20830,7 @@ GlobOpt::EmitMemcopy(Loop * loop, LoopCount *loopCount, SymID ldBase, SymID ldIn
                 }
 
                 Assert(instr->IsProfiledInstr());
+                // Clone instruction to keep array optimisation in case of bailout
                 memcopyInstr = instr->AsProfiledInstr()->CloneProfiledInstr();
                 bailOutKind = instr->GetBailOutKind();
                 break;
@@ -20855,6 +20863,11 @@ GlobOpt::EmitMemcopy(Loop * loop, LoopCount *loopCount, SymID ldBase, SymID ldIn
     Func *localFunc = loop->GetFunc();
     IR::Instr *insertBeforeInstr = nullptr;
     Assert(bailOutKind != IR::BailOutInvalid);
+    // Keep only Array bits bailOuts. Consider handling these bailouts instead of simply ignoring them
+    bailOutKind &= IR::BailOutForArrayBits;
+    // Add our custom bailout to handle Op_MemCopy return value.
+    bailOutKind |= IR::BailOutOnMemOpError;
+
     EnsureBailTarget(loop);
     Assert(loop->bailOutInfo);
     insertBeforeInstr = loop->bailOutInfo->bailOutInstr;
@@ -20878,11 +20891,12 @@ GlobOpt::EmitMemcopy(Loop * loop, LoopCount *loopCount, SymID ldBase, SymID ldIn
     memcopyInstr->SetDst(dstOpnd);
     memcopyInstr->SetSrc1(srcOpnd);
     memcopyInstr->SetSrc2(sizeOpnd);
+    memcopyInstr->SetBailOutKind(bailOutKind);
+
     insertBeforeInstr->InsertBefore(memcopyInstr);
+#if DBG_DUMP
     char valueTypeStr[VALUE_TYPE_MAX_STRING_SIZE];
     ldValueType->ToString(valueTypeStr);
-
-#if DBG_DUMP
     if (PHASE_TRACE(Js::MemOpPhase, this->func->GetJnFunction()) || PHASE_TRACE(Js::MemCopyPhase, this->func->GetJnFunction()))
     {
         wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
@@ -20896,7 +20910,7 @@ GlobOpt::EmitMemcopy(Loop * loop, LoopCount *loopCount, SymID ldBase, SymID ldIn
         {
             Output::Print(L"%u, ", loopCount->LoopCountMinusOneConstantValue());
         }
-        Output::Print(L", Unroll: %d, LdIsIndexChangedBeforeUse: %d, StIsIndexChangedBeforeUse: %d\n", unroll, bLdIndexAlreadyChanged, bStIndexAlreadyChanged);
+        Output::Print(L"Unroll: %d, LdIsIndexChangedBeforeUse: %d, StIsIndexChangedBeforeUse: %d\n", unroll, bLdIndexAlreadyChanged, bStIndexAlreadyChanged);
         Output::Flush();
     }
 #endif

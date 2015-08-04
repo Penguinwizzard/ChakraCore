@@ -1564,6 +1564,7 @@ void DynamicProfileInfo::Dump(FunctionBody* functionBody, ArenaAllocator * dynam
             L" disableDivIntTypeSpec : %s"
             L" disableDivIntTypeSpec_jitLoopBody : %s"
             L" disableLossyIntTypeSpec : %s"
+            L" disableMemOp : %s"
             L" disableTrackIntOverflow : %s"
             L" disableFloatTypeSpec : %s"
             L" disableCheckThis : %s"
@@ -1596,6 +1597,7 @@ void DynamicProfileInfo::Dump(FunctionBody* functionBody, ArenaAllocator * dynam
             IsTrueOrFalse(this->bits.disableDivIntTypeSpec),
             IsTrueOrFalse(this->bits.disableDivIntTypeSpec_jitLoopBody),
             IsTrueOrFalse( this->bits.disableLossyIntTypeSpec ),
+            IsTrueOrFalse( this->bits.disableMemOp ),
             IsTrueOrFalse( this->bits.disableTrackCompoundedIntOverflow ),
             IsTrueOrFalse( this->bits.disableFloatTypeSpec ),
             IsTrueOrFalse( this->bits.disableCheckThis ),

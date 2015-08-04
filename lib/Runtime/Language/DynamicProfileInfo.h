@@ -455,6 +455,7 @@ namespace Js
             bool disableDivIntTypeSpec : 1;
             bool disableDivIntTypeSpec_jitLoopBody : 1;
             bool disableLossyIntTypeSpec : 1;
+            bool disableMemOp : 1;
             bool disableTrackCompoundedIntOverflow : 1;
             bool disableFloatTypeSpec : 1;
             bool disableCheckThis : 1;
@@ -608,6 +609,8 @@ namespace Js
 
         bool IsLossyIntTypeSpecDisabled() const { return bits.disableLossyIntTypeSpec; }
         void DisableLossyIntTypeSpec() { this->bits.disableLossyIntTypeSpec = true; }
+        bool IsMemOpDisabled() const { return bits.disableMemOp; }
+        void DisableMemOp() { this->bits.disableMemOp = true; }
         bool IsTrackCompoundedIntOverflowDisabled() const { return this->bits.disableTrackCompoundedIntOverflow; }
         void DisableTrackCompoundedIntOverflow() { this->bits.disableTrackCompoundedIntOverflow = true; }
         bool IsFloatTypeSpecDisabled() const { return this->bits.disableFloatTypeSpec; }

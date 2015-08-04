@@ -1690,6 +1690,17 @@ void BailOutRecord::ScheduleFunctionCodeGen(Js::ScriptFunction * function, Js::S
                     rejitReason = RejitReason::LossyIntTypeSpecDisabled;
                 }
                 break;
+            case IR::BailOutOnMemOpError:
+                if (profileInfo->IsMemOpDisabled())
+                {
+                    reThunk = true;
+                }
+                else
+                {
+                    profileInfo->DisableMemOp();
+                    rejitReason = RejitReason::MemOpDisabled;
+                }
+                break;
 
             case IR::BailOutPrimitiveButString:
             case IR::BailOutNumberOnly:
@@ -2115,6 +2126,12 @@ void BailOutRecord::ScheduleLoopBodyCodeGen(Js::ScriptFunction * function, Js::S
                 profileInfo->DisableLossyIntTypeSpec();
                 executeFunction->SetDontRethunkAfterBailout();
                 rejitReason = RejitReason::LossyIntTypeSpecDisabled;
+                break;
+
+            case IR::BailOutOnMemOpError:
+                profileInfo->DisableMemOp();
+                executeFunction->SetDontRethunkAfterBailout();
+                rejitReason = RejitReason::MemOpDisabled;
                 break;
 
             case IR::BailOutPrimitiveButString:
