@@ -1,2 +1,0 @@
-$ENV{'SDXROOT'}/tools/perl/site/lib/Devel/StackTrace/WithLexicals.pm
-$ENV{'SDXROOT'}/tools/perl/site/lib/Devel/StackTrace/WithLexicals/Frame.pm
