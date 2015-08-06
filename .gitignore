@@ -11,3 +11,4 @@ buildchk.*
 buildfre.*
 Build/swum-cache.txt
 *.tlog/
+sd.ini
