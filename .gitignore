@@ -7,5 +7,7 @@ Build/ipch/
 build_*.log
 build_*.wrn
 build_*.err
+buildchk.*
+buildfre.*
 Build/swum-cache.txt
 *.tlog/
