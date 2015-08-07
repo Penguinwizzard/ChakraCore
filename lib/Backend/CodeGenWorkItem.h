@@ -28,7 +28,14 @@ protected:
     ExecutionMode jitMode;
 
 public:
-    bool IsInMemoryWorkItem() const { return type != JsFunctionSerializedType; }
+    bool IsInMemoryWorkItem() const 
+    { 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
+        return type != JsFunctionSerializedType; 
+#else
+        return true;
+#endif
+    }
 #if DBG
     virtual bool DbgIsInMemoryWorkItem() const abstract;
 #endif
@@ -97,6 +104,7 @@ public:
     }
 };
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
 struct SerializedCodeGenWorkItem sealed : public CodeGenWorkItem
 {
 public:
@@ -232,7 +240,7 @@ public:
 private:
     PEWriter *writer;
 };
-
+#endif
 struct InMemoryCodeGenWorkItem : public CodeGenWorkItem, public JsUtil::Job
 {
 protected:

@@ -241,6 +241,7 @@ NativeCodeGenerator::GenerateAllFunctions(Js::FunctionBody * fn)
 }
 #endif
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
 void NativeCodeGenerator::GenerateFunctionForSerialization(Js::FunctionBody * fn, DWORD dwFunctionTableLength, BYTE * functionTable, PageAllocator * pageAllocator, PEWriter *writer)
 {
     if (functionTable && ((fn->GetSerializationIndex() >= (int)dwFunctionTableLength) || !functionTable[fn->GetSerializationIndex()]))
@@ -277,7 +278,7 @@ void NativeCodeGenerator::GenerateAllFunctionsForSerialization(Js::FunctionBody 
 
     END_TEMP_ALLOCATOR(tempAllocator, scriptContext);
 }
-
+#endif
 #if _M_ARM
 USHORT ArmExtractThumbImmediate16(PUSHORT address)
 {
@@ -379,6 +380,7 @@ void DoFunctionRelocations(BYTE *function, DWORD functionOffset, DWORD functionS
     }
 }
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION    
 bool NativeCodeGenerator::DeserializeFunction(Js::FunctionBody *function, Js::NativeModule *nativeModule)
 {
     if(!function->DoFullJit())
@@ -479,6 +481,7 @@ bool NativeCodeGenerator::DeserializeFunction(Js::FunctionBody *function, Js::Na
 
     return true;
 }
+#endif
 
 class AutoRestoreDefaultEntryPoint
 {
@@ -2863,13 +2866,16 @@ NativeCodeGenerator::IsNativeFunctionAddr(void * address)
 {
     return
         (this->backgroundAllocators && this->backgroundAllocators->emitBufferManager.IsInRange(address)) ||
-        (this->foregroundAllocators && this->foregroundAllocators->emitBufferManager.IsInRange(address)) ||
-        this->scriptContext->AnyNativeModule(
+        (this->foregroundAllocators && this->foregroundAllocators->emitBufferManager.IsInRange(address))
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
+        || this->scriptContext->AnyNativeModule(
             [=] (Js::NativeModule *nativeModule) -> bool 
             { 
                 return (!nativeModule->loadedInMemory && address >= nativeModule->code && address < (nativeModule->code + nativeModule->codeSize)) ||
                        (nativeModule->loadedInMemory && address >= nativeModule->textSection && address < (nativeModule->textSection + nativeModule->codeSize));
-            });
+            })
+#endif
+        ;
 }
 
 void

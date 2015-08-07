@@ -1410,7 +1410,9 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             break;
 
         case Js::OpCode::IsInst:
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
             if (m_func->IsInMemory())
+#endif
             {
                 m_lowererMD.GenerateFastIsInst(instr);
             }
@@ -2381,7 +2383,9 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
         case Js::OpCode::LdFuncExpr:
             // src = function Expression
             m_lowererMD.LoadFuncExpression(instr);
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
             if (instr->m_func->IsInMemory())
+#endif
             {
                 this->GenerateGetCurrentFunctionObject(instr);
             }
@@ -2860,6 +2864,7 @@ Lowerer::LoadScriptContext(IR::Instr * instr)
     return m_lowererMD.LoadHelperArgument(instr, LoadScriptContextOpnd(instr));
 }
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
 #if DBG_DUMP || defined(ENABLE_IR_VIEWER)
 #define POINTER_OFFSET(opnd, c, field, type) \
     IR::IndirOpnd::New((opnd), c::Get##field##Offset(), type, L#c L"." L#field, this->m_func)
@@ -2912,20 +2917,24 @@ Lowerer::LoadDynamicFunctionBodyOpnd(IR::Instr * instr)
 
     return opnd;
 }
+#endif
 
 IR::Opnd *
 Lowerer::LoadFunctionBodyOpnd(IR::Instr * instr)
 {
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     if (!this->m_func->IsInMemory())
     {
         return LoadDynamicFunctionBodyOpnd(instr);
     }
     else
+#endif
     {
         return IR::AddrOpnd::New(instr->m_func->GetJnFunction(), IR::AddrOpndKindDynamicFunctionBody, instr->m_func);
     }
 }
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
 IR::RegOpnd *
 Lowerer::LoadDynamicScriptContextOpnd(IR::Instr * instr)
 {
@@ -2944,15 +2953,18 @@ Lowerer::LoadDynamicScriptContextOpnd(IR::Instr * instr, RegNum regNum)
 
     return opnd;
 }
+#endif
 
 IR::Opnd *
 Lowerer::LoadScriptContextOpnd(IR::Instr * instr)
 {
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     if (!this->m_func->IsInMemory())
     {
         return LoadDynamicScriptContextOpnd(instr);
     }
     else
+#endif
     {
         return IR::AddrOpnd::New(this->m_func->GetScriptContext(), IR::AddrOpndKindDynamicScriptContext, this->m_func);
     }
@@ -2961,6 +2973,7 @@ Lowerer::LoadScriptContextOpnd(IR::Instr * instr)
 IR::Opnd *
 Lowerer::LoadScriptContextValueOpnd(IR::Instr * instr, ScriptContextValue valueType)
 {
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     if (!instr->m_func->IsInMemory())
     {
         IR::RegOpnd *opnd = LoadDynamicScriptContextOpnd(instr);
@@ -2984,6 +2997,7 @@ Lowerer::LoadScriptContextValueOpnd(IR::Instr * instr, ScriptContextValue valueT
         return opnd;
     }
     else
+#endif
     {
         Js::ScriptContext *scriptContext = instr->m_func->GetScriptContext();
         switch (valueType)
@@ -3000,6 +3014,7 @@ Lowerer::LoadScriptContextValueOpnd(IR::Instr * instr, ScriptContextValue valueT
 
 }
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
 IR::RegOpnd *
 Lowerer::LoadDynamicFunctionBodyValueOpnd(IR::Instr * instr, FunctionBodyValue valueType, uint32 index)
 {
@@ -3030,10 +3045,12 @@ Lowerer::LoadDynamicFunctionBodyValueOpnd(IR::Instr * instr, FunctionBodyValue v
 
     return opnd;
 }
+#endif
 
 IR::Opnd *
 Lowerer::LoadLibraryValueOpnd(IR::Instr * instr, LibraryValue valueType, RegNum regNum)
 {
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     if (!instr->m_func->IsInMemory())
     {
         IR::RegOpnd * opnd = regNum == RegNOREG ? LoadDynamicJavascriptLibraryOpnd(instr) : LoadDynamicJavascriptLibraryOpnd(instr, regNum);
@@ -3111,6 +3128,7 @@ Lowerer::LoadLibraryValueOpnd(IR::Instr * instr, LibraryValue valueType, RegNum 
         return opnd;
     }
     else
+#endif
     {
         Js::ScriptContext *scriptContext = instr->m_func->GetScriptContext();
         switch (valueType)
@@ -3163,6 +3181,7 @@ Lowerer::LoadLibraryValueOpnd(IR::Instr * instr, LibraryValue valueType, RegNum 
 IR::Opnd *
 Lowerer::LoadVTableValueOpnd(IR::Instr * instr, VTableValue vtableType)
 {
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     if (!instr->m_func->IsInMemory())
     {
         IR::RegOpnd * opnd = LoadDynamicJavascriptLibraryOpnd(instr);
@@ -3181,6 +3200,7 @@ Lowerer::LoadVTableValueOpnd(IR::Instr * instr, VTableValue vtableType)
         return opnd;
     }
     else
+#endif
     {
         return IR::AddrOpnd::New((Js::Var)instr->m_func->GetScriptContext()->GetLibrary()->GetVTableAddresses()[vtableType], IR::AddrOpndKindDynamicVtable, this->m_func);
     }
@@ -3189,6 +3209,7 @@ Lowerer::LoadVTableValueOpnd(IR::Instr * instr, VTableValue vtableType)
 IR::Opnd *
 Lowerer::LoadOptimizationOverridesValueOpnd(IR::Instr *instr, OptimizationOverridesValue valueType)
 {
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     if (!instr->m_func->IsInMemory())
     {
         IR::RegOpnd * opnd = (IR::RegOpnd *)LoadScriptContextValueOpnd(instr, ScriptContextValue::ScriptContextOptimizationOverrides);
@@ -3215,6 +3236,7 @@ Lowerer::LoadOptimizationOverridesValueOpnd(IR::Instr *instr, OptimizationOverri
         return opnd;
     }
     else
+#endif
     {
         Js::ScriptContext *scriptContext = instr->m_func->GetScriptContext();
         switch (valueType)
@@ -3237,6 +3259,7 @@ Lowerer::LoadOptimizationOverridesValueOpnd(IR::Instr *instr, OptimizationOverri
 IR::Opnd *
 Lowerer::LoadNumberAllocatorValueOpnd(IR::Instr *instr, NumberAllocatorValue valueType)
 {
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     if (!instr->m_func->IsInMemory())
     {
         IR::RegOpnd * opnd = (IR::RegOpnd *)LoadScriptContextValueOpnd(instr, ScriptContextValue::ScriptContextNumberAllocator);
@@ -3253,6 +3276,7 @@ Lowerer::LoadNumberAllocatorValueOpnd(IR::Instr *instr, NumberAllocatorValue val
         }
     }
     else
+#endif
     {
         Js::ScriptContext *scriptContext = instr->m_func->GetScriptContext();
         bool allowNativeCodeBumpAllocation = scriptContext->GetNumberAllocator()->AllowNativeCodeBumpAllocation();
@@ -3278,6 +3302,7 @@ Lowerer::LoadNumberAllocatorValueOpnd(IR::Instr *instr, NumberAllocatorValue val
 IR::Opnd *
 Lowerer::LoadIsInstInlineCacheOpnd(IR::Instr * instr, uint inlineCacheIndex)
 {
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     if (!this->m_func->IsInMemory())
     {
         IR::RegOpnd *opnd = LoadDynamicFunctionBodyOpnd(instr);
@@ -3292,6 +3317,7 @@ Lowerer::LoadIsInstInlineCacheOpnd(IR::Instr * instr, uint inlineCacheIndex)
         return opnd;
     }
     else
+#endif
     {
         Js::IsInstInlineCache * inlineCache = instr->m_func->GetJnFunction()->GetIsInstInlineCache(inlineCacheIndex);
         return IR::AddrOpnd::New(inlineCache,  IR::AddrOpndKindDynamicInlineCache, this->m_func);
@@ -3301,6 +3327,7 @@ Lowerer::LoadIsInstInlineCacheOpnd(IR::Instr * instr, uint inlineCacheIndex)
 IR::Opnd *
 Lowerer::LoadRuntimeInlineCacheOpnd(IR::Instr * instr, IR::PropertySymOpnd * propertySymOpnd, bool isHelper)
 {
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     if (!this->m_func->IsInMemory())
     {
         IR::RegOpnd *opnd = LoadDynamicFunctionBodyOpnd(instr);
@@ -3311,6 +3338,7 @@ Lowerer::LoadRuntimeInlineCacheOpnd(IR::Instr * instr, IR::PropertySymOpnd * pro
         return opnd;
     }
     else
+#endif
     {
         Assert(propertySymOpnd->m_runtimeInlineCache != nullptr);
         IR::Opnd * inlineCacheOpnd = null;
@@ -3327,6 +3355,7 @@ Lowerer::LoadRuntimeInlineCacheOpnd(IR::Instr * instr, IR::PropertySymOpnd * pro
     }
 }
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
 IR::Opnd *
 Lowerer::LoadStackLimitForCurrentThreadOpnd(IR::Instr *instr, RegNum regNum)
 {
@@ -3356,6 +3385,7 @@ Lowerer::LoadDynamicHelperFunctionOpnd(IR::Instr *instr, IR::JnHelperMethod help
 
     return opnd;
 }
+#endif
 
 bool
 Lowerer::TryGenerateFastCmSrEq(IR::Instr * instr)
@@ -3485,11 +3515,13 @@ Lowerer::GenerateFastBrConst(IR::BranchInstr *branchInstr, IR::Opnd * constOpnd,
 bool
 Lowerer::TryGenerateFastBrEq(IR::Instr * instr)
 {
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     // Can't optimize these this way at the moment
     if (!m_func->IsInMemory())
     {
         return false;
     }
+#endif
 
     IR::RegOpnd *srcReg1 = instr->GetSrc1()->IsRegOpnd() ? instr->GetSrc1()->AsRegOpnd() : null;
     IR::RegOpnd *srcReg2 = instr->GetSrc2()->IsRegOpnd() ? instr->GetSrc2()->AsRegOpnd() : null;
@@ -3524,11 +3556,13 @@ Lowerer::TryGenerateFastBrEq(IR::Instr * instr)
 bool
 Lowerer::TryGenerateFastBrNeq(IR::Instr * instr)
 {
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     // Can't optimize these this way at the moment
     if (!m_func->IsInMemory())
     {
         return false;
     }
+#endif
 
     IR::RegOpnd *srcReg1 = instr->GetSrc1()->IsRegOpnd() ? instr->GetSrc1()->AsRegOpnd() : null;
     IR::RegOpnd *srcReg2 = instr->GetSrc2()->IsRegOpnd() ? instr->GetSrc2()->AsRegOpnd() : null;
@@ -3672,6 +3706,7 @@ Lowerer::LowerNewScObjectLiteral(IR::Instr *newObjInstr)
     uint slotCapacity = Js::JavascriptOperators::GetLiteralSlotCapacity(propIds, scriptContext);
     IR::RegOpnd * dstOpnd;
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     if (!m_func->IsInMemory())
     {
         // Has to be a reg here because we're going to indirect it below.
@@ -3685,6 +3720,7 @@ Lowerer::LowerNewScObjectLiteral(IR::Instr *newObjInstr)
         InsertAdd(false, propertyArrayOpnd, propertyArrayOpnd, propertyArrayIdOpnd, newObjInstr);
     }
     else
+#endif
     {
         // RELOCJIT: These are OK because they're handled in the other branch
         literalTypeRefOpnd = IR::AddrOpnd::New(literalTypeRef, IR::AddrOpndKindDynamicMisc, this->m_func);
@@ -3697,11 +3733,13 @@ Lowerer::LowerNewScObjectLiteral(IR::Instr *newObjInstr)
         allocLabel = IR::LabelInstr::New(Js::OpCode::Label, func);
 
         literalTypeOpnd = IR::RegOpnd::New(TyMachPtr, func);
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
         if (!m_func->IsInMemory())
         {
             InsertMove(literalTypeOpnd, IR::IndirOpnd::New((IR::RegOpnd *)literalTypeRefOpnd, 0, TyMachReg, m_func), newObjInstr);
         }
         else
+#endif
         {
             // RELOCJIT: This is OK because it's handled in the other branch
             InsertMove(literalTypeOpnd, IR::MemRefOpnd::New(literalTypeRef, TyMachPtr, func), newObjInstr);
@@ -3715,12 +3753,14 @@ Lowerer::LowerNewScObjectLiteral(IR::Instr *newObjInstr)
     }
     else
     {
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
         if (!m_func->IsInMemory())
         {
             literalTypeOpnd = IR::RegOpnd::New(TyMachPtr, func);
             InsertMove(literalTypeOpnd, IR::IndirOpnd::New((IR::RegOpnd *)literalTypeRefOpnd, 0, TyMachReg, m_func), newObjInstr);
         }
         else
+#endif
         {
             // RELOCJIT: Relocatable case is handled by other branch.
             literalTypeOpnd = IR::AddrOpnd::New(literalType, IR::AddrOpndKindDynamicType, func);
@@ -4944,7 +4984,11 @@ Lowerer::GenerateRecyclerAllocAligned(IR::JnHelperMethod allocHelper, size_t all
 {
     IR::LabelInstr * allocDoneLabel = null;
 
-    if (this->m_func->IsInMemory() && !PHASE_OFF(Js::JitAllocNewObjPhase, insertionPointInstr->m_func->GetJnFunction()) && HeapInfo::IsSmallObject(allocSize))
+    if (
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
+        this->m_func->IsInMemory() && 
+#endif
+        !PHASE_OFF(Js::JitAllocNewObjPhase, insertionPointInstr->m_func->GetJnFunction()) && HeapInfo::IsSmallObject(allocSize))
     {
         IR::LabelInstr * allocHelperLabel = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, true);
         allocDoneLabel = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, inOpHelper);
@@ -5520,11 +5564,13 @@ Lowerer::InsertOneLoopProbe(IR::Instr *insertInstr, IR::LabelInstr *loopLabel)
 
     IR::Opnd *memRefOpnd;
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     if (!this->m_func->IsInMemory())
     {
         memRefOpnd = this->LoadStackLimitForCurrentThreadOpnd(insertInstr);
     }
     else
+#endif
     {
         memRefOpnd = IR::MemRefOpnd::New(
             this->m_func->GetScriptContext()->GetThreadContext()->GetAddressOfStackLimitForCurrentThread(),
@@ -5578,6 +5624,7 @@ Lowerer::LoadPropertySymAsArgument(IR::Instr *instr, IR::Opnd *fieldSrc)
     IR::SymOpnd *symOpnd = fieldSrc->AsSymOpnd();
     PropertySym * fieldSym = symOpnd->m_sym->AsPropertySym();
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     Assert(
         m_func->IsInMemory() ||
         fieldSym->m_propertyId < Js::PropertyIds::_countJSOnlyProperty ||
@@ -5593,6 +5640,7 @@ Lowerer::LoadPropertySymAsArgument(IR::Instr *instr, IR::Opnd *fieldSrc)
         instrPrev = m_lowererMD.LoadHelperArgument(instr, this->LoadDynamicFunctionBodyValueOpnd(instr, FunctionBodyValue::FunctionBodyPropertyIdFromCacheId, fieldSym->GetInlineCacheIndex()));
     }
     else
+#endif
     {
         IR::IntConstOpnd * indexOpnd = IR::IntConstOpnd::New(fieldSym->m_propertyId, TyInt32, m_func, /*dontEncode*/true);
         instrPrev = m_lowererMD.LoadHelperArgument(instr, indexOpnd);
@@ -5621,11 +5669,13 @@ Lowerer::LoadFunctionBodyAsArgument(IR::Instr *instr, IR::IntConstOpnd * functio
     // At which point the deferred function proxy may be collect.
     // Just pass it the address where we will find the function proxy/body
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     if (!m_func->IsInMemory())
     {
         instrPrev = m_lowererMD.LoadHelperArgument(instr, this->LoadDynamicFunctionBodyValueOpnd(instr, FunctionBodyValue::FunctionBodyNestedFuncReference, (uint) functionBodySlotOpnd->m_value));
     }
     else
+#endif
     {
         Js::FunctionProxyPtrPtr proxyRef = instr->m_func->GetJnFunction()->GetNestedFuncReference((uint)functionBodySlotOpnd->m_value);
         AssertMsg(proxyRef, "Expected FunctionProxy for index of NewScFunc or NewScGenFunc opnd");
@@ -7260,7 +7310,9 @@ Lowerer::CreateTypePropertyGuardForGuardedProperties(Js::Type* type, IR::Propert
 
     Js::JitTypePropertyGuard* guard = null;
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     if (m_func->IsInMemory())
+#endif
     {
         Js::EntryPointInfo* entryPointInfo = this->m_func->m_workItem->AsInMemoryWorkItem()->GetEntryPoint();
 
@@ -7313,7 +7365,9 @@ Lowerer::CreateEquivalentTypeGuardAndLinkToGuardedProperties(Js::Type* type, IR:
 
     Js::JitEquivalentTypeGuard* guard = this->m_func->CreateEquivalentTypeGuard(type, propertySymOpnd->GetObjTypeSpecFldId());
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     if (m_func->IsInMemory())
+#endif
     {
         Js::EntryPointInfo* entryPointInfo = this->m_func->m_workItem->AsInMemoryWorkItem()->GetEntryPoint();
 
@@ -7452,7 +7506,9 @@ Lowerer::LinkCtorCacheToGuardedProperties(Js::JitTimeConstructorCache* ctorCache
     }
 
     bool linked = false;
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     if (this->m_func->IsInMemory())
+#endif
     {
         Js::EntryPointInfo* entryPointInfo = this->m_func->m_workItem->AsInMemoryWorkItem()->GetEntryPoint();
 
@@ -10385,12 +10441,14 @@ Lowerer::InlineBuiltInLibraryCall(IR::Instr *callInstr)
     IR::Opnd *objRefOpnd;
     IR::LabelInstr *labelHelper = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, true);
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     if (!m_func->IsInMemory())
     {
         objRefOpnd = this->LoadLibraryValueOpnd(callInstr, LibraryValue::ValueBuiltinFunctions);
         InsertAdd(false, objRefOpnd, objRefOpnd, IR::IntConstOpnd::New(callTargetOpnd->AsRegOpnd()->m_sym->m_builtInIndex, TyInt32, m_func, true), callInstr);
     }
     else
+#endif
     {
         objRefOpnd = IR::MemRefOpnd::New((void*)this->GetObjRefForBuiltInTarget(callTargetOpnd->AsRegOpnd()), TyMachReg, this->m_func);
     }
@@ -10509,7 +10567,13 @@ IR::Instr *
 Lowerer::LowerNewRegEx(IR::Instr * instr)
 {
     IR::Opnd *src1 = instr->UnlinkSrc1();
+    
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     Assert(src1->IsAddrOpnd() || !m_func->IsInMemory());
+#else
+    Assert(src1->IsAddrOpnd());
+#endif
+        
 #if ENABLE_REGEX_CONFIG_OPTIONS
     if (REGEX_CONFIG_FLAG(RegexTracing))
     {
@@ -12433,8 +12497,10 @@ Lowerer::GenerateBailOut(IR::Instr * instr, IR::BranchInstr * branchInstr, IR::L
     IR::Instr * bailOutInstr = bailOutInfo->bailOutInstr;
     IR::LabelInstr *collectRuntimeStatsLabel = null;
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     // We should never be generating bailouts when doing serialized JIT
     Assert(m_func->IsInMemory());
+#endif
 
     if (instr->IsCloned())
     {
@@ -21182,7 +21248,11 @@ void Lowerer::LowerFunctionBodyCallCountChange(IR::Instr *const insertBeforeInst
     const bool isSimpleJit = func->IsSimpleJit();
 
     // RELOCJIT: Profiling is not currently supported for relocatable JIT
-    if ((isSimpleJit && !func->GetTopFunc()->GetJnFunction()->DoFullJit()) || !func->IsInMemory())
+    if ((isSimpleJit && !func->GetTopFunc()->GetJnFunction()->DoFullJit()) 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
+        || !func->IsInMemory()
+#endif
+        )
     {
         return;
     }
@@ -21752,9 +21822,11 @@ void Lowerer::LowerLdFrameDisplay(IR::Instr *instr, bool isStrict, bool doStackF
 
 IR::AddrOpnd *Lowerer::CreateFunctionBodyOpnd(Func *const func) const
 {
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     // RELOCJIT: Inlining & profiling is turned off in relocatable JIT
     Assert(m_func->IsInMemory());
     Assert(func->IsInMemory());
+#endif
     return CreateFunctionBodyOpnd(func->GetJnFunction());
 }
 

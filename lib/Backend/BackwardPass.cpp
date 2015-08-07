@@ -2650,6 +2650,7 @@ BackwardPass::ProcessBlock(BasicBlock * block)
     {
         // Copy the upward exposed use as the live on back edge regs
         block->loop->regAlloc.liveOnBackEdgeSyms = block->upwardExposedUses->CopyNew(this->func->m_alloc);
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
         if (!this->func->IsInMemory())
         {
             // These syms will be used in lower, so we have to assume that they're going to
@@ -2658,6 +2659,7 @@ BackwardPass::ProcessBlock(BasicBlock * block)
             block->loop->regAlloc.liveOnBackEdgeSyms->Set(this->func->GetFunctionBodySym()->m_id);
             block->loop->regAlloc.liveOnBackEdgeSyms->Set(this->func->GetScriptContextSym()->m_id);
         }
+#endif
     }
 
     Assert(!considerSymAsRealUseInNoImplicitCallUses);
@@ -4123,10 +4125,12 @@ BackwardPass::TrackAddPropertyTypes(IR::PropertySymOpnd *opnd, BasicBlock *block
     Assert(typeWithoutPropertyTypeHandler->GetSlotCapacity() <= typeWithPropertyTypeHandler->GetSlotCapacity());
 #endif
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     if (!this->func->IsInMemory())
     {
         return;
     }
+#endif
 
     // Review (jedmiad): Do we need profile info to not rely on AreThisAndPrototypesEnsuredToHaveOnlyWritableDataProperties?
     //// If we can tolerate read-only properties outside of the list of properties we're adding, we can

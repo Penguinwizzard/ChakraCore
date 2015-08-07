@@ -5,7 +5,9 @@
 #pragma once
 
 struct CodeGenWorkItem;
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
 class PEWriter;
+#endif
 class NativeCodeGenerator sealed : public JsUtil::WaitableJobManager
 {
 #if ENABLE_DEBUG_CONFIG_OPTIONS
@@ -32,14 +34,15 @@ public:
     void GenerateAllFunctions(Js::FunctionBody * fn);
 #endif
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION    
     void GenerateAllFunctionsForSerialization(Js::FunctionBody * fn, BYTE *sourceCode, DWORD dwSourceCodeSize, BYTE *byteCode, DWORD dwByteCodeSize, DWORD dwFunctionTableLength, BYTE * functionTable, BYTE ** nativeCode, DWORD * pdwNativeCodeSize);
+    bool DeserializeFunction(Js::FunctionBody *function, Js::NativeModule *nativeModule);
+#endif
 
 #ifdef IR_VIEWER
     Js::Var RejitIRViewerFunction(Js::FunctionBody *fn, Js::ScriptContext *scriptContext);
 #endif
-
-    bool DeserializeFunction(Js::FunctionBody *function, Js::NativeModule *nativeModule);
-    void SetProfileMode(BOOL fSet);
+void SetProfileMode(BOOL fSet);
 public:
     static Js::Var CheckCodeGenThunk(Js::RecyclableObject* function, Js::CallInfo callInfo, ...);        
 
@@ -59,7 +62,9 @@ private:
 
 private:
     static Js::JavascriptMethod CheckCodeGenDone(Js::FunctionBody *const functionBody, Js::FunctionEntryPointInfo *const entryPointInfo, Js::ScriptFunction * function);
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     void GenerateFunctionForSerialization(Js::FunctionBody * fn, DWORD dwFunctionTableLength, BYTE * functionTable, PageAllocator * pageAllocator, PEWriter *writer);
+#endif
     InMemoryCodeGenWorkItem *GetJob(Js::EntryPointInfo *const entryPoint) const;     
     bool WasAddedToJobProcessor(JsUtil::Job *const job) const;
     bool ShouldProcessInForeground(const bool willWaitForJob, const unsigned int numJobsInQueue) const;

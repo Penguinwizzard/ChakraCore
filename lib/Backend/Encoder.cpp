@@ -289,7 +289,9 @@ Encoder::Encode()
 
     workItem->RecordNativeCode(m_func, m_encodeBuffer);
     
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     if (this->m_func->IsInMemory())
+#endif
     {
         m_func->GetScriptContext()->GetThreadContext()->SetValidCallTargetForCFG((PVOID) workItem->GetCodeAddress());
     }
@@ -303,12 +305,14 @@ Encoder::Encode()
     workItem->SetCodeAddress(workItem->GetCodeAddress() | 0x1); // Set thumb mode
 #endif
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     if (!this->m_func->IsInMemory())
     {
         Assert(this->m_func->pinnedTypeRefs == nullptr && this->m_func->propertyGuardsByPropertyId == nullptr &&
             this->m_func->singleTypeGuards == nullptr && this->m_func->equivalentTypeGuards == nullptr);
     }
     else
+#endif
     {
         Js::EntryPointInfo* entryPointInfo = this->m_func->m_workItem->AsInMemoryWorkItem()->GetEntryPoint();
         const bool isSimpleJit = m_func->IsSimpleJit();
@@ -606,7 +610,11 @@ void Encoder::RecordInlineeFrame(Func* inlinee, uint32 currentOffset)
 {
     // The only restriction for not supporting loop bodies is that inlinee frame map is created on FunctionEntryPointInfo & not
     // the base class EntryPointInfo.
-    if (this->m_func->IsInMemory() && !this->m_func->IsLoopBody() && !this->m_func->IsSimpleJit())
+    if (
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
+        this->m_func->IsInMemory() && 
+#endif
+        !this->m_func->IsLoopBody() && !this->m_func->IsSimpleJit())
     {
         InlineeFrameRecord* record = nullptr;
         if (inlinee->frameInfo && inlinee->m_hasInlineArgsOpt)

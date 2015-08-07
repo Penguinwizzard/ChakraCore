@@ -2956,10 +2956,13 @@ public:
             }
 #endif
 
-            if (((nativeModule == nullptr) || (!::DeserializeFunction(scriptContext->GetNativeCodeGenerator(), *functionBody, nativeModule)))
 #ifdef ENABLE_NATIVE_CODEGEN
-                && (!PHASE_OFF(Js::BackEndPhase, *functionBody))
-                && !this->scriptContext->GetConfig()->IsNoNative())
+            if ((!PHASE_OFF(Js::BackEndPhase, *functionBody))
+                && !this->scriptContext->GetConfig()->IsNoNative()
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION   
+                && ((nativeModule == nullptr) || (!::DeserializeFunction(scriptContext->GetNativeCodeGenerator(), *functionBody, nativeModule)))
+#endif
+                )
             {
                 GenerateFunction(this->scriptContext->GetNativeCodeGenerator(), *functionBody);
             }

@@ -496,24 +496,26 @@ private:
 
     IR::Instr *         LoadScriptContext(IR::Instr *instr);
     IR::Instr *         LoadFunctionBody(IR::Instr * instr);
-    IR::RegOpnd *       LoadDynamicJavascriptFunctionOpnd(IR::Instr * instr, RegNum regNum);
-    IR::RegOpnd *       LoadDynamicJavascriptLibraryOpnd(IR::Instr * instr);
-    IR::RegOpnd *       LoadDynamicJavascriptLibraryOpnd(IR::Instr * instr, RegNum regNum);
-    IR::RegOpnd *       LoadDynamicFunctionBodyOpnd(IR::Instr * instr);
     IR::Opnd *          LoadFunctionBodyOpnd(IR::Instr *instr);
-    IR::RegOpnd *       LoadDynamicScriptContextOpnd(IR::Instr * instr);
-    IR::RegOpnd *       LoadDynamicScriptContextOpnd(IR::Instr * instr, RegNum regNum);
     IR::Opnd *          LoadScriptContextOpnd(IR::Instr *instr);
-    IR::Opnd *          LoadScriptContextValueOpnd(IR::Instr * instr, ScriptContextValue valueType);
-    IR::RegOpnd *       LoadDynamicFunctionBodyValueOpnd(IR::Instr * instr, FunctionBodyValue valueType, uint32 index);
+    IR::Opnd *          LoadScriptContextValueOpnd(IR::Instr * instr, ScriptContextValue valueType);    
     IR::Opnd *          LoadLibraryValueOpnd(IR::Instr * instr, LibraryValue valueType, RegNum regNum = RegNOREG);
     IR::Opnd *          LoadVTableValueOpnd(IR::Instr * instr, VTableValue vtableType);
     IR::Opnd *          LoadOptimizationOverridesValueOpnd(IR::Instr *instr, OptimizationOverridesValue valueType);
     IR::Opnd *          LoadNumberAllocatorValueOpnd(IR::Instr *instr, NumberAllocatorValue valueType);
     IR::Opnd *          LoadIsInstInlineCacheOpnd(IR::Instr *instr, uint inlineCacheIndex);
     IR::Opnd *          LoadRuntimeInlineCacheOpnd(IR::Instr * instr, IR::PropertySymOpnd * sym, bool isHelper = false);
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
+    IR::RegOpnd *       LoadDynamicJavascriptFunctionOpnd(IR::Instr * instr, RegNum regNum);
+    IR::RegOpnd *       LoadDynamicJavascriptLibraryOpnd(IR::Instr * instr);
+    IR::RegOpnd *       LoadDynamicJavascriptLibraryOpnd(IR::Instr * instr, RegNum regNum);
+    IR::RegOpnd *       LoadDynamicFunctionBodyOpnd(IR::Instr * instr);
+    IR::RegOpnd *       LoadDynamicScriptContextOpnd(IR::Instr * instr);
+    IR::RegOpnd *       LoadDynamicScriptContextOpnd(IR::Instr * instr, RegNum regNum);
+    IR::RegOpnd *       LoadDynamicFunctionBodyValueOpnd(IR::Instr * instr, FunctionBodyValue valueType, uint32 index);
     IR::Opnd *          LoadStackLimitForCurrentThreadOpnd(IR::Instr *instr, RegNum regNum = RegNOREG);
     IR::Opnd *          LoadDynamicHelperFunctionOpnd(IR::Instr *instr, IR::JnHelperMethod helperMethod, RegNum regNum = RegNOREG);
+#endif
 
     void            LowerSpreadArrayLiteral(IR::Instr *instr);
     IR::Instr*      LowerSpreadCall(IR::Instr *instr, Js::CallFlags callFlags, bool setupProfiledVersion = false);

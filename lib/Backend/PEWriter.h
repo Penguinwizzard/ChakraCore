@@ -4,6 +4,7 @@
 
 #pragma once
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
 namespace IR
 {
 enum JnHelperMethod;
@@ -147,3 +148,5 @@ private:
     JsUtil::List<CodeBlock, ArenaAllocator> *codeBlocks;
     JsUtil::List<size_t, ArenaAllocator> *relocations;
 };
+
+#endif

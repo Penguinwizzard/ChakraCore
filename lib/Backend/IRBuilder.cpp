@@ -80,7 +80,11 @@ IRBuilder::DoBailOnNoProfile()
     }
 
     Func *const topFunc = m_func->GetTopFunc();
-    if(!topFunc->IsInMemory() || topFunc->m_jitTimeData->GetProfiledIterations() == 0)
+    if(
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
+        !topFunc->IsInMemory() || 
+#endif
+        topFunc->m_jitTimeData->GetProfiledIterations() == 0)
     {
         // The top function has not been profiled yet. Some switch must have been used to force jitting. This is not a
         // real-world case, but for the purpose of testing the JIT, it's beneficial to generate code in unprofiled paths.
@@ -382,7 +386,9 @@ IRBuilder::Build()
 
     m_switchBuilder.Init(m_func, m_tempAlloc, false);
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     this->BuildRelocatableConstantLoads();
+#endif
     this->BuildConstantLoads();
     this->BuildGeneratorPreamble();
 
@@ -1066,6 +1072,7 @@ IRBuilder::BuildGeneratorPreamble()
     this->AddInstr(labelInstr, Js::Constants::NoByteCodeOffset);
 }
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
 void
 IRBuilder::BuildRelocatableConstantLoads()
 {
@@ -1108,6 +1115,7 @@ IRBuilder::BuildRelocatableConstantLoads()
     this->AddInstr(instr, Js::Constants::NoByteCodeOffset);
 
 }
+#endif
 
 void
 IRBuilder::BuildConstantLoads()
@@ -1124,11 +1132,13 @@ IRBuilder::BuildConstantLoads()
         Assert(this->RegIsConstant(reg));
         dstOpnd->m_sym->SetIsFromByteCodeConstantTable();
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
         if (!m_func->IsInMemory() && !Js::TaggedInt::Is(varConst))
         {
             BuildDynamicFunctionBodyValueLoad(FunctionBodyValue::FunctionBodyConstantVar, dstOpnd, reg, Js::Constants::NoByteCodeOffset);
         }
         else
+#endif
         {
             IR::Instr *instr = IR::Instr::NewConstantLoad(dstOpnd, varConst, m_func);
             this->AddInstr(instr, Js::Constants::NoByteCodeOffset);
@@ -1176,6 +1186,7 @@ IRBuilder::BuildReg1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot R0)
         return;
     }
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     // Need to treat some opcodes specially for serialization
     if (!m_func->IsInMemory())
     {
@@ -1218,6 +1229,7 @@ IRBuilder::BuildReg1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot R0)
             return;
         }
     }
+#endif
 
     IR::Opnd * srcOpnd = null;
     bool isNotInt = false;
@@ -2523,6 +2535,7 @@ IRBuilder::BuildReg1Unsigned1(Js::OpCode newOpcode, uint offset, Js::RegSlot R0,
         {
             IR::Opnd * dstOpnd = this->BuildFieldOpnd(newOpcode, R0, C1, (Js::PropertyIdIndexType)-1, PropertyKindSlots);
             IR::Opnd * srcOpnd;
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
             if (!this->m_func->IsInMemory())
             {
                 IR::RegOpnd* opnd = IR::RegOpnd::New(TyVar, m_func);
@@ -2530,6 +2543,7 @@ IRBuilder::BuildReg1Unsigned1(Js::OpCode newOpcode, uint offset, Js::RegSlot R0,
                 srcOpnd = opnd;
             }
             else
+#endif
             {
                 srcOpnd = IR::AddrOpnd::New(m_func->GetScriptContext()->GetLibrary()->GetUndeclBlockVar(), IR::AddrOpndKindDynamicVar, this->m_func, true);
                 srcOpnd->SetValueType(ValueType::PrimitiveOrObject);
@@ -3102,6 +3116,7 @@ IRBuilder::BuildElementCP(Js::OpCode newOpcode, uint32 offset, Js::RegSlot insta
         // Store
         if (newOpcode == Js::OpCode::InitUndeclLetFld)
         {
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
             if (!this->m_func->IsInMemory())
             {
                 IR::RegOpnd* opnd = IR::RegOpnd::New(TyVar, m_func);
@@ -3109,6 +3124,7 @@ IRBuilder::BuildElementCP(Js::OpCode newOpcode, uint32 offset, Js::RegSlot insta
                 srcOpnd = opnd;
             }
             else
+#endif
             {
                 srcOpnd = IR::AddrOpnd::New(m_func->GetScriptContext()->GetLibrary()->GetUndeclBlockVar(), IR::AddrOpndKindDynamicVar, this->m_func, true);
                 srcOpnd->SetValueType(ValueType::PrimitiveOrObject);
@@ -3117,6 +3133,7 @@ IRBuilder::BuildElementCP(Js::OpCode newOpcode, uint32 offset, Js::RegSlot insta
         }
         else if (newOpcode == Js::OpCode::InitUndeclConstFld)
         {
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
             if (!this->m_func->IsInMemory())
             {
                 IR::RegOpnd* opnd = IR::RegOpnd::New(TyVar, m_func);
@@ -3124,6 +3141,7 @@ IRBuilder::BuildElementCP(Js::OpCode newOpcode, uint32 offset, Js::RegSlot insta
                 srcOpnd = opnd;
             }
             else
+#endif
             {
                 srcOpnd = IR::AddrOpnd::New(m_func->GetScriptContext()->GetLibrary()->GetUndeclBlockVar(), IR::AddrOpndKindDynamicVar, this->m_func, true);
                 srcOpnd->SetValueType(ValueType::PrimitiveOrObject);
@@ -3454,7 +3472,6 @@ IRBuilder::BuildAuxiliary(Js::OpCode newOpcode, uint32 offset)
             StackSym *      symDst;
             IR::SymOpnd *   dstOpnd;
             IR::Opnd *      src1Opnd;
-            IR::Opnd *      varArrayOpnd = this->BuildAuxArrayOpnd(AuxArrayValue::AuxVarArrayVarCount, offset, auxInsn->Offset);
 
             //
             // PUSH all the parameters on the auxiliary context, to the stack
@@ -3471,13 +3488,16 @@ IRBuilder::BuildAuxiliary(Js::OpCode newOpcode, uint32 offset)
                 }
 
                 dstOpnd = IR::SymOpnd::New(symDst, TyVar, m_func);
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
                 if (!m_func->IsInMemory())
                 {
+                    IR::Opnd *      varArrayOpnd = this->BuildAuxArrayOpnd(AuxArrayValue::AuxVarArrayVarCount, offset, auxInsn->Offset);
                     IR::Instr *loadInstr = IR::Instr::New(Js::OpCode::Ld_A, IR::RegOpnd::New(TyVar, m_func), IR::IndirOpnd::New(varArrayOpnd->AsRegOpnd(), (i + 1) * MachPtr, TyVar, m_func), m_func);
                     this->AddInstr(loadInstr, offset);
                     src1Opnd = loadInstr->GetDst();
                 }
                 else
+#endif
                 {
                     // RELOCJIT: Handled in other branch
                     src1Opnd = IR::AddrOpnd::New(vars->elements[i], IR::AddrOpndKindDynamicVar, this->m_func, true);
@@ -5423,6 +5443,7 @@ IRBuilder::BuildRegexFromPattern(Js::RegSlot dstRegSlot, uint32 patternIndex, ui
     dstOpnd->SetValueType(ValueType::GetObject(ObjectType::RegExp));
 
     IR::Opnd * regexOpnd;
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     if (!m_func->IsInMemory())
     {
         IR::RegOpnd *dst = IR::RegOpnd::New(TyVar, m_func);
@@ -5430,6 +5451,7 @@ IRBuilder::BuildRegexFromPattern(Js::RegSlot dstRegSlot, uint32 patternIndex, ui
         regexOpnd = dst;
     }
     else
+#endif
     {
         // RELOCJIT: We are OK generating an address here because relocatable JIT takes the other branch.
         regexOpnd = IR::AddrOpnd::New(this->m_func->GetJnFunction()->GetLiteralRegex(patternIndex), IR::AddrOpndKindDynamicMisc, this->m_func);
@@ -5636,6 +5658,7 @@ IRBuilder::InsertInitLoopBodyLoopCounter(uint loopNum)
 IR::Opnd *
 IRBuilder::BuildAuxArrayOpnd(AuxArrayValue auxArrayType, uint32 offset, uint32 auxArrayOffset, uint extraSlots)
 {
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     if (!m_func->IsInMemory())
     {
         IR::RegOpnd *functionBodyOpnd = IR::RegOpnd::New(this->m_func->GetFunctionBodySym(), TyVar, m_func);
@@ -5662,6 +5685,7 @@ IRBuilder::BuildAuxArrayOpnd(AuxArrayValue auxArrayType, uint32 offset, uint32 a
         return dstOpnd;
     }
     else
+#endif
     {
         switch (auxArrayType)
         {
@@ -5687,6 +5711,7 @@ IRBuilder::BuildAuxArrayOpnd(AuxArrayValue auxArrayType, uint32 offset, uint32 a
 IR::Opnd *
 IRBuilder::BuildAuxObjectLiteralTypeRefOpnd(int objectId, uint32 offset)
 {
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     if (!m_func->IsInMemory())
     {
         IR::RegOpnd *functionBodyOpnd = IR::RegOpnd::New(this->m_func->GetFunctionBodySym(), TyMachReg, m_func);
@@ -5701,11 +5726,13 @@ IRBuilder::BuildAuxObjectLiteralTypeRefOpnd(int objectId, uint32 offset)
         return dstOpnd;
     }
     else
+#endif
     {
         return IR::AddrOpnd::New(m_func->GetJnFunction()->GetObjectLiteralTypeRef(objectId), IR::AddrOpndKindDynamicMisc, this->m_func);
     }
 }
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
 void
 IRBuilder::BuildDynamicLibraryValueLoad(LibraryValue valueType, IR::RegOpnd *dstOpnd, uint32 offset)
 {
@@ -5778,3 +5805,4 @@ IRBuilder::BuildDynamicFunctionBodyValueLoad(FunctionBodyValue valueType, IR::Re
         break;
     }
 }
+#endif

@@ -3,6 +3,7 @@
 //----------------------------------------------------------------------------
 
 #include "backend.h"
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
 #include "PEWriter.h"
 
 inline static size_t roundUp(size_t len, size_t align) 
@@ -988,3 +989,5 @@ void PEWriter::Write(Js::FunctionBody *rootFunction, BYTE *sourceCode, DWORD dwS
     *nativeCode = memory;
     *pdwNativeCodeSize = (DWORD)rawSize;
 }
+
+#endif

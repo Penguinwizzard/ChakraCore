@@ -2997,7 +2997,10 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
     if ((!PHASE_OFF(Js::BackEndPhase, funcInfo->byteCodeFunction))
         && !this->forceNoNative
         && !this->scriptContext->GetConfig()->IsNoNative()
-        && ((this->flags & fscrIsNativeCode) == 0))
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
+        && ((this->flags & fscrIsNativeCode) == 0)
+#endif
+        )
     {
         GenerateFunction(this->scriptContext->GetNativeCodeGenerator(), byteCodeFunction);
     }

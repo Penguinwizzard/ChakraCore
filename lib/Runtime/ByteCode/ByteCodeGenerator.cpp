@@ -1611,7 +1611,11 @@ bool ByteCodeGenerator::CanStackNestedFunc(FuncInfo * funcInfo, bool trace)
     wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
 #endif
     Assert(!funcInfo->IsGlobalFunction());
-    bool const doStackNestedFunc = !funcInfo->HasMaybeEscapedNestedFunc() && !IsInDebugMode() && !(this->flags & fscrIsNativeCode);
+    bool const doStackNestedFunc = !funcInfo->HasMaybeEscapedNestedFunc() && !IsInDebugMode() 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
+        && !(this->flags & fscrIsNativeCode)
+#endif
+        ;
 
     if (!doStackNestedFunc)
     {

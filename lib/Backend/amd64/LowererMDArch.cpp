@@ -786,6 +786,7 @@ LowererMDArch::LowerCall(IR::Instr * callInstr, uint32 argCount)
     IR::Instr *retInstr = callInstr;
     callInstr->m_opcode = Js::OpCode::CALL;
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     if (!this->m_func->IsInMemory() && callInstr->GetSrc1()->IsHelperCallOpnd())
     {
         IR::HelperCallOpnd *helperCall = callInstr->UnlinkSrc1()->AsHelperCallOpnd();
@@ -794,6 +795,7 @@ LowererMDArch::LowerCall(IR::Instr * callInstr, uint32 argCount)
         callInstr->SetSrc1(this->lowererMD->m_lowerer->LoadDynamicHelperFunctionOpnd(callInstr, helperCall->m_fnHelper));
         retInstr = prev->m_next;
     }
+#endif
 
     if (callInstr->GetDst())
     {
@@ -857,7 +859,11 @@ LowererMDArch::LowerCall(IR::Instr * callInstr, uint32 argCount)
     // Also skip this for relocatable helper calls. These will be turned into indirect
     // calls in lower.
 
-    if (callInstr->GetSrc1()->IsHelperCallOpnd() && !callInstr->HasBailOutInfo() && this->m_func->IsInMemory())
+    if (callInstr->GetSrc1()->IsHelperCallOpnd() && !callInstr->HasBailOutInfo()
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
+        && this->m_func->IsInMemory()
+#endif
+        )
     {
         IR::RegOpnd *targetOpnd = IR::RegOpnd::New(StackSym::New(TyMachPtr,m_func), RegRAX, TyMachPtr, this->m_func);
         IR::Instr   *movInstr   = IR::Instr::New(Js::OpCode::MOV, targetOpnd, callInstr->GetSrc1(),  this->m_func);
@@ -1330,6 +1336,7 @@ LowererMDArch::GenerateStackAllocation(IR::Instr *instr, uint32 size)
 
         this->LowerCall(callInstr, 0);
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
         if (!this->m_func->IsInMemory())
         {
             IR::Opnd *opnd = this->lowererMD->m_lowerer->LoadDynamicHelperFunctionOpnd(callInstr, IR::HelperCRT_chkstk, RegRCX);
@@ -1337,6 +1344,7 @@ LowererMDArch::GenerateStackAllocation(IR::Instr *instr, uint32 size)
             callInstr->SetSrc1(opnd);
         }
         else
+#endif
         {
             IR::Instr   *movHelperAddrInstr = IR::Instr::New(
                 Js::OpCode::MOV,
@@ -1680,9 +1688,14 @@ LowererMDArch::GeneratePrologueStackProbe(IR::Instr *entryInstr, IntConstType fr
 
     // MOV rax, ThreadContext::scriptStackLimit + frameSize
     stackLimitOpnd = IR::RegOpnd::New(null, RegRAX, TyMachReg, this->m_func);
-    if (doInterruptProbe || !threadContext->GetIsThreadBound() || !this->m_func->IsInMemory())
+    if (doInterruptProbe || !threadContext->GetIsThreadBound() 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
+        || !this->m_func->IsInMemory()
+#endif
+        )
     {
         // Load the current stack limit from the ThreadContext and add the current frame size.
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
         if (!this->m_func->IsInMemory())
         {
             // We have to do this by hand here b/c we're basing off the RCX register instead of the stack
@@ -1695,6 +1708,7 @@ LowererMDArch::GeneratePrologueStackProbe(IR::Instr *entryInstr, IntConstType fr
             this->lowererMD->CreateAssign(stackLimitOpnd, IR::IndirOpnd::New(baseOpnd, ThreadContext::GetStackLimitForCurrentThreadOffset(), TyMachReg, this->m_func), insertInstr);
         }
         else
+#endif
         {
             void *pLimit = threadContext->GetAddressOfStackLimitForCurrentThread();
             IR::RegOpnd *baseOpnd = IR::RegOpnd::New(null, RegRAX, TyMachReg, this->m_func);
@@ -1754,6 +1768,7 @@ LowererMDArch::GeneratePrologueStackProbe(IR::Instr *entryInstr, IntConstType fr
     insertInstr->InsertBefore(helperLabel);
 
     IR::RegOpnd *target;
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     if (!this->m_func->IsInMemory())
     {
         // MOV rdx, scriptContext
@@ -1776,6 +1791,7 @@ LowererMDArch::GeneratePrologueStackProbe(IR::Instr *entryInstr, IntConstType fr
             IR::AddrOpnd::New((void*)frameSize, IR::AddrOpndKindConstant, this->m_func), insertInstr);
     }
     else
+#endif
     {
         // MOV rdx, scriptContext
         this->lowererMD->CreateAssign(
@@ -2904,11 +2920,13 @@ LowererMDArch::LowerEHRegionReturn(IR::Instr * insertBeforeInstr, IR::Opnd * tar
     // PUSH rcx
     // RET
     IR::Opnd *endCallWithFakeFrame = nullptr;
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     if (!m_func->IsInMemory())
     {
         endCallWithFakeFrame = this->lowererMD->m_lowerer->LoadDynamicHelperFunctionOpnd(insertBeforeInstr, IR::HelperOp_ReturnFromCallWithFakeFrame, RegRCX);
     }
     else
+#endif
     {
         endCallWithFakeFrame = IR::RegOpnd::New(null, RegRCX, TyMachReg, m_func);
         IR::Instr *movTarget = IR::Instr::New(Js::OpCode::MOV,

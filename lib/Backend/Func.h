@@ -185,7 +185,11 @@ public:
         bool doStackClosure = m_jnFunction->DoStackClosure() && !PHASE_OFF(Js::FrameDisplayFastPathPhase, this);
         Assert(!doStackClosure || doStackNestedFunc);
         this->stackClosure = doStackClosure && this->IsTopFunc();
-        if (m_workItem->Type() == JsFunctionType || m_workItem->Type() == JsFunctionSerializedType)
+        if (m_workItem->Type() == JsFunctionType 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
+            || m_workItem->Type() == JsFunctionSerializedType
+#endif
+            )
         {
             if (m_jnFunction->GetDoBackendArgumentsOptimization() && !m_jnFunction->GetHasTry())
             {
@@ -309,7 +313,9 @@ public:
     bool DoStackScopeSlots() const { return this->stackClosure; }
     bool IsBackgroundJIT() const { return this->m_isBackgroundJIT; }
     bool HasArgumentSlot() const { return this->GetInParamsCount() != 0 && !this->IsLoopBody(); }
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     bool IsInMemory() const { return this->m_workItem->IsInMemoryWorkItem(); }
+#endif
     bool IsLoopBody() const;
     bool IsLoopBodyInTry() const;
     bool CanAllocInPreReservedHeapPageSegment();
@@ -328,7 +334,9 @@ public:
     {
         return
             !PHASE_OFF(Js::GlobOptPhase, this->GetJnFunction()) &&
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
             IsInMemory() &&
+#endif
             !IsSimpleJit() &&
             (!GetTopFunc()->HasTry() || GetTopFunc()->CanOptimizeTryCatch());
     }

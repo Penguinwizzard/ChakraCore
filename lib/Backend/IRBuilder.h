@@ -117,7 +117,9 @@ private:
 #endif
     BranchReloc *       CreateRelocRecord(IR::BranchInstr * branchInstr, uint32 offset, uint32 targetOffset);
     void                BuildGeneratorPreamble();
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     void                BuildRelocatableConstantLoads();
+#endif
     void                BuildConstantLoads();
     void                BuildImplicitArgIns();
 
@@ -199,9 +201,10 @@ private:
     SymID               BuildSrcStackSymID(Js::RegSlot regSlot);
     IR::RegOpnd *       BuildDstOpnd(Js::RegSlot dstRegSlot, IRType type = TyVar, bool isCatchObjectSym = false);
     IR::RegOpnd *       BuildSrcOpnd(Js::RegSlot srcRegSlot, IRType type = TyVar);
-
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     void                BuildDynamicLibraryValueLoad(LibraryValue valueType, IR::RegOpnd *dstOpnd, uint32 offset);
     void                BuildDynamicFunctionBodyValueLoad(FunctionBodyValue valueType, IR::RegOpnd *dstOpnd, uint32 index, uint32 offset);
+#endif
     IR::Opnd *          BuildAuxArrayOpnd(AuxArrayValue auxArrayType, uint32 offset, uint32 auxArrayOffset, uint extraSlots = 0);
     IR::Opnd *          BuildAuxObjectLiteralTypeRefOpnd(int objectId, uint32 offset);
 

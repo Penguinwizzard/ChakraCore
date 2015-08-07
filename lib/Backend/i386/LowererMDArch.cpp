@@ -1130,6 +1130,7 @@ LowererMDArch::LowerCall(IR::Instr * callInstr, uint32 argCount, RegNum regNum)
     IR::Instr *retInstr = callInstr;
     callInstr->m_opcode = Js::OpCode::CALL;
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     if (!this->m_func->IsInMemory() && callInstr->GetSrc1()->IsHelperCallOpnd())
     {
         IR::HelperCallOpnd *helperCall = callInstr->UnlinkSrc1()->AsHelperCallOpnd();
@@ -1138,6 +1139,7 @@ LowererMDArch::LowerCall(IR::Instr * callInstr, uint32 argCount, RegNum regNum)
         callInstr->SetSrc1(this->lowererMD->m_lowerer->LoadDynamicHelperFunctionOpnd(callInstr, helperCall->m_fnHelper, regNum));
         retInstr = prev->m_next;
     }
+#endif
 
     if (callInstr->GetDst())
     {
@@ -1675,15 +1677,21 @@ LowererMDArch::GeneratePrologueStackProbe(IR::Instr *entryInstr, size_t frameSiz
     ThreadContext *threadContext = this->m_func->GetScriptContext()->GetThreadContext();
     bool doInterruptProbe = threadContext->DoInterruptProbe(this->m_func->GetJnFunction());
 
-    if (doInterruptProbe || !threadContext->GetIsThreadBound() || !this->m_func->IsInMemory())
+    if (doInterruptProbe || !threadContext->GetIsThreadBound() 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
+        || !this->m_func->IsInMemory()
+#endif
+        )
     {
         // Load the current stack limit from the ThreadContext, then increment this value by the size of the
         // current frame. This is the value we'll compare against below.
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
         if (!this->m_func->IsInMemory())
         {
             stackLimitOpnd = this->lowererMD->m_lowerer->LoadStackLimitForCurrentThreadOpnd(insertInstr, RegEAX);
         }
         else
+#endif
         {
             stackLimitOpnd = IR::RegOpnd::New(NULL, RegEAX, TyMachReg, this->m_func);
             void *pLimit = threadContext->GetAddressOfStackLimitForCurrentThread();
@@ -1729,11 +1737,13 @@ LowererMDArch::GeneratePrologueStackProbe(IR::Instr *entryInstr, size_t frameSiz
     LoadHelperArgument(insertInstr, IR::IntConstOpnd::New(0, TyMachReg, m_func));
 
     // Load the arguments to the probe helper and do the call.
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     if (!this->m_func->IsInMemory())
     {
         LoadHelperArgument(insertInstr, this->lowererMD->m_lowerer->LoadDynamicScriptContextOpnd(insertInstr, RegEAX));
     }
     else
+#endif
     {
         lowererMD->m_lowerer->LoadScriptContext(insertInstr);
     }
@@ -2185,11 +2195,13 @@ LowererMDArch::EmitUIntToFloat(IR::Opnd *dst, IR::Opnd *src, IR::Instr *instrIns
     // TODO: Encode indir with base as address opnd instead
     IR::RegOpnd * baseOpnd = IR::RegOpnd::New(TyMachPtr, this->m_func);
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     if (!this->m_func->IsInMemory())
     {
         instr = IR::Instr::New(Js::OpCode::MOV, baseOpnd, this->lowererMD->m_lowerer->LoadLibraryValueOpnd(instrInsert, LibraryValue::ValueUintConvertConst), this->m_func);
     }
     else
+#endif
     {
         // RELOCJIT: We are OK generating an address here because relocatable JIT takes the other branch.
         instr = IR::Instr::New(Js::OpCode::MOV, baseOpnd, IR::AddrOpnd::New((Js::Var)&Js::JavascriptNumber::UIntConvertConst,
