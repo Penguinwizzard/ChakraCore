@@ -672,11 +672,12 @@ Js::DynamicObject * IRtoJSObjectBuilder::DumpIRtoJSObject(Func *func, Js::Phase 
 // TODO (t-doilij) write documentation for this function
 void IRtoJSObjectBuilder::DumpIRtoGlobalObject(Func *func, Js::Phase phase)
 {
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     if (!func->IsInMemory())
     {
         return;
     }
-
+#endif
     // FIXME (t-doilij) this cast has got to be unnecessary
     InMemoryCodeGenWorkItem *workItem = reinterpret_cast<InMemoryCodeGenWorkItem *>(func->m_workItem);
     bool rejit = workItem->isRejitIRViewerFunction;

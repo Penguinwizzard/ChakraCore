@@ -7,6 +7,8 @@
 enum CodeGenWorkItemType : byte
 {
     JsFunctionType = 0,
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     JsFunctionSerializedType,
+#endif
     JsLoopBodyWorkItemType
 };

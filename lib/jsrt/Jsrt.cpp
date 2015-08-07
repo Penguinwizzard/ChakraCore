@@ -2622,7 +2622,13 @@ JsErrorCode JsSerializeScriptCore(const wchar_t *script, BYTE *functionTable, in
 
 STDAPI_(JsErrorCode) JsSerializeScript(const wchar_t *script, unsigned char *buffer, unsigned long *bufferSize)
 {
-    return JsSerializeScriptCore(script, nullptr, 0, buffer, bufferSize, Js::Configuration::Global.flags.IncludeNativeCodeWithSerializedByteCodes);
+    return JsSerializeScriptCore(script, nullptr, 0, buffer, bufferSize, 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
+        Js::Configuration::Global.flags.IncludeNativeCodeWithSerializedByteCodes
+#else
+        false
+#endif
+        );
 }
 
 #ifdef ENABLE_NATIVE_CODE_SERIALIZATION

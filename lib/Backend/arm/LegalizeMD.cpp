@@ -168,6 +168,7 @@ void LegalizeMD::LegalizeSrc(IR::Instr * instr, IR::Opnd * opnd, uint opndNum, b
     case IR::OpndKindAddr:
     case IR::OpndKindHelperCall:
     case IR::OpndKindIntConst:
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
         if (opnd->IsHelperCallOpnd() && !instr->m_func->IsInMemory())
         {
             // We don't want the helper address here because we're relocatable.
@@ -175,6 +176,7 @@ void LegalizeMD::LegalizeSrc(IR::Instr * instr, IR::Opnd * opnd, uint opndNum, b
             immed = opnd->AsHelperCallOpnd()->m_fnHelper;
         }
         else
+#endif
         {
             immed = opnd->GetImmediateValue();
         }

@@ -444,11 +444,13 @@ LowererMD::LowerLeaveNull(IR::Instr *finallyEndInstr)
         finallyEndInstr->InsertBefore(movR9);
 
         IR::Opnd *targetOpnd = nullptr;
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
         if (!m_func->IsInMemory())
         {
             targetOpnd = m_lowerer->LoadDynamicHelperFunctionOpnd(finallyEndInstr, IR::HelperOp_ReturnFromCallWithFakeFrame, RegRCX);
         }
         else
+#endif
         {
             targetOpnd = IR::RegOpnd::New(null, RegRCX, TyMachReg, m_func);
             IR::Instr *movTarget = IR::Instr::New(Js::OpCode::MOV,
@@ -2524,10 +2526,12 @@ bool LowererMD::GenerateFastCmXxTaggedInt(IR::Instr *instr)
 
     Assert(src1 && src2 && dst);
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     if (!m_func->IsInMemory())
     {
         return false;
     }
+#endif
 
     // Not tagged ints?
     if (src1->IsRegOpnd() && src1->AsRegOpnd()->IsNotInt())
@@ -5489,12 +5493,14 @@ IR::Instr * LowererMD::GenerateFloatAbs(IR::RegOpnd * regOpnd, IR::Instr * inser
         Assert(regOpnd->IsFloat32());        
         opnd = IR::MemRefOpnd::New((void *)&Js::JavascriptNumber::AbsFloatCst, TyFloat32, this->m_func, IR::AddrOpndKindDynamicFloatRef);
     }
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     if (!m_func->IsInMemory())
     {
         IR::RegOpnd *absDoubleCstOpnd = IR::RegOpnd::New(TyMachReg, this->m_func);
         CreateAssign(absDoubleCstOpnd, opnd, insertInstr);
         opnd = IR::IndirOpnd::New(absDoubleCstOpnd, 0, TyMachDouble, this->m_func);
     }
+#endif
     // ANDPS has smaller encoding then ANDPD
     IR::Instr * instr = IR::Instr::New(Js::OpCode::ANDPS, regOpnd, regOpnd, opnd, this->m_func);
     insertInstr->InsertBefore(instr);
@@ -5839,7 +5845,14 @@ LowererMD::GenerateCFGCheck(IR::Opnd * entryPointOpnd, IR::Instr * insertBeforeI
     IR::HelperCallOpnd *cfgCallOpnd = IR::HelperCallOpnd::New(IR::HelperGuardCheckCall, this->m_func);
     IR::Instr* cfgCallInstr = IR::Instr::New(Js::OpCode::CALL, this->m_func);
 
-    if (this->m_func->IsInMemory())
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
+    if (!this->m_func->IsInMemory())
+    {
+        //RELOC JIT: Generating DynamicHelperFunction Operand for reloc jit
+        cfgCallInstr->SetSrc1(this->m_lowerer->LoadDynamicHelperFunctionOpnd(insertBeforeInstr, cfgCallOpnd->m_fnHelper));
+    }
+    else
+#endif
     {
 #if _M_IX86
         //call[__guard_check_icall_fptr]
@@ -5853,12 +5866,6 @@ LowererMD::GenerateCFGCheck(IR::Opnd * entryPointOpnd, IR::Instr * insertBeforeI
         //call rax    
         cfgCallInstr->SetSrc1(targetOpnd);
 #endif
-    }
-    else
-    {
-        //RELOC JIT: Generating DynamicHelperFunction Operand for reloc jit
-        Assert(!this->m_func->IsInMemory());
-        cfgCallInstr->SetSrc1(this->m_lowerer->LoadDynamicHelperFunctionOpnd(insertBeforeInstr, cfgCallOpnd->m_fnHelper));
     }
 
     //CALL cfg(rax)
@@ -5882,7 +5889,9 @@ LowererMD::GenerateFastRecyclerAlloc(size_t allocSize, IR::RegOpnd* newObjDst, I
     IR::Opnd * endAddressOpnd;
     IR::Opnd * freeListOpnd;
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     Assert(m_func->IsInMemory());
+#endif
 
     Js::ScriptContext* scriptContext = this->m_func->GetScriptContext();
     Recycler* recycler = scriptContext->GetRecycler();

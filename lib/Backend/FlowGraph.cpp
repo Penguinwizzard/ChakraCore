@@ -1398,7 +1398,11 @@ FlowGraph::UpdateRegionForBlock(BasicBlock * block, Region ** blockToRegion)
     }
     
     AssertMsg(region != NULL, "Failed to find region for block");
-    if (!region->ehBailoutData && this->func->IsInMemory())
+    if (!region->ehBailoutData 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
+        && this->func->IsInMemory()
+#endif
+        )
     {
         region->AllocateEHBailoutData(this->func, tryInstr);
     }
@@ -2041,10 +2045,12 @@ FlowGraph::PeepCm(IR::Instr *instr)
 
     Func *func = instr->m_func;
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     if (!func->IsInMemory())
     {
         return NULL;
     }
+#endif
 
     // Find Ld_A
     IR::Instr *instrNext = instr->GetNextRealInstrOrLabel();

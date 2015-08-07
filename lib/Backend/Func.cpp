@@ -703,7 +703,10 @@ void Func::InitStackClosureSyms()
 bool Func::CanAllocInPreReservedHeapPageSegment ()
 {
 #ifdef _CONTROL_FLOW_GUARD 
-    return PHASE_FORCE1(Js::PreReservedHeapAllocPhase) || (!PHASE_OFF1(Js::PreReservedHeapAllocPhase) && IsInMemory() &&
+    return PHASE_FORCE1(Js::PreReservedHeapAllocPhase) || (!PHASE_OFF1(Js::PreReservedHeapAllocPhase) && 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
+        IsInMemory() &&
+#endif
         !IsJitInDebugMode() && !GetScriptContext()->IsInDebugMode() && GetScriptContext()->GetThreadContext()->IsCFGEnabled()
 #if _M_IX86
         && m_workItem->GetJitMode() == ExecutionMode::FullJit && GetCodeGenAllocators()->canCreatePreReservedSegment);

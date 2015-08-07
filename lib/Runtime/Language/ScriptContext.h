@@ -346,6 +346,7 @@ namespace Js
         SRCINFO const ** moduleSrcInfo;
     };
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION    
     struct NativeModule
     {
         BYTE *base;
@@ -389,7 +390,7 @@ namespace Js
         {
         }
     };
-
+#endif
     class ScriptContext : public ScriptContextBase
     {
         friend class LowererMD;
@@ -737,7 +738,7 @@ public:
         void TrackIntConstPropertyOnGlobalObject(Js::PropertyId propId);
         bool IsIntConstPropertyOnGlobalUserObject(Js::PropertyId propertyId);
         void TrackIntConstPropertyOnGlobalUserObject(Js::PropertyId propertyId);
-
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
         void AddNativeModule(BYTE *moduleBase, NativeModule *module);
         bool TryGetNativeModule(BYTE *moduleBase, NativeModule **nativeModule);
         template <typename TConditionalFunction>
@@ -753,6 +754,7 @@ public:
                 nativeModules->EachValue(function);
             }
         }
+#endif
 
 private:
         //
@@ -1608,8 +1610,10 @@ private:
         typedef JsUtil::BaseDictionary<JavascriptMethod, JavascriptFunction*, Recycler, PowerOf2SizePolicy> BuiltInLibraryFunctionMap;
         BuiltInLibraryFunctionMap* builtInLibraryFunctions;
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
         typedef JsUtil::BaseDictionary<BYTE *, NativeModule *, HeapAllocator> NativeModuleMap;
         NativeModuleMap *nativeModules;
+#endif
 
 #ifdef RECYCLER_PERF_COUNTERS
         size_t bindReferenceCount;

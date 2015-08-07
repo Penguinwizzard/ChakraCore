@@ -431,7 +431,9 @@ EncoderMD::EmitImmed(IR::Opnd * opnd, int opSize, int sbit)
 
     switch (opnd->GetKind()) {
     case IR::OpndKindAddr:
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
         Assert(m_func->IsInMemory() || !opnd->AsAddrOpnd()->IsDynamic());
+#endif
         value = (uint32)opnd->AsAddrOpnd()->m_address;        
         goto intConst;
 
@@ -456,7 +458,9 @@ intConst:
         break;
 
     case IR::OpndKindMemRef:
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
         Assert(m_func->IsInMemory() || Js::TaggedInt::Is(opnd->AsMemRefOpnd()->GetMemLoc()));
+#endif
         value = (size_t)opnd->AsMemRefOpnd()->GetMemLoc();
         break;
 
@@ -940,14 +944,18 @@ modrm:
             }
             else if (opr1->IsIntConstOpnd())
             {
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
                 Assert(m_func->IsInMemory());
+#endif
                 AppendRelocEntry(RelocTypeCallPcrel, (void*)m_pc);
                 this->EmitConst(opr1->AsIntConstOpnd()->m_value, 4);
                 AssertMsg( ( ((BYTE*)opr1->AsIntConstOpnd()->m_value) < m_encoder->m_encodeBuffer || ((BYTE *)opr1->AsIntConstOpnd()->m_value) >= m_encoder->m_encodeBuffer + m_encoder->m_encodeBufferSize), "Call Target within buffer.");
             }
             else if (opr1->IsHelperCallOpnd())
             {
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
                 Assert(m_func->IsInMemory());
+#endif
                 AppendRelocEntry(RelocTypeCallPcrel, (void*)m_pc);
                 const void* fnAddress = IR::GetMethodAddress(opr1->AsHelperCallOpnd());
                 AssertMsg(sizeof(uint32) == sizeof(void*), "Sizes of void* assumed to be 32-bits");
@@ -1375,7 +1383,9 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress)
         {
         case RelocTypeCallPcrel: 
             {
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
                 Assert(m_func->IsInMemory());
+#endif
                 pcrel = (uint32)(codeBufferAddress + (BYTE*)reloc->m_ptr - m_encoder->m_encodeBuffer + 4);
                 *(uint32 *)relocAddress -= pcrel;
                 break;
@@ -1403,11 +1413,13 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress)
                 IR::LabelInstr * labelInstr = *(IR::LabelInstr**)relocAddress;
                 AssertMsg(labelInstr->GetPC() != null, "Branch to unemitted label?");
                 *(uint32 *)relocAddress = (uint32)(labelInstr->GetPC() - m_encoder->m_encodeBuffer + codeBufferAddress);
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
                 // If we're serializing, we shouldn't be fixing up anything outside of the code
                 // we're emitting at the moment. Everything else requires import/export.
                 Assert(m_func->IsInMemory() ||
                     (labelInstr->GetPC() >= m_encoder->m_encodeBuffer && 
                      labelInstr->GetPC() < (m_encoder->m_encodeBuffer + m_encoder->m_encodeBufferSize)));
+#endif
                 this->m_func->m_workItem->RecordNativeRelocation(codeBufferAddress + (BYTE*)reloc->m_ptr - m_encoder->m_encodeBuffer);
                 break;
             }

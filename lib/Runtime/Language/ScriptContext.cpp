@@ -173,7 +173,9 @@ namespace Js
 #ifdef ENABLE_DOM_FAST_PATH
         , domFastPathIRHelperMap(nullptr)
 #endif
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
         , nativeModules(nullptr)
+#endif
         , intConstPropsOnGlobalObject(nullptr)
         , intConstPropsOnGlobalUserObject(nullptr)
 #ifdef ARRLOG
@@ -493,6 +495,7 @@ namespace Js
         }
 #endif
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
         if (nativeModules != nullptr)
         {
             EachNativeModule(
@@ -518,7 +521,7 @@ namespace Js
             HeapDelete(nativeModules);
             nativeModules = nullptr;
         }
-
+#endif
         if (this->interpreterThunkEmitter != null)
         {
             HeapDelete(interpreterThunkEmitter);
@@ -1754,7 +1757,10 @@ namespace Js
             // Invoke the parser, passing in the global function name, which we will then run to execute
             // the script.
             // This is global function called from jc or scriptengine::parse, in both case we can return the value to the caller.
-            ULONG grfscr = fscrGlobalCode | (isExpression ? fscrReturnExpression : 0) | (isForNativeCode? fscrIsNativeCode : 0);
+            ULONG grfscr = fscrGlobalCode | (isExpression ? fscrReturnExpression : 0);
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
+            grfscr |= (isForNativeCode ? fscrIsNativeCode : 0);
+#endif
             if (!disableDeferredParse && (length > Parser::GetDeferralThreshold(sourceContextInfo->sourceDynamicProfileManager)))
             {
                 grfscr |= fscrDeferFncParse;
@@ -1819,7 +1825,10 @@ namespace Js
             SourceContextInfo * sourceContextInfo = pSrcInfo->sourceContextInfo;
             // Invoke the parser, passing in the global function name, which we will then run to execute
             // the script.
-            ULONG grfscr = fscrGlobalCode | (isExpression ? fscrReturnExpression : 0) | (isForNativeCode? fscrIsNativeCode : 0);
+            ULONG grfscr = fscrGlobalCode | (isExpression ? fscrReturnExpression : 0);
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
+            grfscr |= (isForNativeCode ? fscrIsNativeCode : 0);
+#endif
             if (!disableDeferredParse && (cb > Parser::GetDeferralThreshold(sourceContextInfo->sourceDynamicProfileManager)))
             {
                 grfscr |= fscrDeferFncParse;
@@ -6430,10 +6439,24 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
     }
 #endif
 
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     bool ScriptContext::TryGetNativeModule(BYTE *moduleBase, NativeModule **nativeModule)
     {
         return nativeModules && nativeModules->TryGetValue(moduleBase, nativeModule);
     }
+
+    void ScriptContext::AddNativeModule(BYTE *moduleBase, NativeModule *nativeModule)
+    {
+        if (!nativeModules || !nativeModules->ContainsKey(moduleBase))
+        {
+            if (!nativeModules)
+            {
+                nativeModules = new NativeModuleMap(&HeapAllocator::Instance);
+            }
+            nativeModules->Add(moduleBase, nativeModule);
+        }
+    }
+#endif
 
     bool ScriptContext::IsIntConstPropertyOnGlobalObject(Js::PropertyId propId)
     {
@@ -6453,18 +6476,6 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
     void ScriptContext::TrackIntConstPropertyOnGlobalUserObject(Js::PropertyId propertyId)
     {
         intConstPropsOnGlobalUserObject->AddNew(propertyId);
-    }
-
-    void ScriptContext::AddNativeModule(BYTE *moduleBase, NativeModule *nativeModule)
-    {
-        if (!nativeModules || !nativeModules->ContainsKey(moduleBase))
-        {
-            if (!nativeModules)
-            {
-                nativeModules = new NativeModuleMap(&HeapAllocator::Instance);
-            }
-            nativeModules->Add(moduleBase, nativeModule);
-        }
     }
 
     void ScriptContext::AddCalleeSourceInfoToList(Utf8SourceInfo* sourceInfo)

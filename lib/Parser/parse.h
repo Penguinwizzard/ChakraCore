@@ -38,7 +38,9 @@ enum
     fscrAllowFunctionProxy = 1 << 17,  // Allow creation of function proxies instead of function bodies
     fscrIsLibraryCode = 1 << 18,  // Current code is engine library code written in Javascript
     fscrNoDeferParse = 1 << 19,  // Do not defer parsing
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
     fscrIsNativeCode = 1 << 20,  // We are either serializing or deserializing native code
+#endif
 #ifdef IR_VIEWER
     fscrIrDumpEnable = 1 << 21,  // Allow parseIR to generate an IR dump
 #endif /* IRVIEWER */

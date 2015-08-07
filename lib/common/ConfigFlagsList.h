@@ -380,7 +380,9 @@ PHASE(All)
 #define DEFAULT_CONFIG_ForceCleanCacheOnCollect (false)
 #define DEFAULT_CONFIG_ForceGCAfterJSONParse (false)
 #define DEFAULT_CONFIG_ForceSerialized      (false)
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
 #define DEFAULT_CONFIG_IncludeNativeCodeWithSerializedByteCodes (false)
+#endif
 #define DEFAULT_CONFIG_ForceES5Array        (false)
 #define DEFAULT_CONFIG_LSCallGraph          (false)
 #define DEFAULT_CONFIG_ForceAsmJsLinkFail   (false)
@@ -1297,10 +1299,10 @@ FLAGNR(Number,  MaxMarkStackPageCount , "Restrict recycler mark stack size (in p
 FLAGNR(Number,  MaxTrackedObjectListCount,  "Restrict recycler tracked object count during GC", -1)
 
 FLAGNR(Boolean, Win8Compat, "Win8 WWA compatiable interface", false)
-
+#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
 FLAGR(Boolean, IncludeNativeCodeWithSerializedByteCodes, "Include serialized JIT code in calls to GenerateByteCodeBuffer", DEFAULT_CONFIG_IncludeNativeCodeWithSerializedByteCodes)
 FLAGNR(Boolean, PartiallySerializeNativeCode, "Serialize in native code format but don't serialize any actual native code", false)
-
+#endif
 #if DBG
 FLAGNR(Boolean, InitializeInterpreterSlotsWithInvalidStackVar, "Enable the initialization of the interpreter local slots with invalid stack vars", false)
 #endif
