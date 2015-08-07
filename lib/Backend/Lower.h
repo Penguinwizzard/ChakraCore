@@ -366,7 +366,8 @@ private:
     bool            GenerateFastPop(IR::Opnd *baseOpndParam, IR::Instr *callInstr, IR::LabelInstr *labelHelper, IR::LabelInstr *doneLabel, IR::LabelInstr * bailOutLabelHelper);
     bool            GenerateFastStringLdElem(IR::Instr * ldElem, IR::LabelInstr * labelHelper, IR::LabelInstr * labelFallThru);
     IR::Instr *     LowerCallDirect(IR::Instr * instr);
-    IR::Instr*      GenerateFastInlineBuiltInMathRandom(IR::Instr* instr);
+    IR::Instr *     GenerateDirectCall(IR::Instr* inlineInstr, IR::Opnd* funcObj, ushort callflags);
+    IR::Instr *     GenerateFastInlineBuiltInMathRandom(IR::Instr* instr);
     IR::Instr *     GenerateHelperToArrayPushFastPath(IR::Instr * instr, IR::LabelInstr * bailOutLabelHelper);
     IR::Instr *     GenerateHelperToArrayPopFastPath(IR::Instr * instr, IR::LabelInstr * doneLabel, IR::LabelInstr * bailOutLabelHelper);
     IR::Instr *     LowerCondBranchCheckBailOut(IR::BranchInstr * instr, IR::Instr * helperCall, bool isHelper);

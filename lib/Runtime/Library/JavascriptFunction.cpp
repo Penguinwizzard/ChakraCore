@@ -713,6 +713,15 @@ namespace Js
             }
         }
 
+        // Call the constructor function:
+        // - If this is not already specified as the overriding new target in Reflect.construct a class case, then 
+        // - Pass in the new empty object as the 'this' parameter. This can be null if an empty object was not created.
+
+        if (!thisAlreadySpecified)
+        {
+            newValues[0] = resultObject;
+        }
+
         CallInfo newCallInfo(newFlags, newCount);
         Arguments newArgs(newCallInfo, newValues);
 
@@ -728,15 +737,6 @@ namespace Js
             CheckValidDebugThunk(scriptContext, functionObj);
         }
 #endif
-
-        // Call the constructor function:
-        // - If this is not already specified as the overriding new target in Reflect.construct a class case, then 
-        // - Pass in the new empty object as the 'this' parameter. This can be null if an empty object was not created.
-
-        if (!thisAlreadySpecified)
-        {
-            newValues[0] = resultObject;
-        }
 
         Var functionResult;
         if (spreadIndices != nullptr)

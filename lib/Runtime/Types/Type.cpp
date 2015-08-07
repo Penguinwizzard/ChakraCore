@@ -179,6 +179,14 @@ namespace Js
             /* TODO-ERROR: args.Info.Count > 0? args[0] : null); */);
     }
 
+    Var RecyclableObject::DefaultExternalEntryPoint(RecyclableObject* function, CallInfo callInfo, Var* arguments)
+    {
+        TypeId typeId = function->GetTypeId();
+        rtErrors err = typeId == TypeIds_Undefined || typeId == TypeIds_Null ? JSERR_NeedObject : JSERR_NeedFunction;
+        JavascriptError::ThrowTypeError(function->GetScriptContext(), err
+            /* TODO-ERROR: args.Info.Count > 0? args[0] : null); */);
+    }
+
     BOOL RecyclableObject::HasProperty(PropertyId propertyId)
     {
         return false;

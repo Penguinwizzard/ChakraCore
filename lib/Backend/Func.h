@@ -170,6 +170,7 @@ public:
       , vtableMap(null)
 #endif
       , m_yieldOffsetResumeLabelList(nullptr)
+      , m_bailOutNoSaveLabel(nullptr)
       , constantAddressRegOpnd(alloc)
       , lastConstantAddressRegLoadInstr(nullptr)    
     {
@@ -889,6 +890,23 @@ public:
         m_yieldOffsetResumeLabelList->Remove(yorl);
     }
 
+    void RemoveDeadYieldOffsetResumeLabel(IR::LabelInstr* label)
+    {
+        uint32 offset;
+        bool found = m_yieldOffsetResumeLabelList->MapUntil([&offset, &label](int i, YieldOffsetResumeLabel& yorl)
+        {
+            if (yorl.Second() == label)
+            {
+                offset = yorl.First();
+                return true;
+            }
+            return false;
+        });
+        Assert(found);
+        RemoveYieldOffsetResumeLabel(YieldOffsetResumeLabel(offset, label));
+        AddYieldOffsetResumeLabel(offset, nullptr);
+    }
+
     IR::Instr * GetFunctionEntryInsertionPoint();
     IR::IndirOpnd * GetConstantAddressIndirOpnd(void * address, IR::AddrOpndKind kind, IRType type, Js::OpCode loadOpCode);
     void MarkConstantAddressSyms(BVSparse<JitArenaAllocator> * bv);
@@ -915,6 +933,8 @@ public:
     BVSparse<JitArenaAllocator> *  m_nonTempLocalVars;  // Only populated in debug mode as part of IRBuilder. Used in GlobOpt and BackwardPass.
     InlineeFrameInfo*              frameInfo;
     uint32 m_inlineeId;
+
+    IR::LabelInstr *    m_bailOutNoSaveLabel;
 
 private:
 #ifdef PROFILE_EXEC

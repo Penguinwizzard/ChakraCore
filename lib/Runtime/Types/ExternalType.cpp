@@ -356,7 +356,7 @@ namespace Js
         return this == other;
     }
 
-    void ExternalType::Initialize(JavascriptMethod entryPoint)
+    void ExternalType::Initialize(ExternalMethod entryPoint)
     {
         // If caller specifies an entry point, wrap it in the thunk so we can do additional check, calldir leavescriptstart/leavescriptend on the methods.
         if (entryPoint != nullptr)
@@ -373,17 +373,17 @@ namespace Js
         }
     }
 
-    ExternalType::ExternalType(ScriptContext* scriptContext, TypeId typeId, RecyclableObject* prototype, JavascriptMethod entryPoint, 
+    ExternalType::ExternalType(ScriptContext* scriptContext, TypeId typeId, RecyclableObject* prototype, ExternalMethod entryPoint,
         DynamicTypeHandler * typeHandler, bool isLocked, bool isShared, ITypeOperations * operations, PropertyId nameId) 
-        : DynamicType(scriptContext, typeId, prototype, entryPoint, typeHandler, isLocked, isShared), nameId(nameId), operations(operations), hasInheritedTypeIds(false)
+        : DynamicType(scriptContext, typeId, prototype, nullptr, typeHandler, isLocked, isShared), nameId(nameId), operations(operations), hasInheritedTypeIds(false)
     {
         this->flags |= TypeFlagMask_External | TypeFlagMask_CanHaveInterceptors;
         Initialize(entryPoint);
     }
 
-     ExternalType::ExternalType(ScriptContext* scriptContext, TypeId typeId, RecyclableObject* prototype, JavascriptMethod entryPoint,  
+     ExternalType::ExternalType(ScriptContext* scriptContext, TypeId typeId, RecyclableObject* prototype, ExternalMethod entryPoint,
          DynamicTypeHandler * typeHandler, bool isLocked, bool isShared,  PropertyId nameId) 
-         : DynamicType(scriptContext, typeId, prototype, entryPoint, typeHandler, isLocked, isShared), nameId(nameId), operations(nullptr) 
+         : DynamicType(scriptContext, typeId, prototype, nullptr, typeHandler, isLocked, isShared), nameId(nameId), operations(nullptr) 
      {
          this->flags |= TypeFlagMask_External | TypeFlagMask_CanHaveInterceptors;
          Initialize(entryPoint);
@@ -420,7 +420,7 @@ namespace Js
             }
             
             // Don't do stack probe since BEGIN_LEAVE_SCRIPT_WITH_EXCEPTION does that for us already
-            result = JavascriptFunction::CallFunction<false>(recyclableObject, externalType->nativeMethod, args);
+            result = externalType->nativeMethod(recyclableObject, callInfo, args.Values);
             if ( nullptr == result )
             {
                 result = scriptContext->GetLibrary()->GetUndefined();
@@ -455,7 +455,7 @@ namespace Js
         }
     }
 
-    ExternalTypeWithInheritedTypeIds::ExternalTypeWithInheritedTypeIds(ScriptContext* scriptContext, TypeId typeId, RecyclableObject* prototype, JavascriptMethod entryPoint,
+    ExternalTypeWithInheritedTypeIds::ExternalTypeWithInheritedTypeIds(ScriptContext* scriptContext, TypeId typeId, RecyclableObject* prototype, ExternalMethod entryPoint,
         DynamicTypeHandler * typeHandler, bool isLocked, bool isShared, ITypeOperations * operations, PropertyId nameId, const JavascriptTypeId* inheritedTypeIds, UINT inheritedTypeIdsCount)
         : ExternalType(scriptContext, typeId, prototype, entryPoint, typeHandler, isLocked, isShared, operations, nameId), 
             inheritedTypeIdsCount(inheritedTypeIdsCount), inheritedTypeIds(inheritedTypeIds)

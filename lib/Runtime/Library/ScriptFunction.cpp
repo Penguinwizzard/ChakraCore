@@ -71,8 +71,8 @@ namespace Js
 
         ScriptContext* scriptContext = functionProxy->GetScriptContext();
 
-        bool hasSuperReference = (functionProxy->GetAttributes() & Js::FunctionInfo::Attributes::HasSuperReference) ? true : false;
-        bool isDefaultConstructor = (functionProxy->GetAttributes() & Js::FunctionInfo::Attributes::IsDefaultConstructor) ? true : false;
+        bool hasSuperReference = functionProxy->HasSuperReference();
+        bool isDefaultConstructor = functionProxy->IsDefaultConstructor();
 
         if (functionProxy->IsFunctionBody() && functionProxy->GetFunctionBody()->GetInlineCachesOnFunctionObject())
         {

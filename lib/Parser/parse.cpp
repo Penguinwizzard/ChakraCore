@@ -2007,15 +2007,19 @@ void Parser::EnsureStackAvailable()
 }
 
 template<bool buildAST>
-ParseNodePtr Parser::ParseMetaProperty(tokens metaParentKeyword, charcount_t ichMin)
+ParseNodePtr Parser::ParseMetaProperty(tokens metaParentKeyword, charcount_t ichMin, _Inout_opt_ BOOL* pfCanAssign)
 {
     AssertMsg(metaParentKeyword == tkNEW, "Only supported for tkNEW parent keywords");
     AssertMsg(this->m_token.tk == tkDot, "We must be currently sitting on the dot after the parent keyword");
 
     m_pscan->Scan();
-
+    
     if (this->m_token.tk == tkID && this->m_token.GetIdentifier(m_phtbl) == this->GetTargetPid())
     {
+        if (pfCanAssign)
+        {
+            *pfCanAssign = FALSE;
+        }
         if (buildAST)
         {
             return CreateNodeWithScanner<knopNewTarget>(ichMin);
@@ -2033,7 +2037,7 @@ ParseNodePtr Parser::ParseMetaProperty(tokens metaParentKeyword, charcount_t ich
 Parse an expression term.
 ***************************************************************************/
 template<bool buildAST>
-ParseNodePtr Parser::ParseTerm(BOOL fAllowCall, LPCOLESTR pNameHint, ulong *pHintLength, _Inout_opt_ IdentToken* pToken/*= NULL*/, bool fUnaryOrParen)
+ParseNodePtr Parser::ParseTerm(BOOL fAllowCall, LPCOLESTR pNameHint, ulong *pHintLength, _Inout_opt_ IdentToken* pToken/*= NULL*/, bool fUnaryOrParen, _Inout_opt_ BOOL* pfCanAssign)
 {
     ParseNodePtr pnode = NULL;
     charcount_t ichMin = 0;
@@ -2241,9 +2245,9 @@ ParseNodePtr Parser::ParseTerm(BOOL fAllowCall, LPCOLESTR pNameHint, ulong *pHin
         ichMin = m_pscan->IchMinTok();
         m_pscan->Scan();
 
-        if (m_token.tk == tkDot && m_scriptContext->GetConfig()->IsES6NewTargetEnabled())
+        if (m_token.tk == tkDot && m_scriptContext->GetConfig()->IsES6ClassAndExtendsEnabled())
         {
-            pnode = ParseMetaProperty<buildAST>(tkNEW, ichMin);
+            pnode = ParseMetaProperty<buildAST>(tkNEW, ichMin, pfCanAssign);
 
             m_pscan->Scan();
         }
@@ -2350,7 +2354,7 @@ LFunction :
         break;
 
     case tkSUPER:
-        if (m_scriptContext->GetConfig()->IsES6SuperEnabled())
+        if (m_scriptContext->GetConfig()->IsES6ClassAndExtendsEnabled())
         {
             pnode = ParseSuper<buildAST>(pnode, !!fAllowCall);
         }
@@ -4167,9 +4171,11 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
         //  1. We are not reparsing a deferred func which is being invoked.
         //  2. Dynamic profile suggests this func can be deferred (and deferred parse is on).
         //  3. This func is top level or defer nested func is on.
-        //  4. The function is non-nested and not in eval, or the deferral decision was based on cached profile info,
+        //  4. Optionally, the function is non-nested and not in eval, or the deferral decision was based on cached profile info,
         //     or the function is sufficiently long. (I.e., don't defer little nested functions unless we're
         //     confident they'll never be executed, because undeferring nested functions is more expensive.)
+        //     NOTE: I'm disabling #4 by default, because we've found other ways to reduce the cost of undeferral,
+        //           and we don't want to create function bodies aggressively for little functions.
 
         // We will also temporarily defer all asm.js functions, except for the asm.js
         // module itself, which we will never defer
@@ -4181,7 +4187,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
 #ifndef DISABLE_DYNAMIC_PROFILE_DEFER_PARSE
             m_sourceContextInfo->sourceDynamicProfileManager == nullptr &&
 #endif
-            !PHASE_OFF_RAW(Js::ScanAheadPhase, m_sourceContextInfo->sourceContextId, pnodeFnc->sxFnc.functionId) &&
+            PHASE_ON_RAW(Js::ScanAheadPhase, m_sourceContextInfo->sourceContextId, pnodeFnc->sxFnc.functionId) &&
             (
                 !PHASE_FORCE_RAW(Js::DeferParsePhase, m_sourceContextInfo->sourceContextId, pnodeFnc->sxFnc.functionId) ||
                 PHASE_FORCE_RAW(Js::ScanAheadPhase, m_sourceContextInfo->sourceContextId, pnodeFnc->sxFnc.functionId)
@@ -5125,7 +5131,7 @@ void Parser::ParseFncFormals(ParseNodePtr pnodeFnc, ushort flags)
                     m_ppnodeVar = ppnodeVarSave;
                     if (buildAST)
                     {
-                        paramPattern = CreateParamPatternNode(pnodePattern->ichMin, pnodePattern);
+                        paramPattern = CreateParamPatternNode(pnodePattern);
 
                         // Linking the current formal parameter (which is pattern paramater) with other formals.
                         *m_ppnodeVar = paramPattern;
@@ -6872,7 +6878,7 @@ ParseNodePtr Parser::ParseExpr(int oplMin, BOOL *pfCanAssign, BOOL fAllowIn, BOO
         tokens beforeToken = m_token.tk;
         m_pscan->Capture(&termStart);
         ichMin = m_pscan->IchMinTok();
-        pnode = ParseTerm<buildAST>(TRUE, pNameHint, &hintLength, &term, fUnaryOrParen);
+        pnode = ParseTerm<buildAST>(TRUE, pNameHint, &hintLength, &term, fUnaryOrParen, &fCanAssign);
 
         if (IsES6DestructuringEnabled()
             && m_token.tk == tkAsg && (beforeToken == tkLBrack || beforeToken == tkLCurly)
@@ -7329,6 +7335,10 @@ ParseNodePtr Parser::ParseVariableDeclaration(
         if (IsES6DestructuringEnabled() && IsPossiblePatternStart())
         {
             pnodeThis = ParseDestructuredLiteral<buildAST>(declarationType, true, !!isTopVarParse);
+            if (pnodeThis != nullptr)
+            {
+                pnodeThis->ichMin = ichMin;
+            }
         }
         else
         {
@@ -7636,7 +7646,7 @@ ParseNodePtr Parser::ParseCatch()
             ParseNodePtr pnodePattern = ParseDestructuredLiteral<buildAST>(tkLET, true /*isDecl*/, true /*topLevel*/);
             if (buildAST)
             {
-                pnode->sxCatch.pnodeParam = CreateParamPatternNode(pnodePattern->ichMin, pnodePattern);
+                pnode->sxCatch.pnodeParam = CreateParamPatternNode(pnodePattern);
                 Scope *scope = pnodeCatchScope->sxBlock.scope;
                 pnode->sxCatch.scope = scope;
             }
@@ -10488,9 +10498,9 @@ ParseNodePtr Parser::ConvertArrayToArrayPattern(ParseNodePtr pnode)
     return pnode;
 }
 
-ParseNodePtr Parser::CreateParamPatternNode(charcount_t ichMin, ParseNodePtr pnode1)
+ParseNodePtr Parser::CreateParamPatternNode(ParseNodePtr pnode1)
 {
-    ParseNodePtr paramPatternNode = CreateNode(knopParamPattern, ichMin);
+    ParseNodePtr paramPatternNode = CreateNode(knopParamPattern, pnode1->ichMin, pnode1->ichLim);
     paramPatternNode->sxParamPattern.pnode1 = pnode1;
     paramPatternNode->sxParamPattern.pnodeNext = nullptr;
     paramPatternNode->sxParamPattern.location = Js::Constants::NoRegister;
@@ -10707,9 +10717,9 @@ template <bool buildAST>
 ParseNodePtr Parser::ParseDestructuredObjectLiteral(tokens declarationType, bool isDecl, bool topLevel/* = true*/)
 {
     Assert(m_token.tk == tkLCurly);
+    charcount_t ichMin = m_pscan->IchMinTok();
     m_pscan->Scan();
 
-    charcount_t ichMin = m_pscan->IchMinTok();
     if (!isDecl)
     {
         declarationType = tkLCurly;
@@ -10857,6 +10867,7 @@ template <bool buildAST>
 ParseNodePtr Parser::ParseDestructuredArrayLiteral(tokens declarationType, bool isDecl, bool topLevel)
 {
     Assert(m_token.tk == tkLBrack);
+    charcount_t ichMin = m_pscan->IchMinTok();
 
     m_pscan->Scan();
 
@@ -10866,7 +10877,6 @@ ParseNodePtr Parser::ParseDestructuredArrayLiteral(tokens declarationType, bool 
     uint count = 0;
     bool hasMissingValues = false;
     bool seenRest = false;
-    charcount_t ichMin = m_pscan->IchMinTok();
 
     while (true)
     {

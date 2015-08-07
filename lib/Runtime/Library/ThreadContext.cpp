@@ -164,6 +164,7 @@ ThreadContext::ThreadContext(AllocationPolicyManager * allocationPolicyManager, 
     isDebuggerAttaching(false),
     isAllJITCodeInPreReservedRegion(true)
     , activityId(GUID_NULL)
+    , tridentLoadAddress(nullptr)
 #ifdef ENABLE_DIRECTCALL_TELEMETRY
     , directCallTelemetry(this)
 #endif
@@ -477,8 +478,14 @@ ThreadContext::~ThreadContext()
 void ThreadContext::CloseForJSRT()
 {
     // This is used for JSRT APIs only. 
-    Assert(this->jsrtRuntime);    
-
+    Assert(this->jsrtRuntime);
+#ifdef ENABLE_BASIC_TELEMETRY
+    // log any relevant telemetry before disposing the current thread for cases which are properly shutdown
+    if (g_TraceLoggingClient != nullptr && !(g_TraceLoggingClient->IsPackageTelemetryFired()))
+    {
+        firePackageTelemetry();
+    }
+#endif
     ShutdownThreads();
 }
 

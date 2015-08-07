@@ -1702,6 +1702,7 @@ StoreCommon:
         case OpCode::InitConstFld:
         case OpCode::InitUndeclLetFld:
         case OpCode::InitUndeclConstFld:
+        case OpCode::InitClassMember:
         case OpCode::ScopedLdFld:
         case OpCode::ScopedLdFldForTypeOf:
         case OpCode::ScopedLdMethodFld:

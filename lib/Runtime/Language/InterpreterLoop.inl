@@ -86,7 +86,7 @@ Var Js::InterpreterStackFrame::INTERPRETERLOOPNAME()
             {
                 uint prevOffset = m_reader.GetCurrentOffset();
                 InterpreterHaltState haltState(STOP_STEPCOMPLETE, m_functionBody);
-                this->scriptContext->diagProbesContainer.DispatchStepHandler(&haltState, &op);
+                this->scriptContext->GetDebugContext()->GetProbeContainer()->DispatchStepHandler(&haltState, &op);
                 if (prevOffset != m_reader.GetCurrentOffset())
                 {
                     // The location of the statement has been changed, setnextstatement was called.
@@ -106,7 +106,7 @@ Var Js::InterpreterStackFrame::INTERPRETERLOOPNAME()
             {
                 uint prevOffset = m_reader.GetCurrentOffset();
                 InterpreterHaltState haltState(STOP_ASYNCBREAK, m_functionBody);
-                this->scriptContext->diagProbesContainer.DispatchAsyncBreak(&haltState);
+                this->scriptContext->GetDebugContext()->GetProbeContainer()->DispatchAsyncBreak(&haltState);
                 if (prevOffset != m_reader.GetCurrentOffset())
                 {
                     // The location of the statement has been changed, setnextstatement was called.
@@ -372,7 +372,7 @@ SWAP_BP_FOR_OPCODE:
                 {
                     uint prevOffset = m_reader.GetCurrentOffset();
                     InterpreterHaltState haltState(STOP_BREAKPOINT, m_functionBody);
-                    this->scriptContext->diagProbesContainer.DispatchProbeHandlers(&haltState);
+                    this->scriptContext->GetDebugContext()->GetProbeContainer()->DispatchProbeHandlers(&haltState);
                     if (prevOffset != m_reader.GetCurrentOffset())
                     {
                         // The location of the statement has been changed, setnextstatement was called.
@@ -392,7 +392,7 @@ SWAP_BP_FOR_OPCODE:
                     {
                         uint prevOffset = m_reader.GetCurrentOffset();
                         InterpreterHaltState haltState(STOP_INLINEBREAKPOINT, m_functionBody);
-                        this->scriptContext->diagProbesContainer.DispatchInlineBreakpoint(&haltState);
+                        this->scriptContext->GetDebugContext()->GetProbeContainer()->DispatchInlineBreakpoint(&haltState);
                         if (prevOffset != m_reader.GetCurrentOffset())
                         {
                             // The location of the statement has been changed, setnextstatement was called.

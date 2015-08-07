@@ -1809,7 +1809,7 @@ namespace Js
                 {
                     // If we are going to swallow the exception then advance to the beginning of the next user statement
                     if (exception->IsIgnoreAdvanceToNextStatement() 
-                        || this->scriptContext->diagProbesContainer.AdvanceToNextUserStatement(this->m_functionBody, &this->m_reader))
+                        || this->scriptContext->GetDebugContext()->GetProbeContainer()->AdvanceToNextUserStatement(this->m_functionBody, &this->m_reader))
                     {
                         // We must fix up the return value to at least be undefined:
                         this->SetReg((RegSlot)0,this->scriptContext->GetLibrary()->GetUndefined());
@@ -1929,6 +1929,7 @@ namespace Js
         Var* moduleMemoryPtr = RecyclerNewArray( scriptContext->GetRecycler(), Var, moduleMemory.mMemorySize );
         Var* arrayBufferPtr = moduleMemoryPtr + moduleMemory.mArrayBufferOffset;
         Assert(moduleMemory.mArrayBufferOffset == AsmJsModuleMemory::MemoryTableBeginOffset);
+        Var* stdLibPtr = moduleMemoryPtr + moduleMemory.mStdLibOffset;
         int* localIntSlots        = (int*)(moduleMemoryPtr + moduleMemory.mIntOffset);
         float* localFloatSlots = (float*)(moduleMemoryPtr + moduleMemory.mFloatOffset);
         double* localDoubleSlots = (double*)(moduleMemoryPtr + moduleMemory.mDoubleOffset);
@@ -1954,7 +1955,8 @@ namespace Js
 #endif
 
         ThreadContext* threadContext = this->scriptContext->GetThreadContext();
-        Var stdlib = (m_inSlotsCount > 1) ? m_inParams[1] : nullptr;
+        *stdLibPtr = (m_inSlotsCount > 1) ? m_inParams[1] : nullptr;
+
         Var foreign = (m_inSlotsCount > 2) ? m_inParams[2] : nullptr;
         *arrayBufferPtr = (m_inSlotsCount > 3) ? m_inParams[3] : nullptr;
         //cache the current state of the disable implicit call flag
@@ -1963,7 +1965,7 @@ namespace Js
         // Disable implicit calls to check if any of the VarImport or Function Import leads to implicit calls
         threadContext->DisableImplicitCall();
         threadContext->SetImplicitCallFlags(ImplicitCallFlags::ImplicitCall_None);
-        bool checkParamResult = ASMLink::CheckParams(this->scriptContext, info, stdlib, foreign, *arrayBufferPtr);
+        bool checkParamResult = ASMLink::CheckParams(this->scriptContext, info, *stdLibPtr, foreign, *arrayBufferPtr);
         if (!checkParamResult)
         {
             // don't need to print, because checkParams will do it for us
@@ -2141,7 +2143,7 @@ namespace Js
         {
             const auto& modFuncTable = info->GetFunctionTable( i );
             Var* funcTableArray = RecyclerNewArray( scriptContext->GetRecycler(), Var, modFuncTable.size );
-            for (int j = 0; j < modFuncTable.size ; j++)
+            for (uint j = 0; j < modFuncTable.size ; j++)
             {
                 // get the module function index
                 const RegSlot index = modFuncTable.moduleFunctionIndex[j];
@@ -3993,6 +3995,22 @@ namespace Js
             RecyclableObject::FromVar(instance),
             GetPropertyIdFromCacheId(playout->inlineCacheIndex),
             GetReg(playout->Value));
+    }
+
+    template <class T>
+    void InterpreterStackFrame::OP_InitClassMember(const unaligned T * playout)
+    {
+        uint inlineCacheIndex = playout->inlineCacheIndex;
+        InlineCache * inlineCache = this->GetInlineCache(inlineCacheIndex);
+        Var instance = GetReg(playout->Instance);
+        PropertyOperationFlags flags = PropertyOperation_None;
+
+        Assert(!TaggedNumber::Is(instance));
+        PropertyId propertyId = GetPropertyIdFromCacheId(playout->inlineCacheIndex);
+        if (!TrySetPropertyLocalFastPath(playout, propertyId, instance, inlineCache, flags))
+        {
+            JavascriptOperators::OP_InitClassMember(instance, propertyId, GetReg(playout->Value));
+        }
     }
 
     template <class T>
@@ -6191,7 +6209,7 @@ namespace Js
     template <class T>
     void InterpreterStackFrame::OP_EmitTmpRegCount(const unaligned OpLayoutT_Reg1<T> * playout)
     {
-        this->scriptContext->diagProbesContainer.SetCurrentTmpRegCount((uint32)playout->R0);
+        this->scriptContext->GetDebugContext()->GetProbeContainer()->SetCurrentTmpRegCount((uint32)playout->R0);
     }
 
     Var InterpreterStackFrame::OP_LdSuper(ScriptContext * scriptContext)

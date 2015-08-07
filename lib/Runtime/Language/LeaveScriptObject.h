@@ -21,8 +21,10 @@
             Js::ScriptEntryExitRecord __entryExitRecord = {0}; \
             SAVE_FS0(); \
             Js::EnterScriptObject __enterScriptObject = Js::EnterScriptObject(__localScriptContext, &__entryExitRecord, \
-                _ReturnAddress(), doCleanup, isCallRoot, hasCaller);     \
-            __localScriptContext->OnScriptStart(isCallRoot, __localScriptContext->diagProbesContainer.isForcedToEnterScriptStart, isScript); \
+                _ReturnAddress(), doCleanup, isCallRoot, hasCaller); \
+            __localScriptContext->OnScriptStart(isCallRoot, \
+                __localScriptContext->GetDebugContext() != nullptr ? __localScriptContext->GetDebugContext()->GetProbeContainer()->isForcedToEnterScriptStart : false, \
+                isScript); \
             __enterScriptObject.VerifyEnterScript();
 
 #define BEGIN_ENTER_SCRIPT(scriptContext, doCleanup, isCallRoot, hasCaller) \
@@ -160,7 +162,7 @@ namespace Js
             this->doCleanup = doCleanup;
             this->isCallRoot = isCallRoot;
             this->hr = NOERROR;
-            this->hasForcedEnter = scriptContext->diagProbesContainer.isForcedToEnterScriptStart;
+            this->hasForcedEnter = scriptContext->GetDebugContext() != nullptr ? scriptContext->GetDebugContext()->GetProbeContainer()->isForcedToEnterScriptStart : false;
 
             // Initialize the entry exit record
             entryExitRecord->returnAddrOfScriptEntryFunction = returnAddress;

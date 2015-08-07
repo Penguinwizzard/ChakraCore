@@ -920,10 +920,8 @@ namespace Js
             JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedFunction, L"Promise");
         }
 
-        if (JavascriptOperators::IsObject(constructorResult) && !JavascriptConversion::SameValue(promise, constructorResult))
-        {
-            JavascriptError::ThrowTypeError(scriptContext, JSERR_UnexpectedMetadataFailure, L"Promise");
-        }
+        promiseCapability->SetPromise(!JavascriptOperators::IsObject(constructorResult) ? constructorResult :
+            JavascriptOperators::OrdinaryCreateFromConstructor(RecyclableObject::FromVar(constructor), RecyclableObject::FromVar(constructorResult), nullptr, scriptContext));
 
         return promiseCapability;
     }
@@ -1186,6 +1184,11 @@ namespace Js
     Var JavascriptPromiseCapability::GetPromise()
     {
         return this->promise;
+    }
+
+    void JavascriptPromiseCapability::SetPromise(Var promise)
+    {
+        this->promise = promise;
     }
 
     void JavascriptPromiseCapability::SetResolve(RecyclableObject* resolve)

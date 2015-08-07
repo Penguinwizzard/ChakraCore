@@ -159,6 +159,19 @@ void Visit(ParseNode *pnode, ByteCodeGenerator* byteCodeGenerator, PrefixFn pref
         Visit(pnode->sxParamPattern.pnode1, byteCodeGenerator, prefix, postfix);
         break;
 
+    case knopArrayPattern:
+        if (!byteCodeGenerator->InDestructuredPattern())
+        {
+            byteCodeGenerator->SetInDestructuredPattern(true);
+            Visit(pnode->sxUni.pnode1, byteCodeGenerator, prefix, postfix);
+            byteCodeGenerator->SetInDestructuredPattern(false);
+        }
+        else
+        {
+            Visit(pnode->sxUni.pnode1, byteCodeGenerator, prefix, postfix);
+        }
+        break;
+
     case knopCall:
         Visit(pnode->sxCall.pnodeTarget, byteCodeGenerator, prefix, postfix);
         Visit(pnode->sxCall.pnodeArgs, byteCodeGenerator, prefix, postfix);
@@ -174,21 +187,6 @@ void Visit(ParseNode *pnode, ByteCodeGenerator* byteCodeGenerator, PrefixFn pref
         break;
     }
 
-    case knopAsg:
-        if (byteCodeGenerator->IsES6DestructuringEnabled()
-            && pnode->sxBin.pnode1->IsPattern()
-            && !byteCodeGenerator->InDestructuredPattern())
-        {
-            byteCodeGenerator->SetInDestructuredPattern(true);
-            Visit(pnode->sxBin.pnode1, byteCodeGenerator, prefix, postfix);
-            byteCodeGenerator->SetInDestructuredPattern(false);
-        }
-        else
-        {
-            Visit(pnode->sxBin.pnode1, byteCodeGenerator, prefix, postfix);
-        }
-        Visit(pnode->sxBin.pnode2, byteCodeGenerator, prefix, postfix);
-        break;
     case knopQmark:
         Visit(pnode->sxTri.pnode1, byteCodeGenerator, prefix, postfix);
         Visit(pnode->sxTri.pnode2, byteCodeGenerator, prefix, postfix);
@@ -1153,15 +1151,22 @@ FuncInfo * ByteCodeGenerator::StartBindFunction(const wchar_t *name, int nameLen
         }
         if (pnode->sxFnc.HasSuperReference())
         {
-            attributes = (Js::FunctionInfo::Attributes)(attributes | Js::FunctionInfo::Attributes::HasSuperReference);
+            attributes = (Js::FunctionInfo::Attributes)(attributes | Js::FunctionInfo::Attributes::SuperReference);
         }
-        if (pnode->sxFnc.IsClassConstructor())
+        if (pnode->sxFnc.IsClassMember())
         {
-            attributes = (Js::FunctionInfo::Attributes)(attributes | Js::FunctionInfo::Attributes::ClassConstructor);
-
-            if (pnode->sxFnc.IsGeneratedDefault())
+            if (pnode->sxFnc.IsClassConstructor())
             {
-                attributes = (Js::FunctionInfo::Attributes)(attributes | Js::FunctionInfo::Attributes::IsDefaultConstructor);
+                attributes = (Js::FunctionInfo::Attributes)(attributes | Js::FunctionInfo::Attributes::ClassConstructor);
+
+                if (pnode->sxFnc.IsGeneratedDefault())
+                {
+                    attributes = (Js::FunctionInfo::Attributes)(attributes | Js::FunctionInfo::Attributes::DefaultConstructor);
+                }
+            }
+            else
+            {
+                attributes = (Js::FunctionInfo::Attributes)(attributes | Js::FunctionInfo::Attributes::ErrorOnNew);
             }
         }
         if (pnode->sxFnc.IsGenerator())
@@ -4150,6 +4155,9 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
         {
             // Get a register for the rest array counter.
             pnode->location = byteCodeGenerator->NextVarRegister();
+
+            // Any rest parameter in a destructured array will need a 0 constant.
+            byteCodeGenerator->EnregisterConstant(0);
         }
         CheckMaybeEscapedUse(pnode->sxUni.pnode1, byteCodeGenerator);
         break;
@@ -4347,7 +4355,7 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
             nonLambdaFunc->AssignThisRegister();
             nonLambdaFunc->SetIsSuperLexicallyCaptured();
 
-            if (nonLambdaFunc->IsClassConstructor() && byteCodeGenerator->GetScriptContext()->GetConfig()->IsES6NewTargetEnabled())
+            if (nonLambdaFunc->IsClassConstructor())
             {
                 func->AssignNewTargetRegister();
 
@@ -4418,8 +4426,7 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
             }
 
             // If this is a super call in a derived class constructor, we need to have new.target 
-            if (byteCodeGenerator->GetScriptContext()->GetConfig()->IsES6NewTargetEnabled()
-                && parent->IsClassConstructor()
+            if (parent->IsClassConstructor()
                 && pnode->sxCall.pnodeTarget->nop == knopSuper)
             {
                 byteCodeGenerator->AssignNewTargetRegister();

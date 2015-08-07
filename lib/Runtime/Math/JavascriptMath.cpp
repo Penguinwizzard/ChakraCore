@@ -884,6 +884,116 @@ StringCommon:
             return JavascriptNumber::InPlaceNew((double)(value + 0.5), scriptContext, result);
         }
 
+        Var JavascriptMath::MaxInAnArray(RecyclableObject * function, CallInfo callInfo, ...)
+        {
+            PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+
+            ARGUMENTS(args, callInfo);
+            Assert(args.Info.Count == 2);
+            Var thisArg = args[0];
+            Var arrayArg = args[1];
+            
+            ScriptContext * scriptContext = function->GetScriptContext();
+            
+            TypeId typeId = JavascriptOperators::GetTypeId(arrayArg);
+            if (!JavascriptNativeArray::Is(typeId) && !(TypedArrayBase::Is(typeId) && typeId != TypeIds_CharArray && typeId != TypeIds_BoolArray))
+            {
+                if (JavascriptArray::IsVarArray(typeId) && JavascriptArray::FromVar(arrayArg)->GetLength() == 0)
+                {
+                    return scriptContext->GetLibrary()->GetNegativeInfinite();
+                }
+                return JavascriptFunction::CalloutHelper<false>(function, thisArg, /* overridingNewTarget = */nullptr, arrayArg, scriptContext);
+            }
+
+            if (JavascriptNativeArray::Is(typeId))
+            {
+                JavascriptLibrary::CheckAndConvertCopyOnAccessNativeIntArray<Var>(arrayArg);
+                JavascriptNativeArray * argsArray = JavascriptNativeArray::FromVar(arrayArg);
+                uint len = argsArray->GetLength();
+                if (len == 0)
+                {
+                    return scriptContext->GetLibrary()->GetNegativeInfinite();
+                }
+
+                if (((Js::SparseArraySegmentBase*)argsArray->GetHead())->next != nullptr)
+                {
+                    return JavascriptFunction::CalloutHelper<false>(function, thisArg, /* overridingNewTarget = */nullptr, arrayArg, scriptContext);
+                }
+
+                return argsArray->FindMinOrMax(scriptContext, true /*findMax*/);
+            }
+            else
+            {
+                TypedArrayBase * argsArray = TypedArrayBase::FromVar(arrayArg);
+                uint len = argsArray->GetLength();
+                if (len == 0)
+                {
+                    return scriptContext->GetLibrary()->GetNegativeInfinite();
+                }
+                Var max = argsArray->FindMinOrMax(scriptContext, typeId, true /*findMax*/);
+                if (max == nullptr)
+                {
+                    return JavascriptFunction::CalloutHelper<false>(function, thisArg, /* overridingNewTarget = */nullptr, arrayArg, scriptContext);
+                }
+                return max;
+            }
+        }
+		
+        Var JavascriptMath::MinInAnArray(RecyclableObject * function, CallInfo callInfo, ...)
+        {
+            PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+
+            ARGUMENTS(args, callInfo);
+            Assert(args.Info.Count == 2);
+            Var thisArg = args[0];
+            Var arrayArg = args[1];
+
+            ScriptContext * scriptContext = function->GetScriptContext();
+            
+            TypeId typeId = JavascriptOperators::GetTypeId(arrayArg);
+            if (!JavascriptNativeArray::Is(typeId) && !(TypedArrayBase::Is(typeId) && typeId != TypeIds_CharArray && typeId != TypeIds_BoolArray))
+            {
+                if (JavascriptArray::Is(typeId) && JavascriptArray::FromVar(arrayArg)->GetLength() == 0)
+                {
+                    return scriptContext->GetLibrary()->GetPositiveInfinite();
+                }
+                return JavascriptFunction::CalloutHelper<false>(function, thisArg, /* overridingNewTarget = */nullptr, arrayArg, scriptContext);
+            }
+
+            if (JavascriptNativeArray::Is(typeId))
+            {
+                JavascriptLibrary::CheckAndConvertCopyOnAccessNativeIntArray<Var>(arrayArg);
+                JavascriptNativeArray * argsArray = JavascriptNativeArray::FromVar(arrayArg);
+                uint len = argsArray->GetLength();
+                if (len == 0)
+                {
+                    return scriptContext->GetLibrary()->GetPositiveInfinite();
+                }
+
+                if (((Js::SparseArraySegmentBase*)argsArray->GetHead())->next != nullptr)
+                {
+                    return JavascriptFunction::CalloutHelper<false>(function, thisArg, /* overridingNewTarget = */nullptr, arrayArg, scriptContext);
+                }
+
+                return argsArray->FindMinOrMax(scriptContext, false /*findMax*/);
+            }
+            else
+            {
+                TypedArrayBase * argsArray = TypedArrayBase::FromVar(arrayArg);
+                uint len = argsArray->GetLength();
+                if (len == 0)
+                {
+                    return scriptContext->GetLibrary()->GetPositiveInfinite();
+                }
+                Var min = argsArray->FindMinOrMax(scriptContext, typeId, false /*findMax*/);
+                if (min == nullptr)
+                {
+                    return JavascriptFunction::CalloutHelper<false>(function, thisArg, /* overridingNewTarget = */nullptr, arrayArg, scriptContext);
+                }
+                return min;
+            }
+        }
+
         static const LARGE_INTEGER multiplier = { 0xDEECE66D, 0x00000005 };
         static const double kdbl2to27 = 134217728.0;
 
@@ -956,15 +1066,15 @@ StringCommon:
         }
 
 
-        uint32 JavascriptMath::ToUInt32(double T1, ScriptContext* scriptContext)
+        uint32 JavascriptMath::ToUInt32(double T1)
         {
             // Same as doing ToInt32 and reinterpret the bits as uint32
-            return (uint32)ToInt32Core(T1, scriptContext);
+            return (uint32)ToInt32Core(T1);
         }
 
-        int32 JavascriptMath::ToInt32(double T1, ScriptContext* scriptContext)
+        int32 JavascriptMath::ToInt32(double T1)
         {        
-            return JavascriptMath::ToInt32Core(T1, scriptContext);
+            return JavascriptMath::ToInt32Core(T1);
         }
 
         int32 JavascriptMath::ToInt32_Full(Var aValue, ScriptContext* scriptContext)
@@ -978,7 +1088,7 @@ StringCommon:
 
             if (typeId == TypeIds_Number)
             {
-                return JavascriptMath::ToInt32Core(JavascriptNumber::GetValue(aValue), scriptContext);
+                return JavascriptMath::ToInt32Core(JavascriptNumber::GetValue(aValue));
             }
             
             return JavascriptConversion::ToInt32_Full(aValue, scriptContext);

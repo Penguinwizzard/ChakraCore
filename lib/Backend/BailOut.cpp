@@ -234,7 +234,8 @@ BailOutInfo::FinalizeBailOutRecord(Func * func)
     currentBailOutRecord = bailOutRecord;
     do
     {
-        currentBailOutRecord->globalBailOutRecordTable->IterateGlobalBailOutRecordTableRows(
+        // Note: do this only once 
+        currentBailOutRecord->globalBailOutRecordTable->VisitGlobalBailOutRecordTableRowsAtFirstBailOut(
           currentBailOutRecord->m_bailOutRecordId, [=](GlobalBailOutRecordDataRow *row) {
             int32 inlineeArgStackSize = func->GetInlineeArgumentStackSize();
             int localsSize = func->m_localStackHeight + func->m_ArgumentsOffset;
@@ -2281,6 +2282,49 @@ void BailOutRecord::ScheduleLoopBodyCodeGen(Js::ScriptFunction * function, Js::S
         }
 #endif
     }
+}
+
+Js::Var BailOutRecord::BailOutForElidedYield(void * framePointer)
+{
+    Js::JavascriptCallStackLayout * const layout = Js::JavascriptCallStackLayout::FromFramePointer(framePointer);
+    Js::ScriptFunction ** functionRef = (Js::ScriptFunction **)&layout->functionObject;
+    Js::ScriptFunction * function = *functionRef;
+    Js::FunctionBody * executeFunction = function->GetFunctionBody();
+    Js::ScriptContext * functionScriptContext = executeFunction->GetScriptContext();
+    bool isInDebugMode = functionScriptContext->IsInDebugMode();
+
+    Js::JavascriptGenerator* generator = static_cast<Js::JavascriptGenerator*>(layout->args[0]);
+    Js::InterpreterStackFrame* frame = generator->GetFrame();
+    ThreadContext *threadContext = frame->GetScriptContext()->GetThreadContext();
+
+    Js::ResumeYieldData* resumeYieldData = static_cast<Js::ResumeYieldData*>(layout->args[1]);
+    frame->SetNonVarReg(executeFunction->GetYieldRegister(), resumeYieldData);
+
+    // The debugger relies on comparing stack addresses of frames to decide when a step_out is complete so
+    // give the InterpreterStackFrame a legit enough stack address to make this comparison work.
+    frame->m_stackAddress = reinterpret_cast<DWORD_PTR>(&generator);
+
+    executeFunction->BeginExecution();
+
+    Js::Var aReturn = nullptr;
+
+    {
+        // Following _AddressOfReturnAddress <= real address of "returnAddress". Suffices for RemoteStackWalker to test partially initialized interpreter frame.
+        Js::InterpreterStackFrame::PushPopFrameHelper pushPopFrameHelper(frame, _ReturnAddress(), _AddressOfReturnAddress());
+        aReturn = isInDebugMode ? frame->DebugProcess() : frame->Process();
+        // Note: in debug mode we always have to bailout to debug thunk, 
+        //       as normal interpreter thunk expects byte code compiled w/o debugging.
+    }
+    
+    executeFunction->EndExecution();
+
+    if (executeFunction->HasDynamicProfileInfo())
+    {
+        Js::DynamicProfileInfo *dynamicProfileInfo = executeFunction->GetAnyDynamicProfileInfo();
+        dynamicProfileInfo->RecordImplicitCallFlags(threadContext->GetImplicitCallFlags());
+    }
+
+    return aReturn;
 }
 
 BranchBailOutRecord::BranchBailOutRecord(uint32 trueBailOutOffset, uint32 falseBailOutOffset, Js::RegSlot resultByteCodeReg, IR::BailOutKind kind, Func * bailOutFunc) 

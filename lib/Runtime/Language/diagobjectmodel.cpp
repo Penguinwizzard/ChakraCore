@@ -185,7 +185,7 @@ namespace Js
                 pResolvedObject->name          = L"{exception}";
                 pResolvedObject->typeId        = TypeIds_Error;
                 pResolvedObject->address       = nullptr;
-                pResolvedObject->obj           = pResolvedObject->scriptContext->diagProbesContainer.GetExceptionObject();
+                pResolvedObject->obj           = pResolvedObject->scriptContext->GetDebugContext()->GetProbeContainer()->GetExceptionObject();
 
                 if (pResolvedObject->obj == nullptr)
                 {
@@ -208,7 +208,7 @@ namespace Js
         Assert(frame);
         Assert(frame->GetScriptContext());
 
-        return frame->GetScriptContext()->diagProbesContainer.GetExceptionObject() != nullptr;
+        return frame->GetScriptContext()->GetDebugContext()->GetProbeContainer()->GetExceptionObject() != nullptr;
     }
 
     /*static*/
@@ -218,7 +218,7 @@ namespace Js
         Assert(pResolvedObject->scriptContext);
         Assert(frame);
         Assert(index >= 0);
-        ReturnedValueList *returnedValueList = frame->GetScriptContext()->diagProbesContainer.GetReturnedValueList();
+        ReturnedValueList *returnedValueList = frame->GetScriptContext()->GetDebugContext()->GetProbeContainer()->GetReturnedValueList();
 
         if (returnedValueList != nullptr && returnedValueList->Count() > 0 && frame->IsTopFrame())
         {
@@ -272,7 +272,7 @@ namespace Js
         Assert(frame);
         Assert(frame->GetScriptContext());
 
-        ReturnedValueList *returnedValueList = frame->GetScriptContext()->diagProbesContainer.GetReturnedValueList();
+        ReturnedValueList *returnedValueList = frame->GetScriptContext()->GetDebugContext()->GetProbeContainer()->GetReturnedValueList();
         return returnedValueList != nullptr && frame->IsTopFrame() ? returnedValueList->Count() : 0;
     }
 
@@ -284,7 +284,7 @@ namespace Js
         Assert(frame);
         Assert(index >= 0);
 
-        Js::MutationBreakpoint *mutationBreakpoint = frame->GetScriptContext()->diagProbesContainer.GetProbeManager()->GetActiveMutationBreakpoint();
+        Js::MutationBreakpoint *mutationBreakpoint = frame->GetScriptContext()->GetDebugContext()->GetProbeContainer()->GetProbeManager()->GetActiveMutationBreakpoint();
 
         if (mutationBreakpoint != nullptr)
         {
@@ -310,7 +310,7 @@ namespace Js
         Assert(frame);
         Assert(frame->GetScriptContext());
 
-        return frame->GetScriptContext()->diagProbesContainer.GetProbeManager()->GetActiveMutationBreakpoint() != nullptr ? 1 : 0;
+        return frame->GetScriptContext()->GetDebugContext()->GetProbeContainer()->GetProbeManager()->GetActiveMutationBreakpoint() != nullptr ? 1 : 0;
     }
 #endif
     BOOL VariableWalkerBase::Get(int i, ResolvedObject* pResolvedObject)
@@ -874,12 +874,7 @@ namespace Js
                     case DiagCatchScopeDirect:
                     case DiagCatchScopeInObject:
                         {
-                            Assert(debuggerScope->HasProperties());
-                            Assert(debuggerScope->scopeProperties->Count() == 1);
-                            Js::DebuggerScopeProperty prop = debuggerScope->scopeProperties->Item(0);
-
-                            CatchScopeWalker* catchScopeWalker = Anew(arena, CatchScopeWalker, pFrame,
-                                debuggerScope->GetLocation(), prop.propId, debuggerScope->scopeType);
+                            CatchScopeWalker* catchScopeWalker = Anew(arena, CatchScopeWalker, pFrame, debuggerScope);
                             pDiagScopeObjects->Add(catchScopeWalker);
                             diagScopeVarCount += catchScopeWalker->GetChildrenCount();
                         }
@@ -1462,18 +1457,17 @@ namespace Js
 
         Assert(pFrame);
         pResolvedObject->scriptContext = pFrame->GetScriptContext();
+        Assert(i < (int)GetChildrenCount());
+        Js::DebuggerScopeProperty scopeProperty = debuggerScope->scopeProperties->Item(i);
 
-        Assert(GetChildrenCount() == 1);
-        Assert(i == 0);
-
-        pResolvedObject->propId = propId;
+        pResolvedObject->propId = scopeProperty.propId;
 
         const Js::PropertyRecord* propertyRecord = pResolvedObject->scriptContext->GetPropertyName(pResolvedObject->propId);
 
         // TODO: If this is a symbol-keyed property, we should indicate that in the name - "Symbol (description)"
         pResolvedObject->name = propertyRecord->GetBuffer();
 
-        FetchValueAndAddress(&pResolvedObject->obj, &pResolvedObject->address);
+        FetchValueAndAddress(scopeProperty, &pResolvedObject->obj, &pResolvedObject->address);
 
         Assert(pResolvedObject->obj);
 
@@ -1485,31 +1479,42 @@ namespace Js
 
     ulong CatchScopeWalker::GetChildrenCount()
     {
-        return (location != Constants::NoRegister && propId != Constants::NoProperty) ? 1 : 0;
+        return debuggerScope->scopeProperties->Count();
     }
 
-    void CatchScopeWalker::FetchValueAndAddress(__out Var *pValue, __out IDiagObjectAddress ** ppAddress)
+    void CatchScopeWalker::FetchValueAndAddress(DebuggerScopeProperty &scopeProperty, __out Var *pValue, __out IDiagObjectAddress ** ppAddress)
     {
         Assert(pValue != nullptr || ppAddress != nullptr);
 
         ArenaAllocator* arena = pFrame->GetArena();
         Var outValue;
-        IDiagObjectAddress * pAddress;
+        IDiagObjectAddress * pAddress = nullptr;
 
-        Assert(diagScopeType != Js::DiagCatchScopeInSlot);
-        if (diagScopeType == Js::DiagCatchScopeInObject)
+        ScriptContext* scriptContext = pFrame->GetScriptContext();
+        if (debuggerScope->scopeType == Js::DiagCatchScopeInObject)
         {
-            Var obj = pFrame->GetRegValue(location);
+            Var obj = pFrame->GetRegValue(debuggerScope->GetLocation());
             Assert(RecyclableObject::Is(obj));
 
-            ScriptContext* scriptContext = pFrame->GetScriptContext(); 
-            outValue = RecyclableObjectWalker::GetObject(RecyclableObject::FromVar(obj), RecyclableObject::FromVar(obj), propId, scriptContext);
-            pAddress = Anew(arena, RecyclableObjectAddress, obj, propId, outValue, false /*isInDeadZone*/);
+            outValue = RecyclableObjectWalker::GetObject(RecyclableObject::FromVar(obj), RecyclableObject::FromVar(obj), scopeProperty.propId, scriptContext);
+            bool isInDeadZone = scriptContext->IsUndeclBlockVar(outValue);
+            if (isInDeadZone)
+            {
+                outValue = scriptContext->GetLibrary()->GetDebuggerDeadZoneBlockVariableString();
+
+            }
+            pAddress = Anew(arena, RecyclableObjectAddress, obj, scopeProperty.propId, outValue, isInDeadZone);
         }
         else
         {
-            outValue = pFrame->GetRegValue(location);
-            pAddress = Anew(arena, LocalObjectAddressForRegSlot, pFrame, location, outValue);
+            outValue = pFrame->GetRegValue(scopeProperty.location);
+            bool isInDeadZone = scriptContext->IsUndeclBlockVar(outValue);
+            if (isInDeadZone)
+            {
+                outValue = scriptContext->GetLibrary()->GetDebuggerDeadZoneBlockVariableString();
+
+            }
+            pAddress = Anew(arena, LocalObjectAddressForRegSlot, pFrame, scopeProperty.location, outValue);
         }
 
         if (pValue)
@@ -1527,9 +1532,14 @@ namespace Js
     {
         isConst = false;
         IDiagObjectAddress * address = nullptr;
-        if (propId == _propId)
+        auto properties = debuggerScope->scopeProperties;
+        for (int i = 0; i < properties->Count(); i++)
         {
-            FetchValueAndAddress(nullptr, &address);
+            if (properties->Item(i).propId == _propId)
+            {
+                FetchValueAndAddress(properties->Item(i), nullptr, &address);
+                break;
+            }
         }
 
         return address;
@@ -2422,7 +2432,7 @@ namespace Js
             if (propertyRecord)
             {
                 // Pin this record so that it will not go away till we are done with this break.
-                scriptContext->diagProbesContainer.PinPropertyRecord(propertyRecord);
+                scriptContext->GetDebugContext()->GetProbeContainer()->PinPropertyRecord(propertyRecord);
             }
         }
 
@@ -3848,7 +3858,7 @@ namespace Js
 
     BOOL PendingMutationBreakpointWalker::Get(int i, ResolvedObject* pResolvedObject)
     {
-        Js::MutationBreakpoint *mutationBreakpoint = scriptContext->diagProbesContainer.GetProbeManager()->GetActiveMutationBreakpoint();
+        Js::MutationBreakpoint *mutationBreakpoint = scriptContext->GetDebugContext()->GetProbeContainer()->GetProbeManager()->GetActiveMutationBreakpoint();
         Assert(mutationBreakpoint);
         if (mutationBreakpoint != nullptr) 
         {

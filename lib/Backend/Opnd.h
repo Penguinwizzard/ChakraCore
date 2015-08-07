@@ -225,6 +225,7 @@ public:
     bool                IsValueTypeFixed() const { return m_isValueTypeFixed; }
     void                SetValueTypeFixed() { m_isValueTypeFixed = true; }
     IR::RegOpnd *       FindRegUse(IR::RegOpnd *regOpnd);
+    bool                IsArgumentsObject();
     
     static IntConstOpnd *CreateUint32Opnd(const uint i, Func *const func);
     static IntConstOpnd *CreateProfileIdOpnd(const Js::ProfileId profileId, Func *const func);

@@ -201,6 +201,8 @@
 #include "strsafe.h"
 #include "HostSysInfo.h"
 
+#pragma warning(disable: 4474) // 'fprintf' : too many arguments passed for format string
+
 // Win64 headers (process.h) has this:
 #ifndef _INTPTR_T_DEFINED
 #ifdef  _WIN64
@@ -1167,10 +1169,10 @@ Usage(
          "DIFF_DIR defaults to diffs.<target machine>\n"
          "\n"
          "The following environment variables are recognized:\n"
-         "REGR_CL use the specified command instead of "DEFAULT_REGR_CL"\n"
+         "REGR_CL use the specified command instead of " DEFAULT_REGR_CL "\n"
          "REGR_ASM generate assembly listings and use the specified command to\n"
          "    assemble them\n"
-         "REGR_DIFF use the specified command instead of "DEFAULT_REGR_DIFF" (asm only)\n"
+         "REGR_DIFF use the specified command instead of " DEFAULT_REGR_DIFF " (asm only)\n"
          "REGR_SHOWD use the specified executable instead of %s\\bin\\showd.cmd (asm only)\n"
          "EXTRA_CC_FLAGS specifies additional flags to pass to REGR_CL\n"
          "    if EXTRA_CC_FLAGS is not specified, it is constructed from\n"
@@ -1205,7 +1207,7 @@ Usage(
          printf(")\n");
 
       printf(
-         "LINKER use the specified command instead of "DEFAULT_LINKER" (exe only)\n"
+         "LINKER use the specified command instead of " DEFAULT_LINKER " (exe only)\n"
          "LINKFLAGS specifies additional flags to pass to LINKER (exe only)\n"
       );
       fFirst = TRUE;
@@ -2330,7 +2332,7 @@ WriteEnvLst
 
    ASSERT(pDir->fullPath);
 
-   sprintf(envlst, "%s%s", pDir->fullPath, "\\"DEFAULT_ENVLST_CFG);
+   sprintf(envlst, "%s%s", pDir->fullPath, "\\" DEFAULT_ENVLST_CFG);
 
    DeleteFileIfFound(envlst);
    COutputBuffer *LstFilesOut = new COutputBuffer(envlst, FSyncImmediate ? false : true);
@@ -3866,16 +3868,16 @@ PROCESS_CONFIG_STATUS
 ProcessConfig
 (
    TestList * pTestList,
-   char *CFGfile,
+   char *CfgFile,
    RLMODE cfg
 )
 {
    static int unnamedCount = 0;
    const char * szOrder;
 
-   ASSERT(!IsRelativePath(CFGfile)); // must be full path!
+   ASSERT(!IsRelativePath(CfgFile)); // must be full path!
 
-   Xml::Node * topNode = Xml::ReadFile(CFGfile);
+   Xml::Node * topNode = Xml::ReadFile(CfgFile);
 
    if (topNode == NULL)
    {
@@ -3978,7 +3980,7 @@ ProcessConfig
 
       if (testNode->ChildList == NULL)
       {
-         CFG_ERROR_EX(CFGfile, testNode->LineNumber, "test has no information", NULL);
+         CFG_ERROR_EX(CfgFile, testNode->LineNumber, "test has no information", NULL);
          testNode->Dump();
          goto Label_Error;
       }
@@ -3986,7 +3988,7 @@ ProcessConfig
       defaultNode = testNode->ChildList;
       if (strcmp(defaultNode->Name, "default") != 0)
       {
-         CFG_ERROR_EX(CFGfile, defaultNode->LineNumber, "first node is not default", NULL);
+         CFG_ERROR_EX(CfgFile, defaultNode->LineNumber, "first node is not default", NULL);
          testNode->Dump();
          goto Label_Error;
       }
@@ -3999,14 +4001,14 @@ ProcessConfig
       {
          if (strcmp(applyNode->Name, "default") == 0)
          {
-            CFG_ERROR_EX(CFGfile, applyNode->LineNumber, "multiple default nodes", NULL);
+            CFG_ERROR_EX(CfgFile, applyNode->LineNumber, "multiple default nodes", NULL);
             testNode->Dump();
             goto Label_Error;
          }
 
          if (strcmp(applyNode->Name, "condition") != 0)
          {
-            CFG_ERROR_EX(CFGfile, applyNode->LineNumber, "unknown node", NULL);
+            CFG_ERROR_EX(CfgFile, applyNode->LineNumber, "unknown node", NULL);
             applyNode->Dump();
             goto Label_Error;
          }
@@ -4014,7 +4016,7 @@ ProcessConfig
          szOrder = applyNode->GetAttributeValue("order");
          if (szOrder == NULL)
          {
-            CFG_ERROR_EX(CFGfile, applyNode->LineNumber, "condition node has no order", NULL);
+            CFG_ERROR_EX(CfgFile, applyNode->LineNumber, "condition node has no order", NULL);
             applyNode->Dump();
             goto Label_Error;
          }
@@ -4022,14 +4024,14 @@ ProcessConfig
          int order = atoi(szOrder);
          if (order < 1)
          {
-            CFG_ERROR_EX(CFGfile, applyNode->LineNumber, "illegal order value '%s'", szOrder);
+            CFG_ERROR_EX(CfgFile, applyNode->LineNumber, "illegal order value '%s'", szOrder);
             applyNode->Dump();
             goto Label_Error;
          }
 
          if (order <= lastOrder)
          {
-            CFG_ERROR_EX(CFGfile, applyNode->LineNumber, "condition node is out-of-order", NULL);
+            CFG_ERROR_EX(CfgFile, applyNode->LineNumber, "condition node is out-of-order", NULL);
             applyNode->Dump();
             goto Label_Error;
          }
@@ -4054,7 +4056,7 @@ ProcessConfig
                }
                else
                {
-                  CFG_ERROR_EX(CFGfile, applyNode->LineNumber,
+                  CFG_ERROR_EX(CfgFile, applyNode->LineNumber,
                      "Too many override nodes", NULL);
                }
             }
@@ -4065,7 +4067,7 @@ ProcessConfig
             {
                if (fHasNonTargetCond)
                {
-                  CFG_ERROR_EX(CFGfile, applyNode->LineNumber,
+                  CFG_ERROR_EX(CfgFile, applyNode->LineNumber,
                      "Target conditions must come before non-target conditions",
                      NULL);
                   applyNode->Dump();
@@ -4081,7 +4083,7 @@ ProcessConfig
             }
             else
             {
-               CFG_ERROR_EX(CFGfile, applyNode->LineNumber,
+               CFG_ERROR_EX(CfgFile, applyNode->LineNumber,
                   "Can't be conditional on %s", condNode->Name);
                applyNode->Dump();
                goto Label_Error;
@@ -4090,7 +4092,7 @@ ProcessConfig
 
          if (numCond == 0)
          {
-            CFG_ERROR_EX(CFGfile, applyNode->LineNumber,
+            CFG_ERROR_EX(CfgFile, applyNode->LineNumber,
                "Missing condition", NULL);
          }
       }
@@ -4100,7 +4102,7 @@ ProcessConfig
       TestInfo testInfo;
       memset(&testInfo, 0, sizeof(TestInfo));
 
-      if (!GetTestInfoFromNode(CFGfile, defaultNode, &testInfo))
+      if (!GetTestInfoFromNode(CfgFile, defaultNode, &testInfo))
       {
          goto Label_Error;
       }
@@ -4142,7 +4144,7 @@ ProcessConfig
          }
          else
          {
-            CFG_ERROR_EX(CFGfile, applyNode->LineNumber, "unknown condition type", NULL);
+            CFG_ERROR_EX(CfgFile, applyNode->LineNumber, "unknown condition type", NULL);
             applyNode->Dump();
             goto Label_Error;
          }
@@ -4157,7 +4159,7 @@ ProcessConfig
             {
                 if (targetNode->ChildList != NULL)
                 {
-                    CFG_ERROR_EX(CFGfile, applyNode->LineNumber,
+                    CFG_ERROR_EX(CfgFile, applyNode->LineNumber,
                         "expected data, not child node list", NULL);
                     targetNode->Dump();
                     goto Label_Error;
@@ -4165,7 +4167,7 @@ ProcessConfig
 
                 char * targetList = targetNode->Data;
                 if ((targetList != NULL)
-                    && !AppliesToTarget(CFGfile, targetNode->LineNumber, targetList))
+                    && !AppliesToTarget(CfgFile, targetNode->LineNumber, targetList))
                 {
                     continue;
                 }
@@ -4175,7 +4177,7 @@ ProcessConfig
             {
                 char * osList = osNode->Data;
                 if (osList != NULL
-                    && !AppliesToTargetOS(CFGfile, osNode->LineNumber, osList))
+                    && !AppliesToTargetOS(CfgFile, osNode->LineNumber, osList))
                 {
                     continue;
                 }
@@ -4185,14 +4187,14 @@ ProcessConfig
 
             Xml::Node * overrideNode = applyNode->GetChild("override");
 
-            if (!GetTestInfoFromNode(CFGfile, overrideNode, &testInfo))
+            if (!GetTestInfoFromNode(CfgFile, overrideNode, &testInfo))
             {
                goto Label_Error;
             }
          }
          else if (cfg != RM_EXE)
          {
-            CFG_ERROR_EX(CFGfile, applyNode->LineNumber,
+            CFG_ERROR_EX(CfgFile, applyNode->LineNumber,
                "non-target condition node NYI for non-exe", NULL);
             applyNode->Dump();
             goto Label_Error;
@@ -4249,7 +4251,7 @@ ProcessConfig
       {
           // TODO: Figure out where it came from (default or condition.)
 
-          CFG_ERROR_EX(CFGfile, defaultNode->LineNumber,
+          CFG_ERROR_EX(CfgFile, defaultNode->LineNumber,
              "bad file list", NULL);
 
           goto Label_Error;
@@ -4284,12 +4286,12 @@ void
 WriteTestLst
 (
    TestList * pTestList,
-   char *CFGfile
+   char *cfgFile
 )
 {
    char tempBuf[BUFFER_SIZE], drive[MAX_PATH], dir[MAX_PATH];
 
-   _splitpath(CFGfile, drive, dir, NULL, NULL);
+   _splitpath(cfgFile, drive, dir, NULL, NULL);
    sprintf(tempBuf, "%s%s%s", drive, dir, DEFAULT_TESTLST_DCFG);
    DeleteFileIfFound(tempBuf);
    COutputBuffer *LstFilesOut = new COutputBuffer(tempBuf, FSyncImmediate ? false : true);

@@ -257,12 +257,6 @@ namespace Js
         }
 
 #if defined(_M_ARM32_OR_ARM64)
-        __inline int32 JavascriptMath::ToInt32Core(double T1, ScriptContext* scriptContext)
-        {
-            UNREFERENCED_PARAMETER(scriptContext);
-
-            return ToInt32Core(T1);
-        }
         __inline int32 JavascriptMath::ToInt32Core(double T1)
         {
             //Try the int32 conversion first and only do the more expensive (& closer to spec)
@@ -280,10 +274,6 @@ namespace Js
             return static_cast<int32>(T4_64);
         }
 #else
-        __inline int32 JavascriptMath::ToInt32Core(double T1, ScriptContext* scriptContext)
-        {
-            return ToInt32Core(T1);
-        }
         __inline int32 JavascriptMath::ToInt32Core(double T1)
         {
             // ES5 Spec for ToUInt32

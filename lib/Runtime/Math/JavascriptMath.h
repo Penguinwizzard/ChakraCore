@@ -81,14 +81,15 @@ namespace Js
 
             static Var FinishOddDivByPow2(int32 value, ScriptContext *scriptContext);
             static Var FinishOddDivByPow2_InPlace(int32 value, ScriptContext *scriptContext, __out JavascriptNumber* result);
+            static Var MaxInAnArray(RecyclableObject * function, CallInfo callInfo, ...);
+            static Var MinInAnArray(RecyclableObject * function, CallInfo callInfo, ...);
 
             static double Random(ScriptContext *scriptContext);
             static int32 ToInt32Core(double T1);
-            static int32 ToInt32Core(double T1, ScriptContext* scriptContext);
-            static uint32 ToUInt32(double value, ScriptContext* scriptContext);
+            static uint32 ToUInt32(double value);
             static int64 TryToInt64(double T1);
             static int32 ToInt32(Var aValue, ScriptContext* scriptContext);
-            static int32 ToInt32(double value, ScriptContext* scriptContext);
+            static int32 ToInt32(double value);
             static int32 ToInt32_Full(Var aValue, ScriptContext* scriptContext);
 
         private:

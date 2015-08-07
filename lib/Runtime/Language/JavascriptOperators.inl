@@ -393,9 +393,24 @@ namespace Js
         return TypeIds_FirstNumberType <= typeId && typeId <= TypeIds_LastNumberType;
     }
 
-    __inline BOOL JavascriptOperators::IsIterable(RecyclableObject* instance)
+    __inline BOOL JavascriptOperators::IsIterable(RecyclableObject* instance, ScriptContext* scriptContext)
     {
-        return JavascriptOperators::HasProperty(instance, PropertyIds::_symbolIterator);
+        if (JavascriptProxy::Is(instance)) 
+        {
+            Var func = JavascriptOperators::GetProperty(instance, PropertyIds::_symbolIterator, scriptContext);
+            if (JavascriptOperators::IsUndefinedObject(func))
+            {
+                return FALSE;
+            }
+            else 
+            {
+                return TRUE;
+            }
+        }
+        else 
+        {
+            return JavascriptOperators::HasProperty(instance, PropertyIds::_symbolIterator);
+        }
     }
 
     // GetIterator as described in ES6.0 (draft 22) Section 7.4.1

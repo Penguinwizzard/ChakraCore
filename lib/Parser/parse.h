@@ -627,6 +627,10 @@ public:
         {
             bindIdentNode = bindIdentNode->sxBin.pnode1;
         }
+        else if (bindIdentNode->nop == knopEllipsis)
+        {
+            bindIdentNode = bindIdentNode->sxUni.pnode1;
+        }
 
         if (bindIdentNode->IsPattern())
         {
@@ -822,16 +826,18 @@ private:
         bool fUnaryOrParen = false);
     template<bool buildAST> ParseNodePtr ParseTerm(
         BOOL fAllowCall = TRUE,
-        LPCOLESTR pNameHint = NULL,
+        LPCOLESTR pNameHint = nullptr,
         ulong *pHintLength = nullptr,
-        _Inout_opt_ IdentToken* pToken = NULL,
-        bool fUnaryOrParen = false);
+        _Inout_opt_ IdentToken* pToken = nullptr,
+        bool fUnaryOrParen = false,
+        _Inout_opt_ BOOL* pfCanAssign = nullptr);
     template<bool buildAST> ParseNodePtr ParsePostfixOperators(ParseNodePtr pnode,
         BOOL fAllowCall, BOOL fInNew, _Inout_ IdentToken* pToken);
 
     template<bool buildAST> ParseNodePtr ParseMetaProperty(
         tokens metaParentKeyword,
-        charcount_t ichMin);
+        charcount_t ichMin,
+        _Inout_opt_ BOOL* pfCanAssign = nullptr);
 
     BOOL NodeIsIdent(ParseNodePtr pnode, IdentPtr pid);
     BOOL NodeIsEvalName(ParseNodePtr pnode);        
@@ -854,7 +860,7 @@ private:
     BOOL IsConstantInFunctionCall(ParseNodePtr pnode);
     BOOL IsConstantInArrayLiteral(ParseNodePtr pnode);
 
-    ParseNodePtr CreateParamPatternNode(charcount_t ichMin, ParseNodePtr pnode1);
+    ParseNodePtr CreateParamPatternNode(ParseNodePtr pnode1);
 
     ParseNodePtr ConvertMemberToMemberPattern(ParseNodePtr pnodeMember);
     ParseNodePtr ConvertObjectToObjectPattern(ParseNodePtr pnodeMemberList);

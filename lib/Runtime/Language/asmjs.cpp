@@ -252,29 +252,26 @@ namespace Js
     }
 
     bool
-    AsmJSCompiler::CheckArgument(AsmJsModuleCompiler &m, ParseNode *arg, PropertyName *name)
+    AsmJSCompiler::CheckModuleArgument(AsmJsModuleCompiler &m, ParseNode *arg, PropertyName *name, AsmJsModuleArg::ArgType type)
     {
         if (!ParserWrapper::IsDefinition(arg))
         {
             return m.Fail(arg, L"duplicate argument name not allowed");
         }
 
-        if( !CheckIdentifier( m, arg, arg->name() ) )
+        if (!CheckIdentifier(m, arg, arg->name()))
         {
             return false;
         }
         *name = arg->name();
 
-        return true;
-    }
+        m.GetByteCodeGenerator()->AssignPropertyId(*name);
 
-    bool
-    AsmJSCompiler::CheckModuleArgument(AsmJsModuleCompiler &m, ParseNode *arg, PropertyName *name)
-    {
-        m.GetByteCodeGenerator()->AssignPropertyId(arg->name());
-        if (!CheckArgument(m, arg, name))
+        AsmJsModuleArg * moduleArg = Anew(m.GetAllocator(), AsmJsModuleArg, *name, type);
+
+        if (!m.DefineIdentifier(*name, moduleArg))
         {
-            return false;
+            return m.Fail(arg, L"duplicate argument name not allowed");
         }
         
         if (!CheckModuleLevelName(m, arg, *name))
@@ -300,7 +297,7 @@ namespace Js
         }
 
         PropertyName arg1Name = nullptr;
-        if (numFormals >= 1 && !CheckModuleArgument(m, arg1, &arg1Name))
+        if (numFormals >= 1 && !CheckModuleArgument(m, arg1, &arg1Name, AsmJsModuleArg::ArgType::StdLib))
         {
             return false;
         }
@@ -308,14 +305,14 @@ namespace Js
         m.InitStdLibArgName(arg1Name);
 
         PropertyName arg2Name = nullptr;
-        if (numFormals >= 2 && !CheckModuleArgument(m, arg2, &arg2Name))
+        if (numFormals >= 2 && !CheckModuleArgument(m, arg2, &arg2Name, AsmJsModuleArg::ArgType::Import))
         {
             return false;
         }
         m.InitForeignArgName(arg2Name);
 
         PropertyName arg3Name = nullptr;
-        if (numFormals >= 3 && !CheckModuleArgument(m, arg3, &arg3Name))
+        if (numFormals >= 3 && !CheckModuleArgument(m, arg3, &arg3Name, AsmJsModuleArg::ArgType::Heap))
         {
             return false;
         }

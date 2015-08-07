@@ -407,10 +407,10 @@ namespace Js
                 if (pTopFuncContext != pScriptContext)
                 {
                     OUTPUT_TRACE(Js::DebuggerPhase, L"ProbeContainer::DispatchExceptionBreakpoint: top function's context is different from the current context: pHaltState=%p, haltCallbackProbe=%p\n", 
-                        pHaltState, pTopFuncContext->diagProbesContainer.haltCallbackProbe);
-                    if (pTopFuncContext->diagProbesContainer.haltCallbackProbe)
+                        pHaltState, pTopFuncContext->GetDebugContext()->GetProbeContainer()->haltCallbackProbe);
+                    if (pTopFuncContext->GetDebugContext()->GetProbeContainer()->haltCallbackProbe)
                     {
-                        pTopFuncContext->diagProbesContainer.haltCallbackProbe->DispatchHalt(pHaltState);
+                        pTopFuncContext->GetDebugContext()->GetProbeContainer()->haltCallbackProbe->DispatchHalt(pHaltState);
                         fSuccess = true;
                     }
                 }

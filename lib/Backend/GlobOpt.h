@@ -1249,7 +1249,7 @@ private:
     bool                    intOverflowCurrentlyMattersInRange : 1;
     bool                    ignoredIntOverflowForCurrentInstr : 1;
     bool                    ignoredNegativeZeroForCurrentInstr : 1;
-    bool                    callTrackingForBailoutDisabled : 1; // For cases when we are sure that we will bailout to the StartCall (.apply optimization)
+    bool                    inInlinedBuiltIn : 1;
     bool                    isRecursiveCallOnLandingPad : 1;
     bool                    updateInductionVariableValueNumber : 1;
     bool                    isPerformingLoopBackEdgeCompensation : 1;
@@ -1262,6 +1262,7 @@ private:
     bool                    doFloatTypeSpec : 1;
     bool                    doArrayCheckHoist : 1;
     bool                    doArrayMissingValueCheckHoist : 1;
+   
     bool                    doArraySegmentHoist : 1;
     bool                    doJsArraySegmentHoist : 1;
     bool                    doArrayLengthHoist : 1;
@@ -1270,6 +1271,7 @@ private:
     bool                    doBoundCheckElimination : 1;
     bool                    doBoundCheckHoist : 1;
     bool                    doLoopCountBasedBoundCheckHoist : 1;
+    
     bool                    isAsmJSFunc : 1;
     OpndList *              noImplicitCallUsesToInsert;
 

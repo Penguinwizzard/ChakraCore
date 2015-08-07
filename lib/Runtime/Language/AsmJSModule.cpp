@@ -32,12 +32,14 @@ namespace Js
     void AsmJsModuleCompiler::RevertFunction(int funcIndex)
     {
         AsmJsFunc* func = mFunctionArray.Item(funcIndex);
-        func->GetFuncBody()->ResetByteCodeGenState();
-        func->GetFuncBody()->AddDeferParseAttribute();
-        func->GetFuncBody()->SetFunctionParsed(false);
-        func->GetFuncBody()->ResetEntryPoint();
-        func->GetFuncBody()->SetEntryPoint(func->GetFuncBody()->GetDefaultEntryPointInfo(), GetScriptContext()->DeferredParsingThunk);
-        func->GetFuncBody()->SetIsAsmjsMode(false);
+        FunctionBody * funcBody = func->GetFuncBody();
+        funcBody->ResetByteCodeGenState();
+        funcBody->AddDeferParseAttribute();
+        funcBody->SetFunctionParsed(false);
+        funcBody->ResetEntryPoint();
+        funcBody->SetEntryPoint(funcBody->GetDefaultEntryPointInfo(), GetScriptContext()->DeferredParsingThunk);
+        funcBody->SetIsAsmjsMode(false);
+        funcBody->SetIsAsmJsFunction(false);
         func->GetFncNode()->sxFnc.funcInfo->byteCodeFunction = func->GetFuncBody();
     }
 
@@ -52,19 +54,20 @@ namespace Js
 
     bool AsmJsModuleCompiler::CommitFunctions()
     {
-        FuncInfo* asmfuncInfo = GetModuleFunctionNode()->sxFnc.funcInfo;
-        FunctionBody* asmfunctionBody = asmfuncInfo->GetParsedFunctionBody();
         const int size = mFunctionArray.Count();
         // if changeHeap is defined, it must be first function, so we should skip it
-        for (int i = mUsesChangeHeap ? 1 : 0; i < size; i++)
+        for (int i = 0; i < size; i++)
         {
             AsmJsFunc* func = mFunctionArray.Item(i);
+            FunctionBody* functionBody = func->GetFuncBody();
+            AsmJsFunctionInfo* asmInfo = functionBody->AllocateAsmJsFunctionInfo();
+            if (i == 0 && mUsesChangeHeap)
+            {
+                continue;
+            }
             const auto& intRegisterSpace = func->GetRegisterSpace<int>();
             const auto& doubleRegisterSpace = func->GetRegisterSpace<double>();
             const auto& floatRegisterSpace = func->GetRegisterSpace<float>();
-
-            FunctionBody* functionBody = func->GetFuncBody();
-            AsmJsFunctionInfo* asmInfo = functionBody->AllocateAsmJsFunctionInfo();
 
             if (!asmInfo->Init(func))
             {
@@ -90,9 +93,6 @@ namespace Js
             Assert(functionBody->GetIsAsmjsMode());
             Assert(functionBody->GetIsAsmJsFunction());
             ((EntryPointInfo*)functionBody->GetDefaultEntryPointInfo())->SetIsAsmJSFunction(true);
-#if ENABLE_DEBUG_CONFIG_OPTIONS
-            asmInfo->SetAsmJSFunctionBody(asmfunctionBody);
-#endif
 #if _M_IX86
             if (PHASE_ON1(AsmJsJITTemplatePhase) && !Configuration::Global.flags.NoNative)
             {
@@ -176,14 +176,18 @@ namespace Js
             *ex.location = exMod.location;
         }
 
-
         int iVar = 0, iVarImp = 0, iFunc = 0, iFuncImp = 0;
         const int size = mModuleEnvironment.Count();
+        asmInfo->InitializeSlotMap(size);
+        auto slotMap = asmInfo->GetAsmJsSlotMap();
         for (int i = 0; i < size; i++)
         {
             AsmJsSymbol* sym = mModuleEnvironment.GetValueAt(i);
             if (sym)
             {
+                AsmJsSlot * slot = RecyclerNewLeaf(GetScriptContext()->GetRecycler(), AsmJsSlot);
+                slot->symType = sym->GetSymbolType();
+                slotMap->AddNew(sym->GetName()->GetPropertyId(), slot);
                 switch (sym->GetSymbolType())
                 {
                 case AsmJsSymbol::Variable:{
@@ -214,6 +218,10 @@ namespace Js
                     }
 #endif
                     modVar.isMutable = var->isMutable();
+
+                    slot->location = modVar.location;
+                    slot->varType = modVar.type.which();
+                    slot->isConstVar = !modVar.isMutable;
                     break;
                 }
                 case AsmJsSymbol::ConstantImport:{
@@ -222,6 +230,9 @@ namespace Js
                     modVar.location = var->GetLocation();
                     modVar.field = var->GetField()->GetPropertyId();
                     modVar.type = var->GetVarType();
+
+                    slot->location = modVar.location;
+                    slot->varType = modVar.type.which();
                     break;
                 }
                 case AsmJsSymbol::ImportFunction:{
@@ -229,36 +240,74 @@ namespace Js
                     auto& modVar = asmInfo->GetFunctionImport(iFuncImp++);
                     modVar.location = func->GetFunctionIndex();
                     modVar.field = func->GetField()->GetPropertyId();
+
+                    slot->location = modVar.location;
                     break;
                 }
                 case AsmJsSymbol::FuncPtrTable:{
                     AsmJsFunctionTable* funcTable = sym->Cast<AsmJsFunctionTable>();
-                    const int size = funcTable->GetSize();
-                    const int index = funcTable->GetFunctionIndex();
+                    const uint size = funcTable->GetSize();
+                    const RegSlot index = funcTable->GetFunctionIndex();
                     asmInfo->SetFunctionTableSize(index, size);
                     auto& modTable = asmInfo->GetFunctionTable(index);
-                    for (int i = 0; i < size; i++)
+                    for (uint j = 0; j < size; j++)
                     {
-                        modTable.moduleFunctionIndex[i] = funcTable->GetModuleFunctionIndex(i);
+                        modTable.moduleFunctionIndex[j] = funcTable->GetModuleFunctionIndex(j);
                     }
+                    slot->funcTableSize = size;
+                    slot->location = index;
+
                     break;
                 }
                 case AsmJsSymbol::ModuleFunction:{
                     AsmJsFunc* func = sym->Cast<AsmJsFunc>();
                     auto& modVar = asmInfo->GetFunction(iFunc++);
                     modVar.location = func->GetFunctionIndex();
+                    slot->location = modVar.location;
+
+                    // add reference from functions back to the module
+                    func->GetFuncBody()->GetAsmJsFunctionInfo()->SetModuleFunctionBody(functionBody);
                     break;
                 }
-                                                 // used only for module validation
-                case AsmJsSymbol::Argument:
-                case AsmJsSymbol::MathConstant:
                 case AsmJsSymbol::ArrayView:
+                {
+                    AsmJsArrayView * var = sym->Cast<AsmJsArrayView>();
+                    slot->viewType = var->GetViewType();
+                    break;
+                }
+                case AsmJsSymbol::ModuleArgument:
+                {
+                    AsmJsModuleArg * arg = sym->Cast<AsmJsModuleArg>();
+                    slot->argType = arg->GetArgType();
+                    break;
+                }
+                // used only for module validation
+                case AsmJsSymbol::MathConstant:
+                {
+                    AsmJsMathConst * constVar = sym->Cast<AsmJsMathConst>();
+                    slot->mathConstVal = *constVar->GetVal();
+                    break;
+                }
                 case AsmJsSymbol::MathBuiltinFunction:
+                {
+                    AsmJsMathFunction * mathFunc = sym->Cast<AsmJsMathFunction>();
+                    slot->builtinMathFunc = mathFunc->GetMathBuiltInFunction();
+                    break;
+                }
                 case AsmJsSymbol::TypedArrayBuiltinFunction:
+                {
+                    AsmJsTypedArrayFunction * mathFunc = sym->Cast<AsmJsTypedArrayFunction>();
+                    slot->builtinArrayFunc = mathFunc->GetArrayBuiltInFunction();
+                    break;
+                }
 #ifdef SIMD_JS_ENABLED
                 case AsmJsSymbol::SIMDBuiltinFunction:
-#endif
+                {
+                    AsmJsSIMDFunction * mathFunc = sym->Cast<AsmJsSIMDFunction>();
+                    slot->builtinSIMDFunc = mathFunc->GetSimdBuiltInFunction();
                     break;
+                }
+#endif
                 default:
                     Assume(UNREACHED);
                 }
@@ -307,7 +356,7 @@ namespace Js
         {
             GetByteCodeGenerator()->AssignPropertyId(pnode->name());
             AsmJsSymbol * declSym = LookupIdentifier(pnode->name());
-            if (declSym && !declSym->isMutable() && declSym->GetSymbolType() == AsmJsSymbol::Variable)
+            if (declSym && declSym->GetSymbolType() == AsmJsSymbol::Variable && !declSym->isMutable())
             {
                 AsmJsVar * definition = declSym->Cast<AsmJsVar>();
                 switch (definition->GetVarType().which())
@@ -626,10 +675,16 @@ namespace Js
                 return Fail(pnode, L"Missing assignment statement for argument");
             }
 
-            PropertyName argName = nullptr;
-            if (!AsmJSCompiler::CheckArgument(*this, argNode, &argName))
+
+            if (!ParserWrapper::IsDefinition(argNode))
             {
-                return Fail(argNode, L"Invalid Argument");
+                return Fail(argNode, L"duplicate argument name not allowed");
+            }
+
+            PropertyName argName = argNode->name();
+            if (!AsmJSCompiler::CheckIdentifier(*this, argNode, argName))
+            {
+                return false;
             }
 
             // creates the variable
@@ -1977,7 +2032,8 @@ namespace Js
     void AsmJsModuleCompiler::InitMemoryOffsets()
     {
         mModuleMemory.mArrayBufferOffset = AsmJsModuleMemory::MemoryTableBeginOffset;
-        mModuleMemory.mDoubleOffset = mModuleMemory.mArrayBufferOffset + DOUBLE_SLOTS_SPACE; // pad 4 byte buffer on x86
+        mModuleMemory.mStdLibOffset = mModuleMemory.mArrayBufferOffset + 1;
+        mModuleMemory.mDoubleOffset = mModuleMemory.mStdLibOffset + 1;
         mModuleMemory.mFuncOffset = mModuleMemory.mDoubleOffset + (mDoubleVarSpace.GetTotalVarCount() * DOUBLE_SLOTS_SPACE);
         mModuleMemory.mFFIOffset = mModuleMemory.mFuncOffset + mFunctionArray.Count();
         mModuleMemory.mFuncPtrOffset = mModuleMemory.mFFIOffset + mImportFunctions.GetTotalVarCount();
@@ -2116,7 +2172,14 @@ namespace Js
         mExportsCount = count;
     }
 
-    void AsmJsModuleInfo::SetFunctionTableSize( int index, int size )
+    void AsmJsModuleInfo::InitializeSlotMap(int val)
+    {
+        Assert(mSlotMap == nullptr);
+        mSlotsCount = val;
+        mSlotMap = RecyclerNew(mRecycler, AsmJsSlotMap, mRecycler);
+    }
+
+    void AsmJsModuleInfo::SetFunctionTableSize( int index, uint size )
     {
         Assert( mFunctionTables != nullptr );
         Assert( index < mFunctionTableCount );
@@ -2133,6 +2196,249 @@ namespace Js
         {
             Throw::OutOfMemory();
         }
+    }
+
+    void AsmJsModuleInfo::ConvertFrameForJavascript(ScriptFunction* func)
+    {
+        FunctionBody * body = func->GetFunctionBody();
+        AsmJsFunctionInfo * asmFuncInfo = body->GetAsmJsFunctionInfo();
+        FunctionBody * moduleBody = asmFuncInfo->GetModuleFunctionBody();
+        AsmJsModuleInfo * asmModuleInfo = moduleBody->GetAsmJsModuleInfo();
+        Assert(asmModuleInfo);
+
+        if (asmModuleInfo->GetJavascriptSlots())
+        {
+            func->GetEnvironment()->SetItem(0, asmModuleInfo->GetJavascriptSlots());
+            body->ResetAsmJsInfo();
+            return;
+        }
+        if (asmModuleInfo->GetJavascriptScope())
+        {
+            func->GetEnvironment()->SetItem(0, asmModuleInfo->GetJavascriptScope());
+            body->ResetAsmJsInfo();
+            return;
+        }
+        ScriptContext * scriptContext = func->GetScriptContext();
+        // AsmJsModuleEnvironment is all laid out here
+        Var * asmJsEnvironment = static_cast<Var*>(func->GetEnvironment()->GetItem(0));
+        Var * asmBufferPtr = asmJsEnvironment + asmModuleInfo->GetModuleMemory().mArrayBufferOffset;
+        ArrayBuffer * asmBuffer = *asmBufferPtr ? ArrayBuffer::FromVar(*asmBufferPtr) : nullptr;
+
+        Var stdLibObj = *(asmJsEnvironment + asmModuleInfo->GetModuleMemory().mStdLibOffset);
+        Var asmMathObject = stdLibObj ? JavascriptOperators::OP_GetProperty(stdLibObj, PropertyIds::Math, scriptContext) : nullptr;
+
+        Var * asmFFIs = asmJsEnvironment + asmModuleInfo->GetModuleMemory().mFFIOffset;
+        Var * asmFuncs = asmJsEnvironment + asmModuleInfo->GetModuleMemory().mFuncOffset;
+        Var ** asmFuncPtrs = reinterpret_cast<Var**>(asmJsEnvironment + asmModuleInfo->GetModuleMemory().mFuncPtrOffset);
+
+        double * asmDoubleVars = reinterpret_cast<double*>(asmJsEnvironment + asmModuleInfo->GetModuleMemory().mDoubleOffset);
+        int * asmIntVars = reinterpret_cast<int*>(asmJsEnvironment + asmModuleInfo->GetModuleMemory().mIntOffset);
+        float * asmFloatVars = reinterpret_cast<float*>(asmJsEnvironment + asmModuleInfo->GetModuleMemory().mFloatOffset);
+#ifdef SIMD_JS_ENABLED
+        AsmJsSIMDValue * asmSIMDVars = reinterpret_cast<AsmJsSIMDValue*>(asmJsEnvironment + asmModuleInfo->GetModuleMemory().mSimdOffset);
+#endif
+
+#if DEBUG
+        Var * slotArray = RecyclerNewArrayZ(scriptContext->GetRecycler(), Var, moduleBody->scopeSlotArraySize + ScopeSlots::FirstSlotIndex);
+#else
+        Var * slotArray = RecyclerNewArray(scriptContext->GetRecycler(), Var, moduleBody->scopeSlotArraySize + ScopeSlots::FirstSlotIndex);
+#endif
+        ScopeSlots scopeSlots(slotArray);
+        scopeSlots.SetCount(moduleBody->scopeSlotArraySize);
+        scopeSlots.SetScope(moduleBody);
+
+        auto asmSlotMap = asmModuleInfo->GetAsmJsSlotMap();
+        Assert((uint)asmModuleInfo->GetSlotsCount() == moduleBody->scopeSlotArraySize);
+
+        Js::ActivationObject* activeScopeObject = nullptr;
+        if (moduleBody->GetObjectRegister() != 0)
+        {
+            activeScopeObject = static_cast<ActivationObject*>(scriptContext->GetLibrary()->CreateActivationObject());
+        }
+
+        PropertyId* propertyIdArray = moduleBody->GetPropertyIdsForScopeSlotArray();
+        for (int i = 0; i < asmModuleInfo->GetSlotsCount(); ++i)
+        {
+            AsmJsSlot * asmSlot;
+            bool found = asmSlotMap->TryGetValue(propertyIdArray[i], &asmSlot);
+            // we should have everything we need in the map
+            Assert(found);
+            Var value = nullptr;
+            switch (asmSlot->symType)
+            {
+            case AsmJsSymbol::ConstantImport:
+            case AsmJsSymbol::Variable:
+            {
+                switch (asmSlot->varType)
+                {
+                case AsmJsVarType::Double:
+                    value = JavascriptNumber::New(asmDoubleVars[asmSlot->location], scriptContext);
+                    break;
+                case AsmJsVarType::Float:
+                    value = JavascriptNumber::New(asmFloatVars[asmSlot->location], scriptContext);
+                    break;
+                case AsmJsVarType::Int:
+                    value = JavascriptNumber::ToVar(asmIntVars[asmSlot->location], scriptContext);
+                    break;
+#ifdef SIMD_JS_ENABLED
+                case AsmJsVarType::Float32x4:
+                    value = JavascriptSIMDFloat32x4::New(&asmSIMDVars[asmSlot->location], scriptContext);
+                    break;
+                case AsmJsVarType::Float64x2:
+                    value = JavascriptSIMDFloat64x2::New(&asmSIMDVars[asmSlot->location], scriptContext);
+                    break;
+                case AsmJsVarType::Int32x4:
+                    value = JavascriptSIMDInt32x4::New(&asmSIMDVars[asmSlot->location], scriptContext);
+                    break;
+#endif
+                default:
+                    Assume(UNREACHED);
+                }
+                break;
+            }
+            case AsmJsSymbol::ModuleArgument:
+            {
+                switch (asmSlot->argType)
+                {
+                case AsmJsModuleArg::ArgType::StdLib:
+                    value = stdLibObj;
+                    break;
+                case AsmJsModuleArg::ArgType::Import:
+                    // we can't reference this inside functions (and don't hold onto it), but must set to something, so set it to be undefined
+                    value = scriptContext->GetLibrary()->GetUndefined();
+                    break;
+                case AsmJsModuleArg::ArgType::Heap:
+                    value = asmBuffer;
+                    break;
+                default:
+                    Assume(UNREACHED);
+                }
+                break;
+            }
+            case AsmJsSymbol::ImportFunction:
+                value = asmFFIs[asmSlot->location];
+                break;
+            case AsmJsSymbol::FuncPtrTable:
+                value = JavascriptArray::OP_NewScArrayWithElements(asmSlot->funcTableSize, asmFuncPtrs[asmSlot->location], scriptContext);
+                break;
+            case AsmJsSymbol::ModuleFunction:
+                value = asmFuncs[asmSlot->location];
+                break;
+            case AsmJsSymbol::MathConstant:
+                value = JavascriptNumber::New(asmSlot->mathConstVal, scriptContext);
+                break;
+            case AsmJsSymbol::ArrayView:
+            {
+                Assert(asmBuffer);
+#ifdef _M_X64
+                const bool isOptimizedBuffer = true;
+#elif _M_IX86
+                const bool isOptimizedBuffer = false;
+#else
+                Assert(UNREACHED);
+                const bool isOptimizedBuffer = false;
+#endif
+                Assert(isOptimizedBuffer == asmBuffer->IsValidVirtualBufferLength(asmBuffer->GetByteLength()));
+                switch (asmSlot->viewType)
+                {
+                case ArrayBufferView::TYPE_FLOAT32:
+                    value = TypedArray<float, false, isOptimizedBuffer>::Create(asmBuffer, 0, asmBuffer->GetByteLength() >> 2, scriptContext->GetLibrary());
+                    break;
+                case ArrayBufferView::TYPE_FLOAT64:
+                    value = TypedArray<double, false, isOptimizedBuffer>::Create(asmBuffer, 0, asmBuffer->GetByteLength() >> 3, scriptContext->GetLibrary());
+                    break;
+                case ArrayBufferView::TYPE_INT8:
+                    value = TypedArray<int8, false, isOptimizedBuffer>::Create(asmBuffer, 0, asmBuffer->GetByteLength(), scriptContext->GetLibrary());
+                    break;
+                case ArrayBufferView::TYPE_INT16:
+                    value = TypedArray<int16, false, isOptimizedBuffer>::Create(asmBuffer, 0, asmBuffer->GetByteLength() >> 1, scriptContext->GetLibrary());
+                    break;
+                case ArrayBufferView::TYPE_INT32:
+                    value = TypedArray<int32, false, isOptimizedBuffer>::Create(asmBuffer, 0, asmBuffer->GetByteLength() >> 2, scriptContext->GetLibrary());
+                    break;
+                case ArrayBufferView::TYPE_UINT8:
+                    value = TypedArray<uint8, false, isOptimizedBuffer>::Create(asmBuffer, 0, asmBuffer->GetByteLength(), scriptContext->GetLibrary());
+                    break;
+                case ArrayBufferView::TYPE_UINT16:
+                    value = TypedArray<uint16, false, isOptimizedBuffer>::Create(asmBuffer, 0, asmBuffer->GetByteLength() >> 1, scriptContext->GetLibrary());
+                    break;
+                case ArrayBufferView::TYPE_UINT32:
+                    value = TypedArray<uint32, false, isOptimizedBuffer>::Create(asmBuffer, 0, asmBuffer->GetByteLength() >> 2, scriptContext->GetLibrary());
+                    break;
+                default:
+                    Assume(UNREACHED);
+                }
+                break;
+            }
+            case AsmJsSymbol::MathBuiltinFunction:
+            {
+                switch (asmSlot->builtinMathFunc)
+                {
+#define ASMJS_MATH_FUNC_NAMES(name, propertyName) \
+                        case AsmJSMathBuiltin_##name: \
+                            value = JavascriptOperators::OP_GetProperty(asmMathObject, PropertyIds::##propertyName, scriptContext); \
+                            break;
+#include "AsmJsBuiltinNames.h"
+                default:
+                    Assume(UNREACHED);
+                }
+                break;
+            }
+            case AsmJsSymbol::TypedArrayBuiltinFunction:
+                switch (asmSlot->builtinArrayFunc)
+                {
+#define ASMJS_ARRAY_NAMES(name, propertyName) \
+                        case AsmJSTypedArrayBuiltin_##name: \
+                            value = JavascriptOperators::OP_GetProperty(stdLibObj, PropertyIds::##propertyName, scriptContext); \
+                            break;
+#include "AsmJsBuiltinNames.h"
+                default:
+                    Assume(UNREACHED);
+                }
+                break;
+#ifdef SIMD_JS_ENABLED
+            case AsmJsSymbol::SIMDBuiltinFunction:
+                switch (asmSlot->builtinSIMDFunc)
+                {
+#define ASMJS_SIMD_NAMES(name, propertyName) \
+                        case AsmJsSIMDBuiltin_##name: \
+                            value = JavascriptOperators::OP_GetProperty(stdLibObj, PropertyIds::##propertyName, scriptContext); \
+                            break;
+#include "AsmJsBuiltinNames.h"
+                default:
+                    Assume(UNREACHED);
+                }
+                break;
+#endif
+            default:
+                Assume(UNREACHED);
+            }
+            if (activeScopeObject != nullptr)
+            {
+                activeScopeObject->SetPropertyWithAttributes(
+                    propertyIdArray[i],
+                    value,
+                    asmSlot->isConstVar ? PropertyConstDefaults : PropertyDynamicTypeDefaults,
+                    nullptr);
+            }
+            else
+            {
+                // ensure we aren't multiply writing to a slot
+                Assert(scopeSlots.Get(i) == nullptr);
+                scopeSlots.Set(i, value);
+            }
+        }
+        if (activeScopeObject != nullptr)
+        {
+            asmModuleInfo->SetJavascriptScope(activeScopeObject);
+            func->GetEnvironment()->SetItem(0, activeScopeObject);
+        }
+        else
+        {
+            asmModuleInfo->SetJavascriptSlots(slotArray);
+            func->GetEnvironment()->SetItem(0, slotArray);
+        }
+        body->ResetAsmJsInfo();
     }
 
 #ifdef SIMD_JS_ENABLED

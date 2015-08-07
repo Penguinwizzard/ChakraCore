@@ -90,6 +90,5 @@ LIBRARY_FUNCTION(Math,          Hypot,              2,    /* TODO: What flags sh
 LIBRARY_FUNCTION(Math,          Trunc,              1,    /* TODO: What flags should this function have? */)
 LIBRARY_FUNCTION(Math,          Sign,               1,    /* TODO: What flags should this function have? */)
 LIBRARY_FUNCTION(Math,          Cbrt,               1,    /* TODO: What flags should this function have? */)
-LIBRARY_FUNCTION(Math,          Clz32,              1,    /* TODO: What flags should this function have? */)
 #endif
 // Note: 1st column is currently used only for debug tracing.

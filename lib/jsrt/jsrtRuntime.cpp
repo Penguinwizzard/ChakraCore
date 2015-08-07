@@ -21,6 +21,10 @@ JsrtRuntime::JsrtRuntime(ThreadContext * threadContext, bool useIdle, bool dispa
         this->threadService.Initialize(threadContext);
     }
     threadContext->SetJSRTRuntime(this);
+
+#ifdef ENABLE_BASIC_TELEMETRY
+    atexit(firePackageTelemetry); // for node chakra purposes.
+#endif
 }
 
 JsrtRuntime::~JsrtRuntime()

@@ -186,7 +186,6 @@ namespace Js
         bool IsES6IsConcatSpreadableEnabled()   const { return CONFIG_FLAG_RELEASE(ES6IsConcatSpreadable); }
         bool IsES6LambdaEnabled()               const { return CONFIG_FLAG_RELEASE(ES6Lambda); }
         bool IsES6MathExtensionsEnabled()       const { return CONFIG_FLAG_RELEASE(ES6Math); }
-        bool IsES6NewTargetEnabled()            const { return CONFIG_FLAG_RELEASE(ES6NewTarget); }
         bool IsES6ObjectExtensionsEnabled()     const { return CONFIG_FLAG_RELEASE(ES6Object); }
         bool IsES6NumberExtensionsEnabled()     const { return CONFIG_FLAG_RELEASE(ES6Number); }
         bool IsES6NumericLiteralEnabled()       const { return CONFIG_FLAG_RELEASE(ES6NumericLiterals); }
@@ -199,7 +198,6 @@ namespace Js
         bool IsES6StringPrototypeFixEnabled()   const { return CONFIG_FLAG_RELEASE(ES6StringPrototypeFixes); }
         bool IsES6StringTemplateEnabled()       const { return CONFIG_FLAG_RELEASE(ES6StringTemplate); }
         bool IsES6PrototypeChain()              const { return CONFIG_FLAG_RELEASE(ES6PrototypeChain); }
-        bool IsES6SuperEnabled()                const { return CONFIG_FLAG_RELEASE(ES6Super); }
         bool IsES6SymbolEnabled()               const { return CONFIG_FLAG_RELEASE(ES6Symbol); }
         bool IsES6ToPrimitiveEnabled()          const { return CONFIG_FLAG_RELEASE(ES6ToPrimitive); }
         bool IsES6ToLengthEnabled()             const { return CONFIG_FLAG_RELEASE(ES6ToLength); }
@@ -253,7 +251,7 @@ namespace Js
         bool WinRTConstructorAllowed;  // whether allow constructor in webview host type. Also note that this is not a security feature.
         bool NoNative;
         BOOL fCanOptimizeGlobalLookup;
-        const bool isOptimizedForManyInstances;        
+        const bool isOptimizedForManyInstances;
 
 #ifdef ENABLE_PROJECTION
         ProjectionConfiguration projectionConfiguration;
@@ -305,7 +303,7 @@ namespace Js
     typedef TwoLevelHashDictionary<FastEvalMapString, ScriptFunction*, EvalMapRecord, EvalCacheTopLevelDictionary, EvalMapString> EvalCacheDictionary;
 
     struct PropertyStringMap 
-    {        
+    {
         PropertyString* strLen2[80];
 
         __inline static uint PStrMapIndex(wchar_t ch)
@@ -346,22 +344,6 @@ namespace Js
         SourceContextInfo* noContextSourceContextInfo;
         SRCINFO* noContextGlobalSourceInfo;
         SRCINFO const ** moduleSrcInfo;
-    };
-
-    // Represents the different modes that the debugger can be placed into.
-    enum DebuggerMode
-    {
-        // The debugger is not running so the engine can be running
-        // in JITed mode.
-        NotDebugging,
-
-        // The debugger is not running but PDM has been created and
-        // source rundown was performed to register script documents.
-        SourceRundown,
-
-        // The debugger is running which means that the engine is
-        // running in interpreted mode.
-        Debugging,
     };
 
     struct NativeModule
@@ -505,16 +487,11 @@ namespace Js
         void SetIsDiagnosticsScriptContext(bool set) { this->isDiagnosticsScriptContext = set; }
         bool IsDiagnosticsScriptContext() const { return this->isDiagnosticsScriptContext; }
 
-        // Debugger methods.
-        DebuggerMode GetDebuggerMode() const { return this->debuggerMode; }
-        void SetDebuggerMode(DebuggerMode mode);
-        bool IsInNonDebugMode() const { return this->GetDebuggerMode() == DebuggerMode::NotDebugging; }
-        bool IsInSourceRundownMode() const { return this->GetDebuggerMode() == DebuggerMode::SourceRundown; }
-        bool IsInDebugMode() const { return this->GetDebuggerMode() == DebuggerMode::Debugging; }   // TODO: Fast F12: assert that we are called from main thread.
-        bool IsInDebugOrSourceRundownMode() const { return this->IsInDebugMode() || this->IsInSourceRundownMode(); }
+        bool IsInNonDebugMode() const;
+        bool IsInSourceRundownMode() const;
+        bool IsInDebugMode() const;
+        bool IsInDebugOrSourceRundownMode() const;
         bool IsRunningScript() const { return this->threadContext->GetScriptEntryExit() != nullptr; }
-        void SetInDebugMode() { this->SetDebuggerMode(DebuggerMode::Debugging); }
-        void SetInSourceRundownMode() { this->SetDebuggerMode(DebuggerMode::SourceRundown); }
 
         typedef JsUtil::List<RecyclerWeakReference<Utf8SourceInfo>*, Recycler, false, Js::WeakRefFreeListedRemovePolicy> CalleeSourceList;
         RecyclerRootPtr<CalleeSourceList> calleeUtf8SourceInfoList;
@@ -559,7 +536,7 @@ namespace Js
         void SetFakeGlobalFuncForUndefer(FunctionBody * func) { fakeGlobalFuncForUndefer.Root(func, GetRecycler()); }
 
     private:
-        PropertyStringMap* propertyStrings[80];        
+        PropertyStringMap* propertyStrings[80];
 
         JavascriptFunction* GenerateRootFunction(ParseNodePtr parseTree, uint sourceIndex, Parser* parser, ulong grfscr, CompileScriptException * pse, const wchar_t *rootDisplayName);
 
@@ -601,9 +578,6 @@ namespace Js
         typedef JsUtil::BaseHashSet<Js::PropertyId, ArenaAllocator> PropIdSetForConstProp;
         PropIdSetForConstProp * intConstPropsOnGlobalObject;
         PropIdSetForConstProp * intConstPropsOnGlobalUserObject;
-
-        // Debugger fields.
-        DebuggerMode debuggerMode;
 
         void * firstInterpreterFrameReturnAddress;
 #ifdef SEPARATE_ARENA
@@ -912,9 +886,6 @@ private:
         SListBase<JsUtil::IWeakReferenceDictionary*> weakReferenceDictionaryList;
         bool isWeakReferenceDictionaryListCleared;
 
-        typedef HRESULT (*DbgRegisterFunctionType)(ScriptContext *, FunctionBody *, LPCWSTR title);
-        DbgRegisterFunctionType dbgRegisterFunction;
-
         typedef void(*RaiseMessageToDebuggerFunctionType)(ScriptContext *, DEBUG_EVENT_INFO_TYPE, LPCWSTR, LPCWSTR);
         RaiseMessageToDebuggerFunctionType raiseMessageToDebuggerFunctionType;
 
@@ -963,7 +934,7 @@ private:
         ScriptContext(ThreadContext* threadContext);
         void InitializeAllocations();
         void InitializePreGlobal();
-        void InitializePostGlobal(bool initializingCopy);        
+        void InitializePostGlobal(bool initializingCopy);
 
         // Source Info
         void EnsureSourceContextInfoMap();
@@ -979,6 +950,8 @@ private:
         BOOL LeaveScriptStartCore(void * frameAddress, bool leaveForHost);
 
         void InternalClose();
+
+        DebugContext* debugContext;
 
     public:
         static const int kArrayMatchCh=72;
@@ -1029,7 +1002,8 @@ private:
 #ifdef HEAP_ENUMERATION_VALIDATION
         bool IsInitialized() { return this->isInitialized; }
 #endif
-        ProbeContainer diagProbesContainer;
+
+        DebugContext* GetDebugContext() const { return this->debugContext; }
 
         uint callCount;
 
@@ -1350,29 +1324,6 @@ private:
         // Do not call this directly, look for ENFORCE_ENTRYEXITRECORD_HASCALLER macro.
         void EnforceEERHasCaller() { threadContext->GetScriptEntryExit()->hasCaller = true; }
 
-        void DbgRegisterFunction(Js::ParseableFunctionInfo * func, LPCWSTR title)
-        {
-            if (dbgRegisterFunction != null)
-            {
-                FunctionBody * functionBody;
-                // REVIEW: kinda wasteful to defer parse and then parse again here.
-                // Can DbgRegisterFunction accept a ParseableFunctionInfo?
-                if (func->IsDeferredParseFunction())
-                {
-                    functionBody = func->Parse();
-                }
-                else
-                {
-                    functionBody = func->GetFunctionBody();
-                }
-                dbgRegisterFunction(this, functionBody, title);
-            }
-        }
-        void SetDbgRegisterFunction(DbgRegisterFunctionType function)
-        {
-            dbgRegisterFunction = function;
-        }
-
         void SetRaiseMessageToDebuggerFunction(RaiseMessageToDebuggerFunctionType function)
         {
             raiseMessageToDebuggerFunctionType = function;
@@ -1536,12 +1487,16 @@ private:
         static void RecyclerEnumClassEnumeratorCallback(void *address, size_t size);
         static void RecyclerFunctionCallbackForDebugger(void *address, size_t size);
 
+#ifdef ASMJS_PLAT
+        static void TransitionEnvironmentForDebugger(ScriptFunction * scriptFunction);
+#endif
+
         HRESULT RecreateNativeCodeGenerator();
 
         HRESULT OnDebuggerAttached();
         HRESULT OnDebuggerDetached();
         HRESULT OnDebuggerAttachedDetached(bool attach);
-        void InitializeDebugging(DbgRegisterFunctionType dbgRegisterFunction);
+        void InitializeDebugging();
         bool IsForceNoNative();
         bool IsEnumeratingRecyclerObjects() const { return isEnumeratingRecyclerObjects; }
 

@@ -109,7 +109,9 @@ HELPERCALL_MATH(Conv_ToInt32, (int32 (*)(Js::Var, Js::ScriptContext *))Js::Javas
 
 HELPERCALL_MATH(Op_FinishOddDivByPow2, Js::JavascriptMath::FinishOddDivByPow2, Js::SSE2::JavascriptMath::FinishOddDivByPow2, 0)
 HELPERCALL_MATH(Op_FinishOddDivByPow2InPlace, Js::JavascriptMath::FinishOddDivByPow2_InPlace, Js::SSE2::JavascriptMath::FinishOddDivByPow2_InPlace, 0)
-HELPERCALL_MATH(Conv_ToInt32Core, (int32 (*)(double, Js::ScriptContext *))Js::JavascriptMath::ToInt32Core, (int32 (*)(double, Js::ScriptContext *))Js::SSE2::JavascriptMath::ToInt32Core, 0)
+HELPERCALL_MATH(Conv_ToInt32Core, (int32 (*)(double))Js::JavascriptMath::ToInt32Core, (int32 (*)(double))Js::SSE2::JavascriptMath::ToInt32Core, 0)
+HELPERCALL_MATH(Op_MaxInAnArray, Js::JavascriptMath::MaxInAnArray, Js::SSE2::JavascriptMath::MaxInAnArray, AttrCanThrow)
+HELPERCALL_MATH(Op_MinInAnArray, Js::JavascriptMath::MinInAnArray, Js::SSE2::JavascriptMath::MinInAnArray, AttrCanThrow)
 
 HELPERCALL(Op_ConvString, Js::JavascriptConversion::ToString, AttrCanThrow)
 HELPERCALL(Op_CoerseString, Js::JavascriptConversion::CoerseString, AttrCanThrow)
@@ -148,6 +150,7 @@ HELPERCALL(Op_InitUndeclConsoleLetFld, Js::JavascriptOperators::OP_InitUndeclCon
 HELPERCALL(Op_InitUndeclConsoleConstFld, Js::JavascriptOperators::OP_InitUndeclConsoleConstProperty, AttrCanThrow)
 HELPERCALL(Op_InitLetFld, Js::JavascriptOperators::OP_InitLetProperty, AttrCanThrow)
 HELPERCALL(Op_InitConstFld, Js::JavascriptOperators::OP_InitConstProperty, AttrCanThrow)
+HELPERCALL(Op_InitClassMember, Js::JavascriptOperators::OP_InitClassMember, AttrCanThrow)
 HELPERCALL(Op_InitFuncScoped, Js::JavascriptOperators::OP_InitFuncScoped, AttrCanThrow)
 HELPERCALL(Op_DeleteProperty, Js::JavascriptOperators::OP_DeleteProperty, AttrCanThrow)
 HELPERCALL(Op_DeleteRootProperty, Js::JavascriptOperators::OP_DeleteRootProperty, AttrCanThrow)
@@ -381,6 +384,8 @@ HELPERCALL(SimpleIsLoopCodeGenDone, Js::SimpleJitHelpers::IsLoopCodeGenDone, 0)
 HELPERCALL(SimpleRecordLoopImplicitCallFlags, Js::SimpleJitHelpers::RecordLoopImplicitCallFlags, 0)
 
 HELPERCALL(ScriptAbort, Js::JavascriptOperators::ScriptAbort, AttrCanThrow)
+
+HELPERCALL(NoSaveRegistersBailOutForElidedYield, BailOutRecord::BailOutForElidedYield, 0)
 
 // We don't want these functions to be valid iCall targets because they can be used to disclose stack addresses
 //   which CFG cannot defend against. Instead, return these addresses in GetNonTableMethodAddress

@@ -290,6 +290,7 @@ MACRO_WMS(              InitLetFld,                 ElementCP,      OpSideEffect
 MACRO_WMS(              InitRootLetFld,             ElementRootCP,  OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut)   // Declare a property with an initial value
 MACRO_WMS(              InitConstFld,               ElementCP,      OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut)   // Declare a property with an initial value
 MACRO_WMS(              InitRootConstFld,           ElementRootCP,  OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut)   // Declare a property with an initial value
+MACRO_WMS(              InitClassMember,            ElementCP,      OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut)   // Declare a property with an initial value
 
 MACRO_BACKEND_ONLY(     ArgIn_A,                    Empty,          OpSideEffect)        // Copy from "in slot" to "local slot", unchecked
 MACRO_WMS(              ArgIn0,                     Reg1,           OpByteCodeOnly)       // Copy from "in slot" to "local slot", unchecked
@@ -654,7 +655,7 @@ MACRO_BACKEND_ONLY(     LdStrictNullDisplay,Empty,          None)               
 MACRO(                  SpreadArrayLiteral, Reg2Aux,        OpSideEffect|OpHasImplicitCall)
 MACRO_BACKEND_ONLY(     LdSpreadIndices,    Empty,          None)
 
-MACRO_WMS(              ClearAttributes,    ElementU,       None)
+MACRO_EXTEND_WMS(       ClearAttributes,    ElementU,       None)
 MACRO_EXTEND_WMS(       ObjectFreeze,       Reg1,           None)
 
 MACRO_EXTEND_WMS(       LdSuper,            Reg1,           OpSideEffect)

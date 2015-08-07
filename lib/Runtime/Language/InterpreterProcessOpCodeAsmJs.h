@@ -84,7 +84,7 @@
         PROCESS_READ_LAYOUT_ASMJS(name, Int3, suffix); \
         SetRegRawInt(playout->I0, \
                 JavascriptConversion::ToInt32(\
-                func((unsigned int)GetRegRawInt(playout->I1), (unsigned int)GetRegRawInt(playout->I2)),scriptContext)); \
+                func((unsigned int)GetRegRawInt(playout->I1), (unsigned int)GetRegRawInt(playout->I2)))); \
         break; \
         }
 
@@ -197,7 +197,7 @@ if (switchProfileMode) \
                                                                 { \
         PROCESS_READ_LAYOUT_ASMJS(name, Int1Double1, suffix); \
         SetRegRawInt(playout->I0, \
-                func(GetRegRawDouble(playout->D1),scriptContext)); \
+                func(GetRegRawDouble(playout->D1))); \
         break; \
                                                                 }
 #define PROCESS_D1toI1Scr(name, func) PROCESS_D1toI1Scr_COMMON(name, func,)
@@ -207,7 +207,7 @@ if (switchProfileMode) \
                                                                 { \
        PROCESS_READ_LAYOUT_ASMJS(name, Int1Float1, suffix); \
        SetRegRawInt(playout->I0, \
-                func(GetRegRawFloat(playout->F1), scriptContext)); \
+                func(GetRegRawFloat(playout->F1))); \
        break; \
                                                                 }
 #define PROCESS_F1toI1Scr(name, func) PROCESS_F1toI1Scr_COMMON(name, func,)

@@ -26,12 +26,13 @@ namespace Js
             DeferredDeserialize        = 1 << 5, // The function represents something that needs to be deserialized on use
             DeferredParse              = 1 << 6, // The function represents something that needs to be parsed on use
             CanBeHoisted               = 1 << 7, // The function return value won't be changed in a loop so the evaluation can be hoisted.
-            HasSuperReference          = 1 << 8,
-            IsDefaultConstructor       = 1 << 9,
+            SuperReference             = 1 << 8,
+            DefaultConstructor         = 1 << 9,
             Lambda                     = 1 << 10,
             CapturesThis               = 1 << 11, // Only lambdas will set this; denotes whether the lambda referred to this, used by debugger
             Generator                  = 1 << 12,
-            ClassConstructor           = 1 << 13,
+            ClassConstructor           = 1 << 13, // The function is a class constructor
+            BuiltInInlinableAsLdFldInlinee = 1 << 14
         };
         FunctionInfo(JavascriptMethod entryPoint, Attributes attributes = None, LocalFunctionId functionId = Js::Constants::NoFunctionId, FunctionBody* functionBodyImpl = NULL);
 
@@ -42,11 +43,13 @@ namespace Js
         JavascriptMethod GetOriginalEntryPoint_Unchecked() const;
         void SetOriginalEntryPoint(const JavascriptMethod originalEntryPoint);
 
-        BOOL IsDeferred() const { return ((this->attributes & (DeferredDeserialize | DeferredParse)) != 0); }
-        BOOL IsLambda() const { return ((this->attributes & Lambda) != 0); }
-        BOOL IsConstructor() const { return ((this->attributes & ErrorOnNew) == 0); }
-        BOOL IsGenerator() const { return ((this->attributes & Generator) != 0); }
-        BOOL IsClassConstructor() const { return ((this->attributes & ClassConstructor) != 0); }
+        bool IsDeferred() const { return ((this->attributes & (DeferredDeserialize | DeferredParse)) != 0); }
+        bool IsLambda() const { return ((this->attributes & Lambda) != 0); }
+        bool IsConstructor() const { return ((this->attributes & ErrorOnNew) == 0); }
+        bool IsGenerator() const { return ((this->attributes & Generator) != 0); }
+        bool IsDefaultConstructor() const { return ((this->attributes & DefaultConstructor) != 0); }
+        bool IsClassConstructor() const { return ((this->attributes & ClassConstructor) != 0); }
+        bool HasSuperReference() const { return ((this->attributes & SuperReference) != 0); }
 
         BOOL HasBody() const { return functionBodyImpl != NULL; }
         BOOL HasParseableInfo() const { return this->HasBody() && !this->IsDeferredDeserializeFunction(); }

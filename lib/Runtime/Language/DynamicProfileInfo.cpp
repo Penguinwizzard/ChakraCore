@@ -352,8 +352,9 @@ DynamicProfileInfo::RecordLdFldCallSiteInfo(FunctionBody* functionBody, Recyclab
     }
     else if (!calleeFunctionInfo->HasBody())
     {
-        // We can inline fastDOM getter/setter 
-        if (calleeFunctionInfo->GetAttributes() & Js::FunctionInfo::Attributes::NeedCrossSiteSecurityCheck)
+        // We can inline fastDOM getter/setter.
+        // We can directly call Math.max/min as apply targets.
+        if (calleeFunctionInfo->GetAttributes() & Js::FunctionInfo::Attributes::BuiltInInlinableAsLdFldInlinee)
         {
             if (functionBody->GetScriptContext() == callee->GetScriptContext())
             {

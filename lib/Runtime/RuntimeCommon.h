@@ -54,6 +54,7 @@ namespace Js
     #define PropertyConstDefaults (PropertyEnumerable|PropertyConfigurable|PropertyConst)
     #define PropertyDeletedDefaults (PropertyDeleted | PropertyWritable | PropertyConfigurable)
     #define PropertyNoRedecl        (PropertyLet | PropertyConst)
+    #define PropertyClassMemberDefaults (PropertyConfigurable|PropertyWritable)
 
     BEGIN_ENUM_UINT(InternalPropertyIds)
 #define INTERNALPROPERTY(n) n,
@@ -119,6 +120,7 @@ namespace Js
     typedef WriteBarrierPtr<void> WriteBarrierVar;
 
     typedef Var(__cdecl *JavascriptMethod)(RecyclableObject*, CallInfo, ...);
+    typedef Var(*ExternalMethod)(RecyclableObject*, CallInfo, Var*);
 
 
     const uintptr AtomTag_Object    = 0x0;

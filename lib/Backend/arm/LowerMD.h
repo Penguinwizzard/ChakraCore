@@ -223,7 +223,6 @@ public:
             static void         Legalize(IR::Instr *const instr, bool fPostRegAlloc = false);
 
             IR::Opnd*           IsOpndNegZero(IR::Opnd* opnd, IR::Instr* instr);
-            IR::Instr*          GenerateDirectCall(IR::Instr* inlineInstr, IR::Opnd* funcObj, ushort callflags);
             void                GenerateFastInlineBuiltInMathAbs(IR::Instr *callInstr);
             void                GenerateFastInlineBuiltInMathFloor(IR::Instr *callInstr);
             void                GenerateFastInlineBuiltInMathCeil(IR::Instr *callInstr);

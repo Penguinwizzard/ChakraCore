@@ -830,13 +830,13 @@ namespace Js
         Assert(scriptContext != NULL);
 
         if (scriptContext->IsInDebugMode()
-            && scriptContext->diagProbesContainer.HasAllowedForException(exceptionObject) )
+            && scriptContext->GetDebugContext()->GetProbeContainer()->HasAllowedForException(exceptionObject))
         {
             InterpreterHaltState haltState(STOP_EXCEPTIONTHROW, /*executingFunction*/nullptr);
 
             haltState.exceptionObject = exceptionObject;
 
-            scriptContext->diagProbesContainer.DispatchExceptionBreakpoint(&haltState);
+            scriptContext->GetDebugContext()->GetProbeContainer()->DispatchExceptionBreakpoint(&haltState);
         }
     }
 

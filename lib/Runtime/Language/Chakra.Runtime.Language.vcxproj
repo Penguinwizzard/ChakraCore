@@ -80,6 +80,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)CacheOperators.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)CallInfo.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)CodeGenRecyclableData.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)DebugContext.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)DynamicProfileInfo.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)DynamicProfileMutator.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)DynamicProfileStorage.cpp" />
@@ -131,6 +132,8 @@
     <ClInclude Include="AsmJSJitTemplate.h" />
     <ClInclude Include="AsmJSLink.h" />
     <ClInclude Include="AsmJSModule.h" />
+    <ClInclude Include="AsmJsBuiltinNames.h" />
+    <ClInclude Include="AsmJSTypes.h" />
     <ClInclude Include="AsmJSUtils.h" />
     <ClInclude Include="ByteCodeSerializeFlags.h" />
     <ClInclude Include="byteCodeCacheReleaseFileVersion.h" />
@@ -140,6 +143,7 @@
     </ClInclude>
     <ClInclude Include="InterpreterProcessOpCodeAsmJs.h" />
     <ClInclude Include="CodeGenRecyclableData.h" />
+    <ClInclude Include="DebugContext.h" />
     <ClInclude Include="DynamicProfileInfo.h" />
     <ClInclude Include="DynamicProfileMutator.h" />
     <ClInclude Include="DynamicProfileStorage.h" />

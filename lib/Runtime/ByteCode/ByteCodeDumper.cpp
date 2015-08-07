@@ -731,6 +731,7 @@ namespace Js
             case OpCode::InitUndeclConstFld:
             case OpCode::StFld:
             case OpCode::StFldStrict:
+            case OpCode::InitClassMember:
             {
                 Output::Print(L" R%d.%s = R%d #%d", data->Instance, pPropertyName->GetBuffer(),
                         data->Value, data->inlineCacheIndex);

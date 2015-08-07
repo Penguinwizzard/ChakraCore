@@ -78,6 +78,7 @@ namespace Js
                 ? RoundUpObjectHeaderInlinedInlineSlotCapacity(inlineSlotCapacity)
                 : RoundUpInlineSlotCapacity(inlineSlotCapacity);
         this->slotCapacity = RoundUpSlotCapacity(slotCapacity, inlineSlotCapacity);
+        this->isNotPathTypeHandlerOrHasUserDefinedCtor = true;
 
         Assert(IsObjectHeaderInlinedTypeHandler() == IsObjectHeaderInlined(offsetOfInlineSlots));
     }

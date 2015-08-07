@@ -147,7 +147,7 @@ GlobOpt::GlobOpt(Func * func)
     prePassLoop(NULL),
     alloc(null),
     isCallHelper(false),
-    callTrackingForBailoutDisabled(false),
+    inInlinedBuiltIn(false),
     rootLoopPrePass(null),
     noImplicitCallUsesToInsert(null),
     valuesCreatedForClone(nullptr),
@@ -13468,7 +13468,7 @@ GlobOpt::ToTypeSpecUse(IR::Instr *instr, IR::Opnd *opnd, BasicBlock *block, Valu
                 Assert(lossy);
                 constOpnd =
                     IR::IntConstOpnd::New(
-                        Js::JavascriptMath::ToInt32(floatValue, instr->m_func->GetScriptContext()),
+                        Js::JavascriptMath::ToInt32(floatValue),
                         TyInt32,
                         instr->m_func);
             }

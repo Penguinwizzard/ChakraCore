@@ -176,7 +176,6 @@ public:
             void            HelperCallForAsmMathBuiltin(IR::Instr* instr, IR::JnHelperMethod helperMethodFloat, IR::JnHelperMethod helperMethodDouble);
             void            GenerateFastInlineBuiltInMathAbs(IR::Instr* instr);
             IR::Opnd*       IsOpndNegZero(IR::Opnd* opnd, IR::Instr* instr);
-            IR::Instr*      GenerateDirectCall(IR::Instr* instr, IR::Opnd* funcObj, ushort callflags);
             IR::Instr *     CloneSlowPath(IR::Instr * instrEndFloatRange, IR::Instr * instrInsert);
             bool            IsCloneDone(IR::Instr * instr, BVSparse<JitArenaAllocator> *bvTmps);
             IR::Instr *     EnsureAdjacentArgs(IR::Instr * instrArg);

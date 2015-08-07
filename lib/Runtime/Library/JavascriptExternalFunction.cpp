@@ -14,14 +14,14 @@ namespace Js
     // . leavescriptstart/end
     // . wrap the result value with potential cross site access
 
-    JavascriptExternalFunction::JavascriptExternalFunction(JavascriptMethod entryPoint, DynamicType* type)
+    JavascriptExternalFunction::JavascriptExternalFunction(ExternalMethod entryPoint, DynamicType* type)
         : RuntimeFunction(type, &EntryInfo::ExternalFunctionThunk), nativeMethod(entryPoint), signature(nullptr), callbackState(nullptr), initMethod(nullptr), 
         oneBit(1), typeSlots(0), hasAccessors(0), callCount(0), prototypeTypeId(-1), flags(0)
     {
         DebugOnly(VerifyEntryPoint());
     }
 
-    JavascriptExternalFunction::JavascriptExternalFunction(JavascriptMethod entryPoint, DynamicType* type, InitializeMethod method, unsigned short deferredSlotCount, bool accessors)
+    JavascriptExternalFunction::JavascriptExternalFunction(ExternalMethod entryPoint, DynamicType* type, InitializeMethod method, unsigned short deferredSlotCount, bool accessors)
         : RuntimeFunction(type, &EntryInfo::ExternalFunctionThunk), nativeMethod(entryPoint), signature(nullptr), callbackState(nullptr), initMethod(method), 
         oneBit(1), typeSlots(deferredSlotCount), hasAccessors(accessors), callCount(0), prototypeTypeId(-1), flags(0)
     {
@@ -245,9 +245,9 @@ namespace Js
 
         // Deferred constructors which are not callable fall back to using the RecyclableObject::DefaultEntryPoint. In order to call
         // this function we have to be inside script so all this and return before doing any of the external call preparation.
-        if (externalFunction->nativeMethod == Js::RecyclableObject::DefaultEntryPoint)
+        if (externalFunction->nativeMethod == Js::RecyclableObject::DefaultExternalEntryPoint)
         {
-            return JavascriptFunction::CallFunction<true>(function, externalFunction->nativeMethod, args);
+            return Js::RecyclableObject::DefaultExternalEntryPoint(function, callInfo, args.Values);
         }
 
         ScriptContext * scriptContext = externalFunction->type->GetScriptContext();
@@ -262,7 +262,7 @@ namespace Js
         BEGIN_LEAVE_SCRIPT_WITH_EXCEPTION(scriptContext)
         {
             // Don't do stack probe since BEGIN_LEAVE_SCRIPT_WITH_EXCEPTION does that for us already
-            result = JavascriptFunction::CallFunction<false>(function, externalFunction->nativeMethod, args);
+            result = externalFunction->nativeMethod(function, callInfo, args.Values);
         }
         END_LEAVE_SCRIPT_WITH_EXCEPTION(scriptContext);
 

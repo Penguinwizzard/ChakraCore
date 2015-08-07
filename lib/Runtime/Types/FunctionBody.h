@@ -2507,6 +2507,11 @@ namespace Js
         AsmJsFunctionInfo* GetAsmJsFunctionInfo()const {return asmJsFunctionInfo; }
         AsmJsFunctionInfo* AllocateAsmJsFunctionInfo();
         AsmJsModuleInfo* GetAsmJsModuleInfo()const{ return asmJsModuleInfo; }
+        void ResetAsmJsInfo()
+        {
+            asmJsFunctionInfo = nullptr;
+            asmJsModuleInfo = nullptr;
+        }
         bool IsAsmJSModule()const{ if (asmJsModuleInfo) return true; return false; }
         AsmJsModuleInfo* AllocateAsmJsModuleInfo();
         void SetLiteralRegex(const uint index, UnifiedRegex::RegexPattern *const pattern);

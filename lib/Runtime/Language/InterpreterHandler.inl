@@ -186,6 +186,7 @@ EXDEF2_WMS(A2toXX,                  SetComputedNameVar,         JavascriptOperat
   DEF2_WMS(ELEM_RtU_to_XX,          InitUndeclRootConstFld,     OP_InitUndeclRootConstProperty)
   EXDEF3_WMS(CUSTOM,                InitUndeclConsoleLetFld,    OP_InitUndeclConsoleLetProperty, ElementU)
   EXDEF3_WMS(CUSTOM,                InitUndeclConsoleConstFld,  OP_InitUndeclConsoleConstProperty, ElementU)
+  DEF3_WMS(CUSTOM,                  InitClassMember,            OP_InitClassMember, ElementCP)
   DEF2_WMS(FALLTHROUGH,             LdSlotArr,                  /* Common case with LdSlot */)
   DEF3_WMS(GET_ELEM_SLOTNonVar,     LdSlot,                     OP_LdSlot, ElementSlot)
   DEF3_WMS(GET_ELEM_SLOTNonVar,     ProfiledLdSlot,             PROFILEDOP(OP_ProfiledLdSlot, OP_LdSlot), ProfiledElementSlot)
@@ -324,7 +325,7 @@ EXDEF2    (W1,                      RuntimeTypeError,           JavascriptExcept
 EXDEF2    (W1,                      RuntimeReferenceError,      JavascriptExceptionOperators::OP_RuntimeReferenceError)
   DEF3    (CUSTOM_L_R0,             SpreadArrayLiteral,         OP_SpreadArrayLiteral, Reg2Aux)
 EXDEF2_WMS(A1toXX,                  ObjectFreeze,               JavascriptOperators::OP_Freeze)
-  DEF3_WMS(CUSTOM,                  ClearAttributes,            OP_ClearAttributes, ElementU)
+EXDEF3_WMS(CUSTOM,                  ClearAttributes,            OP_ClearAttributes, ElementU)
   DEF3_WMS(CUSTOM,                  ApplyArgs,                  OP_ApplyArgs, Reg5)
 EXDEF3_WMS(CUSTOM,                  EmitTmpRegCount,            OP_EmitTmpRegCount, Reg1)
 

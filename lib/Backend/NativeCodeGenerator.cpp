@@ -2058,9 +2058,12 @@ NativeCodeGenerator::GatherCodeGenData(
                             {
                                 IncInlineCacheCount(clonedMonoInlineCacheCount);
 
-                                if (!PHASE_OFF(Js::InlineApplyTargetPhase, functionBody) && IsInlinee && (cacheType & Js::FldInfo_InlineCandidate))
+                                if (!PHASE_OFF(Js::InlineApplyTargetPhase, functionBody) && (cacheType & Js::FldInfo_InlineCandidate))
                                 {
-                                    inlineApplyTarget = true;
+                                    if (IsInlinee || objTypeSpecFldInfo->isBuiltIn)
+                                    {
+                                        inlineApplyTarget = true;
+                                    }
                                 }
 
                                 if (!PHASE_OFF(Js::InlineCallTargetPhase, functionBody) && (cacheType & Js::FldInfo_InlineCandidate))
@@ -2548,14 +2551,16 @@ NativeCodeGenerator::GatherCodeGenData(
                 const auto inlineeFunctionBody = inlinee->GetFunctionBody();
                 if(!inlineeFunctionBody)
                 {
+					if((
 #ifdef ENABLE_DOM_FAST_PATH
-                    if ((inlinee->GetLocalFunctionId() == Js::JavascriptBuiltInFunction::DOMFastPathGetter ||
-                        inlinee->GetLocalFunctionId() == Js::JavascriptBuiltInFunction::DOMFastPathSetter) &&
+						 inlinee->GetLocalFunctionId() == Js::JavascriptBuiltInFunction::DOMFastPathGetter ||
+                         inlinee->GetLocalFunctionId() == Js::JavascriptBuiltInFunction::DOMFastPathSetter ||
+#endif
+                         (inlineeFunctionInfo->GetAttributes() & Js::FunctionInfo::Attributes::BuiltInInlinableAsLdFldInlinee) != 0) &&
                         !isJitTimeDataComputed)
                     {
                         jitTimeData->AddLdFldInlinee(recycler, inlineCacheIndex, inlinee);
                     }
-#endif
                     continue;
                 }
 

@@ -981,7 +981,7 @@ CommonNumber:
 
         if (typeId == TypeIds_Number)
         {
-            return JavascriptMath::ToInt32Core(JavascriptNumber::GetValue(aValue), scriptContext);
+            return JavascriptMath::ToInt32Core(JavascriptNumber::GetValue(aValue));
         }
 
         switch (typeId)
@@ -1002,26 +1002,26 @@ CommonNumber:
         case TypeIds_Int64Number:
             // we won't lose precision if the int64 is within 32bit boundary; otherwise we need to
             // treat it as double anyhow.
-            return JavascriptMath::ToInt32Core((double)JavascriptInt64Number::FromVar(aValue)->GetValue(), scriptContext);
+            return JavascriptMath::ToInt32Core((double)JavascriptInt64Number::FromVar(aValue)->GetValue());
 
         case TypeIds_UInt64Number:
             // we won't lose precision if the int64 is within 32bit boundary; otherwise we need to
             // treat it as double anyhow.
-            return JavascriptMath::ToInt32Core((double)JavascriptUInt64Number::FromVar(aValue)->GetValue(), scriptContext);
+            return JavascriptMath::ToInt32Core((double)JavascriptUInt64Number::FromVar(aValue)->GetValue());
 
         case TypeIds_String:
         {
             double result;
             if (JavascriptString::FromVar(aValue)->ToDouble(&result))
             {
-                return JavascriptMath::ToInt32Core(result, scriptContext);
+                return JavascriptMath::ToInt32Core(result);
             }
             // If the string isn't a valid number, ToDouble returns NaN, and ToInt32 of that is 0
             return 0;
         }
 
         case TypeIds_VariantDate:
-            return ToInt32(ToNumber_Full(aValue, scriptContext), scriptContext);
+            return ToInt32(ToNumber_Full(aValue, scriptContext));
 
         default:
             AssertMsg(JavascriptOperators::IsObject(aValue), "bad type object in conversion ToInteger32");
@@ -1044,31 +1044,31 @@ CommonNumber:
             return JavascriptBoolean::FromVar(aValue)->GetValue() ? 1 : +0;
 
         case TypeIds_Number:
-            return ToInt32(JavascriptNumber::GetValue(aValue), scriptContext);
+            return ToInt32(JavascriptNumber::GetValue(aValue));
 
         case TypeIds_Int64Number:
             // we won't lose precision if the int64 is within 32bit boundary; otherwise we need to
             // treat it as double anyhow.
-            return JavascriptMath::ToInt32Core((double)JavascriptInt64Number::FromVar(aValue)->GetValue(), scriptContext);
+            return JavascriptMath::ToInt32Core((double)JavascriptInt64Number::FromVar(aValue)->GetValue());
 
         case TypeIds_UInt64Number:
             // we won't lose precision if the int64 is within 32bit boundary; otherwise we need to
             // treat it as double anyhow.
-            return JavascriptMath::ToInt32Core((double)JavascriptUInt64Number::FromVar(aValue)->GetValue(), scriptContext);
+            return JavascriptMath::ToInt32Core((double)JavascriptUInt64Number::FromVar(aValue)->GetValue());
 
         case TypeIds_String:
         {
             double result;
             if (JavascriptString::FromVar(aValue)->ToDouble(&result))
             {
-                return ToInt32(result, scriptContext);
+                return ToInt32(result);
             }
             // If the string isn't a valid number, ToDouble returns NaN, and ToInt32 of that is 0
             return 0;
         }
 
         case TypeIds_VariantDate:
-            return ToInt32(ToNumber_Full(aValue, scriptContext), scriptContext);
+            return ToInt32(ToNumber_Full(aValue, scriptContext));
 
         default:
             // We assert here rather than __assume(false) because a bad activeX control could cause this to happen.
@@ -1110,23 +1110,23 @@ CommonNumber:
                 return true;
 
             case TypeIds_Number:
-                return ToInt32Finite(JavascriptNumber::GetValue(aValue), scriptContext, result);
+                return ToInt32Finite(JavascriptNumber::GetValue(aValue), result);
 
             case TypeIds_Int64Number:
                 // we won't lose precision if the int64 is within 32bit boundary; otherwise we need to
                 // treat it as double anyhow.
-                return ToInt32Finite((double)JavascriptInt64Number::FromVar(aValue)->GetValue(), scriptContext, result);
+                return ToInt32Finite((double)JavascriptInt64Number::FromVar(aValue)->GetValue(), result);
 
             case TypeIds_UInt64Number:
                 // we won't lose precision if the int64 is within 32bit boundary; otherwise we need to
                 // treat it as double anyhow.
-                return ToInt32Finite((double)JavascriptUInt64Number::FromVar(aValue)->GetValue(), scriptContext, result);
+                return ToInt32Finite((double)JavascriptUInt64Number::FromVar(aValue)->GetValue(), result);
 
             case TypeIds_String:
-                return ToInt32Finite(JavascriptString::FromVar(aValue)->ToDouble(), scriptContext, result);
+                return ToInt32Finite(JavascriptString::FromVar(aValue)->ToDouble(), result);
 
             case TypeIds_VariantDate:
-                return ToInt32Finite(ToNumber_Full(aValue, scriptContext), scriptContext, result);
+                return ToInt32Finite(ToNumber_Full(aValue, scriptContext), result);
 
             default:
                 {
@@ -1144,9 +1144,9 @@ CommonNumber:
 
     }
 
-    int32 JavascriptConversion::ToInt32(double T1, ScriptContext* scriptContext)
+    int32 JavascriptConversion::ToInt32(double T1)
     {
-        return JavascriptMath::ToInt32Core(T1, scriptContext);
+        return JavascriptMath::ToInt32Core(T1);
     }
 
     __int64 JavascriptConversion::ToInt64(Var aValue, ScriptContext* scriptContext)
@@ -1199,7 +1199,7 @@ CommonNumber:
         }
     }
 
-    BOOL JavascriptConversion::ToInt32Finite(double value, ScriptContext* scriptContext, int32* result)
+    BOOL JavascriptConversion::ToInt32Finite(double value, int32* result)
     {
         if((!NumberUtilities::IsFinite(value)) || JavascriptNumber::IsNan(value))
         {
@@ -1208,7 +1208,7 @@ CommonNumber:
         }
         else
         {
-            *result = JavascriptMath::ToInt32Core(value, scriptContext);
+            *result = JavascriptMath::ToInt32Core(value);
             return true;
         }
     }
@@ -1239,31 +1239,31 @@ CommonNumber:
                 return JavascriptBoolean::FromVar(aValue)->GetValue() ? 1 : +0;
 
             case TypeIds_Number:
-                return JavascriptMath::ToUInt32(JavascriptNumber::GetValue(aValue), scriptContext);
+                return JavascriptMath::ToUInt32(JavascriptNumber::GetValue(aValue));
 
             case TypeIds_Int64Number:
                 // we won't lose precision if the int64 is within 32bit boundary; otherwise we need to
                 // treat it as double anyhow.
-                return JavascriptMath::ToUInt32((double)JavascriptInt64Number::FromVar(aValue)->GetValue(), scriptContext);
+                return JavascriptMath::ToUInt32((double)JavascriptInt64Number::FromVar(aValue)->GetValue());
 
             case TypeIds_UInt64Number:
                 // we won't lose precision if the int64 is within 32bit boundary; otherwise we need to
                 // treat it as double anyhow.
-                return JavascriptMath::ToUInt32((double)JavascriptUInt64Number::FromVar(aValue)->GetValue(), scriptContext);
+                return JavascriptMath::ToUInt32((double)JavascriptUInt64Number::FromVar(aValue)->GetValue());
 
             case TypeIds_String:
             {
                 double result;
                 if (JavascriptString::FromVar(aValue)->ToDouble(&result))
                 {
-                    return JavascriptMath::ToUInt32(result, scriptContext);
+                    return JavascriptMath::ToUInt32(result);
                 }
                 // If the string isn't a valid number, ToDouble returns NaN, and ToUInt32 of that is 0
                 return 0;
             }
 
             case TypeIds_VariantDate:
-                return JavascriptMath::ToUInt32(ToNumber_Full(aValue, scriptContext), scriptContext);
+                return JavascriptMath::ToUInt32(ToNumber_Full(aValue, scriptContext));
 
             default:
                 {
@@ -1280,10 +1280,10 @@ CommonNumber:
         }
     }
 
-    uint32 JavascriptConversion::ToUInt32(double T1, ScriptContext* scriptContext)
+    uint32 JavascriptConversion::ToUInt32(double T1)
     {
         // Same as doing ToInt32 and reinterpret the bits as uint32
-        return (uint32)JavascriptMath::ToInt32Core(T1, scriptContext);
+        return (uint32)JavascriptMath::ToInt32Core(T1);
     }
 
     //----------------------------------------------------------------------------
@@ -1314,31 +1314,31 @@ CommonNumber:
                 return JavascriptBoolean::FromVar(aValue)->GetValue() ? 1 : +0;
 
             case TypeIds_Number:
-                return ToUInt16(JavascriptNumber::GetValue(aValue), scriptContext);
+                return ToUInt16(JavascriptNumber::GetValue(aValue));
 
             case TypeIds_Int64Number:
                 // we won't lose precision if the int64 is within 16bit boundary; otherwise we need to
                 // treat it as double anyhow.
-                return ToUInt16((double)JavascriptInt64Number::FromVar(aValue)->GetValue(), scriptContext);
+                return ToUInt16((double)JavascriptInt64Number::FromVar(aValue)->GetValue());
 
             case TypeIds_UInt64Number:
                 // we won't lose precision if the int64 is within 16bit boundary; otherwise we need to
                 // treat it as double anyhow.
-                return ToUInt16((double)JavascriptUInt64Number::FromVar(aValue)->GetValue(), scriptContext);
+                return ToUInt16((double)JavascriptUInt64Number::FromVar(aValue)->GetValue());
 
             case TypeIds_String:
             {
                 double result;
                 if (JavascriptString::FromVar(aValue)->ToDouble(&result))
                 {
-                    return ToUInt16(result, scriptContext);
+                    return ToUInt16(result);
                 }
                 // If the string isn't a valid number, ToDouble is NaN, and ToUInt16 of that is 0
                 return 0;
             }
 
             case TypeIds_VariantDate:
-                return ToUInt16(ToNumber_Full(aValue, scriptContext), scriptContext);
+                return ToUInt16(ToNumber_Full(aValue, scriptContext));
 
             default:
                 {
@@ -1355,14 +1355,14 @@ CommonNumber:
         }
     }
 
-    __inline uint16 JavascriptConversion::ToUInt16(double T1, ScriptContext* scriptContext)
+    __inline uint16 JavascriptConversion::ToUInt16(double T1)
     {
         //
         // VC does the right thing here, if we first convert to uint32 and then to uint16
         // Spec says mod should be done.
         //
 
-        uint32 result = JavascriptMath::ToUInt32(T1, scriptContext);
+        uint32 result = JavascriptConversion::ToUInt32(T1);
 #if defined(_M_IX86) && _MSC_FULL_VER < 160030329
         // Well VC doesn't actually do the right thing...  It takes (uint16)(uint32)double and removes the
         // middle uint32 cast to (uint16)double, which isn't the same thing.  Somehow, it only seems to be a

@@ -324,7 +324,7 @@
         ///     Calling <c>JsSetException</c> will also dispatch the exception to the script debugger
         ///     (if any) giving the debugger a chance to break on the exception.
         /// </summary>
-        JsRuntimeDispatchSetExceptionsToDebugger = 0x00000040
+        JsRuntimeAttributeDispatchSetExceptionsToDebugger = 0x00000040
     } JsRuntimeAttributes;
 
     /// <summary>
@@ -2062,7 +2062,7 @@
     /// </returns>
     STDAPI_(JsErrorCode)
         JsCreateExternalArrayBuffer(
-        _In_ void *data,
+        _Pre_maybenull_ _Pre_writable_byte_size_(byteLength) void *data,
         _In_ unsigned int byteLength,
         _In_opt_ JsFinalizeCallback finalizeCallback,
         _In_opt_ void *callbackState,

@@ -17,8 +17,8 @@ namespace Js
         DEFINE_VTABLE_CTOR(JavascriptExternalFunction, RuntimeFunction);
         JavascriptExternalFunction(DynamicType * type);
     public:
-        JavascriptExternalFunction(JavascriptMethod nativeMethod, DynamicType* type);
-        JavascriptExternalFunction(JavascriptMethod entryPoint, DynamicType* type, InitializeMethod method, unsigned short deferredSlotCount, bool accessors);
+        JavascriptExternalFunction(ExternalMethod nativeMethod, DynamicType* type);
+        JavascriptExternalFunction(ExternalMethod entryPoint, DynamicType* type, InitializeMethod method, unsigned short deferredSlotCount, bool accessors);
         JavascriptExternalFunction(JavascriptExternalFunction* wrappedMethod, DynamicType* type);
         JavascriptExternalFunction(StdCallJavascriptMethod nativeMethod, DynamicType* type);
 
@@ -37,7 +37,7 @@ namespace Js
             static FunctionInfo StdCallExternalFunctionThunk;
         };
 
-        JavascriptMethod GetNativeMethod() { return nativeMethod; }
+        ExternalMethod GetNativeMethod() { return nativeMethod; }
         BOOL SetLengthProperty(Var length);
 
         virtual JavascriptExternalFunction* MakeCopyOnWriteObject(ScriptContext* scriptContext) override;
@@ -52,7 +52,7 @@ namespace Js
         void *callbackState;
         union
         {
-            JavascriptMethod nativeMethod;
+            ExternalMethod nativeMethod;
             JavascriptExternalFunction* wrappedMethod;
             StdCallJavascriptMethod stdCallNativeMethod;
         };

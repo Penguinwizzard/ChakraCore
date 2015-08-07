@@ -1,5 +1,5 @@
 //---------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
+// Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
 #pragma once
@@ -7,16 +7,16 @@
 namespace Js
 {
 #if FLOATVAR
-    __inline JavascriptNumber::JavascriptNumber(double value, StaticType*) 
+    __inline JavascriptNumber::JavascriptNumber(double value, StaticType*)
     {
-        AssertMsg(!IsNan(value) || ToSpecial(value) == k_Nan || ToSpecial(value) == 0x7FF8000000000000ull, "We should only produce a NaN with this value"); 
+        AssertMsg(!IsNan(value) || ToSpecial(value) == k_Nan || ToSpecial(value) == 0x7FF8000000000000ull, "We should only produce a NaN with this value");
         SetSpecial(ToSpecial(value) ^ FloatTag_Value);
     }
 #else
     __inline JavascriptNumber::JavascriptNumber(double value, StaticType * type) : RecyclableObject(type), m_value(value)
     {
         Assert(type->GetTypeId() == TypeIds_Number);
-    }  
+    }
 #endif
 
     __forceinline Var JavascriptNumber::ToVar(int32 nValue, ScriptContext* scriptContext)
@@ -33,7 +33,7 @@ namespace Js
 
     __inline Var JavascriptNumber::ToVar(uint32 nValue, ScriptContext* scriptContext)
     {
-        return !TaggedInt::IsOverflow(nValue) ? TaggedInt::ToVarUnchecked(nValue) : 
+        return !TaggedInt::IsOverflow(nValue) ? TaggedInt::ToVarUnchecked(nValue) :
             JavascriptNumber::New((double) nValue,scriptContext);
     }
 
@@ -83,7 +83,7 @@ namespace Js
     }
 
 #if FLOATVAR
-    inline bool JavascriptNumber::Is(Var aValue) 
+    inline bool JavascriptNumber::Is(Var aValue)
     {
         return Is_NoTaggedIntCheck(aValue);
     }
@@ -94,12 +94,12 @@ namespace Js
         result = (JavascriptNumber*)ToVar(value);
         return result;
     }
-   
+
     inline Var JavascriptNumber::New(double value, ScriptContext* scriptContext)
     {
         return ToVar(value);
     }
-    
+
     inline Var JavascriptNumber::NewWithCheck(double value, ScriptContext* scriptContext)
     {
         if (IsNan(value))
@@ -108,7 +108,7 @@ namespace Js
         }
         return ToVar(value);
     }
-    
+
     __inline Var JavascriptNumber::NewInlined(double value, ScriptContext* scriptContext)
     {
         return ToVar(value);
@@ -122,12 +122,12 @@ namespace Js
     __inline Var JavascriptNumber::ToVar(double value)
     {
         uint64 val = *(uint64*)&value;
-        AssertMsg(!IsNan(value) || ToSpecial(value) == k_Nan || ToSpecial(value) == 0x7FF8000000000000ull, "We should only produce a NaN with this value"); 
+        AssertMsg(!IsNan(value) || ToSpecial(value) == k_Nan || ToSpecial(value) == 0x7FF8000000000000ull, "We should only produce a NaN with this value");
         return reinterpret_cast<Var>(val ^ FloatTag_Value);
     }
 
 #else
-    inline bool JavascriptNumber::Is(Var aValue) 
+    inline bool JavascriptNumber::Is(Var aValue)
     {
         return !TaggedInt::Is(aValue) && Is_NoTaggedIntCheck(aValue);
     }
@@ -141,10 +141,10 @@ namespace Js
     }
 #endif
 
-    inline JavascriptNumber* JavascriptNumber::FromVar(Var aValue)      
+    inline JavascriptNumber* JavascriptNumber::FromVar(Var aValue)
     {
         AssertMsg(Is(aValue), "Ensure var is actually a 'JavascriptNumber'");
-        
+
         return reinterpret_cast<JavascriptNumber *>(aValue);
     }
 
@@ -154,7 +154,7 @@ namespace Js
 
          return JavascriptNumber::FromVar(aValue)->GetValue();
      }
-    
+
     __inline JavascriptNumber* JavascriptNumber::InPlaceNew(double value, ScriptContext* scriptContext, __out Js::JavascriptNumber *result)
     {
         AssertMsg( result != NULL, "Cannot use InPlaceNew without a value result location" );
@@ -199,15 +199,15 @@ namespace Js
         {
             if(IsNan(value))
             {
-                return ToStringNan(scriptContext); 
+                return ToStringNan(scriptContext);
             }
 
-            BSTR bstr = null;            
+            BSTR bstr = null;
             if(IsPosInf(value))
             {
                 bstr = BstrGetResourceString(IDS_INFINITY);
             }
-            else 
+            else
             {
                 AssertMsg(IsNegInf(value), "bad handling of infinite number");
                 bstr = BstrGetResourceString(IDS_MINUSINFINITY);
@@ -265,4 +265,4 @@ namespace Js
         //
         return JavascriptNumber::NewInlined(value,scriptContext);
     }
-} 
+}

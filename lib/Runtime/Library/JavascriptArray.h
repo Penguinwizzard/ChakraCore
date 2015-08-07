@@ -725,7 +725,7 @@ namespace Js
         static void ConcatIntArgs(JavascriptNativeIntArray* pDestArray, TypeId* remoteTypeIds, Js::Arguments& args, ScriptContext* scriptContext);
         static void ConcatFloatArgs(JavascriptNativeFloatArray* pDestArray, TypeId* remoteTypeIds, Js::Arguments& args, ScriptContext* scriptContext);
     private:
-        static RecyclableObject* ArraySpeciesCreate(Var pThisArray, uint32 length, ScriptContext* scriptContext);
+        static RecyclableObject* ArraySpeciesCreate(Var pThisArray, uint32 length, ScriptContext* scriptContext, bool* pIsIntArray = nullptr, bool* pIsFloatArray = nullptr);
         template <typename T, typename R> static R ConvertToIndex(T idxDest, ScriptContext* scriptContext) { Throw::InternalError(); return 0; }
         template <> static Var ConvertToIndex<uint32, Var>(uint32 idxDest, ScriptContext* scriptContext);
         template <> static uint32 ConvertToIndex<uint32, uint32>(uint32 idxDest, ScriptContext* scriptContext) { return idxDest; }
@@ -792,15 +792,15 @@ namespace Js
         DEFINE_MARSHAL_OBJECT_TO_SCRIPT_CONTEXT(JavascriptNativeArray);
 
     public:
-        JavascriptNativeArray(DynamicType * type) : 
-            JavascriptArray(type), weakRefToFuncBody(null) 
-        {            
+        JavascriptNativeArray(DynamicType * type) :
+            JavascriptArray(type), weakRefToFuncBody(null)
+        {
         }
 
     protected:
         JavascriptNativeArray(uint32 length, DynamicType * type) :
             JavascriptArray(length, type), weakRefToFuncBody(null) {}
-        
+
         // For BoxStackInstance
         JavascriptNativeArray(JavascriptNativeArray * instance);
 
@@ -810,9 +810,9 @@ namespace Js
         static bool Is(Var aValue);
         static bool Is(TypeId typeId);
         static JavascriptNativeArray* FromVar(Var aValue);
-        
+
         void SetArrayCallSite(ProfileId index, RecyclerWeakReference<FunctionBody> *weakRef)
-        { 
+        {
             Assert(weakRef);
             Assert(!weakRefToFuncBody);
             SetArrayCallSiteIndex(index);
@@ -823,7 +823,7 @@ namespace Js
             weakRefToFuncBody = null;
         }
 
-        ArrayCallSiteInfo *GetArrayCallSiteInfo();        
+        ArrayCallSiteInfo *GetArrayCallSiteInfo();
 
         static uint32 GetOffsetOfArrayCallSiteIndex() { return offsetof(JavascriptNativeArray, arrayCallSiteIndex); }
         static uint32 GetOffsetOfWeakFuncRef() { return offsetof(JavascriptNativeArray, weakRefToFuncBody); }
@@ -831,8 +831,11 @@ namespace Js
         void SetArrayProfileInfo(RecyclerWeakReference<FunctionBody> *weakRef, ArrayCallSiteInfo *arrayInfo);
         void CopyArrayProfileInfo(Js::JavascriptNativeArray* baseArray);
 
+        Var FindMinOrMax(Js::ScriptContext * scriptContext, bool findMax);
+        template<typename T, bool checkNaNAndNegZero> Var FindMinOrMax(Js::ScriptContext * scriptContext, bool findMax); //NativeInt arrays can't have NaNs or -0
+        
         static void PopWithNoDst(Var nativeArray);
-    };
+	};
 
     class JavascriptNativeFloatArray;
     class JavascriptNativeIntArray : public JavascriptNativeArray
@@ -898,9 +901,9 @@ namespace Js
         virtual void ClearElements(SparseArraySegmentBase *seg, uint32 newSegmentLength) override;
         virtual void PrepareDetach(DynamicObject* proxiedObject) override;
         virtual void SetIsPrototype() override;
-
+		
         TypeId TrySetNativeIntArrayItem(Var value, int32 *iValue, double *dValue);
-
+		
         virtual bool IsMissingHeadSegmentItem(const uint32 index) const override;
 
         static VTableValue VtableHelper()
@@ -1011,9 +1014,9 @@ namespace Js
         virtual void ClearElements(SparseArraySegmentBase *seg, uint32 newSegmentLength) override;
         virtual void PrepareDetach(DynamicObject* proxiedObject) override;
         virtual void SetIsPrototype() override;
-
+		
         TypeId TrySetNativeFloatArrayItem(Var value, double *dValue);
-
+		
         virtual bool IsMissingHeadSegmentItem(const uint32 index) const override;
 
         static VTableValue VtableHelper()

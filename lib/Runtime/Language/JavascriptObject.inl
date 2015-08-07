@@ -37,6 +37,10 @@ namespace Js
             returnValue = JavascriptOperators::SetPropertyDescriptor(obj, propId, descriptor);
         }
 
+        if (propId == PropertyIds::_symbolSpecies && obj == scriptContext->GetLibrary()->GetArrayConstructor())
+        {
+            scriptContext->GetLibrary()->SetArrayObjectHasUserDefinedSpecies(true);
+        }
 
         if (obj->IsWritableDataOnlyDetectionBitSet())
         {

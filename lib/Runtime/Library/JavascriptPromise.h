@@ -181,6 +181,7 @@ namespace Js
         RecyclableObject* GetResolve();
         RecyclableObject* GetReject();
         Var GetPromise();
+        void SetPromise(Var);
 
         void SetResolve(RecyclableObject* resolve);
         void SetReject(RecyclableObject* reject);

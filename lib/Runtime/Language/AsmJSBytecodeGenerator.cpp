@@ -1077,7 +1077,10 @@ namespace Js
                 else if (argInfo.type.isFloat())
                 {
                     CheckNodeLocation(argInfo, float);
-                    Assert(!isFFI);
+                    if (isFFI)
+                    {
+                        throw AsmJsCompilationException(L"FFI function %s doesn't support float arguments", funcName->Psz());
+                    }
                     mWriter.AsmReg2(OpCodeAsmJs::I_ArgOut_Flt, regSlotLocation, argInfo.location);
                     regSlotLocation++;
                     mFunction->ReleaseLocation<float>(&argInfo);
@@ -1116,7 +1119,7 @@ namespace Js
 #endif
                 else
                 {
-                    Assert(UNREACHED);
+                    throw AsmJsCompilationException(L"Function %s doesn't support argument of type %s", funcName->Psz(), argInfo.type.toChars());
                 }
                 // if there are nested calls, track whichever is the deepest
                 if (maxDepthForLevel < mFunction->GetArgOutDepth())
@@ -2471,7 +2474,6 @@ namespace Js
                 else if (var->GetVarType().isFloat())
                 {
                     CheckNodeLocation(rhsEmit, float);
-                    Assert(var->GetVarType().isFloat());
                     mWriter.AsmReg2(Js::OpCodeAsmJs::Ld_Flt, var->GetLocation(), rhsEmit.location);
                 }
                 else if (var->GetVarType().isDouble())
@@ -3025,15 +3027,18 @@ namespace Js
             emitInfo.location = doubleReg;
             emitInfo.type = AsmJsType::Double;
         }
-        else
+        else if (trueInfo.type.isFloat())
         {
-            Assert(trueInfo.type.isFloat());
             mWriter.AsmReg2(Js::OpCodeAsmJs::Ld_Flt, floatReg, trueInfo.location);
             mFunction->ReleaseLocation<float>(&trueInfo);
             mFunction->ReleaseTmpRegister<int>(intReg);
             mFunction->ReleaseTmpRegister<double>(doubleReg);
             emitInfo.location = floatReg;
             emitInfo.type = AsmJsType::Float;
+        }
+        else
+        {
+            throw AsmJsCompilationException(L"Conditional expressions must be of type int, double, or float");
         }
         mWriter.AsmBr( skipLabel );
         EndStatement(pnode->sxTri.pnode2);
@@ -3044,7 +3049,7 @@ namespace Js
         {
             if( !trueInfo.type.isInt() )
             {
-                throw AsmJsCompilationException( L"Conditionnal expressions results must be the same type" );
+                throw AsmJsCompilationException( L"Conditional expressions results must be the same type" );
             }
             mWriter.AsmReg2( Js::OpCodeAsmJs::Ld_Int, intReg, falseInfo.location );
             mFunction->ReleaseLocation<int>( &falseInfo );
@@ -3053,20 +3058,23 @@ namespace Js
         {
             if( !trueInfo.type.isDouble() )
             {
-                throw AsmJsCompilationException( L"Conditionnal expressions results must be the same type" );
+                throw AsmJsCompilationException( L"Conditional expressions results must be the same type" );
             }
             mWriter.AsmReg2( Js::OpCodeAsmJs::Ld_Db, doubleReg, falseInfo.location );
             mFunction->ReleaseLocation<double>( &falseInfo );
         }
-        else
+        else if(falseInfo.type.isFloat())
         {
-            Assert(falseInfo.type.isFloat());
             if (!trueInfo.type.isFloat())
             {
-                throw AsmJsCompilationException(L"Conditionnal expressions results must be the same type");
+                throw AsmJsCompilationException(L"Conditional expressions results must be the same type");
             }
             mWriter.AsmReg2(Js::OpCodeAsmJs::Ld_Flt, floatReg, falseInfo.location);
             mFunction->ReleaseLocation<float>(&falseInfo);
+        }
+        else
+        {
+            throw AsmJsCompilationException(L"Conditional expressions must be of type int, double, or float");
         }
         mWriter.MarkAsmJsLabel( skipLabel );
         EndStatement(pnode->sxTri.pnode3);

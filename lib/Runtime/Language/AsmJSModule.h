@@ -80,6 +80,7 @@ namespace Js {
         static const int32   MemoryTableBeginOffset = 0;
         // Memory is allocated in this order
         int32 mArrayBufferOffset
+            , mStdLibOffset
             , mDoubleOffset
             , mFuncOffset
             , mFFIOffset
@@ -319,6 +320,24 @@ namespace Js {
     };
 
 
+    struct AsmJsSlot
+    {
+        RegSlot location;
+        AsmJsSymbol::SymbolType symType;
+        union
+        {
+            AsmJsVarType::Which varType;
+            ArrayBufferView::ViewType viewType;
+            double mathConstVal;
+            uint funcTableSize;
+            AsmJsModuleArg::ArgType argType;
+            AsmJSMathBuiltinFunction builtinMathFunc;
+            AsmJSTypedArrayBuiltinFunction builtinArrayFunc;
+            AsmJsSIMDBuiltinFunction builtinSIMDFunc;
+        };
+        bool isConstVar = false;
+    };
+
     class AsmJsModuleInfo
     {
         /// proxy of asmjs module
@@ -359,17 +378,20 @@ namespace Js {
         };
         struct ModuleFunctionTable
         {
-            int size;
+            uint size;
             RegSlot* moduleFunctionIndex;
         };
 
+        typedef JsUtil::BaseDictionary<PropertyId, AsmJsSlot*, Memory::Recycler> AsmJsSlotMap;
+
         Recycler* mRecycler;
         int mArgInCount; // for runtime validation of arguments in
-        int mVarCount, mVarImportCount, mFunctionImportCount, mFunctionCount, mFunctionTableCount, mExportsCount;
+        int mVarCount, mVarImportCount, mFunctionImportCount, mFunctionCount, mFunctionTableCount, mExportsCount, mSlotsCount;
 #ifdef SIMD_JS_ENABLED
         int mSimdRegCount; // part of mVarCount
 #endif
-
+        Var                          mJavascriptScope;
+        Var*                         mJavascriptSlots;
         PropertyIdArray*             mExports;
         RegSlot*                     mExportsFunctionLocation;
         RegSlot                      mExportFunctionIndex; // valid only if export object is empty
@@ -379,6 +401,7 @@ namespace Js {
         ModuleFunction*              mFunctions;
         ModuleFunctionTable*         mFunctionTables;
         AsmJsModuleMemory            mModuleMemory;
+        AsmJsSlotMap*                mSlotMap;
         BVStatic<ASMMATH_BUILTIN_SIZE>  mAsmMathBuiltinUsed;
         BVStatic<ASMARRAY_BUILTIN_SIZE> mAsmArrayBuiltinUsed;
 #ifdef SIMD_JS_ENABLED
@@ -406,6 +429,9 @@ namespace Js {
             , mMaxHeapAccess(0)
             , mUsesChangeHeap(false)
             , mIsProcessed(false)
+            , mJavascriptScope(nullptr)
+            , mJavascriptSlots(nullptr)
+            , mSlotMap(nullptr)
         {
 
         }
@@ -435,7 +461,7 @@ namespace Js {
             Assert( i < mFunctionTableCount );
             return mFunctionTables[i];
         }
-        void SetFunctionTableSize( int index, int size );
+        void SetFunctionTableSize( int index, uint size );
         ModuleExport GetExport( int i )
         {
             ModuleExport ex;
@@ -448,9 +474,31 @@ namespace Js {
             return mExports;
         }
 
+        AsmJsSlotMap* GetAsmJsSlotMap()
+        {
+            return mSlotMap;
+        }
 
         // Accessors
     public:
+        inline Var GetJavascriptScope() const
+        {
+            return mJavascriptScope;
+        }
+        inline void SetJavascriptScope(Var val)
+        {
+            Assert(mJavascriptScope == nullptr);
+            mJavascriptScope = val;
+        }
+        inline Var* GetJavascriptSlots() const
+        {
+            return mJavascriptSlots;
+        }
+        inline void SetJavascriptSlots(Var* val)
+        {
+            Assert(mJavascriptSlots == nullptr);
+            mJavascriptSlots = val;
+        }
         inline Js::RegSlot GetExportFunctionIndex() const{return mExportFunctionIndex;}
         inline void SetExportFunctionIndex( Js::RegSlot val ){mExportFunctionIndex = val;}
         void SetExportsCount(int count);
@@ -491,6 +539,12 @@ namespace Js {
             return mVarCount;
         }
         void SetVarCount( int val );
+
+        inline int GetSlotsCount() const
+        {
+            return mSlotsCount;
+        }
+        void InitializeSlotMap(int val);
         inline bool IsRuntimeProcessed() const
         {
             return mIsProcessed;
@@ -553,6 +607,8 @@ namespace Js {
 #endif
 
         static void EnsureHeapAttached(ScriptFunction * func);
+        static void ConvertFrameForJavascript(ScriptFunction * func);
+        static void ConvertFrameForAsmJs(ScriptFunction * func);
     };
 
 

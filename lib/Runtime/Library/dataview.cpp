@@ -81,7 +81,7 @@ namespace Js
         {
             Var secondArgument = args[2];
             numberOffset = JavascriptConversion::ToNumber(secondArgument, scriptContext);
-            offset = JavascriptConversion::ToInt32(numberOffset, scriptContext);
+            offset = JavascriptConversion::ToInt32(numberOffset);
 
             if (offset < 0 || 
                 numberOffset != offset)

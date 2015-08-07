@@ -25,9 +25,8 @@ namespace Js
         static bool CheckIdentifier( AsmJsModuleCompiler &m, ParseNode *usepn, PropertyName name );
         static bool CheckModuleLevelName( AsmJsModuleCompiler &m, ParseNode *usepn, PropertyName name );
         static bool CheckFunctionHead( AsmJsModuleCompiler &m, ParseNode *fn, bool isGlobal = true );
-        static bool CheckTypeAnnotation( AsmJsModuleCompiler &m, ParseNode *coercionNode, AsmJSCoercion *coercion, ParseNode **coercedExpr = nullptr );
-        static bool CheckArgument( AsmJsModuleCompiler &m, ParseNode *arg, PropertyName *name );
-        static bool CheckModuleArgument( AsmJsModuleCompiler &m, ParseNode *arg, PropertyName *name );
+        static bool CheckTypeAnnotation( AsmJsModuleCompiler &m, ParseNode *coercionNode, AsmJSCoercion *coercion, ParseNode **coercedExpr = nullptr);
+        static bool CheckModuleArgument( AsmJsModuleCompiler &m, ParseNode *arg, PropertyName *name, AsmJsModuleArg::ArgType type);
         static bool CheckModuleArguments( AsmJsModuleCompiler &m, ParseNode *fn );
         static bool CheckPrecedingStatements( AsmJsModuleCompiler &m, ParseNode *stmtList );
         static bool CheckModuleGlobals( AsmJsModuleCompiler &m );

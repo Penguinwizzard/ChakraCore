@@ -120,12 +120,12 @@
 
 
     #define TELEMETRY_TRACELOGGING   // Telemetry output using TraceLogging
-    #define TELEMETRY_OUTPUTPRINT    // Telemetry output using Output::Print
+//    #define TELEMETRY_OUTPUTPRINT    // Telemetry output using Output::Print
 
     // Enable/disable specific telemetry providers:
     #define TELEMETRY_ESB  // Telemetry of ECMAScript Built-Ins usage or detection.
 //    #define TELEMETRY_ARRAY_USAGE // Telemetry of Array usage statistics
-//    #define TELEMETRY_DateParse // Telemetry of `Date.parse`
+    #define TELEMETRY_DateParse // Telemetry of `Date.parse`
 
     #ifdef TELEMETRY_ESB
         // Because ESB telemetry is in-production and has major performance implications, this redefines some of the #defines above to disable non-critical functionality to get more performance.

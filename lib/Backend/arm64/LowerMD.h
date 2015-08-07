@@ -222,7 +222,6 @@ public:
               static void         Legalize(IR::Instr *const instr, bool fPostRegAlloc = false) { __debugbreak(); }
   
               IR::Opnd*           IsOpndNegZero(IR::Opnd* opnd, IR::Instr* instr) { __debugbreak(); return 0; }
-              IR::Instr*          GenerateDirectCall(IR::Instr* inlineInstr, IR::Opnd* funcObj, ushort callflags) { __debugbreak(); return 0; }
               void                GenerateFastInlineBuiltInMathAbs(IR::Instr *callInstr) { __debugbreak(); }
               void                GenerateFastInlineBuiltInMathFloor(IR::Instr *callInstr) { __debugbreak(); }
               void                GenerateFastInlineBuiltInMathCeil(IR::Instr *callInstr) { __debugbreak(); }

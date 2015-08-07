@@ -7760,8 +7760,7 @@ LowererMD::EmitFloatToInt(IR::Opnd *dst, IR::Opnd *src, IR::Instr *instrInsert)
     instrInsert->InsertBefore(instr);
     this->ChangeToHelperCall(instr, IR::HelperConv_ToInt32_Full);
 #else
-    // dst = ToInt32Core(src, scriptContext);
-    m_lowerer->LoadScriptContext(instrInsert);
+    // dst = ToInt32Core(src);
     LoadDoubleHelperArgument(instrInsert, src);
 
     instr = IR::Instr::New(Js::OpCode::CALL, dst, this->m_func);
@@ -9174,16 +9173,6 @@ void LowererMD::GenerateFastInlineBuiltInMathAbs(IR::Instr* inlineInstr)
     {
         AssertMsg(FALSE, "GenerateFastInlineBuiltInMathAbs: unexpected type of the src!");
     }
-}
-
-IR::Instr*
-LowererMD::GenerateDirectCall(IR::Instr* inlineInstr, IR::Opnd* funcObj, ushort callflags)
-{
-    int32 argCount = this->lowererMDArch.LowerCallArgs(inlineInstr, callflags);
-    this->lowererMDArch.LoadHelperArgument(inlineInstr, funcObj);
-    this->lowererMDArch.LowerCall(inlineInstr, argCount); //to account for function object and callinfo
-
-    return inlineInstr->m_prev;
 }
 
 void

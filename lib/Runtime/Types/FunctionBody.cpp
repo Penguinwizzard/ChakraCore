@@ -412,6 +412,7 @@ namespace Js
 
         bool isDebugReparse = m_scriptContext->IsInDebugOrSourceRundownMode();
         bool isAsmJsReparse = false;
+        bool isReparse = isDebugReparse;
 
         FunctionBody* funcBody = NULL;
 
@@ -488,9 +489,10 @@ namespace Js
         else
         {
             isAsmJsReparse = m_isAsmjsMode && !isDebugReparse;
+            isReparse |= isAsmJsReparse;
             funcBody = this->GetFunctionBody();
 
-            if (isDebugReparse || isAsmJsReparse)
+            if (isReparse)
             {
     #if ENABLE_DEBUG_CONFIG_OPTIONS
                 wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
@@ -524,7 +526,7 @@ namespace Js
                         "Deferred parsing of event handler body?");
 
             // In debug or asm.js mode, the scriptlet will be asked to recompile again.
-            AssertMsg(isAsmJsReparse || isDebugReparse || funcBody->GetGrfscr() & fscrGlobalCode || CONFIG_FLAG(DeferNested), "Deferred parsing of non-global procedure?");
+            AssertMsg(isReparse || funcBody->GetGrfscr() & fscrGlobalCode || CONFIG_FLAG(DeferNested), "Deferred parsing of non-global procedure?");
 
             HRESULT hr = NO_ERROR;
             HRESULT hrParser = NO_ERROR;
@@ -570,8 +572,8 @@ namespace Js
                     uint nextFunctionId = funcBody->GetLocalFunctionId();
                     hrParser = ps.ParseSourceWithOffset(&parseTree, pszStart, offset, length, charOffset, isCesu8, grfscr, &se,
                         &nextFunctionId, funcBody->GetRelativeLineNumber(), funcBody->GetSourceContextInfo(),
-                        funcBody, (isDebugReparse || isAsmJsReparse), isAsmJsReparse);
-                    Assert(FAILED(hrParser) || nextFunctionId == funcBody->deferredParseNextFunctionId || isDebugReparse || isAsmJsReparse || isByteCodeDeserialization);
+                        funcBody, isReparse, isReparse);
+                    Assert(FAILED(hrParser) || nextFunctionId == funcBody->deferredParseNextFunctionId || isReparse || isByteCodeDeserialization);
 
                     if (FAILED(hrParser))
                     {
@@ -583,7 +585,7 @@ namespace Js
                         TRACE_BYTECODE(L"\nDeferred parse %s\n", funcBody->GetDisplayName());
                         Js::AutoDynamicCodeReference dynamicFunctionReference(m_scriptContext);
 
-                        bool forceNoNative = (isDebugReparse || isAsmJsReparse) ? this->GetScriptContext()->IsInterpreted() : false;
+                        bool forceNoNative = isReparse ? this->GetScriptContext()->IsInterpreted() : false;
                         hrParseCodeGen = GenerateByteCode(parseTree, grfscr, m_scriptContext,
                             funcBody->GetParseableFunctionInfoRef(), funcBody->GetSourceIndex(),
                             forceNoNative, &ps, &se, funcBody->GetScopeInfo(), functionRef);
@@ -6359,9 +6361,9 @@ namespace Js
         // We will register function if, this is not host managed and it was not registered before.
         if (GetHostSourceContext() == Js::Constants::NoHostSourceContext
             && !m_isFuncRegisteredToDiag
-            && !scriptContext->diagProbesContainer.IsContextRegistered(GetSecondaryHostSourceContext()))
+            && !scriptContext->GetDebugContext()->GetProbeContainer()->IsContextRegistered(GetSecondaryHostSourceContext()))
         {
-            FunctionBody *pFunc = scriptContext->diagProbesContainer.GetGlobalFunc(scriptContext, GetSecondaryHostSourceContext());
+            FunctionBody *pFunc = scriptContext->GetDebugContext()->GetProbeContainer()->GetGlobalFunc(scriptContext, GetSecondaryHostSourceContext());
             if (pFunc)
             {
                 // Existing behaviour here is to ignore the OOM and since this function
@@ -6369,13 +6371,13 @@ namespace Js
                 try
                 {
                     // Register the function to the PDM as eval code (the debugger app will show file as 'eval code')
-                    scriptContext->DbgRegisterFunction(pFunc, Constants::EvalCode);
+                    scriptContext->GetDebugContext()->RegisterFunction(pFunc, Constants::EvalCode);
                 }
                 catch (Js::OutOfMemoryException)
                 {
                 }
 
-                scriptContext->diagProbesContainer.RegisterContextToDiag(GetSecondaryHostSourceContext(), scriptContext->AllocatorForDiagnostics());
+                scriptContext->GetDebugContext()->GetProbeContainer()->RegisterContextToDiag(GetSecondaryHostSourceContext(), scriptContext->AllocatorForDiagnostics());
 
                 m_isFuncRegisteredToDiag = true;
             }

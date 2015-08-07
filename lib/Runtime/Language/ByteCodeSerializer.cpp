@@ -1596,12 +1596,12 @@ public:
         PrependInt16(builder, L"Attributes", function->GetAttributes());
         AssertMsg((function->GetAttributes() &
                 ~(FunctionInfo::Attributes::ErrorOnNew
-                  | FunctionInfo::Attributes::HasSuperReference
-                  | FunctionInfo::Attributes::IsDefaultConstructor
+                  | FunctionInfo::Attributes::SuperReference
+                  | FunctionInfo::Attributes::DefaultConstructor
                   | FunctionInfo::Attributes::Lambda
                   | FunctionInfo::Attributes::CapturesThis
                   | FunctionInfo::Attributes::Generator)) == 0,
-                "Only the ErrorOnNew|HasSuperReference|IsDefaultConstructor|Lambda|CapturesThis|Generator attributes should be set on a serialized function");
+                "Only the ErrorOnNew|SuperReference|DefaultConstructor|Lambda|CapturesThis|Generator attributes should be set on a serialized function");
 
         PrependInt32(builder, L"Offset Into Source", sourceDiff);
         if (function->GetNestedCount() > 0)

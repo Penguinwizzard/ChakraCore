@@ -15,7 +15,7 @@ namespace Js
     // Returns whether or not this frame is on the top of the callstack.
     bool DiagStackFrame::IsTopFrame()
     {
-        return this->frameIndex == 0 && GetScriptContext()->diagProbesContainer.IsPrimaryBrokenToDebuggerContext();
+        return this->frameIndex == 0 && GetScriptContext()->GetDebugContext()->GetProbeContainer()->IsPrimaryBrokenToDebuggerContext();
     }
 
     ScriptFunction* DiagStackFrame::GetScriptFunction()

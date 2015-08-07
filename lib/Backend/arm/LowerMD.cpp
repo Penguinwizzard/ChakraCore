@@ -1080,16 +1080,6 @@ LowererMD::GenerateStackProbe(IR::Instr *insertInstr, bool afterProlog)
     Security::InsertRandomFunctionPad(doneLabelInstr);
 }
 
-IR::Instr*
-LowererMD::GenerateDirectCall(IR::Instr* inlineInstr, IR::Opnd* funcObj, ushort callflags)
-{
-    int32 argCount = this->LowererMD::LowerCallArgs(inlineInstr, callflags);
-    this->LowererMD::LoadHelperArgument(inlineInstr, funcObj);
-    this->LowererMD::LowerCall(inlineInstr, (Js::ArgSlot)argCount);
-
-    return inlineInstr->m_prev;
-}
-
 //
 // Emits the code to allocate 'size' amount of space on stack. for values smaller than PAGE_SIZE
 // this will just emit sub rsp,size otherwise calls _chkstk.
@@ -9018,8 +9008,7 @@ LowererMD::EmitFloatToInt(IR::Opnd *dst, IR::Opnd *src, IR::Instr *instrInsert)
     // $Helper
     instrInsert->InsertBefore(labelHelper);
 
-    // dst = ToInt32Core(src, scriptContext);
-    m_lowerer->LoadScriptContext(instrInsert);
+    // dst = ToInt32Core(src);
     LoadDoubleHelperArgument(instrInsert, src);
 
     instr = IR::Instr::New(Js::OpCode::Call, dst, this->m_func);

@@ -2446,6 +2446,18 @@ CommonNumber:
         return TRUE;
     }
 
+    BOOL JavascriptOperators::OP_InitClassMember(Var obj, PropertyId propertyId, Var newValue)
+    {
+        RecyclableObject* instance = RecyclableObject::FromVar(obj);
+
+        PropertyOperationFlags flags = PropertyOperation_None;
+        PropertyAttributes attributes = PropertyClassMemberDefaults;
+
+        instance->SetPropertyWithAttributes(propertyId, newValue, attributes, NULL, flags);
+
+        return TRUE;
+    }
+
     BOOL JavascriptOperators::OP_InitLetProperty(Var obj, PropertyId propertyId, Var newValue)
     {
         RecyclableObject* instance = RecyclableObject::FromVar(obj);
@@ -5587,7 +5599,7 @@ CommonNumber:
         // inlined slots.
 
         JavascriptFunction* constructor = JavascriptFunction::FromVar(function);
-        if (requestContext->GetConfig()->IsES6NewTargetEnabled() && functionInfo->IsClassConstructor() && !isBaseClassConstructorNewScObject)
+        if (functionInfo->IsClassConstructor() && !isBaseClassConstructorNewScObject)
         {
             // If we are calling new on a class constructor, the contract is that we pass new.target as the 'this' argument.
             // function is the constructor on which we called new - which is new.target.
@@ -8264,18 +8276,6 @@ CommonNumber:
         Var value;
         RecyclableObject* propertySpecObj = RecyclableObject::FromVar(propertySpec);
 
-        if (JavascriptOperators::HasProperty(propertySpecObj, PropertyIds::writable) == TRUE)
-        {
-            if (JavascriptOperators::GetProperty(propertySpecObj, PropertyIds::writable, &value, scriptContext))
-            {
-                descriptor->SetWritable(JavascriptConversion::ToBoolean(value, scriptContext) ? true : false);
-            }
-            else
-            {
-                AssertMsg(FALSE, "Proxy : HasProperty and GetProperty's result don't match for 'writable'.");
-            }
-        }
-
         if (JavascriptOperators::HasProperty(propertySpecObj, PropertyIds::enumerable) == TRUE)
         {
             if (JavascriptOperators::GetProperty(propertySpecObj, PropertyIds::enumerable, &value, scriptContext))
@@ -8309,6 +8309,18 @@ CommonNumber:
             else
             {
                 AssertMsg(FALSE, "Proxy : HasProperty and GetProperty's result don't match for 'value'.");
+            }
+        }
+
+        if (JavascriptOperators::HasProperty(propertySpecObj, PropertyIds::writable) == TRUE)
+        {
+            if (JavascriptOperators::GetProperty(propertySpecObj, PropertyIds::writable, &value, scriptContext))
+            {
+                descriptor->SetWritable(JavascriptConversion::ToBoolean(value, scriptContext) ? true : false);
+            }
+            else
+            {
+                AssertMsg(FALSE, "Proxy : HasProperty and GetProperty's result don't match for 'writable'.");
             }
         }
 
@@ -8356,16 +8368,11 @@ CommonNumber:
         Var value;
         RecyclableObject* propertySpecObj = RecyclableObject::FromVar(propertySpec);
 
-        if (JavascriptOperators::GetProperty(propertySpecObj, PropertyIds::writable, &value, scriptContext))
-        {
-            descriptor->SetWritable(JavascriptConversion::ToBoolean(value, scriptContext) ? true : false);
-        }
-
         if (JavascriptOperators::GetProperty(propertySpecObj, PropertyIds::enumerable, &value, scriptContext))
         {
             descriptor->SetEnumerable(JavascriptConversion::ToBoolean(value, scriptContext) ? true : false);
         }
-
+      
         if (JavascriptOperators::GetProperty(propertySpecObj, PropertyIds::configurable, &value, scriptContext))
         {
             descriptor->SetConfigurable(JavascriptConversion::ToBoolean(value, scriptContext) ? true : false);
@@ -8374,6 +8381,11 @@ CommonNumber:
         if (JavascriptOperators::GetProperty(propertySpecObj, PropertyIds::value, &value, scriptContext))
         {
             descriptor->SetValue(value);
+        }
+
+        if (JavascriptOperators::GetProperty(propertySpecObj, PropertyIds::writable, &value, scriptContext))
+        {
+            descriptor->SetWritable(JavascriptConversion::ToBoolean(value, scriptContext) ? true : false);
         }
 
         if (JavascriptOperators::GetProperty(propertySpecObj, PropertyIds::get, &value, scriptContext))

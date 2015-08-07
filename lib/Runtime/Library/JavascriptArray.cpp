@@ -864,7 +864,7 @@ namespace Js
             {
                 // Non-tagged-int number: make sure the double value is really a uint32.
                 double value = JavascriptNumber::GetValue(firstArgument);
-                uint32 uvalue = JavascriptConversion::ToUInt32(value, function->GetScriptContext());
+                uint32 uvalue = JavascriptConversion::ToUInt32(value);
                 if (value != uvalue)
                 {
                     JavascriptError::ThrowRangeError(function->GetScriptContext(), JSERR_ArrayLengthConstructIncorrect);
@@ -992,7 +992,7 @@ namespace Js
             {
                 // Non-tagged-int number: make sure the double value is really a uint32.
                 double value = JavascriptNumber::GetValue(firstArgument);
-                uint32 uvalue = JavascriptConversion::ToUInt32(value, scriptContext);
+                uint32 uvalue = JavascriptConversion::ToUInt32(value);
                 if (value != uvalue)
                 {
                     JavascriptError::ThrowRangeError(scriptContext, JSERR_ArrayLengthConstructIncorrect);
@@ -1135,7 +1135,7 @@ namespace Js
             {
                 // Non-tagged-int number: make sure the double value is really a uint32.
                 double value = JavascriptNumber::GetValue(firstArgument);
-                uint32 uvalue = JavascriptConversion::ToUInt32(value, function->GetScriptContext());
+                uint32 uvalue = JavascriptConversion::ToUInt32(value);
                 if (value != uvalue)
                 {
                     JavascriptError::ThrowRangeError(
@@ -1210,7 +1210,7 @@ namespace Js
             {
                 // Non-tagged-int number: make sure the double value is really a uint32.
                 double value = JavascriptNumber::GetValue(firstArgument);
-                uint32 uvalue = JavascriptConversion::ToUInt32(value, function->GetScriptContext());
+                uint32 uvalue = JavascriptConversion::ToUInt32(value);
                 if (value != uvalue)
                 {
                     JavascriptError::ThrowRangeError(
@@ -2252,6 +2252,68 @@ namespace Js
             {
                 baseArray->ClearArrayCallSiteIndex();
             }
+        }
+    }
+
+    Var JavascriptNativeArray::FindMinOrMax(Js::ScriptContext * scriptContext, bool findMax)
+    {
+        if (JavascriptNativeIntArray::Is(this))
+        {
+            return this->FindMinOrMax<int32, false>(scriptContext, findMax);
+        }
+        else
+        {
+            return this->FindMinOrMax<double, true>(scriptContext, findMax);
+        }
+    }
+
+    template <typename T, bool checkNaNAndNegZero>
+    Var JavascriptNativeArray::FindMinOrMax(Js::ScriptContext * scriptContext, bool findMax)
+    {
+        uint len = this->GetLength();
+        Js::SparseArraySegment<T>* headSegment = ((Js::SparseArraySegment<T>*)this->GetHead());
+        bool hasNoMissingValues = this->HasNoMissingValues();
+
+        if (headSegment->next == nullptr)
+        {
+            T currentRes = headSegment->elements[0];
+            uint headSegLen = headSegment->length;
+            uint i = 0;
+            if (hasNoMissingValues)
+            {
+                for (; i < headSegLen; i++)
+                {
+                    T compare = headSegment->elements[i];
+                    if (checkNaNAndNegZero && JavascriptNumber::IsNan(double(compare)))
+                    {
+                        return scriptContext->GetLibrary()->GetNaN();
+                    }
+                    if (findMax ? currentRes < compare : currentRes > compare ||
+                        (checkNaNAndNegZero && compare == 0 && Js::JavascriptNumber::IsNegZero(double(currentRes))))
+                    {
+                        currentRes = compare;
+                    }
+                }
+            }
+            for (; i < len; i++)
+            {
+                T compare = headSegment->elements[i];
+                if (SparseArraySegment<T>::IsMissingItem(&compare) || (checkNaNAndNegZero && JavascriptNumber::IsNan(double(compare))))
+                {
+                    return scriptContext->GetLibrary()->GetNaN();
+                }
+                if (findMax ? currentRes < compare : currentRes > compare ||
+                    (checkNaNAndNegZero && compare == 0 && Js::JavascriptNumber::IsNegZero(double(currentRes))))
+                {
+                    currentRes = compare;
+                }
+            }
+            return Js::JavascriptNumber::ToVarNoCheck(currentRes, scriptContext);
+        }
+        else
+        {
+            AssertMsg(false, "FindMinOrMax currently supports native arrays with only one segment");
+            return nullptr;
         }
     }
 
@@ -5409,8 +5471,14 @@ Case0:
                 JavascriptError::ThrowTypeError(scriptContext, JSERR_InvalidTypedArray_Constructor, L"[TypedArray].prototype.slice");
             }
         }
+        
+        else if (pArr != nullptr)
+        {
+            newObj = ArraySpeciesCreate(pArr, newLen, scriptContext, &isIntArray, &isFloatArray);
+        }
+
         // skip the typed array and "pure" array case, we still need to handle special arrays like es5array, remote array, and proxy of array.
-        else if (pArr == nullptr || scriptContext->GetConfig()->IsES6SpeciesEnabled())
+        else
         {
             newObj = ArraySpeciesCreate(obj, length, scriptContext);
         }
@@ -9151,7 +9219,7 @@ Case0:
         RecyclableObject* newObj = nullptr;
         JavascriptArray* newArr = nullptr;
 
-        if (JavascriptOperators::IsIterable(items))
+        if (JavascriptOperators::IsIterable(items, scriptContext))
         {
             if (constructor)
             {
@@ -10785,9 +10853,18 @@ JavascriptNativeFloatArray::BoxStackInstance(JavascriptNativeFloatArray * instan
 }
 
 RecyclableObject*
-JavascriptArray::ArraySpeciesCreate(Var originalArray, uint32 length, ScriptContext* scriptContext)
+JavascriptArray::ArraySpeciesCreate(Var originalArray, uint32 length, ScriptContext* scriptContext, bool* pIsIntArray, bool* pIsFloatArray)
 {
     if (originalArray == nullptr || !scriptContext->GetConfig()->IsES6SpeciesEnabled())
+    {
+        return nullptr;
+    }
+
+    DynamicObject* obj = DynamicObject::FromVar(originalArray);
+    if (JavascriptArray::Is(obj)
+        && !obj->GetDynamicType()->GetTypeHandler()->GetIsNotPathTypeHandlerOrHasUserDefinedCtor()
+        && obj->GetPrototype() == scriptContext->GetLibrary()->GetArrayPrototype()
+        && !scriptContext->GetLibrary()->GetArrayObjectHasUserDefinedSpecies())
     {
         return nullptr;
     }
@@ -10826,10 +10903,20 @@ JavascriptArray::ArraySpeciesCreate(Var originalArray, uint32 length, ScriptCont
         }
     }
 
-    if (constructor == scriptContext->GetLibrary()->GetUndefined())
+    if (constructor == scriptContext->GetLibrary()->GetUndefined() || constructor == scriptContext->GetLibrary()->GetArrayConstructor())
     {
-        // TODO: ES6 ArrayCreate(length) throws RangeError for length > 2^32-1
-        return scriptContext->GetLibrary()->CreateArray(length);
+        if (nullptr == pIsIntArray)
+        {
+            // TODO: ES6 ArrayCreate(length) throws RangeError for length > 2^32-1
+            return scriptContext->GetLibrary()->CreateArray(length);
+        }
+        else
+        {
+            // If the constructor function is the built-in Array constructor, we can be smart and create the right type of native array.
+            JavascriptArray* pArr = JavascriptArray::FromVar(originalArray);
+            pArr->GetArrayTypeAndConvert(pIsIntArray, pIsFloatArray);
+            return CreateNewArrayHelper(length, *pIsIntArray, *pIsFloatArray, pArr, scriptContext);
+        }
     }
 
     if (!JavascriptOperators::IsConstructor(constructor))
@@ -10837,7 +10924,7 @@ JavascriptArray::ArraySpeciesCreate(Var originalArray, uint32 length, ScriptCont
         JavascriptError::ThrowTypeError(scriptContext, JSERR_NotAConstructor, L"[@@species]");
     }
 
-    Js::Var constructorArgs[] = { constructor, JavascriptNumber::ToVar( length, scriptContext) };
+    Js::Var constructorArgs[] = { constructor, JavascriptNumber::ToVar(length, scriptContext) };
     Js::CallInfo constructorCallInfo(Js::CallFlags_New, _countof(constructorArgs));
 
     return RecyclableObject::FromVar(JavascriptOperators::NewScObject(constructor, Js::Arguments(constructorCallInfo, constructorArgs), scriptContext));

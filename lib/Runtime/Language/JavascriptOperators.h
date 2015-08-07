@@ -54,14 +54,14 @@ namespace Js
         { \
             if (scriptContext->IsInDebugMode()) \
             { \
-                scriptContext->diagProbesContainer.SetThrowIsInternal(true); \
+                scriptContext->GetDebugContext()->GetProbeContainer()->SetThrowIsInternal(true); \
             } \
         } \
         ~AutoCleanup() \
         { \
             if (scriptContext->IsInDebugMode()) \
             { \
-                scriptContext->diagProbesContainer.SetThrowIsInternal(false); \
+                scriptContext->GetDebugContext()->GetProbeContainer()->SetThrowIsInternal(false); \
             } \
         } \
     } autoCleanup(scriptContext);
@@ -245,7 +245,7 @@ namespace Js
         static BOOL IsUndefinedObject(Var instance, RecyclableObject *libraryUndefined);
         static BOOL IsUndefinedObject(Var isntance, JavascriptLibrary* library);
         static BOOL IsAnyNumberValue(Var instance);
-        static BOOL IsIterable(RecyclableObject* instance);
+        static BOOL IsIterable(RecyclableObject* instance, ScriptContext* scriptContext);
 
         static BOOL HasOwnItem(RecyclableObject* instance, uint32 index);
         static BOOL HasItem(RecyclableObject* instance, uint32 index);
@@ -300,6 +300,7 @@ namespace Js
         static BOOL OP_InitUndeclRootConstProperty(Var instance, PropertyId propertyId);
         static BOOL OP_InitUndeclConsoleLetProperty(Var instance, PropertyId propertyId);
         static BOOL OP_InitUndeclConsoleConstProperty(Var instance, PropertyId propertyId);
+        static BOOL OP_InitClassMember(Var instance, PropertyId propertyId, Var newValue);
 
         static BOOL OP_HasItem(Var instance, Var aElementIndex, ScriptContext* scriptContext);
         static Var OP_GetElementI(Var instance, Var aElementIndex, ScriptContext* scriptContext);

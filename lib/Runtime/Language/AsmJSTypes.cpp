@@ -490,6 +490,25 @@ namespace Js
         return (AsmJsTypedArrayFunction*)this;
     }
 
+    template<>
+    AsmJsModuleArg* Js::AsmJsSymbol::Cast()
+    {
+        Assert(mType == ModuleArgument);
+        return (AsmJsModuleArg*)this;
+    }
+
+    Js::AsmJsType AsmJsModuleArg::GetType() const
+    {
+        Assert(UNREACHED);
+        return AsmJsType::Void;
+    }
+
+    bool AsmJsModuleArg::isMutable() const
+    {
+        Assert(UNREACHED);
+        return true;
+    }
+
     Js::AsmJsType AsmJsMathConst::GetType() const
     {
         return AsmJsType::Double;

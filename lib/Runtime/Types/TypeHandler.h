@@ -72,6 +72,7 @@ namespace Js
         int slotCapacity;
         uint16 unusedBytes;             // This always has it's lowest bit set to avoid false references
         uint16 inlineSlotCapacity;
+        bool isNotPathTypeHandlerOrHasUserDefinedCtor;
 
     public:
         DEFINE_GETCPPNAME_ABSTRACT();
@@ -80,6 +81,7 @@ namespace Js
             propertyTypes(typeHandler->propertyTypes),
             slotCapacity(typeHandler->slotCapacity),
             offsetOfInlineSlots(typeHandler->offsetOfInlineSlots),
+            isNotPathTypeHandlerOrHasUserDefinedCtor(typeHandler->isNotPathTypeHandlerOrHasUserDefinedCtor),
             unusedBytes(typeHandler->unusedBytes)
         {
         }
@@ -390,6 +392,7 @@ namespace Js
         }
 
         BOOL Freeze(DynamicObject *instance, bool isConvertedType = false)  { return FreezeImpl(instance, isConvertedType); }
+        bool GetIsNotPathTypeHandlerOrHasUserDefinedCtor() const { return this->isNotPathTypeHandlerOrHasUserDefinedCtor; }
 
         virtual BOOL IsStringTypeHandler() const { return false; }
 

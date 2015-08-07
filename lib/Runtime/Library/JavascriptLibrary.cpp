@@ -1506,6 +1506,7 @@ namespace Js
         AddFunction(globalObject, PropertyIds::Object, objectConstructor);
         arrayConstructor = CreateBuiltinConstructor(&JavascriptArray::EntryInfo::NewInstance,
             DeferredTypeHandler<InitializeArrayConstructor>::GetDefaultInstance());
+        SetArrayObjectHasUserDefinedSpecies(false);
         AddFunction(globalObject, PropertyIds::Array, arrayConstructor);
         booleanConstructor = CreateBuiltinConstructor(&JavascriptBoolean::EntryInfo::NewInstance,
             DeferredTypeHandler<InitializeBooleanConstructor>::GetDefaultInstance());
@@ -4674,7 +4675,7 @@ namespace Js
             functionInfo, ctorCache);
     }
 
-    JavascriptExternalFunction* JavascriptLibrary::CreateExternalConstructor(Js::JavascriptMethod entryPoint, PropertyId nameId, RecyclableObject * prototype)
+    JavascriptExternalFunction* JavascriptLibrary::CreateExternalConstructor(Js::ExternalMethod entryPoint, PropertyId nameId, RecyclableObject * prototype)
     {
         Assert(nameId >= Js::InternalPropertyIds::Count && scriptContext->IsTrackedPropertyId(nameId));
         JavascriptExternalFunction* function = this->CreateIdMappedExternalFunction(entryPoint, idMappedFunctionWithPrototypeType);
@@ -4706,14 +4707,14 @@ namespace Js
         return function;
     }
 
-    JavascriptExternalFunction* JavascriptLibrary::CreateExternalConstructor(Js::JavascriptMethod entryPoint, PropertyId nameId, InitializeMethod method, unsigned short deferredTypeSlots, bool hasAccessors)
+    JavascriptExternalFunction* JavascriptLibrary::CreateExternalConstructor(Js::ExternalMethod entryPoint, PropertyId nameId, InitializeMethod method, unsigned short deferredTypeSlots, bool hasAccessors)
     {
         Assert(nameId >= Js::InternalPropertyIds::Count && scriptContext->IsTrackedPropertyId(nameId));
 
         // Make sure the actual entry point is never null.
         if (entryPoint == nullptr)
         {
-            entryPoint = Js::RecyclableObject::DefaultEntryPoint;
+            entryPoint = Js::RecyclableObject::DefaultExternalEntryPoint;
         }
 
         JavascriptExternalFunction* function = RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptExternalFunction, entryPoint,
@@ -5361,14 +5362,14 @@ namespace Js
     }
 
     JavascriptExternalFunction*
-    JavascriptLibrary::CreateExternalFunction(JavascriptMethod entryPoint, PropertyId nameId, Var signature, JavascriptTypeId prototypeTypeId, UINT64 flags)
+    JavascriptLibrary::CreateExternalFunction(ExternalMethod entryPoint, PropertyId nameId, Var signature, JavascriptTypeId prototypeTypeId, UINT64 flags)
     {
         Assert(nameId == 0 || scriptContext->IsTrackedPropertyId(nameId));
         return CreateExternalFunction(entryPoint, TaggedInt::ToVarUnchecked(nameId), signature, prototypeTypeId, flags);
     }
 
     JavascriptExternalFunction*
-    JavascriptLibrary::CreateExternalFunction(JavascriptMethod entryPoint, Var nameId, Var signature, JavascriptTypeId prototypeTypeId, UINT64 flags)
+    JavascriptLibrary::CreateExternalFunction(ExternalMethod entryPoint, Var nameId, Var signature, JavascriptTypeId prototypeTypeId, UINT64 flags)
     {
         JavascriptExternalFunction* function = EnsureReadyIfHybridDebugging(this->CreateIdMappedExternalFunction(entryPoint, externalFunctionWithDeferredPrototypeType));
         function->SetPrototypeTypeId(prototypeTypeId);

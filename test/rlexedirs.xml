@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<regress-exe>
+<dir>
+  <default>
+    <files>es5</files>
+  </default>
+</dir>
+<dir>
+  <default>
+    <files>UnitTestFramework</files>
+  </default>
+</dir>
+</regress-exe>

@@ -65,7 +65,7 @@ namespace Js
                 ByteCodeReader reader;
                 reader.Create(exceptionObject->GetFunctionBody(), exceptionObject->GetByteCodeOffset());
                 // Determine offset for next statement here.
-                if (!scriptContext->diagProbesContainer.GetNextUserStatementOffsetForAdvance(
+                if (!scriptContext->GetDebugContext()->GetProbeContainer()->GetNextUserStatementOffsetForAdvance(
                     exceptionObject->GetFunctionBody(), &reader, exceptionObject->GetByteCodeOffset(), &nextStatementOffset)) 
                 {
                     // Can't advance.

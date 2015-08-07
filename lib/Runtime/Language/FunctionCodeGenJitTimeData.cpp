@@ -61,6 +61,7 @@ namespace Js
         bool keepFieldValue = false;
         bool isFieldValueFixed = false;
         bool isMissing = false;
+        bool isBuiltIn = false;
 
         // Save untagged type pointers, remembering whether the original type was tagged.
         // The type pointers must be untagged so that the types cannot be collected during JIT.
@@ -267,6 +268,8 @@ namespace Js
                             }
                         }
                     }
+
+                    isBuiltIn = Js::JavascriptLibrary::GetBuiltinFunctionForPropId(propertyId) != Js::BuiltinFunction::None;
                 }
 
                 if (fixedProperty != null)
@@ -337,7 +340,7 @@ namespace Js
         else
         {
             info = RecyclerNew(recycler, ObjTypeSpecFldInfo,
-                id, type->GetTypeId(), typeWithoutProperty, usesAuxSlot, isProto, isAccessor, isFieldValueFixed, keepFieldValue, slotIndex, propertyId,
+                id, type->GetTypeId(), typeWithoutProperty, usesAuxSlot, isProto, isAccessor, isFieldValueFixed, keepFieldValue, isBuiltIn, slotIndex, propertyId,
                 prototypeObject, propertyGuard, ctorCache, fixedFieldInfoArray);
 
             if (PHASE_TRACE(Js::ObjTypeSpecPhase, topFunctionBody) || PHASE_TRACE(Js::EquivObjTypeSpecPhase, topFunctionBody))

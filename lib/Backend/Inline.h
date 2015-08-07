@@ -46,9 +46,14 @@ private:
     IR::Instr * SimulateCallForGetterSetter(IR::Instr *accessorInstr, IR::Instr* insertInstr, IR::PropertySymOpnd* methodOpnd, bool isGetter);
 
     IR::Instr * InlineApply(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, const Js::FunctionCodeGenJitTimeData* inlinerData, const StackSym *symThis, bool* pIsInlined, uint callSiteId, uint recursiveInlineDepth);
-    bool        InlineApplyTarget(IR::Instr *callInstr, const Js::FunctionCodeGenJitTimeData* inlinerData, Js::FunctionInfo *applyFuncInfo, const StackSym *symThis, IR::Instr ** returnInstr, uint recursiveInlineDepth);
+    IR::Instr * InlineApplyWithArray(IR::Instr *callInstr, Js::FunctionInfo * funcInfo, Js::BuiltinFunction builtInId);
+    IR::Instr * InlineApplyWithArgumentsObject(IR::Instr * callInstr, IR::Instr * argsObjectArgInstr, Js::FunctionInfo * funcInfo);
+    bool        InlineApplyTarget(IR::Instr *callInstr, const Js::FunctionCodeGenJitTimeData* inlinerData, const Js::FunctionCodeGenJitTimeData** pInlineeData, Js::FunctionInfo *applyFuncInfo, 
+                                    const StackSym *symThis, IR::Instr ** returnInstr, uint recursiveInlineDepth);
+
     IR::Instr * InlineCall(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, const Js::FunctionCodeGenJitTimeData* inlinerData, const StackSym *symThis, bool* pIsInlined, uint callSiteId, uint recursiveInlineDepth);
     bool        InlineCallTarget(IR::Instr *callInstr, const Js::FunctionCodeGenJitTimeData* inlinerData, Js::FunctionInfo *callFuncInfo, const StackSym *symThis, IR::Instr ** returnInstr, uint recursiveInlineDepth);
+    
     bool        InlConstFoldArg(IR::Instr *instr, __in_ecount(callerArgOutCount) IR::Instr *callerArgOuts[], Js::ArgSlot callerArgOutCount);
     bool        InlConstFold(IR::Instr *instr, IntConstType *pValue, __in_ecount(callerArgOutCount) IR::Instr *callerArgOuts[], Js::ArgSlot callerArgOutCount);
 

@@ -1755,7 +1755,8 @@ void ByteCodeGenerator::LoadAllConstants(FuncInfo *funcInfo)
 
         // A reparse should result in the same size of the activation object.
         // Exclude functions which were created from the bytecodecache.
-        AssertMsg(!byteCodeFunction->IsReparsed() || byteCodeFunction->HasGeneratedFromByteCodeCache() || byteCodeFunction->scopeObjectSize == count, "The activation object size is different betweeen debug and non-debug mode");
+        AssertMsg(!byteCodeFunction->IsReparsed() || byteCodeFunction->HasGeneratedFromByteCodeCache() || byteCodeFunction->scopeObjectSize == count || byteCodeFunction->m_wasEverAsmjsMode,
+            "The activation object size is different betweeen debug and non-debug mode");
         byteCodeFunction->scopeObjectSize = count;
 
 #endif
@@ -1975,7 +1976,7 @@ void ByteCodeGenerator::LoadThisObject(FuncInfo *funcInfo, bool thisLoadedFromPa
         //
         Js::RegSlot thisLocation = funcInfo->thisPointerRegister;
 
-        if (this->scriptContext->GetConfig()->IsES6NewTargetEnabled() && funcInfo->IsClassConstructor())
+        if (funcInfo->IsClassConstructor())
         {
             // Derived class constructors initialize 'this' to be undecl 
             //   - we'll check this value during a super call and during 'this' access
@@ -2531,8 +2532,11 @@ void ByteCodeGenerator::EmitDefaultArgs(FuncInfo *funcInfo, ParseNode *pnode)
     {
         if (pnodeArg->nop == knopParamPattern)
         {
+            this->StartStatement(pnodeArg);
+
             Assert(pnodeArg->sxParamPattern.location != Js::Constants::NoRegister);
             ParseNodePtr pnode1 = pnodeArg->sxParamPattern.pnode1;
+
             if (pnode1->IsPattern())
             {
                 EmitAssignment(nullptr, pnode1, pnodeArg->sxParamPattern.location, this, funcInfo);
@@ -2543,6 +2547,7 @@ void ByteCodeGenerator::EmitDefaultArgs(FuncInfo *funcInfo, ParseNode *pnode)
                 Assert(pnode1->sxBin.pnode1->IsPattern());
                 EmitDestructuredValueOrInitializer(pnode1->sxBin.pnode1, pnodeArg->sxParamPattern.location, pnode1->sxBin.pnode2, this, funcInfo);
             }
+            this->EndStatement(pnodeArg);
             return;
         }
         else if (pnodeArg->IsVarLetOrConst())
@@ -2564,7 +2569,6 @@ void ByteCodeGenerator::EmitDefaultArgs(FuncInfo *funcInfo, ParseNode *pnode)
             this->StartStatement(pnodeArg);
             m_writer.BrReg2(Js::OpCode::BrNeq_A, noDefaultLabel, location, funcInfo->undefinedConstantRegister);
 
-            this->StartStatement(pnodeArg->sxVar.pnodeInit);
             Emit(pnodeArg->sxVar.pnodeInit, this, funcInfo, false);
             pnodeArg->sxVar.sym->SetNeedDeclaration(false); // After emit to prevent foo(a = a)
 
@@ -2580,7 +2584,6 @@ void ByteCodeGenerator::EmitDefaultArgs(FuncInfo *funcInfo, ParseNode *pnode)
             }
 
             funcInfo->ReleaseLoc(pnodeArg->sxVar.pnodeInit);
-            this->EndStatement(pnodeArg->sxVar.pnodeInit);
 
             m_writer.MarkLabel(noDefaultLabel);
 
@@ -4007,7 +4010,7 @@ void ByteCodeGenerator::EmitPropStore(Js::RegSlot rhsLocation, Symbol *sym, Iden
 
         uint cacheId = funcInfo->FindOrAddInlineCacheId(scopeLocation, propertyId, false, true);
         // REVIEW: isLetDecl and isConstDecl can never be true here now that eval's do not leak them, correct?
-        this->m_writer.PatchableProperty(GetStFldOpCode(funcInfo, false, isLetDecl, isConstDecl), rhsLocation, scopeLocation, cacheId);
+        this->m_writer.PatchableProperty(GetStFldOpCode(funcInfo, false, isLetDecl, isConstDecl, false), rhsLocation, scopeLocation, cacheId);
 
         this->m_writer.Br(doneLabel);
         this->m_writer.MarkLabel(nextLabel);
@@ -4041,7 +4044,7 @@ void ByteCodeGenerator::EmitPropStore(Js::RegSlot rhsLocation, Symbol *sym, Iden
         }
         else
         {
-            this->EmitPatchableRootProperty(GetStFldOpCode(funcInfo, true, isLetDecl, isConstDecl), rhsLocation, propertyId, false, true, funcInfo);
+            this->EmitPatchableRootProperty(GetStFldOpCode(funcInfo, true, isLetDecl, isConstDecl, false), rhsLocation, propertyId, false, true, funcInfo);
         }
     }
     else if (sym->GetFuncExpr())
@@ -5201,39 +5204,7 @@ void EmitDestructuredArray(
         }
         else
         {
-            Js::ByteCodeLabel useDefault = -1;
-            Js::ByteCodeLabel end = -1;
-
-            // Without an initializer, we can just emit the assignment. If there is an initializer, we need to also have a branch for
-            // the undefined value case instead of overwriting the value due to assumptions about the use of temporaries.
-            if (init != nullptr) {
-                useDefault = byteCodeGenerator->Writer()->DefineLabel();
-                end = byteCodeGenerator->Writer()->DefineLabel();
-
-                byteCodeGenerator->Writer()->BrReg2(Js::OpCode::BrSrEq_A, useDefault, valueLocation, funcInfo->undefinedConstantRegister);
-            }
-
-            EmitDestructuredElement(elem, valueLocation, byteCodeGenerator, funcInfo);
-
-            // Emit the initializer. Because we have to evaluate the initializer before the element reference,
-            // we have to emit the element reference again for this branch before we use it for assignment.
-            if (init != nullptr)
-            {
-                // Br $end
-                byteCodeGenerator->Writer()->Br(end);
-
-                byteCodeGenerator->Writer()->MarkLabel(useDefault);
-
-                // Evaluate the default expression and assign it.
-                byteCodeGenerator->StartStatement(init);
-                Emit(init, byteCodeGenerator, funcInfo, false);
-                byteCodeGenerator->EndStatement(init);
-
-                EmitDestructuredElement(elem, init->location, byteCodeGenerator, funcInfo);
-
-                funcInfo->ReleaseLoc(init);
-                byteCodeGenerator->Writer()->MarkLabel(end);
-            }
+            EmitDestructuredValueOrInitializer(elem, valueLocation, init, byteCodeGenerator, funcInfo);
         }
         funcInfo->ReleaseTmpRegister(valueLocation);
         funcInfo->ReleaseTmpRegister(itemLocation);
@@ -5426,7 +5397,7 @@ void EmitAssignment(
 
             uint cacheId = funcInfo->FindOrAddInlineCacheId(lhs->sxBin.pnode1->location, propertyId, false, true);
             byteCodeGenerator->Writer()->PatchableProperty(
-                ByteCodeGenerator::GetStFldOpCode(funcInfo, false, false, false), rhsLocation, lhs->sxBin.pnode1->location, cacheId);
+                ByteCodeGenerator::GetStFldOpCode(funcInfo, false, false, false, false), rhsLocation, lhs->sxBin.pnode1->location, cacheId);
             break;
         }
     case knopIndex:
@@ -6177,8 +6148,7 @@ void EmitCallTargetES5(
 
         // Super calls should always use the new.target register unless we don't have one.
         // That could happen if we have an eval('super()') outside of a class constructor.
-        if (byteCodeGenerator->GetScriptContext()->GetConfig()->IsES6NewTargetEnabled()
-            && funcInfo->newTargetRegister != Js::Constants::NoRegister)
+        if (funcInfo->newTargetRegister != Js::Constants::NoRegister)
         {
             *thisLocation = funcInfo->newTargetRegister;
         }
@@ -6586,6 +6556,8 @@ void EmitMemberNode(ParseNode *memberNode, Js::RegSlot objectLocation, ByteCodeG
     ParseNode *nameNode=memberNode->sxBin.pnode1;
     ParseNode *exprNode=memberNode->sxBin.pnode2;
 
+    bool isClassMember = exprNode->nop == knopFncDecl && exprNode->sxFnc.IsClassMember();
+
     if (nameNode->nop == knopComputedName)
     {
         // Computed property name
@@ -6614,7 +6586,7 @@ void EmitMemberNode(ParseNode *memberNode, Js::RegSlot objectLocation, ByteCodeG
         }
 
         // Class members need a reference back to the class.
-        if (exprNode->nop == knopFncDecl && exprNode->sxFnc.IsClassMember())
+        if (isClassMember)
         {
             byteCodeGenerator->Writer()->Reg2(Js::OpCode::SetHomeObj, exprNode->location, objectLocation);
         }
@@ -6628,7 +6600,7 @@ void EmitMemberNode(ParseNode *memberNode, Js::RegSlot objectLocation, ByteCodeG
     Js::OpCode stFldOpCode = (Js::OpCode)0;
     if (useStore)
     {
-        stFldOpCode = ByteCodeGenerator::GetStFldOpCode(funcInfo, false, false, false);
+        stFldOpCode = ByteCodeGenerator::GetStFldOpCode(funcInfo, false, false, false, isClassMember);
     }
 
     Emit(exprNode, byteCodeGenerator, funcInfo, false);
@@ -6655,7 +6627,22 @@ void EmitMemberNode(ParseNode *memberNode, Js::RegSlot objectLocation, ByteCodeG
         else
         {
             uint cacheId = funcInfo->FindOrAddInlineCacheId(objectLocation, propertyId, false, true);
-            byteCodeGenerator->Writer()->PatchableProperty(useStore ? stFldOpCode : Js::OpCode::InitFld, exprNode->location, objectLocation, cacheId);
+            Js::OpCode patchablePropertyOpCode;
+
+            if (useStore)
+            {
+                patchablePropertyOpCode = stFldOpCode;
+            }
+            else if (isClassMember)
+            {
+                patchablePropertyOpCode = Js::OpCode::InitClassMember;
+            }
+            else
+            {
+                patchablePropertyOpCode = Js::OpCode::InitFld;
+            }
+
+            byteCodeGenerator->Writer()->PatchableProperty(patchablePropertyOpCode, exprNode->location, objectLocation, cacheId);
         }
     }
     else if (memberNode->nop == knopGetMember)
@@ -6670,7 +6657,7 @@ void EmitMemberNode(ParseNode *memberNode, Js::RegSlot objectLocation, ByteCodeG
     }
 
     // Class members need a reference back to the class.
-    if (exprNode->nop == knopFncDecl && exprNode->sxFnc.IsClassMember())
+    if (isClassMember)
     {
         byteCodeGenerator->Writer()->Reg2(Js::OpCode::SetHomeObj, exprNode->location, objectLocation);
     }
@@ -7432,7 +7419,6 @@ void EmitForInOrForOf(ParseNode *loopNode, ByteCodeGenerator *byteCodeGenerator,
         // otherwise put result's value property in itemLocation
         EmitIteratorValue(loopNode->sxForInOrForOf.itemLocation, loopNode->sxForInOrForOf.itemLocation, byteCodeGenerator, funcInfo);
     }
-    byteCodeGenerator->EndStatement(loopNode->sxForInOrForOf.pnodeLval);
 
 
     if (loopNode->sxForInOrForOf.pnodeLval->nop != knopVarDecl &&
@@ -7446,6 +7432,13 @@ void EmitForInOrForOf(ParseNode *loopNode, ByteCodeGenerator *byteCodeGenerator,
         sym->SetNeedDeclaration(false);
     }
     EmitAssignment(NULL, loopNode->sxForInOrForOf.pnodeLval, loopNode->sxForInOrForOf.itemLocation, byteCodeGenerator, funcInfo);
+
+    if (!loopNode->sxForInOrForOf.pnodeLval->IsPattern())
+    {
+        // In the case of pattern the above statement has already done the endstatement for the pnodeLval
+        byteCodeGenerator->EndStatement(loopNode->sxForInOrForOf.pnodeLval);
+    }
+
     funcInfo->ReleaseReference(loopNode->sxForInOrForOf.pnodeLval);
 
     Emit(loopNode->sxForInOrForOf.pnodeBody, byteCodeGenerator, funcInfo, fReturnValue);
@@ -9605,6 +9598,10 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
                         {
                             byteCodeGenerator->Writer()->Slot(Js::OpCode::StSlot, location, scopeLocation, Js::ScopeSlots::FirstSlotIndex);
                         }
+                        else
+                        {
+                            byteCodeGenerator->Writer()->Reg1Unsigned1(Js::OpCode::InitUndeclSlot, scopeLocation, sym->GetScopeSlot() + Js::ScopeSlots::FirstSlotIndex);
+                        }
                     }
                 }
                 else
@@ -9613,6 +9610,10 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
                     if (initializeParam)
                     {
                         byteCodeGenerator->EmitLocalPropInit(location, sym, funcInfo);
+                    }
+                    else
+                    {
+                        byteCodeGenerator->Writer()->Reg1(Js::OpCode::InitUndecl, location);
                     }
                 }
             };

@@ -2464,6 +2464,17 @@ Opnd::FindRegUse(IR::RegOpnd *regOpnd)
     return NULL;
 }
 
+bool
+Opnd::IsArgumentsObject()
+{
+    // returns "false" if the sym is not single def (happens when the parent function has formals); the opnd can still be the arguments object.
+    // Since we need this information in the inliner where we dont track arguments object sym, going with single def is the best option.
+    StackSym * sym = this->GetStackSym();
+
+    return sym && sym->IsSingleDef() &&
+	    (sym->m_instrDef->m_opcode == Js::OpCode::LdHeapArguments || sym->m_instrDef->m_opcode == Js::OpCode::LdLetHeapArguments);
+}
+
 #if DBG_DUMP || defined(ENABLE_IR_VIEWER)
 
 void

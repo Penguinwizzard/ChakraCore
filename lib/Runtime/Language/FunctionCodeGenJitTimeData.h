@@ -157,6 +157,7 @@ namespace Js
                 bool isBeingStored: 1;
                 bool isBeingAdded: 1;
                 bool doesntHaveEquivalence: 1;
+                bool isBuiltIn : 1;
             };
             struct {
                 uint16 flags;
@@ -174,7 +175,7 @@ namespace Js
             ctorCache(null), fixedFieldInfoArray(null) {}
 
         ObjTypeSpecFldInfo(uint id, TypeId typeId, Type* initialType,
-            bool usesAuxSlot, bool isLoadedFromProto, bool usesAccessor, bool isFieldValueFixed, bool keepFieldValue,
+            bool usesAuxSlot, bool isLoadedFromProto, bool usesAccessor, bool isFieldValueFixed, bool keepFieldValue, bool isBuiltIn,
             uint16 slotIndex, PropertyId propertyId, DynamicObject* protoObject, PropertyGuard* propertyGuard,
             JitTimeConstructorCache* ctorCache, FixedFieldInfo* fixedFieldInfoArray) :
             id(id), typeId(typeId), typeSet(null), initialType(initialType), flags(InitialObjTypeSpecFldInfoFlagValue),
@@ -190,6 +191,7 @@ namespace Js
             this->keepFieldValue = keepFieldValue;
             this->isBeingAdded = initialType != null;
             this->doesntHaveEquivalence = true; //doesn't mean anything for data from a monomorphic cache
+            this->isBuiltIn = isBuiltIn;
             this->fixedFieldCount = 1;
         }
 
@@ -210,6 +212,7 @@ namespace Js
             this->keepFieldValue = keepFieldValue;
             this->isBeingAdded = initialType != null;
             this->doesntHaveEquivalence = doesntHaveEquivalence;
+            this->isBuiltIn = false;
             this->fixedFieldCount = fixedFieldCount;
         }
 

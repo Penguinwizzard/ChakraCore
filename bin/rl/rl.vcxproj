@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Condition="'$(BuildingWithBuildExe)'=='true'" Project="..\..\..\Build\Chakra.Build.Paths.props" />
   <Import Condition="'$(ChakraBuildPathImported)'!='true'" Project="$(SolutionDir)Chakra.Build.Paths.props" />
@@ -23,12 +23,6 @@
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
   </PropertyGroup>
   <ItemDefinitionGroup>
-    <ClCompile>
-      <AdditionalIncludeDirectories>
-        %(AdditionalIncludeDirectories);
-        $(SdkToolsIncPath)
-      </AdditionalIncludeDirectories>
-    </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <!-- In general we need msxml6 for our XML reading functionality but we also 
@@ -36,14 +30,24 @@
            and this symbol is defined only in msxml2.lib -->
       <AdditionalDependencies>
         %(AdditionalDependencies);
-        $(SdkLibPath)\oleaut32.lib;
-        $(SdkLibPath)\ole32.lib;
-        $(SdkLibPath)\kernel32.lib;
-        $(SdkLibPath)\msxml6.lib;
-        $(SdkLibPath)\msxml2.lib;
+        oleaut32.lib;
+        ole32.lib;
+        kernel32.lib;
+        msxml6.lib;
+        msxml2.lib
+      </AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(BuildingWithBuildExe)'!='true'">
+        %(AdditionalDependencies);
+        nothrownew.obj
+      </AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(BuildingWithBuildExe)'=='true'">
+        %(AdditionalDependencies);
         $(InternalSdkLibPath)\nothrownew.lib
       </AdditionalDependencies>
     </Link>
+    <ClCompile>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
   </ItemDefinitionGroup>
   <!-- Razzle binplace -->
   <ItemGroup Condition="'$(BuildingWithBuildExe)'=='true'">

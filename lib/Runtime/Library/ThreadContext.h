@@ -819,6 +819,10 @@ public:
     JITTimer JITTelemetry;
     ParserTimer ParserTelemetry;
     GUID activityId;
+    void *tridentLoadAddress;
+
+    void* GetTridentLoadAddress() const { return tridentLoadAddress;  }
+    void SetTridentLoadAddress(void *loadAddress) { tridentLoadAddress = loadAddress; }
 
 #ifdef ENABLE_DIRECTCALL_TELEMETRY
     DirectCallTelemetry directCallTelemetry;

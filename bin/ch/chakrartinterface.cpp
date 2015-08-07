@@ -3,7 +3,6 @@
 //----------------------------------------------------------------------------
 #include "StdAfx.h"
 
-LPCWSTR chakratestDllName = L"chakracoretest.dll";
 LPCWSTR chakraDllName = L"chakracore.dll";
 
 bool ChakraRTInterface::m_testHooksSetup = false;
@@ -24,21 +23,22 @@ HINSTANCE ChakraRTInterface::LoadChakraDll(ArgInfo& argInfo)
     wchar_t modulename[_MAX_PATH];
     GetModuleFileName(NULL, modulename, _MAX_PATH);
     _wsplitpath_s(modulename, drive, _MAX_DRIVE, dir, _MAX_DIR, nullptr, 0, nullptr, 0);
-    _wmakepath_s(filename, drive, dir, chakratestDllName, nullptr);
+    _wmakepath_s(filename, drive, dir, chakraDllName, nullptr);
     LPCWSTR dllName = filename;
 
     HINSTANCE library = LoadLibraryEx(dllName, nullptr, 0);
     if (library == nullptr)
     {
-        _wmakepath_s(filename, drive, dir, chakraDllName, nullptr);
-        library = LoadLibraryEx(filename, nullptr, 0);
+        int ret = GetLastError();
+        fwprintf(stderr, L"FATAL ERROR: Unable to load %ls GetLastError=0x%x\n", chakraDllName, ret);
+        return nullptr;
+    }
 
-        if (library == nullptr)
-        {
-            int ret = GetLastError();
-            fwprintf(stderr, L"FATAL ERROR: Unable to load %ls and %ls GetLastError=0x%x\n", chakratestDllName, chakraDllName, ret);
-            return nullptr;
-        }
+    if (!m_testHooksInitialized)
+    {
+        fwprintf(stderr, L"The binary %ls is not test enabled, please use %ls from debug/test flavor\n", chakraDllName, chakraDllName);
+        UnloadChakraDll(library);
+        return nullptr;
     }
 
     m_jsApiHooks.pfJsrtCreateRuntime = (JsAPIHooks::JsrtCreateRuntimePtr)GetProcAddress(library, "JsCreateRuntime");

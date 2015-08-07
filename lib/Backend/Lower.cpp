@@ -2422,6 +2422,10 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             LowerElementUndefined(instr, IR::HelperOp_InitUndeclConsoleConstFld);
             break;
 
+        case Js::OpCode::InitClassMember:
+            LowerStFld(instr, IR::HelperOp_InitClassMember, IR::HelperOp_InitClassMember, false);
+            break;
+
         case Js::OpCode::NewStackFrameDisplay:
             this->LowerLdFrameDisplay(instr, false, m_func->DoStackFrameDisplay());
             break;
@@ -2753,8 +2757,65 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
         }
 
         case Js::OpCode::GeneratorResumeJumpTable:
-            // Lowered in LowerPrologEpilog so that the jumps introduced are not considered to be part of the flow for the RegAlloc phase
+        {
+            // Lowered in LowerPrologEpilog so that the jumps introduced are not considered to be part of the flow for the RegAlloc phase.
+
+            // Introduce a BailOutNoSave label if there were yield points that were elided due to optimizations.  They could still be hit
+            // if an active generator object had been paused at such a yield point when the function body was JITed.  So safe guard such a
+            // case by having the native code simply jump back to the interpreter for such yield points.
+
+            IR::LabelInstr *bailOutNoSaveLabel = nullptr;
+
+            m_func->MapUntilYieldOffsetResumeLabels([this, &bailOutNoSaveLabel](int, const YieldOffsetResumeLabel& yorl)
+            {
+                if (yorl.Second() == nullptr)
+                {
+                    if (bailOutNoSaveLabel == nullptr)
+                    {
+                        bailOutNoSaveLabel = IR::LabelInstr::New(Js::OpCode::Label, m_func);
+                    }
+
+                    return true;
+                }
+
+                return false;
+            });
+
+            // Insert the bailoutnosave label somewhere along with a call to BailOutNoSave helper
+            if (bailOutNoSaveLabel != nullptr)
+            {
+                IR::Instr * exitPrevInstr = this->m_func->m_exitInstr->m_prev;
+                IR::LabelInstr * exitTargetInstr;
+                if (exitPrevInstr->IsLabelInstr())
+                {
+                    exitTargetInstr = exitPrevInstr->AsLabelInstr();
+                    exitPrevInstr = exitPrevInstr->m_prev;
+                }
+                else
+                {
+                    exitTargetInstr = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, false);
+                    exitPrevInstr->InsertAfter(exitTargetInstr);
+                }
+
+                bailOutNoSaveLabel->m_hasNonBranchRef = true;
+                bailOutNoSaveLabel->isOpHelper = true;
+
+                IR::Instr* bailOutCall = IR::Instr::New(Js::OpCode::Call, m_func);
+
+                exitPrevInstr->InsertAfter(bailOutCall);
+                exitPrevInstr->InsertAfter(bailOutNoSaveLabel);
+                exitPrevInstr->InsertAfter(IR::BranchInstr::New(LowererMD::MDUncondBranchOpcode, exitTargetInstr, m_func));
+
+                IR::RegOpnd * frameRegOpnd = IR::RegOpnd::New(nullptr, LowererMD::GetRegFramePointer(), TyMachPtr, m_func);
+
+                m_lowererMD.LoadHelperArgument(bailOutCall, frameRegOpnd);
+                m_lowererMD.ChangeToHelperCall(bailOutCall, IR::HelperNoSaveRegistersBailOutForElidedYield);
+
+                m_func->m_bailOutNoSaveLabel = bailOutNoSaveLabel;
+            }
+
             break;
+        }
 
         default:
 #if defined(SIMD_JS_ENABLED)
@@ -5166,7 +5227,7 @@ Lowerer::LowerNewScObjArray(IR::Instr *newObjInstr)
     IR::JnHelperMethod helperMethod = IR::HelperScrArr_ProfiledNewInstance;
 
     newObjInstr->SetSrc1(IR::HelperCallOpnd::New(helperMethod, func));
-    newObjInstr = m_lowererMD.GenerateDirectCall(newObjInstr, targetOpnd, Js::CallFlags_New);
+    newObjInstr = GenerateDirectCall(newObjInstr, targetOpnd, Js::CallFlags_New);
 
     IR::LabelInstr *labelDone = IR::LabelInstr::New(Js::OpCode::Label, func);
     InsertCompareBranch(
@@ -5329,16 +5390,25 @@ Lowerer::LowerGeneratorResumeJumpTable()
 
     IR::Opnd * srcOpnd = jumpTableInstr->UnlinkSrc1();
 
-    m_func->MapYieldOffsetResumeLabels([&](int i, const YieldOffsetResumeLabel& yorl) {
+    m_func->MapYieldOffsetResumeLabels([&](int i, const YieldOffsetResumeLabel& yorl)
+    {
         uint32 offset = yorl.First();
         IR::LabelInstr * label = yorl.Second();
 
+        // using m_hasNonBranchRef is a bad bad hack; please find another way, Ian
+        if (label != nullptr && label->m_hasNonBranchRef)
+        {
+            // Also fix up the bailout at the label with the jump to epilog that was not emitted in GenerateBailOut()
+            Assert(label->m_prev->HasBailOutInfo());
+            GenerateJumpToEpilogForBailOut(label->m_prev->GetBailOutInfo(), label->m_prev);
+        }
+        else if (label == nullptr)
+        {
+            label = m_func->m_bailOutNoSaveLabel;
+        }
+
         // For each offset label pair, insert a compare of the offset and branch if equal to the label
         InsertCompareBranch(srcOpnd, IR::IntConstOpnd::New(offset, TyUint32, m_func), Js::OpCode::BrSrEq_A, label, jumpTableInstr);
-
-        // Now also fix up the bailout at the label with the jump to epilog that was not emitted in GenerateBailOut()
-        Assert(label->m_prev->HasBailOutInfo());
-        GenerateJumpToEpilogForBailOut(label->m_prev->GetBailOutInfo(), label->m_prev);
     });
 
     jumpTableInstr->Remove();
@@ -10586,7 +10656,17 @@ Lowerer::LowerCallDirect(IR::Instr * instr)
         this->LowerBailOnEqualOrNotEqual(bailOutInstr);
     }
     Js::CallFlags flags = instr->GetDst() ? Js::CallFlags_Value : Js::CallFlags_NotUsed;
-    return m_lowererMD.GenerateDirectCall(instr, funcObj, (ushort)flags);
+    return this->GenerateDirectCall(instr, funcObj, (ushort)flags);
+}
+
+IR::Instr *
+Lowerer::GenerateDirectCall(IR::Instr* inlineInstr, IR::Opnd* funcObj, ushort callflags)
+{
+    int32 argCount = m_lowererMD.LowerCallArgs(inlineInstr, callflags);
+    m_lowererMD.LoadHelperArgument(inlineInstr, funcObj);
+    m_lowererMD.LowerCall(inlineInstr, (Js::ArgSlot)argCount); //to account for function object and callinfo
+
+    return inlineInstr->m_prev;
 }
 
 /*

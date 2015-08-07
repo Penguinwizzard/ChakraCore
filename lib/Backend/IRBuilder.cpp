@@ -3078,6 +3078,7 @@ IRBuilder::BuildElementCP(Js::OpCode newOpcode, uint32 offset, Js::RegSlot insta
     case Js::OpCode::InitRootConstFld:
     case Js::OpCode::InitUndeclLetFld:
     case Js::OpCode::InitUndeclConstFld:
+    case Js::OpCode::InitClassMember:
     case Js::OpCode::StRootFld:
     case Js::OpCode::StFldStrict:
     case Js::OpCode::StRootFldStrict:

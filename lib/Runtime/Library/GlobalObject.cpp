@@ -926,8 +926,8 @@ namespace Js
 
             if (registerDocument)
             {
-                scriptContext->DbgRegisterFunction(funcBody, pszTitle);
-                funcBody = funcBody->GetParseableFunctionInfo(); // DbgRegisterFunction may parse and update function body
+                scriptContext->GetDebugContext()->RegisterFunction(funcBody, pszTitle);
+                funcBody = funcBody->GetParseableFunctionInfo(); // RegisterFunction may parse and update function body
             }
 
             ScriptFunction* pfuncScript = funcBody->IsGenerator() ?
@@ -1088,8 +1088,8 @@ namespace Js
 
             if (registerDocument)
             {
-                scriptContext->DbgRegisterFunction(funcBody, pszTitle);
-                funcBody = funcBody->GetParseableFunctionInfo(); // DbgRegisterFunction may parse and update function body
+                scriptContext->GetDebugContext()->RegisterFunction(funcBody, pszTitle);
+                funcBody = funcBody->GetParseableFunctionInfo(); // RegisterFunction may parse and update function body
             }
 
             NativeCodeGenerator *nativeCodeGenerator = scriptContext->GetNativeCodeGenerator();

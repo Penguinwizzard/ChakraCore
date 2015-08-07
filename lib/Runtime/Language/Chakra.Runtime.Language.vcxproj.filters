@@ -14,6 +14,7 @@
     <ClCompile Include="$(MsBuildThisFileDirectory)CacheOperators.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)CallInfo.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)CodeGenRecyclableData.cpp" />
+    <ClCompile Include="$(MsBuildThisFileDirectory)DebugContext.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)DynamicProfileInfo.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)DynamicProfileMutator.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)DynamicProfileStorage.cpp" />
@@ -77,6 +78,7 @@
     <ClInclude Include="CacheOperators.h" />
     <ClInclude Include="InterpreterProcessOpCodeAsmJs.h" />
     <ClInclude Include="CodeGenRecyclableData.h" />
+    <ClInclude Include="DebugContext.h" />
     <ClInclude Include="DynamicProfileInfo.h" />
     <ClInclude Include="DynamicProfileMutator.h" />
     <ClInclude Include="DynamicProfileStorage.h" />
@@ -127,6 +129,10 @@
     <ClInclude Include="arm\stackframe.h">
       <Filter>arm</Filter>
     </ClInclude>
+    <ClInclude Include="ByteCodeSerializeFlags.h" />
+    <ClInclude Include="ScriptContextBase.h" />
+    <ClInclude Include="AsmJSTypes.h" />
+    <ClInclude Include="AsmJsBuiltinNames.h" />
   </ItemGroup>
   <ItemGroup>
     <MASM Include="$(MSBuildThisFileDirectory)amd64\amd64_Thunks.asm">
@@ -153,7 +159,6 @@
     <None Include="JavascriptOperators.inl" />
     <None Include="ScriptContext.inl" />
     <None Include="DiagHelperMethodWrapper.inl" />
-    <None Include="packages.config" />
     <None Include="amd64\stackframe.inl">
       <Filter>amd64</Filter>
     </None>

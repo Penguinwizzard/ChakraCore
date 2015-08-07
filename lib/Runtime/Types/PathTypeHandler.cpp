@@ -14,6 +14,7 @@ namespace Js
         Assert(pathLength <= slotCapacity);
         Assert(inlineSlotCapacity <= slotCapacity);
         SetUnusedBytesValue(pathLength);
+        isNotPathTypeHandlerOrHasUserDefinedCtor = predecessorType == nullptr ? false : predecessorType->GetTypeHandler()->GetIsNotPathTypeHandlerOrHasUserDefinedCtor();
     }
 
     int PathTypeHandlerBase::GetPropertyCount()
@@ -1250,6 +1251,10 @@ namespace Js
 
         Assert(instance->GetTypeHandler()->IsPathTypeHandler());
         PathTypeHandlerBase* newTypeHandler = (PathTypeHandlerBase*)newType->GetTypeHandler();
+        if (propertyId == PropertyIds::constructor)
+        {
+            newTypeHandler->isNotPathTypeHandlerOrHasUserDefinedCtor = true;
+        }
 
         Assert(newType->GetIsShared() == newTypeHandler->GetIsShared());
 
@@ -1454,7 +1459,7 @@ namespace Js
         return this->typePath->HasSingletonInstance() && GetPathLength() >= this->typePath->GetMaxInitializedLength();
     }
 
-    void PathTypeHandlerBase::DoShareTypeHandler(ScriptContext* scriptContext) 
+    void PathTypeHandlerBase::DoShareTypeHandler(ScriptContext* scriptContext)
     {
         DoShareTypeHandlerInternal<true>(scriptContext);
     }

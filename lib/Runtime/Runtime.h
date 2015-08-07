@@ -582,6 +582,7 @@ enum tagDEBUG_EVENT_INFO_TYPE
 
 #include "Language\DiagProbe.h"
 #include "Language\ProbeContainer.h"
+#include "Language\DebugContext.h"
 #include "Library\Entropy.h"
 #include "Language\PropertyRecord.h"
 #include "Library\threadservicewrapper.h"

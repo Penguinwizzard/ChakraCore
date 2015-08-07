@@ -1383,7 +1383,7 @@ namespace Js
 
         Var newObj;
 
-        if (JavascriptOperators::IsIterable(items))
+        if (JavascriptOperators::IsIterable(items, scriptContext))
         {
             RecyclableObject* iterator = JavascriptOperators::GetIterator(items, scriptContext);
             Var nextValue;
@@ -2601,6 +2601,71 @@ namespace Js
             Assert(false);
         }
         return defaultConstructor;
+    }
+
+    Var TypedArrayBase::FindMinOrMax(Js::ScriptContext * scriptContext, TypeId typeId, bool findMax)
+    {
+        if (this->IsDetachedBuffer()) //9.4.5.8 IntegerIndexedElementGet 
+        {
+            JavascriptError::ThrowTypeError(GetScriptContext(), JSERR_DetachedTypedArray);
+        }
+
+        switch (typeId)
+        {
+        case TypeIds_Int8Array:
+            return this->FindMinOrMax<int8, false>(scriptContext, findMax);
+
+        case TypeIds_Uint8Array:
+        case TypeIds_Uint8ClampedArray:
+            return this->FindMinOrMax<uint8, false>(scriptContext, findMax);
+
+        case TypeIds_Int16Array:
+            return this->FindMinOrMax<int16, false>(scriptContext, findMax);
+
+        case TypeIds_Uint16Array:
+            return this->FindMinOrMax<uint16, false>(scriptContext, findMax);
+
+        case TypeIds_Int32Array:
+            return this->FindMinOrMax<int32, false>(scriptContext, findMax);
+
+        case TypeIds_Uint32Array:
+            return this->FindMinOrMax<uint32, false>(scriptContext, findMax);
+
+        case TypeIds_Float32Array:
+            return this->FindMinOrMax<float, true>(scriptContext, findMax);
+
+        case TypeIds_Float64Array:
+            return this->FindMinOrMax<double, true>(scriptContext, findMax);
+
+        default:
+            AssertMsg(false, "Unsupported array for fast path");
+            return nullptr;
+        }
+    }
+
+    template<typename T, bool checkNaNAndNegZero> 
+    Var TypedArrayBase::FindMinOrMax(Js::ScriptContext * scriptContext, bool findMax)
+    {
+        T* typedBuffer = (T*)this->buffer;
+        uint len = this->GetLength();
+
+        Assert(sizeof(T)+GetByteOffset() <= GetArrayBuffer()->GetByteLength());
+        T currentRes = typedBuffer[0];
+        for (uint i = 0; i < len; i++)
+        {
+            Assert((i + 1) * sizeof(T)+GetByteOffset() <= GetArrayBuffer()->GetByteLength());
+            T compare = typedBuffer[i];
+            if (checkNaNAndNegZero && JavascriptNumber::IsNan(double(compare)))
+            {
+                return scriptContext->GetLibrary()->GetNaN();
+            }
+            if (findMax ? currentRes < compare : currentRes > compare ||
+                (checkNaNAndNegZero && compare == 0 && Js::JavascriptNumber::IsNegZero(double(currentRes))))
+            {
+                currentRes = compare;
+            }
+        }
+        return Js::JavascriptNumber::ToVarNoCheck(currentRes, scriptContext);
     }
 
     template<> BOOL Uint8ClampedArray::Is(Var aValue)

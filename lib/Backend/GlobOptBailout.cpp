@@ -265,10 +265,10 @@ GlobOpt::TrackCalls(IR::Instr * instr)
             this->currentBlock->globOptData.callSequence = this->blockData.callSequence;
         }
         this->blockData.callSequence->Prepend(this->alloc, instr->GetDst());
-    
+        
         this->currentBlock->globOptData.totalOutParamCount += instr->GetArgOutCount(/*getInterpreterArgOutCount*/ true);
         this->currentBlock->globOptData.startCallCount++;
-        
+
         break;
     case Js::OpCode::BytecodeArgOutCapture:
         {
@@ -392,6 +392,10 @@ GlobOpt::TrackCalls(IR::Instr * instr)
         break;
     }
 
+    case Js::OpCode::InlineBuiltInStart:
+        this->inInlinedBuiltIn = true;
+        break;
+
     case Js::OpCode::InlineNonTrackingBuiltInEnd:
     case Js::OpCode::InlineBuiltInEnd:
     {
@@ -461,14 +465,15 @@ GlobOpt::TrackCalls(IR::Instr * instr)
         Assert(this->currentBlock->globOptData.inlinedArgOutCount >= instr->GetArgOutCount(/*getInterpreterArgOutCount*/ false));
         this->currentBlock->globOptData.inlinedArgOutCount -= instr->GetArgOutCount(/*getInterpreterArgOutCount*/ false);
 
+        this->inInlinedBuiltIn = false;
         break;
     }
 
     case Js::OpCode::InlineArrayPop:
     {
-        //TrackCall should be called here as the Post-op BailOnImplicit will bail out to the instruction next to the Push function call instr.
-        //Hence we need to trackCall for the InlineArrayPop, before it bails out to the next instrution.
-        // TrackCall() cannot be done in the InlineBuilt-inEnd like it is done for other InlineMathXXX - because we bailout to the next instr(post-op) and not to the same instruction.
+        // EndTrackCall should be called here as the Post-op BailOutOnImplicitCalls will bail out to the instruction after the Pop function call instr.
+        // This bailout shouldn't be tracking the call sequence as it will then erroneously reserve stack space for arguments when the call would have already happened
+        // Can't wait till InlineBuiltinEnd like we do for other InlineMathXXX because by then we would have filled bailout info for the BailOutOnImplicitCalls for InlineArrayPop.
         this->EndTrackCall(instr);
         break;
     }
@@ -477,6 +482,27 @@ GlobOpt::TrackCalls(IR::Instr * instr)
         if (OpCodeAttr::CallInstr(instr->m_opcode))
         {    
             this->EndTrackCall(instr);
+            if (this->inInlinedBuiltIn && instr->m_opcode == Js::OpCode::CallDirect)
+            {
+                // We can end up in this situation when a built-in apply target is inlined to a CallDirect. We have the following IR:
+                //
+                // StartCall
+                // ArgOut_InlineBuiltIn
+                // ArgOut_InlineBuiltIn
+                // ArgOut_InlineBuiltIn
+                // InlineBuiltInStart
+                //      ArgOut_A_InlineSpecialized
+                //      ArgOut_A
+                //      ArgOut_A
+                //      CallDirect    
+                // InlineNonTrackingBuiltInEnd
+                //
+                // We need to call EndTrackCall twice for CallDirect in this case. The CallDirect may get a BailOutOnImplicitCalls later, 
+                // but it should not be tracking the call sequence for the apply call as it is a post op bailout and the call would have 
+                // happened when we bail out.
+                // Can't wait till InlineBuiltinEnd like we do for other InlineMathXXX because by then we would have filled bailout info for the BailOutOnImplicitCalls for CallDirect.
+                this->EndTrackCall(instr);
+            }
         }
         break;
     }

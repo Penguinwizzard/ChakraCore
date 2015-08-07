@@ -489,14 +489,12 @@ int
             }
         }
 
-        if (kind == TK_JSCRIPT || kind == TK_HTML)
+        char* cmd = JCBinary; 
+        if (kind != TK_JSCRIPT && kind != TK_HTML)
         {
-            sprintf(cmdbuf, "%s -bvt %s %s %s %s  >testout%d 2>&1", JCBinary, optFlags, tempExtraCCFlags, ccFlags, testCmd, localTestCount);
+            cmd = pTestVariant->testInfo.data[TIK_COMMAND];
         }
-        else
-        {
-            sprintf(cmdbuf, "%s %s %s %s %s >testout%d 2>&1", pTestVariant->testInfo.data[TIK_COMMAND], optFlags, tempExtraCCFlags, ccFlags, testCmd, localTestCount);
-        }
+        sprintf(cmdbuf, "%s %s %s %s %s >testout%d 2>&1", cmd, optFlags, tempExtraCCFlags, ccFlags, testCmd, localTestCount);
 
         Message("Running '%s'", cmdbuf);
 

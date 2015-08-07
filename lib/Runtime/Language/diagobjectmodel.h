@@ -424,14 +424,11 @@ namespace Js
     class CatchScopeWalker sealed : public IDiagObjectModelWalkerBase
     {
         DiagStackFrame* pFrame;
-        RegSlot location;
-        PropertyId propId;
-        Js::DiagExtraScopesType diagScopeType;
-
+        DebuggerScope * debuggerScope;
     public :
 
-        CatchScopeWalker(DiagStackFrame* _pFrame, RegSlot _location, PropertyId _propId, Js::DiagExtraScopesType _diagScopeType)
-            : pFrame(_pFrame), location(_location), propId(_propId), diagScopeType(_diagScopeType)
+        CatchScopeWalker(DiagStackFrame* _pFrame, DebuggerScope* _debuggerScope)
+            : pFrame(_pFrame), debuggerScope(_debuggerScope)
         {
         }
 
@@ -442,7 +439,7 @@ namespace Js
         virtual BOOL GetGroupObject(ResolvedObject* pResolvedObject) override { return FALSE; }
         virtual IDiagObjectAddress *FindPropertyAddress(PropertyId propId, bool& isConst) override;
     private:
-        void FetchValueAndAddress(__out Var *pValue, __out IDiagObjectAddress ** ppAddress);
+        void FetchValueAndAddress(DebuggerScopeProperty &scopeProperty, __out Var *pValue, __out IDiagObjectAddress ** ppAddress);
     };
 
 

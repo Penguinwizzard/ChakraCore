@@ -48,8 +48,8 @@ namespace Js
         FunctionProxy* functionProxy = *proxyRef;
         ScriptContext* scriptContext = functionProxy->GetScriptContext();
 
-        bool hasSuperReference = (functionProxy->GetAttributes() & Js::FunctionInfo::Attributes::HasSuperReference) ? true : false;
-        bool isDefaultConstructor = (functionProxy->GetAttributes() & Js::FunctionInfo::Attributes::IsDefaultConstructor) ? true : false;
+        bool hasSuperReference = functionProxy->HasSuperReference();
+        bool isDefaultConstructor = functionProxy->IsDefaultConstructor();
 
         AssertMsg(!isDefaultConstructor, "How is generator function is a default constructor?");
 

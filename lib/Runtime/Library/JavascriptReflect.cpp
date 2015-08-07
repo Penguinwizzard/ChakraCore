@@ -410,7 +410,7 @@ namespace Js
         }
 
         Var newTarget = nullptr;
-        if (scriptContext->GetConfig()->IsES6NewTargetEnabled())
+        if (scriptContext->GetConfig()->IsES6ClassAndExtendsEnabled())
         {
             if (args.Info.Count > 3)
             {

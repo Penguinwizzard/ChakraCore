@@ -87,7 +87,6 @@ namespace Js
 #endif
         integerStringMap(nullptr),
         guestArena(nullptr),
-        dbgRegisterFunction(nullptr),
         raiseMessageToDebuggerFunctionType(nullptr),
         transitionToDebugModeIfFirstSourceFn(nullptr),
         lastTimeZoneUpdateTickCount(0),        
@@ -170,7 +169,6 @@ namespace Js
         , bindReferenceCount(0)
 #endif
         , nextPendingClose(nullptr)
-        , debuggerMode(DebuggerMode::NotDebugging)
         , m_fTraceDomCall(FALSE)
 #ifdef ENABLE_DOM_FAST_PATH
         , domFastPathIRHelperMap(nullptr)
@@ -188,6 +186,7 @@ namespace Js
         , codeSize(0)
         , bailOutRecordBytes(0)
         , bailOutOffsetBytes(0)
+        , debugContext(nullptr)
 #endif
     {
        // This may allocate memory and cause exception, but it is ok, as we all we have done so far
@@ -335,6 +334,11 @@ namespace Js
 #endif
         intConstPropsOnGlobalObject = Anew(GeneralAllocator(), PropIdSetForConstProp, GeneralAllocator());
         intConstPropsOnGlobalUserObject = Anew(GeneralAllocator(), PropIdSetForConstProp, GeneralAllocator());
+
+        // ToDo (SaAgarwa): DebugContext should only be needed during debugLaunch/Attach it should be created then
+        // Will do it in next checkin as I have moved ProbeContainer from ScriptContext to DebugContext which was a field on ScriptContext and not a pointer
+        // All places which access scriptContext.diagProbesContainer needs to have check of IsInDebugOrSourceRundownMode to gurantee DebugContext
+        this->debugContext = HeapNew(DebugContext, this);
     }
 #ifdef BODLOG
     void PrintBod(int key, FunctionBody* bod, FILE* fp, void* ignore2) {
@@ -715,8 +719,12 @@ namespace Js
         // Stop profiling if present
         DeRegisterProfileProbe(S_OK, nullptr);
 
-        // Close the diagProbesContainer
-        this->diagProbesContainer.Close();
+        if (this->debugContext != nullptr)
+        {
+            this->debugContext->Close();
+            HeapDelete(this->debugContext);
+            this->debugContext = nullptr;
+        }
 
         // Need to print this out beform the native code gen is deleted
         // which will delete the codegenProfiler
@@ -1095,6 +1103,8 @@ namespace Js
 
         this->operationStack = Anew(GeneralAllocator(), JsUtil::Stack<Var>, GeneralAllocator());
 
+        this->GetDebugContext()->Initialize();
+
         Tick::InitType();
     }
 
@@ -1113,7 +1123,7 @@ namespace Js
     {
         if (!initializingCopy)
             // In CopyOnWriteCopy() this is performed early because it is required to create a copy-on-write function.
-            this->diagProbesContainer.Initialize(this);
+            this->GetDebugContext()->GetProbeContainer()->Initialize(this);
 
         AssertMsg(this->CurrentThunk == DefaultEntryThunk, "Creating non default thunk while initializing");
         AssertMsg(this->DeferredParsingThunk == DefaultDeferredParsingThunk, "Creating non default thunk while initializing");
@@ -1725,7 +1735,10 @@ namespace Js
     {
         if (this->scriptStartEventHandler != null && ((isRoot && threadContext->GetCallRootLevel() == 1) || isForcedEnter))
         {
-            diagProbesContainer.isForcedToEnterScriptStart = false;
+            if (this->GetDebugContext() != nullptr)
+            {
+                this->GetDebugContext()->GetProbeContainer()->isForcedToEnterScriptStart = false;
+            }
 
             this->scriptStartEventHandler(this);
         }
@@ -1877,7 +1890,7 @@ namespace Js
     uint ScriptContext::SaveSourceNoCopy(Utf8SourceInfo* sourceInfo, int cchLength, bool isCesu8)
     {
         Assert(sourceInfo->GetScriptContext() == this);
-        if(this->IsInDebugMode() && sourceInfo->debugModeSource == nullptr && !sourceInfo->debugModeSourceIsEmpty)
+        if (this->IsInDebugMode() && sourceInfo->debugModeSource == nullptr && !sourceInfo->debugModeSourceIsEmpty)
         {
             sourceInfo->SetInDebugMode(true);
         }
@@ -2621,19 +2634,111 @@ namespace Js
     {
         OUTPUT_TRACE(Js::DebuggerPhase, L"ScriptContext::OnDebuggerAttached: start 0x%p\n", this);
 
-        return OnDebuggerAttachedDetached(/*attach*/ true);
+        Js::StepController* stepController = &this->GetThreadContext()->Diagnostics->stepController;
+        if (stepController->IsActive())
+        {
+            AssertMsg(stepController->GetActivatedContext() == nullptr, "StepController should not be active when we attach.");
+            stepController->Deactivate(); // Defense in depth
+        }
 
-        OUTPUT_TRACE(Js::DebuggerPhase, L"ScriptContext::OnDebuggerAttached: done %p\n", this);
+        bool shouldPerformSourceRundown = false;
+        if (this->IsInNonDebugMode())
+        {
+            // Today we do source rundown as a part of attach to support VS attaching without
+            // first calling PerformSourceRundown.  PerformSourceRundown will be called once
+            // by F12 prior to attaching.
+            this->GetDebugContext()->SetInSourceRundownMode();
+
+            // Need to perform rundown only once.
+            shouldPerformSourceRundown = true;
+        }
+
+        // Rundown on all exisiting functions and change their thunks so that they will go to debug mode once they are called.
+
+        HRESULT hr = OnDebuggerAttachedDetached(/*attach*/ true);
+        if (SUCCEEDED(hr))
+        {
+            // Disable QC while functions are re-parsed as this can be time consuming 
+            AutoDisableInterrupt autoDisableInterrupt(this->threadContext->GetInterruptPoller(), true);
+
+            if ((hr = this->GetDebugContext()->RundownSourcesAndReparse(shouldPerformSourceRundown, /*shouldReparseFunctions*/ true)) == S_OK)
+            {
+                HRESULT hr2 = this->GetLibrary()->EnsureReadyIfHybridDebugging(); // Prepare library if hybrid debugging attach
+                Assert(hr2 != E_FAIL);   // Ommiting hresult
+            }
+
+            if (!this->IsClosed())
+            {
+                HRESULT hrEntryPointUpdate = S_OK;
+                BEGIN_TRANSLATE_OOM_TO_HRESULT_NESTED
+                    // Still do the pass on the function's entrypoint to reflect its state with the functionbody's entrypoint.
+                    this->UpdateRecyclerFunctionEntryPointsForDebugger();
+                END_TRANSLATE_OOM_TO_HRESULT(hrEntryPointUpdate);
+
+                if (hrEntryPointUpdate != S_OK)
+                {
+                    // should only be here for OOM
+                    Assert(hrEntryPointUpdate == E_OUTOFMEMORY);
+                    return hrEntryPointUpdate;
+                }
+            }
+        }
+        else
+        {
+            // Let's find out on what conditions it fails
+            RAISE_FATL_INTERNAL_ERROR_IFFAILED(hr);
+        }
+
+        OUTPUT_TRACE(Js::DebuggerPhase, L"ScriptContext::OnDebuggerAttached: done 0x%p, hr = 0x%X\n", this, hr);
+
+        return hr;
     }
 
     // Reverts the script context state back to the state before debugging began.
     HRESULT ScriptContext::OnDebuggerDetached()
     {
-        OUTPUT_TRACE(Js::DebuggerPhase, L"ScriptContext::OnDebuggerDetached: start %p\n", this);
+        OUTPUT_TRACE(Js::DebuggerPhase, L"ScriptContext::OnDebuggerDetached: start 0x%p\n", this);
 
-        return OnDebuggerAttachedDetached(/*attach*/ false);
+        Js::StepController* stepController = &this->GetThreadContext()->Diagnostics->stepController;
+        if (stepController->IsActive())
+        {
+            // Normally step controller is deactivated on start of dispatch (step, async break, exception, etc),
+            // and in the beginning of interpreter loop we check for step complete (can cause check whether current bytecode belong to stmt).
+            // But since it holds to functionBody/statementMaps, we have to deactivate it as func bodies are going away/reparsed.
+            stepController->Deactivate();
+        }
 
-        OUTPUT_TRACE(Js::DebuggerPhase, L"ScriptContext::OnDebuggerDetached: done %p\n", this);
+        // Go through all existing functions and change their thunks back to using non-debug mode versions when called
+        // and notify the script context that the debugger has detached to allow it to revert the runtime to the proper
+        // state (JIT enabled).
+
+        HRESULT hr = OnDebuggerAttachedDetached(/*attach*/ false);
+
+        if (SUCCEEDED(hr))
+        {
+            // Move the debugger into source rundown mode.
+            this->GetDebugContext()->SetInSourceRundownMode();
+
+            // Disable QC while functions are re-parsed as this can be time consuming 
+            AutoDisableInterrupt autoDisableInterrupt(this->threadContext->GetInterruptPoller(), true);
+
+            // Force a reparse so that indirect function caches are updated.
+            hr = this->GetDebugContext()->RundownSourcesAndReparse(/*shouldPerformSourceRundown*/ false, /*shouldReparseFunctions*/ true);
+            // Let's find out on what conditions it fails
+            RAISE_FATL_INTERNAL_ERROR_IFFAILED(hr);
+
+            // Still do the pass on the function's entrypoint to reflect its state with the functionbody's entrypoint.
+            this->UpdateRecyclerFunctionEntryPointsForDebugger();
+        }
+        else
+        {
+            // Let's find out on what conditions it fails
+            RAISE_FATL_INTERNAL_ERROR_IFFAILED(hr);
+        }
+
+        OUTPUT_TRACE(Js::DebuggerPhase, L"ScriptContext::OnDebuggerDetached: done 0x%p, hr = 0x%X\n", this, hr);
+
+        return hr;
     }
 
     HRESULT ScriptContext::OnDebuggerAttachedDetached(bool attach)
@@ -2682,7 +2787,7 @@ namespace Js
             this->UnRegisterDebugThunk();
 
             // Remove all breakpoint probes
-            this->diagProbesContainer.RemoveAllProbes();
+            this->GetDebugContext()->GetProbeContainer()->RemoveAllProbes();
         }
 
         HRESULT hr = S_OK;
@@ -2699,13 +2804,13 @@ namespace Js
             {
                 // We need to transition to debug mode after the NativeCodeGenerator is cleared/closed. Since the NativeCodeGenerator will be working on a different thread - it may
                 // be checking on the DebuggerState (from ScriptContext) while emitting code.
-                SetInDebugMode();
+                this->GetDebugContext()->SetInDebugMode();
                 UpdateNativeCodeGeneratorForDebugMode(this->nativeCodeGen);
             }
         }
         else if (attach)
         {
-            SetInDebugMode();
+            this->GetDebugContext()->SetInDebugMode();
         }
 
         BEGIN_TRANSLATE_OOM_TO_HRESULT_NESTED
@@ -2948,6 +3053,17 @@ namespace Js
         this->recycler->EnumerateObjects(JavascriptLibrary::EnumFunctionClass, &ScriptContext::RecyclerFunctionCallbackForDebugger);
     }
 
+#ifdef ASMJS_PLAT
+    void ScriptContext::TransitionEnvironmentForDebugger(ScriptFunction * scriptFunction)
+    {
+        if (scriptFunction->GetScriptContext()->IsInDebugMode() && scriptFunction->GetFunctionBody()->GetAsmJsFunctionInfo() != nullptr)
+        {
+            // we are attaching, change frame setup for asm.js frame to javascript frame
+            AsmJsModuleInfo::ConvertFrameForJavascript(scriptFunction);
+        }
+    }
+#endif
+
     /*static*/
     void ScriptContext::RecyclerFunctionCallbackForDebugger(void *address, size_t size)
     {
@@ -3045,6 +3161,11 @@ namespace Js
 #endif
 
         ScriptFunction * scriptFunction = ScriptFunction::FromVar(pFunction);
+
+#ifdef ASMJS_PLAT
+        TransitionEnvironmentForDebugger(scriptFunction);
+#endif
+
         JavascriptMethod newEntryPoint;
         if (CrossSite::IsThunk(entryPoint))
         {
@@ -3214,7 +3335,7 @@ namespace Js
 
         // This must be done early as well because it is also required to make a copy-on-write
         // function.
-        fork->diagProbesContainer.Initialize(fork);
+        fork->GetDebugContext()->GetProbeContainer()->Initialize(fork);
 
         if (init)
             init(initContext, fork);
@@ -3587,7 +3708,7 @@ namespace Js
     bool ScriptContext::IsForceNoNative()
     {
         bool forceNoNative = false;
-        if (this->GetDebuggerMode() != Js::DebuggerMode::NotDebugging)
+        if (!this->IsInNonDebugMode())
         {
             forceNoNative = this->IsInterpreted();
         }
@@ -3599,12 +3720,11 @@ namespace Js
         return forceNoNative;
     }
 
-    void ScriptContext::InitializeDebugging(DbgRegisterFunctionType dbgRegisterFunction)
+    void ScriptContext::InitializeDebugging()
     {
         if (!this->IsInDebugMode()) // If we already in debug mode, we would have done below changes already.
         {
-            this->SetInDebugMode();
-            this->SetDbgRegisterFunction(dbgRegisterFunction);
+            this->GetDebugContext()->SetInDebugMode();
             if (this->IsInDebugMode())
             {
                 // Note: for this we need final IsInDebugMode and NativeCodeGen initialized,
@@ -3617,7 +3737,6 @@ namespace Js
                 //       Need to verify. If that's the case, one way would be to enumerate and fix all external/winRT thunks here.
             }
         }
-        Assert(this->dbgRegisterFunction == dbgRegisterFunction);
     }
 
     // Combined profile/debug wrapper thunk.
@@ -3738,7 +3857,7 @@ namespace Js
 
             if (scriptContext->IsInDebugMode())
             {
-                scriptContext->diagProbesContainer.StartRecordingCall();
+                scriptContext->GetDebugContext()->GetProbeContainer()->StartRecordingCall();
             }
 
             if (useDebugWrapper)
@@ -3808,7 +3927,7 @@ namespace Js
 
             if (scriptContext->IsInDebugMode())
             {
-                scriptContext->diagProbesContainer.EndRecordingCall(aReturn, function);
+                scriptContext->GetDebugContext()->GetProbeContainer()->EndRecordingCall(aReturn, function);
             }
         }
 
@@ -5911,12 +6030,12 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
 #ifdef ENABLE_MUTATION_BREAKPOINT
     bool ScriptContext::HasMutationBreakpoints()
     {
-        return this->diagProbesContainer.HasMutationBreakpoints();
+        return this->GetDebugContext()->GetProbeContainer()->HasMutationBreakpoints();
     }
 
     void ScriptContext::InsertMutationBreakpoint(Js::MutationBreakpoint *mutationBreakpoint)
     {
-        this->diagProbesContainer.InsertMutationBreakpoint(mutationBreakpoint);
+        this->GetDebugContext()->GetProbeContainer()->InsertMutationBreakpoint(mutationBreakpoint);
     }
 #endif
 
@@ -5991,27 +6110,40 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
     }
 #endif
 
-    // Sets the specified mode for the debugger.  The mode is used to inform
-    // the runtime of whether or not functions should be JITed or interpreted
-    // when they are defer parsed.
-    // Note: Transitions back to NotDebugging are not allowed.  Once the debugger
-    // is in SourceRundown or Debugging mode, it can only transition between those
-    // two modes.
-    void ScriptContext::SetDebuggerMode(DebuggerMode mode)
+    bool ScriptContext::IsInNonDebugMode() const
     {
-        if (this->debuggerMode == mode)
+        if (this->debugContext != nullptr)
         {
-            // Already in this mode so return.
-            return;
+            return this->GetDebugContext()->IsInNonDebugMode();
         }
+        return true;
+    }
 
-        if (mode == DebuggerMode::NotDebugging)
+    bool ScriptContext::IsInSourceRundownMode() const
+    {
+        if (this->debugContext != nullptr)
         {
-            AssertMsg(false, "Transitioning to non-debug mode is not allowed.");
-            return;
+            return this->GetDebugContext()->IsInSourceRundownMode();
         }
+        return false;
+    }
 
-        this->debuggerMode = mode;
+    bool ScriptContext::IsInDebugMode() const
+    {
+        if (this->debugContext != nullptr)
+        {
+            return this->GetDebugContext()->IsInDebugMode();
+        }
+        return false;
+    }
+
+    bool ScriptContext::IsInDebugOrSourceRundownMode() const
+    {
+        if (this->debugContext != nullptr)
+        {
+            return this->GetDebugContext()->IsInDebugOrSourceRundownMode();
+        }
+        return false;
     }
 
 

@@ -2638,6 +2638,7 @@ FlowGraph::RemoveInstr(IR::Instr *instr, GlobOpt * globOpt)
             return instr;
         }
 
+        Js::OpCode opcode = instr->m_opcode;
         IR::ByteCodeUsesInstr * newByteCodeUseInstr = globOpt->ConvertToByteCodeUses(instr);   
         if (newByteCodeUseInstr != null)
         {
@@ -2645,6 +2646,17 @@ FlowGraph::RemoveInstr(IR::Instr *instr, GlobOpt * globOpt)
             // It is only necessary for field copy prop so that we will keep the implicit call
             // up to the copy prop location.                 
             newByteCodeUseInstr->propertySymUse = null;
+
+            if (opcode == Js::OpCode::Yield)
+            {
+                IR::Instr *instrLabel = newByteCodeUseInstr->m_next;
+                while (instrLabel->m_opcode != Js::OpCode::Label)
+                {
+                    instrLabel = instrLabel->m_next;
+                }
+                func->RemoveDeadYieldOffsetResumeLabel(instrLabel->AsLabelInstr());
+                instrLabel->AsLabelInstr()->m_hasNonBranchRef = false;
+            }
 
             // Save the last instruction to update the block with
             return newByteCodeUseInstr;

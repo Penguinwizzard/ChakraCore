@@ -50,31 +50,17 @@ namespace Js
     // The asm.js spec recognizes this set of builtin Math functions.
     enum AsmJSMathBuiltinFunction
     {
-        AsmJSMathBuiltin_sin, AsmJSMathBuiltin_cos, AsmJSMathBuiltin_tan,
-        AsmJSMathBuiltin_asin, AsmJSMathBuiltin_acos, AsmJSMathBuiltin_atan,
-        AsmJSMathBuiltin_ceil, AsmJSMathBuiltin_floor, AsmJSMathBuiltin_exp,
-        AsmJSMathBuiltin_log, AsmJSMathBuiltin_pow, AsmJSMathBuiltin_sqrt,
-        AsmJSMathBuiltin_abs, AsmJSMathBuiltin_atan2, AsmJSMathBuiltin_imul,
-        AsmJSMathBuiltin_fround, AsmJSMathBuiltin_min, AsmJSMathBuiltin_max,
-        AsmJSMathBuiltin_clz32,
+#define ASMJS_MATH_FUNC_NAMES(name, propertyName) AsmJSMathBuiltin_##name,
+#include "AsmJsBuiltinNames.h"
         AsmJSMathBuiltinFunction_COUNT,
-        AsmJSMathBuiltin_e, AsmJSMathBuiltin_ln10, AsmJSMathBuiltin_ln2,
-        AsmJSMathBuiltin_log2e, AsmJSMathBuiltin_log10e, AsmJSMathBuiltin_pi,
-        AsmJSMathBuiltin_sqrt1_2, AsmJSMathBuiltin_sqrt2, AsmJSMathBuiltin_infinity,
-        AsmJSMathBuiltin_nan,
+#define ASMJS_MATH_CONST_NAMES(name, propertyName) AsmJSMathBuiltin_##name,
+#include "AsmJsBuiltinNames.h"
         AsmJSMathBuiltin_COUNT
     };
     enum AsmJSTypedArrayBuiltinFunction
     {
-        AsmJSTypedArrayBuiltin_Uint8Array,
-        AsmJSTypedArrayBuiltin_Int8Array,
-        AsmJSTypedArrayBuiltin_Uint16Array,
-        AsmJSTypedArrayBuiltin_Int16Array,
-        AsmJSTypedArrayBuiltin_Uint32Array,
-        AsmJSTypedArrayBuiltin_Int32Array,
-        AsmJSTypedArrayBuiltin_Float32Array,
-        AsmJSTypedArrayBuiltin_Float64Array,
-        AsmJSTypedArrayBuiltin_byteLength,
+#define ASMJS_ARRAY_NAMES(name, propertyName) AsmJSTypedArrayBuiltin_##name,
+#include "AsmJsBuiltinNames.h"
         AsmJSTypedArrayBuiltin_COUNT
     };
     // Respresents the type of a general asm.js expression.
@@ -267,7 +253,8 @@ namespace Js
             MathBuiltinFunction,
             TypedArrayBuiltinFunction,
             /*SIMDVariable,*/
-            SIMDBuiltinFunction
+            SIMDBuiltinFunction,
+            ModuleArgument
         };
     private:
         // name of the symbol, all symbols must have unique names
@@ -294,6 +281,30 @@ namespace Js
         virtual AsmJsType GetType() const = 0;
         // if the symbol is mutable, it can be on the lhs of an assignment operation
         virtual bool isMutable() const = 0;
+    };
+
+    // Symbol representing a module argument
+    class AsmJsModuleArg : public AsmJsSymbol
+    {
+    public:
+        enum ArgType: int8
+        {
+            StdLib,
+            Import,
+            Heap
+        };
+    private:
+        ArgType mArgType;
+    public:
+        // Constructor
+        AsmJsModuleArg(PropertyName name, ArgType type) : AsmJsSymbol(name, AsmJsSymbol::ModuleArgument), mArgType(type) { }
+        // Accessor
+        inline const ArgType GetArgType()const { return mArgType; }
+
+        // AsmJsSymbol interface
+    public:
+        virtual AsmJsType GetType() const override;
+        virtual bool isMutable() const override;
     };
 
     // Symbol representing a double constant from the standard library
@@ -967,9 +978,7 @@ namespace Js
         int mSimdConstCount, mSimdVarCount, mSimdTmpCount, mSimdByteOffset;
 #endif
 
-#if ENABLE_DEBUG_CONFIG_OPTIONS
         FunctionBody* asmJsModuleFunctionBody;
-#endif
     public:
         AsmJsFunctionInfo() : mArgCount(Constants::UninitializedValue),
                               mIntConstCount(0),
@@ -1050,10 +1059,8 @@ namespace Js
             return mArgType[index];
         }
         bool Init( AsmJsFunc* func );
- #if ENABLE_DEBUG_CONFIG_OPTIONS
-        void SetAsmJSFunctionBody(FunctionBody* body){ asmJsModuleFunctionBody = body; };
-        FunctionBody* GetAsmJSFunctionBody()const{ return asmJsModuleFunctionBody; };
-#endif
+        void SetModuleFunctionBody(FunctionBody* body){ asmJsModuleFunctionBody = body; };
+        FunctionBody* GetModuleFunctionBody()const{ return asmJsModuleFunctionBody; };
 
         uint* GetArgsSizesArray()
         {
@@ -1068,54 +1075,8 @@ namespace Js
     // !! Note: keep these grouped by SIMD type
     enum AsmJsSIMDBuiltinFunction
     {
-        AsmJsSIMDBuiltin_int32x4,
-        AsmJsSIMDBuiltin_int32x4_check,
-        AsmJsSIMDBuiltin_int32x4_splat, 
-        //AsmJsSIMDBuiltin_int32x4_bool,  // Is this supported in ASMJS ? We don't have bool type.
-        AsmJsSIMDBuiltin_int32x4_fromFloat64x2, AsmJsSIMDBuiltin_int32x4_fromFloat64x2Bits, AsmJsSIMDBuiltin_int32x4_fromFloat32x4, AsmJsSIMDBuiltin_int32x4_fromFloat32x4Bits,
-        AsmJsSIMDBuiltin_int32x4_neg, AsmJsSIMDBuiltin_int32x4_add, AsmJsSIMDBuiltin_int32x4_sub, AsmJsSIMDBuiltin_int32x4_mul,
-        AsmJsSIMDBuiltin_int32x4_swizzle, 
-        AsmJsSIMDBuiltin_int32x4_shuffle, 
-        AsmJsSIMDBuiltin_int32x4_withX, AsmJsSIMDBuiltin_int32x4_withY, AsmJsSIMDBuiltin_int32x4_withZ, AsmJsSIMDBuiltin_int32x4_withW,
-        AsmJsSIMDBuiltin_int32x4_lessThan, AsmJsSIMDBuiltin_int32x4_equal, AsmJsSIMDBuiltin_int32x4_greaterThan, AsmJsSIMDBuiltin_int32x4_select,
-        AsmJsSIMDBuiltin_int32x4_and, AsmJsSIMDBuiltin_int32x4_or, AsmJsSIMDBuiltin_int32x4_xor, AsmJsSIMDBuiltin_int32x4_not, 
-        AsmJsSIMDBuiltin_int32x4_shiftLeftByScalar, AsmJsSIMDBuiltin_int32x4_shiftRightLogicalByScalar, AsmJsSIMDBuiltin_int32x4_shiftRightArithmeticByScalar,
-        AsmJsSIMDBuiltin_int32x4_load, AsmJsSIMDBuiltin_int32x4_load1, AsmJsSIMDBuiltin_int32x4_load2, AsmJsSIMDBuiltin_int32x4_load3,
-        AsmJsSIMDBuiltin_int32x4_store, AsmJsSIMDBuiltin_int32x4_store1, AsmJsSIMDBuiltin_int32x4_store2, AsmJsSIMDBuiltin_int32x4_store3,
-
-        AsmJsSIMDBuiltin_float32x4,
-        AsmJsSIMDBuiltin_float32x4_check,
-        AsmJsSIMDBuiltin_float32x4_splat,
-        AsmJsSIMDBuiltin_float32x4_fromFloat64x2, AsmJsSIMDBuiltin_float32x4_fromFloat64x2Bits, AsmJsSIMDBuiltin_float32x4_fromInt32x4, AsmJsSIMDBuiltin_float32x4_fromInt32x4Bits,
-        AsmJsSIMDBuiltin_float32x4_abs, AsmJsSIMDBuiltin_float32x4_neg, AsmJsSIMDBuiltin_float32x4_add, AsmJsSIMDBuiltin_float32x4_sub, AsmJsSIMDBuiltin_float32x4_mul,
-        AsmJsSIMDBuiltin_float32x4_div, AsmJsSIMDBuiltin_float32x4_clamp, AsmJsSIMDBuiltin_float32x4_min, AsmJsSIMDBuiltin_float32x4_max, AsmJsSIMDBuiltin_float32x4_reciprocal,
-        AsmJsSIMDBuiltin_float32x4_reciprocalSqrt, 
-        AsmJsSIMDBuiltin_float32x4_sqrt, 
-        AsmJsSIMDBuiltin_float32x4_swizzle,  
-        AsmJsSIMDBuiltin_float32x4_shuffle,  
-        AsmJsSIMDBuiltin_float32x4_withX, AsmJsSIMDBuiltin_float32x4_withY, AsmJsSIMDBuiltin_float32x4_withZ, AsmJsSIMDBuiltin_float32x4_withW,
-        AsmJsSIMDBuiltin_float32x4_lessThan, AsmJsSIMDBuiltin_float32x4_lessThanOrEqual, AsmJsSIMDBuiltin_float32x4_equal, AsmJsSIMDBuiltin_float32x4_notEqual, 
-        AsmJsSIMDBuiltin_float32x4_greaterThan, AsmJsSIMDBuiltin_float32x4_greaterThanOrEqual, AsmJsSIMDBuiltin_float32x4_select,
-        AsmJsSIMDBuiltin_float32x4_and, AsmJsSIMDBuiltin_float32x4_or, AsmJsSIMDBuiltin_float32x4_xor, AsmJsSIMDBuiltin_float32x4_not,
-        AsmJsSIMDBuiltin_float32x4_load, AsmJsSIMDBuiltin_float32x4_load1, AsmJsSIMDBuiltin_float32x4_load2, AsmJsSIMDBuiltin_float32x4_load3,
-        AsmJsSIMDBuiltin_float32x4_store, AsmJsSIMDBuiltin_float32x4_store1, AsmJsSIMDBuiltin_float32x4_store2, AsmJsSIMDBuiltin_float32x4_store3,
-
-        AsmJsSIMDBuiltin_float64x2, 
-        AsmJsSIMDBuiltin_float64x2_check,
-        AsmJsSIMDBuiltin_float64x2_splat, 
-        AsmJsSIMDBuiltin_float64x2_fromFloat32x4, AsmJsSIMDBuiltin_float64x2_fromFloat32x4Bits, AsmJsSIMDBuiltin_float64x2_fromInt32x4, AsmJsSIMDBuiltin_float64x2_fromInt32x4Bits,
-        AsmJsSIMDBuiltin_float64x2_abs, AsmJsSIMDBuiltin_float64x2_neg, AsmJsSIMDBuiltin_float64x2_add, AsmJsSIMDBuiltin_float64x2_sub, AsmJsSIMDBuiltin_float64x2_mul,
-        AsmJsSIMDBuiltin_float64x2_div, AsmJsSIMDBuiltin_float64x2_clamp, AsmJsSIMDBuiltin_float64x2_min, AsmJsSIMDBuiltin_float64x2_max, AsmJsSIMDBuiltin_float64x2_reciprocal,
-        AsmJsSIMDBuiltin_float64x2_reciprocalSqrt, 
-        AsmJsSIMDBuiltin_float64x2_sqrt,
-        AsmJsSIMDBuiltin_float64x2_swizzle,  
-        AsmJsSIMDBuiltin_float64x2_shuffle,  
-        AsmJsSIMDBuiltin_float64x2_withX, AsmJsSIMDBuiltin_float64x2_withY,
-        AsmJsSIMDBuiltin_float64x2_lessThan, AsmJsSIMDBuiltin_float64x2_lessThanOrEqual, AsmJsSIMDBuiltin_float64x2_equal, AsmJsSIMDBuiltin_float64x2_notEqual,
-        AsmJsSIMDBuiltin_float64x2_greaterThan, AsmJsSIMDBuiltin_float64x2_greaterThanOrEqual, AsmJsSIMDBuiltin_float64x2_select,
-        AsmJsSIMDBuiltin_float64x2_load, AsmJsSIMDBuiltin_float64x2_load1,
-        AsmJsSIMDBuiltin_float64x2_store, AsmJsSIMDBuiltin_float64x2_store1,
-
+#define ASMJS_SIMD_NAMES(name, propertyName) AsmJsSIMDBuiltin_##name,
+#include "AsmJsBuiltinNames.h"
         AsmJsSIMDBuiltin_COUNT
     };
 
@@ -1129,6 +1090,7 @@ namespace Js
     public:
         AsmJsSIMDFunction(PropertyName name, ArenaAllocator* allocator, int argCount, AsmJsSIMDBuiltinFunction builtIn, OpCodeAsmJs op, AsmJsRetType retType, ...);
 
+        PropertyId GetBuiltinPropertyId();
         void SetOverload(AsmJsSIMDFunction* val);
         AsmJsSIMDBuiltinFunction GetSimdBuiltInFunction(){ return mBuiltIn; };
         virtual bool CheckAndSetReturnType(Js::AsmJsRetType val) override;

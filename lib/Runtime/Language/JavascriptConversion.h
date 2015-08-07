@@ -36,7 +36,7 @@ namespace Js {
 
         static int32 ToInt32(Var aValue, ScriptContext* scriptContext);
         static __int64 ToInt64(Var aValue, ScriptContext* scriptContext);
-        static int32 ToInt32(double value, ScriptContext* scriptContext);
+        static int32 ToInt32(double value);
         static int32 ToInt32_Full(Var aValue, ScriptContext* scriptContext);
 
         static int8 ToInt8(Var aValue, ScriptContext* scriptContext);
@@ -47,11 +47,11 @@ namespace Js {
 
         static uint32 ToUInt32(Var aValue, ScriptContext* scriptContext);
         static unsigned __int64 ToUInt64(Var aValue, ScriptContext* scriptContext);
-        static uint32 ToUInt32(double value, ScriptContext* scriptContext);
+        static uint32 ToUInt32(double value);
         static uint32 ToUInt32_Full(Var aValue, ScriptContext* scriptContext);
 
         static uint16 ToUInt16(Var aValue, ScriptContext* scriptContext);
-        static uint16 ToUInt16(double value, ScriptContext* scriptContext);
+        static uint16 ToUInt16(double value);
         static uint16 ToUInt16_Full(Var aValue, ScriptContext* scriptContext);
 
         static JavascriptString *JavascriptConversion::CoerseString(Var aValue, ScriptContext* scriptContext, const wchar_t* apiNameForErrorMsg);
@@ -67,7 +67,7 @@ namespace Js {
 
         static int64 ToLength(Var aValue, ScriptContext* scriptContext);
     private:
-        static BOOL ToInt32Finite(double value, ScriptContext* scriptContext, int32* result);
+        static BOOL ToInt32Finite(double value, int32* result);
         template<bool zero>
         static bool SameValueCommon(Var aValue, Var bValue);
     };

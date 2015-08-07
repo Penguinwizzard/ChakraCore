@@ -305,7 +305,7 @@ void Js::MutationBreakpoint::Break(ScriptContext *scriptContext, MutationType mu
     this->propertyRecord = pr;
 
     InterpreterHaltState haltState(STOP_MUTATIONBREAKPOINT, /*executingFunction*/nullptr, this);
-    scriptContext->diagProbesContainer.DispatchMutationBreakpoint(&haltState);
+    scriptContext->GetDebugContext()->GetProbeContainer()->DispatchMutationBreakpoint(&haltState);
     
     this->didCauseBreak = false;
 }

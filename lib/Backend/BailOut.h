@@ -153,6 +153,8 @@ public:
     static Js::Var BailOutInlined(Js::JavascriptCallStackLayout * layout, BailOutRecord const * bailOutRecord, void * returnAddress);
     static uint32 BailOutFromLoopBodyInlined(Js::JavascriptCallStackLayout * layout, BailOutRecord const * bailOutRecord, void * returnAddress);
 
+    static Js::Var BailOutForElidedYield(void * framePointer);
+
     static size_t GetOffsetOfPolymorphicCacheIndex() { return offsetof(BailOutRecord, polymorphicCacheIndex); }
     static size_t GetOffsetOfBailOutKind() { return offsetof(BailOutRecord, bailOutKind); }
 
@@ -377,21 +379,43 @@ struct GlobalBailOutRecordDataTable
     template<class Fn>
     void IterateGlobalBailOutRecordTableRows(uint32 bailOutRecordId, Fn callback)
     {
+        // Visit all the rows that have this bailout ID in their range.
         for (uint i = 0; i < this->length; i++)
         {
-            
-            if (bailOutRecordId < globalBailOutRecordDataRows[i].start ||
-                bailOutRecordId > globalBailOutRecordDataRows[i].end) 
+            if (bailOutRecordId > globalBailOutRecordDataRows[i].end) 
             {
+                // Not in range.
                 continue;
             }
             
             if (globalBailOutRecordDataRows[i].start > bailOutRecordId)
             {
+                // Not in range, and we know there are no more in range (since the table is sorted by "start").
                 return;
             }
             
+            // In range: take action.
             callback(&globalBailOutRecordDataRows[i]);
+        }
+    }
+
+    template<class Fn>
+    void VisitGlobalBailOutRecordTableRowsAtFirstBailOut(uint32 bailOutRecordId, Fn callback)
+    {
+        // Visit all the rows that have this bailout ID as the start of their range.
+        // (I.e., visit each row once in a walk of the whole function)
+        for (uint i = 0; i < this->length; i++)
+        {
+            if (bailOutRecordId == globalBailOutRecordDataRows[i].start)
+            {
+                // Matching start ID: take action.
+                callback(&globalBailOutRecordDataRows[i]);
+            }
+            else if (globalBailOutRecordDataRows[i].start > bailOutRecordId)
+            {
+                // We know there are no more in range (since the table is sorted by "start").
+                return;
+            }            
         }
     }
 };
