@@ -19679,9 +19679,11 @@ GlobOpt::GenerateInductionVariableChangeForMemOp(Loop *loop, byte unroll, IR::In
 
         // loop count is off by one, so add one 
         IR::RegOpnd *loopCountOpnd = IR::RegOpnd::New(type, localFunc);
+        IR::RegOpnd *minusOneOpnd = IR::RegOpnd::New(loopCount->LoopCountMinusOneSym(), type, localFunc);
+        minusOneOpnd->SetIsJITOptimizedReg(true);
         InsertInstr(IR::Instr::New(Js::OpCode::Add_I4,
             loopCountOpnd,
-            IR::RegOpnd::New(loopCount->LoopCountMinusOneSym(), type, localFunc),
+            minusOneOpnd,
             IR::IntConstOpnd::New(1, type, localFunc, true),
             localFunc));
 
