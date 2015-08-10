@@ -350,6 +350,7 @@ class PageAllocatorBase
     friend class Recycler;
 public:
     static uint const DefaultMaxFreePageCount = 0x400;       // 4 MB
+    static uint const DefaultLowMaxFreePageCount = 0x100;    // 1 MB for low-memory process
 
     static uint const MinPartialDecommitFreePageCount = 0x1000;  // 16 MB
 

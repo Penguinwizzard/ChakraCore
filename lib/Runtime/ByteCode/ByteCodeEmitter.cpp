@@ -2660,7 +2660,34 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
         {
             if ((pnode->nop==knopFncDecl)&&(funcInfo->GetHasHeapArguments())&&(!funcInfo->GetCallsEval())&&ApplyEnclosesArgs(pnode,this))
             {
-                funcInfo->SetApplyEnclosesArgs(true);
+                bool applyEnclosesArgs = true;
+                for (ParseNode* pnodeVar = funcInfo->root->sxFnc.pnodeVars; pnodeVar; pnodeVar = pnodeVar->sxVar.pnodeNext)
+                {
+                    Symbol* sym = pnodeVar->sxVar.sym;
+                    if (sym->GetSymbolType() == STVariable && !sym->GetIsArguments())
+                    {
+                        applyEnclosesArgs = false;
+                        break;
+                    }
+                }
+                auto constAndLetCheck = [](ParseNode *pnodeBlock, bool *applyEnclosesArgs)
+                {
+                    if (*applyEnclosesArgs)
+                    {
+                        for (auto lexvar = pnodeBlock->sxBlock.pnodeLexVars; lexvar; lexvar = lexvar->sxVar.pnodeNext)
+                        {
+                            Symbol* sym = lexvar->sxVar.sym;
+                            if (sym->GetSymbolType() == STVariable && !sym->GetIsArguments())
+                            {
+                                *applyEnclosesArgs = false;
+                                break;
+                            }
+                        }
+                    }
+                };                
+                constAndLetCheck(funcInfo->root->sxFnc.pnodeScopes, &applyEnclosesArgs);
+                constAndLetCheck(funcInfo->root->sxFnc.pnodeBodyScope, &applyEnclosesArgs);
+                funcInfo->SetApplyEnclosesArgs(applyEnclosesArgs);
             }
         }
 

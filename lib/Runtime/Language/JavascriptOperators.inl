@@ -566,6 +566,13 @@ namespace Js
         return JavascriptOperators::GetPropertyReference(instance, instance, propertyId, value, requestContext, info);
     }
 
+    inline BOOL JavascriptOperators::GetItem(RecyclableObject* instance, uint64 index, Var* value, ScriptContext* requestContext)
+    {
+        PropertyRecord const * propertyRecord;
+        JavascriptOperators::GetPropertyIdForInt(index, requestContext, &propertyRecord);
+        return JavascriptOperators::GetProperty(instance, propertyRecord->GetPropertyId(), value, requestContext);
+    }
+
     inline BOOL JavascriptOperators::GetItem(RecyclableObject* instance, uint32 index, Var* value, ScriptContext* requestContext)
     {
         return JavascriptOperators::GetItem(instance, instance, index, value, requestContext);

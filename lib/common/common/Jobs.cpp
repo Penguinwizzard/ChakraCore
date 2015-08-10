@@ -451,6 +451,11 @@ namespace JsUtil
         {
             this->maxThreadCount = CONFIG_FLAG(MaxJitThreadCount);
         }
+        else if (AutoSystemInfo::Data.IsLowMemoryProcess())
+        {
+            // In a low-memory scenario, don't spin up multiple threads, regardless of how many cores we have.
+            this->maxThreadCount = 1;
+        }
         else
         {
             int processorCount = AutoSystemInfo::Data.GetNumberOfPhysicalProcessors();

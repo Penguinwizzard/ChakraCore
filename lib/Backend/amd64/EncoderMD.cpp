@@ -845,19 +845,6 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
             {
                 BYTE byte2  = (this->GetOpcodeByte2(instr) >> 3);
                 rexByte    |= this->EmitModRM(instr, opr1, byte2);
-
-                if(opr1->IsRegOpnd() && instr->IsBranchInstr() && instr->AsBranchInstr()->IsMultiBranch())
-                {
-                    IR::MultiBranchInstr * multiBranchInstr = instr->AsBranchInstr()->AsMultiBrInstr();
-
-                    //Reloc Records
-
-                    multiBranchInstr->MapMultiBrTargetByAddress([=](void ** offset) -> void
-                    {
-                        AppendRelocEntry(RelocTypeLabelUse, (void*)(offset), nullptr);
-                        AssertMsg( ((BYTE *)offset < m_encoder->m_encodeBuffer || (BYTE *)offset >= m_encoder->m_encodeBuffer + m_encoder->m_encodeBufferSize), "JMP table entry within buffer");
-                    });
-                }
             }
             else if (opr1->IsRegOpnd()) 
             {

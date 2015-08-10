@@ -132,63 +132,69 @@ namespace Js {
         ByteBlock* finalByteCodeBlock;
 
         ScriptContext* scriptContext = m_functionWrite->GetScriptContext();
-        m_byteCodeData.Copy(scriptContext->GetRecycler(), &finalByteCodeBlock);
+        m_byteCodeData.Copy(scriptContext->GetRecycler(), &finalByteCodeBlock, scriptContext);
 
         byte * byteBuffer = finalByteCodeBlock->GetBuffer();
         int byteCount = m_byteCodeData.GetCurrentOffset();
 
-        //
-        // Update all branch targets with their actual label destinations.
-        //
-#ifdef BYTECODE_BRANCH_ISLAND
-        if( useBranchIsland )
+        AutoCriticalSection cs(scriptContext->GetByteCodeAllocator()->GetCriticalSection());
         {
+            scriptContext->EnsureByteCodeAllocationReadWrite(finalByteCodeBlock->GetAllocation());
+            //
+            // Update all branch targets with their actual label destinations.
+            //
+    #ifdef BYTECODE_BRANCH_ISLAND
+            if( useBranchIsland )
+            {
+                PatchJumpOffset<JumpOffset>(m_jumpOffsets, byteBuffer, byteCount);
+                PatchJumpOffset<LongJumpOffset>(m_longJumpOffsets, byteBuffer, byteCount);
+            }
+            else
+            {
+                PatchJumpOffset<LongJumpOffset>(m_jumpOffsets, byteBuffer, byteCount);
+            }
+    #else
             PatchJumpOffset<JumpOffset>(m_jumpOffsets, byteBuffer, byteCount);
-            PatchJumpOffset<LongJumpOffset>(m_longJumpOffsets, byteBuffer, byteCount);
+    #endif
+
+            // Patch up the root object load inline cache with the start index
+            uint rootObjectLoadInlineCacheStart = this->m_functionWrite->GetRootObjectLoadInlineCacheStart();
+            rootObjectLoadInlineCacheOffsets.Map([=](size_t offset)
+            {
+                Assert(offset < byteCount - sizeof(int));
+                unaligned uint * pnBackPatch = reinterpret_cast<unaligned uint *>(&byteBuffer[offset]);
+                *pnBackPatch += rootObjectLoadInlineCacheStart;
+            });
+
+            // Patch up the root object load method inline cache with the start index
+            uint rootObjectLoadMethodInlineCacheStart = this->m_functionWrite->GetRootObjectLoadMethodInlineCacheStart();
+            rootObjectLoadMethodInlineCacheOffsets.Map([=](size_t offset)
+            {
+                Assert(offset < byteCount - sizeof(int));
+                unaligned uint * pnBackPatch = reinterpret_cast<unaligned uint *>(&byteBuffer[offset]);
+                *pnBackPatch += rootObjectLoadMethodInlineCacheStart;
+            });
+
+            // Patch up the root object store inline cache with the start index
+            uint rootObjectStoreInlineCacheStart = this->m_functionWrite->GetRootObjectStoreInlineCacheStart();
+            rootObjectStoreInlineCacheOffsets.Map([=](size_t offset)
+            {
+                Assert(offset < byteCount - sizeof(int));
+                unaligned uint * pnBackPatch = reinterpret_cast<unaligned uint *>(&byteBuffer[offset]);
+                *pnBackPatch += rootObjectStoreInlineCacheStart;
+            });
+
+            //Make the Bytecode region READ only
+            scriptContext->EnsureByteCodeAllocationReadOnly(finalByteCodeBlock->GetAllocation());
         }
-        else
-        {
-            PatchJumpOffset<LongJumpOffset>(m_jumpOffsets, byteBuffer, byteCount);
-        }
-#else
-        PatchJumpOffset<JumpOffset>(m_jumpOffsets, byteBuffer, byteCount);
-#endif
-
-        // Patch up the root object load inline cache with the start index
-        uint rootObjectLoadInlineCacheStart = this->m_functionWrite->GetRootObjectLoadInlineCacheStart();
-        rootObjectLoadInlineCacheOffsets.Map([=](size_t offset)
-        {
-            Assert(offset < byteCount - sizeof(int));
-            unaligned uint * pnBackPatch = reinterpret_cast<unaligned uint *>(&byteBuffer[offset]);
-            *pnBackPatch += rootObjectLoadInlineCacheStart;
-        });
-
-        // Patch up the root object load method inline cache with the start index
-        uint rootObjectLoadMethodInlineCacheStart = this->m_functionWrite->GetRootObjectLoadMethodInlineCacheStart();
-        rootObjectLoadMethodInlineCacheOffsets.Map([=](size_t offset)
-        {
-            Assert(offset < byteCount - sizeof(int));
-            unaligned uint * pnBackPatch = reinterpret_cast<unaligned uint *>(&byteBuffer[offset]);
-            *pnBackPatch += rootObjectLoadMethodInlineCacheStart;
-        });
-
-        // Patch up the root object store inline cache with the start index
-        uint rootObjectStoreInlineCacheStart = this->m_functionWrite->GetRootObjectStoreInlineCacheStart();
-        rootObjectStoreInlineCacheOffsets.Map([=](size_t offset)
-        {
-            Assert(offset < byteCount - sizeof(int));
-            unaligned uint * pnBackPatch = reinterpret_cast<unaligned uint *>(&byteBuffer[offset]);
-            *pnBackPatch += rootObjectStoreInlineCacheStart;
-        });
-
         //
         // Store the final trimmed byte-code on the function.
         //
         ByteBlock* finalAuxiliaryBlock;
         ByteBlock* finalAuxiliaryContextBlock;
 
-        m_auxiliaryData.Copy(m_functionWrite->GetScriptContext()->GetRecycler(), &finalAuxiliaryBlock);
-        m_auxContextData.Copy(m_functionWrite->GetScriptContext()->GetRecycler(), &finalAuxiliaryContextBlock);
+        m_auxiliaryData.Copy(m_functionWrite->GetScriptContext()->GetRecycler(), &finalAuxiliaryBlock, m_functionWrite->GetScriptContext());
+        m_auxContextData.Copy(m_functionWrite->GetScriptContext()->GetRecycler(), &finalAuxiliaryContextBlock, m_functionWrite->GetScriptContext());
 
         m_functionWrite->AllocateInlineCache();
         m_functionWrite->AllocateObjectLiteralTypeArray();
@@ -2721,7 +2727,7 @@ StoreCommon:
     }
 
     /// Copies its contents to a final contiguous section of memory.
-    void ByteCodeWriter::Data::Copy(Recycler* alloc, ByteBlock ** finalBlock)
+    void ByteCodeWriter::Data::Copy(Recycler * alloc, ByteBlock ** finalBlock, ScriptContext * scriptContext)
     {
         AssertMsg(finalBlock != null, "Must have valid storage");
 
@@ -2732,28 +2738,38 @@ StoreCommon:
         }
         else
         {
-            ByteBlock* finalByteCodeBlock = ByteBlock::New(alloc, /*intialContent*/NULL, cbFinalData);
+            ByteBlock* finalByteCodeBlock = ByteBlock::New(alloc, /*intialContent*/NULL, cbFinalData, scriptContext);
 
             DataChunk* currentChunk = head;
             size_t bytesLeftToCopy = cbFinalData;
             byte* currentDest = finalByteCodeBlock->GetBuffer();
-            while(true)
+
+            AutoCriticalSection cs(scriptContext->GetByteCodeAllocator()->GetCriticalSection());
             {
-                if(bytesLeftToCopy <= currentChunk->GetSize())
+                //Set ByteCode Memory Region to RW
+                scriptContext->EnsureByteCodeAllocationReadWrite(finalByteCodeBlock->GetAllocation());
+
+                while (true)
                 {
-                    js_memcpy_s(currentDest, bytesLeftToCopy, currentChunk->GetBuffer(), bytesLeftToCopy);
-                    break;
+                    if (bytesLeftToCopy <= currentChunk->GetSize())
+                    {
+                        js_memcpy_s(currentDest, bytesLeftToCopy, currentChunk->GetBuffer(), bytesLeftToCopy);
+                        break;
+                    }
+
+                    js_memcpy_s(currentDest, bytesLeftToCopy, currentChunk->GetBuffer(), currentChunk->GetSize());
+                    bytesLeftToCopy -= currentChunk->GetSize();
+                    currentDest += currentChunk->GetSize();
+
+                    currentChunk = currentChunk->nextChunk;
+                    AssertMsg(currentChunk, "We are copying more data than we have!");
                 }
 
-                js_memcpy_s(currentDest, bytesLeftToCopy, currentChunk->GetBuffer(), currentChunk->GetSize());
-                bytesLeftToCopy -= currentChunk->GetSize();
-                currentDest += currentChunk->GetSize();
+                *finalBlock = finalByteCodeBlock;
 
-                currentChunk = currentChunk->nextChunk;
-                AssertMsg(currentChunk, "We are copying more data than we have!");
+                //Set ByteCode Memory Region to Read Only
+                scriptContext->EnsureByteCodeAllocationReadOnly(finalByteCodeBlock->GetAllocation());
             }
-
-            *finalBlock = finalByteCodeBlock;
         }
     }
 

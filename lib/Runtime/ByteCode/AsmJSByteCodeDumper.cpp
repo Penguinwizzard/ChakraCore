@@ -652,35 +652,12 @@ namespace Js
     }
 
     template <class T>
-    void AsmJsByteCodeDumper::DumpFloat1Addr1(OpCodeAsmJs op, const unaligned T * data, FunctionBody * dumpFunction, ByteCodeReader& reader)
-    {
-        DumpFloatReg(data->F0);
-        DumpAddr((void*)data->A1);
-    }
-
-    template <class T>
     void AsmJsByteCodeDumper::DumpDouble1Addr1( OpCodeAsmJs op, const unaligned T * data, FunctionBody * dumpFunction, ByteCodeReader& reader )
     {
         DumpDoubleReg( data->D0 );
         DumpAddr( (void*)data->A1 );
     }
 
-    template <class T>
-    void AsmJsByteCodeDumper::DumpDouble1Const2( OpCodeAsmJs op, const unaligned T * data, FunctionBody * dumpFunction, ByteCodeReader& reader )
-    {
-        DumpDoubleReg( data->D0 );
-        DumpR8( data->C1 );
-        DumpR8( data->C2 );
-    }
-
-    template <class T>
-    void AsmJsByteCodeDumper::DumpDouble2Const1( OpCodeAsmJs op, const unaligned T * data, FunctionBody * dumpFunction, ByteCodeReader& reader )
-    {
-        DumpDoubleReg( data->D0 );
-        DumpDoubleReg( data->D1 );
-        DumpR8( data->C2 );
-    }
-    
     template <class T>
     void AsmJsByteCodeDumper::DumpDouble2( OpCodeAsmJs op, const unaligned T * data, FunctionBody * dumpFunction, ByteCodeReader& reader )
     {

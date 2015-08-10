@@ -9124,10 +9124,15 @@ Lowerer::LowerJumpTableMultiBranch(IR::MultiBranchInstr * multiBrInstr, IR::RegO
     IR::Opnd * opndDst = IR::RegOpnd::New(TyMachPtr, func);
     //Move the native address of the jump table to a register
     // RELOCJIT: Relocatable JIT doesn't support profiling.
-    IR::AddrOpnd* nativeJumpTable = IR::AddrOpnd::New(multiBrInstr->GetBranchJumpTable()->jmpTable, IR::AddrOpndKindDynamicMisc, func);
-
+    IR::LabelInstr * nativeJumpTableLabel = IR::LabelInstr::New(Js::OpCode::Label, m_func);
+    nativeJumpTableLabel->m_isDataLabel = true;
+    IR::LabelOpnd * nativeJumpTable = IR::LabelOpnd::New(nativeJumpTableLabel, m_func);
     IR::RegOpnd * nativeJumpTableReg = IR::RegOpnd::New(TyMachPtr, func);
     m_lowererMD.CreateAssign(nativeJumpTableReg, nativeJumpTable, multiBrInstr);
+
+    Js::BranchJumpTableWrapper * branchJumpTable = multiBrInstr->GetBranchJumpTable();
+    AssertMsg(branchJumpTable->labelInstr == nullptr, "Should not be already assigned");
+    branchJumpTable->labelInstr = nativeJumpTableLabel;
 
     //Indirect addressing @ target location in the jump table.
     //MOV eax, [nativeJumpTableReg + (offset * indirScale)]

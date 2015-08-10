@@ -423,7 +423,7 @@ MemoryLeakCheck::~MemoryLeakCheck()
         }
         if (enableOutput)
         {
-            Assert(false); // force to geenrate dump/fall into debugger.
+            Js::Throw::GenerateDump(Js::Configuration::Global.flags.DumpOnCrash, true, true);
         }
     }
 }

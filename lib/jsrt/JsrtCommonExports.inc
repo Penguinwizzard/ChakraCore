@@ -87,6 +87,8 @@
     JsSerializeScript
     JsParseSerializedScript
     JsRunSerializedScript
+    JsParseSerializedScriptWithCallback
+    JsRunSerializedScriptWithCallback
     JsParseScript
     JsConstructObject
     JsGetPropertyIdFromName

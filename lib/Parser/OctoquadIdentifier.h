@@ -8,7 +8,7 @@
 //   - A is a set of exactly four ASCII characters
 //   - The pattern ignores case
 //   - The pattern includes the global flag
-//
+// An example pattern would be "ABCdABCd|aDcAbBcD".
 #pragma once
 
 namespace UnifiedRegex

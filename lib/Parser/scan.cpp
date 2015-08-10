@@ -1061,7 +1061,7 @@ tokens Scanner<EncodingPolicy>::ScanRegExpConstantNoAST(ArenaAllocator* alloc)
     charcount_t totalLen = 0, bodyChars = 0, totalChars = 0, bodyLen = 0;
     UnifiedRegex::Parser<EncodingPolicy, true> parser
             ( m_scriptContext
-            , 0 // if only use pass0 parsers then no need for temporary allocator
+            , alloc
             , standardEncodedChars
             , standardChars
             , IsFromExternalSource()

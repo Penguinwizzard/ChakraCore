@@ -9,6 +9,7 @@ class Encoder;
 enum RelocType {
     RelocTypeBranch20,
     RelocTypeBranch24,
+    RelocTypeDataLabelLow,
     RelocTypeLabelLow,
     RelocTypeLabelHigh,
     RelocTypeLabel

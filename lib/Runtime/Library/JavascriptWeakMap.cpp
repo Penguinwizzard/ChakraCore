@@ -114,12 +114,12 @@ namespace Js
 
                 Var key, value;
 
-                if (!JavascriptOperators::GetItem(obj, 0, &key, scriptContext))
+                if (!JavascriptOperators::GetItem(obj, 0u, &key, scriptContext))
                 {
                     key = undefined;
                 }
 
-                if (!JavascriptOperators::GetItem(obj, 1, &value, scriptContext))
+                if (!JavascriptOperators::GetItem(obj, 1u, &value, scriptContext))
                 {
                     value = undefined;
                 }

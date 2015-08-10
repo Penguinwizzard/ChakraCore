@@ -428,6 +428,8 @@ namespace Js
 
         const ScriptContextBase* GetScriptContextBase() const { return static_cast<const ScriptContextBase*>(this); }
 
+        bool DoUndeferGlobalFunctions() const;
+
         bool IsUndeclBlockVar(Var var) const { return this->javascriptLibrary->IsUndeclBlockVar(var); }
         
         void TrackPid(const PropertyRecord* propertyRecord)
@@ -534,6 +536,10 @@ namespace Js
 
         FunctionBody * GetFakeGlobalFuncForUndefer() const { return fakeGlobalFuncForUndefer; }
         void SetFakeGlobalFuncForUndefer(FunctionBody * func) { fakeGlobalFuncForUndefer.Root(func, GetRecycler()); }
+
+        void EnsureByteCodeAllocationReadOnly(CustomHeap::Allocation * byteCodeAllocation);
+        void EnsureByteCodeAllocationReadWrite(CustomHeap::Allocation * byteCodeAllocation);
+        void FreeByteCodeAllocation(CustomHeap::Allocation * byteCodeAllocation);
 
     private:
         PropertyStringMap* propertyStrings[80];
@@ -804,6 +810,8 @@ private:
 
         JsUtil::Stack<Var>* operationStack;
         Recycler* recycler;
+
+        CustomHeap::Heap byteCodeAllocationHeap;
         RecyclerJavascriptNumberAllocator numberAllocator;
 
         ScriptConfiguration config;
@@ -1234,6 +1242,7 @@ private:
         void ReleaseGuestArena();
 
         Recycler* GetRecycler() const { return recycler; }
+        CustomHeap::Heap * GetByteCodeAllocator() { return &byteCodeAllocationHeap; }
         RecyclerJavascriptNumberAllocator * GetNumberAllocator() { return &numberAllocator; }
 #if ENABLE_NATIVE_CODEGEN
         NativeCodeGenerator * GetNativeCodeGenerator() const { return nativeCodeGen; }

@@ -1755,7 +1755,7 @@ namespace UnifiedRegex
             wchar_t lower, upper;
 
             uint tableIndex = 0, actualHigh = 0;
-            uint equivClass[CaseInsensitive::EquivClassSize];
+            codepoint_t equivClass[CaseInsensitive::EquivClassSize];
 
             if (caseInsensitiveFlagPresent && CaseInsensitive::RangeToEquivClass(tableIndex, this->currentSurrogatePairNode->value, this->currentSurrogatePairNode->value, actualHigh, equivClass))
             {
@@ -1776,7 +1776,7 @@ namespace UnifiedRegex
 
                     if (!alreadyAdded)
                     {
-                        if (equivClass[i] >= 0x10000)
+                        if (Js::NumberUtilities::IsInSupplementaryPlane(equivClass[i]))
                         {
                             Js::NumberUtilities::CodePointAsSurrogatePair(equivClass[i], &lower, &upper);
                             equivNode[indexForNextNode] = CreateSurrogatePairAtom(lower, upper);
@@ -2240,7 +2240,6 @@ namespace UnifiedRegex
         }
         else 
         {
-            bool simpleCharsNeedCaseFolding = true;
             // Here we have a regex that has both case insensitive and unicode options.
             // The range might also be negated. If it is negated, we can go ahead and negate
             // the entire set as well as fill in cases, as optimizations wouldn't kick in anyways.
@@ -2254,7 +2253,6 @@ namespace UnifiedRegex
                 
                 tmpSet.ToComplement(ctAllocator, codePointSet);
                 
-                simpleCharsNeedCaseFolding = false;
                 simpleCharsCount = codePointSet.SimpleCharCount();
                 totalCodePointsCount = codePointSet.Count();
                 Assert(toUseForTranslation == &codePointSet);
@@ -2262,12 +2260,11 @@ namespace UnifiedRegex
             }
             else
             {
-                // Here we we want to do partial case conversion.
-                // All supplementary characters are to be expanded, only.
-                CharSet<codepoint_t> caseEquilvalent;
-                codePointSet.ToSurrogateEquivClass(ctAllocator, caseEquilvalent);
+                CharSet<codepoint_t> caseEquivalent;
+                codePointSet.ToEquivClass(ctAllocator, caseEquivalent);
+                codePointSet.CloneFrom(ctAllocator, caseEquivalent);
 
-                codePointSet.CloneFrom(ctAllocator, caseEquilvalent);
+                simpleCharsCount = codePointSet.SimpleCharCount();
             }
 
             Assert(simpleCharsCount == toUseForTranslation->SimpleCharCount());
@@ -2285,16 +2282,16 @@ namespace UnifiedRegex
             {
                 if (!toUseForTranslation->ContainSurrogateCodeUnits())
                 {
-                    MatchSetNode *node = Anew(ctAllocator, MatchSetNode, false, simpleCharsNeedCaseFolding);
+                    MatchSetNode *node = Anew(ctAllocator, MatchSetNode, false, false);
                     toUseForTranslation->CloneSimpleCharsTo(ctAllocator, node->set);
                     prefixNode = node;
                 }
                 else
                 {
-                    MatchSetNode *node = Anew(ctAllocator, MatchSetNode, false, simpleCharsNeedCaseFolding);
+                    MatchSetNode *node = Anew(ctAllocator, MatchSetNode, false, false);
                     toUseForTranslation->CloneNonSurrogateCodeUnitsTo(ctAllocator, node->set);
                     prefixNode = node;
-                    node = Anew(ctAllocator, MatchSetNode, false, simpleCharsNeedCaseFolding);
+                    node = Anew(ctAllocator, MatchSetNode, false, false);
                     toUseForTranslation->CloneSurrogateCodeUnitsTo(ctAllocator, node->set);
                     suffixNode = node;
                 }

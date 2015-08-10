@@ -194,11 +194,14 @@ namespace UnifiedRegex
 
             do
             {
-                uint acth, equivl[CaseInsensitive::EquivClassSize];
+                uint acth;
+                C equivl[CaseInsensitive::EquivClassSize];
                 CaseInsensitive::RangeToEquivClass(tblidx, l, h, acth, equivl);
                 uint n = acth - l;
                 for (int i = 0; i < CaseInsensitive::EquivClassSize; i++)
-                    result.SetRange(allocator, Chars<C>::UTC(equivl[i]), Chars<C>::UTC(equivl[i] + n));
+                {
+                    result.SetRange(allocator, equivl[i], Chars<C>::Shift(equivl[i], n));
+                }
 
                 // Go around again for rest of this range
                 l = acth + 1;
@@ -206,150 +209,6 @@ namespace UnifiedRegex
             while (l <= h);
         }
     }
-
-    // ----------------------------------------------------------------------
-    // CharSet<char>
-    // ----------------------------------------------------------------------
-
-    CharSet<char>::CharSet() : singleton(emptyFlag)
-    {
-        vec.Clear();
-    }
-
-    void CharSet<char>::Clear(ArenaAllocator* allocator)
-    {
-        singleton = emptyFlag;
-        vec.Clear();
-    }
-
-    void CharSet<char>::Set(ArenaAllocator* allocator, Char kc)
-    {
-        uint k = CTU(kc);
-        if (k == singleton)
-            return;
-        if (singleton == emptyFlag)
-            singleton = k;
-        else
-            singleton = multiFlag;
-        vec.Set(k);
-    }
-
-    void CharSet<char>::SetRange(ArenaAllocator* allocator, Char lc, Char hc)
-    {
-        uint l = CTU(lc);
-        uint h = CTU(hc);
-        if (h < l)
-            return;
-        if (l == singleton && h == singleton)
-            return;
-        if (h == l && singleton == emptyFlag)
-            singleton = l;
-        else
-            singleton = multiFlag;
-        vec.SetRange(l, h);
-    }
-
-    void CharSet<char>::SetRanges(ArenaAllocator* allocator, int numSortedPairs, const Char* sortedPairs)
-    {
-        for (int i = 0; i < numSortedPairs * 2; i += 2)
-        {
-            Assert(i == 0 || sortedPairs[i-1] < sortedPairs[i]);
-            Assert(sortedPairs[i] <= sortedPairs[i+1]);
-            SetRange(allocator, sortedPairs[i], sortedPairs[i+1]);
-        }
-    }
-
-    void CharSet<char>::SetNotRanges(ArenaAllocator* allocator, int numSortedPairs, const Char* sortedPairs)
-    {
-        if (numSortedPairs == 0)
-            SetRange(allocator, MinChar, MaxChar);
-        else
-        {
-            if (sortedPairs[0] != MinChar)
-                SetRange(allocator, MinChar, sortedPairs[0] - 1);
-            for (int i = 1; i < numSortedPairs * 2 - 1; i += 2)
-                SetRange(allocator, sortedPairs[i] + 1, sortedPairs[i+1] - 1);
-            if (sortedPairs[numSortedPairs * 2 - 1] != MaxChar)
-                SetRange(allocator, sortedPairs[1] + 1, MaxChar);
-        }
-    }
-
-    void CharSet<char>::UnionInPlace(ArenaAllocator* allocator, CharSet<Char>& other)
-    {
-        if (singleton != other.singleton)
-        {
-            if (singleton == emptyFlag)
-                singleton = other.singleton;
-            else
-                singleton = multiFlag;
-        }
-        vec.UnionInPlace(other.vec);
-    }
-
-    void CharSet<char>::ToComplement(ArenaAllocator* allocator, CharSet<Char>& result) const
-    {
-        vec.ToComplement<char>(allocator, 0, result);
-    }
-
-    bool CharSet<char>::IsSubsetOf(const CharSet<Char>& other) const
-    {
-        if (singleton <= MaxUChar && singleton == other.singleton)
-            return true;
-        return vec.IsSubsetOf(other.vec);
-    }
-
-    bool CharSet<char>::IsEqualTo(const CharSet<Char>& other) const
-    {
-        if (singleton <= MaxUChar && singleton == other.singleton)
-            return true;
-        return vec.IsEqualTo(other.vec);
-    }
-
-    void CharSet<char>::ToEquivClass(ArenaAllocator* allocator, CharSet<Char>& result) const
-    {
-        uint tblidx = 0;
-        vec.ToEquivClass<Char>(allocator, 0, tblidx, result);
-    }
-
-#if ENABLE_REGEX_CONFIG_OPTIONS
-    // CAUTION! Slow
-    void CharSet<char>::Print(DebugWriter* w) const 
-    {
-        w->Print(L"[");
-        int start = -1;
-        for (uint i = 0; i < NumChars; i++)
-        {
-            if (vec.Get(i))
-            {
-                if (start < 0)
-                {
-                    start = i;
-                    w->PrintEscapedChar(CTW(UTC(i)));
-                }
-            }
-            else
-            {
-                if (start >= 0)
-                {
-                    if (i > (uint)(start + 1))
-                    {
-                        if (i  > (uint)(start + 2))
-                            w->Print(L"-");
-                        w->PrintEscapedChar(CTW(UTC(i - 1)));
-                    }
-                    start = -1;
-                }
-            }
-        }
-        if (start >= 0)
-        {
-            if ((uint)start < MaxUChar - 1)
-                w->Print(L"-");
-            w->PrintEscapedChar(CTW(MaxChar));
-        }
-        w->Print(L"]");
-    }
-#endif
 
     // ----------------------------------------------------------------------
     // CharSetNode
@@ -447,11 +306,14 @@ namespace UnifiedRegex
 
         do
         {
-            uint acth, equivl[CaseInsensitive::EquivClassSize];
+            uint acth;
+            C equivl[CaseInsensitive::EquivClassSize];
             CaseInsensitive::RangeToEquivClass(tblidx, l, h, acth, equivl);
             uint n = acth - l;
             for (int i = 0; i < CaseInsensitive::EquivClassSize; i++)
-                result.SetRange(allocator, Chars<C>::UTC(equivl[i]), Chars<C>::UTC(equivl[i] + n));
+            {
+                result.SetRange(allocator, equivl[i], Chars<C>::Shift(equivl[i], n));
+            }
 
             // Go around again for rest of this range
             l = acth + 1;
@@ -1507,21 +1369,28 @@ namespace UnifiedRegex
             Sort();
             for (uint i = 0; i < this->GetCompactLength(); i++)
             {
-                uint acth, equivs[CaseInsensitive::EquivClassSize];
+                uint acth;
+                Char equivs[CaseInsensitive::EquivClassSize];
                 if (CaseInsensitive::RangeToEquivClass(tblidx, this->GetCompactCharU(i), this->GetCompactCharU(i), acth, equivs))
                 {
                     for (int j = 0; j < CaseInsensitive::EquivClassSize; j++)
-                        result.Set(allocator, UTC(equivs[j]));
+                    {
+                        result.Set(allocator, equivs[j]);
+                    }
                 }
                 else
+                {
                     result.Set(allocator, this->GetCompactChar(i));
+                }
             }
         }
         else
         {
             rep.full.direct.ToEquivClass<wchar_t>(allocator, 0, tblidx, result);
             if (rep.full.root != nullptr)
+            {
                 rep.full.root->ToEquivClassW(allocator, CharSetNode::levels - 1, 0, tblidx, result);
+            }
         }
     }
 
@@ -1533,21 +1402,28 @@ namespace UnifiedRegex
             Sort();
             for (uint i = 0; i < this->GetCompactLength(); i++)
             {
-                uint acth, equivs[CaseInsensitive::EquivClassSize];
+                uint acth;
+                codepoint_t equivs[CaseInsensitive::EquivClassSize];
                 if (CaseInsensitive::RangeToEquivClass(tblidx, this->GetCompactCharU(i) + baseOffset, this->GetCompactCharU(i) + baseOffset, acth, equivs))
                 {
                     for (int j = 0; j < CaseInsensitive::EquivClassSize; j++)
-                        result.Set(allocator, (codepoint_t)equivs[j]);
+                    {
+                        result.Set(allocator, equivs[j]);
+                    }
                 }
                 else
+                {
                     result.Set(allocator, this->GetCompactChar(i) + baseOffset);
+                }
             }
         }
         else
         {
             rep.full.direct.ToEquivClass<codepoint_t>(allocator, 0, tblidx, result, baseOffset);
             if (rep.full.root != nullptr)
+            {
                 rep.full.root->ToEquivClassCP(allocator, CharSetNode::levels - 1, 0, tblidx, result, baseOffset);
+            }
         }
     }
 

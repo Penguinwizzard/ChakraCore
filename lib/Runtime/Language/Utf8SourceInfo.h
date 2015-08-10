@@ -353,36 +353,13 @@ namespace Js
             *outCharPosition = this->m_lineOffsetCache->GetCharacterOffsetForLine(lineNumber, outByteOffset);
         }
 
+        void TrackDeferredFunction(Js::LocalFunctionId functionID, Js::ParseableFunctionInfo *function);
+        void StopTrackingDeferredFunction(Js::LocalFunctionId functionID);
 
-        void TrackDeferredFunction(Js::LocalFunctionId functionID, Js::ParseableFunctionInfo *function)
-        {
-            if (CONFIG_FLAG(DeferTopLevelTillFirstCall))
-            {
-                Assert(m_deferredFunctionsInitialized);
-                if (this->m_deferredFunctionsDictionary != nullptr)
-                {
-                    this->m_deferredFunctionsDictionary->Add(functionID, function);
-                }
-            }
-        }
-
-        void StopTrackingDeferredFunction(Js::LocalFunctionId functionID)
-        {
-            if (CONFIG_FLAG(DeferTopLevelTillFirstCall))
-            {
-                Assert(m_deferredFunctionsInitialized);
-                if (this->m_deferredFunctionsDictionary != nullptr)
-                {
-                    this->m_deferredFunctionsDictionary->Remove(functionID);
-                }
-            }
-        }
-
-        //Undeffers all defferred
-        template <class Fn>
+        template <class Fn> 
         void UndeferGlobalFunctions(Fn fn)
         {
-            if (CONFIG_FLAG(DeferTopLevelTillFirstCall))
+            if (this->m_scriptContext->DoUndeferGlobalFunctions())
             {
                 Assert(m_deferredFunctionsInitialized);
                 if (m_deferredFunctionsDictionary == nullptr) 
@@ -396,7 +373,7 @@ namespace Js
                 tmp->MapAndRemoveIf(fn);
             }
         }
-                
+
         ISourceHolder* GetSourceHolder() const
         {
             return sourceHolder;

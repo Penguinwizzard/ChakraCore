@@ -94,7 +94,9 @@ namespace Js
 
     inline OpCode ByteCodeReader::ReadOp(LayoutSize& layoutSize)
     {
-        return ReadOp(m_currentLocation, layoutSize);       
+        OpCode op = ReadOp(m_currentLocation, layoutSize);       
+        Assert(!OpCodeAttr::BackEndOnly(op));
+        return op;
     }
 
     inline OpCode ByteCodeReader::ReadPrefixedOp(LayoutSize& layoutSize, OpCode prefix)
@@ -182,5 +184,19 @@ namespace Js
         Assert(targetip < m_endLocation);
         m_currentLocation = targetip;        
         return targetip;
+    }
+
+    inline bool ByteCodeReader::IsCurrentLocationReadOnly(CustomHeap::Heap * byteCodeAllocator)
+    {
+        Assert(byteCodeAllocator != nullptr);
+        return byteCodeAllocator->IsReadOnly((void*)m_currentLocation);
+    }
+
+    inline bool ByteCodeReader::IsCurrentLocationExecuteReadProtection()
+    {
+        MEMORY_BASIC_INFORMATION memBasicInfo;
+        size_t bytes = VirtualQuery(m_currentLocation, &memBasicInfo, sizeof(memBasicInfo));
+
+        return (bytes != 0 && memBasicInfo.Protect == PAGE_EXECUTE_READ);
     }
 } // namespace Js

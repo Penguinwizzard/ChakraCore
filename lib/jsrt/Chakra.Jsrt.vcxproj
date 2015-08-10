@@ -36,6 +36,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)Jsrt.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)JsrtByteCodeSourceMapper.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JsrtContext.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JsrtExternalArrayBuffer.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JsrtExternalObject.cpp" />
@@ -47,6 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="chakrart.h" />
+    <ClInclude Include="JsrtByteCodeSourceMapper.h" />
     <ClInclude Include="JsrtContext.h" />
     <ClInclude Include="JsrtCustomEnumerator.h" />
     <ClInclude Include="JsrtExternalArrayBuffer.h" />

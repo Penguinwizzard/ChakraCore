@@ -563,7 +563,7 @@ class LabelInstr : public Instr
 
 public:
     LabelInstr(JitArenaAllocator * allocator) : Instr(), labelRefs(allocator), m_isLoopTop(false), m_block(null), isOpHelper(false), 
-        m_hasNonBranchRef(false), m_region(null), m_loweredBasicBlock(nullptr)
+        m_hasNonBranchRef(false), m_region(null), m_loweredBasicBlock(nullptr), m_isDataLabel(false)
 #if DBG
         , m_noHelperAssert(false)
 #endif
@@ -583,6 +583,7 @@ public:
     BYTE                    m_isLoopTop : 1;
     BYTE                    isOpHelper : 1;
     BYTE                    m_hasNonBranchRef : 1;
+    BYTE                    m_isDataLabel : 1;
 #if DBG
     BYTE                    m_noHelperAssert : 1;
 #endif
@@ -748,14 +749,14 @@ public:
     }
 
     void                            AddtoDictionary(uint32 offset, TBranchKey key);
-    void                                                        AddtoJumpTable(uint32 offset, uint32 jmpIndex);
+    void                            AddtoJumpTable(uint32 offset, uint32 jmpIndex);
     void                            CreateBranchTargetsAndSetDefaultTarget(int dictionarySize, Kind kind, uint defaultTargetOffset);
     void                            ChangeLabelRef(LabelInstr * oldTarget, LabelInstr * newTarget);
     bool                            ReplaceTarget(IR::LabelInstr * oldLabelInstr, IR::LabelInstr * newLabelInstr);
     void                            MultiBranchInstr::FixMultiBrDefaultTarget(uint32 targetOffset);
     void                            ClearTarget();
-        BranchDictionaryWrapper *               GetBranchDictionary();
-        BranchJumpTable *                               GetBranchJumpTable();
+    BranchDictionaryWrapper *       GetBranchDictionary();
+    BranchJumpTable *               GetBranchJumpTable();
 
 
 ///---------------------------------------------------------------------------

@@ -2739,7 +2739,7 @@ double Js::NumberUtilities::DblFromDecimal(DECIMAL * pdecIn)
 void Js::NumberUtilities::CodePointAsSurrogatePair(codepoint_t codePointValue, wchar_t* first, wchar_t* second)
 {
     AssertMsg(first != nullptr && second != nullptr, "Null ptr's passed in for out.");
-    AssertMsg(codePointValue >= 0x10000 && codePointValue <= 0x10FFFF, "Code point is not a surrogate pair.");
+    AssertMsg(IsInSupplementaryPlane(codePointValue), "Code point is not a surrogate pair.");
     codePointValue -= 0x10000;
     *first = (wchar_t)(codePointValue >> 10) + 0xD800;
     *second = (wchar_t)(codePointValue & 0x3FF /* This is same as cpv % 0x400 */) + 0xDC00;
@@ -2759,6 +2759,12 @@ bool Js::NumberUtilities::IsSurrogateUpperPart(codepoint_t codePointValue)
 bool Js::NumberUtilities::IsSurrogateLowerPart(codepoint_t codePointValue)
 {
     return codePointValue >= 0xD800 && codePointValue <= 0xDBFF;
+}
+
+bool Js::NumberUtilities::IsInSupplementaryPlane(codepoint_t codePointValue)
+{
+    Assert(codePointValue <= 0x10FFFF);
+    return codePointValue >= 0x10000;
 }
 
 }; // namespace Js

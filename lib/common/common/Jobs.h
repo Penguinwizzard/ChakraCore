@@ -407,7 +407,10 @@ namespace JsUtil
             canDecommit(true),
             currentJob(null),
             threadStartedOrClosing(false), 
-            backgroundPageAllocator(policyManager, Js::Configuration::Global.flags, PageAllocatorType_BGJIT),
+            backgroundPageAllocator(policyManager, Js::Configuration::Global.flags, PageAllocatorType_BGJIT,
+                                    (AutoSystemInfo::Data.IsLowMemoryProcess() ?
+                                     PageAllocator::DefaultLowMaxFreePageCount :
+                                     PageAllocator::DefaultMaxFreePageCount)),
             threadArena(null),
             processor(null),
             parser(null),

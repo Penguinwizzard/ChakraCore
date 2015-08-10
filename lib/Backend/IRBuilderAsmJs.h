@@ -89,6 +89,7 @@ private:
     void                    Build##layout(Js::OpCodeAsmJs newOpcode, uint32 offset);
 #define LAYOUT_TYPE_WMS(layout) \
     template <typename SizePolicy> void Build##layout(Js::OpCodeAsmJs newOpcode, uint32 offset);
+#define EXCLUDE_FRONTEND_LAYOUT
 #include "ByteCode\LayoutTypesAsmJs.h"
 
     void                    BuildElementSlot(Js::OpCodeAsmJs newOpcode, uint32 offset, int32 slotIndex, Js::RegSlot value, Js::RegSlot instance);
@@ -111,7 +112,6 @@ private:
     void                    BuildDouble1Const1(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegSlot dstDoubleReg, double constDouble);
     void                    BuildFloat1Const1(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegSlot dstFloatReg, float constFloat);
     void                    BuildDouble1Addr1(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegSlot dstDoubleReg, const double * addr);
-    void                    BuildFloat1Addr1(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegSlot dstFloatReg, const float * addr);
     void                    BuildInt1Double2(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegSlot dst, Js::RegSlot src1, Js::RegSlot src2);
     void                    BuildInt1Float2(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegSlot dst, Js::RegSlot src1, Js::RegSlot src2);
     void                    BuildInt2(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegSlot dst, Js::RegSlot src);

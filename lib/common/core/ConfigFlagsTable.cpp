@@ -1020,16 +1020,6 @@ namespace Js
 #undef FLAG_REGOVR_EXP
     }
 
-    void
-    ConfigFlagsTable::EnableAsmJsFlag()
-    {
-#define FLAG(...) 
-#define FLAG_REGOVR_ASMJS(type, name, description, defaultValue, parentName, hasCallback) this->SetAsBoolean(Js::Flag::name##Flag, true);
-#include "ConfigFlagsList.h"
-#undef FLAG
-#undef FLAG_REGOVR_ASMJS
-    }
-
     //
     // Configuration options
     //

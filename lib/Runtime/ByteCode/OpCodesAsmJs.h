@@ -139,7 +139,6 @@ MACRO_WMS   ( Rem_Db                    , Double3       , None           ) // Do
 
 //float math 
 MACRO_WMS   ( Ld_Flt                    , Float2        , None           ) // Sets a float from another float register
-MACRO_WMS   ( Ld_FltAddr                , Float1Addr1   , None           ) // Sets a float register from a const float*
 MACRO_WMS   ( Neg_Flt                   , Float2        , None           ) // Float  Unary '-'
 MACRO_WMS   ( Add_Flt                   , Float3        , None           ) // Float Arithmetic '+'
 MACRO_WMS   ( Sub_Flt                   , Float3        , None           ) // Float Arithmetic '-' (subtract)

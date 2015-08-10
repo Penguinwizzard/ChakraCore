@@ -265,7 +265,7 @@ namespace UnifiedRegex
         for (int i = 0; i < TrigramAlphabet::AlphaCount; i++)
         {
             Char equivs[CaseInsensitive::EquivClassSize];
-            standardChars->ToEquivs(codeToChar[i], equivs);
+            standardChars->ToEquivs(CaseInsensitive::MappingSource::UnicodeData, codeToChar[i], equivs);
             for (int j = 0; j < CaseInsensitive::EquivClassSize; j++)
             {
                 if (CTU(equivs[j]) < TrigramAlphabet::AsciiTableSize)

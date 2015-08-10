@@ -14,7 +14,6 @@ enum AssemblyStepDefs
     STEP_HREG,
     STEP_DREG,
     STEP_SREG,
-    STEP_MULTIBR,
     STEP_VMOV_IMM,
     STEP_SWPREG,
     STEP_DUMMY_REG,
@@ -241,7 +240,7 @@ static const AssemblyStep Steps_T2_BLX [] =
 // used by : BX
 static const AssemblyStep Steps_T_BX [] =
 {
-   STEP_REG, 3, STEP_MULTIBR, STEP_OPCODE, STEP_DONE
+   STEP_REG, 3, STEP_OPCODE, STEP_DONE
 };
 
 // used by : AND, MUL, BIC, ADC, SUB, SBC

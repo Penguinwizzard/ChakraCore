@@ -469,7 +469,6 @@ namespace Js
     public:
         void FinalizeConfiguration();
         void EnableExperimentalFlag();
-        void EnableAsmJsFlag();
 
     private:
         void TransferAcronymFlagConfiguration();

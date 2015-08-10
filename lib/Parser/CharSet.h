@@ -215,60 +215,6 @@ namespace UnifiedRegex
     template <typename C>
     class CharSet {};
 
-    template <>
-    class CharSet<char> : private Chars<char>
-    {
-    private:
-        static const uint emptyFlag = MaxUChar + 1;
-        static const uint multiFlag = MaxUChar + 2;
-        uint singleton; // if not one of above flags then singleton char
-        CharBitvec vec;
-
-    public:
-        CharSet();
-        void Clear(ArenaAllocator* allocator);
-        void Set(ArenaAllocator* allocator, Char kc);
-        void SetRange(ArenaAllocator* allocator, Char lc, Char hc);
-        void SetRanges(ArenaAllocator* allocator, int numSortedPairs, const Char* sortedPairs);
-        void SetNotRanges(ArenaAllocator* allocator, int numSortedPairs, const Char* sortedPairs);
-        void UnionInPlace(ArenaAllocator* allocator, CharSet<Char>& other);
-
-        inline bool Get(Char kc) const
-        {
-            return vec.Get(CTU(kc));
-        }
-
-        inline bool IsEmpty() const
-        {
-            return singleton == emptyFlag;
-        }
-        
-        inline bool IsSingleton() const
-        {
-            return singleton <= MaxUChar;
-        }
-        
-        inline char Singleton() const
-        {
-            Assert(IsSingleton());
-            return UTC(singleton);
-        }
-
-        bool IsSubsetOf(const CharSet<Char>& other) const;
-        bool IsEqualTo(const CharSet<Char>& other) const;
-
-        inline uint Count() const
-        {
-            return singleton <= MaxUChar ? 1 : (singleton == emptyFlag ? 0 : vec.Count());
-        }
-
-        void ToComplement(ArenaAllocator* allocator, CharSet<Char>& result) const;
-        void ToEquivClass(ArenaAllocator* allocator, CharSet<Char>& result) const;
-#if ENABLE_REGEX_CONFIG_OPTIONS
-        void Print(DebugWriter* w) const;
-#endif
-    };
-
     struct CharSetNode : protected Chars<wchar_t>
     {
         static const int directBits = Chars<char>::CharWidth;
@@ -804,7 +750,6 @@ namespace UnifiedRegex
 #endif
     };
 
-    typedef CharSet<char> ASCIICharSet;
     typedef CharSet<wchar_t> UnicodeCharSet;
     typedef RuntimeCharSet<wchar_t> UnicodeRuntimeCharSet;
 }

@@ -4,6 +4,11 @@
 
 #pragma once
 
+namespace IR
+{
+    class LabelInstr;
+}
+
 namespace Js
 {
 #define DeclareExceptionPointer(ep)                  \
@@ -99,28 +104,37 @@ namespace Js
         }
 
     };
-
+    
     class BranchJumpTableWrapper
     {
     public:
 
-        BranchJumpTableWrapper() : defaultTarget(null)
+        BranchJumpTableWrapper(uint tableSize) : defaultTarget(null), labelInstr(nullptr), tableSize(tableSize)
         {
         }
+
         void** jmpTable;
         void* defaultTarget;
+        IR::LabelInstr * labelInstr;
+        int tableSize;
 
-        static BranchJumpTableWrapper* New(NativeCodeData::Allocator * allocator, uint tableSize)
+        static BranchJumpTableWrapper* New(JitArenaAllocator * allocator, uint tableSize)
         {
-            BranchJumpTableWrapper * branchTargets = NativeCodeDataNew(allocator, BranchJumpTableWrapper);
+            BranchJumpTableWrapper * branchTargets = JitAnew(allocator, BranchJumpTableWrapper, tableSize);
 
             //Create the jump table for integers
-
-            void* * jmpTable = NativeCodeDataNewArray(allocator, void*, tableSize);
+            
+            void* * jmpTable = JitAnewArrayZ(allocator, void*, tableSize);
             branchTargets->jmpTable = jmpTable;
             return branchTargets;
         }
 
+        static void Delete(JitArenaAllocator * allocator, BranchJumpTableWrapper * branchTargets)
+        {
+            Assert(allocator != nullptr && branchTargets != nullptr);
+            JitAdeleteArray(allocator, branchTargets->tableSize, branchTargets->jmpTable);
+            JitAdelete(allocator, branchTargets);
+        }
     };
 
     class JavascriptOperators  /* All static */
@@ -249,13 +263,17 @@ namespace Js
 
         static BOOL HasOwnItem(RecyclableObject* instance, uint32 index);
         static BOOL HasItem(RecyclableObject* instance, uint32 index);
+        static BOOL HasItem(RecyclableObject* instance, uint64 index);
         static BOOL GetOwnItem(RecyclableObject* instance, uint32 index, Var* value, ScriptContext* requestContext);
+        static BOOL GetItem(RecyclableObject* instance, uint64 index, Var* value, ScriptContext* requestContext);
         static BOOL GetItem(RecyclableObject* instance, uint32 index, Var* value, ScriptContext* requestContext);
         static BOOL GetItem(Var instance, RecyclableObject* propertyObject, uint32 index, Var* value, ScriptContext* requestContext);
         static BOOL GetItemReference(RecyclableObject* instance, uint32 index, Var* value, ScriptContext* requestContext);
         static BOOL GetItemReference(Var instance, RecyclableObject* propertyObject, uint32 index, Var* value, ScriptContext* requestContext);
+        static BOOL SetItem(Var instance, RecyclableObject* object, uint64 index, Var value, ScriptContext* scriptContext, PropertyOperationFlags flags = PropertyOperation_None);
         static BOOL SetItem(Var instance, RecyclableObject* object, uint32 index, Var value, ScriptContext* scriptContext, PropertyOperationFlags flags = PropertyOperation_None, BOOL skipPrototypeCheck = FALSE);
         static BOOL DeleteItem(RecyclableObject* instance, uint32 index, PropertyOperationFlags propertyOperationFlags = PropertyOperation_None);
+        static BOOL DeleteItem(RecyclableObject* instance, uint64 index, PropertyOperationFlags propertyOperationFlags = PropertyOperation_None);
 
         static Var Construct(RecyclableObject* constructor, const Arguments args, ScriptContext* scriptContext);
         static Var CreateFromConstructor(RecyclableObject* constructor, ScriptContext* scriptContext);

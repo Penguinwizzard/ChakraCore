@@ -369,4 +369,28 @@ namespace Js
     {
         return this->callerUtf8SourceInfo;
     }
+
+    void Utf8SourceInfo::TrackDeferredFunction(Js::LocalFunctionId functionID, Js::ParseableFunctionInfo *function)
+    {
+        if (this->m_scriptContext->DoUndeferGlobalFunctions())
+        {
+            Assert(m_deferredFunctionsInitialized);
+            if (this->m_deferredFunctionsDictionary != nullptr)
+            {
+                this->m_deferredFunctionsDictionary->Add(functionID, function);
+            }
+        }
+    }
+
+    void Utf8SourceInfo::StopTrackingDeferredFunction(Js::LocalFunctionId functionID)
+    {
+        if (this->m_scriptContext->DoUndeferGlobalFunctions())
+        {
+            Assert(m_deferredFunctionsInitialized);
+            if (this->m_deferredFunctionsDictionary != nullptr)
+            {
+                this->m_deferredFunctionsDictionary->Remove(functionID);
+            }
+        }
+    }
 }

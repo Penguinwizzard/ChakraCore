@@ -6,12 +6,12 @@
 
 namespace Js
 {
-    ByteBlock *ByteBlock::New(Recycler *alloc,const byte * initialContent,int initialContentSize)  
+    ByteBlock *ByteBlock::New(Recycler *alloc, const byte * initialContent, int initialContentSize, ScriptContext * scriptContext)
     {
         // initialContent may be 'null' if no data to copy
         AssertMsg(initialContentSize > 0, "Must have valid data size");
  
-        ByteBlock *newBlock = RecyclerNew(alloc,ByteBlock,initialContentSize,alloc);
+        ByteBlock *newBlock = RecyclerNew(alloc,ByteBlock,initialContentSize, scriptContext->GetByteCodeAllocator());
         //
         // Copy any optional data into the block:
         // - If this was not provided, the block's contents will be uninitialized.
@@ -19,7 +19,12 @@ namespace Js
 
         if (initialContent != null)
         {
-            js_memcpy_s(newBlock->m_content, newBlock->GetLength(), initialContent, initialContentSize);
+            {
+                AutoCriticalSection cs(scriptContext->GetByteCodeAllocator()->GetCriticalSection());
+                scriptContext->EnsureByteCodeAllocationReadWrite(newBlock->GetAllocation());
+                js_memcpy_s(newBlock->m_content, newBlock->GetLength(), initialContent, initialContentSize);
+                scriptContext->EnsureByteCodeAllocationReadOnly(newBlock->GetAllocation());
+            }
         }
 
         return newBlock;
@@ -44,17 +49,17 @@ namespace Js
         return newBlock;
     }
 
-    ByteBlock * ByteBlock::Clone(Recycler* alloc)
+    ByteBlock * ByteBlock::Clone(Recycler* alloc, ScriptContext * scriptContext)
     {
-        return ByteBlock::New(alloc, this->m_content, this->m_contentSize);
+        return ByteBlock::New(alloc, this->m_content, this->m_contentSize, scriptContext);
     }
 
-    ByteBlock *ByteBlock::New(Recycler *alloc,const byte * initialContent,int initialContentSize, ScriptContext * requestContext)  
+    ByteBlock *ByteBlock::New(Recycler *alloc, const byte * initialContent, int initialContentSize, ScriptContext * requestContext, ScriptContext * scriptContext)
     {
         // initialContent may be 'null' if no data to copy
         AssertMsg(initialContentSize > 0, "Must have valid data size");
  
-        ByteBlock *newBlock = RecyclerNew(alloc,ByteBlock,initialContentSize,alloc);
+        ByteBlock *newBlock = RecyclerNew(alloc, ByteBlock, initialContentSize, scriptContext->GetByteCodeAllocator());
 
         //
         // Copy any optional data into the block:
@@ -72,21 +77,28 @@ namespace Js
             Var *dst = (Var*)newBlock->m_content;
             size_t count = initialContentSize / sizeof(Var);
 
-            for (size_t i=0; i<count;i++)
+            AutoCriticalSection cs(scriptContext->GetByteCodeAllocator()->GetCriticalSection());
             {
-                if (TaggedInt::Is(src[i]))
+                scriptContext->EnsureByteCodeAllocationReadWrite(newBlock->GetAllocation());
+
+                for (size_t i = 0; i < count; i++)
                 {
-                    dst[i] = src[i];
+                    if (TaggedInt::Is(src[i]))
+                    {
+                        dst[i] = src[i];
+                    }
+                    else
+                    {
+                        //
+                        // Currently only numbers are put into AuxiliaryContext data
+                        //
+                        Assert(JavascriptNumber::Is(src[i]));
+                        dst[i] = JavascriptNumber::CloneToScriptContext(src[i], requestContext);
+                        requestContext->BindReference(dst[i]);
+                    }
                 }
-                else
-                {
-                     //
-                    // Currently only numbers are put into AuxiliaryContext data
-                    //
-                    Assert(JavascriptNumber::Is(src[i]));
-                    dst[i] = JavascriptNumber::CloneToScriptContext(src[i], requestContext);
-                    requestContext->BindReference(dst[i]);
-                }
+
+                scriptContext->EnsureByteCodeAllocationReadOnly(newBlock->GetAllocation());
             }
         }
 
@@ -97,8 +109,8 @@ namespace Js
     // Create a copy of buffer
     //  Each Var is cloned on the requestContext
     //
-    ByteBlock * ByteBlock::Clone(Recycler* alloc, ScriptContext * requestContext)
+    ByteBlock * ByteBlock::Clone(Recycler* alloc, ScriptContext * requestContext, ScriptContext * scriptContext)
     {
-        return ByteBlock::New(alloc, this->m_content, this->m_contentSize, requestContext);
+        return ByteBlock::New(alloc, this->m_content, this->m_contentSize, requestContext, scriptContext);
     }
 }

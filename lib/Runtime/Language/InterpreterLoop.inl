@@ -64,6 +64,19 @@ Var Js::InterpreterStackFrame::INTERPRETERLOOPNAME()
     // For checked builds this does mean we are incrementing 2 different counters to
     // track the ip.
     const byte* ip = m_reader.GetIP();
+
+    if (!CONFIG_FLAG(ForceSerialized) && !this->m_functionBody->GetUtf8SourceInfo()->GetIsLibraryCode()
+        && m_functionBody->GetByteCode()->GetAllocation() != nullptr)
+    {
+        byte * byteCodeStartAddress = (byte*) m_functionBody->GetByteCode()->GetAllocation()->address;
+        byte * byteCodeEndAddress = byteCodeStartAddress + m_functionBody->GetByteCode()->GetAllocation()->size;
+        if (ip < byteCodeStartAddress || ip >= byteCodeEndAddress)
+        {
+            CustomHeap_BadPageState_fatal_error((ULONG_PTR)this);
+            return null;
+        }
+    }
+
     while (true)
     {
         INTERPRETER_OPCODE op = ReadByteOp<INTERPRETER_OPCODE>(ip);

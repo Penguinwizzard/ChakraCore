@@ -25,8 +25,8 @@ namespace Js {
 #ifdef GENERATE_DUMP
         static bool ReportAssert(__in LPSTR fileName, uint lineNumber, __in LPSTR error, __in LPSTR message);
         static void LogAssert();
-        static int GenerateDump(PEXCEPTION_POINTERS exceptInfo, LPCWSTR filePath, int ret = EXCEPTION_CONTINUE_SEARCH);
-        static void GenerateDump(LPCWSTR filePath, bool terminate = false);
+        static int GenerateDump(PEXCEPTION_POINTERS exceptInfo, LPCWSTR filePath, int ret = EXCEPTION_CONTINUE_SEARCH, bool needLock = false);
+        static void GenerateDump(LPCWSTR filePath, bool terminate = false, bool needLock = false);
     private:
         static CriticalSection csGenereateDump;
         __declspec(thread) static  StackBackTrace * stackBackTrace;
@@ -181,18 +181,6 @@ namespace Js {
 #define END_TRANSLATE_ERROROBJECT_TO_HRESULT(hr) \
     END_TRANSLATE_ERROROBJECT_TO_HRESULT_EX(hr, Js::JavascriptError::GetRuntimeErrorWithScriptEnter)
 
-#define END_RECORD_TRANSLATE_ERROROBJECT_TO_HRESULT(hr, scriptContext) \
-    catch (Js::JavascriptExceptionObject *  exceptionObject)  \
-    {   \
-        if (!scriptContext->HasRecordedException())  \
-        {  \
-            BEGIN_TRANSLATE_OOM_TO_HRESULT_NESTED \
-                exceptionObject = exceptionObject->CloneIfStaticExceptionObject(scriptContext);  \
-                scriptContext->RecordException(exceptionObject);  \
-            END_TRANSLATE_OOM_TO_HRESULT(hr) \
-        }  \
-    }
-
 #define END_GET_ERROROBJECT(hr, scriptContext, exceptionObject) \
     catch (Js::JavascriptExceptionObject *  _exceptionObject)  \
     {   \
@@ -200,6 +188,29 @@ namespace Js {
             exceptionObject = _exceptionObject; \
             exceptionObject = exceptionObject->CloneIfStaticExceptionObject(scriptContext);  \
         END_TRANSLATE_OOM_TO_HRESULT(hr) \
+    }
+
+#define CATCH_JAVASCRIPT_EXCEPTION_OBJECT(threadContext) \
+    catch (Js::JavascriptExceptionObject *  exceptionObject)  \
+    {   \
+        threadContext->SetRecordedException(exceptionObject);   \
+        return JsErrorScriptException; \
+    }
+
+#define CATCH_OTHER_EXCEPTIONS  \
+    catch (JsrtExceptionBase& e)  \
+    {  \
+        return e.GetJsErrorCode();  \
+    }   \
+    catch (Js::ExceptionBase)   \
+    {   \
+        AssertMsg(false, "Unexpected engine exception.");   \
+        return JsErrorFatal;    \
+    }   \
+    catch (...) \
+    {   \
+        AssertMsg(false, "Unexpected non-engine exception.");   \
+        return JsErrorFatal;    \
     }
 
 // Use this version if execution is in script (use rarely)

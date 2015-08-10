@@ -53,6 +53,11 @@ namespace UnifiedRegex
             Assert(ph >= pl && ph - pl <= MaxCharCount);
             return (CharCount)(ph - pl);
         }
+
+        static inline Char Shift(Char c, int n)
+        {
+            return UTC(CTU(c) + n);
+        }
     };
 
     template <>
@@ -97,6 +102,11 @@ namespace UnifiedRegex
         {
             Assert(ph >= pl && ph - pl <= MaxCharCount);
             return (CharCount)(ph - pl);
+        }
+
+        static inline Char Shift(Char c, int n)
+        {
+            return UTC(CTU(c) + n);
         }
     };
 
@@ -145,6 +155,11 @@ namespace UnifiedRegex
             Assert(ph >= pl && ph - pl <= MaxCharCount);
             return (CharCount)(ph - pl);
         }
+
+        static inline Char Shift(Char c, int n)
+        {
+            return UTC(CTU(c) + n);
+        }
     };
 
     template <>
@@ -192,6 +207,11 @@ namespace UnifiedRegex
         {
             Assert(ph >= pl && ph - pl <= MaxCharCount);
             return (CharCount)(ph - pl);
+        }
+
+        static inline Char Shift(Char c, int n)
+        {
+            return UTC(CTU(c) + n);
         }
     };
 }

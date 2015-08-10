@@ -817,6 +817,7 @@ public:
                 DEFAULT_LAYOUT_WITH_ONEBYTE_AND_PROFILED(CallI);
                 DEFAULT_LAYOUT_WITH_ONEBYTE_AND_PROFILED(CallIFlags);
                 DEFAULT_LAYOUT_WITH_ONEBYTE_AND_PROFILED(CallIWithICIndex);
+                DEFAULT_LAYOUT_WITH_ONEBYTE_AND_PROFILED(CallIFlagsWithICIndex);
                 DEFAULT_LAYOUT_WITH_ONEBYTE_AND_PROFILED(ElementI);
                 DEFAULT_LAYOUT_WITH_ONEBYTE(ElementUnsigned1);
                 DEFAULT_LAYOUT_WITH_ONEBYTE_AND_PROFILED(ElementSlot);
@@ -1971,7 +1972,7 @@ public:
         *value = raw + offset;
         return next;
     }
-
+    
     const byte * ReadByteBlock(const byte * buffer, WriteBarrierPtr<ByteBlock>* byteBlock)
     {
         int contentLength;
@@ -1983,6 +1984,14 @@ public:
         }
         else
         {
+#if DBG
+            if (!CONFIG_FLAG(ForceSerialized))
+            {
+                MEMORY_BASIC_INFORMATION memBasicInfo;
+                size_t bytes = VirtualQuery(buffer, &memBasicInfo, sizeof(memBasicInfo));
+                Assert(bytes != 0 && (memBasicInfo.Protect == PAGE_EXECUTE_READ || memBasicInfo.Protect == PAGE_READONLY));
+            }
+#endif
             // TODO: Abstract this out to ByteBlock::New
             *byteBlock = RecyclerNewLeaf(scriptContext->GetRecycler(), ByteBlock, contentLength, (byte*)buffer);
         }
@@ -2004,57 +2013,79 @@ public:
         current = ReadUInt32(current, &sizeOfAuxiliaryContextBlock);
 
         ByteBlock * auxBlock = sizeOfAuxiliaryBlock?
-            ByteBlock::New(scriptContext->GetRecycler(), null, sizeOfAuxiliaryBlock) : null;
+            ByteBlock::New(scriptContext->GetRecycler(), null, sizeOfAuxiliaryBlock, scriptContext) : null;
         ByteBlock * auxContextBlock = sizeOfAuxiliaryContextBlock?
-            ByteBlock::New(scriptContext->GetRecycler(), null, sizeOfAuxiliaryContextBlock) : null;
+            ByteBlock::New(scriptContext->GetRecycler(), null, sizeOfAuxiliaryContextBlock, scriptContext) : null;
 
-        for (uint i = 0; i < countOfAuxiliaryStructure; i++)
+        AutoCriticalSection cs(scriptContext->GetByteCodeAllocator()->GetCriticalSection());
         {
-            typedef serialization_alignment const SerializedAuxiliary TBase;
-            auto part = (serialization_alignment const SerializedAuxiliary * )current;
-#ifdef BYTE_CODE_MAGIC_CONSTANTS
-            Assert(part->auxMagic == magicStartOfAux);
-#endif
-            switch(part->kind)
+            if (auxBlock != nullptr)
             {
-            default:
-                AssertMsg(false, "Unexpected auxiliary kind");
-                Throw::FatalInternalError();
-                break;
-
-            case sakVarArrayIntCount:
-                current = DeserializeVarArray<VarArray>(scriptContext, current, auxBlock);
-                break;
-
-            case sakVarArrayVarCount:
-                current = DeserializeVarArray<VarArrayVarCount>(scriptContext, current, auxContextBlock);
-                break;
-
-            case sakIntArray:
-                current = DeserializeIntArray(scriptContext, current, auxBlock);
-                break;
-
-            case sakFloatArray:
-                current = DeserializeFloatArray(scriptContext, current, auxBlock);
-                break;
-
-            case sakPropertyIdArray:
-                current = DeserializePropertyIdArray(scriptContext, current, auxBlock, functionBody);
-                break;
-
-            case sakFuncInfoArray:
-                current = DeserializeFuncInfoArray(scriptContext, current, auxBlock);
-                break;
+                scriptContext->EnsureByteCodeAllocationReadWrite(auxBlock->GetAllocation());
             }
-#ifdef BYTE_CODE_MAGIC_CONSTANTS
-            int magicEnd;
-            current = ReadInt32(current, &magicEnd);
-            Assert(magicEnd == magicEndOfAux);
-#endif
-        }
-        functionBody->auxBlock = auxBlock;
-        functionBody->auxContextBlock = auxContextBlock;
 
+            if (auxContextBlock != nullptr)
+            {
+                scriptContext->EnsureByteCodeAllocationReadWrite(auxContextBlock->GetAllocation());
+            }
+
+            for (uint i = 0; i < countOfAuxiliaryStructure; i++)
+            {
+                typedef serialization_alignment const SerializedAuxiliary TBase;
+                auto part = (serialization_alignment const SerializedAuxiliary *)current;
+#ifdef BYTE_CODE_MAGIC_CONSTANTS
+                Assert(part->auxMagic == magicStartOfAux);
+#endif
+                switch (part->kind)
+                {
+                default:
+                    AssertMsg(false, "Unexpected auxiliary kind");
+                    Throw::FatalInternalError();
+                    break;
+
+                case sakVarArrayIntCount:
+                    current = DeserializeVarArray<VarArray>(scriptContext, current, auxBlock);
+                    break;
+
+                case sakVarArrayVarCount:
+                    current = DeserializeVarArray<VarArrayVarCount>(scriptContext, current, auxContextBlock);
+                    break;
+
+                case sakIntArray:
+                    current = DeserializeIntArray(scriptContext, current, auxBlock);
+                    break;
+
+                case sakFloatArray:
+                    current = DeserializeFloatArray(scriptContext, current, auxBlock);
+                    break;
+
+                case sakPropertyIdArray:
+                    current = DeserializePropertyIdArray(scriptContext, current, auxBlock, functionBody);
+                    break;
+
+                case sakFuncInfoArray:
+                    current = DeserializeFuncInfoArray(scriptContext, current, auxBlock);
+                    break;
+                }
+#ifdef BYTE_CODE_MAGIC_CONSTANTS
+                int magicEnd;
+                current = ReadInt32(current, &magicEnd);
+                Assert(magicEnd == magicEndOfAux);
+#endif
+            }
+            functionBody->auxBlock = auxBlock;
+            functionBody->auxContextBlock = auxContextBlock;
+
+            if (auxBlock != nullptr)
+            {
+                scriptContext->EnsureByteCodeAllocationReadOnly(auxBlock->GetAllocation());
+            }
+
+            if (auxContextBlock != nullptr)
+            {
+                scriptContext->EnsureByteCodeAllocationReadOnly(auxContextBlock->GetAllocation());
+            }
+        }
         return current;
     }
 

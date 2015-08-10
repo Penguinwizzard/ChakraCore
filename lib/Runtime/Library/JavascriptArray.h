@@ -430,29 +430,36 @@ namespace Js
         inline BOOL TryGrowHeadSegmentAndSetItem(uint32 indexInt, unitType iValue);
 
         static int64 GetIndexFromVar(Js::Var arg, int64 length, ScriptContext* scriptContext);
-
-        static Var MapHelper(JavascriptArray* pArr, Js::TypedArrayBase* typedArrayBase, RecyclableObject* obj, uint32 length, Arguments& args, ScriptContext* scriptContext);
+        template <typename T>
+        static Var MapHelper(JavascriptArray* pArr, Js::TypedArrayBase* typedArrayBase, RecyclableObject* obj, T length, Arguments& args, ScriptContext* scriptContext);
         static Var FillHelper(JavascriptArray* pArr, Js::TypedArrayBase* typedArrayBase, RecyclableObject* obj, int64 length, Arguments& args, ScriptContext* scriptContext);
         static Var CopyWithinHelper(JavascriptArray* pArr, Js::TypedArrayBase* typedArrayBase, RecyclableObject* obj, int64 length, Arguments& args, ScriptContext* scriptContext);
-
-        static BOOL GetParamForIndexOf(uint32 length, Arguments const & args, Var& search, uint32& fromIndex, ScriptContext * scriptContext);
+        template <typename T>
+        static BOOL GetParamForIndexOf(T length, Arguments const & args, Var& search, T& fromIndex, ScriptContext * scriptContext);
         static BOOL GetParamForLastIndexOf(int64 length, Arguments const & args, Var& search, int64& fromIndex, ScriptContext * scriptContext);
 
-        template <typename T>
-        static Var TemplatedIndexOfHelper(T* pArr, Var search, uint32 fromIndex, uint32 toIndex, ScriptContext * scriptContext);
+        template <typename T, typename P = uint32>
+        static Var TemplatedIndexOfHelper(T* pArr, Var search, P fromIndex, P toIndex, ScriptContext * scriptContext);
         template <typename T>
         static Var LastIndexOfHelper(T* pArr, Var search, int64 fromIndex, ScriptContext * scriptContext);
         template <typename T>
         static BOOL TemplatedGetItem(T *pArr, uint32 index, Var * element, ScriptContext * scriptContext);
-        
-        static Var ReverseHelper(JavascriptArray* pArr, Js::TypedArrayBase* typedArrayBase, RecyclableObject* obj, uint32 length, ScriptContext* scriptContext);
-        static Var SliceHelper(JavascriptArray* pArr, Js::TypedArrayBase* typedArrayBase, RecyclableObject* obj, uint32 length, Arguments& args, ScriptContext* scriptContext);
-        static Var EveryHelper(JavascriptArray* pArr, Js::TypedArrayBase* typedArrayBase, RecyclableObject* obj, uint32 length, Arguments& args, ScriptContext* scriptContext);
-        static Var SomeHelper(JavascriptArray* pArr, Js::TypedArrayBase* typedArrayBase, RecyclableObject* obj, uint32 length, Arguments& args, ScriptContext* scriptContext);
+        template <typename T>
+        static BOOL TemplatedGetItem(T *pArr, uint64 index, Var * element, ScriptContext * scriptContext);
+        template <typename T = uint32>
+        static Var ReverseHelper(JavascriptArray* pArr, Js::TypedArrayBase* typedArrayBase, RecyclableObject* obj, T length, ScriptContext* scriptContext);
+        template <typename T = uint32>
+        static Var SliceHelper(JavascriptArray* pArr, Js::TypedArrayBase* typedArrayBase, RecyclableObject* obj, T length, Arguments& args, ScriptContext* scriptContext);
+        template <typename T = uint32>
+        static Var EveryHelper(JavascriptArray* pArr, Js::TypedArrayBase* typedArrayBase, RecyclableObject* obj, T length, Arguments& args, ScriptContext* scriptContext);
+        template <typename T = uint32>
+        static Var SomeHelper(JavascriptArray* pArr, Js::TypedArrayBase* typedArrayBase, RecyclableObject* obj, T length, Arguments& args, ScriptContext* scriptContext);
         template <bool findIndex>
         static Var FindHelper(JavascriptArray* pArr, Js::TypedArrayBase* typedArrayBase, RecyclableObject* obj, int64 length, Arguments& args, ScriptContext* scriptContext);
-        static Var ReduceHelper(JavascriptArray* pArr, Js::TypedArrayBase* typedArrayBase, RecyclableObject* obj, uint32 length, Arguments& args, ScriptContext* scriptContext);
-        static Var ReduceRightHelper(JavascriptArray* pArr, Js::TypedArrayBase* typedArrayBase, RecyclableObject* obj, uint32 length, Arguments& args, ScriptContext* scriptContext);
+        template <typename T = uint32>
+        static Var ReduceHelper(JavascriptArray* pArr, Js::TypedArrayBase* typedArrayBase, RecyclableObject* obj, T length, Arguments& args, ScriptContext* scriptContext);
+        template <typename T = uint32>
+        static Var ReduceRightHelper(JavascriptArray* pArr, Js::TypedArrayBase* typedArrayBase, RecyclableObject* obj, T length, Arguments& args, ScriptContext* scriptContext);
         static Var OfHelper(bool isTypedArrayEntryPoint, Arguments& args, ScriptContext* scriptContext);
 
     protected:
@@ -485,6 +492,7 @@ namespace Js
         static void GrowArrayHeadHelperForUnshift(JavascriptArray* pArr, uint32 unshiftElements, ScriptContext * scriptContext);
 
         static uint32 GetFromIndex(Var arg, uint32 length, ScriptContext *scriptContext);
+        static uint64 GetFromIndex(Var arg, uint64 length, ScriptContext *scriptContext);
         static int64 GetFromLastIndex(Var arg, int64 length, ScriptContext *scriptContext);
         static JavascriptString* JoinToString(Var value, ScriptContext* scriptContext);
         static JavascriptString* JoinHelper(Var thisArg, JavascriptString* separatorStr, ScriptContext* scriptContext);
@@ -562,10 +570,10 @@ namespace Js
             }
         }
 
-        template <bool hasSideEffect, typename T, typename Fn>
-        static void TemplatedForEachItemInRange(T * arr, uint32 startIndex, uint32 limitIndex, ScriptContext * scriptContext, Fn fn)
+        template <bool hasSideEffect, typename T, typename P, typename Fn>
+        static void TemplatedForEachItemInRange(T * arr, P startIndex, P limitIndex, ScriptContext * scriptContext, Fn fn)
         {
-            for (uint32 i = startIndex; i < limitIndex; i++)
+            for (P i = startIndex; i < limitIndex; i++)
             {
                 Var element;
                 if (TemplatedGetItem(arr, i, &element, scriptContext))
@@ -582,6 +590,13 @@ namespace Js
             }
         }
     public:
+
+        template <bool hasSideEffect, typename Fn>
+        void ForEachItemInRange(uint64 startIndex, uint64 limitIndex, ScriptContext * scriptContext, Fn fn)
+        {
+            Assert(false);
+            Throw::InternalError();
+        }
         template <bool hasSideEffect, typename Fn>
         void ForEachItemInRange(uint32 startIndex, uint32 limitIndex, ScriptContext * scriptContext, Fn fn)
         {
@@ -672,13 +687,20 @@ namespace Js
             BigIndex(uint64 initIndex);
 
             bool IsSmallIndex() const;
+            bool IsUint32Max() const;
             uint32 GetSmallIndex() const;
             uint64 GetBigIndex() const;
             Var ToNumber(ScriptContext* scriptContext) const;
 
             const BigIndex& operator++();
             const BigIndex& operator--();
+            BigIndex operator+(const BigIndex& delta) const;
             BigIndex operator+(uint32 delta) const;
+            bool operator==(const BigIndex& rhs)   const;
+            bool operator> (const BigIndex& rhs)   const;
+            bool operator< (const BigIndex& rhs)   const;
+            bool operator<=(const BigIndex& rhs)   const;
+            bool operator>=(const BigIndex& rhs)   const;
 
             BOOL GetItem(JavascriptArray* arr, Var* outVal) const;
             BOOL SetItem(JavascriptArray* arr, Var newValue) const;
@@ -721,11 +743,16 @@ namespace Js
         static void SetConcatItem(Var aItem, uint idxArg, JavascriptArray* pDestArray, RecyclableObject* pDestObj, T idxDest, ScriptContext *scriptContext);
 
         template<typename T>
-        static void ConcatArgs(RecyclableObject* pDestObj, TypeId* remoteTypeIds, Js::Arguments& args, ScriptContext* scriptContext, uint start = 0, uint startIdxDest = 0u);
+        static void ConcatArgs(RecyclableObject* pDestObj, TypeId* remoteTypeIds, Js::Arguments& args, ScriptContext* scriptContext, uint start, BigIndex startIdxDest, BOOL firstPromotedItemIsSpreadable, BigIndex firstPromotedItemLength);
+        template<typename T>
+        static void ConcatArgs(RecyclableObject* pDestObj, TypeId* remoteTypeIds, Js::Arguments& args, ScriptContext* scriptContext, uint start = 0, uint startIdxDest = 0u, BOOL FirstPromotedItemIsSpreadable = false, BigIndex FirstPromotedItemLength = 0u);
         static void ConcatIntArgs(JavascriptNativeIntArray* pDestArray, TypeId* remoteTypeIds, Js::Arguments& args, ScriptContext* scriptContext);
+        static bool PromoteToBigIndex(BigIndex lhs, BigIndex rhs);
+        static bool PromoteToBigIndex(BigIndex lhs, uint32 rhs);
         static void ConcatFloatArgs(JavascriptNativeFloatArray* pDestArray, TypeId* remoteTypeIds, Js::Arguments& args, ScriptContext* scriptContext);
     private:
-        static RecyclableObject* ArraySpeciesCreate(Var pThisArray, uint32 length, ScriptContext* scriptContext, bool* pIsIntArray = nullptr, bool* pIsFloatArray = nullptr);
+        template<typename T=uint32>
+        static RecyclableObject* ArraySpeciesCreate(Var pThisArray, T length, ScriptContext* scriptContext, bool* pIsIntArray = nullptr, bool* pIsFloatArray = nullptr);
         template <typename T, typename R> static R ConvertToIndex(T idxDest, ScriptContext* scriptContext) { Throw::InternalError(); return 0; }
         template <> static Var ConvertToIndex<uint32, Var>(uint32 idxDest, ScriptContext* scriptContext);
         template <> static uint32 ConvertToIndex<uint32, uint32>(uint32 idxDest, ScriptContext* scriptContext) { return idxDest; }
@@ -735,8 +762,8 @@ namespace Js
         static BOOL SetArrayLikeObjects(RecyclableObject* pDestObj, BigIndex idxDest, Var aItem);
         static void ConcatArgsCallingHelper(RecyclableObject* pDestObj, TypeId* remoteTypeIds, Js::Arguments& args, ScriptContext* scriptContext, ::Math::RecordOverflowPolicy &destLengthOverflow);
     public:
-        template<typename T>
-        static void Unshift(RecyclableObject* obj, const T& toIndex, uint32 start, uint32 end, ScriptContext* scriptContext);
+        template<typename T, typename P = uint32>
+        static void Unshift(RecyclableObject* obj, const T& toIndex, uint32 start, P end, ScriptContext* scriptContext);
 
         template <typename T>
         class ItemTrace

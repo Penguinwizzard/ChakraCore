@@ -49,7 +49,8 @@ enum
     fscrDeferredClassMemberFnc = 1 << 23,
     fscrConsoleScopeEval = 1 << 24,  //  The eval string is console eval or debugEval, used to have top level
                                      //  let/const in global scope instead of eval scope so that they can be preserved across console inputs
-    fscrAll = (1 << 25) - 1
+    fscrNoAsmJs = 1 << 25, // Disable generation of asm.js code
+    fscrAll = (1 << 26) - 1
 };
 
 // Operator precedence levels
@@ -243,7 +244,7 @@ public:
     // Used by deferred parsing to parse a deferred function.
     HRESULT ParseSourceWithOffset(__out ParseNodePtr* parseTree, LPCUTF8 pSrc, size_t offset, size_t cbLength, charcount_t cchOffset,
         bool isCesu8, ULONG grfscr, CompileScriptException *pse, Js::LocalFunctionId * nextFunctionId, ULONG lineNumber,
-        SourceContextInfo * sourceContextInfo, Js::ParseableFunctionInfo* functionInfo, bool isReparse, bool isAsmJsDisabled);
+        SourceContextInfo * sourceContextInfo, Js::ParseableFunctionInfo* functionInfo, bool isReparse);
 
 protected:
     HRESULT ParseSourceInternal(
@@ -471,7 +472,6 @@ private:
     ParseType m_parseType;
 
     uint m_parsingDuplicate;
-    uint m_exprDepth;
     uint m_arrayDepth;
     uint m_funcInArrayDepth; // Count func depth within array literal
     charcount_t m_funcInArray;
@@ -807,6 +807,7 @@ private:
 
     template<bool buildAST> bool ParseOptionalExpr(
         ParseNodePtr* pnode,
+        bool fUnaryOrParen = false,
         int oplMin = koplNo,
         BOOL *pfCanAssign = NULL,
         BOOL fAllowIn = TRUE,
@@ -973,7 +974,6 @@ private:
 
     BOOL m_fUseStrictMode; // ES5 Use Strict mode. In AST mode this is a global flag; in NoAST mode it is pushed and popped.
     bool m_InAsmMode; // Currently parsing Asm.Js module
-    bool m_isAsmJsDisabled; // we disable parsing as asm.js if we are reparsing due to link time validation failure or under debugger
     bool m_deferAsmJs;
     BOOL m_fExpectExternalSource;
     BOOL m_deferringAST;

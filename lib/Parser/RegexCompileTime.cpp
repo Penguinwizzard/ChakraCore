@@ -758,7 +758,8 @@ namespace UnifiedRegex
     CharCount MatchLiteralNode::TransferPass0(Compiler& compiler, const Char* litbuf)
     {
         Assert(length > 1);
-        if ((compiler.program->flags & IgnoreCaseRegexFlag) != 0 && !compiler.standardChars->IsTrivialString(litbuf + offset, length))
+        if ((compiler.program->flags & IgnoreCaseRegexFlag) != 0
+            && !compiler.standardChars->IsTrivialString(compiler.program->GetCaseMappingSource(), litbuf + offset, length))
         {
             // We'll need to expand each charactor of literal into its equivalence class
             isEquivClass = true;
@@ -776,7 +777,12 @@ namespace UnifiedRegex
             Assert((compiler.program->flags & IgnoreCaseRegexFlag) != 0);
             // Expand literal according to character equivalence classes
             for (CharCount i = 0; i < length; i++)
-                compiler.standardChars->ToEquivs(litbuf[offset + i], compiler.program->rep.insts.litbuf + nextLit + i * CaseInsensitive::EquivClassSize);
+            {
+                compiler.standardChars->ToEquivs(
+                    compiler.program->GetCaseMappingSource(),
+                    litbuf[offset + i],
+                    compiler.program->rep.insts.litbuf + nextLit + i * CaseInsensitive::EquivClassSize);
+            }
             compiler.program->rep.insts.litbufLen += length * CaseInsensitive::EquivClassSize;
         }
         else
@@ -889,7 +895,7 @@ namespace UnifiedRegex
         //
         // Compilation scheme:
         //
-        //   Match(Char|Char3|Literal|LiteralEquiv)Inst 
+        //   Match(Char|Char4|Literal|LiteralEquiv)Inst
         //
 
         CharCount effectiveOffset = offset + skipped * (isEquivClass ? CaseInsensitive::EquivClassSize : 1);
@@ -910,6 +916,7 @@ namespace UnifiedRegex
         }
     }
 
+    CompileAssert(CaseInsensitive::EquivClassSize == 4);
     CharCount MatchLiteralNode::EmitScan(Compiler& compiler, bool isHeadSyncronizingNode)
     {
         //
@@ -928,7 +935,8 @@ namespace UnifiedRegex
             {
                 const uint lastPatCharIndex = length - 1;
                 if (litptr[lastPatCharIndex * CaseInsensitive::EquivClassSize] == litptr[lastPatCharIndex * CaseInsensitive::EquivClassSize + 1]
-                    && litptr[lastPatCharIndex * CaseInsensitive::EquivClassSize] == litptr[lastPatCharIndex * CaseInsensitive::EquivClassSize + 2])
+                    && litptr[lastPatCharIndex * CaseInsensitive::EquivClassSize] == litptr[lastPatCharIndex * CaseInsensitive::EquivClassSize + 2]
+                    && litptr[lastPatCharIndex * CaseInsensitive::EquivClassSize] == litptr[lastPatCharIndex * CaseInsensitive::EquivClassSize + 3])
                 {
                     EMIT(compiler, SyncToLiteralEquivTrivialLastPatCharAndConsumeInst, offset, length)->scanner.Setup(compiler.rtAllocator, litptr, length, CaseInsensitive::EquivClassSize);
                 }
@@ -966,7 +974,8 @@ namespace UnifiedRegex
                 {
                     const uint lastPatCharIndex = length - 1;
                     if (litptr[lastPatCharIndex * CaseInsensitive::EquivClassSize] == litptr[lastPatCharIndex * CaseInsensitive::EquivClassSize + 1]
-                        && litptr[lastPatCharIndex * CaseInsensitive::EquivClassSize] == litptr[lastPatCharIndex * CaseInsensitive::EquivClassSize + 2])
+                        && litptr[lastPatCharIndex * CaseInsensitive::EquivClassSize] == litptr[lastPatCharIndex * CaseInsensitive::EquivClassSize + 2]
+                        && litptr[lastPatCharIndex * CaseInsensitive::EquivClassSize] == litptr[lastPatCharIndex * CaseInsensitive::EquivClassSize + 3])
                     {
                         EMIT(compiler, SyncToLiteralEquivTrivialLastPatCharAndContinueInst, offset, length)->scanner.Setup(compiler.rtAllocator, litptr, length, CaseInsensitive::EquivClassSize);
                     }
@@ -999,7 +1008,8 @@ namespace UnifiedRegex
                 {
                     const uint lastPatCharIndex = length - 1;
                     if (litptr[lastPatCharIndex * CaseInsensitive::EquivClassSize] == litptr[lastPatCharIndex * CaseInsensitive::EquivClassSize + 1]
-                        && litptr[lastPatCharIndex * CaseInsensitive::EquivClassSize] == litptr[lastPatCharIndex * CaseInsensitive::EquivClassSize + 2])
+                        && litptr[lastPatCharIndex * CaseInsensitive::EquivClassSize] == litptr[lastPatCharIndex * CaseInsensitive::EquivClassSize + 2]
+                        && litptr[lastPatCharIndex * CaseInsensitive::EquivClassSize] == litptr[lastPatCharIndex * CaseInsensitive::EquivClassSize + 3])
                     {
                         EMIT(compiler, SyncToLiteralEquivTrivialLastPatCharAndBackupInst, offset, length, prevConsumes)->scanner.Setup(compiler.rtAllocator, litptr, length, CaseInsensitive::EquivClassSize);
                     }
@@ -1038,7 +1048,7 @@ namespace UnifiedRegex
             return false;
         for (CharCount i = 0; i < length; i++)
         {
-            if (!oi->AppendChar(compiler.standardChars->ToCanonical(compiler.program->rep.insts.litbuf[offset + i])))
+            if (!oi->AppendChar(compiler.standardChars->ToCanonical(compiler.program->GetCaseMappingSource(), compiler.program->rep.insts.litbuf[offset + i])))
                 return false;
         }
         return true;
@@ -1133,11 +1143,14 @@ namespace UnifiedRegex
         if ((compiler.program->flags & IgnoreCaseRegexFlag) != 0)
         {
             Char equivs[CaseInsensitive::EquivClassSize];
-            if (compiler.standardChars->ToEquivs(cs[0], equivs))
+            bool isNonTrivial = compiler.standardChars->ToEquivs(compiler.program->GetCaseMappingSource(), cs[0], equivs);
+            if (isNonTrivial)
             {
                 isEquivClass = true;
                 for (int i = 0; i < CaseInsensitive::EquivClassSize; i++)
+                {
                     cs[i] = equivs[i];
+                }
             }
         }
         return 0;
@@ -1223,22 +1236,53 @@ namespace UnifiedRegex
     {
     }
 
-    CompileAssert(CaseInsensitive::EquivClassSize == 3);
-    void MatchCharNode::Emit(Compiler& compiler, __in_ecount(3) Char * cs, bool isEquivClass)
+    CompileAssert(CaseInsensitive::EquivClassSize == 4);
+    void MatchCharNode::Emit(Compiler& compiler, __in_ecount(4) Char * cs, bool isEquivClass)
     {
         if (isEquivClass)
         {
-            if (cs[0] == cs[1])
-                EMIT(compiler, MatchChar2Inst, cs[1], cs[2]);
-            else if (cs[1] == cs[2])
-                EMIT(compiler, MatchChar2Inst, cs[0], cs[1]);
-            else if (cs[0] == cs[2])
-                EMIT(compiler, MatchChar2Inst, cs[0], cs[1]);
-            else
-                EMIT(compiler, MatchChar3Inst, cs[0], cs[1], cs[2]);
+            Char uniqueEquivs[CaseInsensitive::EquivClassSize];
+            CharCount uniqueEquivCount = FindUniqueEquivs(cs, uniqueEquivs);
+            switch (uniqueEquivCount)
+            {
+            case 2:
+                EMIT(compiler, MatchChar2Inst, uniqueEquivs[0], uniqueEquivs[1]);
+                break;
+
+            case 3:
+                EMIT(compiler, MatchChar3Inst, uniqueEquivs[0], uniqueEquivs[1], uniqueEquivs[2]);
+                break;
+
+            default:
+                EMIT(compiler, MatchChar4Inst, uniqueEquivs[0], uniqueEquivs[1], uniqueEquivs[2], uniqueEquivs[3]);
+                break;
+            }
         }
         else
             EMIT(compiler, MatchCharInst, cs[0]);
+    }
+
+    CharCount MatchCharNode::FindUniqueEquivs(const Char equivs[CaseInsensitive::EquivClassSize], Char uniqueEquivs[CaseInsensitive::EquivClassSize])
+    {
+        uniqueEquivs[0] = equivs[0];
+        CharCount uniqueCount = 1;
+        for (CharCount equivIndex = 1; equivIndex < CaseInsensitive::EquivClassSize; ++equivIndex)
+        {
+            bool alreadyHave = false;
+            for (CharCount uniqueIndex = 0; uniqueIndex < uniqueCount; ++uniqueIndex)
+            {
+                if (uniqueEquivs[uniqueIndex] == equivs[equivIndex])
+                {
+                    alreadyHave = true;
+                    break;
+                }
+            }
+
+            uniqueEquivs[uniqueCount] = equivs[equivIndex];
+            uniqueCount += 1;
+        }
+
+        return uniqueCount;
     }
 
     void MatchCharNode::Emit(Compiler& compiler, CharCount& skipped)
@@ -1253,7 +1297,7 @@ namespace UnifiedRegex
         //
         // Compilation scheme:
         //
-        //   MatchChar(2|3)?
+        //   MatchChar(2|3|4)?
         //
 
         skipped -= min(skipped, static_cast<CharCount>(1));
@@ -1310,7 +1354,7 @@ namespace UnifiedRegex
     {
         // We look for octoquad patterns before converting for case-insensitivity
         Assert(!isEquivClass);
-        return oi->AppendChar(compiler.standardChars->ToCanonical(cs[0]));
+        return oi->AppendChar(compiler.standardChars->ToCanonical(compiler.program->GetCaseMappingSource(), cs[0]));
     }
 
     bool MatchCharNode::IsCharTrieArm(Compiler& compiler, uint& accNumAlts) const
@@ -1576,7 +1620,7 @@ namespace UnifiedRegex
             return false;
         for (int i = 0; i < count; i++)
         {
-            if (!oi->UnionChar(compiler.standardChars->ToCanonical(entries[i])))
+            if (!oi->UnionChar(compiler.standardChars->ToCanonical(compiler.program->GetCaseMappingSource(), entries[i])))
                 // Too many unique characters
                 return false;
         }

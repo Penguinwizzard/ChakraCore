@@ -13,9 +13,10 @@ namespace CustomHeap
 
 #pragma region "Constructor and Destructor"
 
-Heap::Heap(AllocationPolicyManager * policyManager, ArenaAllocator * alloc, bool allocXdata):
+Heap::Heap(AllocationPolicyManager * policyManager, ArenaAllocator * alloc, bool allocXdata, bool ensurePageReadWriteBeforeRelease) :
     auxilliaryAllocator(alloc),
     allocXdata(allocXdata),
+    ensurePageReadWriteBeforeRelease(ensurePageReadWriteBeforeRelease),
 #if DBG_DUMP
     freeObjectSize(0),
     totalAllocationSize(0),
@@ -56,7 +57,34 @@ void Heap::FreeAll()
     FreeDecommittedLargeObjects();
 }
 
-bool Heap::Free(__in Allocation* object)
+bool Heap::LockAndFree(__in Allocation* object, bool EnsureAllocationReadOnlyOrReadWrite)
+{
+    AutoCriticalSection autocs(&this->cs);
+    return Free(object, EnsureAllocationReadOnlyOrReadWrite);
+}
+
+/*
+* First, Check if the Page State is READ_ONLY without acquiring any lock. 
+* Acquire lock, if the page is not in READ_ONLY state and check the state again after acquiring the lock.
+*/
+bool Heap::IsReadOnly(void * address)
+{
+    MEMORY_BASIC_INFORMATION memBasicInfo;
+    size_t bytes = VirtualQuery(address, &memBasicInfo, sizeof(memBasicInfo));
+
+    if (bytes != 0 && memBasicInfo.Protect == PAGE_READONLY)
+    {
+        return true;
+    }
+
+    AutoCriticalSection autocs(&this->cs);
+    {
+        size_t bytes = VirtualQuery(address, &memBasicInfo, sizeof(memBasicInfo));
+        return (bytes != 0 && memBasicInfo.Protect == PAGE_READONLY);
+    }
+}
+
+bool Heap::Free(__in Allocation* object, bool EnsureAllocationReadOnlyOrReadWrite)
 {
     Assert(object != null);
 
@@ -93,7 +121,7 @@ bool Heap::Free(__in Allocation* object)
     {
         return true;
     }
-    return FreeAllocation(object);
+    return FreeAllocation(object, EnsureAllocationReadOnlyOrReadWrite);
 }
 
 bool Heap::Decommit(__in Allocation* object)
@@ -425,7 +453,10 @@ bool Heap::FreeLargeObject(Allocation* address)
     {
         if (address == (&allocation) || freeAll)
         {
-            EnsureAllocationWriteable(&allocation);      
+            if (ensurePageReadWriteBeforeRelease)
+            {
+                EnsureAllocationWriteable(&allocation);
+            }
 #if PDATA_ENABLED
             Assert(allocation.xdata.IsFreed());
 #endif
@@ -708,7 +739,7 @@ BVIndex Heap::GetIndexInPage(__in Page* page, __in char* address)
  * Free List methods
  */
 #pragma region "Freeing methods"
-bool Heap::FreeAllocation(Allocation* object)
+bool Heap::FreeAllocation(Allocation* object, bool isEnsureAllocationExecutable)
 {        
     Page* page = object->page;
     void* segment = page->segment;
@@ -737,7 +768,14 @@ bool Heap::FreeAllocation(Allocation* object)
         }
         else
         {
-            EnsureAllocationWriteable(object);
+            if (isEnsureAllocationExecutable)
+            {
+                EnsureAllocationReadOnlyOrReadWrite<true>(object);
+            }
+            else
+            {
+                EnsureAllocationWriteable(object);
+            }
             
             // Fill the old buffer with debug breaks                        
             CustomHeap::FillDebugBreak((BYTE *)object->address, object->size);
@@ -762,16 +800,23 @@ bool Heap::FreeAllocation(Allocation* object)
         }
     }
 
-    // If the page is about to become empty then we should not need
-    // to set it to executable and we don't expect to restore the 
-    // previous protection settings.
-    if (page->freeBitVector.Count() == BVUnit::BitsPerWord - length)
+    if (isEnsureAllocationExecutable)
     {
-        EnsureAllocationWriteable(object);
+        EnsureAllocationReadOnlyOrReadWrite<true>(object);
     }
     else
     {
-        EnsureAllocationExecuteWriteable(object);
+        // If the page is about to become empty then we should not need
+        // to set it to executable and we don't expect to restore the 
+        // previous protection settings.
+        if (page->freeBitVector.Count() == BVUnit::BitsPerWord - length)
+        {
+            EnsureAllocationWriteable(object);
+        }
+        else
+        {
+            EnsureAllocationExecuteWriteable(object);
+        }
     }
 
     // Fill the old buffer with debug breaks                        
@@ -827,11 +872,17 @@ bool Heap::FreeAllocation(Allocation* object)
     { 
         DWORD dwExpectedFlags = 0;
         
-        this->ProtectPages(page->address, 1, segment, PAGE_EXECUTE, &dwExpectedFlags, PAGE_EXECUTE_READWRITE);
-        
-        Assert(!object->isAllocationUsed || dwExpectedFlags == PAGE_EXECUTE_READWRITE);
+        if (isEnsureAllocationExecutable)
+        {
+            this->ProtectPages(page->address, 1, segment, PAGE_READONLY, &dwExpectedFlags, PAGE_READWRITE);
+            Assert(!object->isAllocationUsed || dwExpectedFlags == PAGE_READWRITE);
+        }
+        else
+        {
+            this->ProtectPages(page->address, 1, segment, PAGE_EXECUTE, &dwExpectedFlags, PAGE_EXECUTE_READWRITE);
+            Assert(!object->isAllocationUsed || dwExpectedFlags == PAGE_EXECUTE_READWRITE);
+        }
         page->isReadWrite = false;
-
         return true;
     }
 }
@@ -853,7 +904,10 @@ void Heap::FreePage(Page* page)
     // This is only call when the heap is being destroy, so don't need to sync with the background thread.
     Assert(inDtor);
     DWORD pageSize = AutoSystemInfo::PageSize;
-    EnsurePageWriteable(page);
+    if (ensurePageReadWriteBeforeRelease)
+    {
+        EnsurePageWriteable(page);
+    }
     size_t freeSpace = page->freeBitVector.Count() * Page::Alignment;
 
     VerboseHeapTrace(L"Removing page in bucket %d, freeSpace: %d\n", page->currentBucket, freeSpace);

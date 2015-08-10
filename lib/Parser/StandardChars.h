@@ -65,78 +65,6 @@ namespace UnifiedRegex
     };
 
     template <>
-    class StandardChars<char> : ASCIIChars
-    {
-        static const int numDigitPairs;
-        static const Char* const digitStr;
-        static const int numWhitespacePairs;
-        static const Char* const whitespaceStr;
-        static const int numWordPairs;
-        static const Char* const wordStr;
-        static const int numNewlinePairs;
-        static const Char* const newlineStr;
-        ArenaAllocator* allocator;
-        Char toEquivs[NumChars][CaseInsensitive::EquivClassSize];
-        CharSet<Char>* fullSet;
-        CharSet<Char>* emptySet;
-        CharSet<Char>* wordSet;
-        CharSet<Char>* nonWordSet;
-        CharSet<Char>* newlineSet;
-        CharSet<Char>* whitespaceSet;
-
-    public:
-        StandardChars(ArenaAllocator* allocator);
-
-        void SetDigits(ArenaAllocator* setAllocator, CharSet<Char> &set);
-        void SetNonDigits(ArenaAllocator* setAllocator, CharSet<Char> &set);
-        void SetWhitespace(ArenaAllocator* setAllocator, CharSet<Char> &set);
-        void SetNonWhitespace(ArenaAllocator* setAllocator, CharSet<Char> &set);
-        void SetWordChars(ArenaAllocator* setAllocator, CharSet<Char> &set);
-        void SetNonWordChars(ArenaAllocator* setAllocator, CharSet<Char> &set);
-        void SetNewline(ArenaAllocator* setAllocator, CharSet<Char> &set);
-        void SetNonNewline(ArenaAllocator* setAllocator, CharSet<Char> &set);
-
-        CharSet<Char>* GetFullSet();
-        CharSet<Char>* GetEmptySet();
-        CharSet<Char>* GetWordSet();
-        CharSet<Char>* GetNonWordSet();
-        CharSet<Char>* GetNewlineSet();
-        CharSet<Char>* GetWhitespaceSet();
-        CharSet<Char>* GetSurrogateUpperRange() { AssertMsg(false, "Not implemented"); return nullptr; }
-
-        inline Char ToCanonical(Char c) const
-        {
-            return toEquivs[CTU(c)][0];
-        }
-
-        inline bool ToEquivs(Char c, __out_ecount(3) Char* equivs) const
-        {
-            bool nonTrivial = false;
-            for (int i = 0; i < CaseInsensitive::EquivClassSize; i++)
-            {
-                equivs[i] = toEquivs[CTU(c)][i];
-                if (equivs[i] != c)
-                    nonTrivial = true;
-            }
-            return nonTrivial;
-        }
-
-        inline bool IsTrivialString(const Char* str, CharCount strLen) const
-        {
-            for (CharCount i = 0; i < strLen; i++)
-            {
-                Char c = str[i];
-                for (int j = 0; j < CaseInsensitive::EquivClassSize; j++)
-                {
-                    if (toEquivs[CTU(c)][j] != c)
-                        return false;
-                }
-            }
-            return true;
-        }
-    };
-
-    template <>
     class StandardChars<uint8> : Chars<uint8>
     {
     public:
@@ -183,6 +111,120 @@ namespace UnifiedRegex
         }
     };
 
+    template <typename FallbackCaseMapper>
+    class CaseMapper
+    {
+    public:
+        CaseMapper(ArenaAllocator *allocator, CaseInsensitive::MappingSource mappingSource, const FallbackCaseMapper *fallbackMapper) :
+            toEquivs((uint64) -1),
+            fallbackMapper(fallbackMapper)
+        {
+            Assert(sizeof(wchar_t) == 2); // of course
+            Assert(sizeof(uint) > sizeof(wchar_t));
+
+            const uint maxUChar = Chars<wchar_t>::MaxUChar;
+            uint l = 0;
+            uint h = maxUChar;
+            uint tblidx = 0;
+            do {
+                uint acth;
+                wchar_t equivl[CaseInsensitive::EquivClassSize];
+                bool isNonTrivial = CaseInsensitive::RangeToEquivClassOnlyInSource(mappingSource, tblidx, l, h, acth, equivl);
+                if (isNonTrivial)
+                {
+                    __assume(acth <= maxUChar); // property of algorithm: acth never greater than h
+                    do
+                    {
+                        uint64 r = 0;
+                        CompileAssert(sizeof(r) >= sizeof(wchar_t) * CaseInsensitive::EquivClassSize);
+
+                        for (int i = CaseInsensitive::EquivClassSize - 1; i >= 0; i--)
+                        {
+                            __assume(equivl[i] <= maxUChar); // property of algorithm: never map outside of range
+                            r <<= 16;
+                            r |= Chars<wchar_t>::CTU(equivl[i]++);
+                        }
+                        toEquivs.Set(allocator, Chars<wchar_t>::UTC(l++), r);
+                    }
+                    while (l <= acth);
+                }
+                else
+                {
+                    l = acth + 1;
+                }
+            }
+            while (l <= h);
+        }
+
+        inline wchar_t ToCanonical(wchar_t c) const
+        {
+            uint64 r = toEquivs.Get(c);
+            return r == EQUIV_MISSING ? fallbackMapper->ToCanonical(c) : Chars<wchar_t>::UTC(r & 0xffff);
+        }
+
+        CompileAssert(CaseInsensitive::EquivClassSize == 4);
+        inline bool ToEquivs(wchar_t c, __out_ecount(4) wchar_t* equivs) const
+        {
+            uint64 r = toEquivs.Get(c);
+            if (r == EQUIV_MISSING)
+            {
+                return fallbackMapper->ToEquivs(c, equivs);
+            }
+            else
+            {
+                for (int i = 0; i < CaseInsensitive::EquivClassSize; i++)
+                {
+                    equivs[i] = Chars<wchar_t>::UTC(r & 0xffff);
+                    r >>= 16;
+                }
+                return true;
+            }
+        }
+
+        inline bool IsTrivialString(const wchar_t* str, CharCount strLen) const
+        {
+            for (CharCount i = 0; i < strLen; i++)
+            {
+                if (toEquivs.Get(str[i]) != EQUIV_MISSING)
+                    return false;
+            }
+            return fallbackMapper->IsTrivialString(str, strLen);
+        }
+
+    private:
+        // Map character to:
+        //  - -1 if trivial equivalence class
+        //  - otherwise to four 16-bit fields: <0><equiv 3><equiv 2><equiv 1>
+        const static uint64 EQUIV_MISSING = static_cast<uint64>(-1);
+        CharMap<wchar_t, uint64> toEquivs;
+
+        const FallbackCaseMapper *fallbackMapper;
+    };
+
+    class TrivialCaseMapper
+    {
+    public:
+        inline wchar_t ToCanonical(wchar_t c) const
+        {
+            return c;
+        }
+
+        CompileAssert(CaseInsensitive::EquivClassSize == 4);
+        inline bool ToEquivs(wchar_t c, __out_ecount(4) wchar_t* equivs) const
+        {
+            for (int i = 0; i < CaseInsensitive::EquivClassSize; i++)
+                equivs[i] = c;
+            return false;
+        }
+
+        inline bool IsTrivialString(const wchar_t* str, CharCount strLen) const
+        {
+            return true;
+        }
+
+        static const TrivialCaseMapper Instance;
+    };
+
     template <>
     class StandardChars<wchar_t> : public Chars<wchar_t>
     {
@@ -198,10 +240,9 @@ namespace UnifiedRegex
 
         ArenaAllocator* allocator;
 
-        // Map character to:
-        //  - -1 if trivial equivalence class
-        //  - otherwise to four 16-bit fields: <0><equiv 3><equiv 2><equiv 1>
-        CharMap<Char, uint64> toEquivs;
+        typedef CaseMapper<TrivialCaseMapper> UnicodeDataCaseMapper;
+        const UnicodeDataCaseMapper unicodeDataCaseMapper;
+        const CaseMapper<UnicodeDataCaseMapper> caseFoldingCaseMapper;
 
         CharSet<Char>* fullSet;
         CharSet<Char>* emptySet;
@@ -276,44 +317,47 @@ namespace UnifiedRegex
         CharSet<Char>* GetWhitespaceSet();
         CharSet<Char>* GetSurrogateUpperRange();
 
-        inline Char ToCanonical(Char c) const
+        inline Char ToCanonical(CaseInsensitive::MappingSource mappingSource, Char c) const
         {
-            uint64 r = toEquivs.Get(c);
-            return r == (uint64)-1 ? c : UTC(r & 0xffff);
-        }
-
-        inline bool ToEquivs(Char c, __out_ecount(3) Char* equivs) const
-        {
-            uint64 r = toEquivs.Get(c);
-            if (r == (uint64)-1)
+            if (mappingSource == CaseInsensitive::MappingSource::UnicodeData)
             {
-                for (int i = 0; i < CaseInsensitive::EquivClassSize; i++)
-                    equivs[i] = c;
-                return false;
+                return unicodeDataCaseMapper.ToCanonical(c);
             }
             else
             {
-                for (int i = 0; i < CaseInsensitive::EquivClassSize; i++)
-                {
-                    equivs[i] = UTC(r & 0xffff);
-                    r >>= 16;
-                }
-                return true;
+                Assert(mappingSource == CaseInsensitive::MappingSource::CaseFolding);
+                return caseFoldingCaseMapper.ToCanonical(c);
             }
         }
 
-        inline bool IsTrivialString(const Char* str, CharCount strLen) const
+        CompileAssert(CaseInsensitive::EquivClassSize == 4);
+        inline bool ToEquivs(CaseInsensitive::MappingSource mappingSource, Char c, __out_ecount(4) Char* equivs) const
         {
-            for (CharCount i = 0; i < strLen; i++)
+            if (mappingSource == CaseInsensitive::MappingSource::UnicodeData)
             {
-                if (toEquivs.Get(str[i]) != (uint64)-1)
-                    return false;
+                return unicodeDataCaseMapper.ToEquivs(c, equivs);
             }
-            return true;
+            else
+            {
+                Assert(mappingSource == CaseInsensitive::MappingSource::CaseFolding);
+                return caseFoldingCaseMapper.ToEquivs(c, equivs);
+            }
+        }
+
+        inline bool IsTrivialString(CaseInsensitive::MappingSource mappingSource, const Char* str, CharCount strLen) const
+        {
+            if (mappingSource == CaseInsensitive::MappingSource::UnicodeData)
+            {
+                return unicodeDataCaseMapper.IsTrivialString(str, strLen);
+            }
+            else
+            {
+                Assert(mappingSource == CaseInsensitive::MappingSource::CaseFolding);
+                return caseFoldingCaseMapper.IsTrivialString(str, strLen);
+            }
         }
     };
 
-    typedef UnifiedRegex::StandardChars<char> ASCIIStandardChars;
     typedef UnifiedRegex::StandardChars<uint8> UTF8StandardChars;
     typedef UnifiedRegex::StandardChars<wchar_t> UnicodeStandardChars;
 }

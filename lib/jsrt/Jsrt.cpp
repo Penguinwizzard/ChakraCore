@@ -7,6 +7,10 @@
 #include "JsrtExternalObject.h"
 #include "JsrtExternalArrayBuffer.h"
 
+// REVIEW: ChakraCore Dependency
+#include "JsrtByteCodeSourceMapper.h"
+#include "..\..\..\private\lib\engine\DynamicSourceHolder.h"
+
 JsErrorCode CheckContext(JsrtContext *currentContext, bool verifyRuntimeState, bool allowInObjectBeforeCollectCallback)
 {
     if (currentContext == NULL)
@@ -500,10 +504,6 @@ STDAPI_(JsErrorCode) JsGetContextOfObject(JsValueRef object, JsContextRef *conte
 
     BEGIN_JSRT_NO_EXCEPTION
     {
-        if (Js::TaggedNumber::Is(object))
-        {
-            RETURN_NO_EXCEPTION(JsErrorNonNumericArgumentExpected);
-        }
         if(!Js::RecyclableObject::Is(object))
         {
             RETURN_NO_EXCEPTION(JsErrorArgumentNotObject);
@@ -2098,19 +2098,27 @@ STDAPI_(JsErrorCode) JsGetAndClearException(JsValueRef *exception)
         return JsErrorInDisabledState;
     }
 
-    Js::JavascriptExceptionObject *recordedException = scriptContext->GetAndClearRecordedException();
+    HRESULT hr = S_OK;
+    Js::JavascriptExceptionObject *recordedException = nullptr;
 
-    if (recordedException == NULL)
+    BEGIN_TRANSLATE_OOM_TO_HRESULT
+      recordedException = scriptContext->GetAndClearRecordedException();
+    END_TRANSLATE_OOM_TO_HRESULT(hr)
+
+    if (hr == E_OUTOFMEMORY) 
+    {
+      recordedException = scriptContext->GetThreadContext()->GetRecordedException();
+    }
+    if (recordedException == NULL) 
     {
         return JsErrorInvalidArgument;
     }
 
     *exception = recordedException->GetThrownObject(NULL);
-    if (*exception == NULL)
+    if (*exception == NULL) 
     {
         return JsErrorInvalidArgument;
     }
-
     return JsNoError;
 }
 
@@ -2627,30 +2635,41 @@ STDAPI_(JsErrorCode) JsSerializeNativeScript(const wchar_t *script, BYTE *functi
 }
 #endif
 
-JsErrorCode RunSerializedScriptCore(const wchar_t *script, unsigned char *buffer, JsSourceContext sourceContext, const wchar_t *sourceUrl, bool parseOnly, JsValueRef *result)
+JsErrorCode RunSerializedScriptCore(const wchar_t *script, _In_ JsSerializedScriptLoadSourceCallback scriptLoadCallback, _In_ JsSerializedScriptUnloadCallback scriptUnloadCallback, unsigned char *buffer, JsSourceContext sourceContext, const wchar_t *sourceUrl, bool parseOnly, JsValueRef *result)
 {
     Js::JavascriptFunction *function;
     JsErrorCode errorCode = ContextAPINoScriptWrapper([&](Js::ScriptContext *scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(script);
+        if (result != NULL)
+        {
+            *result = NULL;
+        }
+
         PARAM_NOT_NULL(buffer);
         PARAM_NOT_NULL(sourceUrl);
 
-        size_t length = wcslen(script);
-        if (length > UINT_MAX)
+        Js::ISourceHolder *sourceHolder = NULL;
+        LPUTF8 utf8Source = NULL;
+        size_t utf8Length = 0;
+        size_t length = 0;
+
+        if (script != NULL)
         {
-            return JsErrorOutOfMemory;
+            Assert(scriptLoadCallback == NULL);
+            Assert(scriptUnloadCallback == NULL);
+            JsErrorCode error = Js::ByteCodeSourceMapper::ScriptToUtf8(scriptContext, script, &utf8Source, &utf8Length, &length);
+            if (error != JsNoError)
+            {
+                return error;
+            }
         }
-
-        size_t cbUtf8Buffer = (length + 1) * 3;
-        if (cbUtf8Buffer > UINT_MAX)
+        else
         {
-            return JsErrorOutOfMemory;
+            PARAM_NOT_NULL(scriptLoadCallback);
+            PARAM_NOT_NULL(scriptUnloadCallback);
+            IActiveScriptByteCodeSource* byteCodeSource = HeapNew(Js::ByteCodeSourceMapper, scriptLoadCallback, scriptUnloadCallback, sourceContext);
+            sourceHolder = (Js::DynamicSourceHolder *)RecyclerNewFinalized(scriptContext->GetRecycler(), Js::DynamicSourceHolder, byteCodeSource);
+            byteCodeSource->Release();
         }
-
-        LPUTF8 utf8Script = RecyclerNewArrayLeaf(scriptContext->GetRecycler(), utf8char_t, cbUtf8Buffer);
-
-        Assert(length < MAXLONG);
-        utf8::EncodeIntoAndNullTerminate(utf8Script, script, static_cast<charcount_t>(length));
 
         SourceContextInfo *sourceContextInfo;
         SRCINFO *hsi;
@@ -2664,14 +2683,14 @@ JsErrorCode RunSerializedScriptCore(const wchar_t *script, unsigned char *buffer
         {
             sourceContextInfo = scriptContext->CreateSourceContextInfo(sourceContext, sourceUrl, wcslen(sourceUrl), NULL);
         }
-
+                
         SRCINFO si = {
             /* sourceContextInfo   */ sourceContextInfo,
             /* dlnHost             */ 0,
             /* ulColumnHost        */ 0,
             /* lnMinHost           */ 0,
             /* ichMinHost          */ 0,
-            /* ichLimHost          */ wcslen(script),
+            /* ichLimHost          */ length, // REVIEW: Currently 0 for Callback case.  Determine what is best to set this value.
             /* ulCharOffset        */ 0,
             /* mod                 */ kmodGlobal,
             /* grfsi               */ 0
@@ -2685,7 +2704,15 @@ JsErrorCode RunSerializedScriptCore(const wchar_t *script, unsigned char *buffer
         }
 
         hsi = scriptContext->AddHostSrcInfo(&si);
-        hr = Js::ByteCodeSerializer::DeserializeFromBuffer(scriptContext, flags, utf8Script, hsi, buffer, nullptr, &functionBody);
+
+        if (utf8Source != NULL)
+        {
+            hr = Js::ByteCodeSerializer::DeserializeFromBuffer(scriptContext, flags, utf8Source, hsi, buffer, nullptr, &functionBody);
+        }
+        else
+        {
+            hr = Js::ByteCodeSerializer::DeserializeFromBuffer(scriptContext, flags, sourceHolder, hsi, buffer, nullptr, &functionBody);
+        }
 
         if (FAILED(hr))
         {
@@ -2723,13 +2750,22 @@ JsErrorCode RunSerializedScriptCore(const wchar_t *script, unsigned char *buffer
     });
 }
 
-
 STDAPI_(JsErrorCode) JsParseSerializedScript(const wchar_t * script, unsigned char *buffer, JsSourceContext sourceContext, const wchar_t *sourceUrl, JsValueRef * result)
 {
-    return RunSerializedScriptCore(script, buffer, sourceContext, sourceUrl, true, result);
+    return RunSerializedScriptCore(script, NULL, NULL, buffer, sourceContext, sourceUrl, true, result);
 }
 
 STDAPI_(JsErrorCode) JsRunSerializedScript(const wchar_t * script, unsigned char *buffer, JsSourceContext sourceContext, const wchar_t *sourceUrl, JsValueRef * result)
 {
-    return RunSerializedScriptCore(script, buffer, sourceContext, sourceUrl, false, result);
+    return RunSerializedScriptCore(script, NULL, NULL, buffer, sourceContext, sourceUrl, false, result);
+}
+
+STDAPI_(JsErrorCode) JsParseSerializedScriptWithCallback(_In_ JsSerializedScriptLoadSourceCallback scriptLoadCallback, _In_ JsSerializedScriptUnloadCallback scriptUnloadCallback, _In_ unsigned char *buffer, _In_ JsSourceContext sourceContext, _In_z_ const wchar_t *sourceUrl, _Out_ JsValueRef * result)
+{
+    return RunSerializedScriptCore(NULL, scriptLoadCallback, scriptUnloadCallback, buffer, sourceContext, sourceUrl, true, result);
+}
+
+STDAPI_(JsErrorCode) JsRunSerializedScriptWithCallback(_In_ JsSerializedScriptLoadSourceCallback scriptLoadCallback, _In_ JsSerializedScriptUnloadCallback scriptUnloadCallback, _In_ unsigned char *buffer, _In_ JsSourceContext sourceContext, _In_z_ const wchar_t *sourceUrl, _Out_opt_ JsValueRef * result)
+{
+    return RunSerializedScriptCore(NULL, scriptLoadCallback, scriptUnloadCallback, buffer, sourceContext, sourceUrl, false, result);
 }

@@ -97,11 +97,7 @@
         /// <summary>
         ///     A hosting API that operates on object values was called with a non-object value.
         /// </summary>
-        JsErrorArgumentNotObject,
-        /// <summary>
-        ///     A hosting API that operates on object values was called with a numeric value.
-        /// </summary>
-        JsErrorNonNumericArgumentExpected,
+        JsErrorArgumentNotObject,        
         /// <summary>
         ///     A script context is in the middle of a profile callback.
         /// </summary>
@@ -781,7 +777,7 @@
             _Out_ void **data);
 
     /// <summary>
-    ///     Sets the interal data of JsrtContext.
+    ///     Sets the internal data of JsrtContext.
     /// </summary>
     /// <param name="context">The context to set the data to.</param>
     /// <param name="data">The pointer to the data to be set.</param>
@@ -906,6 +902,96 @@
         _In_z_ const wchar_t *script,
         _Out_writes_to_opt_(*bufferSize, *bufferSize) BYTE *buffer,
         _Inout_ unsigned long *bufferSize);
+
+    /// <summary>
+    ///     Called by the runtime to load the source code of the serialized script.
+    ///     The caller must keep the script buffer valid until the JsSerializedScriptUnloadCallback.
+    /// </summary>
+    /// <param name="sourceContext">The context passed to Js[Parse|Run]SerializedScriptWithCallback</param>
+    /// <param name="scriptBuffer">The script returned.</param>
+    /// <returns>
+    ///     true if the operation succeeded, false otherwise.
+    /// </returns>
+    typedef bool (CALLBACK * JsSerializedScriptLoadSourceCallback)(_In_ JsSourceContext sourceContext, _Outptr_result_z_ const wchar_t** scriptBuffer);
+
+    /// <summary>
+    ///     Called by the runtime when it is finished with all resources related to the script execution.
+    ///     The caller should free the source if loaded, the byte code, and the context at this time. 
+    /// </summary>
+    /// <param name="sourceContext">The context passed to Js[Parse|Run]SerializedScriptWithCallback</param>
+    typedef void (CALLBACK * JsSerializedScriptUnloadCallback)(_In_ JsSourceContext sourceContext);
+
+    /// <summary>
+    ///     Parses a serialized script and returns a function representing the script.
+    ///     Provides the ability to lazy load the script source only if/when it is needed.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///     Requires an active script context.
+    ///     </para>
+    ///     <para>
+    ///     The runtime will hold on to the buffer until all instances of any functions created from
+    ///     the buffer are garbage collected.  It will then call scriptUnloadCallback to inform the
+    ///     caller it is safe to release.
+    ///     </para>
+    /// </remarks>
+    /// <param name="scriptLoadCallback">Callback called when the source code of the script needs to be loaded.</param>
+    /// <param name="scriptUnloadCallback">Callback called when the serialized script and source code are no longer needed.</param>
+    /// <param name="buffer">The serialized script.</param>
+    /// <param name="sourceContext">
+    ///     A cookie identifying the script that can be used by debuggable script contexts.
+    ///     This context will passed into scriptLoadCallback and scriptUnloadCallback.
+    /// </param>
+    /// <param name="sourceUrl">The location the script came from.</param>
+    /// <param name="result">A function representing the script code.</param>
+    /// <returns>
+    ///     The code <c>JsNoError</c> if the operation succeeded, a failure code otherwise.
+    /// </returns>
+    STDAPI_(JsErrorCode)
+        JsParseSerializedScriptWithCallback(
+        _In_ JsSerializedScriptLoadSourceCallback scriptLoadCallback,
+        _In_ JsSerializedScriptUnloadCallback scriptUnloadCallback,
+        _In_ BYTE *buffer,
+        _In_ JsSourceContext sourceContext,
+        _In_z_ const wchar_t *sourceUrl,
+        _Out_ JsValueRef * result);
+
+    /// <summary>
+    ///     Runs a serialized script.
+    ///     Provides the ability to lazy load the script source only if/when it is needed.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///     Requires an active script context.
+    ///     </para>
+    ///     <para>
+    ///     The runtime will hold on to the buffer until all instances of any functions created from
+    ///     the buffer are garbage collected.  It will then call scriptUnloadCallback to inform the
+    ///     caller it is safe to release.
+    ///     </para>
+    /// </remarks>
+    /// <param name="scriptLoadCallback">Callback called when the source code of the script needs to be loaded.</param>
+    /// <param name="scriptUnloadCallback">Callback called when the serialized script and source code are no longer needed.</param>
+    /// <param name="buffer">The serialized script.</param>
+    /// <param name="sourceContext">
+    ///     A cookie identifying the script that can be used by debuggable script contexts.
+    ///     This context will passed into scriptLoadCallback and scriptUnloadCallback.
+    /// </param>
+    /// <param name="sourceUrl">The location the script came from.</param>
+    /// <param name="result">
+    ///     The result of running the script, if any. This parameter can be null.
+    /// </param>
+    /// <returns>
+    ///     The code <c>JsNoError</c> if the operation succeeded, a failure code otherwise.
+    /// </returns>
+    STDAPI_(JsErrorCode)
+        JsRunSerializedScriptWithCallback(
+        _In_ JsSerializedScriptLoadSourceCallback scriptLoadCallback,
+        _In_ JsSerializedScriptUnloadCallback scriptUnloadCallback,
+        _In_ BYTE *buffer,
+        _In_ JsSourceContext sourceContext,
+        _In_z_ const wchar_t *sourceUrl,
+        _Out_opt_ JsValueRef * result);
 
     /// <summary>
     ///     Parses a serialized script and returns a function representing the script.

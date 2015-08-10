@@ -3756,7 +3756,6 @@ void ThreadContext::SetThreadContextFlag(ThreadContextFlags contextFlag)
     if (contextFlag & ThreadContextFlagExperimentalFeaturesEnabled)
     {
         Js::Configuration::Global.flags.EnableExperimentalFlag();
-        Js::Configuration::Global.flags.EnableAsmJsFlag();
     }
 }
 

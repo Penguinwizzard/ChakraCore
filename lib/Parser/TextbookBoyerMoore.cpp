@@ -154,17 +154,18 @@ namespace UnifiedRegex
     template <>
     static bool MatchPatternAt<CaseInsensitive::EquivClassSize, CaseInsensitive::EquivClassSize>(uint inputChar, wchar_t const * pat, CharCount index)
     {
-        CompileAssert(CaseInsensitive::EquivClassSize == 3);
-        return inputChar == pat[index * 3] 
-            || inputChar == pat[index * 3 + 1] 
-            || inputChar == pat[index * 3 + 2];
+        CompileAssert(CaseInsensitive::EquivClassSize == 4);
+        return inputChar == pat[index * CaseInsensitive::EquivClassSize]
+            || inputChar == pat[index * CaseInsensitive::EquivClassSize + 1]
+            || inputChar == pat[index * CaseInsensitive::EquivClassSize + 2]
+            || inputChar == pat[index * CaseInsensitive::EquivClassSize + 3];
     }
 
     template <>
     static bool MatchPatternAt<CaseInsensitive::EquivClassSize, 1>(uint inputChar, wchar_t const * pat, CharCount index)
     {
-        CompileAssert(CaseInsensitive::EquivClassSize == 3);
-        return inputChar == pat[index * 3];
+        CompileAssert(CaseInsensitive::EquivClassSize == 4);
+        return inputChar == pat[index * 4];
     }
 
     template <typename C>

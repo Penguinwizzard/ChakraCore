@@ -19,6 +19,9 @@ Encoder::Encode()
     m_tempAlloc = &localAlloc;
 
     uint32 instrCount = m_func->GetInstrCount();
+    size_t totalJmpTableSizeInBytes = 0;
+    
+    JmpTableList * jumpTableListForSwitchStatement = nullptr;
 
     m_encoderMD.Init(this);
     m_encodeBufferSize = UInt32Math::Mul(instrCount, MachMaxInstrSize);
@@ -110,6 +113,37 @@ Encoder::Encode()
                     continue;
                 }
             }
+            else if (instr->IsBranchInstr() && instr->AsBranchInstr()->IsMultiBranch())
+            {
+                Assert(instr->GetSrc1() && instr->GetSrc1()->IsRegOpnd());
+                IR::MultiBranchInstr * multiBranchInstr = instr->AsBranchInstr()->AsMultiBrInstr();
+
+                if (multiBranchInstr->m_isSwitchBr &&
+                    (multiBranchInstr->m_kind == IR::MultiBranchInstr::IntJumpTable || multiBranchInstr->m_kind == IR::MultiBranchInstr::SingleCharStrJumpTable))
+                {
+                    Js::BranchJumpTableWrapper * branchJumpTableWrapper = multiBranchInstr->GetBranchJumpTable();
+                    if (jumpTableListForSwitchStatement == nullptr)
+                    {
+                        jumpTableListForSwitchStatement = Anew(m_tempAlloc, JmpTableList, m_tempAlloc);;
+                    }
+                    jumpTableListForSwitchStatement->Add(branchJumpTableWrapper);
+
+                    totalJmpTableSizeInBytes += (branchJumpTableWrapper->tableSize * sizeof(void*));
+                }
+                else
+                {
+                    //Reloc Records
+                    EncoderMD * encoderMD = &(this->m_encoderMD);
+                    multiBranchInstr->MapMultiBrTargetByAddress([=](void ** offset) -> void
+                    {
+#if defined(_M_ARM32_OR_ARM64) 
+                        encoderMD->AddLabelReloc((byte*) offset);
+#else
+                        encoderMD->AppendRelocEntry(RelocTypeLabelUse, (void*) (offset));
+#endif
+                    });
+                }
+            }
             else
             {
                 isCallInstr = LowererMD::IsCall(instr);
@@ -119,34 +153,35 @@ Encoder::Encode()
                     m_pragmaInstrToRecordMap->Add(pragmaInstr);
                     pragmaInstr = nullptr; // Only once per pragma isntr - do we need to make this record
                 }
-            }
 
-            if (instr->HasBailOutInfo())
-            {
-                Assert(this->m_func->hasBailout);                
-                Assert(LowererMD::IsCall(instr));
-                instr->GetBailOutInfo()->FinalizeBailOutRecord(this->m_func);
-            }
 
-            if (instr->isInlineeEntryInstr)
-            {
-                
-                m_encoderMD.EncodeInlineeCallInfo(instr, GetCurrentOffset());
-            }
-
-            if (instr->m_opcode == Js::OpCode::InlineeStart)
-            {
-                Func* inlinee = instr->m_func;
-                if (inlinee->frameInfo && inlinee->frameInfo->record)
-                {                    
-                    inlinee->frameInfo->record->Finalize(inlinee, GetCurrentOffset());
-                    
-#if defined(_M_IX86) || defined(_M_X64)
-                    // Store all records to be adjusted for BR shortening
-                    m_inlineeFrameRecords->Add(inlinee->frameInfo->record);                        
-#endif
+                if (instr->HasBailOutInfo())
+                {
+                    Assert(this->m_func->hasBailout);
+                    Assert(LowererMD::IsCall(instr));
+                    instr->GetBailOutInfo()->FinalizeBailOutRecord(this->m_func);
                 }
-                continue;
+
+                if (instr->isInlineeEntryInstr)
+                {
+
+                    m_encoderMD.EncodeInlineeCallInfo(instr, GetCurrentOffset());
+                }
+
+                if (instr->m_opcode == Js::OpCode::InlineeStart)
+                {
+                    Func* inlinee = instr->m_func;
+                    if (inlinee->frameInfo && inlinee->frameInfo->record)
+                    {
+                        inlinee->frameInfo->record->Finalize(inlinee, GetCurrentOffset());
+
+#if defined(_M_IX86) || defined(_M_X64)
+                        // Store all records to be adjusted for BR shortening
+                        m_inlineeFrameRecords->Add(inlinee->frameInfo->record);
+#endif
+                    }
+                    continue;
+                }
             }
 
             count = m_encoderMD.Encode(instr, m_pc, m_encodeBuffer);
@@ -191,7 +226,7 @@ Encoder::Encode()
         }
     } NEXT_INSTR_IN_FUNC;   
 
-    ptrdiff_t codeSize = m_pc - m_encodeBuffer;
+    ptrdiff_t codeSize = m_pc - m_encodeBuffer + totalJmpTableSizeInBytes;
 
 #if defined(_M_IX86) || defined(_M_X64)
     BOOL isSuccessBrShortAndLoopAlign = false;
@@ -239,6 +274,8 @@ Encoder::Encode()
     OUTPUT_VERBOSE_TRACE(Js::EmitterPhase, L"PDATA count:%u\n", pdataCount);
     OUTPUT_VERBOSE_TRACE(Js::EmitterPhase, L"Size of XDATA:%u\n", xdataSize);
     OUTPUT_VERBOSE_TRACE(Js::EmitterPhase, L"Size of code:%u\n", codeSize);
+    
+    TryCopyAndAddRelocRecordsForSwitchJumpTableEntries(m_encodeBuffer, codeSize, jumpTableListForSwitchStatement, totalJmpTableSizeInBytes);
 
     workItem->RecordNativeCodeSize(m_func, (DWORD)codeSize, pdataCount, xdataSize);
 
@@ -514,6 +551,49 @@ bool Encoder::DoTrackAllStatementBoundary() const
 #else
     return false;
 #endif
+}
+
+void Encoder::TryCopyAndAddRelocRecordsForSwitchJumpTableEntries(BYTE *codeStart, size_t codeSize, JmpTableList * jumpTableListForSwitchStatement, size_t totalJmpTableSizeInBytes)
+{
+    if (jumpTableListForSwitchStatement == nullptr)
+    {
+        return;
+    }
+    
+    BYTE * jmpTableStartAddress = codeStart + codeSize - totalJmpTableSizeInBytes;
+    JitArenaAllocator * allocator = this->m_func->m_alloc;
+    EncoderMD * encoderMD = &m_encoderMD;
+
+    jumpTableListForSwitchStatement->Map([&](uint index, Js::BranchJumpTableWrapper * branchJumpTableWrapper) -> void
+    {
+        Assert(branchJumpTableWrapper != nullptr);
+
+        void ** srcJmpTable = branchJumpTableWrapper->jmpTable;
+        size_t jmpTableSizeInBytes = branchJumpTableWrapper->tableSize * sizeof(void*);
+
+        AssertMsg(branchJumpTableWrapper->labelInstr != nullptr, "Label not yet created?");
+        Assert(branchJumpTableWrapper->labelInstr->GetPC() == nullptr);
+        
+        branchJumpTableWrapper->labelInstr->SetPC(jmpTableStartAddress);
+        memcpy(jmpTableStartAddress, srcJmpTable, jmpTableSizeInBytes);
+
+        for (int i = 0; i < branchJumpTableWrapper->tableSize; i++)
+        {
+            void * addressOfJmpTableEntry = jmpTableStartAddress + (i * sizeof(void*));
+            Assert((ptrdiff_t) addressOfJmpTableEntry - (ptrdiff_t) jmpTableStartAddress < (ptrdiff_t) jmpTableSizeInBytes);
+#if defined(_M_ARM32_OR_ARM64)
+            encoderMD->AddLabelReloc((byte*) addressOfJmpTableEntry);
+#else
+            encoderMD->AppendRelocEntry(RelocTypeLabelUse, addressOfJmpTableEntry);
+#endif
+        }
+
+        jmpTableStartAddress += (jmpTableSizeInBytes);
+        
+        Js::BranchJumpTableWrapper::Delete(allocator, branchJumpTableWrapper);
+    });
+
+    Assert(jmpTableStartAddress == codeStart + codeSize);
 }
 
 uint32 Encoder::GetCurrentOffset() const

@@ -25,7 +25,7 @@
     <CustomBuild Include="Microsoft-Scripting-JScript9.Internal.man">
       <FileType>Document</FileType>
       <Command>mc.exe /h $(IntDir) /W "$(EventManifestXmlPath)\winmeta.xml" /w "$(EventManifestXmlPath)\eventman.xsd" /r $(IntDir) /z %(Filename)Events -um /v %(FullPath)</Command>
-      <Outputs>$(IntDir)\%(Filename)Events.rc;$(IntDir)\%(Filename)Events_MSG00001.bin;$(IntDir)\%(Filename)EventsTEMP.bin</Outputs>
+      <Outputs>$(IntDir)\%(Filename)Events.h;$(IntDir)\%(Filename)Events.rc;$(IntDir)\%(Filename)Events_MSG00001.bin;$(IntDir)\%(Filename)EventsTEMP.bin</Outputs>
     </CustomBuild>
   </ItemGroup>
   <ImportGroup Label="PropertySheets">

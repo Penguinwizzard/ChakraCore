@@ -32,6 +32,8 @@ public:
     BOOL LZCntAvailable() const;
     bool IsAtomPlatform() const;
 #endif
+    bool IsLowMemoryProcess();
+    ULONG64 GetAvailableCommit();
     DWORD GetNumberOfLogicalProcessors() const { return this->dwNumberOfProcessors; }
     DWORD GetNumberOfPhysicalProcessors() const { return this->dwNumberOfPhyscialProcessors; }
 
@@ -82,6 +84,7 @@ private:
 
     static const DWORD INVALID_VERSION = (DWORD)-1;
 
+    ULONG64 availableCommit;
     ULONGLONG UAPInfo;
     ULONG DeviceFamily;
     ULONG DeviceForm;

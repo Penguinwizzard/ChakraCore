@@ -368,6 +368,20 @@ namespace UnifiedRegex
 #endif
 
 #if ENABLE_REGEX_CONFIG_OPTIONS
+    void Char4Mixin::Print(DebugWriter* w, const wchar_t* litbuf) const
+    {
+        w->Print(L"c0: ");
+        w->PrintQuotedChar(cs[0]);
+        w->Print(L", c1: ");
+        w->PrintQuotedChar(cs[1]);
+        w->Print(L", c2: ");
+        w->PrintQuotedChar(cs[2]);
+        w->Print(L", c3: ");
+        w->PrintQuotedChar(cs[3]);
+    }
+#endif
+
+#if ENABLE_REGEX_CONFIG_OPTIONS
     void LiteralMixin::Print(DebugWriter* w, const wchar_t* litbuf, bool isEquivClass) const
     {
         if (isEquivClass)
@@ -1374,6 +1388,33 @@ namespace UnifiedRegex
 #endif
 
     // ----------------------------------------------------------------------
+    // MatchChar4Inst
+    // ----------------------------------------------------------------------
+
+    __inline bool MatchChar4Inst::Exec(REGEX_INST_EXEC_PARAMETERS) const
+    {
+#if ENABLE_REGEX_CONFIG_OPTIONS
+        matcher.CompStats();
+#endif
+        if (inputOffset >= inputLength || (input[inputOffset] != cs[0] && input[inputOffset] != cs[1] && input[inputOffset] != cs[2] && input[inputOffset] != cs[3]))
+            return matcher.Fail(FAIL_PARAMETERS);
+
+        inputOffset++;
+        instPointer += sizeof(*this);
+        return false;
+    }
+
+#if ENABLE_REGEX_CONFIG_OPTIONS
+    int MatchChar4Inst::Print(DebugWriter* w, Label label, const Char* litbuf) const
+    {
+        w->Print(L"L%04x: MatchChar4(", label);
+        Char4Mixin::Print(w, litbuf);
+        w->PrintEOL(L")");
+        return sizeof(*this);
+    }
+#endif
+
+    // ----------------------------------------------------------------------
     // MatchSetInst
     // ----------------------------------------------------------------------
 
@@ -1464,25 +1505,30 @@ namespace UnifiedRegex
 
     __inline bool MatchLiteralEquivInst::Exec(REGEX_INST_EXEC_PARAMETERS) const
     {
-        Assert(length <= matcher.program->rep.insts.litbufLen - offset);
-        Assert(CaseInsensitive::EquivClassSize == 3);
-
         if (length > inputLength - inputOffset)
             return matcher.Fail(FAIL_PARAMETERS);
 
         const Char *const literalBuffer = matcher.program->rep.insts.litbuf;
         CharCount literalOffset = offset;
-        const CharCount literalEndOffset = literalOffset + length * CaseInsensitive::EquivClassSize;
+        const CharCount literalEndOffset = offset + length * CaseInsensitive::EquivClassSize;
+
+        Assert(literalEndOffset <= matcher.program->rep.insts.litbufLen);
+        Assert(CaseInsensitive::EquivClassSize == 4);
 
         do
         {
 #if ENABLE_REGEX_CONFIG_OPTIONS
             matcher.CompStats();
 #endif
-            if (input[inputOffset] != literalBuffer[literalOffset] && input[inputOffset] != literalBuffer[literalOffset+1] &&  input[inputOffset] != literalBuffer[literalOffset+2])
+            if (input[inputOffset] != literalBuffer[literalOffset]
+                && input[inputOffset] != literalBuffer[literalOffset + 1]
+                && input[inputOffset] != literalBuffer[literalOffset + 2]
+                && input[inputOffset] != literalBuffer[literalOffset + 3])
+            {
                 return matcher.Fail(FAIL_PARAMETERS);
+            }
             inputOffset++;
-            literalOffset += 3;
+            literalOffset += CaseInsensitive::EquivClassSize;
         }
         while (literalOffset < literalEndOffset);
 
@@ -2163,16 +2209,87 @@ namespace UnifiedRegex
             CharCount groupOffset = info->offset;
             const CharCount groupEndOffset = groupOffset + info->length;
 
+            bool isCaseInsensitivieMatch = (matcher.program->flags & IgnoreCaseRegexFlag) != 0;
+            bool isCodePointList = (matcher.program->flags & UnicodeRegexFlag) != 0;
+
             // This is the only place in the runtime machinery we need to convert characters to their equivalence class
-            if ((matcher.program->flags & IgnoreCaseRegexFlag) != 0)
+            if (isCaseInsensitivieMatch && isCodePointList)
+            {
+                auto getNextCodePoint = [=](CharCount &offset, CharCount endOffset, codepoint_t &codePoint) {
+                    if (endOffset <= offset)
+                    {
+                        return false;
+                    }
+
+                    Char lowerPart = input[offset];
+                    if (!Js::NumberUtilities::IsSurrogateLowerPart(lowerPart) || offset + 1 == endOffset)
+                    {
+                        codePoint = lowerPart;
+                        offset += 1;
+                        return true;
+                    }
+
+                    Char upperPart = input[offset + 1];
+                    if (!Js::NumberUtilities::IsSurrogateUpperPart(upperPart))
+                    {
+                        codePoint = lowerPart;
+                        offset += 1;
+                    }
+                    else
+                    {
+                        codePoint = Js::NumberUtilities::SurrogatePairAsCodePoint(lowerPart, upperPart);
+                        offset += 2;
+                    }
+
+                    return true;
+                };
+
+                while (true)
+                {
+                    codepoint_t groupCodePoint;
+                    bool hasGroupCodePoint = getNextCodePoint(groupOffset, groupEndOffset, groupCodePoint);
+                    if (!hasGroupCodePoint)
+                    {
+                        break;
+                    }
+
+                    codepoint_t inputCodePoint;
+                    bool hasInputCodePoint = getNextCodePoint(inputOffset, inputLength, inputCodePoint);
+                    if (!hasInputCodePoint)
+                    {
+                        return matcher.Fail(FAIL_PARAMETERS);
+                    }
+
+                    codepoint_t equivs[CaseInsensitive::EquivClassSize];
+                    uint tblidx = 0;
+                    uint acth = 0;
+                    CaseInsensitive::RangeToEquivClass(tblidx, groupCodePoint, groupCodePoint, acth, equivs);
+                    CompileAssert(CaseInsensitive::EquivClassSize == 4);
+                    bool doesMatch =
+                        inputCodePoint == equivs[0]
+                        || inputCodePoint == equivs[1]
+                        || inputCodePoint == equivs[2]
+                        || inputCodePoint == equivs[3];
+                    if (!doesMatch)
+                    {
+                        return matcher.Fail(FAIL_PARAMETERS);
+                    }
+                }
+            }
+            else if (isCaseInsensitivieMatch)
             {
                 do
                 {
 #if ENABLE_REGEX_CONFIG_OPTIONS
                     matcher.CompStats();
 #endif
-                    if (matcher.standardChars->ToCanonical(input[groupOffset++]) != matcher.standardChars->ToCanonical(input[inputOffset++]))
+                    auto toCanonical = [&](CharCount &offset) {
+                        return matcher.standardChars->ToCanonical(CaseInsensitive::MappingSource::UnicodeData, input[offset++]);
+                    };
+                    if (toCanonical(groupOffset) != toCanonical(inputOffset))
+                    {
                         return matcher.Fail(FAIL_PARAMETERS);
+                    }
                 }
                 while (groupOffset < groupEndOffset);
             }
@@ -4326,7 +4443,7 @@ namespace UnifiedRegex
 #if ENABLE_REGEX_CONFIG_OPTIONS
             CompStats();
 #endif
-            if (standardChars->ToCanonical(input[offset]) == standardChars->ToCanonical(c))
+            if (MatchSingleCharCaseInsensitiveSticky(input, offset, c))
             {
                 GroupInfo* const info = GroupIdToGroupInfo(0);
                 info->offset = offset;
@@ -4345,7 +4462,7 @@ namespace UnifiedRegex
 #if ENABLE_REGEX_CONFIG_OPTIONS
             CompStats();
 #endif
-            if (standardChars->ToCanonical(input[offset]) == standardChars->ToCanonical(c))
+            if (MatchSingleCharCaseInsensitiveSticky(input, offset, c))
             {
                 GroupInfo* const info = GroupIdToGroupInfo(0);
                 info->offset = offset;
@@ -4357,6 +4474,12 @@ namespace UnifiedRegex
 
         ResetGroup(0);
         return false;
+    }
+
+    __inline bool Matcher::MatchSingleCharCaseInsensitiveSticky(const Char* const input, const CharCount offset, const Char c)
+    {
+        CaseInsensitive::MappingSource mappingSource = program->GetCaseMappingSource();
+        return (standardChars->ToCanonical(mappingSource, input[offset]) == standardChars->ToCanonical(mappingSource, c));
     }
 
     __inline bool Matcher::MatchSingleCharCaseSensitive(const Char* const input, const CharCount inputLength, CharCount offset, const Char c)

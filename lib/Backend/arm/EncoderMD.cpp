@@ -954,6 +954,7 @@ EncoderMD::EncodeT2Offset(ENCODE_32 encode, IR::Instr *instr, int offset, int bi
 
     return encode;
 }
+
 //---------------------------------------------------------------------------
 //
 // GenerateEncoding()
@@ -1074,22 +1075,6 @@ EncoderMD::GenerateEncoding(IR::Instr* instr, IFORM iform, BYTE *pc, int32 size,
                     encode |= regNum << bitOffset;
                     continue;
                 
-                case STEP_MULTIBR:
-                    
-                    if(instr->IsBranchInstr() && instr->AsBranchInstr()->IsMultiBranch())
-                    {
-                        IR::MultiBranchInstr * multiBranchInstr = instr->AsBranchInstr()->AsMultiBrInstr();
-
-                        //Reloc Records
-
-                        multiBranchInstr->MapMultiBrTargetByAddress([=](void ** offset) -> void
-                        {
-                            IR::Instr *instr = *(IR::Instr**)offset;
-                            EncodeReloc::New(&m_relocList, RelocTypeLabel, (BYTE*)(offset), instr, m_encoder->m_tempAlloc);
-                        });
-                    }
-                    continue;
-
                 case STEP_HREG:
                     Assert(reg != NULL);
                     Assert(reg->IsRegOpnd());
@@ -1625,7 +1610,15 @@ EncoderMD::GenerateEncoding(IR::Instr* instr, IFORM iform, BYTE *pc, int32 size,
 
                 case STEP_MOVW_reloc:
                     Assert(opn && opn->IsLabelOpnd());
-                    EncodeReloc::New(&m_relocList, RelocTypeLabelLow, m_pc, opn->AsLabelOpnd()->GetLabel(), m_encoder->m_tempAlloc);
+                    if (opn->AsLabelOpnd()->GetLabel()->m_isDataLabel)
+                    {
+                        Assert(!opn->AsLabelOpnd()->GetLabel()->isInlineeEntryInstr);
+                        EncodeReloc::New(&m_relocList, RelocTypeDataLabelLow, m_pc, opn->AsLabelOpnd()->GetLabel(), m_encoder->m_tempAlloc);
+                    }
+                    else
+                    {
+                        EncodeReloc::New(&m_relocList, RelocTypeLabelLow, m_pc, opn->AsLabelOpnd()->GetLabel(), m_encoder->m_tempAlloc);
+                    }
                     continue;
 
                 case STEP_MOVT_reloc:
@@ -2300,6 +2293,24 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress)
                 break;
             }
 
+        case RelocTypeDataLabelLow:
+            {
+                IR::LabelInstr * labelInstr = reloc->m_relocInstr->AsLabelInstr();
+                Assert(!labelInstr->isInlineeEntryInstr && labelInstr->m_isDataLabel);
+                
+                AssertMsg(labelInstr->GetPC() != null, "Branch to unemitted label?");
+
+                pcrel = ((labelInstr->GetPC() - m_encoder->m_encodeBuffer + codeBufferAddress) & 0xFFFF);
+                this->m_func->m_workItem->RecordNativeRelocation(codeBufferAddress + reloc->m_consumerOffset - m_encoder->m_encodeBuffer);
+                
+                if (!EncodeImmediate16(pcrel, (DWORD*) &encode))
+                {
+                    Assert(UNREACHED);
+                }
+                *(ENCODE_32 *) relocAddress = encode;
+                break;
+            }
+
         case RelocTypeLabelLow:
             {
                 // Absolute (not relative) label address (lower 16 bits)
@@ -2417,6 +2428,7 @@ bool EncoderMD::TryFold(IR::Instr *instr, IR::RegOpnd *regOpnd)
 
 void EncoderMD::AddLabelReloc(BYTE* relocAddress)
 {
-    EncodeReloc::New(&m_relocList, RelocTypeLabel, relocAddress, nullptr, m_encoder->m_tempAlloc);
+    Assert(relocAddress != nullptr);
+    EncodeReloc::New(&m_relocList, RelocTypeLabel, relocAddress, *(IR::Instr**)relocAddress, m_encoder->m_tempAlloc);
 }
 

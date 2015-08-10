@@ -379,24 +379,6 @@ if (switchProfileMode) \
        SetRegRawFloat(playout->F0, playout->C1); \
        break; \
                                                                 }
-#define PROCESS_C2toD1Mem_COMMON(name, func, suffix) \
-    case OpCodeAsmJs::name: \
-                                                                { \
-        PROCESS_READ_LAYOUT_ASMJS(name, Double1Const2, suffix); \
-        SetRegRawDouble( playout->D0, \
-                func( playout->C1, playout->C2 )); \
-        break; \
-                                                                }
-
-#define PROCESS_C1D1toD1Mem_COMMON(name, func, suffix) \
-    case OpCodeAsmJs::name: \
-                                                                { \
-        PROCESS_READ_LAYOUT_ASMJS(name, Double2Const1, suffix); \
-        SetRegRawDouble( playout->D0, \
-                func( playout->C1, playout->D2 )); \
-        break; \
-                                                                }
-
 
 #define PROCESS_I1toR1Mem_COMMON(name, func, suffix) \
     case OpCodeAsmJs::name: \

@@ -348,7 +348,7 @@ PHASE(All)
 #else
 #define DEFAULT_CONFIG_BgJitDelay           (30)
 #endif
-#define DEFAULT_CONFIG_ASMJS                (false)
+#define DEFAULT_CONFIG_ASMJS                (true)
 #define DEFAULT_CONFIG_AsmJsEdge            (false)
 #define DEFAULT_CONFIG_AsmJsStopOnError     (false) 
 #ifdef SIMD_JS_ENABLED
@@ -436,6 +436,8 @@ PHASE(All)
 #define DEFAULT_CONFIG_PageHeapBlockType    ((Js::Number) PageHeapBlockTypeFilter::PageHeapBlockTypeFilterAll)
 #endif
 
+#define DEFAULT_CONFIG_LowMemoryCap         (0x2E400)   // 185 MB - based on memory cap for process on low-capacity device
+
 #define DEFAULT_CONFIG_MaxCodeFill          (500)
 #define DEFAULT_CONFIG_MaxLoopsPerFunction  (10)
 #define DEFAULT_CONFIG_NopFrequency         (8)
@@ -478,7 +480,7 @@ PHASE(All)
 #define DEFAULT_CONFIG_ES6                     (true)  // master flag to gate all P0-spec-test compliant ES6 features
 
 // ES6 sub-feature gate - to enable-disable ES6 subfeature when ES6 flag is enabled
-#define DEFAULT_CONFIG_ES6Species              (false)
+#define DEFAULT_CONFIG_ES6Species              (true)
 #define DEFAULT_CONFIG_ES6AsyncAwait           (false)
 #define DEFAULT_CONFIG_ES6Classes              (true)
 #define DEFAULT_CONFIG_ES6DateParseFix         (true)
@@ -722,9 +724,6 @@ PHASE(All)
         FLAGNR(Type, Acronym, String, Default)
 #endif
 
-// Enable all Asmjs dependent features
-FLAGR(Boolean, AsmjsAll, "Enable all features dependent on Asmjs", true)
-
 // Please keep this list alphabetically sorted
 
 #if DBG
@@ -740,12 +739,12 @@ FLAGNR(Boolean, ArenaUseHeapAlloc     , "Arena use heap to allocate memory inste
 FLAGNR(Boolean, ValidateInlineStack, "Does a stack walk on helper calls to validate inline stack is correctly restored", false)
 FLAGNR(Boolean, AsmDiff               , "Dump the IR without memory locations and varying parameters.", false)
 FLAGNR(String,  AsmDumpMode           , "Dump the final assembly to a file without memory locations and varying parameters\n\t\t\t\t\tThe 'filename' is the file where the assembly will be dumped. Dump to console if no file is specified", NULL)
-FLAGPR_REGOVR_ASMJS(Boolean, AsmjsAll, Asmjs          , "Enable Asmjs", DEFAULT_CONFIG_ASMJS)
+FLAGR (Boolean, Asmjs                 , "Enable Asmjs", DEFAULT_CONFIG_ASMJS)
 FLAGNR(Boolean, AsmJsStopOnError      , "Stop execution on any AsmJs validation errors", DEFAULT_CONFIG_AsmJsStopOnError)
 FLAGNR(Boolean, AsmJsEdge             , "Enable asm.js features which may have backward incompatible changes or not validate on old demos", DEFAULT_CONFIG_AsmJsEdge)
 
 #ifdef SIMD_JS_ENABLED
-FLAGPR_REGOVR_ASMJS(Boolean, AsmjsAll, Simdjs, "Enable Simdjs", DEFAULT_CONFIG_SIMDJS)
+FLAGPR_REGOVR_EXP(Boolean, ES6, Simdjs, "Enable Simdjs", DEFAULT_CONFIG_SIMDJS)
 #endif
 
 FLAGNR(Boolean, AssertBreak           , "Debugbreak on assert", false)
@@ -868,7 +867,7 @@ FLAGNRC(Boolean, ES6Experimental           , "Enable all experimental features",
 
 // Per ES6 feature/flag
 
-FLAGPR_REGOVR_EXP(Boolean, ES6, ES6Species             , "Enable ES6 '@@species' properties and built-in behaviors" , DEFAULT_CONFIG_ES6Species)
+FLAGPR           (Boolean, ES6, ES6Species             , "Enable ES6 '@@species' properties and built-in behaviors" , DEFAULT_CONFIG_ES6Species)
 FLAGPR_REGOVR_EXP(Boolean, ES6, ES6AsyncAwait          , "Enable ES6 'async' and 'await' keywords"                  , DEFAULT_CONFIG_ES6AsyncAwait)
 FLAGPR           (Boolean, ES6, ES6Classes             , "Enable ES6 'class' and 'extends' keywords"                , DEFAULT_CONFIG_ES6Classes)
 FLAGPR           (Boolean, ES6, ES6DateParseFix        , "Enable ES6 Date.parse fixes"                              , DEFAULT_CONFIG_ES6DateParseFix)
@@ -1176,6 +1175,7 @@ FLAGNR(Boolean, RecyclerProtectPagesOnRescan, "Temporarily switch all pages to r
 #ifdef RECYCLER_VERIFY_MARK
 FLAGNR(Boolean, RecyclerVerifyMark    , "verify concurrent gc", false)
 #endif
+FLAGR (Number,  LowMemoryCap          , "Memory cap indicating a low-memory process", DEFAULT_CONFIG_LowMemoryCap)
 #ifdef RUNTIME_DATA_COLLECTION
 FLAGNR(String,  RuntimeDataOutputFile, "Filename to write the dynamic profile info", NULL)
 #endif

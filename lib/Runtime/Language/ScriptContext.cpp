@@ -127,6 +127,7 @@ namespace Js
 #endif
         inlineCacheAllocator(L"SC-InlineCache", threadContext->GetPageAllocator(), Throw::OutOfMemory),
         isInstInlineCacheAllocator(L"SC-IsInstInlineCache", threadContext->GetPageAllocator(), Throw::OutOfMemory),
+        byteCodeAllocationHeap(threadContext->GetAllocationPolicyManager(), this->GeneralAllocator(), false, false),
         hasRegisteredInlineCache(false),
         hasRegisteredIsInstInlineCache(false),
         entryInScriptContextWithInlineCachesRegistry(nullptr),
@@ -587,6 +588,28 @@ namespace Js
         PERF_COUNTER_DEC(Basic, ScriptContext);
     }
 
+    void ScriptContext::FreeByteCodeAllocation(CustomHeap::Allocation * byteCodeAllocation)
+    {
+        Assert(byteCodeAllocation != nullptr);
+        GetByteCodeAllocator()->LockAndFree(byteCodeAllocation, true);
+    }
+
+    void ScriptContext::EnsureByteCodeAllocationReadWrite(CustomHeap::Allocation * byteCodeAllocation)
+    {
+        Assert(byteCodeAllocation != nullptr);
+        this->GetByteCodeAllocator()->EnsureAllocationReadOnlyOrReadWriteProtection(byteCodeAllocation, true);
+    }
+
+    void ScriptContext::EnsureByteCodeAllocationReadOnly(CustomHeap::Allocation * byteCodeAllocation)
+    {
+        Assert(byteCodeAllocation != nullptr);
+        if (this->IsInDebugMode() || Js::Configuration::Global.IsHybridDebugging())
+        {
+            return;
+        }
+        this->GetByteCodeAllocator()->EnsureAllocationReadOnlyOrReadWriteProtection(byteCodeAllocation, false);
+    }
+
     void ScriptContext::SetUrl(BSTR bstrUrl)
     {
         // Assumption: this method is never called multiple times
@@ -961,6 +984,11 @@ namespace Js
     }
 #endif
 
+    bool ScriptContext::DoUndeferGlobalFunctions() const
+    {
+        return CONFIG_FLAG(DeferTopLevelTillFirstCall) && !AutoSystemInfo::Data.IsLowMemoryProcess();
+    }
+
     RegexPatternMruMap* ScriptContext::GetDynamicRegexMap() const
     {
         Assert(!isScriptContextActuallyClosed);
@@ -1085,7 +1113,10 @@ namespace Js
         srcInfo->moduleID = kmodGlobal;
         this->cache->noContextGlobalSourceInfo = srcInfo;
 
-        this->backgroundParser = BackgroundParser::New(this);
+        if (PHASE_ON1(Js::ParallelParsePhase))
+        {
+            this->backgroundParser = BackgroundParser::New(this);
+        }
 
 #if ENABLE_NATIVE_CODEGEN
         // Create the native code gen before the profiler
@@ -1959,6 +1990,7 @@ namespace Js
         {
             *considerPassingToDebugger = this->threadContext->GetPropagateException();
         }
+        exceptionObject = exceptionObject->CloneIfStaticExceptionObject(this);
         this->threadContext->SetRecordedException(null);
         return exceptionObject;
     }

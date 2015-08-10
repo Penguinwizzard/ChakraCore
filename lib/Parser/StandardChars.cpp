@@ -141,148 +141,10 @@ echo("    };");
     };
 
     // ----------------------------------------------------------------------
-    // StandardChars<char>
+    // TrivialCaseMapper
     // ----------------------------------------------------------------------
 
-    const int StandardChars<char>::numDigitPairs = 1;
-    const char* const StandardChars<char>::digitStr = "09";
-    const int StandardChars<char>::numWhitespacePairs = 3;
-    const char* const StandardChars<char>::whitespaceStr = "\x09\x0d\x20\x20\xa0\xa0";
-    const int StandardChars<char>::numWordPairs = 4;
-    const char* const StandardChars<char>::wordStr = "09AZ__az";
-    const int StandardChars<char>::numNewlinePairs = 2;
-    const char* const StandardChars<char>::newlineStr = "\x0a\x0a\x0d\x0d";
-
-    StandardChars<char>::StandardChars(ArenaAllocator* allocator)
-        : ASCIIChars(), allocator(allocator), fullSet(0), emptySet(0), wordSet(0), nonWordSet(0), newlineSet(0), whitespaceSet(0)
-    {
-        Assert(sizeof(Char) == 1); // of course
-        Assert(sizeof(UChar) == 1);
-        Assert(sizeof(uint) > sizeof(Char));
-        Assert(sizeof(CharCountOrFlag) >= sizeof(CharCount));
-
-        uint l = 0;
-        uint h = MaxUChar;
-        uint tblidx = 0;
-        do {
-            uint acth, equivl[CaseInsensitive::EquivClassSize];
-            CaseInsensitive::RangeToEquivClass(tblidx, l, h, acth, equivl);
-            __assume(acth <= MaxUChar); // property of algorithm: acth never greater than h
-            do
-            {
-                for (int i = 0; i < CaseInsensitive::EquivClassSize; i++)
-                {
-                    if (equivl[i] <= MaxUChar)
-                        toEquivs[l][i] = UTC(equivl[i]++);
-                    else
-                        toEquivs[l][i] = UTC(l);
-                }
-                l++;
-            }
-            while (l <= acth);
-        }
-        while (l <= h);
-    }
-
-    void StandardChars<char>::SetDigits(ArenaAllocator* setAllocator, CharSet<Char> &set)
-    {
-        set.SetRanges(setAllocator, numDigitPairs, digitStr);
-    }
-
-    void StandardChars<char>::SetNonDigits(ArenaAllocator* setAllocator, CharSet<Char> &set)
-    {
-        set.SetNotRanges(setAllocator, numDigitPairs, digitStr);
-    }
-
-    void StandardChars<char>::SetWhitespace(ArenaAllocator* setAllocator, CharSet<Char> &set)
-    {
-        set.SetRanges(setAllocator, numWhitespacePairs, whitespaceStr);
-    }
-
-    void StandardChars<char>::SetNonWhitespace(ArenaAllocator* setAllocator, CharSet<Char> &set)
-    {
-        set.SetNotRanges(setAllocator, numWhitespacePairs, whitespaceStr);
-    }
-
-    void StandardChars<char>::SetWordChars(ArenaAllocator* setAllocator, CharSet<Char> &set)
-    {
-        set.SetRanges(setAllocator, numWordPairs, wordStr);
-    }
-
-    void StandardChars<char>::SetNonWordChars(ArenaAllocator* setAllocator, CharSet<Char> &set)
-    {
-        set.SetNotRanges(setAllocator, numWordPairs, wordStr);
-    }
-
-    void StandardChars<char>::SetNewline(ArenaAllocator* setAllocator, CharSet<Char> &set)
-    {
-        set.SetRanges(setAllocator, numNewlinePairs, newlineStr);
-    }
-
-    void StandardChars<char>::SetNonNewline(ArenaAllocator* setAllocator, CharSet<Char> &set)
-    {
-        set.SetNotRanges(setAllocator, numNewlinePairs, newlineStr);
-    }
-
-    CharSet<char>* StandardChars<char>::GetFullSet()
-    {
-        if (fullSet == 0)
-        {
-            fullSet = Anew(allocator, ASCIICharSet);
-            fullSet->SetRange(allocator, MinChar, MaxChar);
-        }
-        return fullSet;
-    }
-
-    CharSet<char>* StandardChars<char>::GetEmptySet()
-    {
-        if (emptySet == 0)
-        {
-            emptySet = Anew(allocator, ASCIICharSet);
-            // leave empty
-        }
-        return emptySet;
-    }
-
-    CharSet<char>* StandardChars<char>::GetWordSet()
-    {
-        if (wordSet == 0)
-        {
-            wordSet = Anew(allocator, ASCIICharSet);
-            wordSet->SetRanges(allocator, numWordPairs, wordStr);
-        }
-        return wordSet;
-    }
-
-    CharSet<char>* StandardChars<char>::GetNonWordSet()
-    {
-        if (nonWordSet == 0)
-        {
-            nonWordSet = Anew(allocator, ASCIICharSet);
-            nonWordSet->SetNotRanges(allocator, numWordPairs, wordStr);
-        }
-        return nonWordSet;
-    }
-
-    CharSet<char>* StandardChars<char>::GetNewlineSet()
-    {
-        if (newlineSet == 0)
-        {
-            newlineSet = Anew(allocator, ASCIICharSet);
-            newlineSet->SetRanges(allocator, numNewlinePairs, newlineStr);
-        }
-        return newlineSet;
-    }
-
-    CharSet<char>* StandardChars<char>::GetWhitespaceSet()
-    {
-        if (whitespaceSet == 0)
-        {
-            whitespaceSet = Anew(allocator, ASCIICharSet);
-            whitespaceSet->SetRanges(allocator, numWhitespacePairs, whitespaceStr);
-        }
-        return whitespaceSet;
-    }
+    const TrivialCaseMapper TrivialCaseMapper::Instance;
 
     // ----------------------------------------------------------------------
     // StandardChars<wchar_t>
@@ -328,40 +190,16 @@ END {
     const wchar_t* const StandardChars<wchar_t>::newlineStr = L"\x000a\x000a\x000d\x000d\x2028\x2029";
 
     StandardChars<wchar_t>::StandardChars(ArenaAllocator* allocator)
-        : allocator(allocator), toEquivs((uint64)-1), fullSet(0), emptySet(0), wordSet(0), nonWordSet(0), newlineSet(0), whitespaceSet(0)
+        : allocator(allocator)
+        , unicodeDataCaseMapper(allocator, CaseInsensitive::MappingSource::UnicodeData, &TrivialCaseMapper::Instance)
+        , caseFoldingCaseMapper(allocator, CaseInsensitive::MappingSource::CaseFolding, &unicodeDataCaseMapper)
+        , fullSet(0)
+        , emptySet(0)
+        , wordSet(0)
+        , nonWordSet(0)
+        , newlineSet(0)
+        , whitespaceSet(0)
     {
-        Assert(sizeof(Char) == 2); // of course
-        Assert(sizeof(UChar) == 2);
-        Assert(sizeof(uint) > sizeof(Char));
-        Assert(sizeof(CharCountOrFlag) >= sizeof(CharCount));
-
-        uint l = 0;
-        uint h = MaxUChar;
-        uint tblidx = 0;
-        do {
-            uint acth, equivl[CaseInsensitive::EquivClassSize];
-            if (CaseInsensitive::RangeToEquivClass(tblidx, l, h, acth, equivl))
-            {
-                // non-trivial equivalence class
-                __assume(acth <= MaxUChar); // property of algorithm: acth never greater than h
-                do
-                {
-                    uint64 r = 0;
-                    for (int i = CaseInsensitive::EquivClassSize - 1; i >= 0; i--)
-                    {
-                        __assume(equivl[i] <= MaxUChar); // property of algorithm: never map outside of range
-                        r <<= 16;
-                        r |= equivl[i]++;
-                    }
-                    toEquivs.Set(allocator, UTC(l++), r);
-                }
-                while (l <= acth);
-            }
-            else
-                // trivial equivalence class, don't add to map
-                l = acth + 1;
-        }
-        while (l <= h);
     }
 
     void StandardChars<wchar_t>::SetDigits(ArenaAllocator* setAllocator, CharSet<Char> &set)

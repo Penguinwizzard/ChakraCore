@@ -14,6 +14,7 @@
 typedef JsUtil::List<NativeOffsetInlineeFramePair, ArenaAllocator> InlineeFrameMap;
 typedef JsUtil::List<IR::PragmaInstr*, ArenaAllocator> PragmaInstrList;
 typedef JsUtil::List<uint32, ArenaAllocator> OffsetList;
+typedef JsUtil::List<Js::BranchJumpTableWrapper*, ArenaAllocator> JmpTableList;
 
 class Encoder
 {
@@ -57,5 +58,6 @@ private:
     BYTE            FindNopCountFor16byteAlignment(size_t address);
 
     uint32          GetCurrentOffset() const;
+    void            TryCopyAndAddRelocRecordsForSwitchJumpTableEntries(BYTE *codeStart, size_t codeSize, JmpTableList * jumpTableListForSwitchStatement, size_t totalJmpTableSizeInBytes);
 };
 

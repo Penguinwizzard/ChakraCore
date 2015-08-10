@@ -289,33 +289,10 @@ namespace Js
     };
 
     template <typename SizePolicy>
-    struct OpLayoutT_Float1Addr1
-    {
-        typename SizePolicy::RegSlotType     F0;
-        typename const float*                A1;
-    };
-
-    template <typename SizePolicy>
     struct OpLayoutT_Double1Addr1
     {
         typename SizePolicy::RegSlotType     D0;
         typename const double*               A1;
-    };
-
-    template <typename SizePolicy>
-    struct OpLayoutT_Double1Const2
-    {
-        typename SizePolicy::RegSlotType     D0;
-        typename double                      C1;
-        typename double                      C2;
-    };
-
-    template <typename SizePolicy>
-    struct OpLayoutT_Double2Const1
-    {
-        typename SizePolicy::RegSlotType     D0;
-        typename SizePolicy::RegSlotType     D1;
-        typename double                      C2;
     };
 
     template <typename SizePolicy>

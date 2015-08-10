@@ -78,7 +78,6 @@ Parser::Parser(Js::ScriptContext* scriptContext, BOOL strictMode, PageAllocator 
     m_scriptContext = scriptContext;
     m_pCurrentAstSize = NULL;
     m_parsingDuplicate = 0;
-    m_exprDepth = 0;
     m_arrayDepth = 0;
     m_funcInArrayDepth = 0;
     m_parenDepth = 0;
@@ -107,7 +106,6 @@ Parser::Parser(Js::ScriptContext* scriptContext, BOOL strictMode, PageAllocator 
     m_fUseStrictMode = strictMode;
     m_InAsmMode = false;
     m_deferAsmJs = true;
-    m_isAsmJsDisabled = false;
     m_scopeCountNoAst = 0;
     m_fExpectExternalSource = 0;
 
@@ -2142,13 +2140,9 @@ ParseNodePtr Parser::ParseTerm(BOOL fAllowCall, LPCOLESTR pNameHint, ulong *pHin
             break;
         }
 
-        // Decrement expression depth so that we don't count nesting of parentheses.
-        // Restore decremented depth after the expression contained in parentheses is finished.
-        this->m_exprDepth--;
         this->m_parenDepth++;
         pnode = ParseExpr<buildAST>(koplNo, nullptr, TRUE, FALSE, nullptr, nullptr /*nameLength*/, &term, true);
         this->m_parenDepth--;
-        this->m_exprDepth++;
 
         ChkCurTok(tkRParen, ERRnoRparen);
         // Emit a deferred ... error if one was parsed.
@@ -2325,7 +2319,7 @@ LFunction :
         {
             flags |= fFncAsync;
         }
-        pnode = ParseFncDecl<buildAST>(flags, pNameHint, false, false, fUnaryOrParen);
+        pnode = ParseFncDecl<buildAST>(flags, pNameHint, false, false, true, fUnaryOrParen);
         if (isAsyncExpr)
         {
             pnode->sxFnc.cbMin = iecpMin;
@@ -4009,6 +4003,11 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
     }
 
     // Start a new statement stack.
+    bool topLevelStmt = 
+        buildAST &&
+        !fFunctionInBlock &&
+        (this->m_pstmtCur == nullptr || this->m_pstmtCur->pnodeStmt->nop == knopBlock);
+
     pstmtSave = m_pstmtCur;
     SetCurrentStatement(nullptr);
 
@@ -4057,20 +4056,15 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
             !fDeclaration && pnodeFnc && pnodeFnc->sxFnc.pnodeName == nullptr && fUnaryOrParen;
 
         BOOL isDeferredFnc = IsDeferredFnc();
-        isTopLevelDeferredFunc = (!isDeferredFnc
-            && DeferredParse(pnodeFnc->sxFnc.functionId)
-            && (!pnodeFnc->sxFnc.IsNested() || CONFIG_FLAG(DeferNested))
+        isTopLevelDeferredFunc = 
+            (!isDeferredFnc
+             && DeferredParse(pnodeFnc->sxFnc.functionId)
+             && (!pnodeFnc->sxFnc.IsNested() || CONFIG_FLAG(DeferNested))
             // Don't defer if this is a function expression not contained in a statement or other expression.
             // Assume it will be called as part of this expression.
-            // Note that in compat mode a named function expression has to be treated like a declaration statement.
-            && (fDeclaration
-            || (this->m_pstmtCur != nullptr &&
-            (this->m_pstmtCur->pnodeStmt->nop != knopBlock ||
-            (this->m_pstmtCur->pnodeStmt->sxBlock.blockType != PnodeBlockType::Function &&
-            this->m_pstmtCur->pnodeStmt->sxBlock.blockType != PnodeBlockType::Global)))
-            || this->m_exprDepth > 1)
-            && !m_InAsmMode
-            );
+             && (!isLikelyModulePattern || !topLevelStmt || PHASE_FORCE1(Js::DeferParsePhase))
+             && !m_InAsmMode
+                );
 
         if (!fLambda &&
             !isDeferredFnc &&
@@ -6678,7 +6672,7 @@ Checks for no expression by looking for a token that can follow an
 Expression grammar production.
 ***************************************************************************/
 template<bool buildAST>
-bool Parser::ParseOptionalExpr(ParseNodePtr* pnode, int oplMin, BOOL *pfCanAssign, BOOL fAllowIn, BOOL fAllowEllipsis, LPCOLESTR pNameHint, ulong *pHintLength, _Inout_opt_ IdentToken* pToken)
+bool Parser::ParseOptionalExpr(ParseNodePtr* pnode, bool fUnaryOrParen, int oplMin, BOOL *pfCanAssign, BOOL fAllowIn, BOOL fAllowEllipsis, LPCOLESTR pNameHint, ulong *pHintLength, _Inout_opt_ IdentToken* pToken)
 {
     *pnode = nullptr;
     if (m_token.tk == tkRCurly ||
@@ -6693,7 +6687,7 @@ bool Parser::ParseOptionalExpr(ParseNodePtr* pnode, int oplMin, BOOL *pfCanAssig
         return false;
     }
 
-    *pnode = ParseExpr<buildAST>(oplMin, pfCanAssign, fAllowIn, fAllowEllipsis, pNameHint, pHintLength, pToken);
+    *pnode = ParseExpr<buildAST>(oplMin, pfCanAssign, fAllowIn, fAllowEllipsis, pNameHint, pHintLength, pToken, fUnaryOrParen);
     return true;
 }
 
@@ -6715,7 +6709,6 @@ ParseNodePtr Parser::ParseExpr(int oplMin, BOOL *pfCanAssign, BOOL fAllowIn, BOO
     bool assignmentStmt = false;
     IdentToken term;
     RestorePoint termStart;
-    this->m_exprDepth++;
     ulong hintLength = 0;
 
     if (pHintLength != 0)
@@ -6775,7 +6768,7 @@ ParseNodePtr Parser::ParseExpr(int oplMin, BOOL *pfCanAssign, BOOL fAllowIn, BOO
 
         if (nop == knopYield)
         {
-            if (!ParseOptionalExpr<buildAST>(&pnodeT, opl, NULL, TRUE, fAllowEllipsis))
+            if (!ParseOptionalExpr<buildAST>(&pnodeT, false, opl, NULL, TRUE, fAllowEllipsis))
             {
                 nop = knopYieldLeaf;
                 if (buildAST)
@@ -7112,8 +7105,6 @@ ParseNodePtr Parser::ParseExpr(int oplMin, BOOL *pfCanAssign, BOOL fAllowIn, BOO
             }
         }
     }
-
-    this->m_exprDepth--;
 
     if (NULL != pfCanAssign)
     {
@@ -7830,11 +7821,6 @@ ParseNodePtr Parser::ParseStatement(bool isSourceElement/* = false*/, bool check
     StmtNest stmtTry;
     StmtNest stmtTryBlock;
 #endif
-
-    // Reset the current expression depth so that it doesn't carry over across
-    // function declarations, etc.
-    uint oldExprDepth = this->m_exprDepth;
-    this->m_exprDepth = 0;
 
     if (buildAST)
     {
@@ -8680,7 +8666,7 @@ LGetJumpStatement:
         }
         m_pscan->Scan();
         ParseNodePtr pnodeExpr = NULL;
-        ParseOptionalExpr<buildAST>(&pnodeExpr);
+        ParseOptionalExpr<buildAST>(&pnodeExpr, true);
         if (buildAST)
         {
             pnode->sxReturn.pnodeExpr = pnodeExpr;
@@ -8909,9 +8895,6 @@ LNeedTerminator:
 #endif // EXCEPTION_RECOVERY
 
     }
-
-    // Restore saved expression depth.
-    this->m_exprDepth = oldExprDepth;
 
     return pnode;
 }
@@ -9676,7 +9659,7 @@ bool Parser::CheckAsmjsModeStrPid(IdentPtr pid)
         return false;
     }
 
-    return isAsmCandidate && !m_isAsmJsDisabled;
+    return isAsmCandidate && !(m_grfscr & fscrNoAsmJs);
 #else
     return false;
 #endif
@@ -9866,14 +9849,13 @@ HRESULT Parser::ParseFunctionInBackground(ParseNodePtr pnodeFnc, ParseContext *p
 
 HRESULT Parser::ParseSourceWithOffset(__out ParseNodePtr* parseTree, LPCUTF8 pSrc, size_t offset, size_t cbLength, charcount_t cchOffset,
         bool isCesu8, ULONG grfscr, CompileScriptException *pse, Js::LocalFunctionId * nextFunctionId, ULONG lineNumber, SourceContextInfo * sourceContextInfo,
-        Js::ParseableFunctionInfo* functionInfo, bool isReparse, bool isAsmJsDisabled)
+        Js::ParseableFunctionInfo* functionInfo, bool isReparse)
 {
     m_functionBody = functionInfo;
-    m_isAsmJsDisabled = isAsmJsDisabled;
     if (m_functionBody)
     {
         m_currDeferredStub = m_functionBody->GetDeferredStubs();
-        m_InAsmMode = isAsmJsDisabled ? false : m_functionBody->GetIsAsmjsMode();
+        m_InAsmMode = grfscr & fscrNoAsmJs ? false : m_functionBody->GetIsAsmjsMode();
     }
     m_deferAsmJs = !m_InAsmMode;
     m_parseType = isReparse ? ParseType_Reparse : ParseType_Deferred;

@@ -16,11 +16,15 @@
     LAYOUT_TYPE(layout##_Large)
 #endif
 
-#ifndef LAYOUT_TYPE_WMS
-#define LAYOUT_TYPE_WMS(layout) \
-    LAYOUT_TYPE(layout##_Small) \
-    LAYOUT_TYPE(layout##_Medium) \
-    LAYOUT_TYPE(layout##_Large)
+// FE for frontend only layout
+#ifdef EXCLUDE_FRONTEND_LAYOUT
+#ifndef LAYOUT_TYPE_WMS_FE
+#define LAYOUT_TYPE_WMS_FE(...)
+#endif
+#else
+#ifndef LAYOUT_TYPE_WMS_FE
+#define LAYOUT_TYPE_WMS_FE LAYOUT_TYPE_WMS
+#endif
 #endif
 
 // For duplicates layout from LayoutTypes.h
@@ -44,14 +48,14 @@ LAYOUT_TYPE_WMS    ( AsmTypedArr   )
 LAYOUT_TYPE_WMS    ( AsmCall       )
 LAYOUT_TYPE        ( AsmBr         )
 LAYOUT_TYPE_WMS    ( AsmReg1       ) // Generic layout with 1 RegSlot
-LAYOUT_TYPE_WMS    ( AsmReg2       ) // Generic layout with 2 RegSlot
-LAYOUT_TYPE_WMS    ( AsmReg3       ) // Generic layout with 3 RegSlot
-LAYOUT_TYPE_WMS    ( AsmReg4       ) // Generic layout with 4 RegSlot
-LAYOUT_TYPE_WMS    ( AsmReg5       ) // Generic layout with 5 RegSlot
+LAYOUT_TYPE_WMS_FE ( AsmReg2       ) // Generic layout with 2 RegSlot
+LAYOUT_TYPE_WMS_FE ( AsmReg3       ) // Generic layout with 3 RegSlot
+LAYOUT_TYPE_WMS_FE ( AsmReg4       ) // Generic layout with 4 RegSlot
+LAYOUT_TYPE_WMS_FE ( AsmReg5       ) // Generic layout with 5 RegSlot
 #ifdef SIMD_JS_ENABLED
-LAYOUT_TYPE_WMS    ( AsmReg6       ) // Generic layout with 6 RegSlot
-LAYOUT_TYPE_WMS    ( AsmReg7       ) // Generic layout with 7 RegSlot
-LAYOUT_TYPE_WMS    ( AsmReg2IntConst1 ) // Generic layout with 2 RegSlots and 1 Int Constant
+LAYOUT_TYPE_WMS_FE ( AsmReg6       ) // Generic layout with 6 RegSlot
+LAYOUT_TYPE_WMS_FE ( AsmReg7       ) // Generic layout with 7 RegSlot
+LAYOUT_TYPE_WMS_FE ( AsmReg2IntConst1 ) // Generic layout with 2 RegSlots and 1 Int Constant
 #endif
 LAYOUT_TYPE_WMS    ( Int1Double1   ) // 1 int register and 1 double register
 LAYOUT_TYPE_WMS    ( Int1Float1    ) // 1 int register and 1 float register
@@ -65,9 +69,6 @@ LAYOUT_TYPE_WMS    ( Reg1Float1    ) // 1 var register and 1 Float register
 LAYOUT_TYPE_WMS    ( Reg1Int1      ) // 1 var register and 1 int register
 LAYOUT_TYPE_WMS    ( Int1Const1    ) // 1 int register and 1 const int value
 LAYOUT_TYPE_WMS    ( Double1Addr1  ) // 1 double register and 1 const double* value
-LAYOUT_TYPE_WMS    ( Float1Addr1   ) // 1 float register and 1 const float* value
-LAYOUT_TYPE_WMS    ( Double1Const2 ) // 1 double register and 2 const double value
-LAYOUT_TYPE_WMS    ( Double2Const1 ) // 2 double register and 1 const double value
 LAYOUT_TYPE_WMS    ( Int1Double2   ) // 1 int register and 2 double register ( double comparisons )
 LAYOUT_TYPE_WMS    ( Int1Float2    ) // 1 int register and 2 float register ( float comparisons )
 LAYOUT_TYPE_WMS    ( Int2          ) // 2 int register
@@ -138,3 +139,5 @@ LAYOUT_TYPE_WMS    ( AsmSimdTypedArr )
 #undef LAYOUT_TYPE
 #undef LAYOUT_TYPE_WMS
 #undef EXCLUDE_DUP_LAYOUT
+#undef LAYOUT_TYPE_WMS_FE
+#undef EXCLUDE_FRONTEND_LAYOUT

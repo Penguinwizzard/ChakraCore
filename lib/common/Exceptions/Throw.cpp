@@ -115,7 +115,7 @@ namespace Js {
 
 #ifdef GENERATE_DUMP
     CriticalSection Throw::csGenereateDump;
-    void Throw::GenerateDump(LPCWSTR filePath, bool terminate)
+    void Throw::GenerateDump(LPCWSTR filePath, bool terminate, bool needLock)
     {
         __try
         {
@@ -129,13 +129,13 @@ namespace Js {
             }
         }
         __except(Throw::GenerateDump(GetExceptionInformation(), filePath, 
-            terminate? EXCEPTION_CONTINUE_SEARCH : EXCEPTION_EXECUTE_HANDLER))
+            terminate? EXCEPTION_CONTINUE_SEARCH : EXCEPTION_EXECUTE_HANDLER), needLock)
         {
             // we don't do anything interesting in this handler
         }
     }
 
-    int Throw::GenerateDump(PEXCEPTION_POINTERS exceptInfo, LPCWSTR filePath, int ret)
+    int Throw::GenerateDump(PEXCEPTION_POINTERS exceptInfo, LPCWSTR filePath, int ret, bool needLock)
     {
         WCHAR tempFilePath[MAX_PATH];
         WCHAR tempFileName[MAX_PATH];
@@ -154,6 +154,9 @@ namespace Js {
         }
 
         StringCchPrintf(tempFileName, _countof(tempFileName), L"%s\\JC_%d_%d.dmp", filePath, GetCurrentProcessId(), GetCurrentThreadId());
+        Output::Print(L"dump filename %s \n", tempFileName);
+        Output::Flush();
+
         hTempFile = CreateFile(tempFileName, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 
             FILE_ATTRIBUTE_NORMAL, NULL);
         if (hTempFile == INVALID_HANDLE_VALUE)
@@ -175,14 +178,32 @@ namespace Js {
                 dumpType = static_cast<MINIDUMP_TYPE>(dumpType | MiniDumpWithFullMemory);
             }
 
-            AutoCriticalSection autocs(&csGenereateDump);
-            if (!MiniDumpWriteDump(GetCurrentProcess(),
-                GetCurrentProcessId(),
-                hTempFile,
-                dumpType,
-                &dumpExceptInfo,
-                NULL,
-                NULL))
+            BOOL dumpGenerated = false;
+            if (needLock)
+            {
+                // the criticalsection might have been destructed at process shutdown time. At that time we don't need 
+                // to lock.
+                AutoCriticalSection autocs(&csGenereateDump);
+
+                dumpGenerated = MiniDumpWriteDump(GetCurrentProcess(),
+                    GetCurrentProcessId(),
+                    hTempFile,
+                    dumpType,
+                    &dumpExceptInfo,
+                    NULL,
+                    NULL);
+            }
+            else
+            {
+                dumpGenerated = MiniDumpWriteDump(GetCurrentProcess(),
+                    GetCurrentProcessId(),
+                    hTempFile,
+                    dumpType,
+                    &dumpExceptInfo,
+                    NULL,
+                    NULL);
+            }
+            if (!dumpGenerated)
             {
                 Output::Print(L"Unable to write minidump (0x%08X)\n", GetLastError());
                 Output::Flush();
@@ -227,7 +248,7 @@ namespace Js {
             {
                 return false;
             }
-            Throw::GenerateDump(Js::Configuration::Global.flags.DumpOnCrash, true);            
+            Throw::GenerateDump(Js::Configuration::Global.flags.DumpOnCrash, true);
 #else
             return false;
 #endif

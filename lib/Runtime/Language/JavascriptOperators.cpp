@@ -2859,6 +2859,14 @@ CommonNumber:
         return object->HasOwnItem(index);
     }
 
+    BOOL JavascriptOperators::HasItem(RecyclableObject* object, uint64 index)
+    {
+        PropertyRecord const * propertyRecord;
+        ScriptContext* scriptContext = object->GetScriptContext();
+        JavascriptOperators::GetPropertyIdForInt(index, scriptContext, &propertyRecord);
+        return JavascriptOperators::HasProperty(object, propertyRecord->GetPropertyId());
+    }
+
     BOOL JavascriptOperators::HasItem(RecyclableObject* object, uint32 index)
     {
         JavascriptLibrary::CheckAndConvertCopyOnAccessNativeIntArray<Var>(object);
@@ -2916,6 +2924,13 @@ CommonNumber:
         return false;
     }
 
+    BOOL JavascriptOperators::SetItem(Var receiver, RecyclableObject* object, uint64 index, Var value, ScriptContext* scriptContext, PropertyOperationFlags propertyOperationFlags)
+    {
+        PropertyRecord const * propertyRecord;
+        JavascriptOperators::GetPropertyIdForInt(index, scriptContext, &propertyRecord);
+        return JavascriptOperators::SetProperty(receiver, object, propertyRecord->GetPropertyId(), value, scriptContext, propertyOperationFlags);
+    }
+
     BOOL JavascriptOperators::SetItem(Var receiver, RecyclableObject* object, uint32 index, Var value, ScriptContext* scriptContext, PropertyOperationFlags propertyOperationFlags, BOOL skipPrototypeCheck /* = FALSE */)
     {
         Var setterValueOrProxy = null;
@@ -2971,6 +2986,12 @@ CommonNumber:
     BOOL JavascriptOperators::DeleteItem(RecyclableObject* object, uint32 index, PropertyOperationFlags propertyOperationFlags)
     {
         return object->DeleteItem(index, propertyOperationFlags);
+    }
+    BOOL JavascriptOperators::DeleteItem(RecyclableObject* object, uint64 index, PropertyOperationFlags propertyOperationFlags)
+    {
+        PropertyRecord const * propertyRecord;
+        JavascriptOperators::GetPropertyIdForInt(index, object->GetScriptContext(), &propertyRecord);
+        return JavascriptOperators::DeleteProperty(object, propertyRecord->GetPropertyId(), propertyOperationFlags);
     }
 
     BOOL JavascriptOperators::OP_HasItem(Var instance, Var index, ScriptContext* scriptContext)

@@ -114,28 +114,9 @@ JsErrorCode GlobalAPIWrapper(Fn fn)
             errCode != JsErrorScriptException &&
             errCode != JsErrorScriptTerminated);
     }
-    catch (Js::OutOfMemoryException)
-    {
-        return JsErrorOutOfMemory;
-    }
-    catch (Js::StackOverflowException)
-    {
-        return JsErrorOutOfMemory;
-    }
-    catch (JsrtExceptionBase& e)
-    {
-        return e.GetJsErrorCode();
-    }
-    catch (Js::ExceptionBase)
-    {
-        AssertMsg(false, "Unexpected engine exception.");
-        return JsErrorFatal;
-    }
-    catch (...)
-    {
-        AssertMsg(false, "Unexpected non-engine exception.");
-        return JsErrorFatal;
-    }
+    CATCH_JAVASCRIPT_EXCEPTION_OBJECT(JsrtContext::GetCurrent()->GetScriptContext()->GetThreadContext())
+
+    CATCH_OTHER_EXCEPTIONS
 
     return errCode;
 }
@@ -154,7 +135,6 @@ JsErrorCode ContextAPIWrapper(Fn fn)
     }
 
     Js::ScriptContext *scriptContext = currentContext->GetScriptContext();
-
     try
     {
         AUTO_NESTED_HANDLED_EXCEPTION_TYPE((ExceptionType)ExceptionType_JavascriptException);
@@ -176,25 +156,7 @@ JsErrorCode ContextAPIWrapper(Fn fn)
             errCode != JsErrorScriptException &&
             errCode != JsErrorScriptTerminated);
     }
-    catch (Js::JavascriptExceptionObject *exceptionObject)
-    {
-        Assert(scriptContext->GetThreadContext()->GetRecordedException() == NULL);
-
-        if (exceptionObject == scriptContext->GetThreadContext()->GetPendingOOMErrorObject())
-        {
-            return JsErrorOutOfMemory;
-        }
-        else if (exceptionObject == scriptContext->GetThreadContext()->GetPendingSOErrorObject())
-        {
-            return JsErrorOutOfMemory;
-        }
-        else
-        {
-            scriptContext->GetThreadContext()->SetRecordedException(exceptionObject);
-
-            return JsErrorScriptException;
-        }
-    }
+    CATCH_JAVASCRIPT_EXCEPTION_OBJECT(scriptContext->GetThreadContext())
     catch (Js::ScriptAbortException)
     {
         Assert(scriptContext->GetThreadContext()->GetRecordedException() == NULL);
@@ -205,20 +167,8 @@ JsErrorCode ContextAPIWrapper(Fn fn)
     {
         return JsErrorScriptEvalDisabled;
     }
-    catch (JsrtExceptionBase& e)
-    {
-        return e.GetJsErrorCode();
-    }
-    catch (Js::ExceptionBase)
-    {
-        AssertMsg(false, "Unexpected engine exception.");
-        return JsErrorFatal;
-    }
-    catch (...)
-    {
-        AssertMsg(false, "Unexpected non-engine exception.");
-        return JsErrorFatal;
-    }
+
+    CATCH_OTHER_EXCEPTIONS
 
     return errCode;
 }
@@ -255,34 +205,16 @@ JsErrorCode ContextAPINoScriptWrapper(Fn fn, bool allowInObjectBeforeCollectCall
             errCode != JsErrorScriptException &&
             errCode != JsErrorScriptTerminated);
     }
+    CATCH_JAVASCRIPT_EXCEPTION_OBJECT(scriptContext->GetThreadContext())
+
     catch (Js::ScriptAbortException)
     {
         Assert(scriptContext->GetThreadContext()->GetRecordedException() == NULL);
         scriptContext->GetThreadContext()->SetRecordedException(scriptContext->GetThreadContext()->GetPendingTerminatedErrorObject());
         return JsErrorScriptTerminated;
     }
-    catch (Js::OutOfMemoryException)
-    {
-        return JsErrorOutOfMemory;
-    }
-    catch (Js::StackOverflowException)
-    {
-        return JsErrorOutOfMemory;
-    }
-    catch (JsrtExceptionBase& e)
-    {
-        return e.GetJsErrorCode();
-    }
-    catch (Js::ExceptionBase)
-    {
-        AssertMsg(false, "Unexpected engine exception.");
-        return JsErrorFatal;
-    }
-    catch (...)
-    {
-        AssertMsg(false, "Unexpected non-engine exception.");
-        return JsErrorFatal;
-    }
+
+    CATCH_OTHER_EXCEPTIONS
 
     return errCode;
 }

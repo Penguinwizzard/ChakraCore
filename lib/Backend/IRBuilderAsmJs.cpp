@@ -110,6 +110,13 @@ IRBuilderAsmJs::Build()
     AssertMsg(sizeof(SymID) >= sizeof(Js::RegSlot), "sizeof(SymID) != sizeof(Js::RegSlot)!!");
 
     offset = m_functionStartOffset;
+    
+    if (!m_jnReader.IsCurrentLocationReadOnly(this->m_func->GetScriptContext()->GetByteCodeAllocator()))
+    {
+        Assert(false);
+        CustomHeap_BadPageState_fatal_error((ULONG_PTR)this);
+        return;
+    }
 
     // Skip the last EndOfBlock opcode
     // EndOfBlock opcode has same value in Asm
@@ -156,7 +163,6 @@ IRBuilderAsmJs::Build()
     for (Js::OpCodeAsmJs newOpcode = (Js::OpCodeAsmJs)m_jnReader.ReadOp(layoutSize); (uint)m_jnReader.GetCurrentOffset() <= lastOffset; newOpcode = (Js::OpCodeAsmJs)m_jnReader.ReadOp(layoutSize))
     {
         Assert(newOpcode != Js::OpCodeAsmJs::EndOfBlock);
-
         AssertMsg(Js::OpCodeUtilAsmJs::IsValidByteCodeOpcode(newOpcode), "Error getting opcode from m_jnReader.Op()");
 
         uint layoutAndSize = layoutSize * Js::OpLayoutTypeAsmJs::Count + Js::OpCodeUtilAsmJs::GetOpCodeLayout(newOpcode);
@@ -177,6 +183,7 @@ IRBuilderAsmJs::Build()
         case Js::LargeLayout * Js::OpLayoutTypeAsmJs::Count + Js::OpLayoutTypeAsmJs::layout: \
             Build##layout<Js::LargeLayoutSizePolicy>(newOpcode, offset); \
             break;
+#define EXCLUDE_FRONTEND_LAYOUT
 #include "ByteCode\LayoutTypesAsmJs.h"
 
         default:
@@ -1077,11 +1084,6 @@ IRBuilderAsmJs::BuildEmpty(Js::OpCodeAsmJs newOpcode, uint32 offset)
         AddInstr(instr, offset);
         break;
 
-    case Js::OpCodeAsmJs::Break:
-        instr = IR::Instr::New(Js::OpCode::Break, m_func);
-        AddInstr(instr, offset);
-        break;
-
     case Js::OpCodeAsmJs::Label:
         // NOP
         break;
@@ -1775,62 +1777,6 @@ IRBuilderAsmJs::BuildAsmReg1(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegSl
 
 template <typename SizePolicy>
 void
-IRBuilderAsmJs::BuildAsmReg2(Js::OpCodeAsmJs newOpcode, uint32 offset)
-{
-    // Used only by bytecode generator
-    Assert(UNREACHED);
-}
-
-template <typename SizePolicy>
-void
-IRBuilderAsmJs::BuildAsmReg3(Js::OpCodeAsmJs newOpcode, uint32 offset)
-{
-    // Used only by bytecode generator
-    Assert(UNREACHED);
-}
-
-template <typename SizePolicy>
-void
-IRBuilderAsmJs::BuildAsmReg4(Js::OpCodeAsmJs newOpcode, uint32 offset)
-{
-    // Used only by bytecode generator
-    Assert(UNREACHED);
-}
-
-template <typename SizePolicy>
-void
-IRBuilderAsmJs::BuildAsmReg5(Js::OpCodeAsmJs newOpcode, uint32 offset)
-{
-    // Used only by bytecode generator
-    Assert(UNREACHED);
-}
-
-#ifdef SIMD_JS_ENABLED
-template <typename SizePolicy>
-void
-IRBuilderAsmJs::BuildAsmReg6(Js::OpCodeAsmJs newOpcode, uint32 offset)
-{
-    // Used only by bytecode generator
-    Assert(UNREACHED);
-}
-template <typename SizePolicy>
-void
-IRBuilderAsmJs::BuildAsmReg7(Js::OpCodeAsmJs newOpcode, uint32 offset)
-{
-    // Used only by bytecode generator
-    Assert(UNREACHED);
-}
-template <typename SizePolicy>
-void
-IRBuilderAsmJs::BuildAsmReg2IntConst1(Js::OpCodeAsmJs newOpcode, uint32 offset)
-{
-    // Used only by bytecode generator
-    Assert(UNREACHED);
-}
-#endif
-
-template <typename SizePolicy>
-void
 IRBuilderAsmJs::BuildInt1Double1(Js::OpCodeAsmJs newOpcode, uint32 offset)
 {
     Assert(OpCodeAttrAsmJs::HasMultiSizeLayout(newOpcode));
@@ -2249,47 +2195,6 @@ IRBuilderAsmJs::BuildDouble1Addr1(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::
 
     IR::Instr * instr = IR::Instr::New(Js::OpCode::Ld_A, dstOpnd, memRefOpnd, m_func);
     AddInstr(instr, offset);
-}
-
-template <typename SizePolicy>
-void
-IRBuilderAsmJs::BuildFloat1Addr1(Js::OpCodeAsmJs newOpcode, uint32 offset)
-{
-    Assert(OpCodeAttrAsmJs::HasMultiSizeLayout(newOpcode));
-    auto layout = m_jnReader.GetLayout<Js::OpLayoutT_Float1Addr1<SizePolicy>>();
-    BuildFloat1Addr1(newOpcode, offset, layout->F0, layout->A1);
-}
-
-void
-IRBuilderAsmJs::BuildFloat1Addr1(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegSlot dstFloatReg, const float * addr)
-{
-    Assert(newOpcode == Js::OpCodeAsmJs::Ld_FltAddr);
-
-    Js::RegSlot dstRegSlot = GetRegSlotFromDoubleReg(dstFloatReg);
-
-    IR::RegOpnd * dstOpnd = BuildDstOpnd(dstRegSlot, TyFloat32);
-    dstOpnd->SetValueType(ValueType::Float);
-
-    IR::MemRefOpnd * memRefOpnd = IR::MemRefOpnd::New((void*)addr, TyMachPtr, m_func);
-
-    IR::Instr * instr = IR::Instr::New(Js::OpCode::Ld_A, dstOpnd, memRefOpnd, m_func);
-    AddInstr(instr, offset);
-}
-
-template <typename SizePolicy>
-void
-IRBuilderAsmJs::BuildDouble1Const2(Js::OpCodeAsmJs newOpcode, uint32 offset)
-{
-    // REVIEW: There are no opcodes that use this layout -- should be removed?
-    Assert(UNREACHED);
-}
-
-template <typename SizePolicy>
-void
-IRBuilderAsmJs::BuildDouble2Const1(Js::OpCodeAsmJs newOpcode, uint32 offset)
-{
-    // REVIEW: There are no opcodes that use this layout -- should be removed?
-    Assert(UNREACHED);
 }
 
 template <typename SizePolicy>

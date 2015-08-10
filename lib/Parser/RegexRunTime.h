@@ -152,6 +152,13 @@ namespace UnifiedRegex
 
         void FreeBody(ArenaAllocator* rtAllocator);
 
+        inline CaseInsensitive::MappingSource GetCaseMappingSource() const
+        {
+            return (flags & UnicodeRegexFlag) != 0
+                ? CaseInsensitive::MappingSource::CaseFolding
+                : CaseInsensitive::MappingSource::UnicodeData;
+        }
+
 #if ENABLE_REGEX_CONFIG_OPTIONS
         void Print(DebugWriter* w);
 #endif
@@ -308,6 +315,17 @@ namespace UnifiedRegex
         wchar_t cs[3];
 
         inline Char3Mixin(wchar_t c0, wchar_t c1, wchar_t c2) { cs[0] = c0; cs[1] = c1; cs[2] = c2; }
+
+#if ENABLE_REGEX_CONFIG_OPTIONS
+        void Print(DebugWriter* w, const wchar_t* litbuf) const;
+#endif
+    };
+
+    struct Char4Mixin
+    {
+        wchar_t cs[4];
+
+        inline Char4Mixin(wchar_t c0, wchar_t c1, wchar_t c2, wchar_t c3) { cs[0] = c0; cs[1] = c1; cs[2] = c2; cs[3] = c3; }
 
 #if ENABLE_REGEX_CONFIG_OPTIONS
         void Print(DebugWriter* w, const wchar_t* litbuf) const;
@@ -792,6 +810,13 @@ namespace UnifiedRegex
     struct MatchChar3Inst : Inst, Char3Mixin
     {
         inline MatchChar3Inst(Char c0, Char c1, Char c2) : Inst(MatchChar3), Char3Mixin(c0, c1, c2) {}
+
+        INST_BODY
+    };
+
+    struct MatchChar4Inst : Inst, Char4Mixin
+    {
+        inline MatchChar4Inst(Char c0, Char c1, Char c2, Char c3) : Inst(MatchChar4), Char4Mixin(c0, c1, c2, c3) {}
 
         INST_BODY
     };
@@ -1787,6 +1812,7 @@ namespace UnifiedRegex
 
         // Specialized matcher for regex c - case insensitive
         __inline bool MatchSingleCharCaseInsensitive(const Char* const input, const CharCount inputLength, CharCount offset, const Char c);
+        __inline bool MatchSingleCharCaseInsensitiveSticky(const Char* const input, CharCount offset, const Char c);
 
         // Specialized matcher for regex c - case sensitive
         __inline bool MatchSingleCharCaseSensitive(const Char* const input, const CharCount inputLength, CharCount offset, const Char c);

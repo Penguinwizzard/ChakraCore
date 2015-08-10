@@ -410,7 +410,7 @@ namespace Js
         Recycler* recycler = this->m_scriptContext->GetRecycler();
         propertyRecordList = RecyclerNew(recycler, Js::PropertyRecordList, recycler);
 
-        bool isDebugReparse = m_scriptContext->IsInDebugOrSourceRundownMode();
+        bool isDebugReparse = m_scriptContext->IsInDebugOrSourceRundownMode() && !this->m_utf8SourceInfo->GetIsLibraryCode();
         bool isAsmJsReparse = false;
         bool isReparse = isDebugReparse;
 
@@ -451,7 +451,9 @@ namespace Js
                 PHASE_PRINT_TESTTRACE1(Js::DeferParsePhase, L"TestTrace: Deferred function parsed - ID: %d; Display Name: %s; Length: %d; Nested Function Count: %d; Utf8SourceInfo: %d; Source Length: %d\n; Is Top Level: %s;", m_functionNumber, m_displayName, this->m_cchLength, this->GetNestedCount(),  this->m_utf8SourceInfo->GetSourceInfoId(), this->m_utf8SourceInfo->GetCchLength(), this->GetIsTopLevel() ? L"True" : L"False");
             }
 
-            if (CONFIG_FLAG(DeferTopLevelTillFirstCall) && !this->GetIsTopLevel() && !this->GetSourceContextInfo()->IsDynamic())
+            if (!this->GetIsTopLevel() && 
+                !this->GetSourceContextInfo()->IsDynamic() &&
+                this->m_scriptContext->DoUndeferGlobalFunctions())
             {
                 this->m_utf8SourceInfo->UndeferGlobalFunctions([this](JsUtil::SimpleDictionaryEntry<Js::LocalFunctionId, Js::ParseableFunctionInfo*> func)
                 {
@@ -561,6 +563,11 @@ namespace Js
                     grfscr &= ~fscrDeferFncParse; // Disable deferred parsing if not DeferNested, or doing a debug/asm.js re-parse
                 }
 
+                if (isReparse)
+                {
+                    grfscr |= fscrNoAsmJs; // Disable asm.js when debugging or if linking failed
+                }
+
                 // TODO: is ETW tracing possible/necessary here?
 
                 BEGIN_TRANSLATE_EXCEPTION_TO_HRESULT
@@ -572,7 +579,7 @@ namespace Js
                     uint nextFunctionId = funcBody->GetLocalFunctionId();
                     hrParser = ps.ParseSourceWithOffset(&parseTree, pszStart, offset, length, charOffset, isCesu8, grfscr, &se,
                         &nextFunctionId, funcBody->GetRelativeLineNumber(), funcBody->GetSourceContextInfo(),
-                        funcBody, isReparse, isReparse);
+                        funcBody, isReparse);
                     Assert(FAILED(hrParser) || nextFunctionId == funcBody->deferredParseNextFunctionId || isReparse || isByteCodeDeserialization);
 
                     if (FAILED(hrParser))
@@ -719,7 +726,7 @@ namespace Js
         // if parser throws, it will be caught by function trying to bytecode gen the asm.js module, so don't need to catch/rethrow here
         hrParser = ps->ParseSourceWithOffset(parseTree, pszStart, offset, length, charOffset, isCesu8, grfscr, se,
                     &nextFunctionId, funcBody->GetRelativeLineNumber(), funcBody->GetSourceContextInfo(),
-                    funcBody, false, false);
+                    funcBody, false);
 
         Assert(FAILED(hrParser) || funcBody->deferredParseNextFunctionId == nextFunctionId);
         if (FAILED(hrParser))
@@ -2071,13 +2078,19 @@ namespace Js
             SetProbeBackingBlock(probeBackingBlock);
         }
 
-        // Make sure Break opcode only need one byte
-        Assert(OpCodeUtil::IsSmallEncodedOpcode(OpCode::Break));
-        Assert(!OpCodeAttr::HasMultiSizeLayout(OpCode::Break));
-        *(byte *)(pbyteCodeBlockBuffer + offset) = (byte)OpCode::Break;
+        {
+            AutoCriticalSection cs(this->GetScriptContext()->GetByteCodeAllocator()->GetCriticalSection());
+            this->GetScriptContext()->EnsureByteCodeAllocationReadWrite(this->GetByteCode()->GetAllocation());
+
+            // Make sure Break opcode only need one byte
+            Assert(OpCodeUtil::IsSmallEncodedOpcode(OpCode::Break));
+            Assert(!OpCodeAttr::HasMultiSizeLayout(OpCode::Break));
+            *(byte *) (pbyteCodeBlockBuffer + offset) = (byte) OpCode::Break;
+
+            this->GetScriptContext()->EnsureByteCodeAllocationReadOnly(this->GetByteCode()->GetAllocation());
+        }
 
         ++m_sourceInfo.m_probeCount;
-
         return true;
     }
 
@@ -2089,9 +2102,15 @@ namespace Js
         }
         byte* pbyteCodeBlockBuffer = byteCodeBlock->GetBuffer();
 
-        Js::OpCode originalOpCode = ByteCodeReader::PeekByteOp(GetProbeBackingBlock()->GetBuffer() + offset);
-        *(pbyteCodeBlockBuffer + offset) = (byte)originalOpCode;
+        {
+            AutoCriticalSection cs(this->GetScriptContext()->GetByteCodeAllocator()->GetCriticalSection());
+            this->GetScriptContext()->EnsureByteCodeAllocationReadWrite(this->GetByteCode()->GetAllocation());
 
+            Js::OpCode originalOpCode = ByteCodeReader::PeekByteOp(GetProbeBackingBlock()->GetBuffer() + offset);
+            *(pbyteCodeBlockBuffer + offset) = (byte) originalOpCode;
+
+            this->GetScriptContext()->EnsureByteCodeAllocationReadOnly(this->GetByteCode()->GetAllocation());
+        }
         --m_sourceInfo.m_probeCount;
         AssertMsg(m_sourceInfo.m_probeCount >= 0, "Probe (Break Point) count became negative!");
 
@@ -2173,7 +2192,7 @@ namespace Js
         }
         else
         {
-            newFunctionBody->byteCodeBlock = this->byteCodeBlock->Clone(this->m_scriptContext->GetRecycler());
+            newFunctionBody->byteCodeBlock = this->byteCodeBlock->Clone(this->m_scriptContext->GetRecycler(), this->m_scriptContext);
 
             newFunctionBody->isByteCodeDebugMode = this->isByteCodeDebugMode;
             newFunctionBody->m_byteCodeCount = this->m_byteCodeCount;
@@ -2185,7 +2204,7 @@ namespace Js
 #endif
             if (this->auxBlock)
             {
-                newFunctionBody->auxBlock = this->auxBlock->Clone(this->m_scriptContext->GetRecycler());
+                newFunctionBody->auxBlock = this->auxBlock->Clone(this->m_scriptContext->GetRecycler(), this->m_scriptContext);
 
 #ifdef PERF_COUNTERS
                 byteCodeSize += this->auxBlock->GetLength();
@@ -2194,7 +2213,7 @@ namespace Js
 
             if (this->auxContextBlock)
             {
-                newFunctionBody->auxContextBlock = this->auxContextBlock->Clone(scriptContext->GetRecycler(), scriptContext);
+                newFunctionBody->auxContextBlock = this->auxContextBlock->Clone(scriptContext->GetRecycler(), scriptContext, this->m_scriptContext);
 #ifdef PERF_COUNTERS
                 byteCodeSize += this->auxContextBlock->GetLength();
 #endif
@@ -2202,7 +2221,7 @@ namespace Js
 
             if (this->GetProbeBackingBlock())
             {
-                newFunctionBody->SetProbeBackingBlock(this->GetProbeBackingBlock()->Clone(scriptContext->GetRecycler()));
+                newFunctionBody->SetProbeBackingBlock(this->GetProbeBackingBlock()->Clone(scriptContext->GetRecycler(), this->m_scriptContext));
                 newFunctionBody->m_sourceInfo.m_probeCount = m_sourceInfo.m_probeCount;
             }
 
@@ -6199,6 +6218,23 @@ namespace Js
         if (cleanedUp)
         {
             return;
+        }
+        
+        if (this->GetScriptContext() != nullptr && this->IsFunctionBody())
+        {
+            FunctionBody * functionBody = this->GetFunctionBody();
+            if (functionBody->GetByteCode() != nullptr && functionBody->GetByteCode()->GetAllocation() != nullptr)
+            {
+                this->GetScriptContext()->FreeByteCodeAllocation(functionBody->GetByteCode()->GetAllocation());
+            }
+            if (functionBody->GetAuxiliaryContextData() != nullptr && functionBody->GetAuxiliaryContextData()->GetAllocation() != nullptr)
+            {
+                this->GetScriptContext()->FreeByteCodeAllocation(functionBody->GetAuxiliaryContextData()->GetAllocation());
+            }
+            if (functionBody->GetAuxiliaryData() != nullptr && functionBody->GetAuxiliaryData()->GetAllocation() != nullptr)
+            {
+                this->GetScriptContext()->FreeByteCodeAllocation(functionBody->GetAuxiliaryData()->GetAllocation());
+            }
         }
 
         CleanupRecyclerData(isScriptContextClosing, false /* capture entry point cleanup stack trace */);
