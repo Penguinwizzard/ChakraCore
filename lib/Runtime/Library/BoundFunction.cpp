@@ -38,18 +38,8 @@ namespace Js
             type->SetPrototype(proto);
         }
         // If targetFunction is proxy, need to make sure that traps are called in right order as per 19.2.3.2 in RC#4 dated April 3rd 2015.
-        // Here although we won't use value of length, this is just to make sure that we call traps envoled for HasOwnProperty(Target, "length") and Get(Target, "length")
         if (JavascriptProxy::Is(targetFunction))
         {
-            if (JavascriptOperators::HasOwnProperty(targetFunction, PropertyIds::length, scriptContext) == TRUE)
-            {
-                int len = 0;
-                Var varLength;
-                if (targetFunction->GetProperty(targetFunction, PropertyIds::length, &varLength, NULL, scriptContext))
-                {
-                    len = JavascriptConversion::ToInt32(varLength, scriptContext);
-                }
-            }
             EnsureObjectReady();
         }
 
@@ -304,4 +294,24 @@ namespace Js
         return false;
     }
 
+    Var BoundFunction::GetLengthForInitialization(ScriptContext *requestContext) const
+    {
+        Var zero = TaggedInt::ToVarUnchecked(0);
+
+        // Even though we can get the same result using the return value of the GetProperty()
+        // call below, we need to call the proxy trap as per the "Function.prototype.bind"
+        // section of the spec.
+        if (!JavascriptOperators::HasOwnProperty(targetFunction, PropertyIds::length, requestContext))
+        {
+            return zero;
+        }
+
+        Var varLength;
+        targetFunction->GetProperty(targetFunction, PropertyIds::length, &varLength, nullptr, requestContext);
+        double length = JavascriptConversion::ToInteger(varLength, requestContext);
+        varLength = length <= this->count
+            ? zero
+            : JavascriptNumber::ToVarNoCheck(length - this->count, requestContext);
+        return varLength;
+    }
 } // namespace Js

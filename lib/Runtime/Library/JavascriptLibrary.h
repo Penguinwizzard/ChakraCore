@@ -209,6 +209,8 @@ namespace Js
         // Function Types
         DynamicTypeHandler * functionTypeHandler;
         DynamicTypeHandler * functionWithPrototypeTypeHandler;
+        DynamicTypeHandler * userDefinedFunctionWithoutPrototypeTypeHandler;
+        DynamicTypeHandler * userDefinedFunctionWithPrototypeTypeHandler;
         DynamicType * externalFunctionWithDeferredPrototypeType;
         DynamicType * wrappedFunctionWithDeferredPrototypeType;
         DynamicType * stdCallFunctionWithDeferredPrototypeType;
@@ -402,6 +404,11 @@ namespace Js
         static SimpleTypeHandler<1> SharedFunctionWithLengthTypeHandler;
         static SimpleTypeHandler<1> SharedIdMappedFunctionWithPrototypeTypeHandler;
         static MissingPropertyTypeHandler MissingPropertyHolderTypeHandler;
+
+        static SimpleTypeHandler<1> SharedUserDefinedFunctionWithoutPrototypeAndWithoutNameTypeHandler;
+        static SimpleTypeHandler<2> SharedUserDefinedFunctionWithoutPrototypeAndWithNameTypeHandler;
+        static SimpleTypeHandler<2> SharedUserDefinedFunctionWithPrototypeAndWithoutNameTypeHandler;
+        static SimpleTypeHandler<3> SharedUserDefinedFunctionWithPrototypeAndWithNameTypeHandler;
 
         static SimplePropertyDescriptor SharedFunctionPropertyDescriptors[2];
         static SimplePropertyDescriptor HeapArgumentsPropertyDescriptorsV11[2];
@@ -735,8 +742,10 @@ namespace Js
         static DynamicTypeHandler * GetDeferredPrototypeGeneratorFunctionTypeHandler(ScriptContext* scriptContext);
         DynamicType * CreateDeferredPrototypeGeneratorFunctionType(JavascriptMethod entrypoint, bool isShared = false);
         static DynamicTypeHandler * GetDeferredPrototypeFunctionTypeHandler(ScriptContext* scriptContext);
+        static DynamicTypeHandler * GetDeferredUserDefinedFunctionWithPrototypeTypeHandler(ScriptContext* scriptContext);
         static DynamicTypeHandler * GetDeferredBoundFunctionTypeHandler(ScriptContext* scriptContext);
         DynamicTypeHandler * GetDeferredFunctionTypeHandler();
+        DynamicTypeHandler * GetDeferredUserDefinedFunctionWithoutPrototypeTypeHandler();
         DynamicType * CreateDeferredPrototypeFunctionType(JavascriptMethod entrypoint, bool isShared = false);
         DynamicType * CreateFunctionType(JavascriptMethod entrypoint, RecyclableObject* prototype = nullptr);
         DynamicType * CreateFunctionWithLengthType(FunctionInfo * functionInfo);
@@ -1041,7 +1050,7 @@ namespace Js
         void InitializeDiagnosticsScriptObject(DiagnosticsScriptObject* newDiagnosticsScriptObject);
 
         static void __cdecl InitializeGeneratorFunction(DynamicObject* function, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
-        template<bool addPrototype>
+        template<bool addPrototype, bool addLength>
         static void __cdecl InitializeFunction(DynamicObject* function, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
 
 #ifdef ENABLE_NATIVE_CODEGEN

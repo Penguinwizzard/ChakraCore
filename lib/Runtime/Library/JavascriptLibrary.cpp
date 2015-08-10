@@ -20,6 +20,31 @@ namespace Js
     SimpleTypeHandler<1> JavascriptLibrary::SharedFunctionWithLengthTypeHandler(BuiltInPropertyRecords::length);
     MissingPropertyTypeHandler JavascriptLibrary::MissingPropertyHolderTypeHandler;
 
+    SimpleTypeHandler<1> JavascriptLibrary::SharedUserDefinedFunctionWithoutPrototypeAndWithoutNameTypeHandler(
+        BuiltInPropertyRecords::length,
+        PropertyConfigurable);
+    static SimplePropertyDescriptor SharedUserDefinedFunctionWithoutPrototypeAndWithNamePropertyDescriptors[2] =
+    {
+        SimplePropertyDescriptor(BuiltInPropertyRecords::length, PropertyConfigurable),
+        SimplePropertyDescriptor(BuiltInPropertyRecords::name, PropertyConfigurable | PropertyWritable)
+    };
+    SimpleTypeHandler<2> JavascriptLibrary::SharedUserDefinedFunctionWithoutPrototypeAndWithNameTypeHandler(
+        SharedUserDefinedFunctionWithoutPrototypeAndWithNamePropertyDescriptors);
+    static SimplePropertyDescriptor SharedUserDefinedFunctionWithPrototypeAndWithoutNamePropertyDescriptors[2] =
+    {
+        SimplePropertyDescriptor(BuiltInPropertyRecords::prototype, PropertyWritable),
+        SimplePropertyDescriptor(BuiltInPropertyRecords::length, PropertyConfigurable)
+    };
+    SimpleTypeHandler<2> JavascriptLibrary::SharedUserDefinedFunctionWithPrototypeAndWithoutNameTypeHandler(
+        SharedUserDefinedFunctionWithPrototypeAndWithoutNamePropertyDescriptors);
+    static SimplePropertyDescriptor SharedUserDefinedFunctionWithPrototypeAndWithNamePropertyDescriptors[3] =
+    {
+        SimplePropertyDescriptor(BuiltInPropertyRecords::prototype, PropertyWritable),
+        SimplePropertyDescriptor(BuiltInPropertyRecords::length, PropertyConfigurable),
+        SimplePropertyDescriptor(BuiltInPropertyRecords::name, PropertyConfigurable | PropertyWritable)
+    };
+    SimpleTypeHandler<3> JavascriptLibrary::SharedUserDefinedFunctionWithPrototypeAndWithNameTypeHandler(
+        SharedUserDefinedFunctionWithPrototypeAndWithNamePropertyDescriptors);
 
     SimplePropertyDescriptor JavascriptLibrary::HeapArgumentsPropertyDescriptorsV11[2] =
     {
@@ -696,6 +721,15 @@ namespace Js
         }
         functionWithPrototypeTypeHandler->SetHasKnownSlot0();
 
+        userDefinedFunctionWithoutPrototypeTypeHandler =
+            config->IsES6FunctionNameEnabled()
+                ? static_cast<DynamicTypeHandler*>(&SharedUserDefinedFunctionWithoutPrototypeAndWithNameTypeHandler)
+                : static_cast<DynamicTypeHandler*>(&SharedUserDefinedFunctionWithoutPrototypeAndWithoutNameTypeHandler);
+        userDefinedFunctionWithPrototypeTypeHandler =
+            config->IsES6FunctionNameEnabled()
+                ? static_cast<DynamicTypeHandler*>(&SharedUserDefinedFunctionWithPrototypeAndWithNameTypeHandler)
+                : static_cast<DynamicTypeHandler*>(&SharedUserDefinedFunctionWithPrototypeAndWithoutNameTypeHandler);
+
         externalFunctionWithDeferredPrototypeType = CreateDeferredPrototypeFunctionType(JavascriptExternalFunction::ExternalFunctionThunk, true);
         wrappedFunctionWithDeferredPrototypeType = CreateDeferredPrototypeFunctionType(JavascriptExternalFunction::WrappedFunctionThunk, true);
         stdCallFunctionWithDeferredPrototypeType = CreateDeferredPrototypeFunctionType(JavascriptExternalFunction::StdCallExternalFunctionThunk, true);
@@ -855,31 +889,54 @@ namespace Js
 
     void JavascriptLibrary::InitializeGeneratorFunction(DynamicObject *function, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
-        typeHandler->Convert(function, function->GetType()->GetLibrary()->functionWithPrototypeTypeHandler);
+        typeHandler->Convert(function, function->GetType()->GetLibrary()->userDefinedFunctionWithPrototypeTypeHandler);
         function->SetPropertyWithAttributes(PropertyIds::prototype, function->GetType()->GetLibrary()->CreateGeneratorConstructorPrototypeObject(), PropertyWritable, nullptr);
 
-        if (function->GetScriptContext()->GetConfig()->IsES6FunctionNameEnabled())
+        ScriptContext *scriptContext = function->GetScriptContext();
+
+        Var length = static_cast<JavascriptGeneratorFunction *>(function)->GetLengthForInitialization(scriptContext);
+        function->SetPropertyWithAttributes(PropertyIds::length, length, PropertyConfigurable, nullptr);
+
+        if (scriptContext->GetConfig()->IsES6FunctionNameEnabled())
         {
             function->SetPropertyWithAttributes(PropertyIds::name, ((Js::JavascriptFunction*)function)->GetDisplayName(true), PropertyConfigurable, nullptr);
         }
     }
 
 
-    template<bool addPrototype>
+    template<bool addPrototype, bool userDefinedFunction>
     void JavascriptLibrary::InitializeFunction(DynamicObject *function, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
+        JavascriptFunction *javascriptFunction  = Js::JavascriptFunction::FromVar(function);
+
         JavascriptLibrary* javascriptLibrary = function->GetType()->GetLibrary();
         if (!addPrototype)
         {
-            typeHandler->Convert(function, javascriptLibrary->functionTypeHandler);
+            DynamicTypeHandler *newTypeHandler = userDefinedFunction
+                ? static_cast<DynamicTypeHandler *>(javascriptLibrary->userDefinedFunctionWithoutPrototypeTypeHandler)
+                : static_cast<DynamicTypeHandler *>(javascriptLibrary->functionTypeHandler);
+            typeHandler->Convert(function, newTypeHandler);
         }
         else
         {
-            typeHandler->Convert(function, javascriptLibrary->functionWithPrototypeTypeHandler);
-            function->SetProperty(PropertyIds::prototype, javascriptLibrary->CreateConstructorPrototypeObject((Js::JavascriptFunction *)function), PropertyOperation_None, nullptr);
+            DynamicTypeHandler *newTypeHandler = userDefinedFunction
+                ? static_cast<DynamicTypeHandler *>(javascriptLibrary->userDefinedFunctionWithPrototypeTypeHandler)
+                : static_cast<DynamicTypeHandler *>(javascriptLibrary->functionWithPrototypeTypeHandler);
+            typeHandler->Convert(function, newTypeHandler);
+            function->SetProperty(PropertyIds::prototype, javascriptLibrary->CreateConstructorPrototypeObject(javascriptFunction), PropertyOperation_None, nullptr);
         }
 
-        if (function->GetScriptContext()->GetConfig()->IsES6FunctionNameEnabled())
+        ScriptContext *scriptContext = function->GetScriptContext();
+
+        if (javascriptFunction->IsScriptFunction() || javascriptFunction->IsBoundFunction())
+        {
+            Var length = javascriptFunction->IsScriptFunction()
+                ? TaggedInt::ToVarUnchecked(javascriptFunction->GetFunctionProxy()->EnsureDeserialized()->GetReportedInParamsCount() - 1)
+                : static_cast<BoundFunction *>(javascriptFunction)->GetLengthForInitialization(scriptContext);
+            javascriptFunction->SetPropertyWithAttributes(PropertyIds::length, length, PropertyConfigurable, nullptr);
+        }
+
+        if (scriptContext->GetConfig()->IsES6FunctionNameEnabled())
         {
             if (ScriptFunction::Is(function))
             {
@@ -903,6 +960,8 @@ namespace Js
         {
             switch (propertyId)
             {
+            case PropertyIds::length:
+                return true;
             case PropertyIds::name:
                 return isNameAvailable;
             }
@@ -910,7 +969,7 @@ namespace Js
         }
     };
 
-    template<bool isNameAvailable>
+    template<bool isLengthAvailable, bool isNameAvailable>
     class InitializeFunctionDeferredTypeHandlerFilter
     {
     public:
@@ -919,6 +978,8 @@ namespace Js
         {
             switch (propertyId)
             {
+            case PropertyIds::length:
+                return isLengthAvailable;
             case PropertyIds::prototype:
                 return true;
             case PropertyIds::name:
@@ -932,11 +993,11 @@ namespace Js
     {
         if (scriptContext->GetConfig()->IsES6FunctionNameEnabled())
         {
-            return DeferredTypeHandler<InitializeFunction<false>, InitializeBoundFunctionDeferredTypeHandlerFilter<true>>::GetDefaultInstance();
+            return DeferredTypeHandler<InitializeFunction<false, true>, InitializeBoundFunctionDeferredTypeHandlerFilter<true>>::GetDefaultInstance();
         }
         else
         {
-            return DeferredTypeHandler<InitializeFunction<false>, InitializeBoundFunctionDeferredTypeHandlerFilter<false>>::GetDefaultInstance();
+            return DeferredTypeHandler<InitializeFunction<false, true>, InitializeBoundFunctionDeferredTypeHandlerFilter<false>>::GetDefaultInstance();
         }
     }
 
@@ -944,50 +1005,77 @@ namespace Js
     {
         if (scriptContext->GetConfig()->IsES6FunctionNameEnabled())
         {
-            return DeferredTypeHandler<InitializeGeneratorFunction, InitializeFunctionDeferredTypeHandlerFilter<true>>::GetDefaultInstance();
+            return DeferredTypeHandler<InitializeGeneratorFunction, InitializeFunctionDeferredTypeHandlerFilter<true, true>>::GetDefaultInstance();
         }
         else
         {
-            return DeferredTypeHandler<InitializeGeneratorFunction, InitializeFunctionDeferredTypeHandlerFilter<false>>::GetDefaultInstance();
+            return DeferredTypeHandler<InitializeGeneratorFunction, InitializeFunctionDeferredTypeHandlerFilter<true, false>>::GetDefaultInstance();
         }
 
     }
+
     DynamicTypeHandler * JavascriptLibrary::GetDeferredPrototypeFunctionTypeHandler(ScriptContext* scriptContext)
     {
         if (scriptContext->GetConfig()->IsES6FunctionNameEnabled())
         {
-            return DeferredTypeHandler<InitializeFunction<true>, InitializeFunctionDeferredTypeHandlerFilter<true>>::GetDefaultInstance();
+            return DeferredTypeHandler<InitializeFunction<true, false>, InitializeFunctionDeferredTypeHandlerFilter<false, true>>::GetDefaultInstance();
         }
         else
         {
-            return DeferredTypeHandler<InitializeFunction<true>, InitializeFunctionDeferredTypeHandlerFilter<false>>::GetDefaultInstance();
+            return DeferredTypeHandler<InitializeFunction<true, false>, InitializeFunctionDeferredTypeHandlerFilter<false, false>>::GetDefaultInstance();
         }
     }
+
+    DynamicTypeHandler * JavascriptLibrary::GetDeferredUserDefinedFunctionWithPrototypeTypeHandler(ScriptContext* scriptContext)
+    {
+        if (scriptContext->GetConfig()->IsES6FunctionNameEnabled())
+        {
+            return DeferredTypeHandler<InitializeFunction<true, true>, InitializeFunctionDeferredTypeHandlerFilter<true, true>>::GetDefaultInstance();
+        }
+        else
+        {
+            return DeferredTypeHandler<InitializeFunction<true, true>, InitializeFunctionDeferredTypeHandlerFilter<true, false>>::GetDefaultInstance();
+        }
+    }
+
     DynamicType * JavascriptLibrary::CreateDeferredPrototypeGeneratorFunctionType(JavascriptMethod entrypoint, bool isShared)
     {
         return DynamicType::New(scriptContext, TypeIds_Function, generatorFunctionPrototype, entrypoint,
             GetDeferredPrototypeGeneratorFunctionTypeHandler(scriptContext), isShared, isShared);
     }
 
+    template <bool isLengthAvailable>
+    class InitializeFunctionDeferredTypeHandlerFilterName
+    {
+    public:
+        static bool HasFilter() { return true; }
+        static bool HasProperty(PropertyId propertyId)
+        {
+            switch (propertyId)
+            {
+            case PropertyIds::length:
+                return isLengthAvailable;
+            case PropertyIds::name:
+                return true;
+            }
+            return false;
+        }
+    };
+
     DynamicTypeHandler * JavascriptLibrary::GetDeferredFunctionTypeHandler()
     {
         if (this->GetScriptContext()->GetConfig()->IsES6FunctionNameEnabled())
         {
-            class InitializeFunctionDeferredTypeHandlerFilterName
-            {
-            public:
-                static bool HasFilter() { return true; }
-                static bool HasProperty(PropertyId propertyId)
-                {
-                    switch (propertyId)
-                    {
-                    case PropertyIds::name:
-                        return true;
-                    }
-                    return false;
-                }
-            };
-            return DeferredTypeHandler<InitializeFunction<false>, InitializeFunctionDeferredTypeHandlerFilterName>::GetDefaultInstance();
+            return DeferredTypeHandler<InitializeFunction<false, false>, InitializeFunctionDeferredTypeHandlerFilterName<false>>::GetDefaultInstance();
+        }
+        return functionTypeHandler;
+    }
+
+    DynamicTypeHandler * JavascriptLibrary::GetDeferredUserDefinedFunctionWithoutPrototypeTypeHandler()
+    {
+        if (this->GetScriptContext()->GetConfig()->IsES6FunctionNameEnabled())
+        {
+            return DeferredTypeHandler<InitializeFunction<false, true>, InitializeFunctionDeferredTypeHandlerFilterName<true>>::GetDefaultInstance();
         }
         return functionTypeHandler;
     }
@@ -997,6 +1085,7 @@ namespace Js
         return DynamicType::New(scriptContext, TypeIds_Function, functionPrototype, entrypoint,
             GetDeferredPrototypeFunctionTypeHandler(scriptContext), isShared, isShared);
     }
+
     DynamicType * JavascriptLibrary::CreateFunctionType(JavascriptMethod entrypoint, RecyclableObject* prototype)
     {
         if (prototype == nullptr)
@@ -5330,8 +5419,8 @@ namespace Js
             if (ScriptFunction::Is(function))
         {
             Assert(!function->GetFunctionInfo()->IsLambda() ?
-                function->GetDynamicType()->GetTypeHandler() == JavascriptLibrary::GetDeferredPrototypeFunctionTypeHandler(this->GetScriptContext()) :
-                function->GetDynamicType()->GetTypeHandler() == JavascriptLibrary::GetDeferredFunctionTypeHandler());
+                function->GetDynamicType()->GetTypeHandler() == JavascriptLibrary::GetDeferredUserDefinedFunctionWithPrototypeTypeHandler(this->GetScriptContext()) :
+                function->GetDynamicType()->GetTypeHandler() == JavascriptLibrary::GetDeferredUserDefinedFunctionWithoutPrototypeTypeHandler());
             // TODO: Theoratically, we can share the cross site thunk here too, but the entry point
             // is a mess :(,   just create a new unshared type and set the cross site thunk
             function->ChangeType();

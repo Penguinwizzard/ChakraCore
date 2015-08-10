@@ -440,13 +440,34 @@ namespace Js
     }
 
     template<size_t size>
+    BOOL SimpleTypeHandler<size>::InitProperty(DynamicObject* instance, PropertyId propertyId, Var value, PropertyOperationFlags flags, PropertyValueInfo* info)
+    {
+        return SetProperty_Internal(instance, propertyId, value, flags, info, true /* isInit */);
+    }
+
+    template<size_t size>
     BOOL SimpleTypeHandler<size>::SetProperty(DynamicObject* instance, PropertyId propertyId, Var value, PropertyOperationFlags flags, PropertyValueInfo* info)
+    {
+        return SetProperty_Internal(instance, propertyId, value, flags, info);
+    }
+
+    template<size_t size>
+    BOOL SimpleTypeHandler<size>::SetProperty_Internal(DynamicObject* instance, PropertyId propertyId, Var value, PropertyOperationFlags flags, PropertyValueInfo* info, bool isInit)
     {
         ScriptContext* scriptContext = instance->GetScriptContext();
         int index;
         if (GetDescriptor(propertyId, &index))
         {
-            if (descriptors[index].Attributes & PropertyDeleted)
+            if (isInit) {
+                // The way a Class is initialized is that we first create a Function and then initialize its
+                // properties. "length" is allowed to be overridden in the class definition when "length" is
+                // defined as a static class method, but because the function's "length" has already been
+                // defined when we try to define the class method and it isn't writable, this prevents the
+                // override. Therefore, we use the default attributes here to allow that case even though the
+                // property has already been initialized.
+                descriptors[index].Attributes = PropertyDynamicTypeDefaults;
+            }
+            else if (descriptors[index].Attributes & PropertyDeleted)
             {
                 // A locked type should not have deleted properties
                 Assert(!GetIsLocked());
@@ -566,16 +587,23 @@ namespace Js
 
             
             CompileAssert(_countof(descriptors) == size);
-            SetSlotUnchecked(instance, index, null);
-
-            // TODO (jedmiad): Create two different flavors of NullTypeHandler: with and without read-only properties.
-            NullTypeHandlerBase* nullTypeHandler = ((this->GetFlags() & IsPrototypeFlag) != 0) ? 
-                (NullTypeHandlerBase*)NullTypeHandler<true>::GetDefaultInstance() : (NullTypeHandlerBase*)NullTypeHandler<false>::GetDefaultInstance();
-            if (instance->HasReadOnlyPropertiesInvisibleToTypeHandler())
+            if (size > 1)
             {
-                nullTypeHandler->ClearHasOnlyWritableDataProperties();
+                SetAttribute(instance, index, descriptors[index].Attributes | PropertyDeleted);
             }
-            SetInstanceTypeHandler(instance, nullTypeHandler, false);
+            else
+            {
+                SetSlotUnchecked(instance, index, null);
+
+                // TODO (jedmiad): Create two different flavors of NullTypeHandler: with and without read-only properties.
+                NullTypeHandlerBase* nullTypeHandler = ((this->GetFlags() & IsPrototypeFlag) != 0) ? 
+                    (NullTypeHandlerBase*)NullTypeHandler<true>::GetDefaultInstance() : (NullTypeHandlerBase*)NullTypeHandler<false>::GetDefaultInstance();
+                if (instance->HasReadOnlyPropertiesInvisibleToTypeHandler())
+                {
+                    nullTypeHandler->ClearHasOnlyWritableDataProperties();
+                }
+                SetInstanceTypeHandler(instance, nullTypeHandler, false);
+            }
 
             return true;
         }
@@ -1072,5 +1100,6 @@ namespace Js
 
     template class SimpleTypeHandler<1>;
     template class SimpleTypeHandler<2>;
+    template class SimpleTypeHandler<3>;
 
 }

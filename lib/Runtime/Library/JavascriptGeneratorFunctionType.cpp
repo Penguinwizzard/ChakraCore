@@ -7,11 +7,6 @@ namespace Js
 {
     BOOL JavascriptGeneratorFunction::HasProperty(PropertyId propertyId)
     {
-        if (propertyId == PropertyIds::length)
-        {
-            return true;
-        }
-
         if (propertyId == PropertyIds::caller || propertyId == PropertyIds::arguments)
         {
             // JavascriptFunction has special case for caller and arguments; call DynamicObject:: virtual directly to skip that.
@@ -23,12 +18,6 @@ namespace Js
 
     BOOL JavascriptGeneratorFunction::GetProperty(Var originalInstance, PropertyId propertyId, Var* value, PropertyValueInfo* info, ScriptContext* requestContext)
     {
-        BOOL result;
-        if (GetPropertyBuiltIns(originalInstance, propertyId, value, info, requestContext, &result))
-        {
-            return result;
-        }
-
         if (propertyId == PropertyIds::caller || propertyId == PropertyIds::arguments)
         {
             // JavascriptFunction has special case for caller and arguments; call DynamicObject:: virtual directly to skip that.
@@ -45,12 +34,6 @@ namespace Js
 
         if (propertyRecord != nullptr)
         {
-            BOOL result;
-            if (GetPropertyBuiltIns(originalInstance, propertyRecord->GetPropertyId(), value, info, requestContext, &result))
-            {
-                return result;
-            }
-
             if (propertyRecord->GetPropertyId() == PropertyIds::caller || propertyRecord->GetPropertyId() == PropertyIds::arguments)
             {
                 // JavascriptFunction has special case for caller and arguments; call DynamicObject:: virtual directly to skip that.
@@ -61,27 +44,6 @@ namespace Js
         return JavascriptFunction::GetProperty(originalInstance, propertyNameString, value, info, requestContext);
     }
 
-    bool JavascriptGeneratorFunction::GetPropertyBuiltIns(Var originalInstance, PropertyId propertyId, Var* value, PropertyValueInfo* info, ScriptContext* requestContext, BOOL* result)
-    {
-        if (propertyId == PropertyIds::length)
-        {   
-            // Cannot just call the base GetProperty for `length` because we need
-            // to get the length from our private ScriptFunction instead of ourself.
-            int len = 0;
-            Var varLength;
-            if (scriptFunction->GetProperty(scriptFunction, PropertyIds::length, &varLength, NULL, requestContext))
-            {
-                len = JavascriptConversion::ToInt32(varLength, requestContext);
-            }
-
-            *value = JavascriptNumber::ToVar(len, requestContext);
-            *result = true;
-            return true;
-        }
-
-        return false;
-    }
-
     BOOL JavascriptGeneratorFunction::GetPropertyReference(Var originalInstance, PropertyId propertyId, Var* value, PropertyValueInfo* info, ScriptContext* requestContext) 
     {
         return JavascriptGeneratorFunction::GetProperty(originalInstance, propertyId, value, info, requestContext);
@@ -89,12 +51,6 @@ namespace Js
 
     BOOL JavascriptGeneratorFunction::SetProperty(PropertyId propertyId, Var value, PropertyOperationFlags flags, PropertyValueInfo* info)
     {
-        BOOL result;
-        if (SetPropertyBuiltIns(propertyId, value, flags, info, &result))
-        {
-            return result;
-        }
-
         if (propertyId == PropertyIds::caller || propertyId == PropertyIds::arguments)
         {
             // JavascriptFunction has special case for caller and arguments; call DynamicObject:: virtual directly to skip that.
@@ -111,12 +67,6 @@ namespace Js
 
         if (propertyRecord != nullptr)
         {
-            BOOL result;
-            if (SetPropertyBuiltIns(propertyRecord->GetPropertyId(), value, flags, info, &result))
-            {
-                return result;
-            }
-
             if (propertyRecord->GetPropertyId() == PropertyIds::caller || propertyRecord->GetPropertyId() == PropertyIds::arguments)
             {
                 // JavascriptFunction has special case for caller and arguments; call DynamicObject:: virtual directly to skip that.
@@ -125,19 +75,6 @@ namespace Js
         }
 
         return JavascriptFunction::SetProperty(propertyNameString, value, flags, info);
-    }
-
-    bool JavascriptGeneratorFunction::SetPropertyBuiltIns(PropertyId propertyId, Var value, PropertyOperationFlags flags, PropertyValueInfo* info, BOOL* result)
-    {
-        if (propertyId == PropertyIds::length)
-        {
-            JavascriptError::ThrowCantAssignIfStrictMode(flags, this->GetScriptContext());
-
-            *result = false;
-            return true;
-        }
-        
-        return false;
     }
 
     BOOL JavascriptGeneratorFunction::GetAccessors(PropertyId propertyId, Var *getter, Var *setter, ScriptContext * requestContext)
@@ -183,11 +120,6 @@ namespace Js
 
     BOOL JavascriptGeneratorFunction::DeleteProperty(PropertyId propertyId, PropertyOperationFlags flags)
     {
-        if (propertyId == PropertyIds::length)
-        {
-            return false;
-        }
-
         if (propertyId == PropertyIds::caller || propertyId == PropertyIds::arguments)
         {
             // JavascriptFunction has special case for caller and arguments; call DynamicObject:: virtual directly to skip that.
@@ -199,11 +131,6 @@ namespace Js
 
     BOOL JavascriptGeneratorFunction::IsWritable(PropertyId propertyId)
     {
-        if (propertyId == PropertyIds::length)
-        {
-            return false;
-        }
-
         if (propertyId == PropertyIds::caller || propertyId == PropertyIds::arguments)
         {
             // JavascriptFunction has special case for caller and arguments; call DynamicObject:: virtual directly to skip that.
@@ -215,11 +142,6 @@ namespace Js
 
     BOOL JavascriptGeneratorFunction::IsEnumerable(PropertyId propertyId)
     {
-        if (propertyId == PropertyIds::length)
-        {
-            return false;
-        }
-
         if (propertyId == PropertyIds::caller || propertyId == PropertyIds::arguments)
         {
             // JavascriptFunction has special case for caller and arguments; call DynamicObject:: virtual directly to skip that.

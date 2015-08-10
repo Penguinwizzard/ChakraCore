@@ -44,6 +44,7 @@ namespace Js
         virtual BOOL HasProperty(DynamicObject* instance, JavascriptString* propertyNameString) override;
         virtual BOOL GetProperty(DynamicObject* instance, Var originalInstance, PropertyId propertyId, Var* value, PropertyValueInfo* info, ScriptContext* requestContext) override;
         virtual BOOL GetProperty(DynamicObject* instance, Var originalInstance, JavascriptString* propertyNameString, Var* value, PropertyValueInfo* info, ScriptContext* requestContext) override;
+        virtual BOOL InitProperty(DynamicObject* instance, PropertyId propertyId, Var value, PropertyOperationFlags flags, PropertyValueInfo* info) override;
         virtual BOOL SetProperty(DynamicObject* instance, PropertyId propertyId, Var value, PropertyOperationFlags flags, PropertyValueInfo* info) override;
         virtual BOOL SetProperty(DynamicObject* instance, JavascriptString* propertyNameString, Var value, PropertyOperationFlags flags, PropertyValueInfo* info) override;
         virtual DescriptorFlags GetSetter(DynamicObject* instance, PropertyId propertyId, Var* setterValue, PropertyValueInfo* info, ScriptContext* requestContext) override;
@@ -93,11 +94,13 @@ namespace Js
         BOOL GetDescriptor(PropertyId propertyId, int * index);
         BOOL SetAttribute(DynamicObject* instance, int index, PropertyAttributes attribute);
         BOOL ClearAttribute(DynamicObject* instance, int index, PropertyAttributes attribute);
+        BOOL SetProperty_Internal(DynamicObject* instance, PropertyId propertyId, Var value, PropertyOperationFlags flags, PropertyValueInfo* info, bool isInit = false);
         BOOL AddProperty(DynamicObject* instance, PropertyId propertyId, Var value, PropertyAttributes attributes, PropertyValueInfo* info, PropertyOperationFlags flags, SideEffects possibleSideEffects);
         virtual BOOL FreezeImpl(DynamicObject* instance, bool isConvertedType) override;
     };
 
     typedef SimpleTypeHandler<1> SimpleTypeHandlerSize1;
     typedef SimpleTypeHandler<2> SimpleTypeHandlerSize2;
+    typedef SimpleTypeHandler<3> SimpleTypeHandlerSize3;
     
 }

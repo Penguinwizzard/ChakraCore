@@ -122,6 +122,16 @@ namespace Js
         return scriptFunction->GetDisplayNameImpl();
     }
 
+    Var JavascriptGeneratorFunction::GetLengthForInitialization(ScriptContext* scriptContext) const
+    {
+        Var length;
+        if (!scriptFunction->GetProperty(scriptFunction, PropertyIds::length, &length, nullptr, scriptContext))
+        {
+            length = TaggedInt::ToVarUnchecked(0);
+        }
+        return length;
+    }
+
     Var JavascriptGeneratorFunction::GetHomeObj() const
     {
         return scriptFunction->GetHomeObj();

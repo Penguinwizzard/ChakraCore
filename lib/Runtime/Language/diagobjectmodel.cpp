@@ -2276,11 +2276,6 @@ namespace Js
                                         InsertItem(originalObject, object, propertyId, isConst, isUnScoped, &pMethodsGroupWalker);
                                     }
                                 }
-                                else if (Js::JavascriptFunction::FromVar(object)->IsScriptFunction() || Js::JavascriptFunction::FromVar(object)->IsBoundFunction())
-                                {
-                                    // Adding special property length for the scriptfunction, like it is done in JavascriptFunction::GetSpecialNonEnumerablePropertyName
-                                    InsertItem(originalObject, object, PropertyIds::length, true/*not editable*/, false /*isUnScoped*/, &pMethodsGroupWalker);
-                                }
                             }
                         }
 

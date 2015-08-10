@@ -50,6 +50,8 @@ namespace Js
 
         virtual bool CloneMethod(JavascriptFunction** pnewMethod, const Var newHome) override;
 
+        Var GetLengthForInitialization(ScriptContext *requestContext) const;
+
         // Below functions are used by debugger to identify and emit event handler information
         virtual bool IsBoundFunction() { return true; }
         JavascriptFunction * GetTargetFunction() const;
