@@ -23,7 +23,7 @@ namespace Js
         virtual bool IsDeferrable() = 0;
     };
 
-    class SimpleSourceHolder : public ISourceHolder
+    class SimpleSourceHolder sealed : public ISourceHolder
     {
         friend class ISourceHolder;
     private:

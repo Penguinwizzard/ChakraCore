@@ -7,9 +7,7 @@
 #include "JsrtExternalObject.h"
 #include "JsrtExternalArrayBuffer.h"
 
-// REVIEW: ChakraCore Dependency
-#include "JsrtByteCodeSourceMapper.h"
-#include "..\..\..\private\lib\engine\DynamicSourceHolder.h"
+#include "JsrtSourceHolder.h"
 
 JsErrorCode CheckContext(JsrtContext *currentContext, bool verifyRuntimeState, bool allowInObjectBeforeCollectCallback)
 {
@@ -2656,19 +2654,13 @@ JsErrorCode RunSerializedScriptCore(const wchar_t *script, _In_ JsSerializedScri
         {
             Assert(scriptLoadCallback == NULL);
             Assert(scriptUnloadCallback == NULL);
-            JsErrorCode error = Js::ByteCodeSourceMapper::ScriptToUtf8(scriptContext, script, &utf8Source, &utf8Length, &length);
-            if (error != JsNoError)
-            {
-                return error;
-            }
+            Js::JsrtSourceHolder::ScriptToUtf8(scriptContext, script, &utf8Source, &utf8Length, &length);          
         }
         else
         {
             PARAM_NOT_NULL(scriptLoadCallback);
-            PARAM_NOT_NULL(scriptUnloadCallback);
-            IActiveScriptByteCodeSource* byteCodeSource = HeapNew(Js::ByteCodeSourceMapper, scriptLoadCallback, scriptUnloadCallback, sourceContext);
-            sourceHolder = (Js::DynamicSourceHolder *)RecyclerNewFinalized(scriptContext->GetRecycler(), Js::DynamicSourceHolder, byteCodeSource);
-            byteCodeSource->Release();
+            PARAM_NOT_NULL(scriptUnloadCallback);            
+            sourceHolder = RecyclerNewFinalized(scriptContext->GetRecycler(), Js::JsrtSourceHolder, scriptLoadCallback, scriptUnloadCallback, sourceContext);            
         }
 
         SourceContextInfo *sourceContextInfo;

@@ -334,6 +334,7 @@ ULONG64 AutoSystemInfo::GetAvailableCommit()
     // -1 indicates that we can't get the value from the API, so don't keep trying.
     this->availableCommit = (ULONG64)-1;
 
+#ifdef NTBUILD
     HMODULE hModule = LoadLibraryExW(L"kernel32.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
 
     if (hModule)
@@ -356,7 +357,7 @@ ULONG64 AutoSystemInfo::GetAvailableCommit()
             }
         }
     }
-
+#endif
     return this->availableCommit;
 }
 

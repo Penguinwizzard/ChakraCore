@@ -7,7 +7,7 @@
     <ProjectGuid>{706083F7-6AA4-4558-A153-6352EF9220F5}</ProjectGuid>
     <RootNamespace>JS</RootNamespace>
     <Keyword>Win32Proj</Keyword>
-  </PropertyGroup>  
+  </PropertyGroup>
   <PropertyGroup Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
   </PropertyGroup>
@@ -36,7 +36,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)Jsrt.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)JsrtByteCodeSourceMapper.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JsrtContext.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JsrtExternalArrayBuffer.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JsrtExternalObject.cpp" />
@@ -45,15 +44,16 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)JsrtPch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)JsrtSourceHolder.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="chakrart.h" />
-    <ClInclude Include="JsrtByteCodeSourceMapper.h" />
     <ClInclude Include="JsrtContext.h" />
     <ClInclude Include="JsrtCustomEnumerator.h" />
     <ClInclude Include="JsrtExternalArrayBuffer.h" />
     <ClInclude Include="JsrtExternalObject.h" />
     <ClInclude Include="JsrtRuntime.h" />
+    <ClInclude Include="JsrtSourceHolder.h" />
     <ClInclude Include="JsrtThreadService.h" />
     <ClInclude Include="JsrtInternal.h" />
     <ClInclude Include="JsrtExceptionBase.h" />
