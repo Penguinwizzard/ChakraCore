@@ -3921,6 +3921,27 @@ GlobOpt::CollectMemcopyLdElementI(IR::Instr *instr, Loop *loop)
         return;
     }
 
+    const ValueType baseValueType(baseOp->GetValueType());
+    // Additionnal checks only if not a typed array
+    if (!baseValueType.IsTypedArray())
+    {
+        IR::ArrayRegOpnd *baseArrayOp = baseOp->AsRegOpnd()->AsArrayRegOpnd();
+
+        if (!baseArrayOp->EliminatedLowerBoundCheck() || !baseArrayOp->EliminatedUpperBoundCheck())
+        {
+#if DBG_DUMP
+            if (PHASE_TRACE(Js::MemOpPhase, this->func->GetJnFunction()) || PHASE_TRACE(Js::MemCopyPhase, this->func->GetJnFunction()))
+            {
+                wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
+                Output::Print(L"Memcopy skipped for missing bounds check optimization: Function: %s %s,  Loop: %d\n", this->func->GetJnFunction()->GetDisplayName(), this->func->GetJnFunction()->GetDebugNumberSet(debugStringBuffer), loop->GetLoopNumber());
+                Output::Flush();
+            }
+#endif       
+            loop->InvalidateMemcopyCandidate(baseSymID);
+            return;
+        }
+    }
+
     Assert(indexOp->GetStackSym());
 
     SymID inductionSymID = GetInductionVariableSymID(GetVarSymID(indexOp->GetStackSym()), this->currentBlock->loop);
