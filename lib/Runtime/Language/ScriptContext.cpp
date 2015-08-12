@@ -1371,7 +1371,45 @@ namespace Js
         memset(propertyStrings[i]->strLen2, 0, sizeof(PropertyString*)* 80);
     }
 
+    void ScriptContext::TrackPid(const PropertyRecord* propertyRecord)
+    {
+        if (IsBuiltInPropertyId(propertyRecord->GetPropertyId()) || propertyRecord->IsBound())
+        {
+            return;
+        }
 
+        if (-1 != this->GetLibrary()->EnsureReferencedPropertyRecordList()->AddNew(propertyRecord))
+        {
+            RECYCLER_PERF_COUNTER_INC(PropertyRecordBindReference);
+        }
+    }
+    void ScriptContext::TrackPid(PropertyId propertyId)
+    {
+        if (IsBuiltInPropertyId(propertyId))
+        {
+            return;
+        }
+        const PropertyRecord* propertyRecord = this->GetPropertyName(propertyId);
+        Assert(propertyRecord != null);
+        this->TrackPid(propertyRecord);
+    }
+
+    bool ScriptContext::IsTrackedPropertyId(Js::PropertyId propertyId)
+    {
+        if (IsBuiltInPropertyId(propertyId))
+        {
+            return true;
+        }
+        const PropertyRecord* propertyRecord = this->GetPropertyName(propertyId);
+        Assert(propertyRecord != null);
+        if (propertyRecord->IsBound())
+        {
+            return true;
+        }
+        JavascriptLibrary::ReferencedPropertyRecordHashSet * referencedPropertyRecords
+            = this->GetLibrary()->GetReferencedPropertyRecordList();
+        return referencedPropertyRecords && referencedPropertyRecords->Contains(propertyRecord);
+    }
     PropertyString* ScriptContext::AddPropertyString2(const Js::PropertyRecord* propString)
     {
         const wchar_t* buf = propString->GetBuffer();

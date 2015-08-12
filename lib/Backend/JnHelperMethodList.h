@@ -138,7 +138,7 @@ HELPERCALL(Op_StrictEqualString, Js::JavascriptOperators::StrictEqualString, 0)
 HELPERCALL(Op_StrictEqualEmptyString, Js::JavascriptOperators::StrictEqualEmptyString, 0)
 HELPERCALL(Op_NotStrictEqual, Js::JavascriptOperators::NotStrictEqual, 0)
 
-HELPERCALL(Op_SwitchStringLookUp, Js::JavascriptOperators::Op_SwitchStringLookUp, 0)
+HELPERCALL(Op_SwitchStringLookUp, Js::JavascriptNativeOperators::Op_SwitchStringLookUp, 0)
 
 HELPERCALL(Op_HasProperty, Js::JavascriptOperators::OP_HasProperty, 0)
 HELPERCALL(Op_GetProperty, Js::JavascriptOperators::OP_GetProperty, AttrCanThrow)

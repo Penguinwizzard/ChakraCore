@@ -14,7 +14,7 @@
 typedef JsUtil::List<NativeOffsetInlineeFramePair, ArenaAllocator> InlineeFrameMap;
 typedef JsUtil::List<IR::PragmaInstr*, ArenaAllocator> PragmaInstrList;
 typedef JsUtil::List<uint32, ArenaAllocator> OffsetList;
-typedef JsUtil::List<Js::BranchJumpTableWrapper*, ArenaAllocator> JmpTableList;
+typedef JsUtil::List<BranchJumpTableWrapper*, ArenaAllocator> JmpTableList;
 
 class Encoder
 {

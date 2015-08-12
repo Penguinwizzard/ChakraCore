@@ -7,7 +7,7 @@
     <ProjectGuid>{706083F7-6AA4-4558-A153-6352EF9110F8}</ProjectGuid>
     <RootNamespace>JS</RootNamespace>
     <Keyword>Win32Proj</Keyword>
-  </PropertyGroup>  
+  </PropertyGroup>
   <PropertyGroup Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
   </PropertyGroup>
@@ -115,6 +115,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\StdAfx.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptNativeOperators.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="amd64\stackframe.h">
@@ -159,6 +160,7 @@
     <ClInclude Include="InlineCachePointerArray.h" />
     <ClInclude Include="JavascriptExceptionOperators.h" />
     <ClInclude Include="JavascriptMathOperators.h" />
+    <ClInclude Include="JavascriptNativeOperators.h" />
     <ClInclude Include="LeaveScriptObject.h" />
     <ClInclude Include="MutationBreakpoint.h" />
     <ClInclude Include="ProfilingHelpers.h" />

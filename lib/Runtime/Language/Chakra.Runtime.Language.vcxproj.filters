@@ -64,6 +64,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)arm\stackframe.cpp">
       <Filter>arm</Filter>
     </ClCompile>
+    <ClCompile Include="JavascriptNativeOperators.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AsmJS.h" />
@@ -133,6 +134,7 @@
     <ClInclude Include="ScriptContextBase.h" />
     <ClInclude Include="AsmJSTypes.h" />
     <ClInclude Include="AsmJsBuiltinNames.h" />
+    <ClInclude Include="JavascriptNativeOperators.h" />
   </ItemGroup>
   <ItemGroup>
     <MASM Include="$(MSBuildThisFileDirectory)amd64\amd64_Thunks.asm">

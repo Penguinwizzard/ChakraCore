@@ -142,51 +142,7 @@ public:
         PropertyIndex LookupInline(PropertyId propId,int typePathLength);
 
     private:
-        int AddInternal(const PropertyRecord* propId)
-        {
-            Assert(pathLength < this->pathSize);
-            if (pathLength >= this->pathSize)
-            {
-                Throw::InternalError();
-            }
-
-
-            // The previous dictionary did not replace on dupes.
-            // I believe a dupe here would be a bug, but to be conservative
-            // replicate the exact previous behavior.
-#if DBG
-            PropertyIndex temp;
-            if (map.TryGetValue(propId->GetPropertyId(), &temp, assignments))
-            {
-                AssertMsg(false, "Adding a duplicate to the type path");
-            }
-#endif 
-            map.Add((unsigned int)propId->GetPropertyId(), (byte)pathLength);
-
-#ifdef SUPPORT_FIXED_FIELDS_ON_PATH_TYPES
-            if (PHASE_VERBOSE_TRACE1(FixMethodPropsPhase))
-            {
-                Output::Print(L"FixedFields: TypePath::AddInternal: singleton = 0x%p(0x%p)\n", 
-                    this->singletonInstance, this->singletonInstance != null ? this->singletonInstance->Get() : null);
-                Output::Print(L"   fixed fields:");
-
-                for (PropertyIndex i = 0; i < GetPathLength(); i++)
-                {
-                    Output::Print(L" %s %d%d%d,", GetPropertyId(i)->GetBuffer(),
-                        i < GetMaxInitializedLength() ? 1 : 0,
-                        GetIsFixedFieldAt(i, GetPathLength()) ? 1 : 0,
-                        GetIsUsedFixedFieldAt(i, GetPathLength()) ? 1 : 0);
-                }
-                
-                Output::Print(L"\n");
-            }
-#endif
-
-            assignments[pathLength]=propId;
-            pathLength++;
-            return (pathLength-1);
-        }
-
+        int AddInternal(const PropertyRecord* propId);
 
 #ifdef SUPPORT_FIXED_FIELDS_ON_PATH_TYPES
         int GetMaxInitializedLength() { return this->maxInitializedLength; }
@@ -278,101 +234,11 @@ public:
             return this->singletonInstance != null && typePathLength >= this->maxInitializedLength;
         }
 
-        void AddBlankFieldAt(PropertyIndex index, int typePathLength)
-        {
-            Assert(index >= this->maxInitializedLength);
-            this->maxInitializedLength = index + 1;
+        void AddBlankFieldAt(PropertyIndex index, int typePathLength);
 
-#ifdef SUPPORT_FIXED_FIELDS_ON_PATH_TYPES
-            if (PHASE_VERBOSE_TRACE1(FixMethodPropsPhase))
-            {
-                Output::Print(L"FixedFields: TypePath::AddBlankFieldAt: singleton = 0x%p(0x%p)\n", 
-                    this->singletonInstance, this->singletonInstance != null ? this->singletonInstance->Get() : null);
-                Output::Print(L"   fixed fields:");
+        void AddSingletonInstanceFieldAt(DynamicObject* instance, PropertyIndex index, bool isFixed, int typePathLength);
 
-                for (PropertyIndex i = 0; i < GetPathLength(); i++)
-                {
-                    Output::Print(L" %s %d%d%d,", GetPropertyId(i)->GetBuffer(),
-                        i < GetMaxInitializedLength() ? 1 : 0,
-                        GetIsFixedFieldAt(i, GetPathLength()) ? 1 : 0,
-                        GetIsUsedFixedFieldAt(i, GetPathLength()) ? 1 : 0);
-                }
-                
-                Output::Print(L"\n");
-            }
-#endif
-        }
-
-        void AddSingletonInstanceFieldAt(DynamicObject* instance, PropertyIndex index, bool isFixed, int typePathLength)
-        {
-            Assert(index < this->pathLength);
-            Assert(typePathLength >= this->maxInitializedLength);
-            Assert(index >= this->maxInitializedLength);
-            // This invariant is predicated on the properties getting initialized in the order of indexes in the type handler.
-            Assert(instance != null);
-            Assert(this->singletonInstance == null || this->singletonInstance->Get() == instance);
-            Assert(!fixedFields.Test(index) && !usedFixedFields.Test(index));
-
-            if (this->singletonInstance == null)
-            {
-                this->singletonInstance = instance->CreateWeakReferenceToSelf();
-            }
-
-            this->maxInitializedLength = index + 1;
-
-            if (isFixed)
-            {
-                this->fixedFields.Set(index);
-            }
-
-#ifdef SUPPORT_FIXED_FIELDS_ON_PATH_TYPES
-            if (PHASE_VERBOSE_TRACE1(FixMethodPropsPhase))
-            {
-                Output::Print(L"FixedFields: TypePath::AddSingletonInstanceFieldAt: singleton = 0x%p(0x%p)\n", 
-                    this->singletonInstance, this->singletonInstance != null ? this->singletonInstance->Get() : null);
-                Output::Print(L"   fixed fields:");
-
-                for (PropertyIndex i = 0; i < GetPathLength(); i++)
-                {
-                    Output::Print(L" %s %d%d%d,", GetPropertyId(i)->GetBuffer(),
-                        i < GetMaxInitializedLength() ? 1 : 0,
-                        GetIsFixedFieldAt(i, GetPathLength()) ? 1 : 0,
-                        GetIsUsedFixedFieldAt(i, GetPathLength()) ? 1 : 0);
-                }
-                
-                Output::Print(L"\n");
-            }
-#endif
-        }
-
-        void AddSingletonInstanceFieldAt(PropertyIndex index, int typePathLength)
-        {
-            Assert(index < this->pathLength);
-            Assert(typePathLength >= this->maxInitializedLength);
-            Assert(index >= this->maxInitializedLength);
-            Assert(!fixedFields.Test(index) && !usedFixedFields.Test(index));
-
-            this->maxInitializedLength = index + 1;
-
-#ifdef SUPPORT_FIXED_FIELDS_ON_PATH_TYPES
-            if (PHASE_VERBOSE_TRACE1(FixMethodPropsPhase))
-            {
-                Output::Print(L"FixedFields: TypePath::AddSingletonInstanceFieldAt: singleton = 0x%p(0x%p)\n", 
-                    this->singletonInstance, this->singletonInstance != null ? this->singletonInstance->Get() : null);
-                Output::Print(L"   fixed fields:");
-
-                for (PropertyIndex i = 0; i < GetPathLength(); i++)
-                {
-                    Output::Print(L" %s %d%d%d,", GetPropertyId(i)->GetBuffer(),
-                        i < GetMaxInitializedLength() ? 1 : 0,
-                        GetIsFixedFieldAt(i, GetPathLength()) ? 1 : 0,
-                        GetIsUsedFixedFieldAt(i, GetPathLength()) ? 1 : 0);
-                }
-                
-                Output::Print(L"\n");
-            }
-#endif
-        }
+        void AddSingletonInstanceFieldAt(PropertyIndex index, int typePathLength);
 
 #if DBG
         bool HasSingletonInstanceOnlyIfNeeded();
