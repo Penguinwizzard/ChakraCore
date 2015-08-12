@@ -9157,7 +9157,7 @@ Lowerer::LowerJumpTableMultiBranch(IR::MultiBranchInstr * multiBrInstr, IR::RegO
     IR::RegOpnd * nativeJumpTableReg = IR::RegOpnd::New(TyMachPtr, func);
     m_lowererMD.CreateAssign(nativeJumpTableReg, nativeJumpTable, multiBrInstr);
 
-    Js::BranchJumpTableWrapper * branchJumpTable = multiBrInstr->GetBranchJumpTable();
+    BranchJumpTableWrapper * branchJumpTable = multiBrInstr->GetBranchJumpTable();
     AssertMsg(branchJumpTable->labelInstr == nullptr, "Should not be already assigned");
     branchJumpTable->labelInstr = nativeJumpTableLabel;
 

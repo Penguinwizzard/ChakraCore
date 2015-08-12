@@ -121,7 +121,7 @@ Encoder::Encode()
                 if (multiBranchInstr->m_isSwitchBr &&
                     (multiBranchInstr->m_kind == IR::MultiBranchInstr::IntJumpTable || multiBranchInstr->m_kind == IR::MultiBranchInstr::SingleCharStrJumpTable))
                 {
-                    Js::BranchJumpTableWrapper * branchJumpTableWrapper = multiBranchInstr->GetBranchJumpTable();
+                    BranchJumpTableWrapper * branchJumpTableWrapper = multiBranchInstr->GetBranchJumpTable();
                     if (jumpTableListForSwitchStatement == nullptr)
                     {
                         jumpTableListForSwitchStatement = Anew(m_tempAlloc, JmpTableList, m_tempAlloc);;
@@ -564,7 +564,7 @@ void Encoder::TryCopyAndAddRelocRecordsForSwitchJumpTableEntries(BYTE *codeStart
     JitArenaAllocator * allocator = this->m_func->m_alloc;
     EncoderMD * encoderMD = &m_encoderMD;
 
-    jumpTableListForSwitchStatement->Map([&](uint index, Js::BranchJumpTableWrapper * branchJumpTableWrapper) -> void
+    jumpTableListForSwitchStatement->Map([&](uint index, BranchJumpTableWrapper * branchJumpTableWrapper) -> void
     {
         Assert(branchJumpTableWrapper != nullptr);
 
@@ -590,7 +590,7 @@ void Encoder::TryCopyAndAddRelocRecordsForSwitchJumpTableEntries(BYTE *codeStart
 
         jmpTableStartAddress += (jmpTableSizeInBytes);
         
-        Js::BranchJumpTableWrapper::Delete(allocator, branchJumpTableWrapper);
+        BranchJumpTableWrapper::Delete(allocator, branchJumpTableWrapper);
     });
 
     Assert(jmpTableStartAddress == codeStart + codeSize);

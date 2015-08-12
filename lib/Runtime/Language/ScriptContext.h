@@ -432,46 +432,10 @@ namespace Js
 
         bool IsUndeclBlockVar(Var var) const { return this->javascriptLibrary->IsUndeclBlockVar(var); }
         
-        void TrackPid(const PropertyRecord* propertyRecord)
-        {
-            if (IsBuiltInPropertyId(propertyRecord->GetPropertyId()) || propertyRecord->IsBound())
-            {
-                return;
-            }
-                       
-            if (-1 != this->GetLibrary()->EnsureReferencedPropertyRecordList()->AddNew(propertyRecord))
-            {
-                RECYCLER_PERF_COUNTER_INC(PropertyRecordBindReference);
-            }            
-        }
-        void TrackPid(PropertyId propertyId)
-        {
-            if (IsBuiltInPropertyId(propertyId))
-            {
-                return;
-            }
-            const PropertyRecord* propertyRecord = this->GetPropertyName(propertyId);
-            Assert(propertyRecord != null);
-            this->TrackPid(propertyRecord);
-        }
+        void TrackPid(const PropertyRecord* propertyRecord);
+        void TrackPid(PropertyId propertyId);
 
-        bool IsTrackedPropertyId(Js::PropertyId propertyId)
-        {
-            if (IsBuiltInPropertyId(propertyId))
-            {
-                return true;
-            }
-            const PropertyRecord* propertyRecord = this->GetPropertyName(propertyId);
-            Assert(propertyRecord != null);
-            if (propertyRecord->IsBound())
-            {
-                return true;
-            }
-            JavascriptLibrary::ReferencedPropertyRecordHashSet * referencedPropertyRecords 
-                = this->GetLibrary()->GetReferencedPropertyRecordList();
-            return referencedPropertyRecords && referencedPropertyRecords->Contains(propertyRecord);           
-        }
-
+        bool IsTrackedPropertyId(Js::PropertyId propertyId);
         void InvalidateHostObjects()
         {
             AssertMsg(!isClosed, "Host Object invalidation should occur before the engine is fully closed. Figure our how isClosed got set beforehand.");

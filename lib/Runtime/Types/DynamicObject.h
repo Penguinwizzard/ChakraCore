@@ -140,12 +140,12 @@ namespace Js
         DynamicType * GetDynamicType() const { return (DynamicType *)this->GetType(); }
 
         // Check if a typeId is of any array type (JavascriptArray or ES5Array).
-        static inline bool IsAnyArrayTypeId(TypeId typeId);
+        static bool IsAnyArrayTypeId(TypeId typeId);
 
         // Check if a Var is either a JavascriptArray* or ES5Array*.
-        static inline bool IsAnyArray(const Var aValue);
+        static bool IsAnyArray(const Var aValue);
 
-        __inline bool UsesObjectArrayOrFlagsAsFlags() const
+        bool UsesObjectArrayOrFlagsAsFlags() const
         {
             return !!(arrayFlags & DynamicObjectFlags::ObjectArrayFlagsTag);
         }
@@ -155,7 +155,7 @@ namespace Js
             return HasObjectArray() ? GetObjectArrayOrFlagsAsArray() : null;
         }
 
-        __inline bool HasObjectArray() const
+        bool HasObjectArray() const
         {            
             // Only JavascriptArray uses the objectArrayOrFlags as flags.
             Assert(DynamicObject::IsAnyArray((Var)this) || !UsesObjectArrayOrFlagsAsFlags() || IsObjectHeaderInlinedTypeHandler());
@@ -167,7 +167,7 @@ namespace Js
             return HasObjectArrayUnchecked() ? GetObjectArrayOrFlagsAsArray() : null;
         }
 
-        __inline bool HasObjectArrayUnchecked() const
+        bool HasObjectArrayUnchecked() const
         {
             return ((objectArray != null) && !UsesObjectArrayOrFlagsAsFlags() && !IsObjectHeaderInlinedTypeHandlerUnchecked());
         }
@@ -298,7 +298,7 @@ namespace Js
         static DynamicObject * BoxStackInstance(DynamicObject * instance);
     private:
         ArrayObject* EnsureObjectArray();
-        __inline ArrayObject* GetObjectArrayOrFlagsAsArray() const { return objectArray; }
+        ArrayObject* GetObjectArrayOrFlagsAsArray() const { return objectArray; }
         
         template <PropertyId propertyId>
         BOOL ToPrimitiveImpl(Var* result, ScriptContext * requestContext);

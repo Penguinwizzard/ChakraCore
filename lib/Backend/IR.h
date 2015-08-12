@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "Language\JavascriptNativeOperators.h"
+
 class Func;
 class BasicBlock;
 class Region;
@@ -27,6 +29,38 @@ struct CapturedValues
 };
 
 class LoweredBasicBlock;
+
+class BranchJumpTableWrapper
+{
+public:
+
+    BranchJumpTableWrapper(uint tableSize) : defaultTarget(null), labelInstr(nullptr), tableSize(tableSize)
+    {
+    }
+
+    void** jmpTable;
+    void* defaultTarget;
+    IR::LabelInstr * labelInstr;
+    int tableSize;
+
+    static BranchJumpTableWrapper* New(JitArenaAllocator * allocator, uint tableSize)
+    {
+        BranchJumpTableWrapper * branchTargets = JitAnew(allocator, BranchJumpTableWrapper, tableSize);
+
+        //Create the jump table for integers
+
+        void* * jmpTable = JitAnewArrayZ(allocator, void*, tableSize);
+        branchTargets->jmpTable = jmpTable;
+        return branchTargets;
+    }
+
+    static void Delete(JitArenaAllocator * allocator, BranchJumpTableWrapper * branchTargets)
+    {
+        Assert(allocator != nullptr && branchTargets != nullptr);
+        JitAdeleteArray(allocator, branchTargets->tableSize, branchTargets->jmpTable);
+        JitAdelete(allocator, branchTargets);
+    }
+};
 
 namespace IR {
 
@@ -723,7 +757,7 @@ private:
     typedef Js::JavascriptString* TBranchKey;
     typedef Js::BranchDictionaryWrapper<TBranchKey> BranchDictionaryWrapper;
     typedef BranchDictionaryWrapper::BranchDictionary BranchDictionary;
-    typedef Js::BranchJumpTableWrapper BranchJumpTable;
+    typedef BranchJumpTableWrapper BranchJumpTable;
 
     void * m_branchTargets;                     //can point to a dictionary or a jump table
 

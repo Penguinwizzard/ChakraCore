@@ -84,59 +84,7 @@ namespace Js
         functionBody->GetDynamicProfileInfo()->RecordFieldAccess(functionBody, inlineCacheIndex, var, FldInfo_NoInfo); \
     TYPEOF_ERROR_HANDLER_THROW(scriptContext, var)
 
-    template <typename T>
-    class BranchDictionaryWrapper
-    {
-    public:
-        typedef JsUtil::BaseDictionary<T, void*, NativeCodeData::Allocator> BranchDictionary;
-
-        BranchDictionaryWrapper(NativeCodeData::Allocator * allocator, uint dictionarySize) : 
-            defaultTarget(null), dictionary(allocator)
-        {
-        }
-
-        BranchDictionary dictionary;
-        void* defaultTarget;
-
-        static BranchDictionaryWrapper* New(NativeCodeData::Allocator * allocator, uint dictionarySize)
-        {
-            return NativeCodeDataNew(allocator, BranchDictionaryWrapper, allocator, dictionarySize);            
-        }
-
-    };
     
-    class BranchJumpTableWrapper
-    {
-    public:
-
-        BranchJumpTableWrapper(uint tableSize) : defaultTarget(null), labelInstr(nullptr), tableSize(tableSize)
-        {
-        }
-
-        void** jmpTable;
-        void* defaultTarget;
-        IR::LabelInstr * labelInstr;
-        int tableSize;
-
-        static BranchJumpTableWrapper* New(JitArenaAllocator * allocator, uint tableSize)
-        {
-            BranchJumpTableWrapper * branchTargets = JitAnew(allocator, BranchJumpTableWrapper, tableSize);
-
-            //Create the jump table for integers
-            
-            void* * jmpTable = JitAnewArrayZ(allocator, void*, tableSize);
-            branchTargets->jmpTable = jmpTable;
-            return branchTargets;
-        }
-
-        static void Delete(JitArenaAllocator * allocator, BranchJumpTableWrapper * branchTargets)
-        {
-            Assert(allocator != nullptr && branchTargets != nullptr);
-            JitAdeleteArray(allocator, branchTargets->tableSize, branchTargets->jmpTable);
-            JitAdelete(allocator, branchTargets);
-        }
-    };
-
     class JavascriptOperators  /* All static */
     {
     // Methods
@@ -191,8 +139,6 @@ namespace Js
         static BOOL StrictEqualString(Var aLeft, Var aRight);
         static BOOL StrictEqualEmptyString(Var aLeft);
         static BOOL NotStrictEqual(Var aLeft, Var aRight,ScriptContext* scriptContext);
-
-        static void * Op_SwitchStringLookUp(JavascriptString* str, Js::BranchDictionaryWrapper<Js::JavascriptString*>* stringDictionary, uintptr funcStart, uintptr funcEnd);
 
         static BOOL HasOwnProperty(Var instance, PropertyId propertyId, ScriptContext * requestContext);
         static BOOL GetOwnProperty(Var instance, PropertyId propertyId, Var* value, ScriptContext* requestContext);

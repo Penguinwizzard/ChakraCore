@@ -563,7 +563,7 @@ MultiBranchInstr::CreateBranchTargetsAndSetDefaultTarget(int size, Kind kind, ui
     case SingleCharStrJumpTable:
         {
             JitArenaAllocator * jitAllocator = this->m_func->GetTopFunc()->m_alloc;
-            Js::BranchJumpTableWrapper * branchTargets = Js::BranchJumpTableWrapper::New(jitAllocator, size);
+            BranchJumpTableWrapper * branchTargets = BranchJumpTableWrapper::New(jitAllocator, size);
             branchTargets->defaultTarget = (void *)defaultTargetOffset;
             this->m_branchTargets = branchTargets;
             break;
