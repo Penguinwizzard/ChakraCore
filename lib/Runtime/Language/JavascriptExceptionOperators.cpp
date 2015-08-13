@@ -39,6 +39,37 @@ namespace Js
             m_threadContext->SetIsUserCode(true);
         }
     }
+
+    JavascriptExceptionOperators::AutoCatchHandlerExists::AutoCatchHandlerExists(ScriptContext* scriptContext)
+    {
+        Assert(scriptContext);
+        m_threadContext = scriptContext->GetThreadContext();
+        Assert(m_threadContext);
+        m_previousCatchHandlerExists = m_threadContext->HasCatchHandler();
+        m_threadContext->SetHasCatchHandler(TRUE);
+        m_previousCatchHandlerToUserCodeStatus = m_threadContext->IsUserCode();
+        if (scriptContext->IsInDebugMode())
+        {
+            FetchNonUserCodeStatus(scriptContext);
+        }
+    }
+
+    JavascriptExceptionOperators::AutoCatchHandlerExists::~AutoCatchHandlerExists()
+    {
+        m_threadContext->SetHasCatchHandler(m_previousCatchHandlerExists);
+        m_threadContext->SetIsUserCode(m_previousCatchHandlerToUserCodeStatus);
+    }
+
+    bool JavascriptExceptionOperators::CrawlStackForWER(Js::ScriptContext& scriptContext)
+    {
+        return Js::Configuration::Global.flags.WERExceptionSupport && !scriptContext.GetThreadContext()->HasCatchHandler();
+    }
+
+    uint64 JavascriptExceptionOperators::StackCrawlLimitOnThrow(Var thrownObject, ScriptContext& scriptContext)
+    {
+        return CrawlStackForWER(scriptContext) ? MaxStackTraceLimit : GetStackTraceLimit(thrownObject, &scriptContext);
+    }
+
 #ifdef _M_X64
     void *JavascriptExceptionOperators::OP_TryCatch(void          *tryAddr,
                                                     void          *catchAddr,

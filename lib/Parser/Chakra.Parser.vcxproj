@@ -118,8 +118,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="CharTrie.inl" />
+  <ItemGroup>    
     <None Include="jsscan.js" />
   </ItemGroup>
   <ItemGroup>

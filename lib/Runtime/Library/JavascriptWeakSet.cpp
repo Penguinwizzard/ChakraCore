@@ -12,6 +12,18 @@ namespace Js
     {
     }
 
+    bool JavascriptWeakSet::Is(Var aValue)
+    {
+        return JavascriptOperators::GetTypeId(aValue) == TypeIds_WeakSet;
+    }
+
+    JavascriptWeakSet* JavascriptWeakSet::FromVar(Var aValue)
+    {
+        AssertMsg(Is(aValue), "Ensure var is actually a 'JavascriptWeakSet'");
+
+        return static_cast<JavascriptWeakSet *>(RecyclableObject::FromVar(aValue));
+    }
+
     Var JavascriptWeakSet::NewInstance(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);

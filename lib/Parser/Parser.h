@@ -61,7 +61,6 @@ namespace UnifiedRegex {
 #include "RegexParser.h"
 #include "RegexPattern.h"
 
-#include "CharTrie.inl"
 
 #include "pnodewalk.h"
 #include "pnodevisit.h"

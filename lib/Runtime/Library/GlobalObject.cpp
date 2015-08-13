@@ -41,6 +41,17 @@ namespace Js
         library = localLibrary;
     }
 
+    bool GlobalObject::Is(Var aValue)
+    {
+        return RecyclableObject::Is(aValue) && (RecyclableObject::FromVar(aValue)->GetTypeId() == TypeIds_GlobalObject);
+    }
+
+    GlobalObject* GlobalObject::FromVar(Var aValue)
+    {
+        AssertMsg(Is(aValue), "Ensure var is actually a 'GlobalObject'");
+        return static_cast<GlobalObject*>(aValue);
+    }
+
     HRESULT GlobalObject::SetDirectHostObject(RecyclableObject* hostObject, RecyclableObject* secureDirectHostObject)
     {
         HRESULT hr = S_OK;

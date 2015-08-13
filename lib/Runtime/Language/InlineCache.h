@@ -183,29 +183,8 @@ namespace Js
             return TypeWithoutAuxSlotTag(GetRawType());
         }
 
-        template<bool IsAccessor>
-        __inline bool HasDifferentType(const bool isProto, const Type * type, const Type * typeWithoutProperty) const
-        {
-            Assert(!IsAccessor && !isProto || !typeWithoutProperty);
-
-            if(IsAccessor)
-            {
-                return !IsEmpty() && u.accessor.type != type && u.accessor.type != TypeWithAuxSlotTag(type);
-            }
-            if(isProto)
-            {
-                return !IsEmpty() && u.proto.type != type && u.proto.type != TypeWithAuxSlotTag(type);
-            }
-
-            // If the new type matches the cached type, the types without property must also match (unless one of them is null).
-            Assert((u.local.typeWithoutProperty == null || typeWithoutProperty == null) || 
-                ((u.local.type != type || u.local.typeWithoutProperty == typeWithoutProperty) &&
-                (u.local.type != TypeWithAuxSlotTag(type) || u.local.typeWithoutProperty == TypeWithAuxSlotTag(typeWithoutProperty))));
-
-            // Don't consider a cache polymorphic, if it differs only by the typeWithoutProperty.  We can handle this case with
-            // the monomorphic cache.
-            return !IsEmpty() && (u.local.type != type && u.local.type != TypeWithAuxSlotTag(type));
-        }
+        template<bool isAccessor>
+        bool HasDifferentType(const bool isProto, const Type * type, const Type * typeWithoutProperty) const;
 
         bool HasType_Flags(const Type * type) const
         {
@@ -249,7 +228,7 @@ namespace Js
 #endif
 
     public:
-        __inline void CacheLocal(
+        void CacheLocal(
             Type *const type,
             const PropertyId propertyId,
             const PropertyIndex propertyIndex,
@@ -258,7 +237,7 @@ namespace Js
             int requiredAuxSlotCapacity,
             ScriptContext *const requestContext);
 
-        __inline void CacheProto(
+        void CacheProto(
             DynamicObject *const prototypeObjectWithProperty,
             const PropertyId propertyId,
             const PropertyIndex propertyIndex,
@@ -267,7 +246,7 @@ namespace Js
             Type *const type,
             ScriptContext *const requestContext);
 
-        __inline void CacheMissing(
+        void CacheMissing(
             DynamicObject *const missingPropertyHolder,
             const PropertyId propertyId,
             const PropertyIndex propertyIndex,
@@ -275,7 +254,7 @@ namespace Js
             Type *const type,
             ScriptContext *const requestContext);
 
-        __inline void CacheAccessor(
+        void CacheAccessor(
             const bool isGetter,
             const PropertyId propertyId,
             const PropertyIndex propertyIndex,
@@ -291,7 +270,7 @@ namespace Js
             bool CheckAccessor,
             bool CheckMissing,
             bool ReturnOperationInfo>
-        __inline bool TryGetProperty(
+        bool TryGetProperty(
             Var const instance,
             RecyclableObject *const propertyObject,
             const PropertyId propertyId,
@@ -304,7 +283,7 @@ namespace Js
             bool CheckLocalTypeWithoutProperty,
             bool CheckAccessor,
             bool ReturnOperationInfo>
-        __inline bool TrySetProperty(
+        bool TrySetProperty(
             RecyclableObject *const object,
             const PropertyId propertyId,
             Var propertyValue,
@@ -312,18 +291,18 @@ namespace Js
             PropertyCacheOperationInfo *const operationInfo,
             const PropertyOperationFlags propertyOperationFlags = PropertyOperation_None);
 
-        __inline bool PretendTryGetProperty(Type *const type, PropertyCacheOperationInfo * operationInfo);
-        __inline bool PretendTrySetProperty(Type *const type, Type *const oldType, PropertyCacheOperationInfo * operationInfo);
+        bool PretendTryGetProperty(Type *const type, PropertyCacheOperationInfo * operationInfo);
+        bool PretendTrySetProperty(Type *const type, Type *const oldType, PropertyCacheOperationInfo * operationInfo);
 
-        inline void Clear();
+        void Clear();
         template <class TAllocator>
-        inline InlineCache *Clone(TAllocator *const allocator);
-        inline InlineCache *Clone(Js::PropertyId propertyId, ScriptContext* scriptContext);
-        inline void CopyTo(PropertyId propertyId, ScriptContext * scriptContext, InlineCache * const clone);
-        inline bool TryGetFixedMethodFromCache(Js::FunctionBody* functionBody, uint cacheId, Js::JavascriptFunction** pFixedMethod);
+        InlineCache *Clone(TAllocator *const allocator);
+        InlineCache *Clone(Js::PropertyId propertyId, ScriptContext* scriptContext);
+        void CopyTo(PropertyId propertyId, ScriptContext * scriptContext, InlineCache * const clone);
+        bool TryGetFixedMethodFromCache(Js::FunctionBody* functionBody, uint cacheId, Js::JavascriptFunction** pFixedMethod);
 
-        __inline bool GetGetterSetter(Type *const type, RecyclableObject **callee);
-        __inline bool GetCallApplyTarget(RecyclableObject* obj, RecyclableObject **callee);
+        bool GetGetterSetter(Type *const type, RecyclableObject **callee);
+        bool GetCallApplyTarget(RecyclableObject* obj, RecyclableObject **callee);
 
         static uint GetGetterFlagMask()
         {
@@ -415,13 +394,13 @@ namespace Js
             }
         }
 
-        template<bool IsAccessor>
-        __inline bool HasDifferentType(const bool isProto, const Type * type, const Type * typeWithoutProperty) const;
-        __inline bool HasType_Flags(const Type * type) const;
+        template<bool isAccessor>
+        bool HasDifferentType(const bool isProto, const Type * type, const Type * typeWithoutProperty) const;
+        bool HasType_Flags(const Type * type) const;
         
-        __inline InlineCache * GetInlineCaches() const { return inlineCaches; }
-        __inline uint16 GetSize() const { return size; }
-        __inline PolymorphicInlineCache * GetNext() { return next; }
+        InlineCache * GetInlineCaches() const { return inlineCaches; }
+        uint16 GetSize() const { return size; }
+        PolymorphicInlineCache * GetNext() { return next; }
         bool GetIgnoreForEquivalentObjTypeSpec() const { return this->ignoreForEquivalentObjTypeSpec; }
         void SetIgnoreForEquivalentObjTypeSpec(bool value) { this->ignoreForEquivalentObjTypeSpec = value; }
         bool GetCloneForJitTimeUse() const { return this->cloneForJitTimeUse; }
@@ -431,7 +410,7 @@ namespace Js
         virtual void Dispose(bool isShutdown) override { };
         virtual void Mark(Recycler *recycler) override { AssertMsg(false, "Mark called on object that isnt TrackableObject"); }
 
-        __inline void CacheLocal(
+        void CacheLocal(
             Type *const type,
             const PropertyId propertyId,
             const PropertyIndex propertyIndex,
@@ -440,7 +419,7 @@ namespace Js
             int requiredAuxSlotCapacity,
             ScriptContext *const requestContext);
 
-        __inline void CacheProto(
+        void CacheProto(
             DynamicObject *const prototypeObjectWithProperty,
             const PropertyId propertyId,
             const PropertyIndex propertyIndex,
@@ -449,7 +428,7 @@ namespace Js
             Type *const type,
             ScriptContext *const requestContext);
 
-        __inline void CacheAccessor(
+        void CacheAccessor(
             const bool isGetter,
             const PropertyId propertyId,
             const PropertyIndex propertyIndex,
@@ -466,7 +445,7 @@ namespace Js
             bool CheckMissing,
             bool IsInlineCacheAvailable,
             bool ReturnOperationInfo>
-        __inline bool TryGetProperty(
+        bool TryGetProperty(
             Var const instance,
             RecyclableObject *const propertyObject,
             const PropertyId propertyId,
@@ -481,7 +460,7 @@ namespace Js
             bool CheckAccessor,
             bool ReturnOperationInfo,
             bool PopulateInlineCache>
-        __inline bool TrySetProperty(
+        bool TrySetProperty(
             RecyclableObject *const object,
             const PropertyId propertyId,
             Var propertyValue,
@@ -490,23 +469,23 @@ namespace Js
             InlineCache *const inlineCacheToPopulate,
             const PropertyOperationFlags propertyOperationFlags = PropertyOperation_None);
 
-        __inline bool PretendTryGetProperty(Type *const type, PropertyCacheOperationInfo * operationInfo);
-        __inline bool PretendTrySetProperty(Type *const type, Type *const oldType, PropertyCacheOperationInfo * operationInfo);
+        bool PretendTryGetProperty(Type *const type, PropertyCacheOperationInfo * operationInfo);
+        bool PretendTrySetProperty(Type *const type, Type *const oldType, PropertyCacheOperationInfo * operationInfo);
 
         //inline void CopyTo(ScriptContext* scriptContext, PolymorphicInlineCache *const clone);
-        inline void CopyTo(PropertyId propertyId, ScriptContext* scriptContext, PolymorphicInlineCache *const clone);
+        void CopyTo(PropertyId propertyId, ScriptContext* scriptContext, PolymorphicInlineCache *const clone);
 
 #if DBG_DUMP
         void Dump();
 #endif
 
-        __inline uint GetInlineCacheIndexForType(const Type * type) const
+        uint GetInlineCacheIndexForType(const Type * type) const
         {
             return (((size_t)type) >> PolymorphicInlineCacheShift) & (GetSize() - 1);
         }
 
     private:
-        __inline uint GetNextInlineCacheIndex(uint index) const
+        uint GetNextInlineCacheIndex(uint index) const
         {
             if (++index == GetSize())
             {
@@ -516,14 +495,14 @@ namespace Js
         }
 
         template<bool CheckLocal, bool CheckProto, bool CheckAccessor>
-        inline void CloneInlineCacheToEmptySlotInCollision(Type *const type, uint index) ;
+        void CloneInlineCacheToEmptySlotInCollision(Type *const type, uint index) ;
 
 #ifdef CLONE_INLINECACHE_TO_EMPTYSLOT
         template <typename TDelegate>
-        inline bool CheckClonedInlineCache(uint inlineCacheIndex, TDelegate mapper);
+        bool CheckClonedInlineCache(uint inlineCacheIndex, TDelegate mapper);
 #endif
 #if INTRUSIVE_TESTTRACE_PolymorphicInlineCache 
-        __inline uint GetEntryCount()
+        uint GetEntryCount()
         {
             uint count = 0;
             for (uint i = 0; i < size; ++i)
@@ -920,7 +899,7 @@ namespace Js
             Assert(IsConsistent());
         }
 
-        inline static ConstructorCache* EnsureValidInstance(ConstructorCache* currentCache, ScriptContext* scriptContext);
+        static ConstructorCache* EnsureValidInstance(ConstructorCache* currentCache, ScriptContext* scriptContext);
 
         const void* GetAddressOfGuardValue() const
         {
@@ -959,33 +938,7 @@ namespace Js
 #endif
 
     private:
-        void InvalidateOnPrototypeChange()
-        {
-            if (IsDefault(this))
-            {
-                Assert(this->guard.value == CtorCacheGuardValues::Invalid);
-                Assert(!this->content.isPopulated);
-            }
-            else if (this->guard.value == CtorCacheGuardValues::Special && this->content.skipDefaultNewObject)
-            {
-                // Do nothing.  If we skip the default object, changes to the prototype property don't affect
-                // what we'll do during object allocation.
-
-                // Can't assert the following because we set the prototype property during library initialization.
-                // AssertMsg(false, "Overriding a prototype on a built-in constructor should be illegal.");
-            }
-            else
-            {
-                this->guard.value = CtorCacheGuardValues::Invalid;
-                this->content.hasPrototypeChanged = true;
-                // Make sure we don't leak the old type.
-                Assert(this->content.type == null);
-                this->content.pendingType = null;
-                Assert(this->content.pendingType == null);
-                Assert(IsInvalidated());
-            }
-            Assert(IsConsistent());
-        }
+        void InvalidateOnPrototypeChange();
     };
 
     // Caches the result of an instanceof operator over a type and a function

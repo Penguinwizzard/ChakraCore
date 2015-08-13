@@ -79,8 +79,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Jobs.inl" />
-    <None Include="NumberUtilities.inl" />
-    <None Include="Tick.inl" />
+    <None Include="NumberUtilities.inl" />    
     <None Include="vtinfo.inl" />
     <ARMASM Include="$(MSBuildThisFileDirectory)arm\arm_GET_CURRENT_FRAME.asm">
       <ExcludedFromBuild Condition="'$(Platform)'!='ARM'">true</ExcludedFromBuild>

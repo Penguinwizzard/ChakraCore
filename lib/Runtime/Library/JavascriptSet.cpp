@@ -11,6 +11,31 @@ namespace Js
     {
     }
 
+    JavascriptSet* JavascriptSet::New(ScriptContext* scriptContext)
+    {
+        JavascriptSet* set = scriptContext->GetLibrary()->CreateSet();
+        set->set = RecyclerNew(scriptContext->GetRecycler(), SetDataSet, scriptContext->GetRecycler());
+
+        return set;
+    }
+
+    bool JavascriptSet::Is(Var aValue)
+    {
+        return JavascriptOperators::GetTypeId(aValue) == TypeIds_Set;
+    }
+
+    JavascriptSet* JavascriptSet::FromVar(Var aValue)
+    {
+        AssertMsg(Is(aValue), "Ensure var is actually a 'JavascriptSet'");
+
+        return static_cast<JavascriptSet *>(RecyclableObject::FromVar(aValue));
+    }
+
+    JavascriptSet::SetDataList::Iterator JavascriptSet::GetIterator()
+    {
+        return list.GetIterator();
+    }
+
     Var JavascriptSet::NewInstance(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);

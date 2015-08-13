@@ -6,6 +6,35 @@
 
 namespace Js
 {
+    uint ByteBlock::GetLength() const
+    {
+        return m_contentSize;
+    }
+
+    const byte* ByteBlock::GetBuffer() const
+    {
+        return m_content;
+    }
+
+    byte* ByteBlock::GetBuffer()
+    {
+        return m_content;
+    }
+
+    const byte ByteBlock::operator[](uint itemIndex) const
+    {
+        AssertMsg(itemIndex < m_contentSize, "Ensure valid offset");
+
+        return m_content[itemIndex];
+    }
+
+    byte& ByteBlock::operator[] (uint itemIndex)
+    {
+        AssertMsg(itemIndex < m_contentSize, "Ensure valid offset");
+
+        return m_content[itemIndex];
+    }
+
     ByteBlock *ByteBlock::New(Recycler *alloc,const byte * initialContent,int initialContentSize)  
     {
         // initialContent may be 'null' if no data to copy

@@ -31,8 +31,7 @@ namespace Js
         static Var ToVarWithCheck(double value, ScriptContext* scriptContext);
         static Var ToVarNoCheck(double value, ScriptContext* scriptContext);
         static Var ToVarInPlace(double value, ScriptContext* scriptContext, __out JavascriptNumber *result);
-        static Var ToVarMaybeInPlace(double value, ScriptContext* scriptContext, __out_opt JavascriptNumber *result);
-        static Var ToVarInlined(double value, ScriptContext* scriptContext);
+        static Var ToVarMaybeInPlace(double value, ScriptContext* scriptContext, __out_opt JavascriptNumber *result);        
         static Var ToVarIntCheck(double value, ScriptContext* scriptContext);
         static Var ToVar(int32 nValue, ScriptContext* scriptContext);
         static Var ToVarInPlace(int32 nValue, ScriptContext* scriptContext, __out JavascriptNumber *result);

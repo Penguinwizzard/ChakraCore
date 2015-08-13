@@ -31,6 +31,200 @@ namespace Js
 #endif
     }
 
+
+    template<typename LayoutType>
+    const unaligned LayoutType * ByteCodeReader::GetLayout()
+    {
+        size_t layoutSize = sizeof(LayoutType);
+
+        AssertMsg((layoutSize > 0) && (layoutSize < 100), "Ensure valid layout size");
+
+        const byte * layoutData = m_currentLocation;
+        m_currentLocation += layoutSize;
+
+        Assert(m_currentLocation <= m_endLocation);
+
+        return reinterpret_cast<const unaligned LayoutType *>(layoutData);
+    }
+
+    template<typename LayoutType>
+    const unaligned LayoutType * ByteCodeReader::GetLayout(const byte*& ip)
+    {
+        size_t layoutSize = sizeof(LayoutType);
+
+        AssertMsg((layoutSize > 0) && (layoutSize < 100), "Ensure valid layout size");
+
+        const byte * layoutData = ip;
+        ip += layoutSize;
+        m_currentLocation = ip;
+
+        Assert(m_currentLocation <= m_endLocation);
+
+        return reinterpret_cast<const unaligned LayoutType *>(layoutData);
+    }
+
+    template<>
+    const unaligned OpLayoutEmpty * ByteCodeReader::GetLayout<OpLayoutEmpty>()
+    {
+        return null;
+    }
+
+    template<>
+    const unaligned OpLayoutEmpty * ByteCodeReader::GetLayout<OpLayoutEmpty>(const byte*& ip)
+    {
+        m_currentLocation = ip;
+        return null;
+    }
+
+    OpCode ByteCodeReader::ReadOp(const byte *&ip, LayoutSize& layoutSize) const
+    {
+        // Return current location and advance past data.
+
+        Assert(ip < m_endLocation);
+        OpCode op = (OpCode)*ip++;
+
+        if (!OpCodeUtil::IsPrefixOpcode(op))
+        {
+            layoutSize = SmallLayout;
+            return op;
+        }
+
+        return ReadPrefixedOp(ip, layoutSize, op);
+    }
+
+    OpCode ByteCodeReader::ReadPrefixedOp(const byte *&ip, LayoutSize& layoutSize, OpCode prefix) const
+    {
+        Assert(ip < m_endLocation);
+        OpCode op = (OpCode)*ip++;
+        switch (prefix)
+        {
+        case Js::OpCode::MediumLayoutPrefix:
+            layoutSize = MediumLayout;
+            return op;
+        case Js::OpCode::LargeLayoutPrefix:
+            layoutSize = LargeLayout;
+            return op;
+        case Js::OpCode::ExtendedOpcodePrefix:
+            layoutSize = SmallLayout;
+            break;
+        case Js::OpCode::ExtendedMediumLayoutPrefix:
+            layoutSize = MediumLayout;
+            break;
+        default:
+            Assert(prefix == Js::OpCode::ExtendedLargeLayoutPrefix);
+            layoutSize = LargeLayout;
+        };
+        return (OpCode)(op + (Js::OpCode::ExtendedOpcodePrefix << 8));
+    }
+
+    OpCode ByteCodeReader::ReadOp(LayoutSize& layoutSize)
+    {
+        OpCode op = ReadOp(m_currentLocation, layoutSize);
+        Assert(!OpCodeAttr::BackEndOnly(op));
+        return op;
+    }
+
+    OpCode ByteCodeReader::ReadPrefixedOp(LayoutSize& layoutSize, OpCode prefix)
+    {
+        Assert(OpCodeUtil::IsPrefixOpcode(prefix));
+        return ReadPrefixedOp(m_currentLocation, layoutSize, prefix);
+    }
+    OpCode ByteCodeReader::PeekOp(LayoutSize& layoutSize) const
+    {
+        const byte * ip = m_currentLocation;
+        return ReadOp(ip, layoutSize);
+    }
+
+    OpCode ByteCodeReader::PeekOp(const byte * ip, LayoutSize& layoutSize)
+    {
+        return ReadOp(ip, layoutSize);
+    }
+
+    OpCode ByteCodeReader::ReadByteOp(const byte*& ip)
+    {
+        return (OpCode)*ip++;
+    }
+
+    OpCode ByteCodeReader::PeekByteOp(const byte * ip)
+    {
+        return (OpCode)*ip;
+    }
+
+    const byte* ByteCodeReader::GetIP()
+    {
+        return m_currentLocation;
+    }
+
+    void ByteCodeReader::SetIP(const byte *const ip)
+    {
+        Assert(ip >= m_startLocation);
+        Assert(ip < m_endLocation);
+
+        m_currentLocation = ip;
+    }
+
+    // Define reading functions
+#define LAYOUT_TYPE(layout) \
+    const unaligned OpLayout##layout * ByteCodeReader::layout() \
+    { \
+        return GetLayout<OpLayout##layout>(); \
+    } \
+    const unaligned OpLayout##layout * ByteCodeReader::layout(const byte*& ip) \
+    { \
+        return GetLayout<OpLayout##layout>(ip); \
+    }
+#include "LayoutTypes.h"
+    // Define reading functions
+#define LAYOUT_TYPE(layout) \
+    const unaligned OpLayout##layout * ByteCodeReader::layout() \
+    { \
+        return GetLayout<OpLayout##layout>(); \
+    } \
+    const unaligned OpLayout##layout * ByteCodeReader::layout(const byte*& ip) \
+    { \
+        return GetLayout<OpLayout##layout>(ip); \
+    }
+#define EXCLUDE_DUP_LAYOUT
+#include "LayoutTypesAsmJs.h"
+
+    uint ByteCodeReader::GetCurrentOffset() const
+    {
+        Assert(m_currentLocation >= m_startLocation);
+        Assert(m_currentLocation - m_startLocation <= UINT_MAX);
+        return (uint)(m_currentLocation - m_startLocation);
+    }
+
+    const byte * ByteCodeReader::SetCurrentOffset(int byteOffset)
+    {
+        const byte * ip = m_startLocation + byteOffset;
+        Assert(ip < m_endLocation);
+        m_currentLocation = ip;
+        return ip;
+    }
+
+    const byte * ByteCodeReader::SetCurrentRelativeOffset(const byte * ip, int byteOffset)
+    {
+        Assert(ip < m_endLocation);
+        const byte * targetip = ip + byteOffset;
+        Assert(targetip < m_endLocation);
+        m_currentLocation = targetip;
+        return targetip;
+    }
+
+    bool ByteCodeReader::IsCurrentLocationReadOnly(CustomHeap::Heap * byteCodeAllocator)
+    {
+        Assert(byteCodeAllocator != nullptr);
+        return byteCodeAllocator->IsReadOnly((void*)m_currentLocation);
+    }
+
+    bool ByteCodeReader::IsCurrentLocationExecuteReadProtection()
+    {
+        MEMORY_BASIC_INFORMATION memBasicInfo;
+        size_t bytes = VirtualQuery(m_currentLocation, &memBasicInfo, sizeof(memBasicInfo));
+
+        return (bytes != 0 && memBasicInfo.Protect == PAGE_EXECUTE_READ);
+    }
+
     template <typename T>
     AuxArray<T> const * 
     ByteCodeReader::ReadAuxArray(uint offset, FunctionBody * functionBody)

@@ -65,7 +65,7 @@ namespace UnifiedRegex
         void FreeBody(ArenaAllocator* allocator);
         void CloneFrom(ArenaAllocator* allocator, const CharTrie& other);
 
-        __inline bool Match
+        bool Match
             ( const Char* const input
             , const CharCount inputLength
             , CharCount &inputOffset

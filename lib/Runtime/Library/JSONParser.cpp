@@ -3,9 +3,8 @@
 //----------------------------------------------------------------------------
 
 #include "StdAfx.h"
-#include <strsafe.h>
-
 #include "JSON.h"
+#include "JSONParser.h"
 
 using namespace Js;
 

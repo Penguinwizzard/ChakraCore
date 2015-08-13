@@ -50,6 +50,15 @@ namespace Js
     }
 #endif
 
+    void JavascriptRegularExpressionResult::SetMatch(JavascriptArray* arr, const UnifiedRegex::GroupInfo match)
+    {
+        Assert(JavascriptRegularExpressionResult::Is(arr));
+        Assert(!match.IsUndefined());
+
+        ScriptContext* scriptContext = arr->GetScriptContext();
+        arr->SetSlot(SetSlotArguments(BuiltInPropertyRecords::index.propertyRecord.GetPropertyId(), IndexIndex, JavascriptNumber::ToVar(match.offset, scriptContext)));
+    }
+
     void JavascriptRegularExpressionResult::InstantiateForceInlinedMembers()
     {
         // Force-inlined functions defined in a translation unit need a reference from an extern non-force-inlined function in

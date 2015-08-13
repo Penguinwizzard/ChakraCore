@@ -763,9 +763,9 @@ namespace Js
         JavascriptGeneratorFunction* CreateGeneratorFunction(JavascriptMethod entryPoint, GeneratorVirtualScriptFunction* scriptFunction);
         JavascriptExternalFunction* CreateExternalFunction(ExternalMethod entryPointer, PropertyId nameId, Var signature, JavascriptTypeId prototypeTypeId, UINT64 flags);
         JavascriptExternalFunction* CreateExternalFunction(ExternalMethod entryPointer, Var nameId, Var signature, JavascriptTypeId prototypeTypeId, UINT64 flags);
-        inline JavascriptExternalFunction* CreateStdCallExternalFunction(StdCallJavascriptMethod entryPointer, PropertyId nameId, void *callbackState);
-        inline JavascriptExternalFunction* CreateStdCallExternalFunction(StdCallJavascriptMethod entryPointer, Var nameId, void *callbackState);
-        inline JavascriptWinRTFunction* CreateWinRTFunction(JavascriptMethod entryPoint, PropertyId nameId, Var signature, bool fConstructor);
+        JavascriptExternalFunction* CreateStdCallExternalFunction(StdCallJavascriptMethod entryPointer, PropertyId nameId, void *callbackState);
+        JavascriptExternalFunction* CreateStdCallExternalFunction(StdCallJavascriptMethod entryPointer, Var nameId, void *callbackState);
+        JavascriptWinRTFunction* CreateWinRTFunction(JavascriptMethod entryPoint, PropertyId nameId, Var signature, bool fConstructor);
         JavascriptPromiseAsyncSpawnExecutorFunction* CreatePromiseAsyncSpawnExecutorFunction(JavascriptMethod entryPoint, JavascriptGenerator* generatorFunction, Var target);
         JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction* CreatePromiseAsyncSpawnStepArgumentExecutorFunction(JavascriptMethod entryPoint, JavascriptGenerator* generator, Var argument, JavascriptFunction* resolve = NULL, JavascriptFunction* reject = NULL, bool isReject = false);
         JavascriptPromiseCapabilitiesExecutorFunction* CreatePromiseCapabilitiesExecutorFunction(JavascriptMethod entryPoint, JavascriptPromiseCapability* capability);
@@ -849,8 +849,8 @@ namespace Js
 #endif
 
 #ifdef ENABLE_NATIVE_CODEGEN
-        inline JavascriptFunction** GetBuiltinFunctions();
-        inline INT_PTR* GetVTableAddresses();
+        JavascriptFunction** GetBuiltinFunctions();
+        INT_PTR* GetVTableAddresses();
         static BuiltinFunction GetBuiltinFunctionForPropId(PropertyId id);
         static BuiltinFunction GetBuiltInForFuncInfo(FunctionInfo* funcInfo);
 #if DBG

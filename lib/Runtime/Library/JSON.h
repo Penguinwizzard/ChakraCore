@@ -4,13 +4,10 @@
 
 #pragma once
 #include <wchar.h>
-const int JSONspaceSize = 10; //ES5 defined limit on the indentation space
-
-#include "JSONScanner.h"
-#include "JSONParser.h"
 
 namespace JSON 
 {
+    class JSONStack;
     class JSONParser;
 
     class EntryInfo

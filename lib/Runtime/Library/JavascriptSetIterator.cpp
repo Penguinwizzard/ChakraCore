@@ -15,6 +15,19 @@ namespace Js
         Assert(type->GetTypeId() == TypeIds_SetIterator);
     }
 
+    bool JavascriptSetIterator::Is(Var aValue)
+    {
+        TypeId typeId = JavascriptOperators::GetTypeId(aValue);
+        return typeId == TypeIds_SetIterator;
+    }
+
+    JavascriptSetIterator* JavascriptSetIterator::FromVar(Var aValue)
+    {
+        AssertMsg(Is(aValue), "Ensure var is actually a 'JavascriptSetIterator'");
+
+        return static_cast<JavascriptSetIterator *>(RecyclableObject::FromVar(aValue));
+    }
+
     Var JavascriptSetIterator::EntryNext(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);

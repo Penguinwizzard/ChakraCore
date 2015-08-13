@@ -255,14 +255,4 @@ namespace Js
 
         return result;
     }
-
-    __inline
-    Var JavascriptNumber::ToVarInlined(double value,ScriptContext* scriptContext)
-    {
-        //
-        // Check if a well-known value:
-        // - This significantly cuts down on the below floating-point to integer conversions.
-        //
-        return JavascriptNumber::NewInlined(value,scriptContext);
-    }
 }

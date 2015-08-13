@@ -3,10 +3,11 @@
 //----------------------------------------------------------------------------
 
 #include "StdAfx.h"
-#include <strsafe.h>
+#include "JSONStack.h"
+#include "JSONParser.h"
 
 #define MAX_JSON_STRINGIFY_NAMES_ON_STACK 20
-
+static const int JSONspaceSize = 10; //ES5 defined limit on the indentation space
 using namespace Js;
 
 

@@ -171,7 +171,7 @@ namespace Js
 
             double result = Math::Asin(x);
 
-            return JavascriptNumber::ToVarInlined(result, scriptContext);
+            return JavascriptNumber::ToVarNoCheck(result, scriptContext);
         }
         else
         {
@@ -973,7 +973,7 @@ LDone:
 
         double res = JavascriptMath::Random(scriptContext);
 
-        return JavascriptNumber::ToVarInlined(res, scriptContext);
+        return JavascriptNumber::ToVarNoCheck(res, scriptContext);
     }  
      
 
@@ -1053,7 +1053,7 @@ LDone:
 
             double result = Math::Sin(x);
 
-            return JavascriptNumber::ToVarInlined(result, scriptContext);
+            return JavascriptNumber::ToVarNoCheck(result, scriptContext);
         }
         else
         {

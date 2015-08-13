@@ -42,11 +42,12 @@ namespace Js
         // To remove when the recycler supports multi-threaded allocation
         static ByteBlock* NewFromArena(ArenaAllocator* alloc,const byte * initialContent,int initialContentSize);
 
-        inline uint GetLength() const;
-        inline byte* GetBuffer();
-        inline const byte* GetBuffer() const;
-        inline const byte operator[](uint itemIndex) const;
-        inline byte& operator[] (uint itemIndex);
+        uint GetLength() const;
+        byte* GetBuffer();
+        const byte* GetBuffer() const;
+        const byte operator[](uint itemIndex) const;
+        byte& operator[] (uint itemIndex);
+        CustomHeap::Allocation * GetAllocation() { return allocation; }
 
         ByteBlock * Clone(Recycler* alloc);
 

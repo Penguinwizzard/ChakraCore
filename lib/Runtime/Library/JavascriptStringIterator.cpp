@@ -14,6 +14,19 @@ namespace Js
         Assert(type->GetTypeId() == TypeIds_StringIterator);
     }
 
+    bool JavascriptStringIterator::Is(Var aValue)
+    {
+        TypeId typeId = JavascriptOperators::GetTypeId(aValue);
+        return typeId == TypeIds_StringIterator;
+    }
+
+    JavascriptStringIterator* JavascriptStringIterator::FromVar(Var aValue)
+    {
+        AssertMsg(Is(aValue), "Ensure var is actually a 'JavascriptStringIterator'");
+
+        return static_cast<JavascriptStringIterator *>(RecyclableObject::FromVar(aValue));
+    }
+
     Var JavascriptStringIterator::EntryNext(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);

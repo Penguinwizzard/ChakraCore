@@ -111,12 +111,8 @@
     <ClInclude Include="WithScopeObject.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="DynamicObject.inl" />
-    <None Include="DynamicType.inl" />
-    <None Include="FunctionBody.inl" />
     <None Include="RecyclableObject.inl" />
-    <None Include="TypeHandler.inl" />
-    <None Include="TypePropertyCache.inl" />
+    <None Include="DynamicObject.inl" />    
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Condition="'$(USE_EXTERNAL_DEPENDENCIES)'!='yes'" Include="..\..\..\..\publish\Publish.vcxproj">

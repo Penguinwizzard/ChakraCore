@@ -7835,3 +7835,97 @@ void Recycler::ClearObjectBeforeCollectCallbacks()
     ProcessObjectBeforeCollectCallbacks(/*atShutdown*/true);
     Assert(objectBeforeCollectCallbackMap == nullptr);
 }
+
+void
+Recycler::NotifyFree(__in char *address, size_t size)
+{
+    RecyclerVerboseTrace(GetRecyclerFlagsTable(), L"Sweeping object %p\n", address);
+
+#ifdef RECYCLER_TEST_SUPPORT
+    if (BinaryFeatureControl::RecyclerTest())
+    {
+        if (checkFn != NULL)
+            checkFn(address, size);
+    }
+#endif
+
+#ifdef ENABLE_JS_ETW
+    if (EventEnabledJSCRIPT_RECYCLER_FREE_MEMORY())
+    {
+        AppendFreeMemoryETWRecord(address, (UINT)size);
+    }
+#endif
+
+    RecyclerMemoryTracking::ReportFree(this, address, size);
+    RECYCLER_PERF_COUNTER_DEC(LiveObject);
+    RECYCLER_PERF_COUNTER_SUB(LiveObjectSize, size);
+    RECYCLER_PERF_COUNTER_ADD(FreeObjectSize, size);
+
+    if (HeapInfo::IsSmallBlockAllocation(HeapInfo::GetAlignedSizeNoCheck(size)))
+    {
+        RECYCLER_PERF_COUNTER_DEC(SmallHeapBlockLiveObject);
+        RECYCLER_PERF_COUNTER_SUB(SmallHeapBlockLiveObjectSize, size);
+        RECYCLER_PERF_COUNTER_ADD(SmallHeapBlockFreeObjectSize, size);
+    }
+    else
+    {
+        RECYCLER_PERF_COUNTER_DEC(LargeHeapBlockLiveObject);
+        RECYCLER_PERF_COUNTER_SUB(LargeHeapBlockLiveObjectSize, size);
+        RECYCLER_PERF_COUNTER_ADD(LargeHeapBlockFreeObjectSize, size);
+    }
+
+#ifdef RECYCLER_MEMORY_VERIFY
+    if (this->VerifyEnabled())
+    {
+        VerifyCheckPad(address, size);
+    }
+#endif
+
+#ifdef PROFILE_RECYCLER_ALLOC
+    TrackFree(address, size);
+#endif
+
+#ifdef RECYCLER_STATS
+    collectionStats.objectSweptCount++;
+    collectionStats.objectSweptBytes += size;
+
+    if (!isForceSweeping)
+    {
+        collectionStats.objectSweptFreeListCount++;
+        collectionStats.objectSweptFreeListBytes += size;
+    }
+#endif
+}
+
+size_t
+RecyclerHeapObjectInfo::GetSize() const
+{
+    Assert(m_heapBlock);
+
+    size_t size;
+#if LARGEHEAPBLOCK_ENCODING
+    if (isUsingLargeHeapBlock)
+    {
+        size = m_largeHeapBlockHeader->objectSize;
+    }
+#else
+    if (m_heapBlock->IsLargeHeapBlock())
+    {
+        size = ((LargeHeapBlock*)m_heapBlock)->GetObjectSize();
+    }
+#endif
+    else
+    {
+        // All small heap block types have the same layout for the object size field.
+        // TODO: consider refactoring the shared parts of SmallHeapBlockT into a non-template base class.
+        size = ((SmallHeapBlock*)m_heapBlock)->GetObjectSize();
+    }
+
+#ifdef RECYCLER_MEMORY_VERIFY
+    if (m_recycler->VerifyEnabled())
+    {
+        size -= *(size_t *)(((char *)m_address) + size - sizeof(size_t));
+    }
+#endif
+    return size;
+}

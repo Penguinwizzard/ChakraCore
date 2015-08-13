@@ -10,7 +10,7 @@ namespace Js
 
     Var JavascriptNumber::ToVarNoCheck(double value, ScriptContext* scriptContext)
     {
-        return ToVarInlined(value, scriptContext);
+        return JavascriptNumber::NewInlined(value, scriptContext);
     }
 
     Var JavascriptNumber::ToVarWithCheck(double value, ScriptContext* scriptContext)
@@ -21,7 +21,7 @@ namespace Js
             value = JavascriptNumber::NaN;
         }
 #endif
-        return ToVarInlined(value, scriptContext);
+        return JavascriptNumber::NewInlined(value, scriptContext);
     }
 
     Var JavascriptNumber::ToVarInPlace(double value, ScriptContext* scriptContext, __out JavascriptNumber *result)

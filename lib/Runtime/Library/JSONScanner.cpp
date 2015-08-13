@@ -3,9 +3,7 @@
 //----------------------------------------------------------------------------
 
 #include "StdAfx.h"
-#include <strsafe.h>
-
-#include "JSON.h"
+#include "JSONScanner.h"
 
 using namespace Js;
 
