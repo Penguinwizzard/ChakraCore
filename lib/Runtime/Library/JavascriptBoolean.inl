@@ -6,16 +6,7 @@
 
 namespace Js
 {
-    __inline Var JavascriptBoolean::OP_LdTrue(ScriptContext*scriptContext)
-    {
-        return scriptContext->GetLibrary()->GetTrue();
-    }
-
-    __inline Var JavascriptBoolean::OP_LdFalse(ScriptContext* scriptContext)
-    {
-        return scriptContext->GetLibrary()->GetFalse();
-    }
-
+    // These function needs to be in INL file for static lib
     inline bool JavascriptBoolean::Is(Var aValue)
     {
         return JavascriptOperators::GetTypeId(aValue) == TypeIds_Boolean;
@@ -28,11 +19,5 @@ namespace Js
         return static_cast<JavascriptBoolean *>(RecyclableObject::FromVar(aValue));
     }
 
-    inline Js::Var JavascriptBoolean::ToVar(BOOL fValue, ScriptContext* scriptContext)
-    {
-        return
-            fValue ?
-            scriptContext->GetLibrary()->GetTrue() :
-            scriptContext->GetLibrary()->GetFalse();
-    }
 } // namespace Js
+

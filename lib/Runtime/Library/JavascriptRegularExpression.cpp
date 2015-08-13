@@ -62,6 +62,44 @@ namespace Js
         Assert(ThreadContext::IsOnStack(instance));   
     }
 
+    bool JavascriptRegExp::Is(Var aValue)
+    {
+        return JavascriptOperators::GetTypeId(aValue) == TypeIds_RegEx;
+    }
+
+    JavascriptRegExp* JavascriptRegExp::FromVar(Var aValue)
+    {
+        AssertMsg(Is(aValue), "Ensure var is actually a 'JavascriptRegExp'");
+
+        return static_cast<JavascriptRegExp *>(RecyclableObject::FromVar(aValue));
+    }
+
+    void JavascriptRegExp::SetRegex(UnifiedRegex::RegexPattern* pattern)
+    {
+        this->pattern = pattern;
+    }
+
+    JavascriptRegExp* JavascriptRegExp::GetJavascriptRegExp(Var var, ScriptContext* scriptContext)
+    {
+        if (JavascriptRegExp::Is(var))
+        {
+            return JavascriptRegExp::FromVar(var);
+        }
+
+        if (JavascriptOperators::GetTypeId(var) == TypeIds_HostDispatch)
+        {
+            TypeId remoteTypeId;
+            RecyclableObject* reclObj = RecyclableObject::FromVar(var);
+            reclObj->GetRemoteTypeId(&remoteTypeId);
+            if (remoteTypeId == TypeIds_RegEx)
+            {
+                return static_cast<JavascriptRegExp *>(reclObj->GetRemoteObject());
+            }
+        }
+
+        return nullptr;
+    }
+
     Var JavascriptRegExp::NewInstance(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);

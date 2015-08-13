@@ -360,39 +360,21 @@
     </ARMASM>
     <ARMASM Include="$(MSBuildThisFileDirectory)arm64\arm64_DeferredParsingThunk.asm">
       <ExcludedFromBuild Condition="'$(Platform)'!='Arm64'">true</ExcludedFromBuild>
-    </ARMASM>
-    <None Include="CharStringCache.inl" />
-    <None Include="ConcatString.inl" />
+    </ARMASM>    
+    
     <None Include="InJavascript\BuildGenByteCodeBin.cmd" />
     <None Include="InJavascript\GenByteCode.cmd" />
     <None Include="InJavascript\Intl.js" />
     <None Include="InJavascript\Promise.js" />
     <None Include="InJavascript\WarnGenByteCode.cmd" />
-    <None Include="JavascriptArrayIterator.inl" />
-    <None Include="JavascriptMap.inl" />
-    <None Include="JavascriptMapIterator.inl" />
-    <None Include="JavascriptPixelArray.inl" />
-    <None Include="JavascriptRegularExpressionResult.inl" />
-    <None Include="JavascriptSet.inl" />
-    <None Include="JavascriptSetIterator.inl" />
-    <None Include="JavascriptStringIterator.inl" />
-    <None Include="JavascriptSymbol.inl" />
-    <None Include="JavascriptWeakMap.inl" />
-    <None Include="JavascriptWeakSet.inl" />
-    <None Include="JavascriptWinRTDate.inl" />
-    <None Include="RegexHelper.inl" />
-    <None Include="SparseArraySegment.inl" />
-    <None Include="GlobalObject.inl" />
+    <None Include="ConcatString.inl" />
+    <None Include="JavascriptPixelArray.inl" />        
+    <None Include="SparseArraySegment.inl" />    
     <None Include="TaggedInt.inl" />
-    <None Include="JavascriptArray.inl" />
-    <None Include="JavascriptBoolean.inl" />
-    <None Include="JavascriptDate.inl" />
-    <None Include="JavascriptFunction.inl" />
+    <None Include="JavascriptArray.inl" />   
     <None Include="JavascriptLibrary.inl" />
     <None Include="JavascriptNumber.inl" />
-    <None Include="JavascriptRegularExpression.inl" />
-    <None Include="JavascriptString.inl" />
-    <None Include="JavascriptVariantDate.inl" />
+    <None Include="JavascriptString.inl" />    
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Condition="'$(USE_EXTERNAL_DEPENDENCIES)'!='yes'" Include="..\..\..\..\publish\Publish.vcxproj">

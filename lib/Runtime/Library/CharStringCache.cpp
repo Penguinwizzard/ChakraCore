@@ -8,6 +8,38 @@ namespace Js
 {
     CharStringCache::CharStringCache() : charStringCache(null) { memset(charStringCacheA, 0, sizeof charStringCacheA); }
 
+    JavascriptString* CharStringCache::GetStringForCharA(char c)
+    {
+        AssertMsg(JavascriptString::IsASCII7BitChar(c), "GetStringForCharA must be called with ASCII 7bit chars only");
+
+        PropertyString * str = charStringCacheA[c];
+        if (str == null)
+        {
+            PropertyRecord const * propertyRecord;
+            wchar_t wc = c;
+            JavascriptLibrary * javascriptLibrary = JavascriptLibrary::FromCharStringCache(this);
+            javascriptLibrary->GetScriptContext()->GetOrAddPropertyRecord(&wc, 1, &propertyRecord);
+            str = javascriptLibrary->CreatePropertyString(propertyRecord);
+            charStringCacheA[c] = str;
+        }
+
+        return str;
+    }
+
+
+    JavascriptString* CharStringCache::GetStringForChar(wchar_t c)
+    {
+#ifdef PROFILE_STRINGS
+        StringProfiler::RecordSingleCharStringRequest(JavascriptLibrary::FromCharStringCache(this)->GetScriptContext());
+#endif
+        if (JavascriptString::IsASCII7BitChar(c))
+        {
+            return GetStringForCharA(JavascriptString::ToASCII7BitChar(c));
+        }
+
+        return GetStringForCharW(c);
+    }
+
     JavascriptString* CharStringCache::GetStringForCharW(wchar_t c)
     {        
         Assert(!JavascriptString::IsASCII7BitChar(c));

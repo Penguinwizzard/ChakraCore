@@ -57,6 +57,77 @@ namespace Js
         }
     }
 
+    FunctionProxy *JavascriptFunction::GetFunctionProxy() const
+    {
+        Assert(functionInfo != null);
+        return functionInfo->GetFunctionProxy();
+    }
+
+    ParseableFunctionInfo *JavascriptFunction::GetParseableFunctionInfo() const
+    {
+        Assert(functionInfo != null);
+        return functionInfo->GetParseableFunctionInfo();
+    }
+
+    DeferDeserializeFunctionInfo *JavascriptFunction::GetDeferDeserializeFunctionInfo() const
+    {
+        Assert(functionInfo != null);
+        return functionInfo->GetDeferDeserializeFunctionInfo();
+    }
+
+    FunctionBody *JavascriptFunction::GetFunctionBody() const
+    {
+        Assert(functionInfo != null);
+        return functionInfo->GetFunctionBody();
+    }
+
+    BOOL JavascriptFunction::IsScriptFunction() const
+    {
+        Assert(functionInfo != null);
+        return functionInfo->HasBody();
+    }
+
+    bool JavascriptFunction::Is(Var aValue)
+    {
+        if (JavascriptOperators::GetTypeId(aValue) == TypeIds_Function)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    JavascriptFunction* JavascriptFunction::FromVar(Var aValue)
+    {
+        AssertMsg(Is(aValue), "Ensure var is actually a 'JavascriptFunction'");
+
+        return static_cast<JavascriptFunction *>(RecyclableObject::FromVar(aValue));
+    }
+
+    BOOL JavascriptFunction::IsStrictMode()
+    {
+        FunctionProxy * proxy = this->GetFunctionProxy();
+        return proxy && proxy->EnsureDeserialized()->GetIsStrictMode();
+    }
+
+    BOOL JavascriptFunction::IsLambda() const
+    {
+        return this->GetFunctionInfo()->IsLambda();
+    }
+
+    BOOL JavascriptFunction::IsConstructor() const
+    {
+        return this->GetFunctionInfo()->IsConstructor();
+    }
+
+#if DBG
+    /* static */
+    bool JavascriptFunction::IsBuiltinProperty(Var objectWithProperty, PropertyIds propertyId)
+    {
+        return ScriptFunction::Is(objectWithProperty)
+            && (propertyId == PropertyIds::arguments || propertyId == PropertyIds::caller);
+    }
+#endif
+
     static wchar_t const funcName[] = L"function anonymous";
     static wchar_t const genFuncName[] = L"function* anonymous";
     static wchar_t const bracket[] = L" {\012";

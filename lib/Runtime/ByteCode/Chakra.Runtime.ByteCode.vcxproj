@@ -72,9 +72,7 @@
     <ClInclude Include="ByteCodeWriter.h" />
     <ClInclude Include="OpCodes.h" />
     <ClInclude Include="OpLayouts.h" />
-    <ClInclude Include="Symbol.h" />
-    <None Include="ByteBlock.inl" />
-    <None Include="ByteCodeReader.inl" />
+    <ClInclude Include="Symbol.h" />    
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Condition="'$(USE_EXTERNAL_DEPENDENCIES)'!='yes'" Include="..\..\..\..\publish\Publish.vcxproj">

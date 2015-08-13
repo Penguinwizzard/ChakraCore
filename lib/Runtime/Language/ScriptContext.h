@@ -1140,22 +1140,28 @@ private:
         void InitPropertyStringMap(int i);        
         PropertyString* AddPropertyString2(const Js::PropertyRecord* propertyRecord);
         PropertyString* CachePropertyString2(const Js::PropertyRecord* propertyRecord);        
-        inline PropertyString* GetPropertyString2(wchar_t ch1, wchar_t ch2);
-        inline void FindPropertyRecord(__in LPCWSTR pszPropertyName, __in int propertyNameLength, PropertyRecord const** propertyRecord);
-        inline JsUtil::List<const RecyclerWeakReference<Js::PropertyRecord const>*>* FindPropertyIdNoCase(__in LPCWSTR pszPropertyName, __in int propertyNameLength);
+        PropertyString* GetPropertyString2(wchar_t ch1, wchar_t ch2);
+        void FindPropertyRecord(__in LPCWSTR pszPropertyName, __in int propertyNameLength, PropertyRecord const** propertyRecord);
+        JsUtil::List<const RecyclerWeakReference<Js::PropertyRecord const>*>* FindPropertyIdNoCase(__in LPCWSTR pszPropertyName, __in int propertyNameLength);
 
-        inline void FindPropertyRecord(JavascriptString* pstName, PropertyRecord const** propertyRecord);
+        void FindPropertyRecord(JavascriptString* pstName, PropertyRecord const** propertyRecord);
         PropertyRecord const * GetPropertyName(PropertyId propertyId);
         PropertyRecord const * GetPropertyNameLocked(PropertyId propertyId);
-        inline void GetOrAddPropertyRecord(JsUtil::CharacterBuffer<WCHAR> const& propName, PropertyRecord const** propertyRecord);
-        template <size_t N> void GetOrAddPropertyRecord(const wchar_t(&propertyName)[N], PropertyRecord const** propertyRecord);
-        inline PropertyId GetOrAddPropertyIdTracked(JsUtil::CharacterBuffer<WCHAR> const& propName);
-        template <size_t N> PropertyId GetOrAddPropertyIdTracked(const wchar_t(&propertyName)[N]);
-        inline PropertyId GetOrAddPropertyIdTracked(__in_ecount(propertyNameLength) LPCWSTR pszPropertyName, __in int propertyNameLength);
-        inline void GetOrAddPropertyRecord(__in_ecount(propertyNameLength) LPCWSTR pszPropertyName, __in int propertyNameLength, PropertyRecord const** propertyRecord);
-        inline BOOL IsNumericPropertyId(PropertyId propertyId, uint32* value);
+        void GetOrAddPropertyRecord(JsUtil::CharacterBuffer<WCHAR> const& propName, PropertyRecord const** propertyRecord);
+        template <size_t N> void GetOrAddPropertyRecord(const wchar_t(&propertyName)[N], PropertyRecord const** propertyRecord)
+        {
+            GetOrAddPropertyRecord(propertyName, N - 1, propertyRecord);
+        }
+        PropertyId GetOrAddPropertyIdTracked(JsUtil::CharacterBuffer<WCHAR> const& propName);
+        template <size_t N> PropertyId GetOrAddPropertyIdTracked(const wchar_t(&propertyName)[N])
+        {
+            return GetOrAddPropertyIdTracked(propertyName, N - 1);
+        }
+        PropertyId GetOrAddPropertyIdTracked(__in_ecount(propertyNameLength) LPCWSTR pszPropertyName, __in int propertyNameLength);
+        void GetOrAddPropertyRecord(__in_ecount(propertyNameLength) LPCWSTR pszPropertyName, __in int propertyNameLength, PropertyRecord const** propertyRecord);
+        BOOL IsNumericPropertyId(PropertyId propertyId, uint32* value);
 
-        inline void RegisterWeakReferenceDictionary(JsUtil::IWeakReferenceDictionary* weakReferenceDictionary);
+        void RegisterWeakReferenceDictionary(JsUtil::IWeakReferenceDictionary* weakReferenceDictionary);
         void ResetWeakReferenceDicitionaryList() { weakReferenceDictionaryList.Reset(); }
 
         BOOL ReserveStaticTypeIds(__in int first, __in int last);
@@ -1646,6 +1652,61 @@ private:
     private:
         ScriptContext* m_scriptContext;
     };
+
+    template <typename TCacheType>
+    void ScriptContext::CleanDynamicFunctionCache(TCacheType* cacheType)
+    {
+        // Remove eval map functions that haven't been recently used
+        // TODO: Metric based on allocation size too? So don't clean if there hasn't been much allocated?
+
+        cacheType->Clean([this](const TCacheType::KeyType& key, TCacheType::ValueType value) {
+#ifdef ENABLE_DEBUG_CONFIG_OPTIONS
+            if (CONFIG_FLAG(DumpEvalStringOnRemoval))
+            {
+                Output::Print(L"EvalMap: Removing Dynamic Function String from dynamic function cache: %s\n", key.str.GetBuffer()); Output::Flush();
+            }
+#endif            
+        });
+    }
+
+    template <class TDelegate>
+    void ScriptContext::MapFunction(TDelegate mapper)
+    {
+        if (this->sourceList)
+        {
+            this->sourceList->Map([&mapper](int, RecyclerWeakReference<Js::Utf8SourceInfo>* sourceInfo)
+            {
+                Utf8SourceInfo* sourceInfoStrongRef = sourceInfo->Get();
+                if (sourceInfoStrongRef)
+                {
+                    sourceInfoStrongRef->MapFunction(mapper);
+                }
+            });
+        }
+    }
+
+    template <class TDelegate>
+    FunctionBody* ScriptContext::FindFunction(TDelegate predicate)
+    {
+        FunctionBody* functionBody = null;
+
+        this->sourceList->MapUntil([&functionBody, &predicate](int, RecyclerWeakReference<Js::Utf8SourceInfo>* sourceInfo) -> bool
+        {
+            Utf8SourceInfo* sourceInfoStrongRef = sourceInfo->Get();
+            if (sourceInfoStrongRef)
+            {
+                functionBody = sourceInfoStrongRef->FindFunction(predicate);
+                if (functionBody)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        });
+
+        return functionBody;
+    }
 }
 
 #define BEGIN_TEMP_ALLOCATOR(allocator, scriptContext, name) \

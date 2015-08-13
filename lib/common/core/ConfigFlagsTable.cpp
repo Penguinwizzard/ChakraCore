@@ -57,6 +57,25 @@ namespace Js
     ///
     ///----------------------------------------------------------------------------
     ///----------------------------------------------------------------------------
+ 
+    String::String()
+    {
+        this->pszValue = NULL;
+    }
+ 
+    String::String(__in LPWSTR psz)
+    {
+        this->pszValue = NULL;
+        Set(psz);
+    }
+
+    String::~String()
+    {
+        if(NULL != this->pszValue)
+        {
+            NoCheckHeapDeleteArray(wcslen(this->pszValue) + 1, this->pszValue);
+        }
+    }
 
     ///----------------------------------------------------------------------------
     ///
@@ -87,6 +106,41 @@ namespace Js
         }
     }
 
+    template <>
+    bool RangeUnitContains<SourceFunctionNode>(RangeUnit<SourceFunctionNode> unit, SourceFunctionNode n)
+    {
+        Assert(n.functionId != (uint32)-1);
+
+        if ((n.sourceContextId >= unit.i.sourceContextId) &&
+            (n.sourceContextId <= unit.j.sourceContextId)
+            )
+        {
+            if ((n.sourceContextId == unit.j.sourceContextId) && (-2 == unit.j.functionId) ||  //#.#-#.* case
+                (n.sourceContextId == unit.i.sourceContextId) && (-2 == unit.i.functionId)     //#.*-#.# case
+                )
+            {
+                return true;
+            }
+
+            if ((n.sourceContextId == unit.j.sourceContextId) && (-1 == unit.j.functionId) || //#.#-#.+ case
+                (n.sourceContextId == unit.i.sourceContextId) && (-1 == unit.i.functionId)     //#.+-#.# case
+                )
+            {
+                return n.functionId != 0;
+            }
+
+            if (((n.sourceContextId == unit.i.sourceContextId) && (n.functionId < unit.i.functionId)) || //excludes all values less than functionId LHS
+                ((n.sourceContextId == unit.j.sourceContextId) && (n.functionId > unit.j.functionId))) ////excludes all values greater than functionId RHS
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
     ///----------------------------------------------------------------------------
     ///----------------------------------------------------------------------------
     ///
@@ -95,12 +149,32 @@ namespace Js
     ///----------------------------------------------------------------------------
     ///----------------------------------------------------------------------------
 
-    ///----------------------------------------------------------------------------
-    ///
-    /// Phases::Enable
-    ///
-    ///----------------------------------------------------------------------------    
-    
+    bool 
+    Phases::IsEnabled(Phase phase)
+    {
+        return this->phaseList[(int)phase].valid;
+    }
+
+    bool
+    Phases::IsEnabled(Phase phase, uint soruceContextId, Js::LocalFunctionId functionId)
+    {
+        return  this->phaseList[(int)phase].valid &&
+                this->phaseList[(int)phase].range.InRange(SourceFunctionNode(soruceContextId, functionId));
+    }
+
+    bool 
+    Phases::IsEnabledForAll(Phase phase)
+    {
+        return  this->phaseList[(int)phase].valid && 
+                this->phaseList[(int)phase].range.ContainsAll();
+    }
+
+    Range * 
+    Phases::GetRange(Phase phase)
+    {
+        return &this->phaseList[(int)phase].range;
+    }
+
     void 
     Phases::Enable(Phase phase)
     {
@@ -221,6 +295,72 @@ namespace Js
     ///
     /// Note: only Boolean type supported for now
     ///----------------------------------------------------------------------------
+
+    String *
+    ConfigFlagsTable::GetAsString(Flag flag) const 
+    { 
+        return reinterpret_cast<String* >(GetProperty(flag)); 
+    }
+
+    Phases *
+    ConfigFlagsTable::GetAsPhase(Flag flag) const
+    {
+        return reinterpret_cast<Phases*>(GetProperty(flag));
+    }
+
+    Boolean *
+    ConfigFlagsTable::GetAsBoolean(Flag flag)  const
+    { 
+        return reinterpret_cast<Boolean*>(GetProperty(flag)); 
+    }
+
+    Number *
+    ConfigFlagsTable::GetAsNumber(Flag flag)  const
+    { 
+        return reinterpret_cast<Number* >(GetProperty(flag)); 
+    }
+
+    NumberSet *
+    ConfigFlagsTable::GetAsNumberSet(Flag flag)  const
+    { 
+        return reinterpret_cast<NumberSet* >(GetProperty(flag)); 
+    }
+
+    NumberPairSet *
+    ConfigFlagsTable::GetAsNumberPairSet(Flag flag)  const
+    { 
+        return reinterpret_cast<NumberPairSet* >(GetProperty(flag)); 
+    }
+
+    NumberRange *
+    ConfigFlagsTable::GetAsNumberRange(Flag flag)  const
+    {
+        return reinterpret_cast<NumberRange* >(GetProperty(flag));
+    }
+
+    void
+    ConfigFlagsTable::Enable(Flag flag) 
+    { 
+        this->flagPresent[flag] = true; 
+    }
+
+    void 
+    ConfigFlagsTable::Disable(Flag flag)
+    {
+        this->flagPresent[flag] = false;
+    }
+
+    bool
+    ConfigFlagsTable::IsEnabled(Flag flag) 
+    { 
+        return this->flagPresent[flag];
+    }
+
+    bool
+    ConfigFlagsTable::IsParentFlag(Flag flag) const
+    {
+        return this->flagIsParent[flag];
+    }
 
     void 
     ConfigFlagsTable::SetAllParentFlagsAsDefaultValue()

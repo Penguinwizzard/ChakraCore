@@ -18,7 +18,7 @@ namespace Js
         JavascriptDate(double value, DynamicType * type);
         JavascriptDate(DynamicType * type); 
         
-        static inline bool Is(Var aValue);
+        static bool Is(Var aValue);
 
         double GetTime() { return m_date.GetMilliSeconds(); }
         static JavascriptDate* FromVar(Var aValue);

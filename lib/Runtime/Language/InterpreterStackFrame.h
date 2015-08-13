@@ -8,11 +8,10 @@ extern "C" PVOID _ReturnAddress(VOID);
 #pragma intrinsic(_ReturnAddress)
 class BailOutRecord;
 
-
 extern "C" void __cdecl _alloca_probe_16();
 namespace Js
 {
-    
+    class EHBailoutData;
     enum InterpreterStackFrameFlags : UINT16
     {
         InterpreterStackFrameFlags_None = 0,

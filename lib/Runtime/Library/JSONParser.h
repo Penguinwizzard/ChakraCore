@@ -4,7 +4,7 @@
 
 #pragma once
 #include <wchar.h>
-
+#include "JSONScanner.h"
 namespace JSON 
 {
     class JSONDeferredParserRootNode;

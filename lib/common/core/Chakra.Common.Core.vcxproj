@@ -83,10 +83,6 @@
     <ClInclude Include="..\Warnings.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="ConfigFlagsTable.inl" />
-    <None Include="ProfileMemory.inl" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Condition="'$(USE_EXTERNAL_DEPENDENCIES)'!='yes'" Include="..\..\..\..\dep\manifests-inbox.vcxproj">
       <Project>{14bbb4b1-da6a-4c69-bf07-f8d4865e0815}</Project>
     </ProjectReference>

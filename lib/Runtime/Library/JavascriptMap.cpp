@@ -11,6 +11,31 @@ namespace Js
     {
     }
 
+    JavascriptMap* JavascriptMap::New(ScriptContext* scriptContext)
+    {
+        JavascriptMap* map = scriptContext->GetLibrary()->CreateMap();
+        map->map = RecyclerNew(scriptContext->GetRecycler(), MapDataMap, scriptContext->GetRecycler());
+
+        return map;
+    }
+
+    bool JavascriptMap::Is(Var aValue)
+    {
+        return JavascriptOperators::GetTypeId(aValue) == TypeIds_Map;
+    }
+
+    JavascriptMap* JavascriptMap::FromVar(Var aValue)
+    {
+        AssertMsg(Is(aValue), "Ensure var is actually a 'JavascriptMap'");
+
+        return static_cast<JavascriptMap *>(RecyclableObject::FromVar(aValue));
+    }
+
+    JavascriptMap::MapDataList::Iterator JavascriptMap::GetIterator()
+    {
+        return list.GetIterator();
+    }
+
     Var JavascriptMap::NewInstance(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);

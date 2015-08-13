@@ -742,7 +742,7 @@ StringCommon:
         Var JavascriptMath::Subtract_Full(Var aLeft, Var aRight, ScriptContext* scriptContext)
         {
             double difference = Subtract_Helper(aLeft, aRight, scriptContext);
-            return JavascriptNumber::ToVarInlined(difference, scriptContext);
+            return JavascriptNumber::ToVarNoCheck(difference, scriptContext);
         }
 
         Var JavascriptMath::Subtract_InPlace(Var aLeft, Var aRight, ScriptContext* scriptContext, __out JavascriptNumber* result)
@@ -774,12 +774,12 @@ StringCommon:
                 if(JavascriptNumber::Is(aRight))
                 {
                     double product = JavascriptNumber::GetValue(aLeft) * JavascriptNumber::GetValue(aRight);
-                    return JavascriptNumber::ToVarInlined(product, scriptContext);
+                    return JavascriptNumber::ToVarNoCheck(product, scriptContext);
                 }
                 else if(TaggedInt::Is(aRight))
                 {
                     double product = TaggedInt::ToDouble(aRight) * JavascriptNumber::GetValue(aLeft);
-                    return JavascriptNumber::ToVarInlined(product, scriptContext);
+                    return JavascriptNumber::ToVarNoCheck(product, scriptContext);
                 }
             }
             else if(JavascriptNumber::Is(aRight))
@@ -787,7 +787,7 @@ StringCommon:
                 if(TaggedInt::Is(aLeft))
                 {
                     double product = TaggedInt::ToDouble(aLeft) * JavascriptNumber::GetValue(aRight);
-                    return JavascriptNumber::ToVarInlined(product, scriptContext);
+                    return JavascriptNumber::ToVarNoCheck(product, scriptContext);
                 }
             }
             else if(TaggedInt::IsPair(aLeft, aRight))
@@ -795,7 +795,7 @@ StringCommon:
                 return TaggedInt::Multiply(aLeft, aRight, scriptContext);
             }
             double product = Multiply_Helper(aLeft, aRight, scriptContext);
-            return JavascriptNumber::ToVarInlined(product, scriptContext);
+            return JavascriptNumber::ToVarNoCheck(product, scriptContext);
         }
 
         Var JavascriptMath::Multiply_InPlace(Var aLeft, Var aRight, ScriptContext* scriptContext, __out JavascriptNumber* result)

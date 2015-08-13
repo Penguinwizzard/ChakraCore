@@ -35,9 +35,9 @@ namespace Js {
     public:
         static  void            InitType();
 
-        inline                  Tick();
+                                Tick();
     private:
-        inline                  Tick(uint64 luTick);
+                                Tick(uint64 luTick);
 
     // Properties
     public:
@@ -47,17 +47,17 @@ namespace Js {
         
         static  Tick            Now();
 
-        inline  Tick            operator +(TickDelta tdChange) const;
-        inline  Tick            operator -(TickDelta tdChange) const;
-        inline  TickDelta       operator -(Tick timeOther) const;
-        inline  bool            operator ==(Tick timeOther) const;
-        inline  bool            operator !=(Tick timeOther) const;
-        inline  bool            operator <(Tick timeOther) const;
-        inline  bool            operator <=(Tick timeOther) const;
-        inline  bool            operator >(Tick timeOther) const;
-        inline  bool            operator >=(Tick timeOther) const;
+                Tick            operator +(TickDelta tdChange) const;
+                Tick            operator -(TickDelta tdChange) const;
+                TickDelta       operator -(Tick timeOther) const;
+                bool            operator ==(Tick timeOther) const;
+                bool            operator !=(Tick timeOther) const;
+                bool            operator <(Tick timeOther) const;
+                bool            operator <=(Tick timeOther) const;
+                bool            operator >(Tick timeOther) const;
+                bool            operator >=(Tick timeOther) const;
 
-        inline  uint64          ToQPC();
+                uint64          ToQPC();
         
     // Data
     private:
@@ -90,40 +90,40 @@ namespace Js {
     {
     // Construction
     public:
-        inline  TickDelta();
+                TickDelta();
     private:
-        inline  TickDelta(int64 lnDelta);
+                TickDelta(int64 lnDelta);
 
     // Properties
     public:
-        inline  int64           ToMicroseconds() const; 
+                int64           ToMicroseconds() const; 
                 int             ToMilliseconds() const; 
         static  TickDelta       FromMicroseconds(int nTickDelta);
         static  TickDelta       FromMicroseconds(int64 lnTickDelta);
         static  TickDelta       FromMilliseconds(int nTickDelta);
-        inline  bool            IsForward() const;
-        inline  bool            IsBackward() const;
+                bool            IsForward() const;
+                bool            IsBackward() const;
         static  TickDelta       Infinite();
         static  TickDelta       Abs(TickDelta tdOther);
 
-        inline  TickDelta       operator +(TickDelta tdOther) const;
-        inline  TickDelta       operator -(TickDelta tdOther) const;
-        inline  TickDelta       operator %(TickDelta tdOther) const;
-        inline  int64           operator /(TickDelta tdOther) const;
-        inline  TickDelta       operator *(int nScale) const;
-        inline  TickDelta       operator *(float flScale) const;
-        inline  TickDelta       operator /(int nScale) const;
-        inline  TickDelta       operator /(float flScale) const;
+                TickDelta       operator +(TickDelta tdOther) const;
+                TickDelta       operator -(TickDelta tdOther) const;
+                TickDelta       operator %(TickDelta tdOther) const;
+                int64           operator /(TickDelta tdOther) const;
+                TickDelta       operator *(int nScale) const;
+                TickDelta       operator *(float flScale) const;
+                TickDelta       operator /(int nScale) const;
+                TickDelta       operator /(float flScale) const;
 
-        inline  TickDelta       operator +=(TickDelta tdOther);
-        inline  TickDelta       operator -=(TickDelta tdOther);
+                TickDelta       operator +=(TickDelta tdOther);
+                TickDelta       operator -=(TickDelta tdOther);
         
-        inline  bool            operator ==(TickDelta tdOther) const;
-        inline  bool            operator !=(TickDelta tdOther) const;
-        inline  bool            operator <(TickDelta tdOther) const;
-        inline  bool            operator <=(TickDelta tdOther) const;
-        inline  bool            operator >(TickDelta tdOther) const;
-        inline  bool            operator >=(TickDelta tdOther) const;
+                bool            operator ==(TickDelta tdOther) const;
+                bool            operator !=(TickDelta tdOther) const;
+                bool            operator <(TickDelta tdOther) const;
+                bool            operator <=(TickDelta tdOther) const;
+                bool            operator >(TickDelta tdOther) const;
+                bool            operator >=(TickDelta tdOther) const;
         
     // Data
     private:

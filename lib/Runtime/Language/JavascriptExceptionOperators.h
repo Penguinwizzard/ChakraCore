@@ -75,7 +75,7 @@ namespace Js
         static Var StackTraceAccessor(RecyclableObject* function, CallInfo callInfo, ...);
         static void WalkStackForExceptionContext(ScriptContext& scriptContext, JavascriptExceptionContext& exceptionContext, Var thrownObject, uint64 stackCrawlLimit, PVOID returnAddress, bool isThrownException = true, bool resetSatck = false);
         static void AddStackTraceToObject(Var obj, JavascriptExceptionContext::StackTrace* stackTrace, ScriptContext& scriptContext, bool isThrownException = true, bool resetSatck = false);
-        static inline uint64 StackCrawlLimitOnThrow(Var thrownObject, ScriptContext& scriptContext);
+        static uint64 StackCrawlLimitOnThrow(Var thrownObject, ScriptContext& scriptContext);
 
         class EntryInfo
         {
@@ -101,7 +101,7 @@ namespace Js
         static void AppendLibraryFrameToStackTrace(CompoundString* bs, LPCWSTR functionName);
         static bool IsErrorInstance(Var thrownObject);
 
-        static inline bool CrawlStackForWER(Js::ScriptContext& scriptContext);
+        static bool CrawlStackForWER(Js::ScriptContext& scriptContext);
         static void DispatchExceptionToDebugger(Js::JavascriptExceptionObject * exceptionObject, ScriptContext* scriptContext);
     };
 

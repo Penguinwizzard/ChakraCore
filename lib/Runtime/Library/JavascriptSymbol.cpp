@@ -6,6 +6,18 @@
 
 namespace Js
 {
+    bool JavascriptSymbol::Is(Var aValue)
+    {
+        return JavascriptOperators::GetTypeId(aValue) == TypeIds_Symbol;
+    }
+
+    JavascriptSymbol* JavascriptSymbol::FromVar(Js::Var aValue)
+    {
+        AssertMsg(Is(aValue), "Ensure var is actually a 'JavascriptSymbol'");
+
+        return static_cast<JavascriptSymbol *>(RecyclableObject::FromVar(aValue));
+    }
+
     Var JavascriptSymbol::NewInstance(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);

@@ -6,6 +6,24 @@
 
 namespace Js
 {    
+    Var JavascriptBoolean::OP_LdTrue(ScriptContext*scriptContext)
+    {
+        return scriptContext->GetLibrary()->GetTrue();
+    }
+
+    Var JavascriptBoolean::OP_LdFalse(ScriptContext* scriptContext)
+    {
+        return scriptContext->GetLibrary()->GetFalse();
+    }
+
+    Js::Var JavascriptBoolean::ToVar(BOOL fValue, ScriptContext* scriptContext)
+    {
+        return
+            fValue ?
+            scriptContext->GetLibrary()->GetTrue() :
+            scriptContext->GetLibrary()->GetFalse();
+    }
+
     Var JavascriptBoolean::NewInstance(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);

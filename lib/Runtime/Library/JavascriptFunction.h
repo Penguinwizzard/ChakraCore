@@ -140,13 +140,13 @@ namespace Js
         JavascriptString* GetDisplayName(bool isFunctionName = false) const;
         bool IsLibraryCode() const;
 
-        inline BOOL IsScriptFunction() const;
+        BOOL IsScriptFunction() const;
         virtual Var GetSourceString() const { return null; }
         virtual Var EnsureSourceString();
         virtual BOOL IsExternalFunction() { return FALSE; }
         virtual BOOL IsWinRTFunction() { return FALSE; }
-        inline BOOL IsStrictMode();
-        inline BOOL IsLambda() const;
+        BOOL IsStrictMode();
+        BOOL IsLambda() const;
         virtual inline BOOL IsConstructor() const;
 
         ConstructorCache* GetConstructorCache() { Assert(this->constructorCache != null); return this->constructorCache; }
@@ -197,7 +197,7 @@ namespace Js
 #if DBG
         void VerifyEntryPoint();
 
-        inline static bool JavascriptFunction::IsBuiltinProperty(Var objectWithProperty, PropertyIds propertyId);
+        static bool IsBuiltinProperty(Var objectWithProperty, PropertyIds propertyId);
 #endif
         private:
             int  ResumeForOutOfBoundsAsmJSArrayRefs(int exceptionCode, PEXCEPTION_POINTERS exceptionInfo);

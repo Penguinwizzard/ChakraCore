@@ -6,6 +6,7 @@
 
 #include <wchar.h>
 #include "Runtime.h"
+#include "Language\EHBailoutData.h"
 
 //
 // Defines

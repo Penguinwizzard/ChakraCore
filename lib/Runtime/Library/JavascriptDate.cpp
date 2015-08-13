@@ -18,6 +18,39 @@ namespace Js
         Assert(type->GetTypeId() == TypeIds_Date);
     }
 
+    bool JavascriptDate::Is(Var aValue)
+    {
+        // All WinRT Date's are also implicitly Javascript dates
+        return IsDateTypeId(JavascriptOperators::GetTypeId(aValue));
+    }
+
+    JavascriptDate* JavascriptDate::FromVar(Var aValue)
+    {
+        AssertMsg(Is(aValue), "Ensure var is actually a 'Date'");
+
+        return static_cast<JavascriptDate *>(RecyclableObject::FromVar(aValue));
+    }
+
+    Var JavascriptDate::GetDateData(JavascriptDate* date, DateImplementation::DateData dd, ScriptContext* scriptContext)
+    {
+        return JavascriptNumber::ToVarIntCheck(date->m_date.GetDateData(dd, false, scriptContext), scriptContext);
+    }
+
+    Var JavascriptDate::GetUTCDateData(JavascriptDate* date, DateImplementation::DateData dd, ScriptContext* scriptContext)
+    {
+        return JavascriptNumber::ToVarIntCheck(date->m_date.GetDateData(dd, true, scriptContext), scriptContext);
+    }
+
+    Var JavascriptDate::SetDateData(JavascriptDate* date, Arguments args, DateImplementation::DateData dd, ScriptContext* scriptContext)
+    {
+        return JavascriptNumber::ToVarNoCheck(date->m_date.SetDateData(args, dd, false, scriptContext), scriptContext);
+    }
+
+    Var JavascriptDate::SetUTCDateData(JavascriptDate* date, Arguments args, DateImplementation::DateData dd, ScriptContext* scriptContext)
+    {
+        return JavascriptNumber::ToVarNoCheck(date->m_date.SetDateData(args, dd, true, scriptContext), scriptContext);
+    }
+
     Var JavascriptDate::NewInstance(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);

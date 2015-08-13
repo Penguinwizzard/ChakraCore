@@ -9,6 +9,8 @@
 #include "Parser.h"
 #include "RuntimeCommon.h"
 
+#include <intsafe.h>
+
 #if !defined(UNREFERENCED_PARAMETER)
 #define UNREFERENCED_PARAMETER(x) (x)
 #endif
@@ -515,7 +517,6 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Library\JavascriptObject.h"
 #include "Library\BuiltInFlags.h"
 #include "Library\CharStringCache.h"
-// REVIEW: ChakraCore Dependency
 #include "Library\JavascriptLibraryBase.h"
 #include "Library\JavascriptLibrary.h"
 
@@ -536,7 +537,6 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Language\JavascriptMathOperators.h"
 #include "Math\JavascriptSSE2MathOperators.h"
 #include "Language\JavascriptExceptionOperators.h"
-#include "Language\EHBailoutData.h"
 #include "Language\JavascriptOperators.h"
 #include "Library\TaggedInt.h"
 #include "Library\SubString.h"
@@ -555,7 +555,6 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Library\JavascriptPromise.h"
 #include "Library\MathLibrary.h"
 #include "Library\RegexHelper.h"
-#include "Library\JSONStack.h"
 #include "Library\JSON.h"
 #include "Library\ObjectPrototypeObject.h"
 #include "Library\ProfileString.h"
@@ -622,7 +621,6 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Language\diagobjectmodel.h"
 #include "Language\ScriptContextProfiler.h"
 #include "Language\ScriptContextOptimizationOverrideInfo.h"
-// REVIEW: ChakraCore Dependency
 #include "Language\scriptContextbase.h"
 #include "Language\ScriptContext.h"
 
@@ -658,8 +656,9 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Language\ByteCodeSerializer.h"
 #include "Language\ProfilingHelpers.h"
 
-
+#ifdef ENABLE_MUTATION_BREAKPOINT
 #include "Language\MutationBreakpoint.h"
+#endif
 
 #ifdef DYNAMIC_PROFILE_STORAGE
 #include "Language\DynamicProfileStorage.h"
@@ -680,27 +679,15 @@ enum tagDEBUG_EVENT_INFO_TYPE
 
 #include "commoninl.h"
 
-#include "Types\RecyclableObject.inl"
-#include "ByteCode\ByteBlock.inl"
 #include "Library\JavascriptString.inl"
-#include "Library\JavascriptStringIterator.inl"
 #include "Library\ConcatString.inl"
 #include "Language\JavascriptConversion.inl"
-#include "Types\FunctionBody.inl"
-#include "Library\JavascriptBoolean.inl"
-#include "Library\JavascriptVariantDate.inl"
+#include "Types\RecyclableObject.inl"
 #include "Types\DynamicObject.inl"
-#include "Library\GlobalObject.inl"
+#include "Library\JavascriptBoolean.inl"
 #include "Library\JavascriptArray.inl"
-#include "Library\JavascriptArrayIterator.inl"
 #include "Library\SparseArraySegment.inl"
-#include "Library\JavascriptFunction.inl"
 #include "Library\JavascriptNumber.inl"
-#include "Library\JavascriptRegularExpression.inl"
-#include "Library\JavascriptRegularExpressionResult.inl"
-#include "Library\RegexHelper.inl"
-#include "Types\DynamicType.inl"
-#include "Types\TypeHandler.inl"
 #include "Library\JavascriptLibrary.inl"
 #include "Math\JavascriptSSE2MathOperators.inl"
 #include "Language\JavascriptMathOperators.inl"
@@ -708,26 +695,11 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Language\InlineCachePointerArray.inl"
 #include "Language\CacheOperators.inl"
 #include "Language\JavascriptOperators.inl"
-#include "Language\JavascriptExceptionOperators.inl"
 #include "Library\TaggedInt.inl"
-#include "Language\ScriptContext.inl"
-#include "ByteCode\ByteCodeReader.inl"
 #include "Language\InterpreterStackFrame.inl"
-#include "Library\JavascriptDate.inl"
-#include "Library\JavascriptWinRTDate.inl"
-#include "Language\JavascriptObject.inl"
 #include "Library\JavascriptPixelArray.inl"
-#include "Library\JavascriptMap.inl"
-#include "Library\JavascriptMapIterator.inl"
-#include "Library\JavascriptSet.inl"
-#include "Library\JavascriptSetIterator.inl"
-#include "Library\JavascriptWeakMap.inl"
-#include "Library\JavascriptWeakSet.inl"
-#include "Library\JavascriptSymbol.inl"
+
 #include "Language\DiagHelperMethodWrapper.inl"
-#include "Library\CharStringCache.inl"
-
-
 
 
 

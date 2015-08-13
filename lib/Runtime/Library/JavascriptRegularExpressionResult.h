@@ -19,7 +19,7 @@ namespace Js
         // Constructor for storing captures
         static JavascriptArray* Create(void *const stackAllocationPointer, const int numGroups, JavascriptString* input, ScriptContext* const scriptContext);
 
-        __inline static void SetMatch(JavascriptArray* arr, const UnifiedRegex::GroupInfo match);
+        static void SetMatch(JavascriptArray* arr, const UnifiedRegex::GroupInfo match);
 
         // Must be >= 2, but ensure that it will be equal to the total slot count so that the slot array is not created
         static const PropertyIndex InlineSlotCount = HeapConstants::ObjectGranularity / sizeof(Var);

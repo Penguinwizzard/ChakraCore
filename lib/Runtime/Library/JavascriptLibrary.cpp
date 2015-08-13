@@ -5893,4 +5893,1049 @@ namespace Js
 
         return hash;
     }
+
+    DynamicType * JavascriptLibrary::GetObjectLiteralType(uint16 requestedInlineSlotCapacity)
+    {
+        if (requestedInlineSlotCapacity <= MaxPreInitializedObjectTypeInlineSlotCount)
+        {
+            return objectTypes[DynamicTypeHandler::RoundUpInlineSlotCapacity(requestedInlineSlotCapacity) / InlineSlotCountIncrement];
+        }
+        else
+        {
+            return objectTypes[PreInitializedObjectTypeCount - 1];
+        }
+    }
+
+    DynamicType * JavascriptLibrary::GetObjectHeaderInlinedLiteralType(uint16 requestedInlineSlotCapacity)
+    {
+        Assert(requestedInlineSlotCapacity <= MaxPreInitializedObjectHeaderInlinedTypeInlineSlotCount);
+
+        return
+            objectHeaderInlinedTypes[
+                (
+                    DynamicTypeHandler::RoundUpObjectHeaderInlinedInlineSlotCapacity(requestedInlineSlotCapacity) -
+                    DynamicTypeHandler::GetObjectHeaderInlinableSlotCapacity()
+                    ) / InlineSlotCountIncrement];
+    }
+
+    HeapArgumentsObject* JavascriptLibrary::CreateHeapArguments(Var frameObj, uint32 formalCount)
+    {
+        AssertMsg(heapArgumentsType, "Where's heapArgumentsType?");
+
+        Recycler *recycler = this->GetRecycler();
+
+        if (!this->arrayPrototypeValuesFunction) //InitializeArrayPrototype can be delay loaded, which could prevent us from access to array.prototype.values
+        {
+            this->arrayPrototypeValuesFunction = DefaultCreateFunction(&JavascriptArray::EntryInfo::Values, 0, nullptr, nullptr, PropertyIds::values);
+        }
+        return RecyclerNew(recycler, HeapArgumentsObject, recycler, (ActivationObject*)frameObj, formalCount, heapArgumentsType);
+    }
+
+    JavascriptArray* JavascriptLibrary::CreateArray()
+    {
+        AssertMsg(arrayType, "Where's arrayType?");
+        return JavascriptArray::New<Var, JavascriptArray>(this->GetRecycler(), arrayType);
+    }
+
+    JavascriptArray* JavascriptLibrary::CreateArray(uint32 length)
+    {
+        AssertMsg(arrayType, "Where's arrayType?");
+        JavascriptArray* arr = JavascriptArray::New<Var, JavascriptArray, 0>(length, arrayType, this->GetRecycler());
+        JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_ARRAY(arr));
+
+#ifdef ENABLE_DEBUG_CONFIG_OPTIONS
+        arr->CheckForceES5Array();
+#endif
+        return arr;
+    }
+
+    JavascriptArray *JavascriptLibrary::CreateArrayOnStack(void *const stackAllocationPointer)
+    {
+        return JavascriptArray::New<JavascriptArray, 0>(stackAllocationPointer, 0, arrayType);
+    }
+
+    JavascriptNativeIntArray* JavascriptLibrary::CreateNativeIntArray()
+    {
+        AssertMsg(nativeIntArrayType, "Where's nativeIntArrayType?");
+        return JavascriptArray::New<int32, JavascriptNativeIntArray>(this->GetRecycler(), nativeIntArrayType);
+    }
+
+    JavascriptNativeIntArray* JavascriptLibrary::CreateNativeIntArray(uint32 length)
+    {
+        AssertMsg(nativeIntArrayType, "Where's nativeIntArrayType?");
+        JavascriptNativeIntArray* arr = JavascriptArray::New<int32, JavascriptNativeIntArray, 0>(length, nativeIntArrayType, this->GetRecycler());
+        JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_ARRAY(arr));
+
+#ifdef ENABLE_DEBUG_CONFIG_OPTIONS
+        arr->CheckForceES5Array();
+#endif
+        return arr;
+    }
+
+    JavascriptNativeFloatArray* JavascriptLibrary::CreateNativeFloatArray()
+    {
+        AssertMsg(nativeFloatArrayType, "Where's nativeFloatArrayType?");
+        return JavascriptArray::New<double, JavascriptNativeFloatArray>(this->GetRecycler(), nativeFloatArrayType);
+    }
+
+    JavascriptNativeFloatArray* JavascriptLibrary::CreateNativeFloatArray(uint32 length)
+    {
+        AssertMsg(nativeFloatArrayType, "Where's nativeIntArrayType?");
+        JavascriptNativeFloatArray* arr = JavascriptArray::New<double, JavascriptNativeFloatArray, 0>(length, nativeFloatArrayType, this->GetRecycler());
+        JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_ARRAY(arr));
+
+#ifdef ENABLE_DEBUG_CONFIG_OPTIONS
+        arr->CheckForceES5Array();
+#endif
+        return arr;
+    }
+
+    JavascriptArray* JavascriptLibrary::CreateArrayLiteral(uint32 length)
+    {
+        AssertMsg(arrayType, "Where's arrayType?");
+        JavascriptArray* arr = JavascriptArray::NewLiteral<Var, JavascriptArray, 0>(length, arrayType, this->GetRecycler());
+        JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_ARRAY(arr));
+
+#ifdef ENABLE_DEBUG_CONFIG_OPTIONS
+        arr->CheckForceES5Array();
+#endif
+        return arr;
+    }
+
+    JavascriptNativeIntArray* JavascriptLibrary::CreateNativeIntArrayLiteral(uint32 length)
+    {
+        AssertMsg(nativeIntArrayType, "Where's arrayType?");
+        JavascriptNativeIntArray* arr = JavascriptArray::NewLiteral<int32, JavascriptNativeIntArray, 0>(length, nativeIntArrayType, this->GetRecycler());
+        JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_ARRAY(arr));
+
+        return arr;
+    }
+
+    JavascriptNativeIntArray* JavascriptLibrary::CreateCopyOnAccessNativeIntArrayLiteral(ArrayCallSiteInfo *arrayInfo, FunctionBody *functionBody, const Js::AuxArray<int32> *ints)
+    {
+        AssertMsg(copyOnAccessNativeIntArrayType, "Where's arrayType?");
+        JavascriptNativeIntArray* arr = JavascriptArray::NewCopyOnAccessLiteral<int32, JavascriptCopyOnAccessNativeIntArray, 0>(copyOnAccessNativeIntArrayType, arrayInfo, functionBody, ints, this->GetRecycler());
+        JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_ARRAY(arr));
+
+        return arr;
+    }
+
+    JavascriptNativeFloatArray* JavascriptLibrary::CreateNativeFloatArrayLiteral(uint32 length)
+    {
+        AssertMsg(nativeFloatArrayType, "Where's arrayType?");
+        JavascriptNativeFloatArray* arr = JavascriptArray::NewLiteral<double, JavascriptNativeFloatArray, 0>(length, nativeFloatArrayType, this->GetRecycler());
+        JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_ARRAY(arr));
+
+#ifdef ENABLE_DEBUG_CONFIG_OPTIONS
+        arr->CheckForceES5Array();
+#endif
+        return arr;
+    }
+
+    JavascriptArray* JavascriptLibrary::CreateArray(uint32 length, uint32 size)
+    {
+        AssertMsg(arrayType, "Where's arrayType?");
+        JavascriptArray* arr = RecyclerNew(this->GetRecycler(), JavascriptArray, length, size, arrayType);
+        JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_ARRAY(arr));
+
+#ifdef ENABLE_DEBUG_CONFIG_OPTIONS
+        arr->CheckForceES5Array();
+#endif
+        return arr;
+    }
+
+    ArrayBuffer* JavascriptLibrary::CreateArrayBuffer(uint32 length)
+    {
+        ArrayBuffer* arr = JavascriptArrayBuffer::Create(length, arrayBufferType);
+        return arr;
+    }
+
+    ArrayBuffer* JavascriptLibrary::CreateArrayBuffer(byte* buffer, uint32 length)
+    {
+        ArrayBuffer* arr = JavascriptArrayBuffer::Create(buffer, length, arrayBufferType);
+        return arr;
+    }
+
+    ArrayBuffer* JavascriptLibrary::CreateProjectionArraybuffer(uint32 length)
+    {
+        ArrayBuffer* arr = ProjectionArrayBuffer::Create(length, arrayBufferType);
+        JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(arr));
+        return arr;
+    }
+
+    ArrayBuffer* JavascriptLibrary::CreateProjectionArraybuffer(byte* buffer, uint32 length)
+    {
+        ArrayBuffer* arr = ProjectionArrayBuffer::Create(buffer, length, arrayBufferType);
+        JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(arr));
+        return arr;
+    }
+
+    DataView* JavascriptLibrary::CreateDataView(ArrayBuffer* arrayBuffer, uint32 offset, uint32 length)
+    {
+        DataView* dataView = RecyclerNew(this->GetRecycler(), DataView, arrayBuffer, offset, length, dataViewType);
+
+        // Only add these members in pre-ES6 modes. After ES6, these live on Dataview.prototype as getters.
+        if (!scriptContext->GetConfig()->IsKhronosInteropEnabled())
+        {
+            AddMember(dataView, PropertyIds::buffer, arrayBuffer, PropertyNone);
+            AddMember(dataView, PropertyIds::byteOffset, JavascriptNumber::ToVar(offset, scriptContext), PropertyNone);
+            AddMember(dataView, PropertyIds::byteLength, JavascriptNumber::ToVar(length, scriptContext), PropertyNone);
+        }
+
+        return dataView;
+    }
+
+    JavascriptPixelArray* JavascriptLibrary::CreatePixelArray(uint32 length)
+    {
+        AssertMsg(pixelArrayType, "Where's pixelArrayType?");
+        JavascriptPixelArray* newArray = RecyclerNewFinalized(this->GetRecycler(), JavascriptPixelArray, length, pixelArrayType);
+        return newArray;
+    }
+
+    JavascriptBoolean* JavascriptLibrary::CreateBoolean(BOOL value)
+    {
+        AssertMsg(booleanTrue, "Where's booleanTrue?");
+        AssertMsg(booleanFalse, "Where's booleanFalse?");
+        return value ? booleanTrue : booleanFalse;
+    }
+
+    JavascriptDate* JavascriptLibrary::CreateDate()
+    {
+        AssertMsg(dateType, "Where's dateType?");
+        return RecyclerNew(this->GetRecycler(), JavascriptDate, 0, dateType);
+    }
+
+    JavascriptDate* JavascriptLibrary::CreateDate(double value)
+    {
+        AssertMsg(dateType, "Where's dateType?");
+        return RecyclerNew(this->GetRecycler(), JavascriptDate, value, dateType);
+    }
+
+    JavascriptDate* JavascriptLibrary::CreateDate(SYSTEMTIME* pst)
+    {
+        AssertMsg(dateType, "Where's dateType?");
+        double value = DateImplementation::TimeFromSt(pst);
+        return CreateDate(value);
+    }
+
+    JavascriptMap* JavascriptLibrary::CreateMap()
+    {
+        AssertMsg(mapType, "Where's mapType?");
+        return RecyclerNew(this->GetRecycler(), JavascriptMap, mapType);
+    }
+
+    JavascriptSet* JavascriptLibrary::CreateSet()
+    {
+        AssertMsg(setType, "Where's setType?");
+        return RecyclerNew(this->GetRecycler(), JavascriptSet, setType);
+    }
+
+    JavascriptWeakMap* JavascriptLibrary::CreateWeakMap()
+    {
+        AssertMsg(weakMapType, "Where's weakMapType?");
+        return RecyclerNewFinalized(this->GetRecycler(), JavascriptWeakMap, weakMapType);
+    }
+
+    JavascriptWeakSet* JavascriptLibrary::CreateWeakSet()
+    {
+        AssertMsg(weakSetType, "Where's weakSetType?");
+        return RecyclerNewFinalized(this->GetRecycler(), JavascriptWeakSet, weakSetType);
+    }
+
+    JavascriptPromise* JavascriptLibrary::CreatePromise()
+    {
+        AssertMsg(promiseType, "Where's promiseType?");
+        return RecyclerNew(this->GetRecycler(), JavascriptPromise, promiseType);
+    }
+
+    JavascriptGenerator* JavascriptLibrary::CreateGenerator(Arguments& args, ScriptFunction* scriptFunction, RecyclableObject* prototype)
+    {
+        Assert(scriptContext->GetConfig()->IsES6GeneratorsEnabled());
+        DynamicType* generatorType = CreateGeneratorType(prototype);
+        return RecyclerNew(this->GetRecycler(), JavascriptGenerator, generatorType, args, scriptFunction);
+    }
+
+    JavascriptError* JavascriptLibrary::CreateError()
+    {
+        AssertMsg(errorType, "Where's errorType?");
+        JavascriptError *pError = RecyclerNew(this->GetRecycler(), JavascriptError, errorType);
+        JavascriptError::SetErrorType(pError, kjstError);
+        return pError;
+    }
+
+    JavascriptSymbol* JavascriptLibrary::CreateSymbol(JavascriptString* description)
+    {
+        return this->CreateSymbol(description->GetString(), (int)description->GetLength());
+    }
+
+    JavascriptSymbol* JavascriptLibrary::CreateSymbol(const wchar_t* description, int descriptionLength)
+    {
+        ENTER_PINNED_SCOPE(const Js::PropertyRecord, propertyRecord);
+
+        propertyRecord = this->scriptContext->GetThreadContext()->UncheckedAddPropertyId(description, descriptionLength, /*bind*/false, /*isSymbol*/true);
+
+        LEAVE_PINNED_SCOPE();
+
+        return this->CreateSymbol(propertyRecord);
+    }
+
+    JavascriptSymbol* JavascriptLibrary::CreateSymbol(const PropertyRecord* propertyRecord)
+    {
+        AssertMsg(symbolTypeStatic, "Where's symbolTypeStatic?");
+        return RecyclerNew(this->GetRecycler(), JavascriptSymbol, propertyRecord, symbolTypeStatic);
+    }
+
+    JavascriptError* JavascriptLibrary::CreateExternalError(ErrorTypeEnum errorTypeEnum)
+    {
+        DynamicType* baseErrorType = NULL;
+        switch (errorTypeEnum)
+        {
+        case kjstError:
+        default:
+            baseErrorType = errorType;
+            break;
+        case kjstRangeError:
+            baseErrorType = rangeErrorType;
+            break;
+        case kjstReferenceError:
+            baseErrorType = referenceErrorType;
+            break;
+        case kjstSyntaxError:
+            baseErrorType = syntaxErrorType;
+            break;
+        case kjstTypeError:
+            baseErrorType = typeErrorType;
+            break;
+        case kjstURIError:
+            baseErrorType = uriErrorType;
+            break;
+        }
+
+        JavascriptError *pError = RecyclerNew(recycler, JavascriptError, baseErrorType, TRUE);
+        JavascriptError::SetErrorType(pError, errorTypeEnum);
+        return pError;
+    }
+
+    JavascriptError* JavascriptLibrary::CreateEvalError()
+    {
+        AssertMsg(evalErrorType, "Where's evalErrorType?");
+        JavascriptError *pError = RecyclerNew(this->GetRecycler(), JavascriptError, evalErrorType);
+        JavascriptError::SetErrorType(pError, kjstEvalError);
+        return pError;
+    }
+
+    JavascriptError* JavascriptLibrary::CreateRangeError()
+    {
+        AssertMsg(rangeErrorType, "Where's rangeErrorType?");
+        JavascriptError *pError = RecyclerNew(this->GetRecycler(), JavascriptError, rangeErrorType);
+        JavascriptError::SetErrorType(pError, kjstRangeError);
+        return pError;
+    }
+
+    JavascriptError* JavascriptLibrary::CreateReferenceError()
+    {
+        AssertMsg(referenceErrorType, "Where's referenceErrorType?");
+        JavascriptError *pError = RecyclerNew(this->GetRecycler(), JavascriptError, referenceErrorType);
+        JavascriptError::SetErrorType(pError, kjstReferenceError);
+        return pError;
+    }
+
+    JavascriptError* JavascriptLibrary::CreateSyntaxError()
+    {
+        AssertMsg(syntaxErrorType, "Where's syntaxErrorType?");
+        JavascriptError *pError = RecyclerNew(this->GetRecycler(), JavascriptError, syntaxErrorType);
+        JavascriptError::SetErrorType(pError, kjstSyntaxError);
+        return pError;
+    }
+
+    JavascriptError* JavascriptLibrary::CreateTypeError()
+    {
+        AssertMsg(typeErrorType, "Where's typeErrorType?");
+        JavascriptError *pError = RecyclerNew(this->GetRecycler(), JavascriptError, typeErrorType);
+        JavascriptError::SetErrorType(pError, kjstTypeError);
+        return pError;
+    }
+
+    JavascriptError* JavascriptLibrary::CreateURIError()
+    {
+        AssertMsg(uriErrorType, "Where's uriErrorType?");
+        JavascriptError *pError = RecyclerNew(this->GetRecycler(), JavascriptError, uriErrorType);
+        JavascriptError::SetErrorType(pError, kjstURIError);
+        return pError;
+    }
+
+    JavascriptError* JavascriptLibrary::CreateStackOverflowError()
+    {
+#if DBG
+        // If we are doing a heap enum, we need to be able to allocate the error object.
+        Recycler::AutoAllowAllocationDuringHeapEnum autoAllowAllocationDuringHeapEnum(this->GetRecycler());
+#endif
+
+        JavascriptError* stackOverflowError = scriptContext->GetLibrary()->CreateError();
+        JavascriptError::SetErrorMessage(stackOverflowError, VBSERR_OutOfStack, NULL, scriptContext);
+        return stackOverflowError;
+    }
+
+    JavascriptError* JavascriptLibrary::CreateOutOfMemoryError()
+    {
+        JavascriptError* outOfMemoryError = scriptContext->GetLibrary()->CreateError();
+        JavascriptError::SetErrorMessage(outOfMemoryError, VBSERR_OutOfMemory, NULL, scriptContext);
+        return outOfMemoryError;
+    }
+
+    // Should only be called when WinRT is enabled
+    JavascriptError* JavascriptLibrary::CreateWinRTError()
+    {
+        // If WinRT isn't enabled, create an error of type kjstError instead.
+        if (!scriptContext->GetConfig()->IsWinRTEnabled())
+        {
+            return scriptContext->GetLibrary()->CreateError();
+        }
+        AssertMsg(winrtErrorType, "Where's winrtErrorType?");
+        JavascriptError *pError = RecyclerNew(this->GetRecycler(), JavascriptError, winrtErrorType);
+        JavascriptError::SetErrorType(pError, kjstWinRTError);
+        return pError;
+    }
+
+    JavascriptFunction* JavascriptLibrary::CreateNonProfiledFunction(FunctionInfo * functionInfo)
+    {
+        Assert(functionInfo->GetAttributes() & FunctionInfo::DoNotProfile);
+        return EnsureReadyIfHybridDebugging(RecyclerNew(this->GetRecycler(), RuntimeFunction,
+            CreateDeferredPrototypeFunctionType(functionInfo->GetOriginalEntryPoint()),
+            functionInfo));
+    }
+
+    ScriptFunction* JavascriptLibrary::CreateScriptFunction(FunctionProxy * proxy)
+    {
+        ScriptFunctionType* deferredPrototypeType = proxy->EnsureDeferredPrototypeType();
+        return EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, ScriptFunction, proxy, deferredPrototypeType));
+    }
+
+    ScriptFunctionWithInlineCache* JavascriptLibrary::CreateScriptFunctionWithInlineCache(FunctionProxy * proxy)
+    {
+        ScriptFunctionType* deferredPrototypeType = proxy->EnsureDeferredPrototypeType();
+        return EnsureReadyIfHybridDebugging(RecyclerNewWithInfoBits(this->GetRecycler(), (Memory::ObjectInfoBits)(EnumFunctionClass | Memory::FinalizableObjectBits), ScriptFunctionWithInlineCache, proxy, deferredPrototypeType));
+    }
+
+    GeneratorVirtualScriptFunction* JavascriptLibrary::CreateGeneratorVirtualScriptFunction(FunctionProxy * proxy)
+    {
+        ScriptFunctionType* deferredPrototypeType = proxy->EnsureDeferredPrototypeType();
+        return EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, GeneratorVirtualScriptFunction, proxy, deferredPrototypeType));
+    }
+
+#ifdef ENABLE_DOM_FAST_PATH
+    JavascriptTypedObjectSlotAccessorFunction* JavascriptLibrary::CreateTypedObjectSlotGetterFunction(unsigned int slotIndex, FunctionInfo* functionInfo, int typeId, PropertyId nameId)
+    {
+        // GC should zero out the whole library; we shouldn't need to explicitly zero out
+        if (typedObjectSlotGetterFunctionTypes[slotIndex] == nullptr)
+        {
+            typedObjectSlotGetterFunctionTypes[slotIndex] = CreateFunctionWithLengthType(functionInfo);
+            scriptContext->EnsureDOMFastPathIRHelperMap()->Add(functionInfo, ::DOMFastPathInfo::GetGetterIRHelper(slotIndex));
+        }
+        return EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptTypedObjectSlotAccessorFunction, typedObjectSlotGetterFunctionTypes[slotIndex], functionInfo, typeId, nameId));
+    }
+
+    JavascriptTypedObjectSlotAccessorFunction* JavascriptLibrary::CreateTypedObjectSlotSetterFunction(unsigned int slotIndex, FunctionInfo* functionInfo, int typeId, PropertyId nameId)
+    {
+        // GC should zero out the whole library; we shouldn't need to explicitly zero out
+        if (typedObjectSlotSetterFunctionTypes[slotIndex] == nullptr)
+        {
+            typedObjectSlotSetterFunctionTypes[slotIndex] = CreateFunctionWithLengthType(functionInfo);
+
+        }
+        return EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptTypedObjectSlotAccessorFunction, typedObjectSlotSetterFunctionTypes[slotIndex], functionInfo, typeId, nameId));
+    }
+
+#endif
+    DynamicType * JavascriptLibrary::CreateGeneratorType(RecyclableObject* prototype)
+    {
+        return DynamicType::New(scriptContext, TypeIds_Generator, prototype, nullptr, NullTypeHandler<false>::GetDefaultInstance());
+    }
+
+    template <class MethodType>
+    JavascriptExternalFunction* JavascriptLibrary::CreateIdMappedExternalFunction(MethodType entryPoint, DynamicType *pPrototypeType)
+    {
+        return EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptExternalFunction, entryPoint, pPrototypeType));
+    }
+
+    JavascriptWinRTFunction* JavascriptLibrary::CreateIdMappedWinRTFunction(DynamicType * type, WinRTFunctionInfo * functionInfo, Var signature)
+    {
+        return EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptWinRTFunction, type, functionInfo, signature));
+    }
+
+    JavascriptWinRTFunction* JavascriptLibrary::CreateIdMappedWinRTConstructorFunction(DynamicType * type, WinRTFunctionInfo * functionInfo, Var signature)
+    {
+        return EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptWinRTConstructorFunction, type, functionInfo, signature));
+    }
+
+    JavascriptGeneratorFunction* JavascriptLibrary::CreateGeneratorFunction(JavascriptMethod entryPoint, GeneratorVirtualScriptFunction* scriptFunction)
+    {
+        Assert(scriptContext->GetConfig()->IsES6GeneratorsEnabled());
+
+        DynamicType* type = CreateDeferredPrototypeGeneratorFunctionType(entryPoint);
+
+        return EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptGeneratorFunction, type, scriptFunction));
+    }
+
+    JavascriptExternalFunction* JavascriptLibrary::CreateStdCallExternalFunction(StdCallJavascriptMethod entryPoint, PropertyId nameId, void *callbackState)
+    {
+        Assert(nameId == 0 || scriptContext->IsTrackedPropertyId(nameId));
+        return CreateStdCallExternalFunction(entryPoint, TaggedInt::ToVarUnchecked(nameId), callbackState);
+    }
+
+    JavascriptExternalFunction* JavascriptLibrary::CreateStdCallExternalFunction(StdCallJavascriptMethod entryPoint, Var nameId, void *callbackState)
+    {
+        JavascriptExternalFunction* function = EnsureReadyIfHybridDebugging(this->CreateIdMappedExternalFunction(entryPoint, stdCallFunctionWithDeferredPrototypeType));
+        function->SetFunctionNameId(nameId);
+        function->SetCallbackState(callbackState);
+
+        return function;
+    }
+
+    JavascriptWinRTFunction* JavascriptLibrary::CreateWinRTFunction(JavascriptMethod entryPoint, PropertyId nameId, Var signature, bool fConstructor)
+    {
+        auto functionInfo = RecyclerNew(this->GetRecycler(), WinRTFunctionInfo, entryPoint);
+        JavascriptWinRTFunction *function = nullptr;
+        DynamicType * type = CreateDeferredPrototypeFunctionType(this->inDispatchProfileMode ? ProfileEntryThunk : entryPoint);
+        if (fConstructor)
+        {
+            function = this->CreateIdMappedWinRTConstructorFunction(type, functionInfo, signature);
+        }
+        else
+        {
+            function = this->CreateIdMappedWinRTFunction(type, functionInfo, signature);
+        }
+        function = EnsureReadyIfHybridDebugging(function);
+
+        function->SetFunctionNameId(TaggedInt::ToVarUnchecked(nameId));
+        return function;
+    }
+
+    JavascriptPromiseCapabilitiesExecutorFunction* JavascriptLibrary::CreatePromiseCapabilitiesExecutorFunction(JavascriptMethod entryPoint, JavascriptPromiseCapability* capability)
+    {
+        Assert(scriptContext->GetConfig()->IsES6PromiseEnabled());
+
+        FunctionInfo* functionInfo = RecyclerNew(this->GetRecycler(), FunctionInfo, entryPoint);
+        DynamicType* type = CreateDeferredPrototypeFunctionType(this->inDispatchProfileMode ? ProfileEntryThunk : entryPoint);
+        JavascriptPromiseCapabilitiesExecutorFunction* function = EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptPromiseCapabilitiesExecutorFunction, type, functionInfo, capability));
+
+        function->SetPropertyWithAttributes(PropertyIds::length, TaggedInt::ToVarUnchecked(2), PropertyConfigurable, nullptr);
+
+        return function;
+    }
+
+    JavascriptPromiseResolveOrRejectFunction* JavascriptLibrary::CreatePromiseResolveOrRejectFunction(JavascriptMethod entryPoint, JavascriptPromise* promise, bool isReject)
+    {
+        Assert(scriptContext->GetConfig()->IsES6PromiseEnabled());
+
+        FunctionInfo* functionInfo = &Js::JavascriptPromise::EntryInfo::ResolveOrRejectFunction;
+        DynamicType* type = CreateDeferredPrototypeFunctionType(this->inDispatchProfileMode ? ProfileEntryThunk : entryPoint);
+        JavascriptPromiseResolveOrRejectFunction* function = EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptPromiseResolveOrRejectFunction, type, functionInfo, promise, isReject));
+
+        function->SetPropertyWithAttributes(PropertyIds::length, TaggedInt::ToVarUnchecked(1), PropertyConfigurable, nullptr);
+
+        return function;
+    }
+
+    JavascriptPromiseReactionTaskFunction* JavascriptLibrary::CreatePromiseReactionTaskFunction(JavascriptMethod entryPoint, JavascriptPromiseReaction* reaction, Var argument)
+    {
+        Assert(scriptContext->GetConfig()->IsES6PromiseEnabled());
+
+        FunctionInfo* functionInfo = RecyclerNew(this->GetRecycler(), FunctionInfo, entryPoint);
+        DynamicType* type = CreateDeferredPrototypeFunctionType(this->inDispatchProfileMode ? ProfileEntryThunk : entryPoint);
+
+        return EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptPromiseReactionTaskFunction, type, functionInfo, reaction, argument));
+    }
+
+    JavascriptPromiseResolveThenableTaskFunction* JavascriptLibrary::CreatePromiseResolveThenableTaskFunction(JavascriptMethod entryPoint, JavascriptPromise* promise, RecyclableObject* thenable, RecyclableObject* thenFunction)
+    {
+        Assert(scriptContext->GetConfig()->IsES6PromiseEnabled());
+
+        FunctionInfo* functionInfo = RecyclerNew(this->GetRecycler(), FunctionInfo, entryPoint);
+        DynamicType* type = CreateDeferredPrototypeFunctionType(this->inDispatchProfileMode ? ProfileEntryThunk : entryPoint);
+
+        return EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptPromiseResolveThenableTaskFunction, type, functionInfo, promise, thenable, thenFunction));
+    }
+
+    JavascriptPromiseAllResolveElementFunction* JavascriptLibrary::CreatePromiseAllResolveElementFunction(JavascriptMethod entryPoint, uint32 index, JavascriptArray* values, JavascriptPromiseCapability* capabilities, JavascriptPromiseAllResolveElementFunctionRemainingElementsWrapper* remainingElements)
+    {
+        Assert(scriptContext->GetConfig()->IsES6PromiseEnabled());
+
+        FunctionInfo* functionInfo = &Js::JavascriptPromise::EntryInfo::AllResolveElementFunction;
+        DynamicType* type = CreateDeferredPrototypeFunctionType(this->inDispatchProfileMode ? ProfileEntryThunk : entryPoint);
+        JavascriptPromiseAllResolveElementFunction* function = EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptPromiseAllResolveElementFunction, type, functionInfo, index, values, capabilities, remainingElements));
+
+        function->SetPropertyWithAttributes(PropertyIds::length, TaggedInt::ToVarUnchecked(1), PropertyConfigurable, nullptr);
+
+        return function;
+    }
+
+    JavascriptExternalFunction* JavascriptLibrary::CreateWrappedExternalFunction(JavascriptExternalFunction* wrappedFunction)
+    {
+        // The wrapped function will have profiling, so the wrapper function does not need it.
+        JavascriptExternalFunction* function = EnsureReadyIfHybridDebugging(RecyclerNew(this->GetRecycler(), JavascriptExternalFunction, wrappedFunction, wrappedFunctionWithDeferredPrototypeType));
+        function->SetFunctionNameId(wrappedFunction->GetSourceString());
+
+        return function;
+    }
+
+#if !FLOATVAR
+    JavascriptNumber * JavascriptLibrary::CreateNumber(double value, RecyclerJavascriptNumberAllocator * numberAllocator)
+    {
+        AssertMsg(numberTypeStatic, "Where's numberTypeStatic?");
+        return AllocatorNew(RecyclerJavascriptNumberAllocator, numberAllocator, JavascriptNumber, value, numberTypeStatic);
+    }
+
+    JavascriptNumber* JavascriptLibrary::CreateCodeGenNumber(CodeGenNumberAllocator * alloc, double value)
+    {
+        AssertMsg(numberTypeStatic, "Where's numberTypeStatic?");
+        return new (alloc->Alloc()) JavascriptNumber(value, numberTypeStatic);
+    }
+#endif
+
+    DynamicObject* JavascriptLibrary::CreateGeneratorConstructorPrototypeObject()
+    {
+        AssertMsg(generatorConstructorPrototypeObjectType, "Where's generatorConstructorPrototypeObjectType?");
+        DynamicObject * prototype = DynamicObject::New(this->GetRecycler(), generatorConstructorPrototypeObjectType);
+        // Generator functions' prototype objects are not created with a .constructor property
+        return prototype;
+    }
+
+    DynamicObject* JavascriptLibrary::CreateConstructorPrototypeObject(JavascriptFunction * constructor)
+    {
+        AssertMsg(constructorPrototypeObjectType, "Where's constructorPrototypeObjectType?");
+        DynamicObject * prototype = DynamicObject::New(this->GetRecycler(), constructorPrototypeObjectType);
+        AddMember(prototype, PropertyIds::constructor, constructor);
+        return prototype;
+    }
+
+    DynamicObject* JavascriptLibrary::CreateObject(
+        const bool allowObjectHeaderInlining,
+        const PropertyIndex requestedInlineSlotCapacity)
+    {
+        Assert(GetObjectType());
+        Assert(GetObjectHeaderInlinedType());
+
+        const bool useObjectHeaderInlining =
+            allowObjectHeaderInlining && FunctionBody::DoObjectHeaderInliningForObjectLiteral(requestedInlineSlotCapacity);
+        DynamicType *const type =
+            useObjectHeaderInlining
+            ? GetObjectHeaderInlinedLiteralType(requestedInlineSlotCapacity)
+            : GetObjectLiteralType(requestedInlineSlotCapacity);
+        return DynamicObject::New(GetRecycler(), type);
+    }
+
+    DynamicObject* JavascriptLibrary::CreateObject(DynamicTypeHandler * typeHandler)
+    {
+        return DynamicObject::New(this->GetRecycler(),
+            Js::DynamicType::New(scriptContext, Js::TypeIds_Object, this->GetObjectPrototype(),
+                RecyclableObject::DefaultEntryPoint, typeHandler, false, false));
+    }
+
+    DynamicType* JavascriptLibrary::CreateObjectType(RecyclableObject* prototype, Js::TypeId typeId, uint16 requestedInlineSlotCapacity)
+    {
+        const bool useObjectHeaderInlining = FunctionBody::DoObjectHeaderInliningForConstructor(requestedInlineSlotCapacity);
+        const uint16 offsetOfInlineSlots =
+            useObjectHeaderInlining
+            ? DynamicTypeHandler::GetOffsetOfObjectHeaderInlineSlots()
+            : sizeof(DynamicObject);
+
+        DynamicType* dynamicType = null;
+        const bool useCache = prototype->GetScriptContext() == this->scriptContext;
+        if (useCache &&
+            prototype->GetInternalProperty(prototype, Js::InternalPropertyIds::TypeOfPrototypObject, (Js::Var*) &dynamicType, NULL, this->scriptContext))
+        {
+            //If the prototype is externalObject, then ExternalObject::Reinitialize can set all the properties to undefined in navigation scenario.
+            //Check to make sure dynamicType which is stored as a Js::Var is not undefined. 
+            //See Blue 419324
+            if (dynamicType != null && (Js::Var)dynamicType != this->GetUndefined())
+            {
+                DynamicTypeHandler *const dynamicTypeHandler = dynamicType->GetTypeHandler();
+                if (dynamicTypeHandler->IsObjectHeaderInlinedTypeHandler() == useObjectHeaderInlining &&
+                    (
+                        dynamicTypeHandler->GetInlineSlotCapacity() ==
+                        (
+                            useObjectHeaderInlining
+                            ? DynamicTypeHandler::RoundUpObjectHeaderInlinedInlineSlotCapacity(requestedInlineSlotCapacity)
+                            : DynamicTypeHandler::RoundUpInlineSlotCapacity(requestedInlineSlotCapacity)
+                            )
+                        ))
+                {
+                    Assert(dynamicType->GetIsShared());
+                    return dynamicType;
+                }
+            }
+        }
+
+        SimplePathTypeHandler* typeHandler = SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, requestedInlineSlotCapacity, offsetOfInlineSlots, true, true);
+        dynamicType = DynamicType::New(scriptContext, typeId, prototype, RecyclableObject::DefaultEntryPoint, typeHandler, true, true);
+
+        if (useCache)
+        {
+            prototype->SetInternalProperty(Js::InternalPropertyIds::TypeOfPrototypObject, (Var)dynamicType, PropertyOperationFlags::PropertyOperation_Force, NULL);
+        }
+
+        return dynamicType;
+    }
+
+    DynamicType* JavascriptLibrary::CreateObjectTypeNoCache(RecyclableObject* prototype, Js::TypeId typeId)
+    {
+        return DynamicType::New(scriptContext, typeId, prototype, RecyclableObject::DefaultEntryPoint,
+            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+    }
+
+    DynamicType* JavascriptLibrary::CreateObjectType(RecyclableObject* prototype, uint16 requestedInlineSlotCapacity)
+    {
+        // We can't reuse the type in objectType even if hte prototype is the object protoypte, because those has inline slot capacity fixed
+        return CreateObjectType(prototype, TypeIds_Object, requestedInlineSlotCapacity);
+    }
+
+    DynamicObject* JavascriptLibrary::CreateObject(RecyclableObject* prototype, uint16 requestedInlineSlotCapacity)
+    {
+        Assert(JavascriptOperators::IsObject(prototype));
+
+        DynamicType* dynamicType = CreateObjectType(prototype, requestedInlineSlotCapacity);
+        return DynamicObject::New(this->GetRecycler(), dynamicType);
+    }
+
+    PropertyStringCacheMap* JavascriptLibrary::EnsurePropertyStringMap()
+    {
+        if (this->propertyStringMap == null)
+        {
+            this->propertyStringMap = RecyclerNew(this->recycler, PropertyStringCacheMap, this->GetRecycler());
+            this->scriptContext->RegisterWeakReferenceDictionary((JsUtil::IWeakReferenceDictionary*) this->propertyStringMap);
+        }
+        return this->propertyStringMap;
+    }
+
+    DynamicObject* JavascriptLibrary::CreateActivationObject()
+    {
+        AssertMsg(activationObjectType, "Where's activationObjectType?");
+        return RecyclerNew(this->GetRecycler(), ActivationObject, activationObjectType);
+    }
+
+    DynamicObject* JavascriptLibrary::CreatePseudoActivationObject()
+    {
+        AssertMsg(activationObjectType, "Where's activationObjectType?");
+        return RecyclerNew(this->GetRecycler(), PseudoActivationObject, activationObjectType);
+    }
+
+    DynamicObject* JavascriptLibrary::CreateBlockActivationObject()
+    {
+        AssertMsg(activationObjectType, "Where's activationObjectType?");
+        return RecyclerNew(this->GetRecycler(), BlockActivationObject, activationObjectType);
+    }
+
+    DynamicObject* JavascriptLibrary::CreateConsoleScopeActivationObject()
+    {
+        AssertMsg(activationObjectType, "Where's activationObjectType?");
+        return RecyclerNew(this->GetRecycler(), ConsoleScopeActivationObject, activationObjectType);
+    }
+
+    JavascriptString* JavascriptLibrary::GetEmptyString() const
+    {
+        AssertMsg(emptyString, "Where's emptyString?");
+#ifdef PROFILE_STRINGS
+        StringProfiler::RecordEmptyStringRequest(scriptContext);
+#endif
+        return emptyString;
+    }
+
+    PropertyString* JavascriptLibrary::CreatePropertyString(const Js::PropertyRecord* propertyRecord)
+    {
+        AssertMsg(stringTypeStatic, "Where's stringTypeStatic?");
+        return PropertyString::New(stringTypeStatic, propertyRecord, this->GetRecycler());
+    }
+
+    PropertyString* JavascriptLibrary::CreatePropertyString(const Js::PropertyRecord* propertyRecord, ArenaAllocator *arena)
+    {
+        AssertMsg(stringTypeStatic, "Where's stringTypeStatic?");
+        return PropertyString::New(stringTypeStatic, propertyRecord, arena);
+    }
+
+    JavascriptVariantDate* JavascriptLibrary::CreateVariantDate(const double value)
+    {
+        AssertMsg(variantDateType, "Where's variantDateType?");
+        return RecyclerNewLeafZ(this->GetRecycler(), JavascriptVariantDate, value, variantDateType);
+    }
+
+    JavascriptBooleanObject* JavascriptLibrary::CreateBooleanObject()
+    {
+        AssertMsg(booleanTypeDynamic, "Where's booleanTypeDynamic?");
+        return RecyclerNew(this->GetRecycler(), JavascriptBooleanObject, nullptr, booleanTypeDynamic);
+    }
+
+    JavascriptBooleanObject* JavascriptLibrary::CreateBooleanObject(BOOL value)
+    {
+        AssertMsg(booleanTypeDynamic, "Where's booleanTypeDynamic?");
+        return RecyclerNew(this->GetRecycler(), JavascriptBooleanObject, CreateBoolean(value), booleanTypeDynamic);
+    }
+
+    JavascriptSymbolObject* JavascriptLibrary::CreateSymbolObject(JavascriptSymbol* value)
+    {
+        AssertMsg(symbolTypeDynamic, "Where's symbolTypeDynamic?");
+        return RecyclerNew(this->GetRecycler(), JavascriptSymbolObject, value, symbolTypeDynamic);
+    }
+
+    JavascriptNumberObject* JavascriptLibrary::CreateNumberObject(Var number)
+    {
+        AssertMsg(numberTypeDynamic, "Where's numberTypeDynamic?");
+        return RecyclerNew(this->GetRecycler(), JavascriptNumberObject, number, numberTypeDynamic);
+    }
+
+    JavascriptNumberObject* JavascriptLibrary::CreateNumberObjectWithCheck(double value)
+    {
+        return CreateNumberObject(JavascriptNumber::ToVarWithCheck(value, scriptContext));
+    }
+
+    JavascriptStringObject* JavascriptLibrary::CreateStringObject(JavascriptString* value)
+    {
+        AssertMsg(stringTypeDynamic, "Where's stringTypeDynamic?");
+        return RecyclerNew(this->GetRecycler(), JavascriptStringObject, value, stringTypeDynamic);
+    }
+
+    JavascriptStringObject* JavascriptLibrary::CreateStringObject(const wchar_t* value, charcount_t length)
+    {
+        AssertMsg(stringTypeDynamic, "Where's stringTypeDynamic?");
+        return RecyclerNew(this->GetRecycler(), JavascriptStringObject,
+            Js::JavascriptString::NewWithBuffer(value, length, scriptContext), stringTypeDynamic);
+    }
+
+    JavascriptRegExp* JavascriptLibrary::CreateRegExp(UnifiedRegex::RegexPattern* pattern)
+    {
+        AssertMsg(regexType, "Where's regexType?");
+        return RecyclerNew(this->GetRecycler(), JavascriptRegExp, pattern, regexType);
+    }
+
+    JavascriptArrayIterator* JavascriptLibrary::CreateArrayIterator(Var iterable, JavascriptArrayIteratorKind kind)
+    {
+        AssertMsg(arrayIteratorType, "Where's arrayIteratorType");
+        return RecyclerNew(this->GetRecycler(), JavascriptArrayIterator, arrayIteratorType, iterable, kind);
+    }
+
+    JavascriptMapIterator* JavascriptLibrary::CreateMapIterator(JavascriptMap* map, JavascriptMapIteratorKind kind)
+    {
+        AssertMsg(mapIteratorType, "Where's mapIteratorType");
+        return RecyclerNew(this->GetRecycler(), JavascriptMapIterator, mapIteratorType, map, kind);
+    }
+
+    JavascriptSetIterator* JavascriptLibrary::CreateSetIterator(JavascriptSet* set, JavascriptSetIteratorKind kind)
+    {
+        AssertMsg(setIteratorType, "Where's setIteratorType");
+        return RecyclerNew(this->GetRecycler(), JavascriptSetIterator, setIteratorType, set, kind);
+    }
+
+    JavascriptStringIterator* JavascriptLibrary::CreateStringIterator(JavascriptString* string)
+    {
+        AssertMsg(stringIteratorType, "Where's stringIteratorType");
+        return RecyclerNew(this->GetRecycler(), JavascriptStringIterator, stringIteratorType, string);
+    }
+
+    DynamicObject* JavascriptLibrary::CreateIteratorResultObject(Var value, Var done)
+    {
+        DynamicObject* iteratorResult = DynamicObject::New(this->GetRecycler(), iteratorResultType);
+
+        iteratorResult->SetSlot(SetSlotArguments(Js::PropertyIds::value, 0, value));
+        iteratorResult->SetSlot(SetSlotArguments(Js::PropertyIds::done, 1, done));
+
+        return iteratorResult;
+    }
+
+    DynamicObject* JavascriptLibrary::CreateIteratorResultObjectValueFalse(Var value)
+    {
+        return CreateIteratorResultObject(value, GetFalse());
+    }
+
+    DynamicObject* JavascriptLibrary::CreateIteratorResultObjectUndefinedTrue()
+    {
+        return CreateIteratorResultObject(GetUndefined(), GetTrue());
+    }
+
+    RecyclableObject* JavascriptLibrary::CreateThrowErrorObject(JavascriptError* error)
+    {
+        return ThrowErrorObject::New(this->throwErrorObjectType, error, this->GetRecycler());
+    }
+
+    void JavascriptLibrary::SetForInEnumeratorCache(ForInObjectEnumerator* enumerator)
+    {
+        Assert(enumerator);
+        this->cachedForInEnumerator = enumerator->GetWeakReference(this->recycler);
+    }
+
+    ForInObjectEnumerator* JavascriptLibrary::GetAndClearForInEnumeratorCache()
+    {
+        auto cachedEnumerator = this->cachedForInEnumerator;
+        if (cachedEnumerator)
+        {
+            ForInObjectEnumerator * enumerator = cachedEnumerator->Get();
+            this->cachedForInEnumerator = null;
+            return enumerator;
+        }
+        return null;
+    }
+
+    bool JavascriptLibrary::IsCopyOnAccessArrayCallSite(JavascriptLibrary *lib, ArrayCallSiteInfo *arrayInfo, uint32 length)
+    {
+        return
+            lib->cacheForCopyOnAccessArraySegments
+            && lib->cacheForCopyOnAccessArraySegments->IsNotOverHardLimit()
+            && (
+                PHASE_FORCE1(CopyOnAccessArrayPhase)  // -force:copyonaccessarray is only restricted by hard limit of the segment cache
+                || (
+                    !arrayInfo->isNotCopyOnAccessArray        // from profile
+                    && !PHASE_OFF1(CopyOnAccessArrayPhase)
+                    && lib->cacheForCopyOnAccessArraySegments->IsNotFull()  // cache size soft limit thru -copyonaccessarraysegmentcachesize:<number>
+                    && length <= (uint32)CONFIG_FLAG(MaxCopyOnAccessArrayLength)  // -maxcopyonaccessarraylength:<number>
+                    && length >= (uint32)CONFIG_FLAG(MinCopyOnAccessArrayLength)  // -mincopyonaccessarraylength:<number>
+                    )
+                );
+    }
+
+    bool JavascriptLibrary::IsCachedCopyOnAccessArrayCallSite(const JavascriptLibrary *lib, ArrayCallSiteInfo *arrayInfo)
+    {
+        return lib->cacheForCopyOnAccessArraySegments
+            && lib->cacheForCopyOnAccessArraySegments->IsValidIndex(arrayInfo->copyOnAccessArrayCacheIndex);
+    }
+
+    // static
+    bool JavascriptLibrary::IsTypedArrayConstructor(Var constructor, ScriptContext* scriptContext)
+    {
+        JavascriptLibrary* library = scriptContext->GetLibrary();
+        return constructor == library->GetInt8ArrayConstructor()
+            || constructor == library->GetUint8ArrayConstructor()
+            || constructor == library->GetUint8ClampedArrayConstructor()
+            || constructor == library->GetInt16ArrayConstructor()
+            || constructor == library->GetUint16ArrayConstructor()
+            || constructor == library->GetInt32ArrayConstructor()
+            || constructor == library->GetUint32ArrayConstructor()
+            || constructor == library->GetFloat32ArrayConstructor()
+            || constructor == library->GetFloat64ArrayConstructor();
+    }
+
+#ifdef ENABLE_NATIVE_CODEGEN
+    JavascriptFunction ** JavascriptLibrary::GetBuiltinFunctions()
+    {
+        AssertMsg(this->builtinFunctions, "builtinFunctions table must've been initialized as part of library initialization!");
+        return this->builtinFunctions;
+    }
+
+    INT_PTR* JavascriptLibrary::GetVTableAddresses()
+    {
+        AssertMsg(this->vtableAddresses, "vtableAddresses table must've been initialized as part of library initialization!");
+        return this->vtableAddresses;
+    }
+
+    // TODO: get rid of switch and use table-driven approach. See reverse function: InliningDecider::GetBuiltInInlineCandidateOpCode
+    //static 
+    BuiltinFunction JavascriptLibrary::GetBuiltInInlineCandidateId(OpCode opCode)
+    {
+        switch (opCode)
+        {
+        case OpCode::InlineMathAcos:
+            return BuiltinFunction::Math_Acos;
+
+        case OpCode::InlineMathAsin:
+            return BuiltinFunction::Math_Asin;
+
+        case OpCode::InlineMathAtan:
+            return BuiltinFunction::Math_Atan;
+
+        case OpCode::InlineMathAtan2:
+            return BuiltinFunction::Math_Atan2;
+
+        case OpCode::InlineMathCos:
+            return BuiltinFunction::Math_Cos;
+
+        case OpCode::InlineMathExp:
+            return BuiltinFunction::Math_Exp;
+
+        case OpCode::InlineMathLog:
+            return BuiltinFunction::Math_Log;
+
+        case OpCode::InlineMathPow:
+            return BuiltinFunction::Math_Pow;
+
+        case OpCode::InlineMathSin:
+            return BuiltinFunction::Math_Sin;
+
+        case OpCode::InlineMathSqrt:
+            return BuiltinFunction::Math_Sqrt;
+
+        case OpCode::InlineMathTan:
+            return BuiltinFunction::Math_Tan;
+
+            // The ones below will be enabled in IE11.
+            // TODO: add string.prototype.concat.
+        case OpCode::InlineMathAbs:
+            return BuiltinFunction::Math_Abs;
+
+        case OpCode::InlineMathClz32:
+            return BuiltinFunction::Math_Clz32;
+
+        case OpCode::InlineMathCeil:
+            return BuiltinFunction::Math_Ceil;
+
+        case OpCode::InlineMathFloor:
+            return BuiltinFunction::Math_Floor;
+
+        case OpCode::InlineMathMax:
+            return BuiltinFunction::Math_Max;
+
+        case OpCode::InlineMathMin:
+            return BuiltinFunction::Math_Min;
+
+        case OpCode::InlineMathImul:
+            return BuiltinFunction::Math_Imul;
+
+        case OpCode::InlineMathRandom:
+            return BuiltinFunction::Math_Random;
+
+        case OpCode::InlineMathRound:
+            return BuiltinFunction::Math_Round;
+
+        case OpCode::InlineMathFround:
+            return BuiltinFunction::Math_Fround;
+
+        case OpCode::InlineStringCharAt:
+            return BuiltinFunction::String_CharAt;
+
+        case OpCode::InlineStringCharCodeAt:
+            return BuiltinFunction::String_CharCodeAt;
+
+        case OpCode::InlineStringCodePointAt:
+            return BuiltinFunction::String_CodePointAt;
+
+        case OpCode::InlineArrayPop:
+            return BuiltinFunction::Array_Pop;
+
+        case OpCode::InlineArrayPush:
+            return BuiltinFunction::Array_Push;
+
+        case OpCode::InlineFunctionApply:
+            return BuiltinFunction::Function_Apply;
+
+        case OpCode::InlineFunctionCall:
+            return BuiltinFunction::Function_Call;
+
+        case OpCode::InlineRegExpExec:
+            return BuiltinFunction::RegExp_Exec;
+
+        }
+
+        return BuiltinFunction::None;
+    }
+
+    // Parses given flags and arg kind (dst or src1, or src2) returns the type the arg must be type-specialized to.
+    // static 
+    BuiltInArgSpecizationType JavascriptLibrary::GetBuiltInArgType(BuiltInFlags flags, BuiltInArgShift argKind)
+    {
+        Assert(argKind == BuiltInArgShift::BIAS_Dst || BuiltInArgShift::BIAS_Src1 || BuiltInArgShift::BIAS_Src2);
+
+        BuiltInArgSpecizationType type = static_cast<BuiltInArgSpecizationType>(
+            (flags >> argKind) &                            // Shift-out everyting to the right of start of interesting area.
+            ((1 << Js::BIAS_ArgSize) - 1));   // Mask-out everything to the left of interesting area.
+
+        return type;
+    }
+#endif
 }

@@ -6,7 +6,6 @@
 
 namespace JSON 
 {
-    class JSONStack;
     class StrictEqualsObjectComparer
     {
     public:       
@@ -24,58 +23,15 @@ namespace JSON
         Js::ScriptContext *scriptContext;
 
     public:
-        JSONStack(ArenaAllocator *allocator, Js::ScriptContext *context): jsObjectStack(allocator), domObjectStack(null), alloc(allocator), scriptContext(context)
-        {
-        }
+        JSONStack(ArenaAllocator *allocator, Js::ScriptContext *context);
 
-        static bool Equals(Js::Var x, Js::Var y)
-        {
-            return Js::JavascriptOperators::StrictEqual(x,y, ((Js::RecyclableObject *)x)->GetScriptContext()) == TRUE;
-        }
+        static bool Equals(Js::Var x, Js::Var y);
 
-        bool Has(Js::Var data, bool bJsObject = true) const
-        {
-            if (bJsObject)
-            {
-                return jsObjectStack.Has(data);
-            }
-            else if (domObjectStack)
-            {
-                return domObjectStack->Contains(data);
-            }
-            return false;
-        }
-
-        bool Push(Js::Var data, bool bJsObject = true)
-        {
-            if (bJsObject)
-            {
-                return jsObjectStack.Push(data);
-            }
-            EnsuresDomObjectStack();
-            domObjectStack->Add(data);
-            return true;
-        }
-
-        void Pop(bool bJsObject = true)
-        {
-            if (bJsObject)
-            {
-                jsObjectStack.Pop();
-                return;
-            }
-            AssertMsg(domObjectStack != NULL, "Misaligned pop");
-            domObjectStack->RemoveAtEnd();
-        }
+        bool Has(Js::Var data, bool bJsObject = true) const;
+        bool Push(Js::Var data, bool bJsObject = true);
+        void Pop(bool bJsObject = true);
 
     private:
-        void EnsuresDomObjectStack(void)
-        {
-            if (!domObjectStack)
-            {
-                domObjectStack = DOMObjectStack::New(alloc);
-            }
-        }
-
+        void EnsuresDomObjectStack(void);
     };
 } //namespace JSON

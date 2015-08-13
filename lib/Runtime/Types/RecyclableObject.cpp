@@ -85,7 +85,7 @@ namespace Js
         RecordAllocation(scriptContext);
     }
 
-    void RecyclableObject:: RecordAllocation(ScriptContext * scriptContext)
+    void RecyclableObject::RecordAllocation(ScriptContext * scriptContext)
     {
 #ifdef PROFILE_TYPES
         TypeId typeId = this->GetType()->GetTypeId();
@@ -96,6 +96,109 @@ namespace Js
 #endif
     }
 #endif
+
+    RecyclableObject::RecyclableObject(Type * type) : type(type)
+    {
+#if DBG_EXTRAFIELD
+        dtorCalled = false;
+#ifdef HEAP_ENUMERATION_VALIDATION
+        m_heapEnumValidationCookie = 0;
+#endif
+#endif
+#if DBG || defined(PROFILE_TYPES)
+        RecordAllocation(type->GetScriptContext());
+#endif
+    }
+
+    RecyclableObject* RecyclableObject::GetPrototype() const
+    {
+        Type* type = GetType();
+        if (!type->HasSpecialPrototype())
+        {
+            return type->GetPrototype();
+        }
+        return const_cast<RecyclableObject*>(this)->GetPrototypeSpecial();
+    }
+
+    RecyclableObject* RecyclableObject::GetPrototypeSpecial()
+    {
+        AssertMsg(GetType()->GetTypeId() == TypeIds_Null, "Do not use this function.");
+        return nullptr;
+    }
+
+    JavascriptMethod RecyclableObject::GetEntryPoint() const
+    {
+        return this->GetType()->GetEntryPoint();
+    }
+
+    Recycler* RecyclableObject::GetRecycler() const
+    {
+        return this->GetLibrary()->GetRecycler();
+    }
+
+    void RecyclableObject::SetIsPrototype()
+    {
+        if (DynamicType::Is(this->GetTypeId()))
+        {
+            DynamicObject* dynamicThis = DynamicObject::FromVar(this);
+            dynamicThis->SetIsPrototype();      // Call the DynamicObject::SetIsPrototype
+        }
+    }
+
+    bool RecyclableObject::HasOnlyWritableDataProperties()
+    {
+        if (DynamicType::Is(this->GetTypeId()))
+        {
+            DynamicObject* obj = DynamicObject::FromVar(this);
+            return obj->GetTypeHandler()->GetHasOnlyWritableDataProperties() &&
+                (!obj->HasObjectArray() || obj->GetObjectArrayOrFlagsAsArray()->HasOnlyWritableDataProperties());
+        }
+
+        return true;
+    }
+
+    void RecyclableObject::ClearWritableDataOnlyDetectionBit()
+    {
+        if (DynamicType::Is(this->GetTypeId()))
+        {
+            DynamicObject* obj = DynamicObject::FromVar(this);
+            obj->GetTypeHandler()->ClearWritableDataOnlyDetectionBit();
+            if (obj->HasObjectArray())
+            {
+                obj->GetObjectArrayOrFlagsAsArray()->ClearWritableDataOnlyDetectionBit();
+            }
+        }
+    }
+
+    bool RecyclableObject::IsWritableDataOnlyDetectionBitSet()
+    {
+        if (DynamicType::Is(this->GetTypeId()))
+        {
+            DynamicObject* obj = DynamicObject::FromVar(this);
+            return obj->GetTypeHandler()->IsWritableDataOnlyDetectionBitSet() ||
+                (obj->HasObjectArray() && obj->GetObjectArrayOrFlagsAsArray()->IsWritableDataOnlyDetectionBitSet());
+        }
+
+        return false;
+    }
+
+    RecyclableObject* RecyclableObject::GetProxiedObjectForHeapEnum()
+    {
+        Assert(this->GetScriptContext()->IsHeapEnumInProgress());
+        return NULL;
+    }
+
+    BOOL RecyclableObject::IsExternal() const
+    {
+        Assert(this->IsExternalVirtual() == this->GetType()->IsExternal());
+        return this->GetType()->IsExternal();
+    }
+
+    BOOL RecyclableObject::SkipsPrototype() const
+    {
+        Assert(this->DbgSkipsPrototype() == this->GetType()->SkipsPrototype());
+        return this->GetType()->SkipsPrototype();
+    }
 
     uint32
     RecyclableObject::GetOffsetOfType()

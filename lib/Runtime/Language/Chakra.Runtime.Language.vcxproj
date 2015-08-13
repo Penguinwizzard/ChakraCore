@@ -219,8 +219,7 @@
     <None Include="InterpreterHandlerAsmJs.inl" />
     <None Include="InterpreterLoop.inl" />
     <None Include="JavascriptExceptionOperators.inl" />
-    <None Include="JavascriptMathOperators.inl" />
-    <None Include="JavascriptObject.inl" />
+    <None Include="JavascriptMathOperators.inl" />    
     <None Include="InterpreterStackFrame.inl" />
     <None Include="JavascriptConversion.inl" />
     <None Include="JavascriptOperators.inl" />

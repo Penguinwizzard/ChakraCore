@@ -1300,7 +1300,22 @@ namespace Js
         void SetHasImplicitArgIns(bool has) { m_hasImplicitArgIns = has; }
         ulong GetGrfscr() const;
         void SetGrfscr(ulong grfscr);
-        ArgSlot GetInParamsCount() const;
+
+        ///----------------------------------------------------------------------------
+        ///
+        /// ParseableFunctionInfo::GetInParamsCount
+        ///
+        /// GetInParamsCount() returns the number of "in parameters" that have
+        /// currently been declared for this function:
+        /// - If this is "RegSlot_VariableCount", the function takes a variable number
+        ///   of parameters.
+        ///
+        /// TODO: Change to store type information about parameters- names, type,
+        /// direction, etc.
+        ///
+        ///----------------------------------------------------------------------------
+        ArgSlot GetInParamsCount() const { return m_inParamCount; }
+
         void SetInParamsCount(ArgSlot newInParamCount);
         ArgSlot GetReportedInParamsCount() const;
         void SetReportedInParamsCount(ArgSlot newReportedInParamCount);
@@ -1332,7 +1347,7 @@ namespace Js
 
         bool IsDynamicScript() const;
 
-        size_t LengthInBytes() const;
+        size_t LengthInBytes() const { return m_cbLength; }
         size_t StartOffset() const;
         ULONG GetLineNumber() const;
         ULONG GetColumnNumber() const;
@@ -1340,14 +1355,14 @@ namespace Js
         LPCWSTR GetSourceName(const T& sourceContextInfo) const;
         template <class T>
         static LPCWSTR GetSourceName(const T& sourceContextInfo, bool m_isEval, bool m_isDynamicFunction);
-        inline LPCWSTR GetSourceName() const;
+        LPCWSTR GetSourceName() const;
         ULONG GetRelativeLineNumber() const { return m_lineNumber; }
         ULONG GetRelativeColumnNumber() const { return m_columnNumber; }
         uint GetSourceIndex() const;
         LPCUTF8 GetSource(const  wchar_t* reason = nullptr) const;
-        charcount_t LengthInChars() const;
+        charcount_t LengthInChars() const { return m_cchLength; }
         charcount_t StartInDocument() const;
-        bool IsEval() const;
+        bool IsEval() const { return m_isEval; }
         bool IsDynamicFunction() const;
         bool GetDontInline() { return m_dontInline; }
         void SetDontInline(bool is) { m_dontInline = is; }
@@ -1384,10 +1399,21 @@ namespace Js
         void SetSourceInfo(uint sourceIndex, ParseNodePtr node, bool isEval, bool isDynamicFunction);
         void Copy(FunctionBody* other);
 
-        inline const wchar_t* GetExternalDisplayName() const;
+        const wchar_t* GetExternalDisplayName() const;
 
+        //
+        // Algorithm to retrieve a function body's external display name. Template supports both
+        // local FunctionBody and ScriptDAC (debugging) scenarios.
+        //
         template <class T>
-        static const wchar_t* GetExternalDisplayName(const T* funcBody);
+        static const wchar_t* GetExternalDisplayName(const T* funcBody)
+        {
+            Assert(funcBody != nullptr);
+            Assert(funcBody->GetDisplayName() != nullptr);
+
+            return funcBody->GetDisplayName();
+        }
+
         virtual const wchar_t* GetDisplayName() const override;
         void SetDisplayName(const wchar_t* displayName);
         virtual void SetDisplayName(const wchar_t* displayName, uint displayNameLength, SetDisplayNameFlags flags = SetDisplayNameFlagsNone) override;
@@ -1479,6 +1505,40 @@ namespace Js
 #endif
     };
 
+    //
+    // Algorithm to retrieve a function body's source name (url). Template supports both
+    // local FunctionBody and ScriptDAC (debugging) scenarios.
+    //
+    template <class T>
+    LPCWSTR ParseableFunctionInfo::GetSourceName(const T& sourceContextInfo) const
+    {
+        return GetSourceName<T>(sourceContextInfo, this->m_isEval, this->m_isDynamicFunction);
+    }
+
+    template <class T>
+    LPCWSTR ParseableFunctionInfo::GetSourceName(const T& sourceContextInfo, bool m_isEval, bool m_isDynamicFunction)
+    {
+        if (sourceContextInfo->IsDynamic())
+        {
+            if (m_isEval)
+            {
+                return Constants::EvalCode;
+            }
+            else if (m_isDynamicFunction)
+            {
+                return Constants::FunctionCode;
+            }
+            else
+            {
+                return Constants::UnknownScriptCode;
+            }
+        }
+        else
+        {
+            return sourceContextInfo->url;
+        }
+    }
+
     class FunctionBody : public ParseableFunctionInfo
     {
         DEFINE_VTABLE_CTOR_NO_REGISTER(FunctionBody, ParseableFunctionInfo);
@@ -1486,6 +1546,9 @@ namespace Js
         friend class ByteCodeBufferBuilder;
         friend class ByteCodeBufferReader;
         public:
+            // same as MachDouble, used in the Func.h
+            static const uint DIAGLOCALSLOTSIZE = 8;
+
             struct StatementMap
             {
                 StatementMap() : isSubexpression(false) {}
@@ -1855,13 +1918,13 @@ namespace Js
 
         Js::RootObjectBase * LoadRootObject() const;
         Js::RootObjectBase * GetRootObject() const;
-        inline ByteBlock* GetAuxiliaryData();
-        inline ByteBlock* GetAuxiliaryContextData();
-        inline ByteBlock* GetByteCode();
-        inline ByteBlock* GetOriginalByteCode(); // Returns original bytecode without probes (such as BPs).
-        inline const Js::ByteCodeCache * GetByteCodeCache() const;
+        ByteBlock* GetAuxiliaryData();
+        ByteBlock* GetAuxiliaryContextData();
+        ByteBlock* GetByteCode();
+        ByteBlock* GetOriginalByteCode(); // Returns original bytecode without probes (such as BPs).
+        const Js::ByteCodeCache * GetByteCodeCache() const;
         void SetSerializationIndex(int index) { Assert(serializationIndex == -1 && index != -1); serializationIndex = index; }
-        inline const int GetSerializationIndex() const;
+        const int GetSerializationIndex() const;
         uint GetByteCodeCount() const { return m_byteCodeCount; }
         uint GetByteCodeWithoutLDACount() const { return m_byteCodeWithoutLDACount; }
         uint GetByteCodeInLoopCount() const { return m_byteCodeInLoopCount; }
@@ -2385,32 +2448,43 @@ namespace Js
         uint32 GetFrameHeight(FunctionEntryPointInfo* entryPointInfo) const;
         void SetFrameHeight(FunctionEntryPointInfo* entryPointInfo, uint32 frameHeight);
 
-        inline RegSlot GetLocalsCount();
-        inline RegSlot GetConstantCount();
-        inline void SetConstantCount(RegSlot cNewConstants);
-        inline RegSlot GetVarCount();
-        inline void SetVarCount(RegSlot cNewVars);
-        inline ArgSlot GetOutParamsCount();
-        inline void SetOutParamsCount(ArgSlot cNewOutParams);
-        inline RegSlot MapRegSlot(RegSlot reg);
-        inline bool RegIsConst(RegSlot reg);
+        RegSlot GetLocalsCount();
+        RegSlot GetConstantCount() const { return m_constCount; }
+        void SetConstantCount(RegSlot cNewConstants);
+        RegSlot GetVarCount();
+        void SetVarCount(RegSlot cNewVars);
+        RegSlot MapRegSlot(RegSlot reg)
+        {
+            if (this->RegIsConst(reg))
+            {
+                reg = CONSTREG_TO_REGSLOT(reg);
+                Assert(reg < this->GetConstantCount());
+            }
+            else
+            {
+                reg += this->GetConstantCount();
+            }
 
-        inline uint32 GetNonTempLocalVarCount();
-        inline uint32 GetFirstNonTempLocalIndex();
-        inline uint32 GetEndNonTempLocalIndex();
-        inline bool IsNonTempLocalVar(uint32 varIndex);
-        inline bool GetSlotOffset(RegSlot slotId, __out int32 * slotOffset, bool allowTemp = false);
+            return reg;
+        }
+        bool RegIsConst(RegSlot reg) { return reg > REGSLOT_TO_CONSTREG(this->GetConstantCount()); }
 
-        inline RegSlot GetOutParamsDepth();
-        inline void SetOutParamDepth(RegSlot cOutParamsDepth);
+        uint32 GetNonTempLocalVarCount();
+        uint32 GetFirstNonTempLocalIndex();
+        uint32 GetEndNonTempLocalIndex();
+        bool IsNonTempLocalVar(uint32 varIndex);
+        bool GetSlotOffset(RegSlot slotId, __out int32 * slotOffset, bool allowTemp = false);
 
-        inline RegSlot GetYieldRegister();
+        RegSlot GetOutParamsDepth();
+        void SetOutParamDepth(RegSlot cOutParamsDepth);
 
-        inline RegSlot GetFirstTmpReg();
-        inline void SetFirstTmpReg(RegSlot firstTmpReg);
-        inline RegSlot GetTempCount();
+        RegSlot GetYieldRegister();
 
-        inline Js::ModuleID GetModuleID() const;
+        RegSlot GetFirstTmpReg();
+        void SetFirstTmpReg(RegSlot firstTmpReg);
+        RegSlot GetTempCount();
+
+         Js::ModuleID GetModuleID() const;
 
         void CreateConstantTable();
         void RecordNullObject(RegSlot location);

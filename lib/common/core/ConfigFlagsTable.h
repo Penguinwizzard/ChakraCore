@@ -228,13 +228,13 @@ namespace Js
     };
 
     template <typename TRangeUnitData>
-    inline bool RangeUnitContains(RangeUnit<TRangeUnitData> unit, TRangeUnitData item)
+    bool RangeUnitContains(RangeUnit<TRangeUnitData> unit, TRangeUnitData item)
     {
         return (item >= unit.i && item <= unit.j);
     }
 
     template <>
-    inline bool RangeUnitContains<SourceFunctionNode>(RangeUnit<SourceFunctionNode> unit, SourceFunctionNode n);
+    bool RangeUnitContains<SourceFunctionNode>(RangeUnit<SourceFunctionNode> unit, SourceFunctionNode n);
 
     ///----------------------------------------------------------------------------
     ///----------------------------------------------------------------------------
@@ -346,12 +346,12 @@ namespace Js
     // Methods
     public:
 
-                void            Enable(Phase phase);       
-        inline  bool            IsEnabled(Phase phase);
-        inline  bool            IsEnabled(Phase phase, uint sourceContextId, Js::LocalFunctionId functionId);
-        inline  bool            IsEnabledForAll(Phase phase);
-        inline  Range *         GetRange(Phase phase);
-                Phase           GetFirstPhase();
+        void            Enable(Phase phase);       
+        bool            IsEnabled(Phase phase);
+        bool            IsEnabled(Phase phase, uint sourceContextId, Js::LocalFunctionId functionId);
+        bool            IsEnabledForAll(Phase phase);
+        Range *         GetRange(Phase phase);
+        Phase           GetFirstPhase();
     };
 
     ///----------------------------------------------------------------------------
@@ -394,32 +394,32 @@ namespace Js
         
         static  FlagTypes       GetFlagType(Flag flag);
 
-        inline  String*         GetAsString(Flag flag) const;
-        inline  Phases*         GetAsPhase(Flag flag) const;
-        inline  Boolean*        GetAsBoolean(Flag flag) const;
-        inline  Number*         GetAsNumber(Flag flag) const;
-        inline  NumberSet*      GetAsNumberSet(Flag flag) const;
-        inline  NumberPairSet * GetAsNumberPairSet(Flag flag) const;
-        inline  NumberRange *   GetAsNumberRange(Flag flag) const;
+                String*         GetAsString(Flag flag) const;
+                Phases*         GetAsPhase(Flag flag) const;
+                Boolean*        GetAsBoolean(Flag flag) const;
+                Number*         GetAsNumber(Flag flag) const;
+                NumberSet*      GetAsNumberSet(Flag flag) const;
+                NumberPairSet * GetAsNumberPairSet(Flag flag) const;
+                NumberRange *   GetAsNumberRange(Flag flag) const;
 
-        inline  void            SetAsBoolean(Flag flag, Boolean value);
+                void            SetAsBoolean(Flag flag, Boolean value);
 
-        inline  Boolean         GetDefaultValueAsBoolean(Flag flag) const;
+                Boolean         GetDefaultValueAsBoolean(Flag flag) const;
 
         // indicates whether a flag is a parent flag
-        inline  bool            IsParentFlag(Flag flag) const;
+                bool            IsParentFlag(Flag flag) const;
 
         // get the parent flag of a given flag, if any, otherwise returns InvalidFlag.
-        inline  Flag            GetParentFlag(Flag flag) const;
+                Flag            GetParentFlag(Flag flag) const;
 
         // get the next child flag of a given parent flag, if any, otherwise returns InvalidFlag. Pass InvalidFlag as currentChildFlag if no current child flag to iterate from.
-        inline  Flag            GetNextChildFlag(Flag parentFlag, Flag currentChildFlag) const;
+                Flag            GetNextChildFlag(Flag parentFlag, Flag currentChildFlag) const;
 
-        inline  void            Enable(Flag flag);
-        inline  bool            IsEnabled(Flag flag);
-        inline  void            Disable(Flag flag);
+                void            Enable(Flag flag);
+                bool            IsEnabled(Flag flag);
+                void            Disable(Flag flag);
 
-        void VerboseDump();
+                void             VerboseDump();
 
     // Data
     public:
@@ -789,4 +789,60 @@ namespace Js
 #else
 #define PHASE_PRINT_INTRUSIVE_TESTTRACE1(phase, ...) (false)
 #endif
+
+///----------------------------------------------------------------------------
+///----------------------------------------------------------------------------
+///
+/// class RangeBase
+///
+///----------------------------------------------------------------------------
+///----------------------------------------------------------------------------
+
+template <typename TRangeUnitData>
+void
+RangeBase<TRangeUnitData>::Add(TRangeUnitData i)
+{
+    Add(i, i);
+}
+
+template <typename TRangeUnitData>
+void
+RangeBase<TRangeUnitData>::Add(TRangeUnitData i, TRangeUnitData j)
+{
+    range.Add(RangeUnit<TRangeUnitData>(i, j));
+}
+
+template <typename TRangeUnitData>
+bool
+RangeBase<TRangeUnitData>::ContainsAll()
+{
+    return range.Count() == 0;
+}
+
+///----------------------------------------------------------------------------
+///
+/// RangeBase::InRange
+///
+/// Searches for each element in the list of UnitRanges. If the given integer
+/// is between the 2 values, then return true; If no element is present in range
+/// then, then we return true
+///
+///----------------------------------------------------------------------------
+
+template <typename TRangeUnitData>
+bool RangeBase<TRangeUnitData>::InRange(TRangeUnitData n)
+{
+    if (range.Count() == 0)
+    {
+        return true;
+    }
+    else
+    {
+        return range.MapUntil([n](int, RangeUnit<TRangeUnitData> const& unit)
+        {
+            return RangeUnitContains(unit, n);
+        });
+    }
+}
 }  // namespace Js
+

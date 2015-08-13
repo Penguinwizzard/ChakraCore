@@ -94,6 +94,285 @@ namespace Js
         }
     }
 
+    DynamicObject * DynamicObject::New(Recycler * recycler, DynamicType * type)
+    {
+        return NewObject<DynamicObject>(recycler, type);
+    }
+
+    bool DynamicObject::Is(Var aValue)
+    {
+        return RecyclableObject::Is(aValue) && (RecyclableObject::FromVar(aValue)->GetTypeId() == TypeIds_Object);
+    }
+
+    DynamicObject* DynamicObject::FromVar(Var aValue)
+    {
+        //        AssertMsg(Is(aValue), "Ensure var is actually a 'DynamicObject'");
+        RecyclableObject* obj = RecyclableObject::FromVar(aValue);
+        AssertMsg(obj->DbgIsDynamicObject(), "Ensure instance is actually a DynamicObject");
+        Assert(DynamicType::Is(obj->GetTypeId()));
+        return static_cast<DynamicObject*>(obj);
+    }
+
+    ArrayObject* DynamicObject::EnsureObjectArray()
+    {
+        if (!HasObjectArray())
+        {
+            ScriptContext* scriptContext = GetScriptContext();
+            ArrayObject* objArray = scriptContext->GetLibrary()->CreateArray(0, SparseArraySegmentBase::SMALL_CHUNK_SIZE);
+            SetObjectArray(objArray);
+        }
+        Assert(HasObjectArray());
+        return GetObjectArrayOrFlagsAsArray();
+    }
+
+    void DynamicObject::SetObjectArray(ArrayObject* objArray)
+    {
+        Assert(!IsAnyArray(this));
+
+        DeoptimizeObjectHeaderInlining();
+
+        this->objectArray = objArray;
+        if (objArray)
+        {
+            if (!this->IsExtensible()) // sync objectArray isExtensible
+            {
+                objArray->PreventExtensions();
+            }
+
+            // sync objectArray is prototype
+            if ((this->GetTypeHandler()->GetFlags() & DynamicTypeHandler::IsPrototypeFlag) != 0)
+            {
+                objArray->SetIsPrototype();
+            }
+        }
+    }
+
+    bool DynamicObject::HasNonEmptyObjectArray() const
+    {
+        return HasObjectArray() && GetObjectArrayOrFlagsAsArray()->GetLength() > 0;
+    }
+
+    // Check if a typeId is of any array type (JavascriptArray or ES5Array).
+    bool DynamicObject::IsAnyArrayTypeId(TypeId typeId)
+    {
+        return JavascriptArray::Is(typeId) || typeId == TypeIds_ES5Array;
+    }
+
+    // Check if a Var is either a JavascriptArray* or ES5Array*.
+    bool DynamicObject::IsAnyArray(const Var aValue)
+    {
+        return IsAnyArrayTypeId(JavascriptOperators::GetTypeId(aValue));
+    }
+
+    // Check if this instance is of any array type, used for debug
+    bool DynamicObject::IsArrayInstance()
+    {
+        return JavascriptArray::Is(this) || ES5Array::Is(this);
+    }
+
+    BOOL DynamicObject::HasObjectArrayItem(uint32 index)
+    {
+        return HasObjectArray() && GetObjectArrayOrFlagsAsArray()->HasItem(index);
+    }
+
+    BOOL DynamicObject::DeleteObjectArrayItem(uint32 index, PropertyOperationFlags flags)
+    {
+        if (HasObjectArray())
+        {
+            return GetObjectArrayOrFlagsAsArray()->DeleteItem(index, flags);
+        }
+        return true;
+    }
+
+    BOOL DynamicObject::GetObjectArrayItem(Var originalInstance, uint32 index, Var* value, ScriptContext* requestContext)
+    {
+        return HasObjectArray() && GetObjectArrayOrFlagsAsArray()->GetItem(originalInstance, index, value, requestContext);
+    }
+
+    DescriptorFlags DynamicObject::GetObjectArrayItemSetter(uint32 index, Var* setterValue, ScriptContext* requestContext)
+    {
+        return HasObjectArray() ? GetObjectArrayOrFlagsAsArray()->GetItemSetter(index, setterValue, requestContext) : None;
+    }
+
+    BOOL DynamicObject::SetObjectArrayItem(uint32 index, Var value, PropertyOperationFlags flags)
+    {
+        const auto result = EnsureObjectArray()->SetItem(index, value, flags);
+
+        // We don't track non-enumerable items in object arrays.  Any object with an object array reports having 
+        // enumerable properties.  See comment in DynamicObject::GetHasNoEnumerableProperties.
+        //SetHasNoEnumerableProperties(false);
+
+        return result;
+    }
+
+    BOOL DynamicObject::SetObjectArrayItemWithAttributes(uint32 index, Var value, PropertyAttributes attributes)
+    {
+        const auto result = EnsureObjectArray()->SetItemWithAttributes(index, value, attributes);
+
+        // We don't track non-enumerable items in object arrays.  Any object with an object array reports having 
+        // enumerable properties.  See comment in DynamicObject::GetHasNoEnumerableProperties.
+        //if (attributes & PropertyEnumerable)
+        //{
+        //    SetHasNoEnumerableProperties(false);
+        //}
+
+        if (!(attributes & PropertyWritable) && result)
+        {
+            InvalidateHasOnlyWritableDataPropertiesInPrototypeChainCacheIfPrototype();
+        }
+        return result;
+    }
+
+    BOOL DynamicObject::SetObjectArrayItemAttributes(uint32 index, PropertyAttributes attributes)
+    {
+        const auto result = HasObjectArray() && GetObjectArrayOrFlagsAsArray()->SetItemAttributes(index, attributes);
+
+        // We don't track non-enumerable items in object arrays.  Any object with an object array reports having 
+        // enumerable properties.  See comment in DynamicObject::GetHasNoEnumerableProperties.
+        //if (attributes & PropertyEnumerable)
+        //{
+        //    SetHasNoEnumerableProperties(false);
+        //}
+
+        if (!(attributes & PropertyWritable) && result)
+        {
+            InvalidateHasOnlyWritableDataPropertiesInPrototypeChainCacheIfPrototype();
+        }
+        return result;
+    }
+
+    BOOL DynamicObject::SetObjectArrayItemWritable(PropertyId propertyId, BOOL writable)
+    {
+        const auto result = HasObjectArray() && GetObjectArrayOrFlagsAsArray()->SetWritable(propertyId, writable);
+        if (!writable && result)
+        {
+            InvalidateHasOnlyWritableDataPropertiesInPrototypeChainCacheIfPrototype();
+        }
+        return result;
+    }
+
+    BOOL DynamicObject::SetObjectArrayItemAccessors(uint32 index, Var getter, Var setter)
+    {
+        const auto result = EnsureObjectArray()->SetItemAccessors(index, getter, setter);
+        if (result)
+        {
+            InvalidateHasOnlyWritableDataPropertiesInPrototypeChainCacheIfPrototype();
+        }
+        return result;
+    }
+
+    void DynamicObject::InvalidateHasOnlyWritableDataPropertiesInPrototypeChainCacheIfPrototype()
+    {
+        if (GetTypeHandler()->GetFlags() & DynamicTypeHandler::IsPrototypeFlag)
+        {
+            // No need to invalidate store field caches for non-writable properties here.  We're dealing
+            // with numeric properties only, and we never cache these in add property inline caches.
+
+            // If this object is used as a prototype, the has-only-writable-data-properties-in-prototype-chain cache needs to be
+            // invalidated here since the type handler of 'objectArray' is not marked as being used as a prototype
+            GetType()->GetLibrary()->NoPrototypeChainsAreEnsuredToHaveOnlyWritableDataProperties();
+        }
+    }
+
+    bool DynamicObject::HasLockedType() const
+    {
+        return this->GetDynamicType()->GetIsLocked();
+    }
+
+    bool DynamicObject::HasSharedType() const
+    {
+        return this->GetDynamicType()->GetIsShared();
+    }
+
+    bool DynamicObject::HasSharedTypeHandler() const
+    {
+        return this->GetTypeHandler()->GetIsShared();
+    }
+
+    void DynamicObject::ReplaceType(DynamicType * type)
+    {
+        Assert(!type->isLocked || type->GetTypeHandler()->GetIsLocked());
+        Assert(!type->isShared || type->GetTypeHandler()->GetIsShared());
+
+        //For now, i have added only Aux Slot -> so new inlineSlotCapacity should be 2.
+        AssertMsg(DynamicObject::IsTypeHandlerCompatibleForObjectHeaderInlining(this->GetTypeHandler(), type->GetTypeHandler()),
+            "Object is ObjectHeaderInlined and should have compatible TypeHandlers for proper transition");
+
+        this->type = type;
+    }
+
+    DWORD DynamicObject::GetOffsetOfAuxSlots()
+    {
+        return offsetof(DynamicObject, auxSlots);
+    }
+
+    DWORD DynamicObject::GetOffsetOfObjectArray()
+    {
+        return offsetof(DynamicObject, objectArray);
+    }
+
+    DWORD DynamicObject::GetOffsetOfType()
+    {
+        return offsetof(DynamicObject, type);
+    }
+
+    void DynamicObject::EnsureSlots(int oldCount, int newCount, ScriptContext * scriptContext, DynamicTypeHandler * newTypeHandler)
+    {
+        this->GetTypeHandler()->EnsureSlots(this, oldCount, newCount, scriptContext, newTypeHandler);
+    }
+
+    void DynamicObject::EnsureSlots(int newCount, ScriptContext * scriptContext)
+    {
+        EnsureSlots(GetTypeHandler()->GetSlotCapacity(), newCount, scriptContext);
+    }
+
+    Var DynamicObject::GetSlot(int index)
+    {
+        return this->GetTypeHandler()->GetSlot(this, index);
+    }
+
+    Var DynamicObject::GetInlineSlot(int index)
+    {
+        return this->GetTypeHandler()->GetInlineSlot(this, index);
+    }
+
+    Var DynamicObject::GetAuxSlot(int index)
+    {
+        return this->GetTypeHandler()->GetAuxSlot(this, index);
+    }
+
+#if DBG
+    void DynamicObject::SetSlot(PropertyId propertyId, bool allowLetConst, int index, Var value)
+    {
+        this->GetTypeHandler()->SetSlot(this, propertyId, allowLetConst, index, value);
+    }
+
+    void DynamicObject::SetInlineSlot(PropertyId propertyId, bool allowLetConst, int index, Var value)
+    {
+        this->GetTypeHandler()->SetInlineSlot(this, propertyId, allowLetConst, index, value);
+    }
+
+    void DynamicObject::SetAuxSlot(PropertyId propertyId, bool allowLetConst, int index, Var value)
+    {
+        this->GetTypeHandler()->SetAuxSlot(this, propertyId, allowLetConst, index, value);
+    }
+#else
+    void DynamicObject::SetSlot(int index, Var value)
+    {
+        this->GetTypeHandler()->SetSlot(this, index, value);
+    }
+
+    void DynamicObject::SetInlineSlot(int index, Var value)
+    {
+        this->GetTypeHandler()->SetInlineSlot(this, index, value);
+    }
+
+    void DynamicObject::SetAuxSlot(int index, Var value)
+    {
+        this->GetTypeHandler()->SetAuxSlot(this, index, value);
+    }
+#endif
+
     bool
     DynamicObject::GetIsExtensible() const
     {
