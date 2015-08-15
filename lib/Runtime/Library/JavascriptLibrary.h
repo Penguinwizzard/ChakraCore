@@ -396,7 +396,8 @@ namespace Js
         DynamicObject* EnsureReadyIfHybridDebugging(DynamicObject* obj);
         template <class T> T* EnsureReadyIfHybridDebugging(T* obj)
         {
-            return (T*)EnsureReadyIfHybridDebugging((DynamicObject*)obj);
+            DynamicObject * dynamicObject = obj;
+            return (T*)EnsureReadyIfHybridDebugging(dynamicObject);
         }
 
         static SimpleTypeHandler<1> SharedPrototypeTypeHandler;
@@ -732,14 +733,13 @@ namespace Js
         JavascriptExternalFunction* CreateIdMappedExternalFunction(MethodType entryPoint, DynamicType *pPrototypeType);
         JavascriptExternalFunction* CreateExternalConstructor(Js::ExternalMethod entryPoint, PropertyId nameId, RecyclableObject * prototype);
         JavascriptExternalFunction* CreateExternalConstructor(Js::ExternalMethod entryPoint, PropertyId nameId, InitializeMethod method, unsigned short deferredTypeSlots, bool hasAccessors);
-        JavascriptWinRTFunction* CreateIdMappedWinRTFunction(DynamicType * type, WinRTFunctionInfo * functionInfo, Var signature);
-        JavascriptWinRTFunction* CreateIdMappedWinRTConstructorFunction(DynamicType * type, WinRTFunctionInfo * functionInfo, Var signature);
         static DynamicTypeHandler * GetDeferredPrototypeGeneratorFunctionTypeHandler(ScriptContext* scriptContext);
         DynamicType * CreateDeferredPrototypeGeneratorFunctionType(JavascriptMethod entrypoint, bool isShared = false);
         static DynamicTypeHandler * GetDeferredPrototypeFunctionTypeHandler(ScriptContext* scriptContext);
         static DynamicTypeHandler * GetDeferredBoundFunctionTypeHandler(ScriptContext* scriptContext);
         DynamicTypeHandler * GetDeferredFunctionTypeHandler();
-        DynamicType * CreateDeferredPrototypeFunctionType(JavascriptMethod entrypoint, bool isShared = false);
+        DynamicType * CreateDeferredPrototypeFunctionType(JavascriptMethod entrypoint);
+        DynamicType * CreateDeferredPrototypeFunctionTypeNoProfileThunk(JavascriptMethod entrypoint, bool isShared = false);
         DynamicType * CreateFunctionType(JavascriptMethod entrypoint, RecyclableObject* prototype = nullptr);
         DynamicType * CreateFunctionWithLengthType(FunctionInfo * functionInfo);
         DynamicType * CreateFunctionWithLengthAndPrototypeType(FunctionInfo * functionInfo);
@@ -764,8 +764,7 @@ namespace Js
         JavascriptExternalFunction* CreateExternalFunction(ExternalMethod entryPointer, PropertyId nameId, Var signature, JavascriptTypeId prototypeTypeId, UINT64 flags);
         JavascriptExternalFunction* CreateExternalFunction(ExternalMethod entryPointer, Var nameId, Var signature, JavascriptTypeId prototypeTypeId, UINT64 flags);
         JavascriptExternalFunction* CreateStdCallExternalFunction(StdCallJavascriptMethod entryPointer, PropertyId nameId, void *callbackState);
-        JavascriptExternalFunction* CreateStdCallExternalFunction(StdCallJavascriptMethod entryPointer, Var nameId, void *callbackState);
-        JavascriptWinRTFunction* CreateWinRTFunction(JavascriptMethod entryPoint, PropertyId nameId, Var signature, bool fConstructor);
+        JavascriptExternalFunction* CreateStdCallExternalFunction(StdCallJavascriptMethod entryPointer, Var nameId, void *callbackState);        
         JavascriptPromiseAsyncSpawnExecutorFunction* CreatePromiseAsyncSpawnExecutorFunction(JavascriptMethod entryPoint, JavascriptGenerator* generatorFunction, Var target);
         JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction* CreatePromiseAsyncSpawnStepArgumentExecutorFunction(JavascriptMethod entryPoint, JavascriptGenerator* generator, Var argument, JavascriptFunction* resolve = NULL, JavascriptFunction* reject = NULL, bool isReject = false);
         JavascriptPromiseCapabilitiesExecutorFunction* CreatePromiseCapabilitiesExecutorFunction(JavascriptMethod entryPoint, JavascriptPromiseCapability* capability);

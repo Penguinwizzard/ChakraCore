@@ -98,8 +98,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSymbolType.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptTypedObjectSlotAccessorFunction.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptWeakMap.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptWeakSet.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptWinRTDate.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptWeakSet.cpp" />    
     <ClCompile Include="$(MSBuildThisFileDirectory)JnDebugHelp.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)javascripttypednumber.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JSONParser.cpp" />
@@ -269,8 +268,7 @@
     <ClInclude Include="javascripttypednumber.h" />
     <ClInclude Include="JavascriptTypedObjectSlotAccessorFunction.h" />
     <ClInclude Include="JavascriptWeakMap.h" />
-    <ClInclude Include="JavascriptWeakSet.h" />
-    <ClInclude Include="JavascriptWinRTDate.h" />
+    <ClInclude Include="JavascriptWeakSet.h" />    
     <ClInclude Include="JavascriptWinRTFunction.h" />
     <ClInclude Include="JSONParser.h" />
     <ClInclude Include="JSONScanner.h" />

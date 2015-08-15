@@ -654,9 +654,9 @@ namespace Js
         }
         functionWithPrototypeTypeHandler->SetHasKnownSlot0();
 
-        externalFunctionWithDeferredPrototypeType = CreateDeferredPrototypeFunctionType(JavascriptExternalFunction::ExternalFunctionThunk, true);
-        wrappedFunctionWithDeferredPrototypeType = CreateDeferredPrototypeFunctionType(JavascriptExternalFunction::WrappedFunctionThunk, true);
-        stdCallFunctionWithDeferredPrototypeType = CreateDeferredPrototypeFunctionType(JavascriptExternalFunction::StdCallExternalFunctionThunk, true);
+        externalFunctionWithDeferredPrototypeType = CreateDeferredPrototypeFunctionTypeNoProfileThunk(JavascriptExternalFunction::ExternalFunctionThunk, true);
+        wrappedFunctionWithDeferredPrototypeType = CreateDeferredPrototypeFunctionTypeNoProfileThunk(JavascriptExternalFunction::WrappedFunctionThunk, true);
+        stdCallFunctionWithDeferredPrototypeType = CreateDeferredPrototypeFunctionTypeNoProfileThunk(JavascriptExternalFunction::StdCallExternalFunctionThunk, true);
         idMappedFunctionWithPrototypeType = DynamicType::New(scriptContext, TypeIds_Function, functionPrototype, JavascriptExternalFunction::ExternalFunctionThunk,
             &SharedIdMappedFunctionWithPrototypeTypeHandler, true, true);
         externalConstructorFunctionWithDeferredPrototypeType = DynamicType::New(scriptContext, TypeIds_Function, functionPrototype, JavascriptExternalFunction::ExternalFunctionThunk,
@@ -672,7 +672,7 @@ namespace Js
             boundFunctionType = DynamicType::New(scriptContext, TypeIds_Function, functionPrototype, BoundFunction::NewInstance,
                 SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
         }
-        crossSiteDeferredPrototypeFunctionType = CreateDeferredPrototypeFunctionType(
+        crossSiteDeferredPrototypeFunctionType = CreateDeferredPrototypeFunctionTypeNoProfileThunk(
             scriptContext->CurrentCrossSiteThunk, true);
         crossSiteIdMappedFunctionWithPrototypeType = DynamicType::New(scriptContext, TypeIds_Function, functionPrototype, scriptContext->CurrentCrossSiteThunk,
             &SharedIdMappedFunctionWithPrototypeTypeHandler, true, true);
@@ -961,7 +961,12 @@ namespace Js
         return functionTypeHandler;
     }
 
-    DynamicType * JavascriptLibrary::CreateDeferredPrototypeFunctionType(JavascriptMethod entrypoint, bool isShared)
+    DynamicType * JavascriptLibrary::CreateDeferredPrototypeFunctionType(JavascriptMethod entrypoint)
+    {
+        return CreateDeferredPrototypeFunctionTypeNoProfileThunk(this->inDispatchProfileMode ? ProfileEntryThunk : entrypoint);
+    }
+
+    DynamicType * JavascriptLibrary::CreateDeferredPrototypeFunctionTypeNoProfileThunk(JavascriptMethod entrypoint, bool isShared)
     {
         return DynamicType::New(scriptContext, TypeIds_Function, functionPrototype, entrypoint,
             GetDeferredPrototypeFunctionTypeHandler(scriptContext), isShared, isShared);
@@ -6120,7 +6125,7 @@ namespace Js
     {
         Assert(functionInfo->GetAttributes() & FunctionInfo::DoNotProfile);
         return EnsureReadyIfHybridDebugging(RecyclerNew(this->GetRecycler(), RuntimeFunction,
-            CreateDeferredPrototypeFunctionType(functionInfo->GetOriginalEntryPoint()),
+            CreateDeferredPrototypeFunctionTypeNoProfileThunk(functionInfo->GetOriginalEntryPoint()),
             functionInfo));
     }
 
@@ -6177,16 +6182,6 @@ namespace Js
         return EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptExternalFunction, entryPoint, pPrototypeType));
     }
 
-    JavascriptWinRTFunction* JavascriptLibrary::CreateIdMappedWinRTFunction(DynamicType * type, WinRTFunctionInfo * functionInfo, Var signature)
-    {
-        return EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptWinRTFunction, type, functionInfo, signature));
-    }
-
-    JavascriptWinRTFunction* JavascriptLibrary::CreateIdMappedWinRTConstructorFunction(DynamicType * type, WinRTFunctionInfo * functionInfo, Var signature)
-    {
-        return EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptWinRTConstructorFunction, type, functionInfo, signature));
-    }
-
     JavascriptGeneratorFunction* JavascriptLibrary::CreateGeneratorFunction(JavascriptMethod entryPoint, GeneratorVirtualScriptFunction* scriptFunction)
     {
         Assert(scriptContext->GetConfig()->IsES6GeneratorsEnabled());
@@ -6211,31 +6206,12 @@ namespace Js
         return function;
     }
 
-    JavascriptWinRTFunction* JavascriptLibrary::CreateWinRTFunction(JavascriptMethod entryPoint, PropertyId nameId, Var signature, bool fConstructor)
-    {
-        auto functionInfo = RecyclerNew(this->GetRecycler(), WinRTFunctionInfo, entryPoint);
-        JavascriptWinRTFunction *function = nullptr;
-        DynamicType * type = CreateDeferredPrototypeFunctionType(this->inDispatchProfileMode ? ProfileEntryThunk : entryPoint);
-        if (fConstructor)
-        {
-            function = this->CreateIdMappedWinRTConstructorFunction(type, functionInfo, signature);
-        }
-        else
-        {
-            function = this->CreateIdMappedWinRTFunction(type, functionInfo, signature);
-        }
-        function = EnsureReadyIfHybridDebugging(function);
-
-        function->SetFunctionNameId(TaggedInt::ToVarUnchecked(nameId));
-        return function;
-    }
-
     JavascriptPromiseCapabilitiesExecutorFunction* JavascriptLibrary::CreatePromiseCapabilitiesExecutorFunction(JavascriptMethod entryPoint, JavascriptPromiseCapability* capability)
     {
         Assert(scriptContext->GetConfig()->IsES6PromiseEnabled());
 
         FunctionInfo* functionInfo = RecyclerNew(this->GetRecycler(), FunctionInfo, entryPoint);
-        DynamicType* type = CreateDeferredPrototypeFunctionType(this->inDispatchProfileMode ? ProfileEntryThunk : entryPoint);
+        DynamicType* type = CreateDeferredPrototypeFunctionType(entryPoint);
         JavascriptPromiseCapabilitiesExecutorFunction* function = EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptPromiseCapabilitiesExecutorFunction, type, functionInfo, capability));
 
         function->SetPropertyWithAttributes(PropertyIds::length, TaggedInt::ToVarUnchecked(2), PropertyConfigurable, nullptr);
@@ -6248,7 +6224,7 @@ namespace Js
         Assert(scriptContext->GetConfig()->IsES6PromiseEnabled());
 
         FunctionInfo* functionInfo = &Js::JavascriptPromise::EntryInfo::ResolveOrRejectFunction;
-        DynamicType* type = CreateDeferredPrototypeFunctionType(this->inDispatchProfileMode ? ProfileEntryThunk : entryPoint);
+        DynamicType* type = CreateDeferredPrototypeFunctionType(entryPoint);
         JavascriptPromiseResolveOrRejectFunction* function = EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptPromiseResolveOrRejectFunction, type, functionInfo, promise, isReject));
 
         function->SetPropertyWithAttributes(PropertyIds::length, TaggedInt::ToVarUnchecked(1), PropertyConfigurable, nullptr);
@@ -6261,7 +6237,7 @@ namespace Js
         Assert(scriptContext->GetConfig()->IsES6PromiseEnabled());
 
         FunctionInfo* functionInfo = RecyclerNew(this->GetRecycler(), FunctionInfo, entryPoint);
-        DynamicType* type = CreateDeferredPrototypeFunctionType(this->inDispatchProfileMode ? ProfileEntryThunk : entryPoint);
+        DynamicType* type = CreateDeferredPrototypeFunctionType(entryPoint);
 
         return EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptPromiseReactionTaskFunction, type, functionInfo, reaction, argument));
     }
@@ -6271,7 +6247,7 @@ namespace Js
         Assert(scriptContext->GetConfig()->IsES6PromiseEnabled());
 
         FunctionInfo* functionInfo = RecyclerNew(this->GetRecycler(), FunctionInfo, entryPoint);
-        DynamicType* type = CreateDeferredPrototypeFunctionType(this->inDispatchProfileMode ? ProfileEntryThunk : entryPoint);
+        DynamicType* type = CreateDeferredPrototypeFunctionType(entryPoint);
 
         return EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptPromiseResolveThenableTaskFunction, type, functionInfo, promise, thenable, thenFunction));
     }
@@ -6281,7 +6257,7 @@ namespace Js
         Assert(scriptContext->GetConfig()->IsES6PromiseEnabled());
 
         FunctionInfo* functionInfo = &Js::JavascriptPromise::EntryInfo::AllResolveElementFunction;
-        DynamicType* type = CreateDeferredPrototypeFunctionType(this->inDispatchProfileMode ? ProfileEntryThunk : entryPoint);
+        DynamicType* type = CreateDeferredPrototypeFunctionType(entryPoint);
         JavascriptPromiseAllResolveElementFunction* function = EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptPromiseAllResolveElementFunction, type, functionInfo, index, values, capabilities, remainingElements));
 
         function->SetPropertyWithAttributes(PropertyIds::length, TaggedInt::ToVarUnchecked(1), PropertyConfigurable, nullptr);
