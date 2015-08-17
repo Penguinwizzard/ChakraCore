@@ -1164,7 +1164,7 @@ namespace Js
     }
     bool AsmJsSIMDFunction::IsConstructor()
     {
-        return mBuiltIn == AsmJsSIMDBuiltin_int32x4 || mBuiltIn == AsmJsSIMDBuiltin_float32x4 || mBuiltIn == AsmJsSIMDBuiltin_float64x2;
+        return mBuiltIn == AsmJsSIMDBuiltin_Int32x4 || mBuiltIn == AsmJsSIMDBuiltin_Float32x4 || mBuiltIn == AsmJsSIMDBuiltin_Float64x2;
     }
 
     // Is a constructor with the correct argCount ?
@@ -1177,10 +1177,10 @@ namespace Js
         
         switch (mBuiltIn)
         {
-        case AsmJsSIMDBuiltin_float64x2:
+        case AsmJsSIMDBuiltin_Float64x2:
             return argCount == 2;
-        case AsmJsSIMDBuiltin_float32x4:
-        case AsmJsSIMDBuiltin_int32x4:
+        case AsmJsSIMDBuiltin_Float32x4:
+        case AsmJsSIMDBuiltin_Int32x4:
             return argCount == 4;
         };
         return false;

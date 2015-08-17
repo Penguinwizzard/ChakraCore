@@ -52,7 +52,7 @@ namespace Js
     ArenaAllocator * DiagStackFrame::GetArena()
     {
         Assert(GetScriptContext() != NULL);
-        return GetScriptContext()->GetThreadContext()->Diagnostics->GetDiagnosticArena()->Arena();
+        return GetScriptContext()->GetThreadContext()->GetDebugManager()->GetDiagnosticArena()->Arena();
     }
 
     FrameDisplay * DiagStackFrame::GetFrameDisplay()

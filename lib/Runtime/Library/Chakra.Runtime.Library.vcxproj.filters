@@ -42,9 +42,6 @@
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptGeneratorFunctionType.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptMap.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptMapIterator.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptPixelArray.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptPixelArrayEnumerator.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptPixelArrayType.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptPromise.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptProxy.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptReflect.cpp" />
@@ -143,6 +140,12 @@
     <ClCompile Include="$(MsBuildThisFileDirectory)..\StdAfx.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)SubString.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)UriHelper.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)ThreadServiceWrapperBase.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDUtils.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDInt8x16Lib.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDInt8x16Operation.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDInt8x16OperationX86X64.cpp" />
+    <ClCompile Include="(MSBuildThisFileDirectory)JavascriptSIMDInt8x16.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\DiagGlobalList.h" />
@@ -202,8 +205,6 @@
     <ClInclude Include="JavascriptGeneratorFunction.h" />
     <ClInclude Include="JavascriptMap.h" />
     <ClInclude Include="JavascriptMapIterator.h" />
-    <ClInclude Include="JavascriptPixelArray.h" />
-    <ClInclude Include="JavascriptPixelArrayEnumerator.h" />
     <ClInclude Include="JavascriptPromise.h" />
     <ClInclude Include="JavascriptProxy.h" />
     <ClInclude Include="JavascriptRegExpEnumerator.h" />
@@ -289,6 +290,12 @@
     <ClInclude Include="..\StdAfx.h" />
     <ClInclude Include="SubString.h" />
     <ClInclude Include="UriHelper.h" />
+    <ClInclude Include="SIMDUtils.h" />
+    <ClInclude Include="ThreadServiceWrapperBase.h" />
+    <ClInclude Include="JavascriptLibraryBase.h" />
+    <ClInclude Include="SIMDInt8x16Lib.h" />
+    <ClInclude Include="SIMDInt8x16Operation.h" />
+    <ClInclude Include="JavascriptSIMDInt8x16.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="CharStringCache.inl" />
@@ -301,7 +308,6 @@
     <None Include="JavascriptArrayIterator.inl" />
     <None Include="JavascriptMap.inl" />
     <None Include="JavascriptMapIterator.inl" />
-    <None Include="JavascriptPixelArray.inl" />
     <None Include="JavascriptRegularExpressionResult.inl" />
     <None Include="JavascriptSet.inl" />
     <None Include="JavascriptSetIterator.inl" />
@@ -323,7 +329,6 @@
     <None Include="JavascriptRegularExpression.inl" />
     <None Include="JavascriptString.inl" />
     <None Include="JavascriptVariantDate.inl" />
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="arm">

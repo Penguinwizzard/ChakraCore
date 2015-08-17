@@ -4732,28 +4732,36 @@ namespace Js
             // ok to re-use F4, size of D2 lane >= size of F4 lane. Important for correct invalidation of regs upon store to stack.
             return Simd128_Select_F4::ApplyTemplate(context, buffer, targetOffsetD2_0, srcOffsetI4_1, srcOffsetD2_2, srcOffsetD2_3);
         }
-
-        int Simd128_LdLane_F4::ApplyTemplate(TemplateContext context, BYTE*& buffer, int targetOffsetF0, int srcOffsetF4_1, const int index)
-        {
-            AssertMsg(index >= 0 && index < 4, "Invalid lane index");
-            X86TemplateData* templateData = GetTemplateData(context);
-            return EncodingHelpers::SIMDLdLaneOperation<MOVSS, float>(buffer, templateData, targetOffsetF0, srcOffsetF4_1, index);
-        }
-
-        int Simd128_LdLane_I4::ApplyTemplate(TemplateContext context, BYTE*& buffer, int targetOffsetI0, int srcOffsetI4_1, const int index)
+        
+        //Lane Access
+        int Simd128_ExtractLane_I4::ApplyTemplate(TemplateContext context, BYTE*& buffer, int targetOffsetI0, int srcOffsetI4_1, int index)
         {
             AssertMsg(index >= 0 && index < 4, "Invalid lane index");
             X86TemplateData* templateData = GetTemplateData(context);
             return EncodingHelpers::SIMDLdLaneOperation<MOVSS, int>(buffer, templateData, targetOffsetI0, srcOffsetI4_1, index, false);
         }
-
-        int Simd128_LdLane_D2::ApplyTemplate(TemplateContext context, BYTE*& buffer, int targetOffsetD0, int srcOffsetD2_1, const int index)
+        
+        int Simd128_ExtractLane_F4::ApplyTemplate(TemplateContext context, BYTE*& buffer, int targetOffsetF0, int srcOffsetF4_1, int index)
         {
-            AssertMsg(index >= 0 && index < 2, "Invalid lane index");
+            AssertMsg(index >= 0 && index < 4, "Invalid lane index");
             X86TemplateData* templateData = GetTemplateData(context);
-            return EncodingHelpers::SIMDLdLaneOperation<MOVSD, double>(buffer, templateData, targetOffsetD0, srcOffsetD2_1, index);
+            return EncodingHelpers::SIMDLdLaneOperation<MOVSS, int>(buffer, templateData, targetOffsetF0, srcOffsetF4_1, index, false);
         }
 
+        int Simd128_ReplaceLane_F4::ApplyTemplate(TemplateContext context, BYTE*& buffer, int targetOffsetF4_0, int srcOffsetF4_1, int srcOffsetF2, int laneIndex)
+        {
+            X86TemplateData* templateData = GetTemplateData(context);
+            AssertMsg(laneIndex >= 0 && laneIndex < 4, "Invalid lane index");
+            return EncodingHelpers::SIMDSetLaneOperation<float, SHUFPS>(buffer, templateData, targetOffsetF4_0, srcOffsetF4_1, srcOffsetF2, laneIndex);
+
+        }
+
+        int Simd128_ReplaceLane_I4::ApplyTemplate(TemplateContext context, BYTE*& buffer, int targetOffsetI4_0, int srcOffsetI4_1, int srcOffsetI2, int laneIndex)
+        {
+            X86TemplateData* templateData = GetTemplateData(context);
+            AssertMsg(laneIndex >= 0 && laneIndex < 4, "Invalid lane index");
+            return EncodingHelpers::SIMDSetLaneOperation<int, PSHUFD>(buffer, templateData, targetOffsetI4_0, srcOffsetI4_1, srcOffsetI2, laneIndex);
+        }
         int Simd128_LdSignMask_F4::ApplyTemplate(TemplateContext context, BYTE*& buffer, int targetOffsetI0, int srcOffsetF4_1)
         {
             X86TemplateData* templateData = GetTemplateData(context);
@@ -4799,28 +4807,6 @@ namespace Js
             return size;
         }
         
-        int Simd128_SetLane_F4::ApplyTemplate(TemplateContext context, BYTE*& buffer, int targetOffsetF4_0, int srcOffsetF4_1, int srcOffsetF2, byte laneIndex)
-        {
-            X86TemplateData* templateData = GetTemplateData(context);
-            AssertMsg(laneIndex >= 0 && laneIndex < 4, "Invalid lane index");
-            return EncodingHelpers::SIMDSetLaneOperation<float, SHUFPS>(buffer, templateData, targetOffsetF4_0, srcOffsetF4_1, srcOffsetF2, laneIndex);
-
-        }
-        
-        int Simd128_SetLane_I4::ApplyTemplate(TemplateContext context, BYTE*& buffer, int targetOffsetI4_0, int srcOffsetI4_1, int srcOffsetI2, byte laneIndex)
-        {
-            X86TemplateData* templateData = GetTemplateData(context);
-            AssertMsg(laneIndex >= 0 && laneIndex < 4, "Invalid lane index");
-            return EncodingHelpers::SIMDSetLaneOperation<int, PSHUFD>(buffer, templateData, targetOffsetI4_0, srcOffsetI4_1, srcOffsetI2, laneIndex);
-        }
-
-        int Simd128_SetLane_D2::ApplyTemplate(TemplateContext context, BYTE*& buffer, int targetOffsetD2_0, int srcOffsetD2_1, int srcOffsetD2, byte laneIndex)
-        {
-            X86TemplateData* templateData = GetTemplateData(context);
-            AssertMsg(laneIndex >= 0 && laneIndex < 2, "Invalid lane index");
-            return EncodingHelpers::SIMDSetLaneOperation<double>(buffer, templateData, targetOffsetD2_0, srcOffsetD2_1, srcOffsetD2, laneIndex);
-        }
-
         int Simd128_I_ArgOut_F4::ApplyTemplate(TemplateContext context, BYTE*& buffer, int argIndex, int offset)
         {
             X86TemplateData* templateData = GetTemplateData(context);

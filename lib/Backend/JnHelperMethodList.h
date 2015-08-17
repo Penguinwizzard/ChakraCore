@@ -150,7 +150,14 @@ HELPERCALL(Op_InitUndeclConsoleLetFld, Js::JavascriptOperators::OP_InitUndeclCon
 HELPERCALL(Op_InitUndeclConsoleConstFld, Js::JavascriptOperators::OP_InitUndeclConsoleConstProperty, AttrCanThrow)
 HELPERCALL(Op_InitLetFld, Js::JavascriptOperators::OP_InitLetProperty, AttrCanThrow)
 HELPERCALL(Op_InitConstFld, Js::JavascriptOperators::OP_InitConstProperty, AttrCanThrow)
+
 HELPERCALL(Op_InitClassMember, Js::JavascriptOperators::OP_InitClassMember, AttrCanThrow)
+HELPERCALL(Op_InitClassMemberSet, Js::JavascriptOperators::OP_InitClassMemberSet, AttrCanThrow)
+HELPERCALL(Op_InitClassMemberSetComputedName, Js::JavascriptOperators::OP_InitClassMemberSetComputedName, AttrCanThrow)
+HELPERCALL(Op_InitClassMemberGet, Js::JavascriptOperators::OP_InitClassMemberGet, AttrCanThrow)
+HELPERCALL(Op_InitClassMemberGetComputedName, Js::JavascriptOperators::OP_InitClassMemberGetComputedName, AttrCanThrow)
+HELPERCALL(Op_InitClassMemberComputedName, Js::JavascriptOperators::OP_InitClassMemberComputedName, AttrCanThrow)
+
 HELPERCALL(Op_InitFuncScoped, Js::JavascriptOperators::OP_InitFuncScoped, AttrCanThrow)
 HELPERCALL(Op_DeleteProperty, Js::JavascriptOperators::OP_DeleteProperty, AttrCanThrow)
 HELPERCALL(Op_DeleteRootProperty, Js::JavascriptOperators::OP_DeleteRootProperty, AttrCanThrow)
@@ -453,7 +460,6 @@ HELPERCALL(RegExp_ExecResultNotUsed, Js::RegexHelper::RegexExecResultNotUsed, 0)
 HELPERCALL(RegExp_ReplaceStringResultUsed, Js::RegexHelper::RegexReplaceResultUsed, 0)
 HELPERCALL(RegExp_ReplaceStringResultNotUsed, Js::RegexHelper::RegexReplaceResultNotUsed, 0)
 
-HELPERCALL(PixelSetItem, (void (*)(Js::JavascriptPixelArray * array, uint32 index, Js::Var value))&Js::JavascriptPixelArray::DirectSetItem, 0)
 HELPERCALL(Uint8ClampedArraySetItem, (BOOL (*)(Js::Uint8ClampedArray * arr, uint32 index, Js::Var value))&Js::Uint8ClampedArray::DirectSetItem, 0)
 HELPERCALL(EnsureFunctionProxyDeferredPrototypeType, &Js::FunctionProxy::EnsureFunctionProxyDeferredPrototypeType, 0)
 
@@ -465,6 +471,7 @@ HELPERCALL(ScopedLdSuper, Js::JavascriptOperators::OP_ScopedLdSuper, 0)
 HELPERCALL(SetHomeObj,    Js::JavascriptOperators::OP_SetHomeObj,    0)
 
 HELPERCALL(ResumeYield,   Js::JavascriptOperators::OP_ResumeYield,   AttrCanThrow)
+HELPERCALL(AsyncSpawn,    Js::JavascriptOperators::OP_AsyncSpawn,    AttrCanThrow)
 
 #ifdef ENABLE_DOM_FAST_PATH
 #define _ONE_SIMPLESLOT_RECORD(nameGetter, nameSetter, funcInfoGetter, funcInfoSetter, entryGetter, entrySetter, attributeGetter, attributeSetter) HELPERCALL(nameGetter, entryGetter, attributeGetter)

@@ -2078,19 +2078,13 @@ namespace Js
             SetProbeBackingBlock(probeBackingBlock);
         }
 
-        {
-            AutoCriticalSection cs(this->GetScriptContext()->GetByteCodeAllocator()->GetCriticalSection());
-            this->GetScriptContext()->EnsureByteCodeAllocationReadWrite(this->GetByteCode()->GetAllocation());
-
-            // Make sure Break opcode only need one byte
-            Assert(OpCodeUtil::IsSmallEncodedOpcode(OpCode::Break));
-            Assert(!OpCodeAttr::HasMultiSizeLayout(OpCode::Break));
-            *(byte *) (pbyteCodeBlockBuffer + offset) = (byte) OpCode::Break;
-
-            this->GetScriptContext()->EnsureByteCodeAllocationReadOnly(this->GetByteCode()->GetAllocation());
-        }
+        // Make sure Break opcode only need one byte
+        Assert(OpCodeUtil::IsSmallEncodedOpcode(OpCode::Break));
+        Assert(!OpCodeAttr::HasMultiSizeLayout(OpCode::Break));
+        *(byte *)(pbyteCodeBlockBuffer + offset) = (byte)OpCode::Break;
 
         ++m_sourceInfo.m_probeCount;
+
         return true;
     }
 
@@ -2102,15 +2096,9 @@ namespace Js
         }
         byte* pbyteCodeBlockBuffer = byteCodeBlock->GetBuffer();
 
-        {
-            AutoCriticalSection cs(this->GetScriptContext()->GetByteCodeAllocator()->GetCriticalSection());
-            this->GetScriptContext()->EnsureByteCodeAllocationReadWrite(this->GetByteCode()->GetAllocation());
+        Js::OpCode originalOpCode = ByteCodeReader::PeekByteOp(GetProbeBackingBlock()->GetBuffer() + offset);
+        *(pbyteCodeBlockBuffer + offset) = (byte)originalOpCode;
 
-            Js::OpCode originalOpCode = ByteCodeReader::PeekByteOp(GetProbeBackingBlock()->GetBuffer() + offset);
-            *(pbyteCodeBlockBuffer + offset) = (byte) originalOpCode;
-
-            this->GetScriptContext()->EnsureByteCodeAllocationReadOnly(this->GetByteCode()->GetAllocation());
-        }
         --m_sourceInfo.m_probeCount;
         AssertMsg(m_sourceInfo.m_probeCount >= 0, "Probe (Break Point) count became negative!");
 
@@ -2192,7 +2180,7 @@ namespace Js
         }
         else
         {
-            newFunctionBody->byteCodeBlock = this->byteCodeBlock->Clone(this->m_scriptContext->GetRecycler(), this->m_scriptContext);
+            newFunctionBody->byteCodeBlock = this->byteCodeBlock->Clone(this->m_scriptContext->GetRecycler());
 
             newFunctionBody->isByteCodeDebugMode = this->isByteCodeDebugMode;
             newFunctionBody->m_byteCodeCount = this->m_byteCodeCount;
@@ -2204,7 +2192,7 @@ namespace Js
 #endif
             if (this->auxBlock)
             {
-                newFunctionBody->auxBlock = this->auxBlock->Clone(this->m_scriptContext->GetRecycler(), this->m_scriptContext);
+                newFunctionBody->auxBlock = this->auxBlock->Clone(this->m_scriptContext->GetRecycler());
 
 #ifdef PERF_COUNTERS
                 byteCodeSize += this->auxBlock->GetLength();
@@ -2213,7 +2201,7 @@ namespace Js
 
             if (this->auxContextBlock)
             {
-                newFunctionBody->auxContextBlock = this->auxContextBlock->Clone(scriptContext->GetRecycler(), scriptContext, this->m_scriptContext);
+                newFunctionBody->auxContextBlock = this->auxContextBlock->Clone(scriptContext->GetRecycler(), scriptContext);
 #ifdef PERF_COUNTERS
                 byteCodeSize += this->auxContextBlock->GetLength();
 #endif
@@ -2221,7 +2209,7 @@ namespace Js
 
             if (this->GetProbeBackingBlock())
             {
-                newFunctionBody->SetProbeBackingBlock(this->GetProbeBackingBlock()->Clone(scriptContext->GetRecycler(), this->m_scriptContext));
+                newFunctionBody->SetProbeBackingBlock(this->GetProbeBackingBlock()->Clone(scriptContext->GetRecycler()));
                 newFunctionBody->m_sourceInfo.m_probeCount = m_sourceInfo.m_probeCount;
             }
 
@@ -6218,23 +6206,6 @@ namespace Js
         if (cleanedUp)
         {
             return;
-        }
-        
-        if (this->GetScriptContext() != nullptr && this->IsFunctionBody())
-        {
-            FunctionBody * functionBody = this->GetFunctionBody();
-            if (functionBody->GetByteCode() != nullptr && functionBody->GetByteCode()->GetAllocation() != nullptr)
-            {
-                this->GetScriptContext()->FreeByteCodeAllocation(functionBody->GetByteCode()->GetAllocation());
-            }
-            if (functionBody->GetAuxiliaryContextData() != nullptr && functionBody->GetAuxiliaryContextData()->GetAllocation() != nullptr)
-            {
-                this->GetScriptContext()->FreeByteCodeAllocation(functionBody->GetAuxiliaryContextData()->GetAllocation());
-            }
-            if (functionBody->GetAuxiliaryData() != nullptr && functionBody->GetAuxiliaryData()->GetAllocation() != nullptr)
-            {
-                this->GetScriptContext()->FreeByteCodeAllocation(functionBody->GetAuxiliaryData()->GetAllocation());
-            }
         }
 
         CleanupRecyclerData(isScriptContextClosing, false /* capture entry point cleanup stack trace */);

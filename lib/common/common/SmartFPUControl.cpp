@@ -10,10 +10,10 @@
 
 static errno_t SetFPUControlDefault(void)
 {
-#if _M_AMD64 || _M_IA64
+#if _M_AMD64 || _M_ARM
     return _controlfp_s(0, _RC_NEAR + _DN_SAVE + _EM_INVALID + _EM_ZERODIVIDE +
         _EM_OVERFLOW + _EM_UNDERFLOW + _EM_INEXACT,
-        _MCW_EM | _MCW_DN | _MCW_PC | _MCW_RC | _MCW_IC);
+        _MCW_EM | _MCW_DN | _MCW_RC);
 #elif _M_IX86
     _control87(_CW_DEFAULT, _MCW_EM | _MCW_DN | _MCW_PC | _MCW_RC | _MCW_IC);
     return 0;
@@ -35,7 +35,9 @@ static errno_t GetFPUControl(unsigned int *pctrl)
 
 static errno_t SetFPUControl(unsigned int fpctrl)
 {
-#if _M_IX86
+#if _M_AMD64 || _M_ARM
+    return _controlfp_s(0, fpctrl, _MCW_EM | _MCW_DN | _MCW_RC);
+#elif _M_IX86
     _control87(fpctrl, (unsigned int)(-1));
     return 0;
 #else

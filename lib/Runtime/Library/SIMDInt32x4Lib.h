@@ -42,16 +42,15 @@ namespace Js {
             static FunctionInfo LessThan;
             static FunctionInfo Equal;
             static FunctionInfo GreaterThan;
-            // WithX/Y/Z/W
-            static FunctionInfo WithX;
-            static FunctionInfo WithY;
-            static FunctionInfo WithZ;
-            static FunctionInfo WithW;
+
             // WithFlagX/Y/Z/W
             static FunctionInfo WithFlagX;
             static FunctionInfo WithFlagY;
             static FunctionInfo WithFlagZ;
             static FunctionInfo WithFlagW;
+			//Lane access
+			static FunctionInfo ExtractLane;
+			static FunctionInfo ReplaceLane;
             // ShiftOps
             static FunctionInfo ShiftLeft;
             static FunctionInfo ShiftRightLogical;
@@ -104,16 +103,14 @@ namespace Js {
         static Var EntryLessThan(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryEqual(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryGreaterThan(RecyclableObject* function, CallInfo callInfo, ...);
-        // WithX/Y/Z/W
-        static Var EntryWithX(RecyclableObject* function, CallInfo callInfo, ...);
-        static Var EntryWithY(RecyclableObject* function, CallInfo callInfo, ...);
-        static Var EntryWithZ(RecyclableObject* function, CallInfo callInfo, ...);
-        static Var EntryWithW(RecyclableObject* function, CallInfo callInfo, ...);
         // WithFlagX/Y/Z/W
         static Var EntryWithFlagX(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryWithFlagY(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryWithFlagZ(RecyclableObject* function, CallInfo callInfo, ...);
-        static Var EntryWithFlagW(RecyclableObject* function, CallInfo callInfo, ...);
+		static Var EntryWithFlagW(RecyclableObject* function, CallInfo callInfo, ...);
+		// Lane Access
+		static Var EntryExtractLane(RecyclableObject* function, CallInfo callInfo, ...);
+		static Var EntryReplaceLane(RecyclableObject* function, CallInfo callInfo, ...);
         // ShiftOps
         static Var EntryShiftLeft(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryShiftRightLogical(RecyclableObject* function, CallInfo callInfo, ...);

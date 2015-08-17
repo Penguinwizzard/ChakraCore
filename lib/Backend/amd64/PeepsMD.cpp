@@ -84,8 +84,14 @@ PeepsMD::PeepAssign(IR::Instr *instr)
             }
         }
     } 
-    else if (((instr->m_opcode == Js::OpCode::MOVSD || instr->m_opcode == Js::OpCode::MOVSS || instr->m_opcode == Js::OpCode::MOVUPS) && src->IsRegOpnd() && dst->IsRegOpnd())
-                || instr->m_opcode == Js::OpCode::MOVAPD )
+    else if (((instr->m_opcode == Js::OpCode::MOVSD || instr->m_opcode == Js::OpCode::MOVSS)
+                && src->IsRegOpnd()
+                && dst->IsRegOpnd()
+                && (TySize[src->GetType()] == TySize[dst->GetType()]))
+        || ((instr->m_opcode == Js::OpCode::MOVUPS)
+                && src->IsRegOpnd()
+                && dst->IsRegOpnd())
+        || (instr->m_opcode == Js::OpCode::MOVAPD))
     {
         // MOVAPS has 1 byte shorter encoding
         instr->m_opcode = Js::OpCode::MOVAPS;

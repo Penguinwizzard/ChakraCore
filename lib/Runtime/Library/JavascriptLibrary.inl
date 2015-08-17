@@ -186,22 +186,7 @@ namespace Js
     {
         DataView* dataView = RecyclerNew(this->GetRecycler(), DataView, arrayBuffer, offset, length, dataViewType);
 
-        // Only add these members in pre-ES6 modes. After ES6, these live on Dataview.prototype as getters.
-        if (!scriptContext->GetConfig()->IsKhronosInteropEnabled())
-        {
-            AddMember(dataView, PropertyIds::buffer, arrayBuffer, PropertyNone);
-            AddMember(dataView, PropertyIds::byteOffset, JavascriptNumber::ToVar(offset, scriptContext), PropertyNone);
-            AddMember(dataView, PropertyIds::byteLength, JavascriptNumber::ToVar(length, scriptContext), PropertyNone);
-        }
-
         return dataView;
-    }
-
-    inline JavascriptPixelArray* JavascriptLibrary::CreatePixelArray(uint32 length)
-    {
-        AssertMsg(pixelArrayType, "Where's pixelArrayType?");
-        JavascriptPixelArray* newArray = RecyclerNewFinalized(this->GetRecycler(), JavascriptPixelArray, length, pixelArrayType);
-        return newArray;
     }
 
     inline JavascriptBoolean* JavascriptLibrary::CreateBoolean(BOOL value)
@@ -520,6 +505,24 @@ namespace Js
         function = EnsureReadyIfHybridDebugging(function);
 
         function->SetFunctionNameId(TaggedInt::ToVarUnchecked(nameId));
+        return function;
+    }
+
+    inline JavascriptPromiseAsyncSpawnExecutorFunction* JavascriptLibrary::CreatePromiseAsyncSpawnExecutorFunction(JavascriptMethod entryPoint, JavascriptGenerator* generatorFunction, Var target)
+    {
+        FunctionInfo* functionInfo = RecyclerNew(this->GetRecycler(), FunctionInfo, entryPoint);
+        DynamicType* type = CreateDeferredPrototypeFunctionType(this->inDispatchProfileMode ? ProfileEntryThunk : entryPoint);
+        JavascriptPromiseAsyncSpawnExecutorFunction* function = EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptPromiseAsyncSpawnExecutorFunction, type, functionInfo, generatorFunction, target));
+
+        return function;
+    }
+
+    inline JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction* JavascriptLibrary::CreatePromiseAsyncSpawnStepArgumentExecutorFunction(JavascriptMethod entryPoint, JavascriptGenerator* generator, Var argument, JavascriptFunction* resolve, JavascriptFunction* reject, bool isReject)
+    {
+        FunctionInfo* functionInfo = RecyclerNew(this->GetRecycler(), FunctionInfo, entryPoint);
+        DynamicType* type = CreateDeferredPrototypeFunctionType(this->inDispatchProfileMode ? ProfileEntryThunk : entryPoint);
+        JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction* function = EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction, type, functionInfo, generator, argument, resolve, reject, isReject));
+
         return function;
     }
 

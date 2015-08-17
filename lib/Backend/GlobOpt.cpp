@@ -7382,7 +7382,6 @@ GlobOpt::ValueNumberLdElemDst(IR::Instr **pInstr, Value *srcVal)
     case ObjectType::Uint8ClampedArray:
     case ObjectType::Uint8ClampedVirtualArray:
     case ObjectType::Uint8ClampedMixedArray:
-    case ObjectType::PixelArray:
         newMin = Uint8ConstMin;
         newMax = Uint8ConstMax;
         goto IntArrayCommon;
@@ -12421,15 +12420,12 @@ GlobOpt::TypeSpecializeStElem(IR::Instr ** pInstr, Value *src1Val, Value **pDstV
         toType = TyFloat64;
         break;
 
-    case ObjectType::PixelArray:
     case ObjectType::Uint8ClampedArray:
     case ObjectType::Uint8ClampedVirtualArray:
     case ObjectType::Uint8ClampedMixedArray:
-        // PixelArray requires rounding (as opposed to truncation) of floating point values. If source symbol is
+        // Uint8ClampedArray (and old PixelArray) requires rounding (as opposed to truncation) of floating point values. If source symbol is
         // float type specialized, type specialize this instruction to float as well, and handle rounding in the
         // lowerer.
-        if (!PHASE_OFF(Js::PixelArrayTypeSpecPhase, this->func))
-        {
             if (!sym || this->IsInt32TypeSpecialized(sym, this->currentBlock))
             {
                 toType = TyInt32;
@@ -12439,7 +12435,6 @@ GlobOpt::TypeSpecializeStElem(IR::Instr ** pInstr, Value *src1Val, Value **pDstV
             {
                 toType = TyFloat64;
             }
-        }
         break;
 
     default:

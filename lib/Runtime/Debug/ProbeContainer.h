@@ -21,7 +21,7 @@ namespace Js
         ProbeList* pendingProbeList;
 
         ScriptContext* pScriptContext;
-        ProbeManager *pProbeManager;
+        DebugManager *debugManager;
 
         // Stack for a current scriptcontext
         DiagStack* framePointers;
@@ -78,8 +78,8 @@ namespace Js
 
         void StartRecordingCall();
         void EndRecordingCall(Js::Var returnValue, Js::JavascriptFunction * function);
-        ReturnedValueList* GetReturnedValueList() const { return this->pProbeManager->stepController.GetReturnedValueList(); }
-        void ResetReturnedValueList() { this->pProbeManager->stepController.ResetReturnedValueList(); }
+        ReturnedValueList* GetReturnedValueList() const { return this->debugManager->stepController.GetReturnedValueList(); }
+        void ResetReturnedValueList() { this->debugManager->stepController.ResetReturnedValueList(); }
 
         void Initialize(ScriptContext* pScriptContext);
         void Close();
@@ -151,7 +151,7 @@ namespace Js
         bool IsPrimaryBrokenToDebuggerContext() const { return isPrimaryBrokenToDebuggerContext; }
         void SetIsPrimaryBrokenToDebuggerContext(bool set) { isPrimaryBrokenToDebuggerContext = set; }
 
-        ProbeManager *GetProbeManager() const { return this->pProbeManager; }
+        DebugManager *GetDebugManager() const { return this->debugManager; }
 
 #ifdef ENABLE_MUTATION_BREAKPOINT
         typedef JsUtil::List<RecyclerWeakReference<Js::MutationBreakpoint>*, Recycler, false, Js::WeakRefFreeListedRemovePolicy> MutationBreakpointList;

@@ -319,6 +319,13 @@ namespace Js
         static BOOL OP_InitUndeclConsoleLetProperty(Var instance, PropertyId propertyId);
         static BOOL OP_InitUndeclConsoleConstProperty(Var instance, PropertyId propertyId);
         static BOOL OP_InitClassMember(Var instance, PropertyId propertyId, Var newValue);
+        static void OP_InitClassMemberComputedName(Var object, Var elementName, Var value, ScriptContext* scriptContext, PropertyOperationFlags flags = PropertyOperation_None);
+        static void OP_InitClassMemberGet(Var object, PropertyId propertyId, Var getter);
+        static void OP_InitClassMemberGetComputedName(Var object, Var elementName, Var getter, ScriptContext* scriptContext, PropertyOperationFlags flags = PropertyOperation_None);
+        static void OP_InitClassMemberSet(Var object, PropertyId propertyId, Var setter);
+        static void OP_InitClassMemberSetComputedName(Var object, Var elementName, Var getter, ScriptContext* scriptContext, PropertyOperationFlags flags = PropertyOperation_None);
+
+        static Js::PropertyId GetPropertyId(Var propertyName, ScriptContext* scriptContext);
 
         static BOOL OP_HasItem(Var instance, Var aElementIndex, ScriptContext* scriptContext);
         static Var OP_GetElementI(Var instance, Var aElementIndex, ScriptContext* scriptContext);
@@ -377,9 +384,9 @@ namespace Js
             PropertyOperationFlags propertyOperationFlags = PropertyOperation_None);
         static Var OP_TypeofPropertyScoped(FrameDisplay *pScope, PropertyId propertyId, Var defaultInstance, ScriptContext* scriptContext);
         static void OP_InitGetter(Var object, PropertyId propertyId, Var getter);
-        static void OP_InitElemGetter(Var object, Var elementName, Var getter, ScriptContext* scriptContext, PropertyOperationFlags flags = PropertyOperation_None);
+        static Js::PropertyId OP_InitElemGetter(Var object, Var elementName, Var getter, ScriptContext* scriptContext, PropertyOperationFlags flags = PropertyOperation_None);
         static void OP_InitSetter(Var object, PropertyId propertyId, Var setter);
-        static void OP_InitElemSetter(Var object, Var elementName, Var getter, ScriptContext* scriptContext, PropertyOperationFlags flags = PropertyOperation_None);
+        static Js::PropertyId OP_InitElemSetter(Var object, Var elementName, Var getter, ScriptContext* scriptContext, PropertyOperationFlags flags = PropertyOperation_None);
         static void OP_InitComputedProperty(Var object, Var elementName, Var value, ScriptContext* scriptContext, PropertyOperationFlags flags = PropertyOperation_None);
         static void OP_InitProto(Var object, PropertyId propertyId, Var value);
 
@@ -563,6 +570,8 @@ namespace Js
         static Var OP_ScopedLdSuper(Var scriptFunction, ScriptContext * scriptContext);
 
         static Var OP_ResumeYield(ResumeYieldData* yieldData, RecyclableObject* iterator);
+
+        static Var OP_AsyncSpawn(Js::Var aGenerator, Js::Var aThis, ScriptContext* scriptContext);
 
         template <typename T>
         static void * JitRecyclerAlloc(size_t size, Recycler* recycler)

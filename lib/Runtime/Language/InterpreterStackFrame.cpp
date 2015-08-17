@@ -4014,6 +4014,54 @@ namespace Js
     }
 
     template <class T>
+    void InterpreterStackFrame::OP_InitClassMemberGet(const unaligned T * playout)
+    {
+        JavascriptOperators::OP_InitClassMemberGet(
+            GetReg(playout->Instance), 
+            m_functionBody->GetReferencedPropertyId(playout->PropertyIdIndex),
+            GetReg(playout->Value));
+    }
+
+    template <class T>
+    void InterpreterStackFrame::OP_InitClassMemberSet(const unaligned T * playout)
+    {
+        JavascriptOperators::OP_InitClassMemberSet(
+            GetReg(playout->Instance), 
+            m_functionBody->GetReferencedPropertyId(playout->PropertyIdIndex), 
+            GetReg(playout->Value));
+    }
+
+    template <class T>
+    void InterpreterStackFrame::OP_InitClassMemberSetComputedName(const unaligned T * playout)
+    {
+        JavascriptOperators::OP_InitClassMemberSetComputedName(
+            GetReg(playout->Instance),
+            GetReg(playout->Element),
+            GetReg(playout->Value),
+            m_functionBody->GetScriptContext());
+    }
+
+    template <class T>
+    void InterpreterStackFrame::OP_InitClassMemberGetComputedName(const unaligned T * playout)
+    {
+        JavascriptOperators::OP_InitClassMemberGetComputedName(
+            GetReg(playout->Instance),
+            GetReg(playout->Element),
+            GetReg(playout->Value),
+            m_functionBody->GetScriptContext());
+    }
+
+    template <class T>
+    void InterpreterStackFrame::OP_InitClassMemberComputedName(const unaligned T * playout)
+    {
+        JavascriptOperators::OP_InitClassMemberComputedName(
+            GetReg(playout->Instance),
+            GetReg(playout->Element),
+            GetReg(playout->Value),
+            m_functionBody->GetScriptContext());
+    }
+
+    template <class T>
     void InterpreterStackFrame::DoInitLetFld(const unaligned T * playout, Var instance, PropertyOperationFlags flags)
     {
         uint inlineCacheIndex = playout->inlineCacheIndex;

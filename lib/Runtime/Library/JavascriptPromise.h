@@ -32,6 +32,52 @@ namespace Js
         bool isAlreadyResolved;
     };
 
+    class JavascriptPromiseAsyncSpawnExecutorFunction : public RuntimeFunction
+    {
+    protected:
+        DEFINE_VTABLE_CTOR(JavascriptPromiseAsyncSpawnExecutorFunction, RuntimeFunction);
+        DEFINE_MARSHAL_OBJECT_TO_SCRIPT_CONTEXT(JavascriptPromiseAsyncSpawnExecutorFunction);
+
+    public:
+        JavascriptPromiseAsyncSpawnExecutorFunction(DynamicType* type, FunctionInfo* functionInfo, JavascriptGenerator* generatorFunction, Var target);
+
+        inline static bool Is(Var var);
+        inline static JavascriptPromiseAsyncSpawnExecutorFunction* FromVar(Var var);
+
+        JavascriptGenerator* GetGeneratorFunction();
+        Var GetTarget();
+
+    private:
+        JavascriptGenerator* generatorFunction;
+        Var target; // this
+    };
+
+    class JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction : public RuntimeFunction
+    {
+    protected:
+        DEFINE_VTABLE_CTOR(JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction, RuntimeFunction);
+        DEFINE_MARSHAL_OBJECT_TO_SCRIPT_CONTEXT(JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction);
+
+    public:
+        JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction(DynamicType* type, FunctionInfo* functionInfo, JavascriptGenerator* generator, Var argument, JavascriptFunction* resolve = NULL, JavascriptFunction* reject = NULL, bool isReject = false);
+
+        inline static bool Is(Var var);
+        inline static JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction* FromVar(Var var);
+
+        JavascriptGenerator* GetGenerator();
+        JavascriptFunction* GetReject();
+        JavascriptFunction* GetResolve();
+        bool GetIsReject();
+        Var GetArgument();
+
+    private:
+        JavascriptGenerator* generator;
+        JavascriptFunction* reject;
+        JavascriptFunction* resolve;
+        bool isReject;
+        Var argument;
+    };
+
     class JavascriptPromiseCapabilitiesExecutorFunction : public RuntimeFunction
     {
     protected:
@@ -296,6 +342,11 @@ namespace Js
         static Var EntryAllResolveElementFunction(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryGetterSymbolSpecies(RecyclableObject* function, CallInfo callInfo, ...);
 
+        static Var EntryJavascriptPromiseAsyncSpawnExecutorFunction(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryJavascriptPromiseAsyncSpawnStepNextExecutorFunction(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryJavascriptPromiseAsyncSpawnStepThrowExecutorFunction(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryJavascriptPromiseAsyncSpawnCallStepExecutorFunction(RecyclableObject* function, CallInfo callInfo, ...);
+
         static bool Is(Var aValue);
         static JavascriptPromise* FromVar(Js::Var aValue);
 
@@ -326,5 +377,9 @@ namespace Js
         Var result;
         JavascriptPromiseReactionList* resolveReactions;
         JavascriptPromiseReactionList* rejectReactions;
+
+    private :
+        static void AsyncSpawnStep(JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction* nextFunction, JavascriptGenerator* gen, JavascriptFunction* resolve, JavascriptFunction* reject);
+
     };
 }

@@ -20,11 +20,6 @@ SOURCES= \
     ..\CacheOperators.cpp \
     ..\CallInfo.cpp \
     ..\CodeGenRecyclableData.cpp \
-    ..\diagProbe.cpp \
-    ..\ProbeContainer.cpp \
-    ..\diagObjectModel.cpp \
-    ..\DiagStackFrame.cpp \
-    ..\SourceContextInfo.cpp \
     ..\DiagHelperMethodWrapper.cpp \
     ..\DynamicProfileInfo.cpp \
     ..\DynamicProfileStorage.cpp \
@@ -39,7 +34,6 @@ SOURCES= \
     ..\JavascriptMathOperators.cpp \
     ..\JavascriptOperators.cpp \
     ..\JavascriptStackWalker.cpp \
-    ..\MutationBreakpoint.cpp \
     ..\ProfilingHelpers.cpp \
     ..\PropertyRecord.cpp \
     ..\ReadOnlyDynamicProfileInfo.cpp \

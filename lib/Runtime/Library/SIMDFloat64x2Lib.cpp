@@ -42,7 +42,7 @@ namespace Js
         {
             return args[1];
         }
-        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat64x2TypeMismatch, L"float64x2");
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat64x2TypeMismatch, L"Float64x2");
     }
 
     Var SIMDFloat64x2Lib::EntryZero(RecyclableObject* function, CallInfo callInfo, ...)
@@ -154,60 +154,6 @@ namespace Js
         }
 
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat32x4TypeMismatch, L"fromInt32x4Bits");
-    }
-
-
-    // withX/Y
-    Var SIMDFloat64x2Lib::EntryWithX(RecyclableObject* function, CallInfo callInfo, ...)
-    {
-        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
-
-        ARGUMENTS(args, callInfo);
-        ScriptContext* scriptContext = function->GetScriptContext();
-
-        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
-        Assert(!(callInfo.Flags & CallFlags_New));
-
-        // withX(t, value)
-        
-        // first arg has to be of type float64x2, so cannot be missing. 
-        if (args.Info.Count >= 2 && JavascriptSIMDFloat64x2::Is(args[1]))
-        {
-            JavascriptSIMDFloat64x2 *instance = JavascriptSIMDFloat64x2::FromVar(args[1]);
-            Assert(instance);
-
-            // if value arg is missing, then it is undefined.
-            Var value = args.Info.Count >= 3 ? args[2] : scriptContext->GetLibrary()->GetUndefined();
-            return instance->CopyAndSetLane(SIMD_X, JavascriptConversion::ToNumber(value, scriptContext), scriptContext);
-        }
-
-        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat64x2TypeMismatch, L"withX");
-    }
-
-    Var SIMDFloat64x2Lib::EntryWithY(RecyclableObject* function, CallInfo callInfo, ...)
-    {
-        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
-
-        ARGUMENTS(args, callInfo);
-        ScriptContext* scriptContext = function->GetScriptContext();
-
-        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
-        Assert(!(callInfo.Flags & CallFlags_New));
-
-        // withY(t, value)
-
-        // first arg has to be of type float64x2, so cannot be missing. 
-        if (args.Info.Count >= 2 && JavascriptSIMDFloat64x2::Is(args[1]))
-        {
-            JavascriptSIMDFloat64x2 *instance = JavascriptSIMDFloat64x2::FromVar(args[1]);
-            Assert(instance);
-
-            // if value arg is missing, then it is undefined.
-            Var value = args.Info.Count >= 3 ? args[2] : scriptContext->GetLibrary()->GetUndefined();
-            return instance->CopyAndSetLane(SIMD_Y, JavascriptConversion::ToNumber(value, scriptContext), scriptContext);
-        }
-
-        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat64x2TypeMismatch, L"withY");
     }
 
     Var SIMDFloat64x2Lib::EntryNot(RecyclableObject* function, CallInfo callInfo, ...)
@@ -1009,7 +955,7 @@ namespace Js
             SIMD128TypedArrayStore<JavascriptSIMDFloat64x2>(args[1], args[2], args[3], 2 * TySize[TyFloat64], scriptContext);
             return NULL;
         }
-        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInvalidArgType, L"SIMD.float64x2.store");
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInvalidArgType, L"SIMD.Float64x2.store");
         
     }
 
@@ -1028,7 +974,7 @@ namespace Js
             SIMD128TypedArrayStore<JavascriptSIMDFloat64x2>(args[1], args[2], args[3], 1 * TySize[TyFloat64], scriptContext);
             return NULL;
         }
-        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInvalidArgType, L"SIMD.float64x2.store");
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInvalidArgType, L"SIMD.Float64x2.store");
         
     }
 

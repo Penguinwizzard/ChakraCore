@@ -25,8 +25,6 @@ namespace Js
         uint GetCurrentOffset() const;
         const byte * SetCurrentOffset(int byteOffset);
         const byte * SetCurrentRelativeOffset(const byte * ip, int byteOffset);
-        bool IsCurrentLocationReadOnly(CustomHeap::Heap * byteCodeAllocator);
-        bool IsCurrentLocationExecuteReadProtection();
 
         template<typename LayoutType> inline const unaligned LayoutType * GetLayout();
         template<typename LayoutType> inline const unaligned LayoutType * GetLayout(const byte*& ip);

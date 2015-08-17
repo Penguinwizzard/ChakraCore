@@ -28,7 +28,6 @@ namespace Js
 
         virtual JavascriptString* GetDisplayNameImpl() const override;
         GeneratorVirtualScriptFunction* GetGeneratorVirtualScriptFunction() { return scriptFunction; }
-        Var GetLengthForInitialization(ScriptContext* scriptContext) const;
 
         static JavascriptGeneratorFunction* FromVar(Var var);
         static bool Is(Var var);

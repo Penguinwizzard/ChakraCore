@@ -218,10 +218,7 @@ HRESULT ExecuteTestWithMemoryCheck(BSTR fileName)
     _flushall();
 
 #ifdef CHECK_MEMORY_LEAK
-    if (false) // TODO : there is one outstanding TLS Entry leak
-    {
-        ChakraRTInterface::SetEnableCheckMemoryLeakOutput(true);
-    }
+    ChakraRTInterface::SetEnableCheckMemoryLeakOutput(true);
 #endif
     return hr;
 }

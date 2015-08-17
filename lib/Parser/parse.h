@@ -779,6 +779,8 @@ private:
     void CheckStrictFormalParameters();
     void AddArgumentsNodeToVars(ParseNodePtr pnodeFnc);
     void UpdateOrCheckForDuplicateInFormals(IdentPtr pid, SList<IdentPtr> *formals);
+    void TransformAsyncFncDeclAST(ParseNodePtr *pnodeBody);
+    ParseNodePtr CreateAsyncSpawnGenerator();
 
     LPCOLESTR GetFunctionName(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint);
     uint CalculateFunctionColumnNumber();

@@ -20,6 +20,12 @@ namespace Js
             case PropertyIds::caller:
             case PropertyIds::arguments:
                 return true;
+            case PropertyIds::length:
+                if (this->IsScriptFunction())
+                {
+                    return true;
+                }
+                break;
         }
         return DynamicObject::HasProperty(propertyId);
     }
@@ -126,6 +132,12 @@ namespace Js
             case PropertyIds::caller:
             case PropertyIds::arguments:
                 return false;
+            case PropertyIds::length:
+                if (this->IsScriptFunction() || this->IsBoundFunction())
+                {
+                    return true;
+                }
+                break;
             }
         }
         return DynamicObject::IsConfigurable(propertyId);
@@ -140,6 +152,12 @@ namespace Js
             case PropertyIds::caller:
             case PropertyIds::arguments:
                 return false;
+            case PropertyIds::length:
+                if (this->IsScriptFunction())
+                {
+                    return false;
+                }
+                break;
             }
         }
         return DynamicObject::IsEnumerable(propertyId);
@@ -154,6 +172,12 @@ namespace Js
             case PropertyIds::caller:
             case PropertyIds::arguments:
                 return false;
+            case PropertyIds::length:
+                if (this->IsScriptFunction())
+                {
+                    return false;
+                }
+                break;
             }
         }
         return DynamicObject::IsWritable(propertyId);
@@ -167,6 +191,19 @@ namespace Js
             Assert(DynamicObject::GetPropertyIndex(specialPropertyIds[index]) == Constants::NoSlot);
             *propertyName = requestContext->GetPropertyString(specialPropertyIds[index]);
             return true;
+        }
+
+        if (index == length)
+        {            
+            if (this->IsScriptFunction() || this->IsBoundFunction())
+            {
+                if (DynamicObject::GetPropertyIndex(PropertyIds::length) == Constants::NoSlot)
+                {
+                    //Only for user defined functions length is a special property.
+                    *propertyName = requestContext->GetPropertyString(PropertyIds::length);
+                    return true;
+                }
+            }
         }
         return false;
     }
@@ -237,9 +274,15 @@ namespace Js
             return true;
         }
 
+        JavascriptFunction* nullValue = (JavascriptFunction*)requestContext->GetLibrary()->GetNull();
+        if (this->IsLibraryCode()) // Hide .caller for builtins
+        {
+            *value = nullValue;
+            return true;
+        }
+
         // Use a stack walker to find this function's frame. If we find it, find its caller.
         BOOL foundThis = FALSE;
-        JavascriptFunction* nullValue = (JavascriptFunction*)requestContext->GetLibrary()->GetNull();
         JavascriptFunction* funcCaller = FindCaller(&foundThis, nullValue, requestContext);
 
         // WOOB #1142373. We are trying to get the caller in window.onerror = function(){alert(arguments.callee.caller);} case
@@ -407,6 +450,17 @@ namespace Js
             return true;
         }
 
+        if (propertyId == PropertyIds::length)
+        {
+            FunctionProxy *proxy = this->GetFunctionProxy();
+            if (proxy)
+            {
+                *value = TaggedInt::ToVarUnchecked(proxy->EnsureDeserialized()->GetReportedInParamsCount() - 1);
+                *result = true;
+                return true;
+            }
+        }
+
         return false;
     }
 
@@ -434,6 +488,14 @@ namespace Js
                 }
                 isReadOnly = true;
                 break;
+
+            case PropertyIds::length:
+                if (this->IsScriptFunction())
+                {
+                    isReadOnly = true;
+                }
+                break;
+
         }
 
         if(isReadOnly)
@@ -491,6 +553,13 @@ namespace Js
             case PropertyIds::arguments:
                 JavascriptError::ThrowCantDeleteIfStrictMode(flags, this->GetScriptContext(), this->GetScriptContext()->GetPropertyName(propertyId)->GetBuffer());
                 return false;
+            case PropertyIds::length:
+                if( this->IsScriptFunction())
+                {
+                    JavascriptError::ThrowCantDeleteIfStrictMode(flags, this->GetScriptContext(), this->GetScriptContext()->GetPropertyName(propertyId)->GetBuffer());
+                    return false;
+                }
+                break;
         }
 
         BOOL result = DynamicObject::DeleteProperty(propertyId, flags);
@@ -688,7 +757,7 @@ namespace Js
     // Check if this function is native/script library code
     bool JavascriptFunction::IsLibraryCode() const
     {
-        return !this->IsScriptFunction() || this->GetFunctionBody()->GetUtf8SourceInfo()->GetIsLibraryCode();
+        return !this->IsScriptFunction() || this->GetFunctionProxy()->GetUtf8SourceInfo()->GetIsLibraryCode();
     }
 
     BOOL JavascriptFunction::HasInstance(Var instance, ScriptContext* scriptContext, IsInstInlineCache* inlineCache)

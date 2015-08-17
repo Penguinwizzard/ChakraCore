@@ -968,7 +968,6 @@ namespace Js
             {
                 // Special handling for .load*/.store* operations
                 AsmJsSIMDFunction *simdFun = sym->Cast<AsmJsSIMDFunction>();
-                
                 if (simdFun->IsSimdLoadFunc() || simdFun->IsSimdStoreFunc())
                 {
                     return EmitSimdLoadStoreBuiltin(pnode, sym->Cast<AsmJsSIMDFunction>(), expectedType);
@@ -977,9 +976,7 @@ namespace Js
                 {
                     return EmitSimdBuiltin(pnode, sym->Cast<AsmJsSIMDFunction>(), expectedType);
                 }
-
-                
-            }
+            }         
         }
 #endif
         
@@ -988,6 +985,7 @@ namespace Js
             expectedType = AsmJsRetType::Float;
         }
 
+        
         const bool isFFI = sym->GetSymbolType() == AsmJsSymbol::ImportFunction;
         const bool isMathBuiltin = sym->GetSymbolType() == AsmJsSymbol::MathBuiltinFunction;
         if( isMathBuiltin )
@@ -1324,7 +1322,6 @@ namespace Js
                         //      
                         //      Float64x2: 
                         //          similar to Int32x4
-
                         PropertyName argCallTarget = ParserWrapper::VariableName(arg->sxCall.pnodeTarget);
                         AsmJsFunctionDeclaration* argCall = mCompiler->LookupFunction(argCallTarget);
 
@@ -1341,14 +1338,10 @@ namespace Js
                             argInfo = EmitCall(arg, simdFunc->GetReturnType());
                         }
                         // special case for fround inside some float32x4 operations
-                        // f4(fround(), ...) , f4splat(fround()), f4.withX/Y/Z/W(fround())
-                        else if ((simdFunc->IsConstructor() && simdFunc->GetSimdBuiltInFunction() == AsmJsSIMDBuiltinFunction::AsmJsSIMDBuiltin_float32x4) ||  /*float32x4 all args*/
-                            simdFunc->GetSimdBuiltInFunction() == AsmJsSIMDBuiltinFunction::AsmJsSIMDBuiltin_float32x4_splat ||                                /*splat all args*/
-                            (i == 1 &&                                                                                                                         /*second arg to withX/Y/Z/W*/
-                            (simdFunc->GetSimdBuiltInFunction() == AsmJsSIMDBuiltinFunction::AsmJsSIMDBuiltin_float32x4_withX ||
-                            simdFunc->GetSimdBuiltInFunction() == AsmJsSIMDBuiltinFunction::AsmJsSIMDBuiltin_float32x4_withY ||
-                            simdFunc->GetSimdBuiltInFunction() == AsmJsSIMDBuiltinFunction::AsmJsSIMDBuiltin_float32x4_withZ ||
-                            simdFunc->GetSimdBuiltInFunction() == AsmJsSIMDBuiltinFunction::AsmJsSIMDBuiltin_float32x4_withW)))
+                        // f4(fround(), ...) , f4splat(fround()), f4.replaceLane(..,..,fround())
+                        else if ((simdFunc->IsConstructor() && simdFunc->GetSimdBuiltInFunction() == AsmJsSIMDBuiltinFunction::AsmJsSIMDBuiltin_Float32x4) ||  /*float32x4 all args*/
+                                  simdFunc->GetSimdBuiltInFunction() == AsmJsSIMDBuiltinFunction::AsmJsSIMDBuiltin_float32x4_splat ||                                /*splat all args*/
+                                 (i == 2 && simdFunc->GetSimdBuiltInFunction() == AsmJsSIMDBuiltinFunction::AsmJsSIMDBuiltin_float32x4_replaceLane))
                         {
 
                             if (argCall && argCall->GetSymbolType() == AsmJsSymbol::MathBuiltinFunction && IsFRound(argCall->Cast<AsmJsMathFunction>()))
@@ -1385,6 +1378,35 @@ namespace Js
                         argsInfo[i].location = mFunction->GetConstRegister<float>((float)arg->sxFlt.dbl);
                         // no need to emit constant
                         continue;
+                    }
+                    else if (simdFunc->IsLaneAccessFunc())
+                    {
+                        if (i == 0 && !simdFunc->GetArgType(i).isSIMDType())
+                        {
+                            throw AsmJsCompilationException(L"Invalid arguments to ExtractLane/ReplaceLane, SIMD type expected for first argument.");
+                        }
+                        if (i == 1)    //lane index
+                        {
+                            Assert(simdFunc->GetArgType(i) == AsmJsType::Int);
+                            int lane = (int)arg->sxInt.lw;
+                            if (arg->nop == knopInt)
+                            {
+                                if (lane < 0 || lane > 3)
+                                {
+                                    throw AsmJsCompilationException(L"Invalid arguments to ExtractLane/ReplaceLane, out of range lane indices.");
+                                }
+                            }
+                            else
+                            {
+                                throw AsmJsCompilationException(L"Invalid arguments to extractLane/replaceLane, expecting literals for lane indices.");
+                            }
+                            Assert(argCount == 2 || argCount == 3);
+                            argsTypes[i] = AsmJsType::Int;
+                            argsInfo[i].type = AsmJsType::Int;
+                            argsInfo[i].location = mFunction->GetConstRegister<int>((int)lane);
+                            continue;
+                        }
+                        
                     }
                     else if ((simdFunc->IsShuffleFunc() || simdFunc->IsSwizzleFunc()) && simdFunc->GetArgType(i) == AsmJsType::Int)
                     {
@@ -1447,8 +1469,6 @@ namespace Js
 
     bool    AsmJSByteCodeGenerator::ValidateSimdFieldAccess(PropertyName field, const AsmJsType& receiverType, OpCodeAsmJs &op, int &laneIndex, AsmJsType &laneType)
     {
-        AssertMsg(PropertyIds::x == PropertyIds::y - 1 && PropertyIds::x == PropertyIds::z - 2 && PropertyIds::x == PropertyIds::w - 3, "Expecting contiguous SIMD lanes property IDs");
-        
         PropertyId fieldId = field->GetPropertyId();
         // Bind propertyId if not already.
         if (fieldId == Js::Constants::NoProperty)
@@ -1456,36 +1476,8 @@ namespace Js
             mByteCodeGenerator->AssignPropertyId(field);
             fieldId = field->GetPropertyId();
         }
-
         if (receiverType.isSIMDType())
         {
-            if (fieldId >= PropertyIds::x && fieldId <= PropertyIds::w)
-            {
-                switch (receiverType.GetWhich())
-                {
-                    case AsmJsType::Int32x4:
-                        op = OpCodeAsmJs::Simd128_LdLane_I4;
-                        laneType = AsmJsType::Signed;
-                        break;
-                    case AsmJsType::Float32x4:
-                        op = OpCodeAsmJs::Simd128_LdLane_F4;
-                        laneType = AsmJsType::Float;
-                        break;
-                    case AsmJsType::Float64x2:
-                        if (fieldId >= PropertyIds::z)
-                        {
-                            return false;
-                        }
-                        op = OpCodeAsmJs::Simd128_LdLane_D2;
-                        laneType = AsmJsType::Double;
-                        break;
-                    default:
-                        Assert(UNREACHED);
-                }
-                laneIndex = fieldId - PropertyIds::x;
-                return true;
-            }
-            
             if (fieldId == PropertyIds::signMask)
             {
                 switch (receiverType.GetWhich())
@@ -1520,8 +1512,6 @@ namespace Js
         PropertyName field = ParserWrapper::DotMember(pnode);
         EmitExpressionInfo baseInfo = Emit(base);
        
-        
-        
         if (!ValidateSimdFieldAccess(field, baseInfo.type, opcode, laneIndex, laneType))
         {
             throw AsmJsCompilationException(L"Expression does not support field access or invalid field name");
@@ -1591,8 +1581,6 @@ namespace Js
             throw AsmJsCompilationException(L"SIMD builtin function doesn't support arguments");
         }
 
-        Assert(retType.toVarType().isSIMD());
-
         // If a simd built-in is used without coercion, then expectedType is Void
         // e.g. x = f4add(a, b);
 
@@ -1607,9 +1595,28 @@ namespace Js
             mFunction->ReleaseLocationGeneric(&argsInfo[i]);
         }
 
-        RegSlot dst = mFunction->AcquireTmpRegister<AsmJsSIMDValue>();
+        RegSlot dst = Constants::NoRegister;
+        AsmJsType dstType = AsmJsType::Void;
 
+        switch (retType.which())
+        {
+        case AsmJsType::Signed:
+            dst = mFunction->AcquireTmpRegister<int>();
+            dstType = AsmJsType::Signed;
+            break;
+        case AsmJsType::Float:
+            dst = mFunction->AcquireTmpRegister<float>();
+            dstType = AsmJsType::Float;
+            break;
+        default:
+            Assert(retType.toVarType().isSIMD());
+            dst = mFunction->AcquireTmpRegister<AsmJsSIMDValue>();
+        }
         EmitExpressionInfo emitInfo(dst, retType.toType());
+        if (dstType != AsmJsType::Void)
+        {
+            emitInfo.type = dstType;
+        }
 
         switch (argCount){
         case 1:

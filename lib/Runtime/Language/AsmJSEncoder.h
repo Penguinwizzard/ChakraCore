@@ -212,29 +212,15 @@ namespace Js
         template <class T> void OP_Simd128_SelectF4(const unaligned T* playout);
         template <class T> void OP_Simd128_SelectI4(const unaligned T* playout);
         template <class T> void OP_Simd128_SelectD2(const unaligned T* playout);
-     
-        template <class T> void OP_Simd128_LdLaneF4(const unaligned T* playout);
-        template <class T> void OP_Simd128_LdLaneI4(const unaligned T* playout);
-        template <class T> void OP_Simd128_LdLaneD2(const unaligned T* playout);
-
 
         template <class T> void OP_Simd128_LdSignMaskF4(const unaligned T* playout);
         template <class T> void OP_Simd128_LdSignMaskI4(const unaligned T* playout);
         template <class T> void OP_Simd128_LdSignMaskD2(const unaligned T* playout);
 
-        template <class T> void OP_Simd128_WithXF4(const unaligned T* playout);
-        template <class T> void OP_Simd128_WithXI4(const unaligned T* playout);
-        template <class T> void OP_Simd128_WithXD2(const unaligned T* playout);
-
-        template <class T> void OP_Simd128_WithYF4(const unaligned T* playout);
-        template <class T> void OP_Simd128_WithYI4(const unaligned T* playout);
-        template <class T> void OP_Simd128_WithYD2(const unaligned T* playout);
-
-        template <class T> void OP_Simd128_WithZF4(const unaligned T* playout);
-        template <class T> void OP_Simd128_WithZI4(const unaligned T* playout);
-
-        template <class T> void OP_Simd128_WithWF4(const unaligned T* playout);
-        template <class T> void OP_Simd128_WithWI4(const unaligned T* playout);
+        template <class T> void OP_Simd128_ExtractLaneI4(const unaligned T* playout);
+        template <class T> void OP_Simd128_ExtractLaneF4(const unaligned T* playout);
+        template <class T> void OP_Simd128_ReplaceLaneI4(const unaligned T* playout);
+        template <class T> void OP_Simd128_ReplaceLaneF4(const unaligned T* playout);
 
         template <class T> void OP_Simd128_I_ArgOutF4(const unaligned T* playout);
         template <class T> void OP_Simd128_I_ArgOutI4(const unaligned T* playout);

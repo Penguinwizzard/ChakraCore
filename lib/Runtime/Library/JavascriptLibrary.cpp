@@ -20,31 +20,6 @@ namespace Js
     SimpleTypeHandler<1> JavascriptLibrary::SharedFunctionWithLengthTypeHandler(BuiltInPropertyRecords::length);
     MissingPropertyTypeHandler JavascriptLibrary::MissingPropertyHolderTypeHandler;
 
-    SimpleTypeHandler<1> JavascriptLibrary::SharedUserDefinedFunctionWithoutPrototypeAndWithoutNameTypeHandler(
-        BuiltInPropertyRecords::length,
-        PropertyConfigurable);
-    static SimplePropertyDescriptor SharedUserDefinedFunctionWithoutPrototypeAndWithNamePropertyDescriptors[2] =
-    {
-        SimplePropertyDescriptor(BuiltInPropertyRecords::length, PropertyConfigurable),
-        SimplePropertyDescriptor(BuiltInPropertyRecords::name, PropertyConfigurable | PropertyWritable)
-    };
-    SimpleTypeHandler<2> JavascriptLibrary::SharedUserDefinedFunctionWithoutPrototypeAndWithNameTypeHandler(
-        SharedUserDefinedFunctionWithoutPrototypeAndWithNamePropertyDescriptors);
-    static SimplePropertyDescriptor SharedUserDefinedFunctionWithPrototypeAndWithoutNamePropertyDescriptors[2] =
-    {
-        SimplePropertyDescriptor(BuiltInPropertyRecords::prototype, PropertyWritable),
-        SimplePropertyDescriptor(BuiltInPropertyRecords::length, PropertyConfigurable)
-    };
-    SimpleTypeHandler<2> JavascriptLibrary::SharedUserDefinedFunctionWithPrototypeAndWithoutNameTypeHandler(
-        SharedUserDefinedFunctionWithPrototypeAndWithoutNamePropertyDescriptors);
-    static SimplePropertyDescriptor SharedUserDefinedFunctionWithPrototypeAndWithNamePropertyDescriptors[3] =
-    {
-        SimplePropertyDescriptor(BuiltInPropertyRecords::prototype, PropertyWritable),
-        SimplePropertyDescriptor(BuiltInPropertyRecords::length, PropertyConfigurable),
-        SimplePropertyDescriptor(BuiltInPropertyRecords::name, PropertyConfigurable | PropertyWritable)
-    };
-    SimpleTypeHandler<3> JavascriptLibrary::SharedUserDefinedFunctionWithPrototypeAndWithNameTypeHandler(
-        SharedUserDefinedFunctionWithPrototypeAndWithNamePropertyDescriptors);
 
     SimplePropertyDescriptor JavascriptLibrary::HeapArgumentsPropertyDescriptorsV11[2] =
     {
@@ -224,26 +199,14 @@ namespace Js
                     DynamicType::New(scriptContext, TypeIds_Uint8Array, objectPrototype, nullptr,
                     DeferredTypeHandler<InitializeUint8ArrayPrototype>::GetDefaultInstance()));
 
-                if (scriptContext->GetConfig()->IsKhronosInteropEnabled())
-                {
-                    dataViewPrototype = DynamicObject::New(recycler,
-                        DynamicType::New(scriptContext, TypeIds_Object, objectPrototype, nullptr,
-                        DeferredTypeHandler<InitializeDataViewPrototype>::GetDefaultInstance()));
+                dataViewPrototype = DynamicObject::New(recycler,
+                    DynamicType::New(scriptContext, TypeIds_Object, objectPrototype, nullptr,
+                    DeferredTypeHandler<InitializeDataViewPrototype>::GetDefaultInstance()));
 
-                    baseArrayBuffer = JavascriptArrayBuffer::Create(0, arrayBufferType);
-                    Uint8ClampedArrayPrototype = RecyclerNew(recycler, Uint8ClampedArray, baseArrayBuffer, 0, 0,
-                        DynamicType::New(scriptContext, TypeIds_Uint8ClampedArray, objectPrototype, nullptr,
-                        DeferredTypeHandler<InitializeUint8ClampedArrayPrototype>::GetDefaultInstance()));
-                }
-                else
-                {
-                    baseArrayBuffer = JavascriptArrayBuffer::Create(0, arrayBufferType);
-                    dataViewPrototype = RecyclerNew(recycler, DataView, baseArrayBuffer, 0, 0,
-                        DynamicType::New(scriptContext, TypeIds_DataView, objectPrototype, nullptr,
-                        DeferredTypeHandler<InitializeDataViewPrototype>::GetDefaultInstance()));
-
-                    Uint8ClampedArrayPrototype = nullptr;
-                }
+                baseArrayBuffer = JavascriptArrayBuffer::Create(0, arrayBufferType);
+                Uint8ClampedArrayPrototype = RecyclerNew(recycler, Uint8ClampedArray, baseArrayBuffer, 0, 0,
+                    DynamicType::New(scriptContext, TypeIds_Uint8ClampedArray, objectPrototype, nullptr,
+                    DeferredTypeHandler<InitializeUint8ClampedArrayPrototype>::GetDefaultInstance()));
 
                 baseArrayBuffer = JavascriptArrayBuffer::Create(0, arrayBufferType);
                 Int16ArrayPrototype = RecyclerNew(recycler, Int16Array, baseArrayBuffer, 0, 0,
@@ -317,38 +280,27 @@ namespace Js
             CharArrayPrototype = nullptr;
         }
 
-        if (!scriptContext->GetConfig()->IsES6TypedArrayExtensionsEnabled())
-        {
-            pixelArrayPrototype = RecyclerNew(recycler, JavascriptPixelArray, 0,
-                DynamicType::New(scriptContext, TypeIds_PixelArray, objectPrototype, nullptr,
-                DeferredTypeHandler<InitializePixelArrayPrototype>::GetDefaultInstance()));
-        }
-        else
-        {
-            pixelArrayPrototype = nullptr;
-        }
-
         arrayPrototype = JavascriptArray::New<Var, JavascriptArray, 0>(0,
             DynamicType::New(scriptContext, TypeIds_Array, objectPrototype, nullptr,
             DeferredTypeHandler<InitializeArrayPrototype>::GetDefaultInstance()), recycler);
 
+        booleanPrototype = RecyclerNew(recycler, JavascriptBooleanObject, nullptr,
+            DynamicType::New(scriptContext, TypeIds_BooleanObject, objectPrototype, nullptr,
+            DeferredTypeHandler<InitializeBooleanPrototype>::GetDefaultInstance()));
+
+        numberPrototype = RecyclerNew(recycler, JavascriptNumberObject, TaggedInt::ToVarUnchecked(0),
+            DynamicType::New(scriptContext, TypeIds_NumberObject, objectPrototype, nullptr,
+            DeferredTypeHandler<InitializeNumberPrototype>::GetDefaultInstance()));
+
+        stringPrototype = RecyclerNew(recycler, JavascriptStringObject, nullptr,
+            DynamicType::New(scriptContext, TypeIds_StringObject, objectPrototype, nullptr,
+            DeferredTypeHandler<InitializeStringPrototype>::GetDefaultInstance()));
+
         if (scriptContext->GetConfig()->IsES6PrototypeChain())
         {
-            booleanPrototype = DynamicObject::New(recycler,
-                DynamicType::New(scriptContext, TypeIds_Object, objectPrototype, nullptr,
-                DeferredTypeHandler<InitializeBooleanPrototype>::GetDefaultInstance()));
-
             datePrototype = DynamicObject::New(recycler,
                 DynamicType::New(scriptContext, TypeIds_Object, objectPrototype, nullptr,
                 DeferredTypeHandler<InitializeDatePrototype>::GetDefaultInstance()));
-
-            numberPrototype = DynamicObject::New(recycler,
-                DynamicType::New(scriptContext, TypeIds_Object, objectPrototype, nullptr,
-                DeferredTypeHandler<InitializeNumberPrototype>::GetDefaultInstance()));
-
-            stringPrototype = DynamicObject::New(recycler,
-                DynamicType::New(scriptContext, TypeIds_Object, objectPrototype, nullptr,
-                DeferredTypeHandler<InitializeStringPrototype>::GetDefaultInstance()));
 
             regexPrototype = DynamicObject::New(recycler,
                 DynamicType::New(scriptContext, TypeIds_Object, objectPrototype, nullptr,
@@ -356,23 +308,11 @@ namespace Js
         }
         else
         {
-            booleanPrototype = RecyclerNew(recycler, JavascriptBooleanObject, nullptr,
-                DynamicType::New(scriptContext, TypeIds_BooleanObject, objectPrototype, nullptr,
-                DeferredTypeHandler<InitializeBooleanPrototype>::GetDefaultInstance()));
-
             double initDateValue = JavascriptNumber::NaN;
 
             datePrototype = RecyclerNewZ(recycler, JavascriptDate, initDateValue,
                 DynamicType::New(scriptContext, TypeIds_Date, objectPrototype, nullptr,
-                DeferredTypeHandler<InitializeDatePrototype>::GetDefaultInstance()));
-
-            numberPrototype = RecyclerNew(recycler, JavascriptNumberObject, TaggedInt::ToVarUnchecked(0),
-                DynamicType::New(scriptContext, TypeIds_NumberObject, objectPrototype, nullptr,
-                DeferredTypeHandler<InitializeNumberPrototype>::GetDefaultInstance()));
-
-            stringPrototype = RecyclerNew(recycler, JavascriptStringObject, nullptr,
-                DynamicType::New(scriptContext, TypeIds_StringObject, objectPrototype, nullptr,
-                DeferredTypeHandler<InitializeStringPrototype>::GetDefaultInstance()));
+                DeferredTypeHandler<InitializeDatePrototype>::GetDefaultInstance()));   
         }
 
         winrtErrorPrototype = nullptr;
@@ -642,19 +582,12 @@ namespace Js
                 SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
         }
 
-        pixelArrayType = nullptr;
         symbolTypeStatic = nullptr;
         symbolTypeDynamic = nullptr;
         withType    = nullptr;
         proxyType   = nullptr;
         promiseType = nullptr;
         javascriptEnumeratorIteratorType = nullptr;
-
-        if (!config->IsES6TypedArrayExtensionsEnabled())
-        {
-            pixelArrayType = DynamicType::New(scriptContext, TypeIds_PixelArray, pixelArrayPrototype, nullptr,
-                SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
-        }
 
         // Initialize boolean types
         booleanTypeStatic = StaticType::New(scriptContext, TypeIds_Boolean, booleanPrototype, nullptr);
@@ -721,15 +654,6 @@ namespace Js
         }
         functionWithPrototypeTypeHandler->SetHasKnownSlot0();
 
-        userDefinedFunctionWithoutPrototypeTypeHandler =
-            config->IsES6FunctionNameEnabled()
-                ? static_cast<DynamicTypeHandler*>(&SharedUserDefinedFunctionWithoutPrototypeAndWithNameTypeHandler)
-                : static_cast<DynamicTypeHandler*>(&SharedUserDefinedFunctionWithoutPrototypeAndWithoutNameTypeHandler);
-        userDefinedFunctionWithPrototypeTypeHandler =
-            config->IsES6FunctionNameEnabled()
-                ? static_cast<DynamicTypeHandler*>(&SharedUserDefinedFunctionWithPrototypeAndWithNameTypeHandler)
-                : static_cast<DynamicTypeHandler*>(&SharedUserDefinedFunctionWithPrototypeAndWithoutNameTypeHandler);
-
         externalFunctionWithDeferredPrototypeType = CreateDeferredPrototypeFunctionType(JavascriptExternalFunction::ExternalFunctionThunk, true);
         wrappedFunctionWithDeferredPrototypeType = CreateDeferredPrototypeFunctionType(JavascriptExternalFunction::WrappedFunctionThunk, true);
         stdCallFunctionWithDeferredPrototypeType = CreateDeferredPrototypeFunctionType(JavascriptExternalFunction::StdCallExternalFunctionThunk, true);
@@ -769,6 +693,7 @@ namespace Js
             simdFloat32x4TypeStatic = StaticType::New(scriptContext, TypeIds_SIMDFloat32x4, nullValue /*prototype*/, nullptr);
             simdFloat64x2TypeStatic = StaticType::New(scriptContext, TypeIds_SIMDFloat64x2, nullValue /*prototype*/, nullptr);
             simdInt32x4TypeStatic = StaticType::New(scriptContext, TypeIds_SIMDInt32x4, nullValue /*prototype*/, nullptr);
+            simdInt8x16TypeStatic = StaticType::New(scriptContext, TypeIds_SIMDInt8x16, nullValue /*prototype*/, nullptr);
         }
 #endif
 
@@ -889,62 +814,49 @@ namespace Js
 
     void JavascriptLibrary::InitializeGeneratorFunction(DynamicObject *function, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
-        typeHandler->Convert(function, function->GetType()->GetLibrary()->userDefinedFunctionWithPrototypeTypeHandler);
+        typeHandler->Convert(function, function->GetType()->GetLibrary()->functionWithPrototypeTypeHandler);
         function->SetPropertyWithAttributes(PropertyIds::prototype, function->GetType()->GetLibrary()->CreateGeneratorConstructorPrototypeObject(), PropertyWritable, nullptr);
 
-        ScriptContext *scriptContext = function->GetScriptContext();
-
-        Var length = static_cast<JavascriptGeneratorFunction *>(function)->GetLengthForInitialization(scriptContext);
-        function->SetPropertyWithAttributes(PropertyIds::length, length, PropertyConfigurable, nullptr);
-
-        if (scriptContext->GetConfig()->IsES6FunctionNameEnabled())
+        if (function->GetScriptContext()->GetConfig()->IsES6FunctionNameEnabled())
         {
             function->SetPropertyWithAttributes(PropertyIds::name, ((Js::JavascriptFunction*)function)->GetDisplayName(true), PropertyConfigurable, nullptr);
         }
     }
 
 
-    template<bool addPrototype, bool userDefinedFunction>
+    template<bool addPrototype>
     void JavascriptLibrary::InitializeFunction(DynamicObject *function, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
-        JavascriptFunction *javascriptFunction  = Js::JavascriptFunction::FromVar(function);
-
         JavascriptLibrary* javascriptLibrary = function->GetType()->GetLibrary();
         if (!addPrototype)
         {
-            DynamicTypeHandler *newTypeHandler = userDefinedFunction
-                ? static_cast<DynamicTypeHandler *>(javascriptLibrary->userDefinedFunctionWithoutPrototypeTypeHandler)
-                : static_cast<DynamicTypeHandler *>(javascriptLibrary->functionTypeHandler);
-            typeHandler->Convert(function, newTypeHandler);
+            typeHandler->Convert(function, javascriptLibrary->functionTypeHandler);
         }
         else
         {
-            DynamicTypeHandler *newTypeHandler = userDefinedFunction
-                ? static_cast<DynamicTypeHandler *>(javascriptLibrary->userDefinedFunctionWithPrototypeTypeHandler)
-                : static_cast<DynamicTypeHandler *>(javascriptLibrary->functionWithPrototypeTypeHandler);
-            typeHandler->Convert(function, newTypeHandler);
-            function->SetProperty(PropertyIds::prototype, javascriptLibrary->CreateConstructorPrototypeObject(javascriptFunction), PropertyOperation_None, nullptr);
+            typeHandler->Convert(function, javascriptLibrary->functionWithPrototypeTypeHandler);
+            function->SetProperty(PropertyIds::prototype, javascriptLibrary->CreateConstructorPrototypeObject((Js::JavascriptFunction *)function), PropertyOperation_None, nullptr);
+        }
+
+        ScriptFunction *scriptFunction = nullptr;
+
+        if (ScriptFunction::Is(function))
+        {
+            scriptFunction = Js::ScriptFunction::FromVar(function);
+
+            if (scriptFunction->IsClassConstructor())
+            {
+                scriptFunction->SetWritable(Js::PropertyIds::prototype, FALSE);
+            }
         }
 
         ScriptContext *scriptContext = function->GetScriptContext();
 
-        if (javascriptFunction->IsScriptFunction() || javascriptFunction->IsBoundFunction())
-        {
-            Var length = javascriptFunction->IsScriptFunction()
-                ? TaggedInt::ToVarUnchecked(javascriptFunction->GetFunctionProxy()->EnsureDeserialized()->GetReportedInParamsCount() - 1)
-                : static_cast<BoundFunction *>(javascriptFunction)->GetLengthForInitialization(scriptContext);
-            javascriptFunction->SetPropertyWithAttributes(PropertyIds::length, length, PropertyConfigurable, nullptr);
-        }
-
         if (scriptContext->GetConfig()->IsES6FunctionNameEnabled())
         {
-            if (ScriptFunction::Is(function))
+            if (scriptFunction && scriptFunction->GetFunctionProxy()->EnsureDeserialized()->GetIsStaticNameFunction())
             {
-                ScriptFunction *scriptFunction  = Js::ScriptFunction::FromVar(function);
-                if (scriptFunction->GetFunctionProxy()->EnsureDeserialized()->GetIsStaticNameFunction())
-                {
-                    return;
-                }
+                return;
             }
             function->SetPropertyWithAttributes(PropertyIds::name, ((Js::JavascriptFunction*)function)->GetDisplayName(true), PropertyConfigurable, nullptr);
         }
@@ -960,8 +872,6 @@ namespace Js
         {
             switch (propertyId)
             {
-            case PropertyIds::length:
-                return true;
             case PropertyIds::name:
                 return isNameAvailable;
             }
@@ -969,7 +879,7 @@ namespace Js
         }
     };
 
-    template<bool isLengthAvailable, bool isNameAvailable>
+    template<bool isNameAvailable>
     class InitializeFunctionDeferredTypeHandlerFilter
     {
     public:
@@ -978,8 +888,6 @@ namespace Js
         {
             switch (propertyId)
             {
-            case PropertyIds::length:
-                return isLengthAvailable;
             case PropertyIds::prototype:
                 return true;
             case PropertyIds::name:
@@ -993,11 +901,11 @@ namespace Js
     {
         if (scriptContext->GetConfig()->IsES6FunctionNameEnabled())
         {
-            return DeferredTypeHandler<InitializeFunction<false, true>, InitializeBoundFunctionDeferredTypeHandlerFilter<true>>::GetDefaultInstance();
+            return DeferredTypeHandler<InitializeFunction<false>, InitializeBoundFunctionDeferredTypeHandlerFilter<true>>::GetDefaultInstance();
         }
         else
         {
-            return DeferredTypeHandler<InitializeFunction<false, true>, InitializeBoundFunctionDeferredTypeHandlerFilter<false>>::GetDefaultInstance();
+            return DeferredTypeHandler<InitializeFunction<false>, InitializeBoundFunctionDeferredTypeHandlerFilter<false>>::GetDefaultInstance();
         }
     }
 
@@ -1005,77 +913,50 @@ namespace Js
     {
         if (scriptContext->GetConfig()->IsES6FunctionNameEnabled())
         {
-            return DeferredTypeHandler<InitializeGeneratorFunction, InitializeFunctionDeferredTypeHandlerFilter<true, true>>::GetDefaultInstance();
+            return DeferredTypeHandler<InitializeGeneratorFunction, InitializeFunctionDeferredTypeHandlerFilter<true>>::GetDefaultInstance();
         }
         else
         {
-            return DeferredTypeHandler<InitializeGeneratorFunction, InitializeFunctionDeferredTypeHandlerFilter<true, false>>::GetDefaultInstance();
+            return DeferredTypeHandler<InitializeGeneratorFunction, InitializeFunctionDeferredTypeHandlerFilter<false>>::GetDefaultInstance();
         }
 
     }
-
     DynamicTypeHandler * JavascriptLibrary::GetDeferredPrototypeFunctionTypeHandler(ScriptContext* scriptContext)
     {
         if (scriptContext->GetConfig()->IsES6FunctionNameEnabled())
         {
-            return DeferredTypeHandler<InitializeFunction<true, false>, InitializeFunctionDeferredTypeHandlerFilter<false, true>>::GetDefaultInstance();
+            return DeferredTypeHandler<InitializeFunction<true>, InitializeFunctionDeferredTypeHandlerFilter<true>>::GetDefaultInstance();
         }
         else
         {
-            return DeferredTypeHandler<InitializeFunction<true, false>, InitializeFunctionDeferredTypeHandlerFilter<false, false>>::GetDefaultInstance();
+            return DeferredTypeHandler<InitializeFunction<true>, InitializeFunctionDeferredTypeHandlerFilter<false>>::GetDefaultInstance();
         }
     }
-
-    DynamicTypeHandler * JavascriptLibrary::GetDeferredUserDefinedFunctionWithPrototypeTypeHandler(ScriptContext* scriptContext)
-    {
-        if (scriptContext->GetConfig()->IsES6FunctionNameEnabled())
-        {
-            return DeferredTypeHandler<InitializeFunction<true, true>, InitializeFunctionDeferredTypeHandlerFilter<true, true>>::GetDefaultInstance();
-        }
-        else
-        {
-            return DeferredTypeHandler<InitializeFunction<true, true>, InitializeFunctionDeferredTypeHandlerFilter<true, false>>::GetDefaultInstance();
-        }
-    }
-
     DynamicType * JavascriptLibrary::CreateDeferredPrototypeGeneratorFunctionType(JavascriptMethod entrypoint, bool isShared)
     {
         return DynamicType::New(scriptContext, TypeIds_Function, generatorFunctionPrototype, entrypoint,
             GetDeferredPrototypeGeneratorFunctionTypeHandler(scriptContext), isShared, isShared);
     }
 
-    template <bool isLengthAvailable>
-    class InitializeFunctionDeferredTypeHandlerFilterName
-    {
-    public:
-        static bool HasFilter() { return true; }
-        static bool HasProperty(PropertyId propertyId)
-        {
-            switch (propertyId)
-            {
-            case PropertyIds::length:
-                return isLengthAvailable;
-            case PropertyIds::name:
-                return true;
-            }
-            return false;
-        }
-    };
-
     DynamicTypeHandler * JavascriptLibrary::GetDeferredFunctionTypeHandler()
     {
         if (this->GetScriptContext()->GetConfig()->IsES6FunctionNameEnabled())
         {
-            return DeferredTypeHandler<InitializeFunction<false, false>, InitializeFunctionDeferredTypeHandlerFilterName<false>>::GetDefaultInstance();
-        }
-        return functionTypeHandler;
-    }
-
-    DynamicTypeHandler * JavascriptLibrary::GetDeferredUserDefinedFunctionWithoutPrototypeTypeHandler()
-    {
-        if (this->GetScriptContext()->GetConfig()->IsES6FunctionNameEnabled())
-        {
-            return DeferredTypeHandler<InitializeFunction<false, true>, InitializeFunctionDeferredTypeHandlerFilterName<true>>::GetDefaultInstance();
+            class InitializeFunctionDeferredTypeHandlerFilterName
+            {
+            public:
+                static bool HasFilter() { return true; }
+                static bool HasProperty(PropertyId propertyId)
+                {
+                    switch (propertyId)
+                    {
+                    case PropertyIds::name:
+                        return true;
+                    }
+                    return false;
+                }
+            };
+            return DeferredTypeHandler<InitializeFunction<false>, InitializeFunctionDeferredTypeHandlerFilterName>::GetDefaultInstance();
         }
         return functionTypeHandler;
     }
@@ -1085,7 +966,6 @@ namespace Js
         return DynamicType::New(scriptContext, TypeIds_Function, functionPrototype, entrypoint,
             GetDeferredPrototypeFunctionTypeHandler(scriptContext), isShared, isShared);
     }
-
     DynamicType * JavascriptLibrary::CreateFunctionType(JavascriptMethod entrypoint, RecyclableObject* prototype)
     {
         if (prototype == nullptr)
@@ -1248,6 +1128,7 @@ namespace Js
             simdFloat32x4DisplayString = CopyObject(scriptContext, originalLibrary->simdFloat32x4DisplayString);
             simdFloat64x2DisplayString = CopyObject(scriptContext, originalLibrary->simdFloat64x2DisplayString);
             simdInt32x4DisplayString = CopyObject(scriptContext, originalLibrary->simdInt32x4DisplayString);
+            simdInt8x16DisplayString = CopyObject(scriptContext, originalLibrary->simdInt8x16DisplayString);
         }
 #endif
 
@@ -1310,7 +1191,6 @@ namespace Js
         numberConstructor = CopyObject(scriptContext, originalLibrary->numberConstructor);
         stringConstructor = CopyObject(scriptContext, originalLibrary->stringConstructor);
         regexConstructor = CopyObject(scriptContext, originalLibrary->regexConstructor);
-        pixelArrayConstructor = CopyObject(scriptContext, originalLibrary->pixelArrayConstructor);
 
         // Note that CopyObject handles nullptr. Initialize to nullptr if these were nullptr in original library.
         arrayBufferConstructor = CopyObject(scriptContext, originalLibrary->arrayBufferConstructor);
@@ -1473,13 +1353,14 @@ namespace Js
         functionTypeDisplayString = CreateStringFromCppLiteral(L"function");
         booleanTypeDisplayString = CreateStringFromCppLiteral(L"boolean");
         numberTypeDisplayString = CreateStringFromCppLiteral(L"number");
+        promiseResolveFunction = nullptr;
 
 #ifdef SIMD_JS_ENABLED
         if (Js::Configuration::Global.flags.Simdjs)
         {
-            simdFloat32x4DisplayString = CreateStringFromCppLiteral(L"float32x4");
-            simdFloat64x2DisplayString = CreateStringFromCppLiteral(L"float64x2");
-            simdInt32x4DisplayString = CreateStringFromCppLiteral(L"int32x4");
+            simdFloat32x4DisplayString = CreateStringFromCppLiteral(L"Float32x4");
+            simdFloat64x2DisplayString = CreateStringFromCppLiteral(L"Float64x2");
+            simdInt32x4DisplayString = CreateStringFromCppLiteral(L"Int32x4");
         }
 #endif
 
@@ -1657,6 +1538,7 @@ namespace Js
             simdFloat32x4ToStringFunction = DefaultCreateFunction(&JavascriptSIMDFloat32x4::EntryInfo::ToString, 1, nullptr, nullptr, PropertyIds::toString);
             simdFloat64x2ToStringFunction = DefaultCreateFunction(&JavascriptSIMDFloat64x2::EntryInfo::ToString, 1, nullptr, nullptr, PropertyIds::toString);
             simdInt32x4ToStringFunction = DefaultCreateFunction(&JavascriptSIMDInt32x4::EntryInfo::ToString, 1, nullptr, nullptr, PropertyIds::toString);
+            simdInt8x16ToStringFunction = DefaultCreateFunction(&JavascriptSIMDInt8x16::EntryInfo::ToString, 1, nullptr, nullptr, PropertyIds::toString);
         }
 #endif
 
@@ -1738,16 +1620,7 @@ namespace Js
             {
                 ADD_TYPEDARRAY_CONSTRUCTOR(Int8ArrayConstructor, Int8Array);
                 ADD_TYPEDARRAY_CONSTRUCTOR(Uint8ArrayConstructor, Uint8Array);
-
-                if (scriptContext->GetConfig()->IsKhronosInteropEnabled())
-                {
-                    ADD_TYPEDARRAY_CONSTRUCTOR(Uint8ClampedArrayConstructor, Uint8ClampedArray);
-                }
-                else
-                {
-                    Uint8ClampedArrayConstructor = nullptr;
-                }
-
+                ADD_TYPEDARRAY_CONSTRUCTOR(Uint8ClampedArrayConstructor, Uint8ClampedArray);
                 ADD_TYPEDARRAY_CONSTRUCTOR(Int16ArrayConstructor, Int16Array);
                 ADD_TYPEDARRAY_CONSTRUCTOR(Uint16ArrayConstructor, Uint16Array);
                 ADD_TYPEDARRAY_CONSTRUCTOR(Int32ArrayConstructor, Int32Array);
@@ -1769,17 +1642,6 @@ namespace Js
             Float32ArrayConstructor = nullptr;
             Float64ArrayConstructor = nullptr;
             dataViewConstructor = nullptr;
-        }
-
-        if (!scriptContext->GetConfig()->IsES6TypedArrayExtensionsEnabled())
-        {
-            pixelArrayConstructor = CreateBuiltinConstructor(&JavascriptPixelArray::EntryInfo::NewInstance,
-                DeferredTypeHandler<InitializePixelArrayConstructor>::GetDefaultInstance());
-            AddFunction(globalObject, PropertyIds::CanvasPixelArray, pixelArrayConstructor);
-        }
-        else
-        {
-            pixelArrayConstructor = nullptr;
         }
 
 
@@ -2099,10 +1961,7 @@ namespace Js
         {
             library->AddMember(arrayBufferConstructor, PropertyIds::name, scriptContext->GetPropertyString(PropertyIds::ArrayBuffer), PropertyConfigurable);
         }
-        if (scriptContext->GetConfig()->IsKhronosInteropEnabled())
-        {
-            library->AddFunctionToLibraryObject(arrayBufferConstructor, PropertyIds::isView, &ArrayBuffer::EntryInfo::IsView, 1);
-        }
+        library->AddFunctionToLibraryObject(arrayBufferConstructor, PropertyIds::isView, &ArrayBuffer::EntryInfo::IsView, 1);
 
         if (CONFIG_FLAG_RELEASE(ArrayBufferTransfer))
         {
@@ -2120,10 +1979,7 @@ namespace Js
         JavascriptLibrary* library = arrayBufferPrototype->GetLibrary();
         library->AddMember(arrayBufferPrototype, PropertyIds::constructor, library->arrayBufferConstructor);
 
-        if (scriptContext->GetConfig()->IsKhronosInteropEnabled())
-        {
-            library->AddFunctionToLibraryObject(arrayBufferPrototype, PropertyIds::slice, &ArrayBuffer::EntryInfo::Slice, 2);
-        }
+        library->AddFunctionToLibraryObject(arrayBufferPrototype, PropertyIds::slice, &ArrayBuffer::EntryInfo::Slice, 2);
 
         if (scriptContext->GetConfig()->IsES6TypedArrayExtensionsEnabled())
         {
@@ -2177,12 +2033,9 @@ namespace Js
         library->AddFunctionToLibraryObject(dataViewPrototype, PropertyIds::getFloat32, &DataView::EntryInfo::GetFloat32, 1);
         library->AddFunctionToLibraryObject(dataViewPrototype, PropertyIds::getFloat64, &DataView::EntryInfo::GetFloat64, 1);
 
-        if (scriptContext->GetConfig()->IsKhronosInteropEnabled())
-        {
-            library->AddAccessorsToLibraryObject(dataViewPrototype, PropertyIds::buffer, &DataView::EntryInfo::GetterBuffer, nullptr);
-            library->AddAccessorsToLibraryObject(dataViewPrototype, PropertyIds::byteLength, &DataView::EntryInfo::GetterByteLength, nullptr);
-            library->AddAccessorsToLibraryObject(dataViewPrototype, PropertyIds::byteOffset, &DataView::EntryInfo::GetterByteOffset, nullptr);
-        }
+        library->AddAccessorsToLibraryObject(dataViewPrototype, PropertyIds::buffer, &DataView::EntryInfo::GetterBuffer, nullptr);
+        library->AddAccessorsToLibraryObject(dataViewPrototype, PropertyIds::byteLength, &DataView::EntryInfo::GetterByteLength, nullptr);
+        library->AddAccessorsToLibraryObject(dataViewPrototype, PropertyIds::byteOffset, &DataView::EntryInfo::GetterByteOffset, nullptr);
 
         if (scriptContext->GetConfig()->IsES6ToStringTagEnabled())
         {
@@ -2362,59 +2215,6 @@ namespace Js
     INIT_MSINTERNAL_TYPEDARRAY_PROTOTYPE(Uint64Array, Uint64ArrayPrototype);
     INIT_MSINTERNAL_TYPEDARRAY_PROTOTYPE(BoolArray, BoolArrayPrototype);
     INIT_MSINTERNAL_TYPEDARRAY_PROTOTYPE(CharArray, CharArrayPrototype);
-
-    void JavascriptLibrary::InitializePixelArrayConstructor(DynamicObject* pixelArrayConstructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
-    {
-        typeHandler->Convert(pixelArrayConstructor, mode, 2);
-
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterPixelArray
-        // so that the update is in sync with profiler
-
-        ScriptContext* scriptContext = pixelArrayConstructor->GetScriptContext();
-        JavascriptLibrary* library = pixelArrayConstructor->GetLibrary();
-        library->AddMember(pixelArrayConstructor, PropertyIds::length, TaggedInt::ToVarUnchecked(1), PropertyNone);
-        library->AddMember(pixelArrayConstructor, PropertyIds::prototype, scriptContext->GetLibrary()->pixelArrayPrototype, PropertyNone);
-
-        // Note: PixelArray constructor object does not have a .name property per spec, unlike other function object built-ins.  Further,
-        // the deprecation of PixelArrays no longer warrant the addition of IE12+ features
-
-        pixelArrayConstructor->SetHasNoEnumerableProperties(true);
-    }
-
-    void JavascriptLibrary::InitializePixelArrayPrototype(DynamicObject* arrayPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
-    {
-        typeHandler->Convert(arrayPrototype, mode, 1);
-
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterPixelArray
-        // so that the update is in sync with profiler
-
-        JavascriptLibrary* library = arrayPrototype->GetLibrary();
-        library->AddMember(arrayPrototype, PropertyIds::constructor, library->arrayConstructor);
-
-        arrayPrototype->SetHasNoEnumerableProperties(true);
-    }
-
-    bool JavascriptLibrary::GetPixelArrayBuffer(Var instance, BYTE **ppBuffer, UINT *pBufferLength)
-    {
-        AssertMsg(pixelArrayType, "Where's pixelArrayType?");
-
-#if ENABLE_DEBUG_CONFIG_OPTIONS
-        // unwrap the autoproxy'ed proxy to make the call go through.
-        if (Js::Configuration::Global.flags.IsEnabled(Js::autoProxyFlag) && JavascriptProxy::Is(instance))
-        {
-            instance = JavascriptProxy::FromVar(instance)->GetTarget();
-        }
-#endif
-        if (JavascriptPixelArray::Is(instance))
-        {
-            JavascriptPixelArray *pixelArray = JavascriptPixelArray::FromVar(instance);
-            *ppBuffer = pixelArray->GetBufferPointer();
-            *pBufferLength = pixelArray->GetBufferLength();
-            return true;
-        }
-
-        return false;
-    }
 
     void JavascriptLibrary::InitializeErrorConstructor(DynamicObject* constructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
@@ -2628,9 +2428,18 @@ namespace Js
         library->AddFunctionToLibraryObject(promiseConstructor, PropertyIds::all, &JavascriptPromise::EntryInfo::All, 1);
         library->AddFunctionToLibraryObject(promiseConstructor, PropertyIds::race, &JavascriptPromise::EntryInfo::Race, 1);
         library->AddFunctionToLibraryObject(promiseConstructor, PropertyIds::reject, &JavascriptPromise::EntryInfo::Reject, 1);
-        library->AddFunctionToLibraryObject(promiseConstructor, PropertyIds::resolve, &JavascriptPromise::EntryInfo::Resolve, 1);
+        library->AddMember(promiseConstructor, PropertyIds::resolve, library->EnsurePromiseResolveFunction(), PropertyBuiltInMethodDefaults);
 
         promiseConstructor->SetHasNoEnumerableProperties(true);
+    }
+
+    JavascriptFunction* JavascriptLibrary::EnsurePromiseResolveFunction()
+    {
+        if (promiseResolveFunction == nullptr)
+        {
+            promiseResolveFunction = DefaultCreateFunction(&JavascriptPromise::EntryInfo::Resolve, 1, nullptr, nullptr, PropertyIds::resolve);
+        }
+        return promiseResolveFunction;
     }
 
     void JavascriptLibrary::InitializePromisePrototype(DynamicObject* promisePrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
@@ -3040,14 +2849,15 @@ namespace Js
         JavascriptLibrary* library = simdObject->GetLibrary();
         
         // Float32x4
-        JavascriptFunction* float32x4Function = library->AddFunctionToLibraryObject(simdObject, PropertyIds::float32x4, &SIMDFloat32x4Lib::EntryInfo::Float32x4, 5, PropertyNone);
+        JavascriptFunction* float32x4Function = library->AddFunctionToLibraryObject(simdObject, PropertyIds::Float32x4, &SIMDFloat32x4Lib::EntryInfo::Float32x4, 5, PropertyNone);
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::check, &SIMDFloat32x4Lib::EntryInfo::Check, 2, PropertyNone);
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::zero, &SIMDFloat32x4Lib::EntryInfo::Zero, 1, PropertyNone);
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::splat, &SIMDFloat32x4Lib::EntryInfo::Splat, 2, PropertyNone);
-        library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::withX, &SIMDFloat32x4Lib::EntryInfo::WithX, 3, PropertyNone);
-        library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::withY, &SIMDFloat32x4Lib::EntryInfo::WithY, 3, PropertyNone);
-        library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::withZ, &SIMDFloat32x4Lib::EntryInfo::WithZ, 3, PropertyNone);
-        library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::withW, &SIMDFloat32x4Lib::EntryInfo::WithW, 3, PropertyNone);
+
+		// Lane Access
+		library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::extractLane, &SIMDFloat32x4Lib::EntryInfo::ExtractLane, 3, PropertyNone);
+		library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::replaceLane, &SIMDFloat32x4Lib::EntryInfo::ReplaceLane, 4, PropertyNone);
+
 
         // type conversions
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::fromFloat64x2,     &SIMDFloat32x4Lib::EntryInfo::FromFloat64x2,     2, PropertyNone);
@@ -3100,13 +2910,11 @@ namespace Js
         // end Float32x4
 
         // Float64x2
-        JavascriptFunction* float64x2Function = library->AddFunctionToLibraryObject(simdObject, PropertyIds::float64x2, &SIMDFloat64x2Lib::EntryInfo::Float64x2, 3, PropertyNone);
+        JavascriptFunction* float64x2Function = library->AddFunctionToLibraryObject(simdObject, PropertyIds::Float64x2, &SIMDFloat64x2Lib::EntryInfo::Float64x2, 3, PropertyNone);
        
         library->AddFunctionToLibraryObject(float64x2Function, PropertyIds::check, &SIMDFloat64x2Lib::EntryInfo::Check, 2, PropertyNone);
         library->AddFunctionToLibraryObject(float64x2Function, PropertyIds::zero, &SIMDFloat64x2Lib::EntryInfo::Zero, 1, PropertyNone);
         library->AddFunctionToLibraryObject(float64x2Function, PropertyIds::splat, &SIMDFloat64x2Lib::EntryInfo::Splat, 2, PropertyNone);
-        library->AddFunctionToLibraryObject(float64x2Function, PropertyIds::withX, &SIMDFloat64x2Lib::EntryInfo::WithX, 3, PropertyNone);
-        library->AddFunctionToLibraryObject(float64x2Function, PropertyIds::withY, &SIMDFloat64x2Lib::EntryInfo::WithY, 3, PropertyNone);
 
         // type conversions
         library->AddFunctionToLibraryObject(float64x2Function, PropertyIds::fromFloat32x4,      &SIMDFloat64x2Lib::EntryInfo::FromFloat32x4,        2, PropertyNone);
@@ -3153,19 +2961,18 @@ namespace Js
         // end Float64x2
 
         // Int32x4
-        JavascriptFunction* int32x4Function = library->AddFunctionToLibraryObject(simdObject, PropertyIds::int32x4, &SIMDInt32x4Lib::EntryInfo::Int32x4, 5, PropertyNone);
+        JavascriptFunction* int32x4Function = library->AddFunctionToLibraryObject(simdObject, PropertyIds::Int32x4, &SIMDInt32x4Lib::EntryInfo::Int32x4, 5, PropertyNone);
         library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::check,        &SIMDInt32x4Lib::EntryInfo::Check,      2, PropertyNone);
         library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::zero,         &SIMDInt32x4Lib::EntryInfo::Zero,       1, PropertyNone);
         library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::splat,        &SIMDInt32x4Lib::EntryInfo::Splat,      2, PropertyNone); 
         library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::bool_,        &SIMDInt32x4Lib::EntryInfo::Bool,       5, PropertyNone);
-        library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::withX,        &SIMDInt32x4Lib::EntryInfo::WithX,      3, PropertyNone); 
-        library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::withY,        &SIMDInt32x4Lib::EntryInfo::WithY,      3, PropertyNone);
-        library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::withZ,        &SIMDInt32x4Lib::EntryInfo::WithZ,      3, PropertyNone);
-        library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::withW,        &SIMDInt32x4Lib::EntryInfo::WithW,      3, PropertyNone);
         library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::withFlagX,    &SIMDInt32x4Lib::EntryInfo::WithFlagX,  3, PropertyNone);
         library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::withFlagY,    &SIMDInt32x4Lib::EntryInfo::WithFlagY,  3, PropertyNone);
         library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::withFlagZ,    &SIMDInt32x4Lib::EntryInfo::WithFlagZ,  3, PropertyNone);
         library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::withFlagW,    &SIMDInt32x4Lib::EntryInfo::WithFlagW,  3, PropertyNone);
+		// Lane Access
+		library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::extractLane, &SIMDInt32x4Lib::EntryInfo::ExtractLane, 3, PropertyNone);
+		library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::replaceLane, &SIMDInt32x4Lib::EntryInfo::ReplaceLane, 4, PropertyNone);
         // type conversions
         library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::fromFloat64x2, &SIMDInt32x4Lib::EntryInfo::FromFloat64x2,         2, PropertyNone);
         library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::fromFloat64x2Bits, &SIMDInt32x4Lib::EntryInfo::FromFloat64x2Bits, 2, PropertyNone);
@@ -3211,6 +3018,44 @@ namespace Js
         library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::store3, &SIMDInt32x4Lib::EntryInfo::Store3, 4, PropertyNone);
 
         // end Int32x4
+
+        // Int8x16
+        JavascriptFunction* int8x16Function = library->AddFunctionToLibraryObject(simdObject, PropertyIds::Int8x16, &SIMDInt8x16Lib::EntryInfo::Int8x16, 17, PropertyNone);
+        library->AddFunctionToLibraryObject(int8x16Function, PropertyIds::check, &SIMDInt8x16Lib::EntryInfo::Check, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(int8x16Function, PropertyIds::zero, &SIMDInt8x16Lib::EntryInfo::Zero, 1, PropertyNone);
+        library->AddFunctionToLibraryObject(int8x16Function, PropertyIds::splat, &SIMDInt8x16Lib::EntryInfo::Splat, 2, PropertyNone);
+
+        //// type conversions
+        library->AddFunctionToLibraryObject(int8x16Function, PropertyIds::fromFloat32x4Bits, &SIMDInt8x16Lib::EntryInfo::FromFloat32x4Bits, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(int8x16Function, PropertyIds::fromInt32x4Bits, &SIMDInt8x16Lib::EntryInfo::FromInt32x4Bits, 2, PropertyNone);
+
+        //// binary ops
+        library->AddFunctionToLibraryObject(int8x16Function, PropertyIds::add, &SIMDInt8x16Lib::EntryInfo::Add, 3, PropertyNone);
+        library->AddFunctionToLibraryObject(int8x16Function, PropertyIds::sub, &SIMDInt8x16Lib::EntryInfo::Sub, 3, PropertyNone);
+        library->AddFunctionToLibraryObject(int8x16Function, PropertyIds::mul, &SIMDInt8x16Lib::EntryInfo::Mul, 3, PropertyNone);
+        library->AddFunctionToLibraryObject(int8x16Function, PropertyIds::and, &SIMDInt8x16Lib::EntryInfo::And, 3, PropertyNone);
+        library->AddFunctionToLibraryObject(int8x16Function, PropertyIds::or , &SIMDInt8x16Lib::EntryInfo::Or , 3, PropertyNone);
+        library->AddFunctionToLibraryObject(int8x16Function, PropertyIds::xor, &SIMDInt8x16Lib::EntryInfo::Xor, 3, PropertyNone);
+
+        // unary ops
+        library->AddFunctionToLibraryObject(int8x16Function, PropertyIds::neg, &SIMDInt8x16Lib::EntryInfo::Neg, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(int8x16Function, PropertyIds::not, &SIMDInt8x16Lib::EntryInfo::Not, 2, PropertyNone);
+
+        //// compare ops                           
+        library->AddFunctionToLibraryObject(int8x16Function, PropertyIds::lessThan, &SIMDInt8x16Lib::EntryInfo::LessThan, 3, PropertyNone);
+        library->AddFunctionToLibraryObject(int8x16Function, PropertyIds::equal   , &SIMDInt8x16Lib::EntryInfo::Equal   , 3, PropertyNone);
+        library->AddFunctionToLibraryObject(int8x16Function, PropertyIds::greaterThan, &SIMDInt8x16Lib::EntryInfo::GreaterThan, 3, PropertyNone);
+
+        //// shift
+        library->AddFunctionToLibraryObject(int8x16Function, PropertyIds::shiftLeftByScalar, &SIMDInt8x16Lib::EntryInfo::ShiftLeftByScalar, 3, PropertyNone);
+        library->AddFunctionToLibraryObject(int8x16Function, PropertyIds::shiftRightLogicalByScalar, &SIMDInt8x16Lib::EntryInfo::ShiftRightLogicalByScalar, 3, PropertyNone);
+        library->AddFunctionToLibraryObject(int8x16Function, PropertyIds::shiftRightArithmeticByScalar, &SIMDInt8x16Lib::EntryInfo::ShiftRightArithmeticByScalar, 3, PropertyNone);
+
+        // Lane Access
+        library->AddFunctionToLibraryObject(int8x16Function, PropertyIds::extractLane, &SIMDInt8x16Lib::EntryInfo::ExtractLane, 3, PropertyNone);
+        library->AddFunctionToLibraryObject(int8x16Function, PropertyIds::replaceLane, &SIMDInt8x16Lib::EntryInfo::ReplaceLane, 4, PropertyNone);
+
+        // end Int8x16
     }
 #endif
 
@@ -3283,7 +3128,6 @@ namespace Js
         vtableAddresses[VTableValue::VtableUint32Array] = VirtualTableInfo<Js::Uint32Array>::Address;
         vtableAddresses[VTableValue::VtableFloat32Array] = VirtualTableInfo<Js::Float32Array>::Address;
         vtableAddresses[VTableValue::VtableFloat64Array] = VirtualTableInfo<Js::Float64Array>::Address;
-        vtableAddresses[VTableValue::VtableJavascriptPixelArray] = VirtualTableInfo<Js::JavascriptPixelArray>::Address;
         vtableAddresses[VTableValue::VtableInt64Array] = VirtualTableInfo<Js::Int64Array>::Address;
         vtableAddresses[VTableValue::VtableUint64Array] = VirtualTableInfo<Js::Uint64Array>::Address;
 
@@ -3373,7 +3217,6 @@ namespace Js
             this->Uint64ArrayPrototype,
             this->BoolArrayPrototype,
             this->CharArrayPrototype,
-            this->pixelArrayPrototype,
             this->booleanPrototype,
             this->datePrototype,
             this->functionPrototype,
@@ -3421,7 +3264,6 @@ namespace Js
             this->Uint32ArrayConstructor,
             this->Float32ArrayConstructor,
             this->Float64ArrayConstructor,
-            this->pixelArrayConstructor,
             this->JSONObject,
             this->IntlObject,  //TODO: InitializeIntlObject executes script, needs from CallRootFunction
             this->mapConstructor,
@@ -4852,7 +4694,6 @@ namespace Js
 
         symbolTypeDynamic = nullptr;
         promiseType = nullptr;
-        pixelArrayType = nullptr;
 
         if (scriptContext->GetConfig()->IsES6SymbolEnabled())
         {
@@ -4872,12 +4713,6 @@ namespace Js
             RecyclableObject::DefaultEntryPoint, SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
 
         regexType->GetTypeHandler()->ClearHasOnlyWritableDataProperties();
-
-        if (!scriptContext->GetConfig()->IsES6TypedArrayExtensionsEnabled())
-        {
-            pixelArrayType = DynamicType::New(scriptContext, TypeIds_PixelArray, objectPrototype,
-                RecyclableObject::DefaultEntryPoint, SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
-        }
 
         arrayBufferType = DynamicType::New(scriptContext, TypeIds_ArrayBuffer, objectPrototype,
             RecyclableObject::DefaultEntryPoint, SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
@@ -5001,7 +4836,6 @@ namespace Js
 
         javascriptEnumeratorIteratorPrototype = CopyObject(scriptContext, originalLibrary->javascriptEnumeratorIteratorPrototype);
 
-        pixelArrayPrototype = CopyObject(scriptContext, originalLibrary->pixelArrayPrototype);
         symbolPrototype = CopyObject(scriptContext, originalLibrary->symbolPrototype);
         promisePrototype = CopyObject(scriptContext, originalLibrary->promisePrototype);
 
@@ -5419,8 +5253,8 @@ namespace Js
             if (ScriptFunction::Is(function))
         {
             Assert(!function->GetFunctionInfo()->IsLambda() ?
-                function->GetDynamicType()->GetTypeHandler() == JavascriptLibrary::GetDeferredUserDefinedFunctionWithPrototypeTypeHandler(this->GetScriptContext()) :
-                function->GetDynamicType()->GetTypeHandler() == JavascriptLibrary::GetDeferredUserDefinedFunctionWithoutPrototypeTypeHandler());
+                function->GetDynamicType()->GetTypeHandler() == JavascriptLibrary::GetDeferredPrototypeFunctionTypeHandler(this->GetScriptContext()) :
+                function->GetDynamicType()->GetTypeHandler() == JavascriptLibrary::GetDeferredFunctionTypeHandler());
             // TODO: Theoratically, we can share the cross site thunk here too, but the entry point
             // is a mess :(,   just create a new unshared type and set the cross site thunk
             function->ChangeType();

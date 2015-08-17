@@ -43,7 +43,7 @@ SpawnRLFE(
     SECURITY_ATTRIBUTES sa;
     HANDLE NULStderr = 0, NULStdout = 0, NULStdin = 0;
 
-    sprintf(cmd, "rlfe %s", options);
+    sprintf_s(cmd, "rlfe %s", options);
     if (strlen(cmd) > 1023) {
         printf("cmd buffer too small\n");
         return -2;
@@ -165,7 +165,7 @@ RLFEConnect(
             *s++ = '\0';
 
         if (!_stricmp(RLFEOpts, "min"))
-            pOpt += sprintf(pOpt, " -min");
+            pOpt += sprintf_s(pOpt, REMAININGARRAYLEN(options, pOpt), " -min");
         else if (!_strnicmp(RLFEOpts, "pipe", 4))
             pID = RLFEOpts + 4;
 
@@ -174,19 +174,19 @@ RLFEConnect(
 
     if (pID == NULL) {
         id = GetCurrentProcessId();
-        sprintf(pipeID, "%08x", id);
+        sprintf_s(pipeID, "%08x", id);
         pID = pipeID;
     }
 
-    sprintf(pipeName, "%s%s", PIPE_NAME, pID);
+    sprintf_s(pipeName, "%s%s", PIPE_NAME, pID);
     if (strlen(pipeName) > 31) {
         printf("RLFE pipename buffer too small\n");
         return FALSE;
     }
 
-    pOpt += sprintf(pOpt, " -pipe %s", pID);
+    pOpt += sprintf_s(pOpt, REMAININGARRAYLEN(options, pOpt), " -pipe %s", pID);
     if (prefix)
-        pOpt += sprintf(pOpt, " -prefix \"%s\"", prefix);
+        pOpt += sprintf_s(pOpt, REMAININGARRAYLEN(options, pOpt), " -prefix \"%s\"", prefix);
 
     HPipe = CreateNamedPipe(
         pipeName,
@@ -434,9 +434,9 @@ RLFEAddLog(
 
     path = pathBuf;
     if (testName)
-        path += sprintf(path, "%c%s", PIPE_SEP_CHAR, testName);
+        path += sprintf_s(path, REMAININGARRAYLEN(pathBuf, path), "%c%s", PIPE_SEP_CHAR, testName);
     if (subTestName)
-        path += sprintf(path, "%c%s", PIPE_SEP_CHAR, subTestName);
+        path += sprintf_s(path, REMAININGARRAYLEN(pathBuf, path), "%c%s", PIPE_SEP_CHAR, subTestName);
 
     // String has a leading PIPE_SEP_CHAR, so chop that off.
 

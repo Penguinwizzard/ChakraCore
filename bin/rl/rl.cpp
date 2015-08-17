@@ -176,7 +176,7 @@
 // 4. The primary thread never changes the current directory, to avoid
 //    synchronization issues.
 //
-// 5. Any file access (fopen, etc.) must use full pathnames. The only place
+// 5. Any file access (fopen_s, etc.) must use full pathnames. The only place
 //    relative paths may be used is in commands that are executed via
 //    ExecuteCommand(), which does a _chdir before creating a new process to
 //    execute the command.
@@ -431,6 +431,15 @@ __declspec(thread) COutputBuffer* ThreadRes;    // results log file
 __declspec(thread) char *cmpbuf1 = NULL;
 __declspec(thread) char *cmpbuf2 = NULL;
 
+// Allow usage of getenv() without disabling all deprecated CRT API warnings
+#pragma warning (push)
+#pragma warning (disable:4996)
+char * getenv_unsafe(const char * varName)
+{
+   return getenv(varName);
+}
+#pragma warning (pop)
+
 //////////////////////////////////////////////////////////////////////////////
 
 void
@@ -516,12 +525,12 @@ __cdecl Warning(const char *fmt, ...)
 
    buf[0] = '\0';
    if (!FNoThreadId && ThreadId != 0 && NumberOfThreads > 1) {
-      sprintf(buf, "%d>", ThreadId);
+      sprintf_s(buf, "%d>", ThreadId);
    }
 
    if (!FNoWarn) {
       va_start(arg_ptr, fmt);
-      vsprintf(tempBuf, fmt, arg_ptr);
+      vsprintf_s(tempBuf, fmt, arg_ptr);
       ASSERT(strlen(tempBuf) < BUFFER_SIZE);
       ThreadOut->Add("%sWarning: %s\n", buf, tempBuf);
       ThreadFull->Add("%sWarning: %s\n", buf, tempBuf);
@@ -538,11 +547,11 @@ __cdecl Message(const char *fmt, ...)
 
    buf[0] = '\0';
    if (!FNoThreadId && ThreadId != 0 && NumberOfThreads > 1) {
-      sprintf(buf, "%d>", ThreadId);
+      sprintf_s(buf, "%d>", ThreadId);
    }
 
    va_start(arg_ptr, fmt);
-   vsprintf(tempBuf, fmt, arg_ptr);
+   vsprintf_s(tempBuf, fmt, arg_ptr);
    ASSERT(strlen(tempBuf) < BUFFER_SIZE);
    ThreadOut->Add("%s%s\n", buf, tempBuf);
    ThreadFull->Add("%s%s\n", buf, tempBuf);
@@ -558,11 +567,11 @@ __cdecl WriteLog(const char *fmt, ...)
 
    buf[0] = '\0';
    if (!FNoThreadId && ThreadId != 0 && NumberOfThreads > 1) {
-      sprintf(buf, "%d>", ThreadId);
+      sprintf_s(buf, "%d>", ThreadId);
    }
 
    va_start(arg_ptr, fmt);
-   vsprintf(tempBuf, fmt, arg_ptr);
+   vsprintf_s(tempBuf, fmt, arg_ptr);
    ASSERT(strlen(tempBuf) < BUFFER_SIZE);
    ThreadLog->Add("%s%s\n", buf, tempBuf);
 }
@@ -578,11 +587,11 @@ __cdecl LogOut(const char *fmt, ...)
 
    buf[0] = '\0';
    if (!FNoThreadId && ThreadId != 0 && NumberOfThreads > 1) {
-      sprintf(buf, "%d>", ThreadId);
+      sprintf_s(buf, "%d>", ThreadId);
    }
 
    va_start(arg_ptr, fmt);
-   vsprintf(tempBuf, fmt, arg_ptr);
+   vsprintf_s(tempBuf, fmt, arg_ptr);
    ASSERT(strlen(tempBuf) < BUFFER_SIZE);
    ThreadOut->Add("%s%s\n", buf, tempBuf);
    ThreadLog->Add("%s%s\n", buf, tempBuf);
@@ -600,11 +609,11 @@ __cdecl LogError(const char *fmt, ...)
 
    buf[0] = '\0';
    if (!FNoThreadId && ThreadId != 0 && NumberOfThreads > 1) {
-      sprintf(buf, "%d>", ThreadId);
+      sprintf_s(buf, "%d>", ThreadId);
    }
 
    va_start(arg_ptr, fmt);
-   vsprintf(tempBuf, fmt, arg_ptr);
+   vsprintf_s(tempBuf, fmt, arg_ptr);
    ASSERT(strlen(tempBuf) < BUFFER_SIZE);
    ThreadOut->Add("%sError: %s\n", buf, tempBuf);  // TODO: use stderr not stdout?
    ThreadLog->Add("%sError: %s\n", buf, tempBuf);
@@ -744,7 +753,7 @@ DeleteMultipleFiles(
    HANDLE h;
    char full[MAX_PATH];
 
-   sprintf(full, "%s\\%s", pDir->GetDirectoryPath(), pattern);
+   sprintf_s(full, "%s\\%s", pDir->GetDirectoryPath(), pattern);
 
    // Read filenames...
 
@@ -757,7 +766,7 @@ DeleteMultipleFiles(
       // the delete. This is because multithreaded rl might have changed the
       // current directory out from underneath us.
 
-      sprintf(full, "%s\\%s", pDir->GetDirectoryPath(), findData.cFileName);
+      sprintf_s(full, "%s\\%s", pDir->GetDirectoryPath(), findData.cFileName);
       if (FVerbose)
          Message("Deleting %s\n", full);
 
@@ -801,7 +810,7 @@ mytmpnam(
    // prefix. This should be ok, because it will still create a unique
    // filename.
 
-   sprintf(threadPrefix, "%s%X", prefix, ThreadId);
+   sprintf_s(threadPrefix, "%s%X", prefix, ThreadId);
 
    // NOTE: GetTempFileName actually creates a file when it succeeds.
    if (HostSystemInfo::SupportsOnlyMultiThreadedCOM())
@@ -957,7 +966,7 @@ FormatString(
    char *format
 )
 {
-   static char buf[BUFFER_SIZE + 32]; // extra in case a sprintf goes over
+   static char buf[BUFFER_SIZE + 32]; // extra in case a sprintf_s goes over
    int i;
 
    i = 0;
@@ -968,25 +977,25 @@ FormatString(
       else {
          switch (*++format) {
             case 'd':
-               i += sprintf(&buf[i], "%d", (long)NumDiffsTotal[RLS_TOTAL]);
+               i += sprintf_s(&buf[i], BUFFER_SIZE + 32 - i, "%d", (long)NumDiffsTotal[RLS_TOTAL]);
                break;
             case 'f':
-               i += sprintf(&buf[i], "%d", (long)NumFailuresTotal[RLS_TOTAL]);
+               i += sprintf_s(&buf[i], BUFFER_SIZE + 32 - i, "%d", (long)NumFailuresTotal[RLS_TOTAL]);
                break;
             case 't':
-               i += sprintf(&buf[i], "%d", (long)NumVariationsRun[RLS_TOTAL]);
+               i += sprintf_s(&buf[i], BUFFER_SIZE + 32 - i, "%d", (long)NumVariationsRun[RLS_TOTAL]);
                break;
             case 'T':
-               i += sprintf(&buf[i], "%d", (long)NumVariationsTotal[RLS_TOTAL]);
+               i += sprintf_s(&buf[i], BUFFER_SIZE + 32 - i, "%d", (long)NumVariationsTotal[RLS_TOTAL]);
                break;
             case 'p':
                if ((long)NumVariationsTotal[RLS_TOTAL]) {
-                  i += sprintf(&buf[i], "%d",
+                  i += sprintf_s(&buf[i], BUFFER_SIZE + 32 - i, "%d",
                      100 * (long)NumVariationsRun[RLS_TOTAL] /
                      (long)NumVariationsTotal[RLS_TOTAL]);
                }
                else {
-                  i += sprintf(&buf[i], "--");
+                  i += sprintf_s(&buf[i], BUFFER_SIZE + 32 - i, "--");
                }
                break;
             default:
@@ -1182,7 +1191,7 @@ Usage(
          "RL_B2 specify backend to use (appended to above to create EXTRA_CC_FLAGS)\n"
          "EXEC_TESTS_FLAGS semicolon delimited list of testing options (exe only)\n"
          "    (overridden by -exeflags switch) (defaults to %s)\n"
-         , getenv("REGRESS"), DEFAULT_EXEC_TESTS_FLAGS
+         , getenv_unsafe("REGRESS"), DEFAULT_EXEC_TESTS_FLAGS
       );
 
       printf(
@@ -1599,19 +1608,19 @@ SetNOGPF()
    char tempBuf[BUFFER_SIZE];
 
    if (FNogpfnt && TargetInfo[TargetMachine].fUseNoGPF) {
-      sprintf(tempBuf,
+      sprintf_s(tempBuf,
          "NOGPF=%s\\bin\\%s\\nogpfnt.obj /entry:nogpfntStartup",
          REGRESS, TargetInfo[TargetMachine].name);
       if (_putenv(tempBuf))
          Fatal("Couldn't set NOGPF");
 
-      sprintf(tempBuf,
+      sprintf_s(tempBuf,
          "NOGPFWINEXE=%s\\bin\\%s\\nogpfntWinMain.obj /entry:nogpfntWinMainStartup",
          REGRESS, TargetInfo[TargetMachine].name);
       if (_putenv(tempBuf))
          Fatal("Couldn't set NOGPFWINEXE");
 
-      sprintf(tempBuf,
+      sprintf_s(tempBuf,
          "NOGPFWINDLL=%s\\bin\\%s\\nogpfntDllMain.obj /entry:nogpfntDllMainStartup",
          REGRESS, TargetInfo[TargetMachine].name);
       if (_putenv(tempBuf))
@@ -1645,17 +1654,18 @@ GetLINKFLAGS()
    char* b2;
    char tmpLINKFLAGS[BUFFER_SIZE];
    char tmpstrtok[BUFFER_SIZE];
+   char* tmpstrtoknext = NULL;
    char tempBuf[BUFFER_SIZE];
    bool fPropagateB2;
 
-   if ((readLINKFLAGS = getenv("LINKFLAGS")) == NULL) {
+   if ((readLINKFLAGS = getenv_unsafe("LINKFLAGS")) == NULL) {
       if (NULL == TargetInfo[TargetMachine].LINKFLAGS) {
          tmpLINKFLAGS[0] = '\0';
       } else {
-         strcpy(tmpLINKFLAGS, TargetInfo[TargetMachine].LINKFLAGS);
+         strcpy_s(tmpLINKFLAGS, TargetInfo[TargetMachine].LINKFLAGS);
       }
    } else {
-      strcpy(tmpLINKFLAGS, readLINKFLAGS);
+      strcpy_s(tmpLINKFLAGS, readLINKFLAGS);
    }
 
    // Look for -B2 or /B2 in EXTRA_CC_FLAGS
@@ -1663,8 +1673,8 @@ GetLINKFLAGS()
    fPropagateB2 = false;
    b2 = NULL;
 
-   strcpy(tmpstrtok, EXTRA_CC_FLAGS);
-   s = strtok(tmpstrtok, " \t");
+   strcpy_s(tmpstrtok, EXTRA_CC_FLAGS);
+   s = strtok_s(tmpstrtok, " \t", &tmpstrtoknext);
    while (s) {
 
 #ifndef NODEBUG
@@ -1685,13 +1695,14 @@ GetLINKFLAGS()
             Warning("Two /B2 flags in EXTRA_CC_FLAGS (%s)", EXTRA_CC_FLAGS);
          }
       }
-      s = strtok(NULL, " \t");
+      s = strtok_s(NULL, " \t", &tmpstrtoknext);
    }
 
    // Now look for -B2: or /B2: in LINKFLAGS to check for consistency.
 
-   strcpy(tmpstrtok, tmpLINKFLAGS);
-   s = strtok(tmpstrtok, " \t");
+   strcpy_s(tmpstrtok, tmpLINKFLAGS);
+   tmpstrtoknext = NULL;
+   s = strtok_s(tmpstrtok, " \t", &tmpstrtoknext);
    while (s) {
 
 #ifndef NODEBUG
@@ -1710,20 +1721,20 @@ GetLINKFLAGS()
             }
          }
       }
-      s = strtok(NULL, " \t");
+      s = strtok_s(NULL, " \t", &tmpstrtoknext);
    }
 
    if (fPropagateB2) {
       // We found -B2 in EXTRA_CC_FLAGS but not in LINKFLAGS, so propagate
       // it to LINKFLAGS.
-      sprintf(tempBuf, " -B2:\"%s\"", b2);
+      sprintf_s(tempBuf, " -B2:\"%s\"", b2);
       free(b2); // came from _strdup()
-      strcat(tmpLINKFLAGS, tempBuf);
+      strcat_s(tmpLINKFLAGS, tempBuf);
    }
 
    // Now, put it back into the environment with all our changes
 
-   sprintf(tempBuf, "LINKFLAGS=%s", tmpLINKFLAGS);
+   sprintf_s(tempBuf, "LINKFLAGS=%s", tmpLINKFLAGS);
    if (_putenv(tempBuf))
       Fatal("Couldn't set LINKFLAGS");
 
@@ -1748,7 +1759,7 @@ GetEnvironment(
    // user passed.
 
    if ((TARGET_MACHINE != NULL)
-      || ((TARGET_MACHINE = getenv("TARGET_MACHINE")) != NULL))
+      || ((TARGET_MACHINE = getenv_unsafe("TARGET_MACHINE")) != NULL))
    {
       TargetMachine = RLMachine = ParseMachine(TARGET_MACHINE);
       if (TargetMachine == TM_UNKNOWN) {
@@ -1764,7 +1775,7 @@ GetEnvironment(
 
       // Set environment var in case regr scripts reference.
 
-      sprintf(tempBuf, "TARGET_MACHINE=%s", TargetInfo[TargetMachine].name);
+      sprintf_s(tempBuf, "TARGET_MACHINE=%s", TargetInfo[TargetMachine].name);
       if (_putenv(tempBuf))
          Fatal("Couldn't set TARGET_MACHINE");
    }
@@ -1772,7 +1783,7 @@ GetEnvironment(
    // Get the RL_MACHINE environment variable or option.
 
    if ((RL_MACHINE != NULL)
-      || ((RL_MACHINE = getenv("RL_MACHINE")) != NULL))
+      || ((RL_MACHINE = getenv_unsafe("RL_MACHINE")) != NULL))
    {
       RLMachine = ParseMachine(RL_MACHINE);
       if (RLMachine == TM_UNKNOWN) {
@@ -1783,14 +1794,14 @@ GetEnvironment(
 
       // Set environment var in case regr scripts reference.
 
-      sprintf(tempBuf, "RL_MACHINE=%s", TargetInfo[RLMachine].name);
+      sprintf_s(tempBuf, "RL_MACHINE=%s", TargetInfo[RLMachine].name);
       if (_putenv(tempBuf))
          Fatal("Couldn't set RL_MACHINE");
    }
 
    // Get the TARGET_OS environment variable or option.
    if (TARGET_OS_NAME != NULL
-      || (TARGET_OS_NAME = getenv("TARGET_OS")) != NULL)
+      || (TARGET_OS_NAME = getenv_unsafe("TARGET_OS")) != NULL)
    {
        TargetOS = ParseOS(TARGET_OS_NAME);
        if (TargetOS == TO_UNKNOWN) {
@@ -1800,17 +1811,17 @@ GetEnvironment(
 
    // Get the EXTRA_CC_FLAGS environment variable.
 
-   if ((EXTRA_CC_FLAGS = getenv("EXTRA_CC_FLAGS")) == NULL) {
+   if ((EXTRA_CC_FLAGS = getenv_unsafe("EXTRA_CC_FLAGS")) == NULL) {
       char *cflags, *b2;
 
       // It doesn't exist, see if we can construct from RL_{ASM,EXE}_CFLAGS.
 
       if (Mode == RM_ASM)
-         cflags = getenv("RL_ASM_CFLAGS");
+         cflags = getenv_unsafe("RL_ASM_CFLAGS");
       else
-         cflags = getenv("RL_EXE_CFLAGS");
+         cflags = getenv_unsafe("RL_EXE_CFLAGS");
 
-      b2 = getenv("RL_B2");
+      b2 = getenv_unsafe("RL_B2");
       if (BaseCompiler || DiffCompiler || ExeCompiler) {
          if (FVerbose && b2)
             puts("Command line specified compiler overrides RL_B2 environment variable");
@@ -1821,13 +1832,13 @@ GetEnvironment(
             b2 = NULL;
       }
 
-      sprintf(tempBuf, "%s%s%s",
+      sprintf_s(tempBuf, "%s%s%s",
          cflags ? cflags : "",
          b2 ? " -B2 " : "",
          b2 ? b2 : "");
       EXTRA_CC_FLAGS = _strdup(tempBuf);
 
-      sprintf(tempBuf, "EXTRA_CC_FLAGS=%s", EXTRA_CC_FLAGS);
+      sprintf_s(tempBuf, "EXTRA_CC_FLAGS=%s", EXTRA_CC_FLAGS);
       if (_putenv(tempBuf))
          Fatal("Couldn't set EXTRA_CC_FLAGS");
 
@@ -1839,19 +1850,19 @@ GetEnvironment(
 
    // Get REGR_* overrides.
 
-   if ((REGR_CL = getenv("REGR_CL")) == NULL) {
+   if ((REGR_CL = getenv_unsafe("REGR_CL")) == NULL) {
       REGR_CL = DEFAULT_REGR_CL;
    } else {
       REGR_CL = _strdup(REGR_CL);
    }
 
-   if ((REGR_DIFF = getenv("REGR_DIFF")) == NULL) {
+   if ((REGR_DIFF = getenv_unsafe("REGR_DIFF")) == NULL) {
       REGR_DIFF = DEFAULT_REGR_DIFF;
    } else {
       REGR_DIFF = _strdup(REGR_DIFF);
    }
 
-   REGR_ASM = getenv("REGR_ASM");
+   REGR_ASM = getenv_unsafe("REGR_ASM");
    if (REGR_ASM != NULL) {
       REGR_ASM = _strdup(REGR_ASM);
    }
@@ -1862,19 +1873,19 @@ GetEnvironment(
 
       // Get/generate the MASTER directory.
 
-      if ((MASTER_DIR = getenv("MASTER_DIR")) == NULL) {
+      if ((MASTER_DIR = getenv_unsafe("MASTER_DIR")) == NULL) {
          if (FVerbose) {
             // This should be the default, so don't warn
             Warning("Generating MASTER_DIR environment variable");
          }
 
-         sprintf(tempBuf, "master.%s", TargetInfo[RLMachine].name);
+         sprintf_s(tempBuf, "master.%s", TargetInfo[RLMachine].name);
          MASTER_DIR = _strdup(tempBuf);
 
          // Set environment var in case user overrides internal regr
          // with -cmd.
 
-         sprintf(tempBuf, "MASTER_DIR=%s", MASTER_DIR);
+         sprintf_s(tempBuf, "MASTER_DIR=%s", MASTER_DIR);
          if (_putenv(tempBuf))
             Fatal("Couldn't set MASTER_DIR");
       } else {
@@ -1884,19 +1895,19 @@ GetEnvironment(
       // Get/generate the DIFF directory.
 
       if (FMoveDiffs) {
-         if ((DIFF_DIR = getenv("DIFF_DIR")) == NULL) {
+         if ((DIFF_DIR = getenv_unsafe("DIFF_DIR")) == NULL) {
             if (FVerbose) {
                // This should be the default, so don't warn
                Warning("Generating DIFF_DIR environment variable");
             }
 
-            sprintf(tempBuf, "diffs.%s", TargetInfo[RLMachine].name);
+            sprintf_s(tempBuf, "diffs.%s", TargetInfo[RLMachine].name);
             DIFF_DIR = _strdup(tempBuf);
 
             // Set environment var in case user overrides internal regr
             // with -cmd.
 
-            sprintf(tempBuf, "DIFF_DIR=%s", DIFF_DIR);
+            sprintf_s(tempBuf, "DIFF_DIR=%s", DIFF_DIR);
             if (_putenv(tempBuf))
                Fatal("Couldn't set DIFF_DIR");
          } else {
@@ -1911,15 +1922,15 @@ GetEnvironment(
 
       // Get the REGR_SHOWD directory.
 
-      REGR_SHOWD = getenv("REGR_SHOWD");
+      REGR_SHOWD = getenv_unsafe("REGR_SHOWD");
       if (REGR_SHOWD == NULL) {
-         sprintf(tempBuf, "%s\\bin\\showd.cmd", REGRESS);
+         sprintf_s(tempBuf, "%s\\bin\\showd.cmd", REGRESS);
          REGR_SHOWD = _strdup(tempBuf);
       } else {
          REGR_SHOWD = _strdup(REGR_SHOWD);
       }
-      showd_fp = fopen(REGR_SHOWD, "rt");
-      if (showd_fp == NULL) {
+      errno_t err = fopen_s(&showd_fp, REGR_SHOWD, "rt");
+      if (err != 0 || showd_fp == NULL) {
          if (!FGenLst)
             Fatal("couldn't find diff processing command file (%s)", REGR_SHOWD);
       } else
@@ -1930,7 +1941,7 @@ GetEnvironment(
 
    else {
       if (EXEC_TESTS_FLAGS == NULL) {
-         if ((EXEC_TESTS_FLAGS = getenv("EXEC_TESTS_FLAGS")) == NULL)
+         if ((EXEC_TESTS_FLAGS = getenv_unsafe("EXEC_TESTS_FLAGS")) == NULL)
             EXEC_TESTS_FLAGS = DEFAULT_EXEC_TESTS_FLAGS;
 
          // We edit EXEC_TESTS_FLAGS, so create a copy.
@@ -1938,7 +1949,7 @@ GetEnvironment(
          EXEC_TESTS_FLAGS = _strdup(EXEC_TESTS_FLAGS);
       }
 
-      if ((TARGET_VM = getenv("TARGET_VM")) == NULL) {
+      if ((TARGET_VM = getenv_unsafe("TARGET_VM")) == NULL) {
          TARGET_VM = TargetInfo[TargetMachine].TARGET_VM;
 
          // Support automatic cross-compilation
@@ -1950,7 +1961,7 @@ GetEnvironment(
 
             char* PROCESSOR_ARCHITECTURE;
 
-            PROCESSOR_ARCHITECTURE = getenv("PROCESSOR_ARCHITECTURE");
+            PROCESSOR_ARCHITECTURE = getenv_unsafe("PROCESSOR_ARCHITECTURE");
             if (PROCESSOR_ARCHITECTURE == NULL) {
                Fatal("PROCESSOR_ARCHITECTURE enviroment variable not set (this should be set by the OS!)");
             }
@@ -1965,7 +1976,7 @@ GetEnvironment(
          TARGET_VM = _strdup(TARGET_VM);
       }
 
-      if ((LINKER = getenv("LINKER")) == NULL) {
+      if ((LINKER = getenv_unsafe("LINKER")) == NULL) {
          LINKER = DEFAULT_LINKER;
       } else {
          LINKER = _strdup(LINKER);
@@ -1978,13 +1989,13 @@ GetEnvironment(
 
    // Grab CL and _CL_.
 
-   CL = getenv("CL");
+   CL = getenv_unsafe("CL");
    if (CL != NULL)
    {
       CL = _strdup(CL);
    }
 
-   _CL_ = getenv("_CL_");
+   _CL_ = getenv_unsafe("_CL_");
    if (_CL_ != NULL)
    {
       _CL_ = _strdup(_CL_);
@@ -1993,9 +2004,9 @@ GetEnvironment(
    // Display all the settings.
 
    if (FVerbose) {
-      if ((env = getenv(RL_PRE_ENV_VAR)) != NULL)
+      if ((env = getenv_unsafe(RL_PRE_ENV_VAR)) != NULL)
          printf(RL_PRE_ENV_VAR"=%s\n", env);
-      if ((env = getenv(RL_POST_ENV_VAR)) != NULL)
+      if ((env = getenv_unsafe(RL_POST_ENV_VAR)) != NULL)
          printf(RL_POST_ENV_VAR"=%s\n", env);
 
       printf("Target machine = %s", TargetInfo[RLMachine].name);
@@ -2181,10 +2192,11 @@ AddUserDirs(
    char *s
 )
 {
-   s = strtok(s, XML_DELIM);
+   char *context = NULL;
+   s = strtok_s(s, XML_DELIM, &context);
    while (s) {
       AddDir(pTestList, s);
-      s = strtok(NULL, XML_DELIM);
+      s = strtok_s(NULL, XML_DELIM, &context);
    }
 }
 
@@ -2218,14 +2230,14 @@ PrintTestInfo
                ASSERT(pStringList->next);
                if (pStringList->next->string[0]=='%') {
                   char tmpBuf[BUFFER_SIZE];
-                  strncpy(tmpBuf, pStringList->next->string+1, strlen(pStringList->next->string)-2);
+                  strncpy_s(tmpBuf, pStringList->next->string+1, strlen(pStringList->next->string)-2);
                   tmpBuf[strlen(pStringList->next->string)-2]=0;
-                  if (getenv(tmpBuf)==NULL) {
+                  if (getenv_unsafe(tmpBuf)==NULL) {
                      char msgBuf[BUFFER_SIZE];
-                     sprintf(msgBuf, "%s environment variable used is not set\n", tmpBuf);
+                     sprintf_s(msgBuf, "%s environment variable used is not set\n", tmpBuf);
                      Fatal(msgBuf);
                   } else {
-                     printf("\t%s=%s\n",pStringList->string, getenv(tmpBuf));
+                     printf("\t%s=%s\n",pStringList->string, getenv_unsafe(tmpBuf));
                   }
                } else {
                   printf("\t%s=%s\n",pStringList->string, pStringList->next->string);
@@ -2332,7 +2344,7 @@ WriteEnvLst
 
    ASSERT(pDir->fullPath);
 
-   sprintf(envlst, "%s%s", pDir->fullPath, "\\" DEFAULT_ENVLST_CFG);
+   sprintf_s(envlst, "%s%s", pDir->fullPath, "\\" DEFAULT_ENVLST_CFG);
 
    DeleteFileIfFound(envlst);
    COutputBuffer *LstFilesOut = new COutputBuffer(envlst, FSyncImmediate ? false : true);
@@ -2350,7 +2362,7 @@ WriteEnvLst
             LstFilesOut->Add("\t");
          }
          LstFilesOut->Add("TESTNAME=%s", pTest->name);
-         strcpy(comments, pTest->name);
+         strcpy_s(comments, pTest->name);
 
          PadSpecialChars(noSpecialCharsBuf, EXTRA_CC_FLAGS);
          if (noSpecialCharsBuf[0] != '\0') {
@@ -2384,7 +2396,7 @@ WriteEnvLst
             }
          }
          LstFilesOut->Add(" optFlags=\"%s\"", variants->optFlags);
-         strcat(comments, " "); strcat(comments, variants->optFlags);
+         strcat_s(comments, " "); strcat_s(comments, variants->optFlags);
 
          // print the env settings
          StringList* pStringList = NULL;
@@ -2397,19 +2409,19 @@ WriteEnvLst
                   if (pStringList->next->string[0]=='%') {
                      // grab the env variable specified in the pStringList->next->string
                      char tmpBuf[BUFFER_SIZE];
-                     strncpy(tmpBuf, pStringList->next->string+1, strlen(pStringList->next->string)-2);
+                     strncpy_s(tmpBuf, pStringList->next->string+1, strlen(pStringList->next->string)-2);
                      tmpBuf[strlen(pStringList->next->string)-2]=0;
-                     if (getenv(tmpBuf)==NULL) {
+                     if (getenv_unsafe(tmpBuf)==NULL) {
                         char msgBuf[BUFFER_SIZE];
-                        sprintf(msgBuf, "%s environment variable used in %s not set\n", tmpBuf, envlst);
+                        sprintf_s(msgBuf, "%s environment variable used in %s not set\n", tmpBuf, envlst);
                         Fatal(msgBuf);
                      } else {
-                        LstFilesOut->Add(" %s=%s",pStringList->string, getenv(tmpBuf));
-                        sprintf(comments, "%s %s=%s", comments, pStringList->string, getenv(tmpBuf));
+                        LstFilesOut->Add(" %s=%s",pStringList->string, getenv_unsafe(tmpBuf));
+                        sprintf_s(comments, "%s %s=%s", comments, pStringList->string, getenv_unsafe(tmpBuf));
                      }
                   } else {
                      LstFilesOut->Add(" %s=%s",pStringList->string, pStringList->next->string);
-                     sprintf(comments, "%s %s=%s", comments, pStringList->string, pStringList->next->string);
+                     sprintf_s(comments, "%s %s=%s", comments, pStringList->string, pStringList->next->string);
                   }
                }
                FreeStringList(pStringList);
@@ -2431,7 +2443,7 @@ IsRelativePath(
 {
    char drive[MAX_PATH], dir[MAX_PATH];
 
-   _splitpath(path, drive, dir, NULL, NULL);
+   _splitpath_s(path, drive, ARRAYLEN(drive), dir, ARRAYLEN(dir), NULL, 0, NULL, 0);
 
    // Path is relative if neither drive nor absolute directory are specified.
 
@@ -2501,13 +2513,13 @@ CreateAsmDirs(
 
    ASSERTNR(!IsRelativePath(root));
 
-   sprintf(path, "%s\\%s", root, MASTER_DIR);
+   sprintf_s(path, "%s\\%s", root, MASTER_DIR);
 
    if (!VerifyOrCreateDir(path, fBaseline))
       return FALSE;
 
    if (FMoveDiffs && FDiff) {
-      sprintf(path, "%s\\%s", root, DIFF_DIR);
+      sprintf_s(path, "%s\\%s", root, DIFF_DIR);
       if (!VerifyOrCreateDir(path, TRUE))
          return FALSE;
    }
@@ -2733,7 +2745,7 @@ ParseArg(
             // Some test scripts use TARGET_MACHINE, so put it into the
             // environment.
 
-            sprintf(tempBuf, "TARGET_MACHINE=%s", TARGET_MACHINE);
+            sprintf_s(tempBuf, "TARGET_MACHINE=%s", TARGET_MACHINE);
             if (_putenv(tempBuf))
                Fatal("Couldn't set TARGET_MACHINE");
             break;
@@ -2761,7 +2773,7 @@ ParseArg(
             // Some test scripts use REGRESS, so put it into the
             // environment.
 
-            sprintf(tempBuf, "REGRESS=%s", REGRESS);
+            sprintf_s(tempBuf, "REGRESS=%s", REGRESS);
             if (_putenv(tempBuf))
                Fatal("Couldn't set REGRESS");
             break;
@@ -2976,14 +2988,15 @@ ParseEnvVar(
 )
 {
    char * s;
+   char * context;
 
-   s = getenv(envVar);
+   s = getenv_unsafe(envVar);
    if (s == NULL)
       return;
 
    s = _strdup(s);
 
-   s = strtok(s, " \"");
+   s = strtok_s(s, " \"", &context);
    while (s) {
       switch (ParseArg(s, NULL)) {
          case 1:
@@ -2993,7 +3006,7 @@ ParseEnvVar(
             Fatal("Only switches may appear in %s environment variable",
                envVar);
       }
-      s = strtok(NULL, " \"");
+      s = strtok_s(NULL, " \"", &context);
    }
 }
 
@@ -3027,7 +3040,7 @@ ParseCommandLine(
    // Get the REGRESS environment variable.
 
    if (REGRESS == NULL)
-      REGRESS = getenv("REGRESS");
+      REGRESS = getenv_unsafe("REGRESS");
    if (REGRESS == NULL)
       Fatal("REGRESS enviroment variable not set");
 
@@ -3042,9 +3055,9 @@ ParseCommandLine(
       if (!FUserSpecifiedDirs || (DirList.first != NULL)) {
          char tempBuf[MAX_PATH];
 
-         strcpy(tempBuf, REGRESS);
-         strcat(tempBuf, "\\logs\\");
-         strcat(tempBuf, DEFAULT_LOG_FILE);
+         strcpy_s(tempBuf, REGRESS);
+         strcat_s(tempBuf, "\\logs\\");
+         strcat_s(tempBuf, DEFAULT_LOG_FILE);
          LogName = _strdup(tempBuf);
       } else {
          LogName = DEFAULT_LOG_FILE;
@@ -3057,9 +3070,9 @@ ParseCommandLine(
       if (!FUserSpecifiedDirs || (DirList.first != NULL)) {
          char tempBuf[MAX_PATH];
 
-         strcpy(tempBuf, REGRESS);
-         strcat(tempBuf, "\\logs\\");
-         strcat(tempBuf, DEFAULT_FULL_LOG_FILE);
+         strcpy_s(tempBuf, REGRESS);
+         strcat_s(tempBuf, "\\logs\\");
+         strcat_s(tempBuf, DEFAULT_FULL_LOG_FILE);
          FullLogName = _strdup(tempBuf);
       } else {
          FullLogName = DEFAULT_FULL_LOG_FILE;
@@ -3072,9 +3085,9 @@ ParseCommandLine(
       if (!FUserSpecifiedDirs || (DirList.first != NULL)) {
          char tempBuf[MAX_PATH];
 
-         strcpy(tempBuf, REGRESS);
-         strcat(tempBuf, "\\logs\\");
-         strcat(tempBuf, DEFAULT_RESULTS_LOG_FILE);
+         strcpy_s(tempBuf, REGRESS);
+         strcat_s(tempBuf, "\\logs\\");
+         strcat_s(tempBuf, DEFAULT_RESULTS_LOG_FILE);
          ResultsLogName = _strdup(tempBuf);
       } else {
          ResultsLogName = DEFAULT_RESULTS_LOG_FILE;
@@ -3203,7 +3216,7 @@ ParseCommandLine(
    // Generate unspecified options.
 
    if (StatusPrefix == NULL) {
-      s = tempBuf + sprintf(tempBuf, "%s [%s",
+      s = tempBuf + sprintf_s(tempBuf, "%s [%s",
          Mode == RM_ASM
          ? FBaseDiff
          ? "Base/Diff"
@@ -3213,11 +3226,11 @@ ParseCommandLine(
          : "Exec",
          TargetInfo[TargetMachine].name);
       if (RLMachine != TargetMachine)
-         s += sprintf(s, ":%s", TargetInfo[RLMachine].name);
-      sprintf(s, "]");
+         s += sprintf_s(s, REMAININGARRAYLEN(tempBuf, s), ":%s", TargetInfo[RLMachine].name);
+      sprintf_s(s, REMAININGARRAYLEN(tempBuf, s), "]");
    }
    else {
-      strcpy(tempBuf, StatusPrefix);
+      strcpy_s(tempBuf, StatusPrefix);
    }
    StatusPrefix = _strdup(tempBuf);
 
@@ -3229,11 +3242,11 @@ ParseCommandLine(
    }
    s = tempBuf + strlen(tempBuf);
    *s++ = ' ';
-   strcpy(s, StatusFormat);
+   strcpy_s(s, REMAININGARRAYLEN(tempBuf, s), StatusFormat);
    StatusFormat = _strdup(tempBuf);
 
    if (DCFGfile == NULL) {
-      sprintf(tempBuf, "%s\\%s", REGRESS,
+      sprintf_s(tempBuf, "%s\\%s", REGRESS,
          Mode == RM_ASM ? DEFAULT_ASM_DCFG : DEFAULT_EXE_DCFG);
       DCFGfile = _strdup(tempBuf);
    }
@@ -3706,7 +3719,7 @@ mystrcmp(
    return strcmp(a,b);
 }
 
-// mystrtok is similar to strtok, but takes two delimeter parameters: one for
+// mystrtok is similar to strtok_s, but takes two delimeter parameters: one for
 // skipping entirely and one for skipping and terminating.
 char *
 mystrtok(
@@ -3788,7 +3801,7 @@ AppliesToTarget
    TARGET_MACHINES fileMach;
 
     // Parse the target list looking for our target machine.
-    // Using mystrtok here because strtok doesn't appear to initialize
+    // Using mystrtok here because strtok_s doesn't appear to initialize
     // its static pointer to NULL.
 
    targetList = mystrtok(targetList, XML_DELIM, XML_DELIM);
@@ -4291,8 +4304,8 @@ WriteTestLst
 {
    char tempBuf[BUFFER_SIZE], drive[MAX_PATH], dir[MAX_PATH];
 
-   _splitpath(cfgFile, drive, dir, NULL, NULL);
-   sprintf(tempBuf, "%s%s%s", drive, dir, DEFAULT_TESTLST_DCFG);
+   _splitpath_s(cfgFile, drive, ARRAYLEN(drive), dir, ARRAYLEN(dir), NULL, 0, NULL, 0);
+   sprintf_s(tempBuf, "%s%s%s", drive, dir, DEFAULT_TESTLST_DCFG);
    DeleteFileIfFound(tempBuf);
    COutputBuffer *LstFilesOut = new COutputBuffer(tempBuf, FSyncImmediate ? false : true);
    ASSERT(LstFilesOut);
@@ -4337,10 +4350,10 @@ BuildDirList(
    // Get the full path for each. Grab the directory of the DCFG file and
    // append to that each subdir.
 
-   _splitpath(DCFGfile, drive, dir, NULL, NULL);
+   _splitpath_s(DCFGfile, drive, ARRAYLEN(drive), dir, ARRAYLEN(dir), NULL, 0, NULL, 0);
 
    for (pDir = DirList.first; pDir; pDir = pDir->next) {
-      sprintf(tempBuf, "%s%s%s", drive, dir, pDir->name);
+      sprintf_s(tempBuf, "%s%s%s", drive, dir, pDir->name);
       pDir->fullPath = _strdup(tempBuf);
    }
 
@@ -4370,14 +4383,14 @@ UpdateTitleStatus()
    EnterCriticalSection(&csTitleBar);
 
    s = FormatString(StatusFormat);
-   strcpy(TitleStatus, s);
+   strcpy_s(TitleStatus, s);
    s = strchr(TitleStatus, '\0');
 
    // start at 1: skip primary thread 0 (unless we decide to let it do real
    // work)
    for (i = 1; i <= NumberOfThreads; i++) {
       ThreadInfo[i].GetCurrentTest(tempBuf);
-      s += sprintf(s, "; %s", tempBuf);
+      s += sprintf_s(s, REMAININGARRAYLEN(TitleStatus, s), "; %s", tempBuf);
    }
 
    LeaveCriticalSection(&csTitleBar);
@@ -4397,12 +4410,12 @@ WriteSummary(
    if (FSummary || FVerbose) {
       if (Mode == RM_ASM) {
          if (fBaseline) {
-            sprintf(tempBuf,
+            sprintf_s(tempBuf,
                "Summary: %s (baselines) has %d tests; %d failures",
                name, tests, failures);
          }
          else {
-            sprintf(tempBuf,
+            sprintf_s(tempBuf,
                "Summary: %s (diffs) has %d tests; %d diffs and %d failures",
                name, tests, diffs, failures);
          }
@@ -4410,7 +4423,7 @@ WriteSummary(
          LogOut("%s", tempBuf);
       }
       else {
-         sprintf(tempBuf,
+         sprintf_s(tempBuf,
             "Summary: %s had %d tests; %d failures",
             name, tests, failures);
          LogOut("%s", tempBuf);
@@ -4427,7 +4440,7 @@ __cdecl WriteResults(const char *fmt, ...)
    ASSERT(ThreadRes != NULL);
 
    va_start(arg_ptr, fmt);
-   vsprintf(tempBuf, fmt, arg_ptr);
+   vsprintf_s(tempBuf, fmt, arg_ptr);
    ASSERT(strlen(tempBuf) < BUFFER_SIZE);
    ThreadRes->Add("%s\n", tempBuf);
 }
@@ -4442,10 +4455,10 @@ __cdecl WriteRunpl(const char *fmt, ...)
 
    buf[0] = '\0';
    if (!FNoThreadId && ThreadId != 0 && NumberOfThreads > 1) {
-      sprintf(buf, "%d>", ThreadId);
+      sprintf_s(buf, "%d>", ThreadId);
    }
    va_start(arg_ptr, fmt);
-   vsprintf(tempBuf, fmt, arg_ptr);
+   vsprintf_s(tempBuf, fmt, arg_ptr);
    ASSERT(strlen(tempBuf) < BUFFER_SIZE);
    ThreadFull->Add("%s%s\n", buf, tempBuf);
 }
@@ -4476,29 +4489,29 @@ PerformSingleRegression(
             UpdateTitleStatus();
         
         if (strcmp(pTest->files->string, "dotest.cmd") == 0) {
-            sprintf(tempBuf, "(%s (", pTest->name);
+            sprintf_s(tempBuf, "(%s (", pTest->name);
         } else
-            sprintf(tempBuf, "(%s (", pTest->files->string);
+            sprintf_s(tempBuf, "(%s (", pTest->files->string);
 
         if (pTestVariant->optFlags != NULL)
-            strcat(tempBuf, pTestVariant->optFlags);
+            strcat_s(tempBuf, pTestVariant->optFlags);
 
         ccFlags = pTestVariant->testInfo.data[TIK_COMPILE_FLAGS];
         if(ccFlags != NULL) {
             if(pTestVariant->optFlags != NULL)
-                strcat(tempBuf, " ");
+                strcat_s(tempBuf, " ");
             
-            strcat(tempBuf, ccFlags);
+            strcat_s(tempBuf, ccFlags);
         }
         
         if(!pTestVariant->optFlags && !ccFlags)
             tempBuf[0] = '\0';
         else
-            strcat(tempBuf,") ");
+            strcat_s(tempBuf,") ");
 
-        strcat(tempBuf, Mode == RM_ASM ? "asm" : "exe");
-        strcat(tempBuf, (Mode == RM_ASM) ? (pDir->IsBaseline() ? " base)" : " diffs)") : ")");
-        sprintf(testNameBuf, "%s %s", pDir->GetDirectoryName(), tempBuf);
+        strcat_s(tempBuf, Mode == RM_ASM ? "asm" : "exe");
+        strcat_s(tempBuf, (Mode == RM_ASM) ? (pDir->IsBaseline() ? " base)" : " diffs)") : ")");
+        sprintf_s(testNameBuf, "%s %s", pDir->GetDirectoryName(), tempBuf);
         WriteRunpl("+++ %s +++", testNameBuf);
         
         start_test = time(NULL);
@@ -4666,7 +4679,7 @@ StatusWorker( void *arg )
       if (0 != strcmp(oldTitleStatus, TitleStatus)) {
          // only if it changed do we set it...
          SetConsoleTitle(TitleStatus);
-         strcpy(oldTitleStatus, TitleStatus);
+         strcpy_s(oldTitleStatus, TitleStatus);
       }
       LeaveCriticalSection(&csTitleBar);
       Sleep(500);  // don't change it too often
@@ -4695,8 +4708,9 @@ ThreadWorker( void *arg )
    // Create thread-specific target VM command.
 
    if (TARGET_VM) {
-      TargetVM = (char *)malloc(strlen(TARGET_VM) + 1);
-      sprintf(TargetVM, TARGET_VM, ThreadId);
+      size_t bufSize = strlen(TARGET_VM) + 1;
+      TargetVM = (char *)malloc(bufSize);
+      sprintf_s(TargetVM, bufSize, TARGET_VM, ThreadId);
    }
    else {
       TargetVM = NULL;
@@ -4812,11 +4826,11 @@ main(int argc, char *argv[])
 
    err = GetTempPathA(MAX_PATH, TempPath);
    if (err == 0) {
-      strcpy(TempPath, "\\");
+      strcpy_s(TempPath, "\\");
    } else {
       err = GetFileAttributesA(TempPath);
       if (err == 0xffffffff || !(err & FILE_ATTRIBUTE_DIRECTORY)) {
-         strcpy(TempPath, "\\");
+         strcpy_s(TempPath, "\\");
       }
    }
 
@@ -4919,7 +4933,7 @@ main(int argc, char *argv[])
 
       // Build a file list.
 
-      sprintf(fullCfg, "%s\\%s", pDir->fullPath, CFGfile);
+      sprintf_s(fullCfg, "%s\\%s", pDir->fullPath, CFGfile);
       status = ProcessConfig(&TestList, fullCfg, Mode);
 
       if (status != PCS_ERROR)

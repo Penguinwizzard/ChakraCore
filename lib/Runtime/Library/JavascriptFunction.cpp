@@ -558,7 +558,7 @@ namespace Js
         {
             ret = CallRootFunctionInternal(args, scriptContext);
         }        
-        __except (ResumeForOutOfBoundsAsmJSArrayRefs(GetExceptionCode(), GetExceptionInformation()))
+        __except (ResumeForOutOfBoundsArrayRefs(GetExceptionCode(), GetExceptionInformation()))
         {
             // should never reach here
             Assert(false);
@@ -1392,6 +1392,12 @@ LABEL1:
             lea eax, [esp+8]                // load the address of the funciton os that if we need to box, we can patch it up
             push eax
             call JavascriptFunction::DeferredParse
+#ifdef _CONTROL_FLOW_GUARD
+            // verify that the call target is valid
+            mov  ecx, eax
+            call[__guard_check_icall_fptr]
+            mov eax, ecx
+#endif
             pop ebp
             jmp eax
         }
@@ -1438,6 +1444,12 @@ LABEL1:
             mov ebp, esp
             push [esp+8]
             call JavascriptFunction::DeferredDeserialize
+#ifdef _CONTROL_FLOW_GUARD
+            // verify that the call target is valid
+            mov  ecx, eax
+            call[__guard_check_icall_fptr]
+            mov eax, ecx
+#endif
             pop ebp
             jmp eax
         }
@@ -1526,25 +1538,24 @@ LABEL1:
         d.  Ensure that the functionbody is heap allocated
         e.	Is a function
         f.	Is AsmJs Function object for asmjs
-    4)	Check if Rip is Native address
-    5)	Check if Array BufferLength > 0x10000 (64K), power of 2 if length is less than 2^24 or multiple of 2^24  and multiple of 0x1000(4K) for asmjs
-    6)	Check If the instruction is valid
+    4)	Check if Array BufferLength > 0x10000 (64K), power of 2 if length is less than 2^24 or multiple of 2^24  and multiple of 0x1000(4K) for asmjs
+    5)	Check If the instruction is valid
         a.	Is one of the move instructions , i.e. mov, movsx, movzx, movsxd, movss or movsd               
         b.	Get the array buffer register and its value for asmjs
         c.	Get the dst register(in case of load)
         d.	Calculate the number of bytes read in order to get the length of the instruction , ensure that the length should never be greater than 15 bytes
-    7)	Check that the Array buffer value is same as the one we passed in EntryPointInfo in asmjs
-    8)	Set the dst reg if the instr type is load
-    9)	Add the bytes read to Rip and set it as new Rip
-    10)	Return EXCEPTION_CONTINUE_EXECUTION
+    6)	Check that the Array buffer value is same as the one we passed in EntryPointInfo in asmjs
+    7)	Set the dst reg if the instr type is load
+    8)	Add the bytes read to Rip and set it as new Rip
+    9)	Return EXCEPTION_CONTINUE_EXECUTION
 
     */
 #ifdef _M_X64
-    AsmJSInstructionDecoder::InstructionData AsmJSInstructionDecoder::CheckValidInstr(BYTE* &pc, PEXCEPTION_POINTERS exceptionInfo, FunctionBody* funcBody) // get the reg operand and isLoad and 
+    ArrayAccessDecoder::InstructionData ArrayAccessDecoder::CheckValidInstr(BYTE* &pc, PEXCEPTION_POINTERS exceptionInfo, FunctionBody* funcBody) // get the reg operand and isLoad and 
     {
         InstructionData instrData;
         uint prefixValue = 0;
-        AsmJSInstructionDecoder::RexByteValue rexByteValue;
+        ArrayAccessDecoder::RexByteValue rexByteValue;
         bool isFloat = false;
         uint  immBytes = 0;
         uint dispBytes = 0;
@@ -1590,76 +1601,76 @@ LABEL1:
         }
 
         // read opcode 
-        //6a.	Is one of the move instructions , i.e. mov, movsx, movzx, movsxd, movss or movsd
+        // Is one of the move instructions , i.e. mov, movsx, movzx, movsxd, movss or movsd
         switch (*pc)
         {
         //MOV - Store
         case 0x89:
         case 0x88:
         {
-                     pc++;
-                     instrData.isLoad = false;
-                     break;
+            pc++;
+            instrData.isLoad = false;
+            break;
         }
         //MOV - Load
         case 0x8A:
         case 0x8B:
         {
-                     pc++;
-                     instrData.isLoad = true;
-                     break;
+            pc++;
+            instrData.isLoad = true;
+            break;
         }
         case 0x0F:
         {
-                     // more than one byte opcode and hence we will read pc multiple times
-                     pc++;
-                     //MOVSX  , MOVSXD  
-                     if (*pc == 0xBE || *pc == 0xBF)
-                     {                                             
-                         instrData.isLoad = true;
-                     }
-                     //MOVZX
-                     else if (*pc == 0xB6 || *pc == 0xB7) 
-                     {                         
-                         instrData.isLoad = true;                         
-                     }
-                     //MOVSS - Load
-                     else if (*pc == 0x10 && prefixValue == 0xF3)
-                     {                         
-                         Assert(isFloat);
-                         instrData.isLoad = true;
-                         instrData.isFloat32 = true;
-                     }
-                     //MOVSS - Store
-                     else if (*pc == 0x11 && prefixValue == 0xF3)
-                     {                         
-                         Assert(isFloat);
-                         instrData.isLoad = false;
-                         instrData.isFloat32 = true;
-                     }
-                     //MOVSD - Load
-                     else if (*pc == 0x10 && prefixValue == 0xF2)
-                     {                         
-                         Assert(isFloat);
-                         instrData.isLoad = true;
-                         instrData.isFloat64 = true;
-                     }
-                     //MOVSD - Store
-                     else if (*pc == 0x11 && prefixValue == 0xF2)
-                     {                         
-                         Assert(isFloat);
-                         instrData.isLoad = false;
-                         instrData.isFloat64 = true;
-                     }
-                     else
-                     {
-                         instrData.isInvalidInstr = true;
-                     }
-                     pc++;
-                     break;
+            // more than one byte opcode and hence we will read pc multiple times
+            pc++;
+            //MOVSX  , MOVSXD  
+            if (*pc == 0xBE || *pc == 0xBF)
+            {                                             
+                instrData.isLoad = true;
+            }
+            //MOVZX
+            else if (*pc == 0xB6 || *pc == 0xB7) 
+            {                         
+                instrData.isLoad = true;                         
+            }
+            //MOVSS - Load
+            else if (*pc == 0x10 && prefixValue == 0xF3)
+            {                         
+                Assert(isFloat);
+                instrData.isLoad = true;
+                instrData.isFloat32 = true;
+            }
+            //MOVSS - Store
+            else if (*pc == 0x11 && prefixValue == 0xF3)
+            {                         
+                Assert(isFloat);
+                instrData.isLoad = false;
+                instrData.isFloat32 = true;
+            }
+            //MOVSD - Load
+            else if (*pc == 0x10 && prefixValue == 0xF2)
+            {                         
+                Assert(isFloat);
+                instrData.isLoad = true;
+                instrData.isFloat64 = true;
+            }
+            //MOVSD - Store
+            else if (*pc == 0x11 && prefixValue == 0xF2)
+            {                         
+                Assert(isFloat);
+                instrData.isLoad = false;
+                instrData.isFloat64 = true;
+            }
+            else
+            {
+                instrData.isInvalidInstr = true;
+            }
+            pc++;
+            break;
         }
-            //Support Mov Immediates
-            // MOV 
+        //Support Mov Immediates
+        // MOV 
         case 0xC6:
         case 0xC7:
         {
@@ -1840,7 +1851,7 @@ LABEL1:
             Assert(immBytes > 0);
             instrData.instrSizeInByte += immBytes;
         }
-        //6h.	Calculate the number of bytes read in order to get the length of the instruction , ensure that the length should never be greater than 15 bytes
+        // Calculate the number of bytes read in order to get the length of the instruction , ensure that the length should never be greater than 15 bytes
         if (instrData.instrSizeInByte > 15)
         {
             // no instr size can be greater than 15
@@ -1848,117 +1859,120 @@ LABEL1:
         }
         return instrData;
     }
-    int JavascriptFunction::ResumeForOutOfBoundsAsmJSArrayRefs(int exceptionCode, PEXCEPTION_POINTERS exceptionInfo)
+
+    int JavascriptFunction::ResumeForOutOfBoundsArrayRefs(int exceptionCode, PEXCEPTION_POINTERS exceptionInfo)
     {
-        // 1) Exception Code is AV i.e STATUS_ACCESS_VIOLATION
-        if (exceptionCode == STATUS_ACCESS_VIOLATION)
+        if (exceptionCode != STATUS_ACCESS_VIOLATION)
         {
-            ThreadContext* threadContext = ThreadContext::GetContextForCurrentThread();
+            return EXCEPTION_CONTINUE_SEARCH;
+        }
+        ThreadContext* threadContext = ThreadContext::GetContextForCurrentThread();
 
-            //2)  Check if Rip is Native address
+        // AV should come from JITed code, since we don't eliminate bound checks in interpreter
+        if (!threadContext->IsNativeAddress((Var)exceptionInfo->ContextRecord->Rip))
+        {
+            return EXCEPTION_CONTINUE_SEARCH;
+        }
 
-            BOOL isNativeAddress = threadContext->IsNativeAddress((Var)exceptionInfo->ContextRecord->Rip);
-            if (isNativeAddress)
+        Var* addressOfFuncObj = (Var*)(exceptionInfo->ContextRecord->Rbp + 2 * sizeof(Var));
+        if (!addressOfFuncObj)
+        {
+            return EXCEPTION_CONTINUE_SEARCH;
+        }
+        
+        Js::ScriptFunction* func = (ScriptFunction::Is(*addressOfFuncObj))?(Js::ScriptFunction*)(*addressOfFuncObj):nullptr;
+        if (!func)
+        {
+            return EXCEPTION_CONTINUE_SEARCH;
+        }
+
+        RecyclerHeapObjectInfo heapObject;
+        Recycler* recycler = threadContext->GetRecycler();
+
+        bool isFuncObjHeapAllocated = recycler->FindHeapObject(func, FindHeapObjectFlags_NoFlags, heapObject); // recheck if this needs to be removed
+        bool isEntryPointHeapAllocated = recycler->FindHeapObject(func->GetEntryPointInfo(), FindHeapObjectFlags_NoFlags, heapObject);
+        bool isFunctionBodyHeapAllocated = recycler->FindHeapObject(func->GetFunctionBody(), FindHeapObjectFlags_NoFlags, heapObject);
+
+        // ensure that all our objects are heap allocated
+        if (!(isFuncObjHeapAllocated && isEntryPointHeapAllocated && isFunctionBodyHeapAllocated))
+        {
+            return EXCEPTION_CONTINUE_SEARCH;
+        }
+        bool isAsmJs = func->GetFunctionBody()->GetIsAsmJsFunction();
+        Js::FunctionBody* funcBody = func->GetFunctionBody();
+        BYTE* buffer = nullptr;
+        if (isAsmJs)
+        {
+            // some extra checks for asm.js because we have slightly more information that we can validate
+            Js::EntryPointInfo* entryPointInfo = (Js::EntryPointInfo*)funcBody->GetDefaultEntryPointInfo();
+            uintptr moduleMemory = entryPointInfo->GetModuleAddress();
+            if (!moduleMemory)
             {
+                return EXCEPTION_CONTINUE_SEARCH;
+            }
+            ArrayBuffer* arrayBuffer = *(ArrayBuffer**)(moduleMemory + AsmJsModuleMemory::MemoryTableBeginOffset);
+            if (!arrayBuffer || !arrayBuffer->GetBuffer())
+            {
+                // don't have a heap buffer for asm.js... so this shouldn't be an asm.js heap access
+                return EXCEPTION_CONTINUE_SEARCH;
+            }
+            buffer = arrayBuffer->GetBuffer();
 
-                BYTE* pc = (BYTE*)exceptionInfo->ExceptionRecord->ExceptionAddress;
-                Var* addressOfFuncObj = (Var*)(exceptionInfo->ContextRecord->Rbp + 2 * sizeof(Var));
-                Js::ScriptFunction* func = (ScriptFunction::Is(*addressOfFuncObj))?(Js::ScriptFunction*)(*addressOfFuncObj):nullptr;
-                RecyclerHeapObjectInfo heapObject;
-                Recycler* recycler = threadContext->GetRecycler();
+            uint bufferLength = arrayBuffer->GetByteLength();
 
-                //3b.   Ensure that the function object is heap allocated
-                //3c.   Ensure that the entrypointInfo is heap allocated
-                //3d.   Ensure that the functionbody is heap allocated
-                if (func)
+            if (!arrayBuffer->IsValidAsmJsBufferLength(bufferLength))
+            {
+                return EXCEPTION_CONTINUE_SEARCH;
+            }
+        }
+
+        BYTE* pc = (BYTE*)exceptionInfo->ExceptionRecord->ExceptionAddress;
+        ArrayAccessDecoder::InstructionData instrData = ArrayAccessDecoder::CheckValidInstr(pc, exceptionInfo, funcBody);
+        // Check If the instruction is valid
+        if (instrData.isInvalidInstr)
+        {
+            return EXCEPTION_CONTINUE_SEARCH;
+        }
+        
+        // If asm.js, make sure the base address is that of the heap buffer
+        if (isAsmJs && (instrData.bufferValue != (uint64)buffer))
+        {
+            return EXCEPTION_CONTINUE_SEARCH;
+        }
+
+        // Set the dst reg if the instr type is load
+        if (instrData.isLoad)
+        {
+            Var exceptionInfoReg = exceptionInfo->ContextRecord;
+            Var* exceptionInfoIntReg = (Var*)((uint64)exceptionInfoReg + offsetof(CONTEXT, CONTEXT::Rax)); // offset in the contextRecord for RAX , the assert below checks for any change in the exceptionInfo struct
+            Var* exceptionInfoFloatReg = (Var*)((uint64)exceptionInfoReg + offsetof(CONTEXT, CONTEXT::Xmm0));// offset in the contextRecord for XMM0 , the assert below checks for any change in the exceptionInfo struct                                    
+            Assert((DWORD64)*exceptionInfoIntReg == exceptionInfo->ContextRecord->Rax);
+            Assert((uint64)*exceptionInfoFloatReg == exceptionInfo->ContextRecord->Xmm0.Low);
+
+            if (instrData.isLoad)
+            {
+                double nanVal = JavascriptNumber::NaN;
+                if (instrData.isFloat64)
                 {
-                    bool isFuncObjHeapAllocated = recycler->FindHeapObject(func, FindHeapObjectFlags_NoFlags, heapObject); // recheck if this needs to be removed
-                    bool isEntryPointHeapAllocated = recycler->FindHeapObject(func->GetEntryPointInfo(), FindHeapObjectFlags_NoFlags, heapObject);
-                    bool isFunctionBodyHeapAllocated = recycler->FindHeapObject(func->GetFunctionBody(), FindHeapObjectFlags_NoFlags, heapObject);
-
-                    //3a. Not Null
-                    //3c. Is a function
-                    //3d. Is AsmJs Function object
-                    if (isFuncObjHeapAllocated && isEntryPointHeapAllocated && isFunctionBodyHeapAllocated)
-                    {
-                        bool isAsmJs = func->GetFunctionBody()->GetIsAsmJsFunction();
-                        Js::FunctionBody* funcBody = func->GetFunctionBody();
-                        AsmJSInstructionDecoder::InstructionData instrData;
-                        //4.	Check if Rip is Native address
-                        BOOL isJitAddress = IsNativeAddress(funcBody->GetScriptContext(), (Var)exceptionInfo->ContextRecord->Rip);
-                        BYTE* buffer = nullptr;
-                        Js::FunctionEntryPointInfo* funcEntryPointInfo = nullptr;
-                        ArrayBuffer* arrayBuffer = nullptr;
-                        if (isAsmJs)
-                        {
-                            funcEntryPointInfo = (Js::FunctionEntryPointInfo*)funcBody->GetDefaultEntryPointInfo();
-                            arrayBuffer = *(ArrayBuffer**)(funcEntryPointInfo->GetModuleAddress() + AsmJsModuleMemory::MemoryTableBeginOffset);
-                        }
-                        bool isValidAsmLength = (isAsmJs) ? false : true;
-                        if (isAsmJs && arrayBuffer)
-                        {
-                            buffer = arrayBuffer->GetBuffer();
-                            //4.	Check if Rip is Native address
-                            Assert(buffer);
-
-                            uint bufferLength = arrayBuffer->GetByteLength();
-                            Assert(funcEntryPointInfo->IsCodeGenDone() && !(funcEntryPointInfo->GetIsTJMode()));
-
-                            //5.    Check if Array BufferLength > 0x10000 (64K) , power of 2 and multiple of 0x1000(4K) 
-                            isValidAsmLength = arrayBuffer->IsValidAsmJsBufferLength(bufferLength);
-                        }
-
-                        //5.    Check if Array BufferLength > 0x10000 (64K) , power of 2 and multiple of 0x1000(4K) 
-                        if (isJitAddress && isValidAsmLength)
-                        {
-                            // 6.	Check If the instruction is valid
-                            AsmJSInstructionDecoder::InstructionData instrData = AsmJSInstructionDecoder::CheckValidInstr(pc, exceptionInfo, funcBody);
-
-                            // is it a valid instr
-                            if (!instrData.isInvalidInstr && (!isAsmJs || (instrData.bufferValue == (uint64)buffer)))
-                            {
-                                //8.    Set the dst reg if the instr type is load
-                                if (instrData.isLoad)
-                                {
-                                    Var exceptionInfoReg = exceptionInfo->ContextRecord;
-                                    Var* exceptionInfoIntReg = (Var*)((uint64)exceptionInfoReg + offsetof(CONTEXT, CONTEXT::Rax)); // offset in the contextRecord for RAX , the assert below checks for any change in the exceptionInfo struct
-                                    Var* exceptionInfoFloatReg = (Var*)((uint64)exceptionInfoReg + offsetof(CONTEXT, CONTEXT::Xmm0));// offset in the contextRecord for XMM0 , the assert below checks for any change in the exceptionInfo struct                                    
-                                    Assert((DWORD64)*exceptionInfoIntReg == exceptionInfo->ContextRecord->Rax);
-                                    Assert((uint64)*exceptionInfoFloatReg == exceptionInfo->ContextRecord->Xmm0.Low);
-
-                                    if (instrData.isLoad)
-                                    {
-                                        double nanVal = JavascriptNumber::NaN;
-                                        if (instrData.isFloat64)
-                                        {
-                                            double* destRegLocation = (double*)((uint64)exceptionInfoFloatReg + 16 * (instrData.dstReg));
-                                            *destRegLocation = nanVal;
-                                        }
-                                        else if (instrData.isFloat32)
-                                        {
-                                            float* destRegLocation = (float*)((uint64)exceptionInfoFloatReg + 16 * (instrData.dstReg));
-                                            *destRegLocation = (float)nanVal;
-                                        }
-                                        else
-                                        {
-                                            uint64* destRegLocation = (uint64*)((uint64)exceptionInfoIntReg + 8 * (instrData.dstReg));
-                                            *destRegLocation = 0;
-                                        }
-                                    }
-
-                                }
-                                //modify the RIP finally
-                                //9.	Add the bytes read to Rip and set it as new Rip
-                                exceptionInfo->ContextRecord->Rip = exceptionInfo->ContextRecord->Rip + instrData.instrSizeInByte;
-                                //10.	Return EXCEPTION_CONTINUE_EXECUTION
-                                return EXCEPTION_CONTINUE_EXECUTION;
-                            }
-                        }
-                    }
+                    double* destRegLocation = (double*)((uint64)exceptionInfoFloatReg + 16 * (instrData.dstReg));
+                    *destRegLocation = nanVal;
+                }
+                else if (instrData.isFloat32)
+                {
+                    float* destRegLocation = (float*)((uint64)exceptionInfoFloatReg + 16 * (instrData.dstReg));
+                    *destRegLocation = (float)nanVal;
+                }
+                else
+                {
+                    uint64* destRegLocation = (uint64*)((uint64)exceptionInfoIntReg + 8 * (instrData.dstReg));
+                    *destRegLocation = 0;
                 }
             }
         }
-        return EXCEPTION_CONTINUE_SEARCH;
+        // Add the bytes read to Rip and set it as new Rip
+        exceptionInfo->ContextRecord->Rip = exceptionInfo->ContextRecord->Rip + instrData.instrSizeInByte;
+
+        return EXCEPTION_CONTINUE_EXECUTION;
     }
 #endif
 #if DBG

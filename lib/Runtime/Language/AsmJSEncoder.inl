@@ -941,23 +941,26 @@ namespace Js
     {
         AsmJsJitTemplate::Simd128_Select_D2::ApplyTemplate(this, mPc, CalculateOffset<AsmJsSIMDValue>(playout->D2_0), CalculateOffset<AsmJsSIMDValue>(playout->I4_1), CalculateOffset<AsmJsSIMDValue>(playout->D2_2), CalculateOffset<AsmJsSIMDValue>(playout->D2_3));
     }
-
     template <class T>
-    void Js::AsmJsEncoder::OP_Simd128_LdLaneF4(const unaligned T* playout)
+    void Js::AsmJsEncoder::OP_Simd128_ExtractLaneI4(const unaligned T* playout)
     {
-        AsmJsJitTemplate::Simd128_LdLane_F4::ApplyTemplate(this, mPc, CalculateOffset<float>(playout->F0), CalculateOffset<AsmJsSIMDValue>(playout->F4_1), playout->C2);
+        AsmJsJitTemplate::Simd128_ExtractLane_I4::ApplyTemplate(this, mPc, CalculateOffset<int>(playout->I0), CalculateOffset<AsmJsSIMDValue>(playout->I4_1), CalculateOffset<int>(playout->I2));
     }
     template <class T>
-    void Js::AsmJsEncoder::OP_Simd128_LdLaneI4(const unaligned T* playout)
+    void Js::AsmJsEncoder::OP_Simd128_ExtractLaneF4(const unaligned T* playout)
     {
-        AsmJsJitTemplate::Simd128_LdLane_I4::ApplyTemplate(this, mPc, CalculateOffset<int>(playout->I0), CalculateOffset<AsmJsSIMDValue>(playout->I4_1), playout->C2);
+        AsmJsJitTemplate::Simd128_ExtractLane_F4::ApplyTemplate(this, mPc, CalculateOffset<float>(playout->F0), CalculateOffset<AsmJsSIMDValue>(playout->F4_1), CalculateOffset<int>(playout->I2));
     }
     template <class T>
-    void Js::AsmJsEncoder::OP_Simd128_LdLaneD2(const unaligned T* playout)
+    void Js::AsmJsEncoder::OP_Simd128_ReplaceLaneI4(const unaligned T* playout)
     {
-        AsmJsJitTemplate::Simd128_LdLane_D2::ApplyTemplate(this, mPc, CalculateOffset<double>(playout->D0), CalculateOffset<AsmJsSIMDValue>(playout->D2_1), playout->C2);
+        AsmJsJitTemplate::Simd128_ReplaceLane_I4::ApplyTemplate(this, mPc, CalculateOffset<AsmJsSIMDValue>(playout->I4_0), CalculateOffset<AsmJsSIMDValue>(playout->I4_1), CalculateOffset<int>(playout->I2), CalculateOffset<int>(playout->I3));
     }
-
+    template <class T>
+    void Js::AsmJsEncoder::OP_Simd128_ReplaceLaneF4(const unaligned T* playout)
+    {
+        AsmJsJitTemplate::Simd128_ReplaceLane_F4::ApplyTemplate(this, mPc, CalculateOffset<AsmJsSIMDValue>(playout->F4_0), CalculateOffset<AsmJsSIMDValue>(playout->F4_1), CalculateOffset<int>(playout->I2), CalculateOffset<float>(playout->F3));
+    }
     template <class T>
     void Js::AsmJsEncoder::OP_Simd128_LdSignMaskF4(const unaligned T* playout)
     {
@@ -972,60 +975,6 @@ namespace Js
     void Js::AsmJsEncoder::OP_Simd128_LdSignMaskD2(const unaligned T* playout)
     {
         AsmJsJitTemplate::Simd128_LdSignMask_D2::ApplyTemplate(this, mPc, CalculateOffset<int>(playout->I0), CalculateOffset<AsmJsSIMDValue>(playout->D2_1));
-    }
-
-    template <class T>
-    void Js::AsmJsEncoder::OP_Simd128_WithXF4(const unaligned T* playout)
-    {
-        AsmJsJitTemplate::Simd128_SetLane_F4::ApplyTemplate(this, mPc, CalculateOffset<AsmJsSIMDValue>(playout->F4_0), CalculateOffset<AsmJsSIMDValue>(playout->F4_1), CalculateOffset<float>(playout->F2), SIMD_X);
-    }
-    template <class T>
-    void Js::AsmJsEncoder::OP_Simd128_WithXI4(const unaligned T* playout)
-    {
-        AsmJsJitTemplate::Simd128_SetLane_I4::ApplyTemplate(this, mPc, CalculateOffset<AsmJsSIMDValue>(playout->I4_0), CalculateOffset<AsmJsSIMDValue>(playout->I4_1), CalculateOffset<int>(playout->I2), SIMD_X);
-    }
-    template <class T>
-    void Js::AsmJsEncoder::OP_Simd128_WithXD2(const unaligned T* playout)
-    {
-        AsmJsJitTemplate::Simd128_SetLane_D2::ApplyTemplate(this, mPc, CalculateOffset<AsmJsSIMDValue>(playout->D2_0), CalculateOffset<AsmJsSIMDValue>(playout->D2_1), CalculateOffset<double>(playout->D2), SIMD_X);
-    }
-
-    template <class T>
-    void Js::AsmJsEncoder::OP_Simd128_WithYF4(const unaligned T* playout)
-    {
-        AsmJsJitTemplate::Simd128_SetLane_F4::ApplyTemplate(this, mPc, CalculateOffset<AsmJsSIMDValue>(playout->F4_0), CalculateOffset<AsmJsSIMDValue>(playout->F4_1), CalculateOffset<float>(playout->F2), SIMD_Y);
-    }
-    template <class T>
-    void Js::AsmJsEncoder::OP_Simd128_WithYI4(const unaligned T* playout)
-    {
-        AsmJsJitTemplate::Simd128_SetLane_I4::ApplyTemplate(this, mPc, CalculateOffset<AsmJsSIMDValue>(playout->I4_0), CalculateOffset<AsmJsSIMDValue>(playout->I4_1), CalculateOffset<int>(playout->I2), SIMD_Y);
-    }
-    template <class T>
-    void Js::AsmJsEncoder::OP_Simd128_WithYD2(const unaligned T* playout)
-    {
-        AsmJsJitTemplate::Simd128_SetLane_D2::ApplyTemplate(this, mPc, CalculateOffset<AsmJsSIMDValue>(playout->D2_0), CalculateOffset<AsmJsSIMDValue>(playout->D2_1), CalculateOffset<double>(playout->D2), SIMD_Y);
-    }
-    
-    template <class T>
-    void Js::AsmJsEncoder::OP_Simd128_WithZF4(const unaligned T* playout)
-    {
-        AsmJsJitTemplate::Simd128_SetLane_F4::ApplyTemplate(this, mPc, CalculateOffset<AsmJsSIMDValue>(playout->F4_0), CalculateOffset<AsmJsSIMDValue>(playout->F4_1), CalculateOffset<float>(playout->F2), SIMD_Z);
-    }
-    template <class T>
-    void Js::AsmJsEncoder::OP_Simd128_WithZI4(const unaligned T* playout)
-    {
-        AsmJsJitTemplate::Simd128_SetLane_I4::ApplyTemplate(this, mPc, CalculateOffset<AsmJsSIMDValue>(playout->I4_0), CalculateOffset<AsmJsSIMDValue>(playout->I4_1), CalculateOffset<int>(playout->I2), SIMD_Z);
-    }
-
-    template <class T>
-    void Js::AsmJsEncoder::OP_Simd128_WithWF4(const unaligned T* playout)
-    {
-        AsmJsJitTemplate::Simd128_SetLane_F4::ApplyTemplate(this, mPc, CalculateOffset<AsmJsSIMDValue>(playout->F4_0), CalculateOffset<AsmJsSIMDValue>(playout->F4_1), CalculateOffset<float>(playout->F2), SIMD_W);
-    }
-    template <class T>
-    void Js::AsmJsEncoder::OP_Simd128_WithWI4(const unaligned T* playout)
-    {
-        AsmJsJitTemplate::Simd128_SetLane_I4::ApplyTemplate(this, mPc, CalculateOffset<AsmJsSIMDValue>(playout->I4_0), CalculateOffset<AsmJsSIMDValue>(playout->I4_1), CalculateOffset<int>(playout->I2), SIMD_W);
     }
 
     template <class T> 

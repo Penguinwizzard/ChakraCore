@@ -311,7 +311,7 @@ public:
     IR::Instr*          Simd128LowerUnMappedInstruction(IR::Instr *instr);
     IR::Instr*          Simd128LowerConstructor(IR::Instr *instr);
     IR::Instr*          Simd128LowerLdLane(IR::Instr *instr);
-    IR::Instr*          Simd128LowerStLane(IR::Instr *instr);
+    IR::Instr*          SIMD128LowerReplaceLane(IR::Instr *instr);
     IR::Instr*          Simd128LowerSplat(IR::Instr *instr);
     IR::Instr*          Simd128LowerRcp(IR::Instr *instr, bool removeInstr = true);
     IR::Instr*          Simd128LowerSqrt(IR::Instr *instr);

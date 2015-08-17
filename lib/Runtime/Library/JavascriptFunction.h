@@ -200,9 +200,9 @@ namespace Js
         inline static bool JavascriptFunction::IsBuiltinProperty(Var objectWithProperty, PropertyIds propertyId);
 #endif
         private:
-            int  ResumeForOutOfBoundsAsmJSArrayRefs(int exceptionCode, PEXCEPTION_POINTERS exceptionInfo);
+            int  ResumeForOutOfBoundsArrayRefs(int exceptionCode, PEXCEPTION_POINTERS exceptionInfo);
     };
-    class AsmJSInstructionDecoder
+    class ArrayAccessDecoder
     {
     public:
         struct InstructionData

@@ -64,19 +64,6 @@ Var Js::InterpreterStackFrame::INTERPRETERLOOPNAME()
     // For checked builds this does mean we are incrementing 2 different counters to
     // track the ip.
     const byte* ip = m_reader.GetIP();
-
-    if (!CONFIG_FLAG(ForceSerialized) && !this->m_functionBody->GetUtf8SourceInfo()->GetIsLibraryCode()
-        && m_functionBody->GetByteCode()->GetAllocation() != nullptr)
-    {
-        byte * byteCodeStartAddress = (byte*) m_functionBody->GetByteCode()->GetAllocation()->address;
-        byte * byteCodeEndAddress = byteCodeStartAddress + m_functionBody->GetByteCode()->GetAllocation()->size;
-        if (ip < byteCodeStartAddress || ip >= byteCodeEndAddress)
-        {
-            CustomHeap_BadPageState_fatal_error((ULONG_PTR)this);
-            return null;
-        }
-    }
-
     while (true)
     {
         INTERPRETER_OPCODE op = ReadByteOp<INTERPRETER_OPCODE>(ip);
@@ -91,8 +78,8 @@ Var Js::InterpreterStackFrame::INTERPRETERLOOPNAME()
 #endif
         
 #if DEBUGGING_LOOP
-        if (this->scriptContext->GetThreadContext()->Diagnostics->stepController.IsActive() &&
-            this->scriptContext->GetThreadContext()->Diagnostics->stepController.IsStepComplete_AllowingFalsePositives(this))
+        if (this->scriptContext->GetThreadContext()->GetDebugManager()->stepController.IsActive() &&
+            this->scriptContext->GetThreadContext()->GetDebugManager()->stepController.IsStepComplete_AllowingFalsePositives(this))
         {
             // BrLong is used for branch island, we don't want to break over there, as they don't belong to any statement. Just skip this.
             if (!InterpreterStackFrame::IsBrLong(op, ip) && !this->m_functionBody->GetUtf8SourceInfo()->GetIsLibraryCode())
@@ -113,7 +100,7 @@ Var Js::InterpreterStackFrame::INTERPRETERLOOPNAME()
             }
         }
         // The break opcode will be handled later in the switch block.
-        if (op != OpCode::Break && this->scriptContext->GetThreadContext()->Diagnostics->asyncBreakController.IsBreak())
+        if (op != OpCode::Break && this->scriptContext->GetThreadContext()->GetDebugManager()->asyncBreakController.IsBreak())
         {
             if (!InterpreterStackFrame::IsBrLong(op, ip) && !this->m_functionBody->GetUtf8SourceInfo()->GetIsLibraryCode())
             {
@@ -401,7 +388,7 @@ SWAP_BP_FOR_OPCODE:
                 {
 #if DEBUGGING_LOOP
                     // an inline break statement rather than a probe
-                    if (!this->scriptContext->GetThreadContext()->Diagnostics->stepController.ContinueFromInlineBreakpoint())
+                    if (!this->scriptContext->GetThreadContext()->GetDebugManager()->stepController.ContinueFromInlineBreakpoint())
                     {
                         uint prevOffset = m_reader.GetCurrentOffset();
                         InterpreterHaltState haltState(STOP_INLINEBREAKPOINT, m_functionBody);

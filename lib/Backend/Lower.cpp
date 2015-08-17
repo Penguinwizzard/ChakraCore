@@ -2426,6 +2426,26 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             LowerStFld(instr, IR::HelperOp_InitClassMember, IR::HelperOp_InitClassMember, false);
             break;
 
+        case Js::OpCode::InitClassMemberComputedName:
+            instrPrev = this->LowerStElemI(instr, Js::PropertyOperation_None, false, IR::HelperOp_InitClassMemberComputedName);
+            break;
+
+        case Js::OpCode::InitClassMemberGetComputedName:
+            instrPrev = this->LowerStElemI(instr, Js::PropertyOperation_None, false, IR::HelperOp_InitClassMemberGetComputedName);
+            break;
+
+        case Js::OpCode::InitClassMemberSetComputedName:
+            instrPrev = this->LowerStElemI(instr, Js::PropertyOperation_None, false, IR::HelperOp_InitClassMemberSetComputedName);
+            break;
+
+        case Js::OpCode::InitClassMemberGet:
+            instrPrev = this->LowerStFld(instr, IR::HelperOp_InitClassMemberGet, IR::HelperOp_InitClassMemberGet, false);
+            break;
+
+        case Js::OpCode::InitClassMemberSet:
+            instrPrev = this->LowerStFld(instr, IR::HelperOp_InitClassMemberSet, IR::HelperOp_InitClassMemberSet, false);
+            break;
+
         case Js::OpCode::NewStackFrameDisplay:
             this->LowerLdFrameDisplay(instr, false, m_func->DoStackFrameDisplay());
             break;
@@ -2816,6 +2836,10 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
 
             break;
         }
+
+        case Js::OpCode::AsyncSpawn:
+            this->LowerBinaryHelperMem(instr, IR::HelperAsyncSpawn);
+            break;
 
         default:
 #if defined(SIMD_JS_ENABLED)
@@ -8441,7 +8465,10 @@ Lowerer::LowerStElemI(IR::Instr * instr, Js::PropertyOperationFlags flags, bool 
         helperMethod == IR::HelperOP_InitElemGetter ||
         helperMethod == IR::HelperOP_InitElemSetter ||
         helperMethod == IR::HelperOP_InitComputedProperty ||
-        helperMethod == IR::HelperOp_SetElementI
+        helperMethod == IR::HelperOp_SetElementI ||
+        helperMethod == IR::HelperOp_InitClassMemberComputedName || 
+        helperMethod == IR::HelperOp_InitClassMemberGetComputedName ||
+        helperMethod == IR::HelperOp_InitClassMemberSetComputedName
         );
 
     if (indexOpnd && indexOpnd->GetType() != TyVar)
@@ -11200,7 +11227,8 @@ Lowerer::LowerBailForDebugger(IR::Instr* instr, bool isInsideHelper /* = false *
 
     if (!(bailOutKind & IR::BailOutExplicit))
     {
-        DebuggingFlags* flags = this->GetScriptContext()->GetThreadContext()->GetDebuggingFlags();
+        Js::DebugManager* debugManager = this->GetScriptContext()->GetThreadContext()->GetDebugManager();
+        DebuggingFlags* flags = debugManager->GetDebuggingFlags();
 
         // Check 1 (do we need to bail out?)
         // JXX bailoutLabel
@@ -11275,13 +11303,13 @@ Lowerer::LowerBailForDebugger(IR::Instr* instr, bool isInsideHelper /* = false *
         {
             // TEST STEP_BAILOUT, [&stepController->StepType]
             // BNE BailoutLabel
-            IR::Opnd* opnd1 = IR::MemRefOpnd::New((void*)(m_func->GetScriptContext()->GetThreadContext()->Diagnostics->stepController.GetAddressOfStepType()), TyInt8, m_func);
+            IR::Opnd* opnd1 = IR::MemRefOpnd::New((void*)(debugManager->stepController.GetAddressOfStepType()), TyInt8, m_func);
             IR::Opnd* opnd2 = IR::IntConstOpnd::New(Js::STEP_BAILOUT, TyInt8, this->m_func, /*dontEncode*/ true);
             InsertTestBranch(opnd1, opnd2, Js::OpCode::BrNeq_A, bailOutLabel, continueBranchInstr);
 
             // CMP  STEP_DOCUMENT, [&stepController->StepType]
             // BEQ BailoutDocumentLabel
-            opnd1 = IR::MemRefOpnd::New((void*)(m_func->GetScriptContext()->GetThreadContext()->Diagnostics->stepController.GetAddressOfStepType()), TyInt8, m_func);
+            opnd1 = IR::MemRefOpnd::New((void*)(debugManager->stepController.GetAddressOfStepType()), TyInt8, m_func);
             opnd2 = IR::IntConstOpnd::New(Js::STEP_DOCUMENT, TyInt8, this->m_func, /*dontEncode*/ true);
             InsertCompareBranch(opnd1, opnd2, Js::OpCode::BrEq_A, /*isUnsigned*/ true, bailOutDocumentLabel, continueBranchInstr);
 
@@ -11302,12 +11330,12 @@ Lowerer::LowerBailForDebugger(IR::Instr* instr, bool isInsideHelper /* = false *
             effectiveFrameBaseReg = m_lowererMD.GetRegFramePointer();
 #endif
             IR::Opnd* opnd1 = IR::RegOpnd::New(NULL, effectiveFrameBaseReg, TyMachReg, m_func);
-            IR::Opnd* opnd2 = IR::MemRefOpnd::New(m_func->GetScriptContext()->GetThreadContext()->Diagnostics->stepController.GetAddressOfFrameAddress(), TyMachReg, m_func);
+            IR::Opnd* opnd2 = IR::MemRefOpnd::New(debugManager->stepController.GetAddressOfFrameAddress(), TyMachReg, m_func);
             this->InsertCompareBranch(opnd1, opnd2, Js::OpCode::BrGt_A, /*isUnsigned*/ true, bailOutLabel, continueBranchInstr);
 
             // CMP  STEP_DOCUMENT, [&stepController->StepType]
             // BEQ BailoutDocumentLabel
-            opnd1 = IR::MemRefOpnd::New((void*)(m_func->GetScriptContext()->GetThreadContext()->Diagnostics->stepController.GetAddressOfStepType()), TyInt8, m_func);
+            opnd1 = IR::MemRefOpnd::New((void*)(debugManager->stepController.GetAddressOfStepType()), TyInt8, m_func);
             opnd2 = IR::IntConstOpnd::New(Js::STEP_DOCUMENT, TyInt8, this->m_func, /*dontEncode*/ true);
             InsertCompareBranch(opnd1, opnd2, Js::OpCode::BrEq_A, /*isUnsigned*/ true, bailOutDocumentLabel, continueBranchInstr);
 
@@ -11343,7 +11371,7 @@ Lowerer::LowerBailForDebugger(IR::Instr* instr, bool isInsideHelper /* = false *
             Js::FunctionBody* body = m_func->GetJnFunction();
             IR::Opnd* opnd1 = IR::MemRefOpnd::New(body->GetAddressOfScriptId(), TyInt32, m_func);
 
-            IR::Opnd* opnd2 = IR::MemRefOpnd::New(m_func->GetScriptContext()->GetThreadContext()->Diagnostics->stepController.GetAddressOfScriptIdWhenSet(), TyInt32, m_func);
+            IR::Opnd* opnd2 = IR::MemRefOpnd::New(debugManager->stepController.GetAddressOfScriptIdWhenSet(), TyInt32, m_func);
             IR::RegOpnd* reg1 = IR::RegOpnd::New(TyInt32, m_func);
             InsertMove(reg1, opnd2, bailOutLabel);
 
@@ -13100,7 +13128,6 @@ const VTableValue Lowerer::VtableAddresses[static_cast<ValueType::TSize>(ObjectT
     /* ObjectType::Uint32Array              */ VTableValue::VtableUint32Array,
     /* ObjectType::Float32Array             */ VTableValue::VtableFloat32Array,
     /* ObjectType::Float64Array             */ VTableValue::VtableFloat64Array,
-    /* ObjectType::PixelArray               */ VTableValue::VtableJavascriptPixelArray,
     /* ObjectType::Int8VirtualArray         */ VTableValue::VtableInt8VirtualArray,
     /* ObjectType::Uint8VirtualArray        */ VTableValue::VtableUint8VirtualArray,
     /* ObjectType::Uint8ClampedVirtualArray */ VTableValue::VtableUint8ClampedVirtualArray,
@@ -13142,7 +13169,6 @@ const uint32 Lowerer::OffsetsOfHeadSegment[static_cast<ValueType::TSize>(ObjectT
     /* ObjectType::Uint32Array                */ Js::Uint32Array::GetOffsetOfBuffer(),
     /* ObjectType::Float32Array               */ Js::Float32Array::GetOffsetOfBuffer(),
     /* ObjectType::Float64Array               */ Js::Float64Array::GetOffsetOfBuffer(),
-    /* ObjectType::PixelArray                 */ Js::JavascriptPixelArray::GetOffsetOfBuffer(),
     /* ObjectType::Int8VirtualArray           */ Js::Int8VirtualArray::GetOffsetOfBuffer(),
     /* ObjectType::Uint8VirtualArray          */ Js::Uint8VirtualArray::GetOffsetOfBuffer(),
     /* ObjectType::Uint8ClampedVirtualArray   */ Js::Uint8ClampedVirtualArray::GetOffsetOfBuffer(),
@@ -13183,7 +13209,6 @@ const uint32 Lowerer::OffsetsOfLength[static_cast<ValueType::TSize>(ObjectType::
     /* ObjectType::Uint32Array              */ Js::Uint32Array::GetOffsetOfLength(),
     /* ObjectType::Float32Array             */ Js::Float32Array::GetOffsetOfLength(),
     /* ObjectType::Float64Array             */ Js::Float64Array::GetOffsetOfLength(),
-    /* ObjectType::PixelArray               */ Js::JavascriptPixelArray::GetOffsetOfBufferlength(),
     /* ObjectType::Int8VirtualArray         */ Js::Int8VirtualArray::GetOffsetOfLength(),
     /* ObjectType::Uint8VirtualArray        */ Js::Uint8VirtualArray::GetOffsetOfLength(),
     /* ObjectType::Uint8ClampedVirtualArray */ Js::Uint8ClampedVirtualArray::GetOffsetOfLength(),
@@ -13224,7 +13249,6 @@ const IRType Lowerer::IndirTypes[static_cast<ValueType::TSize>(ObjectType::Count
     /* ObjectType::Uint32Array              */ TyUint32,
     /* ObjectType::Float32Array             */ TyFloat32,
     /* ObjectType::Float64Array             */ TyFloat64,
-    /* ObjectType::PixelArray               */ TyUint8,
     /* ObjectType::Int8VirtualArray         */ TyInt8,
     /* ObjectType::Uint8VirtualArray        */ TyUint8,
     /* ObjectType::Uint8ClampedVirtualArray */ TyUint8,
@@ -13265,7 +13289,6 @@ const BYTE Lowerer::IndirScales[static_cast<ValueType::TSize>(ObjectType::Count)
     /* ObjectType::Uint32Array              */ 2, // log2(sizeof(uint32))
     /* ObjectType::Float32Array             */ 2, // log2(sizeof(float))
     /* ObjectType::Float64Array             */ 3, // log2(sizeof(double))
-    /* ObjectType::PixelArray               */ 0, // log2(sizeof(uint8))
     /* ObjectType::Int8VirtualArray         */ 0, // log2(sizeof(int8))
     /* ObjectType::Uint8VirtualArray        */ 0, // log2(sizeof(uint8))
     /* ObjectType::Uint8ClampedVirtualArray */ 0, // log2(sizeof(uint8))
@@ -14491,14 +14514,7 @@ Lowerer::GenerateFastElemIIntIndexCommon(
             {
                 // (headSegmentLength = [base + offset(length)])
                 int lengthOffset;
-                if (baseValueType.GetObjectType() == ObjectType::PixelArray)
-                {
-                    lengthOffset = Js::JavascriptPixelArray::GetOffsetOfBufferlength();
-                }
-                else
-                {
-                    lengthOffset = Js::Float64Array::GetOffsetOfLength();
-                }
+                lengthOffset = Js::Float64Array::GetOffsetOfLength();
                 headSegmentLengthOpnd = IR::IndirOpnd::New(arrayOpnd, lengthOffset, TyUint32, m_func);
                 autoReuseHeadSegmentLengthOpnd.Initialize(headSegmentLengthOpnd, m_func);
             }
@@ -15019,14 +15035,7 @@ Lowerer::GenerateFastElemIIntIndexCommon(
         {
             //  MOV headSegment, [base + offset(arrayBuffer)]
             int bufferOffset;
-            if (baseValueType.GetObjectType() == ObjectType::PixelArray)
-            {
-                bufferOffset = Js::JavascriptPixelArray::GetOffsetOfBuffer();
-            }
-            else
-            {
-                bufferOffset = Js::Float64Array::GetOffsetOfBuffer();
-            }
+            bufferOffset = Js::Float64Array::GetOffsetOfBuffer();
             indirOpnd = IR::IndirOpnd::New(arrayOpnd, bufferOffset, TyMachPtr, this->m_func);
             headSegmentOpnd = IR::RegOpnd::New(TyMachPtr, this->m_func);
             autoReuseHeadSegmentOpnd.Initialize(headSegmentOpnd, m_func);
@@ -15859,7 +15868,7 @@ Lowerer::GenerateFastStElemI(IR::Instr *& stElem, bool *instrIsInHelperBlockRef)
 
             }
         }
-        else if (objectType == ObjectType::PixelArray || objectType == ObjectType::Uint8ClampedArray || objectType == ObjectType::Uint8ClampedVirtualArray || objectType == ObjectType::Uint8ClampedMixedArray)
+        else if (objectType == ObjectType::Uint8ClampedArray || objectType == ObjectType::Uint8ClampedVirtualArray || objectType == ObjectType::Uint8ClampedMixedArray)
         {
             Assert(indirOpnd->GetType() == TyUint8);
 
@@ -15882,7 +15891,7 @@ Lowerer::GenerateFastStElemI(IR::Instr *& stElem, bool *instrIsInHelperBlockRef)
             IR::Opnd *bitMaskOpnd;
             IRType srcType = regSrc->GetType();
 
-            if (!PHASE_OFF(Js::PixelArrayTypeSpecPhase, this->m_func) && ((srcType == TyFloat64) || (srcType == TyInt32)))
+            if ((srcType == TyFloat64) || (srcType == TyInt32))
             {
                 // if (srcType == TyInt32) {
                 //     TEST regSrc, ~255
@@ -15926,32 +15935,20 @@ Lowerer::GenerateFastStElemI(IR::Instr *& stElem, bool *instrIsInHelperBlockRef)
                 else
                 {
 #ifdef _M_IX86
-                    AssertMsg(AutoSystemInfo::Data.SSE2Available(), "GlobOpt shouldn't have specialized PixelArray StElem to float64 if SSE2 is unavaialable.");
+                    AssertMsg(AutoSystemInfo::Data.SSE2Available(), "GlobOpt shouldn't have specialized Uint8ClampedArray StElem to float64 if SSE2 is unavaialable.");
 #endif
 
                     regOpnd = IR::RegOpnd::New(TyInt32, this->m_func);
                     autoReuseRegOpnd.Initialize(regOpnd, m_func);
 
-                    if (objectType == ObjectType::PixelArray)
-                    {
-                        // CanvasPixelArray always rounds up to the nearest integer on tie.
-                        //
-                        // MOVSD regTmp, regSrc
-                        // ADDSD regTmp, 0.5
-                        // CVTTSD2SI regOpnd, regTmp
-                        LowererMD::InsertConvertFloat64ToInt32(RoundModeTowardInteger, regOpnd, regSrc, stElem);
-                    }
-                    else
-                    {
-                        Assert(objectType == ObjectType::Uint8ClampedArray || objectType == ObjectType::Uint8ClampedVirtualArray || objectType == ObjectType::Uint8ClampedMixedArray);
+                    Assert(objectType == ObjectType::Uint8ClampedArray || objectType == ObjectType::Uint8ClampedVirtualArray || objectType == ObjectType::Uint8ClampedMixedArray);
 
-                        // Uint8ClampedArray follows IEEE 754 rounding rules for ties which round up
-                        // odd integers and round down even integers. Both ties result in the nearest
-                        // even integer value.
-                        //
-                        // CVTSD2SI regOpnd, regSrc
-                        LowererMD::InsertConvertFloat64ToInt32(RoundModeHalfToEven, regOpnd, regSrc, stElem);
-                    }
+                    // Uint8ClampedArray follows IEEE 754 rounding rules for ties which round up
+                    // odd integers and round down even integers. Both ties result in the nearest
+                    // even integer value.
+                    //
+                    // CVTSD2SI regOpnd, regSrc
+                    LowererMD::InsertConvertFloat64ToInt32(RoundModeHalfToEven, regOpnd, regSrc, stElem);
                 }
 
                 IR::LabelInstr *labelStoreValue = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, false);
@@ -16089,8 +16086,6 @@ Lowerer::GenerateFastStElemI(IR::Instr *& stElem, bool *instrIsInHelperBlockRef)
                     stElem);
 #endif
 
-                // JavascriptPixelArray::DirectSetItem(array, index, value);
-                // or
                 // Uint8ClampedArray::DirectSetItem(array, index, value);
 
                 m_lowererMD.LoadHelperArgument(stElem, regSrc);
@@ -16108,15 +16103,8 @@ Lowerer::GenerateFastStElemI(IR::Instr *& stElem, bool *instrIsInHelperBlockRef)
 
                 IR::Instr *instr = IR::Instr::New(Js::OpCode::Call, this->m_func);
 
-                if (objectType == ObjectType::PixelArray)
-                {
-                    instr->SetSrc1(IR::HelperCallOpnd::New(IR::HelperPixelSetItem, this->m_func));
-                }
-                else
-                {
-                    Assert(objectType == ObjectType::Uint8ClampedArray || objectType == ObjectType::Uint8ClampedMixedArray || objectType == ObjectType::Uint8ClampedVirtualArray);
-                    instr->SetSrc1(IR::HelperCallOpnd::New(IR::HelperUint8ClampedArraySetItem, this->m_func));
-                }
+                Assert(objectType == ObjectType::Uint8ClampedArray || objectType == ObjectType::Uint8ClampedMixedArray || objectType == ObjectType::Uint8ClampedVirtualArray);
+                instr->SetSrc1(IR::HelperCallOpnd::New(IR::HelperUint8ClampedArraySetItem, this->m_func));
 
                 stElem->InsertBefore(instr);
                 m_lowererMD.LowerCall(instr, 0);

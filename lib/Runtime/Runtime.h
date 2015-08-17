@@ -73,6 +73,8 @@ namespace Js
     class JavascriptPromise;
     class JavascriptPromiseCapability;
     class JavascriptPromiseReaction;
+    class JavascriptPromiseAsyncSpawnExecutorFunction;
+    class JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction;
     class JavascriptPromiseCapabilitiesExecutorFunction;
     class JavascriptPromiseResolveOrRejectFunction;
     class JavascriptPromiseReactionTaskFunction;
@@ -116,6 +118,8 @@ namespace Js
     class JavascriptSIMDFloat64x2;
     class SIMDInt32x4Lib;
     class JavascriptSIMDInt32x4;
+    class SIMDInt8x16Lib;
+    class JavascriptSIMDInt8x16;
     
 #endif
 
@@ -426,7 +430,7 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Language\DynamicProfileInfo.h"
 #include "Language\ReadOnlyDynamicProfileInfo.h"
 #include "Language\SourceDynamicProfileManager.h"
-#include "Language\SourceContextInfo.h"
+#include "Debug\SourceContextInfo.h"
 #include "Language\DynamicProfileMutator.h"
 #include "Language\InlineCache.h"
 #include "Language\InlineCachePointerArray.h"
@@ -472,10 +476,12 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Library\JavascriptSIMDFloat32x4.h"
 #include "Library\JavascriptSIMDFloat64x2.h"
 #include "Library\JavascriptSIMDInt32x4.h"
+#include "Library\JavascriptSIMDInt8x16.h"
 // SIMD operations
 #include "Library\SIMDFloat32x4Operation.h"
 #include "Library\SIMDFloat64x2Operation.h"
 #include "Library\SIMDInt32x4Operation.h"
+#include "Library\SIMDInt8x16Operation.h"
 #endif
 
 #include "Library\JavascriptTypedNumber.h"
@@ -491,8 +497,6 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Library\TypedArray.h"
 #include "Library\DataView.h"
 #include "Library\TypedArrayEnumerator.h"
-#include "Library\JavascriptPixelArray.h"
-#include "Library\JavascriptPixelArrayEnumerator.h"
 #include "Library\ES5ArrayEnumerator.h"
 #include "Library\ES5ArrayNonIndexEnumerator.h"
 #include "Library\ES5ArrayIndexEnumerator.h"
@@ -524,9 +528,11 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Library\SIMDFloat32x4Lib.h"
 #include "Library\SIMDFloat64x2Lib.h"
 #include "Library\SIMDInt32x4Lib.h"
+#include "Library\SIMDInt8x16Lib.h"
 // SIMD operations
 #include "Library\SIMDFloat32x4Operation.h"
 #include "Library\SIMDInt32x4Operation.h"
+#include "Library\SIMDInt8x16Operation.h"
 #include "Library\SIMDFloat64x2Operation.h"
 #endif
 
@@ -580,9 +586,11 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Language\amd64\stackframe.h"
 #endif
 
-#include "Language\DiagProbe.h"
-#include "Language\ProbeContainer.h"
-#include "Language\DebugContext.h"
+#include "Debug\DebuggingFlags.h"
+#include "Debug\DiagProbe.h"
+#include "Debug\DebugManager.h"
+#include "Debug\ProbeContainer.h"
+#include "Debug\DebugContext.h"
 #include "Library\Entropy.h"
 #include "Language\PropertyRecord.h"
 #include "Library\threadservicewrapper.h"
@@ -619,7 +627,7 @@ enum tagDEBUG_EVENT_INFO_TYPE
 // REVIEW: ChakraCore Dependency
 #include "activdbg_private.h"
 #endif
-#include "Language\diagobjectmodel.h"
+#include "Debug\DiagObjectModel.h"
 #include "Language\ScriptContextProfiler.h"
 #include "Language\ScriptContextOptimizationOverrideInfo.h"
 // REVIEW: ChakraCore Dependency
@@ -653,13 +661,13 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #endif
 
 #include "Language\InterpreterStackFrame.h"
-#include "Language\DiagStackFrame.h"
+#include "Debug\DiagStackFrame.h"
 #include "Language\LeaveScriptObject.h"
 #include "Language\ByteCodeSerializer.h"
 #include "Language\ProfilingHelpers.h"
 
 
-#include "Language\MutationBreakpoint.h"
+#include "Debug\MutationBreakpoint.h"
 
 #ifdef DYNAMIC_PROFILE_STORAGE
 #include "Language\DynamicProfileStorage.h"
@@ -716,7 +724,6 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Library\JavascriptDate.inl"
 #include "Library\JavascriptWinRTDate.inl"
 #include "Language\JavascriptObject.inl"
-#include "Library\JavascriptPixelArray.inl"
 #include "Library\JavascriptMap.inl"
 #include "Library\JavascriptMapIterator.inl"
 #include "Library\JavascriptSet.inl"

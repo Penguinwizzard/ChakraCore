@@ -55,11 +55,10 @@ namespace Js {
             static FunctionInfo Shuffle;
             static FunctionInfo Clamp;
             static FunctionInfo Select;
-            // WithX/Y/Z/W
-            static FunctionInfo WithX;
-            static FunctionInfo WithY;
-            static FunctionInfo WithZ;
-            static FunctionInfo WithW;
+
+			//Lane access
+			static FunctionInfo ExtractLane;
+			static FunctionInfo ReplaceLane;
 
             static FunctionInfo Load;
             static FunctionInfo Load1;
@@ -84,11 +83,11 @@ namespace Js {
         static Var EntryFromFloat64x2Bits(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryFromInt32x4(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryFromInt32x4Bits(RecyclableObject* function, CallInfo callInfo, ...);
-        // WithX/Y/Z/W
-        static Var EntryWithX(RecyclableObject* function, CallInfo callInfo, ...);
-        static Var EntryWithY(RecyclableObject* function, CallInfo callInfo, ...);
-        static Var EntryWithZ(RecyclableObject* function, CallInfo callInfo, ...);
-        static Var EntryWithW(RecyclableObject* function, CallInfo callInfo, ...);
+        
+		// Lane Access
+		static Var EntryExtractLane(RecyclableObject* function, CallInfo callInfo, ...);
+		static Var EntryReplaceLane(RecyclableObject* function, CallInfo callInfo, ...);
+
         // UnaryOps
         static Var EntryAbs(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryNeg(RecyclableObject* function, CallInfo callInfo, ...);

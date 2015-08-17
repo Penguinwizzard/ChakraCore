@@ -888,6 +888,141 @@ namespace Js
         return undefinedVar;
     }
 
+    Var JavascriptPromise::EntryJavascriptPromiseAsyncSpawnExecutorFunction(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+        ARGUMENTS(args, callInfo);
+
+        ScriptContext* scriptContext = function->GetScriptContext();
+        JavascriptLibrary* library = scriptContext->GetLibrary();
+        Var undefinedVar = library->GetUndefined();
+        Var resolve = undefinedVar;
+        Var reject = undefinedVar;
+
+        Assert(args.Info.Count == 3);
+
+        resolve = args[1];
+        reject = args[2];
+
+        Assert(JavascriptPromiseAsyncSpawnExecutorFunction::Is(function));
+        JavascriptPromiseAsyncSpawnExecutorFunction* asyncSpawnExecutorFunction = JavascriptPromiseAsyncSpawnExecutorFunction::FromVar(function);
+        JavascriptGenerator* genF = asyncSpawnExecutorFunction->GetGeneratorFunction();
+        Var self = asyncSpawnExecutorFunction->GetTarget();
+
+        JavascriptGenerator* gen = JavascriptGenerator::FromVar(genF->GetEntryPoint()(genF, CallInfo(CallFlags_Value, 2), undefinedVar, self));
+        JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction* nextFunction = library->CreatePromiseAsyncSpawnStepArgumentExecutorFunction(EntryJavascriptPromiseAsyncSpawnStepNextExecutorFunction, gen, undefinedVar);
+
+        Assert(JavascriptFunction::Is(resolve) && JavascriptFunction::Is(reject));
+        AsyncSpawnStep(nextFunction, gen, JavascriptFunction::FromVar(resolve), JavascriptFunction::FromVar(reject));
+
+        return undefinedVar;
+    }
+
+    Var JavascriptPromise::EntryJavascriptPromiseAsyncSpawnStepNextExecutorFunction(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+
+        JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction* asyncSpawnStepArgumentExecutorFunction = JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction::FromVar(function);
+        Var argument = asyncSpawnStepArgumentExecutorFunction->GetArgument();
+
+        JavascriptFunction* next = JavascriptFunction::FromVar(JavascriptOperators::GetProperty(asyncSpawnStepArgumentExecutorFunction->GetGenerator(), PropertyIds::next, function->GetScriptContext()));
+        return next->GetEntryPoint()(next, CallInfo(CallFlags_Value, 2), asyncSpawnStepArgumentExecutorFunction->GetGenerator(), argument);
+    }
+
+    Var JavascriptPromise::EntryJavascriptPromiseAsyncSpawnStepThrowExecutorFunction(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+
+        JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction* asyncSpawnStepArgumentExecutorFunction = JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction::FromVar(function);
+        JavascriptFunction* throw_ = JavascriptFunction::FromVar(JavascriptOperators::GetProperty(asyncSpawnStepArgumentExecutorFunction->GetGenerator(), PropertyIds::throw_, function->GetScriptContext()));
+        return throw_->GetEntryPoint()(throw_, CallInfo(CallFlags_Value, 2), asyncSpawnStepArgumentExecutorFunction->GetGenerator(), asyncSpawnStepArgumentExecutorFunction->GetArgument());
+    }
+
+    Var JavascriptPromise::EntryJavascriptPromiseAsyncSpawnCallStepExecutorFunction(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+        ARGUMENTS(args, callInfo);
+
+        ScriptContext* scriptContext = function->GetScriptContext();
+        JavascriptLibrary* library = scriptContext->GetLibrary();
+        Var undefinedVar = library->GetUndefined();
+
+        Var argument = undefinedVar;
+
+        if (args.Info.Count > 1)
+        {
+            argument = args[1];
+        }
+
+        JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction* asyncSpawnStepExecutorFunction = JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction::FromVar(function);
+        JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction* functionArg;
+        JavascriptGenerator* gen = asyncSpawnStepExecutorFunction->GetGenerator();
+        JavascriptFunction* reject = asyncSpawnStepExecutorFunction->GetReject();
+        JavascriptFunction* resolve = asyncSpawnStepExecutorFunction->GetResolve();
+
+        if (asyncSpawnStepExecutorFunction->GetIsReject())
+        {
+            functionArg = library->CreatePromiseAsyncSpawnStepArgumentExecutorFunction(EntryJavascriptPromiseAsyncSpawnStepThrowExecutorFunction, gen, argument, NULL, NULL, false);
+        }
+        else
+        {
+            functionArg = library->CreatePromiseAsyncSpawnStepArgumentExecutorFunction(EntryJavascriptPromiseAsyncSpawnStepNextExecutorFunction, gen, argument, NULL, NULL, false);
+        }
+
+        AsyncSpawnStep(functionArg, gen, resolve, reject);
+
+        return undefinedVar;
+    }
+
+    void JavascriptPromise::AsyncSpawnStep(JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction* nextFunction, JavascriptGenerator* gen, JavascriptFunction* resolve, JavascriptFunction* reject)
+    {
+        ScriptContext* scriptContext = resolve->GetScriptContext();
+        JavascriptLibrary* library = scriptContext->GetLibrary();
+        Var undefinedVar = library->GetUndefined();
+
+        JavascriptExceptionObject* e = nullptr;
+        Var value = nullptr;
+        RecyclableObject* next = nullptr;
+        bool done;
+
+        try
+        {
+            next = RecyclableObject::FromVar(nextFunction->GetEntryPoint()(nextFunction, CallInfo(CallFlags_Value, 1), undefinedVar));
+        }
+        catch (JavascriptExceptionObject* ex)
+        {
+            e = ex;
+        }
+
+        if (e != nullptr)
+        {
+            // finished with failure, reject the promise
+            reject->GetEntryPoint()(reject, CallInfo(CallFlags_Value, 2), undefinedVar, e->GetThrownObject(scriptContext));
+            return;
+        }
+
+        Assert(next != nullptr);
+        done = JavascriptConversion::ToBool(JavascriptOperators::GetProperty(next, PropertyIds::done, scriptContext), scriptContext);
+        if (done)
+        {
+            // finished with success, resolve the promise
+            value = JavascriptOperators::GetProperty(next, PropertyIds::value, scriptContext);
+            resolve->GetEntryPoint()(resolve, CallInfo(CallFlags_Value, 2), undefinedVar, value);
+            return;
+        }
+
+        // not finished, chain off the yielded promise and `step` again
+        JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction* successFunction = library->CreatePromiseAsyncSpawnStepArgumentExecutorFunction(EntryJavascriptPromiseAsyncSpawnCallStepExecutorFunction, gen, undefinedVar, resolve, reject);
+        JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction* failFunction = library->CreatePromiseAsyncSpawnStepArgumentExecutorFunction(EntryJavascriptPromiseAsyncSpawnCallStepExecutorFunction, gen, undefinedVar, resolve, reject, true);
+
+        JavascriptFunction* promiseResolve = library->EnsurePromiseResolveFunction();
+        value = JavascriptOperators::GetProperty(next, PropertyIds::value, scriptContext);
+        JavascriptPromise* promise = FromVar(promiseResolve->GetEntryPoint()(promiseResolve, CallInfo(CallFlags_Value, 2), library->GetPromiseConstructor(), value));
+
+        JavascriptFunction* promiseThen = JavascriptFunction::FromVar(JavascriptOperators::GetProperty(promise, PropertyIds::then, scriptContext));
+        promiseThen->GetEntryPoint()(promiseThen, CallInfo(CallFlags_Value, 2), promise, successFunction, failFunction);
+    }
+
     // NewPromiseCapability as described in ES6.0 (draft 29) Section 25.4.1.6
     JavascriptPromiseCapability* JavascriptPromise::NewPromiseCapability(Var constructor, ScriptContext* scriptContext)
     {
@@ -1135,6 +1270,89 @@ namespace Js
     void JavascriptPromiseResolveOrRejectFunction::SetAlreadyResolved(bool is)
     {
         this->isAlreadyResolved = is;
+    }
+
+    JavascriptPromiseAsyncSpawnExecutorFunction::JavascriptPromiseAsyncSpawnExecutorFunction(DynamicType* type, FunctionInfo* functionInfo, JavascriptGenerator* generatorFunction, Var target)
+        : RuntimeFunction(type, functionInfo), generatorFunction(generatorFunction), target(target)
+    { }
+
+    bool JavascriptPromiseAsyncSpawnExecutorFunction::Is(Var var)
+    {
+        if (JavascriptFunction::Is(var))
+        {
+            JavascriptFunction* obj = JavascriptFunction::FromVar(var);
+
+            return VirtualTableInfo<JavascriptPromiseAsyncSpawnExecutorFunction>::HasVirtualTable(obj)
+                || VirtualTableInfo<CrossSiteObject<JavascriptPromiseAsyncSpawnExecutorFunction>>::HasVirtualTable(obj);
+        }
+
+        return false;
+    }
+
+    JavascriptPromiseAsyncSpawnExecutorFunction* JavascriptPromiseAsyncSpawnExecutorFunction::FromVar(Var var)
+    {
+        Assert(JavascriptPromiseAsyncSpawnExecutorFunction::Is(var));
+
+        return static_cast<JavascriptPromiseAsyncSpawnExecutorFunction*>(var);
+    }
+
+    JavascriptGenerator* JavascriptPromiseAsyncSpawnExecutorFunction::GetGeneratorFunction()
+    {
+        return this->generatorFunction;
+    }
+
+    Var JavascriptPromiseAsyncSpawnExecutorFunction::GetTarget()
+    {
+        return this->target;
+    }
+
+    JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction::JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction(DynamicType* type, FunctionInfo* functionInfo, JavascriptGenerator* generator, Var argument, JavascriptFunction* resolve, JavascriptFunction* reject, bool isReject)
+        : RuntimeFunction(type, functionInfo), generator(generator), argument(argument), resolve(resolve), reject(reject), isReject(isReject)
+    { }
+
+    bool JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction::Is(Var var)
+    {
+        if (JavascriptFunction::Is(var))
+        {
+            JavascriptFunction* obj = JavascriptFunction::FromVar(var);
+
+            return VirtualTableInfo<JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction>::HasVirtualTable(obj)
+                || VirtualTableInfo<CrossSiteObject<JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction>>::HasVirtualTable(obj);
+        }
+
+        return false;
+    }
+
+    JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction* JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction::FromVar(Var var)
+    {
+        Assert(JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction::Is(var));
+
+        return static_cast<JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction*>(var);
+    }
+
+    JavascriptGenerator* JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction::GetGenerator()
+    {
+        return this->generator;
+    }
+
+    JavascriptFunction* JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction::GetResolve()
+    {
+        return this->resolve;
+    }
+
+    JavascriptFunction* JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction::GetReject()
+    {
+        return this->reject;
+    }
+
+    bool JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction::GetIsReject()
+    {
+        return this->isReject;
+    }
+
+    Var JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction::GetArgument()
+    {
+        return this->argument;
     }
 
     JavascriptPromiseCapabilitiesExecutorFunction::JavascriptPromiseCapabilitiesExecutorFunction(DynamicType* type, FunctionInfo* functionInfo, JavascriptPromiseCapability* capability)

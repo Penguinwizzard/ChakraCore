@@ -101,10 +101,13 @@ IR::Instr* LowererMD::Simd128LowerUnMappedInstruction(IR::Instr *instr)
     case Js::OpCode::Simd128_DoublesToD2:
         return Simd128LowerConstructor(instr);
 
-    case Js::OpCode::Simd128_LdLane_F4:
-    case Js::OpCode::Simd128_LdLane_I4:
-    case Js::OpCode::Simd128_LdLane_D2:
+    case Js::OpCode::Simd128_ExtractLane_I4:
+    case Js::OpCode::Simd128_ExtractLane_F4:
         return Simd128LowerLdLane(instr);
+
+    case Js::OpCode::Simd128_ReplaceLane_I4:
+    case Js::OpCode::Simd128_ReplaceLane_F4:
+        return SIMD128LowerReplaceLane(instr);  
 
     case Js::OpCode::Simd128_Splat_F4:
     case Js::OpCode::Simd128_Splat_I4:
@@ -127,18 +130,6 @@ IR::Instr* LowererMD::Simd128LowerUnMappedInstruction(IR::Instr *instr)
     case Js::OpCode::Simd128_Select_I4:
     case Js::OpCode::Simd128_Select_D2:
         return Simd128LowerSelect(instr);
-
-    case Js::OpCode::Simd128_WithX_F4:
-    case Js::OpCode::Simd128_WithY_F4:
-    case Js::OpCode::Simd128_WithZ_F4:
-    case Js::OpCode::Simd128_WithW_F4:
-    case Js::OpCode::Simd128_WithX_I4:
-    case Js::OpCode::Simd128_WithY_I4:
-    case Js::OpCode::Simd128_WithZ_I4:
-    case Js::OpCode::Simd128_WithW_I4:
-    case Js::OpCode::Simd128_WithX_D2:
-    case Js::OpCode::Simd128_WithY_D2:
-        return Simd128LowerStLane(instr);
 
     case Js::OpCode::Simd128_Neg_I4:
         return Simd128LowerNegI4(instr);
@@ -348,20 +339,15 @@ IR::Instr* LowererMD::Simd128LowerLdLane(IR::Instr *instr)
 
     switch (instr->m_opcode)
     {
-    case Js::OpCode::Simd128_LdLane_F4:
+    case Js::OpCode::Simd128_ExtractLane_F4:
         laneSize = 4;
         movOpcode = Js::OpCode::MOVSS;
         Assert(laneIndex < 4);
         break;
-    case Js::OpCode::Simd128_LdLane_I4:
+    case Js::OpCode::Simd128_ExtractLane_I4:
         laneSize = 4;
         movOpcode = Js::OpCode::MOVD;
         Assert(laneIndex < 4);
-        break;
-    case Js::OpCode::Simd128_LdLane_D2:
-        laneSize = 8;
-        movOpcode = Js::OpCode::MOVSD;
-        Assert(laneIndex < 2);
         break;
     default:
         Assert(UNREACHED);
@@ -382,125 +368,6 @@ IR::Instr* LowererMD::Simd128LowerLdLane(IR::Instr *instr)
     IR::Instr* prevInstr = instr->m_prev;
     instr->Remove();
 
-    return prevInstr;
-}
-
-IR::Instr* LowererMD::Simd128LowerStLane(IR::Instr *instr)
-{
-    IR::Opnd* dst, *src1, *laneValue;
-    uint32 laneIndex = 0;
-    int width = 0; // in bytes
-    dst = instr->GetDst();
-    src1 = instr->GetSrc1();
-    laneValue = instr->GetSrc2();
-
-    Assert(dst && dst->IsRegOpnd() && dst->GetType() == TySimd128);
-    Assert(src1 && src1->IsRegOpnd() && src1->GetType() == TySimd128);
-    
-    // int32 operands can be const prop'ed. Enregister them.
-    laneValue = laneValue->GetType() == TyInt32 ? EnregisterIntConst(instr, instr->GetSrc2()) : instr->GetSrc2();
-
-    Assert(laneValue && laneValue->IsRegOpnd());
-    
-    switch (instr->m_opcode)
-    {
-    case Js::OpCode::Simd128_WithX_F4:
-    case Js::OpCode::Simd128_WithX_I4:
-        laneIndex = 0;
-        width = TySize[TyInt32];
-        break;
-    case Js::OpCode::Simd128_WithX_D2:
-        laneIndex = 0;
-        width = TySize[TyFloat64];
-        break;
-    case Js::OpCode::Simd128_WithY_F4:
-    case Js::OpCode::Simd128_WithY_I4:
-        laneIndex = 1;
-        width = TySize[TyInt32];
-        break;
-    case Js::OpCode::Simd128_WithY_D2:
-        laneIndex = 1;
-        width = TySize[TyFloat64];
-        break;
-
-    case Js::OpCode::Simd128_WithZ_F4:
-    case Js::OpCode::Simd128_WithZ_I4:
-        laneIndex = 2;
-        width = TySize[TyInt32];
-        break;
-    case Js::OpCode::Simd128_WithW_F4:
-    case Js::OpCode::Simd128_WithW_I4:
-        laneIndex = 3;
-        width = TySize[TyInt32];
-        break;
-    default:
-        Assert(UNREACHED);
-    }
-
-    // MOVAPS dst, src1
-    instr->InsertBefore(IR::Instr::New(Js::OpCode::MOVAPS, dst, src1, m_func));
-    
-    if (width == TySize[TyFloat64])
-    {
-        Assert(laneValue->GetType() == TyFloat64);
-        if (laneIndex == 0)
-        {
-            instr->InsertBefore(IR::Instr::New(Js::OpCode::MOVSD, dst, laneValue, m_func));
-        }
-        else
-        {
-            Assert(laneIndex == 1);
-            IR::RegOpnd *tmp = IR::RegOpnd::New(TySimd128, m_func);
-            instr->InsertBefore(IR::Instr::New(Js::OpCode::MOVHLPS, tmp, dst, m_func));
-            instr->InsertBefore(IR::Instr::New(Js::OpCode::MOVSD, tmp, laneValue, m_func));
-            instr->InsertBefore(IR::Instr::New(Js::OpCode::MOVLHPS, dst, tmp, m_func));
-        }
-    }
-    else
-    {
-        Assert(width == TySize[TyInt32] && (laneValue->GetType() == TyInt32 || laneValue->GetType() == TyFloat32));
-        if (laneValue->GetType() == TyInt32)
-        {
-            // value is in int register, move to xmm
-            IR::RegOpnd *tempReg = IR::RegOpnd::New(TyFloat32, m_func);
-            // MOVD 
-            instr->InsertBefore(IR::Instr::New(Js::OpCode::MOVD, tempReg, laneValue, m_func));
-            laneValue = tempReg;
-        }
-        Assert(laneValue->GetType() == TyFloat32);
-        if (laneIndex == 0)
-        {
-            // MOVSS for both TyFloat32 and TyInt32. MOVD zeroes upper bits.
-            instr->InsertBefore(IR::Instr::New(Js::OpCode::MOVSS, dst, laneValue, m_func));
-        }
-        else if (laneIndex == 2)
-        {
-            IR::RegOpnd *tmp = IR::RegOpnd::New(TySimd128, m_func);
-            instr->InsertBefore(IR::Instr::New(Js::OpCode::MOVHLPS, tmp, dst, m_func));
-            instr->InsertBefore(IR::Instr::New(Js::OpCode::MOVSS, tmp, laneValue, m_func));
-            instr->InsertBefore(IR::Instr::New(Js::OpCode::MOVLHPS, dst, tmp, m_func));
-        }
-        else 
-        {
-            Assert(laneIndex == 1 || laneIndex == 3);
-            
-            uint8 shufMask = 0xE4; // 11 10 01 00
-            shufMask |= laneIndex; // 11 10 01 id
-            shufMask &= ~(0x03 << (laneIndex << 1)); // set 2 bits corresponding to lane index to 00
-
-            // SHUFPS dst, dst, shufMask
-            instr->InsertBefore(IR::Instr::New(Js::OpCode::SHUFPS, dst, dst, IR::IntConstOpnd::New(shufMask, TyInt8, m_func, true), m_func));
-
-            // MOVSS dst, value
-            instr->InsertBefore(IR::Instr::New(Js::OpCode::MOVSS, dst, laneValue, m_func));
-
-            // SHUFPS dst, dst, shufMask
-            instr->InsertBefore(IR::Instr::New(Js::OpCode::SHUFPS, dst, dst, IR::IntConstOpnd::New(shufMask, TyInt8, m_func, true), m_func));
-        }
-    }
-    
-    IR::Instr* prevInstr = instr->m_prev;
-    instr->Remove();
     return prevInstr;
 }
 
@@ -757,6 +624,80 @@ IR::Instr* LowererMD::Simd128LowerMulI4(IR::Instr *instr)
     pInstr = instr->m_prev;
     instr->Remove();
     return pInstr;
+}
+
+IR::Instr* LowererMD::SIMD128LowerReplaceLane(IR::Instr* instr)
+{
+    SList<IR::Opnd*> *args = Simd128GetExtendedArgs(instr);
+
+    int lane = 0, byteWidth = 0;
+
+    IR::Opnd *dst  = args->Pop();
+    IR::Opnd *src1 = args->Pop();
+    IR::Opnd *src2 = args->Pop();
+    IR::Opnd *src3 = args->Pop();
+   
+    Assert(dst->GetType() == TySimd128 && src1->GetType() == TySimd128);
+    lane = src2->AsIntConstOpnd()->m_value;  
+
+    IR::Opnd* laneValue = EnregisterIntConst(instr, src3);
+    
+    switch (instr->m_opcode)
+    {
+    case Js::OpCode::Simd128_ReplaceLane_I4:
+        byteWidth = TySize[TyInt32];
+        break;
+    case Js::OpCode::Simd128_ReplaceLane_F4:
+        byteWidth = TySize[TyFloat32];
+        break;
+    default:
+        Assert(UNREACHED);
+    }
+
+    // MOVAPS dst, src1
+    instr->InsertBefore(IR::Instr::New(Js::OpCode::MOVAPS, dst, src1, m_func));
+    if (byteWidth == TySize[TyFloat32])
+    {
+        if (laneValue->GetType() == TyInt32)
+        {
+            IR::RegOpnd *tempReg = IR::RegOpnd::New(TyFloat32, m_func); //mov intval to xmm
+            //MOVD
+            instr->InsertBefore(IR::Instr::New(Js::OpCode::MOVD, tempReg, laneValue, m_func));
+            laneValue = tempReg;
+        }
+        Assert(laneValue->GetType() == TyFloat32);
+        if (lane == 0)
+        {
+            // MOVSS for both TyFloat32 and TyInt32. MOVD zeroes upper bits.
+            instr->InsertBefore(IR::Instr::New(Js::OpCode::MOVSS, dst, laneValue, m_func));
+        }
+        else if (lane == 2)
+        {
+            IR::RegOpnd *tmp = IR::RegOpnd::New(TySimd128, m_func);
+            instr->InsertBefore(IR::Instr::New(Js::OpCode::MOVHLPS, tmp, dst, m_func));
+            instr->InsertBefore(IR::Instr::New(Js::OpCode::MOVSS, tmp, laneValue, m_func));
+            instr->InsertBefore(IR::Instr::New(Js::OpCode::MOVLHPS, dst, tmp, m_func));
+        }
+        else
+        {
+            Assert(lane == 1 || lane == 3);
+            uint8 shufMask = 0xE4; // 11 10 01 00
+            shufMask |= lane;      // 11 10 01 id
+            shufMask &= ~(0x03 << (lane << 1)); // set 2 bits corresponding to lane index to 00
+
+            // SHUFPS dst, dst, shufMask
+            instr->InsertBefore(IR::Instr::New(Js::OpCode::SHUFPS, dst, dst, IR::IntConstOpnd::New(shufMask, TyInt8, m_func, true), m_func));
+
+            // MOVSS dst, value
+            instr->InsertBefore(IR::Instr::New(Js::OpCode::MOVSS, dst, laneValue, m_func));
+
+            // SHUFPS dst, dst, shufMask
+            instr->InsertBefore(IR::Instr::New(Js::OpCode::SHUFPS, dst, dst, IR::IntConstOpnd::New(shufMask, TyInt8, m_func, true), m_func));
+        }
+    }
+    IR::Instr* prevInstr = instr->m_prev;
+    instr->Remove();
+    return prevInstr;
 }
 
 IR::Instr* LowererMD::Simd128LowerShuffle(IR::Instr* instr)

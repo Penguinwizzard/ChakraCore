@@ -26,6 +26,11 @@ BOOL MayHaveSideEffectOnNode(ParseNode *pnode, ParseNode *pnodeSE)
 {
     // Try to determine whether pnodeSE may kill the named var represented by pnode.
 
+    if (pnode->nop == knopComputedName)
+    {
+        pnode = pnode->sxUni.pnode1;
+    }
+
     if (pnode->nop != knopName)
     {
         // Only investigating named vars here.
@@ -2066,7 +2071,11 @@ void ByteCodeGenerator::EmitScopeSlotLoadThis(FuncInfo *funcInfo, Js::RegSlot re
 
             EmitInternalScopedSlotLoad(funcInfo, slot, regLoc, chkUndecl);
         }
-        else if (!nonLambdaFunc->IsThisInitialized() && chkUndecl)
+        else if (funcInfo->thisPointerRegister != Js::Constants::NoRegister && chkUndecl)
+        {
+            this->m_writer.Reg1(Js::OpCode::ChkUndecl, funcInfo->thisPointerRegister);
+        }
+        else if (chkUndecl)
         {
             // If we don't have a scope slot for 'this' we know that super could not have 
             // been called inside a lambda so we can check the flag to see if we called 
@@ -2109,8 +2118,6 @@ void ByteCodeGenerator::EmitPostSuperCall(FuncInfo *funcInfo, ParseNode* pnode)
 
         funcInfo->AcquireLoc(pnode);
         this->Writer()->Reg2(Js::OpCode::StrictLdThis, funcInfo->thisPointerRegister, pnode->location);
-
-        nonLambdaFunc->SetThisInitialized();
 
         // We already assigned the result of super() to the 'this' register but we need to store it in the scope slot, too. If there is one.
         if (nonLambdaFunc->thisScopeSlot != Js::Constants::NoRegister)
@@ -4831,13 +4838,21 @@ void SaveOpndValue(ParseNode *pnode, FuncInfo *funcInfo)
 {
     // Save a local name to a register other than its home location.
     // This guards against side-effects in cases like x.foo(x = bar()).
-    if (pnode->nop != knopName)
+    Symbol *sym = nullptr;
+    if (pnode->nop == knopName)
     {
-        return;
+        sym = pnode->sxPid.sym;
+    }
+    else if (pnode->nop == knopComputedName)
+    {
+        ParseNode *pnode1 = pnode->sxUni.pnode1;
+        if (pnode1->nop == knopName)
+        {
+            sym = pnode1->sxPid.sym;
+        }
     }
 
-    Symbol *sym = pnode->sxPid.sym;
-    if (sym == null)
+    if (sym == nullptr)
     {
         return;
     }
@@ -6579,38 +6594,51 @@ void EmitInvoke(
 }
 
 
-void EmitMemberNode(ParseNode *memberNode, Js::RegSlot objectLocation, ByteCodeGenerator *byteCodeGenerator, FuncInfo *funcInfo, ParseNode* parentNode, bool useStore = false) {
+void EmitMemberNode(ParseNode *memberNode, Js::RegSlot objectLocation, ByteCodeGenerator *byteCodeGenerator, FuncInfo *funcInfo, ParseNode* parentNode, bool useStore, bool* isObjectEmpty = nullptr) {
     ParseNode *nameNode=memberNode->sxBin.pnode1;
     ParseNode *exprNode=memberNode->sxBin.pnode2;
 
     bool isClassMember = exprNode->nop == knopFncDecl && exprNode->sxFnc.IsClassMember();
 
+    // Moved SetComputedNameVar before LdFld of prototype b\c loading the prototype undeferres the function TypeHanlder
+    // which makes this bytecode too late to influence the function.name
     if (nameNode->nop == knopComputedName)
     {
         // Computed property name
-        Emit(nameNode, byteCodeGenerator, funcInfo, false);
-        Emit(exprNode, byteCodeGenerator, funcInfo, false);
-        if (memberNode->nop == knopGetMember)
-        {
-            byteCodeGenerator->Writer()->Element(
-                Js::OpCode::InitGetElemI, exprNode->location, objectLocation, nameNode->location, true);
-        }
-        else if (memberNode->nop == knopSetMember)
-        {
-            byteCodeGenerator->Writer()->Element(
-                Js::OpCode::InitSetElemI, exprNode->location, objectLocation, nameNode->location, true);
-        }
-        else
-        {
-            Assert(memberNode->nop == knopMember);
-            byteCodeGenerator->Writer()->Element(
-                Js::OpCode::InitComputedProperty,
-                exprNode->location, objectLocation, nameNode->location, true);
-        }
-        if (exprNode->nop == knopFncDecl && (exprNode->sxFnc.pnodeName == nullptr || exprNode->sxFnc.pnodeName->nop != knopVarDecl))
+        // Transparently pass the name expr
+        // The Emit will replace this with a temp register if necessary to preserve the value.
+        nameNode->location = nameNode->sxUni.pnode1->location;
+        EmitBinaryOpnds(nameNode, exprNode, byteCodeGenerator, funcInfo);
+
+        if ((exprNode->nop == knopFncDecl && (exprNode->sxFnc.pnodeName == nullptr || exprNode->sxFnc.pnodeName->nop != knopVarDecl))
+            || (exprNode->nop == knopClassDecl && (exprNode->sxClass.pnodeConstructor == nullptr || exprNode->sxClass.pnodeConstructor->nop != knopVarDecl))
+           )
         {
             byteCodeGenerator->Writer()->Reg2(Js::OpCode::SetComputedNameVar, exprNode->location, nameNode->location);
         }
+    }
+
+    // classes allocates a RegSlot as part of Instance Methods EmitClassInitializers, 
+    // but if we don't have any members then we don't need to load the prototype
+    Assert(isClassMember == (isObjectEmpty != nullptr));
+    if (isClassMember && *isObjectEmpty)
+    {
+        *isObjectEmpty = false;
+        int cacheId = funcInfo->FindOrAddInlineCacheId(parentNode->location, Js::PropertyIds::prototype, false, false);
+        byteCodeGenerator->Writer()->PatchableProperty(Js::OpCode::LdFld, objectLocation, parentNode->location, cacheId);
+    }
+
+    if (nameNode->nop == knopComputedName)
+    {
+        Assert(memberNode->nop == knopGetMember || memberNode->nop == knopSetMember || memberNode->nop == knopMember);
+
+        Js::OpCode setOp = memberNode->nop == knopGetMember ?
+            (isClassMember ? Js::OpCode::InitClassMemberGetComputedName : Js::OpCode::InitGetElemI) :
+            memberNode->nop == knopSetMember ?
+            (isClassMember ? Js::OpCode::InitClassMemberSetComputedName : Js::OpCode::InitSetElemI) :
+            (isClassMember ? Js::OpCode::InitClassMemberComputedName : Js::OpCode::InitComputedProperty);
+
+        byteCodeGenerator->Writer()->Element(setOp, exprNode->location, objectLocation, nameNode->location, true);
 
         // Class members need a reference back to the class.
         if (isClassMember)
@@ -6672,15 +6700,15 @@ void EmitMemberNode(ParseNode *memberNode, Js::RegSlot objectLocation, ByteCodeG
             byteCodeGenerator->Writer()->PatchableProperty(patchablePropertyOpCode, exprNode->location, objectLocation, cacheId);
         }
     }
-    else if (memberNode->nop == knopGetMember)
+    else 
     {
-        byteCodeGenerator->Writer()->Property(Js::OpCode::InitGetFld,exprNode->location,objectLocation,
-            funcInfo->FindOrAddReferencedPropertyId(propertyId));
-    }
-    else // if (memberNode->nop == knopSetMember)
-    {
-        byteCodeGenerator->Writer()->Property(Js::OpCode::InitSetFld,exprNode->location,objectLocation,
-            funcInfo->FindOrAddReferencedPropertyId(propertyId));
+        Assert(memberNode->nop == knopGetMember || memberNode->nop == knopSetMember);
+
+        Js::OpCode setOp = memberNode->nop == knopGetMember ?
+            (isClassMember ? Js::OpCode::InitClassMemberGet : Js::OpCode::InitGetFld) :
+            (isClassMember ? Js::OpCode::InitClassMemberSet : Js::OpCode::InitSetFld);
+
+        byteCodeGenerator->Writer()->Property(setOp, exprNode->location, objectLocation, funcInfo->FindOrAddReferencedPropertyId(propertyId));
     }
 
     // Class members need a reference back to the class.
@@ -6701,17 +6729,17 @@ void EmitMemberNode(ParseNode *memberNode, Js::RegSlot objectLocation, ByteCodeG
     }
 }
 
-void EmitClassInitializers(ParseNode *memberList, Js::RegSlot objectLocation, ByteCodeGenerator *byteCodeGenerator, FuncInfo *funcInfo, ParseNode* parentNode)
+void EmitClassInitializers(ParseNode *memberList, Js::RegSlot objectLocation, ByteCodeGenerator *byteCodeGenerator, FuncInfo *funcInfo, ParseNode* parentNode, bool isObjectEmpty)
 {
     if (memberList != NULL)
     {
         while (memberList->nop == knopList)
         {
             ParseNode *memberNode = memberList->sxBin.pnode1;
-            EmitMemberNode(memberNode, objectLocation, byteCodeGenerator, funcInfo, parentNode);
+            EmitMemberNode(memberNode, objectLocation, byteCodeGenerator, funcInfo, parentNode, /*useStore*/ false, &isObjectEmpty);
             memberList = memberList->sxBin.pnode2;
         }
-        EmitMemberNode(memberList, objectLocation, byteCodeGenerator, funcInfo, parentNode);
+        EmitMemberNode(memberList, objectLocation, byteCodeGenerator, funcInfo, parentNode, /*useStore*/ false, &isObjectEmpty);
     }
 }
 
@@ -8484,19 +8512,24 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         EmitArrayLiteral(pnode,byteCodeGenerator,funcInfo);
         break;
         //PTNODE(knopObject     , "obj cnst"    ,None    ,Uni  ,fnopUni)
-    case knopObject: {
+    case knopObject:
         funcInfo->AcquireLoc(pnode);
         EmitObjectInitializers(pnode->sxUni.pnode1,pnode->location,byteCodeGenerator,funcInfo);
         break;
         //PTNODE(knopComputedName, "[name]"      ,None    ,Uni  ,fnopUni)
     case knopComputedName:
+        Emit(pnode->sxUni.pnode1, byteCodeGenerator, funcInfo, false);
+        if (pnode->location == Js::Constants::NoRegister)
         {
-            Emit(pnode->sxUni.pnode1, byteCodeGenerator, funcInfo, false);
-            // Transparently pass the name expr
+            // The name is some expression with no home location. We can just re-use the register.
             pnode->location = pnode->sxUni.pnode1->location;
-            break;
         }
-                     }
+        else if (pnode->location != pnode->sxUni.pnode1->location)
+        {
+            // The name had to be protected from side-effects of the RHS.
+            byteCodeGenerator->Writer()->Reg2(Js::OpCode::Ld_A, pnode->location, pnode->sxUni.pnode1->location);
+        }
+        break;
                      // Binary and Ternary Operators
     case knopAdd:
         EmitAdd(pnode, byteCodeGenerator, funcInfo);
@@ -9128,15 +9161,11 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
             }
 
             // Static Methods
-            EmitClassInitializers(pnode->sxClass.pnodeStaticMembers, pnode->location, byteCodeGenerator, funcInfo, pnode);
+            EmitClassInitializers(pnode->sxClass.pnodeStaticMembers, pnode->location, byteCodeGenerator, funcInfo, pnode, /*isObjectEmpty*/ false);
 
             // Instance Methods
-            Js::RegSlot protoLoc = funcInfo->AcquireTmpRegister();
-            int cacheId = funcInfo->FindOrAddInlineCacheId(pnode->location, Js::PropertyIds::prototype, false, false);
-            byteCodeGenerator->Writer()->PatchableProperty(Js::OpCode::LdFld, protoLoc, pnode->location, cacheId);
-
-            EmitClassInitializers(pnode->sxClass.pnodeMembers, protoLoc, byteCodeGenerator, funcInfo, pnode);
-
+            Js::RegSlot protoLoc = funcInfo->AcquireTmpRegister(); //register set if we have Instance Methods
+            EmitClassInitializers(pnode->sxClass.pnodeMembers, protoLoc, byteCodeGenerator, funcInfo, pnode, /*isObjectEmpty*/ true);
             funcInfo->ReleaseTmpRegister(protoLoc);
 
             // Emit name binding.
@@ -9801,6 +9830,7 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         EmitYield(funcInfo->undefinedConstantRegister, pnode->location, byteCodeGenerator, funcInfo);
         byteCodeGenerator->EndStatement(pnode);
         break;
+    case knopAwait:
     case knopYield:
         byteCodeGenerator->StartStatement(pnode);
         funcInfo->AcquireLoc(pnode);
@@ -9814,10 +9844,8 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         EmitYieldStar(pnode, byteCodeGenerator, funcInfo);
         byteCodeGenerator->EndStatement(pnode);
         break;
-    case knopAwait:
-        Emit(pnode->sxUni.pnode1, byteCodeGenerator, funcInfo, false);
-        funcInfo->ReleaseLoc(pnode->sxUni.pnode1);
-        byteCodeGenerator->Writer()->Reg1(Js::OpCode::LdUndef, funcInfo->AcquireLoc(pnode));
+    case knopAsyncSpawn:
+        EmitBinary(Js::OpCode::AsyncSpawn, pnode, byteCodeGenerator, funcInfo);
         break;
     default:
         AssertMsg(0, "emit unhandled pnode op");

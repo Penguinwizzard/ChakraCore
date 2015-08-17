@@ -89,7 +89,7 @@ namespace Js
             inline size_t GetCurrentOffset() const { return currentOffset; }
             inline DataChunk * GetCurrentChunk() const { return &(*current); }
             void SetCurrent(size_t offset, DataChunk* currChunk);
-            void Copy(Recycler * alloc, ByteBlock ** finalBlock, ScriptContext * scriptContext);
+            void Copy(Recycler* alloc, ByteBlock ** finalBlock);
             size_t Encode(OpCode op, ByteCodeWriter* writer)
             {
                 return EncodeT<Js::SmallLayout>(op, writer);

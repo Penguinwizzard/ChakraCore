@@ -1596,7 +1596,6 @@ STDAPI_(JsErrorCode) JsSetIndexedPropertiesToExternalData(
         if (!Js::DynamicType::Is(typeId)
             || Js::DynamicObject::IsAnyArrayTypeId(typeId)
             || (typeId >= Js::TypeIds_TypedArrayMin && typeId <= Js::TypeIds_TypedArrayMax)
-            || typeId == Js::TypeIds_PixelArray
             || typeId == Js::TypeIds_ArrayBuffer
             || typeId == Js::TypeIds_DataView
             || Js::RecyclableObject::FromVar(object)->IsExternal()

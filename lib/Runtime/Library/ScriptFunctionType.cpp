@@ -31,8 +31,8 @@ namespace Js
             address,
             proxy->GetDefaultEntryPointInfo(),
             proxy->IsLambda() ?
-                library->GetDeferredUserDefinedFunctionWithoutPrototypeTypeHandler() :
-                JavascriptLibrary::GetDeferredUserDefinedFunctionWithPrototypeTypeHandler(scriptContext),
+                library->GetDeferredFunctionTypeHandler() :
+                JavascriptLibrary::GetDeferredPrototypeFunctionTypeHandler(scriptContext),
             isShared, isShared);
     }
 };

@@ -28,13 +28,14 @@
 
 #define BUFFER_SIZE 1024
 #define MAXQUEUE    10000
-#define ARRAYLEN(x) (sizeof(x) / sizeof((x)[0]))
 
 extern void assert(char *file, int line);
 #define ASSERT(ex) ((ex) ? (void)0 : assert(__FILE__, __LINE__))
 #define ASSERTNR ASSERT
 #define UNREACHED FALSE
 
+#define ARRAYLEN(x) (sizeof(x) / sizeof((x)[0]))
+#define REMAININGARRAYLEN(a, p) (ASSERT(a <= p && p <= a + ARRAYLEN(a)), ((sizeof(a) - (p - a)) / sizeof((a)[0])))
 
 // Target machines
 
@@ -718,7 +719,7 @@ class CThreadInfo
 
         ~TmpFileList()
         {
-            delete[] _fullPath;
+            delete [] _fullPath;
         }
     };
 
@@ -747,10 +748,11 @@ public:
 
     void SetCurrentTest(char* dir, char* test, bool isBaseline);
 
-    void GetCurrentTest(char* currentTest)
+    template <size_t bufSize>
+    void GetCurrentTest(char (&currentTest)[bufSize])
     {
         EnterCriticalSection(&_cs);
-        strcpy(currentTest, _currentTest);
+        strcpy_s(currentTest, _currentTest);
         LeaveCriticalSection(&_cs);
     }
 
@@ -936,6 +938,8 @@ GetTestInfoFromNode
    Xml::Node * node,
    TestInfo *  testInfo
 );
+
+extern char * getenv_unsafe(const char *);
 
 // rlregr.cpp
 

@@ -6,21 +6,6 @@
 #include "BackEndAPI.h"
 #include "ThreadBoundThreadContextManager.h"
 
-//Control Flow Guard - Related Structs and APIs
-#ifdef _CONTROL_FLOW_GUARD
-struct PROCESS_CONTROL_FLOW_GUARD_POLICY_MITIGATION {
-    union {
-        DWORD Flags;
-        struct CFGBits{
-            DWORD EnableControlFlowGuard : 1;
-            DWORD ReservedFlags : 31;
-        } CFGFlagBits;
-    };
-};
-
-#define ProcessControlFlowGuardPolicy ProcessReserved1Policy
-#endif
-
 int TotalNumberOfBuiltInProperties = Js::PropertyIds::_countJSOnlyProperty;
      
 /*
@@ -91,7 +76,6 @@ ThreadContext::ThreadContext(AllocationPolicyManager * allocationPolicyManager, 
     threadService(threadServiceCallback),
     isOptimizedForManyInstances(Js::Configuration::Global.flags.OptimizeForManyInstances),
     bgJit(Js::Configuration::Global.flags.BgJit),
-    diagnosticPageAllocator(allocationPolicyManager, Js::Configuration::Global.flags, PageAllocatorType_Diag, 0),
     pageAllocator(allocationPolicyManager, PageAllocatorType_Thread, Js::Configuration::Global.flags, 0, PageAllocator::DefaultMaxFreePageCount,
         false, &backgroundPageQueue),
     recycler(nullptr),
@@ -114,14 +98,10 @@ ThreadContext::ThreadContext(AllocationPolicyManager * allocationPolicyManager, 
     temporaryArenaAllocatorCount(0),
     temporaryGuestArenaAllocatorCount(0),
     crefSContextForDiag(0),
-    Diagnostics(nullptr),
     scriptContextList(nullptr),
 #if DBG_DUMP || defined(PROFILE_EXEC)
     topLevelScriptSite(nullptr),
 #endif
-    nEvalCode(0),
-    nAnonymousCode(0),
-    nJScriptBlock(0),
     polymorphicCacheState(0),
     stackProbeCount(0),
 #ifdef BAILOUT_INJECTION
@@ -161,19 +141,14 @@ ThreadContext::ThreadContext(AllocationPolicyManager * allocationPolicyManager, 
     isProfilingUserCode(true),
     loopDepth(0),    
     maxGlobalFunctionExecTime(0.0),
-    isDebuggerAttaching(false),
-    isAllJITCodeInPreReservedRegion(true)
-    , activityId(GUID_NULL)
-    , tridentLoadAddress(nullptr)
+    isAllJITCodeInPreReservedRegion(true),
+    activityId(GUID_NULL),
+    tridentLoadAddress(nullptr),
+    debugManager(nullptr)
 #ifdef ENABLE_DIRECTCALL_TELEMETRY
     , directCallTelemetry(this)
 #endif
 {
-#if DBG
-    // diagnostic page allocator may be used in multiple thread, but it's usage is synchronized.
-    diagnosticPageAllocator.SetDisableThreadAccessCheck();
-#endif
-
     pendingProjectionContextCloseList = JsUtil::List<IProjectionContext*, ArenaAllocator>::New(GetThreadAlloc());
     hostScriptContextStack = Anew(GetThreadAlloc(), JsUtil::Stack<HostScriptContext*>, GetThreadAlloc());
 
@@ -190,8 +165,7 @@ ThreadContext::ThreadContext(AllocationPolicyManager * allocationPolicyManager, 
 #endif
 #if DBG_DUMP
     scriptSiteCount = 0;
-    pageAllocator.debugName = L"Thread";    
-    diagnosticPageAllocator.debugName = L"Diagnostic";
+    pageAllocator.debugName = L"Thread";
 #endif
 #ifdef TEST_LOG
     if(Js::Configuration::Global.flags.IsEnabled(Js::HostLoggingFlag))
@@ -324,7 +298,12 @@ ThreadContext::~ThreadContext()
     // Allocating memory during the shutdown codepath is not preferred
     // so we'll close the page allocator before we release the GC
     // If any dispose is allocating memory during shutdown, that is a bug
-    diagnosticPageAllocator.Close();
+    if (this->debugManager != nullptr)
+    {
+        this->debugManager->Close();
+        HeapDelete(this->debugManager);
+        this->debugManager = nullptr;
+    }
     pageAllocator.Close();
 
     // The recycler need to delete before the background code gen thread
@@ -358,6 +337,12 @@ ThreadContext::~ThreadContext()
             this->recyclableData->symbolRegistrationMap = nullptr;
         }
 
+        if (this->recyclableData->returnedValueList != nullptr)
+        {
+            this->recyclableData->returnedValueList->Clear();
+            this->recyclableData->returnedValueList = nullptr;
+        }
+
         if (this->propertyMap != nullptr)
         {
             HeapDelete(this->propertyMap);
@@ -367,7 +352,7 @@ ThreadContext::~ThreadContext()
         // Unpin the memory for leak report so we don't report this as a leak.
         recyclableData.Unroot(recycler);
 
-#if defined(LEAK_REPORT) || defined(CHECK_MEMORY_LEAK)     
+#if defined(LEAK_REPORT) || defined(CHECK_MEMORY_LEAK)
         for (Js::ScriptContext *scriptContext = scriptContextList; scriptContext; scriptContext = scriptContext->next)
         {
             scriptContext->ClearSourceContextInfoMaps();
@@ -379,7 +364,7 @@ ThreadContext::~ThreadContext()
         // and force close on it  
         if (this->rootTrackerScriptContext != nullptr)
         {             
-            this->rootTrackerScriptContext->Close(false);            
+            this->rootTrackerScriptContext->Close(false);
         }      
 #endif
 #endif
@@ -1858,22 +1843,21 @@ ThreadContext::CanBeFalsy(Js::TypeId typeId)
     return typeId == this->wellKnownHostTypeHTMLAllCollectionTypeId;
 }
 
-
-void ThreadContext::EnsureAndAddToDiagnostic()
+void ThreadContext::EnsureDebugManager()
 {
-    if (!Diagnostics)
+    if (this->debugManager == nullptr)
     {
-        Diagnostics = HeapNew(Js::ProbeManager, this);
+        this->debugManager = HeapNew(Js::DebugManager, this, this->GetAllocationPolicyManager());
     }
-
     InterlockedIncrement(&crefSContextForDiag);
+    Assert(this->debugManager != nullptr);
 }
 
-void ThreadContext::ReleaseScriptContextFromDiagnostic()
+void ThreadContext::ReleaseDebugManager()
 {
     Assert(crefSContextForDiag > 0);
 
-   long lref = InterlockedDecrement(&crefSContextForDiag);
+    long lref = InterlockedDecrement(&crefSContextForDiag);
 
     if (lref == 0)
     {
@@ -1881,10 +1865,13 @@ void ThreadContext::ReleaseScriptContextFromDiagnostic()
         {
             this->recyclableData->returnedValueList = nullptr;
         }
-        HeapDelete(Diagnostics);
-        Diagnostics = null;
+        this->debugManager->Close();
+        HeapDelete(this->debugManager);
+        this->debugManager = nullptr;
     }
 }
+
+
 
 Js::TempArenaAllocatorObject *
 ThreadContext::GetTemporaryAllocator(LPCWSTR name)
@@ -2284,7 +2271,7 @@ ThreadContext::InExpirableCollectMode()
     return (expirableObjectList != null && 
             numExpirableObjects > 0 && 
             expirableCollectModeGcCount >= 0 &&
-            !isDebuggerAttaching);
+            !this->GetDebugManager()->IsDebuggerAttaching());
 }
 
 void
@@ -3854,14 +3841,14 @@ Js::DelayLoadWinRtFoundation* ThreadContext::GetWinRtFoundationLibrary()
 bool ThreadContext::IsCFGEnabled()
 {
 #if defined(_CONTROL_FLOW_GUARD)
-    PROCESS_CONTROL_FLOW_GUARD_POLICY_MITIGATION CfgPolicy;
+    PROCESS_MITIGATION_CONTROL_FLOW_GUARD_POLICY CfgPolicy;
     BOOL isGetMitigationPolicySucceeded = GetWinCoreProcessThreads()->GetMitigationPolicyForProcess(
         GetCurrentProcess(),
-        (PROCESS_MITIGATION_POLICY) ProcessControlFlowGuardPolicy,
+        ProcessControlFlowGuardPolicy,
         &CfgPolicy,
         sizeof(CfgPolicy));
     Assert(isGetMitigationPolicySucceeded || !AutoSystemInfo::Data.IsCFGEnabled());
-    return CfgPolicy.CFGFlagBits.EnableControlFlowGuard && AutoSystemInfo::Data.IsCFGEnabled();
+    return CfgPolicy.EnableControlFlowGuard && AutoSystemInfo::Data.IsCFGEnabled();
 #else
     return false;
 #endif
@@ -3995,83 +3982,6 @@ ThreadContext::ClearRootTrackerScriptContext(Js::ScriptContext * scriptContext)
     this->rootTrackerScriptContext = null;
 }
 #endif
-
-DebuggingFlags* ThreadContext::GetDebuggingFlags()
-{
-    return &this->debuggingFlags;
-}
-
-//static 
-DebuggingFlags::DebuggingFlags() : 
-    m_forceInterpreter(false), 
-    m_isIgnoringException(false),
-    m_byteCodeOffsetAfterIgnoreException(InvalidByteCodeOffset), 
-    m_funcNumberAfterIgnoreException(InvalidFuncNumber), 
-    m_isBuiltInWrapperPresent(false)
-{
-    // In Lowerer::LowerBailForDebugger we rely on the following:
-    CompileAssert(offsetof(DebuggingFlags, m_isIgnoringException) == offsetof(DebuggingFlags, m_forceInterpreter) + 1);
-}
-
-bool DebuggingFlags::GetForceInterpreter() const
-{
-    return this->m_forceInterpreter;
-}
-
-void DebuggingFlags::SetForceInterpreter(bool value)
-{
-    this->m_forceInterpreter = value;
-}
-
-//static
-size_t DebuggingFlags::GetForceInterpreterOffset()
-{
-    return offsetof(DebuggingFlags, m_forceInterpreter);
-}
-
-int DebuggingFlags::GetByteCodeOffsetAfterIgnoreException() const
-{
-    return this->m_byteCodeOffsetAfterIgnoreException;
-}
-
-uint DebuggingFlags::GetFuncNumberAfterIgnoreException() const
-{
-    return this->m_funcNumberAfterIgnoreException;
-}
-
-void DebuggingFlags::SetByteCodeOffsetAfterIgnoreException(int offset)
-{
-    this->m_byteCodeOffsetAfterIgnoreException = offset;
-    this->m_isIgnoringException = offset != InvalidByteCodeOffset;
-}
-
-void DebuggingFlags::SetByteCodeOffsetAndFuncAfterIgnoreException(int offset, uint functionNumber)
-{
-    this->SetByteCodeOffsetAfterIgnoreException(offset);
-    this->m_funcNumberAfterIgnoreException = functionNumber;
-}
-
-void DebuggingFlags::ResetByteCodeOffsetAndFuncAfterIgnoreException()
-{
-    this->SetByteCodeOffsetAfterIgnoreException(InvalidByteCodeOffset);
-    this->m_funcNumberAfterIgnoreException = InvalidFuncNumber;
-}
-
-size_t DebuggingFlags::GetByteCodeOffsetAfterIgnoreExceptionOffset() const
-{
-    return offsetof(DebuggingFlags, m_byteCodeOffsetAfterIgnoreException);
-}
-
-bool DebuggingFlags::IsBuiltInWrapperPresent() const
-{
-    return m_isBuiltInWrapperPresent;
-}
-
-void DebuggingFlags::SetIsBuiltInWrapperPresent(bool value /* = true */)
-{
-    m_isBuiltInWrapperPresent = value;
-}
-
 
 JITTimer::JITTimer()
 {

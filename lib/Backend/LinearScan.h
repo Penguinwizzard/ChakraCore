@@ -72,7 +72,7 @@ private:
     uint                intRegUsedCount;
     uint                floatRegUsedCount;
     int                 loopNest;
-    uint16              m_bailOutRecordCount;
+    uint32              m_bailOutRecordCount;
     Loop *              curLoop;
     Region *            currentRegion;
     BVSparse<JitArenaAllocator> *liveOnBackEdgeSyms;

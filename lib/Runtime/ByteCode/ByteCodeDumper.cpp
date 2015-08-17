@@ -436,6 +436,9 @@ namespace Js
             case OpCode::InitSetElemI:
             case OpCode::InitGetElemI:
             case OpCode::InitComputedProperty:
+            case OpCode::InitClassMemberComputedName:
+            case OpCode::InitClassMemberGetComputedName:
+            case OpCode::InitClassMemberSetComputedName:
             {
                 Output::Print(L" R%d[R%d] = R%d", data->Instance, data->Element, data->Value);
                 break;
@@ -561,6 +564,8 @@ namespace Js
             }
             case OpCode::InitSetFld:
             case OpCode::InitGetFld:
+            case OpCode::InitClassMemberGet:
+            case OpCode::InitClassMemberSet:
             {
                 Output::Print(L" R%d.%s = (Set/Get) R%d", data->Instance, pPropertyName->GetBuffer(),
                         data->Value);

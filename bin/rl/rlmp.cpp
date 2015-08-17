@@ -32,7 +32,7 @@ PipeSpawnClose(
 bool CDirectory::TryLock()
 {
     char full[BUFFER_SIZE];
-    sprintf(full, "%s\\%s", this->GetDirectoryPath(), DIR_LOCKFILE);
+    sprintf_s(full, "%s\\%s", this->GetDirectoryPath(), DIR_LOCKFILE);
     _dirLock = CreateFile(full, GENERIC_WRITE, 0, 0, CREATE_ALWAYS,
                     FILE_ATTRIBUTE_HIDDEN | FILE_FLAG_DELETE_ON_CLOSE,
                     NULL);
@@ -51,7 +51,7 @@ bool CDirectory::TryLock()
 void CDirectory::WaitLock()
 {
     char full[BUFFER_SIZE];
-    sprintf(full, "%s\\%s", this->GetDirectoryPath(), DIR_LOCKFILE);
+    sprintf_s(full, "%s\\%s", this->GetDirectoryPath(), DIR_LOCKFILE);
     int sec = 0;
     for (;;)
     {
@@ -332,7 +332,7 @@ void CThreadInfo::Done()
     // The thread is exiting, so set appropriate state
     EnterCriticalSection(&_cs);
     _isDone = true;
-    strcpy(_currentTest, "done");
+    strcpy_s(_currentTest, "done");
     if (FRLFE)
         RLFEThreadDir(NULL, (BYTE)ThreadId);
     LeaveCriticalSection(&_cs);
@@ -346,7 +346,7 @@ void CThreadInfo::SetCurrentTest(char* dir, char* test, bool isBaseline)
 
     if (FRLFE) {
         if (test[0] != ' ') {
-            sprintf(_currentTest, "\\%s", test);
+            sprintf_s(_currentTest, "\\%s", test);
             RLFEThreadStatus((BYTE)ThreadId, _currentTest);
         }
         else {
@@ -360,7 +360,7 @@ void CThreadInfo::SetCurrentTest(char* dir, char* test, bool isBaseline)
         else
             tmp = "d:";
     }
-    sprintf(_currentTest, "%s%s\\%s", tmp, dir, test);
+    sprintf_s(_currentTest, "%s%s\\%s", tmp, dir, test);
 
     LeaveCriticalSection(&_cs);
 }
@@ -447,7 +447,6 @@ COutputBuffer::COutputBuffer(FILE* pfile, bool buffered)
 
 COutputBuffer::~COutputBuffer()
 {
-    Flush();
     delete[] _start;
     _start = _end = NULL;
     _bufSize = 0;
@@ -488,7 +487,7 @@ void COutputBuffer::Add(const char* fmt, ...)
     char tempBuf[MESSAGE_MAX];
 
     va_start(arg_ptr, fmt);
-    vsprintf(tempBuf, fmt, arg_ptr);
+    vsprintf_s(tempBuf, fmt, arg_ptr);
     ASSERT(strlen(tempBuf) < MESSAGE_MAX); // better not have written past tempBuf
     AddDirect(tempBuf);
 }
@@ -503,7 +502,8 @@ void COutputBuffer::Flush()
     else {
         ASSERTNR(_type == OUT_FILENAME);
         if (_filename != NULL) {
-            if ((fp = fopen(_filename, "a")) == NULL) {
+            errno_t err = fopen_s(&fp, _filename, "a");
+            if (err != 0 || fp == NULL) {
                 // We might not be able to open the log or full log output
                 // files because someone is grepping or otherwise looking
                 // through them while rl is active. In that case, we don't
@@ -569,8 +569,8 @@ ExecuteCommand(
     fflush(stdout);
     fflush(stderr);
 
-    strcpy(ExecuteProgramCmdLine, "cmd.exe /c "); // for .cmd/.bat scripts
-    strcat(ExecuteProgramCmdLine, CommandLine);
+    strcpy_s(ExecuteProgramCmdLine, "cmd.exe /c "); // for .cmd/.bat scripts
+    strcat_s(ExecuteProgramCmdLine, CommandLine);
 
     EnterCriticalSection(&csCurrentDirectory);
 
@@ -579,7 +579,7 @@ ExecuteCommand(
     // not thread specific.
 
     if ((Mode == RM_EXE) && TargetVM) {
-        sprintf(putEnvStr, "TARGET_VM=%s", TargetVM);
+        sprintf_s(putEnvStr, "TARGET_VM=%s", TargetVM);
         _putenv(putEnvStr);
     }
 
@@ -627,7 +627,7 @@ FilterThread(
 
     buf[0] = '\0';
     if (!FNoThreadId && ThreadId != 0 && NumberOfThreads > 1) {
-        sprintf(buf, "%d>", ThreadId);
+        sprintf_s(buf, "%d>", ThreadId);
     }
 
     if (StartPointer == NULL)

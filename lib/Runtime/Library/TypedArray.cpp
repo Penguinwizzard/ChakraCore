@@ -2467,12 +2467,6 @@ namespace Js
                 *lengthRef = FromVar(var)->GetLength();
                 *typeIdRef = typeId;
                 return true;
-
-            case TypeIds_PixelArray:
-                Assert(ValueType::FromTypeId(typeId,false).IsOptimizedTypedArray());
-                *lengthRef = JavascriptPixelArray::FromVar(var)->GetBufferLength();
-                *typeIdRef = typeId;
-                return true;
         }
 
         Assert(!ValueType::FromTypeId(typeId,false).IsOptimizedTypedArray());

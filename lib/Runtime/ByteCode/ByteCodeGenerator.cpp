@@ -4496,8 +4496,8 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
     case knopLetDecl:
         {
             sym = pnode->sxVar.sym;
-            Assert(sym->GetScope()->GetEnclosingFunc() == byteCodeGenerator->TopFuncInfo());
             Assert(sym!=NULL);
+            Assert(sym->GetScope()->GetEnclosingFunc() == byteCodeGenerator->TopFuncInfo());
 
             if (pnode->sxVar.isBlockScopeFncDeclVar && sym->GetIsBlockVar())
             {

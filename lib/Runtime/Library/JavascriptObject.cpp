@@ -40,7 +40,6 @@ namespace Js
             case TypeIds_Date:
             case TypeIds_BooleanObject:
             case TypeIds_Error:
-            case TypeIds_ExtensionEnumerator:
             case TypeIds_Object:
             case TypeIds_Arguments:
             case TypeIds_ActivationObject:
@@ -607,20 +606,17 @@ namespace Js
                 }
                 return library->GetObjectDisplayString();
             }
-        case TypeIds_PixelArray:
-            return library->CreateStringFromCppLiteral(L"[object CanvasPixelArray]");
 
-
-        case TypeIds_ArrayBuffer:            
-        case TypeIds_Int8Array:            
-        case TypeIds_Uint8Array:            
-        case TypeIds_Uint8ClampedArray:           
-        case TypeIds_Int16Array:   
-        case TypeIds_Uint16Array:  
-        case TypeIds_Int32Array:    
-        case TypeIds_Uint32Array:   
-        case TypeIds_Float32Array:   
-        case TypeIds_Float64Array: 
+        case TypeIds_ArrayBuffer:
+        case TypeIds_Int8Array:
+        case TypeIds_Uint8Array:
+        case TypeIds_Uint8ClampedArray:
+        case TypeIds_Int16Array:
+        case TypeIds_Uint16Array:
+        case TypeIds_Int32Array:
+        case TypeIds_Uint32Array:
+        case TypeIds_Float32Array:
+        case TypeIds_Float64Array:
         case TypeIds_Symbol:
         case TypeIds_SymbolObject:
         case TypeIds_Map:

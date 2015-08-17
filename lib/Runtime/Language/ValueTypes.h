@@ -76,7 +76,6 @@ OBJECT_TYPE(Int32Array          )
 OBJECT_TYPE(Uint32Array         )
 OBJECT_TYPE(Float32Array        )
 OBJECT_TYPE(Float64Array        )
-OBJECT_TYPE(PixelArray          )
 
 // Virtual Arrays
 OBJECT_TYPE(Int8VirtualArray)
@@ -110,6 +109,7 @@ OBJECT_TYPE(CharArray)
 // Only Simd128 sub-types. Currently no need to track top Simd128 type
 OBJECT_TYPE(Simd128Float32x4    )
 OBJECT_TYPE(Simd128Int32x4      )
+OBJECT_TYPE(Simd128Int8x16      )
 OBJECT_TYPE(Simd128Float64x2    )
 #endif
 OBJECT_TYPE(Count)
