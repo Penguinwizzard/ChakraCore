@@ -7,7 +7,7 @@
     <ProjectGuid>{706083F7-6AA4-4558-A153-6352EF9110F7}</ProjectGuid>
     <RootNamespace>JS</RootNamespace>
     <Keyword>Win32Proj</Keyword>
-  </PropertyGroup>  
+  </PropertyGroup>
   <PropertyGroup Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
   </PropertyGroup>
@@ -85,9 +85,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptGeneratorFunctionType.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptMap.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptMapIterator.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptPixelArray.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptPixelArrayEnumerator.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptPixelArrayType.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptPromise.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptProxy.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptReflect.cpp" />
@@ -189,6 +186,14 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)ThreadServiceWrapperBase.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)UriHelper.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)SIMDUtils.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDInt8x16Lib.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDInt8x16Operation.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'!='ARM' AND '$(Platform)'!='Arm64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDInt8x16OperationX86X64.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'!='Win32' AND '$(Platform)'!='x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSIMDInt8x16.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\DiagGlobalList.h" />
@@ -199,12 +204,15 @@
     <ClInclude Include="JavascriptSIMDFloat32x4.h" />
     <ClInclude Include="JavascriptSIMDFloat64x2.h" />
     <ClInclude Include="JavascriptSIMDInt32x4.h" />
+    <ClInclude Include="JavascriptSIMDInt8x16.h" />
     <ClInclude Include="SIMDFloat32x4Lib.h" />
     <ClInclude Include="SIMDFloat32x4Operation.h" />
     <ClInclude Include="SIMDFloat64x2Lib.h" />
     <ClInclude Include="SIMDFloat64x2Operation.h" />
     <ClInclude Include="SIMDInt32x4Lib.h" />
     <ClInclude Include="SIMDInt32x4Operation.h" />
+    <ClInclude Include="SIMDInt8x16Lib.h" />
+    <ClInclude Include="SIMDInt8x16Operation.h" />
     <ClInclude Include="SIMDShuffleMasks.h" />
     <ClInclude Include="LibraryFunction.h" />
     <ClInclude Include="ArrayBuffer.h" />
@@ -248,8 +256,6 @@
     <ClInclude Include="JavascriptGeneratorFunction.h" />
     <ClInclude Include="JavascriptMap.h" />
     <ClInclude Include="JavascriptMapIterator.h" />
-    <ClInclude Include="JavascriptPixelArray.h" />
-    <ClInclude Include="JavascriptPixelArrayEnumerator.h" />
     <ClInclude Include="JavascriptPromise.h" />
     <ClInclude Include="JavascriptProxy.h" />
     <ClInclude Include="JavascriptRegExpEnumerator.h" />
@@ -367,8 +373,8 @@
     <None Include="InJavascript\Intl.js" />
     <None Include="InJavascript\Promise.js" />
     <None Include="InJavascript\WarnGenByteCode.cmd" />
-    <None Include="ConcatString.inl" />
-    <None Include="JavascriptPixelArray.inl" />        
+    <None Include="JavascriptMap.inl" />
+    <None Include="JavascriptSet.inl" />
     <None Include="SparseArraySegment.inl" />    
     <None Include="TaggedInt.inl" />
     <None Include="JavascriptArray.inl" />   

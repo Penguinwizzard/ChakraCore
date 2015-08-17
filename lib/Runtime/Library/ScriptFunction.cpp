@@ -337,6 +337,12 @@ namespace Js
                 lea eax, [esp+8]
                 push eax
                 call CopyOnWriteScriptFunction::CopyOnWriteDeferredParse
+#ifdef _CONTROL_FLOW_GUARD
+                // verify that the call target is valid
+                mov  ecx, eax
+                call[__guard_check_icall_fptr]
+                mov eax, ecx
+#endif
                 pop ebp
                 jmp eax
         }

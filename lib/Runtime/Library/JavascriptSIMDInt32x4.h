@@ -59,7 +59,6 @@ namespace Js
 
     private:
         bool GetPropertyBuiltIns(PropertyId propertyId, Var* value, ScriptContext* requestContext);
-        Var  GetLaneAsNumber(uint index, ScriptContext* requestContext);
         Var  GetLaneAsFlag(uint index, ScriptContext* requestContext);
         Var  GetSignMask();
     };

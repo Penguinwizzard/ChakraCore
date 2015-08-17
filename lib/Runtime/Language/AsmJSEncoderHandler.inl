@@ -311,32 +311,21 @@ EXDEF3    ( CUSTOM     , NopEx             , OP_Empty                , Empty    
   DEF3_WMS( CUSTOM                              , Simd128_Select_I4             , OP_Simd128_SelectI4               , Int32x4_4              )
   DEF3_WMS( CUSTOM                              , Simd128_Select_D2             , OP_Simd128_SelectD2               , Float64x2_1Int32x4_1Float64x2_2)
   
-  DEF3_WMS( CUSTOM                              , Simd128_LdLane_F4             , OP_Simd128_LdLaneF4               , Float1Float32x4_1IntConst1)
-  DEF3_WMS( CUSTOM                              , Simd128_LdLane_I4             , OP_Simd128_LdLaneI4               , Int1Int32x4_1IntConst1)
-  DEF3_WMS( CUSTOM                              , Simd128_LdLane_D2             , OP_Simd128_LdLaneD2               , Double1Float64x2_1IntConst1)
-  
   DEF3_WMS( CUSTOM                              , Simd128_LdSignMask_F4         , OP_Simd128_LdSignMaskF4           , Int1Float32x4_1      )
   DEF3_WMS( CUSTOM                              , Simd128_LdSignMask_I4         , OP_Simd128_LdSignMaskI4           , Int1Int32x4_1        )
   DEF3_WMS( CUSTOM                              , Simd128_LdSignMask_D2         , OP_Simd128_LdSignMaskD2           , Int1Float64x2_1      )
-  
-  DEF3_WMS( CUSTOM                              , Simd128_WithX_F4              , OP_Simd128_WithXF4                , Float32x4_2Float1    )
-  DEF3_WMS( CUSTOM                              , Simd128_WithX_I4              , OP_Simd128_WithXI4                , Int32x4_2Int1        )
-  DEF3_WMS( CUSTOM                              , Simd128_WithX_D2              , OP_Simd128_WithXD2                , Float64x2_2Double1   )
-  
-  DEF3_WMS( CUSTOM                              , Simd128_WithY_F4              , OP_Simd128_WithYF4                , Float32x4_2Float1    )
-  DEF3_WMS( CUSTOM                              , Simd128_WithY_I4              , OP_Simd128_WithYI4                , Int32x4_2Int1        )
-  DEF3_WMS( CUSTOM                              , Simd128_WithY_D2              , OP_Simd128_WithYD2                , Float64x2_2Double1   )
-  
-  DEF3_WMS( CUSTOM                              , Simd128_WithZ_F4              , OP_Simd128_WithZF4                , Float32x4_2Float1       )
-  DEF3_WMS( CUSTOM                              , Simd128_WithZ_I4              , OP_Simd128_WithZI4                , Int32x4_2Int1           )
-  
-  DEF3_WMS( CUSTOM                              , Simd128_WithW_F4              , OP_Simd128_WithWF4                , Float32x4_2Float1       )
-  DEF3_WMS( CUSTOM                              , Simd128_WithW_I4              , OP_Simd128_WithWI4                , Int32x4_2Int1           )
   
   DEF3_WMS( CUSTOM                              , Simd128_I_ArgOut_F4           , OP_Simd128_I_ArgOutF4             , Reg1Float32x4_1      )
   DEF3_WMS( CUSTOM                              , Simd128_I_ArgOut_I4           , OP_Simd128_I_ArgOutI4             , Reg1Int32x4_1        )
   DEF3_WMS( CUSTOM                              , Simd128_I_ArgOut_D2           , OP_Simd128_I_ArgOutD2             , Reg1Float64x2_1      )
   
+  //Lane acess
+  DEF3_WMS( CUSTOM                              , Simd128_ExtractLane_I4        , OP_Simd128_ExtractLaneI4          , Int1Int32x4_1Int1)
+  DEF3_WMS( CUSTOM                              , Simd128_ExtractLane_F4        , OP_Simd128_ExtractLaneF4          , Float1Float32x4_1Int1)
+
+  DEF3_WMS( CUSTOM                              , Simd128_ReplaceLane_I4        , OP_Simd128_ReplaceLaneI4          , Int32x4_2Int2)
+  DEF3_WMS( CUSTOM                              , Simd128_ReplaceLane_F4        , OP_Simd128_ReplaceLaneF4          , Float32x4_2Int1Float1)
+
   DEF3_WMS( CUSTOM                              , Simd128_I_Conv_VTF4           , OP_Simd128_I_Conv_VTF4            , Float32x4_2      )
   DEF3_WMS( CUSTOM                              , Simd128_I_Conv_VTI4           , OP_Simd128_I_Conv_VTI4            , Int32x4_2        )
   DEF3_WMS( CUSTOM                              , Simd128_I_Conv_VTD2           , OP_Simd128_I_Conv_VTD2            , Float64x2_2      )

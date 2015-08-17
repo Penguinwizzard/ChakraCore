@@ -328,18 +328,7 @@ IRBuilder::Build()
         Assert(!this->RegIsTemp(this->m_func->GetJnFunction()->GetStackClosureRegister()));
         m_func->InitStackClosureSyms();
     }
-            
-    CustomHeap::Heap * byteCodeAllocator = this->m_func->GetScriptContext()->GetByteCodeAllocator();
 
-    if (!m_func->GetScriptContext()->IsInDebugMode() && !Js::Configuration::Global.IsHybridDebugging() && !CONFIG_FLAG(ForceSerialized) &&
-        !(this->m_func->GetJnFunction()->GetUtf8SourceInfo()->GetIsLibraryCode() && m_jnReader.IsCurrentLocationExecuteReadProtection()) && 
-        byteCodeAllocator != nullptr && !m_jnReader.IsCurrentLocationReadOnly(byteCodeAllocator))
-    {
-        Assert(false);
-        CustomHeap_BadPageState_fatal_error((ULONG_PTR)this);
-        return;
-    }
-    
     m_functionStartOffset = m_jnReader.GetCurrentOffset();
     m_lastInstr = m_func->m_headInstr;
 
@@ -425,10 +414,6 @@ IRBuilder::Build()
     for (Js::OpCode newOpcode = m_jnReader.ReadOp(layoutSize); (uint)m_jnReader.GetCurrentOffset() <= lastOffset; newOpcode = m_jnReader.ReadOp(layoutSize))
     {
         Assert(newOpcode != Js::OpCode::EndOfBlock);
-        if (OpCodeAttr::BackEndOnly(newOpcode))
-        {
-            Js::Throw::InternalError();
-        }
 
 #ifdef BAILOUT_INJECTION
         if (!this->m_func->GetTopFunc()->HasTry()
@@ -2686,6 +2671,8 @@ IRBuilder::BuildElementC(Js::OpCode newOpcode, uint32 offset, Js::RegSlot fieldR
 
     case Js::OpCode::InitSetFld:
     case Js::OpCode::InitGetFld:
+    case Js::OpCode::InitClassMemberGet:
+    case Js::OpCode::InitClassMemberSet:
     case Js::OpCode::InitProto:
     case Js::OpCode::StFuncExpr:
     case Js::OpCode::ScopedEnsureNoRedeclFld:
@@ -4010,6 +3997,9 @@ IRBuilder::BuildElementI(Js::OpCode newOpcode, uint32 offset, Js::RegSlot baseRe
     case Js::OpCode::InitSetElemI:
     case Js::OpCode::InitGetElemI:
     case Js::OpCode::InitComputedProperty:
+    case Js::OpCode::InitClassMemberComputedName:
+    case Js::OpCode::InitClassMemberGetComputedName:
+    case Js::OpCode::InitClassMemberSetComputedName:
         {
 
             regOpnd = this->BuildSrcOpnd(regSlot);

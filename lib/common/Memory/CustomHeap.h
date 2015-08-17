@@ -144,16 +144,13 @@ struct Allocation
 class Heap
 {
 public:
-    Heap(AllocationPolicyManager * policyManager, ArenaAllocator * alloc, bool allocXdata, bool ensurePageReadWriteBeforeRelease = true);
+    Heap(AllocationPolicyManager * policyManager, ArenaAllocator * alloc, bool allocXdata);
 
     Allocation* Alloc(size_t bytes, ushort pdataCount, ushort xdataSize, bool canAllocInPreReservedHeapPageSegment, bool isAnyJittedCode, __out bool* isAllJITCodeInPreReservedRegion);
-    bool IsReadOnly(void * address);
-    bool LockAndFree(__in Allocation* allocation, bool EnsureAllocationReadOnlyOrReadWrite = false);
-    bool Free(__in Allocation* allocation, bool EnsureAllocationReadOnlyOrReadWrite = false);
+    bool Free(__in Allocation* allocation);
     bool Decommit(__in Allocation* allocation);
     void FreeAll();
     bool IsInRange(__in void* address);
-    CriticalSection * GetCriticalSection() { return &cs; }
 
     template<typename T>
     HeapPageAllocator<T>* GetPageAllocator(Page * page)
@@ -336,19 +333,7 @@ public:
             return EnsureAllocationReadWrite<false, PAGE_READWRITE>(allocation);
         }
 
-    }
-
-    DWORD EnsureAllocationReadOnlyOrReadWriteProtection(Allocation * allocation, bool readWrite)
-    {
-        if (readWrite)
-        {
-            return EnsureAllocationReadOnlyOrReadWrite<true>(allocation);
-        }
-        else
-        {
-            return EnsureAllocationReadOnlyOrReadWrite<false>(allocation);
-        }
-    }
+    }    
 
     ~Heap();
 
@@ -438,36 +423,6 @@ private:
         return EnsureAllocationReadWrite<true, PAGE_EXECUTE_READWRITE>(allocation);
     }
 
-    template<bool readWrite>
-    DWORD EnsurePageReadOnlyOrReadWriteOnly(Page * page)
-    {
-        if (readWrite)
-        {
-            if (!page->isReadWrite && !page->isDecommitted)
-            {
-                DWORD dwOldProtectFlags = 0;
-                BOOL result = this->ProtectPages(page->address, 1, page->segment, PAGE_READWRITE, &dwOldProtectFlags, PAGE_READONLY);
-                page->isReadWrite = true;
-                Assert(result && (dwOldProtectFlags & PAGE_READWRITE) == 0);
-                return dwOldProtectFlags;
-            }
-        }
-        else
-        {
-            if (page->isReadWrite && !page->isDecommitted)
-            {
-                DWORD dwOldProtectFlags = 0;
-                BOOL result = this->ProtectPages(page->address, 1, page->segment, PAGE_READONLY, &dwOldProtectFlags, PAGE_READWRITE);
-                page->isReadWrite = false;
-                Assert(result && (dwOldProtectFlags & PAGE_READONLY) == 0);
-                return dwOldProtectFlags;
-            }
-        }
-        // 0 is safe to return as its not a memory protection constant
-        // so it indicates that nothing was changed
-        return 0;
-    }
-
     template<bool readWrite, DWORD readWriteFlags>
     DWORD EnsurePageReadWrite(Page* page)
     {
@@ -494,42 +449,6 @@ private:
             }
         }
 
-        return 0;
-    }
-
-    template<bool readWrite>
-    DWORD EnsureAllocationReadOnlyOrReadWrite(Allocation * allocation)
-    {
-        if (allocation->IsLargeAllocation())
-        {
-            if (readWrite)
-            {
-                if (!allocation->largeObjectAllocation.isReadWrite)
-                {
-                    DWORD dwOldProtectFlags;
-                    BOOL result = this->ProtectAllocation(allocation, PAGE_READWRITE, &dwOldProtectFlags, PAGE_READONLY);
-                    Assert(result && (dwOldProtectFlags & PAGE_READWRITE) == 0);
-                    return dwOldProtectFlags;
-                }
-            }
-            else
-            {
-                if (allocation->largeObjectAllocation.isReadWrite)
-                {
-                    DWORD dwOldProtectFlags;
-                    this->ProtectAllocation(allocation, PAGE_READONLY, &dwOldProtectFlags, PAGE_READWRITE);
-                    Assert((dwOldProtectFlags & PAGE_READONLY) == 0);
-                    return dwOldProtectFlags;
-                }
-            }
-        }
-        else
-        {
-            return EnsurePageReadOnlyOrReadWriteOnly<readWrite>(allocation->page);
-        }
-
-        // 0 is safe to return as its not a memory protection constant
-        // so it indicates that nothing was changed
         return 0;
     }
 
@@ -578,7 +497,7 @@ private:
     void FreeBuckets(bool freeOnlyEmptyPages);
     void FreeBucket(DListBase<Page>* bucket, bool freeOnlyEmptyPages);
     void FreePage(Page* page);
-    bool FreeAllocation(Allocation* allocation, bool isEnsureAllocationExecutable);
+    bool FreeAllocation(Allocation* allocation);
 
 #if PDATA_ENABLED
     void FreeXdata(XDataAllocation* xdata, void* segment);
@@ -649,7 +568,6 @@ private:
 #if DBG
     bool inDtor;
 #endif
-    bool ensurePageReadWriteBeforeRelease;
 };
 
 // Helpers

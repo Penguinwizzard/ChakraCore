@@ -751,34 +751,40 @@ if (switchProfileMode) \
     }
 #define PROCESS_SIMD_I4_1D2_2toD2_1(name, func, suffix) PROCESS_SIMD_I4_1D2_2toD2_1_COMMON(name, func, suffix)
 
-// fields access
-// lanes
-#define PROCESS_SIMD_F4_1C1toF1_COMMON(name, func, suffix) \
+// Extract Lane / Replace Lane
+#define PROCESS_SIMD_I4_1I1toI1_COMMON(name, func, suffix) \
     case OpCodeAsmJs::name: \
     { \
-    PROCESS_READ_LAYOUT_ASMJS(name, Float1Float32x4_1IntConst1, suffix); \
-    SetRegRawFloat(playout->F0, GetRegRawSimd(playout->F4_1).f32[playout->C2]); \
+    PROCESS_READ_LAYOUT_ASMJS(name, Int1Int32x4_1Int1, suffix); \
+    SetRegRawInt(playout->I0, func(GetRegRawSimd(playout->I4_1), GetRegRawInt(playout->I2))); \
     break; \
     }
-#define PROCESS_SIMD_F4_1C1toF1(name, func, suffix) PROCESS_SIMD_F4_1C1toF1_COMMON(name, func, suffix)
+#define PROCESS_SIMD_I4_1I1toI1(name, func, suffix) PROCESS_SIMD_I4_1I1toI1_COMMON(name, func, suffix)
+#define PROCESS_SIMD_I4_1I2toI4_1_COMMON(name, func, suffix) \
+    case OpCodeAsmJs::name: \
+    { \
+    PROCESS_READ_LAYOUT_ASMJS(name, Int32x4_2Int2, suffix); \
+    SetRegRawSimd(playout->I4_0, func(GetRegRawSimd(playout->I4_1), GetRegRawInt(playout->I2), GetRegRawInt(playout->I3))); \
+    break; \
+    }
+#define PROCESS_SIMD_I4_1I2toI4_1(name, func, suffix) PROCESS_SIMD_I4_1I2toI4_1_COMMON(name, func, suffix)
 
-#define PROCESS_SIMD_I4_1C1toI1_COMMON(name, func, suffix) \
+#define PROCESS_SIMD_F4_1I1toF1_COMMON(name, func, suffix) \
     case OpCodeAsmJs::name: \
     { \
-    PROCESS_READ_LAYOUT_ASMJS(name, Int1Int32x4_1IntConst1, suffix); \
-    SetRegRawInt(playout->I0, GetRegRawSimd(playout->I4_1).i32[playout->C2]); \
+    PROCESS_READ_LAYOUT_ASMJS(name, Float1Float32x4_1Int1, suffix); \
+    SetRegRawFloat(playout->F0, func(GetRegRawSimd(playout->F4_1), GetRegRawInt(playout->I2))); \
     break; \
     }
-#define PROCESS_SIMD_I4_1C1toF1(name, func, suffix) PROCESS_SIMD_I4_1C1toF1_COMMON(name, func, suffix)
-
-#define PROCESS_SIMD_D2_1C1toD1_COMMON(name, func, suffix) \
+#define PROCESS_SIMD_F4_1I1toF1(name, func, suffix) PROCESS_SIMD_F4_1I1toF1_COMMON(name, func, suffix)
+#define PROCESS_SIMD_F4_1I1F1toF4_1_COMMON(name, func, suffix) \
     case OpCodeAsmJs::name: \
     { \
-    PROCESS_READ_LAYOUT_ASMJS(name, Double1Float64x2_1IntConst1, suffix); \
-    SetRegRawDouble(playout->D0, GetRegRawSimd(playout->D2_1).f64[playout->C2]); \
+    PROCESS_READ_LAYOUT_ASMJS(name, Float32x4_2Int1Float1, suffix); \
+    SetRegRawSimd(playout->F4_0, func(GetRegRawSimd(playout->F4_1), GetRegRawInt(playout->I2), GetRegRawFloat(playout->F3))); \
     break; \
     }
-#define PROCESS_SIMD_D2_1C1toD1(name, func, suffix) PROCESS_SIMD_D2_1C1toD1_COMMON(name, func, suffix)
+#define PROCESS_SIMD_I4_1I2toI4_1(name, func, suffix) PROCESS_SIMD_I4_1I2toI4_1_COMMON(name, func, suffix)
 
 // signmask
 #define PROCESS_SIMD_F4_1toI1_COMMON(name, func, suffix) \

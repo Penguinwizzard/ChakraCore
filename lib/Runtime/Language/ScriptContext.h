@@ -172,9 +172,7 @@ namespace Js
         bool IsES6WeakMapEnabled()              const { return CONFIG_FLAG(WeakMap); }
         bool IsDefineGetterSetterEnabled()      const { return CONFIG_FLAG(DefineGetterSetter); }
         bool IsIntlEnabled() const;
-        bool IsKhronosInteropEnabled()          const { return CONFIG_FLAG(KhronosInterop); }
         bool IsES6SpeciesEnabled()              const { return CONFIG_FLAG_RELEASE(ES6Species); }
-        bool IsES6AsyncAndAwaitEnabled()        const { return CONFIG_FLAG_RELEASE(ES6AsyncAwait); }
         bool IsES6ClassAndExtendsEnabled()      const { return CONFIG_FLAG_RELEASE(ES6Classes); } 
         bool IsES6DateParseFixEnabled()         const { return CONFIG_FLAG_RELEASE(ES6DateParseFix); }
         bool IsES6DefaultArgsEnabled()          const { return CONFIG_FLAG_RELEASE(ES6DefaultArgs); }
@@ -210,6 +208,8 @@ namespace Js
         bool SkipSplitOnNoResult()              const { return CONFIG_FLAG_RELEASE(SkipSplitOnNoResult); }
         bool AreWinRTDelegatesInterfaces()      const { return CONFIG_FLAG(WinRTDelegateInterfaces); }
         bool IsWinRTAdaptiveAppsEnabled()       const { return CONFIG_FLAG_RELEASE(WinRTAdaptiveApps); }
+
+        bool IsES7AsyncAndAwaitEnabled()        const { return CONFIG_FLAG_RELEASE(ES7AsyncAwait); }
 
         void ForceNoNative() { this->NoNative = true; }
         void ForceNative() { this->NoNative = false; }
@@ -502,10 +502,6 @@ namespace Js
         FunctionBody * GetFakeGlobalFuncForUndefer() const { return fakeGlobalFuncForUndefer; }
         void SetFakeGlobalFuncForUndefer(FunctionBody * func) { fakeGlobalFuncForUndefer.Root(func, GetRecycler()); }
 
-        void EnsureByteCodeAllocationReadOnly(CustomHeap::Allocation * byteCodeAllocation);
-        void EnsureByteCodeAllocationReadWrite(CustomHeap::Allocation * byteCodeAllocation);
-        void FreeByteCodeAllocation(CustomHeap::Allocation * byteCodeAllocation);
-
     private:
         PropertyStringMap* propertyStrings[80];
 
@@ -776,8 +772,6 @@ private:
 
         JsUtil::Stack<Var>* operationStack;
         Recycler* recycler;
-
-        CustomHeap::Heap byteCodeAllocationHeap;
         RecyclerJavascriptNumberAllocator numberAllocator;
 
         ScriptConfiguration config;
@@ -876,7 +870,6 @@ private:
         inline HRESULT RegisterString();
         inline HRESULT RegisterRegExp();
         inline HRESULT RegisterJSON();
-        inline HRESULT RegisterPixelArray();
         inline HRESULT RegisterMap();
         inline HRESULT RegisterSet();
         inline HRESULT RegisterWeakMap();
@@ -1214,7 +1207,6 @@ private:
         void ReleaseGuestArena();
 
         Recycler* GetRecycler() const { return recycler; }
-        CustomHeap::Heap * GetByteCodeAllocator() { return &byteCodeAllocationHeap; }
         RecyclerJavascriptNumberAllocator * GetNumberAllocator() { return &numberAllocator; }
 #if ENABLE_NATIVE_CODEGEN
         NativeCodeGenerator * GetNativeCodeGenerator() const { return nativeCodeGen; }

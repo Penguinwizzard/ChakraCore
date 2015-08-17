@@ -277,7 +277,7 @@ protected:
     void DumpValue(int offset, bool isFloat64);
 #endif
     ushort bailOutCount;
-    uint16 m_bailOutRecordId;
+    uint32 m_bailOutRecordId;
 
     friend class LinearScan;
     friend class BailOutInfo;
@@ -354,8 +354,8 @@ inline void BailOutRecord::MapArgOutOffsets(Fn fn)
 struct GlobalBailOutRecordDataRow
 {
     uint32 offset;
-    uint16 start;           // start bailOutId
-    uint16 end;             // end bailOutId
+    uint32 start;           // start bailOutId
+    uint32 end;             // end bailOutId
     unsigned regSlot : 30;
     unsigned isFloat : 1;
     unsigned isInt : 1;
@@ -374,7 +374,7 @@ struct GlobalBailOutRecordDataTable
     bool isInlinedConstructor;
     bool isLoopBody;
     void Finalize(NativeCodeData::Allocator *allocator, JitArenaAllocator *tempAlloc);
-    void AddOrUpdateRow(JitArenaAllocator *allocator, uint16 bailOutRecordId, uint32 regSlot, bool isFloat, bool isInt, uint32 offset, uint *lastUpdatedRowIndex);
+    void AddOrUpdateRow(JitArenaAllocator *allocator, uint32 bailOutRecordId, uint32 regSlot, bool isFloat, bool isInt, uint32 offset, uint *lastUpdatedRowIndex);
 
     template<class Fn>
     void IterateGlobalBailOutRecordTableRows(uint32 bailOutRecordId, Fn callback)

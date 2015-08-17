@@ -310,17 +310,18 @@ RT_ERROR_MSG(JSERR_This_NeedSimd, 5620, "%s: 'this' is not a SIMD type", "SIMD t
 RT_ERROR_MSG(JSERR_SimdFloat32x4TypeMismatch, 5621, "SIMD.Float32x4.%s: Invalid SIMD types for operation", "Expecting Float32x4 values", kjstTypeError, 0)
 RT_ERROR_MSG(JSERR_SimdFloat64x2TypeMismatch, 5622, "SIMD.Float64x2.%s: Invalid SIMD types for operation", "Expecting Float64x2 values", kjstTypeError, 0)
 RT_ERROR_MSG(JSERR_SimdInt32x4TypeMismatch, 5623, "SIMD.Int32x4.%s: Invalid SIMD types for operation", "Expecting Int32x4 values", kjstTypeError, 0)
-RT_ERROR_MSG(JSERR_SimdLaneRangeError, 5624, "Lane index is out of range for this SIMD type", "Lane index is out of range", kjstRangeError, 0)
-RT_ERROR_MSG(JSERR_SimdInvalidArgType, 5625, "%s: Invalid argument type for SIMD operation", "Invalid argument type for SIMD operation", kjstTypeError, 0)
+RT_ERROR_MSG(JSERR_SimdInt8x16TypeMismatch, 5624, "SIMD.Int8x16.%s: Invalid SIMD types for operation", "Expecting Int8x16 values", kjstTypeError, 0)
+RT_ERROR_MSG(JSERR_SimdLaneRangeError, 5625, "Lane index is out of range for this SIMD type", "Lane index is out of range", kjstRangeError, 0)
+RT_ERROR_MSG(JSERR_SimdInvalidArgType, 5626, "%s: Invalid argument type for SIMD operation", "Invalid argument type for SIMD operation", kjstTypeError, 0)
 #endif
 
-RT_ERROR_MSG(JSERR_NeedConstructor, 5626, "'%s' is not a constructor", "Constructor expected", kjstTypeError, 0)
+RT_ERROR_MSG(JSERR_NeedConstructor, 5627, "'%s' is not a constructor", "Constructor expected", kjstTypeError, 0)
 
 RT_ERROR_MSG(VBSERR_CantDisplayDate, 32812, "", "The specified date is not available in the current locale's calendar", kjstRangeError, 0)
 
-RT_ERROR_MSG(JSERR_ClassThisAlreadyAssigned, 5627, "", "Multiple calls to 'super' in a class constructor are not allowed", kjstReferenceError, 0)
-RT_ERROR_MSG(JSERR_ClassSuperInBaseClass, 5628, "", "Unexpected call to 'super' in a base class constructor", kjstReferenceError, 0)
-RT_ERROR_MSG(JSERR_ClassDerivedConstructorInvalidReturnType, 5629, "", "Derived class constructor can return only object or undefined", kjstTypeError, 0)
+RT_ERROR_MSG(JSERR_ClassThisAlreadyAssigned, 5628, "", "Multiple calls to 'super' in a class constructor are not allowed", kjstReferenceError, 0)
+RT_ERROR_MSG(JSERR_ClassSuperInBaseClass, 5629, "", "Unexpected call to 'super' in a base class constructor", kjstReferenceError, 0)
+RT_ERROR_MSG(JSERR_ClassDerivedConstructorInvalidReturnType, 5630, "", "Derived class constructor can return only object or undefined", kjstTypeError, 0)
 
 #ifndef VBSERR_UndefVariable
 #define VBSERR_UndefVariable JSERR_UndefVariable

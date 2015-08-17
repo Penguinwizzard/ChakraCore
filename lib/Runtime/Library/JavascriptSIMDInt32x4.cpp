@@ -95,13 +95,6 @@ namespace Js
             *value = GetSignMask();  
             return true;
 
-        case PropertyIds::x:
-        case PropertyIds::y:
-        case PropertyIds::z:
-        case PropertyIds::w:
-            *value = GetLaneAsNumber(propertyId - PropertyIds::x, requestContext);
-            return true;
-
         case PropertyIds::flagX:
         case PropertyIds::flagY:
         case PropertyIds::flagZ:
@@ -134,7 +127,7 @@ namespace Js
         wchar_t stringBuffer[1024];
         SIMDValue value = instance->GetValue();
 
-        swprintf_s(stringBuffer, 1024, L"int32x4(%d,%d,%d,%d)", value.i32[SIMD_X], value.i32[SIMD_Y], value.i32[SIMD_Z], value.i32[SIMD_W]);
+        swprintf_s(stringBuffer, 1024, L"Int32x4(%d,%d,%d,%d)", value.i32[SIMD_X], value.i32[SIMD_Y], value.i32[SIMD_Z], value.i32[SIMD_W]);
 
         JavascriptString* string = JavascriptString::NewCopySzFromArena(stringBuffer, scriptContext, scriptContext->GeneralAllocator());
 
@@ -164,13 +157,6 @@ namespace Js
         Assert(insValue);
         insValue->value.i32[index] = value ? -1 : 0;
         return instance;
-    }
-
-    __inline Var  JavascriptSIMDInt32x4::GetLaneAsNumber(uint index, ScriptContext* requestContext)
-    {
-        // convert value.i32[index] to TaggedInt 
-        AssertMsg(index < 4, "Out of range lane index"); 
-        return JavascriptNumber::ToVar(value.i32[index], requestContext);
     }
 
     __inline Var  JavascriptSIMDInt32x4::GetLaneAsFlag(uint index, ScriptContext* requestContext)

@@ -127,7 +127,6 @@ namespace Js
 #endif
         inlineCacheAllocator(L"SC-InlineCache", threadContext->GetPageAllocator(), Throw::OutOfMemory),
         isInstInlineCacheAllocator(L"SC-IsInstInlineCache", threadContext->GetPageAllocator(), Throw::OutOfMemory),
-        byteCodeAllocationHeap(threadContext->GetAllocationPolicyManager(), this->GeneralAllocator(), false, false),
         hasRegisteredInlineCache(false),
         hasRegisteredIsInstInlineCache(false),
         entryInScriptContextWithInlineCachesRegistry(nullptr),
@@ -194,7 +193,7 @@ namespace Js
     {
        // This may allocate memory and cause exception, but it is ok, as we all we have done so far
        // are field init and those dtor will be called if exception occurs
-       threadContext->EnsureAndAddToDiagnostic();
+       threadContext->EnsureDebugManager();
 
        // Don't use throwing memory allocation in ctor, as exception in ctor doesn't cause the dtor to be called
        // potentially causing memory leaks
@@ -543,11 +542,6 @@ namespace Js
         }
 #endif
 
-        if (diagnosticArena)
-        {
-            HeapDelete(diagnosticArena);
-        }
-
         if (this->hasRegisteredInlineCache)
         {
             // TODO (PersistentInlineCaches): It really isn't necessary to clear inline caches in all script contexts.
@@ -589,28 +583,6 @@ namespace Js
         this->weakReferenceDictionaryList.Reset();
 
         PERF_COUNTER_DEC(Basic, ScriptContext);
-    }
-
-    void ScriptContext::FreeByteCodeAllocation(CustomHeap::Allocation * byteCodeAllocation)
-    {
-        Assert(byteCodeAllocation != nullptr);
-        GetByteCodeAllocator()->LockAndFree(byteCodeAllocation, true);
-    }
-
-    void ScriptContext::EnsureByteCodeAllocationReadWrite(CustomHeap::Allocation * byteCodeAllocation)
-    {
-        Assert(byteCodeAllocation != nullptr);
-        this->GetByteCodeAllocator()->EnsureAllocationReadOnlyOrReadWriteProtection(byteCodeAllocation, true);
-    }
-
-    void ScriptContext::EnsureByteCodeAllocationReadOnly(CustomHeap::Allocation * byteCodeAllocation)
-    {
-        Assert(byteCodeAllocation != nullptr);
-        if (this->IsInDebugMode() || Js::Configuration::Global.IsHybridDebugging())
-        {
-            return;
-        }
-        this->GetByteCodeAllocator()->EnsureAllocationReadOnlyOrReadWriteProtection(byteCodeAllocation, false);
     }
 
     void ScriptContext::SetUrl(BSTR bstrUrl)
@@ -745,6 +717,12 @@ namespace Js
         // Stop profiling if present
         DeRegisterProfileProbe(S_OK, nullptr);
 
+        if (this->diagnosticArena != nullptr)
+        {
+            HeapDelete(this->diagnosticArena);
+            this->diagnosticArena = nullptr;
+        }
+
         if (this->debugContext != nullptr)
         {
             this->debugContext->Close();
@@ -822,8 +800,7 @@ namespace Js
             Assert(registeredPrototypeChainEnsuredToHaveOnlyWritableDataPropertiesScriptContext == nullptr);
             threadContext->UnregisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertiesScriptContext(registeredScriptContext);
         }
-
-        threadContext->ReleaseScriptContextFromDiagnostic();
+        threadContext->ReleaseDebugManager();
     }
 
     bool ScriptContext::Close(bool inDestructor)
@@ -1041,7 +1018,6 @@ namespace Js
         Output::Print(L"    SymbolObject                   %8d   %8d\n", typeCount[TypeIds_SymbolObject], instanceCount[TypeIds_SymbolObject]);
         Output::Print(L"    GlobalObject                   %8d   %8d\n", typeCount[TypeIds_GlobalObject], instanceCount[TypeIds_GlobalObject]);
         Output::Print(L"    Enumerator                     %8d   %8d\n", typeCount[TypeIds_Enumerator], instanceCount[TypeIds_Enumerator]);
-        Output::Print(L"    ExtensionEnumerator            %8d   %8d\n", typeCount[TypeIds_ExtensionEnumerator], instanceCount[TypeIds_ExtensionEnumerator]);
         Output::Print(L"    Int8Array                      %8d   %8d\n", typeCount[TypeIds_Int8Array], instanceCount[TypeIds_Int8Array]);
         Output::Print(L"    Uint8Array                     %8d   %8d\n", typeCount[TypeIds_Uint8Array], instanceCount[TypeIds_Uint8Array]);
         Output::Print(L"    Uint8ClampedArray              %8d   %8d\n", typeCount[TypeIds_Uint8ClampedArray], instanceCount[TypeIds_Uint8ClampedArray]);
@@ -1385,12 +1361,12 @@ namespace Js
 
     ArenaAllocator* ScriptContext::AllocatorForDiagnostics()
     {
-        if (!diagnosticArena)
+        if (this->diagnosticArena == nullptr)
         {
-            diagnosticArena = HeapNew(ArenaAllocator, L"Diagnostic", GetThreadContext()->GetDiagnosticPageAllocator(), Throw::OutOfMemory);
+            this->diagnosticArena = HeapNew(ArenaAllocator, L"Diagnostic", this->GetThreadContext()->GetDebugManager()->GetDiagnosticPageAllocator(), Throw::OutOfMemory);
         }
-
-        return diagnosticArena;
+        Assert(this->diagnosticArena != nullptr);
+        return this->diagnosticArena;
     }
 
     void ScriptContext::PushObject(Var object)
@@ -1490,7 +1466,7 @@ namespace Js
         }
         else
         {
-            Assert(!GetHostScriptContext()->HasCaller());
+            Assert(!GetThreadContext()->GetIsThreadBound() || !GetHostScriptContext()->HasCaller());
             VerifyAlive(isJSFunction, NULL);
         }
     }
@@ -2851,7 +2827,7 @@ namespace Js
     {
         OUTPUT_TRACE(Js::DebuggerPhase, L"ScriptContext::OnDebuggerAttached: start 0x%p\n", this);
 
-        Js::StepController* stepController = &this->GetThreadContext()->Diagnostics->stepController;
+        Js::StepController* stepController = &this->GetThreadContext()->GetDebugManager()->stepController;
         if (stepController->IsActive())
         {
             AssertMsg(stepController->GetActivatedContext() == nullptr, "StepController should not be active when we attach.");
@@ -2916,7 +2892,7 @@ namespace Js
     {
         OUTPUT_TRACE(Js::DebuggerPhase, L"ScriptContext::OnDebuggerDetached: start 0x%p\n", this);
 
-        Js::StepController* stepController = &this->GetThreadContext()->Diagnostics->stepController;
+        Js::StepController* stepController = &this->GetThreadContext()->GetDebugManager()->stepController;
         if (stepController->IsActive())
         {
             // Normally step controller is deactivated on start of dispatch (step, async break, exception, etc),
@@ -2967,11 +2943,11 @@ namespace Js
             AutoRestore(ThreadContext* threadContext)
                 :threadContext(threadContext)
             {
-                this->threadContext->SetDebuggerAttaching(true);
+                this->threadContext->GetDebugManager()->SetDebuggerAttaching(true);
             }
             ~AutoRestore()
             {
-                this->threadContext->SetDebuggerAttaching(false);
+                this->threadContext->GetDebugManager()->SetDebuggerAttaching(false);
             }
 
         private:
@@ -3166,7 +3142,6 @@ namespace Js
         REGISTER_OBJECT(String);
         REGISTER_OBJECT(RegExp);
         REGISTER_OBJECT(JSON);
-        REGISTER_OBJECT(PixelArray);
 
         if (config.IsES6MapEnabled())
         {
@@ -3584,7 +3559,6 @@ namespace Js
         case TypeIds_UndeclBlockVar:
             return this->GetLibrary()->GetUndeclBlockVar();
         case TypeIds_Enumerator:
-        case TypeIds_ExtensionEnumerator:
         case TypeIds_HostDispatch:
             return value;
         case TypeIds_Boolean:
@@ -3785,6 +3759,12 @@ namespace Js
                     lea eax, [esp + 8]
                     push eax
                     call ScriptContext::ProfileModeDeferredParse
+#ifdef _CONTROL_FLOW_GUARD
+                    // verify that the call target is valid
+                    mov  ecx, eax
+                    call[__guard_check_icall_fptr]
+                    mov eax, ecx
+#endif
                     pop ebp
                     // Although we don't restore ESP here on WinCE, this is fine because script profiler is not shipped for WinCE.
                     jmp eax
@@ -3835,10 +3815,16 @@ namespace Js
             // Register functions
             __asm
             {
-                push ebp
+                    push ebp
                     mov ebp, esp
                     push[esp + 8]
                     call ScriptContext::ProfileModeDeferredDeserialize
+#ifdef _CONTROL_FLOW_GUARD
+                    // verify that the call target is valid
+                    mov  ecx, eax
+                    call[__guard_check_icall_fptr]
+                    mov eax, ecx
+#endif
                     pop ebp
                     // Although we don't restore ESP here on WinCE, this is fine because script profiler is not shipped for WinCE.
                     jmp eax
@@ -4092,10 +4078,10 @@ namespace Js
                     // so that if there is library/helper call after script function, it will use try-catch.
                     // Can't use smart/destructor object here because of __try__finally.
                     ThreadContext* threadContext = scriptContext->GetThreadContext();
-                    bool isOrigWrapperPresent = threadContext->GetDebuggingFlags()->IsBuiltInWrapperPresent();
+                    bool isOrigWrapperPresent = threadContext->GetDebugManager()->GetDebuggingFlags()->IsBuiltInWrapperPresent();
                     if (isOrigWrapperPresent)
                     {
-                        threadContext->GetDebuggingFlags()->SetIsBuiltInWrapperPresent(false);
+                        threadContext->GetDebugManager()->GetDebuggingFlags()->SetIsBuiltInWrapperPresent(false);
                     }
                     __try
                     {
@@ -4103,7 +4089,7 @@ namespace Js
                     }
                     __finally
                     {
-                        threadContext->GetDebuggingFlags()->SetIsBuiltInWrapperPresent(isOrigWrapperPresent);
+                        threadContext->GetDebugManager()->GetDebuggingFlags()->SetIsBuiltInWrapperPresent(isOrigWrapperPresent);
                     }
                 }
                 else
@@ -4985,14 +4971,12 @@ namespace Js
         DEFINE_OBJECT_NAME(SIMD);
 
         // Float32x4
-        REG_OBJECTS_LIB_FUNC(float32x4, SIMDFloat32x4Lib::EntryFloat32x4);
+        REG_OBJECTS_LIB_FUNC(Float32x4, SIMDFloat32x4Lib::EntryFloat32x4);
         REG_OBJECTS_LIB_FUNC(check, SIMDFloat32x4Lib::EntryCheck);
         REG_OBJECTS_LIB_FUNC(zero, SIMDFloat32x4Lib::EntryZero);
         REG_OBJECTS_LIB_FUNC(splat, SIMDFloat32x4Lib::EntrySplat);
-        REG_OBJECTS_LIB_FUNC(withX, SIMDFloat32x4Lib::EntryWithX);
-        REG_OBJECTS_LIB_FUNC(withY, SIMDFloat32x4Lib::EntryWithY);
-        REG_OBJECTS_LIB_FUNC(withZ, SIMDFloat32x4Lib::EntryWithZ);
-        REG_OBJECTS_LIB_FUNC(withW, SIMDFloat32x4Lib::EntryWithW);
+        REG_OBJECTS_LIB_FUNC(extractLane, SIMDFloat32x4Lib::EntryExtractLane);
+        REG_OBJECTS_LIB_FUNC(replaceLane, SIMDFloat32x4Lib::EntryReplaceLane);
         REG_OBJECTS_LIB_FUNC(fromFloat64x2, SIMDFloat32x4Lib::EntryFromFloat64x2);
         REG_OBJECTS_LIB_FUNC(fromFloat64x2Bits, SIMDFloat32x4Lib::EntryFromFloat64x2Bits);
         REG_OBJECTS_LIB_FUNC(fromInt32x4, SIMDFloat32x4Lib::EntryFromInt32x4);
@@ -5024,12 +5008,10 @@ namespace Js
         REG_OBJECTS_LIB_FUNC(clamp, SIMDFloat32x4Lib::EntryClamp);
         REG_OBJECTS_LIB_FUNC(select, SIMDFloat32x4Lib::EntrySelect);
         // Float64x2
-        REG_OBJECTS_LIB_FUNC(float64x2, SIMDFloat64x2Lib::EntryFloat64x2);
+        REG_OBJECTS_LIB_FUNC(Float64x2, SIMDFloat64x2Lib::EntryFloat64x2);
         REG_OBJECTS_LIB_FUNC(check, SIMDFloat64x2Lib::EntryCheck);
         REG_OBJECTS_LIB_FUNC(zero, SIMDFloat64x2Lib::EntryZero);
         REG_OBJECTS_LIB_FUNC(splat, SIMDFloat64x2Lib::EntrySplat);
-        REG_OBJECTS_LIB_FUNC(withX, SIMDFloat64x2Lib::EntryWithX);
-        REG_OBJECTS_LIB_FUNC(withY, SIMDFloat64x2Lib::EntryWithY);
         REG_OBJECTS_LIB_FUNC(fromFloat32x4, SIMDFloat64x2Lib::EntryFromFloat32x4);
         REG_OBJECTS_LIB_FUNC(fromFloat32x4Bits, SIMDFloat64x2Lib::EntryFromFloat32x4Bits);
         REG_OBJECTS_LIB_FUNC(fromInt32x4, SIMDFloat64x2Lib::EntryFromInt32x4);
@@ -5057,16 +5039,14 @@ namespace Js
         REG_OBJECTS_LIB_FUNC(clamp, SIMDFloat64x2Lib::EntryClamp);
         REG_OBJECTS_LIB_FUNC(select, SIMDFloat64x2Lib::EntrySelect);
         // Int32x4
-        REG_OBJECTS_LIB_FUNC(int32x4, SIMDInt32x4Lib::EntryInt32x4);
+        REG_OBJECTS_LIB_FUNC(Int32x4, SIMDInt32x4Lib::EntryInt32x4);
         REG_OBJECTS_LIB_FUNC(check, SIMDInt32x4Lib::EntryCheck);
         REG_OBJECTS_LIB_FUNC(zero, SIMDInt32x4Lib::EntryZero);
         REG_OBJECTS_LIB_FUNC(splat, SIMDInt32x4Lib::EntrySplat);
         REG_OBJECTS_LIB_FUNC(bool_, SIMDInt32x4Lib::EntryBool);
-        REG_OBJECTS_LIB_FUNC(withX, SIMDInt32x4Lib::EntryWithX);
-        REG_OBJECTS_LIB_FUNC(withY, SIMDInt32x4Lib::EntryWithY);
-        REG_OBJECTS_LIB_FUNC(withZ, SIMDInt32x4Lib::EntryWithZ);
-        REG_OBJECTS_LIB_FUNC(withW, SIMDInt32x4Lib::EntryWithW);
-        REG_OBJECTS_LIB_FUNC(withFlagX, SIMDInt32x4Lib::EntryWithFlagX);
+		REG_OBJECTS_LIB_FUNC(extractLane, SIMDInt32x4Lib::EntryExtractLane);
+		REG_OBJECTS_LIB_FUNC(replaceLane, SIMDInt32x4Lib::EntryReplaceLane);
+		REG_OBJECTS_LIB_FUNC(withFlagX, SIMDInt32x4Lib::EntryWithFlagX);
         REG_OBJECTS_LIB_FUNC(withFlagY, SIMDInt32x4Lib::EntryWithFlagY);
         REG_OBJECTS_LIB_FUNC(withFlagZ, SIMDInt32x4Lib::EntryWithFlagZ);
         REG_OBJECTS_LIB_FUNC(withFlagW, SIMDInt32x4Lib::EntryWithFlagW);
@@ -5091,6 +5071,30 @@ namespace Js
         REG_OBJECTS_LIB_FUNC(shiftRightLogical, SIMDInt32x4Lib::EntryShiftRightLogical);
         REG_OBJECTS_LIB_FUNC(shiftRightArithmetic, SIMDInt32x4Lib::EntryShiftRightArithmetic);
         REG_OBJECTS_LIB_FUNC(select, SIMDInt32x4Lib::EntrySelect);
+
+        // Int8x16
+        REG_OBJECTS_LIB_FUNC(Int8x16, SIMDInt8x16Lib::EntryInt8x16);
+        REG_OBJECTS_LIB_FUNC(check, SIMDInt8x16Lib::EntryCheck);
+        REG_OBJECTS_LIB_FUNC(zero, SIMDInt8x16Lib::EntryZero);
+        REG_OBJECTS_LIB_FUNC(splat, SIMDInt8x16Lib::EntrySplat);
+        REG_OBJECTS_LIB_FUNC(fromFloat32x4Bits, SIMDInt8x16Lib::EntryFromFloat32x4Bits);
+        REG_OBJECTS_LIB_FUNC(fromInt32x4Bits, SIMDInt8x16Lib::EntryFromInt32x4Bits);
+        REG_OBJECTS_LIB_FUNC(neg, SIMDInt8x16Lib::EntryNeg);
+        REG_OBJECTS_LIB_FUNC(not, SIMDInt8x16Lib::EntryNot);
+        REG_OBJECTS_LIB_FUNC(add, SIMDInt8x16Lib::EntryAdd);
+        REG_OBJECTS_LIB_FUNC(sub, SIMDInt8x16Lib::EntrySub);
+        REG_OBJECTS_LIB_FUNC(mul, SIMDInt8x16Lib::EntryMul);
+        REG_OBJECTS_LIB_FUNC(and, SIMDInt8x16Lib::EntryAnd);
+        REG_OBJECTS_LIB_FUNC(or, SIMDInt8x16Lib::EntryOr);
+        REG_OBJECTS_LIB_FUNC(xor, SIMDInt8x16Lib::EntryXor);
+        REG_OBJECTS_LIB_FUNC(lessThan, SIMDInt8x16Lib::EntryLessThan);
+        REG_OBJECTS_LIB_FUNC(equal, SIMDInt8x16Lib::EntryEqual);
+        REG_OBJECTS_LIB_FUNC(greaterThan, SIMDInt8x16Lib::EntryGreaterThan);
+        REG_OBJECTS_LIB_FUNC(shiftLeftByScalar, SIMDInt8x16Lib::EntryShiftLeftByScalar);
+        REG_OBJECTS_LIB_FUNC(shiftRightLogicalByScalar, SIMDInt8x16Lib::EntryShiftRightLogicalByScalar);
+        REG_OBJECTS_LIB_FUNC(shiftRightArithmeticByScalar, SIMDInt8x16Lib::EntryShiftRightArithmeticByScalar);
+        REG_OBJECTS_LIB_FUNC(extractLane, SIMDInt8x16Lib::EntryExtractLane);
+        REG_OBJECTS_LIB_FUNC(replaceLane, SIMDInt8x16Lib::EntryReplaceLane);
 
         return hr;
     }
@@ -5140,16 +5144,6 @@ namespace Js
         this->bindReferenceCount++;
         RECYCLER_PERF_COUNTER_INC(BindReference);
 #endif
-    }
-
-    HRESULT ScriptContext::RegisterPixelArray()
-    {
-        HRESULT hr = S_OK;
-
-        // Due to naming inconsistency of CanvasPixelArray, the REG_GLOBAL_CONSTRUCTOR macro doesn't work here
-        REG_LIB_FUNC(NULL, CanvasPixelArray, JavascriptPixelArray::NewInstance);
-
-        return hr;
     }
 
 #ifdef PROFILE_STRINGS
@@ -6247,7 +6241,11 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
 #ifdef ENABLE_MUTATION_BREAKPOINT
     bool ScriptContext::HasMutationBreakpoints()
     {
-        return this->GetDebugContext()->GetProbeContainer()->HasMutationBreakpoints();
+        if (this->GetDebugContext() != nullptr && this->GetDebugContext()->GetProbeContainer() != nullptr)
+        {
+            return this->GetDebugContext()->GetProbeContainer()->HasMutationBreakpoints();
+        }
+        return false;
     }
 
     void ScriptContext::InsertMutationBreakpoint(Js::MutationBreakpoint *mutationBreakpoint)

@@ -182,7 +182,6 @@ namespace Js
         DynamicType * uint64ArrayType;
         DynamicType * boolArrayType;
         DynamicType * charArrayType;
-        DynamicType * pixelArrayType;
         StaticType * booleanTypeStatic;
         DynamicType * booleanTypeDynamic;
         DynamicType * dateType;
@@ -209,8 +208,6 @@ namespace Js
         // Function Types
         DynamicTypeHandler * functionTypeHandler;
         DynamicTypeHandler * functionWithPrototypeTypeHandler;
-        DynamicTypeHandler * userDefinedFunctionWithoutPrototypeTypeHandler;
-        DynamicTypeHandler * userDefinedFunctionWithPrototypeTypeHandler;
         DynamicType * externalFunctionWithDeferredPrototypeType;
         DynamicType * wrappedFunctionWithDeferredPrototypeType;
         DynamicType * stdCallFunctionWithDeferredPrototypeType;
@@ -241,6 +238,7 @@ namespace Js
         // SIMD
         StaticType * simdFloat32x4TypeStatic;
         StaticType * simdInt32x4TypeStatic;
+        StaticType * simdInt8x16TypeStatic;
         StaticType * simdFloat64x2TypeStatic;
 #endif
 
@@ -291,6 +289,7 @@ namespace Js
         JavascriptString* simdFloat32x4DisplayString;
         JavascriptString* simdFloat64x2DisplayString;
         JavascriptString* simdInt32x4DisplayString;
+        JavascriptString* simdInt8x16DisplayString;
 #endif
 
         JavascriptString* symbolTypeDisplayString;
@@ -327,6 +326,7 @@ namespace Js
         JavascriptFunction* identityFunction;
         JavascriptFunction* throwerFunction;
         JavascriptFunction* hostPromiseContinuationFunction;
+        JavascriptFunction* promiseResolveFunction;
 
         JavascriptFunction* objectValueOfFunction;
         JavascriptFunction* objectToStringFunction;
@@ -339,6 +339,8 @@ namespace Js
         JavascriptFunction* simdFloat64x2ToStringFunction;
         // Int32x4
         JavascriptFunction* simdInt32x4ToStringFunction;
+        // Int8x16
+        JavascriptFunction* simdInt8x16ToStringFunction;
 #endif
 
         mutable CharStringCache charStringCache;
@@ -404,11 +406,6 @@ namespace Js
         static SimpleTypeHandler<1> SharedFunctionWithLengthTypeHandler;
         static SimpleTypeHandler<1> SharedIdMappedFunctionWithPrototypeTypeHandler;
         static MissingPropertyTypeHandler MissingPropertyHolderTypeHandler;
-
-        static SimpleTypeHandler<1> SharedUserDefinedFunctionWithoutPrototypeAndWithoutNameTypeHandler;
-        static SimpleTypeHandler<2> SharedUserDefinedFunctionWithoutPrototypeAndWithNameTypeHandler;
-        static SimpleTypeHandler<2> SharedUserDefinedFunctionWithPrototypeAndWithoutNameTypeHandler;
-        static SimpleTypeHandler<3> SharedUserDefinedFunctionWithPrototypeAndWithNameTypeHandler;
 
         static SimplePropertyDescriptor SharedFunctionPropertyDescriptors[2];
         static SimplePropertyDescriptor HeapArgumentsPropertyDescriptorsV11[2];
@@ -505,6 +502,7 @@ namespace Js
         JavascriptString* GetSIMDFloat32x4DisplayString() const { return simdFloat32x4DisplayString; }
         JavascriptString* GetSIMDFloat64x2DisplayString() const { return simdFloat64x2DisplayString; }
         JavascriptString* GetSIMDInt32x4DisplayString()   const { return simdInt32x4DisplayString; }
+        JavascriptString* GetSIMDInt8x16DisplayString()   const { return simdInt8x16DisplayString; }
 #endif
 
         JavascriptString* GetSymbolTypeDisplayString() const { return symbolTypeDisplayString; }
@@ -518,7 +516,6 @@ namespace Js
         JavascriptRegExpConstructor* GetRegExpConstructor() const {return regexConstructor; }
         JavascriptFunction* GetStringConstructor() const {return stringConstructor; }
         JavascriptFunction* GetArrayBufferConstructor() const {return arrayBufferConstructor; }
-        JavascriptFunction* GetPixelArrayConstructor() const {return pixelArrayConstructor; }
         JavascriptFunction* GetErrorConstructor() const { return errorConstructor; }
         JavascriptFunction* GetTypedArrayConstructor() const { return typedArrayConstructor; }
         JavascriptFunction* GetInt8ArrayConstructor() const {return Int8ArrayConstructor; }
@@ -582,6 +579,7 @@ namespace Js
         StaticType* GetSIMDFloat32x4TypeStatic() const { return simdFloat32x4TypeStatic; }
         StaticType* GetSIMDFloat64x2TypeStatic() const { return simdFloat64x2TypeStatic; }
         StaticType* GetSIMDInt32x4TypeStatic()   const { return simdInt32x4TypeStatic; }
+        StaticType* GetSIMDInt8x16TypeStatic()   const { return simdInt8x16TypeStatic; }
 #endif
 
         DynamicType * GetObjectLiteralType(uint16 requestedInlineSlotCapacity);
@@ -598,7 +596,6 @@ namespace Js
         DynamicType * GetNativeIntArrayType() const { return nativeIntArrayType; }
         DynamicType * GetCopyOnAccessNativeIntArrayType() const { return copyOnAccessNativeIntArrayType; }
         DynamicType * GetNativeFloatArrayType() const { return nativeFloatArrayType; }
-        DynamicType * GetPixelArrayType() const { return pixelArrayType; }
         DynamicType * GetRegexType() const { return regexType; }
         DynamicType * GetRegexResultType() const { return regexResultType; }
         DynamicType * GetArrayBufferType() const { return arrayBufferType; }
@@ -632,6 +629,7 @@ namespace Js
         JavascriptFunction* GetSIMDFloat32x4ToStringFunction() const { return simdFloat32x4ToStringFunction;  }
         JavascriptFunction* GetSIMDFloat64x2ToStringFunction() const { return simdFloat64x2ToStringFunction; }
         JavascriptFunction* GetSIMDInt32x4ToStringFunction()   const { return simdInt32x4ToStringFunction; }
+        JavascriptFunction* GetSIMDInt8x16ToStringFunction()   const { return simdInt8x16ToStringFunction; }
 #endif
 
         JavascriptFunction* GetDebugObjectNonUserGetterFunction() const { return debugObjectNonUserGetterFunction; }
@@ -695,9 +693,6 @@ namespace Js
 
         DynamicType* GetCharArrayType() { return charArrayType; };
 
-        JavascriptPixelArray* CreatePixelArray(uint32 length);
-        bool GetPixelArrayBuffer(Var instance, BYTE **ppBuffer, UINT *pBufferLength);
-
         //
         // This method would be used for creating array literals, when we really need to create a huge array
         // Avoids checks at runtime.
@@ -742,10 +737,8 @@ namespace Js
         static DynamicTypeHandler * GetDeferredPrototypeGeneratorFunctionTypeHandler(ScriptContext* scriptContext);
         DynamicType * CreateDeferredPrototypeGeneratorFunctionType(JavascriptMethod entrypoint, bool isShared = false);
         static DynamicTypeHandler * GetDeferredPrototypeFunctionTypeHandler(ScriptContext* scriptContext);
-        static DynamicTypeHandler * GetDeferredUserDefinedFunctionWithPrototypeTypeHandler(ScriptContext* scriptContext);
         static DynamicTypeHandler * GetDeferredBoundFunctionTypeHandler(ScriptContext* scriptContext);
         DynamicTypeHandler * GetDeferredFunctionTypeHandler();
-        DynamicTypeHandler * GetDeferredUserDefinedFunctionWithoutPrototypeTypeHandler();
         DynamicType * CreateDeferredPrototypeFunctionType(JavascriptMethod entrypoint, bool isShared = false);
         DynamicType * CreateFunctionType(JavascriptMethod entrypoint, RecyclableObject* prototype = nullptr);
         DynamicType * CreateFunctionWithLengthType(FunctionInfo * functionInfo);
@@ -773,6 +766,8 @@ namespace Js
         JavascriptExternalFunction* CreateStdCallExternalFunction(StdCallJavascriptMethod entryPointer, PropertyId nameId, void *callbackState);
         JavascriptExternalFunction* CreateStdCallExternalFunction(StdCallJavascriptMethod entryPointer, Var nameId, void *callbackState);
         JavascriptWinRTFunction* CreateWinRTFunction(JavascriptMethod entryPoint, PropertyId nameId, Var signature, bool fConstructor);
+        JavascriptPromiseAsyncSpawnExecutorFunction* CreatePromiseAsyncSpawnExecutorFunction(JavascriptMethod entryPoint, JavascriptGenerator* generatorFunction, Var target);
+        JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction* CreatePromiseAsyncSpawnStepArgumentExecutorFunction(JavascriptMethod entryPoint, JavascriptGenerator* generator, Var argument, JavascriptFunction* resolve = NULL, JavascriptFunction* reject = NULL, bool isReject = false);
         JavascriptPromiseCapabilitiesExecutorFunction* CreatePromiseCapabilitiesExecutorFunction(JavascriptMethod entryPoint, JavascriptPromiseCapability* capability);
         JavascriptPromiseResolveOrRejectFunction* CreatePromiseResolveOrRejectFunction(JavascriptMethod entryPoint, JavascriptPromise* promise, bool isReject);
         JavascriptPromiseReactionTaskFunction* CreatePromiseReactionTaskFunction(JavascriptMethod entryPoint, JavascriptPromiseReaction* reaction, Var argument);
@@ -827,6 +822,8 @@ namespace Js
 
         DynamicType * GetModuleRootType() { return moduleRootType; }
         DynamicType * GetExtensionEnumeratorType() { return extensionEnumeratorType; }
+
+        JavascriptFunction* EnsurePromiseResolveFunction();
 
         void SetCrossSiteForSharedFunctionType(JavascriptFunction * function, bool useSlotAccessCrossSiteThunk);
 
@@ -978,9 +975,6 @@ namespace Js
         static void __cdecl InitializeBoolArrayPrototype(DynamicObject* prototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
         static void __cdecl InitializeCharArrayPrototype(DynamicObject* prototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
 
-        static void __cdecl InitializePixelArrayConstructor(DynamicObject* pixelArrayConstructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
-        static void __cdecl InitializePixelArrayPrototype(DynamicObject* arrayPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
-
         static void __cdecl InitializeBooleanConstructor(DynamicObject* booleanConstructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
         static void __cdecl InitializeBooleanPrototype(DynamicObject* booleanPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
         static void __cdecl InitializeSymbolConstructor(DynamicObject* symbolConstructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
@@ -1050,7 +1044,7 @@ namespace Js
         void InitializeDiagnosticsScriptObject(DiagnosticsScriptObject* newDiagnosticsScriptObject);
 
         static void __cdecl InitializeGeneratorFunction(DynamicObject* function, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
-        template<bool addPrototype, bool addLength>
+        template<bool addPrototype>
         static void __cdecl InitializeFunction(DynamicObject* function, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
 
 #ifdef ENABLE_NATIVE_CODEGEN

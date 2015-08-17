@@ -710,6 +710,11 @@ bool ValueType::IsSimd128Int32x4() const
     return IsObject() && GetObjectType() == ObjectType::Simd128Int32x4;
 }
 
+bool ValueType::IsSimd128Int8x16() const
+{
+    return IsObject() && GetObjectType() == ObjectType::Simd128Int8x16;
+}
+
 bool ValueType::IsSimd128Float64x2() const
 {
     return IsObject() && GetObjectType() == ObjectType::Simd128Float64x2;
@@ -728,6 +733,11 @@ bool ValueType::IsLikelySimd128Float32x4() const
 bool ValueType::IsLikelySimd128Int32x4() const
 {
     return IsLikelyObject() && GetObjectType() == ObjectType::Simd128Int32x4;
+}
+
+bool ValueType::IsLikelySimd128Int8x16() const
+{
+    return IsLikelyObject() && GetObjectType() == ObjectType::Simd128Int8x16;
 }
 
 bool ValueType::IsLikelySimd128Float64x2() const
@@ -1158,7 +1168,6 @@ void ValueType::InitializeTypeIdToBitsMap()
     TypeIdToBits[TypeIds_Boolean           ] = ValueType::Boolean.bits;
     TypeIdToBits[TypeIds_String            ] = ValueType::String.bits;
     TypeIdToBits[TypeIds_RegEx             ] = GetObject(ObjectType::RegExp).bits;
-    TypeIdToBits[TypeIds_PixelArray        ] = GetObject(ObjectType::PixelArray).bits;
     TypeIdToBits[TypeIds_Int8Array         ] = GetObject(ObjectType::Int8Array).bits;
     TypeIdToBits[TypeIds_Uint8Array        ] = GetObject(ObjectType::Uint8Array).bits;
     TypeIdToBits[TypeIds_Uint8ClampedArray ] = GetObject(ObjectType::Uint8ClampedArray).bits;
@@ -1175,6 +1184,7 @@ void ValueType::InitializeTypeIdToBitsMap()
 #ifdef SIMD_JS_ENABLED
     TypeIdToBits[TypeIds_SIMDFloat32x4     ] = GetObject(ObjectType::Simd128Float32x4).bits;
     TypeIdToBits[TypeIds_SIMDInt32x4       ] = GetObject(ObjectType::Simd128Int32x4).bits;
+    TypeIdToBits[TypeIds_SIMDInt8x16       ] = GetObject(ObjectType::Simd128Int8x16).bits;
     TypeIdToBits[TypeIds_SIMDFloat64x2     ] = GetObject(ObjectType::Simd128Float64x2).bits;
 #endif
 

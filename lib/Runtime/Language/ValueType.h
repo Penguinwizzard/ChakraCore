@@ -159,11 +159,13 @@ public:
     bool IsSimd128() const;
     bool IsSimd128Float32x4() const;
     bool IsSimd128Int32x4() const;
+    bool IsSimd128Int8x16() const;
     bool IsSimd128Float64x2() const;
 
     bool IsLikelySimd128() const;
     bool IsLikelySimd128Float32x4() const;
     bool IsLikelySimd128Int32x4() const;
+    bool IsLikelySimd128Int8x16() const;
     bool IsLikelySimd128Float64x2() const;
 #endif
 

@@ -30,9 +30,36 @@ goto :main
 :: ============================================================================
 :printUsage
 
-  echo Usage: runtests.cmd [-binary ^<path^>]
+  echo runtests.cmd -x86^|-x64^|-arm -debug^|-test [options]
+  echo.
+  echo Required switches:
+  echo.
+  echo   Specify architecture of jshost (required):
+  echo.
+  echo   -x86           Build arch of binaries is x86
+  echo   -x64           Build arch of binaries is x64
+  echo   -arm           Build arch of binaries is ARM
+  echo.
+  echo   Specify type of jshost (required):
+  echo.
+  echo   -debug         Build type of binaries is debug
+  echo   -test          Build type of binaries is test
+  echo.
+  echo   Shorthand combinations can be used, e.g. -x64debug
+  echo.
+  echo Options:
+  echo.
+  echo   -dirs dirname  Run only the specified directory
+  :: TODO Add more usage help
 
-  rem TODO: Improve usage help
+  goto :eof
+
+:: ============================================================================
+:: Print how to get help
+:: ============================================================================
+:printGetHelp
+
+  echo For help use runtests.cmd -?
 
   goto :eof
 
@@ -41,19 +68,13 @@ goto :main
 :: ============================================================================
 :main
 
-  set _Binary=
-  set _Variants=
-  set _TAGS=
-  set _NOTTAGS=
-  set _DIRNOTTAGS=
-  set _DIRTAGS=
-  set _drt=
-  set _rebase=
-  set _ExtraVariants=
-  set _dynamicprofilecache=-dynamicprofilecache:profile.dpl
-  set _dynamicprofileinput=-dynamicprofileinput:profile.dpl
-  set EXTRA_CC_FLAGS=%EXTRA_CC_FLAGS% -DumpOnCrash
+  if not exist %cd%\rlexedirs.xml (
+    echo Error: rlexedirs.xml not found in current directory.
+    echo runtests.cmd must be run from a test root directory containing rlexedirs.xml.
+    exit /b 1
+  )
 
+  call :initVars
   call :parseArgs %*
 
   if not "%fShowUsage%" == "" (
@@ -61,59 +82,32 @@ goto :main
     goto :eof
   )
 
-  if not "%_binaryRoot%" == "" set path=%_binaryRoot%;%path%
+  call :validateArgs
 
-  if "%_Binary%" == "" set _Binary=-binary:ch.exe
-
-  :: If the user didn't specify explicit variants then do the defaults
-  if "%_Variants%"=="" set _Variants=interpreted,dynapogo
-
-  :: If the user specified extra variants to run (i.e. in addition to the defaults), include them.
-  if not "%_ExtraVariants%" == "" set _Variants=%_Variants%,%_ExtraVariants%
-
-  rem TODO: Move any apollo tests from core\test back into private unittests
-  set _ExcludeApolloTests=
-  if "%APOLLO%" == "1" (
-      set _ExcludeApolloTests=-nottags:exclude_apollo
-      set TARGET_OS=wp8
+  if not "%fShowGetHelp%" == "" (
+    call :printGetHelp
+    goto :eof
   )
 
-  rem TODO: Move any nightly tagged tests from core\test back into private unittests
-  rem if "%_nightly%" == "" (
-      set _NOTTAGS=%_NOTTAGS% -nottags:nightly
-  )
-
-  rem TODO: Move any slow tagged tests from core\test back into private unittests
-  if not "%_full%" == "1" (
-      set _NOTTAGS=%_NOTTAGS% -nottags:Slow
-  )
-
-  if not "%NUM_RL_THREADS%" == "" (
-    set _RL_THREAD_FLAGS=-threads:%NUM_RL_THREADS%
-  )
-
-  if "%_DIRS%" == "" (
-    set _DIRS=-all
-  )
-
-  :: Ensure we're running from the root folder of the tests
-  pushd %~dp0
+  call :configureVars
 
   set _logsRoot=%cd%\logs
   call :doSilent del /s /q profile.dpl.*
 
   for %%i in (%_Variants%) do (
-      set _TESTCONFIG=%%i
-      call :RunOneVariant
+    set _TESTCONFIG=%%i
+    call :RunOneVariant
   )
 
   for %%i in (%_Variants%) do (
-      echo ######## Logs for %%i variant ########
-      type %_logsRoot%\%%i\rl.log
-      echo.
+    echo.
+    echo ######## Logs for %%i variant ########
+    if exist %_logsRoot%\%_BuildArch%_%_BuildType%\%%i\rl.log (
+      type %_logsRoot%\%_BuildArch%_%_BuildType%\%%i\rl.log
+    ) else (
+      echo ERROR: Log file '%_logsRoot%\%_BuildArch%_%_BuildType%\%%i\rl.log' does not exist
+    )
   )
-
-  popd
 
   goto :eof
 
@@ -126,27 +120,43 @@ goto :main
 
   if "%1" == "-?" set fShowUsage=1& goto :ArgOk
   if "%1" == "/?" set fShowUsage=1& goto :ArgOk
-  if /i "%1" == "-binary"     set _Binary=-binary:%2&                                            goto :ArgOkShift2
-  if /i "%1" == "-dirs"       set _DIRS=-dirs:%2&                                                goto :ArgOkShift2
-  if /i "%1" == "-win7"       set TARGET_OS=win7&                                                goto :ArgOk
-  if /i "%1" == "-win8"       set TARGET_OS=win8&                                                goto :ArgOk
-  if /i "%1" == "-winBlue"    set TARGET_OS=winBlue&                                             goto :ArgOk
-  if /i "%1" == "-win10"      set TARGET_OS=win10&                                               goto :ArgOk
-  if /i "%1" == "-nottags"    set _NOTTAGS=%_NOTTAGS% -nottags:%2&                               goto :ArgOkShift2
-  if /i "%1" == "-tags"       set _TAGS=%_TAGS% -tags:%2&                                        goto :ArgOkShift2
-  if /i "%1" == "-dirtags"    set _DIRTAGS=%_DIRTAGS% -dirtags:%2&                               goto :ArgOkShift2
-  if /i "%1" == "-dirnottags" set _DIRNOTTAGS=%_DIRNOTTAGS% -dirnottags:%2&                      goto :ArgOkShift2
+
+  if /i "%1" == "-x86"          set _BuildArch=x86&                                             goto :ArgOk
+  if /i "%1" == "-x64"          set _BuildArch=x64&                                             goto :ArgOk
+  if /i "%1" == "-arm"          set _BuildArch=arm&                                             goto :ArgOk
+  if /i "%1" == "-debug"        set _BuildType=debug&                                           goto :ArgOk
+  if /i "%1" == "-test"         set _BuildType=test&                                            goto :ArgOk
+
+  if /i "%1" == "-x86debug"     set _BuildArch=x86&set _BuildType=debug&                        goto :ArgOk
+  if /i "%1" == "-x64debug"     set _BuildArch=x64&set _BuildType=debug&                        goto :ArgOk
+  if /i "%1" == "-armdebug"     set _BuildArch=arm&set _BuildType=debug&                        goto :ArgOk
+  if /i "%1" == "-x86test"      set _BuildArch=x86&set _BuildType=test&                         goto :ArgOk
+  if /i "%1" == "-x64test"      set _BuildArch=x64&set _BuildType=test&                         goto :ArgOk
+  if /i "%1" == "-armtest"      set _BuildArch=arm&set _BuildType=test&                         goto :ArgOk
+
+  if /i "%1" == "-binary"       set _Binary=-binary:%2&                                         goto :ArgOkShift2
+  if /i "%1" == "-bindir"       set _BinDir=%~f2&                                               goto :ArgOkShift2
+  if /i "%1" == "-dirs"         set _DIRS=-dirs:%2&                                             goto :ArgOkShift2
+  if /i "%1" == "-win7"         set TARGET_OS=win7&                                             goto :ArgOk
+  if /i "%1" == "-win8"         set TARGET_OS=win8&                                             goto :ArgOk
+  if /i "%1" == "-winBlue"      set TARGET_OS=winBlue&                                          goto :ArgOk
+  if /i "%1" == "-win10"        set TARGET_OS=win10&                                            goto :ArgOk
+  if /i "%1" == "-nottags"      set _NOTTAGS=%_NOTTAGS% -nottags:%2&                            goto :ArgOkShift2
+  if /i "%1" == "-tags"         set _TAGS=%_TAGS% -tags:%2&                                     goto :ArgOkShift2
+  if /i "%1" == "-dirtags"      set _DIRTAGS=%_DIRTAGS% -dirtags:%2&                            goto :ArgOkShift2
+  if /i "%1" == "-dirnottags"   set _DIRNOTTAGS=%_DIRNOTTAGS% -dirnottags:%2&                   goto :ArgOkShift2
+  if /i "%1" == "-includeSlow"  set _includeSlow=1&                                             goto :ArgOk
   :: TODO Consider removing -drt and exclude_drt in some reasonable manner
-  if /i "%1" == "-drt"        set _drt=1& set _NOTTAGS=%_NOTTAGS% -nottags:exclude_drt&          goto :ArgOk
-  if /i "%1" == "-rebase"     set _rebase=-rebase&                                               goto :ArgOk
-  if /i "%1" == "-rundebug"   set _RUNDEBUG=1&                                                   goto :ArgOk
+  if /i "%1" == "-drt"          set _drt=1& set _NOTTAGS=%_NOTTAGS% -nottags:exclude_drt&       goto :ArgOk
+  if /i "%1" == "-nightly"      set _nightly=1&                                                 goto :ArgOk
+  if /i "%1" == "-rebase"       set _rebase=-rebase&                                            goto :ArgOk
+  if /i "%1" == "-rundebug"     set _RUNDEBUG=1&                                                goto :ArgOk
   :: TODO Figure out best way to specify build arch for tests that are excluded to specific archs
-  if /i "%1" == "-platform"   set _buildArch=%2&                                                 goto :ArgOkShift2
+  if /i "%1" == "-platform"     set _buildArch=%2&                                              goto :ArgOkShift2
   :: TODO Figure out best way to specify build type for tests that are excluded to specific type (chk, fre, etc)
-  if /i "%1" == "-buildType"  set _buildType=%2&                                                 goto :ArgOkShift2
-  if /i "%1" == "-binaryRoot" set _binaryRoot=%~f2&                                              goto :ArgOkShift2
-  if /i "%1" == "-toolsRoot"  set _toolsRoot=%2&                                                 goto :ArgOkShift2
-  if /i "%1" == "-variants"   set _Variants=%~2&                                                 goto :ArgOkShift2
+  if /i "%1" == "-buildType"    set _buildType=%2&                                              goto :ArgOkShift2
+  if /i "%1" == "-binaryRoot"   set _binaryRoot=%~f2&                                           goto :ArgOkShift2
+  if /i "%1" == "-variants"     set _Variants=%~2&                                              goto :ArgOkShift2
 
   if /i "%1" == "-extraVariants" (
     :: Extra variants are specified by the user but not run by default.
@@ -177,7 +187,7 @@ goto :main
     goto :ArgOk
   )
 
-  if not "%1" == "" echo Unknown argument: %1 & set fShowUsage=1
+  if not "%1" == "" echo Unknown argument: %1 & set fShowGetHelp=1
 
   goto :eof
 
@@ -188,6 +198,101 @@ goto :main
   shift
 
   goto :NextArgument
+
+:: ============================================================================
+:: Initialize batch script variables to defaults
+:: ============================================================================
+:initVars
+
+  set _RootDir=%~dp0..
+  set _BinDir=%_RootDir%\Build\VcBuild\Bin
+  set _BuildArch=
+  set _BuildType=
+  set _Binary=-binary:ch.exe
+  set _Variants=
+  set _TAGS=
+  set _NOTTAGS=
+  set _DIRNOTTAGS=
+  set _DIRTAGS=
+  set _drt=
+  set _rebase=
+  set _ExtraVariants=
+  set _dynamicprofilecache=-dynamicprofilecache:profile.dpl
+  set _dynamicprofileinput=-dynamicprofileinput:profile.dpl
+  set EXTRA_CC_FLAGS=%EXTRA_CC_FLAGS% -DumpOnCrash
+  set _includeSlow=
+  set _nightly=
+  set TARGET_OS=win10
+
+  goto :eof
+
+:: ============================================================================
+:: Validate that required arguments were specified
+:: ============================================================================
+:validateArgs
+
+  if "%_BuildArch%" == "" (
+    echo Error missing required build architecture or build type switch
+    set fShowGetHelp=1
+    goto :eof
+  )
+
+  if "%_BuildType%" == "" (
+    echo Error missing required build architecture or build type switch
+    set fShowGetHelp=1
+  )
+
+  goto :eof
+
+:: ============================================================================
+:: Configure the script variables and environment based on parsed arguments
+:: ============================================================================
+:configureVars
+
+  echo Adding to PATH: %_binDir%\%_BuildArch%_%_BuildType%
+  set path=%_binDir%\%_BuildArch%_%_BuildType%;%path%
+
+  :: If the user didn't specify explicit variants then do the defaults
+  if "%_Variants%"=="" set _Variants=interpreted,dynapogo
+
+  :: If the user specified extra variants to run (i.e. in addition to the defaults), include them.
+  if not "%_ExtraVariants%" == "" set _Variants=%_Variants%,%_ExtraVariants%
+
+  rem TODO: Move any apollo tests from core\test back into private unittests
+  set _ExcludeApolloTests=
+  if "%APOLLO%" == "1" (
+      set _ExcludeApolloTests=-nottags:exclude_apollo
+      set TARGET_OS=wp8
+  )
+
+  if not "%_nightly%" == "1" (
+    set _NOTTAGS=%_NOTTAGS% -nottags:nightly
+  ) else (
+    set _NOTTAGS=%_NOTTAGS% -nottags:exclude_nightly
+  )
+
+  if not "%_includeSlow%" == "1" (
+      set _NOTTAGS=%_NOTTAGS% -nottags:Slow
+  )
+
+  if not "%NUM_RL_THREADS%" == "" (
+    set _RL_THREAD_FLAGS=-threads:%NUM_RL_THREADS%
+  )
+
+  if "%_DIRS%" == "" (
+    set _DIRS=-all
+  )
+
+  set _BuildArchMapped=%_BuildArch%
+  set _BuildTypeMapped=%_BuildType%
+
+  :: Map new build arch and type names to old names until rl test tags are
+  :: updated to the new names
+  if "%_BuildArchMapped%" == "x64" set _BuildArchMapped=amd64
+  if "%_BuildTypeMapped%" == "debug" set _BuildTypeMapped=chk
+  if "%_BuildTypeMapped%" == "test" set _BuildTypeMapped=fre
+
+  goto :eof
 
 :: ============================================================================
 :: Run one variant
@@ -232,12 +337,11 @@ goto :main
       set _exclude_serialized=-nottags:exclude_serialized
   )
 
+  echo.
   echo ############# Starting %_TESTCONFIG% variant #############
 
-  call :do del /q %_logsRoot%\rl*
-  call :do md %_logsRoot%\%_TESTCONFIG%
-
-  echo %_TESTCONFIG% > %_logsRoot%\_currentRun.tmp
+  call :doSilent del /q %_logsRoot%\%_BuildArch%_%_BuildType%\%_TESTCONFIG%\rl*
+  call :doSilent md %_logsRoot%\%_BuildArch%_%_BuildType%\%_TESTCONFIG%
 
   set _rlArgs=%_Binary%
   set _rlArgs=%_rlArgs% -nottags:fail
@@ -249,11 +353,10 @@ goto :main
   set _rlArgs=%_rlArgs% %_DIRTAGS%
   set _rlArgs=%_rlArgs% %_DIRNOTTAGS%
   set _rlArgs=%_rlArgs% -nottags:fails_%_TESTCONFIG%
-  set _rlArgs=%_rlArgs% -nottags:fail_%TARGET_OS%
   set _rlArgs=%_rlArgs% -nottags:exclude_%_TESTCONFIG%
-  set _rlArgs=%_rlArgs% -nottags:exclude_%_buildArch%
   set _rlArgs=%_rlArgs% -nottags:exclude_%TARGET_OS%
-  set _rlArgs=%_rlArgs% -nottags:exclude_%_buildType%
+  set _rlArgs=%_rlArgs% -nottags:exclude_%_BuildArchMapped%
+  set _rlArgs=%_rlArgs% -nottags:exclude_%_BuildTypeMapped%
   set _rlArgs=%_rlArgs% %_exclude_serialized%
   set _rlArgs=%_rlArgs% %_exclude_forcedeferparse%
   set _rlArgs=%_rlArgs% %_exclude_nodeferparse%
@@ -267,8 +370,7 @@ goto :main
 
   call :do rl %_rlArgs%
 
-  call :do move /Y %_logsRoot%\*.log %_logsRoot%\%_TESTCONFIG%
-  del /Q %_logsRoot%\_currentRun.tmp
+  call :do move /Y %_logsRoot%\*.log %_logsRoot%\%_BuildArch%_%_BuildType%\%_TESTCONFIG%
 
   set EXTRA_CC_FLAGS=%_OLD_CC_FLAGS%
 
@@ -290,7 +392,7 @@ goto :main
 :: ============================================================================
 :doSilent
 
-  echo ^>^> %* ^> nul 2^>&1
-  cmd /s /c "%*" > nul 2>&1
+  echo ^>^> %* ^> nul 2^>^&1
+  cmd /s /c "%* > nul 2>&1"
 
   goto :eof

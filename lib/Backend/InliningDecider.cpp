@@ -472,10 +472,6 @@ bool InliningDecider::GetBuiltInInfo(
         *returnType = ValueType::GetObject(ObjectType::Array).SetHasNoMissingValues(true).SetArrayTypeId(Js::TypeIds_Array);
         break;
 
-    case Js::JavascriptBuiltInFunction::JavascriptPixelArray_NewInstance:
-        *returnType = ValueType::GetObject(ObjectType::PixelArray);
-        break;
-
     case Js::JavascriptBuiltInFunction::Int8Array_NewInstance:
 #ifdef _M_X64
         *returnType = (!PHASE_OFF1(Js::TypedArrayVirtualPhase)) ? ValueType::GetObject(ObjectType::Int8MixedArray) : ValueType::GetObject(ObjectType::Int8Array);

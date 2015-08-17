@@ -10,18 +10,18 @@ namespace Js
         m_threadContext(threadContext)
     { 
         AssertMsg(!IsRegistered(threadContext), "BuiltInWrapper is already registered.");
-        m_threadContext->GetDebuggingFlags()->SetIsBuiltInWrapperPresent(true); 
+        m_threadContext->GetDebugManager()->GetDebuggingFlags()->SetIsBuiltInWrapperPresent(true);
     }
 
     AutoRegisterIgnoreExceptionWrapper::~AutoRegisterIgnoreExceptionWrapper() 
     { 
-        m_threadContext->GetDebuggingFlags()->SetIsBuiltInWrapperPresent(false); 
+        m_threadContext->GetDebugManager()->GetDebuggingFlags()->SetIsBuiltInWrapperPresent(false);
     }
 
     // static
     bool AutoRegisterIgnoreExceptionWrapper::IsRegistered(ThreadContext* threadContext)
     {
-        return threadContext->GetDebuggingFlags()->IsBuiltInWrapperPresent();
+        return threadContext->GetDebugManager()->GetDebuggingFlags()->IsBuiltInWrapperPresent();
     }
 
     // These are wrappers for helpers that can throw non-OOM / non-SO exceptions.

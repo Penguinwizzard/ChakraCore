@@ -24,10 +24,6 @@ namespace Js {
             static FunctionInfo FromInt32x4;
             static FunctionInfo FromInt32x4Bits;
 
-            // WithX/Y
-            static FunctionInfo WithX;
-            static FunctionInfo WithY;
-
             // UnaryOps
             static FunctionInfo Not;
             static FunctionInfo Abs;
@@ -79,9 +75,6 @@ namespace Js {
         static Var EntryFromInt32x4(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryFromInt32x4Bits(RecyclableObject* function, CallInfo callInfo, ...);
 
-        // WithX/Y
-        static Var EntryWithX(RecyclableObject* function, CallInfo callInfo, ...);
-        static Var EntryWithY(RecyclableObject* function, CallInfo callInfo, ...);
         // UnaryOps
         static Var EntryNot(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryAbs(RecyclableObject* function, CallInfo callInfo, ...);

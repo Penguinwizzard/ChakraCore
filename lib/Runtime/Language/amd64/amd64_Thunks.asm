@@ -28,21 +28,16 @@ align 16
         .setframe rbp, 0
         .endprolog
 
-ifdef _CONTROL_FLOW_GUARD
-        sub rsp, 30h                            ;allocate stack space for the callee params(min 4 slots is mandate + 1 for saving call target + 1 for alignment)
-        call ?EnsureDynamicInterpreterThunk@InterpreterStackFrame@Js@@CAP6APEAXPEAVRecyclableObject@2@UCallInfo@2@ZZPEAVScriptFunction@2@@Z
-
-        mov [rsp + 28h], rax                    ;save rax (call target) [6th slot will have call target and 5th slot is left untouched]
-        mov rcx, rax                            ; __guard_check_icall_fptr requires the call target in rcx. 
-        call [__guard_check_icall_fptr]         ; verify that the call target is valid
-
-        add rsp, 28h                            ;de-allocate stack space for the callee params(min 4 slots is mandate + 1 for alignment )
-        pop rax                                 ;restore call target
-else
         sub rsp, 20h                            ;allocate stack space for the callee params(min 4 slots is mandate)
         call ?EnsureDynamicInterpreterThunk@InterpreterStackFrame@Js@@CAP6APEAXPEAVRecyclableObject@2@UCallInfo@2@ZZPEAVScriptFunction@2@@Z
-        add rsp, 20h                            ;de-allocate stack space for the callee params(min 4 slots is mandate)
+
+ifdef _CONTROL_FLOW_GUARD
+        mov rcx, rax                            ; __guard_check_icall_fptr requires the call target in rcx. 
+        call [__guard_check_icall_fptr]         ; verify that the call target is valid
+        mov rax, rcx                            ;restore call target
 endif
+
+        add rsp, 20h                            ;de-allocate stack space for the callee params(min 4 slots is mandate)
 
         ;;EPILOGUE starts here
         lea rsp, [rbp]
@@ -136,6 +131,13 @@ align 16
 
         sub rsp, 20h
         call ?EnsureDynamicProfileInfo@DynamicProfileInfo@Js@@CAP6APEAXPEAVRecyclableObject@2@UCallInfo@2@ZZPEAVScriptFunction@2@@Z
+
+ifdef _CONTROL_FLOW_GUARD
+        mov rcx, rax                            ; __guard_check_icall_fptr requires the call target in rcx. 
+        call [__guard_check_icall_fptr]         ; verify that the call target is valid
+        mov rax, rcx                            ;restore call target
+endif
+        
         add rsp, 20h
 
         lea rsp, [rbp]
@@ -176,6 +178,12 @@ align 16
         sub rsp, 20h
         lea rcx, [rsp + 30h]
         call ?ProfileModeDeferredParse@ScriptContext@Js@@SAP6APEAXPEAVRecyclableObject@2@UCallInfo@2@ZZPEAPEAVScriptFunction@2@@Z
+
+ifdef _CONTROL_FLOW_GUARD
+        mov rcx, rax                            ; __guard_check_icall_fptr requires the call target in rcx. 
+        call [__guard_check_icall_fptr]         ; verify that the call target is valid
+        mov rax, rcx                            ;restore call target
+endif
         add rsp, 20h
 
         lea rsp, [rbp]
@@ -217,6 +225,12 @@ align 16
 
         sub rsp, 20h
         call ?ProfileModeDeferredDeserialize@ScriptContext@Js@@SAP6APEAXPEAVRecyclableObject@2@UCallInfo@2@ZZPEAVScriptFunction@2@@Z
+
+ifdef _CONTROL_FLOW_GUARD
+        mov rcx, rax                            ; __guard_check_icall_fptr requires the call target in rcx. 
+        call [__guard_check_icall_fptr]         ; verify that the call target is valid
+        mov rax, rcx                            ;restore call target
+endif
         add rsp, 20h
 
         lea rsp, [rbp]
@@ -262,6 +276,13 @@ align 16
         ; get correct interpreter entrypoint
 
         call ?GetAsmJsInterpreterEntryPoint@InterpreterStackFrame@Js@@SAPEAXPEAUAsmJsCallStackLayout@2@@Z
+
+ifdef _CONTROL_FLOW_GUARD
+        mov rcx, rax                            ; __guard_check_icall_fptr requires the call target in rcx. 
+        call [__guard_check_icall_fptr]         ; verify that the call target is valid
+        mov rax, rcx                            ;restore call target
+endif
+
         mov rcx, qword ptr [rsp + 70h] ; restore rcx
 
         call rax ; call appropriate template

@@ -265,6 +265,11 @@ namespace Js
             {
                 return scriptContext->GetLibrary()->GetSIMDInt32x4DisplayString();
             }
+        case TypeIds_SIMDInt8x16:
+            if (Js::Configuration::Global.flags.Simdjs)
+            {
+                return scriptContext->GetLibrary()->GetSIMDInt8x16DisplayString();
+            }
 #endif
 
         default:
@@ -3458,18 +3463,6 @@ CommonNumber:
                 break;
             }
 
-            case TypeIds_PixelArray: // fast path for pixel array
-            {
-                // The pixel array will deal with all possible values for the index
-                uint32 indexInt = TaggedInt::ToUInt32(index);
-                JavascriptPixelArray* pixelArray = JavascriptPixelArray::FromVar(instance);
-                if (!CrossSite::IsCrossSiteObjectTyped(pixelArray))
-                {
-                    return pixelArray->DirectGetItem(indexInt);
-                }
-                break;
-            }
-
             default:
                 break;
             }
@@ -4103,18 +4096,6 @@ CommonNumber:
                     if (indexInt >= 0 && scriptContext->optimizationOverrides.IsEnabledArraySetElementFastPath())
                     {
                         JavascriptArray::FromVar(instance)->SetItem((uint32)indexInt, value, flags);
-                        return true;
-                    }
-                    break;
-                }
-                case TypeIds_PixelArray: // fast path for pixel array
-                {
-                    // The pixel array will deal with all possible values for the index
-                    uint32 indexInt = TaggedInt::ToUInt32(index);
-                    JavascriptPixelArray* pixelArray = JavascriptPixelArray::FromVar(instance);
-                    if (!CrossSite::IsCrossSiteObjectTyped(pixelArray))
-                    {
-                        pixelArray->DirectSetItem(indexInt, value);
                         return true;
                     }
                     break;
@@ -4790,7 +4771,6 @@ CommonNumber:
             case TypeIds_Symbol:
             case TypeIds_SymbolObject:
             //case TypeIds_GlobalObject:
-            case TypeIds_ExtensionEnumerator:
             //case TypeIds_ModuleRoot:
             //case TypeIds_HostObject:
             case TypeIds_Arguments:
@@ -6209,32 +6189,55 @@ CommonNumber:
         return OP_LdStrictFrameDisplay(argHead, (void*)&StrictNullFrameDisplay, scriptContext);
     }
 
+    Js::PropertyId JavascriptOperators::GetPropertyId(Var propertyName, ScriptContext* scriptContext)
+    {
+        PropertyRecord const * propertyRecord = nullptr;
+        if (JavascriptSymbol::Is(propertyName))
+        {
+            propertyRecord = JavascriptSymbol::FromVar(propertyName)->GetValue();
+        }
+        else if (JavascriptSymbolObject::Is(propertyName))
+        {
+            propertyRecord = JavascriptSymbolObject::FromVar(propertyName)->GetValue();
+        }
+        else
+        {
+            JavascriptString * indexStr = JavascriptConversion::ToString(propertyName, scriptContext);
+            scriptContext->GetOrAddPropertyRecord(indexStr->GetString(), indexStr->GetLength(), &propertyRecord);
+        }
+
+        return propertyRecord->GetPropertyId();
+    }
+
     void JavascriptOperators::OP_InitSetter(Var object, PropertyId propertyId, Var setter)
     {
         AssertMsg(!TaggedNumber::Is(object), "SetMember on a non-object?");
         RecyclableObject::FromVar(object)->SetAccessors(propertyId, nullptr, setter);
     }
 
-    void JavascriptOperators::OP_InitElemSetter(Var object, Var elementName, Var setter, ScriptContext* scriptContext, PropertyOperationFlags flags)
+    void JavascriptOperators::OP_InitClassMemberSet(Var object, PropertyId propertyId, Var setter)
+    {
+        JavascriptOperators::OP_InitSetter(object, propertyId, setter);
+
+        RecyclableObject::FromVar(object)->SetAttributes(propertyId, PropertyClassMemberDefaults);
+    }
+
+    Js::PropertyId JavascriptOperators::OP_InitElemSetter(Var object, Var elementName, Var setter, ScriptContext* scriptContext, PropertyOperationFlags flags)
     {
         AssertMsg(!TaggedNumber::Is(object), "SetMember on a non-object?");
 
-        PropertyRecord const * propertyRecord = nullptr;
-        if (JavascriptSymbol::Is(elementName))
-        {
-            propertyRecord = JavascriptSymbol::FromVar(elementName)->GetValue();
-        }
-        else if (JavascriptSymbolObject::Is(elementName))
-        {
-            propertyRecord = JavascriptSymbolObject::FromVar(elementName)->GetValue();
-        }
-        else
-        {
-            JavascriptString * indexStr = JavascriptConversion::ToString(elementName, scriptContext);
-            scriptContext->GetOrAddPropertyRecord(indexStr->GetString(), indexStr->GetLength(), &propertyRecord);
-        }
+        PropertyId propertyId = JavascriptOperators::GetPropertyId(elementName, scriptContext);
 
-        RecyclableObject::FromVar(object)->SetAccessors(propertyRecord->GetPropertyId(), nullptr, setter);
+        RecyclableObject::FromVar(object)->SetAccessors(propertyId, nullptr, setter);
+
+        return propertyId;
+    }
+
+    void JavascriptOperators::OP_InitClassMemberSetComputedName(Var object, Var elementName, Var value, ScriptContext* scriptContext, PropertyOperationFlags flags)
+    {
+        Js::PropertyId propertyId = JavascriptOperators::OP_InitElemSetter(object, elementName, value, scriptContext);
+
+        RecyclableObject::FromVar(object)->SetAttributes(propertyId, PropertyClassMemberDefaults);
     }
 
     void JavascriptOperators::OP_InitGetter(Var object, PropertyId propertyId, Var getter)
@@ -6243,46 +6246,43 @@ CommonNumber:
         RecyclableObject::FromVar(object)->SetAccessors(propertyId, getter, nullptr);
     }
 
-    void JavascriptOperators::OP_InitElemGetter(Var object, Var elementName, Var getter, ScriptContext* scriptContext, PropertyOperationFlags flags)
+    void JavascriptOperators::OP_InitClassMemberGet(Var object, PropertyId propertyId, Var getter)
+    {
+        JavascriptOperators::OP_InitGetter(object, propertyId, getter);
+
+        RecyclableObject::FromVar(object)->SetAttributes(propertyId, PropertyClassMemberDefaults);
+    }
+
+    Js::PropertyId JavascriptOperators::OP_InitElemGetter(Var object, Var elementName, Var getter, ScriptContext* scriptContext, PropertyOperationFlags flags)
     {
         AssertMsg(!TaggedNumber::Is(object), "GetMember on a non-object?");
 
-        PropertyRecord const * propertyRecord = nullptr;
-        if (JavascriptSymbol::Is(elementName))
-        {
-            propertyRecord = JavascriptSymbol::FromVar(elementName)->GetValue();
-        }
-        else if (JavascriptSymbolObject::Is(elementName))
-        {
-            propertyRecord = JavascriptSymbolObject::FromVar(elementName)->GetValue();
-        }
-        else
-        {
-            JavascriptString * indexStr = JavascriptConversion::ToString(elementName, scriptContext);
-            scriptContext->GetOrAddPropertyRecord(indexStr->GetString(), indexStr->GetLength(), &propertyRecord);
-        }
+        PropertyId propertyId = JavascriptOperators::GetPropertyId(elementName, scriptContext);
 
-        RecyclableObject::FromVar(object)->SetAccessors(propertyRecord->GetPropertyId(), getter, nullptr);
+        RecyclableObject::FromVar(object)->SetAccessors(propertyId, getter, nullptr);
+
+        return propertyId;
+    }
+
+    void JavascriptOperators::OP_InitClassMemberGetComputedName(Var object, Var elementName, Var value, ScriptContext* scriptContext, PropertyOperationFlags flags)
+    {
+        Js::PropertyId propertyId = JavascriptOperators::OP_InitElemGetter(object, elementName, value, scriptContext);
+
+        RecyclableObject::FromVar(object)->SetAttributes(propertyId, PropertyClassMemberDefaults);
     }
 
     void JavascriptOperators::OP_InitComputedProperty(Var object, Var elementName, Var value, ScriptContext* scriptContext, PropertyOperationFlags flags)
     {
-        PropertyRecord const * propertyRecord = nullptr;
-        if (JavascriptSymbol::Is(elementName))
-        {
-            propertyRecord = JavascriptSymbol::FromVar(elementName)->GetValue();
-        }
-        else if (JavascriptSymbolObject::Is(elementName))
-        {
-            propertyRecord = JavascriptSymbolObject::FromVar(elementName)->GetValue();
-        }
-        else
-        {
-            JavascriptString * indexStr = JavascriptConversion::ToString(elementName, scriptContext);
-            scriptContext->GetOrAddPropertyRecord(indexStr->GetString(), indexStr->GetLength(), &propertyRecord);
-        }
+        PropertyId propertyId = JavascriptOperators::GetPropertyId(elementName, scriptContext);
 
-        RecyclableObject::FromVar(object)->InitProperty(propertyRecord->GetPropertyId(), value, flags);
+        RecyclableObject::FromVar(object)->InitProperty(propertyId, value, flags);
+    }
+
+    void JavascriptOperators::OP_InitClassMemberComputedName(Var object, Var elementName, Var value, ScriptContext* scriptContext, PropertyOperationFlags flags)
+    {
+        PropertyId propertyId = JavascriptOperators::GetPropertyId(elementName, scriptContext);
+
+        RecyclableObject::FromVar(object)->SetPropertyWithAttributes(propertyId, value, PropertyClassMemberDefaults, NULL, flags);
     }
 
     //
@@ -6647,8 +6647,6 @@ CommonNumber:
                 }
             }
         }
-
-        ctor->SetWritable(Js::PropertyIds::prototype, FALSE); //TODO SetWritable undefers the function, do we really want to do it this way?
     }
 
     void JavascriptOperators::OP_LoadUndefinedToElement(Var instance, PropertyId propertyId)
@@ -9067,6 +9065,35 @@ CommonNumber:
 
         // Do not use ThrowExceptionObject for return() API exceptions since these exceptions are not real exceptions
         throw yieldData->exceptionObj;
+    }
+
+    Var JavascriptOperators::OP_AsyncSpawn(Var aGenerator, Var aThis, ScriptContext* scriptContext)
+    {
+        JavascriptLibrary* library = scriptContext->GetLibrary();
+
+        JavascriptExceptionObject* e = nullptr;
+        JavascriptPromiseResolveOrRejectFunction* resolve;
+        JavascriptPromiseResolveOrRejectFunction* reject;
+        JavascriptPromiseAsyncSpawnExecutorFunction* executor = library->CreatePromiseAsyncSpawnExecutorFunction(JavascriptPromise::EntryJavascriptPromiseAsyncSpawnExecutorFunction, (JavascriptGenerator*)aGenerator, aThis);
+        JavascriptPromise* promise = library->CreatePromise();
+
+        JavascriptPromise::InitializePromise(promise, &resolve, &reject, scriptContext);
+
+        try
+        {
+            executor->GetEntryPoint()(executor, CallInfo(CallFlags_Value, 3), library->GetUndefined(), resolve, reject);
+        }
+        catch (JavascriptExceptionObject* ex)
+        {
+            e = ex;
+        }
+
+        if (e != nullptr)
+        {
+            reject->GetEntryPoint()(reject, CallInfo(CallFlags_Value, 2), library->GetUndefined(), e->GetThrownObject(scriptContext));
+        }
+
+        return promise;
     }
 
     Js::Var

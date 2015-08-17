@@ -7,7 +7,8 @@ namespace Js
 {
     BOOL BoundFunction::HasProperty(PropertyId propertyId)
     {
-        if (propertyId == PropertyIds::caller || 
+        if (propertyId == PropertyIds::length ||
+            propertyId == PropertyIds::caller || 
             propertyId == PropertyIds::arguments)
         {
             return true;
@@ -43,6 +44,25 @@ namespace Js
 
     bool BoundFunction::GetPropertyBuiltIns(Var originalInstance, PropertyId propertyId, Var* value, PropertyValueInfo* info, ScriptContext* requestContext, BOOL* result)
     {
+        if (propertyId == PropertyIds::length)
+        {   
+            // Get the "length" property of the underlying target function
+            int len = 0;
+            Var varLength;
+            if (targetFunction->GetProperty(targetFunction, PropertyIds::length, &varLength, NULL, requestContext))
+            {
+                len = JavascriptConversion::ToInt32(varLength, requestContext);
+            }
+
+            // Reduce by number of bound args
+            len = len - this->count;
+            len = max(len, 0);
+
+            *value = JavascriptNumber::ToVar(len, requestContext);
+            *result = true;
+            return true;
+        }
+
         if (propertyId == PropertyIds::caller || propertyId == PropertyIds::arguments)
         {
             JavascriptError::ThrowTypeError(this->GetScriptContext(), VBSERR_ActionNotSupported);
@@ -83,6 +103,14 @@ namespace Js
 
     bool BoundFunction::SetPropertyBuiltIns(PropertyId propertyId, Var value, PropertyOperationFlags flags, PropertyValueInfo* info, BOOL* result)
     {
+        if (propertyId == PropertyIds::length)
+        {
+            JavascriptError::ThrowCantAssignIfStrictMode(flags, this->GetScriptContext());
+
+            *result = false;
+            return true;
+        }
+        
         if (propertyId == PropertyIds::caller || propertyId == PropertyIds::arguments)
         {
             JavascriptError::ThrowTypeError(this->GetScriptContext(), VBSERR_ActionNotSupported);           
@@ -141,6 +169,11 @@ namespace Js
 
     BOOL BoundFunction::DeleteProperty(PropertyId propertyId, PropertyOperationFlags flags)
     {
+        if (propertyId == PropertyIds::length)
+        {
+            return false;
+        }
+
         // JavascriptFunction has special case for caller and arguments
         // TODO: Remove this, once that is removed
         if (propertyId == PropertyIds::caller || propertyId == PropertyIds::arguments)
@@ -153,6 +186,11 @@ namespace Js
 
     BOOL BoundFunction::IsWritable(PropertyId propertyId)
     {
+        if (propertyId == PropertyIds::length)
+        {
+            return false;
+        }
+
         // JavascriptFunction has special case for caller and arguments
         // TODO: Remove this, once that is removed
         if (propertyId == PropertyIds::caller || propertyId == PropertyIds::arguments)
@@ -165,6 +203,11 @@ namespace Js
 
     BOOL BoundFunction::IsConfigurable(PropertyId propertyId)
     {
+        if (propertyId == PropertyIds::length)
+        {
+            return false;
+        }
+
         // JavascriptFunction has special case for caller and arguments
         // TODO: Remove this, once that is removed
         if (propertyId == PropertyIds::caller || propertyId == PropertyIds::arguments)
@@ -177,6 +220,11 @@ namespace Js
 
     BOOL BoundFunction::IsEnumerable(PropertyId propertyId)
     {
+        if (propertyId == PropertyIds::length)
+        {
+            return false;
+        }
+
         // JavascriptFunction has special case for caller and arguments
         // TODO: Remove this, once that is removed
         if (propertyId == PropertyIds::caller || propertyId == PropertyIds::arguments)

@@ -283,6 +283,12 @@ DynamicProfileInfo::EnsureDynamicProfileInfoThunk(RecyclableObject* function, Ca
         mov ebp, esp
         push [esp+8]     // push function object
         call DynamicProfileInfo::EnsureDynamicProfileInfo;
+#ifdef _CONTROL_FLOW_GUARD
+        // verify that the call target is valid
+        mov  ecx, eax
+        call[__guard_check_icall_fptr]
+        mov eax, ecx
+#endif
         pop ebp
         jmp eax
     }

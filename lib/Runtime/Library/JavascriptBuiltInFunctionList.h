@@ -174,7 +174,6 @@ BUILTIN(JavascriptObject, Is, EntryIs, FunctionInfo::ErrorOnNew)
 BUILTIN(JavascriptObject, Assign, EntryAssign, FunctionInfo::ErrorOnNew)
 BUILTIN(ObjectPrototypeObject, __proto__getter, Entry__proto__getter, FunctionInfo::ErrorOnNew | FunctionInfo::DoNotProfile)
 BUILTIN(ObjectPrototypeObject, __proto__setter, Entry__proto__setter, FunctionInfo::ErrorOnNew | FunctionInfo::DoNotProfile)
-BUILTIN(JavascriptPixelArray, NewInstance, NewInstance, FunctionInfo::SkipDefaultNewObject)
 BUILTIN(JavascriptRegExp, NewInstance, NewInstance, FunctionInfo::SkipDefaultNewObject)
 BUILTIN(JavascriptRegExp, Exec, EntryExec, FunctionInfo::ErrorOnNew)
 BUILTIN(JavascriptRegExp, Test, EntryTest, FunctionInfo::ErrorOnNew)
@@ -282,11 +281,9 @@ BUILTIN(SIMDFloat32x4Lib, FromFloat64x2, EntryFromFloat64x2, FunctionInfo::None)
 BUILTIN(SIMDFloat32x4Lib, FromFloat64x2Bits, EntryFromFloat64x2Bits, FunctionInfo::None)
 BUILTIN(SIMDFloat32x4Lib, FromInt32x4, EntryFromInt32x4, FunctionInfo::None)
 BUILTIN(SIMDFloat32x4Lib, FromInt32x4Bits, EntryFromInt32x4Bits, FunctionInfo::None)
-// WithX/Y/Z/W
-BUILTIN(SIMDFloat32x4Lib, WithX, EntryWithX, FunctionInfo::None)
-BUILTIN(SIMDFloat32x4Lib, WithY, EntryWithY, FunctionInfo::None)
-BUILTIN(SIMDFloat32x4Lib, WithZ, EntryWithZ, FunctionInfo::None)
-BUILTIN(SIMDFloat32x4Lib, WithW, EntryWithW, FunctionInfo::None)
+// Lane Access
+BUILTIN(SIMDFloat32x4Lib, ExtractLane, EntryExtractLane, FunctionInfo::None)
+BUILTIN(SIMDFloat32x4Lib, ReplaceLane, EntryReplaceLane, FunctionInfo::None)
 // UnaryOps
 BUILTIN(SIMDFloat32x4Lib, Abs, EntryAbs, FunctionInfo::None)
 BUILTIN(SIMDFloat32x4Lib, Neg, EntryNeg, FunctionInfo::None)
@@ -339,16 +336,14 @@ BUILTIN(SIMDInt32x4Lib, FromFloat64x2,     EntryFromFloat64x2,     FunctionInfo:
 BUILTIN(SIMDInt32x4Lib, FromFloat64x2Bits, EntryFromFloat64x2Bits, FunctionInfo::None)
 BUILTIN(SIMDInt32x4Lib, FromFloat32x4,     EntryFromFloat32x4,     FunctionInfo::None)
 BUILTIN(SIMDInt32x4Lib, FromFloat32x4Bits, EntryFromFloat32x4Bits, FunctionInfo::None)
-// WithX/Y/Z/W
-BUILTIN(SIMDInt32x4Lib, WithX, EntryWithX, FunctionInfo::None)
-BUILTIN(SIMDInt32x4Lib, WithY, EntryWithY, FunctionInfo::None)
-BUILTIN(SIMDInt32x4Lib, WithZ, EntryWithZ, FunctionInfo::None)
-BUILTIN(SIMDInt32x4Lib, WithW, EntryWithW, FunctionInfo::None)
 // EntryWithFlagX/Y/Z/W
 BUILTIN(SIMDInt32x4Lib, WithFlagX, EntryWithFlagX, FunctionInfo::None)
 BUILTIN(SIMDInt32x4Lib, WithFlagY, EntryWithFlagY, FunctionInfo::None)
 BUILTIN(SIMDInt32x4Lib, WithFlagZ, EntryWithFlagZ, FunctionInfo::None)
 BUILTIN(SIMDInt32x4Lib, WithFlagW, EntryWithFlagW, FunctionInfo::None)
+// Lane Access
+BUILTIN(SIMDInt32x4Lib, ExtractLane, EntryExtractLane, FunctionInfo::None)
+BUILTIN(SIMDInt32x4Lib, ReplaceLane, EntryReplaceLane, FunctionInfo::None)
 // UnaryOps
 BUILTIN(SIMDInt32x4Lib, Abs, EntryAbs, FunctionInfo::None)
 BUILTIN(SIMDInt32x4Lib, Neg, EntryNeg, FunctionInfo::None)
@@ -385,6 +380,42 @@ BUILTIN(SIMDInt32x4Lib, Store1, EntryStore1, FunctionInfo::None)
 BUILTIN(SIMDInt32x4Lib, Store2, EntryStore2, FunctionInfo::None)
 BUILTIN(SIMDInt32x4Lib, Store3, EntryStore3, FunctionInfo::None)
 
+// SIMDInt8x16Lib entry points
+BUILTIN(SIMDInt8x16Lib, Int8x16     , EntryInt8x16      , FunctionInfo::None)
+BUILTIN(SIMDInt8x16Lib, Check       , EntryCheck        , FunctionInfo::None)
+BUILTIN(SIMDInt8x16Lib, Zero        , EntryZero         , FunctionInfo::None)
+BUILTIN(SIMDInt8x16Lib, Splat       , EntrySplat        , FunctionInfo::None)
+
+BUILTIN(SIMDInt8x16Lib, FromFloat32x4Bits   , EntryFromFloat32x4Bits    , FunctionInfo::None)
+BUILTIN(SIMDInt8x16Lib, FromInt32x4Bits     , EntryFromInt32x4Bits      , FunctionInfo::None)
+
+// UnaryOps
+BUILTIN(SIMDInt8x16Lib, Neg         , EntryNeg          , FunctionInfo::None)
+BUILTIN(SIMDInt8x16Lib, Not         , EntryNot          , FunctionInfo::None)
+
+// BinaryOps
+BUILTIN(SIMDInt8x16Lib, Add         , EntryAdd          , FunctionInfo::None)
+BUILTIN(SIMDInt8x16Lib, Sub         , EntrySub          , FunctionInfo::None)
+BUILTIN(SIMDInt8x16Lib, Mul         , EntryMul          , FunctionInfo::None)
+BUILTIN(SIMDInt8x16Lib, And         , EntryAnd          , FunctionInfo::None)
+BUILTIN(SIMDInt8x16Lib, Or          , EntryOr           , FunctionInfo::None)
+BUILTIN(SIMDInt8x16Lib, Xor         , EntryXor          , FunctionInfo::None)
+
+// CompareOps
+BUILTIN(SIMDInt8x16Lib, LessThan    , EntryLessThan     , FunctionInfo::None)
+BUILTIN(SIMDInt8x16Lib, Equal       , EntryEqual        , FunctionInfo::None)
+BUILTIN(SIMDInt8x16Lib, GreaterThan , EntryGreaterThan  , FunctionInfo::None)
+
+// ShiftOps
+BUILTIN(SIMDInt8x16Lib, ShiftLeftByScalar           , EntryShiftLeftByScalar            , FunctionInfo::None)
+BUILTIN(SIMDInt8x16Lib, ShiftRightLogicalByScalar   , EntryShiftRightLogicalByScalar    , FunctionInfo::None)
+BUILTIN(SIMDInt8x16Lib, ShiftRightArithmeticByScalar, EntryShiftRightArithmeticByScalar , FunctionInfo::None)
+
+// Lane Access
+BUILTIN(SIMDInt8x16Lib, ExtractLane, EntryExtractLane, FunctionInfo::None)
+BUILTIN(SIMDInt8x16Lib, ReplaceLane, EntryReplaceLane, FunctionInfo::None)
+
+
 // SIMDFloat64x2Lib entry points
 BUILTIN(SIMDFloat64x2Lib, Float64x2, EntryFloat64x2, FunctionInfo::None)
 BUILTIN(SIMDFloat64x2Lib, Check,     EntryCheck,     FunctionInfo::None)
@@ -395,9 +426,6 @@ BUILTIN(SIMDFloat64x2Lib, FromFloat32x4Bits, EntryFromFloat32x4Bits, FunctionInf
 BUILTIN(SIMDFloat64x2Lib, FromInt32x4, EntryFromInt32x4, FunctionInfo::None)
 BUILTIN(SIMDFloat64x2Lib, FromInt32x4Bits, EntryFromInt32x4Bits, FunctionInfo::None)
 
-// WithX/Y
-BUILTIN(SIMDFloat64x2Lib, WithX, EntryWithX, FunctionInfo::None)
-BUILTIN(SIMDFloat64x2Lib, WithY, EntryWithY, FunctionInfo::None)
 // UnaryOps
 BUILTIN(SIMDFloat64x2Lib, Not, EntryNot, FunctionInfo::None)
 BUILTIN(SIMDFloat64x2Lib, Abs, EntryAbs, FunctionInfo::None)
@@ -444,6 +472,9 @@ BUILTIN(JavascriptSIMDFloat64x2, ToString, EntryToString, FunctionInfo::None)
 
 // JavascriptInt32x4 entry points
 BUILTIN(JavascriptSIMDInt32x4, ToString, EntryToString, FunctionInfo::None)
+
+// JavascriptInt32x4 entry points
+BUILTIN(JavascriptSIMDInt8x16, ToString, EntryToString, FunctionInfo::None)
 
 #endif
 

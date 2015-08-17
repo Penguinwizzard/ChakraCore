@@ -24,7 +24,7 @@ void JsrtContext::OnScriptLoad(Js::JavascriptFunction * scriptFunction, Js::Utf8
 
 JsrtContextCore::JsrtContextCore(JsrtRuntime * runtime) :
     JsrtContext(runtime)
-{       
+{
     Link();
 }
 
@@ -44,8 +44,7 @@ void JsrtContextCore::Dispose(bool isShutdown)
     {
         Js::ScriptContext::Delete(this->GetScriptContext());
         this->SetScriptContext(nullptr);
-
-        Unlink();        
+        Unlink();
     }
 }
 
@@ -58,6 +57,9 @@ Js::ScriptContext* JsrtContextCore::EnsureScriptContext()
     AutoPtr<Js::ScriptContext> newScriptContext(Js::ScriptContext::New(localThreadContext));
 
     newScriptContext->Initialize();
+
+    hostContext = HeapNew(ChakraCoreHostScriptContext(newScriptContext));
+    newScriptContext->SetHostScriptContext(hostContext);
 
     this->SetScriptContext(newScriptContext.Detach());
 

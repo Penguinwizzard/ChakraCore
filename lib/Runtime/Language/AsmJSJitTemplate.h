@@ -299,17 +299,14 @@ namespace Js
         CreateTemplate(Simd128_Select_I4, int targetOffsetI4_0, int srcOffsetI4_1, int srcOffsetI4_2, int srcOffsetI4_3);
         CreateTemplate(Simd128_Select_D2, int targetOffsetD2_0, int srcOffsetI4_1, int srcOffsetD2_2, int srcOffsetD2_3);
 
-        CreateTemplate(Simd128_LdLane_F4, int targetOffsetF0, int srcOffsetF4_1, const int index);
-        CreateTemplate(Simd128_LdLane_I4, int targetOffsetI0, int srcOffsetI4_1, const int index);
-        CreateTemplate(Simd128_LdLane_D2, int targetOffsetD0, int srcOffsetD2_1, const int index);
+        CreateTemplate(Simd128_ExtractLane_I4, int targetOffsetI0, int srcOffsetI4_1, int index);
+        CreateTemplate(Simd128_ExtractLane_F4, int targetOffsetF0, int srcOffsetF4_1, int index);
+        CreateTemplate(Simd128_ReplaceLane_I4, int targetOffsetI4_0, int srcOffsetI4_1, int index, int srcOffsetI3);
+        CreateTemplate(Simd128_ReplaceLane_F4, int targetOffsetF4_0, int srcOffsetF4_1, int index, int srcOffsetF3);
 
         CreateTemplate(Simd128_LdSignMask_F4, int targetOffsetI0, int srcOffsetF4_1);
         CreateTemplate(Simd128_LdSignMask_I4, int targetOffsetI0, int srcOffsetI4_1);
         CreateTemplate(Simd128_LdSignMask_D2, int targetOffsetI0, int srcOffsetD2_1);
-
-        CreateTemplate(Simd128_SetLane_F4, int targetOffsetF4_0, int srcOffsetF4_1, int srcOffsetF2, byte laneIndex);
-        CreateTemplate(Simd128_SetLane_I4, int targetOffsetI4_0, int srcOffsetI4_1, int srcOffsetI2, byte laneIndex);
-        CreateTemplate(Simd128_SetLane_D2, int targetOffsetD2_0, int srcOffsetD2_1, int srcOffsetD2, byte laneIndex);
 
         CreateTemplate(Simd128_I_ArgOut_F4, int argIndex, int offset );
         CreateTemplate(Simd128_I_ArgOut_I4, int argIndex, int offset);

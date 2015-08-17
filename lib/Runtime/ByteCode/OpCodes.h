@@ -160,6 +160,7 @@ MACRO(                  Ret,                Empty,          OpSideEffect|OpUseAl
 MACRO_WMS(              Yield,              Reg2,           OpSideEffect|OpUseAllFields)                        // Yield from generator function
 MACRO_WMS(              ResumeYield,        Reg2,           OpSideEffect)
 MACRO_WMS(              ResumeYieldStar,    Reg3,           OpSideEffect)
+MACRO_EXTEND_WMS(       AsyncSpawn,         Reg3,           OpSideEffect|OpUseAllFields)
 
 // Unary operations
 MACRO_WMS(              Incr_A,             Reg2,           OpTempNumberProducing|OpCallsValueOf|OpDoNotTransfer|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut|OpProducesNumber)     // Increment
@@ -291,6 +292,11 @@ MACRO_WMS(              InitRootLetFld,             ElementRootCP,  OpSideEffect
 MACRO_WMS(              InitConstFld,               ElementCP,      OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut)   // Declare a property with an initial value
 MACRO_WMS(              InitRootConstFld,           ElementRootCP,  OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut)   // Declare a property with an initial value
 MACRO_WMS(              InitClassMember,            ElementCP,      OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut)   // Declare a property with an initial value
+MACRO_EXTEND_WMS(       InitClassMemberComputedName,ElementI,       OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Class member with computed property name
+MACRO_EXTEND_WMS(       InitClassMemberSet,         ElementC,       OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut)   // Class member in set syntax
+MACRO_EXTEND_WMS(       InitClassMemberGet,         ElementC,       OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut)   // Class member in get syntax
+MACRO_EXTEND_WMS(       InitClassMemberSetComputedName,ElementI,    OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Class member in set syntax with computed property name
+MACRO_EXTEND_WMS(       InitClassMemberGetComputedName,ElementI,    OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Class member in get syntax with computed property name
 
 MACRO_BACKEND_ONLY(     ArgIn_A,                    Empty,          OpSideEffect)        // Copy from "in slot" to "local slot", unchecked
 MACRO_WMS(              ArgIn0,                     Reg1,           OpByteCodeOnly)       // Copy from "in slot" to "local slot", unchecked

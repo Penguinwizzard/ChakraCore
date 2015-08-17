@@ -1227,7 +1227,7 @@ FuncBailOutData::FinalizeLocalOffsets(JitArenaAllocator *allocator, GlobalBailOu
         *lastUpdatedRowIndices = JitAnewArrayZ(allocator, uint, localsCount);
         memset(*lastUpdatedRowIndices, -1, sizeof(uint)*localsCount);
     }
-    uint16 bailOutRecordId = bailOutRecord->m_bailOutRecordId;
+    uint32 bailOutRecordId = bailOutRecord->m_bailOutRecordId;
     bailOutRecord->localOffsetsCount = 0;
     for (uint32 i = 0; i < localsCount; i++)
     {

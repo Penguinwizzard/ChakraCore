@@ -270,32 +270,14 @@ EXDEF2    (NOPASMJS          , NopEx        , Empty                             
                                
   DEF2_WMS( SIMD_F4_2toF4_1  , Simd128_Xor_F4              , Js::SIMDFloat32x4Operation::OpXor           )
   DEF2_WMS( SIMD_I4_2toI4_1  , Simd128_Xor_I4              , Js::SIMDInt32x4Operation::OpXor             )
-                               
-  DEF2_WMS( SIMD_SetLane_F4  , Simd128_WithX_F4            ,SIMD_X                                       )
-  DEF2_WMS( SIMD_SetLane_F4  , Simd128_WithY_F4            ,SIMD_Y                                       )
-  DEF2_WMS( SIMD_SetLane_F4  , Simd128_WithZ_F4            ,SIMD_Z                                       )
-  DEF2_WMS( SIMD_SetLane_F4  , Simd128_WithW_F4            ,SIMD_W                                       )
-                               
-  DEF2_WMS( SIMD_SetLane_I4  , Simd128_WithX_I4            ,SIMD_X                                       )
-  DEF2_WMS( SIMD_SetLane_I4  , Simd128_WithY_I4            ,SIMD_Y                                       )
-  DEF2_WMS( SIMD_SetLane_I4  , Simd128_WithZ_I4            ,SIMD_Z                                       )
-  DEF2_WMS( SIMD_SetLane_I4  , Simd128_WithW_I4            ,SIMD_W                                       )
-                               
-  DEF2_WMS( SIMD_SetLane_D2  , Simd128_WithX_D2            ,SIMD_X                                       )
-  DEF2_WMS( SIMD_SetLane_D2  , Simd128_WithY_D2            ,SIMD_Y                                       )
-  
+                                 
   // ternary ops
   DEF2_WMS( SIMD_F4_3toF4_1      , Simd128_Clamp_F4        , Js::SIMDFloat32x4Operation::OpClamp         )
   DEF2_WMS( SIMD_D2_3toD2_1      , Simd128_Clamp_D2        , Js::SIMDFloat64x2Operation::OpClamp         )
   DEF2_WMS( SIMD_I4_1F4_2toF4_1  , Simd128_Select_F4       , Js::SIMDFloat32x4Operation::OpSelect        )
   DEF2_WMS( SIMD_I4_3toI4_1      , Simd128_Select_I4       , Js::SIMDInt32x4Operation::OpSelect          )
   DEF2_WMS( SIMD_I4_1D2_2toD2_1  , Simd128_Select_D2       , Js::SIMDFloat64x2Operation::OpSelect        )
-  
-  // fields access
-  DEF2_WMS( SIMD_F4_1C1toF1      , Simd128_LdLane_F4       , None                                        )
-  DEF2_WMS( SIMD_I4_1C1toI1      , Simd128_LdLane_I4       , None                                        )
-  DEF2_WMS( SIMD_D2_1C1toD1      , Simd128_LdLane_D2       , None                                        )
-                                   
+                                     
   DEF2_WMS( SIMD_F4_1toI1        , Simd128_LdSignMask_F4   , Js::SIMDFloat32x4Operation::OpGetSignMask   )
   DEF2_WMS( SIMD_I4_1toI1        , Simd128_LdSignMask_I4   , Js::SIMDInt32x4Operation::OpGetSignMask     )
   DEF2_WMS( SIMD_D2_1toI1        , Simd128_LdSignMask_D2   , Js::SIMDFloat64x2Operation::OpGetSignMask   )
@@ -321,6 +303,11 @@ EXDEF2    (NOPASMJS          , NopEx        , Empty                             
   EXDEF2_WMS (  SIMD_D2_1I2toD2_1  , Simd128_Swizzle_D2      , SIMD128InnerShuffle                        )
   EXDEF2_WMS (  SIMD_D2_2I2toD2_1  , Simd128_Shuffle_D2      , SIMD128InnerShuffle                        )
   
+  //Lane Access
+  EXDEF2_WMS   ( SIMD_I4_1I1toI1   , Simd128_ExtractLane_I4  , SIMD128InnerExtractLaneI4                  )
+  EXDEF2_WMS   ( SIMD_I4_1I2toI4_1 , Simd128_ReplaceLane_I4  , SIMD128InnerReplaceLaneI4                  )
+  EXDEF2_WMS   ( SIMD_F4_1I1toF1   , Simd128_ExtractLane_F4  , SIMD128InnerExtractLaneF4                  )
+  EXDEF2_WMS   ( SIMD_F4_1I1F1toF4_1, Simd128_ReplaceLane_F4 , SIMD128InnerReplaceLaneF4                  )
 
   EXDEF3_WMS   ( CUSTOM_ASMJS      , Simd128_LdArr_F4        , OP_SimdLdArrGeneric , AsmSimdTypedArr       )
   EXDEF3_WMS   ( CUSTOM_ASMJS      , Simd128_LdArr_I4        , OP_SimdLdArrGeneric , AsmSimdTypedArr       )

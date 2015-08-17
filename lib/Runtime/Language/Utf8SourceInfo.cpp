@@ -159,7 +159,7 @@ namespace Js
         DWORD_PTR secondaryHostSourceContext = Js::Constants::NoHostSourceContext;
         if (srcInfo->sourceContextInfo->IsDynamic())
         {
-            secondaryHostSourceContext = scriptContext->GetThreadContext()->Diagnostics->AllocateSecondaryHostSourceContext();    
+            secondaryHostSourceContext = scriptContext->GetThreadContext()->GetDebugManager()->AllocateSecondaryHostSourceContext();
         }
 
         Recycler * recycler = scriptContext->GetRecycler();

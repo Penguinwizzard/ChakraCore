@@ -69,7 +69,7 @@ RegrInit(
 {
     atexit(RegrCleanUp);
 
-    if (getenv("REGR_NOMASTERCMP") != NULL) {
+    if (getenv_unsafe("REGR_NOMASTERCMP") != NULL) {
         if (FBaseline) {
             Fatal("-baseline conflicts with environment variable REGR_NOMASTERCMP.");
         }
@@ -90,7 +90,7 @@ RegrStartDir(
 
     // Execute directory setup command script if present.
 
-    sprintf(full, "%s\\%s", path, DIR_START_CMD);
+    sprintf_s(full, "%s\\%s", path, DIR_START_CMD);
     if (GetFileAttributes(full) != 0xFFFFFFFF) {
         Message(""); // newline
         Message("Executing %s", DIR_START_CMD);
@@ -112,7 +112,7 @@ RegrEndDir(
 
     // Execute directory shutdown command script if present.
 
-    sprintf(full, "%s\\%s", path, DIR_END_CMD);
+    sprintf_s(full, "%s\\%s", path, DIR_END_CMD);
     if (GetFileAttributes(full) != 0xFFFFFFFF) {
         Message(""); // newline
         Message("Executing %s", DIR_END_CMD);
@@ -179,7 +179,7 @@ RegrFile(
 
     // Base file name (name.* -> name)
 
-    strcpy(basename, pTest->name);
+    strcpy_s(basename, pTest->name);
     for(p = basename; *p != '.' && *p != '\0'; p++);
     *p = '\0';
 
@@ -187,14 +187,14 @@ RegrFile(
     // Determine the standard options.
 
     asmdir = pDir->IsBaseline() ? MASTER_DIR : DIFF_DIR;
-    sprintf(standardoptbuf, "-AsmDumpMode:%s\\%s.asm",
+    sprintf_s(standardoptbuf, "-AsmDumpMode:%s\\%s.asm",
         asmdir, basename);
 
     switch (TargetMachine) {
     case TM_WVM:
     case TM_WVMX86:
     case TM_WVM64:
-        strcat(standardoptbuf, " /BC ");
+        strcat_s(standardoptbuf, " /BC ");
         break;
     }
 
@@ -208,7 +208,7 @@ RegrFile(
 
         ASSERTNR(b2);
 
-        sprintf(compilerbuf, " -B2 %s", b2);
+        sprintf_s(compilerbuf, " -B2 %s", b2);
     }
     else
     {
@@ -217,8 +217,9 @@ RegrFile(
 
     // Try to open the source file.
 
-    sprintf(full, "%s\\%s", pDir->GetDirectoryPath(), pTest->name);
-    if ((fp = fopen(full, "r")) == NULL) {
+    sprintf_s(full, "%s\\%s", pDir->GetDirectoryPath(), pTest->name);
+    errno_t err = fopen_s(&fp, full, "r");
+    if (err != 0 || fp == NULL) {
         LogError("ERROR: File %s does not exist", pTest->name);
         return -1;
     }
@@ -236,20 +237,20 @@ RegrFile(
     // Compute the object name if passing -Fo through.
 
     if (passFo)
-        sprintf(objbuf, "%s.obj", basename);
+        sprintf_s(objbuf, "%s.obj", basename);
     else
-        sprintf(objbuf, "%s\\%s.obj", asmdir, basename);
-    sprintf(fullobjbuf, "%s\\%s", pDir->GetDirectoryPath(), objbuf);
+        sprintf_s(objbuf, "%s\\%s.obj", asmdir, basename);
+    sprintf_s(fullobjbuf, "%s\\%s", pDir->GetDirectoryPath(), objbuf);
 
     // Compute the names for the assembly and diff files.
 
-    sprintf(masterasmbuf, "%s\\%s.asm", MASTER_DIR, basename);
-    sprintf(asmbuf,       "%s\\%s.asm", asmdir, basename);
-    sprintf(diffbuf,      "%s\\%s.d",   DIFF_DIR, basename);
+    sprintf_s(masterasmbuf, "%s\\%s.asm", MASTER_DIR, basename);
+    sprintf_s(asmbuf,       "%s\\%s.asm", asmdir, basename);
+    sprintf_s(diffbuf,      "%s\\%s.d",   DIFF_DIR, basename);
 
-    sprintf(fullmasterasmbuf, "%s\\%s", pDir->GetDirectoryPath(), masterasmbuf);
-    sprintf(fullasmbuf,       "%s\\%s", pDir->GetDirectoryPath(), asmbuf);
-    sprintf(fulldiffbuf,      "%s\\%s", pDir->GetDirectoryPath(), diffbuf);
+    sprintf_s(fullmasterasmbuf, "%s\\%s", pDir->GetDirectoryPath(), masterasmbuf);
+    sprintf_s(fullasmbuf,       "%s\\%s", pDir->GetDirectoryPath(), asmbuf);
+    sprintf_s(fulldiffbuf,      "%s\\%s", pDir->GetDirectoryPath(), diffbuf);
 
     // There could be a diff file from previous regressions.  Remove it now.
 
@@ -258,16 +259,16 @@ RegrFile(
 
     // Create the compiler command and do the compile.
 
-    sprintf(cmdbuf, "%s%s %s %s %s %s 2>nul 1>nul",
+    sprintf_s(cmdbuf, "%s%s %s %s %s %s 2>nul 1>nul",
         JCBinary, compilerbuf, standardoptbuf, opts, EXTRA_CC_FLAGS,
        pTest->name);
 
     if (FVerbose) {
-        strcpy(buf, cmdbuf);
+        strcpy_s(buf, cmdbuf);
     }
     else {
         // For non-verbose, don't display the standard options
-        sprintf(buf, "%s%s %s %s %s",
+        sprintf_s(buf, "%s%s %s %s %s",
             JCBinary, compilerbuf, opts, EXTRA_CC_FLAGS, pTest->name);
     }
     Message("%s", buf);
@@ -306,7 +307,7 @@ RegrFile(
     // Create the assembler command and do the asm if necessary.
 
     if (REGR_ASM && !noAsm) {
-        sprintf(cmdbuf, "%s %s", REGR_ASM, asmbuf);
+        sprintf_s(cmdbuf, "%s %s", REGR_ASM, asmbuf);
         Message("%s", cmdbuf);
         // ignore the REGR_ASM return code; we still want to do diffs or
         // update the master with the generated asm file.
@@ -362,13 +363,13 @@ RegrFile(
         ThreadInfo[ThreadId].AddToTmpFileList(tmp_file2);
         ThreadInfo[ThreadId].AddToTmpFileList(tmp_file3);
 
-        sprintf(cmdbuf, "%s %s %s %s",
+        sprintf_s(cmdbuf, "%s %s %s %s",
             REGR_SHOWD, REGR_PERL, fullasmbuf, tmp_file1);
         if (DoCommand(pDir->GetDirectoryPath(), cmdbuf)) {
             rc = -1;
         }
         else {
-            sprintf(cmdbuf, "%s %s %s %s",
+            sprintf_s(cmdbuf, "%s %s %s %s",
                 REGR_SHOWD, REGR_PERL, fullmasterasmbuf, tmp_file2);
             if (DoCommand(pDir->GetDirectoryPath(), cmdbuf)) {
                 rc = -1;
@@ -385,10 +386,10 @@ RegrFile(
 
                     // They still differ, make a diff file.
 
-                    sprintf(cmdbuf, "%s %s %s > %s",
+                    sprintf_s(cmdbuf, "%s %s %s > %s",
                         REGR_DIFF, tmp_file1, tmp_file2, tmp_file3);
                     DoCommand(pDir->GetDirectoryPath(), cmdbuf, false);
-                    sprintf(cmdbuf,"%s -p -e \"s/^[<>-].*\\r?\\n//\" < %s > %s",
+                    sprintf_s(cmdbuf,"%s -p -e \"s/^[<>-].*\\r?\\n//\" < %s > %s",
                         REGR_PERL, tmp_file3, fulldiffbuf);
                     if (DoCommand(pDir->GetDirectoryPath(), cmdbuf)) {
                         rc = -1;

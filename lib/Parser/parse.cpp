@@ -2070,7 +2070,7 @@ ParseNodePtr Parser::ParseTerm(BOOL fAllowCall, LPCOLESTR pNameHint, ulong *pHin
         m_pscan->Scan();
 
         // We search an Async expression (a function declaration or a async lambda expression)
-        if (pid == wellKnownPropertyPids.async && m_scriptContext->GetConfig()->IsES6AsyncAndAwaitEnabled())
+        if (pid == wellKnownPropertyPids.async && m_scriptContext->GetConfig()->IsES7AsyncAndAwaitEnabled())
         {
             if (m_token.tk == tkFUNCTION)
             {
@@ -3162,7 +3162,7 @@ ParseNodePtr Parser::ParseMemberList(LPCOLESTR pNameHint, ulong* pNameHintLength
         bool isAsyncMethod = false;
         charcount_t ichMin = 0;
         size_t iecpMin = 0;
-        if (m_token.tk == tkID && m_token.GetIdentifier(m_phtbl) == wellKnownPropertyPids.async && m_scriptContext->GetConfig()->IsES6AsyncAndAwaitEnabled())
+        if (m_token.tk == tkID && m_token.GetIdentifier(m_phtbl) == wellKnownPropertyPids.async && m_scriptContext->GetConfig()->IsES7AsyncAndAwaitEnabled())
         {
             RestorePoint parsedAsync;
             m_pscan->Capture(&parsedAsync);
@@ -3574,12 +3574,6 @@ ParseNodePtr Parser::ParseFncDecl(ushort flags, LPCOLESTR pNameHint, const bool 
     if (this->m_arrayDepth)
     {
         this->m_funcInArrayDepth++; // Count func depth within array literal
-    }
-
-    Js::LocalFunctionId nextFunctionIdSave = 0;
-    if (!buildAST && m_nextFunctionId != nullptr)
-    {
-        nextFunctionIdSave = *m_nextFunctionId;
     }
 
     // Update the count of functions nested in the current parent.
@@ -4193,6 +4187,12 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
             {
                 isTopLevelDeferredFunc = false;
             }
+        }
+
+        if ((!buildAST || isTopLevelDeferredFunc) && fAsync)
+        {
+            // We increment m_nextFunctionId when there is an Async function to counterbalance the functionId because of the added generator to the AST with an async function that we use to keep deferred parsing in sync with non-deferred parsing
+            (*m_nextFunctionId)++;
         }
 
         if (isTopLevelDeferredFunc || (m_InAsmMode && m_deferAsmJs))
@@ -5666,14 +5666,20 @@ void Parser::FinishFncDecl(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint, ParseNode
     Assert(pnodeFnc->nop == knopFncDecl);
 
     ChkCurTok(tkLCurly, ERRnoLcurly);
-    ParseStmtList<true>(&pnodeFnc->sxFnc.pnodeBody, &lastNodeRef, SM_OnFunctionCode, true /* isSourceElementList */);
+    if (pnodeFnc->sxFnc.IsAsync())
+    {
+        TransformAsyncFncDeclAST(&pnodeFnc->sxFnc.pnodeBody);
+    }
+    else
+    {
+        ParseStmtList<true>(&pnodeFnc->sxFnc.pnodeBody, &lastNodeRef, SM_OnFunctionCode, true /* isSourceElementList */);
+        // Append an EndCode node.
+        AddToNodeList(&pnodeFnc->sxFnc.pnodeBody, &lastNodeRef, CreateNodeWithScanner<knopEndCode>());
+    }
+    ChkCurTokNoScan(tkRCurly, ERRnoRcurly);
 
     pnodeFnc->ichLim = m_pscan->IchLimTok();
     pnodeFnc->sxFnc.cbLim = m_pscan->IecpLimTok();
-
-    // Append an EndCode node.
-    AddToNodeList(&pnodeFnc->sxFnc.pnodeBody, &lastNodeRef, CreateNodeWithScanner<knopEndCode>());
-    ChkCurTokNoScan(tkRCurly, ERRnoRcurly);
 
     // Restore the lists of scopes that contain function expressions.
     // Save the temps and restore the outer scope's list.
@@ -5962,7 +5968,7 @@ ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulo
         bool isComputedName = false;
         bool isAsyncMethod = false;
 
-        if (m_token.tk == tkID && m_token.GetIdentifier(m_phtbl) == wellKnownPropertyPids.async && m_scriptContext->GetConfig()->IsES6AsyncAndAwaitEnabled())
+        if (m_token.tk == tkID && m_token.GetIdentifier(m_phtbl) == wellKnownPropertyPids.async && m_scriptContext->GetConfig()->IsES7AsyncAndAwaitEnabled())
         {
             RestorePoint parsedAsync;
             m_pscan->Capture(&parsedAsync);
@@ -6390,6 +6396,171 @@ ParseNodePtr Parser::ParseStringTemplateDecl(ParseNodePtr pnodeTagFnc)
     m_pscan->Scan();
 
     return pnodeStringTemplate;
+}
+
+void Parser::TransformAsyncFncDeclAST(ParseNodePtr *pnodeBody)
+{
+    StmtNest *pstmtSave;
+
+    ParseNodePtr pnodeReturn;
+    ParseNodePtr pnodeAsyncSpawn;
+    ParseNodePtr pnodeFncGenerator = nullptr;
+    ParseNodePtr pnodeFncSave = nullptr;
+    ParseNodePtr pnodeInnerBlock = nullptr;
+    ParseNodePtr pnodeBlock = nullptr;
+    ParseNodePtr *ppnodeVarSave = nullptr;
+    ParseNodePtr *lastNodeRef = nullptr;
+    ParseNodePtr *ppnodeScopeSave = nullptr;
+    ParseNodePtr *ppnodeExprScopeSave = nullptr;
+
+    AutoParsingSuperRestrictionStateRestorer restorer(this);
+
+    // Create the generator : function*() {}
+    uint tryCatchOrFinallyDepthSave = this->m_tryCatchOrFinallyDepth;
+    this->m_tryCatchOrFinallyDepth = 0;
+
+    uint *pnestedCountSave = m_pnestedCount;
+    if (m_pnestedCount)
+    {
+        (*m_pnestedCount)++;
+    }
+
+    uint scopeCountNoAstSave = m_scopeCountNoAst;
+    m_scopeCountNoAst = 0;
+
+    long* pAstSizeSave = m_pCurrentAstSize;
+
+    pnodeFncSave = m_currentNodeFunc;
+    ppnodeVarSave = m_ppnodeVar;
+
+    pnodeFncGenerator = CreateAsyncSpawnGenerator();
+
+    pstmtSave = m_pstmtCur;
+    SetCurrentStatement(nullptr);
+
+    bool fPreviousYieldIsKeyword = m_pscan->SetYieldIsKeyword(FALSE);
+    BOOL oldStrictMode = this->m_fUseStrictMode;
+    uint uDeferSave = m_grfscr & fscrDeferFncParse;
+
+    pnodeBlock = StartParseBlock<true>(PnodeBlockType::Parameter, ScopeType_Parameter);
+    pnodeFncGenerator->sxFnc.pnodeScopes = pnodeBlock;
+    m_ppnodeVar = &pnodeFncGenerator->sxFnc.pnodeArgs;
+
+    ppnodeScopeSave = m_ppnodeScope;
+
+    m_ppnodeScope = &pnodeBlock->sxBlock.pnodeScopes;
+    pnodeBlock->sxBlock.pnodeStmt = pnodeFncGenerator;
+
+    ppnodeExprScopeSave = m_ppnodeExprScope;
+    m_ppnodeExprScope = nullptr;
+
+    m_fUseStrictMode = oldStrictMode;
+
+    pnodeInnerBlock = StartParseBlock<true>(PnodeBlockType::Function, ScopeType_FunctionBody);
+    *m_ppnodeScope = pnodeInnerBlock;
+    pnodeFncGenerator->sxFnc.pnodeBodyScope = pnodeInnerBlock;
+
+    m_ppnodeScope = &pnodeInnerBlock->sxBlock.pnodeScopes;
+    pnodeInnerBlock->sxBlock.pnodeStmt = pnodeFncGenerator;
+
+    Assert(*m_ppnodeVar == nullptr);
+
+    pnodeFncGenerator->sxFnc.pnodeVars = nullptr;
+    m_ppnodeVar = &pnodeFncGenerator->sxFnc.pnodeVars;
+
+    DeferredFunctionStub *saveCurrentStub = m_currDeferredStub;
+    if (pnodeFncSave && m_currDeferredStub)
+    {
+        m_currDeferredStub = (m_currDeferredStub + (pnodeFncSave->sxFnc.nestedCount - 1))->deferredStubs;
+    }
+
+    pnodeFncGenerator->sxFnc.pnodeBody = nullptr;
+        // Parse the function body
+        ParseStmtList<true>(&pnodeFncGenerator->sxFnc.pnodeBody, &lastNodeRef, SM_OnFunctionCode, true);
+        ChkCurTokNoScan(tkRCurly, ERRnoRcurly);
+    AddToNodeList(&pnodeFncGenerator->sxFnc.pnodeBody, &lastNodeRef, CreateNodeWithScanner<knopEndCode>());
+    lastNodeRef = NULL;
+
+    pnodeFncGenerator->ichLim = m_pscan->IchLimTok();
+    pnodeFncGenerator->sxFnc.cbLim = m_pscan->IecpLimTok();
+
+    m_currDeferredStub = saveCurrentStub;
+
+    FinishParseBlock(pnodeInnerBlock, true);
+
+    this->AddArgumentsNodeToVars(pnodeFncGenerator);
+
+    Assert(m_ppnodeExprScope == nullptr || *m_ppnodeExprScope == nullptr);
+    m_ppnodeExprScope = ppnodeExprScopeSave;
+
+    AssertMem(m_ppnodeScope);
+    Assert(nullptr == *m_ppnodeScope);
+    m_ppnodeScope = ppnodeScopeSave;
+
+    FinishParseBlock(pnodeBlock, true);
+
+    Assert(nullptr == m_pstmtCur);
+    SetCurrentStatement(pstmtSave);
+
+    if (!m_stoppedDeferredParse)
+    {
+        m_grfscr |= uDeferSave;
+    }
+
+    m_pscan->SetYieldIsKeyword(fPreviousYieldIsKeyword);
+
+    *m_ppnodeVar = nullptr;
+    m_ppnodeVar = ppnodeVarSave;
+
+    Assert(pnodeFncGenerator == m_currentNodeFunc);
+
+    m_currentNodeFunc = pnodeFncSave;
+    m_pCurrentAstSize = pAstSizeSave;
+
+    m_pnestedCount = pnestedCountSave;
+    m_inDeferredNestedFunc = false;
+
+    m_scopeCountNoAst = scopeCountNoAstSave;
+
+    this->m_tryCatchOrFinallyDepth = tryCatchOrFinallyDepthSave;
+
+
+    // Create the call : spawn(function*() {}, this)   
+    pnodeAsyncSpawn = CreateBinNode(knopAsyncSpawn, pnodeFncGenerator, CreateNodeWithScanner<knopThis>());
+
+    // Create the return : return spawn(function*() {}, this) 
+    pnodeReturn = CreateNodeWithScanner<knopReturn>();
+    pnodeReturn->sxReturn.pnodeExpr = pnodeAsyncSpawn;
+        *pnodeBody = nullptr;
+        AddToNodeList(pnodeBody, &lastNodeRef, pnodeReturn);
+        AddToNodeList(pnodeBody, &lastNodeRef, CreateNodeWithScanner<knopEndCode>());
+    lastNodeRef = NULL;
+}
+
+ParseNodePtr Parser::CreateAsyncSpawnGenerator()
+{
+    ParseNodePtr pnodeFncGenerator = nullptr;
+
+    pnodeFncGenerator = CreateDummyFuncNode(false);
+    pnodeFncGenerator->sxFnc.functionId = (*m_nextFunctionId)++;
+
+    pnodeFncGenerator->sxFnc.lineNumber = m_pscan->LineCur();
+    pnodeFncGenerator->sxFnc.columnNumber = CalculateFunctionColumnNumber();
+    pnodeFncGenerator->sxFnc.SetNested(m_currentNodeFunc != nullptr);
+    pnodeFncGenerator->sxFnc.SetStrictMode(IsStrictMode());
+    pnodeFncGenerator->sxFnc.firstDefaultArg = 0;
+
+    pnodeFncGenerator->sxFnc.SetIsGenerator();
+    pnodeFncGenerator->sxFnc.pnodeName = nullptr;
+    pnodeFncGenerator->sxFnc.scope = nullptr;
+
+    AppendFunctionToScopeList(false, pnodeFncGenerator);
+
+    m_pCurrentAstSize = &pnodeFncGenerator->sxFnc.astSize;
+    m_pnestedCount = &pnodeFncGenerator->sxFnc.nestedCount;
+    m_currentNodeFunc = pnodeFncGenerator;
+
+    return pnodeFncGenerator;
 }
 
 LPCOLESTR Parser::FormatPropertyString(LPCOLESTR propertyString, ParseNodePtr pNode, ulong *fullNameHintLength)
@@ -7034,7 +7205,7 @@ ParseNodePtr Parser::ParseExpr(int oplMin, BOOL *pfCanAssign, BOOL fAllowIn, BOO
             size_t iecpMin = 0;
             bool isAsyncMethod = false;
             m_pscan->SeekTo(termStart);
-            if (m_token.tk == tkID && m_token.GetIdentifier(m_phtbl) == wellKnownPropertyPids.async && m_scriptContext->GetConfig()->IsES6AsyncAndAwaitEnabled())
+            if (m_token.tk == tkID && m_token.GetIdentifier(m_phtbl) == wellKnownPropertyPids.async && m_scriptContext->GetConfig()->IsES7AsyncAndAwaitEnabled())
             {
                 ichMin = m_pscan->IchMinTok();
                 iecpMin = m_pscan->IecpMinTok();
@@ -7918,7 +8089,7 @@ LFunctionStatement:
             }
             m_pscan->SeekTo(parsedLet);
         }
-        else if (m_token.GetIdentifier(m_phtbl) == wellKnownPropertyPids.async && m_scriptContext->GetConfig()->IsES6AsyncAndAwaitEnabled())
+        else if (m_token.GetIdentifier(m_phtbl) == wellKnownPropertyPids.async && m_scriptContext->GetConfig()->IsES7AsyncAndAwaitEnabled())
         {
             RestorePoint parsedAsync;
             m_pscan->Capture(&parsedAsync);
@@ -9388,12 +9559,6 @@ ParseNodePtr Parser::Parse(LPCUTF8 pszSrc, size_t offset, size_t length, charcou
     pnodeProg->sxFnc.cbMin = m_pscan->IecpMinTok();
     pnodeProg->sxFnc.lineNumber = lineNumber;
     pnodeProg->sxFnc.columnNumber = 0;
-
-    if (m_token.tk == tkID && m_token.GetIdentifier(m_phtbl) == wellKnownPropertyPids.async)
-    {
-        Assert(m_scriptContext->GetConfig()->IsES6AsyncAndAwaitEnabled());
-        pnodeProg->sxFnc.SetIsAsync();
-    }
 
     if (!isDeferred || (isDeferred && grfscr & fscrGlobalCode))
     {

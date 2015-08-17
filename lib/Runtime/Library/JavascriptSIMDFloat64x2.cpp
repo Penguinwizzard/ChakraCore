@@ -87,12 +87,6 @@ namespace Js
         case PropertyIds::signMask:
             *value = GetSignMask();
             return true;
-        case PropertyIds::x:
-        case PropertyIds::y:
-        case PropertyIds::z:
-        case PropertyIds::w:
-            *value = GetLaneAsNumber(propertyId - PropertyIds::x, requestContext);
-            return true;
         }
 
         return false;
@@ -121,7 +115,7 @@ namespace Js
         wchar_t stringBuffer[1024];
         SIMDValue value = instance->GetValue();
 
-        swprintf_s(stringBuffer, 1024, L"float64x2(%.1f,%.1f)", value.f64[SIMD_X], value.f64[SIMD_Y]);
+        swprintf_s(stringBuffer, 1024, L"Float64x2(%.1f,%.1f)", value.f64[SIMD_X], value.f64[SIMD_Y]);
 
         JavascriptString* string = JavascriptString::NewCopySzFromArena(stringBuffer, scriptContext, scriptContext->GeneralAllocator());
 
@@ -145,13 +139,6 @@ namespace Js
         return instance;
     }
     
-    __inline Var JavascriptSIMDFloat64x2::GetLaneAsNumber(uint index, ScriptContext* requestContext)
-    {
-        // convert value.f64[index] to TaggedInt or Number object
-        AssertMsg(index < 2, "Out of range lane index");
-        return JavascriptNumber::ToVarWithCheck(value.f64[index], requestContext);
-    }
-
     __inline Var JavascriptSIMDFloat64x2::GetSignMask()
     {
         int signMask = SIMDFloat64x2Operation::OpGetSignMask(value);

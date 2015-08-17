@@ -135,7 +135,6 @@ PHASE(All)
                     PHASE(CopyOnAccessArray)
                     PHASE(NativeArrayLeafSegment)
                 PHASE(TypedArrayTypeSpec)
-                PHASE(PixelArrayTypeSpec)
                 PHASE(LdLenIntSpec)
                 PHASE(FixDataProps)
                 PHASE(FixMethodProps)
@@ -534,7 +533,6 @@ PHASE(All)
 
 #define DEFAULT_CONFIG_MaxJITFunctionBytecodeSize (120000)
 
-#define DEFAULT_CONFIG_KhronosInterop         (true)
 #define DEFAULT_CONFIG_JitQueueThreshold      (6)
 
 #define DEFAULT_CONFIG_FullJitRequeueThreshold (25)     // Minimum number of times a function needs to be executed before it is re-added to the jit queue
@@ -869,8 +867,8 @@ FLAGNRC(Boolean, ES6Experimental           , "Enable all experimental features",
 
 // Per ES6 feature/flag
 
-FLAGPR           (Boolean, ES6, ES6Species             , "Enable ES6 '@@species' properties and built-in behaviors" , DEFAULT_CONFIG_ES6Species)
-FLAGPR_REGOVR_EXP(Boolean, ES6, ES6AsyncAwait          , "Enable ES6 'async' and 'await' keywords"                  , DEFAULT_CONFIG_ES6AsyncAwait)
+FLAGPR_REGOVR_EXP(Boolean, ES6, ES6Species             , "Enable ES6 '@@species' properties and built-in behaviors" , DEFAULT_CONFIG_ES6Species)
+FLAGPR_REGOVR_EXP(Boolean, ES6, ES7AsyncAwait          , "Enable ES7 'async' and 'await' keywords"                  , DEFAULT_CONFIG_ES6AsyncAwait)
 FLAGPR           (Boolean, ES6, ES6Classes             , "Enable ES6 'class' and 'extends' keywords"                , DEFAULT_CONFIG_ES6Classes)
 FLAGPR           (Boolean, ES6, ES6DateParseFix        , "Enable ES6 Date.parse fixes"                              , DEFAULT_CONFIG_ES6DateParseFix)
 FLAGPR_REGOVR_EXP(Boolean, ES6, ES6DefaultArgs         , "Enable ES6 Default Arguments"                             , DEFAULT_CONFIG_ES6DefaultArgs)
@@ -1002,7 +1000,6 @@ FLAGNR(Number,  InlineThresholdAdjustCountInSmallFunction       , "Adjustment in
 FLAGNR(String,  Interpret             , "List of functions to interpret", NULL)
 FLAGNR(Phases,  Instrument            , "Instrument the generated code from the given phase", )
 FLAGNR(Number,  JitQueueThreshold     , "Max number of work items/script context in the jit queue", DEFAULT_CONFIG_JitQueueThreshold)
-FLAGNR(Boolean, KhronosInterop        , "Make the TypedArray and Canvas implementations interoperable with the Khronos spec", DEFAULT_CONFIG_KhronosInterop)
 #ifdef LEAK_REPORT
 FLAGNR(String,  LeakReport            , "File name for the leak report", NULL)
 #endif

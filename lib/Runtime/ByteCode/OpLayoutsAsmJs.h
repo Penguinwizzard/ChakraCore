@@ -488,14 +488,6 @@ namespace Js
     };
 
     template <typename SizePolicy>
-    struct OpLayoutT_Float1Float32x4_1IntConst1
-    {
-        typename SizePolicy::RegSlotType    F0;
-        typename SizePolicy::RegSlotType    F4_1;
-        typename int                        C2;
-    };
-
-    template <typename SizePolicy>
     struct OpLayoutT_Int1Float32x4_1
     {
         typename SizePolicy::RegSlotType    I0;
@@ -577,6 +569,40 @@ namespace Js
     };
 
     template <typename SizePolicy>
+    struct OpLayoutT_Int32x4_2Int2
+    {
+        typename SizePolicy::RegSlotType    I4_0;
+        typename SizePolicy::RegSlotType    I4_1;
+        typename SizePolicy::RegSlotType    I2;
+        typename SizePolicy::RegSlotType    I3;
+    };
+
+    template <typename SizePolicy>
+    struct OpLayoutT_Int1Int32x4_1Int1
+    {
+        typename SizePolicy::RegSlotType    I0;
+        typename SizePolicy::RegSlotType    I4_1;
+        typename SizePolicy::RegSlotType    I2;
+    };
+
+    template <typename SizePolicy>
+    struct OpLayoutT_Float32x4_2Int1Float1
+    {
+        typename SizePolicy::RegSlotType    F4_0;
+        typename SizePolicy::RegSlotType    F4_1;
+        typename SizePolicy::RegSlotType    I2;
+        typename SizePolicy::RegSlotType    F3;
+    };
+
+    template <typename SizePolicy>
+    struct OpLayoutT_Float1Float32x4_1Int1
+    {
+        typename SizePolicy::RegSlotType    F0;
+        typename SizePolicy::RegSlotType    F4_1;
+        typename SizePolicy::RegSlotType    I2;
+    };
+
+    template <typename SizePolicy>
     struct OpLayoutT_Reg1Int32x4_1
     {
         typename SizePolicy::RegSlotType     R0;
@@ -602,15 +628,6 @@ namespace Js
     {
         typename SizePolicy::RegSlotType    I4_0;
         typename SizePolicy::RegSlotType    F4_1;
-    };
-
-
-    template <typename SizePolicy>
-    struct OpLayoutT_Int1Int32x4_1IntConst1
-    {
-        typename SizePolicy::RegSlotType    I0;
-        typename SizePolicy::RegSlotType    I4_1;
-        typename int                        C2;
     };
 
     template <typename SizePolicy>
@@ -724,14 +741,6 @@ namespace Js
     {
         typename SizePolicy::RegSlotType     D2_0;
         typename SizePolicy::RegSlotType     R1;
-    };
-
-    template <typename SizePolicy>
-    struct OpLayoutT_Double1Float64x2_1IntConst1
-    {
-        typename SizePolicy::RegSlotType    D0;
-        typename SizePolicy::RegSlotType    D2_1;
-        typename int                        C2;
     };
 
     template <typename SizePolicy>

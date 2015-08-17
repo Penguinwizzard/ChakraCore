@@ -37,13 +37,13 @@ namespace Js
     ArenaAllocator *GetArenaFromContext(ScriptContext *scriptContext)
     {
         Assert(scriptContext);
-        return scriptContext->GetThreadContext()->Diagnostics->GetDiagnosticArena()->Arena();
+        return scriptContext->GetThreadContext()->GetDebugManager()->GetDiagnosticArena()->Arena();
     }
 
     template <class T>
     WeakArenaReference<IDiagObjectModelWalkerBase>* CreateAWalker(ScriptContext * scriptContext, Var instance, Var originalInstance)
     {
-        ReferencedArenaAdapter* pRefArena = scriptContext->GetThreadContext()->Diagnostics->GetDiagnosticArena();
+        ReferencedArenaAdapter* pRefArena = scriptContext->GetThreadContext()->GetDebugManager()->GetDiagnosticArena();
         if (pRefArena)
         {
             IDiagObjectModelWalkerBase* pOMWalker = Anew(pRefArena->Arena(), T, scriptContext, instance, originalInstance);
@@ -62,21 +62,17 @@ namespace Js
         IDiagObjectModelDisplay* pOMDisplay = (this->objectDisplay != nullptr) ? this->objectDisplay : CreateDisplay();
         Assert(pOMDisplay);
 
-        return HeapNew(WeakArenaReference<IDiagObjectModelDisplay>, scriptContext->GetThreadContext()->Diagnostics->GetDiagnosticArena(), pOMDisplay);
+        return HeapNew(WeakArenaReference<IDiagObjectModelDisplay>, scriptContext->GetThreadContext()->GetDebugManager()->GetDiagnosticArena(), pOMDisplay);
     }
 
     IDiagObjectModelDisplay * ResolvedObject::CreateDisplay()
     {
         IDiagObjectModelDisplay* pOMDisplay = nullptr;
-        ReferencedArenaAdapter* pRefArena = scriptContext->GetThreadContext()->Diagnostics->GetDiagnosticArena();
+        ReferencedArenaAdapter* pRefArena = scriptContext->GetThreadContext()->GetDebugManager()->GetDiagnosticArena();
 
         if (Js::TypedArrayBase::Is(obj))
         {
             pOMDisplay = Anew(pRefArena->Arena(), RecyclableTypedArrayDisplay, this);
-        }
-        else if (Js::JavascriptPixelArray::Is(obj))
-        {
-            pOMDisplay = Anew(pRefArena->Arena(), RecyclablePixelArrayDisplay, this);
         }
         else if (Js::ES5Array::Is(obj))
         {
@@ -152,7 +148,7 @@ namespace Js
 
     WeakArenaReference<IDiagObjectModelWalkerBase>* LocalsDisplay::CreateWalker()
     {
-        ReferencedArenaAdapter* pRefArena = pFrame->GetScriptContext()->GetThreadContext()->Diagnostics->GetDiagnosticArena();
+        ReferencedArenaAdapter* pRefArena = pFrame->GetScriptContext()->GetThreadContext()->GetDebugManager()->GetDiagnosticArena();
         if (pRefArena)
         {
             IDiagObjectModelWalkerBase * pOMWalker = nullptr;
@@ -284,7 +280,7 @@ namespace Js
         Assert(frame);
         Assert(index >= 0);
 
-        Js::MutationBreakpoint *mutationBreakpoint = frame->GetScriptContext()->GetDebugContext()->GetProbeContainer()->GetProbeManager()->GetActiveMutationBreakpoint();
+        Js::MutationBreakpoint *mutationBreakpoint = frame->GetScriptContext()->GetDebugContext()->GetProbeContainer()->GetDebugManager()->GetActiveMutationBreakpoint();
 
         if (mutationBreakpoint != nullptr)
         {
@@ -294,7 +290,7 @@ namespace Js
                 pResolvedObject->typeId = TypeIds_Object;
                 pResolvedObject->address = nullptr;
                 pResolvedObject->obj = mutationBreakpoint->GetMutationObjectVar();
-                ReferencedArenaAdapter* pRefArena = pResolvedObject->scriptContext->GetThreadContext()->Diagnostics->GetDiagnosticArena();
+                ReferencedArenaAdapter* pRefArena = pResolvedObject->scriptContext->GetThreadContext()->GetDebugManager()->GetDiagnosticArena();
                 pResolvedObject->objectDisplay = Anew(pRefArena->Arena(), PendingMutationBreakpointDisplay, pResolvedObject, mutationBreakpoint->GetBreakMutationType());
                 pResolvedObject->objectDisplay->SetDefaultTypeAttribute(DBGPROP_ATTRIB_VALUE_PENDING_MUTATION | DBGPROP_ATTRIB_VALUE_READONLY | DBGPROP_ATTRIB_VALUE_IS_FAKE);
                 return TRUE;
@@ -310,7 +306,7 @@ namespace Js
         Assert(frame);
         Assert(frame->GetScriptContext());
 
-        return frame->GetScriptContext()->GetDebugContext()->GetProbeContainer()->GetProbeManager()->GetActiveMutationBreakpoint() != nullptr ? 1 : 0;
+        return frame->GetScriptContext()->GetDebugContext()->GetProbeContainer()->GetDebugManager()->GetActiveMutationBreakpoint() != nullptr ? 1 : 0;
     }
 #endif
     BOOL VariableWalkerBase::Get(int i, ResolvedObject* pResolvedObject)
@@ -1672,7 +1668,7 @@ namespace Js
         {
             Js::RecyclableObject* obj = Js::RecyclableObject::FromVar(instance);
 
-            StringBuilder<ArenaAllocator>* builder = scriptContext->GetThreadContext()->Diagnostics->pCurrentInterpreterLocation->stringBuilder;
+            StringBuilder<ArenaAllocator>* builder = scriptContext->GetThreadContext()->GetDebugManager()->pCurrentInterpreterLocation->stringBuilder;
             builder->Reset();
 
             // For the recyclableobject try to find out the constructor, which will be shown as type for the object.
@@ -1795,7 +1791,7 @@ namespace Js
         {
             Js::RecyclableObject* obj = Js::RecyclableObject::FromVar(instance);
 
-            StringBuilder<ArenaAllocator>* builder = scriptContext->GetThreadContext()->Diagnostics->pCurrentInterpreterLocation->stringBuilder;
+            StringBuilder<ArenaAllocator>* builder = scriptContext->GetThreadContext()->GetDebugManager()->pCurrentInterpreterLocation->stringBuilder;
             builder->Reset();
 
             if (obj->GetDiagValueString(builder, scriptContext))
@@ -1946,7 +1942,7 @@ namespace Js
 
     StringBuilder<ArenaAllocator>* RecyclableObjectDisplay::GetStringBuilder()
     {
-        return scriptContext->GetThreadContext()->Diagnostics->pCurrentInterpreterLocation->stringBuilder;
+        return scriptContext->GetThreadContext()->GetDebugManager()->pCurrentInterpreterLocation->stringBuilder;
     }
 
     PropertyId RecyclableObjectDisplay::GetPropertyId() const
@@ -2275,6 +2271,11 @@ namespace Js
 
                                         InsertItem(originalObject, object, propertyId, isConst, isUnScoped, &pMethodsGroupWalker);
                                     }
+                                }
+                                else if (Js::JavascriptFunction::FromVar(object)->IsScriptFunction() || Js::JavascriptFunction::FromVar(object)->IsBoundFunction())
+                                {
+                                    // Adding special property length for the scriptfunction, like it is done in JavascriptFunction::GetSpecialNonEnumerablePropertyName
+                                    InsertItem(originalObject, object, PropertyIds::length, true/*not editable*/, false /*isUnScoped*/, &pMethodsGroupWalker);
                                 }
                             }
                         }
@@ -2703,7 +2704,7 @@ namespace Js
 
     StringBuilder<ArenaAllocator>* RecyclableArrayWalker::GetBuilder()
     {
-        return scriptContext->GetThreadContext()->Diagnostics->pCurrentInterpreterLocation->stringBuilder;
+        return scriptContext->GetThreadContext()->GetDebugManager()->pCurrentInterpreterLocation->stringBuilder;
     }
 
     //--------------------------
@@ -2743,7 +2744,7 @@ namespace Js
 
     WeakArenaReference<IDiagObjectModelWalkerBase>* RecyclableArgumentsObjectDisplay::CreateWalker()
     {
-        ReferencedArenaAdapter* pRefArena = scriptContext->GetThreadContext()->Diagnostics->GetDiagnosticArena();
+        ReferencedArenaAdapter* pRefArena = scriptContext->GetThreadContext()->GetDebugManager()->GetDiagnosticArena();
         if (pRefArena)
         {
             IDiagObjectModelWalkerBase* pOMWalker = Anew(pRefArena->Arena(), RecyclableArgumentsObjectWalker, scriptContext, instance, pLocalsWalker);
@@ -3011,112 +3012,7 @@ namespace Js
 
 
     //--------------------------
-    // RecyclablePixelArrayAddress
-
-    RecyclablePixelArrayAddress::RecyclablePixelArrayAddress(Var _parentArray, unsigned int _index)
-        : RecyclableArrayAddress(_parentArray, _index)
-    {
-    }
-
-    BOOL RecyclablePixelArrayAddress::Set(Var updateObject)
-    {
-        if (Js::JavascriptPixelArray::Is(parentArray))
-        {
-            Js::JavascriptPixelArray* pixelArrayObj = Js::JavascriptPixelArray::FromVar(parentArray);
-            return pixelArrayObj->SetItem(index, updateObject, PropertyOperation_None);
-        }
-
-        return FALSE;
-    }
-
-
-    //--------------------------
-    // RecyclablePixelArrayDisplay
-
-    RecyclablePixelArrayDisplay::RecyclablePixelArrayDisplay(ResolvedObject* resolvedObject)
-        : RecyclableObjectDisplay(resolvedObject)
-    {
-    }
-
-    BOOL RecyclablePixelArrayDisplay::HasChildren()
-    {
-        if (Js::JavascriptPixelArray::Is(instance))
-        {
-            Js::JavascriptPixelArray* pixelArrayObj = Js::JavascriptPixelArray::FromVar(instance);
-            if (pixelArrayObj->GetBufferLength() > 0)
-            {
-                return TRUE;
-            }
-        }
-        return RecyclableObjectDisplay::HasChildren();
-    }
-
-    WeakArenaReference<IDiagObjectModelWalkerBase>* RecyclablePixelArrayDisplay::CreateWalker()
-    {
-        return CreateAWalker<RecyclablePixelArrayWalker>(scriptContext, instance, originalInstance);
-    }
-
-    //--------------------------
-    // RecyclablePixelArrayWalker
-
-    RecyclablePixelArrayWalker::RecyclablePixelArrayWalker(ScriptContext* _scriptContext, Var _instance, Var _originalInstance)
-        : RecyclableArrayWalker(_scriptContext, _instance, _originalInstance)
-    {
-    }
-
-    ulong RecyclablePixelArrayWalker::GetChildrenCount()
-    {
-        if (!indexedItemCount)
-        {
-            Assert(Js::JavascriptPixelArray::Is(instance));
-
-            Js::JavascriptPixelArray * pixelArrayObj = Js::JavascriptPixelArray::FromVar(instance);
-
-            indexedItemCount = pixelArrayObj->GetBufferLength() + (!fOnlyOwnProperties ? RecyclableObjectWalker::GetChildrenCount() : 0);
-        }
-
-        return indexedItemCount;
-    }
-
-    BOOL RecyclablePixelArrayWalker::Get(int i, ResolvedObject* pResolvedObject)
-    {
-        AssertMsg(pResolvedObject, "Bad usage of RecyclablePixelArrayWalker::Get");
-
-        Assert(Js::JavascriptPixelArray::Is(instance));
-
-        Js::JavascriptPixelArray * pixelArrayObj = Js::JavascriptPixelArray::FromVar(instance);
-
-        int nonArrayElementCount = (!fOnlyOwnProperties ? RecyclableObjectWalker::GetChildrenCount() : 0);
-
-        if (i < nonArrayElementCount)
-        {
-            return RecyclableObjectWalker::Get(i, pResolvedObject);
-        }
-        else
-        {
-            i -= nonArrayElementCount;
-            pResolvedObject->scriptContext = scriptContext;
-            pResolvedObject->obj = pixelArrayObj->DirectGetItem(i);
-            pResolvedObject->typeId = JavascriptOperators::GetTypeId(pResolvedObject->obj);
-
-            StringBuilder<ArenaAllocator>* builder = GetBuilder();
-            Assert(builder);
-            builder->Reset();
-            pResolvedObject->name = GetIndexName(i, builder);
-
-            Assert(pResolvedObject->typeId != TypeIds_HostDispatch);
-
-            pResolvedObject->address = Anew(GetArenaFromContext(scriptContext),
-                RecyclablePixelArrayAddress,
-                instance,
-                i);
-        }
-
-        return TRUE;
-    }
-
-    //--------------------------
-    // RecyclablePixelArrayAddress
+    // RecyclableES5ArrayAddress
 
     RecyclableES5ArrayAddress::RecyclableES5ArrayAddress(Var _parentArray, unsigned int _index)
         : RecyclableArrayAddress(_parentArray, _index)
@@ -3311,7 +3207,7 @@ namespace Js
     template <typename TData>
     BOOL RecyclableCollectionObjectWalker<TData>::Get(int i, ResolvedObject* pResolvedObject)
     {
-        auto builder = scriptContext->GetThreadContext()->Diagnostics->pCurrentInterpreterLocation->stringBuilder;
+        auto builder = scriptContext->GetThreadContext()->GetDebugManager()->pCurrentInterpreterLocation->stringBuilder;
         builder->Reset();
         builder->AppendUint64(i);
         pResolvedObject->name = builder->Detach();
@@ -3415,7 +3311,7 @@ namespace Js
     template <typename TData>
     LPCWSTR RecyclableCollectionObjectDisplay<TData>::Value(int radix)
     {
-        StringBuilder<ArenaAllocator>* builder = scriptContext->GetThreadContext()->Diagnostics->pCurrentInterpreterLocation->stringBuilder;
+        StringBuilder<ArenaAllocator>* builder = scriptContext->GetThreadContext()->GetDebugManager()->pCurrentInterpreterLocation->stringBuilder;
         builder->Reset();
 
         builder->AppendCppLiteral(L"size = ");
@@ -3429,7 +3325,7 @@ namespace Js
     {
         if (walker)
         {
-            ReferencedArenaAdapter* pRefArena = scriptContext->GetThreadContext()->Diagnostics->GetDiagnosticArena();
+            ReferencedArenaAdapter* pRefArena = scriptContext->GetThreadContext()->GetDebugManager()->GetDiagnosticArena();
             if (pRefArena)
             {
                 return HeapNew(WeakArenaReference<IDiagObjectModelWalkerBase>, pRefArena, walker);
@@ -3442,7 +3338,7 @@ namespace Js
     // RecyclableKeyValueDisplay
     WeakArenaReference<IDiagObjectModelWalkerBase>* RecyclableKeyValueDisplay::CreateWalker()
     {
-        ReferencedArenaAdapter* pRefArena = scriptContext->GetThreadContext()->Diagnostics->GetDiagnosticArena();
+        ReferencedArenaAdapter* pRefArena = scriptContext->GetThreadContext()->GetDebugManager()->GetDiagnosticArena();
         if (pRefArena)
         {
             IDiagObjectModelWalkerBase* pOMWalker = Anew(pRefArena->Arena(), RecyclableKeyValueWalker, scriptContext, key, value);
@@ -3467,7 +3363,7 @@ namespace Js
         const wchar_t* keyValue = keyDisplay.Value(radix);
         const wchar_t* valueValue = valueDisplay.Value(radix);
 
-        StringBuilder<ArenaAllocator>* builder = scriptContext->GetThreadContext()->Diagnostics->pCurrentInterpreterLocation->stringBuilder;
+        StringBuilder<ArenaAllocator>* builder = scriptContext->GetThreadContext()->GetDebugManager()->pCurrentInterpreterLocation->stringBuilder;
         builder->Reset();
 
         builder->Append('[');
@@ -3519,7 +3415,7 @@ namespace Js
 
     WeakArenaReference<IDiagObjectModelWalkerBase>* RecyclableProxyObjectDisplay::CreateWalker()
     {
-        ReferencedArenaAdapter* pRefArena = scriptContext->GetThreadContext()->Diagnostics->GetDiagnosticArena();
+        ReferencedArenaAdapter* pRefArena = scriptContext->GetThreadContext()->GetDebugManager()->GetDiagnosticArena();
         if (pRefArena)
         {
             IDiagObjectModelWalkerBase* pOMWalker = Anew(pRefArena->Arena(), RecyclableProxyObjectWalker, scriptContext, instance);
@@ -3668,7 +3564,7 @@ namespace Js
     {
         if (methodGroupWalker)
         {
-            ReferencedArenaAdapter* pRefArena = scriptContext->GetThreadContext()->Diagnostics->GetDiagnosticArena();
+            ReferencedArenaAdapter* pRefArena = scriptContext->GetThreadContext()->GetDebugManager()->GetDiagnosticArena();
             if (pRefArena)
             {
                 return HeapNew(WeakArenaReference<IDiagObjectModelWalkerBase>, pRefArena, methodGroupWalker);
@@ -3765,7 +3661,7 @@ namespace Js
     {
         if (scopeGroupWalker)
         {
-            ReferencedArenaAdapter* pRefArena = scriptContext->GetThreadContext()->Diagnostics->GetDiagnosticArena();
+            ReferencedArenaAdapter* pRefArena = scriptContext->GetThreadContext()->GetDebugManager()->GetDiagnosticArena();
             if (pRefArena)
             {
                 return HeapNew(WeakArenaReference<IDiagObjectModelWalkerBase>, pRefArena, scopeGroupWalker);
@@ -3804,7 +3700,7 @@ namespace Js
     {
         if (globalsGroupWalker)
         {
-            ReferencedArenaAdapter* pRefArena = scriptContext->GetThreadContext()->Diagnostics->GetDiagnosticArena();
+            ReferencedArenaAdapter* pRefArena = scriptContext->GetThreadContext()->GetDebugManager()->GetDiagnosticArena();
             if (pRefArena)
             {
                 return HeapNew(WeakArenaReference<IDiagObjectModelWalkerBase>, pRefArena, globalsGroupWalker);
@@ -3821,7 +3717,7 @@ namespace Js
 
     WeakArenaReference<IDiagObjectModelWalkerBase>* PendingMutationBreakpointDisplay::CreateWalker()
     {
-        ReferencedArenaAdapter* pRefArena = scriptContext->GetThreadContext()->Diagnostics->GetDiagnosticArena();
+        ReferencedArenaAdapter* pRefArena = scriptContext->GetThreadContext()->GetDebugManager()->GetDiagnosticArena();
         if (pRefArena) 
         {
             IDiagObjectModelWalkerBase* pOMWalker = Anew(pRefArena->Arena(), PendingMutationBreakpointWalker, scriptContext, instance, this->mutationType);
@@ -3853,7 +3749,7 @@ namespace Js
 
     BOOL PendingMutationBreakpointWalker::Get(int i, ResolvedObject* pResolvedObject)
     {
-        Js::MutationBreakpoint *mutationBreakpoint = scriptContext->GetDebugContext()->GetProbeContainer()->GetProbeManager()->GetActiveMutationBreakpoint();
+        Js::MutationBreakpoint *mutationBreakpoint = scriptContext->GetDebugContext()->GetProbeContainer()->GetDebugManager()->GetActiveMutationBreakpoint();
         Assert(mutationBreakpoint);
         if (mutationBreakpoint != nullptr) 
         {

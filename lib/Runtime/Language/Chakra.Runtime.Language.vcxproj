@@ -80,7 +80,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)CacheOperators.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)CallInfo.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)CodeGenRecyclableData.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)DebugContext.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)DynamicProfileInfo.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)DynamicProfileMutator.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)DynamicProfileStorage.cpp" />
@@ -90,22 +89,16 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)InlineCache.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptExceptionOperators.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptMathOperators.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)MutationBreakpoint.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ProfilingHelpers.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)PropertyRecord.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ReadOnlyDynamicProfileInfo.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)SourceContextInfo.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)SourceDynamicProfileManager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)SourceHolder.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)StackTraceArguments.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Utf8SourceInfo.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ValueType.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ScriptContextOptimizationOverrideInfo.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)diagobjectmodel.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)DiagProbe.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)ProbeContainer.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)DiagHelperMethodWrapper.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)DiagStackFrame.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)InterpreterStackFrame.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptConversion.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptOperators.cpp" />
@@ -144,7 +137,6 @@
     </ClInclude>
     <ClInclude Include="InterpreterProcessOpCodeAsmJs.h" />
     <ClInclude Include="CodeGenRecyclableData.h" />
-    <ClInclude Include="DebugContext.h" />
     <ClInclude Include="DynamicProfileInfo.h" />
     <ClInclude Include="DynamicProfileMutator.h" />
     <ClInclude Include="DynamicProfileStorage.h" />
@@ -162,11 +154,9 @@
     <ClInclude Include="JavascriptMathOperators.h" />
     <ClInclude Include="JavascriptNativeOperators.h" />
     <ClInclude Include="LeaveScriptObject.h" />
-    <ClInclude Include="MutationBreakpoint.h" />
     <ClInclude Include="ProfilingHelpers.h" />
     <ClInclude Include="PropertyRecord.h" />
     <ClInclude Include="ReadOnlyDynamicProfileInfo.h" />
-    <ClInclude Include="SourceContextInfo.h" />
     <ClInclude Include="SourceDynamicProfileManager.h" />
     <ClInclude Include="SourceHolder.h" />
     <ClInclude Include="StackTraceArguments.h" />
@@ -175,11 +165,7 @@
     <ClInclude Include="ScriptContextOptimizationOverrideInfo.h" />
     <ClInclude Include="Arguments.h" />
     <ClInclude Include="CallInfo.h" />
-    <ClInclude Include="diagobjectmodel.h" />
-    <ClInclude Include="DiagProbe.h" />
-    <ClInclude Include="ProbeContainer.h" />
     <ClInclude Include="DiagHelperMethodWrapper.h" />
-    <ClInclude Include="DiagStackFrame.h" />
     <ClInclude Include="InterpreterStackFrame.h" />
     <ClInclude Include="JavascriptConversion.h" />
     <ClInclude Include="JavascriptOperators.h" />

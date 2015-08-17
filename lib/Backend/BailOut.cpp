@@ -1169,7 +1169,8 @@ BailOutRecord::BailOutHelper(Js::JavascriptCallStackLayout * layout, Js::ScriptF
     // Adjust bailout offset for debug mode (only scenario when we ignore exception).
     if (isInDebugMode)
     {
-        DebuggingFlags* debuggingFlags = functionScriptContext->GetThreadContext()->GetDebuggingFlags();
+        Js::DebugManager* debugManager = functionScriptContext->GetThreadContext()->GetDebugManager();
+        DebuggingFlags* debuggingFlags = debugManager->GetDebuggingFlags();
         int byteCodeOffsetAfterEx = debuggingFlags->GetByteCodeOffsetAfterIgnoreException();
 
         // Note that in case when bailout for ignore exception immediately follows regular bailout after a helper,
@@ -1194,11 +1195,11 @@ BailOutRecord::BailOutHelper(Js::JavascriptCallStackLayout * layout, Js::ScriptF
                 if (byteCodeOffsetAfterEx != DebuggingFlags::InvalidByteCodeOffset)
                 {
                     // We got an exception in native frame, and need to bail out to interpreter
-                    if (functionScriptContext->GetThreadContext()->Diagnostics->stepController.IsActive())
+                    if (debugManager->stepController.IsActive())
                     {
                         // Native frame went away, and there will be interpreter frame on its place.
                         // Make sure that frameAddrWhenSet it less than current interpreter frame -- we use it to detect stack depth.
-                        functionScriptContext->GetThreadContext()->Diagnostics->stepController.SetFrameAddr(0);
+                        debugManager->stepController.SetFrameAddr(0);
                     }
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
@@ -2439,9 +2440,22 @@ void GlobalBailOutRecordDataTable::Finalize(NativeCodeData::Allocator *allocator
     JitAdeleteArray(tempAlloc, length, globalBailOutRecordDataRows);
     globalBailOutRecordDataRows = newRows;
     size = length;
+
+#if DBG
+    if (length > 0)
+    {
+        uint32 currStart = globalBailOutRecordDataRows[0].start;
+        for (uint32 i = 1; i < length; i++)
+        {
+            AssertMsg(currStart <= globalBailOutRecordDataRows[i].start, 
+                      "Rows in the table must be in order by start ID");
+            currStart = globalBailOutRecordDataRows[i].start;
+        }
+    }
+#endif
 }
 
-void  GlobalBailOutRecordDataTable::AddOrUpdateRow(JitArenaAllocator *allocator, uint16 bailOutRecordId, uint32 regSlot, bool isFloat, bool isInt, uint32 offset, uint *lastUpdatedRowIndex)
+void  GlobalBailOutRecordDataTable::AddOrUpdateRow(JitArenaAllocator *allocator, uint32 bailOutRecordId, uint32 regSlot, bool isFloat, bool isInt, uint32 offset, uint *lastUpdatedRowIndex)
 {
     Assert(offset != 0);
     const int INITIAL_TABLE_SIZE = 64;

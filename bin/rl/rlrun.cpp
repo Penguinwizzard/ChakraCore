@@ -135,7 +135,8 @@ void
     char buf[BUFFER_SIZE];
     char* p;
 
-    if ((fp = fopen(path, "r")) == NULL) {
+    errno_t err = fopen_s(&fp, path, "r");
+    if (err != 0 || fp == NULL) {
         LogError("ERROR: couldn't open file to dump it");
     }
     else {
@@ -227,16 +228,17 @@ BOOL
         "NoGPF");
 }
 
+template <size_t bufSize>
 void
     FillNoGPFFlags(
-    char* nogpfFlags,
+    char (&nogpfFlags)[bufSize],
     BOOL fSuppressNoGPF
     )
 {
     nogpfFlags[0] = '\0';
     if (FNogpfnt && TargetInfo[TargetMachine].fUseNoGPF) {
         if (!fSuppressNoGPF) {
-            sprintf(nogpfFlags,
+            sprintf_s(nogpfFlags,
                 " %s\\bin\\%s\\nogpfnt.obj /entry:nogpfntStartup",
                 REGRESS, TargetInfo[TargetMachine].name);
         }
@@ -251,7 +253,8 @@ BOOL
 
     // Check to see if the exe ran at all.
 
-    if ((fp = fopen(filename, "r")) == NULL) {
+    errno_t err = fopen_s(&fp, filename, "r");
+    if (err != 0 || fp == NULL) {
         LogOut("ERROR: Test failed to run (%s):", optReportBuf);
         LogOut("    %s", cmdbuf);
         return FALSE;
@@ -352,7 +355,7 @@ int
     // Avoid conditionals by copying/creating ccFlags appropriately.
 
     if (inCCFlags)
-        sprintf(ccFlags, " %s", inCCFlags);
+        sprintf_s(ccFlags, " %s", inCCFlags);
     else
         ccFlags[0] = '\0';
 
@@ -360,27 +363,27 @@ int
     case TM_WVM:
     case TM_WVMX86:
     case TM_WVM64:
-        strcat(ccFlags, " /BC ");
+        strcat_s(ccFlags, " /BC ");
         break;
     }
 
     if (inLinkFlags)
-        strcpy(linkFlags, inLinkFlags);
+        strcpy_s(linkFlags, inLinkFlags);
     else
         linkFlags[0] = '\0';
 
-    sprintf(optReportBuf, "%s%s%s", optFlags, *linkFlags ? ";" : "", linkFlags);
+    sprintf_s(optReportBuf, "%s%s%s", optFlags, *linkFlags ? ";" : "", linkFlags);
 
     // Update the status.
 
-    sprintf(buf, " (%s)", optReportBuf);
+    sprintf_s(buf, " (%s)", optReportBuf);
     ThreadInfo[ThreadId].SetCurrentTest(pDir->GetDirectoryName(),
         buf, pDir->IsBaseline());
     UpdateTitleStatus();
 
     // Make sure the file that will say pass or fail is not present.
 
-    sprintf(full, "%s\\testout%d", pDir->GetDirectoryPath(), localTestCount);
+    sprintf_s(full, "%s\\testout%d", pDir->GetDirectoryPath(), localTestCount);
     DeleteFileIfFound(full);
 
     start_variation = time(NULL);
@@ -400,7 +403,7 @@ int
 
             // Clean the directory.
 
-            sprintf(cmdbuf, NMAKE"%s clean", testCmd);
+            sprintf_s(cmdbuf, NMAKE"%s clean", testCmd);
             Message(cmdbuf);
             ExecuteCommand(pDir->GetDirectoryPath(), cmdbuf);
         }
@@ -411,7 +414,7 @@ int
 
         start_build_variation = time(NULL);
 
-        sprintf(cmdbuf, NMAKE"%s build OPT=\"%s %s%s\" LINKFLAGS=\"%s %s %s\"",
+        sprintf_s(cmdbuf, NMAKE"%s build OPT=\"%s %s%s\" LINKFLAGS=\"%s %s %s\"",
             testCmd,
             optFlags, EXTRA_CC_FLAGS, ccFlags,
             LINKFLAGS, linkFlags, nogpfFlags);
@@ -440,7 +443,7 @@ int
 
         QueryPerformanceCounter(&start_run);
 
-        sprintf(cmdbuf, NMAKE"%s run", testCmd);
+        sprintf_s(cmdbuf, NMAKE"%s run", testCmd);
         Message(cmdbuf);
         ExecuteCommand(pDir->GetDirectoryPath(), cmdbuf);
 
@@ -461,7 +464,7 @@ int
 
         // Build up the test command string
 
-        sprintf(cmdbuf, "%s %s %s%s >testout%d", testCmd, optFlags, EXTRA_CC_FLAGS, ccFlags, localTestCount);
+        sprintf_s(cmdbuf, "%s %s %s%s >testout%d", testCmd, optFlags, EXTRA_CC_FLAGS, ccFlags, localTestCount);
 
         Message("Running '%s'", cmdbuf);
 
@@ -481,11 +484,11 @@ int
             // Append test case unique identifier to the end of EXTRA_CC_FLAGS.
             if (FAppendTestNameToExtraCCFlags)
             {
-                sprintf(tempExtraCCFlags, "%s.%s", EXTRA_CC_FLAGS, pTestVariant->testInfo.data[TIK_FILES]);
+                sprintf_s(tempExtraCCFlags, "%s.%s", EXTRA_CC_FLAGS, pTestVariant->testInfo.data[TIK_FILES]);
             }
             else
             {
-                strcpy(tempExtraCCFlags, EXTRA_CC_FLAGS);
+                strcpy_s(tempExtraCCFlags, EXTRA_CC_FLAGS);
             }
         }
 
@@ -494,7 +497,7 @@ int
         {
             cmd = pTestVariant->testInfo.data[TIK_COMMAND];
         }
-        sprintf(cmdbuf, "%s %s %s %s %s >testout%d 2>&1", cmd, optFlags, tempExtraCCFlags, ccFlags, testCmd, localTestCount);
+        sprintf_s(cmdbuf, "%s %s %s %s %s >testout%d 2>&1", cmd, optFlags, tempExtraCCFlags, ccFlags, testCmd, localTestCount);
 
         Message("Running '%s'", cmdbuf);
 
@@ -509,7 +512,7 @@ int
         if (cmdResult && !pTestVariant->testInfo.data[TIK_BASELINE]) // failure code, not baseline diffing
         {
             fFailed = TRUE;
-            sprintf(nonZeroReturnBuf, "non-zero (%08X) return value from test command", cmdResult);
+            sprintf_s(nonZeroReturnBuf, "non-zero (%08X) return value from test command", cmdResult);
             reason = nonZeroReturnBuf;
             goto logFailure;
         }
@@ -523,11 +526,11 @@ int
     if (pTestVariant->testInfo.data[TIK_BASELINE]) {
         char baseline_file[_MAX_PATH];
 
-        sprintf(baseline_file, "%s\\%s", pDir->GetDirectoryPath(),
+        sprintf_s(baseline_file, "%s\\%s", pDir->GetDirectoryPath(),
             pTestVariant->testInfo.data[TIK_BASELINE]);
         if (DoCompare(baseline_file, full)) {
             reason = "diffs from baseline";
-            sprintf(optReportBuf, "%s", baseline_file);
+            sprintf_s(optReportBuf, "%s", baseline_file);
             fFailed = TRUE;
             CopyRebaseFile(full, baseline_file);
         }
@@ -568,7 +571,7 @@ SkipLogFailure:
         // If the test failed and we are asked to copy the failures, do so.
 
         if (fFailed && FCopyOnFail) {
-            sprintf(cmdbuf, NMAKE"%s copy COPYDIR=\"fail.%s.%s\"",
+            sprintf_s(cmdbuf, NMAKE"%s copy COPYDIR=\"fail.%s.%s\"",
                 testCmd, optFlags, linkFlags);
             Message(cmdbuf);
             ExecuteCommand(pDir->GetDirectoryPath(), cmdbuf);
@@ -577,7 +580,7 @@ SkipLogFailure:
         // Clean up after ourselves.
 
         if (!FNoDelete && (fFailed || fCleanAfter)) {
-            sprintf(cmdbuf, NMAKE"%s clean", testCmd);
+            sprintf_s(cmdbuf, NMAKE"%s clean", testCmd);
             Message(cmdbuf);
             ExecuteCommand(pDir->GetDirectoryPath(), cmdbuf);
         }
@@ -604,22 +607,21 @@ void * GetEnvFlags
     TestVariant * pTestVariant
     )
 {
-    char temp[BUFFER_SIZE], *p = NULL;
+    char temp[BUFFER_SIZE];
     size_t len = 0, totalEnvLen = 0;
     char * envFlags = NULL;
     Xml::Node *env = (Xml::Node *)pTestVariant->testInfo.data[TIK_ENV];
     if (env != NULL) {
         // use a fixed global array for memory
         memset(EnvFlags, '\0', MAX_ENV_LEN);
-        p = temp;
-        *p = '\0';
+        *temp = '\0';
         for ( Xml::Node * child = env->ChildList; child != NULL; child = child->Next) {
-            sprintf(p, "%s=%s", child->Name, child->Data);
+            sprintf_s(temp, "%s=%s", child->Name, child->Data);
             if (envFlags == NULL) {
+                sprintf_s(EnvFlags, "%s", temp);
                 envFlags = EnvFlags;
-                sprintf(envFlags, "%s", p);
             } else {
-                strcat(envFlags, p);
+                strcat_s(envFlags, REMAININGARRAYLEN(EnvFlags, envFlags), temp);
             }
             len = strlen(envFlags);
             envFlags += len+1;
@@ -672,7 +674,7 @@ int
     BOOL fFailed;
     void *envFlags = GetEnvFlags(pTestVariant);
 
-    sprintf(pgdFull, "%s\\%s", pDir->GetDirectoryPath(), pgd);
+    sprintf_s(pgdFull, "%s\\%s", pDir->GetDirectoryPath(), pgd);
 
     char * inCCFlags = pTestVariant->testInfo.data[TIK_COMPILE_FLAGS];
     char * optFlags = pTestVariant->optFlags;
@@ -689,8 +691,8 @@ int
         Warning("'%s\\%s' is not a makefile test; Pogo almost certainly won't work", pDir->GetDirectoryPath(), testCmd);
     }
 
-    sprintf(ccFlags, "%s %s", PogoForceErrors, optFlags);
-    sprintf(linkFlags, "-ltcg:pgi -pgd:%s", pgd);
+    sprintf_s(ccFlags, "%s %s", PogoForceErrors, optFlags);
+    sprintf_s(linkFlags, "-ltcg:pgi -pgd:%s", pgd);
 
     if (DoOneExternalTest(pDir, pTestVariant, ccFlags, inCCFlags,
         linkFlags, testCmd, kind, FALSE, TRUE, FALSE, fSuppressNoGPF, envFlags)) {
@@ -698,8 +700,8 @@ int
             goto logFailure;
     }
 
-    sprintf(ccFlags, "%s %s", PogoForceErrors, optFlags);
-    sprintf(linkFlags, "-ltcg:pgo -pgd:%s", pgd);
+    sprintf_s(ccFlags, "%s %s", PogoForceErrors, optFlags);
+    sprintf_s(linkFlags, "-ltcg:pgo -pgd:%s", pgd);
 
     // Manually erase EXE and DLL files to get makefile to relink.
     // Also erase ASM files because some makefiles try to rebuild from
@@ -718,7 +720,7 @@ logFailure:
 
     if (FSyncVariation) {
         if (FRLFE && fFailed) {
-            sprintf(cmdbuf, "%s%s%s", ccFlags,
+            sprintf_s(cmdbuf, "%s%s%s", ccFlags,
                 *linkFlags ? ";" : "", linkFlags);
             RLFEAddLog(pDir, RLFES_FAILED, testCmd,
                 cmdbuf, ThreadOut->GetText());
@@ -775,7 +777,7 @@ BOOL
     // Avoid conditionals by copying/creating ccFlags appropriately.
 
     if (inCCFlags)
-        sprintf(ccFlags, " %s", inCCFlags);
+        sprintf_s(ccFlags, " %s", inCCFlags);
     else
         ccFlags[0] = '\0';
 
@@ -783,62 +785,62 @@ BOOL
     case TM_WVM:
     case TM_WVMX86:
     case TM_WVM64:
-        strcat(ccFlags, " /BC ");
+        strcat_s(ccFlags, " /BC ");
         break;
     }
 
     if (inLinkFlags)
-        strcpy(linkFlags, inLinkFlags);
+        strcpy_s(linkFlags, inLinkFlags);
     else
         linkFlags[0] = '\0';
 
-    sprintf(optReportBuf, "%s%s%s", optFlags, *linkFlags ? ";" : "", linkFlags);
+    sprintf_s(optReportBuf, "%s%s%s", optFlags, *linkFlags ? ";" : "", linkFlags);
 
     // Figure out the exe name and path
 
-    strcpy(exebuf, pTest->name);
+    strcpy_s(exebuf, pTest->name);
     p = strrchr(exebuf, '.');
     if (p != NULL)
     {
-        strcpy(p + 1, "exe");
+        strcpy_s(p + 1, REMAININGARRAYLEN(exebuf, p + 1), "exe");
     }
     else
     {
-        strcat(exebuf, ".exe");
+        strcat_s(exebuf, ".exe");
     }
 
-    sprintf(fullexebuf, "%s\\%s", pDir->GetDirectoryPath(), exebuf);
+    sprintf_s(fullexebuf, "%s\\%s", pDir->GetDirectoryPath(), exebuf);
 
     start_variation = time(NULL);
 
     // Build up the compile command string.
 
-    sprintf(cmdbuf, "%s %s%s %s", REGR_CL,
+    sprintf_s(cmdbuf, "%s %s%s %s", REGR_CL,
         optFlags, ccFlags, EXTRA_CC_FLAGS);
 
     for (StringList * pFile = pTest->files; pFile != NULL; pFile = pFile->next)
     {
-        strcat(cmdbuf, " ");
-        strcat(cmdbuf, pFile->string);
+        strcat_s(cmdbuf, " ");
+        strcat_s(cmdbuf, pFile->string);
 
         // If we're only relinking, hammer the extension to .obj
 
         if (fLinkOnly)
         {
             p = strrchr(cmdbuf, '.');
-            sprintf(p, ".obj");
+            sprintf_s(p, REMAININGARRAYLEN(cmdbuf, p), ".obj");
         }
     }
 
     // Build the link option string.
 
     if (LINKFLAGS && LINKFLAGS[0] != '\0') {
-        strcat(linkFlags, " ");
-        strcat(linkFlags, LINKFLAGS);
+        strcat_s(linkFlags, " ");
+        strcat_s(linkFlags, LINKFLAGS);
     }
 
     FillNoGPFFlags(nogpfFlags, fSuppressNoGPF);
-    strcat(linkFlags, nogpfFlags);
+    strcat_s(linkFlags, nogpfFlags);
 
     switch (TargetMachine) {
     case TM_X86:
@@ -857,22 +859,22 @@ BOOL
     case TM_SH5C:
     case TM_WVMX86:
         if (*linkFlags) {
-            strcat(cmdbuf, " /link ");
-            strcat(cmdbuf, linkFlags);
+            strcat_s(cmdbuf, " /link ");
+            strcat_s(cmdbuf, linkFlags);
         }
         break;
     case TM_WVM:
-        strcat(cmdbuf, " /c ");
+        strcat_s(cmdbuf, " /c ");
         break;
     case TM_PPCWCE:
         if (*linkFlags) {
-            strcat(cmdbuf, " ");
-            strcat(cmdbuf, linkFlags);
+            strcat_s(cmdbuf, " ");
+            strcat_s(cmdbuf, linkFlags);
         }
         break;
     }
 
-    sprintf(buf, "%s (%s)", pTest->name, optReportBuf);
+    sprintf_s(buf, "%s (%s)", pTest->name, optReportBuf);
     ThreadInfo[ThreadId].SetCurrentTest(pDir->GetDirectoryName(), buf, pDir->IsBaseline());
     UpdateTitleStatus();
 
@@ -911,11 +913,11 @@ BOOL
 
                         // Build up the assembler command string.
 
-                        strcpy(cmdbuf, REGR_ASM);
-                        strcat(cmdbuf, " ");
-                        strcat(cmdbuf, pTest->name);
+                        strcpy_s(cmdbuf, REGR_ASM);
+                        strcat_s(cmdbuf, " ");
+                        strcat_s(cmdbuf, pTest->name);
                         p = strrchr(cmdbuf, '.');
-                        strcpy(p + 1, "asm");
+                        strcpy_s(p + 1, "asm");
 
                         // Do the assembly.
 
@@ -943,21 +945,21 @@ BOOL
         case TM_WVM:
             // Build up the linker command string.
 
-            strcpy(cmdbuf, LINKER);
+            strcpy_s(cmdbuf, LINKER);
 
             for (StringList * pFile = pTest->files;
                 pFile != NULL;
                 pFile = pFile->next)
             {
-                strcat(cmdbuf, " ");
-                strcat(cmdbuf, pFile->string);
+                strcat_s(cmdbuf, " ");
+                strcat_s(cmdbuf, pFile->string);
                 p = strrchr(cmdbuf, '.');
-                strcpy(p + 1, "obj");
+                strcpy_s(p + 1, REMAININGARRAYLEN(cmdbuf, p + 1), "obj");
             }
 
             if (linkFlags) {
-                strcat(cmdbuf, " ");
-                strcat(cmdbuf, linkFlags);
+                strcat_s(cmdbuf, " ");
+                strcat_s(cmdbuf, linkFlags);
             }
 
             // Do the link.
@@ -985,17 +987,17 @@ BOOL
     // Run the resulting exe.
 
     if (TargetVM) {
-        strcpy(buf, TargetVM);
-        strcat(buf, " ");
-        strcat(buf, exebuf);
+        strcpy_s(buf, TargetVM);
+        strcat_s(buf, " ");
+        strcat_s(buf, exebuf);
 
         // Copy the VM command to cmdbuf, so we get a useful error message
         // in the log file if test fails.
 
-        strcpy(cmdbuf, buf);
+        strcpy_s(cmdbuf, buf);
     }
     else {
-        strcpy(buf, exebuf);
+        strcpy_s(buf, exebuf);
     }
 
     // We need some temporary files.
@@ -1019,8 +1021,8 @@ BOOL
         Message("INFO: tmp file 1 = %s, tmp file 2 = %s", tmp_file1, tmp_file2);
 
     Message("Running the test (%s)", buf);
-    strcat(buf, " > ");
-    strcat(buf, tmp_file1);
+    strcat_s(buf, " > ");
+    strcat_s(buf, tmp_file1);
 
     // Make sure the output file isn't there.
 
@@ -1043,7 +1045,7 @@ BOOL
             fFailed = TRUE;
         }
         else {
-            sprintf(full, "%s\\%s", pDir->GetDirectoryPath(),
+            sprintf_s(full, "%s\\%s", pDir->GetDirectoryPath(),
                 pTestVariant->testInfo.data[TIK_BASELINE]);
             if (DoCompare(tmp_file1, full)) {
 
@@ -1051,7 +1053,7 @@ BOOL
                 // floating point anomalies.
 
                 DeleteFileIfFound(tmp_file2);
-                sprintf(buf, "spiff -m -n -s \"command spiff\" %s %s > %s",
+                sprintf_s(buf, "spiff -m -n -s \"command spiff\" %s %s > %s",
                     tmp_file1, full, tmp_file2);
                 spiff_ret = ExecuteCommand(pDir->GetDirectoryPath(), buf);
                 if (GetFileAttributes(tmp_file2) == 0xFFFFFFFF) {
@@ -1080,7 +1082,7 @@ logFailure:
             if (FVerbose)
                 Message("INFO: Copying '%s' failure", optReportBuf);
 
-            sprintf(failDir, "%s\\fail.%s",
+            sprintf_s(failDir, "%s\\fail.%s",
                 pDir->GetDirectoryPath(), optReportBuf);
 
             if ((GetFileAttributes(failDir) == 0xFFFFFFFF) &&
@@ -1093,13 +1095,13 @@ logFailure:
                     pFile != NULL;
                     pFile = pFile->next)
                 {
-                    sprintf(copyName, "%s\\%s", failDir, pFile->string);
+                    sprintf_s(copyName, "%s\\%s", failDir, pFile->string);
                     p = strrchr(copyName, '.') + 1;
-                    strcpy(p, "obj");
-                    sprintf(buf, "%s\\%s", pDir->GetDirectoryPath(),
+                    strcpy_s(p, REMAININGARRAYLEN(copyName, p + 1), "obj");
+                    sprintf_s(buf, "%s\\%s", pDir->GetDirectoryPath(),
                         pFile->string);
                     p = strrchr(buf, '.') + 1;
-                    strcpy(p, "obj");
+                    strcpy_s(p, REMAININGARRAYLEN(buf, p + 1), "obj");
 
                     if (!CopyFile(buf, copyName, FALSE)) {
                         Message("ERROR: Couldn't copy '%s' to '%s'",
@@ -1107,7 +1109,7 @@ logFailure:
                     }
                 }
 
-                sprintf(copyName, "%s\\%s", failDir, exebuf);
+                sprintf_s(copyName, "%s\\%s", failDir, exebuf);
                 if (!CopyFile(fullexebuf, copyName, FALSE)) {
                     Message("ERROR: Couldn't copy '%s' to '%s'",
                         fullexebuf, copyName);
@@ -1131,19 +1133,19 @@ logFailure:
 
     // Don't trash fullexebuf!
 
-    strcpy(buf, fullexebuf);
+    strcpy_s(buf, fullexebuf);
 
     p = strrchr(buf, '.') + 1;
 
     // Remove the pdb(s) (if it exists).
 
-    strcpy(p, "pdb");
+    strcpy_s(p, REMAININGARRAYLEN(buf, p), "pdb");
     DeleteFileIfFound(buf);
     DeleteMultipleFiles(pDir, "*.pdb");
 
     // Remove the ilk (if it exists).
 
-    strcpy(p, "ilk");
+    strcpy_s(p, REMAININGARRAYLEN(buf, p), "ilk");
     DeleteFileIfFound(buf);
 
     // Remove the objs.
@@ -1154,17 +1156,17 @@ logFailure:
             pFile != NULL;
             pFile = pFile->next)
         {
-            sprintf(buf, "%s\\%s", pDir->GetDirectoryPath(), pFile->string);
+            sprintf_s(buf, "%s\\%s", pDir->GetDirectoryPath(), pFile->string);
             p = strrchr(buf, '.') + 1;
 
             if (fCleanAfter)
             {
-                strcpy(p, "obj");
+                strcpy_s(p, REMAININGARRAYLEN(buf, p), "obj");
                 DeleteFileRetryMsg(buf);
             }
 
             if (REGR_ASM) {
-                strcpy(p, "asm");
+                strcpy_s(p, REMAININGARRAYLEN(buf, p), "asm");
                 DeleteFileRetryMsg(buf);
             }
         }
@@ -1219,7 +1221,7 @@ int
     char linkFlags[BUFFER_SIZE];
     BOOL fFailed;
 
-    sprintf(pgdFull, "%s\\%s", pDir->GetDirectoryPath(), pgd);
+    sprintf_s(pgdFull, "%s\\%s", pDir->GetDirectoryPath(), pgd);
 
     char * inCCFlags = pTestVariant->testInfo.data[TIK_COMPILE_FLAGS];
     char * optFlags = pTestVariant->optFlags;
@@ -1232,8 +1234,8 @@ int
 
     ASSERT(strstr(optFlags, "GL") != NULL);
 
-    sprintf(ccFlags, "%s %s", PogoForceErrors, optFlags);
-    sprintf(linkFlags, "-ltcg:pgi -pgd:%s", pgd);
+    sprintf_s(ccFlags, "%s %s", PogoForceErrors, optFlags);
+    sprintf_s(linkFlags, "-ltcg:pgi -pgd:%s", pgd);
 
     if (DoOneSimpleTest(pDir, pTest, pTestVariant,
         ccFlags, inCCFlags, linkFlags,
@@ -1247,8 +1249,8 @@ int
         return 0;
     }
 
-    sprintf(ccFlags, "%s %s", PogoForceErrors, optFlags);
-    sprintf(linkFlags, "-ltcg:pgo -pgd:%s", pgd);
+    sprintf_s(ccFlags, "%s %s", PogoForceErrors, optFlags);
+    sprintf_s(linkFlags, "-ltcg:pgo -pgd:%s", pgd);
 
     if (DoOneSimpleTest(pDir, pTest, pTestVariant,
         ccFlags, inCCFlags, linkFlags,
@@ -1261,7 +1263,7 @@ logFailure:
     if (FSyncVariation) {
 #if 0
         if (FRLFE && fFailed) {
-            sprintf(cmdbuf, "%s%s%s", ccFlags,
+            sprintf_s(cmdbuf, "%s%s%s", ccFlags,
                 *linkFlags ? ";" : "", linkFlags);
             RLFEAddLog(pDir, RLFES_FAILED, testCmd,
                 cmdbuf, ThreadOut->GetText());
@@ -1302,7 +1304,7 @@ int
         // If we have no pathname, use the current directory.
 
         if (p == pFile->string) {
-            sprintf(full, "%s\\", pDir->GetDirectoryPath());
+            sprintf_s(full, "%s\\", pDir->GetDirectoryPath());
         }
         else {
 
@@ -1315,7 +1317,7 @@ int
 
                     ASSERT(p[-1] == '\\');
                     p[-1] = '\0';
-                    sprintf(full, "%s%s\\",
+                    sprintf_s(full, "%s%s\\",
                         REGRESS, pFile->string + strlen("%REGRESS%"));
                     p[-1] = '\\';
             }
@@ -1324,7 +1326,7 @@ int
             }
         }
 
-        strcat(full, p);
+        strcat_s(full, p);
 
         if (GetFileAttributes(full) == 0xFFFFFFFF) {
             LogError("ERROR: '%s' does not exist", pFile->string);

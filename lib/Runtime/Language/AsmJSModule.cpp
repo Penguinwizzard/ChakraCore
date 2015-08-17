@@ -1454,7 +1454,7 @@ namespace Js
 
         /* Int32x4 builtins*/
         //-------------------
-        simdFunctions[AsmJsSIMDBuiltin_int32x4]                     = SIMDFunc(PropertyIds::int32x4, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 4, AsmJsSIMDBuiltin_int32x4, OpCodeAsmJs::Simd128_IntsToI4, AsmJsRetType::Int32x4, AsmJsType::Intish, AsmJsType::Intish, AsmJsType::Intish, AsmJsType::Intish));
+        simdFunctions[AsmJsSIMDBuiltin_Int32x4]                     = SIMDFunc(PropertyIds::Int32x4, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 4, AsmJsSIMDBuiltin_Int32x4, OpCodeAsmJs::Simd128_IntsToI4, AsmJsRetType::Int32x4, AsmJsType::Intish, AsmJsType::Intish, AsmJsType::Intish, AsmJsType::Intish));
         simdFunctions[AsmJsSIMDBuiltin_int32x4_check]              = SIMDFunc(PropertyIds::check,  Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 1, AsmJsSIMDBuiltin_int32x4_check, OpCodeAsmJs::Simd128_Ld_I4 /*no dynamic checks*/, AsmJsRetType::Int32x4, AsmJsType::Int32x4));
         simdFunctions[AsmJsSIMDBuiltin_int32x4_splat]               = SIMDFunc(PropertyIds::splat, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 1, AsmJsSIMDBuiltin_int32x4_splat, OpCodeAsmJs::Simd128_Splat_I4, AsmJsRetType::Int32x4, AsmJsType::Int));
         // Q: Is this operation supported in ASMJS ? We don't have bool type.
@@ -1469,13 +1469,9 @@ namespace Js
         simdFunctions[AsmJsSIMDBuiltin_int32x4_mul]                 = SIMDFunc(PropertyIds::mul, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_int32x4_mul, OpCodeAsmJs::Simd128_Mul_I4, AsmJsRetType::Int32x4, AsmJsType::Int32x4, AsmJsType::Int32x4));
         // ToDo: Enable after fix in lib
         simdFunctions[AsmJsSIMDBuiltin_int32x4_swizzle]           = SIMDFunc(PropertyIds::swizzle, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 5, AsmJsSIMDBuiltin_int32x4_swizzle, OpCodeAsmJs::Simd128_Swizzle_I4, AsmJsRetType::Int32x4, AsmJsType::Int32x4, AsmJsType::Int, AsmJsType::Int, AsmJsType::Int, AsmJsType::Int));
-        simdFunctions[AsmJsSIMDBuiltin_int32x4_shuffle]           = SIMDFunc(PropertyIds::shuffle, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 6, AsmJsSIMDBuiltin_int32x4_shuffle, OpCodeAsmJs::Simd128_Shuffle_I4, AsmJsRetType::Int32x4, AsmJsType::Int32x4, AsmJsType::Int32x4, AsmJsType::Int, AsmJsType::Int, AsmJsType::Int, AsmJsType::Int));
-        
-        // ToDo: replace with .extract
-        simdFunctions[AsmJsSIMDBuiltin_int32x4_withX]               = SIMDFunc(PropertyIds::withX, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_int32x4_withX, OpCodeAsmJs::Simd128_WithX_I4, AsmJsRetType::Int32x4, AsmJsType::Int32x4, AsmJsType::Int));
-        simdFunctions[AsmJsSIMDBuiltin_int32x4_withY]               = SIMDFunc(PropertyIds::withY, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_int32x4_withY, OpCodeAsmJs::Simd128_WithY_I4, AsmJsRetType::Int32x4, AsmJsType::Int32x4, AsmJsType::Int));
-        simdFunctions[AsmJsSIMDBuiltin_int32x4_withZ]               = SIMDFunc(PropertyIds::withZ, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_int32x4_withZ, OpCodeAsmJs::Simd128_WithZ_I4, AsmJsRetType::Int32x4, AsmJsType::Int32x4, AsmJsType::Int));
-        simdFunctions[AsmJsSIMDBuiltin_int32x4_withW]               = SIMDFunc(PropertyIds::withW, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_int32x4_withW, OpCodeAsmJs::Simd128_WithW_I4, AsmJsRetType::Int32x4, AsmJsType::Int32x4, AsmJsType::Int));
+        simdFunctions[AsmJsSIMDBuiltin_int32x4_shuffle]           = SIMDFunc(PropertyIds::shuffle, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 6, AsmJsSIMDBuiltin_int32x4_shuffle, OpCodeAsmJs::Simd128_Shuffle_I4, AsmJsRetType::Int32x4, AsmJsType::Int32x4, AsmJsType::Int32x4, AsmJsType::Int, AsmJsType::Int, AsmJsType::Int, AsmJsType::Int));      
+        simdFunctions[AsmJsSIMDBuiltin_int32x4_extractLane]         = SIMDFunc(PropertyIds::extractLane, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_int32x4_extractLane, OpCodeAsmJs::Simd128_ExtractLane_I4, AsmJsRetType::Signed, AsmJsType::Int32x4, AsmJsType::Int));
+        simdFunctions[AsmJsSIMDBuiltin_int32x4_replaceLane]         = SIMDFunc(PropertyIds::replaceLane, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 3, AsmJsSIMDBuiltin_int32x4_replaceLane, OpCodeAsmJs::Simd128_ReplaceLane_I4, AsmJsRetType::Int32x4, AsmJsType::Int32x4, AsmJsType::Int, AsmJsType::Int));
         simdFunctions[AsmJsSIMDBuiltin_int32x4_lessThan]            = SIMDFunc(PropertyIds::lessThan, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_int32x4_lessThan, OpCodeAsmJs::Simd128_Lt_I4, AsmJsRetType::Int32x4, AsmJsType::Int32x4, AsmJsType::Int32x4));
         simdFunctions[AsmJsSIMDBuiltin_int32x4_equal]               = SIMDFunc(PropertyIds::equal, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_int32x4_equal, OpCodeAsmJs::Simd128_Eq_I4, AsmJsRetType::Int32x4, AsmJsType::Int32x4, AsmJsType::Int32x4));
         simdFunctions[AsmJsSIMDBuiltin_int32x4_greaterThan]         = SIMDFunc(PropertyIds::greaterThan, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_int32x4_greaterThan, OpCodeAsmJs::Simd128_Gt_I4, AsmJsRetType::Int32x4, AsmJsType::Int32x4, AsmJsType::Int32x4));
@@ -1484,10 +1480,6 @@ namespace Js
         simdFunctions[AsmJsSIMDBuiltin_int32x4_or]                  = SIMDFunc(PropertyIds::or, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_int32x4_or, OpCodeAsmJs::Simd128_Or_I4, AsmJsRetType::Int32x4, AsmJsType::Int32x4, AsmJsType::Int32x4));
         simdFunctions[AsmJsSIMDBuiltin_int32x4_xor]                 = SIMDFunc(PropertyIds::xor, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_int32x4_xor, OpCodeAsmJs::Simd128_Xor_I4, AsmJsRetType::Int32x4, AsmJsType::Int32x4, AsmJsType::Int32x4));
         simdFunctions[AsmJsSIMDBuiltin_int32x4_not]                 = SIMDFunc(PropertyIds::not, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 1, AsmJsSIMDBuiltin_int32x4_not, OpCodeAsmJs::Simd128_Not_I4, AsmJsRetType::Int32x4, AsmJsType::Int32x4));
-        // ToDo: Enable after fix in lib
-        //simdFunctions[AsmJsSIMDBuiltin_int32x4_shiftLeftByScalar] = SIMDFunc(PropertyIds::shiftLeftByScalar, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_int32x4_shiftLeftByScalar, OpCodeAsmJs::Simd128_Shl_I4, AsmJsRetType::Int32x4, AsmJsType::Int32x4, AsmJsType::Int));
-        //simdFunctions[AsmJsSIMDBuiltin_int32x4_shiftRightByScalar] = SIMDFunc(PropertyIds::shiftRightByScalar, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_int32x4_shiftRightByScalar, OpCodeAsmJs::Simd128_Shr_I4, AsmJsRetType::Int32x4, AsmJsType::Int32x4, AsmJsType::Int));
-        //simdFunctions[AsmJsSIMDBuiltin_int32x4_shiftRightArithmeticByScalar] = SIMDFunc(PropertyIds::shiftRightArithmeticByScalar, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_int32x4_shiftRightArithmeticByScalar, OpCodeAsmJs::Simd128_ShrA_I4, AsmJsRetType::Int32x4, AsmJsType::Int32x4, AsmJsType::Int));
 
         // Loads and Stores
         // We fill Void for the tarray type. This is ok since we special handle these ops.
@@ -1503,7 +1495,7 @@ namespace Js
 
         /* Float32x4 builtins*/
         //-------------------
-        simdFunctions[AsmJsSIMDBuiltin_float32x4]                   = SIMDFunc(PropertyIds::float32x4, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 4, AsmJsSIMDBuiltin_float32x4, OpCodeAsmJs::Simd128_FloatsToF4, AsmJsRetType::Float32x4, AsmJsType::FloatishDoubleLit, AsmJsType::FloatishDoubleLit, AsmJsType::FloatishDoubleLit, AsmJsType::FloatishDoubleLit));
+        simdFunctions[AsmJsSIMDBuiltin_Float32x4]                   = SIMDFunc(PropertyIds::Float32x4, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 4, AsmJsSIMDBuiltin_Float32x4, OpCodeAsmJs::Simd128_FloatsToF4, AsmJsRetType::Float32x4, AsmJsType::FloatishDoubleLit, AsmJsType::FloatishDoubleLit, AsmJsType::FloatishDoubleLit, AsmJsType::FloatishDoubleLit));
         simdFunctions[AsmJsSIMDBuiltin_float32x4_check]             = SIMDFunc(PropertyIds::check, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 1, AsmJsSIMDBuiltin_float32x4_check, OpCodeAsmJs::Simd128_Ld_F4 /*no dynamic checks*/, AsmJsRetType::Float32x4, AsmJsType::Float32x4));
         simdFunctions[AsmJsSIMDBuiltin_float32x4_splat]             = SIMDFunc(PropertyIds::splat, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 1, AsmJsSIMDBuiltin_float32x4_splat, OpCodeAsmJs::Simd128_Splat_F4, AsmJsRetType::Float32x4, AsmJsType::FloatishDoubleLit));
         simdFunctions[AsmJsSIMDBuiltin_float32x4_fromFloat64x2]     = SIMDFunc(PropertyIds::fromFloat64x2, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 1, AsmJsSIMDBuiltin_float32x4_fromFloat64x2, OpCodeAsmJs::Simd128_FromFloat64x2_F4, AsmJsRetType::Float32x4, AsmJsType::Float64x2));
@@ -1524,11 +1516,8 @@ namespace Js
         simdFunctions[AsmJsSIMDBuiltin_float32x4_sqrt]              = SIMDFunc(PropertyIds::sqrt, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 1, AsmJsSIMDBuiltin_float32x4_sqrt, OpCodeAsmJs::Simd128_Sqrt_F4, AsmJsRetType::Float32x4, AsmJsType::Float32x4));
         simdFunctions[AsmJsSIMDBuiltin_float32x4_swizzle]           = SIMDFunc(PropertyIds::swizzle, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 5, AsmJsSIMDBuiltin_float32x4_swizzle, OpCodeAsmJs::Simd128_Swizzle_F4, AsmJsRetType::Float32x4, AsmJsType::Float32x4, AsmJsType::Int, AsmJsType::Int, AsmJsType::Int, AsmJsType::Int));
         simdFunctions[AsmJsSIMDBuiltin_float32x4_shuffle]           = SIMDFunc(PropertyIds::shuffle, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 6, AsmJsSIMDBuiltin_float32x4_shuffle, OpCodeAsmJs::Simd128_Shuffle_F4, AsmJsRetType::Float32x4, AsmJsType::Float32x4, AsmJsType::Float32x4, AsmJsType::Int, AsmJsType::Int, AsmJsType::Int, AsmJsType::Int));
-        // ToDo: replace with .extract
-        simdFunctions[AsmJsSIMDBuiltin_float32x4_withX]             = SIMDFunc(PropertyIds::withX, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_float32x4_withX, OpCodeAsmJs::Simd128_WithX_F4, AsmJsRetType::Float32x4, AsmJsType::Float32x4, AsmJsType::Float));
-        simdFunctions[AsmJsSIMDBuiltin_float32x4_withY]             = SIMDFunc(PropertyIds::withY, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_float32x4_withY, OpCodeAsmJs::Simd128_WithY_F4, AsmJsRetType::Float32x4, AsmJsType::Float32x4, AsmJsType::Float));
-        simdFunctions[AsmJsSIMDBuiltin_float32x4_withZ]             = SIMDFunc(PropertyIds::withZ, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_float32x4_withZ, OpCodeAsmJs::Simd128_WithZ_F4, AsmJsRetType::Float32x4, AsmJsType::Float32x4, AsmJsType::Float));
-        simdFunctions[AsmJsSIMDBuiltin_float32x4_withW]             = SIMDFunc(PropertyIds::withW, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_float32x4_withW, OpCodeAsmJs::Simd128_WithW_F4, AsmJsRetType::Float32x4, AsmJsType::Float32x4, AsmJsType::Float));
+        simdFunctions[AsmJsSIMDBuiltin_float32x4_extractLane]       = SIMDFunc(PropertyIds::extractLane, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_float32x4_extractLane, OpCodeAsmJs::Simd128_ExtractLane_F4, AsmJsRetType::Float, AsmJsType::Float32x4, AsmJsType::Int));
+        simdFunctions[AsmJsSIMDBuiltin_float32x4_replaceLane]       = SIMDFunc(PropertyIds::replaceLane, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 3, AsmJsSIMDBuiltin_float32x4_replaceLane, OpCodeAsmJs::Simd128_ReplaceLane_F4, AsmJsRetType::Float32x4, AsmJsType::Float32x4, AsmJsType::Int, AsmJsType::FloatishDoubleLit));
         simdFunctions[AsmJsSIMDBuiltin_float32x4_lessThan]          = SIMDFunc(PropertyIds::lessThan, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_float32x4_lessThan, OpCodeAsmJs::Simd128_Lt_F4, AsmJsRetType::Int32x4, AsmJsType::Float32x4, AsmJsType::Float32x4));
         simdFunctions[AsmJsSIMDBuiltin_float32x4_lessThanOrEqual]   = SIMDFunc(PropertyIds::lessThanOrEqual, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_float32x4_lessThanOrEqual, OpCodeAsmJs::Simd128_LtEq_F4, AsmJsRetType::Int32x4, AsmJsType::Float32x4, AsmJsType::Float32x4));
         simdFunctions[AsmJsSIMDBuiltin_float32x4_equal]             = SIMDFunc(PropertyIds::equal, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_float32x4_equal, OpCodeAsmJs::Simd128_Eq_F4, AsmJsRetType::Int32x4, AsmJsType::Float32x4, AsmJsType::Float32x4));
@@ -1540,13 +1529,6 @@ namespace Js
         simdFunctions[AsmJsSIMDBuiltin_float32x4_or]                = SIMDFunc(PropertyIds::or, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_float32x4_or, OpCodeAsmJs::Simd128_Or_F4, AsmJsRetType::Float32x4, AsmJsType::Float32x4, AsmJsType::Float32x4));
         simdFunctions[AsmJsSIMDBuiltin_float32x4_xor]               = SIMDFunc(PropertyIds::xor, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_float32x4_xor, OpCodeAsmJs::Simd128_Xor_F4, AsmJsRetType::Float32x4, AsmJsType::Float32x4, AsmJsType::Float32x4));
         simdFunctions[AsmJsSIMDBuiltin_float32x4_not]               = SIMDFunc(PropertyIds::not, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 1, AsmJsSIMDBuiltin_float32x4_not, OpCodeAsmJs::Simd128_Not_F4, AsmJsRetType::Float32x4, AsmJsType::Float32x4));
-        // ToDo: replace with .extract
-        // withX/Y/Z/W overloads.
-        simdFunctions[AsmJsSIMDBuiltin_float32x4_withX].val->SetOverload(Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_float32x4_withX, OpCodeAsmJs::Simd128_WithX_F4, AsmJsRetType::Float32x4, AsmJsType::Float32x4, AsmJsType::DoubleLit));
-        simdFunctions[AsmJsSIMDBuiltin_float32x4_withY].val->SetOverload(Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_float32x4_withY, OpCodeAsmJs::Simd128_WithY_F4, AsmJsRetType::Float32x4, AsmJsType::Float32x4, AsmJsType::DoubleLit));
-        simdFunctions[AsmJsSIMDBuiltin_float32x4_withZ].val->SetOverload(Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_float32x4_withZ, OpCodeAsmJs::Simd128_WithZ_F4, AsmJsRetType::Float32x4, AsmJsType::Float32x4, AsmJsType::DoubleLit));
-        simdFunctions[AsmJsSIMDBuiltin_float32x4_withW].val->SetOverload(Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_float32x4_withW, OpCodeAsmJs::Simd128_WithW_F4, AsmJsRetType::Float32x4, AsmJsType::Float32x4, AsmJsType::DoubleLit));
-        
         simdFunctions[AsmJsSIMDBuiltin_float32x4_load] = SIMDFunc(PropertyIds::load, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_float32x4_load, OpCodeAsmJs::Simd128_LdArr_F4, AsmJsRetType::Float32x4, AsmJsType::Void, AsmJsType::Int));
         simdFunctions[AsmJsSIMDBuiltin_float32x4_load1] = SIMDFunc(PropertyIds::load1, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_float32x4_load1, OpCodeAsmJs::Simd128_LdArr_F4, AsmJsRetType::Float32x4, AsmJsType::Void, AsmJsType::Int));
         simdFunctions[AsmJsSIMDBuiltin_float32x4_load2] = SIMDFunc(PropertyIds::load2, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_float32x4_load2, OpCodeAsmJs::Simd128_LdArr_F4, AsmJsRetType::Float32x4, AsmJsType::Void, AsmJsType::Int));
@@ -1558,7 +1540,7 @@ namespace Js
 
         /* Float64x2 builtins*/
         //-------------------
-        simdFunctions[AsmJsSIMDBuiltin_float64x2]                   = SIMDFunc(PropertyIds::float64x2, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_float64x2, OpCodeAsmJs::Simd128_DoublesToD2, AsmJsRetType::Float64x2, AsmJsType::MaybeDouble, AsmJsType::MaybeDouble));
+        simdFunctions[AsmJsSIMDBuiltin_Float64x2]                   = SIMDFunc(PropertyIds::Float64x2, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_Float64x2, OpCodeAsmJs::Simd128_DoublesToD2, AsmJsRetType::Float64x2, AsmJsType::MaybeDouble, AsmJsType::MaybeDouble));
         simdFunctions[AsmJsSIMDBuiltin_float64x2_check]             = SIMDFunc(PropertyIds::check, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 1, AsmJsSIMDBuiltin_float64x2_check, OpCodeAsmJs::Simd128_Ld_D2 /*no dynamic checks*/, AsmJsRetType::Float64x2, AsmJsType::Float64x2));
         simdFunctions[AsmJsSIMDBuiltin_float64x2_splat]             = SIMDFunc(PropertyIds::splat, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 1, AsmJsSIMDBuiltin_float64x2_splat, OpCodeAsmJs::Simd128_Splat_D2, AsmJsRetType::Float64x2, AsmJsType::Double));
         simdFunctions[AsmJsSIMDBuiltin_float64x2_fromFloat32x4]     = SIMDFunc(PropertyIds::fromFloat32x4, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 1, AsmJsSIMDBuiltin_float64x2_fromFloat32x4, OpCodeAsmJs::Simd128_FromFloat32x4_D2, AsmJsRetType::Float64x2, AsmJsType::Float32x4));
@@ -1579,10 +1561,6 @@ namespace Js
         simdFunctions[AsmJsSIMDBuiltin_float64x2_sqrt]              = SIMDFunc(PropertyIds::sqrt, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 1, AsmJsSIMDBuiltin_float64x2_sqrt, OpCodeAsmJs::Simd128_Sqrt_D2, AsmJsRetType::Float64x2, AsmJsType::Float64x2));
         simdFunctions[AsmJsSIMDBuiltin_float64x2_swizzle]           = SIMDFunc(PropertyIds::swizzle, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 3, AsmJsSIMDBuiltin_float64x2_swizzle, OpCodeAsmJs::Simd128_Swizzle_D2, AsmJsRetType::Float64x2, AsmJsType::Float64x2, AsmJsType::Int, AsmJsType::Int));
         simdFunctions[AsmJsSIMDBuiltin_float64x2_shuffle]           = SIMDFunc(PropertyIds::shuffle, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 4, AsmJsSIMDBuiltin_float64x2_shuffle, OpCodeAsmJs::Simd128_Shuffle_D2, AsmJsRetType::Float64x2, AsmJsType::Float64x2, AsmJsType::Float64x2, AsmJsType::Int, AsmJsType::Int));
-        // ToDo: replace with .extract
-        simdFunctions[AsmJsSIMDBuiltin_float64x2_withX]             = SIMDFunc(PropertyIds::withX, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_float64x2_withX, OpCodeAsmJs::Simd128_WithX_D2, AsmJsRetType::Float64x2, AsmJsType::Float64x2, AsmJsType::Double));
-        simdFunctions[AsmJsSIMDBuiltin_float64x2_withY]             = SIMDFunc(PropertyIds::withY, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_float64x2_withY, OpCodeAsmJs::Simd128_WithY_D2, AsmJsRetType::Float64x2, AsmJsType::Float64x2, AsmJsType::Double));
-
         simdFunctions[AsmJsSIMDBuiltin_float64x2_lessThan]          = SIMDFunc(PropertyIds::lessThan, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_float64x2_lessThan, OpCodeAsmJs::Simd128_Lt_D2, AsmJsRetType::Int32x4, AsmJsType::Float64x2, AsmJsType::Float64x2));
         simdFunctions[AsmJsSIMDBuiltin_float64x2_lessThanOrEqual]   = SIMDFunc(PropertyIds::lessThanOrEqual, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_float64x2_lessThanOrEqual, OpCodeAsmJs::Simd128_LtEq_D2, AsmJsRetType::Int32x4, AsmJsType::Float64x2, AsmJsType::Float64x2));
         simdFunctions[AsmJsSIMDBuiltin_float64x2_equal]             = SIMDFunc(PropertyIds::equal, Anew(&mAllocator, AsmJsSIMDFunction, nullptr, &mAllocator, 2, AsmJsSIMDBuiltin_float64x2_equal, OpCodeAsmJs::Simd128_Eq_D2, AsmJsRetType::Int32x4, AsmJsType::Float64x2, AsmJsType::Float64x2));
@@ -1601,11 +1579,11 @@ namespace Js
             SIMDNameMap *map = &mStdLibSIMDInt32x4Map;
             for (int i = 0; i < AsmJsSIMDBuiltin_COUNT; i++)
             {
-                if (i == AsmJsSIMDBuiltin_float32x4)
+                if (i == AsmJsSIMDBuiltin_Float32x4)
                 {
                     map = &mStdLibSIMDFloat32x4Map;
                 }
-                if (i == AsmJsSIMDBuiltin_float64x2)
+                if (i == AsmJsSIMDBuiltin_Float64x2)
                 {
                     map = &mStdLibSIMDFloat64x2Map;
                 }
@@ -2462,11 +2440,11 @@ namespace Js
     {
         switch (baseId)
         {
-        case PropertyIds::int32x4:
+        case PropertyIds::Int32x4:
             return LookupStdLibSIMDNameInMap(fieldName, simdFunc, &mStdLibSIMDInt32x4Map);
-        case PropertyIds::float32x4:
+        case PropertyIds::Float32x4:
             return LookupStdLibSIMDNameInMap(fieldName, simdFunc, &mStdLibSIMDFloat32x4Map);
-        case PropertyIds::float64x2:
+        case PropertyIds::Float64x2:
             return LookupStdLibSIMDNameInMap(fieldName, simdFunc, &mStdLibSIMDFloat64x2Map);
         default:
             AssertMsg(false, "Invalid SIMD type");
@@ -2478,11 +2456,11 @@ namespace Js
     {
         switch (baseId)
         {
-        case AsmJsSIMDBuiltin_int32x4:
+        case AsmJsSIMDBuiltin_Int32x4:
             return LookupStdLibSIMDNameInMap(fieldName, simdFunc, &mStdLibSIMDInt32x4Map);
-        case AsmJsSIMDBuiltin_float32x4:
+        case AsmJsSIMDBuiltin_Float32x4:
             return LookupStdLibSIMDNameInMap(fieldName, simdFunc, &mStdLibSIMDFloat32x4Map);
-        case AsmJsSIMDBuiltin_float64x2:
+        case AsmJsSIMDBuiltin_Float64x2:
             return LookupStdLibSIMDNameInMap(fieldName, simdFunc, &mStdLibSIMDFloat64x2Map);
         default:
             AssertMsg(false, "Invalid SIMD type");
@@ -2528,9 +2506,9 @@ namespace Js
             return nullptr;
         }
         AsmJsSIMDFunction *simdFunc = func->Cast<AsmJsSIMDFunction>();
-        if (simdFunc->GetSimdBuiltInFunction() != AsmJsSIMDBuiltin_int32x4 &&
-            simdFunc->GetSimdBuiltInFunction() != AsmJsSIMDBuiltin_float32x4 &&
-            simdFunc->GetSimdBuiltInFunction() != AsmJsSIMDBuiltin_float64x2)
+        if (simdFunc->GetSimdBuiltInFunction() != AsmJsSIMDBuiltin_Int32x4 &&
+            simdFunc->GetSimdBuiltInFunction() != AsmJsSIMDBuiltin_Float32x4 &&
+            simdFunc->GetSimdBuiltInFunction() != AsmJsSIMDBuiltin_Float64x2)
         {
             return simdFunc;
         }
@@ -2583,18 +2561,18 @@ namespace Js
 
         switch (simdBuiltin)
         {
-        case AsmJsSIMDBuiltin_float64x2:
-        case AsmJsSIMDBuiltin_float32x4:
+        case AsmJsSIMDBuiltin_Float64x2:
+        case AsmJsSIMDBuiltin_Float32x4:
             nop = (uint)knopFlt;
             break;
-        case AsmJsSIMDBuiltin_int32x4:
+        case AsmJsSIMDBuiltin_Int32x4:
             nop = (uint)knopInt;
             break;
         default:
             Assert(UNREACHED);
         }
         
-        Assert(simdBuiltin == AsmJsSIMDBuiltin_float64x2 || simdBuiltin == AsmJsSIMDBuiltin_float32x4 || simdBuiltin == AsmJsSIMDBuiltin_int32x4);
+        Assert(simdBuiltin == AsmJsSIMDBuiltin_Float64x2 || simdBuiltin == AsmJsSIMDBuiltin_Float32x4 || simdBuiltin == AsmJsSIMDBuiltin_Int32x4);
         if (simdFunc->GetArgCount() != argCount)
         {
             return Fail(pnode, L"Invalid number of arguments to SIMD constructor.");
@@ -2618,7 +2596,7 @@ namespace Js
                 }
                 else if (nop == (uint)knopFlt)
                 {
-                    if (simdBuiltin == AsmJsSIMDBuiltin_float32x4)
+                    if (simdBuiltin == AsmJsSIMDBuiltin_Float32x4)
                     {
                         value.f32[i] = (float)arg->sxFlt.dbl;
                     }

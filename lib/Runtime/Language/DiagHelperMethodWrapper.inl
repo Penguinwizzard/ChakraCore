@@ -78,7 +78,7 @@ namespace Js
             // looks like we don't need to that because we start with brand new interpreter frame.
 
             // Indicate to bailout check that we should bail out for/into debugger and set the byte code offset to one of next statement.
-            scriptContext->GetThreadContext()->GetDebuggingFlags()->SetByteCodeOffsetAndFuncAfterIgnoreException(
+            scriptContext->GetThreadContext()->GetDebugManager()->GetDebuggingFlags()->SetByteCodeOffsetAndFuncAfterIgnoreException(
                 nextStatementOffset, exceptionObject->GetFunctionBody()->GetFunctionNumber());
 
         }

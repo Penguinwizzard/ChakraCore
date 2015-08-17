@@ -2,11 +2,6 @@
 <regress-exe>
 <dir>
   <default>
-    <files>es5</files>
-  </default>
-</dir>
-<dir>
-  <default>
     <files>UnitTestFramework</files>
   </default>
 </dir>

@@ -19,6 +19,7 @@ struct _SIMDValue
         int     i32[4];
         float   f32[4];
         double  f64[2];
+        int8    i8[16];
     };
 
     void SetValue(_SIMDValue value)
@@ -121,14 +122,36 @@ CompileAssert(sizeof(SIMDValue) == 16);
 
 namespace Js {
     int32 SIMDCheckTypedArrayIndex(ScriptContext* scriptContext, Var index);
-    int32 SIMDCheckLaneIndex(ScriptContext* scriptContext, Var lane, bool &fastShuffle, const int range = 4);
+	int32 SIMDCheckLaneIndex(ScriptContext* scriptContext, Var lane, const int32 range = 4);
     
     template <int laneCount = 4>
     SIMDValue SIMD128InnerShuffle(SIMDValue src1, SIMDValue src2, int32 lane0, int32 lane1, int32 lane2, int32 lane3);
 
     template <class SIMDType, int laneCount = 4> 
     Var SIMD128SlowShuffle(Var src1, Var src2, Var lane0, Var lane1, Var lane2, Var lane3, int range, ScriptContext* scriptContext);
+
+	//Lane Access
+	template<class SIMDType, int laneCount, typename T>
+    inline T SIMD128ExtractLane(Var src, Var lane, ScriptContext* scriptContext);
+	template<class SIMDType, int laneCount, typename T>
+	inline SIMDValue SIMD128ReplaceLane(Var src, Var lane, T value, ScriptContext* scriptContext);
     
+    //Lane Access
+    template<class SIMDType, int laneCount, typename T>
+    inline T SIMD128ExtractLane(Var src, Var lane, ScriptContext* scriptContext);
+
+    template<class SIMDType, int laneCount, typename T>
+    inline SIMDValue SIMD128ReplaceLane(Var src, Var lane, T value, ScriptContext* scriptContext);
+
+    SIMDValue SIMD128InnerReplaceLaneF4(const SIMDValue& src1, const int32 lane, const float value);
+    float SIMD128InnerExtractLaneF4(const SIMDValue& src1, const int32 lane);
+
+    SIMDValue SIMD128InnerReplaceLaneI4(const SIMDValue& src1, const int32 lane, const int value);
+    int SIMD128InnerExtractLaneI4(const SIMDValue& src1, const int32 lane);
+
+    SIMDValue SIMD128InnerReplaceLaneI16(const SIMDValue& src1, const int32 lane, const int8 value);
+    int8 SIMD128InnerExtractLaneI16(const SIMDValue& src1, const int32 lane);
+
 
     int32 SIMDCheckInt32Number(ScriptContext* scriptContext, Var value);
     bool        SIMDIsSupportedTypedArray(Var value);

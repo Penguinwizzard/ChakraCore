@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Condition="'$(ChakraBuildPathImported)'!='true'" Project="$(SolutionDir)Chakra.Build.Paths.props" />
+  <Import Project="$(BuildConfig_ChakraBuildProjectConfigurationProps)" />
+  <PropertyGroup Label="Globals">
+    <TargetName>Chakra.Runtime.Debug</TargetName>
+    <ProjectGuid>{8C61E4E7-F0D6-420D-A352-3E6E50D406DD}</ProjectGuid>
+    <RootNamespace>JS</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.Default.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
+    <Import Project="$(BuildConfig_ARMASM_Path)armasm.props" />
+  </ImportGroup>
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.props" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>
+          $(MSBuildThisFileDirectory)..;
+          $(MSBuildThisFileDirectory)..\..\Common;
+          $(MSBuildThisFileDirectory)..\..\Parser;
+          $(MSBuildThisFileDirectory)..\..\Backend;
+          $(MSBuildThisFileDirectory)..\..\Language;
+          $(ChakraManifestsIncludeDirectory);
+          $(ManifestsInboxIncludeDirectory);
+          %(AdditionalIncludeDirectories)
+      </AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>%(DisableSpecificWarnings);4702</DisableSpecificWarnings>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)DebugContext.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)DebuggingFlags.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)DebugManager.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)DiagObjectModel.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)DiagProbe.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)DiagStackFrame.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)MutationBreakpoint.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)ProbeContainer.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)SourceContextInfo.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\StdAfx.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="DebugContext.h" />
+    <ClInclude Include="DebuggingFlags.h" />
+    <ClInclude Include="DebugManager.h" />
+    <ClInclude Include="DiagObjectModel.h" />
+    <ClInclude Include="DiagProbe.h" />
+    <ClInclude Include="DiagStackFrame.h" />
+    <ClInclude Include="MutationBreakpoint.h" />
+    <ClInclude Include="ProbeContainer.h" />
+    <ClInclude Include="SourceContextInfo.h" />
+  </ItemGroup>
+  <!-- In Razzle build, we are still rely on the publish directory -->
+  <ItemGroup>
+    <ProjectReference Condition="'$(USE_EXTERNAL_DEPENDENCIES)'!='yes'" Include="..\..\..\..\publish\Publish.vcxproj">
+      <Project>{1876e800-ad77-48c4-a2f7-e5265f24ac35}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" />
+    <Import Project="$(BuildConfig_ARMASM_Path)armasm.targets" />
+  </ImportGroup>
+</Project>

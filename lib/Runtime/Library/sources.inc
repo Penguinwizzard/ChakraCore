@@ -144,6 +144,8 @@ SOURCES= \
 	..\SIMDFloat64x2Lib.cpp \
     ..\JavascriptSIMDInt32x4.cpp \
     ..\SIMDInt32x4Lib.cpp \
+	..\JavascriptSIMDInt8x16.cpp \
+    ..\SIMDInt8x16Lib.cpp \
     ..\SIMDUtils.cpp 
 
 
@@ -151,12 +153,14 @@ AMD64_SOURCES=\
     ..\amd64\javascriptfunctiona.asm \
     ..\SIMDFloat32x4OperationX86X64.cpp \
     ..\SIMDFloat64x2OperationX86X64.cpp \
-    ..\SIMDInt32x4OperationX86X64.cpp 
+    ..\SIMDInt32x4OperationX86X64.cpp  \
+	..\SIMDInt8x16OperationX86X64.cpp 
     
 I386_SOURCES=\
     ..\SIMDFloat32x4OperationX86X64.cpp \
     ..\SIMDFloat64x2OperationX86X64.cpp \
-    ..\SIMDInt32x4OperationX86X64.cpp 
+    ..\SIMDInt32x4OperationX86X64.cpp \
+	..\SIMDInt8x16OperationX86X64.cpp 
 
 ARM_SOURCES= \
     ..\arm\arm_CallFunction.asm \
@@ -164,7 +168,8 @@ ARM_SOURCES= \
     ..\arm\arm_DeferredDeserializeThunk.asm \
     ..\SIMDFloat32x4Operation.cpp \
     ..\SIMDFloat64x2Operation.cpp \
-    ..\SIMDInt32x4Operation.cpp 
+    ..\SIMDInt32x4Operation.cpp \
+	..\SIMDInt8x16Operation.cpp 
 
 ARM64_SOURCES= \
     ..\arm64\arm64_CallFunction.asm \
@@ -172,7 +177,8 @@ ARM64_SOURCES= \
     ..\arm64\arm64_DeferredDeserializeThunk.asm \
     ..\SIMDFloat32x4Operation.cpp \
     ..\SIMDFloat64x2Operation.cpp \
-    ..\SIMDInt32x4Operation.cpp 
+    ..\SIMDInt32x4Operation.cpp \
+	..\SIMDInt8x16Operation.cpp 
 
 NTTARGETFILE0= \
 !IF "$(_BUILDARCH)" == "amd64"

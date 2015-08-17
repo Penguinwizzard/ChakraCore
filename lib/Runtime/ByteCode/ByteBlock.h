@@ -12,34 +12,30 @@ namespace Js
 
     private:
         uint m_contentSize;      // Length of block, in bytes
-        CustomHeap::Allocation * allocation;
+        __declspec(align(4))  //Align the buffer to sizeof(uint32) to improve GetHashCode() perf.
         byte* m_content;      // Block's content
 
-        static ByteBlock* New(Recycler* alloc, const byte * initialContent, int initialContentSize, ScriptContext * requestContext, ScriptContext * scriptContext);
+        static ByteBlock* New(Recycler* alloc,const byte * initialContent,int initialContentSize, ScriptContext * requestContext);
 
     public:
         ByteBlock(uint size, byte * content)
-            : m_contentSize(size), m_content(content), allocation(nullptr)
+            : m_contentSize(size), m_content(content)
         { }
-        ByteBlock(uint size, CustomHeap::Heap *alloc) : m_contentSize(size)
+        ByteBlock(uint size, Recycler *alloc) : m_contentSize(size)
         {
             // The New function below will copy over a buffer into this so 
             // we don't need to zero it out
-            allocation = alloc->Alloc(size, 0, 0, false, false, nullptr);
-#if DBG
-            allocation->isAllocationUsed = true;
-#endif
-            m_content = (byte*)allocation->address;
+            m_content = RecyclerNewArrayLeaf(alloc, byte, size);
         }
 
-        ByteBlock(uint size, ArenaAllocator* alloc) : m_contentSize(size), allocation(nullptr)
+        ByteBlock(uint size, ArenaAllocator* alloc) : m_contentSize(size)
         {
             m_content = AnewArray(alloc, byte, size);
         }
         
         static DWORD GetBufferOffset() { return offsetof(ByteBlock, m_content); }
 
-        static ByteBlock* New(Recycler* alloc, const byte * initialContent, int initialContentSize, ScriptContext * scriptContext);
+        static ByteBlock* New(Recycler* alloc,const byte * initialContent,int initialContentSize);
 
         // This is needed just for the debugger since it allocates
         // the byte block on a seperate thread, which the recycler doesn't like
@@ -53,12 +49,12 @@ namespace Js
         byte& operator[] (uint itemIndex);
         CustomHeap::Allocation * GetAllocation() { return allocation; }
 
-        ByteBlock * Clone(Recycler* alloc, ScriptContext * scriptContext);
+        ByteBlock * Clone(Recycler* alloc);
 
         //
         // Create a copy of buffer
         //  Each Var is cloned on the requestContext
         //
-        ByteBlock * Clone(Recycler* alloc, ScriptContext * requestContext, ScriptContext * scriptContext);
+        ByteBlock * Clone(Recycler* alloc, ScriptContext * requestContext);
     };
 } // namespace Js

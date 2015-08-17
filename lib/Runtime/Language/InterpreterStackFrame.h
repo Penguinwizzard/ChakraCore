@@ -471,6 +471,11 @@ namespace Js
         template <class T> inline void DoInitLetFld(const unaligned T * playout, Var instance, PropertyOperationFlags flags = PropertyOperation_None);
         template <class T> inline void DoInitConstFld(const unaligned T * playout, Var instance, PropertyOperationFlags flags = PropertyOperation_None);
         template <class T> inline void OP_InitClassMember(const unaligned T * playout);
+        template <class T> inline void OP_InitClassMemberComputedName(const unaligned T * playout);
+        template <class T> inline void OP_InitClassMemberGet(const unaligned T * playout);
+        template <class T> inline void OP_InitClassMemberSet(const unaligned T * playout);
+        template <class T> inline void OP_InitClassMemberGetComputedName(const unaligned T * playout);
+        template <class T> inline void OP_InitClassMemberSetComputedName(const unaligned T * playout);
         inline Var OP_LdEnv();
         template<typename T> uint32 LogSizeOf();
         template <typename T2> inline void OP_LdArr(  uint32 index, RegSlot value  );

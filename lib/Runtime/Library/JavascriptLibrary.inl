@@ -6,6 +6,10 @@
 
 namespace Js
 {
+    inline JavascriptGeneratorFunction* JavascriptLibrary::CreateGeneratorFunction(JavascriptMethod entryPoint, GeneratorVirtualScriptFunction* scriptFunction)
+        JavascriptPromiseCapabilitiesExecutorFunction* function = EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptPromiseCapabilitiesExecutorFunction, type, functionInfo, capability));
+    inline JavascriptPromiseResolveThenableTaskFunction* JavascriptLibrary::CreatePromiseResolveThenableTaskFunction(JavascriptMethod entryPoint, JavascriptPromise* promise, RecyclableObject* thenable, RecyclableObject* thenFunction)
+        JavascriptPromiseAllResolveElementFunction* function = EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptPromiseAllResolveElementFunction, type, functionInfo, index, values, capabilities, remainingElements));
     // Create a string literal from a C++ string (const wchar_t array with compile-time determined size)
     // Note: The template arg is the string length in characters, including the NUL terminator.
     template< size_t N > JavascriptString* JavascriptLibrary::CreateStringFromCppLiteral(const wchar_t(&value)[N]) const

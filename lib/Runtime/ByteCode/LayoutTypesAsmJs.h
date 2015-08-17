@@ -97,7 +97,8 @@ LAYOUT_TYPE_WMS    ( Float32x4_1Float64x2_1 )
 LAYOUT_TYPE_WMS    ( Float32x4_1Int32x4_1 )
 LAYOUT_TYPE_WMS    ( Float32x4_1Int32x4_1Float32x4_2 )
 LAYOUT_TYPE_WMS    ( Reg1Float32x4_1 )
-LAYOUT_TYPE_WMS    ( Float1Float32x4_1IntConst1 )
+LAYOUT_TYPE_WMS    ( Float1Float32x4_1Int1 )
+LAYOUT_TYPE_WMS    ( Float32x4_2Int1Float1 )
 LAYOUT_TYPE_WMS    ( Int1Float32x4_1)
 // Int32x4
 LAYOUT_TYPE_WMS    ( Int32x4_2) 
@@ -111,8 +112,9 @@ LAYOUT_TYPE_WMS    ( Int32x4_2Int1 )
 LAYOUT_TYPE_WMS    ( Reg1Int32x4_1 )
 LAYOUT_TYPE_WMS    ( Int32x4_1Float32x4_1 )
 LAYOUT_TYPE_WMS    ( Int32x4_1Float64x2_1 )
-LAYOUT_TYPE_WMS    ( Int1Int32x4_1IntConst1)
 LAYOUT_TYPE_WMS    ( Int1Int32x4_1)
+LAYOUT_TYPE_WMS    ( Int1Int32x4_1Int1 )
+LAYOUT_TYPE_WMS    ( Int32x4_2Int2 )
 
 
 // Float64x2
@@ -128,7 +130,6 @@ LAYOUT_TYPE_WMS    ( Float64x2_1Float32x4_1 )
 LAYOUT_TYPE_WMS    ( Float64x2_1Int32x4_1 ) 
 LAYOUT_TYPE_WMS    ( Float64x2_1Int32x4_1Float64x2_2 ) 
 LAYOUT_TYPE_WMS    ( Reg1Float64x2_1 )
-LAYOUT_TYPE_WMS    ( Double1Float64x2_1IntConst1 ) 
 LAYOUT_TYPE_WMS    ( Int1Float64x2_1)
 
 LAYOUT_TYPE_WMS    ( AsmSimdTypedArr )
