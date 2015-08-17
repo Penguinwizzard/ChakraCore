@@ -18,5 +18,6 @@
     <NtTargetVersion Condition="'$(Platform)'=='ARM' or '$(Platform)'=='Arm64'">$(NtTargetVersion_Win8)</NtTargetVersion>
 
     <WindowsSDKDesktopARMSupport Condition="'$(Platform)'=='ARM'">true</WindowsSDKDesktopARMSupport>
+    <ChakraDevConfigDir Condition="'$(ChakraDevConfigDir)'==''">$(USEPROFILE)\ChakraDevConfig</ChakraDevConfigDir>
   </PropertyGroup>
 </Project>
