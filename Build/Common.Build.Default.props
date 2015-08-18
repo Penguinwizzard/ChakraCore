@@ -17,7 +17,6 @@
          but for x86/amd64 we may need to ship IE10 for Win7, thus it's not OK in general to require Win8 as minimum. -->
     <NtTargetVersion Condition="'$(Platform)'=='ARM' or '$(Platform)'=='Arm64'">$(NtTargetVersion_Win8)</NtTargetVersion>
 
-    <WindowsSDKDesktopARMSupport Condition="'$(Platform)'=='ARM'">true</WindowsSDKDesktopARMSupport>
-    <ChakraDevConfigDir Condition="'$(ChakraDevConfigDir)'==''">$(USEPROFILE)\ChakraDevConfig</ChakraDevConfigDir>
+    <WindowsSDKDesktopARMSupport Condition="'$(Platform)'=='ARM'">true</WindowsSDKDesktopARMSupport>    
   </PropertyGroup>
 </Project>

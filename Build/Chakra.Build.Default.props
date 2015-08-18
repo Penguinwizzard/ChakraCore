@@ -24,6 +24,7 @@
     
     <!-- Always use Platform SDK for core builds -->
     <EventManifestXmlPath>$(WindowsSDK80Path)Include\um</EventManifestXmlPath>
+    <ChakraDevConfigDir Condition="'$(ChakraDevConfigDir)'==''">$(USEPROFILE)\ChakraDevConfig</ChakraDevConfigDir>
   </PropertyGroup>
   <ImportGroup>
     <Import Project="$(ChakraDevConfigDir)\Chakra.Build.user.props" Condition="exists('$(ChakraDevConfigDir)\Chakra.Build.user.props')"/>
