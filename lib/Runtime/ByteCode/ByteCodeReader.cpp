@@ -211,20 +211,6 @@ namespace Js
         return targetip;
     }
 
-    bool ByteCodeReader::IsCurrentLocationReadOnly(CustomHeap::Heap * byteCodeAllocator)
-    {
-        Assert(byteCodeAllocator != nullptr);
-        return byteCodeAllocator->IsReadOnly((void*)m_currentLocation);
-    }
-
-    bool ByteCodeReader::IsCurrentLocationExecuteReadProtection()
-    {
-        MEMORY_BASIC_INFORMATION memBasicInfo;
-        size_t bytes = VirtualQuery(m_currentLocation, &memBasicInfo, sizeof(memBasicInfo));
-
-        return (bytes != 0 && memBasicInfo.Protect == PAGE_EXECUTE_READ);
-    }
-
     template <typename T>
     AuxArray<T> const * 
     ByteCodeReader::ReadAuxArray(uint offset, FunctionBody * functionBody)
