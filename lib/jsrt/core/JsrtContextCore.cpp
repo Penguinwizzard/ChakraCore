@@ -58,7 +58,7 @@ Js::ScriptContext* JsrtContextCore::EnsureScriptContext()
 
     newScriptContext->Initialize();
 
-    hostContext = HeapNew(ChakraCoreHostScriptContext(newScriptContext));
+    hostContext = HeapNew(ChakraCoreHostScriptContext, newScriptContext);
     newScriptContext->SetHostScriptContext(hostContext);
 
     this->SetScriptContext(newScriptContext.Detach());

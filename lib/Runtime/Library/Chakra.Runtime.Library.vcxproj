@@ -373,8 +373,7 @@
     <None Include="InJavascript\Intl.js" />
     <None Include="InJavascript\Promise.js" />
     <None Include="InJavascript\WarnGenByteCode.cmd" />
-    <None Include="JavascriptMap.inl" />
-    <None Include="JavascriptSet.inl" />
+    <None Include="ConcatString.inl" />
     <None Include="SparseArraySegment.inl" />    
     <None Include="TaggedInt.inl" />
     <None Include="JavascriptArray.inl" />   

@@ -11,7 +11,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Chakra.Common.Codex", "..\l
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Chakra.Runtime.ByteCode", "..\lib\Runtime\ByteCode\Chakra.Runtime.ByteCode.vcxproj", "{706083F7-6AA4-4558-A153-6352EF9110F5}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Chakra.Runtime.Debug", "..\core\lib\Runtime\Debug\Chakra.Runtime.Debug.vcxproj", "{8C61E4E7-F0D6-420D-A352-3E6E50D406DD}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Chakra.Runtime.Debug", "..\lib\Runtime\Debug\Chakra.Runtime.Debug.vcxproj", "{8C61E4E7-F0D6-420D-A352-3E6E50D406DD}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Chakra.Runtime.Language", "..\lib\Runtime\Language\Chakra.Runtime.Language.vcxproj", "{706083F7-6AA4-4558-A153-6352EF9110F8}"
 EndProject

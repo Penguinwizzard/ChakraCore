@@ -47,7 +47,6 @@ namespace Js
         const byte* GetBuffer() const;
         const byte operator[](uint itemIndex) const;
         byte& operator[] (uint itemIndex);
-        CustomHeap::Allocation * GetAllocation() { return allocation; }
 
         ByteBlock * Clone(Recycler* alloc);
 

@@ -5908,22 +5908,7 @@ namespace Js
     {
         DataView* dataView = RecyclerNew(this->GetRecycler(), DataView, arrayBuffer, offset, length, dataViewType);
 
-        // Only add these members in pre-ES6 modes. After ES6, these live on Dataview.prototype as getters.
-        if (!scriptContext->GetConfig()->IsKhronosInteropEnabled())
-        {
-            AddMember(dataView, PropertyIds::buffer, arrayBuffer, PropertyNone);
-            AddMember(dataView, PropertyIds::byteOffset, JavascriptNumber::ToVar(offset, scriptContext), PropertyNone);
-            AddMember(dataView, PropertyIds::byteLength, JavascriptNumber::ToVar(length, scriptContext), PropertyNone);
-        }
-
         return dataView;
-    }
-
-    JavascriptPixelArray* JavascriptLibrary::CreatePixelArray(uint32 length)
-    {
-        AssertMsg(pixelArrayType, "Where's pixelArrayType?");
-        JavascriptPixelArray* newArray = RecyclerNewFinalized(this->GetRecycler(), JavascriptPixelArray, length, pixelArrayType);
-        return newArray;
     }
 
     JavascriptBoolean* JavascriptLibrary::CreateBoolean(BOOL value)
