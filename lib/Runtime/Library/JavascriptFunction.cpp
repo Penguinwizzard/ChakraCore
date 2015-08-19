@@ -1097,7 +1097,7 @@ dbl_align:
             // Restore ESP
             mov esp, savedEsp
 
-            // save the return value from realsum.
+            // save the return value ^%from realsum.
             mov varResult, eax;
         }
 

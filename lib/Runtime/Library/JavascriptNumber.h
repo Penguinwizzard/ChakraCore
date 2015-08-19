@@ -41,7 +41,10 @@ namespace Js
         static Var ToVar(int64 nValue, ScriptContext* scriptContext);
         static Var ToVar(uint64 nValue, ScriptContext* scriptContext);
         static double GetValue(Var aValue);
-        static double DirectPow(double, double);
+
+        static double DirectPow_Double_Double(double, double);
+        static double DirectPow_Double_Int(double, int);
+        static int DirectPow_Int_Int(int, int);
 
         static bool TryToVarFast(int32 nValue, Var* result);
         static bool TryToVarFastWithCheck(double value, Var* result);

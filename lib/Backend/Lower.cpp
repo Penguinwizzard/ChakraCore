@@ -560,7 +560,18 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             break;
 
         case Js::OpCode::InlineMathPow:
-            m_lowererMD.GenerateFastInlineBuiltInCall(instr, IR::HelperDirectMath_Pow);
+            if (instr->GetDst()->IsInt32())
+            {
+                m_lowererMD.GenerateFastInlineBuiltInCall(instr, IR::HelperDirectMath_Pow_Int_Int);
+            }
+            else if(instr->GetSrc2()->IsInt32())
+            {
+                m_lowererMD.GenerateFastInlineBuiltInCall(instr, IR::HelperDirectMath_Pow_Double_Int);
+            }
+            else
+            {
+                m_lowererMD.GenerateFastInlineBuiltInCall(instr, IR::HelperDirectMath_Pow_Double_Double);
+            }
             break;
 
         case Js::OpCode::InlineMathSin:

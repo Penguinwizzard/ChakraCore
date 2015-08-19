@@ -8624,6 +8624,90 @@ void LowererMD::GenerateFastInlineBuiltInCall(IR::Instr* instr, IR::JnHelperMeth
         Assert(helperMethod == (IR::JnHelperMethod)0);
         return GenerateFastInlineBuiltInMathAbs(instr);
 
+    case Js::OpCode::InlineMathPow:
+    {
+        IR::Instr* argOut = IR::Instr::New(Js::OpCode::MOVSD, this->m_func);
+        IR::RegOpnd* dst1 = IR::RegOpnd::New(null, (RegNum)FIRST_FLOAT_ARG_REG, TyMachDouble, this->m_func);
+        dst1->m_isCallArg = true; // This is to make sure that lifetime of opnd is virtually extended until next CALL instr.
+        argOut->SetDst(dst1);
+        argOut->SetSrc1(instr->GetSrc1());
+        instr->InsertBefore(argOut);
+
+        IR::Instr* argOut2 = IR::Instr::New(Js::OpCode::MOVSD, this->m_func);
+        IR::RegOpnd* dst2 = IR::RegOpnd::New(null, (RegNum)(FIRST_FLOAT_ARG_REG + 1), TyMachDouble, this->m_func);
+        dst2->m_isCallArg = true;   // This is to make sure that lifetime of opnd is virtually extended until next CALL instr.
+        argOut2->SetDst(dst2);
+        argOut2->SetSrc1(instr->GetSrc2());
+        instr->InsertBefore(argOut2);
+
+        // Call CRT.
+        IR::RegOpnd* dst = IR::RegOpnd::New(null, (RegNum)(FIRST_FLOAT_REG), TyMachDouble, this->m_func);   // Dst in XMM0.
+#ifdef _M_IX86
+        IR::Instr* call = IR::Instr::New(Js::OpCode::CALL, dst, this->m_func);
+        call->SetSrc1(IR::HelperCallOpnd::New(helperMethod, this->m_func));
+        instr->InsertBefore(call);
+#else                                                                                     // s1 = MOV helperAddr
+        IR::RegOpnd* s1 = IR::RegOpnd::New(TyMachReg, this->m_func);
+        // RELOCJIT: Inlining is not supported in relocatable JIT
+        IR::AddrOpnd* helperAddr = IR::AddrOpnd::New((Js::Var)IR::GetMethodOriginalAddress(helperMethod), IR::AddrOpndKind::AddrOpndKindDynamicMisc, this->m_func);
+        IR::Instr* mov = IR::Instr::New(Js::OpCode::MOV, s1, helperAddr, this->m_func);
+        instr->InsertBefore(mov);
+
+        // dst(XMM0) = CALL s1
+        IR::Instr *call = IR::Instr::New(Js::OpCode::CALL, dst, s1, this->m_func);
+        instr->InsertBefore(call);
+#endif
+
+        if (instr->GetSrc1()->IsInt32() && instr->GetSrc2()->IsInt32() && instr->GetDst()->IsInt32())
+        {
+            argOut->m_opcode = Js::OpCode::MOV;
+            dst1->SetType(TyInt32);
+            argOut2->m_opcode = Js::OpCode::MOV;
+            dst2->SetType(TyInt32);
+            instr->m_opcode = Js::OpCode::MOV;
+            dst->SetType(TyInt32);
+
+#if _M_IX86
+            argOut->m_opcode = Js::OpCode::PUSH;
+            argOut->UnlinkDst();
+            argOut2->m_opcode = Js::OpCode::PUSH;
+            argOut2->UnlinkDst();
+            argOut2->Unlink();
+            argOut->InsertBefore(argOut2);
+            dst->SetReg(RegEAX);
+#elif _M_X64
+            dst1->SetReg(RegRCX);
+            dst2->SetReg(RegRDX);
+            dst->SetReg(RegRAX);
+#endif
+
+            instr->m_opcode = Js::OpCode::MOV;
+        }
+        else if (instr->GetSrc2()->IsInt32())
+        {
+            argOut2->m_opcode = Js::OpCode::MOV;
+            dst2->SetType(TyInt32);
+
+#if _M_IX86
+            dst2->SetReg(RegECX);
+#elif _M_X64
+            dst2->SetReg(RegRCX);
+#endif
+
+            instr->m_opcode = Js::OpCode::MOVSD;
+        }
+        else
+        {
+            instr->m_opcode = Js::OpCode::MOVSD;
+        }
+
+        instr->UnlinkSrc1();
+        instr->UnlinkSrc2();
+        instr->SetSrc1(call->GetDst());
+
+        break;
+    }
+
     case Js::OpCode::InlineMathAcos:
     case Js::OpCode::InlineMathAsin:
     case Js::OpCode::InlineMathAtan:
@@ -8631,7 +8715,6 @@ void LowererMD::GenerateFastInlineBuiltInCall(IR::Instr* instr, IR::JnHelperMeth
     case Js::OpCode::InlineMathCos:
     case Js::OpCode::InlineMathExp:
     case Js::OpCode::InlineMathLog:
-    case Js::OpCode::InlineMathPow:
     case Js::OpCode::InlineMathSin:
     case Js::OpCode::InlineMathTan:
         {

@@ -490,7 +490,10 @@ HELPERCALL(BoxStackNumber, Js::JavascriptNumber::BoxStackNumber, 0)
 HELPERCALL(GetNonzeroInt32Value_NoTaggedIntCheck, Js::JavascriptNumber::GetNonzeroInt32Value_NoTaggedIntCheck, 0)
 HELPERCALL(IsNegZero, Js::JavascriptNumber::IsNegZero, 0)
 
-HELPERCALL(DirectMath_Pow, (double(*)(double, double))Js::JavascriptNumber::DirectPow, 0)
+HELPERCALL(DirectMath_Pow_Double_Double,    (double(*)(double, double))Js::JavascriptNumber::DirectPow_Double_Double,   0)
+HELPERCALL(DirectMath_Pow_Double_Int,       (double(*)(double, int))Js::JavascriptNumber::DirectPow_Double_Int,         0)
+HELPERCALL(DirectMath_Pow_Int_Int,          (int   (*)(int, int))Js::JavascriptNumber::DirectPow_Int_Int,               0)
+
 HELPERCALL_MATH(DirectMath_Random,  (double(*)(Js::ScriptContext*))Js::JavascriptMath::Random, (double(*)(Js::ScriptContext*))Js::SSE2::JavascriptMath::Random, 0)
 
 

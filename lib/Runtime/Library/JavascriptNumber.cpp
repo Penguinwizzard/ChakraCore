@@ -3,6 +3,7 @@
 //----------------------------------------------------------------------------
 
 #include "StdAfx.h"
+#include <cmath>
 
 namespace Js
 {
@@ -162,11 +163,12 @@ namespace Js
 #if _M_IX86
 
     extern "C" double __cdecl __libm_sse2_pow(double, double);
+    double(__stdcall *fn_pow_double_int)(double, int) = _Pow_int<double>;
 
     static const double d1_0 = 1.0;
    
     __declspec(naked)
-    double JavascriptNumber::DirectPow(double x, double y)
+    double JavascriptNumber::DirectPow_Double_Double(double x, double y)
     {      
         UNREFERENCED_PARAMETER(x);
         UNREFERENCED_PARAMETER(y);
@@ -206,20 +208,71 @@ namespace Js
         }
     }
 
-
-#elif defined(_M_AMD64) || defined(_M_ARM32_OR_ARM64)
-    
-    double JavascriptNumber::DirectPow(double x, double y)
+    __declspec(naked)
+    double JavascriptNumber::DirectPow_Double_Int(double x, int y)
     {
-        if(y == 1.0)
+        UNREFERENCED_PARAMETER(x);
+        UNREFERENCED_PARAMETER(y);
+
+        __asm {
+            // check y for 1.0 
+            cmp ecx, 1
+            jne pow_full
+            ret
+
+        pow_full :
+            cmp ecx, -2147483648
+            je fallback_double_double
+
+            //popcnt eax, ecx
+            //cmp eax, 8
+            cmp ecx, 8
+            jg fallback_double_double
+               
+            push ebp
+            mov ebp, esp
+            sub esp, 8
+
+            cmp ecx, 0
+            jg y_pos
+
+            neg ecx
+            movsd xmm1, xmm0
+            movsd xmm0, d1_0
+            divsd xmm0, xmm1
+
+        y_pos :
+            push ecx
+            sub esp, 8
+            movsd qword ptr[esp], xmm0
+            call fn_pow_double_int
+            fstp qword ptr[esp]
+            movsd xmm0, qword ptr[esp]
+
+            mov esp, ebp
+            pop ebp
+            ret
+
+        fallback_double_double :
+            cvtsi2sd xmm1, ecx
+            jmp dword ptr[__libm_sse2_pow]
+        }
+
+    }
+
+    
+#elif defined(_M_AMD64) || defined(_M_ARM32_OR_ARM64)
+
+    double JavascriptNumber::DirectPow_Double_Double(double x, double y)
+    {
+        if (y == 1.0)
         {
             return x;
         }
-        
+
         // For AMD64/ARM calling convention already uses SSE2/VFP registers so we don't have to use assembler.
         // We can't just use "if (0 == y)" because NaN compares
         // equal to 0 according to our compilers.
-        int32 intY;
         if (0 == NumberUtilities::LuLoDbl(y) && 0 == (NumberUtilities::LuHiDbl(y) & 0x7FFFFFFF))
         {
             // pow(x, 0) = 1 even if x is NaN.
@@ -230,14 +283,21 @@ namespace Js
             // pow([+/-] 1, Infinity) = NaN according to javascript, but not for CRT pow.
             return JavascriptNumber::NaN;
         }
-        else if(TryGetInt32Value(y, &intY))
-        {
-            return ::pow(x, intY);
-        }
 
         return ::pow(x, y);
     }
 
+    double JavascriptNumber::DirectPow_Double_Int(double x, int y)
+    {
+        if (y < 0)
+        {
+            y = -y;
+            x = 1 / x;
+        }
+
+        return ::pow(x, y);
+    }
+    
 #else
 
     double JavascriptNumber::DirectPow(double x, double y)
@@ -250,6 +310,11 @@ namespace Js
     }
 
 #endif
+
+    int JavascriptNumber::DirectPow_Int_Int(int x, int y)
+    {
+        return _Pow_int<int>(x, y);
+    }
 
     Var JavascriptNumber::NewInstance(RecyclableObject* function, CallInfo callInfo, ...)
     {

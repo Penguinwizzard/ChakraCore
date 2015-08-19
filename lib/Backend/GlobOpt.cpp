@@ -9303,7 +9303,6 @@ GlobOpt::TypeSpecializeInlineBuiltInBinary(IR::Instr **pInstr, Value *src1Val, V
     switch(instr->m_opcode)
     {
         case Js::OpCode::InlineMathAtan2:
-        case Js::OpCode::InlineMathPow:
         {
             Js::BuiltinFunction builtInId = Js::JavascriptLibrary::GetBuiltInInlineCandidateId(instr->m_opcode);   // From actual instr, not profile based.
             Js::BuiltInFlags builtInFlags = Js::JavascriptLibrary::GetFlagsForBuiltIn(builtInId);
@@ -9320,6 +9319,46 @@ GlobOpt::TypeSpecializeInlineBuiltInBinary(IR::Instr **pInstr, Value *src1Val, V
 
             break;
         }
+
+        case Js::OpCode::InlineMathPow:
+        {
+            AssertMsg(instr->GetDst()->IsRegOpnd(), "What else?");
+
+            bool isSrc1LikelyInt = src1Val->GetValueInfo()->IsLikelyInt();
+            bool isSrc2LikelyInt = src2Val->GetValueInfo()->IsLikelyInt();
+            IntConstType src1LowerBound, src1UpperBound, src2LowerBound, src2UpperBound;
+
+            if (isSrc1LikelyInt && isSrc2LikelyInt
+                && src1Val->GetValueInfo()->TryGetIntConstantLowerBound(&src1LowerBound, true)
+                && src1Val->GetValueInfo()->TryGetIntConstantUpperBound(&src1UpperBound, true)
+                && src2Val->GetValueInfo()->TryGetIntConstantLowerBound(&src2LowerBound, true)
+                && src2Val->GetValueInfo()->TryGetIntConstantUpperBound(&src2UpperBound, true)
+                && src2LowerBound >= 0 // can only use int pow for y >= 0
+                && pow((double)max(abs(src1LowerBound), abs(src2LowerBound)), src2UpperBound) < Int32ConstMax)
+            {
+                this->ToInt32(instr, instr->GetSrc1(), this->currentBlock, src1OriginalVal, NULL, IR::BailOutIntOnly);
+                this->ToInt32(instr, instr->GetSrc2(), this->currentBlock, src2OriginalVal, NULL, IR::BailOutIntOnly);
+                *pDstVal = CreateDstUntransferredIntValue(0, Int32ConstMax, instr, src1OriginalVal, src2OriginalVal);
+                this->ToInt32Dst(instr, instr->GetDst()->AsRegOpnd(), this->currentBlock);
+            }
+            else if (isSrc2LikelyInt)
+            {
+                this->ToFloat64(instr, instr->GetSrc1(), this->currentBlock, src1OriginalVal, NULL, IR::BailOutPrimitiveButString);
+                this->ToInt32(instr, instr->GetSrc2(), this->currentBlock, src2OriginalVal, NULL, IR::BailOutIntOnly);
+                *pDstVal = CreateDstUntransferredValue(ValueType::Float, instr, src1OriginalVal, src2OriginalVal);
+                this->ToFloat64Dst(instr, instr->GetDst()->AsRegOpnd(), this->currentBlock);
+            }
+            else
+            {
+                this->ToFloat64(instr, instr->GetSrc1(), this->currentBlock, src1OriginalVal, NULL, IR::BailOutPrimitiveButString);
+                this->ToFloat64(instr, instr->GetSrc2(), this->currentBlock, src2OriginalVal, NULL, IR::BailOutPrimitiveButString);
+                *pDstVal = CreateDstUntransferredValue(ValueType::Float, instr, src1OriginalVal, src2OriginalVal);
+                this->ToFloat64Dst(instr, instr->GetDst()->AsRegOpnd(), this->currentBlock);
+            }
+
+            break;
+        }
+
 
         case Js::OpCode::InlineMathImul:
         {

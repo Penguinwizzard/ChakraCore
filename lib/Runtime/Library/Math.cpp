@@ -950,7 +950,7 @@ LDone:
             }
         }
 #else
-        result = JavascriptNumber::DirectPow( x, y );
+        result = JavascriptNumber::DirectPow_Double_Double( x, y );
 #endif
         return result;
     }
