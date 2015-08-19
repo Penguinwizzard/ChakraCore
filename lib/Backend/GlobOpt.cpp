@@ -3925,9 +3925,13 @@ GlobOpt::CollectMemcopyLdElementI(IR::Instr *instr, Loop *loop)
     // Additionnal checks only if not a typed array
     if (!baseValueType.IsTypedArray())
     {
-        IR::ArrayRegOpnd *baseArrayOp = baseOp->AsRegOpnd()->AsArrayRegOpnd();
-
-        if (!baseArrayOp->EliminatedLowerBoundCheck() || !baseArrayOp->EliminatedUpperBoundCheck())
+        bool hasBoundChecksRemoved = false;
+        if (baseOp->IsRegOpnd() && baseOp->AsRegOpnd()->IsArrayRegOpnd())
+        {
+            IR::ArrayRegOpnd *baseArrayOp = baseOp->AsRegOpnd()->AsArrayRegOpnd();
+            hasBoundChecksRemoved = baseArrayOp->EliminatedLowerBoundCheck() && baseArrayOp->EliminatedUpperBoundCheck();
+        }
+        if(!hasBoundChecksRemoved)
         {
 #if DBG_DUMP
             if (PHASE_TRACE(Js::MemOpPhase, this->func->GetJnFunction()) || PHASE_TRACE(Js::MemCopyPhase, this->func->GetJnFunction()))
