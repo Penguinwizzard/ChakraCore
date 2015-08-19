@@ -2,6 +2,7 @@
 *.sdf
 *.suo
 *.opensdf
+*.user
 *.i
 Build/VCBuild/
 Build/ipch/
