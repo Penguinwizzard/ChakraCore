@@ -49,8 +49,8 @@
     <Link>
       <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <EnableCOMDATFolding Condition="'$(OptimiziedBuild)'=='true'">true</EnableCOMDATFolding>
-      <OptimizeReferences Condition="'$(OptimiziedBuild)'=='true'">true</OptimizeReferences>
+      <EnableCOMDATFolding Condition="'$(OptimizedBuild)'=='true'">true</EnableCOMDATFolding>
+      <OptimizeReferences Condition="'$(OptimizedBuild)'=='true'">true</OptimizeReferences>
 
       <MinimumRequiredVersion Condition="'$(NtTargetVersion)'=='$(NtTargetVersion_Win7)'" >6.1</MinimumRequiredVersion>
       <MinimumRequiredVersion Condition="'$(NtTargetVersion)'=='$(NtTargetVersion_Win8)'" >6.2</MinimumRequiredVersion>
@@ -61,7 +61,7 @@
     </Link>
   </ItemDefinitionGroup>
   <!-- chk build flags -->
-  <ItemDefinitionGroup Condition="'$(OptimiziedBuild)'!='true'">
+  <ItemDefinitionGroup Condition="'$(OptimizedBuild)'!='true'">
     <ClCompile>
       <!-- ========= From inetcore\jscript\project.mk ========= -->
       <Optimization>Disabled</Optimization>
@@ -72,7 +72,7 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <!-- fre and fretest build flags -->
-  <ItemDefinitionGroup Condition="'$(OptimiziedBuild)'=='true'">
+  <ItemDefinitionGroup Condition="'$(OptimizedBuild)'=='true'">
     <ClCompile>
       <!-- ========= From inetcore\jscript\project.mk ========= -->
       <PreprocessorDefinitions>%(PreprocessorDefinitions);NDEBUG</PreprocessorDefinitions>

@@ -29,7 +29,7 @@
       <PrecompiledHeaderFile>BackEnd.h</PrecompiledHeaderFile>
     </ClCompile>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(OptimiziedBuild)'!='true'">
+  <ItemDefinitionGroup Condition="'$(OptimizedBuild)'!='true'">
     <ClCompile>
       <!-- /Ob1 -->
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
