@@ -141,9 +141,7 @@ namespace Js
 
         virtual BOOL GetDiagTypeString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext) override;
         virtual RecyclableObject* ToObject(ScriptContext * requestContext) override;
-        virtual Var GetTypeOfString(ScriptContext* requestContext) override;
-
-        virtual JavascriptProxy* MakeCopyOnWriteObject(ScriptContext* scriptContext) override;
+        virtual Var GetTypeOfString(ScriptContext* requestContext) override;        
 
         BOOL SetPropertyTrap(Var receiver, SetPropertyTrapKind setPropertyTrapKind, PropertyId propertyId, Var newValue, ScriptContext* requestContext, BOOL skipPrototypeCheck = FALSE);
         BOOL SetPropertyTrap(Var receiver, SetPropertyTrapKind setPropertyTrapKind, Js::JavascriptString * propertyString, Var newValue, ScriptContext* requestContext);

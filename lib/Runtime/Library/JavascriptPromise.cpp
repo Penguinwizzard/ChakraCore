@@ -1141,65 +1141,6 @@ namespace Js
         library->EnqueueTask(reactionTaskFunction);
     }
 
-    JavascriptPromiseCapability* JavascriptPromise::MakeCopyOnWriteObjectJavascriptPromiseCapability(JavascriptPromiseCapability* src, ScriptContext* scriptContext)
-    {
-        Assert(src);
-
-        Var promiseCopy = scriptContext->CopyOnWrite(src->GetPromise());
-        RecyclableObject* resolveCopy = (RecyclableObject*)scriptContext->CopyOnWrite(src->GetResolve());
-        RecyclableObject* rejectCopy = (RecyclableObject*)scriptContext->CopyOnWrite(src->GetReject());
-
-        return JavascriptPromiseCapability::New(promiseCopy, resolveCopy, rejectCopy, scriptContext);
-    }
-
-    JavascriptPromiseReactionList* JavascriptPromise::MakeCopyOnWriteObjectJavascriptPromiseReactionList(JavascriptPromiseReactionList* src, ScriptContext* scriptContext)
-    {
-        Recycler* recycler = scriptContext->GetRecycler();
-
-        JavascriptPromiseReactionList* result = RecyclerNew(recycler, JavascriptPromiseReactionList, recycler);
-
-        if (src)
-        {
-            for (int i = 0; i < src->Count(); i++)
-            {
-                JavascriptPromiseReaction* reaction = src->Item(i);
-
-                JavascriptPromiseCapability* capability = reaction->GetCapabilities();
-                JavascriptPromiseCapability* capabilityCopy = MakeCopyOnWriteObjectJavascriptPromiseCapability(capability, scriptContext);
-
-                RecyclableObject* handlerCopy = (RecyclableObject*)scriptContext->CopyOnWrite(reaction->GetHandler());
-                JavascriptPromiseReaction* reactionCopy = JavascriptPromiseReaction::New(capabilityCopy, handlerCopy, scriptContext);
-
-                result->Add(reactionCopy);
-            }
-        }
-
-        return result;
-    }
-
-    JavascriptPromise* JavascriptPromise::MakeCopyOnWriteObject(ScriptContext* scriptContext)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED_RET();
-
-        Recycler* recycler = scriptContext->GetRecycler();
-        DynamicType* type = scriptContext->GetLibrary()->GetPromiseType();
-
-        typedef CopyOnWriteObject<JavascriptPromise> JavascriptPromiseCopy;
-        JavascriptPromiseCopy* result = RecyclerNew(recycler, JavascriptPromiseCopy, type, this, scriptContext);
-
-        if (this->result)
-        {
-            result->result = scriptContext->CopyOnWrite(this->result);
-        }
-
-        result->status = this->status;
-
-        result->resolveReactions = MakeCopyOnWriteObjectJavascriptPromiseReactionList(this->resolveReactions, scriptContext);
-        result->rejectReactions = MakeCopyOnWriteObjectJavascriptPromiseReactionList(this->rejectReactions, scriptContext);
-
-        return result;
-    }
-
     JavascriptPromiseResolveOrRejectFunction::JavascriptPromiseResolveOrRejectFunction(DynamicType* type)
         : RuntimeFunction(type, &Js::JavascriptPromise::EntryInfo::ResolveOrRejectFunction), promise(nullptr), isReject(false), isAlreadyResolved(false)
     { }
@@ -1215,8 +1156,7 @@ namespace Js
             JavascriptFunction* obj = JavascriptFunction::FromVar(var);
 
             return VirtualTableInfo<JavascriptPromiseResolveOrRejectFunction>::HasVirtualTable(obj)
-                || VirtualTableInfo<CrossSiteObject<JavascriptPromiseResolveOrRejectFunction>>::HasVirtualTable(obj)
-                || VirtualTableInfo<CopyOnWriteObject<JavascriptPromiseResolveOrRejectFunction, Js::JavascriptFunctionSpecialProperties>>::HasVirtualTable(obj);
+                || VirtualTableInfo<CrossSiteObject<JavascriptPromiseResolveOrRejectFunction>>::HasVirtualTable(obj);
         }
 
         return false;
@@ -1227,30 +1167,7 @@ namespace Js
         Assert(JavascriptPromiseResolveOrRejectFunction::Is(var));
 
         return static_cast<JavascriptPromiseResolveOrRejectFunction*>(var);
-    }
-
-    JavascriptPromiseResolveOrRejectFunction* JavascriptPromiseResolveOrRejectFunction::MakeCopyOnWriteObject(ScriptContext* scriptContext)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED_RET();
-
-        Recycler* recycler = scriptContext->GetRecycler();
-        DynamicType* type = scriptContext->GetLibrary()->CreateFunctionType(this->GetEntryPoint());
-
-        typedef CopyOnWriteObject<JavascriptPromiseResolveOrRejectFunction, JavascriptFunctionSpecialProperties> JavascriptPromiseResolveOrRejectFunctionCopy;
-        JavascriptPromiseResolveOrRejectFunctionCopy* result = RecyclerNew(recycler, JavascriptPromiseResolveOrRejectFunctionCopy, type, this, scriptContext);
-
-        result->functionInfo = this->functionInfo;
-
-        if (this->promise)
-        {
-            result->promise = (Js::JavascriptPromise*)scriptContext->CopyOnWrite(this->promise);
-        }
-
-        result->isAlreadyResolved = this->isAlreadyResolved;
-        result->isReject = this->isReject;
-
-        return result;
-    }
+    }    
 
     JavascriptPromise* JavascriptPromiseResolveOrRejectFunction::GetPromise()
     {
@@ -1474,8 +1391,7 @@ namespace Js
             JavascriptFunction* obj = JavascriptFunction::FromVar(var);
 
             return VirtualTableInfo<JavascriptPromiseAllResolveElementFunction>::HasVirtualTable(obj)
-                || VirtualTableInfo<CrossSiteObject<JavascriptPromiseAllResolveElementFunction>>::HasVirtualTable(obj)
-                || VirtualTableInfo<CopyOnWriteObject<JavascriptPromiseAllResolveElementFunction, JavascriptFunctionSpecialProperties>>::HasVirtualTable(obj);
+                || VirtualTableInfo<CrossSiteObject<JavascriptPromiseAllResolveElementFunction>>::HasVirtualTable(obj);
         }
 
         return false;
@@ -1486,40 +1402,6 @@ namespace Js
         Assert(JavascriptPromiseAllResolveElementFunction::Is(var));
 
         return static_cast<JavascriptPromiseAllResolveElementFunction*>(var);
-    }
-
-    JavascriptPromiseAllResolveElementFunction* JavascriptPromiseAllResolveElementFunction::MakeCopyOnWriteObject(ScriptContext* scriptContext)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED_RET();
-
-        Recycler* recycler = scriptContext->GetRecycler();
-        DynamicType* type = scriptContext->GetLibrary()->CreateFunctionType(this->GetEntryPoint());
-
-        typedef CopyOnWriteObject<JavascriptPromiseAllResolveElementFunction, JavascriptFunctionSpecialProperties> JavascriptPromiseAllResolveElementFunctionCopy;
-        JavascriptPromiseAllResolveElementFunctionCopy* result = RecyclerNew(recycler, JavascriptPromiseAllResolveElementFunctionCopy, type, this, scriptContext);
-
-        result->functionInfo = this->functionInfo;
-
-        result->index = this->index;
-        result->alreadyCalled = this->alreadyCalled;
-
-        if (this->remainingElementsWrapper)
-        {
-            result->remainingElementsWrapper = RecyclerNewStructZ(recycler, JavascriptPromiseAllResolveElementFunctionRemainingElementsWrapper);
-            result->remainingElementsWrapper->remainingElements = this->remainingElementsWrapper->remainingElements;
-        }
-
-        if (this->values)
-        {
-            result->values = (JavascriptArray*)scriptContext->CopyOnWrite(this->values);
-        }
-
-        if (this->capabilities)
-        {
-            result->capabilities = JavascriptPromise::MakeCopyOnWriteObjectJavascriptPromiseCapability(this->capabilities, scriptContext);
-        }
-
-        return result;
     }
 
     JavascriptPromiseCapability* JavascriptPromiseAllResolveElementFunction::GetCapabilities()

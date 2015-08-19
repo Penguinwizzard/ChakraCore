@@ -2254,17 +2254,5 @@ namespace Js
         }
 
         return trapResult;
-    }
-
-    JavascriptProxy* JavascriptProxy::MakeCopyOnWriteObject(ScriptContext* scriptContext)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED_RET();
-
-        Recycler *recycler = scriptContext->GetRecycler();
-        CopyOnWriteObject<JavascriptProxy> *result = RecyclerNew(recycler, CopyOnWriteObject<JavascriptProxy>, scriptContext->GetLibrary()->GetProxyType(), this, scriptContext);
-        result->handler = RecyclableObject::FromVar(scriptContext->CopyOnWrite(this->handler));
-        result->target = RecyclableObject::FromVar(scriptContext->CopyOnWrite(this->target));
-
-        return result;
-    }
+    }   
 }

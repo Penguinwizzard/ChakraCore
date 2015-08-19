@@ -337,8 +337,7 @@ namespace Js
         EvalCacheDictionary* evalCacheDictionary;
         EvalCacheDictionary* indirectEvalCacheDictionary;
         NewFunctionCache* newFunctionCache;
-        RegexPatternMruMap *dynamicRegexMap;
-        ParseableFunctionInfoMap *copyOnWriteParseableFunctionInfoMap;
+        RegexPatternMruMap *dynamicRegexMap;        
         SourceContextInfoMap* sourceContextInfoMap;   // maps host provided context cookie to the URL of the script buffer passed.
         DynamicSourceContextInfoMap* dynamicSourceContextInfoMap;
         SourceContextInfo* noContextSourceContextInfo;
@@ -511,10 +510,7 @@ namespace Js
         ScriptContext ** entryInScriptContextWithInlineCachesRegistry;
         ScriptContext ** entryInScriptContextWithIsInstInlineCachesRegistry;
         ScriptContext ** registeredPrototypeChainEnsuredToHaveOnlyWritableDataPropertiesScriptContext;
-
-        typedef JsUtil::BaseDictionary<RecyclableObject *, RecyclableObject *, ArenaAllocator, PrimeSizePolicy, RecyclerPointerComparer> InstanceMap;
-        InstanceMap *copyOnWriteMap;
-
+        
         ArenaAllocator generalAllocator;
 #ifdef ENABLE_BASIC_TELEMETRY
         ArenaAllocator telemetryAllocator;
@@ -901,7 +897,7 @@ private:
         ScriptContext(ThreadContext* threadContext);
         void InitializeAllocations();
         void InitializePreGlobal();
-        void InitializePostGlobal(bool initializingCopy);
+        void InitializePostGlobal();
 
         // Source Info
         void EnsureSourceContextInfoMap();
@@ -1524,18 +1520,6 @@ private:
         static const wchar_t* CopyString(const wchar_t* str, size_t charCount, ArenaAllocator* alloc);
 
     public:
-        ScriptContext *CopyOnWriteCopy(void *initContext, void (*init)(void *, ScriptContext *));
-        Var CopyOnWrite(Var value);
-        void EnsureCopyOnWriteMap();
-        void RecordCopyOnWrite(RecyclableObject *originalValue, RecyclableObject *copiedValue);
-        UnifiedRegex::RegexPattern *CopyPattern(UnifiedRegex::RegexPattern *pattern);
-        ParseableFunctionInfo *CopyFunction(ParseableFunctionInfo *body);
-        void RecordFunctionClone(ParseableFunctionInfo* originalBody, ParseableFunctionInfo* clonedBody);
-
-#ifdef DEBUG
-        int CopyOnWriteTableSize() { return copyOnWriteMap ? copyOnWriteMap->Count() : 0; }
-#endif
-
         JavascriptMethod GetNextDynamicAsmJsInterpreterThunk(PVOID* ppDynamicInterpreterThunk);
         JavascriptMethod GetNextDynamicInterpreterThunk(PVOID* ppDynamicInterpreterThunk);
         BOOL IsDynamicInterpreterThunk(void* address);

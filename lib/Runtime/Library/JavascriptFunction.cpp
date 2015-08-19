@@ -1439,17 +1439,6 @@ LABEL1:
         (*functionRef)->UpdateUndeferredBody(funcBody);
     }
 
-    JavascriptFunction* JavascriptFunction::MakeCopyOnWriteObject(ScriptContext* scriptContext)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED_RET();
-
-        typedef CopyOnWriteObject<JavascriptFunction, JavascriptFunctionSpecialProperties> CopyOnWriteJavascriptFunction;
-        CopyOnWriteJavascriptFunction *result = RecyclerNew(scriptContext->GetRecycler(), CopyOnWriteJavascriptFunction,
-            scriptContext->GetLibrary()->CreateFunctionType(this->GetEntryPoint(), RecyclableObject::FromVar(scriptContext->CopyOnWrite(this->GetPrototype()))), this, scriptContext);
-        result->functionInfo = this->functionInfo;
-        return result;
-    }
-
     // Thunk for handling calls to functions that have not had byte code generated for them.
 
 #if _M_IX86

@@ -124,9 +124,7 @@ namespace Js
         BOOL IsFormalArgument(PropertyId propertyId);
         BOOL IsFormalArgument(PropertyId propertyId, uint32* pIndex);    // Checks whether property is numeric, and on success sets that index.
         BOOL IsArgumentDeleted(uint32 index) const;
-        const ActivationObject* const GetFrameObject() { return frameObject; }
-
-        virtual HeapArgumentsObject* MakeCopyOnWriteObject(ScriptContext* scriptContext) override;
+        const ActivationObject* const GetFrameObject() { return frameObject; }        
     };
 
     // ES5 version of the HeapArgumentsObject: support for attributes on formal arguments.

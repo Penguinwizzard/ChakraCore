@@ -355,7 +355,6 @@ PHASE(All)
 #endif
 #define DEFAULT_CONFIG_BgJitDelayFgBuffer   (0)
 #define DEFAULT_CONFIG_BgJitPendingFuncCap  (31)
-#define DEFAULT_CONFIG_CopyOnWriteTest      (false)
 #define DEFAULT_CONFIG_CurrentSourceInfo     (true)
 #define DEFAULT_CONFIG_CreateFunctionProxy  (true)
 #define DEFAULT_CONFIG_HybridFgJit          (false)
@@ -384,7 +383,6 @@ PHASE(All)
 #define DEFAULT_CONFIG_IncludeNativeCodeWithSerializedByteCodes (false)
 #endif
 #define DEFAULT_CONFIG_ForceES5Array        (false)
-#define DEFAULT_CONFIG_LSCallGraph          (false)
 #define DEFAULT_CONFIG_ForceAsmJsLinkFail   (false)
 #define DEFAULT_CONFIG_DumpCommentsFromReferencedFiles (false)
 
@@ -516,8 +514,6 @@ PHASE(All)
 #define DEFAULT_CONFIG_ES6Unscopables          (true)
 #define DEFAULT_CONFIG_ES6WeakSet              (true)
 #define DEFAULT_CONFIG_ES6RegExChanges         (false)
-#define DEFAULT_CONFIG_NativeADS               (true)
-#define DEFAULT_CONFIG_ScriptADS               (false)
 #define DEFAULT_CONFIG_ArrayBufferTransfer     (false)
 
 #define DEFAULT_CONFIG_ES6Verbose              (false)
@@ -772,7 +768,6 @@ FLAGNR(Boolean, CreateFunctionProxy   , "Create function proxies instead of full
 FLAGNR(Boolean, HybridFgJit           , "When background JIT is enabled, enable jitting in the foreground based on heuristics. This flag is only effective when OptimizeForManyInstances is disabled (UI threads).", DEFAULT_CONFIG_HybridFgJit)
 FLAGNR(Number,  HybridFgJitBgQueueLengthThreshold, "The background job queue length must exceed this threshold to consider jitting in the foreground", DEFAULT_CONFIG_HybridFgJitBgQueueLengthThreshold)
 FLAGNR(Boolean, BytecodeHist          , "Provide a histogram of the bytecodes run by the script. (NoNative required).", false)
-FLAGNR(Boolean, CopyOnWriteTest       , "Turn on copy on write code for testing in jscript9", DEFAULT_CONFIG_CopyOnWriteTest)
 FLAGNR(Boolean, CurrentSourceInfo     , "Enable IASD get current script source info", DEFAULT_CONFIG_CurrentSourceInfo)
 FLAGNR(Boolean, CFGLog                , "Log CFG checks", false)
 FLAGNR(Boolean, CheckAlignment        , "Insert checks in the native code to verify 8-byte alignment of stack", false)
@@ -849,10 +844,6 @@ FLAGNR(Boolean, WeakMap               , "Enable ES6 WeakMap feature", DEFAULT_CO
 
 FLAGR (Boolean, Intl                  , "Intl object support", DEFAULT_CONFIG_Intl)
 FLAGNR(Boolean, IntlBuiltIns          , "Intl built-in function support", DEFAULT_CONFIG_IntlBuiltIns)
-
-FLAGNR(Boolean, NativeADS,              "Enable Native dynamic analysis", DEFAULT_CONFIG_NativeADS)
-FLAGNR(Boolean, ScriptADS,              "Enable Script dynamic analysis", DEFAULT_CONFIG_ScriptADS)
-
 
 // ES6 (BLUE+1) features/flags
 
@@ -946,7 +937,6 @@ FLAGNR(Boolean, ForceExpireOnNonCacheCollect, "Allow expiration collect outside 
 FLAGNR(Boolean, ForceFastPath         , "Force fast-paths in native codegen", DEFAULT_CONFIG_ForceFastPath)
 FLAGNR(Boolean, ForceFloatPref        , "Force float preferencing (JIT only)", false)
 FLAGNR(Boolean, ForceJITLoopBody      , "Force jit loop body only", DEFAULT_CONFIG_ForceJITLoopBody)
-FLAGNR(Boolean, LSCallGraph           , "Print call graph for Language service", DEFAULT_CONFIG_LSCallGraph)
 FLAGNR(Boolean, DumpCommentsFromReferencedFiles, "Allow printing comments of comment-table of the referenced file as well (use with -trace:CommentTable)", DEFAULT_CONFIG_DumpCommentsFromReferencedFiles)
 
 #ifdef _M_ARM

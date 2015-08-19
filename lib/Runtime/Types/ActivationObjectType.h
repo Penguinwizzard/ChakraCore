@@ -26,8 +26,7 @@ namespace Js
         virtual BOOL InitFuncScoped(PropertyId propertyId, Var value) override;
         virtual BOOL DeleteItem(uint32 index, PropertyOperationFlags flags) override;
         virtual BOOL GetDiagValueString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext) override;
-        virtual BOOL GetDiagTypeString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext) override;
-        virtual DynamicObject* MakeCopyOnWriteObject(ScriptContext* scriptContext) override;
+        virtual BOOL GetDiagTypeString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext) override;        
         static bool Is(void* instance);
     };
 

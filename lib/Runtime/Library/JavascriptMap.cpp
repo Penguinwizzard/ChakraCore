@@ -409,25 +409,6 @@ namespace Js
         return TRUE;
     }
 
-    JavascriptMap* JavascriptMap::MakeCopyOnWriteObject(ScriptContext* scriptContext)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED_RET();
-
-        Recycler *recycler = scriptContext->GetRecycler();
-        CopyOnWriteObject<JavascriptMap> *result = RecyclerNew(recycler, CopyOnWriteObject<JavascriptMap>, scriptContext->GetLibrary()->GetMapType(), this, scriptContext);
-        result->map = RecyclerNew(scriptContext->GetRecycler(), MapDataMap, scriptContext->GetRecycler());
-
-        auto iterator = GetIterator();
-        while (iterator.Next())
-        {
-            Var proxyKey = scriptContext->CopyOnWrite(iterator.Current().Key());
-            auto proxyValue = scriptContext->CopyOnWrite(iterator.Current().Value());
-            result->Set(proxyKey, proxyValue);
-        }
-
-        return result;
-    }
-
     Var JavascriptMap::EntryGetterSymbolSpecies(RecyclableObject* function, CallInfo callInfo, ...)
     {
         ARGUMENTS(args, callInfo);

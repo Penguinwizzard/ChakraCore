@@ -452,7 +452,7 @@ public:
             // Either we are in strict mode, or have strict mode formal semantics from a non-simple parameter list, and
             && (funcInfo->GetIsStrictMode()
                 || !pnodeFnc->sxFnc.IsSimpleParameterList())
-            // Neither of the scopes are objects (they may still be in the language service despite the conditions above.)
+            // Neither of the scopes are objects
             && !funcInfo->paramScope->GetIsObject()
             && !funcInfo->bodyScope->GetIsObject();
 

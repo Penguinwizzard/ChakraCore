@@ -339,23 +339,5 @@ namespace Js
     {
         stringBuilder->AppendCppLiteral(L"Set");
         return TRUE;
-    }
-
-    JavascriptSet* JavascriptSet::MakeCopyOnWriteObject(ScriptContext* scriptContext)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED_RET();
-
-        Recycler *recycler = scriptContext->GetRecycler();
-        CopyOnWriteObject<JavascriptSet> *result = RecyclerNew(recycler, CopyOnWriteObject<JavascriptSet>, scriptContext->GetLibrary()->GetSetType(), this, scriptContext);
-        result->set = RecyclerNew(scriptContext->GetRecycler(), SetDataSet, scriptContext->GetRecycler());
-
-        auto iterator = GetIterator();
-        while (iterator.Next())
-        {
-            auto proxyValue = scriptContext->CopyOnWrite(iterator.Current());
-            result->Add(proxyValue);
-        }
-
-        return result;
-    }
+    }    
 }

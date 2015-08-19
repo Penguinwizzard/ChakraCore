@@ -157,10 +157,7 @@ namespace Js
         virtual BOOL DirectGetItemAtFull(uint index, Var* outVal);
         virtual Var DirectGetItem(uint32 index);
 
-        Var DirectGetItem(JavascriptString *propName, ScriptContext* scriptContext);
-
-        virtual void PrepareDetach(DynamicObject* proxiedObject) override;        
-        virtual DynamicObject* MakeCopyOnWriteObject(ScriptContext* scriptContext) sealed;
+        Var DirectGetItem(JavascriptString *propName, ScriptContext* scriptContext);        
 
         template<typename T> inline void DirectSetItemAt(uint32 itemIndex, T newValue);
         template<typename T> inline void DirectSetItemInLastUsedSegmentAt(const uint32 offset, const T newValue);
@@ -388,8 +385,7 @@ namespace Js
 
         template<typename T> inline void LinkSegments(SparseArraySegment<T>* prev, SparseArraySegment<T>* current);
         template<typename T> inline SparseArraySegment<T>* ReallocNonLeafSegment(SparseArraySegment<T>* seg, SparseArraySegmentBase* nextSeg);
-        void TryAddToSegmentMap(Recycler* recycler, SparseArraySegmentBase* seg);
-        void PrepareDetach(DynamicType * newType);
+        void TryAddToSegmentMap(Recycler* recycler, SparseArraySegmentBase* seg);        
 
     private:
         DynamicObjectFlags GetFlags() const;
@@ -925,8 +921,7 @@ namespace Js
         static int32 Pop(ScriptContext * scriptContext, Var nativeIntArray);
 
         virtual JavascriptArray *FillFromArgs(uint length, uint start, Var *args, ArrayCallSiteInfo *info = null, bool dontCreateNewArray = false) override;
-        virtual void ClearElements(SparseArraySegmentBase *seg, uint32 newSegmentLength) override;
-        virtual void PrepareDetach(DynamicObject* proxiedObject) override;
+        virtual void ClearElements(SparseArraySegmentBase *seg, uint32 newSegmentLength) override;        
         virtual void SetIsPrototype() override;
 		
         TypeId TrySetNativeIntArrayItem(Var value, int32 *iValue, double *dValue);
@@ -1038,8 +1033,7 @@ namespace Js
         static JavascriptArray * ConvertToVarArray(JavascriptNativeFloatArray *fArray);
 
         virtual JavascriptArray *FillFromArgs(uint length, uint start, Var *args, ArrayCallSiteInfo *info = null, bool dontCreateNewArray = false) override;
-        virtual void ClearElements(SparseArraySegmentBase *seg, uint32 newSegmentLength) override;
-        virtual void PrepareDetach(DynamicObject* proxiedObject) override;
+        virtual void ClearElements(SparseArraySegmentBase *seg, uint32 newSegmentLength) override;        
         virtual void SetIsPrototype() override;
 		
         TypeId TrySetNativeFloatArrayItem(Var value, double *dValue);

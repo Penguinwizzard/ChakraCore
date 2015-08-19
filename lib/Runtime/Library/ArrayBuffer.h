@@ -245,8 +245,7 @@ namespace Js
         virtual ArrayBuffer * TransferInternal(uint32 newBufferLength) override;
     private:
         JavascriptArrayBuffer(uint32 length, DynamicType * type);
-        JavascriptArrayBuffer(byte* buffer, uint32 length, DynamicType * type);
-        virtual DynamicObject* MakeCopyOnWriteObject(ScriptContext* scriptContext) override;
+        JavascriptArrayBuffer(byte* buffer, uint32 length, DynamicType * type);        
     };
 
     // the memory must be allocated via CoTaskMemAlloc.

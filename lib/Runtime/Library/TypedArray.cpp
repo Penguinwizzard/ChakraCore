@@ -893,29 +893,6 @@ namespace Js
     }
 
     template <typename TypeName, bool clamped, bool virtualAllocated>
-    TypedArray<TypeName, clamped, virtualAllocated>* TypedArray<TypeName, clamped, virtualAllocated>::MakeCopyOnWriteObject(ScriptContext* scriptContext)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED_RET();
-
-        Recycler *recycler = scriptContext->GetRecycler();
-        DynamicType *type = scriptContext->GetLibrary()->GetTypedArrayType<TypeName, clamped>(0);
-        TypedArray<TypeName, clamped, virtualAllocated> *result = CopyOnWriteObject<TypedArray<TypeName, clamped, virtualAllocated>>::New(recycler, type, this, scriptContext);
-
-        result->BYTES_PER_ELEMENT = BYTES_PER_ELEMENT;
-        result->byteOffset = byteOffset;
-        result->length = length;
-        /* TODO - delete this function based on code coverage data. 
-        // We don't support copy on write of ArrayBuffer's outside of LanguageService. 
-        // For lanugage service, we don't support parent of ArrayBuffer tracking.
-        Assert(BinaryFeatureControl::LanguageService());
-        */
-        result->SetArrayBuffer((ArrayBuffer *)scriptContext->CopyOnWrite(GetArrayBuffer()));
-        result->buffer = result->GetArrayBuffer()->GetBuffer() + result->byteOffset;
-
-        return result;
-    }
-
-    template <typename TypeName, bool clamped, bool virtualAllocated>
     __inline Var TypedArray<TypeName, clamped, virtualAllocated>::Create(ArrayBuffer* arrayBuffer, uint32 byteOffSet, uint32 mappedLength, JavascriptLibrary* javascriptLibrary)
     {
         uint32 totalLength, mappedByteLength;
@@ -2665,8 +2642,7 @@ namespace Js
     template<> BOOL Uint8ClampedArray::Is(Var aValue)
     {
         return JavascriptOperators::GetTypeId(aValue) == TypeIds_Uint8ClampedArray &&
-               ( VirtualTableInfo<Uint8ClampedArray>::HasVirtualTable(aValue) || 
-                 VirtualTableInfo<CopyOnWriteObject<Uint8ClampedArray>>::HasVirtualTable(aValue) ||
+               ( VirtualTableInfo<Uint8ClampedArray>::HasVirtualTable(aValue) ||                  
                  VirtualTableInfo<CrossSiteObject<Uint8ClampedArray>>::HasVirtualTable(aValue)
                );
     }
@@ -2674,8 +2650,7 @@ namespace Js
     template<> BOOL Uint8Array::Is(Var aValue)
     {
         return JavascriptOperators::GetTypeId(aValue) == TypeIds_Uint8Array &&
-              ( VirtualTableInfo<Uint8Array>::HasVirtualTable(aValue) || 
-                VirtualTableInfo<CopyOnWriteObject<Uint8Array>>::HasVirtualTable(aValue) ||
+              ( VirtualTableInfo<Uint8Array>::HasVirtualTable(aValue) ||                 
                 VirtualTableInfo<CrossSiteObject<Uint8Array>>::HasVirtualTable(aValue)
               );
     }
@@ -2683,8 +2658,7 @@ namespace Js
     template<> BOOL Int8Array::Is(Var aValue)
     {
         return JavascriptOperators::GetTypeId(aValue) == TypeIds_Int8Array && 
-               ( VirtualTableInfo<Int8Array>::HasVirtualTable(aValue) || 
-                 VirtualTableInfo<CopyOnWriteObject<Int8Array>>::HasVirtualTable(aValue) ||
+               ( VirtualTableInfo<Int8Array>::HasVirtualTable(aValue) ||                  
                  VirtualTableInfo<CrossSiteObject<Int8Array>>::HasVirtualTable(aValue)
                );
     }
@@ -2693,8 +2667,7 @@ namespace Js
     template<> BOOL Int16Array::Is(Var aValue)
     {
         return JavascriptOperators::GetTypeId(aValue) == TypeIds_Int16Array && 
-               ( VirtualTableInfo<Int16Array>::HasVirtualTable(aValue) || 
-                 VirtualTableInfo<CopyOnWriteObject<Int16Array>>::HasVirtualTable(aValue) ||
+               ( VirtualTableInfo<Int16Array>::HasVirtualTable(aValue) ||                  
                  VirtualTableInfo<CrossSiteObject<Int16Array>>::HasVirtualTable(aValue)
                );
     }
@@ -2702,8 +2675,7 @@ namespace Js
     template<> BOOL Uint16Array::Is(Var aValue)
     {
         return JavascriptOperators::GetTypeId(aValue) == TypeIds_Uint16Array &&
-              ( VirtualTableInfo<Uint16Array>::HasVirtualTable(aValue) || 
-                VirtualTableInfo<CopyOnWriteObject<Uint16Array>>::HasVirtualTable(aValue) ||
+              ( VirtualTableInfo<Uint16Array>::HasVirtualTable(aValue) ||                 
                 VirtualTableInfo<CrossSiteObject<Uint16Array>>::HasVirtualTable(aValue)
               );
     }
@@ -2711,8 +2683,7 @@ namespace Js
     template<> BOOL Int32Array::Is(Var aValue)
     {
         return JavascriptOperators::GetTypeId(aValue) == TypeIds_Int32Array && 
-               ( VirtualTableInfo<Int32Array>::HasVirtualTable(aValue) || 
-                 VirtualTableInfo<CopyOnWriteObject<Int32Array>>::HasVirtualTable(aValue) ||
+               ( VirtualTableInfo<Int32Array>::HasVirtualTable(aValue) ||                  
                  VirtualTableInfo<CrossSiteObject<Int32Array>>::HasVirtualTable(aValue)
                );
     }
@@ -2720,8 +2691,7 @@ namespace Js
     template<> BOOL Uint32Array::Is(Var aValue)
     {
         return JavascriptOperators::GetTypeId(aValue) == TypeIds_Uint32Array &&
-               ( VirtualTableInfo<Uint32Array>::HasVirtualTable(aValue) || 
-                 VirtualTableInfo<CopyOnWriteObject<Uint32Array>>::HasVirtualTable(aValue) ||
+               ( VirtualTableInfo<Uint32Array>::HasVirtualTable(aValue) ||                  
                  VirtualTableInfo<CrossSiteObject<Uint32Array>>::HasVirtualTable(aValue)
                );
     }
@@ -2729,8 +2699,7 @@ namespace Js
     template<> BOOL Float32Array::Is(Var aValue)
     {
         return JavascriptOperators::GetTypeId(aValue) == TypeIds_Float32Array && 
-               ( VirtualTableInfo<Float32Array>::HasVirtualTable(aValue) || 
-                 VirtualTableInfo<CopyOnWriteObject<Float32Array>>::HasVirtualTable(aValue) ||
+               ( VirtualTableInfo<Float32Array>::HasVirtualTable(aValue) ||                  
                  VirtualTableInfo<CrossSiteObject<Float32Array>>::HasVirtualTable(aValue)
                );
     }
@@ -2738,8 +2707,7 @@ namespace Js
     template<> BOOL Float64Array::Is(Var aValue)
     {
         return JavascriptOperators::GetTypeId(aValue) == TypeIds_Float64Array && 
-               ( VirtualTableInfo<Float64Array>::HasVirtualTable(aValue) || 
-                 VirtualTableInfo<CopyOnWriteObject<Float64Array>>::HasVirtualTable(aValue) ||
+               ( VirtualTableInfo<Float64Array>::HasVirtualTable(aValue) ||                  
                  VirtualTableInfo<CrossSiteObject<Float64Array>>::HasVirtualTable(aValue)
                );
     }
@@ -2747,8 +2715,7 @@ namespace Js
     template<> BOOL Int64Array::Is(Var aValue)
     {
         return JavascriptOperators::GetTypeId(aValue) == TypeIds_Int64Array && 
-               ( VirtualTableInfo<Int64Array>::HasVirtualTable(aValue) || 
-                 VirtualTableInfo<CopyOnWriteObject<Int64Array>>::HasVirtualTable(aValue) ||
+               ( VirtualTableInfo<Int64Array>::HasVirtualTable(aValue) ||                  
                  VirtualTableInfo<CrossSiteObject<Int64Array>>::HasVirtualTable(aValue)
                );
     }
@@ -2756,8 +2723,7 @@ namespace Js
     template<> BOOL Uint64Array::Is(Var aValue)
     {
         return JavascriptOperators::GetTypeId(aValue) == TypeIds_Uint64Array && 
-               ( VirtualTableInfo<Uint64Array>::HasVirtualTable(aValue) || 
-                 VirtualTableInfo<CopyOnWriteObject<Uint64Array>>::HasVirtualTable(aValue) ||
+               ( VirtualTableInfo<Uint64Array>::HasVirtualTable(aValue) ||                  
                  VirtualTableInfo<CrossSiteObject<Uint64Array>>::HasVirtualTable(aValue)
                );
     }
@@ -2765,8 +2731,7 @@ namespace Js
     template<> BOOL BoolArray::Is(Var aValue)
     {
         return JavascriptOperators::GetTypeId(aValue) == TypeIds_BoolArray && 
-               ( VirtualTableInfo<BoolArray>::HasVirtualTable(aValue) || 
-                 VirtualTableInfo<CopyOnWriteObject<BoolArray>>::HasVirtualTable(aValue) ||
+               ( VirtualTableInfo<BoolArray>::HasVirtualTable(aValue) ||                 
                  VirtualTableInfo<CrossSiteObject<BoolArray>>::HasVirtualTable(aValue)
                );
     }
@@ -2774,8 +2739,7 @@ namespace Js
     template<> BOOL Uint8ClampedVirtualArray::Is(Var aValue)
     {
         return JavascriptOperators::GetTypeId(aValue) == TypeIds_Uint8ClampedArray && 
-               ( VirtualTableInfo<Uint8ClampedVirtualArray>::HasVirtualTable(aValue) || 
-                 VirtualTableInfo<CopyOnWriteObject<Uint8ClampedVirtualArray>>::HasVirtualTable(aValue) ||
+               ( VirtualTableInfo<Uint8ClampedVirtualArray>::HasVirtualTable(aValue) ||                  
                  VirtualTableInfo<CrossSiteObject<Uint8ClampedVirtualArray>>::HasVirtualTable(aValue)
                );
     }
@@ -2783,8 +2747,7 @@ namespace Js
     template<> BOOL Uint8VirtualArray::Is(Var aValue)
     {
         return JavascriptOperators::GetTypeId(aValue) == TypeIds_Uint8Array && 
-               ( VirtualTableInfo<Uint8VirtualArray>::HasVirtualTable(aValue) || 
-                 VirtualTableInfo<CopyOnWriteObject<Uint8VirtualArray>>::HasVirtualTable(aValue) ||
+               ( VirtualTableInfo<Uint8VirtualArray>::HasVirtualTable(aValue) ||                  
                  VirtualTableInfo<CrossSiteObject<Uint8VirtualArray>>::HasVirtualTable(aValue)
                );
     }
@@ -2793,8 +2756,7 @@ namespace Js
     template<> BOOL Int8VirtualArray::Is(Var aValue)
     {
         return JavascriptOperators::GetTypeId(aValue) == TypeIds_Int8Array && 
-               ( VirtualTableInfo<Int8VirtualArray>::HasVirtualTable(aValue) || 
-                 VirtualTableInfo<CopyOnWriteObject<Int8VirtualArray>>::HasVirtualTable(aValue) ||
+               ( VirtualTableInfo<Int8VirtualArray>::HasVirtualTable(aValue) ||                  
                  VirtualTableInfo<CrossSiteObject<Int8VirtualArray>>::HasVirtualTable(aValue)
                );
     }
@@ -2802,8 +2764,7 @@ namespace Js
     template<> BOOL Int16VirtualArray::Is(Var aValue)
     {
         return JavascriptOperators::GetTypeId(aValue) == TypeIds_Int16Array && 
-               ( VirtualTableInfo<Int16VirtualArray>::HasVirtualTable(aValue) || 
-                 VirtualTableInfo<CopyOnWriteObject<Int16VirtualArray>>::HasVirtualTable(aValue) ||
+               ( VirtualTableInfo<Int16VirtualArray>::HasVirtualTable(aValue) ||                  
                  VirtualTableInfo<CrossSiteObject<Int16VirtualArray>>::HasVirtualTable(aValue)
                );
     }
@@ -2811,8 +2772,7 @@ namespace Js
     template<> BOOL Uint16VirtualArray::Is(Var aValue)
     {
         return JavascriptOperators::GetTypeId(aValue) == TypeIds_Uint16Array && 
-               ( VirtualTableInfo<Uint16VirtualArray>::HasVirtualTable(aValue) || 
-                 VirtualTableInfo<CopyOnWriteObject<Uint16VirtualArray>>::HasVirtualTable(aValue) ||
+               ( VirtualTableInfo<Uint16VirtualArray>::HasVirtualTable(aValue) ||                  
                  VirtualTableInfo<CrossSiteObject<Uint16VirtualArray>>::HasVirtualTable(aValue)
                );
     }
@@ -2820,8 +2780,7 @@ namespace Js
     template<> BOOL Int32VirtualArray::Is(Var aValue)
     {
         return JavascriptOperators::GetTypeId(aValue) == TypeIds_Int32Array && 
-               ( VirtualTableInfo<Int32VirtualArray>::HasVirtualTable(aValue) || 
-                 VirtualTableInfo<CopyOnWriteObject<Int32VirtualArray>>::HasVirtualTable(aValue) ||
+               ( VirtualTableInfo<Int32VirtualArray>::HasVirtualTable(aValue) ||                  
                  VirtualTableInfo<CrossSiteObject<Int32VirtualArray>>::HasVirtualTable(aValue)
                );
     }
@@ -2829,8 +2788,7 @@ namespace Js
     template<> BOOL Uint32VirtualArray::Is(Var aValue)
     {
         return JavascriptOperators::GetTypeId(aValue) == TypeIds_Uint32Array && 
-               ( VirtualTableInfo<Uint32VirtualArray>::HasVirtualTable(aValue) ||
-                 VirtualTableInfo<CopyOnWriteObject<Uint32VirtualArray>>::HasVirtualTable(aValue) ||
+               ( VirtualTableInfo<Uint32VirtualArray>::HasVirtualTable(aValue) ||                 
                  VirtualTableInfo<CrossSiteObject<Uint32VirtualArray>>::HasVirtualTable(aValue)
                );
     }
@@ -2838,8 +2796,7 @@ namespace Js
     template<> BOOL Float32VirtualArray::Is(Var aValue)
     {
         return JavascriptOperators::GetTypeId(aValue) == TypeIds_Float32Array && 
-               ( VirtualTableInfo<Float32VirtualArray>::HasVirtualTable(aValue) || 
-                 VirtualTableInfo<CopyOnWriteObject<Float32VirtualArray>>::HasVirtualTable(aValue) ||
+               ( VirtualTableInfo<Float32VirtualArray>::HasVirtualTable(aValue) ||                  
                  VirtualTableInfo<CrossSiteObject<Float32VirtualArray>>::HasVirtualTable(aValue)
                );
     }
@@ -2847,8 +2804,7 @@ namespace Js
     template<> BOOL Float64VirtualArray::Is(Var aValue)
     {
         return JavascriptOperators::GetTypeId(aValue) == TypeIds_Float64Array && 
-               ( VirtualTableInfo<Float64VirtualArray>::HasVirtualTable(aValue) || 
-                 VirtualTableInfo<CopyOnWriteObject<Float64VirtualArray>>::HasVirtualTable(aValue) ||
+               ( VirtualTableInfo<Float64VirtualArray>::HasVirtualTable(aValue) ||                 
                  VirtualTableInfo<CrossSiteObject<Float64VirtualArray>>::HasVirtualTable(aValue)
                );
     }

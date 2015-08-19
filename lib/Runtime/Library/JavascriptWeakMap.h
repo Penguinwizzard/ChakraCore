@@ -36,9 +36,6 @@ namespace Js
         //      will not have the arrayOrFlags field (e.g. HostDispatch).  Perhaps
         //      such objects should not be permitted to be keys on WeakMap?
         //
-        //      If such objects are allowed to be keys then extra plumbing will
-        //      be required to ensure CopyOnWrite still works.
-        //
         // Regardless of this idea, the ideal would be to have InternalPropertyIds
         // not affect the type of an object.  That is, ideally we would have a way
         // to add and remove InternalPropertyIds from an object without affecting
@@ -75,8 +72,7 @@ namespace Js
         virtual void Finalize(bool isShutdown) override { Clear(); }
         virtual void Dispose(bool isShutdown) override { }
 
-        virtual BOOL GetDiagTypeString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext) override;
-        virtual JavascriptWeakMap* MakeCopyOnWriteObject(ScriptContext* scriptContext) override;
+        virtual BOOL GetDiagTypeString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext) override;        
 
         class EntryInfo
         {
@@ -92,9 +88,7 @@ namespace Js
         static Var EntryDelete(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryGet(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryHas(RecyclableObject* function, CallInfo callInfo, ...);
-        static Var EntrySet(RecyclableObject* function, CallInfo callInfo, ...);
-
-        static Var CopyWeakMapKeyMapForCopyOnWrite(ScriptContext* scriptContext, Var sourceWeakMapKeyDataVar);
+        static Var EntrySet(RecyclableObject* function, CallInfo callInfo, ...);        
         
     public:
         // For diagnostics and heap enum provide size and allow enumeration of key value pairs

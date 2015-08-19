@@ -155,8 +155,7 @@ namespace Js
 #endif
 #ifdef FIELD_ACCESS_STATS
         , fieldAccessStatsByFunctionNumber(nullptr)
-#endif
-        , copyOnWriteMap(nullptr)
+#endif        
         , webWorkerId(Js::Constants::NonWebWorkerContextId)
         , url(L"")
         , startupComplete(false)
@@ -303,8 +302,7 @@ namespace Js
     }
 
     void ScriptContext::InitializeAllocations()
-    {
-        //Language service uses a predetermined ES6 mode, and silently falls back to ES5 in case Windows.Globalization.dll is missing.
+    {        
         this->charClassifier = Anew(GeneralAllocator(), CharClassifier, this);
 
         this->valueOfInlineCache = AllocatorNewZ(InlineCacheAllocator, GetInlineCacheAllocator(), InlineCache);
@@ -1264,14 +1262,12 @@ namespace Js
 
         InitializeGlobalObject();
 
-        InitializePostGlobal(false);
+        InitializePostGlobal();
     }
 
-    void ScriptContext::InitializePostGlobal(bool initializingCopy)
+    void ScriptContext::InitializePostGlobal()
     {
-        if (!initializingCopy)
-            // In CopyOnWriteCopy() this is performed early because it is required to create a copy-on-write function.
-            this->GetDebugContext()->GetProbeContainer()->Initialize(this);
+        this->GetDebugContext()->GetProbeContainer()->Initialize(this);
 
         AssertMsg(this->CurrentThunk == DefaultEntryThunk, "Creating non default thunk while initializing");
         AssertMsg(this->DeferredParsingThunk == DefaultDeferredParsingThunk, "Creating non default thunk while initializing");
@@ -3475,256 +3471,7 @@ namespace Js
         {
             function->SetEntryPoint(function->GetFunctionInfo()->GetOriginalEntryPoint());
         }
-    }
-
-    ScriptContext *ScriptContext::CopyOnWriteCopy(void *initContext, void(*init)(void *, ScriptContext *))
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED_RET();
-        SmartFPUControl defaultControl;
-
-        // Create the script context copy.
-        ThreadContext *threadContext = GetThreadContext();
-        AutoPtr<ScriptContext> fork = ScriptContext::New(threadContext);
-        fork->recycler = this->recycler;
-
-        fork->config.CopyFrom(config);
-
-        fork->InitializePreGlobal();
-        // Clone the source list
-        // This must be done before making a copy of the global object since making a copy-on-write
-        // function relies on this being correct.
-        // This will be released in the script context's destructor
-        // Can't just bindref since the script context's destructor relies on it existing for walking the function list
-        fork->sourceList.Root(RecyclerNew(fork->GetRecycler(), SourceList, fork->GetRecycler()), fork->GetRecycler());
-
-
-
-        // Keep this alive till the global object has been cloned
-        int numSources = this->sourceList->Count();
-        Utf8SourceInfo** pinnedSourceInfo = RecyclerNewArrayZ(this->recycler, Js::Utf8SourceInfo*, numSources);
-
-        // We can't share sources any more since they have function bodies in them
-        // Instead, we clone the source info without making a copy of the source, so that each
-        // script context still has it's own function body collection
-        for (int i = 0; i < numSources; i++)
-        {
-            if (sourceList->IsItemValid(i))
-            {
-                RecyclerWeakReference<Utf8SourceInfo>* sourceInfoWeakRef = sourceList->Item(i);
-
-                if (sourceInfoWeakRef->Get())
-                {
-                    Utf8SourceInfo* prevScriptContextSourceInfo = sourceInfoWeakRef->Get();
-                    Utf8SourceInfo* newSourceInfo = fork->CloneSourceCrossContext(prevScriptContextSourceInfo);
-
-                    sourceInfoWeakRef = recycler->CreateWeakReferenceHandle(newSourceInfo);
-                    pinnedSourceInfo[i] = newSourceInfo;
-                }
-
-                fork->sourceList->Add(sourceInfoWeakRef);
-            }
-        }
-
-        // This must be done early as well because it is also required to make a copy-on-write
-        // function.
-        fork->GetDebugContext()->GetProbeContainer()->Initialize(fork);
-
-        if (init)
-            init(initContext, fork);
-
-#if DBG
-        fork->isCloningGlobal = true;
-#endif
-
-        // Clone the global object including the library.
-        GlobalObject *forkedGlobalObject = globalObject->MakeCopyOnWriteObject(fork);
-        fork->globalObject = forkedGlobalObject;
-        fork->RecordCopyOnWrite(globalObject, forkedGlobalObject);
-
-#if DBG
-        fork->isCloningGlobal = false;
-#endif
-
-        fork->InitializePostGlobal(true);
-
-        return fork.Detach();
-    }
-
-    Var ScriptContext::CopyOnWrite(Var value)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED_RET();
-        auto valueType = JavascriptOperators::GetTypeId(value);
-        switch (valueType)
-        {
-        case TypeIds_UndeclBlockVar:
-            return this->GetLibrary()->GetUndeclBlockVar();
-        case TypeIds_Enumerator:
-        case TypeIds_HostDispatch:
-            return value;
-        case TypeIds_Boolean:
-        case TypeIds_Integer:
-        case TypeIds_Int64Number:
-        case TypeIds_Number:
-        case TypeIds_UInt64Number:
-        {
-            if (TaggedNumber::Is(value))
-                return value;
-
-            Js::RecyclableObject *obj = Js::RecyclableObject::FromVar(value);
-            if (obj->GetScriptContext() == this)
-                return value;
-
-            // Since these are relatively small values with values comparison semantics,
-            if (valueType == TypeIds_Boolean)
-                return obj->CloneToScriptContext(this);
-            else
-                return Js::JavascriptNumber::CloneToScriptContext(value, this);
-        }
-
-        case TypeIds_Symbol:
-        {
-            return JavascriptSymbol::FromVar(value)->CloneToScriptContext(this);
-        }
-
-        case TypeIds_String:
-        {
-            JavascriptString *str = JavascriptString::FromVar(value);
-            if (str->GetLength() < 16)
-            {
-                // Only remember non-trivial strings.
-                if (str->GetScriptContext() == this)
-                    return value;
-                // Since these are relatively small values with values comparison semantics,
-                return str->CloneToScriptContext(this);
-            }
-
-            Js::RecyclableObject *objValue = Js::RecyclableObject::FromVar(value);
-            if (objValue->GetScriptContext() == this)
-                return value;
-
-            Js::RecyclableObject *copyObj;
-
-            EnsureCopyOnWriteMap();
-            if (!this->copyOnWriteMap->TryGetValue(objValue, &copyObj))
-            {
-                copyObj = objValue->CloneToScriptContext(this);
-                RecordCopyOnWrite(objValue, copyObj);
-            }
-            return copyObj;
-        }
-
-        case TypeIds_Null:
-            return GetLibrary()->GetNull();
-
-        case TypeIds_Undefined:
-            return GetLibrary()->GetUndefined();
-
-        default:
-        {
-            DynamicObject *objValue = DynamicObject::FromVar(value);
-            RecyclableObject *copyObj;
-            EnsureCopyOnWriteMap();
-            if (!this->copyOnWriteMap->TryGetValue(objValue, &copyObj))
-            {
-                copyObj = objValue->MakeCopyOnWriteObject(this);
-                RecordCopyOnWrite(objValue, copyObj);
-            }
-            return copyObj;
-        }
-
-        }
-    }
-
-    void ScriptContext::EnsureCopyOnWriteMap()
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED();
-
-        if (!this->copyOnWriteMap)
-        {
-            ArenaAllocator *alloc = this->GetGuestArena();
-            this->copyOnWriteMap = Anew(alloc, InstanceMap, alloc, 1);
-        }
-    }
-
-    void ScriptContext::RecordCopyOnWrite(RecyclableObject *originalValue, RecyclableObject *copiedValue)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED();
-
-        EnsureCopyOnWriteMap();
-        this->copyOnWriteMap->Item(originalValue, copiedValue);
-    }
-
-    void ScriptContext::RecordFunctionClone(ParseableFunctionInfo* originalBody, ParseableFunctionInfo* clonedBody)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED();
-
-        RecordCopyOnWrite((RecyclableObject *)originalBody, (RecyclableObject *)clonedBody);
-    }
-
-    ParseableFunctionInfo* ScriptContext::CopyFunction(ParseableFunctionInfo* functionInfo)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED_RET();
-
-        if (!functionInfo) return nullptr;
-
-        if (!this->cache->copyOnWriteParseableFunctionInfoMap)
-        {
-            this->cache->copyOnWriteParseableFunctionInfoMap = RecyclerNew(this->GetRecycler(), ParseableFunctionInfoMap, this->GetRecycler(), 1);
-        }
-
-        ParseableFunctionInfo *result;
-        if (!this->cache->copyOnWriteParseableFunctionInfoMap->TryGetValue(functionInfo, &result))
-        {
-            if (functionInfo->IsDeferredParseFunction())
-            {
-                result = functionInfo->Clone(this);
-            }
-            else
-            {
-                result = functionInfo->GetFunctionBody()->Clone(this);
-            }
-
-            this->cache->copyOnWriteParseableFunctionInfoMap->Item(functionInfo, result);
-
-            auto scopeInfo = result->GetScopeInfo();
-            if (scopeInfo)
-            {
-                // Ensure the pids in the scopeInfo and parent scopeInfos are tracked.
-                scopeInfo->EnsurePidTracking(this);
-                auto parent = scopeInfo->GetParent();
-                while (parent)
-                {
-                    if (parent->GetScopeInfo())
-                    {
-                        parent->GetScopeInfo()->EnsurePidTracking(this);
-                        parent = parent->GetScopeInfo()->GetParent();
-                    }
-                    else
-                        break;
-                }
-            }
-        }
-
-        return result;
-    }
-
-    UnifiedRegex::RegexPattern *ScriptContext::CopyPattern(UnifiedRegex::RegexPattern *pattern)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED_RET();
-
-        if (!pattern) return nullptr;
-
-        EnsureCopyOnWriteMap();
-        UnifiedRegex::RegexPattern *result;
-
-        if (!this->copyOnWriteMap->TryGetValue((Js::RecyclableObject *)pattern, (Js::RecyclableObject **)&result))
-        {
-            result = pattern->CopyToScriptContext(this);
-            copyOnWriteMap->Item((Js::RecyclableObject *)pattern, (Js::RecyclableObject *)result);
-        }
-
-        return result;
-    }
+    }     
 
     JavascriptMethod ScriptContext::GetProfileModeThunk(JavascriptMethod entryPoint)
     {
@@ -5352,9 +5099,7 @@ namespace Js
         {
             GetDynamicRegexMap()->RemoveRecentlyUnusedItems();
         }
-
-        // The language service expects the source index in the source list to never change
-        // so to keep this invariant, we don't cleanup the source list during GC
+       
         CleanSourceListInternal(true);
     }
 
@@ -6600,10 +6345,7 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
 #endif
 
     bool ScriptConfiguration::IsIntlEnabled() const
-    {
-        // Intl is never enabled in the Language Service. The Language service includes Intl.js directly as a reference file and
-        // initializes the Intl object with a mock version of the EngineInterfaceObject implemented in JS in IntlHelpers.js.
-        // The Language Service should never use the actual runtime Intl object.
+    {       
         return Js::Configuration::Global.flags.Intl;
     }
 

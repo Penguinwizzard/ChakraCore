@@ -827,8 +827,7 @@ namespace Js
                 return false;
             }
             else if (isInit && descriptor->IsAccessor)
-            {
-                // When in Language service mode the break point can be inside a duplicate property. Removing the accessor makes the break point unreachable.
+            {                
                 descriptor->ConvertToData();
             }
             SetPropertyWithDescriptor<allowLetConstGlobal>(instance, propertyId, descriptor, value, flags, info);

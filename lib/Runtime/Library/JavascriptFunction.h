@@ -184,8 +184,6 @@ namespace Js
         virtual BOOL HasInstance(Var instance, ScriptContext* scriptContext, IsInstInlineCache* inlineCache = NULL);
         static BOOL HasInstance(Var funcPrototype, Var instance, ScriptContext* scriptContext, IsInstInlineCache* inlineCache, JavascriptFunction* function);
 
-        virtual JavascriptFunction* MakeCopyOnWriteObject(ScriptContext* scriptContext) override;
-
         // This will be overriden for the BoundFunction
         virtual bool IsBoundFunction() { return false; }
 

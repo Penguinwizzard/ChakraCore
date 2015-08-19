@@ -26,7 +26,7 @@ namespace Js
         static BOOL IsCrossSiteObjectTyped(T * obj)
         {
             BOOL ret = VirtualTableInfo<CrossSiteObject<T>>::HasVirtualTable(obj);
-            Assert(ret || VirtualTableInfo<T>::HasVirtualTable(obj) || obj->IsCopyOnWriteObject());
+            Assert(ret || VirtualTableInfo<T>::HasVirtualTable(obj));
             Assert(ret == obj->IsCrossSiteObject());
             return ret;
         }

@@ -37,8 +37,7 @@ namespace Js
         bool isActiveScript;
         static const wchar_t diagDefaultCtor[];
         static const wchar_t diagDefaultExtendsCtor[];
-
-        void CopyEnvironmentTo(ScriptFunction *newFunction, ScriptContext *scriptContext);
+        
         bool HasFunctionBody();
         Var FormatToString(JavascriptString* inputString);
     protected:
@@ -77,18 +76,14 @@ namespace Js
         JavascriptMethod UpdateThunkEntryPoint(FunctionEntryPointInfo* entryPointInfo, JavascriptMethod entryPoint);
         JavascriptMethod UpdateUndeferredBody(FunctionBody* newFunctionInfo);
 
-        virtual ScriptFunctionType * DuplicateType() override;
-        virtual ScriptFunction* GetOriginalCopy();
-        virtual ScriptFunction* MakeCopyOnWriteObject(ScriptContext* scriptContext) override;
+        virtual ScriptFunctionType * DuplicateType() override;            
 
         virtual Var GetSourceString() const;
         virtual Var EnsureSourceString();
 
         // Used in the LanguageService mode only
         virtual bool GetIsDelayFunctionInfo() const { return false; }
-        virtual void SetIsDelayFunctionInfo(bool set) {  /*nothing*/ }
-
-        void EnsureCopyFunction();
+        virtual void SetIsDelayFunctionInfo(bool set) {  /*nothing*/ }        
 
         bool GetHasInlineCaches() { return hasInlineCaches; }
         void SetHasInlineCaches(bool has) { hasInlineCaches = has; }

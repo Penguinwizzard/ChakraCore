@@ -222,33 +222,7 @@ namespace Js
         }
 
         return aReturnValue;
-    }
-
-    BoundFunction* BoundFunction::MakeCopyOnWriteObject(ScriptContext* scriptContext)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED_RET();
-
-        auto *result = RecyclerNew(scriptContext->GetRecycler(), CopyOnWriteObject<BoundFunction>,
-            scriptContext->GetLibrary()->GetBoundFunctionType(), this, scriptContext);
-
-        Assert(this->GetFunctionInfo() == &functionInfo);
-        Assert(result->GetFunctionInfo() == &functionInfo);
-
-        // Copy fields immediately since these are not accessed through virtuals.
-        result->targetFunction = RecyclableObject::FromVar(scriptContext->CopyOnWrite(this->targetFunction));
-        result->count = this->count;
-        result->boundThis = scriptContext->CopyOnWrite(this->boundThis);
-        if (this->boundArgs)
-        {
-            result->boundArgs = RecyclerNewArray(scriptContext->GetRecycler(), Var, count);
-
-            for (uint i = 0; i<count; i++)
-            {
-                result->boundArgs[i] = scriptContext->CopyOnWrite(this->boundArgs[i]);
-            }
-        }
-        return result;
-    }
+    }   
 
     JavascriptFunction * BoundFunction::GetTargetFunction() const
     {

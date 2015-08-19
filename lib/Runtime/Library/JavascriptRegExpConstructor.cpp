@@ -96,28 +96,4 @@ namespace Js
             reset = false;
         }
     }
-
-
-    JavascriptRegExpConstructor* JavascriptRegExpConstructor::MakeCopyOnWriteObject(ScriptContext* scriptContext)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED_RET();
-
-        typedef CopyOnWriteObject< JavascriptRegExpConstructor, JavascriptRegExpConstructorProperties > JavascriptRegExpConstructorCopy;
-        JavascriptRegExpConstructorCopy *result = RecyclerNew(scriptContext->GetRecycler(), JavascriptRegExpConstructorCopy,
-            scriptContext->GetLibrary()->CreateFunctionType(this->GetEntryPoint()), this, scriptContext);
-
-        Assert(this->functionInfo == &JavascriptRegExp::EntryInfo::NewInstance);
-        Assert(result->functionInfo == &JavascriptRegExp::EntryInfo::NewInstance);
-
-        if (lastPattern)
-            result->lastPattern = scriptContext->CopyPattern(lastPattern);
-        if (lastInput)
-            result->lastInput = (Js::JavascriptString *)scriptContext->CopyOnWrite(lastInput);
-        result->lastMatch = lastMatch;
-        result->reset = !lastMatch.IsUndefined();
-
-        return result;
-    }
-
-
 } // namespace Js

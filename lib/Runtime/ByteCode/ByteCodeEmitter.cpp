@@ -1207,8 +1207,6 @@ Js::RegSlot ByteCodeGenerator::DefineOneFunction(ParseNode *pnodeFnc, FuncInfo *
                 // a bit involved.
                 // TODO: Once the redeclaration error is in place, this boolean can be replaced
                 // by funcSymbol->GetIsBlockVar().
-                // UPDATE: Relying on a redeclaration error here is not possible because the
-                // language service can skip the redeclaration error and cause failures.
                 Assert(funcInfoParent->GetBodyScope() != nullptr && funcSymbol->GetScope() != nullptr);
                 bool isFunctionDeclarationInBlock = funcSymbol->GetScope() != funcInfoParent->GetBodyScope();
 

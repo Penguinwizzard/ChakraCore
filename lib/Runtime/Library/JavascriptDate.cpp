@@ -1545,15 +1545,4 @@ namespace Js
         }
         return FALSE;
     }
-
-    JavascriptDate* JavascriptDate::MakeCopyOnWriteObject(ScriptContext* scriptContext)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED_RET();
-
-        Recycler *recycler = scriptContext->GetRecycler();
-        CopyOnWriteObject<JavascriptDate> *result = RecyclerNew(recycler, CopyOnWriteObject<JavascriptDate>, scriptContext->GetLibrary()->GetDateType(), this, scriptContext);
-        result->m_date = m_date;
-        return result;
-    }
-
 } // namespace Js

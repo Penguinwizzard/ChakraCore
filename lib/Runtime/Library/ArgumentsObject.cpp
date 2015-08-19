@@ -511,30 +511,5 @@ namespace Js
         {
            m_args->DeleteObjectArrayItem(m_index, PropertyOperation_None);        
         }
-    }
-
-    HeapArgumentsObject* HeapArgumentsObject::MakeCopyOnWriteObject(ScriptContext* scriptContext)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED_RET();
-
-        Recycler *recycler = scriptContext->GetRecycler();
-        CopyOnWriteObject<HeapArgumentsObject> * result =
-            RecyclerNew(recycler, CopyOnWriteObject<HeapArgumentsObject>, scriptContext->GetLibrary()->GetHeapArgumentsObjectType(), this, scriptContext);
-
-        scriptContext->RecordCopyOnWrite(this, result); // We record the copy before detaching to handle cycles.
-
-        // Copy the internal fields.
-        result->numOfArguments = numOfArguments;
-        result->callerDeleted = callerDeleted;
-        result->formalCount = formalCount;
-        result->frameObject = (Js::ActivationObject *)scriptContext->CopyOnWrite(frameObject);
-        if (deletedArgs)
-            result->deletedArgs = deletedArgs->CopyNew(recycler);
-
-        // The arguments object needs to be detached immediately because is holds on to an activation object
-        // and directly references its content.
-        result->Detach();
-
-        return result;
-    }
+    }    
 }

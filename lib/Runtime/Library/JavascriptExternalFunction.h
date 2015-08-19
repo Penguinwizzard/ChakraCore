@@ -38,9 +38,7 @@ namespace Js
         };
 
         ExternalMethod GetNativeMethod() { return nativeMethod; }
-        BOOL SetLengthProperty(Var length);
-
-        virtual JavascriptExternalFunction* MakeCopyOnWriteObject(ScriptContext* scriptContext) override;
+        BOOL SetLengthProperty(Var length);        
 
         virtual bool CloneMethod(JavascriptFunction** pnewMethod, const Var newHome) override;
 

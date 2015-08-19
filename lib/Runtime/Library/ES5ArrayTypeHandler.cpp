@@ -242,16 +242,9 @@ namespace Js
         JavascriptArray * arrayInstance = JavascriptArray::EnsureNonNativeArray(JavascriptArray::FromVar(instance));
         if (!CrossSite::IsCrossSiteObjectTyped(arrayInstance))
         {
-            // Convert instance to an ES5Array (Or CopyOnWriteObject<ES5Array> in-case of language service)
-            Assert(VirtualTableInfo<JavascriptArray>::HasVirtualTable(arrayInstance) || VirtualTableInfo<CopyOnWriteObject<JavascriptArray>>::HasVirtualTable(arrayInstance));
-            if (VirtualTableInfo<CopyOnWriteObject<JavascriptArray>>::HasVirtualTable(arrayInstance))
-            {
-                VirtualTableInfo<CopyOnWriteObject<ES5Array>>::SetVirtualTable(arrayInstance);
-            }
-            else
-            {
-                VirtualTableInfo<ES5Array>::SetVirtualTable(arrayInstance);
-            }
+            // Convert instance to an ES5Array
+            Assert(VirtualTableInfo<JavascriptArray>::HasVirtualTable(arrayInstance));
+            VirtualTableInfo<ES5Array>::SetVirtualTable(arrayInstance);            
         }
         else
         {

@@ -59,55 +59,6 @@ namespace Js
         SetEnumerable(propertyId, false);
     }
 
-    DynamicObject* JavascriptError::MakeCopyOnWriteObject(ScriptContext* scriptContext)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED_RET();
-
-        Recycler *recycler = scriptContext->GetRecycler();
-        JavascriptLibrary* library = scriptContext->GetLibrary();
-        DynamicType *type;
-        switch (this->m_errorType)
-        {
-        case kjstError:
-            type = library->GetErrorType();
-            break;
-        case kjstEvalError:
-            type = library->GetEvalErrorType();
-            break;
-        case kjstRangeError:
-            type = library->GetRangeErrorType();
-            break;
-        case kjstReferenceError:
-            type = library->GetReferenceErrorType();
-            break;
-        case kjstSyntaxError:
-            type = library->GetSyntaxErrorType();
-            break;
-        case kjstTypeError:
-            type = library->GetTypeErrorType();
-            break;
-        case kjstURIError:
-            type = library->GetURIErrorType();
-            break;
-        case kjstWinRTError:
-            type = library->GetWinRTErrorType();
-            break;        
-        default:
-            type = library->CreateObjectTypeNoCache(RecyclableObject::FromVar(scriptContext->CopyOnWrite(this->GetPrototype())), this->GetTypeId());
-            break;
-        }
-        CopyOnWriteObject<JavascriptError> *result = CopyOnWriteObject<JavascriptError>::New(recycler, type, this, scriptContext);
-
-        result->m_errorType = this->m_errorType;
-        result->isExternalError = this->isExternalError;
-        result->isPrototype = this->isPrototype;
-        result->originalRuntimeErrorMessage = this->originalRuntimeErrorMessage;
-        result->exceptionObject = nullptr;
-        result->isStackPropertyRedefined = this->isStackPropertyRedefined;
-
-        return result;
-    }
-
     Var JavascriptError::NewInstance(RecyclableObject* function, JavascriptError* pError, CallInfo callInfo, Arguments args)
     {
         ScriptContext* scriptContext = function->GetScriptContext();

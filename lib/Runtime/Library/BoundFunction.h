@@ -44,9 +44,7 @@ namespace Js
         virtual BOOL IsConfigurable(PropertyId propertyId) override;
         virtual BOOL IsEnumerable(PropertyId propertyId) override;
         virtual BOOL HasInstance(Var instance, ScriptContext* scriptContext, IsInstInlineCache* inlineCache = NULL) override;
-        virtual inline BOOL IsConstructor() const override;
-
-        virtual BoundFunction* MakeCopyOnWriteObject(ScriptContext* scriptContext) override;
+        virtual inline BOOL IsConstructor() const override;        
 
         virtual bool CloneMethod(JavascriptFunction** pnewMethod, const Var newHome) override;
 

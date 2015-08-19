@@ -477,15 +477,6 @@ namespace Js
         return this->GetTypeHandler()->FindNextProperty(this->GetScriptContext(), index, propertyString, propertyId, attributes, this->GetType(), typeToEnumerate, requireEnumerable, enumSymbols);
     }
 
-    DynamicObject* DynamicObject::MakeCopyOnWriteObject(ScriptContext* scriptContext)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED_RET();
-
-        Recycler *recycler = scriptContext->GetRecycler();
-        DynamicType *type = scriptContext->GetLibrary()->CreateObjectTypeNoCache(RecyclableObject::FromVar(scriptContext->CopyOnWrite(this->GetPrototype())), this->GetTypeId());
-        return CopyOnWriteObject<DynamicObject>::New(recycler, type, this, scriptContext);
-    }
-
     BOOL
     DynamicObject::HasDeferredTypeHandler() const
     {

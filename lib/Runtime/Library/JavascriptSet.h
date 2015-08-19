@@ -36,8 +36,7 @@ namespace Js
 
         SetDataList::Iterator GetIterator();
 
-        virtual BOOL GetDiagTypeString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext) override;
-        virtual JavascriptSet* MakeCopyOnWriteObject(ScriptContext* scriptContext) override;
+        virtual BOOL GetDiagTypeString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext) override;        
 
         class EntryInfo
         {

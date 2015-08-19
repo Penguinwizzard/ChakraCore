@@ -250,12 +250,7 @@ namespace Js
 
         virtual void RemoveFromPrototype(ScriptContext * requestContext) override;
         virtual void AddToPrototype(ScriptContext * requestContext) override;
-        virtual void SetPrototype(RecyclableObject* newPrototype) override;
-
-        virtual DynamicObject* MakeCopyOnWriteObject(ScriptContext* scriptContext);
-        virtual void PrepareDetach(DynamicObject* proxiedObject) {  }
-        virtual BOOL IsCopyOnWriteProxy() { return FALSE; }
-        virtual BOOL IsCopyOnWriteObject() { return FALSE; }
+        virtual void SetPrototype(RecyclableObject* newPrototype) override;                
 
         virtual BOOL IsCrossSiteObject() const { return FALSE; }
 

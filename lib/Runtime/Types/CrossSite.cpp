@@ -128,8 +128,7 @@ namespace Js
     // static
     __inline Var CrossSite::MarshalVar(ScriptContext* scriptContext, Var value, bool fRequestWrapper)
     {
-        // value might be null from disable implicit call
-        // no marshalling in the case of language service mode.
+        // value might be null from disable implicit call        
         if (value == nullptr || Js::TaggedNumber::Is(value))
         {
             return value;

@@ -2317,63 +2317,6 @@ namespace Js
         }
     }
 
-    void JavascriptArray::PrepareDetach(DynamicType * newType)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED();
-
-        // initialize array state
-        length = 0;
-        SetFlags(DynamicObjectFlags::HasNoMissingValues);
-        SetHeadAndLastUsedSegment(const_cast<SparseArraySegmentBase *>(EmptySegment));
-
-        // Force the type back to an array type from a TypeIds_Object.
-        type = newType;
-    }
-
-    void JavascriptArray::PrepareDetach(DynamicObject* proxiedObject)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED();
-
-        JavascriptArray* proxiedArray = (JavascriptArray*)proxiedObject;
-        Assert(proxiedArray != NULL);
-        ScriptContext* scriptContext = GetScriptContext();
-        PrepareDetach(scriptContext->GetLibrary()->GetArrayType());
-    }
-
-    void JavascriptNativeIntArray::PrepareDetach(DynamicObject* proxiedObject)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED();
-
-        JavascriptArray* proxiedArray = (JavascriptArray*)proxiedObject;
-        Assert(proxiedArray != NULL);
-        ScriptContext* scriptContext = GetScriptContext();
-        __super::PrepareDetach(scriptContext->GetLibrary()->GetNativeIntArrayType());
-    }
-
-    void JavascriptNativeFloatArray::PrepareDetach(DynamicObject* proxiedObject)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED();
-
-        JavascriptArray* proxiedArray = (JavascriptArray*)proxiedObject;
-        Assert(proxiedArray != NULL);
-        ScriptContext* scriptContext = GetScriptContext();
-        __super::PrepareDetach(scriptContext->GetLibrary()->GetNativeFloatArrayType());
-    }
-
-    DynamicObject* JavascriptArray::MakeCopyOnWriteObject(ScriptContext* scriptContext)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED_RET();
-
-        // Construct the array copy with a es5 array type and the array prototype to force slow path access to the array
-        // which will use virtual methods allowing the copy-on-write object to trap modifications. If the type is
-        // TypeIds_Array the array methods, such as push(), will directly access the array bypassing the Detach().
-        Recycler* recycler = scriptContext->GetRecycler();
-        DynamicType* type = scriptContext->GetLibrary()->CreateObjectTypeNoCache(scriptContext->GetLibrary()->GetArrayPrototype(), TypeIds_ES5Array);
-        CopyOnWriteObject<JavascriptArray>* cow = RecyclerNew(recycler, CopyOnWriteObject<JavascriptArray>, type, this, scriptContext);
-        cow->length = length;
-        return cow;
-    }
-
     SparseArraySegmentBase * JavascriptArray::GetLastUsedSegment() const
     {
         return (HasSegmentMap() ? segmentUnion.segmentBTreeRoot->lastUsedSegment : segmentUnion.lastUsedSegment);
@@ -3700,10 +3643,8 @@ namespace Js
     template <>
     static BOOL JavascriptArray::TemplatedGetItem(JavascriptArray *pArr, uint32 index, Var * element, ScriptContext * scriptContext)
     {
-        Assert(VirtualTableInfo<JavascriptArray>::HasVirtualTable(pArr)            
-            || VirtualTableInfo<CrossSiteObject<JavascriptArray>>::HasVirtualTable(pArr)
-            // Once we detached the proxy, we act as if we are a normal array (instead of have ES5 Array TypedId)
-            || (pArr->IsCopyOnWriteObject() && !pArr->IsCopyOnWriteProxy()));
+        Assert(VirtualTableInfo<JavascriptArray>::HasVirtualTable(pArr)
+            || VirtualTableInfo<CrossSiteObject<JavascriptArray>>::HasVirtualTable(pArr));
         return pArr->JavascriptArray::DirectGetItemAtFull(index, element);
     }
     template <>
@@ -4089,7 +4030,7 @@ namespace Js
     template <typename T>
     JavascriptString* JavascriptArray::JoinArrayHelper(T * arr, JavascriptString* separator, ScriptContext* scriptContext)
     {
-        Assert(VirtualTableInfo<T>::HasVirtualTable(arr) || VirtualTableInfo<CrossSiteObject<T>>::HasVirtualTable(arr) || arr->IsCopyOnWriteObject());
+        Assert(VirtualTableInfo<T>::HasVirtualTable(arr) || VirtualTableInfo<CrossSiteObject<T>>::HasVirtualTable(arr));
         const uint32 arrLength = arr->length;
         switch(arrLength)
         {

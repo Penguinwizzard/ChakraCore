@@ -346,19 +346,6 @@ namespace Js
         return DynamicObject::SetPropertyWithAttributes(PropertyIds::length, length, PropertyConfigurable, NULL, PropertyOperation_None, SideEffects_None);
     }
 
-    JavascriptExternalFunction* JavascriptExternalFunction::MakeCopyOnWriteObject(ScriptContext* scriptContext)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED_RET();
-
-        typedef CopyOnWriteObject<JavascriptExternalFunction, JavascriptFunctionSpecialProperties> CopyOnWriteJavascriptExternalFunction;
-
-        auto result = RecyclerNew(scriptContext->GetRecycler(), CopyOnWriteJavascriptExternalFunction, scriptContext->GetLibrary()->CreateFunctionType(this->GetEntryPoint()), this, scriptContext);
-        result->functionInfo = this->functionInfo;
-        result->signature = this->signature;
-        result->nativeMethod = this->nativeMethod;
-
-        return result;
-    }
 
     bool JavascriptExternalFunction::CloneMethod(JavascriptFunction** pnewMethod, const Var newHome)
     {

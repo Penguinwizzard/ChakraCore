@@ -463,21 +463,4 @@ namespace Js
     {
         return specialPropertyIds;
     }
-
-    JavascriptRegExp* JavascriptRegExp::MakeCopyOnWriteObject(ScriptContext* scriptContext)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED_RET();
-
-        Recycler *recycler = scriptContext->GetRecycler();
-        CopyOnWriteObject<JavascriptRegExp> *result = RecyclerNew(recycler, CopyOnWriteObject<JavascriptRegExp>, scriptContext->GetLibrary()->GetRegexType(), this, scriptContext);
-
-        // Copy internal properties immediately.
-        result->pattern = scriptContext->CopyPattern(pattern);
-        result->lastIndexOrFlag = lastIndexOrFlag;
-        if (lastIndexVar)
-            result->lastIndexVar = scriptContext->CopyOnWrite(lastIndexVar);
-
-        return result;
-    }
-
 } // namespace Js

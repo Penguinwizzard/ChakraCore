@@ -59,9 +59,7 @@ namespace Js
 
         virtual BOOL IsWritable(PropertyId propertyId) override;
         virtual BOOL IsEnumerable(PropertyId propertyId) override;
-        virtual BOOL HasInstance(Var instance, ScriptContext* scriptContext, IsInstInlineCache* inlineCache = NULL) override;
-
-        virtual JavascriptGeneratorFunction* MakeCopyOnWriteObject(ScriptContext* scriptContext) override;
+        virtual BOOL HasInstance(Var instance, ScriptContext* scriptContext, IsInstInlineCache* inlineCache = NULL) override;        
 
         virtual bool CloneMethod(JavascriptFunction** pnewMethod, const Var newHome) override;
 
@@ -90,8 +88,5 @@ namespace Js
         static uint32 GetRealFunctionOffset() { return offsetof(GeneratorVirtualScriptFunction, realFunction); }
 
         virtual JavascriptFunction* GetRealFunctionObject() override { return realFunction; }
-
-        // Should never make a CopyOnWrite proxy of GeneratorVirtualScriptFunction objects
-        virtual GeneratorVirtualScriptFunction* MakeCopyOnWriteObject(ScriptContext* scriptContext) override { Throw::FatalInternalError(); }
     };
 }

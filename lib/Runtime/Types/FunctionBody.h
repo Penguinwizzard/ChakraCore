@@ -2513,8 +2513,7 @@ namespace Js
         bool ProbeAtOffset(int offsest, OpCode* pOriginalOpcode);
 
         FunctionBody * Clone(ScriptContext *scriptContext, uint sourceIndex = Js::Constants::InvalidSourceIndex);
-        
-        void CopyUndeferredInto(ScriptContext *scriptContext, FunctionBody *newFunctionBody, uint sourceIndex);
+                
         static bool ShouldShareInlineCaches() { return CONFIG_FLAG(ShareInlineCaches); }
 
         uint GetInlineCacheCount() const { return inlineCacheCount; }

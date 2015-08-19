@@ -120,9 +120,7 @@ namespace Js
         virtual BOOL IsWritable(PropertyId propertyId) override;
         virtual BOOL GetSpecialPropertyName(uint32 index, Var *propertyName, ScriptContext * requestContext) override;
         virtual uint GetSpecialPropertyCount() const override;
-        virtual PropertyId* GetSpecialPropertyIds() const override;
-
-        virtual JavascriptRegExp* MakeCopyOnWriteObject(ScriptContext* scriptContext) override;
+        virtual PropertyId* GetSpecialPropertyIds() const override;        
 
         static Js::JavascriptRegExp * BoxStackInstance(Js::JavascriptRegExp * instance);
     };

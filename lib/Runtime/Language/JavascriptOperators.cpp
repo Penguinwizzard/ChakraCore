@@ -1457,43 +1457,6 @@ CommonNumber:
         return JavascriptOperators::OP_HasOwnProperty(defaultInstance, propertyId, scriptContext);
     }
 
-    inline bool GetMissingPropertyValue(ScriptContext *scriptContext, RecyclableObject *instance, Var &value, PropertyId propertyId)
-    {
-        // If this is library undefined or null then ask the langauge service what undefined value to use. The language service
-        // uses  instances with the type TypeIds_Undefined that are not the same value as Library.GetUndefined() to track what type
-        // the value would have been had it been defined (derived from meta-data declarations).
-        if (value == scriptContext->GetLibrary()->GetUndefined())
-        {
-            value = scriptContext->GetMissingPropertyResult(instance, propertyId);
-            return true;
-        }
-        if (value == scriptContext->GetLibrary()->GetNull())
-        {
-            value = scriptContext->GetNullPropertyResult(instance, propertyId);
-            return true;
-        }
-        return false;
-    }
-
-    inline bool GetMissingItemValue(ScriptContext *scriptContext, RecyclableObject *instance, Var &value, uint32 index)
-    {
-        // If this is library undefined or null then ask the langauge service what undefined value to use. The language service
-        // uses  instances with the type TypeIds_Undefined that are not the same value as Library.GetUndefined() to track what type
-        // the value would have been had it been defined (derived from meta-data declarations).
-        if (value == scriptContext->GetLibrary()->GetUndefined())
-        {
-            value = scriptContext->GetMissingItemResult(instance, index);
-            return true;
-        }
-        if (value == scriptContext->GetLibrary()->GetNull())
-        {
-            value = scriptContext->GetNullItemResult(instance, index);
-            return true;
-        }
-
-        return false;
-    }
-
     BOOL JavascriptOperators::GetPropertyUnscopable(Var instance, RecyclableObject* propertyObject, PropertyId propertyId, Var* value, ScriptContext* requestContext, PropertyValueInfo* info)
     {
         return GetProperty_Internal<true>(instance, propertyObject, false, propertyId, value, requestContext, info);

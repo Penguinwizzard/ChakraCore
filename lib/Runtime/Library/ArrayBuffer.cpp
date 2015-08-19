@@ -875,49 +875,6 @@ namespace Js
 #endif
     }
 
-    DynamicObject* JavascriptArrayBuffer::MakeCopyOnWriteObject(ScriptContext* scriptContext)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED_RET();
-
-        Recycler *recycler = scriptContext->GetRecycler();
-        DynamicType *type = scriptContext->GetLibrary()->GetArrayBufferType();
-        typedef CopyOnWriteObject<JavascriptArrayBuffer> COWJavascriptArrayBuffer;
-        recycler->AddExternalMemoryUsage(bufferLength);
-        JavascriptArrayBuffer *result = RecyclerNewFinalized(recycler, COWJavascriptArrayBuffer, type, this, scriptContext);
-
-        uint32 length = bufferLength;
-        if (length != 0)
-        {
-            // This call to malloc must track with the JavascriptArrayBuffer constructor above.
-#if _WIN64
-            if (IsValidVirtualBufferLength(length))
-            {
-                result->buffer = (BYTE*)AllocWrapper(length);
-            }
-            else
-            {
-                result->buffer = (BYTE*)malloc(length);
-            }
-#else
-            result->buffer = (BYTE*)malloc(length);
-#endif
-            if (result->buffer == null)
-            {
-                JavascriptError::ThrowOutOfMemoryError(GetScriptContext());
-            }
-
-            result->bufferLength = length;
-            js_memcpy_s(result->buffer, result->bufferLength, buffer, bufferLength);
-        }
-        else
-        {
-            result->bufferLength = 0;
-            result->buffer = null;
-        }
-
-        return result;
-    }
-
     ArrayBuffer * JavascriptArrayBuffer::TransferInternal(uint32 newBufferLength)
     {
         ArrayBuffer* newArrayBuffer;

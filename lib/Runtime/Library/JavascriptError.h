@@ -49,8 +49,6 @@ namespace Js
 
         void AdjustNameOrMessageProperty(PropertyId propertyId);
 
-        virtual DynamicObject* MakeCopyOnWriteObject(ScriptContext* scriptContext) override;
-
         static Var NewInstance(RecyclableObject* function, JavascriptError* pError, CallInfo callInfo, Arguments args);
         class EntryInfo
         {

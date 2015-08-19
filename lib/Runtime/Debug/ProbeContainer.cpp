@@ -153,8 +153,7 @@ namespace Js
     WeakDiagStack * ProbeContainer::GetFramePointers()
     {
         if (framePointers == nullptr || this->debugSessionNumber < debugManager->GetDebugSessionNumber())
-        {
-            // This is debugger code, no need to check Language Service optimization
+        {            
             UpdateFramePointers(/*fMatchWithCurrentScriptContext*/true);
             this->debugSessionNumber = debugManager->GetDebugSessionNumber();
         }

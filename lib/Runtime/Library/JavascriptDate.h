@@ -139,8 +139,6 @@ namespace Js
         virtual BOOL GetDiagValueString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext) override;
         virtual BOOL GetDiagTypeString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext) override;
 
-        virtual JavascriptDate* MakeCopyOnWriteObject(ScriptContext* scriptContext) override;
-
     private:        
         static Var GetDateData(JavascriptDate* date, DateImplementation::DateData dd, ScriptContext* scriptContext);
         static Var GetUTCDateData(JavascriptDate* date, DateImplementation::DateData dd, ScriptContext* scriptContext);

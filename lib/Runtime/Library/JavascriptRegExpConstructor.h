@@ -45,9 +45,7 @@ namespace Js
         PropertyId* GetSpecialEnumerablePropertyIds() const;
         virtual BOOL GetSpecialPropertyName(uint32 index, Var *propertyName, ScriptContext * requestContext) override;
         virtual uint GetSpecialPropertyCount() const override;
-        virtual PropertyId* GetSpecialPropertyIds() const override;
-
-        virtual JavascriptRegExpConstructor* MakeCopyOnWriteObject(ScriptContext* scriptContext) override;
+        virtual PropertyId* GetSpecialPropertyIds() const override;        
 
         UnifiedRegex::RegexPattern* GetLastPattern() const { return lastPattern; }
 

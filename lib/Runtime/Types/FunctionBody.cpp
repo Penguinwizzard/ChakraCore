@@ -3735,29 +3735,6 @@ namespace Js
         return newFunctionInfo;
     }
 
-    void FunctionBody::CopyUndeferredInto(ScriptContext *scriptContext, FunctionBody *newFunctionBody, uint sourceIndex)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED();
-
-        Assert(scriptContext);
-        Assert(newFunctionBody);
-
-        newFunctionBody->SetInitialDefaultEntryPoint();
-
-        newFunctionBody->CloneSourceInfo(scriptContext, (*this), this->m_scriptContext, sourceIndex);
-        CloneByteCodeInto(scriptContext, newFunctionBody, this->GetSourceIndex());
-
-        // Since the original function (this) was defer-parsed when the new function body was created,
-        // the new function body would not have been registered with the utf8SourceInfo. However,
-        // when CopyUndeferredInto was called, the original function body got parsed and did get
-        // registered with the utf8SourceInfo. We need to register the new one too now.
-        Utf8SourceInfo* newFunctionSourceInfo = newFunctionBody->GetUtf8SourceInfo();
-        LocalFunctionId newFunctionId = newFunctionBody->GetLocalFunctionId();
-
-        Assert(newFunctionId == this->GetLocalFunctionId());
-        Assert(newFunctionSourceInfo != this->m_utf8SourceInfo);
-    }
-
     void FunctionBody::CreateCacheIdToPropertyIdMap(uint rootObjectLoadInlineCacheStart, uint rootObjectLoadMethodInlineCacheStart,
         uint rootObjectStoreInlineCacheStart,
         uint totalFieldAccessInlineCacheCount, uint isInstInlineCacheCount)

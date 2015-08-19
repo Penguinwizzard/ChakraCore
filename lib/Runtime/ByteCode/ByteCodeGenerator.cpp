@@ -2194,7 +2194,7 @@ FuncInfo* PreVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerato
         if (pnode->sxFnc.CallsEval())
         {
             // 1. eval is called.
-            // 2. when the debugging or language service is enabled, since user can seek arguments during breakpoint.
+            // 2. when the debugging is enabled, since user can seek arguments during breakpoint.
             funcInfo->SetHasArguments(true);
             funcInfo->SetHasHeapArguments(true);
             if (funcInfo->inArgsCount == 0)
@@ -2657,9 +2657,7 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
     }
 
     if (top->HasSuperReference())
-    {
-        // Language service may remove all of the knopSuper ParseNodes. If this does happen, the function will still be marked as having a super reference.
-        // Since we will emit the LdSuper opcode regardless, assign the super register now.
+    {        
         top->AssignSuperRegister();
     }
 

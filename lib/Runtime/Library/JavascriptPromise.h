@@ -17,9 +17,7 @@ namespace Js
         JavascriptPromiseResolveOrRejectFunction(DynamicType* type, FunctionInfo* functionInfo, JavascriptPromise* promise, bool isReject);
 
         inline static bool Is(Var var);
-        inline static JavascriptPromiseResolveOrRejectFunction* FromVar(Var var);
-
-        virtual JavascriptPromiseResolveOrRejectFunction* MakeCopyOnWriteObject(ScriptContext* scriptContext) override;
+        inline static JavascriptPromiseResolveOrRejectFunction* FromVar(Var var);        
 
         JavascriptPromise* GetPromise();
         bool IsRejectFunction();
@@ -193,9 +191,7 @@ namespace Js
         JavascriptPromiseAllResolveElementFunction(DynamicType* type, FunctionInfo* functionInfo, uint32 index, JavascriptArray* values, JavascriptPromiseCapability* capabilities, JavascriptPromiseAllResolveElementFunctionRemainingElementsWrapper* remainingElementsWrapper);
 
         inline static bool Is(Var var);
-        inline static JavascriptPromiseAllResolveElementFunction* FromVar(Var var);
-
-        virtual JavascriptPromiseAllResolveElementFunction* MakeCopyOnWriteObject(ScriptContext* scriptContext) override;
+        inline static JavascriptPromiseAllResolveElementFunction* FromVar(Var var);        
 
         JavascriptPromiseCapability* GetCapabilities();
         uint32 GetIndex();
@@ -319,11 +315,7 @@ namespace Js
         };
 
         JavascriptPromise(DynamicType * type);
-
-        virtual JavascriptPromise* MakeCopyOnWriteObject(ScriptContext* scriptContext) override;
-        static JavascriptPromiseReactionList* MakeCopyOnWriteObjectJavascriptPromiseReactionList(JavascriptPromiseReactionList* src, ScriptContext* scriptContext);
-        static JavascriptPromiseCapability* MakeCopyOnWriteObjectJavascriptPromiseCapability(JavascriptPromiseCapability* src, ScriptContext* scriptContext);
-
+        
         static Var NewInstance(RecyclableObject* function, CallInfo callInfo, ...);
 
         static Var EntryAll(RecyclableObject* function, CallInfo callInfo, ...);

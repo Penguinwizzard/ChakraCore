@@ -206,9 +206,7 @@ namespace Js
             static FunctionInfo Subarray;
         };
 
-        TypedArray(ArrayBuffer* arrayBuffer, uint32 byteOffset, uint32 mappedLength, DynamicType* type);
-
-        virtual TypedArray<TypeName, clamped, virtualAllocated>* MakeCopyOnWriteObject(ScriptContext* scriptContext) override;
+        TypedArray(ArrayBuffer* arrayBuffer, uint32 byteOffset, uint32 mappedLength, DynamicType* type);        
 
         static Var Create(ArrayBuffer* arrayBuffer, uint32 byteOffSet, uint32 mappedLength, JavascriptLibrary* javascriptLibrary);
         static Var NewInstance(RecyclableObject* function, CallInfo callInfo, ...);

@@ -65,16 +65,4 @@ namespace Js
 
         return value;
     }
-
-    JavascriptStringObject* JavascriptStringObject::MakeCopyOnWriteObject(ScriptContext* scriptContext)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED_RET();
-
-        Recycler *recycler = scriptContext->GetRecycler();
-        DynamicType *type = scriptContext->GetLibrary()->GetStringTypeDynamic();
-        JavascriptStringObject* result = RecyclerNew(recycler, CopyOnWriteObject<JavascriptStringObject>, type, this, scriptContext);
-        result->value = value;
-        return result;
-    }
-
 } // namespace Js

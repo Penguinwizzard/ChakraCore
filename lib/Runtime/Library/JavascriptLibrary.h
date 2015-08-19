@@ -413,9 +413,6 @@ namespace Js
         static SimplePropertyDescriptor HeapArgumentsPropertyDescriptors[3];
         static SimplePropertyDescriptor FunctionWithLengthAndPrototypeTypeDescriptors[2];
 
-        void CopyOnWriteSpecialGlobals(ScriptContext * scriptContext, GlobalObject * globalObject, JavascriptLibrary * originalLibrary);
-        void CopyOnWriteGlobal(ScriptContext * scriptContext, GlobalObject * globalObject, JavascriptLibrary * originalLibrary);
-
     public:
         static const ObjectInfoBits EnumFunctionClass = EnumClass_1_Bit;
 
@@ -449,9 +446,7 @@ namespace Js
         void Initialize(ScriptContext* scriptContext, GlobalObject * globalObject);
         void Uninitialize();
         GlobalObject* GetGlobalObject() const { return globalObject; }
-        ScriptContext* GetScriptContext() const { return scriptContext; }
-
-        void CopyOnWriteFrom(ScriptContext * scriptContext, GlobalObject * globalObject, JavascriptLibrary * originalLibrary);
+        ScriptContext* GetScriptContext() const { return scriptContext; }        
 
         Recycler * GetRecycler() const { return recycler; }
         Var GetPI() { return pi; }
@@ -985,7 +980,6 @@ namespace Js
 
         static void __cdecl InitializeFunctionConstructor(DynamicObject* functionConstructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
         static void __cdecl InitializeFunctionPrototype(DynamicObject* functionPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
-        void InitializeDebug();
         void InitializeComplexThings();
         void InitializeStaticValues();
         static void __cdecl InitializeMathObject(DynamicObject* mathObject, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);

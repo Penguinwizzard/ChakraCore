@@ -337,46 +337,4 @@ namespace Js
         stringBuilder->AppendCppLiteral(L"WeakMap");
         return TRUE;
     }
-
-    JavascriptWeakMap* JavascriptWeakMap::MakeCopyOnWriteObject(ScriptContext* scriptContext)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED_RET();
-
-        Recycler *recycler = scriptContext->GetRecycler();
-        CopyOnWriteObject<JavascriptWeakMap> *result = RecyclerNew(recycler, CopyOnWriteObject<JavascriptWeakMap>, scriptContext->GetLibrary()->GetWeakMapType(), this, scriptContext);
-
-        keySet.Map([&](DynamicObject* key, bool val, const RecyclerWeakReference<DynamicObject>* weakRef) {
-            WeakMapKeyMap* keyMap = GetWeakMapKeyMapFromKey(key);
-
-            if (keyMap != nullptr)
-            {
-                Var value = null;
-                bool success = KeyMapGet(keyMap, &value);
-                Assert(success);
-
-                Var copyKey = scriptContext->CopyOnWrite(key);
-
-                result->keySet.Item(DynamicObject::FromVar(copyKey), true);
-            }
-        });
-
-        return result;
-    }
-
-    /* static */ Var JavascriptWeakMap::CopyWeakMapKeyMapForCopyOnWrite(ScriptContext* scriptContext, Var sourceWeakMapKeyDataVar)
-    {
-        WeakMapKeyMap* sourceWeakMapKeyData = static_cast<WeakMapKeyMap*>(sourceWeakMapKeyDataVar);
-        WeakMapKeyMap* targetWeakMapKeyData = RecyclerNew(scriptContext->GetRecycler(), WeakMapKeyMap, scriptContext->GetRecycler());
-
-        sourceWeakMapKeyData->Map([&](const WeakMapId& sourceKey, const Var& sourceValue)
-        {
-            JavascriptWeakMap* sourceJavascriptWeakMap = GetWeakMapFromId(sourceKey);
-            JavascriptWeakMap* targetJavascriptWeakMap = static_cast<JavascriptWeakMap*>(scriptContext->CopyOnWrite(sourceJavascriptWeakMap));
-            WeakMapId targetKey = targetJavascriptWeakMap->GetWeakMapId();
-            Var targetValue = scriptContext->CopyOnWrite(sourceValue);
-            targetWeakMapKeyData->Add(targetKey, targetValue);
-        });
-
-        return targetWeakMapKeyData;
-    }
 }

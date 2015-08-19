@@ -102,21 +102,6 @@ namespace Js
         return JavascriptFunction::NewInstanceHelper(function->GetScriptContext(), function, callInfo, args, /* isGenerator: */ true);
     }
 
-    JavascriptGeneratorFunction* JavascriptGeneratorFunction::MakeCopyOnWriteObject(ScriptContext* scriptContext)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED_RET();
-
-        DynamicType* type = scriptContext->GetLibrary()->CreateDeferredPrototypeGeneratorFunctionType(functionInfo.GetOriginalEntryPoint());
-        auto *result = RecyclerNew(scriptContext->GetRecycler(), CopyOnWriteObject<JavascriptGeneratorFunction>, type, this, scriptContext);
-
-        Assert(this->GetFunctionInfo() == &functionInfo);
-        Assert(result->GetFunctionInfo() == &functionInfo);
-
-        // No need to make a copy of scriptFunction since it is private and cannot be mutated (effectively read-only)
-        result->scriptFunction = this->scriptFunction;
-        return result;
-    }
-
     JavascriptString* JavascriptGeneratorFunction::GetDisplayNameImpl() const
     {
         return scriptFunction->GetDisplayNameImpl();

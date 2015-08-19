@@ -415,7 +415,6 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Types\SimpleDictionaryUnorderedTypeHandler.h"
 #include "Types\DictionaryTypeHandler.h"
 #include "Types\DynamicType.h"
-#include "Types\CopyOnWrite.h"
 #ifdef NTBUILD
 #include "Types\ExternalObject.h"
 #endif

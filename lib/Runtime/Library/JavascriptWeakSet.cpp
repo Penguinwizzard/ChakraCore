@@ -186,20 +186,4 @@ namespace Js
         stringBuilder->AppendCppLiteral(L"WeakSet");
         return TRUE;
     }
-
-    JavascriptWeakSet* JavascriptWeakSet::MakeCopyOnWriteObject(ScriptContext* scriptContext)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED_RET();
-
-        Recycler *recycler = scriptContext->GetRecycler();
-        CopyOnWriteObject<JavascriptWeakSet> *result = RecyclerNew(recycler, CopyOnWriteObject<JavascriptWeakSet>, scriptContext->GetLibrary()->GetWeakSetType(), this, scriptContext);
-
-        keySet.Map([&](DynamicObject* key, bool val, const RecyclerWeakReference<DynamicObject>* weakRef) {
-            Var copyKey = scriptContext->CopyOnWrite(key);
-            Assert(DynamicObject::Is(copyKey));
-            result->Add(DynamicObject::FromVar(copyKey));
-        });
-
-        return result;
-    }
 }

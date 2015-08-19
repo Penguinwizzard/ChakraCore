@@ -107,17 +107,6 @@ namespace Js
         return result;
     }
 
-    ObjectPrototypeObject* ObjectPrototypeObject::MakeCopyOnWriteObject(ScriptContext* scriptContext)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED_RET();
-
-        Recycler *recycler = scriptContext->GetRecycler();
-        DynamicType *type = scriptContext->GetLibrary()->CreateObjectTypeNoCache(RecyclableObject::FromVar(scriptContext->CopyOnWrite(this->GetPrototype())), this->GetTypeId());
-        auto cow = CopyOnWriteObject<ObjectPrototypeObject>::New(recycler, type, this, scriptContext);
-        cow->__proto__Enabled = this->__proto__Enabled;
-        return cow;
-    }
-
     void ObjectPrototypeObject::PostDefineOwnProperty__proto__(RecyclableObject* obj)
     {
         ScriptContext* scriptContext = this->GetScriptContext();

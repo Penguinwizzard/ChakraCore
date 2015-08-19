@@ -142,9 +142,7 @@ namespace Js
         virtual BOOL GetRootPropertyReference(Var originalInstance, PropertyId propertyId, Var* value, PropertyValueInfo* info, ScriptContext* requestContext) override;
         virtual BOOL SetRootProperty(PropertyId propertyId, Var value, PropertyOperationFlags flags, PropertyValueInfo* info) override;
         virtual DescriptorFlags GetRootSetter(PropertyId propertyId, Var *setterValue, PropertyValueInfo* info, ScriptContext* requestContext) override;
-        virtual BOOL DeleteRootProperty(PropertyId propertyId, PropertyOperationFlags flags) override;
-
-        virtual GlobalObject* MakeCopyOnWriteObject(ScriptContext* scriptContext) override sealed;
+        virtual BOOL DeleteRootProperty(PropertyId propertyId, PropertyOperationFlags flags) override;        
 
         BOOL SetExistingProperty(PropertyId propertyId, Var value, PropertyValueInfo* info, BOOL *setAttempted);
         BOOL SetExistingRootProperty(PropertyId propertyId, Var value, PropertyValueInfo* info, BOOL *setAttempted);

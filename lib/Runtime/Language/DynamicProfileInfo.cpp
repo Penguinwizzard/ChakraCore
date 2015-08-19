@@ -260,7 +260,6 @@ bool DynamicProfileInfo::IsEnabled_OptionalFunctionBody(
             ;
 
     case Phase::InlinePhase:
-        // TODO: disable for language service, as the function Id assignment is wrong.
         return !PHASE_OFF_PROFILED_BYTE_CODE_OPTFUNC(Phase::InlinePhase, functionBody);
     }
     return false;

@@ -38,8 +38,7 @@ namespace Js
 
         MapDataList::Iterator GetIterator();
 
-        virtual BOOL GetDiagTypeString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext) override;
-        virtual JavascriptMap* MakeCopyOnWriteObject(ScriptContext* scriptContext) override;
+        virtual BOOL GetDiagTypeString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext) override;        
 
         class EntryInfo
         {

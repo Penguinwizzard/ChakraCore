@@ -26,8 +26,7 @@ namespace Js
         bool Delete(DynamicObject* key);
         bool Has(DynamicObject* key);
 
-        virtual BOOL GetDiagTypeString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext) override;
-        virtual JavascriptWeakSet* MakeCopyOnWriteObject(ScriptContext* scriptContext) override;
+        virtual BOOL GetDiagTypeString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext) override;        
 
         class EntryInfo
         {

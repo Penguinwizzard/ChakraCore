@@ -102,22 +102,6 @@ namespace Js
         return TRUE;
     }
 
-    DynamicObject* ActivationObject::MakeCopyOnWriteObject(ScriptContext* scriptContext)
-    {
-        VERIFY_COPY_ON_WRITE_ENABLED_RET();
-
-        Recycler *recycler = scriptContext->GetRecycler();
-        CopyOnWriteObject<ActivationObject> * activationObject =
-            RecyclerNew(recycler, CopyOnWriteObject<ActivationObject>, scriptContext->GetLibrary()->GetActivationObjectType(), this, scriptContext);
-
-        // The activation object needs to be detached immediately because activation objects are indexed
-        // directly by the LdSlot and StSlot instructions instead of going through GetProperty/SetProperty
-        // so there is no opportunity to trap modifications to an activation object.
-        scriptContext->RecordCopyOnWrite(this, activationObject); // We record the copy before detaching to handle cycles.
-        activationObject->Detach();
-        return activationObject;
-    }
-
     BOOL BlockActivationObject::InitPropertyScoped(PropertyId propertyId, Var value)
     {
         // eval, etc., should not create var properties on block scope
