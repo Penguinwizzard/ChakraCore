@@ -296,12 +296,12 @@ Init()
    CoInitializeEx(NULL, HostSystemInfo::SupportsOnlyMultiThreadedCOM() ? COINIT_MULTITHREADED : COINIT_APARTMENTTHREADED);
    hr = CoCreateInstance(HostSystemInfo::SupportsOnlyMultiThreadedCOM() ? 
 #if defined (_M_AMD64) || defined(_M_ARM64)
-       CLSID_DOMDocument
+       __uuidof(DOMDocument)
 #else
-       CLSID_DOMDocument60
+       __uuidof(DOMDocument60)
 #endif       
-       : CLSID_DOMDocument, NULL, CLSCTX_INPROC_SERVER,
-       IID_IXMLDOMDocument, (void**)&pDoc);
+       : __uuidof(DOMDocument), NULL, CLSCTX_INPROC_SERVER,
+       __uuidof(IXMLDOMDocument), (void**)&pDoc);
 
    return hr == 0 ? true : false;
 }
@@ -368,7 +368,7 @@ ReadFile
       // of this changeover.
 
       IXMLDOMNode* pNode = NULL;
-      hr = pDoc->QueryInterface(IID_IXMLDOMNode,(void**)&pNode);
+      hr = pDoc->QueryInterface(__uuidof(IXMLDOMNode),(void**)&pNode);
       if (FAILED(hr))
       {
          return NULL;

@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Condition="'$(ChakraBuildPathImported)'!='true'" Project="$(SolutionDir)Chakra.Build.Paths.props" />
-  <Import Project="$(BuildConfig_ChakraBuildProjectConfigurationProps)" />
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.ProjectConfiguration.props" />
   <PropertyGroup Label="Globals">
     <TargetName>Chakra.Runtime.ByteCode</TargetName>
     <ProjectGuid>{706083F7-6AA4-4558-A153-6352EF9110F5}</ProjectGuid>

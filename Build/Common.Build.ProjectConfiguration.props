@@ -42,20 +42,5 @@
       <Platform>ARM</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <!-- Only razzle has ARM64 build configs -->
-  <ItemGroup Label="ProjectConfigurations" Condition="'$(BuildingWithBuildExe)'=='true'">
-    <ProjectConfiguration Include="Debug|Arm64">
-      <Configuration>Debug</Configuration>
-      <Platform>Arm64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Test|Arm64">
-      <Configuration>Test</Configuration>
-      <Platform>Arm64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|Arm64">
-      <Configuration>Release</Configuration>
-      <Platform>Arm64</Platform>
-    </ProjectConfiguration>
-  </ItemGroup>
 </Project>
 

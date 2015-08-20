@@ -3,8 +3,7 @@
   <PropertyGroup>
     <ChakraCoreRootDirectory>$(MSBuildThisFileDirectory)..\</ChakraCoreRootDirectory>
     
-    <!-- ChakraCore -->
-    <BuildConfig_ChakraBuildProjectConfigurationProps>$(MSBuildThisFileDirectory)Chakra.Build.ProjectConfiguration.props</BuildConfig_ChakraBuildProjectConfigurationProps>
+    <!-- ChakraCore -->    
     <BuildConfig_ARMASM_Path>$(MSBuildThisFileDirectory)</BuildConfig_ARMASM_Path>
     <BuildConfigPropsPath>$(MSBuildThisFileDirectory)</BuildConfigPropsPath>    
     
