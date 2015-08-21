@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "RuntimeByteCodePch.h"
 
 namespace Js {
     //
@@ -323,6 +323,21 @@ namespace Js {
         }
         this->scope = scope;
         DebugOnly(scope->isRestored = true);
+    }
+
+    ScopeInfo::AutoCapturesAllScope::AutoCapturesAllScope(Scope* scope, bool turnOn)
+        : scope(scope)
+    {
+        oldCapturesAll = scope->GetCapturesAll();
+        if (turnOn)
+        {
+            scope->SetCapturesAll(true);
+        }
+    }
+
+    ScopeInfo::AutoCapturesAllScope::~AutoCapturesAllScope()
+    {
+        scope->SetCapturesAll(oldCapturesAll);
     }
 
 }; // namespace Js

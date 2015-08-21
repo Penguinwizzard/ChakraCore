@@ -3,7 +3,7 @@
 //----------------------------------------------------------------------------
 
 #include "BackEnd.h"
-
+#include "ByteCode\OpCodeUtilAsmJs.h"
 
 void
 IRBuilderAsmJs::Build()

@@ -2,7 +2,9 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#include "stdafx.h"
+#include "RuntimeTypePch.h"
+#include "Library\JavascriptProxy.h"
+#include "Library\HostObjectBase.h"
 
 namespace Js
 {
@@ -193,7 +195,7 @@ namespace Js
         if (typeId == TypeIds_ModuleRoot)
         {
             ModuleRoot *moduleRoot = static_cast<ModuleRoot*>(object);
-            RecyclableObject* hostObject = moduleRoot->GetHostObject();
+            HostObjectBase * hostObject = moduleRoot->GetHostObject();
 
             // When marshaling module root, all we need is the host object.
             // So, if the module root which is being marshaled has host object, marshal it.

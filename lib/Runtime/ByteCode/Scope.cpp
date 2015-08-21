@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "RuntimeByteCodePch.h"
 
 bool
 Scope::IsGlobalEvalBlockScope() const

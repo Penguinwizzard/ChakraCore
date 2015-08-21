@@ -2,7 +2,9 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "RuntimeLibraryPch.h"
+#include "Language\ByteCodeSerializer.h"
+
 using namespace Windows::Globalization;
 #pragma warning(push)
 #pragma warning(disable:4309) // truncation of constant value

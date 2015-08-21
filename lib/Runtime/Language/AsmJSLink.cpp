@@ -2,8 +2,9 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //---------------------------------------------------------------------------
 
+#include "RuntimeLanguagePch.h"
+#include "Library\BoundFunction.h"
 
-#include "StdAfx.h"
 namespace Js{
     bool ASMLink::CheckArrayBuffer(ScriptContext* scriptContext, Var bufferView, const AsmJsModuleInfo * info)
     {

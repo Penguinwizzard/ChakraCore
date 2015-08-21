@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#include "stdafx.h"
+#include "RuntimeLibraryPch.h"
 
 ulong ThreadContextTLSEntry::s_tlsSlot = TLS_OUT_OF_INDEXES;
 

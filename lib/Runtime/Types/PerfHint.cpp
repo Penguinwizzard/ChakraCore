@@ -1,4 +1,4 @@
-#include "StdAfx.h"
+#include "RuntimeTypePch.h"
 
 const PerfHintItem s_perfHintContainer[] =
 {

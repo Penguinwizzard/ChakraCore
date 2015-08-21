@@ -1,4 +1,8 @@
 #include "Runtime.h"
+#include "Library\ThreadBoundThreadContextManager.h"
+#ifdef DYNAMIC_PROFILE_STORAGE
+#include "Language\DynamicProfileStorage.h"
+#endif
 #include "jsrtcontext.h"
 #include "TestHooks.h"
 

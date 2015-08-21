@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "RuntimeByteCodePch.h"
 
 // We only have one extended range so maximum number of opcode is only 512 unless we add more extended ranges.
 CompileAssert((uint)Js::OpCode::ByteCodeLast < 512);

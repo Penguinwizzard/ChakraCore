@@ -6,7 +6,18 @@
 
 #include <wchar.h>
 #include "Runtime.h"
+
+// Other runtime includes
+#include "ByteCode\StatementReader.h"
 #include "Language\EHBailoutData.h"
+#include "Language\AsmJsTypes.h"
+#include "Language\AsmJsModule.h"
+#include "Language\ProfilingHelpers.h"
+#include "Language\FunctionCodeGenRuntimeData.h"
+#include "Language\FunctionCodeGenJitTimeData.h"
+#include "Library\JavascriptGenerator.h"
+#include "Language\JavascriptMathOperators.h"
+#include "Language\JavascriptMathOperators.inl"
 
 //
 // Defines

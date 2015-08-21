@@ -9,6 +9,8 @@ namespace Js
     class MutationBreakpoint;
 #endif
 
+    class DebugManager;
+
     // This class contains the probes and list of function bodies.
     // ÎÐThe object of this class is maintained by Script context.
     class ProbeContainer
@@ -78,8 +80,8 @@ namespace Js
 
         void StartRecordingCall();
         void EndRecordingCall(Js::Var returnValue, Js::JavascriptFunction * function);
-        ReturnedValueList* GetReturnedValueList() const { return this->debugManager->stepController.GetReturnedValueList(); }
-        void ResetReturnedValueList() { this->debugManager->stepController.ResetReturnedValueList(); }
+        ReturnedValueList* GetReturnedValueList() const;
+        void ResetReturnedValueList();
 
         void Initialize(ScriptContext* pScriptContext);
         void Close();

@@ -5,9 +5,19 @@
 #pragma once
 
 struct CodeGenWorkItem;
+struct JsFunctionCodeGen;
+struct JsLoopBodyCodeGen;
+class InliningDecider;
+
 #ifdef ENABLE_NATIVE_CODE_SERIALIZATION
 class PEWriter;
 #endif
+
+namespace Js
+{
+    class ObjTypeSpecFldInfo;
+};
+
 class NativeCodeGenerator sealed : public JsUtil::WaitableJobManager
 {
 #if ENABLE_DEBUG_CONFIG_OPTIONS

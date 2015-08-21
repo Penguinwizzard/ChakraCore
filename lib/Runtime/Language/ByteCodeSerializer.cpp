@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#include <StdAfx.h>
+#include "RuntimeLanguagePch.h"
 
 #if DBG || !defined(NTBUILD)
 // __DATE__ and __TIME__ are only available in CHK or NTBUILD

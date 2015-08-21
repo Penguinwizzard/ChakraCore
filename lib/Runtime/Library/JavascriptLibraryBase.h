@@ -92,7 +92,8 @@ namespace Js
         DynamicObject* GetDatePrototype() { return datePrototype; }
         DynamicObject* GetFunctionPrototype() { return functionPrototype; }
         DynamicObject* GetNumberPrototype() { return numberPrototype; }
-        ObjectPrototypeObject* GetObjectPrototype() { return objectPrototype; }
+        ObjectPrototypeObject* GetObjectPrototypeObject() { return objectPrototype; }
+        DynamicObject* GetObjectPrototype();
         DynamicObject* GetRegExpPrototype() { return regexPrototype; }
         DynamicObject* GetStringPrototype() { return stringPrototype; }
         DynamicObject* GetMapPrototype() { return mapPrototype; }

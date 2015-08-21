@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //---------------------------------------------------------------------------- 
 
-#include "StdAfx.h"
+#include "RuntimeLibraryPch.h"
 #include "SIMDFloat64x2Operation.h"
 #include "SIMDInt32x4Operation.h"
 

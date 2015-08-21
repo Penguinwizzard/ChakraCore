@@ -1,4 +1,4 @@
-#include "StdAfx.h"
+#include "RuntimeLanguagePch.h"
 #include "JavascriptNativeOperators.h"
 
 namespace Js

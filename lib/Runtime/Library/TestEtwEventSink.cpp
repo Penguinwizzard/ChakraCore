@@ -1,5 +1,7 @@
-// Copyright (C) Microsoft. All rights reserved. 
-#include "stdafx.h"
+//----------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+//----------------------------------------------------------------------------
+#include "RuntimeLibraryPch.h"
 
 #ifdef TEST_ETW_EVENTS
 

@@ -1,4 +1,8 @@
-#include "stdafx.h"
+//----------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved. 
+//----------------------------------------------------------------------------
+
+#include "RuntimeLibraryPch.h"
 
 ExpirableObject::ExpirableObject(ThreadContext* threadContext):
     isUsed(false),

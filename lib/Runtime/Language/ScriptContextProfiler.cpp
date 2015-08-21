@@ -1,5 +1,5 @@
 // Copyright (C) Microsoft. All rights reserved. 
-#include "stdafx.h"
+#include "RuntimeLanguagePch.h"
 
 #ifdef PROFILE_EXEC
 namespace Js 

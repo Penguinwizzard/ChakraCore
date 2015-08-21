@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "RuntimeLanguagePch.h"
 #include "shlwapi.h"
 
 #ifdef _M_IX86

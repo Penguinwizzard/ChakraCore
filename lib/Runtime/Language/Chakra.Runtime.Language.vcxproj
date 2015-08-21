@@ -35,6 +35,7 @@
       </AdditionalIncludeDirectories>
       <DisableSpecificWarnings>%(DisableSpecificWarnings);4702</DisableSpecificWarnings>
       <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>RuntimeLanguagePch.h</PrecompiledHeaderFile>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -105,7 +106,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptStackWalker.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ScriptContext.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ScriptContextProfiler.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\StdAfx.cpp">
+    <ClCompile Include="$(MSBuildThisFileDirectory)RuntimeLanguagePch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptNativeOperators.cpp" />
@@ -174,6 +175,7 @@
     <ClInclude Include="ScriptContext.h" />
     <ClInclude Include="ScriptContextBase.h" />
     <ClInclude Include="ScriptContextProfiler.h" />
+    <ClInclude Include="RuntimeLanguagePch.h" />
   </ItemGroup>
   <ItemGroup>
     <MASM Include="$(MSBuildThisFileDirectory)amd64\JavascriptOperatorsA.asm">
@@ -206,7 +208,6 @@
     <None Include="InterpreterLoop.inl" />
     <None Include="JavascriptExceptionOperators.inl" />
     <None Include="JavascriptMathOperators.inl" />    
-    <None Include="InterpreterStackFrame.inl" />
     <None Include="JavascriptConversion.inl" />
     <None Include="JavascriptOperators.inl" />
     <None Include="ScriptContext.inl" />

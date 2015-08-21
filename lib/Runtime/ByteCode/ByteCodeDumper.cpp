@@ -1,7 +1,7 @@
 //----------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
-#include "StdAfx.h"
+#include "RuntimeByteCodePch.h"
 #if DBG_DUMP
 namespace Js
 {

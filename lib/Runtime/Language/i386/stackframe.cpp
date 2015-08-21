@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //---------------------------------------------------------------------------
 
-#include "stdafx.h"
+#include "RuntimeLanguagePch.h"
 
 #if !defined(_M_IX86)
 #error X86StackFrame is not supported on this architecture.

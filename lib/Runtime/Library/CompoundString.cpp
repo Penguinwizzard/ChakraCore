@@ -2,8 +2,7 @@
 
 // JScriptDiag does not link with Runtime.lib and does not include .cpp files, so this file will be included as a header
 #pragma once
-
-#include "StdAfx.h"
+#include "RuntimeLibraryPch.h"
 
 namespace Js
 {

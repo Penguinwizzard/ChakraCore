@@ -2,9 +2,10 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#include <StdAfx.h>
+#include "RuntimeLanguagePch.h"
 
 #ifdef DYNAMIC_PROFILE_MUTATOR
+#include "DynamicProfileMutator.h"
 
 char const * const DynamicProfileMutator::CreateMutatorProcName = STRINGIZE(CREATE_MUTATOR_PROC_NAME);
 

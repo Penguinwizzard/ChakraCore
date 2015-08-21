@@ -1,7 +1,18 @@
 //----------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
-#include "stdafx.h"
+#include "RuntimeDebugPch.h"
+#include "Library\ObjectPrototypeObject.h"
+#include "Library\BoundFunction.h"
+#include "Library\JavascriptRegExpConstructor.h"
+#include "Library\SameValueComparer.h"
+#include "Library\MapOrSetDataList.h"
+#include "Library\JavascriptProxy.h"
+#include "Library\JavascriptMap.h"
+#include "Library\JavascriptSet.h"
+#include "Library\JavascriptWeakMap.h"
+#include "Library\JavascriptWeakSet.h"
+
 #include <shlwapi.h>
 #include <strsafe.h>
 
@@ -3107,7 +3118,7 @@ namespace Js
         Assert(pResolvedObject);
 
         DBGPROP_ATTRIB_FLAGS defaultAttributes = DBGPROP_ATTRIB_NO_ATTRIB;
-        if (scriptContext->GetLibrary()->GetObjectPrototype()->is__proto__Enabled())
+        if (scriptContext->GetLibrary()->GetObjectPrototypeObject()->is__proto__Enabled())
         {
             pResolvedObject->name           = L"__proto__";
             pResolvedObject->propId         = PropertyIds::__proto__;

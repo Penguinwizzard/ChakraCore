@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "Library\threadservicewrapper.h"
+
 class ThreadServiceWrapperBase : public ThreadServiceWrapper
 {
 public:

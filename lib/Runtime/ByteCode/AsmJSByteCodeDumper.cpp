@@ -3,9 +3,10 @@
 //---------------------------------------------------------------------------
 
 
-#include "StdAfx.h"
+#include "RuntimeByteCodePch.h"
 
 #if DBG_DUMP
+#include "Language\AsmJsModule.h"
 namespace Js
 {
 

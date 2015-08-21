@@ -7,7 +7,7 @@
 namespace Js
 {
     class ScriptContext;
-    struct InlineCache;
+    struct InlineCache;    
 }
 
 struct IAuthorFileContext;
@@ -16,6 +16,8 @@ class HostScriptContext;
 class ScriptSite;
 class ThreadServiceWrapper;
 struct IActiveScriptProfilerHeapEnum;
+class DynamicProfileMutator;
+class StackProber;
 
 enum DisableImplicitFlags : BYTE
 {

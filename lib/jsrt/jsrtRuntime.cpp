@@ -4,6 +4,7 @@
 
 #include <JsrtPch.h>
 #include "JsrtRuntime.h"
+#include "Library\ThreadBoundThreadContextManager.h"
 
 JsrtRuntime::JsrtRuntime(ThreadContext * threadContext, bool useIdle, bool dispatchExceptions)
 {       

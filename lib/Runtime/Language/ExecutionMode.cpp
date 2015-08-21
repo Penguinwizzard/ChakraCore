@@ -1,6 +1,6 @@
 // Copyright (C) Microsoft. All rights reserved.
 
-#include "StdAfx.h"
+#include "RuntimeLanguagePch.h"
 
 static const char *const ExecutionModeNames[] =
 {

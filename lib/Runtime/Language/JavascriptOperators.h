@@ -9,8 +9,12 @@ namespace IR
     class LabelInstr;
 }
 
+enum JsNativeValueType;
+
 namespace Js
 {
+    struct ResumeYieldData;
+
 #define DeclareExceptionPointer(ep)                  \
     EXCEPTION_RECORD        ep##er;                 \
     CONTEXT                 ep##c;                  \
@@ -509,7 +513,7 @@ namespace Js
 
         static bool CheckIfObjectAndPrototypeChainHasOnlyWritableDataProperties(RecyclableObject* object);
         static bool CheckIfPrototypeChainHasOnlyWritableDataProperties(RecyclableObject* prototype);
-        static inline bool DoCheckIfPrototypeChainHasOnlyWritableDataProperties(RecyclableObject* prototype);
+        static bool DoCheckIfPrototypeChainHasOnlyWritableDataProperties(RecyclableObject* prototype);
         static void OP_SetComputedNameVar(Var method, Var computedNameVar);
         static void OP_SetHomeObj(Var method, Var homeObj);
         static Var OP_LdSuper(Var scriptFunction, ScriptContext * scriptContext);
@@ -596,7 +600,7 @@ namespace Js
         template <bool unscopables>
         static BOOL GetProperty_Internal(Var instance, RecyclableObject* propertyObject, const bool isRoot, PropertyId propertyId, Var* value, ScriptContext* requestContext, PropertyValueInfo* info);
 
-        static __inline RecyclableObject* GetPrototypeNoTrap(RecyclableObject* instance);
+        static RecyclableObject* GetPrototypeNoTrap(RecyclableObject* instance);
 
         static BOOL GetPropertyReference_Internal(Var instance, RecyclableObject* propertyObject, const bool isRoot, PropertyId propertyId, Var* value,ScriptContext* requestContext, PropertyValueInfo* info);
         template <bool unscopables>

@@ -2,7 +2,124 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "RuntimeByteCodePch.h"
+
+FuncInfo::FuncInfo(
+    const wchar_t *name,
+    ArenaAllocator *alloc,
+    Scope *paramScope,
+    Scope *bodyScope,
+    ParseNode *pnode,
+    Js::ParseableFunctionInfo* byteCodeFunction)
+    : alloc(alloc),
+    varRegsCount(0),
+    constRegsCount(2),
+    inArgsCount(0),
+    firstTmpReg(Js::Constants::NoRegister),
+    curTmpReg(Js::Constants::NoRegister),
+    outArgsMaxDepth(0),
+    outArgsCurrentExpr(0),
+#if DBG
+    outArgsDepth(0),
+#endif
+    name(name),
+    nullConstantRegister(Js::Constants::NoRegister),
+    undefinedConstantRegister(Js::Constants::NoRegister),
+    trueConstantRegister(Js::Constants::NoRegister),
+    falseConstantRegister(Js::Constants::NoRegister),
+    thisPointerRegister(Js::Constants::NoRegister),
+    superRegister(Js::Constants::NoRegister),
+    newTargetRegister(Js::Constants::NoRegister),
+    envRegister(Js::Constants::NoRegister),
+    frameObjRegister(Js::Constants::NoRegister),
+    frameSlotsRegister(Js::Constants::NoRegister),
+    frameDisplayRegister(Js::Constants::NoRegister),
+    funcObjRegister(Js::Constants::NoRegister),
+    stackClosureReg(Js::Constants::NoRegister),
+    yieldRegister(Js::Constants::NoRegister),
+    paramScope(paramScope),
+    bodyScope(bodyScope),
+    funcExprScope(NULL),
+    root(pnode),
+    capturedSyms(nullptr),
+    capturedSymMap(nullptr),
+    currentChildFunction(nullptr),
+    currentChildScope(nullptr),
+    callsEval(false),
+    childCallsEval(false),
+    hasArguments(false),
+    hasHeapArguments(false),
+    isEventHandler(false),
+    hasLocalInClosure(false),
+    hasClosureReference(false),
+    hasGlobalReference(false),
+    hasCachedScope(false),
+    funcExprNameReference(false),
+    applyEnclosesArgs(false),
+    escapes(false),
+    hasDeferredChild(false),
+    childHasWith(false),
+    hasLoop(false),
+    hasEscapedUseNestedFunc(false),
+    needEnvRegister(false),
+    hasCapturedThis(false),
+    staticFuncId(-1),
+    inlineCacheMap(null),
+    slotProfileIdMap(alloc),
+    localPropIdOffset(-1),
+    sameNameArgsPlaceHolderSlotCount(0),
+    thisScopeSlot(Js::Constants::NoProperty),
+    superScopeSlot(Js::Constants::NoProperty),
+    newTargetScopeSlot(Js::Constants::NoProperty),
+    isThisLexicallyCaptured(false),
+    isSuperLexicallyCaptured(false),
+    isNewTargetLexicallyCaptured(false),
+    inlineCacheCount(0),
+    rootObjectLoadInlineCacheCount(0),
+    rootObjectLoadMethodInlineCacheCount(0),
+    rootObjectStoreInlineCacheCount(0),
+    isInstInlineCacheCount(0),
+    referencedPropertyIdCount(0),
+    argumentsSymbol(NULL),
+    nonUserNonTempRegistersToInitialize(alloc),
+    constantToRegister(/*size=*/ 17, alloc),
+    stringToRegister(/*size=*/ 17, alloc),
+    doubleConstantToRegister(alloc, /*size=*/ 17),
+    stringTemplateCallsiteRegisterMap(alloc, 17),
+    targetStatements(alloc)
+{
+    this->byteCodeFunction = byteCodeFunction;
+    bodyScope->SetFunc(this);
+    if (paramScope != nullptr)
+    {
+        paramScope->SetFunc(this);
+    }
+}
+
+void FuncInfo::EnsureThisScopeSlot()
+{
+    if (this->thisScopeSlot == Js::Constants::NoRegister)
+    {
+        Scope* scope = this->bodyScope->IsGlobalEvalBlockScope() ? this->GetGlobalEvalBlockScope() : this->bodyScope;
+        this->thisScopeSlot = scope->AddScopeSlot();
+    }
+}
+
+void FuncInfo::EnsureSuperScopeSlot()
+{
+    if (this->superScopeSlot == Js::Constants::NoRegister)
+    {
+        this->superScopeSlot = this->bodyScope->AddScopeSlot();
+    }
+}
+
+void FuncInfo::EnsureNewTargetScopeSlot()
+{
+    if (this->newTargetScopeSlot == Js::Constants::NoRegister)
+    {
+        this->newTargetScopeSlot = this->bodyScope->AddScopeSlot();
+    }
+}
 
 Scope *
 FuncInfo::GetGlobalBlockScope() const

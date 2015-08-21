@@ -6,7 +6,10 @@ struct InMemoryCodeGenWorkItem;
 class SourceContextInfo;
 class FunctionBailOutRecord;
 struct DeferredFunctionStub;
-
+#ifdef DYNAMIC_PROFILE_MUTATOR
+class DynamicProfileMutator;
+class DynamicProfileMutatorImpl;
+#endif
 #define MAX_FUNCTION_BODY_DEBUG_STRING_SIZE 42 //11*3+8+1
 
 namespace Js
@@ -38,6 +41,7 @@ namespace Js
     class AsmJsFunctionInfo;
     class AmsJsModuleInfo;
     class ArrayBuffer;
+    class FunctionCodeGenRuntimeData;
 #pragma endregion
 
     typedef JsUtil::BaseDictionary<Js::PropertyId, const Js::PropertyRecord*, RecyclerNonLeafAllocator, PowerOf2SizePolicy, DefaultComparer, JsUtil::SimpleDictionaryEntry> PropertyRecordList;

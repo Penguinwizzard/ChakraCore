@@ -4,6 +4,8 @@
 
 namespace Js
 {
+    class FunctionCodeGenJitTimeData;
+
     // Keeps data relevant to a function body that is needed for jitting the function, alive until jitting is complete
     class CodeGenRecyclableData sealed : public JsUtil::DoublyLinkedListElement<CodeGenRecyclableData>
     {

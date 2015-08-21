@@ -2,7 +2,10 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "RuntimeByteCodePch.h"
+
+#include "Language\AsmJsByteCodeGenerator.h"
+#include "Language\AsmJs.h"
 
 // TODO (yongqu) get rid of pragma warning
 #pragma warning(disable:4242)

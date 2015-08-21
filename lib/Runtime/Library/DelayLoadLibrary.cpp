@@ -2,7 +2,7 @@
 // Copyright (C) by Microsoft Corporation.  All rights reserved.
 //----------------------------------------------------------------------------
 
-#include "stdafx.h"
+#include "RuntimeLibraryPch.h"
 
 #ifdef _CONTROL_FLOW_GUARD
 #if !defined(DELAYLOAD_SET_CFG_TARGET)

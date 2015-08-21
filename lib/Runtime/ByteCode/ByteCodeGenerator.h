@@ -11,8 +11,6 @@ const long AstBytecodeRatioEstimate = 5;
 class ByteCodeGenerator
 {
 private:
-    static SymbolName const argumentsName; // arguments
-
     Js::ScriptContext* scriptContext;
     ArenaAllocator *alloc;
     ulong flags;
@@ -119,12 +117,7 @@ public:
 
     ArenaAllocator *GetAllocator() {
         return alloc;
-    }
-
-    SymbolName const& GetArgumentsName()
-    {
-        return argumentsName;
-    }
+    }    
 
     Js::PropertyRecordList* EnsurePropertyRecordList()
     {
@@ -158,7 +151,7 @@ public:
     Js::RegSlot NextConstRegister();
     FuncInfo *TopFuncInfo() const;
 
-    void EnterLoop() {  if (this->TopFuncInfo()) { this->TopFuncInfo()->hasLoop = true; } loopDepth++; }
+    void EnterLoop();
     void ExitLoop() { loopDepth--; }
     BOOL IsInLoop() const { return loopDepth > 0; }
     // TODO: per-function register assignment for env and global symbols
@@ -235,38 +228,8 @@ public:
     void PushBlock(ParseNode *pnode);
     void PopBlock();
 
-    __inline void PushFuncInfo(wchar_t const * location, FuncInfo* funcInfo)
-    {
-        // We might have multiple global scope for deferparse
-        //Assert(!funcInfo->IsGlobalFunction() || this->TopFuncInfo() == null || this->TopFuncInfo()->IsGlobalFunction());
-        if (PHASE_TRACE1(Js::ByteCodePhase))
-        {
-            Output::Print(L"%s: PushFuncInfo: %s", location, funcInfo->name);
-            if (this->TopFuncInfo())
-            {
-                Output::Print(L" Top: %s", this->TopFuncInfo()->name);
-            }
-            Output::Print(L"\n");
-            Output::Flush();
-        }
-        funcInfoStack->Push(funcInfo);
-    }
-
-    __inline void PopFuncInfo(wchar_t const * location)
-    {
-        FuncInfo * funcInfo = funcInfoStack->Pop();
-        //Assert(!funcInfo->IsGlobalFunction() || this->TopFuncInfo() == null || this->TopFuncInfo()->IsGlobalFunction());
-        if (PHASE_TRACE1(Js::ByteCodePhase))
-        {
-            Output::Print(L"%s: PopFuncInfo: %s", location, funcInfo->name);
-            if (this->TopFuncInfo())
-            {
-                Output::Print(L" Top: %s", this->TopFuncInfo()->name);
-            }
-            Output::Print(L"\n");
-            Output::Flush();
-        }
-    }
+    void PushFuncInfo(wchar_t const * location, FuncInfo* funcInfo);
+    void PopFuncInfo(wchar_t const * location);
 
     Js::RegSlot PrependLocalScopes(Js::RegSlot evalEnv, Js::RegSlot tempLoc, FuncInfo *funcInfo);
     Symbol *FindSymbol(Symbol **symRef, IdentPtr pid, bool forReference = false);
@@ -349,42 +312,19 @@ public:
             isStrictMode ? (isRoot ? Js::OpCode::StRootFldStrict : Js::OpCode::StFldStrict) :
             isRoot ? Js::OpCode::StRootFld : Js::OpCode::StFld;
     }
-    static Js::OpCode GetStFldOpCode(FuncInfo* funcInfo, bool isRoot, bool isLetDecl, bool isConstDecl, bool isClassMemberInit)
-    {
-        return GetStFldOpCode(funcInfo->GetIsStrictMode(), isRoot, isLetDecl, isConstDecl, isClassMemberInit);
-    }
+    static Js::OpCode GetStFldOpCode(FuncInfo* funcInfo, bool isRoot, bool isLetDecl, bool isConstDecl, bool isClassMemberInit);
     static Js::OpCode GetScopedStFldOpCode(bool isStrictMode)
     {
         return isStrictMode ? Js::OpCode::ScopedStFldStrict : Js::OpCode::ScopedStFld;
     }
-    static Js::OpCode GetScopedStFldOpCode(FuncInfo* funcInfo, bool isConsoleScopeLetConst = false)
-    {
-        if (isConsoleScopeLetConst)
-        {
-            return Js::OpCode::ConsoleScopedStFld;
-        }
-        return GetScopedStFldOpCode(funcInfo->GetIsStrictMode());
-    }
+    static Js::OpCode GetScopedStFldOpCode(FuncInfo* funcInfo, bool isConsoleScopeLetConst = false);
     static Js::OpCode GetStElemIOpCode(bool isStrictMode)
     {
         return isStrictMode ? Js::OpCode::StElemI_A_Strict : Js::OpCode::StElemI_A;
     }
-    static Js::OpCode GetStElemIOpCode(FuncInfo* funcInfo)
-    {
-        return GetStElemIOpCode(funcInfo->GetIsStrictMode());
-    }
+    static Js::OpCode GetStElemIOpCode(FuncInfo* funcInfo);
 
-    bool DoJitLoopBodies(FuncInfo *funcInfo) const
-    {
-        // Never jit loop bodies in a function with a try.
-        // Otherwise, always jit loop bodies under /forcejitloopbody.
-        // Otherwise, jit loop bodies unless we're in eval/"new Function" or feature is disabled.
-
-        Assert(funcInfo->byteCodeFunction->IsFunctionParsed());
-        Js::FunctionBody* functionBody = funcInfo->byteCodeFunction->GetFunctionBody();
-
-        return functionBody->ForceJITLoopBody() || funcInfo->byteCodeFunction->IsJitLoopBodyPhaseEnabled();
-    }
+    bool DoJitLoopBodies(FuncInfo *funcInfo) const;
 
     static void Generate(__in ParseNode *pnode, ulong grfscr, __in ByteCodeGenerator* byteCodeGenerator, __inout Js::ParseableFunctionInfo ** ppRootFunc, __in uint sourceIndex, __in bool forceNoNative, __in Parser* parser, Js::ScriptFunction ** functionRef);
     void Begin(
@@ -418,18 +358,7 @@ public:
     void TrackFunctionDeclarationPropertyForDebugger(Symbol *functionDeclarationSymbol, FuncInfo *funcInfoParent);
     void UpdateDebuggerPropertyInitializationOffset(Js::RegSlot location, Js::PropertyId propertyId, bool shouldConsumeRegister = true);
 
-    FuncInfo *FindEnclosingNonLambda()
-    {
-        for (Scope *scope = TopFuncInfo()->GetBodyScope(); scope; scope = scope->GetEnclosingScope())
-        {
-            if (!scope->GetFunc()->IsLambda())
-            {
-                return scope->GetFunc();
-            }
-        }
-        Assert(0);
-        return nullptr;
-    }
+    FuncInfo *FindEnclosingNonLambda();
 
     bool CanStackNestedFunc(FuncInfo * funcInfo, bool trace = false);
     void CheckDeferParseHasMaybeEscapedNestedFunc();
@@ -444,25 +373,7 @@ public:
     Js::FunctionBody *EnsureFakeGlobalFuncForUndefer(ParseNode *pnode);
     Js::FunctionBody *MakeGlobalFunctionBody(ParseNode *pnode);
 
-    static bool NeedScopeObjectForArguments(FuncInfo *funcInfo, ParseNode *pnodeFnc)
-    {
-        // We can avoid creating a scope object with arguments present if:
-        bool dontNeedScopeObject =
-            // We have arguments, and
-            funcInfo->GetHasHeapArguments()
-            // Either we are in strict mode, or have strict mode formal semantics from a non-simple parameter list, and
-            && (funcInfo->GetIsStrictMode()
-                || !pnodeFnc->sxFnc.IsSimpleParameterList())
-            // Neither of the scopes are objects
-            && !funcInfo->paramScope->GetIsObject()
-            && !funcInfo->bodyScope->GetIsObject();
-
-        return funcInfo->GetHasHeapArguments()
-            // Regardless of the conditions above, we won't need a scope object if there aren't any formals.
-            && (pnodeFnc->sxFnc.pnodeArgs != nullptr || pnodeFnc->sxFnc.pnodeRest != nullptr)
-            && !dontNeedScopeObject;
-    }
-
+    static bool NeedScopeObjectForArguments(FuncInfo *funcInfo, ParseNode *pnodeFnc);
 private:
     bool NeedCheckBlockVar(Symbol* sym, Scope* scope, FuncInfo* funcInfo) const;
 };

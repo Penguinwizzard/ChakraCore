@@ -144,19 +144,19 @@ namespace Js
 
         void ProcessTryFinally(const byte* ip, Js::JumpOffset jumpOffset, Js::RegSlot regException = Js::Constants::NoRegister, Js::RegSlot regOffset = Js::Constants::NoRegister, bool hasYield = false);
     public:
-        inline void OP_SetOutAsmDb(RegSlot outRegisterID, double val);
-        inline void OP_SetOutAsmInt(RegSlot outRegisterID, int val);
-        inline void OP_I_SetOutAsmInt(RegSlot outRegisterID, int val);
-        inline void OP_I_SetOutAsmDb(RegSlot outRegisterID, double val);
-        inline void OP_I_SetOutAsmFlt(RegSlot outRegisterID, float val);
+        void OP_SetOutAsmDb(RegSlot outRegisterID, double val);
+        void OP_SetOutAsmInt(RegSlot outRegisterID, int val);
+        void OP_I_SetOutAsmInt(RegSlot outRegisterID, int val);
+        void OP_I_SetOutAsmDb(RegSlot outRegisterID, double val);
+        void OP_I_SetOutAsmFlt(RegSlot outRegisterID, float val);
 #ifdef SIMD_JS_ENABLED
-        inline void OP_I_SetOutAsmSimd(RegSlot outRegisterID, AsmJsSIMDValue val);
+        void OP_I_SetOutAsmSimd(RegSlot outRegisterID, AsmJsSIMDValue val);
 #endif
 
-        inline void SetOut(ArgSlot outRegisterID, Var bValue);
-        inline void SetOut(ArgSlot_OneByte outRegisterID, Var bValue);
-        inline void PushOut(Var aValue);
-        inline void PopOut(ArgSlot argCount);
+        void SetOut(ArgSlot outRegisterID, Var bValue);
+        void SetOut(ArgSlot_OneByte outRegisterID, Var bValue);
+        void PushOut(Var aValue);
+        void PopOut(ArgSlot argCount);
 
         void ValidateRegValue(Var value, bool allowStackVar = false, bool allowStackVarOnDisabledStackNestedFunc = true) const;
         void ValidateSetRegValue(Var value, bool allowStackVar = false, bool allowStackVarOnDisabledStackNestedFunc = true) const;
@@ -179,36 +179,36 @@ namespace Js
         template <typename RegSlotType> AsmJsSIMDValue GetRegRawSimd(RegSlotType localRegisterID) const;
         template <typename RegSlotType> void           SetRegRawSimd(RegSlotType localRegisterID, AsmJsSIMDValue bValue);
         static DWORD GetAsmSimdValOffSet(AsmJsCallStackLayout* stack);
-        template <class T> inline void OP_SimdLdArrGeneric(const unaligned T* playout);
-        template <class T> inline void OP_SimdLdArrConstIndex(const unaligned T* playout);
-        template <class T> inline void OP_SimdStArrGeneric(const unaligned T* playout);
-        template <class T> inline void OP_SimdStArrConstIndex(const unaligned T* playout);
+        template <class T> void OP_SimdLdArrGeneric(const unaligned T* playout);
+        template <class T> void OP_SimdLdArrConstIndex(const unaligned T* playout);
+        template <class T> void OP_SimdStArrGeneric(const unaligned T* playout);
+        template <class T> void OP_SimdStArrConstIndex(const unaligned T* playout);
 
 #endif
 
         template <typename RegSlotType>
-        inline Var GetRegAllowStackVarEnableOnly(RegSlotType localRegisterID) const;
+        Var GetRegAllowStackVarEnableOnly(RegSlotType localRegisterID) const;
         template <typename RegSlotType>
-        inline void SetRegAllowStackVarEnableOnly(RegSlotType localRegisterID, Var bValue);
+        void SetRegAllowStackVarEnableOnly(RegSlotType localRegisterID, Var bValue);
 
-        inline Var GetNonVarReg(RegSlot localRegisterID) const;
-        inline void SetNonVarReg(RegSlot localRegisterID, void * bValue);
-        inline ScriptContext* GetScriptContext() const { return scriptContext; }
+        Var GetNonVarReg(RegSlot localRegisterID) const;
+        void SetNonVarReg(RegSlot localRegisterID, void * bValue);
+        ScriptContext* GetScriptContext() const { return scriptContext; }
         Var GetRootObject() const;
-        inline ScriptFunction* GetJavascriptFunction() const { return function; }
-        inline FunctionBody * GetFunctionBody() const { return m_functionBody; }
-        inline ByteCodeReader* GetReader() { return &m_reader;}
-        inline uint GetCurrentLoopNum() const { return currentLoopNum; }
-        inline InterpreterStackFrame* GetPreviousFrame() const {return previousInterpreterFrame;}
-        inline void SetPreviousFrame(InterpreterStackFrame *interpreterFrame) {previousInterpreterFrame = interpreterFrame;}
-        inline Var GetArgumentsObject() const { return m_arguments; }
-        inline void SetArgumentsObject(Var args) { m_arguments = args; }
-        inline UINT16 GetFlags() const { return m_flags; }
-        inline void OrFlags(UINT16 addTo) { m_flags |= addTo; }
+        ScriptFunction* GetJavascriptFunction() const { return function; }
+        FunctionBody * GetFunctionBody() const { return m_functionBody; }
+        ByteCodeReader* GetReader() { return &m_reader;}
+        uint GetCurrentLoopNum() const { return currentLoopNum; }
+        InterpreterStackFrame* GetPreviousFrame() const {return previousInterpreterFrame;}
+        void SetPreviousFrame(InterpreterStackFrame *interpreterFrame) {previousInterpreterFrame = interpreterFrame;}
+        Var GetArgumentsObject() const { return m_arguments; }
+        void SetArgumentsObject(Var args) { m_arguments = args; }
+        UINT16 GetFlags() const { return m_flags; }
+        void OrFlags(UINT16 addTo) { m_flags |= addTo; }
         bool IsInCatchOrFinallyBlock();
         static bool IsDelayDynamicInterpreterThunk(void* entryPoint);
 
-        inline Var CreateHeapArguments(ScriptContext* scriptContext);
+        Var CreateHeapArguments(ScriptContext* scriptContext);
 
         bool IsCurrentLoopNativeAddr(void * codeAddr) const;
         void * GetReturnAddress() { return returnAddress; }
@@ -276,8 +276,8 @@ namespace Js
 #endif 
                            );
 
-        inline void* __cdecl operator new(size_t byteSize, void* previousAllocation) throw();
-        inline void __cdecl operator delete(void* allocationToFree, void* previousAllocation) throw();
+        void* __cdecl operator new(size_t byteSize, void* previousAllocation) throw();
+        void __cdecl operator delete(void* allocationToFree, void* previousAllocation) throw();
 
 
         __declspec(noinline) Var ProcessThunk();
@@ -299,16 +299,16 @@ namespace Js
         void ResetOut();
 
         Var OP_ArgIn0();
-        template <class T> inline void OP_ArgOut_A(const unaligned T* playout);
+        template <class T> void OP_ArgOut_A(const unaligned T* playout);
         template <class T> void OP_ProfiledArgOut_A(const unaligned T * playout);
 #if DBG
-        template <class T> inline void OP_ArgOut_ANonVar(const unaligned T* playout);
+        template <class T> void OP_ArgOut_ANonVar(const unaligned T* playout);
 #endif
-        inline BOOL OP_BrFalse_A(Var aValue, ScriptContext* scriptContext);
-        inline BOOL OP_BrTrue_A(Var aValue, ScriptContext* scriptContext);
-        inline BOOL OP_BrNotNull_A(Var aValue);
-        inline BOOL OP_BrOnHasProperty(Var argInstance, uint propertyIdIndex, ScriptContext* scriptContext);
-        inline BOOL OP_BrOnNoProperty(Var argInstance, uint propertyIdIndex, ScriptContext* scriptContext);
+        BOOL OP_BrFalse_A(Var aValue, ScriptContext* scriptContext);
+        BOOL OP_BrTrue_A(Var aValue, ScriptContext* scriptContext);
+        BOOL OP_BrNotNull_A(Var aValue);
+        BOOL OP_BrOnHasProperty(Var argInstance, uint propertyIdIndex, ScriptContext* scriptContext);
+        BOOL OP_BrOnNoProperty(Var argInstance, uint propertyIdIndex, ScriptContext* scriptContext);
 
         RecyclableObject * OP_CallGetFunc(Var target);
 

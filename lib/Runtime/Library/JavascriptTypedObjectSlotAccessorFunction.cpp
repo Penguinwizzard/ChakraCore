@@ -3,7 +3,7 @@
 *   Copyright (C) Microsoft. All rights reserved.       *
 *                                                       *
 ********************************************************/
-#include "StdAfx.h"
+#include "RuntimeLibraryPch.h"
 
 #ifdef ENABLE_DOM_FAST_PATH
 namespace Js

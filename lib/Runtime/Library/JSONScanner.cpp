@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "RuntimeLibraryPch.h"
 #include "JSONScanner.h"
 
 using namespace Js;

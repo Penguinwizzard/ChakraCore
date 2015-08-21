@@ -3,10 +3,14 @@
 //---------------------------------------------------------------------------
 
 
-#include "StdAfx.h"
+#include "RuntimeLanguagePch.h"
 #include "..\Backend\CodeGenAllocators.h"
 
 #include "AsmJSEncoder.inl"
+
+#if DBG_DUMP
+#include "ByteCode\OpCodeUtilAsmJs.h"
+#endif
 
 namespace Js
 {

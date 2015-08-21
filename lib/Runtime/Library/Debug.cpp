@@ -1,7 +1,9 @@
-#include "Stdafx.h"
 //----------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
+
+#include "RuntimeLibraryPch.h"
+
 #if DBG_DUMP
 WCHAR* DumpCallStack(uint frameCount) { return DumpCallStackFull(frameCount, /*print*/ true); }
 

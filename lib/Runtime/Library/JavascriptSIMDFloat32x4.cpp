@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "RuntimeLibraryPch.h"
 #include "SIMDFloat32x4Operation.h"
 
 #ifdef SIMD_JS_ENABLED

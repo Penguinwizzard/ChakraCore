@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //---------------------------------------------------------------------------
 
-#include "stdafx.h"
+#include "RuntimeLanguagePch.h"
 
 #if !defined(_M_ARM)
 #error ArmStackFrame is not supported on this architecture.

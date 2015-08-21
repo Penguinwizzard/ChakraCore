@@ -204,24 +204,11 @@ namespace Js {
             bool oldCapturesAll;
 
         public:
-            AutoCapturesAllScope(Scope* scope, bool turnOn)
-                : scope(scope)
-            {
-                oldCapturesAll = scope->GetCapturesAll();
-                if (turnOn)
-                {
-                    scope->SetCapturesAll(true);
-                }
-            }
-
+            AutoCapturesAllScope(Scope* scope, bool turnOn);
+            ~AutoCapturesAllScope();
             bool OldCapturesAll() const
             {
                 return oldCapturesAll;
-            }
-
-            ~AutoCapturesAllScope()
-            {
-                scope->SetCapturesAll(oldCapturesAll);
             }
         };
     };

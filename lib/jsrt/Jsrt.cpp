@@ -8,6 +8,9 @@
 #include "JsrtExternalArrayBuffer.h"
 
 #include "JsrtSourceHolder.h"
+#include "Language\ByteCodeSerializer.h"
+#include "Library\dataview.h"
+#include "Library\JavascriptSymbol.h"
 
 JsErrorCode CheckContext(JsrtContext *currentContext, bool verifyRuntimeState, bool allowInObjectBeforeCollectCallback)
 {

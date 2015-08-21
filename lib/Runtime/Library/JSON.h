@@ -66,11 +66,7 @@ namespace JSON
         Js::Var Str(uint32 index, Js::Var holder);
         
     private:
-        inline Js::JavascriptString* Quote(Js::JavascriptString* value)
-        {
-            // By default, optimize for scenario when we don't need to change the inside of the string. That's majority of cases.
-            return Js::JSONString::Escape<Js::EscapingOperation_NotEscape>(value);
-        }
+        Js::JavascriptString* Quote(Js::JavascriptString* value);
 
         Js::Var StringifyObject(Js::Var value);
 

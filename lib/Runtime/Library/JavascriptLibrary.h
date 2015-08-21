@@ -23,6 +23,7 @@ namespace Projection
 
 namespace Js
 {
+    class MissingPropertyTypeHandler;
     typedef RecyclerFastAllocator<JavascriptNumber, LeafBit> RecyclerJavascriptNumberAllocator;
 
     class UndeclaredBlockVariable : public RecyclableObject
@@ -851,6 +852,7 @@ namespace Js
         void SetProfileMode(bool fSet);
         void SetDispatchProfile(bool fSet, JavascriptMethod dispatchInvoke);
         void SetDispatchInvoke(Js::JavascriptMethod dispatchInvoke);
+        HRESULT ProfilerRegisterBuiltIns();
 
         static bool IsCopyOnAccessArrayCallSite(JavascriptLibrary *lib, ArrayCallSiteInfo *arrayInfo, uint32 length);
         static bool IsCachedCopyOnAccessArrayCallSite(const JavascriptLibrary *lib, ArrayCallSiteInfo *arrayInfo);
@@ -1092,6 +1094,7 @@ namespace Js
                 RECYCLER_PERF_COUNTER_SUB(PropertyRecordBindReference, this->referencedPropertyRecords->Count());
             }
         }
+        
     private:
         typedef JsUtil::BaseHashSet<Js::PropertyRecord const *, Recycler, PowerOf2SizePolicy> ReferencedPropertyRecordHashSet;
         ReferencedPropertyRecordHashSet* referencedPropertyRecords;
@@ -1111,5 +1114,37 @@ namespace Js
         {
             return this->referencedPropertyRecords;
         }
+
+        HRESULT ProfilerRegisterObject();
+        HRESULT ProfilerRegisterArray();
+        HRESULT ProfilerRegisterBoolean();
+        HRESULT ProfilerRegisterDate();
+        HRESULT ProfilerRegisterFunction();
+        HRESULT ProfilerRegisterMath();
+        HRESULT ProfilerRegisterNumber();
+        HRESULT ProfilerRegisterString();
+        HRESULT ProfilerRegisterRegExp();
+        HRESULT ProfilerRegisterJSON();
+        HRESULT ProfilerRegisterMap();
+        HRESULT ProfilerRegisterSet();
+        HRESULT ProfilerRegisterWeakMap();
+        HRESULT ProfilerRegisterWeakSet();
+        HRESULT ProfilerRegisterSymbol();
+        HRESULT ProfilerRegisterArrayIterator();
+        HRESULT ProfilerRegisterMapIterator();
+        HRESULT ProfilerRegisterSetIterator();
+        HRESULT ProfilerRegisterStringIterator();
+        HRESULT ProfilerRegisterEnumeratorIterator();
+        HRESULT ProfilerRegisterTypedArray();
+        HRESULT ProfilerRegisterPromise();
+        HRESULT ProfilerRegisterProxy();
+        HRESULT ProfilerRegisterReflect();
+        HRESULT ProfilerRegisterGenerator();
+#ifdef SIMD_JS_ENABLED
+        HRESULT ProfilerRegisterSIMD();
+#endif
+#ifdef IR_VIEWER
+        HRESULT ProfilerRegisterIRViewer();
+#endif /* IR_VIEWER */
     };
 }

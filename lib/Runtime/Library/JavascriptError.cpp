@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "RuntimeLibraryPch.h"
 
 #ifdef ERROR_TRACE
 #define TRACE_ERROR(...) { Trace(__VA_ARGS__); }

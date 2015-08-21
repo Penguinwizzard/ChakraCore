@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "stdafx.h"
+#include "RuntimeDebugPch.h"
 
 namespace Js
 {
@@ -83,6 +83,16 @@ namespace Js
     void ProbeContainer::EndRecordingCall(Js::Var returnValue, Js::JavascriptFunction * function)
     {
         this->debugManager->stepController.EndRecordingCall(returnValue, function);
+    }
+
+    ReturnedValueList* ProbeContainer::GetReturnedValueList() const
+    { 
+        return this->debugManager->stepController.GetReturnedValueList(); 
+    }
+
+    void ProbeContainer::ResetReturnedValueList()
+    { 
+        this->debugManager->stepController.ResetReturnedValueList(); 
     }
 
     void ProbeContainer::UpdateFramePointers(bool fMatchWithCurrentScriptContext)

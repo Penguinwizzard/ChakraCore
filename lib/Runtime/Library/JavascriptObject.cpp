@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "RuntimeLibraryPch.h"
 
 namespace Js
 {    
@@ -2020,7 +2020,7 @@ namespace Js
                 returnValue = JavascriptOperators::DefineOwnPropertyDescriptor(obj, propId, descriptor, throwOnError, scriptContext);
                 if (propId == PropertyIds::__proto__)
                 {
-                    scriptContext->GetLibrary()->GetObjectPrototype()->PostDefineOwnProperty__proto__(obj);
+                    scriptContext->GetLibrary()->GetObjectPrototypeObject()->PostDefineOwnProperty__proto__(obj);
                 }
             }
         }

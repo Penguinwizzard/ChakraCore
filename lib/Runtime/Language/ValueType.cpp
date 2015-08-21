@@ -1,6 +1,6 @@
 // Copyright (C) Microsoft. All rights reserved.
 
-#include "StdAfx.h"
+#include "RuntimeLanguagePch.h"
 
 #define BASE_VALUE_TYPE(t, b) const ValueType ValueType::##t(b);
 #include "ValueTypes.h"

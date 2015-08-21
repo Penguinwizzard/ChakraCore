@@ -2,7 +2,8 @@
 // Copyright (C) by Microsoft Corporation.  All rights reserved.
 //----------------------------------------------------------------------------
 
-#include "stdafx.h"
+#include "RuntimeLibraryPch.h"
+#include "Library\JavascriptTypedNumber.h"
 
 namespace Js
 {   

@@ -3,6 +3,8 @@
 //----------------------------------------------------------------------------
 
 #include "Backend.h"
+#include "Math\JavascriptSSE2MathOperators.h"
+#include "Math\JavascriptSSE2MathOperators.inl"
 
 namespace IR
 {

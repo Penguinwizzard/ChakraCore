@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "RuntimeLibraryPch.h"
 #include "JSONStack.h"
 #include "JSONParser.h"
 
@@ -965,5 +965,11 @@ namespace JSON
         }
 
         return count;
+    }
+
+    inline Js::JavascriptString* StringifySession::Quote(Js::JavascriptString* value)
+    {
+        // By default, optimize for scenario when we don't need to change the inside of the string. That's majority of cases.
+        return Js::JSONString::Escape<Js::EscapingOperation_NotEscape>(value);
     }
 } // namespace JSON

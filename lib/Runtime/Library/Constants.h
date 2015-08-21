@@ -165,4 +165,7 @@ namespace Js
         static const size_t EvalCodeLength          = _countof(L"eval code") - 1;
         static const size_t UnknownScriptCodeLength = _countof(L"Unknown script code") - 1;
     };  
+
+    extern const FrameDisplay NullFrameDisplay;
+    extern const FrameDisplay StrictNullFrameDisplay;
 }

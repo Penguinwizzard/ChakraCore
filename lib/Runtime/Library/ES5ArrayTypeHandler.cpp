@@ -2,7 +2,7 @@
 // Copyright (C) 2008 - 2009 by Microsoft Corporation.  All rights reserved.
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "RuntimeLibraryPch.h"
 
 namespace Js
 {

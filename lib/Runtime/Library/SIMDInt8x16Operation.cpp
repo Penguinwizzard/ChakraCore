@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //---------------------------------------------------------------------------- 
 
-#include "StdAfx.h"
+#include "RuntimeLibraryPch.h"
 #include "SIMDInt8x16Operation.h"
 
 #if defined(_M_ARM32_OR_ARM64)

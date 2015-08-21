@@ -5,7 +5,7 @@
 // There is one nested ArrayBuffer for each typed array. Multiple typed array
 // can share the same array buffer. 
 //----------------------------------------------------------------------------
-#include "stdAfx.h"
+#include "RuntimeLibraryPch.h"
 
 #define INSTANTIATE_BUILT_IN_ENTRYPOINTS(typeName) \
     template Var typeName::NewInstance(RecyclableObject* function, CallInfo callInfo, ...); \

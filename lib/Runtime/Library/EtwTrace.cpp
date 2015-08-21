@@ -2,9 +2,24 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "RuntimeLibraryPch.h"
 
 #ifdef ENABLE_JS_ETW
+
+#ifdef VTUNE_PROFILING
+#ifdef CDECL
+#define ORIGINAL_CDECL CDECL
+#undef CDECL
+#endif
+// REVIEW: ChakraCore Dependency
+#include "..\..\..\tools\external\inc\jitProfiling.h"
+#ifdef ORIGINAL_CDECL
+#undef CDECL
+#endif
+#define CDECL ORIGINAL_CDECL
+#endif
+
+
 using namespace Js;
 
 //

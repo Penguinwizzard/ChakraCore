@@ -3,6 +3,8 @@
 //----------------------------------------------------------------------------
 
 #include "BackEnd.h"
+#include "Library\EtwTrace.h"
+#include "Language\ScriptContextProfiler.h"
 
 bool
 Func::IsLoopBody() const

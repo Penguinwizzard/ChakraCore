@@ -23,6 +23,7 @@
       <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)..;$(MSBuildThisFileDirectory)..\..\Common;$(MSBuildThisFileDirectory)..\..\Parser;$(MSBuildThisFileDirectory)..\..\Backend;$(ChakraManifestsIncludeDirectory);$(ManifestsInboxIncludeDirectory);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>%(DisableSpecificWarnings);4702</DisableSpecificWarnings>
       <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>RuntimeByteCodePch.h</PrecompiledHeaderFile>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -42,7 +43,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)ScopeInfo.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)StatementReader.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Symbol.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\StdAfx.cpp">
+    <ClCompile Include="$(MSBuildThisFileDirectory)RuntimeByteCodePch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
@@ -72,7 +73,8 @@
     <ClInclude Include="ByteCodeWriter.h" />
     <ClInclude Include="OpCodes.h" />
     <ClInclude Include="OpLayouts.h" />
-    <ClInclude Include="Symbol.h" />    
+    <ClInclude Include="Symbol.h" />
+    <ClInclude Include="RuntimeByteCodePch.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Condition="'$(USE_EXTERNAL_DEPENDENCIES)'!='yes'" Include="..\..\..\..\publish\Publish.vcxproj">

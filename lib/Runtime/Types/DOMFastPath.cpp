@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "stdafx.h"
+#include "RuntimeTypePch.h"
 
 #ifdef ENABLE_DOM_FAST_PATH
 DECLARE_SIMPLEACCESSOR_INFO(0)

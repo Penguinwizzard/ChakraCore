@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#include <StdAfx.h>
+#include "RuntimeLanguagePch.h"
 
 #ifdef DYNAMIC_PROFILE_STORAGE
 

@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "stdafx.h"
+#include "RuntimeLanguagePch.h"
 
 #ifdef ENABLE_WININET_PROFILE_DATA_CACHE
 #include "activscp_private.h"

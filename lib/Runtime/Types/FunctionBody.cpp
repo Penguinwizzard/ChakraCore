@@ -1,6 +1,17 @@
 // Copyright (C) Microsoft. All rights reserved.
 
-#include "StdAfx.h"
+#include "RuntimeTypePch.h"
+#include "Language\AsmJsTypes.h"
+#include "Language\AsmJsModule.h"
+#include "Language\ByteCodeSerializer.h"
+#include "Language\FunctionCodeGenRuntimeData.h"
+
+#include "ByteCode\ScopeInfo.h"
+#include "Library\EtwTrace.h"
+
+#ifdef DYNAMIC_PROFILE_MUTATOR
+#include "Language\DynamicProfileMutator.h"
+#endif
 
 namespace Js
 {
@@ -4337,6 +4348,17 @@ namespace Js
 #endif /* IR_VIEWER */
 
 #ifdef VTUNE_PROFILING
+#ifdef CDECL
+#define ORIGINAL_CDECL CDECL
+#undef CDECL
+#endif
+// REVIEW: ChakraCore Dependency
+#include "..\..\..\tools\external\inc\jitProfiling.h"
+#ifdef ORIGINAL_CDECL
+#undef CDECL
+#endif
+#define CDECL ORIGINAL_CDECL
+
     int EntryPointInfo::GetNativeOffsetMapCount() const
     {
         return this->nativeOffsetMaps.Count();

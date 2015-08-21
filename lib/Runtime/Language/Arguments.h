@@ -27,8 +27,12 @@ namespace Js
     public:
         Arguments(CallInfo callInfo, Var *values) : Info(callInfo), Values(values) {}
         Arguments(VirtualTableInfoCtorEnum v) : Info(v) {}
-        inline Var operator [](int idxArg) { return const_cast<Var>(static_cast<const Arguments&>(*this)[idxArg]); }
-        inline const Var operator [](int idxArg) const;
+        Var operator [](int idxArg) { return const_cast<Var>(static_cast<const Arguments&>(*this)[idxArg]); }
+        const Var operator [](int idxArg) const
+        {
+            AssertMsg((idxArg < (int)Info.Count) && (idxArg >= 0), "Ensure a valid argument index");
+            return Values[idxArg];
+        }
         CallInfo Info;
         Var* Values;
 

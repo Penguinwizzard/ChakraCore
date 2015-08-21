@@ -2,10 +2,15 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#include "stdafx.h"
+#include "RuntimeLibraryPch.h"
 #include "BackEndAPI.h"
+#include "ThreadServiceWrapper.h"
 #include "ThreadBoundThreadContextManager.h"
+#include "Types\TypePropertyCache.h"
 
+#ifdef DYNAMIC_PROFILE_MUTATOR
+#include "Language\DynamicProfileMutator.h"
+#endif
 int TotalNumberOfBuiltInProperties = Js::PropertyIds::_countJSOnlyProperty;
      
 /*

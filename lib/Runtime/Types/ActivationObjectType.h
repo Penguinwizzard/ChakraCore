@@ -6,6 +6,12 @@
 
 namespace Js
 {
+    struct FuncCacheEntry
+    {
+        ScriptFunction *func;
+        DynamicType *type;
+    };
+
     class ActivationObject : public DynamicObject
     {
     protected:
@@ -136,11 +142,7 @@ namespace Js
         static uint32 GetOffsetOfCommitFlag() { return offsetof(ActivationObjectEx, committed); }
         static uint32 GetOffsetOfParentFunc() { return offsetof(ActivationObjectEx, parentFunc); }
 
-        static const PropertyId *GetCachedScopeInfo(const PropertyIdArray *propIds)
-        {
-            // Cached scope info is appended to the "normal" prop ID array elements.
-            return &propIds->elements[propIds->count];
-        }
+        static const PropertyId *GetCachedScopeInfo(const PropertyIdArray *propIds);
 
         // Cached scope info:
         // [0] - cached func count

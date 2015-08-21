@@ -1,7 +1,7 @@
 //  Copyright (c) Microsoft Corporation. All rights reserved.
 // This is a snap of //fbl_rex_dev1/com/combase/RoDebug/RoCausality.cpp#7 (some pieces removed for chakra integration)
 
-#include "stdafx.h"
+#include "RuntimeLibraryPch.h"
 #include "RoCausality.Win7.h"
 
 // Maps for events

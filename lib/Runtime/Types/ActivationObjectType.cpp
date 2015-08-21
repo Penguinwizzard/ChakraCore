@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "stdafx.h"
+#include "RuntimeTypePch.h"
 
 namespace Js
 {
@@ -146,6 +146,13 @@ namespace Js
     BOOL PseudoActivationObject::EnsureNoRedeclProperty(PropertyId propertyId)
     {
         return false;
+    }
+
+    /* static */
+    const PropertyId * ActivationObjectEx::GetCachedScopeInfo(const PropertyIdArray *propIds)
+    {
+        // Cached scope info is appended to the "normal" prop ID array elements.
+        return &propIds->elements[propIds->count];
     }
 
     BOOL ActivationObjectEx::GetPropertyReference(Var originalInstance, PropertyId propertyId, Var *value, PropertyValueInfo *info, ScriptContext *requestContext)

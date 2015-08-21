@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "Stdafx.h"
+#include "RuntimeLibraryPch.h"
 
 using namespace Js;
 

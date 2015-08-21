@@ -21,6 +21,7 @@ namespace Js
     class ScriptContext;
     class ScriptEditQuery;
     class MutationBreakpoint;
+    class StringProfiler;
 }
 
 // Created for every source buffer passed by trident this structure has
@@ -857,43 +858,12 @@ private:
         typedef void(*TransitionToDebugModeIfFirstSourceFn)(ScriptContext *, Utf8SourceInfo *);
         TransitionToDebugModeIfFirstSourceFn transitionToDebugModeIfFirstSourceFn;
 
-        inline HRESULT RegisterObject();
-        inline HRESULT RegisterArray();
-        inline HRESULT RegisterBoolean();
-        inline HRESULT RegisterDate();
-        inline HRESULT RegisterFunction();
-        inline HRESULT RegisterMath();
-        inline HRESULT RegisterNumber();
-        inline HRESULT RegisterString();
-        inline HRESULT RegisterRegExp();
-        inline HRESULT RegisterJSON();
-        inline HRESULT RegisterMap();
-        inline HRESULT RegisterSet();
-        inline HRESULT RegisterWeakMap();
-        inline HRESULT RegisterWeakSet();
-        inline HRESULT RegisterSymbol();
-        inline HRESULT RegisterArrayIterator();
-        inline HRESULT RegisterMapIterator();
-        inline HRESULT RegisterSetIterator();
-        inline HRESULT RegisterStringIterator();
-        inline HRESULT RegisterEnumeratorIterator();
-        inline HRESULT RegisterTypedArray();
-        inline HRESULT RegisterPromise();
-        inline HRESULT RegisterProxy();
-        inline HRESULT RegisterReflect();
-        inline HRESULT RegisterGenerator();
-#ifdef SIMD_JS_ENABLED
-        inline HRESULT RegisterSIMD();
-#endif
-
 #ifdef ENABLE_DOM_FAST_PATH
         // Theoretically we can put this in ThreadContext; don't want to keep the dictionary forever, and preserve the possibility of
         // using JavascriptFunction as key.
         DOMFastPathIRHelperMap* domFastPathIRHelperMap;
 #endif
-#ifdef IR_VIEWER
-        inline HRESULT RegisterIRViewer();
-#endif /* IR_VIEWER */
+
                 
         ScriptContext(ThreadContext* threadContext);
         void InitializeAllocations();
@@ -1443,7 +1413,7 @@ private:
         // To be called directly only when the thread context is shutting down
         void ShutdownClearSourceLists();
 
-        inline HRESULT RegisterLibraryFunction(const wchar_t *pwszObjectName, const wchar_t *pwszFunctionName, Js::PropertyId functionPropertyId, JavascriptMethod entryPoint);
+        HRESULT RegisterLibraryFunction(const wchar_t *pwszObjectName, const wchar_t *pwszFunctionName, Js::PropertyId functionPropertyId, JavascriptMethod entryPoint);
 
         HRESULT RegisterBuiltinFunctions(RegisterExternalLibraryType RegisterExternalLibrary);
         void RegisterDebugThunk(bool calledDuringAttach = true);

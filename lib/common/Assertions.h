@@ -14,7 +14,6 @@ _declspec(selectany) int AssertCount = 0;
 _declspec(selectany) int AssertsToConsole = false;
 _declspec(thread,selectany) int IsInAssert = false;
 
-extern bool CheckIsDebuggerPresent(void);
 #if !defined(USED_IN_STATIC_LIB) 
 #define REPORT_ASSERT(f, comment) Js::Throw::ReportAssert(__FILE__, __LINE__, STRINGIZE((f)), comment)
 #define LOG_ASSERT() Js::Throw::LogAssert()

@@ -18,6 +18,7 @@ ENUM_CLASS_HELPERS(TypeFlagMask, uint8);
 
 namespace Js
 {
+    class TypePropertyCache;
     class Type
     {
         friend class DynamicObject;

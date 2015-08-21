@@ -36,6 +36,7 @@
       </AdditionalIncludeDirectories>
       <DisableSpecificWarnings>%(DisableSpecificWarnings);4702</DisableSpecificWarnings>
       <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>RuntimeDebugPch.h</PrecompiledHeaderFile>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -50,7 +51,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)MutationBreakpoint.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ProbeContainer.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)SourceContextInfo.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\StdAfx.cpp">
+    <ClCompile Include="$(MSBuildThisFileDirectory)RuntimeDebugPch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
@@ -65,6 +66,7 @@
     <ClInclude Include="DiagStackFrame.h" />
     <ClInclude Include="MutationBreakpoint.h" />
     <ClInclude Include="ProbeContainer.h" />
+    <ClInclude Include="RuntimeDebugPch.h" />
     <ClInclude Include="SourceContextInfo.h" />
   </ItemGroup>
   <!-- In Razzle build, we are still rely on the publish directory -->

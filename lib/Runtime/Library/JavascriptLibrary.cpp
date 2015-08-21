@@ -2,7 +2,8 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "RuntimeLibraryPch.h"
+#include "Types\MissingPropertyTypeHandler.h"
 
 namespace Js
 {
@@ -1034,6 +1035,11 @@ namespace Js
         }
     }
 
+    DynamicObject * JavascriptLibraryBase::GetObjectPrototype()
+    {
+        return GetObjectPrototypeObject();
+    }
+
     void JavascriptLibraryBase::Finalize(bool isShutdown)
     {
         if (scriptContext)
@@ -1200,7 +1206,7 @@ namespace Js
         AddMember(globalObject, PropertyIds::Infinity, positiveInfinite, PropertyNone);
         AddMember(globalObject, PropertyIds::undefined, undefinedValue, PropertyNone);
 
-        // Note: Any global function added/removed/changed here should also be updated in ScriptContext::RegisterBuiltinFunctions
+        // Note: Any global function added/removed/changed here should also be updated in JavascriptLibrary::ProfilerRegisterBuiltinFunctions
         // so that the new functions show up in the profiler too.
         JavascriptFunction ** builtinFuncs = this->GetBuiltinFunctions();
 
@@ -1586,7 +1592,7 @@ namespace Js
     void JavascriptLibrary::InitializeArrayConstructor(DynamicObject* arrayConstructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(arrayConstructor, mode, 6);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterArray
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterArray
         // so that the update is in sync with profiler
         ScriptContext* scriptContext = arrayConstructor->GetScriptContext();
         JavascriptLibrary* library = arrayConstructor->GetLibrary();
@@ -1620,7 +1626,7 @@ namespace Js
     void JavascriptLibrary::InitializeArrayPrototype(DynamicObject* arrayPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(arrayPrototype, mode, 24);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterArray
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterArray
         // so that the update is in sync with profiler
 
         ScriptContext* scriptContext = arrayPrototype->GetScriptContext();
@@ -2070,7 +2076,7 @@ namespace Js
     void JavascriptLibrary::InitializeBooleanConstructor(DynamicObject* booleanConstructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(booleanConstructor, mode, 3);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterBoolean
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterBoolean
         // so that the update is in sync with profiler
         ScriptContext* scriptContext = booleanConstructor->GetScriptContext();
         JavascriptLibrary* library = booleanConstructor->GetLibrary();
@@ -2087,7 +2093,7 @@ namespace Js
     void JavascriptLibrary::InitializeBooleanPrototype(DynamicObject* booleanPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(booleanPrototype, mode, 3);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterBoolean
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterBoolean
         // so that the update is in sync with profiler
         JavascriptLibrary* library = booleanPrototype->GetLibrary();
         ScriptContext* scriptContext = booleanPrototype->GetScriptContext();
@@ -2103,7 +2109,7 @@ namespace Js
     void JavascriptLibrary::InitializeSymbolConstructor(DynamicObject* symbolConstructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(symbolConstructor, mode, 12);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterSymbol
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterSymbol
         // so that the update is in sync with profiler
         JavascriptLibrary* library = symbolConstructor->GetLibrary();
         ScriptContext* scriptContext = symbolConstructor->GetScriptContext();
@@ -2144,7 +2150,7 @@ namespace Js
     void JavascriptLibrary::InitializeSymbolPrototype(DynamicObject* symbolPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(symbolPrototype, mode, 5);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterSymbol
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterSymbol
         // so that the update is in sync with profiler
         JavascriptLibrary* library = symbolPrototype->GetLibrary();
         ScriptContext* scriptContext = symbolPrototype->GetScriptContext();
@@ -2173,7 +2179,7 @@ namespace Js
     void JavascriptLibrary::InitializePromiseConstructor(DynamicObject* promiseConstructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(promiseConstructor, mode, 8);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterPromise
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterPromise
         // so that the update is in sync with profiler
         JavascriptLibrary* library = promiseConstructor->GetLibrary();
         ScriptContext* scriptContext = promiseConstructor->GetScriptContext();
@@ -2210,7 +2216,7 @@ namespace Js
     void JavascriptLibrary::InitializePromisePrototype(DynamicObject* promisePrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(promisePrototype, mode, 4);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterPromise
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterPromise
         // so that the update is in sync with profiler
         JavascriptLibrary* library = promisePrototype->GetLibrary();
         ScriptContext* scriptContext = promisePrototype->GetScriptContext();
@@ -2231,7 +2237,7 @@ namespace Js
     void JavascriptLibrary::InitializeGeneratorFunctionConstructor(DynamicObject* generatorFunctionConstructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(generatorFunctionConstructor, mode, 3);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterGeneratorFunction
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterGeneratorFunction
         // so that the update is in sync with profiler
         JavascriptLibrary* library = generatorFunctionConstructor->GetLibrary();
         ScriptContext* scriptContext = generatorFunctionConstructor->GetScriptContext();
@@ -2247,7 +2253,7 @@ namespace Js
     void JavascriptLibrary::InitializeGeneratorFunctionProtoype(DynamicObject* generatorFunctionPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(generatorFunctionPrototype, mode, 3);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterGeneratorFunction
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterGeneratorFunction
         // so that the update is in sync with profiler
         JavascriptLibrary* library = generatorFunctionPrototype->GetLibrary();
         ScriptContext* scriptContext = library->GetScriptContext();
@@ -2264,7 +2270,7 @@ namespace Js
     void JavascriptLibrary::InitializeGeneratorProtoype(DynamicObject* generatorPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(generatorPrototype, mode, 6);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterGenerator
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterGenerator
         // so that the update is in sync with profiler
         JavascriptLibrary* library = generatorPrototype->GetLibrary();
         ScriptContext* scriptContext = library->GetScriptContext();
@@ -2286,7 +2292,7 @@ namespace Js
     void JavascriptLibrary::InitializeProxyConstructor(DynamicObject* proxyConstructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(proxyConstructor, mode, 4);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterSymbol
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterSymbol
         // so that the update is in sync with profiler
         JavascriptLibrary* library = proxyConstructor->GetLibrary();
         ScriptContext* scriptContext = proxyConstructor->GetScriptContext();
@@ -2303,7 +2309,7 @@ namespace Js
     void JavascriptLibrary::InitializeProxyPrototype(DynamicObject* proxyPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(proxyPrototype, mode, 1);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterSymbol
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterSymbol
         // so that the update is in sync with profiler
         JavascriptLibrary* library = proxyPrototype->GetLibrary();
         library->AddMember(proxyPrototype, PropertyIds::constructor, library->proxyConstructor);
@@ -2314,7 +2320,7 @@ namespace Js
     void JavascriptLibrary::InitializeDateConstructor(DynamicObject* dateConstructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(dateConstructor, mode, 6);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterDate
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterDate
         // so that the update is in sync with profiler
         JavascriptLibrary* library = dateConstructor->GetLibrary();
         ScriptContext* scriptContext = dateConstructor->GetScriptContext();
@@ -2334,7 +2340,7 @@ namespace Js
     void JavascriptLibrary::InitializeDatePrototype(DynamicObject* datePrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(datePrototype, mode, 51);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterDate
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterDate
         // so that the update is in sync with profiler
         ScriptContext* scriptContext = datePrototype->GetScriptContext();
         JavascriptLibrary* library = datePrototype->GetLibrary();
@@ -2450,7 +2456,7 @@ namespace Js
     void JavascriptLibrary::InitializeFunctionConstructor(DynamicObject* functionConstructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(functionConstructor, mode, 3);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterFunction
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterFunction
         // so that the update is in sync with profiler
         ScriptContext* scriptContext = functionConstructor->GetScriptContext();
         JavascriptLibrary* library = functionConstructor->GetLibrary();
@@ -2466,7 +2472,7 @@ namespace Js
     void JavascriptLibrary::InitializeFunctionPrototype(DynamicObject* functionPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(functionPrototype, mode, 7);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterFunction
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterFunction
         // so that the update is in sync with profiler
         ScriptContext* scriptContext = functionPrototype->GetScriptContext();
         JavascriptLibrary* library = functionPrototype->GetLibrary();
@@ -2525,7 +2531,7 @@ namespace Js
     void JavascriptLibrary::InitializeMathObject(DynamicObject* mathObject, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(mathObject, mode, 42);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterMath
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterMath
         // so that the update is in sync with profiler
         ScriptContext* scriptContext = mathObject->GetScriptContext();
         JavascriptLibrary* library = mathObject->GetLibrary();
@@ -2596,7 +2602,7 @@ namespace Js
     // SIMD
     void JavascriptLibrary::InitializeSIMDObject(DynamicObject* simdObject, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
-        // Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterSIMD so that the update is in sync with profiler
+        // Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterSIMD so that the update is in sync with profiler
         typeHandler->Convert(simdObject, mode, 2);
         JavascriptLibrary* library = simdObject->GetLibrary();
         
@@ -2869,7 +2875,7 @@ namespace Js
     void JavascriptLibrary::InitializeReflectObject(DynamicObject* reflectObject, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(reflectObject, mode, 12);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterReflect
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterReflect
         // so that the update is in sync with profiler
         ScriptContext* scriptContext = reflectObject->GetScriptContext();
         JavascriptLibrary* library = reflectObject->GetLibrary();
@@ -3455,7 +3461,7 @@ namespace Js
     {
         typeHandler->Convert(numberConstructor, mode, 17);
 
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterNumber
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterNumber
         // so that the update is in sync with profiler
         ScriptContext* scriptContext = numberConstructor->GetScriptContext();
         JavascriptLibrary* library = numberConstructor->GetLibrary();
@@ -3501,7 +3507,7 @@ namespace Js
     void JavascriptLibrary::InitializeNumberPrototype(DynamicObject* numberPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(numberPrototype, mode, 8);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterNumber
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterNumber
         // so that the update is in sync with profiler
         ScriptContext* scriptContext = numberPrototype->GetScriptContext();
         JavascriptLibrary* library = numberPrototype->GetLibrary();
@@ -3525,7 +3531,7 @@ namespace Js
 
     void JavascriptLibrary::InitializeObjectConstructor(DynamicObject* objectConstructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterObject
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterObject
         // so that the update is in sync with profiler
         JavascriptLibrary* library = objectConstructor->GetLibrary();
         ScriptContext* scriptContext = objectConstructor->GetScriptContext();
@@ -3599,7 +3605,7 @@ namespace Js
         bool hasAccessors = scriptContext->GetConfig()->Is__proto__Enabled();
 
         typeHandler->Convert(objectPrototype, mode, 11, hasAccessors);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterObject
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterObject
         // so that the update is in sync with profiler
         library->AddMember(objectPrototype, PropertyIds::constructor, library->objectConstructor);
         library->AddFunctionToLibraryObject(objectPrototype, PropertyIds::hasOwnProperty, &JavascriptObject::EntryInfo::HasOwnProperty, 1);
@@ -3640,7 +3646,7 @@ namespace Js
         JavascriptLibrary* library = regexConstructor->GetLibrary();
         ScriptContext* scriptContext = regexConstructor->GetScriptContext();
         typeHandler->Convert(regexConstructor, mode, 3);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterRegExp
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterRegExp
         // so that the update is in sync with profiler
         library->AddMember(regexConstructor, PropertyIds::length, TaggedInt::ToVarUnchecked(2), PropertyNone);
         library->AddMember(regexConstructor, PropertyIds::prototype, library->regexPrototype, PropertyNone);
@@ -3661,7 +3667,7 @@ namespace Js
     void JavascriptLibrary::InitializeRegexPrototype(DynamicObject* regexPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(regexPrototype, mode, 5);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterRegExp
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterRegExp
         // so that the update is in sync with profiler
         JavascriptFunction * func;
         JavascriptLibrary* library = regexPrototype->GetLibrary();
@@ -3683,7 +3689,7 @@ namespace Js
     void JavascriptLibrary::InitializeStringConstructor(DynamicObject* stringConstructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(stringConstructor, mode, 6);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterString
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterString
         // so that the update is in sync with profiler
         JavascriptLibrary* library = stringConstructor->GetLibrary();
         ScriptContext* scriptContext = stringConstructor->GetScriptContext();
@@ -3717,7 +3723,7 @@ namespace Js
     void JavascriptLibrary::InitializeStringPrototype(DynamicObject* stringPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(stringPrototype, mode, 38);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterString
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterString
         // so that the update is in sync with profiler
         ScriptContext* scriptContext = stringPrototype->GetScriptContext();
         JavascriptLibrary* library = stringPrototype->GetLibrary();
@@ -3796,7 +3802,7 @@ namespace Js
     void JavascriptLibrary::InitializeMapConstructor(DynamicObject* mapConstructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(mapConstructor, mode, 3);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterMap
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterMap
         // so that the update is in sync with profiler
         JavascriptLibrary* library = mapConstructor->GetLibrary();
         ScriptContext* scriptContext = mapConstructor->GetScriptContext();
@@ -3819,7 +3825,7 @@ namespace Js
     void JavascriptLibrary::InitializeMapPrototype(DynamicObject* mapPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(mapPrototype, mode, 13, true);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterMap
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterMap
         // so that the update is in sync with profiler
         ScriptContext* scriptContext = mapPrototype->GetScriptContext();
         JavascriptLibrary* library = mapPrototype->GetLibrary();
@@ -3853,7 +3859,7 @@ namespace Js
     void JavascriptLibrary::InitializeSetConstructor(DynamicObject* setConstructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(setConstructor, mode, 3);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterSet
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterSet
         // so that the update is in sync with profiler
         JavascriptLibrary* library = setConstructor->GetLibrary();
         ScriptContext* scriptContext = setConstructor->GetScriptContext();
@@ -3876,7 +3882,7 @@ namespace Js
     void JavascriptLibrary::InitializeSetPrototype(DynamicObject* setPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(setPrototype, mode, 12, true);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterSet
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterSet
         // so that the update is in sync with profiler
         ScriptContext* scriptContext = setPrototype->GetScriptContext();
         JavascriptLibrary* library = setPrototype->GetLibrary();
@@ -3910,7 +3916,7 @@ namespace Js
     void JavascriptLibrary::InitializeWeakMapConstructor(DynamicObject* weakMapConstructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(weakMapConstructor, mode, 3);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterWeakMap
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterWeakMap
         // so that the update is in sync with profiler
         JavascriptLibrary* library = weakMapConstructor->GetLibrary();
         ScriptContext* scriptContext = weakMapConstructor->GetScriptContext();
@@ -3927,7 +3933,7 @@ namespace Js
     void JavascriptLibrary::InitializeWeakMapPrototype(DynamicObject* weakMapPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(weakMapPrototype, mode, 6);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterWeakMap
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterWeakMap
         // so that the update is in sync with profiler
         ScriptContext* scriptContext = weakMapPrototype->GetScriptContext();
         JavascriptLibrary* library = weakMapPrototype->GetLibrary();
@@ -3949,7 +3955,7 @@ namespace Js
     void JavascriptLibrary::InitializeWeakSetConstructor(DynamicObject* weakSetConstructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(weakSetConstructor, mode, 3);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterWeakSet
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterWeakSet
         // so that the update is in sync with profiler
         JavascriptLibrary* library = weakSetConstructor->GetLibrary();
         ScriptContext* scriptContext = weakSetConstructor->GetScriptContext();
@@ -3966,7 +3972,7 @@ namespace Js
     void JavascriptLibrary::InitializeWeakSetPrototype(DynamicObject* weakSetPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(weakSetPrototype, mode, 5);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterWeakSet
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterWeakSet
         // so that the update is in sync with profiler
         ScriptContext* scriptContext = weakSetPrototype->GetScriptContext();
         JavascriptLibrary* library = weakSetPrototype->GetLibrary();
@@ -3987,7 +3993,7 @@ namespace Js
     void JavascriptLibrary::InitializeArrayIteratorPrototype(DynamicObject* arrayIteratorPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(arrayIteratorPrototype, mode, 3);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterArrayIterator
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterArrayIterator
         // so that the update is in sync with profiler
 
         JavascriptLibrary* library = arrayIteratorPrototype->GetLibrary();
@@ -4006,7 +4012,7 @@ namespace Js
     void JavascriptLibrary::InitializeMapIteratorPrototype(DynamicObject* mapIteratorPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(mapIteratorPrototype, mode, 3);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterMapIterator
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterMapIterator
         // so that the update is in sync with profiler
 
         JavascriptLibrary* library = mapIteratorPrototype->GetLibrary();
@@ -4025,7 +4031,7 @@ namespace Js
     void JavascriptLibrary::InitializeSetIteratorPrototype(DynamicObject* setIteratorPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(setIteratorPrototype, mode, 3);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterSetIterator
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterSetIterator
         // so that the update is in sync with profiler
 
         JavascriptLibrary* library = setIteratorPrototype->GetLibrary();
@@ -4043,7 +4049,7 @@ namespace Js
     void JavascriptLibrary::InitializeStringIteratorPrototype(DynamicObject* stringIteratorPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(stringIteratorPrototype, mode, 3);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterStringIterator
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterStringIterator
         // so that the update is in sync with profiler
 
         JavascriptLibrary* library = stringIteratorPrototype->GetLibrary();
@@ -4061,7 +4067,7 @@ namespace Js
     void JavascriptLibrary::InitializeJavascriptEnumeratorIteratorPrototype(DynamicObject* javascriptEnumeratorIteratorPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(javascriptEnumeratorIteratorPrototype, mode, 1);
-        // Note: Any new function addition/deletion/modification should also be updated in ScriptContext::RegisterEnumeratorIterator
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterEnumeratorIterator
         // so that the update is in sync with profiler
 
         JavascriptLibrary* library = javascriptEnumeratorIteratorPrototype->GetLibrary();
@@ -5237,6 +5243,24 @@ namespace Js
         return RecyclerNew(this->GetRecycler(), JavascriptPromise, promiseType);
     }
 
+    JavascriptPromiseAsyncSpawnExecutorFunction* JavascriptLibrary::CreatePromiseAsyncSpawnExecutorFunction(JavascriptMethod entryPoint, JavascriptGenerator* generatorFunction, Var target)
+    {
+        FunctionInfo* functionInfo = RecyclerNew(this->GetRecycler(), FunctionInfo, entryPoint);
+        DynamicType* type = CreateDeferredPrototypeFunctionType(this->inDispatchProfileMode ? ProfileEntryThunk : entryPoint);
+        JavascriptPromiseAsyncSpawnExecutorFunction* function = EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptPromiseAsyncSpawnExecutorFunction, type, functionInfo, generatorFunction, target));
+
+        return function;
+    }
+
+    JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction* JavascriptLibrary::CreatePromiseAsyncSpawnStepArgumentExecutorFunction(JavascriptMethod entryPoint, JavascriptGenerator* generator, Var argument, JavascriptFunction* resolve, JavascriptFunction* reject, bool isReject)
+    {
+        FunctionInfo* functionInfo = RecyclerNew(this->GetRecycler(), FunctionInfo, entryPoint);
+        DynamicType* type = CreateDeferredPrototypeFunctionType(this->inDispatchProfileMode ? ProfileEntryThunk : entryPoint);
+        JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction* function = EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction, type, functionInfo, generator, argument, resolve, reject, isReject));
+
+        return function;
+    }
+
     JavascriptGenerator* JavascriptLibrary::CreateGenerator(Arguments& args, ScriptFunction* scriptFunction, RecyclableObject* prototype)
     {
         Assert(scriptContext->GetConfig()->IsES6GeneratorsEnabled());
@@ -5998,4 +6022,948 @@ namespace Js
         return type;
     }
 #endif
+
+    // Register for profiler
+#define DEFINE_OBJECT_NAME(object) const wchar_t *pwszObjectName = L#object;
+
+#define REGISTER_OBJECT(object)\
+    if (FAILED(hr = this->ProfilerRegister##object()))\
+    {\
+    return hr; \
+    }\
+
+#define REG_LIB_FUNC_CORE(pwszObjectName, pwszFunctionName, functionPropertyId, entryPoint)\
+    if (FAILED(hr = this->GetScriptContext()->RegisterLibraryFunction(pwszObjectName, pwszFunctionName, functionPropertyId, entryPoint)))\
+    {\
+    return hr; \
+    }\
+
+#define REG_OBJECTS_DYNAMIC_LIB_FUNC(pwszFunctionName, nFuncNameLen, entryPoint) {\
+    Js::PropertyRecord const * propRecord; \
+    this->GetScriptContext()->GetOrAddPropertyRecord(pwszFunctionName, nFuncNameLen, &propRecord); \
+    REG_LIB_FUNC_CORE(pwszObjectName, pwszFunctionName, propRecord->GetPropertyId(), entryPoint)\
+}
+
+#define REG_LIB_FUNC(pwszObjectName, functionPropertyId, entryPoint)\
+    REG_LIB_FUNC_CORE(pwszObjectName, L#functionPropertyId, PropertyIds::##functionPropertyId, entryPoint)\
+
+#define REG_OBJECTS_LIB_FUNC(functionPropertyId, entryPoint)\
+    REG_LIB_FUNC(pwszObjectName, functionPropertyId, entryPoint)\
+
+#define REG_OBJECTS_LIB_FUNC2(functionPropertyId, pwszFunctionPropertyName, entryPoint)\
+    REG_LIB_FUNC_CORE(pwszObjectName, pwszFunctionPropertyName, PropertyIds::##functionPropertyId, entryPoint)\
+
+#define REG_GLOBAL_LIB_FUNC(functionPropertyId, entryPoint)\
+    REG_LIB_FUNC(NULL, functionPropertyId, entryPoint)\
+
+#define REG_GLOBAL_CONSTRUCTOR(functionPropertyId)\
+    REG_GLOBAL_LIB_FUNC(functionPropertyId, Javascript##functionPropertyId##::NewInstance)\
+
+#define REGISTER_ERROR_OBJECT(functionPropertyId)\
+    REG_GLOBAL_LIB_FUNC(functionPropertyId, JavascriptError::New##functionPropertyId##Instance)\
+    REG_LIB_FUNC(L#functionPropertyId, toString, JavascriptError::EntryToString)\
+
+    HRESULT JavascriptLibrary::ProfilerRegisterBuiltIns()
+    {
+        HRESULT hr = S_OK;        
+
+        // Register functions directly in global scope
+        REG_GLOBAL_LIB_FUNC(eval, GlobalObject::EntryEval);
+        REG_GLOBAL_LIB_FUNC(parseInt, GlobalObject::EntryParseInt);
+        REG_GLOBAL_LIB_FUNC(parseFloat, GlobalObject::EntryParseFloat);
+        REG_GLOBAL_LIB_FUNC(isNaN, GlobalObject::EntryIsNaN);
+        REG_GLOBAL_LIB_FUNC(isFinite, GlobalObject::EntryIsFinite);
+        REG_GLOBAL_LIB_FUNC(decodeURI, GlobalObject::EntryDecodeURI);
+        REG_GLOBAL_LIB_FUNC(decodeURIComponent, GlobalObject::EntryDecodeURIComponent);
+        REG_GLOBAL_LIB_FUNC(encodeURI, GlobalObject::EntryEncodeURI);
+        REG_GLOBAL_LIB_FUNC(encodeURIComponent, GlobalObject::EntryEncodeURIComponent);
+        REG_GLOBAL_LIB_FUNC(escape, GlobalObject::EntryEscape);
+        REG_GLOBAL_LIB_FUNC(unescape, GlobalObject::EntryUnEscape);
+
+        ScriptConfiguration const& config = *(scriptContext->GetConfig());
+        if (config.SupportsES3Extensions())
+        {
+            REG_GLOBAL_LIB_FUNC(CollectGarbage, GlobalObject::EntryCollectGarbage);
+        }
+
+        // Register constructors, prototypes and objects in global
+        REGISTER_OBJECT(Object);
+        REGISTER_OBJECT(Array);
+        REGISTER_OBJECT(Boolean);
+        REGISTER_OBJECT(Date);
+        REGISTER_OBJECT(Function);
+        REGISTER_OBJECT(Math);
+        REGISTER_OBJECT(Number);
+        REGISTER_OBJECT(String);
+        REGISTER_OBJECT(RegExp);
+        REGISTER_OBJECT(JSON);
+
+        if (config.IsES6MapEnabled())
+        {
+            REGISTER_OBJECT(Map);
+        }
+
+        if (config.IsES6SetEnabled())
+        {
+            REGISTER_OBJECT(Set);
+        }
+
+        if (config.IsES6WeakMapEnabled())
+        {
+            REGISTER_OBJECT(WeakMap);
+        }
+
+        if (config.IsES6WeakSetEnabled())
+        {
+            REGISTER_OBJECT(WeakSet);
+        }
+
+        if (config.IsES6SymbolEnabled())
+        {
+            REGISTER_OBJECT(Symbol);
+        }
+
+        if (config.IsES6IteratorsEnabled())
+        {
+            REGISTER_OBJECT(ArrayIterator);
+            REGISTER_OBJECT(MapIterator);
+            REGISTER_OBJECT(SetIterator);
+            REGISTER_OBJECT(StringIterator);
+            REGISTER_OBJECT(EnumeratorIterator);
+        }
+
+        if (config.IsES6TypedArrayExtensionsEnabled())
+        {
+            REGISTER_OBJECT(TypedArray);
+        }
+
+        if (config.IsES6PromiseEnabled())
+        {
+            REGISTER_OBJECT(Promise);
+        }
+
+        if (config.IsES6ProxyEnabled())
+        {
+            REGISTER_OBJECT(Proxy);
+            REGISTER_OBJECT(Reflect);
+        }
+
+#ifdef IR_VIEWER
+        if (Js::Configuration::Global.flags.IsEnabled(Js::IRViewerFlag))
+        {
+            REGISTER_OBJECT(IRViewer);
+        }
+#endif /* IR_VIEWER */
+
+        // Error Constructors and prototypes
+        REGISTER_ERROR_OBJECT(Error);
+        REGISTER_ERROR_OBJECT(EvalError);
+        REGISTER_ERROR_OBJECT(RangeError);
+        REGISTER_ERROR_OBJECT(ReferenceError);
+        REGISTER_ERROR_OBJECT(SyntaxError);
+        REGISTER_ERROR_OBJECT(TypeError);
+        REGISTER_ERROR_OBJECT(URIError);
+
+        if (config.IsWinRTEnabled())
+        {
+            REGISTER_ERROR_OBJECT(WinRTError);
+        }
+
+        return hr;
+    }
+
+     HRESULT JavascriptLibrary::ProfilerRegisterObject()
+    {
+        HRESULT hr = S_OK;
+
+        REG_GLOBAL_CONSTRUCTOR(Object);
+
+        DEFINE_OBJECT_NAME(Object);
+
+        REG_OBJECTS_LIB_FUNC(defineProperty, JavascriptObject::EntryDefineProperty);
+        REG_OBJECTS_LIB_FUNC(getOwnPropertyDescriptor, JavascriptObject::EntryGetOwnPropertyDescriptor);
+
+        REG_OBJECTS_LIB_FUNC(defineProperties, JavascriptObject::EntryDefineProperties);
+        REG_OBJECTS_LIB_FUNC(create, JavascriptObject::EntryCreate);
+        REG_OBJECTS_LIB_FUNC(seal, JavascriptObject::EntrySeal);
+        REG_OBJECTS_LIB_FUNC(freeze, JavascriptObject::EntryFreeze);
+        REG_OBJECTS_LIB_FUNC(preventExtensions, JavascriptObject::EntryPreventExtensions);
+        REG_OBJECTS_LIB_FUNC(isSealed, JavascriptObject::EntryIsSealed);
+        REG_OBJECTS_LIB_FUNC(isFrozen, JavascriptObject::EntryIsFrozen);
+        REG_OBJECTS_LIB_FUNC(isExtensible, JavascriptObject::EntryIsExtensible);
+
+        REG_OBJECTS_LIB_FUNC(getPrototypeOf, JavascriptObject::EntryGetPrototypeOf);
+        REG_OBJECTS_LIB_FUNC(keys, JavascriptObject::EntryKeys);
+        REG_OBJECTS_LIB_FUNC(getOwnPropertyNames, JavascriptObject::EntryGetOwnPropertyNames);
+
+        REG_OBJECTS_LIB_FUNC(setPrototypeOf, JavascriptObject::EntrySetPrototypeOf);
+        
+        ScriptConfiguration const& config = *(scriptContext->GetConfig());
+        if (config.IsES6SymbolEnabled())
+        {
+            REG_OBJECTS_LIB_FUNC(getOwnPropertySymbols, JavascriptObject::EntryGetOwnPropertySymbols);
+        }
+
+        REG_OBJECTS_LIB_FUNC(hasOwnProperty, JavascriptObject::EntryHasOwnProperty);
+        REG_OBJECTS_LIB_FUNC(propertyIsEnumerable, JavascriptObject::EntryPropertyIsEnumerable);
+        REG_OBJECTS_LIB_FUNC(isPrototypeOf, JavascriptObject::EntryIsPrototypeOf);
+        REG_OBJECTS_LIB_FUNC(toLocaleString, JavascriptObject::EntryToLocaleString);
+        REG_OBJECTS_LIB_FUNC(toString, JavascriptObject::EntryToString);
+        REG_OBJECTS_LIB_FUNC(valueOf, JavascriptObject::EntryValueOf);
+
+        if (config.IsDefineGetterSetterEnabled())
+        {
+            REG_OBJECTS_LIB_FUNC(__defineGetter__, JavascriptObject::EntryDefineGetter);
+            REG_OBJECTS_LIB_FUNC(__defineSetter__, JavascriptObject::EntryDefineSetter);
+        }
+
+        if (config.IsES6ObjectExtensionsEnabled())
+        {
+            REG_OBJECTS_LIB_FUNC(is, JavascriptObject::EntryIs);
+            REG_OBJECTS_LIB_FUNC(assign, JavascriptObject::EntryAssign);
+        }
+
+        return hr;
+    }
+
+    HRESULT JavascriptLibrary::ProfilerRegisterArray()
+    {
+        HRESULT hr = S_OK;
+        REG_GLOBAL_CONSTRUCTOR(Array);
+
+        DEFINE_OBJECT_NAME(Array);
+
+        REG_OBJECTS_LIB_FUNC(isArray, JavascriptArray::EntryIsArray);
+        REG_OBJECTS_LIB_FUNC(concat, JavascriptArray::EntryConcat);
+        REG_OBJECTS_LIB_FUNC(join, JavascriptArray::EntryJoin);
+        REG_OBJECTS_LIB_FUNC(pop, JavascriptArray::EntryPop);
+        REG_OBJECTS_LIB_FUNC(push, JavascriptArray::EntryPush);
+        REG_OBJECTS_LIB_FUNC(reverse, JavascriptArray::EntryReverse);
+        REG_OBJECTS_LIB_FUNC(shift, JavascriptArray::EntryShift);
+        REG_OBJECTS_LIB_FUNC(slice, JavascriptArray::EntrySlice);
+        REG_OBJECTS_LIB_FUNC(sort, JavascriptArray::EntrySort);
+        REG_OBJECTS_LIB_FUNC(splice, JavascriptArray::EntrySplice);
+        REG_OBJECTS_LIB_FUNC(toLocaleString, JavascriptArray::EntryToLocaleString);
+        REG_OBJECTS_LIB_FUNC(toString, JavascriptArray::EntryToString);
+        REG_OBJECTS_LIB_FUNC(unshift, JavascriptArray::EntryUnshift);
+        REG_OBJECTS_LIB_FUNC(indexOf, JavascriptArray::EntryIndexOf);
+        REG_OBJECTS_LIB_FUNC(every, JavascriptArray::EntryEvery);
+        REG_OBJECTS_LIB_FUNC(filter, JavascriptArray::EntryFilter);
+        REG_OBJECTS_LIB_FUNC(forEach, JavascriptArray::EntryForEach);
+        REG_OBJECTS_LIB_FUNC(lastIndexOf, JavascriptArray::EntryLastIndexOf);
+        REG_OBJECTS_LIB_FUNC(map, JavascriptArray::EntryMap);
+        REG_OBJECTS_LIB_FUNC(reduce, JavascriptArray::EntryReduce);
+        REG_OBJECTS_LIB_FUNC(reduceRight, JavascriptArray::EntryReduceRight);
+        REG_OBJECTS_LIB_FUNC(some, JavascriptArray::EntrySome);
+
+        ScriptConfiguration const& config = *(scriptContext->GetConfig());
+        if (config.IsES6StringExtensionsEnabled())
+        {
+            REG_OBJECTS_LIB_FUNC(find, JavascriptArray::EntryFind);
+            REG_OBJECTS_LIB_FUNC(findIndex, JavascriptArray::EntryFindIndex);
+        }
+
+        if (config.IsES6IteratorsEnabled())
+        {
+            REG_OBJECTS_LIB_FUNC(entries, JavascriptArray::EntryEntries)
+            REG_OBJECTS_LIB_FUNC(keys, JavascriptArray::EntryKeys)
+            REG_OBJECTS_LIB_FUNC(values, JavascriptArray::EntryValues)
+            // _symbolIterator is just an alias for values on Array.prototype so do not register it as its own function
+        }
+
+        if (config.IsES6TypedArrayExtensionsEnabled())
+        {
+            REG_OBJECTS_LIB_FUNC(fill, JavascriptArray::EntryFill)
+            REG_OBJECTS_LIB_FUNC(copyWithin, JavascriptArray::EntryCopyWithin)
+            REG_OBJECTS_LIB_FUNC(from, JavascriptArray::EntryFrom);
+            REG_OBJECTS_LIB_FUNC(of, JavascriptArray::EntryOf);
+        }
+
+        return hr;
+    }
+
+    HRESULT JavascriptLibrary::ProfilerRegisterBoolean()
+    {
+        HRESULT hr = S_OK;
+        REG_GLOBAL_CONSTRUCTOR(Boolean);
+
+        DEFINE_OBJECT_NAME(Boolean);
+
+        REG_OBJECTS_LIB_FUNC(valueOf, JavascriptBoolean::EntryValueOf);
+        REG_OBJECTS_LIB_FUNC(toString, JavascriptBoolean::EntryToString);
+
+        return hr;
+    }
+
+    HRESULT JavascriptLibrary::ProfilerRegisterDate()
+    {
+        HRESULT hr = S_OK;
+        REG_GLOBAL_CONSTRUCTOR(Date);
+
+        DEFINE_OBJECT_NAME(Date);
+
+        REG_OBJECTS_LIB_FUNC(parse, JavascriptDate::EntryParse);
+        REG_OBJECTS_LIB_FUNC(now, JavascriptDate::EntryNow);
+        REG_OBJECTS_LIB_FUNC(UTC, JavascriptDate::EntryUTC);
+
+        REG_OBJECTS_LIB_FUNC(getDate, JavascriptDate::EntryGetDate);
+        REG_OBJECTS_LIB_FUNC(getDay, JavascriptDate::EntryGetDay);
+        REG_OBJECTS_LIB_FUNC(getFullYear, JavascriptDate::EntryGetFullYear);
+        REG_OBJECTS_LIB_FUNC(getHours, JavascriptDate::EntryGetHours);
+        REG_OBJECTS_LIB_FUNC(getMilliseconds, JavascriptDate::EntryGetMilliseconds);
+        REG_OBJECTS_LIB_FUNC(getMinutes, JavascriptDate::EntryGetMinutes);
+        REG_OBJECTS_LIB_FUNC(getMonth, JavascriptDate::EntryGetMonth);
+        REG_OBJECTS_LIB_FUNC(getSeconds, JavascriptDate::EntryGetSeconds);
+        REG_OBJECTS_LIB_FUNC(getTime, JavascriptDate::EntryGetTime);
+        REG_OBJECTS_LIB_FUNC(getTimezoneOffset, JavascriptDate::EntryGetTimezoneOffset);
+        REG_OBJECTS_LIB_FUNC(getUTCDate, JavascriptDate::EntryGetUTCDate);
+        REG_OBJECTS_LIB_FUNC(getUTCDay, JavascriptDate::EntryGetUTCDay);
+        REG_OBJECTS_LIB_FUNC(getUTCFullYear, JavascriptDate::EntryGetUTCFullYear);
+        REG_OBJECTS_LIB_FUNC(getUTCHours, JavascriptDate::EntryGetUTCHours);
+        REG_OBJECTS_LIB_FUNC(getUTCMilliseconds, JavascriptDate::EntryGetUTCMilliseconds);
+        REG_OBJECTS_LIB_FUNC(getUTCMinutes, JavascriptDate::EntryGetUTCMinutes);
+        REG_OBJECTS_LIB_FUNC(getUTCMonth, JavascriptDate::EntryGetUTCMonth);
+        REG_OBJECTS_LIB_FUNC(getUTCSeconds, JavascriptDate::EntryGetUTCSeconds);
+
+        ScriptConfiguration const& config = *(scriptContext->GetConfig());
+        if (config.SupportsES3Extensions() && config.GetHostType() != HostTypeApplication)
+        {
+            REG_OBJECTS_LIB_FUNC(getVarDate, JavascriptDate::EntryGetVarDate);
+        }
+        REG_OBJECTS_LIB_FUNC(getYear, JavascriptDate::EntryGetYear);
+        REG_OBJECTS_LIB_FUNC(setDate, JavascriptDate::EntrySetDate);
+        REG_OBJECTS_LIB_FUNC(setFullYear, JavascriptDate::EntrySetFullYear);
+        REG_OBJECTS_LIB_FUNC(setHours, JavascriptDate::EntrySetHours);
+        REG_OBJECTS_LIB_FUNC(setMilliseconds, JavascriptDate::EntrySetMilliseconds);
+        REG_OBJECTS_LIB_FUNC(setMinutes, JavascriptDate::EntrySetMinutes);
+        REG_OBJECTS_LIB_FUNC(setMonth, JavascriptDate::EntrySetMonth);
+        REG_OBJECTS_LIB_FUNC(setSeconds, JavascriptDate::EntrySetSeconds);
+        REG_OBJECTS_LIB_FUNC(setTime, JavascriptDate::EntrySetTime);
+        REG_OBJECTS_LIB_FUNC(setUTCDate, JavascriptDate::EntrySetUTCDate);
+        REG_OBJECTS_LIB_FUNC(setUTCFullYear, JavascriptDate::EntrySetUTCFullYear);
+        REG_OBJECTS_LIB_FUNC(setUTCHours, JavascriptDate::EntrySetUTCHours);
+        REG_OBJECTS_LIB_FUNC(setUTCMilliseconds, JavascriptDate::EntrySetUTCMilliseconds);
+        REG_OBJECTS_LIB_FUNC(setUTCMinutes, JavascriptDate::EntrySetUTCMinutes);
+        REG_OBJECTS_LIB_FUNC(setUTCMonth, JavascriptDate::EntrySetUTCMonth);
+        REG_OBJECTS_LIB_FUNC(setUTCSeconds, JavascriptDate::EntrySetUTCSeconds);
+        REG_OBJECTS_LIB_FUNC(setYear, JavascriptDate::EntrySetYear);
+        REG_OBJECTS_LIB_FUNC(toDateString, JavascriptDate::EntryToDateString);
+        REG_OBJECTS_LIB_FUNC(toISOString, JavascriptDate::EntryToISOString);
+        REG_OBJECTS_LIB_FUNC(toJSON, JavascriptDate::EntryToJSON);
+        REG_OBJECTS_LIB_FUNC(toLocaleDateString, JavascriptDate::EntryToLocaleDateString);
+        REG_OBJECTS_LIB_FUNC(toLocaleString, JavascriptDate::EntryToLocaleString);
+        REG_OBJECTS_LIB_FUNC(toLocaleTimeString, JavascriptDate::EntryToLocaleTimeString);
+        REG_OBJECTS_LIB_FUNC(toString, JavascriptDate::EntryToString);
+        REG_OBJECTS_LIB_FUNC(toTimeString, JavascriptDate::EntryToTimeString);
+        REG_OBJECTS_LIB_FUNC(toUTCString, JavascriptDate::EntryToUTCString);
+        REG_OBJECTS_LIB_FUNC(toGMTString, JavascriptDate::EntryToGMTString);
+        REG_OBJECTS_LIB_FUNC(valueOf, JavascriptDate::EntryValueOf);
+
+        return hr;
+    }
+
+    HRESULT JavascriptLibrary::ProfilerRegisterFunction()
+    {
+        HRESULT hr = S_OK;
+        REG_GLOBAL_CONSTRUCTOR(Function);
+
+        DEFINE_OBJECT_NAME(Function);
+
+        REG_OBJECTS_LIB_FUNC(apply, JavascriptFunction::EntryApply);
+        REG_OBJECTS_LIB_FUNC(bind, JavascriptFunction::EntryBind);
+        REG_OBJECTS_LIB_FUNC(call, JavascriptFunction::EntryCall);
+        REG_OBJECTS_LIB_FUNC(toString, JavascriptFunction::EntryToString);
+        
+        if (scriptContext->GetConfig()->IsES6ClassAndExtendsEnabled())
+        {
+            REG_OBJECTS_LIB_FUNC(toMethod, JavascriptFunction::EntryToMethod);
+        }
+
+        return hr;
+    }
+
+    HRESULT JavascriptLibrary::ProfilerRegisterMath()
+    {
+        HRESULT hr = S_OK;
+
+        DEFINE_OBJECT_NAME(Math);
+
+        REG_OBJECTS_LIB_FUNC(abs, Math::Abs);
+        REG_OBJECTS_LIB_FUNC(acos, Math::Acos);
+        REG_OBJECTS_LIB_FUNC(asin, Math::Asin);
+        REG_OBJECTS_LIB_FUNC(atan, Math::Atan);
+        REG_OBJECTS_LIB_FUNC(atan2, Math::Atan2);
+        REG_OBJECTS_LIB_FUNC(ceil, Math::Ceil);
+        REG_OBJECTS_LIB_FUNC(cos, Math::Cos);
+        REG_OBJECTS_LIB_FUNC(exp, Math::Exp);
+        REG_OBJECTS_LIB_FUNC(floor, Math::Floor);
+        REG_OBJECTS_LIB_FUNC(log, Math::Log);
+        REG_OBJECTS_LIB_FUNC(max, Math::Max);
+        REG_OBJECTS_LIB_FUNC(min, Math::Min);
+        REG_OBJECTS_LIB_FUNC(pow, Math::Pow);
+        REG_OBJECTS_LIB_FUNC(random, Math::Random);
+        REG_OBJECTS_LIB_FUNC(round, Math::Round);
+        REG_OBJECTS_LIB_FUNC(sin, Math::Sin);
+        REG_OBJECTS_LIB_FUNC(sqrt, Math::Sqrt);
+        REG_OBJECTS_LIB_FUNC(tan, Math::Tan);
+        
+        if (scriptContext->GetConfig()->IsES6MathExtensionsEnabled())
+        {
+            REG_OBJECTS_LIB_FUNC(log10, Math::Log10);
+            REG_OBJECTS_LIB_FUNC(log2, Math::Log2);
+            REG_OBJECTS_LIB_FUNC(log1p, Math::Log1p);
+            REG_OBJECTS_LIB_FUNC(expm1, Math::Expm1);
+            REG_OBJECTS_LIB_FUNC(cosh, Math::Cosh);
+            REG_OBJECTS_LIB_FUNC(sinh, Math::Sinh);
+            REG_OBJECTS_LIB_FUNC(tanh, Math::Tanh);
+            REG_OBJECTS_LIB_FUNC(acosh, Math::Acosh);
+            REG_OBJECTS_LIB_FUNC(asinh, Math::Asinh);
+            REG_OBJECTS_LIB_FUNC(atanh, Math::Atanh);
+            REG_OBJECTS_LIB_FUNC(hypot, Math::Hypot);
+            REG_OBJECTS_LIB_FUNC(trunc, Math::Trunc);
+            REG_OBJECTS_LIB_FUNC(sign, Math::Sign);
+            REG_OBJECTS_LIB_FUNC(cbrt, Math::Cbrt);
+            REG_OBJECTS_LIB_FUNC(imul, Math::Imul);
+            REG_OBJECTS_LIB_FUNC(clz32, Math::Clz32);
+            REG_OBJECTS_LIB_FUNC(fround, Math::Fround);
+        }
+
+        return hr;
+    }
+
+    HRESULT JavascriptLibrary::ProfilerRegisterNumber()
+    {
+        HRESULT hr = S_OK;
+        REG_GLOBAL_CONSTRUCTOR(Number);
+
+        DEFINE_OBJECT_NAME(Number);
+
+        if (scriptContext->GetConfig()->IsES6NumberExtensionsEnabled())
+        {
+            REG_OBJECTS_LIB_FUNC(isNaN, JavascriptNumber::EntryIsNaN);
+            REG_OBJECTS_LIB_FUNC(isFinite, JavascriptNumber::EntryIsFinite);
+            REG_OBJECTS_LIB_FUNC(isInteger, JavascriptNumber::EntryIsInteger);
+            REG_OBJECTS_LIB_FUNC(isSafeInteger, JavascriptNumber::EntryIsSafeInteger);
+        }
+
+        REG_OBJECTS_LIB_FUNC(toExponential, JavascriptNumber::EntryToExponential);
+        REG_OBJECTS_LIB_FUNC(toFixed, JavascriptNumber::EntryToFixed);
+        REG_OBJECTS_LIB_FUNC(toPrecision, JavascriptNumber::EntryToPrecision);
+        REG_OBJECTS_LIB_FUNC(toLocaleString, JavascriptNumber::EntryToLocaleString);
+        REG_OBJECTS_LIB_FUNC(toString, JavascriptNumber::EntryToString);
+        REG_OBJECTS_LIB_FUNC(valueOf, JavascriptNumber::EntryValueOf);
+
+        return hr;
+    }
+
+    HRESULT JavascriptLibrary::ProfilerRegisterString()
+    {
+        HRESULT hr = S_OK;
+        REG_GLOBAL_CONSTRUCTOR(String);
+
+        DEFINE_OBJECT_NAME(String);
+
+        REG_OBJECTS_LIB_FUNC(fromCharCode, JavascriptString::EntryFromCharCode);
+
+        ScriptConfiguration const& config = *(scriptContext->GetConfig());
+        if (config.IsES6UnicodeExtensionsEnabled())
+        {
+            REG_OBJECTS_LIB_FUNC(fromCodePoint, JavascriptString::EntryFromCodePoint);
+            REG_OBJECTS_LIB_FUNC(codePointAt, JavascriptString::EntryCodePointAt);
+            REG_OBJECTS_LIB_FUNC(normalize, JavascriptString::EntryNormalize);
+        }
+
+        REG_OBJECTS_LIB_FUNC(indexOf, JavascriptString::EntryIndexOf);
+        REG_OBJECTS_LIB_FUNC(lastIndexOf, JavascriptString::EntryLastIndexOf);
+        REG_OBJECTS_LIB_FUNC(replace, JavascriptString::EntryReplace);
+        REG_OBJECTS_LIB_FUNC(search, JavascriptString::EntrySearch);
+        REG_OBJECTS_LIB_FUNC(slice, JavascriptString::EntrySlice);
+        REG_OBJECTS_LIB_FUNC(charAt, JavascriptString::EntryCharAt);
+        REG_OBJECTS_LIB_FUNC(charCodeAt, JavascriptString::EntryCharCodeAt);
+        REG_OBJECTS_LIB_FUNC(concat, JavascriptString::EntryConcat);
+        REG_OBJECTS_LIB_FUNC(localeCompare, JavascriptString::EntryLocaleCompare);
+        REG_OBJECTS_LIB_FUNC(match, JavascriptString::EntryMatch);
+        REG_OBJECTS_LIB_FUNC(split, JavascriptString::EntrySplit);
+        REG_OBJECTS_LIB_FUNC(substring, JavascriptString::EntrySubstring);
+        REG_OBJECTS_LIB_FUNC(substr, JavascriptString::EntrySubstr);
+        REG_OBJECTS_LIB_FUNC(toLocaleLowerCase, JavascriptString::EntryToLocaleLowerCase);
+        REG_OBJECTS_LIB_FUNC(toLocaleUpperCase, JavascriptString::EntryToLocaleUpperCase);
+        REG_OBJECTS_LIB_FUNC(toLowerCase, JavascriptString::EntryToLowerCase);
+        REG_OBJECTS_LIB_FUNC(toString, JavascriptString::EntryToString);
+        REG_OBJECTS_LIB_FUNC(toUpperCase, JavascriptString::EntryToUpperCase);
+        REG_OBJECTS_LIB_FUNC(trim, JavascriptString::EntryTrim);
+        REG_OBJECTS_LIB_FUNC(valueOf, JavascriptString::EntryValueOf);
+        if (config.SupportsES3Extensions() && config.GetHostType() != HostTypeApplication)
+        {
+            REG_OBJECTS_LIB_FUNC(anchor, JavascriptString::EntryAnchor);
+            REG_OBJECTS_LIB_FUNC(big, JavascriptString::EntryBig);
+            REG_OBJECTS_LIB_FUNC(blink, JavascriptString::EntryBlink);
+            REG_OBJECTS_LIB_FUNC(bold, JavascriptString::EntryBold);
+            REG_OBJECTS_LIB_FUNC(fixed, JavascriptString::EntryFixed);
+            REG_OBJECTS_LIB_FUNC(fontcolor, JavascriptString::EntryFontColor);
+            REG_OBJECTS_LIB_FUNC(fontsize, JavascriptString::EntryFontSize);
+            REG_OBJECTS_LIB_FUNC(italics, JavascriptString::EntryItalics);
+            REG_OBJECTS_LIB_FUNC(link, JavascriptString::EntryLink);
+            // TODO: Small is defined using Entry2 and it has Small as the propertyId and small as name
+            // For some reason if i make it ENTRY(small) instead of ENTRY2(Small, L"small") it overflows with error
+            //REG_OBJECTS_LIB_FUNC(Small, JavascriptString::EntrySmall);
+            REG_OBJECTS_DYNAMIC_LIB_FUNC(L"small", 5, JavascriptString::EntrySmall);
+            REG_OBJECTS_LIB_FUNC(strike, JavascriptString::EntryStrike);
+            REG_OBJECTS_LIB_FUNC(sub, JavascriptString::EntrySub);
+            REG_OBJECTS_LIB_FUNC(sup, JavascriptString::EntrySup);
+        }
+
+        if (config.IsES6StringExtensionsEnabled())
+        {
+            REG_OBJECTS_LIB_FUNC(repeat, JavascriptString::EntryRepeat);
+            REG_OBJECTS_LIB_FUNC(startsWith, JavascriptString::EntryStartsWith);
+            REG_OBJECTS_LIB_FUNC(endsWith, JavascriptString::EntryEndsWith);
+            REG_OBJECTS_LIB_FUNC(includes, JavascriptString::EntryIncludes);
+            REG_OBJECTS_LIB_FUNC(trimLeft, JavascriptString::EntryTrimLeft);
+            REG_OBJECTS_LIB_FUNC(trimRight, JavascriptString::EntryTrimRight);
+
+        }
+
+        if (config.IsES6StringTemplateEnabled())
+        {
+            REG_OBJECTS_LIB_FUNC(raw, JavascriptString::EntryRaw);
+        }
+
+        if (config.IsES6IteratorsEnabled())
+        {
+            REG_OBJECTS_LIB_FUNC2(_symbolIterator, L"[Symbol.iterator]", JavascriptString::EntrySymbolIterator);
+        }
+
+        return hr;
+    }
+
+    HRESULT JavascriptLibrary::ProfilerRegisterRegExp()
+    {
+        HRESULT hr = S_OK;
+        REG_GLOBAL_CONSTRUCTOR(RegExp);
+
+        DEFINE_OBJECT_NAME(RegExp);
+
+        REG_OBJECTS_LIB_FUNC(exec, JavascriptRegExp::EntryExec);
+        REG_OBJECTS_LIB_FUNC(test, JavascriptRegExp::EntryTest);
+        REG_OBJECTS_LIB_FUNC(toString, JavascriptRegExp::EntryToString);
+        // This is deprecated. Should be guarded with appropriate version flag.
+        REG_OBJECTS_LIB_FUNC(compile, JavascriptRegExp::EntryCompile);
+
+        return hr;
+    }
+
+    HRESULT JavascriptLibrary::ProfilerRegisterJSON()
+    {
+        HRESULT hr = S_OK;
+
+        DEFINE_OBJECT_NAME(JSON);
+
+        REG_OBJECTS_LIB_FUNC(stringify, JSON::Stringify);
+        REG_OBJECTS_LIB_FUNC(parse, JSON::Parse);
+        return hr;
+    }
+
+    HRESULT JavascriptLibrary::ProfilerRegisterWeakMap()
+    {
+        HRESULT hr = S_OK;
+        REG_GLOBAL_CONSTRUCTOR(WeakMap);
+
+        DEFINE_OBJECT_NAME(WeakMap);
+
+        REG_OBJECTS_LIB_FUNC2(delete_, L"delete", JavascriptWeakMap::EntryDelete);
+        REG_OBJECTS_LIB_FUNC(get, JavascriptWeakMap::EntryGet);
+        REG_OBJECTS_LIB_FUNC(has, JavascriptWeakMap::EntryHas);
+        REG_OBJECTS_LIB_FUNC(set, JavascriptWeakMap::EntrySet);
+
+        return hr;
+    }
+
+    HRESULT JavascriptLibrary::ProfilerRegisterWeakSet()
+    {
+        HRESULT hr = S_OK;
+        REG_GLOBAL_CONSTRUCTOR(WeakSet);
+
+        DEFINE_OBJECT_NAME(WeakSet);
+
+        REG_OBJECTS_LIB_FUNC(add, JavascriptWeakSet::EntryAdd);
+        REG_OBJECTS_LIB_FUNC2(delete_, L"delete", JavascriptWeakSet::EntryDelete);
+        REG_OBJECTS_LIB_FUNC(has, JavascriptWeakSet::EntryHas);
+
+        return hr;
+    }
+
+    HRESULT JavascriptLibrary::ProfilerRegisterMap()
+    {
+        HRESULT hr = S_OK;
+        REG_GLOBAL_CONSTRUCTOR(Map);
+
+        DEFINE_OBJECT_NAME(Map);
+
+        REG_OBJECTS_LIB_FUNC(clear, JavascriptMap::EntryClear);
+        REG_OBJECTS_LIB_FUNC2(delete_, L"delete", JavascriptMap::EntryDelete);
+        REG_OBJECTS_LIB_FUNC(forEach, JavascriptMap::EntryForEach);
+        REG_OBJECTS_LIB_FUNC(get, JavascriptMap::EntryGet);
+        REG_OBJECTS_LIB_FUNC(has, JavascriptMap::EntryHas);
+        REG_OBJECTS_LIB_FUNC(set, JavascriptMap::EntrySet);
+
+        if (scriptContext->GetConfig()->IsES6IteratorsEnabled())
+        {
+            REG_OBJECTS_LIB_FUNC(entries, JavascriptMap::EntryEntries);
+            REG_OBJECTS_LIB_FUNC(keys, JavascriptMap::EntryKeys);
+            REG_OBJECTS_LIB_FUNC(values, JavascriptMap::EntryValues);
+        }
+
+        return hr;
+    }
+
+    HRESULT JavascriptLibrary::ProfilerRegisterSet()
+    {
+        HRESULT hr = S_OK;
+        REG_GLOBAL_CONSTRUCTOR(Set);
+
+        DEFINE_OBJECT_NAME(Set);
+
+        REG_OBJECTS_LIB_FUNC(add, JavascriptSet::EntryAdd);
+        REG_OBJECTS_LIB_FUNC(clear, JavascriptSet::EntryClear);
+        REG_OBJECTS_LIB_FUNC2(delete_, L"delete", JavascriptSet::EntryDelete);
+        REG_OBJECTS_LIB_FUNC(forEach, JavascriptSet::EntryForEach);
+        REG_OBJECTS_LIB_FUNC(has, JavascriptSet::EntryHas);
+
+        if (scriptContext->GetConfig()->IsES6IteratorsEnabled())
+        {
+            REG_OBJECTS_LIB_FUNC(entries, JavascriptSet::EntryEntries);
+            REG_OBJECTS_LIB_FUNC(values, JavascriptSet::EntryValues);
+        }
+
+        return hr;
+    }
+
+    HRESULT JavascriptLibrary::ProfilerRegisterSymbol()
+    {
+        HRESULT hr = S_OK;
+        REG_GLOBAL_CONSTRUCTOR(Symbol);
+
+        DEFINE_OBJECT_NAME(Symbol);
+
+        REG_OBJECTS_LIB_FUNC(valueOf, JavascriptSymbol::EntryValueOf);
+        REG_OBJECTS_LIB_FUNC(toString, JavascriptSymbol::EntryToString);
+        REG_OBJECTS_LIB_FUNC2(for_, L"for", JavascriptSymbol::EntryFor);
+        REG_OBJECTS_LIB_FUNC(keyFor, JavascriptSymbol::EntryKeyFor);
+
+        return hr;
+    }
+
+    HRESULT JavascriptLibrary::ProfilerRegisterArrayIterator()
+    {
+        HRESULT hr = S_OK;
+        // Array Iterator has no global constructor
+
+        DEFINE_OBJECT_NAME(Array Iterator);
+
+        REG_OBJECTS_LIB_FUNC(next, JavascriptArrayIterator::EntryNext);
+        REG_OBJECTS_LIB_FUNC2(_symbolIterator, L"[Symbol.iterator]", JavascriptArrayIterator::EntrySymbolIterator);
+
+        return hr;
+    }
+
+    HRESULT JavascriptLibrary::ProfilerRegisterMapIterator()
+    {
+        HRESULT hr = S_OK;
+        // Map Iterator has no global constructor
+
+        DEFINE_OBJECT_NAME(Map Iterator);
+
+        REG_OBJECTS_LIB_FUNC(next, JavascriptMapIterator::EntryNext);
+        REG_OBJECTS_LIB_FUNC2(_symbolIterator, L"[Symbol.iterator]", JavascriptMapIterator::EntrySymbolIterator);
+
+        return hr;
+    }
+
+    HRESULT JavascriptLibrary::ProfilerRegisterSetIterator()
+    {
+        HRESULT hr = S_OK;
+        // Set Iterator has no global constructor
+
+        DEFINE_OBJECT_NAME(Set Iterator);
+
+        REG_OBJECTS_LIB_FUNC(next, JavascriptSetIterator::EntryNext);
+        REG_OBJECTS_LIB_FUNC2(_symbolIterator, L"[Symbol.iterator]", JavascriptSetIterator::EntrySymbolIterator);
+
+        return hr;
+    }
+
+    HRESULT JavascriptLibrary::ProfilerRegisterStringIterator()
+    {
+        HRESULT hr = S_OK;
+        // String Iterator has no global constructor
+
+        DEFINE_OBJECT_NAME(String Iterator);
+
+        REG_OBJECTS_LIB_FUNC(next, JavascriptStringIterator::EntryNext);
+        REG_OBJECTS_LIB_FUNC2(_symbolIterator, L"[Symbol.iterator]", JavascriptStringIterator::EntrySymbolIterator);
+
+        return hr;
+    }
+
+    HRESULT JavascriptLibrary::ProfilerRegisterEnumeratorIterator()
+    {
+        HRESULT hr = S_OK;
+        // Enumerator Iterator has no global constructor
+
+        DEFINE_OBJECT_NAME(Enumerator Iterator);
+
+        REG_OBJECTS_LIB_FUNC(next, JavascriptEnumeratorIterator::EntryNext);
+        REG_OBJECTS_LIB_FUNC2(_symbolIterator, L"[Symbol.iterator]", JavascriptEnumeratorIterator::EntrySymbolIterator);
+
+        return hr;
+    }
+
+    HRESULT JavascriptLibrary::ProfilerRegisterTypedArray()
+    {
+        HRESULT hr = S_OK;
+        // TypedArray has no named global constructor
+
+        DEFINE_OBJECT_NAME(TypedArray);
+
+        REG_OBJECTS_LIB_FUNC(from, TypedArrayBase::EntryFrom);
+        REG_OBJECTS_LIB_FUNC(of, TypedArrayBase::EntryOf);
+        REG_OBJECTS_LIB_FUNC(set, TypedArrayBase::EntrySet);
+        REG_OBJECTS_LIB_FUNC(subarray, TypedArrayBase::EntrySubarray);
+        REG_OBJECTS_LIB_FUNC(copyWithin, TypedArrayBase::EntryCopyWithin);
+        REG_OBJECTS_LIB_FUNC(every, TypedArrayBase::EntryEvery);
+        REG_OBJECTS_LIB_FUNC(fill, TypedArrayBase::EntryFill);
+        REG_OBJECTS_LIB_FUNC(filter, TypedArrayBase::EntryFilter);
+        REG_OBJECTS_LIB_FUNC(find, TypedArrayBase::EntryFind);
+        REG_OBJECTS_LIB_FUNC(findIndex, TypedArrayBase::EntryFindIndex);
+        REG_OBJECTS_LIB_FUNC(forEach, TypedArrayBase::EntryForEach);
+        REG_OBJECTS_LIB_FUNC(indexOf, TypedArrayBase::EntryIndexOf);
+        REG_OBJECTS_LIB_FUNC(join, TypedArrayBase::EntryJoin);
+        REG_OBJECTS_LIB_FUNC(lastIndexOf, TypedArrayBase::EntryLastIndexOf);
+        REG_OBJECTS_LIB_FUNC(map, TypedArrayBase::EntryMap);
+        REG_OBJECTS_LIB_FUNC(reduce, TypedArrayBase::EntryReduce);
+        REG_OBJECTS_LIB_FUNC(reduceRight, TypedArrayBase::EntryReduceRight);
+        REG_OBJECTS_LIB_FUNC(reverse, TypedArrayBase::EntryReverse);
+        REG_OBJECTS_LIB_FUNC(slice, TypedArrayBase::EntrySlice);
+        REG_OBJECTS_LIB_FUNC(some, TypedArrayBase::EntrySome);
+        REG_OBJECTS_LIB_FUNC(sort, TypedArrayBase::EntrySort);
+
+        return hr;
+    }
+
+    HRESULT JavascriptLibrary::ProfilerRegisterPromise()
+    {
+        HRESULT hr = S_OK;
+        REG_GLOBAL_CONSTRUCTOR(Promise);
+
+        DEFINE_OBJECT_NAME(Promise);
+
+        REG_OBJECTS_LIB_FUNC(all, JavascriptPromise::EntryAll);
+        REG_OBJECTS_LIB_FUNC2(catch_, L"catch", JavascriptPromise::EntryCatch);
+        REG_OBJECTS_LIB_FUNC(race, JavascriptPromise::EntryRace);
+        REG_OBJECTS_LIB_FUNC(resolve, JavascriptPromise::EntryResolve);
+        REG_OBJECTS_LIB_FUNC(then, JavascriptPromise::EntryThen);
+
+        return hr;
+    }
+
+    HRESULT JavascriptLibrary::ProfilerRegisterProxy()
+    {
+        HRESULT hr = S_OK;
+        REG_GLOBAL_CONSTRUCTOR(Proxy);
+
+        DEFINE_OBJECT_NAME(Proxy);
+
+        REG_OBJECTS_LIB_FUNC(revocable, JavascriptProxy::EntryRevocable);
+        return hr;
+    }
+
+    HRESULT JavascriptLibrary::ProfilerRegisterReflect()
+    {
+        HRESULT hr = S_OK;
+        DEFINE_OBJECT_NAME(Reflect);
+
+        REG_OBJECTS_LIB_FUNC(defineProperty, JavascriptReflect::EntryDefineProperty);
+        REG_OBJECTS_LIB_FUNC(deleteProperty, JavascriptReflect::EntryDeleteProperty);
+        REG_OBJECTS_LIB_FUNC(enumerate, JavascriptReflect::EntryEnumerate);
+        REG_OBJECTS_LIB_FUNC(get, JavascriptReflect::EntryGet);
+        REG_OBJECTS_LIB_FUNC(getOwnPropertyDescriptor, JavascriptReflect::EntryGetOwnPropertyDescriptor);
+        REG_OBJECTS_LIB_FUNC(getPrototypeOf, JavascriptReflect::EntryGetPrototypeOf);
+        REG_OBJECTS_LIB_FUNC(has, JavascriptReflect::EntryHas);
+        REG_OBJECTS_LIB_FUNC(isExtensible, JavascriptReflect::EntryIsExtensible);
+        REG_OBJECTS_LIB_FUNC(ownKeys, JavascriptReflect::EntryOwnKeys);
+        REG_OBJECTS_LIB_FUNC(preventExtensions, JavascriptReflect::EntryPreventExtensions);
+        REG_OBJECTS_LIB_FUNC(set, JavascriptReflect::EntrySet);
+        REG_OBJECTS_LIB_FUNC(setPrototypeOf, JavascriptReflect::EntrySetPrototypeOf);
+        REG_OBJECTS_LIB_FUNC(apply, JavascriptReflect::EntryApply);
+        REG_OBJECTS_LIB_FUNC(construct, JavascriptReflect::EntryConstruct);
+        return hr;
+    }
+
+
+    HRESULT JavascriptLibrary::ProfilerRegisterGenerator()
+    {
+        HRESULT hr = S_OK;
+        DEFINE_OBJECT_NAME(Generator);
+
+        REG_OBJECTS_LIB_FUNC(next, JavascriptGenerator::EntryNext);
+        REG_OBJECTS_LIB_FUNC(return_, JavascriptGenerator::EntryReturn);
+        REG_OBJECTS_LIB_FUNC(throw_, JavascriptGenerator::EntryThrow);
+        REG_OBJECTS_LIB_FUNC2(_symbolIterator, L"[Symbol.iterator]", JavascriptGenerator::EntrySymbolIterator);
+
+        return hr;
+    }
+
+#ifdef SIMD_JS_ENABLED
+    HRESULT JavascriptLibrary::ProfilerRegisterSIMD()
+    {
+        HRESULT hr = S_OK;
+
+        DEFINE_OBJECT_NAME(SIMD);
+
+        // Float32x4
+        REG_OBJECTS_LIB_FUNC(Float32x4, SIMDFloat32x4Lib::EntryFloat32x4);
+        REG_OBJECTS_LIB_FUNC(check, SIMDFloat32x4Lib::EntryCheck);
+        REG_OBJECTS_LIB_FUNC(zero, SIMDFloat32x4Lib::EntryZero);
+        REG_OBJECTS_LIB_FUNC(splat, SIMDFloat32x4Lib::EntrySplat);
+        REG_OBJECTS_LIB_FUNC(extractLane, SIMDFloat32x4Lib::EntryExtractLane);
+        REG_OBJECTS_LIB_FUNC(replaceLane, SIMDFloat32x4Lib::EntryReplaceLane);
+        REG_OBJECTS_LIB_FUNC(fromFloat64x2, SIMDFloat32x4Lib::EntryFromFloat64x2);
+        REG_OBJECTS_LIB_FUNC(fromFloat64x2Bits, SIMDFloat32x4Lib::EntryFromFloat64x2Bits);
+        REG_OBJECTS_LIB_FUNC(fromInt32x4, SIMDFloat32x4Lib::EntryFromInt32x4);
+        REG_OBJECTS_LIB_FUNC(fromInt32x4Bits, SIMDFloat32x4Lib::EntryFromInt32x4Bits);
+        REG_OBJECTS_LIB_FUNC(add, SIMDFloat32x4Lib::EntryAdd);
+        REG_OBJECTS_LIB_FUNC(sub, SIMDFloat32x4Lib::EntrySub);
+        REG_OBJECTS_LIB_FUNC(mul, SIMDFloat32x4Lib::EntryMul);
+        REG_OBJECTS_LIB_FUNC(div, SIMDFloat32x4Lib::EntryDiv);
+        REG_OBJECTS_LIB_FUNC(and, SIMDFloat32x4Lib::EntryAnd);
+        REG_OBJECTS_LIB_FUNC(or, SIMDFloat32x4Lib::EntryOr);
+        REG_OBJECTS_LIB_FUNC(xor, SIMDFloat32x4Lib::EntryXor);
+        REG_OBJECTS_LIB_FUNC(min, SIMDFloat32x4Lib::EntryMin);
+        REG_OBJECTS_LIB_FUNC(max, SIMDFloat32x4Lib::EntryMax);
+        REG_OBJECTS_LIB_FUNC(scale, SIMDFloat32x4Lib::EntryScale);
+        REG_OBJECTS_LIB_FUNC(abs, SIMDFloat32x4Lib::EntryAbs);
+        REG_OBJECTS_LIB_FUNC(neg, SIMDFloat32x4Lib::EntryNeg);
+        REG_OBJECTS_LIB_FUNC(not, SIMDFloat32x4Lib::EntryNot);
+        REG_OBJECTS_LIB_FUNC(sqrt, SIMDFloat32x4Lib::EntrySqrt);
+        REG_OBJECTS_LIB_FUNC(reciprocal, SIMDFloat32x4Lib::EntryReciprocal);
+        REG_OBJECTS_LIB_FUNC(reciprocalSqrt, SIMDFloat32x4Lib::EntryReciprocalSqrt);
+        REG_OBJECTS_LIB_FUNC(lessThan, SIMDFloat32x4Lib::EntryLessThan);
+        REG_OBJECTS_LIB_FUNC(lessThanOrEqual, SIMDFloat32x4Lib::EntryLessThanOrEqual);
+        REG_OBJECTS_LIB_FUNC(equal, SIMDFloat32x4Lib::EntryEqual);
+        REG_OBJECTS_LIB_FUNC(notEqual, SIMDFloat32x4Lib::EntryNotEqual);
+        REG_OBJECTS_LIB_FUNC(greaterThan, SIMDFloat32x4Lib::EntryGreaterThan);
+        REG_OBJECTS_LIB_FUNC(greaterThanOrEqual, SIMDFloat32x4Lib::EntryGreaterThanOrEqual);
+        REG_OBJECTS_LIB_FUNC(swizzle, SIMDFloat32x4Lib::EntrySwizzle);
+        REG_OBJECTS_LIB_FUNC(shuffle, SIMDFloat32x4Lib::EntryShuffle);
+        REG_OBJECTS_LIB_FUNC(clamp, SIMDFloat32x4Lib::EntryClamp);
+        REG_OBJECTS_LIB_FUNC(select, SIMDFloat32x4Lib::EntrySelect);
+        // Float64x2
+        REG_OBJECTS_LIB_FUNC(Float64x2, SIMDFloat64x2Lib::EntryFloat64x2);
+        REG_OBJECTS_LIB_FUNC(check, SIMDFloat64x2Lib::EntryCheck);
+        REG_OBJECTS_LIB_FUNC(zero, SIMDFloat64x2Lib::EntryZero);
+        REG_OBJECTS_LIB_FUNC(splat, SIMDFloat64x2Lib::EntrySplat);
+        REG_OBJECTS_LIB_FUNC(fromFloat32x4, SIMDFloat64x2Lib::EntryFromFloat32x4);
+        REG_OBJECTS_LIB_FUNC(fromFloat32x4Bits, SIMDFloat64x2Lib::EntryFromFloat32x4Bits);
+        REG_OBJECTS_LIB_FUNC(fromInt32x4, SIMDFloat64x2Lib::EntryFromInt32x4);
+        REG_OBJECTS_LIB_FUNC(fromInt32x4Bits, SIMDFloat64x2Lib::EntryFromInt32x4Bits);
+        REG_OBJECTS_LIB_FUNC(add, SIMDFloat64x2Lib::EntryAdd);
+        REG_OBJECTS_LIB_FUNC(sub, SIMDFloat64x2Lib::EntrySub);
+        REG_OBJECTS_LIB_FUNC(mul, SIMDFloat64x2Lib::EntryMul);
+        REG_OBJECTS_LIB_FUNC(div, SIMDFloat64x2Lib::EntryDiv);
+        REG_OBJECTS_LIB_FUNC(min, SIMDFloat64x2Lib::EntryMin);
+        REG_OBJECTS_LIB_FUNC(max, SIMDFloat64x2Lib::EntryMax);
+        REG_OBJECTS_LIB_FUNC(scale, SIMDFloat64x2Lib::EntryScale);
+        REG_OBJECTS_LIB_FUNC(abs, SIMDFloat64x2Lib::EntryAbs);
+        REG_OBJECTS_LIB_FUNC(neg, SIMDFloat64x2Lib::EntryNeg);
+        REG_OBJECTS_LIB_FUNC(sqrt, SIMDFloat64x2Lib::EntrySqrt);
+        REG_OBJECTS_LIB_FUNC(reciprocal, SIMDFloat64x2Lib::EntryReciprocal);
+        REG_OBJECTS_LIB_FUNC(reciprocalSqrt, SIMDFloat64x2Lib::EntryReciprocalSqrt);
+        REG_OBJECTS_LIB_FUNC(lessThan, SIMDFloat64x2Lib::EntryLessThan);
+        REG_OBJECTS_LIB_FUNC(lessThanOrEqual, SIMDFloat64x2Lib::EntryLessThanOrEqual);
+        REG_OBJECTS_LIB_FUNC(equal, SIMDFloat64x2Lib::EntryEqual);
+        REG_OBJECTS_LIB_FUNC(notEqual, SIMDFloat64x2Lib::EntryNotEqual);
+        REG_OBJECTS_LIB_FUNC(greaterThan, SIMDFloat64x2Lib::EntryGreaterThan);
+        REG_OBJECTS_LIB_FUNC(greaterThanOrEqual, SIMDFloat64x2Lib::EntryGreaterThanOrEqual);
+        REG_OBJECTS_LIB_FUNC(swizzle, SIMDFloat64x2Lib::EntrySwizzle);
+        REG_OBJECTS_LIB_FUNC(shuffle, SIMDFloat64x2Lib::EntryShuffle);
+        REG_OBJECTS_LIB_FUNC(clamp, SIMDFloat64x2Lib::EntryClamp);
+        REG_OBJECTS_LIB_FUNC(select, SIMDFloat64x2Lib::EntrySelect);
+        // Int32x4
+        REG_OBJECTS_LIB_FUNC(Int32x4, SIMDInt32x4Lib::EntryInt32x4);
+        REG_OBJECTS_LIB_FUNC(check, SIMDInt32x4Lib::EntryCheck);
+        REG_OBJECTS_LIB_FUNC(zero, SIMDInt32x4Lib::EntryZero);
+        REG_OBJECTS_LIB_FUNC(splat, SIMDInt32x4Lib::EntrySplat);
+        REG_OBJECTS_LIB_FUNC(bool_, SIMDInt32x4Lib::EntryBool);
+		REG_OBJECTS_LIB_FUNC(extractLane, SIMDInt32x4Lib::EntryExtractLane);
+		REG_OBJECTS_LIB_FUNC(replaceLane, SIMDInt32x4Lib::EntryReplaceLane);
+		REG_OBJECTS_LIB_FUNC(withFlagX, SIMDInt32x4Lib::EntryWithFlagX);
+        REG_OBJECTS_LIB_FUNC(withFlagY, SIMDInt32x4Lib::EntryWithFlagY);
+        REG_OBJECTS_LIB_FUNC(withFlagZ, SIMDInt32x4Lib::EntryWithFlagZ);
+        REG_OBJECTS_LIB_FUNC(withFlagW, SIMDInt32x4Lib::EntryWithFlagW);
+        REG_OBJECTS_LIB_FUNC(fromFloat64x2, SIMDInt32x4Lib::EntryFromFloat64x2);
+        REG_OBJECTS_LIB_FUNC(fromFloat64x2Bits, SIMDInt32x4Lib::EntryFromFloat64x2Bits);
+        REG_OBJECTS_LIB_FUNC(fromFloat32x4, SIMDInt32x4Lib::EntryFromFloat32x4);
+        REG_OBJECTS_LIB_FUNC(fromFloat32x4Bits, SIMDInt32x4Lib::EntryFromFloat32x4Bits);
+        REG_OBJECTS_LIB_FUNC(add, SIMDInt32x4Lib::EntryAdd);
+        REG_OBJECTS_LIB_FUNC(sub, SIMDInt32x4Lib::EntrySub);
+        REG_OBJECTS_LIB_FUNC(mul, SIMDInt32x4Lib::EntryMul);
+        REG_OBJECTS_LIB_FUNC(and, SIMDInt32x4Lib::EntryAnd);
+        REG_OBJECTS_LIB_FUNC(or,  SIMDInt32x4Lib::EntryOr);
+        REG_OBJECTS_LIB_FUNC(xor, SIMDInt32x4Lib::EntryXor);
+        REG_OBJECTS_LIB_FUNC(neg, SIMDInt32x4Lib::EntryNeg);
+        REG_OBJECTS_LIB_FUNC(not, SIMDInt32x4Lib::EntryNot);
+        REG_OBJECTS_LIB_FUNC(lessThan, SIMDInt32x4Lib::EntryLessThan);
+        REG_OBJECTS_LIB_FUNC(equal, SIMDInt32x4Lib::EntryEqual);
+        REG_OBJECTS_LIB_FUNC(greaterThan, SIMDInt32x4Lib::EntryGreaterThan);
+        REG_OBJECTS_LIB_FUNC(swizzle, SIMDInt32x4Lib::EntrySwizzle);
+        REG_OBJECTS_LIB_FUNC(shuffle, SIMDInt32x4Lib::EntryShuffle);
+        REG_OBJECTS_LIB_FUNC(shiftLeft, SIMDInt32x4Lib::EntryShiftLeft);
+        REG_OBJECTS_LIB_FUNC(shiftRightLogical, SIMDInt32x4Lib::EntryShiftRightLogical);
+        REG_OBJECTS_LIB_FUNC(shiftRightArithmetic, SIMDInt32x4Lib::EntryShiftRightArithmetic);
+        REG_OBJECTS_LIB_FUNC(select, SIMDInt32x4Lib::EntrySelect);
+
+        // Int8x16
+        REG_OBJECTS_LIB_FUNC(Int8x16, SIMDInt8x16Lib::EntryInt8x16);
+        REG_OBJECTS_LIB_FUNC(check, SIMDInt8x16Lib::EntryCheck);
+        REG_OBJECTS_LIB_FUNC(zero, SIMDInt8x16Lib::EntryZero);
+        REG_OBJECTS_LIB_FUNC(splat, SIMDInt8x16Lib::EntrySplat);
+        REG_OBJECTS_LIB_FUNC(fromFloat32x4Bits, SIMDInt8x16Lib::EntryFromFloat32x4Bits);
+        REG_OBJECTS_LIB_FUNC(fromInt32x4Bits, SIMDInt8x16Lib::EntryFromInt32x4Bits);
+        REG_OBJECTS_LIB_FUNC(neg, SIMDInt8x16Lib::EntryNeg);
+        REG_OBJECTS_LIB_FUNC(not, SIMDInt8x16Lib::EntryNot);
+        REG_OBJECTS_LIB_FUNC(add, SIMDInt8x16Lib::EntryAdd);
+        REG_OBJECTS_LIB_FUNC(sub, SIMDInt8x16Lib::EntrySub);
+        REG_OBJECTS_LIB_FUNC(mul, SIMDInt8x16Lib::EntryMul);
+        REG_OBJECTS_LIB_FUNC(and, SIMDInt8x16Lib::EntryAnd);
+        REG_OBJECTS_LIB_FUNC(or, SIMDInt8x16Lib::EntryOr);
+        REG_OBJECTS_LIB_FUNC(xor, SIMDInt8x16Lib::EntryXor);
+        REG_OBJECTS_LIB_FUNC(lessThan, SIMDInt8x16Lib::EntryLessThan);
+        REG_OBJECTS_LIB_FUNC(equal, SIMDInt8x16Lib::EntryEqual);
+        REG_OBJECTS_LIB_FUNC(greaterThan, SIMDInt8x16Lib::EntryGreaterThan);
+        REG_OBJECTS_LIB_FUNC(shiftLeftByScalar, SIMDInt8x16Lib::EntryShiftLeftByScalar);
+        REG_OBJECTS_LIB_FUNC(shiftRightLogicalByScalar, SIMDInt8x16Lib::EntryShiftRightLogicalByScalar);
+        REG_OBJECTS_LIB_FUNC(shiftRightArithmeticByScalar, SIMDInt8x16Lib::EntryShiftRightArithmeticByScalar);
+        REG_OBJECTS_LIB_FUNC(extractLane, SIMDInt8x16Lib::EntryExtractLane);
+        REG_OBJECTS_LIB_FUNC(replaceLane, SIMDInt8x16Lib::EntryReplaceLane);
+
+        return hr;
+    }
+#endif
+
+#ifdef IR_VIEWER
+    HRESULT JavascriptLibrary::ProfilerRegisterIRViewer()
+    {
+        HRESULT hr = S_OK;
+
+        DEFINE_OBJECT_NAME(IRViewer);
+
+        // TODO (t-doilij) move GlobalObject::EntryParseIR to JavascriptIRViewer::EntryParseIR
+        REG_LIB_FUNC_CORE(pwszObjectName, L"parseIR", scriptContext->GetOrAddPropertyIdTracked(L"parseIR"), GlobalObject::EntryParseIR);
+        REG_LIB_FUNC_CORE(pwszObjectName, L"functionList", scriptContext->GetOrAddPropertyIdTracked(L"functionList"), GlobalObject::EntryFunctionList);
+        REG_LIB_FUNC_CORE(pwszObjectName, L"rejitFunction", scriptContext->GetOrAddPropertyIdTracked(L"rejitFunction"), GlobalObject::EntryRejitFunction);
+
+        return hr;
+    }
+#endif /* IR_VIEWER */
 }

@@ -3,7 +3,7 @@
 //----------------------------------------------------------------------------
 
 #include "BackEnd.h"
-
+#include "Language\ScriptContextProfiler.h"
 
 #if DBG
 Js::JavascriptMethod checkCodeGenThunk;

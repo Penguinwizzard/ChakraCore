@@ -2,7 +2,33 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "RuntimeLanguagePch.h"
+#include "Types\WithScopeObject.h"
+#include "Library\JavascriptPromise.h"
+
+#ifndef SCRIPT_DIRECT_TYPE
+typedef enum JsNativeValueType
+{
+    JsInt8Type,
+    JsUint8Type,
+    JsInt16Type,
+    JsUint16Type,
+    JsInt32Type,
+    JsUint32Type,
+    JsInt64Type,
+    JsUint64Type,
+    JsFloatType,
+    JsDoubleType,
+    JsNativeStringType
+} JsNativeValueType;
+
+typedef struct JsNativeString
+{
+    unsigned int length;
+    LPCWSTR str;
+} JsNativeString;
+
+#endif
 
 namespace Js
 {
@@ -9403,5 +9429,637 @@ CommonNumber:
         }
         //10.Throw a TypeError exception.
         JavascriptError::ThrowTypeError(scriptContext, JSERR_NotAConstructor, L"[@@species]");
+    }
+
+    BOOL JavascriptOperators::GreaterEqual(Var aLeft, Var aRight, ScriptContext* scriptContext)
+    {
+        if (TaggedInt::Is(aLeft))
+        {
+            if (TaggedInt::Is(aRight))
+            {
+                return (int)aLeft >= (int)aRight;
+            }
+            if (JavascriptNumber::Is_NoTaggedIntCheck(aRight))
+            {
+                return TaggedInt::ToDouble(aLeft) >= JavascriptNumber::GetValue(aRight);
+            }
+        }
+        else if (TaggedInt::Is(aRight))
+        {
+            if (JavascriptNumber::Is_NoTaggedIntCheck(aLeft))
+            {
+                return JavascriptNumber::GetValue(aLeft) >= TaggedInt::ToDouble(aRight);
+            }
+        }
+        else
+        {
+            if (JavascriptNumber::Is_NoTaggedIntCheck(aLeft) && JavascriptNumber::Is_NoTaggedIntCheck(aRight))
+            {
+                return JavascriptNumber::GetValue(aLeft) >= JavascriptNumber::GetValue(aRight);
+            }
+        }
+
+        return !RelationalComparsionHelper(aLeft, aRight, scriptContext, true, true);
+    }
+
+    BOOL JavascriptOperators::LessEqual(Var aLeft, Var aRight, ScriptContext* scriptContext)
+    {
+        if (TaggedInt::Is(aLeft))
+        {
+            if (TaggedInt::Is(aRight))
+            {
+                return (int)aLeft <= (int)aRight;
+            }
+
+            if (JavascriptNumber::Is_NoTaggedIntCheck(aRight))
+            {
+                return TaggedInt::ToDouble(aLeft) <= JavascriptNumber::GetValue(aRight);
+            }
+        }
+        else if (TaggedInt::Is(aRight))
+        {
+            if (JavascriptNumber::Is_NoTaggedIntCheck(aLeft))
+            {
+                return JavascriptNumber::GetValue(aLeft) <= TaggedInt::ToDouble(aRight);
+            }
+        }
+        else
+        {
+            if (JavascriptNumber::Is_NoTaggedIntCheck(aLeft) && JavascriptNumber::Is_NoTaggedIntCheck(aRight))
+            {
+                return JavascriptNumber::GetValue(aLeft) <= JavascriptNumber::GetValue(aRight);
+            }
+        }
+
+        return !RelationalComparsionHelper(aRight, aLeft, scriptContext, false, true);
+    }
+
+    BOOL JavascriptOperators::NotEqual(Var aLeft, Var aRight, ScriptContext* scriptContext)
+    {
+        //
+        // TODO: Change to use Abstract Equality Comparison Algorithm (ES3.0: S11.9.3):
+        // - Evaluate left, then right, operands to preserve correct evaluation order.
+        // - Call algorithm, potentially reversing arguments.
+        //
+
+        return !Equal(aLeft, aRight, scriptContext);
+    }
+
+
+    // NotStrictEqual() returns whether the two vars have strict equality, as
+    // described in (ES3.0: S11.9.5, S11.9.6).
+
+    BOOL JavascriptOperators::NotStrictEqual(Var aLeft, Var aRight, ScriptContext* scriptContext)
+    {
+        return !StrictEqual(aLeft, aRight, scriptContext);
+    }
+
+
+    bool JavascriptOperators::CheckIfObjectAndPrototypeChainHasOnlyWritableDataProperties(RecyclableObject* object)
+    {
+        Assert(object);
+        if (object->GetType()->HasSpecialPrototype())
+        {
+            TypeId typeId = object->GetTypeId();
+            if (typeId == TypeIds_Null)
+            {
+                return true;
+            }
+            if (typeId == TypeIds_Proxy)
+            {
+                return false;
+            }
+        }
+        if (!object->HasOnlyWritableDataProperties())
+        {
+            return false;
+        }
+        return CheckIfPrototypeChainHasOnlyWritableDataProperties(object->GetPrototype());
+    }
+
+    bool JavascriptOperators::CheckIfPrototypeChainHasOnlyWritableDataProperties(RecyclableObject* prototype)
+    {
+        Assert(prototype);
+
+        if (prototype->GetType()->AreThisAndPrototypesEnsuredToHaveOnlyWritableDataProperties())
+        {
+            Assert(DoCheckIfPrototypeChainHasOnlyWritableDataProperties(prototype));
+            return true;
+        }
+        return DoCheckIfPrototypeChainHasOnlyWritableDataProperties(prototype);
+    }
+
+    // Does a quick check to see if the specified object (which should be a prototype object) and all objects in its prototype
+    // chain have only writable data properties (i.e. no accessors or non-writable properties).
+    bool JavascriptOperators::DoCheckIfPrototypeChainHasOnlyWritableDataProperties(RecyclableObject* prototype)
+    {
+        Assert(prototype);
+
+        Type *const originalType = prototype->GetType();
+        ScriptContext *const scriptContext = prototype->GetScriptContext();
+        bool onlyOneScriptContext = true;
+        TypeId typeId;
+        for (; (typeId = prototype->GetTypeId()) != TypeIds_Null; prototype = prototype->GetPrototype())
+        {
+            if (typeId == TypeIds_Proxy)
+            {
+                return false;
+            }
+            if (!prototype->HasOnlyWritableDataProperties())
+            {
+                return false;
+            }
+            if (prototype->GetScriptContext() != scriptContext)
+            {
+                onlyOneScriptContext = false;
+            }
+        }
+
+        if (onlyOneScriptContext)
+        {
+            // See JavascriptLibrary::typesEnsuredToHaveOnlyWritableDataPropertiesInItAndPrototypeChain for a description of
+            // this cache. Technically, we could register all prototypes in the chain but this is good enough for now.
+            originalType->SetAreThisAndPrototypesEnsuredToHaveOnlyWritableDataProperties(true);
+        }
+
+        return true;
+    }
+
+    BOOL JavascriptOperators::Equal(Var aLeft, Var aRight, ScriptContext* scriptContext)
+    {
+        if (aLeft == aRight)
+        {
+            if (TaggedInt::Is(aLeft) || JavascriptObject::Is(aLeft))
+            {
+                return true;
+            }
+            else
+            {
+                return Equal_Full(aLeft, aRight, scriptContext);
+            }
+        }
+
+        if (JavascriptString::Is(aLeft) && JavascriptString::Is(aRight))
+        {
+            JavascriptString* left = (JavascriptString*)aLeft;
+            JavascriptString* right = (JavascriptString*)aRight;
+
+            if (left->GetLength() == right->GetLength())
+            {
+                if (left->UnsafeGetBuffer() != NULL && right->UnsafeGetBuffer() != NULL)
+                {
+                    if (left->GetLength() == 1)
+                    {
+                        return left->UnsafeGetBuffer()[0] == right->UnsafeGetBuffer()[0];
+                    }
+                    return memcmp(left->UnsafeGetBuffer(), right->UnsafeGetBuffer(), left->GetLength() * sizeof(left->UnsafeGetBuffer()[0])) == 0;
+                }
+                // fall through to Equal_Full
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        return Equal_Full(aLeft, aRight, scriptContext);
+    }
+
+    BOOL JavascriptOperators::Greater(Var aLeft, Var aRight, ScriptContext* scriptContext)
+    {
+        if (TaggedInt::Is(aLeft))
+        {
+            if (TaggedInt::Is(aRight))
+            {
+                return (int)aLeft > (int)aRight;
+            }
+            if (JavascriptNumber::Is_NoTaggedIntCheck(aRight))
+            {
+                return TaggedInt::ToDouble(aLeft) > JavascriptNumber::GetValue(aRight);
+            }
+        }
+        else if (TaggedInt::Is(aRight))
+        {
+            if (JavascriptNumber::Is_NoTaggedIntCheck(aLeft))
+            {
+                return JavascriptNumber::GetValue(aLeft) > TaggedInt::ToDouble(aRight);
+            }
+        }
+        else
+        {
+            if (JavascriptNumber::Is_NoTaggedIntCheck(aLeft) && JavascriptNumber::Is_NoTaggedIntCheck(aRight))
+            {
+                return JavascriptNumber::GetValue(aLeft) > JavascriptNumber::GetValue(aRight);
+            }
+        }
+
+        return Greater_Full(aLeft, aRight, scriptContext);
+    }
+
+    BOOL JavascriptOperators::Less(Var aLeft, Var aRight, ScriptContext* scriptContext)
+    {
+        if (TaggedInt::Is(aLeft))
+        {
+            if (TaggedInt::Is(aRight))
+            {
+                return (int)aLeft < (int)aRight;
+            }
+            if (JavascriptNumber::Is_NoTaggedIntCheck(aRight))
+            {
+                return TaggedInt::ToDouble(aLeft) < JavascriptNumber::GetValue(aRight);
+            }
+        }
+        else if (TaggedInt::Is(aRight))
+        {
+            if (JavascriptNumber::Is_NoTaggedIntCheck(aLeft))
+            {
+                return JavascriptNumber::GetValue(aLeft) < TaggedInt::ToDouble(aRight);
+            }
+        }
+        else
+        {
+            if (JavascriptNumber::Is_NoTaggedIntCheck(aLeft) && JavascriptNumber::Is_NoTaggedIntCheck(aRight))
+            {
+                return JavascriptNumber::GetValue(aLeft) < JavascriptNumber::GetValue(aRight);
+            }
+        }
+
+        return Less_Full(aLeft, aRight, scriptContext);
+    }
+
+    Var JavascriptOperators::ToObject(Var aRight, ScriptContext* scriptContext)
+    {
+        RecyclableObject* object = null;
+        if (FALSE == JavascriptConversion::ToObject(aRight, scriptContext, &object))
+        {
+            JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedObject /* TODO-ERROR: get arg name - aValue */);
+        }
+
+        return object;
+    }
+
+    Var JavascriptOperators::ToWithObject(Var aRight, ScriptContext* scriptContext)
+    {
+        RecyclableObject* object = RecyclableObject::FromVar(aRight);
+
+        WithScopeObject* withWrapper = RecyclerNew(scriptContext->GetRecycler(), WithScopeObject, object, scriptContext->GetLibrary()->GetWithType());
+        return withWrapper;
+    }
+
+    Var JavascriptOperators::ToNumber(Var aRight, ScriptContext* scriptContext)
+    {
+        if (TaggedInt::Is(aRight) || (JavascriptNumber::Is_NoTaggedIntCheck(aRight)))
+        {
+            return aRight;
+        }
+
+        return JavascriptNumber::ToVarNoCheck(JavascriptConversion::ToNumber_Full(aRight, scriptContext), scriptContext);
+    }    
+
+    BOOL JavascriptOperators::IsObject(Var aValue)
+    {
+        return GetTypeId(aValue) > TypeIds_LastJavascriptPrimitiveType;
+    }
+
+    BOOL JavascriptOperators::IsObjectType(TypeId typeId)
+    {
+        return typeId > TypeIds_LastJavascriptPrimitiveType;
+    }
+
+    BOOL JavascriptOperators::IsExposedType(TypeId typeId)
+    {
+        return typeId <= TypeIds_LastTrueJavascriptObjectType && typeId != TypeIds_HostDispatch;
+    }
+
+    BOOL JavascriptOperators::IsObjectOrNull(Var instance)
+    {
+        TypeId typeId = GetTypeId(instance);
+        return IsObjectType(typeId) || typeId == TypeIds_Null;
+    }
+
+    BOOL JavascriptOperators::IsUndefinedOrNullType(TypeId typeId)
+    {
+        return typeId <= TypeIds_UndefinedOrNull;
+    }
+
+    BOOL JavascriptOperators::IsSpecialObjectType(TypeId typeId)
+    {
+        return typeId > TypeIds_LastTrueJavascriptObjectType;
+    }
+
+    BOOL JavascriptOperators::IsUndefinedObject(Var instance)
+    {
+        return JavascriptOperators::GetTypeId(instance) == TypeIds_Undefined;
+    }
+
+    BOOL JavascriptOperators::IsUndefinedObject(Var instance, RecyclableObject *libraryUndefined)
+    {
+        Assert(JavascriptOperators::IsUndefinedObject(libraryUndefined));
+
+        return instance == libraryUndefined;
+    }
+
+    BOOL JavascriptOperators::IsUndefinedObject(Var instance, ScriptContext *scriptContext)
+    {
+        return JavascriptOperators::IsUndefinedObject(instance, scriptContext->GetLibrary()->GetUndefined());
+    }
+
+    BOOL JavascriptOperators::IsUndefinedObject(Var instance, JavascriptLibrary* library)
+    {
+        return JavascriptOperators::IsUndefinedObject(instance, library->GetUndefined());
+    }
+
+    BOOL JavascriptOperators::IsAnyNumberValue(Var instance)
+    {
+        TypeId typeId = GetTypeId(instance);
+        return TypeIds_FirstNumberType <= typeId && typeId <= TypeIds_LastNumberType;
+    }
+
+    BOOL JavascriptOperators::IsIterable(RecyclableObject* instance, ScriptContext* scriptContext)
+    {
+        if (JavascriptProxy::Is(instance))
+        {
+            Var func = JavascriptOperators::GetProperty(instance, PropertyIds::_symbolIterator, scriptContext);
+            if (JavascriptOperators::IsUndefinedObject(func))
+            {
+                return FALSE;
+            }
+            else
+            {
+                return TRUE;
+            }
+        }
+        else
+        {
+            return JavascriptOperators::HasProperty(instance, PropertyIds::_symbolIterator);
+        }
+    }
+
+    // GetIterator as described in ES6.0 (draft 22) Section 7.4.1
+    RecyclableObject* JavascriptOperators::GetIterator(Var iterable, ScriptContext* scriptContext)
+    {
+        RecyclableObject* iterableObj = RecyclableObject::FromVar(JavascriptOperators::ToObject(iterable, scriptContext));
+        return JavascriptOperators::GetIterator(iterableObj, scriptContext);
+    }
+
+    RecyclableObject* JavascriptOperators::GetIteratorFunction(Var iterable, ScriptContext* scriptContext)
+    {
+        RecyclableObject* iterableObj = RecyclableObject::FromVar(JavascriptOperators::ToObject(iterable, scriptContext));
+        return JavascriptOperators::GetIteratorFunction(iterableObj, scriptContext);
+    }
+
+    RecyclableObject* JavascriptOperators::GetIteratorFunction(RecyclableObject* instance, ScriptContext * scriptContext)
+    {
+        Var func = JavascriptOperators::GetProperty(instance, PropertyIds::_symbolIterator, scriptContext);
+
+        if (!JavascriptConversion::IsCallable(func))
+        {
+            JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedFunction);
+        }
+
+        RecyclableObject* function = RecyclableObject::FromVar(func);
+        return function;
+    }
+
+    RecyclableObject* JavascriptOperators::GetIterator(RecyclableObject* instance, ScriptContext * scriptContext)
+    {
+        RecyclableObject* function = GetIteratorFunction(instance, scriptContext);
+        Var iterator = function->GetEntryPoint()(function, CallInfo(Js::CallFlags_Value, 1), instance);
+
+        if (!JavascriptOperators::IsObject(iterator))
+        {
+            JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedObject);
+        }
+
+        return RecyclableObject::FromVar(iterator);
+    }
+
+    // IteratorNext as described in ES6.0 (draft 22) Section 7.4.2
+    RecyclableObject* JavascriptOperators::IteratorNext(RecyclableObject* iterator, ScriptContext* scriptContext, Var value)
+    {
+        Var func = JavascriptOperators::GetProperty(iterator, PropertyIds::next, scriptContext);
+
+        if (!JavascriptConversion::IsCallable(func))
+        {
+            JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedFunction);
+        }
+
+        RecyclableObject* callable = RecyclableObject::FromVar(func);
+        Js::Var args[] = { iterator, value };
+        Js::CallInfo callInfo(Js::CallFlags_Value, _countof(args) + (value == nullptr ? -1 : 0));
+        Var result = JavascriptFunction::CallFunction<true>(callable, callable->GetEntryPoint(), Js::Arguments(callInfo, args));
+
+        if (!JavascriptOperators::IsObject(result))
+        {
+            JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedObject);
+        }
+
+        return RecyclableObject::FromVar(result);
+    }
+
+    // IteratorComplete as described in ES6.0 (draft 22) Section 7.4.3
+    bool JavascriptOperators::IteratorComplete(RecyclableObject* iterResult, ScriptContext* scriptContext)
+    {
+        Var done = JavascriptOperators::GetProperty(iterResult, Js::PropertyIds::done, scriptContext);
+
+        return JavascriptConversion::ToBool(done, scriptContext);
+    }
+
+    // IteratorValue as described in ES6.0 (draft 22) Section 7.4.4
+    Var JavascriptOperators::IteratorValue(RecyclableObject* iterResult, ScriptContext* scriptContext)
+    {
+        return JavascriptOperators::GetProperty(iterResult, Js::PropertyIds::value, scriptContext);
+    }
+
+    // IteratorStep as described in ES6.0 (draft 22) Section 7.4.5
+    bool JavascriptOperators::IteratorStep(RecyclableObject* iterator, ScriptContext* scriptContext, RecyclableObject** result)
+    {
+        Assert(result);
+
+        *result = JavascriptOperators::IteratorNext(iterator, scriptContext);
+        return !JavascriptOperators::IteratorComplete(*result, scriptContext);
+    }
+
+    bool JavascriptOperators::IteratorStepAndValue(RecyclableObject* iterator, ScriptContext* scriptContext, Var* resultValue)
+    {
+        RecyclableObject* result = JavascriptOperators::IteratorNext(iterator, scriptContext);
+
+        if (!JavascriptOperators::IteratorComplete(result, scriptContext))
+        {
+            *resultValue = JavascriptOperators::IteratorValue(result, scriptContext);
+            return true;
+        }
+
+        return false;
+    }
+
+    RecyclableObject* JavascriptOperators::OrdinaryCreateFromConstructor(RecyclableObject* constructor, RecyclableObject* obj, DynamicObject* intrinsicProto, ScriptContext* scriptContext)
+    {
+        // There isn't a good way for us to add internal properties to objects in Chakra.
+        // Thus, caller should take care to create obj with the correct internal properties.
+
+        Var proto = JavascriptOperators::GetProperty(constructor, Js::PropertyIds::prototype, scriptContext);
+
+        // If constructor.prototype is an object, we should use that as the [[Prototype]] for our obj.
+        // Else, we set the [[Prototype]] internal slot of obj to %intrinsicProto% - which should be the default.
+        if (JavascriptOperators::IsObjectType(JavascriptOperators::GetTypeId(proto)) &&
+            DynamicObject::FromVar(proto) != intrinsicProto)
+        {
+            JavascriptObject::ChangePrototype(obj, RecyclableObject::FromVar(proto), /*validate*/true, scriptContext);
+        }
+
+        return obj;
+    }
+
+    Var JavascriptOperators::GetProperty(RecyclableObject* instance, PropertyId propertyId, ScriptContext* requestContext, PropertyValueInfo* info)
+    {
+        return JavascriptOperators::GetProperty(instance, instance, propertyId, requestContext, info);
+    }
+
+    BOOL JavascriptOperators::GetProperty(RecyclableObject* instance, PropertyId propertyId, Var* value, ScriptContext* requestContext, PropertyValueInfo* info)
+    {
+        return JavascriptOperators::GetProperty(instance, instance, propertyId, value, requestContext, info);
+    }
+
+    Var JavascriptOperators::GetProperty(Var instance, RecyclableObject* propertyObject, PropertyId propertyId, ScriptContext* requestContext, PropertyValueInfo* info)
+    {
+        Var value;
+        if (JavascriptOperators::GetProperty(instance, propertyObject, propertyId, &value, requestContext, info))
+        {
+            return value;
+        }
+        return requestContext->GetMissingPropertyResult(propertyObject, propertyId);
+    }
+
+    Var JavascriptOperators::GetRootProperty(RecyclableObject* instance, PropertyId propertyId, ScriptContext* requestContext, PropertyValueInfo* info)
+    {
+        Var value;
+        if (JavascriptOperators::GetRootProperty(instance, propertyId, &value, requestContext, info))
+        {
+            return value;
+        }
+        return requestContext->GetMissingPropertyResult(instance, propertyId);
+    }
+
+    BOOL JavascriptOperators::GetPropertyReference(RecyclableObject *instance, PropertyId propertyId, Var* value, ScriptContext* requestContext, PropertyValueInfo* info)
+    {
+        return JavascriptOperators::GetPropertyReference(instance, instance, propertyId, value, requestContext, info);
+    }
+
+    BOOL JavascriptOperators::GetItem(RecyclableObject* instance, uint64 index, Var* value, ScriptContext* requestContext)
+    {
+        PropertyRecord const * propertyRecord;
+        JavascriptOperators::GetPropertyIdForInt(index, requestContext, &propertyRecord);
+        return JavascriptOperators::GetProperty(instance, propertyRecord->GetPropertyId(), value, requestContext);
+    }
+
+    BOOL JavascriptOperators::GetItem(RecyclableObject* instance, uint32 index, Var* value, ScriptContext* requestContext)
+    {
+        return JavascriptOperators::GetItem(instance, instance, index, value, requestContext);
+    }
+
+    BOOL JavascriptOperators::GetItemReference(RecyclableObject* instance, uint32 index, Var* value, ScriptContext* requestContext)
+    {
+        return GetItemReference(instance, instance, index, value, requestContext);
+    }
+
+    BOOL JavascriptOperators::CheckPrototypesForAccessorOrNonWritableProperty(RecyclableObject* instance, PropertyId propertyId, Var* setterValue, DescriptorFlags* flags, PropertyValueInfo* info, ScriptContext* scriptContext)
+    {
+        if (propertyId == Js::PropertyIds::__proto__)
+        {
+            return CheckPrototypesForAccessorOrNonWritablePropertyCore<PropertyId, false, false>(instance, propertyId, setterValue, flags, info, scriptContext);
+        }
+        else
+        {
+            return CheckPrototypesForAccessorOrNonWritablePropertyCore<PropertyId, true, false>(instance, propertyId, setterValue, flags, info, scriptContext);
+        }
+    }
+
+    BOOL JavascriptOperators::CheckPrototypesForAccessorOrNonWritableRootProperty(RecyclableObject* instance, PropertyId propertyId, Var* setterValue, DescriptorFlags* flags, PropertyValueInfo* info, ScriptContext* scriptContext)
+    {
+        if (propertyId == Js::PropertyIds::__proto__)
+        {
+            return CheckPrototypesForAccessorOrNonWritablePropertyCore<PropertyId, false, true>(instance, propertyId, setterValue, flags, info, scriptContext);
+        }
+        else
+        {
+            return CheckPrototypesForAccessorOrNonWritablePropertyCore<PropertyId, true, true>(instance, propertyId, setterValue, flags, info, scriptContext);
+        }
+    }
+
+    BOOL JavascriptOperators::CheckPrototypesForAccessorOrNonWritableProperty(RecyclableObject* instance, JavascriptString* propertyNameString, Var* setterValue, DescriptorFlags* flags, PropertyValueInfo* info, ScriptContext* scriptContext)
+    {
+        JsUtil::CharacterBuffer<WCHAR> propertyName(propertyNameString->GetString(), propertyNameString->GetLength());
+        if (Js::BuiltInPropertyRecords::__proto__.Equals(propertyName))
+        {
+            return CheckPrototypesForAccessorOrNonWritablePropertyCore<JavascriptString*, false, false>(instance, propertyNameString, setterValue, flags, info, scriptContext);
+        }
+        else
+        {
+            return CheckPrototypesForAccessorOrNonWritablePropertyCore<JavascriptString*, true, false>(instance, propertyNameString, setterValue, flags, info, scriptContext);
+        }
+    }
+
+    template<typename PropertyKeyType>
+    BOOL JavascriptOperators::CheckPrototypesForAccessorOrNonWritablePropertySlow(RecyclableObject* instance, PropertyKeyType propertyKey, Var* setterValue, DescriptorFlags* flags, bool isRoot, ScriptContext* scriptContext)
+    {
+        // This is used in debug verification, do not doFastProtoChainCheck to avoid side effect (doFastProtoChainCheck may update HasWritableDataOnly flags).
+        if (isRoot)
+        {
+            return CheckPrototypesForAccessorOrNonWritablePropertyCore<PropertyKeyType, /*doFastProtoChainCheck*/false, true>(instance, propertyKey, setterValue, flags, nullptr, scriptContext);
+        }
+        else
+        {
+            return CheckPrototypesForAccessorOrNonWritablePropertyCore<PropertyKeyType, /*doFastProtoChainCheck*/false, false>(instance, propertyKey, setterValue, flags, nullptr, scriptContext);
+        }
+    }
+
+    BOOL JavascriptOperators::SetProperty(Var instance, RecyclableObject* object, PropertyId propertyId, Var newValue, ScriptContext* requestContext, PropertyOperationFlags propertyOperationFlags)
+    {
+        PropertyValueInfo info;
+        return JavascriptOperators::SetProperty(instance, object, propertyId, newValue, &info, requestContext, propertyOperationFlags);
+    }
+
+    BOOL JavascriptOperators::TryConvertToUInt32(const wchar_t* str, int length, uint32* intVal)
+    {
+        return NumberUtilities::TryConvertToUInt32(str, length, intVal);
+    }
+
+    template <typename TPropertyKey>
+    DescriptorFlags JavascriptOperators::GetRootSetter(RecyclableObject* instance, TPropertyKey propertyKey, Var *setterValue, PropertyValueInfo* info, ScriptContext* requestContext)
+    {
+        // This is provided only so that CheckPrototypesForAccessorOrNonWritablePropertyCore will compile.
+        // It will never be called.
+        Throw::FatalInternalError();
+    }
+
+    template <>
+    inline DescriptorFlags JavascriptOperators::GetRootSetter(RecyclableObject* instance, PropertyId propertyId, Var *setterValue, PropertyValueInfo* info, ScriptContext* requestContext)
+    {
+        AssertMsg(JavascriptOperators::GetTypeId(instance) == TypeIds_GlobalObject
+            || JavascriptOperators::GetTypeId(instance) == TypeIds_ModuleRoot,
+            "Root must be a global object!");
+
+        RootObjectBase* rootObject = static_cast<RootObjectBase*>(instance);
+        return rootObject->GetRootSetter(propertyId, setterValue, info, requestContext);
+    }
+
+    // Helper to fetch @@species from a constructor object
+    Var JavascriptOperators::GetSpecies(RecyclableObject* constructor, ScriptContext* scriptContext)
+    {
+        if (scriptContext->GetConfig()->IsES6SpeciesEnabled())
+        {
+            Var species = nullptr;
+
+            // Let S be Get(C, @@species)
+            if (JavascriptOperators::GetProperty(constructor, PropertyIds::_symbolSpecies, &species, scriptContext)
+                && !JavascriptOperators::IsUndefinedOrNullType(JavascriptOperators::GetTypeId(species)))
+            {
+                // If S is neither undefined nor null, let C be S
+                return species;
+            }
+        }
+
+        return constructor;
     }
 } // namespace Js

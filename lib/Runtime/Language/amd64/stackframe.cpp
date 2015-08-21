@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 //---------------------------------------------------------------------------
 
-#include "stdafx.h"
+#include "RuntimeLanguagePch.h"
 
 #if !defined(_M_X64)
 #error Amd64StackFrame is not supported on this architecture.

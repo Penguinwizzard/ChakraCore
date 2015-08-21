@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
-#include "StdAfx.h"
+#include "RuntimeMathPch.h"
 
 #define SSE2MATH
 #include "JavascriptMath.cpp"

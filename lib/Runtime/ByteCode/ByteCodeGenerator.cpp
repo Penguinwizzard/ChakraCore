@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "RuntimeByteCodePch.h"
 
 void PreVisitBlock(ParseNode *pnodeBlock, ByteCodeGenerator *byteCodeGenerator);
 void PostVisitBlock(ParseNode *pnodeBlock, ByteCodeGenerator *byteCodeGenerator);
@@ -619,8 +619,6 @@ BOOL MustProduceValue(ParseNode *pnode, const Js::ScriptContext *const scriptCon
     }
 }
 
-SymbolName const ByteCodeGenerator::argumentsName(L"arguments", _countof(L"arguments") - 1);
-
 ByteCodeGenerator::ByteCodeGenerator(Js::ScriptContext* scriptContext, Js::ScopeInfo* parentScopeInfo) :
     alloc(nullptr),
     scriptContext(scriptContext),
@@ -703,6 +701,15 @@ Js::RegSlot ByteCodeGenerator::NextConstRegister()
 FuncInfo * ByteCodeGenerator::TopFuncInfo() const
 {
     return funcInfoStack->Empty() ? NULL : funcInfoStack->Top();
+}
+
+void ByteCodeGenerator::EnterLoop()
+{
+    if (this->TopFuncInfo())
+    { 
+        this->TopFuncInfo()->hasLoop = true; 
+    } 
+    loopDepth++;
 }
 
 void ByteCodeGenerator::SetHasTry(bool has) {
@@ -1432,6 +1439,38 @@ void ByteCodeGenerator::PopBlock()
     currentBlock = currentBlock->sxBlock.GetEnclosingBlock();
 }
 
+void ByteCodeGenerator::PushFuncInfo(wchar_t const * location, FuncInfo* funcInfo)
+{
+    // We might have multiple global scope for deferparse
+    //Assert(!funcInfo->IsGlobalFunction() || this->TopFuncInfo() == null || this->TopFuncInfo()->IsGlobalFunction());
+    if (PHASE_TRACE1(Js::ByteCodePhase))
+    {
+        Output::Print(L"%s: PushFuncInfo: %s", location, funcInfo->name);
+        if (this->TopFuncInfo())
+        {
+            Output::Print(L" Top: %s", this->TopFuncInfo()->name);
+        }
+        Output::Print(L"\n");
+        Output::Flush();
+    }
+    funcInfoStack->Push(funcInfo);
+}
+
+void ByteCodeGenerator::PopFuncInfo(wchar_t const * location)
+{
+    FuncInfo * funcInfo = funcInfoStack->Pop();
+    //Assert(!funcInfo->IsGlobalFunction() || this->TopFuncInfo() == null || this->TopFuncInfo()->IsGlobalFunction());
+    if (PHASE_TRACE1(Js::ByteCodePhase))
+    {
+        Output::Print(L"%s: PopFuncInfo: %s", location, funcInfo->name);
+        if (this->TopFuncInfo())
+        {
+            Output::Print(L" Top: %s", this->TopFuncInfo()->name);
+        }
+        Output::Print(L"\n");
+        Output::Flush();
+    }
+}
 Symbol * ByteCodeGenerator::FindSymbol(Symbol **symRef, IdentPtr pid, bool forReference)
 {
     const wchar_t *key = null;
@@ -1609,6 +1648,19 @@ Symbol * ByteCodeGenerator::AddSymbolToFunctionScope(const wchar_t *key, int key
     return this->AddSymbolToScope(scope, key, keyLength, varDecl, symbolType);
 }
 
+FuncInfo *ByteCodeGenerator::FindEnclosingNonLambda()
+{
+    for (Scope *scope = TopFuncInfo()->GetBodyScope(); scope; scope = scope->GetEnclosingScope())
+    {
+        if (!scope->GetFunc()->IsLambda())
+        {
+            return scope->GetFunc();
+        }
+    }
+    Assert(0);
+    return nullptr;
+}
+
 bool ByteCodeGenerator::CanStackNestedFunc(FuncInfo * funcInfo, bool trace)
 {
 #if ENABLE_DEBUG_CONFIG_OPTIONS
@@ -1688,6 +1740,41 @@ Scope * ByteCodeGenerator::FindScopeForSym(Scope *symScope, Scope *scope, Js::Pr
 
     Assert(scope);
     return scope;
+}
+
+/* static */ 
+Js::OpCode ByteCodeGenerator::GetStFldOpCode(FuncInfo* funcInfo, bool isRoot, bool isLetDecl, bool isConstDecl, bool isClassMemberInit)
+{
+    return GetStFldOpCode(funcInfo->GetIsStrictMode(), isRoot, isLetDecl, isConstDecl, isClassMemberInit);
+}
+
+/* static */
+Js::OpCode ByteCodeGenerator::GetScopedStFldOpCode(FuncInfo* funcInfo, bool isConsoleScopeLetConst)
+{
+    if (isConsoleScopeLetConst)
+    {
+        return Js::OpCode::ConsoleScopedStFld;
+    }
+    return GetScopedStFldOpCode(funcInfo->GetIsStrictMode());
+}
+
+
+/* static */
+Js::OpCode ByteCodeGenerator::GetStElemIOpCode(FuncInfo* funcInfo)
+{
+    return GetStElemIOpCode(funcInfo->GetIsStrictMode());
+}
+
+bool ByteCodeGenerator::DoJitLoopBodies(FuncInfo *funcInfo) const
+{
+    // Never jit loop bodies in a function with a try.
+    // Otherwise, always jit loop bodies under /forcejitloopbody.
+    // Otherwise, jit loop bodies unless we're in eval/"new Function" or feature is disabled.
+
+    Assert(funcInfo->byteCodeFunction->IsFunctionParsed());
+    Js::FunctionBody* functionBody = funcInfo->byteCodeFunction->GetFunctionBody();
+
+    return functionBody->ForceJITLoopBody() || funcInfo->byteCodeFunction->IsJitLoopBodyPhaseEnabled();
 }
 
 void ByteCodeGenerator::Generate( __in ParseNode *pnode, ulong grfscr, __in ByteCodeGenerator* byteCodeGenerator,
@@ -3192,6 +3279,11 @@ void BindFuncSymbol(ParseNode *pnodeFnc, ByteCodeGenerator *byteCodeGenerator)
 
 // expand using hash table for library function names
 
+bool IsMathLibraryId(Js::PropertyId propertyId) 
+{
+    return (propertyId >= Js::PropertyIds::abs) && (propertyId <= Js::PropertyIds::fround);
+}
+
 bool IsLibraryFunction(ParseNode* expr,Js::ScriptContext* scriptContext) {
     if (expr && expr->nop==knopDot) {
         ParseNode* lhs=expr->sxBin.pnode1;
@@ -3199,9 +3291,8 @@ bool IsLibraryFunction(ParseNode* expr,Js::ScriptContext* scriptContext) {
         if ((lhs!=NULL)&&(rhs!=NULL)&&(lhs->nop==knopName)&&(rhs->nop==knopName)) {
             Symbol* lsym=lhs->sxPid.sym;
             if ((lsym == NULL || lsym->GetIsGlobal()) && lhs->sxPid.PropertyIdFromNameNode() == Js::PropertyIds::Math)
-            {
-                // TODO[ianhall]: IsMathLibraryId only checks for abs and tan; can we remove IsLibraryFunction altogether? (And SideEffects_MathFunc which is never consumed?)
-                return Js::IsMathLibraryId(rhs->sxPid.PropertyIdFromNameNode());
+            {             
+                return IsMathLibraryId(rhs->sxPid.PropertyIdFromNameNode());
             }
         }
     }
@@ -4754,6 +4845,26 @@ Js::FunctionBody * ByteCodeGenerator::MakeGlobalFunctionBody(ParseNode *pnode)
     return func;
 }
 
+/* static */
+bool ByteCodeGenerator::NeedScopeObjectForArguments(FuncInfo *funcInfo, ParseNode *pnodeFnc)
+{
+    // We can avoid creating a scope object with arguments present if:
+    bool dontNeedScopeObject =
+        // We have arguments, and
+        funcInfo->GetHasHeapArguments()
+        // Either we are in strict mode, or have strict mode formal semantics from a non-simple parameter list, and
+        && (funcInfo->GetIsStrictMode()
+            || !pnodeFnc->sxFnc.IsSimpleParameterList())
+        // Neither of the scopes are objects
+        && !funcInfo->paramScope->GetIsObject()
+        && !funcInfo->bodyScope->GetIsObject();
+
+    return funcInfo->GetHasHeapArguments()
+        // Regardless of the conditions above, we won't need a scope object if there aren't any formals.
+        && (pnodeFnc->sxFnc.pnodeArgs != nullptr || pnodeFnc->sxFnc.pnodeRest != nullptr)
+        && !dontNeedScopeObject;
+}
+
 Js::FunctionBody *ByteCodeGenerator::EnsureFakeGlobalFuncForUndefer(ParseNode *pnode)
 {
     Js::FunctionBody *func = scriptContext->GetFakeGlobalFuncForUndefer();
@@ -4773,3 +4884,4 @@ Js::FunctionBody *ByteCodeGenerator::EnsureFakeGlobalFuncForUndefer(ParseNode *p
 
     return func;
 }
+

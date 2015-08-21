@@ -7,7 +7,9 @@
 // SOURCE SOFTWARE APPROVAL POLICY.
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "RuntimeLanguagePch.h"
+#include "ByteCode\Symbol.h"
+#include "ByteCode\FuncInfo.h"
 
 namespace Js
 {

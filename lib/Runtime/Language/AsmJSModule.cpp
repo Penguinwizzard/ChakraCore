@@ -1,7 +1,9 @@
 //---------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved. 
 //---------------------------------------------------------------------------
-#include "StdAfx.h"
+#include "RuntimeLanguagePch.h"
+#include "ByteCode\Symbol.h"
+#include "ByteCode\FuncInfo.h"
 
 namespace Js
 {
