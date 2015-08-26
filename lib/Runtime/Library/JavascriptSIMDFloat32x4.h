@@ -27,7 +27,10 @@ namespace Js
             
         };
 
+        JavascriptSIMDFloat32x4(StaticType *type);
         JavascriptSIMDFloat32x4(SIMDValue *val, StaticType *type);
+
+        static JavascriptSIMDFloat32x4* AllocUninitialized(ScriptContext* requestContext);
         static JavascriptSIMDFloat32x4* New(SIMDValue *val, ScriptContext* requestContext);
         static bool Is(Var instance);
         static JavascriptSIMDFloat32x4* FromVar(Var aValue);
@@ -43,6 +46,7 @@ namespace Js
         virtual BOOL GetProperty(Var originalInstance, PropertyId propertyId, Var* value, PropertyValueInfo* info, ScriptContext* requestContext) override;
         virtual BOOL GetProperty(Var originalInstance, JavascriptString* propertyNameString, Var* value, PropertyValueInfo* info, ScriptContext* requestContext) override;
 
+        static size_t GetOffsetOfValue() { return offsetof(JavascriptSIMDFloat32x4, value); }
 
         // Entry Points
         /*

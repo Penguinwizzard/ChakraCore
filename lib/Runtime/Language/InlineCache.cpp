@@ -637,6 +637,23 @@ namespace Js
         return inlineCaches[inlineCacheIndex].HasType_Flags(type);
     }
 
+    void PolymorphicInlineCache::UpdateInlineCachesFillInfo(uint index, bool set)
+    {
+        if (set)
+        {
+            this->inlineCachesFillInfo |= 1 << index;
+        }
+        else
+        {
+            this->inlineCachesFillInfo &= ~(1 << index);
+        }
+    }
+
+    bool PolymorphicInlineCache::IsFull()
+    {
+        return this->inlineCachesFillInfo == ((1 << this->size) - 1);
+    }
+
     void PolymorphicInlineCache::CacheLocal(
         Type *const type,
         const PropertyId propertyId,
@@ -677,6 +694,8 @@ namespace Js
 
             inlineCaches[inlineCacheIndex].CacheLocal(
                 type, propertyId, propertyIndex, isInlineSlot, nullptr, requiredAuxSlotCapacity, requestContext);
+            UpdateInlineCachesFillInfo(inlineCacheIndex, true /*set*/);
+
 #if DBG_DUMP
             if (PHASE_VERBOSE_TRACE1(Js::PolymorphicInlineCachePhase))
             {
@@ -698,6 +717,8 @@ namespace Js
 #endif
             inlineCaches[inlineCacheIndex].CacheLocal(
                 type, propertyId, propertyIndex, isInlineSlot, typeWithoutProperty, requiredAuxSlotCapacity, requestContext);
+            UpdateInlineCachesFillInfo(inlineCacheIndex, true /*set*/);
+
 #if DBG_DUMP
             if (PHASE_VERBOSE_TRACE1(Js::PolymorphicInlineCachePhase))
             {
@@ -747,6 +768,7 @@ namespace Js
 
         inlineCaches[inlineCacheIndex].CacheProto(
             prototypeObjectWithProperty, propertyId, propertyIndex, isInlineSlot, isMissing, type, requestContext);
+        UpdateInlineCachesFillInfo(inlineCacheIndex, true /*set*/);
 
 #if DBG_DUMP
         if (PHASE_VERBOSE_TRACE1(Js::PolymorphicInlineCachePhase))
@@ -796,6 +818,7 @@ namespace Js
         }
 
         inlineCaches[inlineCacheIndex].CacheAccessor(isGetter, propertyId, propertyIndex, isInlineSlot, type, object, isOnProto, requestContext);
+        UpdateInlineCachesFillInfo(inlineCacheIndex, true /*set*/);
 
 #if DBG_DUMP
         if (PHASE_VERBOSE_TRACE1(Js::PolymorphicInlineCachePhase))
@@ -866,6 +889,7 @@ namespace Js
                     }
                 }
                 inlineCaches[i].CopyTo(propertyId, scriptContext, &clone->inlineCaches[inlineCacheIndex]);
+                clone->UpdateInlineCachesFillInfo(inlineCacheIndex, true /*set*/);
             }
         }
     }

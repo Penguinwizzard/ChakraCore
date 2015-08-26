@@ -813,7 +813,14 @@ void AsyncDebug::EmitStackWalk(Js::ScriptContext* scriptContext, AsyncDebug::Asy
                 auto utf8SourceInfo = functionBody->GetUtf8SourceInfo();
                 Assert(utf8SourceInfo);
 
-                frames[frameIndex].documentId = utf8SourceInfo->HasDocumentText() ? (UINT64)utf8SourceInfo->GetDocumentText() : 0;
+                if (utf8SourceInfo->HasDebugDocument() && utf8SourceInfo->GetDebugDocument()->HasDocumentText())
+                {
+                    frames[frameIndex].documentId = (UINT64)utf8SourceInfo->GetDebugDocument()->GetDocumentText();
+                }
+                else
+                {
+                    frames[frameIndex].documentId = 0;
+                }
             }
             else
             {

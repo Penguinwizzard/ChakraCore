@@ -5679,6 +5679,11 @@ IR::RegOpnd *LowererMD::LoadNonnegativeIndex(
     IR::AutoReuseOpnd autoReuseIndexOpnd;
     if(indexOpnd->IsVar())
     {
+        if (indexOpnd->GetValueType().IsLikelyFloat())
+        {
+            return m_lowerer->LoadIndexFromLikelyFloat(indexOpnd, skipNegativeCheck, notTaggedIntLabel, negativeLabel, insertBeforeInstr);
+        }
+
         //     asrs intIndex, index, 1
         //     bcc  $notTaggedIntOrNegative
         IR::RegOpnd *const intIndexOpnd = IR::RegOpnd::New(TyInt32, func);

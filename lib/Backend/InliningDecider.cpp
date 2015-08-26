@@ -267,7 +267,7 @@ Js::FunctionInfo *InliningDecider::Inline(Js::FunctionBody *const inliner, Js::F
 
     Js::OpCode builtInInlineCandidateOpCode;
     ValueType builtInReturnType;
-    GetBuiltInInfo(functionInfo, &builtInInlineCandidateOpCode, &builtInReturnType);
+    GetBuiltInInfo(functionInfo, &builtInInlineCandidateOpCode, &builtInReturnType, inliner->GetScriptContext());
 
     if(builtInInlineCandidateOpCode == 0 && builtInReturnType.IsUninitialized())
     {
@@ -292,7 +292,9 @@ Js::FunctionInfo *InliningDecider::Inline(Js::FunctionBody *const inliner, Js::F
 bool InliningDecider::GetBuiltInInfo(
     Js::FunctionInfo *const funcInfo,
     Js::OpCode *const inlineCandidateOpCode,
-    ValueType *const returnType)
+    ValueType *const returnType, 
+    Js::ScriptContext *const scriptContext /* = null*/
+    )
 {
     Assert(funcInfo);
     Assert(inlineCandidateOpCode);
@@ -568,8 +570,26 @@ bool InliningDecider::GetBuiltInInfo(
         *inlineCandidateOpCode = Js::OpCode::DOMFastPathGetter;
         break;
 #endif
-    }
 
+    //SIMD_JS
+    // we only inline, and hence type-spec on IA
+#if defined(_M_X64) || defined(_M_IX86)
+    default:
+    {
+        // inline only if simdjs and simd128 type-spec is enabled. 
+        if (SIMD_JS_FLAG && SIMD128_TYPE_SPEC_FLAG)
+        {
+            Assert(scriptContext);
+            Js::JavascriptLibrary *library = scriptContext->GetLibrary();
+            *inlineCandidateOpCode = library->GetSimdOpcodeFromFuncInfo(funcInfo);
+        }
+        else
+        {
+            return false;
+        }
+    }
+#endif
+    }
     return true;
 }
 

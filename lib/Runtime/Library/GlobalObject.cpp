@@ -637,7 +637,9 @@ namespace Js
                 JavascriptFunction* pfuncCaller;
                 JavascriptStackWalker::GetCaller(&pfuncCaller, scriptContext);
                 // If we are non-hidden call to eval then look for the "this" object in the frame display if the caller is a lambda else get "this" from the caller's frame.
-                if (pfuncCaller->GetFunctionInfo() != nullptr && pfuncCaller->GetFunctionInfo()->IsLambda())
+
+                FunctionInfo* functionInfo = pfuncCaller->GetFunctionInfo();
+                if (functionInfo != nullptr && (functionInfo->IsLambda() || functionInfo->IsClassConstructor()))
                 {
                     Var defaultInstance = (moduleID == kmodGlobal) ? JavascriptOperators::OP_LdRoot(scriptContext)->ToThis() : (Var)JavascriptOperators::GetModuleRoot(moduleID, scriptContext);
                     varThis = JavascriptOperators::OP_GetThisScoped(environment, defaultInstance, scriptContext);

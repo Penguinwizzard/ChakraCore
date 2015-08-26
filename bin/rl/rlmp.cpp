@@ -447,6 +447,8 @@ COutputBuffer::COutputBuffer(FILE* pfile, bool buffered)
 
 COutputBuffer::~COutputBuffer()
 {
+    Flush();
+
     delete[] _start;
     _start = _end = NULL;
     _bufSize = 0;
@@ -502,8 +504,8 @@ void COutputBuffer::Flush()
     else {
         ASSERTNR(_type == OUT_FILENAME);
         if (_filename != NULL) {
-            errno_t err = fopen_s(&fp, _filename, "a");
-            if (err != 0 || fp == NULL) {
+            fp = fopen_unsafe(_filename, "a");
+            if (fp == NULL) {
                 // We might not be able to open the log or full log output
                 // files because someone is grepping or otherwise looking
                 // through them while rl is active. In that case, we don't
@@ -515,7 +517,7 @@ void COutputBuffer::Flush()
                 // unlikely to ever have so much output that it causes a
                 // problem.
 
-                Warning("Cannot open '%s' for appending", _filename);
+                Warning("Cannot open '%s' for appending with error '%s'", _filename, strerror_unsafe(errno));
             }
             else {
                 Flush(fp);

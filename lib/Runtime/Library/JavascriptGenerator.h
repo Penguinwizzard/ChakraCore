@@ -35,7 +35,7 @@ namespace Js
         Arguments args;
         ScriptFunction* scriptFunction;
 
-        DEFINE_VTABLE_CTOR_V(JavascriptGenerator, DynamicObject, state(GeneratorState::Suspended), args(CallInfo(0), nullptr));
+        DEFINE_VTABLE_CTOR_MEMBER_INIT(JavascriptGenerator, DynamicObject, args);
         DEFINE_MARSHAL_OBJECT_TO_SCRIPT_CONTEXT(JavascriptGenerator);
 
         void SetState(GeneratorState state)

@@ -25,6 +25,7 @@ Encoder::Encode()
 
     m_encoderMD.Init(this);
     m_encodeBufferSize = UInt32Math::Mul(instrCount, MachMaxInstrSize);
+    m_encodeBufferSize += m_func->m_totalJumpTableSizeInBytesForSwitchStatements;
     m_encodeBuffer = AnewArray(m_tempAlloc, BYTE, m_encodeBufferSize);
 #if DBG_DUMP
     m_instrNumber = 0;

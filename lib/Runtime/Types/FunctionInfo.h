@@ -14,7 +14,7 @@ namespace Js
         DEFINE_VTABLE_CTOR_NOBASE(FunctionInfo);
     public:
 
-        enum Attributes : SHORT
+        enum Attributes : USHORT
         {
             None                       = 0,
             ErrorOnNew                 = 1 << 0,
@@ -32,7 +32,8 @@ namespace Js
             CapturesThis               = 1 << 11, // Only lambdas will set this; denotes whether the lambda referred to this, used by debugger
             Generator                  = 1 << 12,
             ClassConstructor           = 1 << 13, // The function is a class constructor
-            BuiltInInlinableAsLdFldInlinee = 1 << 14
+            BuiltInInlinableAsLdFldInlinee = 1 << 14,
+            Async                      = 1 << 15
         };
         FunctionInfo(JavascriptMethod entryPoint, Attributes attributes = None, LocalFunctionId functionId = Js::Constants::NoFunctionId, FunctionBody* functionBodyImpl = NULL);
 
@@ -43,6 +44,7 @@ namespace Js
         JavascriptMethod GetOriginalEntryPoint_Unchecked() const;
         void SetOriginalEntryPoint(const JavascriptMethod originalEntryPoint);
 
+        bool IsAsync() const { return ((this->attributes & Async) != 0); }
         bool IsDeferred() const { return ((this->attributes & (DeferredDeserialize | DeferredParse)) != 0); }
         bool IsLambda() const { return ((this->attributes & Lambda) != 0); }
         bool IsConstructor() const { return ((this->attributes & ErrorOnNew) == 0); }

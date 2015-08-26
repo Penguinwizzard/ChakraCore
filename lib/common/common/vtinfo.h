@@ -120,11 +120,6 @@ INT_PTR const VirtualTableInfo<T>::Address = VirtualTableInfo<T>::RegisterVirtua
     DEFINE_VTABLE_CTOR_ABSTRACT(T, Base) \
     DEFINE_VALIDATE_VTABLE_REGISTERED(T);
 
-#define DEFINE_VTABLE_CTOR_V(T, Base, ...) \
-    friend class VirtualTableInfo<T>; \
-    DEFINE_VTABLE_CTOR_ABSTRACT(T, Base, __VA_ARGS__) \
-    DEFINE_VALIDATE_VTABLE_REGISTERED(T);
-
 // Used by non-RecyclableObject
 #define DEFINE_VTABLE_CTOR_NO_REGISTER(T, Base, ...) \
     friend class VirtualTableInfo<T>; \

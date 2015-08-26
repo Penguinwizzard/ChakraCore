@@ -362,6 +362,8 @@ namespace Js
         bool ignoreForEquivalentObjTypeSpec;
         bool cloneForJitTimeUse;
 
+        int32 inlineCachesFillInfo;
+
         // DList chaining all polymorphic inline caches of a FunctionBody together.
         // Since PolymorphicInlineCache is a leaf object, these references do not keep 
         // the polymorphic inline caches alive. When a PolymorphicInlineCache is finalized,
@@ -370,7 +372,7 @@ namespace Js
         PolymorphicInlineCache * prev;
 
         PolymorphicInlineCache(InlineCache * inlineCaches, uint16 size, FunctionBody * functionBody)
-            : inlineCaches(inlineCaches), functionBody(functionBody), size(size), ignoreForEquivalentObjTypeSpec(false), cloneForJitTimeUse(true), next(null), prev(null)
+            : inlineCaches(inlineCaches), functionBody(functionBody), size(size), ignoreForEquivalentObjTypeSpec(false), cloneForJitTimeUse(true), inlineCachesFillInfo(0), next(null), prev(null)
         {
             Assert((size == 0 && inlineCaches == null) ||
                 (inlineCaches != null && size >= MinPolymorphicInlineCacheSize && size <= MaxPolymorphicInlineCacheSize));
@@ -405,6 +407,9 @@ namespace Js
         void SetIgnoreForEquivalentObjTypeSpec(bool value) { this->ignoreForEquivalentObjTypeSpec = value; }
         bool GetCloneForJitTimeUse() const { return this->cloneForJitTimeUse; }
         void SetCloneForJitTimeUse(bool value) { this->cloneForJitTimeUse = value; }
+        uint32 GetInlineCachesFillInfo(){ return this->inlineCachesFillInfo; }
+        void UpdateInlineCachesFillInfo(uint32 index, bool set);
+        bool IsFull();
 
         virtual void Finalize(bool isShutdown) override;
         virtual void Dispose(bool isShutdown) override { };

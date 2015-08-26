@@ -155,8 +155,9 @@ public:
     bool IsPrimitive() const;
     bool IsLikelyPrimitive() const;
 
-#ifdef SIMD_JS_ENABLED
+// SIMD_JS
     bool IsSimd128() const;
+    bool IsSimd128(IRType type) const;
     bool IsSimd128Float32x4() const;
     bool IsSimd128Int32x4() const;
     bool IsSimd128Int8x16() const;
@@ -167,7 +168,7 @@ public:
     bool IsLikelySimd128Int32x4() const;
     bool IsLikelySimd128Int8x16() const;
     bool IsLikelySimd128Float64x2() const;
-#endif
+
 
     bool HasBeenObject() const;
     bool IsObject() const;

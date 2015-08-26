@@ -386,6 +386,12 @@ void BailOutRecord::DumpArgOffsets(uint count, int* offsets, int argOutSlotStart
         // The variables below determine whether we have a Var or native float/int.
         bool isFloat64 = this->argOutOffsetInfo->argOutFloat64Syms->Test(argOutSlotStart + i) != 0;
         bool isInt32 = this->argOutOffsetInfo->argOutLosslessInt32Syms->Test(argOutSlotStart + i) != 0;
+        
+        // SIMD_JS
+        // Simd128 reside in Float64 regs
+        isFloat64 |= this->argOutOffsetInfo->argOutSimd128F4Syms->Test(argOutSlotStart + i) != 0;
+        isFloat64 |= this->argOutOffsetInfo->argOutSimd128I4Syms->Test(argOutSlotStart + i) != 0;
+
         Assert(!isFloat64 || !isInt32);
 
         Output::Print(L"%s #%3d: ", name, i + regSlotOffset);
@@ -403,7 +409,12 @@ void BailOutRecord::DumpLocalOffsets(uint count, int argOutSlotStart)
         // The variables below determine whether we have a Var or native float/int.
         bool isFloat64 = row->isFloat;
         bool isInt32 = row->isInt;
-
+        
+        // SIMD_JS
+        // Simd values are in float64 regs
+        isFloat64 = isFloat64 || row->isSimd128F4;
+        isFloat64 = isFloat64 || row->isSimd128I4;
+        
         Assert(!isFloat64 || !isInt32);
 
         Output::Print(L"%s #%3d: ", name, row->regSlot);
@@ -685,25 +696,32 @@ BailOutRecord::AdjustOffsetsForDiagMode(Js::JavascriptCallStackLayout * layout, 
 }
 
 void
-BailOutRecord::IsOffsetNativeIntOrFloat(uint offsetIndex, int argOutSlotStart, bool * pIsFloat64, bool * pIsInt32) const
+BailOutRecord::IsOffsetNativeIntOrFloat(uint offsetIndex, int argOutSlotStart, bool * pIsFloat64, bool * pIsInt32, bool * pIsSimd128F4, bool * pIsSimd128I4) const
 {
     bool isFloat64 = this->argOutOffsetInfo->argOutFloat64Syms->Test(argOutSlotStart + offsetIndex) != 0;
     bool isInt32 = this->argOutOffsetInfo->argOutLosslessInt32Syms->Test(argOutSlotStart + offsetIndex) != 0;
-    Assert(!isFloat64 || !isInt32);
+    // SIMD_JS
+    bool isSimd128F4 = this->argOutOffsetInfo->argOutSimd128F4Syms->Test(argOutSlotStart + offsetIndex) != 0;
+    bool isSimd128I4 = this->argOutOffsetInfo->argOutSimd128F4Syms->Test(argOutSlotStart + offsetIndex) != 0;
+    
+    Assert(!isFloat64 || !isInt32 || !isSimd128F4 || !isSimd128I4);
 
     *pIsFloat64 = isFloat64;
     *pIsInt32 = isInt32;
+    *pIsSimd128F4 = isSimd128F4;
+    *pIsSimd128I4 = isSimd128I4;
 }
 
 void 
 BailOutRecord::RestoreValue(IR::BailOutKind bailOutKind, Js::JavascriptCallStackLayout * layout, Js::Var * values, Js::ScriptContext * scriptContext, 
     bool fromLoopBody, Js::Var * registerSaves, Js::InterpreterStackFrame * newInstance, Js::Var* pArgumentsObject, void * argoutRestoreAddress,
-    uint regSlot, int offset, bool isLocal, bool isFloat64, bool isInt32) const
+    uint regSlot, int offset, bool isLocal, bool isFloat64, bool isInt32, bool isSimd128F4, bool isSimd128I4) const
 {
     bool boxStackInstance = true;
     Js::Var value = 0;
     double dblValue = 0.0;
     int32 int32Value = 0;
+    SIMDValue simdValue = { 0, 0, 0, 0 };
 
 #if ENABLE_DEBUG_CONFIG_OPTIONS
     wchar_t const * name = L"OutParam";
@@ -728,6 +746,11 @@ BailOutRecord::RestoreValue(IR::BailOutKind bailOutKind, Js::JavascriptCallStack
             {
                 int32Value = layout->GetInt32AtOffset(offset);
             }
+            else if (isSimd128F4 || isSimd128I4)
+            {
+                // SIMD_JS
+                simdValue = layout->GetSimdValueAtOffset(offset);
+            }
             else
             {
                 value = layout->GetOffset(offset);
@@ -747,6 +770,12 @@ BailOutRecord::RestoreValue(IR::BailOutKind bailOutKind, Js::JavascriptCallStack
             else if (isInt32)
             {
                 int32Value = *((int32 *)(((char *)argoutRestoreAddress) + regSlot * MachPtr));
+            }
+            else if (isSimd128F4 || isSimd128I4)
+            {
+                // SIMD_JS
+                // REVIEW: [b-namost]: Not sure if this is correct, or do I need to adjust regSlot to accomodate Simd128 width. 
+                simdValue = *((SIMDValue *)(((char *)argoutRestoreAddress) + regSlot * MachPtr));
             }
             else
             {
@@ -780,13 +809,18 @@ BailOutRecord::RestoreValue(IR::BailOutKind bailOutKind, Js::JavascriptCallStack
             }
             else
             {
-                Assert(RegTypes[LinearScanMD::GetRegisterFromSaveIndex(offset)] != TyFloat64);
-                if (isInt32)
+                if (isSimd128F4 || isSimd128I4)
                 {
+                    simdValue = *((SIMDValue *)&(registerSaveSpace[offset - 1]));
+                }
+                else if (isInt32)
+                {
+                    Assert(RegTypes[LinearScanMD::GetRegisterFromSaveIndex(offset)] != TyFloat64);
                     int32Value = (int32)registerSaveSpace[offset - 1];
                 }
                 else
                 {
+                    Assert(RegTypes[LinearScanMD::GetRegisterFromSaveIndex(offset)] != TyFloat64);
                     value = registerSaveSpace[offset - 1];
                 }
 
@@ -839,6 +873,17 @@ BailOutRecord::RestoreValue(IR::BailOutKind bailOutKind, Js::JavascriptCallStack
         value = Js::JavascriptNumber::ToVar(int32Value, scriptContext);
         BAILOUT_VERBOSE_TRACE(newInstance->function->GetFunctionBody(), bailOutKind, L", value: %10d (ToVar: 0x%p)", int32Value, value);
     }
+    // SIMD_JS
+    else if (isSimd128F4)
+    {
+        Assert(!value);
+        value = Js::JavascriptSIMDFloat32x4::New(&simdValue, scriptContext);
+    }
+    else if (isSimd128I4)
+    {
+        Assert(!value);
+        value = Js::JavascriptSIMDInt32x4::New(&simdValue, scriptContext);
+    }
     else
     {
         BAILOUT_VERBOSE_TRACE(newInstance->function->GetFunctionBody(), bailOutKind, L", value: 0x%p", value);
@@ -870,7 +915,7 @@ BailOutRecord::RestoreValues(IR::BailOutKind bailOutKind, Js::JavascriptCallStac
         globalBailOutRecordTable->IterateGlobalBailOutRecordTableRows(m_bailOutRecordId, [=](GlobalBailOutRecordDataRow *row) {
             Assert(row->offset != 0);
             RestoreValue(bailOutKind, layout, values, scriptContext, fromLoopBody, registerSaves, newInstance, pArgumentsObject, 
-                argoutRestoreAddress, row->regSlot, row->offset, true, row->isFloat, row->isInt);
+                argoutRestoreAddress, row->regSlot, row->offset, true, row->isFloat, row->isInt, row->isSimd128F4, row->isSimd128I4);
         });
     }
     else 
@@ -881,10 +926,12 @@ BailOutRecord::RestoreValues(IR::BailOutKind bailOutKind, Js::JavascriptCallStac
             // The variables below determine whether we have a Var or native float/int.
             bool isFloat64;
             bool isInt32;
+            bool isSimd128F4, isSimd128I4;
+
             offset = offsets[i];
-            this->IsOffsetNativeIntOrFloat(i, argOutSlotStart, &isFloat64, &isInt32);
+            this->IsOffsetNativeIntOrFloat(i, argOutSlotStart, &isFloat64, &isInt32, &isSimd128F4, &isSimd128I4);
             RestoreValue(bailOutKind, layout, values, scriptContext, fromLoopBody, registerSaves, newInstance, pArgumentsObject,
-                argoutRestoreAddress, i, offset, false, isFloat64, isInt32);
+                argoutRestoreAddress, i, offset, false, isFloat64, isInt32, isSimd128F4, isSimd128I4);
         }
     }
 }
@@ -2455,7 +2502,7 @@ void GlobalBailOutRecordDataTable::Finalize(NativeCodeData::Allocator *allocator
 #endif
 }
 
-void  GlobalBailOutRecordDataTable::AddOrUpdateRow(JitArenaAllocator *allocator, uint32 bailOutRecordId, uint32 regSlot, bool isFloat, bool isInt, uint32 offset, uint *lastUpdatedRowIndex)
+void  GlobalBailOutRecordDataTable::AddOrUpdateRow(JitArenaAllocator *allocator, uint32 bailOutRecordId, uint32 regSlot, bool isFloat, bool isInt, bool isSimd128F4, bool isSimd128I4, uint32 offset, uint *lastUpdatedRowIndex)
 {
     Assert(offset != 0);
     const int INITIAL_TABLE_SIZE = 64;
@@ -2474,6 +2521,10 @@ void  GlobalBailOutRecordDataTable::AddOrUpdateRow(JitArenaAllocator *allocator,
         if(rowToUpdate->offset == offset &&
             rowToUpdate->isInt == (unsigned)isInt &&
             rowToUpdate->isFloat == (unsigned)isFloat &&
+            // SIMD_JS
+            rowToUpdate->isSimd128F4 == (unsigned) isSimd128F4 &&
+            rowToUpdate->isSimd128I4 == (unsigned) isSimd128I4 &&
+
             rowToUpdate->end + 1 == bailOutRecordId)
         {
             Assert(rowToUpdate->regSlot == regSlot);
@@ -2493,6 +2544,9 @@ void  GlobalBailOutRecordDataTable::AddOrUpdateRow(JitArenaAllocator *allocator,
     rowToInsert->offset = offset;
     rowToInsert->isFloat = isFloat;
     rowToInsert->isInt = isInt;
+    // SIMD_JS
+    rowToInsert->isSimd128F4 = isSimd128F4;
+    rowToInsert->isSimd128I4 = isSimd128I4;
     rowToInsert->regSlot = regSlot;
     *lastUpdatedRowIndex = length++;
 }

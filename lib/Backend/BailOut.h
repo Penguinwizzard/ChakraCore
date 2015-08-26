@@ -26,7 +26,7 @@ public:
         bailOutOffset(bailOutOffset), bailOutFunc(bailOutFunc),
         byteCodeUpwardExposedUsed(null), polymorphicCacheIndex((uint)-1), startCallCount(0), startCallInfo(null), bailOutInstr(null),
         totalOutParamCount(0), argOutSyms(null), bailOutRecord(null), wasCloned(false), isInvertedBranch(false), sharedBailOutKind(true), outParamInlinedArgSlot(null), 
-        liveVarSyms(null), liveLosslessInt32Syms(null), liveFloat64Syms(null), branchConditionOpnd(null),
+        liveVarSyms(null), liveLosslessInt32Syms(null), liveFloat64Syms(null), liveSimd128F4Syms(null), liveSimd128I4Syms(null), liveSimd128D2Syms(null), branchConditionOpnd(null),
         stackLiteralBailOutInfoCount(0), stackLiteralBailOutInfo(null)
     {      
         Assert(bailOutOffset != Js::Constants::NoByteCodeOffset);
@@ -94,6 +94,11 @@ public:
     BVSparse<JitArenaAllocator> * liveVarSyms;
     BVSparse<JitArenaAllocator> * liveLosslessInt32Syms;                   // These are only the live int32 syms that fully represent the var-equivalent sym's value (see GlobOpt::FillBailOutInfo)
     BVSparse<JitArenaAllocator> * liveFloat64Syms;
+
+    // SIMD_JS
+    BVSparse<JitArenaAllocator> * liveSimd128F4Syms;
+    BVSparse<JitArenaAllocator> * liveSimd128I4Syms;
+    BVSparse<JitArenaAllocator> * liveSimd128D2Syms;
 
     int * outParamOffsets;
 
@@ -166,7 +171,7 @@ public:
     template <size_t N>
     void FillNativeRegToByteCodeRegMap(uint (&nativeRegToByteCodeRegMap)[N]);
 
-    void IsOffsetNativeIntOrFloat(uint offsetIndex, int argOutSlotStart, bool * pIsFloat64, bool * pIsInt32) const;
+    void IsOffsetNativeIntOrFloat(uint offsetIndex, int argOutSlotStart, bool * pIsFloat64, bool * pIsInt32, bool * pIsSimd128F4, bool * pIsSImd128I4) const;
 
     template <typename Fn>
     void MapStartCallParamCounts(Fn fn);
@@ -217,7 +222,7 @@ protected:
         void * argoutRestoreAddress = nullptr) const;
     void RestoreValue(IR::BailOutKind bailOutKind, Js::JavascriptCallStackLayout * layout, Js::Var * values, Js::ScriptContext * scriptContext,
         bool fromLoopBody, Js::Var * registerSaves, Js::InterpreterStackFrame * newInstance, Js::Var* pArgumentsObject, void * argoutRestoreAddress,
-        uint regSlot, int offset, bool isLocal, bool isFloat64, bool isInt32) const;
+        uint regSlot, int offset, bool isLocal, bool isFloat64, bool isInt32, bool isSimd128F4, bool isSimd128I4) const;
     void RestoreInlineFrame(InlinedFrameLayout *inlinedFrame, Js::JavascriptCallStackLayout * layout, Js::Var * registerSaves);
 
     void AdjustOffsetsForDiagMode(Js::JavascriptCallStackLayout * layout, Js::ScriptFunction * function) const;
@@ -236,6 +241,9 @@ protected:
     {
         BVFixed * argOutFloat64Syms;        // Used for float-type-specialized ArgOut symbols. Index = [0 .. BailOutInfo::totalOutParamCount].
         BVFixed * argOutLosslessInt32Syms;  // Used for int-type-specialized ArgOut symbols (which are native int and for bailout we need tagged ints).
+        // SIMD_JS
+        BVFixed * argOutSimd128F4Syms;
+        BVFixed * argOutSimd128I4Syms;
         uint * startCallOutParamCounts;
         int * outParamOffsets;
         uint startCallCount;
@@ -359,6 +367,9 @@ struct GlobalBailOutRecordDataRow
     unsigned regSlot : 30;
     unsigned isFloat : 1;
     unsigned isInt : 1;
+    // SIMD_JS
+    unsigned isSimd128F4 : 1;
+    unsigned isSimd128I4 : 1;
 };
 
 struct GlobalBailOutRecordDataTable
@@ -374,7 +385,7 @@ struct GlobalBailOutRecordDataTable
     bool isInlinedConstructor;
     bool isLoopBody;
     void Finalize(NativeCodeData::Allocator *allocator, JitArenaAllocator *tempAlloc);
-    void AddOrUpdateRow(JitArenaAllocator *allocator, uint32 bailOutRecordId, uint32 regSlot, bool isFloat, bool isInt, uint32 offset, uint *lastUpdatedRowIndex);
+    void AddOrUpdateRow(JitArenaAllocator *allocator, uint32 bailOutRecordId, uint32 regSlot, bool isFloat, bool isInt, bool isSimd128F4, bool isSimd128I4, uint32 offset, uint *lastUpdatedRowIndex);
 
     template<class Fn>
     void IterateGlobalBailOutRecordTableRows(uint32 bailOutRecordId, Fn callback)

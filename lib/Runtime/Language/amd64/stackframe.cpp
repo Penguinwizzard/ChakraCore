@@ -70,6 +70,17 @@ bool Js::Amd64StackFrame::Next()
         OnCurrentContextUpdated();
         return true;
     }
+    
+    if (JavascriptFunction::IsNativeAddress(this->scriptContext, (void*)this->currentContext->Rip))
+    {
+        this->addressOfCodeAddr = this->GetAddressOfReturnAddress(true /*isCurrentContextNative*/, false /*shouldCheckForNativeAddr*/);
+        if (NextFromNativeAddress(this->currentContext))
+        {
+            OnCurrentContextUpdated();
+            return true;
+        }
+        return false;
+    }
 
     EnsureFunctionEntry();
     this->addressOfCodeAddr = this->GetAddressOfReturnAddress();
@@ -92,9 +103,9 @@ void *Js::Amd64StackFrame::GetFrame() const
     return (void *)currentContext->Rbp;
 }
 
-VOID **Js::Amd64StackFrame::GetArgv()
+VOID **Js::Amd64StackFrame::GetArgv(bool isCurrentContextNative, bool shouldCheckForNativeAddr)
 {
-    if (EnsureCallerContext())
+    if (EnsureCallerContext(isCurrentContextNative || (shouldCheckForNativeAddr && JavascriptFunction::IsNativeAddress(this->scriptContext, (void*)this->currentContext->Rip))))
     {
         return (VOID **)callerContext->Rsp;
     }
@@ -102,9 +113,9 @@ VOID **Js::Amd64StackFrame::GetArgv()
     return null;
 }
 
-VOID *Js::Amd64StackFrame::GetReturnAddress()
+VOID *Js::Amd64StackFrame::GetReturnAddress(bool isCurrentContextNative, bool shouldCheckForNativeAddr)
 {
-    if (EnsureCallerContext())
+    if (EnsureCallerContext(isCurrentContextNative || (shouldCheckForNativeAddr && JavascriptFunction::IsNativeAddress(this->scriptContext, (void*)this->currentContext->Rip))))
     {
         return (VOID *)callerContext->Rip;
     }
@@ -112,9 +123,9 @@ VOID *Js::Amd64StackFrame::GetReturnAddress()
     return null;
 }
 
-void *Js::Amd64StackFrame::GetAddressOfReturnAddress()
+void *Js::Amd64StackFrame::GetAddressOfReturnAddress(bool isCurrentContextNative, bool shouldCheckForNativeAddr)
 {
-    if (EnsureCallerContext())
+    if (EnsureCallerContext(isCurrentContextNative || (shouldCheckForNativeAddr && JavascriptFunction::IsNativeAddress(this->scriptContext, (void*)this->currentContext->Rip))))
     {
         return (void*)((VOID **)callerContext->Rsp - 1);
     }
@@ -151,6 +162,31 @@ bool Js::Amd64StackFrame::Next(CONTEXT *context, ULONG64 imageBase, RUNTIME_FUNC
         context->Rip = (ULONG)(*((ULONG64 **)context->Rsp));
         context->Rsp += 8;
     }
+
+    return true;
+}
+
+bool 
+Js::Amd64StackFrame::NextFromNativeAddress(CONTEXT * context)
+{
+    if (!context->Rip)
+    {
+        return false;
+    }
+
+    //Restore Rip, Rsp and Rbp
+    // Rip - to check if the context is in native address range
+    //     - to check if the current frame is javascript frame
+    //     - to do virtual unwind
+    //     - to pass to RtlLookupFunctionEntry if the next frame is not native
+    //
+    // Rsp - To easily get to the arguments passed in
+    //
+    // Rbp - to walk to the next frame
+    
+    context->Rip = *((DWORD64*)context->Rbp + 1);
+    context->Rsp = (DWORD64)((DWORD64*)context->Rbp + 2);
+    context->Rbp = *((DWORD64*)context->Rbp);
 
     return true;
 }

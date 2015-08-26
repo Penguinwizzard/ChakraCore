@@ -104,7 +104,9 @@ LowererMDArch::GetAssignOp(IRType type)
         return Js::OpCode::MOVSD;
     case TyFloat32:
         return Js::OpCode::MOVSS;
-    case TySimd128:
+    case TySimd128F4:
+    case TySimd128I4:
+    case TySimd128D2:
         return Js::OpCode::MOVUPS;
     default:
         return Js::OpCode::MOV;
@@ -814,7 +816,8 @@ LowererMDArch::LowerCall(IR::Instr * callInstr, uint32 argCount)
                 helperOpnd->m_fnHelper == IR::HelperConv_ToInt32_Full ||
                 helperOpnd->m_fnHelper == IR::HelperConv_ToInt32Core ||
                 helperOpnd->m_fnHelper == IR::HelperConv_ToUInt32 ||
-                helperOpnd->m_fnHelper == IR::HelperConv_ToUInt32_Full)
+                helperOpnd->m_fnHelper == IR::HelperConv_ToUInt32_Full ||
+                helperOpnd->m_fnHelper == IR::HelperConv_ToUInt32Core)
             {
                 assignOp = Js::OpCode::MOV_TRUNC;
             }
@@ -1610,9 +1613,15 @@ LowererMDArch::LowerEntryInstr(IR::EntryInstr * entryInstr)
                 break;
 #ifdef SIMD_JS_ENABLED
             case Js::AsmJsVarType::Float32x4:
+                this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TySimd128F4);
+                offset += 2;
+                break;
             case Js::AsmJsVarType::Int32x4:
+                this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TySimd128I4);
+                offset += 2;
+                break;
             case Js::AsmJsVarType::Float64x2:
-                this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TySimd128);
+                this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TySimd128D2);
                 offset += 2;
                 break;
 #endif
@@ -1918,9 +1927,13 @@ LowererMDArch::LowerExitInstr(IR::ExitInstr * exitInstr)
             break;
 #ifdef SIMD_JS_ENABLED
         case Js::AsmJsRetType::Int32x4:
+            retReg = IR::RegOpnd::New(NULL, this->GetRegReturnAsmJs(TySimd128I4), TySimd128I4, this->m_func);
+            break;
         case Js::AsmJsRetType::Float32x4:
+            retReg = IR::RegOpnd::New(NULL, this->GetRegReturnAsmJs(TySimd128F4), TySimd128F4, this->m_func);
+            break;
         case Js::AsmJsRetType::Float64x2:
-            retReg = IR::RegOpnd::New(NULL, this->GetRegReturnAsmJs(TySimd128), TySimd128, this->m_func);
+            retReg = IR::RegOpnd::New(NULL, this->GetRegReturnAsmJs(TySimd128D2), TySimd128D2, this->m_func);
             break;
 #endif
         case Js::AsmJsRetType::Signed:
@@ -2531,7 +2544,7 @@ LowererMDArch::EmitLoadInt32(IR::Instr *instrLoad)
             this->lowererMD->GenerateFloatTest(src1, instrLoad, helper, instrLoad->HasBailOutInfo());
             IR::IndirOpnd* floatOpnd = IR::IndirOpnd::New(src1, Js::JavascriptNumber::GetValueOffset(), TyMachDouble, this->m_func);
 #endif
-            this->lowererMD->ConvertFloatToInt32(instrLoad->GetDst(), floatOpnd, done, instrLoad);
+            this->lowererMD->ConvertFloatToInt32(instrLoad->GetDst(), floatOpnd, helper, done, instrLoad);
         }
 
         // $helper:

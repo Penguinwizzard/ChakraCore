@@ -34,10 +34,12 @@ namespace Js
         Assert(this->scriptContext != nullptr);
         this->scriptContext = nullptr;
 
-        Assert(this->diagProbesContainer != nullptr);
-        this->diagProbesContainer->Close();
-        HeapDelete(this->diagProbesContainer);
-        this->diagProbesContainer = nullptr;
+        if (this->diagProbesContainer != nullptr)
+        {
+            this->diagProbesContainer->Close();
+            HeapDelete(this->diagProbesContainer);
+            this->diagProbesContainer = nullptr;
+        }
 
         if (this->hostDebugContext != nullptr)
         {
@@ -148,8 +150,8 @@ namespace Js
 
         utf8SourceInfoList->MapUntil([&](int index, Js::Utf8SourceInfo * sourceInfo) -> bool
         {
-            OUTPUT_TRACE(Js::DebuggerPhase, L"DebugContext::RundownSourcesAndReparse scriptContext 0x%p, sourceInfo 0x%p, HasScriptDebugDocument %d\n",
-                this->scriptContext, sourceInfo, sourceInfo->HasScriptDebugDocument());
+            OUTPUT_TRACE(Js::DebuggerPhase, L"DebugContext::RundownSourcesAndReparse scriptContext 0x%p, sourceInfo 0x%p, HasDebugDocument %d\n",
+                this->scriptContext, sourceInfo, sourceInfo->HasDebugDocument());
 
             if (sourceInfo->GetIsLibraryCode())
             {
@@ -174,7 +176,7 @@ namespace Js
             if (shouldPerformSourceRundown)
             {
                 // We shouldn't have a debug document if we're running source rundown for the first time.
-                Assert(!sourceInfo->HasScriptDebugDocument());
+                Assert(!sourceInfo->HasDebugDocument());
             }
 #endif // DBG
 

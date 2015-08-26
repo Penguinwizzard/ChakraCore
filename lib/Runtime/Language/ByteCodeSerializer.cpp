@@ -1601,8 +1601,9 @@ public:
                   | FunctionInfo::Attributes::DefaultConstructor
                   | FunctionInfo::Attributes::Lambda
                   | FunctionInfo::Attributes::CapturesThis
-                  | FunctionInfo::Attributes::Generator)) == 0,
-                "Only the ErrorOnNew|SuperReference|DefaultConstructor|Lambda|CapturesThis|Generator attributes should be set on a serialized function");
+                  | FunctionInfo::Attributes::Generator
+                  | FunctionInfo::Attributes::ClassConstructor)) == 0,
+                "Only the ErrorOnNew|SuperReference|DefaultConstructor|Lambda|CapturesThis|Generator|ClassConstructor attributes should be set on a serialized function");
 
         PrependInt32(builder, L"Offset Into Source", sourceDiff);
         if (function->GetNestedCount() > 0)

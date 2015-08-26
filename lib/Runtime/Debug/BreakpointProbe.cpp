@@ -2,69 +2,68 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-// Description: Breakpoint Diagnostic Probe
-
 #include "StdAfx.h"
 
-BreakpointProbe::BreakpointProbe(CScriptBody* _pScript, Js::StatementLocation &statement)
-    : pScript(_pScript),
-    pBody(statement.function),
-    characterOffset(statement.statement.begin),
-    byteOffset(statement.bytecodeSpan.begin)
+namespace Js
 {
-}
-
-bool BreakpointProbe::Install(Js::ScriptContext* pScriptContext)
-{
-    Assert(this->pBody);
-    return pBody->InstallProbe(byteOffset);
-}
-
-bool BreakpointProbe::Uninstall(Js::ScriptContext* pScriptContext)
-{
-    Assert(this->pBody);
-
-    if (this->pBody)
+    BreakpointProbe::BreakpointProbe(DebugDocument* debugDocument, StatementLocation &statement) :
+        debugDocument(debugDocument),
+        functionBody(statement.function),
+        characterOffset(statement.statement.begin),
+        byteOffset(statement.bytecodeSpan.begin)
     {
-        Assert(this->pScript);
-        this->pScript->RemoveBreakpointProbe(this);
-
-        return pBody->UninstallProbe(byteOffset);
     }
 
-    // Already been uninstalled...
-    return true;
-}
-
-bool BreakpointProbe::CanHalt(Js::InterpreterHaltState* pHaltState)
-{
-    Assert(this->pBody);
-
-    Js::FunctionBody* pCurrentFuncBody = pHaltState->GetFunction();
-    int offset = pHaltState->GetCurrentOffset();
-
-    if (pBody == pCurrentFuncBody && byteOffset == offset)
+    bool BreakpointProbe::Install(ScriptContext* pScriptContext)
     {
+        Assert(this->functionBody);
+        return functionBody->InstallProbe(byteOffset);
+    }
+
+    bool BreakpointProbe::Uninstall(ScriptContext* pScriptContext)
+    {
+        Assert(this->functionBody);
+
+        if (this->functionBody)
+        {
+            Assert(this->debugDocument);
+            this->debugDocument->RemoveBreakpointProbe(this);
+
+            return functionBody->UninstallProbe(byteOffset);
+        }
+
         return true;
     }
-    return false;
+
+    bool BreakpointProbe::CanHalt(InterpreterHaltState* pHaltState)
+    {
+        Assert(this->functionBody);
+
+        FunctionBody* pCurrentFuncBody = pHaltState->GetFunction();
+        int offset = pHaltState->GetCurrentOffset();
+
+        if (functionBody == pCurrentFuncBody && byteOffset == offset)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    void BreakpointProbe::DispatchHalt(InterpreterHaltState* pHaltState)
+    {
+        Assert(false);
+    }
+
+    void BreakpointProbe::CleanupHalt()
+    {
+        Assert(this->functionBody);
+
+        // Nothing to clean here
+    }
+
+    bool BreakpointProbe::Matches(FunctionBody* _pBody, int _characterOffset)
+    {
+        Assert(this->functionBody);
+        return _pBody == functionBody && _characterOffset == characterOffset;
+    }
 }
-
-void BreakpointProbe::DispatchHalt(Js::InterpreterHaltState* pHaltState)
-{
-    Assert(false);
-}
-
-void BreakpointProbe::CleanupHalt()
-{
-    Assert(this->pBody);
-
-    // Nothing to clean here
-}
-
-bool BreakpointProbe::Matches(Js::FunctionBody* _pBody, int _characterOffset)
-{
-    Assert(this->pBody);
-    return _pBody == pBody && _characterOffset == characterOffset;
-}
-

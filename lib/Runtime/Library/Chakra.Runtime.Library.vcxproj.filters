@@ -145,7 +145,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)SIMDInt8x16Lib.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)SIMDInt8x16Operation.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)SIMDInt8x16OperationX86X64.cpp" />
-    <ClCompile Include="(MSBuildThisFileDirectory)JavascriptSIMDInt8x16.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSIMDInt8x16.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\DiagGlobalList.h" />

@@ -542,10 +542,24 @@ public:
     BVSparse<JitArenaAllocator> *lossyInt32SymsOnEntry; // see GlobOptData::liveLossyInt32Syms
     BVSparse<JitArenaAllocator> *float64SymsOnEntry;
     BVSparse<JitArenaAllocator> *liveFieldsOnEntry;
+    // SIMD_JS
+    // live syms upon entering loop header (from pred merge + forced syms + used before defs in loop)
+    BVSparse<JitArenaAllocator> *simd128F4SymsOnEntry;
+    BVSparse<JitArenaAllocator> *simd128I4SymsOnEntry;
+
     BVSparse<JitArenaAllocator> *symsUsedBeforeDefined;                // stack syms that are live in the landing pad, and used before they are defined in the loop
     BVSparse<JitArenaAllocator> *likelyIntSymsUsedBeforeDefined;       // stack syms that are live in the landing pad with a likely-int value, and used before they are defined in the loop
     BVSparse<JitArenaAllocator> *likelyNumberSymsUsedBeforeDefined;    // stack syms that are live in the landing pad with a likely-number value, and used before they are defined in the loop
+    // SIMD_JS
+    BVSparse<JitArenaAllocator> *likelySimd128F4SymsUsedBeforeDefined;    // stack syms that are live in the landing pad with a likely-Simd128F4 value, and used before they are defined in the loop
+    BVSparse<JitArenaAllocator> *likelySimd128I4SymsUsedBeforeDefined;    // stack syms that are live in the landing pad with a likely-Simd128I4 value, and used before they are defined in the loop
+
     BVSparse<JitArenaAllocator> *forceFloat64SymsOnEntry;
+    // SIMD_JS
+    // syms need to be forced to certain type due to hoisting
+    BVSparse<JitArenaAllocator> *forceSimd128F4SymsOnEntry;
+    BVSparse<JitArenaAllocator> *forceSimd128I4SymsOnEntry;
+    
     BVSparse<JitArenaAllocator> *symsDefInLoop;
     BailOutInfo *       bailOutInfo;
     IR::BailOutInstr *  toPrimitiveSideEffectCheck;    
@@ -650,7 +664,11 @@ public:
         symsUsedBeforeDefined(null),
         likelyIntSymsUsedBeforeDefined(null),
         likelyNumberSymsUsedBeforeDefined(null),
+        likelySimd128F4SymsUsedBeforeDefined(null),
+        likelySimd128I4SymsUsedBeforeDefined(null),
         forceFloat64SymsOnEntry(null),
+        forceSimd128F4SymsOnEntry(null),
+        forceSimd128I4SymsOnEntry(null),
         symsDefInLoop(null),
         fieldHoistCandidateTypes(null),
         fieldHoistSymMap(alloc),

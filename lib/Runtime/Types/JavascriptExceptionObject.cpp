@@ -47,11 +47,21 @@ namespace Js
 
         if (this == threadContext->GetPendingSOErrorObject())
         {
-            AssertMsg(this->thrownObject != NULL, "Here we should have allocated a thrown object");
+            Var thrownObject = NULL;
+
+            if (this->thrownObject == NULL)
+            {
+                AssertMsg(!threadContext->GetIsThreadBound(), "ThrownObject could be NULL for Jsrt scenarios because it is cleared in ~EnterScriptEnd. For non-jsrt cases, we should always have an allocated thrown object.");
+                thrownObject = scriptContext->GetLibrary()->CreateStackOverflowError();
+            } 
+            else
+            {
+                thrownObject = this->GetThrownObject(scriptContext);
+            }
 
             exceptionObject = RecyclerNew(scriptContext->GetRecycler(),
                 JavascriptExceptionObject,
-                this->GetThrownObject(scriptContext),
+                thrownObject,
                 scriptContext,
                 &this->exceptionContext);
             threadContext->ClearPendingSOError();

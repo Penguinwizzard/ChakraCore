@@ -2179,10 +2179,24 @@ LIdentifier:
             break;
         case '*':
             token = tkStar;
-            if (PeekFirst(p, last) == '=')
+            switch(PeekFirst(p, last))
             {
+            case '=' :
                 p++;
                 token = tkAsgMul;
+                break;
+            case '*' :
+                if (!m_scriptContext->GetConfig()->IsES7ExponentiationOperatorEnabled())
+                {
+                    break;
+                }
+                p++;
+                token = tkExpo;
+                if (PeekFirst(p, last) == '=')
+                {
+                    p++;
+                    token = tkAsgExpo;
+                }
             }
             break;
         case '/':

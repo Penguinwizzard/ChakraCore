@@ -50,6 +50,7 @@ namespace Js
         Js::Var GetOffset(int offset) const;
         double GetDoubleAtOffset(int offset) const;
         int32 GetInt32AtOffset(int offset) const;
+        SIMDValue GetSimdValueAtOffset(int offset) const;
         char * GetValueChangeOffset(int offset) const;
 
         static JavascriptCallStackLayout *FromFramePointer(void *const framePointer);

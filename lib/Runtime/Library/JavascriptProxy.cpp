@@ -1343,7 +1343,7 @@ namespace Js
     {
         PROBE_STACK(GetScriptContext(), Js::Constants::MinStackDefault);
 
-        Assert(JavascriptOperators::IsObject(newPrototype));
+        Assert(JavascriptOperators::IsObjectOrNull(newPrototype));
         ScriptContext* scriptContext = GetScriptContext();
         // Reject implicit call
         ThreadContext* threadContext = scriptContext->GetThreadContext();

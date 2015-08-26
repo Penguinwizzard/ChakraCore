@@ -21,9 +21,9 @@ namespace Js {
         bool Next();
 
         void *  GetInstructionPointer() { return codeAddr; }
-        void ** GetArgv() { return frame + 2; }
-        void *  GetReturnAddress() { return frame[1]; }
-        void *  GetAddressOfReturnAddress() { return &frame[1]; }
+        void ** GetArgv(bool isCurrentContextNative = false, bool shouldCheckForNativeAddr = true) { return frame + 2; } // parameters unused for x86, arm and arm64
+        void *  GetReturnAddress(bool isCurrentContextNative = false, bool shouldCheckForNativeAddr = true) { return frame[1]; } // parameters unused for x86, arm and arm64
+        void *  GetAddressOfReturnAddress(bool isCurrentContextNative = false, bool shouldCheckForNativeAddr = true) { return &frame[1]; } // parameters unused for x86, arm and arm64
         void *  GetAddressOfInstructionPointer() const { return addressOfCodeAddr; }
         void *  GetFrame() const { return (void *)frame; }
 

@@ -2696,7 +2696,7 @@ CommonNumber:
 
                     scriptContext->GetThreadContext()->SetDisableImplicitFlags(disableImplicitFlags);
 
-                    if (result && scriptContext->IsUndeclBlockVar(value) && !allowUndecInConsoleScope)
+                    if (result && scriptContext->IsUndeclBlockVar(value) && !allowUndecInConsoleScope && propertyId != PropertyIds::_lexicalThisSlotSymbol)
                     {
                         JavascriptError::ThrowReferenceError(scriptContext, JSERR_UseBeforeDeclaration);
                     }
@@ -6199,8 +6199,16 @@ CommonNumber:
     void JavascriptOperators::OP_InitClassMemberSetComputedName(Var object, Var elementName, Var value, ScriptContext* scriptContext, PropertyOperationFlags flags)
     {
         Js::PropertyId propertyId = JavascriptOperators::OP_InitElemSetter(object, elementName, value, scriptContext);
+        RecyclableObject* instance = RecyclableObject::FromVar(object);
 
-        RecyclableObject::FromVar(object)->SetAttributes(propertyId, PropertyClassMemberDefaults);
+        // instance will be a function if it is the class constructor (otherwise it would be an object)
+        if (JavascriptFunction::Is(instance) && Js::PropertyIds::prototype == propertyId)
+        {
+            // It is a TypeError to have a static member with a computed name that evaluates to 'prototype'
+            JavascriptError::ThrowTypeError(scriptContext, JSERR_ClassStaticMethodCannotBePrototype);
+        }
+
+        instance->SetAttributes(propertyId, PropertyClassMemberDefaults);
     }
 
     void JavascriptOperators::OP_InitGetter(Var object, PropertyId propertyId, Var getter)
@@ -6230,8 +6238,16 @@ CommonNumber:
     void JavascriptOperators::OP_InitClassMemberGetComputedName(Var object, Var elementName, Var value, ScriptContext* scriptContext, PropertyOperationFlags flags)
     {
         Js::PropertyId propertyId = JavascriptOperators::OP_InitElemGetter(object, elementName, value, scriptContext);
+        RecyclableObject* instance = RecyclableObject::FromVar(object);
 
-        RecyclableObject::FromVar(object)->SetAttributes(propertyId, PropertyClassMemberDefaults);
+        // instance will be a function if it is the class constructor (otherwise it would be an object)
+        if (JavascriptFunction::Is(instance) && Js::PropertyIds::prototype == propertyId)
+        {
+            // It is a TypeError to have a static member with a computed name that evaluates to 'prototype'
+            JavascriptError::ThrowTypeError(scriptContext, JSERR_ClassStaticMethodCannotBePrototype);
+        }
+
+        instance->SetAttributes(propertyId, PropertyClassMemberDefaults);
     }
 
     void JavascriptOperators::OP_InitComputedProperty(Var object, Var elementName, Var value, ScriptContext* scriptContext, PropertyOperationFlags flags)
@@ -6244,8 +6260,16 @@ CommonNumber:
     void JavascriptOperators::OP_InitClassMemberComputedName(Var object, Var elementName, Var value, ScriptContext* scriptContext, PropertyOperationFlags flags)
     {
         PropertyId propertyId = JavascriptOperators::GetPropertyId(elementName, scriptContext);
+        RecyclableObject* instance = RecyclableObject::FromVar(object);
 
-        RecyclableObject::FromVar(object)->SetPropertyWithAttributes(propertyId, value, PropertyClassMemberDefaults, NULL, flags);
+        // instance will be a function if it is the class constructor (otherwise it would be an object)
+        if (JavascriptFunction::Is(instance) && Js::PropertyIds::prototype == propertyId)
+        {
+            // It is a TypeError to have a static member with a computed name that evaluates to 'prototype'
+            JavascriptError::ThrowTypeError(scriptContext, JSERR_ClassStaticMethodCannotBePrototype);
+        }
+
+        instance->SetPropertyWithAttributes(propertyId, value, PropertyClassMemberDefaults, NULL, flags);
     }
 
     //
@@ -6582,6 +6606,10 @@ CommonNumber:
                         JavascriptError::ThrowTypeError(scriptContext, JSERR_InvalidPrototype, L"extends");
                     }
                     RecyclableObject * extendsObj = RecyclableObject::FromVar(extends);
+                    if (!JavascriptOperators::IsConstructor(extendsObj))
+                    {
+                        JavascriptError::ThrowTypeError(scriptContext, JSERR_ErrorOnNew);
+                    }
                     if (!extendsObj->HasProperty(Js::PropertyIds::prototype))
                     {
                         JavascriptError::ThrowTypeError(scriptContext, JSERR_InvalidPrototype);
@@ -7005,7 +7033,7 @@ CommonNumber:
 #endif
             if (JavascriptOperators::GetProperty(object, propertyId, &value, scriptContext, &info))
             {
-                if (scriptContext->IsUndeclBlockVar(value))
+                if (scriptContext->IsUndeclBlockVar(value) && propertyId != PropertyIds::_lexicalThisSlotSymbol)
                 {
                     JavascriptError::ThrowReferenceError(scriptContext, JSERR_UseBeforeDeclaration);
                 }
@@ -8981,11 +9009,12 @@ CommonNumber:
         {
             PropertyId propertyId = isReturn ? PropertyIds::return_ : PropertyIds::throw_;
             Var prop = nullptr;
+            Var args[] = { iterator, yieldData->data };
+            CallInfo callInfo(CallFlags_Value, _countof(args));
 
-            if (JavascriptOperators::GetProperty(iterator, iterator, propertyId, &prop, iterator->GetScriptContext()))
+            if (JavascriptOperators::GetProperty(iterator, iterator, propertyId, &prop, iterator->GetScriptContext())
+                    && prop != iterator->GetLibrary()->GetUndefined())
             {
-                Var args [] = { iterator, yieldData->data };
-                CallInfo callInfo(CallFlags_Value, _countof(args));
                 RecyclableObject* method = RecyclableObject::FromVar(prop);
 
                 Var result = JavascriptFunction::CallFunction<true>(method, method->GetEntryPoint(), Arguments(callInfo, args));
@@ -9016,6 +9045,22 @@ CommonNumber:
                     // This would probably give better performance for the common case of calling next() on generators since we wouldn't
                     // have to wrap the call to the generator code in a try catch.
                     yieldData->exceptionObj->SetThrownObject(value);
+                }
+            }
+            else if (!isReturn)
+            {
+                // Throw is called on yield* but the iterator does not have a throw method. This is a protocol violation.
+                // So we have to call IteratorClose().
+                if (JavascriptOperators::GetProperty(iterator, iterator, PropertyIds::return_, &prop, iterator->GetScriptContext())
+                        && prop != iterator->GetLibrary()->GetUndefined())
+                {
+                    // As per the spec we ignore the inner result after checking whether it is a valid object
+                    RecyclableObject* method = RecyclableObject::FromVar(prop);
+                    Var result = JavascriptFunction::CallFunction<true>(method, method->GetEntryPoint(), Arguments(callInfo, args));
+                    if (!JavascriptOperators::IsObject(result))
+                    {
+                        JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedObject);
+                    }
                 }
             }
         }

@@ -172,7 +172,8 @@ public:
       , m_yieldOffsetResumeLabelList(nullptr)
       , m_bailOutNoSaveLabel(nullptr)
       , constantAddressRegOpnd(alloc)
-      , lastConstantAddressRegLoadInstr(nullptr)    
+      , lastConstantAddressRegLoadInstr(nullptr) 
+      , m_totalJumpTableSizeInBytesForSwitchStatements(0)
     {
         Assert(this->IsInlined() == !!runtimeData);
 
@@ -684,6 +685,7 @@ public:
     Js::ArgSlot         actualCount;
     int32               firstActualStackOffset;
     uint32              tryCatchNestingLevel;
+    uint32              m_totalJumpTableSizeInBytesForSwitchStatements;
 #if defined(_M_ARM32_OR_ARM64)
     //Offset to arguments from sp + m_localStackHeight;
     //For non leaf functions this is (callee saved register count + LR + R11) * MachRegInt

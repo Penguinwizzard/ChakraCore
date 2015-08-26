@@ -44,6 +44,10 @@ namespace Js
         {
         }
 
+        CallInfo(VirtualTableInfoCtorEnum v)
+        {
+        }
+
         // Assumes big-endian layout
         // If the size of the count is changed, change should happen at following places also
         //  - scriptdirect.idl

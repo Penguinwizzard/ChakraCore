@@ -84,9 +84,9 @@ namespace Js {
         bool Next();
 
         void *GetInstructionPointer();
-        void **GetArgv();
-        void *GetReturnAddress();
-        void *GetAddressOfReturnAddress();
+        void **GetArgv(bool isCurrentContextNative = false, bool shouldCheckForNativeAddr = true);
+        void *GetReturnAddress(bool isCurrentContextNative = false, bool shouldCheckForNativeAddr = true);
+        void *GetAddressOfReturnAddress(bool isCurrentContextNative = false, bool shouldCheckForNativeAddr = true);
         void *GetAddressOfInstructionPointer() { return this->addressOfCodeAddr; }
         bool SkipToFrame(void * returnAddress);
         void *GetFrame() const;
@@ -108,11 +108,12 @@ namespace Js {
         bool              hasCallerContext;
         CONTEXT          *callerContext;
         size_t            stackCheckCodeHeight;
-
+        
         __inline void EnsureFunctionEntry();
-        __inline bool EnsureCallerContext();
+        __inline bool EnsureCallerContext(bool isCurrentContextNative);
         __inline void OnCurrentContextUpdated();
 
+        static bool NextFromNativeAddress(CONTEXT * context);
         static bool Next(CONTEXT *context, ULONG64 imageBase, RUNTIME_FUNCTION *runtimeFunction);
         static const size_t stackCheckCodeHeightThreadBound = StackFrameConstants::StackCheckCodeHeightThreadBound;
         static const size_t stackCheckCodeHeightNotThreadBound = StackFrameConstants::StackCheckCodeHeightNotThreadBound;

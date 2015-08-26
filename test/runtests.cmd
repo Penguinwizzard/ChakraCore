@@ -121,42 +121,43 @@ goto :main
   if "%1" == "-?" set fShowUsage=1& goto :ArgOk
   if "%1" == "/?" set fShowUsage=1& goto :ArgOk
 
-  if /i "%1" == "-x86"          set _BuildArch=x86&                                             goto :ArgOk
-  if /i "%1" == "-x64"          set _BuildArch=x64&                                             goto :ArgOk
-  if /i "%1" == "-arm"          set _BuildArch=arm&                                             goto :ArgOk
-  if /i "%1" == "-debug"        set _BuildType=debug&                                           goto :ArgOk
-  if /i "%1" == "-test"         set _BuildType=test&                                            goto :ArgOk
+  if /i "%1" == "-x86"              set _BuildArch=x86&                                         goto :ArgOk
+  if /i "%1" == "-x64"              set _BuildArch=x64&                                         goto :ArgOk
+  if /i "%1" == "-arm"              set _BuildArch=arm&                                         goto :ArgOk
+  if /i "%1" == "-debug"            set _BuildType=debug&                                       goto :ArgOk
+  if /i "%1" == "-test"             set _BuildType=test&                                        goto :ArgOk
 
-  if /i "%1" == "-x86debug"     set _BuildArch=x86&set _BuildType=debug&                        goto :ArgOk
-  if /i "%1" == "-x64debug"     set _BuildArch=x64&set _BuildType=debug&                        goto :ArgOk
-  if /i "%1" == "-armdebug"     set _BuildArch=arm&set _BuildType=debug&                        goto :ArgOk
-  if /i "%1" == "-x86test"      set _BuildArch=x86&set _BuildType=test&                         goto :ArgOk
-  if /i "%1" == "-x64test"      set _BuildArch=x64&set _BuildType=test&                         goto :ArgOk
-  if /i "%1" == "-armtest"      set _BuildArch=arm&set _BuildType=test&                         goto :ArgOk
+  if /i "%1" == "-x86debug"         set _BuildArch=x86&set _BuildType=debug&                    goto :ArgOk
+  if /i "%1" == "-x64debug"         set _BuildArch=x64&set _BuildType=debug&                    goto :ArgOk
+  if /i "%1" == "-armdebug"         set _BuildArch=arm&set _BuildType=debug&                    goto :ArgOk
+  if /i "%1" == "-x86test"          set _BuildArch=x86&set _BuildType=test&                     goto :ArgOk
+  if /i "%1" == "-x64test"          set _BuildArch=x64&set _BuildType=test&                     goto :ArgOk
+  if /i "%1" == "-armtest"          set _BuildArch=arm&set _BuildType=test&                     goto :ArgOk
 
-  if /i "%1" == "-binary"       set _Binary=-binary:%2&                                         goto :ArgOkShift2
-  if /i "%1" == "-bindir"       set _BinDir=%~f2&                                               goto :ArgOkShift2
-  if /i "%1" == "-dirs"         set _DIRS=-dirs:%2&                                             goto :ArgOkShift2
-  if /i "%1" == "-win7"         set TARGET_OS=win7&                                             goto :ArgOk
-  if /i "%1" == "-win8"         set TARGET_OS=win8&                                             goto :ArgOk
-  if /i "%1" == "-winBlue"      set TARGET_OS=winBlue&                                          goto :ArgOk
-  if /i "%1" == "-win10"        set TARGET_OS=win10&                                            goto :ArgOk
-  if /i "%1" == "-nottags"      set _NOTTAGS=%_NOTTAGS% -nottags:%2&                            goto :ArgOkShift2
-  if /i "%1" == "-tags"         set _TAGS=%_TAGS% -tags:%2&                                     goto :ArgOkShift2
-  if /i "%1" == "-dirtags"      set _DIRTAGS=%_DIRTAGS% -dirtags:%2&                            goto :ArgOkShift2
-  if /i "%1" == "-dirnottags"   set _DIRNOTTAGS=%_DIRNOTTAGS% -dirnottags:%2&                   goto :ArgOkShift2
-  if /i "%1" == "-includeSlow"  set _includeSlow=1&                                             goto :ArgOk
+  if /i "%1" == "-binary"           set _Binary=-binary:%2&                                     goto :ArgOkShift2
+  if /i "%1" == "-bindir"           set _BinDir=%~f2&                                           goto :ArgOkShift2
+  if /i "%1" == "-dirs"             set _DIRS=-dirs:%2&                                         goto :ArgOkShift2
+  if /i "%1" == "-win7"             set TARGET_OS=win7&                                         goto :ArgOk
+  if /i "%1" == "-win8"             set TARGET_OS=win8&                                         goto :ArgOk
+  if /i "%1" == "-winBlue"          set TARGET_OS=winBlue&                                      goto :ArgOk
+  if /i "%1" == "-win10"            set TARGET_OS=win10&                                        goto :ArgOk
+  if /i "%1" == "-nottags"          set _NOTTAGS=%_NOTTAGS% -nottags:%2&                        goto :ArgOkShift2
+  if /i "%1" == "-tags"             set _TAGS=%_TAGS% -tags:%2&                                 goto :ArgOkShift2
+  if /i "%1" == "-dirtags"          set _DIRTAGS=%_DIRTAGS% -dirtags:%2&                        goto :ArgOkShift2
+  if /i "%1" == "-dirnottags"       set _DIRNOTTAGS=%_DIRNOTTAGS% -dirnottags:%2&               goto :ArgOkShift2
+  if /i "%1" == "-includeSlow"      set _includeSlow=1&                                         goto :ArgOk
+  if /i "%1" == "-includeChBroken"  set _excludeChBroken=&                                      goto :ArgOk
   :: TODO Consider removing -drt and exclude_drt in some reasonable manner
-  if /i "%1" == "-drt"          set _drt=1& set _NOTTAGS=%_NOTTAGS% -nottags:exclude_drt&       goto :ArgOk
-  if /i "%1" == "-nightly"      set _nightly=1&                                                 goto :ArgOk
-  if /i "%1" == "-rebase"       set _rebase=-rebase&                                            goto :ArgOk
-  if /i "%1" == "-rundebug"     set _RUNDEBUG=1&                                                goto :ArgOk
+  if /i "%1" == "-drt"              set _drt=1& set _NOTTAGS=%_NOTTAGS% -nottags:exclude_drt&   goto :ArgOk
+  if /i "%1" == "-nightly"          set _nightly=1&                                             goto :ArgOk
+  if /i "%1" == "-rebase"           set _rebase=-rebase&                                        goto :ArgOk
+  if /i "%1" == "-rundebug"         set _RUNDEBUG=1&                                            goto :ArgOk
   :: TODO Figure out best way to specify build arch for tests that are excluded to specific archs
-  if /i "%1" == "-platform"     set _buildArch=%2&                                              goto :ArgOkShift2
+  if /i "%1" == "-platform"         set _buildArch=%2&                                          goto :ArgOkShift2
   :: TODO Figure out best way to specify build type for tests that are excluded to specific type (chk, fre, etc)
-  if /i "%1" == "-buildType"    set _buildType=%2&                                              goto :ArgOkShift2
-  if /i "%1" == "-binaryRoot"   set _binaryRoot=%~f2&                                           goto :ArgOkShift2
-  if /i "%1" == "-variants"     set _Variants=%~2&                                              goto :ArgOkShift2
+  if /i "%1" == "-buildType"        set _buildType=%2&                                          goto :ArgOkShift2
+  if /i "%1" == "-binaryRoot"       set _binaryRoot=%~f2&                                       goto :ArgOkShift2
+  if /i "%1" == "-variants"         set _Variants=%~2&                                          goto :ArgOkShift2
 
   if /i "%1" == "-extraVariants" (
     :: Extra variants are specified by the user but not run by default.
@@ -219,10 +220,10 @@ goto :main
   set _ExtraVariants=
   set _dynamicprofilecache=-dynamicprofilecache:profile.dpl
   set _dynamicprofileinput=-dynamicprofileinput:profile.dpl
-  set EXTRA_CC_FLAGS=%EXTRA_CC_FLAGS% -DumpOnCrash
   set _includeSlow=
   set _nightly=
   set TARGET_OS=win10
+  set _excludeChBroken=-nottags:exclude_ch
 
   goto :eof
 
@@ -362,6 +363,7 @@ goto :main
   set _rlArgs=%_rlArgs% %_exclude_nodeferparse%
   set _rlArgs=%_rlArgs% %_exclude_forceundodefer%
   set _rlArgs=%_rlArgs% %_ExcludeApolloTests%
+  set _rlArgs=%_rlArgs% %_excludeChBroken%
   set _rlArgs=%_rlArgs% -exe
   set _rlArgs=%_rlArgs% %EXTRA_RL_FLAGS%
   set _rlArgs=%_rlArgs% %_rebase%

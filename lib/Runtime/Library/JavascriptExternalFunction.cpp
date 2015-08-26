@@ -55,6 +55,7 @@ namespace Js
         HRESULT hr = E_FAIL;
 
         ScriptContext* scriptContext = object->GetScriptContext();
+
         if (scriptContext->IsClosed() || scriptContext->IsInvalidatedForHostObjects())
         {
             Js::JavascriptError::MapAndThrowError(scriptContext, E_ACCESSDENIED);

@@ -49,13 +49,20 @@ public:
     uint8               isOpHelperSpillAsArg : 1;
     uint8               cantOpHelperSpill:1;
     uint8               isFloat:1;
-    uint8               isSimd128 : 1;
+    uint8               isSimd128F4 : 1;
+    uint8               isSimd128I4 : 1;
+    uint8               isSimd128D2 : 1;
     uint8               cantSpill:1;
     uint8               dontAllocate:1;
     uint8               isSecondChanceAllocated:1;
     uint8               isCheapSpill:1;
     uint8               needsStoreCompensation:1;
     uint8               cantStackPack : 1;
+
+    bool isSimd128()
+    {
+        return (isSimd128F4 | isSimd128I4 | isSimd128D2) != 0;
+    }
 
     void AddToUseCount(uint32 newUseValue, Loop *loop, Func *func)
     {

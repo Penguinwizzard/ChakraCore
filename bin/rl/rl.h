@@ -940,7 +940,8 @@ GetTestInfoFromNode
 );
 
 extern char * getenv_unsafe(const char *);
-
+extern FILE * fopen_unsafe(const char *, const char *);
+extern char* strerror_unsafe(int errnum);
 // rlregr.cpp
 
 extern void RegrInit(void);

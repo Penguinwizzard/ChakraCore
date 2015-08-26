@@ -70,7 +70,10 @@ extern bool CheckIsDebuggerPresent(void);
 #define Unused(var) var;
 
 #define UNREACHED   (0)
+
+#ifndef CompileAssert
 #define CompileAssert(e) static_assert(e, #e)
+#endif
 
 // Trick adopted from windows.foundations.collections.h
 // We set IsPointer<T>::IsTrue to true if T is a pointer type

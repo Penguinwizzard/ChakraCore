@@ -21,7 +21,7 @@ namespace JsUtil
             hash = _rotl(hash, 7);
             hash ^= tolower(s[i]);
         }
-        return hash;
+        return ((hash & 0x7fffffff) << 1) | 1;
     }
 
     int NoCaseComparer<JsUtil::CharacterBuffer<WCHAR>>::Compare(JsUtil::CharacterBuffer<WCHAR> const& s1, JsUtil::CharacterBuffer<WCHAR> const& s2)

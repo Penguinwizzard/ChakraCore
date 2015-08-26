@@ -408,6 +408,12 @@ namespace Js
             return;
         }
 
+        if (this->IsFull())
+        {
+            // If the cache is full, we won't find an empty slot to move the contents of the colliding inline cache to.
+            return;
+        }
+
         // Collision is with a cache having a different type.
 
         uint tryInlineCacheIndex = GetNextInlineCacheIndex(inlineCacheIndex);
@@ -451,9 +457,12 @@ namespace Js
                 }
             }
             inlineCaches[tryInlineCacheIndex].u = inlineCaches[inlineCacheIndex].u;
+            UpdateInlineCachesFillInfo(tryInlineCacheIndex, true /*set*/);
             // Let's clear the cache slot on which we had the collision.  We might have stolen the invalidationListSlotPtr, so it may not pass VerifyRegistrationForInvalidation.
-            // Besides, It will be repopulated with the incoming data, and registered for invalidation, if necessary.           
+            // Besides, it will be repopulated with the incoming data, and registered for invalidation, if necessary.           
             inlineCaches[inlineCacheIndex].Clear();
+            Assert((this->inlineCachesFillInfo & (1 << inlineCacheIndex)) != 0);
+            UpdateInlineCachesFillInfo(inlineCacheIndex, false /*set*/);
         }
     }
 

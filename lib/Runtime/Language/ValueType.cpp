@@ -700,6 +700,23 @@ bool ValueType::IsSimd128() const
 {
     return IsObject() && (GetObjectType() >= ObjectType::Simd128Float32x4 && GetObjectType() <= ObjectType::Simd128Float64x2);
 }
+
+bool ValueType::IsSimd128(IRType type) const
+{
+    switch (type)
+    {
+    case TySimd128F4:
+        return IsSimd128Float32x4();
+    case TySimd128I4:
+        return IsSimd128Int32x4();
+    case TySimd128D2:
+        return IsSimd128Float64x2();
+    default:
+        Assert(UNREACHED);
+        return false;
+    }
+}
+
 bool ValueType::IsSimd128Float32x4() const
 {
     return IsObject() && GetObjectType() == ObjectType::Simd128Float32x4;

@@ -12,15 +12,21 @@
         return JsErrorNullArgument; \
     }
 
-#define MARSHAL_OBJECT(p, scriptContext, type) \
-        Js::##type * obj = Js::##type::FromVar(p); \
-        if (obj->GetScriptContext() != scriptContext) \
+#define VALIDATE_JSREF(p) \
+    if (p == JS_INVALID_REFERENCE) \
+    { \
+        return JsErrorInvalidArgument; \
+    } \
+
+#define MARSHAL_OBJECT(p, scriptContext) \
+        Js::RecyclableObject* __obj = Js::RecyclableObject::FromVar(p); \
+        if (__obj->GetScriptContext() != scriptContext) \
         { \
-            if(obj->GetScriptContext()->GetThreadContext() != scriptContext->GetThreadContext()) \
+            if(__obj->GetScriptContext()->GetThreadContext() != scriptContext->GetThreadContext()) \
             {  \
                 return JsErrorWrongRuntime;  \
             }  \
-            p = Js::CrossSite::MarshalVar(scriptContext, obj); \
+            p = Js::CrossSite::MarshalVar(scriptContext, __obj); \
         }
 
 #define VALIDATE_INCOMING_RUNTIME_HANDLE(p) \
@@ -32,7 +38,7 @@
         }
 
 #define VALIDATE_INCOMING_PROPERTYID(p) \
-	    { \
+	      { \
             if (p == JS_INVALID_REFERENCE || \
                     Js::IsInternalPropertyId(((Js::PropertyRecord *)p)->GetPropertyId())) \
             { \
@@ -42,54 +48,41 @@
 
 #define VALIDATE_INCOMING_REFERENCE(p, scriptContext) \
         { \
-            if (p != JS_INVALID_REFERENCE && !Js::TaggedNumber::Is(p)) \
+            VALIDATE_JSREF(p); \
+            if (Js::RecyclableObject::Is(p)) \
             { \
-                MARSHAL_OBJECT(p, scriptContext, RecyclableObject)   \
+                MARSHAL_OBJECT(p, scriptContext)   \
             } \
         }
 
 #define VALIDATE_INCOMING_OBJECT(p, scriptContext) \
         { \
-            if (p != JS_INVALID_REFERENCE) \
+            VALIDATE_JSREF(p); \
+            if (!Js::JavascriptOperators::IsObject(p)) \
             { \
-                if (!Js::JavascriptOperators::IsObject(p)) \
-                { \
-                    return JsErrorArgumentNotObject; \
-                } \
-                MARSHAL_OBJECT(p, scriptContext, RecyclableObject)   \
+                return JsErrorArgumentNotObject; \
             } \
+            MARSHAL_OBJECT(p, scriptContext)   \
         }
 
 #define VALIDATE_INCOMING_OBJECT_OR_NULL(p, scriptContext) \
         { \
-            if (p != JS_INVALID_REFERENCE) \
+            VALIDATE_JSREF(p); \
+            if (!Js::JavascriptOperators::IsObjectOrNull(p)) \
             { \
-                if (!Js::JavascriptOperators::IsObjectOrNull(p)) \
-                { \
-                    return JsErrorArgumentNotObject; \
-                } \
-                MARSHAL_OBJECT(p, scriptContext, RecyclableObject)   \
+                return JsErrorArgumentNotObject; \
             } \
+            MARSHAL_OBJECT(p, scriptContext)   \
         }
 
 #define VALIDATE_INCOMING_FUNCTION(p, scriptContext) \
         { \
-            if (p != JS_INVALID_REFERENCE) \
+            VALIDATE_JSREF(p); \
+            if (!Js::JavascriptFunction::Is(p)) \
             { \
-                if (!Js::JavascriptFunction::Is(p)) \
-                { \
-                    return JsErrorInvalidArgument; \
-                } \
-                MARSHAL_OBJECT(p, scriptContext, JavascriptFunction)   \
+                return JsErrorInvalidArgument; \
             } \
-        }
-
-#define VALIDATE_INCOMING_VALUE_CONTEXT(p, scriptContext) \
-        { \
-            if (Js::RecyclableObject::Is(p)) \
-            { \
-                MARSHAL_OBJECT(p, scriptContext, RecyclableObject)   \
-            } \
+            MARSHAL_OBJECT(p, scriptContext)   \
         }
 
 template <class Fn>
@@ -114,7 +107,14 @@ JsErrorCode GlobalAPIWrapper(Fn fn)
             errCode != JsErrorScriptException &&
             errCode != JsErrorScriptTerminated);
     }
-    CATCH_JAVASCRIPT_EXCEPTION_OBJECT(JsrtContext::GetCurrent()->GetScriptContext()->GetThreadContext())
+    catch (Js::OutOfMemoryException)
+    {
+        return JsErrorOutOfMemory;
+    } 
+    catch (Js::StackOverflowException)
+    {
+        return JsErrorOutOfMemory;
+    }
 
     CATCH_OTHER_EXCEPTIONS
 

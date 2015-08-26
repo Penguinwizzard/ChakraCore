@@ -1198,6 +1198,10 @@ struct FuncBailOutData
     int * localOffsets;
     BVFixed * losslessInt32Syms;
     BVFixed * float64Syms;
+    
+    // SIMD_JS
+    BVFixed * simd128F4Syms;
+    BVFixed * simd128I4Syms;
 
     void Initialize(Func * func, JitArenaAllocator * tempAllocator);
     void FinalizeLocalOffsets(JitArenaAllocator *allocator, GlobalBailOutRecordDataTable *table, uint **lastUpdatedRowIndices);
@@ -1212,6 +1216,9 @@ FuncBailOutData::Initialize(Func * func, JitArenaAllocator * tempAllocator)
     this->localOffsets = AnewArrayZ(tempAllocator, int, localsCount);
     this->losslessInt32Syms = BVFixed::New(localsCount, tempAllocator);
     this->float64Syms = BVFixed::New(localsCount, tempAllocator);
+    // SIMD_JS
+    this->simd128F4Syms = BVFixed::New(localsCount, tempAllocator);
+    this->simd128I4Syms = BVFixed::New(localsCount, tempAllocator);
 }
 
 void 
@@ -1236,7 +1243,12 @@ FuncBailOutData::FinalizeLocalOffsets(JitArenaAllocator *allocator, GlobalBailOu
         {
             bool isFloat = float64Syms->Test(i) != 0;
             bool isInt = losslessInt32Syms->Test(i) != 0;
-            globalBailOutRecordDataTable->AddOrUpdateRow(allocator, bailOutRecordId, i, isFloat, isInt, localOffsets[i], &((*lastUpdatedRowIndices)[i]));
+            
+            // SIMD_JS
+            bool isSimd128F4 = simd128F4Syms->Test(i) != 0;
+            bool isSimd128I4 = simd128I4Syms->Test(i) != 0;
+
+            globalBailOutRecordDataTable->AddOrUpdateRow(allocator, bailOutRecordId, i, isFloat, isInt, isSimd128F4, isSimd128I4, localOffsets[i], &((*lastUpdatedRowIndices)[i]));
             Assert(globalBailOutRecordDataTable->globalBailOutRecordDataRows[(*lastUpdatedRowIndices)[i]].regSlot  == i);
             bailOutRecord->localOffsetsCount++;
         }
@@ -1250,6 +1262,9 @@ FuncBailOutData::Clear(JitArenaAllocator * tempAllocator)
     JitAdeleteArray(tempAllocator, localsCount, localOffsets);
     losslessInt32Syms->Delete(tempAllocator);
     float64Syms->Delete(tempAllocator);
+    // SIMD_JS
+    simd128F4Syms->Delete(tempAllocator);
+    simd128I4Syms->Delete(tempAllocator);
 }
 
 GlobalBailOutRecordDataTable *
@@ -1427,6 +1442,15 @@ LinearScan::FillBailOutRecord(IR::Instr * instr)
         {
             funcBailOutData[index].float64Syms->Set(i);
         }
+        // SIMD_JS
+        else if (copyStackSym->IsSimd128F4())
+        {
+            funcBailOutData[index].simd128F4Syms->Set(i);
+        }
+        else if (copyStackSym->IsSimd128I4())
+        {
+            funcBailOutData[index].simd128I4Syms->Set(i);
+        }
         iter.RemoveCurrent(this->func->m_alloc);
     }
     NEXT_SLISTBASE_ENTRY_EDITING;
@@ -1457,6 +1481,15 @@ LinearScan::FillBailOutRecord(IR::Instr * instr)
         else if (stackSym->IsFloat64())
         {
             funcBailOutData[index].float64Syms->Set(i);
+        }
+        // SIMD_JS
+        else if (stackSym->IsSimd128F4())
+        {
+            funcBailOutData[index].simd128F4Syms->Set(i);
+        }
+        else if (stackSym->IsSimd128I4())
+        {
+            funcBailOutData[index].simd128I4Syms->Set(i);
         }
     }
     NEXT_BITSET_IN_SPARSEBV;          
@@ -1533,7 +1566,7 @@ LinearScan::FillBailOutRecord(IR::Instr * instr)
                             funcBailOutData[dataIndex].localOffsets[regSlotId] = this->func->AdjustOffsetValue(offset);
 
                             // We don't support typespec for debug, rework on the bellow assert once we start support them.
-                            Assert(!stackSym->IsInt32() && !stackSym->IsFloat64());
+                            Assert(!stackSym->IsInt32() && !stackSym->IsFloat64() && !stackSym->IsSimd128());
                         }
                     }
                 }
@@ -1554,6 +1587,9 @@ LinearScan::FillBailOutRecord(IR::Instr * instr)
 #endif
         BVFixed * argOutFloat64Syms = BVFixed::New(bailOutInfo->totalOutParamCount, allocator);
         BVFixed * argOutLosslessInt32Syms = BVFixed::New(bailOutInfo->totalOutParamCount, allocator);
+        // SIMD_JS
+        BVFixed * argOutSimd128F4Syms = BVFixed::New(bailOutInfo->totalOutParamCount, allocator);
+        BVFixed * argOutSimd128I4Syms = BVFixed::New(bailOutInfo->totalOutParamCount, allocator);
 
         int* outParamOffsets = bailOutInfo->outParamOffsets = NativeCodeDataNewArrayZ(allocator, int, bailOutInfo->totalOutParamCount);
 #ifdef _M_IX86
@@ -1602,6 +1638,9 @@ LinearScan::FillBailOutRecord(IR::Instr * instr)
                 currentBailOutRecord->argOutOffsetInfo = NativeCodeDataNew(allocator, BailOutRecord::ArgOutOffsetInfo);
                 currentBailOutRecord->argOutOffsetInfo->argOutFloat64Syms = nullptr;
                 currentBailOutRecord->argOutOffsetInfo->argOutLosslessInt32Syms = nullptr;
+                // SIMD_JS
+                currentBailOutRecord->argOutOffsetInfo->argOutSimd128F4Syms = nullptr;
+                currentBailOutRecord->argOutOffsetInfo->argOutSimd128I4Syms = nullptr;
                 currentBailOutRecord->argOutOffsetInfo->argOutSymStart = 0;
                 currentBailOutRecord->argOutOffsetInfo->outParamOffsets = nullptr;
                 currentBailOutRecord->argOutOffsetInfo->startCallOutParamCounts = nullptr;
@@ -1626,6 +1665,11 @@ LinearScan::FillBailOutRecord(IR::Instr * instr)
                 currentBailOutRecord->argOutOffsetInfo->argOutSymStart = outParamStart;
                 currentBailOutRecord->argOutOffsetInfo->argOutFloat64Syms = argOutFloat64Syms;
                 currentBailOutRecord->argOutOffsetInfo->argOutLosslessInt32Syms = argOutLosslessInt32Syms;
+                // SIMD_JS
+                currentBailOutRecord->argOutOffsetInfo->argOutSimd128F4Syms = argOutSimd128F4Syms;
+                currentBailOutRecord->argOutOffsetInfo->argOutSimd128I4Syms = argOutSimd128I4Syms;
+
+
             }
 #if DBG_DUMP
             if (PHASE_DUMP(Js::BailOutPhase, this->func))
@@ -1695,6 +1739,15 @@ LinearScan::FillBailOutRecord(IR::Instr * instr)
                                 else if (copyStackSym->IsFloat64())
                                 {
                                     argOutFloat64Syms->Set(outParamOffsetIndex);
+                                }
+                                // SIMD_JS
+                                else if (copyStackSym->IsSimd128F4())
+                                {
+                                    argOutSimd128F4Syms->Set(outParamOffsetIndex);
+                                }
+                                else if (copyStackSym->IsSimd128I4())
+                                {
+                                    argOutSimd128I4Syms->Set(outParamOffsetIndex);
                                 }
                             }
 #if DBG_DUMP
@@ -1815,6 +1868,15 @@ LinearScan::FillBailOutRecord(IR::Instr * instr)
                     else if (sym->IsInt32())
                     {
                         argOutLosslessInt32Syms->Set(outParamOffsetIndex);
+                    }
+                    // SIMD_JS
+                    else if (sym->IsSimd128F4())
+                    {
+                        argOutSimd128F4Syms->Set(outParamOffsetIndex);
+                    }
+                    else if (sym->IsSimd128I4())
+                    {
+                        argOutSimd128I4Syms->Set(outParamOffsetIndex);
                     }
 #if DBG_DUMP
                     if (PHASE_DUMP(Js::BailOutPhase, this->func))
@@ -2409,9 +2471,17 @@ LinearScan::FindReg(Lifetime *newLifetime, IR::RegOpnd *regOpnd, bool force)
         {
             type = TyFloat64;
         }
-        else if (newLifetime->isSimd128)
+        else if (newLifetime->isSimd128F4)
         {
-            type = TySimd128;
+            type = TySimd128F4;
+        }
+        else if (newLifetime->isSimd128I4)
+        {
+            type = TySimd128I4;
+        }
+        else if (newLifetime->isSimd128D2)
+        {
+            type = TySimd128D2;
         }
         else
         {
@@ -2444,7 +2514,7 @@ LinearScan::FindReg(Lifetime *newLifetime, IR::RegOpnd *regOpnd, bool force)
                 }
             }
 
-            if (newLifetime->isFloat || newLifetime->isSimd128)
+            if (newLifetime->isFloat || newLifetime->isSimd128())
             {
 #ifdef _M_IX86
                 Assert(AutoSystemInfo::Data.SSE2Available());
@@ -2602,7 +2672,7 @@ LinearScan::Spill(Lifetime *newLifetime, IR::RegOpnd *regOpnd, bool dontSpillCur
 {
     uint minSpillCost = (uint)-1;
 
-    Assert(!newLifetime || !regOpnd || newLifetime->isFloat == (regOpnd->GetType() == TyMachDouble) || newLifetime->isSimd128 == (regOpnd->GetType() == TySimd128));
+    Assert(!newLifetime || !regOpnd || newLifetime->isFloat == (regOpnd->GetType() == TyMachDouble) || newLifetime->isSimd128() == (regOpnd->IsSimd128()));
     bool isFloatReg;
     //bool isSimd128Reg;
     BitVector intUsageBV;
@@ -2611,7 +2681,7 @@ LinearScan::Spill(Lifetime *newLifetime, IR::RegOpnd *regOpnd, bool dontSpillCur
     // For now, we just spill the lifetime with the lowest spill cost.
     if (newLifetime)
     {
-        isFloatReg = newLifetime->isFloat || newLifetime->isSimd128;
+        isFloatReg = newLifetime->isFloat || newLifetime->isSimd128();
         
         if (!force)
         {
@@ -2642,7 +2712,7 @@ LinearScan::Spill(Lifetime *newLifetime, IR::RegOpnd *regOpnd, bool dontSpillCur
         uint spillCost = this->GetSpillCost(lifetime);
         if (spillCost < minSpillCost                        && 
             this->instrUseRegs.Test(lifetime->reg) == false &&
-            (lifetime->isFloat || lifetime->isSimd128) == isFloatReg  &&
+            (lifetime->isFloat || lifetime->isSimd128()) == isFloatReg  &&
             !lifetime->cantSpill                            &&
             (!needCalleeSaved || this->calleeSavedRegs.Test(lifetime->reg)) &&
             this->linearScanMD.FitRegIntSizeConstraints(lifetime->reg, intUsageBV))
@@ -2660,7 +2730,7 @@ LinearScan::Spill(Lifetime *newLifetime, IR::RegOpnd *regOpnd, bool dontSpillCur
         candidate.RemoveCurrent();
         
         this->activeRegs.Clear(spilledRange->reg);
-        if (spilledRange->isFloat || spilledRange->isSimd128)
+        if (spilledRange->isFloat || spilledRange->isSimd128())
         {
             this->floatRegUsedCount--;   
         }
@@ -2839,7 +2909,7 @@ LinearScan::ProcessEHRegionBoundary(IR::Instr * instr)
     FOREACH_SLIST_ENTRY_EDITING(Lifetime *, lifetime, this->activeLiveranges, iter)
     {
         this->activeRegs.Clear(lifetime->reg);
-        if (lifetime->isFloat || lifetime->isSimd128)
+        if (lifetime->isFloat || lifetime->isSimd128())
         {
             this->floatRegUsedCount--;
         }
@@ -3049,6 +3119,11 @@ LinearScan::InsertStore(IR::Instr *instr, StackSym *sym, RegNum reg)
 
     IRType type = sym->GetType();
 
+    if (sym->IsSimd128())
+    {
+        type = sym->GetType();
+    }
+
     IR::Instr *store = IR::Instr::New(LowererMD::GetStoreOp(type),
         IR::SymOpnd::New(sym, type, this->func), 
         IR::RegOpnd::New(sym, reg, type, this->func), this->func);
@@ -3074,6 +3149,11 @@ LinearScan::InsertLoad(IR::Instr *instr, StackSym *sym, RegNum reg)
     // The size of loads and stores to memory need to match. See the comment
     // around type in InsertStore above.
     IRType type = sym->GetType();
+
+    if (sym->IsSimd128())
+    {
+        type = sym->GetType();
+    }
 
     bool isMovSDZero = false;
     if (sym->IsConst())
@@ -3548,7 +3628,7 @@ LinearScan::AssignActiveReg(Lifetime * lifetime, RegNum reg)
     this->func->m_regsUsed.Set(reg);
     lifetime->reg = reg;
     this->activeRegs.Set(reg);
-    if (lifetime->isFloat || lifetime->isSimd128)
+    if (lifetime->isFloat || lifetime->isSimd128())
     {
         this->floatRegUsedCount++;
     }
@@ -3991,7 +4071,7 @@ LinearScan::ReconcileRegContent(Lifetime ** branchRegContent, Lifetime **labelRe
     }
     else
     {
-        Assert(type == TyFloat64 || type == TySimd128);
+        Assert(type == TyFloat64 || IRType_IsSimd128(type));
 
         FOREACH_FLOAT_REG(regIter)
         {

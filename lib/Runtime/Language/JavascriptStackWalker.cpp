@@ -59,6 +59,11 @@ namespace Js
         return *intPtr;
     }
 
+    SIMDValue JavascriptCallStackLayout::GetSimdValueAtOffset(int offset) const
+    {
+        return  *((SIMDValue *)(((char *)this) + offset));
+    }
+
     char * JavascriptCallStackLayout::GetValueChangeOffset(int offset) const
     {
         Js::Var *varPtr = (Js::Var *)(((char *)this) + offset);
@@ -684,7 +689,13 @@ namespace Js
     void ** JavascriptStackWalker::GetCurrentArgv() const
     {
         Assert(this->IsJavascriptFrame());
-        void ** argv = currentFrame.GetArgv();
+        Assert(this->interpreterFrame != nullptr ||
+               (this->prevNativeLibraryEntry && this->currentFrame.GetAddressOfReturnAddress() == this->prevNativeLibraryEntry->addr) ||
+               JavascriptFunction::IsNativeAddress(this->scriptContext, (void*)this->currentFrame.GetInstructionPointer()));
+        
+        bool isNativeAddr = (this->interpreterFrame == nullptr) && 
+                            (!this->prevNativeLibraryEntry || (this->currentFrame.GetAddressOfReturnAddress() != this->prevNativeLibraryEntry->addr));
+        void ** argv = currentFrame.GetArgv(isNativeAddr, false /*shouldCheckForNativeAddr*/);
         Assert(argv);
         return argv;
     }
@@ -704,7 +715,7 @@ namespace Js
             // For fully initialized frames (PushPopHelper was called) the thunk stack addr is equal or below addressOfReturnAddress
             // as the latter one is obtained in InterpreterStackFrame::InterpreterThunk called by the thunk.
             bool isPartiallyInitializedFrame = this->shouldDetectPartiallyInitializedInterpreterFrame && 
-                this->currentFrame.GetAddressOfReturnAddress() < this->tempInterpreterFrame->GetAddressOfReturnAddress();
+                this->currentFrame.GetAddressOfReturnAddress(false /*isCurrentContextNative*/, false /*shouldCheckForNativeAddr*/) < this->tempInterpreterFrame->GetAddressOfReturnAddress();
             this->shouldDetectPartiallyInitializedInterpreterFrame = false;
 
             if (isPartiallyInitializedFrame)
@@ -713,7 +724,7 @@ namespace Js
             }
 
 #if defined(_M_AMD64)
-            void ** argv = this->currentFrame.GetArgv();
+            void ** argv = this->currentFrame.GetArgv(false /*isCurrentContextNative*/, false /*shouldCheckForNativeAddr*/);
             if (argv == null)
             {
                 // TODO: When we switch to walking the stack ourselves and skip non engine frames, this should never happen.
@@ -760,7 +771,7 @@ namespace Js
         if (isNativeAddr)
         {
             this->shouldDetectPartiallyInitializedInterpreterFrame = false;
-            void ** argv = this->currentFrame.GetArgv();
+            void ** argv = this->currentFrame.GetArgv(true /*isCurrentContextNative*/, false /*shouldCheckForNativeAddr*/);
             if (argv == null)
             {
                 // TODO: When we switch to walking the stack ourselves and skip non engine frames, this should never happen.

@@ -40,6 +40,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)DebugContext.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)BreakpointProbe.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)DebugDocument.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)DebuggingFlags.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)DebugManager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)DiagObjectModel.cpp" />
@@ -54,6 +56,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DebugContext.h" />
+    <ClInclude Include="BreakpointProbe.h" />
+    <ClInclude Include="DebugDocument.h" />    
     <ClInclude Include="DebuggingFlags.h" />
     <ClInclude Include="DebugManager.h" />
     <ClInclude Include="DiagObjectModel.h" />

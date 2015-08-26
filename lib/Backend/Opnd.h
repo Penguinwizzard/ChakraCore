@@ -197,7 +197,10 @@ public:
     bool                IsFloat64() const { return this->m_type == TyFloat64; }
     bool                IsFloat() const { return this->IsFloat32() || this->IsFloat64(); }
 #ifdef SIMD_JS_ENABLED
-    bool                IsSimd128() const { return this->m_type == TySimd128; }
+    bool                IsSimd128() const { return IRType_IsSimd128(this->m_type);  }
+    bool                IsSimd128F4() const { return this->m_type == TySimd128F4; }
+    bool                IsSimd128I4() const { return this->m_type == TySimd128I4; }
+    bool                IsSimd128D2() const { return this->m_type == TySimd128D2; }
 #endif
     bool                IsVar() const { return this->m_type == TyVar; }
     bool                IsTaggedInt() const;
@@ -338,22 +341,18 @@ private:
 #ifdef SIMD_JS_ENABLED
 class Simd128ConstOpnd sealed : public Opnd
 {
-    // b-namost: Do we ever need to represent this operand as Simd Var (similar to FloatConstOpnd) ?  
-    // I am assuming TypeSpec will always convet the IRType to TySimd128, so we won't need to allocate an SIMD object ?
+   
 public:
     static Simd128ConstOpnd * New(AsmJsSIMDValue value, IRType type, Func *func);
-    // static Simd128ConstOpnd * New(Js::Var simdVar, IRType type, Func *func);
 
 public:
     
     Simd128ConstOpnd *      CopyInternal(Func *func);
     bool                    IsEqualInternal(Opnd *opnd);
     void                    FreeInternal(Func * func);
-    // AddrOpnd               *GetAddrOpnd(Func *func, bool dontEncode = false);
+
 public:
     AsmJsSIMDValue          m_value;
-private:
-   // Js::Var                 m_number;
 };
 #endif
 

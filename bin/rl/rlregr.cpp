@@ -91,7 +91,7 @@ RegrStartDir(
     // Execute directory setup command script if present.
 
     sprintf_s(full, "%s\\%s", path, DIR_START_CMD);
-    if (GetFileAttributes(full) != 0xFFFFFFFF) {
+    if (GetFileAttributes(full) != INVALID_FILE_ATTRIBUTES) {
         Message(""); // newline
         Message("Executing %s", DIR_START_CMD);
         if (DoCommand(path, DIR_START_CMD))
@@ -113,7 +113,7 @@ RegrEndDir(
     // Execute directory shutdown command script if present.
 
     sprintf_s(full, "%s\\%s", path, DIR_END_CMD);
-    if (GetFileAttributes(full) != 0xFFFFFFFF) {
+    if (GetFileAttributes(full) != INVALID_FILE_ATTRIBUTES) {
         Message(""); // newline
         Message("Executing %s", DIR_END_CMD);
         if (DoCommand(path, DIR_END_CMD))
@@ -218,9 +218,9 @@ RegrFile(
     // Try to open the source file.
 
     sprintf_s(full, "%s\\%s", pDir->GetDirectoryPath(), pTest->name);
-    errno_t err = fopen_s(&fp, full, "r");
-    if (err != 0 || fp == NULL) {
-        LogError("ERROR: File %s does not exist", pTest->name);
+    fp = fopen_unsafe(full, "r");
+    if (fp == NULL) {
+        LogError("ERROR: Could not open '%s' with error '%s'", pTest->name, strerror_unsafe(errno));
         return -1;
     }
     fclose(fp);
@@ -299,7 +299,7 @@ RegrFile(
 
     // See if we generated an assembly file.
 
-    if (GetFileAttributes(fullasmbuf) == 0xFFFFFFFF) {
+    if (GetFileAttributes(fullasmbuf) == INVALID_FILE_ATTRIBUTES) {
         LogOut("ERROR: Assembly file %s not generated", asmbuf);
         return -1;
     }
@@ -333,7 +333,7 @@ RegrFile(
 
     // If the master doesn't exist, consider this a failure.
 
-    if (GetFileAttributes(fullmasterasmbuf) == 0xFFFFFFFF) {
+    if (GetFileAttributes(fullmasterasmbuf) == INVALID_FILE_ATTRIBUTES) {
         LogOut("ERROR: %s doesn't exist", fullmasterasmbuf);
         return -1;
     }

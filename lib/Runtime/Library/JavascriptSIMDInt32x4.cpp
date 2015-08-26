@@ -9,9 +9,19 @@
 
 namespace Js
 {
+    JavascriptSIMDInt32x4::JavascriptSIMDInt32x4(StaticType *type) : RecyclableObject(type)
+    {
+        Assert(type->GetTypeId() == TypeIds_SIMDInt32x4);
+    }
+
     JavascriptSIMDInt32x4::JavascriptSIMDInt32x4(SIMDValue *val, StaticType *type) : RecyclableObject(type), value(*val)
     {
         Assert(type->GetTypeId() == TypeIds_SIMDInt32x4);
+    }
+
+    JavascriptSIMDInt32x4* JavascriptSIMDInt32x4::AllocUninitialized(ScriptContext* requestContext)
+    {
+        return (JavascriptSIMDInt32x4 *)AllocatorNew(Recycler, requestContext->GetRecycler(), JavascriptSIMDInt32x4, requestContext->GetLibrary()->GetSIMDInt32x4TypeStatic());
     }
 
     JavascriptSIMDInt32x4* JavascriptSIMDInt32x4::New(SIMDValue *val, ScriptContext* requestContext)

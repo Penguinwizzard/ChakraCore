@@ -12,7 +12,7 @@
 #define DBG_DUMP 0
 #endif
 
-#if _DEBUG
+#ifdef _DEBUG
 #ifdef DEBUG
 #undef DEBUG
 #endif

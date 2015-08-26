@@ -785,7 +785,10 @@ varDeclEnd:
         else
         {
             m.SetCurrentParseNode(fnNodes);
-            CheckFunctionTables(m);
+            if (!CheckFunctionTables(m))
+            {
+                return false;
+            }
         }
         // this will move us back to the beginning of the function declarations
         m.SetCurrentParseNode(varStmts);
@@ -879,9 +882,8 @@ varDeclEnd:
             }
             if (!ParserWrapper::IsNameDeclaration(pnode))
             {
-                return m.FailName(pnode, L"Invalid element int function table %s", varStmt->name());
+                return m.FailName(pnode, L"Invalid element in function table %s", varStmt->name());
             }
-            ftable->SetFirstFuncName(pnode->name());
             ++funcPtrTableCount;
             list = ParserWrapper::GetBinaryRight(list);
         }
@@ -1005,7 +1007,7 @@ varDeclEnd:
 
             PropertyName tableName = varStmt->name();
             
-            AsmJsSymbol* sym = m.LookupIdentifier( tableName );
+            AsmJsSymbol* sym = m.LookupIdentifier(tableName);
             if( !sym )
             {
                 // func table not used in functions disregard it
@@ -1057,6 +1059,15 @@ varDeclEnd:
                             return m.FailName( varStmt, L"Element in function table %s is not a function", tableName );
                         }
                         AsmJsFunc* func = sym->Cast<AsmJsFunc>();
+                        AsmJsRetType retType;
+                        if (!table->SupportsArgCall(func->GetArgCount(), func->GetArgTypeArray(), retType))
+                        {
+                            return m.FailName(funcNameNode, L"Function signatures in table %s do not match", tableName);
+                        }
+                        if (!table->CheckAndSetReturnType(func->GetReturnType()))
+                        {
+                            return m.FailName(funcNameNode, L"Function return types in table %s do not match", tableName);
+                        }
                         table->SetModuleFunctionIndex( func->GetFunctionIndex(), i );
                         ++i;
                     }

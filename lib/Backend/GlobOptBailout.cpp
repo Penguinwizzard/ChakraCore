@@ -340,6 +340,10 @@ GlobOpt::TrackCalls(IR::Instr * instr)
             instr->m_func->frameInfo = frameInfo;
             frameInfo->floatSyms = currentBlock->globOptData.liveFloat64Syms->CopyNew(this->alloc);
             frameInfo->intSyms = currentBlock->globOptData.liveInt32Syms->MinusNew(currentBlock->globOptData.liveLossyInt32Syms, this->alloc);
+            
+            // SIMD_JS
+            frameInfo->simd128F4Syms = currentBlock->globOptData.liveSimd128F4Syms->CopyNew(this->alloc);
+            frameInfo->simd128I4Syms = currentBlock->globOptData.liveSimd128I4Syms->CopyNew(this->alloc);
         }
         break;
 
@@ -577,6 +581,15 @@ void GlobOpt::RecordInlineeFrameInfo(IR::Instr* inlineeEnd)
                     argSym = argSym->GetFloat64EquivSym(null);
                     Assert(argSym);
                 }
+                // SIMD_JS
+                else if (frameInfo->simd128F4Syms->TestEmpty() && frameInfo->simd128F4Syms->Test(argSym->m_id))
+                {
+                    argSym = argSym->GetSimd128F4EquivSym(null);
+                }
+                else if (frameInfo->simd128I4Syms->TestEmpty() && frameInfo->simd128I4Syms->Test(argSym->m_id))
+                {
+                    argSym = argSym->GetSimd128I4EquivSym(null);
+                }
                 else
                 {
                     Assert(globOptData.liveVarSyms->Test(argSym->m_id));
@@ -601,6 +614,12 @@ void GlobOpt::RecordInlineeFrameInfo(IR::Instr* inlineeEnd)
     frameInfo->intSyms = nullptr;
     JitAdelete(this->alloc, frameInfo->floatSyms);
     frameInfo->floatSyms = nullptr;
+
+    // SIMD_JS
+    JitAdelete(this->alloc, frameInfo->simd128F4Syms);
+    frameInfo->simd128F4Syms = nullptr;
+    JitAdelete(this->alloc, frameInfo->simd128I4Syms);
+    frameInfo->simd128I4Syms = nullptr;
 
     frameInfo->isRecorded = true;
 }
@@ -675,6 +694,9 @@ GlobOpt::FillBailOutInfo(BasicBlock *block, BailOutInfo * bailOutInfo)
 
     bailOutInfo->liveVarSyms = block->globOptData.liveVarSyms->CopyNew(this->func->m_alloc);
     bailOutInfo->liveFloat64Syms = block->globOptData.liveFloat64Syms->CopyNew(this->func->m_alloc);
+    // SIMD_JS
+    bailOutInfo->liveSimd128F4Syms = block->globOptData.liveSimd128F4Syms->CopyNew(this->func->m_alloc);
+    bailOutInfo->liveSimd128I4Syms = block->globOptData.liveSimd128I4Syms->CopyNew(this->func->m_alloc);
 
     // The live int32 syms in the bailout info are only the syms resulting from lossless conversion to int. If the int32 value
     // was created from a lossy conversion to int, the original var value cannot be rematerialized from the int32 value. So, the

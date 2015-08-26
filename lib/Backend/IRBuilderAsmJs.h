@@ -40,9 +40,9 @@ private:
     bool                    IsLoopBody()const;
     uint                    GetLoopBodyExitInstrOffset() const;
     IR::SymOpnd *           BuildLoopBodySlotOpnd(SymID symId);
-    IR::SymOpnd *           BuildAsmJsLoopBodySlotOpnd(SymID symId);
+    IR::SymOpnd *           BuildAsmJsLoopBodySlotOpnd(SymID symId, IRType opndType);
     void                    EnsureLoopBodyLoadSlot(SymID symId);
-    void                    EnsureLoopBodyAsmJsLoadSlot(SymID symId);
+    void                    EnsureLoopBodyAsmJsLoadSlot(SymID symId, IRType type);
     bool                    IsLoopBodyOuterOffset(uint offset) const;
     bool                    IsLoopBodyReturnIPInstr(IR::Instr * instr) const;
     IR::Opnd *              InsertLoopBodyReturnIPInstr(uint targetOffset, uint offset);
@@ -50,7 +50,8 @@ private:
     IR::RegOpnd *           BuildDstOpnd(Js::RegSlot dstRegSlot, IRType type);
     IR::RegOpnd *           BuildSrcOpnd(Js::RegSlot srcRegSlot, IRType type);
     IR::RegOpnd *           BuildIntConstOpnd(Js::RegSlot regSlot);
-    SymID                   BuildSrcStackSymID(Js::RegSlot regSlot);
+    SymID                   BuildSrcStackSymID(Js::RegSlot regSlot, IRType type = IRType::TyVar);
+    
     IR::SymOpnd *           BuildFieldOpnd(Js::RegSlot reg, Js::PropertyId propertyId, Js::PropertyIdIndexType propertyIdIndex, PropertyKind propertyKind, IRType type);
     PropertySym *           BuildFieldSym(Js::RegSlot reg, Js::PropertyId propertyId, Js::PropertyIdIndexType propertyIdIndex, PropertyKind propertyKind);
     uint                    AddStatementBoundary(uint statementIndex, uint offset);

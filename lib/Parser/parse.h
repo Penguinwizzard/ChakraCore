@@ -72,6 +72,7 @@ enum
     koplCmp,    // < <= > >=
     koplShf,    // << >> >>>
     koplAdd,    // + -
+    koplExpo,   // **
     koplMul,    // * / %
     koplUni,    // unary operators
     koplLim
@@ -781,7 +782,7 @@ private:
     void CheckStrictFormalParameters();
     void AddArgumentsNodeToVars(ParseNodePtr pnodeFnc);
     void UpdateOrCheckForDuplicateInFormals(IdentPtr pid, SList<IdentPtr> *formals);
-    void TransformAsyncFncDeclAST(ParseNodePtr *pnodeBody);
+    void TransformAsyncFncDeclAST(ParseNodePtr *pnodeBody, bool fLambda);
     ParseNodePtr CreateAsyncSpawnGenerator();
 
     LPCOLESTR GetFunctionName(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint);

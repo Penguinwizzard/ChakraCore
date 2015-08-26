@@ -763,6 +763,22 @@ StringCommon:
             return JavascriptNumber::NewInlined( Divide_Helper(aLeft, aRight, scriptContext), scriptContext );
         }
 
+        Var JavascriptMath::Exponentiation_Full(Var aLeft, Var aRight, ScriptContext *scriptContext)
+        {
+            double x = JavascriptConversion::ToNumber(aLeft, scriptContext);
+            double y = JavascriptConversion::ToNumber(aRight, scriptContext);
+            return JavascriptNumber::ToVarNoCheck(Math::Pow(x, y), scriptContext);
+        }
+
+        Var JavascriptMath::Exponentiation_InPlace(Var aLeft, Var aRight, ScriptContext* scriptContext, __out JavascriptNumber* result)
+        {
+            // The IEEE 754 floating point spec ensures that NaNs are preserved in all operations
+            double dblLeft = JavascriptConversion::ToNumber(aLeft, scriptContext);
+            double dblRight = JavascriptConversion::ToNumber(aRight, scriptContext);
+
+            return JavascriptNumber::InPlaceNew(Math::Pow(dblLeft, dblRight), scriptContext, result);
+        }
+
         Var JavascriptMath::Multiply_Full(Var aLeft, Var aRight, ScriptContext* scriptContext)
         {
             Assert(aLeft != null);

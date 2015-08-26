@@ -111,27 +111,40 @@ public:
     bool            IsIntConst() const;
     bool            IsTaggableIntConst() const;
     bool            IsFloatConst() const;
-#ifdef SIMD_JS_ENABLED
+// SIMD_JS
     bool            IsSimd128Const() const;
-#endif
+
     void            SetIsConst();
     void            SetIsIntConst(IntConstType value);
     void            SetIsFloatConst();
-#ifdef SIMD_JS_ENABLED
+// SIMD_JS
     void            SetIsSimd128Const();
-#endif
+
     intptr_t        GetLiteralConstValue_PostGlobOpt() const;
     IR::Opnd *      GetConstOpnd() const;
     BailoutConstantValue GetConstValueForBailout() const;
+
+    // SIMD_JS
+    StackSym *      GetSimd128EquivSym(IRType type, Func *func);
+    StackSym *      GetSimd128F4EquivSym(Func *func);
+    StackSym *      GetSimd128I4EquivSym(Func *func);
+    StackSym *      GetSimd128D2EquivSym(Func *func);
+    bool            IsSimd128() const { return IRType_IsSimd128(this->GetType()); }
+
+    bool            IsSimd128F4() const { return this->GetType() == TySimd128F4; }
+    bool            IsSimd128I4() const { return this->GetType() == TySimd128I4; }
+    bool            IsSimd128D2() const { return this->GetType() == TySimd128D2; }
+
+
 
     StackSym *      GetFloat64EquivSym(Func *func);
     bool            IsFloat64() const { return this->GetType() == TyFloat64; }
     StackSym *      GetInt32EquivSym(Func *func);
     bool            IsInt32() const { return this->GetType() == TyInt32; }
     bool            IsUInt32() const { return this->GetType() == TyUint32; }
-#ifdef SIMD_JS_ENABLED
-    bool            IsSimd128() const { return this->GetType() == TySimd128;  }
-#endif
+
+    
+
     StackSym *      GetVarEquivSym(Func *func);
     bool            IsVar() const { return this->GetType() == TyVar; }
     bool            IsTypeSpec() const { return this->m_isTypeSpec; }

@@ -5973,7 +5973,12 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
         OUTPUT_STATS(Js::ParsePhase, L"  Total ThreadContext source size %d\n", this->GetThreadContext()->GetSourceSize());
 
 #ifdef ENABLE_BASIC_TELEMETRY
-        this->telemetry->OutputTelemetry();
+        if (this->telemetry != nullptr)
+        {
+            // If an exception (e.g. out-of-memory) happens during InitializeAllocations then `this->telemetry` will be null and the Close method will still be called, hence this guard expression.
+            this->telemetry->OutputTelemetry();
+        }
+            
 #endif
 
         Output::Flush();

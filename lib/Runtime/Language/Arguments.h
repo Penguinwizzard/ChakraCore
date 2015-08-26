@@ -26,6 +26,7 @@ namespace Js
     {
     public:
         Arguments(CallInfo callInfo, Var *values) : Info(callInfo), Values(values) {}
+        Arguments(VirtualTableInfoCtorEnum v) : Info(v) {}
         inline Var operator [](int idxArg) { return const_cast<Var>(static_cast<const Arguments&>(*this)[idxArg]); }
         inline const Var operator [](int idxArg) const;
         CallInfo Info;

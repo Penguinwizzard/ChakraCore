@@ -21,7 +21,12 @@ IRTYPE(Float32,   Float,     4,        2,   b(4),        1,        f32)
 IRTYPE(Float64,   Float,     8,        3,   b(8),        1,        f64)
 
 #ifdef SIMD_JS_ENABLED
-IRTYPE(Simd128,   Simd,     16,        4,   b(16),       1,        simd128)
+//IRTYPE(Simd128, Simd, 16, 4, b(16), 1, simd128)
+IRTYPE(Simd128F4,   Simd,     16,        4,   b(16),       1,        simd128)
+IRTYPE(Simd128I4,   Simd,     16,        4,   b(16),       1,        simd128)
+IRTYPE(Simd128D2,   Simd,     16,        4,   b(16),       1,        simd128)
+
+
 #endif
 //
 // review: MachPtr->Align is incorrect on AMD64. We dont use this value today (6/29/09) so its fine

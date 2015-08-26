@@ -43,6 +43,13 @@ BAIL_OUT_KIND(LazyBailOut,                          0)
 BAIL_OUT_KIND(BailOutOnFailedHoistedLoopCountBasedBoundCheck, 0)
 BAIL_OUT_KIND(BailOutForGeneratorYield,             0)
 BAIL_OUT_KIND(BailOutOnException,                   0)
+
+// SIMD_JS
+BAIL_OUT_KIND(BailOutSimd128F4Only,                 0)
+BAIL_OUT_KIND(BailOutSimd128I4Only,                 0)
+BAIL_OUT_KIND(BailOutSimd128D2Only,                 0)
+BAIL_OUT_KIND(BailOutNoSimdTypeSpec,                0)
+
 BAIL_OUT_KIND(BailOutKindEnd,                       0)
 
 // One bailout instruction can have multiple of the following reasons for bailout combined with any of the above. These tell

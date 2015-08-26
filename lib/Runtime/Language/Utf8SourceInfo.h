@@ -6,12 +6,6 @@
 
 namespace Js
 {
-    // An internal interface for referring the debugdocument
-    struct IScriptDebugDocument
-    {
-        virtual void CloseDocument() = 0;
-    };
-
     struct Utf8SourceInfo : public FinalizableObject
     {
         // TODO: Change this to LeafValueDictionary
@@ -54,7 +48,7 @@ namespace Js
         // For Hybrid debugging purposes we need to have the source mapped in because jscript9 may be in a frozen state when the source would be needed.
         void SetInDebugMode(bool inDebugMode)
         {
-            AssertMsg(this->sourceHolder != null, "We have no source holder.");
+            AssertMsg(this->sourceHolder != nullptr, "We have no source holder.");
             if (!this->sourceHolder->IsDeferrable())
             {
                 //The source should be already loaded;
@@ -179,7 +173,7 @@ namespace Js
         template <typename TDelegate>
         Js::FunctionBody* FindFunction(TDelegate predicate) const
         {
-            Js::FunctionBody* matchedFunctionBody = null;
+            Js::FunctionBody* matchedFunctionBody = nullptr;
 
             // Function body collection could be null if we OOMed 
             // during byte code generation but the source info didn't get
@@ -205,59 +199,24 @@ namespace Js
 
         void SetTridentBuffer(BYTE * pcszCode);
 
-        bool HasScriptDebugDocument() const
+        bool HasDebugDocument() const
         {
-            return m_debugDocument != NULL;
+            return m_debugDocument != nullptr;
         }
 
-        void SetScriptDebugDocument(IScriptDebugDocument * document)
+        void SetDebugDocument(DebugDocument * document)
         {
-            Assert(!HasScriptDebugDocument());
+            Assert(!HasDebugDocument());
             m_debugDocument = document;
         }
 
-        IScriptDebugDocument* GetScriptDebugDocument() const
+        DebugDocument* GetDebugDocument() const
         {
-            Assert(HasScriptDebugDocument());
+            Assert(HasDebugDocument());
             return m_debugDocument;
         }
 
-        void ClearDebugDocument(bool close = true)
-        {
-            if (m_debugDocument)
-            {
-                if (close)
-                {
-                    m_debugDocument->CloseDocument();
-                }
-
-                m_debugDocument = NULL;
-            }
-        }
-
-        bool HasDocumentText() const
-        {
-            return m_documentText != NULL;
-        }
-
-        void SetDocumentText(void* document)
-        {
-            Assert(!HasDocumentText());
-            m_documentText = document;
-        }
-
-        void* GetDocumentText()
-        {
-            Assert(HasDocumentText());
-            return m_documentText;
-        }
-
-        void QueryDocumentText(IDebugDocumentText** ppDebugDocumentText)
-        {
-            Assert(HasDocumentText());
-            *ppDebugDocumentText = reinterpret_cast<IDebugDocumentText*>(m_documentText);
-            (*ppDebugDocumentText)->AddRef();
-        }
+        void ClearDebugDocument(bool close = true);
 
         void SetIsCesu8(bool isCesu8)
         {
@@ -304,7 +263,7 @@ namespace Js
 
         static bool StaticEquals(__in Utf8SourceInfo* s1, __in Utf8SourceInfo* s2)
         {
-            if (s1 == null || s2 == null) return false;
+            if (s1 == nullptr || s2 == nullptr) return false;
 
             //If the source holders have the same pointer, we are expecting the sources to be equal
             return (s1 == s2) || s1->GetSourceHolder()->Equals(s2->GetSourceHolder());
@@ -399,8 +358,8 @@ namespace Js
         
         FunctionBodyDictionary* functionBodyDictionary;
         DeferredFunctionsDictionary* m_deferredFunctionsDictionary;
-        void* m_documentText;    // A unique document ID, which debugger uses for the source file matching.
-        IScriptDebugDocument *m_debugDocument;
+
+        DebugDocument* m_debugDocument;
 
         const SRCINFO* m_srcInfo;
         DWORD_PTR m_secondaryHostSourceContext;

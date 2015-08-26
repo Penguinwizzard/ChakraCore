@@ -4189,10 +4189,15 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
             }
         }
 
-        if ((!buildAST || isTopLevelDeferredFunc) && fAsync)
+        if (fAsync)
         {
-            // We increment m_nextFunctionId when there is an Async function to counterbalance the functionId because of the added generator to the AST with an async function that we use to keep deferred parsing in sync with non-deferred parsing
-            (*m_nextFunctionId)++;
+            if (!buildAST || isTopLevelDeferredFunc)
+            {
+                // We increment m_nextFunctionId when there is an Async function to counterbalance the functionId because of the added generator to the AST with an async function that we use to keep deferred parsing in sync with non-deferred parsing
+                (*m_nextFunctionId)++;
+            }
+            // Same than before, we increment the nestedCount because we will have a Generator inside any async function.
+            pnodeFnc->sxFnc.nestedCount++;
         }
 
         if (isTopLevelDeferredFunc || (m_InAsmMode && m_deferAsmJs))
@@ -4252,7 +4257,14 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
 
                 if (m_token.tk != tkLCurly && fLambda)
                 {
-                    ParseExpressionLambdaBody<true>(pnodeFnc);
+                    if (fAsync)
+                    {
+                        TransformAsyncFncDeclAST(&pnodeFnc, true);
+                    }
+                    else
+                    {
+                        ParseExpressionLambdaBody<true>(pnodeFnc);
+                    }
                     *pNeedScanRCurly = false;
                 }
                 else
@@ -4935,10 +4947,11 @@ bool Parser::ParseFncNames(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncParent, u
         pnodeFnc->sxFnc.pnodeName = nullptr;
     }
 
-    if (m_token.tk != tkID || flags & fFncNoName)
+    if ((m_token.tk != tkID || flags & fFncNoName)
+        && (IsStrictMode() || pnodeFnc->sxFnc.IsGenerator() || m_token.tk != tkYIELD || fDeclaration)) // Function expressions can have the name yield even inside generator functions
     {
         if (fDeclaration  ||
-            ( m_token.IsReservedWord()) )  // For example:  var x = (function break(){});
+            m_token.IsReservedWord())  // For example:  var x = (function break(){});
         {
             IdentifierExpectedError(m_token);
         }
@@ -4948,7 +4961,7 @@ bool Parser::ParseFncNames(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncParent, u
     ichMinNames = m_pscan->IchMinTok();
 
 
-    Assert(m_token.tk == tkID);
+    Assert(m_token.tk == tkID || (m_token.tk == tkYIELD && !fDeclaration));
 
     if (IsStrictMode())
     {
@@ -5668,7 +5681,7 @@ void Parser::FinishFncDecl(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint, ParseNode
     ChkCurTok(tkLCurly, ERRnoLcurly);
     if (pnodeFnc->sxFnc.IsAsync())
     {
-        TransformAsyncFncDeclAST(&pnodeFnc->sxFnc.pnodeBody);
+        TransformAsyncFncDeclAST(&pnodeFnc->sxFnc.pnodeBody, false);
     }
     else
     {
@@ -6398,7 +6411,7 @@ ParseNodePtr Parser::ParseStringTemplateDecl(ParseNodePtr pnodeTagFnc)
     return pnodeStringTemplate;
 }
 
-void Parser::TransformAsyncFncDeclAST(ParseNodePtr *pnodeBody)
+void Parser::TransformAsyncFncDeclAST(ParseNodePtr *pnodeBody, bool fLambda)
 {
     StmtNest *pstmtSave;
 
@@ -6406,9 +6419,9 @@ void Parser::TransformAsyncFncDeclAST(ParseNodePtr *pnodeBody)
     ParseNodePtr pnodeAsyncSpawn;
     ParseNodePtr pnodeFncGenerator = nullptr;
     ParseNodePtr pnodeFncSave = nullptr;
+    ParseNodePtr pnodeDeferredFncSave = nullptr;
     ParseNodePtr pnodeInnerBlock = nullptr;
     ParseNodePtr pnodeBlock = nullptr;
-    ParseNodePtr *ppnodeVarSave = nullptr;
     ParseNodePtr *lastNodeRef = nullptr;
     ParseNodePtr *ppnodeScopeSave = nullptr;
     ParseNodePtr *ppnodeExprScopeSave = nullptr;
@@ -6419,22 +6432,18 @@ void Parser::TransformAsyncFncDeclAST(ParseNodePtr *pnodeBody)
     uint tryCatchOrFinallyDepthSave = this->m_tryCatchOrFinallyDepth;
     this->m_tryCatchOrFinallyDepth = 0;
 
-    uint *pnestedCountSave = m_pnestedCount;
-    if (m_pnestedCount)
-    {
-        (*m_pnestedCount)++;
-    }
-
     uint scopeCountNoAstSave = m_scopeCountNoAst;
     m_scopeCountNoAst = 0;
 
     long* pAstSizeSave = m_pCurrentAstSize;
 
-    pnodeFncSave = m_currentNodeFunc;
-    ppnodeVarSave = m_ppnodeVar;
+    pnodeFncSave = m_currentNodeFunc; 
+    pnodeDeferredFncSave = m_currentNodeDeferredFunc;
 
     pnodeFncGenerator = CreateAsyncSpawnGenerator();
 
+    m_currentNodeDeferredFunc = pnodeFncGenerator;
+    m_inDeferredNestedFunc = true;
     pstmtSave = m_pstmtCur;
     SetCurrentStatement(nullptr);
 
@@ -6475,9 +6484,18 @@ void Parser::TransformAsyncFncDeclAST(ParseNodePtr *pnodeBody)
     }
 
     pnodeFncGenerator->sxFnc.pnodeBody = nullptr;
-        // Parse the function body
+    if (fLambda)
+    {                         
+        // Parse and set the function body        
+        ParseExpressionLambdaBody<true>(*pnodeBody);
+        AddToNodeList(&pnodeFncGenerator->sxFnc.pnodeBody, &lastNodeRef, (*pnodeBody)->sxFnc.pnodeScopes->sxBlock.pnodeStmt);
+    }
+    else
+    {
+        // Parse the function body  
         ParseStmtList<true>(&pnodeFncGenerator->sxFnc.pnodeBody, &lastNodeRef, SM_OnFunctionCode, true);
         ChkCurTokNoScan(tkRCurly, ERRnoRcurly);
+    }
     AddToNodeList(&pnodeFncGenerator->sxFnc.pnodeBody, &lastNodeRef, CreateNodeWithScanner<knopEndCode>());
     lastNodeRef = NULL;
 
@@ -6509,21 +6527,17 @@ void Parser::TransformAsyncFncDeclAST(ParseNodePtr *pnodeBody)
 
     m_pscan->SetYieldIsKeyword(fPreviousYieldIsKeyword);
 
-    *m_ppnodeVar = nullptr;
-    m_ppnodeVar = ppnodeVarSave;
-
     Assert(pnodeFncGenerator == m_currentNodeFunc);
 
     m_currentNodeFunc = pnodeFncSave;
+    m_currentNodeDeferredFunc = pnodeDeferredFncSave;
     m_pCurrentAstSize = pAstSizeSave;
 
-    m_pnestedCount = pnestedCountSave;
     m_inDeferredNestedFunc = false;
 
     m_scopeCountNoAst = scopeCountNoAstSave;
 
     this->m_tryCatchOrFinallyDepth = tryCatchOrFinallyDepthSave;
-
 
     // Create the call : spawn(function*() {}, this)   
     pnodeAsyncSpawn = CreateBinNode(knopAsyncSpawn, pnodeFncGenerator, CreateNodeWithScanner<knopThis>());
@@ -6531,9 +6545,17 @@ void Parser::TransformAsyncFncDeclAST(ParseNodePtr *pnodeBody)
     // Create the return : return spawn(function*() {}, this) 
     pnodeReturn = CreateNodeWithScanner<knopReturn>();
     pnodeReturn->sxReturn.pnodeExpr = pnodeAsyncSpawn;
+    if (fLambda)
+    {
+        (*pnodeBody)->sxFnc.pnodeScopes->sxBlock.pnodeStmt = nullptr;
+        AddToNodeList(&(*pnodeBody)->sxFnc.pnodeScopes->sxBlock.pnodeStmt, &lastNodeRef, pnodeReturn);
+    }
+    else
+    {
         *pnodeBody = nullptr;
         AddToNodeList(pnodeBody, &lastNodeRef, pnodeReturn);
         AddToNodeList(pnodeBody, &lastNodeRef, CreateNodeWithScanner<knopEndCode>());
+    }
     lastNodeRef = NULL;
 }
 
@@ -6910,6 +6932,11 @@ ParseNodePtr Parser::ParseExpr(int oplMin, BOOL *pfCanAssign, BOOL fAllowIn, BOO
                 // binding operator, be it unary or binary.
                 Error(ERRsyntax);
             }
+            if (m_currentNodeFunc->sxFnc.IsGenerator()
+                && m_currentBlockInfo->pnodeBlock->sxBlock.blockType == PnodeBlockType::Parameter)
+            {
+                Error(ERRsyntax);
+            }
         }
         else if (nop == knopAwait)
         {
@@ -7173,6 +7200,15 @@ ParseNodePtr Parser::ParseExpr(int oplMin, BOOL *pfCanAssign, BOOL fAllowIn, BOO
                 Error(ERRsyntax);
                 // No recovery necessary since this is a semantic, not structural, error.
             }
+        }
+        else if (opl == koplExpo)
+        {
+            // ** operator is right associative
+            if (opl < oplMin)
+            {
+                break;
+            }
+
         }
         else if (opl <= oplMin && m_token.tk != tkDArrow)
         {
@@ -10307,6 +10343,7 @@ ParseNode* Parser::CopyPnode(ParseNode *pnode) {
       //PTNODE(knopAdd        , "+"            ,Add     ,Bin  ,fnopBin)
       //PTNODE(knopSub        , "-"            ,Sub     ,Bin  ,fnopBin)
       //PTNODE(knopMul        , "*"            ,Mul     ,Bin  ,fnopBin)
+      //PTNODE(knopExpo       , "**"           ,Expo     ,Bin  ,fnopBin)
       //PTNODE(knopDiv        , "/"            ,Div     ,Bin  ,fnopBin)
       //PTNODE(knopMod        , "%"            ,Mod     ,Bin  ,fnopBin)
       //PTNODE(knopOr         , "|"            ,BitOr   ,Bin  ,fnopBin)
@@ -10331,6 +10368,7 @@ ParseNode* Parser::CopyPnode(ParseNode *pnode) {
   case knopAdd:
   case knopSub:
   case knopMul:
+  case knopExpo:
   case knopDiv:
   case knopMod:
   case knopOr:
@@ -10363,6 +10401,8 @@ ParseNode* Parser::CopyPnode(ParseNode *pnode) {
       //PTNODE(knopAsgMul     , "*="        ,Mul     ,Bin  ,fnopBin|fnopAsg)
   case knopAsgMul:
       //PTNODE(knopAsgDiv     , "/="        ,Div     ,Bin  ,fnopBin|fnopAsg)
+  case knopAsgExpo:
+      //PTNODE(knopAsgExpo    , "**="       ,Expo    ,Bin  ,fnopBin|fnopAsg)
   case knopAsgDiv:
       //PTNODE(knopAsgMod     , "%="        ,Mod     ,Bin  ,fnopBin|fnopAsg)
   case knopAsgMod:
@@ -11362,6 +11402,14 @@ void PrintPnodeWIndent(ParseNode *pnode,int indentAmt) {
       PrintPnodeWIndent(pnode->sxBin.pnode2,indentAmt+INDENT_SIZE);
       break;
       //PTNODE(knopDiv        , "/"            ,Div     ,Bin  ,fnopBin)
+  case knopExpo:
+      Indent(indentAmt);
+      Output::Print(L"**\n");
+      PrintPnodeWIndent(pnode->sxBin.pnode1, indentAmt + INDENT_SIZE);
+      PrintPnodeWIndent(pnode->sxBin.pnode2, indentAmt + INDENT_SIZE);
+      break;
+      //PTNODE(knopExpo        , "**"            ,Expo     ,Bin  ,fnopBin)
+
   case knopDiv:
       Indent(indentAmt);
       Output::Print(L"/\n");
@@ -11573,6 +11621,14 @@ void PrintPnodeWIndent(ParseNode *pnode,int indentAmt) {
       PrintPnodeWIndent(pnode->sxBin.pnode2,indentAmt+INDENT_SIZE);
       break;
       //PTNODE(knopAsgDiv     , "/="        ,Div     ,Bin  ,fnopBin|fnopAsg)
+  case knopAsgExpo:
+      Indent(indentAmt);
+      Output::Print(L"**=\n");
+      PrintPnodeWIndent(pnode->sxBin.pnode1, indentAmt + INDENT_SIZE);
+      PrintPnodeWIndent(pnode->sxBin.pnode2, indentAmt + INDENT_SIZE);
+      break;
+      //PTNODE(knopAsgExpo     , "**="       ,Expo     ,Bin  ,fnopBin|fnopAsg)
+
   case knopAsgDiv:
       Indent(indentAmt);
       Output::Print(L"/=\n");

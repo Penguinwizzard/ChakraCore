@@ -299,6 +299,7 @@ public:
     void EmitInternalScopedSlotStore(FuncInfo *funcInfo, Js::RegSlot slot, Js::RegSlot symbolRegister);
     void EmitPostSuperCall(FuncInfo *funcInfo, ParseNode* pnode);
     void EmitScopeSlotLoadThis(FuncInfo *funcInfo, Js::RegSlot regLoc, bool chkUndecl = true);
+    void EmitScopeSlotStoreThis(FuncInfo *funcInfo, Js::RegSlot regLoc, bool chkUndecl = false);
     void EmitClassConstructorEndCode(FuncInfo *funcInfo);
     void EmitBaseClassConstructorThisObject(FuncInfo *funcInfo);
 

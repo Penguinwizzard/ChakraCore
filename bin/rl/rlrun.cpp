@@ -135,9 +135,9 @@ void
     char buf[BUFFER_SIZE];
     char* p;
 
-    errno_t err = fopen_s(&fp, path, "r");
-    if (err != 0 || fp == NULL) {
-        LogError("ERROR: couldn't open file to dump it");
+    fp = fopen_unsafe(path, "r");
+    if (fp == NULL) {
+        LogError("ERROR: DumpFileToLog couldn't open file '%s' with error '%s'", path, strerror_unsafe(errno));
     }
     else {
         int fd = _fileno(fp);
@@ -253,9 +253,9 @@ BOOL
 
     // Check to see if the exe ran at all.
 
-    errno_t err = fopen_s(&fp, filename, "r");
-    if (err != 0 || fp == NULL) {
-        LogOut("ERROR: Test failed to run (%s):", optReportBuf);
+    fp = fopen_unsafe(filename, "r");
+    if (fp == NULL) {
+        LogOut("ERROR: Test failed to run. Unable to open file '%s', error '%s' (%s):", filename, strerror_unsafe(errno), optReportBuf);
         LogOut("    %s", cmdbuf);
         return FALSE;
     }
@@ -977,7 +977,7 @@ BOOL
     // See if the compile succeeded by checking for the existence
     // of the executable.
 
-    if ((rc != 0) || GetFileAttributes(fullexebuf) == 0xFFFFFFFF) {
+    if ((rc != 0) || GetFileAttributes(fullexebuf) == INVALID_FILE_ATTRIBUTES) {
         LogOut("ERROR: Test failed to compile or link (%s):", optReportBuf);
         LogOut("    %s", cmdbuf);
         fFailed = TRUE;
@@ -1039,8 +1039,8 @@ BOOL
 
         // Check to see if the exe ran at all.
 
-        if (GetFileAttributes(tmp_file1) == 0xFFFFFFFF) {
-            LogOut("ERROR: Test failed to run (%s):", optReportBuf);
+        if (GetFileAttributes(tmp_file1) == INVALID_FILE_ATTRIBUTES) {
+            LogOut("ERROR: Test failed to run. Couldn't find file '%s' (%s):", tmp_file1, optReportBuf);
             LogOut("    %s", cmdbuf);
             fFailed = TRUE;
         }
@@ -1056,13 +1056,12 @@ BOOL
                 sprintf_s(buf, "spiff -m -n -s \"command spiff\" %s %s > %s",
                     tmp_file1, full, tmp_file2);
                 spiff_ret = ExecuteCommand(pDir->GetDirectoryPath(), buf);
-                if (GetFileAttributes(tmp_file2) == 0xFFFFFFFF) {
+                if (GetFileAttributes(tmp_file2) == INVALID_FILE_ATTRIBUTES) {
                     LogError("ERROR: spiff failed to run");
                     fFailed = TRUE;
                 }
                 else if (spiff_ret) {
-                    LogOut("ERROR: Test failed to run correctly (%s):",
-                        optReportBuf);
+                    LogOut("ERROR: Test failed to run correctly. spiff returned %d (%s):", spiff_ret, optReportBuf);
                     LogOut("    %s", cmdbuf);
                     fFailed = TRUE;
                 }
@@ -1085,7 +1084,7 @@ logFailure:
             sprintf_s(failDir, "%s\\fail.%s",
                 pDir->GetDirectoryPath(), optReportBuf);
 
-            if ((GetFileAttributes(failDir) == 0xFFFFFFFF) &&
+            if ((GetFileAttributes(failDir) == INVALID_FILE_ATTRIBUTES) &&
                 !CreateDirectory(failDir, NULL)) {
                     Message("ERROR: Couldn't create directory '%s'", failDir);
             }
@@ -1328,7 +1327,7 @@ int
 
         strcat_s(full, p);
 
-        if (GetFileAttributes(full) == 0xFFFFFFFF) {
+        if (GetFileAttributes(full) == INVALID_FILE_ATTRIBUTES) {
             LogError("ERROR: '%s' does not exist", pFile->string);
             return -1;
         }

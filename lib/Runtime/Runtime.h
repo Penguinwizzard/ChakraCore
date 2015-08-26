@@ -40,6 +40,7 @@ namespace Js
     //    
     typedef int32 MessageId;
     /* enum */ struct PropertyIds;
+    class DebugDocument;
     struct Utf8SourceInfo;
     struct CallInfo;
     struct InlineeCallInfo;
@@ -206,7 +207,6 @@ namespace Js
     class EntryPointInfo;
     class PolymorphicInlineCacheInfo;
     class PropertyGuard;
-
 
     // asm.js
     namespace ArrayBufferView
@@ -584,6 +584,8 @@ enum tagDEBUG_EVENT_INFO_TYPE
 
 #include "Debug\DebuggingFlags.h"
 #include "Debug\DiagProbe.h"
+#include "Debug\BreakpointProbe.h"
+#include "Debug\DebugDocument.h"
 #include "Debug\DebugManager.h"
 #include "Debug\ProbeContainer.h"
 #include "Debug\DebugContext.h"

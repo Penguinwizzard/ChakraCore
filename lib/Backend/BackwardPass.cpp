@@ -1615,6 +1615,7 @@ BackwardPass::ProcessBailOutCopyProps(BailOutInfo * bailOutInfo, BVSparse<JitAre
             // expensive ToVars that can more easily be eliminated due to being dead stores
             StackSym * int32StackSym = null;
             StackSym * float64StackSym = null;
+            StackSym * simd128StackSym = null;
             if (bailOutInfo->liveLosslessInt32Syms->Test(symId))
             {
                 // Var version of the sym is not live, use the int32 version
@@ -1626,6 +1627,15 @@ BackwardPass::ProcessBailOutCopyProps(BailOutInfo * bailOutInfo, BVSparse<JitAre
                 // Var/int32 version of the sym is not live, use the float64 version
                 float64StackSym = stackSym->GetFloat64EquivSym(null);
                 Assert(float64StackSym);
+            }
+            // SIMD_JS
+            else if (bailOutInfo->liveSimd128F4Syms->Test(symId))
+            {
+                simd128StackSym = stackSym->GetSimd128F4EquivSym(null);
+            }
+            else if (bailOutInfo->liveSimd128I4Syms->Test(symId))
+            {
+                simd128StackSym = stackSym->GetSimd128I4EquivSym(null);
             }
             else
             {
@@ -1655,6 +1665,13 @@ BackwardPass::ProcessBailOutCopyProps(BailOutInfo * bailOutInfo, BVSparse<JitAre
                 usedCopyPropSyms->PrependNode(allocator, copyPropSyms.Key(), float64StackSym);
                 iter.RemoveCurrent(allocator);
                 upwardExposedUses->Set(float64StackSym->m_id);
+            }
+            // SIMD_JS
+            else if (simd128StackSym != null)
+            {
+                usedCopyPropSyms->PrependNode(allocator, copyPropSyms.Key(), simd128StackSym);
+                iter.RemoveCurrent(allocator);
+                upwardExposedUses->Set(simd128StackSym->m_id);
             }
             else
             {
@@ -2174,10 +2191,17 @@ BackwardPass::ProcessBailOutInfo(IR::Instr * instr, BailOutInfo * bailOutInfo)
         // ToVars that can more easily be eliminated due to being dead stores.
 
 #if DBG
+        // SIMD_JS
+        // Simd128 syms should be live in at most one form
+        tempBv->And(bailOutInfo->liveSimd128F4Syms, bailOutInfo->liveSimd128I4Syms);
+        Assert(tempBv->IsEmpty());
+
         // Verify that all syms to restore are live in some fashion
         tempBv->Minus(byteCodeUpwardExposedUsed, bailOutInfo->liveVarSyms);
         tempBv->Minus(bailOutInfo->liveLosslessInt32Syms);
         tempBv->Minus(bailOutInfo->liveFloat64Syms);
+        tempBv->Minus(bailOutInfo->liveSimd128F4Syms);
+        tempBv->Minus(bailOutInfo->liveSimd128I4Syms);
         Assert(tempBv->IsEmpty());
 #endif
 
@@ -2245,6 +2269,28 @@ BackwardPass::ProcessBailOutInfo(IR::Instr * instr, BailOutInfo * bailOutInfo)
                 // ensure that the float value can be precicely coerced back to the original Var value by requiring that it is
                 // specialized using BailOutNumberOnly.
                 float64StackSym->m_requiresBailOnNotNumber = true;
+            }
+            NEXT_BITSET_IN_SPARSEBV;
+
+            // SIMD_JS
+            tempBv->Or(bailOutInfo->liveSimd128F4Syms, bailOutInfo->liveSimd128I4Syms);
+            tempBv->And(byteCodeUpwardExposedUsed);
+            byteCodeUpwardExposedUsed->Minus(tempBv);
+            FOREACH_BITSET_IN_SPARSEBV(symId, tempBv)
+            {
+                StackSym * stackSym = this->func->m_symTable->FindStackSym(symId);
+                Assert(stackSym->GetType() == TyVar);
+                StackSym * simd128Sym = null;
+                if (bailOutInfo->liveSimd128F4Syms->Test(symId))
+                {
+                    simd128Sym = stackSym->GetSimd128F4EquivSym(null);
+                }
+                else
+                {
+                    Assert(bailOutInfo->liveSimd128I4Syms->Test(symId));
+                    simd128Sym = stackSym->GetSimd128I4EquivSym(null);
+                }
+                byteCodeUpwardExposedUsed->Set(simd128Sym->m_id);
             }
             NEXT_BITSET_IN_SPARSEBV;
         }
@@ -5183,6 +5229,7 @@ BackwardPass::TrackIntUsage(IR::Instr *const instr)
                 SetNegativeZeroMatters(instr->GetSrc2());
                 break;
 
+            case Js::OpCode::Expo_A:
             case Js::OpCode::InlineMathPow:
                 // Negative zero matters for src1
                 //   Pow( 0, <neg>) is  Infinity

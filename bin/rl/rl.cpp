@@ -176,7 +176,7 @@
 // 4. The primary thread never changes the current directory, to avoid
 //    synchronization issues.
 //
-// 5. Any file access (fopen_s, etc.) must use full pathnames. The only place
+// 5. Any file access (fopen_unsafe, etc.) must use full pathnames. The only place
 //    relative paths may be used is in commands that are executed via
 //    ExecuteCommand(), which does a _chdir before creating a new process to
 //    execute the command.
@@ -431,12 +431,27 @@ __declspec(thread) COutputBuffer* ThreadRes;    // results log file
 __declspec(thread) char *cmpbuf1 = NULL;
 __declspec(thread) char *cmpbuf2 = NULL;
 
-// Allow usage of getenv() without disabling all deprecated CRT API warnings
+// Allow usage of select deprecated CRT APIs without disabling all deprecated CRT API warnings
 #pragma warning (push)
 #pragma warning (disable:4996)
 char * getenv_unsafe(const char * varName)
 {
+   // Use getenv instead of getenv_s or _dupenv_s to simplify calls to the API.
    return getenv(varName);
+}
+
+FILE * fopen_unsafe(const char * filename, const char * mode)
+{
+   // Using fopen_s leads to EACCES error being returned occassionally, even when contentious
+   // fopen/fclose pairs are wrapped in a critical section.  Unclear why this is happening.
+   // Use deprecated fopen instead.
+   _set_errno(0);
+   return fopen(filename, mode);
+}
+
+char* strerror_unsafe(int errnum)
+{
+    return strerror(errnum);
 }
 #pragma warning (pop)
 
@@ -1929,10 +1944,10 @@ GetEnvironment(
       } else {
          REGR_SHOWD = _strdup(REGR_SHOWD);
       }
-      errno_t err = fopen_s(&showd_fp, REGR_SHOWD, "rt");
-      if (err != 0 || showd_fp == NULL) {
+      showd_fp = fopen_unsafe(REGR_SHOWD, "rt");
+      if (showd_fp == NULL) {
          if (!FGenLst)
-            Fatal("couldn't find diff processing command file (%s)", REGR_SHOWD);
+             Fatal("couldn't open diff processing command file (%s) with error '%s'", REGR_SHOWD, strerror_unsafe(errno));
       } else
          fclose(showd_fp);
    }
@@ -2471,7 +2486,7 @@ VerifyOrCreateDir(
 
    // Already exists?
 
-   if (attrib != 0xFFFFFFFF) {
+   if (attrib != INVALID_FILE_ATTRIBUTES) {
 
       // Make sure it's a directory.
 

@@ -2033,9 +2033,10 @@ namespace Js
     {
         Assert(sourceName);
 
-        if (IsDynamicScript() && GetUtf8SourceInfo()->HasDocumentText())
+        if (IsDynamicScript() && GetUtf8SourceInfo()->HasDebugDocument() && GetUtf8SourceInfo()->GetDebugDocument()->HasDocumentText())
         {
-            IDebugDocumentText *documentText = static_cast<IDebugDocumentText *>(GetUtf8SourceInfo()->GetDocumentText());
+            // ToDo (SaAgarwa): Fix for JsRT debugging
+            IDebugDocumentText *documentText = static_cast<IDebugDocumentText *>(GetUtf8SourceInfo()->GetDebugDocument()->GetDocumentText());
             if (documentText->GetName(DOCUMENTNAMETYPE_URL, sourceName) == S_OK)
             {
                 return true;
@@ -5768,7 +5769,11 @@ namespace Js
             PHASE_PRINT_INTRUSIVE_TESTTRACE1(
                 Js::PolymorphicInlineCachePhase,
                 L"TestTrace PIC:  New, Function %s (%s), 0x%x, index = %d, size = %d\n", this->GetDisplayName(), this->GetDebugNumberSet(debugStringBuffer), polymorphicInlineCache, index, PolymorphicInlineCache::GetInitialSize());
-            inlineCache->CopyTo(propertyId, m_scriptContext, &(polymorphicInlineCache->GetInlineCaches()[polymorphicInlineCache->GetInlineCacheIndexForType(inlineCache->GetType())]));
+
+            uint indexInPolymorphicCache = polymorphicInlineCache->GetInlineCacheIndexForType(inlineCache->GetType());
+            inlineCache->CopyTo(propertyId, m_scriptContext, &(polymorphicInlineCache->GetInlineCaches()[indexInPolymorphicCache]));
+            polymorphicInlineCache->UpdateInlineCachesFillInfo(indexInPolymorphicCache, true /*set*/);
+
             return polymorphicInlineCache;
         }
         return null;

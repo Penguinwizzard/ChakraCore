@@ -5,4 +5,25 @@
     <files>UnitTestFramework</files>
   </default>
 </dir>
+<dir>
+  <default>
+    <files>Basics</files>
+  </default>
+</dir>
+<dir>
+  <default>
+    <files>es5</files>
+  </default>
+</dir>
+<dir>
+  <default>
+    <files>EH</files>
+  </default>
+</dir>
+<dir>
+  <default>
+    <files>V8_Functionality</files>
+    <tags>exclude_snap,Slow</tags>
+  </default>
+</dir>
 </regress-exe>

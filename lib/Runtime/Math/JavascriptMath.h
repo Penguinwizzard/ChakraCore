@@ -56,6 +56,10 @@ namespace Js
             static Var Divide_Full(Var aLeft, Var aRight,ScriptContext* scriptContext);
             static Var Divide_InPlace(Var aLeft, Var aRight,ScriptContext* scriptContext, __out JavascriptNumber *result);
 
+            static Var Exponentiation(Var aLeft, Var aRight, ScriptContext* scriptContext);
+            static Var Exponentiation_Full(Var aLeft, Var aRight, ScriptContext* scriptContext);
+            static Var Exponentiation_InPlace(Var aLeft, Var aRight, ScriptContext* scriptContext, __out JavascriptNumber *result);
+
             static Var Modulus(Var aLeft, Var aRight,ScriptContext* scriptContext);
             static Var Modulus_Full(Var aLeft, Var aRight,ScriptContext* scriptContext);
             static Var Modulus_InPlace(Var aLeft, Var aRight,ScriptContext* scriptContext, __out JavascriptNumber *result);

@@ -272,6 +272,9 @@ enum VTableValue {
     VtableStackScriptFunction,
     VtableConcatStringMulti,
     VtableCompoundString,
+    // SIMD_JS
+    VtableSimd128F4,
+    VtableSimd128I4,
     Count
 };
 

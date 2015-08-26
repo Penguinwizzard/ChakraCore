@@ -199,6 +199,11 @@ namespace Js
 
         JavascriptFunction* builtinFunctions[BuiltinFunction::Count];
 
+        typedef JsUtil::BaseDictionary<FunctionInfo *, BuiltinFunction, Recycler> FuncInfoToBuiltinIdMap;
+        FuncInfoToBuiltinIdMap * funcInfoToBuiltinIdMap;
+
+
+
         INT_PTR vtableAddresses[VTableValue::Count];
         ConstructorCache *constructorCacheDefaultInstance;
         __declspec(align(16)) const BYTE *absDoubleCst;
@@ -414,6 +419,25 @@ namespace Js
         static SimplePropertyDescriptor FunctionWithLengthAndPrototypeTypeDescriptors[2];
 
     public:
+#ifdef SIMD_JS_ENABLED
+        // used by inliner. Maps Simd FuncInfo (library func) to equivalent opcode.
+        typedef JsUtil::BaseDictionary<FunctionInfo *, Js::OpCode, Recycler> FuncInfoToOpcodeMap;
+        FuncInfoToOpcodeMap * simdFuncInfoToOpcodeMap;
+
+        struct SimdFuncSignature
+        {
+            uint argCount;          // actual arguments count (excluding this)
+            ValueType returnType;
+            ValueType *args;        // argument types
+        };
+        typedef JsUtil::BaseDictionary<Js::OpCode, SimdFuncSignature, Recycler> OpcodeToSignatureMap;
+        OpcodeToSignatureMap * simdOpcodeToSignatureMap;
+
+        void AddSimdFuncToMaps(Js::OpCode op, ...);
+        Js::OpCode GetSimdOpcodeFromFuncInfo(FunctionInfo * funcInfo);
+        bool GetSimdFuncSignatureFromOpcode(Js::OpCode op, SimdFuncSignature &funcSignature);
+#endif
+
         static const ObjectInfoBits EnumFunctionClass = EnumClass_1_Bit;
 
         static void InitializeProperties(ThreadContext * threadContext);
@@ -846,15 +870,16 @@ namespace Js
         JavascriptFunction** GetBuiltinFunctions();
         INT_PTR* GetVTableAddresses();
         static BuiltinFunction GetBuiltinFunctionForPropId(PropertyId id);
-        static BuiltinFunction GetBuiltInForFuncInfo(FunctionInfo* funcInfo);
+        static BuiltinFunction GetBuiltInForFuncInfo(FunctionInfo* funcInfo, ScriptContext *scriptContext);
 #if DBG
-        static void CheckRegisteredBuiltIns(JavascriptFunction** builtInFuncs)
+        static void CheckRegisteredBuiltIns(JavascriptFunction** builtInFuncs, ScriptContext *scriptContext)
         {
             byte count = BuiltinFunction::Count;
             for(byte index = 0; index < count; index++)
             {
-                Assert(!builtInFuncs[index] || (index == GetBuiltInForFuncInfo(builtInFuncs[index]->GetFunctionInfo())));
+                Assert(!builtInFuncs[index] || (index == GetBuiltInForFuncInfo(builtInFuncs[index]->GetFunctionInfo(), scriptContext)));
             }
+           
         }
 #endif
         static BOOL CanFloatPreferenceFunc(BuiltinFunction index);
@@ -986,6 +1011,7 @@ namespace Js
 #ifdef SIMD_JS_ENABLED
         // SIMD
         static void __cdecl InitializeSIMDObject(DynamicObject* simdObject, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
+        static void __cdecl InitializeSIMDOpCodeMaps();
 #endif
 
         static void __cdecl InitializeNumberConstructor(DynamicObject* numberConstructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);

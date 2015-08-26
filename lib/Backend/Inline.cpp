@@ -235,7 +235,7 @@ Inline::Optimize(Func *func, IR::Instr *callerArgOuts[], Js::ArgSlot callerArgOu
                             break;
                         }
 
-                        isBuiltIn = InliningDecider::GetBuiltInInfo(functionInfo, &builtInInlineCandidateOpCode, &builtInReturnType);
+                        isBuiltIn = InliningDecider::GetBuiltInInfo(functionInfo, &builtInInlineCandidateOpCode, &builtInReturnType, func->GetScriptContext());
 
                         if(!builtInReturnType.IsUninitialized() && instr->GetDst())
                         {
@@ -1756,7 +1756,8 @@ Inline::InlineBuiltInFunction(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, 
     *pIsInlined = false;
 
     // Inlining is profile-based, so get the built-in function from profile rather than from the callInstr's opnd.
-    Js::BuiltinFunction builtInId = Js::JavascriptLibrary::GetBuiltInForFuncInfo(funcInfo);
+    Js::BuiltinFunction builtInId = Js::JavascriptLibrary::GetBuiltInForFuncInfo(funcInfo, callInstr->m_func->GetScriptContext());
+
 #if defined(DBG_DUMP) || defined(ENABLE_DEBUG_CONFIG_OPTIONS)
     wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
 #endif
@@ -1948,7 +1949,8 @@ Inline::InlineBuiltInFunction(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, 
         argoutInstr->SetByteCodeOffset(callInstr);
         callInstr->GetInsertBeforeByteCodeUsesInstr()->InsertBefore(argoutInstr);
 
-        Js::BuiltinFunction builtInId = Js::JavascriptLibrary::GetBuiltInForFuncInfo(funcInfo);
+        Js::BuiltinFunction builtInId = Js::JavascriptLibrary::GetBuiltInForFuncInfo(funcInfo, callInstr->m_func->GetScriptContext());
+            
 
         callInstr->m_opcode = inlineCallOpCode;
         SetupInlineInstrForCallDirect(builtInId, callInstr, argoutInstr);
@@ -1977,7 +1979,11 @@ Inline::InlineBuiltInFunction(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, 
     IR::ByteCodeUsesInstr * useCallTargetInstr = IR::ByteCodeUsesInstr::New(callInstr, originalCallTargetStackSym->m_id);
     callInstr->InsertBefore(useCallTargetInstr);
 
-    if(Js::JavascriptLibrary::IsTypeSpecRequired(builtInFlags))
+    if(Js::JavascriptLibrary::IsTypeSpecRequired(builtInFlags) 
+//SIMD_JS
+        || IsSimd128Opcode(inlineCallOpCode)
+
+        )
     {
         // Emit byteCodeUses for function object
         IR::Instr * inlineBuilitInStartInstr = inlineBuiltInEndInstr;
@@ -1999,7 +2005,7 @@ Inline::InlineBuiltInFunction(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, 
         }
         else
         {
-            AssertMsg(inlineCallOpCode == Js::OpCode::InlineArrayPush || inlineCallOpCode == Js::OpCode::InlineArrayPop , 
+            AssertMsg(inlineCallOpCode == Js::OpCode::InlineArrayPush || inlineCallOpCode == Js::OpCode::InlineArrayPop || Js::IsSimd128Opcode(inlineCallOpCode), 
                 "Currently Dst can be null only for InlineArrayPush/InlineArrayPop");
         }
 
@@ -2028,20 +2034,29 @@ Inline::InlineBuiltInFunction(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, 
         callInstr->m_opcode = inlineCallOpCode;
 
         int argIndex = inlineCallArgCount;    // We'll used it to fill call instr srcs from upper to lower.
-        AssertMsg(0 <= argIndex && argIndex <= 2, "Only 0, 1 or 2 arg built-ins are supported.");
+        
 
         IR::ByteCodeUsesInstr * byteCodeUsesInstr = IR::ByteCodeUsesInstr::New(callInstr->m_func);
         byteCodeUsesInstr->SetByteCodeOffset(callInstr);
         byteCodeUsesInstr->byteCodeUpwardExposedUsed = JitAnew(callInstr->m_func->m_alloc, BVSparse<JitArenaAllocator>, callInstr->m_func->m_alloc);
-        
         IR::Instr *argInsertInstr = inlineBuilitInStartInstr;
+
+//SIMD_JS
+        IR::Instr *eaInsertInstr = callInstr;
+        IR::Opnd *eaLinkOpnd = null;
+        Js::JavascriptLibrary::SimdFuncSignature simdFuncSignature;
+        if (IsSimd128Opcode(callInstr->m_opcode))
+        {
+            callInstr->m_func->GetScriptContext()->GetLibrary()->GetSimdFuncSignatureFromOpcode(callInstr->m_opcode, simdFuncSignature);
+        }
+//
         inlineBuiltInEndInstr->IterateArgInstrs([&](IR::Instr* argInstr) {
             StackSym *linkSym = linkOpnd->GetStackSym();
             linkSym->m_isInlinedArgSlot = true;
             linkSym->m_allocated = true;
 
             // We are going to replace the use on the call (below), insert byte code use if necessary
-            if (OpCodeAttr::BailOutRec(inlineCallOpCode))
+            if (OpCodeAttr::BailOutRec(inlineCallOpCode) || Js::IsSimd128Opcode(inlineCallOpCode))
             {
                 StackSym * sym = argInstr->GetSrc1()->GetStackSym();
                 if (!sym->m_isSingleDef || !sym->m_instrDef->GetSrc1() || !sym->m_instrDef->GetSrc1()->IsConstOpnd())
@@ -2054,22 +2069,64 @@ Inline::InlineBuiltInFunction(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, 
             }
 
             // Convert the arg out ot built in arg out, and get the src of the arg out
-            // And set it to the call
             IR::Opnd * argOpnd = ConvertToInlineBuiltInArgOut(argInstr);
 
-            // Use parameter to the inline call to tempDst.
-            if (argIndex == 2)
+            // SIMD_JS
+            if (inlineCallArgCount > 2 && argIndex != 0 /* don't include 'this' */)
             {
-                callInstr->SetSrc2(argOpnd);
-                // Prevent inserting ByteCodeUses instr during globopt, as we already track the src in ArgOut.
-                callInstr->GetSrc2()->SetIsJITOptimizedReg(true);
+                Assert(IsSimd128Opcode(callInstr->m_opcode));
+                // Insert ExtendedArgs
+                
+                IR::Instr *eaInstr;
+                
+                // inliner sets the dst type of the ExtendedArg to the expected arg type for the operation. The globOpt uses this info to know the type-spec target for each ExtendedArg.
+                eaInstr = IR::Instr::New(Js::OpCode::ExtendArg_A, callInstr->m_func);
+                eaInstr->SetByteCodeOffset(callInstr);
+                if (argIndex == inlineCallArgCount)
+                {
+                    // fix callInstr
+                    eaLinkOpnd = IR::RegOpnd::New(TyVar, callInstr->m_func);
+                    eaLinkOpnd->GetStackSym()->m_isInlinedArgSlot = true;
+                    eaLinkOpnd->GetStackSym()->m_allocated = true;
+
+                    Assert(callInstr->GetSrc1() == null && callInstr->GetSrc2() == null);
+                    callInstr->SetSrc1(eaLinkOpnd);
+                }
+                Assert(eaLinkOpnd);
+                eaInstr->SetDst(eaLinkOpnd);
+                eaInstr->SetSrc1(argInstr->GetSrc1());
+                
+                // insert link opnd, except for first ExtendedArg
+                if (argIndex > 1)
+                {
+                    eaInstr->SetSrc2(IR::RegOpnd::New(TyVar, callInstr->m_func));
+                    eaLinkOpnd = eaInstr->GetSrc2();
+                    eaLinkOpnd->GetStackSym()->m_isInlinedArgSlot = true;
+                    eaLinkOpnd->GetStackSym()->m_allocated = true;
+                }
+                
+                eaInstr->GetDst()->SetValueType(simdFuncSignature.args[argIndex - 1]);
+                
+                eaInsertInstr->InsertBefore(eaInstr);
+                eaInsertInstr = eaInstr;
             }
-            else if (argIndex == 1)
+            else
             {
-                callInstr->SetSrc1(argOpnd);
-                // Prevent inserting ByteCodeUses instr during globopt, as we already track the src in ArgOut.
-                callInstr->GetSrc1()->SetIsJITOptimizedReg(true);
+                // Use parameter to the inline call to tempDst.
+                if (argIndex == 2)
+                {
+                    callInstr->SetSrc2(argOpnd);
+                    // Prevent inserting ByteCodeUses instr during globopt, as we already track the src in ArgOut.
+                    callInstr->GetSrc2()->SetIsJITOptimizedReg(true);
+                }
+                else if (argIndex == 1)
+                {
+                    callInstr->SetSrc1(argOpnd);
+                    // Prevent inserting ByteCodeUses instr during globopt, as we already track the src in ArgOut.
+                    callInstr->GetSrc1()->SetIsJITOptimizedReg(true);
+                }
             }
+            
 
             argIndex--;
 
@@ -2171,7 +2228,7 @@ IR::Instr* Inline::InlineApply(IR::Instr *callInstr, Js::FunctionInfo *funcInfo,
     // We may still decide not to inline.
     *pIsInlined = false;
 
-    Js::BuiltinFunction builtInId = Js::JavascriptLibrary::GetBuiltInForFuncInfo(funcInfo);
+    Js::BuiltinFunction builtInId = Js::JavascriptLibrary::GetBuiltInForFuncInfo(funcInfo, callInstr->m_func->GetScriptContext());
     const Js::FunctionCodeGenJitTimeData * inlineeData = nullptr;
 
     IR::SymOpnd* linkOpnd = callInstr->GetSrc2()->AsSymOpnd();
@@ -2208,7 +2265,7 @@ IR::Instr* Inline::InlineApply(IR::Instr *callInstr, Js::FunctionInfo *funcInfo,
         {
             *pIsInlined = true;
             Assert((inlineeData->GetFunctionInfo()->GetAttributes() & Js::FunctionInfo::Attributes::BuiltInInlinableAsLdFldInlinee) != 0);
-            return InlineApplyWithArray(callInstr, funcInfo, Js::JavascriptLibrary::GetBuiltInForFuncInfo(inlineeData->GetFunctionInfo()));
+            return InlineApplyWithArray(callInstr, funcInfo, Js::JavascriptLibrary::GetBuiltInForFuncInfo(inlineeData->GetFunctionInfo(), callInstr->m_func->GetScriptContext()));
         }
         else
         {
@@ -2642,7 +2699,7 @@ Inline::ConvertToInlineBuiltInArgOut(IR::Instr * argInstr)
 IR::Instr*
 Inline::InlineCall(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, const Js::FunctionCodeGenJitTimeData* inlinerData, const StackSym *symCallerThis, bool* pIsInlined, uint callSiteId, uint recursiveInlineDepth)
 {
-    Js::BuiltinFunction builtInId = Js::JavascriptLibrary::GetBuiltInForFuncInfo(funcInfo);
+    Js::BuiltinFunction builtInId = Js::JavascriptLibrary::GetBuiltInForFuncInfo(funcInfo, callInstr->m_func->GetScriptContext());
     Func *func = callInstr->m_func;
 
     *pIsInlined = false;
@@ -2902,7 +2959,9 @@ Inline::TryGetFixedMethodsForBuiltInAndTarget(IR::Instr *callInstr, const Js::Fu
     wchar_t debugStringBuffer3[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
 #endif
 
-    Assert(isApplyTarget || (Js::JavascriptLibrary::GetBuiltInForFuncInfo(builtInFuncInfo) == Js::BuiltinFunction::Function_Call));
+    
+
+    Assert(isApplyTarget || (Js::JavascriptLibrary::GetBuiltInForFuncInfo(builtInFuncInfo, callInstr->m_func->GetScriptContext()) == Js::BuiltinFunction::Function_Call));
 
     Js::OpCode originalCallOpCode = callInstr->m_opcode;
     StackSym* originalCallTargetStackSym = callInstr->GetSrc1()->GetStackSym();
@@ -3911,7 +3970,7 @@ Inline::InsertFunctionBodyCheck(IR::Instr *callInstr, IR::Instr *insertBeforeIns
 void
 Inline::InsertFunctionObjectCheck(IR::Instr *callInstr, IR::Instr *insertBeforeInstr, IR::Instr *bailOutInstr, Js::FunctionInfo *funcInfo)
 {
-    Js::BuiltinFunction index = Js::JavascriptLibrary::GetBuiltInForFuncInfo(funcInfo);
+     Js::BuiltinFunction index = Js::JavascriptLibrary::GetBuiltInForFuncInfo(funcInfo, callInstr->m_func->GetScriptContext());
     AssertMsg(index < Js::BuiltinFunction::Count, "Invalid built-in index on a call target marked as built-in");
 
     bailOutInstr->SetSrc1(callInstr->GetSrc1()->AsRegOpnd());
@@ -5013,7 +5072,7 @@ Inline::GetInlineeHasArgumentObject(Func * inlinee)
                         if (builtInOpnd->IsAddrOpnd())
                         {
                             Assert(builtInOpnd->AsAddrOpnd()->m_isFunction);
-                            Js::BuiltinFunction builtinFunction = Js::JavascriptLibrary::GetBuiltInForFuncInfo(((Js::JavascriptFunction*)builtInOpnd->AsAddrOpnd()->m_address)->GetFunctionInfo());
+                            Js::BuiltinFunction builtinFunction = Js::JavascriptLibrary::GetBuiltInForFuncInfo(((Js::JavascriptFunction*)builtInOpnd->AsAddrOpnd()->m_address)->GetFunctionInfo(), inlinee->GetScriptContext());
                             if (builtinFunction == Js::BuiltinFunction::Function_Apply)
                             {
                                 this->SetIsInInlinedApplyCall(true);

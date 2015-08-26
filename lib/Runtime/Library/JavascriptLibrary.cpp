@@ -58,7 +58,26 @@ namespace Js
 
         // Library is not zero-initialized. memset the memory occcupied by builtinFunctions array to 0.
         memset(builtinFunctions, 0, sizeof(JavascriptFunction *) * BuiltinFunction::Count);
+        
+        
+        funcInfoToBuiltinIdMap = RecyclerNew(recycler, FuncInfoToBuiltinIdMap, recycler);
+#define LIBRARY_FUNCTION(target, name, argc, flags, entry) \
+    funcInfoToBuiltinIdMap->AddNew(&entry, BuiltinFunction::##target##_##name);
+#include "LibraryFunction.h"
+#undef LIBRARY_FUNCTION
 
+        simdFuncInfoToOpcodeMap = RecyclerNew(recycler, FuncInfoToOpcodeMap, recycler);
+        simdOpcodeToSignatureMap = RecyclerNew(recycler, OpcodeToSignatureMap, recycler);
+        {
+
+#define MACRO_SIMD_WMS(op, LayoutAsmJs, OpCodeAttrAsmJs, OpCodeAttr, ...) \
+    AddSimdFuncToMaps(Js::OpCode::##op, __VA_ARGS__);
+
+#define MACRO_SIMD_EXTEND_WMS(op, LayoutAsmJs, OpCodeAttrAsmJs, OpCodeAttr, ...) MACRO_SIMD_WMS(op, LayoutAsmJs, OpCodeAttrAsmJs, OpCodeAttr, __VA_ARGS__)
+
+#include "ByteCode\OpCodesSimd.h"
+        }
+        
         // Note: InitializePrototypes and InitializeTypes must be called first.
         InitializePrototypes();
         InitializeTypes();
@@ -1212,7 +1231,7 @@ namespace Js
         }
 #endif /* IR_VIEWER */
 
-        DebugOnly(CheckRegisteredBuiltIns(builtinFuncs));
+        DebugOnly(CheckRegisteredBuiltIns(builtinFuncs, scriptContext));
 
         builtInConstructorCache = RecyclerNew(this->GetRecycler(), ConstructorCache);
         builtInConstructorCache->PopulateForSkipDefaultNewObject(this->GetScriptContext());
@@ -1593,7 +1612,7 @@ namespace Js
             library->AddFunctionToLibraryObject(arrayConstructor, PropertyIds::of, &JavascriptArray::EntryInfo::Of, 0);
         }
 
-        DebugOnly(CheckRegisteredBuiltIns(builtinFuncs));
+        DebugOnly(CheckRegisteredBuiltIns(builtinFuncs, scriptContext));
 
         arrayConstructor->SetHasNoEnumerableProperties(true);
     }
@@ -1684,7 +1703,7 @@ namespace Js
             /* No inlining                Array_CopyWithin     */ library->AddFunctionToLibraryObject(arrayPrototype, PropertyIds::copyWithin, &JavascriptArray::EntryInfo::CopyWithin, 2);
         }
 
-        DebugOnly(CheckRegisteredBuiltIns(builtinFuncs));
+        DebugOnly(CheckRegisteredBuiltIns(builtinFuncs, scriptContext));
 
         arrayPrototype->SetHasNoEnumerableProperties(true);
     }
@@ -2474,7 +2493,7 @@ namespace Js
             library->AddFunctionToLibraryObject(functionPrototype, PropertyIds::toMethod, &JavascriptFunction::EntryInfo::ToMethod, 1);
         }
 
-        DebugOnly(CheckRegisteredBuiltIns(builtinFuncs));
+        DebugOnly(CheckRegisteredBuiltIns(builtinFuncs, scriptContext));
 
         functionPrototype->SetHasNoEnumerableProperties(true);
     }
@@ -2568,7 +2587,7 @@ namespace Js
             library->AddMember(mathObject, PropertyIds::_symbolToStringTag, library->CreateStringFromCppLiteral(L"Math"), PropertyConfigurable);
         }
 
-        DebugOnly(CheckRegisteredBuiltIns(builtinFuncs));
+        DebugOnly(CheckRegisteredBuiltIns(builtinFuncs, scriptContext));
 
         mathObject->SetHasNoEnumerableProperties(true);
     }
@@ -2581,6 +2600,9 @@ namespace Js
         typeHandler->Convert(simdObject, mode, 2);
         JavascriptLibrary* library = simdObject->GetLibrary();
         
+        // only functions to be inlined to be added to builtinFuncs
+        JavascriptFunction ** builtinFuncs = library->GetBuiltinFunctions();
+
         // Float32x4
         JavascriptFunction* float32x4Function = library->AddFunctionToLibraryObject(simdObject, PropertyIds::Float32x4, &SIMDFloat32x4Lib::EntryInfo::Float32x4, 5, PropertyNone);
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::check, &SIMDFloat32x4Lib::EntryInfo::Check, 2, PropertyNone);
@@ -2599,7 +2621,7 @@ namespace Js
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::fromInt32x4Bits,   &SIMDFloat32x4Lib::EntryInfo::FromInt32x4Bits,   2, PropertyNone);
 
         // binary ops
-        library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::add,    &SIMDFloat32x4Lib::EntryInfo::Add,   3, PropertyNone);
+        builtinFuncs[BuiltinFunction::SIMD_Float32x4_Add] = library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::add, &SIMDFloat32x4Lib::EntryInfo::Add, 3, PropertyNone);
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::sub,    &SIMDFloat32x4Lib::EntryInfo::Sub,   3, PropertyNone);
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::mul,    &SIMDFloat32x4Lib::EntryInfo::Mul,   3, PropertyNone);
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::div,    &SIMDFloat32x4Lib::EntryInfo::Div,   3, PropertyNone);
@@ -2713,7 +2735,7 @@ namespace Js
         library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::fromFloat32x4Bits, &SIMDInt32x4Lib::EntryInfo::FromFloat32x4Bits, 2, PropertyNone);
 
         // binary ops
-        library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::add, &SIMDInt32x4Lib::EntryInfo::Add, 3, PropertyNone);
+        builtinFuncs[BuiltinFunction::SIMD_Int32x4_Add] = library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::add, &SIMDInt32x4Lib::EntryInfo::Add, 3, PropertyNone);
         library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::sub, &SIMDInt32x4Lib::EntryInfo::Sub, 3, PropertyNone);
         library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::mul, &SIMDInt32x4Lib::EntryInfo::Mul, 3, PropertyNone);
         library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::and, &SIMDInt32x4Lib::EntryInfo::And, 3, PropertyNone);
@@ -2789,6 +2811,58 @@ namespace Js
         library->AddFunctionToLibraryObject(int8x16Function, PropertyIds::replaceLane, &SIMDInt8x16Lib::EntryInfo::ReplaceLane, 4, PropertyNone);
 
         // end Int8x16
+    }
+
+    void JavascriptLibrary::AddSimdFuncToMaps(Js::OpCode op, ...)
+    {
+        Assert(simdFuncInfoToOpcodeMap != null);
+        Assert(simdOpcodeToSignatureMap != null);
+        
+        va_list arguments;
+        va_start(arguments, op);
+        
+        int argumentsCount = va_arg(arguments, int);
+        if (argumentsCount == 0)
+        {
+            // no info to add
+            return;
+        }
+        FunctionInfo *funcInfo = va_arg(arguments, FunctionInfo*); 
+        simdFuncInfoToOpcodeMap->AddNew(funcInfo, op);
+
+        SimdFuncSignature simdFuncSignature;
+        simdFuncSignature.argCount = argumentsCount - 2; // arg count to Simd func = argumentsCount - FuncInfo and return Type fields.
+        simdFuncSignature.returnType = va_arg(arguments, ValueType);
+        simdFuncSignature.args = RecyclerNewPlus(recycler, simdFuncSignature.argCount * sizeof(ValueType), ValueType);
+        for (uint iArg = 0; iArg < simdFuncSignature.argCount; iArg++)
+        {
+            simdFuncSignature.args[iArg] = va_arg(arguments, ValueType);
+        }
+        simdOpcodeToSignatureMap->AddNew(op, simdFuncSignature);
+
+        va_end(arguments);
+    }
+
+    Js::OpCode JavascriptLibrary::GetSimdOpcodeFromFuncInfo(FunctionInfo * funcInfo)
+    {
+        Assert(simdFuncInfoToOpcodeMap != null);
+        if (simdFuncInfoToOpcodeMap->ContainsKey(funcInfo))
+        {
+            return simdFuncInfoToOpcodeMap->Item(funcInfo);
+
+        }
+        return (Js::OpCode) 0;
+    }
+
+    bool JavascriptLibrary::GetSimdFuncSignatureFromOpcode(Js::OpCode op, SimdFuncSignature &funcSignature)
+    {
+        Assert(simdOpcodeToSignatureMap != null);
+        if (simdOpcodeToSignatureMap->ContainsKey(op))
+        {
+            funcSignature = simdOpcodeToSignatureMap->Item(op);
+            return true;
+        }
+        return false;
     }
 #endif
 
@@ -2884,6 +2958,10 @@ namespace Js
         vtableAddresses[VTableValue::VtableStackScriptFunction] = VirtualTableInfo<Js::StackScriptFunction>::Address;
         vtableAddresses[VTableValue::VtableConcatStringMulti] = VirtualTableInfo<Js::ConcatStringMulti>::Address;
         vtableAddresses[VTableValue::VtableCompoundString] = VirtualTableInfo<Js::CompoundString>::Address;
+
+        // SIMD_JS
+        vtableAddresses[VTableValue::VtableSimd128F4] = VirtualTableInfo<Js::JavascriptSIMDFloat32x4>::Address;
+        vtableAddresses[VTableValue::VtableSimd128I4] = VirtualTableInfo<Js::JavascriptSIMDInt32x4>::Address;
     }
 
     //
@@ -3226,335 +3304,11 @@ namespace Js
     // Returns built-in enum value for given funcInfo. Ultimately this will work for all built-ins (not only Math.*).
     // Used by inliner.
     //static
-    BuiltinFunction JavascriptLibrary::GetBuiltInForFuncInfo(FunctionInfo* funcInfo)
+    BuiltinFunction JavascriptLibrary::GetBuiltInForFuncInfo(FunctionInfo* funcInfo, ScriptContext *scriptContext)
     {
         Assert(funcInfo);
 
-        if (funcInfo == &Math::EntryInfo::Abs)
-        {
-            return BuiltinFunction::Math_Abs;
-        }
-        else if (funcInfo == &Math::EntryInfo::Acos)
-        {
-            return BuiltinFunction::Math_Acos;
-        }
-        else if (funcInfo == &Math::EntryInfo::Asin)
-        {
-            return BuiltinFunction::Math_Asin;
-        }
-        else if (funcInfo == &Math::EntryInfo::Atan)
-        {
-            return BuiltinFunction::Math_Atan;
-        }
-        else if (funcInfo == &Math::EntryInfo::Atan2)
-        {
-            // Even that atan2 can't currently be float-preferenced, it's fine to support it here
-            // as we check later for JavascriptLibrary::CanFloatPreferenceFunc.
-            return BuiltinFunction::Math_Atan2;
-        }
-        else if (funcInfo == &Math::EntryInfo::Cos)
-        {
-            return BuiltinFunction::Math_Cos;
-        }
-        else if (funcInfo == &Math::EntryInfo::Exp)
-        {
-            return BuiltinFunction::Math_Exp;
-        }
-        else if (funcInfo == &Math::EntryInfo::Log)
-        {
-            return BuiltinFunction::Math_Log;
-        }
-        else if (funcInfo == &Math::EntryInfo::Pow)
-        {
-            return BuiltinFunction::Math_Pow;
-        }
-        else if (funcInfo == &Math::EntryInfo::Random)
-        {
-            return BuiltinFunction::Math_Random;
-        }
-        else if (funcInfo == &Math::EntryInfo::Sin)
-        {
-            return BuiltinFunction::Math_Sin;
-        }
-        else if (funcInfo == &Math::EntryInfo::Sqrt)
-        {
-            return BuiltinFunction::Math_Sqrt;
-        }
-        else if (funcInfo == &Math::EntryInfo::Tan)
-        {
-            return BuiltinFunction::Math_Tan;
-        }
-        else if (funcInfo == &Math::EntryInfo::Floor)
-        {
-            return BuiltinFunction::Math_Floor;
-        }
-        else if (funcInfo == &Math::EntryInfo::Ceil)
-        {
-            return BuiltinFunction::Math_Ceil;
-        }
-        else if (funcInfo == &Math::EntryInfo::Round)
-        {
-            return BuiltinFunction::Math_Round;
-        }
-        else if (funcInfo == &Math::EntryInfo::Fround)
-        {
-            return BuiltinFunction::Math_Fround;
-        }
-        else if (funcInfo == &JavascriptArray::EntryInfo::Concat)
-        {
-            return BuiltinFunction::Array_Concat;
-        }
-        else if (funcInfo == &JavascriptArray::EntryInfo::IndexOf)
-        {
-            return BuiltinFunction::Array_IndexOf;
-        }
-        else if (funcInfo == &JavascriptArray::EntryInfo::IsArray)
-        {
-            return BuiltinFunction::Array_IsArray;
-        }
-        else if (funcInfo == &JavascriptArray::EntryInfo::Join)
-        {
-            return BuiltinFunction::Array_Join;
-        }
-        else if (funcInfo == &JavascriptArray::EntryInfo::LastIndexOf)
-        {
-            return BuiltinFunction::Array_LastIndexOf;
-        }
-        else if (funcInfo == &JavascriptArray::EntryInfo::Push)
-        {
-            return BuiltinFunction::Array_Push;
-        }
-        else if (funcInfo == &JavascriptArray::EntryInfo::Reverse)
-        {
-            return BuiltinFunction::Array_Reverse;
-        }
-        else if (funcInfo == &JavascriptArray::EntryInfo::Shift)
-        {
-            return BuiltinFunction::Array_Shift;
-        }
-        else if (funcInfo == &JavascriptArray::EntryInfo::Slice)
-        {
-            return BuiltinFunction::Array_Slice;
-        }
-        else if (funcInfo == &JavascriptArray::EntryInfo::Splice)
-        {
-            return BuiltinFunction::Array_Splice;
-        }
-        else if (funcInfo == &JavascriptArray::EntryInfo::Unshift)
-        {
-            return BuiltinFunction::Array_Unshift;
-        }
-
-        else if (funcInfo == &JavascriptString::EntryInfo::Concat)
-        {
-            return BuiltinFunction::String_Concat;
-        }
-        else if (funcInfo == &JavascriptString::EntryInfo::FromCharCode)
-        {
-            return BuiltinFunction::String_FromCharCode;
-        }
-        else if (funcInfo == &JavascriptString::EntryInfo::FromCodePoint)
-        {
-            return BuiltinFunction::String_FromCodePoint;
-        }
-        else if (funcInfo == &JavascriptString::EntryInfo::IndexOf)
-        {
-            return BuiltinFunction::String_IndexOf;
-        }
-        else if (funcInfo == &JavascriptString::EntryInfo::LastIndexOf)
-        {
-            return BuiltinFunction::String_LastIndexOf;
-        }
-        else if (funcInfo == &JavascriptString::EntryInfo::Link)
-        {
-            return BuiltinFunction::String_Link;
-        }
-        else if (funcInfo == &JavascriptString::EntryInfo::LocaleCompare)
-        {
-            return BuiltinFunction::String_LocaleCompare;
-        }
-        else if (funcInfo == &JavascriptString::EntryInfo::Match)
-        {
-            return BuiltinFunction::String_Match;
-        }
-        else if (funcInfo == &JavascriptString::EntryInfo::Search)
-        {
-            return BuiltinFunction::String_Search;
-        }
-        else if (funcInfo == &JavascriptString::EntryInfo::Slice)
-        {
-            return BuiltinFunction::String_Slice;
-        }
-        else if (funcInfo == &JavascriptString::EntryInfo::Split)
-        {
-            return BuiltinFunction::String_Split;
-        }
-        else if (funcInfo == &JavascriptString::EntryInfo::Substr)
-        {
-            return BuiltinFunction::String_Substr;
-        }
-        else if (funcInfo == &JavascriptString::EntryInfo::Substring)
-        {
-            return BuiltinFunction::String_Substring;
-        }
-        else if (funcInfo == &JavascriptString::EntryInfo::ToLocaleLowerCase)
-        {
-            return BuiltinFunction::String_ToLocaleLowerCase;
-        }
-        else if (funcInfo == &JavascriptString::EntryInfo::ToLocaleUpperCase)
-        {
-            return BuiltinFunction::String_ToLocaleUpperCase;
-        }
-        else if (funcInfo == &JavascriptString::EntryInfo::ToLowerCase)
-        {
-            return BuiltinFunction::String_ToLowerCase;
-        }
-        else if (funcInfo == &JavascriptString::EntryInfo::ToUpperCase)
-        {
-            return BuiltinFunction::String_ToUpperCase;
-        }
-        else if (funcInfo == &JavascriptString::EntryInfo::Trim)
-        {
-            return BuiltinFunction::String_Trim;
-        }
-        else if (funcInfo == &JavascriptString::EntryInfo::TrimLeft)
-        {
-            return BuiltinFunction::String_TrimLeft;
-        }
-        else if (funcInfo == &JavascriptString::EntryInfo::TrimRight)
-        {
-            return BuiltinFunction::String_TrimRight;
-        }
-        else if (funcInfo == &Math::EntryInfo::Ceil)
-        {
-            return BuiltinFunction::Math_Ceil;
-        }
-        else if (funcInfo == &Math::EntryInfo::Floor)
-        {
-            return BuiltinFunction::Math_Floor;
-        }
-        else if (funcInfo == &Math::EntryInfo::Max)
-        {
-            return BuiltinFunction::Math_Max;
-        }
-        else if (funcInfo == &Math::EntryInfo::Min)
-        {
-            return BuiltinFunction::Math_Min;
-        }
-        else if (funcInfo == &Math::EntryInfo::Imul)
-        {
-            return BuiltinFunction::Math_Imul;
-        }
-        else if (funcInfo == &Math::EntryInfo::Round)
-        {
-            return BuiltinFunction::Math_Round;
-        }
-        else if (funcInfo == &JavascriptString::EntryInfo::CharAt)
-        {
-            return BuiltinFunction::String_CharAt;
-        }
-        else if (funcInfo == &JavascriptString::EntryInfo::CharCodeAt)
-        {
-            return BuiltinFunction::String_CharCodeAt;
-        }
-        else if (funcInfo == &JavascriptString::EntryInfo::CodePointAt)
-        {
-            return BuiltinFunction::String_CodePointAt;
-        }
-        else if (funcInfo == &JavascriptArray::EntryInfo::Push)
-        {
-            return BuiltinFunction::Array_Push;
-        }
-        else if (funcInfo == &JavascriptArray::EntryInfo::Pop)
-        {
-            return BuiltinFunction::Array_Pop;
-        }
-        else if (funcInfo == &JavascriptString::EntryInfo::Replace)
-        {
-            return BuiltinFunction::String_Replace;
-        }
-        else if (funcInfo == &JavascriptFunction::EntryInfo::Apply)
-        {
-            return BuiltinFunction::Function_Apply;
-        }
-        else if (funcInfo == &JavascriptFunction::EntryInfo::Call)
-        {
-            return BuiltinFunction::Function_Call;
-        }
-        else if (funcInfo == &GlobalObject::EntryInfo::ParseInt)
-        {
-            return BuiltinFunction::GlobalObject_ParseInt;
-        }
-        else if (funcInfo == &JavascriptRegExp::EntryInfo::Exec)
-        {
-            return BuiltinFunction::RegExp_Exec;
-        }
-        else if (funcInfo == &Math::EntryInfo::Clz32)
-        {
-            return BuiltinFunction::Math_Clz32;
-        }
-        /* TODO: Implement inlining of ES6 Math API extensions
-        else if (funcInfo == &Math::EntryInfo::Log10)
-        {
-            return BuiltinFunction::Math_Log10;
-        }
-        else if (funcInfo == &Math::EntryInfo::Log2)
-        {
-            return BuiltinFunction::Math_Log2;
-        }
-        else if (funcInfo == &Math::EntryInfo::Log1p)
-        {
-            return BuiltinFunction::Math_Log1p;
-        }
-        else if (funcInfo == &Math::EntryInfo::Expm1)
-        {
-            return BuiltinFunction::Math_Expm1;
-        }
-        else if (funcInfo == &Math::EntryInfo::Cosh)
-        {
-            return BuiltinFunction::Math_Cosh;
-        }
-        else if (funcInfo == &Math::EntryInfo::Sinh)
-        {
-            return BuiltinFunction::Math_Sinh;
-        }
-        else if (funcInfo == &Math::EntryInfo::Tanh)
-        {
-            return BuiltinFunction::Math_Tanh;
-        }
-        else if (funcInfo == &Math::EntryInfo::Acosh)
-        {
-            return BuiltinFunction::Math_Acosh;
-        }
-        else if (funcInfo == &Math::EntryInfo::Asinh)
-        {
-            return BuiltinFunction::Math_Asinh;
-        }
-        else if (funcInfo == &Math::EntryInfo::Atanh)
-        {
-            return BuiltinFunction::Math_Atanh;
-        }
-        else if (funcInfo == &Math::EntryInfo::Hypot)
-        {
-            return BuiltinFunction::Math_Hypot;
-        }
-        else if (funcInfo == &Math::EntryInfo::Trunc)
-        {
-            return BuiltinFunction::Math_Trunc;
-        }
-        else if (funcInfo == &Math::EntryInfo::Sign)
-        {
-            return BuiltinFunction::Math_Sign;
-        }
-        else if (funcInfo == &Math::EntryInfo::Cbrt)
-        {
-            return BuiltinFunction::Math_Cbrt;
-        }
-        */
-
-        // TODO: add string.prototype.concat.
-
-        return BuiltinFunction::None;
+        return scriptContext->GetLibrary()->funcInfoToBuiltinIdMap->Item(funcInfo);
     }
 
     // Returns true if the function's return type is always float.
@@ -3573,7 +3327,7 @@ namespace Js
     }
 
     size_t JavascriptLibrary::LibraryFunctionArgC[] = {
-#define LIBRARY_FUNCTION(obj, name, argc, flags) argc,
+#define LIBRARY_FUNCTION(obj, name, argc, flags, entry) argc,
 #include "LibraryFunction.h"
 #undef LIBRARY_FUNCTION
         0
@@ -3581,7 +3335,7 @@ namespace Js
 
 #if ENABLE_DEBUG_CONFIG_OPTIONS
     wchar_t* JavascriptLibrary::LibraryFunctionName[] = {
-#define LIBRARY_FUNCTION(obj, name, argc, flags) L#obj L"." L#name,
+#define LIBRARY_FUNCTION(obj, name, argc, flags, entry) L#obj L"." L#name,
 #include "LibraryFunction.h"
 #undef LIBRARY_FUNCTION
         0
@@ -3589,7 +3343,7 @@ namespace Js
 #endif
 
     int JavascriptLibrary::LibraryFunctionFlags[] = {
-#define LIBRARY_FUNCTION(obj, name, argc, flags) flags,
+#define LIBRARY_FUNCTION(obj, name, argc, flags, entry) flags,
 #include "LibraryFunction.h"
 #undef LIBRARY_FUNCTION
         BIF_None
@@ -3921,7 +3675,7 @@ namespace Js
         // This is deprecated. Should be guarded with appropriate version flag.
         library->AddFunctionToLibraryObject(regexPrototype, PropertyIds::compile, &JavascriptRegExp::EntryInfo::Compile, 2);
 
-        DebugOnly(CheckRegisteredBuiltIns(builtinFuncs));
+        DebugOnly(CheckRegisteredBuiltIns(builtinFuncs, library->GetScriptContext()));
 
         regexPrototype->SetHasNoEnumerableProperties(true);
     }
@@ -3955,7 +3709,7 @@ namespace Js
             /* No inlining                String_Raw           */ library->AddFunctionToLibraryObject(stringConstructor, PropertyIds::raw,           &JavascriptString::EntryInfo::Raw,           1);
         }
 
-        DebugOnly(CheckRegisteredBuiltIns(builtinFuncs));
+        DebugOnly(CheckRegisteredBuiltIns(builtinFuncs, scriptContext));
 
         stringConstructor->SetHasNoEnumerableProperties(true);
     }
@@ -4034,7 +3788,7 @@ namespace Js
                 &JavascriptString::EntryInfo::SymbolIterator, 0);
         }
 
-        DebugOnly(CheckRegisteredBuiltIns(builtinFuncs));
+        DebugOnly(CheckRegisteredBuiltIns(builtinFuncs, scriptContext));
 
         stringPrototype->SetHasNoEnumerableProperties(true);
     }

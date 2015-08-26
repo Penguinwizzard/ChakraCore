@@ -70,20 +70,26 @@ ArmStackFrame::GetInstructionPointer()
 }
 
 void ** 
-ArmStackFrame::GetArgv() 
+ArmStackFrame::GetArgv(bool isCurrentContextNative, bool shouldCheckForNativeAddr)
 { 
+    UNREFERENCED_PARAMETER(isCurrentContextNative);
+    UNREFERENCED_PARAMETER(shouldCheckForNativeAddr);
     return this->frame + ArgOffsetFromFramePtr; 
 }
 
 void *  
-ArmStackFrame::GetReturnAddress() 
+ArmStackFrame::GetReturnAddress(bool isCurrentContextNative, bool shouldCheckForNativeAddr)
 { 
+    UNREFERENCED_PARAMETER(isCurrentContextNative);
+    UNREFERENCED_PARAMETER(shouldCheckForNativeAddr);
     return this->frame[ReturnAddrOffsetFromFramePtr]; 
 }
 
 void *  
-ArmStackFrame::GetAddressOfReturnAddress() 
+ArmStackFrame::GetAddressOfReturnAddress(bool isCurrentContextNative, bool shouldCheckForNativeAddr)
 { 
+    UNREFERENCED_PARAMETER(isCurrentContextNative);
+    UNREFERENCED_PARAMETER(shouldCheckForNativeAddr);
     return &this->frame[ReturnAddrOffsetFromFramePtr];
 }
 

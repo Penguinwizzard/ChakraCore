@@ -194,6 +194,7 @@ MACRO_WMS_PROFILED(     Div_A,              Reg3,           OpTempNumberProducin
 MACRO_WMS(              Mul_A,              Reg3,           OpTempNumberProducing|OpCallsValueOf|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut|OpProducesNumber)  // Arithmetic '*'
 MACRO_WMS_PROFILED(     Rem_A,              Reg3,           OpTempNumberProducing|OpCallsValueOf|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut|OpProducesNumber)  // Arithmetic '%'
 MACRO_WMS(              Sub_A,              Reg3,           OpTempNumberProducing|OpCallsValueOf|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut|OpProducesNumber)  // Arithmetic '-' (subtract)
+MACRO_WMS(              Expo_A,             Reg3,           OpTempNumberProducing|OpCallsValueOf|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut|OpProducesNumber)  // Arithmetic '**' (exponentiaton)
 
 MACRO_WMS(              And_A,              Reg3,           OpTempNumberProducing|OpCallsValueOf|OpIsInt32|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut|OpProducesNumber) // Bitwise '&'
 MACRO_WMS(              Or_A,               Reg3,           OpTempNumberProducing|OpCallsValueOf|OpIsInt32|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut|OpProducesNumber) // Bitwise '|'
@@ -420,7 +421,7 @@ MACRO_WMS(              LdLetHeapArguments, Reg3,           OpSideEffect)       
 MACRO_BACKEND_ONLY(     LdArgumentsFromStack,Reg1,          None)      // Load the heap-based "arguments" object even if it is null (Loads from meta arguments location for inlinee as well).
 MACRO_WMS(              LdHeapArgsCached,   Reg2,           OpSideEffect)    // Load the heap-based "arguments" object in a cached scope
 MACRO_EXTEND_WMS(       LdLetHeapArgsCached,Reg2,           OpSideEffect)    // Load the heap-based "arguments" object in a cached scope (formals are let-like instead of var-like)
-MACRO_WMS(              LdStackArgPtr,      Reg1,           OpSideEffect)       // Load the address of the base of the input parameter area
+MACRO_EXTEND_WMS(       LdStackArgPtr,      Reg1,           OpSideEffect)       // Load the address of the base of the input parameter area
 MACRO_WMS_PROFILED_OP(  LdThis,       Reg2Int1,       OpHasImplicitCall|OpTempNumberTransfer)        // Load this object     (NOTE: TryLoadRoot exit scripts on host dispatch, but otherwise, no side effect)
 MACRO_WMS_PROFILED_OP(  StrictLdThis, Reg2,           OpHasImplicitCall|OpTempNumberTransfer)        // Load this object in strict mode
 MACRO_BACKEND_ONLY(     CheckThis,          Reg1,           OpCanCSE|OpBailOutRec)
@@ -576,6 +577,7 @@ MACRO_BACKEND_ONLY(     BailOnNotSpreadable,         Empty,          OpBailOutRe
 MACRO_BACKEND_ONLY(     BailOnNotPolymorphicInlinee, Empty,          OpBailOutRec|OpTempNumberSources)
 MACRO_BACKEND_ONLY(     BailTarget,                  Empty,          OpBailOutRec|OpTempNumberSources|OpTempObjectSources)
 MACRO_BACKEND_ONLY(     BailOnNoProfile,             Empty,          OpBailOutRec|OpDeadFallThrough)
+MACRO_BACKEND_ONLY(     BailOnNoSimdTypeSpec,        Empty,          OpBailOutRec|OpDeadFallThrough)
 MACRO_BACKEND_ONLY(     BailOnNotObject,             Empty,          OpBailOutRec|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpTempObjectSources)
 MACRO_BACKEND_ONLY(     BailOnNotArray,              Empty,          OpBailOutRec|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpTempObjectSources)
 MACRO_BACKEND_ONLY(     BailForDebugger,             Empty,          OpBailOutRec|OpTempNumberSources|OpTempObjectSources|OpSideEffect)    // Bail out so that we can continue the function under debugger. Disable optimizations for this instr so that it's not moved.
@@ -675,13 +677,15 @@ MACRO_BACKEND_ONLY(     GeneratorResumeJumpTable, Reg1,     OpSideEffect)
 MACRO_BACKEND_ONLY(     RestoreOutParam,    Empty,          None)
 
 #ifdef SIMD_JS_ENABLED
+
 // All SIMD ops are backend only for non-asmjs.
-#define MACRO_SIMD(opcode, asmjsLayout, opCodeAttrAsmJs, OpCodeAttr) MACRO_BACKEND_ONLY(opcode, Empty, OpCodeAttr)
-#define MACRO_SIMD_WMS(opcode, asmjsLayout, opCodeAttrAsmJs, OpCodeAttr) MACRO_BACKEND_ONLY(opcode, Empty, OpCodeAttr)
+#define MACRO_SIMD(opcode, asmjsLayout, opCodeAttrAsmJs, OpCodeAttr, ...) MACRO_BACKEND_ONLY(opcode, Empty, OpCodeAttr)
+#define MACRO_SIMD_WMS(opcode, asmjsLayout, opCodeAttrAsmJs, OpCodeAttr, ...) MACRO_BACKEND_ONLY(opcode, Empty, OpCodeAttr)
+
 #define MACRO_SIMD_BACKEND_ONLY(opcode, asmjsLayout, opCodeAttrAsmJs, OpCodeAttr) MACRO_BACKEND_ONLY(opcode, Empty, OpCodeAttr)
 
-#define MACRO_SIMD_EXTEND(opcode, asmjsLayout, opCodeAttrAsmJs, OpCodeAttr) MACRO_BACKEND_ONLY(opcode, Empty, OpCodeAttr)
-#define MACRO_SIMD_EXTEND_WMS(opcode, asmjsLayout, opCodeAttrAsmJs, OpCodeAttr) MACRO_BACKEND_ONLY(opcode, Empty, OpCodeAttr)
+#define MACRO_SIMD_EXTEND(opcode, asmjsLayout, opCodeAttrAsmJs, OpCodeAttr, ...) MACRO_BACKEND_ONLY(opcode, Empty, OpCodeAttr)
+#define MACRO_SIMD_EXTEND_WMS(opcode, asmjsLayout, opCodeAttrAsmJs, OpCodeAttr, ...) MACRO_BACKEND_ONLY(opcode, Empty, OpCodeAttr)
 #define MACRO_SIMD_BACKEND_ONLY_EXTEND(opcode, asmjsLayout, opCodeAttrAsmJs, OpCodeAttr) MACRO_BACKEND_ONLY(opcode, Empty, OpCodeAttr)
 
 #include "OpCodesSimd.h"

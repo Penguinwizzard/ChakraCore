@@ -559,17 +559,29 @@ Js::Var StackSym::GetFloatConstValueAsVar_PostGlobOpt() const
         }
     }
 
-    Assert(src1->IsFloatConstOpnd());
     Assert(this->IsFloatConst() || stackSym->IsFloatConst());
-    Assert(defInstr->m_opcode == Js::OpCode::LdC_A_R8);
 
-    IR::AddrOpnd *const addrOpnd = src1->AsFloatConstOpnd()->GetAddrOpnd(defInstr->m_func);
+    IR::AddrOpnd *addrOpnd;
+    if (src1->IsAddrOpnd())
+    {
+        Assert(defInstr->m_opcode == Js::OpCode::Ld_A);
+        addrOpnd = src1->AsAddrOpnd();
+    }
+    else
+    {
+        Assert(src1->IsFloatConstOpnd());
+        Assert(defInstr->m_opcode == Js::OpCode::LdC_A_R8);
+
+        addrOpnd = src1->AsFloatConstOpnd()->GetAddrOpnd(defInstr->m_func);
+
+        // This is just to prevent creating multiple numbers when the sym is used multiple times. We can only do this
+        // post-GlobOpt, as otherwise it violates some invariants assumed in GlobOpt.
+        defInstr->ReplaceSrc1(addrOpnd);
+        defInstr->m_opcode = Js::OpCode::Ld_A;
+    }
+
     const Js::Var address = addrOpnd->m_address;
-
-    // This is just to prevent creating multiple numbers when the sym is used multiple times. We can only do this
-    // post-GlobOpt, as otherwise it violates some invariants assumed in GlobOpt.
-    defInstr->ReplaceSrc1(addrOpnd);
-    defInstr->m_opcode = Js::OpCode::Ld_A;
+    Assert(Js::JavascriptNumber::Is(address));
     return address;
 }
 
@@ -732,6 +744,45 @@ BailoutConstantValue StackSym::GetConstValueForBailout() const
 }
 
 
+// SIMD_JS
+StackSym *
+StackSym::GetSimd128EquivSym(IRType type, Func *func)
+{
+    switch (type)
+    {
+    case TySimd128F4:
+        return this->GetSimd128F4EquivSym(func);
+        break;
+    case TySimd128I4:
+        return this->GetSimd128I4EquivSym(func);
+        break;
+    case TySimd128D2:
+        return this->GetSimd128D2EquivSym(func);
+        break;
+    default:
+        Assert(UNREACHED);
+        return null;
+    }
+}
+
+StackSym *
+StackSym::GetSimd128F4EquivSym(Func *func)
+{
+    return this->GetTypeEquivSym(TySimd128F4, func);
+}
+
+StackSym *
+StackSym::GetSimd128I4EquivSym(Func *func)
+{
+    return this->GetTypeEquivSym(TySimd128I4, func);
+}
+
+StackSym *
+StackSym::GetSimd128D2EquivSym(Func *func)
+{
+    return this->GetTypeEquivSym(TySimd128D2, func);
+}
+
 StackSym *
 StackSym::GetFloat64EquivSym(Func *func)
 {
@@ -756,21 +807,16 @@ StackSym::GetTypeEquivSym(IRType type, Func *func)
     Assert(this->m_type != type);
 
     StackSym *sym = this->m_equivNext;
-
-    if (sym != this)
+    int i = 1;
+    while (sym != this)
     {
+        Assert(i <= 5); // circular of at most 6 syms : var, f64, i32, simd128I4, simd128F4, simd12D2
         if (sym->m_type == type)
         {
             return sym;
         }
-
         sym = sym->m_equivNext;
-        if (sym != this)
-        {
-            // We should have a circular of no more than 3 (var, int32, float64) elements.
-            Assert(sym->m_type == type);
-            return sym;
-        }
+        i++;
     }
 
     // Don't allocatate if func wasn't passed in.

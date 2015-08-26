@@ -305,7 +305,7 @@ STDAPI_(JsErrorCode) JsDisposeRuntime(JsRuntimeHandle runtimeHandle)
 
 STDAPI_(JsErrorCode) JsAddRef(JsRef ref, unsigned int *count)
 {
-    PARAM_NOT_NULL(ref);
+    VALIDATE_JSREF(ref);
     if (count != nullptr)
     {
         *count = 0;
@@ -351,7 +351,7 @@ STDAPI_(JsErrorCode) JsAddRef(JsRef ref, unsigned int *count)
 
 STDAPI_(JsErrorCode) JsRelease(JsRef ref, unsigned int *count)
 {
-    PARAM_NOT_NULL(ref);
+    VALIDATE_JSREF(ref);
     if (count != nullptr)
     {
         *count = 0;
@@ -396,7 +396,7 @@ STDAPI_(JsErrorCode) JsRelease(JsRef ref, unsigned int *count)
 
 STDAPI_(JsErrorCode) JsSetObjectBeforeCollectCallback(JsRef ref, void *callbackState, JsObjectBeforeCollectCallback objectBeforeCollectCallback)
 {
-    PARAM_NOT_NULL(ref);
+    VALIDATE_JSREF(ref);
 
     if (Js::TaggedNumber::Is(ref))
     {
@@ -497,7 +497,7 @@ STDAPI_(JsErrorCode) JsSetCurrentContext(JsContextRef newContext)
 
 STDAPI_(JsErrorCode) JsGetContextOfObject(JsValueRef object, JsContextRef *context)
 {
-    PARAM_NOT_NULL(object);
+    VALIDATE_JSREF(object);
     PARAM_NOT_NULL(context);
 
     BEGIN_JSRT_NO_EXCEPTION
@@ -514,7 +514,7 @@ STDAPI_(JsErrorCode) JsGetContextOfObject(JsValueRef object, JsContextRef *conte
 
 STDAPI_(JsErrorCode) JsGetContextData(JsContextRef context, void **data)
 {
-    PARAM_NOT_NULL(context);
+    VALIDATE_JSREF(context);
     PARAM_NOT_NULL(data);
 
     BEGIN_JSRT_NO_EXCEPTION
@@ -531,7 +531,7 @@ STDAPI_(JsErrorCode) JsGetContextData(JsContextRef context, void **data)
 
 STDAPI_(JsErrorCode) JsSetContextData(_In_ JsContextRef context, _In_ void *data)
 {
-    PARAM_NOT_NULL(context);
+    VALIDATE_JSREF(context);
 
     BEGIN_JSRT_NO_EXCEPTION
     {
@@ -656,7 +656,7 @@ STDAPI_(JsErrorCode) JsBoolToBoolean(bool value, JsValueRef *booleanValue)
 
 STDAPI_(JsErrorCode) JsBooleanToBool(JsValueRef value, bool *boolValue)
 {
-    PARAM_NOT_NULL(value);
+    VALIDATE_JSREF(value);
     PARAM_NOT_NULL(boolValue);
 
     BEGIN_JSRT_NO_EXCEPTION
@@ -674,7 +674,6 @@ STDAPI_(JsErrorCode) JsBooleanToBool(JsValueRef value, bool *boolValue)
 STDAPI_(JsErrorCode) JsConvertValueToBoolean(JsValueRef value, JsValueRef *result)
 {
     return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(value);
         VALIDATE_INCOMING_REFERENCE(value, scriptContext);
         PARAM_NOT_NULL(result);
 
@@ -693,7 +692,7 @@ STDAPI_(JsErrorCode) JsConvertValueToBoolean(JsValueRef value, JsValueRef *resul
 
 STDAPI_(JsErrorCode) JsGetValueType(JsValueRef value, JsValueType *type)
 {
-    PARAM_NOT_NULL(value);
+    VALIDATE_JSREF(value);
     PARAM_NOT_NULL(type);
 
     BEGIN_JSRT_NO_EXCEPTION
@@ -785,7 +784,7 @@ STDAPI_(JsErrorCode) JsIntToNumber(int intValue, JsValueRef *asValue)
 
 STDAPI_(JsErrorCode) JsNumberToDouble(JsValueRef value, double *asDouble)
 {
-    PARAM_NOT_NULL(value);
+    VALIDATE_JSREF(value);
     PARAM_NOT_NULL(asDouble);
 
     BEGIN_JSRT_NO_EXCEPTION
@@ -809,7 +808,7 @@ STDAPI_(JsErrorCode) JsNumberToDouble(JsValueRef value, double *asDouble)
 
 STDAPI_(JsErrorCode) JsNumberToInt(JsValueRef value, int *asInt)
 {
-    PARAM_NOT_NULL(value);
+    VALIDATE_JSREF(value);
     PARAM_NOT_NULL(asInt);
 
     BEGIN_JSRT_NO_EXCEPTION
@@ -834,7 +833,6 @@ STDAPI_(JsErrorCode) JsNumberToInt(JsValueRef value, int *asInt)
 STDAPI_(JsErrorCode) JsConvertValueToNumber(JsValueRef value, JsValueRef *result)
 {
     return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(value);
         VALIDATE_INCOMING_REFERENCE(value, scriptContext);
         PARAM_NOT_NULL(result);
 
@@ -845,7 +843,7 @@ STDAPI_(JsErrorCode) JsConvertValueToNumber(JsValueRef value, JsValueRef *result
 
 STDAPI_(JsErrorCode) JsGetStringLength(JsValueRef value, int *length)
 {
-    PARAM_NOT_NULL(value);
+    VALIDATE_JSREF(value);
     PARAM_NOT_NULL(length);
 
     BEGIN_JSRT_NO_EXCEPTION
@@ -873,7 +871,7 @@ STDAPI_(JsErrorCode) JsPointerToString(const wchar_t *stringValue, size_t string
 
 STDAPI_(JsErrorCode) JsStringToPointer(JsValueRef stringValue, const wchar_t **stringPtr, size_t *stringLength)
 {
-    PARAM_NOT_NULL(stringValue);
+    VALIDATE_JSREF(stringValue);
     PARAM_NOT_NULL(stringPtr);
     *stringPtr = nullptr;
     PARAM_NOT_NULL(stringLength);
@@ -896,7 +894,6 @@ STDAPI_(JsErrorCode) JsStringToPointer(JsValueRef stringValue, const wchar_t **s
 STDAPI_(JsErrorCode) JsConvertValueToString(JsValueRef value, JsValueRef *result)
 {
     return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(value);
         VALIDATE_INCOMING_REFERENCE(value, scriptContext);
         PARAM_NOT_NULL(result);
         *result = nullptr;
@@ -940,10 +937,8 @@ STDAPI_(JsErrorCode) JsCreateExternalObject(void *data, JsFinalizeCallback final
 STDAPI_(JsErrorCode) JsConvertValueToObject(JsValueRef value, JsValueRef *result)
 {
     return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(value);
         VALIDATE_INCOMING_REFERENCE(value, scriptContext);
         PARAM_NOT_NULL(result);
-        *result = nullptr;
 
         *result = (JsValueRef)Js::JavascriptOperators::ToObject((Js::Var)value, scriptContext);
         Assert(*result == nullptr || !Js::CrossSite::NeedMarshalVar(*result, scriptContext));
@@ -955,10 +950,8 @@ STDAPI_(JsErrorCode) JsConvertValueToObject(JsValueRef value, JsValueRef *result
 STDAPI_(JsErrorCode) JsGetPrototype(JsValueRef object, JsValueRef *prototypeObject)
 {
     return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(object);
         VALIDATE_INCOMING_OBJECT(object, scriptContext);
         PARAM_NOT_NULL(prototypeObject);
-        *prototypeObject = nullptr;
 
         *prototypeObject = (JsValueRef)Js::JavascriptOperators::OP_GetPrototype(object, scriptContext);
         Assert(*prototypeObject == nullptr || !Js::CrossSite::NeedMarshalVar(*prototypeObject, scriptContext));
@@ -970,9 +963,7 @@ STDAPI_(JsErrorCode) JsGetPrototype(JsValueRef object, JsValueRef *prototypeObje
 STDAPI_(JsErrorCode) JsSetPrototype(JsValueRef object, JsValueRef prototypeObject)
 {
     return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(object);
         VALIDATE_INCOMING_OBJECT(object, scriptContext);
-        PARAM_NOT_NULL(prototypeObject);
         VALIDATE_INCOMING_OBJECT_OR_NULL(prototypeObject, scriptContext);
 
         // We're not allowed to set this.
@@ -989,9 +980,7 @@ STDAPI_(JsErrorCode) JsSetPrototype(JsValueRef object, JsValueRef prototypeObjec
 
 STDAPI_(JsErrorCode) JsInstanceOf(JsValueRef object, JsValueRef constructor, bool *result) {
     return ContextAPIWrapper<true>([&](Js::ScriptContext *scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(object);
         VALIDATE_INCOMING_REFERENCE(object, scriptContext);
-        PARAM_NOT_NULL(constructor);
         VALIDATE_INCOMING_REFERENCE(constructor, scriptContext);
         PARAM_NOT_NULL(result);
 
@@ -1004,7 +993,6 @@ STDAPI_(JsErrorCode) JsInstanceOf(JsValueRef object, JsValueRef constructor, boo
 STDAPI_(JsErrorCode) JsGetExtensionAllowed(JsValueRef object, bool *value)
 {
     return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(object);
         VALIDATE_INCOMING_OBJECT(object, scriptContext);
         PARAM_NOT_NULL(value);
         *value = nullptr;
@@ -1018,7 +1006,6 @@ STDAPI_(JsErrorCode) JsGetExtensionAllowed(JsValueRef object, bool *value)
 STDAPI_(JsErrorCode) JsPreventExtension(JsValueRef object)
 {
     return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(object);
         VALIDATE_INCOMING_OBJECT(object, scriptContext);
 
         Js::RecyclableObject::FromVar(object)->PreventExtensions();
@@ -1030,7 +1017,6 @@ STDAPI_(JsErrorCode) JsPreventExtension(JsValueRef object)
 STDAPI_(JsErrorCode) JsGetProperty(JsValueRef object, JsPropertyIdRef propertyId, JsValueRef *value)
 {
     return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(object);
         VALIDATE_INCOMING_OBJECT(object, scriptContext);
         VALIDATE_INCOMING_PROPERTYID(propertyId);
         PARAM_NOT_NULL(value);
@@ -1045,7 +1031,6 @@ STDAPI_(JsErrorCode) JsGetProperty(JsValueRef object, JsPropertyIdRef propertyId
 STDAPI_(JsErrorCode) JsGetOwnPropertyDescriptor(JsValueRef object, JsPropertyIdRef propertyId, JsValueRef *propertyDescriptor)
 {
     return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(object);
         VALIDATE_INCOMING_OBJECT(object, scriptContext);
         VALIDATE_INCOMING_PROPERTYID(propertyId);
         PARAM_NOT_NULL(propertyDescriptor);
@@ -1068,7 +1053,6 @@ STDAPI_(JsErrorCode) JsGetOwnPropertyDescriptor(JsValueRef object, JsPropertyIdR
 STDAPI_(JsErrorCode) JsGetOwnPropertyNames(JsValueRef object, JsValueRef *propertyNames)
 {
     return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(object);
         VALIDATE_INCOMING_OBJECT(object, scriptContext);
         PARAM_NOT_NULL(propertyNames);
         *propertyNames = nullptr;
@@ -1082,7 +1066,6 @@ STDAPI_(JsErrorCode) JsGetOwnPropertyNames(JsValueRef object, JsValueRef *proper
 STDAPI_(JsErrorCode) JsGetOwnPropertySymbols(JsValueRef object, JsValueRef *propertySymbols)
 {
     return ContextAPIWrapper<true>([&](Js::ScriptContext *scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(object);
         VALIDATE_INCOMING_OBJECT(object, scriptContext);
         PARAM_NOT_NULL(propertySymbols);
 
@@ -1095,11 +1078,9 @@ STDAPI_(JsErrorCode) JsGetOwnPropertySymbols(JsValueRef object, JsValueRef *prop
 STDAPI_(JsErrorCode) JsSetProperty(JsValueRef object, JsPropertyIdRef propertyId, JsValueRef value, bool useStrictRules)
 {
     return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(object);
         VALIDATE_INCOMING_OBJECT(object, scriptContext);
         VALIDATE_INCOMING_PROPERTYID(propertyId);
-        PARAM_NOT_NULL(value);
-        VALIDATE_INCOMING_VALUE_CONTEXT(value, scriptContext);
+        VALIDATE_INCOMING_REFERENCE(value, scriptContext);
 
         Js::JavascriptOperators::OP_SetProperty(object, ((Js::PropertyRecord *)propertyId)->GetPropertyId(), value, scriptContext,
             NULL, useStrictRules ? Js::PropertyOperation_StrictMode : Js::PropertyOperation_None);
@@ -1111,7 +1092,6 @@ STDAPI_(JsErrorCode) JsSetProperty(JsValueRef object, JsPropertyIdRef propertyId
 STDAPI_(JsErrorCode) JsHasProperty(JsValueRef object, JsPropertyIdRef propertyId, bool *hasProperty)
 {
     return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(object);
         VALIDATE_INCOMING_OBJECT(object, scriptContext);
         VALIDATE_INCOMING_PROPERTYID(propertyId);
         PARAM_NOT_NULL(hasProperty);
@@ -1126,7 +1106,6 @@ STDAPI_(JsErrorCode) JsHasProperty(JsValueRef object, JsPropertyIdRef propertyId
 STDAPI_(JsErrorCode) JsDeleteProperty(JsValueRef object, JsPropertyIdRef propertyId, bool useStrictRules, JsValueRef *result)
 {
     return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(object);
         VALIDATE_INCOMING_OBJECT(object, scriptContext);
         VALIDATE_INCOMING_PROPERTYID(propertyId);
         PARAM_NOT_NULL(result);
@@ -1142,10 +1121,8 @@ STDAPI_(JsErrorCode) JsDeleteProperty(JsValueRef object, JsPropertyIdRef propert
 STDAPI_(JsErrorCode) JsDefineProperty(JsValueRef object, JsPropertyIdRef propertyId, JsValueRef propertyDescriptor, bool *result)
 {
     return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(object);
         VALIDATE_INCOMING_OBJECT(object, scriptContext);
         VALIDATE_INCOMING_PROPERTYID(propertyId);
-        PARAM_NOT_NULL(propertyDescriptor);
         VALIDATE_INCOMING_OBJECT(propertyDescriptor, scriptContext);
         PARAM_NOT_NULL(result);
         *result = nullptr;
@@ -1291,7 +1268,6 @@ STDAPI_(JsErrorCode) JsCreateDataView(JsValueRef arrayBuffer, unsigned int byteO
 {
     return ContextAPIWrapper<true>([&](Js::ScriptContext *scriptContext) -> JsErrorCode {
         VALIDATE_INCOMING_REFERENCE(arrayBuffer, scriptContext);
-        PARAM_NOT_NULL(arrayBuffer);
         PARAM_NOT_NULL(result);
 
         if (!Js::ArrayBuffer::Is(arrayBuffer))
@@ -1325,7 +1301,7 @@ inline JsTypedArrayType GetTypedArrayType(Js::TypeId typeId)
 
 STDAPI_(JsErrorCode) JsGetTypedArrayInfo(JsValueRef typedArray, JsTypedArrayType *arrayType, JsValueRef *arrayBuffer, unsigned int *byteOffset, unsigned int *byteLength)
 {
-    PARAM_NOT_NULL(typedArray);
+    VALIDATE_JSREF(typedArray);
 
     BEGIN_JSRT_NO_EXCEPTION
     {
@@ -1358,7 +1334,7 @@ STDAPI_(JsErrorCode) JsGetTypedArrayInfo(JsValueRef typedArray, JsTypedArrayType
 
 STDAPI_(JsErrorCode) JsGetArrayBufferStorage(JsValueRef instance, BYTE **buffer, unsigned int *bufferLength)
 {
-    PARAM_NOT_NULL(instance);
+    VALIDATE_JSREF(instance);
     PARAM_NOT_NULL(buffer);
     PARAM_NOT_NULL(bufferLength);
 
@@ -1378,7 +1354,7 @@ STDAPI_(JsErrorCode) JsGetArrayBufferStorage(JsValueRef instance, BYTE **buffer,
 
 STDAPI_(JsErrorCode) JsGetTypedArrayStorage(JsValueRef instance, BYTE **buffer, unsigned int *bufferLength, JsTypedArrayType *typedArrayType, int *elementSize)
 {
-    PARAM_NOT_NULL(instance);
+    VALIDATE_JSREF(instance);
     PARAM_NOT_NULL(buffer);
     PARAM_NOT_NULL(bufferLength);
 
@@ -1442,7 +1418,7 @@ STDAPI_(JsErrorCode) JsGetTypedArrayStorage(JsValueRef instance, BYTE **buffer, 
 
 STDAPI_(JsErrorCode) JsGetDataViewStorage(JsValueRef instance, BYTE **buffer, unsigned int *bufferLength)
 {
-    PARAM_NOT_NULL(instance);
+    VALIDATE_JSREF(instance);
     PARAM_NOT_NULL(buffer);
     PARAM_NOT_NULL(bufferLength);
 
@@ -1464,7 +1440,6 @@ STDAPI_(JsErrorCode) JsGetDataViewStorage(JsValueRef instance, BYTE **buffer, un
 STDAPI_(JsErrorCode) JsCreateSymbol(JsValueRef description, JsValueRef *result)
 {
     return ContextAPIWrapper<true>([&](Js::ScriptContext *scriptContext) -> JsErrorCode {
-        VALIDATE_INCOMING_REFERENCE(description, scriptContext);
         PARAM_NOT_NULL(result);
         *result = nullptr;
 
@@ -1472,6 +1447,7 @@ STDAPI_(JsErrorCode) JsCreateSymbol(JsValueRef description, JsValueRef *result)
 
         if (description != JS_INVALID_REFERENCE)
         {
+            VALIDATE_INCOMING_REFERENCE(description, scriptContext);
             descriptionString = Js::JavascriptConversion::ToString(description, scriptContext);
         }
         else
@@ -1488,9 +1464,7 @@ STDAPI_(JsErrorCode) JsCreateSymbol(JsValueRef description, JsValueRef *result)
 STDAPI_(JsErrorCode) JsHasIndexedProperty(JsValueRef object, JsValueRef index, bool *result)
 {
     return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(object);
         VALIDATE_INCOMING_OBJECT(object, scriptContext);
-        PARAM_NOT_NULL(index);
         VALIDATE_INCOMING_REFERENCE(index, scriptContext);
         PARAM_NOT_NULL(result);
         *result = false;
@@ -1504,9 +1478,7 @@ STDAPI_(JsErrorCode) JsHasIndexedProperty(JsValueRef object, JsValueRef index, b
 STDAPI_(JsErrorCode) JsGetIndexedProperty(JsValueRef object, JsValueRef index, JsValueRef *result)
 {
     return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(object);
         VALIDATE_INCOMING_OBJECT(object, scriptContext);
-        PARAM_NOT_NULL(index);
         VALIDATE_INCOMING_REFERENCE(index, scriptContext);
         PARAM_NOT_NULL(result);
         *result = nullptr;
@@ -1520,12 +1492,9 @@ STDAPI_(JsErrorCode) JsGetIndexedProperty(JsValueRef object, JsValueRef index, J
 STDAPI_(JsErrorCode) JsSetIndexedProperty(JsValueRef object, JsValueRef index, JsValueRef value)
 {
     return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(object);
         VALIDATE_INCOMING_OBJECT(object, scriptContext);
-        PARAM_NOT_NULL(index);
         VALIDATE_INCOMING_REFERENCE(index, scriptContext);
-        PARAM_NOT_NULL(value);
-        VALIDATE_INCOMING_VALUE_CONTEXT(value, scriptContext);
+        VALIDATE_INCOMING_REFERENCE(value, scriptContext);
 
         Js::JavascriptOperators::OP_SetElementI((Js::Var)object, (Js::Var)index, (Js::Var)value, scriptContext);
 
@@ -1536,9 +1505,7 @@ STDAPI_(JsErrorCode) JsSetIndexedProperty(JsValueRef object, JsValueRef index, J
 STDAPI_(JsErrorCode) JsDeleteIndexedProperty(JsValueRef object, JsValueRef index)
 {
     return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(object);
         VALIDATE_INCOMING_OBJECT(object, scriptContext);
-        PARAM_NOT_NULL(index);
         VALIDATE_INCOMING_REFERENCE(index, scriptContext);
 
         Js::JavascriptOperators::OP_DeleteElementI((Js::Var)object, (Js::Var)index, scriptContext);
@@ -1588,7 +1555,6 @@ STDAPI_(JsErrorCode) JsSetIndexedPropertiesToExternalData(
     _In_ unsigned int elementLength)
 {
     return ContextAPIWrapper<true>([&](Js::ScriptContext *scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(object);
         VALIDATE_INCOMING_OBJECT(object, scriptContext);
 
         // Don't support doing this on array or array-like object
@@ -1652,7 +1618,7 @@ STDAPI_(JsErrorCode) JsSetIndexedPropertiesToExternalData(
 
 STDAPI_(JsErrorCode) JsHasIndexedPropertiesExternalData(JsValueRef object, bool *value)
 {
-    PARAM_NOT_NULL(object);
+    VALIDATE_JSREF(object);
     PARAM_NOT_NULL(value);
 
     BEGIN_JSRT_NO_EXCEPTION
@@ -1675,7 +1641,7 @@ STDAPI_(JsErrorCode) JsGetIndexedPropertiesExternalData(
     _Out_ JsTypedArrayType* arrayType,
     _Out_ unsigned int* elementLength)
 {
-    PARAM_NOT_NULL(object);
+    VALIDATE_JSREF(object);
     PARAM_NOT_NULL(buffer);
     PARAM_NOT_NULL(arrayType);
     PARAM_NOT_NULL(elementLength);
@@ -1737,9 +1703,7 @@ STDAPI_(JsErrorCode) JsGetIndexedPropertiesExternalData(
 STDAPI_(JsErrorCode) JsEquals(JsValueRef object1, JsValueRef object2, bool *result)
 {
     return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(object1);
         VALIDATE_INCOMING_REFERENCE(object1, scriptContext);
-        PARAM_NOT_NULL(object2);
         VALIDATE_INCOMING_REFERENCE(object2, scriptContext);
         PARAM_NOT_NULL(result);
 
@@ -1751,9 +1715,7 @@ STDAPI_(JsErrorCode) JsEquals(JsValueRef object1, JsValueRef object2, bool *resu
 STDAPI_(JsErrorCode) JsStrictEquals(JsValueRef object1, JsValueRef object2, bool *result)
 {
     return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(object1);
         VALIDATE_INCOMING_REFERENCE(object1, scriptContext);
-        PARAM_NOT_NULL(object2);
         VALIDATE_INCOMING_REFERENCE(object2, scriptContext);
         PARAM_NOT_NULL(result);
 
@@ -1764,7 +1726,7 @@ STDAPI_(JsErrorCode) JsStrictEquals(JsValueRef object1, JsValueRef object2, bool
 
 STDAPI_(JsErrorCode) JsHasExternalData(JsValueRef object, bool *value)
 {
-    PARAM_NOT_NULL(object);
+    VALIDATE_JSREF(object);
     PARAM_NOT_NULL(value);
 
     BEGIN_JSRT_NO_EXCEPTION
@@ -1776,7 +1738,7 @@ STDAPI_(JsErrorCode) JsHasExternalData(JsValueRef object, bool *value)
 
 STDAPI_(JsErrorCode) JsGetExternalData(JsValueRef object, void **data)
 {
-    PARAM_NOT_NULL(object);
+    VALIDATE_JSREF(object);
     PARAM_NOT_NULL(data);
 
     BEGIN_JSRT_NO_EXCEPTION
@@ -1796,7 +1758,7 @@ STDAPI_(JsErrorCode) JsGetExternalData(JsValueRef object, void **data)
 
 STDAPI_(JsErrorCode) JsSetExternalData(JsValueRef object, void *data)
 {
-    PARAM_NOT_NULL(object);
+    VALIDATE_JSREF(object);
 
     BEGIN_JSRT_NO_EXCEPTION
     {
@@ -1818,23 +1780,17 @@ STDAPI_(JsErrorCode) JsCallFunction(JsValueRef function, JsValueRef *args, ushor
     {
         *result = nullptr;
     }
+
     return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(function);
         VALIDATE_INCOMING_FUNCTION(function, scriptContext);
 
-        if (cargs != 0)
+        if (cargs == 0 || args == nullptr) {
+          return JsErrorInvalidArgument;
+        }
+
+        for (int index = 0; index < cargs; index++)
         {
-            if (args == NULL)
-            {
-                return JsErrorInvalidArgument;
-            }
-            else
-            {
-                for (int index = 0; index < cargs; index++)
-                {
-                    VALIDATE_INCOMING_REFERENCE(args[index], scriptContext);
-                }
-            }
+            VALIDATE_INCOMING_REFERENCE(args[index], scriptContext);
         }
 
         Js::JavascriptFunction *jsFunction = Js::JavascriptFunction::FromVar(function);
@@ -1856,12 +1812,11 @@ STDAPI_(JsErrorCode) JsCallFunction(JsValueRef function, JsValueRef *args, ushor
 STDAPI_(JsErrorCode) JsConstructObject(JsValueRef function, JsValueRef *args, ushort cargs, JsValueRef *result)
 {
     return ContextAPIWrapper<true>([&] (Js::ScriptContext *scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(function);
+        VALIDATE_INCOMING_FUNCTION(function, scriptContext);
         PARAM_NOT_NULL(result);
         *result = nullptr;
-        VALIDATE_INCOMING_FUNCTION(function, scriptContext);
 
-        if (cargs == 0 || args == NULL)
+        if (cargs == 0 || args == nullptr)
         {
             return JsErrorInvalidArgument;
         }
@@ -1929,7 +1884,6 @@ void SetErrorMessage(Js::ScriptContext *scriptContext, JsValueRef newError, JsVa
 STDAPI_(JsErrorCode) JsCreateError(JsValueRef message, JsValueRef *error)
 {
     return ContextAPIWrapper<true>([&] (Js::ScriptContext * scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(message);
         VALIDATE_INCOMING_REFERENCE(message, scriptContext);
         PARAM_NOT_NULL(error);
         *error = nullptr;
@@ -1945,7 +1899,6 @@ STDAPI_(JsErrorCode) JsCreateError(JsValueRef message, JsValueRef *error)
 STDAPI_(JsErrorCode) JsCreateRangeError(JsValueRef message, JsValueRef *error)
 {
     return ContextAPIWrapper<true>([&] (Js::ScriptContext * scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(message);
         VALIDATE_INCOMING_REFERENCE(message, scriptContext);
         PARAM_NOT_NULL(error);
         *error = nullptr;
@@ -1963,7 +1916,6 @@ STDAPI_(JsErrorCode) JsCreateRangeError(JsValueRef message, JsValueRef *error)
 STDAPI_(JsErrorCode) JsCreateReferenceError(JsValueRef message, JsValueRef *error)
 {
     return ContextAPIWrapper<true>([&] (Js::ScriptContext * scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(message);
         VALIDATE_INCOMING_REFERENCE(message, scriptContext);
         PARAM_NOT_NULL(error);
         *error = nullptr;
@@ -1981,7 +1933,6 @@ STDAPI_(JsErrorCode) JsCreateReferenceError(JsValueRef message, JsValueRef *erro
 STDAPI_(JsErrorCode) JsCreateSyntaxError(JsValueRef message, JsValueRef *error)
 {
     return ContextAPIWrapper<true>([&] (Js::ScriptContext * scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(message);
         VALIDATE_INCOMING_REFERENCE(message, scriptContext);
         PARAM_NOT_NULL(error);
         *error = nullptr;
@@ -1999,7 +1950,6 @@ STDAPI_(JsErrorCode) JsCreateSyntaxError(JsValueRef message, JsValueRef *error)
 STDAPI_(JsErrorCode) JsCreateTypeError(JsValueRef message, JsValueRef *error)
 {
     return ContextAPIWrapper<true>([&] (Js::ScriptContext * scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(message);
         VALIDATE_INCOMING_REFERENCE(message, scriptContext);
         PARAM_NOT_NULL(error);
         *error = nullptr;
@@ -2017,7 +1967,6 @@ STDAPI_(JsErrorCode) JsCreateTypeError(JsValueRef message, JsValueRef *error)
 STDAPI_(JsErrorCode) JsCreateURIError(JsValueRef message, JsValueRef *error)
 {
     return ContextAPIWrapper<true>([&] (Js::ScriptContext * scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(message);
         VALIDATE_INCOMING_REFERENCE(message, scriptContext);
         PARAM_NOT_NULL(error);
         *error = nullptr;
@@ -2122,7 +2071,6 @@ STDAPI_(JsErrorCode) JsGetAndClearException(JsValueRef *exception)
 STDAPI_(JsErrorCode) JsSetException(JsValueRef exception)
 {
     return ContextAPINoScriptWrapper([&](Js::ScriptContext* scriptContext) -> JsErrorCode {
-        PARAM_NOT_NULL(exception);
         VALIDATE_INCOMING_REFERENCE(exception, scriptContext);
 
         Js::JavascriptExceptionObject *exceptionObject;
@@ -2140,9 +2088,8 @@ STDAPI_(JsErrorCode) JsSetException(JsValueRef exception)
 
 STDAPI_(JsErrorCode) JsGetRuntimeMemoryUsage(JsRuntimeHandle runtimeHandle, size_t * memoryUsage)
 {
-    PARAM_NOT_NULL(memoryUsage);
     VALIDATE_INCOMING_RUNTIME_HANDLE(runtimeHandle);
-
+    PARAM_NOT_NULL(memoryUsage);
     *memoryUsage = 0;
 
     ThreadContext * threadContext = JsrtRuntime::FromHandle(runtimeHandle)->GetThreadContext();
@@ -2167,8 +2114,8 @@ STDAPI_(JsErrorCode) JsSetRuntimeMemoryLimit(JsRuntimeHandle runtimeHandle, size
 
 STDAPI_(JsErrorCode) JsGetRuntimeMemoryLimit(JsRuntimeHandle runtimeHandle, size_t * memoryLimit)
 {
-    PARAM_NOT_NULL(memoryLimit);
     VALIDATE_INCOMING_RUNTIME_HANDLE(runtimeHandle);
+    PARAM_NOT_NULL(memoryLimit);
     *memoryLimit = 0;
 
     ThreadContext * threadContext = JsrtRuntime::FromHandle(runtimeHandle)->GetThreadContext();
@@ -2263,8 +2210,8 @@ STDAPI_(JsErrorCode) JsEnableRuntimeExecution(JsRuntimeHandle runtimeHandle)
 
 STDAPI_(JsErrorCode) JsIsRuntimeExecutionDisabled(JsRuntimeHandle runtimeHandle, bool *isDisabled)
 {
-    PARAM_NOT_NULL(isDisabled);
     VALIDATE_INCOMING_RUNTIME_HANDLE(runtimeHandle);
+    PARAM_NOT_NULL(isDisabled);
     *isDisabled = false;
 
     ThreadContext* threadContext = JsrtRuntime::FromHandle(runtimeHandle)->GetThreadContext();
@@ -2288,7 +2235,6 @@ STDAPI_(JsErrorCode) JsGetPropertyIdFromSymbol(JsValueRef symbol, JsPropertyIdRe
 {
     return ContextAPINoScriptWrapper([&](Js::ScriptContext * scriptContext) -> JsErrorCode {
         VALIDATE_INCOMING_REFERENCE(symbol, scriptContext);
-        PARAM_NOT_NULL(symbol);
         PARAM_NOT_NULL(propertyId);
         *propertyId = nullptr;
 
@@ -2344,7 +2290,6 @@ STDAPI_(JsErrorCode) JsGetPropertyIdType(JsPropertyIdRef propertyId, JsPropertyI
 {
     return GlobalAPIWrapper([&]() -> JsErrorCode {
         VALIDATE_INCOMING_PROPERTYID(propertyId);
-        PARAM_NOT_NULL(propertyIdType);
 
         Js::PropertyRecord const * propertyRecord = (Js::PropertyRecord const *)propertyId;
 
@@ -2363,6 +2308,7 @@ STDAPI_(JsErrorCode) JsGetPropertyIdType(JsPropertyIdRef propertyId, JsPropertyI
 
 STDAPI_(JsErrorCode) JsGetRuntime(JsContextRef context, JsRuntimeHandle *runtime)
 {
+    VALIDATE_JSREF(context);
     PARAM_NOT_NULL(runtime);
 
     *runtime = nullptr;

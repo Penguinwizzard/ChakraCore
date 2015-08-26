@@ -637,6 +637,17 @@ GlobOpt::OptBlock(BasicBlock *block)
                     this->tempBv->And(liveOnBackEdge);
                     this->ToFloat64(this->tempBv, block);
 
+                    // SIMD_JS
+                    // compensate on backedge if sym is live on loop entry but not on backedge
+                    this->tempBv->Minus(block->loop->simd128F4SymsOnEntry, block->globOptData.liveSimd128F4Syms);
+                    this->tempBv->And(liveOnBackEdge);
+                    this->ToTypeSpec(this->tempBv, block, TySimd128F4, IR::BailOutSimd128F4Only);
+
+                    this->tempBv->Minus(block->loop->simd128I4SymsOnEntry, block->globOptData.liveSimd128I4Syms);
+                    this->tempBv->And(liveOnBackEdge);
+                    this->ToTypeSpec(this->tempBv, block, TySimd128I4, IR::BailOutSimd128I4Only);
+
+
                     // For ints and floats, go aggressive and type specialize in the landing pad any symbol which was specialized on
                     // entry to the loop body (in the loop header), and is still specialized on this tail, but wasn't specialized in
                     // the landing pad.
@@ -662,6 +673,18 @@ GlobOpt::OptBlock(BasicBlock *block)
                     this->tempBv->And(block->globOptData.liveFloat64Syms);
                     this->tempBv->And(liveOnBackEdge);
                     this->ToFloat64(this->tempBv, block->loop->landingPad);
+
+                    // SIMD_JS
+                    // compensate on landingpad if live on loopEntry and Backedge.
+                    this->tempBv->Minus(block->loop->simd128F4SymsOnEntry, block->loop->landingPad->globOptData.liveSimd128F4Syms);
+                    this->tempBv->And(block->globOptData.liveSimd128F4Syms);
+                    this->tempBv->And(liveOnBackEdge);
+                    this->ToTypeSpec(this->tempBv, block->loop->landingPad, TySimd128F4, IR::BailOutSimd128F4Only);
+
+                    this->tempBv->Minus(block->loop->simd128I4SymsOnEntry, block->loop->landingPad->globOptData.liveSimd128I4Syms);
+                    this->tempBv->And(block->globOptData.liveSimd128I4Syms);
+                    this->tempBv->And(liveOnBackEdge);
+                    this->ToTypeSpec(this->tempBv, block->loop->landingPad, TySimd128I4, IR::BailOutSimd128I4Only);
 
                     // Now that we're done with the liveFields within this loop, trim the set to those syms
                     // that the backward pass told us were live out of the loop.
@@ -731,7 +754,13 @@ GlobOpt::OptLoops(Loop *loop)
         loop->symsUsedBeforeDefined = JitAnew(alloc, BVSparse<JitArenaAllocator>, this->alloc);
         loop->likelyIntSymsUsedBeforeDefined = JitAnew(alloc, BVSparse<JitArenaAllocator>, this->alloc);
         loop->likelyNumberSymsUsedBeforeDefined = JitAnew(alloc, BVSparse<JitArenaAllocator>, this->alloc);
+        loop->likelySimd128F4SymsUsedBeforeDefined = JitAnew(alloc, BVSparse<JitArenaAllocator>, this->alloc);
+        loop->likelySimd128I4SymsUsedBeforeDefined = JitAnew(alloc, BVSparse<JitArenaAllocator>, this->alloc);
+
         loop->forceFloat64SymsOnEntry = JitAnew(this->alloc, BVSparse<JitArenaAllocator>, this->alloc);
+        loop->forceSimd128F4SymsOnEntry = JitAnew(this->alloc, BVSparse<JitArenaAllocator>, this->alloc);
+        loop->forceSimd128I4SymsOnEntry = JitAnew(this->alloc, BVSparse<JitArenaAllocator>, this->alloc);
+
         loop->symsDefInLoop = JitAnew(this->alloc, BVSparse<JitArenaAllocator>, this->alloc);
         loop->fieldKilled = JitAnew(alloc, BVSparse<JitArenaAllocator>, this->alloc);
         loop->fieldPRESymStore = JitAnew(alloc, BVSparse<JitArenaAllocator>, this->alloc);
@@ -742,7 +771,13 @@ GlobOpt::OptLoops(Loop *loop)
         loop->symsUsedBeforeDefined->ClearAll();
         loop->likelyIntSymsUsedBeforeDefined->ClearAll();
         loop->likelyNumberSymsUsedBeforeDefined->ClearAll();
+        loop->likelySimd128F4SymsUsedBeforeDefined->ClearAll();
+        loop->likelySimd128I4SymsUsedBeforeDefined->ClearAll();
+
         loop->forceFloat64SymsOnEntry->ClearAll();
+        loop->forceSimd128F4SymsOnEntry->ClearAll();
+        loop->forceSimd128I4SymsOnEntry->ClearAll();
+
         loop->symsDefInLoop->ClearAll();
         loop->fieldKilled->ClearAll();
         loop->allFieldsKilled = false;
@@ -1116,6 +1151,73 @@ GlobOpt::MergePredBlocksValueMaps(BasicBlock *block)
             }
         } NEXT_BITSET_IN_SPARSEBV;
 
+        // SIMD_JS
+        // Simd128 type-spec syms
+        BVSparse<JitArenaAllocator> tempBv2(this->tempAlloc);
+        
+        // For syms we made alive in loop header because of hoisting, use-before-def, or def in Loop body, set their valueInfo to definite.
+        // Made live on header AND in one of forceSimd128* or likelySimd128* vectors.
+        tempBv->Or(loop->likelySimd128F4SymsUsedBeforeDefined, loop->symsDefInLoop);
+        tempBv->Or(loop->likelySimd128I4SymsUsedBeforeDefined);
+        tempBv->Or(loop->forceSimd128F4SymsOnEntry);
+        tempBv->Or(loop->forceSimd128I4SymsOnEntry);
+        tempBv2.Or(blockData.liveSimd128F4Syms, blockData.liveSimd128I4Syms);
+        tempBv->And(&tempBv2);
+
+        FOREACH_BITSET_IN_SPARSEBV(id, tempBv)
+        {
+            StackSym * typeSpecSym = null;
+            StackSym *const varSym = symTable->FindStackSym(id);
+            Assert(varSym);
+
+            if (blockData.liveSimd128F4Syms->Test(id))
+            {
+                typeSpecSym = varSym->GetSimd128F4EquivSym(nullptr);
+
+
+                if (!typeSpecSym || !IsSimd128F4TypeSpecialized(varSym, &landingPadBlockData))
+                {
+                    Value *const value = FindValue(symToValueMap, varSym);
+                    if (value)
+                    {
+                        ValueInfo *const valueInfo = value->GetValueInfo();
+                        if (!valueInfo->IsSimd128Float32x4())
+                        {
+                            ChangeValueInfo(block, value, valueInfo->SpecializeToSimd128F4(alloc));
+                        }
+                    }
+                    else
+                    {
+                        SetValue(&block->globOptData, NewGenericValue(ValueType::GetSimd128(ObjectType::Simd128Float32x4), varSym), varSym);
+                    }
+                }
+            }
+            else if (blockData.liveSimd128I4Syms->Test(id))
+            {
+
+                typeSpecSym = varSym->GetSimd128I4EquivSym(nullptr);
+                if (!typeSpecSym || !IsSimd128I4TypeSpecialized(varSym, &landingPadBlockData))
+                {
+                    Value *const value = FindValue(symToValueMap, varSym);
+                    if (value)
+                    {
+                        ValueInfo *const valueInfo = value->GetValueInfo();
+                        if (!valueInfo->IsSimd128Int32x4())
+                        {
+                            ChangeValueInfo(block, value, valueInfo->SpecializeToSimd128I4(alloc));
+                        }
+                    }
+                    else
+                    {
+                        SetValue(&block->globOptData, NewGenericValue(ValueType::GetSimd128(ObjectType::Simd128Int32x4), varSym), varSym);
+                    }
+                }
+            }
+            else
+            {
+                Assert(UNREACHED);
+            }
+        } NEXT_BITSET_IN_SPARSEBV;
         tempBv->ClearAll();
     }
 
@@ -1131,6 +1233,10 @@ GlobOpt::MergePredBlocksValueMaps(BasicBlock *block)
     BVSparse<JitArenaAllocator> tempBv2(this->tempAlloc);
     BVSparse<JitArenaAllocator> tempBv3(this->tempAlloc);
     BVSparse<JitArenaAllocator> tempBv4(this->tempAlloc);
+
+    // SIMD_JS
+    BVSparse<JitArenaAllocator> simd128F4SymsToUnbox(this->tempAlloc);
+    BVSparse<JitArenaAllocator> simd128I4SymsToUnbox(this->tempAlloc);
 
     FOREACH_PREDECESSOR_EDGE_EDITING(edge, block, iter)
     {
@@ -1164,11 +1270,18 @@ GlobOpt::MergePredBlocksValueMaps(BasicBlock *block)
         tempBv4.Minus(this->blockData.liveFloat64Syms, pred->globOptData.liveFloat64Syms);
 
         bool symIVNeedsSpecializing = (symIV && !pred->globOptData.liveInt32Syms->Test(symIV->m_id) && !tempBv3.Test(symIV->m_id));
+        
+        // SIMD_JS
+        simd128F4SymsToUnbox.Minus(this->blockData.liveSimd128F4Syms, pred->globOptData.liveSimd128F4Syms);
+        simd128I4SymsToUnbox.Minus(this->blockData.liveSimd128I4Syms, pred->globOptData.liveSimd128I4Syms);
+        
 
         if (!this->tempBv->IsEmpty() ||
             !tempBv2.IsEmpty() ||
             !tempBv3.IsEmpty() ||
             !tempBv4.IsEmpty() ||
+            !simd128F4SymsToUnbox.IsEmpty() ||
+            !simd128I4SymsToUnbox.IsEmpty() ||
             symIVNeedsSpecializing ||
             symsRequiringCompensationToMergedValueInfoMap.Count() != 0)
         {
@@ -1228,6 +1341,17 @@ GlobOpt::MergePredBlocksValueMaps(BasicBlock *block)
             {
                 InsertValueCompensation(pred, symsRequiringCompensationToMergedValueInfoMap);
             }
+
+            // SIMD_JS
+            if (!simd128F4SymsToUnbox.IsEmpty())
+            {
+                this->ToTypeSpec(&simd128F4SymsToUnbox, pred, TySimd128F4, IR::BailOutSimd128F4Only);
+            }
+
+            if (!simd128I4SymsToUnbox.IsEmpty())
+            {
+                this->ToTypeSpec(&simd128I4SymsToUnbox, pred, TySimd128I4, IR::BailOutSimd128I4Only);
+            }
         }
     } NEXT_PREDECESSOR_EDGE_EDITING;
 
@@ -1285,6 +1409,14 @@ GlobOpt::MergePredBlocksValueMaps(BasicBlock *block)
         loop->float64SymsOnEntry = JitAnew(this->alloc, BVSparse<JitArenaAllocator>, this->alloc);
         loop->float64SymsOnEntry->Copy(block->globOptData.liveFloat64Syms);
 
+        // SIMD_JS
+        loop->simd128F4SymsOnEntry = JitAnew(this->alloc, BVSparse<JitArenaAllocator>, this->alloc);
+        loop->simd128F4SymsOnEntry->Copy(block->globOptData.liveSimd128F4Syms);
+
+        loop->simd128I4SymsOnEntry = JitAnew(this->alloc, BVSparse<JitArenaAllocator>, this->alloc);
+        loop->simd128I4SymsOnEntry->Copy(block->globOptData.liveSimd128I4Syms);
+        
+
         loop->liveFieldsOnEntry = JitAnew(this->alloc, BVSparse<JitArenaAllocator>, this->alloc);
         loop->liveFieldsOnEntry->Copy(block->globOptData.liveFields);
 
@@ -1319,6 +1451,10 @@ GlobOpt::NulloutBlockData(GlobOptBlockData *data)
     data->liveInt32Syms = NULL;
     data->liveLossyInt32Syms = NULL;
     data->liveFloat64Syms = NULL;
+    // SIMD_JS
+    data->liveSimd128F4Syms = NULL;
+    data->liveSimd128I4Syms = NULL;
+
     data->hoistableFields = NULL;
     data->argObjSyms = NULL;
     data->maybeTempObjectSyms = null;
@@ -1354,6 +1490,11 @@ GlobOpt::InitBlockData()
     data->liveInt32Syms = JitAnew(alloc, BVSparse<JitArenaAllocator>, alloc);
     data->liveLossyInt32Syms = JitAnew(alloc, BVSparse<JitArenaAllocator>, alloc);
     data->liveFloat64Syms = JitAnew(alloc, BVSparse<JitArenaAllocator>, alloc);
+
+    // SIMD_JS
+    data->liveSimd128F4Syms = JitAnew(alloc, BVSparse<JitArenaAllocator>, alloc);
+    data->liveSimd128I4Syms = JitAnew(alloc, BVSparse<JitArenaAllocator>, alloc);
+    
     data->hoistableFields = null;
     data->argObjSyms = JitAnew(alloc, BVSparse<JitArenaAllocator>, alloc);
     data->maybeTempObjectSyms = null;
@@ -1394,6 +1535,11 @@ GlobOpt::ReuseBlockData(GlobOptBlockData *toData, GlobOptBlockData *fromData)
     toData->liveInt32Syms = fromData->liveInt32Syms;
     toData->liveLossyInt32Syms = fromData->liveLossyInt32Syms;
     toData->liveFloat64Syms = fromData->liveFloat64Syms;
+
+    // SIMD_JS
+    toData->liveSimd128F4Syms = fromData->liveSimd128F4Syms;
+    toData->liveSimd128I4Syms = fromData->liveSimd128I4Syms;
+    
     if (TrackHoistableFields())
     {
         toData->hoistableFields = fromData->hoistableFields;
@@ -1436,6 +1582,11 @@ GlobOpt::CopyBlockData(GlobOptBlockData *toData, GlobOptBlockData *fromData)
     toData->liveInt32Syms = fromData->liveInt32Syms;
     toData->liveLossyInt32Syms = fromData->liveLossyInt32Syms;
     toData->liveFloat64Syms = fromData->liveFloat64Syms;
+
+    // SIMD_JS
+    toData->liveSimd128F4Syms = fromData->liveSimd128F4Syms;
+    toData->liveSimd128I4Syms = fromData->liveSimd128I4Syms;
+    
     toData->hoistableFields = fromData->hoistableFields;
     toData->argObjSyms = fromData->argObjSyms;
     toData->maybeTempObjectSyms = fromData->maybeTempObjectSyms;
@@ -1503,6 +1654,13 @@ void GlobOpt::CloneBlockData(BasicBlock *const toBlock, GlobOptBlockData *const 
 
     toData->liveFloat64Syms = JitAnew(alloc, BVSparse<JitArenaAllocator>, alloc);
     toData->liveFloat64Syms->Copy(fromData->liveFloat64Syms);
+
+    // SIMD_JS
+    toData->liveSimd128F4Syms = JitAnew(alloc, BVSparse<JitArenaAllocator>, alloc);
+    toData->liveSimd128F4Syms->Copy(fromData->liveSimd128F4Syms);
+
+    toData->liveSimd128I4Syms = JitAnew(alloc, BVSparse<JitArenaAllocator>, alloc);
+    toData->liveSimd128I4Syms->Copy(fromData->liveSimd128I4Syms);
 
     if (TrackHoistableFields())
     {
@@ -1736,6 +1894,89 @@ GlobOpt::MergeBlockData(
             tempBv1.Minus(fromData->liveFloat64Syms, toData->liveFloat64Syms);
             tempBv1.And(loop->likelyNumberSymsUsedBeforeDefined);
             toData->liveFloat64Syms->Or(&tempBv1);
+
+            // Force to Simd128 type:
+            // if live on the backedge and we are hoisting the operand.
+            // or if live on the backedge only and used before def in the loop.
+            tempBv1.And(fromData->liveSimd128F4Syms, loop->forceSimd128F4SymsOnEntry);
+            toData->liveSimd128F4Syms->Or(&tempBv1);
+            tempBv1.Minus(fromData->liveSimd128F4Syms, toData->liveSimd128F4Syms);
+            tempBv1.And(loop->likelySimd128F4SymsUsedBeforeDefined);
+            toData->liveSimd128F4Syms->Or(&tempBv1);
+
+            tempBv1.And(fromData->liveSimd128I4Syms, loop->forceSimd128I4SymsOnEntry);
+            toData->liveSimd128I4Syms->Or(&tempBv1);
+            tempBv1.Minus(fromData->liveSimd128I4Syms, toData->liveSimd128I4Syms);
+            tempBv1.And(loop->likelySimd128I4SymsUsedBeforeDefined);
+            toData->liveSimd128I4Syms->Or(&tempBv1);
+        }
+
+        BVSparse<JitArenaAllocator> simdSymsToVar(this->tempAlloc);
+        {
+            // SIMD_JS
+            // If we have simd128 type-spec sym live as one type on one side, but not of same type on the other, we look at the merged ValueType. 
+            // If it's Likely the simd128 type, we choose to keep the type-spec sym (compensate with a FromVar), if the following is true:
+            // 1. We are not in jitLoopBody:   Introducing a FromVar for compensation extends bytecode syms lifetime. If the value is actually dead, and we enter the loop-body after bailing out from SimpleJit, the value will not be restored in the bailout code. 
+            // 2. Value was never Undefined/Null: Avoid unboxing of possibly uninitialized values.
+            // 3. Not loop back-edge. To keep unboxed value, the value has to be used-before def in the loop-body. This is done separately in forceSimd128*SymsOnEntry and included in loop-header.
+            
+            // Live syms as F4 on one edge only
+            tempBv1.Xor(fromData->liveSimd128F4Syms, toData->liveSimd128F4Syms);
+            FOREACH_BITSET_IN_SPARSEBV(id, &tempBv1)
+            {
+                StackSym *const stackSym = this->func->m_symTable->FindStackSym(id);
+                Assert(stackSym);
+                Value *const value = this->FindValue(toData->symToValueMap, stackSym);
+                ValueInfo * valueInfo = value ? value->GetValueInfo() : null;
+
+                // There are two possible representations for Simd128F4 Value: F4 or Var.
+                // If the merged ValueType is LikelySimd128F4, then on the edge where F4 is dead,  Var must be alive. 
+                // Unbox to F4 type-spec sym.
+                if (
+                    valueInfo && valueInfo->IsLikelySimd128Float32x4() && 
+                    !valueInfo->HasBeenUndefined() && !valueInfo->HasBeenNull() &&
+                    !isLoopBackEdge && !func->IsLoopBody()
+                   )
+                {
+                    toData->liveSimd128F4Syms->Set(id);
+                }
+                else
+                {
+                    // If live on both edges, box it.
+                    if (IsLive(stackSym, fromData) && IsLive(stackSym, toData))
+                    {
+                        simdSymsToVar.Set(id);
+                    }
+                    // kill F4 sym
+                    toData->liveSimd128F4Syms->Clear(id);
+                }
+            } NEXT_BITSET_IN_SPARSEBV;
+
+            // same for I4
+            tempBv1.Xor(fromData->liveSimd128I4Syms, toData->liveSimd128I4Syms);
+            FOREACH_BITSET_IN_SPARSEBV(id, &tempBv1)
+            {
+                StackSym *const stackSym = this->func->m_symTable->FindStackSym(id);
+                Assert(stackSym);
+                Value *const value = this->FindValue(toData->symToValueMap, stackSym);
+                ValueInfo * valueInfo = value ? value->GetValueInfo() : null;
+                if (
+                    valueInfo && valueInfo->IsLikelySimd128Int32x4() && 
+                    !valueInfo->HasBeenUndefined() && !valueInfo->HasBeenNull() &&
+                    !isLoopBackEdge && !func->IsLoopBody()
+                   )
+                {
+                    toData->liveSimd128I4Syms->Set(id);
+                }
+                else
+                {
+                    if (IsLive(stackSym, fromData) && IsLive(stackSym, toData))
+                    {
+                        simdSymsToVar.Set(id);
+                    }
+                    toData->liveSimd128I4Syms->Clear(id);
+                }
+            } NEXT_BITSET_IN_SPARSEBV;
         }
 
         {
@@ -1778,6 +2019,8 @@ GlobOpt::MergeBlockData(
             //     (fromData.var & toData.var) |
             //     (fromData.temp - fromData.float64) |
             //     (toData.temp - toData.float64)
+
+
             toData->liveVarSyms->And(fromData->liveVarSyms);
             toData->liveVarSyms->Or(&tempBv1);
 
@@ -1797,6 +2040,10 @@ GlobOpt::MergeBlockData(
                     }
                 }
             } NEXT_BITSET_IN_SPARSEBV;
+
+            // SIMD_JS
+            // Simd syms that need boxing
+            toData->liveVarSyms->Or(&simdSymsToVar);
         }
 
         //     fromData.float64 & ((toData.int32 - toData.lossyInt32) | toData.float64)
@@ -1929,6 +2176,11 @@ GlobOpt::DeleteBlockData(GlobOptBlockData *data)
     JitAdelete(alloc, data->liveInt32Syms);
     JitAdelete(alloc, data->liveLossyInt32Syms);
     JitAdelete(alloc, data->liveFloat64Syms);
+    
+    // SIMD_JS
+    JitAdelete(alloc, data->liveSimd128F4Syms);
+    JitAdelete(alloc, data->liveSimd128I4Syms);
+    
     if (data->hoistableFields)
     {
         JitAdelete(alloc, data->hoistableFields);
@@ -2044,12 +2296,27 @@ GlobOpt::ToTypeSpec(BVSparse<JitArenaAllocator> *bv, BasicBlock *block, IRType t
             fromType = TyInt32;
             stackSym = stackSym->GetInt32EquivSym(this->func);
         }
-        else
+        else if (block->globOptData.liveFloat64Syms->Test(id))
         {
-            Assert(block->globOptData.liveFloat64Syms->Test(id));
+        
             fromType = TyFloat64;
             stackSym = stackSym->GetFloat64EquivSym(this->func);
         }
+        else
+        {
+            Assert(IsLiveAsSimd128(stackSym, &block->globOptData));
+            if (IsLiveAsSimd128F4(stackSym, &block->globOptData))
+            {
+                fromType = TySimd128F4;
+                stackSym = stackSym->GetSimd128F4EquivSym(this->func);
+            }
+            else
+            {
+                fromType = TySimd128I4;
+                stackSym = stackSym->GetSimd128I4EquivSym(this->func);
+            }
+        }
+        
 
         IR::RegOpnd *newOpnd = IR::RegOpnd::New(stackSym, fromType, this->func);
         IR::Instr *lastInstr = block->GetLastInstr();
@@ -3646,7 +3913,8 @@ GlobOpt::OptArguments(IR::Instr *instr)
                 if (builtinStart->GetSrc1()->IsAddrOpnd())
                 {
                     Assert(builtinOpnd->AsAddrOpnd()->m_isFunction);
-                    Js::BuiltinFunction builtinFunction = Js::JavascriptLibrary::GetBuiltInForFuncInfo(((Js::JavascriptFunction*)builtinOpnd->AsAddrOpnd()->m_address)->GetFunctionInfo());
+                    
+                    Js::BuiltinFunction builtinFunction = Js::JavascriptLibrary::GetBuiltInForFuncInfo(((Js::JavascriptFunction*)builtinOpnd->AsAddrOpnd()->m_address)->GetFunctionInfo(), func->GetScriptContext());
                     if (builtinFunction == Js::BuiltinFunction::Function_Apply)
                     {
                         ClearArgumentsSym(src1->AsRegOpnd());
@@ -3861,7 +4129,7 @@ GlobOpt::CollectMemcopyLdElementI(IR::Instr *instr, Loop *loop)
 
     IR::IndirOpnd *src1 = instr->GetSrc1()->AsIndirOpnd();
     IR::Opnd *indexOp = src1->GetIndexOpnd();
-    IR::Opnd *baseOp = src1->GetBaseOpnd();
+    IR::RegOpnd *baseOp = src1->GetBaseOpnd()->AsRegOpnd();
     SymID baseSymID = GetVarSymID(baseOp->GetStackSym());
 
     IR::Opnd *dstOpnd = instr->GetDst();
@@ -3873,6 +4141,12 @@ GlobOpt::CollectMemcopyLdElementI(IR::Instr *instr, Loop *loop)
     // if it's in the ignore set return
     if (loop->memOpInfo->memcopyIgnore->Contains(baseSymID))
     {
+        return;
+    }
+
+    if (!this->OptIsInvariant(baseOp, this->currentBlock, loop, this->FindValue(baseOp->m_sym), false, true))
+    {
+        loop->InvalidateMemcopyCandidate(baseSymID);
         return;
     }
 
@@ -3931,7 +4205,7 @@ GlobOpt::CollectMemcopyLdElementI(IR::Instr *instr, Loop *loop)
             IR::ArrayRegOpnd *baseArrayOp = baseOp->AsRegOpnd()->AsArrayRegOpnd();
             hasBoundChecksRemoved = baseArrayOp->EliminatedLowerBoundCheck() && baseArrayOp->EliminatedUpperBoundCheck();
         }
-        if(!hasBoundChecksRemoved)
+        if (!hasBoundChecksRemoved)
         {
 #if DBG_DUMP
             if (PHASE_TRACE(Js::MemOpPhase, this->func->GetJnFunction()) || PHASE_TRACE(Js::MemCopyPhase, this->func->GetJnFunction()))
@@ -4010,7 +4284,7 @@ GlobOpt::CollectMemsetStElementI(IR::Instr *instr, Loop *loop)
     Assert(instr->GetDst()->IsIndirOpnd());
     IR::IndirOpnd *dst = instr->GetDst()->AsIndirOpnd();
     IR::Opnd *indexOp = dst->GetIndexOpnd();
-    IR::Opnd *baseOp = dst->GetBaseOpnd();
+    IR::RegOpnd *baseOp = dst->GetBaseOpnd()->AsRegOpnd();
 
     SymID baseSymID = GetVarSymID(baseOp->GetStackSym());
 
@@ -4039,6 +4313,11 @@ GlobOpt::CollectMemsetStElementI(IR::Instr *instr, Loop *loop)
         loop->memOpInfo->memsetCandidates->Prepend(memsetInfo);
     }
 
+    if (!this->OptIsInvariant(baseOp, this->currentBlock, loop, this->FindValue(baseOp->m_sym), false, true))
+    {
+        loop->InvalidateMemsetCandidate(baseSymID, memsetInfo);
+        return;
+    }
 
     // Process the Index Operand 
     if (!indexOp)
@@ -4129,12 +4408,18 @@ GlobOpt::CollectMemcopyStElementI(IR::Instr *instr, Loop *loop)
     Assert(instr->GetDst()->IsIndirOpnd());
     IR::IndirOpnd *dst = instr->GetDst()->AsIndirOpnd();
     IR::Opnd *indexOp = dst->GetIndexOpnd();
-    IR::Opnd *baseOp = dst->GetBaseOpnd();
+    IR::RegOpnd *baseOp = dst->GetBaseOpnd()->AsRegOpnd();
     SymID baseSymID = GetVarSymID(baseOp->GetStackSym());
 
     // if it's in the ignore set return
     if (loop->memOpInfo->memcopyIgnore->Contains(baseSymID))
     {
+        return;
+    }
+
+    if (!this->OptIsInvariant(baseOp, this->currentBlock, loop, this->FindValue(baseOp->m_sym), false, true))
+    {
+        loop->InvalidateMemcopyCandidate(baseSymID);
         return;
     }
 
@@ -5404,6 +5689,59 @@ GlobOpt::OptSrc(IR::Opnd *opnd, IR::Instr * *pInstr, Value **indirIndexValRef, I
                         rootLoopPrePass->likelyIntSymsUsedBeforeDefined->Set(sym->m_id);
                     }
                 }
+                
+                // SIMD_JS
+                // For uses before defs, we set likelySimd128*SymsUsedBeforeDefined bits for syms that have landing pad value info that allow type-spec to happen in the loop body.
+                // The BV will be added to loop header if the backedge has a live matching type-spec value. We then compensate in the loop header to unbox the value. 
+                // This allows type-spec in the landing pad instead of boxing/unboxing on each iteration.
+                if (Js::IsSimd128Opcode(instr->m_opcode))
+                {
+                    // Simd ops are strongly typed. We type-spec only if the type is likely/Definitely the expected type or if we have object which can come from merging different Simd types. 
+                    // Simd value must be initialized properly on all paths before the loop entry. Cannot be merged with Undefined/Null.
+                    Js::JavascriptLibrary::SimdFuncSignature funcSignature;
+                    bool found = instr->m_func->GetScriptContext()->GetLibrary()->GetSimdFuncSignatureFromOpcode(instr->m_opcode, funcSignature);
+                    Assert(found);
+                    ValueType expectedType = funcSignature.args[opnd == instr->GetSrc1() ? 0 : 1];
+
+                    if (expectedType.IsSimd128Float32x4())
+                    {
+                        if  ( 
+                                (landingPadValueInfo->IsLikelySimd128Float32x4() || (landingPadValueInfo->IsLikelyObject() && landingPadValueInfo->GetObjectType() == ObjectType::Object))
+                                && 
+                                !landingPadValueInfo->HasBeenUndefined() && !landingPadValueInfo->HasBeenNull()
+                            )
+                        {
+                            rootLoopPrePass->likelySimd128F4SymsUsedBeforeDefined->Set(sym->m_id);
+                        }
+                    }
+                    else if (expectedType.IsSimd128Int32x4())
+                    {
+                        if ( 
+                            (landingPadValueInfo->IsLikelySimd128Int32x4() || (landingPadValueInfo->IsLikelyObject() && landingPadValueInfo->GetObjectType() == ObjectType::Object))
+                            && 
+                            !landingPadValueInfo->HasBeenUndefined() && !landingPadValueInfo->HasBeenNull()
+                          )
+                        {
+                            rootLoopPrePass->likelySimd128I4SymsUsedBeforeDefined->Set(sym->m_id);
+                        }
+                    }
+                }
+                else if (instr->m_opcode == Js::OpCode::ExtendArg_A && opnd == instr->GetSrc1() && instr->GetDst()->GetValueType().IsSimd128())
+                {
+                    // Extended_Args for Simd ops are annotated with the expected type by the inliner. Use this info to find out if type-spec is supposed to happen.
+                    ValueType expectedType = instr->GetDst()->GetValueType();
+
+                    if ((landingPadValueInfo->IsLikelySimd128Float32x4() || (landingPadValueInfo->IsLikelyObject() && landingPadValueInfo->GetObjectType() == ObjectType::Object))
+                        && expectedType.IsSimd128Float32x4())
+                    {
+                        rootLoopPrePass->likelySimd128F4SymsUsedBeforeDefined->Set(sym->m_id);
+                    }
+                    else if ((landingPadValueInfo->IsLikelySimd128Int32x4() || (landingPadValueInfo->IsLikelyObject() && landingPadValueInfo->GetObjectType() == ObjectType::Object))
+                        && expectedType.IsSimd128Int32x4())
+                    {
+                        rootLoopPrePass->likelySimd128I4SymsUsedBeforeDefined->Set(sym->m_id);
+                    }
+                }
             }
         }
     }
@@ -5813,6 +6151,26 @@ GlobOpt::CopyProp(IR::Opnd *opnd, IR::Instr *instr, Value *val, IR::IndirOpnd *p
         // Don't copy prop into CheckFixedFld or CheckPropertyGuardAndLoadType
         return opnd;
     }
+
+    // SIMD_JS
+    
+    // Don't copy-prop link operands of ExtendedArgs
+    if (instr->m_opcode == Js::OpCode::ExtendArg_A && opnd == instr->GetSrc2())
+    {
+        return opnd;
+    }
+    
+
+    // Don't copy-prop operand of SIMD instr with ExtendedArg operands. Each instr should have its exclusive EA sequence.
+    if (Js::IsSimd128Opcode(instr->m_opcode) && instr->GetSrc1() != null && instr->GetSrc2() == null &&  instr->GetSrc1()->GetStackSym()->IsSingleDef())
+    {
+        IR::Instr *defInstr = instr->GetSrc1()->GetStackSym()->GetInstrDef();
+        if (defInstr->m_opcode == Js::OpCode::ExtendArg_A)
+        {
+            return opnd;
+        }
+    }
+    
     ValueInfo *valueInfo = val->GetValueInfo();
 
     // Constant prop?
@@ -6809,6 +7167,7 @@ GlobOpt::ValueNumberDst(IR::Instr **pInstr, Value *src1Val, Value *src2Val)
     case Js::OpCode::BytecodeArgOutCapture:
     case Js::OpCode::Ld_A:
     case Js::OpCode::Ld_I4:
+    
         // Propagate sym attributes across the reg copy.
         if (!this->IsLoopPrePass() && instr->GetSrc1()->IsRegOpnd())
         {
@@ -6857,6 +7216,22 @@ GlobOpt::ValueNumberDst(IR::Instr **pInstr, Value *src1Val, Value *src2Val)
         }
 
         break;
+
+    case Js::OpCode::ExtendArg_A:
+    {     // SIMD_JS
+        // We avoid transforming EAs to Lds to keep the IR shape consistent and avoid CSEing of EAs. 
+        // CSEOptimize only assigns a Value to the EA dst, and doesn't turn it to a Ld. If this happened, we shouldn't assign a new Value here.
+        if (DoCSE())
+        {
+            IR::Opnd *dst = instr->GetDst();
+            Value *dstVal = this->FindValue(dst->GetStackSym());
+            if (dstVal != null)
+            {
+                return dstVal;
+            }
+        }
+        break;
+    }
 
     case Js::OpCode::CheckFixedFld:
         AssertMsg(false, "CheckFixedFld doesn't have a dst, so we should never get here");
@@ -7303,6 +7678,14 @@ GlobOpt::ValueNumberDst(IR::Instr **pInstr, Value *src1Val, Value *src2Val)
         break;
     }
 
+    // SIMD_JS
+    if (Js::IsSimd128Opcode(instr->m_opcode) && !func->m_workItem->GetFunctionBody()->GetIsAsmjsMode())
+    {
+        Js::JavascriptLibrary::SimdFuncSignature simdFuncSignature; 
+        this->func->GetScriptContext()->GetLibrary()->GetSimdFuncSignatureFromOpcode(instr->m_opcode, simdFuncSignature);
+        return this->NewGenericValue(simdFuncSignature.returnType, dst);
+    }
+    
     if (dstVal == NULL)
     {
         return this->NewGenericValue(dst->GetValueType(), dst);
@@ -8123,6 +8506,15 @@ GlobOpt::TypeSpecialization(
     //   the value resulting from the operation will eventually be converted to int32 anyway
     Value *const src1OriginalVal = src1Val;
     Value *const src2OriginalVal = src2Val;
+
+    // SIMD_JS
+    
+    if (TypeSpecializeSimd128(instr, pSrc1Val, pSrc2Val, pDstVal))
+    {
+        return instr;
+    }
+    
+
     if(!instr->ShouldCheckForIntOverflow())
     {
         if(src1Val && src1Val->GetValueInfo()->IsFloatConstant())
@@ -10198,10 +10590,10 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
     bool needsBoolConv = false;
     AddSubConstantInfo addSubConstantInfo;
 
-    switch(instr->m_opcode)
+    switch (instr->m_opcode)
     {
     case Js::OpCode::Or_A:
-        if(!DoLossyIntTypeSpec())
+        if (!DoLossyIntTypeSpec())
         {
             return false;
         }
@@ -10210,7 +10602,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
         break;
 
     case Js::OpCode::And_A:
-        if(!DoLossyIntTypeSpec())
+        if (!DoLossyIntTypeSpec())
         {
             return false;
         }
@@ -10219,7 +10611,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
         break;
 
     case Js::OpCode::Xor_A:
-        if(!DoLossyIntTypeSpec())
+        if (!DoLossyIntTypeSpec())
         {
             return false;
         }
@@ -10228,7 +10620,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
         break;
 
     case Js::OpCode::Shl_A:
-        if(!DoLossyIntTypeSpec())
+        if (!DoLossyIntTypeSpec())
         {
             return false;
         }
@@ -10237,7 +10629,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
         break;
 
     case Js::OpCode::Shr_A:
-        if(!DoLossyIntTypeSpec())
+        if (!DoLossyIntTypeSpec())
         {
             return false;
         }
@@ -10246,7 +10638,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
         break;
 
     case Js::OpCode::ShrU_A:
-        if(!DoLossyIntTypeSpec())
+        if (!DoLossyIntTypeSpec())
         {
             return false;
         }
@@ -10254,7 +10646,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
         {
             // Src1 may be too large to represent as a signed int32, and src2 may be zero. Unless the resulting value is only
             // used as a signed int32 (hence allowing us to ignore the result's sign), don't specialize the instruction.
-            if (!instr->ignoreIntOverflow) 
+            if (!instr->ignoreIntOverflow)
                 return false;
             ignoredIntOverflow = true;
         }
@@ -10265,14 +10657,14 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
     case Js::OpCode::BrUnLe_A:
         // Folding the branch based on bounds will attempt a lossless int32 conversion of the sources if they are not definitely
         // int already, so require that both sources are likely int for folding
-        if(DoConstFold() &&
+        if (DoConstFold() &&
             !IsLoopPrePass() &&
             TryOptConstFoldBrUnsignedGreaterThan(instr, false, src1Val, min1, max1, src2Val, min2, max2))
         {
             return true;
         }
 
-        if(min1 >= 0 && min2 >= 0)
+        if (min1 >= 0 && min2 >= 0)
         {
             // Only handle positive values since this is unsigned...
 
@@ -10286,7 +10678,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
             UpdateIntBoundsForLessThanOrEqualBranch(src1Val, src2Val);
         }
 
-        if(!DoLossyIntTypeSpec())
+        if (!DoLossyIntTypeSpec())
         {
             return false;
         }
@@ -10297,14 +10689,14 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
     case Js::OpCode::BrUnLt_A:
         // Folding the branch based on bounds will attempt a lossless int32 conversion of the sources if they are not definitely
         // int already, so require that both sources are likely int for folding
-        if(DoConstFold() &&
+        if (DoConstFold() &&
             !IsLoopPrePass() &&
             TryOptConstFoldBrUnsignedLessThan(instr, true, src1Val, min1, max1, src2Val, min2, max2))
         {
             return true;
         }
 
-        if(min1 >= 0 && min2 >= 0)
+        if (min1 >= 0 && min2 >= 0)
         {
             // Only handle positive values since this is unsigned...
 
@@ -10318,7 +10710,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
             UpdateIntBoundsForLessThanBranch(src1Val, src2Val);
         }
 
-        if(!DoLossyIntTypeSpec())
+        if (!DoLossyIntTypeSpec())
         {
             return false;
         }
@@ -10329,14 +10721,14 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
     case Js::OpCode::BrUnGe_A:
         // Folding the branch based on bounds will attempt a lossless int32 conversion of the sources if they are not definitely
         // int already, so require that both sources are likely int for folding
-        if(DoConstFold() &&
+        if (DoConstFold() &&
             !IsLoopPrePass() &&
             TryOptConstFoldBrUnsignedLessThan(instr, false, src1Val, min1, max1, src2Val, min2, max2))
         {
             return true;
         }
 
-        if(min1 >= 0 && min2 >= 0)
+        if (min1 >= 0 && min2 >= 0)
         {
             // Only handle positive values since this is unsigned...
 
@@ -10350,7 +10742,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
             UpdateIntBoundsForGreaterThanOrEqualBranch(src1Val, src2Val);
         }
 
-        if(!DoLossyIntTypeSpec())
+        if (!DoLossyIntTypeSpec())
         {
             return false;
         }
@@ -10361,14 +10753,14 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
     case Js::OpCode::BrUnGt_A:
         // Folding the branch based on bounds will attempt a lossless int32 conversion of the sources if they are not definitely
         // int already, so require that both sources are likely int for folding
-        if(DoConstFold() &&
+        if (DoConstFold() &&
             !IsLoopPrePass() &&
             TryOptConstFoldBrUnsignedGreaterThan(instr, true, src1Val, min1, max1, src2Val, min2, max2))
         {
             return true;
         }
 
-        if(min1 >= 0 && min2 >= 0)
+        if (min1 >= 0 && min2 >= 0)
         {
             // Only handle positive values since this is unsigned...
 
@@ -10382,7 +10774,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
             UpdateIntBoundsForGreaterThanBranch(src1Val, src2Val);
         }
 
-        if(!DoLossyIntTypeSpec())
+        if (!DoLossyIntTypeSpec())
         {
             return false;
         }
@@ -10391,7 +10783,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
         break;
 
     case Js::OpCode::CmUnLe_A:
-        if(!DoLossyIntTypeSpec())
+        if (!DoLossyIntTypeSpec())
         {
             return false;
         }
@@ -10402,7 +10794,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
         break;
 
     case Js::OpCode::CmUnLt_A:
-        if(!DoLossyIntTypeSpec())
+        if (!DoLossyIntTypeSpec())
         {
             return false;
         }
@@ -10413,7 +10805,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
         break;
 
     case Js::OpCode::CmUnGe_A:
-        if(!DoLossyIntTypeSpec())
+        if (!DoLossyIntTypeSpec())
         {
             return false;
         }
@@ -10424,7 +10816,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
         break;
 
     case Js::OpCode::CmUnGt_A:
-        if(!DoLossyIntTypeSpec())
+        if (!DoLossyIntTypeSpec())
         {
             return false;
         }
@@ -10433,6 +10825,13 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
         opcode = Js::OpCode::CmUnGt_I4;
         needsBoolConv = true;
         break;
+
+    case Js::OpCode::Expo_A:
+        {
+            src1Val = src1OriginalVal;
+            src2Val = src2OriginalVal;
+            return this->TypeSpecializeFloatBinary(instr, src1Val, src2Val, pDstVal);
+        }
 
     case Js::OpCode::Div_A:
         {
@@ -10711,6 +11110,13 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                         src2Val = src2OriginalVal;
                         return this->TypeSpecializeFloatBinary(instr, src1Val, src2Val, pDstVal);
                     }
+                    else if (this->IsSimd128F4TypeSpecialized(sym, this->currentBlock))
+                    {
+                        // SIMD_JS
+                        // We should be already using the SIMD type-spec sym. See TypeSpecializeSimd128.
+                        Assert(IRType_IsSimd128(instr->GetSrc1()->GetType()));
+                    }
+                    
                 }
                 return false;
 
@@ -12030,6 +12436,25 @@ void GlobOpt::TypeSpecializeFloatDst(IR::Instr *instr, Value *valToTransfer, Val
     }
 }
 
+void GlobOpt::TypeSpecializeSimd128Dst(IRType type, IR::Instr *instr, Value *valToTransfer, Value *const src1Value, Value **pDstVal)
+{
+    IR::Opnd* dst = instr->GetDst();
+    Assert(dst);
+
+    AssertMsg(dst->IsRegOpnd(), "What else?");
+    this->ToSimd128Dst(type, instr, dst->AsRegOpnd(), this->currentBlock);
+
+    if (valToTransfer)
+    {
+        *pDstVal = this->ValueNumberTransferDst(instr, valToTransfer);
+        InsertNewValue(*pDstVal, dst);
+    }
+    else
+    {
+        *pDstVal = NewGenericValue(GetValueTypeFromIRType(type), instr->GetDst());
+    }
+}
+
 bool GlobOpt::TypeSpecializeLdLen(
     IR::Instr * *const instrRef,
     Value * *const src1ValueRef,
@@ -12147,6 +12572,7 @@ GlobOpt::TypeSpecializeFloatBinary(IR::Instr *instr, Value *src1Val, Value *src2
         case Js::OpCode::Sub_A:
         case Js::OpCode::Mul_A:
         case Js::OpCode::Div_A:
+        case Js::OpCode::Expo_A:
             // Avoid if one source is known not to be a number.
             if (src1Val->GetValueInfo()->IsNotNumber() || src2Val->GetValueInfo()->IsNotNumber())
             {
@@ -12706,9 +13132,9 @@ GlobOpt::ToVar(IR::Instr *instr, IR::RegOpnd *regOpnd, BasicBlock *block, Value 
         Assert(valueInfo);
         Assert(valueInfo->IsInt());
     }
-    else
+    else if (block->globOptData.liveFloat64Syms->Test(varSym->m_id))
     {
-        Assert(block->globOptData.liveFloat64Syms->Test(varSym->m_id));
+        
         fromType = TyFloat64;
         typeSpecSym = varSym->GetFloat64EquivSym(this->func);
 
@@ -12738,6 +13164,53 @@ GlobOpt::ToVar(IR::Instr *instr, IR::RegOpnd *regOpnd, BasicBlock *block, Value 
             SetValue(&block->globOptData, value, varSym);
             regOpnd->SetValueType(valueInfo->Type());
         }
+    }
+    else
+    {
+        // SIMD_JS
+        Assert(IsLiveAsSimd128(varSym, &block->globOptData));
+        if (IsLiveAsSimd128F4(varSym, &block->globOptData))
+        {
+            fromType = TySimd128F4;
+        }
+        else
+        {
+            Assert(IsLiveAsSimd128I4(varSym, &block->globOptData));
+            fromType = TySimd128I4;
+        }
+        
+        if (valueInfo)
+        {
+            if (fromType == TySimd128F4 && !valueInfo->Type().IsSimd128Float32x4())
+            {
+                valueInfo = valueInfo->SpecializeToSimd128F4(alloc);
+                ChangeValueInfo(block, value, valueInfo);
+                regOpnd->SetValueType(valueInfo->Type());
+            }
+            else if (fromType == TySimd128I4 && !valueInfo->Type().IsSimd128Int32x4())
+            {
+                if (!valueInfo->Type().IsSimd128Int32x4())
+                {
+                    valueInfo = valueInfo->SpecializeToSimd128I4(alloc);
+                    ChangeValueInfo(block, value, valueInfo);
+                    regOpnd->SetValueType(valueInfo->Type());
+                }
+            }
+        }
+        else
+        {
+            ValueType valueType = fromType == TySimd128F4 ? ValueType::GetSimd128(ObjectType::Simd128Float32x4) : ValueType::GetSimd128(ObjectType::Simd128Int32x4);
+            value = NewGenericValue(valueType);
+            valueInfo = value->GetValueInfo();
+            SetValue(&block->globOptData, value, varSym);
+            regOpnd->SetValueType(valueInfo->Type());
+        }
+
+        ValueType valueType = valueInfo->Type();
+        // should be definite if type-specialized
+        Assert(valueType.IsSimd128());
+
+        typeSpecSym = varSym->GetSimd128EquivSym(fromType, this->func);
     }
     Assert(valueInfo);
 
@@ -13050,11 +13523,9 @@ GlobOpt::ToTypeSpecUse(IR::Instr *instr, IR::Opnd *opnd, BasicBlock *block, Valu
             }
             GOPT_TRACE_OPND(regSrc, L"Converting to int32\n");
         }
-        else
+        else if (toType == TyFloat64)
         {
             // float64
-            Assert(toType == TyFloat64);
-
             typeSpecSym = varSym->GetFloat64EquivSym(this->func);
             if(!IsLoopPrePass() && typeSpecSym->m_requiresBailOnNotNumber && IsFloat64TypeSpecialized(varSym, block))
             {
@@ -13159,7 +13630,92 @@ GlobOpt::ToTypeSpecUse(IR::Instr *instr, IR::Opnd *opnd, BasicBlock *block, Valu
             }
             GOPT_TRACE_OPND(regSrc, L"Converting to float64\n");
         }
+        else
+        {
+            // SIMD_JS
+            Assert(IRType_IsSimd128(toType));
+            // get or create type-spec sym
+            typeSpecSym = varSym->GetSimd128EquivSym(toType, this->func);
 
+            if (!IsLoopPrePass() && IsSimd128TypeSpecialized(toType, varSym, block))
+            {
+                // REVIEW: Is this needed ? Shouldn't this have been done at previous FromVar since the simd128 sym is alive ?
+                if (valueInfo)
+                {
+                    if (!valueInfo->IsSimd128(toType))
+                    {
+                        valueInfo = valueInfo->SpecializeToSimd128(toType, alloc);
+                        ChangeValueInfo(block, val, valueInfo);
+                        opnd->SetValueType(valueInfo->Type());
+                    }
+                }
+                else
+                {
+                    val = NewGenericValue(GetValueTypeFromIRType(toType));
+                    valueInfo = val->GetValueInfo();
+                    SetValue(&block->globOptData, val, varSym);
+                    opnd->SetValueType(valueInfo->Type());
+                }
+            }
+
+            livenessBv = block->globOptData.GetSimd128LivenessBV(toType);
+            isLive = livenessBv->Test(varSym->m_id);
+            if (this->IsLoopPrePass())
+            {
+                // FromVar Hoisting
+                
+                BVSparse<Memory::JitArenaAllocator> * forceSimd128SymsOnEntry;
+                forceSimd128SymsOnEntry = \
+                    toType == TySimd128F4 ? this->prePassLoop->forceSimd128F4SymsOnEntry : this->prePassLoop->forceSimd128I4SymsOnEntry;
+                if (!isLive)
+                {
+                    livenessBv->Set(varSym->m_id);
+                }
+
+                // Be aggressive with hoisting only if value is always initialied to SIMD type before entering loop. 
+                // This reduces the chance that the FromVar gets executed while the specialized instruction in the loop is not. Leading to unnecessary excessive bailouts.
+                if (val && !val->GetValueInfo()->HasBeenUndefined() &&  !val->GetValueInfo()->HasBeenNull() &&
+                    this->OptIsInvariant(opnd, block, this->prePassLoop, val, false, true))
+                {
+                    forceSimd128SymsOnEntry->Set(varSym->m_id);
+                }
+                else
+                {
+                    Sym *symStore = (valueInfo ? valueInfo->GetSymStore() : NULL);
+                    Value * value = symStore ? this->FindValue(block->globOptData.symToValueMap, symStore) : null;
+
+                    if (symStore && symStore != varSym
+                        && value 
+                        && !value->GetValueInfo()->HasBeenUndefined() && !value->GetValueInfo()->HasBeenNull() 
+                        && this->OptIsInvariant(symStore, block, this->prePassLoop, value, true, true))
+                    {
+                        // If symStore is assignd to sym and we want sym to be type-specialized, for symStore to be specialized
+                        // outside the loop.
+                        forceSimd128SymsOnEntry->Set(symStore->m_id);
+                    }
+                }
+                
+                Assert(bailOutKind == IR::BailOutSimd128F4Only || bailOutKind == IR::BailOutSimd128I4Only);
+                // we are in loop prepass, we haven't propagated the value info to the src. Do it now.
+                if (valueInfo)
+                {
+                    valueInfo = valueInfo->SpecializeToSimd128(toType, alloc);
+                    ChangeValueInfo(block, val, valueInfo);
+                }
+                else
+                {
+                    val = NewGenericValue(GetValueTypeFromIRType(toType));
+                    valueInfo = val->GetValueInfo();
+                    SetValue(&block->globOptData, val, varSym);
+                }
+                if (needReplaceSrc)
+                {
+                    opnd->SetValueType(valueInfo->Type());
+                }
+                return instr;
+            }
+            GOPT_TRACE_OPND(regSrc, L"Converting to Simd128\n");
+        }
         bool needLoad = false;
 
         if (needReplaceSrc)
@@ -13267,6 +13823,14 @@ GlobOpt::ToTypeSpecUse(IR::Instr *instr, IR::Opnd *opnd, BasicBlock *block, Valu
             Assert(bailOutKind != IR::BailOutInvalid);
             isBailout = true;
         }
+        else if (IRType_IsSimd128(toType) 
+            && opcode == Js::OpCode::FromVar 
+            && (!valueInfo || !valueInfo->IsSimd128(toType)))
+        {
+                Assert(toType == TySimd128F4 && bailOutKind == IR::BailOutSimd128F4Only
+                    || toType == TySimd128I4 && bailOutKind == IR::BailOutSimd128I4Only);
+                isBailout = true;
+        }
 
         if (isBailout)
         {
@@ -13329,9 +13893,8 @@ GlobOpt::ToTypeSpecUse(IR::Instr *instr, IR::Opnd *opnd, BasicBlock *block, Valu
                     }
                 }
             }
-            else
+            else if (toType == TyFloat64)
             {
-                Assert(toType == TyFloat64);
                 if(bailOutKind == IR::BailOutNumberOnly)
                 {
                     if(valueInfo)
@@ -13345,6 +13908,21 @@ GlobOpt::ToTypeSpecUse(IR::Instr *instr, IR::Opnd *opnd, BasicBlock *block, Valu
                         valueInfo = val->GetValueInfo();
                         SetValue(&block->globOptData, val, varSym);
                     }
+                }
+            }
+            else
+            {
+                Assert(IRType_IsSimd128(toType));
+                if (valueInfo)
+                {
+                    valueInfo = valueInfo->SpecializeToSimd128(toType, alloc);
+                    ChangeValueInfo(block, val, valueInfo);
+                }
+                else
+                {
+                    val = NewGenericValue(GetValueTypeFromIRType(toType));
+                    valueInfo = val->GetValueInfo();
+                    SetValue(&block->globOptData, val, varSym);
                 }
             }
         }
@@ -13654,6 +14232,11 @@ GlobOpt::ToVarStackSym(StackSym *varSym, BasicBlock *block)
     block->globOptData.liveInt32Syms->Clear(varSym->m_id);
     block->globOptData.liveLossyInt32Syms->Clear(varSym->m_id);
     block->globOptData.liveFloat64Syms->Clear(varSym->m_id);
+
+    // SIMD_JS
+    block->globOptData.liveSimd128F4Syms->Clear(varSym->m_id);
+    block->globOptData.liveSimd128I4Syms->Clear(varSym->m_id);
+    
 }
 
 void
@@ -13678,6 +14261,11 @@ GlobOpt::ToInt32Dst(IR::Instr *instr, IR::RegOpnd *dst, BasicBlock *block)
     block->globOptData.liveLossyInt32Syms->Clear(varSym->m_id); // the store makes it lossless
     block->globOptData.liveVarSyms->Clear(varSym->m_id);
     block->globOptData.liveFloat64Syms->Clear(varSym->m_id);
+
+    // SIMD_JS
+    block->globOptData.liveSimd128F4Syms->Clear(varSym->m_id);
+    block->globOptData.liveSimd128I4Syms->Clear(varSym->m_id);
+    
 }
 
 void
@@ -13691,8 +14279,12 @@ GlobOpt::ToUInt32Dst(IR::Instr *instr, IR::RegOpnd *dst, BasicBlock *block)
     block->globOptData.liveLossyInt32Syms->Clear(varSym->m_id); // the store makes it lossless
     block->globOptData.liveVarSyms->Clear(varSym->m_id);
     block->globOptData.liveFloat64Syms->Clear(varSym->m_id);
-}
 
+    // SIMD_JS
+    block->globOptData.liveSimd128F4Syms->Clear(varSym->m_id);
+    block->globOptData.liveSimd128I4Syms->Clear(varSym->m_id);
+    
+}
 
 void
 GlobOpt::ToFloat64Dst(IR::Instr *instr, IR::RegOpnd *dst, BasicBlock *block)
@@ -13716,6 +14308,46 @@ GlobOpt::ToFloat64Dst(IR::Instr *instr, IR::RegOpnd *dst, BasicBlock *block)
     block->globOptData.liveVarSyms->Clear(varSym->m_id);
     block->globOptData.liveInt32Syms->Clear(varSym->m_id);
     block->globOptData.liveLossyInt32Syms->Clear(varSym->m_id);
+
+    // SIMD_JS
+    block->globOptData.liveSimd128F4Syms->Clear(varSym->m_id);
+    block->globOptData.liveSimd128I4Syms->Clear(varSym->m_id);
+    
+}
+
+// SIMD_JS
+void
+GlobOpt::ToSimd128Dst(IRType toType, IR::Instr *instr, IR::RegOpnd *dst, BasicBlock *block)
+{
+    StackSym *varSym = dst->m_sym;
+    Assert(!varSym->IsTypeSpec());
+    BVSparse<JitArenaAllocator> * livenessBV = block->globOptData.GetSimd128LivenessBV(toType);
+
+    Assert(livenessBV);
+
+    if (!this->IsLoopPrePass() && varSym->IsVar())
+    {
+        StackSym *simd128Sym = varSym->GetSimd128EquivSym(toType, this->func);
+
+        // Use UnlinkDst / SetDst to make sure isSingleDef is tracked properly,
+        // since we'll just be hammering the symbol.
+        dst = instr->UnlinkDst()->AsRegOpnd();
+        dst->m_sym = simd128Sym;
+        dst->SetType(toType);
+        instr->SetDst(dst);
+    }
+
+    block->globOptData.liveFloat64Syms->Clear(varSym->m_id);
+    block->globOptData.liveVarSyms->Clear(varSym->m_id);
+    block->globOptData.liveInt32Syms->Clear(varSym->m_id);
+    block->globOptData.liveLossyInt32Syms->Clear(varSym->m_id);
+
+    // SIMD_JS
+    block->globOptData.liveSimd128F4Syms->Clear(varSym->m_id);
+    block->globOptData.liveSimd128I4Syms->Clear(varSym->m_id);
+    
+    
+    livenessBV->Set(varSym->m_id);
 }
 
 BOOL
@@ -13751,6 +14383,94 @@ GlobOpt::IsFloat64TypeSpecialized(Sym *sym, GlobOptBlockData *data)
     return sym && data->liveFloat64Syms->Test(sym->m_id);
 }
 
+// SIMD_JS
+BOOL
+GlobOpt::IsSimd128TypeSpecialized(Sym *sym, BasicBlock *block)
+{
+    return IsSimd128TypeSpecialized(sym, &block->globOptData);
+}
+
+BOOL
+GlobOpt::IsSimd128TypeSpecialized(Sym *sym, GlobOptBlockData *data)
+{
+    sym = StackSym::GetVarEquivStackSym_NoCreate(sym);
+    return sym && (data->liveSimd128F4Syms->Test(sym->m_id) || data->liveSimd128I4Syms->Test(sym->m_id));
+}
+
+BOOL
+GlobOpt::IsSimd128TypeSpecialized(IRType type, Sym *sym, BasicBlock *block)
+{
+    return IsSimd128TypeSpecialized(type, sym, &block->globOptData);
+}
+
+BOOL
+GlobOpt::IsSimd128TypeSpecialized(IRType type, Sym *sym, GlobOptBlockData *data)
+{
+    switch (type)
+    {
+    case TySimd128F4:
+        return IsSimd128F4TypeSpecialized(sym, data);
+    case TySimd128I4:
+        return IsSimd128I4TypeSpecialized(sym, data);
+    default:
+        Assert(UNREACHED);
+        return false;
+    }
+}
+
+BOOL
+GlobOpt::IsSimd128F4TypeSpecialized(Sym *sym, BasicBlock *block)
+{
+    return IsSimd128F4TypeSpecialized(sym, &block->globOptData);
+}
+
+BOOL
+GlobOpt::IsSimd128F4TypeSpecialized(Sym *sym, GlobOptBlockData *data)
+{
+    sym = StackSym::GetVarEquivStackSym_NoCreate(sym);
+    return sym && (data->liveSimd128F4Syms->Test(sym->m_id));
+}
+
+BOOL
+GlobOpt::IsSimd128I4TypeSpecialized(Sym *sym, BasicBlock *block)
+{
+    return IsSimd128I4TypeSpecialized(sym, &block->globOptData);
+}
+
+BOOL
+GlobOpt::IsSimd128I4TypeSpecialized(Sym *sym, GlobOptBlockData *data)
+{
+    sym = StackSym::GetVarEquivStackSym_NoCreate(sym);
+    return sym && (data->liveSimd128I4Syms->Test(sym->m_id));
+}
+
+
+BOOL 
+GlobOpt::IsLiveAsSimd128(Sym *sym, GlobOptBlockData *data)
+{
+    sym = StackSym::GetVarEquivStackSym_NoCreate(sym);
+    return
+        sym &&
+        (
+        data->liveSimd128F4Syms->Test(sym->m_id) ||
+        data->liveSimd128I4Syms->Test(sym->m_id) 
+        );
+}
+
+BOOL
+GlobOpt::IsLiveAsSimd128F4(Sym *sym, GlobOptBlockData *data)
+{
+    sym = StackSym::GetVarEquivStackSym_NoCreate(sym);
+    return sym && data->liveSimd128F4Syms->Test(sym->m_id);
+}
+
+BOOL
+GlobOpt::IsLiveAsSimd128I4(Sym *sym, GlobOptBlockData *data)
+{
+    sym = StackSym::GetVarEquivStackSym_NoCreate(sym);
+    return sym && data->liveSimd128I4Syms->Test(sym->m_id);
+}
+
 BOOL
 GlobOpt::IsTypeSpecialized(Sym *sym, BasicBlock *block)
 {
@@ -13760,7 +14480,7 @@ GlobOpt::IsTypeSpecialized(Sym *sym, BasicBlock *block)
 BOOL
 GlobOpt::IsTypeSpecialized(Sym *sym, GlobOptBlockData *data)
 {
-    return IsInt32TypeSpecialized(sym, data) || IsFloat64TypeSpecialized(sym, data);
+    return IsInt32TypeSpecialized(sym, data) || IsFloat64TypeSpecialized(sym, data) || IsSimd128TypeSpecialized(sym, data);
 }
 
 BOOL
@@ -13776,9 +14496,11 @@ GlobOpt::IsLive(Sym *sym, GlobOptBlockData *data)
     return
         sym &&
         (
-            data->liveVarSyms->Test(sym->m_id) ||
-            data->liveInt32Syms->Test(sym->m_id) ||
-            data->liveFloat64Syms->Test(sym->m_id)
+        data->liveVarSyms->Test(sym->m_id) ||
+        data->liveInt32Syms->Test(sym->m_id) ||
+        data->liveFloat64Syms->Test(sym->m_id) ||
+        data->liveSimd128F4Syms->Test(sym->m_id) ||
+        data->liveSimd128I4Syms->Test(sym->m_id)
         );
 }
 
@@ -13804,9 +14526,25 @@ void GlobOpt::MakeLive(StackSym *const sym, GlobOptBlockData *const blockData, c
             return;
         }
 
-        Assert(sym->IsFloat64());
-        blockData->liveFloat64Syms->Set(varSymId);
-        return;
+        if (sym->IsFloat64())
+        {
+            blockData->liveFloat64Syms->Set(varSymId);
+            return;
+        }
+
+        // SIMD_JS
+        if (sym->IsSimd128F4())
+        {
+            blockData->liveSimd128F4Syms->Set(varSymId);
+            return;
+        }
+
+        if (sym->IsSimd128I4())
+        {
+            blockData->liveSimd128I4Syms->Set(varSymId);
+            return;
+        }
+       
     }
 
     blockData->liveVarSyms->Set(sym->m_id);
@@ -14039,6 +14777,27 @@ bool GlobOpt::AreValueInfosCompatible(const ValueInfo *const v0, const ValueInfo
     {
         // Float specialization allows specializing values of arbitrary types, even values that are definitely not float
         return true;
+    }
+
+    // SIMD_JS
+    if (SIMD128_TYPE_SPEC_FLAG && v0->Type().IsSimd128())
+    {
+        // we only type-spec Undefined values, Objects (possibly merged SIMD values), or actual SIMD values.
+        
+        if (v1->Type().IsLikelyUndefined() || v1->Type().IsLikelyNull())
+        {
+            return true;
+        }
+        
+        if (v1->Type().IsLikelyObject() && v1->Type().GetObjectType() == ObjectType::Object)
+        {
+            return true;
+        }
+
+        if (v1->Type().IsSimd128())
+        {
+            return v0->Type().GetObjectType() == v1->Type().GetObjectType();
+        }
     }
 
     const bool doArrayMissingValueCheckHoist = DoArrayMissingValueCheckHoist();
@@ -17402,10 +18161,17 @@ GlobOpt::OptIsInvariant(Sym *sym, BasicBlock *block, Loop *loop, Value *srcVal, 
                 return false;
             }
         }
+        else if (sym->AsStackSym()->IsFloat64())
+        {
+            if (!loop->landingPad->globOptData.liveFloat64Syms->Test(varSym->m_id))
+            {
+                return false;
+            }
+        }
         else
         {
-            Assert(sym->AsStackSym()->IsFloat64());
-            if (!loop->landingPad->globOptData.liveFloat64Syms->Test(varSym->m_id))
+            Assert(sym->AsStackSym()->IsSimd128());
+            if (!loop->landingPad->globOptData.liveSimd128F4Syms->Test(varSym->m_id) && !loop->landingPad->globOptData.liveSimd128I4Syms->Test(varSym->m_id))
             {
                 return false;
             }
@@ -17690,6 +18456,22 @@ GlobOpt::OptHoistInvariant(
                     block->globOptData.liveFloat64Syms->Set(copyVarSym->m_id);
                     copySym = copySym->GetFloat64EquivSym(instr->m_func);
                 }
+                else if (dst->IsSimd128())
+                {
+                    // SIMD_JS
+                    if (dst->IsSimd128F4())
+                    {
+                        block->globOptData.liveSimd128F4Syms->Set(copyVarSym->m_id);
+                        copySym = copySym->GetSimd128F4EquivSym(instr->m_func);
+                    }
+                    else
+                    {
+                        Assert(dst->IsSimd128I4());
+                        block->globOptData.liveSimd128I4Syms->Set(copyVarSym->m_id);
+                        copySym = copySym->GetSimd128I4EquivSym(instr->m_func);
+                    }
+                    
+                }
                 copyReg = IR::RegOpnd::New(copySym, copySym->GetType(), instr->m_func);
             }
             else
@@ -17810,7 +18592,8 @@ GlobOpt::OptHoistInvariant(
         }
 
         // Check if the dst value was transferred from the src. If so, the value transfer needs to be replicated
-        const bool isTransfer = dstVal == src1Val;
+        bool isTransfer = dstVal == src1Val;
+
         StackSym *transferValueOfSym = nullptr;
         if(isTransfer)
         {
@@ -17827,6 +18610,20 @@ GlobOpt::OptHoistInvariant(
                 {
                     transferValueOfSym = src1Sym;
                 }
+            }
+        }
+
+        // SIMD_JS
+        if (instr->m_opcode == Js::OpCode::ExtendArg_A)
+        {
+            // check if we should have CSE'ed this EA
+            Assert(instr->GetSrc1());
+            
+            // if the dstVal symstore is not the dst itself, then we copied the Value from another expression.
+            if (dstVal->GetValueInfo()->GetSymStore() != instr->GetDst()->GetStackSym())
+            {
+                isTransfer = true;
+                transferValueOfSym = dstVal->GetValueInfo()->GetSymStore()->AsStackSym();
             }
         }
 
@@ -17896,10 +18693,19 @@ GlobOpt::OptHoistInvariant(
                 changeValueType = changeValueTypeToInt = true;
             }
         }
+        else if (dst->IsFloat64())
+        {
+            if(instr->HasBailOutInfo() && instr->GetBailOutKind() == IR::BailOutNumberOnly)
+            {
+                changeValueType = true;
+            }
+        }
         else
         {
-            Assert(dst->IsFloat64());
-            if(instr->HasBailOutInfo() && instr->GetBailOutKind() == IR::BailOutNumberOnly)
+            // SIMD_JS
+            Assert(dst->IsSimd128());
+            if (instr->HasBailOutInfo() &&
+                (instr->GetBailOutKind() == IR::BailOutSimd128F4Only || instr->GetBailOutKind() == IR::BailOutSimd128I4Only))
             {
                 changeValueType = true;
             }
@@ -18949,6 +19755,49 @@ ValueInfo *ValueInfo::SpecializeToFloat64(JitArenaAllocator *const allocator)
     return newValueInfo;
 }
 
+// SIMD_JS
+ValueInfo *ValueInfo::SpecializeToSimd128(IRType type, JitArenaAllocator *const allocator)
+{
+    switch (type)
+    {
+    case TySimd128F4:
+        return SpecializeToSimd128F4(allocator);
+    case TySimd128I4:
+        return SpecializeToSimd128I4(allocator);
+    default:
+        Assert(UNREACHED);
+        return false;
+    }
+
+}
+ValueInfo *ValueInfo::SpecializeToSimd128F4(JitArenaAllocator *const allocator)
+{
+    if (IsSimd128Float32x4())
+    {
+        return this;
+    }
+
+    ValueInfo *const newValueInfo = CopyWithGenericStructureKind(allocator);
+
+    newValueInfo->Type() = ValueType::GetSimd128(ObjectType::Simd128Float32x4);
+
+    return newValueInfo;
+}
+
+ValueInfo *ValueInfo::SpecializeToSimd128I4(JitArenaAllocator *const allocator)
+{
+    if (IsSimd128Int32x4())
+    {
+        return this;
+    }
+
+    ValueInfo *const newValueInfo = CopyWithGenericStructureKind(allocator);
+
+    newValueInfo->Type() = ValueType::GetSimd128(ObjectType::Simd128Int32x4);
+
+    return newValueInfo;
+}
+
 bool ValueInfo::GetIsShared() const
 {
     return IsJsType() ? AsJsType()->GetIsShared() : false;
@@ -19632,6 +20481,11 @@ GlobOpt::KillStateForGeneratorYield()
     globOptData->liveInt32Syms->ClearAll();
     globOptData->liveLossyInt32Syms->ClearAll();
     globOptData->liveFloat64Syms->ClearAll();
+
+    // SIMD_JS
+    globOptData->liveSimd128F4Syms->ClearAll();
+    globOptData->liveSimd128I4Syms->ClearAll();
+
     if (globOptData->hoistableFields)
     {
         globOptData->hoistableFields->ClearAll();

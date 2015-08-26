@@ -937,7 +937,7 @@ namespace Js
                 AsmJsFunctionTable* funcTable = sym->Cast<AsmJsFunctionTable>();
                 if( funcTable->GetSize() != tableSize )
                 {
-                    throw AsmJsCompilationException( L"Trying to load from Function table %s of size [%s] with size [%d]", funcName->Psz(), funcTable->GetSize(), tableSize );
+                    throw AsmJsCompilationException( L"Trying to load from Function table %s of size [%d] with size [%d]", funcName->Psz(), funcTable->GetSize(), tableSize );
                 }
             }
 
@@ -1133,14 +1133,7 @@ namespace Js
         {
             throw AsmJsCompilationException( L"Function %s doesn't support arguments", funcName->Psz() );
         }
-        if (sym->GetSymbolType() == AsmJsSymbol::FuncPtrTable)
-        {
-            AsmJsFunctionTable* funcTable = sym->Cast<AsmJsFunctionTable>();
-            if (!funcTable->EnsureSignatureIsKnown(mCompiler))
-            {
-                throw AsmJsCompilationException(L"Error trying to define function table %s's signature", funcName->Psz());
-            }
-        }
+
         // need to validate return type again because function might support arguments,
         // but return a different type ie:abs(int) -> int, but expecting double
         // don't validate the return type for foreign import functions

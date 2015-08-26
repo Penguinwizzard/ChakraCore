@@ -48,14 +48,14 @@ namespace Js
         bool Next();
 
         void *GetInstructionPointer();
-        void **GetArgv();
-        void *GetReturnAddress();
+        void **GetArgv(bool isCurrentContextNative = false, bool shouldCheckForNativeAddr = true);
+        void *GetReturnAddress(bool isCurrentContextNative = false, bool shouldCheckForNativeAddr = true);
         void *GetAddressOfInstructionPointer() { Assert(addressOfCodeAddr != nullptr); return addressOfCodeAddr; }
-        void *GetAddressOfReturnAddress();
+        void *GetAddressOfReturnAddress(bool isCurrentContextNative = false, bool shouldCheckForNativeAddr = true);
         bool SkipToFrame(void * returnAddress);
         void *GetFrame() { return (void *)frame;};
         bool IsInStackCheckCode(void *entry) const;
-
+        
     private:
 
         void ** frame;         // fp (frame pointer) - other interesting values are relative to this address

@@ -1145,6 +1145,10 @@ FuncInfo * ByteCodeGenerator::StartBindFunction(const wchar_t *name, int nameLen
         if (!CONFIG_FLAG(CreateFunctionProxy)) createFunctionBody = true;
 
         Js::FunctionInfo::Attributes attributes = Js::FunctionInfo::Attributes::None;
+        if (pnode->sxFnc.IsAsync())
+        {
+            attributes = (Js::FunctionInfo::Attributes)(attributes | Js::FunctionInfo::Attributes::ErrorOnNew | Js::FunctionInfo::Attributes::Async);
+        }
         if (pnode->sxFnc.IsLambda())
         {
             attributes = (Js::FunctionInfo::Attributes)(attributes | Js::FunctionInfo::Attributes::ErrorOnNew | Js::FunctionInfo::Attributes::Lambda);
@@ -1611,7 +1615,7 @@ bool ByteCodeGenerator::CanStackNestedFunc(FuncInfo * funcInfo, bool trace)
     wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
 #endif
     Assert(!funcInfo->IsGlobalFunction());
-    bool const doStackNestedFunc = !funcInfo->HasMaybeEscapedNestedFunc() && !IsInDebugMode() 
+    bool const doStackNestedFunc = !funcInfo->HasMaybeEscapedNestedFunc() && !IsInDebugMode() && !funcInfo->byteCodeFunction->IsGenerator() 
 #ifdef ENABLE_NATIVE_CODE_SERIALIZATION
         && !(this->flags & fscrIsNativeCode)
 #endif
@@ -2674,6 +2678,19 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
         {
             // Derived class constructors need to check undefined against explicit return statements.
             top->AssignUndefinedConstRegister();
+
+            top->AssignNewTargetRegister();
+
+            if (top->GetCallsEval() || top->GetChildCallsEval())
+            {
+                top->AssignThisRegister();
+                top->SetIsThisLexicallyCaptured();
+                top->SetIsNewTargetLexicallyCaptured();
+                top->SetIsSuperLexicallyCaptured();
+                top->SetHasLocalInClosure(true);
+                top->SetHasClosureReference(true);
+                top->SetHasCapturedThis();
+            }
         }
     }
 
@@ -3276,6 +3293,7 @@ void CheckInvertableExpr(ParseNode* pnode,ByteCodeGenerator* byteCodeGenerator,S
         case knopSub:
         case knopDiv:
         case knopMul:
+        case knopExpo:
         case knopMod:
         case knopNeg:
         case knopInt:
@@ -3936,10 +3954,7 @@ void ByteCodeGenerator::MarkThisUsedInLambda()
         parent->SetIsThisLexicallyCaptured();
         Scope* scope = parent->IsGlobalFunction() ? parent->GetGlobalEvalBlockScope() : parent->GetBodyScope();
         scope->SetHasLocalInClosure(true);
-    }
 
-    if (!parent->IsGlobalFunction() || this->flags & fscrEval)
-    {
         this->TopFuncInfo()->SetHasClosureReference(true);
     }
 
@@ -4329,7 +4344,10 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
         if (func->IsLambda())
         {
             nonLambdaFunc = byteCodeGenerator->FindEnclosingNonLambda();
+        }
 
+        if (nonLambdaFunc != func || (func->IsGlobalFunction() && (byteCodeGenerator->GetFlags() & fscrEval)))
+        {
             nonLambdaFunc->root->sxFnc.SetHasNewTargetReferene();
             nonLambdaFunc->AssignNewTargetRegister();
             nonLambdaFunc->SetIsNewTargetLexicallyCaptured();
@@ -4345,7 +4363,7 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
         FuncInfo* func = byteCodeGenerator->TopFuncInfo();
         pnode->location = func->AssignSuperRegister();
         func->AssignThisRegister();
-
+        
         FuncInfo* nonLambdaFunc = func;
         if (func->IsLambda())
         {
@@ -4377,7 +4395,7 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
                 func->AssignNewTargetRegister();
             }
         }
-
+    
         if (nonLambdaFunc->IsGlobalFunction())
         {
             if (!(byteCodeGenerator->GetFlags() & fscrEval))
@@ -4427,9 +4445,8 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
                 byteCodeGenerator->MarkThisUsedInLambda();
             }
 
-            // If this is a super call in a derived class constructor, we need to have new.target 
-            if (parent->IsClassConstructor()
-                && pnode->sxCall.pnodeTarget->nop == knopSuper)
+            // If this is a super call we need to have new.target 
+            if (pnode->sxCall.pnodeTarget->nop == knopSuper)
             {
                 byteCodeGenerator->AssignNewTargetRegister();
             }

@@ -691,10 +691,13 @@ namespace Js
         inline Js::AsmJsRetType GetReturnType() const{return mReturnType;}
         bool EnsureArgCount(uint32_t count);
         void SetArgCount( uint32_t count );
+
         uint32_t GetArgCount() const
         {
             return mArgCount;
         }
+        AsmJsType* GetArgTypeArray();
+
         const AsmJsType& GetArgType( uint32 index ) const
         {
             Assert( mArgumentsType && index < GetArgCount() ); return mArgumentsType[index];
@@ -779,7 +782,6 @@ namespace Js
         unsigned int    mSize;
         bool            mIsDefined : 1;
         bool            mAreArgumentsKnown : 1;
-        PropertyName    mFirstFuncName;
     public:
         AsmJsFunctionTable( PropertyName name, ArenaAllocator* allocator ) :
             AsmJsFunctionDeclaration( name, AsmJsSymbol::FuncPtrTable, allocator )
@@ -809,15 +811,6 @@ namespace Js
             Assert( index < mSize );
             return mTable.Item( index );
         }
-        inline Js::PropertyName GetFirstFuncName() const
-        {
-            return mFirstFuncName;
-        }
-        inline void SetFirstFuncName( Js::PropertyName val )
-        {
-            mFirstFuncName = val;
-        }
-        bool EnsureSignatureIsKnown( AsmJsModuleCompiler* module );
         virtual bool SupportsArgCall( uint argCount, AsmJsType* args, AsmJsRetType& retType );
 
     };

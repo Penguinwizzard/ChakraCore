@@ -170,6 +170,15 @@ public:
     using ValueType::HasFloatElements;
     using ValueType::HasVarElements;
 
+    using ValueType::IsSimd128;
+    using ValueType::IsSimd128Float32x4;
+    using ValueType::IsSimd128Int32x4;
+    using ValueType::IsSimd128Float64x2;
+    using ValueType::IsLikelySimd128;
+    using ValueType::IsLikelySimd128Float32x4;
+    using ValueType::IsLikelySimd128Int32x4;
+    using ValueType::IsLikelySimd128Float64x2;
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
@@ -234,6 +243,13 @@ private:
 public:
     ValueInfo *SpecializeToInt32(JitArenaAllocator *const allocator, const bool isForLoopBackEdgeCompensation = false);
     ValueInfo *SpecializeToFloat64(JitArenaAllocator *const allocator);
+
+    // SIMD_JS
+    ValueInfo *SpecializeToSimd128(IRType type, JitArenaAllocator *const allocator);
+    ValueInfo *SpecializeToSimd128F4(JitArenaAllocator *const allocator);
+    ValueInfo *SpecializeToSimd128I4(JitArenaAllocator *const allocator);
+    
+
 
 public:
     Sym *                   GetSymStore() const { return this->symStore; }
@@ -980,8 +996,8 @@ class GlobOptBlockData
 {
 public:
     GlobOptBlockData(Func *func) :
-        symToValueMap(null),        
-        exprToValueMap(null),        
+        symToValueMap(null),
+        exprToValueMap(null),
         liveFields(null),
         liveArrayValues(null),
         maybeWrittenTypeSyms(null),
@@ -989,6 +1005,8 @@ public:
         liveInt32Syms(null),
         liveLossyInt32Syms(null),
         liveFloat64Syms(null),
+        liveSimd128F4Syms(null),
+        liveSimd128I4Syms(null),
         hoistableFields(null),
         argObjSyms(null),
         maybeTempObjectSyms(null),
@@ -1025,6 +1043,11 @@ public:
     // Conversely, a lossless int32 sym can be reused to avoid a lossy conversion.
     BVSparse<JitArenaAllocator> *           liveLossyInt32Syms;
     BVSparse<JitArenaAllocator> *           liveFloat64Syms;
+
+    // SIMD_JS
+    BVSparse<JitArenaAllocator> *           liveSimd128F4Syms;
+    BVSparse<JitArenaAllocator> *           liveSimd128I4Syms;
+    
     BVSparse<JitArenaAllocator> *           hoistableFields;
     BVSparse<JitArenaAllocator> *           argObjSyms;
     BVSparse<JitArenaAllocator> *           maybeTempObjectSyms;
@@ -1088,6 +1111,21 @@ public:
             return true;
         OnDataUnreferenced();
         return false;
+    }
+
+    // SIMD_JS
+    BVSparse<JitArenaAllocator> * GetSimd128LivenessBV(IRType type)
+    {
+        switch (type)
+        {
+        case TySimd128F4:
+            return liveSimd128F4Syms;
+        case TySimd128I4:
+            return liveSimd128I4Syms;
+        default:
+            Assert(UNREACHED);
+            return null;
+        }
     }
 };
 
@@ -1404,6 +1442,17 @@ private:
     void                    SetValue(GlobOptBlockData * blockData, Value *val, Sym * sym);
     void                    SetValueToHashTable(GlobHashTable * valueNumberMap, Value *val, Sym *sym);
     IR::Instr *             TypeSpecialization(IR::Instr *instr, Value **pSrc1Val, Value **pSrc2Val, Value **pDstVal, bool *redoTypeSpecRef, bool *const forceInvariantHoistingRef);
+    
+    // SIMD_JS
+    bool                    TypeSpecializeSimd128(IR::Instr *instr, Value **pSrc1Val, Value **pSrc2Val, Value **pDstVal);
+    bool                    Simd128DoTypeSpec(IR::Instr *instr, const Value *src1Val, const Value *src2Val, const Value *dstVal);
+    bool                    Simd128CanTypeSpecOpnd(const ValueType opndType, const ValueType expectedType);
+    IRType                  GetIRTypeFromValueType(const ValueType &valueType);
+    ValueType               GetValueTypeFromIRType(const IRType &type);
+    IR::BailOutKind         GetBailOutKindFromValueType(const ValueType &valueType);
+    IR::Instr *             GetExtendedArg(IR::Instr *instr);
+
+
     IR::Instr *             OptNewScObject(IR::Instr** instrPtr, Value* srcVal);
     bool                    OptConstFoldBinary(IR::Instr * *pInstr, const IntConstantBounds &src1IntConstantBounds, const IntConstantBounds &src2IntConstantBounds, Value **pDstVal);
     bool                    OptConstFoldUnary(IR::Instr * *pInstr, const IntConstType intConstantValue, const bool isUsingOriginalSrc1Value, Value **pDstVal);
@@ -1540,11 +1589,28 @@ private:
     void                    ToInt32Dst(IR::Instr *instr, IR::RegOpnd *dst, BasicBlock *block);    
     void                    ToUInt32Dst(IR::Instr *instr, IR::RegOpnd *dst, BasicBlock *block);
     void                    ToFloat64Dst(IR::Instr *instr, IR::RegOpnd *dst, BasicBlock *block);
+    // SIMD_JS
+    void                    TypeSpecializeSimd128Dst(IRType type, IR::Instr *instr, Value *valToTransfer, Value *const src1Value, Value **pDstVal);
+    void                    ToSimd128Dst(IRType toType, IR::Instr *instr, IR::RegOpnd *dst, BasicBlock *block);
+
     static BOOL             IsInt32TypeSpecialized(Sym *sym, BasicBlock *block);
     static BOOL             IsInt32TypeSpecialized(Sym *sym, GlobOptBlockData *data);
     static BOOL             IsSwitchInt32TypeSpecialized(IR::Instr * instr, BasicBlock * block);
     static BOOL             IsFloat64TypeSpecialized(Sym *sym, BasicBlock *block);
     static BOOL             IsFloat64TypeSpecialized(Sym *sym, GlobOptBlockData *data);
+    // SIMD_JS
+    static BOOL             IsSimd128TypeSpecialized(Sym *sym, BasicBlock *block);
+    static BOOL             IsSimd128TypeSpecialized(Sym *sym, GlobOptBlockData *data);
+    static BOOL             IsSimd128TypeSpecialized(IRType type, Sym *sym, BasicBlock *block);
+    static BOOL             IsSimd128TypeSpecialized(IRType type, Sym *sym, GlobOptBlockData *data);
+    static BOOL             IsSimd128F4TypeSpecialized(Sym *sym, BasicBlock *block);
+    static BOOL             IsSimd128F4TypeSpecialized(Sym *sym, GlobOptBlockData *data);
+    static BOOL             IsSimd128I4TypeSpecialized(Sym *sym, BasicBlock *block);
+    static BOOL             IsSimd128I4TypeSpecialized(Sym *sym, GlobOptBlockData *data);
+    static BOOL             IsLiveAsSimd128(Sym *sym, GlobOptBlockData *data);
+    static BOOL             IsLiveAsSimd128F4(Sym *sym, GlobOptBlockData *data);
+    static BOOL             IsLiveAsSimd128I4(Sym *sym, GlobOptBlockData *data);
+
     static BOOL             IsTypeSpecialized(Sym *sym, BasicBlock *block);
     static BOOL             IsTypeSpecialized(Sym *sym, GlobOptBlockData *data);
     static BOOL             IsLive(Sym *sym, BasicBlock *block);

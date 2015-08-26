@@ -103,7 +103,9 @@ LowererMDArch::GetAssignOp(IRType type)
         return Js::OpCode::MOVSD;
     case TyFloat32:
         return Js::OpCode::MOVSS;
-    case TySimd128:
+    case TySimd128F4:
+    case TySimd128I4:
+    case TySimd128D2:
         return Js::OpCode::MOVUPS;
     default:
         return Js::OpCode::MOV;
@@ -1383,7 +1385,7 @@ LowererMDArch::LoadDoubleHelperArgument(IR::Instr * instrInsert, IR::Opnd * opnd
     }
     instr = IR::Instr::New(Js::OpCode::MOVSD, opnd, float64Opnd, this->m_func);
     instrInsert->InsertBefore(instr);
-
+    LowererMD::Legalize(instr);
     return instrPrev;
 }
 
@@ -1801,9 +1803,17 @@ LowererMDArch::LowerExitInstrAsmJs(IR::ExitInstr * exitInstr)
         regType = TyFloat32;
     }
 #ifdef SIMD_JS_ENABLED
-    else if (asmRetType.toVarType().isSIMD())
+    else if (asmRetType.toVarType().isFloat32x4())
     {
-        regType = TySimd128;
+        regType = TySimd128F4;
+    }
+    else if (asmRetType.toVarType().isInt32x4())
+    {
+        regType = TySimd128I4;
+    }
+    else if (asmRetType.toVarType().isFloat64x2())
+    {
+        regType = TySimd128D2;
     }
 #endif
     else
@@ -2373,7 +2383,7 @@ LowererMDArch::EmitLoadInt32(IR::Instr *instrLoad)
             this->lowererMD->GenerateFloatTest(src1, instrLoad, labelHelper, instrLoad->HasBailOutInfo());
 
             IR::Opnd* floatOpnd = IR::IndirOpnd::New(src1, Js::JavascriptNumber::GetValueOffset(), TyMachDouble, this->m_func);
-            this->lowererMD->ConvertFloatToInt32(instrLoad->GetDst(), floatOpnd, labelDone, instrLoad);
+            this->lowererMD->ConvertFloatToInt32(instrLoad->GetDst(), floatOpnd, labelHelper, labelDone, instrLoad);
         }
 
         // $Helper

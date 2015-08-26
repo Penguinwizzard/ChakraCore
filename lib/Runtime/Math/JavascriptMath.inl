@@ -204,6 +204,12 @@ namespace Js
                 Multiply_Full(aLeft, aRight, scriptContext);
         }
 
+        __inline Var JavascriptMath::Exponentiation(Var aLeft, Var aRight, ScriptContext* scriptContext)
+        {
+            return Exponentiation_Full(aLeft, aRight, scriptContext);
+        }
+
+
         __inline double JavascriptMath::Multiply_Helper(Var aLeft, Var aRight, ScriptContext* scriptContext)
         {
             Assert(aLeft != null);

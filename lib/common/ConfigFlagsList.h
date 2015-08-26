@@ -487,7 +487,7 @@ PHASE(All)
 #define DEFAULT_CONFIG_ES6Destructuring        (false)
 #define DEFAULT_CONFIG_ES6FunctionName         (true)
 #define DEFAULT_CONFIG_ES6FunctionNameFull     (false)
-#define DEFAULT_CONFIG_ES6Generators           (false)
+#define DEFAULT_CONFIG_ES6Generators           (true)
 #define DEFAULT_CONFIG_ES6Iterators            (true)
 #define DEFAULT_CONFIG_ES6IsConcatSpreadable   (false) 
 #define DEFAULT_CONFIG_ES6Lambda               (true)
@@ -515,6 +515,7 @@ PHASE(All)
 #define DEFAULT_CONFIG_ES6WeakSet              (true)
 #define DEFAULT_CONFIG_ES6RegExChanges         (false)
 #define DEFAULT_CONFIG_ArrayBufferTransfer     (false)
+#define DEFAULT_CONFIG_ES7ExponentionOperator  (false)
 
 #define DEFAULT_CONFIG_ES6Verbose              (false)
 #define DEFAULT_CONFIG_ES6All                  (false)
@@ -741,6 +742,7 @@ FLAGNR(Boolean, AsmJsEdge             , "Enable asm.js features which may have b
 
 #ifdef SIMD_JS_ENABLED
 FLAGPR_REGOVR_EXP(Boolean, ES6, Simdjs, "Enable Simdjs", DEFAULT_CONFIG_SIMDJS)
+FLAGR(Boolean, Simd128TypeSpec, "Enable type-specialization of Simd128 symbols", false)
 #endif
 
 FLAGNR(Boolean, AssertBreak           , "Debugbreak on assert", false)
@@ -858,7 +860,7 @@ FLAGNRC(Boolean, ES6Experimental           , "Enable all experimental features",
 
 // Per ES6 feature/flag
 
-FLAGPR_REGOVR_EXP(Boolean, ES6, ES6Species             , "Enable ES6 '@@species' properties and built-in behaviors" , DEFAULT_CONFIG_ES6Species)
+FLAGPR           (Boolean, ES6, ES6Species             , "Enable ES6 '@@species' properties and built-in behaviors" , DEFAULT_CONFIG_ES6Species)
 FLAGPR_REGOVR_EXP(Boolean, ES6, ES7AsyncAwait          , "Enable ES7 'async' and 'await' keywords"                  , DEFAULT_CONFIG_ES6AsyncAwait)
 FLAGPR           (Boolean, ES6, ES6Classes             , "Enable ES6 'class' and 'extends' keywords"                , DEFAULT_CONFIG_ES6Classes)
 FLAGPR           (Boolean, ES6, ES6DateParseFix        , "Enable ES6 Date.parse fixes"                              , DEFAULT_CONFIG_ES6DateParseFix)
@@ -866,7 +868,8 @@ FLAGPR_REGOVR_EXP(Boolean, ES6, ES6DefaultArgs         , "Enable ES6 Default Arg
 FLAGPR_REGOVR_EXP(Boolean, ES6, ES6Destructuring       , "Enable ES6 Destructuring"                                 , DEFAULT_CONFIG_ES6Destructuring)
 FLAGPR           (Boolean, ES6, ES6FunctionName        , "Enable ES6 function.name"                                 , DEFAULT_CONFIG_ES6FunctionName)
 FLAGPR_REGOVR_EXP(Boolean, ES6, ES6FunctionNameFull    , "Enable ES6 Full function.name"                            , DEFAULT_CONFIG_ES6FunctionNameFull)
-FLAGPR_REGOVR_EXP(Boolean, ES6, ES6Generators          , "Enable ES6 generators"                                    , DEFAULT_CONFIG_ES6Generators)
+FLAGPR           (Boolean, ES6, ES6Generators          , "Enable ES6 generators"                                    , DEFAULT_CONFIG_ES6Generators)
+FLAGPR_REGOVR_EXP(Boolean, ES6, ES7ExponentiationOperator, "Enable ES7 exponentiation operator (**)"                , DEFAULT_CONFIG_ES7ExponentionOperator)
 FLAGPR           (Boolean, ES6, ES6Iterators           , "Enable ES6 iterators"                                     , DEFAULT_CONFIG_ES6Iterators)
 FLAGPR           (Boolean, ES6, ES6IsConcatSpreadable  , "Enable ES6 isConcatSpreadable Symbol"                     , DEFAULT_CONFIG_ES6IsConcatSpreadable)
 FLAGPR           (Boolean, ES6, ES6Lambda              , "Enable ES6 lambdas"                                       , DEFAULT_CONFIG_ES6Lambda)

@@ -180,6 +180,7 @@ namespace Js
         bool IsES6FunctionNameEnabled()         const { return CONFIG_FLAG_RELEASE(ES6FunctionName); }
         bool IsES6FunctionNameFullEnabled()     const { return CONFIG_FLAG_RELEASE(ES6FunctionNameFull); }
         bool IsES6GeneratorsEnabled()           const { return CONFIG_FLAG_RELEASE(ES6Generators); }
+        bool IsES7ExponentiationOperatorEnabled() const { return CONFIG_FLAG_RELEASE(ES7ExponentiationOperator); }
         bool IsES6IteratorsEnabled()            const { return CONFIG_FLAG_RELEASE(ES6Iterators); }
         bool IsES6IsConcatSpreadableEnabled()   const { return CONFIG_FLAG_RELEASE(ES6IsConcatSpreadable); }
         bool IsES6LambdaEnabled()               const { return CONFIG_FLAG_RELEASE(ES6Lambda); }

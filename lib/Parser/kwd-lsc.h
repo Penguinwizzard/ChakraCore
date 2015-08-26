@@ -133,6 +133,7 @@ TOK_DCL(tkAsgAdd        ,Asg, knopAsgAdd , No, knopNone   ) // +=
 TOK_DCL(tkAsgSub        ,Asg, knopAsgSub , No, knopNone   ) // -=
 TOK_DCL(tkAsgMul        ,Asg, knopAsgMul , No, knopNone   ) // *=
 TOK_DCL(tkAsgDiv        ,Asg, knopAsgDiv , No, knopNone   ) // /=
+TOK_DCL(tkAsgExpo       ,Asg, knopAsgExpo, No, knopNone   ) // **=
 TOK_DCL(tkAsgMod        ,Asg, knopAsgMod , No, knopNone   ) // %=
 TOK_DCL(tkAsgAnd        ,Asg, knopAsgAnd , No, knopNone   ) // &=
 TOK_DCL(tkAsgXor        ,Asg, knopAsgXor , No, knopNone   ) // ^=
@@ -160,6 +161,7 @@ TOK_DCL(tkRsh           ,Shf, knopRsh    , No, knopNone   ) // >>
 TOK_DCL(tkRs2           ,Shf, knopRs2    , No, knopNone   ) // >>>
 TOK_DCL(tkAdd           ,Add, knopAdd    ,Uni, knopPos    ) // +
 TOK_DCL(tkSub           ,Add, knopSub    ,Uni, knopNeg    ) // -
+TOK_DCL(tkExpo          ,Expo, knopExpo  , No, knopNone   ) // **
 TOK_DCL(tkStar          ,Mul, knopMul    , No, knopNone   ) // *
 TOK_DCL(tkDiv           ,Mul, knopDiv    , No, knopNone   ) // /
 TOK_DCL(tkPct           ,Mul, knopMod    , No, knopNone   ) // %

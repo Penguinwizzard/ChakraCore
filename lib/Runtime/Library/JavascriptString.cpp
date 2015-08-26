@@ -3262,8 +3262,6 @@ case_2:
         //Loop while the size estimate is bigger than 0
         while (lastError == ERROR_INSUFFICIENT_BUFFER)
         {
-            //BEGIN_TEMP_ALLOCATOR(tempAllocator, scriptContext, L"normalize");
-
             tmpBuffer = AnewArray(tempAllocator, wchar_t, sizeEstimate);
             sizeEstimate = NormalizeString(form, this->GetSz(), this->GetLength() + 1, tmpBuffer, sizeEstimate);
 
@@ -3271,14 +3269,13 @@ case_2:
             if (sizeEstimate > 0)
             {
                 sizeOfNormalizedStringWithoutNullTerminator = sizeEstimate - 1;
-                return tmpBuffer;// JavascriptString::NewCopyBuffer(tmpBuffer, sizeEstimate - 1, scriptContext);
+                return tmpBuffer;
             }
 
             //Anything less than 0, we have an error, flip sizeEstimate now. As both times we need to use it, we need positive anyways.
             lastError = GetLastError();
             sizeEstimate *= -1;
 
-            //END_TEMP_ALLOCATOR(tempAllocator, scriptContext);
         }
 
         switch ((long)lastError)

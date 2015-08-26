@@ -1166,6 +1166,24 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             break;
         }
 
+        case Js::OpCode::Expo_A:
+        {
+            if (instr->GetDst()->IsFloat())
+            {
+                Assert(instr->GetSrc1()->IsFloat());
+                Assert(instr->GetSrc2()->IsFloat());
+                Assert(instr->GetDst()->GetType() == instr->GetSrc1()->GetType());
+                Assert(instr->GetDst()->GetType() == instr->GetSrc2()->GetType());
+
+                m_lowererMD.GenerateFastInlineBuiltInCall(instr, IR::HelperDirectMath_Pow);
+            }
+            else
+            {
+                this->LowerBinaryHelperMemWithTemp2(instr, IR_HELPER_OP_FULL_OR_INPLACE(Exponentiation));
+            }
+            break;
+        }
+
         case Js::OpCode::Mul_A:
             if (instr->GetDst()->IsFloat())
             {
@@ -1664,10 +1682,29 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
                     GenerateBailOut(instr);
                 }
             }
+            else if (instr->GetDst()->IsFloat())
+            {
+                if (m_func->GetJnFunction()->GetIsAsmJsFunction())
+                {
+                    m_lowererMD.EmitLoadFloat(instr->GetDst(), instr->GetSrc1(), instr);
+                    instr->Remove();
+                }
+                else
+                {
+                    m_lowererMD.EmitLoadFloatFromNumber(instr->GetDst(), instr->GetSrc1(), instr);
+                }
+            }
+            // Support on IA only
+#if defined(_M_IX86) || defined(_M_X64)
+            else if (instr->GetDst()->IsSimd128())
+            {
+                // SIMD_JS
+                m_lowererMD.GenerateCheckedSimdLoad(instr);
+            }
+#endif
             else
             {
-                Assert(instr->GetDst()->IsFloat());
-                m_lowererMD.EmitLoadFloatFromNumber(instr->GetDst(), instr->GetSrc1(), instr);
+                Assert(UNREACHED);
             }
             break;
 
@@ -1703,14 +1740,23 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             {
                 m_lowererMD.EmitLoadVar(instr);
             }
-            else
+            else if (instr->GetSrc1()->GetType() == TyFloat64)
             {
-                Assert(instr->GetSrc1()->GetType() == TyFloat64);
                 Assert(instr->GetSrc1()->IsRegOpnd());
                 m_lowererMD.SaveDoubleToVar(
                     instr->GetDst()->AsRegOpnd(),
                     instr->GetSrc1()->AsRegOpnd(), instr, instr);
                 instr->Remove();
+            }
+#if defined(_M_IX86) || defined(_M_X64)
+            else if (IRType_IsSimd128(instr->GetSrc1()->GetType()))
+            {
+                m_lowererMD.GenerateSimdStore(instr);
+            }
+#endif
+            else
+            {
+                Assert(UNREACHED);
             }
             break;
 
@@ -1982,16 +2028,19 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
         case Js::OpCode::MultiBr:
         {
             //Lower the MultiBr Instr
-            switch (instr->AsBranchInstr()->AsMultiBrInstr()->m_kind)
+            IR::MultiBranchInstr * multiBranchInstr = instr->AsBranchInstr()->AsMultiBrInstr();
+            switch (multiBranchInstr->m_kind)
             {
             case IR::MultiBranchInstr::StrDictionary:            
                 this->GenerateSwitchStringLookup(instr);                
                 break;
             case IR::MultiBranchInstr::SingleCharStrJumpTable:
                 this->GenerateSingleCharStrJumpTableLookup(instr);
+                m_func->m_totalJumpTableSizeInBytesForSwitchStatements += (multiBranchInstr->GetBranchJumpTable()->tableSize * sizeof(void*));
                 break;
             case IR::MultiBranchInstr::IntJumpTable:
                 this->LowerMultiBr(instr);
+                m_func->m_totalJumpTableSizeInBytesForSwitchStatements += (multiBranchInstr->GetBranchJumpTable()->tableSize * sizeof(void*));
                 break;
             default:
                 Assert(false);
@@ -2534,6 +2583,7 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             instrPrev = LowerBailOnNotPolymorphicInlinee(instr);
             break;
 
+        case Js::OpCode::BailOnNoSimdTypeSpec:
         case Js::OpCode::BailOnNoProfile:
             this->GenerateBailOut(instr, null, null);
             break;
@@ -12622,7 +12672,7 @@ Lowerer::GenerateBailOut(IR::Instr * instr, IR::BranchInstr * branchInstr, IR::L
     }
 
 #if DBG
-    if (bailOutInstr->m_opcode == Js::OpCode::BailOnNoProfile || bailOutInstr->m_opcode == Js::OpCode::BailOnException || bailOutInstr->m_opcode == Js::OpCode::Yield)
+    if (bailOutInstr->m_opcode == Js::OpCode::BailOnNoSimdTypeSpec || bailOutInstr->m_opcode == Js::OpCode::BailOnNoProfile || bailOutInstr->m_opcode == Js::OpCode::BailOnException || bailOutInstr->m_opcode == Js::OpCode::Yield)
     {
         bailOutLabel->m_noHelperAssert = true;
     }
@@ -14554,19 +14604,19 @@ Lowerer::GenerateFastElemIIntIndexCommon(
     if(!indexValueOpnd)
     {
         indexValueOpnd =
-            m_lowererMD.LoadNonnegativeIndex(
-                indexOpnd,
-                (
-                    indexIsNonnegative
-                #if !INT32VAR
-                    ||
-                    // On 32-bit platforms, skip the negative check since for now, the unsigned upper bound check covers it
-                    doUpperBoundCheck
-                #endif
-                ),
-                labelCantUseArray,
-                labelHelper,
-                ldElem);
+        m_lowererMD.LoadNonnegativeIndex(
+            indexOpnd,
+            (
+                indexIsNonnegative
+            #if !INT32VAR
+                ||
+                // On 32-bit platforms, skip the negative check since for now, the unsigned upper bound check covers it
+                doUpperBoundCheck
+            #endif
+            ),
+            labelCantUseArray,
+            labelHelper,
+            ldElem);
     }
     const IR::AutoReuseOpnd autoReuseIndexValueOpnd(indexValueOpnd, m_func);
 
@@ -22397,6 +22447,70 @@ Lowerer::LowerLdEnv(IR::Instr * instr)
 
     LowererMD::ChangeToAssign(instr);
     return instrPrev;
+}
+
+IR::RegOpnd *
+Lowerer::LoadIndexFromLikelyFloat(
+    IR::RegOpnd *indexOpnd,
+    const bool skipNegativeCheck,
+    IR::LabelInstr *const notIntLabel,
+    IR::LabelInstr *const negativeLabel,
+    IR::Instr *const insertBeforeInstr)
+{
+    Func *func = insertBeforeInstr->m_func;
+
+    IR::LabelInstr * convertToUint = IR::LabelInstr::New(Js::OpCode::Label, func);
+    IR::LabelInstr * fallThrough = IR::LabelInstr::New(Js::OpCode::Label, func);
+
+    // First generate test for tagged int even though profile data says likely float. Indices are usually int and we need a fast path before we try to convert float to int
+
+    //     mov  intIndex, index
+    //     sar  intIndex, 1
+    //     jae  convertToInt 
+    IR::RegOpnd *int32IndexOpnd = GenerateUntagVar(indexOpnd, convertToUint, insertBeforeInstr, !indexOpnd->IsTaggedInt());
+
+    if (!skipNegativeCheck)
+    {
+        //     test index, index
+        //     js   $notTaggedIntOrNegative
+        InsertTestBranch(int32IndexOpnd, int32IndexOpnd, LowererMD::MDCompareWithZeroBranchOpcode(Js::OpCode::BrLt_A), negativeLabel, insertBeforeInstr);
+    }
+    InsertBranch(Js::OpCode::Br, fallThrough, insertBeforeInstr);
+
+    insertBeforeInstr->InsertBefore(convertToUint);
+
+    // try to convert float to int in a fast path
+#if FLOATVAR
+    IR::RegOpnd* floatIndexOpnd = m_lowererMD.CheckFloatAndUntag(indexOpnd, insertBeforeInstr, notIntLabel);
+#else
+    m_lowererMD.GenerateFloatTest(indexOpnd, insertBeforeInstr, notIntLabel);
+    IR::IndirOpnd * floatIndexOpnd = IR::IndirOpnd::New(indexOpnd, Js::JavascriptNumber::GetValueOffset(), TyMachDouble, this->m_func);
+#endif
+
+    IR::LabelInstr * doneConvUint32 = IR::LabelInstr::New(Js::OpCode::Label, func);
+    IR::LabelInstr * helperConvUint32 = IR::LabelInstr::New(Js::OpCode::Label, func, true /*helper*/);
+    m_lowererMD.ConvertFloatToInt32(int32IndexOpnd, floatIndexOpnd, helperConvUint32, doneConvUint32, insertBeforeInstr);
+
+    // helper path
+    insertBeforeInstr->InsertBefore(helperConvUint32);
+    m_lowererMD.LoadDoubleHelperArgument(insertBeforeInstr, floatIndexOpnd);
+
+    IR::Instr * helperCall = IR::Instr::New(Js::OpCode::Call, int32IndexOpnd, this->m_func);
+    insertBeforeInstr->InsertBefore(helperCall);
+    m_lowererMD.ChangeToHelperCall(helperCall, IR::HelperConv_ToUInt32Core);
+
+    // main path
+    insertBeforeInstr->InsertBefore(doneConvUint32);
+
+    //Convert uint32 to back to float for comparision that conversion was indeed successful
+    IR::RegOpnd *floatOpndFromUint32 = IR::RegOpnd::New(TyFloat64, func);
+    m_lowererMD.EmitUIntToFloat(floatOpndFromUint32, int32IndexOpnd, insertBeforeInstr);
+
+    // compare with float from the original indexOpnd, we need floatIndex == (float64)(uint32)floatIndex
+    InsertCompareBranch(floatOpndFromUint32, floatIndexOpnd, Js::OpCode::BrNeq_A, notIntLabel, insertBeforeInstr, false);
+
+    insertBeforeInstr->InsertBefore(fallThrough);
+    return int32IndexOpnd;
 }
 
 #if DBG

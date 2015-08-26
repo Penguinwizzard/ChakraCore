@@ -793,14 +793,21 @@ LowererMD::LowerRet(IR::Instr * retInstr)
             regType = TyInt32;
         }
 #ifdef SIMD_JS_ENABLED
-        else if (asmType.which() == Js::AsmJsRetType::Float32x4 ||
-            asmType.which() == Js::AsmJsRetType::Int32x4 ||
-            asmType.which() == Js::AsmJsRetType::Float64x2)
+        else if (asmType.which() == Js::AsmJsRetType::Float32x4)
         {
-            regType = TySimd128;
+            regType = TySimd128F4;
+        }
+        else if (asmType.which() == Js::AsmJsRetType::Int32x4)
+        {
+            regType = TySimd128I4;
+        }
+        else if (asmType.which() == Js::AsmJsRetType::Float64x2)
+        {
+            regType = TySimd128D2;
         }
 #endif
-        else{
+        else
+        {
             Assert(UNREACHED);
         }
 
@@ -1428,8 +1435,8 @@ LowererMD::Legalize(IR::Instr *const instr, bool fPostRegAlloc)
         case Js::OpCode::MOVSD:
         case Js::OpCode::MOVSS:
         {            
-            Assert(instr->GetDst()->GetType() == (instr->m_opcode == Js::OpCode::MOVSD? TyFloat64 : TyFloat32) || instr->GetDst()->GetType() == TySimd128);
-            Assert(instr->GetSrc1()->GetType() == (instr->m_opcode == Js::OpCode::MOVSD ? TyFloat64 : TyFloat32) || instr->GetSrc1()->GetType() == TySimd128);
+            Assert(instr->GetDst()->GetType() == (instr->m_opcode == Js::OpCode::MOVSD? TyFloat64 : TyFloat32) || instr->GetDst()->IsSimd128());
+            Assert(instr->GetSrc1()->GetType() == (instr->m_opcode == Js::OpCode::MOVSD ? TyFloat64 : TyFloat32) || instr->GetSrc1()->IsSimd128());
 
             LegalizeOpnds<verify>(
                 instr,
@@ -4865,6 +4872,11 @@ IR::RegOpnd *LowererMD::LoadNonnegativeIndex(
 
     if(indexOpnd->IsVar())
     {
+        if (indexOpnd->GetValueType().IsLikelyFloat())
+        {
+            return m_lowerer->LoadIndexFromLikelyFloat(indexOpnd, skipNegativeCheck, notTaggedIntLabel, negativeLabel, insertBeforeInstr);
+        }
+
         //     mov  intIndex, index
         //     sar  intIndex, 1
         //     jae  $notTaggedIntOrNegative
@@ -7558,8 +7570,9 @@ LowererMD::EmitNon32BitOvfCheck(IR::Instr *instr, IR::Instr *insertInstr, IR::La
     Lowerer::InsertBranch(Js::OpCode::JNE, false, bailOutLabel, insertInstr);
 }
 
-void LowererMD::ConvertFloatToInt32(IR::Opnd* intOpnd, IR::Opnd* floatOpnd, IR::LabelInstr * labelDone, IR::Instr * instInsert)
+void LowererMD::ConvertFloatToInt32(IR::Opnd* intOpnd, IR::Opnd* floatOpnd, IR::LabelInstr * labelHelper, IR::LabelInstr * labelDone, IR::Instr * instInsert)
 {
+    UNREFERENCED_PARAMETER(labelHelper); // used on ARM
 #if defined(_M_IX86)
     // We should only generate this if sse2 is available
     Assert(AutoSystemInfo::Data.SSE2Available());
@@ -7740,7 +7753,7 @@ LowererMD::EmitFloatToInt(IR::Opnd *dst, IR::Opnd *src, IR::Instr *instrInsert)
     IR::LabelInstr *labelHelper = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, true);
     IR::Instr *instr;
 
-    ConvertFloatToInt32(dst, src, labelDone, instrInsert);
+    ConvertFloatToInt32(dst, src, labelHelper, labelDone, instrInsert);
 
     // $Helper
     instrInsert->InsertBefore(labelHelper);
@@ -8632,6 +8645,7 @@ void LowererMD::GenerateFastInlineBuiltInCall(IR::Instr* instr, IR::JnHelperMeth
     case Js::OpCode::InlineMathExp:
     case Js::OpCode::InlineMathLog:
     case Js::OpCode::InlineMathPow:
+    case Js::OpCode::Expo_A:        //** operator reuses InlineMathPow fastpath
     case Js::OpCode::InlineMathSin:
     case Js::OpCode::InlineMathTan:
         {

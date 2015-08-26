@@ -608,7 +608,6 @@ namespace Js {
 
         static void EnsureHeapAttached(ScriptFunction * func);
         static void ConvertFrameForJavascript(ScriptFunction * func);
-        static void ConvertFrameForAsmJs(ScriptFunction * func);
     };
 
 

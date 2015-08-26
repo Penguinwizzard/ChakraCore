@@ -124,7 +124,7 @@ namespace Js
     bool JavascriptFunction::IsBuiltinProperty(Var objectWithProperty, PropertyIds propertyId)
     {
         return ScriptFunction::Is(objectWithProperty)
-            && (propertyId == PropertyIds::arguments || propertyId == PropertyIds::caller);
+            && (propertyId == PropertyIds::length || propertyId == PropertyIds::arguments || propertyId == PropertyIds::caller);
     }
 #endif
 

@@ -436,7 +436,7 @@ namespace Js
         // For the global object we don't emit a type check before a hard-coded use of a fixed field.  Therefore a type transition isn't sufficient to
         // invalidate any used fixed fields, and we must continue tracking them on the new type handler.  If the type isn't locked, we may not change the
         // type of the instance, and we must also track the used fixed fields on the new handler.
-        bool transferUsedAsFixed = isGlobalObject || !isTypeLocked || ((this->GetFlags() & IsPrototypeFlag) != 0 || (isOrMayBecomeShared && !IsolatePrototypes()));
+        bool transferUsedAsFixed = isGlobalObject || !isTypeLocked || ((this->GetFlags() & IsPrototypeFlag) != 0 || (isOrMayBecomeShared && !IsolatePrototypes())) || PHASE_FORCE1(Js::FixDataPropsPhase);
 
         SimpleDictionaryPropertyDescriptor<TPropertyIndex> descriptor;
         TMapKey propertyKey;

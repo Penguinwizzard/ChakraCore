@@ -56,7 +56,8 @@ public:
     static bool GetBuiltInInfo(
         Js::FunctionInfo *const funcInfo,
         Js::OpCode *const inlineCandidateOpCode,
-        ValueType *const returnType);
+        ValueType *const returnType,
+        Js::ScriptContext *const scriptContext = null);
 
 #if defined(ENABLE_DEBUG_CONFIG_OPTIONS)
     static void TraceInlining(Js::FunctionBody *const inliner, const wchar_t* inlineeName, const wchar_t* inlineeFunctionIdandNumberString, uint inlineeByteCodeCount,

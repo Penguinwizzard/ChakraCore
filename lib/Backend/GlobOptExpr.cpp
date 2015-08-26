@@ -630,10 +630,22 @@ GlobOpt::CSEOptimize(BasicBlock *block, IR::Instr * *const instrRef, Value **pSr
         return false;
     }
 
+    // SIMD_JS
+    if (instr->m_opcode == Js::OpCode::ExtendArg_A)
+    {
+        // we don't want to CSE ExtendArgs, only the operation using them. To do that, we mimic CSE by transfering the symStore valueInfo to the dst.
+        IR::Opnd *dst = instr->GetDst();
+        Value *dstVal = this->FindValue(symStore);
+        this->SetValue(&this->blockData, dstVal, dst);
+        dst->AsRegOpnd()->m_sym->CopySymAttrs(symStore->AsStackSym());
+        return false;
+    }
+    
+
     //
     // Success, do the CSE rewrite.
     //
-
+    
 #if DBG_DUMP
     if (Js::Configuration::Global.flags.Trace.IsEnabled(Js::CSEPhase, this->func->GetSourceContextId(), this->func->GetLocalFunctionId()))
     {

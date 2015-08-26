@@ -25,7 +25,9 @@ const int PAGESIZE = 2 * 0x1000;
 const IRType TyMachReg = TyInt64;
 const IRType TyMachPtr = TyUint64;
 const IRType TyMachDouble = TyFloat64;
-const IRType TyMachSimd128 = TySimd128;
+const IRType TyMachSimd128F4 = TySimd128F4;
+const IRType TyMachSimd128I4 = TySimd128I4;
+const IRType TyMachSimd128D2 = TySimd128D2;
 
 const DWORD EMIT_BUFFER_ALIGNMENT = 16;
 const DWORD INSTR_ALIGNMENT = 1;

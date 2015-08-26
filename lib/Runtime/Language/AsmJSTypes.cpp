@@ -544,6 +544,11 @@ namespace Js
         }
     }
 
+    AsmJsType* AsmJsFunctionDeclaration::GetArgTypeArray()
+    {
+        return mArgumentsType;
+    }
+
     bool AsmJsFunctionDeclaration::CheckAndSetReturnType(Js::AsmJsRetType val)
     {
         Assert((val != AsmJsRetType::Fixnum && val != AsmJsRetType::Unsigned && val != AsmJsRetType::Floatish) || GetSymbolType() == AsmJsSymbol::MathBuiltinFunction);
@@ -1061,28 +1066,6 @@ namespace Js
             }
         }
         mAreArgumentsKnown = true;
-        return true;
-    }
-
-    bool AsmJsFunctionTable::EnsureSignatureIsKnown(AsmJsModuleCompiler* module)
-    {
-        if (!mAreArgumentsKnown)
-        {
-            AsmJsFunctionDeclaration* asmFunc = module->LookupFunction(mFirstFuncName);
-            if (asmFunc->GetSymbolType() != AsmJsSymbol::ModuleFunction)
-            {
-                return false;
-            }
-            AsmJsFunc* moduleFunc = (AsmJsFunc*)asmFunc;
-            const int argCount = moduleFunc->GetArgCount();
-            SetArgCount(argCount);
-            for (int i = 0; i < argCount; i++)
-            {
-                SetArgType(moduleFunc->GetArgType(i), i);
-            }
-            mAreArgumentsKnown = true;
-            return true;
-        }
         return true;
     }
 

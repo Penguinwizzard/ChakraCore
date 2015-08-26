@@ -1,4 +1,4 @@
-c//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
@@ -13,11 +13,10 @@ namespace Js
     Utf8SourceInfo::Utf8SourceInfo(ISourceHolder* mappableSource, int32 cchLength, SRCINFO const* srcInfo, DWORD_PTR secondaryHostSourceContext, ScriptContext* scriptContext) :
         sourceHolder(mappableSource),
         m_cchLength(cchLength),
-        m_pOriginalSourceInfo(null),
+        m_pOriginalSourceInfo(nullptr),
         m_srcInfo(srcInfo),
         m_secondaryHostSourceContext(secondaryHostSourceContext),
-        m_documentText(NULL),
-        m_debugDocument(NULL),
+        m_debugDocument(nullptr),
         m_sourceInfoId(scriptContext->GetThreadContext()->NewSourceInfoNumber()),
         m_hasTridentBuffer(false),
         m_isCesu8(false),
@@ -43,7 +42,7 @@ namespace Js
 
     LPCUTF8 Utf8SourceInfo::GetSource(const wchar_t * reason) const
     {
-        AssertMsg(this->sourceHolder != null, "We have no source mapper.");
+        AssertMsg(this->sourceHolder != nullptr, "We have no source mapper.");
         if (this->m_scriptContext->IsInDebugMode())
         {
             AssertMsg(this->debugModeSource != nullptr || this->debugModeSourceIsEmpty, "Debug mode source should have been set by this point.");
@@ -57,7 +56,7 @@ namespace Js
         
     size_t Utf8SourceInfo::GetCbLength(const wchar_t * reason) const
     {
-        AssertMsg(this->sourceHolder != null, "We have no source mapper.");
+        AssertMsg(this->sourceHolder != nullptr, "We have no source mapper.");
         if (this->m_scriptContext->IsInDebugMode())
         {
             AssertMsg(this->debugModeSource != nullptr || this->debugModeSourceIsEmpty, "Debug mode source should have been set by this point.");
@@ -74,12 +73,12 @@ namespace Js
     Utf8SourceInfo::Dispose(bool isShutdown)
     {
         ClearDebugDocument();
-        this->debugModeSource = null;
+        this->debugModeSource = nullptr;
         if (this->m_hasTridentBuffer)
         {
             PERF_COUNTER_DEC(Basic, ScriptCodeBufferCount);
             HeapFree(GetProcessHeap(), 0 , m_pTridentBuffer);
-            m_pTridentBuffer = null;
+            m_pTridentBuffer = nullptr;
         }
     };
 
@@ -87,7 +86,7 @@ namespace Js
     Utf8SourceInfo::SetTridentBuffer(BYTE * pcszCode)
     {
         Assert(!this->m_hasTridentBuffer);
-        Assert(this->m_pTridentBuffer == null);
+        Assert(this->m_pTridentBuffer == nullptr);
         this->m_hasTridentBuffer = true;
         this->m_pTridentBuffer = pcszCode;
     }
@@ -119,7 +118,7 @@ namespace Js
         Assert(!functionBody->GetIsFuncRegistered());
 
         const LocalFunctionId functionId = functionBody->GetLocalFunctionId();
-        FunctionBody* oldFunctionBody = null;
+        FunctionBody* oldFunctionBody = nullptr;
         if (functionBodyDictionary->TryGetValue(functionId, &oldFunctionBody)) {
             Assert(oldFunctionBody != functionBody);
             oldFunctionBody->SetIsFuncRegistered(false);
@@ -285,7 +284,7 @@ namespace Js
 
         charcount_t lineCharOffset = 0;
         int line = 0;
-        if (this->m_lineOffsetCache == null)
+        if (this->m_lineOffsetCache == nullptr)
         {
             LPCUTF8 sourceStart = this->GetSource(L"Utf8SourceInfo::AllocateLineOffsetCache");
             LPCUTF8 sourceEnd = sourceStart + this->GetCbLength(L"Utf8SourceInfo::AllocateLineOffsetCache");
@@ -336,22 +335,22 @@ namespace Js
     // Used if the caller want's any function in this source info
     Js::FunctionBody* Utf8SourceInfo::GetAnyParsedFunction()
     {
-        if (this->functionBodyDictionary != null && this->functionBodyDictionary->Count() > 0)
+        if (this->functionBodyDictionary != nullptr && this->functionBodyDictionary->Count() > 0)
         {
-            FunctionBody* functionBody = null;
+            FunctionBody* functionBody = nullptr;
             int i = 0;
             do
             {
                 functionBody = this->functionBodyDictionary->GetValueAt(i);
-                if (functionBody != null && functionBody->GetByteCode() == null && !functionBody->GetIsFromNativeCodeModule()) functionBody = null;
+                if (functionBody != nullptr && functionBody->GetByteCode() == nullptr && !functionBody->GetIsFromNativeCodeModule()) functionBody = nullptr;
                 i++;
             }
-            while (functionBody == null && i < this->functionBodyDictionary->Count());
+            while (functionBody == nullptr && i < this->functionBodyDictionary->Count());
 
             return functionBody;
         }
 
-        return null;
+        return nullptr;
     }
 
 
@@ -391,6 +390,19 @@ namespace Js
             {
                 this->m_deferredFunctionsDictionary->Remove(functionID);
             }
+        }
+    }
+
+    void Utf8SourceInfo::ClearDebugDocument(bool close)
+    {
+        if (this->m_debugDocument != nullptr)
+        {
+            if (close)
+            {
+                m_debugDocument->CloseDocument();
+            }
+
+            this->m_debugDocument = nullptr;
         }
     }
 }
