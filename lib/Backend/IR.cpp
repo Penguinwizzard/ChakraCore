@@ -356,7 +356,7 @@ Instr::Free()
                         return;
                     }
                     Assert(this->m_func->GetTopFunc()->allowRemoveBailOutArgInstr || !stackSym->m_isBailOutReferenced);
-                    stackSym->m_instrDef = GetInvalidInstr();
+                    stackSym->m_instrDef = nullptr;
                 }
                 else
                 {
