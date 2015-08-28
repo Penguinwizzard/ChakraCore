@@ -4929,7 +4929,7 @@ IRBuilder::BuildClass(Js::OpCode newOpcode, uint32 offset, Js::RegSlot construct
     Assert(newOpcode == Js::OpCode::InitClass);
 
     IR::Instr * insn = IR::Instr::New(newOpcode, m_func);
-    insn->SetSrc1(this->BuildDstOpnd(constructor));
+    insn->SetSrc1(this->BuildSrcOpnd(constructor));
 
     if (extends != Js::Constants::NoRegister)
     {

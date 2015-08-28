@@ -455,6 +455,7 @@ private:
     void            GenerateFalsyObjectTest(IR::Instr *insertInstr, IR::RegOpnd *TypeOpnd, Js::TypeId typeIdToCheck, IR::LabelInstr* target, IR::LabelInstr* done, bool isNeqOp);
 
     void            GenerateLoadNewTarget(IR::Instr* instrInsert);
+    void            GenerateCheckForCallFlagNew(IR::Instr* instrInsert);
     void            GenerateGetCurrentFunctionObject(IR::Instr * instr);
     IR::Opnd *      GetInlineCacheFromFuncObjectForRuntimeUse(IR::Instr * instr, IR::PropertySymOpnd * propSymOpnd, bool isHelper);
 

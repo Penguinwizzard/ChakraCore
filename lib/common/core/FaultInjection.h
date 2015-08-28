@@ -131,6 +131,8 @@ namespace Js
         int InjectionRecordsCount;
         void dumpCurrentStackData(LPCWSTR name = nullptr, size_t size = 0);
 
+        static __declspec(thread) int(*pfnHandleAV)(int, PEXCEPTION_POINTERS);
+
     private:
         bool symInitialized;
         static PVOID vectoredExceptionHandler;

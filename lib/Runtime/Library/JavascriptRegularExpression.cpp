@@ -9,6 +9,7 @@ namespace Js
     JavascriptRegExp::JavascriptRegExp(UnifiedRegex::RegexPattern* pattern, DynamicType* type) :
         DynamicObject(type),
         pattern(pattern),
+        splitPattern(nullptr),
         lastIndexVar(nullptr),
         lastIndexOrFlag(0)
     {
@@ -38,6 +39,7 @@ namespace Js
     JavascriptRegExp::JavascriptRegExp(DynamicType * type) :
         DynamicObject(type),
         pattern(nullptr),
+        splitPattern(nullptr),
         lastIndexVar(nullptr),
         lastIndexOrFlag(0)
     {
@@ -55,6 +57,7 @@ namespace Js
      JavascriptRegExp::JavascriptRegExp(JavascriptRegExp * instance) :
         DynamicObject(instance),
         pattern(instance->GetPattern()),
+        splitPattern(instance->GetSplitPattern()),
         lastIndexVar(instance->lastIndexVar),
         lastIndexOrFlag(instance->lastIndexOrFlag)
     {       
@@ -74,9 +77,14 @@ namespace Js
         return static_cast<JavascriptRegExp *>(RecyclableObject::FromVar(aValue));
     }
 
-    void JavascriptRegExp::SetRegex(UnifiedRegex::RegexPattern* pattern)
+    void JavascriptRegExp::SetPattern(UnifiedRegex::RegexPattern* pattern)
     {
         this->pattern = pattern;
+    }
+
+    void JavascriptRegExp::SetSplitPattern(UnifiedRegex::RegexPattern* splitPattern)
+    {
+        this->splitPattern = splitPattern;
     }
 
     JavascriptRegExp* JavascriptRegExp::GetJavascriptRegExp(Var var, ScriptContext* scriptContext)
@@ -118,6 +126,7 @@ namespace Js
             || JavascriptOperators::GetTypeId(args[0]) == TypeIds_HostDispatch);
 
         UnifiedRegex::RegexPattern* pattern = nullptr;
+        UnifiedRegex::RegexPattern* splitPattern = nullptr;
         JavascriptRegExp* regex = nullptr;
 
         if (callInfo.Count < 2)
@@ -147,11 +156,23 @@ namespace Js
                     InternalString str = source->GetSource();
                     pattern = CreatePattern(JavascriptString::NewCopyBuffer(str.GetBuffer(), str.GetLength(), scriptContext),
                         args[2], scriptContext);
+
+                    // "splitPattern" is a version of "pattern" without the sticky flag. If other flags are the same, we can safely
+                    // reuse "splitPattern".
+                    UnifiedRegex::RegexFlags currentSplitFlags =
+                        static_cast<UnifiedRegex::RegexFlags>(source->GetPattern()->GetFlags() & ~UnifiedRegex::StickyRegexFlag);
+                    UnifiedRegex::RegexFlags newSplitFlags =
+                        static_cast<UnifiedRegex::RegexFlags>(pattern->GetFlags() & ~UnifiedRegex::StickyRegexFlag);
+                    if (newSplitFlags == currentSplitFlags)
+                    {
+                        splitPattern = source->GetSplitPattern();
+                    }
                 }
             }
             if (!pattern)
             {
                 pattern = source->GetPattern();
+                splitPattern = source->GetSplitPattern();
             }
             
         }
@@ -165,7 +186,8 @@ namespace Js
             regex = scriptContext->GetLibrary()->CreateRegExp(nullptr);
         }
 
-        regex->SetRegex(pattern);
+        regex->SetPattern(pattern);
+        regex->SetSplitPattern(splitPattern);
 
         return isCtorSuperCall ?
             JavascriptOperators::OrdinaryCreateFromConstructor(RecyclableObject::FromVar(newTarget), regex, nullptr, scriptContext) :
@@ -394,6 +416,7 @@ namespace Js
         }
 
         UnifiedRegex::RegexPattern* pattern;
+        UnifiedRegex::RegexPattern* splitPattern = nullptr;
 
         if (callInfo.Count == 1 )
         {
@@ -401,8 +424,10 @@ namespace Js
         }
         else if (JavascriptRegExp::Is(args[1]))
         {
+            JavascriptRegExp* source = JavascriptRegExp::FromVar(args[1]);
             //compile with a regular expression
-            pattern = JavascriptRegExp::FromVar(args[1])->GetPattern();
+            pattern = source->GetPattern();
+            splitPattern = source->GetSplitPattern();
             // second arg must be undefined if a reg expression is passed
             if(callInfo.Count > 2 &&  JavascriptOperators::GetTypeId(args[2]) != TypeIds_Undefined)
             {
@@ -449,7 +474,8 @@ namespace Js
             pattern = RegexHelper::CompileDynamic(scriptContext, szRegex, cBody, szOptions, cOpts, false);
         }
 
-        thisRegularExpression->SetRegex(pattern);
+        thisRegularExpression->SetPattern(pattern);
+        thisRegularExpression->SetSplitPattern(splitPattern);
         thisRegularExpression->SetLastIndex(0);
         return thisRegularExpression;
     }

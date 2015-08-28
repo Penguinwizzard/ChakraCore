@@ -459,6 +459,8 @@ namespace Js
 
         inline Var OP_Ld_A(Var aValue);
         void OP_ChkUndecl(Var aValue);
+        void OP_ChkNewCallFlag();
+
         void OP_EnsureNoRootProperty(uint propertyIdIndex);
         void OP_EnsureNoRootRedeclProperty(uint propertyIdIndex);
         void OP_ScopedEnsureNoRedeclProperty(Var aValue, uint propertyIdIndex, Var aValue2);

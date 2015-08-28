@@ -630,6 +630,25 @@ namespace Js
 
 #ifdef _M_X64
         Var ret = null;
+
+#ifdef FAULT_INJECTION
+        if (Js::Configuration::Global.flags.FaultInjection >= 0)
+        {
+            Js::FaultInjection::pfnHandleAV = JavascriptFunction::ResumeForOutOfBoundsArrayRefs;
+            __try
+            {
+                ret = CallRootFunctionInternal(args, scriptContext);
+            }
+            __finally 
+            {
+                Js::FaultInjection::pfnHandleAV = nullptr;
+            }
+            //ret should never be null here
+            Assert(ret);
+            return ret;
+        }
+#endif
+
         __try
         {
             ret = CallRootFunctionInternal(args, scriptContext);

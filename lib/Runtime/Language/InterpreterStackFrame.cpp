@@ -5489,6 +5489,14 @@ namespace Js
         }
     }
 
+    void InterpreterStackFrame::OP_ChkNewCallFlag()
+    {
+        if (!(this->m_callFlags & CallFlags_New))
+        {
+            JavascriptError::ThrowTypeError(scriptContext, JSERR_ClassConstructorCannotBeCalledWithoutNew);
+        }
+    }
+
     void InterpreterStackFrame::OP_EnsureNoRootProperty(uint propertyIdIndex)
     {
         Var instance = this->GetRootObject();

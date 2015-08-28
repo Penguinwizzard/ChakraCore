@@ -198,7 +198,7 @@ namespace Js
         static bool IsBuiltinProperty(Var objectWithProperty, PropertyIds propertyId);
 #endif
         private:
-            int  ResumeForOutOfBoundsArrayRefs(int exceptionCode, PEXCEPTION_POINTERS exceptionInfo);
+        static int  ResumeForOutOfBoundsArrayRefs(int exceptionCode, PEXCEPTION_POINTERS exceptionInfo);
     };
     class ArrayAccessDecoder
     {

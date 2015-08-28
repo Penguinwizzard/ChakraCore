@@ -252,6 +252,15 @@ Js::FunctionInfo *InliningDecider::Inline(Js::FunctionBody *const inliner, Js::F
             return null;
         }
 
+        // Do not inline a call to a class constructor if it isn't part of a new expression since the call will throw a TypeError anyway.
+        if (inlinee->IsClassConstructor() && !isConstructorCall)
+        {
+            INLINE_TESTTRACE(L"INLINING: Skip Inline: Class constructor without new keyword\tInlinee: %s (%s)\tCaller: %s (%s)\n",
+                inlinee->GetDisplayName(), inlinee->GetDebugNumberSet(debugStringBuffer), inliner->GetDisplayName(),
+                inliner->GetDebugNumberSet(debugStringBuffer2));
+            return null;
+        }
+
         if (!inliningHeuristics.DeciderInlineIntoInliner(inlinee, inliner, isConstructorCall, isPolymorphicCall, this, constantArgInfo, recursiveInlineDepth, allowRecursiveInlining))
         {
             return null;

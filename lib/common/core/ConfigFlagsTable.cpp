@@ -459,10 +459,6 @@ namespace Js
         {
             Off.Enable(DeferParsePhase);
         }
-        if (!ES6UnicodeFlag)
-        {
-            Disable(ES6RegExChangesFlag);
-        }
 
         bool dontEnforceLimitsForSimpleJitAfterOrFullJitAfter = false;
         if((IsEnabled(MinInterpretCountFlag) || IsEnabled(MaxInterpretCountFlag)) &&

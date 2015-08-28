@@ -303,36 +303,29 @@ ThreadContext::~ThreadContext()
     // Allocating memory during the shutdown codepath is not preferred
     // so we'll close the page allocator before we release the GC
     // If any dispose is allocating memory during shutdown, that is a bug
-    if (this->debugManager != nullptr)
-    {
-        this->debugManager->Close();
-        HeapDelete(this->debugManager);
-        this->debugManager = nullptr;
-    }
     pageAllocator.Close();
 
     // The recycler need to delete before the background code gen thread
     // because that might run finalizer which need access to the background code gen thread.
     if (recycler != nullptr)
     {
-#if DBG
-        bool allScriptContextsClosed = true;
-
         for (Js::ScriptContext *scriptContext = scriptContextList; scriptContext; scriptContext = scriptContext->next)
         {
-            if (scriptContext->IsClosed() == false)
+            if (!scriptContext->IsClosed())
             {
-                allScriptContextsClosed = false;
-                break;
+                // We close ScriptContext here because anyhow HeapDelete(recycler) when disposing the
+                // JavaScriptLibrary will close ScriptContext. Explicit close gives us chance to clear
+                // other things to which ScriptContext holds reference to
+                AssertMsg(!IsInScript(), "Can we be in script here?");
+                scriptContext->MarkForClose();
             }
         }
-
-#endif
-
+        
         // If all scriptContext's have been closed, then the sourceProfileManagersByUrl 
         // should have been released
-        AssertMsg(!allScriptContextsClosed || 
-                  this->recyclableData->sourceProfileManagersByUrl == nullptr || this->recyclableData->sourceProfileManagersByUrl->Count() == 0, "There seems to have been a refcounting imbalance.");
+        AssertMsg(this->recyclableData->sourceProfileManagersByUrl == nullptr ||
+            this->recyclableData->sourceProfileManagersByUrl->Count() == 0, "There seems to have been a refcounting imbalance.");
+        
         this->recyclableData->sourceProfileManagersByUrl = nullptr;
         this->recyclableData->oldEntryPointInfo = nullptr;
 
@@ -377,6 +370,14 @@ ThreadContext::~ThreadContext()
         HeapDelete(this->codeGenNumberThreadAllocator);
         this->codeGenNumberThreadAllocator = nullptr;
 #endif
+
+        if (this->debugManager != nullptr)
+        {
+            this->debugManager->Close();
+            HeapDelete(this->debugManager);
+            this->debugManager = nullptr;
+        }
+
         HeapDelete(recycler);
     }
 
@@ -2276,7 +2277,8 @@ ThreadContext::InExpirableCollectMode()
     return (expirableObjectList != null && 
             numExpirableObjects > 0 && 
             expirableCollectModeGcCount >= 0 &&
-            !this->GetDebugManager()->IsDebuggerAttaching());
+            (this->GetDebugManager() != nullptr && 
+            !this->GetDebugManager()->IsDebuggerAttaching()));
 }
 
 void

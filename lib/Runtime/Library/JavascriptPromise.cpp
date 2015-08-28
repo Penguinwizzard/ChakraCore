@@ -1045,7 +1045,7 @@ namespace Js
 
         JavascriptPromiseCapabilitiesExecutorFunction* executor = library->CreatePromiseCapabilitiesExecutorFunction(EntryCapabilitiesExecutorFunction, promiseCapability);
 
-        Var constructorResult = constructor->GetEntryPoint()(constructor, Js::CallInfo(Js::CallFlags::CallFlags_Value, 2),
+        Var constructorResult = constructor->GetEntryPoint()(constructor, Js::CallInfo((Js::CallFlags)(Js::CallFlags::CallFlags_Value | Js::CallFlags::CallFlags_New), 2),
             promise,
             executor);
 

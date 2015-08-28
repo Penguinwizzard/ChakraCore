@@ -42,7 +42,7 @@ void JsrtContextCore::Dispose(bool isShutdown)
 {
     if (nullptr != this->GetScriptContext())
     {
-        Js::ScriptContext::Delete(this->GetScriptContext());
+        this->GetScriptContext()->MarkForClose();
         this->SetScriptContext(nullptr);
         Unlink();
     }

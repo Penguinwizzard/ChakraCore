@@ -599,7 +599,7 @@ namespace Js
                     {
                         memset(this->m_inlineCaches[i], 0, sizeof(InlineCache));
                     }
-                    else
+                    else if(!scriptContext->IsClosed())
                     {
                         if (inlineCache->RemoveFromInvalidationList())
                         {
@@ -620,7 +620,7 @@ namespace Js
                     {
                         memset(this->m_inlineCaches[i], 0, sizeof(IsInstInlineCache));
                     }
-                    else
+                    else if (!scriptContext->IsClosed())
                     {
                         AllocatorDelete(IsInstInlineCacheAllocator, scriptContext->GetIsInstInlineCacheAllocator(), (IsInstInlineCache*)this->m_inlineCaches[i]);
                     }
@@ -628,7 +628,7 @@ namespace Js
                 }
             }
 
-            if (!isShutdown && unregisteredInlineCacheCount > 0)
+            if (!isShutdown && unregisteredInlineCacheCount > 0 && !scriptContext->IsClosed())
             {
                 scriptContext->GetThreadContext()->NotifyInlineCacheBatchUnregistered(unregisteredInlineCacheCount);
             }

@@ -2700,7 +2700,7 @@ namespace UnifiedRegex
                     break;
                 }
             case 'y':
-                if (scriptContext->GetConfig()->IsES6RegExChangesEnabled())
+                if (scriptContext->GetConfig()->IsES6RegExStickyEnabled())
                 {
                     if ((flags & StickyRegexFlag) != 0)
                     {

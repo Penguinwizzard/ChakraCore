@@ -4684,6 +4684,21 @@ Inline::MapFormals(Func *inlinee,
             }
             break;
 
+        case Js::OpCode::ChkNewCallFlag:
+            if (instr->m_func == inlinee)
+            {
+                if (instr->m_func->IsInlinedConstructor())
+                {
+                    instr->Remove();
+                }
+                else
+                {
+                    // InliningDecider::Inline should have decided not to inline this since we are going to end up throwing anyway
+                    Assert(false);
+                }
+            }
+            break;
+
         case Js::OpCode::LdSuper:
             if (instr->m_func == inlinee)
             {

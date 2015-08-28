@@ -314,6 +314,7 @@ Label:
     static CriticalSection cs_Sym; // for Sym* method is not thread safe
     const auto& globalFlags = Js::Configuration::Global.flags;
     PVOID FaultInjection::vectoredExceptionHandler = nullptr;
+    int(*Js::FaultInjection::pfnHandleAV)(int, PEXCEPTION_POINTERS) = nullptr;
     static SymbolInfoPackage sip;
     static ModuleInfo mi;
 
@@ -755,6 +756,13 @@ Label:
                 {
                 // selected fatal exceptions:
                 case STATUS_ACCESS_VIOLATION:
+                {
+                    if (pfnHandleAV 
+                        && pfnHandleAV(ExceptionInfo->ExceptionRecord->ExceptionCode, ExceptionInfo) == EXCEPTION_CONTINUE_EXECUTION)
+                    {
+                        return EXCEPTION_CONTINUE_EXECUTION;
+                    }
+                }
                 case STATUS_ASSERTION_FAILURE:
                 case STATUS_STACK_OVERFLOW:
                     FaultInjectionExceptionFilter(ExceptionInfo);

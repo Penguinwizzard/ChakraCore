@@ -206,7 +206,7 @@ namespace Js
         bool IsES6UnicodeExtensionsEnabled()    const { return CONFIG_FLAG_RELEASE(ES6Unicode); }
         bool IsES6UnscopablesEnabled()          const { return CONFIG_FLAG_RELEASE(ES6Unscopables); }
         bool IsES6WeakSetEnabled()              const { return CONFIG_FLAG_RELEASE(ES6WeakSet); }
-        bool IsES6RegExChangesEnabled()         const { return CONFIG_FLAG_RELEASE(ES6RegExChanges); }
+        bool IsES6RegExStickyEnabled()          const { return CONFIG_FLAG_RELEASE(ES6RegExSticky); }
         bool SkipSplitOnNoResult()              const { return CONFIG_FLAG_RELEASE(SkipSplitOnNoResult); }
         bool AreWinRTDelegatesInterfaces()      const { return CONFIG_FLAG(WinRTDelegateInterfaces); }
         bool IsWinRTAdaptiveAppsEnabled()       const { return CONFIG_FLAG_RELEASE(WinRTAdaptiveApps); }

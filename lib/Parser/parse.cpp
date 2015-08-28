@@ -5907,6 +5907,9 @@ ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulo
         GetCurrentFunctionNode()->grfpn |= PNodeFlags::fpnArguments_overriddenByDecl;
     }
 
+    BOOL strictSave = m_fUseStrictMode;
+    m_fUseStrictMode = TRUE;
+
     if (m_token.tk == tkEXTENDS)
     {
         m_pscan->Scan();
@@ -5944,9 +5947,6 @@ ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulo
 
     RestorePoint beginClass;
     m_pscan->Capture(&beginClass);
-
-    BOOL strictSave = m_fUseStrictMode;
-    m_fUseStrictMode = TRUE;
 
     m_pscan->ScanForcingPid();
 

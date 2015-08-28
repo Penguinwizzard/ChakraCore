@@ -62,7 +62,8 @@ namespace Js
             , UnifiedRegex::GroupInfo lastSuccessfullMatch
             , UnifiedRegex::GroupInfo lastActualMatch
             , bool updateRegex
-            , bool updateCtor );
+            , bool updateCtor
+            , bool useSplitPattern = false );
         static void PropagateLastMatchToRegex
             ( ScriptContext* scriptContext
             , bool isGlobal
@@ -74,7 +75,8 @@ namespace Js
             ( ScriptContext* scriptContext
             , JavascriptRegExp* regularExpression
             , JavascriptString* lastInput
-            , UnifiedRegex::GroupInfo lastSuccessfullMatch );      
+            , UnifiedRegex::GroupInfo lastSuccessfullMatch
+            , bool useSplitPattern );
             
         static bool GetInitialOffset(bool isGlobal, bool isSticky, JavascriptRegExp* regularExpression, CharCount inputLength, CharCount& offset);        
         static JavascriptArray* CreateMatchResult(void *const stackAllocationPointer, ScriptContext* scriptContext, bool isGlobal, int numGroups, JavascriptString* input);
@@ -139,6 +141,7 @@ namespace Js
         static Var RegexReplaceImpl(ScriptContext* scriptContext, JavascriptRegExp* regularExpression, JavascriptString* input, JavascriptString* replace, JavascriptString* options, bool noResult);        
         static Var RegexReplaceImpl(ScriptContext* scriptContext, JavascriptRegExp* regularExpression, JavascriptString* input, JavascriptFunction* replacefn, JavascriptString* options);        
         static Var RegexSearchImpl(ScriptContext* scriptContext, JavascriptRegExp* regularExpression, JavascriptString* input);        
+        __inline static UnifiedRegex::RegexPattern *RegexHelper::GetSplitPattern(ScriptContext* scriptContext, JavascriptRegExp *regularExpression);
         static Var RegexSplitImpl(ScriptContext* scriptContext, JavascriptRegExp* regularExpression, JavascriptString* input, CharCount limit, bool noResult, void *const stackAllocationPointer = nullptr);
 
         static int GetReplaceSubstitutions(const wchar_t * const replaceStr, CharCount const replaceLength, ArenaAllocator * const tempAllocator, CharCount** const substitutionOffsetsOut);

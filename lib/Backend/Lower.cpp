@@ -692,8 +692,27 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
         case Js::OpCode::CallINew:
         case Js::OpCode::CallIFixed:
         {
-            Js::CallFlags flags = (instr->isCtorCall || instr->m_opcode == Js::OpCode::CallINew) ? Js::CallFlags_New :
-                instr->GetDst() ? Js::CallFlags_Value : Js::CallFlags_NotUsed;
+            Js::CallFlags flags = Js::CallFlags_None;
+
+            if (instr->isCtorCall)
+            {
+                flags = Js::CallFlags_New;
+            }
+            else
+            {
+                if (instr->m_opcode == Js::OpCode::CallINew)
+                {
+                    flags = Js::CallFlags_New;
+                }
+                if (instr->GetDst())
+                {
+                    flags = (Js::CallFlags) (flags | Js::CallFlags_Value);
+                }
+                else
+                {
+                    flags = (Js::CallFlags) (flags | Js::CallFlags_NotUsed);
+                }
+            }
 
             if (!PHASE_OFF(Js::CallFastPathPhase, this->m_func) && !noMathFastPath)
             {
@@ -2442,6 +2461,10 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
 
         case Js::OpCode::LdNewTarget:
             this->GenerateLoadNewTarget(instr);
+            break;
+
+        case Js::OpCode::ChkNewCallFlag:
+            this->GenerateCheckForCallFlagNew(instr);
             break;
 
         case Js::OpCode::StFuncExpr:
@@ -10690,6 +10713,7 @@ Lowerer::LowerNewRegEx(IR::Instr * instr)
     {
         GenerateMemInit(dstOpnd, Js::JavascriptRegExp::GetOffsetOfPattern(), src1, instr, isZeroed);
     }
+    GenerateMemInitNull(dstOpnd, Js::JavascriptRegExp::GetOffsetOfSplitPattern(), instr, isZeroed);
     GenerateMemInitNull(dstOpnd, Js::JavascriptRegExp::GetOffsetOfLastIndexVar(), instr, isZeroed);
     GenerateMemInit(dstOpnd, Js::JavascriptRegExp::GetOffsetOfLastIndexOrFlag(), 0, instr, isZeroed);
     instr->Remove();
@@ -20464,6 +20488,41 @@ Lowerer::GenerateFastCmTypeOf(IR::Instr *compare, IR::RegOpnd *object, IR::IntCo
     // $done:
 }
 
+void            
+Lowerer::GenerateCheckForCallFlagNew(IR::Instr* instrInsert)
+{
+    Func *func = instrInsert->m_func;
+    IR::LabelInstr * labelDone = IR::LabelInstr::New(Js::OpCode::Label, func, false);
+
+    Assert(!func->IsInlinee());
+
+    // MOV s1, [ebp + 4]                        // s1 = call info
+    // AND s2, s1, Js::CallFlags_New            // s2 = s1 & Js::CallFlags_New
+    // CMP s2, 0
+    // JNE $Done
+    // CALL RuntimeTypeError
+    // $Done
+
+    IR::SymOpnd* callInfoOpnd = Lowerer::LoadCallInfo(instrInsert);
+    Assert(Js::CallInfo::ksizeofCount == 24);
+
+    IR::RegOpnd* isNewFlagSetRegOpnd = IR::RegOpnd::New(TyUint32, func);
+
+    InsertAnd(isNewFlagSetRegOpnd, callInfoOpnd, IR::IntConstOpnd::New(Js::CallFlags_New << Js::CallInfo::ksizeofCount, TyUint32, func, true), instrInsert);
+    InsertTestBranch(isNewFlagSetRegOpnd, isNewFlagSetRegOpnd, Js::OpCode::BrNeq_A, labelDone, instrInsert);
+
+    IR::Instr *throwInstr = IR::Instr::New(
+        Js::OpCode::RuntimeTypeError,
+        IR::RegOpnd::New(TyMachReg, m_func),
+        IR::IntConstOpnd::New(SCODE_CODE(JSERR_ClassConstructorCannotBeCalledWithoutNew), TyInt32, m_func),
+        m_func);
+    instrInsert->InsertBefore(throwInstr);
+    this->LowerUnaryHelperMem(throwInstr, IR::HelperOp_RuntimeTypeError);
+
+    instrInsert->InsertBefore(labelDone);
+    instrInsert->Remove();
+}
+
 void
 Lowerer::GenerateLoadNewTarget(IR::Instr* instrInsert)
 {
@@ -20485,7 +20544,7 @@ Lowerer::GenerateLoadNewTarget(IR::Instr* instrInsert)
 
     // MOV dst, undefined                       // dst = undefined
     // MOV s1, [ebp + 4]                        // s1 = call info
-    // AND s2, s1, Js::CallFlags_NewTarget   // s2 = s1 & Js::CallFlags_NewTarget
+    // AND s2, s1, Js::CallFlags_NewTarget      // s2 = s1 & Js::CallFlags_NewTarget
     // CMP s2, 0
     // JNE $LoadLastArgument
     // AND s2, s1, Js::CallFlags_New            // s2 = s1 & Js::CallFlags_New

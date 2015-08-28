@@ -12,10 +12,19 @@ namespace Js
         friend class RegexHelper;
 
     private:
-        static PropertyId specialPropertyIds[];
+        static PropertyId specialPropertyIdsAll[];
+        static PropertyId specialPropertyIdsWithoutUnicode[];
         static const uint defaultSpecialPropertyIdsCount = 6;
 
         UnifiedRegex::RegexPattern* pattern;
+
+        // The pattern used by String.prototype.split could be different than the normal pattern. Even
+        // when the sticky flag is present in the normal pattern, split() should look for the pattern
+        // in the whole input string as opposed to just looking for it at the beginning.
+        //
+        // Initialization of this pattern is deferred until split() is called, or it's copied from another
+        // RegExp object.
+        UnifiedRegex::RegexPattern* splitPattern;
 
         Var lastIndexVar;  // null => must build lastIndexVar from current lastIndex
 
@@ -35,6 +44,10 @@ namespace Js
         bool GetPropertyBuiltIns(PropertyId propertyId, Var* value, BOOL* result);
         bool SetPropertyBuiltIns(PropertyId propertyId, Var value, PropertyOperationFlags flags, BOOL* result);
         bool GetSetterBuiltIns(PropertyId propertyId, PropertyValueInfo* info, DescriptorFlags* result);
+        inline PropertyId* GetSpecialPropertyIdsInlined() const;
+
+        inline void SetPattern(UnifiedRegex::RegexPattern* pattern);
+        inline void SetSplitPattern(UnifiedRegex::RegexPattern* splitPattern);
 
         // For boxing stack instance
         JavascriptRegExp(JavascriptRegExp * instance);
@@ -47,10 +60,12 @@ namespace Js
         JavascriptRegExp(DynamicType * type);
 
         static uint GetOffsetOfPattern() { return offsetof(JavascriptRegExp, pattern); }
+        static uint GetOffsetOfSplitPattern() { return offsetof(JavascriptRegExp, splitPattern); }
         static uint GetOffsetOfLastIndexVar() { return offsetof(JavascriptRegExp, lastIndexVar); }
         static uint GetOffsetOfLastIndexOrFlag() { return offsetof(JavascriptRegExp, lastIndexOrFlag); }
 
         inline UnifiedRegex::RegexPattern* GetPattern() const { return pattern; }
+        inline UnifiedRegex::RegexPattern* GetSplitPattern() const { return splitPattern; }
 
         InternalString GetSource() const { return GetPattern()->GetSource(); }
         UnifiedRegex::RegexFlags GetFlags() const { return GetPattern()->GetFlags(); }
@@ -71,7 +86,6 @@ namespace Js
 
         static bool Is(Var aValue);
         static JavascriptRegExp* FromVar(Var aValue);
-        inline void SetRegex(UnifiedRegex::RegexPattern* pattern);
 
         static JavascriptRegExp* CreateRegEx(const wchar_t* pSource, CharCount sourceLen,
             UnifiedRegex::RegexFlags flags, ScriptContext *scriptContext);

@@ -212,7 +212,8 @@ bool IsArguments(ParseNode *pnode)
 }
 
 bool ApplyEnclosesArgs(ParseNode* fncDecl,ByteCodeGenerator* byteCodeGenerator);
-void Emit(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator,FuncInfo *funcInfo, BOOL fReturnValue, bool isConstructorCall = false);
+void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *funcInfo, BOOL fReturnValue, bool isConstructorCall = false, ParseNode *bindPnode = nullptr);
+void EmitComputedNameVar(ParseNode *nameNode, ParseNode *exprNode, ByteCodeGenerator *byteCodeGenerator);
 void EmitBinaryOpnds(ParseNode *pnode1, ParseNode *pnode2, ByteCodeGenerator *byteCodeGenerator, FuncInfo *funcInfo);
 bool IsExpressionStatement(ParseNode* stmt, const Js::ScriptContext *const scriptContext);
 
@@ -2057,9 +2058,15 @@ void ByteCodeGenerator::LoadNewTargetObject(FuncInfo *funcInfo)
         {
             scopeLocation = funcInfo->frameDisplayRegister;
         }
-        else
+        else if (funcInfo->NeedEnvRegister())
         {
             scopeLocation = funcInfo->GetEnvRegister();
+        }
+        else
+        {
+            // If this eval doesn't have environment register or frame display register, we didn't capture anything from a class constructor
+            m_writer.Reg1(Js::OpCode::LdNewTarget, funcInfo->newTargetRegister);
+            return;
         }
 
         uint cacheId = funcInfo->FindOrAddInlineCacheId(scopeLocation, Js::PropertyIds::_lexicalNewTargetSymbol, false, false);
@@ -2838,6 +2845,14 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
         this->PushFuncInfo(L"EmitOneFunction", funcInfo);
 
         this->inPrologue = true;
+
+        // Class constructors do not have a [[call]] slot but we don't implement a generic way to express this.
+        // What we do is emit a check for the new flag here. If we don't have CallFlags_New set, the opcode will throw.
+        // We need to do this before emitting 'this' since the base class constructor will try to construct a new object.
+        if (funcInfo->IsClassConstructor())
+        {
+            m_writer.Empty(Js::OpCode::ChkNewCallFlag);
+        }
 
         // for now, emit all constant loads at top of function (should instead put in
         // closest dominator of uses)
@@ -6248,8 +6263,25 @@ void EmitCallTargetES5(
 
             Js::PropertyId propertyId = pnodeTarget->sxBin.pnode2->sxPid.PropertyIdFromNameNode();
             Js::RegSlot callObjLocation = pnodeTarget->sxBin.pnode1->location;
-            EmitMethodFld(pnodeTarget, callObjLocation, propertyId, byteCodeGenerator, funcInfo);
-
+            
+            FuncInfo* parent = funcInfo;
+            if (funcInfo->IsLambda()) 
+            {
+                parent = byteCodeGenerator->FindEnclosingNonLambda();
+            }
+            if (pnodeTarget->sxBin.pnode1->nop == knopSuper && parent->IsClassConstructor() && !parent->IsBaseClassConstructor())
+            {
+                Js::RegSlot protoLoc = funcInfo->AcquireTmpRegister();
+                int cacheId = funcInfo->FindOrAddInlineCacheId(callObjLocation, Js::PropertyIds::prototype, false, false);
+                byteCodeGenerator->Writer()->PatchableProperty(Js::OpCode::LdFld, protoLoc, callObjLocation, cacheId);
+                byteCodeGenerator->EmitScopeSlotLoadThis(funcInfo, funcInfo->thisPointerRegister, /*chkUndecl*/ true);
+                EmitMethodFld(pnodeTarget, protoLoc, propertyId, byteCodeGenerator, funcInfo);
+                funcInfo->ReleaseTmpRegister(protoLoc);
+            }
+            else
+            {
+                EmitMethodFld(pnodeTarget, callObjLocation, propertyId, byteCodeGenerator, funcInfo);
+            }
             // Function calls on the 'super' object should maintain current 'this' pointer
             *thisLocation = (pnodeTarget->sxBin.pnode1->nop == knopSuper) ? funcInfo->thisPointerRegister : pnodeTarget->sxBin.pnode1->location;
             break;
@@ -6268,13 +6300,31 @@ void EmitCallTargetES5(
             }
             Emit(pnodeTarget->sxBin.pnode1, byteCodeGenerator, funcInfo, false);
             Emit(pnodeTarget->sxBin.pnode2, byteCodeGenerator, funcInfo, false);
-            funcInfo->ReleaseLoc(pnodeTarget->sxBin.pnode2);
-
+            
             Js::RegSlot callObjLocation = pnodeTarget->sxBin.pnode1->location;
             Js::RegSlot indexLocation = pnodeTarget->sxBin.pnode2->location;
-            EmitMethodElem(pnodeTarget, callObjLocation, indexLocation, byteCodeGenerator);
+            FuncInfo* parent = funcInfo;
+            if (funcInfo->IsLambda())
+            {
+                parent = byteCodeGenerator->FindEnclosingNonLambda();
+            }
+            if (pnodeTarget->sxBin.pnode1->nop == knopSuper && parent->IsClassConstructor() && !parent->IsBaseClassConstructor())
+            {
+                Js::RegSlot protoLoc = funcInfo->AcquireTmpRegister();
+                int cacheId = funcInfo->FindOrAddInlineCacheId(callObjLocation, Js::PropertyIds::prototype, false, false);
+                byteCodeGenerator->Writer()->PatchableProperty(Js::OpCode::LdFld, protoLoc, callObjLocation, cacheId);
+                byteCodeGenerator->EmitScopeSlotLoadThis(funcInfo, funcInfo->thisPointerRegister, /*chkUndecl*/ true);
+                EmitMethodElem(pnodeTarget, protoLoc, indexLocation, byteCodeGenerator);
+                funcInfo->ReleaseTmpRegister(protoLoc);
+            }
+            else
+            {
+                EmitMethodElem(pnodeTarget, callObjLocation, indexLocation, byteCodeGenerator);
+            }
+            funcInfo->ReleaseLoc(pnodeTarget->sxBin.pnode2); // don't release indexLocation until after we use it.
 
-            *thisLocation = pnodeTarget->sxBin.pnode1->location;
+            // Function calls on the 'super' object should maintain current 'this' pointer
+            *thisLocation = (pnodeTarget->sxBin.pnode1->nop == knopSuper) ? funcInfo->thisPointerRegister : pnodeTarget->sxBin.pnode1->location;
             break;
         }
 
@@ -6695,6 +6745,19 @@ void EmitInvoke(
     byteCodeGenerator->Writer()->CallI(Js::OpCode::CallI, location, location, 2, callSiteId);
 }
 
+void EmitComputedNameVar(ParseNode *nameNode, ParseNode *exprNode, ByteCodeGenerator *byteCodeGenerator)
+{
+    AssertMsg(exprNode != nullptr, "callers of this function should pass in a valid expression Node");
+
+    if (nameNode == nullptr)
+    {
+        return;
+    }
+    if ((exprNode->nop == knopFncDecl && (exprNode->sxFnc.pnodeName == nullptr || exprNode->sxFnc.pnodeName->nop != knopVarDecl)))
+    {
+        byteCodeGenerator->Writer()->Reg2(Js::OpCode::SetComputedNameVar, exprNode->location, nameNode->location);
+    }
+};
 
 void EmitMemberNode(ParseNode *memberNode, Js::RegSlot objectLocation, ByteCodeGenerator *byteCodeGenerator, FuncInfo *funcInfo, ParseNode* parentNode, bool useStore, bool* isObjectEmpty = nullptr) {
     ParseNode *nameNode=memberNode->sxBin.pnode1;
@@ -6711,12 +6774,9 @@ void EmitMemberNode(ParseNode *memberNode, Js::RegSlot objectLocation, ByteCodeG
         // The Emit will replace this with a temp register if necessary to preserve the value.
         nameNode->location = nameNode->sxUni.pnode1->location;
         EmitBinaryOpnds(nameNode, exprNode, byteCodeGenerator, funcInfo);
-
-        if ((exprNode->nop == knopFncDecl && (exprNode->sxFnc.pnodeName == nullptr || exprNode->sxFnc.pnodeName->nop != knopVarDecl))
-            || (exprNode->nop == knopClassDecl && (exprNode->sxClass.pnodeConstructor == nullptr || exprNode->sxClass.pnodeConstructor->nop != knopVarDecl))
-           )
+        if (!exprNode->sxFnc.IsClassConstructor())
         {
-            byteCodeGenerator->Writer()->Reg2(Js::OpCode::SetComputedNameVar, exprNode->location, nameNode->location);
+            EmitComputedNameVar(nameNode, exprNode, byteCodeGenerator);
         }
     }
 
@@ -6770,7 +6830,7 @@ void EmitMemberNode(ParseNode *memberNode, Js::RegSlot objectLocation, ByteCodeG
         && parentNode->sxClass.pnodeConstructor != nullptr)
     {
         Js::ParseableFunctionInfo* nameFunc = parentNode->sxClass.pnodeConstructor->sxFnc.funcInfo->byteCodeFunction->GetParseableFunctionInfo();
-        nameFunc->SetIsStaticNameFunction(true); // TODO this code needs to be duplicated for computed properties
+        nameFunc->SetIsStaticNameFunction(true); 
     }
 
     if (memberNode->nop == knopMember || memberNode->nop == knopMemberShort)
@@ -7675,7 +7735,14 @@ void EmitBinaryOpnds(ParseNode *pnode1, ParseNode *pnode2, ByteCodeGenerator *by
         SaveOpndValue(pnode1, funcInfo);
     }
     Emit(pnode1, byteCodeGenerator, funcInfo, false);
-    Emit(pnode2, byteCodeGenerator, funcInfo, false);
+    if (pnode1->nop == knopComputedName && pnode2->nop == knopClassDecl && (pnode2->sxClass.pnodeConstructor == nullptr || pnode2->sxClass.pnodeConstructor->nop != knopVarDecl))
+    {
+        Emit(pnode2, byteCodeGenerator, funcInfo, false, false, pnode1);
+    }
+    else
+    {
+        Emit(pnode2, byteCodeGenerator, funcInfo, false);
+    }
 }
 
 void EmitBinaryReference(ParseNode *pnode1, ParseNode *pnode2, ByteCodeGenerator *byteCodeGenerator, FuncInfo *funcInfo, BOOL fLoadLhs)
@@ -8306,7 +8373,7 @@ void TrackGlobalIntAssignments(ParseNodePtr pnode, ByteCodeGenerator * byteCodeG
     }
 }
 
-void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *funcInfo, BOOL fReturnValue, bool isConstructorCall)
+void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *funcInfo, BOOL fReturnValue, bool isConstructorCall, ParseNode * bindPnode)
 {
     if (pnode==NULL)
         return;
@@ -9254,7 +9321,7 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
 
             // Constructor
             Emit(pnode->sxClass.pnodeConstructor, byteCodeGenerator, funcInfo, false);
-           
+            EmitComputedNameVar(bindPnode, pnode->sxClass.pnodeConstructor, byteCodeGenerator);
             if (pnode->sxClass.pnodeExtends)
             {
                 byteCodeGenerator->Writer()->InitClass(pnode->location, pnode->sxClass.pnodeExtends->location);

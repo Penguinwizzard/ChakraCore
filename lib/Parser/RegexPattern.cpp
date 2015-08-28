@@ -98,7 +98,7 @@ namespace UnifiedRegex
 
     bool RegexPattern::IsSticky() const
     {
-        return GetScriptContext()->GetConfig()->IsES6RegExChangesEnabled() && (rep.unified.program->flags & StickyRegexFlag) != 0;
+        return GetScriptContext()->GetConfig()->IsES6RegExStickyEnabled() && (rep.unified.program->flags & StickyRegexFlag) != 0;
     }
 
     bool RegexPattern::WasLastMatchSuccessful() const

@@ -4487,27 +4487,49 @@ Case0:
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NullOrUndefined, L"Array.prototype.pop");
         }
-        uint length = JavascriptConversion::ToUInt32(JavascriptOperators::OP_GetLength(dynamicObject, scriptContext), scriptContext);
+        BigIndex length;
+        if (scriptContext->GetConfig()->IsES6ToLengthEnabled())
+        {
+            length = (uint64)JavascriptConversion::ToLength(JavascriptOperators::OP_GetLength(dynamicObject, scriptContext), scriptContext);
+        }
+        else
+        {
+            length = JavascriptConversion::ToUInt32(JavascriptOperators::OP_GetLength(dynamicObject, scriptContext), scriptContext);
+        }
+
 
         ThrowTypeErrorOnFailureHelper h(scriptContext, L"Array.prototype.pop");
-        if (length == 0)
+        if (length == 0u)
         {
             // Set length = 0
             h.ThrowTypeErrorOnFailure(JavascriptOperators::SetProperty(dynamicObject, dynamicObject, PropertyIds::length, TaggedInt::ToVarUnchecked(0), scriptContext, PropertyOperation_ThrowIfNotExtensible));
             return scriptContext->GetLibrary()->GetUndefined();
         }
-
-        uint index = length - 1;
+        BigIndex index = length;
+        --index;
         Var element;
-        if (!JavascriptOperators::GetItem(dynamicObject, index, &element, scriptContext))
+        if (index.IsSmallIndex())
         {
-            element = scriptContext->GetLibrary()->GetUndefined();
+            if (!JavascriptOperators::GetItem(dynamicObject, index.GetSmallIndex(), &element, scriptContext))
+            {
+                element = scriptContext->GetLibrary()->GetUndefined();
+            }
+            h.ThrowTypeErrorOnFailure(JavascriptOperators::DeleteItem(dynamicObject, index.GetSmallIndex(), PropertyOperation_ThrowIfNotExtensible));
+
+            // Set the new length
+            h.ThrowTypeErrorOnFailure(JavascriptOperators::SetProperty(dynamicObject, dynamicObject, PropertyIds::length, JavascriptNumber::ToVar(index.GetSmallIndex(), scriptContext), scriptContext, PropertyOperation_ThrowIfNotExtensible));
         }
-        h.ThrowTypeErrorOnFailure(JavascriptOperators::DeleteItem(dynamicObject, index, PropertyOperation_ThrowIfNotExtensible));
+        else
+        {
+            if (!JavascriptOperators::GetItem(dynamicObject, index.GetBigIndex(), &element, scriptContext))
+            {
+                element = scriptContext->GetLibrary()->GetUndefined();
+            }
+            h.ThrowTypeErrorOnFailure(JavascriptOperators::DeleteItem(dynamicObject, index.GetBigIndex(), PropertyOperation_ThrowIfNotExtensible));
 
-        // Set the new length
-        h.ThrowTypeErrorOnFailure(JavascriptOperators::SetProperty(dynamicObject, dynamicObject, PropertyIds::length, JavascriptNumber::ToVar(index, scriptContext), scriptContext, PropertyOperation_ThrowIfNotExtensible));
-
+            // Set the new length
+            h.ThrowTypeErrorOnFailure(JavascriptOperators::SetProperty(dynamicObject, dynamicObject, PropertyIds::length, JavascriptNumber::ToVar(index.GetBigIndex(), scriptContext), scriptContext, PropertyOperation_ThrowIfNotExtensible));
+        }
         return element;
     }
 

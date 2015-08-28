@@ -43,7 +43,7 @@ namespace Js
                 }
                 return false;
             case 'y':
-                if (scriptContext->GetConfig()->IsES6RegExChangesEnabled())
+                if (scriptContext->GetConfig()->IsES6RegExStickyEnabled())
                 {
                     if ((flags & UnifiedRegex::StickyRegexFlag) != 0)
                         return false;
@@ -130,7 +130,7 @@ namespace Js
         }
         if (flags & UnifiedRegex::StickyRegexFlag)
         {
-            Assert(scriptContext->GetConfig()->IsES6RegExChangesEnabled());
+            Assert(scriptContext->GetConfig()->IsES6RegExStickyEnabled());
             opts[i++] = L'y';
         }
         Assert(i < OPT_BUF_SIZE);
@@ -1058,6 +1058,47 @@ namespace Js
             ary->DirectSetItemAt(numElems++, SubString::New(input, startInclusive, length));
     }
 
+    __inline UnifiedRegex::RegexPattern *RegexHelper::GetSplitPattern(ScriptContext* scriptContext, JavascriptRegExp *regularExpression)
+    {
+        UnifiedRegex::RegexPattern* splitPattern = regularExpression->GetSplitPattern();
+        if (!splitPattern)
+        {
+            UnifiedRegex::RegexPattern* pattern = regularExpression->GetPattern();
+            bool isSticky = (pattern->GetFlags() & UnifiedRegex::StickyRegexFlag) != 0;
+            if (!isSticky)
+            {
+                splitPattern = pattern;
+            }
+            else
+            {
+                // When the sticky flag is present, the pattern will match the input only at
+                // the beginning since "lastIndex" is set to 0 before the first iteration.
+                // However, for split(), we need to look for the pattern anywhere in the input.
+                //
+                // One way to handle this is to use the original pattern with the sticky flag and
+                // when it fails, move to the next character and retry.
+                //
+                // Another way, which is implemented here, is to create another pattern without the
+                // sticky flag and have it automatically look for itself anywhere in the input. This
+                // way, we can also take advantage of the optimizations for the global search (e.g.,
+                // the Boyer-Moore string search).
+
+                InternalString source = pattern->GetSource();
+                UnifiedRegex::RegexFlags nonStickyFlags =
+                    static_cast<UnifiedRegex::RegexFlags>(pattern->GetFlags() & ~UnifiedRegex::StickyRegexFlag);
+                splitPattern = CompileDynamic(
+                    scriptContext,
+                    source.GetBuffer(),
+                    source.GetLength(),
+                    nonStickyFlags,
+                    pattern->IsLiteral());
+            }
+            regularExpression->SetSplitPattern(splitPattern);
+        }
+
+        return splitPattern;
+    }
+
     // String.prototype.split (ES5 15.5.4.14)    
     Var RegexHelper::RegexSplitImpl(ScriptContext* scriptContext, JavascriptRegExp* regularExpression, JavascriptString* input, CharCount limit, bool noResult, void *const stackAllocationPointer)
     {
@@ -1067,13 +1108,6 @@ namespace Js
             return scriptContext->GetLibrary()->GetNull();
         }
 
-        UnifiedRegex::RegexPattern* pattern = regularExpression->GetPattern();
-        const wchar_t* inputStr = input->GetString();
-        CharCount inputLength = input->GetLength(); // s in spec
-        const int numGroups = pattern->NumGroups();
-        Var nonMatchValue = NonMatchValue(scriptContext, false);
-        UnifiedRegex::GroupInfo lastSuccessfullMatch; // initially undefined
-
 #if ENABLE_REGEX_CONFIG_OPTIONS
         Trace(scriptContext, UnifiedRegex::RegexStats::Split, regularExpression, input);
 #endif
@@ -1081,16 +1115,26 @@ namespace Js
         JavascriptArray* ary = scriptContext->GetLibrary()->CreateArrayOnStack(stackAllocationPointer);
 
         if (limit == 0)
+        {
             // SPECIAL CASE: Zero limit
             return ary;
+        }
+
+        UnifiedRegex::RegexPattern *splitPattern = GetSplitPattern(scriptContext, regularExpression);
+
+        const wchar_t* inputStr = input->GetString();
+        CharCount inputLength = input->GetLength(); // s in spec
+        const int numGroups = splitPattern->NumGroups();
+        Var nonMatchValue = NonMatchValue(scriptContext, false);
+        UnifiedRegex::GroupInfo lastSuccessfullMatch; // initially undefined
 
         RegexMatchState state;
-        PrimBeginMatch(state, scriptContext, pattern, inputStr, inputLength, false);
+        PrimBeginMatch(state, scriptContext, splitPattern, inputStr, inputLength, false);
 
         if (inputLength == 0)
         {
             // SPECIAL CASE: Empty string
-            UnifiedRegex::GroupInfo match = PrimMatch(state, scriptContext, pattern, inputLength, 0);
+            UnifiedRegex::GroupInfo match = PrimMatch(state, scriptContext, splitPattern, inputLength, 0);
             if (match.IsUndefined())
                 ary->DirectSetItemAt(0, input);
             else
@@ -1106,7 +1150,7 @@ namespace Js
 
             while (startOffset < inputLimit)
             {
-                UnifiedRegex::GroupInfo match = PrimMatch(state, scriptContext, pattern, inputLength, startOffset);
+                UnifiedRegex::GroupInfo match = PrimMatch(state, scriptContext, splitPattern, inputLength, startOffset);
 
                 if (match.IsUndefined())
                     break;
@@ -1131,7 +1175,7 @@ namespace Js
 
                     for (int groupId = 1; groupId < numGroups; groupId++)
                     {
-                        ary->DirectSetItemAt(numElems++, GetGroup(scriptContext, pattern, input, nonMatchValue, groupId));
+                        ary->DirectSetItemAt(numElems++, GetGroup(scriptContext, splitPattern, input, nonMatchValue, groupId));
                         if (numElems >= limit)
                             break;
                     }
@@ -1142,8 +1186,20 @@ namespace Js
                 AppendSubString(scriptContext, ary, numElems, input, copyOffset, inputLength);
         }
 
-        PrimEndMatch(state, scriptContext, pattern);
-        PropagateLastMatch(scriptContext, pattern->IsGlobal(), pattern->IsSticky(), regularExpression, input, lastSuccessfullMatch, UnifiedRegex::GroupInfo(), true, true);
+        PrimEndMatch(state, scriptContext, splitPattern);
+        Assert(!splitPattern->IsSticky());
+        PropagateLastMatch
+            ( scriptContext
+            , splitPattern->IsGlobal()
+            , /* isSticky */ false
+            , regularExpression
+            , input
+            , lastSuccessfullMatch
+            , UnifiedRegex::GroupInfo()
+            , /* updateRegex */ true
+            , /* updateCtor */ true
+            , /* useSplitPattern */ true );
+
         return ary;
     }
     
@@ -1361,15 +1417,16 @@ namespace Js
     // ======================================================================
 
     void RegexHelper::PropagateLastMatch
-        (ScriptContext* scriptContext
-            , bool isGlobal
-            , bool isSticky
-            , JavascriptRegExp* regularExpression
-            , JavascriptString* lastInput
-            , UnifiedRegex::GroupInfo lastSuccessfullMatch
-            , UnifiedRegex::GroupInfo lastActualMatch
-            , bool updateRegex
-            , bool updateCtor)
+        ( ScriptContext* scriptContext
+        , bool isGlobal
+        , bool isSticky
+        , JavascriptRegExp* regularExpression
+        , JavascriptString* lastInput
+        , UnifiedRegex::GroupInfo lastSuccessfullMatch
+        , UnifiedRegex::GroupInfo lastActualMatch
+        , bool updateRegex
+        , bool updateCtor
+        , bool useSplitPattern )
     {
         if (updateRegex)
         {
@@ -1377,17 +1434,17 @@ namespace Js
         }
         if (updateCtor)
         {
-            PropagateLastMatchToCtor(scriptContext, regularExpression, lastInput, lastSuccessfullMatch);
+            PropagateLastMatchToCtor(scriptContext, regularExpression, lastInput, lastSuccessfullMatch, useSplitPattern);
         }
     }
 
     void RegexHelper::PropagateLastMatchToRegex
-        (ScriptContext* scriptContext
-            , bool isGlobal
-            , bool isSticky
-            , JavascriptRegExp* regularExpression
-            , UnifiedRegex::GroupInfo lastSuccessfullMatch
-            , UnifiedRegex::GroupInfo lastActualMatch)
+        ( ScriptContext* scriptContext
+        , bool isGlobal
+        , bool isSticky
+        , JavascriptRegExp* regularExpression
+        , UnifiedRegex::GroupInfo lastSuccessfullMatch
+        , UnifiedRegex::GroupInfo lastActualMatch )
     {
         if (lastActualMatch.IsUndefined())
         {
@@ -1402,10 +1459,11 @@ namespace Js
     }
 
     void RegexHelper::PropagateLastMatchToCtor
-        (ScriptContext* scriptContext
-            , JavascriptRegExp* regularExpression
-            , JavascriptString* lastInput
-            , UnifiedRegex::GroupInfo lastSuccessfullMatch)
+        ( ScriptContext* scriptContext
+        , JavascriptRegExp* regularExpression
+        , JavascriptString* lastInput
+        , UnifiedRegex::GroupInfo lastSuccessfullMatch
+        , bool useSplitPattern )
     {
         Assert(lastInput);
 
@@ -1418,7 +1476,10 @@ namespace Js
             //   So, if you call the function with remoteContext.regexInstance.exec.call(localRegexInstance, "match string"),
             //   we will update stats in the context related to the exec function, i.e. remoteContext.
             //   This is consistent with chrome.
-            scriptContext->GetLibrary()->GetRegExpConstructor()->SetLastMatch(regularExpression->GetPattern(), lastInput, lastSuccessfullMatch);
+            UnifiedRegex::RegexPattern* pattern = useSplitPattern
+                ? regularExpression->GetSplitPattern()
+                : regularExpression->GetPattern();
+            scriptContext->GetLibrary()->GetRegExpConstructor()->SetLastMatch(pattern, lastInput, lastSuccessfullMatch);
         }
     }
 
