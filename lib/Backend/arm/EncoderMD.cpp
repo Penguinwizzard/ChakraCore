@@ -2300,8 +2300,7 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress)
                 
                 AssertMsg(labelInstr->GetPC() != null, "Branch to unemitted label?");
 
-                pcrel = ((labelInstr->GetPC() - m_encoder->m_encodeBuffer + codeBufferAddress) & 0xFFFF);
-                this->m_func->m_workItem->RecordNativeRelocation(codeBufferAddress + reloc->m_consumerOffset - m_encoder->m_encodeBuffer);
+                pcrel = ((labelInstr->GetPC() - m_encoder->m_encodeBuffer + codeBufferAddress) & 0xFFFF);                
                 
                 if (!EncodeImmediate16(pcrel, (DWORD*) &encode))
                 {
@@ -2319,8 +2318,7 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress)
                 {
                     AssertMsg(labelInstr->GetPC() != null, "Branch to unemitted label?");
                     // Note that the bottom bit must be set, since this is a Thumb code address.
-                    pcrel = ((labelInstr->GetPC() - m_encoder->m_encodeBuffer + codeBufferAddress) & 0xFFFF) | 1;
-                    this->m_func->m_workItem->RecordNativeRelocation(codeBufferAddress + reloc->m_consumerOffset - m_encoder->m_encodeBuffer);
+                    pcrel = ((labelInstr->GetPC() - m_encoder->m_encodeBuffer + codeBufferAddress) & 0xFFFF) | 1;                    
                 }
                 else
                 {

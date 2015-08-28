@@ -13,4 +13,6 @@ buildchk.*
 buildfre.*
 Build/swum-cache.txt
 *.tlog/
+.*.swp
 sd.ini
+*.vcxproj.user

@@ -107,9 +107,6 @@ enum IRDumpFlags
 #include "GlobOpt.h"
 #include "GlobOptIntBounds.h"
 #include "CodeGenWorkItemType.h"
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-#include "PEWriter.h"
-#endif
 #include "QueuedFullJitWorkItem.h"
 #include "CodeGenWorkItem.h"
 #include "SimpleJitProfilingHelpers.h"

@@ -8797,7 +8797,7 @@ namespace Js
             // So we need to have a memory barrier here in order to make sure that the work item is consistent
             MemoryBarrier();
 #endif
-            InMemoryCodeGenWorkItem* workItem = this->GetWorkItem();
+            CodeGenWorkItem* workItem = this->GetWorkItem();
             if (workItem != null)
             {
                 // Probably don't need to do anything else here

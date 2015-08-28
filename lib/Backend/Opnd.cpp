@@ -1477,8 +1477,7 @@ FloatConstOpnd::GetAddrOpnd(Func *func, bool dontEncode)
 {
 #if !FLOATVAR
     if (this->m_number)
-    {
-        // RELOCJIT: Will only call with tagged numbers under relocatable JIT
+    {        
         return AddrOpnd::New(this->m_number, (Js::TaggedNumber::Is(this->m_number) ? AddrOpndKindConstantVar : AddrOpndKindDynamicVar), func, dontEncode);
     }
 #endif
@@ -1733,9 +1732,6 @@ AddrOpnd::New(Js::Var address, AddrOpndKind addrOpndKind, Func *func, bool dontE
 
     addrOpnd->m_address = address;
     addrOpnd->addrOpndKind = addrOpndKind;
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-    Assert(func->IsInMemory() || !addrOpnd->IsDynamic());
-#endif
     addrOpnd->m_type = addrOpnd->IsVar()? TyVar : TyMachPtr;  
     addrOpnd->m_dontEncode = dontEncode;
     addrOpnd->m_isFunction = false;
@@ -1776,11 +1772,7 @@ AddrOpnd::NewFromNumber(int32 value, Func *func, bool dontEncode /* = false */)
     }
     else
     {
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-        Assert(func->IsInMemory());
-#endif
         Js::Var number = Js::JavascriptNumber::NewCodeGenInstance(func->GetNumberAllocator(), (double)value, func->GetScriptContext());
-        // RELOCJIT: Will not call for relocatable JIT
         return New(number, AddrOpndKindDynamicVar, func, dontEncode);
     }
 }
@@ -1794,11 +1786,7 @@ AddrOpnd::NewFromNumber(int64 value, Func *func, bool dontEncode /* = false */)
     }
     else
     {
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-        Assert(func->IsInMemory());
-#endif
         Js::Var number = Js::JavascriptNumber::NewCodeGenInstance(func->GetNumberAllocator(), (double)value, func->GetScriptContext());
-        // RELOCJIT: Will not call for relocatable JIT
         return New(number, AddrOpndKindDynamicVar, func, dontEncode);
     }
 }
@@ -1812,11 +1800,7 @@ AddrOpnd::NewFromNumber(double value, Func *func, bool dontEncode /* = false */)
     //
 
     if (Js::JavascriptNumber::IsNegZero(value))
-    {
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-        Assert(func->IsInMemory());
-#endif
-        // RELOCJIT: Will not call for relocatable JIT
+    {        
         return New(func->GetScriptContext()->GetLibrary()->GetNegativeZero(), AddrOpndKindDynamicVar, func, dontEncode);
     }
     if (value == +0.0)
@@ -1840,11 +1824,7 @@ AddrOpnd::NewFromNumber(double value, Func *func, bool dontEncode /* = false */)
         return New(Js::TaggedInt::ToVarUnchecked(nValue), AddrOpndKindConstantVar, func, dontEncode);
     }
 
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-    Assert(func->IsInMemory());
-#endif
     Js::Var number = Js::JavascriptNumber::NewCodeGenInstance(func->GetNumberAllocator(), (double)value, func->GetScriptContext());
-    // RELOCJIT: Will not call for relocatable JIT
     return New(number, AddrOpndKindDynamicVar, func, dontEncode);
 }
 
@@ -2323,9 +2303,6 @@ MemRefOpnd *
 MemRefOpnd::New(void * pMemLoc, IRType type, Func *func, AddrOpndKind addrOpndKind)
 {
     MemRefOpnd * memRefOpnd = JitAnew(func->m_alloc, IR::MemRefOpnd);
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-    Assert(func->IsInMemory() || Js::TaggedInt::Is(pMemLoc));
-#endif
     memRefOpnd->m_memLoc = pMemLoc;
     memRefOpnd->m_type = type;
 

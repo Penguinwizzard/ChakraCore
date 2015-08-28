@@ -379,9 +379,6 @@ PHASE(All)
 #define DEFAULT_CONFIG_ForceCleanCacheOnCollect (false)
 #define DEFAULT_CONFIG_ForceGCAfterJSONParse (false)
 #define DEFAULT_CONFIG_ForceSerialized      (false)
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-#define DEFAULT_CONFIG_IncludeNativeCodeWithSerializedByteCodes (false)
-#endif
 #define DEFAULT_CONFIG_ForceES5Array        (false)
 #define DEFAULT_CONFIG_ForceAsmJsLinkFail   (false)
 #define DEFAULT_CONFIG_DumpCommentsFromReferencedFiles (false)
@@ -829,7 +826,6 @@ FLAGNR(String,  DynamicProfileMutatorDll , "Path of the mutator DLL", L"DynamicP
 FLAGNR(String,  DynamicProfileMutator , "Type of local, temp, return, param, loop implicit flag and implicit flag. \n\t\t\t\t\ti.e local=LikelyArray_NoMissingValues_NonInts_NonFloats;temp=Int8Array;param=LikelyNumber;return=LikelyString;loopimplicitflag=ImplicitCall_ToPrimitive;implicitflag=ImplicitCall_None\n\t\t\t\t\tor pass DynamicProfileMutator:random\n\t\t\t\t\tSee DynamicProfileInfo.h for enum values", null)
 #endif
 FLAGNR(Boolean, ExecuteByteCodeBufferReturnsInvalidByteCode, "Serialized byte code execution always returns SCRIPT_E_INVALID_BYTECODE", false)
-FLAGNR(Boolean, ExecuteNativeCodeBufferReturnsInvalidByteCode, "Serialized native code execution always returns SCRIPT_E_INVALID_BYTECODE", false)
 FLAGR(Number, ExpirableCollectionGCCount, "Number of GCs during which Expirable object profiling occurs", DEFAULT_CONFIG_ExpirableCollectionGCCount)
 FLAGR (Number,  ExpirableCollectionTriggerThreshold, "Threshold at which Expirable Object Collection is triggered (In Percentage)", DEFAULT_CONFIG_ExpirableCollectionTriggerThreshold)
 FLAGR(Boolean, SkipSplitOnNoResult, "If the result of Regex split isn't used, skip executing the regex. (Perf optimization)", DEFAULT_CONFIG_SkipSplitWhenResultIgnored)
@@ -979,7 +975,6 @@ FLAGNR(Number, InduceCodeGenFailureSeed, "Seed used while calculating codegen fa
 FLAGNR(Number, InjectPartiallyInitializedInterpreterFrameError, "The number of interpreter stack frame (with 1 being bottom-most) to inject error before the frame is initialized.", DEFAULT_CONFIG_InjectPartiallyInitializedInterpreterFrameError)
 FLAGNR(Number, InjectPartiallyInitializedInterpreterFrameErrorType, "Type of error to inject: 0 - debug break, 1 - exception.", DEFAULT_CONFIG_InjectPartiallyInitializedInterpreterFrameErrorType)
 FLAGNR(Boolean, GenerateByteCodeBufferReturnsCantGenerate, "Serialized byte code generation always returns SCRIPT_E_CANT_GENERATE", false)
-FLAGNR(Boolean, GenerateNativeCodeBufferReturnsCantGenerate, "Serialized native code generation always returns SCRIPT_E_CANT_GENERATE", false)
 FLAGNR(Number, GoptCleanupThreshold, "Number of instructions seen before we cleanup the value table", DEFAULT_CONFIG_GoptCleanupThreshold)
 FLAGNR(Number, AsmGoptCleanupThreshold, "Number of instructions seen before we cleanup the value table", DEFAULT_CONFIG_AsmGoptCleanupThreshold)
 FLAGNR(Boolean, HighPrecisionDate, "Enable sub-millisecond resolution in Javascript Date for benchmark timing", DEFAULT_CONFIG_HighPrecisionDate)
@@ -1292,10 +1287,6 @@ FLAGNR(Number,  MaxMarkStackPageCount , "Restrict recycler mark stack size (in p
 FLAGNR(Number,  MaxTrackedObjectListCount,  "Restrict recycler tracked object count during GC", -1)
 
 FLAGNR(Boolean, Win8Compat, "Win8 WWA compatiable interface", false)
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-FLAGR(Boolean, IncludeNativeCodeWithSerializedByteCodes, "Include serialized JIT code in calls to GenerateByteCodeBuffer", DEFAULT_CONFIG_IncludeNativeCodeWithSerializedByteCodes)
-FLAGNR(Boolean, PartiallySerializeNativeCode, "Serialize in native code format but don't serialize any actual native code", false)
-#endif
 #if DBG
 FLAGNR(Boolean, InitializeInterpreterSlotsWithInvalidStackVar, "Enable the initialization of the interpreter local slots with invalid stack vars", false)
 #endif

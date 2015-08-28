@@ -4,12 +4,12 @@
 
 #include "BackEnd.h"
 
-QueuedFullJitWorkItem::QueuedFullJitWorkItem(InMemoryCodeGenWorkItem *const workItem) : workItem(workItem)
+QueuedFullJitWorkItem::QueuedFullJitWorkItem(CodeGenWorkItem *const workItem) : workItem(workItem)
 {
     Assert(workItem->GetJitMode() == ExecutionMode::FullJit);
 }
 
-InMemoryCodeGenWorkItem *QueuedFullJitWorkItem::WorkItem() const
+CodeGenWorkItem *QueuedFullJitWorkItem::WorkItem() const
 {
     return workItem;
 }

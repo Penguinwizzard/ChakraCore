@@ -241,44 +241,6 @@ NativeCodeGenerator::GenerateAllFunctions(Js::FunctionBody * fn)
 }
 #endif
 
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-void NativeCodeGenerator::GenerateFunctionForSerialization(Js::FunctionBody * fn, DWORD dwFunctionTableLength, BYTE * functionTable, PageAllocator * pageAllocator, PEWriter *writer)
-{
-    if (functionTable && ((fn->GetSerializationIndex() >= (int)dwFunctionTableLength) || !functionTable[fn->GetSerializationIndex()]))
-    {
-        writer->RecordEmptyFunction();
-    }
-    else
-    {
-        SerializedCodeGenWorkItem workitem(fn, writer);
-        CodeGen(pageAllocator, &workitem, true);
-    }
-
-    for (uint i = 0; i < fn->GetNestedCount(); i++)
-    {
-        GenerateFunctionForSerialization(fn->GetNestedFunctionForExecution(i)->GetFunctionBody(), dwFunctionTableLength, functionTable, pageAllocator, writer);
-    }
-}
-
-void NativeCodeGenerator::GenerateAllFunctionsForSerialization(Js::FunctionBody * fn, BYTE *sourceCode, DWORD dwSourceCodeSize, BYTE *byteCode, DWORD dwByteCodeSize, DWORD dwFunctionTableLength, BYTE * functionTable, BYTE ** nativeCode, DWORD * pdwNativeCodeSize)
-{
-    Assert(fn->GetDefaultFunctionEntryPointInfo()->entryPointIndex == 0);
-    Assert(fn->GetDefaultFunctionEntryPointInfo()->IsNotScheduled() || CONFIG_FLAG(ForceSerialized));
-
-    // Make sure this isn't a deferred function
-    Assert(fn->GetFunctionBody() == fn);
-    Assert(!fn->IsDeferred());
-
-    BEGIN_TEMP_ALLOCATOR(tempAllocator, scriptContext, L"NativeCodeSerializer");
-
-    PageAllocator * pageAllocator = this->scriptContext->GetThreadContext()->GetPageAllocator();
-    PEWriter writer(tempAllocator);
-    GenerateFunctionForSerialization(fn, dwFunctionTableLength, functionTable, pageAllocator, &writer);
-    writer.Write(fn, sourceCode, dwSourceCodeSize, byteCode, dwByteCodeSize, nativeCode, pdwNativeCodeSize);
-
-    END_TEMP_ALLOCATOR(tempAllocator, scriptContext);
-}
-#endif
 #if _M_ARM
 USHORT ArmExtractThumbImmediate16(PUSHORT address)
 {
@@ -379,109 +341,6 @@ void DoFunctionRelocations(BYTE *function, DWORD functionOffset, DWORD functionS
         relocationBlock = (PIMAGE_BASE_RELOCATION) (((BYTE *) relocationBlock) + relocationBlock->SizeOfBlock);
     }
 }
-
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION    
-bool NativeCodeGenerator::DeserializeFunction(Js::FunctionBody *function, Js::NativeModule *nativeModule)
-{
-    if(!function->DoFullJit())
-    {
-        return false;
-    }
-
-    DWORD *exportTable = nativeModule->exports;
-    int index = function->GetSerializationIndex();
-    FARPROC proc = (FARPROC)((size_t)exportTable[index] + nativeModule->code);
-    FARPROC nextProc = (FARPROC)((size_t)exportTable[index + 1] + nativeModule->code);
-
-    if ((proc == nullptr) || (((size_t) nextProc - (size_t) proc) == 0))
-    {
-        Assert(proc != nullptr);
-        // Didn't serialize this function
-        return false;
-    }
-
-    JS_ETW(EventWriteJSCRIPT_NATIVE_FUNCTION_LOAD(nativeModule->base, function->GetSerializationIndex(), function->GetDisplayName(), exportTable[index], exportTable[index + 1] - exportTable[index]));
-
-    function->SetIsFromNativeCodeModule(true);
-    Js::FunctionEntryPointInfo * entryPoint = function->GetDefaultFunctionEntryPointInfo();
-    entryPoint->SetCodeGenPendingWithStackAllocatedWorkItem();
-    entryPoint->SetCodeGenQueued();
-#if DBG_DUMP
-    if (nativeModule->nativeMap)
-    {
-        NativeMapFunction nativeMapFunction = ((NativeMapFunction *)nativeModule->nativeMap)[index];
-        int entryIndex = nativeMapFunction.numberOfEntries;
-        NativeMapEntry *current = (NativeMapEntry *)(nativeModule->nativeMap + nativeMapFunction.entryOffset);
-
-        while (entryIndex != 0)
-        {
-            entryPoint->RecordNativeMap(current->nativeOffset, current->statementIndex);
-            entryIndex--;
-            current++;
-        }
-    }
-#endif
-
-    if (nativeModule->nativeThrowMap)
-    {
-        NativeMapFunction nativeThrowMapFunction = ((NativeMapFunction *)nativeModule->nativeThrowMap)[index];
-        int entryIndex = nativeThrowMapFunction.numberOfEntries;
-        NativeMapEntry *current = (NativeMapEntry *)(nativeModule->nativeThrowMap + nativeThrowMapFunction.entryOffset);
-        Js::SmallSpanSequenceIter iter;
-
-        while (entryIndex != 0)
-        {
-            function->RecordNativeThrowMap(iter, current->nativeOffset, current->statementIndex, entryPoint, Js::LoopHeader::NoLoop);
-            entryIndex--;
-            current++;
-        }
-    }
-
-    BYTE *functionBytes = (BYTE *)proc;
-    size_t functionSize = (BYTE *)nextProc - (BYTE *)proc;
-
-    // If we're loading in-memory, then we need to do some stuff the loader would
-    // normally do for us.
-    if (nativeModule->loadedInMemory)
-    {
-        BYTE *buffer = (size_t)exportTable[index] + nativeModule->textSection;
-
-        DWORD oldProtect;
-        if (!VirtualProtect(buffer, functionSize, PAGE_READWRITE, &oldProtect))
-        {
-            Js::Throw::OutOfMemory();
-        }
-
-        memcpy_s(buffer, functionSize, functionBytes, functionSize);
-        functionBytes = buffer;
-
-        if (nativeModule->relocHeader != nullptr)
-        {
-            DoFunctionRelocations(functionBytes, exportTable[index], (DWORD)functionSize, nativeModule->base, nativeModule->imageBase, nativeModule->textHeader, nativeModule->relocHeader);
-        }
-
-        if (!VirtualProtect(functionBytes, functionSize, PAGE_EXECUTE_READ, &oldProtect) ||
-            !FlushInstructionCache(AutoSystemInfo::Data.GetProcessHandle(), functionBytes, functionSize))
-        {
-            Js::Throw::OutOfMemory();
-        }
-    }
-
-#if _M_ARM
-    functionBytes = functionBytes + 1;
-#endif
-
-    function->RecordNativeBaseAddress(functionBytes, functionSize, nullptr, nullptr, nullptr, entryPoint,  Js::LoopHeader::NoLoop);
-    entryPoint->SetCodeGenDone();
-    entryPoint->SetJitMode(ExecutionMode::FullJit);
-    function->TraceExecutionMode("DeserializeNativeCode (before)");
-    function->TransitionToFullJitExecutionMode();
-    function->TraceExecutionMode("DeserializeNativeCode");
-    SetNativeEntryPoint(function->GetDefaultFunctionEntryPointInfo(), function, (Js::JavascriptMethod)functionBytes);
-
-    return true;
-}
-#endif
 
 class AutoRestoreDefaultEntryPoint
 {
@@ -957,13 +816,12 @@ NativeCodeGenerator::CodeGen(PageAllocator * pageAllocator, CodeGenWorkItem* wor
     bool irviewerInstance = false;
 #ifdef IR_VIEWER
     irviewerInstance = true;
-#endif
-    Assert(workItem->IsInMemoryWorkItem() || foreground);
+#endif    
     Assert(
         workItem->Type() != JsFunctionType || 
         irviewerInstance || 
-        IsThunk(workItem->GetFunctionBody()->GetDirectEntryPoint(workItem->AsInMemoryWorkItem()->GetEntryPoint())) ||
-        IsAsmJsCodeGenThunk(workItem->GetFunctionBody()->GetDirectEntryPoint(workItem->AsInMemoryWorkItem()->GetEntryPoint())));
+        IsThunk(workItem->GetFunctionBody()->GetDirectEntryPoint(workItem->GetEntryPoint())) ||
+        IsAsmJsCodeGenThunk(workItem->GetFunctionBody()->GetDirectEntryPoint(workItem->GetEntryPoint())));
 
     InterlockedExchangeAdd(&this->byteCodeSizeGenerated, workItem->GetByteCodeCount()); // must be interlocked because this data may be modified in the foreground and background thread concurrently
     Js::FunctionBody* body = workItem->GetFunctionBody();
@@ -980,9 +838,7 @@ NativeCodeGenerator::CodeGen(PageAllocator * pageAllocator, CodeGenWorkItem* wor
         null;
 #endif
 
-    NoRecoverMemoryJitArenaAllocator funcAlloc(L"BE-FuncAlloc", pageAllocator, Js::Throw::OutOfMemory);
-    // JIT serialization doesn't support dynamic profile information.
-    Assert(workItem->IsInMemoryWorkItem() || !body->HasDynamicProfileInfo());
+    NoRecoverMemoryJitArenaAllocator funcAlloc(L"BE-FuncAlloc", pageAllocator, Js::Throw::OutOfMemory);        
     Js::ReadOnlyDynamicProfileInfo profileInfo(
         body->HasDynamicProfileInfo() ? body->GetAnyDynamicProfileInfo() : null,
         foreground ? null : &funcAlloc);
@@ -1005,9 +861,7 @@ NativeCodeGenerator::CodeGen(PageAllocator * pageAllocator, CodeGenWorkItem* wor
                 (&funcAlloc),
                 workItem,
                 null,
-                !workItem->IsInMemoryWorkItem() ?
-                    nullptr :
-                    workItem->AsInMemoryWorkItem()->GetEntryPoint()->GetPolymorphicInlineCacheInfo()->GetSelfInfo(),
+                workItem->GetEntryPoint()->GetPolymorphicInlineCacheInfo()->GetSelfInfo(),
                 allocators,
                 &numberAllocator,
                 &profileInfo,
@@ -1381,7 +1235,7 @@ NativeCodeGenerator::CheckCodeGenDone(
     return address;
 }
 
-InMemoryCodeGenWorkItem *
+CodeGenWorkItem *
 NativeCodeGenerator::GetJob(Js::EntryPointInfo * const entryPoint) const
 {
     ASSERT_THREAD();
@@ -1398,7 +1252,7 @@ NativeCodeGenerator::WasAddedToJobProcessor(JsUtil::Job *const job) const
     ASSERT_THREAD();
     Assert(job);
 
-    return static_cast<InMemoryCodeGenWorkItem *>(job)->IsInJitQueue();
+    return static_cast<CodeGenWorkItem *>(job)->IsInJitQueue();
 }
 
 bool
@@ -1425,7 +1279,7 @@ NativeCodeGenerator::PrioritizedButNotYetProcessed(JsUtil::Job *const job)
     Assert(job);
 
 #ifdef BGJIT_STATS
-    InMemoryCodeGenWorkItem *const codeGenWorkItem = static_cast<InMemoryCodeGenWorkItem *>(job);
+    CodeGenWorkItem *const codeGenWorkItem = static_cast<CodeGenWorkItem *>(job);
     if(codeGenWorkItem->Type() == JsFunctionType && codeGenWorkItem->IsInJitQueue())
     {
         codeGenWorkItem->GetScriptContext()->interpretedCallsHighPri++;
@@ -1473,7 +1327,7 @@ NativeCodeGenerator::AfterWaitForJob(Js::EntryPointInfo *const entryPoint) const
 * it exceeds the JIT limits
 */
 bool
-NativeCodeGenerator::WorkItemExceedsJITLimits(InMemoryCodeGenWorkItem *const codeGenWork)
+NativeCodeGenerator::WorkItemExceedsJITLimits(CodeGenWorkItem *const codeGenWork)
 {
     // TODO: SimpleJit: Do we need a separate limit for simple JIT, or no limit at all?
     return
@@ -1495,7 +1349,7 @@ NativeCodeGenerator::Process(JsUtil::Job *const job, JsUtil::ParallelThreadData 
         pageAllocator = threadData->GetPageAllocator();
     }
 
-    InMemoryCodeGenWorkItem *const codeGenWork = static_cast<InMemoryCodeGenWorkItem *>(job);
+    CodeGenWorkItem *const codeGenWork = static_cast<CodeGenWorkItem *>(job);
 
     switch (codeGenWork->Type())
     {
@@ -1543,7 +1397,7 @@ NativeCodeGenerator::Prioritize(JsUtil::Job *const job, const bool forceAddJobTo
 
     ASSERT_THREAD();
     Assert(job);
-    Assert(static_cast<const InMemoryCodeGenWorkItem *>(job)->Type() == CodeGenWorkItemType::JsFunctionType);
+    Assert(static_cast<const CodeGenWorkItem *>(job)->Type() == CodeGenWorkItemType::JsFunctionType);
     Assert(!WasAddedToJobProcessor(job));
 
     JsFunctionCodeGen *const workItem = static_cast<JsFunctionCodeGen *>(job);
@@ -1648,7 +1502,7 @@ NativeCodeGenerator::JobProcessed(JsUtil::Job *const job, const bool succeeded)
 
     Assert(job);
 
-    InMemoryCodeGenWorkItem *workItem = static_cast<InMemoryCodeGenWorkItem *>(job);
+    CodeGenWorkItem *workItem = static_cast<CodeGenWorkItem *>(job);
 
     class AutoCleanup
     {
@@ -1768,7 +1622,7 @@ NativeCodeGenerator::GetJobToProcessProactively()
     ASSERT_THREAD();
 
     // Look for work, starting with high priority items first, and above LowPri
-    InMemoryCodeGenWorkItem* workItem = workItems.Head();
+    CodeGenWorkItem* workItem = workItems.Head();
     while(workItem != null)
     {
         if(workItem->ShouldSpeculativelyJit(this->byteCodeSizeGenerated))
@@ -1809,7 +1663,7 @@ NativeCodeGenerator::GetJobToProcessProactively()
             workItem->GetFunctionBody()->TraceExecutionMode("SpeculativeJit");
             break;
         }
-        workItem = static_cast<InMemoryCodeGenWorkItem*>(workItem->Next());
+        workItem = static_cast<CodeGenWorkItem*>(workItem->Next());
     }
     return workItem;
 }
@@ -1819,10 +1673,10 @@ NativeCodeGenerator::GetJobToProcessProactively()
 void
 NativeCodeGenerator::RemoveProactiveJobs()
 {
-    InMemoryCodeGenWorkItem* workItem = workItems.Head();
+    CodeGenWorkItem* workItem = workItems.Head();
     while (workItem)
     {
-        InMemoryCodeGenWorkItem* temp = static_cast<InMemoryCodeGenWorkItem*>(workItem->Next());
+        CodeGenWorkItem* temp = static_cast<CodeGenWorkItem*>(workItem->Next());
         workItem->Delete();
         workItem = temp;
     }
@@ -2833,7 +2687,7 @@ FreeNativeCodeGenAllocation(Js::ScriptContext *scriptContext, void * address)
     scriptContext->GetNativeCodeGenerator()->QueueFreeNativeCodeGenAllocation(address);
 }
 
-bool TryReleaseNonHiPriWorkItem(Js::ScriptContext* scriptContext, InMemoryCodeGenWorkItem* workItem)
+bool TryReleaseNonHiPriWorkItem(Js::ScriptContext* scriptContext, CodeGenWorkItem* workItem)
 {
     if (!scriptContext->GetNativeCodeGenerator())
     {
@@ -2845,7 +2699,7 @@ bool TryReleaseNonHiPriWorkItem(Js::ScriptContext* scriptContext, InMemoryCodeGe
 
 // Called from within the lock
 // The work item cannot be used after this point if it returns true
-bool NativeCodeGenerator::TryReleaseNonHiPriWorkItem(InMemoryCodeGenWorkItem* workItem)
+bool NativeCodeGenerator::TryReleaseNonHiPriWorkItem(CodeGenWorkItem* workItem)
 {
     // If its the highest priority, don't release it, let the job continue
     if (workItem->IsInJitQueue())
@@ -2866,16 +2720,7 @@ NativeCodeGenerator::IsNativeFunctionAddr(void * address)
 {
     return
         (this->backgroundAllocators && this->backgroundAllocators->emitBufferManager.IsInRange(address)) ||
-        (this->foregroundAllocators && this->foregroundAllocators->emitBufferManager.IsInRange(address))
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-        || this->scriptContext->AnyNativeModule(
-            [=] (Js::NativeModule *nativeModule) -> bool 
-            { 
-                return (!nativeModule->loadedInMemory && address >= nativeModule->code && address < (nativeModule->code + nativeModule->codeSize)) ||
-                       (nativeModule->loadedInMemory && address >= nativeModule->textSection && address < (nativeModule->textSection + nativeModule->codeSize));
-            })
-#endif
-        ;
+        (this->foregroundAllocators && this->foregroundAllocators->emitBufferManager.IsInRange(address));
 }
 
 void
@@ -3029,7 +2874,7 @@ NativeCodeGenerator::ProfileEnd(Js::ScriptContextProfiler *const profiler, Js::P
 
 #endif
 
-void NativeCodeGenerator::AddToJitQueue(InMemoryCodeGenWorkItem *const codeGenWorkItem, bool prioritize, bool lock, void* function) 
+void NativeCodeGenerator::AddToJitQueue(CodeGenWorkItem *const codeGenWorkItem, bool prioritize, bool lock, void* function) 
 {
     codeGenWorkItem->VerifyJitMode();
 
@@ -3045,7 +2890,7 @@ void NativeCodeGenerator::AddToJitQueue(InMemoryCodeGenWorkItem *const codeGenWo
     if(jitMode == ExecutionMode::FullJit &&
         queuedFullJitWorkItemCount >= (unsigned int)CONFIG_FLAG(JitQueueThreshold))
     {
-        InMemoryCodeGenWorkItem *const workItemRemoved = queuedFullJitWorkItems.Tail()->WorkItem();
+        CodeGenWorkItem *const workItemRemoved = queuedFullJitWorkItems.Tail()->WorkItem();
         Assert(workItemRemoved->GetJitMode() == ExecutionMode::FullJit);
         if(Processor()->RemoveJob(workItemRemoved))
         {
@@ -3075,7 +2920,7 @@ void NativeCodeGenerator::AddToJitQueue(InMemoryCodeGenWorkItem *const codeGenWo
     codeGenWorkItem->OnAddToJitQueue();
 }
 
-void NativeCodeGenerator::AddWorkItem(InMemoryCodeGenWorkItem* workitem)
+void NativeCodeGenerator::AddWorkItem(CodeGenWorkItem* workitem)
 {
     workitem->ResetJitMode();
     workItems.LinkToEnd(workitem);

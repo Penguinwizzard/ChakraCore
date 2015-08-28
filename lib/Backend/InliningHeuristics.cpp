@@ -354,7 +354,7 @@ bool InliningHeuristics::BackendInlineIntoInliner(Js::FunctionBody* inlinee,
     }
 
 
-    if (((InMemoryCodeGenWorkItem *)topFunction->m_workItem)->RecyclableData()->JitTimeData()->GetIsAggressiveInliningEnabled())
+    if (topFunction->m_workItem->RecyclableData()->JitTimeData()->GetIsAggressiveInliningEnabled())
     {
         return true;
     }

@@ -2929,11 +2929,7 @@ public:
 
 #ifdef ENABLE_NATIVE_CODEGEN
             if ((!PHASE_OFF(Js::BackEndPhase, *functionBody))
-                && !this->scriptContext->GetConfig()->IsNoNative()
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION   
-                && ((nativeModule == nullptr) || (!::DeserializeFunction(scriptContext->GetNativeCodeGenerator(), *functionBody, nativeModule)))
-#endif
-                )
+                && !this->scriptContext->GetConfig()->IsNoNative())
             {
                 GenerateFunction(this->scriptContext->GetNativeCodeGenerator(), *functionBody);
             }

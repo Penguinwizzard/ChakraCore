@@ -27,7 +27,6 @@
 class NativeCodeGenerator;
 class ThreadContext;
 struct CodeGenWorkItem;
-struct InMemoryCodeGenWorkItem;
 class NativeCodeData;
 
 class StackSym;
@@ -56,7 +55,7 @@ void SetProfileModeNativeCodeGen(NativeCodeGenerator *pNativeCodeGen, BOOL fSet)
 void UpdateNativeCodeGeneratorForDebugMode(NativeCodeGenerator* nativeCodeGen);
 
 CriticalSection *GetNativeCodeGenCriticalSection(NativeCodeGenerator *pNativeCodeGen);
-bool TryReleaseNonHiPriWorkItem(Js::ScriptContext* scriptContext, InMemoryCodeGenWorkItem* workItem);
+bool TryReleaseNonHiPriWorkItem(Js::ScriptContext* scriptContext, CodeGenWorkItem* workItem);
 void NativeCodeGenEnterScriptStart(NativeCodeGenerator * nativeCodeGen);
 bool IsNativeFunctionAddr(Js::ScriptContext *scriptContext, void * address);
 void FreeNativeCodeGenAllocation(Js::ScriptContext* scriptContext, void* address);
@@ -65,10 +64,6 @@ void GenerateFunction(NativeCodeGenerator * nativeCodeGen, Js::FunctionBody * fu
 void GenerateLoopBody(NativeCodeGenerator * nativeCodeGen, Js::FunctionBody * functionBody, Js::LoopHeader * loopHeader, Js::EntryPointInfo* entryPointInfo, uint localCount, Js::Var localSlots[]);
 #ifdef ENABLE_PREJIT
 void GenerateAllFunctions(NativeCodeGenerator * nativeCodeGen, Js::FunctionBody * fn);
-#endif
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION    
-void GenerateAllFunctionsForSerialization(NativeCodeGenerator  * nativeCodeGen, Js::FunctionBody * fn, BYTE *sourceCode, DWORD dwSourceCodeSize, BYTE *byteCode, DWORD dwByteCodeSize, DWORD dwFunctionTableLength, BYTE * functionTable, BYTE ** nativeCode, DWORD * pdwNativeCodeSize);
-bool DeserializeFunction(NativeCodeGenerator * nativeCodeGen, Js::FunctionBody *function, Js::NativeModule *nativeModule);
 #endif
 #ifdef IR_VIEWER
 Js::Var RejitIRViewerFunction(NativeCodeGenerator *nativeCodeGen, Js::FunctionBody *fn, Js::ScriptContext *scriptContext);

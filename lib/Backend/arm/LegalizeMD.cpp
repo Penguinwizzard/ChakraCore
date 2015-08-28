@@ -78,8 +78,7 @@ void LegalizeMD::LegalizeDst(IR::Instr * instr, bool fPostRegAlloc)
         if (fPostRegAlloc)
         {
             newReg->SetReg(SCRATCH_REG);
-        }
-        // RELOCJIT: This is already a MemRef
+        }        
         IR::Instr *newInstr = IR::Instr::New(Js::OpCode::LDIMM, newReg, 
             IR::AddrOpnd::New(memLoc, opnd->AsMemRefOpnd()->GetAddrKind(), instr->m_func, true), instr->m_func);
         instr->InsertBefore(newInstr);
@@ -168,18 +167,7 @@ void LegalizeMD::LegalizeSrc(IR::Instr * instr, IR::Opnd * opnd, uint opndNum, b
     case IR::OpndKindAddr:
     case IR::OpndKindHelperCall:
     case IR::OpndKindIntConst:
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-        if (opnd->IsHelperCallOpnd() && !instr->m_func->IsInMemory())
-        {
-            // We don't want the helper address here because we're relocatable.
-            // Pass through the helper index
-            immed = opnd->AsHelperCallOpnd()->m_fnHelper;
-        }
-        else
-#endif
-        {
-            immed = opnd->GetImmediateValue();
-        }
+        immed = opnd->GetImmediateValue();
         LegalizeImmed(instr, opnd, opndNum, immed, forms, fPostRegAlloc);
         break;
 
@@ -197,8 +185,7 @@ void LegalizeMD::LegalizeSrc(IR::Instr * instr, IR::Opnd * opnd, uint opndNum, b
         if (fPostRegAlloc)
         {
             newReg->SetReg(SCRATCH_REG);
-        }
-        // RELOCJIT: This is already a MemRef.
+        }        
         IR::Instr *newInstr = IR::Instr::New(Js::OpCode::LDIMM, newReg, IR::AddrOpnd::New(memLoc, IR::AddrOpndKindDynamicMisc, instr->m_func), instr->m_func);
         instr->InsertBefore(newInstr);
         LegalizeMD::LegalizeInstr(newInstr, fPostRegAlloc);

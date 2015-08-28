@@ -4,14 +4,17 @@
 
 #include "BackEnd.h"
 
-InMemoryCodeGenWorkItem::InMemoryCodeGenWorkItem(
+CodeGenWorkItem::CodeGenWorkItem(
     JsUtil::JobManager *const manager,
     Js::FunctionBody *const functionBody,
     Js::EntryPointInfo* entryPointInfo,
     bool isJitInDebugMode,
     CodeGenWorkItemType type)
     : JsUtil::Job(manager)
-    , CodeGenWorkItem(type, functionBody)
+    , codeAddress(null)
+    , functionBody(functionBody)
+    , type(type)
+    , jitMode(ExecutionMode::Interpreter)    
     , entryPointInfo(entryPointInfo)
     , recyclableData(null)
     , isInJitQueue(false)
@@ -27,7 +30,7 @@ InMemoryCodeGenWorkItem::InMemoryCodeGenWorkItem(
 {
 }
 
-InMemoryCodeGenWorkItem::~InMemoryCodeGenWorkItem()
+CodeGenWorkItem::~CodeGenWorkItem()
 {
     if(queuedFullJitWorkItem)
     {
@@ -41,7 +44,7 @@ InMemoryCodeGenWorkItem::~InMemoryCodeGenWorkItem()
 // be careful with it (moving it around actually caused around a 5% perf
 // regression on a test).
 // 
-bool InMemoryCodeGenWorkItem::ShouldSpeculativelyJit(uint byteCodeSizeGenerated) const
+bool CodeGenWorkItem::ShouldSpeculativelyJit(uint byteCodeSizeGenerated) const
 {
     if(!functionBody->DoFullJit())
     {
@@ -67,7 +70,7 @@ bool InMemoryCodeGenWorkItem::ShouldSpeculativelyJit(uint byteCodeSizeGenerated)
     }
 }
 
-bool InMemoryCodeGenWorkItem::ShouldSpeculativelyJitBasedOnProfile() const
+bool CodeGenWorkItem::ShouldSpeculativelyJitBasedOnProfile() const
 {
     Js::FunctionBody* functionBody = this->GetFunctionBody();
 
@@ -113,7 +116,7 @@ bool InMemoryCodeGenWorkItem::ShouldSpeculativelyJitBasedOnProfile() const
     INT, SJ, FG: (default)
 */
 
-void InMemoryCodeGenWorkItem::OnAddToJitQueue()
+void CodeGenWorkItem::OnAddToJitQueue()
 {
     Assert(!this->isInJitQueue);
     this->isInJitQueue = true;
@@ -143,7 +146,7 @@ void InMemoryCodeGenWorkItem::OnAddToJitQueue()
     }
 }
 
-void InMemoryCodeGenWorkItem::OnRemoveFromJitQueue(NativeCodeGenerator* generator)
+void CodeGenWorkItem::OnRemoveFromJitQueue(NativeCodeGenerator* generator)
 {
     // This is callled from within the lock
 
@@ -193,7 +196,7 @@ void InMemoryCodeGenWorkItem::OnRemoveFromJitQueue(NativeCodeGenerator* generato
     }
 }
 
-void InMemoryCodeGenWorkItem::RecordNativeCodeSize(Func *func, size_t bytes, ushort pdataCount, ushort xdataSize)
+void CodeGenWorkItem::RecordNativeCodeSize(Func *func, size_t bytes, ushort pdataCount, ushort xdataSize)
 {
     BYTE *buffer;
 #if defined(_M_ARM32_OR_ARM64)
@@ -214,7 +217,7 @@ void InMemoryCodeGenWorkItem::RecordNativeCodeSize(Func *func, size_t bytes, ush
     SetAllocation(allocation);
 }
 
-void InMemoryCodeGenWorkItem::RecordNativeCode(Func *func, const BYTE* sourceBuffer)
+void CodeGenWorkItem::RecordNativeCode(Func *func, const BYTE* sourceBuffer)
 {
     if (!func->GetEmitBufferManager()->CommitBuffer(this->GetAllocation(), (BYTE *)GetCodeAddress(), GetCodeSize(), sourceBuffer))
     {
@@ -231,7 +234,7 @@ void InMemoryCodeGenWorkItem::RecordNativeCode(Func *func, const BYTE* sourceBuf
 #endif
 }
 
-void InMemoryCodeGenWorkItem::OnWorkItemProcessFail(NativeCodeGenerator* codeGen)
+void CodeGenWorkItem::OnWorkItemProcessFail(NativeCodeGenerator* codeGen)
 {
     if (!isAllocationCommitted && this->allocation != null && this->allocation->allocation != null)
     {
@@ -242,7 +245,7 @@ void InMemoryCodeGenWorkItem::OnWorkItemProcessFail(NativeCodeGenerator* codeGen
     }
 }
 
-void InMemoryCodeGenWorkItem::FinalizeNativeCode(Func *func)
+void CodeGenWorkItem::FinalizeNativeCode(Func *func)
 {
     NativeCodeData * data = func->GetNativeCodeDataAllocator()->Finalize();
     NativeCodeData * transferData = func->GetTransferDataAllocator()->Finalize();
@@ -251,12 +254,12 @@ void InMemoryCodeGenWorkItem::FinalizeNativeCode(Func *func)
     func->GetEmitBufferManager()->CompletePreviousAllocation(this->GetAllocation());
 }
 
-QueuedFullJitWorkItem *InMemoryCodeGenWorkItem::GetQueuedFullJitWorkItem() const
+QueuedFullJitWorkItem *CodeGenWorkItem::GetQueuedFullJitWorkItem() const
 {
     return queuedFullJitWorkItem;
 }
 
-QueuedFullJitWorkItem *InMemoryCodeGenWorkItem::EnsureQueuedFullJitWorkItem()
+QueuedFullJitWorkItem *CodeGenWorkItem::EnsureQueuedFullJitWorkItem()
 {
     if(queuedFullJitWorkItem)
     {

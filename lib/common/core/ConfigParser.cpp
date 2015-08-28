@@ -420,10 +420,8 @@ void ConfigParser::ProcessConfiguration(HANDLE hmod)
     if (Js::Configuration::Global.flags.ForceSerialized)
     {
         // Can't generate or execute byte code under forced serialize
-        Js::Configuration::Global.flags.GenerateByteCodeBufferReturnsCantGenerate = true;
-        Js::Configuration::Global.flags.GenerateNativeCodeBufferReturnsCantGenerate = true;
-        Js::Configuration::Global.flags.ExecuteByteCodeBufferReturnsInvalidByteCode = true;
-        Js::Configuration::Global.flags.ExecuteNativeCodeBufferReturnsInvalidByteCode = true;
+        Js::Configuration::Global.flags.GenerateByteCodeBufferReturnsCantGenerate = true;        
+        Js::Configuration::Global.flags.ExecuteByteCodeBufferReturnsInvalidByteCode = true;        
     }
 
     ForcedMemoryConstraint::Apply();

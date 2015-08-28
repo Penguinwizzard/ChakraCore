@@ -19,7 +19,7 @@ Inline::Optimize(Func *func, IR::Instr *callerArgOuts[], Js::ArgSlot callerArgOu
     }
 
     bool doFixedMethods = !PHASE_OFF(Js::FixedMethodsPhase, func->GetJnFunction());
-    const auto inlinerData = ((InMemoryCodeGenWorkItem *)func->m_workItem)->RecyclableData()->JitTimeData();
+    const auto inlinerData = func->m_workItem->RecyclableData()->JitTimeData();
 
     bool doInline = (inlinerData->InlineeCount() > 0 || inlinerData->isLdFldInlineePresent());
     if (PHASE_OFF(Js::InlinePhase, this->topFunc) ||
@@ -1194,7 +1194,7 @@ Inline::BuildInlinee(Js::FunctionBody* funcBody, const InlineeData& inlineeData,
             funcBody->HasDynamicProfileInfo() ? funcBody->GetAnyDynamicProfileInfo() : null,
             this->topFunc->IsBackgroundJIT() ? this->topFunc->m_alloc : null);
 
-    Js::EntryPointPolymorphicInlineCacheInfo * entryPointPolymorphicInlineCacheInfo = this->topFunc->m_workItem->AsInMemoryWorkItem()->GetEntryPoint()->GetPolymorphicInlineCacheInfo();
+    Js::EntryPointPolymorphicInlineCacheInfo * entryPointPolymorphicInlineCacheInfo = this->topFunc->m_workItem->GetEntryPoint()->GetPolymorphicInlineCacheInfo();
     Func *inlinee = JitAnew(this->topFunc->m_alloc,
                             Func,
                             this->topFunc->m_alloc,
@@ -1634,8 +1634,7 @@ Inline::TryOptimizeCallInstrWithFixedMethod(IR::Instr *callInstr, Js::FunctionIn
         }
     }
 
-    // Insert a load instruction to place the constant address in methodOpnd (the Ld[Root]MethodFld's original dst).
-    // RELOCJIT: Reloctable JIT doesn't support inlining
+    // Insert a load instruction to place the constant address in methodOpnd (the Ld[Root]MethodFld's original dst).    
     IR::AddrOpnd * constMethodValueOpnd = IR::AddrOpnd::New((Js::Var)functionObject, IR::AddrOpndKind::AddrOpndKindDynamicVar, callInstr->m_func);
     constMethodValueOpnd->m_isFunction = true;
     IR::Instr * ldMethodValueInstr = IR::Instr::New(Js::OpCode::Ld_A, methodValueDstOpnd, constMethodValueOpnd, callInstr->m_func);
@@ -2661,7 +2660,7 @@ Inline::InlineCallApplyTarget_Shared(IR::Instr *callInstr, StackSym* originalCal
             funcBody->HasDynamicProfileInfo() ? funcBody->GetAnyDynamicProfileInfo() : null,
             this->topFunc->IsBackgroundJIT() ? this->topFunc->m_alloc : null);
 
-    Js::EntryPointPolymorphicInlineCacheInfo * entryPointPolymorphicInlineCacheInfo = this->topFunc->m_workItem->AsInMemoryWorkItem()->GetEntryPoint()->GetPolymorphicInlineCacheInfo();
+    Js::EntryPointPolymorphicInlineCacheInfo * entryPointPolymorphicInlineCacheInfo = this->topFunc->m_workItem->GetEntryPoint()->GetPolymorphicInlineCacheInfo();
     Func *inlinee = JitAnew(this->topFunc->m_alloc,
                          Func,
                          this->topFunc->m_alloc,
@@ -3374,7 +3373,7 @@ Inline::InlineGetterSetterFunction(IR::Instr *accessorInstr, const Js::FunctionC
             funcBody->HasDynamicProfileInfo() ? funcBody->GetAnyDynamicProfileInfo() : null,
             this->topFunc->IsBackgroundJIT() ? this->topFunc->m_alloc : null);
 
-    Js::EntryPointPolymorphicInlineCacheInfo * entryPointPolymorphicInlineCacheInfo = this->topFunc->m_workItem->AsInMemoryWorkItem()->GetEntryPoint()->GetPolymorphicInlineCacheInfo();
+    Js::EntryPointPolymorphicInlineCacheInfo * entryPointPolymorphicInlineCacheInfo = this->topFunc->m_workItem->GetEntryPoint()->GetPolymorphicInlineCacheInfo();
     Func *inlinee = JitAnew(this->topFunc->m_alloc,
                          Func,
                          this->topFunc->m_alloc,
@@ -3688,7 +3687,7 @@ Inline::InlineScriptFunction(IR::Instr *callInstr, const Js::FunctionCodeGenJitT
         funcBody->HasDynamicProfileInfo() ? funcBody->GetAnyDynamicProfileInfo() : null,
         this->topFunc->IsBackgroundJIT() ? this->topFunc->m_alloc : null);
 
-    Js::EntryPointPolymorphicInlineCacheInfo * entryPointPolymorphicInlineCacheInfo = this->topFunc->m_workItem->AsInMemoryWorkItem()->GetEntryPoint()->GetPolymorphicInlineCacheInfo();
+    Js::EntryPointPolymorphicInlineCacheInfo * entryPointPolymorphicInlineCacheInfo = this->topFunc->m_workItem->GetEntryPoint()->GetPolymorphicInlineCacheInfo();
     Func *inlinee = JitAnew(this->topFunc->m_alloc,
                          Func,
                          this->topFunc->m_alloc,
@@ -3957,8 +3956,7 @@ Inline::InsertFunctionBodyCheck(IR::Instr *callInstr, IR::Instr *insertBeforeIns
 {
     // if (JavascriptFunction::FromVar(r1)->functionInfo != funcInfo) goto noInlineLabel
     // BrNeq_I4 noInlineLabel, r1->functionInfo, funcInfo
-    IR::IndirOpnd* funcBody = IR::IndirOpnd::New(callInstr->GetSrc1()->AsRegOpnd(), Js::JavascriptFunction::GetOffsetOfFunctionInfo(), TyMachPtr, callInstr->m_func);
-    // RELOCJIT: We are OK generating an address here because relocatable JIT does not support inlining.
+    IR::IndirOpnd* funcBody = IR::IndirOpnd::New(callInstr->GetSrc1()->AsRegOpnd(), Js::JavascriptFunction::GetOffsetOfFunctionInfo(), TyMachPtr, callInstr->m_func);    
     IR::AddrOpnd* inlinedFuncBody = IR::AddrOpnd::New(funcInfo, IR::AddrOpndKindDynamicFunctionBody, callInstr->m_func);
     bailoutInstr->SetSrc1(funcBody);
     bailoutInstr->SetSrc2(inlinedFuncBody);
@@ -4540,8 +4538,7 @@ Inline::MapFormals(Func *inlinee,
                 }
             }
             else
-            {
-                // RELOCJIT: Reloctable JIT doesn't support inlining
+            {                
                 instr->SetSrc1(IR::AddrOpnd::New(this->topFunc->GetScriptContext()->GetLibrary()->GetUndefined(),
                     IR::AddrOpndKindDynamicVar, this->topFunc, true));
                 instr->GetSrc1()->SetValueType(ValueType::Undefined);
@@ -4742,8 +4739,7 @@ Inline::MapFormals(Func *inlinee,
                         else
                         {
                             thisConstVar = Js::JavascriptOperators::OP_StrictGetThis(thisConstVar, scriptContext);
-                        }
-                        // RELOCJIT: Reloctable JIT doesn't support inlining
+                        }                        
                         IR::Opnd *thisOpnd = IR::AddrOpnd::New(thisConstVar, IR::AddrOpndKindDynamicVar, inlinee, true);
 
                         instr->m_opcode = Js::OpCode::Ld_A;

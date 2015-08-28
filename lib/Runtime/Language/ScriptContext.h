@@ -347,51 +347,6 @@ namespace Js
         SRCINFO const ** moduleSrcInfo;
     };
 
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION    
-    struct NativeModule
-    {
-        BYTE *base;
-        BYTE *code;
-        size_t codeSize;
-        DWORD *exports;
-        uint exportCount;
-        BYTE *nativeMap;
-        BYTE *nativeThrowMap;
-        size_t imageBase;
-        IMAGE_SECTION_HEADER *textHeader;
-        IMAGE_SECTION_HEADER *relocHeader;
-        BYTE *textSection;
-        size_t textSectionSize;
-#if defined(_M_X64) || defined(_M_ARM32_OR_ARM64)
-        RUNTIME_FUNCTION *pdataTable;
-        uint pdataCount;
-        void *functionTableHandle;
-#endif
-        bool loadedInMemory;
-
-        NativeModule() :
-            base(nullptr),
-            code(nullptr),
-            codeSize(0),
-            exports(nullptr),
-            exportCount(0),
-            nativeMap(nullptr),
-            nativeThrowMap(nullptr),
-            imageBase(0),
-            textHeader(nullptr),
-            relocHeader(nullptr),
-            textSection(nullptr),
-            textSectionSize(0),
-#if defined(_M_X64) || defined(_M_ARM32_OR_ARM64)
-            pdataTable(nullptr),
-            pdataCount(0),
-            functionTableHandle(nullptr),
-#endif
-            loadedInMemory(false)
-        {
-        }
-    };
-#endif
     class ScriptContext : public ScriptContextBase
     {
         friend class LowererMD;
@@ -736,23 +691,6 @@ public:
         void TrackIntConstPropertyOnGlobalObject(Js::PropertyId propId);
         bool IsIntConstPropertyOnGlobalUserObject(Js::PropertyId propertyId);
         void TrackIntConstPropertyOnGlobalUserObject(Js::PropertyId propertyId);
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-        void AddNativeModule(BYTE *moduleBase, NativeModule *module);
-        bool TryGetNativeModule(BYTE *moduleBase, NativeModule **nativeModule);
-        template <typename TConditionalFunction>
-        bool AnyNativeModule(TConditionalFunction function)
-        {
-            return nativeModules && nativeModules->AnyValue(function);
-        }
-        template <typename fn>
-        void EachNativeModule(fn function)
-        {
-            if (nativeModules)
-            {
-                nativeModules->EachValue(function);
-            }
-        }
-#endif
 
 private:
         //
@@ -1133,8 +1071,8 @@ private:
         WellKnownHostType GetWellKnownHostType(Js::TypeId typeId) { return threadContext->GetWellKnownHostType(typeId); }
         void SetWellKnownHostTypeId(WellKnownHostType wellKnownType, Js::TypeId typeId) { threadContext->SetWellKnownHostTypeId(wellKnownType, typeId); }
 
-        JavascriptFunction* LoadScript(const wchar_t* script, SRCINFO const * pSrcInfo, CompileScriptException * pse, bool isExpression, bool disableDeferredParse, bool isForNativeCode, Utf8SourceInfo** ppSourceInfo, const wchar_t *rootDisplayName);
-        JavascriptFunction* LoadScript(LPCUTF8 script, size_t cb, SRCINFO const * pSrcInfo, CompileScriptException * pse, bool isExpression, bool disableDeferredParse, bool isForNativeCode, Utf8SourceInfo** ppSourceInfo, const wchar_t *rootDisplayName);
+        JavascriptFunction* LoadScript(const wchar_t* script, SRCINFO const * pSrcInfo, CompileScriptException * pse, bool isExpression, bool disableDeferredParse, Utf8SourceInfo** ppSourceInfo, const wchar_t *rootDisplayName);
+        JavascriptFunction* LoadScript(LPCUTF8 script, size_t cb, SRCINFO const * pSrcInfo, CompileScriptException * pse, bool isExpression, bool disableDeferredParse, Utf8SourceInfo** ppSourceInfo, const wchar_t *rootDisplayName);
 
         ArenaAllocator* GeneralAllocator() { return &generalAllocator; }
 
@@ -1564,11 +1502,6 @@ private:
     private:
         typedef JsUtil::BaseDictionary<JavascriptMethod, JavascriptFunction*, Recycler, PowerOf2SizePolicy> BuiltInLibraryFunctionMap;
         BuiltInLibraryFunctionMap* builtInLibraryFunctions;
-
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-        typedef JsUtil::BaseDictionary<BYTE *, NativeModule *, HeapAllocator> NativeModuleMap;
-        NativeModuleMap *nativeModules;
-#endif
 
 #ifdef RECYCLER_PERF_COUNTERS
         size_t bindReferenceCount;

@@ -6,17 +6,16 @@
 
 class Func;
 
-struct CodeGenWorkItem
+struct CodeGenWorkItem : public JsUtil::Job
 {
 protected:
-    CodeGenWorkItem(CodeGenWorkItemType type, Js::FunctionBody *const functionBody)
-        : codeAddress(null)
-        , functionBody(functionBody)
-        , type(type)
-        , jitMode(ExecutionMode::Interpreter)
-    {
-        Assert(functionBody);
-    }
+    CodeGenWorkItem(
+        JsUtil::JobManager *const manager,
+        Js::FunctionBody *const functionBody,
+        Js::EntryPointInfo* entryPointInfo,
+        bool isJitInDebugMode,
+        CodeGenWorkItemType type);
+    ~CodeGenWorkItem();
 
     Js::FunctionBody *const functionBody;
     size_t codeAddress;
@@ -28,18 +27,6 @@ protected:
     ExecutionMode jitMode;
 
 public:
-    bool IsInMemoryWorkItem() const 
-    { 
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-        return type != JsFunctionSerializedType; 
-#else
-        return true;
-#endif
-    }
-#if DBG
-    virtual bool DbgIsInMemoryWorkItem() const abstract;
-#endif
-
     virtual uint GetByteCodeCount() const abstract; 
     virtual uint GetFunctionNumber() const abstract; 
     virtual size_t GetDisplayName(_Out_writes_opt_z_(sizeInChars) WCHAR* displayName, _In_ size_t sizeInChars) abstract;
@@ -49,24 +36,11 @@ public:
 #if DBG_DUMP | defined(VTUNE_PROFILING)
     virtual void RecordNativeMap(uint32 nativeOffset, uint32 statementIndex) abstract;
 #endif
-    virtual void RecordNativeThrowMap(Js::SmallSpanSequenceIter& iter, uint32 nativeOffset, uint32 statementIndex) abstract;
 #if DBG_DUMP
     virtual void DumpNativeOffsetMaps() abstract;
     virtual void DumpNativeThrowSpanSequence() abstract;
 #endif
-#if _M_X64 || _M_ARM
-    virtual size_t RecordUnwindInfo(size_t offset, BYTE *unwindInfo, size_t size) abstract;
-#endif
-#if _M_ARM
-    virtual void RecordPdataEntry(int index, DWORD beginAddress, DWORD unwindData) abstract;
-    virtual void FinalizePdata() abstract;
-#endif
-    virtual void FinalizeNativeCode(Func *func) abstract;
-    virtual void InitializeReader(Js::ByteCodeReader &reader, Js::StatementReader &statementReader) abstract;
-    virtual void RecordNativeCodeSize(Func *func, size_t bytes, ushort pdataCount, ushort xdataSize) abstract;
-    virtual void RecordNativeCode(Func *func, const BYTE* sourceBuffer) abstract;
-    virtual void RecordNativeRelocation(size_t offset) abstract;
-    virtual void OnWorkItemProcessFail(NativeCodeGenerator *codeGen) abstract;
+    virtual void InitializeReader(Js::ByteCodeReader &reader, Js::StatementReader &statementReader) abstract;        
 
     ExecutionMode GetJitMode()
     {
@@ -97,161 +71,7 @@ public:
     void SetXdataSize(ushort xdataSize) { this->xdataSize = xdataSize; }
     ushort GetXdataSize() { return xdataSize; }
 
-    InMemoryCodeGenWorkItem *AsInMemoryWorkItem()
-    {
-        Assert(IsInMemoryWorkItem());
-        return (InMemoryCodeGenWorkItem *)this;
-    }
-};
-
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-struct SerializedCodeGenWorkItem sealed : public CodeGenWorkItem
-{
-public:
-    SerializedCodeGenWorkItem(Js::FunctionBody *const functionBody, PEWriter *writer)
-        : CodeGenWorkItem(JsFunctionSerializedType, functionBody)
-        , writer(writer)
-    {
-        // TODO [paulv]: Consider how we can use this.
-        this->jitMode = ExecutionMode::FullJit;
-    }
-#if DBG
-    virtual bool DbgIsInMemoryWorkItem() const override { return false; }
-#endif    
-    uint GetByteCodeCount() const override
-    {
-        return functionBody->GetByteCodeCount() +  functionBody->GetConstantCount();
-    }
-
-    uint GetFunctionNumber() const override 
-    {
-        return functionBody->GetFunctionNumber();
-    }
-
-    size_t GetDisplayName(_Out_writes_opt_z_(sizeInChars) WCHAR* displayName, _In_ size_t sizeInChars) override
-    {
-        const WCHAR* name = functionBody->GetExternalDisplayName();
-        size_t nameSizeInChars = wcslen(name) + 1;
-        size_t sizeInBytes = nameSizeInChars * sizeof(WCHAR);
-        if(displayName == NULL || sizeInChars < nameSizeInChars)
-        {
-           return nameSizeInChars;
-        }
-        js_memcpy_s(displayName, sizeInChars * sizeof(WCHAR), name, sizeInBytes);
-        return nameSizeInChars;
-    }
-
-    void GetEntryPointAddress(void** entrypoint, ptrdiff_t *size) override
-    {
-         Assert(entrypoint);
-         *entrypoint = (void *)GetCodeAddress();
-         *size = GetCodeSize();
-    }
-
-    uint GetInterpretedCount() const override
-    {
-        return this->functionBody->interpretedCount;
-    }
-
-    void Delete() override
-    {
-        HeapDelete(this);
-    }
-
-    void InitializeReader(Js::ByteCodeReader &reader, Js::StatementReader &statementReader) override
-    {
-        reader.Create(this->functionBody);
-        statementReader.Create(this->functionBody);
-    }
-
-#if DBG_DUMP | defined(VTUNE_PROFILING)
-    void RecordNativeMap(uint32 nativeOffset, uint32 statementIndex) override
-    {
-        writer->RecordNativeMap(nativeOffset, statementIndex);
-    }
-#endif
-
-#if DBG_DUMP
-    void DumpNativeOffsetMaps() override
-    {
-        writer->DumpNativeOffsetMaps();
-    }
-
-    void DumpNativeThrowSpanSequence() override
-    {
-        writer->DumpNativeThrowSpanSequence();
-    }
-#endif
-
-    void RecordNativeThrowMap(Js::SmallSpanSequenceIter& iter, uint32 nativeOffset, uint32 statementIndex) override
-    {
-        writer->RecordNativeThrowMap(nativeOffset, statementIndex);
-    }
-
-#if _M_X64 || _M_ARM
-    size_t RecordUnwindInfo(size_t offset, BYTE *unwindInfo, size_t size) override
-    {
-#if _M_X64
-        Assert(offset == 0);
-#endif
-        return writer->RecordUnwindInfo(offset, unwindInfo, size);
-    }
-#endif
-#if _M_ARM
-    void RecordPdataEntry(int index, DWORD beginAddress, DWORD unwindData) override
-    {
-        writer->RecordPdataEntry(index, beginAddress, unwindData);
-    }
-
-    void FinalizePdata() override
-    {
-        // Nothing to do.
-    }
-#endif
-
-    void RecordNativeCodeSize(Func *func, size_t bytes, ushort pdataCount, ushort xdataSize) override
-    {
-        SetCodeAddress(writer->RecordNativeCodeSize(bytes, pdataCount, xdataSize));
-        SetCodeSize(bytes);
-        SetPdataCount(pdataCount);
-        SetXdataSize(xdataSize);
-    }
-
-    void RecordNativeCode(Func *func, const BYTE* sourceBuffer) override
-    {
-        writer->RecordNativeCode(GetCodeSize(), sourceBuffer);
-    }
-
-    void RecordNativeRelocation(size_t offset) override
-    {
-        writer->RecordNativeRelocation(offset);
-    }
-
-    void FinalizeNativeCode(Func *func) override
-    {
-        writer->FinalizeNativeCode();
-    }
-
-    void OnWorkItemProcessFail(NativeCodeGenerator *codeGen) override
-    {
-        // Nothing to do.
-    }
-
-private:
-    PEWriter *writer;
-};
-#endif
-struct InMemoryCodeGenWorkItem : public CodeGenWorkItem, public JsUtil::Job
-{
 protected:
-    InMemoryCodeGenWorkItem(
-        JsUtil::JobManager *const manager,
-        Js::FunctionBody *const functionBody,
-        Js::EntryPointInfo* entryPointInfo,
-        bool isJitInDebugMode,
-        CodeGenWorkItemType type);
-    ~InMemoryCodeGenWorkItem();
-
     virtual uint GetLoopNumber() const
     {
         return Js::LoopHeader::NoLoop;
@@ -290,7 +110,6 @@ public:  // FIXME (t-doilij) this isn't how it should be
 
     void SetIRViewerOutput(Js::DynamicObject *output)
     {
-        Assert(IsInMemoryWorkItem());
         irViewerOutput = output;
     }
 
@@ -298,8 +117,7 @@ public:  // FIXME (t-doilij) this isn't how it should be
 private:
 
     void SetAllocation(EmitBufferAllocation *allocation) 
-    { 
-        Assert(IsInMemoryWorkItem());
+    {      
         this->allocation = allocation; 
     }
     EmitBufferAllocation *GetAllocation() { return allocation; }
@@ -309,17 +127,10 @@ public:
     {
         return this->entryPointInfo;
     }
-#if DBG
-    virtual bool DbgIsInMemoryWorkItem() const { return true; }
-#endif
-    void RecordNativeCodeSize(Func *func, size_t bytes, ushort pdataCount, ushort xdataSize) override;
-    void RecordNativeCode(Func *func, const BYTE* sourceBuffer) override;
 
-    void RecordNativeRelocation(size_t offset) override
-    {
-        // Nothing to do.
-    }
-
+    void RecordNativeCodeSize(Func *func, size_t bytes, ushort pdataCount, ushort xdataSize);
+    void RecordNativeCode(Func *func, const BYTE* sourceBuffer);
+    
     Js::CodeGenRecyclableData *RecyclableData() const
     {
         return recyclableData;
@@ -377,7 +188,7 @@ public:
     }
 
 #if _M_X64 || _M_ARM
-    size_t RecordUnwindInfo(size_t offset, BYTE *unwindInfo, size_t size) override
+    size_t RecordUnwindInfo(size_t offset, BYTE *unwindInfo, size_t size)
     {
 #if _M_X64
         Assert(offset == 0);
@@ -396,24 +207,24 @@ public:
 #endif
 
 #if _M_ARM
-    void RecordPdataEntry(int index, DWORD beginAddress, DWORD unwindData) override
+    void RecordPdataEntry(int index, DWORD beginAddress, DWORD unwindData)
     {
         RUNTIME_FUNCTION *function = GetAllocation()->allocation->xdata.GetPdataArray() + index;
         function->BeginAddress = beginAddress;
         function->UnwindData = unwindData;
     }
 
-    void FinalizePdata() override
+    void FinalizePdata()
     {
         GetAllocation()->allocation->RegisterPdata((ULONG_PTR)GetCodeAddress(), GetCodeSize());
     }
 #endif
 
-    void OnWorkItemProcessFail(NativeCodeGenerator *codeGen) override;
+    void OnWorkItemProcessFail(NativeCodeGenerator *codeGen);
 
-    void FinalizeNativeCode(Func *func) override;
+    void FinalizeNativeCode(Func *func);
 
-    void RecordNativeThrowMap(Js::SmallSpanSequenceIter& iter, uint32 nativeOffset, uint32 statementIndex) override
+    void RecordNativeThrowMap(Js::SmallSpanSequenceIter& iter, uint32 nativeOffset, uint32 statementIndex)
     {
         this->functionBody->RecordNativeThrowMap(iter, nativeOffset, statementIndex, this->GetEntryPoint(), GetLoopNumber());
     }
@@ -425,14 +236,14 @@ private:
     bool ShouldSpeculativelyJit() const;
 };
 
-struct JsFunctionCodeGen sealed : public InMemoryCodeGenWorkItem
+struct JsFunctionCodeGen sealed : public CodeGenWorkItem
 {
     JsFunctionCodeGen(
         JsUtil::JobManager *const manager,
         Js::FunctionBody *const functionBody,
         Js::EntryPointInfo* entryPointInfo,
         bool isJitInDebugMode)
-        : InMemoryCodeGenWorkItem(manager, functionBody, entryPointInfo, isJitInDebugMode, JsFunctionType)
+        : CodeGenWorkItem(manager, functionBody, entryPointInfo, isJitInDebugMode, JsFunctionType)
     {
     }
 
@@ -505,14 +316,14 @@ public:
     }
 };
 
-struct JsLoopBodyCodeGen sealed : public InMemoryCodeGenWorkItem
+struct JsLoopBodyCodeGen sealed : public CodeGenWorkItem
 {
     JsLoopBodyCodeGen(
         JsUtil::JobManager *const manager,
         Js::FunctionBody *const functionBody,
         Js::EntryPointInfo* entryPointInfo,
         bool isJitInDebugMode)
-        : InMemoryCodeGenWorkItem(manager, functionBody, entryPointInfo, isJitInDebugMode, JsLoopBodyWorkItemType)
+        : CodeGenWorkItem(manager, functionBody, entryPointInfo, isJitInDebugMode, JsLoopBodyWorkItemType)
         , symIdToValueTypeMap(null)
     { 
     }

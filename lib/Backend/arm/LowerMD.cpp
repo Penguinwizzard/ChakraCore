@@ -165,8 +165,7 @@ LowererMD::MDConvertFloat64ToInt32Opcode(const RoundMode roundMode)
 IR::Opnd *
 LowererMD::GenerateMemRef(void *addr, IRType type, IR::Instr *instr, bool dontEncode)
 {
-    IR::RegOpnd *baseOpnd = IR::RegOpnd::New(TyMachReg, this->m_func);
-    // RELOCJIT: Since this is already a MemRef, this is OK
+    IR::RegOpnd *baseOpnd = IR::RegOpnd::New(TyMachReg, this->m_func);    
     IR::AddrOpnd *addrOpnd = IR::AddrOpnd::New(addr, IR::AddrOpndKindDynamicMisc, this->m_func, dontEncode);
     LowererMD::CreateAssign(baseOpnd, addrOpnd, instr);
 
@@ -228,18 +227,6 @@ IR::Instr *
 LowererMD::LowerCall(IR::Instr * callInstr, Js::ArgSlot argCount)
 {
     IR::Instr *retInstr = callInstr;
-
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-    if (!this->m_func->IsInMemory() && callInstr->GetSrc1()->IsHelperCallOpnd())
-    {
-        IR::HelperCallOpnd *helperCall = callInstr->UnlinkSrc1()->AsHelperCallOpnd();
-        IR::Instr *prev = callInstr->m_prev;
-        Assert(prev);
-        callInstr->SetSrc1(m_lowerer->LoadDynamicHelperFunctionOpnd(callInstr, helperCall->m_fnHelper));
-        retInstr = prev->m_next;
-    }
-#endif
-
     IR::Opnd *targetOpnd = callInstr->GetSrc1();
     AssertMsg(targetOpnd, "Call without a target?");
 
@@ -251,9 +238,6 @@ LowererMD::LowerCall(IR::Instr * callInstr, Js::ArgSlot argCount)
     else
     {
         AssertMsg(targetOpnd->IsHelperCallOpnd(), "Why haven't we loaded the call target?");
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-        Assert(m_func->IsInMemory());
-#endif
         // Direct call
         //
         // load the address into a register because we cannot directly access more than 24 bit constants
@@ -946,29 +930,11 @@ LowererMD::GenerateStackProbe(IR::Instr *insertInstr, bool afterProlog)
     ThreadContext *threadContext = this->m_func->GetScriptContext()->GetThreadContext();
     bool doInterruptProbe = threadContext->DoInterruptProbe(this->m_func->GetJnFunction());
 
-    if (doInterruptProbe || !threadContext->GetIsThreadBound() 
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-        || !this->m_func->IsInMemory()
-#endif
-        )
+    if (doInterruptProbe || !threadContext->GetIsThreadBound())
     {
         // Load the current stack limit and add the current frame allocation.
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-        if (!this->m_func->IsInMemory())
         {
-            StackSym * paramSym = GetImplicitParamSlotSym(0);
-            this->CreateAssign(scratchOpnd, IR::SymOpnd::New(paramSym, TyMachReg, this->m_func), insertInstr);
-            this->CreateAssign(scratchOpnd, IR::IndirOpnd::New(scratchOpnd, Js::JavascriptFunction::GetTypeOffset(), TyMachReg, this->m_func), insertInstr);
-            this->CreateAssign(scratchOpnd, IR::IndirOpnd::New(scratchOpnd, Js::Type::GetJavascriptLibraryOffset(), TyMachReg, this->m_func), insertInstr);
-            this->CreateAssign(scratchOpnd, IR::IndirOpnd::New(scratchOpnd, Js::JavascriptLibrary::GetScriptContextOffset(), TyMachReg, this->m_func), insertInstr);
-            this->CreateAssign(scratchOpnd, IR::IndirOpnd::New(scratchOpnd, Js::ScriptContext::GetThreadContextOffset(), TyMachReg, this->m_func), insertInstr);
-            this->CreateAssign(scratchOpnd, IR::IndirOpnd::New(scratchOpnd, ThreadContext::GetStackLimitForCurrentThreadOffset(), TyMachReg, this->m_func), insertInstr);
-        }
-        else
-#endif
-        {
-            void *pLimit = threadContext->GetAddressOfStackLimitForCurrentThread();
-            // RELOCJIT: Relocatable JIT is supported in the other branch
+            void *pLimit = threadContext->GetAddressOfStackLimitForCurrentThread();            
             this->CreateAssign(scratchOpnd, IR::AddrOpnd::New(pLimit, IR::AddrOpndKindDynamicMisc, this->m_func), insertInstr);
             this->CreateAssign(scratchOpnd, IR::IndirOpnd::New(scratchOpnd, 0, TyMachReg, this->m_func), insertInstr);
         }
@@ -1054,36 +1020,10 @@ LowererMD::GenerateStackProbe(IR::Instr *insertInstr, bool afterProlog)
     this->CreateAssign(r0Opnd, IR::IntConstOpnd::New(frameSize, TyMachReg, this->m_func, true), insertInstr);
 
     IR::RegOpnd *r1Opnd = IR::RegOpnd::New(NULL, RegR1, TyMachReg, this->m_func);
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-    if (!this->m_func->IsInMemory())
-    {
-        StackSym * paramSym = GetImplicitParamSlotSym(0);
-        this->CreateAssign(r1Opnd, IR::SymOpnd::New(paramSym, TyMachReg, this->m_func), insertInstr);
-        this->CreateAssign(r1Opnd, IR::IndirOpnd::New(r1Opnd, Js::JavascriptFunction::GetTypeOffset(), TyMachReg, this->m_func), insertInstr);
-        this->CreateAssign(r1Opnd, IR::IndirOpnd::New(r1Opnd, Js::Type::GetJavascriptLibraryOffset(), TyMachReg, this->m_func), insertInstr);
-        this->CreateAssign(r1Opnd, IR::IndirOpnd::New(r1Opnd, Js::JavascriptLibrary::GetScriptContextOffset(), TyMachReg, this->m_func), insertInstr);
-    }
-    else
-#endif
-    {
-        this->CreateAssign(r1Opnd, this->m_lowerer->LoadScriptContextOpnd(insertInstr), insertInstr);
-    }
+    this->CreateAssign(r1Opnd, this->m_lowerer->LoadScriptContextOpnd(insertInstr), insertInstr);
 
     IR::RegOpnd *r2Opnd = IR::RegOpnd::New(null, RegR2, TyMachReg, m_func);
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-    if (!this->m_func->IsInMemory())
-    {
-        this->CreateAssign(r2Opnd, IR::SymOpnd::New(GetImplicitParamSlotSym(0), TyMachReg, this->m_func), insertInstr);
-        this->CreateAssign(r2Opnd, IR::IndirOpnd::New(r2Opnd, Js::JavascriptFunction::GetTypeOffset(), TyMachReg, this->m_func), insertInstr);
-        this->CreateAssign(r2Opnd, IR::IndirOpnd::New(r2Opnd, Js::Type::GetJavascriptLibraryOffset(), TyMachReg, this->m_func), insertInstr);
-        this->CreateAssign(r2Opnd, IR::IndirOpnd::New(r2Opnd, Js::JavascriptLibrary::GetJnHelperMethodsOffset(), TyMachReg, this->m_func), insertInstr);
-        this->CreateAssign(r2Opnd, IR::IndirOpnd::New(r2Opnd, IR::HelperProbeCurrentStack * sizeof(void *), TyMachReg, this->m_func), insertInstr);
-    }
-    else
-#endif
-    {
-        this->CreateAssign(r2Opnd, IR::HelperCallOpnd::New(IR::HelperProbeCurrentStack, this->m_func), insertInstr);
-    }
+    this->CreateAssign(r2Opnd, IR::HelperCallOpnd::New(IR::HelperProbeCurrentStack, this->m_func), insertInstr);
 
     instr = IR::Instr::New(afterProlog? Js::OpCode::BLX : Js::OpCode::BX, this->m_func);
     instr->SetSrc1(r2Opnd);
@@ -1129,17 +1069,8 @@ LowererMD::GenerateStackAllocation(IR::Instr *instr, uint32 allocSize, uint32 pr
     IR::Instr *movInstr = IR::Instr::New(Js::OpCode::LDIMM, r4Opnd, stackSizeOpnd, this->m_func);
     instr->InsertBefore(movInstr);
 
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-    if (!this->m_func->IsInMemory())
-    {
-        m_lowerer->LoadDynamicHelperFunctionOpnd(instr, IR::HelperCRT_chkstk, SCRATCH_REG);
-    }
-    else
-#endif
-    {
-        IR::Instr *movHelperAddrInstr = IR::Instr::New(Js::OpCode::LDIMM, targetOpnd, IR::HelperCallOpnd::New(IR::HelperCRT_chkstk, this->m_func), this->m_func);
-        instr->InsertBefore(movHelperAddrInstr);
-    }
+    IR::Instr *movHelperAddrInstr = IR::Instr::New(Js::OpCode::LDIMM, targetOpnd, IR::HelperCallOpnd::New(IR::HelperCRT_chkstk, this->m_func), this->m_func);
+    instr->InsertBefore(movHelperAddrInstr);
 
     IR::Instr * callInstr = IR::Instr::New(Js::OpCode::BLX, r4Opnd, targetOpnd, this->m_func);
     instr->InsertBefore(callInstr);
@@ -1452,11 +1383,7 @@ LowererMD::LowerEntryInstr(IR::EntryInstr * entryInstr)
     }
 
     bool useDynamicStackProbe =
-        (threadContext->DoInterruptProbe(this->m_func->GetJnFunction()) || !threadContext->GetIsThreadBound() 
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-            || !m_func->IsInMemory()
-#endif
-            ) &&
+        (threadContext->DoInterruptProbe(this->m_func->GetJnFunction()) || !threadContext->GetIsThreadBound()) &&
         !EncoderMD::CanEncodeModConst12(stackProbeStackHeight + Js::Constants::MinStackJIT);
 
     if (useDynamicStackProbe && !hasCalls)
@@ -2467,8 +2394,7 @@ LowererMD::ChangeToHelperCall(IR::Instr * callInstr, IR::JnHelperMethod helperMe
     IR::HelperCallOpnd *helperCallOpnd = Lowerer::CreateHelperCallOpnd(helperMethod, this->GetHelperArgsCount(), m_func);
     if (helperCallOpnd->IsDiagHelperCallOpnd())
     {
-        // Load arguments for the wrapper.
-        // RELOCJIT: We don't emit diagnostic helper calls in relocatable JIT.
+        // Load arguments for the wrapper.        
         this->LoadHelperArgument(callInstr, IR::AddrOpnd::New((Js::Var)IR::GetMethodOriginalAddress(helperMethod), IR::AddrOpndKindDynamicMisc, m_func));
         this->m_lowerer->LoadScriptContext(callInstr);
     }
@@ -3394,13 +3320,6 @@ bool LowererMD::GenerateFastCmXxTaggedInt(IR::Instr *instr)
     IR::Opnd * dst = instr->GetDst();
     IR::LabelInstr * helper = IR::LabelInstr::New(Js::OpCode::Label, m_func, true);
     IR::LabelInstr * fallthru = IR::LabelInstr::New(Js::OpCode::Label, m_func);
-
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-    if (!m_func->IsInMemory())
-    {
-        return false;
-    }
-#endif
 
     Assert(src1 && src2 && dst);
     
@@ -6570,12 +6489,7 @@ LowererMD::GenerateFastRecyclerAlloc(size_t allocSize, IR::RegOpnd* newObjDst, I
 
     IR::RegOpnd * allocatorAddressRegOpnd = IR::RegOpnd::New(TyMachPtr, this->m_func);
 
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-    Assert(m_func->IsInMemory());
-#endif
-    
-    // LDIMM allocatorAddressRegOpnd, allocator
-    // RELOCJIT: this is turned off in relocatable JIT for the time being.
+    // LDIMM allocatorAddressRegOpnd, allocator    
     IR::AddrOpnd* allocatorAddressOpnd = IR::AddrOpnd::New(allocatorAddress, IR::AddrOpndKindDynamicMisc, this->m_func);
     IR::Instr * loadAllocatorAddressInstr = IR::Instr::New(Js::OpCode::LDIMM, allocatorAddressRegOpnd, allocatorAddressOpnd, this->m_func);
     insertionPointInstr->InsertBefore(loadAllocatorAddressInstr);
@@ -8397,8 +8311,7 @@ void LowererMD::GenerateFastInlineBuiltInCall(IR::Instr* instr, IR::JnHelperMeth
         instr->InsertBefore(floatCall);
 
         // lr = MOV helperAddr
-        //      BLX lr
-        // RELOCJIT: Inlining is not currently supported for relocatable JIT
+        //      BLX lr        
         IR::AddrOpnd* targetAddr = IR::AddrOpnd::New((Js::Var)IR::GetMethodOriginalAddress(helperMethod), IR::AddrOpndKind::AddrOpndKindDynamicMisc, this->m_func);
         IR::RegOpnd *targetOpnd = IR::RegOpnd::New(null, RegLR, TyMachPtr, this->m_func);
         IR::Instr   *movInstr   = IR::Instr::New(Js::OpCode::LDIMM, targetOpnd, targetAddr, this->m_func);

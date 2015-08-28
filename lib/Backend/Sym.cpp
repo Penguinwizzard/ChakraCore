@@ -892,15 +892,10 @@ PropertySym::New(StackSym *stackSym, int32 propertyId, uint32 propertyIdIndex, u
     propertySym->m_kind = SymKindProperty;
 
     propertySym->m_propertyId = propertyId;
-    // We only need to store the derivation info if we're serializing native code and the property
-    // ID isn't fixed.
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-    if (func->IsInMemory() || propertyId < Js::PropertyIds::_countJSOnlyProperty)
-#endif
-    {
-        propertyIdIndex = (uint)-1;
-        inlineCacheIndex = (uint)-1;
-    }
+
+    propertyIdIndex = (uint)-1;
+    inlineCacheIndex = (uint)-1;
+
     propertySym->m_propertyIdIndex = propertyIdIndex;
     propertySym->m_inlineCacheIndex = inlineCacheIndex;
     Assert(propertyIdIndex == (uint)-1 || inlineCacheIndex == (uint)-1);

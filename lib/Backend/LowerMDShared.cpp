@@ -443,22 +443,12 @@ LowererMD::LowerLeaveNull(IR::Instr *finallyEndInstr)
                                           m_func);
         finallyEndInstr->InsertBefore(movR9);
 
-        IR::Opnd *targetOpnd = nullptr;
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-        if (!m_func->IsInMemory())
-        {
-            targetOpnd = m_lowerer->LoadDynamicHelperFunctionOpnd(finallyEndInstr, IR::HelperOp_ReturnFromCallWithFakeFrame, RegRCX);
-        }
-        else
-#endif
-        {
-            targetOpnd = IR::RegOpnd::New(null, RegRCX, TyMachReg, m_func);
-            IR::Instr *movTarget = IR::Instr::New(Js::OpCode::MOV,
-                targetOpnd,
-                IR::HelperCallOpnd::New(IR::HelperOp_ReturnFromCallWithFakeFrame, m_func),
-                m_func);
-            finallyEndInstr->InsertBefore(movTarget);
-        }
+        IR::Opnd *targetOpnd = IR::RegOpnd::New(null, RegRCX, TyMachReg, m_func);
+        IR::Instr *movTarget = IR::Instr::New(Js::OpCode::MOV,
+            targetOpnd,
+            IR::HelperCallOpnd::New(IR::HelperOp_ReturnFromCallWithFakeFrame, m_func),
+            m_func);
+        finallyEndInstr->InsertBefore(movTarget);
 
         IR::Instr *push = IR::Instr::New(Js::OpCode::PUSH, m_func);
         push->SetSrc1(targetOpnd);
@@ -662,8 +652,7 @@ LowererMD::ChangeToHelperCall(IR::Instr * callInstr,  IR::JnHelperMethod helperM
     IR::HelperCallOpnd *helperCallOpnd = Lowerer::CreateHelperCallOpnd(helperMethod, this->lowererMDArch.GetHelperArgsCount(), m_func);
     if (helperCallOpnd->IsDiagHelperCallOpnd())
     {
-        // Load arguments for the wrapper.
-        // RELOCJIT: We don't emit diagnostic helper calls in relocatable JIT.
+        // Load arguments for the wrapper.        
         this->LoadHelperArgument(callInstr, IR::AddrOpnd::New((Js::Var)IR::GetMethodOriginalAddress(helperMethod), IR::AddrOpndKindDynamicMisc, m_func));
         this->m_lowerer->LoadScriptContext(callInstr);
     }
@@ -2533,13 +2522,6 @@ bool LowererMD::GenerateFastCmXxTaggedInt(IR::Instr *instr)
 
     Assert(src1 && src2 && dst);
 
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-    if (!m_func->IsInMemory())
-    {
-        return false;
-    }
-#endif
-
     // Not tagged ints?
     if (src1->IsRegOpnd() && src1->AsRegOpnd()->IsNotInt())
     {
@@ -2647,8 +2629,7 @@ bool LowererMD::GenerateFastCmXxTaggedInt(IR::Instr *instr)
 
     // AND r1, (notEqualResult - equalResult)
     {
-        IR::Instr * and = IR::Instr::New(Js::OpCode::AND, r1, r1, m_func);
-        // RELOCJIT: For the time being, this is turned off in relocatable JIT
+        IR::Instr * and = IR::Instr::New(Js::OpCode::AND, r1, r1, m_func);        
         and->SetSrc2(IR::AddrOpnd::New((void*)((size_t)notEqualResult - (size_t)equalResult), IR::AddrOpndKind::AddrOpndKindDynamicMisc, this->m_func));
         instr->InsertBefore(and);
         Legalize(and);
@@ -2656,8 +2637,7 @@ bool LowererMD::GenerateFastCmXxTaggedInt(IR::Instr *instr)
 
     // ADD r1, equalResult
     {
-        IR::Instr * add = IR::Instr::New(Js::OpCode::ADD, r1, r1, m_func);
-        // RELOCJIT: We don't allow relocatable JIT above.
+        IR::Instr * add = IR::Instr::New(Js::OpCode::ADD, r1, r1, m_func);       
         add->SetSrc2(IR::AddrOpnd::New(equalResult, IR::AddrOpndKind::AddrOpndKindDynamicVar, this->m_func));
         instr->InsertBefore(add);
         Legalize(add);
@@ -5505,14 +5485,7 @@ IR::Instr * LowererMD::GenerateFloatAbs(IR::RegOpnd * regOpnd, IR::Instr * inser
         Assert(regOpnd->IsFloat32());        
         opnd = IR::MemRefOpnd::New((void *)&Js::JavascriptNumber::AbsFloatCst, TyFloat32, this->m_func, IR::AddrOpndKindDynamicFloatRef);
     }
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-    if (!m_func->IsInMemory())
-    {
-        IR::RegOpnd *absDoubleCstOpnd = IR::RegOpnd::New(TyMachReg, this->m_func);
-        CreateAssign(absDoubleCstOpnd, opnd, insertInstr);
-        opnd = IR::IndirOpnd::New(absDoubleCstOpnd, 0, TyMachDouble, this->m_func);
-    }
-#endif
+
     // ANDPS has smaller encoding then ANDPD
     IR::Instr * instr = IR::Instr::New(Js::OpCode::ANDPS, regOpnd, regOpnd, opnd, this->m_func);
     insertInstr->InsertBefore(instr);
@@ -5857,28 +5830,19 @@ LowererMD::GenerateCFGCheck(IR::Opnd * entryPointOpnd, IR::Instr * insertBeforeI
     IR::HelperCallOpnd *cfgCallOpnd = IR::HelperCallOpnd::New(IR::HelperGuardCheckCall, this->m_func);
     IR::Instr* cfgCallInstr = IR::Instr::New(Js::OpCode::CALL, this->m_func);
 
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-    if (!this->m_func->IsInMemory())
-    {
-        //RELOC JIT: Generating DynamicHelperFunction Operand for reloc jit
-        cfgCallInstr->SetSrc1(this->m_lowerer->LoadDynamicHelperFunctionOpnd(insertBeforeInstr, cfgCallOpnd->m_fnHelper));
-    }
-    else
-#endif
-    {
 #if _M_IX86
-        //call[__guard_check_icall_fptr]
-        cfgCallInstr->SetSrc1(cfgCallOpnd);
+    //call[__guard_check_icall_fptr]
+    cfgCallInstr->SetSrc1(cfgCallOpnd);
 #elif _M_X64
-        //mov rax, __guard_check_icall_fptr
-        IR::RegOpnd *targetOpnd = IR::RegOpnd::New(StackSym::New(TyMachPtr, m_func), RegRAX, TyMachPtr, this->m_func);
-        IR::Instr   *movInstr = IR::Instr::New(Js::OpCode::MOV, targetOpnd, cfgCallOpnd, this->m_func);
-        insertBeforeInstr->InsertBefore(movInstr);
+    //mov rax, __guard_check_icall_fptr
+    IR::RegOpnd *targetOpnd = IR::RegOpnd::New(StackSym::New(TyMachPtr, m_func), RegRAX, TyMachPtr, this->m_func);
+    IR::Instr   *movInstr = IR::Instr::New(Js::OpCode::MOV, targetOpnd, cfgCallOpnd, this->m_func);
+    insertBeforeInstr->InsertBefore(movInstr);
 
-        //call rax    
-        cfgCallInstr->SetSrc1(targetOpnd);
+    //call rax    
+    cfgCallInstr->SetSrc1(targetOpnd);
 #endif
-    }
+
 
     //CALL cfg(rax)
     insertBeforeInstr->InsertBefore(cfgCallInstr);
@@ -5901,10 +5865,6 @@ LowererMD::GenerateFastRecyclerAlloc(size_t allocSize, IR::RegOpnd* newObjDst, I
     IR::Opnd * endAddressOpnd;
     IR::Opnd * freeListOpnd;
 
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-    Assert(m_func->IsInMemory());
-#endif
-
     Js::ScriptContext* scriptContext = this->m_func->GetScriptContext();
     Recycler* recycler = scriptContext->GetRecycler();
     void* allocatorAddress;
@@ -5913,8 +5873,7 @@ LowererMD::GenerateFastRecyclerAlloc(size_t allocSize, IR::RegOpnd* newObjDst, I
     size_t alignedSize = HeapInfo::GetAlignedSizeNoCheck(allocSize);
 
     recycler->GetNormalHeapBlockAllocatorInfoForNativeAllocation(alignedSize, allocatorAddress, endAddressOffset, freeListOffset);
-
-    // RELOCJIT: These are turned off in relocatable JIT for now
+    
     endAddressOpnd = IR::MemRefOpnd::New((char*)allocatorAddress + endAddressOffset, TyMachPtr, this->m_func, IR::AddrOpndKindDynamicRecyclerAllocatorEndAddressRef);
     freeListOpnd = IR::MemRefOpnd::New((char*)allocatorAddress + freeListOffset, TyMachPtr, this->m_func, IR::AddrOpndKindDynamicRecyclerAllocatorFreeListRef);
     const IR::AutoReuseOpnd autoReuseTempOpnd(freeListOpnd, m_func);
@@ -8602,8 +8561,7 @@ void LowererMD::HelperCallForAsmMathBuiltin(IR::Instr* instr, IR::JnHelperMethod
         // Call CRT.
         IR::RegOpnd* floatCallDst = IR::RegOpnd::New(null, (RegNum)(FIRST_FLOAT_REG), (isFloat32)?TyFloat32:TyMachDouble, this->m_func);   // Dst in XMM0.
         // s1 = MOV helperAddr
-        IR::RegOpnd* s1 = IR::RegOpnd::New(TyMachReg, this->m_func);
-        // RELOCJIT: Inlining is not supported in relocatable JIT
+        IR::RegOpnd* s1 = IR::RegOpnd::New(TyMachReg, this->m_func);        
         IR::AddrOpnd* helperAddr = IR::AddrOpnd::New((Js::Var)IR::GetMethodOriginalAddress((isFloat32)?helperMethodFloat:helperMethodDouble), IR::AddrOpndKind::AddrOpndKindDynamicMisc, this->m_func);
         IR::Instr* mov = IR::Instr::New(Js::OpCode::MOV, s1, helperAddr, this->m_func);
         instr->InsertBefore(mov);
@@ -8693,8 +8651,7 @@ void LowererMD::GenerateFastInlineBuiltInCall(IR::Instr* instr, IR::JnHelperMeth
             instr->InsertBefore(floatCall);
 #else
             // s1 = MOV helperAddr
-            IR::RegOpnd* s1 = IR::RegOpnd::New(TyMachReg, this->m_func);
-            // RELOCJIT: Inlining is not supported in relocatable JIT
+            IR::RegOpnd* s1 = IR::RegOpnd::New(TyMachReg, this->m_func);            
             IR::AddrOpnd* helperAddr = IR::AddrOpnd::New((Js::Var)IR::GetMethodOriginalAddress(helperMethod), IR::AddrOpndKind::AddrOpndKindDynamicMisc, this->m_func);
             IR::Instr* mov = IR::Instr::New(Js::OpCode::MOV, s1, helperAddr, this->m_func);
             instr->InsertBefore(mov);
@@ -9076,8 +9033,7 @@ IR::Opnd* LowererMD::IsOpndNegZero(IR::Opnd* opnd, IR::Instr* instr)
     IR::Instr * movInstr = IR::Instr::New(Js::OpCode::MOVSD, regXMM0, opnd, this->m_func);
     instr->InsertBefore(movInstr);
 
-    IR::RegOpnd* reg1 = IR::RegOpnd::New(TyMachReg, this->m_func);
-    // RELOCJIT: Inlining is not supported in relocatable JIT
+    IR::RegOpnd* reg1 = IR::RegOpnd::New(TyMachReg, this->m_func);    
     IR::AddrOpnd* helperAddr = IR::AddrOpnd::New((Js::Var)IR::GetMethodOriginalAddress(IR::HelperIsNegZero), IR::AddrOpndKind::AddrOpndKindDynamicMisc, this->m_func);
     IR::Instr* mov = IR::Instr::New(Js::OpCode::MOV, reg1, helperAddr, this->m_func);
     instr->InsertBefore(mov);

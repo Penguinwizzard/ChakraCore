@@ -169,7 +169,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Opnd.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)PDataManager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Peeps.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)PEWriter.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)PreLowerPeeps.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)QueuedFullJitWorkItem.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Region.cpp" />
@@ -361,7 +360,6 @@
     <ClInclude Include="LowerMDShared.h" />
     <ClInclude Include="NativeCodeData.h" />
     <ClInclude Include="PDataManager.h" />
-    <ClInclude Include="PEWriter.h" />
     <ClInclude Include="PrologEncoder.h">
       <ExcludedFromBuild Condition="'$(Platform)'!='x64'">true</ExcludedFromBuild>
     </ClInclude>

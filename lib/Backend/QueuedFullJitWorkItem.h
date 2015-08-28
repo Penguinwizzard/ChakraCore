@@ -4,16 +4,16 @@
 
 #pragma once
 
-struct InMemoryCodeGenWorkItem;
+struct CodeGenWorkItem;
 
 class QueuedFullJitWorkItem : public JsUtil::DoublyLinkedListElement<QueuedFullJitWorkItem>
 {
 private:
-    InMemoryCodeGenWorkItem *const workItem;
+    CodeGenWorkItem *const workItem;
 
 public:
-    QueuedFullJitWorkItem(InMemoryCodeGenWorkItem *const workItem);
+    QueuedFullJitWorkItem(CodeGenWorkItem *const workItem);
 
 public:
-    InMemoryCodeGenWorkItem *WorkItem() const;
+    CodeGenWorkItem *WorkItem() const;
 };

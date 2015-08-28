@@ -2401,7 +2401,7 @@ JsErrorCode RunScriptCore(const wchar_t *script, JsSourceContext sourceContext, 
         };
 
         Js::Utf8SourceInfo* utf8SourceInfo;
-        scriptFunction = scriptContext->LoadScript(script, &si, &se, result != NULL, false, false, &utf8SourceInfo, Js::Constants::GlobalCode);
+        scriptFunction = scriptContext->LoadScript(script, &si, &se, result != NULL, false, &utf8SourceInfo, Js::Constants::GlobalCode);
 
         JsrtContext * context = JsrtContext::GetCurrent();
         context->OnScriptLoad(scriptFunction, utf8SourceInfo);
@@ -2459,7 +2459,7 @@ STDAPI_(JsErrorCode) JsRunScript(const wchar_t * script, JsSourceContext sourceC
     return RunScriptCore(script, sourceContext, sourceUrl, false, result);
 }
 
-JsErrorCode JsSerializeScriptCore(const wchar_t *script, BYTE *functionTable, int functionTableSize, unsigned char *buffer, unsigned long *bufferSize, bool serializeNative)
+JsErrorCode JsSerializeScriptCore(const wchar_t *script, BYTE *functionTable, int functionTableSize, unsigned char *buffer, unsigned long *bufferSize)
 {
     Js::JavascriptFunction *function;
     CompileScriptException se;
@@ -2495,7 +2495,7 @@ JsErrorCode JsSerializeScriptCore(const wchar_t *script, BYTE *functionTable, in
         };
 
         Js::Utf8SourceInfo* sourceInfo;
-        function = scriptContext->LoadScript(script, &si, &se, true, true, serializeNative, &sourceInfo, Js::Constants::GlobalCode);
+        function = scriptContext->LoadScript(script, &si, &se, true, true, &sourceInfo, Js::Constants::GlobalCode);
         return JsNoError;
     });
 
@@ -2521,40 +2521,7 @@ JsErrorCode JsSerializeScriptCore(const wchar_t *script, BYTE *functionTable, in
         LPCUTF8 utf8Code = sourceInfo->GetSource(L"JsSerializeScript");
 
         BEGIN_TEMP_ALLOCATOR(tempAllocator, scriptContext, L"ByteCodeSerializer");
-        HRESULT hr = S_OK;
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-        if (serializeNative)
-        {
-            BYTE *nativeCode = nullptr;
-            DWORD dwNativeCodeSize = 0;
-            BYTE *byteCodeBuffer = nullptr;
-            DWORD dwByteCodeSize = 0;
-            hr = Js::ByteCodeSerializer::SerializeToBuffer(scriptContext, tempAllocator, dwSourceCodeLength, utf8Code, 0, nullptr, functionBody, functionBody->GetHostSrcInfo(), true, &byteCodeBuffer, &dwByteCodeSize, GENERATE_BYTE_CODE_FOR_NATIVE);
-            if (SUCCEEDED(hr))
-            {
-                GenerateAllFunctionsForSerialization(scriptContext->GetNativeCodeGenerator(), functionBody, nullptr, 0, byteCodeBuffer, dwByteCodeSize, functionTableSize, functionTable, &nativeCode, &dwNativeCodeSize);
-
-                if (*bufferSize >= dwNativeCodeSize)
-                {
-                    memcpy_s(buffer, *bufferSize, nativeCode, dwNativeCodeSize);
-                }
-                else if (buffer != nullptr)
-                {
-                    return JsErrorInvalidArgument;
-                }
-
-                *bufferSize = dwNativeCodeSize;
-                CoTaskMemFree(nativeCode);
-                CoTaskMemFree(byteCodeBuffer);
-            }
-        }
-        else
-#else
-        Assert(!serializeNative);
-#endif
-        {
-            hr = Js::ByteCodeSerializer::SerializeToBuffer(scriptContext, tempAllocator, dwSourceCodeLength, utf8Code, 0, nullptr, functionBody, functionBody->GetHostSrcInfo(), false, &buffer, bufferSize);
-        }
+        HRESULT hr = Js::ByteCodeSerializer::SerializeToBuffer(scriptContext, tempAllocator, dwSourceCodeLength, utf8Code, 0, nullptr, functionBody, functionBody->GetHostSrcInfo(), false, &buffer, bufferSize);        
         END_TEMP_ALLOCATOR(tempAllocator, scriptContext);
 
         if (SUCCEEDED(hr))
@@ -2571,21 +2538,8 @@ JsErrorCode JsSerializeScriptCore(const wchar_t *script, BYTE *functionTable, in
 
 STDAPI_(JsErrorCode) JsSerializeScript(const wchar_t *script, unsigned char *buffer, unsigned long *bufferSize)
 {
-    return JsSerializeScriptCore(script, nullptr, 0, buffer, bufferSize, 
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-        Js::Configuration::Global.flags.IncludeNativeCodeWithSerializedByteCodes
-#else
-        false
-#endif
-        );
+    return JsSerializeScriptCore(script, nullptr, 0, buffer, bufferSize);
 }
-
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-STDAPI_(JsErrorCode) JsSerializeNativeScript(const wchar_t *script, BYTE *functionTable, int functionTableSize, unsigned char *buffer, unsigned long *bufferSize)
-{
-    return JsSerializeScriptCore(script, functionTable, functionTableSize, buffer, bufferSize, true);
-}
-#endif
 
 JsErrorCode RunSerializedScriptCore(const wchar_t *script, _In_ JsSerializedScriptLoadSourceCallback scriptLoadCallback, _In_ JsSerializedScriptUnloadCallback scriptUnloadCallback, unsigned char *buffer, JsSourceContext sourceContext, const wchar_t *sourceUrl, bool parseOnly, JsValueRef *result)
 {

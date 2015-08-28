@@ -80,11 +80,7 @@ IRBuilder::DoBailOnNoProfile()
     }
 
     Func *const topFunc = m_func->GetTopFunc();
-    if(
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-        !topFunc->IsInMemory() || 
-#endif
-        topFunc->m_jitTimeData->GetProfiledIterations() == 0)
+    if(topFunc->m_jitTimeData->GetProfiledIterations() == 0)
     {
         // The top function has not been profiled yet. Some switch must have been used to force jitting. This is not a
         // real-world case, but for the purpose of testing the JIT, it's beneficial to generate code in unprofiled paths.
@@ -375,9 +371,6 @@ IRBuilder::Build()
 
     m_switchBuilder.Init(m_func, m_tempAlloc, false);
 
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-    this->BuildRelocatableConstantLoads();
-#endif
     this->BuildConstantLoads();
     this->BuildGeneratorPreamble();
 
@@ -1057,51 +1050,6 @@ IRBuilder::BuildGeneratorPreamble()
     this->AddInstr(labelInstr, Js::Constants::NoByteCodeOffset);
 }
 
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-void
-IRBuilder::BuildRelocatableConstantLoads()
-{
-    if (this->m_func->IsInMemory())
-    {
-        return;
-    }
-
-    StackSym *javascriptLibrarySym = StackSym::New(TyMachPtr, this->m_func);
-    StackSym *scriptContextSym = StackSym::New(TyMachPtr, this->m_func);
-    StackSym *functionBodySym = StackSym::New(TyMachPtr, this->m_func);
-
-    this->m_func->SetJavascriptLibrarySym(javascriptLibrarySym);
-    this->m_func->SetScriptContextSym(scriptContextSym);
-    this->m_func->SetFunctionBodySym(functionBodySym);
-
-    IR::RegOpnd *funcExprOpnd = IR::RegOpnd::New(TyMachPtr, this->m_func);
-    IR::Instr *instr = IR::Instr::New(Js::OpCode::LdFuncExpr, funcExprOpnd, this->m_func);
-    this->AddInstr(instr, Js::Constants::NoByteCodeOffset);
-
-    IR::RegOpnd *javascriptLibraryOpnd = IR::RegOpnd::New(javascriptLibrarySym, TyMachReg, this->m_func);
-    javascriptLibraryOpnd->m_dontDeadStore = true;
-    instr = IR::Instr::New(Js::OpCode::Ld_A, javascriptLibraryOpnd, POINTER_OFFSET(funcExprOpnd, Js::JavascriptFunction, Type), this->m_func);
-    this->AddInstr(instr, Js::Constants::NoByteCodeOffset);
-
-    instr = IR::Instr::New(Js::OpCode::Ld_A, javascriptLibraryOpnd, POINTER_OFFSET(javascriptLibraryOpnd, Js::Type, JavascriptLibrary), this->m_func);
-    this->AddInstr(instr, Js::Constants::NoByteCodeOffset);
-
-    IR::RegOpnd *scriptContextOpnd = IR::RegOpnd::New(scriptContextSym, TyMachReg, this->m_func);
-    scriptContextOpnd->m_dontDeadStore = true;
-    instr = IR::Instr::New(Js::OpCode::Ld_A, scriptContextOpnd, POINTER_OFFSET(javascriptLibraryOpnd, Js::JavascriptLibrary, ScriptContext), this->m_func);
-    this->AddInstr(instr, Js::Constants::NoByteCodeOffset);
-
-    IR::RegOpnd *functionBodyOpnd = IR::RegOpnd::New(functionBodySym, TyMachReg, this->m_func);
-    functionBodyOpnd->m_dontDeadStore = true;
-    instr = IR::Instr::New(Js::OpCode::Ld_A, functionBodyOpnd, POINTER_OFFSET(funcExprOpnd, Js::JavascriptFunction, FunctionInfo), this->m_func);
-    this->AddInstr(instr, Js::Constants::NoByteCodeOffset);
-
-    instr = IR::Instr::New(Js::OpCode::Ld_A, functionBodyOpnd, POINTER_OFFSET(functionBodyOpnd, Js::FunctionInfo, FunctionBodyImpl), this->m_func);
-    this->AddInstr(instr, Js::Constants::NoByteCodeOffset);
-
-}
-#endif
-
 void
 IRBuilder::BuildConstantLoads()
 {
@@ -1117,17 +1065,8 @@ IRBuilder::BuildConstantLoads()
         Assert(this->RegIsConstant(reg));
         dstOpnd->m_sym->SetIsFromByteCodeConstantTable();
 
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-        if (!m_func->IsInMemory() && !Js::TaggedInt::Is(varConst))
-        {
-            BuildDynamicFunctionBodyValueLoad(FunctionBodyValue::FunctionBodyConstantVar, dstOpnd, reg, Js::Constants::NoByteCodeOffset);
-        }
-        else
-#endif
-        {
-            IR::Instr *instr = IR::Instr::NewConstantLoad(dstOpnd, varConst, m_func);
-            this->AddInstr(instr, Js::Constants::NoByteCodeOffset);
-        }
+        IR::Instr *instr = IR::Instr::NewConstantLoad(dstOpnd, varConst, m_func);
+        this->AddInstr(instr, Js::Constants::NoByteCodeOffset);
     }
 
 }
@@ -1171,51 +1110,6 @@ IRBuilder::BuildReg1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot R0)
         return;
     }
 
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-    // Need to treat some opcodes specially for serialization
-    if (!m_func->IsInMemory())
-    {
-        LibraryValue valueType = LibraryValue::ValueInvalid;
-
-        switch (newOpcode)
-        {
-        case Js::OpCode::LdC_A_Null:
-            valueType = LibraryValue::ValueNull;
-            break;
-
-        case Js::OpCode::LdUndef:
-            valueType = LibraryValue::ValueUndefined;
-            break;
-
-        case Js::OpCode::LdFalse:
-            valueType = LibraryValue::ValueFalse;
-            break;
-
-        case Js::OpCode::LdTrue:
-            valueType = LibraryValue::ValueTrue;
-            break;
-
-        case Js::OpCode::LdInfinity:
-            valueType = LibraryValue::ValuePositiveInfinity;
-            break;
-
-        case Js::OpCode::LdNaN:
-            valueType = LibraryValue::ValueNaN;
-            break;
-
-        case Js::OpCode::InitUndecl:
-            valueType = LibraryValue::ValueUndeclBlockVar;
-            break;
-        }
-
-        if (valueType != LibraryValue::ValueInvalid)
-        {
-            BuildDynamicLibraryValueLoad(valueType, this->BuildDstOpnd(dstRegSlot), offset);
-            return;
-        }
-    }
-#endif
-
     IR::Opnd * srcOpnd = null;
     bool isNotInt = false;
     bool dstIsCatchObject = false;
@@ -1256,8 +1150,7 @@ IRBuilder::BuildReg1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot R0)
         }
 
     case Js::OpCode::LdC_A_Null:
-        {
-            // RELOCJIT: Handled above
+        {            
             const auto addrOpnd = IR::AddrOpnd::New(m_func->GetScriptContext()->GetLibrary()->GetNull(), IR::AddrOpndKindDynamicVar, m_func, true);
             addrOpnd->SetValueType(ValueType::Null);
             srcOpnd = addrOpnd;
@@ -1266,8 +1159,7 @@ IRBuilder::BuildReg1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot R0)
         }
 
     case Js::OpCode::LdUndef:
-        {
-            // RELOCJIT: Handled above
+        {            
             const auto addrOpnd = IR::AddrOpnd::New(m_func->GetScriptContext()->GetLibrary()->GetUndefined(), IR::AddrOpndKindDynamicVar, m_func, true);
             addrOpnd->SetValueType(ValueType::Undefined);
             srcOpnd = addrOpnd;
@@ -1292,8 +1184,7 @@ IRBuilder::BuildReg1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot R0)
         }
 
     case Js::OpCode::LdFalse:
-        {
-            // RELOCJIT: Handled above
+        {            
             const auto addrOpnd = IR::AddrOpnd::New(m_func->GetScriptContext()->GetLibrary()->GetFalse(), IR::AddrOpndKindDynamicVar, m_func, true);
             addrOpnd->SetValueType(ValueType::Boolean);
             srcOpnd = addrOpnd;
@@ -1302,8 +1193,7 @@ IRBuilder::BuildReg1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot R0)
         }
 
     case Js::OpCode::LdTrue:
-        {
-            // RELOCJIT: Handled above
+        {            
             const auto addrOpnd = IR::AddrOpnd::New(m_func->GetScriptContext()->GetLibrary()->GetTrue(), IR::AddrOpndKindDynamicVar, m_func, true);
             addrOpnd->SetValueType(ValueType::Boolean);
             srcOpnd = addrOpnd;
@@ -1331,8 +1221,7 @@ IRBuilder::BuildReg1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot R0)
         this->SetTempUsed(dstRegSlot, TRUE);
         return;
 
-    case Js::OpCode::InitUndecl:
-        // RELOCJIT: Handled above
+    case Js::OpCode::InitUndecl:        
         srcOpnd = IR::AddrOpnd::New(m_func->GetScriptContext()->GetLibrary()->GetUndeclBlockVar(), IR::AddrOpndKindDynamicVar, m_func, true);
         srcOpnd->SetValueType(ValueType::PrimitiveOrObject);
         newOpcode = Js::OpCode::Ld_A;
@@ -2519,20 +2408,9 @@ IRBuilder::BuildReg1Unsigned1(Js::OpCode newOpcode, uint offset, Js::RegSlot R0,
         case Js::OpCode::InitUndeclSlot:
         {
             IR::Opnd * dstOpnd = this->BuildFieldOpnd(newOpcode, R0, C1, (Js::PropertyIdIndexType)-1, PropertyKindSlots);
-            IR::Opnd * srcOpnd;
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-            if (!this->m_func->IsInMemory())
-            {
-                IR::RegOpnd* opnd = IR::RegOpnd::New(TyVar, m_func);
-                BuildDynamicLibraryValueLoad(LibraryValue::ValueUndeclBlockVar, opnd, offset);
-                srcOpnd = opnd;
-            }
-            else
-#endif
-            {
-                srcOpnd = IR::AddrOpnd::New(m_func->GetScriptContext()->GetLibrary()->GetUndeclBlockVar(), IR::AddrOpndKindDynamicVar, this->m_func, true);
-                srcOpnd->SetValueType(ValueType::PrimitiveOrObject);
-            }
+            IR::Opnd * srcOpnd = IR::AddrOpnd::New(m_func->GetScriptContext()->GetLibrary()->GetUndeclBlockVar(), IR::AddrOpndKindDynamicVar, this->m_func, true);
+            srcOpnd->SetValueType(ValueType::PrimitiveOrObject);
+            
             IR::Instr* instr = IR::Instr::New(Js::OpCode::StSlot, dstOpnd, srcOpnd, m_func);
             this->AddInstr(instr, offset);
             return;
@@ -3103,36 +2981,14 @@ IRBuilder::BuildElementCP(Js::OpCode newOpcode, uint32 offset, Js::RegSlot insta
         // Store
         if (newOpcode == Js::OpCode::InitUndeclLetFld)
         {
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-            if (!this->m_func->IsInMemory())
-            {
-                IR::RegOpnd* opnd = IR::RegOpnd::New(TyVar, m_func);
-                BuildDynamicLibraryValueLoad(LibraryValue::ValueUndeclBlockVar, opnd, offset);
-                srcOpnd = opnd;
-            }
-            else
-#endif
-            {
-                srcOpnd = IR::AddrOpnd::New(m_func->GetScriptContext()->GetLibrary()->GetUndeclBlockVar(), IR::AddrOpndKindDynamicVar, this->m_func, true);
-                srcOpnd->SetValueType(ValueType::PrimitiveOrObject);
-            }
+            srcOpnd = IR::AddrOpnd::New(m_func->GetScriptContext()->GetLibrary()->GetUndeclBlockVar(), IR::AddrOpndKindDynamicVar, this->m_func, true);
+            srcOpnd->SetValueType(ValueType::PrimitiveOrObject);
             newOpcode = Js::OpCode::InitLetFld;
         }
         else if (newOpcode == Js::OpCode::InitUndeclConstFld)
         {
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-            if (!this->m_func->IsInMemory())
-            {
-                IR::RegOpnd* opnd = IR::RegOpnd::New(TyVar, m_func);
-                BuildDynamicLibraryValueLoad(LibraryValue::ValueUndeclBlockVar, opnd, offset);
-                srcOpnd = opnd;
-            }
-            else
-#endif
-            {
-                srcOpnd = IR::AddrOpnd::New(m_func->GetScriptContext()->GetLibrary()->GetUndeclBlockVar(), IR::AddrOpndKindDynamicVar, this->m_func, true);
-                srcOpnd->SetValueType(ValueType::PrimitiveOrObject);
-            }
+            srcOpnd = IR::AddrOpnd::New(m_func->GetScriptContext()->GetLibrary()->GetUndeclBlockVar(), IR::AddrOpndKindDynamicVar, this->m_func, true);
+            srcOpnd->SetValueType(ValueType::PrimitiveOrObject);
             newOpcode = Js::OpCode::InitConstFld;
         }
         else
@@ -3475,20 +3331,7 @@ IRBuilder::BuildAuxiliary(Js::OpCode newOpcode, uint32 offset)
                 }
 
                 dstOpnd = IR::SymOpnd::New(symDst, TyVar, m_func);
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-                if (!m_func->IsInMemory())
-                {
-                    IR::Opnd *      varArrayOpnd = this->BuildAuxArrayOpnd(AuxArrayValue::AuxVarArrayVarCount, offset, auxInsn->Offset);
-                    IR::Instr *loadInstr = IR::Instr::New(Js::OpCode::Ld_A, IR::RegOpnd::New(TyVar, m_func), IR::IndirOpnd::New(varArrayOpnd->AsRegOpnd(), (i + 1) * MachPtr, TyVar, m_func), m_func);
-                    this->AddInstr(loadInstr, offset);
-                    src1Opnd = loadInstr->GetDst();
-                }
-                else
-#endif
-                {
-                    // RELOCJIT: Handled in other branch
-                    src1Opnd = IR::AddrOpnd::New(vars->elements[i], IR::AddrOpndKindDynamicVar, this->m_func, true);
-                }
+                src1Opnd = IR::AddrOpnd::New(vars->elements[i], IR::AddrOpndKindDynamicVar, this->m_func, true);                
                 instr = IR::Instr::New(Js::OpCode::ArgOut_A, dstOpnd, src1Opnd, m_func);
 
                 this->AddInstr(instr, offset);
@@ -5432,20 +5275,7 @@ IRBuilder::BuildRegexFromPattern(Js::RegSlot dstRegSlot, uint32 patternIndex, ui
     IR::RegOpnd* dstOpnd = this->BuildDstOpnd(dstRegSlot);
     dstOpnd->SetValueType(ValueType::GetObject(ObjectType::RegExp));
 
-    IR::Opnd * regexOpnd;
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-    if (!m_func->IsInMemory())
-    {
-        IR::RegOpnd *dst = IR::RegOpnd::New(TyVar, m_func);
-        BuildDynamicFunctionBodyValueLoad(FunctionBodyValue::FunctionBodyLiteralRegex, dst, patternIndex, offset);
-        regexOpnd = dst;
-    }
-    else
-#endif
-    {
-        // RELOCJIT: We are OK generating an address here because relocatable JIT takes the other branch.
-        regexOpnd = IR::AddrOpnd::New(this->m_func->GetJnFunction()->GetLiteralRegex(patternIndex), IR::AddrOpndKindDynamicMisc, this->m_func);
-    }
+    IR::Opnd * regexOpnd = IR::AddrOpnd::New(this->m_func->GetJnFunction()->GetLiteralRegex(patternIndex), IR::AddrOpndKindDynamicMisc, this->m_func);    
 
     instr = IR::Instr::New(Js::OpCode::NewRegEx, dstOpnd, regexOpnd, this->m_func);
     this->AddInstr(instr, offset);
@@ -5648,151 +5478,28 @@ IRBuilder::InsertInitLoopBodyLoopCounter(uint loopNum)
 IR::Opnd *
 IRBuilder::BuildAuxArrayOpnd(AuxArrayValue auxArrayType, uint32 offset, uint32 auxArrayOffset, uint extraSlots)
 {
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-    if (!m_func->IsInMemory())
+    switch (auxArrayType)
     {
-        IR::RegOpnd *functionBodyOpnd = IR::RegOpnd::New(this->m_func->GetFunctionBodySym(), TyVar, m_func);
-        IR::RegOpnd *dstOpnd = IR::RegOpnd::New(TyVar, m_func);
-        IR::Instr *instr;
-
-        if (auxArrayType == AuxArrayValue::AuxVarArrayVarCount)
-        {
-            instr = IR::Instr::New(Js::OpCode::Ld_A, dstOpnd, POINTER_OFFSET(functionBodyOpnd, Js::FunctionBody, AuxiliaryContextData), this->m_func);
-            this->AddInstr(instr, offset);
-        }
-        else
-        {
-            instr = IR::Instr::New(Js::OpCode::Ld_A, dstOpnd, POINTER_OFFSET(functionBodyOpnd, Js::FunctionBody, AuxiliaryData), this->m_func);
-            this->AddInstr(instr, offset);
-        }
-
-        instr = IR::Instr::New(Js::OpCode::Ld_A, dstOpnd, POINTER_OFFSET(dstOpnd, Js::ByteBlock, Buffer), this->m_func);
-        this->AddInstr(instr, offset);
-
-        instr = IR::Instr::New(Js::OpCode::Add_Ptr, dstOpnd, dstOpnd, IR::IntConstOpnd::New(auxArrayOffset, TyUint32, this->m_func), this->m_func);
-        this->AddInstr(instr, offset);
-
-        return dstOpnd;
-    }
-    else
-#endif
-    {
-        switch (auxArrayType)
-        {
-        case AuxArrayValue::AuxPropertyIdArray:
-            return IR::AddrOpnd::New((Js::Var)Js::ByteCodeReader::ReadPropertyIdArray(auxArrayOffset, m_functionBody, extraSlots), IR::AddrOpndKindDynamicMisc, m_func);
-        case AuxArrayValue::AuxIntArray:
-            return IR::AddrOpnd::New((Js::Var)Js::ByteCodeReader::ReadAuxArray<int32>(auxArrayOffset, m_functionBody), IR::AddrOpndKindDynamicMisc, m_func);
-        case AuxArrayValue::AuxFloatArray:
-            return IR::AddrOpnd::New((Js::Var)Js::ByteCodeReader::ReadAuxArray<double>(auxArrayOffset, m_functionBody), IR::AddrOpndKindDynamicMisc, m_func);
-        case AuxArrayValue::AuxVarsArray:
-            return IR::AddrOpnd::New((Js::Var)Js::ByteCodeReader::ReadAuxArray<Js::Var>(auxArrayOffset, m_functionBody), IR::AddrOpndKindDynamicMisc, m_func);
-        case AuxArrayValue::AuxVarArrayVarCount:
-            return IR::AddrOpnd::New((Js::Var)Js::ByteCodeReader::ReadVarArrayVarCount(auxArrayOffset, m_functionBody), IR::AddrOpndKindDynamicMisc, m_func);
-        case AuxArrayValue::AuxFuncInfoArray:
-            return IR::AddrOpnd::New((Js::Var)Js::ByteCodeReader::ReadAuxArray<Js::FuncInfoEntry>(auxArrayOffset, m_functionBody), IR::AddrOpndKindDynamicMisc, m_func);
-        default:
-            Assert(false);
-            return nullptr;
-        }
+    case AuxArrayValue::AuxPropertyIdArray:
+        return IR::AddrOpnd::New((Js::Var)Js::ByteCodeReader::ReadPropertyIdArray(auxArrayOffset, m_functionBody, extraSlots), IR::AddrOpndKindDynamicMisc, m_func);
+    case AuxArrayValue::AuxIntArray:
+        return IR::AddrOpnd::New((Js::Var)Js::ByteCodeReader::ReadAuxArray<int32>(auxArrayOffset, m_functionBody), IR::AddrOpndKindDynamicMisc, m_func);
+    case AuxArrayValue::AuxFloatArray:
+        return IR::AddrOpnd::New((Js::Var)Js::ByteCodeReader::ReadAuxArray<double>(auxArrayOffset, m_functionBody), IR::AddrOpndKindDynamicMisc, m_func);
+    case AuxArrayValue::AuxVarsArray:
+        return IR::AddrOpnd::New((Js::Var)Js::ByteCodeReader::ReadAuxArray<Js::Var>(auxArrayOffset, m_functionBody), IR::AddrOpndKindDynamicMisc, m_func);
+    case AuxArrayValue::AuxVarArrayVarCount:
+        return IR::AddrOpnd::New((Js::Var)Js::ByteCodeReader::ReadVarArrayVarCount(auxArrayOffset, m_functionBody), IR::AddrOpndKindDynamicMisc, m_func);
+    case AuxArrayValue::AuxFuncInfoArray:
+        return IR::AddrOpnd::New((Js::Var)Js::ByteCodeReader::ReadAuxArray<Js::FuncInfoEntry>(auxArrayOffset, m_functionBody), IR::AddrOpndKindDynamicMisc, m_func);
+    default:
+        Assert(false);
+        return nullptr;
     }
 }
 
 IR::Opnd *
 IRBuilder::BuildAuxObjectLiteralTypeRefOpnd(int objectId, uint32 offset)
 {
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-    if (!m_func->IsInMemory())
-    {
-        IR::RegOpnd *functionBodyOpnd = IR::RegOpnd::New(this->m_func->GetFunctionBodySym(), TyMachReg, m_func);
-        IR::RegOpnd *dstOpnd = IR::RegOpnd::New(TyVar, m_func);
-
-        IR::Instr *instr = IR::Instr::New(Js::OpCode::Ld_A, dstOpnd, POINTER_OFFSET(functionBodyOpnd, Js::FunctionBody, ObjLiteralTypes), this->m_func);
-        this->AddInstr(instr, offset);
-
-        instr = IR::Instr::New(Js::OpCode::Add_Ptr, dstOpnd, dstOpnd, IR::IntConstOpnd::New(objectId * MachPtr, TyUint32, this->m_func), this->m_func);
-        this->AddInstr(instr, offset);
-
-        return dstOpnd;
-    }
-    else
-#endif
-    {
-        return IR::AddrOpnd::New(m_func->GetJnFunction()->GetObjectLiteralTypeRef(objectId), IR::AddrOpndKindDynamicMisc, this->m_func);
-    }
+    return IR::AddrOpnd::New(m_func->GetJnFunction()->GetObjectLiteralTypeRef(objectId), IR::AddrOpndKindDynamicMisc, this->m_func);
 }
-
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-void
-IRBuilder::BuildDynamicLibraryValueLoad(LibraryValue valueType, IR::RegOpnd *dstOpnd, uint32 offset)
-{
-    IR::RegOpnd *javascriptLibraryOpnd = IR::RegOpnd::New(this->m_func->GetJavascriptLibrarySym(), TyVar, m_func);
-
-    IR::IndirOpnd *indirOpnd = nullptr;
-
-    switch (valueType)
-    {
-    case LibraryValue::ValueUndefined:
-        indirOpnd = POINTER_OFFSET(javascriptLibraryOpnd, Js::JavascriptLibrary, UndefinedValue);
-        break;
-    case LibraryValue::ValueNull:
-        indirOpnd = POINTER_OFFSET(javascriptLibraryOpnd, Js::JavascriptLibrary, NullValue);
-        break;
-    case LibraryValue::ValueTrue:
-        indirOpnd = POINTER_OFFSET(javascriptLibraryOpnd, Js::JavascriptLibrary, BooleanTrue);
-        break;
-    case LibraryValue::ValueFalse:
-        indirOpnd = POINTER_OFFSET(javascriptLibraryOpnd, Js::JavascriptLibrary, BooleanFalse);
-        break;
-    case LibraryValue::ValuePositiveInfinity:
-        indirOpnd = POINTER_OFFSET(javascriptLibraryOpnd, Js::JavascriptLibrary, PositiveInfinity);
-        break;
-    case LibraryValue::ValueNaN:
-        indirOpnd = POINTER_OFFSET(javascriptLibraryOpnd, Js::JavascriptLibrary, NaN);
-        break;
-    case LibraryValue::ValueUndeclBlockVar:
-        indirOpnd = POINTER_OFFSET(javascriptLibraryOpnd, Js::JavascriptLibrary, UndeclBlockVar);
-        break;
-
-    default:
-        Assert(false);
-        break;
-    }
-
-    IR::Instr *instr = IR::Instr::New(Js::OpCode::Ld_A, dstOpnd, indirOpnd, this->m_func);
-    this->AddInstr(instr, offset);
-}
-
-void
-IRBuilder::BuildDynamicFunctionBodyValueLoad(FunctionBodyValue valueType, IR::RegOpnd *dstOpnd, uint32 index, uint32 offset)
-{
-    IR::RegOpnd *functionBodyOpnd = IR::RegOpnd::New(this->m_func->GetFunctionBodySym(), TyVar, m_func);
-
-    switch (valueType)
-    {
-    case FunctionBodyValue::FunctionBodyConstantVar:
-    {
-        IR::Instr *instr = IR::Instr::New(Js::OpCode::Ld_A, dstOpnd, POINTER_OFFSET(functionBodyOpnd, Js::FunctionBody, ConstTable), this->m_func);
-        this->AddInstr(instr, offset);
-
-        instr = IR::Instr::New(Js::OpCode::Ld_A, dstOpnd, BuildIndirOpnd(dstOpnd, (index - Js::FunctionBody::FirstRegSlot) * sizeof(Js::Var)), this->m_func);
-        this->AddInstr(instr, offset);
-        break;
-    }
-
-    case FunctionBodyValue::FunctionBodyLiteralRegex:
-    {
-        IR::Instr *instr = IR::Instr::New(Js::OpCode::Ld_A, dstOpnd, POINTER_OFFSET(functionBodyOpnd, Js::FunctionBody, LiteralRegexes), this->m_func);
-        this->AddInstr(instr, offset);
-
-        instr = IR::Instr::New(Js::OpCode::Ld_A, dstOpnd, BuildIndirOpnd(dstOpnd, index * sizeof(void *)), this->m_func);
-        this->AddInstr(instr, offset);
-        break;
-    }
-        
-    default:
-        Assert(false);
-        break;
-    }
-}
-#endif

@@ -923,7 +923,7 @@ LowererMDArch::LowerAsmJsLdElemHelper(IR::Instr * instr, bool isSimdLoad /*= fal
     if (m_func->GetJnFunction()->GetAsmJsFunctionInfo()->IsHeapBufferConst())
     {
         src1->AsIndirOpnd()->ReplaceBaseOpnd(src1->AsIndirOpnd()->UnlinkIndexOpnd());
-        Js::Var* module = (Js::Var*)m_func->m_workItem->AsInMemoryWorkItem()->GetEntryPoint()->GetModuleAddress();
+        Js::Var* module = (Js::Var*)m_func->m_workItem->GetEntryPoint()->GetModuleAddress();
         Js::ArrayBuffer* arrayBuffer = *(Js::ArrayBuffer**)(module + Js::AsmJsModuleMemory::MemoryTableBeginOffset);
         Assert(arrayBuffer);
         src1->AsIndirOpnd()->SetOffset((uintptr)arrayBuffer->GetBuffer(), true);
@@ -1000,7 +1000,7 @@ LowererMDArch::LowerAsmJsStElemHelper(IR::Instr * instr, bool isSimdStore /*= fa
     if (m_func->GetJnFunction()->GetAsmJsFunctionInfo()->IsHeapBufferConst())
     {
         dst->AsIndirOpnd()->ReplaceBaseOpnd(dst->AsIndirOpnd()->UnlinkIndexOpnd());
-        Js::Var* module = (Js::Var*)m_func->m_workItem->AsInMemoryWorkItem()->GetEntryPoint()->GetModuleAddress();
+        Js::Var* module = (Js::Var*)m_func->m_workItem->GetEntryPoint()->GetModuleAddress();
         Js::ArrayBuffer* arrayBuffer = *(Js::ArrayBuffer**)(module + Js::AsmJsModuleMemory::MemoryTableBeginOffset);
         Assert(arrayBuffer);
         dst->AsIndirOpnd()->SetOffset((uintptr)arrayBuffer->GetBuffer(), true);
@@ -1131,17 +1131,6 @@ LowererMDArch::LowerCall(IR::Instr * callInstr, uint32 argCount, RegNum regNum)
 {
     IR::Instr *retInstr = callInstr;
     callInstr->m_opcode = Js::OpCode::CALL;
-
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-    if (!this->m_func->IsInMemory() && callInstr->GetSrc1()->IsHelperCallOpnd())
-    {
-        IR::HelperCallOpnd *helperCall = callInstr->UnlinkSrc1()->AsHelperCallOpnd();
-        IR::Instr *prev = callInstr->m_prev;
-        Assert(prev);
-        callInstr->SetSrc1(this->lowererMD->m_lowerer->LoadDynamicHelperFunctionOpnd(callInstr, helperCall->m_fnHelper, regNum));
-        retInstr = prev->m_next;
-    }
-#endif
 
     if (callInstr->GetDst())
     {
@@ -1679,27 +1668,15 @@ LowererMDArch::GeneratePrologueStackProbe(IR::Instr *entryInstr, size_t frameSiz
     ThreadContext *threadContext = this->m_func->GetScriptContext()->GetThreadContext();
     bool doInterruptProbe = threadContext->DoInterruptProbe(this->m_func->GetJnFunction());
 
-    if (doInterruptProbe || !threadContext->GetIsThreadBound() 
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-        || !this->m_func->IsInMemory()
-#endif
-        )
+    if (doInterruptProbe || !threadContext->GetIsThreadBound())
     {
         // Load the current stack limit from the ThreadContext, then increment this value by the size of the
         // current frame. This is the value we'll compare against below.
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-        if (!this->m_func->IsInMemory())
-        {
-            stackLimitOpnd = this->lowererMD->m_lowerer->LoadStackLimitForCurrentThreadOpnd(insertInstr, RegEAX);
-        }
-        else
-#endif
-        {
-            stackLimitOpnd = IR::RegOpnd::New(NULL, RegEAX, TyMachReg, this->m_func);
-            void *pLimit = threadContext->GetAddressOfStackLimitForCurrentThread();
-            IR::MemRefOpnd * memOpnd = IR::MemRefOpnd::New(pLimit, TyMachReg, this->m_func);
-            this->lowererMD->CreateAssign(stackLimitOpnd, memOpnd, insertInstr);
-        }
+
+        stackLimitOpnd = IR::RegOpnd::New(NULL, RegEAX, TyMachReg, this->m_func);
+        void *pLimit = threadContext->GetAddressOfStackLimitForCurrentThread();
+        IR::MemRefOpnd * memOpnd = IR::MemRefOpnd::New(pLimit, TyMachReg, this->m_func);
+        this->lowererMD->CreateAssign(stackLimitOpnd, memOpnd, insertInstr);
 
         instr = IR::Instr::New(Js::OpCode::ADD, stackLimitOpnd, stackLimitOpnd,
                                IR::AddrOpnd::New((void*)frameSize, IR::AddrOpndKindConstant, this->m_func), this->m_func);
@@ -1715,8 +1692,7 @@ LowererMDArch::GeneratePrologueStackProbe(IR::Instr *entryInstr, size_t frameSiz
     else
     {
         // The incremented stack limit is a compile-time constant.
-        size_t scriptStackLimit = (size_t)threadContext->GetScriptStackLimit();
-        // RELOCJIT: We are OK generating an address here because relocatable JIT will force us to take the other path in the if.
+        size_t scriptStackLimit = (size_t)threadContext->GetScriptStackLimit();        
         stackLimitOpnd = IR::AddrOpnd::New((void *)(frameSize + scriptStackLimit), IR::AddrOpndKindDynamicMisc, this->m_func);
     }
 
@@ -1739,16 +1715,7 @@ LowererMDArch::GeneratePrologueStackProbe(IR::Instr *entryInstr, size_t frameSiz
     LoadHelperArgument(insertInstr, IR::IntConstOpnd::New(0, TyMachReg, m_func));
 
     // Load the arguments to the probe helper and do the call.
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-    if (!this->m_func->IsInMemory())
-    {
-        LoadHelperArgument(insertInstr, this->lowererMD->m_lowerer->LoadDynamicScriptContextOpnd(insertInstr, RegEAX));
-    }
-    else
-#endif
-    {
-        lowererMD->m_lowerer->LoadScriptContext(insertInstr);
-    }
+    lowererMD->m_lowerer->LoadScriptContext(insertInstr);
     this->lowererMD->LoadHelperArgument(
         insertInstr, IR::AddrOpnd::New((void*)frameSize, IR::AddrOpndKindConstant, this->m_func));
 
@@ -2204,19 +2171,9 @@ LowererMDArch::EmitUIntToFloat(IR::Opnd *dst, IR::Opnd *src, IR::Instr *instrIns
 
     // TODO: Encode indir with base as address opnd instead
     IR::RegOpnd * baseOpnd = IR::RegOpnd::New(TyMachPtr, this->m_func);
-
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-    if (!this->m_func->IsInMemory())
-    {
-        instr = IR::Instr::New(Js::OpCode::MOV, baseOpnd, this->lowererMD->m_lowerer->LoadLibraryValueOpnd(instrInsert, LibraryValue::ValueUintConvertConst), this->m_func);
-    }
-    else
-#endif
-    {
-        // RELOCJIT: We are OK generating an address here because relocatable JIT takes the other branch.
-        instr = IR::Instr::New(Js::OpCode::MOV, baseOpnd, IR::AddrOpnd::New((Js::Var)&Js::JavascriptNumber::UIntConvertConst,
-            IR::AddrOpndKindDynamicMisc, this->m_func), this->m_func);
-    }
+    
+    instr = IR::Instr::New(Js::OpCode::MOV, baseOpnd, IR::AddrOpnd::New((Js::Var)&Js::JavascriptNumber::UIntConvertConst,
+        IR::AddrOpndKindDynamicMisc, this->m_func), this->m_func);    
 
     instrInsert->InsertBefore(instr);
 

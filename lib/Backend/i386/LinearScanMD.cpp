@@ -106,8 +106,7 @@ LinearScanMD::GenerateBailOut(IR::Instr * instr, __in_ecount(registerSaveSymsCou
     // Pass in the bailout record
     //     push bailOutRecord
     {
-        IR::Instr *const newInstr = IR::Instr::New(Js::OpCode::PUSH, func);
-        // RELOCJIT: No bailouts in relocatable JIT
+        IR::Instr *const newInstr = IR::Instr::New(Js::OpCode::PUSH, func);       
         newInstr->SetSrc1(IR::AddrOpnd::New(bailOutInfo->bailOutRecord, IR::AddrOpndKindDynamicBailOutRecord, func, true));
         instr->InsertBefore(newInstr);
         newInstr->CopyNumber(instr);

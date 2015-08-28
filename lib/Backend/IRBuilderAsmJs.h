@@ -17,7 +17,7 @@ public:
     {
         func->m_workItem->InitializeReader(m_jnReader, m_statementReader);
         m_asmFuncInfo = m_func->GetJnFunction()->GetAsmJsFunctionInfo();
-        m_entryPoint = (Js::FunctionEntryPointInfo*)(((InMemoryCodeGenWorkItem *)func->m_workItem)->GetEntryPoint());
+        m_entryPoint = (Js::FunctionEntryPointInfo*)(func->m_workItem->GetEntryPoint());
         Assert(m_entryPoint);
         m_ModuleAddress = m_entryPoint->GetModuleAddress();
         Assert(m_ModuleAddress);

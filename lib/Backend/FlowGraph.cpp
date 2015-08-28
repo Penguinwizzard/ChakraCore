@@ -1398,11 +1398,7 @@ FlowGraph::UpdateRegionForBlock(BasicBlock * block, Region ** blockToRegion)
     }
     
     AssertMsg(region != NULL, "Failed to find region for block");
-    if (!region->ehBailoutData 
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-        && this->func->IsInMemory()
-#endif
-        )
+    if (!region->ehBailoutData)
     {
         region->AllocateEHBailoutData(this->func, tryInstr);
     }
@@ -2045,13 +2041,6 @@ FlowGraph::PeepCm(IR::Instr *instr)
 
     Func *func = instr->m_func;
 
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-    if (!func->IsInMemory())
-    {
-        return NULL;
-    }
-#endif
-
     // Find Ld_A
     IR::Instr *instrNext = instr->GetNextRealInstrOrLabel();
     IR::Instr *inlineeEndInstr = nullptr;
@@ -2191,10 +2180,8 @@ FlowGraph::PeepCm(IR::Instr *instr)
     }
 
     instrBr->m_opcode = newOpcode;
-
-    // RELOCJIT: We skip this peep in reloctable JIT for now
+    
     IR::AddrOpnd* trueOpnd = IR::AddrOpnd::New(func->GetScriptContext()->GetLibrary()->GetTrue(), IR::AddrOpndKindDynamicVar, func, true);
-    // RELOCJIT: We skip this peep in reloctable JIT for now
     IR::AddrOpnd* falseOpnd = IR::AddrOpnd::New(func->GetScriptContext()->GetLibrary()->GetFalse(), IR::AddrOpndKindDynamicVar, func, true);
     
     trueOpnd->SetValueType(ValueType::Boolean);

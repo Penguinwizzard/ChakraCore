@@ -67,7 +67,7 @@ public:
         Js::ProfileId callSiteIdInParentFunc = UINT16_MAX, bool isGetterSetter = false):
       m_alloc(alloc), 
       m_workItem(workItem),
-      m_jitTimeData(workItem->IsInMemoryWorkItem() ? ((InMemoryCodeGenWorkItem *)workItem)->RecyclableData()->JitTimeData() : nullptr),
+      m_jitTimeData(workItem->RecyclableData()->JitTimeData()),
       m_runtimeData(runtimeData),
       m_polymorphicInlineCacheInfo(polymorphicInlineCacheInfo),
       m_codeGenAllocators(codeGenAllocators),
@@ -186,11 +186,7 @@ public:
         bool doStackClosure = m_jnFunction->DoStackClosure() && !PHASE_OFF(Js::FrameDisplayFastPathPhase, this);
         Assert(!doStackClosure || doStackNestedFunc);
         this->stackClosure = doStackClosure && this->IsTopFunc();
-        if (m_workItem->Type() == JsFunctionType 
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-            || m_workItem->Type() == JsFunctionSerializedType
-#endif
-            )
+        if (m_workItem->Type() == JsFunctionType)
         {
             if (m_jnFunction->GetDoBackendArgumentsOptimization() && !m_jnFunction->GetHasTry())
             {
@@ -268,32 +264,22 @@ public:
     ArenaAllocator *GetCodeGenAllocator() const { return &this->m_codeGenAllocators->allocator; }
     CodeGenAllocators * const GetCodeGenAllocators()
     { 
-        // If we're serializing, anything generated in dynamic memory won't get encoded into the PE
-        Assert(m_workItem->IsInMemoryWorkItem());
         return this->GetTopFunc()->m_codeGenAllocators; 
     }
     NativeCodeData::Allocator *GetNativeCodeDataAllocator() 
     { 
-        // If we're serializing, anything generated in dynamic memory won't get encoded into the PE
-        Assert(m_workItem->IsInMemoryWorkItem());
         return &this->GetTopFunc()->nativeCodeDataAllocator; 
     }
     NativeCodeData::Allocator *GetTransferDataAllocator() 
     { 
-        // If we're serializing, anything generated in dynamic memory won't get encoded into the PE
-        Assert(m_workItem->IsInMemoryWorkItem());
         return &this->GetTopFunc()->transferDataAllocator; 
     }
     CodeGenNumberAllocator * GetNumberAllocator()
     {
-        // If we're serializing, anything generated in dynamic memory won't get encoded into the PE
-        Assert(m_workItem->IsInMemoryWorkItem());
         return this->numberAllocator; 
     }
     EmitBufferManager<CriticalSection> *GetEmitBufferManager() const 
     { 
-        // If we're serializing, anything generated in dynamic memory won't get encoded into the PE
-        Assert(m_workItem->IsInMemoryWorkItem());
         return &this->m_codeGenAllocators->emitBufferManager; 
     }
 
@@ -314,9 +300,6 @@ public:
     bool DoStackScopeSlots() const { return this->stackClosure; }
     bool IsBackgroundJIT() const { return this->m_isBackgroundJIT; }
     bool HasArgumentSlot() const { return this->GetInParamsCount() != 0 && !this->IsLoopBody(); }
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-    bool IsInMemory() const { return this->m_workItem->IsInMemoryWorkItem(); }
-#endif
     bool IsLoopBody() const;
     bool IsLoopBodyInTry() const;
     bool CanAllocInPreReservedHeapPageSegment();
@@ -334,11 +317,7 @@ public:
     bool DoGlobOpt() const
     {
         return
-            !PHASE_OFF(Js::GlobOptPhase, this->GetJnFunction()) &&
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-            IsInMemory() &&
-#endif
-            !IsSimpleJit() &&
+            !PHASE_OFF(Js::GlobOptPhase, this->GetJnFunction()) && !IsSimpleJit() &&
             (!GetTopFunc()->HasTry() || GetTopFunc()->CanOptimizeTryCatch());
     }
 

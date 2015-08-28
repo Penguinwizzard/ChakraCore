@@ -222,8 +222,7 @@ LinearScanMD::GenerateBailOut(
     const auto LoadRegSaveSpaceIntoScratch = [&](const RegNum reg)
     {
         // Load the register save space address for the specified register into the scratch register:
-        //     ldimm SCRATCH_REG, regSaveSpace
-        // RELOCJIT: Profiling/bailout is not currently supported for relocatable JIT
+        //     ldimm SCRATCH_REG, regSaveSpace        
         LinearScan::InsertMove(
             IR::RegOpnd::New(null, SCRATCH_REG, TyMachPtr, func),
             IR::AddrOpnd::New(&registerSaveSpace[reg - 1], IR::AddrOpndKindDynamicMisc, func),
@@ -296,8 +295,7 @@ LinearScanMD::GenerateBailOut(
     // Pass in the bailout record
     //     ldimm r0, bailOutRecord
     LinearScan::InsertMove(
-        IR::RegOpnd::New(null, RegR0, TyMachPtr, func),
-        // RELOCJIT: Bailouts not supported.
+        IR::RegOpnd::New(null, RegR0, TyMachPtr, func),        
         IR::AddrOpnd::New(bailOutInfo->bailOutRecord, IR::AddrOpndKindDynamicBailOutRecord, func, true),
         instr);
 

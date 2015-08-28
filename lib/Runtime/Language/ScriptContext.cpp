@@ -140,9 +140,6 @@ namespace Js
 #ifdef ENABLE_DOM_FAST_PATH
         , domFastPathIRHelperMap(nullptr)
 #endif
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-        , nativeModules(nullptr)
-#endif
         , intConstPropsOnGlobalObject(nullptr)
         , intConstPropsOnGlobalUserObject(nullptr)
 #ifdef ARRLOG
@@ -461,33 +458,6 @@ namespace Js
         }
 #endif
 
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-        if (nativeModules != nullptr)
-        {
-            EachNativeModule(
-                [=](Js::NativeModule *nativeModule) -> void
-            {
-                if (nativeModule->loadedInMemory)
-                {
-                    HeapDeleteArray(nativeModule->exportCount, nativeModule->exports);
-#if defined(_M_X64) || defined(_M_ARM32_OR_ARM64)
-                    HeapDeleteArray(nativeModule->pdataCount, nativeModule->pdataTable);
-                    if (nativeModule->functionTableHandle)
-                    {
-                        NtdllLibrary::Instance->DeleteGrowableFunctionTable(nativeModule->functionTableHandle);
-                        nativeModule->functionTableHandle = nullptr;
-                    }
-#endif
-                    VirtualFree(nativeModule->textSection, nativeModule->textSectionSize, MEM_DECOMMIT | MEM_RELEASE);
-                }
-                HeapDelete(nativeModule);
-            });
-
-            nativeModules->Clear();
-            HeapDelete(nativeModules);
-            nativeModules = nullptr;
-        }
-#endif
         if (this->interpreterThunkEmitter != null)
         {
             HeapDelete(interpreterThunkEmitter);
@@ -1663,7 +1633,7 @@ namespace Js
         Js::JavascriptError::MapAndThrowError(this, E_FAIL);
     }
 
-    JavascriptFunction* ScriptContext::LoadScript(const wchar_t* script, SRCINFO const * pSrcInfo, CompileScriptException * pse, bool isExpression, bool disableDeferredParse, bool isForNativeCode, Utf8SourceInfo** ppSourceInfo, const wchar_t *rootDisplayName)
+    JavascriptFunction* ScriptContext::LoadScript(const wchar_t* script, SRCINFO const * pSrcInfo, CompileScriptException * pse, bool isExpression, bool disableDeferredParse, Utf8SourceInfo** ppSourceInfo, const wchar_t *rootDisplayName)
     {
         if (pSrcInfo == null)
         {
@@ -1722,9 +1692,6 @@ namespace Js
             // the script.
             // This is global function called from jc or scriptengine::parse, in both case we can return the value to the caller.
             ULONG grfscr = fscrGlobalCode | (isExpression ? fscrReturnExpression : 0);
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-            grfscr |= (isForNativeCode ? fscrIsNativeCode : 0);
-#endif
             if (!disableDeferredParse && (length > Parser::GetDeferralThreshold(sourceContextInfo->sourceDynamicProfileManager)))
             {
                 grfscr |= fscrDeferFncParse;
@@ -1767,7 +1734,7 @@ namespace Js
         }
     }
 
-    JavascriptFunction* ScriptContext::LoadScript(LPCUTF8 script, size_t cb, SRCINFO const * pSrcInfo, CompileScriptException * pse, bool isExpression, bool disableDeferredParse, bool isForNativeCode, Utf8SourceInfo** ppSourceInfo, const wchar_t *rootDisplayName)
+    JavascriptFunction* ScriptContext::LoadScript(LPCUTF8 script, size_t cb, SRCINFO const * pSrcInfo, CompileScriptException * pse, bool isExpression, bool disableDeferredParse, Utf8SourceInfo** ppSourceInfo, const wchar_t *rootDisplayName)
     {
         if (pSrcInfo == null)
         {
@@ -1790,9 +1757,6 @@ namespace Js
             // Invoke the parser, passing in the global function name, which we will then run to execute
             // the script.
             ULONG grfscr = fscrGlobalCode | (isExpression ? fscrReturnExpression : 0);
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-            grfscr |= (isForNativeCode ? fscrIsNativeCode : 0);
-#endif
             if (!disableDeferredParse && (cb > Parser::GetDeferralThreshold(sourceContextInfo->sourceDynamicProfileManager)))
             {
                 grfscr |= fscrDeferFncParse;
@@ -5269,25 +5233,6 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
     void ScriptContext::RecordMissingPropertyCacheAttempt()
     {
         this->missingPropertyCacheAttempts++;
-    }
-#endif
-
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-    bool ScriptContext::TryGetNativeModule(BYTE *moduleBase, NativeModule **nativeModule)
-    {
-        return nativeModules && nativeModules->TryGetValue(moduleBase, nativeModule);
-    }
-
-    void ScriptContext::AddNativeModule(BYTE *moduleBase, NativeModule *nativeModule)
-    {
-        if (!nativeModules || !nativeModules->ContainsKey(moduleBase))
-        {
-            if (!nativeModules)
-            {
-                nativeModules = new NativeModuleMap(&HeapAllocator::Instance);
-            }
-            nativeModules->Add(moduleBase, nativeModule);
-        }
     }
 #endif
 

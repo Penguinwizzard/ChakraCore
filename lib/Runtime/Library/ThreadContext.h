@@ -525,10 +525,6 @@ private:
     IdleDecommitPageAllocator pageAllocator;
     Recycler* recycler;
 
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-    HCRYPTPROV hProv;
-#endif
-    
     // Fake RecyclerWeakReference for built-in properties
     class StaticPropertyRecordReference : public RecyclerWeakReference<const Js::PropertyRecord>
     {

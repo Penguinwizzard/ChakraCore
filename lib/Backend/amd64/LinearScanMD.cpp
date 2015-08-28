@@ -254,8 +254,7 @@ LinearScanMD::GenerateBailOut(IR::Instr * instr, __in_ecount(registerSaveSymsCou
     // Pass in the bailout record
     //     mov  rcx, bailOutRecord
     Lowerer::InsertMove(
-        IR::RegOpnd::New(null, RegRCX, TyMachPtr, func),
-        // RELOCJIT: Bailouts not supported.
+        IR::RegOpnd::New(null, RegRCX, TyMachPtr, func),        
         IR::AddrOpnd::New(bailOutInfo->bailOutRecord, IR::AddrOpndKindDynamicBailOutRecord, func, true),
         instr);
 

@@ -466,9 +466,6 @@ EncoderMD::EmitImmed(IR::Opnd * opnd, int opSize, int sbit, bool allow64Immediat
     switch (opnd->GetKind())
     {
     case IR::OpndKindAddr:
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-        Assert(m_func->IsInMemory() || !opnd->AsAddrOpnd()->IsDynamic());
-#endif
         value = (size_t)opnd->AsAddrOpnd()->m_address;
         goto intConst;
 
@@ -489,9 +486,6 @@ intConst:
         break;
 
     case IR::OpndKindHelperCall:
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-        Assert(m_func->IsInMemory());
-#endif
         AssertMsg(this->GetOpndSize(opnd) == 8, "HelperCall opnd must be 64 bit");
         value = (size_t)IR::GetMethodAddress(opnd->AsHelperCallOpnd());
         break;
@@ -501,9 +495,6 @@ intConst:
         break;
 
     case IR::OpndKindMemRef:
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-        Assert(m_func->IsInMemory() || Js::TaggedInt::Is(opnd->AsMemRefOpnd()->GetMemLoc()));
-#endif
         value = (size_t)opnd->AsMemRefOpnd()->GetMemLoc();
         break;
 
@@ -1414,8 +1405,7 @@ EncoderMD::ApplyRelocs(size_t codeBufferAddress_)
         case RelocTypeCallPcrel: 
             AssertMsg(UNREACHED, "PC relative calls not yet supported on amd64");
 #if 0
-            {
-                Assert(m_func->IsInMemory());
+            {                
                 pcrel = (uint32)(codeBufferAddress + (BYTE*)reloc->m_ptr - m_encoder->m_encodeBuffer + 4);
                  *(uint32 *)relocAddress -= pcrel;
                 break;
@@ -1446,15 +1436,7 @@ EncoderMD::ApplyRelocs(size_t codeBufferAddress_)
             {
                 IR::LabelInstr *labelInstr = *(IR::LabelInstr**)relocAddress;
                 AssertMsg(labelInstr->GetPC() != null, "Branch to unemitted label?");
-                *(size_t *)relocAddress = (size_t)(labelInstr->GetPC() - m_encoder->m_encodeBuffer + codeBufferAddress_);
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-                // If we're serializing, we shouldn't be fixing up anything outside of the code
-                // we're emitting at the moment. Everything else requires import/export.
-                Assert(m_func->IsInMemory() ||
-                    (labelInstr->GetPC() >= m_encoder->m_encodeBuffer && 
-                     labelInstr->GetPC() < (m_encoder->m_encodeBuffer + m_encoder->m_encodeBufferSize)));
-#endif
-                this->m_func->m_workItem->RecordNativeRelocation(codeBufferAddress_ + (BYTE*)reloc->m_ptr - m_encoder->m_encodeBuffer);
+                *(size_t *)relocAddress = (size_t)(labelInstr->GetPC() - m_encoder->m_encodeBuffer + codeBufferAddress_);                
                 break;
             }     
         case RelocTypeLabel:

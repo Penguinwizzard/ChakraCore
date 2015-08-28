@@ -3395,14 +3395,12 @@ IR::Instr* IR::Instr::NewConstantLoad(IR::RegOpnd* dstOpnd, Js::Var varConst, Fu
         Js::RecyclableObject *obj;
 
         if (varConst == (Js::Var)&Js::NullFrameDisplay)
-        {
-            // RELOCJIT: Handled above
+        {            
             instr = IR::Instr::New(Js::OpCode::Ld_A, dstOpnd,
                 IR::AddrOpnd::New((Js::Var)&Js::NullFrameDisplay, IR::AddrOpndKindDynamicMisc, func), func);
         }
         else if (varConst == (Js::Var)&Js::StrictNullFrameDisplay)
-        {
-            // RELOCJIT: Handled above
+        {         
             instr = IR::Instr::New(Js::OpCode::Ld_A, dstOpnd,
                 IR::AddrOpnd::New((Js::Var)&Js::StrictNullFrameDisplay, IR::AddrOpndKindDynamicMisc, func), func);
         }
@@ -3414,8 +3412,7 @@ IR::Instr* IR::Instr::NewConstantLoad(IR::RegOpnd* dstOpnd, Js::Var varConst, Fu
             {
             case Js::TypeIds_String:
             {
-                obj = Js::RecyclableObject::FromVar(varConst);
-                // RELOCJIT: Handled above
+                obj = Js::RecyclableObject::FromVar(varConst);                
                 srcOpnd = IR::AddrOpnd::New(obj, IR::AddrOpndKindDynamicVar, func, true);
                 instr = IR::Instr::New(Js::OpCode::LdStr, dstOpnd, srcOpnd, func);
                 Assert(dstOpnd->m_sym->m_isSingleDef);
@@ -3459,8 +3456,7 @@ IR::Instr* IR::Instr::NewConstantLoad(IR::RegOpnd* dstOpnd, Js::Var varConst, Fu
             default:
                 valueType = ValueType::GetObject(ObjectType::Object);
             dynamicVar:
-                obj = Js::RecyclableObject::FromVar(varConst);
-                // RELOCJIT: Handled above
+                obj = Js::RecyclableObject::FromVar(varConst);                
                 srcOpnd = IR::AddrOpnd::New(obj, IR::AddrOpndKindDynamicVar, func, true);
                 instr = IR::Instr::New(Js::OpCode::Ld_A, dstOpnd, srcOpnd, func);
                 if (dstOpnd->m_sym->IsSingleDef())

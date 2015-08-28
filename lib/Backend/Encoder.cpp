@@ -290,12 +290,7 @@ Encoder::Encode()
 
     workItem->RecordNativeCode(m_func, m_encodeBuffer);
     
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-    if (this->m_func->IsInMemory())
-#endif
-    {
-        m_func->GetScriptContext()->GetThreadContext()->SetValidCallTargetForCFG((PVOID) workItem->GetCodeAddress());
-    }
+    m_func->GetScriptContext()->GetThreadContext()->SetValidCallTargetForCFG((PVOID) workItem->GetCodeAddress());
     
 
 #ifdef _M_X64
@@ -306,206 +301,196 @@ Encoder::Encode()
     workItem->SetCodeAddress(workItem->GetCodeAddress() | 0x1); // Set thumb mode
 #endif
 
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-    if (!this->m_func->IsInMemory())
+    Js::EntryPointInfo* entryPointInfo = this->m_func->m_workItem->GetEntryPoint();
+    const bool isSimpleJit = m_func->IsSimpleJit();
+    Assert(
+        isSimpleJit ||
+        entryPointInfo->GetJitTransferData() != null && !entryPointInfo->GetJitTransferData()->GetIsReady());
+
+    if (this->m_inlineeFrameMap->Count() > 0 && 
+        !(this->m_inlineeFrameMap->Count() == 1 && this->m_inlineeFrameMap->Item(0).record == nullptr))
     {
-        Assert(this->m_func->pinnedTypeRefs == nullptr && this->m_func->propertyGuardsByPropertyId == nullptr &&
-            this->m_func->singleTypeGuards == nullptr && this->m_func->equivalentTypeGuards == nullptr);
+        AssertMsg(!this->m_func->IsLoopBody(), "Loop body does not support inlining.");
+        Js::FunctionEntryPointInfo* functionEntryPointInfo = static_cast<Js::FunctionEntryPointInfo*>(entryPointInfo);
+        functionEntryPointInfo->RecordInlineeFrameMap(m_inlineeFrameMap);
     }
-    else
-#endif
+
+    if (this->m_bailoutRecordMap->Count() > 0)
     {
-        Js::EntryPointInfo* entryPointInfo = this->m_func->m_workItem->AsInMemoryWorkItem()->GetEntryPoint();
-        const bool isSimpleJit = m_func->IsSimpleJit();
-        Assert(
-            isSimpleJit ||
-            entryPointInfo->GetJitTransferData() != null && !entryPointInfo->GetJitTransferData()->GetIsReady());
+        entryPointInfo->RecordBailOutMap(m_bailoutRecordMap);
+    }
 
-        if (this->m_inlineeFrameMap->Count() > 0 && 
-            !(this->m_inlineeFrameMap->Count() == 1 && this->m_inlineeFrameMap->Item(0).record == nullptr))
+    if (this->m_func->pinnedTypeRefs != null)
+    {
+        Assert(!isSimpleJit);
+
+        Func::TypeRefSet* pinnedTypeRefs = this->m_func->pinnedTypeRefs;
+        int pinnedTypeRefCount = pinnedTypeRefs->Count();
+        void** compactPinnedTypeRefs = HeapNewArrayZ(void*, pinnedTypeRefCount);
+
+        int index = 0;
+        pinnedTypeRefs->Map([compactPinnedTypeRefs, &index](void* typeRef) -> void
         {
-            AssertMsg(!this->m_func->IsLoopBody(), "Loop body does not support inlining.");
-            Js::FunctionEntryPointInfo* functionEntryPointInfo = static_cast<Js::FunctionEntryPointInfo*>(entryPointInfo);
-            functionEntryPointInfo->RecordInlineeFrameMap(m_inlineeFrameMap);
+            compactPinnedTypeRefs[index++] = typeRef;
+        });
+
+        if (PHASE_TRACE(Js::TracePinnedTypesPhase, this->m_func))
+        {
+            wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
+            Output::Print(L"PinnedTypes: function %s(%s) pinned %d types.\n", 
+                this->m_func->GetJnFunction()->GetDisplayName(), this->m_func->GetJnFunction()->GetDebugNumberSet(debugStringBuffer), pinnedTypeRefCount);
+            Output::Flush();
         }
 
-        if (this->m_bailoutRecordMap->Count() > 0)
+        entryPointInfo->GetJitTransferData()->SetRuntimeTypeRefs(compactPinnedTypeRefs, pinnedTypeRefCount);
+    }
+
+    // Save all equivalent type guards in a fixed size array on the JIT transfer data
+    if (this->m_func->equivalentTypeGuards != null)
+    {
+        AssertMsg(!PHASE_OFF(Js::EquivObjTypeSpecPhase, this->m_func), "Why do we have equivalent type guards if we don't do equivalent object type spec?");
+
+        int count = this->m_func->equivalentTypeGuards->Count();
+        Js::JitEquivalentTypeGuard** guards = HeapNewArrayZ(Js::JitEquivalentTypeGuard*, count);
+        Js::JitEquivalentTypeGuard** dstGuard = guards;
+        this->m_func->equivalentTypeGuards->Map([&dstGuard](Js::JitEquivalentTypeGuard* srcGuard) -> void
         {
-            entryPointInfo->RecordBailOutMap(m_bailoutRecordMap);
-        }
+            *dstGuard++ = srcGuard;
+        });
+        entryPointInfo->GetJitTransferData()->SetEquivalentTypeGuards(guards, count);
+    }
 
-        if (this->m_func->pinnedTypeRefs != null)
+    if (this->m_func->lazyBailoutProperties.Count() > 0)
+    {
+        int count = this->m_func->lazyBailoutProperties.Count();
+        Js::PropertyId* lazyBailoutProperties = HeapNewArrayZ(Js::PropertyId, count);
+        Js::PropertyId* dstProperties = lazyBailoutProperties;
+        this->m_func->lazyBailoutProperties.Map([&](Js::PropertyId propertyId)
         {
-            Assert(!isSimpleJit);
+            *dstProperties++ = propertyId;
+        });
+        entryPointInfo->GetJitTransferData()->SetLazyBailoutProperties(lazyBailoutProperties, count);
+    }
 
-            Func::TypeRefSet* pinnedTypeRefs = this->m_func->pinnedTypeRefs;
-            int pinnedTypeRefCount = pinnedTypeRefs->Count();
-            void** compactPinnedTypeRefs = HeapNewArrayZ(void*, pinnedTypeRefCount);
+    // Save all property guards on the JIT transfer data in a map keyed by property ID. We will use this map when installing the entry
+    // point to register each guard for invalidation.
+    if (this->m_func->propertyGuardsByPropertyId != null)
+    {
+        Assert(!isSimpleJit);
 
-            int index = 0;
-            pinnedTypeRefs->Map([compactPinnedTypeRefs, &index](void* typeRef) -> void
-            {
-                compactPinnedTypeRefs[index++] = typeRef;
-            });
+        AssertMsg(!(PHASE_OFF(Js::ObjTypeSpecPhase, this->m_func) && PHASE_OFF(Js::FixedMethodsPhase, this->m_func)),
+            "Why do we have type guards if we don't do object type spec or fixed methods?");
 
-            if (PHASE_TRACE(Js::TracePinnedTypesPhase, this->m_func))
-            {
-                wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
-                Output::Print(L"PinnedTypes: function %s(%s) pinned %d types.\n", 
-                    this->m_func->GetJnFunction()->GetDisplayName(), this->m_func->GetJnFunction()->GetDebugNumberSet(debugStringBuffer), pinnedTypeRefCount);
-                Output::Flush();
-            }
-
-            entryPointInfo->GetJitTransferData()->SetRuntimeTypeRefs(compactPinnedTypeRefs, pinnedTypeRefCount);
-        }
-
-        // Save all equivalent type guards in a fixed size array on the JIT transfer data
-        if (this->m_func->equivalentTypeGuards != null)
-        {
-            AssertMsg(!PHASE_OFF(Js::EquivObjTypeSpecPhase, this->m_func), "Why do we have equivalent type guards if we don't do equivalent object type spec?");
-
-            int count = this->m_func->equivalentTypeGuards->Count();
-            Js::JitEquivalentTypeGuard** guards = HeapNewArrayZ(Js::JitEquivalentTypeGuard*, count);
-            Js::JitEquivalentTypeGuard** dstGuard = guards;
-            this->m_func->equivalentTypeGuards->Map([&dstGuard](Js::JitEquivalentTypeGuard* srcGuard) -> void
-            {
-                *dstGuard++ = srcGuard;
-            });
-            entryPointInfo->GetJitTransferData()->SetEquivalentTypeGuards(guards, count);
-        }
-
-        if (this->m_func->lazyBailoutProperties.Count() > 0)
-        {
-            int count = this->m_func->lazyBailoutProperties.Count();
-            Js::PropertyId* lazyBailoutProperties = HeapNewArrayZ(Js::PropertyId, count);
-            Js::PropertyId* dstProperties = lazyBailoutProperties;
-            this->m_func->lazyBailoutProperties.Map([&](Js::PropertyId propertyId)
-            {
-                *dstProperties++ = propertyId;
-            });
-            entryPointInfo->GetJitTransferData()->SetLazyBailoutProperties(lazyBailoutProperties, count);
-        }
-
-        // Save all property guards on the JIT transfer data in a map keyed by property ID. We will use this map when installing the entry
-        // point to register each guard for invalidation.
-        if (this->m_func->propertyGuardsByPropertyId != null)
-        {
-            Assert(!isSimpleJit);
-
-            AssertMsg(!(PHASE_OFF(Js::ObjTypeSpecPhase, this->m_func) && PHASE_OFF(Js::FixedMethodsPhase, this->m_func)),
-                "Why do we have type guards if we don't do object type spec or fixed methods?");
-
-            int propertyCount = this->m_func->propertyGuardsByPropertyId->Count();
-            Assert(propertyCount > 0);
+        int propertyCount = this->m_func->propertyGuardsByPropertyId->Count();
+        Assert(propertyCount > 0);
 
 #if DBG
-            int totalGuardCount = (this->m_func->singleTypeGuards != null ? this->m_func->singleTypeGuards->Count() : 0)
-                + (this->m_func->equivalentTypeGuards != null ? this->m_func->equivalentTypeGuards->Count() : 0);
-            Assert(totalGuardCount > 0);
-            Assert(totalGuardCount == this->m_func->indexedPropertyGuardCount);
+        int totalGuardCount = (this->m_func->singleTypeGuards != null ? this->m_func->singleTypeGuards->Count() : 0)
+            + (this->m_func->equivalentTypeGuards != null ? this->m_func->equivalentTypeGuards->Count() : 0);
+        Assert(totalGuardCount > 0);
+        Assert(totalGuardCount == this->m_func->indexedPropertyGuardCount);
 #endif
 
-            int guardSlotCount = 0;
-            this->m_func->propertyGuardsByPropertyId->Map([&guardSlotCount](Js::PropertyId propertyId, Func::IndexedPropertyGuardSet* set) -> void 
-            {
-                guardSlotCount += set->Count();
-            });
-
-            size_t typeGuardTransferSize =                              // Reserve enough room for:
-                propertyCount * sizeof(Js::TypeGuardTransferEntry) +    //   each propertyId,
-                propertyCount * sizeof(Js::JitIndexedPropertyGuard*) +  //   terminating null guard for each propertyId,
-                guardSlotCount * sizeof(Js::JitIndexedPropertyGuard*);  //   a pointer for each guard we counted above.
-
-            // The extra room for sizeof(Js::TypePropertyGuardEntry) allocated by HeapNewPlus will be used for the terminating invalid propertyId.
-            // Review (jedmiad): Skip zeroing?  This is heap allocated so there shoudn't be any false recycler references.
-            Js::TypeGuardTransferEntry* typeGuardTransferRecord = HeapNewPlusZ(typeGuardTransferSize, Js::TypeGuardTransferEntry);
-
-            Func* func = this->m_func;
-
-            Js::TypeGuardTransferEntry* dstEntry = typeGuardTransferRecord;
-            this->m_func->propertyGuardsByPropertyId->Map([func, &dstEntry](Js::PropertyId propertyId, Func::IndexedPropertyGuardSet* srcSet) -> void 
-            {
-                dstEntry->propertyId = propertyId;
-
-                int guardIndex = 0;
-
-                srcSet->Map([dstEntry, &guardIndex](Js::JitIndexedPropertyGuard* guard) -> void 
-                {
-                    dstEntry->guards[guardIndex++] = guard;
-                });
-
-                dstEntry->guards[guardIndex++] = null;
-                dstEntry = reinterpret_cast<Js::TypeGuardTransferEntry*>(&dstEntry->guards[guardIndex]);
-            });
-            dstEntry->propertyId = Js::Constants::NoProperty;
-            dstEntry++;
-
-            Assert(reinterpret_cast<char*>(dstEntry) <= reinterpret_cast<char*>(typeGuardTransferRecord) + typeGuardTransferSize + sizeof(Js::TypeGuardTransferEntry));
-
-            entryPointInfo->RecordTypeGuards(this->m_func->indexedPropertyGuardCount, typeGuardTransferRecord, typeGuardTransferSize);
-        }
-
-        // Save all constructor caches on the JIT transfer data in a map keyed by property ID. We will use this map when installing the entry
-        // point to register each cache for invalidation.
-        if (this->m_func->ctorCachesByPropertyId != null)
+        int guardSlotCount = 0;
+        this->m_func->propertyGuardsByPropertyId->Map([&guardSlotCount](Js::PropertyId propertyId, Func::IndexedPropertyGuardSet* set) -> void 
         {
-            Assert(!isSimpleJit);
+            guardSlotCount += set->Count();
+        });
 
-            AssertMsg(!(PHASE_OFF(Js::ObjTypeSpecPhase, this->m_func) && PHASE_OFF(Js::FixedMethodsPhase, this->m_func)),
-                "Why do we have constructor cache guards if we don't do object type spec or fixed methods?");
+        size_t typeGuardTransferSize =                              // Reserve enough room for:
+            propertyCount * sizeof(Js::TypeGuardTransferEntry) +    //   each propertyId,
+            propertyCount * sizeof(Js::JitIndexedPropertyGuard*) +  //   terminating null guard for each propertyId,
+            guardSlotCount * sizeof(Js::JitIndexedPropertyGuard*);  //   a pointer for each guard we counted above.
 
-            int propertyCount = this->m_func->ctorCachesByPropertyId->Count();
-            Assert(propertyCount > 0);
+        // The extra room for sizeof(Js::TypePropertyGuardEntry) allocated by HeapNewPlus will be used for the terminating invalid propertyId.
+        // Review (jedmiad): Skip zeroing?  This is heap allocated so there shoudn't be any false recycler references.
+        Js::TypeGuardTransferEntry* typeGuardTransferRecord = HeapNewPlusZ(typeGuardTransferSize, Js::TypeGuardTransferEntry);
+
+        Func* func = this->m_func;
+
+        Js::TypeGuardTransferEntry* dstEntry = typeGuardTransferRecord;
+        this->m_func->propertyGuardsByPropertyId->Map([func, &dstEntry](Js::PropertyId propertyId, Func::IndexedPropertyGuardSet* srcSet) -> void 
+        {
+            dstEntry->propertyId = propertyId;
+
+            int guardIndex = 0;
+
+            srcSet->Map([dstEntry, &guardIndex](Js::JitIndexedPropertyGuard* guard) -> void 
+            {
+                dstEntry->guards[guardIndex++] = guard;
+            });
+
+            dstEntry->guards[guardIndex++] = null;
+            dstEntry = reinterpret_cast<Js::TypeGuardTransferEntry*>(&dstEntry->guards[guardIndex]);
+        });
+        dstEntry->propertyId = Js::Constants::NoProperty;
+        dstEntry++;
+
+        Assert(reinterpret_cast<char*>(dstEntry) <= reinterpret_cast<char*>(typeGuardTransferRecord) + typeGuardTransferSize + sizeof(Js::TypeGuardTransferEntry));
+
+        entryPointInfo->RecordTypeGuards(this->m_func->indexedPropertyGuardCount, typeGuardTransferRecord, typeGuardTransferSize);
+    }
+
+    // Save all constructor caches on the JIT transfer data in a map keyed by property ID. We will use this map when installing the entry
+    // point to register each cache for invalidation.
+    if (this->m_func->ctorCachesByPropertyId != null)
+    {
+        Assert(!isSimpleJit);
+
+        AssertMsg(!(PHASE_OFF(Js::ObjTypeSpecPhase, this->m_func) && PHASE_OFF(Js::FixedMethodsPhase, this->m_func)),
+            "Why do we have constructor cache guards if we don't do object type spec or fixed methods?");
+
+        int propertyCount = this->m_func->ctorCachesByPropertyId->Count();
+        Assert(propertyCount > 0);
 
 #if DBG
-            int cacheCount = entryPointInfo->GetConstructorCacheCount();
-            Assert(cacheCount > 0);
+        int cacheCount = entryPointInfo->GetConstructorCacheCount();
+        Assert(cacheCount > 0);
 #endif
 
-            int cacheSlotCount = 0;
-            this->m_func->ctorCachesByPropertyId->Map([&cacheSlotCount](Js::PropertyId propertyId, Func::CtorCacheSet* cacheSet) -> void 
-            {
-                cacheSlotCount += cacheSet->Count();
-            });
-
-            size_t ctorCachesTransferSize =                                // Reserve enough room for:
-                propertyCount * sizeof(Js::CtorCacheGuardTransferEntry) +  //   each propertyId,
-                propertyCount * sizeof(Js::ConstructorCache*) +            //   terminating null cache for each propertyId,
-                cacheSlotCount * sizeof(Js::JitIndexedPropertyGuard*);     //   a pointer for each cache we counted above.
-
-            // The extra room for sizeof(Js::CtorCacheGuardTransferEntry) allocated by HeapNewPlus will be used for the terminating invalid propertyId.
-            // Review (jedmiad): Skip zeroing?  This is heap allocated so there shoudn't be any false recycler references.
-            Js::CtorCacheGuardTransferEntry* ctorCachesTransferRecord = HeapNewPlusZ(ctorCachesTransferSize, Js::CtorCacheGuardTransferEntry);
-
-            Func* func = this->m_func;
-
-            Js::CtorCacheGuardTransferEntry* dstEntry = ctorCachesTransferRecord;
-            this->m_func->ctorCachesByPropertyId->Map([func, &dstEntry](Js::PropertyId propertyId, Func::CtorCacheSet* srcCacheSet) -> void 
-            {
-                dstEntry->propertyId = propertyId;
-
-                int cacheIndex = 0;
-
-                srcCacheSet->Map([dstEntry, &cacheIndex](Js::ConstructorCache* cache) -> void 
-                {
-                    dstEntry->caches[cacheIndex++] = cache;
-                });
-
-                dstEntry->caches[cacheIndex++] = null;
-                dstEntry = reinterpret_cast<Js::CtorCacheGuardTransferEntry*>(&dstEntry->caches[cacheIndex]);
-            });
-            dstEntry->propertyId = Js::Constants::NoProperty;
-            dstEntry++;
-
-            Assert(reinterpret_cast<char*>(dstEntry) <= reinterpret_cast<char*>(ctorCachesTransferRecord) + ctorCachesTransferSize + sizeof(Js::CtorCacheGuardTransferEntry));
-
-            entryPointInfo->RecordCtorCacheGuards(ctorCachesTransferRecord, ctorCachesTransferSize);
-        }
-
-        if(!isSimpleJit)
+        int cacheSlotCount = 0;
+        this->m_func->ctorCachesByPropertyId->Map([&cacheSlotCount](Js::PropertyId propertyId, Func::CtorCacheSet* cacheSet) -> void 
         {
-            entryPointInfo->GetJitTransferData()->SetIsReady();
-        }
+            cacheSlotCount += cacheSet->Count();
+        });
+
+        size_t ctorCachesTransferSize =                                // Reserve enough room for:
+            propertyCount * sizeof(Js::CtorCacheGuardTransferEntry) +  //   each propertyId,
+            propertyCount * sizeof(Js::ConstructorCache*) +            //   terminating null cache for each propertyId,
+            cacheSlotCount * sizeof(Js::JitIndexedPropertyGuard*);     //   a pointer for each cache we counted above.
+
+        // The extra room for sizeof(Js::CtorCacheGuardTransferEntry) allocated by HeapNewPlus will be used for the terminating invalid propertyId.
+        // Review (jedmiad): Skip zeroing?  This is heap allocated so there shoudn't be any false recycler references.
+        Js::CtorCacheGuardTransferEntry* ctorCachesTransferRecord = HeapNewPlusZ(ctorCachesTransferSize, Js::CtorCacheGuardTransferEntry);
+
+        Func* func = this->m_func;
+
+        Js::CtorCacheGuardTransferEntry* dstEntry = ctorCachesTransferRecord;
+        this->m_func->ctorCachesByPropertyId->Map([func, &dstEntry](Js::PropertyId propertyId, Func::CtorCacheSet* srcCacheSet) -> void 
+        {
+            dstEntry->propertyId = propertyId;
+
+            int cacheIndex = 0;
+
+            srcCacheSet->Map([dstEntry, &cacheIndex](Js::ConstructorCache* cache) -> void 
+            {
+                dstEntry->caches[cacheIndex++] = cache;
+            });
+
+            dstEntry->caches[cacheIndex++] = null;
+            dstEntry = reinterpret_cast<Js::CtorCacheGuardTransferEntry*>(&dstEntry->caches[cacheIndex]);
+        });
+        dstEntry->propertyId = Js::Constants::NoProperty;
+        dstEntry++;
+
+        Assert(reinterpret_cast<char*>(dstEntry) <= reinterpret_cast<char*>(ctorCachesTransferRecord) + ctorCachesTransferSize + sizeof(Js::CtorCacheGuardTransferEntry));
+
+        entryPointInfo->RecordCtorCacheGuards(ctorCachesTransferRecord, ctorCachesTransferSize);
+    }
+
+    if(!isSimpleJit)
+    {
+        entryPointInfo->GetJitTransferData()->SetIsReady();
     }
 
     workItem->FinalizeNativeCode(m_func);
@@ -611,11 +596,7 @@ void Encoder::RecordInlineeFrame(Func* inlinee, uint32 currentOffset)
 {
     // The only restriction for not supporting loop bodies is that inlinee frame map is created on FunctionEntryPointInfo & not
     // the base class EntryPointInfo.
-    if (
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-        this->m_func->IsInMemory() && 
-#endif
-        !this->m_func->IsLoopBody() && !this->m_func->IsSimpleJit())
+    if (!this->m_func->IsLoopBody() && !this->m_func->IsSimpleJit())
     {
         InlineeFrameRecord* record = nullptr;
         if (inlinee->frameInfo && inlinee->m_hasInlineArgsOpt)

@@ -2,7 +2,7 @@
 
 #pragma once
 
-struct InMemoryCodeGenWorkItem;
+struct CodeGenWorkItem;
 class SourceContextInfo;
 class FunctionBailOutRecord;
 struct DeferredFunctionStub;
@@ -415,7 +415,7 @@ namespace Js
             void EnsureJitTimeTypeRefs(Recycler* recycler);
         };
 
-        InMemoryCodeGenWorkItem * workItem;
+        CodeGenWorkItem * workItem;
         SmallSpanSequence *nativeThrowSpanSequence;
         NativeCodeData * data;
         CodeGenNumberChunk * numberChunks;
@@ -625,7 +625,7 @@ namespace Js
 
         void Reset(bool resetStateToNotScheduled = true);
 
-        void SetCodeGenPending(InMemoryCodeGenWorkItem * workItem)
+        void SetCodeGenPending(CodeGenWorkItem * workItem)
         {
             Assert(this->GetState() == NotScheduled || this->GetState() == CleanedUp);
             Assert(workItem != NULL);
@@ -729,7 +729,7 @@ namespace Js
             return codeSize;
         }
 
-        InMemoryCodeGenWorkItem * GetWorkItem() const
+        CodeGenWorkItem * GetWorkItem() const
         {
             State state = this->GetState();
             Assert(state != NotScheduled);

@@ -8,11 +8,6 @@ struct CodeGenWorkItem;
 struct JsFunctionCodeGen;
 struct JsLoopBodyCodeGen;
 class InliningDecider;
-
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-class PEWriter;
-#endif
-
 namespace Js
 {
     class ObjTypeSpecFldInfo;
@@ -44,11 +39,6 @@ public:
     void GenerateAllFunctions(Js::FunctionBody * fn);
 #endif
 
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION    
-    void GenerateAllFunctionsForSerialization(Js::FunctionBody * fn, BYTE *sourceCode, DWORD dwSourceCodeSize, BYTE *byteCode, DWORD dwByteCodeSize, DWORD dwFunctionTableLength, BYTE * functionTable, BYTE ** nativeCode, DWORD * pdwNativeCodeSize);
-    bool DeserializeFunction(Js::FunctionBody *function, Js::NativeModule *nativeModule);
-#endif
-
 #ifdef IR_VIEWER
     Js::Var RejitIRViewerFunction(Js::FunctionBody *fn, Js::ScriptContext *scriptContext);
 #endif
@@ -72,21 +62,18 @@ private:
 
 private:
     static Js::JavascriptMethod CheckCodeGenDone(Js::FunctionBody *const functionBody, Js::FunctionEntryPointInfo *const entryPointInfo, Js::ScriptFunction * function);
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-    void GenerateFunctionForSerialization(Js::FunctionBody * fn, DWORD dwFunctionTableLength, BYTE * functionTable, PageAllocator * pageAllocator, PEWriter *writer);
-#endif
-    InMemoryCodeGenWorkItem *GetJob(Js::EntryPointInfo *const entryPoint) const;     
+    CodeGenWorkItem *GetJob(Js::EntryPointInfo *const entryPoint) const;     
     bool WasAddedToJobProcessor(JsUtil::Job *const job) const;
     bool ShouldProcessInForeground(const bool willWaitForJob, const unsigned int numJobsInQueue) const;
     void Prioritize(JsUtil::Job *const job, const bool forceAddJobToProcessor = false, void* function = null);
     void PrioritizedButNotYetProcessed(JsUtil::Job *const job);
     void BeforeWaitForJob(Js::EntryPointInfo *const entryPoint) const;     
     void AfterWaitForJob(Js::EntryPointInfo *const entryPoint) const;
-    static bool WorkItemExceedsJITLimits(InMemoryCodeGenWorkItem *const codeGenWork); 
+    static bool WorkItemExceedsJITLimits(CodeGenWorkItem *const codeGenWork);
     virtual bool Process(JsUtil::Job *const job, JsUtil::ParallelThreadData *threadData) override;
     virtual void JobProcessed(JsUtil::Job *const job, const bool succeeded) override;
     JsUtil::Job *GetJobToProcessProactively();
-    void AddToJitQueue(InMemoryCodeGenWorkItem *const codeGenWorkItem, bool prioritize, bool lock, void* function = null);
+    void AddToJitQueue(CodeGenWorkItem *const codeGenWorkItem, bool prioritize, bool lock, void* function = null);
     void RemoveProactiveJobs();
     typedef SListCounted<Js::ObjTypeSpecFldInfo*, ArenaAllocator> ObjTypeSpecFldInfoList;
 
@@ -110,12 +97,12 @@ public:
     void EnterScriptStart();
     bool IsNativeFunctionAddr(void * address);
     void FreeNativeCodeGenAllocation(void* address);
-    bool TryReleaseNonHiPriWorkItem(InMemoryCodeGenWorkItem* workItem);
+    bool TryReleaseNonHiPriWorkItem(CodeGenWorkItem* workItem);
 
     void QueueFreeNativeCodeGenAllocation(void* address);
 
     bool IsClosed() { return isClosed; }
-    void AddWorkItem(InMemoryCodeGenWorkItem* workItem);
+    void AddWorkItem(CodeGenWorkItem* workItem);
     CodeGenAllocators* GetCodeGenAllocator(PageAllocator* pageallocator){ return EnsureForegroundAllocators(pageallocator); }
 
 #if DBG_DUMP
@@ -194,7 +181,7 @@ private:
     Js::ScriptContext * scriptContext;
     Js::FunctionBody::SetNativeEntryPointFuncType SetNativeEntryPoint;
     uint pendingCodeGenWorkItems;
-    JsUtil::DoublyLinkedList<InMemoryCodeGenWorkItem> workItems;
+    JsUtil::DoublyLinkedList<CodeGenWorkItem> workItems;
     JsUtil::DoublyLinkedList<QueuedFullJitWorkItem> queuedFullJitWorkItems;
     uint queuedFullJitWorkItemCount;
     uint byteCodeSizeGenerated;

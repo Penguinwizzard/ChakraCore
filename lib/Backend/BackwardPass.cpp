@@ -2696,16 +2696,6 @@ BackwardPass::ProcessBlock(BasicBlock * block)
     {
         // Copy the upward exposed use as the live on back edge regs
         block->loop->regAlloc.liveOnBackEdgeSyms = block->upwardExposedUses->CopyNew(this->func->m_alloc);
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-        if (!this->func->IsInMemory())
-        {
-            // These syms will be used in lower, so we have to assume that they're going to
-            // be live on the back edge
-            block->loop->regAlloc.liveOnBackEdgeSyms->Set(this->func->GetJavascriptLibrarySym()->m_id);
-            block->loop->regAlloc.liveOnBackEdgeSyms->Set(this->func->GetFunctionBodySym()->m_id);
-            block->loop->regAlloc.liveOnBackEdgeSyms->Set(this->func->GetScriptContextSym()->m_id);
-        }
-#endif
     }
 
     Assert(!considerSymAsRealUseInNoImplicitCallUses);
@@ -4169,13 +4159,6 @@ BackwardPass::TrackAddPropertyTypes(IR::PropertySymOpnd *opnd, BasicBlock *block
     AssertMsg(Js::DynamicObject::IsTypeHandlerCompatibleForObjectHeaderInlining(typeWithoutPropertyTypeHandler, typeWithPropertyTypeHandler),
         "TypeHandlers are not compatible for transition?");
     Assert(typeWithoutPropertyTypeHandler->GetSlotCapacity() <= typeWithPropertyTypeHandler->GetSlotCapacity());
-#endif
-
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-    if (!this->func->IsInMemory())
-    {
-        return;
-    }
 #endif
 
     // Review (jedmiad): Do we need profile info to not rely on AreThisAndPrototypesEnsuredToHaveOnlyWritableDataProperties?
@@ -6765,7 +6748,7 @@ bool BackwardPass::ReverseCopyProp(IR::Instr *instr)
     }
 
     // The fast-path for these doesn't handle dst == src.
-    // REVIEW: I believe the fast-path for LdElemI_A has been fixed... Nope, still broken for "i = A[i]" for –prejit or serialized jit’d code
+    // REVIEW: I believe the fast-path for LdElemI_A has been fixed... Nope, still broken for "i = A[i]" for –prejit
     switch (instrPrev->m_opcode)
     {
     case Js::OpCode::LdElemI_A:

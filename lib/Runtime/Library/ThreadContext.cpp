@@ -139,9 +139,6 @@ ThreadContext::ThreadContext(AllocationPolicyManager * allocationPolicyManager, 
     telemetryBlock(&localTelemetryBlock),
     jsrtRuntime(nullptr),
     rootPendingClose(nullptr),
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-    hProv(NULL),
-#endif
     wellKnownHostTypeHTMLAllCollectionTypeId(Js::TypeIds_Undefined),
     isProfilingUserCode(true),
     loopDepth(0),    
@@ -456,13 +453,6 @@ ThreadContext::~ThreadContext()
 #endif
 #endif
 
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-    if (hProv != NULL)
-    {
-        CryptReleaseContext(hProv, 0);
-        hProv = NULL;
-    }
-#endif
     ReleasePreReservedSegment();
 }
 
@@ -3757,21 +3747,6 @@ void ThreadContext::ClearThreadContextFlag(ThreadContextFlags contextFlag)
 {
     this->threadContextFlags = (ThreadContextFlags)(this->threadContextFlags & ~contextFlag);
 }
-
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-HCRYPTPROV ThreadContext::EnsureCryptoContext()
-{
-    if (NULL == hProv)
-    {
-        if (!CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_AES, CRYPT_VERIFYCONTEXT))
-        {
-            Assert(hProv == NULL);
-            return NULL;
-        }
-    }
-    return hProv;
-}
-#endif
 
 #ifdef _CONTROL_FLOW_GUARD
 Js::DelayLoadWinCoreMemory * ThreadContext::GetWinCoreMemoryLibrary()

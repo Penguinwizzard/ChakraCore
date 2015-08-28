@@ -519,7 +519,7 @@ Func::EnsureLocalVarSlots()
             Assert(this->m_workItem->Type() == JsFunctionType);
 
             // Store in the entry point info, so that it will later be used when we do the variable inspection.
-            Js::FunctionEntryPointInfo * entryPointInfo = static_cast<Js::FunctionEntryPointInfo*>(this->m_workItem->AsInMemoryWorkItem()->GetEntryPoint());
+            Js::FunctionEntryPointInfo * entryPointInfo = static_cast<Js::FunctionEntryPointInfo*>(this->m_workItem->GetEntryPoint());
             Assert(entryPointInfo != NULL);
 
             entryPointInfo->localVarSlotsOffset = AdjustOffsetValue(m_localVarSlotsOffset);
@@ -590,8 +590,7 @@ Func::IsJitInDebugMode()
 {
     return 
         Js::Configuration::Global.EnableJitInDebugMode() && 
-        this->m_workItem->IsInMemoryWorkItem() &&
-        this->m_workItem->AsInMemoryWorkItem()->IsJitInDebugMode();
+        this->m_workItem->IsJitInDebugMode();
 }
 
 bool
@@ -624,9 +623,8 @@ Func::AjustLocalVarSlotOffset()
 
         int localsOffset = m_localVarSlotsOffset - (m_localStackHeight + m_ArgumentsOffset);
         int valueChangeOffset = m_hasLocalVarChangedOffset - (m_localStackHeight + m_ArgumentsOffset);
-
-        Assert(this->m_workItem->IsInMemoryWorkItem());
-        Js::FunctionEntryPointInfo * entryPointInfo = static_cast<Js::FunctionEntryPointInfo*>(this->m_workItem->AsInMemoryWorkItem()->GetEntryPoint());
+        
+        Js::FunctionEntryPointInfo * entryPointInfo = static_cast<Js::FunctionEntryPointInfo*>(this->m_workItem->GetEntryPoint());
         Assert(entryPointInfo != NULL);
 
         entryPointInfo->localVarSlotsOffset = localsOffset;
@@ -705,10 +703,7 @@ void Func::InitStackClosureSyms()
 bool Func::CanAllocInPreReservedHeapPageSegment ()
 {
 #ifdef _CONTROL_FLOW_GUARD 
-    return PHASE_FORCE1(Js::PreReservedHeapAllocPhase) || (!PHASE_OFF1(Js::PreReservedHeapAllocPhase) && 
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION
-        IsInMemory() &&
-#endif
+    return PHASE_FORCE1(Js::PreReservedHeapAllocPhase) || (!PHASE_OFF1(Js::PreReservedHeapAllocPhase) &&
         !IsJitInDebugMode() && !GetScriptContext()->IsInDebugMode() && GetScriptContext()->GetThreadContext()->IsCFGEnabled()
 #if _M_IX86
         && m_workItem->GetJitMode() == ExecutionMode::FullJit && GetCodeGenAllocators()->canCreatePreReservedSegment);

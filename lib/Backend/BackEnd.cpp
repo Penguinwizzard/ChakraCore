@@ -68,20 +68,6 @@ GenerateAllFunctions(NativeCodeGenerator * nativeCodeGen, Js::FunctionBody *fn)
     nativeCodeGen->GenerateAllFunctions(fn);
 }
 #endif
-
-#ifdef ENABLE_NATIVE_CODE_SERIALIZATION    
-void
-GenerateAllFunctionsForSerialization(NativeCodeGenerator  * nativeCodeGen, Js::FunctionBody * fn, BYTE *sourceCode, DWORD dwSourceCodeSize, BYTE *byteCode, DWORD dwByteCodeSize, DWORD dwFunctionTableLength, BYTE * functionTable, BYTE ** nativeCode, DWORD * pdwNativeCodeSize)
-{
-    nativeCodeGen->GenerateAllFunctionsForSerialization(fn, sourceCode, dwSourceCodeSize, byteCode, dwByteCodeSize, dwFunctionTableLength, functionTable, nativeCode, pdwNativeCodeSize);
-}
-
-bool
-DeserializeFunction(NativeCodeGenerator  * nativeCodeGen, Js::FunctionBody *function, Js::NativeModule *nativeModule)
-{
-    return nativeCodeGen->DeserializeFunction(function, nativeModule);
-}
-#endif
 #ifdef IR_VIEWER
 Js::Var
 RejitIRViewerFunction(NativeCodeGenerator *nativeCodeGen, Js::FunctionBody *fn, Js::ScriptContext *scriptContext)
