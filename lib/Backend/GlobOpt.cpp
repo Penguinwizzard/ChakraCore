@@ -20605,57 +20605,34 @@ GlobOpt::GenerateStartIndexOpndForMemop(Loop *loop, IR::Opnd *indexOpnd, IR::Opn
         }
     };
 
-    if (isInductionVariableChangeIncremental)
+    startIndexOpnd = IR::RegOpnd::New(type, localFunc);
+    // If the 2 are different we can simply use indexOpnd
+    if (isInductionVariableChangeIncremental ^ bIndexAlreadyChanged)
     {
-        if (bIndexAlreadyChanged)
-        {
-            startIndexOpnd = IR::RegOpnd::New(type, localFunc);
-            InsertInstr(IR::Instr::New(Js::OpCode::Add_I4,
-                startIndexOpnd,
-                indexOpnd,
-                IR::IntConstOpnd::New(1, type, localFunc, true),
-                localFunc
-                ));
-        }
-        else
-        {
-            startIndexOpnd = IR::RegOpnd::New(type, localFunc);
-            InsertInstr(IR::Instr::New(Js::OpCode::Ld_A,
-                startIndexOpnd,
-                indexOpnd,
-                localFunc
-                ));
-        }
+        InsertInstr(IR::Instr::New(Js::OpCode::Ld_A,
+                                   startIndexOpnd,
+                                   indexOpnd,
+                                   localFunc));
     }
     else
     {
-        if (bIndexAlreadyChanged)
-        {
-            startIndexOpnd = IR::RegOpnd::New(type, localFunc);
-            InsertInstr(IR::Instr::New(Js::OpCode::Ld_A,
-                startIndexOpnd,
-                indexOpnd,
-                localFunc
-                ));
-        }
-        else
-        {
-            startIndexOpnd = IR::RegOpnd::New(type, localFunc);
-            InsertInstr(IR::Instr::New(Js::OpCode::Add_I4,
-                startIndexOpnd,
-                indexOpnd,
-                IR::IntConstOpnd::New(1, type, localFunc, true),
-                localFunc
-                ));
-        }
-
-        InsertInstr(IR::Instr::New(Js::OpCode::Sub_I4,
-            startIndexOpnd,
-            startIndexOpnd,
-            sizeOpnd,
-            localFunc
-            ));
+        // Otherwise add 1 to it
+        InsertInstr(IR::Instr::New(Js::OpCode::Add_I4,
+                                   startIndexOpnd,
+                                   indexOpnd,
+                                   IR::IntConstOpnd::New(1, type, localFunc, true),
+                                   localFunc));
     }
+
+    if (!isInductionVariableChangeIncremental)
+    {
+        InsertInstr(IR::Instr::New(Js::OpCode::Sub_I4,
+                                   startIndexOpnd,
+                                   startIndexOpnd,
+                                   sizeOpnd,
+                                   localFunc));
+    }
+
     return startIndexOpnd;
 }
 

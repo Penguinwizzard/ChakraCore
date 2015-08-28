@@ -251,24 +251,60 @@ namespace Js
             return GetLibrary()->GetUndefined();
         }
 
-        __inline BOOL DirectSetItemAtRange(TypedArray *fromArray, __in uint32 srcStart, __in uint32 dstStart, __in uint32 length, TypeName(*convFunc)(Var value, ScriptContext* scriptContext))
+        __inline BOOL DirectSetItemAtRange(TypedArray *fromArray, __in int32 iSrcStart, __in int32 iDstStart, __in uint32 length, TypeName(*convFunc)(Var value, ScriptContext* scriptContext))
         {
             TypeName* dstBuffer = (TypeName*)buffer;
             TypeName* srcBuffer = (TypeName*)fromArray->buffer;
+            Assert(srcBuffer && dstBuffer);
 
-            uint32 srcLength = (srcStart + length) < fromArray->GetLength() ? length : (fromArray->GetLength() > srcStart ? fromArray->GetLength() - srcStart : 0);
+            // Fixup destination start in case it's negative
+            uint32 dstStart = iDstStart;
+            if (iDstStart < 0)
+            {
+                if ((uint32)-iDstStart >= length)
+                {
+                    // nothing to do, all index are no-op
+                    return true;
+                }
+                // negative index are no-op on TypedArrays
+                iSrcStart -= iDstStart;
+                length += iDstStart;
+                dstStart = 0;
+            }
             uint32 dstLength = (dstStart + length) < GetLength() ? length : GetLength() > dstStart ? GetLength() - dstStart : 0;
+
+            // Fixup source start in case it's negative
+            uint32 srcStart = iSrcStart;
+            // Place undefined when reading negative index from the source
+            if (iSrcStart < 0)
+            {
+                TypeName undefinedValue = convFunc(GetLibrary()->GetUndefined(), GetScriptContext());
+                for (int32 i = 0; i < -iSrcStart && dstLength > 0; ++i)
+                {
+                    dstBuffer[dstStart++] = undefinedValue;
+                    --dstLength;
+                }
+                if ((uint32)-iSrcStart >= length)
+                {
+                    // all read operation we're undefined, no need to continue
+                    return true;
+                }
+                length -= iSrcStart;
+                srcStart = 0;
+            }
+            uint32 srcLength = (srcStart + length) < fromArray->GetLength() ? length : (fromArray->GetLength() > srcStart ? fromArray->GetLength() - srcStart : 0);
 
             // length is the minimum of length, srcLength and dstLength
             length = length < srcLength ? (length < dstLength ? length : dstLength) : (srcLength < dstLength ? srcLength : dstLength);
 
-            Assert(srcBuffer && dstBuffer);
-            js_memcpy_s(dstBuffer + dstStart, sizeof(TypeName)* length, srcBuffer + srcStart, sizeof(TypeName)* length);
+            const size_t byteSize = sizeof(TypeName) * length;
+            Assert(byteSize > length); // check for overflow
+            js_memcpy_s(dstBuffer + dstStart, byteSize, srcBuffer + srcStart, byteSize);
 
             if (dstLength > length)
             {
                 TypeName undefinedValue = convFunc(GetLibrary()->GetUndefined(), GetScriptContext());
-                for (uint i = length; i < dstLength; i++)
+                for (uint32 i = length; i < dstLength; i++)
                 {
                     dstBuffer[i] = undefinedValue;
                 }
@@ -277,7 +313,7 @@ namespace Js
             return true;
         }
 
-        __inline BOOL DirectSetItemAtRange(__in uint32 start, __in uint32 length, __in Js::Var value, TypeName(*convFunc)(Var value, ScriptContext* scriptContext))
+        __inline BOOL DirectSetItemAtRange(__in int32 start, __in uint32 length, __in Js::Var value, TypeName(*convFunc)(Var value, ScriptContext* scriptContext))
         {
             if (CrossSite::IsCrossSiteObjectTyped(this))
             {
@@ -294,8 +330,10 @@ namespace Js
             if (start < 0)
             {
                 newStart = 0;
+                // fixup the length with the change
+                newLength += start;
             }
-            if (start + length >= GetLength())
+            if (newStart + newLength > GetLength())
             {
                 newLength = GetLength() - newStart;
             }
@@ -304,7 +342,9 @@ namespace Js
 
             if (typedValue == 0 || sizeof(TypeName) == 1)
             {
-                memset(typedBuffer + newStart, typedValue, sizeof(TypeName)* newLength);
+                const size_t byteSize = sizeof(TypeName) * newLength;
+                Assert(byteSize > newLength); // check for overflow
+                memset(typedBuffer + newStart, typedValue, byteSize);
             }
             else
             {

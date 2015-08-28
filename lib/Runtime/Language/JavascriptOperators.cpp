@@ -4357,7 +4357,7 @@ CommonNumber:
             (Js::JavascriptNumber *)buffer), scriptContext, flags, dValue);
 #endif
     }
-    BOOL JavascriptOperators::OP_Memcopy(Var dstInstance, uint32 dstStart, Var srcInstance, uint32 srcStart, uint32 length, ScriptContext* scriptContext)
+    BOOL JavascriptOperators::OP_Memcopy(Var dstInstance, int32 dstStart, Var srcInstance, int32 srcStart, uint32 length, ScriptContext* scriptContext)
     {
         if (length == 0)
         {
@@ -4411,23 +4411,26 @@ CommonNumber:
             returnValue = Uint32Array::FromVar(dstInstance)->DirectSetItemAtRange(Uint32Array::FromVar(srcInstance), srcStart, dstStart, length, JavascriptConversion::ToUInt32);
             break;
         }
+        case TypeIds_Array:
         case TypeIds_NativeIntArray:
         {
-            if (scriptContext->optimizationOverrides.IsEnabledArraySetElementFastPath())
+            if (dstStart < 0 || srcStart < 0)
             {
-                INT_PTR vt = VirtualTableInfoBase::GetVirtualTable(dstInstance);
-                JavascriptArray::FromVar(dstInstance)->DirectSetItemAtRangeFromArray<int32>(dstStart, length, JavascriptArray::FromVar(srcInstance), srcStart);
-                returnValue = vt != VirtualTableInfoBase::GetVirtualTable(dstInstance);
+                // This is not supported, Bailout
+                break;
             }
-            break;
-        }
-        case TypeIds_Array:
-        {
             if (scriptContext->optimizationOverrides.IsEnabledArraySetElementFastPath())
             {
                 INT_PTR vt = VirtualTableInfoBase::GetVirtualTable(dstInstance);
-                JavascriptArray::FromVar(dstInstance)->DirectSetItemAtRangeFromArray<Var>(dstStart, length, JavascriptArray::FromVar(srcInstance), srcStart);
-                returnValue = vt != VirtualTableInfoBase::GetVirtualTable(dstInstance);
+                if (instanceType == TypeIds_Array)
+                {
+                    JavascriptArray::FromVar(dstInstance)->DirectSetItemAtRangeFromArray<Var>(dstStart, length, JavascriptArray::FromVar(srcInstance), srcStart);
+                }
+                else
+                {
+                    JavascriptArray::FromVar(dstInstance)->DirectSetItemAtRangeFromArray<int32>(dstStart, length, JavascriptArray::FromVar(srcInstance), srcStart);
+                }
+                returnValue = vt == VirtualTableInfoBase::GetVirtualTable(dstInstance);
             }
             break;
         }
@@ -4439,9 +4442,9 @@ CommonNumber:
         }
 
         return returnValue;
-        }
+    }
 
-    BOOL JavascriptOperators::OP_Memset(Var instance, uint32 start, Var value, uint32 length, ScriptContext* scriptContext)
+    BOOL JavascriptOperators::OP_Memset(Var instance, int32 start, Var value, uint32 length, ScriptContext* scriptContext)
     {
         if (length == 0)
         {
@@ -4492,23 +4495,30 @@ CommonNumber:
             break;
         }
         case TypeIds_NativeIntArray:
-        {
-            if (scriptContext->optimizationOverrides.IsEnabledArraySetElementFastPath())
-            {
-                INT_PTR vt = VirtualTableInfoBase::GetVirtualTable(instance);
-                JavascriptArray::FromVar(instance)->DirectSetItemAtRange<int32>(start, length, JavascriptConversion::ToInt32(value, scriptContext));
-                returnValue = vt != VirtualTableInfoBase::GetVirtualTable(instance);
-            }
-            break;
-        }
         case TypeIds_Array:
         {
+            if (start < 0)
+            {
+                for (start; start < 0 && length > 0; ++start, --length)
+                {
+                    if (!OP_SetElementI(instance, JavascriptNumber::ToVar(start, scriptContext), value, scriptContext))
+                    {
+                        return false;
+                    }
+                }
+            }
             if (scriptContext->optimizationOverrides.IsEnabledArraySetElementFastPath())
             {
                 INT_PTR vt = VirtualTableInfoBase::GetVirtualTable(instance);
-                Var val = reinterpret_cast<Var>(value);
-                JavascriptArray::FromVar(instance)->DirectSetItemAtRange<Var>(start, length, val);
-                returnValue = vt != VirtualTableInfoBase::GetVirtualTable(instance);
+                if (instanceType == TypeIds_Array)
+                {
+                    JavascriptArray::FromVar(instance)->DirectSetItemAtRange<Var>(start, length, value);
+                }
+                else
+                {
+                    JavascriptArray::FromVar(instance)->DirectSetItemAtRange<int32>(start, length, JavascriptConversion::ToInt32(value, scriptContext));
+                }
+                returnValue = vt == VirtualTableInfoBase::GetVirtualTable(instance);
             }
             break;
         }
@@ -4517,9 +4527,7 @@ CommonNumber:
             AssertMsg(false, "We don't support this type for memset yet.");
             break;
         }
-
         }
-
 
         return returnValue;
     }
