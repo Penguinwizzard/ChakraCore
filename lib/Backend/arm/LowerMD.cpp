@@ -8883,18 +8883,20 @@ LowererMD::EmitUIntToFloat(IR::Opnd *dst, IR::Opnd *src, IR::Instr *instrInsert)
 
 void LowererMD::ConvertFloatToInt32(IR::Opnd* intOpnd, IR::Opnd* floatOpnd, IR::LabelInstr * labelHelper, IR::LabelInstr * labelDone, IR::Instr * instrInsert)
 {
-    Assert(floatOpnd->IsRegOpnd() && floatOpnd->IsFloat64());
-    Assert(intOpnd->IsRegOpnd() && intOpnd->IsInt32());
+    Assert(floatOpnd->IsFloat64());
+    Assert(intOpnd->IsInt32());
 
     IR::RegOpnd *floatReg = IR::RegOpnd::New(TyFloat32, this->m_func);
     // VCVTS32F64 dst.i32, src.f64
     // Convert to int
     IR::Instr * instr = IR::Instr::New(Js::OpCode::VCVTS32F64, floatReg, floatOpnd, this->m_func);
     instrInsert->InsertBefore(instr);
+    Legalize(instr);
 
     //Move to integer reg
     instr = IR::Instr::New(Js::OpCode::VMOVARMVFP, intOpnd, floatReg, this->m_func);
     instrInsert->InsertBefore(instr);
+    Legalize(instr);
 
     this->CheckOverflowOnFloatToInt32(instrInsert, intOpnd, labelHelper, labelDone);
 }

@@ -6,6 +6,7 @@
 *.i
 Build/VCBuild/
 Build/ipch/
+Build/.vs/
 build_*.log
 build_*.wrn
 build_*.err
