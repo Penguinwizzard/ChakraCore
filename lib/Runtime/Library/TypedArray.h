@@ -298,7 +298,7 @@ namespace Js
             length = length < srcLength ? (length < dstLength ? length : dstLength) : (srcLength < dstLength ? srcLength : dstLength);
 
             const size_t byteSize = sizeof(TypeName) * length;
-            Assert(byteSize > length); // check for overflow
+            Assert(byteSize >= length); // check for overflow
             js_memcpy_s(dstBuffer + dstStart, byteSize, srcBuffer + srcStart, byteSize);
 
             if (dstLength > length)
@@ -343,7 +343,7 @@ namespace Js
             if (typedValue == 0 || sizeof(TypeName) == 1)
             {
                 const size_t byteSize = sizeof(TypeName) * newLength;
-                Assert(byteSize > newLength); // check for overflow
+                Assert(byteSize >= newLength); // check for overflow
                 memset(typedBuffer + newStart, typedValue, byteSize);
             }
             else
