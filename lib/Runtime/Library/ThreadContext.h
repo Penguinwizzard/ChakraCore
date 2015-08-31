@@ -577,6 +577,7 @@ private:
 #endif
 
     Js::ScriptContext *scriptContextList;
+    bool scriptContextEverRegistered;
     static size_t processNativeCodeSize;
     size_t nativeCodeSize;
     size_t sourceCodeSize;
@@ -838,6 +839,7 @@ public:
     uint GetScriptContextCount() const { return this->scriptContextCount; }
 #endif
     Js::ScriptContext* GetScriptContextList() const { return this->scriptContextList; }
+    bool WasAnyScriptContextEverRegistered() const { return this->scriptContextEverRegistered; }
 
 #if DBG_DUMP || defined(PROFILE_EXEC)
     void SetTopLevelScriptSite(ScriptSite* topScriptSite) { this->topLevelScriptSite = topScriptSite; }

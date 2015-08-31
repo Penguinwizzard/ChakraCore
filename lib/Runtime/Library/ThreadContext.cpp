@@ -104,6 +104,7 @@ ThreadContext::ThreadContext(AllocationPolicyManager * allocationPolicyManager, 
     temporaryGuestArenaAllocatorCount(0),
     crefSContextForDiag(0),
     scriptContextList(nullptr),
+    scriptContextEverRegistered(false),
 #if DBG_DUMP || defined(PROFILE_EXEC)
     topLevelScriptSite(nullptr),
 #endif
@@ -2048,7 +2049,7 @@ ThreadContext::RegisterScriptContext(Js::ScriptContext *scriptContext)
         scriptContext->ForceNoNative();
     }
     scriptContextCount++;
-
+    scriptContextEverRegistered = true;
 }
 
 void
