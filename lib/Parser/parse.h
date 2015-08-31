@@ -702,7 +702,7 @@ private:
 
     template<bool buildAST> ParseNodePtr ParseArrayLiteral();
 
-    template<bool buildAST> ParseNodePtr ParseStatement(bool isSourceElement = false, bool checkForPossibleObjectPattern = false);
+    template<bool buildAST> ParseNodePtr ParseStatement(bool isSourceElement = false);
     template<bool buildAST> ParseNodePtr ParseVariableDeclaration(
         tokens declarationType, 
         charcount_t ichMin,
@@ -875,7 +875,6 @@ private:
     void AppendToList(ParseNodePtr * node, ParseNodePtr nodeToAppend);
 
     bool IsES6DestructuringEnabled() const;
-    bool IsPossibleObjectPatternExpression();
     bool IsPossiblePatternStart() const { return m_token.tk == tkLCurly || m_token.tk == tkLBrack; }
 
     template<bool buildAST> ParseNodePtr ParseTryCatchFinally();

@@ -8000,7 +8000,7 @@ ParseNodePtr Parser::ParseCase(ParseNodePtr *ppnodeBody)
 Parse a single statement. Digest a trailing semicolon.
 ***************************************************************************/
 template<bool buildAST>
-ParseNodePtr Parser::ParseStatement(bool isSourceElement/* = false*/, bool checkForPossibleObjectPattern/* = false*/)
+ParseNodePtr Parser::ParseStatement(bool isSourceElement/* = false*/)
 {
     ParseNodePtr *ppnodeT;
     ParseNodePtr pnodeT;
@@ -8703,14 +8703,7 @@ LEndSwitch:
     }
 
     case tkLCurly:
-        if (checkForPossibleObjectPattern && IsPossibleObjectPatternExpression()) // check for {...} = 
-        {
-            pnode = ParseExpr<buildAST>();
-        }
-        else
-        {
-            pnode = ParseBlock<buildAST>(pnodeLabel, pLabelIdList);
-        }
+        pnode = ParseBlock<buildAST>(pnodeLabel, pLabelIdList);
         break;
 
     case tkSColon:
@@ -9221,7 +9214,7 @@ void Parser::ParseStmtList(ParseNodePtr *ppnodeList, ParseNodePtr **pppnodeLast,
             }
         }
 
-        if (NULL != (pnodeStmt = ParseStatement<buildAST>(isSourceElementList, IsES6DestructuringEnabled())))
+        if (NULL != (pnodeStmt = ParseStatement<buildAST>(isSourceElementList)))
         {
             Assert(buildAST || BindDeferredPidRefs());
             if (buildAST)
@@ -10774,48 +10767,6 @@ ParseNodePtr Parser::ConvertToPattern(ParseNodePtr pnode)
         }
     }
     return pnode;
-}
-
-bool Parser::IsPossibleObjectPatternExpression()
-{
-    // Goal of this function to achieve if the current text satisfies
-    // { ..<bunch of expression ...} = 
-
-    Assert(m_token.tk == tkLCurly);
-
-    int curlyCount = 1;
-    bool isValid = false;
-
-    RestorePoint begin;
-    m_pscan->Capture(&begin);
-
-    while (m_token.tk != tkEOF)
-    {
-        m_pscan->Scan();
-        if (m_token.tk == tkLCurly)
-        {
-            curlyCount++;
-        }
-        else if (m_token.tk == tkRCurly)
-        {
-            curlyCount--;
-            if (curlyCount == 0)
-            {
-                m_pscan->Scan();
-                isValid = (m_token.tk == tkAsg);
-                break;
-            }
-        }
-        else if (m_token.tk == tkStrTmplBasic || m_token.tk == tkStrTmplBegin)
-        {
-            // String template has it's own state machine - let's re-use that.
-            ParseStringTemplateDecl<false>(nullptr /*pnodeTagFnc*/);
-        }
-
-        Assert(curlyCount != 0);
-    }
-    m_pscan->SeekTo(begin);
-    return isValid;
 }
 
 // This essentially be called for verifying the structure of the current tree with satisfying the destructuring grammer.
