@@ -216,9 +216,11 @@ HRESULT ExecuteTestWithMemoryCheck(BSTR fileName)
     }
 
     _flushall();
-
 #ifdef CHECK_MEMORY_LEAK
+    // temporary work around ucrt limitation.
+#if defined(_MSC_VER) && (_MSC_VER <= 1800)
     ChakraRTInterface::SetEnableCheckMemoryLeakOutput(true);
+#endif
 #endif
     return hr;
 }
