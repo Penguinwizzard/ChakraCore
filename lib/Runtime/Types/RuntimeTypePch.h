@@ -4,12 +4,6 @@
 
 #pragma once
 
-#if defined(_UCRT)
-#include <cmath>
-#else
-#include <math.h>
-#endif
-
 #include "Runtime.h"
 #include "Language\CacheOperators.h"
 #include "Language\InlineCachePointerArray.h"

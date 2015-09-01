@@ -8,6 +8,10 @@ namespace Js
 {
     class ScriptContext;
     struct InlineCache;    
+    class DebugManager;
+
+    struct ReturnedValue;
+    typedef JsUtil::List<ReturnedValue*> ReturnedValueList;
 }
 
 struct IAuthorFileContext;
@@ -914,10 +918,6 @@ public:
     Recycler* GetRecycler() { return recycler; }
 
     Recycler* EnsureRecycler();
-
-#ifdef ENABLE_DEBUG_CONFIG_OPTIONS
-    HCRYPTPROV EnsureCryptoContext();
-#endif
 
     ThreadContext::CollectCallBack * AddRecyclerCollectCallBack(RecyclerCollectCallBackFunction callback, void * context);
     void RemoveRecyclerCollectCallBack(ThreadContext::CollectCallBack * collectCallBack);

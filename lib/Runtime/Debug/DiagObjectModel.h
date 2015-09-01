@@ -9,6 +9,7 @@ namespace Js
     class IDiagObjectModelDisplay;
     class RecyclableMethodsGroupWalker;
     class RecyclableObjectWalker;
+    class RecyclableArrayWalker;
 
     // Concrete type for manipulating JS Vars
     struct ResolvedObject

@@ -6,14 +6,7 @@
 
 namespace Js
 {
-    typedef JsUtil::MruDictionary<UnifiedRegex::RegexKey, UnifiedRegex::RegexPattern*> RegexPatternMruMap;
-
-    struct RegexMatchState
-    {
-        const wchar_t* input;
-        TempArenaAllocatorObject* tempAllocatorObj;
-        UnifiedRegex::Matcher* matcher;
-    };
+    struct RegexMatchState;
 
     class RegexHelper
     {
@@ -34,19 +27,6 @@ namespace Js
         // Primitives
         //
 
-#if ENABLE_REGEX_CONFIG_OPTIONS
-        static void Trace(ScriptContext* scriptContext, UnifiedRegex::RegexStats::Use use, JavascriptRegExp* regularExpression, JavascriptString* input);
-        static void Trace(ScriptContext* scriptContext, UnifiedRegex::RegexStats::Use use, JavascriptRegExp* regularExpression, JavascriptString* input, JavascriptString* replace);
-
-        static void Trace(
-            ScriptContext* scriptContext, 
-            UnifiedRegex::RegexStats::Use use,
-            JavascriptRegExp* regularExpression,
-            const wchar_t *const input,
-            const CharCount inputLength,
-            const wchar_t *const replace = 0,
-            const CharCount replaceLength = 0);
-#endif
     public:
         static UnifiedRegex::GroupInfo SimpleMatch(ScriptContext * scriptContext, UnifiedRegex::RegexPattern * pattern, const wchar_t * inputStr,  CharCount inputLength, CharCount offset);       
         static Var NonMatchValue(ScriptContext* scriptContext, bool isGlobalCtor);
@@ -147,17 +127,3 @@ namespace Js
         static int GetReplaceSubstitutions(const wchar_t * const replaceStr, CharCount const replaceLength, ArenaAllocator * const tempAllocator, CharCount** const substitutionOffsetsOut);
     };
 }
-
-namespace JsUtil
-{
-    template <>
-    class ValueEntry<Js::RegexPatternMruMap::MruDictionaryData>: public BaseValueEntry<Js::RegexPatternMruMap::MruDictionaryData>
-    {
-    public:
-        void Clear()
-        {
-            this->value = 0;
-        }
-    };
-
-};

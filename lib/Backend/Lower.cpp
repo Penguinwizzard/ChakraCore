@@ -5,6 +5,14 @@
 
 
 #include "BackEnd.h"
+#include "Debug\DebuggingFlags.h"
+#include "Debug\DiagProbe.h"
+#include "Debug\DebugManager.h"
+
+// Parser includes
+// TODO: clean up the need of these regex related header here just for GroupInfo needed in RegexPattern
+#include "RegexCommon.h"
+#include "RegexPattern.h"
 
 ///----------------------------------------------------------------------------
 ///
@@ -19482,7 +19490,7 @@ Lowerer::CreateHelperCallOpnd(IR::JnHelperMethod helperMethod, int helperArgCoun
     {
         // Create DiagHelperCallOpnd to indicate that it's needed to wrap original helper with try-catch wrapper,
         // so that we can ignore exception and bailout to next stmt in debugger.
-        // For details, see: Lib\Runtime\Language\DiagHelperMethodWrapper.{h,cpp}.
+        // For details, see: Lib\Runtime\Debug\DiagHelperMethodWrapper.{h,cpp}.
         helperCallOpnd = IR::DiagHelperCallOpnd::New(helperMethod, func, helperArgCount);
     }
     else

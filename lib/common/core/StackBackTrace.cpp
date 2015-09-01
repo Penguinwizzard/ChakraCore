@@ -5,6 +5,7 @@
 #include "StdAfx.h"
 
 #ifdef STACK_BACK_TRACE
+#include "core\DbgHelpSymbolManager.h"
 
 StackBackTrace::StackBackTrace(ULONG framesToSkip, ULONG framesToCapture) : requestedFramesToCapture(framesToCapture)
 {

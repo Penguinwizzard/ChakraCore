@@ -5,6 +5,7 @@
 #include "RuntimeLanguagePch.h"
 #include "Types\WithScopeObject.h"
 #include "Library\JavascriptPromise.h"
+#include "Library\JavascriptRegularExpression.h"
 
 #ifndef SCRIPT_DIRECT_TYPE
 typedef enum JsNativeValueType

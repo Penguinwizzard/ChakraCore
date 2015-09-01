@@ -4,6 +4,4 @@
 #pragma once
 
 #include "Runtime.h"
-
-// REVIEW: ChakraCore Dependency
 #include "JsrtContext.h"

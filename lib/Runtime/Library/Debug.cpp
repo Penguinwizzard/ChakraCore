@@ -5,6 +5,7 @@
 #include "RuntimeLibraryPch.h"
 
 #if DBG_DUMP
+#include <strsafe.h>
 WCHAR* DumpCallStack(uint frameCount) { return DumpCallStackFull(frameCount, /*print*/ true); }
 
 WCHAR* DumpCallStackFull(uint frameCount, bool print)

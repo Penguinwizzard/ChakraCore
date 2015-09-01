@@ -3,6 +3,9 @@
 //----------------------------------------------------------------------------
 
 #include "RuntimeLanguagePch.h"
+#include "Debug\DiagProbe.h"
+#include "Debug\BreakpointProbe.h"
+#include "Debug\DebugDocument.h"
 
 namespace Js
 {
@@ -404,5 +407,19 @@ namespace Js
 
             this->m_debugDocument = nullptr;
         }
+    }
+
+    bool Utf8SourceInfo::GetDebugDocumentName(BSTR * sourceName)
+    {
+        if (this->HasDebugDocument() && this->GetDebugDocument()->HasDocumentText())
+        {
+            // ToDo (SaAgarwa): Fix for JsRT debugging
+            IDebugDocumentText *documentText = static_cast<IDebugDocumentText *>(this->GetDebugDocument()->GetDocumentText());
+            if (documentText->GetName(DOCUMENTNAMETYPE_URL, sourceName) == S_OK)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }

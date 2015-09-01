@@ -83,24 +83,23 @@ public:
     {
         ForEachProfiler([&] (MemoryProfiler * memoryProfiler)
         {
-            memoryProfiler->WithArenaUsageSummary(true, [&] (JsUtil::List<LPWSTR, ArenaAllocator> * name, JsUtil::List<ArenaMemoryDataSummary *, ArenaAllocator>* summaries) 
-            {
-                auto count = name->Count();
+            memoryProfiler->WithArenaUsageSummary(true, [&] (int count, _In_reads_(count) LPWSTR * name, _In_reads_(count) ArenaMemoryDataSummary * summaries)
+            {                
                 for (int i = 0; i < count; i++)
                 {
-                    ArenaMemoryDataSummary * data = summaries->Item(i);
+                    ArenaMemoryDataSummary * data = summaries[i];
                     if (data == null)
                     {
                         continue;
                     }
-                    handler(name->Item(i), data);
+                    handler(name[i], data);
                 }
             });
         });
     }
 
 private:
-    void CreateArenaUsageSummary(ArenaAllocator* alloc, bool liveOnly, JsUtil::List<LPWSTR, ArenaAllocator>*& name, JsUtil::List<ArenaMemoryDataSummary *, ArenaAllocator>*& summaries);
+    int CreateArenaUsageSummary(ArenaAllocator* alloc, bool liveOnly, _Out_ LPWSTR *& name, _Out_ ArenaMemoryDataSummary **& summaries);
 
     template<typename THandler>
     void WithArenaUsageSummary(bool liveOnly, THandler handler);
@@ -149,10 +148,10 @@ MemoryProfiler::WithArenaUsageSummary(bool liveOnly, THandler handler)
 
     PageAllocator tempPageAlloc(NULL, Js::Configuration::Global.flags);
     ArenaAllocator tempAlloc(L"MemoryProfiler", &tempPageAlloc, Js::Throw::OutOfMemory);
-    JsUtil::List<LPWSTR, ArenaAllocator> * name;
-    JsUtil::List<ArenaMemoryDataSummary *, ArenaAllocator> * summaries;
-    CreateArenaUsageSummary(&tempAlloc, liveOnly, name, summaries);
-    handler(name, summaries);
+    LPWSTR * name;
+    ArenaMemoryDataSummary ** summaries;    
+    int count = CreateArenaUsageSummary(&tempAlloc, liveOnly, name, summaries);
+    handler(count, name, summaries);
 }
 
 #endif

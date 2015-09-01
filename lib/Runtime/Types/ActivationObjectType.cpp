@@ -3,6 +3,7 @@
 //----------------------------------------------------------------------------
 
 #include "RuntimeTypePch.h"
+#include "cmperr.h"
 
 namespace Js
 {

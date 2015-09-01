@@ -5,6 +5,7 @@
 #pragma once
 
 #include "StdAfx.h"
+#include <strsafe.h>
 #include "StackOverflowException.h"
 
 // dbghelp.h is not clean with warning 4091

@@ -3,8 +3,17 @@
 //----------------------------------------------------------------------------
 
 #include "Backend.h"
+
+// Parser includes
+// TODO: clean up the need of these regex related header here just for GroupInfo needed in RegexHelper
+#include "RegexCommon.h"
+
+#include "Library\RegexHelper.h"
+
+#include "Debug\DiagHelperMethodWrapper.h"
 #include "Math\JavascriptSSE2MathOperators.h"
 #include "Math\JavascriptSSE2MathOperators.inl"
+#include "Math\CrtSSE2Math.h"
 
 namespace IR
 {

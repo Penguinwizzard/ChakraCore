@@ -12,6 +12,10 @@
 #include "Library\dataview.h"
 #include "Library\JavascriptSymbol.h"
 
+// Parser Includes
+#include "cmperr.h"     // For ERRnoMemory
+#include "screrror.h"   // For CompileScriptException
+
 JsErrorCode CheckContext(JsrtContext *currentContext, bool verifyRuntimeState, bool allowInObjectBeforeCollectCallback)
 {
     if (currentContext == NULL)

@@ -4,6 +4,7 @@
 
 #include "StdAfx.h"
 #pragma hdrstop
+#include "errstr.h"
 
 void CopyException (EXCEPINFO *peiDest, const EXCEPINFO *peiSource)
 {

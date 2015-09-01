@@ -6,6 +6,8 @@
 
 namespace Js
 {
+    struct InterpreterHaltState;
+
     class DebugManager
     {
         friend class RecyclableObjectDisplay;

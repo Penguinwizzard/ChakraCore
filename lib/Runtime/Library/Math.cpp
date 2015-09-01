@@ -4,6 +4,7 @@
 
 #include "RuntimeLibraryPch.h"
 #include "Language\JavascriptMathOperators.h"
+#include "Math\CrtSSE2Math.h"
 
 #if defined(_M_IX86) || defined(_M_X64)
 #pragma intrinsic(_mm_round_sd)

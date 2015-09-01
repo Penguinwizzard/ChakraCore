@@ -19,21 +19,26 @@ namespace Js
 {
     class ScriptContext;
     class JavascriptString;
-    class JavascriptRegularExpressionResult;
 }
 
 namespace UnifiedRegex {
     struct RegexPattern;
-    struct Program;
+    struct Program;  
+    template <typename T> class StandardChars;
+    typedef StandardChars<uint8> UTF8StandardChars;
+    typedef StandardChars<wchar_t> UnicodeStandardChars;
+#if ENABLE_REGEX_CONFIG_OPTIONS
+    class DebugWriter;
+    struct RegexStats;
+    class RegexStatsDatabase;
+#endif
 }
 
 #include "ParserCommon.h"
 #include "alloc.h"
 #include "cmperr.h"
-#include "errstr.h"
-#include "globals.h"
 #include "idiom.h"
-#include "keywords.h"
+#include "popcode.h"
 #include "ptree.h"
 #include "tokens.h"
 #include "hash.h"
@@ -42,28 +47,5 @@ namespace UnifiedRegex {
 #include "screrror.h"
 #include "rterror.h"
 #include "parse.h"
-
-#include "RegexFlags.h"
-
-#include "Chars.h"
-#include "DebugWriter.h"
-#include "RegexStats.h"
-#include "CaseInsensitive.h"
-#include "BitCounts.h"
-#include "CharSet.h"
-#include "CharMap.h"
-#include "CharTrie.h"
-#include "StandardChars.h"
-#include "OctoquadIdentifier.h"
-#include "TextbookBoyerMoore.h"
-#include "RegexRunTime.h"
-#include "RegexCompileTime.h"
-#include "RegexParser.h"
-#include "RegexPattern.h"
-
-
-#include "pnodewalk.h"
-#include "pnodevisit.h"
-#include "pnodechange.h"
 
 #include "BackgroundParser.h"

@@ -346,6 +346,7 @@ namespace Js
         void SetCallerUtf8SourceInfo(Utf8SourceInfo* callerUtf8SourceInfo);
         Utf8SourceInfo* GetCallerUtf8SourceInfo() const;
 
+        bool GetDebugDocumentName(BSTR * sourceName);
     private:
 
         size_t m_cchLength;               // The number of characters encoded in m_utf8Source.

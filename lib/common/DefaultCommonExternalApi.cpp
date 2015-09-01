@@ -3,6 +3,7 @@
 //----------------------------------------------------------------------------
 
 #pragma once
+#include "core\ConfigParser.h"
 
 // Include this file got get the default behavior for JsUtil::ExternalApi functions.
 void JsUtil::ExternalApi::RecoverUnusedMemory()

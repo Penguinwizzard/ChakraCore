@@ -5,12 +5,6 @@
 #include "StdAfx.h"
 
 #include <time.h>
-#if defined(_UCRT)
-#include <cmath>
-#else
-#include <math.h>
-#endif
-
 namespace Js {
 
     static const double TicksPerMinute = 60000.0;

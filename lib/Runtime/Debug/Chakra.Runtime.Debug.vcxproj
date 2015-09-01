@@ -45,6 +45,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)DebugDocument.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)DebuggingFlags.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)DebugManager.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)DiagHelperMethodWrapper.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)DiagObjectModel.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)DiagProbe.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)DiagStackFrame.cpp" />
@@ -61,9 +62,10 @@
     <ClInclude Include="DebugDocument.h" />    
     <ClInclude Include="DebuggingFlags.h" />
     <ClInclude Include="DebugManager.h" />
+    <ClInclude Include="DiagHelperMethodWrapper.h" />
     <ClInclude Include="DiagObjectModel.h" />
     <ClInclude Include="DiagProbe.h" />
-    <ClInclude Include="DiagStackFrame.h" />
+    <ClInclude Include="DiagStackFrame.h" />    
     <ClInclude Include="MutationBreakpoint.h" />
     <ClInclude Include="ProbeContainer.h" />
     <ClInclude Include="RuntimeDebugPch.h" />

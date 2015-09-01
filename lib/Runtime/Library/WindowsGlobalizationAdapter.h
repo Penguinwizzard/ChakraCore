@@ -10,11 +10,14 @@
 #ifndef NTBUILD
 #include "windows.globalization.numberformatting.h"
 #include "windows.globalization.datetimeformatting.h"
+#include "Windows.Data.Text.h"
 #include "activation.h"
 using namespace ABI;
 #endif
 
 #define IfFailedReturn(EXPR) do { hr = (EXPR); if (FAILED(hr)) { return hr; }} while(FALSE)
+
+class ThreadContext;
 
 namespace Js
 {

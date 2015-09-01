@@ -5,6 +5,8 @@
 #include "StdAfx.h"
 
 #ifdef DBGHELP_SYMBOL_MANAGER
+#include "core\DbgHelpSymbolManager.h"
+
 // Initialization order
 //  AB AutoSystemInfo
 //  AD PerfCounter

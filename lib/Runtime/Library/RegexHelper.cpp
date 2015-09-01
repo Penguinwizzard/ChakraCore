@@ -4,6 +4,14 @@
 
 #include "RuntimeLibraryPch.h"
 
+// Parser Includes
+#include "DebugWriter.h"
+#include "RegexStats.h"
+#include "OctoquadIdentifier.h"
+#include "RegexCompileTime.h"
+#include "RegexParser.h"
+#include "RegexPattern.h"
+
 namespace Js
 {
     // ----------------------------------------------------------------------
@@ -265,31 +273,16 @@ namespace Js
     // Primitives
     // ----------------------------------------------------------------------
 #if ENABLE_REGEX_CONFIG_OPTIONS
-    void RegexHelper::Trace(ScriptContext* scriptContext, UnifiedRegex::RegexStats::Use use, JavascriptRegExp* regExp, JavascriptString* input)
-    {
-        Assert(regExp);
-        Assert(input);
+    
 
-        Trace(scriptContext, use, regExp, input->GetString(), input->GetLength());
-    }
-
-    void RegexHelper::Trace(ScriptContext* scriptContext, UnifiedRegex::RegexStats::Use use, JavascriptRegExp* regExp, JavascriptString* input, JavascriptString* replace)
-    {
-        Assert(regExp);
-        Assert(input);
-        Assert(replace);
-
-        Trace(scriptContext, use, regExp, input->GetString(), input->GetLength(), replace->GetString(), replace->GetLength());
-    }
-
-    void RegexHelper::Trace(
+    static void RegexHelperTrace(
         ScriptContext* scriptContext, 
         UnifiedRegex::RegexStats::Use use,
         JavascriptRegExp* regExp,
         const wchar_t *const input,
         const CharCount inputLength,
-        const wchar_t *const replace,
-        const CharCount replaceLength)
+        const wchar_t *const replace = 0,
+        const CharCount replaceLength = 0)
     {
         Assert(regExp);
         Assert(input);
@@ -324,11 +317,35 @@ namespace Js
             w->Flush();
         }
     }
+
+    static void RegexHelperTrace(ScriptContext* scriptContext, UnifiedRegex::RegexStats::Use use, JavascriptRegExp* regExp, JavascriptString* input)
+    {
+        Assert(regExp);
+        Assert(input);
+
+        RegexHelperTrace(scriptContext, use, regExp, input->GetString(), input->GetLength());
+    }
+
+    static void RegexHelperTrace(ScriptContext* scriptContext, UnifiedRegex::RegexStats::Use use, JavascriptRegExp* regExp, JavascriptString* input, JavascriptString* replace)
+    {
+        Assert(regExp);
+        Assert(input);
+        Assert(replace);
+
+        RegexHelperTrace(scriptContext, use, regExp, input->GetString(), input->GetLength(), replace->GetString(), replace->GetLength());
+    }
 #endif
 
     // ----------------------------------------------------------------------
     // Regex entry points
     // ----------------------------------------------------------------------
+
+    struct RegexMatchState
+    {
+        const wchar_t* input;
+        TempArenaAllocatorObject* tempAllocatorObj;
+        UnifiedRegex::Matcher* matcher;
+    };
 
     // String.prototype.match (ES5 15.5.4.10)
     template <bool updateHistory>
@@ -339,7 +356,7 @@ namespace Js
         CharCount inputLength = input->GetLength();
 
 #if ENABLE_REGEX_CONFIG_OPTIONS
-        Trace(scriptContext, UnifiedRegex::RegexStats::Match, regularExpression, input);
+        RegexHelperTrace(scriptContext, UnifiedRegex::RegexStats::Match, regularExpression, input);
 #endif
 
         UnifiedRegex::GroupInfo lastSuccessfullMatch; // initially undefined
@@ -503,7 +520,7 @@ namespace Js
         UnifiedRegex::RegexPattern* pattern = regularExpression->GetPattern();
         
 #if ENABLE_REGEX_CONFIG_OPTIONS
-        Trace(scriptContext, UnifiedRegex::RegexStats::Exec, regularExpression, input);
+        RegexHelperTrace(scriptContext, UnifiedRegex::RegexStats::Exec, regularExpression, input);
 #endif
 
         const bool isGlobal = pattern->IsGlobal();
@@ -552,7 +569,7 @@ namespace Js
         UnifiedRegex::GroupInfo match; // initially undefined
 
 #if ENABLE_REGEX_CONFIG_OPTIONS
-        Trace(scriptContext, UnifiedRegex::RegexStats::Test, regularExpression, input);
+        RegexHelperTrace(scriptContext, UnifiedRegex::RegexStats::Test, regularExpression, input);
 #endif
         const bool isGlobal = pattern->IsGlobal();
         const bool isSticky = pattern->IsSticky();
@@ -703,7 +720,7 @@ namespace Js
         JavascriptString* newString = null;
 
 #if ENABLE_REGEX_CONFIG_OPTIONS
-        Trace(scriptContext, UnifiedRegex::RegexStats::Replace, regularExpression, input, replace);
+        RegexHelperTrace(scriptContext, UnifiedRegex::RegexStats::Replace, regularExpression, input, replace);
 #endif
 
         RegexMatchState state;
@@ -827,7 +844,7 @@ namespace Js
         UnifiedRegex::GroupInfo lastMatch; // initially undefined
 
 #if ENABLE_REGEX_CONFIG_OPTIONS
-        Trace(scriptContext, UnifiedRegex::RegexStats::Replace, regularExpression, input, scriptContext->GetLibrary()->CreateStringFromCppLiteral(L"<replace function>"));
+        RegexHelperTrace(scriptContext, UnifiedRegex::RegexStats::Replace, regularExpression, input, scriptContext->GetLibrary()->CreateStringFromCppLiteral(L"<replace function>"));
 #endif
 
         RegexMatchState state;
@@ -1109,7 +1126,7 @@ namespace Js
         }
 
 #if ENABLE_REGEX_CONFIG_OPTIONS
-        Trace(scriptContext, UnifiedRegex::RegexStats::Split, regularExpression, input);
+        RegexHelperTrace(scriptContext, UnifiedRegex::RegexStats::Split, regularExpression, input);
 #endif
 
         JavascriptArray* ary = scriptContext->GetLibrary()->CreateArrayOnStack(stackAllocationPointer);
@@ -1221,7 +1238,7 @@ namespace Js
         CharCount inputLength = input->GetLength();
 
 #if ENABLE_REGEX_CONFIG_OPTIONS
-        Trace(scriptContext, UnifiedRegex::RegexStats::Search, regularExpression, input);
+        RegexHelperTrace(scriptContext, UnifiedRegex::RegexStats::Search, regularExpression, input);
 #endif
         UnifiedRegex::GroupInfo match = RegexHelper::SimpleMatch(scriptContext, pattern, inputStr, inputLength, 0);
 
@@ -1540,7 +1557,7 @@ namespace Js
         UnifiedRegex::GroupInfo match; // initially undefined
 
 #if ENABLE_REGEX_CONFIG_OPTIONS
-        Trace(scriptContext, UnifiedRegex::RegexStats::Test, regularExpression, input, inputLength);
+        RegexHelperTrace(scriptContext, UnifiedRegex::RegexStats::Test, regularExpression, input, inputLength);
 #endif
         const bool isGlobal = pattern->IsGlobal();
         const bool isSticky = pattern->IsSticky();

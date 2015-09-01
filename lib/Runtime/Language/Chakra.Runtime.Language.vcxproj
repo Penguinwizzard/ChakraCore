@@ -98,12 +98,12 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)StackTraceArguments.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Utf8SourceInfo.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ValueType.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)ScriptContextOptimizationOverrideInfo.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)DiagHelperMethodWrapper.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)ScriptContextOptimizationOverrideInfo.cpp" />    
     <ClCompile Include="$(MSBuildThisFileDirectory)InterpreterStackFrame.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptConversion.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptOperators.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptStackWalker.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)LeaveScriptObject.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ScriptContext.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ScriptContextProfiler.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)RuntimeLanguagePch.cpp">
@@ -165,13 +165,13 @@
     <ClInclude Include="ValueType.h" />
     <ClInclude Include="ScriptContextOptimizationOverrideInfo.h" />
     <ClInclude Include="Arguments.h" />
-    <ClInclude Include="CallInfo.h" />
-    <ClInclude Include="DiagHelperMethodWrapper.h" />
+    <ClInclude Include="CallInfo.h" />    
     <ClInclude Include="InterpreterStackFrame.h" />
     <ClInclude Include="JavascriptConversion.h" />
     <ClInclude Include="JavascriptOperators.h" />
     <ClInclude Include="JavascriptFunctionArgIndex.h" />
     <ClInclude Include="JavascriptStackWalker.h" />
+    <ClInclude Include="RegexPatternMruMap.h" />
     <ClInclude Include="ScriptContext.h" />
     <ClInclude Include="ScriptContextBase.h" />
     <ClInclude Include="ScriptContextProfiler.h" />
@@ -210,8 +210,7 @@
     <None Include="JavascriptMathOperators.inl" />    
     <None Include="JavascriptConversion.inl" />
     <None Include="JavascriptOperators.inl" />
-    <None Include="ScriptContext.inl" />
-    <None Include="DiagHelperMethodWrapper.inl" />
+    <None Include="ScriptContext.inl" />    
   </ItemGroup>
   <!-- In Razzle build, we are still rely on the publish directory -->
   <ItemGroup>

@@ -5,6 +5,7 @@
 // JScriptDiag does not link with Runtime.lib and does not include .cpp files, so this file will be included as a header
 #pragma once
 #include "RuntimeLibraryPch.h"
+#include "DataStructures\LargeStack.h"
 
 namespace Js
 {

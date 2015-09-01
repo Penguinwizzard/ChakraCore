@@ -2,6 +2,8 @@
 
 #pragma once
 
+template <class T> class LargeStack;
+
 namespace Js
 {
     #pragma region StringCopyInfo

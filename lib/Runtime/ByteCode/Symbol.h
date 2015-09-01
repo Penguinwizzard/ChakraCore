@@ -13,7 +13,6 @@ enum SymbolType : byte {
 };
 
 typedef JsUtil::CharacterBuffer<WCHAR> SymbolName;
-
 class Symbol
 {
 private:
@@ -276,10 +275,7 @@ public:
         isNonSimpleParameter = is;
     }
 
-    bool GetIsArguments() const
-    {
-        return decl != NULL && (decl->grfpn & PNodeFlags::fpnArguments);
-    }
+    bool GetIsArguments() const;
 
     void SetPosition(Js::PropertyId pos) {
         position=pos;

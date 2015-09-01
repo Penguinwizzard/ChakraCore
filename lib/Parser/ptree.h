@@ -10,17 +10,6 @@ typedef Ident *IdentPtr;
 class Scope;
 
 /***************************************************************************
-Node operators (indicates semantics of the parse node)
-***************************************************************************/
-enum OpCode : byte
-{
-#define PTNODE(nop,sn,pc,nk,ok,json)  nop,
-#include "ptlist.h"
-    knopLim
-};
-
-
-/***************************************************************************
 Flags for classifying node operators.
 ***************************************************************************/
 const uint fnopNone     = 0x0000;

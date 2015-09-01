@@ -193,37 +193,6 @@ namespace Js
         return ToStringNanOrInfinite(value, *scriptContext->GetLibrary());
     }
 
-    __inline JavascriptString* JavascriptNumber::ToLocaleStringNanOrInfinite(double value, ScriptContext* scriptContext)
-    {
-        if(!NumberUtilities::IsFinite(value))
-        {
-            if(IsNan(value))
-            {
-                return ToStringNan(scriptContext);
-            }
-
-            BSTR bstr = null;
-            if(IsPosInf(value))
-            {
-                bstr = BstrGetResourceString(IDS_INFINITY);
-            }
-            else
-            {
-                AssertMsg(IsNegInf(value), "bad handling of infinite number");
-                bstr = BstrGetResourceString(IDS_MINUSINFINITY);
-            }
-
-            if (bstr == null)
-            {
-                Js::JavascriptError::ThrowTypeError(scriptContext, VBSERR_InternalError /* TODO-ERROR: L"NEED MESSAGE" */);
-            }
-            JavascriptString* str = JavascriptString::NewCopyBuffer(bstr, SysStringLen(bstr), scriptContext);
-            SysFreeString(bstr);
-            return str;
-        }
-        return null;
-    }
-
     __inline Var JavascriptNumber::FormatDoubleToString( double value, Js::NumberUtilities::FormatType formatType, int formatDigits, ScriptContext* scriptContext )
     {
         static const int bufSize = 256;

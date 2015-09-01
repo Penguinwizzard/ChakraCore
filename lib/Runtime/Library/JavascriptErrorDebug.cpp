@@ -3,7 +3,9 @@
 //----------------------------------------------------------------------------
 
 #include "RuntimeLibraryPch.h"
+#include <strsafe.h>
 #include "restrictederrorinfo.h"
+#include "errstr.h"
 
 // Temporarily undefining "null" (defined in Common.h) to avoid compile errors when importing mscorlib.tlb
 #undef null

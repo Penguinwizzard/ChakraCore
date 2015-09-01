@@ -7,10 +7,20 @@
 #include "ThreadServiceWrapper.h"
 #include "ThreadBoundThreadContextManager.h"
 #include "Types\TypePropertyCache.h"
+#include "Debug\DebuggingFlags.h"
+#include "Debug\DiagProbe.h"
+#include "Debug\DebugManager.h"
+
+#include "StandardChars.h"
+
+#if DBG
+#include "Memory\StressTest.h"
+#endif
 
 #ifdef DYNAMIC_PROFILE_MUTATOR
 #include "Language\DynamicProfileMutator.h"
 #endif
+
 int TotalNumberOfBuiltInProperties = Js::PropertyIds::_countJSOnlyProperty;
      
 /*

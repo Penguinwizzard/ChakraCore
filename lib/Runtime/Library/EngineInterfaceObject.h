@@ -6,6 +6,7 @@
 
 namespace Js
 {
+    class WindowsGlobalizationAdapter;
 
     #define EngineInterfaceObject_CommonFunctionProlog(function, callInfo) \
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault); \

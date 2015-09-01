@@ -412,8 +412,14 @@ namespace Js
             if (wasCallerSet)
             {
                 calleeHostScriptContext->SetCaller(previousSourceCaller, &originalCaller);
-                RELEASEPTR(previousSourceCaller);
-                RELEASEPTR(originalCaller);
+                if (previousSourceCaller) 
+                {
+                    previousSourceCaller->Release();
+                }
+                if (originalCaller)
+                {
+                    originalCaller->Release();
+                }
             }
         }
         Assert(result != NULL);

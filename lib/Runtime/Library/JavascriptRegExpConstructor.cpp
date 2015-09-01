@@ -3,6 +3,7 @@
 //----------------------------------------------------------------------------
 
 #include "RuntimeLibraryPch.h"
+#include "RegexPattern.h"
 
 namespace Js
 {

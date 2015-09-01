@@ -3,10 +3,8 @@
 //----------------------------------------------------------------------------
 
 // INL files
-#include "common\Int32Math.inl"
 #include "Common\NumberUtilities.inl"
 #include "Common\vtinfo.inl"
-#include "DataStructures\BigInt.inl"
 #include "DataStructures\DoublyLinkedListElement.inl"
 #include "DataStructures\DoublyLinkedList.inl"
 #include "Memory\Recycler.inl"

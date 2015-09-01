@@ -1,4 +1,9 @@
+//----------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved. 
+//----------------------------------------------------------------------------
+
 #include "Common.h"
+#include "core\ConfigParser.h"
 
 bool ConfigParserAPI::FillConsoleTitle(__ecount(cchBufferSize) LPWSTR buffer, size_t cchBufferSize, __in LPWSTR moduleName)
 {

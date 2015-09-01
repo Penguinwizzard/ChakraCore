@@ -33,8 +33,8 @@ namespace Js
 #endif //!DBG
 
     public:
-        inline BigInt(void);
-        inline ~BigInt(void);
+        BigInt(void);
+        ~BigInt(void);
 
         bool FInitFromRglu(ulong *prglu, long clu);
         bool FInitFromBigint(BigInt *pbiSrc);
@@ -50,8 +50,8 @@ namespace Js
         void Subtract(BigInt *pbi);
         int DivRem(BigInt *pbi);
 
-        inline long Clu(void);
-        inline ulong Lu(long ilu);
+        long Clu(void);
+        ulong Lu(long ilu);
         double GetDbl(void);
     };
 }

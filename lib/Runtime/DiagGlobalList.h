@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-// This is the list of global static variables exposed to Jscript9Diag for 
+// This is the list of global static variables exposed to ChakraDiag for 
 // hybrid debugging scenarios.
 // Entry(staticVariablName, DAC friendly name)
 

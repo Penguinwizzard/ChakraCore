@@ -67,8 +67,8 @@ namespace Js
         inline UnifiedRegex::RegexPattern* GetPattern() const { return pattern; }
         inline UnifiedRegex::RegexPattern* GetSplitPattern() const { return splitPattern; }
 
-        InternalString GetSource() const { return GetPattern()->GetSource(); }
-        UnifiedRegex::RegexFlags GetFlags() const { return GetPattern()->GetFlags(); }
+        InternalString GetSource() const;
+        UnifiedRegex::RegexFlags GetFlags() const;
 
         void CacheLastIndex();
         inline CharCountOrFlag GetLastIndex() {

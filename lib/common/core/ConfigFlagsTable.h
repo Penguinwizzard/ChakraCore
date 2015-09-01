@@ -259,7 +259,7 @@ namespace Js
 
     // Data
     protected:
-        JsUtil::List<Unit, NoCheckHeapAllocator>      range;
+        SList<Unit, NoCheckHeapAllocator>      range;
 
     // Construction 
     public:
@@ -809,14 +809,14 @@ template <typename TRangeUnitData>
 void
 RangeBase<TRangeUnitData>::Add(TRangeUnitData i, TRangeUnitData j)
 {
-    range.Add(RangeUnit<TRangeUnitData>(i, j));
+    range.Prepend(RangeUnit<TRangeUnitData>(i, j));
 }
 
 template <typename TRangeUnitData>
 bool
 RangeBase<TRangeUnitData>::ContainsAll()
 {
-    return range.Count() == 0;
+    return range.Empty();
 }
 
 ///----------------------------------------------------------------------------
@@ -832,13 +832,13 @@ RangeBase<TRangeUnitData>::ContainsAll()
 template <typename TRangeUnitData>
 bool RangeBase<TRangeUnitData>::InRange(TRangeUnitData n)
 {
-    if (range.Count() == 0)
+    if (range.Empty())
     {
         return true;
     }
     else
     {
-        return range.MapUntil([n](int, RangeUnit<TRangeUnitData> const& unit)
+        return range.MapUntil([n](RangeUnit<TRangeUnitData> const& unit)
         {
             return RangeUnitContains(unit, n);
         });

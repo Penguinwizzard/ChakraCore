@@ -35,6 +35,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)FixedBitVector.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)FixedBitVectorEnumerator.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)InternalStringNoCaseComparer.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)SizePolicy.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\StdAfx.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
@@ -82,8 +83,7 @@
     <ClInclude Include="InternalStringNoCaseComparer.h" />
     <ClInclude Include="Option.h" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="BigInt.inl" />
+  <ItemGroup>    
     <None Include="DoublyLinkedList.inl" />
     <None Include="DoublyLinkedListElement.inl" />
   </ItemGroup>

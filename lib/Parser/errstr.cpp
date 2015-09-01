@@ -3,6 +3,7 @@
 //----------------------------------------------------------------------------
 
 #include "StdAfx.h"
+#include "errstr.h"
 
 // scafolding - get a g_hInstance from scrbgase.cpp
 HANDLE g_hInstance;

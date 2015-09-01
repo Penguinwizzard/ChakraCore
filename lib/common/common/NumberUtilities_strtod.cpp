@@ -3,6 +3,7 @@
 //----------------------------------------------------------------------------
 
 #include <StdAfx.h>
+#include "DataStructures\BigInt.h"
 
 namespace Js
 {

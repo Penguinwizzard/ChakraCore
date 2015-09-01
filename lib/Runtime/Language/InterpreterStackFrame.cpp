@@ -4,7 +4,7 @@
 
 #include "RuntimeLanguagePch.h"
 #include "EHBailoutData.h"
-
+#include "Library\JavascriptRegularExpression.h"
 #if DBG_DUMP
 #include "ByteCode\OpCodeUtilAsmJs.h"
 #endif

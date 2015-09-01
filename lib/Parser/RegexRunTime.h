@@ -16,6 +16,7 @@ namespace UnifiedRegex
     struct ScannerInfo;
     class ContStack;
     class AssertionStack;
+    class OctoquadMatcher;
 
     enum class ChompMode : uint8
     {

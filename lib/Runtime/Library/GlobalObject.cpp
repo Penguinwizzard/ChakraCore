@@ -3,6 +3,7 @@
 //----------------------------------------------------------------------------
 
 #include "RuntimeLibraryPch.h"
+#include <strsafe.h>
 
 namespace Js
 {
@@ -939,7 +940,7 @@ namespace Js
 
             if (registerDocument)
             {
-                scriptContext->GetDebugContext()->RegisterFunction(funcBody, pszTitle);
+                funcBody->RegisterFuncToDiag(scriptContext, pszTitle);
                 funcBody = funcBody->GetParseableFunctionInfo(); // RegisterFunction may parse and update function body
             }
 
@@ -1101,7 +1102,7 @@ namespace Js
 
             if (registerDocument)
             {
-                scriptContext->GetDebugContext()->RegisterFunction(funcBody, pszTitle);
+                funcBody->RegisterFuncToDiag(scriptContext, pszTitle);
                 funcBody = funcBody->GetParseableFunctionInfo(); // RegisterFunction may parse and update function body
             }
 

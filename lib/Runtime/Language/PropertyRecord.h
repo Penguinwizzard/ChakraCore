@@ -15,6 +15,8 @@
 #define PropertyRecordTrace(...)
 #endif
 
+class ThreadContext;
+
 namespace Js
 {
     class PropertyRecord : FinalizableObject

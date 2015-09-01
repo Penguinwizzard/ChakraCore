@@ -10,6 +10,7 @@ Exception blocks
 class ErrHandler;
 struct ParseNode;
 class COleScript;
+interface IScanner;
 
 inline void FreeExcepInfo(EXCEPINFO *pei)
 {

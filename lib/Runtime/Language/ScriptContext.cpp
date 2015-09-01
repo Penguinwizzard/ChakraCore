@@ -3,8 +3,15 @@
 //----------------------------------------------------------------------------
 
 #include "RuntimeLanguagePch.h"
+
+// Parser Includes
+#include "RegexCommon.h"
+#include "DebugWriter.h"
+#include "RegexStats.h"
+
 #include "Library\AsyncDebug.h"
 #include "Library\ProfileString.h"
+#include "Debug\DiagHelperMethodWrapper.h"
 #include "BackEndAPI.h"
 #if PROFILE_DICTIONARY
 #include "DictionaryStats.h"
@@ -1052,23 +1059,9 @@ namespace Js
         return cache->dynamicRegexMap;
     }
 
-    void ScriptContext::SetTrigramAlphabet
-        (__in_xcount(regex::TrigramAlphabet::AlphaCount) char* alpha
-        , __in_xcount(regex::TrigramAlphabet::AsciiTableSize) char* alphaBits)
+    void ScriptContext::SetTrigramAlphabet(UnifiedRegex::TrigramAlphabet * trigramAlphabet)
     {
-        int i;
-        if (trigramAlphabet == null) {
-            ArenaAllocator* alloc = RegexAllocator();
-            trigramAlphabet = AnewStruct(alloc, UnifiedRegex::TrigramAlphabet);
-        }
-        for (i = 0; i < UnifiedRegex::TrigramAlphabet::AsciiTableSize; i++) {
-            trigramAlphabet->alphaBits[i] = UnifiedRegex::TrigramAlphabet::BitsNotInAlpha;
-        }
-        for (i = 0; i < UnifiedRegex::TrigramAlphabet::AlphaCount; i++) {
-            trigramAlphabet->alpha[i] = alpha[i];
-            trigramAlphabet->alphaBits[alpha[i]] = alphaBits[alpha[i]];
-        }
-        trigramAlphabet->InitTrigramMap();
+        this->trigramAlphabet = trigramAlphabet;
     }
 
     UnifiedRegex::RegexStacks *ScriptContext::RegexStacks()
@@ -1851,8 +1844,9 @@ namespace Js
         return threadContext->CreateTypeId();
     }
 
-    void ScriptContext::OnScriptStart(bool isRoot, bool isForcedEnter, bool isScript)
+    void ScriptContext::OnScriptStart(bool isRoot, bool isScript)
     {
+        const bool isForcedEnter = this->GetDebugContext() != nullptr ? this->GetDebugContext()->GetProbeContainer()->isForcedToEnterScriptStart : false;
         if (this->scriptStartEventHandler != null && ((isRoot && threadContext->GetCallRootLevel() == 1) || isForcedEnter))
         {
             if (this->GetDebugContext() != nullptr)

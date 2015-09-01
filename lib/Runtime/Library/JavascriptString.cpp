@@ -4,6 +4,8 @@
 
 #include "RuntimeLibraryPch.h"
 
+#include "DataStructures\BigInt.h"
+
 namespace Js
 {
     // White Space characters are defined in ES6 Section 11.2

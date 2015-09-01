@@ -5,9 +5,11 @@
 #pragma once
 
 #include <wchar.h>
-#include "Runtime.h"
 
-// Other runtime includes
+// =================
+// Runtime Includes
+// =================
+#include "Runtime.h"
 #include "ByteCode\StatementReader.h"
 #include "Language\EHBailoutData.h"
 #include "Language\AsmJsTypes.h"
@@ -18,6 +20,13 @@
 #include "Library\JavascriptGenerator.h"
 #include "Language\JavascriptMathOperators.h"
 #include "Language\JavascriptMathOperators.inl"
+#include "Library\JavascriptRegularExpression.h"
+// =================
+// Common Includes
+// =================
+#include "DataStructures\Pair.h"
+#include "DataStructures\HashTable.h"
+// =================
 
 //
 // Defines

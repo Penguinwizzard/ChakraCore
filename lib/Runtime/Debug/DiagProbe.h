@@ -60,7 +60,6 @@ namespace Js
         bool IsValid() const;
     };
 
-    class StepController;
 
     struct HaltCallback
     {

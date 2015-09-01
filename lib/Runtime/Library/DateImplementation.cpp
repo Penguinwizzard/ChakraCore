@@ -6,6 +6,8 @@
 #include <time.h>
 #include "DateImplementationData.h"
 
+#include "CharClassifier.h"
+
 namespace Js {
 
     static double ConvertToInteger(double dbl)

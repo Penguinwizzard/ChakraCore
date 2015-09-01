@@ -147,7 +147,7 @@ LeakReport::EnsureLeakReportFile()
         return false;
     }
     Print(L"================================================================================\n");
-    Print(L"Jscript9 Leak Report - PID: %d\n", ::GetCurrentProcessId());
+    Print(L"Chakra Leak Report - PID: %d\n", ::GetCurrentProcessId());
     __time64_t time_value = _time64(NULL);
     wchar_t time_string[26];
     struct tm local_time;

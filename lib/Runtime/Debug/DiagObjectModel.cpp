@@ -2,6 +2,13 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 #include "RuntimeDebugPch.h"
+
+// Parser includes
+#include "CharClassifier.h"
+// TODO: clean up the need of these regex related header here just for GroupInfo needed in JavascriptRegExpConstructor
+#include "RegexCommon.h"
+
+// Runtime includes
 #include "Library\ObjectPrototypeObject.h"
 #include "Library\BoundFunction.h"
 #include "Library\JavascriptRegExpConstructor.h"
@@ -13,6 +20,7 @@
 #include "Library\JavascriptWeakMap.h"
 #include "Library\JavascriptWeakSet.h"
 
+// Other includes
 #include <shlwapi.h>
 #include <strsafe.h>
 

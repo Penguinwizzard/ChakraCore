@@ -335,10 +335,7 @@ public:
     void SetCurrentSourceIndex(uint sourceIndex) { this->sourceIndex = sourceIndex; }
     uint GetCurrentSourceIndex(){return sourceIndex;}   
 
-    static inline bool IsFalse(ParseNode* node)
-    {
-        return (node->nop == knopInt && node->sxInt.lw == 0) || node->nop == knopFalse;
-    }
+    static bool IsFalse(ParseNode* node);
 
     void StartStatement(ParseNode* node);
     void EndStatement(ParseNode* node);

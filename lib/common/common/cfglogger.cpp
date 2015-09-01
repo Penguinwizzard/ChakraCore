@@ -5,6 +5,9 @@
 #include "StdAfx.h"
 
 #ifdef CONTROL_FLOW_GUARD_LOGGER
+#include "common\CFGLogger.h"
+#include "core\DbgHelpSymbolManager.h"
+
 // Initialization order
 //  AB AutoSystemInfo
 //  AD PerfCounter

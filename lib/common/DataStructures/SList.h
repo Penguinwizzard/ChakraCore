@@ -518,11 +518,21 @@ public:
     template <class Fn>
     void Map(Fn fn) const
     {
+        MapUntil([fn](TData& data) { fn(data); return false; });
+    }
+
+    template <class Fn>
+    bool MapUntil(Fn fn) const
+    {
         Iterator iter(this);
         while (iter.Next())
         {
-            fn(iter.Data());
+            if (fn(iter.Data()))
+            {
+                return true;
+            }
         }
+        return false;
     }
 private:
 

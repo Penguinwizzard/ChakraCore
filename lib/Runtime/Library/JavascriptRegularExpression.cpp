@@ -4,6 +4,10 @@
 
 #include "RuntimeLibraryPch.h"
 
+// Parser Includes
+#include "DebugWriter.h"
+#include "RegexPattern.h"
+
 namespace Js
 {
     JavascriptRegExp::JavascriptRegExp(UnifiedRegex::RegexPattern* pattern, DynamicType* type) :
@@ -87,6 +91,16 @@ namespace Js
         this->splitPattern = splitPattern;
     }
 
+    InternalString JavascriptRegExp::GetSource() const
+    { 
+        return GetPattern()->GetSource(); 
+    }
+
+    UnifiedRegex::RegexFlags JavascriptRegExp::GetFlags() const
+    { 
+        return GetPattern()->GetFlags(); 
+    }
+
     JavascriptRegExp* JavascriptRegExp::GetJavascriptRegExp(Var var, ScriptContext* scriptContext)
     {
         if (JavascriptRegExp::Is(var))
@@ -131,7 +145,7 @@ namespace Js
 
         if (callInfo.Count < 2)
         {
-            pattern = RegexHelper::CompileDynamic(scriptContext, L"", 0, L"", 0, false);
+            pattern = scriptContext->GetLibrary()->GetEmptyRegexPattern();
         }
         else if (JavascriptRegExp::Is(args[1]))
         {
@@ -420,7 +434,7 @@ namespace Js
 
         if (callInfo.Count == 1 )
         {
-            pattern = RegexHelper::CompileDynamic(scriptContext, L"", 0, L"", 0, false);
+            pattern = scriptContext->GetLibrary()->GetEmptyRegexPattern();
         }
         else if (JavascriptRegExp::Is(args[1]))
         {

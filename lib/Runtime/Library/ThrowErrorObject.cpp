@@ -2,6 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
+#include "Debug\DiagHelperMethodWrapper.h"
 
 namespace Js
 {

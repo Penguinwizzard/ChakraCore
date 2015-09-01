@@ -1444,11 +1444,10 @@ namespace Js
         void SetCapturesThis() { attributes = (Attributes)(attributes | Attributes::CapturesThis); }
         bool GetCapturesThis() { return (attributes & Attributes::CapturesThis) != 0; }
 
-        void BuildDeferredStubs(ParseNode *pnodeFnc);
-        DeferredFunctionStub *BuildDeferredStubTree(ParseNode *pnodeFnc, Recycler *recycler);
+        void BuildDeferredStubs(ParseNode *pnodeFnc);        
         DeferredFunctionStub *GetDeferredStubs() const { return this->deferredStubs; }
         void SetDeferredStubs(DeferredFunctionStub *stub) { this->deferredStubs = stub; }
-
+        void RegisterFuncToDiag(ScriptContext * scriptContext, wchar_t const * pszTitle);
     protected:
         static HRESULT MapDeferredReparseError(HRESULT& hrParse, const CompileScriptException& se);
 

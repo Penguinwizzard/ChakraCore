@@ -3,6 +3,7 @@
 //----------------------------------------------------------------------------
 
 #include "RuntimeLibraryPch.h"
+#include "errstr.h"
 
 #ifdef ERROR_TRACE
 #define TRACE_ERROR(...) { Trace(__VA_ARGS__); }

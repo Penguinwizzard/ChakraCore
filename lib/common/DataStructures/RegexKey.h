@@ -4,7 +4,7 @@
 
 namespace UnifiedRegex
 {
-    enum RegexFlags;
+    enum RegexFlags : uint8;
 
     class RegexKey
     {

@@ -22,9 +22,7 @@
             SAVE_FS0(); \
             Js::EnterScriptObject __enterScriptObject = Js::EnterScriptObject(__localScriptContext, &__entryExitRecord, \
                 _ReturnAddress(), doCleanup, isCallRoot, hasCaller); \
-            __localScriptContext->OnScriptStart(isCallRoot, \
-                __localScriptContext->GetDebugContext() != nullptr ? __localScriptContext->GetDebugContext()->GetProbeContainer()->isForcedToEnterScriptStart : false, \
-                isScript); \
+            __localScriptContext->OnScriptStart(isCallRoot, isScript); \
             __enterScriptObject.VerifyEnterScript();
 
 #define BEGIN_ENTER_SCRIPT(scriptContext, doCleanup, isCallRoot, hasCaller) \
@@ -149,76 +147,12 @@ namespace Js
         HRESULT hr; // we need to throw outside of constructor
         JavascriptLibrary* library;  // stack pin the library.
     public:
-        EnterScriptObject(ScriptContext* scriptContext, ScriptEntryExitRecord* entryExitRecord, 
-            void * returnAddress, bool doCleanup, bool isCallRoot, bool hasCaller)
-        {
-#ifdef PROFILE_EXEC
-            scriptContext->ProfileBegin(Js::RunPhase);    
-#endif
-            
-            // Keep a copy locally so the optimizer can just copy prop it to the dtor
-            this->scriptContext = scriptContext;
-            this->entryExitRecord = entryExitRecord;
-            this->doCleanup = doCleanup;
-            this->isCallRoot = isCallRoot;
-            this->hr = NOERROR;
-            this->hasForcedEnter = scriptContext->GetDebugContext() != nullptr ? scriptContext->GetDebugContext()->GetProbeContainer()->isForcedToEnterScriptStart : false;
+        EnterScriptObject(ScriptContext* scriptContext, ScriptEntryExitRecord* entryExitRecord,
+            void * returnAddress, bool doCleanup, bool isCallRoot, bool hasCaller);
 
-            // Initialize the entry exit record
-            entryExitRecord->returnAddrOfScriptEntryFunction = returnAddress;
-            entryExitRecord->hasCaller = hasCaller;
-            entryExitRecord->scriptContext = scriptContext;
-#ifdef EXCEPTION_CHECK
-            entryExitRecord->handledExceptionType = ExceptionCheck::ClearHandledExceptionType();
-#endif
-#if DBG_DUMP
-            entryExitRecord->isCallRoot = isCallRoot;            
-#endif
-            if (!scriptContext->IsClosed())
-            {
-                library = scriptContext->GetLibrary();
-            }
-            try
-            {
-                AUTO_NESTED_HANDLED_EXCEPTION_TYPE(ExceptionType_OutOfMemory);
-                scriptContext->GetThreadContext()->PushHostScriptContext(scriptContext->GetHostScriptContext());
-            }
-            catch (Js::OutOfMemoryException)
-            {
-                this->hr = E_OUTOFMEMORY;
-            }
-            BEGIN_NO_EXCEPTION
-            {
-                // We can not have any exception in the constructor, otherwise the destructor will 
-                // not run and we might be in an inconsistent state
+        void VerifyEnterScript();
 
-                // Put any code that may raise an exception in OnScriptStart
-                scriptContext->GetThreadContext()->EnterScriptStart(entryExitRecord, doCleanup);
-            }
-            END_NO_EXCEPTION
-        }
-
-        void VerifyEnterScript()
-        {
-            if (FAILED(hr))
-            {
-                Assert(hr == E_OUTOFMEMORY);
-                throw Js::OutOfMemoryException();
-            }
-        }
-
-        ~EnterScriptObject()
-        {
-            scriptContext->OnScriptEnd(isCallRoot, hasForcedEnter);
-            if (SUCCEEDED(hr))
-            {
-                scriptContext->GetThreadContext()->PopHostScriptContext();
-            }
-            scriptContext->GetThreadContext()->EnterScriptEnd(entryExitRecord, doCleanup); 
-#ifdef PROFILE_EXEC
-            scriptContext->ProfileEnd(Js::RunPhase);    
-#endif
-        }
+        ~EnterScriptObject();
     };
 
     template<bool stackProbe, bool leaveForHost, bool isFPUControlRestoreNeeded>

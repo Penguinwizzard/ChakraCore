@@ -42,6 +42,7 @@
   <ItemGroup>
     <None Include="JavascriptMath.cpp" />
     <ClInclude Include="AsmJsMath.h" />
+    <ClInclude Include="CrtSSE2Math.h" />
     <ClInclude Include="RuntimeMathPch.h" />
     <ClInclude Include="JavascriptMath.h" />
     <ClInclude Include="JavascriptSSE2MathOperators.h" />

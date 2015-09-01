@@ -13,6 +13,7 @@
 CompileAssert(MaxPreInitializedObjectTypeInlineSlotCount <= USHRT_MAX);
 
 class ScriptSite;
+class EditAndContinue;
 
 #ifdef ENABLE_PROJECTION
 namespace Projection
@@ -104,6 +105,7 @@ namespace Js
 
     class JavascriptLibrary : public JavascriptLibraryBase
     {
+        friend class EditAndContinue;
         friend class ScriptSite;
         friend class GlobalObject;
         friend class ScriptContext;
@@ -348,6 +350,8 @@ namespace Js
         // Int8x16
         JavascriptFunction* simdInt8x16ToStringFunction;
 #endif
+
+        UnifiedRegex::RegexPattern * emptyRegexPattern;
 
         mutable CharStringCache charStringCache;
 
@@ -655,6 +659,8 @@ namespace Js
 
         JavascriptFunction* GetDebugObjectNonUserGetterFunction() const { return debugObjectNonUserGetterFunction; }
         JavascriptFunction* GetDebugObjectNonUserSetterFunction() const { return debugObjectNonUserSetterFunction; }
+
+        UnifiedRegex::RegexPattern * GetEmptyRegexPattern() const { return emptyRegexPattern; }
 
         void SetDebugObjectNonUserAccessor(FunctionInfo *funcGetter, FunctionInfo *funcSetter);
 

@@ -4,6 +4,7 @@
 
 #include "RuntimeLibraryPch.h"
 #include "Language\ByteCodeSerializer.h"
+#include "errstr.h"
 
 using namespace Windows::Globalization;
 #pragma warning(push)

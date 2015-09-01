@@ -5,12 +5,8 @@
 #pragma once
 
 #ifndef IsJsDiag
-#if defined(_UCRT)
-#include <cmath>
-#else
-#include <math.h>
-#endif
-
+#include "Parser.h"
+#include "RegexCommon.h"
 #include "Runtime.h"
 
 #include "Library\EtwTrace.h"
@@ -26,6 +22,9 @@
 #include "Library\SubString.h"
 
 #include "Library\BoundFunction.h"
+
+#include "Library\RegexHelper.h"
+#include "Library\JavascriptRegularExpression.h"
 #include "Library\JavascriptRegExpConstructor.h"
 #include "Library\JavascriptRegularExpressionResult.h"
 
@@ -86,6 +85,5 @@
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
 #include "Library\ScriptMemoryDumper.h"
 #endif
-
 
 #endif // !IsJsDiag

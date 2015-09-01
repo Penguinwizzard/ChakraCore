@@ -2,6 +2,9 @@
 // Copyright (C) Microsoft. All rights reserved.
 //---------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
+#include "Debug\DiagProbe.h"
+#include "Debug\BreakpointProbe.h"
+#include "Debug\DebugDocument.h"
 
 #define MAX_PROGID_LENGTH 39
 

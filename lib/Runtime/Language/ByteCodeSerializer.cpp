@@ -3,6 +3,13 @@
 //----------------------------------------------------------------------------
 
 #include "RuntimeLanguagePch.h"
+#include "RegexCommon.h"
+#include "RegexPattern.h"
+#include "Library\RegexHelper.h"
+
+#include "DataStructures\Option.h"
+#include "DataStructures\ImmutableList.h"
+#include "DataStructures\BufferBuilder.h"
 
 #if DBG || !defined(NTBUILD)
 // __DATE__ and __TIME__ are only available in CHK or NTBUILD
@@ -10,6 +17,8 @@
 #else
 #include <rtlfilever.c> // For RtlGetVersionResourceFromSelf in FRE builds
 #endif
+
+
 
 namespace Js
 {

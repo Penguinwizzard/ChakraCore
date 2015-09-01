@@ -22,6 +22,8 @@ namespace Js
     class ScriptEditQuery;
     class MutationBreakpoint;
     class StringProfiler;
+    class DebugContext;
+    struct HaltCallback;
 }
 
 // Created for every source buffer passed by trident this structure has
@@ -909,8 +911,7 @@ private:
 
         UnifiedRegex::TrigramAlphabet* GetTrigramAlphabet() { return trigramAlphabet; }
 
-        void SetTrigramAlphabet(__in_xcount(regex::TrigramAlphabet::AlphaCount) char* alpha,
-            __in_xcount(regex::TrigramAlphabet::AsciiTableSize) char* alphaBits);
+        void SetTrigramAlphabet(UnifiedRegex::TrigramAlphabet * trigramAlphabet);
 
         UnifiedRegex::RegexStacks *RegexStacks();
         UnifiedRegex::RegexStacks *AllocRegexStacks();
@@ -1118,7 +1119,7 @@ private:
 #endif
         BackgroundParser * GetBackgroundParser() const { return backgroundParser; }
 
-        void OnScriptStart(bool isRoot, bool isForcedEnter, bool isScript);
+        void OnScriptStart(bool isRoot, bool isScript);
         void OnScriptEnd(bool isRoot, bool isForcedEnd);
 
         template <bool stackProbe, bool leaveForHost>

@@ -11,6 +11,10 @@ namespace Js
 
 namespace UnifiedRegex
 {
+    struct Program;
+    class Matcher;
+    struct TrigramInfo;
+
     struct RegexPattern : FinalizableObject
     {        
 

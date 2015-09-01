@@ -6,6 +6,12 @@
 
 const wchar_t *SymbolTypeNames[] = { L"Function", L"Variable", L"MemberName", L"Formal", L"Unknown" };
 
+bool
+Symbol::GetIsArguments() const
+{
+    return decl != NULL && (decl->grfpn & PNodeFlags::fpnArguments);
+}
+
 Js::PropertyId Symbol::EnsurePosition(ByteCodeGenerator* byteCodeGenerator)
 {
     // Guarantee that a symbol's name has a property ID mapping.

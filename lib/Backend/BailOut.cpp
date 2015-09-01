@@ -3,6 +3,9 @@
 //----------------------------------------------------------------------------
 
 #include "BackEnd.h"
+#include "Debug\DebuggingFlags.h"
+#include "Debug\DiagProbe.h"
+#include "Debug\DebugManager.h"
 
 extern "C" const IRType RegTypes[RegNumCount];
 

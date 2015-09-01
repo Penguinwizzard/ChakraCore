@@ -3,6 +3,8 @@
 //----------------------------------------------------------------------------
 
 #include "stdafx.h"
+#include <strsafe.h>
+#include "core\ConfigParser.h"
 
 ConfigParser ConfigParser::s_moduleConfigParser(Js::Configuration::Global.flags);
 

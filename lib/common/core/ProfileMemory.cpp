@@ -5,6 +5,7 @@
 #include "StdAfx.h"
 
 #ifdef PROFILE_MEM
+#include "DataStructures\QuickSort.h"
 
 __declspec(thread) MemoryProfiler * MemoryProfiler::Instance = null;
 
@@ -281,31 +282,32 @@ MemoryProfiler::PrintArenaHeader(wchar_t const * title)
     Output::Print(L"--------------------------------------------------------------------------------------------------------\n");
 }
 
-void MemoryProfiler::CreateArenaUsageSummary(ArenaAllocator* alloc, bool liveOnly, JsUtil::List<LPWSTR, ArenaAllocator>*& name, JsUtil::List<ArenaMemoryDataSummary *, ArenaAllocator>*& summaries)
+int MemoryProfiler::CreateArenaUsageSummary(ArenaAllocator* alloc, bool liveOnly, LPWSTR *& name, ArenaMemoryDataSummary**& summaries)
 {
     Assert(alloc);
 
     int count = arenaDataMap.Count();
-    name = JsUtil::List<LPWSTR, ArenaAllocator>::New(alloc, count);
-    arenaDataMap.Map([name](LPWSTR key, ArenaMemoryDataSummary*)
+    name = AnewArray(alloc, LPWSTR, count);
+    int i = 0;
+    arenaDataMap.Map([&i, name](LPWSTR key, ArenaMemoryDataSummary*)
     {
-        name->Add(key);
+        name[i++] = key;
     });
-    name->Sort();
+    JsUtil::QuickSort<LPWSTR, DefaultComparer<LPWSTR>>::Sort(name, name + (count - 1));    
 
-    summaries = JsUtil::List<ArenaMemoryDataSummary *, ArenaAllocator>::New(alloc, count);
+    summaries = AnewArray(alloc, ArenaMemoryDataSummary *, count);
 
     for (int i = 0; i < count; i++)
     {
-        ArenaMemoryDataSummary * summary = arenaDataMap.Item(name->Item(i));
+        ArenaMemoryDataSummary * summary = arenaDataMap.Item(name[i]);
         ArenaMemoryData * data = summary->data;
 
         ArenaMemoryDataSummary * localSummary;
         if (liveOnly)
         {
-            if (data == null)
+            if (data == nullptr)
             {
-                summaries->Add(null);
+                summaries[i] = nullptr;
                 continue;
             }
             localSummary = AnewStructZ(alloc, ArenaMemoryDataSummary);
@@ -315,7 +317,7 @@ void MemoryProfiler::CreateArenaUsageSummary(ArenaAllocator* alloc, bool liveOnl
             localSummary = Anew(alloc, ArenaMemoryDataSummary, *summary);
         }
                   
-        while (data != null)
+        while (data != nullptr)
         {
             localSummary->outstandingCount++;            
             AccumulateData(localSummary, data);
@@ -326,17 +328,18 @@ void MemoryProfiler::CreateArenaUsageSummary(ArenaAllocator* alloc, bool liveOnl
         {
             localSummary->arenaCount = localSummary->outstandingCount;
         }
-        summaries->Add(localSummary);
+        summaries[i] = localSummary;
     }
+
+    return count;
 }
 
 
 void
 MemoryProfiler::PrintArena(bool liveOnly)
 {
-    WithArenaUsageSummary(liveOnly, [&] (JsUtil::List<LPWSTR, ArenaAllocator> * name, JsUtil::List<ArenaMemoryDataSummary *, ArenaAllocator> * summaries) 
-    {
-        int count = name->Count();    
+    WithArenaUsageSummary(liveOnly, [&] (int count, _In_reads_(count) LPWSTR * name, _In_reads_(count) ArenaMemoryDataSummary ** summaries)
+    {        
         int i = 0;
 
         if (liveOnly)
@@ -352,7 +355,7 @@ MemoryProfiler::PrintArena(bool liveOnly)
     
         for (i = 0; i < count; i++)
         {
-            ArenaMemoryDataSummary * data = summaries->Item(i);
+            ArenaMemoryDataSummary * data = summaries[i];
             if (data == null)
             {
                 continue;
@@ -364,7 +367,7 @@ MemoryProfiler::PrintArena(bool liveOnly)
             }
     
             Output::Print(L"%-20s %7d %9d %9d %9d %6d %9d %6d %9d %5d | %5d\n", 
-                name->Item(i),
+                name[i],
                 data->total.requestCount,
                 data->total.allocatedBytes,                 
                 data->total.requestBytes, 
@@ -381,7 +384,7 @@ MemoryProfiler::PrintArena(bool liveOnly)
 
         for (i = 0; i < count; i++)
         {
-            ArenaMemoryDataSummary * data = summaries->Item(i);
+            ArenaMemoryDataSummary * data = summaries[i];
             if (data == null)
             {
                 continue;
@@ -392,7 +395,7 @@ MemoryProfiler::PrintArena(bool liveOnly)
                 PrintArenaHeader(L"Arena Max");
             }
             Output::Print(L"%-20s %7d %9d %9d %9d %6d %9d %6d %9d %5d | %5d\n", 
-                name->Item(i), 
+                name[i],
                 data->max.requestCount, 
                 data->max.allocatedBytes,                 
                 data->max.requestBytes, 
@@ -406,7 +409,7 @@ MemoryProfiler::PrintArena(bool liveOnly)
         header = false;
         for (i = 0; i < count; i++)
         {
-            ArenaMemoryDataSummary * data = summaries->Item(i);
+            ArenaMemoryDataSummary * data = summaries[i];
             if (data == null)
             {
                 continue;
@@ -416,7 +419,7 @@ MemoryProfiler::PrintArena(bool liveOnly)
                 header = true;
                 PrintArenaHeader(L"Arena Average");
             }
-            Output::Print(L"%-20s %7d %9d %9d %9d %6d %9d %6d %9d %5d\n", name->Item(i), 
+            Output::Print(L"%-20s %7d %9d %9d %9d %6d %9d %6d %9d %5d\n", name[i],
                 data->total.requestCount / data->arenaCount,  
                 data->total.allocatedBytes / data->arenaCount,                            
                 data->total.requestBytes / data->arenaCount,

@@ -637,6 +637,12 @@ ByteCodeGenerator::ByteCodeGenerator(Js::ScriptContext* scriptContext, Js::Scope
     m_writer.Create();
 }
 
+/* static */
+bool ByteCodeGenerator::IsFalse(ParseNode* node)
+{
+    return (node->nop == knopInt && node->sxInt.lw == 0) || node->nop == knopFalse;
+}
+
 bool ByteCodeGenerator::UseParserBindings() const
 {
     return IsInNonDebugMode() && !PHASE_OFF1(Js::ParserBindPhase);

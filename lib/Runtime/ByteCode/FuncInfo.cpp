@@ -96,6 +96,39 @@ FuncInfo::FuncInfo(
     }
 }
 
+bool FuncInfo::IsGlobalFunction() const
+{
+    return root && root->nop == knopProg;
+}
+
+bool FuncInfo::IsDeferred() const
+{
+    return root && root->sxFnc.pnodeBody == NULL;
+}
+
+BOOL FuncInfo::HasSuperReference() const
+{
+    return root->sxFnc.HasSuperReference();
+}
+
+BOOL FuncInfo::IsClassMember() const
+{
+    return root->sxFnc.IsClassMember();
+}
+
+BOOL FuncInfo::IsLambda() const {
+    return root->sxFnc.IsLambda();
+}
+
+BOOL FuncInfo::IsClassConstructor() const {
+    return root->sxFnc.IsClassConstructor();
+}
+
+BOOL FuncInfo::IsBaseClassConstructor() const {
+    return root->sxFnc.IsBaseClassConstructor();
+}
+
+
 void FuncInfo::EnsureThisScopeSlot()
 {
     if (this->thisScopeSlot == Js::Constants::NoRegister)

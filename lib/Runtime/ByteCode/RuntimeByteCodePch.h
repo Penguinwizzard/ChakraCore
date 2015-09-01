@@ -4,11 +4,7 @@
 
 #pragma once
 
-#if defined(_UCRT)
-#include <cmath>
-#else
-#include <math.h>
-#endif
+#include "Parser.h"
 
 #include "Runtime.h"
 #include "ByteCode\Symbol.h"
@@ -23,8 +19,3 @@
 #include "ByteCode\OpCodeUtilAsmJs.h"
 
 #include "Language\AsmJsTypes.h"
-
-
-
-
-

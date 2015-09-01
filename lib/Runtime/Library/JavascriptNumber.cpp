@@ -3,6 +3,7 @@
 //----------------------------------------------------------------------------
 
 #include "RuntimeLibraryPch.h"
+#include "errstr.h"
 
 namespace Js
 {
@@ -911,6 +912,37 @@ namespace Js
         {
             return FALSE;
         }
+    }
+
+    JavascriptString* JavascriptNumber::ToLocaleStringNanOrInfinite(double value, ScriptContext* scriptContext)
+    {
+        if (!NumberUtilities::IsFinite(value))
+        {
+            if (IsNan(value))
+            {
+                return ToStringNan(scriptContext);
+            }
+
+            BSTR bstr = null;
+            if (IsPosInf(value))
+            {
+                bstr = BstrGetResourceString(IDS_INFINITY);
+            }
+            else
+            {
+                AssertMsg(IsNegInf(value), "bad handling of infinite number");
+                bstr = BstrGetResourceString(IDS_MINUSINFINITY);
+            }
+
+            if (bstr == null)
+            {
+                Js::JavascriptError::ThrowTypeError(scriptContext, VBSERR_InternalError /* TODO-ERROR: L"NEED MESSAGE" */);
+            }
+            JavascriptString* str = JavascriptString::NewCopyBuffer(bstr, SysStringLen(bstr), scriptContext);
+            SysFreeString(bstr);
+            return str;
+        }
+        return null;
     }
 
     JavascriptString* JavascriptNumber::ToLocaleString(double value, ScriptContext* scriptContext)

@@ -238,11 +238,28 @@ namespace UnifiedRegex
             currPatternNum == NumPatterns - 1;
     }
 
+    void OctoquadIdentifier::SetTrigramAlphabet(Js::ScriptContext * scriptContext,
+        __in_xcount(regex::TrigramAlphabet::AlphaCount) char* alpha
+        , __in_xcount(regex::TrigramAlphabet::AsciiTableSize) char* alphaBits)
+    {        
+        ArenaAllocator* alloc = scriptContext->RegexAllocator();
+        TrigramAlphabet * trigramAlphabet = AnewStruct(alloc, UnifiedRegex::TrigramAlphabet);        
+        for (uint i = 0; i < UnifiedRegex::TrigramAlphabet::AsciiTableSize; i++) {
+            trigramAlphabet->alphaBits[i] = UnifiedRegex::TrigramAlphabet::BitsNotInAlpha;
+        }
+        for (uint i = 0; i < UnifiedRegex::TrigramAlphabet::AlphaCount; i++) {
+            trigramAlphabet->alpha[i] = alpha[i];
+            trigramAlphabet->alphaBits[alpha[i]] = alphaBits[alpha[i]];
+        }
+        trigramAlphabet->InitTrigramMap();
+        scriptContext->SetTrigramAlphabet(trigramAlphabet);
+    }
+
     void OctoquadIdentifier::InitializeTrigramInfo(Js::ScriptContext* scriptContext, RegexPattern* const pattern)
     {
         if(!scriptContext->GetTrigramAlphabet())
         {
-            scriptContext->SetTrigramAlphabet(codeToChar, charToCode);
+            this->SetTrigramAlphabet(scriptContext, codeToChar, charToCode);
         }
         const auto recycler = scriptContext->GetRecycler();
         pattern->rep.unified.trigramInfo = RecyclerNew(recycler, TrigramInfo, patternBits[0], patternBits[1], recycler);

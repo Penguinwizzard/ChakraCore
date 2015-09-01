@@ -4,11 +4,7 @@
 
 #pragma once
 
-#if defined(_UCRT)
-#include <cmath>
-#else
-#include <math.h>
-#endif
+#include "Parser.h"
 
 #include "Runtime.h"
 #include "ByteCode\AsmJsByteCodeWriter.h"
@@ -69,6 +65,12 @@
 #include "Library\SIMDInt8x16Operation.h"
 #include "Library\SIMDFloat64x2Operation.h"
 #endif
+
+#include "Debug\DebuggingFlags.h"
+#include "Debug\DiagProbe.h"
+#include "Debug\DebugManager.h"
+#include "Debug\ProbeContainer.h"
+#include "Debug\DebugContext.h"
 
 // .inl files
 #include "Language\CacheOperators.inl"

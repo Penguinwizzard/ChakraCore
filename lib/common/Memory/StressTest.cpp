@@ -1,6 +1,7 @@
 #include "stdafx.h"
 
 #if DBG
+#include "Memory\StressTest.h"
 
 typedef JsUtil::BaseDictionary<TestObject*, bool, RecyclerNonLeafAllocator> ObjectTracker_t;
 typedef JsUtil::List<TestObject*, Recycler> ObjectList_t;

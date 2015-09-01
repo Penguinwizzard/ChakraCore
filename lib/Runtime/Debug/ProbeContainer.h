@@ -9,7 +9,13 @@ namespace Js
     class MutationBreakpoint;
 #endif
 
-    class DebugManager;
+    class DebugManager;    
+    struct Probe;
+    typedef JsUtil::List<Probe*, ArenaAllocator> ProbeList;
+    class DiagStackFrame;
+    typedef JsUtil::Stack<DiagStackFrame*> DiagStack;
+    typedef WeakArenaReference<DiagStack> WeakDiagStack;
+    struct InterpreterHaltState;
 
     // This class contains the probes and list of function bodies.
     // ÎÐThe object of this class is maintained by Script context.

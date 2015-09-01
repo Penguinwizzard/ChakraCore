@@ -69,7 +69,7 @@
     <ClInclude Include="ByteBlock.h" />
     <ClInclude Include="ByteCodeDumper.h" />
     <ClInclude Include="ByteCodeGenerator.h" />
-    <ClInclude Include="ByteCodeReader.h" />
+    <ClInclude Include="ByteCodeReader.h" />    
     <ClInclude Include="ByteCodeWriter.h" />
     <ClInclude Include="OpCodes.h" />
     <ClInclude Include="OpLayouts.h" />

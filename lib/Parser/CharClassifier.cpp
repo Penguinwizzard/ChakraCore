@@ -3,6 +3,7 @@
 //----------------------------------------------------------------------------
 
 #include "StdAfx.h"
+#include "..\Runtime\Library\WindowsGlobalizationAdapter.h"
 
 using namespace Windows::Data::Text;
 

@@ -15,8 +15,6 @@
 #define CONST_VTABLE             /* for objbase.h */
 //#define WIN32_LEAN_AND_MEAN      /* for windows.h */
 #include <windows.h>
-#include <wincrypt.h>
-
 
 #undef Yield /* winbase.h defines this but we want to use it for Js::OpCode::Yield; it is Win16 legacy, no harm undef'ing it */
 
@@ -89,17 +87,18 @@ RtlUlonglongByteSwap(
 #include <stdarg.h>
 #include <float.h>
 #include <limits.h>
+#if defined(_UCRT)
+#include <cmath>
+#else
 #include <math.h>
+#endif
 #include <time.h>
-#include <strsafe.h>
 
 #include <io.h>
 #include <fcntl.h>
 #include <share.h>
 
 extern "C" void * _AddressOfReturnAddress(void);
-
-#include <sys\timeb.h>
 
 #include <intrin.h>
 #include <malloc.h>
@@ -114,10 +113,6 @@ extern "C" void * _AddressOfReturnAddress(void);
 
 #ifdef _M_ARM64
 #include "arm64.h"
-#endif
-
-#if DBG
-#include <crtdbg.h>
 #endif
 
 #ifndef GET_CURRENT_FRAME_ID
@@ -222,16 +217,6 @@ const CharCount MaxCharCount = INT_MAX-1;
 typedef uint32 CharCountOrFlag;
 const CharCountOrFlag CharCountFlag = (CharCountOrFlag)-1;
 
-union uquad
-{
-    struct
-    {
-        uint32 Low;
-        uint32 High;
-    } u;
-
-    uint64 Quad;
-};
 
 #define null 0
 
@@ -360,7 +345,6 @@ private:
 #include "Core\AllocSizeMath.h"
 #include "Common\DaylightTimeHelper.h"
 #include "Common\DateUtilities.h"
-// REVIEW: ChakraCore Dependency
 #include "Common\NumberUtilitiesBase.h"
 #include "Common\NumberUtilities.h"
 #include "core\FaultInjection.h"
@@ -390,7 +374,6 @@ private:
 #include "Exceptions\reporterror.h"
 
 #include "DataStructures\Comparer.h"
-#include "DataStructures\Pair.h"
 #include "DataStructures\SizePolicy.h"
 
 // Memory Management
@@ -437,9 +420,6 @@ using namespace Memory;
 
 #include "DataStructures\PageStack.h"
 #include "DataStructures\ContinuousPageStack.h"
-#include "DataStructures\LargeStack.h"
-#include "DataStructures\HashTable.h"
-// REVIEW: ChakraCore Dependency
 #include "Core\FinalizableObject.h"
 #include "Memory\RecyclerWriteBarrierManager.h"
 #include "Memory\HeapConstants.h"
@@ -467,15 +447,9 @@ using namespace Memory;
 #include "Memory\RecyclerFastAllocator.h"
 #include "Memory\RecyclerPointers.h"
 #include "util\pinned.h"
-#if DBG
-#include "Memory\StressTest.h"
-#endif
 
 // Data Structures 2
 
-#include "DataStructures\BigInt.h"
-#include "DataStructures\FixedStack.h"
-#include "DataStructures\QuickSort.h"
 #include "DataStructures\StringBuilder.h"
 #include "DataStructures\KeyValuePair.h"
 #include "DataStructures\BaseDictionary.h"
@@ -484,7 +458,6 @@ using namespace Memory;
 #include "DataStructures\List.h"
 #include "DataStructures\Stack.h"
 #include "DataStructures\Queue.h"
-#include "DataStructures\Tree.h"
 #include "DataStructures\CharacterBuffer.h"
 #include "DataStructures\InternalString.h"
 #include "DataStructures\Interval.h"
@@ -492,24 +465,18 @@ using namespace Memory;
 #include "DataStructures\SparseArray.h"
 #include "DataStructures\growingArray.h"
 #include "DataStructures\EvalMapString.h"
-#include "DataStructures\Option.h"
-#include "DataStructures\ImmutableList.h"
-#include "DataStructures\BufferBuilder.h"
 #include "DataStructures\RegexKey.h"
 #include "DataStructures\LineOffsetCache.h"
 
-#include "core\ConfigFlagsTable.h" // Depends on VectorS.h
+#include "core\ConfigFlagsTable.h"
 #include "core\ICustomConfigFlags.h"
 #include "core\CmdParser.h"
-#include "core\ProfileInstrument.h" // Depends on Tree.h
+#include "core\ProfileInstrument.h"
 #include "core\ProfileMemory.h"
-#include "core\ConfigParser.h"
 #include "core\EtwTraceCore.h"
 #include "core\StackBackTrace.h"
-#include "core\DbgHelpSymbolManager.h"
-
 #include "Common\Jobs.h"
-#include "common\CFGLogger.h"
+
 
 #include "DataStructures\Cache.h" // Depends on config flags
 #include "DataStructures\MruDictionary.h" // Depends on DoublyLinkedListElement

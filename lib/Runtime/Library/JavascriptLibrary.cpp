@@ -2506,6 +2506,8 @@ namespace Js
 
     void JavascriptLibrary::InitializeComplexThings()
     {
+        emptyRegexPattern = RegexHelper::CompileDynamic(scriptContext, L"", 0, L"", 0, false);
+
         Recycler *const recycler = GetRecycler();
 
         // Creating the regex prototype object requires compiling an empty regex, which may require error types to be
@@ -2516,7 +2518,7 @@ namespace Js
         // Instead, we just create an ordinary object prototype for RegExp.prototype in InitializePrototypes.
         if (!scriptContext->GetConfig()->IsES6PrototypeChain() && regexPrototype == nullptr)
         {            
-            regexPrototype = RecyclerNew(recycler, JavascriptRegExp, RegexHelper::CompileDynamic(scriptContext, L"", 0, L"", 0, false),
+            regexPrototype = RecyclerNew(recycler, JavascriptRegExp, emptyRegexPattern,
                 DynamicType::New(scriptContext, TypeIds_RegEx, objectPrototype, nullptr,
                 DeferredTypeHandler<InitializeRegexPrototype>::GetDefaultInstance()));
         }
@@ -4495,8 +4497,7 @@ namespace Js
 
     JavascriptRegExp* JavascriptLibrary::CreateEmptyRegExp()
     {
-        UnifiedRegex::RegexPattern* pattern = RegexHelper::CompileDynamic(scriptContext, L"", 0, L"", 0, false);
-        return RecyclerNew(scriptContext->GetRecycler(), JavascriptRegExp, pattern,
+        return RecyclerNew(scriptContext->GetRecycler(), JavascriptRegExp, emptyRegexPattern,
                            this->GetRegexType());
     }
 

@@ -100,6 +100,9 @@ namespace UnifiedRegex
         int currPatternLength;
         int currPatternNum;
 
+        void SetTrigramAlphabet(Js::ScriptContext * scriptContext,
+            __in_xcount(regex::TrigramAlphabet::AlphaCount) char* alpha,
+            __in_xcount(regex::TrigramAlphabet::AsciiTableSize) char* alphaBits);
     public:
         static bool Qualifies(const Program *const program);
 

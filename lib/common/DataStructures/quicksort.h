@@ -30,7 +30,8 @@ namespace regex
             {
                 // Swap middle value to end to use as partition value
                 T* mid = l + ((r - l) / 2);
-                swap(*mid, *r);
+                swap(*mid, *r);
+
             }
                         
             T* i = l-1;

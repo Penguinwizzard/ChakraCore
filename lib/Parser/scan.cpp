@@ -1024,7 +1024,7 @@ tokens Scanner<EncodingPolicy>::ScanRegExpConstant(ArenaAllocator* alloc)
 
         m_currentCharacter += e.encodedPos;
         Error(e.error);
-        return m_ptoken->SetRegex(Js::RegexHelper::CompileDynamic(m_scriptContext, L"", 0, L"", 0, false), m_parser);
+        return m_ptoken->SetRegex(m_scriptContext->GetLibrary()->GetEmptyRegexPattern(), m_parser);
     }
 
     UnifiedRegex::RegexPattern* pattern;

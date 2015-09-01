@@ -3,6 +3,11 @@
 //----------------------------------------------------------------------------
 
 #include "StdAfx.h"
+
+#include "Option.h"
+#include "ImmutableList.h" 
+#include "BufferBuilder.h"
+
 namespace Js
 {
 

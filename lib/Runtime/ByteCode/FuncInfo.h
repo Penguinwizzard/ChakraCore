@@ -237,9 +237,7 @@ public:
     bool GetApplyEnclosesArgs() const { return applyEnclosesArgs; }
     void SetApplyEnclosesArgs(bool b) { applyEnclosesArgs=b; }
 
-    bool IsGlobalFunction() const {
-        return root && root->nop == knopProg;
-    }
+    bool IsGlobalFunction() const;
 
     // Fake global ->
     //    1) new Function code's global code
@@ -382,9 +380,7 @@ public:
 
     void SetHasMaybeEscapedNestedFunc(DebugOnly(wchar_t const * reason));
 
-    bool IsDeferred() const {
-        return root && root->sxFnc.pnodeBody == NULL;
-    }
+    bool IsDeferred() const;
 
     bool IsRestored()
     {
@@ -424,27 +420,11 @@ public:
         hasCapturedThis = true;
     }
 
-    BOOL HasSuperReference() const
-    {
-        return root->sxFnc.HasSuperReference();
-    }
-
-    BOOL IsClassMember() const
-    {
-        return root->sxFnc.IsClassMember();
-    }
-
-    BOOL IsLambda() const {
-        return root->sxFnc.IsLambda();
-    }
-
-    BOOL IsClassConstructor() const {
-        return root->sxFnc.IsClassConstructor();
-    }
-
-    BOOL IsBaseClassConstructor() const {
-        return root->sxFnc.IsBaseClassConstructor();
-    }
+    BOOL HasSuperReference() const;
+    BOOL IsClassMember() const;
+    BOOL IsLambda() const;
+    BOOL IsClassConstructor() const;
+    BOOL IsBaseClassConstructor() const;
 
     void RemoveTargetStmt(ParseNode* pnodeStmt) {
         targetStatements.Remove(pnodeStmt);

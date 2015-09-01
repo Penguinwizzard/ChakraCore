@@ -6,7 +6,39 @@
 
 #include "Banned.h"
 #include "Common.h"
-#include "Parser.h"
+
+//========================
+// Parser includes
+//========================
+#include "ParserCommon.h"
+#include "ParseFlags.h"
+#include "rterror.h"
+
+// Parser forward decl
+class FuncInfo;
+class Scope;
+class Symbol;
+struct Ident;
+typedef Ident *IdentPtr;
+
+enum SymbolType : byte;
+
+// Regex forward decl
+namespace UnifiedRegex
+{
+    struct RegexPattern;    
+    template <typename T> class StandardChars;      // Used by ThreadContext.h
+    struct TrigramAlphabet;
+    struct RegexStacks;
+#if ENABLE_REGEX_CONFIG_OPTIONS
+    class DebugWriter;
+    struct RegexStats;
+    class RegexStatsDatabase;
+#endif
+};
+
+//========================
+
 #include "RuntimeCommon.h"
 
 #include <intsafe.h>
@@ -17,6 +49,7 @@
 
 //#define BODLOG
 
+class SRCINFO;
 class Lowerer;
 class LowererMD;
 class LowererMDArch;
@@ -28,6 +61,7 @@ namespace Js
     //
     // Forward declarations
     //    
+    class CharClassifier;
     typedef int32 MessageId;
     /* enum */ struct PropertyIds;
     class DebugDocument;
@@ -114,10 +148,8 @@ namespace Js
     class SIMDInt32x4Lib;
     class JavascriptSIMDInt32x4;
     class SIMDInt8x16Lib;
-    class JavascriptSIMDInt8x16;
-    
+    class JavascriptSIMDInt8x16;    
 #endif
-
 
     class RecyclableObject;
     class JavascriptRegExp;
@@ -382,7 +414,6 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Library\ES5Array.h"
 #include "Library\ArrayBuffer.h"
 #include "Library\TypedArray.h"
-#include "Library\JavascriptRegularExpression.h"
 #include "Library\JavascriptBoolean.h"
 #include "Library\JavascriptBooleanObject.h"
 #include "Library\JavascriptFunction.h"
@@ -401,8 +432,6 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Library\JavascriptLibrary.h"
 
 #include "Library\GlobalObject.h"
-
-#include "Language\DiagHelperMethodWrapper.h"
 #include "Language\JavascriptExceptionOperators.h"
 #include "Language\JavascriptOperators.h"
 #include "Library\TaggedInt.h"
@@ -411,7 +440,6 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Library\JavascriptDate.h"
 
 #include "Library\MathLibrary.h"
-#include "Library\RegexHelper.h"
 #include "Library\JSON.h"
 
 #include "Library\ThrowErrorObject.h"
@@ -432,13 +460,6 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Language\amd64\stackframe.h"
 #endif
 
-#include "Debug\DebuggingFlags.h"
-#include "Debug\DiagProbe.h"
-#include "Debug\BreakpointProbe.h"
-#include "Debug\DebugDocument.h"
-#include "Debug\DebugManager.h"
-#include "Debug\ProbeContainer.h"
-#include "Debug\DebugContext.h"
 #include "Library\Entropy.h"
 #include "Language\PropertyRecord.h"
 #ifdef ENABLE_BASIC_TELEMETRY
@@ -453,6 +474,7 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Library\ThreadContextTLSEntry.h"
 
 #include "Language\EvalMapRecord.h"
+#include "Language\RegexPatternMruMap.h"
 #include "Language\JavascriptConversion.h"
 
 #include "Language\ScriptContextOptimizationOverrideInfo.h"
@@ -488,27 +510,3 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Language\InlineCachePointerArray.inl"
 #include "Language\JavascriptOperators.inl"
 #include "Library\TaggedInt.inl"
-
-#include "Language\DiagHelperMethodWrapper.inl"
-
-
-
-#if _M_IX86 || _M_X64
-// This CRT routines skip some special condition checks for FPU state
-// These routines are not expected to be called outside of the CRT, so using these should
-// be re-evaluated when upgrading toolsets.
-// Mark them explicitly as dllimport to workaround VC bug (Dev11:909888)
-// This won't work if statically linking to the CRT.
-extern "C" double __declspec(dllimport) __cdecl __libm_sse2_acos(double);
-extern "C" double __declspec(dllimport) __cdecl __libm_sse2_asin(double);
-extern "C" double __declspec(dllimport) __cdecl __libm_sse2_atan(double);
-extern "C" double __declspec(dllimport) __cdecl __libm_sse2_atan2(double,double);
-extern "C" double __declspec(dllimport) __cdecl __libm_sse2_cos(double);
-extern "C" double __declspec(dllimport) __cdecl __libm_sse2_exp(double);
-extern "C" double __declspec(dllimport) __cdecl __libm_sse2_pow(double,double);
-extern "C" double __declspec(dllimport) __cdecl __libm_sse2_log(double);
-extern "C" double __declspec(dllimport) __cdecl __libm_sse2_log10(double);
-extern "C" double __declspec(dllimport) __cdecl __libm_sse2_sin(double);
-extern "C" double __declspec(dllimport) __cdecl __libm_sse2_tan(double);
-
-#endif

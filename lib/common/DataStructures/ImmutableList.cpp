@@ -4,6 +4,7 @@
 
 #include "stdafx.h"
 #include <strsafe.h>
+#include "Option.h"
 #include "ImmutableList.h" 
 
 template<int chunkSize>

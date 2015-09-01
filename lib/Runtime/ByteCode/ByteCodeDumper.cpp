@@ -3,6 +3,13 @@
 //----------------------------------------------------------------------------
 #include "RuntimeByteCodePch.h"
 #if DBG_DUMP
+
+#if DBG
+// Parser Includes
+#include "RegexCommon.h"
+#include "DebugWriter.h"
+#include "RegexPattern.h"
+#endif
 namespace Js
 {
     // Pre-order recursive dump, head then children.
