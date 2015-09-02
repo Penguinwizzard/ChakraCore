@@ -210,6 +210,7 @@ namespace Js
         static BOOL IsUndefinedObject(Var isntance, JavascriptLibrary* library);
         static BOOL IsAnyNumberValue(Var instance);
         static BOOL IsIterable(RecyclableObject* instance, ScriptContext* scriptContext);
+        static BOOL IsClassConstructor(Var instance);
 
         static BOOL HasOwnItem(RecyclableObject* instance, uint32 index);
         static BOOL HasItem(RecyclableObject* instance, uint32 index);

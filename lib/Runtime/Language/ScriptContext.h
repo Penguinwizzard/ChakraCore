@@ -637,6 +637,7 @@ public:
         ScriptContextTelemetry* telemetry;
     public:
         ScriptContextTelemetry& GetTelemetry();
+        bool HasTelemetry();
 
 #endif
 #ifdef INLINE_CACHE_STATS

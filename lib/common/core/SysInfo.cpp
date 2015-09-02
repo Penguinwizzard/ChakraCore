@@ -280,15 +280,18 @@ AutoSystemInfo::CheckForAtom() const
 }
 #endif
 
-bool 
+bool
 AutoSystemInfo::IsCFGEnabled()
 {
 #if defined(_CONTROL_FLOW_GUARD)
-    return (IsWinThresholdOrLater() || PHASE_ON1(Js::CFGPhase))
-        && (Data.deviceInfoRetrived && (Data.DeviceFamily != 0x00000004 /*DEVICEFAMILYINFOENUM_MOBILE*/));
+    return true
+#ifdef ENABLE_DEBUG_CONFIG_OPTIONS
+        && IsWinThresholdOrLater() && !PHASE_OFF1(Js::CFGPhase)
+#endif //ENABLE_DEBUG_CONFIG_OPTIONS
+        ;
 #else
     return false;
-#endif
+#endif //_CONTROL_FLOW_GUARD
 }
 
 bool 

@@ -6639,6 +6639,11 @@ namespace Js
             this->m_functionBody->GetReferencedPropertyId(propertyIdIndex), scriptContext);
     }
 
+    BOOL InterpreterStackFrame::OP_BrOnClassConstructor(Var aValue)
+    {
+        return JavascriptOperators::IsClassConstructor(aValue);
+    }
+
     template<class T>
     void InterpreterStackFrame::OP_LdLen(const unaligned T * const playout)
     {

@@ -699,6 +699,7 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
         case Js::OpCode::CallI:
         case Js::OpCode::CallINew:
         case Js::OpCode::CallIFixed:
+        case Js::OpCode::CallINewTargetNew:
         {
             Js::CallFlags flags = Js::CallFlags_None;
 
@@ -711,6 +712,10 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
                 if (instr->m_opcode == Js::OpCode::CallINew)
                 {
                     flags = Js::CallFlags_New;
+                }
+                else if (instr->m_opcode == Js::OpCode::CallINewTargetNew)
+                {
+                    flags = (Js::CallFlags) (Js::CallFlags_New | Js::CallFlags_ExtraArg | Js::CallFlags_NewTarget);
                 }
                 if (instr->GetDst())
                 {
@@ -1893,6 +1898,10 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             }
             break;
 
+        case Js::OpCode::BrOnClassConstructor:
+            this->LowerBrOnClassConstructor(instr, IR::HelperOp_IsClassConstructor);
+            break;
+
         case Js::OpCode::BrAddr_A:
         case Js::OpCode::BrNotAddr_A:
         case Js::OpCode::BrNotNull_A:
@@ -2772,6 +2781,14 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             // Currently, the only use for CallIExtended is a call that uses spread.
             Assert(IsSpreadCall(instr));
             instrPrev = this->LowerSpreadCall(instr, Js::CallFlags_New);
+            break;
+        }
+
+        case Js::OpCode::CallIExtendedNewTargetNew:
+        {
+            // Currently, the only use for CallIExtended is a call that uses spread.
+            Assert(IsSpreadCall(instr));
+            instrPrev = this->LowerSpreadCall(instr, (Js::CallFlags)(Js::CallFlags_New | Js::CallFlags_ExtraArg | Js::CallFlags_NewTarget));
             break;
         }
 
@@ -4431,7 +4448,7 @@ Lowerer::GenerateCallProfiling(Js::ProfileId profileId, Js::InlineCacheIndex inl
 
     bool needInlineCacheIndex;
     IR::JnHelperMethod helperMethod;
-    if(returnTypeOnly)
+    if (returnTypeOnly)
     {
         needInlineCacheIndex = false;
         helperMethod = IR::HelperSimpleProfileReturnTypeCall;
@@ -8844,6 +8861,37 @@ IR::Instr* Lowerer::LowerBrOnObject(IR::Instr * instr, IR::JnHelperMethod helper
     IR::HelperCallOpnd  * opndHelper;
     IR::Opnd  * opndSrc;
     IR::Opnd  * opndDst;
+    StackSym * symDst;
+    AssertMsg(instr->GetSrc1() != NULL && instr->GetSrc2() == NULL, "Expected 1 src opnds on BrB");
+
+    opndSrc = instr->UnlinkSrc1();
+    instrPrev = m_lowererMD.LoadHelperArgument(instr, opndSrc);
+
+    // Generate helper call to check if the operand's type is object
+
+    opndHelper = IR::HelperCallOpnd::New(helperMethod, this->m_func);
+    symDst = StackSym::New(TyVar, this->m_func);
+    opndDst = IR::RegOpnd::New(symDst, TyVar, this->m_func);
+    instrCall = IR::Instr::New(Js::OpCode::Call, opndDst, opndHelper, this->m_func);
+
+    instr->InsertBefore(instrCall);
+    instrCall = m_lowererMD.LowerCall(instrCall, 0);
+
+    // Branch on the result of the call
+
+    instr->SetSrc1(opndDst);
+    m_lowererMD.LowerCondBranch(instr);
+
+    return instrPrev;
+}
+
+IR::Instr * Lowerer::LowerBrOnClassConstructor(IR::Instr * instr, IR::JnHelperMethod helperMethod)
+{
+    IR::Instr * instrPrev;
+    IR::Instr * instrCall;
+    IR::HelperCallOpnd * opndHelper;
+    IR::Opnd * opndSrc;
+    IR::Opnd * opndDst;
     StackSym * symDst;
     AssertMsg(instr->GetSrc1() != NULL && instr->GetSrc2() == NULL, "Expected 1 src opnds on BrB");
 
