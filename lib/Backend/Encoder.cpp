@@ -678,10 +678,7 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize)
         BYTE* shortBrPtr, *fixedBrPtr /*without shortening*/;
             
         EncodeRelocAndLabels &reloc = relocList->Item(j);
-
-        if (totalBytesSaved != 0)
-            codeChange = true;
-
+        
         // If not a long branch, just fix the reloc entry and skip.
         if (!reloc.isLongBr())
         {
@@ -693,6 +690,7 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize)
                 AssertMsg(reloc.isAlignedLabel(), "Expecting aligned label.");
                 // we aligned a loop, fix maps
                 m_encoderMD.FixMaps((uint32)(reloc.getLabelOrigPC() - buffStart), totalBytesSaved, &inlineeFrameRecordsIndex, &inlineeFrameMapIndex, &pragmaInstToRecordOffsetIndex, &offsetBuffIndex);
+                codeChange = true;
             }
             totalBytesSaved = newTotalBytesSaved;
             continue;
@@ -749,6 +747,7 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize)
             // fix all maps entries from last shortened br to this one, before updating total bytes saved.
             brOffset = (uint32) ((BYTE*)reloc.m_origPtr - buffStart);
             m_encoderMD.FixMaps(brOffset, totalBytesSaved, &inlineeFrameRecordsIndex, &inlineeFrameMapIndex, &pragmaInstToRecordOffsetIndex, &offsetBuffIndex);
+            codeChange = true;
             totalBytesSaved += bytesSaved;
 
             // mark br reloc entry as shortened
@@ -763,10 +762,12 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize)
 
     // Fix the rest of the maps, if needed.
     if (totalBytesSaved != 0)
+    {
         m_encoderMD.FixMaps((uint32) -1, totalBytesSaved, &inlineeFrameRecordsIndex, &inlineeFrameMapIndex, &pragmaInstToRecordOffsetIndex, &offsetBuffIndex);
-        
-    newCodeSize -= totalBytesSaved;
-
+        codeChange = true;
+        newCodeSize -= totalBytesSaved;
+    }
+    
     // no BR shortening or Label alignment happened, no need to copy code
     if (!codeChange)
         return codeChange; 
