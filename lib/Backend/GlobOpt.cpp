@@ -886,7 +886,7 @@ GlobOpt::TryTailDup(IR::BranchInstr *tailBranch)
     //
     FOREACH_SLISTCOUNTED_ENTRY_EDITING(IR::BranchInstr*, branchEntry, &mergeLabel->labelRefs, iter)
     {
-        if (branchEntry->IsUnconditional() && !branchEntry->IsMultiBranch() && branchEntry != mergeLabelPrev)
+        if (branchEntry->IsUnconditional() && !branchEntry->IsMultiBranch() && branchEntry != mergeLabelPrev && branchEntry != tailBranch)
         {
             for (instr = mergeLabel->m_next; instr != tailBranch; instr = instr->m_next)
             {
