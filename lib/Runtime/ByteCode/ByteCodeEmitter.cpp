@@ -7632,7 +7632,6 @@ void EmitForInOrForOf(ParseNode *loopNode, ByteCodeGenerator *byteCodeGenerator,
         EmitIteratorValue(loopNode->sxForInOrForOf.itemLocation, loopNode->sxForInOrForOf.itemLocation, byteCodeGenerator, funcInfo);
     }
 
-
     if (loopNode->sxForInOrForOf.pnodeLval->nop != knopVarDecl &&
         loopNode->sxForInOrForOf.pnodeLval->nop != knopLetDecl)
     {
@@ -7645,11 +7644,7 @@ void EmitForInOrForOf(ParseNode *loopNode, ByteCodeGenerator *byteCodeGenerator,
     }
     EmitAssignment(NULL, loopNode->sxForInOrForOf.pnodeLval, loopNode->sxForInOrForOf.itemLocation, byteCodeGenerator, funcInfo);
 
-    if (!loopNode->sxForInOrForOf.pnodeLval->IsPattern())
-    {
-        // In the case of pattern the above statement has already done the endstatement for the pnodeLval
-        byteCodeGenerator->EndStatement(loopNode->sxForInOrForOf.pnodeLval);
-    }
+    byteCodeGenerator->EndStatement(loopNode->sxForInOrForOf.pnodeLval);
 
     funcInfo->ReleaseReference(loopNode->sxForInOrForOf.pnodeLval);
 

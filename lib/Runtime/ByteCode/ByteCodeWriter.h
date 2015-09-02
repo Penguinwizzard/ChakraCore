@@ -153,6 +153,9 @@ namespace Js
         Data m_auxContextData;   // Optional accumulated auxiliary ScriptContext specific data
         uint m_beginCodeSpan; // Debug Info for where in  bytecode the current statement starts. (Statements do not nest.)
         ParseNode* m_pMatchingNode; // Parse node for statement we are tracking debugInfo for.
+        // This ref count mechanism ensures that nested Start/End Statement with matching parse node will not mess-up the upper Start/End balance.
+        // This count will be incremented/decremented when the nested Start/End has the same m_pMatchingNode.
+        int m_matchingNodeRefCount;
         struct SubexpressionNode
         {
             ParseNode* node;
