@@ -2151,18 +2151,15 @@ namespace UnifiedRegex
         //Everything past here must be under the flag
         Assert(scriptContext->GetConfig()->IsES6UnicodeExtensionsEnabled());
 
-        Node* prefixNode = nullptr;
-        Node* suffixNode = nullptr;
-
-        uint totalCodePointsCount = codePointSet.Count();
-        uint simpleCharsCount = codePointSet.SimpleCharCount();
-
-        CharSet<codepoint_t> *toUseForTranslation = &codePointSet;
-
-        if (totalCodePointsCount == 0)
+        if (codePointSet.IsEmpty())
         {
             return Anew(ctAllocator, MatchSetNode, false, false);
         }
+
+        Node* prefixNode = nullptr;
+        Node* suffixNode = nullptr;
+
+        CharSet<codepoint_t> *toUseForTranslation = &codePointSet;
 
         // If a singleton, return a simple character
         bool isSingleton = !this->caseInsensitiveFlagPresent && !isNegation && codePointSet.IsSingleton();
@@ -2212,7 +2209,7 @@ namespace UnifiedRegex
             CharSet<codepoint_t> caseEquivalent;
             codePointSet.ToEquivClass(ctAllocator, caseEquivalent);
             // Equiv set can't have a reduced count of chars
-            Assert(caseEquivalent.Count() >= totalCodePointsCount);
+            Assert(caseEquivalent.Count() >= codePointSet.Count());
 
             // Here we have a regex that has both case insensitive and unicode options.
             // The range might also be negated. If it is negated, we can go ahead and negate
@@ -2231,8 +2228,8 @@ namespace UnifiedRegex
             Assert(toUseForTranslation == &codePointSet);
         }
 
-        totalCodePointsCount = toUseForTranslation->Count();
-        simpleCharsCount = toUseForTranslation->SimpleCharCount();
+        uint totalCodePointsCount = toUseForTranslation->Count();
+        uint simpleCharsCount = toUseForTranslation->SimpleCharCount();
         if (totalCodePointsCount == simpleCharsCount)
         {
             MatchSetNode *simpleToReturn = Anew(ctAllocator, MatchSetNode, isNegation);
