@@ -1604,19 +1604,12 @@ namespace UnifiedRegex
                 lowerIndex++;
             }
                 
-            if (partialHigher != Chars<wchar_t>::MaxUChar)
-            {
-                this->characterPlanes[upperIndex].SetRange(allocator, 0, partialHigher);
-            }
-            else
-            {
-                partialHigher++;
-            }
-
             for(; lowerIndex < upperIndex; lowerIndex++)
             {
                 this->characterPlanes[lowerIndex].SetRange(allocator, 0, Chars<wchar_t>::MaxUChar);
             }
+
+            this->characterPlanes[upperIndex].SetRange(allocator, 0, partialHigher);
         }
     }
 
