@@ -2164,137 +2164,100 @@ namespace UnifiedRegex
             return Anew(ctAllocator, MatchSetNode, false, false);
         }
 
+        // If a singleton, return a simple character
+        bool isSingleton = !this->caseInsensitiveFlagPresent && !isNegation && codePointSet.IsSingleton();
+        if (isSingleton)
+        {
+            codepoint_t singleton = codePointSet.Singleton();
+            Node* toReturn = nullptr;
+
+            if (singleton < 0x10000)
+            {
+                toReturn = Anew(ctAllocator, MatchCharNode, (wchar_t)singleton);
+            }
+            else
+            {
+                Assert(unicodeFlagPresent);
+                wchar_t lowerSurrogate, upperSurrogate;
+                Js::NumberUtilities::CodePointAsSurrogatePair(singleton, &lowerSurrogate, &upperSurrogate);
+                toReturn = CreateSurrogatePairAtom(lowerSurrogate, upperSurrogate);
+            }
+
+            codePointSet.Clear(ctAllocator);
+            return toReturn;
+        }
+
         // The second set of cases, is if we don't have caseInsensitiveRegex, negation we can handle in certain instances
         // We only handle simple chars here.
-        if (!this->caseInsensitiveFlagPresent)
+        if (!this->caseInsensitiveFlagPresent && simpleCharsCount != 0)
         {
-            // If a singleton, return a simple character
-            if (!isNegation && codePointSet.IsSingleton())
+            // If negation, we want to complement the simple chars.
+            // When a set is negated, optimizations skip checking if applicable, so we can go ahead and negate it here.
+            CharSet<codepoint_t> negatedSet;
+
+            if (isNegation)
             {
-                codepoint_t singleton = codePointSet.Singleton();
-                Node* toReturn = nullptr;
-
-                if (singleton < 0x10000)
-                {
-                    toReturn = Anew(ctAllocator, MatchCharNode, (wchar_t)singleton);
-                }
-                else
-                {
-                    Assert(unicodeFlagPresent);
-                    wchar_t lowerSurrogate, upperSurrogate;
-                    Js::NumberUtilities::CodePointAsSurrogatePair(singleton, &lowerSurrogate, &upperSurrogate);
-                    toReturn = CreateSurrogatePairAtom(lowerSurrogate, upperSurrogate);
-                }
-
-                codePointSet.Clear(ctAllocator);
-                return toReturn;
+                // Complement all characters, and use it as the set toTranslate
+                codePointSet.ToComplement(ctAllocator, negatedSet);
             }
-            
-            if(simpleCharsCount != 0)
+
+            toUseForTranslation = isNegation ? &negatedSet : &codePointSet;
+
+            if (isNegation)
             {
-                // If negation, we want to complement the simple chars.
-                // When a set is negated, optimizations skip checking if applicable, so we can go ahead and negate it here.
-                CharSet<codepoint_t> negatedSet;
-
-                if (isNegation)
-                {
-                    // Complement all characters, and use it as the set toTranslate
-                    codePointSet.ToComplement(ctAllocator, negatedSet);
-                }
-
-                toUseForTranslation = isNegation ? &negatedSet : &codePointSet;
-
-                totalCodePointsCount = toUseForTranslation->Count();
-                simpleCharsCount = toUseForTranslation->SimpleCharCount();
-
-                if (totalCodePointsCount == simpleCharsCount)
-                {
-                    MatchSetNode *simpleToReturn = Anew(ctAllocator, MatchSetNode, isNegation);
-                    toUseForTranslation->CloneSimpleCharsTo(ctAllocator, simpleToReturn->set);
-                    return simpleToReturn;
-                }
-
-                // Deal with preffix/suffix 
-                if (!toUseForTranslation->ContainSurrogateCodeUnits())
-                {
-                    MatchSetNode *node = Anew(ctAllocator, MatchSetNode, false);
-                    toUseForTranslation->CloneSimpleCharsTo(ctAllocator, node->set);
-                    prefixNode = node;
-                }
-                else
-                {
-                    MatchSetNode *node = Anew(ctAllocator, MatchSetNode, false);
-                    toUseForTranslation->CloneNonSurrogateCodeUnitsTo(ctAllocator, node->set);
-                    prefixNode = node;
-                    node = Anew(ctAllocator, MatchSetNode, false);
-                    toUseForTranslation->CloneSurrogateCodeUnitsTo(ctAllocator, node->set);
-                    suffixNode = node;
-                }
-
-                if (isNegation)
-                {
-                    // Clear this, as we will no longer need this.
-                    codePointSet.FreeBody(ctAllocator);
-                }
+                // Clear this, as we will no longer need this.
+                codePointSet.FreeBody(ctAllocator);
             }
         }
         else 
         {
+            CharSet<codepoint_t> caseEquivalent;
+            codePointSet.ToEquivClass(ctAllocator, caseEquivalent);
+            // Equiv set can't have a reduced count of chars
+            Assert(caseEquivalent.Count() >= totalCodePointsCount);
+
             // Here we have a regex that has both case insensitive and unicode options.
             // The range might also be negated. If it is negated, we can go ahead and negate
             // the entire set as well as fill in cases, as optimizations wouldn't kick in anyways.
             if (isNegation)
             {
-                CharSet<codepoint_t> tmpSet;
-                codePointSet.ToEquivClass(ctAllocator, tmpSet);
                 codePointSet.Clear(ctAllocator);
-                //TMP set can't have a reduced count of chars
-                Assert(tmpSet.Count() >= totalCodePointsCount);
-                
-                tmpSet.ToComplement(ctAllocator, codePointSet);
-                
-                simpleCharsCount = codePointSet.SimpleCharCount();
-                totalCodePointsCount = codePointSet.Count();
-                Assert(toUseForTranslation == &codePointSet);
-                tmpSet.FreeBody(ctAllocator);
+                caseEquivalent.ToComplement(ctAllocator, codePointSet);
+                caseEquivalent.FreeBody(ctAllocator);
             }
             else
             {
-                CharSet<codepoint_t> caseEquivalent;
-                codePointSet.ToEquivClass(ctAllocator, caseEquivalent);
                 codePointSet.CloneFrom(ctAllocator, caseEquivalent);
-
-                simpleCharsCount = codePointSet.SimpleCharCount();
             }
 
-            Assert(simpleCharsCount == toUseForTranslation->SimpleCharCount());
-            Assert(toUseForTranslation->Count() >= totalCodePointsCount);
+            Assert(toUseForTranslation == &codePointSet);
+        }
 
-            totalCodePointsCount = toUseForTranslation->Count();
-            if (totalCodePointsCount == simpleCharsCount)
+        totalCodePointsCount = toUseForTranslation->Count();
+        simpleCharsCount = toUseForTranslation->SimpleCharCount();
+        if (totalCodePointsCount == simpleCharsCount)
+        {
+            MatchSetNode *simpleToReturn = Anew(ctAllocator, MatchSetNode, isNegation);
+            toUseForTranslation->CloneSimpleCharsTo(ctAllocator, simpleToReturn->set);
+            return simpleToReturn;
+        }
+
+        if  (simpleCharsCount > 0)
+        {
+            if (!toUseForTranslation->ContainSurrogateCodeUnits())
             {
-                MatchSetNode *simpleToReturn = Anew(ctAllocator, MatchSetNode, isNegation);
-                toUseForTranslation->CloneSimpleCharsTo(ctAllocator, simpleToReturn->set);
-                return simpleToReturn;
+                MatchSetNode *node = Anew(ctAllocator, MatchSetNode, false, false);
+                toUseForTranslation->CloneSimpleCharsTo(ctAllocator, node->set);
+                prefixNode = node;
             }
-
-            if  (simpleCharsCount > 0)
+            else
             {
-                if (!toUseForTranslation->ContainSurrogateCodeUnits())
-                {
-                    MatchSetNode *node = Anew(ctAllocator, MatchSetNode, false, false);
-                    toUseForTranslation->CloneSimpleCharsTo(ctAllocator, node->set);
-                    prefixNode = node;
-                }
-                else
-                {
-                    MatchSetNode *node = Anew(ctAllocator, MatchSetNode, false, false);
-                    toUseForTranslation->CloneNonSurrogateCodeUnitsTo(ctAllocator, node->set);
-                    prefixNode = node;
-                    node = Anew(ctAllocator, MatchSetNode, false, false);
-                    toUseForTranslation->CloneSurrogateCodeUnitsTo(ctAllocator, node->set);
-                    suffixNode = node;
-                }
+                MatchSetNode *node = Anew(ctAllocator, MatchSetNode, false, false);
+                toUseForTranslation->CloneNonSurrogateCodeUnitsTo(ctAllocator, node->set);
+                prefixNode = node;
+                node = Anew(ctAllocator, MatchSetNode, false, false);
+                toUseForTranslation->CloneSurrogateCodeUnitsTo(ctAllocator, node->set);
+                suffixNode = node;
             }
         }
 
