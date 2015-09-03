@@ -531,8 +531,9 @@ namespace Js
         bool GetSetterBuiltIns(PropertyId propertyId, PropertyValueInfo* info, DescriptorFlags* descriptorFlags);
     private:
         struct Element {
-            Var Value;
+            Var               Value;
             JavascriptString* StringValue;
+            int               Index;
         };
 
         static int __cdecl CompareElements(void* context, const void* elem1, const void* elem2);

@@ -6109,7 +6109,7 @@ Case0:
                 {
                     elements[count].Value = orig[i];
                     elements[count].StringValue =  JavascriptConversion::ToString(orig[i], scriptContext);
-
+                    elements[count].Index = count;
                     count++;
                 }
                 else
@@ -6145,7 +6145,16 @@ Case0:
         Assert(element1 != NULL);
         Assert(element2 != NULL);
 
-        return JavascriptString::strcmp(element1->StringValue, element2->StringValue);
+        int ret = JavascriptString::strcmp(element1->StringValue, element2->StringValue);
+        if (ret == 0)
+        {
+            // even if the two string values are equal, the original element values may not
+            // be. In this case, we want to sort the equal string values by their index
+            // within the original array in order to maintain stability. This prevents
+            // an array like [-1, 0, '0', 1] from being sorted as [-1, '0', 0, 1]
+            ret = element1->Index - element2->Index;
+        }
+        return ret;
     }
 
     void JavascriptArray::SortElements(Element* elements, uint32 left, uint32 right)

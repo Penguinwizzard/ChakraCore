@@ -81,52 +81,39 @@ namespace Js
         RecyclableObject *undefined = scriptContext->GetLibrary()->GetUndefined();
 
         uint32 i = 0;
-        uint32 j = length - 1;
         uint32 countUndefined = 0;
+        uint32 placeIndex = 0;
+        uint32 newLength = length;
 
-        while (i <= j)
+        while (i < newLength && !IsMissingOrUndefined(_this->elements[i], undefined, countUndefined))
         {
-            //get the first null/undefined slot from left
-            while (i < j && !IsMissingOrUndefined(_this->elements[i], undefined, countUndefined))
-            {
-                i++;
-            }
-            bool iIsMissingOrUndefined = (i < j); // Flag to avoid test again if later j comes down to == i
+            // for as long as elements are not missing or undefined, we don't want
+            // to perform the copy below, since i and placeIndex will be identical
+            i++;
+        }
 
-            //get the first slot which is not null/undefined from the right
-            while (i < j && IsMissingOrUndefined(_this->elements[j], undefined, countUndefined))
-            {
-                j--;
-            }
+        // the above loop will only ever generate countUndefined = 1 for the first
+        // item it finds. We reset countUndefined to 0 so we don't double count that element
+        countUndefined = 0;
 
-            if (i < j)
+        for (; i < newLength; i++)
+        {
+            if (!IsMissingOrUndefined(_this->elements[i], undefined, countUndefined))
             {
-                //move
-                _this->elements[i] = _this->elements[j];
-                i++;
-                j--;
-            }
-            else
-            {
-                Assert(i == j);
-                if (iIsMissingOrUndefined || IsMissingOrUndefined(_this->elements[j], undefined, countUndefined))
-                {
-                    j--; // ok if j becomes -1. We'll truncate to length (j + 1).
-                }
-                break; // done
+                _this->elements[placeIndex] = _this->elements[i];
+                placeIndex++;
+                newLength--;
             }
         }
 
-        if (j != length - 1) // Truncate if j has changed
+        if (newLength != length) // Truncate if j has changed
         {
-            uint32 newLen = j + 1;
-            Assert(newLen < length);
-            Assert(countUndefined <= length - newLen);
-
-            _this->Truncate(left + newLen); // Truncate to new length (also clears moved elements)
+            Assert(newLength < length);
+            Assert(countUndefined <= length - newLength);
+            _this->Truncate(left + newLength); // Truncate to new length (also clears moved elements)
         }
+
         Assert(length <= size);
-
         return countUndefined;
     }
 }
