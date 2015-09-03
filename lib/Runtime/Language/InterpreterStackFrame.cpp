@@ -2377,7 +2377,7 @@ namespace Js
 
         //schedule for codegen here only if TJ is collected
         if (!functionBody->GetIsAsmJsFullJitScheduled() && !PHASE_OFF(BackEndPhase, functionBody)
-            && !PHASE_OFF(FullJitPhase, functionBody))
+            && !PHASE_OFF(FullJitPhase, functionBody) && !this->scriptContext->GetConfig()->IsNoNative())
         {
             int callCount = ++((FunctionEntryPointInfo*)func->GetEntryPointInfo())->callsCount;
             bool doSchedule = false;
