@@ -2187,9 +2187,7 @@ namespace UnifiedRegex
             return toReturn;
         }
 
-        // The second set of cases, is if we don't have caseInsensitiveRegex, negation we can handle in certain instances
-        // We only handle simple chars here.
-        if (!this->caseInsensitiveFlagPresent && simpleCharsCount != 0)
+        if (!this->caseInsensitiveFlagPresent)
         {
             // If negation, we want to complement the simple chars.
             // When a set is negated, optimizations skip checking if applicable, so we can go ahead and negate it here.
