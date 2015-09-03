@@ -1996,7 +1996,7 @@ namespace UnifiedRegex
                         }
                     }
 
-                    pendingRangeStart = pendingRangeEnd = INVALID_CODEPOINT;
+                    pendingRangeStart = pendingRangeEnd = lastCodepoint = INVALID_CODEPOINT;
                 }
                 //The current char <0x10000 is a candidate for the range end, but we need to iterate one more time.
                 else
