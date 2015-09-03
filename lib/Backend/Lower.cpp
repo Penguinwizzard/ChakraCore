@@ -11859,7 +11859,7 @@ Lowerer::SplitBailOnImplicitCall(IR::Instr *& instr)
             IR::Instr::New(
                 Js::OpCode::Ld_A,
                 disableImplicitCallAddress,
-                IR::IntConstOpnd::New(DisableImplicitCallAndExceptionFlag, TyInt8, instr->m_func, true),
+                IR::IntConstOpnd::New(DisableImplicitCallFlag, TyInt8, instr->m_func, true),
                 instr->m_func);
         instr->InsertBefore(disableImplicitCallsInstr);
 

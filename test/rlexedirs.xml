@@ -7,6 +7,11 @@
 </dir>
 <dir>
   <default>
+    <files>Array</files>
+  </default>
+</dir>
+<dir>
+  <default>
     <files>Basics</files>
   </default>
 </dir>

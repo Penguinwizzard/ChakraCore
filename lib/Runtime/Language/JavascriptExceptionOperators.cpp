@@ -842,7 +842,16 @@ namespace Js
                     DispatchExceptionToDebugger(exceptionObject, scriptContext);
                 }
             }
-            Assert(!scriptContext || !scriptContext->GetThreadContext()->IsDisableImplicitException());
+            Assert(!scriptContext ||
+                   // If we disabled implicit calls and we did record an implicit call, do not throw.
+                   // Check your helper to see if a call recorded an implicit call that might cause an invalid value
+                   !(
+                       scriptContext->GetThreadContext()->IsDisableImplicitCall() && 
+                       scriptContext->GetThreadContext()->GetImplicitCallFlags() & (~ImplicitCall_None) 
+                    ) ||
+                   // Make sure we didn't disable exceptions
+                   !scriptContext->GetThreadContext()->IsDisableImplicitException()
+            );
             scriptContext->GetThreadContext()->ClearDisableImplicitFlags();
         }
 
