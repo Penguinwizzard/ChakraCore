@@ -648,7 +648,7 @@ namespace UnifiedRegex
         {
             for (int i = 0; i < NumberOfPlanes; i++)
             {
-                if (this->characterPlanes[i].IsEmpty())
+                if (!this->characterPlanes[i].IsEmpty())
                 {
                     return false;
                 }
