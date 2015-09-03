@@ -1000,7 +1000,7 @@ namespace UnifiedRegex
             {
                 Char c = this->GetCompactChar(i);
                 uint uChar = CTU(c);
-                if (uChar < 0xD800 || uChar > 0xDFFF)
+                if (0xD800 <= uChar && uChar <= 0xDFFF)
                 {
                     other.Set(allocator, c);
                 }
@@ -1016,7 +1016,7 @@ namespace UnifiedRegex
             else
             {
                 other.rep.full.root = rep.full.root->Clone(allocator);
-                other.rep.full.root->ClearRange(allocator, CharSetNode::levels - 1, 0xD800, 0XDFFF);
+                other.rep.full.root->ClearRange(allocator, CharSetNode::levels - 1, 0, 0xD7FF);
             }
         }
     }
