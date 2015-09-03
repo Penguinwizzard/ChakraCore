@@ -9169,6 +9169,7 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
 
     case knopComma:
         {
+            byteCodeGenerator->StartStatement(pnode);
             // The parser marks binary opnd pnodes as used, but value of the first opnd of a comma is not used.
             // Easier to correct this here than to check every binary op in the parser.
             ParseNode *pnode1 = pnode->sxBin.pnode1;
@@ -9220,6 +9221,7 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
             {
                 byteCodeGenerator->Writer()->Reg2(Js::OpCode::Ld_A, pnode->location, pnode->sxBin.pnode2->location);
             }
+            byteCodeGenerator->EndStatement(pnode);
         }
         break;
 
