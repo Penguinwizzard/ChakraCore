@@ -1954,16 +1954,19 @@ namespace Js
 
         if (!SUCCEEDED(hrParser))
         {
-            JavascriptError::ThrowError(m_scriptContext, VBSERR_InternalError);
+            Js:Throw::InternalError();
         }
         else if (!SUCCEEDED(hrParseCodeGen))
         {
-            // special casing VBSERR_OutOfStack as per Parse method above
             if (hrParseCodeGen == VBSERR_OutOfStack)
             {
-                JavascriptError::ThrowStackOverflowError(m_scriptContext);
+                Js::Throw::StackOverflow(m_scriptContext, NULL);
             }
-            JavascriptError::MapAndThrowError(m_scriptContext, hrParseCodeGen);
+            else
+            {
+                Assert(hrParseCodeGen == E_OUTOFMEMORY);
+                Js::Throw::OutOfMemory();
+            }
         }
 
         UpdateFunctionBodyImpl(funcBody);
