@@ -109,6 +109,9 @@ public:
     }
 
 private:
+    static UINT GetWriteWatchHelper(Js::ConfigFlagsTable& flags, DWORD writeWatchFlags, void* baseAddress, size_t regionSize, void** addresses, ULONG_PTR* count, LPDWORD granularity);
+    static UINT GetWriteWatchHelperOnOOM(Js::ConfigFlagsTable& flags, DWORD writeWatchFlags, void* baseAddress, size_t regionSize, void** addresses, ULONG_PTR* count, LPDWORD granularity);
+
     static void * GetAddressFromIds(uint id1, uint id2)
     {
         Assert(id1 < L1Count);

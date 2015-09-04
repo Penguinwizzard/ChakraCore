@@ -744,6 +744,78 @@ HeapBlockMap32::ChangeProtectionLevel(Recycler* recycler, DWORD protectFlags, DW
     });
 }
 
+///
+/// The GetWriteWatch API can fail under low-mem situations if called to retrieve write-watch for a large number of pages
+/// (On Win10, > 255 pages). This helper is to handle the failure case. In the case of failure, we degrade to retrieving
+/// the write-watch one page at a time since that's expected to succeed
+///
+UINT 
+HeapBlockMap32::GetWriteWatchHelper(Js::ConfigFlagsTable& flags, DWORD writeWatchFlags, void* baseAddress, size_t regionSize, void** addresses, ULONG_PTR* count, LPDWORD granularity)
+{
+    UINT ret = 0;
+
+#ifdef ENABLE_DEBUG_CONFIG_OPTIONS
+    if (flags.ForceGetWriteWatchOOM)
+    {
+        if (regionSize != AutoSystemInfo::PageSize)
+        {
+            ret = (UINT) -1;
+        }
+    }
+    else
+#endif
+    {
+        ret = ::GetWriteWatch(writeWatchFlags, baseAddress, regionSize, addresses, count, granularity);
+    }
+
+    if (ret != 0 && regionSize != AutoSystemInfo::PageSize)
+    {
+       ret = GetWriteWatchHelperOnOOM(flags, writeWatchFlags, baseAddress, regionSize, addresses, count, granularity);
+    }
+
+    Assert(ret == 0);
+
+    return ret;
+}
+
+// OOM codepath- Retrieve write-watch one page at a time
+// It's slow, but we are ok with that during OOM
+// Factored into its own function to help the compiler inline the parent
+UINT 
+HeapBlockMap32::GetWriteWatchHelperOnOOM(Js::ConfigFlagsTable& flags, DWORD writeWatchFlags, void* baseAddress, size_t regionSize, void** addresses, ULONG_PTR* count, LPDWORD granularity)
+{
+    const uint pageCount = (regionSize / AutoSystemInfo::PageSize);
+
+    // Ensure target buffer 
+    AssertMsg(*count >= pageCount, "Not enough space in the buffer to store the write watch state for the given region size");
+
+    void* result;
+    uint dirtyCount = 0;
+
+    for (uint i = 0; i < pageCount; i++)
+    {
+        result = nullptr;
+        char* pageAddress = ((char*)baseAddress) + (i * AutoSystemInfo::PageSize);
+        ULONG_PTR resultBufferCount = 1;
+
+        DWORD r = ::GetWriteWatch(writeWatchFlags, pageAddress, AutoSystemInfo::PageSize, &result, &resultBufferCount, granularity);
+        Assert(r == 0);
+        Assert(resultBufferCount <= 1);
+
+        // The requested page was dirty
+        if (resultBufferCount == 1)
+        {
+            Assert(result == pageAddress);
+            addresses[dirtyCount] = pageAddress;
+            dirtyCount++;
+        }
+    }
+
+    Assert(dirtyCount <= *count);
+    *count = dirtyCount;
+    return 0;
+}
+
 uint
 HeapBlockMap32::Rescan(Recycler * recycler, bool resetWriteWatch)
 {
@@ -768,7 +840,7 @@ HeapBlockMap32::Rescan(Recycler * recycler, bool resetWriteWatch)
             ULONG_PTR pageCount = MaxGetWriteWatchPages;
             DWORD pageSize = PageSize;
 
-            UINT ret = ::GetWriteWatch(writeWatchFlags, segmentStart, segmentLength, dirtyPageAddresses, &pageCount, &pageSize);
+            UINT ret = HeapBlockMap32::GetWriteWatchHelper(recycler->GetRecyclerFlagsTable(), writeWatchFlags, segmentStart, segmentLength, dirtyPageAddresses, &pageCount, &pageSize);
             Assert(ret == 0);
             Assert(pageSize == PageSize);
             Assert(pageCount <= MaxGetWriteWatchPages);

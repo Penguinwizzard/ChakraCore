@@ -918,6 +918,7 @@ FLAGNR(Boolean, ForceGCAfterJSONParse, "Force GC to happen after JSON parsing", 
 FLAGNR(Boolean, ForceDecommitOnCollect, "Force decommit collect", DEFAULT_CONFIG_ForceDecommitOnCollect)
 FLAGNR(Boolean, ForceDeferParse       , "Defer parsing of all function bodies", DEFAULT_CONFIG_ForceDeferParse)
 FLAGNR(Boolean, ForceDiagnosticsMode  , "Enable diagnostics mode and debug interpreter loop", false)
+FLAGNR(Boolean, ForceGetWriteWatchOOM , "Force GetWriteWatch to go into OOM codepath in HeapBlockMap rescan", false)
 FLAGNR(Boolean, DumpDbgControllerBytecode, "Dump dbgcontroller.js bytecode when -dump:bytecode is specified (default false)", false)
 FLAGNR(Boolean, ForceDownlevelAsyncDebug, "Force async debug feature to use downlevel interface", DEFAULT_CONFIG_ForceDownlevelAsyncDebug)
 FLAGNR(Boolean, ForcePostLowerGlobOptInstrString, "Force tracking of globop tinstr string post lower", DEFAULT_CONFIG_ForcePostLowerGlobOptInstrString)
