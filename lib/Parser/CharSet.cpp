@@ -1619,41 +1619,7 @@ namespace UnifiedRegex
             }
         }
     }
-    void CharSet<codepoint_t>::SubtractRange(ArenaAllocator* allocator, Char lc, Char hc)
-    {
-        Assert(lc <= hc);
 
-        int lowerIndex = this->CharToIndex(lc);
-        int upperIndex = this->CharToIndex(hc);
-
-        if (lowerIndex == upperIndex)
-        {
-            this->characterPlanes[lowerIndex].SubtractRange(allocator, this->RemoveOffset(lc), this->RemoveOffset(hc));
-        }
-        else
-        {
-            // Do the partial ranges
-            wchar_t partialLower = this->RemoveOffset(lc);
-            wchar_t partialHigher = this->RemoveOffset(hc);
-                
-            if (partialLower != 0)
-            {
-                this->characterPlanes[lowerIndex].SubtractRange(allocator, partialLower, Chars<wchar_t>::MaxUChar);
-                lowerIndex++;
-            }
-                
-            if (partialHigher != Chars<wchar_t>::MaxUChar)
-            {
-                this->characterPlanes[lowerIndex].SubtractRange(allocator, 0, partialHigher);
-                upperIndex++;
-            }
-
-            for (; lowerIndex < upperIndex; lowerIndex++)
-            {
-                this->characterPlanes[lowerIndex].SubtractRange(allocator, 0, Chars<wchar_t>::MaxUChar);
-            }
-        }
-    }
     void CharSet<codepoint_t>::SetRanges(ArenaAllocator* allocator, int numSortedPairs, const Char* sortedPairs)
     {
         for (int i = 0; i < numSortedPairs * 2; i += 2)
