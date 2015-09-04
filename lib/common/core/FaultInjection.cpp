@@ -93,7 +93,8 @@ namespace Js
         UINT_PTR address = 0;
         while (*str == '0' || *str == '`' || *str == 'x' || *str == 'X')
             str++; // leading zero
-        do{
+        do
+        {
             if (*str == '`') // amd64 address
                 continue;
             if (hexTable[*str & 0xff] < 0)
@@ -113,57 +114,69 @@ namespace Js
         _Out_opt_ PDWORD BackTraceHash,
         _In_ const CONTEXT* pCtx = nullptr)
     {
-            CONTEXT                         Context;
-            KNONVOLATILE_CONTEXT_POINTERS   NvContext;
-            UNWIND_HISTORY_TABLE            UnwindHistoryTable;
-            PRUNTIME_FUNCTION               RuntimeFunction;
-            PVOID                           HandlerData;
-            ULONG64                         EstablisherFrame;
-            ULONG64                         ImageBase;
-            ULONG                           Frame = 0;
+        CONTEXT                         Context;
+        KNONVOLATILE_CONTEXT_POINTERS   NvContext;
+        UNWIND_HISTORY_TABLE            UnwindHistoryTable;
+        PRUNTIME_FUNCTION               RuntimeFunction;
+        PVOID                           HandlerData;
+        ULONG64                         EstablisherFrame;
+        ULONG64                         ImageBase;
+        ULONG                           Frame = 0;
 
-            if (BackTraceHash){
-                *BackTraceHash = 0;
-            }
-            if(pCtx == nullptr) {
-                RtlCaptureContext(&Context);
-            } else {
-                memcpy(&Context, pCtx, sizeof(CONTEXT));
-            }
-            RtlZeroMemory(&UnwindHistoryTable, sizeof(UNWIND_HISTORY_TABLE));
-            while (true) {
-                RuntimeFunction = RtlLookupFunctionEntry(Context.Rip, &ImageBase, &UnwindHistoryTable);
-                RtlZeroMemory(&NvContext, sizeof(KNONVOLATILE_CONTEXT_POINTERS));
-                if (!RuntimeFunction){
-                    Context.Rip = (ULONG64)(*(PULONG64)Context.Rsp);
-                    Context.Rsp += 8;
-                } else {
-                    RtlVirtualUnwind(UNW_FLAG_NHANDLER, ImageBase, Context.Rip, RuntimeFunction,
-                        &Context, &HandlerData, &EstablisherFrame, &NvContext);
-                }
-
-                if (!Context.Rip){
-                    break;
-                }
-
-                if (FramesToSkip > 0){
-                    FramesToSkip--;
-                    continue;
-                }
-
-                if (Frame >= FramesToCapture){
-                    break;
-                }
-
-                BackTrace[Frame] = (PVOID)Context.Rip;
-                if (BackTraceHash){
-                    *BackTraceHash += (Context.Rip & 0xffffffff);
-                }
-                Frame++;
-            }
-
-            return (WORD)Frame;
+        if (BackTraceHash)
+        {
+            *BackTraceHash = 0;
         }
+        if (pCtx == nullptr)
+        {
+            RtlCaptureContext(&Context);
+        }
+        else
+        {
+            memcpy(&Context, pCtx, sizeof(CONTEXT));
+        }
+        RtlZeroMemory(&UnwindHistoryTable, sizeof(UNWIND_HISTORY_TABLE));
+        while (true)
+        {
+            RuntimeFunction = RtlLookupFunctionEntry(Context.Rip, &ImageBase, &UnwindHistoryTable);
+            RtlZeroMemory(&NvContext, sizeof(KNONVOLATILE_CONTEXT_POINTERS));
+            if (!RuntimeFunction)
+            {
+                Context.Rip = (ULONG64)(*(PULONG64)Context.Rsp);
+                Context.Rsp += 8;
+            }
+            else
+            {
+                RtlVirtualUnwind(UNW_FLAG_NHANDLER, ImageBase, Context.Rip, RuntimeFunction,
+                    &Context, &HandlerData, &EstablisherFrame, &NvContext);
+            }
+
+            if (!Context.Rip)
+            {
+                break;
+            }
+
+            if (FramesToSkip > 0)
+            {
+                FramesToSkip--;
+                continue;
+            }
+
+            if (Frame >= FramesToCapture)
+            {
+                break;
+            }
+
+            BackTrace[Frame] = (PVOID)Context.Rip;
+            if (BackTraceHash)
+            {
+                *BackTraceHash += (Context.Rip & 0xffffffff);
+            }
+            Frame++;
+        }
+
+        return (WORD)Frame;
+    }
 
 #define CaptureStack(FramesToSkip, FramesToCapture, BackTrace, BackTraceHash) \
     StackTrace64(FramesToSkip, FramesToCapture, BackTrace, BackTraceHash)
@@ -172,12 +185,12 @@ namespace Js
 #pragma warning( push )
 #pragma warning( disable : 4748 )
     WORD StackTrace86(
-        _In_ DWORD FramesToSkip, 
+        _In_ DWORD FramesToSkip,
         _In_ DWORD FramesToCapture,
-        _Out_writes_to_(FramesToCapture, return) PVOID * BackTrace, 
+        _Out_writes_to_(FramesToCapture, return) PVOID * BackTrace,
         _Out_opt_ PDWORD BackTraceHash,
         __in_opt CONST PCONTEXT InitialContext = NULL
-        ) 
+        )
     {
         _Analysis_assume_(FramesToSkip >= 0);
         _Analysis_assume_(FramesToCapture >= 0);
@@ -185,56 +198,68 @@ namespace Js
         CONTEXT Context;
         STACKFRAME64 StackFrame;
 
-        if ( InitialContext == NULL ){
+        if (InitialContext == NULL)
+        {
             //RtlCaptureContext( &Context );
-            ZeroMemory( &Context, sizeof(CONTEXT));
+            ZeroMemory(&Context, sizeof(CONTEXT));
             Context.ContextFlags = CONTEXT_CONTROL;
-            __asm {
-Label:
-                mov [Context.Ebp], ebp;
-                mov [Context.Esp], esp;
+            __asm
+            {
+            Label:
+                mov[Context.Ebp], ebp;
+                mov[Context.Esp], esp;
                 mov eax, [Label];
-                mov [Context.Eip], eax;
+                mov[Context.Eip], eax;
             }
-        } else {
-            CopyMemory( &Context, InitialContext, sizeof( CONTEXT ) ); 
+        }
+        else
+        {
+            CopyMemory(&Context, InitialContext, sizeof(CONTEXT));
         }
 
         ZeroMemory(&StackFrame, sizeof(STACKFRAME64));
-        MachineType                 = IMAGE_FILE_MACHINE_I386;
-        StackFrame.AddrPC.Offset    = Context.Eip;
-        StackFrame.AddrPC.Mode      = AddrModeFlat;
+        MachineType = IMAGE_FILE_MACHINE_I386;
+        StackFrame.AddrPC.Offset = Context.Eip;
+        StackFrame.AddrPC.Mode = AddrModeFlat;
         StackFrame.AddrFrame.Offset = Context.Ebp;
-        StackFrame.AddrFrame.Mode   = AddrModeFlat;
+        StackFrame.AddrFrame.Mode = AddrModeFlat;
         StackFrame.AddrStack.Offset = Context.Esp;
-        StackFrame.AddrStack.Mode   = AddrModeFlat;
+        StackFrame.AddrStack.Mode = AddrModeFlat;
 
         WORD FrameCount = 0;
-        while ( FrameCount < FramesToSkip + FramesToCapture )
+        while (FrameCount < FramesToSkip + FramesToCapture)
         {
-            if ( ! pfnStackWalk64(MachineType, GetCurrentProcess(), GetCurrentThread(), &StackFrame,
-                NULL, NULL, pfnSymFunctionTableAccess64, pfnSymGetModuleBase64, NULL )) {
+            if (!pfnStackWalk64(MachineType, GetCurrentProcess(), GetCurrentThread(), &StackFrame,
+                NULL, NULL, pfnSymFunctionTableAccess64, pfnSymGetModuleBase64, NULL))
+            {
                 break;
             }
 
-            if ( StackFrame.AddrPC.Offset != 0 ){
-                if(FrameCount >= FramesToSkip){
+            if (StackFrame.AddrPC.Offset != 0)
+            {
+                if (FrameCount >= FramesToSkip){
 #pragma warning(suppress: 22102)
 #pragma warning(suppress: 26014)
                     BackTrace[FrameCount - FramesToSkip] = (PVOID)StackFrame.AddrPC.Offset;
-                    if (BackTraceHash){
+                    if (BackTraceHash)
+                    {
                         *BackTraceHash += (StackFrame.AddrPC.Offset & 0xffffffff);
                     }
                 }
                 FrameCount++;
-            } else {
+            }
+            else
+            {
                 break;
             }
         }
 
-        if (FrameCount > FramesToSkip){
+        if (FrameCount > FramesToSkip)
+        {
             return (WORD)(FrameCount - FramesToSkip);
-        } else {
+        }
+        else
+        {
             return 0;
         }
     }
@@ -249,7 +274,8 @@ Label:
     struct SymbolInfoPackage : public SYMBOL_INFO_PACKAGEW
     {
         SymbolInfoPackage() { Init(); }
-        void Init(){
+        void Init()
+        {
             si.SizeOfStruct = sizeof(SYMBOL_INFOW);
             si.MaxNameLen = sizeof(name);
         }
@@ -258,19 +284,22 @@ Label:
     struct ModuleInfo : public IMAGEHLP_MODULEW64
     {
         ModuleInfo() { Init(); }
-        void Init(){
+        void Init()
+        {
             SizeOfStruct = sizeof(IMAGEHLP_MODULEW64);
         }
     };
 
     bool FaultInjection::InitializeSym()
     {
-        if (symInitialized){
+        if (symInitialized)
+        {
             return true;
         }
 
         // load dbghelp APIs
-        if (hDbgHelp == NULL){
+        if (hDbgHelp == NULL)
+        {
             hDbgHelp = LoadLibraryEx(L"dbghelp.dll", 0, 0);
         }
         if (hDbgHelp == NULL)
@@ -284,7 +313,7 @@ Label:
             fwprintf(stderr, L"Failed to load sigs:%s\n", L#fn); \
             fflush(stderr); \
             return false; \
-        }
+                }
         FIDELAYLOAD(SymInitialize);
         FIDELAYLOAD(SymCleanup);
         FIDELAYLOAD(SymFromAddrW);
@@ -300,7 +329,8 @@ Label:
 #undef FIDELAYLOAD
 
         // TODO: StackBackTrace.cpp also call SymInitialize, but this can only be called once before cleanup
-        if (!pfnSymInitialize(GetCurrentProcess(), NULL, TRUE)){
+        if (!pfnSymInitialize(GetCurrentProcess(), NULL, TRUE))
+        {
             fwprintf(stderr, L"SymInitialize failed, gle=0x%08x\n", GetLastError());
             fflush(stderr);
             return false;
@@ -319,25 +349,26 @@ Label:
     static ModuleInfo mi;
 
     const wchar_t* crashStackStart = L"=====Callstack for this exception=======\n";
-    const wchar_t* crashStackEnd   = L"=====End of callstack for this exception=======\n";
+    const wchar_t* crashStackEnd = L"=====End of callstack for this exception=======\n";
     const wchar_t* injectionStackStart = L"=====Fault injecting record=====\n";
-    const wchar_t* injectionStackEnd   = L"=====End of Fault injecting record=====\n";
+    const wchar_t* injectionStackEnd = L"=====End of Fault injecting record=====\n";
 
     typedef struct _RANGE{
         UINT_PTR startAddress;
         UINT_PTR endAddress;
     }RANGE, *PRANGE;
 
-    typedef struct _FUNCTION_SIGNATURES{
+    typedef struct _FUNCTION_SIGNATURES
+    {
         int count;
         RANGE signatures[ANYSIZE_ARRAY];
     } FUNCTION_SIGNATURES, *PFUNCTION_SIGNATURES;
 
     // function address ranges of each signature
     // use for faster address matching instead of symbol table lookup when reproing
-    PFUNCTION_SIGNATURES baselineFuncSigs[FaultInjection::MAX_FRAME_COUNT] = {0};
+    PFUNCTION_SIGNATURES baselineFuncSigs[FaultInjection::MAX_FRAME_COUNT] = { 0 };
     // record hit count of each frame when Faults are injected.
-    unsigned int stackMatchRank[FaultInjection::MAX_FRAME_COUNT] = {0};
+    unsigned int stackMatchRank[FaultInjection::MAX_FRAME_COUNT] = { 0 };
 
 #define FAULT_TYPE(x) L#x,\
 
@@ -349,16 +380,20 @@ Label:
     static_assert(sizeof(FaultInjection::FaultTypeNames) == FaultInjection::FaultType::FaultTypeCount*sizeof(wchar_t*),
         "FaultTypeNames count is wrong");
 
-    void FaultInjection::FaultInjectionTypes::EnableType(FaultType type){
+    void FaultInjection::FaultInjectionTypes::EnableType(FaultType type)
+    {
         Assert(type >= 0 && type < FaultType::FaultTypeCount);
         setBit(type, 1);
     }
-    bool FaultInjection::FaultInjectionTypes::IsEnabled(FaultType type){
+    bool FaultInjection::FaultInjectionTypes::IsEnabled(FaultType type)
+    {
         Assert(type >= 0 && type < FaultType::FaultTypeCount);
         return getBit(type) == 0x1;
     }
-    bool FaultInjection::FaultInjectionTypes::IsEnabled(const wchar_t* name){
-        for (int type = 0; type < FaultType::FaultTypeCount; type++){
+    bool FaultInjection::FaultInjectionTypes::IsEnabled(const wchar_t* name)
+    {
+        for (int type = 0; type < FaultType::FaultTypeCount; type++)
+        {
             if (wcscmp(FaultTypeNames[type], name) == 0)
                 return getBit(type) == 0x1;
         }
@@ -381,7 +416,8 @@ Label:
         faultInjectionTypes = nullptr;
         symInitialized = false;
 
-        for (int i = 0; i < MAX_FRAME_COUNT; i++){
+        for (int i = 0; i < MAX_FRAME_COUNT; i++)
+        {
             baselineStack[i] = nullptr;
             baselineAddresses[i] = 0;
         }
@@ -409,11 +445,11 @@ Label:
             }
             for (int i = 0; i < MAX_FRAME_COUNT; i++)
             {
-                if(stackMatchRank[i] == 0)
+                if (stackMatchRank[i] == 0)
                 {
                     break;
                 }
-                fwprintf(stderr, L"FaultInjection stack matching rank %d: %d\n", i+1, stackMatchRank[i]);
+                fwprintf(stderr, L"FaultInjection stack matching rank %d: %d\n", i + 1, stackMatchRank[i]);
             }
             fflush(stderr);
 
@@ -438,7 +474,8 @@ Label:
         if (globalFlags.FaultInjection == FaultMode::DisplayAvailableFaultTypes)
         {
             Output::Print(L"Available Fault Types:\n");
-            for (int i = 0; i < FaultType::FaultTypeCount; i++){
+            for (int i = 0; i < FaultType::FaultTypeCount; i++)
+            {
                 Output::Print(L"%d-%s\n", i, FaultTypeNames[i]);
             }
             Output::Flush();
@@ -447,46 +484,58 @@ Label:
         InjectionRecord* head = InjectionFirstRecord;
         while (head != nullptr){
             InjectionRecord* next = head->next;
-            if (head->StackData){
+            if (head->StackData)
+            {
                 free(head->StackData);
             }
             free(head);
             head = next;
         }
 
-        for (int i = 0; i < MAX_FRAME_COUNT; i++){
-            if (baselineStack[i]){
+        for (int i = 0; i < MAX_FRAME_COUNT; i++)
+        {
+            if (baselineStack[i])
+            {
                 free(baselineStack[i]);
             }
-            if(baselineFuncSigs[i]){
+            if (baselineFuncSigs[i])
+            {
                 free(baselineFuncSigs[i]);
             }
         }
 
-        if (stackMatchInitialized == Succeeded){
+        if (stackMatchInitialized == Succeeded)
+        {
             pfnSymCleanup(GetCurrentProcess());
         }
 
-        if (hDbgHelp){
+        if (hDbgHelp)
+        {
             FreeLibrary(hDbgHelp);
         }
 
-        if (faultInjectionTypes){
+        if (faultInjectionTypes)
+        {
             faultInjectionTypes->~FaultInjectionTypes();
             free(faultInjectionTypes);
         }
     }
 
-    bool FaultInjection::IsFaultEnabled(FaultType faultType){
-        if (!faultInjectionTypes){
+    bool FaultInjection::IsFaultEnabled(FaultType faultType)
+    {
+        if (!faultInjectionTypes)
+        {
             // use placement new since new is overloaded in Chakra to use recycler/arena allocators
             faultInjectionTypes = (FaultInjectionTypes*)malloc(sizeof(FaultInjectionTypes));
             faultInjectionTypes = new (faultInjectionTypes)FaultInjectionTypes();
             Assert(faultInjectionTypes);
-            if ((const wchar_t*)globalFlags.FaultInjectionType == nullptr){
+            if ((const wchar_t*)globalFlags.FaultInjectionType == nullptr)
+            {
                 // no -FaultInjectionType specified, inject all
                 faultInjectionTypes->EnableAll();
-            } else {
+            }
+            else
+            {
                 ParseFaultTypes(globalFlags.FaultInjectionType);
             }
         }
@@ -509,32 +558,47 @@ Label:
         const wchar_t* delims = L",";
         wchar_t *nextTok = nullptr;
         wchar_t* tok = wcstok_s(szTypes, delims, &nextTok);
-        while (tok != NULL) {
-            if (wcslen(tok) > 0){
-                if (iswdigit(tok[0])){
+        while (tok != NULL)
+        {
+            if (wcslen(tok) > 0)
+            {
+                if (iswdigit(tok[0]))
+                {
                     auto numType = _wtoi(tok);
                     for (int i = 0; i< FaultType::FaultTypeCount; i++)
                     {
-                        if (numType & (1 << i)){
+                        if (numType & (1 << i))
+                        {
                             faultInjectionTypes->EnableType(i);
                         }
                     }
-                } else if (tok[0] == L'#') {
+                }
+                else if (tok[0] == L'#')
+                {
                     // FaultInjectionType:#1-4,#6 format, not flags
                     auto tok1 = tok + 1;
-                    if (wcslen(tok1)>0 && iswdigit(tok1[0])){
+                    if (wcslen(tok1)>0 && iswdigit(tok1[0]))
+                    {
                         wchar_t* pDash = wcschr(tok1, L'-');
-                        if (pDash){
-                            for (int i = _wtoi(tok1); i <= _wtoi(pDash + 1); i++){
+                        if (pDash)
+                        {
+                            for (int i = _wtoi(tok1); i <= _wtoi(pDash + 1); i++)
+                            {
                                 faultInjectionTypes->EnableType(i);
                             }
-                        } else {
+                        }
+                        else
+                        {
                             faultInjectionTypes->EnableType(_wtoi(tok1));
                         }
                     }
-                } else {
-                    for (int i = 0; i < FaultType::FaultTypeCount; i++){
-                        if (_wcsicmp(FaultTypeNames[i], tok) == 0){
+                }
+                else
+                {
+                    for (int i = 0; i < FaultType::FaultTypeCount; i++)
+                    {
+                        if (_wcsicmp(FaultTypeNames[i], tok) == 0)
+                        {
                             faultInjectionTypes->EnableType(i);
                             break;
                         }
@@ -552,15 +616,19 @@ Label:
         const wchar_t lambdaSig[] = L"<lambda_";
         const int lambdaSigLen = (int)wcslen(lambdaSig);
         auto temp = str;
-        while (temp != nullptr){
+        while (temp != nullptr)
+        {
             auto lambdaStart = wcsstr(temp, lambdaSig);
             temp = nullptr;
-            if (lambdaStart != nullptr){
+            if (lambdaStart != nullptr)
+            {
                 auto lambdaEnd = wcschr(lambdaStart, L'>');
                 temp = lambdaEnd;
-                if (lambdaEnd != nullptr && lambdaEnd - lambdaStart == lambdaSigLen + 32){
+                if (lambdaEnd != nullptr && lambdaEnd - lambdaStart == lambdaSigLen + 32)
+                {
                     lambdaStart += lambdaSigLen;
-                    while (lambdaStart < lambdaEnd){
+                    while (lambdaStart < lambdaEnd)
+                    {
                         *(lambdaStart++) = L'?';
                     }
                 }
@@ -570,15 +638,21 @@ Label:
 
     bool FaultInjection::EnsureStackMatchInfraInitialized()
     {
-        if (stackMatchInitialized == Succeeded){
+        if (stackMatchInitialized == Succeeded)
+        {
             return true;
-        } else if (stackMatchInitialized == FailedToInitialize){
+        }
+        else if (stackMatchInitialized == FailedToInitialize)
+        {
             // previous try to initialize and failed
             return false;
-        } else if (stackMatchInitialized == Uninitialized) {
+        }
+        else if (stackMatchInitialized == Uninitialized)
+        {
             stackMatchInitialized = FailedToInitialize; //tried
 
-            if (!InitializeSym()){
+            if (!InitializeSym())
+            {
                 return false;
             }
 
@@ -586,57 +660,68 @@ Label:
             FILE *fp = nullptr;
             const wchar_t *stackFile = globalFlags.FaultInjectionStackFile;//default: L"stack.txt";            
             auto err = _wfopen_s(&fp, stackFile, L"r");
-            if (err != 0 || fp == nullptr){
+            if (err != 0 || fp == nullptr)
+            {
                 fwprintf(stderr, L"Failed to load %s, gle=0x%08x\n", stackFile, GetLastError());
                 fflush(stderr);
                 return false;
             }
 
             wchar_t buffer[MAX_SYM_NAME]; // assume the file is normal
-            unsigned int maxLineCount = 
-                (globalFlags.FaultInjectionStackLineCount < 0 
+            unsigned int maxLineCount =
+                (globalFlags.FaultInjectionStackLineCount < 0
                 || globalFlags.FaultInjectionStackLineCount > MAX_FRAME_COUNT
                 || globalFlags.FaultInjection == FaultMode::StackMatchCountOnly)
-                    ? MAX_FRAME_COUNT : globalFlags.FaultInjectionStackLineCount;
+                ? MAX_FRAME_COUNT : globalFlags.FaultInjectionStackLineCount;
 
-            while (fgetws(buffer, MAX_SYM_NAME, fp)){
-                if (wcscmp(buffer, injectionStackStart) == 0){
+            while (fgetws(buffer, MAX_SYM_NAME, fp))
+            {
+                if (wcscmp(buffer, injectionStackStart) == 0)
+                {
                     baselineFrameCount = 0;
                     continue;
                 }
 
-                if (baselineFrameCount >= maxLineCount){
+                if (baselineFrameCount >= maxLineCount)
+                {
                     continue; // don't break because we can hit the start marker and reset
                 }
 
                 const wchar_t jscript9test[] = L"jscript9test!";
                 const wchar_t jscript9[] = L"jscript9!";
                 wchar_t* symbolStart = stristr(buffer, jscript9test);
-                if (symbolStart == nullptr){
+                if (symbolStart == nullptr)
+                {
                     symbolStart = stristr(buffer, jscript9);
                 }
-                if (symbolStart == nullptr){
+                if (symbolStart == nullptr)
+                {
                     continue;// no "jscript9test!", skip this line
                 }
 
-                if (wcsstr(symbolStart, L"Js::FaultInjection") != NULL){ // skip faultinjection infra frames.
+                if (wcsstr(symbolStart, L"Js::FaultInjection") != NULL)
+                { // skip faultinjection infra frames.
                     continue;
                 }
 
                 auto plus = wcschr(symbolStart, L'+');
-                if (plus){
+                if (plus)
+                {
                     *plus = L'\0';
                 }
-                else {
+                else
+                {
                     trimRight(symbolStart);
                 }
                 SmashLambda(symbolStart);
                 size_t len = wcslen(symbolStart);
-                if (baselineStack[baselineFrameCount] == nullptr){
+                if (baselineStack[baselineFrameCount] == nullptr)
+                {
                     baselineStack[baselineFrameCount] = (wchar_t*)malloc((len + 1)*sizeof(wchar_t));
                     AssertMsg(baselineStack[baselineFrameCount], "OOM in FaultInjection Infra");
                 }
-                else {
+                else
+                {
                     auto tmp = (wchar_t*)realloc(baselineStack[baselineFrameCount], (len + 1)*sizeof(wchar_t));
                     AssertMsg(tmp, "OOM in FaultInjection Infra");
                     baselineStack[baselineFrameCount] = tmp;
@@ -647,29 +732,32 @@ Label:
             fclose(fp);
 
             OutputDebugString(L"Fault will be injected when hit following stack:\n");
-            for(uint i=0; i<baselineFrameCount; i++){
+            for (uint i = 0; i<baselineFrameCount; i++)
+            {
                 OutputDebugString(baselineStack[i]);
                 OutputDebugString(L"\n");
-                if(wcschr(baselineStack[i], '*') != nullptr || wcschr(baselineStack[i], '?') != nullptr){
+                if (wcschr(baselineStack[i], '*') != nullptr || wcschr(baselineStack[i], '?') != nullptr)
+                {
                     continue; // there's wildcard in this line, don't use address matching
                 }
 
                 // enum symbols, if succeed we compare with address when doing stack matching
-                pfnSymEnumSymbolsW(GetCurrentProcess(), 0, baselineStack[i], 
-                    []( _In_ PSYMBOL_INFOW pSymInfo, _In_ ULONG SymbolSize, _In_opt_  PVOID UserContext)->BOOL{ 
-                        if(pSymInfo->Size > 0) {
-                            PFUNCTION_SIGNATURES* sigs = (PFUNCTION_SIGNATURES*)UserContext;
-                            int count = (*sigs)==nullptr?0:(*sigs)->count;
-                            auto tmp = (PFUNCTION_SIGNATURES)realloc(*sigs, sizeof(FUNCTION_SIGNATURES)+count*sizeof(RANGE));
-                            AssertMsg(tmp, "OOM when allocating for FaultInjection Stack matching objects");
-                            *sigs = tmp;
-                            (*sigs)->count = count;
-                            (*sigs)->signatures[count].startAddress = (UINT_PTR)pSymInfo->Address;
-                            (*sigs)->signatures[count].endAddress = (UINT_PTR)(pSymInfo->Address + pSymInfo->Size);
-                            (*sigs)->count++;
-                        }
-                        return TRUE;
-                }, &baselineFuncSigs[i]); 
+                pfnSymEnumSymbolsW(GetCurrentProcess(), 0, baselineStack[i],
+                    [](_In_ PSYMBOL_INFOW pSymInfo, _In_ ULONG SymbolSize, _In_opt_  PVOID UserContext)->BOOL
+                {
+                    if (pSymInfo->Size > 0) {
+                        PFUNCTION_SIGNATURES* sigs = (PFUNCTION_SIGNATURES*)UserContext;
+                        int count = (*sigs) == nullptr ? 0 : (*sigs)->count;
+                        auto tmp = (PFUNCTION_SIGNATURES)realloc(*sigs, sizeof(FUNCTION_SIGNATURES) + count*sizeof(RANGE));
+                        AssertMsg(tmp, "OOM when allocating for FaultInjection Stack matching objects");
+                        *sigs = tmp;
+                        (*sigs)->count = count;
+                        (*sigs)->signatures[count].startAddress = (UINT_PTR)pSymInfo->Address;
+                        (*sigs)->signatures[count].endAddress = (UINT_PTR)(pSymInfo->Address + pSymInfo->Size);
+                        (*sigs)->count++;
+                    }
+                    return TRUE;
+                }, &baselineFuncSigs[i]);
             }
 
             stackMatchInitialized = Succeeded; // initialized
@@ -682,7 +770,8 @@ Label:
     {
         AutoCriticalSection autocs(&cs_Sym); // sym* API is thread unsafe
 
-        if (!EnsureStackMatchInfraInitialized()){
+        if (!EnsureStackMatchInfraInitialized())
+        {
             return false;
         }
 
@@ -692,28 +781,37 @@ Label:
         auto frameCount = CaptureStack(0, MAX_FRAME_COUNT, framesBuffer, 0);
 
         uint n = 0;
-        for (uint i = 0; i < frameCount; i++){
-            if (n >= baselineFrameCount){
+        for (uint i = 0; i < frameCount; i++)
+        {
+            if (n >= baselineFrameCount)
+            {
                 return true;
             }
 
-            if (!AutoSystemInfo::Data.IsJscriptModulePointer(framesBuffer[i])){ // skip non-Chakra frame
+            if (!AutoSystemInfo::Data.IsJscriptModulePointer(framesBuffer[i]))
+            { // skip non-Chakra frame
                 continue;
             }
 
-            bool match = false;    
-            if(baselineFuncSigs[n] != nullptr){
-                for(int j=0; j<baselineFuncSigs[n]->count; j++){
-                    match = baselineFuncSigs[n]->signatures[j].startAddress <= (UINT_PTR)framesBuffer[i] 
+            bool match = false;
+            if (baselineFuncSigs[n] != nullptr)
+            {
+                for (int j = 0; j<baselineFuncSigs[n]->count; j++)
+                {
+                    match = baselineFuncSigs[n]->signatures[j].startAddress <= (UINT_PTR)framesBuffer[i]
                         && (UINT_PTR)framesBuffer[i] < baselineFuncSigs[n]->signatures[j].endAddress;
-                    if(match){
+                    if (match)
+                    {
                         break;
                     }
                 }
-            } else {
+            }
+            else
+            {
                 // fallback to symbol name matching
                 sip.Init();
-                if (!pfnSymFromAddrW(hProcess, (DWORD64)framesBuffer[i], &dwSymDisplacement, &sip.si)){
+                if (!pfnSymFromAddrW(hProcess, (DWORD64)framesBuffer[i], &dwSymDisplacement, &sip.si))
+                {
                     continue;
                 }
                 SmashLambda(sip.si.Name);
@@ -722,44 +820,59 @@ Label:
                     || pfnSymMatchStringW(sip.si.Name, baselineStack[n], false);// wildcard
             }
 
-            if (match) {
+            if (match)
+            {
                 stackMatchRank[n]++;
-                if (n == 0){
+                if (n == 0)
+                {
                     n++;
                     continue;
                 }
-            } else if (n > 0){
+            }
+            else if (n > 0)
+            {
                 return false;
             }
 
             // First line in baseline is found, moving forward.
-            if (n > 0){
+            if (n > 0)
+            {
                 n++;
             }
         }
         return false;
     }
 
-    bool FaultInjection::InstallExceptionFilters() {
-        if(globalFlags.FaultInjection >= 0 && !IsDebuggerPresent()){
+    static bool faultInjectionDebug = false;
+    bool FaultInjection::InstallExceptionFilters()
+    {
+        if (GetEnvironmentVariable(L"FAULTINJECTION_DEBUG", nullptr, 0) != 0)
+        {
+            faultInjectionDebug = true;
+        }
+        if (globalFlags.FaultInjection >= 0 && !IsDebuggerPresent())
+        {
             // initialize symbol system here instead of inside the exception filter
             // because some hard stack overflow can happen in SymInitialize
             // when the exception filter is handling stack overflow exception
-            if (!FaultInjection::Global.InitializeSym()){
+            if (!FaultInjection::Global.InitializeSym())
+            {
                 return false;
             }
-//C28725:    Use Watson instead of this SetUnhandledExceptionFilter.
+            //C28725:    Use Watson instead of this SetUnhandledExceptionFilter.
 #pragma warning(suppress: 28725)
-            SetUnhandledExceptionFilter([](_In_  struct _EXCEPTION_POINTERS *ExceptionInfo)->LONG{
+            SetUnhandledExceptionFilter([](_In_  struct _EXCEPTION_POINTERS *ExceptionInfo)->LONG
+            {
                 return FaultInjectionExceptionFilter(ExceptionInfo);
             });
-            vectoredExceptionHandler = AddVectoredExceptionHandler(0, [](_In_  struct _EXCEPTION_POINTERS *ExceptionInfo)->LONG{
+            vectoredExceptionHandler = AddVectoredExceptionHandler(0, [](_In_  struct _EXCEPTION_POINTERS *ExceptionInfo)->LONG
+            {
                 switch (ExceptionInfo->ExceptionRecord->ExceptionCode)
                 {
-                // selected fatal exceptions:
+                    // selected fatal exceptions:
                 case STATUS_ACCESS_VIOLATION:
                 {
-                    if (pfnHandleAV 
+                    if (pfnHandleAV
                         && pfnHandleAV(ExceptionInfo->ExceptionRecord->ExceptionCode, ExceptionInfo) == EXCEPTION_CONTINUE_EXECUTION)
                     {
                         return EXCEPTION_CONTINUE_EXECUTION;
@@ -778,21 +891,26 @@ Label:
         return false;
     }
 
-    void FaultInjection::RemoveExceptionFilters() {
-//C28725:    Use Watson instead of this SetUnhandledExceptionFilter.
+    void FaultInjection::RemoveExceptionFilters()
+    {
+        //C28725:    Use Watson instead of this SetUnhandledExceptionFilter.
 #pragma warning(suppress: 28725)
         SetUnhandledExceptionFilter(nullptr);
-        if(vectoredExceptionHandler != nullptr){
+        if (vectoredExceptionHandler != nullptr)
+        {
             RemoveVectoredExceptionHandler(vectoredExceptionHandler);
             vectoredExceptionHandler = nullptr;
         }
     }
 
     // Calculate stack hash by adding the addresses (only jscript9 frames)
-    UINT_PTR FaultInjection::CalculateStackHash(void* frames[], WORD frameCount, WORD framesToSkip){
+    UINT_PTR FaultInjection::CalculateStackHash(void* frames[], WORD frameCount, WORD framesToSkip)
+    {
         UINT_PTR hash = 0;
-        for (int i = framesToSkip; i < frameCount; i++){
-            if (AutoSystemInfo::Data.IsJscriptModulePointer(frames[i])){
+        for (int i = framesToSkip; i < frameCount; i++)
+        {
+            if (AutoSystemInfo::Data.IsJscriptModulePointer(frames[i]))
+            {
                 hash += (UINT_PTR)frames[i] - AutoSystemInfo::Data.dllLoadAddress;
             }
         }
@@ -810,7 +928,8 @@ Label:
 #if !defined(_M_ARM32_OR_ARM64)
 
         static bool keepBreak = true; // for disabling following breakpoint by editing the value
-        if (keepBreak && IsDebuggerPresent()){
+        if (keepBreak && IsDebuggerPresent())
+        {
             DebugBreak();
         }
 
@@ -900,14 +1019,16 @@ Label:
         {
         case CountEquals:
             //Fault inject on count only when equal
-            if (countOfInjectionPoints == (uint)globalFlags.FaultInjectionCount) {
+            if (countOfInjectionPoints == (uint)globalFlags.FaultInjectionCount)
+            {
                 shouldInjectionFault = true;
             }
             break;
 
         case CountEqualsOrAbove:
             //Fault inject on count greater than or equal
-            if (countOfInjectionPoints >= (uint)globalFlags.FaultInjectionCount) {
+            if (countOfInjectionPoints >= (uint)globalFlags.FaultInjectionCount)
+            {
                 shouldInjectionFault = true;
             }
             break;
@@ -926,21 +1047,22 @@ Label:
             validInjectionPoint = IsCurrentStackMatch();
             break;
         case StackHashCountOnly:
+        {
+            // extend the storage when necessary
+            if (countOfInjectionPoints > stackHashOfAllInjectionPointsSize)
             {
-                // extend the storage when necessary
-                if (countOfInjectionPoints > stackHashOfAllInjectionPointsSize){
-                    stackHashOfAllInjectionPointsSize += 1024;
-                    auto extended = (ULONG_PTR*)realloc(stackHashOfAllInjectionPoints,
-                        stackHashOfAllInjectionPointsSize*sizeof(ULONG_PTR));
-                    AssertMsg(extended, "OOM in FaultInjection Infra");
-                    stackHashOfAllInjectionPoints = extended;
-                }
-                void* StackFrames[MAX_FRAME_COUNT];
-                auto FrameCount = CaptureStack(0, MAX_FRAME_COUNT, StackFrames, 0);
-                UINT_PTR hash = CalculateStackHash(StackFrames, FrameCount, 2);
-                stackHashOfAllInjectionPoints[countOfInjectionPoints] = hash;
-                break;
+                stackHashOfAllInjectionPointsSize += 1024;
+                auto extended = (ULONG_PTR*)realloc(stackHashOfAllInjectionPoints,
+                    stackHashOfAllInjectionPointsSize*sizeof(ULONG_PTR));
+                AssertMsg(extended, "OOM in FaultInjection Infra");
+                stackHashOfAllInjectionPoints = extended;
             }
+            void* StackFrames[MAX_FRAME_COUNT];
+            auto FrameCount = CaptureStack(0, MAX_FRAME_COUNT, StackFrames, 0);
+            UINT_PTR hash = CalculateStackHash(StackFrames, FrameCount, 2);
+            stackHashOfAllInjectionPoints[countOfInjectionPoints] = hash;
+            break;
+        }
         case CountOnly:
             break;
         default:
@@ -954,13 +1076,16 @@ Label:
         }
 
         // try to lookup stack hash, to see if it matches
-        if (!shouldInjectionFault){
+        if (!shouldInjectionFault)
+        {
             const static UINT_PTR expectedHash = HexStrToAddress((LPCWSTR)globalFlags.FaultInjectionStackHash);
-            if (expectedHash != 0){
+            if (expectedHash != 0)
+            {
                 void* StackFrames[MAX_FRAME_COUNT];
                 auto FrameCount = CaptureStack(0, MAX_FRAME_COUNT, StackFrames, 0);
                 UINT_PTR hash = CalculateStackHash(StackFrames, FrameCount, 2);
-                if (hash == expectedHash){
+                if (hash == expectedHash)
+                {
                     shouldInjectionFault = true;
                 }
             }
@@ -986,8 +1111,8 @@ Label:
         ipType offset = 0;
 
         // static to not use local stack space since stack space might be low at this point
-         __declspec(thread) static wchar_t modulePath[MAX_PATH + 1];  
-         __declspec(thread) static WCHAR filename[MAX_PATH + 1];
+        __declspec(thread) static wchar_t modulePath[MAX_PATH + 1];
+        __declspec(thread) static WCHAR filename[MAX_PATH + 1];
 
         HMODULE mod = nullptr;
         GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, reinterpret_cast<LPCTSTR>(ip), &mod);
@@ -1006,30 +1131,37 @@ Label:
         _snwprintf_s(filename, _TRUNCATE, L"%s.FICrashes.txt", mainModule);
 
         auto fp = _wfsopen(filename, L"a+t", _SH_DENYNO);
-        if (fp != nullptr) {
+        if (fp != nullptr)
+        {
             HANDLE hFile = (HANDLE)_get_osfhandle(_fileno(fp));
             OVERLAPPED overlapped;
             memset(&overlapped, 0, sizeof(overlapped));
             const int lockSize = 1024 * 64;
-            if (!LockFileEx(hFile, LOCKFILE_EXCLUSIVE_LOCK, 0, lockSize, 0, &overlapped)) {
+            if (!LockFileEx(hFile, LOCKFILE_EXCLUSIVE_LOCK, 0, lockSize, 0, &overlapped))
+            {
                 fwprintf(stderr, L"LockFileEx(%ls) Failed when saving offset to file, gle=%8x\n", filename, GetLastError());
                 fclose(fp);
             }
-            else  { // file lockedh
+            else
+            { // file lockedh
                 wchar_t content[32] = { 0 };
-                while (fgetws(content, 31, fp)){
+                while (fgetws(content, 31, fp))
+                {
                     savedOffset = HexStrToAddress(content);
-                    if (offset == savedOffset){
+                    if (offset == savedOffset)
+                    {
                         // found duplicate so not creating dump
                         needDump = false;
                     }
                 }
 
-                if (needDump) {
+                if (needDump)
+                {
                     fwprintf(stderr, L"This is new Exception\n");
                     fwprintf(fp, L"0x%p\n", (void*)offset);
                 }
-                else {
+                else
+                {
                     fwprintf(stderr, L"This is not a new Exception\n");
                 }
                 fflush(fp);
@@ -1037,10 +1169,12 @@ Label:
                 // save the hitcount to a file, for bug prioritizing
                 _snwprintf_s(filename, _TRUNCATE, L"%s.HitCount_%llx.txt", mainModule, (long long)offset);
                 auto hcfp = _wfsopen(filename, L"r+", _SH_DENYNO);
-                if (!hcfp){
+                if (!hcfp)
+                {
                     hcfp = _wfsopen(filename, L"w+", _SH_DENYNO);
                 }
-                if (hcfp){
+                if (hcfp)
+                {
                     auto count = 0;
                     fscanf_s(hcfp, "%d", &count);
                     count++;
@@ -1054,39 +1188,47 @@ Label:
             }
             fflush(stderr);
         }
-        
+
 
         // create dump for this crash
-        if (needDump){
+        if (needDump)
+        {
             __declspec(thread) static wchar_t dumpName[MAX_PATH + 1];
-            wcscpy_s(filename, globalFlags.Filename);            
+            wcscpy_s(filename, globalFlags.Filename);
             wchar_t* jsFile = filename;
             wchar_t *pch = jsFile;
             // remove path and keep only alphabet and number to make a valid filename
-            while (*pch){
-                if (*pch == L':' || *pch == L'\\'){
+            while (*pch)
+            {
+                if (*pch == L':' || *pch == L'\\')
+                {
                     jsFile = pch + 1;
-                } else if (!isalnum(*pch)){
+                }
+                else if (!isalnum(*pch))
+                {
                     *pch = L'_';
                 }
                 pch++;
             }
-            
+
 
             // get dump file name
             int suffix = 1;
             const wchar_t* fiType = L"undefined";
-            if(globalFlags.FaultInjectionType != nullptr){
+            if (globalFlags.FaultInjectionType != nullptr)
+            {
                 fiType = (LPCWSTR)globalFlags.FaultInjectionType;
             }
-            while (true){
+            while (true)
+            {
                 _snwprintf_s(dumpName, _TRUNCATE, L"%s_%s_M%d_T%s_C%d_%llx_%llx_%d.dmp",
                     mainModule, jsFile,
                     globalFlags.FaultInjection, fiType, globalFlags.FaultInjectionCount,
                     (ULONGLONG)offset, (ULONGLONG)ep->ExceptionRecord->ExceptionCode, suffix);
                 WIN32_FIND_DATAW data;
                 HANDLE hExist = FindFirstFile(dumpName, &data);
-                if (hExist == INVALID_HANDLE_VALUE){
+                if (hExist == INVALID_HANDLE_VALUE)
+                {
                     FindClose(hExist);
                     break;
                 }
@@ -1096,9 +1238,12 @@ Label:
 
             // writing the dump file
             HANDLE hFile = CreateFile(dumpName, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-            if ((hFile == NULL) || (hFile == INVALID_HANDLE_VALUE)) {
+            if ((hFile == NULL) || (hFile == INVALID_HANDLE_VALUE))
+            {
                 fwprintf(stderr, L"CreateFile <%s> failed. gle=0x%08x\n", dumpName, GetLastError());
-            } else {
+            }
+            else
+            {
                 MINIDUMP_EXCEPTION_INFORMATION mdei;
                 mdei.ThreadId = GetCurrentThreadId();
                 mdei.ExceptionPointers = ep;
@@ -1113,9 +1258,10 @@ Label:
                 // removing extension for windbg module name style
                 auto& jscript9Path = modulePath;
                 wcsncpy_s(jscript9Path, AutoSystemInfo::Data.GetJscriptDllFileName(),
-                    wcslen(AutoSystemInfo::Data.GetJscriptDllFileName()) - 4); 
+                    wcslen(AutoSystemInfo::Data.GetJscriptDllFileName()) - 4);
                 wchar_t* jscript9Name = jscript9Path + wcslen(jscript9Path);
-                while (*(jscript9Name-1) != L'\\' && jscript9Name > jscript9Path){
+                while (*(jscript9Name - 1) != L'\\' && jscript9Name > jscript9Path)
+                {
                     jscript9Name--;
                 }
 
@@ -1124,14 +1270,16 @@ Label:
                 // And the message will be showing in windbg while loading the minidump.
                 // If you need to add more instructions please increase the buffer capacity accordingly
                 __declspec(thread) static wchar_t dbgTip[1024];
-                if(InjectionFirstRecord == nullptr){
-                    wcsncpy_s(dbgTip, 
+                if (InjectionFirstRecord == nullptr)
+                {
+                    wcsncpy_s(dbgTip,
                         L"\n"
                         L"************************************************************\n"
                         L"* The dump is made by FaultInjection framework, however, the fault is not actually injected yet.\n"
                         L"************************************************************\n", _TRUNCATE);
                 }
-                else{
+                else
+                {
                     _snwprintf_s(dbgTip, _TRUNCATE, L"\n"
                         L"************************************************************\n"
                         L"* To find the Fault Injecting points run following command: \n"
@@ -1150,9 +1298,12 @@ Label:
                 musi.UserStreamArray = UserStreams;
 
                 BOOL rv = pfnMiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile, mdt, (ep != 0) ? &mdei : 0, &musi, 0);
-                if (rv){
+                if (rv)
+                {
                     fwprintf(stderr, L"Minidump created: %s\n", dumpName);
-                } else {
+                }
+                else
+                {
                     fwprintf(stderr, L"MiniDumpWriteDump failed. gle=0x%08x\n", GetLastError());
                 }
                 CloseHandle(hFile);
@@ -1161,16 +1312,19 @@ Label:
 
         // always show stack for crash and fault injection points in console, 
         // this can be used for additional stack matching repro
-        
+
         auto printFrame = [&](LPVOID addr){
             HANDLE hProcess = GetCurrentProcess();
             DWORD64 dwSymDisplacement = 0;
             sip.Init();
-            if (pfnSymFromAddrW(hProcess, (DWORD64)addr, &dwSymDisplacement, &sip.si)) {
+            if (pfnSymFromAddrW(hProcess, (DWORD64)addr, &dwSymDisplacement, &sip.si))
+            {
                 mi.Init();
                 pfnSymGetModuleInfoW64(hProcess, (DWORD64)addr, &mi);
                 fwprintf(stderr, L"%s!%s+0x%llx\n", mi.ModuleName, sip.si.Name, (ULONGLONG)dwSymDisplacement);
-            } else {
+            }
+            else
+            {
                 fwprintf(stderr, L"0x%p\n", addr);
             }
         };
@@ -1186,23 +1340,26 @@ Label:
         // Print current crash stacks
         fwprintf(stderr, crashStackStart);
         //bool foundFaultIP = false;
-        for(int i=0; i< nStackCount; i++) {
+        for (int i = 0; i< nStackCount; i++)
+        {
             printFrame(backTrace[i]);
         }
         fwprintf(stderr, crashStackEnd);
 
         // Print fault injecting point stacks
         auto record = InjectionFirstRecord;
-        while(record){
-            if(record->StackFrames) {
+        while (record){
+            if (record->StackFrames)
+            {
                 fwprintf(stderr, injectionStackStart);
-                for(int i = 0; i < record->FrameCount; i++){
+                for (int i = 0; i < record->FrameCount; i++)
+                {
                     printFrame(record->StackFrames[i]);
                 }
                 fwprintf(stderr, injectionStackEnd);
             }
             record = record->next;
-        }       
+        }
 
         fflush(stderr);
 
@@ -1213,7 +1370,8 @@ Label:
     {
         RemoveExceptionFilters();
         // for debugging, can't hit here in windbg because of using vectored exception handling
-        if(GetEnvironmentVariable(L"FAULTINJECTION_DEBUG", nullptr, 0) != 0){
+        if (faultInjectionDebug)
+        {
             DebugBreak();
         }
         FaultInjection::Global.FaultInjetionAnalyzeException(ExceptionInfo);
