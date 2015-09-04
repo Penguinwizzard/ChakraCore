@@ -1911,6 +1911,23 @@ namespace UnifiedRegex
                     lastCodepoint = INVALID_CODEPOINT;
                     NextChar();
                 }
+
+                // If we have a pattern of the form [\ud800-\udfff], we need this to be interpreted as a range.
+                // In order to achieve this, the two variables that we use to track surrogate pairs, namely
+                // tempLocationOfSurrogatePair and previousSurrogatePart, need to be in a certain state.
+                //
+                // We need to reset tempLocationOfSurrogatePair as it points to the first Unicode escape (\ud800)
+                // when we're here. We need to clear it in order not to have a surrogate pair when we process the
+                // second escape (\udfff).
+                //
+                // previousSurrogatePart is used when we have a code point in the \u{...} extended format and the
+                // character is in a supplementary plane. However, there is no need to change its value here. When
+                // such an escape sequence is encountered, the first call to ClassEscapePass0() sets the variable
+                // to true, but it rewinds the input back to the beginning of the escape sequence. The next
+                // iteration of the loop here will again call ClassEscape0() with the same character and the
+                // variable will this time be set to false. Therefore, the variable will always be false here.
+                tempLocationOfSurrogatePair = nullptr;
+                Assert(!previousSurrogatePart);
             }
             else
             {
