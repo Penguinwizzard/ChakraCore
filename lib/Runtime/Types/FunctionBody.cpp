@@ -1954,18 +1954,18 @@ namespace Js
 
         if (!SUCCEEDED(hrParser))
         {
-            Js:Throw::InternalError();
+            Throw::InternalError();
         }
         else if (!SUCCEEDED(hrParseCodeGen))
         {
             if (hrParseCodeGen == VBSERR_OutOfStack)
             {
-                Js::Throw::StackOverflow(m_scriptContext, NULL);
+                Throw::StackOverflow(m_scriptContext, NULL);
             }
             else
             {
                 Assert(hrParseCodeGen == E_OUTOFMEMORY);
-                Js::Throw::OutOfMemory();
+                Throw::OutOfMemory();
             }
         }
 
