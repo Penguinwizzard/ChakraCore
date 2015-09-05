@@ -58,6 +58,7 @@
 #include "Library\IteratorObjectEnumerator.h"
 
 
+#include "Library\JavascriptIterator.h"
 #include "Library\JavascriptArrayIterator.h"
 #include "Library\JavascriptMapIterator.h"
 #include "Library\JavascriptSetIterator.h"

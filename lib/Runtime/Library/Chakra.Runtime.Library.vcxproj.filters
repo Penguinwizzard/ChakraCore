@@ -17,7 +17,6 @@
     <ClCompile Include="$(MsBuildThisFileDirectory)ArrayBuffer.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)AsyncDebug.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)BoundFunction.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)BoundFunctionType.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)BufferStringBuilder.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)CommonExternalApiImpl.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)CompoundString.cpp" />
@@ -40,6 +39,7 @@
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptGenerator.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptGeneratorFunction.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptGeneratorFunctionType.cpp" />
+    <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptIterator.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptMap.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptMapIterator.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptPromise.cpp" />
@@ -51,13 +51,9 @@
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptStringIterator.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptSymbol.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptSymbolObject.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptSymbolObjectType.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptSymbolType.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptTypedObjectSlotAccessorFunction.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptWeakMap.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptWeakSet.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptWinRTDate.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)JnDebugHelp.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)javascripttypednumber.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JSONParser.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JSONScanner.cpp" />
@@ -73,7 +69,6 @@
     <ClCompile Include="$(MsBuildThisFileDirectory)StackProber.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)StackScriptFunction.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)StringCopyInfo.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)Telemetry.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)TestEtwEventSink.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)ThreadBoundThreadContextManager.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)ThreadContext.cpp" />
@@ -85,13 +80,11 @@
     <ClCompile Include="$(MsBuildThisFileDirectory)WindowsGlobalizationAdapter.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)ArgumentsObject.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)ArgumentsObjectEnumerator.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)ArgumentsObjectType.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)ConcatString.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)DateImplementation.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)HiResTimer.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)ForInObjectEnumerator.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)GlobalObject.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)GlobalObjectType.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)TaggedInt.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)ES5Array.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)ES5ArrayEnumerator.cpp" />
@@ -100,31 +93,21 @@
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptArrayEnumeratorBase.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptArrayEnumerator.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptArraySnapshotEnumerator.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptArrayType.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptBoolean.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptBooleanObject.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptBooleanObjectType.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptBooleanType.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptDate.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptDateType.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptError.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptFunction.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptFunctionType.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptLibrary.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptNumber.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptNumberObject.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptNumberObjectType.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptObject.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptRegExpConstructor.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptRegExpConstructorType.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptRegularExpression.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptRegularExpressionResult.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptRegularExpressionType.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptString.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptStringEnumerator.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptStringType.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptVariantDate.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptVariantDateType.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JSONStack.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JSON.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)LiteralString.cpp" />
@@ -132,12 +115,10 @@
     <ClCompile Include="$(MsBuildThisFileDirectory)LiteralStringObjectType.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)Math.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)moduleroot.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)ModuleRootType.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)ObjectPrototypeObject.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)PropertyString.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)RegexHelper.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)SparseArraySegment.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)..\StdAfx.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)SubString.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)UriHelper.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ThreadServiceWrapperBase.cpp" />
@@ -146,6 +127,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)SIMDInt8x16Operation.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)SIMDInt8x16OperationX86X64.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSIMDInt8x16.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)RuntimeLibraryPch.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\DiagGlobalList.h" />
@@ -203,6 +185,7 @@
     <ClInclude Include="JavascriptExternalFunction.h" />
     <ClInclude Include="JavascriptGenerator.h" />
     <ClInclude Include="JavascriptGeneratorFunction.h" />
+    <ClInclude Include="JavascriptIterator.h" />
     <ClInclude Include="JavascriptMap.h" />
     <ClInclude Include="JavascriptMapIterator.h" />
     <ClInclude Include="JavascriptPromise.h" />
@@ -219,7 +202,6 @@
     <ClInclude Include="JavascriptTypedObjectSlotAccessorFunction.h" />
     <ClInclude Include="JavascriptWeakMap.h" />
     <ClInclude Include="JavascriptWeakSet.h" />
-    <ClInclude Include="JavascriptWinRTDate.h" />
     <ClInclude Include="JavascriptWinRTFunction.h" />
     <ClInclude Include="JSONParser.h" />
     <ClInclude Include="JSONScanner.h" />
@@ -287,7 +269,6 @@
     <ClInclude Include="RegexHelper.h" />
     <ClInclude Include="..\Runtime.h" />
     <ClInclude Include="SparseArraySegment.h" />
-    <ClInclude Include="..\StdAfx.h" />
     <ClInclude Include="SubString.h" />
     <ClInclude Include="UriHelper.h" />
     <ClInclude Include="SIMDUtils.h" />
@@ -296,39 +277,21 @@
     <ClInclude Include="SIMDInt8x16Lib.h" />
     <ClInclude Include="SIMDInt8x16Operation.h" />
     <ClInclude Include="JavascriptSIMDInt8x16.h" />
+    <ClInclude Include="RuntimeLibraryPch.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="CharStringCache.inl" />
     <None Include="ConcatString.inl" />
     <None Include="InJavascript\BuildGenByteCodeBin.cmd" />
     <None Include="InJavascript\GenByteCode.cmd" />
     <None Include="InJavascript\Intl.js" />
     <None Include="InJavascript\Promise.js" />
     <None Include="InJavascript\WarnGenByteCode.cmd" />
-    <None Include="JavascriptArrayIterator.inl" />
-    <None Include="JavascriptMap.inl" />
-    <None Include="JavascriptMapIterator.inl" />
-    <None Include="JavascriptRegularExpressionResult.inl" />
-    <None Include="JavascriptSet.inl" />
-    <None Include="JavascriptSetIterator.inl" />
-    <None Include="JavascriptStringIterator.inl" />
-    <None Include="JavascriptSymbol.inl" />
-    <None Include="JavascriptWeakMap.inl" />
-    <None Include="JavascriptWeakSet.inl" />
-    <None Include="JavascriptWinRTDate.inl" />
-    <None Include="RegexHelper.inl" />
     <None Include="SparseArraySegment.inl" />
-    <None Include="GlobalObject.inl" />
     <None Include="TaggedInt.inl" />
     <None Include="JavascriptArray.inl" />
-    <None Include="JavascriptBoolean.inl" />
-    <None Include="JavascriptDate.inl" />
-    <None Include="JavascriptFunction.inl" />
     <None Include="JavascriptLibrary.inl" />
     <None Include="JavascriptNumber.inl" />
-    <None Include="JavascriptRegularExpression.inl" />
     <None Include="JavascriptString.inl" />
-    <None Include="JavascriptVariantDate.inl" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="arm">

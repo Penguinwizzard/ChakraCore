@@ -216,6 +216,7 @@ namespace Js
         DynamicObject* weakMapPrototype;
         DynamicObject* weakSetPrototype;
         DynamicObject* symbolPrototype;
+        DynamicObject* iteratorPrototype;           // aka %IteratorPrototype%
         DynamicObject* arrayIteratorPrototype;
         DynamicObject* mapIteratorPrototype;
         DynamicObject* setIteratorPrototype;

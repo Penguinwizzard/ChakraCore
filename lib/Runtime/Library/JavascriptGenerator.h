@@ -73,11 +73,9 @@ namespace Js
             static FunctionInfo Next;
             static FunctionInfo Return;
             static FunctionInfo Throw;
-            static FunctionInfo SymbolIterator;
         };
         static Var EntryNext(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryReturn(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryThrow(RecyclableObject* function, CallInfo callInfo, ...);
-        static Var EntrySymbolIterator(RecyclableObject* function, CallInfo callInfo, ...);
     };
 }

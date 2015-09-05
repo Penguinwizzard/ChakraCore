@@ -436,6 +436,7 @@ namespace Js
         javascriptEnumeratorIteratorPrototype = nullptr;
         generatorFunctionPrototype = nullptr;
         generatorPrototype = nullptr;
+        iteratorPrototype = nullptr;
 
         if (scriptContext->GetConfig()->IsES6SymbolEnabled())
         {
@@ -474,17 +475,21 @@ namespace Js
 
         if (scriptContext->GetConfig()->IsES6IteratorsEnabled())
         {
-            arrayIteratorPrototype = DynamicObject::New(recycler,
+            iteratorPrototype = DynamicObject::New(recycler,
                 DynamicType::New(scriptContext, TypeIds_Object, objectPrototype, nullptr,
+                DeferredTypeHandler<InitializeIteratorPrototype>::GetDefaultInstance()));
+
+            arrayIteratorPrototype = DynamicObject::New(recycler,
+                DynamicType::New(scriptContext, TypeIds_Object, iteratorPrototype, nullptr,
                 DeferredTypeHandler<InitializeArrayIteratorPrototype>::GetDefaultInstance()));
             mapIteratorPrototype = DynamicObject::New(recycler,
-                DynamicType::New(scriptContext, TypeIds_Object, objectPrototype, nullptr,
+                DynamicType::New(scriptContext, TypeIds_Object, iteratorPrototype, nullptr,
                 DeferredTypeHandler<InitializeMapIteratorPrototype>::GetDefaultInstance()));
             setIteratorPrototype = DynamicObject::New(recycler,
-                DynamicType::New(scriptContext, TypeIds_Object, objectPrototype, nullptr,
+                DynamicType::New(scriptContext, TypeIds_Object, iteratorPrototype, nullptr,
                 DeferredTypeHandler<InitializeSetIteratorPrototype>::GetDefaultInstance()));
             stringIteratorPrototype = DynamicObject::New(recycler,
-                DynamicType::New(scriptContext, TypeIds_Object, objectPrototype, nullptr,
+                DynamicType::New(scriptContext, TypeIds_Object, iteratorPrototype, nullptr,
                 DeferredTypeHandler<InitializeStringIteratorPrototype>::GetDefaultInstance()));
         }
 
@@ -497,8 +502,13 @@ namespace Js
 
         if (scriptContext->GetConfig()->IsES6ProxyEnabled())
         {
+            RecyclableObject* proto =
+                scriptContext->GetConfig()->IsES6IteratorsEnabled() ?
+                    iteratorPrototype :
+                    objectPrototype;
+
             javascriptEnumeratorIteratorPrototype = DynamicObject::New(recycler,
-                DynamicType::New(scriptContext, TypeIds_Object, objectPrototype, nullptr,
+                DynamicType::New(scriptContext, TypeIds_Object, proto, nullptr,
                 DeferredTypeHandler<InitializeJavascriptEnumeratorIteratorPrototype>::GetDefaultInstance()));
         }
 
@@ -506,11 +516,16 @@ namespace Js
         {
             generatorFunctionPrototype = DynamicObject::New(recycler,
                 DynamicType::New(scriptContext, TypeIds_Object, functionPrototype, nullptr,
-                DeferredTypeHandler<InitializeGeneratorFunctionProtoype>::GetDefaultInstance()));
+                DeferredTypeHandler<InitializeGeneratorFunctionPrototype>::GetDefaultInstance()));
+
+            RecyclableObject* proto =
+                scriptContext->GetConfig()->IsES6IteratorsEnabled() ?
+                    iteratorPrototype :
+                    objectPrototype;
 
             generatorPrototype = DynamicObject::New(recycler,
-                DynamicType::New(scriptContext, TypeIds_Object, objectPrototype, nullptr,
-                DeferredTypeHandler<InitializeGeneratorProtoype>::GetDefaultInstance()));
+                DynamicType::New(scriptContext, TypeIds_Object, proto, nullptr,
+                DeferredTypeHandler<InitializeGeneratorPrototype>::GetDefaultInstance()));
         }
     }
 
@@ -2250,7 +2265,7 @@ namespace Js
         generatorFunctionConstructor->SetHasNoEnumerableProperties(true);
     }
 
-    void JavascriptLibrary::InitializeGeneratorFunctionProtoype(DynamicObject* generatorFunctionPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
+    void JavascriptLibrary::InitializeGeneratorFunctionPrototype(DynamicObject* generatorFunctionPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(generatorFunctionPrototype, mode, 3);
         // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterGeneratorFunction
@@ -2267,9 +2282,9 @@ namespace Js
         generatorFunctionPrototype->SetHasNoEnumerableProperties(true);
     }
 
-    void JavascriptLibrary::InitializeGeneratorProtoype(DynamicObject* generatorPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
+    void JavascriptLibrary::InitializeGeneratorPrototype(DynamicObject* generatorPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
-        typeHandler->Convert(generatorPrototype, mode, 6);
+        typeHandler->Convert(generatorPrototype, mode, 5);
         // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterGenerator
         // so that the update is in sync with profiler
         JavascriptLibrary* library = generatorPrototype->GetLibrary();
@@ -2283,8 +2298,6 @@ namespace Js
         library->AddFunctionToLibraryObject(generatorPrototype, PropertyIds::next, &JavascriptGenerator::EntryInfo::Next, 1);
         library->AddFunctionToLibraryObject(generatorPrototype, PropertyIds::return_, &JavascriptGenerator::EntryInfo::Return, 1);
         library->AddFunctionToLibraryObject(generatorPrototype, PropertyIds::throw_, &JavascriptGenerator::EntryInfo::Throw, 1);
-        library->AddFunctionToLibraryObjectWithName(generatorPrototype, PropertyIds::_symbolIterator,
-            PropertyIds::_RuntimeFunctionNameId_iterator, &JavascriptGenerator::EntryInfo::SymbolIterator, 0);
 
         generatorPrototype->SetHasNoEnumerableProperties(true);
     }
@@ -3992,9 +4005,21 @@ namespace Js
         weakSetPrototype->SetHasNoEnumerableProperties(true);
     }
 
+    void JavascriptLibrary::InitializeIteratorPrototype(DynamicObject* iteratorPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
+    {
+        typeHandler->Convert(iteratorPrototype, mode, 1);
+        // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterIterator
+        // so that the update is in sync with profiler
+
+        JavascriptLibrary* library = iteratorPrototype->GetLibrary();
+
+        library->AddFunctionToLibraryObjectWithName(iteratorPrototype, PropertyIds::_symbolIterator, PropertyIds::_RuntimeFunctionNameId_iterator,
+            &JavascriptIterator::EntryInfo::SymbolIterator, 0);
+    }
+
     void JavascriptLibrary::InitializeArrayIteratorPrototype(DynamicObject* arrayIteratorPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
-        typeHandler->Convert(arrayIteratorPrototype, mode, 3);
+        typeHandler->Convert(arrayIteratorPrototype, mode, 2);
         // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterArrayIterator
         // so that the update is in sync with profiler
 
@@ -4002,8 +4027,6 @@ namespace Js
         ScriptContext* scriptContext = library->GetScriptContext();
 
         library->AddFunctionToLibraryObject(arrayIteratorPrototype, PropertyIds::next, &JavascriptArrayIterator::EntryInfo::Next, 0);
-        library->AddFunctionToLibraryObjectWithName(arrayIteratorPrototype, PropertyIds::_symbolIterator, PropertyIds::_RuntimeFunctionNameId_iterator,
-            &JavascriptArrayIterator::EntryInfo::SymbolIterator, 0);
 
         if (scriptContext->GetConfig()->IsES6ToStringTagEnabled())
         {
@@ -4013,7 +4036,7 @@ namespace Js
 
     void JavascriptLibrary::InitializeMapIteratorPrototype(DynamicObject* mapIteratorPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
-        typeHandler->Convert(mapIteratorPrototype, mode, 3);
+        typeHandler->Convert(mapIteratorPrototype, mode, 2);
         // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterMapIterator
         // so that the update is in sync with profiler
 
@@ -4021,8 +4044,6 @@ namespace Js
         ScriptContext* scriptContext = library->GetScriptContext();
 
         library->AddFunctionToLibraryObject(mapIteratorPrototype, PropertyIds::next, &JavascriptMapIterator::EntryInfo::Next, 0);
-        library->AddFunctionToLibraryObjectWithName(mapIteratorPrototype, PropertyIds::_symbolIterator, PropertyIds::_RuntimeFunctionNameId_iterator,
-            &JavascriptMapIterator::EntryInfo::SymbolIterator, 0);
 
         if (scriptContext->GetConfig()->IsES6ToStringTagEnabled())
         {
@@ -4032,15 +4053,13 @@ namespace Js
 
     void JavascriptLibrary::InitializeSetIteratorPrototype(DynamicObject* setIteratorPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
-        typeHandler->Convert(setIteratorPrototype, mode, 3);
+        typeHandler->Convert(setIteratorPrototype, mode, 2);
         // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterSetIterator
         // so that the update is in sync with profiler
 
         JavascriptLibrary* library = setIteratorPrototype->GetLibrary();
         ScriptContext* scriptContext = library->GetScriptContext();
         library->AddFunctionToLibraryObject(setIteratorPrototype, PropertyIds::next, &JavascriptSetIterator::EntryInfo::Next, 0);
-        library->AddFunctionToLibraryObjectWithName(setIteratorPrototype, PropertyIds::_symbolIterator, PropertyIds::_RuntimeFunctionNameId_iterator,
-            &JavascriptSetIterator::EntryInfo::SymbolIterator, 0);
 
         if (scriptContext->GetConfig()->IsES6ToStringTagEnabled())
         {
@@ -4050,15 +4069,13 @@ namespace Js
 
     void JavascriptLibrary::InitializeStringIteratorPrototype(DynamicObject* stringIteratorPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
-        typeHandler->Convert(stringIteratorPrototype, mode, 3);
+        typeHandler->Convert(stringIteratorPrototype, mode, 2);
         // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterStringIterator
         // so that the update is in sync with profiler
 
         JavascriptLibrary* library = stringIteratorPrototype->GetLibrary();
         ScriptContext* scriptContext = library->GetScriptContext();
         library->AddFunctionToLibraryObject(stringIteratorPrototype, PropertyIds::next, &JavascriptStringIterator::EntryInfo::Next, 0);
-        library->AddFunctionToLibraryObjectWithName(stringIteratorPrototype, PropertyIds::_symbolIterator, PropertyIds::_RuntimeFunctionNameId_iterator,
-            &JavascriptStringIterator::EntryInfo::SymbolIterator, 0);
 
         if (scriptContext->GetConfig()->IsES6ToStringTagEnabled())
         {
@@ -4068,15 +4085,13 @@ namespace Js
 
     void JavascriptLibrary::InitializeJavascriptEnumeratorIteratorPrototype(DynamicObject* javascriptEnumeratorIteratorPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
-        typeHandler->Convert(javascriptEnumeratorIteratorPrototype, mode, 1);
+        typeHandler->Convert(javascriptEnumeratorIteratorPrototype, mode, 2);
         // Note: Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterEnumeratorIterator
         // so that the update is in sync with profiler
 
         JavascriptLibrary* library = javascriptEnumeratorIteratorPrototype->GetLibrary();
         ScriptContext* scriptContext = library->GetScriptContext();
         library->AddFunctionToLibraryObject(javascriptEnumeratorIteratorPrototype, PropertyIds::next, &JavascriptEnumeratorIterator::EntryInfo::Next, 0);
-        library->AddFunctionToLibraryObjectWithName(javascriptEnumeratorIteratorPrototype, PropertyIds::_symbolIterator, PropertyIds::_RuntimeFunctionNameId_iterator,
-            &JavascriptEnumeratorIterator::EntryInfo::SymbolIterator, 0);
 
         if (scriptContext->GetConfig()->IsES6ToStringTagEnabled())
         {
@@ -6126,6 +6141,7 @@ namespace Js
 
         if (config.IsES6IteratorsEnabled())
         {
+            REGISTER_OBJECT(Iterator);
             REGISTER_OBJECT(ArrayIterator);
             REGISTER_OBJECT(MapIterator);
             REGISTER_OBJECT(SetIterator);
@@ -6655,6 +6671,18 @@ namespace Js
         return hr;
     }
 
+    HRESULT JavascriptLibrary::ProfilerRegisterIterator()
+    {
+        HRESULT hr = S_OK;
+        // Array Iterator has no global constructor
+
+        DEFINE_OBJECT_NAME(Iterator);
+
+        REG_OBJECTS_LIB_FUNC2(_symbolIterator, L"[Symbol.iterator]", JavascriptIterator::EntrySymbolIterator);
+
+        return hr;
+    }
+
     HRESULT JavascriptLibrary::ProfilerRegisterArrayIterator()
     {
         HRESULT hr = S_OK;
@@ -6663,7 +6691,6 @@ namespace Js
         DEFINE_OBJECT_NAME(Array Iterator);
 
         REG_OBJECTS_LIB_FUNC(next, JavascriptArrayIterator::EntryNext);
-        REG_OBJECTS_LIB_FUNC2(_symbolIterator, L"[Symbol.iterator]", JavascriptArrayIterator::EntrySymbolIterator);
 
         return hr;
     }
@@ -6676,7 +6703,6 @@ namespace Js
         DEFINE_OBJECT_NAME(Map Iterator);
 
         REG_OBJECTS_LIB_FUNC(next, JavascriptMapIterator::EntryNext);
-        REG_OBJECTS_LIB_FUNC2(_symbolIterator, L"[Symbol.iterator]", JavascriptMapIterator::EntrySymbolIterator);
 
         return hr;
     }
@@ -6689,7 +6715,6 @@ namespace Js
         DEFINE_OBJECT_NAME(Set Iterator);
 
         REG_OBJECTS_LIB_FUNC(next, JavascriptSetIterator::EntryNext);
-        REG_OBJECTS_LIB_FUNC2(_symbolIterator, L"[Symbol.iterator]", JavascriptSetIterator::EntrySymbolIterator);
 
         return hr;
     }
@@ -6702,7 +6727,6 @@ namespace Js
         DEFINE_OBJECT_NAME(String Iterator);
 
         REG_OBJECTS_LIB_FUNC(next, JavascriptStringIterator::EntryNext);
-        REG_OBJECTS_LIB_FUNC2(_symbolIterator, L"[Symbol.iterator]", JavascriptStringIterator::EntrySymbolIterator);
 
         return hr;
     }
@@ -6715,7 +6739,6 @@ namespace Js
         DEFINE_OBJECT_NAME(Enumerator Iterator);
 
         REG_OBJECTS_LIB_FUNC(next, JavascriptEnumeratorIterator::EntryNext);
-        REG_OBJECTS_LIB_FUNC2(_symbolIterator, L"[Symbol.iterator]", JavascriptEnumeratorIterator::EntrySymbolIterator);
 
         return hr;
     }
@@ -6810,7 +6833,6 @@ namespace Js
         REG_OBJECTS_LIB_FUNC(next, JavascriptGenerator::EntryNext);
         REG_OBJECTS_LIB_FUNC(return_, JavascriptGenerator::EntryReturn);
         REG_OBJECTS_LIB_FUNC(throw_, JavascriptGenerator::EntryThrow);
-        REG_OBJECTS_LIB_FUNC2(_symbolIterator, L"[Symbol.iterator]", JavascriptGenerator::EntrySymbolIterator);
 
         return hr;
     }

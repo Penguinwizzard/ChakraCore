@@ -34,11 +34,9 @@ namespace Js
         {
         public:
             static FunctionInfo Next;
-            static FunctionInfo SymbolIterator;
         };
 
         static Var EntryNext(RecyclableObject* function, CallInfo callInfo, ...);
-        static Var EntrySymbolIterator(RecyclableObject* function, CallInfo callInfo, ...);
 
     public:
         Var GetIteratorObjectForHeapEnum() { return m_iterableObject; }
