@@ -1,6 +1,12 @@
-#include "stdafx.h"
+//---------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+//----------------------------------------------------------------------------
+
+#include "CommonMemoryPch.h"
 
 #if DBG
+#include "common\Int32Math.h"
+#include "DataStructures\list.h"
 #include "Memory\StressTest.h"
 
 typedef JsUtil::BaseDictionary<TestObject*, bool, RecyclerNonLeafAllocator> ObjectTracker_t;

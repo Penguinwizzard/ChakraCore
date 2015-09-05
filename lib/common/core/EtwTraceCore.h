@@ -5,6 +5,21 @@
 #pragma once
 
 #ifdef ENABLE_JS_ETW
+#define PAIR(a,b) a ## b
+
+#define GCETW(e, args)                          \
+    if (IsMemProtectMode())                     \
+    {                                           \
+        PAIR(EventWriteMEMPROTECT_ ## e, args); \
+    }                                           \
+    else                                        \
+    {                                           \
+        PAIR(EventWriteJSCRIPT_ ## e, args);    \
+    }
+
+#define JS_ETW(s) s
+#define IS_JS_ETW(s) s
+
 // C-style callback
 extern "C" {
     void EtwCallback(
@@ -44,4 +59,8 @@ public:
     static bool s_registered;
 };
 
+#else
+#define GCETW(e, ...)
+#define JS_ETW(s)
+#define IS_JS_ETW(s) (false)
 #endif

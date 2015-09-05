@@ -277,7 +277,7 @@ HeapBucketT<TBlockType>::SweepBucket(RecyclerSweep& recyclerSweep, Fn sweepFn)
 #endif
     {
         // We should only queue up pending sweep if we are doing partial collect
-        Assert(recyclerSweep.GetPendingSweepBlockList(this) == null);
+        Assert(recyclerSweep.GetPendingSweepBlockList(this) == nullptr);
 
         // Every thing is swept immediately in non partial collect, so we can allocate
         // from the heap block list now

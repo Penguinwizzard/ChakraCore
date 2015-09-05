@@ -23,13 +23,14 @@
     <ClCompile>
       <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)..;$(ChakraManifestsIncludeDirectory);$(ManifestsInboxIncludeDirectory);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>CommonExceptionsPch.h</PrecompiledHeaderFile>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)ExceptionCheck.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)reporterror.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ExceptionBase.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\StdAfx.cpp">
+    <ClCompile Include="$(MSBuildThisFileDirectory)CommonExceptionsPch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)Throw.cpp">
@@ -45,6 +46,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CommonExceptionsPch.h" />
     <ClInclude Include="EvalDisabledException.h" />
     <ClInclude Include="ExceptionBase.h" />
     <ClInclude Include="ExceptionCheck.h" />

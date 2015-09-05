@@ -8654,7 +8654,10 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
                 incDecResult = funcInfo->AcquireTmpRegister();
             }
 
-            byteCodeGenerator->Writer()->Reg3(op, incDecResult, pnode->location, funcInfo->constantToRegister.Lookup(1));
+            Js::RegSlot oneReg = funcInfo->constantToRegister.LookupWithKey(1, Js::Constants::NoRegister);
+            Assert(oneReg != Js::Constants::NoRegister);
+            byteCodeGenerator->Writer()->Reg3(op, incDecResult, pnode->location, oneReg);
+
             // Store the incremented value.
             EmitAssignment(NULL, pnode->sxUni.pnode1, incDecResult, byteCodeGenerator, funcInfo);
 

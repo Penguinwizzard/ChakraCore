@@ -78,12 +78,12 @@ public:
     class Iterator
     {
     public:        
-        Iterator() : list(null), current(null) {}
+        Iterator() : list(nullptr), current(nullptr) {}
         Iterator(DListBase const * list) : list(list), current(list) {};
 
         bool IsValid() const
         {
-            return (current != null && !list->IsHead(current));
+            return (current != nullptr && !list->IsHead(current));
         }
         void Reset()
         {
@@ -94,10 +94,10 @@ public:
         __forceinline
         bool Next()
         {
-            Assert(current != null);
+            Assert(current != nullptr);
             if (list->IsHead(current->Next()))
             {
-                current = null;
+                current = nullptr;
                 return false;
             }
             current = current->Next();
@@ -127,7 +127,7 @@ public:
         template <typename TAllocator>
         void RemoveCurrent(TAllocator * allocator)
         {
-            Assert(current != null);
+            Assert(current != nullptr);
             Assert(!list->IsHead(current));            
             
             NodeBase * last = current->Prev();
@@ -252,7 +252,7 @@ public:
             this->IncrementCount();
             return &newNode->data;
         }
-        return null;
+        return nullptr;
     }
 
     template <typename TAllocator, typename TParam1>
@@ -265,7 +265,7 @@ public:
             this->IncrementCount();
             return &newNode->data;
         }
-        return null;
+        return nullptr;
     }
 
     template <typename TAllocator, typename TParam1, typename TParam2>
@@ -278,7 +278,7 @@ public:
             this->IncrementCount();
             return &newNode->data;
         }
-        return null;
+        return nullptr;
     }
 
     template <typename TAllocator, typename TParam1, typename TParam2, typename TParam3>
@@ -291,7 +291,7 @@ public:
             this->IncrementCount();
             return &newNode->data;
         }
-        return null;
+        return nullptr;
     }
 
     template <typename TAllocator, typename TParam1, typename TParam2, typename TParam3, typename TParam4>
@@ -304,7 +304,7 @@ public:
             this->IncrementCount();
             return &newNode->data;
         }
-        return null;
+        return nullptr;
     }
 
     template <typename TAllocator>

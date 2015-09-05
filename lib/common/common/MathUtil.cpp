@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "stdafx.h"
+#include "CommonCommonPch.h"
 #include "math.h"
 
 // Mark as volatile to minimize MT issue.

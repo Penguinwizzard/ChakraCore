@@ -1,3 +1,7 @@
+//---------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+//---------------------------------------------------------------------------
+
 // Allows an external memory tracking utility (such as MemSpect) to track recycler allocations
 
 // Routines called to allow tracking memory. These routines are empty for RET

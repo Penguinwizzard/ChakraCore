@@ -1,6 +1,7 @@
 // Copyright (C) Microsoft. All rights reserved. 
 
-#include "StdAfx.h"
+#include "CommonCommonPch.h"
+#include "Common\Event.h"
 
 Event::Event(const bool autoReset, const bool signaled) : handle(CreateEvent(0, !autoReset, signaled, 0))
 {

@@ -2,7 +2,10 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "stdafx.h"
+#include "CommonCommonPch.h"
+#include "DataStructures\SimpleHashTable.h"
+#include "common\vtregistry.h"
+#include "Common\vtinfo.h"
 
 #if DBG
 VirtualTableRegistry::TableEntry VirtualTableRegistry::m_knownVtables[MAX_KNOWN_VTABLES];

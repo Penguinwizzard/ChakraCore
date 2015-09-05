@@ -1,7 +1,8 @@
 //----------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
-#include "stdafx.h"
+#include "CommonExceptionsPch.h"
+
 __inline void ReportFatalException(
     __in ULONG_PTR context,
     __in HRESULT exceptionCode,

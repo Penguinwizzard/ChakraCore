@@ -60,7 +60,7 @@ namespace Js
 #ifdef FAULT_INJECTION
         disposeScriptByFaultInjectionEventHandler(nullptr),
 #endif
-        integerStringMap(nullptr),
+        integerStringMap(this->GeneralAllocator()),
         guestArena(nullptr),
         raiseMessageToDebuggerFunctionType(nullptr),
         transitionToDebugModeIfFirstSourceFn(nullptr),
@@ -117,7 +117,7 @@ namespace Js
 #if DBG
         , isInitialized(false)
         , isCloningGlobal(false)
-        , bindRef(nullptr)
+        , bindRef(MiscAllocator())
 #endif
 #ifdef REJIT_STATS
         , rejitStatsMap(nullptr)
@@ -1564,20 +1564,14 @@ namespace Js
             return GetLibrary()->GetCharStringCache().GetStringForCharA('0' + static_cast<char>(value));
         }
 
-        if (this->integerStringMap == NULL)
-        {
-            this->integerStringMap = Anew(this->GeneralAllocator(), LargeUIntHashTable<JavascriptString *>,
-                this->GeneralAllocator());
-        }
+        JavascriptString *string;
 
-        JavascriptString *string = this->integerStringMap->Lookup(value);
-
-        if (string == NULL)
+        if (!this->integerStringMap.TryGetValue(value, &string))
         {
             // Add the string to hash table cache
             // Don't add if table is getting too full.  We'll be holding on to
             // too many strings, and table lookup will become too slow.
-            if (this->integerStringMap->IsDenserThan<10>())
+            if (this->integerStringMap.Count() > 1024)
             {
                 // Use recycler memory
                 string = TaggedInt::ToString(value, this);
@@ -1588,7 +1582,7 @@ namespace Js
 
                 TaggedInt::ToBuffer(value, stringBuffer, _countof(stringBuffer));
                 string = JavascriptString::NewCopySzFromArena(stringBuffer, this, this->GeneralAllocator());
-                this->integerStringMap->Add(value, string);
+                this->integerStringMap.AddNew(value, string);
             }
         }
 
@@ -1685,7 +1679,7 @@ namespace Js
             // the script.
             // This is global function called from jc or scriptengine::parse, in both case we can return the value to the caller.
             ULONG grfscr = fscrGlobalCode | (isExpression ? fscrReturnExpression : 0);
-            if (!disableDeferredParse && (length > Parser::GetDeferralThreshold(sourceContextInfo->sourceDynamicProfileManager)))
+            if (!disableDeferredParse && (length > Parser::GetDeferralThreshold(sourceContextInfo->IsSourceProfileLoaded())))
             {
                 grfscr |= fscrDeferFncParse;
             }
@@ -1750,7 +1744,7 @@ namespace Js
             // Invoke the parser, passing in the global function name, which we will then run to execute
             // the script.
             ULONG grfscr = fscrGlobalCode | (isExpression ? fscrReturnExpression : 0);
-            if (!disableDeferredParse && (cb > Parser::GetDeferralThreshold(sourceContextInfo->sourceDynamicProfileManager)))
+            if (!disableDeferredParse && (cb > Parser::GetDeferralThreshold(sourceContextInfo->IsSourceProfileLoaded())))
             {
                 grfscr |= fscrDeferFncParse;
             }
@@ -3909,15 +3903,9 @@ namespace Js
         Assert(!this->isClosed);
         Assert(this->guestArena);
         Assert(recycler->IsValidObject(addr));
-#if DBG
-        if (this->bindRef == NULL)
-        {
-            typedef SimpleHashTable<void *, uint> RelativeHashTable;
-            bindRef = Anew(MiscAllocator(), RelativeHashTable, MiscAllocator());
-        }
-        uint refCount;
-        Assert(!bindRef->TryGetValue(addr, &refCount));
-        bindRef->Add(addr, 1);
+#if DBG        
+        Assert(!bindRef.ContainsKey(addr));     // Make sure we don't bind the same pointer twice
+        bindRef.AddNew(addr);       
 #endif
         if (bindRefChunkCurrent == bindRefChunkEnd)
         {

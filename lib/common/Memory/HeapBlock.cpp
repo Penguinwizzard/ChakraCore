@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#include "stdafx.h"
+#include "CommonMemoryPch.h"
 
 template <typename TBlockAttributes>
 SmallNormalHeapBlockT<TBlockAttributes> *

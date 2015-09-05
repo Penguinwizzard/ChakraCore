@@ -3,7 +3,7 @@
 // Copyright (C) 2011 by Microsoft Corporation.  All rights reserved.
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "CommonCorePch.h"
 
 #ifdef PERF_COUNTERS
 // Initialization order
@@ -68,15 +68,15 @@ RecyclerTrackerCounterSet::Map::Map(type_info const * type, bool isArray,uint co
     __analysis_assume(sizeCounterIndex >= NumUnknownCounters && sizeCounterIndex < RecyclerTrackerCounterSetDefinition::MaxCounter);
     if (isArray)
     {
-        Assert(ArrayCountIndexTypeInfoMap[counterIndex - NumUnknownCounters] == null);
-        Assert(ArraySizeIndexTypeInfoMap[sizeCounterIndex - NumUnknownCounters] == null);
+        Assert(ArrayCountIndexTypeInfoMap[counterIndex - NumUnknownCounters] == nullptr);
+        Assert(ArraySizeIndexTypeInfoMap[sizeCounterIndex - NumUnknownCounters] == nullptr);
         ArrayCountIndexTypeInfoMap[counterIndex - NumUnknownCounters] = type;
         ArraySizeIndexTypeInfoMap[sizeCounterIndex - NumUnknownCounters] = type;
     }
     else
     {
-        Assert(CountIndexTypeInfoMap[counterIndex - NumUnknownCounters] == null);
-        Assert(SizeIndexTypeInfoMap[sizeCounterIndex - NumUnknownCounters] == null);
+        Assert(CountIndexTypeInfoMap[counterIndex - NumUnknownCounters] == nullptr);
+        Assert(SizeIndexTypeInfoMap[sizeCounterIndex - NumUnknownCounters] == nullptr);
         CountIndexTypeInfoMap[counterIndex - NumUnknownCounters] = type;
         SizeIndexTypeInfoMap[sizeCounterIndex - NumUnknownCounters] = type;
     }
@@ -86,7 +86,7 @@ RecyclerTrackerCounterSet::Map::Map(type_info const * type, uint weakRefCounterI
 { 
     __analysis_assume(weakRefCounterIndex >= NumUnknownCounters && weakRefCounterIndex < RecyclerTrackerCounterSetDefinition::MaxCounter);
     Assert(weakRefCounterIndex >= NumUnknownCounters && weakRefCounterIndex < RecyclerTrackerCounterSetDefinition::MaxCounter); 
-    Assert(WeakRefIndexTypeInfoMap[weakRefCounterIndex - NumUnknownCounters] == null);
+    Assert(WeakRefIndexTypeInfoMap[weakRefCounterIndex - NumUnknownCounters] == nullptr);
     WeakRefIndexTypeInfoMap[weakRefCounterIndex - NumUnknownCounters] = type;
 }
 

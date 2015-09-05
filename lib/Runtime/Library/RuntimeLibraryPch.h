@@ -14,6 +14,7 @@
 
 #include "Library\ObjectPrototypeObject.h"
 
+#include "common\ByteSwap.h"
 #include "Library\DataView.h"
 
 #include "Library\JSONString.h"

@@ -35,7 +35,7 @@ typedef void* FunctionTableHandle;
         if (!verbose || this->pageAllocatorFlagTable.Verbose) \
         {   \
             Output::Print(L"%p : %p> PageAllocator(%p): ", GetCurrentThreadContextId(), ::GetCurrentThreadId(), this); \
-            if (debugName != null) \
+            if (debugName != nullptr) \
             { \
                 Output::Print(L"[%s] ", this->debugName); \
             } \
@@ -69,7 +69,7 @@ struct SecondaryAllocation
 {
     BYTE* address;   // address of the allocation by the secondary allocator
 
-    SecondaryAllocation() : address(NULL)
+    SecondaryAllocation() : address(nullptr)
     {
     }
 };
@@ -249,7 +249,7 @@ public:
     bool IsFull() const
     {
         return (this->freePageCount == 0 && !ShouldBeInDecommittedList()) ||
-            (this->secondaryAllocator != null && !this->secondaryAllocator->CanAllocate());
+            (this->secondaryAllocator != nullptr && !this->secondaryAllocator->CanAllocate());
     }
 
     bool IsAllDecommitted() const
@@ -413,7 +413,7 @@ public:
         PageAllocatorType type = PageAllocatorType_Max,
         size_t maxFreePageCount = DefaultMaxFreePageCount,
         bool zeroPages = false,
-        BackgroundPageQueue * backgroundPageQueue = null,
+        BackgroundPageQueue * backgroundPageQueue = nullptr,
         size_t maxAllocPageCount = DefaultMaxAllocPageCount,
         size_t secondaryAllocPageCount = DefaultSecondaryAllocPageCount,
         bool stopAllocationOnOutOfMemory = false,
@@ -620,7 +620,7 @@ protected:
 protected:
     virtual bool CreateSecondaryAllocator(SegmentBase<TVirtualAlloc>* segment, SecondaryAllocator** allocator)
     {
-        *allocator = NULL;
+        *allocator = nullptr;
         return true;
     }
 
@@ -688,7 +688,7 @@ private:
             return false;
         }
 
-        if (policyManager != null)
+        if (policyManager != nullptr)
         {
             return policyManager->RequestAlloc(byteCount);
         }
@@ -698,7 +698,7 @@ private:
 
     void ReportFree(size_t byteCount)
     {
-        if (policyManager != null)
+        if (policyManager != nullptr)
         {
             policyManager->ReportFree(byteCount);
         }
@@ -728,7 +728,7 @@ protected:
             this->disableAllocationOutOfMemory = true;
         }
 
-        if (policyManager != null)
+        if (policyManager != nullptr)
         {
             policyManager->ReportFailure(byteCount);
         }

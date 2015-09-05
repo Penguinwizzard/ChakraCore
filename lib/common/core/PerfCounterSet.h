@@ -26,7 +26,7 @@ namespace PerfCounter
                 // Win8 AppContainer because they don't support v2 perf counters. 
                 // See comments in WWAHostJSCounterProvider  for details.
                 data = __super::InitializeSharedMemory(TCounter::MaxCounter, handle);
-                if (data == null)
+                if (data == nullptr)
                 {
                     data = defaultData;
                 }

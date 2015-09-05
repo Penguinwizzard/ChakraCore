@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "CommonMemoryPch.h"
 
 // Initialization order
 //  AB AutoSystemInfo

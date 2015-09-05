@@ -176,16 +176,10 @@ namespace Js
     class HostObjectBase;
     class RootObjectBase;
     class ModuleRoot;
-    class GlobalObject;
-    class GcValueHolder;
+    class GlobalObject;    
     class Math;
     class JavascriptOperators;
-    class JavascriptLibrary;
-    class JavascriptEval;
-    class JavascriptParseInt;
-    class JavascriptParseFloat;
-    class JavascriptIsNaN;
-    class JavascriptIsFinite;
+    class JavascriptLibrary;    
     class JavascriptEncodeURI;
     class JavascriptEncodeURIComponent;
     class JavascriptDecodeURI;
@@ -195,17 +189,13 @@ namespace Js
     enum class OpCode : ushort;
     enum class OpCodeAsmJs : ushort;    
     /* enum */ struct OpLayoutType;
-    /* enum */ struct OpLayoutTypeAsmJs;
-    class RcBlock;
-    class ExceptionBase;
-    class NotImplementedException;
-    class RcObject;
+    /* enum */ struct OpLayoutTypeAsmJs;    
+    class ExceptionBase;    
     class OutOfMemoryException;
     class ScriptDebug;
     class ScriptContext;
     struct NativeModule;
-    template <class T> class RcRef;
-    class RcString;
+    template <class T> class RcRef;    
     class TaggedInt;
     class TaggedNumber;
     struct InterpreterStackFrame;
@@ -280,10 +270,15 @@ namespace Js
     extern const FrameDisplay StrictNullFrameDisplay;    
 }
 
+#include "DataStructures\EvalMapString.h"
+
 bool IsMathLibraryId(Js::PropertyId propertyId);
 #include "ByteCode\PropertyIdArray.h"
 #include "ByteCode\AuxArray.h"
 #include "ByteCode\VarArrayVarCount.h"
+
+// module id
+const Js::ModuleID kmodGlobal = 0;
 
 class SourceContextInfo;
 class AsyncDebug;

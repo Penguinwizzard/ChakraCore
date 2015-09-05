@@ -1,9 +1,11 @@
 //----------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
-#include "stdafx.h"
+#include "CommonExceptionsPch.h"
 
 #ifdef EXCEPTION_CHECK
+#include "ExceptionCheck.h"
+
 __declspec(thread) ExceptionCheck::Data ExceptionCheck::data;
 
 BOOL ExceptionCheck::IsEmpty()

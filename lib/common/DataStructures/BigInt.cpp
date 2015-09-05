@@ -2,8 +2,11 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "CommonDataStructuresPch.h"
 #include "DataStructures\BigInt.h"
+#include "common\NumberUtilitiesBase.h"
+#include "common\NumberUtilities.h"
+
 namespace Js
 {
     BigInt & BigInt::operator= (BigInt &bi)

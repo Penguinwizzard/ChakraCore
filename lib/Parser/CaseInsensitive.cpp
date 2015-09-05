@@ -8,7 +8,7 @@
 // a non-7-bit-ASCII character cannot be mapped to 7-bit-ASCII characters.
 //
 
-#include "StdAfx.h"
+#include "ParserPch.h"
 
 namespace UnifiedRegex
 {

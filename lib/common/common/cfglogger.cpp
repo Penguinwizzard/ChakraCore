@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "CommonCommonPch.h"
 
 #ifdef CONTROL_FLOW_GUARD_LOGGER
 #include "common\CFGLogger.h"

@@ -1,8 +1,8 @@
 //---------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
-#include <StdAfx.h>
-
+#include "CommonCommonPch.h"
+#include "Common\unicode.h"
 //
 // This file contains tables used for operations on the Unicode character
 // set, such as changing case.

@@ -93,12 +93,12 @@ public:
     class Iterator
     {
     public:        
-        Iterator() : list(null), current(null) {}
+        Iterator() : list(nullptr), current(nullptr) {}
         Iterator(SListBase const * list) : list(list), current(list) {};
 
         bool IsValid() const
         {
-            return (current != null && !list->IsHead(current));
+            return (current != nullptr && !list->IsHead(current));
         }
         void Reset()
         {
@@ -108,10 +108,10 @@ public:
         __forceinline
         bool Next()
         {
-            Assert(current != null);            
+            Assert(current != nullptr);
             if (list->IsHead(current->Next()))
             {
-                current = null;
+                current = nullptr;
                 return false;
             }
             current = current->Next();
@@ -135,12 +135,12 @@ public:
     class EditingIterator : public Iterator
     {
     public:        
-        EditingIterator() : Iterator(), last(null) {};
-        EditingIterator(SListBase  * list) : Iterator(list), last(null) {};
+        EditingIterator() : Iterator(), last(nullptr) {};
+        EditingIterator(SListBase  * list) : Iterator(list), last(nullptr) {};
 
         bool Next()
         {
-            if (last != null && last->Next() != current)
+            if (last != nullptr && last->Next() != current)
             {
                 current = last;
             }
@@ -170,7 +170,7 @@ public:
         template <typename TAllocator>
         TData * InsertNodeBefore(TAllocator * allocator)
         {
-            Assert(last != null);
+            Assert(last != nullptr);
             Node * newNode = AllocatorNew(TAllocator, allocator, Node);
             if (newNode)
             {
@@ -180,13 +180,13 @@ public:
                 last = newNode;
                 return &newNode->data;
             }
-            return null;
+            return nullptr;
         }
 
         template <typename TAllocator>
         TData * InsertNodeBeforeNoThrow(TAllocator * allocator)
         {
-            Assert(last != null);
+            Assert(last != nullptr);
             Node * newNode = AllocatorNewNoThrow(TAllocator, allocator, Node);
             if (newNode)
             {
@@ -196,13 +196,13 @@ public:
                 last = newNode;
                 return &newNode->data;
             }
-            return null;
+            return nullptr;
         }
 
         template <typename TAllocator>
         bool InsertBefore(TAllocator * allocator, TData const& data)
         {
-            Assert(last != null);
+            Assert(last != nullptr);
             Node * newNode = AllocatorNew(TAllocator, allocator, Node, data);
             if (newNode)
             {
@@ -229,13 +229,13 @@ public:
         NodeBase * UnlinkCurrentNode()
         {
             NodeBase * unlinkedNode = const_cast<NodeBase *>(current);
-            Assert(current != null);
+            Assert(current != nullptr);
             Assert(!list->IsHead(current));
-            Assert(last != null);
+            Assert(last != nullptr);
 
             const_cast<NodeBase *>(last)->Next() = current->Next();
             current = last;
-            last = null;
+            last = nullptr;
             const_cast<SListBase *>(list)->DecrementCount();;
             return unlinkedNode;
         }
@@ -324,7 +324,7 @@ public:
             this->IncrementCount();
             return &newNode->data;
         }
-        return null;
+        return nullptr;
     }
 
     template <typename TAllocator, typename TParam>
@@ -338,7 +338,7 @@ public:
             this->IncrementCount();
             return &newNode->data;
         }
-        return null;
+        return nullptr;
     }
 
     template <typename TAllocator, typename TParam1, typename TParam2>
@@ -352,7 +352,7 @@ public:
             this->IncrementCount();
             return &newNode->data;
         }
-        return null;
+        return nullptr;
     }
 
     template <typename TAllocator>
@@ -432,7 +432,7 @@ public:
                 return data;
             }
         }
-        return null;
+        return nullptr;
     }
 
     template<class Fn>
@@ -446,7 +446,7 @@ public:
                 return &iter.Data();
             }
         }
-        return null;
+        return nullptr;
     }
 
     template<class Fn>
@@ -502,7 +502,7 @@ public:
         while (iter.Next())
         {
             Node * node = AllocatorNew(TAllocator, allocator, Node);
-            if (node == null)
+            if (node == nullptr)
             {
                 return false;
             }

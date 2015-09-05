@@ -4,7 +4,7 @@
 *                                                       *
 ********************************************************/
 
-#include "stdafx.h"
+#include "CommonCorePch.h"
 #include <psapi.h>
 #include <Wincrypt.h>
 #include <VersionHelpers.h>

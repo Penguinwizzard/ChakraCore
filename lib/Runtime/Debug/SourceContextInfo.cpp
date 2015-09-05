@@ -27,6 +27,11 @@ void SourceContextInfo::EnsureInitialized()
     }
 }
 
+bool SourceContextInfo::IsSourceProfileLoaded() const
+{
+    return sourceDynamicProfileManager != nullptr && sourceDynamicProfileManager->IsProfileLoaded();
+}
+
 SourceContextInfo* SourceContextInfo::Clone(Js::ScriptContext* scriptContext) const
 {
     IActiveScriptDataCache* profileCache = this->sourceDynamicProfileManager  != NULL ? 

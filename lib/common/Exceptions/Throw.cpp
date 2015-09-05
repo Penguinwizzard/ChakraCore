@@ -4,9 +4,41 @@
 
 #pragma once
 
-#include "StdAfx.h"
+#include "CommonExceptionsPch.h"
 #include <strsafe.h>
 #include "StackOverflowException.h"
+#include "InternalErrorException.h"
+#include "OutOfMemoryException.h"
+#include "NotImplementedException.h"
+
+// Header files required before including ConfigFlagsTable.h
+
+#include "EnumHelp.h"
+#include "Common\MathUtil.h"
+#include "Core\AllocSizeMath.h"
+#include "Core\FaultInjection.h"
+
+#include "core\BasePtr.h"
+#include "core\AutoFILE.h"
+#include "core\Output.h"
+
+// Memory Management
+namespace Memory {}
+using namespace Memory;
+#include "Memory\Allocator.h"
+#include "Memory\HeapAllocator.h"
+
+// Data structure
+#include "DataStructures\Comparer.h"
+#include "DataStructures\SizePolicy.h"
+#include "DataStructures\SList.h"
+#include "DataStructures\KeyValuePair.h"
+#include "DataStructures\BaseDictionary.h"
+#include "core\ConfigFlagsTable.h"
+
+#include "core\StackBackTrace.h"
+
+
 
 // dbghelp.h is not clean with warning 4091
 #pragma warning(push)
@@ -266,7 +298,7 @@ namespace Js {
             swprintf_s(buff, _countof(buff), L"%S (%d)\n%S\n%S", fileName, lineNumber, message, error);
             buff[_countof(buff)-1] = 0;
 
-            int ret = MessageBox(null, buff, L"CHAKRA ASSERT", MB_ABORTRETRYIGNORE);
+            int ret = MessageBox(nullptr, buff, L"CHAKRA ASSERT", MB_ABORTRETRYIGNORE);
 
             switch (ret)
             {

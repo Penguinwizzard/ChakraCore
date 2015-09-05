@@ -2,9 +2,13 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "CommonCommonPch.h"
 
 #include <time.h>
+
+#include "Common\DaylightTimeHelper.h"
+#include "Common\DateUtilities.h"
+
 namespace Js {
 
     static const double TicksPerMinute = 60000.0;

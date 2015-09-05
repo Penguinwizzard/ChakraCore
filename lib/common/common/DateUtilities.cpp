@@ -2,9 +2,12 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "CommonCommonPch.h"
 #define ENABLE_INTSAFE_SIGNED_FUNCTIONS 1
 #include <intsafe.h>
+
+#include "Common\DaylightTimeHelper.h"
+#include "Common\DateUtilities.h"
 
 #include <Windows.Foundation.h>
 

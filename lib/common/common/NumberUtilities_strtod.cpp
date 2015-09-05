@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include <StdAfx.h>
+#include <CommonCommonPch.h>
 #include "DataStructures\BigInt.h"
 
 namespace Js

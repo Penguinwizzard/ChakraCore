@@ -2,7 +2,9 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "CommonCommonPch.h"
+#include "Common\UInt32Math.h"
+#include "common\NumberUtilities.inl"
 
 namespace Js
 {
@@ -27,6 +29,75 @@ namespace Js
     __declspec(align(16)) double const NumberConstants::UIntConvertConst[2] = { 0, 4294967296.000000 };
     __declspec(align(16)) float const NumberConstants::MaskNegFloat[] = { -0.0f, -0.0f, -0.0f, -0.0f };
     __declspec(align(16)) double const NumberConstants::MaskNegDouble[] = { -0.0, -0.0 };
+
+    bool NumberUtilities::IsDigit(int ch)
+    {
+        return ch >= '0' && ch <= '9';
+    }
+
+    BOOL NumberUtilities::FHexDigit(wchar_t ch, int *pw)
+    {
+        if ((ch -= '0') <= 9)
+        {
+            *pw = ch;
+            return TRUE;
+        }
+        if ((ch -= 'A' - '0') <= 5 || (ch -= 'a' - 'A') <= 5)
+        {
+            *pw = 10 + ch;
+            return TRUE;
+        }
+        return FALSE;
+    }
+
+    /***************************************************************************
+    Multiply two unsigned longs. Return the low ulong and fill *pluHi with
+    the high ulong.
+    ***************************************************************************/
+    // Turn off warning that there is no return value
+#pragma warning(disable:4035)  // re-enable below
+    ulong NumberUtilities::MulLu(ulong lu1, ulong lu2, ulong *pluHi)
+    {
+#if _WIN32 || _WIN64
+
+#if I386_ASM
+        __asm
+        {
+            mov eax, lu1
+            mul lu2
+                mov ebx, pluHi
+                mov DWORD PTR[ebx], edx
+        }
+#else //!I386_ASM
+        DWORDLONG llu = UInt32x32To64(lu1, lu2);
+
+        *pluHi = (ulong)(llu >> 32);
+        return (ulong)llu;
+#endif //!I386_ASM
+
+#else
+#error Neither _WIN32, nor _WIN64 is defined
+#endif
+    }
+#pragma warning(default:4035)
+
+    /***************************************************************************
+    Add two unsigned longs and return the carry bit.
+    ***************************************************************************/
+    int NumberUtilities::AddLu(ulong *plu1, ulong lu2)
+    {
+        *plu1 += lu2;
+        return *plu1 < lu2;
+    }
+
+    bool NumberUtilities::IsFinite(double value)
+    {
+#if defined(_M_X64_OR_ARM64)
+        return 0 != (~(ToSpecial(value)) & 0x7FF0000000000000ull);
+#else
+        return 0 != (~Js::NumberUtilities::LuHiDbl(value) & 0x7FF00000);
+#endif
+    }
 
     int NumberUtilities::CbitZeroLeft(ulong lu)
     {

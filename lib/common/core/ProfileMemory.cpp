@@ -2,18 +2,20 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "CommonCorePch.h"
 
 #ifdef PROFILE_MEM
 #include "DataStructures\QuickSort.h"
+#include "Memory\AutoPtr.h"
+#include "core\ProfileMemory.h"
 
-__declspec(thread) MemoryProfiler * MemoryProfiler::Instance = null;
+__declspec(thread) MemoryProfiler * MemoryProfiler::Instance = nullptr;
 
 CriticalSection MemoryProfiler::s_cs;
-AutoPtr<MemoryProfiler> MemoryProfiler::profilers(null);
+AutoPtr<MemoryProfiler> MemoryProfiler::profilers(nullptr);
 
 MemoryProfiler::MemoryProfiler() :   
-    pageAllocator(NULL, Js::Configuration::Global.flags, PageAllocatorType_Max, 0, false, null),
+    pageAllocator(nullptr, Js::Configuration::Global.flags, PageAllocatorType_Max, 0, false, nullptr),
     alloc(L"MemoryProfiler", &pageAllocator, Js::Throw::OutOfMemory), 
     arenaDataMap(&alloc, 10)
 {
@@ -35,7 +37,7 @@ MemoryProfiler::EnsureMemoryProfiler()
 {
     MemoryProfiler * memoryProfiler = MemoryProfiler::Instance;
 
-    if (memoryProfiler == null)
+    if (memoryProfiler == nullptr)
     {
         memoryProfiler = new MemoryProfiler();
         
@@ -55,11 +57,11 @@ MemoryProfiler::GetPageMemoryData(PageAllocatorType type)
 {
     if (!Js::Configuration::Global.flags.IsEnabled(Js::TraceMemoryFlag))
     {
-        return null;
+        return nullptr;
     } 
     if (type == PageAllocatorType_Max)
     {
-        return null;
+        return nullptr;
     }
     MemoryProfiler * memoryProfiler = EnsureMemoryProfiler();
     return &memoryProfiler->pageMemoryData[type];
@@ -70,7 +72,7 @@ MemoryProfiler::GetRecyclerMemoryData()
 {
     if (!Js::Configuration::Global.flags.IsEnabled(Js::TraceMemoryFlag))
     {
-        return null;
+        return nullptr;
     }
     MemoryProfiler * memoryProfiler = EnsureMemoryProfiler();
     return &memoryProfiler->recyclerMemoryData;
@@ -81,13 +83,13 @@ MemoryProfiler::Begin(LPCWSTR name)
 {
     if (!Js::Configuration::Global.flags.IsEnabled(Js::TraceMemoryFlag))
     {
-        return null;
+        return nullptr;
     }
-    Assert(name != null);
+    Assert(name != nullptr);
     if (wcscmp(name, L"MemoryProfiler") == 0)
     {
         // Don't profile memory profiler itself
-        return null;
+        return nullptr;
     }
 
     // This is debug only code, we don't care if we catch the right exception        
@@ -102,7 +104,7 @@ MemoryProfiler::Begin(LPCWSTR name)
     arenaTotalMemoryData->arenaCount++;
 
     ArenaMemoryData * memoryData = AnewStructZ(&memoryProfiler->alloc, ArenaMemoryData);
-    if (arenaTotalMemoryData->data == null)
+    if (arenaTotalMemoryData->data == nullptr)
     {
         arenaTotalMemoryData->data = memoryData;
     }
@@ -145,11 +147,11 @@ MemoryProfiler::End(LPCWSTR name, ArenaMemoryData * memoryData)
     bool hasItem = memoryProfiler->arenaDataMap.TryGetValue((LPWSTR)name, &arenaMemoryDataSummary);
     Assert(hasItem);
 
-    if (memoryData->next != null)
+    if (memoryData->next != nullptr)
     {
         memoryData->next->prev = memoryData->prev;
     }
-    if (memoryData->prev != null)
+    if (memoryData->prev != nullptr)
     {            
         memoryData->prev->next = memoryData->next;        
     }
@@ -356,7 +358,7 @@ MemoryProfiler::PrintArena(bool liveOnly)
         for (i = 0; i < count; i++)
         {
             ArenaMemoryDataSummary * data = summaries[i];
-            if (data == null)
+            if (data == nullptr)
             {
                 continue;
             }
@@ -385,7 +387,7 @@ MemoryProfiler::PrintArena(bool liveOnly)
         for (i = 0; i < count; i++)
         {
             ArenaMemoryDataSummary * data = summaries[i];
-            if (data == null)
+            if (data == nullptr)
             {
                 continue;
             }
@@ -410,7 +412,7 @@ MemoryProfiler::PrintArena(bool liveOnly)
         for (i = 0; i < count; i++)
         {
             ArenaMemoryDataSummary * data = summaries[i];
-            if (data == null)
+            if (data == nullptr)
             {
                 continue;
             }
@@ -443,7 +445,7 @@ MemoryProfiler::PrintCurrentThread()
 
     Output::Print(L"========================================================================================================\n");   
     Output::Print(L"Memory Profile (Current thread)\n");
-    if (instance != null)
+    if (instance != nullptr)
     {
         instance->Print();
     }

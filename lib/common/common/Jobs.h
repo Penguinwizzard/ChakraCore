@@ -172,7 +172,7 @@ namespace JsUtil
         // wishes to provide its own implementation.
         Job *GetJobToProcessProactively();
         bool ShouldProcessInForeground(const bool willWaitForJob, const unsigned int numJobsInQueue) const;
-        void Prioritize(JsUtil::Job *const job, const bool forceAddJobToProcessor = false, void* function = null) const;
+        void Prioritize(JsUtil::Job *const job, const bool forceAddJobToProcessor = false, void* function = nullptr) const;
         void PrioritizedButNotYetProcessed(JsUtil::Job *const job) const;
         void BeforeWaitForJob(bool) const;
         void AfterWaitForJob(bool) const;
@@ -326,11 +326,11 @@ namespace JsUtil
         template<class TJobManager, class TJobHolder> bool PrioritizeJob(
             TJobManager *const manager,
             const TJobHolder holder,
-            void* function = null);
+            void* function = nullptr);
         template<class TJobManager, class TJobHolder> void PrioritizeJobAndWait(
             TJobManager *const manager,
             const TJobHolder holder,
-            void* function = null);
+            void* function = nullptr);
 
         virtual void AssociatePageAllocator(PageAllocator* const pageAllocator) = 0;
         virtual void DissociatePageAllocator(PageAllocator* const pageAllocator) = 0;
@@ -367,11 +367,11 @@ namespace JsUtil
         template<class TJobManager, class TJobHolder> bool PrioritizeJob(
             TJobManager *const manager,
             const TJobHolder holder,
-            void* function = null);
+            void* function = nullptr);
         template<class TJobManager, class TJobHolder> void PrioritizeJobAndWait(
             TJobManager *const manager,
             const TJobHolder holder,
-            void* function = null);
+            void* function = nullptr);
 
     private:
         // Calls JobManager::Process, handling specific exception types. The return value indicates whether the job succeeded
@@ -405,16 +405,16 @@ namespace JsUtil
             threadHandle(0), 
             isWaitingForJobs(false),
             canDecommit(true),
-            currentJob(null),
+            currentJob(nullptr),
             threadStartedOrClosing(false), 
             backgroundPageAllocator(policyManager, Js::Configuration::Global.flags, PageAllocatorType_BGJIT,
                                     (AutoSystemInfo::Data.IsLowMemoryProcess() ?
                                      PageAllocator::DefaultLowMaxFreePageCount :
                                      PageAllocator::DefaultMaxFreePageCount)),
-            threadArena(null),
-            processor(null),
-            parser(null),
-            pse(null)
+            threadArena(nullptr),
+            processor(nullptr),
+            parser(nullptr),
+            pse(nullptr)
             {
             }
 
@@ -478,11 +478,11 @@ namespace JsUtil
         template<class TJobManager, class TJobHolder> bool PrioritizeJob(
             TJobManager *const manager,
             const TJobHolder holder,
-            void* function = null);
+            void* function = nullptr);
         template<class TJobManager, class TJobHolder> void PrioritizeJobAndWait(
             TJobManager *const manager,
             const TJobHolder holder,
-            void* function = null);
+            void* function = nullptr);
 
         // Calls JobManager::Process, handling specific exception types. The return value indicates whether the job succeeded
         // (true) or failed (false).

@@ -22,6 +22,7 @@
     <ClCompile>
       <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)..;$(ChakraManifestsIncludeDirectory);$(ManifestsInboxIncludeDirectory);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>CommonCorePch.h</PrecompiledHeaderFile>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -42,19 +43,24 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)ProfileMemory.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)StackBackTrace.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)SysInfo.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\StdAfx.cpp">
+    <ClCompile Include="$(MSBuildThisFileDirectory)CommonCorePch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\commoninl.h" />
-    <ClInclude Include="..\CommonDefines.h" />
-    <ClInclude Include="AllocSizeMath.h" />
+  <ItemGroup>    
+    
+    <ClInclude Include="AllocSizeMath.h" />    
     <ClInclude Include="api.h" />
+    <ClInclude Include="Assertions.h" />
+    <ClInclude Include="AutoFILE.h" />
     <ClInclude Include="BinaryFeatureControl.h" />
+    <ClInclude Include="BasePtr.h" />
     <ClInclude Include="CmdParser.h" />
+    <ClInclude Include="CommonCorePch.h" />
+    <ClInclude Include="CommonTypedefs.h" />
     <ClInclude Include="ConfigFlagsTable.h" />
     <ClInclude Include="ConfigParser.h" />
+    <ClInclude Include="CriticalSection.h" />
     <ClInclude Include="DbgHelpSymbolManager.h" />
     <ClInclude Include="DelayLoadLibrary.h" />
     <ClInclude Include="EtwTraceCore.h" />
@@ -69,18 +75,20 @@
     <ClInclude Include="ProfileMemory.h" />
     <ClInclude Include="StackBackTrace.h" />
     <ClInclude Include="SysInfo.h" />
-    <ClInclude Include="..\CriticalSection.h" />
+    <ClInclude Include="..\Warnings.h" />
+    <ClInclude Include="..\CommonDefines.h" />    
+    <ClInclude Include="..\CommonBasic.h" />
+    <ClInclude Include="..\CommonMin.h" />
+    <ClInclude Include="..\CommonMinMemory.h" />
+    <ClInclude Include="..\Common.h" />
+    <ClInclude Include="..\BackEndAPI.h" />
+    <ClInclude Include="..\commoninl.h" />
     <ClInclude Include="..\DictionaryStats.h" />
     <ClInclude Include="..\EnumClassHelp.h" />
-    <ClInclude Include="..\Assertions.h" />
-    <ClInclude Include="..\BackEndAPI.h" />
-    <ClInclude Include="..\Common.h" />
     <ClInclude Include="..\ConfigFlagsList.h" />
-    <ClInclude Include="..\EnumHelp.h" />
-    <ClInclude Include="..\StdAfx.h" />
+    <ClInclude Include="..\EnumHelp.h" />    
     <ClInclude Include="..\TargetVer.h" />
-    <ClInclude Include="..\TemplateParameter.h" />
-    <ClInclude Include="..\Warnings.h" />
+    <ClInclude Include="..\TemplateParameter.h" />    
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Condition="'$(USE_EXTERNAL_DEPENDENCIES)'!='yes'" Include="..\..\..\..\dep\manifests-inbox.vcxproj">

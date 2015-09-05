@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "CommonMemoryPch.h"
 
 template void SmallLeafHeapBucketT<SmallAllocationBlockAttributes>::Sweep<true>(RecyclerSweep& recyclerSweep);
 template void SmallLeafHeapBucketT<SmallAllocationBlockAttributes>::Sweep<false>(RecyclerSweep& recyclerSweep);

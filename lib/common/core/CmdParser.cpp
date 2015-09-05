@@ -2,7 +2,9 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "stdafx.h"
+#include "CommonCorePch.h"
+#include "core\ICustomConfigFlags.h"
+#include "core\CmdParser.h"
 
 using namespace Js;
 
@@ -445,7 +447,7 @@ CmdLineArgsParser::GetCurrentString()
     case ' ':
     case 0:
         NextChar();
-        return null;
+        return nullptr;
     default:
         throw Exception(L"Expected ':'");
     }
@@ -479,7 +481,7 @@ CmdLineArgsParser::ParseFlag()
     Flag flag = ConfigFlagsTable::GetFlag(flagString);
     if(InvalidFlag == flag)
     {
-        if (pCustomConfigFlags != null)
+        if (pCustomConfigFlags != nullptr)
         {
             if (pCustomConfigFlags->ParseFlag(flagString, this))
             {

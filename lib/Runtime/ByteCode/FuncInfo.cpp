@@ -82,9 +82,9 @@ FuncInfo::FuncInfo(
     referencedPropertyIdCount(0),
     argumentsSymbol(NULL),
     nonUserNonTempRegistersToInitialize(alloc),
-    constantToRegister(/*size=*/ 17, alloc),
-    stringToRegister(/*size=*/ 17, alloc),
-    doubleConstantToRegister(alloc, /*size=*/ 17),
+    constantToRegister(alloc, 17),
+    stringToRegister(alloc, 17),
+    doubleConstantToRegister(alloc, 17),
     stringTemplateCallsiteRegisterMap(alloc, 17),
     targetStatements(alloc)
 {

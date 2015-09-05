@@ -4,12 +4,15 @@
 *                                                       *
 ********************************************************/
 
-#include "StdAfx.h"
+#include "CommonMemoryPch.h"
 
 // This one works only for x64
 #if !defined(_M_X64)
 CompileAssert(false)
 #endif
+
+#include "XDataAllocator.h"
+#include "core\DelayLoadLibrary.h"
 
 XDataAllocator::XDataAllocator(BYTE* address, uint size) :
     freeList(null),

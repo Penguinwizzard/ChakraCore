@@ -2,7 +2,8 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "stdafx.h"
+#include "CommonCorePch.h"
+#include "core\EtwTraceCore.h"
 
 #ifdef ENABLE_JS_ETW
 extern "C" {

@@ -2,7 +2,9 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "stdafx.h"
+#include "CommonDataStructuresPch.h"
+#include "DataStructures\Interval.h"
+
 namespace regex
 {
     bool Interval::Includes(int value) const

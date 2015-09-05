@@ -22,6 +22,7 @@
     <ClCompile>
       <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)..;$(ChakraManifestsIncludeDirectory);$(ManifestsInboxIncludeDirectory);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>CommonDataStructuresPch.h</PrecompiledHeaderFile>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -36,7 +37,8 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)FixedBitVectorEnumerator.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)InternalStringNoCaseComparer.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)SizePolicy.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\StdAfx.cpp">
+    <ClCompile Include="$(MSBuildThisFileDirectory)SparseBitVector.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)CommonDataStructuresPch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
@@ -46,6 +48,7 @@
     <ClInclude Include="BufferBuilder.h" />
     <ClInclude Include="Cache.h" />
     <ClInclude Include="CharacterBuffer.h" />
+    <ClInclude Include="CommonDataStructuresPch.h" />
     <ClInclude Include="ContinuousPageStack.h" />
     <ClInclude Include="DoublyLinkedList.h" />
     <ClInclude Include="DoublyLinkedListElement.h" />
@@ -53,6 +56,7 @@
     <ClInclude Include="ImmutableList.h" />
     <ClInclude Include="interval.h" />
     <ClInclude Include="LineOffsetCache.h" />
+    <ClInclude Include="LeafValueDictionary.h" />
     <ClInclude Include="MruDictionary.h" />
     <ClInclude Include="PageStack.h" />
     <ClInclude Include="Pair.h" />
@@ -73,6 +77,7 @@
     <ClInclude Include="LargeStack.h" />
     <ClInclude Include="list.h" />
     <ClInclude Include="quicksort.h" />
+    <ClInclude Include="SimpleHashTable.h" />
     <ClInclude Include="SList.h" />
     <ClInclude Include="SparseArray.h" />
     <ClInclude Include="SparseBitVector.h" />
@@ -80,6 +85,7 @@
     <ClInclude Include="StringBuilder.h" />
     <ClInclude Include="Tree.h" />
     <ClInclude Include="UnitBitVector.h" />
+    <ClInclude Include="WeakReferenceDictionary.h" />
     <ClInclude Include="InternalStringNoCaseComparer.h" />
     <ClInclude Include="Option.h" />
   </ItemGroup>

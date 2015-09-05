@@ -103,7 +103,7 @@ Term ::= ... | '(' '?' '=' Disjunction ')' [removed] | '(' '?' '!' Disjunction '
 
 */
 
-#include "StdAfx.h"
+#include "ParserPch.h"
 
 namespace UnifiedRegex
 {

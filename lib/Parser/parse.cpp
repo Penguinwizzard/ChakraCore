@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "ParserPch.h"
 #if DBG_DUMP
 void PrintPnodeWIndent(ParseNode *pnode,int indentAmt);
 #endif
@@ -2005,7 +2005,7 @@ void Parser::ReduceDeferredScriptLength(ULONG chars)
         {
             m_length = 0;
         }
-        if (m_length < Parser::GetDeferralThreshold(this->m_sourceContextInfo->sourceDynamicProfileManager))
+        if (m_length < Parser::GetDeferralThreshold(this->m_sourceContextInfo->IsSourceProfileLoaded()))
         {
             // Stop deferring.
             m_grfscr &= ~fscrDeferFncParse;
@@ -9308,7 +9308,7 @@ void Parser::VisitFunctionsInScope(ParseNodePtr pnodeScopeList, Fn fn)
 
 // Scripts above this size (minus string literals and comments) will have parsing of
 // function bodies deferred.
-ULONG Parser::GetDeferralThreshold(Js::SourceDynamicProfileManager* profileManager)
+ULONG Parser::GetDeferralThreshold(bool isProfileLoaded)
 {
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
     if (CONFIG_FLAG(ForceDeferParse) ||
@@ -9324,7 +9324,7 @@ ULONG Parser::GetDeferralThreshold(Js::SourceDynamicProfileManager* profileManag
     else
 #endif
     {
-        if(profileManager != NULL && profileManager->IsProfileLoaded())
+        if (isProfileLoaded)
         {
             return DEFAULT_CONFIG_ProfileBasedDeferParseThreshold;
         }

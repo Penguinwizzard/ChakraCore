@@ -511,7 +511,7 @@ namespace Js
 #endif
 
 #if DBG
-        SimpleHashTable<void *, uint> * bindRef;
+        JsUtil::BaseHashSet<void *, ArenaAllocator> bindRef;
         int m_iProfileSession;
 #endif
 
@@ -737,7 +737,7 @@ private:
         EventHandler disposeScriptByFaultInjectionEventHandler;
 #endif
 
-        LargeUIntHashTable<JavascriptString *> *integerStringMap;
+        JsUtil::BaseDictionary<uint, JavascriptString *, ArenaAllocator> integerStringMap;
 
         double lastNumberToStringRadix10;
         double lastUtcTimeFromStr;

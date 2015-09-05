@@ -3,7 +3,8 @@
 *   Copyright (C) Microsoft. All rights reserved.       *
 *                                                       *
 ********************************************************/
-#include "stdafx.h"
+#include "CommonCorePch.h"
+#include "core\DelayLoadLibrary.h"
 
 DelayLoadLibrary::DelayLoadLibrary()
 {
@@ -109,10 +110,10 @@ VOID NtdllLibrary::GrowFunctionTable(_Inout_ PVOID DynamicTable, _In_ ULONG NewE
 {
     if (m_hModule)
     {
-        if (growFunctionTable == null)
+        if (growFunctionTable == nullptr)
         {
             growFunctionTable = (PFnRtlGrowFunctionTable)GetFunction("RtlGrowFunctionTable");
-            if (growFunctionTable == null)
+            if (growFunctionTable == nullptr)
             {
                 Assert(false);
                 return;

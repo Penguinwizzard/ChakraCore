@@ -1371,7 +1371,7 @@ ThreadContext::IsStackAvailable(size_t size)
     bool stackAvailable = ((size_t)sp > size && (sp - size) > stackLimit);
 
     // Verify that JIT'd frames didn't mess up the ABI stack alignment
-    Assert(((uint)sp & (STACK_ALIGN - 1)) == (sizeof(void*) & (STACK_ALIGN - 1)));
+    Assert(((uint)sp & (AutoSystemInfo::StackAlign - 1)) == (sizeof(void*) & (AutoSystemInfo::StackAlign - 1)));
 
 #if DBG
     // TODO: make this work for JITted code.
@@ -3846,6 +3846,12 @@ bool ThreadContext::IsCFGEnabled()
     return false;
 #endif
 }
+
+
+//Masking bits according to AutoSystemInfo::PageSize
+#define PAGE_START_ADDR(address) ((size_t)(address) & ~(size_t)(AutoSystemInfo::PageSize - 1))
+#define IS_16BYTE_ALIGNED(address) (((size_t)(address) & 0xF) == 0)
+#define OFFSET_ADDR_WITHIN_PAGE(address) ((size_t)(address) & (AutoSystemInfo::PageSize - 1))
 
 void ThreadContext::SetValidCallTargetForCFG(PVOID callTargetAddress, bool isSetValid)
 {

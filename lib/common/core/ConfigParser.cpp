@@ -2,8 +2,15 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "stdafx.h"
+#include "CommonCorePch.h"
+#include <io.h>
+#include <fcntl.h>
+#include <share.h>
 #include <strsafe.h>
+#include "Memory\MemoryLogger.h"
+#include "Memory\ForcedMemoryConstraints.h"
+#include "core\ICustomConfigFlags.h"
+#include "core\CmdParser.h"
 #include "core\ConfigParser.h"
 
 ConfigParser ConfigParser::s_moduleConfigParser(Js::Configuration::Global.flags);

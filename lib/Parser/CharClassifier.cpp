@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "ParserPch.h"
 #include "..\Runtime\Library\WindowsGlobalizationAdapter.h"
 
 using namespace Windows::Data::Text;

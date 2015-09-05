@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#include "stdafx.h"
+#include "CommonCorePch.h"
 
 #include <string.h>
 #include <stdarg.h>
@@ -31,8 +31,8 @@ Js::IStackTraceHelper* Output::s_stackTraceHelper = nullptr;
 unsigned int Output::s_traceEntryId = 0;
 #endif
 
-THREAD_ST FILE*    Output::s_file = null;
-THREAD_ST wchar_t* Output::buffer = NULL;
+THREAD_ST FILE*    Output::s_file = nullptr;
+THREAD_ST wchar_t* Output::buffer = nullptr;
 THREAD_ST size_t   Output::bufferAllocSize = 0;
 THREAD_ST size_t   Output::bufferFreeSize = 0;
 THREAD_ST size_t   Output::s_Column  = 0;
@@ -259,7 +259,7 @@ Output::PrintBuffer(const wchar_t * buf, size_t size)
 {
     Output::s_Column += size;
     const wchar_t * endbuf = wcschr(buf, '\n');
-    while (endbuf != null)
+    while (endbuf != nullptr)
     {
         Output::s_Column = size - (endbuf - buf) - 1;
         endbuf = wcschr(endbuf + 1, '\n');
@@ -284,7 +284,7 @@ Output::PrintBuffer(const wchar_t * buf, size_t size)
 
     if (useConsoleOrFile)
     {
-        if (s_file == null || Output::s_capture)
+        if (s_file == nullptr || Output::s_capture)
         {
             bool addToBuffer = true;
             if (Output::bufferFreeSize < size + 1)
@@ -303,14 +303,14 @@ Output::PrintBuffer(const wchar_t * buf, size_t size)
                     size_t oldBufferSize = bufferAllocSize - bufferFreeSize;
                     size_t newBufferAllocSize = (bufferAllocSize + size + 1) * 4 / 3;
                     wchar_t * newBuffer = (wchar_t *)realloc(buffer, (newBufferAllocSize * sizeof(wchar_t)));
-                    if (newBuffer == null)
+                    if (newBuffer == nullptr)
                     {
                         // See if I can just flush it and print directly
                         Output::Flush();
 
                         // Reset the buffer
                         free(Output::buffer);
-                        Output::buffer = null;
+                        Output::buffer = nullptr;
                         Output::bufferAllocSize = 0;
                         Output::bufferFreeSize = 0;
 
@@ -339,7 +339,7 @@ Output::PrintBuffer(const wchar_t * buf, size_t size)
             fwprintf_s(Output::s_file, L"%s", buf);
         }
 
-        if(s_outputFile != NULL && !Output::s_capture)
+        if(s_outputFile != nullptr && !Output::s_capture)
         {
             fwprintf_s(s_outputFile, L"%s", buf);
         }
@@ -364,7 +364,7 @@ void Output::Flush()
         DirectPrint(Output::buffer);
         bufferFreeSize = bufferAllocSize;
     }
-    if(s_outputFile != NULL)
+    if(s_outputFile != nullptr)
     {
         fflush(s_outputFile);
     }
@@ -442,7 +442,7 @@ Output::SetFile(FILE *file)
 void
 Output::SetOutputFile(FILE* file)
 {
-    if(s_outputFile != NULL)
+    if(s_outputFile != nullptr)
     {
         AssertMsg(false, "Output file is being set twice.");
     }
@@ -515,6 +515,6 @@ Output::CaptureEnd()
     bufferFreeSize = 0;
     bufferAllocSize = 0;
     wchar_t * returnBuffer = buffer;
-    buffer = NULL;
+    buffer = nullptr;
     return returnBuffer;
 }

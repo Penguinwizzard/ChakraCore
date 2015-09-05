@@ -732,7 +732,7 @@ FLAGNR(Boolean, ArenaUseHeapAlloc     , "Arena use heap to allocate memory inste
 #endif
 FLAGNR(Boolean, ValidateInlineStack, "Does a stack walk on helper calls to validate inline stack is correctly restored", false)
 FLAGNR(Boolean, AsmDiff               , "Dump the IR without memory locations and varying parameters.", false)
-FLAGNR(String,  AsmDumpMode           , "Dump the final assembly to a file without memory locations and varying parameters\n\t\t\t\t\tThe 'filename' is the file where the assembly will be dumped. Dump to console if no file is specified", NULL)
+FLAGNR(String,  AsmDumpMode           , "Dump the final assembly to a file without memory locations and varying parameters\n\t\t\t\t\tThe 'filename' is the file where the assembly will be dumped. Dump to console if no file is specified", nullptr)
 FLAGR (Boolean, Asmjs                 , "Enable Asmjs", DEFAULT_CONFIG_ASMJS)
 FLAGNR(Boolean, AsmJsStopOnError      , "Stop execution on any AsmJs validation errors", DEFAULT_CONFIG_AsmJsStopOnError)
 FLAGNR(Boolean, AsmJsEdge             , "Enable asm.js features which may have backward incompatible changes or not validate on old demos", DEFAULT_CONFIG_AsmJsEdge)
@@ -748,8 +748,8 @@ FLAGNR(Boolean, AssertIgnore          , "Ignores asserts if set", false)
 FLAGNR(Boolean, AsyncDebugging, "Enable async debugging feature (default: false)", DEFAULT_CONFIG_AsyncDebugging)
 FLAGNR(Number,  BailOnNoProfileLimit,   "The limit of bailout on no profile info before triggering a rejit", DEFAULT_CONFIG_BailOnNoProfileLimit)
 FLAGNR(Number,  BailOnNoProfileRejitLimit, "The limit of bailout on no profile info before we disable the bailouts", DEFAULT_CONFIG_BailOnNoProfileRejitLimit)
-FLAGNR(String,  DumpOnCrash           , "generate heap dump on asserts or unhandled exception if set", NULL)
-FLAGNR(String,  FullMemoryDump        , "Will perform a full memory dump when -DumpOnCrash is supplied.", NULL)
+FLAGNR(String,  DumpOnCrash           , "generate heap dump on asserts or unhandled exception if set", nullptr)
+FLAGNR(String,  FullMemoryDump        , "Will perform a full memory dump when -DumpOnCrash is supplied.", nullptr)
 #ifdef BAILOUT_INJECTION
 FLAGR (NumberPairSet, BailOut         , "Source location to insert BailOut", )
 FLAGNR(Boolean, BailOutAtEveryLine    , "Inserts BailOut at every line of source (default: false)", false)
@@ -773,7 +773,7 @@ FLAGNR(Boolean, CheckAlignment        , "Insert checks in the native code to ver
 FLAGNR(Boolean, CheckEmitBufferPermissions, "Check JIT code buffers at commit and decommit time to ensure no PAGE_EXECUTE_READWRITE pages.", false)
 #ifdef CHECK_MEMORY_LEAK
 FLAGR (Boolean, CheckMemoryLeak       , "Check for heap memory leak", false)
-FLAGR (String,  DumpOnLeak            , "Create a dump on failed memory leak check", NULL)
+FLAGR (String,  DumpOnLeak            , "Create a dump on failed memory leak check", nullptr)
 #endif
 FLAGNR(Boolean, CheckOpHelpers        , "Verify opHelper labels in the JIT are set properly", false)
 FLAGNR(Boolean, CloneInlinedPolymorphicCaches, "Clones polymorphic inline caches in inlined functions", DEFAULT_CONFIG_CloneInlinedPolymorphicCaches)
@@ -810,9 +810,9 @@ FLAGR (Boolean, DumpObjectGraphOnCollect, "Dump object graph on recycler destruc
 FLAGNR(Boolean, DumpEvalStringOnRemoval, "Dumps an eval string when its being removed from the eval map", false)
 FLAGNR(Boolean, DumpObjectGraphOnEnum, "Dump object graph on recycler heap enumeration", false)
 #ifdef DYNAMIC_PROFILE_STORAGE
-FLAGNRA(String, DynamicProfileCache   , Dpc, "File to cache dynamic profile information", null)
-FLAGNR(String,  DynamicProfileCacheDir, "Directory to cache dynamic profile information", null)
-FLAGNRA(String, DynamicProfileInput   , Dpi, "Read only file containing dynamic profile information", null)
+FLAGNRA(String, DynamicProfileCache   , Dpc, "File to cache dynamic profile information", nullptr)
+FLAGNR(String,  DynamicProfileCacheDir, "Directory to cache dynamic profile information", nullptr)
+FLAGNRA(String, DynamicProfileInput   , Dpi, "Read only file containing dynamic profile information", nullptr)
 #endif
 #ifdef EDIT_AND_CONTINUE
 FLAGNR(Boolean, EditTest              , "Enable edit and continue test tools", false)
@@ -823,14 +823,14 @@ FLAGNR(Boolean, ProfileBasedSpeculativeJit, "Enable dynamic profile based specul
 FLAGNR(Number,  ProfileBasedSpeculationCap, "In the presence of dynamic profile speculative JIT is capped to this many bytecode instructions", DEFAULT_CONFIG_ProfileBasedSpeculationCap)
 #ifdef DYNAMIC_PROFILE_MUTATOR
 FLAGNR(String,  DynamicProfileMutatorDll , "Path of the mutator DLL", L"DynamicProfileMutatorImpl.dll")
-FLAGNR(String,  DynamicProfileMutator , "Type of local, temp, return, param, loop implicit flag and implicit flag. \n\t\t\t\t\ti.e local=LikelyArray_NoMissingValues_NonInts_NonFloats;temp=Int8Array;param=LikelyNumber;return=LikelyString;loopimplicitflag=ImplicitCall_ToPrimitive;implicitflag=ImplicitCall_None\n\t\t\t\t\tor pass DynamicProfileMutator:random\n\t\t\t\t\tSee DynamicProfileInfo.h for enum values", null)
+FLAGNR(String,  DynamicProfileMutator , "Type of local, temp, return, param, loop implicit flag and implicit flag. \n\t\t\t\t\ti.e local=LikelyArray_NoMissingValues_NonInts_NonFloats;temp=Int8Array;param=LikelyNumber;return=LikelyString;loopimplicitflag=ImplicitCall_ToPrimitive;implicitflag=ImplicitCall_None\n\t\t\t\t\tor pass DynamicProfileMutator:random\n\t\t\t\t\tSee DynamicProfileInfo.h for enum values", nullptr)
 #endif
 FLAGNR(Boolean, ExecuteByteCodeBufferReturnsInvalidByteCode, "Serialized byte code execution always returns SCRIPT_E_INVALID_BYTECODE", false)
 FLAGR(Number, ExpirableCollectionGCCount, "Number of GCs during which Expirable object profiling occurs", DEFAULT_CONFIG_ExpirableCollectionGCCount)
 FLAGR (Number,  ExpirableCollectionTriggerThreshold, "Threshold at which Expirable Object Collection is triggered (In Percentage)", DEFAULT_CONFIG_ExpirableCollectionTriggerThreshold)
 FLAGR(Boolean, SkipSplitOnNoResult, "If the result of Regex split isn't used, skip executing the regex. (Perf optimization)", DEFAULT_CONFIG_SkipSplitWhenResultIgnored)
 #ifdef TEST_ETW_EVENTS
-FLAGNR(String,  TestEtwDll            , "Path of the TestEtwEventSink DLL", null)
+FLAGNR(String,  TestEtwDll            , "Path of the TestEtwEventSink DLL", nullptr)
 #endif
 
 // ES6 (BLUE-shipped) features/flags
@@ -904,7 +904,7 @@ FLAGNR(Boolean, JitES6Generators        , "Enable JITing of ES6 generators", fal
 
 FLAGNR(Number,  FastPathCap           , "Cap in source code size for enabling fast-paths", DEFAULT_CONFIG_FastPathCap)
 FLAGNR(Boolean, FastLineColumnCalculation, "Enable fast calculation of line/column numbers from the source.", DEFAULT_CONFIG_FastLineColumnCalculation)
-FLAGR (String,  Filename              , "Jscript source file", NULL)
+FLAGR (String,  Filename              , "Jscript source file", nullptr)
 FLAGNR(Boolean, FreeRejittedCode      , "Free rejitted code", true)
 FLAGNR(Boolean, ForceGuardPages       , "Force the addition of guard pages", false)
 FLAGNR(Boolean, PrintGuardPageBounds  , "Prints the bounds of a guard page", false)
@@ -957,13 +957,13 @@ FLAGNR(Boolean, MediumByteCodeLayout  , "Always use medium layout for bytecodes"
 FLAGNR(Boolean, LargeByteCodeLayout   , "Always use large layout for bytecodes", false)
 #endif
 #ifdef TEST_LOG
-FLAGNR(String,  HostLogging           , "Enable logging of host interactions to a file (requires filename)", NULL)
+FLAGNR(String,  HostLogging           , "Enable logging of host interactions to a file (requires filename)", nullptr)
 #endif
 #ifdef FAULT_INJECTION
 FLAGNR(Number,  FaultInjection        , "FaultInjectMode - 0 (count only), 1 (count equal), 2 (count at or above), 3 (stackhashing)",-1)
 FLAGNR(Number,  FaultInjectionCount   , "Injects an out of memory at the specified allocation", -1)
-FLAGNR(String,  FaultInjectionType    , "FaultType (flag values) -  1 (Throw), 2 (NoThrow), 4 (MarkThrow), 8 (MarkNoThrow), FFFFFFFF (All)", NULL)
-FLAGNR(String,  FaultInjectionFilter  , "A string to restrict the fault injection, the string can be like ArenaAllocator name", NULL)
+FLAGNR(String,  FaultInjectionType    , "FaultType (flag values) -  1 (Throw), 2 (NoThrow), 4 (MarkThrow), 8 (MarkNoThrow), FFFFFFFF (All)", nullptr)
+FLAGNR(String,  FaultInjectionFilter  , "A string to restrict the fault injection, the string can be like ArenaAllocator name", nullptr)
 FLAGNR(Number,  FaultInjectionAllocSize, "Do fault injection only this size", -1)
 FLAGNR(String,  FaultInjectionStackFile   , "Stacks to match, default: stack.txt in current directory", L"stack.txt")
 FLAGNR(Number,  FaultInjectionStackLineCount   , "Count of lines in the stack file used for matching", -1)
@@ -986,11 +986,11 @@ FLAGNR(Number,  AggressiveInlineThreshold, "Maximum size in bytecodes of an inli
 FLAGNR(Number,  InlineThresholdAdjustCountInLargeFunction       , "Adjustment in the maximum size in bytecodes of an inline candidate in a large function", DEFAULT_CONFIG_InlineThresholdAdjustCountInLargeFunction)
 FLAGNR(Number,  InlineThresholdAdjustCountInMediumSizedFunction , "Adjustment in the maximum size in bytecodes of an inline candidate in a medium sized function", DEFAULT_CONFIG_InlineThresholdAdjustCountInMediumSizedFunction)
 FLAGNR(Number,  InlineThresholdAdjustCountInSmallFunction       , "Adjustment in the maximum size in bytecodes of an inline candidate in a small function", DEFAULT_CONFIG_InlineThresholdAdjustCountInSmallFunction)
-FLAGNR(String,  Interpret             , "List of functions to interpret", NULL)
+FLAGNR(String,  Interpret             , "List of functions to interpret", nullptr)
 FLAGNR(Phases,  Instrument            , "Instrument the generated code from the given phase", )
 FLAGNR(Number,  JitQueueThreshold     , "Max number of work items/script context in the jit queue", DEFAULT_CONFIG_JitQueueThreshold)
 #ifdef LEAK_REPORT
-FLAGNR(String,  LeakReport            , "File name for the leak report", NULL)
+FLAGNR(String,  LeakReport            , "File name for the leak report", nullptr)
 #endif
 FLAGNR(Number,  LoopInlineThreshold   , "Maximum size in bytecodes of an inline candidate with loops or not enough profile data", DEFAULT_CONFIG_LoopInlineThreshold)
 FLAGNR(Number,  LeafInlineThreshold   , "Maximum size in bytecodes of an inline candidate with loops or not enough profile data", DEFAULT_CONFIG_LeafInlineThreshold)
@@ -1165,7 +1165,7 @@ FLAGNR(Boolean, RecyclerVerifyMark    , "verify concurrent gc", false)
 #endif
 FLAGR (Number,  LowMemoryCap          , "Memory cap indicating a low-memory process", DEFAULT_CONFIG_LowMemoryCap)
 #ifdef RUNTIME_DATA_COLLECTION
-FLAGNR(String,  RuntimeDataOutputFile, "Filename to write the dynamic profile info", NULL)
+FLAGNR(String,  RuntimeDataOutputFile, "Filename to write the dynamic profile info", nullptr)
 #endif
 FLAGNR(Boolean, ReportErrors          , "Enable reporting of syntax errors", false)
 FLAGR (Number,  SpeculationCap        , "How much bytecode we'll speculatively JIT", DEFAULT_CONFIG_SpeculationCap)

@@ -1,5 +1,5 @@
 // Copyright (C) Microsoft. All rights reserved. 
-#include "StdAfx.h"
+#include "ParserPch.h"
 
 #if ENABLE_REGEX_CONFIG_OPTIONS
 

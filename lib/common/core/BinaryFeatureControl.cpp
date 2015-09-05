@@ -2,7 +2,8 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "CommonCorePch.h"
+#include "core\BinaryFeatureControl.h"
 
 //For making direct call in release binaries.
 #if !defined(DELAYLOAD_SET_CFG_TARGET)

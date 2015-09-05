@@ -1,6 +1,7 @@
 // Copyright (C) Microsoft. All rights reserved. 
 
-#include "StdAfx.h"
+#include "CommonCommonPch.h"
+#include "RejitReason.h"
 
 const char *const RejitReasonNames[] =
 {

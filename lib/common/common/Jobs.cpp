@@ -1,7 +1,31 @@
 // Copyright (C) Microsoft. All rights reserved. 
 
-#include "StdAfx.h"
+#include "CommonCommonPch.h"
 #include <process.h>
+
+
+#include "core\EtwTraceCore.h"
+
+#include "Exceptions\ExceptionBase.h"
+#include "Exceptions\OperationAbortedException.h"
+#include "Exceptions\OutOfMemoryException.h"
+#include "Exceptions\StackOverflowException.h"
+
+#include "TemplateParameter.h"
+#include "DataStructures\DoublyLinkedListElement.h"
+#include "DataStructures\DoublyLinkedList.h"
+#include "DataStructures\DoublyLinkedListElement.inl"
+#include "DataStructures\DoublyLinkedList.inl"
+
+#include "Common\Event.h"
+#include "Common\ThreadService.h"
+#include "Common\Jobs.h"
+#include "Common\Jobs.inl"
+
+namespace Js
+{
+    class JavascriptExceptionObject;
+};
 
 namespace JsUtil
 {
@@ -754,7 +778,7 @@ namespace JsUtil
     Job * BackgroundJobProcessor::GetCurrentJobOfManager(JobManager *const manager)
     {
         Assert(criticalSection.IsLocked());
-        Job *currentJob = null;
+        Job *currentJob = nullptr;
         this->IterateBackgroundThreads([&](ParallelThreadData* threadData)
         {
             if (!threadData->currentJob)
@@ -775,7 +799,7 @@ namespace JsUtil
     ParallelThreadData * BackgroundJobProcessor::GetThreadDataFromCurrentJob(Job* job)
     {
         Assert(criticalSection.IsLocked());
-        ParallelThreadData *currentThreadData = null;
+        ParallelThreadData *currentThreadData = nullptr;
         this->IterateBackgroundThreads([&](ParallelThreadData* threadData)
         {
             if (!threadData->currentJob)
@@ -797,7 +821,7 @@ namespace JsUtil
     {
         Assert(manager);
 
-        ParallelThreadData *threadDataProcessingCurrentJob = null;
+        ParallelThreadData *threadDataProcessingCurrentJob = nullptr;
         WaitableJobManager *waitableManager;
         {
             AutoCriticalSection lock(&criticalSection);

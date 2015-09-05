@@ -59,6 +59,8 @@ namespace JsUtil
         CriticalSection cs;
     };
    
+    template <class TKey, class TValue> class SimpleDictionaryEntry;
+
     template <
         class TKey,
         class TValue,
@@ -115,17 +117,17 @@ namespace JsUtil
         };
     public:
         BaseDictionary(AllocatorType* allocator, int capacity = 0)
-            : buckets (NULL),
+            : buckets (nullptr),
             size(0),
             bucketCount(0),
-            entries(NULL),
+            entries(nullptr),
             count(0),
             freeCount(0),
             alloc(allocator)
         {
             Assert(allocator);
 #if PROFILE_DICTIONARY
-            stats = NULL;
+            stats = nullptr;
 #endif
             // If initial capacity is negative or 0, lazy initialization on
             // the first insert operation is performed.
@@ -281,8 +283,8 @@ namespace JsUtil
         {
             this->size = 0;
             this->bucketCount = 0;
-            this->buckets = NULL;
-            this->entries = NULL;
+            this->buckets = nullptr;
+            this->entries = nullptr;
             this->count = 0;
             this->freeCount = 0;
         }
@@ -781,7 +783,7 @@ namespace JsUtil
             uint depth = 0;
 #endif
             int * localBuckets = buckets;
-            if (localBuckets != NULL)
+            if (localBuckets != nullptr)
             {
                 hash_t hashCode = GetHashCodeWithKey<LookupType>(key);
                 uint targetBucket = this->GetBucket(hashCode);
@@ -822,7 +824,7 @@ namespace JsUtil
             uint depth = 0;
 #endif
             int * localBuckets = buckets;
-            if (localBuckets != NULL)
+            if (localBuckets != nullptr)
             {
                 uint hashCode = GetHashCodeWithKey<LookupType>(key);
                 *targetBucket = this->GetBucket(hashCode);
@@ -871,7 +873,7 @@ namespace JsUtil
         int Insert(TKey key, TValue value)
         {
             int * localBuckets = buckets;
-            if (localBuckets == NULL)
+            if (localBuckets == nullptr)
             {
                 Initialize(0);
                 localBuckets = buckets;
@@ -992,8 +994,8 @@ namespace JsUtil
             uint newBucketCount = SizePolicy::GetBucketSize(newSize);
 
             __analysis_assume(newSize > count);
-            int* newBuckets = NULL;
-            EntryType* newEntries = NULL;
+            int* newBuckets = nullptr;
+            EntryType* newEntries = nullptr;
             if (newBucketCount == bucketCount)
             {
                 // no need to rehash
@@ -1368,43 +1370,7 @@ namespace JsUtil
         PREVENT_ASSIGN(BaseDictionary);
     };
 
-
-    interface IWeakReferenceDictionary
-    {
-        virtual void Cleanup() = 0;
-    };
-
-    template <
-        class TKey,
-        class TValue,
-        class SizePolicy = PowerOf2SizePolicy,
-        template <typename ValueOrKey> class Comparer = DefaultComparer
-    >
-    class WeakReferenceDictionary: public BaseDictionary<TKey, RecyclerWeakReference<TValue>*, RecyclerNonLeafAllocator, SizePolicy, Comparer, WeakRefValueDictionaryEntry>,
-                                   public IWeakReferenceDictionary
-    {
-    public:
-
-        WeakReferenceDictionary(Recycler* recycler, int capacity = 0):
-          BaseDictionary(recycler, capacity)
-        {
-            Assert(reinterpret_cast<void*>(this) == reinterpret_cast<void*>((IWeakReferenceDictionary*) this));
-        }
-
-        virtual void Cleanup() override
-        {
-            this->MapAndRemoveIf([](EntryType& entry)
-            {
-                return (EntryType::NeedsCleanup(entry));
-            });
-        }
-
-    private:
-        using BaseDictionary::Clone;
-        using BaseDictionary::Copy;
-
-        PREVENT_COPY(WeakReferenceDictionary);
-    };
+    template <class TKey, class TValue> class SimpleHashedEntry;
 
     template <
         class TElement,
@@ -1459,14 +1425,14 @@ namespace JsUtil
         {
             // Use a static to pass the null default value, since the
             // default value may get returned out of the current scope by ref.
-            static const TElement nullElement = null;
+            static const TElement nullElement = nullptr;
             return __super::Lookup(key, nullElement);
         }
 
         template <typename KeyType>
         TElement const& LookupWithKey(KeyType const& key)
         {
-            static const TElement nullElement = null;
+            static const TElement nullElement = nullptr;
 
             return __super::LookupWithKey(key, nullElement);
         }
@@ -1858,28 +1824,6 @@ namespace JsUtil
         }
 
         PREVENT_COPY(SynchronizedDictionary);
-    };
-
-    template <
-        class TKey,
-        class TValue,
-        class SizePolicy = PowerOf2SizePolicy,
-        template <typename ValueOrKey> class Comparer = DefaultComparer,
-        template <typename K, typename V> class Entry = SimpleDictionaryEntry,
-        class LockPolicy = Js::DefaultListLockPolicy,   // Controls lock policy for read/map/write/add/remove items
-        class SyncObject = CriticalSection
-    >
-    struct LeafValueDictionary
-    {
-        typedef JsUtil::SynchronizedDictionary<TKey,
-            TValue,
-            RecyclerLeafAllocator,
-            SizePolicy,
-            Comparer,
-            Entry,
-            LockPolicy,
-            SyncObject
-        > Type;
     };
 }
 

@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "stdafx.h"
+#include "CommonMemoryPch.h"
 
 #if defined(_M_X64_OR_ARM64)
 HeapBlockMap32::HeapBlockMap32(__in char * startAddress) : 
@@ -750,12 +750,12 @@ HeapBlockMap32::ChangeProtectionLevel(Recycler* recycler, DWORD protectFlags, DW
 /// the write-watch one page at a time since that's expected to succeed
 ///
 UINT 
-HeapBlockMap32::GetWriteWatchHelper(Js::ConfigFlagsTable& flags, DWORD writeWatchFlags, void* baseAddress, size_t regionSize, void** addresses, ULONG_PTR* count, LPDWORD granularity)
+HeapBlockMap32::GetWriteWatchHelper(Recycler * recycler, DWORD writeWatchFlags, void* baseAddress, size_t regionSize, void** addresses, ULONG_PTR* count, LPDWORD granularity)
 {
     UINT ret = 0;
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
-    if (flags.ForceGetWriteWatchOOM)
+    if (recycler->GetRecyclerFlagsTable().ForceGetWriteWatchOOM)
     {
         if (regionSize != AutoSystemInfo::PageSize)
         {
@@ -770,7 +770,7 @@ HeapBlockMap32::GetWriteWatchHelper(Js::ConfigFlagsTable& flags, DWORD writeWatc
 
     if (ret != 0 && regionSize != AutoSystemInfo::PageSize)
     {
-       ret = GetWriteWatchHelperOnOOM(flags, writeWatchFlags, baseAddress, regionSize, addresses, count, granularity);
+       ret = GetWriteWatchHelperOnOOM(writeWatchFlags, baseAddress, regionSize, addresses, count, granularity);
     }
 
     Assert(ret == 0);
@@ -782,7 +782,7 @@ HeapBlockMap32::GetWriteWatchHelper(Js::ConfigFlagsTable& flags, DWORD writeWatc
 // It's slow, but we are ok with that during OOM
 // Factored into its own function to help the compiler inline the parent
 UINT 
-HeapBlockMap32::GetWriteWatchHelperOnOOM(Js::ConfigFlagsTable& flags, DWORD writeWatchFlags, void* baseAddress, size_t regionSize, void** addresses, ULONG_PTR* count, LPDWORD granularity)
+HeapBlockMap32::GetWriteWatchHelperOnOOM(DWORD writeWatchFlags, void* baseAddress, size_t regionSize, void** addresses, ULONG_PTR* count, LPDWORD granularity)
 {
     const uint pageCount = (regionSize / AutoSystemInfo::PageSize);
 
@@ -840,7 +840,7 @@ HeapBlockMap32::Rescan(Recycler * recycler, bool resetWriteWatch)
             ULONG_PTR pageCount = MaxGetWriteWatchPages;
             DWORD pageSize = PageSize;
 
-            UINT ret = HeapBlockMap32::GetWriteWatchHelper(recycler->GetRecyclerFlagsTable(), writeWatchFlags, segmentStart, segmentLength, dirtyPageAddresses, &pageCount, &pageSize);
+            UINT ret = HeapBlockMap32::GetWriteWatchHelper(recycler, writeWatchFlags, segmentStart, segmentLength, dirtyPageAddresses, &pageCount, &pageSize);
             Assert(ret == 0);
             Assert(pageSize == PageSize);
             Assert(pageCount <= MaxGetWriteWatchPages);

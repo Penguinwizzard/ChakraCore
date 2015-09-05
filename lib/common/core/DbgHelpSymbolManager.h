@@ -21,7 +21,7 @@ public:
 
     static size_t PrintSymbol(PVOID address);
 private:
-    DbgHelpSymbolManager() : isInitialized(false), hDbgHelpModule(null), pfnSymFromAddrW(null) {}
+    DbgHelpSymbolManager() : isInitialized(false), hDbgHelpModule(nullptr), pfnSymFromAddrW(nullptr) {}
     ~DbgHelpSymbolManager();
 
     static DbgHelpSymbolManager Instance;

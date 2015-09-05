@@ -1,13 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Condition="'$(ChakraBuildPathImported)'!='true'" Project="$(SolutionDir)Chakra.Build.Paths.props"/>
+  <Import Condition="'$(ChakraBuildPathImported)'!='true'" Project="$(SolutionDir)Chakra.Build.Paths.props" />
   <Import Project="$(BuildConfigPropsPath)Chakra.Build.ProjectConfiguration.props" />
   <PropertyGroup Label="Globals">
     <TargetName>Chakra.Common.Memory</TargetName>
     <ProjectGuid>{BB4153FF-AC3E-4734-B562-FF23812DF31B}</ProjectGuid>
     <RootNamespace>JS</RootNamespace>
     <Keyword>Win32Proj</Keyword>
-  </PropertyGroup>  
+  </PropertyGroup>
   <PropertyGroup Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
   </PropertyGroup>
@@ -18,7 +18,7 @@
     <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
     <Import Project="$(BuildConfig_ARMASM_Path)armasm.props" />
   </ImportGroup>
-  <Import Project="$(BuildConfigPropsPath)Chakra.Build.props" /> 
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.props" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
   </PropertyGroup>
@@ -26,6 +26,7 @@
     <ClCompile>
       <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)..;$(ChakraManifestsIncludeDirectory);$(ManifestsInboxIncludeDirectory);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>CommonMemoryPch.h</PrecompiledHeaderFile>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -75,7 +76,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)SmallNormalHeapBucket.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)StressTest.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)VirtualAllocWrapper.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\StdAfx.cpp">
+    <ClCompile Include="$(MSBuildThisFileDirectory)CommonMemoryPch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
@@ -90,6 +91,7 @@
     </ClInclude>
     <ClInclude Include="AutoAllocatorObjectPtr.h" />
     <ClInclude Include="AutoPtr.h" />
+    <ClInclude Include="CommonMemoryPch.h" />
     <ClInclude Include="CustomHeap.h" />
     <ClInclude Include="ForcedMemoryConstraints.h" />
     <ClInclude Include="FreeObject.h" />
@@ -110,6 +112,7 @@
     <ClInclude Include="MemoryTracking.h" />
     <ClInclude Include="PageAllocator.h" />
     <ClInclude Include="PageAllocatorDefines.h" />
+    <ClInclude Include="PageHeapBlockTypeFilter.h" />
     <ClInclude Include="PagePool.h" />
     <ClInclude Include="Recycler.h" />
     <ClInclude Include="RecyclerFastAllocator.h" />
@@ -132,6 +135,7 @@
     <ClInclude Include="MemoryLogger.h" />
     <ClInclude Include="StressTest.h" />
     <ClInclude Include="VirtualAllocWrapper.h" />
+    <ClInclude Include="XDataAllocator.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="heapblock.inl" />
@@ -159,7 +163,7 @@
       <ExcludedFromBuild Condition="'$(Platform)'!='Arm64'">true</ExcludedFromBuild>
     </ARMASM>
   </ItemGroup>
-  <Import Project="$(BuildConfigPropsPath)Chakra.Build.targets" Condition="exists('$(BuildConfigPropsPath)Chakra.Build.targets')"/>
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.targets" Condition="exists('$(BuildConfigPropsPath)Chakra.Build.targets')" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" />

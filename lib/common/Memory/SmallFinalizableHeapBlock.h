@@ -48,7 +48,7 @@ public:
         Assert(this->pendingDisposeCount <= this->objectCount);
     }
 
-    bool HasDisposedObjects() const { return this->disposedObjectList != null; }
+    bool HasDisposedObjects() const { return this->disposedObjectList != nullptr; }
     bool HasAnyDisposeObjects() const { return this->HasPendingDisposeObjects() || this->HasDisposedObjects(); }
 
     template <typename Fn>

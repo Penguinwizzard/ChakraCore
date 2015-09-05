@@ -97,6 +97,12 @@ template <bool nullTerminated> class UTF8EncodingPolicyBase;
 typedef UTF8EncodingPolicyBase<false> NotNullTerminatedUTF8EncodingPolicy;
 template <typename T> class Scanner;
 
+namespace Js
+{
+    class ParseableFunctionInfo;
+    class FunctionBody;
+};
+
 class Parser
 {
     typedef Scanner<NotNullTerminatedUTF8EncodingPolicy> Scanner_t;
@@ -145,7 +151,7 @@ public:
 
     size_t GetSourceLength() { return m_length; }
     size_t GetOriginalSourceLength() { return m_originalLength; }
-    static ULONG GetDeferralThreshold(Js::SourceDynamicProfileManager* profileManager);
+    static ULONG GetDeferralThreshold(bool isProfileLoaded);
     BOOL DeferredParse(Js::LocalFunctionId functionId);
     BOOL IsDeferredFnc();
     void ReduceDeferredScriptLength(ULONG chars);
