@@ -433,8 +433,8 @@ public:
     void SetVirtualAllocator(TVirtualAlloc * virtualAllocator)
     {
         Assert(virtualAllocator != nullptr);
-        AssertMsg(this->virtualAllocator == nullptr, "VirtualAllocWrapper is already set?");
-        this->virtualAllocator = virtualAllocator;
+        PVOID oldVirtualAllocator = InterlockedCompareExchangePointer((PVOID*) &(this->virtualAllocator), virtualAllocator, NULL);
+        AssertMsg(oldVirtualAllocator == nullptr || oldVirtualAllocator == (PVOID)virtualAllocator, "Trying to set a new value for VirtualAllocWrapper ? - INVALID");
     }
     bool IsPreReservedPageAllocator() { return virtualAllocator != nullptr; }
 

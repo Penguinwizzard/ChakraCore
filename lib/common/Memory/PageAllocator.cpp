@@ -139,12 +139,12 @@ SegmentBase<T>::Initialize(DWORD allocFlags, bool excludeGuardPages)
 #endif
     }
 
-    if (originalAddress == nullptr)
+    if (this->address == nullptr)
     {
         this->allocator->ReportFailure(totalPages * AutoSystemInfo::PageSize);
     }
     
-    return (originalAddress != nullptr);
+    return (this->address != nullptr);
 }
 
 //=============================================================================================================
