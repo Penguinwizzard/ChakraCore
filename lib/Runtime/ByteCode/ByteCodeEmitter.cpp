@@ -2752,6 +2752,8 @@ void ByteCodeGenerator::EmitDefaultArgs(FuncInfo *funcInfo, ParseNode *pnode)
 
         m_writer.MarkLabel(doneLabel);
 
+        this->SetHasTry(true);
+
         funcInfo->ReleaseTmpRegister(rejectLocation);
         funcInfo->ReleaseTmpRegister(promiseLocation);
         funcInfo->ReleaseTmpRegister(catchArgLocation);

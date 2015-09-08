@@ -51,12 +51,10 @@ namespace Js
         return false;
     }
 
-    void JavascriptError::AdjustNameOrMessageProperty(PropertyId propertyId)
+    void JavascriptError::SetNotEnumerable(PropertyId propertyId)
     {
-        // Error.prototype.name and Error.prototype.message are not enumerable in ES5.
-        // See section 15 and subsection 15.11.4.
-        // These properties were, however, enumerable, up to IE9.
-        Assert(propertyId == PropertyIds::name || propertyId == PropertyIds::message);        
+        // Not all the properties of Error objects (like description, stack, number etc.) are in the spec.
+        // Other browsers have all the properties as not-enumerable. With this change we are matching them.
         SetEnumerable(propertyId, false);
     }
 
@@ -78,7 +76,7 @@ namespace Js
         if (messageString)
         {
             JavascriptOperators::SetProperty(pError, pError, PropertyIds::message, messageString, scriptContext);
-            pError->AdjustNameOrMessageProperty(PropertyIds::message);
+            pError->SetNotEnumerable(PropertyIds::message);
         }
         
         JavascriptExceptionContext exceptionContext;
@@ -132,8 +130,10 @@ namespace Js
         if (hasNumber)
         {
             JavascriptOperators::InitProperty(pError, PropertyIds::number, JavascriptNumber::ToVarNoCheck(number, scriptContext));
+            pError->SetNotEnumerable(PropertyIds::number);
         }
         JavascriptOperators::SetProperty(pError, pError, PropertyIds::description, descriptionString, scriptContext);
+        pError->SetNotEnumerable(PropertyIds::description);
 
         return JavascriptError::NewInstance(function, pError, callInfo, args);
     }
@@ -428,12 +428,14 @@ namespace Js
         }
 
         JavascriptOperators::InitProperty(pError, PropertyIds::message, messageString);
-        pError->AdjustNameOrMessageProperty(PropertyIds::message);
+        pError->SetNotEnumerable(PropertyIds::message);
 
         JavascriptOperators::InitProperty(pError, PropertyIds::description, messageString);
+        pError->SetNotEnumerable(PropertyIds::description);
 
         hr = JavascriptError::GetErrorNumberFromResourceID(hr);
         JavascriptOperators::InitProperty(pError, PropertyIds::number, JavascriptNumber::ToVar(hr, scriptContext));
+        pError->SetNotEnumerable(PropertyIds::number);
     }
 
     void JavascriptError::SetErrorMessage(JavascriptError *pError, HRESULT hr, ScriptContext* scriptContext, va_list argList)

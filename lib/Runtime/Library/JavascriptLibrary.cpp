@@ -43,6 +43,8 @@ namespace Js
 
     void JavascriptLibrary::Initialize(ScriptContext* scriptContext, GlobalObject * globalObject)
     {
+        Configuration::Global.libraryIsInitializing = true;
+
         PROBE_STACK(scriptContext, Js::Constants::MinStackDefault);
 #ifdef PROFILE_EXEC
         scriptContext->ProfileBegin(Js::LibInitPhase);
@@ -97,6 +99,8 @@ namespace Js
 #ifdef PROFILE_EXEC
         scriptContext->ProfileEnd(Js::LibInitPhase);
 #endif
+
+        Configuration::Global.libraryIsInitializing = false;
     }
 
     void JavascriptLibrary::Uninitialize()
@@ -2536,6 +2540,7 @@ namespace Js
                 DeferredTypeHandler<InitializeRegexPrototype>::GetDefaultInstance()));
         }
 
+        AssertMsg(regexPrototype, "Where's regexPrototype?");
         regexType = DynamicType::New(scriptContext, TypeIds_RegEx, regexPrototype, nullptr,
             SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
 
@@ -5804,6 +5809,7 @@ namespace Js
     JavascriptRegExp* JavascriptLibrary::CreateRegExp(UnifiedRegex::RegexPattern* pattern)
     {
         AssertMsg(regexType, "Where's regexType?");
+        AssertMsg(regexPrototype, "Where's regexPrototype?");
         return RecyclerNew(this->GetRecycler(), JavascriptRegExp, pattern, regexType);
     }
 

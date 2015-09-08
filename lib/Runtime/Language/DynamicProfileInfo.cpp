@@ -343,7 +343,7 @@ DynamicProfileInfo::hasLdFldCallSiteInfo()
 }
 
 bool
-DynamicProfileInfo::RecordLdFldCallSiteInfo(FunctionBody* functionBody, RecyclableObject* callee)
+DynamicProfileInfo::RecordLdFldCallSiteInfo(FunctionBody* functionBody, RecyclableObject* callee, bool callApplyTarget)
 {
     auto SetBits = [&]() -> bool {
         this->bits.hasLdFldCallSite = true;
@@ -359,7 +359,8 @@ DynamicProfileInfo::RecordLdFldCallSiteInfo(FunctionBody* functionBody, Recyclab
     {
         // We can inline fastDOM getter/setter.
         // We can directly call Math.max/min as apply targets.
-        if (calleeFunctionInfo->GetAttributes() & Js::FunctionInfo::Attributes::BuiltInInlinableAsLdFldInlinee)
+        if ((calleeFunctionInfo->GetAttributes() & Js::FunctionInfo::Attributes::NeedCrossSiteSecurityCheck) ||
+            (callApplyTarget && (calleeFunctionInfo->GetAttributes() & Js::FunctionInfo::Attributes::BuiltInInlinableAsLdFldInlinee)))
         {
             if (functionBody->GetScriptContext() == callee->GetScriptContext())
             {

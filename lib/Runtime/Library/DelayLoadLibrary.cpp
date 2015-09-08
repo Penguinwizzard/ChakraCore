@@ -400,6 +400,7 @@ namespace Js
         return SetProcessValidCallTargets(hProcess, VirtualAddress, RegionSize, NumberOfOffets, OffsetInformation);
 #endif
     }
+#endif
 
     BOOL DelayLoadWinCoreProcessThreads::GetMitigationPolicyForProcess(
         __in HANDLE hProcess,
@@ -428,7 +429,33 @@ namespace Js
         return BinaryFeatureControl::GetMitigationPolicyForProcess(hProcess, MitigationPolicy, lpBuffer, nLength);
 #endif // ENABLE_DEBUG_CONFIG_OPTIONS
     }
+
+    BOOL DelayLoadWinCoreProcessThreads::GetProcessInformation(
+        __in HANDLE hProcess,
+        __in PROCESS_INFORMATION_CLASS ProcessInformationClass,
+        __out_bcount(nLength) PVOID lpBuffer,
+        __in SIZE_T nLength
+        )
+    {
+#if defined(DELAYLOAD_SET_CFG_TARGET) || defined(_M_ARM)
+        if (m_hModule)
+        {
+            if (m_pfnGetProcessInformation == nullptr)
+            {
+                m_pfnGetProcessInformation = (PFNCGetProcessInformation) GetFunction("GetProcessInformation");
+                if (m_pfnGetProcessInformation == nullptr)
+                {
+                    return FALSE;
+                }
+            }
+
+            Assert(m_pfnGetProcessInformation != nullptr);
+            return m_pfnGetProcessInformation(hProcess, ProcessInformationClass, lpBuffer, nLength);
+        }
 #endif
+        return FALSE;
+    }
+
     // Implement this function inlined so that WinRT.lib can be used without the runtime.
     HRESULT DelayLoadWinType::RoGetMetaDataFile(
         _In_ const HSTRING name,

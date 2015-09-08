@@ -228,9 +228,4 @@ namespace Js
 
         return JavascriptFunction::IsEnumerable(propertyId);
     }
-
-    BOOL JavascriptGeneratorFunction::HasInstance(Var instance, ScriptContext* scriptContext, IsInstInlineCache* inlineCache)
-    {
-        return this->scriptFunction->HasInstance(instance, scriptContext, inlineCache);
-    }
 } // namespace Js

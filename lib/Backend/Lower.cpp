@@ -20298,12 +20298,6 @@ Lowerer::LowerNewConcatStrMultiBE(IR::Instr * instr)
         IR::Opnd * concatItemOpnd = concatItemInstr->GetSrc1();
         Assert(concatItemOpnd->IsRegOpnd());
 
-        // If only some of the SetConcatStrMultiItemBE instructions were CSE'd and the rest, along with the 
-        // NewConcatStrMultiBE instruction, were in a loop, the strings on the CSE'd Set*BE instructions
-        // will become live on back edge. Add them to addToLiveOnBackEdgeSyms here and clear when we reach
-        // the Set*BE instruction.
-        this->addToLiveOnBackEdgeSyms->Set(concatItemOpnd->GetStackSym()->m_id);
-
         // If one of the concat items is equal to the dst of the concat expressions (s = s + a + b), 
         // hoist the load of that item to before the setting of the new string to the dst.
         if (concatItemOpnd->IsEqual(newString))
@@ -20314,6 +20308,18 @@ Lowerer::LowerNewConcatStrMultiBE(IR::Instr * instr)
                 newConcatItemOpnd = hoistSrcInstr->GetDst();
             }
             concatItemOpnd = newConcatItemOpnd;
+        }
+        else
+        {   
+            // If only some of the SetConcatStrMultiItemBE instructions were CSE'd and the rest, along with the NewConcatStrMultiBE 
+            // instruction, were in a loop, the strings on the CSE'd Set*BE instructions will become live on back edge. Add them to 
+            // addToLiveOnBackEdgeSyms here and clear when we reach the Set*BE instruction.
+            
+            // Note that we are doing this only for string opnds which are not the same as the dst of the concat expression. Reasoning 
+            // behind this is that if a loop has a concat expression with one of its sources same as the dst, the Set*BE instruction 
+            // for the dst wouldn't have been CSE'd as the dst's value is changing in the loop and the backward pass should have set the
+            // symbol as live on backedge.
+            this->addToLiveOnBackEdgeSyms->Set(concatItemOpnd->GetStackSym()->m_id);
         }
         IR::Instr * newConcatItemInstr = IR::Instr::New(Js::OpCode::SetConcatStrMultiItem,
                                                         IR::IndirOpnd::New(newString, index, TyVar, instr->m_func),

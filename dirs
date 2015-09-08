@@ -1,4 +1,4 @@
 DIRS = \
     manifests{!MOBILECORE} \
     lib \
-    bin \
+    bin{!cs_xbox} \

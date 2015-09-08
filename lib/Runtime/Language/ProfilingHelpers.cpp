@@ -1180,7 +1180,7 @@ namespace Js
         if((cacheType & (CacheType_Getter | CacheType_Setter)) &&
             inlineCache->GetGetterSetter(object->GetType(), &callee))
         {
-            const bool canInline = functionBody->GetDynamicProfileInfo()->RecordLdFldCallSiteInfo(functionBody, callee);
+            const bool canInline = functionBody->GetDynamicProfileInfo()->RecordLdFldCallSiteInfo(functionBody, callee, false /*callApplyTarget*/);
             if(canInline)
             {
                 //updates this fldInfoFlags passed by referrence.
@@ -1199,7 +1199,7 @@ namespace Js
         RecyclableObject *callee = null;
         if(!(fldInfoFlags & FldInfo_Polymorphic) && inlineCache->GetCallApplyTarget(object, &callee))
         {
-            const bool canInline = functionBody->GetDynamicProfileInfo()->RecordLdFldCallSiteInfo(functionBody, callee);
+            const bool canInline = functionBody->GetDynamicProfileInfo()->RecordLdFldCallSiteInfo(functionBody, callee, true /*callApplyTarget*/);
             if(canInline)
             {
                 //updates the fldInfoFlags passed by referrence.

@@ -989,7 +989,7 @@ namespace Js
         stackPropertyDescriptor.SetSetter(accessor);
         stackPropertyDescriptor.SetGetter(accessor);
         stackPropertyDescriptor.SetConfigurable(true);
-        stackPropertyDescriptor.SetEnumerable(true);
+        stackPropertyDescriptor.SetEnumerable(false);
         HRESULT hr;
         BEGIN_TRANSLATE_EXCEPTION_AND_ERROROBJECT_TO_HRESULT_NESTED
         {

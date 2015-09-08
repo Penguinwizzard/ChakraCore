@@ -52,7 +52,8 @@ private:
                                     const StackSym *symThis, IR::Instr ** returnInstr, uint recursiveInlineDepth);
 
     IR::Instr * InlineCall(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, const Js::FunctionCodeGenJitTimeData* inlinerData, const StackSym *symThis, bool* pIsInlined, uint callSiteId, uint recursiveInlineDepth);
-    bool        InlineCallTarget(IR::Instr *callInstr, const Js::FunctionCodeGenJitTimeData* inlinerData, Js::FunctionInfo *callFuncInfo, const StackSym *symThis, IR::Instr ** returnInstr, uint recursiveInlineDepth);
+    bool        InlineCallTarget(IR::Instr *callInstr, const Js::FunctionCodeGenJitTimeData* inlinerData, const Js::FunctionCodeGenJitTimeData** pInlineeData, Js::FunctionInfo *callFuncInfo, 
+                                    const StackSym *symThis, IR::Instr ** returnInstr, uint recursiveInlineDepth);
     
     bool        InlConstFoldArg(IR::Instr *instr, __in_ecount(callerArgOutCount) IR::Instr *callerArgOuts[], Js::ArgSlot callerArgOutCount);
     bool        InlConstFold(IR::Instr *instr, IntConstType *pValue, __in_ecount(callerArgOutCount) IR::Instr *callerArgOuts[], Js::ArgSlot callerArgOutCount);

@@ -320,48 +320,28 @@ LPCWSTR AutoSystemInfo::GetJscriptDllFileName()
 
 bool AutoSystemInfo::IsLowMemoryProcess()
 {
-    ULONG64 commit = this->GetAvailableCommit();
+    ULONG64 commit = ULONG64(-1);
+    this->GetAvailableCommit(&commit);
     return commit <= CONFIG_FLAG(LowMemoryCap);
 }
 
-ULONG64 AutoSystemInfo::GetAvailableCommit()
+BOOL AutoSystemInfo::GetAvailableCommit(ULONG64 *pCommit)
 {
     Assert(initialized);
 
-    if (this->availableCommit != 0)
+    // Non-zero value indicates we've been here before.
+    if (this->availableCommit == 0)
     {
-        // Non-zero value indicates we've been here before.
-        return this->availableCommit;
+        return false;
     }
 
-    // -1 indicates that we can't get the value from the API, so don't keep trying.
-    this->availableCommit = (ULONG64)-1;
+    *pCommit = this->availableCommit;
+    return true;
+}
 
-#ifdef NTBUILD
-    HMODULE hModule = LoadLibraryExW(L"kernel32.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
-
-    if (hModule)
-    {
-        typedef BOOL (*ProcessInfoFn)(
-            HANDLE, 
-            PROCESS_INFORMATION_CLASS, 
-            LPVOID, 
-            DWORD);
-
-        ProcessInfoFn fn = (ProcessInfoFn)GetProcAddress(hModule, "GetProcessInformation");
-        if (fn)
-        {
-            APP_MEMORY_INFORMATION AppMemInfo;
-
-            BOOL success = fn(this->processHandle, ProcessAppMemoryInfo, &AppMemInfo, sizeof(AppMemInfo));
-            if (success)
-            {
-                this->availableCommit = AppMemInfo.AvailableCommit;
-            }
-        }
-    }
-#endif
-    return this->availableCommit;
+void AutoSystemInfo::SetAvailableCommit(ULONG64 commit)
+{
+    ::InterlockedCompareExchange64((volatile LONG64 *)&this->availableCommit, commit, 0);
 }
 
 //

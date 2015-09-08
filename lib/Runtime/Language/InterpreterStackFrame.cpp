@@ -3412,7 +3412,7 @@ namespace Js
         if ((cacheType & (CacheType_Getter | CacheType_Setter)) && GetInlineCache(inlineCacheIndex)->GetGetterSetter(obj->GetType(), &callee))
         {
             const auto functionBody = this->m_functionBody;
-            bool canInline = dynamicProfileInfo->RecordLdFldCallSiteInfo(functionBody, callee);
+            bool canInline = dynamicProfileInfo->RecordLdFldCallSiteInfo(functionBody, callee, false /*callApplyTarget*/);
             if (canInline)
             {
                 //updates this fldInfoFlags passed by referrence.
@@ -3429,7 +3429,7 @@ namespace Js
         if (!(fldInfoFlags & FldInfo_Polymorphic) && GetInlineCache(inlineCacheIndex)->GetCallApplyTarget(obj, &callee))
         {
             const auto functionBody = this->m_functionBody;
-            bool canInline = dynamicProfileInfo->RecordLdFldCallSiteInfo(functionBody, callee);
+            bool canInline = dynamicProfileInfo->RecordLdFldCallSiteInfo(functionBody, callee, true /*callApplyTarget*/);
             if (canInline)
             {
                 //updates this fldInfoFlags passed by referrence.

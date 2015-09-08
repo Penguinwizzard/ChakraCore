@@ -3494,9 +3494,29 @@ ParseNodePtr Parser::ParseMemberList(LPCOLESTR pNameHint, ulong* pNameHintLength
                 {
                     if (!isObjectPattern)
                     {
-                        pnodeIdent = CreateNameNode(pidHint, idHintIchMin, idHintIchLim);
+                        // While doing a look up for identifier reference we have to make sure that we look in the param scope too.
+                        // So we have to pass the right maxscopeid.
                         BlockInfoStack *blockInfo = GetCurrentFunctionBlockInfo();
-                        PidRefStack *ref = this->FindOrAddPidRef(pidHint, blockInfo->pnodeBlock->sxBlock.blockId);
+                        BlockInfoStack* outerBlockInfo = blockInfo->pBlockInfoOuter;
+                        int maxScopeId = blockInfo->pnodeBlock->sxBlock.blockId;
+                        if (outerBlockInfo != nullptr)
+                        {
+                            if (outerBlockInfo->pnodeBlock->sxBlock.scope != nullptr
+                                && outerBlockInfo->pnodeBlock->sxBlock.scope->GetScopeType() == ScopeType_CatchParamPattern)
+                            {
+                                maxScopeId = outerBlockInfo->pnodeBlock->sxBlock.blockId;
+                            }
+
+                            if (blockInfo->pnodeBlock->sxBlock.scope != nullptr
+                                && blockInfo->pnodeBlock->sxBlock.scope->GetScopeType() == ScopeType_FunctionBody
+                                && outerBlockInfo->pnodeBlock->sxBlock.blockType == PnodeBlockType::Parameter)
+                            {
+                                maxScopeId = outerBlockInfo->pnodeBlock->sxBlock.blockId;
+                            }
+                        }
+
+                        pnodeIdent = CreateNameNode(pidHint, idHintIchMin, idHintIchLim);
+                        PidRefStack *ref = this->FindOrAddPidRef(pidHint, blockInfo->pnodeBlock->sxBlock.blockId, maxScopeId);
                         pnodeIdent->sxPid.SetSymRef(ref);
                     }
 
@@ -6590,6 +6610,8 @@ void Parser::TransformAsyncFncDeclAST(ParseNodePtr *pnodeBody, bool fLambda)
 
     // Create the return : return spawn(function*() {}, this) 
     pnodeReturn = CreateNodeWithScanner<knopReturn>();
+    pnodeReturn->sxStmt.grfnop = 0;
+    pnodeReturn->sxStmt.pnodeOuter = nullptr;
     pnodeReturn->sxReturn.pnodeExpr = pnodeAsyncSpawn;
     if (fLambda)
     {

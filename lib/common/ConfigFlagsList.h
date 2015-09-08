@@ -432,7 +432,7 @@ PHASE(All)
 #define DEFAULT_CONFIG_PageHeapBlockType    ((Js::Number) PageHeapBlockTypeFilter::PageHeapBlockTypeFilterAll)
 #endif
 
-#define DEFAULT_CONFIG_LowMemoryCap         (0x2E400)   // 185 MB - based on memory cap for process on low-capacity device
+#define DEFAULT_CONFIG_LowMemoryCap         (0xB900000) // 185 MB - based on memory cap for process on low-capacity device
 
 #define DEFAULT_CONFIG_MaxCodeFill          (500)
 #define DEFAULT_CONFIG_MaxLoopsPerFunction  (10)
@@ -474,6 +474,10 @@ PHASE(All)
 
 // ES6 DEFAULT BEHAVIOR
 #define DEFAULT_CONFIG_ES6                     (true)  // master flag to gate all P0-spec-test compliant ES6 features
+
+//CollectGarbage is legacy IE specific global function disabled in Edge.
+//Disabled due to security implications. 
+#define DEFAULT_CONFIG_CollectGarbage          (false)
 
 // ES6 sub-feature gate - to enable-disable ES6 subfeature when ES6 flag is enabled
 #define DEFAULT_CONFIG_ES6Species              (true)
@@ -839,6 +843,8 @@ FLAGNR(Boolean, LetConst              , "Enable support of 'let' and 'const' key
 FLAGNR(Boolean, Map                   , "Enable ES6 Map feature", DEFAULT_CONFIG_Map)
 FLAGNR(Boolean, Set                   , "Enable ES6 Set feature", DEFAULT_CONFIG_Set)
 FLAGNR(Boolean, WeakMap               , "Enable ES6 WeakMap feature", DEFAULT_CONFIG_WeakMap)
+
+FLAGNR(Boolean, CollectGarbage        , "Enable CollectGarbage API", DEFAULT_CONFIG_CollectGarbage)
 
 FLAGR (Boolean, Intl                  , "Intl object support", DEFAULT_CONFIG_Intl)
 FLAGNR(Boolean, IntlBuiltIns          , "Intl built-in function support", DEFAULT_CONFIG_IntlBuiltIns)
