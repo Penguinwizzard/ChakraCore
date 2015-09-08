@@ -2270,35 +2270,20 @@ namespace Js
     template <typename T, bool checkNaNAndNegZero>
     Var JavascriptNativeArray::FindMinOrMax(Js::ScriptContext * scriptContext, bool findMax)
     {
+        AssertMsg(this->HasNoMissingValues(), "Fastpath is only for arrays with one segment and no missing values");
         uint len = this->GetLength();
+        
         Js::SparseArraySegment<T>* headSegment = ((Js::SparseArraySegment<T>*)this->GetHead());
-        bool hasNoMissingValues = this->HasNoMissingValues();
+        uint headSegLen = headSegment->length;
+        Assert(headSegLen == len);
 
         if (headSegment->next == nullptr)
         {
             T currentRes = headSegment->elements[0];
-            uint headSegLen = headSegment->length;
-            uint i = 0;
-            if (hasNoMissingValues)
-            {
-                for (; i < headSegLen; i++)
-                {
-                    T compare = headSegment->elements[i];
-                    if (checkNaNAndNegZero && JavascriptNumber::IsNan(double(compare)))
-                    {
-                        return scriptContext->GetLibrary()->GetNaN();
-                    }
-                    if (findMax ? currentRes < compare : currentRes > compare ||
-                        (checkNaNAndNegZero && compare == 0 && Js::JavascriptNumber::IsNegZero(double(currentRes))))
-                    {
-                        currentRes = compare;
-                    }
-                }
-            }
-            for (; i < len; i++)
+            for (uint i = 0; i < headSegLen; i++)
             {
                 T compare = headSegment->elements[i];
-                if (SparseArraySegment<T>::IsMissingItem(&compare) || (checkNaNAndNegZero && JavascriptNumber::IsNan(double(compare))))
+                if (checkNaNAndNegZero && JavascriptNumber::IsNan(double(compare)))
                 {
                     return scriptContext->GetLibrary()->GetNaN();
                 }
@@ -2313,7 +2298,7 @@ namespace Js
         else
         {
             AssertMsg(false, "FindMinOrMax currently supports native arrays with only one segment");
-            return nullptr;
+            Throw::FatalInternalError();
         }
     }
 

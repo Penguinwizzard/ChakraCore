@@ -242,7 +242,7 @@ BailOutInfo::FinalizeBailOutRecord(Func * func)
           currentBailOutRecord->m_bailOutRecordId, [=](GlobalBailOutRecordDataRow *row) {
             int32 inlineeArgStackSize = func->GetInlineeArgumentStackSize();
             int localsSize = func->m_localStackHeight + func->m_ArgumentsOffset;
-            int offset = -(((int32)row->offset) + StackSymBias);
+            int offset = -(row->offset + StackSymBias);
             if (offset < 0)
             {
                 // Not stack offset
@@ -862,7 +862,9 @@ BailOutRecord::RestoreValue(IR::BailOutKind bailOutKind, Js::JavascriptCallStack
     }
     else
     {
+        // Assert(false) here?
         BAILOUT_VERBOSE_TRACE(newInstance->function->GetFunctionBody(), bailOutKind, L"Not live\n");
+        return;
     }
 
     if (isFloat64)
@@ -2505,7 +2507,8 @@ void GlobalBailOutRecordDataTable::Finalize(NativeCodeData::Allocator *allocator
 #endif
 }
 
-void  GlobalBailOutRecordDataTable::AddOrUpdateRow(JitArenaAllocator *allocator, uint32 bailOutRecordId, uint32 regSlot, bool isFloat, bool isInt, bool isSimd128F4, bool isSimd128I4, uint32 offset, uint *lastUpdatedRowIndex)
+
+void  GlobalBailOutRecordDataTable::AddOrUpdateRow(JitArenaAllocator *allocator, uint32 bailOutRecordId, uint32 regSlot, bool isFloat, bool isInt, bool isSimd128F4, bool isSimd128I4, int32 offset, uint *lastUpdatedRowIndex)
 {
     Assert(offset != 0);
     const int INITIAL_TABLE_SIZE = 64;

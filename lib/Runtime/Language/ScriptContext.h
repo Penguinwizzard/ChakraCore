@@ -160,6 +160,7 @@ namespace Js
         // TODO: Revisit this and check what other flags are required
         bool SupportsES3()           const { return true; }
         bool SupportsES3Extensions() const { return true; }        
+        bool IsCollectGarbageEnabled() const { return CONFIG_FLAG(CollectGarbage); }
                                 
         Number GetHostType() const    // Returns one of enum HostType values (see ConfigFlagsTable.h).
         {
@@ -637,6 +638,7 @@ public:
         ScriptContextTelemetry* telemetry;
     public:
         ScriptContextTelemetry& GetTelemetry();
+        bool HasTelemetry();
 
 #endif
 #ifdef INLINE_CACHE_STATS

@@ -21,7 +21,7 @@ Inline::Optimize(Func *func, IR::Instr *callerArgOuts[], Js::ArgSlot callerArgOu
     bool doFixedMethods = !PHASE_OFF(Js::FixedMethodsPhase, func->GetJnFunction());
     const auto inlinerData = func->m_workItem->RecyclableData()->JitTimeData();
 
-    bool doInline = (inlinerData->InlineeCount() > 0 || inlinerData->isLdFldInlineePresent());
+    bool doInline = (inlinerData->InlineeCount() > 0 || inlinerData->IsLdFldInlineePresent());
     if (PHASE_OFF(Js::InlinePhase, this->topFunc) ||
         PHASE_OFF(Js::InlinePhase, func->GetJnFunction()) ||
         func->IsJitInDebugMode())
@@ -70,7 +70,7 @@ Inline::Optimize(Func *func, IR::Instr *callerArgOuts[], Js::ArgSlot callerArgOu
             case Js::OpCode::LdFld:
                 {
                     // Try inlining of getter setter
-                    if (!inlinerData->isLdFldInlineePresent())
+                    if (!inlinerData->IsLdFldInlineePresent())
                     {
                         break;
                     }
@@ -344,7 +344,7 @@ Inline::Optimize(Func *func, IR::Instr *callerArgOuts[], Js::ArgSlot callerArgOu
                     if(++this->inlineesProcessed == inlinerData->InlineeCount())
                     {
                         //getterSetter inline caches are shared and we have no way of knowing how many more are present
-                        if (!inlinerData->isLdFldInlineePresent() && !doFixedMethods)
+                        if (!inlinerData->IsLdFldInlineePresent() && !doFixedMethods)
                         {
                             return ;
                         }
@@ -2509,7 +2509,7 @@ bool Inline::InlineApplyTarget(IR::Instr *callInstr, const Js::FunctionCodeGenJi
     const auto inlineCacheIndex = applyTargetLdOpnd->AsPropertySymOpnd()->m_inlineCacheIndex;
     const auto inlineeData = inlinerData->GetLdFldInlinee(inlineCacheIndex);
 
-    if (inlineeData && !inlineeData->GetFunctionBody())
+    if (SkipCallApplyTargetInlining_Shared(callInstr, inlinerData, inlineeData, /*isApplyTarget*/ true, /*isCallTarget*/ false))
     {
         *pInlineeData = inlineeData;
         return false;
@@ -2519,11 +2519,6 @@ bool Inline::InlineApplyTarget(IR::Instr *callInstr, const Js::FunctionCodeGenJi
     {
         INLINE_TESTTRACE(L"INLINING: Skip Inline: Skipping apply target inlining in top func\tCaller: %s\t(%s) \tTop Func:%s\t(%s)\n", inlinerData->GetFunctionBody()->GetDisplayName(),
 	        inlinerData->GetFunctionBody()->GetDebugNumberSet(debugStringBuffer), this->topFunc->GetJnFunction()->GetDisplayName(), this->topFunc->GetJnFunction()->GetDebugNumberSet(debugStringBuffer2));
-        return false;
-    }
-    
-    if (SkipCallApplyTargetInlining_Shared(callInstr, inlinerData, inlineeData, /*isApplyTarget*/ true, /*isCallTarget*/ false))
-    {
         return false;
     }
 
@@ -2718,11 +2713,12 @@ Inline::InlineCall(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, const Js::F
     }
 
     *pIsInlined = true;
+    const Js::FunctionCodeGenJitTimeData * inlineeData = nullptr;
 
     IR::Instr * returnInstr = null;
     if (!PHASE_OFF(Js::InlineCallTargetPhase, this->topFunc))
     {
-        if (InlineCallTarget(callInstr, inlinerData, funcInfo, symCallerThis, &returnInstr, recursiveInlineDepth))
+        if (InlineCallTarget(callInstr, inlinerData, &inlineeData, funcInfo, symCallerThis, &returnInstr, recursiveInlineDepth))
         {
             Assert(returnInstr);
             return returnInstr;
@@ -2821,7 +2817,8 @@ Inline::InlineCall(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, const Js::F
 }
 
 bool 
-Inline::InlineCallTarget(IR::Instr *callInstr, const Js::FunctionCodeGenJitTimeData* inlinerData, Js::FunctionInfo *callFuncInfo, const StackSym *symCallerThis, IR::Instr ** returnInstr, uint recursiveInlineDepth)
+Inline::InlineCallTarget(IR::Instr *callInstr, const Js::FunctionCodeGenJitTimeData* inlinerData, const Js::FunctionCodeGenJitTimeData** pInlineeData, Js::FunctionInfo *callFuncInfo, 
+                            const StackSym *symCallerThis, IR::Instr ** returnInstr, uint recursiveInlineDepth)
 {
     IR::Opnd* src1 = callInstr->GetSrc1();
     Assert(src1->IsRegOpnd());
@@ -2850,6 +2847,7 @@ Inline::InlineCallTarget(IR::Instr *callInstr, const Js::FunctionCodeGenJitTimeD
     
     if (SkipCallApplyTargetInlining_Shared(callInstr, inlinerData, inlineeData, /*isApplyTarget*/ false, /*isCallTarget*/ true))
     {
+        *pInlineeData = inlineeData;
         return false;
     }
 
@@ -2936,7 +2934,18 @@ Inline::SkipCallApplyTargetInlining_Shared(IR::Instr *callInstr, const Js::Funct
         return true;
     }
 
-    if (!inlinerData->isLdFldInlineePresent())
+    if (!inlineeData->GetFunctionBody())
+    {
+        if (isCallTarget)
+        {
+            INLINE_TESTTRACE(L"INLINING: Skip Inline: Skipping .call inlining, target is a built-in\tCaller: %s\t(#%d) \tTop Func:%s\t(#%d)\n",
+                inlinerData->GetFunctionBody()->GetDisplayName(), inlinerData->GetFunctionBody()->GetDebugNumberSet(debugStringBuffer),
+                this->topFunc->GetJnFunction()->GetDisplayName(), this->topFunc->GetJnFunction()->GetDebugNumberSet(debugStringBuffer2));
+        }
+        return true;
+    }
+
+    if (!inlinerData->IsLdFldInlineePresent())
     {
         INLINE_TESTTRACE(L"INLINING: Skip Inline: Skipping %s target inlining, not registered as a LdFld inlinee \tInlinee: %s (#%d)\tCaller: %s\t(#%d) \tTop Func:%s\t(#%d)\n", isApplyTarget ? L"apply" : L"call", 
             inlineeData->GetFunctionBody()->GetDisplayName(), inlineeData->GetFunctionBody()->GetDebugNumberSet(debugStringBuffer),

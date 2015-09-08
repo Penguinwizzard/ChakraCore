@@ -304,11 +304,13 @@ namespace Js
 #if DBG
         template <class T> void OP_ArgOut_ANonVar(const unaligned T* playout);
 #endif
+
         BOOL OP_BrFalse_A(Var aValue, ScriptContext* scriptContext);
         BOOL OP_BrTrue_A(Var aValue, ScriptContext* scriptContext);
         BOOL OP_BrNotNull_A(Var aValue);
         BOOL OP_BrOnHasProperty(Var argInstance, uint propertyIdIndex, ScriptContext* scriptContext);
         BOOL OP_BrOnNoProperty(Var argInstance, uint propertyIdIndex, ScriptContext* scriptContext);
+        BOOL OP_BrOnClassConstructor(Var aValue);
 
         RecyclableObject * OP_CallGetFunc(Var target);
 
@@ -331,7 +333,7 @@ namespace Js
         template <class T> void OP_CallI(const unaligned T* playout, unsigned flags) { OP_CallCommon(playout, OP_CallGetFunc(GetRegAllowStackVar(playout->Function)), flags); }
         template <class T> void OP_CallIExtended(const unaligned T* playout, unsigned flags) { OP_CallCommon(playout, OP_CallGetFunc(GetRegAllowStackVar(playout->Function)), flags, (playout->Options & CallIExtended_SpreadArgs) ? m_reader.ReadAuxArray<uint32>(playout->SpreadAuxOffset, this->GetFunctionBody()) : nullptr); }
         template <class T> void OP_CallIExtendedFlags(const unaligned T* playout, unsigned flags) { OP_CallCommon(playout, OP_CallGetFunc(GetRegAllowStackVar(playout->Function)), flags | playout->callFlags, (playout->Options & CallIExtended_SpreadArgs) ? m_reader.ReadAuxArray<uint32>(playout->SpreadAuxOffset, this->GetFunctionBody()) : nullptr); }
-        template <class T> void OP_CallIFlags(const unaligned T* playout, unsigned flags) { playout->callFlags & Js::CallFlags::CallFlags_NewTarget ? OP_CallPutCommon(playout, OP_CallGetFunc(GetRegAllowStackVar(playout->Function))) : OP_CallCommon(playout, OP_CallGetFunc(GetRegAllowStackVar(playout->Function)), flags | playout->callFlags); }
+        template <class T> void OP_CallIFlags(const unaligned T* playout, unsigned flags) { playout->callFlags == Js::CallFlags::CallFlags_NewTarget ? OP_CallPutCommon(playout, OP_CallGetFunc(GetRegAllowStackVar(playout->Function))) : OP_CallCommon(playout, OP_CallGetFunc(GetRegAllowStackVar(playout->Function)), flags | playout->callFlags); }
 
         template <class T> void OP_ProfiledCallI(const unaligned OpLayoutDynamicProfile<T>* playout, unsigned flags) { OP_ProfileCallCommon(playout, OP_CallGetFunc(GetRegAllowStackVar(playout->Function)), flags, playout->profileId); }
         template <class T> void OP_ProfiledCallIExtended(const unaligned OpLayoutDynamicProfile<T>* playout, unsigned flags) { OP_ProfileCallCommon(playout, OP_CallGetFunc(GetRegAllowStackVar(playout->Function)), flags, playout->profileId, Js::Constants::NoInlineCacheIndex, (playout->Options & CallIExtended_SpreadArgs) ? m_reader.ReadAuxArray<uint32>(playout->SpreadAuxOffset, this->GetFunctionBody()) : nullptr); }
@@ -339,12 +341,12 @@ namespace Js
         template <class T> void OP_ProfiledCallIWithICIndex(const unaligned OpLayoutDynamicProfile<T>* playout, unsigned flags) { OP_ProfileCallCommon(playout, OP_CallGetFunc(GetRegAllowStackVar(playout->Function)), flags, playout->profileId, playout->inlineCacheIndex); }
         template <class T> void OP_ProfiledCallIExtendedWithICIndex(const unaligned OpLayoutDynamicProfile<T>* playout, unsigned flags) { OP_ProfileCallCommon(playout, OP_CallGetFunc(GetRegAllowStackVar(playout->Function)), flags, playout->profileId, playout->inlineCacheIndex, (playout->Options & CallIExtended_SpreadArgs) ? m_reader.ReadAuxArray<uint32>(playout->SpreadAuxOffset, this->GetFunctionBody()) : nullptr); }
         template <class T> void OP_ProfiledCallIExtendedFlagsWithICIndex(const unaligned OpLayoutDynamicProfile<T>* playout, unsigned flags) { OP_ProfileCallCommon(playout, OP_CallGetFunc(GetRegAllowStackVar(playout->Function)), flags | playout->callFlags, playout->profileId, playout->inlineCacheIndex, (playout->Options & CallIExtended_SpreadArgs) ? m_reader.ReadAuxArray<uint32>(playout->SpreadAuxOffset, this->GetFunctionBody()) : nullptr); }
-        template <class T> void OP_ProfiledCallIFlags(const unaligned T* playout, unsigned flags) { playout->callFlags & Js::CallFlags::CallFlags_NewTarget ? OP_CallPutCommon(playout, OP_CallGetFunc(GetRegAllowStackVar(playout->Function))) : OP_ProfileCallCommon(playout, OP_CallGetFunc(GetRegAllowStackVar(playout->Function)), flags | playout->callFlags, playout->profileId); }
+        template <class T> void OP_ProfiledCallIFlags(const unaligned T* playout, unsigned flags) { playout->callFlags == Js::CallFlags::CallFlags_NewTarget ? OP_CallPutCommon(playout, OP_CallGetFunc(GetRegAllowStackVar(playout->Function))) : OP_ProfileCallCommon(playout, OP_CallGetFunc(GetRegAllowStackVar(playout->Function)), flags | playout->callFlags, playout->profileId); }
 
         template <class T> void OP_ProfiledReturnTypeCallI(const unaligned OpLayoutDynamicProfile<T>* playout, unsigned flags) { OP_ProfileReturnTypeCallCommon(playout, OP_CallGetFunc(GetRegAllowStackVar(playout->Function)), flags, playout->profileId); }
         template <class T> void OP_ProfiledReturnTypeCallIExtended(const unaligned OpLayoutDynamicProfile<T>* playout, unsigned flags) { OP_ProfileReturnTypeCallCommon(playout, OP_CallGetFunc(GetRegAllowStackVar(playout->Function)), flags, playout->profileId, (playout->Options & CallIExtended_SpreadArgs) ? m_reader.ReadAuxArray<uint32>(playout->SpreadAuxOffset, this->GetFunctionBody()) : nullptr); }
         template <class T> void OP_ProfiledReturnTypeCallIExtendedFlags(const unaligned OpLayoutDynamicProfile<T>* playout, unsigned flags) { OP_ProfileReturnTypeCallCommon(playout, OP_CallGetFunc(GetRegAllowStackVar(playout->Function)), flags | playout->callFlags, playout->profileId, (playout->Options & CallIExtended_SpreadArgs) ? m_reader.ReadAuxArray<uint32>(playout->SpreadAuxOffset, this->GetFunctionBody()) : nullptr); }
-        template <class T> void OP_ProfiledReturnTypeCallIFlags(const unaligned T* playout, unsigned flags) { playout->callFlags & Js::CallFlags::CallFlags_NewTarget ? OP_CallPutCommon(playout, OP_CallGetFunc(GetRegAllowStackVar(playout->Function))) : OP_ProfileReturnTypeCallCommon(playout, OP_CallGetFunc(GetRegAllowStackVar(playout->Function)), flags | playout->callFlags, playout->profileId); }
+        template <class T> void OP_ProfiledReturnTypeCallIFlags(const unaligned T* playout, unsigned flags) { playout->callFlags == Js::CallFlags::CallFlags_NewTarget ? OP_CallPutCommon(playout, OP_CallGetFunc(GetRegAllowStackVar(playout->Function))) : OP_ProfileReturnTypeCallCommon(playout, OP_CallGetFunc(GetRegAllowStackVar(playout->Function)), flags | playout->callFlags, playout->profileId); }
 
         // Patching Fastpath Operations
         template <class T> void OP_GetRootProperty(unaligned T* playout);

@@ -588,7 +588,7 @@ namespace Js
             FunctionInfo *const inlinee,
             bool isInlined = true);
         uint InlineeCount() const;
-        bool isLdFldInlineePresent() const { return ldFldInlineeCount != 0;}
+        bool IsLdFldInlineePresent() const { return ldFldInlineeCount != 0;}
 
         RecyclerWeakReference<FunctionBody> *GetWeakFuncRef() const { return this->weakFuncRef; }
         void SetWeakFuncRef(RecyclerWeakReference<FunctionBody> *weakFuncRef)

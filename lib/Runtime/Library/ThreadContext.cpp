@@ -217,6 +217,33 @@ ThreadContext::ThreadContext(AllocationPolicyManager * allocationPolicyManager, 
     this->projectionMemoryInformation = nullptr;
 #endif
 #endif
+
+    this->InitAvailableCommit();
+}
+
+void ThreadContext::InitAvailableCommit()
+{
+    // Once per process: get the available commit for the process from the OS and push it to the AutoSystemInfo.
+    // (This must be done lazily, outside DllMain. And it must be done from the Runtime, since the common lib
+    // doesn't have access to the DelayLoadLibrary stuff.)
+    ULONG64 commit;
+    BOOL success = AutoSystemInfo::Data.GetAvailableCommit(&commit);
+    if (!success)
+    {
+        APP_MEMORY_INFORMATION AppMemInfo;
+        commit = (ULONG64)-1;
+        success = GetWinCoreProcessThreads()->GetProcessInformation(
+            GetCurrentProcess(),
+            ProcessAppMemoryInfo,
+            &AppMemInfo,
+            sizeof(AppMemInfo));
+        if (success)
+        {
+            commit = AppMemInfo.AvailableCommit;
+        }
+        AutoSystemInfo::Data.SetAvailableCommit(commit);
+    }
+    Assert(commit != 0);
 }
 
 void ThreadContext::SetStackProber(StackProber * stackProber)
@@ -3765,13 +3792,13 @@ Js::DelayLoadWinCoreMemory * ThreadContext::GetWinCoreMemoryLibrary()
     delayLoadWinCoreMemoryLibrary.EnsureFromSystemDirOnly();
     return &delayLoadWinCoreMemoryLibrary;
 }
+#endif
 
 Js::DelayLoadWinCoreProcessThreads * ThreadContext::GetWinCoreProcessThreads()
 {
     delayLoadWinCoreProcessThreads.EnsureFromSystemDirOnly();
     return &delayLoadWinCoreProcessThreads;
 }
-#endif
 
 Js::DelayLoadWinRtString * ThreadContext::GetWinRTStringLibrary()
 {

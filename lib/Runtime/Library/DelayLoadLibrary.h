@@ -268,6 +268,7 @@ namespace Js
             _In_reads_(NumberOfOffets) PCFG_CALL_TARGET_INFO OffsetInformation
             );
     };
+#endif
 
     class DelayLoadWinCoreProcessThreads sealed : public DelayLoadLibrary
     {
@@ -277,9 +278,17 @@ namespace Js
         typedef FNCGetMitigationPolicyForProcess* PFNCGetMitigationPolicyForProcess;
         PFNCGetMitigationPolicyForProcess m_pfnGetProcessMitigationPolicy;
 
+        typedef BOOL FNCGetProcessInformation(HANDLE, PROCESS_INFORMATION_CLASS, PVOID, SIZE_T);
+        typedef FNCGetProcessInformation* PFNCGetProcessInformation;
+        PFNCGetProcessInformation m_pfnGetProcessInformation;
+
     public:
-        DelayLoadWinCoreProcessThreads() : DelayLoadLibrary(),
-            m_pfnGetProcessMitigationPolicy(nullptr) { }
+        DelayLoadWinCoreProcessThreads() : 
+            DelayLoadLibrary(),
+            m_pfnGetProcessMitigationPolicy(nullptr), 
+            m_pfnGetProcessInformation(nullptr)
+            {
+            }
 
         LPCTSTR GetLibraryName() const { return L"api-ms-win-core-processthreads-l1-1-3.dll"; }
 
@@ -289,8 +298,15 @@ namespace Js
             __out_bcount(nLength) PVOID lpBuffer,
             __in SIZE_T nLength
             );
+
+        virtual BOOL GetProcessInformation(
+            __in HANDLE hProcess,
+            __in PROCESS_INFORMATION_CLASS ProcessInformationClass,
+            __out_bcount(nLength) PVOID lpBuffer,
+            __in SIZE_T nLength
+            );
     };
-#endif
+
     // Implement this function inlined so that WinRT.lib can be used without the runtime.
     inline HRESULT DelayLoadWinRtRoParameterizedIID::RoGetParameterizedTypeInstanceIID(
             __in UINT32 nameElementCount,

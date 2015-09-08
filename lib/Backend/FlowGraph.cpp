@@ -311,6 +311,7 @@ FlowGraph::RunPeeps()
         case Js::OpCode::BrFncCachedScopeEq:
         case Js::OpCode::BrFncCachedScopeNeq:
         case Js::OpCode::BrOnObject_A:
+        case Js::OpCode::BrOnClassConstructor:
             if (tryUnsignedCmpPeep) 
             {
                 this->UnsignedCmpPeep(instr);

@@ -352,6 +352,7 @@ public:
 
         return &this->stackLimitForCurrentThread; 
     }
+    void InitAvailableCommit();
 
     // This is always on for JSRT APIs.
     bool IsRentalThreadingEnabledInJSRT() const { return true; }
@@ -648,8 +649,8 @@ private:
 #endif
 #ifdef _CONTROL_FLOW_GUARD
     Js::DelayLoadWinCoreMemory delayLoadWinCoreMemoryLibrary;
-    Js::DelayLoadWinCoreProcessThreads delayLoadWinCoreProcessThreads;
 #endif
+    Js::DelayLoadWinCoreProcessThreads delayLoadWinCoreProcessThreads;
 
     // Number of script context attached with probe manager.
     // This counter will be used as addref when the script context is created, this way we maintain the life of diagnostic object.
@@ -739,8 +740,8 @@ public:
 #endif
 #ifdef _CONTROL_FLOW_GUARD
     Js::DelayLoadWinCoreMemory * GetWinCoreMemoryLibrary();
-    Js::DelayLoadWinCoreProcessThreads * GetWinCoreProcessThreads();
 #endif
+    Js::DelayLoadWinCoreProcessThreads * GetWinCoreProcessThreads();
 
     JITTimer JITTelemetry;
     ParserTimer ParserTelemetry;

@@ -47,7 +47,7 @@ namespace Js
             return static_cast<JavascriptError *>(RecyclableObject::FromVar(aValue));
         }
 
-        void AdjustNameOrMessageProperty(PropertyId propertyId);
+        void SetNotEnumerable(PropertyId propertyId);
 
         static Var NewInstance(RecyclableObject* function, JavascriptError* pError, CallInfo callInfo, Arguments args);
         class EntryInfo

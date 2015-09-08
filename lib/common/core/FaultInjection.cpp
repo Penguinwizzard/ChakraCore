@@ -399,7 +399,9 @@ Label:
             fprintf(stderr, "FaultInjection - Total Allocation Count:%d\n", countOfInjectionPoints);
             fflush(stderr);
             FILE *fp;
-            if (fopen_s(&fp, "ChakraFaultInjectionCount.txt", "w") == 0)
+            char countFileName[64];
+            sprintf_s(countFileName, "ChakraFaultInjectionCount_%d.txt", GetCurrentProcessId());
+            if (fopen_s(&fp, countFileName, "w") == 0)
             {
                 fprintf(fp, "FaultInjection - Total Allocation Count:%d\n", countOfInjectionPoints);
                 fflush(fp);

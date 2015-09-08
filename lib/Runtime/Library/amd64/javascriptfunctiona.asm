@@ -423,6 +423,13 @@ align 16
         sub rsp, 20h
         lea rcx, [rsp + 30h]
         call ?DeferredParse@JavascriptFunction@Js@@SAP6APEAXPEAVRecyclableObject@2@UCallInfo@2@ZZPEAPEAVScriptFunction@2@@Z
+
+ifdef _CONTROL_FLOW_GUARD
+        mov rcx, rax                            ; __guard_check_icall_fptr requires the call target in rcx. 
+        call [__guard_check_icall_fptr]         ; verify that the call target is valid
+        mov rax, rcx                            ;restore call target
+endif
+
         add rsp, 20h
 
         lea rsp, [rbp]
@@ -454,6 +461,13 @@ align 16
 
         sub rsp, 20h
         call ?DeferredDeserialize@JavascriptFunction@Js@@SAP6APEAXPEAVRecyclableObject@2@UCallInfo@2@ZZPEAVScriptFunction@2@@Z
+
+ifdef _CONTROL_FLOW_GUARD
+        mov rcx, rax                            ; __guard_check_icall_fptr requires the call target in rcx. 
+        call [__guard_check_icall_fptr]         ; verify that the call target is valid
+        mov rax, rcx                            ;restore call target
+endif
+
         add rsp, 20h
 
         lea rsp, [rbp]

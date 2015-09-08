@@ -13,6 +13,7 @@ namespace Js {
         m_byteCodeInLoopCount = 0;
         m_functionWrite = null;
         m_pMatchingNode = null;
+        m_matchingNodeRefCount = 0;
         m_tmpRegCount = 0;
         DebugOnly(isInitialized = false);
         DebugOnly(isInUse = false);
@@ -272,6 +273,7 @@ namespace Js {
         rootObjectLoadMethodInlineCacheOffsets.Clear(m_labelOffsets->GetAllocator());
         callRegToLdFldCacheIndexMap->ResetNoDelete();
         m_pMatchingNode = null;
+        m_matchingNodeRefCount = 0;
         m_functionWrite = null;
         m_byteCodeCount = 0;
         m_byteCodeWithoutLDACount = 0;
@@ -2383,6 +2385,10 @@ StoreCommon:
     {
         if (m_pMatchingNode)
         {
+            if (m_pMatchingNode == node)
+            {
+                m_matchingNodeRefCount++;
+            }
             return;
         }
 #ifdef BYTECODE_BRANCH_ISLAND
@@ -2407,6 +2413,11 @@ StoreCommon:
         AssertMsg(m_pMatchingNode, "EndStatement unmatched to StartStartment");
         if (m_pMatchingNode != node)
         {
+            return;
+        }
+        else if (m_matchingNodeRefCount > 0)
+        {
+            m_matchingNodeRefCount--;
             return;
         }
 

@@ -1020,7 +1020,10 @@ namespace Js
         JavascriptPromise* promise = FromVar(promiseResolve->GetEntryPoint()(promiseResolve, CallInfo(CallFlags_Value, 2), library->GetPromiseConstructor(), value));
 
         JavascriptFunction* promiseThen = JavascriptFunction::FromVar(JavascriptOperators::GetProperty(promise, PropertyIds::then, scriptContext));
-        promiseThen->GetEntryPoint()(promiseThen, CallInfo(CallFlags_Value, 2), promise, successFunction, failFunction);
+        promiseThen->GetEntryPoint()(promiseThen, CallInfo(CallFlags_Value, 2), promise, successFunction);
+
+        JavascriptFunction* promiseCatch = JavascriptFunction::FromVar(JavascriptOperators::GetProperty(promise, PropertyIds::catch_, scriptContext));
+        promiseCatch->GetEntryPoint()(promiseCatch, CallInfo(CallFlags_Value, 2), promise, failFunction);
     }
 
     // NewPromiseCapability as described in ES6.0 (draft 29) Section 25.4.1.6

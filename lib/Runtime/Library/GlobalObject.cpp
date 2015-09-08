@@ -1520,6 +1520,7 @@ LHexError:
         }
 #endif
 
+
 #if DBG
         // Clear 1K of stack to avoid false positive in debug build.
         // Because we don't debug build don't stack pack
@@ -1528,6 +1529,13 @@ LHexError:
         Assert(!(callInfo.Flags & CallFlags_New));
 
         ScriptContext* scriptContext = function->GetScriptContext();
+
+        if (!scriptContext->GetConfig()->IsCollectGarbageEnabled())
+        {
+            //We expose the CollectGarbage API with flag for compat reasons. Though we don't trigger GC if CollectGarbage key is not present. 
+            return scriptContext->GetLibrary()->GetUndefined();
+        }
+
         Recycler* recycler = scriptContext->GetRecycler();
         if (recycler)
         {

@@ -4199,8 +4199,9 @@ IRBuilder::BuildCallIFlags(Js::OpCode newOpcode, uint32 offset)
     if (instr->m_opcode == Js::OpCode::CallIFlags)
     {
         instr->m_opcode =
-            layout->callFlags == Js::CallFlags::CallFlags_NewTarget  ? Js::OpCode::CallIPut :
-            layout->callFlags == Js::CallFlags::CallFlags_New      ? Js::OpCode::CallINew :
+            layout->callFlags == Js::CallFlags::CallFlags_NewTarget ? Js::OpCode::CallIPut :
+            layout->callFlags == (Js::CallFlags::CallFlags_NewTarget | Js::CallFlags::CallFlags_New | Js::CallFlags::CallFlags_ExtraArg) ? Js::OpCode::CallINewTargetNew :
+            layout->callFlags == Js::CallFlags::CallFlags_New ? Js::OpCode::CallINew :
             instr->m_opcode;
     }
 }
@@ -4289,8 +4290,9 @@ IRBuilder::BuildProfiledCallIFlagsWithICIndex(Js::OpCode newOpcode, uint32 offse
     if (instr->m_opcode == Js::OpCode::CallIFlags)
     {
         instr->m_opcode =
-            layout->callFlags == Js::CallFlags::CallFlags_NewTarget  ? Js::OpCode::CallIPut :
-            layout->callFlags == Js::CallFlags::CallFlags_New      ? Js::OpCode::CallINew :
+            layout->callFlags == Js::CallFlags::CallFlags_NewTarget ? Js::OpCode::CallIPut :
+            layout->callFlags == (Js::CallFlags::CallFlags_NewTarget | Js::CallFlags::CallFlags_New | Js::CallFlags::CallFlags_ExtraArg) ? Js::OpCode::CallINewTargetNew :
+            layout->callFlags == Js::CallFlags::CallFlags_New ? Js::OpCode::CallINew :
             instr->m_opcode;
     }
 }
@@ -4328,7 +4330,8 @@ IRBuilder::BuildProfiledCallIExtendedFlags(Js::OpCode newOpcode, uint32 offset)
     {
         instr->m_opcode =
             layout->callFlags == Js::CallFlags::CallFlags_ExtraArg ? Js::OpCode::CallIEval :
-            layout->callFlags == Js::CallFlags::CallFlags_New      ? Js::OpCode::CallIExtendedNew :
+            layout->callFlags == Js::CallFlags::CallFlags_New ? Js::OpCode::CallIExtendedNew :
+            layout->callFlags == (Js::CallFlags::CallFlags_New | Js::CallFlags::CallFlags_ExtraArg | Js::CallFlags::CallFlags_NewTarget) ? Js::OpCode::CallIExtendedNewTargetNew :
             instr->m_opcode;
     }
 }
@@ -4365,7 +4368,8 @@ IRBuilder::BuildProfiledCallIExtendedFlagsWithICIndex(Js::OpCode newOpcode, uint
     {
         instr->m_opcode =
             layout->callFlags == Js::CallFlags::CallFlags_ExtraArg ? Js::OpCode::CallIEval :
-            layout->callFlags == Js::CallFlags::CallFlags_New      ? Js::OpCode::CallIExtendedNew :
+            layout->callFlags == Js::CallFlags::CallFlags_New ? Js::OpCode::CallIExtendedNew :
+            layout->callFlags == (Js::CallFlags::CallFlags_New | Js::CallFlags::CallFlags_ExtraArg | Js::CallFlags::CallFlags_NewTarget) ? Js::OpCode::CallIExtendedNewTargetNew :
             instr->m_opcode;
     }
 }
@@ -4396,9 +4400,11 @@ IRBuilder::BuildProfiledCallIFlags(Js::OpCode newOpcode, uint32 offset)
     if (instr->m_opcode == Js::OpCode::CallIFlags)
     {
         instr->m_opcode = Js::OpCode::CallIPut;
-        instr->m_opcode =
-            layout->callFlags == Js::CallFlags::CallFlags_NewTarget  ? Js::OpCode::CallIPut :
-            layout->callFlags == Js::CallFlags::CallFlags_New      ? Js::OpCode::CallINew :
+
+        instr->m_opcode = 
+            layout->callFlags == Js::CallFlags::CallFlags_NewTarget ? Js::OpCode::CallIPut :
+            layout->callFlags == (Js::CallFlags::CallFlags_NewTarget | Js::CallFlags::CallFlags_New | Js::CallFlags::CallFlags_ExtraArg) ? Js::OpCode::CallINewTargetNew :
+            layout->callFlags == Js::CallFlags::CallFlags_New ? Js::OpCode::CallINew :
             instr->m_opcode;
     }
 }

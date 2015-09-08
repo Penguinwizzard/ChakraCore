@@ -33,7 +33,8 @@ public:
     bool IsAtomPlatform() const;
 #endif
     bool IsLowMemoryProcess();
-    ULONG64 GetAvailableCommit();
+    BOOL GetAvailableCommit(ULONG64 *pCommit);
+    void SetAvailableCommit(ULONG64 commit);
     DWORD GetNumberOfLogicalProcessors() const { return this->dwNumberOfProcessors; }
     DWORD GetNumberOfPhysicalProcessors() const { return this->dwNumberOfPhyscialProcessors; }
 

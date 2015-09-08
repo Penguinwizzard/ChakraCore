@@ -5017,9 +5017,8 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
         if (this->telemetry != nullptr)
         {
             // If an exception (e.g. out-of-memory) happens during InitializeAllocations then `this->telemetry` will be null and the Close method will still be called, hence this guard expression.
-            this->telemetry->OutputTelemetry();
+            this->telemetry->OutputPrint();
         }
-            
 #endif
 
         Output::Flush();
@@ -5113,6 +5112,10 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
     ScriptContextTelemetry& ScriptContext::GetTelemetry()
     {
         return *this->telemetry;
+    }
+    bool ScriptContext::HasTelemetry()
+    {
+        return this->telemetry != nullptr;
     }
 #endif
 

@@ -361,7 +361,7 @@ inline void BailOutRecord::MapArgOutOffsets(Fn fn)
 
 struct GlobalBailOutRecordDataRow
 {
-    uint32 offset;
+    int32 offset;
     uint32 start;           // start bailOutId
     uint32 end;             // end bailOutId
     unsigned regSlot : 30;
@@ -385,7 +385,7 @@ struct GlobalBailOutRecordDataTable
     bool isInlinedConstructor;
     bool isLoopBody;
     void Finalize(NativeCodeData::Allocator *allocator, JitArenaAllocator *tempAlloc);
-    void AddOrUpdateRow(JitArenaAllocator *allocator, uint32 bailOutRecordId, uint32 regSlot, bool isFloat, bool isInt, bool isSimd128F4, bool isSimd128I4, uint32 offset, uint *lastUpdatedRowIndex);
+    void AddOrUpdateRow(JitArenaAllocator *allocator, uint32 bailOutRecordId, uint32 regSlot, bool isFloat, bool isInt, bool isSimd128F4, bool isSimd128I4, int32 offset, uint *lastUpdatedRowIndex);
 
     template<class Fn>
     void IterateGlobalBailOutRecordTableRows(uint32 bailOutRecordId, Fn callback)
