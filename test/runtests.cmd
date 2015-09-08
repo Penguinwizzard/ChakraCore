@@ -347,6 +347,7 @@ goto :main
   call :doSilent md %_logsRoot%\%_BuildArch%_%_BuildType%\%_TESTCONFIG%
 
   set _rlArgs=%_Binary%
+  set _rlArgs=%_rlArgs% -target:%_BuildArchMapped%
   set _rlArgs=%_rlArgs% -nottags:fail
   set _rlArgs=%_rlArgs% %_RL_THREAD_FLAGS%
   set _rlArgs=%_rlArgs% %_DIRS%
