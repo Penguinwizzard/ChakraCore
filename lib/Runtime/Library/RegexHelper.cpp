@@ -750,7 +750,7 @@ namespace Js
             // If lastIndex > 0, append input[0..offset] characters to the result
             if (offset > 0)
             {
-                concatenated.Append(input, 0, offset);
+                concatenated.Append(input, 0, min(offset, inputLength));
             }
 
             do
