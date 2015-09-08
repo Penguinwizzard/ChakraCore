@@ -63,6 +63,12 @@ IRBuilder::InsertBailOutForDebugger(uint byteCodeOffset, IR::BailOutKind kind, I
     IR::BailOutInstr * instr = IR::BailOutInstr::New(Js::OpCode::BailForDebugger, kind, bailOutInfo, bailOutInfo->bailOutFunc);
     if (insertBeforeInstr)
     {
+        instr->SetByteCodeOffset(byteCodeOffset);
+        uint32 offset = insertBeforeInstr->GetByteCodeOffset();
+        if (m_offsetToInstruction[offset] == insertBeforeInstr)
+        {
+            m_offsetToInstruction[offset] = instr;
+        }
         insertBeforeInstr->InsertBefore(instr);
     }
     else
@@ -152,6 +158,11 @@ void IRBuilder::InsertBailOnNoProfile(IR::Instr *const insertBeforeInstr)
 
     IR::Instr *const bailOnNoProfileInstr = IR::Instr::New(Js::OpCode::BailOnNoProfile, m_func);
     bailOnNoProfileInstr->SetByteCodeOffset(insertBeforeInstr);
+    uint32 offset = insertBeforeInstr->GetByteCodeOffset();
+    if (m_offsetToInstruction[offset] == insertBeforeInstr)
+    {
+        m_offsetToInstruction[offset] = bailOnNoProfileInstr;
+    }
     insertBeforeInstr->InsertBefore(bailOnNoProfileInstr);
 }
 
