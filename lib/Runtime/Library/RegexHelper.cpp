@@ -879,6 +879,11 @@ namespace Js
         replaceArgs[0] = scriptContext->GetLibrary()->GetUndefined();
         replaceArgs[numGroups + 2] = input;
         
+        if (offset > 0)
+        {
+            concatenated.Append(input, 0, min(offset, inputLength));
+        }
+
         do
         {
             if (offset > inputLength)
