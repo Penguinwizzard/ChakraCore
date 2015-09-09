@@ -230,8 +230,9 @@ void ThreadContext::InitAvailableCommit()
     BOOL success = AutoSystemInfo::Data.GetAvailableCommit(&commit);
     if (!success)
     {
-        APP_MEMORY_INFORMATION AppMemInfo;
-        commit = (ULONG64)-1;
+		commit = (ULONG64)-1;
+#if NTBUILD
+		APP_MEMORY_INFORMATION AppMemInfo;
         success = GetWinCoreProcessThreads()->GetProcessInformation(
             GetCurrentProcess(),
             ProcessAppMemoryInfo,
@@ -241,6 +242,7 @@ void ThreadContext::InitAvailableCommit()
         {
             commit = AppMemInfo.AvailableCommit;
         }
+#endif
         AutoSystemInfo::Data.SetAvailableCommit(commit);
     }
     Assert(commit != 0);
