@@ -476,9 +476,9 @@ namespace Js
 #endif
             Assert(entryPointInfo->address);
             uint newOffset = CallLoopBody((JavascriptMethod)entryPointInfo->address, function, ebpPtr);
-            ptrdiff_t value = null;
+            ptrdiff_t value = NULL;
             fn->GetAsmJsFunctionInfo()->mbyteCodeTJMap->TryGetValue(newOffset, &value);
-            Assert(value != null); // value cannot be null
+            Assert(value != NULL); // value cannot be null
             BYTE* newAddress = fn->GetAsmJsFunctionInfo()->mTJBeginAddress + value;
             Assert(newAddress);
             return (uint)newAddress;

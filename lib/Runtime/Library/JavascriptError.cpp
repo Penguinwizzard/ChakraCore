@@ -66,7 +66,7 @@ namespace Js
 
         Var newTarget = callInfo.Flags & CallFlags_NewTarget ? args.Values[args.Info.Count] : args[0];
         bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && (callInfo.Flags & (CallFlags_Value|CallFlags_NewTarget)) && newTarget != nullptr && RecyclableObject::Is(newTarget);
-        JavascriptString* messageString = null;
+        JavascriptString* messageString = nullptr;
         
         if (args.Info.Count >= 2 && !JavascriptOperators::GetTypeId(args[1]) == TypeIds_Undefined)
         {
@@ -99,7 +99,7 @@ namespace Js
 
         // Proceass the arguments for IE specific behaviors for numbers and description
 
-        JavascriptString* descriptionString = null;
+        JavascriptString* descriptionString = nullptr;
         bool hasNumber = false;
         double number = 0;
         if (args.Info.Count >= 3)
@@ -126,7 +126,7 @@ namespace Js
             descriptionString = scriptContext->GetLibrary()->GetEmptyString();                
         }
 
-        Assert(descriptionString != null);
+        Assert(descriptionString != nullptr);
         if (hasNumber)
         {
             JavascriptOperators::InitProperty(pError, PropertyIds::number, JavascriptNumber::ToVarNoCheck(number, scriptContext));
@@ -281,7 +281,7 @@ namespace Js
         ErrorTypeEnum errorType;
         hr = MapHr(hr, &errorType);
 
-        JavascriptError::MapAndThrowError(scriptContext, hr, errorType, null);
+        JavascriptError::MapAndThrowError(scriptContext, hr, errorType, nullptr);
     }
 
     void __declspec(noreturn) JavascriptError::MapAndThrowError(ScriptContext* scriptContext, HRESULT hr, ErrorTypeEnum errorType, EXCEPINFO* pei, IErrorInfo * perrinfo, RestrictedErrorStrings * proerrstr, bool useErrInfoDescription)
@@ -294,7 +294,7 @@ namespace Js
     {
         Assert(pError != nullptr);
 
-        PCWSTR varName = (pei ? pei->bstrDescription : null);
+        PCWSTR varName = (pei ? pei->bstrDescription : nullptr);
         if (useErrInfoDescription)
         {
             JavascriptErrorDebug::SetErrorMessage(pError, hCode, varName, scriptContext);
@@ -414,7 +414,7 @@ namespace Js
     void JavascriptError::SetErrorMessageProperties(JavascriptError *pError, HRESULT hr, PCWSTR message, ScriptContext* scriptContext)
     {
         JavascriptString * messageString;
-        if (message != null)
+        if (message != nullptr)
         {
             // Save the runtime error message to be reported to IE.
             pError->originalRuntimeErrorMessage = message;
@@ -441,18 +441,18 @@ namespace Js
     void JavascriptError::SetErrorMessage(JavascriptError *pError, HRESULT hr, ScriptContext* scriptContext, va_list argList)
     {
         Assert(FAILED(hr));
-        wchar_t * allocatedString = null;
+        wchar_t * allocatedString = nullptr;
         
         // FACILITY_CONTROL is used for internal (activscp.idl) and legacy errors
         // FACILITY_JSCRIPT is used for newer public errors
         if (FACILITY_CONTROL == HRESULT_FACILITY(hr) || FACILITY_JSCRIPT == HRESULT_FACILITY(hr))
         {
-            if (argList != null)
+            if (argList != nullptr)
             {
                 HRESULT hrAdjusted = GetAdjustedResourceStringHr(hr, /* isFormatString */ true);
 
                 BSTR message = BstrGetResourceString(hrAdjusted);
-                if (message != null)
+                if (message != nullptr)
                 {
                     int len = _vscwprintf(message, argList);
                     Assert(len > 0);
@@ -469,16 +469,16 @@ namespace Js
                     SysFreeString(message);
                 }
             }
-            if (allocatedString == null)
+            if (allocatedString == nullptr)
             {
                 HRESULT hrAdjusted = GetAdjustedResourceStringHr(hr, /* isFormatString */ false);
 
                 BSTR message = BstrGetResourceString(hrAdjusted);
-                if (message == null)
+                if (message == nullptr)
                 {
                     message = BstrGetResourceString(IDS_UNKNOWN_RUNTIME_ERROR);
                 }
-                if (message != null)
+                if (message != nullptr)
                 {
                     uint32 len = SysStringLen(message) +1;
                     allocatedString = RecyclerNewArrayLeaf(scriptContext->GetRecycler(), wchar_t, len);
@@ -551,18 +551,18 @@ namespace Js
     void JavascriptError::SetErrorMessage(JavascriptError *pError, HRESULT hr, PCWSTR varName, ScriptContext* scriptContext)
     {
         Assert(FAILED(hr));
-        wchar_t * allocatedString = null;
+        wchar_t * allocatedString = nullptr;
 
         // FACILITY_CONTROL is used for internal (activscp.idl) and legacy errors
         // FACILITY_JSCRIPT is used for newer public errors
         if (FACILITY_CONTROL == HRESULT_FACILITY(hr) || FACILITY_JSCRIPT == HRESULT_FACILITY(hr))
         {
-            if (varName != null)
+            if (varName != nullptr)
             {
                 HRESULT hrAdjusted = GetAdjustedResourceStringHr(hr, /* isFormatString */ true);
 
                 BSTR message = BstrGetResourceString(hrAdjusted);
-                if (message != null)
+                if (message != nullptr)
                 {
                     uint32 msglen = SysStringLen(message);
                     size_t varlen = wcslen(varName);
@@ -590,20 +590,20 @@ namespace Js
                     SysFreeString(message);
                     if (outputIndex != len)
                     {
-                        allocatedString = null;
+                        allocatedString = nullptr;
                     }
                 }
             }
-            if (allocatedString == null)
+            if (allocatedString == nullptr)
             {
                 HRESULT hrAdjusted = GetAdjustedResourceStringHr(hr, /* isFormatString */ false);
 
                 BSTR message = BstrGetResourceString(hrAdjusted);
-                if (message == null)
+                if (message == nullptr)
                 {
                     message = BstrGetResourceString(IDS_UNKNOWN_RUNTIME_ERROR);
                 }
-                if (message != null)
+                if (message != nullptr)
                 {
                     uint32 len = SysStringLen(message) +1;
                     allocatedString = RecyclerNewArrayLeaf(scriptContext->GetRecycler(), wchar_t, len);
@@ -622,7 +622,7 @@ namespace Js
 
     BOOL JavascriptError::GetDiagValueString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext)
     {
-        wchar_t const *pszMessage = null;
+        wchar_t const *pszMessage = nullptr;
         GetRuntimeErrorWithScriptEnter(this, &pszMessage);
 
         if (pszMessage)
@@ -675,7 +675,7 @@ namespace Js
                 JavascriptString * messageString = JavascriptString::FromVar(description);
                 *pMessage = messageString->GetSz();
             }
-            else if (Js::JavascriptError::Is(errorObject) && Js::JavascriptError::FromVar(errorObject)->originalRuntimeErrorMessage != null)
+            else if (Js::JavascriptError::Is(errorObject) && Js::JavascriptError::FromVar(errorObject)->originalRuntimeErrorMessage != nullptr)
             {
                 // use the runtime error message
                 *pMessage = Js::JavascriptError::FromVar(errorObject)->originalRuntimeErrorMessage;
@@ -684,7 +684,7 @@ namespace Js
             {
                 // User might have create it's own Error object with JS error code, try to load the
                 // resource string from the HResult by returning null;
-                *pMessage = null;
+                *pMessage = nullptr;
             }
         }
 

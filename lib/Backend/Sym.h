@@ -68,7 +68,7 @@ public:
     static ObjectSymInfo * New(Func * func);
     static ObjectSymInfo * New(StackSym * typeSym, Func * func);
 
-    ObjectSymInfo(): m_typeSym(null), m_propertySymList(null) {};
+    ObjectSymInfo(): m_typeSym(nullptr), m_propertySymList(nullptr) {};
 
 public:
     StackSym *      m_typeSym;
@@ -162,9 +162,9 @@ public:
     void            DecrementArgSlotNum();
     Js::ArgSlot     GetParamSlotNum() const { Assert(IsParamSlotSym()); return m_paramSlotNum; }
 
-    IR::Instr *     GetInstrDef() const { return this->IsSingleDef() ? this->m_instrDef : NULL; }
+    IR::Instr *     GetInstrDef() const { return this->IsSingleDef() ? this->m_instrDef : nullptr; }
 
-    bool            HasObjectInfo() const { Assert(!IsTypeSpec()); return this->m_objectInfo != NULL; };
+    bool            HasObjectInfo() const { Assert(!IsTypeSpec()); return this->m_objectInfo != nullptr; };
     ObjectSymInfo * GetObjectInfo() const { Assert(this->m_objectInfo); return this->m_objectInfo; }
     void            SetObjectInfo(ObjectSymInfo * value) { this->m_objectInfo = value; }
     ObjectSymInfo * EnsureObjectInfo(Func * func);
@@ -293,7 +293,7 @@ public:
     bool HasInlineCacheIndex() { return m_inlineCacheIndex != -1; }
     int32 GetInlineCacheIndex() { return m_inlineCacheIndex; }
     bool HasObjectTypeSym() const { return this->m_stackSym->HasObjectTypeSym(); }
-    bool HasWriteGuardSym() const { return this->m_writeGuardSym != null; }
+    bool HasWriteGuardSym() const { return this->m_writeGuardSym != nullptr; }
     StackSym * GetObjectTypeSym() const { return this->m_stackSym->GetObjectTypeSym(); }
 
 public:

@@ -24,14 +24,14 @@ struct XDataAllocation sealed  : public SecondaryAllocation
 
     bool IsFreed() const
     {
-        return address == null;
+        return address == nullptr;
     }
 
     void Free()
     {
-        address = null;
+        address = nullptr;
         pdataCount = 0;
-        functionTable = null;
+        functionTable = nullptr;
         xdataSize = 0;
     }
 

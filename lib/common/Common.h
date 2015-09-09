@@ -34,7 +34,6 @@ namespace Js
     typedef int32 PropertyId;
     typedef unsigned long ModuleID;
 }
-#define null 0
 
 #define IsTrueOrFalse(value)     ((value) ? L"True" : L"False")
 

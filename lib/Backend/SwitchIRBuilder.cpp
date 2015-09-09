@@ -166,7 +166,7 @@ SwitchIRBuilder::EndSwitch(uint32 offset, uint32 targetOffset)
     AssertMsg(m_caseNodes->Count() == 0, "Not all switch case nodes built by end of switch");
 
     // only generate the final unconditional jump at the end of the switch
-    IR::BranchInstr * branch = IR::BranchInstr::New(Js::OpCode::Br, NULL, m_func);
+    IR::BranchInstr * branch = IR::BranchInstr::New(Js::OpCode::Br, nullptr, m_func);
     m_adapter->AddBranchInstr(branch, offset, targetOffset, true);
 
     m_profiledSwitchInstr = nullptr;
@@ -239,7 +239,7 @@ SwitchIRBuilder::OnCase(IR::RegOpnd * src1Opnd, IR::RegOpnd * src2Opnd, uint32 o
         return;
     }
 
-    branchInstr = IR::BranchInstr::New(m_eqOp, NULL, src1Opnd, src2Opnd, m_func);
+    branchInstr = IR::BranchInstr::New(m_eqOp, nullptr, src1Opnd, src2Opnd, m_func);
     branchInstr->m_isSwitchBr = true;
 
     /*
@@ -399,7 +399,7 @@ SwitchIRBuilder::BuildBinaryTraverseInstr(int start, int end, uint32 defaultLeaf
     // if the value that we are switching on is greater than the start case value
     // then we branch right to the right half of the binary search
     IR::BranchInstr* caseInstr = startNode->GetCaseInstr();
-    IR::BranchInstr* branchInstr = IR::BranchInstr::New(m_geOp, NULL, caseInstr->GetSrc1(), midNode->GetLowerBound(), m_func);
+    IR::BranchInstr* branchInstr = IR::BranchInstr::New(m_geOp, nullptr, caseInstr->GetSrc1(), midNode->GetLowerBound(), m_func);
     branchInstr->m_isSwitchBr = true;
     m_adapter->AddBranchInstr(branchInstr, startNode->GetOffset(), midNode->GetOffset(), true);
 
@@ -428,12 +428,12 @@ SwitchIRBuilder::BuildEmptyCasesInstr(CaseNode* caseNode, uint32 fallThrOffset)
     AssertMsg(caseNode->GetLowerBound() != caseNode->GetUpperBound(), "The upper bound and lower bound should not be the same");
 
     //Generate <lb instruction
-    branchInstr = IR::BranchInstr::New(m_ltOp, NULL, src1Opnd, caseNode->GetLowerBound(), m_func);
+    branchInstr = IR::BranchInstr::New(m_ltOp, nullptr, src1Opnd, caseNode->GetLowerBound(), m_func);
     branchInstr->m_isSwitchBr = true;
     m_adapter->AddBranchInstr(branchInstr, caseNode->GetOffset(), fallThrOffset, true);
 
     //Generate <=ub instruction
-    branchInstr = IR::BranchInstr::New(m_leOp, NULL, src1Opnd, caseNode->GetUpperBound(), m_func);
+    branchInstr = IR::BranchInstr::New(m_leOp, nullptr, src1Opnd, caseNode->GetUpperBound(), m_func);
     branchInstr->m_isSwitchBr = true;
     m_adapter->AddBranchInstr(branchInstr, caseNode->GetOffset(), caseNode->GetTargetOffset(), true);
 
@@ -492,7 +492,7 @@ SwitchIRBuilder::BuildLinearTraverseInstr(int start, int end, uint fallThrOffset
 
     // Adds an unconditional branch instruction at the end
 
-    IR::BranchInstr* branchInstr = IR::BranchInstr::New(Js::OpCode::Br, NULL, m_func);
+    IR::BranchInstr* branchInstr = IR::BranchInstr::New(Js::OpCode::Br, nullptr, m_func);
     branchInstr->m_isSwitchBr = true;
     m_adapter->AddBranchInstr(branchInstr, Js::Constants::NoByteCodeOffset, fallThrOffset, true);
 }
@@ -563,7 +563,7 @@ SwitchIRBuilder::BuildOptimizedIntegerCaseInstrs(uint32 targetOffset)
     int startBinaryTravIndex = 0;
     int endBinaryTravIndex = 0;
 
-    IR::MultiBranchInstr * multiBranchInstr = null;
+    IR::MultiBranchInstr * multiBranchInstr = nullptr;
 
     /*
     *   Algorithm to find chunks of consecutive integers in a given set of case arms(sorted)
@@ -629,7 +629,7 @@ SwitchIRBuilder::BuildOptimizedIntegerCaseInstrs(uint32 targetOffset)
         if (multiBranchInstr)
         {
             FixUpMultiBrJumpTable(multiBranchInstr, multiBranchInstr->GetNextRealInstr()->GetByteCodeOffset());
-            multiBranchInstr = null;
+            multiBranchInstr = nullptr;
         }
     }
     else
@@ -662,7 +662,7 @@ SwitchIRBuilder::TryBuildBinaryTreeOrMultiBrForSwitchInts(IR::MultiBranchInstr *
         if (multiBranchInstr)
         {
             FixUpMultiBrJumpTable(multiBranchInstr, multiBranchInstr->GetNextRealInstr()->GetByteCodeOffset());
-            multiBranchInstr = null;
+            multiBranchInstr = nullptr;
         }
     }
 
@@ -671,7 +671,7 @@ SwitchIRBuilder::TryBuildBinaryTreeOrMultiBrForSwitchInts(IR::MultiBranchInstr *
     if (multiBranchInstr)
     {
         FixUpMultiBrJumpTable(multiBranchInstr, fallthrOffset);
-        multiBranchInstr = null;
+        multiBranchInstr = nullptr;
     }
     multiBranchInstr = BuildMultiBrCaseInstrForInts(startjmpTableIndex, endjmpTableIndex, defaultTargetOffset);
 
@@ -945,11 +945,11 @@ SwitchIRBuilder::BuildMultiBrCaseInstrForInts(uint32 start, uint32 end, uint32 t
     }
 
     //Insert Boundary checks for the jump table - Reloc records are created later for these instructions (in FixUpMultiBrJumpTable())
-    IR::BranchInstr* lowerBoundChk = IR::BranchInstr::New(m_ltOp, NULL, srcOpnd, m_caseNodes->Item(start)->GetLowerBound(), m_func);
+    IR::BranchInstr* lowerBoundChk = IR::BranchInstr::New(m_ltOp, nullptr, srcOpnd, m_caseNodes->Item(start)->GetLowerBound(), m_func);
     lowerBoundChk->m_isSwitchBr = true;
     m_adapter->AddInstr(lowerBoundChk, lastCaseOffset);
 
-    IR::BranchInstr* upperBoundChk = IR::BranchInstr::New(m_gtOp, NULL, srcOpnd, m_caseNodes->Item(end)->GetUpperBound(), m_func);
+    IR::BranchInstr* upperBoundChk = IR::BranchInstr::New(m_gtOp, nullptr, srcOpnd, m_caseNodes->Item(end)->GetUpperBound(), m_func);
     upperBoundChk->m_isSwitchBr = true;
     m_adapter->AddInstr(upperBoundChk, lastCaseOffset);
 

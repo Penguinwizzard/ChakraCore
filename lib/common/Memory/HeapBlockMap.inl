@@ -60,7 +60,7 @@ HeapBlockMap32::Mark(void * candidate, MarkContext * markContext)
     uint id1 = GetLevel1Id(candidate);
 
     L2MapChunk * chunk = map[id1];
-    if (chunk == null)
+    if (chunk == nullptr)
     {
         // False refernce; no further processing needed.
         return;
@@ -197,7 +197,7 @@ HeapBlockMap32::MarkInterior(void * candidate, MarkContext * markContext)
     uint id1 = GetLevel1Id(candidate);
 
     L2MapChunk * chunk = map[id1];
-    if (chunk == null)
+    if (chunk == nullptr)
     {
         // False reference; no further processing needed.
         return;
@@ -327,7 +327,7 @@ HeapBlockMap64::Mark(void * candidate, MarkContext * markContext)
     uint index = GetNodeIndex(candidate);
     
     Node * node = list;
-    while (node != null)
+    while (node != nullptr)
     {
         if (node->nodeIndex == index)
         {
@@ -351,7 +351,7 @@ HeapBlockMap64::MarkInterior(void * candidate, MarkContext * markContext)
     uint index = GetNodeIndex(candidate);
 
     Node * node = list;
-    while (node != null)
+    while (node != nullptr)
     {
         if (node->nodeIndex == index)
         {

@@ -22,7 +22,7 @@ void
 NativeCodeData::DeleteChunkList(DataChunk * chunkList)
 {
     DataChunk * next = chunkList;
-    while (next != null)
+    while (next != nullptr)
     {
         DataChunk * current = next;
         next = next->next;       
@@ -30,7 +30,7 @@ NativeCodeData::DeleteChunkList(DataChunk * chunkList)
     }
 }
 
-NativeCodeData::Allocator::Allocator() : chunkList(null)
+NativeCodeData::Allocator::Allocator() : chunkList(nullptr)
 {
 #if DBG
     this->finalized = false;
@@ -42,7 +42,7 @@ NativeCodeData::Allocator::Allocator() : chunkList(null)
 
 NativeCodeData::Allocator::~Allocator()
 {
-    Assert(!finalized || this->chunkList == null);
+    Assert(!finalized || this->chunkList == nullptr);
     NativeCodeData::DeleteChunkList(this->chunkList);
     PERF_COUNTER_SUB(Code, DynamicNativeCodeDataSize, this->size);
     PERF_COUNTER_SUB(Code, TotalNativeCodeDataSize, this->size);
@@ -51,7 +51,7 @@ NativeCodeData::Allocator::~Allocator()
 char *
 NativeCodeData::Allocator::Alloc(size_t requestSize)
 {
-    char * data = null;
+    char * data = nullptr;
     Assert(!finalized);
     DataChunk * newChunk = HeapNewStructPlus(requestSize, DataChunk);
     newChunk->next = this->chunkList;
@@ -78,11 +78,11 @@ NativeCodeData::Allocator::AllocZero(size_t requestSize)
 NativeCodeData * 
 NativeCodeData::Allocator::Finalize()
 {
-    NativeCodeData * data = null;
-    if (this->chunkList != null)
+    NativeCodeData * data = nullptr;
+    if (this->chunkList != nullptr)
     {
         data = HeapNew(NativeCodeData, this->chunkList);        
-        this->chunkList = null;
+        this->chunkList = nullptr;
 #ifdef PERF_COUNTERS
         data->size = this->size;
         this->size = 0;

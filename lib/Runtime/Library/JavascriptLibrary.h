@@ -388,7 +388,7 @@ namespace Js
         bool inDispatchProfileMode;
         bool arrayObjectHasUserDefinedSpecies;
 
-        JavascriptFunction * AddFunctionToLibraryObjectWithPrototype(GlobalObject * globalObject, PropertyId propertyId, FunctionInfo * functionInfo, int length, DynamicObject * prototype = null, DynamicType * functionType = null);
+        JavascriptFunction * AddFunctionToLibraryObjectWithPrototype(GlobalObject * globalObject, PropertyId propertyId, FunctionInfo * functionInfo, int length, DynamicObject * prototype = nullptr, DynamicType * functionType = nullptr);
         JavascriptFunction * AddFunctionToLibraryObject(DynamicObject* object, PropertyId propertyId, FunctionInfo * functionInfo, int length, PropertyAttributes attributes = PropertyBuiltInMethodDefaults);
 
         JavascriptFunction * AddFunctionToLibraryObjectWithName(DynamicObject* object, PropertyId propertyId, PropertyId nameId, FunctionInfo * functionInfo, int length);
@@ -628,7 +628,7 @@ namespace Js
         DynamicType * GetStringTypeDynamic() const { return stringTypeDynamic; }
         StaticType  * GetVariantDateType() const { return variantDateType; }
         void EnsureDebugObject(DynamicObject* newDebugObject);
-        DynamicObject* GetDebugObject() const { Assert(debugObject != null); return debugObject; }
+        DynamicObject* GetDebugObject() const { Assert(debugObject != nullptr); return debugObject; }
         DynamicType * GetMapType() const { return mapType; }
         DynamicType * GetSetType() const { return setType; }
         DynamicType * GetWeakMapType() const { return weakMapType; }
@@ -1096,7 +1096,7 @@ namespace Js
         virtual void Finalize(bool isShutdown) override
         {
             __super::Finalize(isShutdown);
-            if (this->referencedPropertyRecords != null)
+            if (this->referencedPropertyRecords != nullptr)
             {
                 RECYCLER_PERF_COUNTER_SUB(PropertyRecordBindReference, this->referencedPropertyRecords->Count());
             }
@@ -1109,7 +1109,7 @@ namespace Js
         ReferencedPropertyRecordHashSet * EnsureReferencedPropertyRecordList()
         {
             ReferencedPropertyRecordHashSet* pidList = this->referencedPropertyRecords;
-            if (pidList == null)
+            if (pidList == nullptr)
             {
                 pidList = RecyclerNew(this->recycler, ReferencedPropertyRecordHashSet, this->recycler, 173);
                 this->referencedPropertyRecords = pidList;

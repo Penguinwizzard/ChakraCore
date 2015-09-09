@@ -73,7 +73,7 @@ namespace Js
         {
             JavascriptError::ThrowTypeError(requestContext, JSERR_Property_VarDate, requestContext->GetPropertyName(propertyId)->GetBuffer());
         }
-        *value = null;
+        *value = nullptr;
         return true;
     };
 
@@ -83,7 +83,7 @@ namespace Js
         {
             JavascriptError::ThrowTypeError(requestContext, JSERR_Property_VarDate, propertyNameString);
         }
-        *value = null;
+        *value = nullptr;
         return true;
     };
 
@@ -93,7 +93,7 @@ namespace Js
         {
             JavascriptError::ThrowTypeError(requestContext, JSERR_Property_VarDate, requestContext->GetPropertyName(propertyId)->GetBuffer());
         }
-        *value = null;
+        *value = nullptr;
         return true;
     };
 

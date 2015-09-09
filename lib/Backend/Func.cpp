@@ -206,7 +206,7 @@ Func::Codegen()
 
             // Delete flowGraph now
             this->m_fg->Destroy();
-            this->m_fg = NULL;
+            this->m_fg = nullptr;
         }
 
 #ifdef IR_VIEWER
@@ -505,7 +505,7 @@ Func::EnsureLocalVarSlots()
 
     if (!this->HasLocalVarSlotCreated())
     {
-        Assert(this->m_jnFunction != NULL);
+        Assert(this->m_jnFunction != nullptr);
         uint32 localSlotCount = this->m_jnFunction->GetNonTempLocalVarCount();
         if (localSlotCount && m_localVarSlotsOffset == Js::Constants::InvalidOffset)
         {
@@ -520,7 +520,7 @@ Func::EnsureLocalVarSlots()
 
             // Store in the entry point info, so that it will later be used when we do the variable inspection.
             Js::FunctionEntryPointInfo * entryPointInfo = static_cast<Js::FunctionEntryPointInfo*>(this->m_workItem->GetEntryPoint());
-            Assert(entryPointInfo != NULL);
+            Assert(entryPointInfo != nullptr);
 
             entryPointInfo->localVarSlotsOffset = AdjustOffsetValue(m_localVarSlotsOffset);
             entryPointInfo->localVarChangedOffset = AdjustOffsetValue(m_hasLocalVarChangedOffset);
@@ -596,7 +596,7 @@ Func::IsJitInDebugMode()
 bool
 Func::IsNonTempLocalVar(uint32 slotIndex)
 {
-    Assert(this->m_jnFunction != NULL);
+    Assert(this->m_jnFunction != nullptr);
     return this->m_jnFunction->IsNonTempLocalVar(slotIndex);
 }
 
@@ -625,7 +625,7 @@ Func::AjustLocalVarSlotOffset()
         int valueChangeOffset = m_hasLocalVarChangedOffset - (m_localStackHeight + m_ArgumentsOffset);
         
         Js::FunctionEntryPointInfo * entryPointInfo = static_cast<Js::FunctionEntryPointInfo*>(this->m_workItem->GetEntryPoint());
-        Assert(entryPointInfo != NULL);
+        Assert(entryPointInfo != nullptr);
 
         entryPointInfo->localVarSlotsOffset = localsOffset;
         entryPointInfo->localVarChangedOffset = valueChangeOffset;
@@ -689,7 +689,7 @@ Func::GetLocalsPointer() const
 void Func::InitStackClosureSyms()
 {
     Assert(this->DoStackFrameDisplay());
-    Assert(this->m_localClosureSym == NULL);
+    Assert(this->m_localClosureSym == nullptr);
 
     // Allocate stack space for closure pointers. Do this only if we're jitting for stack closures, and
     // tell bailout that these are not byte code symbols so that we don't try to encode them in the bailout record,
@@ -778,7 +778,7 @@ void
 Func::BeginPhase(Js::Phase tag)
 {
 #ifdef PROFILE_EXEC
-    AssertMsg((this->m_codeGenProfiler != null) == Js::Configuration::Global.flags.IsEnabled(Js::ProfileFlag),
+    AssertMsg((this->m_codeGenProfiler != nullptr) == Js::Configuration::Global.flags.IsEnabled(Js::ProfileFlag),
         "Profiler tag is supplied but the profiler pointer is NULL");
     if (this->m_codeGenProfiler)
     {        
@@ -800,7 +800,7 @@ void
 Func::EndProfiler(Js::Phase tag)
 {
 #ifdef PROFILE_EXEC
-    AssertMsg((this->m_codeGenProfiler != null) == Js::Configuration::Global.flags.IsEnabled(Js::ProfileFlag),
+    AssertMsg((this->m_codeGenProfiler != nullptr) == Js::Configuration::Global.flags.IsEnabled(Js::ProfileFlag),
         "Profiler tag is supplied but the profiler pointer is NULL");
     if (this->m_codeGenProfiler)
     {
@@ -909,7 +909,7 @@ Func::EnsureFunctionBailOutRecord()
 StackSym *
 Func::EnsureLoopParamSym()
 {
-    if (this->m_loopParamSym == NULL)
+    if (this->m_loopParamSym == nullptr)
     {
         if (this->m_localClosureSym)
         {
@@ -935,9 +935,9 @@ void
 Func::BeginClone(Lowerer * lowerer, JitArenaAllocator *alloc)
 {
     Assert(this->IsTopFunc());
-    AssertMsg(m_cloner == NULL, "Starting new clone while one is in progress");
+    AssertMsg(m_cloner == nullptr, "Starting new clone while one is in progress");
     m_cloner = JitAnew(alloc, Cloner, lowerer, alloc);
-    if (m_cloneMap == NULL)
+    if (m_cloneMap == nullptr)
     {
          m_cloneMap = JitAnew(alloc, InstrMap, alloc, 7);
     }
@@ -951,7 +951,7 @@ Func::EndClone()
     {
         m_cloner->Finish();
         JitAdelete(m_cloner->alloc, m_cloner);
-        m_cloner = NULL;
+        m_cloner = nullptr;
     }
 }
 
@@ -996,9 +996,9 @@ Func::GetCallsCountAddress() const
 RecyclerWeakReference<Js::FunctionBody> *
 Func::GetWeakFuncRef() const
 {
-    if (this->m_jitTimeData == null)
+    if (this->m_jitTimeData == nullptr)
     {
-        return null;
+        return nullptr;
     }
 
     return this->m_jitTimeData->GetWeakFuncRef();
@@ -1026,7 +1026,7 @@ Func::GetRuntimePolymorphicInlineCache(const uint index) const
     {
         return this->m_polymorphicInlineCacheInfo->GetPolymorphicInlineCaches()->GetInlineCache(this->m_jnFunction, index);
     }
-    return null;
+    return nullptr;
 }
 
 byte 
@@ -1044,9 +1044,9 @@ Func::GetPolyCacheUtil(const uint index) const
 Js::ObjTypeSpecFldInfo*
 Func::GetObjTypeSpecFldInfo(const uint index) const
 {
-    if (this->m_jitTimeData == null)
+    if (this->m_jitTimeData == nullptr)
     {
-        return null;
+        return nullptr;
     }
     Assert(this->m_jitTimeData->GetObjTypeSpecFldInfoArray());
 
@@ -1056,21 +1056,21 @@ Func::GetObjTypeSpecFldInfo(const uint index) const
 Js::ObjTypeSpecFldInfo*
 Func::GetGlobalObjTypeSpecFldInfo(uint propertyInfoId) const
 {
-    Assert(this->m_jitTimeData != null);
+    Assert(this->m_jitTimeData != nullptr);
     return this->m_jitTimeData->GetGlobalObjTypeSpecFldInfo(propertyInfoId);
 }
 
 void
 Func::SetGlobalObjTypeSpecFldInfo(uint propertyInfoId, Js::ObjTypeSpecFldInfo* info)
 {
-    Assert(this->m_jitTimeData != null);
+    Assert(this->m_jitTimeData != nullptr);
     this->m_jitTimeData->SetGlobalObjTypeSpecFldInfo(propertyInfoId, info);
 }
 
 void
 Func::EnsurePinnedTypeRefs()
 {
-    if (this->pinnedTypeRefs == null)
+    if (this->pinnedTypeRefs == nullptr)
     {
         this->pinnedTypeRefs = JitAnew(this->m_alloc, TypeRefSet, this->m_alloc);
     }
@@ -1086,7 +1086,7 @@ Func::PinTypeRef(void* typeRef)
 void 
 Func::EnsureSingleTypeGuards()
 {
-    if (this->singleTypeGuards == null)
+    if (this->singleTypeGuards == nullptr)
     {
         this->singleTypeGuards = JitAnew(this->m_alloc, TypePropertyGuardDictionary, this->m_alloc);
     }
@@ -1115,7 +1115,7 @@ Func::GetOrCreateSingleTypeGuard(Js::Type* type)
 void 
 Func::EnsureEquivalentTypeGuards()
 {
-    if (this->equivalentTypeGuards == null)
+    if (this->equivalentTypeGuards == nullptr)
     {
         this->equivalentTypeGuards = JitAnew(this->m_alloc, EquivalentTypeGuardList, this->m_alloc);
     }
@@ -1141,7 +1141,7 @@ Func::CreateEquivalentTypeGuard(Js::Type* type, uint32 objTypeSpecFldId)
 void
 Func::EnsurePropertyGuardsByPropertyId()
 {
-    if (this->propertyGuardsByPropertyId == null)
+    if (this->propertyGuardsByPropertyId == nullptr)
     {
         this->propertyGuardsByPropertyId = JitAnew(this->m_alloc, PropertyGuardByPropertyIdMap, this->m_alloc);
     }
@@ -1150,7 +1150,7 @@ Func::EnsurePropertyGuardsByPropertyId()
 void
 Func::EnsureCtorCachesByPropertyId()
 {
-    if (this->ctorCachesByPropertyId == null)
+    if (this->ctorCachesByPropertyId == nullptr)
     {
         this->ctorCachesByPropertyId = JitAnew(this->m_alloc, CtorCachesByPropertyIdMap, this->m_alloc);
     }
@@ -1159,10 +1159,10 @@ Func::EnsureCtorCachesByPropertyId()
 void 
 Func::LinkGuardToPropertyId(Js::PropertyId propertyId, Js::JitIndexedPropertyGuard* guard)
 {
-    Assert(guard != null);
-    Assert(guard->GetValue() != null);
+    Assert(guard != nullptr);
+    Assert(guard->GetValue() != NULL);
 
-    Assert(this->propertyGuardsByPropertyId != null);
+    Assert(this->propertyGuardsByPropertyId != nullptr);
 
     IndexedPropertyGuardSet* set;
     if (!this->propertyGuardsByPropertyId->TryGetValue(propertyId, &set))
@@ -1177,8 +1177,8 @@ Func::LinkGuardToPropertyId(Js::PropertyId propertyId, Js::JitIndexedPropertyGua
 void 
 Func::LinkCtorCacheToPropertyId(Js::PropertyId propertyId, Js::JitTimeConstructorCache* cache)
 {
-    Assert(cache != null);
-    Assert(this->ctorCachesByPropertyId != null);
+    Assert(cache != nullptr);
+    Assert(this->ctorCachesByPropertyId != nullptr);
 
     CtorCacheSet* set;
     if (!this->ctorCachesByPropertyId->TryGetValue(propertyId, &set))
@@ -1192,27 +1192,27 @@ Func::LinkCtorCacheToPropertyId(Js::PropertyId propertyId, Js::JitTimeConstructo
 
 Js::JitTimeConstructorCache* Func::GetConstructorCache(const Js::ProfileId profiledCallSiteId)
 {
-    Assert(GetJnFunction() != null);
+    Assert(GetJnFunction() != nullptr);
     Assert(profiledCallSiteId < GetJnFunction()->GetProfiledCallSiteCount());
-    Assert(this->constructorCaches != null);
+    Assert(this->constructorCaches != nullptr);
     return this->constructorCaches[profiledCallSiteId];
 }
 
 void Func::SetConstructorCache(const Js::ProfileId profiledCallSiteId, Js::JitTimeConstructorCache* constructorCache)
 {
     const auto functionBody = this->GetJnFunction();
-    Assert(functionBody != null);
+    Assert(functionBody != nullptr);
     Assert(profiledCallSiteId < functionBody->GetProfiledCallSiteCount());
-    Assert(constructorCache != null);
-    Assert(this->constructorCaches != null);
-    Assert(this->constructorCaches[profiledCallSiteId] == null);
+    Assert(constructorCache != nullptr);
+    Assert(this->constructorCaches != nullptr);
+    Assert(this->constructorCaches[profiledCallSiteId] == nullptr);
     this->constructorCacheCount++;
     this->constructorCaches[profiledCallSiteId] = constructorCache;
 }
 
 void Func::EnsurePropertiesWrittenTo()
 {
-    if (this->propertiesWrittenTo == null)
+    if (this->propertiesWrittenTo == nullptr)
     {
         this->propertiesWrittenTo = JitAnew(this->m_alloc, PropertyIdSet, this->m_alloc);
     }
@@ -1220,7 +1220,7 @@ void Func::EnsurePropertiesWrittenTo()
 
 void Func::EnsureCallSiteToArgumentsOffsetFixupMap()
 {
-    if (this->callSiteToArgumentsOffsetFixupMap == null)
+    if (this->callSiteToArgumentsOffsetFixupMap == nullptr)
     {
         this->callSiteToArgumentsOffsetFixupMap = JitAnew(this->m_alloc, CallSiteToArgumentsOffsetFixupMap, this->m_alloc);
     }
@@ -1457,7 +1457,7 @@ LPCSTR
 Func::GetVtableName(INT_PTR address)
 {
 #if DBG
-    if (vtableMap == null)
+    if (vtableMap == nullptr)
     {
         vtableMap = VirtualTableRegistry::CreateVtableHashMap(this->m_alloc);
     };

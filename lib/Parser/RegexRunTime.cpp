@@ -4272,7 +4272,7 @@ namespace UnifiedRegex
                 Assert(matcher);
                 Assert(pattern->rep.unified.matcher == matcher);
 
-                pattern->rep.unified.matcher = null;
+                pattern->rep.unified.matcher = nullptr;
 
                 const auto scriptContext = pattern->GetScriptContext();
                 regexStacks = scriptContext->SaveRegexStacks();                

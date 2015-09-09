@@ -220,7 +220,7 @@ namespace Js
         JavascriptMap* map = JavascriptMap::FromVar(args[0]);
 
         Var key = (args.Info.Count > 1) ? args[1] : scriptContext->GetLibrary()->GetUndefined();
-        Var value = null;
+        Var value = nullptr;
 
         if (map->Get(key, &value))
         {

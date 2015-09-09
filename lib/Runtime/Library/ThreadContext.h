@@ -119,7 +119,7 @@ extern "C" void* MarkerForExternalDebugStep();
 
 #define LEAVE_SCRIPT_START_EX(scriptContext, stackProbe, leaveForHost, isFPUControlRestoreNeeded) \
         { \
-            void * __frameAddr = null; \
+            void * __frameAddr = nullptr; \
             GET_CURRENT_FRAME_ID(__frameAddr); \
             Js::LeaveScriptObject<stackProbe, leaveForHost, isFPUControlRestoreNeeded> __leaveScriptObject(scriptContext, __frameAddr);
 
@@ -326,7 +326,7 @@ public:
     {
         //Abstract notion to hold onto threadhandle of worker thread
         HANDLE threadHandle;
-        WorkerThread(HANDLE handle = null) :threadHandle(handle){};
+        WorkerThread(HANDLE handle = nullptr) :threadHandle(handle){};
     };
 
     void ReleasePreReservedSegment();
@@ -408,7 +408,7 @@ private:
         PropertyGuardHashSet uniqueGuards;
         EntryPointDictionary* entryPoints;
 
-        PropertyGuardEntry(Recycler* recycler) : sharedGuard(null), uniqueGuards(recycler), entryPoints(nullptr) {}
+        PropertyGuardEntry(Recycler* recycler) : sharedGuard(nullptr), uniqueGuards(recycler), entryPoints(nullptr) {}
     };
 
 public:
@@ -428,7 +428,7 @@ private:
     class SourceDynamicProfileManagerCache
     {
     public:
-        SourceDynamicProfileManagerCache() : refCount(0), sourceProfileManagerMap(NULL) {}
+        SourceDynamicProfileManagerCache() : refCount(0), sourceProfileManagerMap(nullptr) {}
 
         SourceDynamicProfileManagerMap* sourceProfileManagerMap;
         void AddRef() { refCount++; }
@@ -793,7 +793,7 @@ public:
 
     void SetInterruptPoller(InterruptPoller *poller) { interruptPoller = poller; }
     InterruptPoller *GetInterruptPoller() const { return interruptPoller; }
-    BOOL HasInterruptPoller() const { return interruptPoller != null; }
+    BOOL HasInterruptPoller() const { return interruptPoller != nullptr; }
     void CheckScriptInterrupt();
     void CheckInterruptPoll();
 
@@ -895,7 +895,7 @@ public:
         }
 #endif
 #ifdef CONCURRENT_GC_ENABLED
-        if (this->recycler != null)
+        if (this->recycler != nullptr)
         {
             this->recycler->ShutdownThread();
         }
@@ -908,7 +908,7 @@ public:
     ArenaAllocator* GetThreadAlloc() { return &threadAlloc; }
     static CriticalSection * GetCriticalSection() { return &s_csThreadContext; }
 
-    ThreadContext(AllocationPolicyManager * allocationPolicyManager = null, JsUtil::ThreadService::ThreadServiceCallback threadServiceCallback = null);
+    ThreadContext(AllocationPolicyManager * allocationPolicyManager = nullptr, JsUtil::ThreadService::ThreadServiceCallback threadServiceCallback = nullptr);
     static void Add(ThreadContext *threadContext);
 
 public:
@@ -1188,7 +1188,7 @@ public:
         if (this->IsInScript())
         {
             // Add it to the list only if it's not already in it
-            if (oldEntryPointInfo->nextEntryPoint == null && !oldEntryPointInfo->IsCleanedUp())
+            if (oldEntryPointInfo->nextEntryPoint == nullptr && !oldEntryPointInfo->IsCleanedUp())
             {
                 oldEntryPointInfo->nextEntryPoint = recyclableData->oldEntryPointInfo;
                 recyclableData->oldEntryPointInfo = oldEntryPointInfo;
@@ -1200,8 +1200,8 @@ public:
     __declspec(noinline) bool IsStackAvailable(size_t size);
     __declspec(noinline) bool IsStackAvailableNoThrow(size_t size = Js::Constants::MinStackDefault);
     static bool IsCurrentStackAvailable(size_t size);
-    void ProbeStackNoDispose(size_t size, Js::ScriptContext *scriptContext, PVOID returnAddress = NULL);
-    void ProbeStack(size_t size, Js::ScriptContext *scriptContext, PVOID returnAddress = NULL);
+    void ProbeStackNoDispose(size_t size, Js::ScriptContext *scriptContext, PVOID returnAddress = nullptr);
+    void ProbeStack(size_t size, Js::ScriptContext *scriptContext, PVOID returnAddress = nullptr);
     void ProbeStack(size_t size, Js::RecyclableObject * obj, Js::ScriptContext *scriptContext);
     void ProbeStack(size_t size);
     static void __stdcall ProbeCurrentStackNoDispose(size_t size, Js::ScriptContext *scriptContext);
@@ -1450,7 +1450,7 @@ public:
     }
 
     void* GetJSRTRuntime() const { return jsrtRuntime; }
-    void SetJSRTRuntime(void* runtime) { Assert(jsrtRuntime == NULL); jsrtRuntime = runtime; }
+    void SetJSRTRuntime(void* runtime) { Assert(jsrtRuntime == nullptr); jsrtRuntime = runtime; }
 
     bool CanBeFalsy(Js::TypeId typeId);
 private:

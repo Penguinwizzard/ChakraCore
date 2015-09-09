@@ -66,7 +66,7 @@ private:
     
     IR::Instr * InlineBuiltInFunction(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, Js::OpCode inlineCallOpCode, const Js::FunctionCodeGenJitTimeData* inlinerData, const StackSym *symCallerThis, bool* pIsInlined, uint profileId, uint recursiveInlineDepth);
     IR::Instr * InlineFunc(IR::Instr *callInstr, const Js::FunctionCodeGenJitTimeData *const inlineeData, const uint profileId);
-    bool        SplitConstructorCall(IR::Instr *const newObjInstr, const bool isInlined, const bool doneFixedMethodFld, IR::Instr** createObjInstrOut = null, IR::Instr** callCtorInstrOut = null) const;
+    bool        SplitConstructorCall(IR::Instr *const newObjInstr, const bool isInlined, const bool doneFixedMethodFld, IR::Instr** createObjInstrOut = nullptr, IR::Instr** callCtorInstrOut = nullptr) const;
     bool        SplitConstructorCallCommon(IR::Instr *const newObjInstr, IR::Opnd *const lastArgOpnd, const Js::OpCode newObjOpCode, 
         const bool isInlined, const bool doneFixedMethodFld, IR::Instr** createObjInstrOut, IR::Instr** callCtorInstrOut) const;
     IR::Instr * InlinePolymorphicFunction(IR::Instr *callInstr, const Js::FunctionCodeGenJitTimeData* inlinerData, const StackSym *symCallerThis, const Js::ProfileId profileId, bool* pIsInlined, uint recursiveInlineDepth, bool triedUsingFixedMethods = false);

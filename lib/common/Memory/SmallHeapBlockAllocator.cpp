@@ -17,7 +17,7 @@ SmallHeapBlockAllocator<TBlockType>::SmallHeapBlockAllocator() :
     next(nullptr)
 {
 #ifdef RECYCLER_TRACK_NATIVE_ALLOCATED_OBJECTS
-    this->lastNonNativeBumpAllocatedBlock = null;
+    this->lastNonNativeBumpAllocatedBlock = nullptr;
 #endif
 }
 
@@ -37,15 +37,15 @@ template <typename TBlockType>
 void
 SmallHeapBlockAllocator<TBlockType>::UpdateHeapBlock()
 {
-    if (heapBlock != null)
+    if (heapBlock != nullptr)
     {
-        if (this->endAddress == null)
+        if (this->endAddress == nullptr)
         {
             heapBlock->freeObjectList = this->freeObjectList;
         }
         else
         {
-            Assert(heapBlock->freeObjectList == null);
+            Assert(heapBlock->freeObjectList == nullptr);
         }
     }
 }
@@ -55,16 +55,16 @@ void
 SmallHeapBlockAllocator<TBlockType>::Clear()
 {
     TBlockType * heapBlock = this->heapBlock;
-    if (heapBlock != null)
+    if (heapBlock != nullptr)
     {
         Assert(heapBlock->isInAllocator);
         heapBlock->isInAllocator = false;
-        FreeObject * remainingFreeObjectList = null;
-        if (this->endAddress != null)
+        FreeObject * remainingFreeObjectList = nullptr;
+        if (this->endAddress != nullptr)
         {            
 #ifdef RECYCLER_TRACK_NATIVE_ALLOCATED_OBJECTS
             TrackNativeAllocatedObjects();
-            lastNonNativeBumpAllocatedBlock = null;
+            lastNonNativeBumpAllocatedBlock = nullptr;
 #endif
 #ifdef PROFILE_RECYCLER_ALLOC
             // Need to tell the tracker
@@ -81,15 +81,15 @@ SmallHeapBlockAllocator<TBlockType>::Clear()
             RECYCLER_PERF_COUNTER_ADD(SmallHeapBlockLiveObjectSize, unallocatedObjectBytes);
             RECYCLER_PERF_COUNTER_SUB(SmallHeapBlockFreeObjectSize, unallocatedObjectBytes);
 #endif
-            Assert(heapBlock->freeObjectList == null);
-            this->endAddress = null;
+            Assert(heapBlock->freeObjectList == nullptr);
+            this->endAddress = nullptr;
         }
         else
         {
             remainingFreeObjectList = this->freeObjectList;
             heapBlock->freeObjectList = remainingFreeObjectList;            
         }
-        this->freeObjectList = null;    
+        this->freeObjectList = nullptr;    
 
         // this->freeObjectList and this->lastFreeCount are accessed in SmallHeapBlock::ResetMarks
         // the order of access there is first we see if lastFreeCount = 0, and if it is, we assert 
@@ -104,7 +104,7 @@ SmallHeapBlockAllocator<TBlockType>::Clear()
 #endif
 #endif
 
-        if (remainingFreeObjectList == null)
+        if (remainingFreeObjectList == nullptr)
         {
             uint lastFreeCount = heapBlock->GetAndClearLastFreeCount();
             heapBlock->heapBucket->heapInfo->uncollectedAllocBytes += lastFreeCount * heapBlock->GetObjectSize();
@@ -115,7 +115,7 @@ SmallHeapBlockAllocator<TBlockType>::Clear()
         {
             DebugOnly(heapBlock->SetIsClearedFromAllocator(true));
         }
-        this->heapBlock = null;
+        this->heapBlock = nullptr;
 
         RECYCLER_SLOW_CHECK(heapBlock->CheckDebugFreeBitVector(false));
     }
@@ -128,7 +128,7 @@ SmallHeapBlockAllocator<TBlockType>::Clear()
         while (freeObject)
         {
             HeapBlock* heapBlock = this->bucket->GetRecycler()->FindHeapBlock((void*) freeObject);
-            Assert(heapBlock != null);
+            Assert(heapBlock != nullptr);
             Assert(!heapBlock->IsLargeHeapBlock());
             TBlockType* smallBlock = (TBlockType*)heapBlock;
 
@@ -136,7 +136,7 @@ SmallHeapBlockAllocator<TBlockType>::Clear()
             freeObject = freeObject->GetNext();
         }
 #endif        
-        this->freeObjectList = null;
+        this->freeObjectList = nullptr;
     }
 
 }
@@ -145,12 +145,12 @@ template <typename TBlockType>
 void
 SmallHeapBlockAllocator<TBlockType>::SetNew(BlockType * heapBlock)
 {
-    Assert(this->endAddress == null);
-    Assert(this->heapBlock == null);
-    Assert(this->freeObjectList == null);
+    Assert(this->endAddress == nullptr);
+    Assert(this->heapBlock == nullptr);
+    Assert(this->freeObjectList == nullptr);
 
-    Assert(heapBlock != null);
-    Assert(heapBlock->freeObjectList == null);
+    Assert(heapBlock != nullptr);
+    Assert(heapBlock->freeObjectList == nullptr);
     Assert(heapBlock->lastFreeCount != 0);
 
     Assert(!heapBlock->isInAllocator);
@@ -165,12 +165,12 @@ template <typename TBlockType>
 void
 SmallHeapBlockAllocator<TBlockType>::Set(BlockType * heapBlock)
 {
-    Assert(this->endAddress == null);
-    Assert(this->heapBlock == null);
-    Assert(this->freeObjectList == null);
+    Assert(this->endAddress == nullptr);
+    Assert(this->heapBlock == nullptr);
+    Assert(this->freeObjectList == nullptr);
 
-    Assert(heapBlock != null);
-    Assert(heapBlock->freeObjectList != null);
+    Assert(heapBlock != nullptr);
+    Assert(heapBlock->freeObjectList != nullptr);
     Assert(heapBlock->lastFreeCount != 0);
 
     Assert(!heapBlock->isInAllocator);
@@ -186,9 +186,9 @@ template <typename TBlockType>
 void
 SmallHeapBlockAllocator<TBlockType>::SetExplicitFreeList(FreeObject* list)
 {
-    Assert(list != null);
-    Assert(this->heapBlock == null);
-    Assert(this->freeObjectList == null);
+    Assert(list != nullptr);
+    Assert(this->heapBlock == nullptr);
+    Assert(this->freeObjectList == nullptr);
 
     this->freeObjectList = list;        
 }
@@ -198,16 +198,16 @@ template <typename TBlockType>
 void
 SmallHeapBlockAllocator<TBlockType>::TrackNativeAllocatedObjects()
 {
-    Assert(this->freeObjectList != null && endAddress != null);
-    Assert(this->heapBlock != null);
+    Assert(this->freeObjectList != nullptr && endAddress != nullptr);
+    Assert(this->heapBlock != nullptr);
 
 #if defined(PROFILE_RECYCLER_ALLOC) || defined(RECYCLER_MEMORY_VERIFY) || defined(MEMSPECT_TRACKING) || defined(ETW_MEMORY_TRACKING)
-    if (pfnTrackNativeAllocatedObjectCallBack == null)
+    if (pfnTrackNativeAllocatedObjectCallBack == nullptr)
     {
         return;
     }
 
-    if (lastNonNativeBumpAllocatedBlock == null)
+    if (lastNonNativeBumpAllocatedBlock == nullptr)
     {
 #ifdef RECYCLER_PAGE_HEAP
         Assert((char *)this->freeObjectList == this->heapBlock->GetAddress() || ((SmallHeapBlock*) this->heapBlock)->InPageHeapMode());
@@ -233,7 +233,7 @@ SmallHeapBlockAllocator<TBlockType>::TrackNativeAllocatedObjects()
         curr += sizeCat;
     }
 #elif defined(RECYCLER_PERF_COUNTERS)
-    if (lastNonNativeBumpAllocatedBlock == null)
+    if (lastNonNativeBumpAllocatedBlock == nullptr)
     {
         return;
     }

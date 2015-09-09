@@ -905,7 +905,7 @@ namespace Js
         newInstance->m_stackAddress = stackAddr;
 
         // the savedLoopImplicitCallFlags is allocated at the end of the out param array
-        newInstance->savedLoopImplicitCallFlags = null;
+        newInstance->savedLoopImplicitCallFlags = nullptr;
         char * nextAllocBytes = (char *)(newInstance->m_outParams + this->executeFunction->GetOutParamsDepth());
         if (this->executeFunction->DoStackNestedFunc() && this->executeFunction->GetNestedCount() != 0)
         {
@@ -1393,7 +1393,7 @@ namespace Js
             }
         } autoRestore(threadContext, executeFunction);
 
-        DynamicProfileInfo * dynamicProfileInfo = null;
+        DynamicProfileInfo * dynamicProfileInfo = nullptr;
         const bool doProfile = executeFunction->GetInterpreterExecutionMode(false) == ExecutionMode::ProfilingInterpreter ||
                                functionScriptContext->IsInDebugMode() && DynamicProfileInfo::IsEnabled(executeFunction);
         if (doProfile)
@@ -1510,7 +1510,7 @@ namespace Js
             * it's cheaper to just copy them all into the recycler array rather than just the ones that
             * have been jitted.
             */
-            Var loopHeaderArray = null;
+            Var loopHeaderArray = nullptr;
 
             if (executeFunction->GetHasAllocatedLoopHeaders())
             {
@@ -1826,10 +1826,10 @@ namespace Js
     //
     Var InterpreterStackFrame::DebugProcess()
     {
-        Assert(this->returnAddress != null);
+        Assert(this->returnAddress != nullptr);
         while (true)
         {
-            JavascriptExceptionObject *exception = null;
+            JavascriptExceptionObject *exception = nullptr;
             try
             {
                 return this->ProcessWithDebugging();
@@ -2286,9 +2286,9 @@ namespace Js
 #if DBG
         Js::RecyclableObject * invalidStackVar = (Js::RecyclableObject*)_alloca(sizeof(Js::RecyclableObject));
         memset(invalidStackVar, 0xFE, sizeof(Js::RecyclableObject));
-        InterpreterStackFrame * newInstance = newInstance = setup.InitializeAllocation(allocation, funcObj->GetFunctionBody()->GetHasImplicitArgIns(), doProfile, null, stackAddr, invalidStackVar);
+        InterpreterStackFrame * newInstance = newInstance = setup.InitializeAllocation(allocation, funcObj->GetFunctionBody()->GetHasImplicitArgIns(), doProfile, nullptr, stackAddr, invalidStackVar);
 #else
-        InterpreterStackFrame * newInstance = newInstance = setup.InitializeAllocation(allocation, funcObj->GetFunctionBody()->GetHasImplicitArgIns(), doProfile, null, stackAddr);
+        InterpreterStackFrame * newInstance = newInstance = setup.InitializeAllocation(allocation, funcObj->GetFunctionBody()->GetHasImplicitArgIns(), doProfile, nullptr, stackAddr);
 #endif
 
         newInstance->m_reader.Create(funcObj->GetFunctionBody());
@@ -3293,8 +3293,8 @@ namespace Js
         FunctionBody* functionBody = this->m_functionBody;
         DynamicProfileInfo * dynamicProfileInfo = functionBody->GetDynamicProfileInfo();
         FunctionInfo* functionInfo = function->GetTypeId() == TypeIds_Function?
-            JavascriptFunction::FromVar(function)->GetFunctionInfo() : null;
-        dynamicProfileInfo->RecordCallSiteInfo(functionBody, profileId, functionInfo, functionInfo ? static_cast<JavascriptFunction*>(function) : null, playout->ArgCount, false, inlineCacheIndex);
+            JavascriptFunction::FromVar(function)->GetFunctionInfo() : nullptr;
+        dynamicProfileInfo->RecordCallSiteInfo(functionBody, profileId, functionInfo, functionInfo ? static_cast<JavascriptFunction*>(function) : nullptr, playout->ArgCount, false, inlineCacheIndex);
         OP_CallCommon<T>(playout, function, flags, spreadIndices);
         if (playout->Return != Js::Constants::NoRegister)
         {
@@ -3407,7 +3407,7 @@ namespace Js
     void InterpreterStackFrame::UpdateFldInfoFlagsForGetSetInlineCandidate(unaligned T* playout, FldInfoFlags& fldInfoFlags, CacheType cacheType,
                                                 DynamicProfileInfo * dynamicProfileInfo, uint inlineCacheIndex, RecyclableObject * obj)
     {
-        RecyclableObject *callee = null;
+        RecyclableObject *callee = nullptr;
         //TODO: Setter case once we stop sharing inline caches for these callsites.
         if ((cacheType & (CacheType_Getter | CacheType_Setter)) && GetInlineCache(inlineCacheIndex)->GetGetterSetter(obj->GetType(), &callee))
         {
@@ -3425,7 +3425,7 @@ namespace Js
     void InterpreterStackFrame::UpdateFldInfoFlagsForCallApplyInlineCandidate(unaligned T* playout, FldInfoFlags& fldInfoFlags, CacheType cacheType,
                                                 DynamicProfileInfo * dynamicProfileInfo, uint inlineCacheIndex, RecyclableObject * obj)
     {
-        RecyclableObject *callee = null;
+        RecyclableObject *callee = nullptr;
         if (!(fldInfoFlags & FldInfo_Polymorphic) && GetInlineCache(inlineCacheIndex)->GetCallApplyTarget(obj, &callee))
         {
             const auto functionBody = this->m_functionBody;
@@ -4016,7 +4016,7 @@ namespace Js
     {
         // Same fast path as in the backend.
 
-        InlineCache *inlineCache = null;
+        InlineCache *inlineCache = nullptr;
 
         Assert(!TaggedNumber::Is(instance));
         PropertyId propertyId = GetPropertyIdFromCacheId(playout->inlineCacheIndex);
@@ -4942,8 +4942,8 @@ namespace Js
         }
 
         LoopHeader const * loopHeader = DoLoopBodyStart(loopNumber, layoutSize, false, isFirstIteration);
-        Assert(loopHeader == null || this->m_functionBody->GetLoopNumber(loopHeader) == loopNumber);
-        if (loopHeader != null)
+        Assert(loopHeader == nullptr || this->m_functionBody->GetLoopNumber(loopHeader) == loopNumber);
+        if (loopHeader != nullptr)
         {
             // We executed jitted loop body, no implicit call information available for this loop
             uint currentOffset = m_reader.GetCurrentOffset();
@@ -5125,12 +5125,12 @@ namespace Js
         {
             if (this->scriptContext->GetConfig()->IsNoNative())
             {
-                return null;
+                return nullptr;
             }
 
             if (!fn->DoJITLoopBody())
             {
-                return null;
+                return nullptr;
             }
 
             // If the job is not scheduled then we need to schedule it now.
@@ -5159,7 +5159,7 @@ namespace Js
             switchProfileModeOnLoopEndNumber = loopNumber;
         }
 
-        return null;
+        return nullptr;
     }
 
     void
@@ -5798,7 +5798,7 @@ namespace Js
     /// ---------------------------------------------------------------------------------------------------
     void InterpreterStackFrame::ProcessTryFinally(const byte* ip, Js::JumpOffset jumpOffset, Js::RegSlot regException, Js::RegSlot regOffset, bool hasYield)
     {
-        Js::JavascriptExceptionObject* pExceptionObject = null;
+        Js::JavascriptExceptionObject* pExceptionObject = nullptr;
         bool skipFinallyBlock = false;
 
         try
@@ -6012,7 +6012,7 @@ namespace Js
         }
 
         frameDisplay = this->GetLocalFrameDisplay();
-        Assert(frameDisplay != null);
+        Assert(frameDisplay != nullptr);
 
         frameDisplay->SetTag(true);
         frameDisplay->SetStrictMode(strict);
@@ -6039,7 +6039,7 @@ namespace Js
     InterpreterStackFrame::OP_LdLocalFrameDisplay()
     {
         FrameDisplay *frameDisplay = this->GetLocalFrameDisplay();
-        Assert(frameDisplay != null);
+        Assert(frameDisplay != nullptr);
         return frameDisplay;
     }
 
@@ -6087,7 +6087,7 @@ namespace Js
         }
 
         slotArray = this->GetLocalScopeSlots();
-        Assert(slotArray != null);
+        Assert(slotArray != nullptr);
 
         ScopeSlots scopeSlots(slotArray);
         scopeSlots.SetCount(scopeSlotCount);
@@ -6105,7 +6105,7 @@ namespace Js
     InterpreterStackFrame::OP_LdLocalScopeSlots()
     {
         Var * slotArray = this->GetLocalScopeSlots();
-        Assert(slotArray != null);
+        Assert(slotArray != nullptr);
 
         Assert(ScopeSlots(slotArray).GetFunctionBody() == this->m_functionBody);
 
@@ -6273,7 +6273,7 @@ namespace Js
         {
             return this->stackNestedFunctions + index;
         }
-        return null;
+        return nullptr;
     }
 
     void InterpreterStackFrame::SetExecutingStackFunction(ScriptFunction * scriptFunction)
@@ -6323,7 +6323,7 @@ namespace Js
     void InterpreterStackFrame::ValidateRegValue(Var value, bool allowStackVar, bool allowStackVarOnDisabledStackNestedFunc) const
     {
 #if DBG
-        if (value != null && !TaggedNumber::Is(value))
+        if (value != nullptr && !TaggedNumber::Is(value))
         {
             if (!allowStackVar || !this->m_functionBody->DoStackNestedFunc())
             {

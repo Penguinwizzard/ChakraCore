@@ -259,7 +259,7 @@ namespace Js
         
         externalFunction->PrepareExternalCall(&args);
 
-        Var result = null;
+        Var result = nullptr;
         BEGIN_LEAVE_SCRIPT_WITH_EXCEPTION(scriptContext)
         {
             // Don't do stack probe since BEGIN_LEAVE_SCRIPT_WITH_EXCEPTION does that for us already
@@ -325,7 +325,7 @@ namespace Js
         {
             bool considerPassingToDebugger = false;
             JavascriptExceptionObject* recordedException = scriptContext->GetAndClearRecordedException(&considerPassingToDebugger);
-            if (recordedException != null)
+            if (recordedException != nullptr)
             {
                 // If this is script termination, then throw ScriptAbortExceptio, else throw normal Exception object.
                 if (recordedException == scriptContext->GetThreadContext()->GetPendingTerminatedErrorObject())

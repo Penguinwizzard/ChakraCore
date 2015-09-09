@@ -15,7 +15,7 @@ namespace Js
     bool ParserWrapper::ParseVarOrConstStatement( AsmJSParser &parser, ParseNode **var )
     {
         Assert( parser );
-        *var = null;
+        *var = nullptr;
         ParseNode *body = parser->sxFnc.pnodeBody;
         if( body )
         {
@@ -74,7 +74,7 @@ namespace Js
                 return function.pnodeName->sxVar.pid;
             }
         }
-        return null;
+        return nullptr;
     }
 
     ParseNode * ParserWrapper::GetVarDeclList( ParseNode * pnode )

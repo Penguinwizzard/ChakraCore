@@ -9,12 +9,12 @@
 #endif
 
 Js::Amd64StackFrame::Amd64StackFrame()
-    : scriptContext(null),
+    : scriptContext(nullptr),
       imageBase(0),
-      functionEntry(null),
-      currentContext(null),
+      functionEntry(nullptr),
+      currentContext(nullptr),
       hasCallerContext(false),
-      callerContext(null),
+      callerContext(nullptr),
       addressOfCodeAddr(nullptr)
 {
 }
@@ -110,7 +110,7 @@ VOID **Js::Amd64StackFrame::GetArgv(bool isCurrentContextNative, bool shouldChec
         return (VOID **)callerContext->Rsp;
     }
 
-    return null;
+    return nullptr;
 }
 
 VOID *Js::Amd64StackFrame::GetReturnAddress(bool isCurrentContextNative, bool shouldCheckForNativeAddr)
@@ -120,7 +120,7 @@ VOID *Js::Amd64StackFrame::GetReturnAddress(bool isCurrentContextNative, bool sh
         return (VOID *)callerContext->Rip;
     }
 
-    return null;
+    return nullptr;
 }
 
 void *Js::Amd64StackFrame::GetAddressOfReturnAddress(bool isCurrentContextNative, bool shouldCheckForNativeAddr)
@@ -130,14 +130,14 @@ void *Js::Amd64StackFrame::GetAddressOfReturnAddress(bool isCurrentContextNative
         return (void*)((VOID **)callerContext->Rsp - 1);
     }
 
-    return null;
+    return nullptr;
 }
 
 bool Js::Amd64StackFrame::Next(CONTEXT *context, ULONG64 imageBase, RUNTIME_FUNCTION *functionEntry)
 {
     Assert(context);
 
-    VOID *handlerData = null;
+    VOID *handlerData = nullptr;
     ULONG64 establisherFrame = 0;
 
     if (!context->Rip)
@@ -152,7 +152,7 @@ bool Js::Amd64StackFrame::Next(CONTEXT *context, ULONG64 imageBase, RUNTIME_FUNC
                          context,
                          &handlerData,
                          &establisherFrame,
-                         null);
+                         nullptr);
     }
     else
     {

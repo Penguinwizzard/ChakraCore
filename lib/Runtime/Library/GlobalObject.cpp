@@ -14,7 +14,7 @@ namespace Js
             scriptContext->GetRecycler(), InitialCapacity, InlineSlotCapacity, sizeof(Js::GlobalObject));
 
         DynamicType* globalType = DynamicType::New(
-            scriptContext, TypeIds_GlobalObject, null, null, globalTypeHandler);
+            scriptContext, TypeIds_GlobalObject, nullptr, nullptr, globalTypeHandler);
 
         GlobalObject* globalObject = RecyclerNewPlus(scriptContext->GetRecycler(),
             sizeof(Var) * InlineSlotCapacity, GlobalObject, globalType, scriptContext);
@@ -26,16 +26,16 @@ namespace Js
 
     GlobalObject::GlobalObject(DynamicType * type, ScriptContext* scriptContext) :
         RootObjectBase(type, scriptContext),
-        directHostObject(NULL),
-        secureDirectHostObject(NULL),
+        directHostObject(nullptr),
+        secureDirectHostObject(nullptr),
         EvalHelper(&GlobalObject::DefaultEvalHelper),
-        reservedProperties(null)
+        reservedProperties(nullptr)
     {
     }
 
     void GlobalObject::Initialize(ScriptContext * scriptContext)
     {
-        Assert(type->javascriptLibrary == NULL);
+        Assert(type->javascriptLibrary == nullptr);
         JavascriptLibrary* localLibrary = RecyclerNewFinalized(scriptContext->GetRecycler(), JavascriptLibrary, this);
         scriptContext->SetLibrary(localLibrary);
         type->javascriptLibrary = localLibrary;
@@ -113,7 +113,7 @@ namespace Js
         {
             return false;
         }
-        if (reservedProperties == null)
+        if (reservedProperties == nullptr)
         {
             Recycler* recycler = this->GetScriptContext()->GetRecycler();
             reservedProperties = RecyclerNew(recycler, ReservedPropertiesHashSet, recycler, 3);
@@ -124,7 +124,7 @@ namespace Js
 
     BOOL GlobalObject::IsReservedGlobalProperty(PropertyId propertyId)
     {
-        return reservedProperties != null && reservedProperties->Contains(propertyId);
+        return reservedProperties != nullptr && reservedProperties->Contains(propertyId);
     }
 
 #ifdef IR_VIEWER
@@ -137,8 +137,8 @@ namespace Js
         RUNTIME_ARGUMENTS(args, callInfo);
         Js::Var codeVar = args[1];  // args[0] is (this)
 
-        Js::JavascriptString *codeStringVar = NULL;
-        const wchar_t *source = NULL;
+        Js::JavascriptString *codeStringVar = nullptr;
+        const wchar_t *source = nullptr;
         size_t sourceLength = 0;
 
         if (Js::JavascriptString::Is(codeVar))
@@ -261,7 +261,7 @@ namespace Js
             sourceList->Map([&fnCount](uint i, Utf8SourceInfoRef *sourceInfoWeakRef)
             {
                 Js::Utf8SourceInfo *sourceInfo = sourceInfoWeakRef->Get();
-                if (sourceInfo == null || sourceInfo->GetIsLibraryCode()) // library code has no source, skip
+                if (sourceInfo == nullptr || sourceInfo->GetIsLibraryCode()) // library code has no source, skip
                 {
                     return;
                 }
@@ -295,7 +295,7 @@ namespace Js
             sourceList->Map([&fnCount, &count, functionList, scriptContext](uint i, Utf8SourceInfoRef *sourceInfoWeakRef)
             {
                 Js::Utf8SourceInfo *sourceInfo = sourceInfoWeakRef->Get();
-                if (sourceInfo == null || sourceInfo->GetIsLibraryCode()) // library code has no source, skip
+                if (sourceInfo == nullptr || sourceInfo->GetIsLibraryCode()) // library code has no source, skip
                 {
                     return;
                 }
@@ -328,7 +328,7 @@ namespace Js
 
                     uint funcId = functionBody->GetLocalFunctionId();
                     Js::Utf8SourceInfo *utf8SrcInfo = functionBody->GetUtf8SourceInfo();
-                    if (utf8SrcInfo == null)
+                    if (utf8SrcInfo == nullptr)
                     {
                         return;
                     }
@@ -688,7 +688,7 @@ namespace Js
 
     Var GlobalObject::ExecuteEvalParsedFunction(ScriptFunction *pfuncScript, FrameDisplay* environment, Var &varThis)
     {
-        Assert(pfuncScript != NULL);
+        Assert(pfuncScript != nullptr);
 
         pfuncScript->SetEnvironment(environment);
         //This function is supposed to be deserialized
@@ -699,7 +699,7 @@ namespace Js
             pfuncScript->InvalidateCachedScopeChain();
         }
         Var varResult = pfuncScript->GetEntryPoint()(pfuncScript, CallInfo(CallFlags_Eval, 1), varThis);
-        pfuncScript->SetEnvironment(null);
+        pfuncScript->SetEnvironment(nullptr);
         return varResult;
     }
 
@@ -800,7 +800,7 @@ namespace Js
 #ifdef PROFILE_EXEC
         scriptContext->ProfileBegin(Js::EvalCompilePhase);
 #endif
-        void * frameAddr = null;
+        void * frameAddr = nullptr;
         GET_CURRENT_FRAME_ID(frameAddr);
 
         HRESULT hr = S_OK;
@@ -919,7 +919,7 @@ namespace Js
         }
         else
         {
-            Assert(funcBody != null);
+            Assert(funcBody != nullptr);
             funcBody->SetDisplayName(pszTitle);
 
             // Set the functionbody information to dynamic content PROFILER_SCRIPT_TYPE_DYNAMIC
@@ -970,7 +970,7 @@ namespace Js
 #ifdef PROFILE_EXEC
         scriptContext->ProfileBegin(Js::EvalCompilePhase);
 #endif
-        void * frameAddr = null;
+        void * frameAddr = nullptr;
         GET_CURRENT_FRAME_ID(frameAddr);
 
         HRESULT hr = S_OK;
@@ -1095,7 +1095,7 @@ namespace Js
         }
         else
         {
-            Assert(funcBody != null);
+            Assert(funcBody != nullptr);
             funcBody->SetDisplayName(pszTitle);
 
             // Set the functionbody information to dynamic content PROFILER_SCRIPT_TYPE_DYNAMIC
@@ -1573,7 +1573,7 @@ LHexError:
     //Example: *pat*tern* actually matches all the strings having pat*tern as substring.
     BOOL GlobalObject::MatchPatternHelper(JavascriptString *propertyName, JavascriptString *pattern, ScriptContext *scriptContext)
     {
-        if (null == propertyName || null == pattern)
+        if (nullptr == propertyName || nullptr == pattern)
         {
             return FALSE;
         }

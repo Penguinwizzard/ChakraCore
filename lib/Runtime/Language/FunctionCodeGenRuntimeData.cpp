@@ -6,7 +6,7 @@
 namespace Js
 {
     FunctionCodeGenRuntimeData::FunctionCodeGenRuntimeData(FunctionBody *const functionBody)
-        : functionBody(functionBody), inlinees(null),next(0)
+        : functionBody(functionBody), inlinees(nullptr), next(0)
     {
     }
 
@@ -29,7 +29,7 @@ namespace Js
     {
         Assert(profiledCallSiteId < functionBody->GetProfiledCallSiteCount());
 
-        return inlinees ? inlinees[profiledCallSiteId] : null;
+        return inlinees ? inlinees[profiledCallSiteId] : nullptr;
     }
 
     const FunctionCodeGenRuntimeData *FunctionCodeGenRuntimeData::GetInlineeForTargetInlinee(const ProfileId profiledCallSiteId, FunctionBody *inlineeFuncBody) const
@@ -38,7 +38,7 @@ namespace Js
 
         if (!inlinees)
         {
-            return null;
+            return nullptr;
         }
         FunctionCodeGenRuntimeData *runtimeData = inlinees[profiledCallSiteId];
         while(runtimeData && runtimeData->GetFunctionBody() != inlineeFuncBody)
@@ -104,7 +104,7 @@ namespace Js
     {
         Assert(inlineCacheIndex < functionBody->GetInlineCacheCount());
 
-        return ldFldInlinees ? ldFldInlinees[inlineCacheIndex] : null;
+        return ldFldInlinees ? ldFldInlinees[inlineCacheIndex] : nullptr;
     }
 
     const FunctionCodeGenRuntimeData *FunctionCodeGenRuntimeData::GetRuntimeDataFromFunctionInfo(FunctionInfo *polyFunctionInfo) const

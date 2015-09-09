@@ -14,7 +14,7 @@ namespace Js
     // Concrete type for manipulating JS Vars
     struct ResolvedObject
     {
-        ResolvedObject() : propId(Js::Constants::NoProperty), scriptContext(NULL), address(NULL), objectDisplay(NULL), obj(NULL), originalObj(NULL), isConst(false)
+        ResolvedObject() : propId(Js::Constants::NoProperty), scriptContext(nullptr), address(nullptr), objectDisplay(nullptr), obj(nullptr), originalObj(nullptr), isConst(false)
         {}
 
         PropertyId              propId;
@@ -41,7 +41,7 @@ namespace Js
     public:
         virtual BOOL Set(Var updateObject) = 0;
         virtual BOOL IsWritable() { return !IsInDeadZone(); }
-        virtual Var GetValue(BOOL fUpdated) { return NULL; }
+        virtual Var GetValue(BOOL fUpdated) { return nullptr; }
         virtual BOOL IsInDeadZone() const { return FALSE; };
     };
 
@@ -56,7 +56,7 @@ namespace Js
 
         virtual BOOL GetGroupObject(ResolvedObject* pResolvedObject) = 0;
 
-        virtual IDiagObjectAddress *FindPropertyAddress(PropertyId propId, bool& isConst) { return NULL;}
+        virtual IDiagObjectAddress *FindPropertyAddress(PropertyId propId, bool& isConst) { return nullptr;}
     };
 
     enum DiagObjectModelDisplayType
@@ -80,8 +80,8 @@ namespace Js
         virtual BOOL SetDefaultTypeAttribute(DBGPROP_ATTRIB_FLAGS attributes) { return FALSE; };
         virtual WeakArenaReference<IDiagObjectModelWalkerBase>* CreateWalker() = 0;
         virtual BOOL IsLocalsAsRoot() { return FALSE; }
-        virtual Var GetVarValue(BOOL fUpdated) { return NULL; }
-        virtual IDiagObjectAddress * GetDiagAddress() { return NULL; }
+        virtual Var GetVarValue(BOOL fUpdated) { return nullptr; }
+        virtual IDiagObjectAddress * GetDiagAddress() { return nullptr; }
         virtual DiagObjectModelDisplayType GetType() = 0;
         virtual bool IsFake() { return (this->GetTypeAttribute() & DBGPROP_ATTRIB_VALUE_IS_FAKE) == DBGPROP_ATTRIB_VALUE_IS_FAKE; }
         virtual bool IsLiteralProperty() const = 0;
@@ -167,13 +167,13 @@ namespace Js
     public :
 
         VariableWalkerBase(DiagStackFrame* _pFrame, Var _instance, UIGroupType _groupType, bool allowLexicalThis, bool allowSuperReference = false)
-            : pFrame(_pFrame), instance(_instance), pMembersList(NULL), groupType(_groupType), allowLexicalThis(allowLexicalThis), allowSuperReference(allowSuperReference)
+            : pFrame(_pFrame), instance(_instance), pMembersList(nullptr), groupType(_groupType), allowLexicalThis(allowLexicalThis), allowSuperReference(allowSuperReference)
         {
         }
 
         // Defined virtual function, should be extended by type of variable scope.
         virtual void PopulateMembers() { };
-        virtual IDiagObjectAddress * GetObjectAddress(int index) { return NULL; }
+        virtual IDiagObjectAddress * GetObjectAddress(int index) { return nullptr; }
         virtual Var GetVarObjectAt(int index);
         virtual bool IsConstAt(int index);
 
@@ -217,7 +217,7 @@ namespace Js
 
     public:
         RegSlotVariablesWalker(DiagStackFrame* _pFrame, DebuggerScope *_debuggerScope, UIGroupType _groupType, bool allowSuperReference = false)
-            : VariableWalkerBase(_pFrame, NULL, _groupType, /* allowLexicalThis */ false, allowSuperReference), debuggerScope(_debuggerScope)
+            : VariableWalkerBase(_pFrame, nullptr, _groupType, /* allowLexicalThis */ false, allowSuperReference), debuggerScope(_debuggerScope)
         {
         }
 
@@ -241,7 +241,7 @@ namespace Js
 
         ScopeSlots GetSlotArray() { 
             Var *slotArray = (Var *) instance;
-            Assert(slotArray != NULL);
+            Assert(slotArray != nullptr);
             return ScopeSlots(slotArray);        
         }
     };
@@ -278,7 +278,7 @@ namespace Js
 
     public:
         DiagScopeVariablesWalker(DiagStackFrame* _pFrame, Var _instance, bool _enumWithScopeAlso)
-            : VariableWalkerBase(_pFrame, _instance, UIGroupType_InnerScope, /* allowLexicalThis */ false), pDiagScopeObjects(NULL), diagScopeVarCount(0), scopeIsInitialized(false), enumWithScopeAlso(_enumWithScopeAlso)
+            : VariableWalkerBase(_pFrame, _instance, UIGroupType_InnerScope, /* allowLexicalThis */ false), pDiagScopeObjects(nullptr), diagScopeVarCount(0), scopeIsInitialized(false), enumWithScopeAlso(_enumWithScopeAlso)
         {}
 
         DiagScopeVariablesWalker(DiagStackFrame* _pFrame, Var _instance, IDiagObjectModelWalkerBase* innerWalker);
@@ -344,7 +344,7 @@ namespace Js
                                 activeScopeObject->SetPropertyWithAttributes(
                                         resolveObject.propId, 
                                         resolveObject.obj,
-                                        attributes, NULL, flags);
+                                        attributes, nullptr, flags);
                             }
                             else
                             {
@@ -737,7 +737,7 @@ namespace Js
     template <typename TData>
     struct RecyclableCollectionObjectWalkerPropertyData
     {
-        RecyclableCollectionObjectWalkerPropertyData():key(null), value(null) { }
+        RecyclableCollectionObjectWalkerPropertyData():key(nullptr), value(nullptr) { }
         RecyclableCollectionObjectWalkerPropertyData(Var key, Var value):key(key), value(value) { }
         Var key;
         Var value;
@@ -746,7 +746,7 @@ namespace Js
     template<>
     struct RecyclableCollectionObjectWalkerPropertyData<JavascriptSet>
     {
-        RecyclableCollectionObjectWalkerPropertyData():value(null) { }
+        RecyclableCollectionObjectWalkerPropertyData():value(nullptr) { }
         RecyclableCollectionObjectWalkerPropertyData(Var value):value(value) { }
         Var value;
     };
@@ -754,7 +754,7 @@ namespace Js
     template<>
     struct RecyclableCollectionObjectWalkerPropertyData<JavascriptWeakSet>
     {
-        RecyclableCollectionObjectWalkerPropertyData():value(null) { }
+        RecyclableCollectionObjectWalkerPropertyData():value(nullptr) { }
         RecyclableCollectionObjectWalkerPropertyData(Var value):value(value) { }
         Var value;
     };
@@ -772,7 +772,7 @@ namespace Js
         void GetChildren();
 
     public:
-        RecyclableCollectionObjectWalker(ScriptContext* scriptContext, Var instance):scriptContext(scriptContext), instance(instance), propertyList(null) { }
+        RecyclableCollectionObjectWalker(ScriptContext* scriptContext, Var instance):scriptContext(scriptContext), instance(instance), propertyList(nullptr) { }
         virtual BOOL GetGroupObject(ResolvedObject* pResolvedObject) override;
         virtual BOOL Get(int i, ResolvedObject* pResolvedObject) override;
         virtual ulong GetChildrenCount() override;
@@ -801,8 +801,8 @@ namespace Js
         virtual BOOL SetDefaultTypeAttribute(DBGPROP_ATTRIB_FLAGS attributes) override { return FALSE; }
         virtual DBGPROP_ATTRIB_FLAGS GetTypeAttribute() override { return DBGPROP_ATTRIB_VALUE_READONLY | DBGPROP_ATTRIB_VALUE_IS_FAKE | (HasChildren() ? DBGPROP_ATTRIB_VALUE_IS_EXPANDABLE : 0); }
         virtual WeakArenaReference<IDiagObjectModelWalkerBase>* CreateWalker() override;
-        virtual Var GetVarValue(BOOL fUpdated) override { return null; }
-        virtual IDiagObjectAddress * GetDiagAddress() override { return null; }
+        virtual Var GetVarValue(BOOL fUpdated) override { return nullptr; }
+        virtual IDiagObjectAddress * GetDiagAddress() override { return nullptr; }
         virtual DiagObjectModelDisplayType GetType() { return DiagObjectModelDisplayType_RecyclableCollectionObjectDisplay; }
         virtual bool IsLiteralProperty() const { return false; }
     };

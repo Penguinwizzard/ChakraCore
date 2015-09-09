@@ -24,12 +24,12 @@ namespace Js
         Assert(requiredAuxSlotCapacity >= 0 && requiredAuxSlotCapacity < 0x01 << RequiredAuxSlotCapacityBitCount);
         // Store field and load field caches are never shared so we should never have a prototype cache morphing into an add property cache.
         // We may, however, have a flags cache (setter) change to add property cache.
-        Assert(typeWithoutProperty == null || !IsProto());
+        Assert(typeWithoutProperty == nullptr || !IsProto());
 
         requestContext->RegisterAsScriptContextWithInlineCaches();
 
         // Add cache into a store field cache list if required, but not there yet.
-        if (typeWithoutProperty != null && invalidationListSlotPtr == null)
+        if (typeWithoutProperty != nullptr && invalidationListSlotPtr == nullptr)
         {
             // Note, this can throw due to OOM, so we need to do it before the inline cache is set below.
             requestContext->RegisterStoreFieldInlineCache(this, propertyId);
@@ -43,7 +43,7 @@ namespace Js
         else
         {
             u.local.type = TypeWithAuxSlotTag(type);
-            u.local.typeWithoutProperty = typeWithoutProperty ? TypeWithAuxSlotTag(typeWithoutProperty) : null;
+            u.local.typeWithoutProperty = typeWithoutProperty ? TypeWithAuxSlotTag(typeWithoutProperty) : nullptr;
         }
 
         u.local.isLocal = true;
@@ -89,12 +89,12 @@ namespace Js
         // Assert(prototypeObjectWithProperty != prototypeObjectWithProperty->type->GetLibrary()->GetGlobalObject());
 
         // Store field and load field caches are never shared so we should never have an add property cache morphing into a prototype cache.
-        Assert(!IsLocal() || u.local.typeWithoutProperty == null);
+        Assert(!IsLocal() || u.local.typeWithoutProperty == nullptr);
 
         requestContext->RegisterAsScriptContextWithInlineCaches();
 
         // Add cache into a proto cache list if not there yet.
-        if (invalidationListSlotPtr == null)
+        if (invalidationListSlotPtr == nullptr)
         {
             // Note, this can throw due to OOM, so we need to do it before the inline cache is set below.
             requestContext->RegisterProtoInlineCache(this, propertyId);
@@ -151,7 +151,7 @@ namespace Js
 
         requestContext->RegisterAsScriptContextWithInlineCaches();
 
-        if (isOnProto && invalidationListSlotPtr == null)
+        if (isOnProto && invalidationListSlotPtr == nullptr)
         {
             // Note, this can throw due to OOM, so we need to do it before the inline cache is set below.
             if (!isGetter)
@@ -296,7 +296,7 @@ namespace Js
     bool InlineCache::GetGetterSetter(Type *const type, RecyclableObject **callee)
     {
         Type *const taggedType = TypeWithAuxSlotTag(type);
-        *callee = null;
+        *callee = nullptr;
 
         if (u.accessor.flags & (InlineCacheGetterFlag | InlineCacheSetterFlag))
         {
@@ -318,7 +318,7 @@ namespace Js
     {
         Type *const type = obj->GetType();
         Type *const taggedType = TypeWithAuxSlotTag(type);
-        *callee = null;
+        *callee = nullptr;
 
         if (IsLocal())
         {
@@ -372,9 +372,9 @@ namespace Js
         // IsEmpty() is a quick check to see that the cache is not populated, it only checks u.local.type, which does not
         // guarantee that the proto or flags cache would not hit. So Clear() must still clear everything.
 
-        u.local.type = null;
+        u.local.type = nullptr;
         u.local.isLocal = true;
-        u.local.typeWithoutProperty = null;
+        u.local.typeWithoutProperty = nullptr;
     }
 
     InlineCache *InlineCache::Clone(Js::PropertyId propertyId, ScriptContext* scriptContext)
@@ -397,7 +397,7 @@ namespace Js
         {
             return false;
         }
-        Js::Type * propertyOwnerType = null;
+        Js::Type * propertyOwnerType = nullptr;
         bool isLocal = IsLocal();
         bool isProto = IsProto();
         if (isLocal)
@@ -415,7 +415,7 @@ namespace Js
             propertyOwnerType = this->u.accessor.object->GetType();
         }
 
-        Assert(propertyOwnerType != null);
+        Assert(propertyOwnerType != nullptr);
 
         if (Js::DynamicType::Is(propertyOwnerType->GetTypeId()))
         {
@@ -423,7 +423,7 @@ namespace Js
             Js::PropertyId propertyId = functionBody->GetPropertyIdFromCacheId(cacheId);
             Js::PropertyRecord const * const methodPropertyRecord = functionBody->GetScriptContext()->GetPropertyName(propertyId);
 
-            Var fixedMethod = null;
+            Var fixedMethod = nullptr;
             bool isUseFixedProperty;
             if (isLocal || isProto)
             {
@@ -433,7 +433,7 @@ namespace Js
             {
                 isUseFixedProperty = propertyOwnerTypeHandler->TryUseFixedAccessor(methodPropertyRecord, &fixedMethod, Js::FixedPropertyKind::FixedAccessorProperty, this->IsGetterAccessor(), functionBody->GetScriptContext());
             }
-            AssertMsg(fixedMethod == null || Js::JavascriptFunction::Is(fixedMethod), "The fixed value should have been a Method !!!");
+            AssertMsg(fixedMethod == nullptr || Js::JavascriptFunction::Is(fixedMethod), "The fixed value should have been a Method !!!");
             *pFixedMethod = reinterpret_cast<JavascriptFunction*>(fixedMethod);
             return isUseFixedProperty;
         }
@@ -445,10 +445,10 @@ namespace Js
     {
         DebugOnly(VerifyRegistrationForInvalidation(this, scriptContext, propertyId));
         DebugOnly(VerifyRegistrationForInvalidation(clone, scriptContext, propertyId));
-        Assert(clone != null);
+        Assert(clone != nullptr);
 
         // Note, the Register methods can throw due to OOM, so we need to do it before the inline cache is copied below.
-        if (this->invalidationListSlotPtr != null && clone->invalidationListSlotPtr == null)
+        if (this->invalidationListSlotPtr != nullptr && clone->invalidationListSlotPtr == nullptr)
         {
             if (this->NeedsToBeRegisteredForProtoInvalidation())
             {
@@ -480,7 +480,7 @@ namespace Js
         }
 
         // If the new type matches the cached type, the types without property must also match (unless one of them is null).
-        Assert((u.local.typeWithoutProperty == null || typeWithoutProperty == null) ||
+        Assert((u.local.typeWithoutProperty == nullptr || typeWithoutProperty == nullptr) ||
             ((u.local.type != type || u.local.typeWithoutProperty == typeWithoutProperty) &&
                 (u.local.type != TypeWithAuxSlotTag(type) || u.local.typeWithoutProperty == TypeWithAuxSlotTag(typeWithoutProperty))));
 
@@ -500,7 +500,7 @@ namespace Js
 
     bool InlineCache::NeedsToBeRegisteredForStoreFieldInvalidation() const
     {
-        return (IsLocal() && this->u.local.typeWithoutProperty != null) || IsSetterAccessorOnProto();
+        return (IsLocal() && this->u.local.typeWithoutProperty != nullptr) || IsSetterAccessorOnProto();
     }
 
 #if DEBUG
@@ -518,7 +518,7 @@ namespace Js
         bool needsProtoInvalidation = cache->NeedsToBeRegisteredForProtoInvalidation();
         bool needsStoreFieldInvalidation = cache->NeedsToBeRegisteredForStoreFieldInvalidation();
         int howManyInvalidationsNeeded = (int)needsProtoInvalidation + (int)needsStoreFieldInvalidation;
-        bool hasListSlotPtr = cache->invalidationListSlotPtr != null;
+        bool hasListSlotPtr = cache->invalidationListSlotPtr != nullptr;
         bool isProtoRegistered = hasListSlotPtr ? scriptContext->GetThreadContext()->IsProtoInlineCacheRegistered(cache, propertyId) : false;
         bool isStoreFieldRegistered = hasListSlotPtr ? scriptContext->GetThreadContext()->IsStoreFieldInlineCacheRegistered(cache, propertyId) : false;
         int howManyRegistrations = (int)isProtoRegistered + (int)isStoreFieldRegistered;
@@ -593,7 +593,7 @@ namespace Js
         // a larger cache, the old one might still be used by some code on the stack.  Consequently, we can't release
         // the inline cache array back to the arena allocator.  The list is leaf-allocated and so does not keep the
         // old caches alive.  As soon as they are collectible, their finalizer releases the inline cache array to the arena.
-        polymorphicInlineCache->prev = null;
+        polymorphicInlineCache->prev = nullptr;
         polymorphicInlineCache->next = functionBody->GetPolymorphicInlineCachesHead();
         if (polymorphicInlineCache->next)
         {
@@ -1029,7 +1029,7 @@ namespace Js
         this->count = ++i;
         for (i; i < oldCount; i++)
         {
-            this->types[i] = null;
+            this->types[i] = nullptr;
         }
 
         this->sortedAndDuplicatesRemoved = true;
@@ -1039,7 +1039,7 @@ namespace Js
 
     ConstructorCache* ConstructorCache::EnsureValidInstance(ConstructorCache* currentCache, ScriptContext* scriptContext)
     {
-        Assert(currentCache != null);
+        Assert(currentCache != nullptr);
 
         ConstructorCache* newCache = currentCache;
 
@@ -1087,9 +1087,9 @@ namespace Js
             this->guard.value = CtorCacheGuardValues::Invalid;
             this->content.hasPrototypeChanged = true;
             // Make sure we don't leak the old type.
-            Assert(this->content.type == null);
-            this->content.pendingType = null;
-            Assert(this->content.pendingType == null);
+            Assert(this->content.type == nullptr);
+            this->content.pendingType = nullptr;
+            Assert(this->content.pendingType == nullptr);
             Assert(IsInvalidated());
         }
         Assert(IsConsistent());
@@ -1132,7 +1132,7 @@ namespace Js
         if (this->function == function &&
             this->type == RecyclableObject::FromVar(instance)->GetType())
         {
-            if (result != null)
+            if (result != nullptr)
             {
                 (*result = this->result);
             }
@@ -1147,9 +1147,9 @@ namespace Js
     void IsInstInlineCache::Cache(Type * instanceType, JavascriptFunction * function, JavascriptBoolean *  result, ScriptContext * scriptContext)
     {
         // In order to populate the cache we must have a function instance.
-        Assert(function != null);
+        Assert(function != nullptr);
 
-        // We assume the following invariant: (cache->function != null) => script context is registered as having some populated instance-of inline caches and
+        // We assume the following invariant: (cache->function != nullptr) => script context is registered as having some populated instance-of inline caches and
         // this cache is registered with thread context for invalidation.
         if (this->function == function)
         {
@@ -1159,7 +1159,7 @@ namespace Js
         }
         else
         {
-            if (this->function != null)
+            if (this->function != nullptr)
             {
                 Unregister(scriptContext);
                 Clear();

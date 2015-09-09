@@ -24,10 +24,10 @@ CriticalSection LeakReport::s_cs;
 DWORD LeakReport::nestedSectionCount = 0;
 DWORD LeakReport::nestedRedirectOutputCount = 0;
 AutoFILE LeakReport::file;
-FILE * oldFile = null;
+FILE * oldFile = nullptr;
 bool LeakReport::openReportFileFailed = false;
-LeakReport::UrlRecord * LeakReport::urlRecordHead = null;
-LeakReport::UrlRecord * LeakReport::urlRecordTail = null;
+LeakReport::UrlRecord * LeakReport::urlRecordHead = nullptr;
+LeakReport::UrlRecord * LeakReport::urlRecordTail = nullptr;
 
 void
 LeakReport::StartRedirectOutput()
@@ -39,7 +39,7 @@ LeakReport::StartRedirectOutput()
     s_cs.Enter();
     if (nestedRedirectOutputCount == 0)
     {        
-        Assert(oldFile == null);
+        Assert(oldFile == nullptr);
         oldFile = Output::SetFile(file);
     }
     nestedRedirectOutputCount++;
@@ -52,7 +52,7 @@ LeakReport::EndRedirectOutput()
     {
         return;
     }
-    Assert(file != null);
+    Assert(file != nullptr);
     nestedRedirectOutputCount--;
 
     if (nestedRedirectOutputCount == 0)
@@ -60,7 +60,7 @@ LeakReport::EndRedirectOutput()
         fflush(file);
         FILE * tmpFile = Output::SetFile(oldFile);
         Assert(tmpFile == file);
-        oldFile = null;
+        oldFile = nullptr;
     }
     s_cs.Leave();
 }
@@ -95,7 +95,7 @@ void
 LeakReport::EndSection()
 {
     s_cs.Leave();
-    if (file == null)
+    if (file == nullptr)
     {
         return;
     }
@@ -125,7 +125,7 @@ LeakReport::EnsureLeakReportFile()
     {
         return false;
     }
-    if (file != null)
+    if (file != nullptr)
     {
         return true;
     }
@@ -135,7 +135,7 @@ LeakReport::EnsureLeakReportFile()
     wchar_t const * filename = Js::Configuration::Global.flags.LeakReport;
     wchar_t const * openMode = L"w+";
     wchar_t defaultFilename[_MAX_PATH];
-    if (filename == null)
+    if (filename == nullptr)
     {
         swprintf_s(defaultFilename, L"jsleakreport-%d.txt", ::GetCurrentProcessId());
         filename = defaultFilename;
@@ -171,14 +171,14 @@ LeakReport::LogUrl(wchar_t const * url, void * globalObject)
     record->url = urlCopy;
     record->time = _time64(NULL);
     record->tid = ::GetCurrentThreadId();
-    record->next = null;       
-    record->scriptEngine = null;
+    record->next = nullptr;       
+    record->scriptEngine = nullptr;
     record->globalObject = globalObject;        // TODO: Switch it to JavascriptLibrary when Yong change to use Library in the type
    
     AutoCriticalSection autocs(&s_cs);
-    if (LeakReport::urlRecordHead == null)
+    if (LeakReport::urlRecordHead == nullptr)
     {
-        Assert(LeakReport::urlRecordTail == null);
+        Assert(LeakReport::urlRecordTail == nullptr);
         LeakReport::urlRecordHead = record;
         LeakReport::urlRecordTail = record;        
     }
@@ -200,10 +200,10 @@ LeakReport::DumpUrl(DWORD tid)
         return;
     }
         
-    UrlRecord * prev = null;
+    UrlRecord * prev = nullptr;
     UrlRecord ** pprev = &LeakReport::urlRecordHead;
     UrlRecord * curr = *pprev;
-    while (curr != null)
+    while (curr != nullptr)
     {
         if (curr->tid == tid)
         {
@@ -225,11 +225,11 @@ LeakReport::DumpUrl(DWORD tid)
         curr = *pprev;
     }   
 
-    if (prev == null)
+    if (prev == nullptr)
     {
-        LeakReport::urlRecordTail = null;
+        LeakReport::urlRecordTail = nullptr;
     }
-    else if (prev->next == null)
+    else if (prev->next == nullptr)
     {
         LeakReport::urlRecordTail = prev;
     }

@@ -20,7 +20,7 @@ namespace Js
         // Only script function can be on the stack
         StackScriptFunction * stackScriptFunction = StackScriptFunction::FromVar(function);
         ScriptFunction * boxedFunction = stackScriptFunction->boxedScriptFunction;
-        if (boxedFunction != null)
+        if (boxedFunction != nullptr)
         {
             // We have already boxed this stack function before, and the function
             // wasn't on any slot or not a caller that we can replace.
@@ -61,10 +61,10 @@ namespace Js
     StackScriptFunction::Box(StackScriptFunction *stackScriptFunction, void * returnAddress)
     {
         Assert(ThreadContext::IsOnStack(stackScriptFunction));
-        Assert(stackScriptFunction->boxedScriptFunction == null);
+        Assert(stackScriptFunction->boxedScriptFunction == nullptr);
 
         FunctionBody * functionParent = stackScriptFunction->GetFunctionBody()->GetStackNestedFuncParent();
-        Assert(functionParent != null);
+        Assert(functionParent != nullptr);
         
         ScriptContext * scriptContext = stackScriptFunction->GetScriptContext(); 
         ScriptFunction * boxedFunction;
@@ -73,7 +73,7 @@ namespace Js
             BoxState state(tempAllocator, functionParent, scriptContext, returnAddress);
             state.Box();
             boxedFunction = stackScriptFunction->boxedScriptFunction;
-            Assert(boxedFunction != null);
+            Assert(boxedFunction != nullptr);
         }
         END_TEMP_ALLOCATOR(tempAllocator, scriptContext);
 
@@ -88,10 +88,10 @@ namespace Js
             BoxState state(tempAllocator, parent, scriptContext);
             state.Box();
 
-            if (functionRef != null && ThreadContext::IsOnStack(*functionRef))
+            if (functionRef != nullptr && ThreadContext::IsOnStack(*functionRef))
             {
                 ScriptFunction * boxedScriptFunction = StackScriptFunction::FromVar(*functionRef)->boxedScriptFunction;
-                if (boxedScriptFunction != null)
+                if (boxedScriptFunction != nullptr)
                 {
                     *functionRef = boxedScriptFunction;
                 }
@@ -328,7 +328,7 @@ namespace Js
                 }
             }
 
-            ScriptFunction * boxedCaller = null;
+            ScriptFunction * boxedCaller = nullptr;
             if (this->NeedBoxScriptFunction(callerScriptFunction))
             {                
                 // TODO-STACK-NESTED-FUNC: Can't assert this yet, JIT might not do stack func allocation
@@ -505,7 +505,7 @@ namespace Js
         // have the default type allocated already.  We can turn this into an assert
         // when we start support JIT'ing that.
 
-        if (curr != null)
+        if (curr != nullptr)
         {                        
             do
             {
@@ -513,7 +513,7 @@ namespace Js
                 fn(func);
                 curr = *(Js::Var *)(func + 1);
             }
-            while (curr != null);
+            while (curr != nullptr);
         }
     }
 
@@ -527,7 +527,7 @@ namespace Js
 
     FrameDisplay * StackScriptFunction::BoxState::BoxFrameDisplay(FrameDisplay * frameDisplay)
     {
-        Assert(frameDisplay != null);
+        Assert(frameDisplay != nullptr);
         if (frameDisplay == &Js::NullFrameDisplay)
         {
             return frameDisplay;
@@ -569,7 +569,7 @@ namespace Js
 
     Var * StackScriptFunction::BoxState::BoxScopeSlots(Var * slotArray, uint count)
     {
-        Assert(slotArray != null);
+        Assert(slotArray != nullptr);
         Assert(count != 0);
         Var * boxedSlotArray;
         if (boxedValues.TryGetValue(slotArray, (void **)&boxedSlotArray))
@@ -618,7 +618,7 @@ namespace Js
         FrameDisplay * boxedFrameDisplay = BoxFrameDisplay(frameDisplay);        
 
         ScriptFunction * boxedFunction = stackFunction->boxedScriptFunction;
-        if (boxedFunction != null)
+        if (boxedFunction != nullptr)
         {
             return boxedFunction;
         }
@@ -661,9 +661,9 @@ namespace Js
 #endif
 
             FunctionProxy* functionProxy = (*proxyRef);
-            AssertMsg(functionProxy!= null, "BYTE-CODE VERIFY: Must specify a valid function to create");
+            AssertMsg(functionProxy != nullptr, "BYTE-CODE VERIFY: Must specify a valid function to create");
             Assert(stackFunction->GetFunctionInfo()->GetFunctionProxy() == functionProxy);
-            Assert(!functionProxy->IsFunctionBody() || functionProxy->GetFunctionBody()->GetStackNestedFuncParent() != null);
+            Assert(!functionProxy->IsFunctionBody() || functionProxy->GetFunctionBody()->GetStackNestedFuncParent() != nullptr);
             stackFunction->SetEnvironment(environment);
 
             

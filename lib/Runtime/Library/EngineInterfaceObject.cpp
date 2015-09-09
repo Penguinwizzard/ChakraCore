@@ -154,7 +154,7 @@ namespace Js
         HSTRING operator*() const { Assert(value != nullptr); return value; }
 
         AutoHSTRING()
-            : value(null)
+            : value(nullptr)
         { }
 
         ~AutoHSTRING()
@@ -164,10 +164,10 @@ namespace Js
 
         void Clear()
         {
-            if(value != null)
+            if(value != nullptr)
             {
                 WindowsDeleteString(value);
-                value = null;
+                value = nullptr;
             }
         }
     };
@@ -257,7 +257,7 @@ namespace Js
         // CommonNativeInterfaces is used as a prototype for the other native interface objects 
         // to share the common APIs without requiring everyone to access EngineInterfaceObject.Common.
         this->commonNativeInterfaces = DynamicObject::New(recycler,
-            DynamicType::New(scriptContext, TypeIds_Object, library->GetObjectPrototype(), null,
+            DynamicType::New(scriptContext, TypeIds_Object, library->GetObjectPrototype(), nullptr,
             DeferredTypeHandler<InitializeCommonNativeInterfaces>::GetDefaultInstance()));
         library->AddMember(this, Js::PropertyIds::Common, this->commonNativeInterfaces);
         
@@ -265,7 +265,7 @@ namespace Js
         if (scriptContext->GetConfig()->IsIntlEnabled())
         {
             this->intlNativeInterfaces = DynamicObject::New(recycler,
-                DynamicType::New(scriptContext, TypeIds_Object, this->commonNativeInterfaces, null,
+                DynamicType::New(scriptContext, TypeIds_Object, this->commonNativeInterfaces, nullptr,
                 DeferredTypeHandler<InitializeIntlNativeInterfaces>::GetDefaultInstance()));
             library->AddMember(this, Js::PropertyIds::Intl, this->intlNativeInterfaces);
         }
@@ -275,7 +275,7 @@ namespace Js
         if (scriptContext->GetConfig()->IsWinRTEnabled())
         {
             this->promiseNativeInterfaces = DynamicObject::New(recycler,
-                DynamicType::New(scriptContext, TypeIds_Object, this->commonNativeInterfaces, null,
+                DynamicType::New(scriptContext, TypeIds_Object, this->commonNativeInterfaces, nullptr,
                 DeferredTypeHandler<InitializePromiseNativeInterfaces>::GetDefaultInstance()));
             library->AddMember(this, Js::PropertyIds::Promise, this->promiseNativeInterfaces);
         }

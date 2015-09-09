@@ -171,7 +171,7 @@ class EncoderMD
 {    
 public:
     EncoderMD(Func * func) : m_func(func) {}
-    ptrdiff_t       Encode(IR::Instr * instr, BYTE *pc, BYTE* beginCodeAddress = null);
+    ptrdiff_t       Encode(IR::Instr * instr, BYTE *pc, BYTE* beginCodeAddress = nullptr);
     void            Init(Encoder *encoder);
     void            ApplyRelocs(size_t codeBufferAddress);
     void            EncodeInlineeCallInfo(IR::Instr *instr, uint32 offset);

@@ -23,8 +23,8 @@ NativeCodeGenerator::NativeCodeGenerator(Js::ScriptContext * scriptContext)
     scriptContext(scriptContext),
     pendingCodeGenWorkItems(0),
     queuedFullJitWorkItemCount(0),
-    foregroundAllocators(null),
-    backgroundAllocators(null),
+    foregroundAllocators(nullptr),
+    backgroundAllocators(nullptr),
     byteCodeSizeGenerated(0),
     isClosed(false),
     isOptimizedForManyInstances(scriptContext->GetThreadContext()->IsOptimizedForManyInstances()),
@@ -32,15 +32,15 @@ NativeCodeGenerator::NativeCodeGenerator(Js::ScriptContext * scriptContext)
     freeLoopBodyManager(scriptContext->GetThreadContext()->GetJobProcessor()),
     hasUpdatedQForDebugMode(false)
 #ifdef PROFILE_EXEC
-    , foregroundCodeGenProfiler(null)
-    , backgroundCodeGenProfiler(null)
+    , foregroundCodeGenProfiler(nullptr)
+    , backgroundCodeGenProfiler(nullptr)
 #endif
 {
     freeLoopBodyManager.SetNativeCodeGen(this);
 
 #if DBG_DUMP
     if (Js::Configuration::Global.flags.IsEnabled(Js::AsmDumpModeFlag)
-        && (Js::Configuration::Global.flags.AsmDumpMode != NULL))
+        && (Js::Configuration::Global.flags.AsmDumpMode != nullptr))
     {
         bool fileOpened = false;
         fileOpened = (0 == _wfopen_s(&this->asmFile, Js::Configuration::Global.flags.AsmDumpMode, L"wt"));
@@ -65,7 +65,7 @@ NativeCodeGenerator::NativeCodeGenerator(Js::ScriptContext * scriptContext)
 
             if (!fileOpened)
             {
-                this->asmFile = NULL;
+                this->asmFile = nullptr;
                 AssertMsg(0, "Could not open file for AsmDump. The output will goto standard console");
             }
         }
@@ -73,7 +73,7 @@ NativeCodeGenerator::NativeCodeGenerator(Js::ScriptContext * scriptContext)
     }
     else
     {
-        this->asmFile = NULL;
+        this->asmFile = nullptr;
     }   
 #endif
 
@@ -90,13 +90,13 @@ NativeCodeGenerator::~NativeCodeGenerator()
     Assert(this->IsClosed());
 
 #ifdef PROFILE_EXEC
-    if (this->foregroundCodeGenProfiler != null)
+    if (this->foregroundCodeGenProfiler != nullptr)
     {
         this->foregroundCodeGenProfiler->Release();
     }
 #endif
 
-    if(this->foregroundAllocators != null)
+    if(this->foregroundAllocators != nullptr)
     {
         HeapDelete(this->foregroundAllocators);
     }
@@ -130,7 +130,7 @@ NativeCodeGenerator::~NativeCodeGenerator()
     }
     else
     {
-        Assert(this->backgroundCodeGenProfiler == null);
+        Assert(this->backgroundCodeGenProfiler == nullptr);
     }
 #endif
 
@@ -175,7 +175,7 @@ void NativeCodeGenerator::Close()
     }
 
 #if DBG_DUMP
-    if (this->asmFile != NULL)
+    if (this->asmFile != nullptr)
     {
         if(0 != fclose(this->asmFile))
         {
@@ -496,16 +496,16 @@ NativeCodeGenerator::GenerateFunction(Js::FunctionBody *fn, Js::ScriptFunction *
     }    
 
     // Create a work item with null entry point- we'll set it once its allocated
-    AutoPtr<JsFunctionCodeGen> workItemAutoPtr(this->NewFunctionCodeGen(fn, null));
-    if ((JsFunctionCodeGen*) workItemAutoPtr == null)
+    AutoPtr<JsFunctionCodeGen> workItemAutoPtr(this->NewFunctionCodeGen(fn, nullptr));
+    if ((JsFunctionCodeGen*) workItemAutoPtr == nullptr)
     {
         // OOM, just skip this work item and return.
         return;
     }    
 
-    Js::FunctionEntryPointInfo* entryPointInfo = null;
+    Js::FunctionEntryPointInfo* entryPointInfo = nullptr;
 
-    if (function != NULL)
+    if (function != nullptr)
     {
         entryPointInfo = fn->CreateNewDefaultEntryPoint();
     }
@@ -517,7 +517,7 @@ NativeCodeGenerator::GenerateFunction(Js::FunctionBody *fn, Js::ScriptFunction *
 #ifdef ASMJS_PLAT
     if (fn->GetIsAsmjsMode())
     {
-        Assert(function != NULL);
+        Assert(function != nullptr);
         Js::FunctionEntryPointInfo* oldFuncObjEntryPointInfo = (Js::FunctionEntryPointInfo*)function->GetEntryPointInfo();
         Assert(oldFuncObjEntryPointInfo->GetIsAsmJSFunction()); // should be asmjs entrypoint info
 
@@ -541,7 +541,7 @@ NativeCodeGenerator::GenerateFunction(Js::FunctionBody *fn, Js::ScriptFunction *
 #endif
     {
         fn->SetCheckCodeGenEntryPoint(entryPointInfo, NativeCodeGenerator::CheckCodeGenThunk);
-        if (function != NULL)
+        if (function != nullptr)
         {   
             function->UpdateThunkEntryPoint(entryPointInfo, NativeCodeGenerator::CheckCodeGenThunk);
         }
@@ -593,7 +593,7 @@ void NativeCodeGenerator::GenerateLoopBody(Js::FunctionBody * fn, Js::LoopHeader
 {
     ASSERT_THREAD();
     Assert(fn->GetScriptContext()->GetNativeCodeGenerator() == this);        
-    Assert(entryPoint->address == NULL);
+    Assert(entryPoint->address == nullptr);
     
 #if DBG_DUMP
     if (PHASE_TRACE1(Js::JITLoopBodyPhase))
@@ -755,7 +755,7 @@ NativeCodeGenerator::IsValidVar(const Js::Var var, Recycler *const recycler)
     if(typeId != TypeIds_Array)
     {
         ArrayObject* const objectArray = object->GetObjectArrayUnchecked();
-        return objectArray == null || recycler->IsValidObject(objectArray, sizeof(*objectArray));
+        return objectArray == nullptr || recycler->IsValidObject(objectArray, sizeof(*objectArray));
     }
 
     // Not using JavascriptArray::FromVar since there's a virtual call in there
@@ -835,13 +835,13 @@ NativeCodeGenerator::CodeGen(PageAllocator * pageAllocator, CodeGenWorkItem* wor
 #ifdef PROFILE_EXEC
         foreground ? EnsureForegroundCodeGenProfiler() : GetBackgroundCodeGenProfiler(pageAllocator); // ok to do outside lock since the respective function is called only from one thread
 #else
-        null;
+        nullptr;
 #endif
 
     NoRecoverMemoryJitArenaAllocator funcAlloc(L"BE-FuncAlloc", pageAllocator, Js::Throw::OutOfMemory);        
     Js::ReadOnlyDynamicProfileInfo profileInfo(
-        body->HasDynamicProfileInfo() ? body->GetAnyDynamicProfileInfo() : null,
-        foreground ? null : &funcAlloc);
+        body->HasDynamicProfileInfo() ? body->GetAnyDynamicProfileInfo() : nullptr,
+        foreground ? nullptr : &funcAlloc);
     bool rejit;
     ThreadContext *threadContext = scriptContext->GetThreadContext();
     double startTime = threadContext->JITTelemetry.Now();
@@ -851,7 +851,7 @@ NativeCodeGenerator::CodeGen(PageAllocator * pageAllocator, CodeGenWorkItem* wor
         // the number allocator needs to be on the stack so that if we are doing forground JIT
         // the chunk allocated from the recycler will be stacked pinned
         CodeGenNumberAllocator numberAllocator(
-            foreground? null : scriptContext->GetThreadContext()->GetCodeGenNumberThreadAllocator(),
+            foreground? nullptr : scriptContext->GetThreadContext()->GetCodeGenNumberThreadAllocator(),
             scriptContext->GetRecycler());
       
         Func *func =
@@ -860,7 +860,7 @@ NativeCodeGenerator::CodeGen(PageAllocator * pageAllocator, CodeGenWorkItem* wor
                 Func,
                 (&funcAlloc),
                 workItem,
-                null,
+                nullptr,
                 workItem->GetEntryPoint()->GetPolymorphicInlineCacheInfo()->GetSelfInfo(),
                 allocators,
                 &numberAllocator,
@@ -946,7 +946,7 @@ NativeCodeGenerator::CodeGen(PageAllocator * pageAllocator, CodeGenWorkItem* wor
         // code generator. The number allocator must be freed before the recycler (and thus before the 
         // code generator) so we can't and don't need to flush it.
         CodeGenNumberThreadAllocator * threadNumberAllocator = this->scriptContext->GetThreadContext()->GetCodeGenNumberThreadAllocator();
-        if (threadNumberAllocator != NULL)
+        if (threadNumberAllocator != nullptr)
         {
             threadNumberAllocator->FlushAllocations();
         }
@@ -1056,7 +1056,7 @@ NativeCodeGenerator::GetCheckCodeGenFunction(Js::JavascriptMethod codeAddress)
     {
         return NativeCodeGenerator::CheckCodeGen;
     }
-    return null;
+    return nullptr;
 }
 
 
@@ -1537,7 +1537,7 @@ NativeCodeGenerator::JobProcessed(JsUtil::Job *const job, const bool succeeded)
         }
     }
 
-    Js::FunctionBody* functionBody = NULL;
+    Js::FunctionBody* functionBody = nullptr;
     CodeGenWorkItemType workitemType = workItem->Type();
 
     if (workitemType == JsFunctionType)
@@ -1549,7 +1549,7 @@ NativeCodeGenerator::JobProcessed(JsUtil::Job *const job, const bool succeeded)
         {
             Js::FunctionEntryPointInfo* entryPointInfo = static_cast<Js::FunctionEntryPointInfo*>(functionCodeGen->GetEntryPoint());
             entryPointInfo->SetJitMode(jitMode);
-            Assert(workItem->GetCodeAddress() != null);
+            Assert(workItem->GetCodeAddress() != NULL);
             entryPointInfo->SetCodeGenDone();
         }
         else
@@ -1623,7 +1623,7 @@ NativeCodeGenerator::GetJobToProcessProactively()
 
     // Look for work, starting with high priority items first, and above LowPri
     CodeGenWorkItem* workItem = workItems.Head();
-    while(workItem != null)
+    while(workItem != nullptr)
     {
         if(workItem->ShouldSpeculativelyJit(this->byteCodeSizeGenerated))
         {
@@ -1711,8 +1711,8 @@ NativeCodeGenerator::GatherCodeGenData(
     Assert(jitTimeData);
     Assert(IsInlinee == !!runtimeData);
     Assert(!IsInlinee || !inliningDecider.GetIsLoopBody());
-    Assert(topFunctionBody != null && (!entryPoint->GetWorkItem() || entryPoint->GetWorkItem()->GetFunctionBody() == topFunctionBody));
-    Assert(objTypeSpecFldInfoList != null);
+    Assert(topFunctionBody != nullptr && (!entryPoint->GetWorkItem() || entryPoint->GetWorkItem()->GetFunctionBody() == topFunctionBody));
+    Assert(objTypeSpecFldInfoList != nullptr);
 
 #ifdef FIELD_ACCESS_STATS
     jitTimeData->EnsureInlineCacheStats(recycler);
@@ -1724,7 +1724,7 @@ NativeCodeGenerator::GatherCodeGenData(
 #define SetInlineCacheCount(counter, value)
 #define IncInlineCacheCount(counter)
 #define AddInlineCacheStats(callerData, inlineeData)
-#define InlineCacheStatsArg(jitTimeData) null
+#define InlineCacheStatsArg(jitTimeData) nullptr
 #endif
 
 #if DBG
@@ -1877,7 +1877,7 @@ NativeCodeGenerator::GatherCodeGenData(
                     inlineCache = functionBody->GetInlineCache(i);
                 }
 
-                Js::ObjTypeSpecFldInfo* objTypeSpecFldInfo = null;
+                Js::ObjTypeSpecFldInfo* objTypeSpecFldInfo = nullptr;
 
 #if ENABLE_DEBUG_CONFIG_OPTIONS
                 if (PHASE_VERBOSE_TRACE(Js::ObjTypeSpecPhase, topFunctionBody) || PHASE_VERBOSE_TRACE(Js::EquivObjTypeSpecPhase, topFunctionBody))
@@ -1979,7 +1979,7 @@ NativeCodeGenerator::GatherCodeGenData(
                                 && !isJitTimeDataComputed)
                             {
                                 // non configurable
-                                if (objTypeSpecFldInfo == null)
+                                if (objTypeSpecFldInfo == nullptr)
                                 {
                                     objTypeSpecFldInfo = Js::ObjTypeSpecFldInfo::CreateFrom(objTypeSpecFldInfoList->Count(), inlineCache, i, entryPoint, topFunctionBody, functionBody, InlineCacheStatsArg(jitTimeData));
                                     if (objTypeSpecFldInfo)
@@ -1989,7 +1989,7 @@ NativeCodeGenerator::GatherCodeGenData(
                                         objTypeSpecFldInfoList->Prepend(objTypeSpecFldInfo);
                                     }
                                 }
-                                if (objTypeSpecFldInfo != null)
+                                if (objTypeSpecFldInfo != nullptr)
                                 {
                                     objTypeSpecFldInfo->SetRootObjectNonConfigurableField(i < functionBody->GetRootObjectStoreInlineCacheStart());
                                 }
@@ -2002,7 +2002,7 @@ NativeCodeGenerator::GatherCodeGenData(
             else if(function && Js::ScriptFunctionWithInlineCache::Is(function) && (cacheType & Js::FldInfo_InlineCandidate || !polymorphicCacheOnFunctionBody))
             {
                 Js::InlineCache *inlineCache = Js::ScriptFunctionWithInlineCache::FromVar(function)->GetInlineCache(i);
-                Js::ObjTypeSpecFldInfo* objTypeSpecFldInfo = null;
+                Js::ObjTypeSpecFldInfo* objTypeSpecFldInfo = nullptr;
 
                 if(!PHASE_OFF(Js::ObjTypeSpecPhase, functionBody) || !PHASE_OFF(Js::FixedMethodsPhase, functionBody))
                 {
@@ -2038,7 +2038,7 @@ NativeCodeGenerator::GatherCodeGenData(
             {
                 const auto polymorphicInlineCache = functionBody->GetPolymorphicInlineCache(i);
 
-                if (polymorphicInlineCache != null)
+                if (polymorphicInlineCache != nullptr)
                 {
                     IncInlineCacheCount(polyInlineCacheCount);
                     if (profileData->GetFldInfo(functionBody, i)->ShouldUsePolymorphicInlineCache())
@@ -2069,7 +2069,7 @@ NativeCodeGenerator::GatherCodeGenData(
                             }
 #endif
                             Js::ObjTypeSpecFldInfo* objTypeSpecFldInfo = Js::ObjTypeSpecFldInfo::CreateFrom(objTypeSpecFldInfoList->Count(), polymorphicInlineCache, i, entryPoint, topFunctionBody, functionBody, InlineCacheStatsArg(jitTimeData));
-                            if (objTypeSpecFldInfo != null)
+                            if (objTypeSpecFldInfo != nullptr)
                             {
                                 if (!isJitTimeDataComputed)
                                 {
@@ -2098,7 +2098,7 @@ NativeCodeGenerator::GatherCodeGenData(
                     IncInlineCacheCount(nullPolyInlineCacheCount);
                 }
 
-                if (polymorphicInlineCache != null)
+                if (polymorphicInlineCache != nullptr)
                 {
                     if (PHASE_VERBOSE_TRACE1(Js::PolymorphicInlineCachePhase))
                     {
@@ -2256,7 +2256,7 @@ NativeCodeGenerator::GatherCodeGenData(
             //  3. Pass the fixed function object to GatherCodeGenData which can clone its inline caches.
 
             uint ldFldInlineCacheIndex = profileData->GetLdFldCacheIndexFromCallSiteInfo(functionBody, profiledCallSiteId);
-            Js::InlineCache * inlineCache = null;
+            Js::InlineCache * inlineCache = nullptr;
             if ((ldFldInlineCacheIndex != Js::Constants::NoInlineCacheIndex) && (ldFldInlineCacheIndex < functionBody->GetInlineCacheCount()))
             {
                 if(function && Js::ScriptFunctionWithInlineCache::Is(function))
@@ -2269,7 +2269,7 @@ NativeCodeGenerator::GatherCodeGenData(
                 }
             }
 
-            Js::JavascriptFunction* fixedFunctionObject = null;
+            Js::JavascriptFunction* fixedFunctionObject = nullptr;
             if (inlineCache && (inlineCache->IsLocal() || inlineCache->IsProto()))
             {
                 inlineCache->TryGetFixedMethodFromCache(functionBody, ldFldInlineCacheIndex, &fixedFunctionObject);
@@ -2277,7 +2277,7 @@ NativeCodeGenerator::GatherCodeGenData(
             
             if (fixedFunctionObject && !fixedFunctionObject->GetFunctionInfo()->IsDeferred() && fixedFunctionObject->GetFunctionBody() != inlineeFunctionBody)
             {
-                fixedFunctionObject = null;
+                fixedFunctionObject = nullptr;
             }
             
             if (!PHASE_OFF(Js::InlineRecursivePhase, functionBody))
@@ -2374,7 +2374,7 @@ NativeCodeGenerator::GatherCodeGenData(
             if (getSetInlineCandidate ^ callApplyInlineCandidate)
             {
                 Js::ObjTypeSpecFldInfo* info = jitTimeData->GetObjTypeSpecFldInfoArray()->GetInfo(functionBody, inlineCacheIndex);
-                if (info == null)
+                if (info == nullptr)
                 {
                     continue;
                 }
@@ -2386,7 +2386,7 @@ NativeCodeGenerator::GatherCodeGenData(
 
                 Js::JavascriptFunction* inlineeFunction = info->GetFieldValueAsFunctionIfAvailable();
 
-                if (inlineeFunction == null)
+                if (inlineeFunction == nullptr)
                 {
                     continue;
                 }
@@ -2560,7 +2560,7 @@ NativeCodeGenerator::GatherCodeGenData(Js::FunctionBody *const topFunctionBody, 
             // Clear field values we don't need so we don't unnecessarily pin them while JIT-ing.
             if (!info->GetKeepFieldValue() && !(info->IsPoly() && info->DoesntHaveEquivalence()))
             {
-                info->SetFieldValue(null);
+                info->SetFieldValue(nullptr);
             }
             jitTimeData->SetGlobalObjTypeSpecFldInfo(propertyInfoId--, info);
         }
@@ -2657,7 +2657,7 @@ NativeCodeGenerator::EnterScriptStart()
 #ifdef PROFILE_EXEC
         this->foregroundCodeGenProfiler
 #else
-        null
+        nullptr
 #endif
         );
 
@@ -2761,7 +2761,7 @@ void NativeCodeGenerator::FreeLoopBodyJobManager::QueueFreeLoopBodyJob(void* cod
 
     FreeLoopBodyJob* job = HeapNewNoThrow(FreeLoopBodyJob, this, codeAddress);
 
-    if (job == null)
+    if (job == nullptr)
     {
         FreeLoopBodyJob stackJob(this, codeAddress, false /* heapAllocated */);
 
@@ -2789,7 +2789,7 @@ void NativeCodeGenerator::FreeLoopBodyJobManager::QueueFreeLoopBodyJob(void* cod
 void
 NativeCodeGenerator::CreateProfiler(Js::ScriptContextProfiler * profiler)
 {
-    Assert(this->foregroundCodeGenProfiler == null);
+    Assert(this->foregroundCodeGenProfiler == nullptr);
 
     this->foregroundCodeGenProfiler = profiler;
     profiler->AddRef();
@@ -2801,7 +2801,7 @@ NativeCodeGenerator::EnsureForegroundCodeGenProfiler()
 {
     if (Js::Configuration::Global.flags.IsEnabled(Js::ProfileFlag))
     {   
-        Assert(this->foregroundCodeGenProfiler != null);
+        Assert(this->foregroundCodeGenProfiler != nullptr);
         Assert(this->foregroundCodeGenProfiler->IsInitialized());
     }
 
@@ -2814,9 +2814,9 @@ NativeCodeGenerator::SetProfilerFromNativeCodeGen(NativeCodeGenerator * nativeCo
 {
     Assert(Js::Configuration::Global.flags.IsEnabled(Js::ProfileFlag));
 
-    Assert(this->foregroundCodeGenProfiler != null);
+    Assert(this->foregroundCodeGenProfiler != nullptr);
     Assert(this->foregroundCodeGenProfiler->IsInitialized());
-    Assert(nativeCodeGen->foregroundCodeGenProfiler != null);
+    Assert(nativeCodeGen->foregroundCodeGenProfiler != nullptr);
     Assert(nativeCodeGen->foregroundCodeGenProfiler->IsInitialized());
 
     this->foregroundCodeGenProfiler->Release();
@@ -2853,7 +2853,7 @@ NativeCodeGenerator::ProfilePrint()
 void
 NativeCodeGenerator::ProfileBegin(Js::ScriptContextProfiler *const profiler, Js::Phase phase)
 {
-    AssertMsg((profiler != null) == Js::Configuration::Global.flags.IsEnabled(Js::ProfileFlag),  
+    AssertMsg((profiler != nullptr) == Js::Configuration::Global.flags.IsEnabled(Js::ProfileFlag),
         "Profiler tag is supplied but the profiler pointer is NULL");        
     if (profiler)
     {        
@@ -2864,7 +2864,7 @@ NativeCodeGenerator::ProfileBegin(Js::ScriptContextProfiler *const profiler, Js:
 void
 NativeCodeGenerator::ProfileEnd(Js::ScriptContextProfiler *const profiler, Js::Phase phase)
 {
-    AssertMsg((profiler != null) == Js::Configuration::Global.flags.IsEnabled(Js::ProfileFlag),  
+    AssertMsg((profiler != nullptr) == Js::Configuration::Global.flags.IsEnabled(Js::ProfileFlag),
         "Profiler tag is supplied but the profiler pointer is NULL");    
     if (profiler)
     {     
@@ -2881,7 +2881,7 @@ void NativeCodeGenerator::AddToJitQueue(CodeGenWorkItem *const codeGenWorkItem, 
     Js::CodeGenRecyclableData* recyclableData = GatherCodeGenData(codeGenWorkItem->GetFunctionBody(), codeGenWorkItem->GetFunctionBody(), codeGenWorkItem->GetEntryPoint(), codeGenWorkItem, function);
     codeGenWorkItem->SetRecyclableData(recyclableData);
 
-    AutoOptionalCriticalSection autoLock(lock ? Processor()->GetCriticalSection() : null);
+    AutoOptionalCriticalSection autoLock(lock ? Processor()->GetCriticalSection() : nullptr);
     scriptContext->GetThreadContext()->RegisterCodeGenRecyclableData(recyclableData);
 
     // If we have added a lot of jobs that are still waiting to be jitted, remove the oldest job
@@ -2938,7 +2938,7 @@ Js::ScriptContextProfiler * NativeCodeGenerator::GetBackgroundCodeGenProfiler(Pa
             {
                 if (!codegenProfiler->IsInitialized())
                 {
-                    codegenProfiler->Initialize(allocator, null);
+                    codegenProfiler->Initialize(allocator, nullptr);
                 }
                 return codegenProfiler;
             }
@@ -2946,9 +2946,9 @@ Js::ScriptContextProfiler * NativeCodeGenerator::GetBackgroundCodeGenProfiler(Pa
         }
         Assert(false);
     }
-    return null;
+    return nullptr;
 #else
-    return null;
+    return nullptr;
 #endif
 }
 

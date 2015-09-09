@@ -6,7 +6,7 @@
 __inline
 bool MarkContext::AddMarkedObject(void * objectAddress, size_t objectSize)
 {  
-    Assert(objectAddress != null);
+    Assert(objectAddress != nullptr);
     Assert(objectSize > 0);
     Assert(objectSize % sizeof(void *) == 0);
 
@@ -30,7 +30,7 @@ bool MarkContext::AddMarkedObject(void * objectAddress, size_t objectSize)
 __inline
 bool MarkContext::AddTrackedObject(FinalizableObject * obj)
 {
-    Assert(obj != null);
+    Assert(obj != nullptr);
     Assert(recycler->DoQueueTrackedObject());
     Assert(!recycler->inPartialCollectMode);
 

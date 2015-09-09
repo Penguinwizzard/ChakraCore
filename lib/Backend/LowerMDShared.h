@@ -29,10 +29,10 @@ public:
     LowererMD(Func *func) :
         m_func(func),
         lowererMDArch(func),
-        floatTmpMap(NULL),
-        bvFloatTmpInits(NULL),
+        floatTmpMap(nullptr),
+        bvFloatTmpInits(nullptr),
 #ifdef SIMD_JS_ENABLED
-        m_simd128OpCodesMap(NULL)
+        m_simd128OpCodesMap(nullptr)
 #endif
     {
     }
@@ -69,8 +69,8 @@ public:
 public:
             void            Init(Lowerer *lowerer);
             IR::Opnd *      GenerateMemRef(void *addr, IRType type, IR::Instr *instr, bool dontEncode = false);
-            IR::Instr *     ChangeToHelperCall(IR::Instr * instr, IR::JnHelperMethod helperMethod, IR::LabelInstr *labelBailOut = NULL,
-                                               IR::Opnd *opndInstance = NULL, IR::PropertySymOpnd * propSymOpnd = null, bool isHelperContinuation = false);
+            IR::Instr *     ChangeToHelperCall(IR::Instr * instr, IR::JnHelperMethod helperMethod, IR::LabelInstr *labelBailOut = nullptr,
+                                               IR::Opnd *opndInstance = nullptr, IR::PropertySymOpnd * propSymOpnd = nullptr, bool isHelperContinuation = false);
             void            FinalLower();
 #ifdef _M_X64
             // TODO: Fix this in IRBuilder.
@@ -92,7 +92,7 @@ public:
             IR::Opnd *      CreateStackArgumentsSlotOpnd();
             IR::Instr *     LoadArgumentsFromFrame(IR::Instr * instr);
             IR::Instr *     LoadArgumentCount(IR::Instr * instr);
-            IR::Instr *     LoadHeapArguments(IR::Instr * instr, bool force = false, IR::Opnd* opndInputParamCount = null);
+            IR::Instr *     LoadHeapArguments(IR::Instr * instr, bool force = false, IR::Opnd* opndInputParamCount = nullptr);
             IR::Instr *     LoadHeapArgsCached(IR::Instr * instr);
             IR::Instr *     LoadFuncExpression(IR::Instr * instr);
             IR::Instr *     LowerRet(IR::Instr * instr);
@@ -118,8 +118,8 @@ private:
             static void     MakeDstEquSrc1(IR::Instr *const instr);
 public:
             IR::Instr *     GenerateSmIntPairTest(IR::Instr * instrInsert, IR::Opnd * opndSrc1, IR::Opnd * opndSrc2, IR::LabelInstr * labelFail);
-            void            GenerateSmIntTest(IR::Opnd *opndSrc, IR::Instr *instrInsert, IR::LabelInstr *labelHelper, IR::Instr **instrFirst = null, bool fContinueLabel = false);            
-            void            GenerateTaggedZeroTest( IR::Opnd * opndSrc, IR::Instr * instrInsert, IR::LabelInstr * labelHelper = NULL);
+            void            GenerateSmIntTest(IR::Opnd *opndSrc, IR::Instr *instrInsert, IR::LabelInstr *labelHelper, IR::Instr **instrFirst = nullptr, bool fContinueLabel = false);
+            void            GenerateTaggedZeroTest( IR::Opnd * opndSrc, IR::Instr * instrInsert, IR::LabelInstr * labelHelper = nullptr);
             bool            GenerateObjectTest(IR::Opnd * opndSrc, IR::Instr * insertInstr, IR::LabelInstr * labelInstr, bool fContinueLabel = false);
             bool            GenerateJSBooleanTest(IR::RegOpnd * regSrc, IR::Instr * insertInstr, IR::LabelInstr * labelTarget, bool fContinueLabel = false);
             void            GenerateBooleanTest(IR::Opnd * regSrc, IR::Instr * insertInstr, IR::LabelInstr * labelTarget, bool fContinueLabel = false);
@@ -211,8 +211,8 @@ public:
             static void     LowerInt4MulWithBailOut(IR::Instr *const instr, const IR::BailOutKind bailOutKind, IR::LabelInstr *const bailOutLabel, IR::LabelInstr *const skipBailOutLabel);
             void     LowerInt4RemWithBailOut(IR::Instr *const instr, const IR::BailOutKind bailOutKind, IR::LabelInstr *const bailOutLabel, IR::LabelInstr *const skipBailOutLabel) const;
 
-            static bool     GenerateSimplifiedInt4Mul(IR::Instr *const mulInstr, const IR::BailOutKind bailOutKind = IR::BailOutInvalid, IR::LabelInstr *const bailOutLabel = NULL);
-            static bool     GenerateSimplifiedInt4Rem(IR::Instr *const remInstr, IR::LabelInstr *const skipBailOutLabel = NULL);
+            static bool     GenerateSimplifiedInt4Mul(IR::Instr *const mulInstr, const IR::BailOutKind bailOutKind = IR::BailOutInvalid, IR::LabelInstr *const bailOutLabel = nullptr);
+            static bool     GenerateSimplifiedInt4Rem(IR::Instr *const remInstr, IR::LabelInstr *const skipBailOutLabel = nullptr);
 
             IR::Instr *     LowerCatch(IR::Instr *instr);
 
@@ -242,7 +242,7 @@ public:
             IR::Instr *         LowerAsmJsLdElemHelper(IR::Instr * callInstr);
             IR::Instr *         LowerAsmJsStElemHelper(IR::Instr * callInstr);
             IR::Instr *         LowerCall(IR::Instr * callInstr, Js::ArgSlot argCount);
-            IR::Instr *         LowerCallI(IR::Instr * callInstr, ushort callFlags, bool isHelper = false, IR::Instr * insertBeforeInstrForCFG = null);
+            IR::Instr *         LowerCallI(IR::Instr * callInstr, ushort callFlags, bool isHelper = false, IR::Instr * insertBeforeInstrForCFG = nullptr);
             IR::Instr *         LowerCallPut(IR::Instr * callInstr);
             IR::Instr *         LoadHelperArgument(IR::Instr * instr, IR::Opnd * opndArg);
             IR::Instr *         LoadDoubleHelperArgument(IR::Instr * instr, IR::Opnd * opndArg);
@@ -300,8 +300,8 @@ public:
             }
 
 public:
-    static void InsertIncUInt8PreventOverflow(IR::Opnd *const dst, IR::Opnd *const src, IR::Instr *const insertBeforeInstr, IR::Instr * *const onOverflowInsertBeforeInstrRef = null);
-    static void InsertDecUInt8PreventOverflow(IR::Opnd *const dst, IR::Opnd *const src, IR::Instr *const insertBeforeInstr, IR::Instr * *const onOverflowInsertBeforeInstrRef = null);
+    static void InsertIncUInt8PreventOverflow(IR::Opnd *const dst, IR::Opnd *const src, IR::Instr *const insertBeforeInstr, IR::Instr * *const onOverflowInsertBeforeInstrRef = nullptr);
+    static void InsertDecUInt8PreventOverflow(IR::Opnd *const dst, IR::Opnd *const src, IR::Instr *const insertBeforeInstr, IR::Instr * *const onOverflowInsertBeforeInstrRef = nullptr);
 
 #ifdef SIMD_JS_ENABLED
     void                Simd128InitOpcodeMap();

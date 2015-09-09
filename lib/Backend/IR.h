@@ -34,7 +34,7 @@ class BranchJumpTableWrapper
 {
 public:
 
-    BranchJumpTableWrapper(uint tableSize) : defaultTarget(null), labelInstr(nullptr), tableSize(tableSize)
+    BranchJumpTableWrapper(uint tableSize) : defaultTarget(nullptr), labelInstr(nullptr), tableSize(tableSize)
     {
     }
 
@@ -119,16 +119,16 @@ class Instr
 {
 protected:
     Instr(bool hasBailOutInfo = false) :
-        m_next(null),
-        m_prev(null),
+        m_next(nullptr),
+        m_prev(nullptr),
         m_opcode(Js::OpCode::MaxByteSizedOpcodes),
-        m_func(null),
+        m_func(nullptr),
         m_number(Js::Constants::NoByteCodeOffset),
-        m_dst(null),
-        m_src1(null),
-        m_src2(null),
+        m_dst(nullptr),
+        m_src1(nullptr),
+        m_src2(nullptr),
 #if DBG_DUMP
-        globOptInstrString(null),
+        globOptInstrString(nullptr),
 #endif
         dstIsTempNumber(false),
         dstIsTempNumberTransferred(false),
@@ -218,22 +218,22 @@ public:
     Opnd *          Replace(Opnd *oldOpnd, Opnd *newOpnd);
     Opnd *          DeepReplace(Opnd *const oldOpnd, Opnd *const newOpnd);
     Opnd *          ReplaceDst(Opnd * newDst);
-    Instr *         SinkDst(Js::OpCode assignOpcode, RegNum regNum = RegNOREG, IR::Instr *insertAfterInstr = null);
-    Instr *         SinkDst(Js::OpCode assignOpcode, StackSym * stackSym, RegNum regNum = RegNOREG, IR::Instr *insertAfterInstr = null);
+    Instr *         SinkDst(Js::OpCode assignOpcode, RegNum regNum = RegNOREG, IR::Instr *insertAfterInstr = nullptr);
+    Instr *         SinkDst(Js::OpCode assignOpcode, StackSym * stackSym, RegNum regNum = RegNOREG, IR::Instr *insertAfterInstr = nullptr);
     Instr *         SinkInstrBefore(IR::Instr * instrTarget);
     Opnd *          GetSrc1() const;
     Opnd *          SetSrc1(Opnd * newSrc);
     Opnd *          UnlinkSrc1();
     void            FreeSrc1();
     Opnd *          ReplaceSrc1(Opnd * newSrc);            
-    Instr *         HoistSrc1(Js::OpCode assignOpcode, RegNum regNum = RegNOREG, StackSym *newSym = null);
+    Instr *         HoistSrc1(Js::OpCode assignOpcode, RegNum regNum = RegNOREG, StackSym *newSym = nullptr);
     bool            IsSrc1FunctionObject();
     Opnd *          GetSrc2() const;
     Opnd *          SetSrc2(Opnd * newSrc);
     Opnd *          UnlinkSrc2();
     void            FreeSrc2();
     Opnd *          ReplaceSrc2(Opnd * newSrc);            
-    Instr *         HoistSrc2(Js::OpCode assignOpcode, RegNum regNum = RegNOREG, StackSym *newSym = null);
+    Instr *         HoistSrc2(Js::OpCode assignOpcode, RegNum regNum = RegNOREG, StackSym *newSym = nullptr);
     Instr *         HoistIndirOffset(IndirOpnd *indirOpnd, RegNum regNum = RegNOREG);
     Instr *         HoistSymOffset(SymOpnd *symOpnd, RegNum baseReg, uint32 offset, RegNum regNum = RegNOREG);
     Instr *         HoistIndirOffsetAsAdd(IndirOpnd *orgOpnd, IR::Opnd *baseOpnd, int offset,  RegNum regNum);
@@ -274,7 +274,7 @@ public:
     static IR::Instr * CloneRange(Instr * instrStart, Instr * instrLast, Instr * instrInsert, Lowerer *lowerer, JitArenaAllocator *alloc, bool (*fMapTest)(IR::Instr*), bool clonedInstrGetOrigArgSlot);
 
     bool            CanHaveArgOutChain() const;
-    bool            HasEmptyArgOutChain(IR::Instr** startCallInstrOut = null);
+    bool            HasEmptyArgOutChain(IR::Instr** startCallInstrOut = nullptr);
     bool            HasFixedFunctionAddressTarget() const;
 
 #if ENABLE_DEBUG_CONFIG_OPTIONS
@@ -315,7 +315,7 @@ public:
     void            UnlinkStartCallFromBailOutInfo(IR::Instr *endInstr) const;
     void            ChangeEquivalentToMonoTypeCheckBailOut();
     Js::Var         TryOptimizeInstrWithFixedDataProperty(IR::Instr ** pInstr, GlobOpt* globopt);
-    Opnd *          FindCallArgumentOpnd(const Js::ArgSlot argSlot, IR::Instr * *const ownerInstrRef = null);
+    Opnd *          FindCallArgumentOpnd(const Js::ArgSlot argSlot, IR::Instr * *const ownerInstrRef = nullptr);
     void            CopyNumber(IR::Instr *instr) { this->SetNumber(instr->GetNumber()); }
 
     bool            FetchOperands(__ecount(argsOpndLength) IR::Opnd **argsOpnd, uint argsOpndLength);
@@ -418,9 +418,9 @@ public:
     Js::JavascriptFunction* GetFixedFunction() const;
     uint       GetArgOutCount(bool getInterpreterArgOutCount);
     IR::PropertySymOpnd *GetPropertySymOpnd() const;
-    bool       CallsAccessor(IR::PropertySymOpnd* methodOpnd = null);
-    bool       CallsGetter(IR::PropertySymOpnd* methodOpnd = null);
-    bool       CallsSetter(IR::PropertySymOpnd* methodOpnd = null);
+    bool       CallsAccessor(IR::PropertySymOpnd* methodOpnd = nullptr);
+    bool       CallsGetter(IR::PropertySymOpnd* methodOpnd = nullptr);
+    bool       CallsSetter(IR::PropertySymOpnd* methodOpnd = nullptr);
     bool       UsesAllFields();
     void       MoveArgs(bool generateByteCodeCapture = false);
     void       Move(IR::Instr* insertInstr);
@@ -596,8 +596,8 @@ class LabelInstr : public Instr
     
 
 public:
-    LabelInstr(JitArenaAllocator * allocator) : Instr(), labelRefs(allocator), m_isLoopTop(false), m_block(null), isOpHelper(false), 
-        m_hasNonBranchRef(false), m_region(null), m_loweredBasicBlock(nullptr), m_isDataLabel(false)
+    LabelInstr(JitArenaAllocator * allocator) : Instr(), labelRefs(allocator), m_isLoopTop(false), m_block(nullptr), isOpHelper(false),
+        m_hasNonBranchRef(false), m_region(nullptr), m_loweredBasicBlock(nullptr), m_isDataLabel(false)
 #if DBG
         , m_noHelperAssert(false)
 #endif
@@ -605,7 +605,7 @@ public:
 #if DBG_DUMP
         m_id = 0;
 #endif
-        m_pc.pc = null;
+        m_pc.pc = nullptr;
     }
 
     static LabelInstr *     New(Js::OpCode opcode, Func *func, bool isOpHelper = false);
@@ -702,7 +702,7 @@ public:
     static BranchInstr * New(Js::OpCode opcode, Opnd* destOpnd, LabelInstr * branchTarget, Opnd *srcOpnd, Func *func);
     static BranchInstr * New(Js::OpCode opcode, LabelInstr * branchTarget, Opnd *src1Opnd, Opnd *src2Opnd, Func *func);
 
-    BranchInstr(bool hasBailOutInfo = false) : Instr(hasBailOutInfo), m_branchTarget(null), m_isAirlock(false), m_isSwitchBr(false), m_isOrphanedLeave(false)
+    BranchInstr(bool hasBailOutInfo = false) : Instr(hasBailOutInfo), m_branchTarget(nullptr), m_isAirlock(false), m_isSwitchBr(false), m_isOrphanedLeave(false)
     {
 #if DBG
         m_isMultiBranch = false;
@@ -775,7 +775,7 @@ public:
     IntConstType m_lastCaseValue;
 
     MultiBranchInstr() : 
-        m_branchTargets(null)
+        m_branchTargets(nullptr)
     {
 #if DBG
         m_isMultiBranch = true;
@@ -871,7 +871,7 @@ public:
             return;
         }
 
-        void ** defaultTarget = null;
+        void ** defaultTarget = nullptr;
         
         switch (m_kind)
         {
@@ -974,9 +974,9 @@ typedef BailOutInstrTemplate<BranchInstr> BranchBailOutInstr;
 //
 
 #ifdef DBG
-# define INIT_PREV   IR::Instr * __prevInstrCheck = NULL
+# define INIT_PREV   IR::Instr * __prevInstrCheck = nullptr
 # define CHECK_PREV(instr)\
-    AssertMsg(__prevInstrCheck == NULL || __prevInstrCheck->m_next == instr, \
+    AssertMsg(__prevInstrCheck == nullptr || __prevInstrCheck->m_next == instr, \
         "Modifying instr list but not using EDITING iterator!"); \
     __prevInstrCheck = instr;
 #else
@@ -985,9 +985,9 @@ typedef BailOutInstrTemplate<BranchInstr> BranchBailOutInstr;
 #endif
 
 #ifdef DBG
-# define INIT_NEXT   IR::Instr * __nextInstrCheck = NULL
+# define INIT_NEXT   IR::Instr * __nextInstrCheck = nullptr
 # define CHECK_NEXT(instr)\
-    AssertMsg(__nextInstrCheck == NULL || __nextInstrCheck->m_prev == instr, \
+    AssertMsg(__nextInstrCheck == nullptr || __nextInstrCheck->m_prev == instr, \
         "Modifying instr list but not using EDITING iterator!"); \
     __nextInstrCheck = instr;
 #else
@@ -998,7 +998,7 @@ typedef BailOutInstrTemplate<BranchInstr> BranchBailOutInstr;
 #define FOREACH_INSTR_IN_RANGE(instr, instrList, instrLast)\
     {\
         INIT_PREV;\
-        IR::Instr *instrStop = instrLast ? ((IR::Instr*)instrLast)->m_next : NULL; \
+        IR::Instr *instrStop = instrLast ? ((IR::Instr*)instrLast)->m_next : nullptr; \
         for ( IR::Instr *instr = instrList;\
             instr != instrStop;\
             instr = instr->m_next)\
@@ -1018,7 +1018,7 @@ typedef BailOutInstrTemplate<BranchInstr> BranchBailOutInstr;
 #define FOREACH_INSTR_BACKWARD_IN_RANGE(instr, instrList, instrLast)\
     {\
         INIT_NEXT;\
-        IR::Instr *instrStop = instrLast ? ((IR::Instr*)instrLast)->m_prev : NULL; \
+        IR::Instr *instrStop = instrLast ? ((IR::Instr*)instrLast)->m_prev : nullptr; \
         for ( IR::Instr *instr = instrList;\
             instr != instrStop;\
             instr = instr->m_prev)\
@@ -1029,7 +1029,7 @@ typedef BailOutInstrTemplate<BranchInstr> BranchBailOutInstr;
 #define FOREACH_INSTR_EDITING_IN_RANGE(instr, instrNext, instrList, instrLast)\
     {\
         IR::Instr * instrNext;\
-        IR::Instr *instrStop = instrLast ? ((IR::Instr*)instrLast)->m_next : NULL; \
+        IR::Instr *instrStop = instrLast ? ((IR::Instr*)instrLast)->m_next : nullptr; \
         for ( IR::Instr *instr = instrList;\
             instr != instrStop;\
             instr = instrNext)\
@@ -1049,7 +1049,7 @@ typedef BailOutInstrTemplate<BranchInstr> BranchBailOutInstr;
 #define FOREACH_INSTR_BACKWARD_EDITING_IN_RANGE(instr, instrPrev, instrList, instrLast)\
     {\
         IR::Instr * instrPrev;\
-        IR::Instr *instrStop = instrLast ? ((IR::Instr*)instrLast)->m_prev : NULL; \
+        IR::Instr *instrStop = instrLast ? ((IR::Instr*)instrLast)->m_prev : nullptr; \
         for ( IR::Instr *instr = instrList;\
             instr != instrStop;\
             instr = instrPrev)\
@@ -1058,31 +1058,31 @@ typedef BailOutInstrTemplate<BranchInstr> BranchBailOutInstr;
 #define NEXT_INSTR_BACKWARD_EDITING_IN_RANGE   }}
 
 #define FOREACH_INSTR_EDITING(instr, instrNext, instrList)\
-    FOREACH_INSTR_EDITING_IN_RANGE(instr, instrNext, instrList, NULL)
+    FOREACH_INSTR_EDITING_IN_RANGE(instr, instrNext, instrList, nullptr)
 #define NEXT_INSTR_EDITING              NEXT_INSTR_EDITING_IN_RANGE
 
 #define FOREACH_INSTR(instr, instrList)\
-    FOREACH_INSTR_IN_RANGE(instr, instrList, NULL)
+    FOREACH_INSTR_IN_RANGE(instr, instrList, nullptr)
 #define NEXT_INSTR                      NEXT_INSTR_IN_RANGE
 
 #define FOREACH_REAL_INSTR(instr, instrList)\
-    FOREACH_REAL_INSTR_IN_RANGE(instr, instrList, NULL)
+    FOREACH_REAL_INSTR_IN_RANGE(instr, instrList, nullptr)
 #define NEXT_REAL_INSTR                 NEXT_REAL_INSTR_IN_RANGE
 
 #define FOREACH_INSTR_BACKWARD(instr, instrList)\
-    FOREACH_INSTR_BACKWARD_IN_RANGE(instr, instrList, NULL)
+    FOREACH_INSTR_BACKWARD_IN_RANGE(instr, instrList, nullptr)
 #define NEXT_INSTR_BACKWARD             NEXT_INSTR_BACKWARD_IN_RANGE
 
 #define FOREACH_INSTR_EDITING(instr, instrNext, instrList)\
-    FOREACH_INSTR_EDITING_IN_RANGE(instr, instrNext, instrList, NULL)
+    FOREACH_INSTR_EDITING_IN_RANGE(instr, instrNext, instrList, nullptr)
 #define NEXT_INSTR_EDITING             NEXT_INSTR_EDITING_IN_RANGE
 
 #define FOREACH_REAL_INSTR_EDITING(instr, instrNext, instrList)\
-    FOREACH_REAL_INSTR_EDITING_IN_RANGE(instr, instrNext, instrList, NULL)
+    FOREACH_REAL_INSTR_EDITING_IN_RANGE(instr, instrNext, instrList, nullptr)
 #define NEXT_REAL_INSTR_EDITING         NEXT_REAL_INSTR_EDITING_IN_RANGE
 
 #define FOREACH_INSTR_BACKWARD_EDITING(instr, instrPrev, instrList)\
-    FOREACH_INSTR_BACKWARD_EDITING_IN_RANGE(instr, instrPrev, instrList, NULL)
+    FOREACH_INSTR_BACKWARD_EDITING_IN_RANGE(instr, instrPrev, instrList, nullptr)
 #define NEXT_INSTR_BACKWARD_EDITING     NEXT_INSTR_BACKWARD_EDITING_IN_RANGE
 
 #define FOREACH_INSTR_IN_FUNC(instr, func)\

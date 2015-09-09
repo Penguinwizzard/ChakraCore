@@ -14,13 +14,13 @@ namespace Js
 
     void StatementReader::Create(FunctionBody* functionRead, uint startOffset, bool useOriginalByteCode)
     {
-        AssertMsg(functionRead != null, "Must provide valid functiopn to execute");
+        AssertMsg(functionRead != nullptr, "Must provide valid functiopn to execute");
 
         ByteBlock * pblkByteCode = useOriginalByteCode ? 
             functionRead->GetOriginalByteCode() : 
             functionRead->GetByteCode();
             
-        AssertMsg(pblkByteCode != null, "Must have valid byte-code to read");
+        AssertMsg(pblkByteCode != nullptr, "Must have valid byte-code to read");
 
         m_startLocation      = pblkByteCode->GetBuffer();
 
@@ -28,13 +28,13 @@ namespace Js
         const bool isInDebugMode = functionRead->IsByteCodeDebugMode();
 
         m_statementMap = functionRead->GetStatementMapSpanSequence();
-        if (m_statementMap == NULL && isInDebugMode)
+        if (m_statementMap == nullptr && isInDebugMode)
         {
             m_fullstatementMap = functionRead->GetStatementMaps();
         }
         else
         {
-            m_fullstatementMap = NULL;
+            m_fullstatementMap = nullptr;
         }
 
         if (m_statementMap && m_statementMap->Count())

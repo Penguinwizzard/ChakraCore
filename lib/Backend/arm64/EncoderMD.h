@@ -53,7 +53,7 @@ class EncoderMD
 {
 public:
     EncoderMD(Func * func) { }
-    ptrdiff_t       Encode(IR::Instr * instr, BYTE *pc, BYTE* beginCodeAddress = null) { __debugbreak(); return 0; }
+    ptrdiff_t       Encode(IR::Instr * instr, BYTE *pc, BYTE* beginCodeAddress = nullptr) { __debugbreak(); return 0; }
     void            Init(Encoder *encoder) { __debugbreak(); }
     void            ApplyRelocs(size_t codeBufferAddress) { __debugbreak(); }
     static bool     TryConstFold(IR::Instr *instr, IR::RegOpnd *regOpnd) { __debugbreak(); return 0; }

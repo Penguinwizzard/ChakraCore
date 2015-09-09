@@ -38,7 +38,7 @@ namespace Js
         Var newTarget = args.Info.Flags & CallFlags_NewTarget ? args.Values[args.Info.Count] : args[0];
 
         bool isCtorSuperCall = (args.Info.Flags & CallFlags_New) && newTarget != nullptr && RecyclableObject::Is(newTarget);
-        Assert(isCtorSuperCall || !(args.Info.Flags & CallFlags_New) || args[0] == null
+        Assert(isCtorSuperCall || !(args.Info.Flags & CallFlags_New) || args[0] == nullptr
             || JavascriptOperators::GetTypeId(args[0]) == TypeIds_HostDispatch);
 
         RecyclableObject* target, *handler;

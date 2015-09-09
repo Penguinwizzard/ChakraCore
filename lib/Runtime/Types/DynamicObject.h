@@ -112,7 +112,7 @@ namespace Js
         static bool Is(Var aValue);
         static DynamicObject* FromVar(Var value);
 
-        void EnsureSlots(int oldCount, int newCount, ScriptContext * scriptContext, DynamicTypeHandler * newTypeHandler = null);
+        void EnsureSlots(int oldCount, int newCount, ScriptContext * scriptContext, DynamicTypeHandler * newTypeHandler = nullptr);
         void EnsureSlots(int newCount, ScriptContext *scriptContext);
 
         Var GetSlot(int index);
@@ -152,24 +152,24 @@ namespace Js
 
         ArrayObject* GetObjectArray() const
         {
-            return HasObjectArray() ? GetObjectArrayOrFlagsAsArray() : null;
+            return HasObjectArray() ? GetObjectArrayOrFlagsAsArray() : nullptr;
         }
 
         bool HasObjectArray() const
         {            
             // Only JavascriptArray uses the objectArrayOrFlags as flags.
             Assert(DynamicObject::IsAnyArray((Var)this) || !UsesObjectArrayOrFlagsAsFlags() || IsObjectHeaderInlinedTypeHandler());
-            return ((objectArray != null) && !UsesObjectArrayOrFlagsAsFlags() && !IsObjectHeaderInlinedTypeHandler());
+            return ((objectArray != nullptr) && !UsesObjectArrayOrFlagsAsFlags() && !IsObjectHeaderInlinedTypeHandler());
         }
 
         ArrayObject* GetObjectArrayUnchecked() const
         {
-            return HasObjectArrayUnchecked() ? GetObjectArrayOrFlagsAsArray() : null;
+            return HasObjectArrayUnchecked() ? GetObjectArrayOrFlagsAsArray() : nullptr;
         }
 
         bool HasObjectArrayUnchecked() const
         {
-            return ((objectArray != null) && !UsesObjectArrayOrFlagsAsFlags() && !IsObjectHeaderInlinedTypeHandlerUnchecked());
+            return ((objectArray != nullptr) && !UsesObjectArrayOrFlagsAsFlags() && !IsObjectHeaderInlinedTypeHandlerUnchecked());
         }
        
         BOOL HasObjectArrayItem(uint32 index);
@@ -212,7 +212,7 @@ namespace Js
         virtual BOOL SetInternalProperty(PropertyId internalPropertyId, Var value, PropertyOperationFlags flags, PropertyValueInfo* info) override;
         virtual DescriptorFlags GetSetter(PropertyId propertyId, Var *setterValue, PropertyValueInfo* info, ScriptContext* requestContext) override;
         virtual DescriptorFlags GetSetter(JavascriptString* propertyNameString, Var *setterValue, PropertyValueInfo* info, ScriptContext* requestContext) override;
-        virtual BOOL InitProperty(PropertyId propertyId, Var value, PropertyOperationFlags flags = PropertyOperation_None, PropertyValueInfo* info = NULL) override;
+        virtual BOOL InitProperty(PropertyId propertyId, Var value, PropertyOperationFlags flags = PropertyOperation_None, PropertyValueInfo* info = nullptr) override;
         virtual BOOL SetPropertyWithAttributes(PropertyId propertyId, Var value, PropertyAttributes attributes, PropertyValueInfo* info, PropertyOperationFlags flags = PropertyOperation_None, SideEffects possibleSideEffects = SideEffects_Any) override;
         virtual BOOL DeleteProperty(PropertyId propertyId, PropertyOperationFlags flags) override;
         virtual BOOL IsFixedProperty(PropertyId propertyId) override;

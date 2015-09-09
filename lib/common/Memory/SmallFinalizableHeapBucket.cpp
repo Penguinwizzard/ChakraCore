@@ -18,7 +18,7 @@ SmallFinalizableHeapBucketBaseT<TBlockType>::~SmallFinalizableHeapBucketBaseT()
 {
     Assert(this->AllocatorsAreEmpty());
     DeleteHeapBlockList(this->pendingDisposeList);
-    Assert(this->tempPendingDisposeList == null);
+    Assert(this->tempPendingDisposeList == nullptr);
 }
 
 template <class TBlockType>
@@ -109,23 +109,23 @@ SmallFinalizableHeapBucketBaseT<TBlockType>::Sweep(RecyclerSweep& recyclerSweep)
     Assert(!recyclerSweep.IsBackground());
 
 #if DBG || defined(RECYCLER_SLOW_CHECK_ENABLED)
-    Assert(this->tempPendingDisposeList == null);
+    Assert(this->tempPendingDisposeList == nullptr);
     this->tempPendingDisposeList = pendingDisposeList;
 #endif
 
     TBlockType * currentDisposeList = pendingDisposeList;
-    this->pendingDisposeList = null;
+    this->pendingDisposeList = nullptr;
 
     BaseT::SweepBucket<pageheap>(recyclerSweep, [=](RecyclerSweep& recyclerSweep)
     {
 #if DBG
         if (TBlockType::HeapBlockAttributes::IsSmallBlock)
         {
-            recyclerSweep.SetupVerifyListConsistencyDataForSmallBlock(null, false, true);
+            recyclerSweep.SetupVerifyListConsistencyDataForSmallBlock(nullptr, false, true);
         }
         else if (TBlockType::HeapBlockAttributes::IsMediumBlock)
         {
-            recyclerSweep.SetupVerifyListConsistencyDataForMediumBlock(null, false, true);
+            recyclerSweep.SetupVerifyListConsistencyDataForMediumBlock(nullptr, false, true);
         }
         else
         {
@@ -137,7 +137,7 @@ SmallFinalizableHeapBucketBaseT<TBlockType>::Sweep(RecyclerSweep& recyclerSweep)
 
 #if DBG || defined(RECYCLER_SLOW_CHECK_ENABLED)
         Assert(this->tempPendingDisposeList == currentDisposeList);
-        this->tempPendingDisposeList = null;
+        this->tempPendingDisposeList = nullptr;
 #endif
         RECYCLER_SLOW_CHECK(this->VerifyHeapBlockCount(recyclerSweep.IsBackground()));
     });
@@ -161,9 +161,9 @@ SmallFinalizableHeapBucketBaseT<TBlockType>::TransferDisposedObjects()
 {
     Assert(!this->IsAllocationStopped());
     TBlockType * currentPendingDisposeList = this->pendingDisposeList;
-    if (currentPendingDisposeList != null)
+    if (currentPendingDisposeList != nullptr)
     {
-        this->pendingDisposeList = null;
+        this->pendingDisposeList = nullptr;
 
         /* GC-TODO: we don't allocate on pending disposed blocks during concurrent sweep or disable dispose
                  is there a reason why not? */
@@ -227,11 +227,11 @@ SmallFinalizableHeapBucketBaseT<TBlockType>::Verify()
     RecyclerVerifyListConsistencyData recyclerVerifyListConsistencyData;
     if (TBlockType::HeapBlockAttributes::IsSmallBlock)
     {
-        recyclerVerifyListConsistencyData.SetupVerifyListConsistencyDataForSmallBlock(null, false, true);
+        recyclerVerifyListConsistencyData.SetupVerifyListConsistencyDataForSmallBlock(nullptr, false, true);
     }
     else if (TBlockType::HeapBlockAttributes::IsMediumBlock)
     {
-        recyclerVerifyListConsistencyData.SetupVerifyListConsistencyDataForMediumBlock(null, false, true);
+        recyclerVerifyListConsistencyData.SetupVerifyListConsistencyDataForMediumBlock(nullptr, false, true);
     }
     else
     {

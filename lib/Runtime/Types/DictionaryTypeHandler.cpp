@@ -16,7 +16,7 @@ namespace Js
     DictionaryTypeHandlerBase<T>::DictionaryTypeHandlerBase(Recycler* recycler) :
         DynamicTypeHandler(1),
         nextPropertyIndex(0),
-        singletonInstance(null)
+        singletonInstance(nullptr)
     {
         // TODO (jedmiad): Remove this once we merged propertyTypes to flags.  Pass the right flags to the base constructor.
         SetIsInlineSlotCapacityLocked();
@@ -28,7 +28,7 @@ namespace Js
     // Do not RoundUp passed in slotCapacity. This may be called by ConvertTypeHandler for an existing DynamicObject and should use the real existing slotCapacity.
         DynamicTypeHandler(slotCapacity, inlineSlotCapacity, offsetOfInlineSlots),
         nextPropertyIndex(0),
-        singletonInstance(null)
+        singletonInstance(nullptr)
     {
         // TODO (jedmiad): Remove this once we merged propertyTypes to flags.  Pass the right flags to the base constructor.
         SetIsInlineSlotCapacityLocked();
@@ -379,7 +379,7 @@ namespace Js
         T index = nextPropertyIndex++;
 
         DictionaryPropertyDescriptor<T> descriptor(index, attributes);
-        Assert((!isFixed && !usedAsFixed) || (!IsInternalPropertyId(propertyId->GetPropertyId()) && this->singletonInstance != null));
+        Assert((!isFixed && !usedAsFixed) || (!IsInternalPropertyId(propertyId->GetPropertyId()) && this->singletonInstance != nullptr));
         descriptor.IsInitialized = isInitialized;
         descriptor.IsFixed = isFixed;
         descriptor.UsedAsFixed = usedAsFixed;
@@ -707,8 +707,8 @@ namespace Js
 
         // DictionaryTypeHandlers are not supposed to be shared.
         Assert(!GetIsOrMayBecomeShared());
-        DynamicObject* localSingletonInstance = this->singletonInstance != null ? this->singletonInstance->Get() : null;
-        Assert(this->singletonInstance == null || localSingletonInstance == instance);
+        DynamicObject* localSingletonInstance = this->singletonInstance != nullptr ? this->singletonInstance->Get() : nullptr;
+        Assert(this->singletonInstance == nullptr || localSingletonInstance == instance);
         T dataSlot = descriptor->GetDataPropertyIndex<allowLetConstGlobal>();
         if (dataSlot != NoSlots)
         {
@@ -731,7 +731,7 @@ namespace Js
                     if (localSingletonInstance == instance && !IsInternalPropertyId(propertyId) && 
                         (flags & (PropertyOperation_NonFixedValue | PropertyOperation_SpecialValue)) == 0)
                     {
-                        Assert(value != null);
+                        Assert(value != nullptr);
                         // We don't want fixed properties on external objects.  See DynamicObject::ResetObject for more informaiton.
                         Assert(!instance->IsExternal());
                         descriptor->IsFixed = (JavascriptFunction::Is(value) ? ShouldFixMethodProperties() : (ShouldFixDataProperties() && CheckHeuristicsForFixedDataProps(instance, propertyId, value)));
@@ -938,7 +938,7 @@ namespace Js
 
                 //Change the type so as we can invalidate the cache in fast path jit
                 instance->ChangeType();
-                SetPropertyUpdateSideEffect(instance, propertyId, null, SideEffects_Any);
+                SetPropertyUpdateSideEffect(instance, propertyId, nullptr, SideEffects_Any);
                 return true;
             }
 
@@ -1034,7 +1034,7 @@ namespace Js
         if (propertyRecord->IsNumeric())
         {
             ArrayObject * objectArray = instance->GetObjectArray();
-            if (objectArray != null)
+            if (objectArray != nullptr)
             {
                 return objectArray->IsEnumerable(propertyId);
             }
@@ -1063,7 +1063,7 @@ namespace Js
         if (propertyRecord->IsNumeric())
         {
             ArrayObject * objectArray = instance->GetObjectArray();
-            if (objectArray != null)
+            if (objectArray != nullptr)
             {
                 return objectArray->IsWritable(propertyId);
             }
@@ -1092,7 +1092,7 @@ namespace Js
         if (propertyRecord->IsNumeric())
         {
             ArrayObject * objectArray = instance->GetObjectArray();
-            if (objectArray != null)
+            if (objectArray != nullptr)
             {
                 return objectArray->IsConfigurable(propertyId);
             }
@@ -1136,7 +1136,7 @@ namespace Js
         if (propertyRecord->IsNumeric())
         {
             ArrayObject * objectArray = instance->GetObjectArray();
-            if (objectArray != null)
+            if (objectArray != nullptr)
             {
                 return objectArray->SetEnumerable(propertyId, value);
             }
@@ -1226,7 +1226,7 @@ namespace Js
         if (propertyRecord->IsNumeric())
         {
             ArrayObject * objectArray = instance->GetObjectArray();
-            if (objectArray != null)
+            if (objectArray != nullptr)
             {
                 return objectArray->SetConfigurable(propertyId, value);
             }
@@ -1255,7 +1255,7 @@ namespace Js
         this->ClearFlags(IsExtensibleFlag);
 
         //Set [[Configurable]] flag of each property to false
-        DictionaryPropertyDescriptor<T> *descriptor = null;
+        DictionaryPropertyDescriptor<T> *descriptor = nullptr;
         for (T index = 0; index < propertyMap->Count(); index++)
         {
             descriptor = propertyMap->GetReferenceAt(index);
@@ -1281,7 +1281,7 @@ namespace Js
 
         //Set [[Writable]] flag of each property to false except for setter\getters
         //Set [[Configurable]] flag of each property to false
-        DictionaryPropertyDescriptor<T> *descriptor = null;
+        DictionaryPropertyDescriptor<T> *descriptor = nullptr;
         for (T index = 0; index < propertyMap->Count(); index++)
         {
             descriptor = propertyMap->GetReferenceAt(index);
@@ -1334,7 +1334,7 @@ namespace Js
             return false;
         }
         
-        DictionaryPropertyDescriptor<T> *descriptor = null;
+        DictionaryPropertyDescriptor<T> *descriptor = nullptr;
         for (T index = 0; index < propertyMap->Count(); index++)
         {
             descriptor = propertyMap->GetReferenceAt(index);
@@ -1366,7 +1366,7 @@ namespace Js
             return false;
         }
                 
-        DictionaryPropertyDescriptor<T> *descriptor = null;
+        DictionaryPropertyDescriptor<T> *descriptor = nullptr;
         for (T index = 0; index < propertyMap->Count(); index++)
         {
             descriptor = propertyMap->GetReferenceAt(index);
@@ -1400,7 +1400,7 @@ namespace Js
     {
         DictionaryPropertyDescriptor<T>* descriptor;
         ScriptContext* scriptContext = instance->GetScriptContext();
-        AssertMsg(null != getter && null != setter, "Getter/Setter must be a valid pointer" );
+        AssertMsg(nullptr != getter && nullptr != setter, "Getter/Setter must be a valid pointer" );
 
         Assert(propertyId != Constants::NoProperty);
         PropertyRecord const* propertyRecord = scriptContext->GetPropertyName(propertyId);
@@ -1432,7 +1432,7 @@ namespace Js
         if (propertyRecord->IsNumeric())
         {
             ArrayObject * objectArray = instance->GetObjectArray();
-            if (objectArray != null)
+            if (objectArray != nullptr)
             {
                 return objectArray->GetAccessors(propertyId, getter, setter, scriptContext);
             }
@@ -1508,8 +1508,8 @@ namespace Js
 
             // DictionaryTypeHandlers are not supposed to be shared.
             Assert(!GetIsOrMayBecomeShared());
-            DynamicObject* localSingletonInstance = this->singletonInstance != null ? this->singletonInstance->Get() : null;
-            Assert(this->singletonInstance == null || localSingletonInstance == instance);
+            DynamicObject* localSingletonInstance = this->singletonInstance != nullptr ? this->singletonInstance->Get() : nullptr;
+            Assert(this->singletonInstance == nullptr || localSingletonInstance == instance);
 
             // Although we don't actually have CreateTypeForNewScObject on DictionaryTypeHandler, we could potentially
             // transition to a DictionaryTypeHandler with some properties uninitialized.
@@ -1549,12 +1549,12 @@ namespace Js
             }
             
             // don't overwrite an existing accessor with null
-            if (getter != null)
+            if (getter != nullptr)
             {
                 getter = CanonicalizeAccessor(getter, library);
                 SetSlotUnchecked(instance, descriptor->GetGetterPropertyIndex(), getter);
             }
-            if (setter != null)
+            if (setter != nullptr)
             {
                 setter = CanonicalizeAccessor(setter, library);
                 SetSlotUnchecked(instance, descriptor->GetSetterPropertyIndex(), setter);
@@ -1566,10 +1566,10 @@ namespace Js
                 scriptContext->InvalidateStoreFieldCaches(propertyId);
                 library->NoPrototypeChainsAreEnsuredToHaveOnlyWritableDataProperties();
             }
-            SetPropertyUpdateSideEffect(instance, propertyId, null, SideEffects_Any);
+            SetPropertyUpdateSideEffect(instance, propertyId, nullptr, SideEffects_Any);
 
             // Let's make sure we always have a getter and a setter
-            Assert(instance->GetSlot(descriptor->GetGetterPropertyIndex()) != null && instance->GetSlot(descriptor->GetSetterPropertyIndex()) != null);
+            Assert(instance->GetSlot(descriptor->GetGetterPropertyIndex()) != nullptr && instance->GetSlot(descriptor->GetSetterPropertyIndex()) != nullptr);
 
             return true;
         }
@@ -1598,8 +1598,8 @@ namespace Js
 
         // DictionaryTypeHandlers are not supposed to be shared.
         Assert(!GetIsOrMayBecomeShared());
-        DynamicObject* localSingletonInstance = this->singletonInstance != null ? this->singletonInstance->Get() : null;
-        Assert(this->singletonInstance == null || localSingletonInstance == instance);
+        DynamicObject* localSingletonInstance = this->singletonInstance != nullptr ? this->singletonInstance->Get() : nullptr;
+        Assert(this->singletonInstance == nullptr || localSingletonInstance == instance);
         newDescriptor.IsInitialized = true;
         if (localSingletonInstance == instance && !IsInternalPropertyId(propertyId))
         {
@@ -1625,10 +1625,10 @@ namespace Js
             scriptContext->InvalidateStoreFieldCaches(propertyId);
             library->NoPrototypeChainsAreEnsuredToHaveOnlyWritableDataProperties();
         }
-        SetPropertyUpdateSideEffect(instance, propertyId, null, SideEffects_Any);
+        SetPropertyUpdateSideEffect(instance, propertyId, nullptr, SideEffects_Any);
 
         // Let's make sure we always have a getter and a setter
-        Assert(instance->GetSlot(newDescriptor.GetGetterPropertyIndex()) != null && instance->GetSlot(newDescriptor.GetSetterPropertyIndex()) != null);
+        Assert(instance->GetSlot(newDescriptor.GetGetterPropertyIndex()) != nullptr && instance->GetSlot(newDescriptor.GetSetterPropertyIndex()) != nullptr);
 
         return true;
     }
@@ -1885,7 +1885,7 @@ namespace Js
     template <typename T>
     Var DictionaryTypeHandlerBase<T>::CanonicalizeAccessor(Var accessor, /*const*/ JavascriptLibrary* library)
     {
-        if (accessor == null || JavascriptOperators::IsUndefinedObject(accessor, library))
+        if (accessor == nullptr || JavascriptOperators::IsUndefinedObject(accessor, library))
         {
             accessor = library->GetDefaultAccessorFunction();
         }
@@ -2013,8 +2013,8 @@ namespace Js
 
         // DictionaryTypeHandlers are not supposed to be shared.
         Assert(!GetIsOrMayBecomeShared());
-        DynamicObject* localSingletonInstance = this->singletonInstance != null ? this->singletonInstance->Get() : null;
-        Assert(this->singletonInstance == null || localSingletonInstance == instance);
+        DynamicObject* localSingletonInstance = this->singletonInstance != nullptr ? this->singletonInstance->Get() : nullptr;
+        Assert(this->singletonInstance == nullptr || localSingletonInstance == instance);
 
         if ((flags & PropertyOperation_PreInit) == 0)
         {
@@ -2022,7 +2022,7 @@ namespace Js
             if (localSingletonInstance == instance && !IsInternalPropertyId(propertyRecord->GetPropertyId()) && 
                 (flags & (PropertyOperation_NonFixedValue | PropertyOperation_SpecialValue)) == 0)
             {
-                Assert(value != null);
+                Assert(value != nullptr);
                 // We don't want fixed properties on external objects.  See DynamicObject::ResetObject for more informaiton.
                 Assert(!instance->IsExternal());
                 newDescriptor.IsFixed = (JavascriptFunction::Is(value) ? ShouldFixMethodProperties() : (ShouldFixDataProperties() & CheckHeuristicsForFixedDataProps(instance, propertyRecord, value)));
@@ -2180,8 +2180,8 @@ namespace Js
             return;
         }
 
-        Assert(!GetIsShared() || this->singletonInstance == null);
-        Assert(this->singletonInstance == null || this->singletonInstance->Get() == instance);
+        Assert(!GetIsShared() || this->singletonInstance == nullptr);
+        Assert(this->singletonInstance == nullptr || this->singletonInstance->Get() == instance);
 
         // Review (jedmiad): Why isn't this getting inlined?
         const auto setFixedFlags = [instance](const PropertyRecord* propertyRecord, DictionaryPropertyDescriptor<T>* const descriptor, bool hasNewType)
@@ -2209,7 +2209,7 @@ namespace Js
                             Var value = instance->GetSlot(dataSlot);
                             // Because DictionaryTypeHandlers are never shared we should always have a property value if the handler
                             // says it's initialized.
-                            Assert(value != null);
+                            Assert(value != nullptr);
                             descriptor->IsFixed = (JavascriptFunction::Is(value) ? ShouldFixMethodProperties() : (ShouldFixDataProperties() && CheckHeuristicsForFixedDataProps(instance, propertyRecord, value)));
                         }
                         else if (descriptor->IsAccessor)
@@ -2253,7 +2253,7 @@ namespace Js
 
         // Currently there is no way to become the prototype if you are a stack instance
         Assert(!ThreadContext::IsOnStack(instance));
-        if (AreSingletonInstancesNeeded() && this->singletonInstance == null)
+        if (AreSingletonInstancesNeeded() && this->singletonInstance == nullptr)
         {
             this->singletonInstance = instance->CreateWeakReferenceToSelf();
         }
@@ -2281,7 +2281,7 @@ namespace Js
     template <typename T>
     bool DictionaryTypeHandlerBase<T>::HasSingletonInstance() const
     {
-        return this->singletonInstance != null;
+        return this->singletonInstance != nullptr;
     }
 
     template <typename T>
@@ -2359,8 +2359,8 @@ namespace Js
     {
         // Note: This function is not thread-safe and cannot be called from the JIT thread.  That's why we collect and
         // cache any fixed function instances during work item creation on the main thread.
-        DynamicObject* localSingletonInstance = this->singletonInstance != null ? this->singletonInstance->Get() : null;
-        if (localSingletonInstance != null && localSingletonInstance->GetScriptContext() == requestContext)
+        DynamicObject* localSingletonInstance = this->singletonInstance != nullptr ? this->singletonInstance->Get() : nullptr;
+        if (localSingletonInstance != nullptr && localSingletonInstance->GetScriptContext() == requestContext)
         {
             DictionaryPropertyDescriptor<T>* descriptor;
             if (propertyMap->TryGetReference(propertyRecord, &descriptor))
@@ -2400,8 +2400,8 @@ namespace Js
     {
         // Note: This function is not thread-safe and cannot be called from the JIT thread.  That's why we collect and
         // cache any fixed function instances during work item creation on the main thread.
-        DynamicObject* localSingletonInstance = this->singletonInstance != null ? this->singletonInstance->Get() : null;
-        if (localSingletonInstance != null && localSingletonInstance->GetScriptContext() == requestContext)
+        DynamicObject* localSingletonInstance = this->singletonInstance != nullptr ? this->singletonInstance->Get() : nullptr;
+        if (localSingletonInstance != nullptr && localSingletonInstance->GetScriptContext() == requestContext)
         {
             DictionaryPropertyDescriptor<T>* descriptor;
             if (propertyMap->TryGetReference(propertyRecord, &descriptor))
@@ -2439,7 +2439,7 @@ namespace Js
     template <typename T>
     void DictionaryTypeHandlerBase<T>::CopySingletonInstance(DynamicObject* instance, DynamicTypeHandler* typeHandler)
     {
-        if (this->singletonInstance != null)
+        if (this->singletonInstance != nullptr)
         {
             Assert(AreSingletonInstancesNeeded());
             Assert(this->singletonInstance->Get() == instance);
@@ -2453,7 +2453,7 @@ namespace Js
         // DictionaryTypeHandlers are never shared, but if they were we would need to invalidate even if
         // there wasn't a singleton instance.  See SimpleDictionaryTypeHandler::InvalidateFixedFields.
         Assert(!GetIsOrMayBecomeShared());
-        if (this->singletonInstance != null)
+        if (this->singletonInstance != nullptr)
         {
             Assert(this->singletonInstance->Get() == instance);
 
@@ -2531,7 +2531,7 @@ namespace Js
         {
             Output::Print(L"FixedFields: converting 0x%p from %s to %s:\n", instance, oldTypeHandlerName, newTypeHandlerName);
             Output::Print(L"   before: type = 0x%p, type handler = 0x%p, old singleton = 0x%p(0x%p)\n", 
-                oldType, oldTypeHandler, oldSingletonInstanceBefore, oldSingletonInstanceBefore != null ? oldSingletonInstanceBefore->Get() : null);
+                oldType, oldTypeHandler, oldSingletonInstanceBefore, oldSingletonInstanceBefore != nullptr ? oldSingletonInstanceBefore->Get() : nullptr);
             Output::Print(L"   fixed fields:");
             oldTypeHandler->DumpFixedFields();
             Output::Print(L"\n");
@@ -2539,7 +2539,7 @@ namespace Js
         if (PHASE_VERBOSE_TESTTRACE1(FixMethodPropsPhase))
         {
             Output::Print(L"FixedFields: converting instance from %s to %s:\n", oldTypeHandlerName, newTypeHandlerName);
-            Output::Print(L"   old singleton before %s null \n", oldSingletonInstanceBefore == null ? L"==" : L"!=");
+            Output::Print(L"   old singleton before %s null \n", oldSingletonInstanceBefore == nullptr ? L"==" : L"!=");
             Output::Print(L"   fixed fields before:");
             oldTypeHandler->DumpFixedFields();
             Output::Print(L"\n");
@@ -2557,8 +2557,8 @@ namespace Js
             RecyclerWeakReference<DynamicObject>* newSingletonInstanceAfter = newTypeHandler->GetSingletonInstance();
             Output::Print(L"   after: type = 0x%p, type handler = 0x%p, old singleton = 0x%p(0x%p), new singleton = 0x%p(0x%p)\n", 
                 instance->GetType(), newTypeHandler, 
-                oldSingletonInstanceAfter, oldSingletonInstanceAfter != null ? oldSingletonInstanceAfter->Get() : null,
-                newSingletonInstanceAfter, newSingletonInstanceAfter != null ? newSingletonInstanceAfter->Get() : null);
+                oldSingletonInstanceAfter, oldSingletonInstanceAfter != nullptr ? oldSingletonInstanceAfter->Get() : nullptr,
+                newSingletonInstanceAfter, newSingletonInstanceAfter != nullptr ? newSingletonInstanceAfter->Get() : nullptr);
             Output::Print(L"   fixed fields after:");
             newTypeHandler->DumpFixedFields();
             Output::Print(L"\n");
@@ -2569,9 +2569,9 @@ namespace Js
             Output::Print(L"   type %s, typeHandler %s, old singleton after %s null (%s), new singleton after %s null\n", 
                 oldTypeHandler != newTypeHandler ? L"changed" : L"unchanged", 
                 oldType != instance->GetType() ? L"changed" : L"unchanged", 
-                oldSingletonInstanceBefore == null ? L"==" : L"!=",
+                oldSingletonInstanceBefore == nullptr ? L"==" : L"!=",
                 oldSingletonInstanceBefore != oldTypeHandler->GetSingletonInstance() ? L"changed" : L"unchanged",
-                newTypeHandler->GetSingletonInstance() == null ? L"==" : L"!=");
+                newTypeHandler->GetSingletonInstance() == nullptr ? L"==" : L"!=");
             Output::Print(L"   fixed fields after:");
             newTypeHandler->DumpFixedFields();
             Output::Print(L"\n");
@@ -2587,7 +2587,7 @@ namespace Js
         {
             Output::Print(L"FixedFields: PathTypeHandler::SetIsPrototype(0x%p):\n", instance);
             Output::Print(L"   before: type = 0x%p, old singleton = 0x%p(0x%p)\n", 
-                oldType, oldSingletonInstanceBefore, oldSingletonInstanceBefore != null ? oldSingletonInstanceBefore->Get() : null);
+                oldType, oldSingletonInstanceBefore, oldSingletonInstanceBefore != nullptr ? oldSingletonInstanceBefore->Get() : nullptr);
             Output::Print(L"   fixed fields:");
             oldTypeHandler->DumpFixedFields();
             Output::Print(L"\n");
@@ -2595,7 +2595,7 @@ namespace Js
         if (PHASE_VERBOSE_TESTTRACE1(FixMethodPropsPhase))
         {
             Output::Print(L"FixedFields: PathTypeHandler::SetIsPrototype():\n");
-            Output::Print(L"   old singleton before %s null \n", oldSingletonInstanceBefore == null ? L"==" : L"!=");
+            Output::Print(L"   old singleton before %s null \n", oldSingletonInstanceBefore == nullptr ? L"==" : L"!=");
             Output::Print(L"   fixed fields before:");
             oldTypeHandler->DumpFixedFields();
             Output::Print(L"\n");
@@ -2613,8 +2613,8 @@ namespace Js
             RecyclerWeakReference<DynamicObject>* newSingletonInstanceAfter = newTypeHandler->GetSingletonInstance();
             Output::Print(L"   after: type = 0x%p, type handler = 0x%p, old singleton = 0x%p(0x%p), new singleton = 0x%p(0x%p)\n", 
                 instance->GetType(), newTypeHandler, 
-                oldSingletonInstanceAfter, oldSingletonInstanceAfter != null ? oldSingletonInstanceAfter->Get() : null,
-                newSingletonInstanceAfter, newSingletonInstanceAfter != null ? newSingletonInstanceAfter->Get() : null);
+                oldSingletonInstanceAfter, oldSingletonInstanceAfter != nullptr ? oldSingletonInstanceAfter->Get() : nullptr,
+                newSingletonInstanceAfter, newSingletonInstanceAfter != nullptr ? newSingletonInstanceAfter->Get() : nullptr);
             Output::Print(L"   fixed fields:");
             newTypeHandler->DumpFixedFields();
             Output::Print(L"\n");
@@ -2624,7 +2624,7 @@ namespace Js
         {
             Output::Print(L"   type %s, old singleton after %s null (%s)\n", 
                 oldType != instance->GetType() ? L"changed" : L"unchanged", 
-                oldSingletonInstanceBefore == null ? L"==" : L"!=",
+                oldSingletonInstanceBefore == nullptr ? L"==" : L"!=",
                 oldSingletonInstanceBefore != oldTypeHandler->GetSingletonInstance() ? L"changed" : L"unchanged");
             Output::Print(L"   fixed fields after:");
             newTypeHandler->DumpFixedFields();

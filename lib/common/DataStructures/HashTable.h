@@ -114,9 +114,9 @@ public:
         } NEXT_SLISTBASE_ENTRY_EDITING;   
 
         Bucket<T> * newBucket = iter.InsertNodeBeforeNoThrow(this->alloc);
-        if (newBucket == null)
+        if (newBucket == nullptr)
         {
-            return null;
+            return nullptr;
         }
         newBucket->value = value;
 #if PROFILE_DICTIONARY
@@ -150,14 +150,14 @@ public:
         } NEXT_SLISTBASE_ENTRY_EDITING;   
 
         Bucket<T> * newBucket = iter.InsertNodeBefore(this->alloc);
-        Assert(newBucket != null);
+        Assert(newBucket != nullptr);
         newBucket->value = value;
         newBucket->element = element;
 #if PROFILE_DICTIONARY
         if (stats)
             stats->Insert(depth);
 #endif
-        return NULL;
+        return nullptr;
     }
 
     T * Get(int value)
@@ -175,7 +175,7 @@ public:
             }
         } NEXT_SLISTBASE_ENTRY;
 
-        return NULL;
+        return nullptr;
     }
 
     T GetAndClear(int value)
@@ -324,7 +324,7 @@ public:
                 {                 
                     Bucket<T> * newBucket = iter.InsertNodeBefore(this->alloc);
                     newBucket->value = iter2.Data().value;
-                    newBucket->element = fn(null, iter2.Data().element);
+                    newBucket->element = fn(nullptr, iter2.Data().element);
                     iter2.Next();
                 }
 
@@ -343,7 +343,7 @@ public:
             {
                 Bucket<T> * newBucket = iter.InsertNodeBefore(this->alloc);
                 newBucket->value = iter2.Data().value;
-                newBucket->element = fn(null, iter2.Data().element);
+                newBucket->element = fn(nullptr, iter2.Data().element);
                 iter2.Next();
             }
         }

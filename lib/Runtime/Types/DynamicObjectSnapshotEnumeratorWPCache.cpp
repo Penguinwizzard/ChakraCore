@@ -117,9 +117,9 @@ namespace Js
         {
 #if DBG
             PropertyId tempPropertyId;
-            Assert(this->GetCurrentAndMoveNextFromObject(objectIndex, tempPropertyId, attributes) == null);
+            Assert(this->GetCurrentAndMoveNextFromObject(objectIndex, tempPropertyId, attributes) == nullptr);
 #endif
-            propertyStringName = null;
+            propertyStringName = nullptr;
         }
 
         if (attributes != nullptr)

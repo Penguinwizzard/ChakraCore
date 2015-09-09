@@ -10,10 +10,10 @@ namespace Js
 
     BoundFunction::BoundFunction(DynamicType * type)
         : JavascriptFunction(type, &functionInfo),
-        targetFunction(null),
-        boundThis(null),
+        targetFunction(nullptr),
+        boundThis(nullptr),
         count(0),
-        boundArgs(null)
+        boundArgs(nullptr)
     {
         // Constructor used during copy on write.
         DebugOnly(VerifyEntryPoint());
@@ -22,7 +22,7 @@ namespace Js
     BoundFunction::BoundFunction(Arguments args, DynamicType * type)
         : JavascriptFunction(type, &functionInfo),
         count(0),
-        boundArgs(null)
+        boundArgs(nullptr)
     {
 
         DebugOnly(VerifyEntryPoint());
@@ -45,7 +45,7 @@ namespace Js
             {
                 int len = 0;
                 Var varLength;
-                if (targetFunction->GetProperty(targetFunction, PropertyIds::length, &varLength, NULL, scriptContext))
+                if (targetFunction->GetProperty(targetFunction, PropertyIds::length, &varLength, nullptr, scriptContext))
                 {
                     len = JavascriptConversion::ToInt32(varLength, scriptContext);
                 }
@@ -82,7 +82,7 @@ namespace Js
     BoundFunction::BoundFunction(RecyclableObject* targetFunction, Var boundThis, Var* args, uint argsCount, DynamicType * type)
         : JavascriptFunction(type, &functionInfo),
         count(argsCount),
-        boundArgs(null)
+        boundArgs(nullptr)
     {
         DebugOnly(VerifyEntryPoint());
 
@@ -142,7 +142,7 @@ namespace Js
         // var o = new boundFunction()
         // a new object should be created using the actual function object
         //
-        Var newVarInstance = null;
+        Var newVarInstance = nullptr;
         if (callInfo.Flags & CallFlags_New)
         {
           if (JavascriptProxy::Is(targetFunction))
@@ -242,13 +242,13 @@ namespace Js
             // targetfunction should always be a javascriptfunction.
             Assert(FALSE);
         }
-        return null;
+        return nullptr;
     }
 
     JavascriptString* BoundFunction::GetDisplayNameImpl() const
     {
         JavascriptString* displayName = GetLibrary()->GetEmptyString();
-        if (targetFunction != null)
+        if (targetFunction != nullptr)
         {
             Var value = JavascriptOperators::GetProperty(targetFunction, PropertyIds::name, targetFunction->GetScriptContext());
             if (JavascriptString::Is(value))
@@ -261,7 +261,7 @@ namespace Js
 
     RecyclableObject* BoundFunction::GetBoundThis()
     {
-        if (boundThis != null && RecyclableObject::Is(boundThis))
+        if (boundThis != nullptr && RecyclableObject::Is(boundThis))
         {
             return RecyclableObject::FromVar(boundThis);
         }
@@ -307,7 +307,7 @@ namespace Js
         PropertyRecord const* propertyRecord;
         this->GetScriptContext()->FindPropertyRecord(propertyNameString, &propertyRecord);
 
-        if (propertyRecord != null && GetPropertyBuiltIns(originalInstance, propertyRecord->GetPropertyId(), value, info, requestContext, &result))
+        if (propertyRecord != nullptr && GetPropertyBuiltIns(originalInstance, propertyRecord->GetPropertyId(), value, info, requestContext, &result))
         {
             return result;
         }
@@ -322,7 +322,7 @@ namespace Js
             // Get the "length" property of the underlying target function
             int len = 0;
             Var varLength;
-            if (targetFunction->GetProperty(targetFunction, PropertyIds::length, &varLength, NULL, requestContext))
+            if (targetFunction->GetProperty(targetFunction, PropertyIds::length, &varLength, nullptr, requestContext))
             {
                 len = JavascriptConversion::ToInt32(varLength, requestContext);
             }
@@ -366,7 +366,7 @@ namespace Js
         PropertyRecord const* propertyRecord;
         this->GetScriptContext()->FindPropertyRecord(propertyNameString, &propertyRecord);
 
-        if (propertyRecord != null && SetPropertyBuiltIns(propertyRecord->GetPropertyId(), value, flags, info, &result))
+        if (propertyRecord != nullptr && SetPropertyBuiltIns(propertyRecord->GetPropertyId(), value, flags, info, &result))
         {
             return result;
         }
@@ -421,7 +421,7 @@ namespace Js
         PropertyRecord const* propertyRecord;
         this->GetScriptContext()->FindPropertyRecord(propertyNameString, &propertyRecord);
 
-        if (propertyRecord != null)
+        if (propertyRecord != nullptr)
         {
             PropertyId propertyId = propertyRecord->GetPropertyId();
 

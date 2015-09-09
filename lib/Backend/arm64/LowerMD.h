@@ -60,7 +60,7 @@ public:
             bool            FinalLowerAssign(IR::Instr* instr){ __debugbreak(); return 0;  };
             IR::Opnd *      GenerateMemRef(void *addr, IRType type, IR::Instr *instr, bool dontEncode = false) { __debugbreak(); return 0; }
             IR::Instr *     ChangeToHelperCall(IR::Instr * instr, IR::JnHelperMethod helperMethod, IR::LabelInstr *labelBailOut = NULL, 
-                            IR::Opnd *opndInstance = NULL, IR::PropertySymOpnd * propSymOpnd = null, bool isHelperContinuation = false) { __debugbreak(); return 0; }
+                            IR::Opnd *opndInstance = NULL, IR::PropertySymOpnd * propSymOpnd = nullptr, bool isHelperContinuation = false) { __debugbreak(); return 0; }
             IR::Instr *     ChangeToHelperCallMem(IR::Instr * instr, IR::JnHelperMethod helperMethod) { __debugbreak(); return 0; }
     static  IR::Instr *     CreateAssign(IR::Opnd *dst, IR::Opnd *src, IR::Instr *instrInsertPt) { __debugbreak(); return 0; }
     static  IR::Instr *     ChangeToAssign(IR::Instr * instr) { __debugbreak(); return 0; }
@@ -71,7 +71,7 @@ public:
   
             IR::Instr *     LoadArgumentCount(IR::Instr * instr) { __debugbreak(); return 0; }
             IR::Instr *     LoadStackArgPtr(IR::Instr * instr) { __debugbreak(); return 0; }
-              IR::Instr *     LoadHeapArguments(IR::Instr * instrArgs, bool force = false, IR::Opnd *opndInputParamCount = null) { __debugbreak(); return 0; }
+              IR::Instr *     LoadHeapArguments(IR::Instr * instrArgs, bool force = false, IR::Opnd *opndInputParamCount = nullptr) { __debugbreak(); return 0; }
               IR::Instr *     LoadHeapArgsCached(IR::Instr * instr) { __debugbreak(); return 0; }              
               IR::Instr *     LoadInputParamCount(IR::Instr * instr, int adjust = 0, bool needFlags = false) { __debugbreak(); return 0; }
               IR::Instr *     LoadArgumentsFromFrame(IR::Instr * instr) { __debugbreak(); return 0; }
@@ -110,7 +110,7 @@ public:
               IR::IndirOpnd * GenerateFastElemIStringIndexCommon(IR::Instr * instr, bool isStore, IR::IndirOpnd *indirOpnd, IR::LabelInstr * labelHelper) { __debugbreak(); return 0; }              
               void            GenerateFastInlineBuiltInCall(IR::Instr* instr, IR::JnHelperMethod helperMethod) { __debugbreak(); }              
               IR::Opnd *      CreateStackArgumentsSlotOpnd() { __debugbreak(); return 0; }
-              void            GenerateSmIntTest(IR::Opnd *opndSrc, IR::Instr *insertInstr, IR::LabelInstr *labelHelper, IR::Instr **instrFirst = null, bool fContinueLabel = false) { __debugbreak(); }              
+              void            GenerateSmIntTest(IR::Opnd *opndSrc, IR::Instr *insertInstr, IR::LabelInstr *labelHelper, IR::Instr **instrFirst = nullptr, bool fContinueLabel = false) { __debugbreak(); }              
               IR::RegOpnd *   LoadNonnegativeIndex(IR::RegOpnd *indexOpnd, const bool skipNegativeCheck, IR::LabelInstr *const notTaggedIntLabel, IR::LabelInstr *const negativeLabel, IR::Instr *const insertBeforeInstr) { __debugbreak(); return nullptr; }
               IR::RegOpnd *   GenerateUntagVar(IR::RegOpnd * opnd, IR::LabelInstr * labelFail, IR::Instr * insertBeforeInstr, bool generateTagCheck = true) { __debugbreak(); return 0; }
               bool            GenerateFastLdMethodFromFlags(IR::Instr * instrLdFld) { __debugbreak(); return 0; }
@@ -172,10 +172,10 @@ public:
               bool            GenerateFastIsInst(IR::Instr * instr) { __debugbreak(); return false; }
   public:
               IR::Instr *         LowerCall(IR::Instr * callInstr, Js::ArgSlot argCount) { __debugbreak(); return 0; }
-              IR::Instr *         LowerCallI(IR::Instr * callInstr, ushort callFlags, bool isHelper = false, IR::Instr* insertBeforeInstrForCFG = null) { __debugbreak(); return 0; }
+              IR::Instr *         LowerCallI(IR::Instr * callInstr, ushort callFlags, bool isHelper = false, IR::Instr* insertBeforeInstrForCFG = nullptr) { __debugbreak(); return 0; }
               IR::Instr *         LowerCallPut(IR::Instr * callInstr) { __debugbreak(); return 0; }
               int32               LowerCallArgs(IR::Instr * callInstr, IR::Instr * stackParamInsert, ushort callFlags) { __debugbreak(); return 0; }
-              int32               LowerCallArgs(IR::Instr * callInstr, ushort callFlags, Js::ArgSlot extraParams = 1 /* for function object */, IR::IntConstOpnd **callInfoOpndRef = null) { __debugbreak(); return 0; }
+              int32               LowerCallArgs(IR::Instr * callInstr, ushort callFlags, Js::ArgSlot extraParams = 1 /* for function object */, IR::IntConstOpnd **callInfoOpndRef = nullptr) { __debugbreak(); return 0; }
               IR::Instr *         LowerStartCall(IR::Instr * instr) { __debugbreak(); return 0; }
               IR::Instr *         LowerAsmJsCallI(IR::Instr * callInstr) { Assert(UNREACHED); return NULL; }
               IR::Instr *         LowerAsmJsCallE(IR::Instr * callInstr) { Assert(UNREACHED); return NULL; }
@@ -261,6 +261,6 @@ public:
               void                LowerInlineSpreadArgOutLoop(IR::Instr *callInstr, IR::RegOpnd *indexOpnd, IR::RegOpnd *arrayElementsStartOpnd) { __debugbreak(); }
 
 public:
-    static void InsertIncUInt8PreventOverflow(IR::Opnd *const dst, IR::Opnd *const src, IR::Instr *const insertBeforeInstr, IR::Instr * *const onOverflowInsertBeforeInstrRef = null) { __debugbreak(); }
-    static void InsertDecUInt8PreventOverflow(IR::Opnd *const dst, IR::Opnd *const src, IR::Instr *const insertBeforeInstr, IR::Instr * *const onOverflowInsertBeforeInstrRef = null) { __debugbreak(); }
+    static void InsertIncUInt8PreventOverflow(IR::Opnd *const dst, IR::Opnd *const src, IR::Instr *const insertBeforeInstr, IR::Instr * *const onOverflowInsertBeforeInstrRef = nullptr) { __debugbreak(); }
+    static void InsertDecUInt8PreventOverflow(IR::Opnd *const dst, IR::Opnd *const src, IR::Instr *const insertBeforeInstr, IR::Instr * *const onOverflowInsertBeforeInstrRef = nullptr) { __debugbreak(); }
 };

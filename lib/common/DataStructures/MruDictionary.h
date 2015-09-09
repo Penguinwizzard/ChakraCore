@@ -41,7 +41,7 @@ namespace JsUtil
             TValue value;
 
         public:
-            MruDictionaryData() : entry(null)
+            MruDictionaryData() : entry(nullptr)
             {
             }
 
@@ -50,8 +50,8 @@ namespace JsUtil
                 // Needed to support KeyValueEntry::Clear for dictionaries
                 Assert(!nullValue);
 
-                entry = null;
-                value = null; // TValue must also support this for the same reason
+                entry = nullptr;
+                value = nullptr; // TValue must also support this for the same reason
                 return *this;
             }
 
@@ -79,7 +79,7 @@ namespace JsUtil
                 Assert(entry);
 
                 value = entry->value;
-                entry = null;
+                entry = nullptr;
             }
         };
 

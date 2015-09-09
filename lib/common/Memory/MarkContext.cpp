@@ -22,7 +22,7 @@ MarkContext::MarkContext(Recycler * recycler, PagePool * pagePool) :
 MarkContext::~MarkContext() 
 {
 #ifdef RECYCLER_MARK_TRACK
-    this->markMap = null;
+    this->markMap = nullptr;
 #endif
 }
 

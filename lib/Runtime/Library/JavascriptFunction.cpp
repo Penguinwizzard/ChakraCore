@@ -24,9 +24,9 @@ namespace Js
 {
     DEFINE_RECYCLER_TRACKER_PERF_COUNTER(JavascriptFunction);
     JavascriptFunction::JavascriptFunction(DynamicType * type)
-        : DynamicObject(type), functionInfo(null), constructorCache(&ConstructorCache::DefaultInstance)
+        : DynamicObject(type), functionInfo(nullptr), constructorCache(&ConstructorCache::DefaultInstance)
     {
-        Assert(this->constructorCache != null);
+        Assert(this->constructorCache != nullptr);
     }
 
 
@@ -34,7 +34,7 @@ namespace Js
         : DynamicObject(type), functionInfo(functionInfo), constructorCache(&ConstructorCache::DefaultInstance)
 
     {
-        Assert(this->constructorCache != null);
+        Assert(this->constructorCache != nullptr);
         this->GetTypeHandler()->ClearHasOnlyWritableDataProperties(); // length is non-writable
         if (GetTypeHandler()->GetFlags() & DynamicTypeHandler::IsPrototypeFlag)
         {
@@ -50,7 +50,7 @@ namespace Js
         : DynamicObject(type), functionInfo(functionInfo), constructorCache(cache)
 
     {
-        Assert(this->constructorCache != null);
+        Assert(this->constructorCache != nullptr);
         this->GetTypeHandler()->ClearHasOnlyWritableDataProperties(); // length is non-writable
         if (GetTypeHandler()->GetFlags() & DynamicTypeHandler::IsPrototypeFlag)
         {
@@ -64,31 +64,31 @@ namespace Js
 
     FunctionProxy *JavascriptFunction::GetFunctionProxy() const
     {
-        Assert(functionInfo != null);
+        Assert(functionInfo != nullptr);
         return functionInfo->GetFunctionProxy();
     }
 
     ParseableFunctionInfo *JavascriptFunction::GetParseableFunctionInfo() const
     {
-        Assert(functionInfo != null);
+        Assert(functionInfo != nullptr);
         return functionInfo->GetParseableFunctionInfo();
     }
 
     DeferDeserializeFunctionInfo *JavascriptFunction::GetDeferDeserializeFunctionInfo() const
     {
-        Assert(functionInfo != null);
+        Assert(functionInfo != nullptr);
         return functionInfo->GetDeferDeserializeFunctionInfo();
     }
 
     FunctionBody *JavascriptFunction::GetFunctionBody() const
     {
-        Assert(functionInfo != null);
+        Assert(functionInfo != nullptr);
         return functionInfo->GetFunctionBody();
     }
 
     BOOL JavascriptFunction::IsScriptFunction() const
     {
-        Assert(functionInfo != null);
+        Assert(functionInfo != nullptr);
         return functionInfo->HasBody();
     }
 
@@ -147,7 +147,7 @@ namespace Js
         // being created, except when call true a host dispatch
         Var newTarget = callInfo.Flags & CallFlags_NewTarget ? args.Values[args.Info.Count] : args[0];
         bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && newTarget != nullptr && RecyclableObject::Is(newTarget);
-        Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == null
+        Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == nullptr
             || JavascriptOperators::GetTypeId(args[0]) == TypeIds_HostDispatch);
 
         // Legacy engine uses comma with a space, while ES5 spec specifies comma to be used.
@@ -629,7 +629,7 @@ namespace Js
     {
 
 #ifdef _M_X64
-        Var ret = null;
+        Var ret = nullptr;
 
 #ifdef FAULT_INJECTION
         if (Js::Configuration::Global.flags.FaultInjection >= 0)
@@ -687,7 +687,7 @@ namespace Js
 #endif
 
         // work around overzealous C4701 warning
-        Var varResult = null;
+        Var varResult = nullptr;
         ThreadContext *threadContext;
         threadContext = scriptContext->GetThreadContext();
 
@@ -723,7 +723,7 @@ namespace Js
         }
         END_JS_RUNTIME_CALL(scriptContext);
 
-        Assert(varResult != null);
+        Assert(varResult != nullptr);
         return varResult;
     }
 
@@ -849,7 +849,7 @@ namespace Js
                 resultObject,
                 JavascriptFunction::Is(functionObj) && functionObj->GetScriptContext() == scriptContext ?
                 JavascriptFunction::FromVar(functionObj) :
-                null);
+                nullptr);
     }
 
     Var JavascriptFunction::FinishConstructor(
@@ -1221,7 +1221,7 @@ dbl_align:
 #endif
 #if 1
         Js::Throw::NotImplemented();
-        return null;
+        return nullptr;
 #else
         Var varResult;
         switch (info.Count)
@@ -1421,7 +1421,7 @@ LABEL1:
         // Do the actual deferred parsing and byte code generation, passing the new entry point to the caller.
 
         ParseableFunctionInfo* functionInfo = (*functionRef)->GetParseableFunctionInfo();
-        FunctionBody* funcBody = null;
+        FunctionBody* funcBody = nullptr;
 
         Assert(functionInfo);
 
@@ -1436,7 +1436,7 @@ LABEL1:
         else
         {
             funcBody = functionInfo->GetFunctionBody();
-            Assert(funcBody != null);
+            Assert(funcBody != nullptr);
             Assert(!funcBody->IsDeferredParseFunction());
         }
 
@@ -1495,20 +1495,20 @@ LABEL1:
     Var JavascriptFunction::DeferredParsingThunk(RecyclableObject* function, CallInfo callInfo, ...)
     {
         Js::Throw::NotImplemented();
-        return null;
+        return nullptr;
     }
 #endif
 
     ConstructorCache* JavascriptFunction::EnsureValidConstructorCache()
     {
-        Assert(this->constructorCache != null);
+        Assert(this->constructorCache != nullptr);
         this->constructorCache = ConstructorCache::EnsureValidInstance(this->constructorCache, this->GetScriptContext());
         return this->constructorCache;
     }
 
     void JavascriptFunction::ResetConstructorCacheToDefault()
     {
-        Assert(this->constructorCache != null);
+        Assert(this->constructorCache != nullptr);
 
         if (!this->constructorCache->IsDefault())
         {
@@ -1547,7 +1547,7 @@ LABEL1:
     Var JavascriptFunction::DeferredDeserializeThunk(RecyclableObject* function, CallInfo callInfo, ...)
     {
         Js::Throw::NotImplemented();
-        return null;
+        return nullptr;
     }
 #endif
 
@@ -1555,7 +1555,7 @@ LABEL1:
     {
         FunctionInfo* funcInfo = function->GetFunctionInfo();
         Assert(funcInfo);
-        FunctionBody* funcBody = null;
+        FunctionBody* funcBody = nullptr;
 
         // If we haven't already deserialized this function, do so now
         // FunctionProxies could have gotten deserialized during the interpreter when
@@ -1576,7 +1576,7 @@ LABEL1:
         else
         {
             funcBody = funcInfo->GetFunctionBody();
-            Assert(funcBody != null);
+            Assert(funcBody != nullptr);
             Assert(!funcBody->IsDeferredDeserializeFunction());
         }
 
@@ -2154,7 +2154,7 @@ LABEL1:
         PropertyRecord const* propertyRecord;
         this->GetScriptContext()->FindPropertyRecord(propertyNameString, &propertyRecord);
 
-        if (propertyRecord != null && GetSetterBuiltIns(propertyRecord->GetPropertyId(), setterValue, info, requestContext, &flags))
+        if (propertyRecord != nullptr && GetSetterBuiltIns(propertyRecord->GetPropertyId(), setterValue, info, requestContext, &flags))
         {
             return flags;
         }
@@ -2335,7 +2335,7 @@ LABEL1:
             }
         }
 
-        return StackScriptFunction::EnsureBoxed(BOX_PARAM(funcCaller, null, L"caller"));
+        return StackScriptFunction::EnsureBoxed(BOX_PARAM(funcCaller, nullptr, L"caller"));
     }
 
     BOOL JavascriptFunction::GetCallerProperty(Var originalInstance, Var* value, ScriptContext* requestContext)
@@ -2497,7 +2497,7 @@ LABEL1:
         result = DynamicObject::GetProperty(originalInstance, propertyNameString, value, info, requestContext);
         if (result)
         {
-            if (propertyRecord != null && propertyRecord->GetPropertyId() == PropertyIds::prototype)
+            if (propertyRecord != nullptr && propertyRecord->GetPropertyId() == PropertyIds::prototype)
             {
                 PropertyValueInfo::DisableStoreFieldCache(info);
             }
@@ -2505,7 +2505,7 @@ LABEL1:
             return result;
         }
 
-        if (propertyRecord != null)
+        if (propertyRecord != nullptr)
         {
             GetPropertyBuiltIns(originalInstance, propertyRecord->GetPropertyId(), value, requestContext, &result);
         }
@@ -2612,7 +2612,7 @@ LABEL1:
         PropertyRecord const * propertyRecord;
         this->GetScriptContext()->FindPropertyRecord(propertyNameString, &propertyRecord);
 
-        if (propertyRecord != null)
+        if (propertyRecord != nullptr)
         {
             return JavascriptFunction::SetProperty(propertyRecord->GetPropertyId(), value, flags, info);
         }
@@ -2658,14 +2658,14 @@ LABEL1:
 
     void JavascriptFunction::InvalidateConstructorCacheOnPrototypeChange()
     {
-        Assert(this->constructorCache != null);
+        Assert(this->constructorCache != nullptr);
 
 #if DBG_DUMP
         if (PHASE_TRACE1(Js::ConstructorCachePhase))
         {
             // This is under DBG_DUMP so we can allow a check
-            ParseableFunctionInfo* body = this->GetFunctionProxy() != null ? this->GetFunctionProxy()->EnsureDeserialized() : null;
-            const wchar_t* ctorName = body != null ? body->GetDisplayName() : L"<unknown>";
+            ParseableFunctionInfo* body = this->GetFunctionProxy() != nullptr ? this->GetFunctionProxy()->EnsureDeserialized() : nullptr;
+            const wchar_t* ctorName = body != nullptr ? body->GetDisplayName() : L"<unknown>";
 
             wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
 
@@ -2683,8 +2683,8 @@ LABEL1:
         if (PHASE_TRACE1(Js::ConstructorCachePhase))
         {
             // This is under DBG_DUMP so we can allow a check
-            ParseableFunctionInfo* body = this->GetFunctionProxy() != null ? this->GetFunctionProxy()->EnsureDeserialized() : null;
-            const wchar_t* ctorName = body != null ? body->GetDisplayName() : L"<unknown>";
+            ParseableFunctionInfo* body = this->GetFunctionProxy() != nullptr ? this->GetFunctionProxy()->EnsureDeserialized() : nullptr;
+            const wchar_t* ctorName = body != nullptr ? body->GetDisplayName() : L"<unknown>";
             wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
 
             Output::Print(L"CtorCache: after invalidating cache (0x%p) for ctor %s (%s): ", this->constructorCache, ctorName,
@@ -2705,7 +2705,7 @@ LABEL1:
 
         // Taken mostly from JavascriptFunction::EntryToString, but this function will not change the state of pFunc->sourceString
 
-        if (sourceString == null)
+        if (sourceString == nullptr)
         {
             FunctionProxy* proxy = this->GetFunctionProxy();
             if (proxy)
@@ -2848,7 +2848,7 @@ LABEL1:
         }
         else
         {
-            funcPrototype = JavascriptOperators::GetProperty(this, PropertyIds::prototype, scriptContext, NULL);
+            funcPrototype = JavascriptOperators::GetProperty(this, PropertyIds::prototype, scriptContext, nullptr);
         }
         funcPrototype = CrossSite::MarshalVar(scriptContext, funcPrototype);
         return JavascriptFunction::HasInstance(funcPrototype, instance, scriptContext, inlineCache, this);
@@ -2865,11 +2865,11 @@ LABEL1:
         if (!JavascriptOperators::IsObject(instance))
         {
             // Only update the cache for primitive cache if it is empty already for the JIT fast path
-            if (inlineCache && inlineCache->function == null
+            if (inlineCache && inlineCache->function == nullptr
                 && scriptContext == function->GetScriptContext())// only register when function has same scriptContext
             {
                 inlineCache->Cache(RecyclableObject::Is(instance) ?
-                    RecyclableObject::FromVar(instance)->GetType() : null,
+                    RecyclableObject::FromVar(instance)->GetType() : nullptr,
                     function, scriptContext->GetLibrary()->GetFalse(), scriptContext);
             }
             return result;
@@ -2890,9 +2890,9 @@ LABEL1:
         // the function will still match the function in the cache (because objects' identities do not change during cross-context marshalling). 
         // However, object o's type (even if it is of the same "shape" as before) will be different, because the object types are permanently
         // bound and unique to the script context from which they were created.  Hence, the cache may miss, even if the function matches.
-        if (inlineCache != NULL)
+        if (inlineCache != nullptr)
         {
-            Assert(function != NULL);
+            Assert(function != nullptr);
             if (inlineCache->TryGetResult(instance, function, &javascriptResult))
             {
                 return javascriptResult == scriptContext->GetLibrary()->GetTrue();

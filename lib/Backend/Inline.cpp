@@ -32,9 +32,9 @@ Inline::Optimize(Func *func, IR::Instr *callerArgOuts[], Js::ArgSlot callerArgOu
     func->actualCount = callerArgOutCount;
 
     // Keep the caller's "this" symbol (if any).
-    StackSym *symThis = null;
+    StackSym *symThis = nullptr;
     lastStatementBoundary = nullptr;
-    IR::LabelInstr* loopTop = null;
+    IR::LabelInstr* loopTop = nullptr;
     int32 backEdgeCount = 0;
 
     // Profile data already filter call site outside of loops if the function has loops, so we don't need to detect that here.
@@ -389,7 +389,7 @@ Inline::Optimize(Func *func, IR::Instr *callerArgOuts[], Js::ArgSlot callerArgOu
 
             case Js::OpCode::LdThis:
                 Assert(instr->GetDst() && instr->GetDst()->IsRegOpnd());
-                Assert(symThis == null);
+                Assert(symThis == nullptr);
 
                 symThis = instr->GetDst()->AsRegOpnd()->m_sym;
                 break;
@@ -397,7 +397,7 @@ Inline::Optimize(Func *func, IR::Instr *callerArgOuts[], Js::ArgSlot callerArgOu
             case Js::OpCode::CheckThis:
                 // Is this possible? Can we be walking an inlinee here? Doesn't hurt to support this case...
                 Assert(instr->GetSrc1() && instr->GetSrc1()->IsRegOpnd());
-                Assert(symThis == null);
+                Assert(symThis == nullptr);
 
                 symThis = instr->GetSrc1()->AsRegOpnd()->m_sym;
                 break;
@@ -416,7 +416,7 @@ Inline::Optimize(Func *func, IR::Instr *callerArgOuts[], Js::ArgSlot callerArgOu
                             {
                                 Assert(this->isInLoop > 0);
                                 --this->isInLoop;
-                                loopTop = null;
+                                loopTop = nullptr;
                             }
                         }
                     }
@@ -442,9 +442,9 @@ Inline::Optimize(Func *func, IR::Instr *callerArgOuts[], Js::ArgSlot callerArgOu
                     TryDisableRuntimePolymorphicCacheOn(methodValueOpnd);
                     StackSym* originalCallTargetStackSym = instr->GetSrc1()->GetStackSym();
                     bool safeThis = false;
-                    if (TryOptimizeCallInstrWithFixedMethod(instr, null, isPolymorphic /*isPolymorphic*/, isBuiltIn /*isBuiltIn*/, isCtor /*isCtor*/, false /*isInlined*/, safeThis /*unused here*/))
+                    if (TryOptimizeCallInstrWithFixedMethod(instr, nullptr, isPolymorphic /*isPolymorphic*/, isBuiltIn /*isBuiltIn*/, isCtor /*isCtor*/, false /*isInlined*/, safeThis /*unused here*/))
                     {
-                        Assert(originalCallTargetStackSym != null);
+                        Assert(originalCallTargetStackSym != nullptr);
 
                         // Insert a ByteCodeUsesInstr to make sure the methodValueDstOpnd's constant value is captured by any
                         // bailout that occurs between CheckFixedMethodField and CallI.
@@ -546,7 +546,7 @@ void Inline::FillInlineesDataArrayUsingFixedMethods(
     Assert(cachedFixedInlineeCount <= inlineesDataArrayLength);
     __analysis_assume(cachedFixedInlineeCount <= inlineesDataArrayLength);
 
-    Js::FunctionBody* inlineeFuncBody = null;
+    Js::FunctionBody* inlineeFuncBody = nullptr;
     while (inlineeJitTimeData)
     {
         inlineeFuncBody = inlineeJitTimeData->GetFunctionBody();
@@ -986,7 +986,7 @@ Inline::InlinePolymorphicFunction(IR::Instr *callInstr, const Js::FunctionCodeGe
     }
     else
     {
-        returnValueOpnd = NULL;
+        returnValueOpnd = nullptr;
         returnRegSlot = Js::Constants::NoRegister;
     }
 
@@ -1191,8 +1191,8 @@ Inline::BuildInlinee(Js::FunctionBody* funcBody, const InlineeData& inlineeData,
         JitAnew(
             this->topFunc->m_alloc,
             Js::ReadOnlyDynamicProfileInfo,
-            funcBody->HasDynamicProfileInfo() ? funcBody->GetAnyDynamicProfileInfo() : null,
-            this->topFunc->IsBackgroundJIT() ? this->topFunc->m_alloc : null);
+            funcBody->HasDynamicProfileInfo() ? funcBody->GetAnyDynamicProfileInfo() : nullptr,
+            this->topFunc->IsBackgroundJIT() ? this->topFunc->m_alloc : nullptr);
 
     Js::EntryPointPolymorphicInlineCacheInfo * entryPointPolymorphicInlineCacheInfo = this->topFunc->m_workItem->GetEntryPoint()->GetPolymorphicInlineCacheInfo();
     Func *inlinee = JitAnew(this->topFunc->m_alloc,
@@ -1200,7 +1200,7 @@ Inline::BuildInlinee(Js::FunctionBody* funcBody, const InlineeData& inlineeData,
                             this->topFunc->m_alloc,
                             workItem,
                             inlineeData.inlineeRuntimeData,
-                            entryPointPolymorphicInlineCacheInfo ? entryPointPolymorphicInlineCacheInfo->GetInlineeInfo(funcBody) : null,
+                            entryPointPolymorphicInlineCacheInfo ? entryPointPolymorphicInlineCacheInfo->GetInlineeInfo(funcBody) : nullptr,
                             this->topFunc->GetCodeGenAllocators(),
                             this->topFunc->GetNumberAllocator(),
                             profileInfo,
@@ -1287,8 +1287,8 @@ Inline::TryOptimizeCallInstrWithFixedMethod(IR::Instr *callInstr, Js::FunctionIn
     if (printFixedFieldsTrace)
     {
         Js::FunctionBody* callerFunctionBody = callInstr->m_func->GetJnFunction();
-        Js::FunctionBody* calleeFunctionBody = functionInfo != null && functionInfo->HasBody() ? functionInfo->GetFunctionBody() : null;
-        const wchar_t* calleeName = calleeFunctionBody != null ? calleeFunctionBody->GetDisplayName() : L"<unknown>";
+        Js::FunctionBody* calleeFunctionBody = functionInfo != nullptr && functionInfo->HasBody() ? functionInfo->GetFunctionBody() : nullptr;
+        const wchar_t* calleeName = calleeFunctionBody != nullptr ? calleeFunctionBody->GetDisplayName() : L"<unknown>";
         
         Output::Print(L"FixedFields: function %s (%s): considering method <unknown> (%s %s): polymorphic = %d, built-in = %d, ctor = %d, inlined = %d, functionInfo = %p.\n",
             callerFunctionBody->GetDisplayName(), callerFunctionBody->GetDebugNumberSet(debugStringBuffer), calleeName, 
@@ -1310,12 +1310,12 @@ Inline::TryOptimizeCallInstrWithFixedMethod(IR::Instr *callInstr, Js::FunctionIn
         if (printFixedFieldsTrace)
         {
             Js::FunctionBody* callerFunctionBody = callInstr->m_func->GetJnFunction();
-            Js::FunctionBody* calleeFunctionBody = functionInfo != null && functionInfo->HasBody() ? functionInfo->GetFunctionBody() : null;
-            const wchar_t* calleeName = calleeFunctionBody != null ? calleeFunctionBody->GetDisplayName() : L"<unknown>";
+            Js::FunctionBody* calleeFunctionBody = functionInfo != nullptr && functionInfo->HasBody() ? functionInfo->GetFunctionBody() : nullptr;
+            const wchar_t* calleeName = calleeFunctionBody != nullptr ? calleeFunctionBody->GetDisplayName() : L"<unknown>";
 
             Output::Print(L"FixedFields: function %s (%s): %s non-fixed method <unknown> (%s %s), because callee is not single def.\n", 
                 callerFunctionBody->GetDisplayName(), callerFunctionBody->GetDebugNumberSet(debugStringBuffer),
-                functionInfo != null ? L"inlining" : L"calling", calleeName, 
+                functionInfo != nullptr ? L"inlining" : L"calling", calleeName,
                 calleeFunctionBody ? calleeFunctionBody->GetDebugNumberSet(debugStringBuffer2) : L"(null)");
             Output::Flush();
         }
@@ -1337,12 +1337,12 @@ Inline::TryOptimizeCallInstrWithFixedMethod(IR::Instr *callInstr, Js::FunctionIn
         if (printFixedFieldsTrace)
         {
             Js::FunctionBody* callerFunctionBody = callInstr->m_func->GetJnFunction();
-            Js::FunctionBody* calleeFunctionBody = functionInfo != null && functionInfo->HasBody() ? functionInfo->GetFunctionBody() : null;
-            const wchar_t* calleeName = calleeFunctionBody != null ? calleeFunctionBody->GetDisplayName() : L"<unknown>";
+            Js::FunctionBody* calleeFunctionBody = functionInfo != nullptr && functionInfo->HasBody() ? functionInfo->GetFunctionBody() : nullptr;
+            const wchar_t* calleeName = calleeFunctionBody != nullptr ? calleeFunctionBody->GetDisplayName() : L"<unknown>";
 
             Output::Print(L"FixedFields: function %s (%s): %s non-fixed method <unknown> (%s %s), because callee does not come from LdMethodFld.\n",
                 callerFunctionBody->GetDisplayName(), callerFunctionBody->GetDebugNumberSet(debugStringBuffer),
-                functionInfo != null ? L"inlining" : L"calling", calleeName,
+                functionInfo != nullptr ? L"inlining" : L"calling", calleeName,
                 calleeFunctionBody ? calleeFunctionBody->GetDebugNumberSet(debugStringBuffer2) : L"(null)");
             Output::Flush();
         }
@@ -1371,15 +1371,15 @@ Inline::TryOptimizeCallInstrWithFixedMethod(IR::Instr *callInstr, Js::FunctionIn
         if (printFixedFieldsTrace)
         {
             Js::FunctionBody* callerFunctionBody = callInstr->m_func->GetJnFunction();
-            Js::FunctionBody* calleeFunctionBody = functionInfo != null && functionInfo->HasBody() ? functionInfo->GetFunctionBody() : null;
-            const wchar_t* calleeName = calleeFunctionBody != null ? calleeFunctionBody->GetDisplayName() : L"<unknown>";
+            Js::FunctionBody* calleeFunctionBody = functionInfo != nullptr && functionInfo->HasBody() ? functionInfo->GetFunctionBody() : nullptr;
+            const wchar_t* calleeName = calleeFunctionBody != nullptr ? calleeFunctionBody->GetDisplayName() : L"<unknown>";
             
             Js::PropertyId methodPropertyId = callerFunctionBody->GetPropertyIdFromCacheId(methodPropertyOpnd->m_inlineCacheIndex);
             Js::PropertyRecord const * const methodPropertyRecord = callerFunctionBody->GetScriptContext()->GetPropertyNameLocked(methodPropertyId);
 
             Output::Print(L"FixedFields: function %s (#%u): %s non-fixed method %s (%s #%u) (cache id: %d), because %s fixed %s %s is disabled.\n",
                 callerFunctionBody->GetDisplayName(), callerFunctionBody->GetDebugNumberSet(debugStringBuffer),
-                functionInfo != null ? L"inlining" : L"calling", methodPropertyRecord->GetBuffer(), calleeName, 
+                functionInfo != nullptr ? L"inlining" : L"calling", methodPropertyRecord->GetBuffer(), calleeName,
                 calleeFunctionBody ? calleeFunctionBody->GetDebugNumberSet(debugStringBuffer2) : L"(null)",
                 methodPropertyOpnd->m_inlineCacheIndex, isInlined ? L"inlining" : L"calling", isBuiltIn ? L"built-in" : L"script",
                 isCtor ? L"ctors" : L"methods");
@@ -1395,14 +1395,14 @@ Inline::TryOptimizeCallInstrWithFixedMethod(IR::Instr *callInstr, Js::FunctionIn
         if (printFixedFieldsTrace)
         {
             Js::FunctionBody* callerFunctionBody = callInstr->m_func->GetJnFunction();
-            Js::FunctionBody* calleeFunctionBody = functionInfo != null && functionInfo->HasBody() ? functionInfo->GetFunctionBody() : null;
-            const wchar_t* calleeName = calleeFunctionBody != null ? calleeFunctionBody->GetDisplayName() : L"<unknown>";
+            Js::FunctionBody* calleeFunctionBody = functionInfo != nullptr && functionInfo->HasBody() ? functionInfo->GetFunctionBody() : nullptr;
+            const wchar_t* calleeName = calleeFunctionBody != nullptr ? calleeFunctionBody->GetDisplayName() : L"<unknown>";
             Js::PropertyId methodPropertyId = callerFunctionBody->GetPropertyIdFromCacheId(methodPropertyOpnd->m_inlineCacheIndex);
             Js::PropertyRecord const * const methodPropertyRecord = callerFunctionBody->GetScriptContext()->GetPropertyNameLocked(methodPropertyId);
 
             Output::Print(L"FixedFields: function %s (%s): %s non-fixed method %s (%s %s) (cache id: %d), because inline cache has no cached type.\n",
                 callerFunctionBody->GetDisplayName(), callerFunctionBody->GetDebugNumberSet(debugStringBuffer),
-                functionInfo != null ? L"inlining" : L"calling", methodPropertyRecord->GetBuffer(), calleeName,
+                functionInfo != nullptr ? L"inlining" : L"calling", methodPropertyRecord->GetBuffer(), calleeName,
                 calleeFunctionBody ? calleeFunctionBody->GetDebugNumberSet(debugStringBuffer2) : L"(null)",
                 methodPropertyOpnd->m_inlineCacheIndex);
             Output::Flush();
@@ -1411,14 +1411,14 @@ Inline::TryOptimizeCallInstrWithFixedMethod(IR::Instr *callInstr, Js::FunctionIn
         return false;
     }
 
-    Js::JavascriptFunction const * functionObject = null;
+    Js::JavascriptFunction const * functionObject = nullptr;
     if (!isPolymorphic)
     {
-        functionObject = methodPropertyOpnd->HasFixedValue() ? methodPropertyOpnd->GetFieldValueAsFixedFunction() : null;
+        functionObject = methodPropertyOpnd->HasFixedValue() ? methodPropertyOpnd->GetFieldValueAsFixedFunction() : nullptr;
     }
     else if (isPolymorphic && isInlined)
     {
-        functionObject = methodPropertyOpnd->HasFixedValue() ? methodPropertyOpnd->GetFieldValueAsFixedFunction(i) : null;
+        functionObject = methodPropertyOpnd->HasFixedValue() ? methodPropertyOpnd->GetFieldValueAsFixedFunction(i) : nullptr;
     }
 
     if (!functionObject)
@@ -1427,15 +1427,15 @@ Inline::TryOptimizeCallInstrWithFixedMethod(IR::Instr *callInstr, Js::FunctionIn
         if (printFixedFieldsTrace)
         {
             Js::FunctionBody* callerFunctionBody = callInstr->m_func->GetJnFunction();
-            Js::FunctionBody* calleeFunctionBody = functionInfo != null && functionInfo->HasBody() ? functionInfo->GetFunctionBody() : null;
-            const wchar_t* calleeName = calleeFunctionBody != null ? calleeFunctionBody->GetDisplayName() : L"<unknown>";
+            Js::FunctionBody* calleeFunctionBody = functionInfo != nullptr && functionInfo->HasBody() ? functionInfo->GetFunctionBody() : nullptr;
+            const wchar_t* calleeName = calleeFunctionBody != nullptr ? calleeFunctionBody->GetDisplayName() : L"<unknown>";
             
             Js::PropertyId methodPropertyId = callerFunctionBody->GetPropertyIdFromCacheId(methodPropertyOpnd->m_inlineCacheIndex);
             Js::PropertyRecord const * const methodPropertyRecord = callerFunctionBody->GetScriptContext()->GetPropertyNameLocked(methodPropertyId);
 
             Output::Print(L"FixedFields: function %s (%s): %s non-fixed method %s (%s %s) (cache id: %d, layout: %s), because inline cache has no fixed function object.\n",
                 callerFunctionBody->GetDisplayName(), callerFunctionBody->GetDebugNumberSet(debugStringBuffer),
-                functionInfo != null ? L"inlining" : L"calling", methodPropertyRecord->GetBuffer(), calleeName,
+                functionInfo != nullptr ? L"inlining" : L"calling", methodPropertyRecord->GetBuffer(), calleeName,
                 calleeFunctionBody ? calleeFunctionBody->GetDebugNumberSet(debugStringBuffer2) : L"(null)",
                 methodPropertyOpnd->m_inlineCacheIndex, 
                 methodPropertyOpnd->IsLoadedFromProto() ? L"proto" : methodPropertyOpnd->UsesAccessor() ? L"accessor" : L"local");
@@ -1448,21 +1448,21 @@ Inline::TryOptimizeCallInstrWithFixedMethod(IR::Instr *callInstr, Js::FunctionIn
     // Certain built-ins that we decide not to inline will get a fast path emitted by the lowerer.
     // The lowering code cannot handle a call with a fixed function target, because it needs access to 
     // the original property sym.  Turn off fixed method calls for these cases.
-    if (functionInfo == null && Func::IsBuiltInInlinedInLowerer(callInstr->GetSrc1()))
+    if (functionInfo == nullptr && Func::IsBuiltInInlinedInLowerer(callInstr->GetSrc1()))
     {
 #if TRACE_FIXED_FIELDS
         if (printFixedFieldsTrace)
         {
             Js::FunctionBody* callerFunctionBody = callInstr->m_func->GetJnFunction();
-            Js::FunctionBody* calleeFunctionBody = functionInfo != null && functionInfo->HasBody() ? functionInfo->GetFunctionBody() : null;
-            const wchar_t* calleeName = calleeFunctionBody != null ? calleeFunctionBody->GetDisplayName() : L"<unknown>";
+            Js::FunctionBody* calleeFunctionBody = functionInfo != nullptr && functionInfo->HasBody() ? functionInfo->GetFunctionBody() : nullptr;
+            const wchar_t* calleeName = calleeFunctionBody != nullptr ? calleeFunctionBody->GetDisplayName() : L"<unknown>";
             
             Js::PropertyId methodPropertyId = callerFunctionBody->GetPropertyIdFromCacheId(methodPropertyOpnd->m_inlineCacheIndex);
             Js::PropertyRecord const * const methodPropertyRecord = callerFunctionBody->GetScriptContext()->GetPropertyNameLocked(methodPropertyId);
 
             Output::Print(L"FixedFields: function %s (%s): %s non-fixed method %s (%s %s) (cache id: %d, layout: %s), because callee is a built-in with fast path in lowerer.\n",
                 callerFunctionBody->GetDisplayName(), callerFunctionBody->GetDebugNumberSet(debugStringBuffer),
-                functionInfo != null ? L"inlining" : L"calling", methodPropertyRecord->GetBuffer(), calleeName, 
+                functionInfo != nullptr ? L"inlining" : L"calling", methodPropertyRecord->GetBuffer(), calleeName,
                 calleeFunctionBody ? calleeFunctionBody->GetDebugNumberSet(debugStringBuffer2) : L"(null)",
                 methodPropertyOpnd->m_inlineCacheIndex, 
                 methodPropertyOpnd->IsLoadedFromProto() ? L"proto" : methodPropertyOpnd->UsesAccessor() ? L"accessor" : L"local");
@@ -1472,7 +1472,7 @@ Inline::TryOptimizeCallInstrWithFixedMethod(IR::Instr *callInstr, Js::FunctionIn
         return false;
     }
 
-    if (functionInfo != null && functionObject->GetFunctionInfo() != functionInfo)
+    if (functionInfo != nullptr && functionObject->GetFunctionInfo() != functionInfo)
     {
 #if TRACE_FIXED_FIELDS
         if (printFixedFieldsTrace)
@@ -1483,11 +1483,11 @@ Inline::TryOptimizeCallInstrWithFixedMethod(IR::Instr *callInstr, Js::FunctionIn
             Js::PropertyRecord const * const methodPropertyRecord = callerFunctionBody->GetScriptContext()->GetPropertyNameLocked(methodPropertyId);
             bool isProto = methodPropertyOpnd->IsLoadedFromProto();
             bool isAccessor = methodPropertyOpnd->UsesAccessor();
-            Js::DynamicObject* protoObject = isProto ? methodPropertyOpnd->GetProtoObject() : null;
+            Js::DynamicObject* protoObject = isProto ? methodPropertyOpnd->GetProtoObject() : nullptr;
             Js::FunctionBody* fixedFunctionBody   = functionObject->GetFunctionInfo()->GetFunctionBody();
             const wchar_t* fixedFunctionNumbers   = fixedFunctionBody ? fixedFunctionBody->GetDebugNumberSet(debugStringBuffer2) : L"(null)";
             Js::FunctionBody* profileFunctionBody = functionInfo->GetFunctionBody();
-            const wchar_t* profileFunctionName    = profileFunctionBody != null ? profileFunctionBody->GetDisplayName() : L"<unknown>";
+            const wchar_t* profileFunctionName    = profileFunctionBody != nullptr ? profileFunctionBody->GetDisplayName() : L"<unknown>";
             const wchar_t* profileFunctionNumbers = profileFunctionBody ? profileFunctionBody->GetDebugNumberSet(debugStringBuffer3) : L"(null)";
 
             if (PHASE_TRACE(Js::FixedMethodsPhase, callInstr->m_func->GetJnFunction()))
@@ -1497,7 +1497,7 @@ Inline::TryOptimizeCallInstrWithFixedMethod(IR::Instr *callInstr, Js::FunctionIn
                     methodPropertyRecord->GetBuffer(), fixedFunctionNumbers, functionObject, functionObject->GetFunctionInfo(),
                     profileFunctionName, profileFunctionNumbers, functionInfo,
                     methodPropertyOpnd->m_inlineCacheIndex, isProto ? L"proto" : isAccessor ? L"acccessor" : L"local",
-                    methodPropertyOpnd->GetType(), protoObject, protoObject != null ? protoObject->GetType() : null);
+                    methodPropertyOpnd->GetType(), protoObject, protoObject != nullptr ? protoObject->GetType() : nullptr);
             }
             if (PHASE_TESTTRACE(Js::FixedMethodsPhase, callInstr->m_func->GetJnFunction()))
             {
@@ -1520,16 +1520,16 @@ Inline::TryOptimizeCallInstrWithFixedMethod(IR::Instr *callInstr, Js::FunctionIn
         if (printFixedFieldsTrace)
         {
             Js::FunctionBody* callerFunctionBody = callInstr->m_func->GetJnFunction();
-            Js::FunctionBody* calleeFunctionBody = functionInfo != null && functionInfo->HasBody() ? functionInfo->GetFunctionBody() : null;
+            Js::FunctionBody* calleeFunctionBody = functionInfo != nullptr && functionInfo->HasBody() ? functionInfo->GetFunctionBody() : nullptr;
             Js::PropertyId methodPropertyId = callerFunctionBody->GetPropertyIdFromCacheId(methodPropertyOpnd->m_inlineCacheIndex);
             Js::PropertyRecord const * const methodPropertyRecord = callerFunctionBody->GetScriptContext()->GetPropertyNameLocked(methodPropertyId);
-            const wchar_t* fixedFunctionName = calleeFunctionBody != null ? calleeFunctionBody->GetDisplayName() : L"<unknown>";
+            const wchar_t* fixedFunctionName = calleeFunctionBody != nullptr ? calleeFunctionBody->GetDisplayName() : L"<unknown>";
             Js::FunctionBody* fixedFunctionBody = functionObject->GetFunctionInfo()->GetFunctionBody();
             const wchar_t* fixedFunctionNumbers = fixedFunctionBody ? fixedFunctionBody->GetDebugNumberSet(debugStringBuffer2) : L"(null)";
 
             Output::Print(L"FixedFields: function %s (%s): %s fixed method %s (%s %s) (cache id: %d, layout: %s).\n",
                 callerFunctionBody->GetDisplayName(), callerFunctionBody->GetDebugNumberSet(debugStringBuffer),
-                functionInfo != null ? L"inlining" : L"calling",
+                functionInfo != nullptr ? L"inlining" : L"calling",
                 methodPropertyRecord->GetBuffer(), fixedFunctionName, fixedFunctionNumbers,
                 methodPropertyOpnd->m_inlineCacheIndex,
                 methodPropertyOpnd->IsLoadedFromProto() ? L"proto" : methodPropertyOpnd->UsesAccessor() ? L"accessor" : L"local");
@@ -1570,23 +1570,23 @@ Inline::TryOptimizeCallInstrWithFixedMethod(IR::Instr *callInstr, Js::FunctionIn
     if (isCtor)
     {
         Js::JitTimeConstructorCache* constructorCache = methodPropertyOpnd->GetCtorCache();
-        if (constructorCache != null && callInstr->IsProfiledInstr())
+        if (constructorCache != nullptr && callInstr->IsProfiledInstr())
         {
 
 #if ENABLE_DEBUG_CONFIG_OPTIONS
             if (PHASE_TRACE(Js::FixedNewObjPhase, callInstr->m_func->GetJnFunction()) || PHASE_TESTTRACE(Js::FixedNewObjPhase, callInstr->m_func->GetJnFunction()))
             {
                 Js::FunctionBody* callerFunctionBody = callInstr->m_func->GetJnFunction();
-                Js::FunctionBody* calleeFunctionBody = functionInfo != null && functionInfo->HasBody() ? functionInfo->GetFunctionBody() : null;
+                Js::FunctionBody* calleeFunctionBody = functionInfo != nullptr && functionInfo->HasBody() ? functionInfo->GetFunctionBody() : nullptr;
                 Js::PropertyId methodPropertyId = callerFunctionBody->GetPropertyIdFromCacheId(methodPropertyOpnd->m_inlineCacheIndex);
                 Js::PropertyRecord const * const methodPropertyRecord = callerFunctionBody->GetScriptContext()->GetPropertyNameLocked(methodPropertyId);
-                const wchar_t* fixedFunctionName = calleeFunctionBody != null ? calleeFunctionBody->GetDisplayName() : L"<unknown>";
+                const wchar_t* fixedFunctionName = calleeFunctionBody != nullptr ? calleeFunctionBody->GetDisplayName() : L"<unknown>";
                 Js::FunctionBody* fixedFunctionBody = functionObject->GetFunctionInfo()->GetFunctionBody();
                 const wchar_t* fixedFunctionNumbers = fixedFunctionBody ? fixedFunctionBody->GetDebugNumberSet(debugStringBuffer2) : L"(null)";
 
                 Output::Print(L"FixedNewObj: function %s (%s): fixed new object for %s with %s ctor %s (%s %s)%s\n",
                     callerFunctionBody->GetDisplayName(), callerFunctionBody->GetDebugNumberSet(debugStringBuffer), Js::OpCodeUtil::GetOpCodeName(callInstr->m_opcode),
-                    functionInfo != null ? L"inlined" : L"called",
+                    functionInfo != nullptr ? L"inlined" : L"called",
                     methodPropertyRecord->GetBuffer(), fixedFunctionName, fixedFunctionNumbers,
                     constructorCache->skipNewScObject ? L" skip default object" : L"");
                 Output::Flush();
@@ -1616,18 +1616,18 @@ Inline::TryOptimizeCallInstrWithFixedMethod(IR::Instr *callInstr, Js::FunctionIn
             if (PHASE_TRACE(Js::FixedNewObjPhase, callInstr->m_func->GetJnFunction()) || PHASE_TESTTRACE(Js::FixedNewObjPhase, callInstr->m_func->GetJnFunction()))
             {
                 Js::FunctionBody* callerFunctionBody = callInstr->m_func->GetJnFunction();
-                Js::FunctionBody* calleeFunctionBody = functionInfo != null && functionInfo->HasBody() ? functionInfo->GetFunctionBody() : null;
+                Js::FunctionBody* calleeFunctionBody = functionInfo != nullptr && functionInfo->HasBody() ? functionInfo->GetFunctionBody() : nullptr;
                 Js::PropertyId methodPropertyId = callerFunctionBody->GetPropertyIdFromCacheId(methodPropertyOpnd->m_inlineCacheIndex);
                 Js::PropertyRecord const * const methodPropertyRecord = callerFunctionBody->GetScriptContext()->GetPropertyNameLocked(methodPropertyId);
-                const wchar_t* fixedFunctionName = calleeFunctionBody != null ? calleeFunctionBody->GetDisplayName() : L"<unknown>";
+                const wchar_t* fixedFunctionName = calleeFunctionBody != nullptr ? calleeFunctionBody->GetDisplayName() : L"<unknown>";
                 Js::FunctionBody* fixedFunctionBody = functionObject->GetFunctionInfo()->GetFunctionBody();
                 const wchar_t* fixedFunctionNumbers = fixedFunctionBody ? fixedFunctionBody->GetDebugNumberSet(debugStringBuffer2) : L"(null)";
 
                 Output::Print(L"FixedNewObj: function %s (%s): non-fixed new object for %s with %s ctor %s (%s %s), because %s.\n",
                     callerFunctionBody->GetDisplayName(), callerFunctionBody->GetDebugNumberSet(debugStringBuffer), Js::OpCodeUtil::GetOpCodeName(callInstr->m_opcode),
-                    functionInfo != null ? L"inlined" : L"called",
+                    functionInfo != nullptr ? L"inlined" : L"called",
                     methodPropertyRecord->GetBuffer(), fixedFunctionName, fixedFunctionNumbers,
-                    constructorCache == null ? L"constructor cache hasn't been cloned" : L"instruction isn't profiled");
+                    constructorCache == nullptr ? L"constructor cache hasn't been cloned" : L"instruction isn't profiled");
                 Output::Flush();
             }
 #endif
@@ -1854,7 +1854,7 @@ Inline::InlineBuiltInFunction(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, 
     Assert(callInstr->GetSrc1()->IsRegOpnd());
     Assert(callInstr->GetSrc1()->AsRegOpnd()->m_sym);
 
-    if (!(builtInFlags & Js::BuiltInFlags::BIF_IgnoreDst) && callInstr->GetDst() == null && inlineCallOpCode != Js::OpCode::InlineArrayPop)
+    if (!(builtInFlags & Js::BuiltInFlags::BIF_IgnoreDst) && callInstr->GetDst() == nullptr && inlineCallOpCode != Js::OpCode::InlineArrayPop)
     {
         // Is seems that it's not worth optimizing odd cases where the result is unused.
         INLINE_TESTTRACE(L"INLINING: Skip Inline: inlinee's return value is not assigned to anything\tInlinee: %s (#%d)\tCaller: %s (%s)\n",
@@ -1899,7 +1899,7 @@ Inline::InlineBuiltInFunction(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, 
     }
     // TODO: check for each arg type in profie matching expected type and don't inline otherwise?
 
-    IR::Instr *inlineBuiltInEndInstr = null;
+    IR::Instr *inlineBuiltInEndInstr = nullptr;
     if (inlineCallOpCode ==  Js::OpCode::InlineFunctionApply)
     {
        inlineBuiltInEndInstr = InlineApply(callInstr, funcInfo, inlinerData, symCallerThis, pIsInlined, profileId, recursiveInlineDepth);
@@ -1991,7 +1991,7 @@ Inline::InlineBuiltInFunction(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, 
             inlineBuilitInStartInstr = inlineBuilitInStartInstr->m_prev;
         }
 
-        IR::Opnd * tmpDst = null;
+        IR::Opnd * tmpDst = nullptr;
         IR::Opnd * callInstrDst = callInstr->GetDst();
 
         if(callInstrDst && inlineCallOpCode != Js::OpCode::InlineArrayPop)
@@ -2042,7 +2042,7 @@ Inline::InlineBuiltInFunction(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, 
 
 //SIMD_JS
         IR::Instr *eaInsertInstr = callInstr;
-        IR::Opnd *eaLinkOpnd = null;
+        IR::Opnd *eaLinkOpnd = nullptr;
         Js::JavascriptLibrary::SimdFuncSignature simdFuncSignature;
         if (IsSimd128Opcode(callInstr->m_opcode))
         {
@@ -2088,7 +2088,7 @@ Inline::InlineBuiltInFunction(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, 
                     eaLinkOpnd->GetStackSym()->m_isInlinedArgSlot = true;
                     eaLinkOpnd->GetStackSym()->m_allocated = true;
 
-                    Assert(callInstr->GetSrc1() == null && callInstr->GetSrc2() == null);
+                    Assert(callInstr->GetSrc1() == nullptr && callInstr->GetSrc2() == nullptr);
                     callInstr->SetSrc1(eaLinkOpnd);
                 }
                 Assert(eaLinkOpnd);
@@ -2241,7 +2241,7 @@ IR::Instr* Inline::InlineApply(IR::Instr *callInstr, Js::FunctionInfo *funcInfo,
     // if isArrayOpndArgumentsObject == false, the array opnd can still be the arguments object; we just can't say that for sure
     bool isArrayOpndArgumentsObject = arrayArgOpnd->IsArgumentsObject();
 
-	IR::Instr * returnInstr = null;
+	IR::Instr * returnInstr = nullptr;
 	if (!PHASE_OFF(Js::InlineApplyTargetPhase, this->topFunc))
 	{
         if (InlineApplyTarget(callInstr, inlinerData, &inlineeData, funcInfo, symCallerThis, &returnInstr, recursiveInlineDepth))
@@ -2537,9 +2537,9 @@ bool Inline::InlineApplyTarget(IR::Instr *callInstr, const Js::FunctionCodeGenJi
     // ArgOut_A         <-- arguments object argout
     // CallIFixed
 
-    IR::Instr* implicitThisArgOut = null;
-    IR::Instr* explicitThisArgOut = null;
-    IR::Instr* argumentsObjArgOut = null;
+    IR::Instr* implicitThisArgOut = nullptr;
+    IR::Instr* explicitThisArgOut = nullptr;
+    IR::Instr* argumentsObjArgOut = nullptr;
     callInstr->IterateArgInstrs([&](IR::Instr* argInstr)
     {
         argumentsObjArgOut = explicitThisArgOut;
@@ -2631,7 +2631,7 @@ Inline::InlineCallApplyTarget_Shared(IR::Instr *callInstr, StackSym* originalCal
     }
     else
     {
-        returnValueOpnd = NULL;
+        returnValueOpnd = nullptr;
         returnRegSlot = Js::Constants::NoRegister;
     }
 
@@ -2652,8 +2652,8 @@ Inline::InlineCallApplyTarget_Shared(IR::Instr *callInstr, StackSym* originalCal
         JitAnew(
             this->topFunc->m_alloc,
             Js::ReadOnlyDynamicProfileInfo,
-            funcBody->HasDynamicProfileInfo() ? funcBody->GetAnyDynamicProfileInfo() : null,
-            this->topFunc->IsBackgroundJIT() ? this->topFunc->m_alloc : null);
+            funcBody->HasDynamicProfileInfo() ? funcBody->GetAnyDynamicProfileInfo() : nullptr,
+            this->topFunc->IsBackgroundJIT() ? this->topFunc->m_alloc : nullptr);
 
     Js::EntryPointPolymorphicInlineCacheInfo * entryPointPolymorphicInlineCacheInfo = this->topFunc->m_workItem->GetEntryPoint()->GetPolymorphicInlineCacheInfo();
     Func *inlinee = JitAnew(this->topFunc->m_alloc,
@@ -2663,7 +2663,7 @@ Inline::InlineCallApplyTarget_Shared(IR::Instr *callInstr, StackSym* originalCal
                          callInstr->m_func->m_runtimeData ?
                             callInstr->m_func->m_runtimeData->GetLdFldInlinee(inlineCacheIndex) : 
                             this->topFunc->GetJnFunction()->GetLdFldInlineeCodeGenRuntimeData(inlineCacheIndex),
-                         entryPointPolymorphicInlineCacheInfo ? entryPointPolymorphicInlineCacheInfo->GetInlineeInfo(funcBody) : null,
+                         entryPointPolymorphicInlineCacheInfo ? entryPointPolymorphicInlineCacheInfo->GetInlineeInfo(funcBody) : nullptr,
                          this->topFunc->GetCodeGenAllocators(),
                          this->topFunc->GetNumberAllocator(),
                          profileInfo,
@@ -2715,7 +2715,7 @@ Inline::InlineCall(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, const Js::F
     *pIsInlined = true;
     const Js::FunctionCodeGenJitTimeData * inlineeData = nullptr;
 
-    IR::Instr * returnInstr = null;
+    IR::Instr * returnInstr = nullptr;
     if (!PHASE_OFF(Js::InlineCallTargetPhase, this->topFunc))
     {
         if (InlineCallTarget(callInstr, inlinerData, &inlineeData, funcInfo, symCallerThis, &returnInstr, recursiveInlineDepth))
@@ -2785,8 +2785,8 @@ Inline::InlineCall(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, const Js::F
     callInstr->m_opcode = Js::OpCode::CallI;
 
     IR::Instr* insertBeforeInstr = callInstr;
-    IR::Instr* clonedArgout = null;
-    IR::Instr* orgArgout = null;
+    IR::Instr* clonedArgout = nullptr;
+    IR::Instr* orgArgout = nullptr;
 
     for (uint i = actualCountToInlinedCall ; i > 0; i--)
     {
@@ -2858,8 +2858,8 @@ Inline::InlineCallTarget(IR::Instr *callInstr, const Js::FunctionCodeGenJitTimeD
         return false;
     }
 
-    IR::Instr* implicitThisArgOut = null;
-    IR::Instr* explicitThisArgOut = null;
+    IR::Instr* implicitThisArgOut = nullptr;
+    IR::Instr* explicitThisArgOut = nullptr;
     
     callInstr->IterateArgInstrs([&] (IR::Instr* argInstr)
     {
@@ -3199,7 +3199,7 @@ Inline::WrapArgsOutWithCoerse(Js::BuiltinFunction builtInId, IR::Instr* callInst
     case Js::BuiltinFunction::String_Match:
         callInstr->ForEachCallDirectArgOutInstrBackward([&](IR::Instr *argOutInstr, uint argNum)
         {
-            IR::Instr * newInstr = NULL;
+            IR::Instr * newInstr = nullptr;
             bool isPreOpBailOutNeeded = false;
             if (argNum == 0)
             {
@@ -3226,7 +3226,7 @@ Inline::WrapArgsOutWithCoerse(Js::BuiltinFunction builtInId, IR::Instr* callInst
     case Js::BuiltinFunction::String_Replace:
         callInstr->ForEachCallDirectArgOutInstrBackward([&](IR::Instr *argOutInstr, uint argNum)
         {
-            IR::Instr * newInstr = NULL;
+            IR::Instr * newInstr = nullptr;
             bool isPreOpBailOutNeeded = false;
             if (argNum == 0)
             {
@@ -3252,7 +3252,7 @@ Inline::WrapArgsOutWithCoerse(Js::BuiltinFunction builtInId, IR::Instr* callInst
     case Js::BuiltinFunction::RegExp_Exec:
         callInstr->ForEachCallDirectArgOutInstrBackward([&](IR::Instr *argOutInstr, uint argNum)
         {
-            IR::Instr * newInstr = NULL;
+            IR::Instr * newInstr = nullptr;
             bool isPreOpBailOutNeeded = false;
             if (argNum == 0)
             {
@@ -3371,7 +3371,7 @@ Inline::InlineGetterSetterFunction(IR::Instr *accessorInstr, const Js::FunctionC
     }
     else
     {
-        returnValueOpnd = NULL;
+        returnValueOpnd = nullptr;
         returnRegSlot = Js::Constants::NoRegister;
     }
 
@@ -3379,8 +3379,8 @@ Inline::InlineGetterSetterFunction(IR::Instr *accessorInstr, const Js::FunctionC
         JitAnew(
             this->topFunc->m_alloc,
             Js::ReadOnlyDynamicProfileInfo,
-            funcBody->HasDynamicProfileInfo() ? funcBody->GetAnyDynamicProfileInfo() : null,
-            this->topFunc->IsBackgroundJIT() ? this->topFunc->m_alloc : null);
+            funcBody->HasDynamicProfileInfo() ? funcBody->GetAnyDynamicProfileInfo() : nullptr,
+            this->topFunc->IsBackgroundJIT() ? this->topFunc->m_alloc : nullptr);
 
     Js::EntryPointPolymorphicInlineCacheInfo * entryPointPolymorphicInlineCacheInfo = this->topFunc->m_workItem->GetEntryPoint()->GetPolymorphicInlineCacheInfo();
     Func *inlinee = JitAnew(this->topFunc->m_alloc,
@@ -3390,7 +3390,7 @@ Inline::InlineGetterSetterFunction(IR::Instr *accessorInstr, const Js::FunctionC
                          accessorInstr->m_func->m_runtimeData ?
                             accessorInstr->m_func->m_runtimeData->GetLdFldInlinee(inlineCacheIndex) : 
                             this->topFunc->GetJnFunction()->GetLdFldInlineeCodeGenRuntimeData(inlineCacheIndex),
-                         entryPointPolymorphicInlineCacheInfo ? entryPointPolymorphicInlineCacheInfo->GetInlineeInfo(funcBody) : null,
+                         entryPointPolymorphicInlineCacheInfo ? entryPointPolymorphicInlineCacheInfo->GetInlineeInfo(funcBody) : nullptr,
                          this->topFunc->GetCodeGenAllocators(),
                          this->topFunc->GetNumberAllocator(),
                          profileInfo,
@@ -3475,7 +3475,7 @@ Inline::InlineFunctionCommon(IR::Instr *callInstr, StackSym* originalCallTargetS
 
     if (callInstr->m_opcode == Js::OpCode::CallIFixed && !inlinee->isGetterSetter)
     {
-        Assert(originalCallTargetStackSym != null);
+        Assert(originalCallTargetStackSym != nullptr);
 
         // Insert a ByteCodeUsesInstr to make sure the function object's lifetimes is extended beyond the last bailout point
         // at which we may have to call the function again in the interpreter.
@@ -3654,7 +3654,7 @@ Inline::InlineScriptFunction(IR::Instr *callInstr, const Js::FunctionCodeGenJitT
         isFixed = TryOptimizeCallInstrWithFixedMethod(callInstr, inlineeData->GetFunctionInfo(),
             false /*isPolymorphic*/, false /*isBuiltIn*/, isCtor /*isCtor*/, true /*isInlined*/, safeThis /*&safeThis*/);
         bool split = SplitConstructorCall(callInstr, true, isFixed, &inlineBailoutChecksBeforeInstr);
-        Assert(split && inlineBailoutChecksBeforeInstr != null);
+        Assert(split && inlineBailoutChecksBeforeInstr != nullptr);
     }
     else
     {
@@ -3685,7 +3685,7 @@ Inline::InlineScriptFunction(IR::Instr *callInstr, const Js::FunctionCodeGenJitT
     }
     else
     {
-        returnValueOpnd = NULL;
+        returnValueOpnd = nullptr;
         returnRegSlot = Js::Constants::NoRegister;
     }
 
@@ -3693,8 +3693,8 @@ Inline::InlineScriptFunction(IR::Instr *callInstr, const Js::FunctionCodeGenJitT
         JitAnew(
         this->topFunc->m_alloc,
         Js::ReadOnlyDynamicProfileInfo,
-        funcBody->HasDynamicProfileInfo() ? funcBody->GetAnyDynamicProfileInfo() : null,
-        this->topFunc->IsBackgroundJIT() ? this->topFunc->m_alloc : null);
+        funcBody->HasDynamicProfileInfo() ? funcBody->GetAnyDynamicProfileInfo() : nullptr,
+        this->topFunc->IsBackgroundJIT() ? this->topFunc->m_alloc : nullptr);
 
     Js::EntryPointPolymorphicInlineCacheInfo * entryPointPolymorphicInlineCacheInfo = this->topFunc->m_workItem->GetEntryPoint()->GetPolymorphicInlineCacheInfo();
     Func *inlinee = JitAnew(this->topFunc->m_alloc,
@@ -3704,7 +3704,7 @@ Inline::InlineScriptFunction(IR::Instr *callInstr, const Js::FunctionCodeGenJitT
                          callInstr->m_func->m_runtimeData ? 
                             callInstr->m_func->m_runtimeData->GetInlineeForTargetInlinee(profileId, funcBody) :
                             this->topFunc->GetJnFunction()->GetInlineeCodeGenRuntimeDataForTargetInlinee(profileId, funcBody),
-                         entryPointPolymorphicInlineCacheInfo ? entryPointPolymorphicInlineCacheInfo->GetInlineeInfo(funcBody) : null,
+                         entryPointPolymorphicInlineCacheInfo ? entryPointPolymorphicInlineCacheInfo->GetInlineeInfo(funcBody) : nullptr,
                          this->topFunc->GetCodeGenAllocators(),
                          this->topFunc->GetNumberAllocator(),
                          profileInfo,
@@ -3763,8 +3763,8 @@ Inline::SplitConstructorCallCommon(
     // Use a temporary register for the newly allocated object (before the call to ctor) - even if we know we'll return this
     // object from the whole operation.  That's so that we don't trash the bytecode register if we need to bail out at
     // object allocation (bytecode instruction has the form [Profiled]NewScObject R6 = R6).
-    IR::RegOpnd* createObjDst = null;
-    IR::Instr* createObjInstr = null;
+    IR::RegOpnd* createObjDst = nullptr;
+    IR::Instr* createObjInstr = nullptr;
     const Js::JitTimeConstructorCache* constructorCache;
     bool returnCreatedObject = false;
     bool skipNewScObj = false;
@@ -3773,8 +3773,8 @@ Inline::SplitConstructorCallCommon(
     {
         Js::ProfileId profiledCallSiteId = static_cast<Js::ProfileId>(newObjInstr->AsProfiledInstr()->u.profileId);
         constructorCache = newObjInstr->m_func->GetConstructorCache(profiledCallSiteId);
-        returnCreatedObject = constructorCache != null && constructorCache->ctorHasNoExplicitReturnValue;
-        skipNewScObj = constructorCache != null && constructorCache->skipNewScObject;
+        returnCreatedObject = constructorCache != nullptr && constructorCache->ctorHasNoExplicitReturnValue;
+        skipNewScObj = constructorCache != nullptr && constructorCache->skipNewScObject;
         if (!skipNewScObj)
         {
             createObjDst = IR::RegOpnd::New(TyVar, callerFunc);
@@ -3784,7 +3784,7 @@ Inline::SplitConstructorCallCommon(
     }
     else
     {
-        constructorCache = null;
+        constructorCache = nullptr;
         createObjDst = IR::RegOpnd::New(TyVar, callerFunc);
         createObjInstr = IR::Instr::New(newObjOpCode, createObjDst, newObjInstr->GetSrc1(), callerFunc);
     }
@@ -3809,7 +3809,7 @@ Inline::SplitConstructorCallCommon(
     }
 
     IR::Opnd* thisPtrOpnd;
-    if (createObjInstr != null)
+    if (createObjInstr != nullptr)
     {
         createObjInstr->SetByteCodeOffset(newObjInstr);
         createObjInstr->GetSrc1()->SetIsJITOptimizedReg(true);
@@ -3884,7 +3884,7 @@ Inline::SplitConstructorCallCommon(
 
     // Update the NewScObject cache, but only if we don't have a hard-coded constructor cache.  We only clone caches that
     // don't require update, and once updated a cache never requires an update again.
-    if (constructorCache == null)
+    if (constructorCache == nullptr)
     {
         instr = IR::Instr::New(Js::OpCode::UpdateNewScObjectCache, callerFunc);
         instr->SetSrc1(newObjInstr->GetSrc1()); // constructor function
@@ -3895,12 +3895,12 @@ Inline::SplitConstructorCallCommon(
         insertBeforeInstr->InsertBefore(instr);
     }
 
-    if (createObjInstrOut != null)
+    if (createObjInstrOut != nullptr)
     {
         *createObjInstrOut = createObjInstr;
     }
 
-    if (callCtorInstrOut != null)
+    if (callCtorInstrOut != nullptr)
     {
         *callCtorInstrOut = newObjInstr;
     }
@@ -4118,7 +4118,7 @@ bool Inline::InlConstFold(IR::Instr *instr, IntConstType *pValue, IR::Instr *cal
 
                 IR::Instr *instrDef = sym->GetInstrDef();
                 // Walk the caller
-                return InlConstFold(instrDef, pValue, null, (Js::ArgSlot) - 1);
+                return InlConstFold(instrDef, pValue, nullptr, (Js::ArgSlot) - 1);
             }
         }
         else if (src1->AsSymOpnd()->IsPropertySymOpnd())
@@ -4369,7 +4369,7 @@ Inline::MapActuals(IR::Instr *callInstr, __out_ecount(maxParamCount) IR::Instr *
                     if (currentActual < maxParamCount)
                     {
                         __analysis_assume(currentActual < Js::InlineeCallInfo::MaxInlineeArgoutCount);
-                        argOuts[currentActual] = NULL;
+                        argOuts[currentActual] = nullptr;
                     }
                 }
             }
@@ -4413,7 +4413,7 @@ Inline::MapActuals(IR::Instr *callInstr, __out_ecount(maxParamCount) IR::Instr *
     // Missing arguments...
     for (Js::ArgSlot i = actualCount; i < formalCount; i++)
     {
-        argOuts[i] = NULL;
+        argOuts[i] = nullptr;
     }
 
     // We may not know the exact number of actuals that "b" gets in a.b.apply just yet, since we have expanded the ArgOut_A_FromStackArgs based on the number of formals "b" accepts.
@@ -4441,8 +4441,8 @@ Inline::MapFormals(Func *inlinee,
     
     bool fUsesSafeThis = false;
     bool fUsesConstThis = false;
-    StackSym *symThis = null;
-    Js::Var thisConstVar = null;
+    StackSym *symThis = nullptr;
+    Js::Var thisConstVar = nullptr;
 
     FOREACH_INSTR_EDITING(instr, instrNext, inlinee->m_headInstr)
     {
@@ -4669,7 +4669,7 @@ Inline::MapFormals(Func *inlinee,
             }
             else
             {
-                Assert(instr->GetSrc1() != null);
+                Assert(instr->GetSrc1() != nullptr);
             }
             break;
 
@@ -4712,7 +4712,7 @@ Inline::MapFormals(Func *inlinee,
             }
             else
             {
-                Assert(instr->GetSrc1() != null);
+                Assert(instr->GetSrc1() != nullptr);
             }
             break;
 
@@ -4810,7 +4810,7 @@ Inline::SetupInlineeFrame(Func *inlinee, IR::Instr *inlineeStart, Js::ArgSlot ac
          * the correct slot in the frame. Lowerer fills this slot with the function object just
          * before entering the inlinee when we're sure we've evaluated the target in all modes.
          */
-        null,
+        nullptr,
 
         IR::AddrOpnd::NewNull(inlinee)
     };
@@ -5241,11 +5241,11 @@ Inline::GetMethodLdOpndForCallInstr(IR::Instr* callInstr)
                 {
                     return defInstr->GetSrc1()->AsSymOpnd()->AsPropertySymOpnd();
                 }
-                return null;
+                return nullptr;
             }
-            return null;
+            return nullptr;
         }
-        return null;
+        return nullptr;
     }
-    return null;
+    return nullptr;
 }

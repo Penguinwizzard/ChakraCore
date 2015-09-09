@@ -985,10 +985,10 @@ private:
 #if defined(LEAK_REPORT) || defined(CHECK_MEMORY_LEAK)
         void ClearSourceContextInfoMaps()
         {
-          if (this->cache != null)
+          if (this->cache != nullptr)
           {
-              this->cache->sourceContextInfoMap = null;
-              this->cache->dynamicSourceContextInfoMap = null;
+              this->cache->sourceContextInfoMap = nullptr;
+              this->cache->dynamicSourceContextInfoMap = nullptr;
               this->referencesSharedDynamicSourceContextInfo = false;
           }
         }
@@ -1010,11 +1010,11 @@ private:
         SRCINFO const * GetModuleSrcInfo(Js::ModuleID moduleID);
         SourceContextInfoMap* GetSourceContextInfoMap()
         {
-            return (this->cache ? this->cache->sourceContextInfoMap : null);
+            return (this->cache ? this->cache->sourceContextInfoMap : nullptr);
         }
         DynamicSourceContextInfoMap* GetDynamicSourceContextInfoMap()
         {
-            return (this->cache ? this->cache->dynamicSourceContextInfoMap : null);
+            return (this->cache ? this->cache->dynamicSourceContextInfoMap : nullptr);
         }
 
         void SetFirstInterpreterFrameReturnAddress(void * returnAddress) { firstInterpreterFrameReturnAddress = returnAddress;}
@@ -1034,7 +1034,7 @@ private:
         bool IsClosed() { return isClosed; }
         bool IsFastDOMEnabled() { return fastDOMenabled; }
         void SetFastDOMenabled();
-        BOOL VerifyAlive(BOOL isJSFunction = FALSE, ScriptContext* requestScriptContext = NULL);
+        BOOL VerifyAlive(BOOL isJSFunction = FALSE, ScriptContext* requestScriptContext = nullptr);
         void VerifyAliveWithHostContext(BOOL isJSFunction, HostScriptContext* requestHostScriptContext);
         void AddFunctionBodyToPropIdMap(FunctionBody* body);
 
@@ -1159,7 +1159,7 @@ private:
         RecyclableObject *GetNullPropertyResult(Js::RecyclableObject *instance, Js::PropertyId id);
         RecyclableObject *GetNullItemResult(Js::RecyclableObject *instance, uint32 index);
 
-        bool HasRecordedException() const { return threadContext->GetRecordedException() != null; }
+        bool HasRecordedException() const { return threadContext->GetRecordedException() != nullptr; }
         Js::JavascriptExceptionObject * GetAndClearRecordedException(bool *considerPassingToDebugger = nullptr);
         void RecordException(Js::JavascriptExceptionObject * exceptionObject, bool propagateToDebugger = false);
         __declspec(noreturn) void RethrowRecordedException(JavascriptExceptionObject::HostWrapperCreateFuncType hostWrapperCreateFunc);
@@ -1172,7 +1172,7 @@ private:
         bool SaveSourceCopy(Utf8SourceInfo* const sourceInfo, int cchLength, bool isCesu8, uint * index);
 
         uint SaveSourceNoCopy(Utf8SourceInfo* sourceInfo, int cchLength, bool isCesu8);
-        Utf8SourceInfo* CloneSourceCrossContext(Utf8SourceInfo* crossContextSourceInfo, SRCINFO const* srcInfo = NULL);
+        Utf8SourceInfo* CloneSourceCrossContext(Utf8SourceInfo* crossContextSourceInfo, SRCINFO const* srcInfo = nullptr);
 
         void CloneSources(ScriptContext* sourceContext);
         Utf8SourceInfo* GetSource(uint sourceIndex);
@@ -1303,7 +1303,7 @@ private:
 
         BOOL IsProfiling()
         {
-            return (m_pProfileCallback != NULL);
+            return (m_pProfileCallback != nullptr);
         }
 
         BOOL IsInProfileCallback()
@@ -1316,19 +1316,19 @@ private:
 
         int GetProfileSession()
         {
-            AssertMsg(m_pProfileCallback != NULL, "Asking for profile session when we arent in any");
+            AssertMsg(m_pProfileCallback != nullptr, "Asking for profile session when we arent in any");
             return m_iProfileSession;
         }
 
         void StartNewProfileSession()
         {
-            AssertMsg(m_pProfileCallback != NULL, "New Session when the profiler isnt set to any callback");
+            AssertMsg(m_pProfileCallback != nullptr, "New Session when the profiler isnt set to any callback");
             m_iProfileSession++;
         }
 
         void StopProfileSession()
         {
-            AssertMsg(m_pProfileCallback == NULL, "How to stop when there is still the callback out there");
+            AssertMsg(m_pProfileCallback == nullptr, "How to stop when there is still the callback out there");
         }
 
         bool hadProfiled;
@@ -1575,7 +1575,7 @@ private:
     template <class TDelegate>
     FunctionBody* ScriptContext::FindFunction(TDelegate predicate)
     {
-        FunctionBody* functionBody = null;
+        FunctionBody* functionBody = nullptr;
 
         this->sourceList->MapUntil([&functionBody, &predicate](int, RecyclerWeakReference<Js::Utf8SourceInfo>* sourceInfo) -> bool
         {
@@ -1604,8 +1604,8 @@ private:
     scriptContext->ReleaseTemporaryAllocator(temp##allocator);
 
 #define DECLARE_TEMP_ALLOCATOR(allocator) \
-    Js::TempArenaAllocatorObject *temp##allocator = null; \
-    ArenaAllocator * allocator = null;
+    Js::TempArenaAllocatorObject *temp##allocator = nullptr; \
+    ArenaAllocator * allocator = nullptr;
 
 #define ACQUIRE_TEMP_ALLOCATOR(allocator, scriptContext, name) \
     temp##allocator = scriptContext->GetTemporaryAllocator(name); \
@@ -1616,8 +1616,8 @@ private:
     scriptContext->ReleaseTemporaryAllocator(temp##allocator);
 
 #define DECLARE_TEMP_GUEST_ALLOCATOR(allocator) \
-    Js::TempGuestArenaAllocatorObject *tempGuest##allocator = null; \
-    ArenaAllocator * allocator = null;
+    Js::TempGuestArenaAllocatorObject *tempGuest##allocator = nullptr; \
+    ArenaAllocator * allocator = nullptr;
 
 #define ACQUIRE_TEMP_GUEST_ALLOCATOR(allocator, scriptContext, name) \
     tempGuest##allocator = scriptContext->GetTemporaryGuestAllocator(name); \

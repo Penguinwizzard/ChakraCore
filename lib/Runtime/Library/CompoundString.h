@@ -470,7 +470,7 @@ namespace Js
         : stringLength(0),
         charLength(0),
         directCharLength(static_cast<CharCount>(-1)),
-        compoundString(null),
+        compoundString(nullptr),
         scriptContext(scriptContext)
     #if DBG
         , isFinalized(false)

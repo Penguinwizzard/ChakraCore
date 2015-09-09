@@ -111,7 +111,7 @@ namespace JSON
 
     uint32 AddToNameTable(StringifySession::StringTable nameTable[], uint32 tableLen, uint32 size, Js::Var item, Js::ScriptContext* scriptContext)
     {
-        Js::Var value = null;
+        Js::Var value = nullptr;
         switch (Js::JavascriptOperators::GetTypeId(item))
         {
         case Js::TypeIds_Integer:
@@ -171,14 +171,14 @@ namespace JSON
         }
 
         Js::Var value = args[1];
-        Js::Var replacerArg = args.Info.Count > 2 ? args[2] : null;
+        Js::Var replacerArg = args.Info.Count > 2 ? args[2] : nullptr;
         Js::Var space = args.Info.Count > 3 ? args[3] : library->GetNull();
 
         Js::DynamicObject* remoteObject;
         if (Js::JavascriptOperators::GetTypeId(value) == Js::TypeIds_HostDispatch)
         {
             remoteObject = Js::RecyclableObject::FromVar(value)->GetRemoteObject();
-            if (remoteObject != NULL)
+            if (remoteObject != nullptr)
             {
                 value = Js::DynamicObject::FromVar(remoteObject);
             }
@@ -191,9 +191,9 @@ namespace JSON
                 }
             }
         }
-        Js::Var result = NULL;
+        Js::Var result = nullptr;
         StringifySession stringifySession(scriptContext);
-        StringifySession::StringTable* nameTable = NULL;            //stringifySession will point to the memory allocated by nameTable, so make sure lifespans are linked.
+        StringifySession::StringTable* nameTable = nullptr;            //stringifySession will point to the memory allocated by nameTable, so make sure lifespans are linked.
 
         DECLARE_TEMP_GUEST_ALLOCATOR(nameTableAlloc);
 
@@ -202,7 +202,7 @@ namespace JSON
             if (Js::JavascriptOperators::IsArray(replacerArg))
             {
                 uint32 length;
-                Js::JavascriptArray *reArray = null;
+                Js::JavascriptArray *reArray = nullptr;
                 Js::RecyclableObject *reRemoteArray = Js::RecyclableObject::FromVar(replacerArg);
                 bool isArray = false;
 
@@ -218,7 +218,7 @@ namespace JSON
                 }
 
                 uint32 count = 0; 
-                Js::Var item = null;
+                Js::Var item = nullptr;
 
                 if (isArray)
                 {

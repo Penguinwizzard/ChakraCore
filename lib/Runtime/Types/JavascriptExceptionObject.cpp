@@ -75,7 +75,7 @@ namespace Js
     {
         // requestingScriptContext == this->scriptContext when we have A->(cross site thunk)B->(IDispatch)A using and nested A window return
         // exception backup. we can go back down to normal code path below.
-        if (requestingScriptContext != null && hostWrapperCreateFunc != null && (requestingScriptContext != this->scriptContext))
+        if (requestingScriptContext != nullptr && hostWrapperCreateFunc != nullptr && (requestingScriptContext != this->scriptContext))
         {
             return hostWrapperCreateFunc(thrownObject, scriptContext, requestingScriptContext);
         }
@@ -103,7 +103,7 @@ namespace Js
                         if ( S_OK != hr )
                         {
                             JavascriptError* jsNewErrorObject = requestingScriptContext->GetLibrary()->CreateTypeError();
-                            JavascriptError::SetErrorMessage(jsNewErrorObject, VBSERR_PermissionDenied, null, requestingScriptContext);
+                            JavascriptError::SetErrorMessage(jsNewErrorObject, VBSERR_PermissionDenied, nullptr, requestingScriptContext);
                             return jsNewErrorObject;
                         }
                     }

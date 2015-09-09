@@ -208,7 +208,7 @@ namespace Js
             }
 
             *pVarThis = this->GetThisFromFrame();
-            return (*pVarThis) != null;
+            return (*pVarThis) != nullptr;
         }
     }
 
@@ -247,13 +247,13 @@ namespace Js
 
     Var JavascriptStackWalker::GetCurrentNativeArgumentsObject() const
     {
-        Assert(this->IsJavascriptFrame() && this->interpreterFrame == null);
+        Assert(this->IsJavascriptFrame() && this->interpreterFrame == nullptr);
         return this->GetCurrentArgv()[JavascriptFunctionArgIndex_ArgumentsObject];
     }
 
     void JavascriptStackWalker::SetCurrentNativeArgumentsObject(Var args)
     {
-        Assert(this->IsJavascriptFrame() && this->interpreterFrame == null);
+        Assert(this->IsJavascriptFrame() && this->interpreterFrame == nullptr);
         this->GetCurrentArgv()[JavascriptFunctionArgIndex_ArgumentsObject] = args;
     }
 
@@ -280,7 +280,7 @@ namespace Js
     {
         if (this->IsJavascriptFrame())
         {
-            if (this->interpreterFrame && this->lastInternalFrameAddress == null)
+            if (this->interpreterFrame && this->lastInternalFrameAddress == nullptr)
             {
                 uint32 offset = this->interpreterFrame->GetReader()->GetCurrentOffset();
                 if (offset == 0)
@@ -301,7 +301,7 @@ namespace Js
 #ifdef ENABLE_NATIVE_CODEGEN
             DWORD_PTR pCodeAddr;
             uint loopNum = LoopHeader::NoLoop;
-            if (this->lastInternalFrameAddress != null)
+            if (this->lastInternalFrameAddress != nullptr)
             {
                 if (lastInternalLoopBodyFrameType == InternalFrameType_LoopBody)
                 {
@@ -334,11 +334,11 @@ namespace Js
                 pCodeAddr--;
             }
 
-            JavascriptFunction *function = null;
-            FunctionBody *inlinee = null;
+            JavascriptFunction *function = nullptr;
+            FunctionBody *inlinee = nullptr;
             StatementData data;
 
-            if (this->interpreterFrame == null) //Inlining is disabled in Jit Loopbody. Don't attempt to get the statement map from the inlined frame. 
+            if (this->interpreterFrame == nullptr) //Inlining is disabled in Jit Loopbody. Don't attempt to get the statement map from the inlined frame. 
             {
                 //
                 // For inlined frames, translation from native offset -> source code happens in two steps. 
@@ -352,7 +352,7 @@ namespace Js
                 // of the physical frame. All other inlined frames use the preceeding inlined frame's offset.
                 //
                 function = this->GetCurrentFunctionFromPhysicalFrame();
-                inlinee = inlinedFramesBeingWalked ? inlinedFrameWalker.GetFunctionObject()->GetFunctionBody() : null;
+                inlinee = inlinedFramesBeingWalked ? inlinedFrameWalker.GetFunctionObject()->GetFunctionBody() : nullptr;
                 InlinedFrameWalker  tmpFrameWalker;
                 if (inlinedFramesBeingWalked)
                 {
@@ -461,7 +461,7 @@ namespace Js
             }
             else
             {
-                Assert(this->interpreterFrame == null || StackScriptFunction::GetCurrentFunctionObject(this->interpreterFrame->GetJavascriptFunction()) == function);
+                Assert(this->interpreterFrame == nullptr || StackScriptFunction::GetCurrentFunctionObject(this->interpreterFrame->GetJavascriptFunction()) == function);
                 if (this->interpreterFrame)
                 {
                     previousInterpreterFrameIsFromBailout = false;
@@ -470,7 +470,7 @@ namespace Js
             this->scriptContext = function->GetScriptContext();
             return function;
         }
-        return null;
+        return nullptr;
     }
 
 #if _M_X64
@@ -725,7 +725,7 @@ namespace Js
 
 #if defined(_M_AMD64)
             void ** argv = this->currentFrame.GetArgv(false /*isCurrentContextNative*/, false /*shouldCheckForNativeAddr*/);
-            if (argv == null)
+            if (argv == nullptr)
             {
                 // TODO: When we switch to walking the stack ourselves and skip non engine frames, this should never happen.
                 return false;
@@ -772,7 +772,7 @@ namespace Js
         {
             this->shouldDetectPartiallyInitializedInterpreterFrame = false;
             void ** argv = this->currentFrame.GetArgv(true /*isCurrentContextNative*/, false /*shouldCheckForNativeAddr*/);
-            if (argv == null)
+            if (argv == nullptr)
             {
                 // TODO: When we switch to walking the stack ourselves and skip non engine frames, this should never happen.
                 return false;
@@ -927,7 +927,7 @@ namespace Js
 
     void JavascriptStackWalker::ClearCachedInternalFrameAddress()
     {
-        SetCachedInternalFrameAddress(null, InternalFrameType_None);
+        SetCachedInternalFrameAddress(nullptr, InternalFrameType_None);
         this->lastInternalLoopBodyFrameType = InternalFrameType_None;
     }
 
@@ -1005,7 +1005,7 @@ namespace Js
     {
         bool inlinedFramesFound = false;
         FunctionEntryPointInfo *entryPointInfo = parent->GetFunctionBody()->GetEntryPointFromNativeAddress((DWORD_PTR) physicalFrame.GetInstructionPointer());
-        AssertMsg(entryPointInfo != null, "Inlined frame should resolve to the right parent address");
+        AssertMsg(entryPointInfo != nullptr, "Inlined frame should resolve to the right parent address");
         if (entryPointInfo->HasInlinees())
         {
             void *entry = reinterpret_cast<void*>(entryPointInfo->GetNativeAddress());
@@ -1057,9 +1057,9 @@ namespace Js
 
     void InlinedFrameWalker::Close()
     {
-        parentFunction = null;
+        parentFunction = nullptr;
         HeapDeleteArray(frameCount, frames);
-        frames = null;
+        frames = nullptr;
         currentIndex = -1;
         frameCount = 0;
     }
@@ -1074,7 +1074,7 @@ namespace Js
             callInfo.Count = (currentFrame->callInfo.Count & 0xFFFF);
         }
 
-        return currentFrame != null;
+        return currentFrame != nullptr;
     }
 
     size_t InlinedFrameWalker::GetArgc() const
@@ -1190,7 +1190,7 @@ namespace Js
         Assert(frames);
         Assert(frameCount);
         
-        InlinedFrameWalker::InlinedFrame *frame = null;
+        InlinedFrameWalker::InlinedFrame *frame = nullptr;
         if (index < frameCount)
         {
             frame = frames[index];

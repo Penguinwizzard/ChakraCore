@@ -10,7 +10,7 @@ namespace Js
     JavascriptRegExpConstructor::JavascriptRegExpConstructor(DynamicType * type) :
         RuntimeFunction(type, &JavascriptRegExp::EntryInfo::NewInstance),
         reset(false),
-        lastPattern(null),
+        lastPattern(nullptr),
         lastMatch() // undefined
     {
         DebugOnly(VerifyEntryPoint());
@@ -37,8 +37,8 @@ namespace Js
     void JavascriptRegExpConstructor::SetLastMatch(UnifiedRegex::RegexPattern* lastPattern, JavascriptString* lastInput, UnifiedRegex::GroupInfo lastMatch)
     {
         AssertMsg(!lastMatch.IsUndefined(), "SetLastMatch should only be called if there's a successful match");
-        AssertMsg(lastPattern != null, "lastPattern should not be null");
-        AssertMsg(lastInput != null, "lastInput should not be null");
+        AssertMsg(lastPattern != nullptr, "lastPattern should not be null");
+        AssertMsg(lastInput != nullptr, "lastInput should not be null");
         AssertMsg(JavascriptOperators::GetTypeId(lastInput) != TypeIds_Null, "lastInput should not be JavaScript null");
 
         this->lastPattern = lastPattern;
@@ -184,7 +184,7 @@ namespace Js
         PropertyRecord const* propertyRecord;
         this->GetScriptContext()->FindPropertyRecord(propertyNameString, &propertyRecord);
 
-        if (propertyRecord != null && GetPropertyBuiltIns(propertyRecord->GetPropertyId(), value, &result))
+        if (propertyRecord != nullptr && GetPropertyBuiltIns(propertyRecord->GetPropertyId(), value, &result))
         {
             return result;
         }
@@ -298,7 +298,7 @@ namespace Js
         PropertyRecord const * propertyRecord;
         this->GetScriptContext()->FindPropertyRecord(propertyNameString, &propertyRecord);
 
-        if (propertyRecord != null && SetPropertyBuiltIns(propertyRecord->GetPropertyId(), value, &result))
+        if (propertyRecord != nullptr && SetPropertyBuiltIns(propertyRecord->GetPropertyId(), value, &result))
         {
             return result;
         }

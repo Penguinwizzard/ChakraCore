@@ -123,7 +123,7 @@ LinearScanMD::GenerateBailOut(IR::Instr * instr, __in_ecount(registerSaveSymsCou
 
         // Record the use on the lifetime in case it spilled afterwards. Spill loads will be inserted before 'firstInstr', that
         // is, before the register saves are done.
-        this->linearScan->RecordUse(stackSym->scratch.linearScan.lifetime, firstInstr, null, true);
+        this->linearScan->RecordUse(stackSym->scratch.linearScan.lifetime, firstInstr, nullptr, true);
     }
 }
 

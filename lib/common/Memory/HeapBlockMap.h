@@ -168,7 +168,7 @@ private:
         // HeapBlockInfo for each page in our range
         HeapBlockInfo blockInfo[L2Count];
         
-        // HeapBlock * for each page in our range (or null, if no block)
+        // HeapBlock * for each page in our range (or nullptr, if no block)
         HeapBlock* map[L2Count];
 
 #ifdef RECYCLER_VERIFY_MARK

@@ -717,7 +717,7 @@ namespace Js
         const wchar_t* inputStr = input->GetString();
         CharCount inputLength = input->GetLength();
         
-        JavascriptString* newString = null;
+        JavascriptString* newString = nullptr;
 
 #if ENABLE_REGEX_CONFIG_OPTIONS
         RegexHelperTrace(scriptContext, UnifiedRegex::RegexStats::Replace, regularExpression, input, replace);
@@ -740,7 +740,7 @@ namespace Js
         
         if (!noResult)
         {
-            CharCount* substitutionOffsets = null;
+            CharCount* substitutionOffsets = nullptr;
             int substitutions = GetReplaceSubstitutions(replaceStr, replaceLength,
                  state.tempAllocatorObj->GetAllocator(), &substitutionOffsets);
             
@@ -838,7 +838,7 @@ namespace Js
         UnifiedRegex::RegexPattern* pattern = regularExpression->GetPattern();        
         const wchar_t* inputStr = input->GetString();
         CharCount inputLength = input->GetLength();
-        JavascriptString* newString = null;
+        JavascriptString* newString = nullptr;
         const int numGroups = pattern->NumGroups();
         Var nonMatchValue = NonMatchValue(scriptContext, false);
         UnifiedRegex::GroupInfo lastMatch; // initially undefined
@@ -1661,18 +1661,18 @@ namespace Js
 
     Var RegexHelper::RegexReplaceResultUsed(ScriptContext* entryFunctionContext, JavascriptRegExp* regularExpression, JavascriptString* input, JavascriptString* replace)
     {
-        return RegexHelper::RegexReplace(entryFunctionContext, regularExpression, input, replace, null, false);
+        return RegexHelper::RegexReplace(entryFunctionContext, regularExpression, input, replace, nullptr, false);
     }
 
     Var RegexHelper::RegexReplaceResultNotUsed(ScriptContext* entryFunctionContext, JavascriptRegExp* regularExpression, JavascriptString* input, JavascriptString* replace)
     {
         if (!PHASE_OFF1(Js::RegexResultNotUsedPhase))
         {
-            return RegexHelper::RegexReplace(entryFunctionContext, regularExpression, input, replace, null, true);
+            return RegexHelper::RegexReplace(entryFunctionContext, regularExpression, input, replace, nullptr, true);
         }
         else
         {
-            return RegexHelper::RegexReplace(entryFunctionContext, regularExpression, input, replace, null, false);
+            return RegexHelper::RegexReplace(entryFunctionContext, regularExpression, input, replace, nullptr, false);
         }
 
     }

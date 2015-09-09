@@ -52,7 +52,7 @@ class EncoderMD
 {
 public:
     EncoderMD(Func * func) : m_func(func), consecutiveThumbInstrCount(0) { }
-    ptrdiff_t       Encode(IR::Instr * instr, BYTE *pc, BYTE* beginCodeAddress = null);
+    ptrdiff_t       Encode(IR::Instr * instr, BYTE *pc, BYTE* beginCodeAddress = nullptr);
     void            Init(Encoder *encoder);
     void            ApplyRelocs(uint32 codeBufferAddress);
     static bool     TryConstFold(IR::Instr *instr, IR::RegOpnd *regOpnd);

@@ -430,13 +430,13 @@ namespace Js
         if (regexStacks)
         {
             Adelete(RegexAllocator(), regexStacks);
-            regexStacks = null;
+            regexStacks = nullptr;
         }
 
-        if (javascriptLibrary != null)
+        if (javascriptLibrary != nullptr)
         {
-            javascriptLibrary->scriptContext = null;
-            javascriptLibrary = null;
+            javascriptLibrary->scriptContext = nullptr;
+            javascriptLibrary = nullptr;
             if (closed)
             {
                 // if we just closed, we haven't unpin the object yet.
@@ -458,14 +458,14 @@ namespace Js
         }
 
 #if ENABLE_NATIVE_CODEGEN
-        if (this->nativeCodeGen != null)
+        if (this->nativeCodeGen != nullptr)
         {
             DeleteNativeCodeGenerator(this->nativeCodeGen);
             nativeCodeGen = NULL;
         }
 #endif
 
-        if (this->interpreterThunkEmitter != null)
+        if (this->interpreterThunkEmitter != nullptr)
         {
             HeapDelete(interpreterThunkEmitter);
             this->interpreterThunkEmitter = NULL;
@@ -478,7 +478,7 @@ namespace Js
             this->asmJsInterpreterThunkEmitter = nullptr;
         }
 
-        if (this->asmJsCodeGenerator != null)
+        if (this->asmJsCodeGenerator != nullptr)
         {
             HeapDelete(asmJsCodeGenerator);
             this->asmJsCodeGenerator = NULL;
@@ -497,13 +497,13 @@ namespace Js
             // clear out all inline caches to remove our proto inline caches from the thread context
             threadContext->ClearInlineCaches();
             Assert(!this->hasRegisteredInlineCache);
-            Assert(this->entryInScriptContextWithInlineCachesRegistry == null);
+            Assert(this->entryInScriptContextWithInlineCachesRegistry == nullptr);
         }
-        else if (this->entryInScriptContextWithInlineCachesRegistry != null)
+        else if (this->entryInScriptContextWithInlineCachesRegistry != nullptr)
         {
             // UnregisterInlineCacheScriptContext may throw, set up the correct state first
             ScriptContext ** entry = this->entryInScriptContextWithInlineCachesRegistry;
-            this->entryInScriptContextWithInlineCachesRegistry = null;
+            this->entryInScriptContextWithInlineCachesRegistry = nullptr;
             threadContext->UnregisterInlineCacheScriptContext(entry);
         }
 
@@ -512,13 +512,13 @@ namespace Js
             // clear out all inline caches to remove our proto inline caches from the thread context
             threadContext->ClearIsInstInlineCaches();
             Assert(!this->hasRegisteredIsInstInlineCache);
-            Assert(this->entryInScriptContextWithIsInstInlineCachesRegistry == null);
+            Assert(this->entryInScriptContextWithIsInstInlineCachesRegistry == nullptr);
         }
-        else if (this->entryInScriptContextWithInlineCachesRegistry != null)
+        else if (this->entryInScriptContextWithInlineCachesRegistry != nullptr)
         {
             // UnregisterInlineCacheScriptContext may throw, set up the correct state first
             ScriptContext ** entry = this->entryInScriptContextWithInlineCachesRegistry;
-            this->entryInScriptContextWithInlineCachesRegistry = null;
+            this->entryInScriptContextWithInlineCachesRegistry = nullptr;
             threadContext->UnregisterIsInstInlineCacheScriptContext(entry);
         }
 
@@ -531,7 +531,7 @@ namespace Js
     void ScriptContext::SetUrl(BSTR bstrUrl)
     {
         // Assumption: this method is never called multiple times
-        Assert(this->url != null && wcslen(this->url) == 0);
+        Assert(this->url != nullptr && wcslen(this->url) == 0);
 
         charcount_t length = SysStringLen(bstrUrl) + 1; // Add 1 for the NULL.
 
@@ -849,7 +849,7 @@ namespace Js
 #if DEBUG
         PropertyRecord const * name = this->GetPropertyName(propertyId);
 
-        if (name != null)
+        if (name != nullptr)
         {
             // Symbol properties are not numeric - description should not be used.
             if (name->IsSymbol())
@@ -908,7 +908,7 @@ namespace Js
 
     SRCINFO *ScriptContext::AddHostSrcInfo(SRCINFO const *pSrcInfo)
     {
-        Assert(pSrcInfo != null);
+        Assert(pSrcInfo != nullptr);
 
         return RecyclerNewZ(this->GetRecycler(), SRCINFO, *pSrcInfo);
     }
@@ -1076,7 +1076,7 @@ namespace Js
 
     UnifiedRegex::RegexStacks * ScriptContext::AllocRegexStacks()
     {
-        Assert(this->regexStacks == null);
+        Assert(this->regexStacks == nullptr);
         UnifiedRegex::RegexStacks * stacks = Anew(RegexAllocator(), UnifiedRegex::RegexStacks, threadContext->GetPageAllocator());
         this->regexStacks = stacks;
         return stacks;
@@ -1087,7 +1087,7 @@ namespace Js
         Assert(regexStacks);
 
         const auto saved = regexStacks;
-        regexStacks = null;
+        regexStacks = nullptr;
         return saved;
     }
 
@@ -1110,7 +1110,7 @@ namespace Js
 
     void ScriptContext::ReleaseTemporaryAllocator(Js::TempArenaAllocatorObject* tempAllocator)
     {
-        AssertMsg(tempAllocator != null, "tempAllocator should not be null");
+        AssertMsg(tempAllocator != nullptr, "tempAllocator should not be null");
 
         this->threadContext->ReleaseTemporaryAllocator(tempAllocator);
     }
@@ -1122,7 +1122,7 @@ namespace Js
 
     void ScriptContext::ReleaseTemporaryGuestAllocator(Js::TempGuestArenaAllocatorObject* tempGuestAllocator)
     {
-        AssertMsg(tempGuestAllocator != null, "tempAllocator should not be null");
+        AssertMsg(tempGuestAllocator != nullptr, "tempAllocator should not be null");
 
         this->threadContext->ReleaseTemporaryGuestAllocator(tempGuestAllocator);
     }
@@ -1222,7 +1222,7 @@ namespace Js
         JS_ETW(EventWriteJSCRIPT_HOST_SCRIPT_CONTEXT_START(this));
 
 #ifdef PROFILE_EXEC
-        if (profiler != null)
+        if (profiler != nullptr)
         {
             this->threadContext->GetRecycler()->SetProfiler(profiler->GetProfiler(), profiler->GetBackgroundRecyclerProfiler());
         }
@@ -1313,7 +1313,7 @@ namespace Js
 
     void ScriptContext::SetHostScriptContext(HostScriptContext *  hostScriptContext)
     {
-        Assert(this->hostScriptContext == null);
+        Assert(this->hostScriptContext == nullptr);
         this->hostScriptContext = hostScriptContext;
 #ifdef PROFILE_EXEC
         this->ensureParentInfo = true;
@@ -1333,7 +1333,7 @@ namespace Js
 
     void ScriptContext::ClearHostScriptContext()
     {
-        if (this->hostScriptContext != null)
+        if (this->hostScriptContext != nullptr)
         {
             this->hostScriptContext->Delete();
 #ifdef PROFILE_EXEC
@@ -1434,7 +1434,7 @@ namespace Js
             return;
         }
         const PropertyRecord* propertyRecord = this->GetPropertyName(propertyId);
-        Assert(propertyRecord != null);
+        Assert(propertyRecord != nullptr);
         this->TrackPid(propertyRecord);
     }
 
@@ -1445,7 +1445,7 @@ namespace Js
             return true;
         }
         const PropertyRecord* propertyRecord = this->GetPropertyName(propertyId);
-        Assert(propertyRecord != null);
+        Assert(propertyRecord != nullptr);
         if (propertyRecord->IsBound())
         {
             return true;
@@ -1492,7 +1492,7 @@ namespace Js
         if (propertyStringMap->TryGetValue(propertyId, &stringReference))
         {
             string = stringReference->Get();
-            if (string != null)
+            if (string != nullptr)
             {
                 return string;
             }
@@ -1508,9 +1508,9 @@ namespace Js
     void ScriptContext::InvalidatePropertyStringCache(PropertyId propertyId, Type* type)
     {
         PropertyStringCacheMap* propertyStringMap = this->javascriptLibrary->GetPropertyStringMap();
-        if (propertyStringMap != null)
+        if (propertyStringMap != nullptr)
         {
-            PropertyString *string = null;
+            PropertyString *string = nullptr;
             RecyclerWeakReference<PropertyString>* stringReference;
             if (propertyStringMap->TryGetValue(propertyId, &stringReference))
             {
@@ -1622,13 +1622,13 @@ namespace Js
 
     JavascriptFunction* ScriptContext::LoadScript(const wchar_t* script, SRCINFO const * pSrcInfo, CompileScriptException * pse, bool isExpression, bool disableDeferredParse, Utf8SourceInfo** ppSourceInfo, const wchar_t *rootDisplayName)
     {
-        if (pSrcInfo == null)
+        if (pSrcInfo == nullptr)
         {
             pSrcInfo = this->cache->noContextGlobalSourceInfo;
         }
 
         Assert(!this->threadContext->IsScriptActive());
-        Assert(pse != null);
+        Assert(pse != nullptr);
         try
         {
             AUTO_NESTED_HANDLED_EXCEPTION_TYPE((ExceptionType)(ExceptionType_OutOfMemory | ExceptionType_StackOverflow));
@@ -1695,9 +1695,9 @@ namespace Js
                 sourceContextInfo);
             (*ppSourceInfo)->SetParseFlags(grfscr);
 
-            if (FAILED(hr) || parseTree == null)
+            if (FAILED(hr) || parseTree == nullptr)
             {
-                return null;
+                return nullptr;
             }
 
             Assert(length < MAXLONG);
@@ -1711,25 +1711,25 @@ namespace Js
         }
         catch (Js::OutOfMemoryException)
         {
-            pse->ProcessError(null, E_OUTOFMEMORY, null);
-            return null;
+            pse->ProcessError(nullptr, E_OUTOFMEMORY, nullptr);
+            return nullptr;
         }
         catch (Js::StackOverflowException)
         {
-            pse->ProcessError(null, VBSERR_OutOfStack, null);
-            return null;
+            pse->ProcessError(nullptr, VBSERR_OutOfStack, nullptr);
+            return nullptr;
         }
     }
 
     JavascriptFunction* ScriptContext::LoadScript(LPCUTF8 script, size_t cb, SRCINFO const * pSrcInfo, CompileScriptException * pse, bool isExpression, bool disableDeferredParse, Utf8SourceInfo** ppSourceInfo, const wchar_t *rootDisplayName)
     {
-        if (pSrcInfo == null)
+        if (pSrcInfo == nullptr)
         {
             pSrcInfo = this->cache->noContextGlobalSourceInfo;
         }
 
         Assert(!this->threadContext->IsScriptActive());
-        Assert(pse != null);
+        Assert(pse != nullptr);
         try
         {
             AUTO_HANDLED_EXCEPTION_TYPE((ExceptionType)(ExceptionType_OutOfMemory | ExceptionType_StackOverflow));
@@ -1769,9 +1769,9 @@ namespace Js
             hr = parser.ParseUtf8Source(&parseTree, script, cb, grfscr, pse, &sourceContextInfo->nextLocalFunctionId,
                 sourceContextInfo);
 
-            if (FAILED(hr) || parseTree == null)
+            if (FAILED(hr) || parseTree == nullptr)
             {
-                return null;
+                return nullptr;
             }
 
             // We do not own the memory passed into DefaultLoadScriptUtf8. We need to save it so we copy the memory.
@@ -1788,13 +1788,13 @@ namespace Js
         }
         catch (Js::OutOfMemoryException)
         {
-            pse->ProcessError(null, E_OUTOFMEMORY, null);
-            return null;
+            pse->ProcessError(nullptr, E_OUTOFMEMORY, nullptr);
+            return nullptr;
         }
         catch (Js::StackOverflowException)
         {
-            pse->ProcessError(null, VBSERR_OutOfStack, null);
-            return null;
+            pse->ProcessError(nullptr, VBSERR_OutOfStack, nullptr);
+            return nullptr;
         }
     }
 
@@ -1804,7 +1804,7 @@ namespace Js
 
         // Get the source code to keep it alive during the bytecode generation process
         LPCUTF8 source = this->GetSource(sourceIndex)->GetSource(L"ScriptContext::GenerateRootFunction");
-        Assert(source != null); // Source should not have been reclaimed by now
+        Assert(source != nullptr); // Source should not have been reclaimed by now
 
         // Generate bytecode and native code
         ParseableFunctionInfo* body = NULL;
@@ -1812,7 +1812,7 @@ namespace Js
         this->GetSource(sourceIndex)->SetByteCodeGenerationFlags(grfscr);
         if (FAILED(hr))
         {
-            return null;
+            return nullptr;
         }
 
         body->SetDisplayName(rootDisplayName);
@@ -1841,7 +1841,7 @@ namespace Js
     void ScriptContext::OnScriptStart(bool isRoot, bool isScript)
     {
         const bool isForcedEnter = this->GetDebugContext() != nullptr ? this->GetDebugContext()->GetProbeContainer()->isForcedToEnterScriptStart : false;
-        if (this->scriptStartEventHandler != null && ((isRoot && threadContext->GetCallRootLevel() == 1) || isForcedEnter))
+        if (this->scriptStartEventHandler != nullptr && ((isRoot && threadContext->GetCallRootLevel() == 1) || isForcedEnter))
         {
             if (this->GetDebugContext() != nullptr)
             {
@@ -1864,7 +1864,7 @@ namespace Js
     {
         if ((isRoot && threadContext->GetCallRootLevel() == 1) || isForcedEnd)
         {
-            if (this->scriptEndEventHandler != null)
+            if (this->scriptEndEventHandler != nullptr)
             {
                 this->scriptEndEventHandler(this);
             }
@@ -1873,7 +1873,7 @@ namespace Js
 
 #ifdef FAULT_INJECTION
     void ScriptContext::DisposeScriptContextByFaultInjection() {
-        if (this->disposeScriptByFaultInjectionEventHandler != null)
+        if (this->disposeScriptByFaultInjectionEventHandler != nullptr)
         {
             this->disposeScriptByFaultInjectionEventHandler(this);
         }
@@ -1921,7 +1921,7 @@ namespace Js
     bool ScriptContext::EnsureInterpreterArena(ArenaAllocator **ppAlloc)
     {
         bool fNew = false;
-        if (this->interpreterArena == null)
+        if (this->interpreterArena == nullptr)
         {
             this->interpreterArena = this->GetRecycler()->CreateGuestArena(L"Interpreter", Throw::OutOfMemory);
             fNew = true;
@@ -1936,7 +1936,7 @@ namespace Js
         if (this->interpreterArena)
         {
             this->GetRecycler()->DeleteGuestArena(this->interpreterArena);
-            this->interpreterArena = NULL;
+            this->interpreterArena = nullptr;
         }
     }
 
@@ -1947,25 +1947,25 @@ namespace Js
         if (this->guestArena)
         {
             this->GetRecycler()->DeleteGuestArena(this->guestArena);
-            this->guestArena = NULL;
+            this->guestArena = nullptr;
         }
     }
 
     void ScriptContext::SetScriptStartEventHandler(ScriptContext::EventHandler eventHandler)
     {
-        AssertMsg(this->scriptStartEventHandler == null, "Do not support multi-cast yet");
+        AssertMsg(this->scriptStartEventHandler == nullptr, "Do not support multi-cast yet");
         this->scriptStartEventHandler = eventHandler;
     }
     void ScriptContext::SetScriptEndEventHandler(ScriptContext::EventHandler eventHandler)
     {
-        AssertMsg(this->scriptEndEventHandler == null, "Do not support multi-cast yet");
+        AssertMsg(this->scriptEndEventHandler == nullptr, "Do not support multi-cast yet");
         this->scriptEndEventHandler = eventHandler;
     }
 
 #ifdef FAULT_INJECTION
     void ScriptContext::SetDisposeDisposeByFaultInjectionEventHandler(ScriptContext::EventHandler eventHandler)
     {
-        AssertMsg(this->disposeScriptByFaultInjectionEventHandler == null, "Do not support multi-cast yet");
+        AssertMsg(this->disposeScriptByFaultInjectionEventHandler == nullptr, "Do not support multi-cast yet");
         this->disposeScriptByFaultInjectionEventHandler = eventHandler;
     }
 #endif
@@ -2030,7 +2030,7 @@ namespace Js
     {
         Assert(this->sourceList->IsItemValid(index)); // This assert should be a subset of info != null- if info was null, in the last collect, we'd have invalidated the item
         Utf8SourceInfo* info = this->sourceList->Item(index)->Get();
-        Assert(info != null); // Should still be alive if this method is being called
+        Assert(info != nullptr); // Should still be alive if this method is being called
         return info;
     }
 
@@ -2041,7 +2041,7 @@ namespace Js
 
     void ScriptContext::RecordException(JavascriptExceptionObject * exceptionObject, bool propagateToDebugger)
     {
-        Assert(this->threadContext->GetRecordedException() == null || GetThreadContext()->HasUnhandledException());
+        Assert(this->threadContext->GetRecordedException() == nullptr || GetThreadContext()->HasUnhandledException());
         this->threadContext->SetRecordedException(exceptionObject, propagateToDebugger);
 #if DBG
         exceptionObject->FillStackBackTrace();
@@ -2054,7 +2054,7 @@ namespace Js
         JavascriptExceptionObject * exceptionObject = this->GetAndClearRecordedException(&considerPassingToDebugger);
         if (hostWrapperCreateFunc)
         {
-            exceptionObject->SetHostWrapperCreateFunc(exceptionObject->GetScriptContext() != this ? hostWrapperCreateFunc : null);
+            exceptionObject->SetHostWrapperCreateFunc(exceptionObject->GetScriptContext() != this ? hostWrapperCreateFunc : nullptr);
         }
         JavascriptExceptionOperators::RethrowExceptionObject(exceptionObject, this, considerPassingToDebugger);
     }
@@ -2062,20 +2062,20 @@ namespace Js
     Js::JavascriptExceptionObject * ScriptContext::GetAndClearRecordedException(bool *considerPassingToDebugger)
     {
         JavascriptExceptionObject * exceptionObject = this->threadContext->GetRecordedException();
-        Assert(exceptionObject != null);
+        Assert(exceptionObject != nullptr);
         if (considerPassingToDebugger)
         {
             *considerPassingToDebugger = this->threadContext->GetPropagateException();
         }
         exceptionObject = exceptionObject->CloneIfStaticExceptionObject(this);
-        this->threadContext->SetRecordedException(null);
+        this->threadContext->SetRecordedException(nullptr);
         return exceptionObject;
     }
 
     bool ScriptContext::IsInEvalMap(FastEvalMapString const& key, BOOL isIndirect, ScriptFunction **ppFuncScript)
     {
         EvalCacheDictionary *dict = isIndirect ? this->cache->indirectEvalCacheDictionary : this->cache->evalCacheDictionary;
-        if (dict == null)
+        if (dict == nullptr)
         {
             return false;
         }
@@ -2112,7 +2112,7 @@ namespace Js
 
     void ScriptContext::BeginDynamicFunctionReferences()
     {
-        if (this->dynamicFunctionReference == null)
+        if (this->dynamicFunctionReference == nullptr)
         {
             this->dynamicFunctionReference = RecyclerNew(this->recycler, FunctionReferenceList, this->recycler);
             this->BindReference(this->dynamicFunctionReference);
@@ -2124,7 +2124,7 @@ namespace Js
 
     void ScriptContext::EndDynamicFunctionReferences()
     {
-        Assert(this->dynamicFunctionReference != null);
+        Assert(this->dynamicFunctionReference != nullptr);
 
         this->dynamicFunctionReferenceDepth--;
 
@@ -2143,7 +2143,7 @@ namespace Js
     void ScriptContext::AddToEvalMap(FastEvalMapString const& key, BOOL isIndirect, ScriptFunction *pFuncScript)
     {
         EvalCacheDictionary *dict = isIndirect ? this->cache->indirectEvalCacheDictionary : this->cache->evalCacheDictionary;
-        if (dict == null)
+        if (dict == nullptr)
         {
             EvalCacheTopLevelDictionary* evalTopDictionary = RecyclerNew(this->recycler, EvalCacheTopLevelDictionary, this->recycler);
             dict = RecyclerNew(this->recycler, EvalCacheDictionary, evalTopDictionary, recycler);
@@ -2162,7 +2162,7 @@ namespace Js
 
     bool ScriptContext::IsInNewFunctionMap(EvalMapString const& key, ParseableFunctionInfo **ppFuncBody)
     {
-        if (this->cache->newFunctionCache == null)
+        if (this->cache->newFunctionCache == nullptr)
         {
             return false;
         }
@@ -2184,7 +2184,7 @@ namespace Js
 
     void ScriptContext::AddToNewFunctionMap(EvalMapString const& key, ParseableFunctionInfo *pFuncBody)
     {
-        if (this->cache->newFunctionCache == null)
+        if (this->cache->newFunctionCache == nullptr)
         {
             this->cache->newFunctionCache = RecyclerNew(this->recycler, NewFunctionCache, this->recycler);
         }
@@ -2194,7 +2194,7 @@ namespace Js
 
     void ScriptContext::EnsureSourceContextInfoMap()
     {
-        if (this->cache->sourceContextInfoMap == null)
+        if (this->cache->sourceContextInfoMap == nullptr)
         {
             this->cache->sourceContextInfoMap = RecyclerNew(this->GetRecycler(), SourceContextInfoMap, this->GetRecycler());
         }
@@ -2202,7 +2202,7 @@ namespace Js
 
     void ScriptContext::EnsureDynamicSourceContextInfoMap()
     {
-        if (this->cache->dynamicSourceContextInfoMap == null)
+        if (this->cache->dynamicSourceContextInfoMap == nullptr)
         {
             this->cache->dynamicSourceContextInfoMap = RecyclerNew(this->GetRecycler(), DynamicSourceContextInfoMap, this->GetRecycler());
         }
@@ -2215,13 +2215,13 @@ namespace Js
         {
             return sourceContextInfo;
         }
-        return null;
+        return nullptr;
     }
 
     SourceContextInfo* ScriptContext::CreateSourceContextInfo(uint hash, DWORD_PTR hostSourceContext)
     {
         EnsureDynamicSourceContextInfoMap();
-        if (this->GetSourceContextInfo(hash) != null)
+        if (this->GetSourceContextInfo(hash) != nullptr)
         {
             return const_cast<SourceContextInfo*>(this->cache->noContextSourceContextInfo);
         }
@@ -2258,19 +2258,19 @@ namespace Js
         AutoCriticalSection autocs(GetThreadContext()->GetEtwRundownCriticalSection());
 
         EnsureSourceContextInfoMap();
-        Assert(this->GetSourceContextInfo(sourceContext, profileDataCache) == null);
+        Assert(this->GetSourceContextInfo(sourceContext, profileDataCache) == nullptr);
         SourceContextInfo * sourceContextInfo = RecyclerNewStructZ(this->GetRecycler(), SourceContextInfo);
         sourceContextInfo->sourceContextId = this->GetNextSourceContextId();
         sourceContextInfo->dwHostSourceContext = sourceContext;
         sourceContextInfo->isHostDynamicDocument = false;
-        sourceContextInfo->sourceDynamicProfileManager = null;
+        sourceContextInfo->sourceDynamicProfileManager = nullptr;
 
-        if (url != null)
+        if (url != nullptr)
         {
             sourceContextInfo->url = CopyString(url, len, this->SourceCodeAllocator());
             JS_ETW(EtwTrace::LogSourceModuleLoadEvent(this, sourceContext, url));
         }
-        if (sourceMapUrl != null && sourceMapUrlLen != 0)
+        if (sourceMapUrl != nullptr && sourceMapUrlLen != 0)
         {
             sourceContextInfo->sourceMapUrl = CopyString(sourceMapUrl, sourceMapUrlLen, this->SourceCodeAllocator());
         }
@@ -2308,7 +2308,7 @@ namespace Js
         if (this->cache->sourceContextInfoMap->TryGetValue(sourceContext, &sourceContextInfo))
         {
             if (profileDataCache &&
-                sourceContextInfo->sourceDynamicProfileManager != null &&
+                sourceContextInfo->sourceDynamicProfileManager != nullptr &&
                 !sourceContextInfo->sourceDynamicProfileManager->IsProfileLoadedFromWinInet() &&
                 !this->startupComplete)
             {
@@ -2320,7 +2320,7 @@ namespace Js
             }
             return sourceContextInfo;
         }
-        return null;
+        return nullptr;
     }
 
     SRCINFO const *
@@ -2338,7 +2338,7 @@ namespace Js
             }
 
             SRCINFO const * si = cache->moduleSrcInfo[moduleID];
-            if (si == null)
+            if (si == nullptr)
             {
                 SRCINFO * newSrcInfo = RecyclerNewStructZ(this->GetRecycler(), SRCINFO);
                 newSrcInfo->sourceContextInfo = this->cache->noContextSourceContextInfo;
@@ -2365,7 +2365,7 @@ namespace Js
     Profiler *
         ScriptContext::CreateProfiler()
     {
-            Assert(profiler == null);
+            Assert(profiler == nullptr);
             if (Js::Configuration::Global.flags.IsEnabled(Js::ProfileFlag))
             {
                 this->profiler = NoCheckHeapNew(ScriptContextProfiler);
@@ -2380,14 +2380,14 @@ namespace Js
                 this->threadContext->GetRecycler()->SetProfiler(this->profiler->GetProfiler(), this->profiler->GetBackgroundRecyclerProfiler());
                 return oldProfiler;
             }
-            return null;
+            return nullptr;
     }
 
     void
         ScriptContext::SetRecyclerProfiler()
     {
             Assert(Js::Configuration::Global.flags.IsEnabled(Js::ProfileFlag));
-            AssertMsg(this->profiler != null, "Profiler tag is supplied but the profiler pointer is NULL");
+            AssertMsg(this->profiler != nullptr, "Profiler tag is supplied but the profiler pointer is NULL");
 
             if (this->ensureParentInfo)
             {
@@ -2405,9 +2405,9 @@ namespace Js
             // that access to codegenProfiler won't have concurrency issues
             if (Js::Configuration::Global.flags.IsEnabled(Js::ProfileFlag))
             {
-                Assert(this->profiler != null);
+                Assert(this->profiler != nullptr);
                 Assert(this->isProfilerCreated);
-                Assert(scriptContext->profiler != null);
+                Assert(scriptContext->profiler != nullptr);
                 Assert(scriptContext->isProfilerCreated);
 
 
@@ -2429,7 +2429,7 @@ namespace Js
     void
         ScriptContext::ProfileBegin(Js::Phase phase)
     {
-            AssertMsg((this->profiler != null) == Js::Configuration::Global.flags.IsEnabled(Js::ProfileFlag),
+            AssertMsg((this->profiler != nullptr) == Js::Configuration::Global.flags.IsEnabled(Js::ProfileFlag),
                 "Profiler tag is supplied but the profiler pointer is NULL");
             if (this->profiler)
             {
@@ -2445,7 +2445,7 @@ namespace Js
     void
         ScriptContext::ProfileEnd(Js::Phase phase)
     {
-            AssertMsg((this->profiler != null) == Js::Configuration::Global.flags.IsEnabled(Js::ProfileFlag),
+            AssertMsg((this->profiler != nullptr) == Js::Configuration::Global.flags.IsEnabled(Js::ProfileFlag),
                 "Profiler tag is supplied but the profiler pointer is NULL");
             if (this->profiler)
             {
@@ -2456,7 +2456,7 @@ namespace Js
     void
         ScriptContext::ProfileSuspend(Js::Phase phase, Js::Profiler::SuspendRecord * suspendRecord)
     {
-            AssertMsg((this->profiler != null) == Js::Configuration::Global.flags.IsEnabled(Js::ProfileFlag),
+            AssertMsg((this->profiler != nullptr) == Js::Configuration::Global.flags.IsEnabled(Js::ProfileFlag),
                 "Profiler tag is supplied but the profiler pointer is NULL");
             if (this->profiler)
             {
@@ -2467,7 +2467,7 @@ namespace Js
     void
         ScriptContext::ProfileResume(Js::Profiler::SuspendRecord * suspendRecord)
     {
-            AssertMsg((this->profiler != null) == Js::Configuration::Global.flags.IsEnabled(Js::ProfileFlag),
+            AssertMsg((this->profiler != nullptr) == Js::Configuration::Global.flags.IsEnabled(Js::ProfileFlag),
                 "Profiler tag is supplied but the profiler pointer is NULL");
             if (this->profiler)
             {
@@ -2483,7 +2483,7 @@ namespace Js
                 return;
             }
 
-            Assert(profiler != null);
+            Assert(profiler != nullptr);
             recycler->EnsureNotCollecting();
             profiler->ProfilePrint(Js::Configuration::Global.flags.Profile.GetFirstPhase());
 #ifdef ENABLE_NATIVE_CODEGEN
@@ -2658,14 +2658,14 @@ namespace Js
 
     HRESULT ScriptContext::RegisterScript(Js::FunctionProxy * proxy, BOOL fRegisterScript /*default TRUE*/)
     {
-        if (m_pProfileCallback == NULL)
+        if (m_pProfileCallback == nullptr)
         {
             return ACTIVPROF_E_PROFILER_ABSENT;
         }
 
         OUTPUT_TRACE(Js::ScriptProfilerPhase, L"ScriptContext::RegisterScript, fRegisterScript : %s, IsFunctionDefer : %s\n", IsTrueOrFalse(fRegisterScript), IsTrueOrFalse(proxy->IsDeferred()));
 
-        AssertMsg(proxy != NULL, "Function body cannot be null when calling reporting");
+        AssertMsg(proxy != nullptr, "Function body cannot be null when calling reporting");
         AssertMsg(proxy->GetScriptContext() == this, "wrong script context while reporting the function?");
 
         if (fRegisterScript)
@@ -2684,7 +2684,7 @@ namespace Js
 
     HRESULT ScriptContext::RegisterAllScripts()
     {
-        AssertMsg(m_pProfileCallback != NULL, "Called register scripts when we dont have profile callback");
+        AssertMsg(m_pProfileCallback != nullptr, "Called register scripts when we dont have profile callback");
 
         OUTPUT_TRACE(Js::ScriptProfilerPhase, L"ScriptContext::RegisterAllScripts started\n");
 
@@ -3102,7 +3102,7 @@ namespace Js
         if (proxy != info)
         {
             // Not a script function or, the thunk can deal with moving to the function body
-            Assert(proxy == null || entryPoint == DefaultDeferredParsingThunk || entryPoint == ProfileDeferredParsingThunk
+            Assert(proxy == nullptr || entryPoint == DefaultDeferredParsingThunk || entryPoint == ProfileDeferredParsingThunk
                 || entryPoint == DefaultDeferredDeserializeThunk || entryPoint == ProfileDeferredDeserializeThunk ||
                 entryPoint == CrossSite::DefaultThunk || entryPoint == CrossSite::ProfileThunk);
 
@@ -3348,7 +3348,7 @@ namespace Js
     Var ScriptContext::ProfileModeDeferredParsingThunk(RecyclableObject* function, CallInfo callInfo, ...)
     {
         Js::Throw::NotImplemented();
-        return null;
+        return nullptr;
     }
 #endif
 
@@ -3408,7 +3408,7 @@ namespace Js
     Var ScriptContext::ProfileModeDeferredDeserializeThunk(RecyclableObject* function, CallInfo callInfo, ...)
     {
         Js::Throw::NotImplemented();
-        return null;
+        return nullptr;
     }
 #endif
 
@@ -3941,7 +3941,7 @@ namespace Js
 
     void ScriptContext::RegisterAsScriptContextWithInlineCaches()
     {
-        if (this->entryInScriptContextWithInlineCachesRegistry == null)
+        if (this->entryInScriptContextWithInlineCachesRegistry == nullptr)
         {
             DoRegisterAsScriptContextWithInlineCaches();
         }
@@ -3949,14 +3949,14 @@ namespace Js
 
     void ScriptContext::DoRegisterAsScriptContextWithInlineCaches()
     {
-        Assert(this->entryInScriptContextWithInlineCachesRegistry == null);
+        Assert(this->entryInScriptContextWithInlineCachesRegistry == nullptr);
         // this call may throw OOM
         this->entryInScriptContextWithInlineCachesRegistry = threadContext->RegisterInlineCacheScriptContext(this);
     }
 
     void ScriptContext::RegisterAsScriptContextWithIsInstInlineCaches()
     {
-        if (this->entryInScriptContextWithIsInstInlineCachesRegistry == null)
+        if (this->entryInScriptContextWithIsInstInlineCachesRegistry == nullptr)
         {
             DoRegisterAsScriptContextWithIsInstInlineCaches();
         }
@@ -3964,12 +3964,12 @@ namespace Js
 
     bool ScriptContext::IsRegisteredAsScriptContextWithIsInstInlineCaches()
     {
-        return this->entryInScriptContextWithIsInstInlineCachesRegistry != null;
+        return this->entryInScriptContextWithIsInstInlineCachesRegistry != nullptr;
     }
 
     void ScriptContext::DoRegisterAsScriptContextWithIsInstInlineCaches()
     {
-        Assert(this->entryInScriptContextWithIsInstInlineCachesRegistry == null);
+        Assert(this->entryInScriptContextWithIsInstInlineCachesRegistry == nullptr);
         // this call may throw OOM
         this->entryInScriptContextWithIsInstInlineCachesRegistry = threadContext->RegisterIsInstInlineCacheScriptContext(this);
     }
@@ -4039,7 +4039,7 @@ namespace Js
             if (this->sourceList->IsItemValid(i))
             {
                 RecyclerWeakReference<Utf8SourceInfo>* sourceInfoWeakRef = this->sourceList->Item(i);
-                Utf8SourceInfo* strongRef = null;
+                Utf8SourceInfo* strongRef = nullptr;
 
                 if (calledDuringMark)
                 {
@@ -4050,7 +4050,7 @@ namespace Js
                     strongRef = sourceInfoWeakRef->Get();
                 }
 
-                if (strongRef == null)
+                if (strongRef == nullptr)
                 {
                     this->sourceList->RemoveAt(i);
                     fCleanupDocRequired = true;
@@ -4104,19 +4104,19 @@ namespace Js
             // Also, dont clean the eval map if the debugger is attached
             if (!this->IsInDebugMode())
             {
-                if (this->cache->evalCacheDictionary != null)
+                if (this->cache->evalCacheDictionary != nullptr)
                 {
                     this->CleanDynamicFunctionCache<Js::EvalCacheTopLevelDictionary>(this->cache->evalCacheDictionary->GetDictionary());
                 }
-                if (this->cache->indirectEvalCacheDictionary != null)
+                if (this->cache->indirectEvalCacheDictionary != nullptr)
                 {
                     this->CleanDynamicFunctionCache<Js::EvalCacheTopLevelDictionary>(this->cache->indirectEvalCacheDictionary->GetDictionary());
                 }
-                if (this->cache->newFunctionCache != null)
+                if (this->cache->newFunctionCache != nullptr)
                 {
                     this->CleanDynamicFunctionCache<Js::NewFunctionCache>(this->cache->newFunctionCache);
                 }
-                if (this->hostScriptContext != null)
+                if (this->hostScriptContext != nullptr)
                 {
                     this->hostScriptContext->CleanDynamicCodeCache();
                 }
@@ -4134,24 +4134,24 @@ namespace Js
 
 void ScriptContext::ClearInlineCaches()
 {
-    Assert(this->entryInScriptContextWithInlineCachesRegistry != null);
+    Assert(this->entryInScriptContextWithInlineCachesRegistry != nullptr);
 
     // For persistent inline caches, we assume here that all thread context's invalidation lists
     // will be reset, such that all invalidationListSlotPtr will get zeroed.  We will not be zeroing
     // this field here to preserve the free list, which uses the field to link caches together.
     GetInlineCacheAllocator()->ZeroAll();
 
-    this->entryInScriptContextWithInlineCachesRegistry = null; // caller will remove us from the thread context
+    this->entryInScriptContextWithInlineCachesRegistry = nullptr; // caller will remove us from the thread context
 
     this->hasRegisteredInlineCache = false;
 }
 
 void ScriptContext::ClearIsInstInlineCaches()
 {
-    Assert(entryInScriptContextWithIsInstInlineCachesRegistry != null);
+    Assert(entryInScriptContextWithIsInstInlineCachesRegistry != nullptr);
     GetIsInstInlineCacheAllocator()->ZeroAll();
 
-    this->entryInScriptContextWithIsInstInlineCachesRegistry = null; // caller will remove us from the thread context.
+    this->entryInScriptContextWithIsInstInlineCachesRegistry = nullptr; // caller will remove us from the thread context.
 
     this->hasRegisteredIsInstInlineCache = false;
 }
@@ -4161,7 +4161,7 @@ void ScriptContext::ClearIsInstInlineCaches()
 void ScriptContext::ClearInlineCachesWithDeadWeakRefs()
 {
     // Review: I should be able to assert this here just like in ClearInlineCaches.
-    Assert(this->entryInScriptContextWithInlineCachesRegistry != null);
+    Assert(this->entryInScriptContextWithInlineCachesRegistry != nullptr);
     GetInlineCacheAllocator()->ClearCachesWithDeadWeakRefs(this->recycler);
     Assert(GetInlineCacheAllocator()->HasNoDeadWeakRefs(this->recycler));
 }
@@ -4176,7 +4176,7 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
 {
     Assert(!IsClosed());
 
-    if (registeredPrototypeChainEnsuredToHaveOnlyWritableDataPropertiesScriptContext == null)
+    if (registeredPrototypeChainEnsuredToHaveOnlyWritableDataPropertiesScriptContext == nullptr)
     {
         DoRegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertiesScriptContext();
     }
@@ -4185,7 +4185,7 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
     void ScriptContext::DoRegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertiesScriptContext()
     {
         Assert(!IsClosed());
-        Assert(registeredPrototypeChainEnsuredToHaveOnlyWritableDataPropertiesScriptContext == null);
+        Assert(registeredPrototypeChainEnsuredToHaveOnlyWritableDataPropertiesScriptContext == nullptr);
 
         // this call may throw OOM
         registeredPrototypeChainEnsuredToHaveOnlyWritableDataPropertiesScriptContext = threadContext->RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertiesScriptContext(this);
@@ -4193,11 +4193,11 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
 
     void ScriptContext::ClearPrototypeChainEnsuredToHaveOnlyWritableDataPropertiesCaches()
     {
-        Assert(registeredPrototypeChainEnsuredToHaveOnlyWritableDataPropertiesScriptContext != null);
+        Assert(registeredPrototypeChainEnsuredToHaveOnlyWritableDataPropertiesScriptContext != nullptr);
         javascriptLibrary->NoPrototypeChainsAreEnsuredToHaveOnlyWritableDataProperties();
 
         // Caller will unregister the script context from the thread context
-        registeredPrototypeChainEnsuredToHaveOnlyWritableDataPropertiesScriptContext = null;
+        registeredPrototypeChainEnsuredToHaveOnlyWritableDataPropertiesScriptContext = nullptr;
     }
 
     JavascriptString * ScriptContext::GetLastNumberToStringRadix10(double value)
@@ -4206,7 +4206,7 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
         {
             return cache->lastNumberToStringRadix10String;
         }
-        return null;
+        return nullptr;
     }
 
     void
@@ -4218,10 +4218,10 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
 
     bool ScriptContext::GetLastUtcTimeFromStr(JavascriptString * str, double& dbl)
     {
-        Assert(str != null);
+        Assert(str != nullptr);
         if (str != cache->lastUtcTimeFromStrString)
         {
-            if (cache->lastUtcTimeFromStrString == null
+            if (cache->lastUtcTimeFromStrString == nullptr
                 || !JavascriptString::Equals(str, cache->lastUtcTimeFromStrString))
             {
                 return false;
@@ -4364,10 +4364,10 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
         SourceDynamicProfileManager* profileManager = sourceContextInfo->sourceDynamicProfileManager;
         if (sourceContextInfo->IsDynamic())
         {
-            if (profileManager != null)
+            if (profileManager != nullptr)
             {
                 // There is an in-memory cache and dynamic profile info is coming from there
-                if (newDynamicProfileInfo == null)
+                if (newDynamicProfileInfo == nullptr)
                 {
                     newDynamicProfileInfo = DynamicProfileInfo::New(this->GetRecycler(), functionBody, true /* persistsAcrossScriptContexts */);
                     profileManager->UpdateDynamicProfileInfo(functionBody->GetLocalFunctionId(), newDynamicProfileInfo);
@@ -4378,7 +4378,7 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
             }
             else
             {
-                if (newDynamicProfileInfo == null)
+                if (newDynamicProfileInfo == nullptr)
                 {
                     newDynamicProfileInfo = functionBody->AllocateDynamicProfile();
                 }
@@ -4387,7 +4387,7 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
         }
         else
         {
-            if (newDynamicProfileInfo == null)
+            if (newDynamicProfileInfo == nullptr)
             {
                 newDynamicProfileInfo = functionBody->AllocateDynamicProfile();
                 *dynamicProfileInfo = newDynamicProfileInfo;
@@ -4405,7 +4405,7 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
                 profileManager->MarkAsExecuted(functionBody->GetLocalFunctionId());
             }
         }
-        Assert(*dynamicProfileInfo != null);
+        Assert(*dynamicProfileInfo != nullptr);
     }
 
     CharClassifier const * ScriptContext::GetCharClassifier(void) const
@@ -4446,8 +4446,8 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
         ScriptContext* scriptContext = static_cast<ScriptContext*>(this);
         Assert(scriptContext->IsClosedNativeCodeGenerator());
 #endif
-        globalObject = null;
-        javascriptLibrary = null;
+        globalObject = nullptr;
+        javascriptLibrary = nullptr;
     }
 
     void ScriptContext::SetFastDOMenabled()
@@ -4554,11 +4554,11 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
 #endif
 
 #ifdef PROFILE_STRINGS
-        if (stringProfiler != null)
+        if (stringProfiler != nullptr)
         {
             stringProfiler->PrintAll();
             Adelete(MiscAllocator(), stringProfiler);
-            stringProfiler = null;
+            stringProfiler = nullptr;
         }
 #endif
 
@@ -4664,7 +4664,7 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
             uint nonZeroBytecodeFunctions = 0;
             Output::Print(L"Script Context: 0x%p Url: %s\n", this, this->url);
 
-            FunctionBody* anyFunctionBody = this->FindFunction([](FunctionBody* body) { return body != null; });
+            FunctionBody* anyFunctionBody = this->FindFunction([](FunctionBody* body) { return body != nullptr; });
 
             if (anyFunctionBody)
             {
@@ -4915,7 +4915,7 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
     if (PHASE_STATS1(Js::ObjTypeSpecPhase))
     {
         FieldAccessStats globalStats;
-        if (this->fieldAccessStatsByFunctionNumber != null)
+        if (this->fieldAccessStatsByFunctionNumber != nullptr)
         {
             this->fieldAccessStatsByFunctionNumber->Map([&globalStats](uint functionNumber, FieldAccessStatsEntry* entry)
             {
@@ -4928,7 +4928,7 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
                 if (PHASE_VERBOSE_STATS1(Js::ObjTypeSpecPhase))
                 {
                     FunctionBody* functionBody = entry->functionBodyWeakRef->Get();
-                    const wchar_t* functionName = functionBody != null ? functionBody->GetDisplayName() : L"<unknown>";
+                    const wchar_t* functionName = functionBody != nullptr ? functionBody->GetDisplayName() : L"<unknown>";
                     Output::Print(L"FieldAccessStats: function %s (#%u): inline cache stats:\n", functionName, functionNumber);
                     Output::Print(L"    overall: total %u, no profile info %u\n", functionStats.totalInlineCacheCount, functionStats.noInfoInlineCacheCount);
                     Output::Print(L"    mono: total %u, empty %u, cloned %u\n",
@@ -5183,7 +5183,7 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
 #ifdef FIELD_ACCESS_STATS
     void ScriptContext::RecordFieldAccessStats(FunctionBody* functionBody, FieldAccessStatsPtr fieldAccessStats)
     {
-        Assert(fieldAccessStats != null);
+        Assert(fieldAccessStats != nullptr);
 
         if (!PHASE_STATS1(Js::ObjTypeSpecPhase))
         {

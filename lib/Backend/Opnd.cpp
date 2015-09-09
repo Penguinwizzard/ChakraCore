@@ -336,7 +336,7 @@ Opnd::GetStackSym() const
     case OpndKindReg:
         return static_cast<RegOpnd const *>(this)->GetStackSymInternal();
     default:
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -584,7 +584,7 @@ SymOpnd::CloneDefInternal(Func *func)
             Assert(newSym != oldSym);
             this->m_sym = newSym;
             newSym->m_instrDef = oldSym->m_instrDef;
-            oldSym->m_instrDef = null;
+            oldSym->m_instrDef = nullptr;
             sym = oldSym;
         }
         else
@@ -628,7 +628,7 @@ SymOpnd::CloneUseInternal(Func *func)
 StackSym *
 SymOpnd::GetStackSymInternal() const
 {
-    return (this->m_sym && this->m_sym->IsStackSym()) ? this->m_sym->AsStackSym() : NULL;
+    return (this->m_sym && this->m_sym->IsStackSym()) ? this->m_sym->AsStackSym() : nullptr;
 }
 
 ///----------------------------------------------------------------------------
@@ -701,9 +701,9 @@ void
 PropertySymOpnd::Init(uint inlineCacheIndex, Func *func)
 {
     this->Init(inlineCacheIndex, 
-        inlineCacheIndex != -1 ? func->GetRuntimeInlineCache(inlineCacheIndex) : null,
-        inlineCacheIndex != -1 ? func->GetRuntimePolymorphicInlineCache(inlineCacheIndex) : null,
-        inlineCacheIndex != -1 ? func->GetObjTypeSpecFldInfo(inlineCacheIndex) : null,
+        inlineCacheIndex != -1 ? func->GetRuntimeInlineCache(inlineCacheIndex) : nullptr,
+        inlineCacheIndex != -1 ? func->GetRuntimePolymorphicInlineCache(inlineCacheIndex) : nullptr,
+        inlineCacheIndex != -1 ? func->GetObjTypeSpecFldInfo(inlineCacheIndex) : nullptr,
         inlineCacheIndex != -1 ? func->GetPolyCacheUtilToInitialize(inlineCacheIndex) : PolymorphicInlineCacheUtilizationMinValue);
 }
 
@@ -715,9 +715,9 @@ PropertySymOpnd::New(PropertySym *propertySym, IRType type, Func *func)
     newOpnd->m_offset = 0;
     newOpnd->m_type = type;
     newOpnd->SetObjTypeSpecFldInfo(nullptr);
-    newOpnd->finalType = null;
-    newOpnd->guardedPropOps = null;
-    newOpnd->writeGuards = null;
+    newOpnd->finalType = nullptr;
+    newOpnd->guardedPropOps = nullptr;
+    newOpnd->writeGuards = nullptr;
     newOpnd->objTypeSpecFlags = 0;
     newOpnd->isPropertySymOpnd = true;
     newOpnd->checkedTypeSetIndex = (uint16)-1;
@@ -765,9 +765,9 @@ PropertySymOpnd::CopyWithoutFlowSensitiveInfo(Func *func)
     // an instruction elsewhere in the flow (e.g. field hoisting or copy propagation), these fields cannot be copied.
     // If the caller knows some of them can be safely copied, the caller must do so manually.
     Assert(newOpnd->typeCheckSeqFlags == 0);
-    Assert(newOpnd->finalType == null);
-    Assert(newOpnd->guardedPropOps == null);
-    Assert(newOpnd->writeGuards == null);
+    Assert(newOpnd->finalType == nullptr);
+    Assert(newOpnd->guardedPropOps == nullptr);
+    Assert(newOpnd->writeGuards == nullptr);
 
     newOpnd->SetIsJITOptimizedReg(this->GetIsJITOptimizedReg());
 
@@ -792,8 +792,8 @@ PropertySymOpnd::CopyForTypeCheckOnly(Func *func)
     newOpnd->usesFixedValue = false;
 
     newOpnd->finalType = this->finalType;
-    newOpnd->guardedPropOps = this->guardedPropOps != null ? this->guardedPropOps->CopyNew() : null;
-    newOpnd->writeGuards = this->writeGuards != null ? this->writeGuards->CopyNew() : null;
+    newOpnd->guardedPropOps = this->guardedPropOps != nullptr ? this->guardedPropOps->CopyNew() : nullptr;
+    newOpnd->writeGuards = this->writeGuards != nullptr ? this->writeGuards->CopyNew() : nullptr;
 
     newOpnd->SetIsJITOptimizedReg(this->GetIsJITOptimizedReg());
 
@@ -813,8 +813,8 @@ PropertySymOpnd::CopyInternalSub(Func *func)
 
     newOpnd->objTypeSpecFlags = this->objTypeSpecFlags;
     newOpnd->finalType = this->finalType;
-    newOpnd->guardedPropOps = this->guardedPropOps != null ? this->guardedPropOps->CopyNew() : null;
-    newOpnd->writeGuards = this->writeGuards != null ? this->writeGuards->CopyNew() : null;
+    newOpnd->guardedPropOps = this->guardedPropOps != nullptr ? this->guardedPropOps->CopyNew() : nullptr;
+    newOpnd->writeGuards = this->writeGuards != nullptr ? this->writeGuards->CopyNew() : nullptr;
 
     newOpnd->SetIsJITOptimizedReg(this->GetIsJITOptimizedReg());
 
@@ -1028,14 +1028,14 @@ RegOpnd::CopyInternal(Func *func)
 RegOpnd *
 RegOpnd::CloneDefInternal(Func *func)
 {    
-    StackSym * sym = m_sym ? m_sym->CloneDef(func) :  NULL;
+    StackSym * sym = m_sym ? m_sym->CloneDef(func) :  nullptr;
     return CopyInternal(sym, func);
 }
 
 RegOpnd *
 RegOpnd::CloneUseInternal(Func *func)
 {    
-    StackSym * sym = m_sym ? m_sym->CloneUse(func) : NULL;
+    StackSym * sym = m_sym ? m_sym->CloneUse(func) : nullptr;
     return CopyInternal(sym, func);
 }
 
@@ -1048,7 +1048,7 @@ RegOpnd::GetStackSymInternal() const
 StackSym *
 RegOpnd::TryGetStackSym(Opnd *const opnd)
 {
-    return opnd && opnd->IsRegOpnd() ? opnd->AsRegOpnd()->m_sym : null;
+    return opnd && opnd->IsRegOpnd() ? opnd->AsRegOpnd()->m_sym : nullptr;
 }
 
 ///----------------------------------------------------------------------------
@@ -1302,7 +1302,7 @@ IntConstOpnd::New(IntConstType value, IRType type, Func *func, bool dontEncode)
     intConstOpnd->m_dontEncode = dontEncode;
 #if DBG_DUMP || defined(ENABLE_IR_VIEWER)
     intConstOpnd->decodedValue = 0;
-    intConstOpnd->name = null;
+    intConstOpnd->name = nullptr;
 #endif
 
     return intConstOpnd;
@@ -1449,7 +1449,7 @@ FloatConstOpnd::New(FloatConstType value, IRType type, Func *func)
     floatConstOpnd->m_value = value;
     floatConstOpnd->m_type = type;
 #if !FLOATVAR
-    floatConstOpnd->m_number = null;
+    floatConstOpnd->m_number = nullptr;
 #endif
 
     floatConstOpnd->m_kind = OpndKindFloatConst;
@@ -2005,11 +2005,11 @@ IndirOpnd::New(RegOpnd *baseOpnd, int32 offset, IRType type, const wchar_t *desc
 
 IndirOpnd::~IndirOpnd()
 {
-    if (m_baseOpnd != null)
+    if (m_baseOpnd != nullptr)
     {
         m_baseOpnd->Free(m_func);
     }
-    if (m_indexOpnd != null)
+    if (m_indexOpnd != nullptr)
     {
         m_indexOpnd->Free(m_func);
     }
@@ -2049,8 +2049,8 @@ IndirOpnd::CloneDefInternal(Func *func)
     IndirOpnd * newOpnd;
 
     // The components of an IndirOpnd are always uses, even if the IndirOpnd itself is a def.
-    RegOpnd * newBaseOpnd = m_baseOpnd ? m_baseOpnd->CloneUse(func)->AsRegOpnd() : NULL;
-    RegOpnd * newIndexOpnd = m_indexOpnd ? m_indexOpnd->CloneUse(func)->AsRegOpnd() : NULL;
+    RegOpnd * newBaseOpnd = m_baseOpnd ? m_baseOpnd->CloneUse(func)->AsRegOpnd() : nullptr;
+    RegOpnd * newIndexOpnd = m_indexOpnd ? m_indexOpnd->CloneUse(func)->AsRegOpnd() : nullptr;
     newOpnd = IndirOpnd::New(newBaseOpnd, newIndexOpnd, m_scale, m_type, func);
 
     newOpnd->SetOffset(m_offset, m_dontEncode);
@@ -2069,8 +2069,8 @@ IndirOpnd::CloneUseInternal(Func *func)
     Assert(m_kind == OpndKindIndir);
     IndirOpnd * newOpnd;
 
-    RegOpnd * newBaseOpnd = m_baseOpnd ? m_baseOpnd->CloneUse(func)->AsRegOpnd() : NULL;
-    RegOpnd * newIndexOpnd = m_indexOpnd ? m_indexOpnd->CloneUse(func)->AsRegOpnd() : NULL;
+    RegOpnd * newBaseOpnd = m_baseOpnd ? m_baseOpnd->CloneUse(func)->AsRegOpnd() : nullptr;
+    RegOpnd * newIndexOpnd = m_indexOpnd ? m_indexOpnd->CloneUse(func)->AsRegOpnd() : nullptr;
     newOpnd = IndirOpnd::New(newBaseOpnd, newIndexOpnd, m_scale, m_type, func);
 
     newOpnd->SetOffset(m_offset, m_dontEncode);
@@ -2136,7 +2136,7 @@ IndirOpnd::IsEqualInternal(Opnd *opnd)
     IndirOpnd *indirOpnd = opnd->AsIndirOpnd();
 
     return m_offset == indirOpnd->m_offset && m_baseOpnd->IsEqual(indirOpnd->m_baseOpnd) 
-        && ((m_indexOpnd == NULL && indirOpnd->m_indexOpnd == NULL) || (m_indexOpnd && indirOpnd->m_indexOpnd && m_indexOpnd->IsEqual(indirOpnd->m_indexOpnd)));
+        && ((m_indexOpnd == nullptr && indirOpnd->m_indexOpnd == nullptr) || (m_indexOpnd && indirOpnd->m_indexOpnd && m_indexOpnd->IsEqual(indirOpnd->m_indexOpnd)));
 }
 
 void
@@ -2179,7 +2179,7 @@ IndirOpnd::UnlinkBaseOpnd()
     RegOpnd * baseOpnd = this->m_baseOpnd;
     
     // This will also call UnUse()...
-    this->SetBaseOpnd(NULL);
+    this->SetBaseOpnd(nullptr);
 
     return baseOpnd;
 }
@@ -2227,7 +2227,7 @@ IndirOpnd::UnlinkIndexOpnd()
     RegOpnd * indexOpnd = this->m_indexOpnd;
     
     // This will also call UnUse()...
-    this->SetIndexOpnd(NULL);
+    this->SetIndexOpnd(nullptr);
 
     return indexOpnd;
 }
@@ -2448,7 +2448,7 @@ Opnd::FindRegUse(IR::RegOpnd *regOpnd)
         }
     }
 
-    return NULL;
+    return nullptr;
 }
 
 bool
@@ -2600,7 +2600,7 @@ Opnd::Dump(IRDumpFlags flags, Func *func)
             {
                 Output::Print(L"s?");
             }
-            if (propertySymOpnd->m_sym->AsPropertySym()->m_writeGuardSym != null)
+            if (propertySymOpnd->m_sym->AsPropertySym()->m_writeGuardSym != nullptr)
             {
                 Output::Print(L",s%d", propertySymOpnd->m_sym->AsPropertySym()->m_writeGuardSym->m_id);
                 if (propertySymOpnd->IsWriteGuardChecked())
@@ -2617,10 +2617,10 @@ Opnd::Dump(IRDumpFlags flags, Func *func)
                 Output::Print(L",final:");
                 this->DumpAddress(propertySymOpnd->GetFinalType(), /* printToConsole */ true, /* skipMaskedAddress */ false);
             }
-            if (propertySymOpnd->GetGuardedPropOps() != null)
+            if (propertySymOpnd->GetGuardedPropOps() != nullptr)
             {
                 Output::Print(L",{");
-                if (func != null)
+                if (func != nullptr)
                 {
                     int i = 0;
                     auto guardedPropOps = propertySymOpnd->GetGuardedPropOps();
@@ -2653,7 +2653,7 @@ Opnd::Dump(IRDumpFlags flags, Func *func)
                 }
                 Output::Print(L"}");
             }
-            if (propertySymOpnd->GetWriteGuards() != null)
+            if (propertySymOpnd->GetWriteGuards() != nullptr)
             {
                 Output::Print(L",{");
                 int i = 0;
@@ -2765,7 +2765,7 @@ Opnd::Dump(IRDumpFlags flags, Func *func)
     case OpndKindIntConst:
     {
         IntConstOpnd * intConstOpnd = this->AsIntConstOpnd();        
-        if (intConstOpnd->name != null)
+        if (intConstOpnd->name != nullptr)
         {
             if (!Js::Configuration::Global.flags.DumpIRAddresses)
             {
@@ -2885,7 +2885,7 @@ Opnd::Dump(IRDumpFlags flags, Func *func)
     {
         LabelOpnd * labelOpnd = this->AsLabelOpnd();
         LabelInstr * labelInstr = labelOpnd->GetLabel();
-        if (labelInstr == NULL)
+        if (labelInstr == nullptr)
         {
             Output::Print(L"??");
         }
@@ -2964,7 +2964,7 @@ Opnd::DumpOpndKindMemRef(bool AsmDumpMode, Func *func)
 void
 Opnd::WriteToBuffer(_Outptr_result_buffer_(*count) wchar_t **buffer, size_t *count, const wchar_t *fmt, ...)
 {
-    va_list argptr = NULL;
+    va_list argptr = nullptr;
     va_start(argptr, fmt);
 
     int len = _vsnwprintf_s(*buffer, *count, _TRUNCATE, fmt, argptr);
@@ -3067,13 +3067,13 @@ Opnd::GetAddrDescription(__out_ecount(count) wchar_t *const description, const s
             break;
         }
         case IR::AddrOpndKindDynamicScriptContext:
-            Assert(func == NULL || address == func->GetScriptContext());
+            Assert(func == nullptr || address == func->GetScriptContext());
             // The script context pointer is unstable allocated from the CRT
             DumpAddress(address, printToConsole, skipMaskedAddress);
             WriteToBuffer(&buffer, &n, L" (ScriptContext)");
             break;
         case IR::AddrOpndKindDynamicCharStringCache:
-            Assert(func == NULL || address == &func->GetScriptContext()->GetLibrary()->GetCharStringCache());
+            Assert(func == nullptr || address == &func->GetScriptContext()->GetLibrary()->GetCharStringCache());
             DumpAddress(address, printToConsole, skipMaskedAddress);
             WriteToBuffer(&buffer, &n, L" (CharStringCache)");
             break;
@@ -3367,7 +3367,7 @@ Opnd::GetAddrDescription(__out_ecount(count) wchar_t *const description, const s
 void 
 Opnd::Dump()
 { 
-    this->Dump(IRDumpFlags_None, NULL); 
+    this->Dump(IRDumpFlags_None, nullptr); 
 }
 
 #endif

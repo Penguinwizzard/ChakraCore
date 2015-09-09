@@ -9,7 +9,7 @@ namespace Js
         typedef JsUtil::BaseDictionary<T, void*, NativeCodeData::Allocator> BranchDictionary;
 
         BranchDictionaryWrapper(NativeCodeData::Allocator * allocator, uint dictionarySize) :
-            defaultTarget(null), dictionary(allocator)
+            defaultTarget(nullptr), dictionary(allocator)
         {
         }
 

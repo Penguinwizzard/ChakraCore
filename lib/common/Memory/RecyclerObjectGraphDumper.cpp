@@ -9,11 +9,11 @@
 RecyclerObjectGraphDumper::RecyclerObjectGraphDumper(Recycler * recycler, RecyclerObjectGraphDumper::Param * param) : 
     recycler(recycler),
     param(param),        
-    dumpObjectName(null),
-    dumpObject(null),    
+    dumpObjectName(nullptr),
+    dumpObject(nullptr),    
     isOutOfMemory(false)
 #ifdef PROFILE_RECYCLER_ALLOC
-    , dumpObjectTypeInfo(null)
+    , dumpObjectTypeInfo(nullptr)
 #endif
 {
     recycler->objectGraphDumper = this;
@@ -21,35 +21,35 @@ RecyclerObjectGraphDumper::RecyclerObjectGraphDumper(Recycler * recycler, Recycl
 
 RecyclerObjectGraphDumper::~RecyclerObjectGraphDumper()
 {
-    recycler->objectGraphDumper = null;
+    recycler->objectGraphDumper = nullptr;
 }
 
 void RecyclerObjectGraphDumper::BeginDumpObject(wchar_t const * name)
 {
-    Assert(dumpObjectName == null);
-    Assert(dumpObject == null);
+    Assert(dumpObjectName == nullptr);
+    Assert(dumpObject == nullptr);
     dumpObjectName = name;
 }
 
 void RecyclerObjectGraphDumper::BeginDumpObject(wchar_t const * name, void * address)
 {
-    Assert(dumpObjectName == null);
-    Assert(dumpObject == null);
+    Assert(dumpObjectName == nullptr);
+    Assert(dumpObject == nullptr);
     swprintf_s(tempObjectName, _countof(tempObjectName), L"%s %p", name, address);
     dumpObjectName = tempObjectName;
 }
 
 void RecyclerObjectGraphDumper::BeginDumpObject(void * objectAddress)
 {
-    Assert(dumpObjectName == null);
-    Assert(dumpObject == null);
+    Assert(dumpObjectName == nullptr);
+    Assert(dumpObject == nullptr);
     this->dumpObject = objectAddress;
 #ifdef PROFILE_RECYCLER_ALLOC
     if (recycler->trackerDictionary)
     {
         Recycler::TrackerData * trackerData = recycler->GetTrackerData(objectAddress);
                
-        if (trackerData != null)
+        if (trackerData != nullptr)
         {
             this->dumpObjectTypeInfo = trackerData->typeinfo;
             this->dumpObjectIsArray = trackerData->isArray;
@@ -57,8 +57,8 @@ void RecyclerObjectGraphDumper::BeginDumpObject(void * objectAddress)
         else
         {
             Assert(false);
-            this->dumpObjectTypeInfo = null;
-            this->dumpObjectIsArray = null;
+            this->dumpObjectTypeInfo = nullptr;
+            this->dumpObjectIsArray = nullptr;
         }
     }
 #endif
@@ -66,15 +66,15 @@ void RecyclerObjectGraphDumper::BeginDumpObject(void * objectAddress)
 
 void RecyclerObjectGraphDumper::EndDumpObject()
 {
-    Assert(this->dumpObjectName != null || this->dumpObject != null);
-    this->dumpObjectName = null;
-    this->dumpObject = null;
+    Assert(this->dumpObjectName != nullptr || this->dumpObject != nullptr);
+    this->dumpObjectName = nullptr;
+    this->dumpObject = nullptr;
 }
 void RecyclerObjectGraphDumper::DumpObjectReference(void * objectAddress, bool remark)
 {
-    if (this->param == null || !this->param->dumpRootOnly || recycler->collectionState == CollectionStateFindRoots)
+    if (this->param == nullptr || !this->param->dumpRootOnly || recycler->collectionState == CollectionStateFindRoots)
     {
-        if (this->param != null && this->param->dumpReferenceFunc)
+        if (this->param != nullptr && this->param->dumpReferenceFunc)
         {
             if (!this->param->dumpReferenceFunc(this->dumpObjectName, this->dumpObject, objectAddress))
                 return;
@@ -86,7 +86,7 @@ void RecyclerObjectGraphDumper::DumpObjectReference(void * objectAddress, bool r
         }
         else
         {
-            Assert(this->dumpObject != null);
+            Assert(this->dumpObject != nullptr);
 #ifdef PROFILE_RECYCLER_ALLOC
             RecyclerObjectDumper::DumpObject(this->dumpObjectTypeInfo, this->dumpObjectIsArray, this->dumpObject);
 #else

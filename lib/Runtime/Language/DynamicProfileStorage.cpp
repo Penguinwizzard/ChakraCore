@@ -12,7 +12,7 @@ bool DynamicProfileStorage::uninitialized = false;
 bool DynamicProfileStorage::enabled = false;
 bool DynamicProfileStorage::useCacheDir = false;
 bool DynamicProfileStorage::collectInfo = false;
-HANDLE DynamicProfileStorage::mutex = null;
+HANDLE DynamicProfileStorage::mutex = nullptr;
 wchar_t DynamicProfileStorage::cacheDrive[_MAX_DRIVE];
 wchar_t DynamicProfileStorage::cacheDir[_MAX_DIR];
 wchar_t DynamicProfileStorage::catalogFilename[_MAX_PATH];
@@ -30,7 +30,7 @@ bool DynamicProfileStorage::locked = false;
 class DynamicProfileStorageReaderWriter
 {
 public:
-    DynamicProfileStorageReaderWriter() : filename(null), file(null) {}
+    DynamicProfileStorageReaderWriter() : filename(nullptr), file(nullptr) {}
     ~DynamicProfileStorageReaderWriter();
     bool Init(wchar_t const * filename, wchar_t const * mode, bool deleteNonClosed, errno_t * err);
     template <typename T>
@@ -65,9 +65,9 @@ DynamicProfileStorageReaderWriter::~DynamicProfileStorageReaderWriter()
     }
 }
 bool
-DynamicProfileStorageReaderWriter::Init(wchar_t const * filename, wchar_t const * mode, bool deleteNonClosed, errno_t * err = null)
+DynamicProfileStorageReaderWriter::Init(wchar_t const * filename, wchar_t const * mode, bool deleteNonClosed, errno_t * err = nullptr)
 {
-    Assert(file == null);
+    Assert(file == nullptr);
     errno_t e = _wfopen_s(&file, filename, mode);
     if (e != 0)
     {    
@@ -114,7 +114,7 @@ DynamicProfileStorageReaderWriter::ReadUtf8String(wchar_t ** str, DWORD * len)
     }
  
     utf8char_t * tempBuffer = NoCheckHeapNewArray(utf8char_t, urllen);
-    if (tempBuffer == null)
+    if (tempBuffer == nullptr)
     {
         Output::Print(L"ERROR: DynamicProfileStorage: Out of memory reading '%s'\n", filename);
         Output::Flush();
@@ -129,7 +129,7 @@ DynamicProfileStorageReaderWriter::ReadUtf8String(wchar_t ** str, DWORD * len)
         
     charcount_t length = utf8::ByteIndexIntoCharacterIndex(tempBuffer, urllen);
     wchar_t * name = NoCheckHeapNewArray(wchar_t, length + 1);
-    if (name == null)
+    if (name == nullptr)
     {
         Output::Print(L"ERROR: DynamicProfileStorage: Out of memory reading '%s'\n", filename);
         Output::Flush();
@@ -169,7 +169,7 @@ DynamicProfileStorageReaderWriter::WriteUtf8String(wchar_t const * str)
 {
     charcount_t len = static_cast< charcount_t >(wcslen(str));
     utf8char_t * tempBuffer = NoCheckHeapNewArray(utf8char_t, len * 3);
-    if (tempBuffer == null)
+    if (tempBuffer == nullptr)
     {
         Output::Print(L"ERROR: DynamicProfileStorage: Out of memory writing to file '%s'\n", filename);    
         Output::Flush();
@@ -212,12 +212,12 @@ DynamicProfileStorageReaderWriter::Close(bool deleteFile)
     Assert(file);
     fflush(file);
     fclose(file);
-    file = null;
+    file = nullptr;
     if (deleteFile)
     {
         _wunlink(filename);
     }
-    filename = null;
+    filename = nullptr;
 }
 
 void
@@ -245,22 +245,22 @@ DynamicProfileStorage::StorageInfo::ReadRecord() const
             Output::Flush();
         }
 #endif
-        return null;
+        return nullptr;
     }
      
     long size = reader.Size();
     char * record = AllocRecord(size);
-    if (record == null)
+    if (record == nullptr)
     {
         Output::Print(L"ERROR: DynamicProfileStorage: Out of memory reading '%s'", cacheFilename);
         Output::Flush();
-        return null;
+        return nullptr;
     }
 
     if (!reader.ReadArray(GetRecordBuffer(record), size))
     {
         DeleteRecord(record);
-        return null;
+        return nullptr;
     }
     return record;
 }
@@ -307,7 +307,7 @@ DynamicProfileStorage::GetMessageType()
         return L"TRACE";
     }
 #endif
-    return null;
+    return nullptr;
 }
 bool
 DynamicProfileStorage::Initialize()
@@ -324,7 +324,7 @@ DynamicProfileStorage::Initialize()
 #ifdef FORCE_DYNAMIC_PROFILE_STORAGE
     enabled = true;
     collectInfo = true;
-    if (!SetupCacheDir(null))
+    if (!SetupCacheDir(nullptr))
     {
         success = false;
     }
@@ -354,7 +354,7 @@ DynamicProfileStorage::Initialize()
         //      With -DyanmicProfileCache           - override the dynamic profiel cache file
         //      With -DyanmicProfileCacheDir        - clear the dynamic profile cache directory
    
-        if (Js::Configuration::Global.flags.DynamicProfileInput != null)
+        if (Js::Configuration::Global.flags.DynamicProfileInput != nullptr)
         {
             // Error if we can't in the profile info if we are not using a cache file or directory.
             collectInfo = collectInfo || Js::Configuration::Global.flags.IsEnabled(Js::DynamicProfileCacheFlag);
@@ -434,7 +434,7 @@ DynamicProfileStorage::Uninitialize()
 
     uninitialized = true;   
     bool success = true;
-    if (Js::Configuration::Global.flags.DynamicProfileCache != null)
+    if (Js::Configuration::Global.flags.DynamicProfileCache != nullptr)
     {
         Assert(enabled);
         if (!ExportFile(Js::Configuration::Global.flags.DynamicProfileCache))
@@ -446,7 +446,7 @@ DynamicProfileStorage::Uninitialize()
 #endif
     }
 
-    if (mutex != null)
+    if (mutex != nullptr)
     {
         CloseHandle(mutex);
     }   
@@ -483,7 +483,7 @@ DynamicProfileStorage::ClearInfoMap(bool deleteFileStorage)
     for (uint i = 0; recordFreed < recordCount; i++)
     {
         wchar_t const * name = infoMap.GetKeyAt(i);
-        if (name == null)
+        if (name == nullptr)
         {
             continue;
         }
@@ -584,7 +584,7 @@ DynamicProfileStorage::ImportFile(wchar_t const * filename, bool allowNonExistin
         }        
 
         char * record = AllocRecord(recordLen);
-        if (record == null)
+        if (record == nullptr)
         {
             Output::Print(L"ERROR: DynamicProfileStorage: Out of memory importing '%s'\n", filename);
             Output::Flush();
@@ -651,7 +651,7 @@ DynamicProfileStorage::ExportFile(wchar_t const * filename)
     for (uint i = 0; recordWritten < recordCount; i++)
     {
         wchar_t const * url = infoMap.GetKeyAt(i);
-        if (url == null)
+        if (url == nullptr)
         {
             Assert(false);
             continue;
@@ -664,7 +664,7 @@ DynamicProfileStorage::ExportFile(wchar_t const * filename)
         {
             Assert(useCacheDir);
             record = info.ReadRecord();
-            if (record == null)
+            if (record == nullptr)
             {
                 ReleaseLock();
                 Assert(FALSE);
@@ -724,7 +724,7 @@ DynamicProfileStorage::DisableCacheDir()
 bool
 DynamicProfileStorage::AcquireLock()
 {
-    Assert(mutex != null);
+    Assert(mutex != nullptr);
     Assert(!locked);    
     DWORD ret = WaitForSingleObject(mutex, INFINITE);
     if (ret == WAIT_OBJECT_0 || ret == WAIT_ABANDONED)    
@@ -745,7 +745,7 @@ bool
 DynamicProfileStorage::ReleaseLock()
 {    
     Assert(locked);
-    Assert(mutex != null);
+    Assert(mutex != nullptr);
 #if DBG
     locked = false;
 #endif
@@ -765,7 +765,7 @@ DynamicProfileStorage::SetupCacheDir(wchar_t const * dirname)
     Assert(enabled);
 
     mutex = CreateMutex(NULL, FALSE, L"JSDPCACHE");
-    if (mutex == null)
+    if (mutex == nullptr)
     {
         Output::Print(L"ERROR: DynamicProfileStorage: Unable to create mutext");
         Output::Flush();
@@ -779,7 +779,7 @@ DynamicProfileStorage::SetupCacheDir(wchar_t const * dirname)
     }
     
     wchar_t tempPath[_MAX_PATH];
-    if (dirname == null)
+    if (dirname == nullptr)
     {                        
         ulong len = GetTempPath(_MAX_PATH, tempPath);
         if (len >= _MAX_PATH || wcscat_s(tempPath, L"jsdpcache") != 0)
@@ -1132,7 +1132,7 @@ DynamicProfileStorage::SaveRecord(wchar_t const * filename, char const * record)
 
     size_t len = wcslen(filename) + 1;
     wchar_t * newFilename = NoCheckHeapNewArray(wchar_t, len);
-    if (newFilename == null)
+    if (newFilename == nullptr)
     {        
         // out of memory, don't save anything
         AssertMsg(false, "OOM");
@@ -1179,7 +1179,7 @@ DynamicProfileStorage::AllocRecord(size_t bufferSize)
 {
     Assert(enabled);
     char * buffer = NoCheckHeapNewArray(char, bufferSize + sizeof(DWORD));
-    if (buffer != null)
+    if (buffer != nullptr)
     {
         *(DWORD *)buffer = bufferSize;
     }

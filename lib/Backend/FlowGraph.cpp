@@ -43,17 +43,17 @@ FlowGraph::Build(void)
         this->catchLabelStack = JitAnew(this->alloc, SList<IR::LabelInstr*>, this->alloc);
     }
 
-    IR::Instr * currLastInstr = NULL;
-    BasicBlock * block = NULL;
-    BasicBlock * nextBlock = NULL;
+    IR::Instr * currLastInstr = nullptr;
+    BasicBlock * block = nullptr;
+    BasicBlock * nextBlock = nullptr;
     bool hasCall = false;
     FOREACH_INSTR_IN_FUNC_BACKWARD_EDITING(instr, instrPrev, func)
     {
-        if (currLastInstr == NULL || instr->EndsBasicBlock())
+        if (currLastInstr == nullptr || instr->EndsBasicBlock())
         {
             // Start working on a new block.
             // If we're currently processing a block, then wrap it up before beginning a new one.
-            if (currLastInstr != NULL)
+            if (currLastInstr != nullptr)
             {
                 nextBlock = block;
                 block = this->AddBlock(instr->m_next, currLastInstr, nextBlock);
@@ -83,7 +83,7 @@ FlowGraph::Build(void)
             block = this->AddBlock(instr, currLastInstr, nextBlock);
             block->hasCall = hasCall;
             hasCall = false;
-            currLastInstr = NULL;
+            currLastInstr = nullptr;
         }
 
         switch (instr->m_opcode)
@@ -185,7 +185,7 @@ FlowGraph::Build(void)
 
     bool assignRegionsBeforeGlobopt = this->func->HasTry() && 
                                 (this->func->DoOptimizeTryCatch() || (this->func->IsSimpleJit() && this->func->hasBailout));
-    Region ** blockToRegion = NULL;
+    Region ** blockToRegion = nullptr;
     if (assignRegionsBeforeGlobopt)
     {
         blockToRegion = JitAnewArrayZ(this->alloc, Region*, this->blockCount);
@@ -211,7 +211,7 @@ FlowGraph::Build(void)
         SortLoopLists();
     }
 #if DBG_DUMP
-    this->Dump(false, null);
+    this->Dump(false, nullptr);
 #endif
 
 }
@@ -259,7 +259,7 @@ FlowGraph::RunPeeps()
         return;
     }
 
-    IR::Instr * instrCm = NULL;
+    IR::Instr * instrCm = nullptr;
     bool tryUnsignedCmpPeep = false;
 
     FOREACH_INSTR_IN_FUNC_EDITING(instr, instrNext, this->func)
@@ -338,9 +338,9 @@ FlowGraph::RunPeeps()
                 {
                     instrNext = this->PeepCm(instrCm);
                 }
-                instrCm = NULL;
+                instrCm = nullptr;
 
-                if (instrNext == NULL)
+                if (instrNext == nullptr)
                 {
                     // Set instrNext back to the current instr.
                     instrNext = instr;
@@ -502,7 +502,7 @@ Loop::RemoveBreakBlocks(FlowGraph *fg)
         return false;
     }
 
-    BasicBlock *loopTailBlock = NULL;
+    BasicBlock *loopTailBlock = nullptr;
     FOREACH_BLOCK_IN_LOOP(block, this)
     {
         loopTailBlock = block;
@@ -615,7 +615,7 @@ FlowGraph::MoveBlocksBefore(BasicBlock *blockStart, BasicBlock *blockEnd, BasicB
 FlowEdge *
 FlowGraph::FindEdge(BasicBlock *predBlock, BasicBlock *succBlock)
 {
-        FlowEdge *srcEdge = NULL;
+        FlowEdge *srcEdge = nullptr;
         FOREACH_SUCCESSOR_EDGE(edge, predBlock)
         {
             if (edge->GetSucc() == succBlock)
@@ -693,20 +693,20 @@ FlowGraph::FindLoops()
 
     FOREACH_BLOCK_BACKWARD_IN_FUNC(block, func)
     {
-        if (block->loop != NULL)
+        if (block->loop != nullptr)
         {
             // Block already visited
             continue;
         }
         FOREACH_SUCCESSOR_BLOCK(succ, block)
         {
-            if (succ->isLoopHeader && succ->loop == NULL)
+            if (succ->isLoopHeader && succ->loop == nullptr)
             {
                 // Found a loop back-edge
                 BuildLoop(succ, block);
             }
         } NEXT_SUCCESSOR_BLOCK;
-        if (block->isLoopHeader && block->loop == NULL)
+        if (block->isLoopHeader && block->loop == nullptr)
         {
             // We would have built a loop for it if it was a loop...
             block->isLoopHeader = false;
@@ -738,8 +738,8 @@ FlowGraph::BuildLoop(BasicBlock *headBlock, BasicBlock *tailBlock, Loop *parentL
     this->loopList = loop;
     headBlock->loop = loop;
     loop->headBlock = headBlock;
-    loop->int32SymsOnEntry = NULL;
-    loop->lossyInt32SymsOnEntry = NULL;
+    loop->int32SymsOnEntry = nullptr;
+    loop->lossyInt32SymsOnEntry = nullptr;
     // If parentLoop is a parent of loop, it's headBlock better appear first.
     if (parentLoop && loop->headBlock->number > parentLoop->headBlock->number)
     {
@@ -883,10 +883,10 @@ FlowGraph::WalkLoopBlocks(BasicBlock *block, Loop *loop, JitArenaAllocator *temp
                 {
                     isInLoop = true;
                 }
-                else if (succ->loop == NULL || succ->loop->headBlock != succ)
+                else if (succ->loop == nullptr || succ->loop->headBlock != succ)
                 {
                     // Recurse on inner loop
-                    BuildLoop(succ, block, isInLoop ? loop : NULL);
+                    BuildLoop(succ, block, isInLoop ? loop : nullptr);
                 }
             }
         } NEXT_SUCCESSOR_BLOCK;
@@ -898,10 +898,10 @@ FlowGraph::WalkLoopBlocks(BasicBlock *block, Loop *loop, JitArenaAllocator *temp
             {
                 // Fix up loop parent if it isn't set already.
                 // If pred->loop != loop, we're looking at an inner loop, which was already visited.
-                // If pred->loop->parent == NULL, this is the first time we see this loop from an outer
+                // If pred->loop->parent == nullptr, this is the first time we see this loop from an outer
                 // loop, so this must be a immediate child.
                 if (pred->loop && pred->loop != loop && loop->headBlock->number < pred->loop->headBlock->number
-                    && (pred->loop->parent == NULL || pred->loop->parent->headBlock->number < loop->headBlock->number))
+                    && (pred->loop->parent == nullptr || pred->loop->parent->headBlock->number < loop->headBlock->number))
                 {                                        
                     pred->loop->parent = loop;
                     loop->isLeaf = false;
@@ -915,7 +915,7 @@ FlowGraph::WalkLoopBlocks(BasicBlock *block, Loop *loop, JitArenaAllocator *temp
                 loopBlocksBv->Set(pred->GetBlockNum());
             } NEXT_PREDECESSOR_BLOCK;
 
-            if (block->loop == NULL || block->loop->IsDescendentOrSelf(loop))
+            if (block->loop == nullptr || block->loop->IsDescendentOrSelf(loop))
             {
                 block->loop = loop;
             }
@@ -978,7 +978,7 @@ FlowGraph::AddBlock(
     }
 
     block = labelInstr->GetBasicBlock();
-    if (block == NULL)
+    if (block == nullptr)
     {
         block = BasicBlock::New(this);
         labelInstr->SetBasicBlock(block);
@@ -993,7 +993,7 @@ FlowGraph::AddBlock(
 
     if (lastInstr->EndsBasicBlock())
     {
-        BasicBlock * blockTarget = NULL;
+        BasicBlock * blockTarget = nullptr;
 
         if (lastInstr->IsBranchInstr())
         {
@@ -1071,10 +1071,10 @@ FlowGraph::AddBlock(
 BasicBlock *
 FlowGraph::SetBlockTargetAndLoopFlag(IR::LabelInstr * labelInstr)
 {
-    BasicBlock * blockTarget = NULL;
+    BasicBlock * blockTarget = nullptr;
     blockTarget = labelInstr->GetBasicBlock();
 
-    if (blockTarget == NULL)
+    if (blockTarget == nullptr)
     {
         blockTarget = BasicBlock::New(this);
         labelInstr->SetBasicBlock(blockTarget);
@@ -1121,7 +1121,7 @@ void
 FlowGraph::Destroy(void)
 {
     BOOL fHasTry = this->func->HasTry();
-    Region ** blockToRegion = NULL;
+    Region ** blockToRegion = nullptr;
     if (fHasTry)
     {
         blockToRegion = JitAnewArrayZ(this->alloc, Region*, this->blockCount);
@@ -1169,7 +1169,7 @@ FlowGraph::Destroy(void)
         {
             // Mark the tail block of this loop (the last back-edge).  The register allocator
             // uses this to lexically find loops.
-            BasicBlock *loopTail = NULL;
+            BasicBlock *loopTail = nullptr;
 
             AssertMsg(firstInstr->IsLabelInstr() && firstInstr->AsLabelInstr()->m_isLoopTop,
                 "Label not marked as loop top...");
@@ -1246,11 +1246,11 @@ FlowGraph::Destroy(void)
         FOREACH_BLOCK(block, this)
         {
             Region * region = blockToRegion[block->GetBlockNum()];
-            Region * predRegion = NULL;
+            Region * predRegion = nullptr;
             FOREACH_PREDECESSOR_BLOCK(predBlock, block)
             {
                 predRegion = blockToRegion[predBlock->GetBlockNum()];
-                if (predBlock->GetLastInstr() == NULL)
+                if (predBlock->GetLastInstr() == nullptr)
                 {
                     AssertMsg(region == predRegion, "Bad region propagation through empty block");
                 }
@@ -1365,7 +1365,7 @@ void
 FlowGraph::UpdateRegionForBlock(BasicBlock * block, Region ** blockToRegion)
 {
     Region *region;
-    Region * predRegion = NULL;
+    Region * predRegion = nullptr;
     IR::Instr * tryInstr = nullptr;
     IR::Instr * firstInstr = block->GetFirstInstr();
     if (firstInstr->IsLabelInstr() && firstInstr->AsLabelInstr()->GetRegion())
@@ -1378,18 +1378,18 @@ FlowGraph::UpdateRegionForBlock(BasicBlock * block, Region ** blockToRegion)
     if (block == this->blockList)
     {
         // Head of the graph: create the root region.
-        region = Region::New(RegionTypeRoot, NULL, this->func);
+        region = Region::New(RegionTypeRoot, nullptr, this->func);
     }
     else
     {
         // Propagate the region forward by finding a predecessor we've already processed.
         // We require that there be one, since we've already removed unreachable blocks.
-        region = NULL;
+        region = nullptr;
         FOREACH_PREDECESSOR_BLOCK(predBlock, block)
         {
             AssertMsg(predBlock->GetBlockNum() < this->blockCount, "Misnumbered block at teardown time?");
             predRegion = blockToRegion[predBlock->GetBlockNum()];
-            if (predRegion != NULL)
+            if (predRegion != nullptr)
             {
                 region = this->PropagateRegionFromPred(block, predBlock, predRegion, tryInstr);
                 break;
@@ -1398,7 +1398,7 @@ FlowGraph::UpdateRegionForBlock(BasicBlock * block, Region ** blockToRegion)
         NEXT_PREDECESSOR_BLOCK;
     }
     
-    AssertMsg(region != NULL, "Failed to find region for block");
+    AssertMsg(region != nullptr, "Failed to find region for block");
     if (!region->ehBailoutData)
     {
         region->AllocateEHBailoutData(this->func, tryInstr);
@@ -1424,10 +1424,10 @@ FlowGraph::PropagateRegionFromPred(BasicBlock * block, BasicBlock * predBlock, R
 {
     // Propagate predRegion to region, looking at the flow transition for an opcode
     // that affects the region.
-    Region * region = NULL;
+    Region * region = nullptr;
     IR::Instr * predLastInstr = predBlock->GetLastInstr();
     IR::Instr * firstInstr = block->GetFirstInstr();
-    if (predLastInstr == NULL)
+    if (predLastInstr == nullptr)
     {
         // Empty block: trivially propagate the region.
         region = predRegion;
@@ -1766,7 +1766,7 @@ FlowGraph::RemoveUnreachableBlock(BasicBlock *block, GlobOpt * globOpt)
 {
     bool isDead = false;
 
-    if ((block->GetPredList() == NULL || block->GetPredList()->Empty()) && block != this->func->m_fg->blockList)
+    if ((block->GetPredList() == nullptr || block->GetPredList()->Empty()) && block != this->func->m_fg->blockList)
     {
         isDead = true;
     }
@@ -1834,7 +1834,7 @@ FlowGraph::PeepTypedCm(IR::Instr *instr)
     }
     else 
     {
-        return NULL;
+        return nullptr;
     }
 
     // if we have intermediate Lds, then make sure pattern is:
@@ -1843,12 +1843,12 @@ FlowGraph::PeepTypedCm(IR::Instr *instr)
     //      BrTrue $L1, t2
     if (instrLd && !instrLd->GetSrc1()->IsEqual(instr->GetDst()))
     {
-        return NULL;
+        return nullptr;
     }
 
     if (instrLd2 && !instrLd2->GetSrc1()->IsEqual(instrLd->GetDst()))
     {
-        return NULL;
+        return nullptr;
     }
 
     // Make sure we have:
@@ -1856,7 +1856,7 @@ FlowGraph::PeepTypedCm(IR::Instr *instr)
     //           BrTrue/BrFalse t1
     if (!(instr->GetDst()->IsEqual(instrBr->GetSrc1()) || (instrLd && instrLd->GetDst()->IsEqual(instrBr->GetSrc1())) || (instrLd2 && instrLd2->GetDst()->IsEqual(instrBr->GetSrc1()))))
     {
-        return NULL;
+        return nullptr;
     }
 
 
@@ -2059,7 +2059,7 @@ FlowGraph::PeepCm(IR::Instr *instr)
 
         if (brSrc->IsEqual(instr->GetSrc1()) || brSrc->IsEqual(instr->GetSrc2()))
         {
-            return NULL;
+            return nullptr;
         }
 
         instrNext = instrLd->GetNextRealInstrOrLabel();
@@ -2078,7 +2078,7 @@ FlowGraph::PeepCm(IR::Instr *instr)
             instrNext = instrLd2->GetNextRealInstrOrLabel();
             if (brSrc->IsEqual(instr->GetSrc1()) || brSrc->IsEqual(instr->GetSrc2()))
             {
-                return NULL;
+                return nullptr;
             }
         }
     }
@@ -2102,7 +2102,7 @@ FlowGraph::PeepCm(IR::Instr *instr)
     }
     else
     {
-        return NULL;
+        return nullptr;
     }
 
     IR::Instr *instrBr = instrNext;
@@ -2112,7 +2112,7 @@ FlowGraph::PeepCm(IR::Instr *instr)
     //         BrTrue/BrFalse t1
     if (!instr->GetDst()->IsEqual(instrBr->GetSrc1()) && !brSrc->IsEqual(instrBr->GetSrc1()))
     {
-        return NULL;
+        return nullptr;
     }
 
     // 
@@ -2300,7 +2300,7 @@ FlowGraph::PeepCm(IR::Instr *instr)
     }
 
     IR::Instr *instrBr2 = instrLd3->GetNextRealInstrOrLabel();
-    IR::Instr *inlineeEndInstr2 = NULL;
+    IR::Instr *inlineeEndInstr2 = nullptr;
 
     // InlineeEnd?
     // REVIEW: Can we handle 2 inlineeEnds?
@@ -2322,18 +2322,18 @@ FlowGraph::PeepCm(IR::Instr *instr)
     }
     else
     {
-        return NULL;
+        return nullptr;
     }
 
     // Make sure Ld_A operates on the right tmps.
     if (!instrLd3->GetDst()->IsEqual(instrBr2->GetSrc1()) || !brSrc->IsEqual(instrLd3->GetSrc1()))
     {
-        return NULL;
+        return nullptr;
     }
 
     if (instrLd3->GetDst()->IsEqual(instrBr->GetSrc1()) || instrLd3->GetDst()->IsEqual(instrBr->GetSrc2()))
     {
-        return NULL;
+        return nullptr;
     }
 
     // Make sure that the reg we're assigning to is not live in the intervening instructions (if this is a forward branch).
@@ -2342,7 +2342,7 @@ FlowGraph::PeepCm(IR::Instr *instr)
         StackSym *symLd3 = instrLd3->GetDst()->AsRegOpnd()->m_sym;
         if (IR::Instr::FindRegUseInRange(symLd3, instrBr->m_next, instrLd3))
         {
-            return NULL;
+            return nullptr;
         }
     }
     
@@ -2634,12 +2634,12 @@ FlowGraph::RemoveInstr(IR::Instr *instr, GlobOpt * globOpt)
 
         Js::OpCode opcode = instr->m_opcode;
         IR::ByteCodeUsesInstr * newByteCodeUseInstr = globOpt->ConvertToByteCodeUses(instr);   
-        if (newByteCodeUseInstr != null)
+        if (newByteCodeUseInstr != nullptr)
         {
             // We don't care about property used in these instruction 
             // It is only necessary for field copy prop so that we will keep the implicit call
             // up to the copy prop location.                 
-            newByteCodeUseInstr->propertySymUse = null;
+            newByteCodeUseInstr->propertySymUse = nullptr;
 
             if (opcode == Js::OpCode::Yield)
             {
@@ -2671,7 +2671,7 @@ void
 FlowGraph::RemoveBlock(BasicBlock *block, GlobOpt * globOpt, bool tailDuping)
 {
     Assert(!block->isDead && !block->isDeleted);
-    IR::Instr * lastInstr = null;
+    IR::Instr * lastInstr = nullptr;
     FOREACH_INSTR_IN_BLOCK_EDITING(instr, instrNext, block)
     {
         if (instr->m_opcode == Js::OpCode::FunctionExit)
@@ -2698,12 +2698,12 @@ FlowGraph::RemoveBlock(BasicBlock *block, GlobOpt * globOpt, bool tailDuping)
     }
     FOREACH_SLISTBASECOUNTED_ENTRY(FlowEdge*, edge, block->GetPredList())
     {
-        edge->GetPred()->RemoveSucc(block, this, false, globOpt != null);
+        edge->GetPred()->RemoveSucc(block, this, false, globOpt != nullptr);
     } NEXT_SLISTBASECOUNTED_ENTRY;
 
     FOREACH_SLISTBASECOUNTED_ENTRY(FlowEdge*, edge, block->GetSuccList())
     {
-        edge->GetSucc()->RemovePred(block, this, false, globOpt != null);
+        edge->GetSucc()->RemovePred(block, this, false, globOpt != nullptr);
     } NEXT_SLISTBASECOUNTED_ENTRY;
     
     if (block->isLoopHeader && this->loopList)
@@ -2716,9 +2716,9 @@ FlowGraph::RemoveBlock(BasicBlock *block, GlobOpt * globOpt, bool tailDuping)
             pPrevLoop = &((*pPrevLoop)->next);
         }
         *pPrevLoop = (*pPrevLoop)->next;
-        this->hasLoop = (this->loopList != NULL);
+        this->hasLoop = (this->loopList != nullptr);
     }
-    if (globOpt != null)
+    if (globOpt != nullptr)
     {
         block->isDead = true;
         block->GetPredList()->MoveTo(block->GetDeadPredList());
@@ -2821,7 +2821,7 @@ Loop::SetHasCall()
         current->hasCall = true;
         current = current->parent;
     }
-    while (current != null);
+    while (current != nullptr);
 }
 
 void
@@ -2846,7 +2846,7 @@ Loop::SetImplicitCallFlags(Js::ImplicitCallFlags newFlags)
         current->implicitCallFlags = newFlags;
         current = current->parent;
     }
-    while (current != null);
+    while (current != nullptr);
 }
 
 Js::ImplicitCallFlags
@@ -2854,7 +2854,7 @@ Loop::GetImplicitCallFlags()
 {
     if (this->implicitCallFlags == Js::ImplicitCall_HasNoInfo)
     {        
-        if (this->parent == null)
+        if (this->parent == nullptr)
         {
             // We don't have any information, and we don't have any parent, so just assume that there aren't any implicit calls
             this->implicitCallFlags = Js::ImplicitCall_None;
@@ -2971,7 +2971,7 @@ bool
 Loop::IsDescendentOrSelf(Loop const * loop) const
 {
     Loop const * currentLoop = loop;
-    while (currentLoop != null)
+    while (currentLoop != nullptr)
     {
         if (currentLoop == this)
         {
@@ -3184,7 +3184,7 @@ FlowGraph::VerifyLoopGraph()
                     || (!loop->IsDescendentOrSelf(succ->loop)));
                 continue;
             }
-            Assert(succ->loop == NULL || succ->loop->IsDescendentOrSelf(loop));
+            Assert(succ->loop == nullptr || succ->loop->IsDescendentOrSelf(loop));
         } NEXT_SUCCESSOR_BLOCK;
 
         if (!PHASE_OFF(Js::RemoveBreakBlockPhase, this->GetFunc()))
@@ -3396,22 +3396,22 @@ BasicBlock::Dump()
 void
 AddPropertyCacheBucket::Dump() const
 {
-    Assert(this->initialType != null);
-    Assert(this->finalType != null);
+    Assert(this->initialType != nullptr);
+    Assert(this->finalType != nullptr);
     Output::Print(L" initial type: 0x%x, final type: 0x%x ", this->initialType, this->finalType);
 }
 
 void
 ObjTypeGuardBucket::Dump() const
 {
-    Assert(this->guardedPropertyOps != null);
+    Assert(this->guardedPropertyOps != nullptr);
     this->guardedPropertyOps->Dump();
 }
 
 void
 ObjWriteGuardBucket::Dump() const
 {
-    Assert(this->writeGuards != null);
+    Assert(this->writeGuards != nullptr);
     this->writeGuards->Dump();
 }
 

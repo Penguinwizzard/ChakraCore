@@ -10,8 +10,8 @@ namespace Js
     ForInObjectEnumerator::ForInObjectEnumerator(RecyclableObject* object, ScriptContext * scriptContext, bool enumSymbols) :
         embeddedEnumerator(scriptContext),
         scriptContext(scriptContext),
-        currentEnumerator(null),
-        propertyIds(null),
+        currentEnumerator(nullptr),
+        propertyIds(nullptr),
         enumSymbols(enumSymbols)
     {
         Initialize(object, scriptContext);
@@ -20,25 +20,25 @@ namespace Js
     void ForInObjectEnumerator::Clear()
     {
         // Only clear stuff that are not useful for the next enumerator
-        propertyIds = null;
+        propertyIds = nullptr;
         newPropertyStrings.Reset();        
     }
 
     void ForInObjectEnumerator::Initialize(RecyclableObject* currentObject, ScriptContext * scriptContext)
     {
-        Assert(propertyIds == null);
+        Assert(propertyIds == nullptr);
         Assert(newPropertyStrings.Empty());
         Assert(this->GetScriptContext() == scriptContext);
 
-        this->currentIndex = null;
+        this->currentIndex = nullptr;
 
-        if (currentObject == null)
+        if (currentObject == nullptr)
         {
             currentEnumerator = scriptContext->GetLibrary()->GetNullEnumerator();
-            this->object = null;
-            this->baseObject = null;
-            this->baseObjectType = null;
-            this->firstPrototype = null;
+            this->object = nullptr;
+            this->baseObject = nullptr;
+            this->baseObjectType = nullptr;
+            this->firstPrototype = nullptr;
             return;
         }
 
@@ -68,7 +68,7 @@ namespace Js
         this->baseObject = currentObject;
         firstPrototype = GetFirstPrototypeWithEnumerableProperties(object);
 
-        if (firstPrototype != null)
+        if (firstPrototype != nullptr)
         {
             Recycler *recyler = scriptContext->GetRecycler();
             propertyIds = RecyclerNew(recyler, BVSparse<Recycler>, recyler);
@@ -77,7 +77,7 @@ namespace Js
 
     RecyclableObject* ForInObjectEnumerator::GetFirstPrototypeWithEnumerableProperties(RecyclableObject* object)
     {
-        RecyclableObject* firstPrototype = null;
+        RecyclableObject* firstPrototype = nullptr;
         if (JavascriptOperators::GetTypeId(object) != TypeIds_HostDispatch)
         {
             firstPrototype = object;
@@ -87,7 +87,7 @@ namespace Js
 
                 if (JavascriptOperators::GetTypeId(firstPrototype) == TypeIds_Null)
                 {
-                    firstPrototype = null;
+                    firstPrototype = nullptr;
                     break;
                 }
 
@@ -135,7 +135,7 @@ namespace Js
         {
             return currentIndex;
         }
-        Assert(currentEnumerator != null);
+        Assert(currentEnumerator != nullptr);
         return currentEnumerator->GetCurrentIndex();
     }
 
@@ -146,7 +146,7 @@ namespace Js
 
     BOOL ForInObjectEnumerator::TestAndSetEnumerated(PropertyId propertyId)
     {
-        Assert(propertyIds != null);
+        Assert(propertyIds != nullptr);
         Assert(!Js::IsInternalPropertyId(propertyId));
 
         return !(propertyIds->TestAndSet(propertyId));
@@ -172,7 +172,7 @@ namespace Js
             JavascriptLibrary::CheckAndConvertCopyOnAccessNativeIntArray<Var>(currentIndex);
             if (currentIndex)
             {
-                if (firstPrototype == null)
+                if (firstPrototype == nullptr)
                 {
                     // We are calculating correct shadowing for non-enumerable properties of the child object, we will receive 
                     // both enumerable and non-enumerable properties from GetCurrentAndMoveNext so we need to check before we simply 
@@ -226,7 +226,7 @@ namespace Js
             {
                 if (object == baseObject)
                 {
-                    if (firstPrototype == null)
+                    if (firstPrototype == nullptr)
                     {
                         return NULL;
                     }
@@ -246,7 +246,7 @@ namespace Js
                 {
                     if (!GetCurrentEnumerator())
                     {
-                        return null;
+                        return nullptr;
                     }
 
                     pEnumerator = currentEnumerator;
@@ -278,7 +278,7 @@ namespace Js
             currentIndex = pEnumerator->GetCurrentBothAndMoveNext(propertyId,currentValueRef);
             if (currentIndex)
             {
-                if (firstPrototype == null)
+                if (firstPrototype == nullptr)
                 {
                     // There are no prototype that has enumerable properties, 
                     // don't need to keep track of the propertyIds we visited.
@@ -324,7 +324,7 @@ namespace Js
             {
                 if (object == baseObject)
                 {
-                    if (firstPrototype == null)
+                    if (firstPrototype == nullptr)
                     {
                         return NULL;
                     }
@@ -342,7 +342,7 @@ namespace Js
 
                 if (!GetCurrentEnumerator())
                 {
-                    return null;
+                    return nullptr;
                 }
                 pEnumerator = (JavascriptEnumerator *)currentEnumerator;
             }
@@ -358,14 +358,14 @@ namespace Js
             propertyIds->ClearAll();
         }
 
-        currentIndex = null;
-        currentEnumerator = null;
+        currentIndex = nullptr;
+        currentEnumerator = nullptr;
         GetCurrentEnumerator();
     }
 
     BOOL ForInObjectEnumerator::CanBeReused()
     {
-        return object == null || (object->GetScriptContext() == GetScriptContext() && !JavascriptProxy::Is(object));
+        return object == nullptr || (object->GetScriptContext() == GetScriptContext() && !JavascriptProxy::Is(object));
     }
 
     Var NullEnumerator::GetCurrentIndex()

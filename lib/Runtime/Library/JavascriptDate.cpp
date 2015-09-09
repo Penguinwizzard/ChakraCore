@@ -68,7 +68,7 @@ namespace Js
         // being created, except when call true a host dispatch
         Var newTarget = callInfo.Flags & CallFlags_NewTarget ? args.Values[args.Info.Count] : args[0];
         bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && newTarget != nullptr && RecyclableObject::Is(newTarget);
-        Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == null
+        Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == nullptr
             || JavascriptOperators::GetTypeId(args[0]) == TypeIds_HostDispatch);
 
         if (!(callInfo.Flags & CallFlags_New))
@@ -1259,7 +1259,7 @@ namespace Js
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NeedObject, L"Data.prototype.toJSON");
         }
-        RecyclableObject* thisObj = null;
+        RecyclableObject* thisObj = nullptr;
         if (FALSE == JavascriptConversion::ToObject(args[0], scriptContext, &thisObj))
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NullOrUndefined, L"Date.prototype.toJSON");

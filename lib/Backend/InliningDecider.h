@@ -57,7 +57,7 @@ public:
         Js::FunctionInfo *const funcInfo,
         Js::OpCode *const inlineCandidateOpCode,
         ValueType *const returnType,
-        Js::ScriptContext *const scriptContext = null);
+        Js::ScriptContext *const scriptContext = nullptr);
 
 #if defined(ENABLE_DEBUG_CONFIG_OPTIONS)
     static void TraceInlining(Js::FunctionBody *const inliner, const wchar_t* inlineeName, const wchar_t* inlineeFunctionIdandNumberString, uint inlineeByteCodeCount,

@@ -171,7 +171,7 @@ LPVOID PreReservedVirtualAllocWrapper::Alloc(LPVOID lpAddress, size_t dwSize, DW
             }
         }
 
-        //Return null, if no space to Reserve
+        //Return nullptr, if no space to Reserve
         if (preReservedStartAddress == NULL)
         {
             PreReservedHeapTrace(L"No space to pre-reserve memory with %d pages. Returning NULL\n", PreReservedAllocationSegmentCount * AutoSystemInfo::Data.GetAllocationGranularityPageCount());
@@ -191,7 +191,7 @@ LPVOID PreReservedVirtualAllocWrapper::Alloc(LPVOID lpAddress, size_t dwSize, DW
             do
             {
                 freeSegmentsBVIndex = freeSegments.GetNextBit(freeSegmentsBVIndex + 1);
-                //Return null, if we don't have free/decommit pages to allocate
+                //Return nullptr, if we don't have free/decommit pages to allocate
                 if ((freeSegments.Length() - freeSegmentsBVIndex < requestedNumOfSegments) || 
                     freeSegmentsBVIndex == BVInvalidIndex)
                 {

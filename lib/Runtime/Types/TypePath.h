@@ -90,7 +90,7 @@ public:
 
 #ifdef SUPPORT_FIXED_FIELDS_ON_PATH_TYPES
         TypePath()
-            : pathLength(0), maxInitializedLength(0), singletonInstance(null)
+            : pathLength(0), maxInitializedLength(0), singletonInstance(nullptr)
         {
         }
 #else
@@ -118,7 +118,7 @@ public:
             if (((uint)index) < ((uint)pathLength))
                 return GetPropertyIdUnchecked(index);
             else
-                return NULL;
+                return nullptr;
         }
 
         const PropertyRecord ** GetPropertyAssignments() 
@@ -156,7 +156,7 @@ public:
 
         bool HasSingletonInstance() const
         {
-            return this->singletonInstance != null;
+            return this->singletonInstance != nullptr;
         }
 
         RecyclerWeakReference<DynamicObject>* GetSingletonInstance() const
@@ -166,19 +166,19 @@ public:
 
         void SetSingletonInstance(RecyclerWeakReference<DynamicObject>* instance, int typePathLength)
         {
-            Assert(this->singletonInstance == null && instance != null);
+            Assert(this->singletonInstance == nullptr && instance != nullptr);
             Assert(typePathLength >= this->maxInitializedLength);
             this->singletonInstance = instance;
         }
 
         void ClearSingletonInstance()
         {
-            this->singletonInstance = null;
+            this->singletonInstance = nullptr;
         }
 
         void ClearSingletonInstanceIfSame(DynamicObject* instance)
         {
-            if (this->singletonInstance != null && this->singletonInstance->Get() == instance)
+            if (this->singletonInstance != nullptr && this->singletonInstance->Get() == instance)
             {
                 ClearSingletonInstance();
             }
@@ -186,7 +186,7 @@ public:
 
         void ClearSingletonInstanceIfDifferent(DynamicObject* instance)
         {
-            if (this->singletonInstance != null && this->singletonInstance->Get() != instance)
+            if (this->singletonInstance != nullptr && this->singletonInstance->Get() != instance)
             {
                 ClearSingletonInstance();
             }
@@ -231,7 +231,7 @@ public:
         {
             // We only support fixed fields on singleton instances.
             // If the instance in question is a singleton, it must be the tip of the type path.
-            return this->singletonInstance != null && typePathLength >= this->maxInitializedLength;
+            return this->singletonInstance != nullptr && typePathLength >= this->maxInitializedLength;
         }
 
         void AddBlankFieldAt(PropertyIndex index, int typePathLength);
@@ -250,7 +250,7 @@ public:
         Var GetSingletonFixedFieldAt(PropertyIndex index, int typePathLength, ScriptContext * requestContext);
 
         bool HasSingletonInstance() const { Assert(false); return false; }
-        RecyclerWeakReference<DynamicObject>* GetSingletonInstance() const { Assert(false); return null; }
+        RecyclerWeakReference<DynamicObject>* GetSingletonInstance() const { Assert(false); return nullptr; }
         void SetSingletonInstance(RecyclerWeakReference<DynamicObject>* instance, int typePathLength) { Assert(false); }
         void ClearSingletonInstance() { Assert(false); }
         void ClearSingletonInstanceIfSame(RecyclerWeakReference<DynamicObject>* instance) { Assert(false); }

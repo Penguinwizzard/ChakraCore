@@ -59,8 +59,8 @@ namespace Js
         Assert(false);
 
         StringCopyInfo copyInfo;
-        JavascriptString *const string = null;
-        wchar_t *const buffer = null;
+        JavascriptString *const string = nullptr;
+        wchar_t *const buffer = nullptr;
 
         (StringCopyInfo());
         (StringCopyInfo(string, buffer));
@@ -78,7 +78,7 @@ namespace Js
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     StringCopyInfoStack::StringCopyInfoStack(ScriptContext *const scriptContext)
-        : scriptContext(scriptContext), allocator(null), stack(null)
+        : scriptContext(scriptContext), allocator(nullptr), stack(nullptr)
     {
         Assert(scriptContext);
     }

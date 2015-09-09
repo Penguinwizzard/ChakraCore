@@ -8,7 +8,7 @@
 extern "C" IRType RegTypes[RegNumCount];
 
 LinearScanMD::LinearScanMD(Func *func)
-    : helperSpillSlots(null),
+    : helperSpillSlots(nullptr),
       maxOpHelperSpilledLiveranges(0),
       func(func)
 {
@@ -36,7 +36,7 @@ LinearScanMD::EnsureSpillSymForVFPReg(RegNum reg, Func *func)
     __analysis_assume(reg - RegD0 < VFP_REGCOUNT);
     StackSym *sym = this->vfpSymTable[reg - RegD0];
 
-    if (sym == NULL)
+    if (sym == nullptr)
     {
         sym = StackSym::New(TyFloat64, func);
         func->StackAllocate(sym, MachRegDouble);
@@ -106,7 +106,7 @@ LinearScanMD::InsertOpHelperSpillsAndRestores(const OpHelperBlock& opHelperBlock
 
         if (RegTypes[opHelperSpilledLifetime.reg] == TyFloat64)
         {
-            IR::RegOpnd * regOpnd = IR::RegOpnd::New(NULL, opHelperSpilledLifetime.reg, TyMachDouble, this->func);
+            IR::RegOpnd * regOpnd = IR::RegOpnd::New(nullptr, opHelperSpilledLifetime.reg, TyMachDouble, this->func);
 
             if (!sym)
             {
@@ -224,7 +224,7 @@ LinearScanMD::GenerateBailOut(
         // Load the register save space address for the specified register into the scratch register:
         //     ldimm SCRATCH_REG, regSaveSpace        
         LinearScan::InsertMove(
-            IR::RegOpnd::New(null, SCRATCH_REG, TyMachPtr, func),
+            IR::RegOpnd::New(nullptr, SCRATCH_REG, TyMachPtr, func),
             IR::AddrOpnd::New(&registerSaveSpace[reg - 1], IR::AddrOpndKindDynamicMisc, func),
             instr);
     };
@@ -239,7 +239,7 @@ LinearScanMD::GenerateBailOut(
         const IRType regType = RegTypes[reg];
         LinearScan::InsertMove(
             IR::IndirOpnd::New(
-                IR::RegOpnd::New(null, SCRATCH_REG, TyMachPtr, func),
+                IR::RegOpnd::New(nullptr, SCRATCH_REG, TyMachPtr, func),
                 0,
                 regType,
                 func),
@@ -257,7 +257,7 @@ LinearScanMD::GenerateBailOut(
         IR::Instr *instrPush = IR::Instr::New(
             Js::OpCode::PUSH,
             IR::IndirOpnd::New(
-            IR::RegOpnd::New(null, SCRATCH_REG, TyMachPtr, func),
+            IR::RegOpnd::New(nullptr, SCRATCH_REG, TyMachPtr, func),
             0,
             TyMachReg,
             func),
@@ -286,7 +286,7 @@ LinearScanMD::GenerateBailOut(
         //     mov  r1, condition
         IR::Instr *const newInstr =
             LinearScan::InsertMove(
-                IR::RegOpnd::New(null, RegR1, bailOutInfo->branchConditionOpnd->GetType(), func),
+                IR::RegOpnd::New(nullptr, RegR1, bailOutInfo->branchConditionOpnd->GetType(), func),
                 bailOutInfo->branchConditionOpnd,
                 instr);
         linearScan->SetSrcRegs(newInstr);
@@ -295,7 +295,7 @@ LinearScanMD::GenerateBailOut(
     // Pass in the bailout record
     //     ldimm r0, bailOutRecord
     LinearScan::InsertMove(
-        IR::RegOpnd::New(null, RegR0, TyMachPtr, func),        
+        IR::RegOpnd::New(nullptr, RegR0, TyMachPtr, func),        
         IR::AddrOpnd::New(bailOutInfo->bailOutRecord, IR::AddrOpndKindDynamicBailOutRecord, func, true),
         instr);
 
@@ -310,15 +310,15 @@ LinearScanMD::GenerateBailOut(
 
         // Record the use on the lifetime in case it spilled afterwards. Spill loads will be inserted before 'firstInstr', that
         // is, before the register saves are done.
-        this->linearScan->RecordUse(stackSym->scratch.linearScan.lifetime, firstInstr, null, true);
+        this->linearScan->RecordUse(stackSym->scratch.linearScan.lifetime, firstInstr, nullptr, true);
     }
 
     // Load the bailout target into lr
     //     ldimm lr, BailOut
     //     blx  lr
     Assert(instr->GetSrc1()->IsHelperCallOpnd());
-    LinearScan::InsertMove(IR::RegOpnd::New(null, RegLR, TyMachPtr, func), instr->GetSrc1(), instr);
-    instr->ReplaceSrc1(IR::RegOpnd::New(null, RegLR, TyMachPtr, func));
+    LinearScan::InsertMove(IR::RegOpnd::New(nullptr, RegLR, TyMachPtr, func), instr->GetSrc1(), instr);
+    instr->ReplaceSrc1(IR::RegOpnd::New(nullptr, RegLR, TyMachPtr, func));
 }
 
 IR::Instr *

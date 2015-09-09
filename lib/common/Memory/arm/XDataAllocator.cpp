@@ -38,7 +38,7 @@ bool XDataAllocator::Alloc(ULONG_PTR functionStart, DWORD functionSize, ushort p
 
     DWORD size = GetAllocSize(pdataCount, xdataSize);
     BYTE* alloc = HeapNewNoThrowArray(BYTE, size);
-    if (alloc != null)
+    if (alloc != nullptr)
     {
         xdata->address = alloc;
         xdata->xdataSize = xdataSize;
@@ -63,7 +63,7 @@ void XDataAllocator::Register(XDataAllocation& allocation, DWORD functionStart, 
             pdata->UnwindData = pdata->UnwindData - (DWORD)functionStart;
         }
     }
-    Assert(allocation.functionTable == null);
+    Assert(allocation.functionTable == nullptr);
     
     // Since we do not expect many thunk functions to be created, we are using 1 table/function
     // for now. This can be optimized further if needed.
@@ -80,7 +80,7 @@ void XDataAllocator::Register(XDataAllocation& allocation, DWORD functionStart, 
 void XDataAllocator::Release(const SecondaryAllocation& allocation)
 {
     const XDataAllocation& xdata = static_cast<const XDataAllocation&>(allocation);
-    if(xdata.address  != null)
+    if(xdata.address  != nullptr)
     {
         if(xdata.functionTable)
         {

@@ -4,7 +4,7 @@ namespace Js
 {
     template<class T>
     InlineCachePointerArray<T>::InlineCachePointerArray()
-        : inlineCaches(null)
+        : inlineCaches(nullptr)
 #if DBG
         , inlineCacheCount(0)
 #endif
@@ -36,7 +36,7 @@ namespace Js
         Assert(functionBody);
         Assert(!inlineCaches || functionBody->GetInlineCacheCount() == inlineCacheCount);
         Assert(index < functionBody->GetInlineCacheCount());
-        return inlineCaches ? inlineCaches[index] : null;
+        return inlineCaches ? inlineCaches[index] : nullptr;
     }
 
     template<class T>
@@ -59,7 +59,7 @@ namespace Js
     template<class T>
     void InlineCachePointerArray<T>::Reset()
     {
-        inlineCaches = null;
+        inlineCaches = nullptr;
 #if DBG
         inlineCacheCount = 0;
 #endif

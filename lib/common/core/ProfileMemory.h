@@ -88,7 +88,7 @@ public:
                 for (int i = 0; i < count; i++)
                 {
                     ArenaMemoryDataSummary * data = summaries[i];
-                    if (data == null)
+                    if (data == nullptr)
                     {
                         continue;
                     }

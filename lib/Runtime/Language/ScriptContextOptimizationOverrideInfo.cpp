@@ -11,17 +11,17 @@ ScriptContextOptimizationOverrideInfo::ScriptContextOptimizationOverrideInfo()
     arraySetElementFastPathVtable(VirtualTableInfo<Js::JavascriptArray>::Address), 
     intArraySetElementFastPathVtable(VirtualTableInfo<Js::JavascriptNativeIntArray>::Address), 
     floatArraySetElementFastPathVtable(VirtualTableInfo<Js::JavascriptNativeFloatArray>::Address), 
-    crossSiteRoot(null), crossSitePrev(null), crossSiteNext(null)
+    crossSiteRoot(nullptr), crossSitePrev(nullptr), crossSiteNext(nullptr)
 {
 }
 
 ScriptContextOptimizationOverrideInfo::~ScriptContextOptimizationOverrideInfo()
 {
     ScriptContextOptimizationOverrideInfo * next = crossSiteNext;
-    if (next != null)
+    if (next != nullptr)
     {
         ScriptContextOptimizationOverrideInfo * root = crossSiteRoot;
-        Assert(root != null);
+        Assert(root != nullptr);
         if (this == root)
         {
             // Change the root
@@ -31,7 +31,7 @@ ScriptContextOptimizationOverrideInfo::~ScriptContextOptimizationOverrideInfo()
             });
         }
         ScriptContextOptimizationOverrideInfo * prev = crossSitePrev;
-        Assert(prev != null);
+        Assert(prev != nullptr);
         next->crossSitePrev = prev;
         prev->crossSiteNext = next; 
     }
@@ -40,7 +40,7 @@ ScriptContextOptimizationOverrideInfo::~ScriptContextOptimizationOverrideInfo()
 template <typename Fn>
 void ScriptContextOptimizationOverrideInfo::ForEachCrossSiteInfo(Fn fn)
 {
-    Assert(crossSiteRoot != null);    
+    Assert(crossSiteRoot != nullptr);
     ScriptContextOptimizationOverrideInfo * current = this;
     do
     {
@@ -54,7 +54,7 @@ void ScriptContextOptimizationOverrideInfo::ForEachCrossSiteInfo(Fn fn)
 template <typename Fn>
 void ScriptContextOptimizationOverrideInfo::ForEachEditingCrossSiteInfo(Fn fn)
 {
-    Assert(crossSiteRoot != null);    
+    Assert(crossSiteRoot != nullptr);
     ScriptContextOptimizationOverrideInfo * current = this;
     do
     {
@@ -72,7 +72,7 @@ ScriptContextOptimizationOverrideInfo::Merge(ScriptContextOptimizationOverrideIn
     ScriptContextOptimizationOverrideInfo * infoRoot = info->crossSiteRoot;
     if (thisRoot == infoRoot)
     {
-        if (thisRoot != null)
+        if (thisRoot != nullptr)
         {
             // Both info is already in the same info group
             return;
@@ -93,10 +93,10 @@ ScriptContextOptimizationOverrideInfo::Merge(ScriptContextOptimizationOverrideIn
     }
     else 
     {
-        if (thisRoot == null)
+        if (thisRoot == nullptr)
         {
             thisRoot = infoRoot;
-            infoRoot = null;
+            infoRoot = nullptr;
             info = this;
         }
 
@@ -108,7 +108,7 @@ ScriptContextOptimizationOverrideInfo::Merge(ScriptContextOptimizationOverrideIn
             thisRoot->CopyTo(i);
         });
 
-        if (infoRoot == null)
+        if (infoRoot == nullptr)
         {
             thisRoot->Insert(info);
         }    
@@ -164,7 +164,7 @@ ScriptContextOptimizationOverrideInfo::Update(ScriptContextOptimizationOverrideI
 void
 ScriptContextOptimizationOverrideInfo::SetSideEffects(SideEffects se)
 {
-    if (this->crossSiteRoot == null)
+    if (this->crossSiteRoot == nullptr)
     {
         sideEffects = (SideEffects)(sideEffects | se);
     }
@@ -186,7 +186,7 @@ ScriptContextOptimizationOverrideInfo::IsEnabledArraySetElementFastPath() const
 void 
 ScriptContextOptimizationOverrideInfo::DisableArraySetElementFastPath()
 {
-    if (this->crossSiteRoot == null)
+    if (this->crossSiteRoot == nullptr)
     {
         arraySetElementFastPathVtable = InvalidVtable;
         intArraySetElementFastPathVtable = InvalidVtable;
@@ -245,7 +245,7 @@ ScriptContextOptimizationOverrideInfo::GetAddressOfFloatArraySetElementFastPathV
 void
 ScriptContextOptimizationOverrideInfo::Verify()
 {
-    if (this->crossSiteRoot == null)
+    if (this->crossSiteRoot == nullptr)
     {
         return;
     }

@@ -7,15 +7,15 @@
 namespace Js
 {
     RuntimeFunction::RuntimeFunction(DynamicType * type)
-        : JavascriptFunction(type), functionNameId(null)
+        : JavascriptFunction(type), functionNameId(nullptr)
     {}
 
     RuntimeFunction::RuntimeFunction(DynamicType * type, FunctionInfo * functionInfo)
-        : JavascriptFunction(type, functionInfo), functionNameId(null)
+        : JavascriptFunction(type, functionInfo), functionNameId(nullptr)
     {}
 
     RuntimeFunction::RuntimeFunction(DynamicType * type, FunctionInfo * functionInfo, ConstructorCache* cache)
-        : JavascriptFunction(type, functionInfo, cache), functionNameId(null)
+        : JavascriptFunction(type, functionInfo, cache), functionNameId(nullptr)
     {}
 
     Var
@@ -23,7 +23,7 @@ namespace Js
     {
         JavascriptLibrary* library = this->GetLibrary();
         ScriptContext * scriptContext = library->GetScriptContext();
-        if (this->functionNameId == null)
+        if (this->functionNameId == nullptr)
         {
             this->functionNameId = library->GetFunctionDisplayString();
         }

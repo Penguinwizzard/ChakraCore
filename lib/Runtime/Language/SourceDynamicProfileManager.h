@@ -24,7 +24,7 @@ namespace Js
     class SourceDynamicProfileManager
     {
     public:        
-        SourceDynamicProfileManager(Recycler* allocator) : isNonCachableScript(false), cachedStartupFunctions(null), recycler(allocator), dynamicProfileInfoMap(allocator), startupFunctions(null), profileDataCache(null) {}
+        SourceDynamicProfileManager(Recycler* allocator) : isNonCachableScript(false), cachedStartupFunctions(nullptr), recycler(allocator), dynamicProfileInfoMap(allocator), startupFunctions(nullptr), profileDataCache(nullptr) {}
 
         ExecutionFlags IsFunctionExecuted(Js::LocalFunctionId functionId);
         DynamicProfileInfo * GetDynamicProfileInfo(FunctionBody * functionBody);       
@@ -35,8 +35,8 @@ namespace Js
         void EnsureStartupFunctions(uint numberOfFunctions);
         void Reuse();
         uint SaveToProfileCacheAndRelease(SourceContextInfo* info);
-        bool IsProfileLoaded() { return cachedStartupFunctions != null; }
-        bool IsProfileLoadedFromWinInet() { return profileDataCache != null; }
+        bool IsProfileLoaded() { return cachedStartupFunctions != nullptr; }
+        bool IsProfileLoadedFromWinInet() { return profileDataCache != nullptr; }
         bool LoadFromProfileCache(IActiveScriptDataCache* profileDataCache, LPCWSTR url);
         IActiveScriptDataCache* GetProfileCache() { return profileDataCache; }
         uint GetStartupFunctionsLength() { return (this->startupFunctions ? this->startupFunctions->Length() : 0); }

@@ -116,7 +116,7 @@ void ScriptMemoryDumper::DumpSmallHeapBlockList(SmallHeapBlockT<TBlockAttributes
 template <class TBlockAttributes>
 void ScriptMemoryDumper::DumpSmallHeapBlock(SmallHeapBlockT<TBlockAttributes>* heapBlock)
 {
-    if (heapBlock == null)
+    if (heapBlock == nullptr)
         return;
 
     if (current.objectSize == 0)
@@ -158,7 +158,7 @@ void ScriptMemoryDumper::DumpLargeBucket(LargeHeapBucket* heapBucket)
 struct LargeObjectHeader;
 void ScriptMemoryDumper::DumpLargeHeapBlock(LargeHeapBlock* heapBlock)
 {
-    if (heapBlock == null)
+    if (heapBlock == nullptr)
         return;
 
     current.finalizeCount += heapBlock->finalizeCount;
@@ -168,7 +168,7 @@ void ScriptMemoryDumper::DumpLargeHeapBlock(LargeHeapBlock* heapBlock)
     for (uint32 i = 0; i < heapBlock->allocCount; i++)
     {
         Memory::LargeObjectHeader* heapHeader = heapBlock->GetHeader(i);
-        if (heapHeader != null)
+        if (heapHeader != nullptr)
         {
             current.activeObjectCount++;
             current.activeObjectByteSize += heapHeader->objectSize;

@@ -11,21 +11,21 @@ CodeGenWorkItem::CodeGenWorkItem(
     bool isJitInDebugMode,
     CodeGenWorkItemType type)
     : JsUtil::Job(manager)
-    , codeAddress(null)
+    , codeAddress(NULL)
     , functionBody(functionBody)
     , type(type)
     , jitMode(ExecutionMode::Interpreter)    
     , entryPointInfo(entryPointInfo)
-    , recyclableData(null)
+    , recyclableData(nullptr)
     , isInJitQueue(false)
     , isAllocationCommitted(false)
     , isJitInDebugMode(isJitInDebugMode)
-    , queuedFullJitWorkItem(null)
-    , allocation(null)
+    , queuedFullJitWorkItem(nullptr)
+    , allocation(nullptr)
 #ifdef IR_VIEWER
     , isRejitIRViewerFunction(false)
-    , irViewerOutput(null)
-    , irViewerRequestContext(null)
+    , irViewerOutput(nullptr)
+    , irViewerRequestContext(nullptr)
 #endif
 {
 }
@@ -81,7 +81,7 @@ bool CodeGenWorkItem::ShouldSpeculativelyJitBasedOnProfile() const
     if(loopPercentage >= 50 || straighLineSize < 300)
     {
         Js::SourceDynamicProfileManager* profileManager = functionBody->GetSourceContextInfo()->sourceDynamicProfileManager;
-        if(profileManager != null)
+        if(profileManager != nullptr)
         {
             functionBody->SetIsSpeculativeJitCandidate();
 
@@ -153,7 +153,7 @@ void CodeGenWorkItem::OnRemoveFromJitQueue(NativeCodeGenerator* generator)
     this->isInJitQueue = false;
     this->entryPointInfo->SetCodeGenPending();
     functionBody->GetScriptContext()->GetThreadContext()->UnregisterCodeGenRecyclableData(this->recyclableData);
-    this->recyclableData = null;
+    this->recyclableData = nullptr;
 
     if(IS_JS_ETW(EventEnabledJSCRIPT_FUNCTION_JIT_DEQUEUED()))
     {
@@ -236,7 +236,7 @@ void CodeGenWorkItem::RecordNativeCode(Func *func, const BYTE* sourceBuffer)
 
 void CodeGenWorkItem::OnWorkItemProcessFail(NativeCodeGenerator* codeGen)
 {
-    if (!isAllocationCommitted && this->allocation != null && this->allocation->allocation != null)
+    if (!isAllocationCommitted && this->allocation != nullptr && this->allocation->allocation != nullptr)
     {
 #if DBG
         this->allocation->allocation->isNotExecutableBecauseOOM = true;

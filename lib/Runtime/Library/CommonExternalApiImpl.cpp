@@ -21,7 +21,7 @@ bool JsUtil::ExternalApi::RaiseOnIntOverflow()
 
 bool JsUtil::ExternalApi::RaiseOutOfMemoryIfScriptActive()
 {
-    return Js::Exception::RaiseIfScriptActive(null, Js::Exception::ExceptionKind_OutOfMemory);
+    return Js::Exception::RaiseIfScriptActive(nullptr, Js::Exception::ExceptionKind_OutOfMemory);
 }
 
 bool JsUtil::ExternalApi::RaiseStackOverflowIfScriptActive(Js::ScriptContext * scriptContext, PVOID returnAddress)
@@ -37,7 +37,7 @@ ThreadContextId JsUtil::ExternalApi::GetCurrentThreadContextId()
 #if DBG || defined(EXCEPTION_CHECK)
 BOOL JsUtil::ExternalApi::IsScriptActiveOnCurrentThreadContext()
 {
-    return ThreadContext::GetContextForCurrentThread() != null &&
+    return ThreadContext::GetContextForCurrentThread() != nullptr &&
         ThreadContext::GetContextForCurrentThread()->IsScriptActive();
 }
 #endif

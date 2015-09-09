@@ -48,12 +48,12 @@ LargeHeapBucket::TryAllocFromNewHeapBlock(Recycler * recycler, size_t sizeCat, O
 #endif
 
     LargeHeapBlock * heapBlock = AddLargeHeapBlock(sizeCat, nothrow);
-    if (heapBlock == null)
+    if (heapBlock == nullptr)
     {
-        return null;
+        return nullptr;
     }
     char * memBlock = heapBlock->Alloc(sizeCat, attributes);
-    Assert(memBlock != null);
+    Assert(memBlock != nullptr);
     return memBlock;
 }
 
@@ -70,7 +70,7 @@ LargeHeapBucket::SnailAlloc(Recycler * recycler, size_t sizeCat, ObjectInfoBits 
     if (!collected)
     {
         memBlock = TryAllocFromNewHeapBlock(recycler, sizeCat, attributes, nothrow);
-        if (memBlock != null)
+        if (memBlock != nullptr)
         {
             return memBlock;
         }
@@ -81,13 +81,13 @@ LargeHeapBucket::SnailAlloc(Recycler * recycler, size_t sizeCat, ObjectInfoBits 
     }
 
     memBlock = TryAlloc(recycler, sizeCat, attributes);
-    if (memBlock != null)
+    if (memBlock != nullptr)
     {
         return memBlock;
     }
 
     memBlock = TryAllocFromNewHeapBlock(recycler, sizeCat, attributes, nothrow);
-    if (memBlock != null)
+    if (memBlock != nullptr)
     {
         return memBlock;
     }
@@ -99,7 +99,7 @@ LargeHeapBucket::SnailAlloc(Recycler * recycler, size_t sizeCat, ObjectInfoBits 
         recycler->OutOfMemory();
     }
 
-    return null;
+    return nullptr;
 }
 
 #ifdef RECYCLER_PAGE_HEAP
@@ -119,19 +119,19 @@ LargeHeapBucket::PageHeapAlloc(Recycler * recycler, size_t size, ObjectInfoBits 
             recycler->OutOfMemory();
         }
 
-        return null;
+        return nullptr;
     }
 
     size_t actualPageCount = pageCount + 1; // for page heap
 
     char * baseAddress = recycler->GetRecyclerLargeBlockPageAllocator()->Alloc(&actualPageCount, &segment);
-    if (baseAddress == null)
+    if (baseAddress == nullptr)
     {
-        return null;
+        return nullptr;
     }
 
-    char* address = null;
-    char* guardPageAddress = null;
+    char* address = nullptr;
+    char* guardPageAddress = nullptr;
     DWORD guardPageOldProtectFlags = PAGE_NOACCESS;
 
     if (heapInfo->pageHeapMode == PageHeapMode::PageHeapModeBlockStart)
@@ -148,7 +148,7 @@ LargeHeapBucket::PageHeapAlloc(Recycler * recycler, size_t size, ObjectInfoBits 
     if (::VirtualProtect(static_cast<LPVOID>(guardPageAddress), AutoSystemInfo::PageSize, PAGE_NOACCESS, &guardPageOldProtectFlags) == FALSE)
     {
         AssertMsg(false, "Unable to set permission for guard page.");
-        return null;
+        return nullptr;
     }
 
 #ifdef RECYCLER_ZERO_MEM_CHECK
@@ -161,7 +161,7 @@ LargeHeapBucket::PageHeapAlloc(Recycler * recycler, size_t size, ObjectInfoBits 
         recycler->GetRecyclerLargeBlockPageAllocator()->SuspendIdleDecommit();
         recycler->GetRecyclerLargeBlockPageAllocator()->Release(address, actualPageCount, segment);
         recycler->GetRecyclerLargeBlockPageAllocator()->ResumeIdleDecommit();
-        return null;
+        return nullptr;
     }
     heapBlock->actualPageCount = actualPageCount;
     heapBlock->guardPageAddress = guardPageAddress;
@@ -206,7 +206,7 @@ LargeHeapBucket::PageHeapAlloc(Recycler * recycler, size_t size, ObjectInfoBits 
         recycler->GetRecyclerLargeBlockPageAllocator()->ResumeIdleDecommit();
         LargeHeapBlock::Delete(heapBlock);
         RECYCLER_SLOW_CHECK(this->heapInfo->heapBlockCount[HeapBlock::HeapBlockType::LargeBlockType]--);
-        return null;
+        return nullptr;
     }
 
     heapBlock->ResetMarks(ResetMarkFlags_None, recycler);
@@ -223,7 +223,7 @@ LargeHeapBucket::PageHeapAlloc(Recycler * recycler, size_t size, ObjectInfoBits 
     RECYCLER_PERF_COUNTER_ADD(FreeObjectSize, heapBlock->GetPageCount() * AutoSystemInfo::PageSize);
 
     char * memBlock = heapBlock->Alloc(sizeCat, attributes);
-    Assert(memBlock != null);
+    Assert(memBlock != nullptr);
     if (recycler->ShouldCapturePageHeapAllocStack())
     {
         heapBlock->CapturePageHeapAllocStack();
@@ -248,22 +248,22 @@ LargeHeapBucket::AddLargeHeapBlock(size_t size, bool nothrow)
             recycler->OutOfMemory();
         }
 
-        return null;
+        return nullptr;
     }
 
     char * address = nullptr;
 
     address = recycler->GetRecyclerLargeBlockPageAllocator()->Alloc(&pageCount, &segment);
 
-    if (address == null)
+    if (address == nullptr)
     {
-        return null;
+        return nullptr;
     }
 #ifdef RECYCLER_ZERO_MEM_CHECK
     recycler->VerifyZeroFill(address, pageCount * AutoSystemInfo::PageSize);
 #endif
     uint objectCount = LargeHeapBlock::GetMaxLargeObjectCount(pageCount, size);
-    LargeHeapBlock * heapBlock = LargeHeapBlock::New(address, pageCount, segment, objectCount, supportFreeList ? this : null);
+    LargeHeapBlock * heapBlock = LargeHeapBlock::New(address, pageCount, segment, objectCount, supportFreeList ? this : nullptr);
 #if DBG
     LargeAllocationVerboseTrace(recycler->GetRecyclerFlagsTable(), L"Allocated new large heap block 0x%p for sizeCat 0x%x\n", heapBlock, sizeCat);
 #endif
@@ -281,7 +281,7 @@ LargeHeapBucket::AddLargeHeapBlock(size_t size, bool nothrow)
         recycler->GetRecyclerLargeBlockPageAllocator()->SuspendIdleDecommit();
         recycler->GetRecyclerLargeBlockPageAllocator()->Release(address, pageCount, segment);
         recycler->GetRecyclerLargeBlockPageAllocator()->ResumeIdleDecommit();
-        return null;
+        return nullptr;
     }
 #ifdef PARTIAL_GC_ENABLED
     recycler->autoHeap.uncollectedNewPageCount += pageCount;
@@ -302,7 +302,7 @@ LargeHeapBucket::AddLargeHeapBlock(size_t size, bool nothrow)
         recycler->GetRecyclerLargeBlockPageAllocator()->ResumeIdleDecommit();
         LargeHeapBlock::Delete(heapBlock);
         RECYCLER_SLOW_CHECK(this->heapInfo->heapBlockCount[HeapBlock::HeapBlockType::LargeBlockType]--);
-        return null;
+        return nullptr;
     }
 
     heapBlock->SetNextBlock(this->largeBlockList);
@@ -374,7 +374,7 @@ LargeHeapBucket::TryAllocFromExplicitFreeList(Recycler * recycler, size_t sizeCa
 
 #ifdef RECYCLER_MEMORY_VERIFY           
         HeapBlock* heapBlock = recycler->FindHeapBlock(memBlock);
-        Assert(heapBlock != null);
+        Assert(heapBlock != nullptr);
         Assert(heapBlock->IsLargeHeapBlock());
         LargeHeapBlock * largeHeapBlock = (LargeHeapBlock *)heapBlock;
         LargeObjectHeader * dbgHeader;
@@ -419,7 +419,7 @@ LargeHeapBucket::ExplicitFree(void * object, size_t sizeCat)
 
 #if DBG
     HeapBlock* heapBlock = this->GetRecycler()->FindHeapBlock(object);
-    Assert(heapBlock != null);
+    Assert(heapBlock != nullptr);
     Assert(heapBlock->IsLargeHeapBlock());
 
     LargeHeapBlock * largeHeapBlock = (LargeHeapBlock *)heapBlock;
@@ -463,7 +463,7 @@ LargeHeapBucket::ResetMarks(ResetMarkFlags flags)
         heapBlock->ResetMarks(flags, recycler);
     });
 #ifdef CONCURRENT_GC_ENABLED
-    Assert(pendingSweepLargeBlockList == null);
+    Assert(pendingSweepLargeBlockList == nullptr);
 #endif
 }
 
@@ -489,7 +489,7 @@ LargeHeapBucket::ScanInitialImplicitRoots(Recycler * recycler)
         heapBlock->ScanInitialImplicitRoots(recycler);
     });
 #ifdef CONCURRENT_GC_ENABLED
-    Assert(pendingSweepLargeBlockList == null);
+    Assert(pendingSweepLargeBlockList == nullptr);
 #endif
 }
 
@@ -515,7 +515,7 @@ LargeHeapBucket::ScanNewImplicitRoots(Recycler * recycler)
         heapBlock->ScanNewImplicitRoots(recycler);
     });
 #ifdef CONCURRENT_GC_ENABLED
-    Assert(pendingSweepLargeBlockList == null);
+    Assert(pendingSweepLargeBlockList == nullptr);
 #endif
 }
 
@@ -539,11 +539,11 @@ LargeHeapBucket::Sweep(RecyclerSweep& recyclerSweep)
 #endif
     LargeHeapBlock * currentFullLargeObjectBlocks = fullLargeBlockList;
     LargeHeapBlock * currentDisposeLargeBlockList = pendingDisposeLargeBlockList;
-    this->largeBlockList = null;
+    this->largeBlockList = nullptr;
 #ifdef RECYCLER_PAGE_HEAP
-    this->largePageHeapBlockList = null;
+    this->largePageHeapBlockList = nullptr;
 #endif
-    this->fullLargeBlockList = null;
+    this->fullLargeBlockList = nullptr;
 
     // Clear the free list before sweep
     // We'll reconstruct the free list during sweep
@@ -552,12 +552,12 @@ LargeHeapBucket::Sweep(RecyclerSweep& recyclerSweep)
 #if DBG
         LargeAllocationVerboseTrace(recyclerSweep.GetRecycler()->GetRecyclerFlagsTable(), L"Resetting free list for 0x%x bucket\n", this->sizeCat);
 #endif
-        this->freeList = null;
+        this->freeList = nullptr;
         this->explicitFreeList = nullptr;
     }
 
 #ifdef CONCURRENT_GC_ENABLED
-    Assert(this->pendingSweepLargeBlockList == null);
+    Assert(this->pendingSweepLargeBlockList == nullptr);
 #endif
     SweepLargeHeapBlockList<pageheap>(recyclerSweep, currentLargeObjectBlocks);
 #ifdef RECYCLER_PAGE_HEAP
@@ -631,7 +631,7 @@ LargeHeapBucket::ReinsertLargeHeapBlock(LargeHeapBlock * heapBlock)
     Assert(!heapBlock->hasPartialFreeObjects);
     Assert(!heapBlock->IsInPendingDisposeList());
 
-    if (this->largeBlockList != null && heapBlock->GetFreeSize() > this->largeBlockList->GetFreeSize())
+    if (this->largeBlockList != nullptr && heapBlock->GetFreeSize() > this->largeBlockList->GetFreeSize())
     {
         heapBlock->SetNextBlock(this->largeBlockList->GetNextBlock());
         this->largeBlockList->SetNextBlock(this->fullLargeBlockList);
@@ -648,8 +648,8 @@ LargeHeapBucket::ReinsertLargeHeapBlock(LargeHeapBlock * heapBlock)
 void
 LargeHeapBucket::RegisterFreeList(LargeHeapBlockFreeList* freeList)
 {
-    Assert(freeList->next == null);
-    Assert(freeList->previous == null);
+    Assert(freeList->next == nullptr);
+    Assert(freeList->previous == nullptr);
 
     LargeHeapBlockFreeList* head = this->freeList;
 
@@ -678,8 +678,8 @@ LargeHeapBucket::UnregisterFreeList(LargeHeapBlockFreeList* freeList)
         next->previous = previous;
     }
 
-    freeList->next = null;
-    freeList->previous = null;
+    freeList->next = nullptr;
+    freeList->previous = nullptr;
 
     if (freeList == this->freeList)
     {
@@ -729,7 +729,7 @@ uint
 LargeHeapBucket::Rescan(RescanFlags flags)
 {
 #ifdef CONCURRENT_GC_ENABLED
-    Assert(pendingSweepLargeBlockList == null);
+    Assert(pendingSweepLargeBlockList == nullptr);
 #endif    
 
     uint scannedPageCount = 0;
@@ -743,7 +743,7 @@ LargeHeapBucket::Rescan(RescanFlags flags)
     scannedPageCount += LargeHeapBucket::Rescan(pendingDisposeLargeBlockList, recycler, true, flags);
 
 #if defined(PARTIAL_GC_ENABLED) && defined(CONCURRENT_GC_ENABLED)
-    Assert(recycler->inPartialCollectMode || partialSweptLargeBlockList == null);
+    Assert(recycler->inPartialCollectMode || partialSweptLargeBlockList == nullptr);
     if (recycler->inPartialCollectMode)
     {
         scannedPageCount += LargeHeapBucket::Rescan(partialSweptLargeBlockList, recycler, true, flags);
@@ -777,7 +777,7 @@ LargeHeapBucket::SweepPendingObjects(RecyclerSweep& recyclerSweep)
     }
     else
     {
-        Assert(this->pendingSweepLargeBlockList == null);
+        Assert(this->pendingSweepLargeBlockList == nullptr);
     }
 }
 
@@ -791,7 +791,7 @@ LargeHeapBucket::ConcurrentPartialTransferSweptObjects(RecyclerSweep& recyclerSw
     RECYCLER_SLOW_CHECK(this->VerifyLargeHeapBlockCount());
 
     LargeHeapBlock * list = this->pendingSweepLargeBlockList;
-    this->pendingSweepLargeBlockList = null;
+    this->pendingSweepLargeBlockList = nullptr;
     HeapBlockList::ForEachEditing(list, [this](LargeHeapBlock * heapBlock)
     {
         // GC-TODO: We don't reuse the large objects
@@ -825,7 +825,7 @@ LargeHeapBucket::FinishPartialCollect(RecyclerSweep * recyclerSweep)
             heapBlock->FinishPartialCollect(recycler);
             this->ReinsertLargeHeapBlock(heapBlock);
         });
-        this->partialSweptLargeBlockList = null;
+        this->partialSweptLargeBlockList = nullptr;
     }
 #endif
 }
@@ -843,7 +843,7 @@ LargeHeapBucket::ConcurrentTransferSweptObjects(RecyclerSweep& recyclerSweep)
         heapBlock->TransferSweptObjects();
         ReinsertLargeHeapBlock(heapBlock);
     });
-    this->pendingSweepLargeBlockList = null;
+    this->pendingSweepLargeBlockList = nullptr;
 
 #ifdef PARTIAL_GC_ENABLED
     // If we did a background finish partial collect, we have left the partialSweptLargeBlockList
@@ -852,7 +852,7 @@ LargeHeapBucket::ConcurrentTransferSweptObjects(RecyclerSweep& recyclerSweep)
     {
         ReinsertLargeHeapBlock(heapBlock);
     });
-    this->partialSweptLargeBlockList = null;
+    this->partialSweptLargeBlockList = nullptr;
 #endif
 }
 
@@ -923,7 +923,7 @@ LargeHeapBucket::TransferDisposedObjects()
         ReinsertLargeHeapBlock(heapBlock);
     });
 
-    this->pendingDisposeLargeBlockList = null;
+    this->pendingDisposeLargeBlockList = nullptr;
 }
 
 void
@@ -941,7 +941,7 @@ LargeHeapBucket::EnumerateObjects(ObjectInfoBits infoBits, void (*CallBackFuncti
     // and we set the header to null upon sweep/finalize
     HeapBucket::EnumerateObjects(pendingDisposeLargeBlockList, infoBits, CallBackFunction);
 #ifdef CONCURRENT_GC_ENABLED
-    Assert(this->pendingSweepLargeBlockList == null);
+    Assert(this->pendingSweepLargeBlockList == nullptr);
 #ifdef PARTIAL_GC_ENABLED
     HeapBucket::EnumerateObjects(partialSweptLargeBlockList, infoBits, CallBackFunction);
 #endif
@@ -981,7 +981,7 @@ LargeHeapBucket::Check()
     currentLargeHeapBlockCount += Check(true, false, fullLargeBlockList);
 
 #ifdef CONCURRENT_GC_ENABLED
-    Assert(pendingSweepLargeBlockList == null);
+    Assert(pendingSweepLargeBlockList == nullptr);
 #ifdef PARTIAL_GC_ENABLED
     currentLargeHeapBlockCount += Check(false, false, partialSweptLargeBlockList);
 #endif

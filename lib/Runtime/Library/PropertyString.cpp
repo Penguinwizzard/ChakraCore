@@ -37,7 +37,7 @@ namespace Js
 
     void PropertyString::ClearPropertyCache()
     {
-        this->propCache->type = null;
+        this->propCache->type = nullptr;
     }
     void const * PropertyString::GetOriginalStringReference() 
     {

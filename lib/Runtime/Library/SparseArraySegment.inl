@@ -302,7 +302,7 @@ namespace Js
         }
         else if (offset == size)
         {
-            if (next == null)
+            if (next == nullptr)
             {
                 current = GrowByMin(recycler, offset + 1 - size);
             }
@@ -346,7 +346,7 @@ namespace Js
     template<typename T>
     SparseArraySegment<T>* SparseArraySegment<T>::CopySegment(Recycler *recycler, SparseArraySegment<T>* dst, uint32 dstIndex, SparseArraySegment<T>* src, uint32 srcIndex, uint32 inputLen) 
     {
-        AssertMsg(src != null && dst != null, "Null input!");
+        AssertMsg(src != nullptr && dst != nullptr, "Null input!");
  
         uint32 newLen = dstIndex - dst->left + inputLen;
         if (newLen > dst->size) 

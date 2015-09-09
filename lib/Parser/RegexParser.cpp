@@ -2299,7 +2299,7 @@ namespace UnifiedRegex
         }
 
         Assert(unicodeFlagPresent);
-        AltNode *headToReturn = prefixNode == nullptr ? nullptr : Anew(ctAllocator, AltNode, prefixNode, null);
+        AltNode *headToReturn = prefixNode == nullptr ? nullptr : Anew(ctAllocator, AltNode, prefixNode, nullptr);
         AltNode *currentTail = headToReturn;
 
         codepoint_t charRangeSearchIndex = 0x10000, lowerCharOfRange = 0, upperCharOfRange = 0;
@@ -2333,7 +2333,7 @@ namespace UnifiedRegex
         }
         toUseForTranslation->Clear(ctAllocator);
 
-        if (headToReturn != nullptr && headToReturn->tail == null)
+        if (headToReturn != nullptr && headToReturn->tail == nullptr)
         {
             return headToReturn->head;
         }

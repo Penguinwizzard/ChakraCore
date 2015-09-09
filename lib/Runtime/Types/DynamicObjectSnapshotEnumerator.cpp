@@ -20,20 +20,20 @@ namespace Js
         if (arrayEnumerator)
         {
             Var currentIndex = arrayEnumerator->GetCurrentAndMoveNext(propertyId, attributes);
-            if(currentIndex != NULL)
+            if(currentIndex != nullptr)
             {
                 return currentIndex;
             }
-            arrayEnumerator = NULL;
+            arrayEnumerator = nullptr;
         }
 
-        return null;
+        return nullptr;
     }
 
     template <typename T, bool enumNonEnumerable, bool enumSymbols>
     JavascriptString * DynamicObjectSnapshotEnumerator<T, enumNonEnumerable, enumSymbols>::GetCurrentAndMoveNextFromObject(T& index, PropertyId& propertyId, PropertyAttributes* attributes)
     {
-        JavascriptString* propertyString = null;
+        JavascriptString* propertyString = nullptr;
         auto newIndex = objectIndex;
         do
         {
@@ -41,7 +41,7 @@ namespace Js
             if (!object->FindNextProperty(newIndex, &propertyString, &propertyId, attributes, GetTypeToEnumerate(), !enumNonEnumerable, /*enumSymbols*/enumSymbols) || newIndex >= initialPropertyCount)
             {
                 newIndex--;
-                propertyString = null;
+                propertyString = nullptr;
                 break;
             }
         }
@@ -55,7 +55,7 @@ namespace Js
     Var DynamicObjectSnapshotEnumerator<T, enumNonEnumerable, enumSymbols>::GetCurrentAndMoveNext(PropertyId& propertyId, PropertyAttributes* attributes)
     {
         Var currentIndex = GetCurrentAndMoveNextFromArray(propertyId, attributes);
-        return (currentIndex != null)? currentIndex :
+        return (currentIndex != nullptr)? currentIndex :
             this->GetCurrentAndMoveNextFromObject(objectIndex, propertyId, attributes);
     }
 

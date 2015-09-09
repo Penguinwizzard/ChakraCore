@@ -566,7 +566,7 @@ namespace Js
 
             
             CompileAssert(_countof(descriptors) == size);
-            SetSlotUnchecked(instance, index, null);
+            SetSlotUnchecked(instance, index, nullptr);
 
             // TODO (jedmiad): Create two different flavors of NullTypeHandler: with and without read-only properties.
             NullTypeHandlerBase* nullTypeHandler = ((this->GetFlags() & IsPrototypeFlag) != 0) ? 

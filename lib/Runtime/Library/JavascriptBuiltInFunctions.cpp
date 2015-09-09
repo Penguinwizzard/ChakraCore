@@ -27,7 +27,7 @@ JavascriptBuiltInFunction::GetFunctionInfo(Js::LocalFunctionId builtinId)
     {
         return builtInFunctionInfo[builtinId];
     }
-    return null;
+    return nullptr;
 }
 
 bool 

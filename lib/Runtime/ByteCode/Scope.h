@@ -40,8 +40,8 @@ public:
 #endif
     Scope(ArenaAllocator *alloc, ScopeType scopeType, bool useSymbolTable = false, int capacity = 0) :
         alloc(alloc),
-        func(null),
-        enclosingScope(null),
+        func(nullptr),
+        enclosingScope(nullptr),
         isDynamic(false),
         isObject(false),
         canMerge(true),
@@ -49,8 +49,8 @@ public:
         mustInstantiate(false),
         hasCrossScopeFuncAssignment(false),
         location(Js::Constants::NoRegister),
-        symbolTable(null),
-        m_symList(null),
+        symbolTable(nullptr),
+        m_symList(nullptr),
         m_count(0),
         scopeSlotCount(0),
         scopeType(scopeType)
@@ -69,13 +69,13 @@ public:
         if (symbolTable)
         {
             Adelete(alloc, symbolTable);
-            symbolTable = null;
+            symbolTable = nullptr;
         }
     }
 
     Symbol *FindLocalSymbol(SymbolName const& key)
     {
-        Symbol *sym = null;
+        Symbol *sym = nullptr;
         if (symbolTable)
         {
             return symbolTable->Lookup(key);
@@ -133,16 +133,16 @@ public:
     // there is always an enclosing global scope
     Symbol *FindSymbol(SymbolName const& name, SymbolType symbolType, bool fCreate = true)
     {
-        Symbol *sym=FindLocalSymbol(name);
-        if (sym==NULL)
+        Symbol *sym = FindLocalSymbol(name);
+        if (sym == nullptr)
         {
-            if (enclosingScope!=NULL)
+            if (enclosingScope != nullptr)
             {
                 sym = enclosingScope->FindSymbol(name, symbolType);
             }
             else if (fCreate)
             {
-                sym = Anew(alloc, Symbol, name, NULL, symbolType);
+                sym = Anew(alloc, Symbol, name, nullptr, symbolType);
                 AddNewSymbol(sym);
             }
         }
@@ -151,7 +151,7 @@ public:
 
     void AddSymbol(Symbol *sym)
     {
-        if (enclosingScope == NULL)
+        if (enclosingScope == nullptr)
         {
             sym->SetIsGlobal(true);
         }
@@ -239,7 +239,7 @@ public:
     FuncInfo *GetEnclosingFunc()
     {
         Scope *scope = this;
-        while (scope && scope->func == NULL)
+        while (scope && scope->func == nullptr)
         {
             scope = scope->GetEnclosingScope();
         }

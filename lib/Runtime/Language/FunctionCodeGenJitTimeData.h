@@ -24,12 +24,12 @@ namespace Js
     public:
         JitTimeConstructorCache(const JavascriptFunction* constructor, ConstructorCache* runtimeCache)
         {
-            Assert(constructor != null);
-            Assert(runtimeCache != null);
+            Assert(constructor != nullptr);
+            Assert(runtimeCache != nullptr);
             this->constructor = constructor;
             this->runtimeCache = runtimeCache;
             this->type = runtimeCache->content.type;
-            this->guardedPropOps = null;
+            this->guardedPropOps = nullptr;
             this->scriptContext = runtimeCache->content.scriptContext;
             this->slotCount = runtimeCache->content.slotCount;
             this->inlineSlotCount = runtimeCache->content.inlineSlotCount;
@@ -41,13 +41,13 @@ namespace Js
 
         JitTimeConstructorCache(const JitTimeConstructorCache* other)
         {
-            Assert(other != null);
-            Assert(other->constructor != null);
-            Assert(other->runtimeCache != null);
+            Assert(other != nullptr);
+            Assert(other->constructor != nullptr);
+            Assert(other->runtimeCache != nullptr);
             this->constructor = other->constructor;
             this->runtimeCache = other->runtimeCache;
             this->type = other->type;
-            this->guardedPropOps = null;
+            this->guardedPropOps = nullptr;
             this->scriptContext = other->scriptContext;
             this->slotCount = other->slotCount;
             this->inlineSlotCount = other->inlineSlotCount;
@@ -70,7 +70,7 @@ namespace Js
 
         void EnsureGuardedPropOps(JitArenaAllocator* allocator)
         {
-            if (this->guardedPropOps == null)
+            if (this->guardedPropOps == nullptr)
             {
                 this->guardedPropOps = Anew(allocator, BVSparse<JitArenaAllocator>, allocator);
             }
@@ -78,13 +78,13 @@ namespace Js
 
         void SetGuardedPropOp(uint propOpId)
         {
-            Assert(this->guardedPropOps != null);
+            Assert(this->guardedPropOps != nullptr);
             this->guardedPropOps->Set(propOpId);
         }
 
         void AddGuardedPropOps(const BVSparse<JitArenaAllocator>* propOps)
         {
-            Assert(this->guardedPropOps != null);
+            Assert(this->guardedPropOps != nullptr);
             this->guardedPropOps->Or(propOps);
         }
 
@@ -170,15 +170,15 @@ namespace Js
 
     public:
         ObjTypeSpecFldInfo():
-            id(0), typeId(TypeIds_Limit), typeSet(null), initialType(null), flags(InitialObjTypeSpecFldInfoFlagValue), 
-            slotIndex(Constants::NoSlot), propertyId(Constants::NoProperty), protoObject(null), propertyGuard(null), 
-            ctorCache(null), fixedFieldInfoArray(null) {}
+            id(0), typeId(TypeIds_Limit), typeSet(nullptr), initialType(nullptr), flags(InitialObjTypeSpecFldInfoFlagValue),
+            slotIndex(Constants::NoSlot), propertyId(Constants::NoProperty), protoObject(nullptr), propertyGuard(nullptr),
+            ctorCache(nullptr), fixedFieldInfoArray(nullptr) {}
 
         ObjTypeSpecFldInfo(uint id, TypeId typeId, Type* initialType,
             bool usesAuxSlot, bool isLoadedFromProto, bool usesAccessor, bool isFieldValueFixed, bool keepFieldValue, bool isBuiltIn,
             uint16 slotIndex, PropertyId propertyId, DynamicObject* protoObject, PropertyGuard* propertyGuard,
             JitTimeConstructorCache* ctorCache, FixedFieldInfo* fixedFieldInfoArray) :
-            id(id), typeId(typeId), typeSet(null), initialType(initialType), flags(InitialObjTypeSpecFldInfoFlagValue),
+            id(id), typeId(typeId), typeSet(nullptr), initialType(initialType), flags(InitialObjTypeSpecFldInfoFlagValue),
             slotIndex(slotIndex), propertyId(propertyId), protoObject(protoObject), propertyGuard(propertyGuard),
             ctorCache(ctorCache), fixedFieldInfoArray(fixedFieldInfoArray)
         {
@@ -189,7 +189,7 @@ namespace Js
             this->usesAccessor = usesAccessor;
             this->hasFixedValue = isFieldValueFixed;
             this->keepFieldValue = keepFieldValue;
-            this->isBeingAdded = initialType != null;
+            this->isBeingAdded = initialType != nullptr;
             this->doesntHaveEquivalence = true; //doesn't mean anything for data from a monomorphic cache
             this->isBuiltIn = isBuiltIn;
             this->fixedFieldCount = 1;
@@ -210,7 +210,7 @@ namespace Js
             this->usesAccessor = usesAccessor;
             this->hasFixedValue = isFieldValueFixed;
             this->keepFieldValue = keepFieldValue;
-            this->isBeingAdded = initialType != null;
+            this->isBeingAdded = initialType != nullptr;
             this->doesntHaveEquivalence = doesntHaveEquivalence;
             this->isBuiltIn = false;
             this->fixedFieldCount = fixedFieldCount;
@@ -497,13 +497,13 @@ namespace Js
         template <class Fn>
         void Map(Fn fn, uint count) const
         {
-            if (this->infoArray != null)
+            if (this->infoArray != nullptr)
             {
                 for (uint i = 0; i < count; i++)
                 {
                     ObjTypeSpecFldInfo* info = this->infoArray[i];
 
-                    if (info != null)
+                    if (info != nullptr)
                     {
                         fn(info);
                     }
@@ -593,7 +593,7 @@ namespace Js
         RecyclerWeakReference<FunctionBody> *GetWeakFuncRef() const { return this->weakFuncRef; }
         void SetWeakFuncRef(RecyclerWeakReference<FunctionBody> *weakFuncRef)
         {
-            Assert(this->weakFuncRef == null || weakFuncRef == null || this->weakFuncRef == weakFuncRef);
+            Assert(this->weakFuncRef == nullptr || weakFuncRef == nullptr || this->weakFuncRef == weakFuncRef);
             this->weakFuncRef = weakFuncRef;
         }
 
@@ -609,19 +609,19 @@ namespace Js
 
        ObjTypeSpecFldInfo* GetGlobalObjTypeSpecFldInfo(uint propertyInfoId) const
        { 
-           Assert(this->globalObjTypeSpecFldInfoArray != null && propertyInfoId < this->globalObjTypeSpecFldInfoCount); 
+           Assert(this->globalObjTypeSpecFldInfoArray != nullptr && propertyInfoId < this->globalObjTypeSpecFldInfoCount);
            return this->globalObjTypeSpecFldInfoArray[propertyInfoId]; 
        }
 
        void SetGlobalObjTypeSpecFldInfo(uint propertyInfoId, ObjTypeSpecFldInfo* info) const
        { 
-           Assert(this->globalObjTypeSpecFldInfoArray != null && propertyInfoId < this->globalObjTypeSpecFldInfoCount); 
+           Assert(this->globalObjTypeSpecFldInfoArray != nullptr && propertyInfoId < this->globalObjTypeSpecFldInfoCount);
            this->globalObjTypeSpecFldInfoArray[propertyInfoId] = info; 
        }
 
        void SetGlobalObjTypeSpecFldInfoArray(ObjTypeSpecFldInfo** array, uint count)
        {
-           Assert(array != null);
+           Assert(array != nullptr);
            this->globalObjTypeSpecFldInfoArray = array;
            this->globalObjTypeSpecFldInfoCount = count;
        }

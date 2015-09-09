@@ -366,22 +366,22 @@ HRESULT HeapInfo::ValidPointersMap<TBlockAttributes>::GenerateValidPointersMapHe
 }
 
 HeapInfo::HeapInfo() :
-recycler(null),
+    recycler(nullptr),
 #ifdef CONCURRENT_GC_ENABLED
-    newLeafHeapBlockList(null),
-    newNormalHeapBlockList(null),
+    newLeafHeapBlockList(nullptr),
+    newNormalHeapBlockList(nullptr),
 #ifdef RECYCLER_WRITE_BARRIER
-    newNormalWithBarrierHeapBlockList(null),
-    newFinalizableWithBarrierHeapBlockList(null),
+    newNormalWithBarrierHeapBlockList(nullptr),
+    newFinalizableWithBarrierHeapBlockList(nullptr),
 #endif
-    newFinalizableHeapBlockList(null),
-    newMediumLeafHeapBlockList(null),
-    newMediumNormalHeapBlockList(null),
+    newFinalizableHeapBlockList(nullptr),
+    newMediumLeafHeapBlockList(nullptr),
+    newMediumNormalHeapBlockList(nullptr),
 #ifdef RECYCLER_WRITE_BARRIER
-    newMediumNormalWithBarrierHeapBlockList(null),
-    newMediumFinalizableWithBarrierHeapBlockList(null),
+    newMediumNormalWithBarrierHeapBlockList(nullptr),
+    newMediumFinalizableWithBarrierHeapBlockList(nullptr),
 #endif
-    newMediumFinalizableHeapBlockList(null),
+    newMediumFinalizableHeapBlockList(nullptr),
 #endif
 #ifdef RECYCLER_FINALIZE_CHECK
     liveFinalizableObjectCount(0),
@@ -1409,7 +1409,7 @@ HeapInfo::GetSmallHeapBlockCount(bool checkCount) const
 
     // TODO: Update recycler sweep
     // Recycler can be null if we have OOM in the ctor
-    if (this->recycler && this->recycler->recyclerSweep != null)
+    if (this->recycler && this->recycler->recyclerSweep != nullptr)
     {
         // This function can't be called in the background
         Assert(!this->recycler->recyclerSweep->IsBackground());

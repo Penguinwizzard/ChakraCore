@@ -113,7 +113,7 @@ namespace Js
     inline const wchar_t * ConcatStringWrapping<L, R>::GetSz()
     {        
         const wchar_t * sz = GetSzImpl<ConcatStringWrapping>();
-        m_inner = null;
+        m_inner = nullptr;
         memset(m_slots, 0, sizeof(m_slots));
         return sz;
     }

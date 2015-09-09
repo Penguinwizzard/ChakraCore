@@ -366,8 +366,8 @@ Instr::Free()
             else 
             {
                 // Encoded constants are not single-defs anymore, and therefore not isConst.
-                Assert((!stackSym->m_isConst && stackSym->constantValue == null)
-                    || (stackSym->m_isEncodedConstant && stackSym->constantValue != null));
+                Assert((!stackSym->m_isConst && stackSym->constantValue == 0)
+                    || (stackSym->m_isEncodedConstant && stackSym->constantValue != 0));
             }          
         }
     }
@@ -399,7 +399,7 @@ Instr::Unlink()
 
 #if DBG_DUMP
     //Transfering the globOptInstrString to the next non-Label Instruction
-    if(this->globOptInstrString != null && m_next->globOptInstrString == null && !m_next->IsLabelInstr())
+    if(this->globOptInstrString != nullptr && m_next->globOptInstrString == nullptr && !m_next->IsLabelInstr())
     {
         m_next->globOptInstrString = this->globOptInstrString;
     }
@@ -471,7 +471,7 @@ Instr::Copy()
             break;
 
         default:
-            instrCopy = NULL;
+            instrCopy = nullptr;
             AssertMsg(UNREACHED, "Copy of other instr kinds NYI");
         }
     }
@@ -507,15 +507,15 @@ LabelInstr::CloneLabel(BOOL fCreate)
 {
     Func * func = this->m_func;
     Cloner * cloner = func->GetCloner();
-    IR::LabelInstr * instrLabel = NULL;
+    IR::LabelInstr * instrLabel = nullptr;
 
     AssertMsg(cloner, "Use Func::BeginClone to initialize cloner");
 
-    if (cloner->labelMap == NULL)
+    if (cloner->labelMap == nullptr)
     {
         if (!fCreate)
         {
-            return NULL;
+            return nullptr;
         }
         cloner->labelMap = HashTable<LabelInstr*>::New(cloner->alloc, 7);
     }
@@ -528,11 +528,11 @@ LabelInstr::CloneLabel(BOOL fCreate)
         }
     }
 
-    if (instrLabel == NULL)
+    if (instrLabel == nullptr)
     {
         if (!fCreate)
         {
-            return NULL;
+            return nullptr;
         }
         if (this->IsProfiledLabelInstr())
         {
@@ -570,7 +570,7 @@ void
 BranchInstr::RetargetClonedBranch()
 {
     IR::LabelInstr * instrLabel = this->m_branchTarget->CloneLabel(false);
-    if (instrLabel == NULL)
+    if (instrLabel == nullptr)
     {
         // Jumping outside the cloned range. No retarget.
         return;
@@ -639,7 +639,7 @@ Instr::Clone()
         break;
     default:
         AssertMsg(0, "Clone of this instr kind NYI");
-        return NULL;
+        return nullptr;
     }
 
     opnd = this->GetDst();
@@ -709,7 +709,7 @@ Instr::CloneRange(
 void
 Instr::MoveRangeAfter(Instr * instrStart, Instr * instrLast, Instr * instrAfter)
 {
-    if (instrLast->m_next != NULL)
+    if (instrLast->m_next != nullptr)
     {
         instrLast->m_next->m_prev = instrStart->m_prev;       
     }
@@ -718,7 +718,7 @@ Instr::MoveRangeAfter(Instr * instrStart, Instr * instrLast, Instr * instrAfter)
         instrLast->m_func->m_tailInstr = instrStart->m_prev;
     }
 
-    if (instrStart->m_prev != NULL)
+    if (instrStart->m_prev != nullptr)
     {
         instrStart->m_prev->m_next = instrLast->m_next;
     }
@@ -729,7 +729,7 @@ Instr::MoveRangeAfter(Instr * instrStart, Instr * instrLast, Instr * instrAfter)
  
     instrStart->m_prev = instrAfter;
     instrLast->m_next = instrAfter->m_next;
-    if (instrAfter->m_next != NULL)
+    if (instrAfter->m_next != nullptr)
     {
         instrAfter->m_next->m_prev = instrLast;      
     }
@@ -841,7 +841,7 @@ ProfiledInstr::New(Js::OpCode opcode, Opnd *dstOpnd, Opnd *src1Opnd, Func * func
         profiledInstr->SetSrc1(src1Opnd);
     }
 
-    profiledInstr->u.ldElemInfo = null;
+    profiledInstr->u.ldElemInfo = nullptr;
     return profiledInstr;
 }
 
@@ -879,8 +879,8 @@ ByteCodeUsesInstr::New(Func * func)
 {
     ByteCodeUsesInstr * byteCodeUses = JitAnew(func->m_alloc, IR::ByteCodeUsesInstr);
     byteCodeUses->Init(Js::OpCode::ByteCodeUses, InstrKindByteCodeUses, func);
-    byteCodeUses->byteCodeUpwardExposedUsed = null;    
-    byteCodeUses->propertySymUse = null;
+    byteCodeUses->byteCodeUpwardExposedUsed = nullptr;    
+    byteCodeUses->propertySymUse = nullptr;
     return byteCodeUses;
 }
 
@@ -893,7 +893,7 @@ ByteCodeUsesInstr::New(IR::Instr* originalBytecodeInstr, SymID symid)
     byteCodeUses->byteCodeUpwardExposedUsed = JitAnew(func->m_alloc, BVSparse<JitArenaAllocator>, func->m_alloc);
     byteCodeUses->byteCodeUpwardExposedUsed->Set(symid);
     byteCodeUses->SetByteCodeOffset(originalBytecodeInstr);
-    byteCodeUses->propertySymUse = null;
+    byteCodeUses->propertySymUse = nullptr;
     return byteCodeUses;
 }
 
@@ -1023,25 +1023,25 @@ Instr::UnlinkBailOutInfo()
     {
     case InstrKindInstr:
         bailOutInfo = ((BailOutInstr const *)this)->bailOutInfo;        
-        ((BailOutInstr *)this)->bailOutInfo = null;
+        ((BailOutInstr *)this)->bailOutInfo = nullptr;
         break;
     case InstrKindProfiled:
         bailOutInfo = ((ProfiledBailOutInstr const *)this)->bailOutInfo;
-        ((ProfiledBailOutInstr *)this)->bailOutInfo = null;
+        ((ProfiledBailOutInstr *)this)->bailOutInfo = nullptr;
         break;
     case InstrKindBranch:
         bailOutInfo = ((BranchBailOutInstr const *)this)->bailOutInfo;
-        ((BranchBailOutInstr *)this)->bailOutInfo = null;
+        ((BranchBailOutInstr *)this)->bailOutInfo = nullptr;
         break;
     default:
         Assert(false);
-        return null;
+        return nullptr;
     }
     Assert(bailOutInfo);
 #if 0
     if (bailOutInfo->bailOutInstr == this)
     {
-        bailOutInfo->bailOutInstr = null;
+        bailOutInfo->bailOutInstr = nullptr;
     }
 #endif
     this->hasBailOutInfo = false;
@@ -1091,7 +1091,7 @@ Instr::ReplaceBailOutInfo(BailOutInfo *newBailOutInfo)
 IR::Instr *Instr::ShareBailOut()
 {
     BailOutInfo *const bailOutInfo = GetBailOutInfo();
-    bailOutInfo->bailOutInstr = null;
+    bailOutInfo->bailOutInstr = nullptr;
 #if DBG
     bailOutInfo->wasCopied = true;
 #endif
@@ -1162,7 +1162,7 @@ Opnd *Instr::FindCallArgumentOpnd(const Js::ArgSlot argSlot, IR::Instr * *const 
             return argInstr->GetSrc1();
         }
     } while(argInstr->GetSrc2()->IsSymOpnd());
-    return null;
+    return nullptr;
 }
 
 
@@ -1269,7 +1269,7 @@ BailOutInstrTemplate<InstrType>::New(Js::OpCode opcode, BailOutKind kind, BailOu
     bailOutInstr->bailOutKind = kind;
     bailOutInstr->auxBailOutKind = BailOutInvalid;
 
-    if (bailOutInfo->bailOutInstr == null)
+    if (bailOutInfo->bailOutInstr == nullptr)
     {
         bailOutInfo->bailOutInstr = bailOutInstr;
     }
@@ -1380,7 +1380,7 @@ LabelInstr::Init(Js::OpCode opcode, IRKind kind, Func *func, bool isOpHelper)
     __super::Init(opcode, kind, func);
     this->isOpHelper = isOpHelper;
 
-    this->m_pc.pc = null;
+    this->m_pc.pc = nullptr;
     this->m_id = ++(func->GetTopFunc()->m_labelCount);
     AssertMsg(this->m_id != 0, "Label numbers wrapped around??!?");    
 }
@@ -1438,9 +1438,9 @@ BranchInstr::New(Js::OpCode opcode, LabelInstr * branchTarget, Func *func)
     branchInstr = JitAnew(func->m_alloc, IR::BranchInstr);
     branchInstr->Init(opcode, InstrKindBranch, func);    
     branchInstr->SetTarget(branchTarget);
-    branchInstr->m_dst = NULL;
-    branchInstr->m_src1 = NULL;
-    branchInstr->m_src2 = NULL;
+    branchInstr->m_dst = nullptr;
+    branchInstr->m_src1 = nullptr;
+    branchInstr->m_src2 = nullptr;
     branchInstr->m_byteCodeReg = Js::Constants::NoRegister;
 #if DBG
     branchInstr->m_isHelperToNonHelperBranch = false;
@@ -1585,9 +1585,9 @@ MultiBranchInstr::ClearTarget()
 
     MapMultiBrLabels([&](LabelInstr *const targetLabel)
     {
-        ChangeLabelRef(targetLabel, null);
+        ChangeLabelRef(targetLabel, nullptr);
     });
-    m_branchTargets = null;
+    m_branchTargets = nullptr;
 }
 
 BranchInstr *
@@ -1597,7 +1597,7 @@ BranchInstr::CloneBranchInstr() const
     Func * func = this->m_func;
     // See if the target has already been cloned.
     IR::LabelInstr * instrLabel = this->GetTarget()->CloneLabel(false);
-    if (instrLabel == NULL)
+    if (instrLabel == nullptr)
     {
         // We didn't find a clone for this label.
         // We'll go back and retarget the cloned branch if the target turns up in the cloned range.
@@ -1963,8 +1963,8 @@ Instr::New(Js::OpCode opcode, Opnd *dstOpnd, Opnd *src1Opnd, Opnd *src2Opnd, Fun
 Opnd *
 Instr::SetDst(Opnd * newDst) 
 { 
-    AssertMsg(newDst != NULL, "Calling SetDst with a NULL dst");
-    AssertMsg(this->m_dst == NULL, "Calling SetDst without unlinking/freeing the current dst");
+    AssertMsg(newDst != nullptr, "Calling SetDst with a NULL dst");
+    AssertMsg(this->m_dst == nullptr, "Calling SetDst without unlinking/freeing the current dst");
     Assert(!(newDst->IsRegOpnd() && newDst->AsRegOpnd()->IsSymValueFrozen()));
 
     newDst = newDst->Use(m_func);
@@ -1984,7 +1984,7 @@ Instr::SetDst(Opnd * newDst)
     }
     else
     {
-        stackSym = NULL;
+        stackSym = nullptr;
     }
 
     if (stackSym && stackSym->m_isSingleDef)
@@ -1995,7 +1995,7 @@ Instr::SetDst(Opnd * newDst)
 
             // Multiple defs, clear isSingleDef flag
             stackSym->m_isSingleDef = false;
-            stackSym->m_instrDef    = NULL;
+            stackSym->m_instrDef    = nullptr;
             stackSym->m_isConst     = false;
             stackSym->m_isIntConst  = false;
             stackSym->m_isTaggableIntConst  = false;
@@ -2016,8 +2016,8 @@ Instr::SetDst(Opnd * newDst)
 Opnd *
 Instr::SetFakeDst(Opnd * newDst) 
 { 
-    AssertMsg(newDst != NULL, "Calling SetDst with a NULL dst");
-    AssertMsg(this->m_dst == NULL, "Calling SetDst without unlinking/freeing the current dst");
+    AssertMsg(newDst != nullptr, "Calling SetDst with a NULL dst");
+    AssertMsg(this->m_dst == nullptr, "Calling SetDst without unlinking/freeing the current dst");
     Assert(!(newDst->IsRegOpnd() && newDst->AsRegOpnd()->IsSymValueFrozen()));
 
     newDst = newDst->Use(m_func);
@@ -2042,7 +2042,7 @@ Opnd *
 Instr::UnlinkDst() 
 { 
     Opnd * oldDst = this->m_dst;
-    StackSym *stackSym = NULL;
+    StackSym *stackSym = nullptr;
 
     // If oldDst isSingleDef, clear instrDef
 
@@ -2068,11 +2068,11 @@ Instr::UnlinkDst()
     if (stackSym && stackSym->m_isSingleDef)
     {
         AssertMsg(stackSym->m_instrDef == this, "m_instrDef incorrectly set");
-        stackSym->m_instrDef = NULL;
+        stackSym->m_instrDef = nullptr;
     }
 
     oldDst->UnUse();
-    this->m_dst = NULL; 
+    this->m_dst = nullptr; 
 
     return oldDst;
 }
@@ -2198,7 +2198,7 @@ Instr::UnlinkSrc1()
 { 
     Opnd * oldSrc = this->m_src1;
     oldSrc->UnUse();
-    this->m_src1 = NULL; 
+    this->m_src1 = nullptr; 
 
     return oldSrc;
 }
@@ -2314,7 +2314,7 @@ Instr::UnlinkSrc2()
 { 
     Opnd * oldSrc = this->m_src2;
     oldSrc->UnUse();
-    this->m_src2 = NULL; 
+    this->m_src2 = nullptr; 
 
     return oldSrc;
 }
@@ -2539,7 +2539,7 @@ Instr::HoistIndirIndexOpndAsAdd(IR::IndirOpnd *orgOpnd, IR::Opnd *baseOpnd, IR::
         this->InsertBefore(instrAdd);
 
         orgOpnd->ReplaceBaseOpnd(newBaseOpnd);
-        orgOpnd->SetIndexOpnd(null);
+        orgOpnd->SetIndexOpnd(nullptr);
 
         return instrAdd;
 }
@@ -2564,7 +2564,7 @@ Instr::HoistSymOffsetAsAdd(IR::SymOpnd *orgOpnd, IR::Opnd *baseOpnd, int offset,
 Instr *
 Instr::HoistSymOffset(SymOpnd *symOpnd, RegNum baseReg, uint32 offset, RegNum regNum)
 {
-    IR::RegOpnd *baseOpnd = IR::RegOpnd::New(NULL, baseReg, TyMachPtr, this->m_func);
+    IR::RegOpnd *baseOpnd = IR::RegOpnd::New(nullptr, baseReg, TyMachPtr, this->m_func);
     IR::IndirOpnd *indirOpnd = IR::IndirOpnd::New(baseOpnd, offset, symOpnd->GetType(), this->m_func);
     if (symOpnd == this->GetDst())
     {
@@ -2651,7 +2651,7 @@ Instr::GetNextRealInstr() const
 {
     IR::Instr *instr = this->m_next;
 
-    while (instr != NULL && !instr->IsRealInstr())
+    while (instr != nullptr && !instr->IsRealInstr())
     {
         AssertMsg(instr->m_next || instr->IsPragmaInstr(), "GetNextRealInstr() failed...");
         instr = instr->m_next;
@@ -2669,7 +2669,7 @@ Instr::GetNextRealInstrOrLabel() const
 {
     IR::Instr *instr = this->m_next;
 
-    while (instr != NULL && !instr->IsLabelInstr() && !instr->IsRealInstr())
+    while (instr != nullptr && !instr->IsLabelInstr() && !instr->IsRealInstr())
     {
         instr = instr->m_next;
         AssertMsg(instr, "GetNextRealInstrOrLabel() failed...");
@@ -2682,7 +2682,7 @@ Instr::GetNextBranchOrLabel() const
 {
     IR::Instr *instr = this->m_next;
 
-    while (instr != NULL && !instr->IsLabelInstr() && !instr->IsBranchInstr())
+    while (instr != nullptr && !instr->IsLabelInstr() && !instr->IsBranchInstr())
     {
         instr = instr->m_next;
     }
@@ -2832,7 +2832,7 @@ Instr::FindRegUse(StackSym *sym)
     // Check uses in dst
     IR::Opnd *dst = this->GetDst();
 
-    if (dst != null && dst->IsIndirOpnd())
+    if (dst != nullptr && dst->IsIndirOpnd())
     {
         IR::IndirOpnd *indirOpnd = dst->AsIndirOpnd();       
         if (indirOpnd->GetBaseOpnd()->m_sym == sym)
@@ -2845,7 +2845,7 @@ Instr::FindRegUse(StackSym *sym)
         }
     }
 
-    return NULL;
+    return nullptr;
 }
 
 IR::RegOpnd *
@@ -2862,7 +2862,7 @@ Instr::FindRegUseInRange(StackSym *sym, IR::Instr *instrBegin, IR::Instr *instrE
     }
     NEXT_INSTR_IN_RANGE;
 
-    return NULL;
+    return nullptr;
 }
 
 ///----------------------------------------------------------------------------
@@ -2891,7 +2891,7 @@ Instr::FindRegDef(StackSym *sym)
         }
     }
 
-    return NULL;
+    return nullptr;
 }
 
 void
@@ -2905,9 +2905,9 @@ Instr::TransferDstAttributesTo(Instr * instr)
 void
 Instr::TransferTo(Instr * instr)
 {
-    Assert(instr->m_dst == null);
-    Assert(instr->m_src1 == null);
-    Assert(instr->m_src2 == null);
+    Assert(instr->m_dst == nullptr);
+    Assert(instr->m_src1 == nullptr);
+    Assert(instr->m_src2 == nullptr);
     this->TransferDstAttributesTo(instr);
     instr->usesStackArgumentsObject = this->usesStackArgumentsObject;
     instr->isCloned = this->isCloned;
@@ -2928,7 +2928,7 @@ Instr::TransferTo(Instr * instr)
     if (dst)
     {
         instr->m_dst = dst;
-        this->m_dst = null;
+        this->m_dst = nullptr;
         if (dst->IsRegOpnd())
         {
             Sym * sym = dst->AsRegOpnd()->m_sym;
@@ -2941,8 +2941,8 @@ Instr::TransferTo(Instr * instr)
         }
     }
 
-    this->m_src1 = null;
-    this->m_src2 = null;
+    this->m_src1 = nullptr;
+    this->m_src2 = nullptr;
 }
 
 IR::Instr *
@@ -2982,7 +2982,7 @@ Instr::ConvertToBailOutInstr(BailOutInfo * bailOutInfo, IR::BailOutKind kind, bo
     AssertMsg(!useAuxBailOut || !this->HasAuxBailOut(), "Already aux bail out!");
     Assert(!this->HasAuxBailOut() || this->GetAuxBailOutKind() != IR::BailOutInvalid);
     
-    IR::Instr * bailOutInstr = null;
+    IR::Instr * bailOutInstr = nullptr;
     if (this->HasAuxBailOut())
     {
         // This instr has already been converted to bailout instr. Only possible with aux bail out.
@@ -3116,7 +3116,7 @@ bool Instr::HasEmptyArgOutChain(IR::Instr** startCallInstrOut)
         AssertMsg(!argLinkSym->IsArgSlotSym() && argLinkSym->m_isSingleDef, "Arg tree not single def...");
         IR::Instr* startCallInstr = argLinkSym->m_instrDef;
         AssertMsg(startCallInstr->m_opcode == Js::OpCode::StartCall, "Problem with arg chain.");
-        if (startCallInstrOut != null)
+        if (startCallInstrOut != nullptr)
         {
             *startCallInstrOut = startCallInstr;
         }
@@ -3137,7 +3137,7 @@ bool Instr::HasFixedFunctionAddressTarget() const
         this->m_opcode == Js::OpCode::NewScObjArraySpread ||
         this->m_opcode == Js::OpCode::NewScObjectNoCtor);
     return
-        this->GetSrc1() != null &&
+        this->GetSrc1() != nullptr &&
         this->GetSrc1()->IsAddrOpnd() &&
         this->GetSrc1()->AsAddrOpnd()->GetAddrOpndKind() == IR::AddrOpndKind::AddrOpndKindDynamicVar &&
         this->GetSrc1()->AsAddrOpnd()->m_isFunction;
@@ -4332,7 +4332,7 @@ Instr::Dump(int window)
     {} // Nothing
 
 
-    for (i = 0; (instr != NULL && i < window); instr = instr->m_next, ++i)
+    for (i = 0; (instr != nullptr && i < window); instr = instr->m_next, ++i)
     {
         if (instr == this)
         {

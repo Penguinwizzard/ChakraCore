@@ -57,12 +57,12 @@ public:
                 return Math::FitsInDWord((size_t)opnd->GetMemLoc());
             }
 
-            IR::Opnd *          GetArgSlotOpnd(Js::ArgSlot slotIndex, StackSym * argSym = null);
+            IR::Opnd *          GetArgSlotOpnd(Js::ArgSlot slotIndex, StackSym * argSym = nullptr);
             IR::Instr *         LoadNewScObjFirstArg(IR::Instr * instr, IR::Opnd * dst, ushort extraArgs = 0);
             IR::Instr *         LoadInputParamPtr(IR::Instr *instrInsert, IR::RegOpnd *optionalDstOpnd = nullptr);                        
-            int32               LowerCallArgs(IR::Instr *callInstr, ushort callFlags, Js::ArgSlot extraParams = 1 /* for function object */, IR::IntConstOpnd **callInfoOpndRef = null);
+            int32               LowerCallArgs(IR::Instr *callInstr, ushort callFlags, Js::ArgSlot extraParams = 1 /* for function object */, IR::IntConstOpnd **callInfoOpndRef = nullptr);
             IR::Instr *         LowerCall(IR::Instr * callInstr, uint32 argCount);
-            IR::Instr *         LowerCallI(IR::Instr * callInstr, ushort callFlags, bool isHelper = false, IR::Instr * insertBeforeInstrForCFG = null);
+            IR::Instr *         LowerCallI(IR::Instr * callInstr, ushort callFlags, bool isHelper = false, IR::Instr * insertBeforeInstrForCFG = nullptr);
             IR::Instr *         LowerCallIDynamic(IR::Instr * callInstr, IR::Instr* saveThis, IR::Opnd* argsLengthOpnd, ushort callFlags, IR::Instr * insertBeforeInstrForCFG = nullptr);
             IR::Instr *         LowerCallPut(IR::Instr * callInstr);
             IR::Instr *         LowerStartCall(IR::Instr * instr);
@@ -77,7 +77,7 @@ public:
             IR::Instr *         LoadDynamicArgumentUsingLength(IR::Instr *instr);
             IR::Instr *         LoadDoubleHelperArgument(IR::Instr * instr, IR::Opnd * opndArg);
             IR::Instr *         LoadStackArgPtr(IR::Instr * instr);
-            IR::Instr *         LoadHeapArguments(IR::Instr * instr, bool force = false, IR::Opnd* opndInputParamCount = null);
+            IR::Instr *         LoadHeapArguments(IR::Instr * instr, bool force = false, IR::Opnd* opndInputParamCount = nullptr);
             IR::Instr *         LoadHeapArgsCached(IR::Instr * instr);
             IR::Instr *         LoadFuncExpression(IR::Instr * instr);
             IR::Instr *         LowerEntryInstr(IR::EntryInstr * entryInstr);

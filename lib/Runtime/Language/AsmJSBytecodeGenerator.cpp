@@ -1678,7 +1678,7 @@ namespace Js
         
         // Arg2 - index
         ParseNode* indexNode = argNode;
-        ParseNode* valueNode = null;
+        ParseNode* valueNode = nullptr;
         if (simdFunction->IsSimdStoreFunc())
         {
             indexNode = ParserWrapper::GetBinaryLeft(argNode);

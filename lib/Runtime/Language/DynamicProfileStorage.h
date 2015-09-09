@@ -103,7 +103,7 @@ DynamicProfileStorage::Load(wchar_t const * filename, Fn loadFn)
             Output::Flush();
         }
 #endif
-        return null;
+        return nullptr;
     }
     char const * record;
     if (info->isFileStorage)
@@ -112,7 +112,7 @@ DynamicProfileStorage::Load(wchar_t const * filename, Fn loadFn)
         Assert(locked);        
         record = info->ReadRecord();        
         ReleaseLock();
-        if (record == null)
+        if (record == nullptr)
         {
 #if DBG_DUMP
             if (DynamicProfileStorage::DoTrace())
@@ -121,7 +121,7 @@ DynamicProfileStorage::Load(wchar_t const * filename, Fn loadFn)
                 Output::Flush();
             }
 #endif
-            return null;
+            return nullptr;
         }        
     }    
     else
@@ -142,7 +142,7 @@ DynamicProfileStorage::Load(wchar_t const * filename, Fn loadFn)
     }
 #endif
     
-    if (sourceDynamicProfileManager == null)
+    if (sourceDynamicProfileManager == nullptr)
     {
         wchar_t const * messageType = GetMessageType();
         if (messageType)

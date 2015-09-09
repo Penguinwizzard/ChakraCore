@@ -26,10 +26,10 @@ namespace Js
 
     JavascriptWeakMap::WeakMapKeyMap* JavascriptWeakMap::GetWeakMapKeyMapFromKey(DynamicObject* key) const
     {
-        Var weakMapKeyData = null;
-        if (!key->GetInternalProperty(key, InternalPropertyIds::WeakMapKeyMap, &weakMapKeyData, null, null))
+        Var weakMapKeyData = nullptr;
+        if (!key->GetInternalProperty(key, InternalPropertyIds::WeakMapKeyMap, &weakMapKeyData, nullptr, nullptr))
         {
-            return null;
+            return nullptr;
         }
 
         return static_cast<WeakMapKeyMap*>(weakMapKeyData);
@@ -39,11 +39,11 @@ namespace Js
     {
         // The internal property may exist on an object that has had DynamicObject::ResetObject called on itself.
         // In that case the value stored in the property slot should be null.
-        DebugOnly(Var unused = null);
-        Assert(!key->GetInternalProperty(key, InternalPropertyIds::WeakMapKeyMap, &unused, null, null) || unused == null);
+        DebugOnly(Var unused = nullptr);
+        Assert(!key->GetInternalProperty(key, InternalPropertyIds::WeakMapKeyMap, &unused, nullptr, nullptr) || unused == nullptr);
 
         WeakMapKeyMap* weakMapKeyData = RecyclerNew(GetScriptContext()->GetRecycler(), WeakMapKeyMap, GetScriptContext()->GetRecycler());
-        BOOL success = key->SetInternalProperty(InternalPropertyIds::WeakMapKeyMap, weakMapKeyData, PropertyOperation_Force, null);
+        BOOL success = key->SetInternalProperty(InternalPropertyIds::WeakMapKeyMap, weakMapKeyData, PropertyOperation_Force, nullptr);
         Assert(success);
 
         return weakMapKeyData;
@@ -191,7 +191,7 @@ namespace Js
         if (JavascriptOperators::IsObject(key) && JavascriptOperators::GetTypeId(key) != TypeIds_HostDispatch)
         {
             DynamicObject* keyObj = DynamicObject::FromVar(key);
-            Var value = null;
+            Var value = nullptr;
 
             if (weakMap->Get(keyObj, &value))
             {
@@ -282,7 +282,7 @@ namespace Js
     {
         WeakMapKeyMap* keyMap = GetWeakMapKeyMapFromKey(key);
 
-        if (keyMap != null)
+        if (keyMap != nullptr)
         {
             bool unused = false;
             bool inSet = keySet.TryGetValueAndRemove(key, &unused);
@@ -299,7 +299,7 @@ namespace Js
     {
         WeakMapKeyMap* keyMap = GetWeakMapKeyMapFromKey(key);
 
-        if (keyMap != null)
+        if (keyMap != nullptr)
         {
             return KeyMapGet(keyMap, value);
         }
@@ -311,7 +311,7 @@ namespace Js
     {
         WeakMapKeyMap* keyMap = GetWeakMapKeyMapFromKey(key);
 
-        if (keyMap != null)
+        if (keyMap != nullptr)
         {
             return keyMap->ContainsKey(GetWeakMapId());
         }
@@ -323,7 +323,7 @@ namespace Js
     {
         WeakMapKeyMap* keyMap = GetWeakMapKeyMapFromKey(key);
 
-        if (keyMap == null)
+        if (keyMap == nullptr)
         {
             keyMap = AddWeakMapKeyMapToKey(key);
         }

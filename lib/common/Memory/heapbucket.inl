@@ -25,7 +25,7 @@ HeapBucketT<TBlockType>::RealAlloc(Recycler * recycler, size_t sizeCat)
 
     // If this API is called and throwing is not allowed, 
     // check if we actually allocated a block before verifying 
-    // its zero fill state. If it is null, return that here.
+    // its zero fill state. If it is nullptr, return that here.
     if (nothrow)
     {
         if (memBlock == nullptr)

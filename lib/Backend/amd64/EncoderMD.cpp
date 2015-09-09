@@ -89,7 +89,7 @@ void
 EncoderMD::Init(Encoder *encoder)
 {
     m_encoder = encoder;
-    m_relocList = NULL;
+    m_relocList = nullptr;
     m_lastLoopLabelPosition = -1;
 }
 
@@ -352,7 +352,7 @@ EncoderMD::EmitModRM(IR::Instr * instr, IR::Opnd *opnd, BYTE reg1)
     case IR::OpndKindIndir:
         
         indirOpnd = opnd->AsIndirOpnd();
-        AssertMsg(indirOpnd->GetBaseOpnd() != NULL, "Expected base to be set in indirOpnd");
+        AssertMsg(indirOpnd->GetBaseOpnd() != nullptr, "Expected base to be set in indirOpnd");
 
         baseOpnd = indirOpnd->GetBaseOpnd();
         indexOpnd = indirOpnd->GetIndexOpnd();
@@ -360,7 +360,7 @@ EncoderMD::EmitModRM(IR::Instr * instr, IR::Opnd *opnd, BYTE reg1)
         
         regBase = this->GetRegEncode(baseOpnd);
 
-        if (indexOpnd != NULL)
+        if (indexOpnd != nullptr)
         {
             regIndex = this->GetRegEncode(indexOpnd);
             *(m_pc++) = (this->GetMod(indirOpnd, &dispSize) | reg1 | 0x4);
@@ -459,7 +459,7 @@ EncoderMD::EmitConst(size_t val, int size, bool allowImm64 /* = false */)
 BYTE
 EncoderMD::EmitImmed(IR::Opnd * opnd, int opSize, int sbit, bool allow64Immediates)
 {
-    StackSym *stackSym   = null;
+    StackSym *stackSym   = nullptr;
     BYTE      retval     = 0;
     size_t    value      = 0;
 
@@ -536,15 +536,15 @@ EncoderMD::GetOpndSize(IR::Opnd * opnd)
 ptrdiff_t           
 EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
 {
-    BYTE     *popcodeByte         = null,
-             *prexByte            = null,
-             *instrStart         = null,
-             *instrRestart       = null;
+    BYTE     *popcodeByte         = nullptr,
+             *prexByte            = nullptr,
+             *instrStart         = nullptr,
+             *instrRestart       = nullptr;
     IR::Opnd *dst                = instr->GetDst();
     IR::Opnd *src1               = instr->GetSrc1();
     IR::Opnd *src2               = instr->GetSrc2();
-    IR::Opnd *opr1               = null;
-    IR::Opnd *opr2               = null;
+    IR::Opnd *opr1               = nullptr;
+    IR::Opnd *opr2               = nullptr;
     int       instrSize          = -1;
     bool      skipRexByte        = false;    
 
@@ -833,12 +833,12 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
             AssertMsg(opr1->AsRegOpnd()->GetReg() == RegRAX, "Expected src1 of IMUL/IDIV to be RAX");
 
             opr1 = opr2;
-            opr2 = null;
+            opr2 = nullptr;
 
             // FALLTHROUGH
         case MODRM:
         modrm:
-            if (opr2 == NULL) 
+            if (opr2 == nullptr) 
             {
                 BYTE byte2  = (this->GetOpcodeByte2(instr) >> 3);
                 rexByte    |= this->EmitModRM(instr, opr1, byte2);
@@ -912,7 +912,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
 
         // jmp, call with full relative disp.
         case LABREL2:
-            if (opr1 == NULL)
+            if (opr1 == nullptr)
             {
                 AssertMsg(sizeof(size_t) == sizeof(void*), "Sizes of void* assumed to be 64-bits");
                 AssertMsg(instr->IsBranchInstr(), "Invalid LABREL2 form");
@@ -1220,7 +1220,7 @@ EncoderMD::EmitRexByte(BYTE * prexByte, BYTE rexByte, bool skipRexByte, bool res
                     current++;
                 }
 
-                if (m_relocList != NULL)
+                if (m_relocList != nullptr)
                 {
                     // if a reloc record was added as part of encoding this instruction - fix the pc in the reloc 
                     EncodeRelocAndLabels &lastRelocEntry = m_relocList->Item(m_relocList->Count() - 1);
@@ -1250,7 +1250,7 @@ EncoderMD::EmitRexByte(BYTE * prexByte, BYTE rexByte, bool skipRexByte, bool res
             current--;
         }
 
-        if (m_relocList != NULL)
+        if (m_relocList != nullptr)
         {
             // if a reloc record was added as part of encoding this instruction - fix the pc in the reloc 
             EncodeRelocAndLabels &lastRelocEntry = m_relocList->Item(m_relocList->Count() - 1);
@@ -1415,7 +1415,7 @@ EncoderMD::ApplyRelocs(size_t codeBufferAddress_)
             {
                 // The address of the target LabelInstr is saved at the reloc address.
                 IR::LabelInstr * labelInstr = reloc->getBrTargetLabel();
-                AssertMsg(labelInstr->GetPC() != null, "Branch to unemitted label?");
+                AssertMsg(labelInstr->GetPC() != nullptr, "Branch to unemitted label?");
                 if (reloc->isShortBr() )
                 {
                     // short branch
@@ -1435,7 +1435,7 @@ EncoderMD::ApplyRelocs(size_t codeBufferAddress_)
         case RelocTypeLabelUse:
             {
                 IR::LabelInstr *labelInstr = *(IR::LabelInstr**)relocAddress;
-                AssertMsg(labelInstr->GetPC() != null, "Branch to unemitted label?");
+                AssertMsg(labelInstr->GetPC() != nullptr, "Branch to unemitted label?");
                 *(size_t *)relocAddress = (size_t)(labelInstr->GetPC() - m_encoder->m_encodeBuffer + codeBufferAddress_);                
                 break;
             }     
@@ -1616,7 +1616,7 @@ bool EncoderMD::TryConstFold(IR::Instr *instr, IR::RegOpnd *regOpnd)
                 continue;
             }
             indir->SetOffset(offset);
-            indir->SetIndexOpnd(null);
+            indir->SetIndexOpnd(nullptr);
         }
 
         return foundUse && foldedAllUses;
@@ -1667,7 +1667,7 @@ bool EncoderMD::TryFold(IR::Instr *instr, IR::RegOpnd *regOpnd)
         break;
 
     case FORM_MODRM:
-        if (src2 == NULL)
+        if (src2 == nullptr)
         {
             if (!instr->GetDst()->IsRegOpnd() || regOpnd != src1 || EncoderMD::IsOPEQ(instr))
             {

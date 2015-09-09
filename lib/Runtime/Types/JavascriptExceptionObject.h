@@ -23,7 +23,7 @@ namespace Js {
         JavascriptExceptionObject(Var object, ScriptContext * scriptContext, JavascriptExceptionContext* exceptionContextIn, bool isPendingExceptionObject = false) : 
             thrownObject(object), isPendingExceptionObject(isPendingExceptionObject),
             scriptContext(scriptContext), tag(true), isDebuggerSkip(false), byteCodeOffsetAfterDebuggerSkip(Constants::InvalidByteCodeOffset), hasDebuggerLogged(false),
-            isFirstChance(false), isExceptionCaughtInNonUserCode(false), ignoreAdvanceToNextStatement(false), hostWrapperCreateFunc(null), isGeneratorReturnException(false)
+            isFirstChance(false), isExceptionCaughtInNonUserCode(false), ignoreAdvanceToNextStatement(false), hostWrapperCreateFunc(nullptr), isGeneratorReturnException(false)
         { 
             if (exceptionContextIn)
             {
@@ -34,7 +34,7 @@ namespace Js {
                 memset(&exceptionContext, 0, sizeof(exceptionContext));
             }
 #if DBG 
-            this->stackBackTrace = null;
+            this->stackBackTrace = nullptr;
 #endif
         }
 

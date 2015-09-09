@@ -577,7 +577,7 @@ namespace Js
 
 #ifdef VALIDATE_ARRAY
         T v_btree = NULL;
-        SparseArraySegmentBase* seg_btree = NULL;
+        SparseArraySegmentBase* seg_btree = nullptr;
         bool first_pass = true;
 #endif
 
@@ -601,7 +601,7 @@ SECOND_PASS:
             nextSeg = this->GetBeginLookupSegment(index, false);
         }
         uint probeCost = 0;
-        while (nextSeg != null && nextSeg->left <= index)
+        while (nextSeg != nullptr && nextSeg->left <= index)
         {
             uint32 limit =  nextSeg->left + nextSeg->length;
 #ifdef ARRLOG
@@ -665,13 +665,13 @@ SECOND_PASS:
         if (segmentMap && first_pass)
         {
             v_btree = NULL;
-            seg_btree= NULL;
+            seg_btree= nullptr;
             first_pass = false;
             goto SECOND_PASS;
         }
         else if (segmentMap && !first_pass)
         {
-            Assert(v_btree == NULL && seg_btree == NULL);
+            Assert(v_btree == NULL && seg_btree == nullptr);
         }
 #endif
 
@@ -698,12 +698,12 @@ SECOND_PASS:
         if (this->length)
         {
             allocLength = this->length <= MaxInitialDenseLength ? this->length : SparseArraySegmentBase::HEAD_CHUNK_SIZE;
-            this->head = SparseArraySegment<T>::AllocateSegment(recycler, 0, 0, allocLength, NULL); 
+            this->head = SparseArraySegment<T>::AllocateSegment(recycler, 0, 0, allocLength, nullptr);
         }
         else
         {
             allocLength = SparseArraySegmentBase::HEAD_CHUNK_SIZE;
-            this->head = SparseArraySegment<T>::AllocateSegment(recycler, 0, 0, allocLength, NULL); 
+            this->head = SparseArraySegment<T>::AllocateSegment(recycler, 0, 0, allocLength, nullptr);
         }
         this->SetLastUsedSegment(this->head);
         SetHasNoMissingValues();
@@ -1274,18 +1274,18 @@ SECOND_PASS:
         {
             current = (SparseArraySegment<T>*)head;
         }
-        SparseArraySegmentBase* prev = NULL;
+        SparseArraySegmentBase* prev = nullptr;
 
 #ifdef VALIDATE_ARRAY
-        SparseArraySegmentBase* current_btree = NULL;
-        SparseArraySegmentBase* prev_btree = NULL;
+        SparseArraySegmentBase* current_btree = nullptr;
+        SparseArraySegmentBase* prev_btree = nullptr;
         bool first_pass = true;
 #endif
 
         SegmentBTreeRoot * segmentMap = GetSegmentMap();
         if (segmentMap)
         {
-            SparseArraySegmentBase* prevSeg = NULL;
+            SparseArraySegmentBase* prevSeg = nullptr;
             SparseArraySegmentBase* currentBase = current;
             segmentMap->Find(itemIndex, prevSeg, currentBase);
             current = (SparseArraySegment<T>*)currentBase;
@@ -1298,7 +1298,7 @@ SECOND_PASS:
                 if (noExactMatch && extendPrevSeg)
                 {
                     current = (SparseArraySegment<T>*)head;
-                    prev = NULL;
+                    prev = nullptr;
                     if (prevSeg != head)
                     {
                         // Since we are going to extend prevSeg we need the
@@ -1332,13 +1332,13 @@ SECOND_PASS:
                 {
                     current = (SparseArraySegment<T>*)head;
                 }
-                prev = NULL;
+                prev = nullptr;
             }
 #endif
         }
 
         uint probeCost = 0;
-        while(current != null)
+        while(current != nullptr)
         {
 #ifdef ARRLOG
             if (Js::Configuration::Global.flags.ArrayLog)
@@ -1353,7 +1353,7 @@ SECOND_PASS:
             }
             else if (offset <= current->size)
             {
-                if ((null == current->next) || (itemIndex < current->next->left))
+                if ((nullptr == current->next) || (itemIndex < current->next->left))
                 {
                     break;
                 }
@@ -1369,7 +1369,7 @@ SECOND_PASS:
                     // Build a SegmentMap
                     segmentMap = BuildSegmentMap();
 
-                    SparseArraySegmentBase* prevSeg = NULL;
+                    SparseArraySegmentBase* prevSeg = nullptr;
                     SparseArraySegmentBase* currentBase = current;
                     segmentMap->Find(itemIndex, prevSeg, currentBase);
                     current = (SparseArraySegment<T>*)currentBase;
@@ -1382,7 +1382,7 @@ SECOND_PASS:
                         if (noExactMatch && extendPrevSeg)
                         {
                             current = (SparseArraySegment<T>*)head;
-                            prev = NULL;
+                            prev = nullptr;
                             if (prevSeg != head)
                             {
                                 // Since we are going to extend prevSeg we need the
@@ -1423,7 +1423,7 @@ SECOND_PASS:
 #endif
 
 
-        if (current != null)
+        if (current != nullptr)
         {
             uint32 offset = itemIndex - current->left;
             if ((itemIndex >= current->left) && (offset < current->size))
@@ -1476,7 +1476,7 @@ SECOND_PASS:
                 SparseArraySegment<T>* next = (SparseArraySegment<T>*)current->next;       
 
                 Assert(segmentMap == GetSegmentMap());
-                if (!segmentMap && next != null && (itemIndex + 1) == next->left)
+                if (!segmentMap && next != nullptr && (itemIndex + 1) == next->left)
                 {
                     // Don't merge segments if we are using a segmentMap
 
@@ -1555,7 +1555,7 @@ SECOND_PASS:
             else
             {
                 //itemIndex is greater than the (left + size) of last segment in the linked list
-                current = SparseArraySegment<T>::AllocateSegment(recycler, itemIndex, 1, (SparseArraySegment<T> *)null); 
+                current = SparseArraySegment<T>::AllocateSegment(recycler, itemIndex, 1, (SparseArraySegment<T> *)nullptr); 
                 current->SetElement(recycler, itemIndex, newValue);
                 LinkSegments((SparseArraySegment<T>*)prev, current);
                 TryAddToSegmentMap(recycler, current);

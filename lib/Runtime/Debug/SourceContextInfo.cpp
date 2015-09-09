@@ -38,7 +38,7 @@ SourceContextInfo* SourceContextInfo::Clone(Js::ScriptContext* scriptContext) co
         this->sourceDynamicProfileManager->GetProfileCache() : NULL;
 
     SourceContextInfo * newSourceContextInfo = scriptContext->GetSourceContextInfo(dwHostSourceContext, profileCache);
-    if (newSourceContextInfo == null)
+    if (newSourceContextInfo == nullptr)
     {
         wchar_t const * oldUrl = this->url;
         wchar_t const * oldSourceMapUrl = this->sourceMapUrl;

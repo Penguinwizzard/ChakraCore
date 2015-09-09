@@ -185,7 +185,7 @@ namespace Js {
                     // function GetDateFormat and the COM+ date type
                     // - the latter is for forward compatibility with JS 7.
                     JavascriptString *bs = GetDateLocaleString(&m_ymdLcl, &m_tzd, noDateTime, m_scriptContext);
-                    if (bs != null)
+                    if (bs != nullptr)
                     {
                         return bs;
                     }
@@ -443,7 +443,7 @@ namespace Js {
         const int kcchMax = 256;
         WCHAR wszBuf[kcchMax];
         WCHAR *pwszBuf, *pToBeFreed = NULL, *p;
-        JavascriptString *bs = null;
+        JavascriptString *bs = nullptr;
 
          // the caller of this function should ensure that the range of pymd->year is such that the following conversion works.
         st.wYear = (WORD)pymd->year;
@@ -655,7 +655,7 @@ Error:
 
     double DateImplementation::UtcTimeFromStr(ScriptContext *scriptContext, JavascriptString *pParseString)
     {
-        Assert(pParseString != null);
+        Assert(pParseString != nullptr);
         double dbl;
         if (scriptContext->GetLastUtcTimeFromStr(pParseString, dbl))
         {
@@ -1018,7 +1018,7 @@ Error:
             return false;
         }
 
-        if (null == psz)
+        if (nullptr == psz)
         {
             retVal = JavascriptNumber::NaN;
             return true;            
@@ -1045,7 +1045,7 @@ Error:
         wchar_t *pchBase;
         wchar_t *pch;
         wchar_t ch;
-        wchar_t *pszSrc = null; 
+        wchar_t *pszSrc = nullptr; 
 
         const long lwNil = 0x80000000;
         long cch;

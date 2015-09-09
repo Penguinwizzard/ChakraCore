@@ -9,8 +9,8 @@ namespace Js
     wchar_t* BufferStringBuilder::WritableString::SafeCopyAndAdvancePtr(__out_ecount(cchDst) wchar_t* dst, charcount_t& cchDst, __in_ecount(cch) const wchar_t* ptr, charcount_t cch)
     {
         Assert( IsValidCharCount(cch) );
-        Assert( dst != null );
-        Assert( ptr != null );
+        Assert( dst != nullptr);
+        Assert( ptr != nullptr);
 
         if( cchDst < cch )
         {
@@ -84,7 +84,7 @@ namespace Js
         StringProfiler::RecordNewString( this->m_string->GetScriptContext(), buffer, length );
 #endif
         // Prevent further calls to ToString, SetContent etc.
-        this->m_string = null;
+        this->m_string = nullptr;
 
         return result;
     }

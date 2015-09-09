@@ -159,7 +159,7 @@ namespace Js {
         // case. We should use existing parent if available.
         FunctionBody * parent = funcBody->GetScopeInfo() ?
             funcBody->GetScopeInfo()->GetParent() :
-            parentFunc ? parentFunc->byteCodeFunction->GetFunctionBody() : null;
+            parentFunc ? parentFunc->byteCodeFunction->GetFunctionBody() : nullptr;
 
         ScopeInfo* funcExprScopeInfo = nullptr;
         Scope* funcExprScope = func->GetFuncExprScope();
@@ -304,7 +304,7 @@ namespace Js {
             {
                 SymbolType symbolType = GetSymbolType(i);
                 SymbolName symName(name->GetBuffer(), name->GetLength());
-                Symbol *sym = Anew(alloc, Symbol, symName, NULL, symbolType);
+                Symbol *sym = Anew(alloc, Symbol, symName, nullptr, symbolType);
                 
                 sym->SetScopeSlot(static_cast<PropertyId>(i));
                 sym->SetIsBlockVar(GetIsBlockVariable(i));

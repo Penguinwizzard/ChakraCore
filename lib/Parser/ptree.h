@@ -517,7 +517,7 @@ struct PnSwitch : PnStmt
 struct PnCase : PnStmt
 {
     ParseNodePtr pnodeNext;
-    ParseNodePtr pnodeExpr; // NULL for default
+    ParseNodePtr pnodeExpr; // nullptr for default
     ParseNodePtr pnodeBody;
     Js::ByteCodeLabel labelCase;
 };
@@ -625,7 +625,7 @@ struct ParseNode
         {
             return this->sxVar.pid;
         }
-        return null;
+        return nullptr;
     }
 
     static const uint mpnopgrfnop[knopLim];

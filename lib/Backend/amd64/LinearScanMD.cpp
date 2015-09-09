@@ -8,7 +8,7 @@
 extern "C" IRType RegTypes[RegNumCount];
 
 LinearScanMD::LinearScanMD(Func *func)
-    : helperSpillSlots(null),
+    : helperSpillSlots(nullptr),
       maxOpHelperSpilledLiveranges(0),
       func(func)
 {
@@ -68,7 +68,7 @@ LinearScanMD::EnsureSpillSymForXmmReg(RegNum reg, Func *func, IRType type)
         sym = this->xmmSymTable64[reg - FIRST_XMM_REG];
     }
 
-    if (sym == NULL)
+    if (sym == nullptr)
     {
         sym = StackSym::New(type, func);
         func->StackAllocate(sym, TySize[type]);
@@ -155,7 +155,7 @@ LinearScanMD::InsertOpHelperSpillsAndRestores(const OpHelperBlock& opHelperBlock
         if (RegTypes[opHelperSpilledLifetime.reg] == TyFloat64)
         {
             IRType type = opHelperSpilledLifetime.lifetime->sym->GetType();
-            IR::RegOpnd *regOpnd = IR::RegOpnd::New(NULL, opHelperSpilledLifetime.reg, type, this->func);
+            IR::RegOpnd *regOpnd = IR::RegOpnd::New(nullptr, opHelperSpilledLifetime.reg, type, this->func);
             
             if (!sym)
             {
@@ -191,7 +191,7 @@ LinearScanMD::InsertOpHelperSpillsAndRestores(const OpHelperBlock& opHelperBlock
                 Assert(sym);
                 func->StackAllocate(sym, MachRegInt);
             }
-            IR::RegOpnd * regOpnd = IR::RegOpnd::New(NULL, opHelperSpilledLifetime.reg, sym->GetType(), func);
+            IR::RegOpnd * regOpnd = IR::RegOpnd::New(nullptr, opHelperSpilledLifetime.reg, sym->GetType(), func);
             LowererMD::CreateAssign(IR::SymOpnd::New(sym, sym->GetType(), func), regOpnd, opHelperBlock.opHelperLabel->m_next);
             if (opHelperSpilledLifetime.reload)
             {
@@ -245,7 +245,7 @@ LinearScanMD::GenerateBailOut(IR::Instr * instr, __in_ecount(registerSaveSymsCou
         //     mov  rdx, condition
         IR::Instr *const newInstr =
             Lowerer::InsertMove(
-                IR::RegOpnd::New(null, RegRDX, bailOutInfo->branchConditionOpnd->GetType(), func),
+                IR::RegOpnd::New(nullptr, RegRDX, bailOutInfo->branchConditionOpnd->GetType(), func),
                 bailOutInfo->branchConditionOpnd,
                 instr);
         linearScan->SetSrcRegs(newInstr);
@@ -254,7 +254,7 @@ LinearScanMD::GenerateBailOut(IR::Instr * instr, __in_ecount(registerSaveSymsCou
     // Pass in the bailout record
     //     mov  rcx, bailOutRecord
     Lowerer::InsertMove(
-        IR::RegOpnd::New(null, RegRCX, TyMachPtr, func),        
+        IR::RegOpnd::New(nullptr, RegRCX, TyMachPtr, func),        
         IR::AddrOpnd::New(bailOutInfo->bailOutRecord, IR::AddrOpndKindDynamicBailOutRecord, func, true),
         instr);
 
@@ -269,15 +269,15 @@ LinearScanMD::GenerateBailOut(IR::Instr * instr, __in_ecount(registerSaveSymsCou
 
         // Record the use on the lifetime in case it spilled afterwards. Spill loads will be inserted before 'firstInstr', that
         // is, before the register saves are done.
-        this->linearScan->RecordUse(stackSym->scratch.linearScan.lifetime, firstInstr, null, true);
+        this->linearScan->RecordUse(stackSym->scratch.linearScan.lifetime, firstInstr, nullptr, true);
     }
 
     // Load the bailout target into rax
     //     mov  rax, BailOut
     //     call rax
     Assert(instr->GetSrc1()->IsHelperCallOpnd());
-    Lowerer::InsertMove(IR::RegOpnd::New(null, RegRAX, TyMachPtr, func), instr->GetSrc1(), instr);
-    instr->ReplaceSrc1(IR::RegOpnd::New(null, RegRAX, TyMachPtr, func));
+    Lowerer::InsertMove(IR::RegOpnd::New(nullptr, RegRAX, TyMachPtr, func), instr->GetSrc1(), instr);
+    instr->ReplaceSrc1(IR::RegOpnd::New(nullptr, RegRAX, TyMachPtr, func));
 }
 
 // Gets the InterpreterStackFrame pointer into RAX.

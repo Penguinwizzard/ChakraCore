@@ -336,14 +336,14 @@ EncoderMD::EmitModRM(IR::Instr * instr, IR::Opnd *opnd, BYTE reg1)
 
     case IR::OpndKindIndir:
         indirOpnd = opnd->AsIndirOpnd();
-        AssertMsg(indirOpnd->GetBaseOpnd() != NULL, "Expected base to be set in indirOpnd");
+        AssertMsg(indirOpnd->GetBaseOpnd() != nullptr, "Expected base to be set in indirOpnd");
 
         baseOpnd = indirOpnd->GetBaseOpnd();
         indexOpnd = indirOpnd->GetIndexOpnd();
         AssertMsg(!indexOpnd || indexOpnd->GetReg() != RegESP, "ESP cannot be the index of an indir.");
 
         regBase = this->GetRegEncode(baseOpnd);
-        if (indexOpnd != NULL)
+        if (indexOpnd != nullptr)
         {
             regIndex = this->GetRegEncode(indexOpnd);
             *(m_pc++) = (this->GetMod(indirOpnd, &dispSize) | reg1 | 0x4);
@@ -580,7 +580,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
 
     m_pc = pc;
 
-    pc = NULL;  // just to avoid using it...
+    pc = nullptr;  // just to avoid using it...
 
     if (instr->IsLowered() == false)
     {
@@ -631,7 +631,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
         opr2 = src2;
     }
 
-    int instrSize = TySize[opr1 != NULL? opr1->GetType() : 0];
+    int instrSize = TySize[opr1 != nullptr? opr1->GetType() : 0];
 
     const BYTE *form = EncoderMD::GetFormTemplate(instr);
     const BYTE *opcodeTemplate = EncoderMD::GetOpbyte(instr);
@@ -818,7 +818,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
             AssertMsg(opr1->AsRegOpnd()->GetReg() == RegEAX, "Expected src1 of IMUL/IDIV to be EAX");
 
             opr1 = opr2;
-            opr2 = NULL;
+            opr2 = nullptr;
 
             // FALLTHROUGH
         case MODRM:
@@ -829,7 +829,7 @@ modrm:
                 *opcodeByte |= 1;
             }
 
-            if (opr2 == NULL) 
+            if (opr2 == nullptr) 
             {
                 BYTE byte2 = (this->GetOpcodeByte2(instr) >> 3);
 
@@ -925,7 +925,7 @@ modrm:
         // jmp, call with full relative disp 
         case LABREL2:
 
-            if (opr1 == NULL)
+            if (opr1 == nullptr)
             {
                 // Unconditional branch
                 AssertMsg(instr->IsBranchInstr(), "Invalid LABREL2 form");
@@ -1378,7 +1378,7 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress)
         case RelocTypeBranch:
             {
                 IR::LabelInstr * labelInstr = reloc->getBrTargetLabel();
-                AssertMsg(labelInstr->GetPC() != null, "Branch to unemitted label?");
+                AssertMsg(labelInstr->GetPC() != nullptr, "Branch to unemitted label?");
                 if (reloc->isShortBr())
                 {
                     // short branch
@@ -1396,7 +1396,7 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress)
         case RelocTypeLabelUse:
             {
                 IR::LabelInstr * labelInstr = *(IR::LabelInstr**)relocAddress;
-                AssertMsg(labelInstr->GetPC() != null, "Branch to unemitted label?");
+                AssertMsg(labelInstr->GetPC() != nullptr, "Branch to unemitted label?");
                 *(uint32 *)relocAddress = (uint32)(labelInstr->GetPC() - m_encoder->m_encodeBuffer + codeBufferAddress);                
                 break;
             }
@@ -1555,7 +1555,7 @@ bool EncoderMD::TryConstFold(IR::Instr *instr, IR::RegOpnd *regOpnd)
                 continue;
             }
             indir->SetOffset(offset);
-            indir->SetIndexOpnd(null);
+            indir->SetIndexOpnd(nullptr);
         }
 
         return foundUse && foldedAllUses;
@@ -1606,7 +1606,7 @@ bool EncoderMD::TryFold(IR::Instr *instr, IR::RegOpnd *regOpnd)
         break;
 
     case FORM_MODRM:
-        if (src2 == NULL)
+        if (src2 == nullptr)
         {
             if (!instr->GetDst()->IsRegOpnd() || regOpnd != src1 || EncoderMD::IsOPEQ(instr))
             {

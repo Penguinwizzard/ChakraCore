@@ -9,33 +9,13 @@
 typedef _Return_type_success_(return >= 0) LONG NTSTATUS;
 #define NT_SUCCESS(Status) (((NTSTATUS)(Status)) >= 0)
 
-#include <wchar.h>
-
 // === C Runtime Header Files ===
-#include <stdarg.h>
-#include <float.h>
-#include <limits.h>
+#include <time.h>
 #if defined(_UCRT)
 #include <cmath>
 #else
 #include <math.h>
 #endif
-#include <time.h>
-
-#include <io.h>
-
-
-extern "C" void * _AddressOfReturnAddress(void);
-
-#include <malloc.h>
-
-#define null 0
-
-template <class T> struct DefaultComparer;
-template <typename T> struct RecyclerPointerComparer;
-
-class StackBackTrace;
-class StackBackTraceNode;
 
 // Exceptions
 #include "Exceptions\Exceptionbase.h"
@@ -58,7 +38,7 @@ class StackBackTraceNode;
 #endif
 #pragma warning(pop)
 
-
+// Inl files
 #include "Memory\Recycler.inl"
 #include "Memory\MarkContext.inl"
 #include "Memory\HeapBucket.inl"

@@ -275,7 +275,7 @@ public:
 
     void SetArgumentsSymbol(Symbol *sym)
     {
-        Assert(argumentsSymbol == null || argumentsSymbol == sym);
+        Assert(argumentsSymbol == nullptr || argumentsSymbol == sym);
         argumentsSymbol = sym;
     }
 
@@ -385,7 +385,7 @@ public:
     bool IsRestored()
     {
         // FuncInfo are from RestoredScopeInfo
-        return root == null;
+        return root == nullptr;
     }
 
     bool HasDeferredChild() const {

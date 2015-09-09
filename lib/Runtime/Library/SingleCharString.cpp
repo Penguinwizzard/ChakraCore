@@ -20,7 +20,7 @@ namespace Js
 
     /*static*/ SingleCharString* SingleCharString::New(wchar_t ch, ScriptContext* scriptContext)
     {
-        Assert(scriptContext != null);
+        Assert(scriptContext != nullptr);
 
         return RecyclerNew(scriptContext->GetRecycler(),SingleCharString,ch,
             scriptContext->GetLibrary()->GetStringTypeStatic());
@@ -28,8 +28,8 @@ namespace Js
 
     /*static*/ SingleCharString* SingleCharString::New(wchar_t ch, ScriptContext* scriptContext, ArenaAllocator* arena)
     {
-        Assert(scriptContext != null);
-        Assert(arena != null);
+        Assert(scriptContext != nullptr);
+        Assert(arena != nullptr);
 
         return Anew(arena, SingleCharString, ch,
             scriptContext->GetLibrary()->GetStringTypeStatic());

@@ -114,7 +114,7 @@ namespace Js
         {
             if (cachedFuncCount != 0)
             {
-                cache[0].func = null;
+                cache[0].func = nullptr;
             }
         }
 
@@ -128,7 +128,7 @@ namespace Js
         ScriptFunction *GetParentFunc() const { return parentFunc; }
         uint GetFirstFuncSlot() const { return firstFuncSlot; }
         uint GetLastFuncSlot() const { return lastFuncSlot; }
-        bool HasCachedFuncs() const { return cachedFuncCount != 0 && cache[0].func != null; }
+        bool HasCachedFuncs() const { return cachedFuncCount != 0 && cache[0].func != nullptr; }
 
         void SetCachedFunc(uint i, ScriptFunction *func);
 

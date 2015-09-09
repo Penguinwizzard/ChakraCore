@@ -977,7 +977,7 @@ namespace Js
                               mIntConstCount(0),
                               mDoubleConstCount(0),
                               mArgByteSize(0),
-                              mTJBeginAddress(null),
+                              mTJBeginAddress(nullptr),
                               mUsesHeapBuffer(false),
                               mIsHeapBufferConst(false) {}
         // the key is the bytecode address

@@ -130,7 +130,7 @@ namespace Js
 
         bool IsEmpty() const
         {
-            return u.local.type == null;
+            return u.local.type == nullptr;
         }
 
         bool IsLocal() const
@@ -175,7 +175,7 @@ namespace Js
 
         Type* GetRawType() const
         {
-            return IsLocal() ? u.local.type : (IsProto() ? u.proto.type : (IsAccessor() ? u.accessor.type : null));
+            return IsLocal() ? u.local.type : (IsProto() ? u.proto.type : (IsAccessor() ? u.accessor.type : nullptr));
         }
 
         Type* GetType() const
@@ -198,13 +198,13 @@ namespace Js
 
         bool RemoveFromInvalidationList()
         {
-            if (this->invalidationListSlotPtr == null)
+            if (this->invalidationListSlotPtr == nullptr)
             {
                 return false;
             }
 
-            *this->invalidationListSlotPtr = null;
-            this->invalidationListSlotPtr = null;
+            *this->invalidationListSlotPtr = nullptr;
+            this->invalidationListSlotPtr = nullptr;
             return true;
         }
 
@@ -372,10 +372,10 @@ namespace Js
         PolymorphicInlineCache * prev;
 
         PolymorphicInlineCache(InlineCache * inlineCaches, uint16 size, FunctionBody * functionBody)
-            : inlineCaches(inlineCaches), functionBody(functionBody), size(size), ignoreForEquivalentObjTypeSpec(false), cloneForJitTimeUse(true), inlineCachesFillInfo(0), next(null), prev(null)
+            : inlineCaches(inlineCaches), functionBody(functionBody), size(size), ignoreForEquivalentObjTypeSpec(false), cloneForJitTimeUse(true), inlineCachesFillInfo(0), next(nullptr), prev(nullptr)
         {
-            Assert((size == 0 && inlineCaches == null) ||
-                (inlineCaches != null && size >= MinPolymorphicInlineCacheSize && size <= MaxPolymorphicInlineCacheSize));
+            Assert((size == 0 && inlineCaches == nullptr) ||
+                (inlineCaches != nullptr && size >= MinPolymorphicInlineCacheSize && size <= MaxPolymorphicInlineCacheSize));
         }
 
     public:
@@ -545,7 +545,7 @@ namespace Js
 
         Type* GetType(uint16 index) const
         {
-            Assert(this->types != null && this->count > 0 && index < this->count);
+            Assert(this->types != nullptr && this->count > 0 && index < this->count);
             return this->types[index];
         }
 
@@ -624,16 +624,16 @@ namespace Js
         };
 
         CompileAssert(offsetof(GuardStruct, value) == offsetof(ContentStruct, type));
-        CompileAssert(sizeof(((GuardStruct*)null)->value) == sizeof(((ContentStruct*)null)->type));
-        CompileAssert(static_cast<intptr_t>(CtorCacheGuardValues::Invalid) == static_cast<intptr_t>(null));
+        CompileAssert(sizeof(((GuardStruct*)nullptr)->value) == sizeof(((ContentStruct*)nullptr)->type));
+        CompileAssert(static_cast<intptr_t>(CtorCacheGuardValues::Invalid) == static_cast<intptr_t>(NULL));
 
         static ConstructorCache DefaultInstance;
 
     public:
         ConstructorCache() 
         {
-            this->content.type = null;
-            this->content.scriptContext = null;
+            this->content.type = nullptr;
+            this->content.scriptContext = nullptr;
             this->content.slotCount = 0;
             this->content.inlineSlotCount = 0;
             this->content.updateAfterCtor = false;
@@ -650,7 +650,7 @@ namespace Js
 
         ConstructorCache(ConstructorCache const * other)
         {
-            Assert(other != null);
+            Assert(other != nullptr);
             this->content.type = other->content.type;
             this->content.scriptContext = other->content.scriptContext;
             this->content.slotCount = other->content.slotCount;
@@ -668,7 +668,7 @@ namespace Js
         }
 
         static size_t const GetOffsetOfGuardValue() { return offsetof(Js::ConstructorCache, guard.value); }
-        static size_t const GetSizeOfGuardValue() { return sizeof(((Js::ConstructorCache*)null)->guard.value); }
+        static size_t const GetSizeOfGuardValue() { return sizeof(((Js::ConstructorCache*)nullptr)->guard.value); }
 
         void Populate(DynamicType* type, ScriptContext* scriptContext, bool ctorHasNoExplicitReturnValue, bool updateAfterCtor)
         {
@@ -717,7 +717,7 @@ namespace Js
             {
                 this->content.type = type;
                 this->content.typeIsFinal = true;
-                this->content.pendingType = null;
+                this->content.pendingType = nullptr;
             }
             else
             {
@@ -760,7 +760,7 @@ namespace Js
             Assert(this->content.pendingType->GetIsShared());
             this->content.type = this->content.pendingType;
             this->content.typeIsFinal = true;
-            this->content.pendingType = null;
+            this->content.pendingType = nullptr;
             this->content.typeUpdatePending = false;
             Assert(IsConsistent());
         }
@@ -851,7 +851,7 @@ namespace Js
 
         bool IsEnabled() const
         {
-            return GetGuardValueAsType() != null;
+            return GetGuardValueAsType() != nullptr;
         }
 
         bool IsInvalidated() const
@@ -892,7 +892,7 @@ namespace Js
 
         bool IsSetUpForJit() const
         {
-            return GetRawGuardValue() != null && !IsPolymorphic() && !NeedsUpdateAfterCtor() && (IsNormal() || SkipDefaultNewObject());
+            return GetRawGuardValue() != NULL && !IsPolymorphic() && !NeedsUpdateAfterCtor() && (IsNormal() || SkipDefaultNewObject());
         }
 
         void ClearUpdateAfterCtor()
@@ -921,8 +921,8 @@ namespace Js
             Assert(!IsDefault(this));
             this->guard.value = CtorCacheGuardValues::Invalid;
             // Make sure we don't leak the types.
-            Assert(this->content.type == null);
-            Assert(this->content.pendingType == null);
+            Assert(this->content.type == nullptr);
+            Assert(this->content.pendingType == nullptr);
             Assert(IsInvalidated());
             Assert(IsConsistent());
         }
@@ -932,9 +932,9 @@ namespace Js
         {
             return this->guard.value == CtorCacheGuardValues::Invalid || 
                 (this->content.isPopulated && (
-                (this->guard.value == CtorCacheGuardValues::Special && !this->content.updateAfterCtor && this->content.skipDefaultNewObject && !this->content.typeUpdatePending && this->content.slotCount == 0 && this->content.inlineSlotCount == 0 && this->content.pendingType == null) ||
-                (this->guard.value == CtorCacheGuardValues::Special && !this->content.updateAfterCtor && this->content.typeUpdatePending && !this->content.skipDefaultNewObject && this->content.pendingType != null) ||
-                ((this->guard.value & CtorCacheGuardValues::TagFlag) == CtorCacheGuardValues::Invalid && !this->content.skipDefaultNewObject && !this->content.typeUpdatePending && this->content.pendingType == null)));
+                (this->guard.value == CtorCacheGuardValues::Special && !this->content.updateAfterCtor && this->content.skipDefaultNewObject && !this->content.typeUpdatePending && this->content.slotCount == 0 && this->content.inlineSlotCount == 0 && this->content.pendingType == nullptr) ||
+                (this->guard.value == CtorCacheGuardValues::Special && !this->content.updateAfterCtor && this->content.typeUpdatePending && !this->content.skipDefaultNewObject && this->content.pendingType != nullptr) ||
+                ((this->guard.value & CtorCacheGuardValues::TagFlag) == CtorCacheGuardValues::Invalid && !this->content.skipDefaultNewObject && !this->content.typeUpdatePending && this->content.pendingType == nullptr)));
         }
 #endif
 
@@ -955,7 +955,7 @@ namespace Js
         IsInstInlineCache * next;                       // Used to link together caches that have the same function operand
 
     public:
-        bool IsEmpty() const { return type == null; }
+        bool IsEmpty() const { return type == nullptr; }
         bool TryGetResult(Var instance, JavascriptFunction * function, JavascriptBoolean ** result);
         void Cache(Type * instanceType, JavascriptFunction * function, JavascriptBoolean * result, ScriptContext * scriptContext);
 

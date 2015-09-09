@@ -8,10 +8,8 @@
 #include "errstr.h"
 
 // Temporarily undefining "null" (defined in Common.h) to avoid compile errors when importing mscorlib.tlb
-#undef null
 #import <mscorlib.tlb> raw_interfaces_only \
     rename("Assert","CLRAssert") rename("ReportEvent","CLRReportEvent") rename("Debugger","CLRDebugger")
-#define null 0
 
 namespace Js
 {
@@ -113,12 +111,12 @@ namespace Js
         else if(memcmp(&excepinfo, &baseline, sizeof(baseline)) != 0)
         {
             Assert(!perrinfo);
-            MapAndThrowError(scriptContext, hr, errorType, &excepinfo, null, null, true);
+            MapAndThrowError(scriptContext, hr, errorType, &excepinfo, nullptr, nullptr, true);
         }
         // If no specialized info was obtained, throw an error by HRESULT and type only.
         else
         {
-            MapAndThrowError(scriptContext, hr, errorType, null, null, null, true);
+            MapAndThrowError(scriptContext, hr, errorType, nullptr, nullptr, nullptr, true);
         }
     }
 
@@ -374,7 +372,7 @@ namespace Js
 
     void JavascriptErrorDebug::GetErrorTypeFromNumber(HRESULT hr, ErrorTypeEnum * errorTypeOut)
     {
-        if (errorTypeOut == null)
+        if (errorTypeOut == nullptr)
         {
             return;
         }

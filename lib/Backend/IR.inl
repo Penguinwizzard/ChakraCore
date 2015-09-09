@@ -456,7 +456,7 @@ BranchInstr::ClearTarget()
     }
     else
     {
-        this->SetTarget(null);
+        this->SetTarget(nullptr);
     }
 }
 
@@ -678,7 +678,7 @@ LabelInstr::GetOffset(void) const
 inline void 
 LabelInstr::SetBasicBlock(BasicBlock * block)
 {
-    AssertMsg(this->m_block == null || block == null, "Overwriting existing block pointer");
+    AssertMsg(this->m_block == nullptr || block == nullptr, "Overwriting existing block pointer");
     this->m_block = block;
 }
 
@@ -717,7 +717,7 @@ LabelInstr::GetLoop(void) const
 inline void
 LabelInstr::UnlinkBasicBlock(void)
 {
-    this->m_block = null;
+    this->m_block = nullptr;
 }
 
 inline BOOL

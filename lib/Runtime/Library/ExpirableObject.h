@@ -22,7 +22,7 @@ public:
     void SetIsObjectUsed();
     bool SupportsExpiration()
     {
-        return (registrationHandle != null);
+        return (registrationHandle != nullptr);
     }
 
 private:

@@ -34,7 +34,7 @@ Lowerer::Lower()
     this->initializedTempSym = &localInitializedTempSym;
     BVSparse<JitArenaAllocator> localAddToLiveOnBackEdgeSyms(&localAlloc);
     this->addToLiveOnBackEdgeSyms = &localAddToLiveOnBackEdgeSyms;
-    Assert(this->m_func->GetCloneMap() == NULL);
+    Assert(this->m_func->GetCloneMap() == nullptr);
 
     m_lowererMD.Init(this);
 
@@ -101,7 +101,7 @@ Lowerer::Lower()
                 default:
                     AssertMsg(FALSE, "Unsupported slot size!");
                     opnd1Type = TyIllegal;
-                    opnd2 = NULL;
+                    opnd2 = nullptr;
                 }
 
                 sym = StackSym::New(opnd1Type, m_func);
@@ -127,11 +127,11 @@ Lowerer::Lower()
     if (!m_func->IsSimpleJit())
     {
         Js::EntryPointInfo* entryPointInfo = this->m_func->m_workItem->GetEntryPoint();
-        Assert(entryPointInfo->GetJitTransferData() != null && !entryPointInfo->GetJitTransferData()->GetIsReady());
+        Assert(entryPointInfo->GetJitTransferData() != nullptr && !entryPointInfo->GetJitTransferData()->GetIsReady());
     }
 
-    this->initializedTempSym = null;
-    this->m_alloc = null;
+    this->initializedTempSym = nullptr;
+    this->m_alloc = nullptr;
 
     this->m_func->DisableConstandAddressLoadHoist();
 }
@@ -147,7 +147,7 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
     noMathFastPath = !defaultDoFastPath;
 
 #if DBG_DUMP
-    wchar_t * globOptInstrString = null;
+    wchar_t * globOptInstrString = nullptr;
 #endif
 
     FOREACH_INSTR_BACKWARD_EDITING_IN_RANGE(instr, instrPrev, instrEnd, instrStart)
@@ -198,7 +198,7 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
         if (instr->IsBranchInstr() && !instr->AsBranchInstr()->IsMultiBranch() && instr->AsBranchInstr()->GetTarget()->m_isLoopTop)
         {
             Loop * loop = instr->AsBranchInstr()->GetTarget()->GetLoop();
-            if (this->outerMostLoopLabel == null && !loop->isProcessed)
+            if (this->outerMostLoopLabel == nullptr && !loop->isProcessed)
             {
                 while (loop && loop->GetLoopTopInstr()) // some loops are optimized away so that they are not loops anymore. 
                                                                     // They do, however, stay in the loop graph but don't have loop top labels assigned to them
@@ -336,7 +336,7 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             break;
 
         case Js::OpCode::LdMethodFldPolyInlineMiss:
-            instrPrev = LowerLdFld(instr, IR::HelperOp_PatchGetMethod, IR::HelperOp_PatchGetMethodPolymorphic, true, null, true);
+            instrPrev = LowerLdFld(instr, IR::HelperOp_PatchGetMethod, IR::HelperOp_PatchGetMethodPolymorphic, true, nullptr, true);
             break;
 
         case Js::OpCode::LdMethodFld:
@@ -934,12 +934,12 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             StackSym *sym = instr->GetSrc1()->GetStackSym();
             if (sym)
             {
-                sym = sym->GetVarEquivSym(NULL);
+                sym = sym->GetVarEquivSym(nullptr);
             }
             sym = instr->GetSrc2()->GetStackSym();
             if (sym)
             {
-                sym = sym->GetVarEquivSym(NULL);
+                sym = sym->GetVarEquivSym(nullptr);
             }
         }
         // FALLTHROUGH
@@ -1183,7 +1183,7 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             {
                 if (!PHASE_OFF(Js::MathFastPathPhase, this->m_func) && !noMathFastPath)
                 {
-                    IR::AddrOpnd *src2 = instr->GetSrc2()->IsAddrOpnd() ? instr->GetSrc2()->AsAddrOpnd() : null;
+                    IR::AddrOpnd *src2 = instr->GetSrc2()->IsAddrOpnd() ? instr->GetSrc2()->AsAddrOpnd() : nullptr;
                     if (src2 && src2->IsVar() && Js::TaggedInt::Is(src2->m_address))
                     {
                         int32 value = Js::TaggedInt::ToInt32(src2->m_address);
@@ -2082,8 +2082,8 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
         case Js::OpCode::BrSrEq_A:
         case Js::OpCode::BrSrNotNeq_A:
         {
-            srcReg1 = instr->GetSrc1()->IsRegOpnd() ? instr->GetSrc1()->AsRegOpnd() : null;
-            srcReg2 = instr->GetSrc2()->IsRegOpnd() ? instr->GetSrc2()->AsRegOpnd() : null;
+            srcReg1 = instr->GetSrc1()->IsRegOpnd() ? instr->GetSrc1()->AsRegOpnd() : nullptr;
+            srcReg2 = instr->GetSrc2()->IsRegOpnd() ? instr->GetSrc2()->AsRegOpnd() : nullptr;
 
             if (instr->GetSrc1()->IsFloat())
             {
@@ -2316,7 +2316,7 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
                     instr->InsertAfter(checkDoBailout);
                     instr->InsertAfter(entryPointIsNull);
 
-                    this->InsertCompareBranch(entryPointOpnd, IR::AddrOpnd::New(null, IR::AddrOpndKindDynamicMisc, m_func), Js::OpCode::BrEq_A, false, entryPointIsNull, instr->m_next);
+                    this->InsertCompareBranch(entryPointOpnd, IR::AddrOpnd::New(nullptr, IR::AddrOpndKindDynamicMisc, m_func), Js::OpCode::BrEq_A, false, entryPointIsNull, instr->m_next);
 
                     // If the entry point is not null
                     auto isCodeGenDone = IR::Instr::New(Js::OpCode::Call, dobailout, IR::HelperCallOpnd::New(IR::HelperSimpleIsLoopCodeGenDone, m_func), m_func);
@@ -2407,7 +2407,7 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             else
             {
                 profileId = Js::Constants::NoProfileId;
-                profileBeforeInstr = null;
+                profileBeforeInstr = nullptr;
             }
 
             this->LowerLdSlot(instr);
@@ -2615,7 +2615,7 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
 
         case Js::OpCode::BailOnNoSimdTypeSpec:
         case Js::OpCode::BailOnNoProfile:
-            this->GenerateBailOut(instr, null, null);
+            this->GenerateBailOut(instr, nullptr, nullptr);
             break;
 
         case Js::OpCode::BailOnNotSpreadable:
@@ -3113,7 +3113,7 @@ IR::Opnd *
 Lowerer::LoadRuntimeInlineCacheOpnd(IR::Instr * instr, IR::PropertySymOpnd * propertySymOpnd, bool isHelper)
 {
     Assert(propertySymOpnd->m_runtimeInlineCache != nullptr);
-    IR::Opnd * inlineCacheOpnd = null;
+    IR::Opnd * inlineCacheOpnd = nullptr;
     if (instr->m_func->GetJnFunction()->GetInlineCachesOnFunctionObject() && !instr->m_func->IsInlinee())
     {
         inlineCacheOpnd = this->GetInlineCacheFromFuncObjectForRuntimeUse(instr, propertySymOpnd, isHelper);
@@ -3129,8 +3129,8 @@ Lowerer::LoadRuntimeInlineCacheOpnd(IR::Instr * instr, IR::PropertySymOpnd * pro
 bool
 Lowerer::TryGenerateFastCmSrEq(IR::Instr * instr)
 {
-    IR::RegOpnd *srcReg1 = instr->GetSrc1()->IsRegOpnd() ? instr->GetSrc1()->AsRegOpnd() : null;
-    IR::RegOpnd *srcReg2 = instr->GetSrc2()->IsRegOpnd() ? instr->GetSrc2()->AsRegOpnd() : null;
+    IR::RegOpnd *srcReg1 = instr->GetSrc1()->IsRegOpnd() ? instr->GetSrc1()->AsRegOpnd() : nullptr;
+    IR::RegOpnd *srcReg2 = instr->GetSrc2()->IsRegOpnd() ? instr->GetSrc2()->AsRegOpnd() : nullptr;
 
     if (srcReg2 && IsConstRegOpnd(srcReg2))
     {
@@ -3254,8 +3254,8 @@ Lowerer::GenerateFastBrConst(IR::BranchInstr *branchInstr, IR::Opnd * constOpnd,
 bool
 Lowerer::TryGenerateFastBrEq(IR::Instr * instr)
 {
-    IR::RegOpnd *srcReg1 = instr->GetSrc1()->IsRegOpnd() ? instr->GetSrc1()->AsRegOpnd() : null;
-    IR::RegOpnd *srcReg2 = instr->GetSrc2()->IsRegOpnd() ? instr->GetSrc2()->AsRegOpnd() : null;
+    IR::RegOpnd *srcReg1 = instr->GetSrc1()->IsRegOpnd() ? instr->GetSrc1()->AsRegOpnd() : nullptr;
+    IR::RegOpnd *srcReg2 = instr->GetSrc2()->IsRegOpnd() ? instr->GetSrc2()->AsRegOpnd() : nullptr;
 
     bool isConst = false;
     if (srcReg1 && this->IsNullOrUndefRegOpnd(srcReg1))
@@ -3287,8 +3287,8 @@ Lowerer::TryGenerateFastBrEq(IR::Instr * instr)
 bool
 Lowerer::TryGenerateFastBrNeq(IR::Instr * instr)
 {
-    IR::RegOpnd *srcReg1 = instr->GetSrc1()->IsRegOpnd() ? instr->GetSrc1()->AsRegOpnd() : null;
-    IR::RegOpnd *srcReg2 = instr->GetSrc2()->IsRegOpnd() ? instr->GetSrc2()->AsRegOpnd() : null;
+    IR::RegOpnd *srcReg1 = instr->GetSrc1()->IsRegOpnd() ? instr->GetSrc1()->AsRegOpnd() : nullptr;
+    IR::RegOpnd *srcReg2 = instr->GetSrc2()->IsRegOpnd() ? instr->GetSrc2()->AsRegOpnd() : nullptr;
 
     bool isConst = false;
     if (srcReg1 && this->IsNullOrUndefRegOpnd(srcReg1))
@@ -3330,8 +3330,8 @@ Lowerer::TryGenerateFastBrNeq(IR::Instr * instr)
 bool
 Lowerer::GenerateFastBrSrNeq(IR::Instr * instr, IR::Instr ** pInstrPrev)
 {
-    IR::RegOpnd *srcReg1 = instr->GetSrc1()->IsRegOpnd() ? instr->GetSrc1()->AsRegOpnd() : null;
-    IR::RegOpnd *srcReg2 = instr->GetSrc2()->IsRegOpnd() ? instr->GetSrc2()->AsRegOpnd() : null;
+    IR::RegOpnd *srcReg1 = instr->GetSrc1()->IsRegOpnd() ? instr->GetSrc1()->AsRegOpnd() : nullptr;
+    IR::RegOpnd *srcReg2 = instr->GetSrc2()->IsRegOpnd() ? instr->GetSrc2()->AsRegOpnd() : nullptr;
 
     if (srcReg2 && IsConstRegOpnd(srcReg2))
     {
@@ -3416,8 +3416,8 @@ Lowerer::LowerNewScObjectLiteral(IR::Instr *newObjInstr)
     Js::DynamicType ** literalTypeRef = newObjInstr->m_func->GetJnFunction()->GetObjectLiteralTypeRef(literalObjectIdOpnd->m_value);
     Js::DynamicType * literalType = *literalTypeRef;
 
-    IR::LabelInstr * helperLabel = null;
-    IR::LabelInstr * allocLabel = null;
+    IR::LabelInstr * helperLabel = nullptr;
+    IR::LabelInstr * allocLabel = nullptr;
     IR::Opnd * literalTypeRefOpnd;
     IR::Opnd * literalTypeOpnd;
     IR::Opnd * propertyArrayOpnd;
@@ -3432,7 +3432,7 @@ Lowerer::LowerNewScObjectLiteral(IR::Instr *newObjInstr)
     literalTypeRefOpnd = IR::AddrOpnd::New(literalTypeRef, IR::AddrOpndKindDynamicMisc, this->m_func);
     propertyArrayOpnd = IR::AddrOpnd::New((Js::Var)propIds, IR::AddrOpndKindDynamicMisc, this->m_func);    
 
-    if (literalType == null || !literalType->GetIsShared())
+    if (literalType == nullptr || !literalType->GetIsShared())
     {
         helperLabel = IR::LabelInstr::New(Js::OpCode::Label, func, true);
         allocLabel = IR::LabelInstr::New(Js::OpCode::Label, func);
@@ -3474,7 +3474,7 @@ Lowerer::LowerNewScObjectLiteral(IR::Instr *newObjInstr)
     }
     else
     {
-        Assert(allocLabel == null);
+        Assert(allocLabel == nullptr);
     }
 
     // For the next call:
@@ -3703,7 +3703,7 @@ Lowerer::GenerateArrayAlloc(IR::Instr *instr, uint32 * psize, Js::ArrayCallSiteI
 
     IR::RegOpnd * headOpnd = IR::RegOpnd::New(TyMachPtr, func);
     const IR::AutoReuseOpnd autoReuseHeadOpnd(headOpnd, func, false);
-    IR::Instr * leaHeadInstr = null;
+    IR::Instr * leaHeadInstr = nullptr;
     bool isHeadSegmentZeroed = false;
     if (ArrayType::HasInlineHeadSegment(count))
     {
@@ -3773,7 +3773,7 @@ Lowerer::GenerateArrayAlloc(IR::Instr *instr, uint32 * psize, Js::ArrayCallSiteI
 
     GenerateMemInit(dstOpnd, ArrayType::GetOffsetOfLength(), count, instr, isZeroed);
 
-    if (leaHeadInstr != null)
+    if (leaHeadInstr != nullptr)
     {
         instr->InsertBefore(leaHeadInstr);
         LowererMD::ChangeToLea(leaHeadInstr);
@@ -4099,7 +4099,7 @@ IR::Instr* Lowerer::LowerProfiledNewArray(IR::JitProfilingInstr* instr, bool has
 
     bool isSpreadCall = instr->m_opcode == Js::OpCode::NewScObjectSpread || instr->m_opcode == Js::OpCode::NewScObjArraySpread;
 
-    m_lowererMD.LoadNewScObjFirstArg(instr, IR::AddrOpnd::New(null, IR::AddrOpndKindConstantVar, m_func, true), isSpreadCall ? 1 : 0);
+    m_lowererMD.LoadNewScObjFirstArg(instr, IR::AddrOpnd::New(nullptr, IR::AddrOpndKindConstantVar, m_func, true), isSpreadCall ? 1 : 0);
 
     if (isSpreadCall)
     {
@@ -4151,7 +4151,7 @@ Lowerer::LowerNewScObject(IR::Instr *newObjInstr, bool callCtor, bool hasArgs, b
     IR::Opnd *ctorOpnd = newObjInstr->GetSrc1();
     IR::RegOpnd *newObjDst = newObjInstr->GetDst()->AsRegOpnd();
 
-    Assert(!callCtor || !hasArgs || (newObjInstr->GetSrc2() != null /*&& newObjInstr->GetSrc2()->IsSymOpnd()*/));
+    Assert(!callCtor || !hasArgs || (newObjInstr->GetSrc2() != nullptr /*&& newObjInstr->GetSrc2()->IsSymOpnd()*/));
 
     bool skipNewScObj = false;
     bool returnNewScObj = false;
@@ -4181,7 +4181,7 @@ Lowerer::LowerNewScObject(IR::Instr *newObjInstr, bool callCtor, bool hasArgs, b
     }
 #endif
 
-    IR::Instr* startCallInstr = null;
+    IR::Instr* startCallInstr = nullptr;
     if (callCtor && hasArgs)
     {
         hasArgs = !newObjInstr->HasEmptyArgOutChain(&startCallInstr);
@@ -4383,7 +4383,7 @@ Lowerer::LowerNewScObject(IR::Instr *newObjInstr, bool callCtor, bool hasArgs, b
         // in the bailout info, if we have a bailout between a StartCall and NewScObject without arguments.  This
         // only happens if we've injected an artificial bailout.
 #if FALSE
-        else if (startCallInstr != null)
+        else if (startCallInstr != nullptr)
         {
             // Review (NewScObject): Remove the StartCall or just leave it orphaned for the peeps to take out later?
             startCallInstr->Remove();
@@ -4507,7 +4507,7 @@ bool Lowerer::TryLowerNewScObjectWithFixedCtorCache(IR::Instr* newObjInstr, IR::
         emitBailOut = true;
 
         ctorCache = newObjInstr->m_func->GetConstructorCache(static_cast<Js::ProfileId>(newObjInstr->AsProfiledInstr()->u.profileId));
-        Assert(ctorCache != null);
+        Assert(ctorCache != nullptr);
         Assert(!ctorCache->skipNewScObject);
         Assert(!ctorCache->typeIsFinal || ctorCache->ctorHasNoExplicitReturnValue);
 
@@ -4522,9 +4522,9 @@ bool Lowerer::TryLowerNewScObjectWithFixedCtorCache(IR::Instr* newObjInstr, IR::
             return false;
         }
 
-        ctorCache = newObjInstr->IsProfiledInstr() ? newObjInstr->m_func->GetConstructorCache(static_cast<Js::ProfileId>(newObjInstr->AsProfiledInstr()->u.profileId)) : null;
+        ctorCache = newObjInstr->IsProfiledInstr() ? newObjInstr->m_func->GetConstructorCache(static_cast<Js::ProfileId>(newObjInstr->AsProfiledInstr()->u.profileId)) : nullptr;
 
-        if (ctorCache == null)
+        if (ctorCache == nullptr)
         {
             if (PHASE_TRACE(Js::FixedNewObjPhase, newObjInstr->m_func->GetJnFunction()) || PHASE_TESTTRACE(Js::FixedNewObjPhase, newObjInstr->m_func->GetJnFunction()))
             {
@@ -4540,7 +4540,7 @@ bool Lowerer::TryLowerNewScObjectWithFixedCtorCache(IR::Instr* newObjInstr, IR::
         }
     }
 
-    Assert(ctorCache != null);
+    Assert(ctorCache != nullptr);
 
     // We should only have cloned if the script contexts match.
     Assert(newObjInstr->m_func->GetScriptContext() == ctorCache->scriptContext);
@@ -4553,8 +4553,8 @@ bool Lowerer::TryLowerNewScObjectWithFixedCtorCache(IR::Instr* newObjInstr, IR::
         {
             Js::FunctionBody* callerFunctionBody = newObjInstr->m_func->GetJnFunction();
             const Js::JavascriptFunction* ctor = ctorCache->constructor;
-            Js::FunctionBody* ctorBody = ctor->GetFunctionInfo()->HasBody() ? ctor->GetFunctionInfo()->GetFunctionBody() : null;
-            const wchar_t* ctorName = ctorBody != null ? ctorBody->GetDisplayName() : L"<unknown>";
+            Js::FunctionBody* ctorBody = ctor->GetFunctionInfo()->HasBody() ? ctor->GetFunctionInfo()->GetFunctionBody() : nullptr;
+            const wchar_t* ctorName = ctorBody != nullptr ? ctorBody->GetDisplayName() : L"<unknown>";
             
             wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
             wchar_t debugStringBuffer2[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
@@ -4578,14 +4578,14 @@ bool Lowerer::TryLowerNewScObjectWithFixedCtorCache(IR::Instr* newObjInstr, IR::
         return true;
     }
 
-    AssertMsg(ctorCache->type != null, "Why did we hard-code a mismatched, invalidated or polymorphic constructor cache?");
+    AssertMsg(ctorCache->type != nullptr, "Why did we hard-code a mismatched, invalidated or polymorphic constructor cache?");
 
     if (PHASE_TRACE(Js::FixedNewObjPhase, newObjInstr->m_func->GetJnFunction()) || PHASE_TESTTRACE(Js::FixedNewObjPhase, newObjInstr->m_func->GetJnFunction()))
     {
         Js::FunctionBody* callerFunctionBody = newObjInstr->m_func->GetJnFunction();
         const Js::JavascriptFunction* constructor = ctorCache->constructor;
-        Js::FunctionBody* constructorBody = constructor->GetFunctionInfo()->HasBody() ? constructor->GetFunctionInfo()->GetFunctionBody() : null;
-        const wchar_t* constructorName = constructorBody != null ? constructorBody->GetDisplayName() : L"<unknown>";
+        Js::FunctionBody* constructorBody = constructor->GetFunctionInfo()->HasBody() ? constructor->GetFunctionInfo()->GetFunctionBody() : nullptr;
+        const wchar_t* constructorName = constructorBody != nullptr ? constructorBody->GetDisplayName() : L"<unknown>";
    
         wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
         wchar_t debugStringBuffer2[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
@@ -4649,7 +4649,7 @@ bool Lowerer::TryLowerNewScObjectWithFixedCtorCache(IR::Instr* newObjInstr, IR::
 void
 Lowerer::GenerateRecyclerAllocAligned(IR::JnHelperMethod allocHelper, size_t allocSize, IR::RegOpnd* newObjDst, IR::Instr* insertionPointInstr, bool inOpHelper)
 {
-    IR::LabelInstr * allocDoneLabel = null;
+    IR::LabelInstr * allocDoneLabel = nullptr;
 
     if (!PHASE_OFF(Js::JitAllocNewObjPhase, insertionPointInstr->m_func->GetJnFunction()) && HeapInfo::IsSmallObject(allocSize))
     {
@@ -4669,7 +4669,7 @@ Lowerer::GenerateRecyclerAllocAligned(IR::JnHelperMethod allocHelper, size_t all
     insertionPointInstr->InsertBefore(newObjCall);
     this->m_lowererMD.LowerCall(newObjCall, 0);
 
-    if (allocDoneLabel != null)
+    if (allocDoneLabel != nullptr)
     {
         // $allocDone:
         insertionPointInstr->InsertBefore(allocDoneLabel);
@@ -4852,7 +4852,7 @@ Lowerer::LowerNewScObjArray(IR::Instr *newObjInstr)
         return LowerNewScObjArrayNoArg(newObjInstr);
     }
 
-    IR::Instr* startMarkerInstr = null;
+    IR::Instr* startMarkerInstr = nullptr;
 
     IR::Opnd *targetOpnd = newObjInstr->GetSrc1();
     Func *func = newObjInstr->m_func;
@@ -4899,7 +4899,7 @@ Lowerer::LowerNewScObjArray(IR::Instr *newObjInstr)
     }
 
     RecyclerWeakReference<Js::FunctionBody> *weakFuncRef = nullptr;
-    Js::ArrayCallSiteInfo *arrayInfo = null;
+    Js::ArrayCallSiteInfo *arrayInfo = nullptr;
     Assert(newObjInstr->IsProfiledInstr());
 
     IR::RegOpnd *resultObjOpnd = newObjInstr->GetDst()->AsRegOpnd();
@@ -4963,7 +4963,7 @@ Lowerer::LowerNewScObjArrayNoArg(IR::Instr *newObjInstr)
     IR::Opnd *targetOpnd = newObjInstr->GetSrc1();
     Func *func = newObjInstr->m_func;
 
-    IR::Instr* startMarkerInstr = null;
+    IR::Instr* startMarkerInstr = nullptr;
 
     if (!targetOpnd->IsAddrOpnd())
     {
@@ -5160,7 +5160,7 @@ uint
 Lowerer::DoLoopProbeAndNumber(IR::BranchInstr *branchInstr)
 {
     IR::LabelInstr *labelInstr = branchInstr->GetTarget();
-    if (labelInstr == null || labelInstr->GetNumber() == 0)
+    if (labelInstr == nullptr || labelInstr->GetNumber() == 0)
     {
         // Forward branch (possibly an indirect jump after try-catch-finally); nothing to do.
         return branchInstr->GetNumber() + 1;
@@ -5482,7 +5482,7 @@ Lowerer::LowerLdFld(
     // Do we need to reload the type and slot array after the helper returns?
     // (We do if there's a propertySymOpnd downstream that needs it, i.e., the type is not dead.)
     IR::RegOpnd *opndBase = src->AsSymOpnd()->CreatePropertyOwnerOpnd(m_func);
-    m_lowererMD.ChangeToHelperCall(ldFldInstr, helperMethod, labelBailOut, opndBase, src->AsSymOpnd()->IsPropertySymOpnd() ? src->AsSymOpnd()->AsPropertySymOpnd() : null, isHelper);
+    m_lowererMD.ChangeToHelperCall(ldFldInstr, helperMethod, labelBailOut, opndBase, src->AsSymOpnd()->IsPropertySymOpnd() ? src->AsSymOpnd()->AsPropertySymOpnd() : nullptr, isHelper);
 
     return instrPrev;
 }
@@ -5492,18 +5492,18 @@ Lowerer::GenerateLdFldWithCachedType(IR::Instr * instrLdFld, bool* continueAsHel
 {
     IR::Instr *instr;
     IR::Opnd *opnd;
-    IR::LabelInstr *labelObjCheckFailed = null;
-    IR::LabelInstr *labelTypeCheckFailed = null;
-    IR::LabelInstr *labelDone = null;
+    IR::LabelInstr *labelObjCheckFailed = nullptr;
+    IR::LabelInstr *labelTypeCheckFailed = nullptr;
+    IR::LabelInstr *labelDone = nullptr;
 
-    Assert(continueAsHelperOut != null);
+    Assert(continueAsHelperOut != nullptr);
     *continueAsHelperOut = false;
 
-    Assert(labelHelperOut != null);
-    *labelHelperOut = null;
+    Assert(labelHelperOut != nullptr);
+    *labelHelperOut = nullptr;
 
-    Assert(typeOpndOut != null);
-    *typeOpndOut = null;
+    Assert(typeOpndOut != nullptr);
+    *typeOpndOut = nullptr;
 
     Assert(instrLdFld->GetSrc1()->IsSymOpnd());
     if (!instrLdFld->GetSrc1()->AsSymOpnd()->IsPropertySymOpnd())
@@ -5528,7 +5528,7 @@ Lowerer::GenerateLdFldWithCachedType(IR::Instr * instrLdFld, bool* continueAsHel
 
     // In the backwards pass we only add guarded property operations to instructions that are not already
     // protected by an upstream type check.
-    Assert(!propertySymOpnd->IsTypeCheckProtected() || propertySymOpnd->GetGuardedPropOps() == null);
+    Assert(!propertySymOpnd->IsTypeCheckProtected() || propertySymOpnd->GetGuardedPropOps() == nullptr);
 
     PHASE_PRINT_TESTTRACE(
         Js::ObjTypeSpecPhase,
@@ -5602,7 +5602,7 @@ Lowerer::GenerateLdFldWithCachedType(IR::Instr * instrLdFld, bool* continueAsHel
     // Either delete the original instruction or replace it with a bailout.
     if (!emitPrimaryTypeCheck && !emitLocalTypeCheck && !emitLoadFromProtoTypeCheck)
     {
-        Assert(labelTypeCheckFailed == null);
+        Assert(labelTypeCheckFailed == nullptr);
         AssertMsg(!instrLdFld->HasBailOutInfo(), "Why does a direct field load have bailout?");
         instrLdFld->Remove();
         return true;
@@ -5639,7 +5639,7 @@ Lowerer::GenerateLdFldWithCachedType(IR::Instr * instrLdFld, bool* continueAsHel
     else
     {
         *continueAsHelperOut = true;
-        Assert(labelObjCheckFailed != null && labelObjCheckFailed != labelTypeCheckFailed);
+        Assert(labelObjCheckFailed != nullptr && labelObjCheckFailed != labelTypeCheckFailed);
         *labelHelperOut = labelObjCheckFailed;
         return false;
     }
@@ -5657,17 +5657,17 @@ IR::Instr* Lowerer::GenerateCompleteLdFld(IR::Instr* instr, bool emitFastPath, I
 
     IR::Instr* prevInstr = instr->m_prev;
 
-    IR::LabelInstr* labelHelper = null;
-    IR::LabelInstr* labelBailOut = null;
+    IR::LabelInstr* labelHelper = nullptr;
+    IR::LabelInstr* labelBailOut = nullptr;
     bool isHelper = false;
-    IR::RegOpnd* typeOpnd = null;
+    IR::RegOpnd* typeOpnd = nullptr;
 
     if (isRoot)
     {
         // Don't do the fast path here if emitFastPath is false, even if we can.
         if (emitFastPath && (this->GenerateLdFldWithCachedType(instr, &isHelper, &labelHelper, &typeOpnd) || this->GenerateNonConfigurableLdRootFld(instr)))
         {
-            Assert(labelHelper == null);
+            Assert(labelHelper == nullptr);
             return prevInstr;
         }
     }
@@ -5675,7 +5675,7 @@ IR::Instr* Lowerer::GenerateCompleteLdFld(IR::Instr* instr, bool emitFastPath, I
     {
         if (this->GenerateLdFldWithCachedType(instr, &isHelper, &labelHelper, &typeOpnd))
         {
-            Assert(labelHelper == null);
+            Assert(labelHelper == nullptr);
             return prevInstr;
         }
     }
@@ -5684,7 +5684,7 @@ IR::Instr* Lowerer::GenerateCompleteLdFld(IR::Instr* instr, bool emitFastPath, I
     {
         if (!GenerateFastLdFld(instr, monoHelperWithoutFastPath, polyHelperWithoutFastPath, &labelBailOut, typeOpnd, &isHelper, &labelHelper))
         {
-            if (labelHelper != null)
+            if (labelHelper != nullptr)
             {
                 labelHelper->isOpHelper = isHelper;
                 instr->InsertBefore(labelHelper);
@@ -5694,7 +5694,7 @@ IR::Instr* Lowerer::GenerateCompleteLdFld(IR::Instr* instr, bool emitFastPath, I
     }
     else
     {
-        if (labelHelper != null)
+        if (labelHelper != nullptr)
         {
             labelHelper->isOpHelper = isHelper;
             instr->InsertBefore(labelHelper);
@@ -5709,8 +5709,8 @@ bool
 Lowerer::GenerateCheckFixedFld(IR::Instr * instrChkFld)
 {
     IR::Instr *instr;
-    IR::LabelInstr *labelBailOut = null;
-    IR::LabelInstr *labelDone = null;
+    IR::LabelInstr *labelBailOut = nullptr;
+    IR::LabelInstr *labelDone = nullptr;
 
     AssertMsg(!PHASE_OFF(Js::FixedMethodsPhase, instrChkFld->m_func->GetJnFunction()) ||
         !PHASE_OFF(Js::UseFixedDataPropsPhase, instrChkFld->m_func->GetJnFunction()), "Lowering a check fixed field with fixed data/method phase disabled?");
@@ -5723,7 +5723,7 @@ Lowerer::GenerateCheckFixedFld(IR::Instr * instrChkFld)
 
     // In the backwards pass we only add guarded property operations to instructions that are not already
     // protected by an upstream type check.
-    Assert(!propertySymOpnd->IsTypeCheckProtected() || propertySymOpnd->GetGuardedPropOps() == null);
+    Assert(!propertySymOpnd->IsTypeCheckProtected() || propertySymOpnd->GetGuardedPropOps() == nullptr);
 
     // For the non-configurable properties on the global object we do not need a type check.  Otherwise,
     // we need a type check and bailout here unless this operation is part of the type check sequence and
@@ -5777,7 +5777,7 @@ Lowerer::GenerateCheckFixedFld(IR::Instr * instrChkFld)
     {
         if (!PHASE_OFF(Js::FixedFieldGuardCheckPhase, this->m_func))
         {
-            Assert(labelBailOut == null);
+            Assert(labelBailOut == nullptr);
             labelBailOut = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, true);
             GenerateFixedFieldGuardCheck(instrChkFld, propertySymOpnd, labelBailOut);
         }
@@ -5793,7 +5793,7 @@ Lowerer::GenerateCheckFixedFld(IR::Instr * instrChkFld)
 
     if (!emitPrimaryTypeCheck && !emitFixedFieldTypeCheck && propertySymOpnd->IsWriteGuardChecked())
     {
-        Assert(labelBailOut == null);
+        Assert(labelBailOut == nullptr);
         AssertMsg(!instrChkFld->HasBailOutInfo(), "Why does a direct fixed field check have bailout?");
         instrChkFld->Remove();
         return true;
@@ -6026,7 +6026,7 @@ Lowerer::GenerateScriptFunctionInit(IR::RegOpnd * regOpnd, IR::Opnd * vtableAddr
     Func * func = this->m_func;
     IR::Opnd * functionProxyOpnd;
     Js::FunctionProxy * functionProxy = *nestedProxy;
-    IR::Opnd * typeOpnd = null;
+    IR::Opnd * typeOpnd = nullptr;
     bool doCheckTypeOpnd = true;
     if (functionProxy->IsDeferred())
     {
@@ -6041,7 +6041,7 @@ Lowerer::GenerateScriptFunctionInit(IR::RegOpnd * regOpnd, IR::Opnd * vtableAddr
         Js::FunctionBody * functionBody = functionProxy->GetFunctionBody();
         functionProxyOpnd = CreateFunctionBodyOpnd(functionBody);
         Js::ScriptFunctionType * type = functionProxy->GetDeferredPrototypeType();
-        if (type != null)
+        if (type != nullptr)
         {            
             typeOpnd = IR::AddrOpnd::New(type, IR::AddrOpndKindDynamicType, func);
             doCheckTypeOpnd = false;
@@ -6122,7 +6122,7 @@ Lowerer::AllocStackClosure()
 void
 Lowerer::EnsureZeroLastStackFunctionNext()
 {
-    Assert(nextStackFunctionOpnd != null);
+    Assert(nextStackFunctionOpnd != nullptr);
     Func * func = this->m_func;
     IR::Instr * insertBeforeInstr = func->GetFunctionEntryInsertionPoint();
     InsertMove(nextStackFunctionOpnd, IR::AddrOpnd::NewNull(func), insertBeforeInstr);
@@ -6170,7 +6170,7 @@ Lowerer::GenerateNewStackScFunc(IR::Instr * newScFuncInstr)
 IR::Instr *
 Lowerer::LowerNewScFunc(IR::Instr * newScFuncInstr)
 {
-    IR::Instr *stackNewScFuncInstr = null;
+    IR::Instr *stackNewScFuncInstr = nullptr;
 
     if (newScFuncInstr->m_func->DoStackNestedFunc())
     {
@@ -6183,7 +6183,7 @@ Lowerer::LowerNewScFunc(IR::Instr * newScFuncInstr)
     IR::Instr * instrPrev = this->LoadFunctionBodyAsArgument(newScFuncInstr, functionBodySlotOpnd, envOpnd);
     m_lowererMD.ChangeToHelperCall(newScFuncInstr, IR::HelperScrFunc_OP_NewScFunc );
 
-    return stackNewScFuncInstr == null? instrPrev : stackNewScFuncInstr;
+    return stackNewScFuncInstr == nullptr? instrPrev : stackNewScFuncInstr;
 }
 
 IR::Instr *
@@ -6434,7 +6434,7 @@ Lowerer::LowerStFld(
     }
 
     IR::RegOpnd *opndBase = dst->AsSymOpnd()->CreatePropertyOwnerOpnd(m_func);
-    m_lowererMD.ChangeToHelperCall(stFldInstr, helperMethod, labelBailOut, opndBase, dst->AsSymOpnd()->IsPropertySymOpnd() ? dst->AsSymOpnd()->AsPropertySymOpnd() : null, isHelper);
+    m_lowererMD.ChangeToHelperCall(stFldInstr, helperMethod, labelBailOut, opndBase, dst->AsSymOpnd()->IsPropertySymOpnd() ? dst->AsSymOpnd()->AsPropertySymOpnd() : nullptr, isHelper);
 
     return instrPrev;
 }
@@ -6450,10 +6450,10 @@ IR::Instr* Lowerer::GenerateCompleteStFld(IR::Instr* instr, bool emitFastPath, I
 
     IR::Instr* prevInstr = instr->m_prev;
 
-    IR::LabelInstr* labelBailOut = null;
-    IR::LabelInstr* labelHelper = null;
+    IR::LabelInstr* labelBailOut = nullptr;
+    IR::LabelInstr* labelHelper = nullptr;
     bool isHelper = false;
-    IR::RegOpnd* typeOpnd = null;
+    IR::RegOpnd* typeOpnd = nullptr;
     if(emitFastPath && GenerateFastStFldForCustomProperty(instr, &labelHelper))
     {
         if(labelHelper)
@@ -6470,14 +6470,14 @@ IR::Instr* Lowerer::GenerateCompleteStFld(IR::Instr* instr, bool emitFastPath, I
     }
     else if (this->GenerateStFldWithCachedType(instr, &isHelper, &labelHelper, &typeOpnd))
     {
-        Assert(labelHelper == null);
+        Assert(labelHelper == nullptr);
         return prevInstr;
     }
     else if (emitFastPath)
     {
         if (!GenerateFastStFld(instr, monoHelperWithoutFastPath, polyHelperWithoutFastPath, &labelBailOut, typeOpnd, &isHelper, &labelHelper, withPutFlags, flags))
         {
-            if (labelHelper != null)
+            if (labelHelper != nullptr)
             {
                 labelHelper->isOpHelper = isHelper;
                 instr->InsertBefore(labelHelper);
@@ -6487,7 +6487,7 @@ IR::Instr* Lowerer::GenerateCompleteStFld(IR::Instr* instr, bool emitFastPath, I
     }
     else
     {
-        if (labelHelper != null)
+        if (labelHelper != nullptr)
         {
             labelHelper->isOpHelper = isHelper;
             instr->InsertBefore(labelHelper);
@@ -6541,20 +6541,20 @@ bool
 Lowerer::GenerateStFldWithCachedType(IR::Instr *instrStFld, bool* continueAsHelperOut, IR::LabelInstr** labelHelperOut, IR::RegOpnd** typeOpndOut)
 {
     IR::Instr *instr;
-    IR::RegOpnd *typeOpnd = null;
-    IR::LabelInstr* labelObjCheckFailed  = null;
-    IR::LabelInstr *labelTypeCheckFailed = null;
-    IR::LabelInstr *labelBothTypeChecksFailed = null;
-    IR::LabelInstr *labelDone = null;
+    IR::RegOpnd *typeOpnd = nullptr;
+    IR::LabelInstr* labelObjCheckFailed  = nullptr;
+    IR::LabelInstr *labelTypeCheckFailed = nullptr;
+    IR::LabelInstr *labelBothTypeChecksFailed = nullptr;
+    IR::LabelInstr *labelDone = nullptr;
 
-    Assert(continueAsHelperOut != null);
+    Assert(continueAsHelperOut != nullptr);
     *continueAsHelperOut = false;
 
-    Assert(labelHelperOut != null);
-    *labelHelperOut = null;
+    Assert(labelHelperOut != nullptr);
+    *labelHelperOut = nullptr;
 
-    Assert(typeOpndOut != null);
-    *typeOpndOut = null;
+    Assert(typeOpndOut != nullptr);
+    *typeOpndOut = nullptr;
 
     Assert(instrStFld->GetDst()->IsSymOpnd());
     if (!instrStFld->GetDst()->AsSymOpnd()->IsPropertySymOpnd() || !instrStFld->GetDst()->AsPropertySymOpnd()->IsTypeCheckSeqCandidate())
@@ -6584,7 +6584,7 @@ Lowerer::GenerateStFldWithCachedType(IR::Instr *instrStFld, bool* continueAsHelp
 
     // In the backwards pass we only add guarded property operations to instructions that are not already
     // protected by an upstream type check.
-    Assert(!propertySymOpnd->IsTypeCheckProtected() || propertySymOpnd->GetGuardedPropOps() == null);
+    Assert(!propertySymOpnd->IsTypeCheckProtected() || propertySymOpnd->GetGuardedPropOps() == nullptr);
 
     PHASE_PRINT_TESTTRACE(
         Js::ObjTypeSpecPhase,
@@ -6654,7 +6654,7 @@ Lowerer::GenerateStFldWithCachedType(IR::Instr *instrStFld, bool* continueAsHelp
     // and return "true" to indicate that we succeeded in eliminating it.
     if (isTypeChecked)
     {
-        Assert(labelTypeCheckFailed == null && labelBothTypeChecksFailed == null);
+        Assert(labelTypeCheckFailed == nullptr && labelBothTypeChecksFailed == nullptr);
         AssertMsg(!instrStFld->HasBailOutInfo(), "Why does a direct field store have bailout?");
         instrStFld->Remove();
         return true;
@@ -6712,7 +6712,7 @@ Lowerer::GenerateStFldWithCachedType(IR::Instr *instrStFld, bool* continueAsHelp
     else
     {
         *continueAsHelperOut = true;
-        Assert(labelObjCheckFailed != null && labelObjCheckFailed != labelBothTypeChecksFailed);
+        Assert(labelObjCheckFailed != nullptr && labelObjCheckFailed != labelBothTypeChecksFailed);
         *labelHelperOut = labelObjCheckFailed;
         return false;
     }
@@ -6767,7 +6767,7 @@ Lowerer::GenerateCachedTypeCheck(IR::Instr *instrChk, IR::PropertySymOpnd *prope
         OUTPUT_VERBOSE_TRACE_FUNC(Js::ObjTypeSpecPhase, this->m_func, L"Emitted %s type check for type 0x % p",
             emitDirectCheck ? L"direct" : propertySymOpnd->IsPoly() ? L"equivalent" : L"indirect", type);
 #if DBG
-        if (propertySymOpnd->GetGuardedPropOps() != null)
+        if (propertySymOpnd->GetGuardedPropOps() != nullptr)
         {
             Output::Print(L" guarding operations:\n    ");
             propertySymOpnd->GetGuardedPropOps()->Dump();
@@ -6829,7 +6829,7 @@ Lowerer::GenerateCachedTypeCheck(IR::Instr *instrChk, IR::PropertySymOpnd *prope
     }
     else
     {
-        InsertCompareBranch(typeOpnd, expectedTypeOpnd, Js::OpCode::BrNeq_A, labelSecondChance != null ? labelSecondChance : labelTypeCheckFailed, instrChk);
+        InsertCompareBranch(typeOpnd, expectedTypeOpnd, Js::OpCode::BrNeq_A, labelSecondChance != nullptr ? labelSecondChance : labelTypeCheckFailed, instrChk);
     }
 
     // Don't pin the type for polymorphic operations. The code can successfully execute even if this type is no longer referenced by any objects,
@@ -6871,7 +6871,7 @@ Lowerer::GenerateCachedTypeWithoutPropertyCheck(IR::Instr *instrInsert, IR::Prop
     // We should never add properties to objects of static types.
     Assert(Js::DynamicType::Is(typeWithoutProperty->GetTypeId()));
 
-    if (typeOpnd == null)
+    if (typeOpnd == nullptr)
     {
         // No opnd holding the type was passed in, so we have to load the type here.
         IR::RegOpnd *baseOpnd = propertySymOpnd->CreatePropertyOwnerOpnd(m_func);
@@ -6892,7 +6892,7 @@ Lowerer::GenerateCachedTypeWithoutPropertyCheck(IR::Instr *instrInsert, IR::Prop
     {
         bool emitDirectCheck = true;
 
-        Assert(typePropertyGuard != null);
+        Assert(typePropertyGuard != nullptr);
         Assert(Js::PropertyGuard::GetSizeOfValue() == static_cast<size_t>(TySize[TyMachPtr]));
         expectedTypeOpnd = IR::MemRefOpnd::New((void*)(typePropertyGuard->GetAddressOfValue()), TyMachPtr, this->m_func, IR::AddrOpndKindDynamicGuardValueRef);
         emitDirectCheck = false;
@@ -6922,9 +6922,9 @@ Js::JitTypePropertyGuard*
 Lowerer::CreateTypePropertyGuardForGuardedProperties(Js::Type* type, IR::PropertySymOpnd* propertySymOpnd)
 {
     // We should always have a list of guarded properties.
-    Assert(propertySymOpnd->GetGuardedPropOps() != null);
+    Assert(propertySymOpnd->GetGuardedPropOps() != nullptr);
 
-    Js::JitTypePropertyGuard* guard = null;
+    Js::JitTypePropertyGuard* guard = nullptr;
 
     Js::EntryPointInfo* entryPointInfo = this->m_func->m_workItem->GetEntryPoint();
 
@@ -6943,7 +6943,7 @@ Lowerer::CreateTypePropertyGuardForGuardedProperties(Js::Type* type, IR::Propert
             }
             else 
             {
-                if (guard == null)
+                if (guard == nullptr)
                 {
                     guard = this->m_func->GetOrCreateSingleTypeGuard(type);
                 }
@@ -6996,7 +6996,7 @@ Lowerer::CreateEquivalentTypeGuardAndLinkToGuardedProperties(Js::Type* type, IR:
         });
     }
 
-    Assert(guard->GetCache() != null);
+    Assert(guard->GetCache() != nullptr);
     Js::EquivalentTypeCache* cache = guard->GetCache();
 
     // TODO (ObjTypeSpec): If we delayed populating the types until encoder, we could bulk allocate all equivalent type caches
@@ -7106,7 +7106,7 @@ Lowerer::LinkCtorCacheToGuardedProperties(Js::JitTimeConstructorCache* ctorCache
 {
     // We do not always have guarded properties. If the constructor is empty and the subsequent code doesn't load or store any of
     // the constructed object's properties, or if all inline caches are empty then this ctor cache doesn't guard any properties.
-    if (ctorCache->GetGuardedPropOps() == null)
+    if (ctorCache->GetGuardedPropOps() == nullptr)
     {
         return false;
     }
@@ -7138,9 +7138,9 @@ template<typename LinkFunc>
 bool
 Lowerer::LinkGuardToGuardedProperties(Js::EntryPointInfo* entryPointInfo, const BVSparse<JitArenaAllocator>* guardedPropOps, LinkFunc link)
 {
-    Assert(entryPointInfo != null);
+    Assert(entryPointInfo != nullptr);
     Assert(entryPointInfo->HasSharedPropertyGuards());
-    Assert(guardedPropOps != null);
+    Assert(guardedPropOps != nullptr);
     bool linked = false;
 
     // For every entry in the bit vector, register the guard for the corresponding property ID.
@@ -7198,7 +7198,7 @@ void
 Lowerer::GeneratePropertyGuardCheck(IR::Instr *insertPointInstr, IR::PropertySymOpnd *propertySymOpnd, IR::LabelInstr *labelBailOut)
 {
     Js::PropertyGuard* guard = propertySymOpnd->GetPropertyGuard();
-    Assert(guard != null);
+    Assert(guard != nullptr);
     
     if (!DoLazyFixedDataBailout(this->m_func))
     {
@@ -7385,14 +7385,14 @@ Lowerer::GenerateStFldWithCachedFinalType(IR::Instr * instrStFld, IR::PropertySy
     Assert(propertySymOpnd->HasInitialType());
 
     IR::Instr *instr;
-    IR::LabelInstr *labelBailOut = null;
+    IR::LabelInstr *labelBailOut = nullptr;
 
     AssertMsg(!propertySymOpnd->IsTypeChecked(), "Why are we doing a type transition when we have the type we want?");
 
     // If the initial type must be checked here, do it.
     Assert(instrStFld->HasBailOutInfo());
     labelBailOut = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, true);
-    GenerateCachedTypeWithoutPropertyCheck(instrStFld, propertySymOpnd, null/*typeOpnd*/, labelBailOut);
+    GenerateCachedTypeWithoutPropertyCheck(instrStFld, propertySymOpnd, nullptr/*typeOpnd*/, labelBailOut);
 
     // Do the type transition.
     GenerateFieldStoreWithTypeChange(instrStFld, propertySymOpnd, propertySymOpnd->GetInitialType(), propertySymOpnd->GetFinalType());
@@ -7407,7 +7407,7 @@ Lowerer::GenerateStFldWithCachedFinalType(IR::Instr * instrStFld, IR::PropertySy
 
     if (instrStFld->HasBailOutInfo())
     {
-        Assert(labelBailOut != null);
+        Assert(labelBailOut != nullptr);
         instrStFld->InsertBefore(labelBailOut);
         instrStFld->InsertAfter(labelDone);
 
@@ -7498,7 +7498,7 @@ Lowerer::LoadHelperTemp(IR::Instr * instr, IR::Instr * instrInsert)
 {
     IR::Opnd *tempOpnd;
     IR::Opnd *dst = instr->GetDst();
-    AssertMsg(dst != NULL, "Always expect a dst for these.");
+    AssertMsg(dst != nullptr, "Always expect a dst for these.");
     AssertMsg(instr->dstIsTempNumber, "Should only be loading temps here");
 
     Assert(dst->IsRegOpnd());
@@ -7588,7 +7588,7 @@ Lowerer::LowerUnaryHelper(IR::Instr *instr, IR::JnHelperMethod helperMethod)
         || Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::ElementI
         || Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::W1
         || Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::Reg1Unsigned1
-        || (Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::Reg1 && instr->GetSrc1() != null
+        || (Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::Reg1 && instr->GetSrc1() != nullptr
         || instr->IsLowered()),
               "Expected a unary instruction...");
 
@@ -7610,7 +7610,7 @@ Lowerer::LowerUnaryHelperMem(IR::Instr *instr, IR::JnHelperMethod helperMethod)
         || Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::ElementI
         || Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::W1
         || Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::Reg1Unsigned1
-        || (Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::Reg1 && instr->GetSrc1() != null
+        || (Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::Reg1 && instr->GetSrc1() != nullptr
         || instr->IsLowered()),
               "Expected a unary instruction...");
 
@@ -7626,7 +7626,7 @@ Lowerer::LowerUnaryHelperMemWithFuncBody(IR::Instr *instr, IR::JnHelperMethod he
         || Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::ElementI
         || Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::W1
         || Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::Reg1Unsigned1
-        || (Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::Reg1 && instr->GetSrc1() != null
+        || (Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::Reg1 && instr->GetSrc1() != nullptr
         || instr->IsLowered()),
         "Expected a unary instruction...");
 
@@ -7692,7 +7692,7 @@ Lowerer::LowerBinaryHelper(IR::Instr *instr, IR::JnHelperMethod helperMethod)
     // The only case where this'd still be null when we return is when
     // helperMethod == HelperOP_CmSrEq_EmptyString; in which case we ignore
     // instrPrev.
-    IR::Instr *instrPrev = null;
+    IR::Instr *instrPrev = nullptr;
 
     AssertMsg((Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::Reg1Unsigned1 && !instr->GetDst()) ||
               Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::Reg3 ||
@@ -7923,7 +7923,7 @@ Lowerer::GetTempNumberSym(IR::Opnd * opnd, bool isTempTransferred)
     StackSym * stackSym = opnd->AsRegOpnd()->m_sym;
     StackSym * tempNumberSym = stackSym->m_tempNumberSym;
 
-    if (tempNumberSym == NULL)
+    if (tempNumberSym == nullptr)
     {
         tempNumberSym = StackSym::New(TyMisc, m_func);
         this->m_func->StackAllocate(tempNumberSym, sizeof(Js::JavascriptNumber));
@@ -8027,7 +8027,7 @@ Lowerer::LowerStElemI(IR::Instr * instr, Js::PropertyOperationFlags flags, bool 
 
     IR::Opnd *src1 = instr->GetSrc1();
     IR::Opnd *dst = instr->GetDst();
-    IR::Opnd *newDst = null;
+    IR::Opnd *newDst = nullptr;
     IRType srcType = src1->GetType();
 
     AssertMsg(dst->IsIndirOpnd(), "Expected indirOpnd on StElementI");
@@ -8124,7 +8124,7 @@ Lowerer::LowerStElemI(IR::Instr * instr, Js::PropertyOperationFlags flags, bool 
     }
     else
     {
-        if (indexOpnd == null)
+        if (indexOpnd == nullptr)
         {
             // No index; the offset identifies the element.
             IntConstType offset = (IntConstType)dst->AsIndirOpnd()->GetOffset();
@@ -8167,7 +8167,7 @@ Lowerer::LowerStElemI(IR::Instr * instr, Js::PropertyOperationFlags flags, bool 
         instr->SetDst(newDst);
     }
 
-    m_lowererMD.ChangeToHelperCall(instr, helperMethod, null, null, null, isHelper);
+    m_lowererMD.ChangeToHelperCall(instr, helperMethod, nullptr, nullptr, nullptr, isHelper);
 
     return instrPrev;
 }
@@ -8195,7 +8195,7 @@ Lowerer::LowerLdElemI(IR::Instr * instr, IR::JnHelperMethod helperMethod, bool i
     {
         IR::LabelInstr * labelLdElem = IR::LabelInstr::New(Js::OpCode::Label, instr->m_func);
         // Pass in null for labelFallThru to only generate the LdHeapArgument call
-        GenerateFastArgumentsLdElemI(instr, labelLdElem, null);
+        GenerateFastArgumentsLdElemI(instr, labelLdElem, nullptr);
         instr->InsertBefore(labelLdElem);
     }
 
@@ -8249,7 +8249,7 @@ Lowerer::LowerLdElemI(IR::Instr * instr, IR::JnHelperMethod helperMethod, bool i
     }
     else
     {
-        if (indexOpnd == null)
+        if (indexOpnd == nullptr)
         {
             // No index; the offset identifies the element.
             IntConstType offset = (IntConstType)src1->AsIndirOpnd()->GetOffset();
@@ -8311,7 +8311,7 @@ Lowerer::LowerLdElemI(IR::Instr * instr, IR::JnHelperMethod helperMethod, bool i
 
     src1->Free(this->m_func);
 
-    m_lowererMD.ChangeToHelperCall(instr, helperMethod, null, null, null, isHelper);
+    m_lowererMD.ChangeToHelperCall(instr, helperMethod, nullptr, nullptr, nullptr, isHelper);
 
     return instrPrev;
 }
@@ -8333,7 +8333,7 @@ void Lowerer::LowerLdLen(IR::Instr *const instr, const bool isHelper)
     PropertySym* fieldSym = PropertySym::FindOrCreate(baseOpnd->m_sym->m_id, Js::PropertyIds::length, (uint32)-1, (uint)-1, PropertyKindData, m_func);
     baseOpnd->Free(this->m_func);
     instr->SetSrc1(IR::SymOpnd::New(fieldSym, TyVar, m_func));
-    LowerLdFld(instr, IR::HelperOp_GetProperty, IR::HelperOp_GetProperty, false, null, isHelper);
+    LowerLdFld(instr, IR::HelperOp_GetProperty, IR::HelperOp_GetProperty, false, nullptr, isHelper);
 }
 
 IR::Instr *
@@ -8718,7 +8718,7 @@ Lowerer::LowerBrBReturn(IR::Instr * instr, IR::JnHelperMethod helperMethod, bool
     IR::Opnd  * opndSrc;
     IR::Opnd  * opndDst;
 
-    AssertMsg(instr->GetSrc1() != NULL && instr->GetSrc2() == NULL, "Expected 1 src opnds on BrB");
+    AssertMsg(instr->GetSrc1() != nullptr && instr->GetSrc2() == nullptr, "Expected 1 src opnds on BrB");
     Assert(instr->m_opcode == Js::OpCode::BrOnEmpty || instr->m_opcode == Js::OpCode::BrOnNotEmpty);
     opndSrc = instr->UnlinkSrc1();
     instrPrev = m_lowererMD.LoadHelperArgument(instr, opndSrc);
@@ -8769,7 +8769,7 @@ IR::Instr* Lowerer::LowerMultiBr(IR::Instr * instr, IR::JnHelperMethod helperMet
     IR::Opnd  * opndDst;
     StackSym * symDst;
 
-    AssertMsg(instr->GetSrc1() != NULL && instr->GetSrc2() == NULL, "Expected 1 src opnd on BrB");
+    AssertMsg(instr->GetSrc1() != nullptr && instr->GetSrc2() == nullptr, "Expected 1 src opnd on BrB");
 
     // Push the args in reverse order.
 
@@ -8847,7 +8847,7 @@ IR::Instr* Lowerer::LowerMultiBr(IR::Instr * instr)
 {
     IR::Instr * instrPrev = instr->m_prev;   
 
-    AssertMsg(instr->GetSrc1() != NULL && instr->GetSrc2() == NULL, "Expected 1 src opnd on BrB");
+    AssertMsg(instr->GetSrc1() != nullptr && instr->GetSrc2() == nullptr, "Expected 1 src opnd on BrB");
     AssertMsg(instr->IsBranchInstr() && instr->AsBranchInstr()->IsMultiBranch(), "Bad Instruction Lowering Call to LowerMultiBr()");
     
     IR::MultiBranchInstr * multiBrInstr = instr->AsBranchInstr()->AsMultiBrInstr();
@@ -8865,7 +8865,7 @@ IR::Instr* Lowerer::LowerBrBMem(IR::Instr * instr, IR::JnHelperMethod helperMeth
     IR::Opnd  * opndSrc;
     IR::Opnd  * opndDst;
     StackSym * symDst;
-    AssertMsg(instr->GetSrc1() != NULL && instr->GetSrc2() == NULL, "Expected 1 src opnds on BrB");
+    AssertMsg(instr->GetSrc1() != nullptr && instr->GetSrc2() == nullptr, "Expected 1 src opnds on BrB");
 
     instrPrev = LoadScriptContext(instr);
     opndSrc = instr->UnlinkSrc1();
@@ -8897,7 +8897,7 @@ IR::Instr* Lowerer::LowerBrOnObject(IR::Instr * instr, IR::JnHelperMethod helper
     IR::Opnd  * opndSrc;
     IR::Opnd  * opndDst;
     StackSym * symDst;
-    AssertMsg(instr->GetSrc1() != NULL && instr->GetSrc2() == NULL, "Expected 1 src opnds on BrB");
+    AssertMsg(instr->GetSrc1() != nullptr && instr->GetSrc2() == nullptr, "Expected 1 src opnds on BrB");
 
     opndSrc = instr->UnlinkSrc1();
     instrPrev = m_lowererMD.LoadHelperArgument(instr, opndSrc);
@@ -8928,7 +8928,7 @@ IR::Instr * Lowerer::LowerBrOnClassConstructor(IR::Instr * instr, IR::JnHelperMe
     IR::Opnd * opndSrc;
     IR::Opnd * opndDst;
     StackSym * symDst;
-    AssertMsg(instr->GetSrc1() != NULL && instr->GetSrc2() == NULL, "Expected 1 src opnds on BrB");
+    AssertMsg(instr->GetSrc1() != nullptr && instr->GetSrc2() == nullptr, "Expected 1 src opnds on BrB");
 
     opndSrc = instr->UnlinkSrc1();
     instrPrev = m_lowererMD.LoadHelperArgument(instr, opndSrc);
@@ -8962,7 +8962,7 @@ Lowerer::LowerBrCMem(IR::Instr * instr, IR::JnHelperMethod helperMethod, bool no
     StackSym * symDst;
     bool inverted = false;
 
-    AssertMsg(instr->GetSrc1() != NULL && instr->GetSrc2() != NULL, "Expected 2 src opnds on BrC");
+    AssertMsg(instr->GetSrc1() != nullptr && instr->GetSrc2() != nullptr, "Expected 2 src opnds on BrC");
 
     if (!noMathFastPath && !this->GenerateFastCondBranch(instr->AsBranchInstr(), &isHelper))
     {
@@ -9046,7 +9046,7 @@ Lowerer::LowerBrFncApply(IR::Instr * instr, IR::JnHelperMethod helperMethod) {
     IR::Opnd  * opndDst;
     StackSym * symDst;
 
-    AssertMsg(instr->GetSrc1() != NULL, "Expected 1 src opnd on BrFncApply");
+    AssertMsg(instr->GetSrc1() != nullptr, "Expected 1 src opnd on BrFncApply");
 
     LoadScriptContext(instr);
 
@@ -9441,8 +9441,8 @@ Lowerer::LowerStElemC(IR::Instr * stElem)
     {
         Assert(stElem->m_opcode == Js::OpCode::StElemC);
 
-        IR::LabelInstr *labelBailOut = null;
-        IR::Instr *instrBailOut = null;
+        IR::LabelInstr *labelBailOut = nullptr;
+        IR::Instr *instrBailOut = nullptr;
 
         if (stElem->HasBailOutInfo())
         {
@@ -9773,7 +9773,7 @@ Lowerer::LowerArgIn(IR::Instr *instrArgIn)
         else
         {
             // Make sure that this instruction gets lowered.
-            if (instrResume == null)
+            if (instrResume == nullptr)
             {
                 instrResume = instrPrev;
             }
@@ -9781,7 +9781,7 @@ Lowerer::LowerArgIn(IR::Instr *instrArgIn)
     }
     // The loading of parameters will be inserted above this instruction.
     instrInsert = instrPrev;
-    if (instrResume == null)
+    if (instrResume == nullptr)
     {
         // We found no intervening non-ArgIn's, so lowering can resume at the previous instruction.
         instrResume = instrInsert->m_prev;
@@ -10161,7 +10161,7 @@ Lowerer::InlineBuiltInLibraryCall(IR::Instr *callInstr)
             break;
 
         case Js::BuiltinFunction::Array_Push:
-            success = GenerateFastPush(argsOpnd[0], argsOpnd[1], callInstr, labelHelper, labelHelper, null, doneLabel);
+            success = GenerateFastPush(argsOpnd[0], argsOpnd[1], callInstr, labelHelper, labelHelper, nullptr, doneLabel);
             break;
 
         case Js::BuiltinFunction::String_Replace:
@@ -10416,7 +10416,7 @@ Lowerer::GenerateHelperToArrayPushFastPath(IR::Instr * instr, IR::LabelInstr * b
     //Currently, X64 floating-point calling convention is not supported. Hence store the
     // float value explicitly in RegXMM2 (RegXMM0 and RegXMM1 will be filled with ScriptContext and Var respectively)
 #if _M_X64
-        IR::RegOpnd* regXMM2 = IR::RegOpnd::New(null, (RegNum)RegXMM2, TyMachDouble, this->m_func);
+        IR::RegOpnd* regXMM2 = IR::RegOpnd::New(nullptr, (RegNum)RegXMM2, TyMachDouble, this->m_func);
         regXMM2->m_isCallArg = true;
         IR::Instr * movInstr = IR::Instr::New(Js::OpCode::MOVSD, regXMM2, elementHelperOpnd, this->m_func);
         instr->InsertBefore(movInstr);
@@ -10512,7 +10512,7 @@ Lowerer::LowerCondBranchCheckBailOut(IR::BranchInstr * branchInstr, IR::Instr * 
         }
 
         IR::Instr * bailOutInstr = this->SplitBailOnImplicitCall(branchInstr, helperCall, branchInstr);
-        IR::Instr* prevInstr = this->LowerBailOnEqualOrNotEqual(bailOutInstr, branchInstr, NULL, NULL, isHelper);
+        IR::Instr* prevInstr = this->LowerBailOnEqualOrNotEqual(bailOutInstr, branchInstr, nullptr, nullptr, isHelper);
 
         if (debuggerBailOutKind != IR::BailOutInvalid)
         {
@@ -10654,7 +10654,7 @@ Lowerer::LowerBailOnNotStackArgs(IR::Instr * instr)
     }
 
     instr->InsertBefore(helperLabelInstr);
-    this->GenerateBailOut(instr, null, null);
+    this->GenerateBailOut(instr, nullptr, nullptr);
     return prevInstr;
 }
 
@@ -10730,7 +10730,7 @@ Lowerer::LowerBailOnNotPolymorphicInlinee(IR::Instr * instr)
     Assert(instr->HasBailOutInfo() && (instr->GetBailOutKind() == IR::BailOutOnFailedPolymorphicInlineTypeCheck || instr->GetBailOutKind() == IR::BailOutOnPolymorphicInlineFunction));
     IR::Instr* instrPrev = instr->m_prev;
     
-    this->GenerateBailOut(instr, null, null);
+    this->GenerateBailOut(instr, nullptr, nullptr);
 
     return instrPrev;
 }
@@ -10782,9 +10782,9 @@ Lowerer::LowerBailoutCheckAndLabel(IR::Instr *instr, bool onEqual, bool isHelper
 
 IR::Instr *
 Lowerer::LowerBailOnEqualOrNotEqual(IR::Instr * instr,
-    IR::BranchInstr *branchInstr, // = null
-    IR::LabelInstr *labelBailOut, // = null
-    IR::PropertySymOpnd * propSymOpnd, // = null
+    IR::BranchInstr *branchInstr, // = nullptr
+    IR::LabelInstr *labelBailOut, // = nullptr
+    IR::PropertySymOpnd * propSymOpnd, // = nullptr
     bool isHelper)                // = false
 {
     IR::Instr * prevInstr = instr->m_prev;
@@ -10857,8 +10857,8 @@ void Lowerer::LowerBailOnNegative(IR::Instr *const instr)
 
 IR::Instr *
 Lowerer::LowerBailOnNotObject(IR::Instr       *instr,
-                              IR::BranchInstr *branchInstr  /* = null */,
-                              IR::LabelInstr  *labelBailOut /* = null */)
+                              IR::BranchInstr *branchInstr  /* = nullptr */,
+                              IR::LabelInstr  *labelBailOut /* = nullptr */)
 {
     IR::Instr      *prevInstr          = instr->m_prev;
     IR::LabelInstr *continueLabelInstr = IR::LabelInstr::New(Js::OpCode::Label,
@@ -10875,8 +10875,8 @@ Lowerer::LowerBailOnNotObject(IR::Instr       *instr,
 
 IR::Instr *
 Lowerer::LowerBailOnNotBuiltIn(IR::Instr       *instr,
-                               IR::BranchInstr *branchInstr  /* = null */,
-                               IR::LabelInstr  *labelBailOut /* = null */)
+                               IR::BranchInstr *branchInstr  /* = nullptr */,
+                               IR::LabelInstr  *labelBailOut /* = nullptr */)
 {
     Assert(instr->GetSrc2()->IsIntConstOpnd());
     IR::Instr *prevInstr = instr->m_prev;
@@ -10912,7 +10912,7 @@ Lowerer::LowerBailForDebugger(IR::Instr* instr, bool isInsideHelper /* = false *
     AssertMsg(!(bailOutKind & IR::BailOutExplicit) || bailOutKind == IR::BailOutExplicit,
         "BailOutExplicit cannot be combined with any other bailout flags.");
 
-    IR::LabelInstr* bailOutLabel = NULL;
+    IR::LabelInstr* bailOutLabel = nullptr;
 
     if (!(bailOutKind & IR::BailOutExplicit))
     {
@@ -11018,7 +11018,7 @@ Lowerer::LowerBailForDebugger(IR::Instr* instr, bool isInsideHelper /* = false *
 #else
             effectiveFrameBaseReg = m_lowererMD.GetRegFramePointer();
 #endif
-            IR::Opnd* opnd1 = IR::RegOpnd::New(NULL, effectiveFrameBaseReg, TyMachReg, m_func);
+            IR::Opnd* opnd1 = IR::RegOpnd::New(nullptr, effectiveFrameBaseReg, TyMachReg, m_func);
             IR::Opnd* opnd2 = IR::MemRefOpnd::New(debugManager->stepController.GetAddressOfFrameAddress(), TyMachReg, m_func);
             this->InsertCompareBranch(opnd1, opnd2, Js::OpCode::BrGt_A, /*isUnsigned*/ true, bailOutLabel, continueBranchInstr);
 
@@ -11078,7 +11078,7 @@ Lowerer::LowerBailForDebugger(IR::Instr* instr, bool isInsideHelper /* = false *
         bailOutLabel = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, false);
     }
 
-    this->GenerateBailOut(instr, NULL, bailOutLabel);
+    this->GenerateBailOut(instr, nullptr, bailOutLabel);
 
     return prevInstr;
 }
@@ -11090,7 +11090,7 @@ Lowerer::LowerBailOnException(IR::Instr * instr)
     IR::Instr * instrPrev = instr->m_prev;
     Assert(instrPrev->m_opcode == Js::OpCode::Catch);
 
-    this->GenerateBailOut(instr, null, null);
+    this->GenerateBailOut(instr, nullptr, nullptr);
 
     return instrPrev;
 }
@@ -11098,7 +11098,7 @@ Lowerer::LowerBailOnException(IR::Instr * instr)
 // Generate BailOut Lowerer Instruction if the value is INT_MIN.
 // It it's not INT_MIN, we continue without bailout.
 IR::Instr *
-Lowerer::LowerBailOnIntMin(IR::Instr *instr, IR::BranchInstr *branchInstr  /* = null */, IR::LabelInstr  *labelBailOut /* = null */)
+Lowerer::LowerBailOnIntMin(IR::Instr *instr, IR::BranchInstr *branchInstr  /* = nullptr */, IR::LabelInstr  *labelBailOut /* = nullptr */)
 {
     Assert(instr);
     Assert(instr->GetSrc1());
@@ -11156,10 +11156,10 @@ void Lowerer::LowerBailOnNotString(IR::Instr *instr)
         IR::LabelInstr *helperLabelInstr = IR::LabelInstr::New(Js::OpCode::Label, m_func, true);
         instr->InsertAfter(continueLabelInstr);
 
-        IR::RegOpnd *srcReg = movInstr->GetSrc1()->IsRegOpnd() ? movInstr->GetSrc1()->AsRegOpnd() : null;
+        IR::RegOpnd *srcReg = movInstr->GetSrc1()->IsRegOpnd() ? movInstr->GetSrc1()->AsRegOpnd() : nullptr;
 
         this->GenerateStringTest(srcReg, instr, helperLabelInstr, continueLabelInstr);
-        this->GenerateBailOut(instr, null, helperLabelInstr);
+        this->GenerateBailOut(instr, nullptr, helperLabelInstr);
     }
     else
     {
@@ -11206,7 +11206,7 @@ void Lowerer::LowerOneBailOutKind(
         instr->UnlinkBailOutInfo();
         if(bailOutInfo->bailOutInstr == instr)
         {
-            bailOutInfo->bailOutInstr = null;
+            bailOutInfo->bailOutInstr = nullptr;
         }
     }
 
@@ -11238,7 +11238,7 @@ void Lowerer::SplitBailOnNotArray(
     IR::Instr *&bailOnMissingValue = *bailOnMissingValueRef;
 
     bailOnNotArray = instr;
-    bailOnMissingValue = null;
+    bailOnMissingValue = nullptr;
 
     IR::BailOutKind bailOutKind = instr->GetBailOutKind();
     if(bailOutKind == IR::BailOutOnNotArray ||
@@ -11390,7 +11390,7 @@ void Lowerer::LowerBailOnInvalidatedArrayHeadSegment(IR::Instr *const instr, con
     const ValueType baseValueType(baseOpnd->GetValueType());
     Assert(!baseValueType.IsNotArrayOrObjectWithArray());
     const bool isArrayOrObjectWithArray = baseValueType.IsArrayOrObjectWithArray();
-    IR::ArrayRegOpnd *const arrayOpnd = baseOpnd->IsArrayRegOpnd() ? baseOpnd->AsArrayRegOpnd() : null;
+    IR::ArrayRegOpnd *const arrayOpnd = baseOpnd->IsArrayRegOpnd() ? baseOpnd->AsArrayRegOpnd() : nullptr;
 
     IR::RegOpnd *headSegmentBeforeHelperCallOpnd;
     IR::AutoReuseOpnd autoReuseHeadSegmentBeforeHelperCallOpnd;
@@ -11516,7 +11516,7 @@ void Lowerer::LowerBailOnInvalidatedArrayLength(IR::Instr *const instr, const bo
     IR::RegOpnd *const baseOpnd = instr->GetDst()->AsIndirOpnd()->GetBaseOpnd();
     const ValueType baseValueType(baseOpnd->GetValueType());
     Assert(!baseValueType.IsNotArray());
-    IR::ArrayRegOpnd *const arrayOpnd = baseOpnd->IsArrayRegOpnd() ? baseOpnd->AsArrayRegOpnd() : null;
+    IR::ArrayRegOpnd *const arrayOpnd = baseOpnd->IsArrayRegOpnd() ? baseOpnd->AsArrayRegOpnd() : nullptr;
 
     IR::RegOpnd *lengthBeforeHelperCallOpnd;
     IR::AutoReuseOpnd autoReuseLengthBeforeHelperCallOpnd;
@@ -11604,7 +11604,7 @@ void Lowerer::LowerBailOnCreatedMissingValue(IR::Instr *const instr, const bool 
     const ValueType baseValueType(baseOpnd->GetValueType());
     Assert(!baseValueType.IsNotArrayOrObjectWithArray());
 
-    IR::Opnd *arrayFlagsBeforeHelperCallOpnd = null;
+    IR::Opnd *arrayFlagsBeforeHelperCallOpnd = nullptr;
     IR::AutoReuseOpnd autoReuseArrayFlagsBeforeHelperCallOpnd;
     const IRType arrayFlagsType = sizeof(uintptr_t) == sizeof(uint32) ? TyUint32 : TyUint64;
     if(!(baseValueType.IsArrayOrObjectWithArray() && baseValueType.HasNoMissingValues()))
@@ -11844,7 +11844,7 @@ Lowerer::SplitBailOnImplicitCall(IR::Instr *& instr)
     // FIELDHOIST-TODO: For now reset the implicit call flag on every helper call
     LowererMD::CreateAssign(implicitCallFlags, noImplicitCall, instr);
 
-    IR::Instr *disableImplicitCallsInstr = null, *enableImplicitCallsInstr = null;
+    IR::Instr *disableImplicitCallsInstr = nullptr, *enableImplicitCallsInstr = nullptr;
     if(bailOutKind == IR::BailOutOnLossyToInt32ImplicitCalls ||
        bailOutKind == IR::BailOutOnImplicitCallsPreOp)
     {
@@ -11911,7 +11911,7 @@ Lowerer::SplitBailOnImplicitCall(IR::Instr * instr, IR::Instr * helperCall, IR::
     BailOutInfo * bailOutInfo = instr->GetBailOutInfo();
     if (bailOutInfo->bailOutInstr == instr)
     {
-        bailOutInfo->bailOutInstr = null;
+        bailOutInfo->bailOutInstr = nullptr;
     }
     IR::Instr * bailOutInstr = IR::BailOutInstr::New(Js::OpCode::BailOnNotEqual, IR::BailOutOnImplicitCalls, bailOutInfo, bailOutInfo->bailOutFunc);
     bailOutInstr->SetSrc1(implicitCallFlags);
@@ -11938,7 +11938,7 @@ IR::Instr* Lowerer::SplitBailForDebugger(IR::Instr* instr)
 
     IR::BailOutKind debuggerBailOutKind;    // Used for splitted instr.
     BailOutInfo* bailOutInfo = instr->GetBailOutInfo();
-    IR::Instr* sharedBailoutInstr = NULL;
+    IR::Instr* sharedBailoutInstr = nullptr;
 
     if (instr->GetBailOutKind() & IR::BailOutForDebuggerBits)
     {
@@ -11953,7 +11953,7 @@ IR::Instr* Lowerer::SplitBailForDebugger(IR::Instr* instr)
         if (bailOutInfo->bailOutInstr == instr)
         {
             // null will be picked up by following BailOutInstr::New which will change it to new bailout instr.
-            bailOutInfo->bailOutInstr = null;
+            bailOutInfo->bailOutInstr = nullptr;
         }
 
         // Remove bailout info from the original instr which from now on becomes just regular instr, w/o deallocating bailout info.
@@ -12148,7 +12148,7 @@ Lowerer::GenerateBailOut(IR::Instr * instr, IR::BranchInstr * branchInstr, IR::L
 {
     BailOutInfo * bailOutInfo = instr->GetBailOutInfo();
     IR::Instr * bailOutInstr = bailOutInfo->bailOutInstr;
-    IR::LabelInstr *collectRuntimeStatsLabel = null;
+    IR::LabelInstr *collectRuntimeStatsLabel = nullptr;
     if (instr->IsCloned())
     {
         Assert(bailOutInstr != instr);
@@ -12205,7 +12205,7 @@ Lowerer::GenerateBailOut(IR::Instr * instr, IR::BranchInstr * branchInstr, IR::L
             collectRuntimeStatsLabel->m_noHelperAssert = true;
         }
 #endif
-        Assert(bailOutLabel == null || bailOutLabel == bailOutTargetLabel);
+        Assert(bailOutLabel == nullptr || bailOutLabel == bailOutTargetLabel);
 
         IR::BranchInstr * branchInstr = IR::BranchInstr::New(LowererMD::MDUncondBranchOpcode, bailOutTargetLabel, this->m_func);
         instr->InsertAfter(branchInstr);
@@ -12221,7 +12221,7 @@ Lowerer::GenerateBailOut(IR::Instr * instr, IR::BranchInstr * branchInstr, IR::L
     instr->InsertBefore(collectRuntimeStatsLabel);
 
     // capture the condition for this bailout
-    if (bailOutLabel == NULL)
+    if (bailOutLabel == nullptr)
     {
         // Create a label and place it in the bailout info so that shared bailout point can jump to this one
         if (instr->m_prev->IsLabelInstr())
@@ -12251,13 +12251,13 @@ Lowerer::GenerateBailOut(IR::Instr * instr, IR::BranchInstr * branchInstr, IR::L
     bailOutLabel->m_hasNonBranchRef = true;
 
     // Create the bail out record
-    Assert(bailOutInfo->bailOutRecord == null);
+    Assert(bailOutInfo->bailOutRecord == nullptr);
     BailOutRecord * bailOutRecord;
     IR::JnHelperMethod helperMethod;
-    if (branchInstr != null)
+    if (branchInstr != nullptr)
     {
-        Assert(branchInstr->GetSrc2() == null);
-        Assert(branchInstr->GetDst() == null);
+        Assert(branchInstr->GetSrc2() == nullptr);
+        Assert(branchInstr->GetDst() == nullptr);
 
         IR::LabelInstr * targetLabel = branchInstr->GetTarget();
         Assert(targetLabel->GetByteCodeOffset() != Js::Constants::NoByteCodeOffset);
@@ -12397,7 +12397,7 @@ Lowerer::GenerateFastCondBranch(IR::BranchInstr * instrBranch, bool *pIsHelper)
     //      (caller will generate normal helper call sequence)
     // $fallthru:
 
-    IR::LabelInstr *     labelHelper = NULL;
+    IR::LabelInstr *     labelHelper = nullptr;
     IR::LabelInstr *     labelFallThru;
     IR::BranchInstr *    instr;
     IR::Opnd *           opndSrc1;
@@ -12669,7 +12669,7 @@ bool
 Lowerer::GetValueFromIndirOpnd(IR::IndirOpnd *indirOpnd, IR::Opnd **pValueOpnd, IntConstType *pValue)
 {
     IR::RegOpnd *indexOpnd = indirOpnd->GetIndexOpnd();
-    IR::Opnd* valueOpnd = NULL;
+    IR::Opnd* valueOpnd = nullptr;
     IntConstType value = 0;
     if (!indexOpnd)
     {
@@ -12701,7 +12701,7 @@ Lowerer::GenerateFastBrOnObject(IR::Instr *instr)
 {
     Assert(instr->m_opcode == Js::OpCode::BrOnObject_A);
 
-    IR::RegOpnd      *object        = instr->GetSrc1()->IsRegOpnd() ? instr->GetSrc1()->AsRegOpnd() : null;
+    IR::RegOpnd      *object        = instr->GetSrc1()->IsRegOpnd() ? instr->GetSrc1()->AsRegOpnd() : nullptr;
     IR::LabelInstr   *done          = instr->GetOrCreateContinueLabel();
     IR::LabelInstr   *target        = instr->AsBranchInstr()->GetTarget();
     IR::RegOpnd      *typeRegOpnd   = IR::RegOpnd::New(TyMachReg, m_func);
@@ -13922,17 +13922,17 @@ Lowerer::GenerateFastElemICommon(
     bool * pIsTypedArrayElement,
     bool * pIsStringIndex,
     bool *emitBailoutRef,
-    IR::LabelInstr **pLabelSegmentLengthIncreased /*= null*/,
+    IR::LabelInstr **pLabelSegmentLengthIncreased /*= nullptr*/,
     bool checkArrayLengthOverflow /*= true*/,
     bool forceGenerateFastPath /* = false */,
     bool returnLength,
-    IR::LabelInstr *bailOutLabelInstr /* = null*/)
+    IR::LabelInstr *bailOutLabelInstr /* = nullptr*/)
 {
     *pIsTypedArrayElement = false;
     *pIsStringIndex = false;
     if(pLabelSegmentLengthIncreased)
     {
-        *pLabelSegmentLengthIncreased = null;
+        *pLabelSegmentLengthIncreased = nullptr;
     }
     IR::RegOpnd *baseOpnd = indirOpnd->GetBaseOpnd();
     AssertMsg(baseOpnd, "This shoudn't be NULL");
@@ -13961,7 +13961,7 @@ Lowerer::GenerateFastElemICommon(
             else
             {
                 // There's no point in generating the int index fast path if we know the index has a string value.
-                return NULL;
+                return nullptr;
             }
         }
     }
@@ -13996,7 +13996,7 @@ Lowerer::GenerateFastElemIIntIndexCommon(
     bool checkArrayLengthOverflow /*= true*/,
     bool forceGenerateFastPath /* = false */,
     bool returnLength,
-    IR::LabelInstr *bailOutLabelInstr /* = null*/)
+    IR::LabelInstr *bailOutLabelInstr /* = nullptr*/)
 {
     IR::RegOpnd *indexOpnd = indirOpnd->GetIndexOpnd();
     IR::RegOpnd *baseOpnd = indirOpnd->GetBaseOpnd();
@@ -14055,7 +14055,7 @@ Lowerer::GenerateFastElemIIntIndexCommon(
     // bailouts.
     bool isIndexNotInt = false;
     IntConstType value = 0;
-    IR::Opnd * indexValueOpnd = NULL;
+    IR::Opnd * indexValueOpnd = nullptr;
     bool invertBoundCheckComparison = false;
 
     if (indirOpnd->TryGetIntConstIndexValue(true, &value, &isIndexNotInt))
@@ -14069,21 +14069,21 @@ Lowerer::GenerateFastElemIIntIndexCommon(
         {
             // If the index is a negative int constant we go directly to helper.
             Assert(!forceGenerateFastPath);
-            return NULL;
+            return nullptr;
         }
     }
     else if (isIndexNotInt)
     {
         // If we know the index is not an int we go directly to helper.
         Assert(!forceGenerateFastPath);
-        return NULL;
+        return nullptr;
     }
 
     //At this point indexValueOpnd is either NULL or contains the valueOpnd
 
     if(!forceGenerateFastPath && !ShouldGenerateArrayFastPath(baseOpnd, true, true, true))
     {
-        return NULL;
+        return nullptr;
     }
 
     if(baseValueType.IsLikelyAnyOptimizedArray())
@@ -14093,7 +14093,7 @@ Lowerer::GenerateFastElemIIntIndexCommon(
     }
 
     IRType elementType = TyIllegal;
-    IR::Opnd * element = null;
+    IR::Opnd * element = nullptr;
 
     if(ldElem->m_opcode == Js::OpCode::InlineArrayPush)
     {
@@ -14106,20 +14106,20 @@ Lowerer::GenerateFastElemIIntIndexCommon(
         elementType = element->GetType();
     }
 
-    Assert(isStore || (element == null && elementType == TyIllegal));
+    Assert(isStore || (element == nullptr && elementType == TyIllegal));
 
     if (isStore && baseValueType.IsLikelyNativeArray() && indirType != elementType)
     {
         // We're trying to write a value of the wrong type, which should force a conversion of the array.
         // Go to the helper for that.
-        return NULL;
+        return nullptr;
     }
 
     // TODO: Deal with the fact that storing to a native array can change the array value type,
     // so that we can actually omit some of these vtable checks in native array cases.
     IR::RegOpnd *arrayOpnd = baseOpnd;
-    IR::RegOpnd *headSegmentOpnd = null;
-    IR::Opnd *headSegmentLengthOpnd = null;
+    IR::RegOpnd *headSegmentOpnd = nullptr;
+    IR::Opnd *headSegmentLengthOpnd = nullptr;
     IR::AutoReuseOpnd autoReuseHeadSegmentOpnd, autoReuseHeadSegmentLengthOpnd;
     bool indexIsNonnegative = indexValueOpnd || indexOpnd->GetType() == TyUint32 || !checkArrayLengthOverflow;
     bool indexIsLessThanHeadSegmentLength = false;
@@ -14347,7 +14347,7 @@ Lowerer::GenerateFastElemIIntIndexCommon(
     else if (isStore && !baseValueType.IsLikelyTypedArray()) //  #if (opcode == StElemI_A)
     {
         IR::LabelInstr *labelDone = IR::LabelInstr::New(Js::OpCode::Label, this->m_func);
-        IR::LabelInstr *labelSegmentLengthIncreased = null;
+        IR::LabelInstr *labelSegmentLengthIncreased = nullptr;
 
         const bool isPush = ldElem->m_opcode != Js::OpCode::StElemI_A && ldElem->m_opcode != Js::OpCode::StElemI_A_Strict;
 
@@ -14646,7 +14646,7 @@ Lowerer::GenerateFastElemIIntIndexCommon(
                 indirOpnd->SetOffset(offsetof(Js::SparseArraySegment<Js::Var>, elements));
             }
 
-            IR::Opnd * tmpDst = null;
+            IR::Opnd * tmpDst = nullptr;
             IR::Opnd * dst = ldElem->GetDst();
             //Pop might not have a dst, if not don't worry about returning the last element. But we still have to
             // worry about gaps, because these force us to access the prototype chain, which may have side-effects.
@@ -14896,8 +14896,8 @@ Lowerer::GenerateFastLdElemI(IR::Instr *& ldElem, bool *instrIsInHelperBlockRef)
 
     IR::LabelInstr *    labelHelper;
     IR::LabelInstr *    labelFallThru;
-    IR::LabelInstr *    labelBailOut = null;
-    IR::LabelInstr *    labelMissingNative = null;
+    IR::LabelInstr *    labelBailOut = nullptr;
+    IR::LabelInstr *    labelMissingNative = nullptr;
     IR::Opnd *src1 =    ldElem->GetSrc1();
 
     AssertMsg(src1->IsIndirOpnd(), "Expected indirOpnd on LdElementI");
@@ -14983,7 +14983,7 @@ Lowerer::GenerateFastLdElemI(IR::Instr *& ldElem, bool *instrIsInHelperBlockRef)
         IRType dstType = dst->AsRegOpnd()->GetType();
 
         // The index is negative or not int.
-        if (indirOpnd == NULL)
+        if (indirOpnd == nullptr)
         {
             Assert(!(ldElem->HasBailOutInfo() && ldElem->GetBailOutKind() & IR::BailOutOnArrayAccessHelperCall));
 
@@ -15022,7 +15022,7 @@ Lowerer::GenerateFastLdElemI(IR::Instr *& ldElem, bool *instrIsInHelperBlockRef)
 
                 ldElem->UnlinkSrc1();
                 ldElem->UnlinkDst();
-                GenerateBailOut(ldElem, NULL, NULL);
+                GenerateBailOut(ldElem, nullptr, nullptr);
                 emittedFastPath = true;
                 return false;
             }
@@ -15290,7 +15290,7 @@ Lowerer::GenerateFastLdElemI(IR::Instr *& ldElem, bool *instrIsInHelperBlockRef)
         {
             if(!emitBailout)
             {
-                if (labelMissingNative == null)
+                if (labelMissingNative == nullptr)
                 {
                     labelMissingNative = IR::LabelInstr::New(Js::OpCode::Label, m_func, true);
                 }
@@ -15340,7 +15340,7 @@ Lowerer::GenerateFastLdElemI(IR::Instr *& ldElem, bool *instrIsInHelperBlockRef)
     {
         ldElem->UnlinkSrc1();
         ldElem->UnlinkDst();
-        GenerateBailOut(ldElem, NULL, NULL);
+        GenerateBailOut(ldElem, nullptr, nullptr);
     }
 
     return !emitBailout;
@@ -15371,7 +15371,7 @@ Lowerer::GenerateFastStElemI(IR::Instr *& stElem, bool *instrIsInHelperBlockRef)
     IR::LabelInstr *    labelHelper;
     IR::LabelInstr *    labelSegmentLengthIncreased;
     IR::LabelInstr *    labelFallThru;
-    IR::LabelInstr *    labelBailOut = null;
+    IR::LabelInstr *    labelBailOut = nullptr;
     IR::Opnd *dst =     stElem->GetDst();
     IR::IndirOpnd *     indirOpnd = dst->AsIndirOpnd();
 
@@ -15447,7 +15447,7 @@ Lowerer::GenerateFastStElemI(IR::Instr *& stElem, bool *instrIsInHelperBlockRef)
     const IR::AutoReuseOpnd autoReuseSrc(src, m_func);
 
     // The index is negative or not int.
-    if (indirOpnd == NULL)
+    if (indirOpnd == nullptr)
     {
         Assert(!(stElem->HasBailOutInfo() && stElem->GetBailOutKind() & IR::BailOutOnArrayAccessHelperCall));
 
@@ -15479,7 +15479,7 @@ Lowerer::GenerateFastStElemI(IR::Instr *& stElem, bool *instrIsInHelperBlockRef)
 
             stElem->UnlinkSrc1();
             stElem->UnlinkDst();
-            GenerateBailOut(stElem, NULL, NULL);
+            GenerateBailOut(stElem, nullptr, nullptr);
             return false;
         }
     }
@@ -15775,7 +15775,7 @@ Lowerer::GenerateFastStElemI(IR::Instr *& stElem, bool *instrIsInHelperBlockRef)
 
                 m_lowererMD.LoadHelperArgument(stElem, regSrc);
                 IR::Opnd *indexOpnd = indirOpnd->GetIndexOpnd();
-                if (indexOpnd == NULL)
+                if (indexOpnd == nullptr)
                 {
                     indexOpnd = IR::IntConstOpnd::New(indirOpnd->GetOffset(), TyInt32, this->m_func);
                 }
@@ -15964,7 +15964,7 @@ Lowerer::GenerateFastStElemI(IR::Instr *& stElem, bool *instrIsInHelperBlockRef)
     {
         stElem->UnlinkSrc1();
         stElem->UnlinkDst();
-        GenerateBailOut(stElem, NULL, NULL);
+        GenerateBailOut(stElem, nullptr, nullptr);
     }
 
     return !emitBailout;
@@ -16028,9 +16028,9 @@ Lowerer::GenerateFastLdLen(IR::Instr *ldLen, bool *instrIsInHelperBlockRef)
             srcValueType.IsLikelyAnyOptimizedArray()
                 ? GetArrayOffsetOfLength(srcValueType)
                 : Js::JavascriptArray::GetOffsetOfLength();
-        IR::LabelInstr *labelString = null;
+        IR::LabelInstr *labelString = nullptr;
         IR::RegOpnd *arrayOpnd = src;
-        IR::RegOpnd *arrayLengthOpnd = null;
+        IR::RegOpnd *arrayLengthOpnd = nullptr;
         IR::AutoReuseOpnd autoReuseArrayLengthOpnd;
         if(arrayFastPath)
         {
@@ -16058,7 +16058,7 @@ Lowerer::GenerateFastLdLen(IR::Instr *ldLen, bool *instrIsInHelperBlockRef)
         }
         const IR::AutoReuseOpnd autoReuseArrayOpnd(arrayOpnd, m_func);
 
-        IR::RegOpnd *lengthOpnd = null;
+        IR::RegOpnd *lengthOpnd = nullptr;
         IR::AutoReuseOpnd autoReuseLengthOpnd;
         const auto EnsureLengthOpnd = [&]()
         {
@@ -16090,7 +16090,7 @@ Lowerer::GenerateFastLdLen(IR::Instr *ldLen, bool *instrIsInHelperBlockRef)
 
         if(stringFastPath)
         {
-            IR::LabelInstr *labelToVar = null;
+            IR::LabelInstr *labelToVar = nullptr;
             if(arrayFastPath)
             {
                 //     JMP $tovar
@@ -16355,7 +16355,7 @@ Lowerer::GenerateFastInlineStringFromCodePoint(IR::Instr* instr)
         //      resultOpnd =  Call HelperGetStringForCharW
         //      JMP $Done
         //$helper:
-        IR::RegOpnd * resultOpnd = null;
+        IR::RegOpnd * resultOpnd = nullptr;
         if (!instr->GetDst()->IsRegOpnd() || instr->GetDst()->IsEqual(src1))
         {
             resultOpnd = IR::RegOpnd::New(TyVar, this->m_func);
@@ -16431,7 +16431,7 @@ Lowerer::GenerateFastInlineStringFromCharCode(IR::Instr* instr)
         //      resultOpnd =  Call HelperGetStringForCharW
         //      JMP $Done
         //$helper:
-        IR::RegOpnd * resultOpnd = null;
+        IR::RegOpnd * resultOpnd = nullptr;
         if (!instr->GetDst()->IsRegOpnd() || instr->GetDst()->IsEqual(src1))
         {
             resultOpnd = IR::RegOpnd::New(TyVar, this->m_func);
@@ -17443,11 +17443,11 @@ bool Lowerer::GenerateFastPop(IR::Opnd *baseOpndParam, IR::Instr *callInstr, IR:
             arrayRef,
             labelHelper,
             labelHelper,
-            null,
+            nullptr,
             &isTypedArrayElement,
             &isStringIndex,
-            null,
-            null /*pLabelSegmentLengthIncreased*/,
+            nullptr,
+            nullptr /*pLabelSegmentLengthIncreased*/,
             true /*checkArrayLengthOverflow*/,
             true /* forceGenerateFastPath */,
             false/* = returnLength */,
@@ -17525,11 +17525,11 @@ bool Lowerer::GenerateFastPush(IR::Opnd *baseOpndParam, IR::Opnd *src, IR::Instr
             arrayRef,
             labelHelper,
             labelHelper,
-            null,
+            nullptr,
             &isTypedArrayElement,
             &isStringIndex,
-            null,
-            null /*pLabelSegmentLengthIncreased*/,
+            nullptr,
+            nullptr /*pLabelSegmentLengthIncreased*/,
             false /*checkArrayLengthOverflow*/,
             true /* forceGenerateFastPath */,
             returnLength,
@@ -17560,8 +17560,8 @@ Lowerer::GenerateArgOutForInlineeStackArgs(IR::Instr* callInstr, IR::Instr* stac
     const IR::AutoReuseOpnd autoReuseArgInOpnd(argInOpnd, func);
     InsertLea(argInOpnd, firstArg, callInstr);
 
-    IR::IndirOpnd *argIndirOpnd = null;
-    IR::Instr* argout = null;
+    IR::IndirOpnd *argIndirOpnd = nullptr;
+    IR::Instr* argout = nullptr;
 
 #if defined(_M_IX86)
     // Maintain alignment
@@ -17887,7 +17887,7 @@ Lowerer::GenerateFastStackArgumentsLdElemI(IR::Instr* ldElem)
     {
         // Load argument set dst = [ebp + index].
         IR::RegOpnd *ebpOpnd = IR::Opnd::CreateFramePointerOpnd(m_func);
-        IR::IndirOpnd *argIndirOpnd = null;
+        IR::IndirOpnd *argIndirOpnd = nullptr;
 
         // The stack looks like this:
         //       ...
@@ -17920,7 +17920,7 @@ IR::IndirOpnd*
 Lowerer::GetArgsIndirOpndForInlinee(IR::Instr* ldElem, IR::Opnd* valueOpnd)
 {
     Assert(ldElem->m_func->IsInlinee());
-    IR::IndirOpnd* argIndirOpnd = null;
+    IR::IndirOpnd* argIndirOpnd = nullptr;
 
     // Address of argument after 'this'
     const auto firstRealArgStackSym = ldElem->m_func->GetInlineeArgvSlotOpnd()->m_sym->AsStackSym();
@@ -17952,7 +17952,7 @@ Lowerer::GetArgsIndirOpndForTopFunction(IR::Instr* ldElem, IR::Opnd* valueOpnd)
 {
     // Load argument set dst = [ebp + index] (or grab from the generator object if m_func is a generator function).
     IR::RegOpnd *baseOpnd = m_func->GetJnFunction()->IsGenerator() ? LoadGeneratorArgsPtr(ldElem) : IR::Opnd::CreateFramePointerOpnd(m_func);
-    IR::IndirOpnd* argIndirOpnd = null;
+    IR::IndirOpnd* argIndirOpnd = nullptr;
     // The stack looks like this:
     //       ...
     //       arguments[1]
@@ -18036,8 +18036,8 @@ Lowerer::GenerateFastArgumentsLdElemI(IR::Instr* ldElem, IR::LabelInstr * labelH
     bool isNotInt = false;
     IntConstType   value     = 0;
     IR::RegOpnd   *indexOpnd = indirOpnd->GetIndexOpnd();
-    IR::Opnd      *valueOpnd        = null;
-    IR::Opnd      *actualParamOpnd = null;
+    IR::Opnd      *valueOpnd        = nullptr;
+    IR::Opnd      *actualParamOpnd = nullptr;
 
     bool hasIntConstIndex = indirOpnd->TryGetIntConstIndexValue(true, &value, &isNotInt);
 
@@ -18045,7 +18045,7 @@ Lowerer::GenerateFastArgumentsLdElemI(IR::Instr* ldElem, IR::LabelInstr * labelH
     {
         //Outside the range of actuals, skip
     }
-    else if (labelFallThru != null && !(hasIntConstIndex && value < 0)) //if index is not a negative int constant
+    else if (labelFallThru != nullptr && !(hasIntConstIndex && value < 0)) //if index is not a negative int constant
     {
         if (isInlinee)
         {
@@ -18095,7 +18095,7 @@ Lowerer::GenerateFastArgumentsLdElemI(IR::Instr* ldElem, IR::LabelInstr * labelH
             GenerateCheckForArgumentsLength(ldElem, labelCreateHeapArgs, actualParamOpnd, valueOpnd, Js::OpCode::BrLe_A);
         }
 
-        IR::Opnd *argIndirOpnd = null;
+        IR::Opnd *argIndirOpnd = nullptr;
         if (isInlinee)
         {
             argIndirOpnd = GetArgsIndirOpndForInlinee(ldElem, valueOpnd);
@@ -18201,7 +18201,7 @@ IR::RegOpnd*
 Lowerer::GenerateFunctionTypeFromFixedFunctionObject(IR::Instr *insertInstrPt, IR::Opnd* functionObjOpnd)
 {
     IR::RegOpnd * functionTypeRegOpnd = IR::RegOpnd::New(TyMachReg, this->m_func);
-    IR::Opnd *functionTypeOpnd = null;
+    IR::Opnd *functionTypeOpnd = nullptr;
 
     if(functionObjOpnd->IsAddrOpnd())
     {
@@ -18373,10 +18373,10 @@ Lowerer::GenerateFastLdFld(IR::Instr * const instrLdFld, IR::JnHelperMethod help
         this->m_func->GetJnFunction()->GetDisplayName(),
         propertySymOpnd->m_inlineCacheIndex);
 
-    Assert(pIsHelper != null);
+    Assert(pIsHelper != nullptr);
     bool& isHelper = *pIsHelper;
 
-    Assert(pLabelHelper != null);
+    Assert(pLabelHelper != nullptr);
     IR::LabelInstr*& labelHelper = *pLabelHelper;
 
     bool doLocal = true;
@@ -18421,7 +18421,7 @@ Lowerer::GenerateFastLdFld(IR::Instr * const instrLdFld, IR::JnHelperMethod help
 
     IR::LabelInstr * labelFallThru = instrLdFld->GetOrCreateContinueLabel();
     
-    if (labelHelper == null)
+    if (labelHelper == nullptr)
     {
         labelHelper = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, isHelper);
     }
@@ -18440,7 +18440,7 @@ Lowerer::GenerateFastLdFld(IR::Instr * const instrLdFld, IR::JnHelperMethod help
         LowererMD::CreateAssign(opndInlineCache, this->LoadRuntimeInlineCacheOpnd(instrLdFld, propertySymOpnd, isHelper), instrLdFld);
     }
 
-    if (typeOpnd == null)
+    if (typeOpnd == nullptr)
     {
         typeOpnd = IR::RegOpnd::New(TyMachPtr, this->m_func);
         GenerateObjectTestAndTypeLoad(instrLdFld, opndBase, typeOpnd, labelHelper);
@@ -18451,10 +18451,10 @@ Lowerer::GenerateFastLdFld(IR::Instr * const instrLdFld, IR::JnHelperMethod help
         LowererMD::GenerateLoadPolymorphicInlineCacheSlot(instrLdFld, opndInlineCache, typeOpnd, propertySymOpnd->m_runtimePolymorphicInlineCache->GetSize());
     }
 
-    IR::LabelInstr * labelNext = null;
+    IR::LabelInstr * labelNext = nullptr;
     IR::Opnd * opndDst = instrLdFld->GetDst();
-    IR::RegOpnd * opndTaggedType = null;
-    IR::BranchInstr * labelNextBranchToPatch = null;
+    IR::RegOpnd * opndTaggedType = nullptr;
+    IR::BranchInstr * labelNextBranchToPatch = nullptr;
 
     if (doProto && doProtoFirst)
     {
@@ -18467,7 +18467,7 @@ Lowerer::GenerateFastLdFld(IR::Instr * const instrLdFld, IR::JnHelperMethod help
         }
         if (doAuxSlots)
         {
-            if (opndTaggedType == null)
+            if (opndTaggedType == nullptr)
             {
                 opndTaggedType = IR::RegOpnd::New(TyMachPtr, this->m_func);
                 LowererMD::GenerateLoadTaggedType(instrLdFld, typeOpnd, opndTaggedType);
@@ -18489,7 +18489,7 @@ Lowerer::GenerateFastLdFld(IR::Instr * const instrLdFld, IR::JnHelperMethod help
         }
         if (doAuxSlots)
         {
-            if (opndTaggedType == null)
+            if (opndTaggedType == nullptr)
             {
                 opndTaggedType = IR::RegOpnd::New(TyMachPtr, this->m_func);
                 LowererMD::GenerateLoadTaggedType(instrLdFld, typeOpnd, opndTaggedType);
@@ -18511,7 +18511,7 @@ Lowerer::GenerateFastLdFld(IR::Instr * const instrLdFld, IR::JnHelperMethod help
         }
         if (doAuxSlots)
         {
-            if (opndTaggedType == null)
+            if (opndTaggedType == nullptr)
             {
                 opndTaggedType = IR::RegOpnd::New(TyMachPtr, this->m_func);
                 LowererMD::GenerateLoadTaggedType(instrLdFld, typeOpnd, opndTaggedType);
@@ -18631,10 +18631,10 @@ Lowerer::GenerateFastStFld(IR::Instr * const instrStFld, IR::JnHelperMethod help
         this->m_func->GetJnFunction()->GetDisplayName(),
         propertySymOpnd->m_inlineCacheIndex);
 
-    Assert(pIsHelper != null);
+    Assert(pIsHelper != nullptr);
     bool& isHelper = *pIsHelper;
     
-    Assert(pLabelHelper != null);
+    Assert(pLabelHelper != nullptr);
     IR::LabelInstr*& labelHelper = *pLabelHelper;
     
     bool doStore = true;
@@ -18697,7 +18697,7 @@ Lowerer::GenerateFastStFld(IR::Instr * const instrStFld, IR::JnHelperMethod help
 
     Assert(doStore || doAdd);
 
-    if (labelHelper == null)
+    if (labelHelper == nullptr)
     {
         labelHelper = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, true);
     }
@@ -18728,7 +18728,7 @@ Lowerer::GenerateFastStFld(IR::Instr * const instrStFld, IR::JnHelperMethod help
         LowererMD::CreateAssign(opndInlineCache, this->LoadRuntimeInlineCacheOpnd(instrStFld, propertySymOpnd, isHelper), instrStFld);
     }
 
-    if (typeOpnd == null)
+    if (typeOpnd == nullptr)
     {
         typeOpnd = IR::RegOpnd::New(TyMachPtr, this->m_func);
         GenerateObjectTestAndTypeLoad(instrStFld, opndBase, typeOpnd, labelHelper);
@@ -18739,9 +18739,9 @@ Lowerer::GenerateFastStFld(IR::Instr * const instrStFld, IR::JnHelperMethod help
         LowererMD::GenerateLoadPolymorphicInlineCacheSlot(instrStFld, opndInlineCache, typeOpnd, propertySymOpnd->m_runtimePolymorphicInlineCache->GetSize());
     }
 
-    IR::LabelInstr * labelNext = null;
-    IR::RegOpnd * opndTaggedType = null;
-    IR::BranchInstr * lastBranchToNext = null;
+    IR::LabelInstr * labelNext = nullptr;
+    IR::RegOpnd * opndTaggedType = nullptr;
+    IR::BranchInstr * lastBranchToNext = nullptr;
 
     if (doStore)
     {
@@ -18754,7 +18754,7 @@ Lowerer::GenerateFastStFld(IR::Instr * const instrStFld, IR::JnHelperMethod help
         }
         if (doAuxSlots)
         {
-            if (opndTaggedType == null)
+            if (opndTaggedType == nullptr)
             {
                 opndTaggedType = IR::RegOpnd::New(TyMachPtr, this->m_func);
                 LowererMD::GenerateLoadTaggedType(instrStFld, typeOpnd, opndTaggedType);
@@ -18778,7 +18778,7 @@ Lowerer::GenerateFastStFld(IR::Instr * const instrStFld, IR::JnHelperMethod help
         }
         if (doAuxSlots)
         {
-            if (opndTaggedType == null)
+            if (opndTaggedType == nullptr)
             {
                 opndTaggedType = IR::RegOpnd::New(TyMachPtr, this->m_func);
                 LowererMD::GenerateLoadTaggedType(instrStFld, typeOpnd, opndTaggedType);
@@ -19356,7 +19356,7 @@ bool Lowerer::GenerateFastBrBool(IR::BranchInstr *const instr)
         src->SetValueType(srcValueType = srcValueType.SetIsNotAnyOf(ValueType::AnyNumber));
     }
 
-    IR::LabelInstr *labelHelper = NULL;
+    IR::LabelInstr *labelHelper = nullptr;
     bool _didObjectTest = checkedForTaggedInt && checkedForTaggedFloat;
     const auto EnsureObjectTest = [&]()
     {
@@ -19626,9 +19626,9 @@ Lowerer::TryGenerateFastBrOrCmTypeOf(IR::Instr *instr, IR::Instr **prev, bool *p
 
     if (typeOf && (typeOf->m_opcode == Js::OpCode::Typeof))
     {
-        IR::RegOpnd *typeOfDst = typeOf->GetDst()->IsRegOpnd() ? typeOf->GetDst()->AsRegOpnd() : null;
-        IR::RegOpnd *instrSrc1 = instr->GetSrc1()->IsRegOpnd() ? instr->GetSrc1()->AsRegOpnd() : null;
-        IR::RegOpnd *instrSrc2 = instr->GetSrc2()->IsRegOpnd() ? instr->GetSrc2()->AsRegOpnd() : null;
+        IR::RegOpnd *typeOfDst = typeOf->GetDst()->IsRegOpnd() ? typeOf->GetDst()->AsRegOpnd() : nullptr;
+        IR::RegOpnd *instrSrc1 = instr->GetSrc1()->IsRegOpnd() ? instr->GetSrc1()->AsRegOpnd() : nullptr;
+        IR::RegOpnd *instrSrc2 = instr->GetSrc2()->IsRegOpnd() ? instr->GetSrc2()->AsRegOpnd() : nullptr;
 
         if (typeOfDst && instrSrc1 && instrSrc2)
         {
@@ -19645,7 +19645,7 @@ Lowerer::TryGenerateFastBrOrCmTypeOf(IR::Instr *instr, IR::Instr **prev, bool *p
                 }
 
                 // The second argument to [Cm|Br]TypeOf is the typeid.
-                IR::IntConstOpnd *typeIdOpnd = null;
+                IR::IntConstOpnd *typeIdOpnd = nullptr;
 
                 Assert(instrSrc2->m_sym->m_isSingleDef);
                 Assert(instrSrc2->m_sym->m_instrDef->GetSrc1()->IsAddrOpnd());
@@ -19896,7 +19896,7 @@ Lowerer::GenerateFastCmTypeOf(IR::Instr *compare, IR::RegOpnd *object, IR::IntCo
     IR::LabelInstr *movFalse = IR::LabelInstr::New(Js::OpCode::Label, m_func, false);
     IR::LabelInstr *done = IR::LabelInstr::New(Js::OpCode::Label, m_func, false);
     IR::LabelInstr *helper= IR::LabelInstr::New(Js::OpCode::Label, m_func, true);
-    IR::RegOpnd    *dst      = compare->GetDst()->IsRegOpnd() ? compare->GetDst()->AsRegOpnd() : null;
+    IR::RegOpnd    *dst      = compare->GetDst()->IsRegOpnd() ? compare->GetDst()->AsRegOpnd() : nullptr;
     IR::RegOpnd    *typeRegOpnd  = IR::RegOpnd::New(TyMachReg, m_func);
     bool isNeqOp             = compare->m_opcode == Js::OpCode::CmSrNeq_A ||
                                compare->m_opcode == Js::OpCode::CmNeq_A;
@@ -20225,7 +20225,7 @@ Lowerer::LowerInitClass(IR::Instr * instr)
     IR::Instr   * prevInstr = LoadScriptContext(instr);
 
     // extends
-    if (instr->GetSrc2() != null)
+    if (instr->GetSrc2() != nullptr)
     {
         IR::Opnd * extendsOpnd = instr->UnlinkSrc2();
         m_lowererMD.LoadHelperArgument(instr, extendsOpnd);
@@ -21481,7 +21481,7 @@ Lowerer::GenerateRecyclerOrMarkTempAlloc(IR::Instr * instr, IR::RegOpnd * dstOpn
     }
 
     this->GenerateRecyclerAlloc(allocHelper, allocSize, dstOpnd, instr);
-    *tempObjectSymOpnd = null;
+    *tempObjectSymOpnd = nullptr;
     return true;
 }
 
@@ -21501,7 +21501,7 @@ Lowerer::GenerateMarkTempAlloc(IR::RegOpnd *const dstOpnd, const size_t allocSiz
     InsertLea(dstOpnd, tempObjectOpnd, insertBeforeInstr);
 
     // Initialize the boxed instance slot
-    if (this->outerMostLoopLabel == null)
+    if (this->outerMostLoopLabel == nullptr)
     {
         GenerateMemInit(dstOpnd, -(int)sizeof(void *), IR::AddrOpnd::NewNull(func), insertBeforeInstr, false);
     }
@@ -21528,7 +21528,7 @@ void Lowerer::LowerBrFncCachedScopeEq(IR::Instr *instr)
 
 IR::Instr* Lowerer::InsertLoweredRegionStartMarker(IR::Instr* instrToInsertBefore)
 {
-    AssertMsg(instrToInsertBefore->m_prev != null, "Can't insert lowered region start marker as the first instr in the func.");
+    AssertMsg(instrToInsertBefore->m_prev != nullptr, "Can't insert lowered region start marker as the first instr in the func.");
     IR::LabelInstr* startMarkerLabel = IR::LabelInstr::New(Js::OpCode::Label, instrToInsertBefore->m_func);
     instrToInsertBefore->InsertBefore(startMarkerLabel);
     return startMarkerLabel;
@@ -21536,7 +21536,7 @@ IR::Instr* Lowerer::InsertLoweredRegionStartMarker(IR::Instr* instrToInsertBefor
 
 IR::Instr* Lowerer::RemoveLoweredRegionStartMarker(IR::Instr* startMarkerInstr)
 {
-    AssertMsg(startMarkerInstr->m_prev != null, "Lowered region start marker became the first instruction in the func after lowering?");
+    AssertMsg(startMarkerInstr->m_prev != nullptr, "Lowered region start marker became the first instruction in the func after lowering?");
     IR::Instr* prevInstr = startMarkerInstr->m_prev;
     startMarkerInstr->Remove();
     return prevInstr;
@@ -21699,7 +21699,7 @@ Lowerer::LowerTry(IR::Instr* instr, bool tryCatch)
 void
 Lowerer::EnsureBailoutReturnValueSym()
 {
-    if (this->m_func->m_bailoutReturnValueSym == null)
+    if (this->m_func->m_bailoutReturnValueSym == nullptr)
     {
         this->m_func->m_bailoutReturnValueSym = StackSym::New(TyVar, this->m_func);
         this->m_func->StackAllocate(this->m_func->m_bailoutReturnValueSym, sizeof(Js::Var));
@@ -21709,7 +21709,7 @@ Lowerer::EnsureBailoutReturnValueSym()
 void
 Lowerer::EnsureHasBailedOutSym()
 {
-    if (this->m_func->m_hasBailedOutSym == null)
+    if (this->m_func->m_hasBailedOutSym == nullptr)
     {
         this->m_func->m_hasBailedOutSym = StackSym::New(TyUint32, this->m_func);
         this->m_func->StackAllocate(this->m_func->m_hasBailedOutSym, MachRegInt);
@@ -21993,7 +21993,7 @@ Lowerer::LoadSlotArrayWithCachedProtoType(IR::Instr * instrInsert, IR::PropertyS
 {
     // Get the prototype object from the cache
     Js::RecyclableObject *prototypeObject = propertySymOpnd->GetProtoObject();
-    Assert(prototypeObject != null);
+    Assert(prototypeObject != nullptr);
 
     if (propertySymOpnd->UsesAuxSlot())
     {
@@ -22017,7 +22017,7 @@ Lowerer::LowerLdEnv(IR::Instr * instr)
     IR::Opnd * functionObjOpnd;
     IR::Instr * instrPrev = this->m_lowererMD.LoadFunctionObjectOpnd(instr, functionObjOpnd);
 
-    if (src1 == null)
+    if (src1 == nullptr)
     {
         IR::IndirOpnd *indirOpnd = IR::IndirOpnd::New(functionObjOpnd->AsRegOpnd(),
             Js::ScriptFunction::GetOffsetOfEnvironment(), TyMachPtr, m_func);

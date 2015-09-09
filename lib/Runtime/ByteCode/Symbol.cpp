@@ -9,7 +9,7 @@ const wchar_t *SymbolTypeNames[] = { L"Function", L"Variable", L"MemberName", L"
 bool
 Symbol::GetIsArguments() const
 {
-    return decl != NULL && (decl->grfpn & PNodeFlags::fpnArguments);
+    return decl != nullptr && (decl->grfpn & PNodeFlags::fpnArguments);
 }
 
 Js::PropertyId Symbol::EnsurePosition(ByteCodeGenerator* byteCodeGenerator)
@@ -226,12 +226,12 @@ Symbol * Symbol::GetFuncScopeVarSym() const
 {
     if (!this->GetIsBlockVar())
     {
-        return null;
+        return nullptr;
     }
     FuncInfo * parentFuncInfo = this->GetScope()->GetFunc();
     if (parentFuncInfo->GetIsStrictMode())
     {
-        return null;
+        return nullptr;
     }
     Symbol *fncScopeSym = parentFuncInfo->GetBodyScope()->FindLocalSymbol(this->GetName());
     if (fncScopeSym == nullptr && parentFuncInfo->GetParamScope() != nullptr)

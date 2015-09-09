@@ -22,11 +22,11 @@ namespace Js
         static JavascriptFunction * GetCurrentFunctionObject(JavascriptFunction * function);
 
         StackScriptFunction(FunctionProxy * proxy, ScriptFunctionType* deferredPrototypeType) : 
-            ScriptFunction(proxy, deferredPrototypeType), boxedScriptFunction(null) {};
+            ScriptFunction(proxy, deferredPrototypeType), boxedScriptFunction(nullptr) {};
 #if DBG
         static bool IsBoxed(Var var) 
         { 
-            return StackScriptFunction::FromVar(var)->boxedScriptFunction != null; 
+            return StackScriptFunction::FromVar(var)->boxedScriptFunction != nullptr;
         }
 
 
@@ -45,7 +45,7 @@ namespace Js
         struct BoxState
         {
         public:
-            BoxState(ArenaAllocator * alloc, FunctionBody * functionBody, ScriptContext * scriptContext, void * returnAddress = null);
+            BoxState(ArenaAllocator * alloc, FunctionBody * functionBody, ScriptContext * scriptContext, void * returnAddress = nullptr);
             void Box();
             ScriptFunction * GetBoxedScriptFunction(ScriptFunction * stackScriptFunction);            
         private:

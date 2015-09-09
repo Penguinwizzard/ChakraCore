@@ -9,7 +9,7 @@ class TempTrackerBase
 {
 public:    
 #if DBG
-    bool HasTempTransferDependencies() const { return tempTransferDependencies != null; }
+    bool HasTempTransferDependencies() const { return tempTransferDependencies != nullptr; }
 #endif
 protected:
     TempTrackerBase(JitArenaAllocator * alloc, bool inLoop);
@@ -81,7 +81,7 @@ protected:
 
     bool IsTempIndirTransferLoad(IR::Instr * instr, BackwardPass * backwardPass);
 
-    bool IsInLoop() const { return propertyIdsTempTransferDependencies != null; }
+    bool IsInLoop() const { return propertyIdsTempTransferDependencies != nullptr; }
     bool DoMarkTempNumbersOnTempObjects(BackwardPass * backwardPass) const;
 
 #if DBG_DUMP    

@@ -138,7 +138,7 @@ namespace Js {
     bool TypePath::HasSingletonInstanceOnlyIfNeeded()
     {
 #ifdef SUPPORT_FIXED_FIELDS_ON_PATH_TYPES
-        return DynamicTypeHandler::AreSingletonInstancesNeeded() || this->singletonInstance == null;
+        return DynamicTypeHandler::AreSingletonInstancesNeeded() || this->singletonInstance == nullptr;
 #else
         return true;
 #endif
@@ -154,14 +154,14 @@ namespace Js {
 
         if (!CanHaveFixedFields(typePathLength))
         {
-            return null;
+            return nullptr;
         }
 
         DynamicObject* localSingletonInstance = this->singletonInstance->Get();
 
-        return localSingletonInstance != null && localSingletonInstance->GetScriptContext() == requestContext && this->fixedFields.Test(index) ? localSingletonInstance->GetSlot(index) : null;
+        return localSingletonInstance != nullptr && localSingletonInstance->GetScriptContext() == requestContext && this->fixedFields.Test(index) ? localSingletonInstance->GetSlot(index) : nullptr;
 #else
-        return null;
+        return nullptr;
 #endif
 
     }
@@ -191,7 +191,7 @@ namespace Js {
         if (PHASE_VERBOSE_TRACE1(FixMethodPropsPhase))
         {
             Output::Print(L"FixedFields: TypePath::AddInternal: singleton = 0x%p(0x%p)\n",
-                this->singletonInstance, this->singletonInstance != null ? this->singletonInstance->Get() : null);
+                this->singletonInstance, this->singletonInstance != nullptr ? this->singletonInstance->Get() : nullptr);
             Output::Print(L"   fixed fields:");
 
             for (PropertyIndex i = 0; i < GetPathLength(); i++)
@@ -220,7 +220,7 @@ namespace Js {
         if (PHASE_VERBOSE_TRACE1(FixMethodPropsPhase))
         {
             Output::Print(L"FixedFields: TypePath::AddBlankFieldAt: singleton = 0x%p(0x%p)\n",
-                this->singletonInstance, this->singletonInstance != null ? this->singletonInstance->Get() : null);
+                this->singletonInstance, this->singletonInstance != nullptr ? this->singletonInstance->Get() : nullptr);
             Output::Print(L"   fixed fields:");
 
             for (PropertyIndex i = 0; i < GetPathLength(); i++)
@@ -242,11 +242,11 @@ namespace Js {
         Assert(typePathLength >= this->maxInitializedLength);
         Assert(index >= this->maxInitializedLength);
         // This invariant is predicated on the properties getting initialized in the order of indexes in the type handler.
-        Assert(instance != null);
-        Assert(this->singletonInstance == null || this->singletonInstance->Get() == instance);
+        Assert(instance != nullptr);
+        Assert(this->singletonInstance == nullptr || this->singletonInstance->Get() == instance);
         Assert(!fixedFields.Test(index) && !usedFixedFields.Test(index));
 
-        if (this->singletonInstance == null)
+        if (this->singletonInstance == nullptr)
         {
             this->singletonInstance = instance->CreateWeakReferenceToSelf();
         }
@@ -262,7 +262,7 @@ namespace Js {
         if (PHASE_VERBOSE_TRACE1(FixMethodPropsPhase))
         {
             Output::Print(L"FixedFields: TypePath::AddSingletonInstanceFieldAt: singleton = 0x%p(0x%p)\n",
-                this->singletonInstance, this->singletonInstance != null ? this->singletonInstance->Get() : null);
+                this->singletonInstance, this->singletonInstance != nullptr ? this->singletonInstance->Get() : nullptr);
             Output::Print(L"   fixed fields:");
 
             for (PropertyIndex i = 0; i < GetPathLength(); i++)
@@ -291,7 +291,7 @@ namespace Js {
         if (PHASE_VERBOSE_TRACE1(FixMethodPropsPhase))
         {
             Output::Print(L"FixedFields: TypePath::AddSingletonInstanceFieldAt: singleton = 0x%p(0x%p)\n",
-                this->singletonInstance, this->singletonInstance != null ? this->singletonInstance->Get() : null);
+                this->singletonInstance, this->singletonInstance != nullptr ? this->singletonInstance->Get() : nullptr);
             Output::Print(L"   fixed fields:");
 
             for (PropertyIndex i = 0; i < GetPathLength(); i++)

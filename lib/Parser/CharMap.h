@@ -269,7 +269,7 @@ namespace UnifiedRegex
         bool GetNonDirect(uint k, V& lastOcc) const
         {
             Assert(k >= directSize);
-            if (root == null)
+            if (root == nullptr)
             {
                 return false;
             }

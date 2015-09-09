@@ -51,7 +51,7 @@ Var Js::InterpreterStackFrame::INTERPRETERLOOPNAME()
         }
     }
 
-    Assert(this->returnAddress != null);
+    Assert(this->returnAddress != nullptr);
     AssertMsg(m_arguments == NULL || Js::ArgumentsObject::Is(m_arguments), "Bad arguments!");
     // IP Passing in the interpreter:
     // We keep a local copy of the bytecode's instruction pointer and
@@ -160,7 +160,7 @@ SWAP_BP_FOR_OPCODE:
                 // indicating that the handler completed without jumping, so exception processing
                 // should continue.
                 m_reader.Empty(ip);
-                return null;
+                return nullptr;
 
             case INTERPRETER_OPCODE::ExtendedOpcodePrefix:
             {
@@ -360,7 +360,7 @@ SWAP_BP_FOR_OPCODE:
                 // be executed. In these cases it is sufficient to return undefined.
                 return this->scriptContext->GetLibrary()->GetUndefined();
 #else
-                return null;
+                return nullptr;
 #endif
             }  
 

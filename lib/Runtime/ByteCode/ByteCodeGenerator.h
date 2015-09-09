@@ -121,7 +121,7 @@ public:
 
     Js::PropertyRecordList* EnsurePropertyRecordList()
     {
-        if (this->propertyRecords == null)
+        if (this->propertyRecords == nullptr)
         {
             Recycler* recycler = this->scriptContext->GetRecycler();
             this->propertyRecords = RecyclerNew(recycler, Js::PropertyRecordList, recycler);
@@ -182,7 +182,7 @@ public:
 
     bool HasParentScopeInfo() const
     {
-        return this->parentScopeInfo != null;
+        return this->parentScopeInfo != nullptr;
     }
     void RestoreScopeInfo(Js::FunctionBody* funcInfo);
     FuncInfo *StartBindGlobalStatements(ParseNode *pnode);

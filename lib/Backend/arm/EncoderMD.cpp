@@ -22,7 +22,7 @@ void
 EncoderMD::Init(Encoder *encoder)
 {
     m_encoder = encoder;
-    m_relocList = NULL;
+    m_relocList = nullptr;
 }
 
 ///----------------------------------------------------------------------------
@@ -313,7 +313,7 @@ bool EncoderMD::IsWideMemInstr(IR::Opnd *memOpnd, IR::RegOpnd *regOpnd)
     int32 offset;
     if (memOpnd->IsSymOpnd())
     {
-        indexOpnd = NULL;
+        indexOpnd = nullptr;
         this->BaseAndOffsetFromSym(memOpnd->AsSymOpnd(), &baseReg, &offset, this->m_func);
     }
     else
@@ -329,7 +329,7 @@ bool EncoderMD::IsWideMemInstr(IR::Opnd *memOpnd, IR::RegOpnd *regOpnd)
         offset = indirOpnd->GetOffset();
     }
 
-    Assert(offset == 0 || indexOpnd == NULL);
+    Assert(offset == 0 || indexOpnd == nullptr);
 
     if (indexOpnd)
     {
@@ -493,7 +493,7 @@ InstructionType EncoderMD::CanonicalizeLea(IR::Instr * instr)
 
         this->BaseAndOffsetFromSym(symOpnd, &baseReg, &offset, this->m_func);
         symOpnd->Free(this->m_func);
-        instr->SetSrc1(IR::RegOpnd::New(NULL, baseReg, TyMachReg, this->m_func));
+        instr->SetSrc1(IR::RegOpnd::New(nullptr, baseReg, TyMachReg, this->m_func));
         instr->SetSrc2(IR::IntConstOpnd::New(offset, TyMachReg, this->m_func));
     }
     else
@@ -503,7 +503,7 @@ InstructionType EncoderMD::CanonicalizeLea(IR::Instr * instr)
         IR::RegOpnd *indexOpnd = indirOpnd->GetIndexOpnd();
         offset = indirOpnd->GetOffset();
 
-        Assert(offset == 0 || indexOpnd == NULL);
+        Assert(offset == 0 || indexOpnd == nullptr);
         instr->SetSrc1(baseOpnd);
 
         if (indexOpnd)
@@ -662,7 +662,7 @@ EncoderMD::IndirForm(int form, int *pOpnnum, RegNum baseReg, IR::Opnd *indexOpnd
         break;
     }
 
-    if (indexOpnd == NULL)
+    if (indexOpnd == nullptr)
     {
         // UTC does this for OPBASED. Seems to be based on the assumption
         // that we have either an offset or an index, but not both.
@@ -715,7 +715,7 @@ EncoderMD::GetForm(IR::Instr *instr, int32 size)
 
     dst  = instr->GetDst();
 
-    if (dst == NULL || LowererMD::IsCall(instr))
+    if (dst == nullptr || LowererMD::IsCall(instr))
     {
         opn = instr->GetSrc1();
         opnnum = 1;
@@ -735,7 +735,7 @@ EncoderMD::GetForm(IR::Instr *instr, int32 size)
 
     bool done = false;
 
-    while (opn != NULL) 
+    while (opn != nullptr) 
     {
         switch (opn->GetKind())
         {
@@ -975,8 +975,8 @@ EncoderMD::GenerateEncoding(IR::Instr* instr, IFORM iform, BYTE *pc, int32 size,
     IR::IndirOpnd *indirOpnd;
 
     Js::OpCode  opcode = instr->m_opcode;
-    const AssemblyStep *AsmSteps = NULL;
-    const FormTable *ftp = NULL;
+    const AssemblyStep *AsmSteps = nullptr;
+    const FormTable *ftp = nullptr;
 
     int bitOffset;
     int offset;
@@ -998,7 +998,7 @@ EncoderMD::GenerateEncoding(IR::Instr* instr, IFORM iform, BYTE *pc, int32 size,
         Assert(instr->m_prev->GetDst()->IsRegOpnd() && (instr->m_prev->GetDst()->AsRegOpnd()->GetReg() == RegR12));
     }
 
-    if (dst == NULL || LowererMD::IsCall(instr))
+    if (dst == nullptr || LowererMD::IsCall(instr))
     {        
         opn = instr->GetSrc1();
         reg = opn;
@@ -1067,7 +1067,7 @@ EncoderMD::GenerateEncoding(IR::Instr* instr, IFORM iform, BYTE *pc, int32 size,
                     continue;
 
                 case STEP_REG:
-                    Assert(reg != NULL);
+                    Assert(reg != nullptr);
                     Assert(reg->IsRegOpnd());
 
                     bitOffset = *AsmSteps++;
@@ -1076,7 +1076,7 @@ EncoderMD::GenerateEncoding(IR::Instr* instr, IFORM iform, BYTE *pc, int32 size,
                     continue;
                 
                 case STEP_HREG:
-                    Assert(reg != NULL);
+                    Assert(reg != nullptr);
                     Assert(reg->IsRegOpnd());
                     bitOffset = *AsmSteps++;
                     regNum = (RegNum)this->GetRegEncode(reg->AsRegOpnd());
@@ -1090,7 +1090,7 @@ EncoderMD::GenerateEncoding(IR::Instr* instr, IFORM iform, BYTE *pc, int32 size,
                     continue;
 
                 case STEP_HBIT:
-                    Assert(reg != NULL);
+                    Assert(reg != nullptr);
                     Assert(reg->IsRegOpnd());
                     regNum = (RegNum)this->GetRegEncode(reg->AsRegOpnd());
                     if (regNum >= MAX_INT_REGISTERS_LOW)
@@ -1370,14 +1370,14 @@ EncoderMD::GenerateEncoding(IR::Instr* instr, IFORM iform, BYTE *pc, int32 size,
                     
                 case STEP_INDEXED:
                     Assert(opn->IsIndirOpnd());
-                    Assert(opn->AsIndirOpnd()->GetIndexOpnd() != NULL);
+                    Assert(opn->AsIndirOpnd()->GetIndexOpnd() != nullptr);
                     Assert(opn->AsIndirOpnd()->GetOffset() == 0);
                     continue;
 
                 case STEP_INDEXREG:
                     bitOffset = *AsmSteps++;
                     reg = opn->AsIndirOpnd()->GetIndexOpnd();
-                    Assert(reg != NULL);
+                    Assert(reg != nullptr);
                     Assert(reg->IsRegOpnd());
                     regNum = (RegNum)this->GetRegEncode(reg->AsRegOpnd());
                     encode |= regNum << bitOffset;
@@ -1389,7 +1389,7 @@ EncoderMD::GenerateEncoding(IR::Instr* instr, IFORM iform, BYTE *pc, int32 size,
                     continue;
                     
                 case STEP_BASED:
-                    Assert((opn->IsIndirOpnd() && opn->AsIndirOpnd()->GetIndexOpnd() == NULL) ||
+                    Assert((opn->IsIndirOpnd() && opn->AsIndirOpnd()->GetIndexOpnd() == nullptr) ||
                            (opn->IsSymOpnd() && opn->AsSymOpnd()->m_sym->IsStackSym()));
                     continue;
 
@@ -1421,7 +1421,7 @@ EncoderMD::GenerateEncoding(IR::Instr* instr, IFORM iform, BYTE *pc, int32 size,
                 case STEP_REGLIST:
                     {
                         indirOpnd = opn->AsIndirOpnd();
-                        Assert(indirOpnd->GetIndexOpnd() == NULL);
+                        Assert(indirOpnd->GetIndexOpnd() == nullptr);
                         constant = indirOpnd->GetOffset();
 
                         IR::Opnd *opndRD;
@@ -1476,7 +1476,7 @@ EncoderMD::GenerateEncoding(IR::Instr* instr, IFORM iform, BYTE *pc, int32 size,
 
                 case STEP_T1_SETS_CR0:
                     {
-                        //ASSERTTNR(Tuple::FindReg(TU_DST(tupInstr), RG_SYM(CR0)) != NULL, tupInstr);
+                        //ASSERTTNR(Tuple::FindReg(TU_DST(tupInstr), RG_SYM(CR0)) != nullptr, tupInstr);
                     }
                     continue;
 
@@ -1507,10 +1507,10 @@ EncoderMD::GenerateEncoding(IR::Instr* instr, IFORM iform, BYTE *pc, int32 size,
 
                 case STEP_T2_MEMIMM_POS12_NEG8:
                     bitOffset = *AsmSteps++;
-                    Assert(opn != NULL);
+                    Assert(opn != nullptr);
                     if (opn->IsIndirOpnd())
                     {
-                        Assert(opn->AsIndirOpnd()->GetIndexOpnd() == NULL);
+                        Assert(opn->AsIndirOpnd()->GetIndexOpnd() == nullptr);
                         offset = opn->AsIndirOpnd()->GetOffset();
                         // TODO: Handle literal pool loads, if necessary
                         // <tfs #775202>: LDR_W could have $Label Fixup for literal-pool
@@ -1533,7 +1533,7 @@ EncoderMD::GenerateEncoding(IR::Instr* instr, IFORM iform, BYTE *pc, int32 size,
 
                 case STEP_T2_IMMSTACK_POS12_NEG8:
                     bitOffset = *AsmSteps++;
-                    Assert(opn != NULL);
+                    Assert(opn != nullptr);
                     Assert(opn->IsSymOpnd() && opn->AsSymOpnd()->m_sym->IsStackSym());
                     this->BaseAndOffsetFromSym(opn->AsSymOpnd(), &regNum, &offset, this->m_func);
 
@@ -1545,7 +1545,7 @@ EncoderMD::GenerateEncoding(IR::Instr* instr, IFORM iform, BYTE *pc, int32 size,
                     // Used by LEA. Encode base reg at the given bit offset and 12-bit constant
                     // as a normal ADDW immediate.
                     bitOffset = *AsmSteps++;
-                    Assert(opn != NULL);
+                    Assert(opn != nullptr);
                     Assert(opn->IsSymOpnd() && opn->AsSymOpnd()->m_sym->IsStackSym());
                     this->BaseAndOffsetFromSym(opn->AsSymOpnd(), &regNum, &offset, this->m_func);
 
@@ -1631,7 +1631,7 @@ EncoderMD::GenerateEncoding(IR::Instr* instr, IFORM iform, BYTE *pc, int32 size,
                     int bbit = 0;
                     DWORD tmp = 0;
 
-                    Assert(opn != NULL && opn->IsRegOpnd());
+                    Assert(opn != nullptr && opn->IsRegOpnd());
 
                     bitOffset = *AsmSteps++;
                     bbit = *AsmSteps++;
@@ -1653,7 +1653,7 @@ EncoderMD::GenerateEncoding(IR::Instr* instr, IFORM iform, BYTE *pc, int32 size,
                     int bbit = 0;
                     DWORD tmp = 0;
 
-                    Assert(opn != NULL && opn->IsRegOpnd());
+                    Assert(opn != nullptr && opn->IsRegOpnd());
 
                     bitOffset = *AsmSteps++;
                     bbit = *AsmSteps++;
@@ -1673,11 +1673,11 @@ EncoderMD::GenerateEncoding(IR::Instr* instr, IFORM iform, BYTE *pc, int32 size,
 
                 case STEP_IMM_S8:
                 {
-                    Assert(opn!=null);
+                    Assert(opn!=nullptr);
                     AssertMsg(instrType == InstructionType::Vfp, "This step is specific to VFP instructions");
                     if (opn->IsIndirOpnd())
                     {
-                        Assert(opn->AsIndirOpnd()->GetIndexOpnd() == NULL);
+                        Assert(opn->AsIndirOpnd()->GetIndexOpnd() == nullptr);
                         offset = opn->AsIndirOpnd()->GetOffset();
                         // TODO: Handle literal pool loads, if necessary
                         // <tfs #775202>: LDR_W could have $Label Fixup for literal-pool
@@ -1763,7 +1763,7 @@ EncoderMD::GenerateEncoding(IR::Instr* instr, IFORM iform, BYTE *pc, int32 size,
 
                 case STEP_AM5:
                     Assert(opn->IsIndirOpnd());
-                    Assert(opn->AsIndirOpnd()->GetIndexOpnd() == NULL);
+                    Assert(opn->AsIndirOpnd()->GetIndexOpnd() == nullptr);
                     Assert(opn->AsIndirOpnd()->GetOffset() == 0);
 
                     fPost = EncoderMD::IsShifterPost(instr);
@@ -1909,7 +1909,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
     int    size = 0;
 
     // Instructions must be lowered, we don't handle non-MD opcodes here.
-    Assert(instr != NULL);
+    Assert(instr != nullptr);
  
     if (instr->IsLowered() == false)
     {
@@ -1965,8 +1965,8 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
         {
             Assert(beginCodeAddress);
             IR::Instr *nop = IR::Instr::New(Js::OpCode::VMOV, 
-                                                        IR::RegOpnd::New(null, RegD15, TyMachDouble, this->m_func),
-                                                        IR::RegOpnd::New(null, RegD15, TyMachDouble, this->m_func),
+                                                        IR::RegOpnd::New(nullptr, RegD15, TyMachDouble, this->m_func),
+                                                        IR::RegOpnd::New(nullptr, RegD15, TyMachDouble, this->m_func),
                                                         m_func);
             size = this->Encode(nop, m_pc);
             consecutiveThumbInstrCount = 0;
@@ -2275,7 +2275,7 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress)
             {
                 IR::LabelInstr * labelInstr = reloc->m_relocInstr->AsLabelInstr();
                 Assert(!labelInstr->isInlineeEntryInstr);
-                AssertMsg(labelInstr->GetPC() != null, "Branch to unemitted label?");
+                AssertMsg(labelInstr->GetPC() != nullptr, "Branch to unemitted label?");
                 pcrel = (uint32)(labelInstr->GetPC() - reloc->m_consumerOffset);
                 encode |= BranchOffset_T2_20(pcrel);
                 *(uint32 *)relocAddress = encode;
@@ -2286,7 +2286,7 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress)
             {
                 IR::LabelInstr * labelInstr = reloc->m_relocInstr->AsLabelInstr();
                 Assert(!labelInstr->isInlineeEntryInstr);
-                AssertMsg(labelInstr->GetPC() != null, "Branch to unemitted label?");
+                AssertMsg(labelInstr->GetPC() != nullptr, "Branch to unemitted label?");
                 pcrel = (uint32)(labelInstr->GetPC() - reloc->m_consumerOffset);
                 encode |= BranchOffset_T2_24(pcrel);
                 *(ENCODE_32 *)relocAddress = encode;
@@ -2298,7 +2298,7 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress)
                 IR::LabelInstr * labelInstr = reloc->m_relocInstr->AsLabelInstr();
                 Assert(!labelInstr->isInlineeEntryInstr && labelInstr->m_isDataLabel);
                 
-                AssertMsg(labelInstr->GetPC() != null, "Branch to unemitted label?");
+                AssertMsg(labelInstr->GetPC() != nullptr, "Branch to unemitted label?");
 
                 pcrel = ((labelInstr->GetPC() - m_encoder->m_encodeBuffer + codeBufferAddress) & 0xFFFF);                
                 
@@ -2316,7 +2316,7 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress)
                 IR::LabelInstr * labelInstr = reloc->m_relocInstr->AsLabelInstr();
                 if (!labelInstr->isInlineeEntryInstr)
                 {
-                    AssertMsg(labelInstr->GetPC() != null, "Branch to unemitted label?");
+                    AssertMsg(labelInstr->GetPC() != nullptr, "Branch to unemitted label?");
                     // Note that the bottom bit must be set, since this is a Thumb code address.
                     pcrel = ((labelInstr->GetPC() - m_encoder->m_encodeBuffer + codeBufferAddress) & 0xFFFF) | 1;                    
                 }
@@ -2339,7 +2339,7 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress)
                 IR::LabelInstr * labelInstr = reloc->m_relocInstr->AsLabelInstr();
                 if (!labelInstr->isInlineeEntryInstr)
                 {
-                    AssertMsg(labelInstr->GetPC() != null, "Branch to unemitted label?");
+                    AssertMsg(labelInstr->GetPC() != nullptr, "Branch to unemitted label?");
                     pcrel = (labelInstr->GetPC() - m_encoder->m_encodeBuffer + codeBufferAddress) >> 16;
                     // We only record the relocation on the low byte of the pair
                 }
@@ -2359,7 +2359,7 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress)
         case RelocTypeLabel:
             {
                 IR::LabelInstr * labelInstr = reloc->m_relocInstr->AsLabelInstr();
-                AssertMsg(labelInstr->GetPC() != null, "Branch to unemitted label?");
+                AssertMsg(labelInstr->GetPC() != nullptr, "Branch to unemitted label?");
                 /* For Thumb instruction set -> OR 1 with the address*/
                 *(uint32 *)relocAddress = (uint32)(labelInstr->GetPC() - m_encoder->m_encodeBuffer + codeBufferAddress)  | 1;
                 break;

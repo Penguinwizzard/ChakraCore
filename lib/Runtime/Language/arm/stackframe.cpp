@@ -53,7 +53,7 @@ ArmStackFrame::Next()
     this->addressOfCodeAddr = this->GetAddressOfReturnAddress();
     this->codeAddr = this->GetReturnAddress();
     this->frame = (void **)this->frame[0]; 
-    return frame != null;
+    return frame != nullptr;
 }
 
 bool

@@ -71,7 +71,7 @@ void PrologEncoder::EncodeInstr(IR::Instr *instr, unsigned __int8 size)
 
     Assert(pdata);
 
-    UnwindCode       *unwindCode       = null;
+    UnwindCode       *unwindCode       = nullptr;
     unsigned __int8   unwindCodeOp     = PrologEncoderMD::GetOp(instr);
     unsigned __int8   unwindCodeOpInfo = 0;
     unsigned __int16  uint16Val        = 0;

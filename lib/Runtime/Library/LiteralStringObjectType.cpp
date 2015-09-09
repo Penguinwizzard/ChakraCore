@@ -60,7 +60,7 @@ namespace Js
         PropertyRecord const* propertyRecord;
         this->GetScriptContext()->FindPropertyRecord(propertyNameString, &propertyRecord);
 
-        if (propertyRecord != null)
+        if (propertyRecord != nullptr)
         {
             PropertyId propertyId = propertyRecord->GetPropertyId();
             if (GetSetterBuiltIns(propertyId, info, &flags))
@@ -219,7 +219,7 @@ namespace Js
         PropertyRecord const* propertyRecord;
         this->GetScriptContext()->FindPropertyRecord(propertyNameString, &propertyRecord);
 
-        if (propertyRecord != null && GetPropertyBuiltIns(propertyRecord->GetPropertyId(), value, requestContext, &result))
+        if (propertyRecord != nullptr && GetPropertyBuiltIns(propertyRecord->GetPropertyId(), value, requestContext, &result))
         {
             return result;
         }
@@ -256,7 +256,7 @@ namespace Js
         PropertyRecord const* propertyRecord;
         this->GetScriptContext()->FindPropertyRecord(propertyNameString, &propertyRecord);
 
-        if (propertyRecord != null && SetPropertyBuiltIns(propertyRecord->GetPropertyId(), flags, &result))
+        if (propertyRecord != nullptr && SetPropertyBuiltIns(propertyRecord->GetPropertyId(), flags, &result))
         {
             return result;
         }

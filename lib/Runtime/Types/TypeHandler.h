@@ -154,7 +154,7 @@ namespace Js
 
         uint16 GetOffsetOfInlineSlots() const { return this->offsetOfInlineSlots; }
 
-        void EnsureSlots(DynamicObject * instance, int oldCount, int newCount, ScriptContext * scriptContext, DynamicTypeHandler * newTypeHandler = null);
+        void EnsureSlots(DynamicObject * instance, int oldCount, int newCount, ScriptContext * scriptContext, DynamicTypeHandler * newTypeHandler = nullptr);
 
         Var GetSlot(DynamicObject * instance, int index);
         Var GetInlineSlot(DynamicObject * instance, int index);
@@ -553,7 +553,7 @@ namespace Js
 #endif
             
     public:
-        virtual RecyclerWeakReference<DynamicObject>* GetSingletonInstance() const { return null; }
+        virtual RecyclerWeakReference<DynamicObject>* GetSingletonInstance() const { return nullptr; }
 
         bool SetSingletonInstanceIfNeeded(DynamicObject* instance) 
         { 

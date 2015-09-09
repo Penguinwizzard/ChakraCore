@@ -63,7 +63,7 @@ Encoder::Encode()
     }
 
     Js::SmallSpanSequenceIter iter;
-    IR::PragmaInstr* pragmaInstr = NULL;
+    IR::PragmaInstr* pragmaInstr = nullptr;
     uint32 pragmaOffsetInBuffer = 0;
 
 #ifdef _M_X64
@@ -305,7 +305,7 @@ Encoder::Encode()
     const bool isSimpleJit = m_func->IsSimpleJit();
     Assert(
         isSimpleJit ||
-        entryPointInfo->GetJitTransferData() != null && !entryPointInfo->GetJitTransferData()->GetIsReady());
+        entryPointInfo->GetJitTransferData() != nullptr && !entryPointInfo->GetJitTransferData()->GetIsReady());
 
     if (this->m_inlineeFrameMap->Count() > 0 && 
         !(this->m_inlineeFrameMap->Count() == 1 && this->m_inlineeFrameMap->Item(0).record == nullptr))
@@ -320,7 +320,7 @@ Encoder::Encode()
         entryPointInfo->RecordBailOutMap(m_bailoutRecordMap);
     }
 
-    if (this->m_func->pinnedTypeRefs != null)
+    if (this->m_func->pinnedTypeRefs != nullptr)
     {
         Assert(!isSimpleJit);
 
@@ -346,7 +346,7 @@ Encoder::Encode()
     }
 
     // Save all equivalent type guards in a fixed size array on the JIT transfer data
-    if (this->m_func->equivalentTypeGuards != null)
+    if (this->m_func->equivalentTypeGuards != nullptr)
     {
         AssertMsg(!PHASE_OFF(Js::EquivObjTypeSpecPhase, this->m_func), "Why do we have equivalent type guards if we don't do equivalent object type spec?");
 
@@ -374,7 +374,7 @@ Encoder::Encode()
 
     // Save all property guards on the JIT transfer data in a map keyed by property ID. We will use this map when installing the entry
     // point to register each guard for invalidation.
-    if (this->m_func->propertyGuardsByPropertyId != null)
+    if (this->m_func->propertyGuardsByPropertyId != nullptr)
     {
         Assert(!isSimpleJit);
 
@@ -385,8 +385,8 @@ Encoder::Encode()
         Assert(propertyCount > 0);
 
 #if DBG
-        int totalGuardCount = (this->m_func->singleTypeGuards != null ? this->m_func->singleTypeGuards->Count() : 0)
-            + (this->m_func->equivalentTypeGuards != null ? this->m_func->equivalentTypeGuards->Count() : 0);
+        int totalGuardCount = (this->m_func->singleTypeGuards != nullptr ? this->m_func->singleTypeGuards->Count() : 0)
+            + (this->m_func->equivalentTypeGuards != nullptr ? this->m_func->equivalentTypeGuards->Count() : 0);
         Assert(totalGuardCount > 0);
         Assert(totalGuardCount == this->m_func->indexedPropertyGuardCount);
 #endif
@@ -399,7 +399,7 @@ Encoder::Encode()
 
         size_t typeGuardTransferSize =                              // Reserve enough room for:
             propertyCount * sizeof(Js::TypeGuardTransferEntry) +    //   each propertyId,
-            propertyCount * sizeof(Js::JitIndexedPropertyGuard*) +  //   terminating null guard for each propertyId,
+            propertyCount * sizeof(Js::JitIndexedPropertyGuard*) +  //   terminating nullptr guard for each propertyId,
             guardSlotCount * sizeof(Js::JitIndexedPropertyGuard*);  //   a pointer for each guard we counted above.
 
         // The extra room for sizeof(Js::TypePropertyGuardEntry) allocated by HeapNewPlus will be used for the terminating invalid propertyId.
@@ -420,7 +420,7 @@ Encoder::Encode()
                 dstEntry->guards[guardIndex++] = guard;
             });
 
-            dstEntry->guards[guardIndex++] = null;
+            dstEntry->guards[guardIndex++] = nullptr;
             dstEntry = reinterpret_cast<Js::TypeGuardTransferEntry*>(&dstEntry->guards[guardIndex]);
         });
         dstEntry->propertyId = Js::Constants::NoProperty;
@@ -433,7 +433,7 @@ Encoder::Encode()
 
     // Save all constructor caches on the JIT transfer data in a map keyed by property ID. We will use this map when installing the entry
     // point to register each cache for invalidation.
-    if (this->m_func->ctorCachesByPropertyId != null)
+    if (this->m_func->ctorCachesByPropertyId != nullptr)
     {
         Assert(!isSimpleJit);
 
@@ -477,7 +477,7 @@ Encoder::Encode()
                 dstEntry->caches[cacheIndex++] = cache;
             });
 
-            dstEntry->caches[cacheIndex++] = null;
+            dstEntry->caches[cacheIndex++] = nullptr;
             dstEntry = reinterpret_cast<Js::CtorCacheGuardTransferEntry*>(&dstEntry->caches[cacheIndex]);
         });
         dstEntry->propertyId = Js::Constants::NoProperty;
@@ -663,7 +663,7 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize)
         , &m_origOffsetBuffer );
 
     RelocList* relocList = m_encoderMD.GetRelocList();
-    Assert(relocList != NULL);
+    Assert(relocList != nullptr);
     // Here we mark BRs to be shortened and adjust Labels and relocList entries offsets.
     uint32 offsetBuffIndex = 0, pragmaInstToRecordOffsetIndex = 0, inlineeFrameRecordsIndex = 0, inlineeFrameMapIndex = 0;
     int32 totalBytesSaved = 0;
@@ -700,7 +700,7 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize)
         // long branch
         opcodeByte = reloc.getBrOpCodeByte();
         targetLabel = reloc.getBrTargetLabel();
-        AssertMsg(targetLabel != NULL, "Branch to non-existing label");
+        AssertMsg(targetLabel != nullptr, "Branch to non-existing label");
 
         labelPc = targetLabel->GetPC();
 
@@ -792,7 +792,7 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize)
 
     // start copying to new buffer
     // this can possibly be done during fixing, but there is no evidence it is an overhead to justify the complexity.
-    BYTE *from = buffStart, *to = NULL;
+    BYTE *from = buffStart, *to = nullptr;
     BYTE *dst_p = (BYTE*)tmpBuffer;
     size_t dst_size = newCodeSize;
     size_t src_size;

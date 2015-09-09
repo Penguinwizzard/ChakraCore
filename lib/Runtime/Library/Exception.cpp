@@ -12,7 +12,7 @@ namespace Js
     {
         ThreadContext *threadContext = ThreadContext::GetContextForCurrentThread();
 
-        if (threadContext != null && threadContext->IsScriptActive())
+        if (threadContext != nullptr && threadContext->IsScriptActive())
         {
             switch (kind) {
             case ExceptionKind_OutOfMemory:

@@ -11,7 +11,7 @@ namespace JSON
         return JSONStack::Equals(x,y);
     }
 
-    JSONStack::JSONStack(ArenaAllocator *allocator, Js::ScriptContext *context) : jsObjectStack(allocator), domObjectStack(null), alloc(allocator), scriptContext(context)
+    JSONStack::JSONStack(ArenaAllocator *allocator, Js::ScriptContext *context) : jsObjectStack(allocator), domObjectStack(nullptr), alloc(allocator), scriptContext(context)
     {
     }
 

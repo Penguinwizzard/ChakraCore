@@ -217,7 +217,7 @@ HRESULT MapHr(HRESULT hr, ErrorTypeEnum * errorTypeOut)
     }
 #endif // DEBUG
 
-    if (errorTypeOut != null)
+    if (errorTypeOut != nullptr)
     {
         *errorTypeOut = kjstError;
     }
@@ -238,7 +238,7 @@ HRESULT MapHr(HRESULT hr, ErrorTypeEnum * errorTypeOut)
     }
     if (imhrMin < kcmhr && hr == g_rgmhr[imhrMin].hrIn)
     {
-        if (errorTypeOut != null)
+        if (errorTypeOut != nullptr)
         {
             *errorTypeOut = g_rgmhr[imhrMin].errorType;
         }
@@ -278,17 +278,17 @@ void ScriptException::GetError(HRESULT *phr, EXCEPINFO *pei)
     if (HR(SCRIPT_E_RECORDED) == *phr)
     {
         Assert(FAILED(HR(ei.scode)));
-        if (NULL == pei)
+        if (nullptr == pei)
             *phr = HR(ei.scode);
         else
         {
             *phr = HR(DISP_E_EXCEPTION);
             js_memcpy_s(pei, sizeof(*pei), &ei, sizeof(*pei));
             memset(&ei, 0, sizeof(ei));
-            if (NULL != pei->pfnDeferredFillIn)
+            if (nullptr != pei->pfnDeferredFillIn)
             {
                 pei->pfnDeferredFillIn(pei);
-                pei->pfnDeferredFillIn = NULL;
+                pei->pfnDeferredFillIn = nullptr;
             }
         }
     }
@@ -310,16 +310,16 @@ void CompileScriptException::Free()
 {
     ScriptException::Free();
     line = ichMinLine = 0;
-    if (NULL != bstrLine)
+    if (nullptr != bstrLine)
     {
         SysFreeString(bstrLine);
-        bstrLine = NULL;
+        bstrLine = nullptr;
     }
 }
 
 HRESULT  CompileScriptException::ProcessError(IScanner * pScan, HRESULT hr, ParseNode * pnodeBase)
 {    
-    if (NULL == this)
+    if (nullptr == this)
         return hr;
 
     // fill in the ScriptException structure
@@ -328,17 +328,17 @@ HRESULT  CompileScriptException::ProcessError(IScanner * pScan, HRESULT hr, Pars
 
     // get the error string
     if (FACILITY_CONTROL != HRESULT_FACILITY(ei.scode) ||
-        NULL == (ei.bstrDescription =
+        nullptr == (ei.bstrDescription =
         BstrGetResourceString(HRESULT_CODE(ei.scode))))
     {
         OLECHAR szT[50];
         _snwprintf_s(szT, ARRAYSIZE(szT), ARRAYSIZE(szT)-1, OLESTR("error %d"), ei.scode);
-        if (NULL == (ei.bstrDescription = SysAllocString(szT)))
+        if (nullptr == (ei.bstrDescription = SysAllocString(szT)))
             ei.scode = E_OUTOFMEMORY;
     }
 
     ei.bstrSource = BstrGetResourceString(IDS_COMPILATION_ERROR_SOURCE);
-    if (NULL == pnodeBase && NULL != pScan)
+    if (nullptr == pnodeBase && nullptr != pScan)
     {
         // parsing phase - get the line number from the scanner
         AssertMem(pScan);

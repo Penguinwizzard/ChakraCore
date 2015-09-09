@@ -2841,8 +2841,8 @@ namespace Js
 
     void JavascriptLibrary::AddSimdFuncToMaps(Js::OpCode op, ...)
     {
-        Assert(simdFuncInfoToOpcodeMap != null);
-        Assert(simdOpcodeToSignatureMap != null);
+        Assert(simdFuncInfoToOpcodeMap != nullptr);
+        Assert(simdOpcodeToSignatureMap != nullptr);
         
         va_list arguments;
         va_start(arguments, op);
@@ -2871,7 +2871,7 @@ namespace Js
 
     Js::OpCode JavascriptLibrary::GetSimdOpcodeFromFuncInfo(FunctionInfo * funcInfo)
     {
-        Assert(simdFuncInfoToOpcodeMap != null);
+        Assert(simdFuncInfoToOpcodeMap != nullptr);
         if (simdFuncInfoToOpcodeMap->ContainsKey(funcInfo))
         {
             return simdFuncInfoToOpcodeMap->Item(funcInfo);
@@ -2882,7 +2882,7 @@ namespace Js
 
     bool JavascriptLibrary::GetSimdFuncSignatureFromOpcode(Js::OpCode op, SimdFuncSignature &funcSignature)
     {
-        Assert(simdOpcodeToSignatureMap != null);
+        Assert(simdOpcodeToSignatureMap != nullptr);
         if (simdOpcodeToSignatureMap->ContainsKey(op))
         {
             funcSignature = simdOpcodeToSignatureMap->Item(op);
@@ -5645,15 +5645,15 @@ namespace Js
             ? DynamicTypeHandler::GetOffsetOfObjectHeaderInlineSlots()
             : sizeof(DynamicObject);
 
-        DynamicType* dynamicType = null;
+        DynamicType* dynamicType = nullptr;
         const bool useCache = prototype->GetScriptContext() == this->scriptContext;
         if (useCache &&
-            prototype->GetInternalProperty(prototype, Js::InternalPropertyIds::TypeOfPrototypObject, (Js::Var*) &dynamicType, NULL, this->scriptContext))
+            prototype->GetInternalProperty(prototype, Js::InternalPropertyIds::TypeOfPrototypObject, (Js::Var*) &dynamicType, nullptr, this->scriptContext))
         {
             //If the prototype is externalObject, then ExternalObject::Reinitialize can set all the properties to undefined in navigation scenario.
             //Check to make sure dynamicType which is stored as a Js::Var is not undefined. 
             //See Blue 419324
-            if (dynamicType != null && (Js::Var)dynamicType != this->GetUndefined())
+            if (dynamicType != nullptr && (Js::Var)dynamicType != this->GetUndefined())
             {
                 DynamicTypeHandler *const dynamicTypeHandler = dynamicType->GetTypeHandler();
                 if (dynamicTypeHandler->IsObjectHeaderInlinedTypeHandler() == useObjectHeaderInlining &&
@@ -5677,7 +5677,7 @@ namespace Js
 
         if (useCache)
         {
-            prototype->SetInternalProperty(Js::InternalPropertyIds::TypeOfPrototypObject, (Var)dynamicType, PropertyOperationFlags::PropertyOperation_Force, NULL);
+            prototype->SetInternalProperty(Js::InternalPropertyIds::TypeOfPrototypObject, (Var)dynamicType, PropertyOperationFlags::PropertyOperation_Force, nullptr);
         }
 
         return dynamicType;
@@ -5705,7 +5705,7 @@ namespace Js
 
     PropertyStringCacheMap* JavascriptLibrary::EnsurePropertyStringMap()
     {
-        if (this->propertyStringMap == null)
+        if (this->propertyStringMap == nullptr)
         {
             this->propertyStringMap = RecyclerNew(this->recycler, PropertyStringCacheMap, this->GetRecycler());
             this->scriptContext->RegisterWeakReferenceDictionary((JsUtil::IWeakReferenceDictionary*) this->propertyStringMap);
@@ -5874,10 +5874,10 @@ namespace Js
         if (cachedEnumerator)
         {
             ForInObjectEnumerator * enumerator = cachedEnumerator->Get();
-            this->cachedForInEnumerator = null;
+            this->cachedForInEnumerator = nullptr;
             return enumerator;
         }
-        return null;
+        return nullptr;
     }
 
     bool JavascriptLibrary::IsCopyOnAccessArrayCallSite(JavascriptLibrary *lib, ArrayCallSiteInfo *arrayInfo, uint32 length)

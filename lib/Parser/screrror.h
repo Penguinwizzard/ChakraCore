@@ -28,7 +28,7 @@ void CopyException (EXCEPINFO *pexcepinfoDest, const EXCEPINFO *pexcepinfoSource
 BOOL FSupportsErrorInfo(IUnknown *punk, REFIID riid);
 HRESULT GetErrorInfo(EXCEPINFO *pexcepinfo);
 
-HRESULT MapHr(HRESULT hr, ErrorTypeEnum * errorTypeOut = null);
+HRESULT MapHr(HRESULT hr, ErrorTypeEnum * errorTypeOut = nullptr);
 
 class SRCINFO;
 class ActiveScriptError;
@@ -62,7 +62,7 @@ public:
 
 public:
     CompileScriptException(void) : ScriptException(), line(0), ichMinLine(0), hasLineNumberInfo(false),
-        bstrLine(NULL)
+        bstrLine(nullptr)
     { }
     ~CompileScriptException();
 

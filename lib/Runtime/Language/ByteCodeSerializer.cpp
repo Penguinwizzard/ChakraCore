@@ -392,7 +392,7 @@ public:
           topFunctionId(0),
           utf8Source(utf8Source),
           scriptContext(scriptContext),
-          startOfCachedScopeAuxBlock(null),
+          startOfCachedScopeAuxBlock(nullptr),
           alloc(alloc),
           dwFlags(dwFlags),
           builtInPropertyCount(builtInPropertyCount),
@@ -1328,7 +1328,7 @@ public:
         for (auto reg = FunctionBody::FirstRegSlot + 1; reg < function->m_constCount; reg++) // Ignore first slot, it is always global object or module root object
         {
             auto var = function->GetConstantVar(reg);
-            Assert(var != null);
+            Assert(var != nullptr);
             size += PrependVarConstant(builder, var);
         }
 
@@ -2016,9 +2016,9 @@ public:
         current = ReadUInt32(current, &sizeOfAuxiliaryContextBlock);
 
         ByteBlock * auxBlock = sizeOfAuxiliaryBlock?
-            ByteBlock::New(scriptContext->GetRecycler(), null, sizeOfAuxiliaryBlock) : null;
+            ByteBlock::New(scriptContext->GetRecycler(), nullptr, sizeOfAuxiliaryBlock) : nullptr;
         ByteBlock * auxContextBlock = sizeOfAuxiliaryContextBlock?
-            ByteBlock::New(scriptContext->GetRecycler(), null, sizeOfAuxiliaryContextBlock) : null;
+            ByteBlock::New(scriptContext->GetRecycler(), nullptr, sizeOfAuxiliaryContextBlock) : nullptr;
 
         for (uint i = 0; i < countOfAuxiliaryStructure; i++)
         {
@@ -2070,11 +2070,11 @@ public:
         return current;
     }
 
-    LPCWSTR GetString16ById(int id, bool* isPropertyRecord = null)
+    LPCWSTR GetString16ById(int id, bool* isPropertyRecord = nullptr)
     {
         if (id == 0xffffffff)
         {
-            return null;
+            return nullptr;
         }
         if(!(id >= this->expectedBuildInPropertyCount && id <= string16Count + this->expectedBuildInPropertyCount))
         {
@@ -2723,9 +2723,9 @@ public:
                 sourceInfo,
                 functionNumber,
                 sourceInfo->GetSrcInfo()->sourceContextInfo->sourceContextId,
-                firstFunctionId + functionId, null, (FunctionInfo::Attributes)attributes
+                firstFunctionId + functionId, nullptr, (FunctionInfo::Attributes)attributes
 #ifdef PERF_COUNTERS
-                , (deferDeserializeFunctionInfo != null)
+                , (deferDeserializeFunctionInfo != nullptr)
 #endif
                 );
 
@@ -3316,7 +3316,7 @@ void ByteCodeSerializer::ReadSourceInfo(const DeferDeserializeFunctionInfo* defe
 
 FunctionBody* ByteCodeSerializer::DeserializeFunction(ScriptContext* scriptContext, DeferDeserializeFunctionInfo* deferredFunction)
 {
-    FunctionBody* deserializedFunctionBody = null;
+    FunctionBody* deserializedFunctionBody = nullptr;
     ByteCodeCache* cache = deferredFunction->m_cache;
     ByteCodeBufferReader* reader = cache->GetReader();
     HRESULT hr = reader->ReadFunctionBody(deferredFunction->m_functionBytes, (FunctionProxy **)&deserializedFunctionBody, deferredFunction->m_utf8SourceInfo, cache, deferredFunction->m_nativeModule, true /* deserialize this */, false /* deserialize nested functions */, deferredFunction);

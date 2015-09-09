@@ -188,11 +188,11 @@ const BYTE InterpreterThunkEmitter::ThunkSize = sizeof(Call);
 const uint InterpreterThunkEmitter::ThunksPerBlock = (BlockSize - HeaderSize) / ThunkSize;
 
 InterpreterThunkEmitter::InterpreterThunkEmitter(AllocationPolicyManager * policyManager, ArenaAllocator* allocator, void * interpreterThunk) :
-    emitBufferManager(policyManager, allocator, /*scriptContext*/ NULL, L"Interpreter thunk buffer", /*allocXdata*/ false),
-    allocation(null),
+    emitBufferManager(policyManager, allocator, /*scriptContext*/ nullptr, L"Interpreter thunk buffer", /*allocXdata*/ false),
+    allocation(nullptr),
     allocator(allocator),
     thunkCount(0),
-    thunkBuffer(NULL),
+    thunkBuffer(nullptr),
     interpreterThunk(interpreterThunk)
 {    
 }
@@ -203,7 +203,7 @@ InterpreterThunkEmitter::InterpreterThunkEmitter(AllocationPolicyManager * polic
 BYTE* InterpreterThunkEmitter::GetNextThunk(PVOID* ppDynamicInterpreterThunk)
 {
     Assert(ppDynamicInterpreterThunk);
-    Assert(*ppDynamicInterpreterThunk == NULL);
+    Assert(*ppDynamicInterpreterThunk == nullptr);
 
     if(thunkCount == 0)
     {
@@ -214,7 +214,7 @@ BYTE* InterpreterThunkEmitter::GetNextThunk(PVOID* ppDynamicInterpreterThunk)
         NewThunkBlock();
     }
 
-    Assert(this->thunkBuffer != NULL);
+    Assert(this->thunkBuffer != nullptr);
     BYTE* thunk = this->thunkBuffer;
 #if _M_ARM
     thunk = (BYTE*)((DWORD)thunk | 0x01);
@@ -234,7 +234,7 @@ BYTE* InterpreterThunkEmitter::GetNextThunk(PVOID* ppDynamicInterpreterThunk)
 //
 void* InterpreterThunkEmitter::ConvertToEntryPoint(PVOID dynamicInterpreterThunk)
 {
-    Assert(dynamicInterpreterThunk != NULL);
+    Assert(dynamicInterpreterThunk != nullptr);
     void* entryPoint = (void*)((size_t)dynamicInterpreterThunk & (~((size_t)(BlockSize) - 1)));
 
 #if _M_ARM
@@ -557,7 +557,7 @@ void InterpreterThunkEmitter::Close()
     this->thunkBlocks.Clear(allocator);
     this->freeListedThunkBlocks.Clear(allocator);
     emitBufferManager.Decommit();
-    this->thunkBuffer = NULL;
+    this->thunkBuffer = nullptr;
     this->thunkCount = 0;
 }
 
@@ -650,7 +650,7 @@ bool ThunkBlock::EnsureFreeList(ArenaAllocator* allocator)
     {
         this->freeList = BVFixed::NewNoThrow(InterpreterThunkEmitter::ThunksPerBlock, allocator);
     }
-    return this->freeList != null;
+    return this->freeList != nullptr;
 }
 
 bool ThunkBlock::IsFreeListEmpty() const

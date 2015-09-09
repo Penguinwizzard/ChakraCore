@@ -26,10 +26,10 @@ namespace Js
     public:
 
         JavascriptError(DynamicType* type, BOOL isExternalError = FALSE, BOOL isPrototype = FALSE) :
-            DynamicObject(type), originalRuntimeErrorMessage(null), isExternalError(isExternalError), isPrototype(isPrototype), isStackPropertyRedefined(false)
+            DynamicObject(type), originalRuntimeErrorMessage(nullptr), isExternalError(isExternalError), isPrototype(isPrototype), isStackPropertyRedefined(false)
         {
             Assert(type->GetTypeId() == TypeIds_Error);
-            exceptionObject = null;
+            exceptionObject = nullptr;
             m_errorType = kjstCustomError;
         }
 
@@ -77,13 +77,13 @@ namespace Js
         static Var EntryToString(RecyclableObject* function, CallInfo callInfo, ...);
 
         static void __declspec(noreturn) MapAndThrowError(ScriptContext* scriptContext, HRESULT hr);
-        static void __declspec(noreturn) MapAndThrowError(ScriptContext* scriptContext, HRESULT hr, ErrorTypeEnum errorType, EXCEPINFO *ei, IErrorInfo * perrinfo = null, RestrictedErrorStrings * proerrstr = null, bool useErrInfoDescription = false);
+        static void __declspec(noreturn) MapAndThrowError(ScriptContext* scriptContext, HRESULT hr, ErrorTypeEnum errorType, EXCEPINFO *ei, IErrorInfo * perrinfo = nullptr, RestrictedErrorStrings * proerrstr = nullptr, bool useErrInfoDescription = false);
         static void __declspec(noreturn) MapAndThrowError(ScriptContext* scriptContext, JavascriptError *pError, long hCode, EXCEPINFO* pei, bool useErrInfoDescription = false);
         static JavascriptError* MapError(ScriptContext* scriptContext, ErrorTypeEnum errorType, IErrorInfo * perrinfo = nullptr, RestrictedErrorStrings * proerrstr = nullptr);
 
 #define THROW_ERROR_DECL(err_method) \
-        static void __declspec(noreturn) err_method(ScriptContext* scriptContext, long hCode, EXCEPINFO* ei, IErrorInfo* perrinfo = null, RestrictedErrorStrings* proerrstr = null, bool useErrInfoDescription = false); \
-        static void __declspec(noreturn) err_method(ScriptContext* scriptContext, long hCode, PCWSTR varName = null); \
+        static void __declspec(noreturn) err_method(ScriptContext* scriptContext, long hCode, EXCEPINFO* ei, IErrorInfo* perrinfo = nullptr, RestrictedErrorStrings* proerrstr = nullptr, bool useErrInfoDescription = false); \
+        static void __declspec(noreturn) err_method(ScriptContext* scriptContext, long hCode, PCWSTR varName = nullptr); \
         static void __declspec(noreturn) err_method(ScriptContext* scriptContext, long hCode, JavascriptString* varName); \
         static void __declspec(noreturn) err_method##Var(ScriptContext* scriptContext, long hCode, ...);
 

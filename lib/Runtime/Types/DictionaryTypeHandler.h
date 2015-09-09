@@ -176,20 +176,20 @@ namespace Js
         virtual void SetSingletonInstanceUnchecked(RecyclerWeakReference<DynamicObject>* instance) override
         {
             Assert(!GetIsShared());
-            Assert(this->singletonInstance == null);
+            Assert(this->singletonInstance == nullptr);
             this->singletonInstance = instance;
         }
 
         virtual void ClearSingletonInstance() override sealed
         {
             Assert(HasSingletonInstanceOnlyIfNeeded());
-            this->singletonInstance = null;
+            this->singletonInstance = nullptr;
         }
 
 #if DBG
         bool HasSingletonInstanceOnlyIfNeeded() const
         {
-            return AreSingletonInstancesNeeded() || this->singletonInstance == null;
+            return AreSingletonInstancesNeeded() || this->singletonInstance == nullptr;
         }
 #endif
 
