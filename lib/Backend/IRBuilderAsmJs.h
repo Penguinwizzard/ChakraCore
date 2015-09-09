@@ -4,6 +4,20 @@
 
 #pragma once
 
+namespace AsmJsRegSlots
+{
+    enum ConstSlots
+    {
+        ReturnReg = 0,
+        EnvReg,
+        ModuleMemReg,
+        ArrayReg,
+        BufferReg,
+        LengthReg,
+        RegCount
+    };
+};
+
 class IRBuilderAsmJs
 {
     friend struct IRBuilderAsmJsSwitchAdapter;
@@ -17,25 +31,21 @@ public:
     {
         func->m_workItem->InitializeReader(m_jnReader, m_statementReader);
         m_asmFuncInfo = m_func->GetJnFunction()->GetAsmJsFunctionInfo();
-        m_entryPoint = (Js::FunctionEntryPointInfo*)(func->m_workItem->GetEntryPoint());
-        Assert(m_entryPoint);
-        m_ModuleAddress = m_entryPoint->GetModuleAddress();
-        Assert(m_ModuleAddress);
-        if (m_entryPoint->IsLoopBody())
+        if (func->m_workItem->GetEntryPoint()->IsLoopBody())
         {
-            Js::LoopEntryPointInfo* loopEntryPointInfo = (Js::LoopEntryPointInfo*)m_entryPoint;
+            Js::LoopEntryPointInfo* loopEntryPointInfo = (Js::LoopEntryPointInfo*)(func->m_workItem->GetEntryPoint());
             if (loopEntryPointInfo->GetIsTJMode())
             {
                 m_IsTJLoopBody = true;
                 func->isTJLoopBody = true;
             }
         }
-        m_ArrayBufferRef = (Js::ArrayBuffer**)((Js::Var *)m_ModuleAddress + Js::AsmJsModuleMemory::MemoryTableBeginOffset);
     }
 
     void Build();
 
 private:
+
     void                    AddInstr(IR::Instr * instr, uint32 offset);
     bool                    IsLoopBody()const;
     uint                    GetLoopBodyExitInstrOffset() const;
@@ -160,9 +170,6 @@ private:
     BVFixed *               m_fbvTempUsed;
     uint32                  m_functionStartOffset;
     Js::AsmJsFunctionInfo * m_asmFuncInfo;
-    Js::ArrayBuffer**       m_ArrayBufferRef;
-    uintptr_t               m_ModuleAddress;
-    Js::FunctionEntryPointInfo* m_entryPoint;
     StackSym *              m_loopBodyRetIPSym;
     BVFixed *               m_ldSlots;
     BVFixed *               m_stSlots;

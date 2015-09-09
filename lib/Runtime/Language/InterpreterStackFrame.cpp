@@ -1942,6 +1942,9 @@ namespace Js
 
     Var InterpreterStackFrame::ProcessAsmJsModule()
     {
+        Js::FunctionBody* asmJsModuleFunctionBody = GetFunctionBody();
+        AsmJsModuleInfo* info = asmJsModuleFunctionBody->GetAsmJsModuleInfo();
+
 #ifdef ASMJS_PLAT
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
         if (Configuration::Global.flags.ForceAsmJsLinkFail)
@@ -1950,17 +1953,6 @@ namespace Js
             return this->ProcessLinkFailedAsmJsModule();
         }
 #endif
-        Js::FunctionBody* asmJsModuleFunctionBody = GetFunctionBody();
-        AsmJsModuleInfo* info = asmJsModuleFunctionBody->GetAsmJsModuleInfo();
-
-        // if module was already processed, that means we are relinking, which is not currently supported
-        if (info->IsRuntimeProcessed())
-        {
-            Js::Throw::OutOfMemory();
-        }
-        // even if linking fails, we want this to be true so we don't try again, because asm.js state will be messed up after reparse
-        info->SetIsRuntimeProcessed(true);
-
         if( m_inSlotsCount != info->GetArgInCount() + 1 )
         {
             // Error reparse without asm.js
@@ -2232,6 +2224,8 @@ namespace Js
             return newObj;
         }
 
+        info->SetIsRuntimeProcessed(true);
+
         // export only 1 function
         Var exportFunc = localModuleFunctions[info->GetExportFunctionIndex()];
         SetReg((RegSlot)0, exportFunc);
@@ -2246,6 +2240,16 @@ namespace Js
     Var InterpreterStackFrame::ProcessLinkFailedAsmJsModule()
     {
         AsmJSCompiler::OutputError(this->scriptContext, L"asm.js linking failed.");
+
+        Js::FunctionBody* asmJsModuleFunctionBody = GetFunctionBody();
+        AsmJsModuleInfo* info = asmJsModuleFunctionBody->GetAsmJsModuleInfo();
+
+        // do not support relinking with failed relink
+        if (info->IsRuntimeProcessed())
+        {
+            Js::Throw::OutOfMemory();
+        }
+
         ScriptFunction * funcObj = GetJavascriptFunction();
         ScriptFunction::ReparseAsmJsModule(&funcObj);
         const bool doProfile =
