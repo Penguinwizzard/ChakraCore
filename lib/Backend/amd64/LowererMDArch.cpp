@@ -1039,7 +1039,10 @@ LowererMDArch::LowerAsmJsLdElemHelper(IR::Instr * instr, bool isSimdLoad /*= fal
         }
         else
         {
-            instr->FreeSrc2();
+            if (instr->GetSrc2())
+            {
+                instr->FreeSrc2();
+            }
             done = instr;
         }
         
@@ -1139,7 +1142,10 @@ LowererMDArch::LowerAsmJsStElemHelper(IR::Instr * instr, bool isSimdStore /*= fa
         }
         else
         {
-            instr->FreeSrc2();
+            if (instr->GetSrc2())
+            {
+                instr->FreeSrc2();
+            }
             done = instr;
         }
     }

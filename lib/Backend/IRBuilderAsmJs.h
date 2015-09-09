@@ -62,8 +62,8 @@ private:
     IR::RegOpnd *           BuildIntConstOpnd(Js::RegSlot regSlot);
     SymID                   BuildSrcStackSymID(Js::RegSlot regSlot, IRType type = IRType::TyVar);
     
-    IR::SymOpnd *           BuildFieldOpnd(Js::RegSlot reg, Js::PropertyId propertyId, Js::PropertyIdIndexType propertyIdIndex, PropertyKind propertyKind, IRType type);
-    PropertySym *           BuildFieldSym(Js::RegSlot reg, Js::PropertyId propertyId, Js::PropertyIdIndexType propertyIdIndex, PropertyKind propertyKind);
+    IR::SymOpnd *           BuildFieldOpnd(Js::RegSlot reg, Js::PropertyId propertyId, PropertyKind propertyKind, IRType type, bool scale = true);
+    PropertySym *           BuildFieldSym(Js::RegSlot reg, Js::PropertyId propertyId, PropertyKind propertyKind);
     uint                    AddStatementBoundary(uint statementIndex, uint offset);
     BranchReloc *           AddBranchInstr(IR::BranchInstr *instr, uint32 offset, uint32 targetOffset);
     BranchReloc *           CreateRelocRecord(IR::BranchInstr * branchInstr, uint32 offset, uint32 targetOffset);
@@ -176,6 +176,7 @@ private:
     BOOL                    m_IsTJLoopBody;
     IRBuilderAsmJsSwitchAdapter m_switchAdapter;
     SwitchIRBuilder         m_switchBuilder;
+    IR::RegOpnd *           m_funcOpnd;
 #if DBG
     uint32                  m_offsetToInstructionCount;
 #endif

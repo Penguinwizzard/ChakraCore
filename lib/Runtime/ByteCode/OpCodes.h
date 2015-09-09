@@ -367,6 +367,8 @@ MACRO_WMS(              StSlot,                     ElementSlot,    None)
 MACRO_WMS(              StSlotChkUndecl,            ElementSlot,    OpSideEffect)
 MACRO_WMS(              StObjSlot,                  ElementSlot,    OpSideEffect)
 MACRO_WMS(              StObjSlotChkUndecl,         ElementSlot,    OpSideEffect)
+MACRO_BACKEND_ONLY(     LdAsmJsSlot,                ElementSlot,    OpTempNumberSources|OpCanCSE)
+MACRO_BACKEND_ONLY(     StAsmJsSlot,                ElementSlot,    None)
 #ifndef FLOAT_VAR
 MACRO_BACKEND_ONLY(     StSlotBoxTemp,              Empty,          OpSideEffect|OpTempNumberSources)
 #endif

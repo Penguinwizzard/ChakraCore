@@ -2423,6 +2423,12 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             }
             break;
         }
+        case Js::OpCode::LdAsmJsSlot:
+            this->LowerLdSlot(instr);
+            break;
+        case Js::OpCode::StAsmJsSlot:
+            this->LowerStSlot(instr);
+            break;
 
         case Js::OpCode::LdSlotChkUndecl:
             this->LowerLdSlotChkUndecl(instr);
@@ -8412,8 +8418,7 @@ Lowerer::LowerLdArrViewElem(IR::Instr * instr)
         instr->UnlinkSrc1();
 
         // this can happen in cases where globopt props a constant access which was not known at bytecodegen time or when heap non-constant
-        Assert(src2->IsIntConstOpnd() || !m_func->GetJnFunction()->GetAsmJsFunctionInfo()->IsHeapBufferConst());
-        if (src2->IsIntConstOpnd() && ((uint32)src1->AsIndirOpnd()->GetOffset() >= (uint32)src2->AsIntConstOpnd()->m_value))
+        if (src2 && src2->IsIntConstOpnd() && ((uint32)src1->AsIndirOpnd()->GetOffset() >= (uint32)src2->AsIntConstOpnd()->m_value))
         {
             src1->Free(m_func);
 
@@ -8426,7 +8431,10 @@ Lowerer::LowerLdArrViewElem(IR::Instr * instr)
                 src1 = IR::IntConstOpnd::New(0, TyInt8, m_func);
             }
         }
-        instr->FreeSrc2();
+        if (src2)
+        {
+            instr->FreeSrc2();
+        }
         done = instr;
     }
 
@@ -8626,17 +8634,19 @@ Lowerer::LowerStArrViewElem(IR::Instr * instr)
     {
         instr->UnlinkDst();
         instr->UnlinkSrc1();
-
-        Assert(src2->IsIntConstOpnd() || !m_func->GetJnFunction()->GetAsmJsFunctionInfo()->IsHeapBufferConst());
+        // TODO: fix OOB case
         // we might have a constant index if globopt propped a constant store. we can ahead of time check if it is in-bounds
-        if (src2->IsIntConstOpnd() && ((uint32)dst->AsIndirOpnd()->GetOffset() >= (uint32)src2->AsIntConstOpnd()->m_value))
+        if (src2 && src2->IsIntConstOpnd() && ((uint32)dst->AsIndirOpnd()->GetOffset() >= (uint32)src2->AsIntConstOpnd()->m_value))
         {
             doStore = false;
             src1->Free(m_func);
             dst->Free(m_func);
         }
         done = instr;
-        instr->FreeSrc2();
+        if (src2)
+        {
+            instr->FreeSrc2();
+        }
     }
     if (doStore)
     {
@@ -9283,8 +9293,6 @@ Lowerer::CreateOpndForSlotAccess(IR::Opnd * opnd)
     {
         offset = offset - m_func->GetJnFunction()->GetAsmJsFunctionInfo()->GetTotalSizeinBytes();
     }
-    // asm.js should only have slot access in loop body code
-    Assert(!m_func->GetJnFunction()->GetIsAsmJsFunction() || m_func->IsLoopBody());
 
     IR::IndirOpnd *indirOpnd = IR::IndirOpnd::New(symOpnd->CreatePropertyOwnerOpnd(m_func),
        offset , opnd->GetType(), this->m_func);
