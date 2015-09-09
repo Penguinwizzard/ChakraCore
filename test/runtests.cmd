@@ -99,6 +99,8 @@ goto :main
     call :RunOneVariant
   )
 
+  call :cleanUp
+
   for %%i in (%_Variants%) do (
     echo.
     echo ######## Logs for %%i variant ########
@@ -109,7 +111,7 @@ goto :main
     )
   )
 
-  goto :eof
+  exit /b %_HadFailures%
 
 :: ============================================================================
 :: Parse the user arguments into environment variables
@@ -147,7 +149,7 @@ goto :main
   if /i "%1" == "-dirnottags"       set _DIRNOTTAGS=%_DIRNOTTAGS% -dirnottags:%2&               goto :ArgOkShift2
   if /i "%1" == "-includeSlow"      set _includeSlow=1&                                         goto :ArgOk
   if /i "%1" == "-includeChBroken"  set _excludeChBroken=&                                      goto :ArgOk
-  if /i "%1" == "-quiet"            set _quiet=-quiet&                                          goto :ArkOk
+  if /i "%1" == "-quiet"            set _quiet=-quiet&                                          goto :ArgOk
   :: TODO Consider removing -drt and exclude_drt in some reasonable manner
   if /i "%1" == "-drt"              set _drt=1& set _NOTTAGS=%_NOTTAGS% -nottags:exclude_drt&   goto :ArgOk
   if /i "%1" == "-nightly"          set _nightly=1&                                             goto :ArgOk
@@ -159,6 +161,7 @@ goto :main
   if /i "%1" == "-buildType"        set _buildType=%2&                                          goto :ArgOkShift2
   if /i "%1" == "-binaryRoot"       set _binaryRoot=%~f2&                                       goto :ArgOkShift2
   if /i "%1" == "-variants"         set _Variants=%~2&                                          goto :ArgOkShift2
+  if /i "%1" == "-cleanupall"       set _CleanUpAll=1&                                          goto :ArgOk
 
   if /i "%1" == "-extraVariants" (
     :: Extra variants are specified by the user but not run by default.
@@ -206,6 +209,7 @@ goto :main
 :: ============================================================================
 :initVars
 
+  set _HadFailures=0
   set _RootDir=%~dp0..
   set _BinDir=%_RootDir%\Build\VcBuild\Bin
   set _BuildArch=
@@ -222,6 +226,7 @@ goto :main
   set _dynamicprofilecache=-dynamicprofilecache:profile.dpl
   set _dynamicprofileinput=-dynamicprofileinput:profile.dpl
   set _includeSlow=
+  set _CleanUpAll=
   set _nightly=
   set TARGET_OS=win10
   set _excludeChBroken=-nottags:exclude_ch
@@ -375,10 +380,28 @@ goto :main
   set REGRESS=%CD%
 
   call :do rl %_rlArgs%
+  if ERRORLEVEL 1 set _HadFailures=1
 
   call :do move /Y %_logsRoot%\*.log %_logsRoot%\%_BuildArch%_%_BuildType%\%_TESTCONFIG%
 
   set EXTRA_CC_FLAGS=%_OLD_CC_FLAGS%
+
+  goto :eof
+
+:: ============================================================================
+:: Clean up left over files
+:: ============================================================================
+:cleanUp
+
+  call :doSilent del /s *.bc
+  call :doSilent del /s *.out
+  call :doSilent del /s *.dpl
+  call :doSilent del /s profile.dpl.UnnamedTest*
+  call :doSilent del /s testout*
+
+  if "%_CleanUpAll%" == "1" (
+    call :doSilent del /s *.rebase
+  )
 
   goto :eof
 

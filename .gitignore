@@ -17,6 +17,4 @@ Build/swum-cache.txt
 .*.swp
 sd.ini
 *.vcxproj.user
-
-testout*
-*.dpl.*
+test/*/*.baseline.rebase
