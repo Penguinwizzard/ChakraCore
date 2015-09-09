@@ -1461,7 +1461,7 @@ Func::GetVtableName(INT_PTR address)
     {
         vtableMap = VirtualTableRegistry::CreateVtableHashMap(this->m_alloc);
     };
-    LPCSTR name = vtableMap->Lookup(address);
+    LPCSTR name = vtableMap->Lookup(address, nullptr);
     if (name)
     {
          if (strncmp(name, "class ", _countof("class ") - 1) == 0)

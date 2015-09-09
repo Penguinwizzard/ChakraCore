@@ -400,16 +400,3 @@ private:
 
     }
 };
-
-template<typename TData, typename TAllocator = ArenaAllocator, typename SizePolicy = PowerOf2Policy>
-class UIntHashTable : public SimpleHashTable<uint, TData, TAllocator, DefaultComparer, /*resize=*/ false, SizePolicy>
-{
-public:
-    UIntHashTable(TAllocator * allocator) : SimpleHashTable(64, allocator)
-    {
-    }
-
-    UIntHashTable(uint size, TAllocator * allocator) : SimpleHashTable(size, allocator)
-    {
-    }
-};

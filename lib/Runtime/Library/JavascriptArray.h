@@ -1056,28 +1056,4 @@ namespace Js
     private:
         virtual int32 HeadSegmentIndexOfHelper(Var search, uint32 &fromIndex, uint32 toIndex, ScriptContext * scriptContext) override;
     };
-
-#ifdef ARRLOG
-    struct ArrLogRec
-    {
-        UIntHashTable<uint32>* accessCounts;
-        uint32 minDex;
-        uint32 maxDex;
-        uint32 setCost;
-        uint32 setSegment;
-        uint32 getCost;
-        uint32 totalSetCount;
-        uint32 totalGetCount;
-        uint32 maxlength;
-    };
-    void PrintArrLog(UIntHashTable<ArrLogRec*>* logTable);
-    extern uint32 rawGet;
-    extern uint32 rawTypeGet;
-    extern uint32 totalSet;
-    extern uint32 totalSetCost;
-    extern uint32 totalGet;
-    extern uint32 totalGetCost;
-    extern uint32 rawSet;
-#endif
-
 } // namespace Js

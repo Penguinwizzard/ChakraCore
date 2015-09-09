@@ -44,7 +44,7 @@ namespace Js
         if( stringLengthMetrics.TryGetValue(length, &metrics) )
         {
             metrics.Accumulate(encoding);
-            stringLengthMetrics.ReplaceValue(length,metrics);
+            stringLengthMetrics.Item(length,metrics);
         }
         else
         {

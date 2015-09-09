@@ -530,42 +530,6 @@ namespace Js
     template<typename T>
     inline BOOL JavascriptArray::DirectGetItemAt(uint32 index, T* outVal)
     {
-#ifdef ARRLOG
-        ArrLogRec* rec = 0;
-        if (Js::Configuration::Global.flags.ArrayLog)
-        {
-            totalGet++;
-            UIntHashTable<ArrLogRec*>* logTable = this->GetScriptContext()->logTable;
-
-            if (!logTable->TryGetValue((unsigned int)this,&rec)) {
-                auto alloc = this->GetScriptContext()->MiscAllocator();
-                rec=AnewStructZ(alloc,ArrLogRec);
-                rec->accessCounts=Anew(alloc,UIntHashTable<unsigned int>,alloc);
-                rec->maxDex=index;
-                rec->minDex=index;
-                rec->totalSetCount=0;
-                rec->totalGetCount=0;
-                rec->setCost=0;
-                rec->setSegment=0;
-                rec->getCost=0;
-                rec->maxlength=0;
-                logTable->Add((unsigned int)this,rec);
-            }
-            if (index>rec->maxDex)
-                rec->maxDex=index;
-            if (index<rec->minDex)
-                rec->minDex=index;
-            rec->totalGetCount++;
-            uint32 count;
-            if (!rec->accessCounts->TryGetValue(index,&count)) {
-                rec->accessCounts->Add(index,1);
-            }
-            else {
-                count++;
-                rec->accessCounts->ReplaceValue(index,count);
-            }
-        }
-#endif
 #ifdef VALIDATE_ARRAY
         ValidateArray();
 #endif
@@ -604,12 +568,6 @@ SECOND_PASS:
         while (nextSeg != nullptr && nextSeg->left <= index)
         {
             uint32 limit =  nextSeg->left + nextSeg->length;
-#ifdef ARRLOG
-            if (Js::Configuration::Global.flags.ArrayLog)
-            {
-                rec->getCost++;
-            }
-#endif
             if (index < limit)
             {
                 T* v = &((SparseArraySegment<T>*)nextSeg)->elements[index - nextSeg->left];
@@ -1210,42 +1168,6 @@ SECOND_PASS:
     void JavascriptArray::DirectSetItem_Full(uint32 itemIndex, T newValue)
     {
         DebugOnly(VerifyNotNeedMarshal(newValue));
-#ifdef ARRLOG
-        ArrLogRec* rec=0;
-        if (Js::Configuration::Global.flags.ArrayLog)
-        {
-            totalSet++;
-            UIntHashTable<ArrLogRec*>* logTable = this->GetScriptContext()->logTable;
-            if (!logTable->TryGetValue((unsigned int)this,&rec)) {
-                auto alloc = this->GetScriptContext()->MiscAllocator();
-                rec=AnewStruct(alloc,ArrLogRec);
-                rec->accessCounts=Anew(alloc,UIntHashTable<unsigned int>,alloc);
-                rec->maxDex=itemIndex;
-                rec->minDex=itemIndex;
-                rec->totalSetCount=0;
-                rec->totalGetCount=0;
-                rec->setCost=0;
-                rec->setSegment=0;
-                rec->getCost=0;
-                rec->maxlength=0;
-                logTable->Add((unsigned int)this,rec);
-            }
-            if (itemIndex>rec->maxDex)
-                rec->maxDex=itemIndex;
-            if (itemIndex<rec->minDex)
-                rec->minDex=itemIndex;
-            rec->totalSetCount++;
-            uint32 count;
-            if (!rec->accessCounts->TryGetValue(itemIndex,&count)) {
-                rec->accessCounts->Add(itemIndex,1);
-            }
-            else {
-                count++;
-                rec->accessCounts->ReplaceValue(itemIndex,count);
-            }
-        }
-#endif
-
         this->EnsureHead<T>();
 
 #ifdef VALIDATE_ARRAY
@@ -1340,12 +1262,6 @@ SECOND_PASS:
         uint probeCost = 0;
         while(current != nullptr)
         {
-#ifdef ARRLOG
-            if (Js::Configuration::Global.flags.ArrayLog)
-            {
-                rec->setCost++;
-            }
-#endif
             uint32 offset = itemIndex - current->left;
             if (itemIndex < current->left)
             {
@@ -1460,13 +1376,6 @@ SECOND_PASS:
                 TryAddToSegmentMap(recycler, newSeg);
 
                 Assert(current != head);
-
-#ifdef ARRLOG
-                if (Js::Configuration::Global.flags.ArrayLog)
-                {
-                    rec->setSegment++;
-                }
-#endif
             }
             else 
             {
@@ -1567,13 +1476,6 @@ SECOND_PASS:
                     SetHasNoMissingValues();
                 }
             }
-
-#ifdef ARRLOG
-            if (Js::Configuration::Global.flags.ArrayLog)
-            {
-                rec->setSegment++;
-            }
-#endif
         }
 
         this->SetLastUsedSegment(current);

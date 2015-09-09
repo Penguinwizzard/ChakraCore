@@ -7,7 +7,7 @@
 
 #include "activprof.h"
 
-#if DBG || ENABLE_REGEX_CONFIG_OPTIONS || defined(ARRLOG) || defined(PROFILE_STRINGS)
+#if DBG || ENABLE_REGEX_CONFIG_OPTIONS || defined(PROFILE_STRINGS)
 #define NEED_MISC_ALLOCATOR
 #endif
 
@@ -585,9 +585,6 @@ public:
         uint byteCodeHistogram[OpCode::ByteCodeLast];
         uint32 forinCache;
         uint32 forinNoCache;
-#endif
-#if ARRLOG
-        UIntHashTable<ArrLogRec*>* logTable;
 #endif
 #ifdef BGJIT_STATS
         uint interpretedCount;

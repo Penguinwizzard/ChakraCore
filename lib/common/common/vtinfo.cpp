@@ -3,7 +3,6 @@
 //----------------------------------------------------------------------------
 
 #include "CommonCommonPch.h"
-#include "DataStructures\SimpleHashTable.h"
 #include "common\vtregistry.h"
 #include "Common\vtinfo.h"
 
@@ -25,7 +24,7 @@ void VirtualTableRegistry::Add(INT_PTR vtable, LPCSTR className)
 VtableHashMap *
 VirtualTableRegistry::CreateVtableHashMap(ArenaAllocator * alloc)
 {
-    VtableHashMap * vtableHashMap = Anew(alloc, VtableHashMap, /*size=*/ MAX_KNOWN_VTABLES, alloc);
+    VtableHashMap * vtableHashMap = Anew(alloc, VtableHashMap, alloc, MAX_KNOWN_VTABLES);
 
     // All classes that derive from RecyclableObject must include DEFINE_VTABLE_CTOR which invokes VirtualTableRegistry::Add
     // at class initialization time. Here we add them to our hash table for easy lookup. Note that on a free build

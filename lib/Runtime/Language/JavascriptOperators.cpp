@@ -3198,9 +3198,6 @@ CommonNumber:
 
     Var JavascriptOperators::OP_GetElementI(Var instance, Var index, ScriptContext* scriptContext)
     {
-#ifdef ARRLOG
-        rawGet++;
-#endif
         JavascriptString *temp = NULL;
         JavascriptLibrary::CheckAndConvertCopyOnAccessNativeIntArray<Var>(instance);
 
@@ -3560,9 +3557,6 @@ CommonNumber:
 
         if (indexType == IndexType_Number)
         {
-#ifdef ARRLOG
-            rawTypeGet++;
-#endif
             if (JavascriptOperators::GetItem(receiver, object, indexVal, &value, scriptContext))
             {
                 return value;
@@ -3852,9 +3846,6 @@ CommonNumber:
 
     BOOL JavascriptOperators::OP_SetElementI(Var instance, Var index, Var value, ScriptContext* scriptContext, PropertyOperationFlags flags)
     {
-#ifdef ARRLOG
-        rawSet++;
-#endif
         JavascriptLibrary::CheckAndConvertCopyOnAccessNativeIntArray<Var>(instance);
 
         TypeId instanceType = JavascriptOperators::GetTypeId(instance);

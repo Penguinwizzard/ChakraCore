@@ -234,7 +234,6 @@
 #endif
 
 #ifdef DBG
-#define ARRLOG 1
 #define VALIDATE_ARRAY
 #define GENERATE_DUMP
 #endif
@@ -482,7 +481,6 @@
 #undef DBG_DUMP
 #undef BGJIT_STATS
 #undef EXCEPTION_RECOVERY
-#undef ARRLOG
 #undef PROFILE_STRINGS
 #undef PROFILE_TYPES
 #undef PROFILE_OBJECT_LITERALS

@@ -47,7 +47,7 @@ RecyclerObjectDumper::RegisterDumper(type_info const * typeinfo, DumpFunction du
 {
     if (EnsureDumpFunctionMap())
     {
-        Assert(!dumpFunctionMap->HasEntry(typeinfo));
+        Assert(!dumpFunctionMap->ContainsKey(typeinfo));
         dumpFunctionMap->Add(typeinfo, dumperFunction);
     }
 }

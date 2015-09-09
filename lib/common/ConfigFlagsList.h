@@ -726,7 +726,6 @@ PHASE(All)
 
 #if DBG
 FLAGNR(Boolean, ArrayValidate         , "Validate each array for valid elements (default: false)", false)
-FLAGNR(Boolean, ArrayLog              , "Log array metrics (default: false)", false)
 FLAGNR(Boolean, MemOpMissingValueValidate, "Validate Missing Value Tracking on memset/memcopy", false)
 #endif
 #ifdef ARENA_MEMORY_VERIFY

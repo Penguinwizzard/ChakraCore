@@ -149,9 +149,6 @@ namespace Js
 #endif
         , intConstPropsOnGlobalObject(nullptr)
         , intConstPropsOnGlobalUserObject(nullptr)
-#ifdef ARRLOG
-        , logTable(nullptr)
-#endif
 #ifdef PROFILE_STRINGS
         , stringProfiler(nullptr)
 #endif
@@ -292,12 +289,6 @@ namespace Js
         this->telemetry = Anew(this->TelemetryAllocator(), ScriptContextTelemetry, *this);
 #endif
 
-#ifdef ARRLOG
-        if (Js::Configuration::Global.flags.ArrayLog)
-        {
-            logTable = Anew(MiscAllocator(), UIntHashTable<ArrLogRec*>, MiscAllocator());
-        }
-#endif
 #ifdef PROFILE_STRINGS
         if (Js::Configuration::Global.flags.ProfileStrings)
         {
@@ -4560,10 +4551,6 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
             Adelete(MiscAllocator(), stringProfiler);
             stringProfiler = nullptr;
         }
-#endif
-
-#ifdef ARRLOG
-        PrintArrLog(logTable);
 #endif
 
 #ifdef PROFILE_MEM

@@ -1373,10 +1373,6 @@ namespace Js
 
     JavascriptNativeFloatArray *JavascriptNativeIntArray::ToNativeFloatArray(JavascriptNativeIntArray *intArray)
     {
-#ifdef ARRLOG
-        ArrLogRec* rec = nullptr;
-#endif
-
         ArrayCallSiteInfo *arrayInfo = intArray->GetArrayCallSiteInfo();
         if (arrayInfo)
         {
@@ -1462,16 +1458,6 @@ namespace Js
                     segmentMap->SwapSegment(left, seg, newSeg);
                 }
 
-#ifdef ARRLOG
-                if (Js::Configuration::Global.flags.ArrayLog)
-                {
-                    UIntHashTable<ArrLogRec*>* logTable = scriptContext->logTable;
-                    if (rec || logTable->TryGetValue((unsigned int)intArray, &rec))
-                    {
-                        rec->setSegment++;
-                    }
-                }
-#endif
                 // Fill the new segment with the overflow.
                 for (i = 0; (uint)i < newSeg->length; i++)
                 {
@@ -1699,9 +1685,6 @@ namespace Js
 
     JavascriptArray *JavascriptNativeIntArray::ConvertToVarArray(JavascriptNativeIntArray *intArray)
     {
-#ifdef ARRLOG
-        ArrLogRec* rec = nullptr;
-#endif
         JavascriptLibrary::CheckAndConvertCopyOnAccessNativeIntArray<Var>(intArray);
         ScriptContext *scriptContext = intArray->GetScriptContext();
         Recycler *recycler = scriptContext->GetRecycler();
@@ -1745,16 +1728,6 @@ namespace Js
                     segmentMap->SwapSegment(left, seg, newSeg);
                 }
 
-#ifdef ARRLOG
-                if (Js::Configuration::Global.flags.ArrayLog)
-                {
-                    UIntHashTable<ArrLogRec*>* logTable = scriptContext->logTable;
-                    if (rec || logTable->TryGetValue((unsigned int)intArray, &rec))
-                    {
-                        rec->setSegment++;
-                    }
-                }
-#endif
                 // Fill the new segment with the overflow.
                 for (i = 0; (uint)i < newSeg->length; i++)
                 {
@@ -1888,9 +1861,6 @@ namespace Js
     */
     JavascriptArray *JavascriptNativeFloatArray::ConvertToVarArray(JavascriptNativeFloatArray *fArray)
     {
-#ifdef ARRLOG
-        ArrLogRec* rec = nullptr;
-#endif
         // We can't be growing the size of the element.
         Assert(sizeof(double) >= sizeof(Var));
 
@@ -1927,17 +1897,6 @@ namespace Js
                 {
                     segmentMap->SwapSegment(left, seg, newSeg);
                 }
-
-#ifdef ARRLOG
-                if (Js::Configuration::Global.flags.ArrayLog)
-                {
-                    UIntHashTable<ArrLogRec*>* logTable = scriptContext->logTable;
-                    if (rec || logTable->TryGetValue((unsigned int)fArray, &rec))
-                    {
-                        rec->setSegment++;
-                    }
-                }
-#endif
             }
             else 
             {
@@ -4422,32 +4381,6 @@ Case0:
 
         uint32 index = length - 1;
         Var element;
-#ifdef ARRLOG
-        ArrLogRec* rec = 0;
-        if (Js::Configuration::Global.flags.ArrayLog)
-        {
-            UIntHashTable<ArrLogRec*>* logTable = arr->GetScriptContext()->logTable;
-
-            if (!logTable->TryGetValue((unsigned int)arr,&rec)) {
-                auto alloc = arr->GetScriptContext()->MiscAllocator();
-                rec=AnewStructZ(alloc,ArrLogRec);
-                rec->accessCounts=Anew(alloc,UIntHashTable<unsigned int>,alloc);
-                rec->maxDex=index;
-                rec->minDex=index;
-                rec->totalSetCount=0;
-                rec->totalGetCount=0;
-                rec->setCost=0;
-                rec->setSegment=0;
-                rec->getCost=0;
-                rec->maxlength = 0;
-                logTable->Add((unsigned int)arr,rec);
-            }
-            if (rec->maxlength < length)
-            {
-                rec->maxlength = length;
-            }
-        }
-#endif
 
         if (!arr->DirectGetItemAtFull(index, &element))
         {
@@ -11075,46 +11008,6 @@ Case0:
 
             seg = (SparseArraySegment<T>*)seg->next;
         }
-    }
-#endif
-
-#ifdef ARRLOG
-    FILE *arrlogfp=NULL;
-    //UIntHashTable<ArrLogRec*>* logTable=NULL;
-
-    uint32 rawGet=0;
-    uint32 rawTypeGet=0;
-    uint32 totalSet=0;
-    uint32 totalSetCost=0;
-    uint32 totalGet=0;
-    uint32 totalGetCost=0;
-    uint32 rawSet=0;
-
-    void PrintArrLog(UIntHashTable<ArrLogRec*>* logTable)
-    {
-        if (false == Js::Configuration::Global.flags.ArrayLog)
-        {
-            return;
-        }
-        fopen_s(&arrlogfp,"c:\\ie\\arrlog.txt","w");
-        fprintf(arrlogfp,"raw get total %d\n",rawGet);
-        fprintf(arrlogfp,"raw type get total %d\n",rawTypeGet);
-        fprintf(arrlogfp,"raw set total %d\n",rawSet);
-        fprintf(arrlogfp,"total set %d\n",totalSet);
-        fprintf(arrlogfp,"total get %d\n",totalGet);
-        logTable->Map([](unsigned int arrKey, ArrLogRec* rec)
-        {
-            if (rec->totalGetCount>100)
-                fprintf(arrlogfp, "B: arr 0x%x total set %d (cost %d) total get %d (cost %d) mindex %d maxdex %d maxlength %d\n", arrKey, rec->totalSetCount,
-                rec->setCost, rec->totalGetCount, rec->getCost, rec->minDex, rec->maxDex, rec->maxlength);
-            else fprintf(arrlogfp, "arr 0x%x total set %d (cost %d) total get %d (cost %d) mindex %d maxdex %d maxlength %d\n", arrKey, rec->totalSetCount,
-                rec->setCost, rec->totalGetCount, rec->getCost, rec->minDex, rec->maxDex, rec->maxlength);
-            totalSetCost += rec->setCost;
-            totalGetCost += rec->getCost;
-        });
-        fprintf(arrlogfp,"total set cost %d\n",totalSetCost);
-        fprintf(arrlogfp,"total get cost %d\n",totalGetCost);
-        fclose(arrlogfp);
     }
 #endif
 
