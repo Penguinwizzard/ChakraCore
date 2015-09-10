@@ -7230,34 +7230,37 @@ ParseNodePtr Parser::ParseExpr(int oplMin, BOOL *pfCanAssign, BOOL fAllowIn, BOO
         }
         Assert(opl != koplNo);
 
-        if (opl == koplAsg && m_token.tk != tkDArrow)
+        if (opl == koplAsg)
         {
-            // Assignment operator. These are the only right associative
-            // binary operators. We also need to special case the left
-            // operand - it should only be a LeftHandSideExpression.
-            Assert(ParseNode::Grfnop(nop) & fnopAsg || nop == knopFncDecl);
-            TrackAssignment<buildAST>(pnode, &term, ichMin, m_pscan->IchLimTok());
-            if (buildAST)
+            if (m_token.tk != tkDArrow)
             {
-                if (IsStrictMode() && pnode->nop == knopName)
+                // Assignment operator. These are the only right associative
+                // binary operators. We also need to special case the left
+                // operand - it should only be a LeftHandSideExpression.
+                Assert(ParseNode::Grfnop(nop) & fnopAsg || nop == knopFncDecl);
+                TrackAssignment<buildAST>(pnode, &term, ichMin, m_pscan->IchLimTok());
+                if (buildAST)
                 {
-                    CheckStrictModeEvalArgumentsUsage(pnode->sxPid.pid);
-                }
-
-                // Assignment stmt of the form "this.<id> = <expr>"
-                if (nop == knopAsg && pnode->nop == knopDot && pnode->sxBin.pnode1->nop == knopThis && pnode->sxBin.pnode2->nop == knopName)
-                {
-                    if (pnode->sxBin.pnode2->sxPid.pid != wellKnownPropertyPids.__proto__)
+                    if (IsStrictMode() && pnode->nop == knopName)
                     {
-                        assignmentStmt = true;
+                        CheckStrictModeEvalArgumentsUsage(pnode->sxPid.pid);
+                    }
+
+                    // Assignment stmt of the form "this.<id> = <expr>"
+                    if (nop == knopAsg && pnode->nop == knopDot && pnode->sxBin.pnode1->nop == knopThis && pnode->sxBin.pnode2->nop == knopName)
+                    {
+                        if (pnode->sxBin.pnode2->sxPid.pid != wellKnownPropertyPids.__proto__)
+                        {
+                            assignmentStmt = true;
+                        }
                     }
                 }
-            }
-            else
-            {
-                if (IsStrictMode() && term.tk == tkID)
+                else
                 {
-                    CheckStrictModeEvalArgumentsUsage(term.pid);
+                    if (IsStrictMode() && term.tk == tkID)
+                    {
+                        CheckStrictModeEvalArgumentsUsage(term.pid);
+                    }
                 }
             }
 
@@ -7265,7 +7268,7 @@ ParseNodePtr Parser::ParseExpr(int oplMin, BOOL *pfCanAssign, BOOL fAllowIn, BOO
             {
                 break;
             }
-            if (!fCanAssign)
+            if (m_token.tk != tkDArrow && !fCanAssign)
             {
                 Error(ERRsyntax);
                 // No recovery necessary since this is a semantic, not structural, error.
@@ -7280,7 +7283,7 @@ ParseNodePtr Parser::ParseExpr(int oplMin, BOOL *pfCanAssign, BOOL fAllowIn, BOO
             }
 
         }
-        else if (opl <= oplMin && m_token.tk != tkDArrow)
+        else if (opl <= oplMin)
         {
             break;
         }
