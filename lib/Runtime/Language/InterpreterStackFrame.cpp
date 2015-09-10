@@ -2160,6 +2160,7 @@ namespace Js
             {
                 scriptFuncObj->GetDynamicType()->SetEntryPoint(AsmJsExternalEntryPoint);
             }
+            scriptFuncObj->mModuleMemory = moduleMemoryPtr;
             FunctionEntryPointInfo* entypointInfo = (FunctionEntryPointInfo*)scriptFuncObj->GetEntryPointInfo();
             entypointInfo->SetIsAsmJSFunction(true);
             entypointInfo->SetModuleAddress((uintptr_t)moduleMemoryPtr);

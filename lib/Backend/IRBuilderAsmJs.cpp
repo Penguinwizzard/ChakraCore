@@ -731,14 +731,8 @@ IRBuilderAsmJs::BuildConstantLoads()
     Js::Var * constTable = static_cast<Js::Var *>(m_func->GetJnFunction()->GetConstTable());
 
     // Load FrameDisplay
-    IR::RegOpnd * dstOpnd = BuildDstOpnd(AsmJsRegSlots::EnvReg, TyVar);
-    IR::Instr * instr = IR::Instr::New(Js::OpCode::LdEnv, dstOpnd, m_func);
-    AddInstr(instr, Js::Constants::NoByteCodeOffset);
-
-    // Load module memory
-    dstOpnd = BuildDstOpnd(AsmJsRegSlots::ModuleMemReg, TyVar);
-    IR::Opnd * srcOpnd = IR::IndirOpnd::New(BuildSrcOpnd(AsmJsRegSlots::EnvReg, TyVar), Js::FrameDisplay::GetOffsetOfScopes(), TyVar, m_func);
-    instr = IR::Instr::New(Js::OpCode::Ld_A, dstOpnd, srcOpnd, m_func);
+    IR::RegOpnd * dstOpnd = BuildDstOpnd(AsmJsRegSlots::ModuleMemReg, TyVar);
+    IR::Instr * instr = IR::Instr::New(Js::OpCode::LdAsmJsEnv, dstOpnd, m_func);
     AddInstr(instr, Js::Constants::NoByteCodeOffset);
 
     // Load heap buffer

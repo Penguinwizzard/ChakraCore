@@ -420,6 +420,7 @@ MACRO_WMS(              LdInfinity,         Reg1,           OpByteCodeOnly|OpCan
 MACRO_WMS(              LdTrue,             Reg1,           OpByteCodeOnly|OpCanCSE)       // Load 'true' boolean primitive
 MACRO_WMS(              LdFalse,            Reg1,           OpByteCodeOnly|OpCanCSE)       // Load 'false' boolean primitive
 MACRO_WMS(              LdEnv,              Reg1,           OpCanCSE)       // Load the optional FixedSizeArray environment for closures
+MACRO_WMS(              LdAsmJsEnv,              Reg1,           OpCanCSE)       // Load the optional FixedSizeArray environment for closures
 
 MACRO_WMS(              LdArgCnt,           Reg1,           None)       // Load the argument count from the current function
 

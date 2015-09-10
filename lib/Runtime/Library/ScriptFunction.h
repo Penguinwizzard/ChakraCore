@@ -57,7 +57,8 @@ namespace Js
             Assert(this->GetFunctionProxy()->IsDeferred() == FALSE);
             return (FunctionEntryPointInfo*) this->GetEntryPointInfo();
         }
-
+        Var* mModuleMemory;
+        static uint32 GetOffsetOfModuleMemory() { return offsetof(ScriptFunction, mModuleMemory); }
         FunctionProxy * GetFunctionProxy() const;
         ScriptFunctionType * GetScriptFunctionType() const;
 

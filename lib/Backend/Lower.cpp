@@ -2450,6 +2450,9 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
         case Js::OpCode::LdEnv:
             instrPrev = this->LowerLdEnv(instr);
             break;
+        case Js::OpCode::LdAsmJsEnv:
+            instrPrev = this->LowerLdEnv(instr);
+            break;
 
         case Js::OpCode::LdElemUndef:
             this->LowerLdElemUndef(instr);
@@ -22053,17 +22056,15 @@ Lowerer::LowerLdEnv(IR::Instr * instr)
     IR::Opnd * src1 = instr->GetSrc1();
     IR::Opnd * functionObjOpnd;
     IR::Instr * instrPrev = this->m_lowererMD.LoadFunctionObjectOpnd(instr, functionObjOpnd);
-
-    if (src1 == nullptr)
+    if (instr->m_opcode == Js::OpCode::LdAsmJsEnv)
     {
         IR::IndirOpnd *indirOpnd = IR::IndirOpnd::New(functionObjOpnd->AsRegOpnd(),
-            Js::ScriptFunction::GetOffsetOfEnvironment(), TyMachPtr, m_func);
+            Js::ScriptFunction::GetOffsetOfModuleMemory(), TyMachPtr, m_func);
         instr->SetSrc1(indirOpnd);
     }
     else
     {
-        // Inlinee LdEnv, use the function object opnd on the instruction
-        if (functionObjOpnd->IsRegOpnd())
+        if (src1 == nullptr)
         {
             IR::IndirOpnd *indirOpnd = IR::IndirOpnd::New(functionObjOpnd->AsRegOpnd(),
                 Js::ScriptFunction::GetOffsetOfEnvironment(), TyMachPtr, m_func);
@@ -22071,11 +22072,21 @@ Lowerer::LowerLdEnv(IR::Instr * instr)
         }
         else
         {
-            Assert(functionObjOpnd->IsAddrOpnd());
-            IR::AddrOpnd* functionObjAddrOpnd = functionObjOpnd->AsAddrOpnd();
-            IR::MemRefOpnd* functionEnvMemRefOpnd = IR::MemRefOpnd::New((void *)((intptr)functionObjAddrOpnd->m_address + Js::ScriptFunction::GetOffsetOfEnvironment()),
-                TyMachPtr, this->m_func, IR::AddrOpndKindDynamicFunctionEnvironmentRef);
-            instr->SetSrc1(functionEnvMemRefOpnd);
+            // Inlinee LdEnv, use the function object opnd on the instruction
+            if (functionObjOpnd->IsRegOpnd())
+            {
+                IR::IndirOpnd *indirOpnd = IR::IndirOpnd::New(functionObjOpnd->AsRegOpnd(),
+                    Js::ScriptFunction::GetOffsetOfEnvironment(), TyMachPtr, m_func);
+                instr->SetSrc1(indirOpnd);
+            }
+            else
+            {
+                Assert(functionObjOpnd->IsAddrOpnd());
+                IR::AddrOpnd* functionObjAddrOpnd = functionObjOpnd->AsAddrOpnd();
+                IR::MemRefOpnd* functionEnvMemRefOpnd = IR::MemRefOpnd::New((void *)((intptr)functionObjAddrOpnd->m_address + Js::ScriptFunction::GetOffsetOfEnvironment()),
+                    TyMachPtr, this->m_func, IR::AddrOpndKindDynamicFunctionEnvironmentRef);
+                instr->SetSrc1(functionEnvMemRefOpnd);
+            }
         }
     }
 
