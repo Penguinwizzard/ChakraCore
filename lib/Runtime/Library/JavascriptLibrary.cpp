@@ -4395,6 +4395,7 @@ namespace Js
         // With JsrtContext supporting cross context, ensure that it doesn't get GCed
         // prematurely. So pin the instance to javascriptLibrary so it will stay alive
         // until any object of it are alive.
+        Assert(this->jsrtContextObject == nullptr);
         this->jsrtContextObject = jsrtContext;
     }
 

@@ -459,6 +459,7 @@ namespace Js
                               arrayPrototypeToStringFunction(nullptr),
                               identityFunction(nullptr),
                               throwerFunction(nullptr),
+                              jsrtContextObject(nullptr),
                               cachedForInEnumerator(nullptr),
                               cacheForCopyOnAccessArraySegments(nullptr),
 #ifdef ENABLE_PROJECTION
