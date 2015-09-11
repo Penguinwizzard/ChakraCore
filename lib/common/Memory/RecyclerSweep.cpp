@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#include "stdafx.h"
+#include "CommonMemoryPch.h"
 
 #ifdef PARTIAL_GC_ENABLED   
 #define KILOBYTES * 1024

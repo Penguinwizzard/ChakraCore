@@ -11,6 +11,13 @@ namespace Js
     class Profiler;
     enum Phase;
 };
+
+namespace JsUtil
+{
+    class ThreadService;
+};
+
+class StackBackTraceNode;
 class ScriptEngineBase;
 class JavascriptThreadService;
 
@@ -20,6 +27,7 @@ struct RecyclerMemoryData;
 
 namespace Memory
 {
+template <typename T> class RecyclerRootPtr;
 
 class AutoBooleanToggle
 {
@@ -48,7 +56,7 @@ public:
     {
         Assert(valueMayChange || *b == value);
         *b = false;
-        b = null;
+        b = nullptr;
     }
 
 private:
@@ -220,13 +228,6 @@ struct InfoBitsWrapper{};
 #define RecyclerHeapDelete(recycler,heapInfo,addr) (static_cast<Recycler *>(recycler)->HeapFree(heapInfo,addr))
 
 typedef void (__cdecl* ExternalRootMarker)(void *);
-
-struct ObjectReference
-{
-    int byteCount;
-    char* address;
-    SimpleHashTable<void *, unsigned int>* relatives;
-};
 
 enum CollectionFlags
 {
@@ -503,22 +504,6 @@ struct CollectionParam
 
 #include "RecyclerObjectGraphDumper.h"
 
-struct RecyclerWatsonTelemetryBlock
-{
-    FILETIME initialCollectionStartTime;
-    DWORDLONG initialCollectionStartProcessUsedBytes;
-    FILETIME currentCollectionStartTime;
-    DWORDLONG currentCollectionStartProcessUsedBytes;
-    FILETIME concurrentMarkFinishTime;
-    FILETIME disposeStartTime;
-    FILETIME disposeEndTime;
-    FILETIME externalWeakReferenceObjectResolveStartTime;
-    FILETIME externalWeakReferenceObjectResolveEndTime;
-    FILETIME currentCollectionEndTime;
-    FILETIME lastCollectionEndTime;
-    DWORD exhaustiveRepeatedCount;
-};
-
 #ifdef RECYCLER_WRITE_BARRIER_ALLOC_SEPARATE_PAGE
 // Macro to be used within the recycler
 #define ForRecyclerPageAllocator(action) { \
@@ -712,10 +697,10 @@ private:
 #if defined(CHECK_MEMORY_LEAK) || defined(LEAK_REPORT)
     struct PinRecord
     {
-        PinRecord() : refCount(0), stackBackTraces(null) {}
+        PinRecord() : refCount(0), stackBackTraces(nullptr) {}
         PinRecord& operator=(uint newRefCount)
         {
-            Assert(stackBackTraces == null); Assert(newRefCount == 0); refCount = 0; return *this;
+            Assert(stackBackTraces == nullptr); Assert(newRefCount == 0); refCount = 0; return *this;
         }
         PinRecord& operator++() { ++refCount; return *this; }
         PinRecord& operator--() { --refCount; return *this; }
@@ -1177,8 +1162,8 @@ public:
     bool QueueTrackedObject(FinalizableObject * trackableObject);
 
     // FindRoots
-    void TryMarkNonInterior(void* candidate, void* parentReference = null);
-    void TryMarkInterior(void *candidate, void* parentReference = null);
+    void TryMarkNonInterior(void* candidate, void* parentReference = nullptr);
+    void TryMarkInterior(void *candidate, void* parentReference = nullptr);
 
     bool InCacheCleanupCollection() { return inCacheCleanupCollection; }
     void ClearCacheCleanupCollection() { Assert(inCacheCleanupCollection); inCacheCleanupCollection = false; }
@@ -1212,12 +1197,7 @@ public:
     }
 
 #ifdef RECYCLER_TEST_SUPPORT
-    void SetCheckFn(BOOL (*checkFn)(char* addr, size_t size))
-    {
-        Assert(BinaryFeatureControl::RecyclerTest());
-        this->EnsureNotCollecting();
-        this->checkFn = checkFn;
-    }
+    void SetCheckFn(BOOL(*checkFn)(char* addr, size_t size));
 #endif
 
     void SetCollectionWrapper(RecyclerCollectionWrapper * wrapper)
@@ -1406,8 +1386,6 @@ public:
     void EnterIdleDecommit();
     void LeaveIdleDecommit();
 
-    void MarkPropertyUsed(Js::PropertyId pid);
-
     void DisposeObjects();
     BOOL IsValidObject(void* candidate, size_t minimumSize = 0);
 
@@ -1448,7 +1426,7 @@ public:
     void VerifyZeroFill(void * address, size_t size);
 #endif
 #ifdef RECYCLER_DUMP_OBJECT_GRAPH
-    bool DumpObjectGraph(RecyclerObjectGraphDumper::Param * param = null);
+    bool DumpObjectGraph(RecyclerObjectGraphDumper::Param * param = nullptr);
     void DumpObjectDescription(void *object);
 #endif
 #ifdef LEAK_REPORT
@@ -1650,7 +1628,7 @@ private:
 #ifdef PARTIAL_GC_ENABLED
     void ProcessClientTrackedObjects();
     bool PartialCollect(bool concurrent);
-    void FinishPartialCollect(RecyclerSweep * recyclerSweep = null);
+    void FinishPartialCollect(RecyclerSweep * recyclerSweep = nullptr);
     void ClearPartialCollect();
     void BackgroundFinishPartialCollect(RecyclerSweep * recyclerSweep);
 #endif
@@ -2148,7 +2126,7 @@ public:
     virtual BOOL IsFreeObject(void* objectAddress) override { Assert(false); return false; }
 #endif
     virtual BOOL IsValidObject(void* objectAddress) override { Assert(false); return false; }
-    virtual byte* GetRealAddressFromInterior(void* interiorAddress) override { Assert(false); return null; }
+    virtual byte* GetRealAddressFromInterior(void* interiorAddress) override { Assert(false); return nullptr; }
     virtual size_t GetObjectSize(void* object) override { Assert(false); return 0; }
     virtual bool FindHeapObject(void* objectAddress, Recycler * recycler, FindHeapObjectFlags flags, RecyclerHeapObjectInfo& heapObject) override { Assert(false); return false; }
     virtual bool TestObjectMarkedBit(void* objectAddress) override { Assert(false); return false; }
@@ -2161,7 +2139,7 @@ public:
     virtual void UpdatePerfCountersOnFree() override { Assert(false); }
 #endif
 #ifdef PROFILE_RECYCLER_ALLOC
-    virtual void * GetTrackerData(void * address) override { Assert(false); return null; }
+    virtual void * GetTrackerData(void * address) override { Assert(false); return nullptr; }
     virtual void SetTrackerData(void * address, void * data) override { Assert(false); }
 #endif
     static CollectedRecyclerWeakRefHeapBlock Instance;
@@ -2178,47 +2156,6 @@ public:
 private:
     Recycler * recycler;
 };
-
-template <bool pageheap, typename T>
-void
-Recycler::NotifyFree(T * heapBlock)
-{
-    bool forceSweepObject = ForceSweepObject();
-
-    if (forceSweepObject)
-    {
-#if DBG || defined(RECYCLER_STATS)
-        this->isForceSweeping = true;
-        heapBlock->isForceSweeping = true;
-#endif
-        heapBlock->SweepObjects<pageheap, SweepMode_InThread>(this);
-#if DBG || defined(RECYCLER_STATS)
-        heapBlock->isForceSweeping = false;
-        this->isForceSweeping = false;
-#endif
-        RECYCLER_STATS_INC(this, heapBlockFreeCount[heapBlock->GetHeapBlockType()]);
-    }
-    JS_ETW(EventWriteFreeMemoryBlock(heapBlock));
-#ifdef RECYCLER_PERF_COUNTERS
-    if (forceSweepObject)
-    {
-        RECYCLER_PERF_COUNTER_SUB(FreeObjectSize, heapBlock->GetPageCount() * AutoSystemInfo::PageSize);
-
-        if (heapBlock->IsLargeHeapBlock())
-        {
-            RECYCLER_PERF_COUNTER_SUB(LargeHeapBlockFreeObjectSize, heapBlock->GetPageCount() * AutoSystemInfo::PageSize);
-        }
-        else
-        {
-            RECYCLER_PERF_COUNTER_SUB(SmallHeapBlockFreeObjectSize, heapBlock->GetPageCount() * AutoSystemInfo::PageSize);
-        }
-    }
-    else
-    {
-        heapBlock->UpdatePerfCountersOnFree();
-    }
-#endif
-}
 
 template <typename SmallHeapBlockAllocatorType>
 void
@@ -2459,7 +2396,7 @@ operator new(size_t byteSize, Recycler * recycler, ObjectInfoBits enumClassBits)
     Assert(enumClassBits == EnumClass_1_Bit);
     void * buffer = recycler->AllocEnumClass<EnumClass_1_Bit>(byteSize);
     // All of our allocation should throw on out of memory
-    Assume(buffer != null);
+    Assume(buffer != nullptr);
     return buffer;
 }
 
@@ -2471,6 +2408,6 @@ operator new(size_t byteSize, Recycler * recycler, const InfoBitsWrapper<infoBit
     Assert(byteSize != 0);
     void * buffer = recycler->AllocWithInfoBits<infoBits>(byteSize);
     // All of our allocation should throw on out of memory
-    Assume(buffer != null);
+    Assume(buffer != nullptr);
     return buffer;
 }

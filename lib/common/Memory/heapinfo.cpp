@@ -3,8 +3,8 @@
 *   Copyright (C) Microsoft. All rights reserved.       *
 *                                                       *
 ********************************************************/
-#include "stdafx.h"
-
+#include "CommonMemoryPch.h"
+#include "Memory\PageHeapBlockTypeFilter.h"
 #if defined(_M_IX86_OR_ARM32)
 #include "ValidPointersMap\vpm.32b.h"
 #elif defined(_M_X64_OR_ARM64)

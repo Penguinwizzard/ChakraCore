@@ -2,7 +2,9 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "stdafx.h"
+#include "CommonDataStructuresPch.h"
+#include "DataStructures\CharacterBuffer.h"
+#include "DataStructures\InternalStringNoCaseComparer.h"
 
 namespace JsUtil
 {    

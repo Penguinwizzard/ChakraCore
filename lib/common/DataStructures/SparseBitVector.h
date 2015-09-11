@@ -1,10 +1,6 @@
-//----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//
-// angar
-// 05/27/2009
-//
-//----------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+//---------------------------------------------------------------------------
 
 #pragma once
 
@@ -45,7 +41,7 @@ typedef  BVUnit64 SparseBVUnit;
 { \
     BVIndex index;  \
     BVSparseNode * _curNodeEdit = (bv)->head; \
-    while (_curNodeEdit != null) \
+    while (_curNodeEdit != nullptr) \
     { \
         BVSparseNode * _next = _curNodeEdit->next; \
         BVIndex _offset; \
@@ -78,94 +74,16 @@ struct BVSparseNode
 #endif
 
 
-    BVSparseNode(BVIndex beginIndex, BVSparseNode * nextNode): 
-        startIndex(beginIndex),
-        data(0), 
-        next(nextNode)
-    {
-    }
+    BVSparseNode(BVIndex beginIndex, BVSparseNode * nextNode);
 
-    void
-    init(BVIndex beginIndex, BVSparseNode * nextNode)
-    {
-        this->startIndex = beginIndex;
-        this->data = 0;
-        this->next = nextNode;
-    }
-
+    void init(BVIndex beginIndex, BVSparseNode * nextNode);
     bool ToString(
         __out_ecount(strSize) char *const str,
         const size_t strSize,
-        size_t *const writtenLengthRef = null,
+        size_t *const writtenLengthRef = nullptr,
         const bool isInSequence = false,
         const bool isFirstInSequence = false,
-        const bool isLastInSequence = false) const
-    {
-        Assert(str);
-        Assert(!isFirstInSequence || isInSequence);
-        Assert(!isLastInSequence || isInSequence);
-
-        if(strSize == 0)
-        {
-            if(writtenLengthRef)
-            {
-                *writtenLengthRef = 0;
-            }
-            return false;
-        }
-        str[0] = '\0';
-
-        const size_t reservedLength = _countof(", ...}");
-        if(strSize <= reservedLength)
-        {
-            if(writtenLengthRef)
-            {
-                *writtenLengthRef = 0;
-            }
-            return false;
-        }
-
-        size_t length = 0;
-        if(!isInSequence || isFirstInSequence)
-        {
-            str[length++] = '{';
-        }
-
-        bool insertComma = isInSequence && !isFirstInSequence;
-        char tempStr[13];
-        for(BVIndex i = data.GetNextBit(); i != BVInvalidIndex; i = data.GetNextBit(i + 1))
-        {
-            const size_t copyLength = sprintf_s(tempStr, insertComma ? ", %u" : "%u", startIndex + i);
-            Assert(static_cast<int>(copyLength) > 0);
-
-            Assert(strSize > length);
-            Assert(strSize - length > reservedLength);
-            if(strSize - length - reservedLength <= copyLength)
-            {
-                strcpy_s(&str[length], strSize - length, insertComma ? ", ...}" : "...}");
-                if(writtenLengthRef)
-                {
-                    *writtenLengthRef = length + (insertComma ? _countof(", ...}") : _countof("...}"));
-                }
-                return false;
-            }
-
-            strcpy_s(&str[length], strSize - length - reservedLength, tempStr);
-            length += copyLength;
-            insertComma = true;
-        }
-        if(!isInSequence || isLastInSequence)
-        {
-            Assert(_countof("}") < strSize - length);
-            strcpy_s(&str[length], strSize - length, "}");
-            length += _countof("}");
-        }
-        if(writtenLengthRef)
-        {
-            *writtenLengthRef = length;
-        }
-        return true;
-    }
+        const bool isLastInSequence = false) const;
 };
 
 CompileAssert(sizeof(BVSparseNode) == 16); //Performance assert, BVSparseNode is heavily used in the backend, do perf measurment before changing this. 
@@ -301,7 +219,7 @@ const SparseBVUnit BVSparse<TAllocator>::s_EmptyUnit(0);
 template <class TAllocator>
 BVSparse<TAllocator>::BVSparse(TAllocator* allocator) :   
    alloc(allocator),
-   head(null)
+   head(nullptr)
 {
     this->lastUsedNodePrevNextField = &this->head;
 }
@@ -323,7 +241,7 @@ template <class TAllocator>
 BVSparse<TAllocator>::~BVSparse()
 {
     BVSparseNode * curNode = this->head;
-    while (curNode != null)
+    while (curNode != nullptr)
     {
         curNode = this->DeleteNode(curNode);
     }
@@ -341,7 +259,7 @@ BVSparse<TAllocator>::NodeFromIndex(BVIndex i, BVSparseNode *** prevNextFieldOut
 
     BVSparseNode ** prevNextField = this->lastUsedNodePrevNextField;
     BVSparseNode * curNode = (*prevNextField);
-    if (curNode != null)
+    if (curNode != nullptr)
     {
         if (curNode->startIndex == searchIndex)
         {
@@ -375,7 +293,7 @@ BVSparse<TAllocator>::NodeFromIndex(BVIndex i, BVSparseNode *** prevNextFieldOut
     
     if(!create)
     {
-        return null;
+        return nullptr;
     }
 
     BVSparseNode * newNode = Allocate(searchIndex, *prevNextField);
@@ -471,7 +389,7 @@ template <class TOtherAllocator>
 void 
 BVSparse<TAllocator>::AssertBV(const BVSparse<TOtherAllocator> *bv)
 {
-    AssertMsg(NULL != bv, "Cannot operate on NULL bitvector");
+    AssertMsg(nullptr != bv, "Cannot operate on NULL bitvector");
 }
 
 template <class TAllocator>
@@ -484,7 +402,7 @@ BVSparse<TAllocator>::ClearAll()
         nextNode = node->next;
         QueueInFreeList(node);
     }
-    this->head = null;
+    this->head = nullptr;
     this->lastUsedNodePrevNextField = &this->head;
 }
 
@@ -522,7 +440,7 @@ template <class TAllocator>
 BOOLEAN 
 BVSparse<TAllocator>::TestEmpty() const
 {    
-    return this->head != null;
+    return this->head != nullptr;
 }
 
 template <class TAllocator>
@@ -577,7 +495,7 @@ void BVSparse<TAllocator>::for_each(const BVSparse *bv2)
     const BVSparseNode * node2      = bv2->head;
           BVSparseNode ** prevNodeNextField   = &this->head;
 
-    while(node1 != null && node2 != null)
+    while(node1 != nullptr && node2 != nullptr)
     {
         if(node2->startIndex == node1->startIndex)
         {
@@ -616,18 +534,18 @@ void BVSparse<TAllocator>::for_each(const BVSparse *bv2)
 
     if (callback == &SparseBVUnit::And)
     {
-        while (node1 != null)
+        while (node1 != nullptr)
         {
             node1 = this->DeleteNode(node1);
         }
-        *prevNodeNextField = NULL;            
+        *prevNodeNextField = nullptr;
     }
     else if (callback == &SparseBVUnit::Or || callback == &SparseBVUnit::Xor)
     {
         while(node2 != 0)
         {
-            Assert(*prevNodeNextField == NULL);    
-            BVSparseNode * newNode = Allocate(node2->startIndex, NULL);
+            Assert(*prevNodeNextField == nullptr);
+            BVSparseNode * newNode = Allocate(node2->startIndex, nullptr);
             *prevNodeNextField = newNode;
             
             (newNode->data.*callback)(node2->data);
@@ -648,10 +566,10 @@ void BVSparse<TAllocator>::for_each(const BVSparse *bv1, const BVSparse *bv2)
 
           BVSparseNode * node1      = bv1->head;
     const BVSparseNode * node2      = bv2->head;
-          BVSparseNode * lastNode   = NULL;
+          BVSparseNode * lastNode   = nullptr;
           BVSparseNode ** prevNextField = &this->head;
 
-    while(node1 != null && node2 != null)
+    while(node1 != nullptr && node2 != nullptr)
     {
         lastNode = node1;
         BVIndex startIndex;
@@ -682,7 +600,7 @@ void BVSparse<TAllocator>::for_each(const BVSparse *bv1, const BVSparse *bv2)
         (bvUnit1.*callback)(bvUnit2);
         if (!bvUnit1.IsEmpty())
         {
-            BVSparseNode * newNode = Allocate(startIndex, NULL);
+            BVSparseNode * newNode = Allocate(startIndex, nullptr);
             newNode->data = bvUnit1;
             *prevNextField = newNode;
             prevNextField = &newNode->next;
@@ -692,13 +610,13 @@ void BVSparse<TAllocator>::for_each(const BVSparse *bv1, const BVSparse *bv2)
 
     if (callback == &SparseBVUnit::Minus || callback == &SparseBVUnit::Or || callback == &SparseBVUnit::Xor)
     {
-        BVSparseNode const * copyNode = (callback == &SparseBVUnit::Minus || node1 != null)? node1 : node2;
+        BVSparseNode const * copyNode = (callback == &SparseBVUnit::Minus || node1 != nullptr)? node1 : node2;
       
-        while (copyNode != NULL)
+        while (copyNode != nullptr)
         {
             if (!copyNode->data.IsEmpty())
             {
-                BVSparseNode * newNode = Allocate(copyNode->startIndex, NULL);
+                BVSparseNode * newNode = Allocate(copyNode->startIndex, nullptr);
                 newNode->data = copyNode->data;
                 *prevNextField = newNode;
                 prevNextField = &newNode->next;
@@ -815,7 +733,7 @@ BVSparse<TAllocator>::Copy(const BVSparse<TSrcAllocator> * bv2)
     const BVSparseNode * node2      = bv2->head;
           BVSparseNode ** prevNextField = &this->head;
 
-    while (node1 != null && node2 != null)
+    while (node1 != nullptr && node2 != nullptr)
     {
         if (!node2->data.IsEmpty())
         {
@@ -828,21 +746,21 @@ BVSparse<TAllocator>::Copy(const BVSparse<TSrcAllocator> * bv2)
         node2 = node2->next;       
     }
 
-    if (node1 != null)
+    if (node1 != nullptr)
     {
-        while (node1 != null)
+        while (node1 != nullptr)
         {
             node1 = this->DeleteNode(node1);
         }
-        *prevNextField = null;
+        *prevNextField = nullptr;
     }
     else
     {
-        while (node2 != null)
+        while (node2 != nullptr)
         {
             if (!node2->data.IsEmpty())
             {
-                BVSparseNode * newNode = Allocate(node2->startIndex, NULL);
+                BVSparseNode * newNode = Allocate(node2->startIndex, nullptr);
                 newNode->data.Copy(node2->data);
                 *prevNextField = newNode;
                 prevNextField = &newNode->next;
@@ -913,19 +831,19 @@ BVSparse<TAllocator>::Equal(BVSparse const * bv) const
 
     while (true)
     {
-        while (bvNode1 != null && bvNode1->data.IsEmpty())
+        while (bvNode1 != nullptr && bvNode1->data.IsEmpty())
         {
             bvNode1 = bvNode1->next;            
         }
-        while (bvNode2 != null && bvNode2->data.IsEmpty())
+        while (bvNode2 != nullptr && bvNode2->data.IsEmpty())
         {
             bvNode2 = bvNode2->next;            
         }
-        if (bvNode1 == null)
+        if (bvNode1 == nullptr)
         {
-            return (bvNode2 == null);
+            return (bvNode2 == nullptr);
         }
-        if (bvNode2 == null)
+        if (bvNode2 == nullptr)
         {
             return false;
         }
@@ -949,7 +867,7 @@ BVSparse<TAllocator>::Test(BVSparse const * bv) const
     BVSparseNode const * bvNode1 = this->head;
     BVSparseNode const * bvNode2 = bv->head;
 
-    while (bvNode1 != null && bvNode2 != null)
+    while (bvNode1 != nullptr && bvNode2 != nullptr)
     {
         if (bvNode1->data.IsEmpty() || bvNode1->startIndex < bvNode2->startIndex)
         {

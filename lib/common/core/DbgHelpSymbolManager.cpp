@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "CommonCorePch.h"
 
 #ifdef DBGHELP_SYMBOL_MANAGER
 #include "core\DbgHelpSymbolManager.h"
@@ -68,11 +68,11 @@ DbgHelpSymbolManager::Initialize()
         }
         else
         {
-            wszModule = null;
+            wszModule = nullptr;
         }
     }
 
-    if (wszModule != null)
+    if (wszModule != nullptr)
     {
         wszModuleDrive = NoCheckHeapNewArray(wchar_t, _MAX_DRIVE);
         if (wszModuleDrive == nullptr)
@@ -113,7 +113,7 @@ DbgHelpSymbolManager::Initialize()
     }
 
     hDbgHelpModule = LoadLibraryEx(L"dbghelp.dll", NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
-    if (hDbgHelpModule == null)
+    if (hDbgHelpModule == nullptr)
     {
         goto end;
     }

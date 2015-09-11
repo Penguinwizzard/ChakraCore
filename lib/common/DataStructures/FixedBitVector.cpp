@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "CommonDataStructuresPch.h"
 
 BVFixed::BVFixed(BVFixed * initBv) :
    len(initBv->Length())

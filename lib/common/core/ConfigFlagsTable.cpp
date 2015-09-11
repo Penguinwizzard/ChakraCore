@@ -2,7 +2,9 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "CommonCorePch.h"
+#include "Memory\PageHeapBlockTypeFilter.h"
+
 #include <initguid.h>
 // {17DC713D-8B3E-4434-9DC8-90C275C75194}
 DEFINE_GUID(HybridDebuggingGuid, 0x17dc713d, 0x8b3e, 0x4434, 0x9d, 0xc8, 0x90, 0xc2, 0x75, 0xc7, 0x51, 0x94);
@@ -903,7 +905,7 @@ namespace Js
                 } \
                 break; \
             case FlagString: \
-                if (GetAsString(name##Flag) != null) \
+                if (GetAsString(name##Flag) != nullptr) \
                 { \
                     Output::Print(L":%s", *GetAsString(name##Flag)); \
                 } \

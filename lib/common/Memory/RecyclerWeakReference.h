@@ -84,11 +84,11 @@ class WeakReferenceCache
 private:
     RecyclerWeakReference<T> * weakReference;
 public:
-    WeakReferenceCache() : weakReference(null) {};
+    WeakReferenceCache() : weakReference(nullptr) {};
     RecyclerWeakReference<T> * GetWeakReference(Recycler * recycler) 
     {
         RecyclerWeakReference<T> * weakRef = this->weakReference;
-        if (weakRef == null)
+        if (weakRef == nullptr)
         {
             weakRef = recycler->CreateWeakReferenceHandle((T*)this);
             this->weakReference = weakRef;
@@ -122,7 +122,7 @@ public:
         count(0),
         size(0),
         allocator(allocator),
-        freeList(NULL)
+        freeList(nullptr)
     {
         this->size = SizePolicy::GetSize(size);
         buckets = AllocatorNewArrayZ(HeapAllocator, allocator, RecyclerWeakReferenceBase*, this->size);
@@ -137,7 +137,7 @@ public:
     {
         uint targetBucket = HashKeyToBucket(strongReference, size);
         RecyclerWeakReferenceBase* entry = FindEntry(strongReference, targetBucket);
-        if (entry != NULL)
+        if (entry != nullptr)
         {
             return entry;
         }
@@ -151,7 +151,7 @@ public:
 
         uint targetBucket = HashKeyToBucket(strongReference, size);
         RecyclerWeakReferenceBase* entry = FindEntry(strongReference, targetBucket);
-        if (entry != NULL)
+        if (entry != nullptr)
         {
             *ppWeakRef = entry;
             return false;
@@ -175,7 +175,7 @@ public:
 
         for (uint i=0;i<size;i++) {
             Output::Print(L"Bucket %d (0x%08x) ==> ", i, &buckets[i]);
-            for (current = buckets[i] ; current != NULL ; current = current->next) {
+            for (current = buckets[i] ; current != nullptr; current = current->next) {
                 DumpNode(current);
             }
             Output::Print(L"\n");
@@ -186,7 +186,7 @@ public:
     bool TryGetValue(char* strongReference, RecyclerWeakReferenceBase** weakReference)
     {
         RecyclerWeakReferenceBase* current = FindEntry(strongReference, HashKeyToBucket(strongReference, size));
-        if (current != null)
+        if (current != nullptr)
         {
             *weakReference = current;
             return true;
@@ -204,7 +204,7 @@ public:
             if (DefaultComparer<char*>::Equals(key, current->strongRef))
             {
                  *pprev = current->next;                           
-                if (pOut != NULL)
+                if (pOut != nullptr)
                 {
                     (*pOut) = current;
                 }
@@ -222,7 +222,7 @@ public:
 
     void Remove(char* key)
     {
-        Remove(key, NULL);
+        Remove(key, nullptr);
     }
 
     template <class Func>
@@ -274,7 +274,7 @@ private:
 
     RecyclerWeakReferenceBase * FindEntry(char* strongReference, uint targetBucket)
     {
-        for (RecyclerWeakReferenceBase * current = buckets[targetBucket] ; current != NULL ; current = current->next)
+        for (RecyclerWeakReferenceBase * current = buckets[targetBucket] ; current != nullptr; current = current->next)
         {
             if (DefaultComparer<char*>::Equals(strongReference, current->strongRef))
             {
@@ -282,7 +282,7 @@ private:
             }
         }
 
-        return null;
+        return nullptr;
     }
 
     uint HashKeyToBucket(char* strongReference, int size)
@@ -309,7 +309,7 @@ private:
         for (uint i=0; i < size; i++)
         {
             RecyclerWeakReferenceBase* current = buckets[i];
-            while (current != NULL)
+            while (current != nullptr)
             {
                 int targetBucket = HashKeyToBucket(current->strongRef, newSize);
                 RecyclerWeakReferenceBase* next = current->next; // Cache the next pointer
@@ -349,7 +349,7 @@ private:
         entry = AllocatorNewBase(Recycler, recycler, AllocWeakReferenceEntry, RecyclerWeakReferenceBase);            
         entry->strongRef = strongReference;
         entry->strongRefHeapBlock = recycler->FindHeapBlock(strongReference);
-        Assert(entry->strongRefHeapBlock != null);
+        Assert(entry->strongRefHeapBlock != nullptr);
 
         // CONSIDER: getting the heap block during the allocation?
         HeapBlock * weakRefHeapBlock = recycler->FindHeapBlock(entry);
@@ -362,9 +362,9 @@ private:
         AddEntry(entry, &buckets[targetBucket]);
         count++;
 #if DBG
-        entry->typeInfo = null;
+        entry->typeInfo = nullptr;
 #if defined(TRACK_ALLOC) && defined(PERF_COUNTERS)
-        entry->counter = null;
+        entry->counter = nullptr;
 #endif
 #endif
         return entry;

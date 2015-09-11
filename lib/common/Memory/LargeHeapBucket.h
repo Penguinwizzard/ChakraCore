@@ -19,17 +19,17 @@ public:
         supportFreeList(false),
         freeList(nullptr),
         explicitFreeList(nullptr),
-        fullLargeBlockList(null),
-        largeBlockList(null),
+        fullLargeBlockList(nullptr),
+        largeBlockList(nullptr),
 #ifdef RECYCLER_PAGE_HEAP
-        largePageHeapBlockList(null),
+        largePageHeapBlockList(nullptr),
 #endif
-        pendingDisposeLargeBlockList(null)
+        pendingDisposeLargeBlockList(nullptr)
 #ifdef CONCURRENT_GC_ENABLED
-        , pendingSweepLargeBlockList(null)
+        , pendingSweepLargeBlockList(nullptr)
 #endif
 #ifdef PARTIAL_GC_ENABLED
-        , partialSweptLargeBlockList(null)
+        , partialSweptLargeBlockList(nullptr)
 #endif
     {
     }
@@ -89,7 +89,7 @@ public:
 #ifdef RECYCLER_SLOW_CHECK_ENABLED
     uint Check();
     template <typename TBlockType>
-    size_t Check(bool expectFull, bool expectPending, TBlockType * list, TBlockType * tail = null);
+    size_t Check(bool expectFull, bool expectPending, TBlockType * list, TBlockType * tail = nullptr);
 #endif
 #endif
 

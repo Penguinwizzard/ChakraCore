@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#include <StdAfx.h>
+#include <ParserPch.h>
 #include "rtError.h"
 
 // PUBLIC ERROR codes

@@ -3,7 +3,7 @@
 *   Copyright (C) Microsoft. All rights reserved.       *
 *                                                       *
 ********************************************************/
-#include "stdafx.h"
+#include "CommonMemoryPch.h"
 
 #define UpdateMinimum(dst, src) if (dst > src) { dst = src; }
 
@@ -2405,6 +2405,7 @@ PageAllocatorBase<T>::IsAddressInSegment(__in void* address, const SegmentBase<T
 }
 
 #if PDATA_ENABLED    
+#include "Memory\XDataAllocator.h"
 template<typename T>
 bool HeapPageAllocator<T>::CreateSecondaryAllocator(SegmentBase<T>* segment, SecondaryAllocator** allocator)
 {

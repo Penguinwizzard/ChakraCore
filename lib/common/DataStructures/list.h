@@ -4,8 +4,6 @@
 
 #pragma once
 
-#include "../Assertions.h"
-
 namespace Js
 {
     template <class TListType, bool clearOldEntries>

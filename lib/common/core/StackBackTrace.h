@@ -73,14 +73,14 @@ public:
     static void DeleteAll(TAllocator * allocator, StackBackTraceNode *& head)
     {
         StackBackTraceNode * curr = head;
-        while (curr != null)
+        while (curr != nullptr)
         {
             StackBackTraceNode * next = curr->next;
             curr->stackBackTrace->Delete(allocator);
             AllocatorDelete(TAllocator, allocator, curr);
             curr = next;
         }
-        head = null;
+        head = nullptr;
     }
 
     static void PrintAll(StackBackTraceNode * head)
@@ -89,8 +89,8 @@ public:
 
         // Reverse the list
         StackBackTraceNode * curr = head;
-        StackBackTraceNode * prev = null;
-        while (curr != null)
+        StackBackTraceNode * prev = nullptr;
+        while (curr != nullptr)
         {
             StackBackTraceNode * next = curr->next;
             curr->next = prev;
@@ -100,8 +100,8 @@ public:
 
         // print and reverse again.
         curr = prev;
-        prev = null;
-        while (curr != null)
+        prev = nullptr;
+        while (curr != nullptr)
         {
             curr->stackBackTrace->Print();
             StackBackTraceNode * next = curr->next;

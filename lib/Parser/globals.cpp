@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "ParserPch.h"
 
 // strings for builtin names
 #define HASH_NAME(name, hashCS, hashCI) \

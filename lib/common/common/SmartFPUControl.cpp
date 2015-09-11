@@ -2,7 +2,9 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "CommonCommonPch.h"
+#include <float.h>
+#include "Common\SmartFPUControl.h"
 
 //
 // Floating point unit utility functions

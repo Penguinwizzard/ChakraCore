@@ -98,7 +98,7 @@ public:
 #ifdef RECYCLER_SLOW_CHECK_ENABLED
     void Check();
     template <typename TBlockType>
-    static size_t Check(bool expectFull, bool expectPending, TBlockType * list, TBlockType * tail = null);
+    static size_t Check(bool expectFull, bool expectPending, TBlockType * list, TBlockType * tail = nullptr);
 
     void VerifySmallHeapBlockCount();
     void VerifyLargeHeapBlockCount();

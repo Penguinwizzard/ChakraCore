@@ -9,6 +9,7 @@
 
 #include "JsrtSourceHolder.h"
 #include "Language\ByteCodeSerializer.h"
+#include "common\ByteSwap.h"
 #include "Library\dataview.h"
 #include "Library\JavascriptSymbol.h"
 

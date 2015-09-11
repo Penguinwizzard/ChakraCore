@@ -18,7 +18,7 @@ enum ErrorReason
     MarkStack_OUTOFMEMORY = 11
 };
 
-EXTERN_C void ReportFatalException(
+extern "C" void ReportFatalException(
     __in ULONG_PTR context,
     __in HRESULT exceptionCode,
     __in ErrorReason reasonCode,

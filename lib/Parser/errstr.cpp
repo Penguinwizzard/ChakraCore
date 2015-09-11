@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "ParserPch.h"
 #include "errstr.h"
 
 // scafolding - get a g_hInstance from scrbgase.cpp

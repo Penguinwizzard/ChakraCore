@@ -1,72 +1,14 @@
-﻿//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#pragma once
+#ifndef NUMBER_UTIL_INLINE
+#define NUMBER_UTIL_INLINE
+#endif
 
 namespace Js
 {
-    inline bool NumberUtilities::IsDigit(int ch)
-    {
-        return ch >= '0' && ch <= '9';
-    }
-
-    inline BOOL NumberUtilities::FHexDigit(wchar_t ch, int *pw)
-    {
-        if ((ch -= '0') <= 9)
-        {
-            *pw = ch;
-            return TRUE;
-        }
-        if ((ch -= 'A' - '0') <= 5 || (ch -= 'a' - 'A') <= 5)
-        {
-            *pw = 10 + ch;
-            return TRUE;
-        }
-        return FALSE;
-    }
-
-    /***************************************************************************
-    Multiply two unsigned longs. Return the low ulong and fill *pluHi with
-    the high ulong.
-    ***************************************************************************/
-    // Turn off warning that there is no return value
-#pragma warning(disable:4035)  // re-enable below
-    inline ulong NumberUtilities::MulLu(ulong lu1, ulong lu2, ulong *pluHi)
-    {
-#if _WIN32 || _WIN64
-
-#if I386_ASM
-        __asm
-        {
-            mov eax,lu1
-                mul lu2
-                mov ebx,pluHi
-                mov DWORD PTR [ebx],edx
-        }
-#else //!I386_ASM
-        DWORDLONG llu = UInt32x32To64(lu1, lu2);
-
-        *pluHi = (ulong)(llu >> 32);
-        return (ulong)llu;
-#endif //!I386_ASM
-
-#else
-#error Neither _WIN32, nor _WIN64 is defined
-#endif
-    }
-#pragma warning(default:4035)
-
-    /***************************************************************************
-    Add two unsigned longs and return the carry bit.
-    ***************************************************************************/
-    inline int NumberUtilities::AddLu(ulong *plu1, ulong lu2)
-    {
-        *plu1 += lu2;
-        return *plu1 < lu2;
-    }
-
-    inline ulong &NumberUtilities::LuHiDbl(double &dbl)
+    NUMBER_UTIL_INLINE ulong &NumberUtilities::LuHiDbl(double &dbl)
     {
 #ifdef BIG_ENDIAN
         return ((ulong *)&dbl)[0];
@@ -75,7 +17,7 @@ namespace Js
 #endif //!BIG_ENDIAN
     }
 
-    inline ulong &NumberUtilities::LuLoDbl(double &dbl)
+    NUMBER_UTIL_INLINE ulong &NumberUtilities::LuLoDbl(double &dbl)
     {
 #ifdef BIG_ENDIAN
         return ((ulong *)&dbl)[1];
@@ -85,7 +27,7 @@ namespace Js
     }
 
 #if defined(_M_X64)
-    __inline INT64 NumberUtilities::TryToInt64(double T1)
+    NUMBER_UTIL_INLINE INT64 NumberUtilities::TryToInt64(double T1)
     {
         // _mm_cvttsd_si64x will result in 0x8000000000000000 if the value is NaN Inf or Zero, or overflows int64
         __m128d a;
@@ -93,8 +35,8 @@ namespace Js
         return _mm_cvttsd_si64x(a);
     }
 #else
-    __inline INT64 NumberUtilities::TryToInt64(double T1)
-   {
+    NUMBER_UTIL_INLINE INT64 NumberUtilities::TryToInt64(double T1)
+    {
         INT64 T4_64;
 #if defined(_M_IX86)
         // If SSE3 is available use FISTPP.  VC (dev10) generates a FISTP, but needs to 
@@ -149,7 +91,7 @@ namespace Js
 #endif
 
     // Returns true <=> TryToInt64() call resulted in a valid value.
-    __inline bool NumberUtilities::IsValidTryToInt64(__int64 value)
+    NUMBER_UTIL_INLINE bool NumberUtilities::IsValidTryToInt64(__int64 value)
     {
 #if defined(_M_ARM32_OR_ARM64)
         return value != Pos_InvalidInt64 && value != Neg_InvalidInt64;
@@ -158,23 +100,14 @@ namespace Js
 #endif
     }
 
-    __inline bool NumberUtilities::IsFinite(double value)
-    {
-#if defined(_M_X64_OR_ARM64)
-        return 0 != (~(ToSpecial(value)) & 0x7FF0000000000000ull);
-#else
-        return 0 != (~Js::NumberUtilities::LuHiDbl(value) & 0x7FF00000);
-#endif
-    }
-
-    __inline bool NumberUtilities::IsNan(double value) 
+    NUMBER_UTIL_INLINE bool NumberUtilities::IsNan(double value)
     {
 #if defined(_M_X64_OR_ARM64)
         // NaN is a range of values; all bits on the exponent are 1's and some nonzero significant.
         // no distinction on signed NaN's
         uint64 nCompare = ToSpecial(value);
-        bool isNan = ( 0 == (~nCompare & 0x7FF0000000000000ull) &&
-                0 != ( nCompare & 0x000FFFFFFFFFFFFFull) );
+        bool isNan = (0 == (~nCompare & 0x7FF0000000000000ull) &&
+            0 != (nCompare & 0x000FFFFFFFFFFFFFull));
         return isNan;
 #else
         return 0 == (~Js::NumberUtilities::LuHiDbl(value) & 0x7FF00000) &&
@@ -182,7 +115,7 @@ namespace Js
 #endif
     }
 
-    __inline bool NumberUtilities::IsSpecial(double value,uint64 nSpecial)
+    NUMBER_UTIL_INLINE bool NumberUtilities::IsSpecial(double value, uint64 nSpecial)
     {
         // Perform a bitwise comparison using uint64 instead of a double comparison, since that
         // would trigger FPU exceptions, etc.
@@ -190,8 +123,8 @@ namespace Js
         return nCompare == nSpecial;
     }
 
-    __inline uint64 NumberUtilities::ToSpecial(double value)
+    NUMBER_UTIL_INLINE uint64 NumberUtilities::ToSpecial(double value)
     {
         return  *(reinterpret_cast<uint64 *>(&value));
     }
-}
+};

@@ -5,10 +5,13 @@
 ********************************************************/
 
 // This one works only for ARM
-#include "StdAfx.h"
+#include "CommonMemoryPch.h"
 #if !defined(_M_ARM)
 CompileAssert(false)
 #endif
+
+#include "XDataAllocator.h"
+#include "core\DelayLoadLibrary.h"
 
 XDataAllocator::XDataAllocator(BYTE* address, uint size)
 {

@@ -1,4 +1,9 @@
-#include <stdafx.h>
+//---------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+//----------------------------------------------------------------------------
+
+#include "CommonDataStructuresPch.h"
+#include "DataStructures\growingArray.h"
 
 namespace JsUtil
 {

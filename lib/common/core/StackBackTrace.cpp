@@ -2,9 +2,10 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "CommonCorePch.h"
 
 #ifdef STACK_BACK_TRACE
+#include "core\StackBackTrace.h"
 #include "core\DbgHelpSymbolManager.h"
 
 StackBackTrace::StackBackTrace(ULONG framesToSkip, ULONG framesToCapture) : requestedFramesToCapture(framesToCapture)

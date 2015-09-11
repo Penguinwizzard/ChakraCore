@@ -22,6 +22,7 @@
     <ClCompile>
       <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)..\Common;$(MSBuildThisFileDirectory)..\Backend;$(ChakraManifestsIncludeDirectory);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>ParserPch.h</PrecompiledHeaderFile>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -48,7 +49,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)scan.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)screrror.cpp" />    
     <ClCompile Include="$(MSBuildThisFileDirectory)StandardChars.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)StdAfx.cpp">
+    <ClCompile Include="$(MSBuildThisFileDirectory)ParserPch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)TextbookBoyerMoore.cpp" />
@@ -80,6 +81,7 @@
     <ClInclude Include="ParseFlags.h" />
     <ClInclude Include="Parser.h" />
     <ClInclude Include="ParserCommon.h" />
+    <ClInclude Include="ParserPch.h" />
     <ClInclude Include="ParseTreeComparer.h" />
     <ClInclude Include="perrors.h" />
     <ClInclude Include="pnodechange.h" />
@@ -105,8 +107,7 @@
     <ClInclude Include="rterrors_limits.h" />
     <ClInclude Include="scan.h" />
     <ClInclude Include="screrror.h" />  
-    <ClInclude Include="StandardChars.h" />
-    <ClInclude Include="StdAfx.h" />
+    <ClInclude Include="StandardChars.h" />    
     <ClInclude Include="TextbookBoyerMoore.h" />
     <ClInclude Include="tokens.h" />
     <ClInclude Include="unicode.h" />    

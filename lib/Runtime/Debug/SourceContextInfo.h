@@ -7,6 +7,7 @@
 namespace Js
 {
 class RemoteSourceContextInfo;
+class SourceDynamicProfileManager;
 };
 
 //
@@ -38,5 +39,6 @@ public:
 
     void EnsureInitialized();
     bool IsDynamic() const { return dwHostSourceContext == Js::Constants::NoHostSourceContext || isHostDynamicDocument; }    
+    bool IsSourceProfileLoaded() const;
     SourceContextInfo* Clone(Js::ScriptContext* scriptContext) const;
 };

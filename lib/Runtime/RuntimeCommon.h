@@ -7,6 +7,8 @@
 // Runtime.h has both definitions and #include other runtime files.
 // Definitions here are extracted definitions (not #include's) from Runtime.h that core Runtime .h's can be used without #include'ing full Runtime.h
 
+extern int TotalNumberOfBuiltInProperties;
+
 namespace Js
 {
     // Forwards
@@ -29,7 +31,10 @@ namespace Js
     typedef uint16 ArgSlot;
     typedef uint16 PropertyIndex;
     typedef int32 BigPropertyIndex;
-    typedef unsigned char PropertyAttributes;
+    typedef unsigned char PropertyAttributes;    
+    typedef uint32 SourceId;
+    typedef uint16 ProfileId;
+    typedef uint32 InlineCacheIndex;
 
     // Inline cache flags when property of the object is not writable
     enum InlineCacheFlags : char {
@@ -76,7 +81,7 @@ namespace Js
 #include "Library\JnDirectFields.h"
         _countJSOnlyProperty,
     END_ENUM_UINT()
-
+    
     inline BOOL IsBuiltInPropertyId(PropertyId propertyId)
     {
         return propertyId < TotalNumberOfBuiltInProperties;

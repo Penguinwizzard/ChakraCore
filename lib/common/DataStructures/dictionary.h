@@ -6,6 +6,16 @@
 
 namespace JsUtil
 {
+    template <class TKey, class TValue> class WeakRefDictionaryEntry
+    {
+    public:
+        static const int INVALID_HASH_VALUE = 0;
+        hash_t hash;    // Lower 31 bits of hash code << 1 | 1, 0 if unused
+        int next;        // Index of next entry, -1 if last
+        const RecyclerWeakReference<TKey>* key;      // Key of entry- this entry holds a weak reference to the key
+        TValue value;    // Value of entry
+    };
+
     // TODO (post-checkin): convert to BaseDictionary- easier now to have custom dictionary since this does compacting
     // and weak reference resolution
     template <class TKey, class TValue, class KeyComparer = DefaultComparer<const TKey*>, bool cleanOnInsert = true> class WeaklyReferencedKeyDictionary

@@ -2,10 +2,26 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#include "stdafx.h"
+#include "CommonMemoryPch.h"
 #ifdef CONCURRENT_GC_ENABLED
 #include <process.h>
 #endif
+
+#ifdef _M_AMD64
+#include "amd64.h"
+#endif
+
+#ifdef _M_ARM
+#include "arm.h"
+#endif
+
+#ifdef _M_ARM64
+#include "arm64.h"
+#endif
+
+#include "core\BinaryFeatureControl.h"
+#include "Common\ThreadService.h"
+#include "Memory\AutoAllocatorObjectPtr.h"
 
 DEFINE_RECYCLER_TRACKER_PERF_COUNTER(RecyclerWeakReferenceBase);
 
@@ -7835,6 +7851,15 @@ void Recycler::ClearObjectBeforeCollectCallbacks()
     ProcessObjectBeforeCollectCallbacks(/*atShutdown*/true);
     Assert(objectBeforeCollectCallbackMap == nullptr);
 }
+
+#ifdef RECYCLER_TEST_SUPPORT
+void Recycler::SetCheckFn(BOOL(*checkFn)(char* addr, size_t size))
+{
+    Assert(BinaryFeatureControl::RecyclerTest());
+    this->EnsureNotCollecting();
+    this->checkFn = checkFn;
+}
+#endif
 
 void
 Recycler::NotifyFree(__in char *address, size_t size)

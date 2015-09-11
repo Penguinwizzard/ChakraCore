@@ -98,72 +98,7 @@ struct HeapAllocator
         return AllocT<false>(byteSize);
     }
     template <bool noThrow>
-    char * AllocT(size_t byteSize)
-    {
-#ifdef HEAP_TRACK_ALLOC
-        size_t requestedBytes = byteSize;
-        byteSize = AllocSizeMath::Add(requestedBytes, ::Math::Align<size_t>(sizeof(HeapAllocRecord), MEMORY_ALLOCATION_ALIGNMENT));
-        TrackAllocData allocData;
-        ClearTrackAllocInfo(&allocData);
-#elif defined(HEAP_PERF_COUNTERS)
-        size_t requestedBytes = byteSize;
-        byteSize = AllocSizeMath::Add(requestedBytes, ::Math::Align<size_t>(sizeof(size_t), MEMORY_ALLOCATION_ALIGNMENT));
-#endif
-
-        if (noThrow)
-        {
-            FAULTINJECT_MEMORY_NOTHROW(L"Heap", byteSize);
-        }
-        else
-        {
-            FAULTINJECT_MEMORY_THROW(L"Heap", byteSize);
-        }
-
-        char * buffer;
-#ifdef INTERNAL_MEM_PROTECT_HEAP_ALLOC
-        if (DoUseMemProtectHeap())
-        {
-            void * memory = MemProtectHeapRootAlloc(memProtectHeapHandle, byteSize);
-            if (memory == nullptr)
-            {
-                if (noThrow)
-                {
-                    return nullptr;
-                }               
-                Js::Throw::OutOfMemory();
-            }
-            buffer = (char *)memory;
-        }
-        else
-#endif
-        {
-            buffer = (char *)malloc(byteSize);
-        }
-
-        if (!noThrow && buffer == null)
-        {
-            Js::Throw::OutOfMemory();            
-        }
-
-#if defined(HEAP_TRACK_ALLOC) || defined(HEAP_PERF_COUNTERS)
-        if (!noThrow || buffer != null)
-        {
-#ifdef HEAP_TRACK_ALLOC
-            cs.Enter();
-            data.LogAlloc((HeapAllocRecord *)buffer, requestedBytes, allocData);
-            cs.Leave();
-            buffer += ::Math::Align<size_t>(sizeof(HeapAllocRecord), MEMORY_ALLOCATION_ALIGNMENT);
-#else
-            *(size_t *)buffer = requestedBytes;
-            buffer += ::Math::Align<size_t>(sizeof(size_t), MEMORY_ALLOCATION_ALIGNMENT);
-
-#endif
-            HEAP_PERF_COUNTER_INC(LiveObject);
-            HEAP_PERF_COUNTER_ADD(LiveObjectSize, requestedBytes);
-        }
-#endif
-        return buffer;
-    }
+    char * AllocT(size_t byteSize);
 
     // This exists soley to make the AllocateXXX macros more polymorphic
     char * AllocLeaf(size_t byteSize)
@@ -186,51 +121,13 @@ struct HeapAllocator
     char * NoThrowAllocZero(size_t byteSize)
     {
         char * buffer = NoThrowAlloc(byteSize);
-        if (buffer != null)
+        if (buffer != nullptr)
         {
             memset(buffer, 0, byteSize);
         }
         return buffer;
     }
-    void Free(void * buffer, size_t byteSize)
-    {
-#ifdef HEAP_TRACK_ALLOC
-        if (buffer != null)
-        {
-            HeapAllocRecord * record = (HeapAllocRecord *)(((char *)buffer) - ::Math::Align<size_t>(sizeof(HeapAllocRecord), MEMORY_ALLOCATION_ALIGNMENT));
-            Assert(byteSize == (size_t)-1 || record->size == byteSize);
-
-            HEAP_PERF_COUNTER_DEC(LiveObject);
-            HEAP_PERF_COUNTER_SUB(LiveObjectSize, record->size);
-
-            cs.Enter();
-            data.LogFree(record);
-            cs.Leave();
-
-            buffer = record;
-#if DBG
-            memset(buffer, DbgMemFill, record->size + ::Math::Align<size_t>(sizeof(HeapAllocRecord), MEMORY_ALLOCATION_ALIGNMENT));
-#endif
-        }
-#elif defined(HEAP_PERF_COUNTERS)
-        if (buffer != null)
-        {
-            HEAP_PERF_COUNTER_DEC(LiveObject);
-            size_t * allocSize = (size_t *)(((char *)buffer) - ::Math::Align<size_t>(sizeof(size_t), MEMORY_ALLOCATION_ALIGNMENT));
-            HEAP_PERF_COUNTER_SUB(LiveObjectSize, *allocSize);
-            buffer = allocSize;
-        }
-#endif
-#ifdef INTERNAL_MEM_PROTECT_HEAP_ALLOC
-        if (DoUseMemProtectHeap())
-        {
-            HRESULT hr = MemProtectHeapUnrootAndZero(memProtectHeapHandle, buffer);
-            Assert(SUCCEEDED(hr));
-            return;
-        }                
-#endif
-        free(buffer);
-    }
+    void Free(void * buffer, size_t byteSize);
 
     static HeapAllocator Instance;
     static HeapAllocator * GetNoMemProtectInstance();
@@ -323,7 +220,7 @@ public:
             processHeap = GetProcessHeap();
         }
         char * buffer = (char*)HeapAlloc(processHeap, 0, byteSize);
-        if (buffer == null)
+        if (buffer == nullptr)
         {
             // NoCheck heap allocator is only used by debug only code, and if we fail to allocate
             // memory, we will just raise an exceptio nand kill the process
@@ -338,7 +235,7 @@ public:
             processHeap = GetProcessHeap();
         }
         char * buffer = (char*)HeapAlloc(processHeap, HEAP_ZERO_MEMORY, byteSize);
-        if (buffer == null)
+        if (buffer == nullptr)
         {
             // NoCheck heap allocator is only used by debug only code, and if we fail to allocate
             // memory, we will just raise an exceptio nand kill the process

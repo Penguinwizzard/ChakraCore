@@ -22,9 +22,9 @@ public:
     {
         PageSegment * pageSegment;
         PagePoolPage * newPage = (PagePoolPage *)pageAllocator->AllocPages(1, &pageSegment);
-        if (newPage == null)
+        if (newPage == nullptr)
         {
-            return null;
+            return nullptr;
         }
 
         newPage->pageAllocator = pageAllocator;
@@ -63,9 +63,9 @@ private:
 
 public:
     PagePool(Js::ConfigFlagsTable& flagsTable) :
-        pageAllocator(NULL, flagsTable, PageAllocatorType_GCThread, PageAllocator::DefaultMaxFreePageCount, false, null, PageAllocator::DefaultMaxAllocPageCount, 0, true),
-        freePageList(null),
-        reservedPageList(null)
+        pageAllocator(NULL, flagsTable, PageAllocatorType_GCThread, PageAllocator::DefaultMaxFreePageCount, false, nullptr, PageAllocator::DefaultMaxAllocPageCount, 0, true),
+        freePageList(nullptr),
+        reservedPageList(nullptr)
     {
     }
 
@@ -85,7 +85,7 @@ public:
 
     ~PagePool()
     {
-        Assert(freePageList == null);
+        Assert(freePageList == nullptr);
 
         if (reservedPageList != nullptr)
         {
@@ -137,7 +137,7 @@ public:
 
     void ReleaseFreePages()
     {
-        while (freePageList != null)
+        while (freePageList != nullptr)
         {
             PagePoolFreePage * page = freePageList;
             Assert(!page->IsReserved());
@@ -152,7 +152,7 @@ public:
     }
 
 #if DBG
-    bool IsEmpty() const { return (freePageList == null); }
+    bool IsEmpty() const { return (freePageList == nullptr); }
 #endif
 
 private:

@@ -2,7 +2,9 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "CommonDataStructuresPch.h"
+#include "DataStructures\CharacterBuffer.h"
+#include "DataStructures\InternalString.h"
 
 namespace Js
 {
@@ -38,7 +40,7 @@ namespace Js
         // This is so that we can pretend that internal strings are BSTRs for purposes of clients who want to use
         // it as thus        
         const unsigned char offset=sizeof(DWORD)/sizeof(wchar_t);
-        InternalString* newInstance = RecyclerNewPlusLeaf(recycler, bytelength + (sizeof(DWORD) + sizeof(wchar_t)), InternalString, null, length, offset);
+        InternalString* newInstance = RecyclerNewPlusLeaf(recycler, bytelength + (sizeof(DWORD) + sizeof(wchar_t)), InternalString, nullptr, length, offset);
         DWORD* allocbuffer = (DWORD*) (newInstance + 1);
         allocbuffer[0] = (DWORD) bytelength;
         wchar_t* buffer = (wchar_t*)(allocbuffer + 1);

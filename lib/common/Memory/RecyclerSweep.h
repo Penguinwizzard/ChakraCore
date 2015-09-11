@@ -198,9 +198,9 @@ RecyclerSweep::QueueEmptyHeapBlock(HeapBucketT<TBlockType> const *heapBucket, TB
     Assert(heapBlock->heapBucket == heapBucket);
     heapBlock->BackgroundReleasePagesSweep<pageheap>(recycler);
     TBlockType * list = bucketData.pendingEmptyBlockList;
-    if (list == null)
+    if (list == nullptr)
     {
-        Assert(bucketData.pendingEmptyBlockListTail == null);
+        Assert(bucketData.pendingEmptyBlockListTail == nullptr);
         bucketData.pendingEmptyBlockListTail = heapBlock;
         this->hasPendingEmptyBlocks = true;
     }
@@ -217,7 +217,7 @@ RecyclerSweep::TransferPendingEmptyHeapBlocks(HeapBucketT<TBlockType> * heapBuck
     RECYCLER_SLOW_CHECK(heapBucket->VerifyHeapBlockCount(false));
     
     auto& bucketData = this->GetBucketData(heapBucket);
-    Assert(bucketData.pendingSweepList == null);
+    Assert(bucketData.pendingSweepList == nullptr);
     TBlockType * list = bucketData.pendingEmptyBlockList;
     if (list)
     {
@@ -226,9 +226,9 @@ RecyclerSweep::TransferPendingEmptyHeapBlocks(HeapBucketT<TBlockType> * heapBuck
         size_t count = 0;
         HeapBlockList::ForEach(list, [tail, &count](TBlockType * heapBlock)
         {
-            Assert(heapBlock->GetAddress() == null);
-            Assert(heapBlock->GetSegment() == null);
-            Assert(heapBlock->GetNextBlock() != null || heapBlock == tail);
+            Assert(heapBlock->GetAddress() == nullptr);
+            Assert(heapBlock->GetSegment() == nullptr);
+            Assert(heapBlock->GetNextBlock() != nullptr || heapBlock == tail);
             count++;
         });
         RECYCLER_SLOW_CHECK(heapBucket->emptyHeapBlockCount += count);
@@ -239,12 +239,12 @@ RecyclerSweep::TransferPendingEmptyHeapBlocks(HeapBucketT<TBlockType> * heapBuck
         tail->SetNextBlock(heapBucket->emptyBlockList);
         heapBucket->emptyBlockList = list;
 
-        bucketData.pendingEmptyBlockList = null;
+        bucketData.pendingEmptyBlockList = nullptr;
         RECYCLER_SLOW_CHECK(heapBucket->VerifyHeapBlockCount(false));
     }
     else
     {
-        Assert(bucketData.pendingEmptyBlockListTail == null);
+        Assert(bucketData.pendingEmptyBlockListTail == nullptr);
     }
 }
 

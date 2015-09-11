@@ -101,17 +101,4 @@ namespace Js
         }
         return library->CreateIteratorResultObjectUndefinedTrue();
     }
-
-    Var JavascriptEnumeratorIterator::EntrySymbolIterator(RecyclableObject* function, CallInfo callInfo, ...)
-    {
-        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
-
-        ARGUMENTS(args, callInfo);
-
-        Assert(!(callInfo.Flags & CallFlags_New));
-
-        // Simply return 'this'
-        return args[0];
-    }
-
 }

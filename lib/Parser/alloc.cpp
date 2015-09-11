@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "ParserPch.h"
 
 //IMPORTANT: keep in sync with duplicate: scriptengines\src\scrobj\core\alloc.cpp
 //TODO: make utility lib with these core classes

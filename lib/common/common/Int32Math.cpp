@@ -2,7 +2,8 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "stdafx.h"
+#include "CommonCommonPch.h"
+#include "Common\Int32Math.h"
 
 bool
 Int32Math::Add(int32 left, int32 right, int32 *pResult)

@@ -5,7 +5,7 @@
 namespace JsUtil
 {
     template<class T>
-    DoublyLinkedList<T>::DoublyLinkedList() : head(null), tail(null)
+    DoublyLinkedList<T>::DoublyLinkedList() : head(nullptr), tail(nullptr)
     {
     }
 
@@ -36,13 +36,13 @@ namespace JsUtil
     template<class T>
     bool DoublyLinkedList<T>::IsEmpty()
     {
-        return head == null;
+        return head == nullptr;
     }
 
     template<class T>
     void DoublyLinkedList<T>::Clear()
     {
-        tail = head = null;
+        tail = head = nullptr;
     }
 
     template<class T>

@@ -48,6 +48,21 @@ public:
 #endif
     static bool IsJscriptModulePointer(void * ptr);
     static DWORD const PageSize = 4096;
+
+#ifdef STACK_ALIGN
+    static DWORD const StackAlign = STACK_ALIGN;
+#else
+# if defined(_WIN64)
+    static DWORD const StackAlign = 16;
+# elif defined(_M_ARM)
+    static DWORD const StackAlign = 8;
+# elif defined(_M_IX86)
+    static DWORD const StackAlign = 4;
+# else
+    #  error_missing_target
+# endif
+#endif
+
     UINT_PTR dllLoadAddress;
     UINT_PTR dllHighAddress;
 private:

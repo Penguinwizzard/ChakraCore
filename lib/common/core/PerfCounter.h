@@ -48,10 +48,10 @@ namespace PerfCounter
         void Uninitialize(InstanceBase& instance, DWORD id);
 
         /* TODO: 64-bit? */
-        Counter& operator+=(size_t value) { Assert(count); ::InterlockedExchangeAdd(count, (DWORD)value); return *this; }
-        Counter& operator-=(size_t value) { Assert(count); ::InterlockedExchangeSubtract(count, (DWORD)value); return *this; }
-        Counter& operator++() { Assert(count); ::InterlockedIncrement(count); return *this; }
-        Counter& operator--() { Assert(count); ::InterlockedDecrement(count); return *this; }
+        Counter& operator+=(size_t value);
+        Counter& operator-=(size_t value);
+        Counter& operator++();
+        Counter& operator--();
         DWORD GetValue() { return *count; }
 
     private:

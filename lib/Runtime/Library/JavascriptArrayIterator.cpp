@@ -131,16 +131,4 @@ namespace Js
 
         return library->CreateIteratorResultObjectValueFalse(keyValueTuple);
     }
-
-    Var JavascriptArrayIterator::EntrySymbolIterator(RecyclableObject* function, CallInfo callInfo, ...)
-    {
-        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
-
-        ARGUMENTS(args, callInfo);
-
-        Assert(!(callInfo.Flags & CallFlags_New));
-
-        // Simply return 'this'
-        return args[0];
-    }
 } //namespace Js

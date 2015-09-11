@@ -7,17 +7,7 @@ class ScriptMemoryDumper;
 namespace Memory
 {
 #ifdef RECYCLER_PAGE_HEAP
-enum class PageHeapBlockTypeFilter
-{
-    PageHeapBlockTypeFilterNormal = 0x01,
-    PageHeapBlockTypeFilterLeaf = 0x02,
-    PageHeapBlockTypeFilterFinalizable = 0x04,
-    PageHeapBlockTypeFilterNormalBarrier = 0x08,
-    PageHeapBlockTypeFilterFinalizableBarrier = 0x10,
-    PageHeapBlockTypeFilterLarge = 0x20,
-    PageHeapBlockTypeFilterMax = PageHeapBlockTypeFilterLarge,
-    PageHeapBlockTypeFilterAll = 0xff
-};
+enum class PageHeapBlockTypeFilter;
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
 #define PageHeapVerboseTrace(flags, ...) \
@@ -497,7 +487,7 @@ public:
                 return false;
             }
         }
-        return freeObjectList != null; 
+        return freeObjectList != nullptr;
     }
 
     bool IsInAllocator() const;
@@ -520,7 +510,7 @@ public:
 #endif
 
 #ifdef DUMP_FRAGMENTATION_STATS
-    void AggregateBlockStats(HeapBucketStats& stats, bool isAllocatorBlock = false, FreeObject* freeObjectList = null, bool isBumpAllocated = false);
+    void AggregateBlockStats(HeapBucketStats& stats, bool isAllocatorBlock = false, FreeObject* freeObjectList = nullptr, bool isBumpAllocated = false);
 #endif
 
     /*
@@ -750,7 +740,7 @@ public:
     template <typename TBlockType, typename Fn>
     static void ForEach(TBlockType * list, Fn fn)
     {
-        ForEach<TBlockType, Fn>(list, null, fn);
+        ForEach<TBlockType, Fn>(list, nullptr, fn);
     }
 
     template <typename TBlockType, typename Fn>
@@ -767,7 +757,7 @@ public:
     template <typename TBlockType, typename Fn>
     static void ForEachEditing(TBlockType * list, Fn fn)
     {
-        ForEachEditing<TBlockType, Fn>(list, null, fn);
+        ForEachEditing<TBlockType, Fn>(list, nullptr, fn);
     };
 
     template <typename TBlockType, typename Fn>
@@ -796,7 +786,7 @@ public:
     template <typename TBlockType>
     static TBlockType * Tail(TBlockType * list)
     {
-        TBlockType * tail = null;
+        TBlockType * tail = nullptr;
         HeapBlockList::ForEach(list, [&tail](TBlockType * heapBlock)
         {
             tail = heapBlock;
@@ -806,7 +796,7 @@ public:
 
 #if DBG
     template <typename TBlockType>
-    static bool Contains(TBlockType * block, TBlockType * list, TBlockType * tail = null)
+    static bool Contains(TBlockType * block, TBlockType * list, TBlockType * tail = nullptr)
     {
         TBlockType * heapBlock = list;
         while (heapBlock != tail)

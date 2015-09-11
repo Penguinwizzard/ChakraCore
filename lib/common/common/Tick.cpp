@@ -1,6 +1,7 @@
 // Copyright (C) Microsoft. All rights reserved. 
 
-#include "StdAfx.h"
+#include "CommonCommonPch.h"
+#include "Common\Tick.h"
 
 namespace Js {
     uint64      Tick::s_luFreq;

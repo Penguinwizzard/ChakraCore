@@ -107,22 +107,22 @@ __inline
 char *
 SmallHeapBlockAllocator<TBlockType>::PageHeapAlloc(Recycler * recycler, size_t sizeCat, ObjectInfoBits attributes, PageHeapMode mode)
 {
-    if (this->heapBlock == null)
+    if (this->heapBlock == nullptr)
     {
-        return null;
+        return nullptr;
     }
 
     // In integrated page, we can get a heapBlock is not pageheap enabled
     if (!heapBlock->InPageHeapMode())
     {
-        return null;
+        return nullptr;
     }
 
     TBlockType* smallBlock = (TBlockType*) this->heapBlock;
 
     // Free list allocation not supported in page heap mode
     // since if we sweep, the block should be empty
-    Assert(this->endAddress != null);
+    Assert(this->endAddress != nullptr);
 
 
     // We do one of two things:
@@ -222,7 +222,7 @@ SmallHeapBlockAllocator<TBlockType>::InlinedAllocImpl(Recycler * recycler, size_
             {
                 Assert(this->IsExplicitFreeObjectListAllocMode());
                 allocationHeapBlock = (TBlockType *)recycler->FindHeapBlock(memBlock);
-                Assert(allocationHeapBlock != null);
+                Assert(allocationHeapBlock != nullptr);
                 Assert(!allocationHeapBlock->IsLargeHeapBlock());
             }
             allocationHeapBlock->SetAttributes(memBlock, (attributes & StoredObjectInfoBitMask));
@@ -235,7 +235,7 @@ SmallHeapBlockAllocator<TBlockType>::InlinedAllocImpl(Recycler * recycler, size_
         if (this->IsExplicitFreeObjectListAllocMode())
         {
             HeapBlock* heapBlock = recycler->FindHeapBlock(memBlock);
-            Assert(heapBlock != null);
+            Assert(heapBlock != nullptr);
             Assert(!heapBlock->IsLargeHeapBlock());
             TBlockType* smallBlock = (TBlockType*)heapBlock;
             smallBlock->ClearExplicitFreeBitForObject(memBlock);

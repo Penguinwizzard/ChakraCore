@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "stdafx.h"
+#include "CommonMemoryPch.h"
 
 #if defined(_M_IX86) || defined(_M_X64)
 // For prefetch

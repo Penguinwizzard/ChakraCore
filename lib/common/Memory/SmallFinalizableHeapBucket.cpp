@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "CommonMemoryPch.h"
 
 template <class TBlockType>
 SmallFinalizableHeapBucketBaseT<TBlockType>::SmallFinalizableHeapBucketBaseT() :

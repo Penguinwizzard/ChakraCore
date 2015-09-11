@@ -2,7 +2,8 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "CommonMemoryPch.h"
+#include "MemoryLogger.h"
 
 #ifdef ENABLE_TRACE
 namespace Js

@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#include "stdafx.h"
+#include "CommonMemoryPch.h"
 CompileAssert(
     sizeof(LargeObjectHeader) == HeapConstants::ObjectGranularity ||
     sizeof(LargeObjectHeader) == HeapConstants::ObjectGranularity * 2);

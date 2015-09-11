@@ -69,9 +69,9 @@ struct LargeHeapBlockFreeList
 {
 public:
     LargeHeapBlockFreeList(LargeHeapBlock* heapBlock):
-        previous(null),
-        next(null),
-        entries(null),
+        previous(nullptr),
+        next(nullptr),
+        entries(nullptr),
         heapBlock(heapBlock)
     {
     }
@@ -190,7 +190,7 @@ private:
 #if defined(PARTIAL_GC_ENABLED) && defined(CONCURRENT_GC_ENABLED)
         if (IsPartialSweptHeader(header))
         {
-            return null;
+            return nullptr;
         }
 #endif
         return header;

@@ -108,7 +108,7 @@ private:
     static void ForEachProfiler(THandler handler)
     {
         MemoryProfiler * memoryProfiler = MemoryProfiler::profilers;
-        while (memoryProfiler != null)
+        while (memoryProfiler != nullptr)
         {
             handler(memoryProfiler);
             memoryProfiler = memoryProfiler->next;

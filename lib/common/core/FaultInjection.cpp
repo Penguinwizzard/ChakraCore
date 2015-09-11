@@ -1,7 +1,7 @@
 //----------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
-#include "StdAfx.h"
+#include "CommonCorePch.h"
 
 #ifdef FAULT_INJECTION
 #include "io.h"

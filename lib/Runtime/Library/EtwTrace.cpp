@@ -5,6 +5,7 @@
 #include "RuntimeLibraryPch.h"
 
 #ifdef ENABLE_JS_ETW
+#include "core\EtwTraceCore.h"
 
 #ifdef VTUNE_PROFILING
 #ifdef CDECL

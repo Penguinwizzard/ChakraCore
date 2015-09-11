@@ -3,7 +3,6 @@
 //----------------------------------------------------------------------------
 
 // INL files
-#include "Common\NumberUtilities.inl"
 #include "Common\vtinfo.inl"
 #include "DataStructures\DoublyLinkedListElement.inl"
 #include "DataStructures\DoublyLinkedList.inl"

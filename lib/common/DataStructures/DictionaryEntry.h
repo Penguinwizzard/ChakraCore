@@ -6,16 +6,6 @@
 
 namespace JsUtil
 {
-    template <class TKey, class TValue> class WeakRefDictionaryEntry
-    {
-    public:
-        static const int INVALID_HASH_VALUE = 0;
-        hash_t hash;    // Lower 31 bits of hash code << 1 | 1, 0 if unused
-        int next;        // Index of next entry, -1 if last
-        const RecyclerWeakReference<TKey>* key;      // Key of entry- this entry holds a weak reference to the key
-        TValue value;    // Value of entry
-    };
-
     template <class TValue>
     class BaseValueEntry
     {
@@ -60,7 +50,7 @@ namespace JsUtil
     public:
         void Clear()
         {
-            this->value = null;
+            this->value = nullptr;
         }
     };
 
@@ -140,7 +130,7 @@ namespace JsUtil
         void Clear()
         {
             __super::Clear();
-            this->key = null;
+            this->key = nullptr;
         }
     };
 
@@ -230,8 +220,8 @@ namespace JsUtil
         {
             // Assuming nullable keys for now
             // This might change in future
-            this->key = null;
-            this->value = null;
+            this->key = NULL;
+            this->value = NULL;
         }
 
         static bool SupportsCleanup()
@@ -243,7 +233,7 @@ namespace JsUtil
         { 
             TValue weakReference = entry.Value(); 
 
-            return (weakReference == null || weakReference->Get() == null);
+            return (weakReference == nullptr || weakReference->Get() == nullptr);
         }
     };
 }

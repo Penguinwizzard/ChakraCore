@@ -3,7 +3,7 @@
 *   Copyright (C) Microsoft. All rights reserved.       *
 *                                                       *
 ********************************************************/
-#include "stdafx.h"
+#include "CommonMemoryPch.h"
 
 #ifdef PROFILE_RECYCLER_ALLOC  
 // Initialization order

@@ -70,12 +70,12 @@ template <typename T>
 __inline
 bool PageStack<T>::Pop(T * item)
 {
-    Assert(currentChunk != null);
+    Assert(currentChunk != nullptr);
     
     if (nextEntry == chunkStart)
     {
         // We're at the beginning of the chunk.  Move to the previous chunk, if any
-        if (currentChunk->nextChunk == null)
+        if (currentChunk->nextChunk == nullptr)
         {
             // All done
             Assert(count == 0);
@@ -111,7 +111,7 @@ bool PageStack<T>::Push(T item)
     if (nextEntry == chunkEnd)
     {
         Chunk * newChunk = CreateChunk();
-        if (newChunk == null)
+        if (newChunk == nullptr)
         {
             return false;
         }
@@ -141,10 +141,10 @@ bool PageStack<T>::Push(T item)
 template <typename T>
 PageStack<T>::PageStack(PagePool * pagePool) : 
     pagePool(pagePool), 
-    currentChunk(null), 
-    nextEntry(null),
-    chunkStart(null),
-    chunkEnd(null),
+    currentChunk(nullptr),
+    nextEntry(nullptr),
+    chunkStart(nullptr),
+    chunkEnd(nullptr),
     usesReservedPages(false)
 {
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
@@ -161,8 +161,8 @@ PageStack<T>::PageStack(PagePool * pagePool) :
 template <typename T>
 PageStack<T>::~PageStack() 
 {
-    Assert(currentChunk == null);
-    Assert(nextEntry == null);
+    Assert(currentChunk == nullptr);
+    Assert(nextEntry == nullptr);
     Assert(count == 0);
     Assert(pageCount == 0);
 }
@@ -178,13 +178,13 @@ void PageStack<T>::Init(uint reservedPageCount)
     }
 
     // Preallocate one chunk.
-    Assert(currentChunk == null);
+    Assert(currentChunk == nullptr);
     currentChunk = CreateChunk();
-    if (currentChunk == null)
+    if (currentChunk == nullptr)
     {
         Js::Throw::OutOfMemory();
     }
-    currentChunk->nextChunk = null;
+    currentChunk->nextChunk = nullptr;
     chunkStart = currentChunk->entries;
     chunkEnd = &currentChunk->entries[EntriesPerChunk];
     nextEntry = chunkStart;
@@ -194,8 +194,8 @@ void PageStack<T>::Init(uint reservedPageCount)
 template <typename T>
 void PageStack<T>::Clear()
 {
-    currentChunk = null;
-    nextEntry = null;
+    currentChunk = nullptr;
+    nextEntry = nullptr;
 #if DBG
     count = 0;
     pageCount = 0;
@@ -209,14 +209,14 @@ typename PageStack<T>::Chunk * PageStack<T>::CreateChunk()
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
     if (pageCount >= maxPageCount)
     {
-        return null;
+        return nullptr;
     }
 #endif
     Chunk * newChunk = (Chunk *)this->pagePool->GetPage(usesReservedPages);
 
-    if (newChunk == null)
+    if (newChunk == nullptr)
     {
-        return null;
+        return nullptr;
     }
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
@@ -254,7 +254,7 @@ uint PageStack<T>::Split(uint targetCount, __in_ecount(targetCount) PageStack<T>
     // indicate that the split was less than the maximum possible.
 
     Chunk * chunk = this->currentChunk;
-    Assert(chunk != null);
+    Assert(chunk != nullptr);
 
     // The first chunk is assigned to the main stack, and since it's already there, 
     // we just advance to the next chunk and start assigning to each target stack.
@@ -356,14 +356,14 @@ void PageStack<T>::Abort()
 {
     // Abandon the current entries in the stack and reset to initialized state.
 
-    if (currentChunk == null)
+    if (currentChunk == nullptr)
     {
         Assert(count == 0);
         return;
     }
 
     // Free all the chunks except the first one
-    while (currentChunk->nextChunk != null)
+    while (currentChunk->nextChunk != nullptr)
     {
         Chunk * temp = currentChunk;
         currentChunk = currentChunk->nextChunk;
@@ -386,30 +386,30 @@ void PageStack<T>::Release()
     Assert(IsEmpty());
 
     // We may have a preallocated chunk still held; if so release it.
-    if (currentChunk != null)
+    if (currentChunk != nullptr)
     {
-        Assert(currentChunk->nextChunk == null);
+        Assert(currentChunk->nextChunk == nullptr);
         FreeChunk(currentChunk);
-        currentChunk = null;
+        currentChunk = nullptr;
     }
     
-    nextEntry = null;
-    chunkStart = null;
-    chunkEnd = null;
+    nextEntry = nullptr;
+    chunkStart = nullptr;
+    chunkEnd = nullptr;
 }
 
 
 template <typename T>
 bool PageStack<T>::IsEmpty() const
 {
-    if (currentChunk == null)
+    if (currentChunk == nullptr)
     {
         Assert(count == 0);
-        Assert(nextEntry == null);
+        Assert(nextEntry == nullptr);
         return true;
     }
 
-    if (nextEntry == chunkStart && currentChunk->nextChunk == null)
+    if (nextEntry == chunkStart && currentChunk->nextChunk == nullptr)
     {
         Assert(count == 0);
         return true;

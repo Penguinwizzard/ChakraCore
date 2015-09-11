@@ -174,7 +174,7 @@ public:
 
         if (this->blockState == 1)
         {
-            Assert(this->bigBlocks != null && this->fullBlocks == null && this->mallocBlocks == null && this->bigBlocks->nextBigBlock == null);
+            Assert(this->bigBlocks != nullptr && this->fullBlocks == nullptr && this->mallocBlocks == nullptr && this->bigBlocks->nextBigBlock == nullptr);
             Assert(this->largestHole == 0);
             Assert(cacheBlockEnd == bigBlocks->GetBytes() + bigBlocks->nbytes);
             Assert(bigBlocks->GetBytes() <= cacheBlockCurrent && cacheBlockCurrent <= cacheBlockEnd);
@@ -200,12 +200,12 @@ public:
         this->freeListSize = 0;
 #endif
         ReleaseMemory();
-        this->cacheBlockCurrent = null;
-        this->cacheBlockEnd = null;
-        this->bigBlocks = null;
-        this->fullBlocks = null;
+        this->cacheBlockCurrent = nullptr;
+        this->cacheBlockEnd = nullptr;
+        this->bigBlocks = nullptr;
+        this->fullBlocks = nullptr;
         this->largestHole = 0;
-        this->mallocBlocks = null;
+        this->mallocBlocks = nullptr;
         this->blockState = 0;
     }
 
@@ -230,7 +230,7 @@ public:
 #ifdef TRACK_ALLOC
     // Doesn't support tracking information, dummy implementation
     ArenaAllocatorBase * TrackAllocInfo(TrackAllocData const& data) { return this; }
-    void ClearTrackAllocInfo(TrackAllocData* data = NULL) {}
+    void ClearTrackAllocInfo(TrackAllocData* data = nullptr) {}
 #endif
 
 protected:
@@ -401,7 +401,7 @@ public:
     char * NoThrowAlloc(size_t requestedBytes)
     {
         void (*tempOutOfMemoryFunc)() = outOfMemoryFunc;
-        outOfMemoryFunc = null;
+        outOfMemoryFunc = nullptr;
         char * buffer = AllocInternal(requestedBytes);
         outOfMemoryFunc = tempOutOfMemoryFunc;
         return buffer;
@@ -410,7 +410,7 @@ public:
     char * NoThrowAllocZero(size_t requestedBytes)
     {
         char * buffer = NoThrowAlloc(requestedBytes);
-        if (buffer != null)
+        if (buffer != nullptr)
         {
             memset(buffer, 0, requestedBytes);
         }
@@ -420,7 +420,7 @@ public:
     char * NoThrowNoRecoveryAlloc(size_t requestedBytes)
     {
         void (*tempRecoverMemoryFunc)() = recoverMemoryFunc;
-        recoverMemoryFunc = null;
+        recoverMemoryFunc = nullptr;
         char * buffer = NoThrowAlloc(requestedBytes);
         recoverMemoryFunc = tempRecoverMemoryFunc;
         return buffer;
@@ -429,7 +429,7 @@ public:
     char * NoThrowNoRecoveryAllocZero(size_t requestedBytes)
     {
         char * buffer = NoThrowNoRecoveryAlloc(requestedBytes);
-        if (buffer != null)
+        if (buffer != nullptr)
         {
             memset(buffer, 0, requestedBytes);
         }
@@ -448,7 +448,7 @@ private:
 public:
 
     JitArenaAllocator(__in LPCWSTR name, PageAllocator * pageAllocator, void(*outOfMemoryFunc)(), void(*recoverMemoryFunc)() = JsUtil::ExternalApi::RecoverUnusedMemory) :
-        bvFreeList(null), ArenaAllocator(name, pageAllocator, outOfMemoryFunc, recoverMemoryFunc)
+        bvFreeList(nullptr), ArenaAllocator(name, pageAllocator, outOfMemoryFunc, recoverMemoryFunc)
     {
     }
 
@@ -512,13 +512,13 @@ public:
 
     void Reset()
     {
-        bvFreeList = null;
+        bvFreeList = nullptr;
         ArenaAllocator::Reset();
     }
 
     void Clear()
     {
-        bvFreeList = null;
+        bvFreeList = nullptr;
         ArenaAllocator::Clear();
     }
 };

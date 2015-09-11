@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "stdafx.h"
+#include "CommonDataStructuresPch.h"
 #include <strsafe.h>
 #include "Option.h"
 #include "ImmutableList.h" 

@@ -4,6 +4,9 @@
 
 #pragma once
 
+#include "TargetVer.h"
+#include "Warnings.h"
+
 //----------------------------------------------------------------------------------------------------
 // Default debug/fretest/release flags values 
 //  - Set the default values of debug/fretest/release flags if it is not set by the command line
@@ -382,6 +385,20 @@
 
 #if defined(_M_IX86) || defined(_M_X64)
 #define ASMJS_PLAT
+#endif
+
+#if _WIN32 || _WIN64
+#if _M_IX86
+#define I386_ASM 1
+#endif //_M_IX86
+#endif // _WIN32 || _WIN64
+
+#ifndef PDATA_ENABLED
+#if defined(_M_ARM32_OR_ARM64) || defined(_M_X64)
+#define PDATA_ENABLED 1
+#else
+#define PDATA_ENABLED 0
+#endif
 #endif
 
 //----------------------------------------------------------------------------------------------------

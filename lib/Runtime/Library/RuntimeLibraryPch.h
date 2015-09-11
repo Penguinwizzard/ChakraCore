@@ -14,6 +14,7 @@
 
 #include "Library\ObjectPrototypeObject.h"
 
+#include "common\ByteSwap.h"
 #include "Library\DataView.h"
 
 #include "Library\JSONString.h"
@@ -58,6 +59,7 @@
 #include "Library\IteratorObjectEnumerator.h"
 
 
+#include "Library\JavascriptIterator.h"
 #include "Library\JavascriptArrayIterator.h"
 #include "Library\JavascriptMapIterator.h"
 #include "Library\JavascriptSetIterator.h"

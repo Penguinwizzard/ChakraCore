@@ -4,9 +4,11 @@
 
 #pragma once
 
+class StackBackTrace;
+
 namespace Js {
 
-    class ScriptContext;
+    class ScriptContext;    
 
     class Throw
     {

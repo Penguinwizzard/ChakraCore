@@ -3,7 +3,7 @@
 *   Copyright (C) Microsoft. All rights reserved.       *
 *                                                       *
 ********************************************************/
-#include "stdafx.h"
+#include "CommonMemoryPch.h"
 
 IdleDecommitPageAllocator::IdleDecommitPageAllocator(AllocationPolicyManager * policyManager, PageAllocatorType type, 
 #ifndef JD_PRIVATE

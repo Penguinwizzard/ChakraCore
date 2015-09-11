@@ -19,7 +19,7 @@ public:
 #endif
         size_t maxFreePageCount = 0,
         size_t maxIdleFreePageCount = DefaultMaxFreePageCount,
-        bool zeroPages = false, BackgroundPageQueue * backgroundPageQueue = null, 
+        bool zeroPages = false, BackgroundPageQueue * backgroundPageQueue = nullptr, 
         size_t maxAllocPageCount = PageAllocator::DefaultMaxAllocPageCount);
 
     void EnterIdleDecommit();

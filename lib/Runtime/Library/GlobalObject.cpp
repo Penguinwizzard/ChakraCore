@@ -4,6 +4,7 @@
 
 #include "RuntimeLibraryPch.h"
 #include <strsafe.h>
+#include "Exceptions\EvalDisabledException.h"
 
 namespace Js
 {
@@ -838,7 +839,7 @@ namespace Js
             ParseNodePtr parseTree;
 
             SourceContextInfo * sourceContextInfo = pSrcInfo->sourceContextInfo;
-            ULONG deferParseThreshold = Parser::GetDeferralThreshold(sourceContextInfo->sourceDynamicProfileManager);
+            ULONG deferParseThreshold = Parser::GetDeferralThreshold(sourceContextInfo->IsSourceProfileLoaded());
             if ((ULONG)sourceLength > deferParseThreshold && !PHASE_OFF1(Phase::DeferParsePhase))
             {
                 // Defer function bodies declared inside large dynamic blocks.

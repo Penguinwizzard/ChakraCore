@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "ParserPch.h"
 
 #define ASSERT_THREAD() AssertMsg(mainThreadId == GetCurrentThreadContextId(), \
     "Cannot use this member of BackgroundParser from thread other than the creating context's current thread")

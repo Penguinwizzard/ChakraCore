@@ -2,9 +2,11 @@
 // Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "CommonCorePch.h"
 
 #ifdef PROFILE_EXEC
+#include "core\ProfileInstrument.h"
+
 #define HIRES_PROFILER
 namespace Js
 {

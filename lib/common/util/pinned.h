@@ -1,3 +1,7 @@
+//---------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+//---------------------------------------------------------------------------
+
 #pragma once
 
 // Only need to be used if the pointer is long live within the function and doesn't escape

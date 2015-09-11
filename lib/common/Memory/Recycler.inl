@@ -257,7 +257,7 @@ Recycler::RealAllocFromBucket(HeapInfo* heap, size_t size)
     }
     else
     {
-        Assert(memBlock != null);
+        Assert(memBlock != nullptr);
     }
 
 #ifdef RECYCLER_ZERO_MEM_CHECK
@@ -323,7 +323,7 @@ __inline RecyclerWeakReference<T>* Recycler::CreateWeakReferenceHandle(T* pStron
     // The entry returned is recycler-allocated memory
     RecyclerWeakReference<T>* weakRef = (RecyclerWeakReference<T>*) this->weakReferenceMap.Add((char*) pStrongReference, this);
 #if DBG
-    if (weakRef->typeInfo == null)
+    if (weakRef->typeInfo == nullptr)
     {
         weakRef->typeInfo = &typeid(T);
 #ifdef TRACK_ALLOC
@@ -363,12 +363,12 @@ Recycler::FindHeapBlock(void* candidate)
 {
     if ((size_t)candidate < 0x10000)
     {
-        return NULL;
+        return nullptr;
     }
 
     if (!HeapInfo::IsAlignedAddress(candidate))
     {
-        return NULL;
+        return nullptr;
     }
     return heapBlockMap.GetHeapBlock(candidate);    
 }
@@ -418,6 +418,48 @@ Recycler::AddMark(void * candidate, size_t byteCount) throw()
     // This is never called during parallel marking
     Assert(this->collectionState != CollectionStateParallelMark);
     return markContext.AddMarkedObject(candidate, byteCount);
+}
+
+
+template <bool pageheap, typename T>
+void
+Recycler::NotifyFree(T * heapBlock)
+{
+    bool forceSweepObject = ForceSweepObject();
+
+    if (forceSweepObject)
+    {
+#if DBG || defined(RECYCLER_STATS)
+        this->isForceSweeping = true;
+        heapBlock->isForceSweeping = true;
+#endif
+        heapBlock->SweepObjects<pageheap, SweepMode_InThread>(this);
+#if DBG || defined(RECYCLER_STATS)
+        heapBlock->isForceSweeping = false;
+        this->isForceSweeping = false;
+#endif
+        RECYCLER_STATS_INC(this, heapBlockFreeCount[heapBlock->GetHeapBlockType()]);
+    }
+    JS_ETW(EventWriteFreeMemoryBlock(heapBlock));
+#ifdef RECYCLER_PERF_COUNTERS
+    if (forceSweepObject)
+    {
+        RECYCLER_PERF_COUNTER_SUB(FreeObjectSize, heapBlock->GetPageCount() * AutoSystemInfo::PageSize);
+
+        if (heapBlock->IsLargeHeapBlock())
+        {
+            RECYCLER_PERF_COUNTER_SUB(LargeHeapBlockFreeObjectSize, heapBlock->GetPageCount() * AutoSystemInfo::PageSize);
+        }
+        else
+        {
+            RECYCLER_PERF_COUNTER_SUB(SmallHeapBlockFreeObjectSize, heapBlock->GetPageCount() * AutoSystemInfo::PageSize);
+        }
+    }
+    else
+    {
+        heapBlock->UpdatePerfCountersOnFree();
+    }
+#endif
 }
 
 template <class TBlockAttributes>

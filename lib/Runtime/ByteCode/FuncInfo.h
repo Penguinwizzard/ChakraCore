@@ -137,9 +137,9 @@ public:
     uint needEnvRegister : 1;
     uint hasCapturedThis : 1;
 
-    typedef ResizableUIntHashTable<Js::RegSlot, ArenaAllocator, PrimePolicy> ConstantRegisterMap;
+    typedef JsUtil::BaseDictionary<uint, Js::RegSlot, ArenaAllocator, PrimeSizePolicy> ConstantRegisterMap;
     ConstantRegisterMap constantToRegister; // maps uint constant to register
-    typedef SimpleHashTable<IdentPtr, Js::RegSlot, ArenaAllocator, DefaultComparer, true, PowerOf2Policy> PidRegisterMap;
+    typedef JsUtil::BaseDictionary<IdentPtr, Js::RegSlot, ArenaAllocator> PidRegisterMap;
     PidRegisterMap stringToRegister; // maps string constant to register
     typedef JsUtil::BaseDictionary<double,Js::RegSlot, ArenaAllocator, PrimeSizePolicy> DoubleRegisterMap;
     DoubleRegisterMap doubleConstantToRegister; // maps double constant to register

@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 
-#include "StdAfx.h"
+#include "ParserPch.h"
 #if PROFILE_DICTIONARY
 #include "DictionaryStats.h"
 #endif

@@ -13,10 +13,10 @@ HeapBucketT<TBlockType>::RealAlloc(Recycler * recycler, size_t sizeCat)
 
     char * memBlock = allocatorHead.InlinedAlloc<(ObjectInfoBits)(attributes & InternalObjectInfoBitMask)>(recycler, sizeCat);
 
-    if (memBlock == null)
+    if (memBlock == nullptr)
     {
         memBlock = SnailAlloc(recycler, &allocatorHead, sizeCat, attributes, nothrow);
-        Assert(memBlock != null || nothrow);
+        Assert(memBlock != nullptr || nothrow);
     }
     else
     {
