@@ -1292,7 +1292,6 @@ FLAGNR(Number,  MinBackgroundRepeatMarkRescanBytes, "Minimum number of bytes res
 FLAGNR(Number,  MaxMarkStackPageCount , "Restrict recycler mark stack size (in pages)", -1)
 FLAGNR(Number,  MaxTrackedObjectListCount,  "Restrict recycler tracked object count during GC", -1)
 
-FLAGNR(Boolean, Win8Compat, "Win8 WWA compatiable interface", false)
 #if DBG
 FLAGNR(Boolean, InitializeInterpreterSlotsWithInvalidStackVar, "Enable the initialization of the interpreter local slots with invalid stack vars", false)
 #endif

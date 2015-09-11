@@ -169,7 +169,6 @@
 //----------------------------------------------------------------------------------------------------
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
 
-#define WIN8_COMPAT                 // include code to allow jscript9.dll to run with Win8 WWAHost.exe
 #define BAILOUT_INJECTION
 #define DYNAMIC_PROFILE_STORAGE
 #define DYNAMIC_PROFILE_MUTATOR
