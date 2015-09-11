@@ -4,6 +4,8 @@
 //-------------------------------------------------------------------------------------------------------
 #include "ParserPch.h"
 #include "FormalsUtil.h"
+#include "..\Runtime\Language\SourceDynamicProfileManager.h"
+
 #if DBG_DUMP
 void PrintPnodeWIndent(ParseNode *pnode,int indentAmt);
 #endif

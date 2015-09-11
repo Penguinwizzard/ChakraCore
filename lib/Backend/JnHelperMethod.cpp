@@ -3,7 +3,9 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "Backend.h"
-
+#ifdef ENABLE_DOM_FAST_PATH
+#include "Types\DOMFastPath.h"
+#endif
 // Parser includes
 // TODO: clean up the need of these regex related header here just for GroupInfo needed in RegexHelper
 #include "RegexCommon.h"

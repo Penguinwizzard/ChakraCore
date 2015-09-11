@@ -3,8 +3,12 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
-#include "Types\MissingPropertyTypeHandler.h"
 
+#include "Library\JSON.h"
+#include "Types\MissingPropertyTypeHandler.h"
+#ifdef ENABLE_DOM_FAST_PATH
+#include "Library\DOMFastPathInfo.h"
+#endif
 namespace Js
 {
     SimplePropertyDescriptor JavascriptLibrary::SharedFunctionPropertyDescriptors[2] =

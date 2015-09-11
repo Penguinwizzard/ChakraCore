@@ -12,6 +12,8 @@
 #include "StandardChars.h"
 #include "Library\ThreadContextTLSEntry.h"
 #include "Library\ThreadBoundThreadContextManager.h"
+#include "Language\SourceDynamicProfileManager.h"
+#include "Language\CodeGenRecyclableData.h"
 
 #if DBG
 #include "Memory\StressTest.h"
@@ -19,6 +21,12 @@
 
 #ifdef DYNAMIC_PROFILE_MUTATOR
 #include "Language\DynamicProfileMutator.h"
+#endif
+
+
+#ifdef ENABLE_BASIC_TELEMETRY
+// REVIEW: ChakraCore Dependency
+#include "..\..\..\private\lib\Telemetry\Telemetry.h"
 #endif
 
 int TotalNumberOfBuiltInProperties = Js::PropertyIds::_countJSOnlyProperty;
@@ -179,16 +187,6 @@ ThreadContext::ThreadContext(AllocationPolicyManager * allocationPolicyManager, 
 #if DBG_DUMP
     scriptSiteCount = 0;
     pageAllocator.debugName = L"Thread";
-#endif
-#ifdef TEST_LOG
-    if(Js::Configuration::Global.flags.IsEnabled(Js::HostLoggingFlag))
-    {
-        hostLogger = Anew(GetThreadAlloc(), Js::HostLogger, this);
-    }
-    else
-    {
-        hostLogger = NULL;
-    }
 #endif
 #ifdef DYNAMIC_PROFILE_MUTATOR
     this->dynamicProfileMutator = DynamicProfileMutator::GetMutator();
@@ -432,12 +430,7 @@ ThreadContext::~ThreadContext()
         jobProcessor = nullptr;
     }
 #endif
-#ifdef TEST_LOG
-    if(Js::Configuration::Global.flags.IsEnabled(Js::HostLoggingFlag))
-    {
-        hostLogger->HostLogger::~HostLogger();
-    }
-#endif
+
     // Do not require all GC callbacks to be revoked, because Trident may not revoke if there
     // is a leak, and we don't want the leak to be masked by an assert
 

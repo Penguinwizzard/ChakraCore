@@ -17,11 +17,29 @@
 #include "Language\ProfilingHelpers.h"
 #include "Language\FunctionCodeGenRuntimeData.h"
 #include "Language\FunctionCodeGenJitTimeData.h"
-#include "Library\JavascriptGenerator.h"
 #include "Language\JavascriptMathOperators.h"
 #include "Language\JavascriptMathOperators.inl"
-#include "Library\JavascriptRegularExpression.h"
 #include "Language\JavascriptStackWalker.h"
+#include "Language\CodeGenRecyclableData.h"
+#include "Library\JavascriptGenerator.h"
+#include "Library\JavascriptRegularExpression.h"
+#ifdef SIMD_JS_ENABLED
+// SIMD types
+#include "Library\JavascriptSIMDFloat32x4.h"
+#include "Library\JavascriptSIMDFloat64x2.h"
+#include "Library\JavascriptSIMDInt32x4.h"
+#include "Library\JavascriptSIMDInt8x16.h"
+// SIMD operations
+#include "Library\SIMDFloat32x4Operation.h"
+#include "Library\SIMDFloat64x2Operation.h"
+#include "Library\SIMDInt32x4Operation.h"
+#include "Library\SIMDInt8x16Operation.h"
+// SIMD libs
+#include "Library\SIMDFloat32x4Lib.h"
+#include "Library\SIMDFloat64x2Lib.h"
+#include "Library\SIMDInt32x4Lib.h"
+#include "Library\SIMDInt8x16Lib.h"
+#endif
 // =================
 // Common Includes
 // =================

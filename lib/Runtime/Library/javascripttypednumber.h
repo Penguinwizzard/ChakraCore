@@ -58,10 +58,7 @@ namespace Js
             return TRUE;
         }
 
-        virtual RecyclableObject* ToObject(ScriptContext * requestContext) override
-        {
-            return requestContext->GetLibrary()->CreateNumberObjectWithCheck((double)m_value);
-        }
+        virtual RecyclableObject* ToObject(ScriptContext * requestContext) override;
 
         virtual Var GetTypeOfString(ScriptContext * requestContext) override {Assert(FALSE); return requestContext->GetLibrary()->GetNumberTypeDisplayString(); }
         virtual BOOL ToPrimitive(JavascriptHint hint, Var* value, ScriptContext * requestContext)override {Assert(false); *value = this; return true;}

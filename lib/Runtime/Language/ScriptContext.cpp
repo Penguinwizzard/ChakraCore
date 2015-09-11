@@ -18,11 +18,6 @@
 #include "DictionaryStats.h"
 #endif
 
-#ifdef ENABLE_BASIC_TELEMETRY
-// REVIEW: ChakraCore Dependency
-#include "..\..\..\private\lib\Telemetry\ScriptContextTelemetry.h"
-#endif
-
 namespace Js
 {
     ScriptContext * ScriptContext::New(ThreadContext * threadContext)

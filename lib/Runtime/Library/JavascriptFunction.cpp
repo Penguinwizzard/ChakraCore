@@ -4,7 +4,9 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 #include "BackEndAPI.h"
-
+#ifdef ENABLE_DOM_FAST_PATH
+#include "Library\DOMFastPathInfo.h"
+#endif
 extern "C" PVOID _ReturnAddress(VOID);
 #pragma intrinsic(_ReturnAddress)
 

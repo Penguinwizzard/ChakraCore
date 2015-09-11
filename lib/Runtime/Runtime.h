@@ -344,9 +344,7 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #ifdef NTBUILD
 #include "Types\ExternalObject.h"
 #endif
-#ifdef ENABLE_DOM_FAST_PATH
-#include "Types\DOMFastPath.h"
-#endif
+
 #include "Types\SpreadArgument.h"
 #include "Language\StackTraceArguments.h"
 #include "Types\PropertyDescriptor.h"
@@ -355,13 +353,11 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Language\ValueType.h"
 #include "Language\DynamicProfileInfo.h"
 #include "Language\ReadOnlyDynamicProfileInfo.h"
-#include "Language\SourceDynamicProfileManager.h"
 #include "Debug\SourceContextInfo.h"
 #include "Language\InlineCache.h"
 #include "Language\InlineCachePointerArray.h"
 #include "Types\FunctionInfo.h"
 #include "Types\FunctionBody.h"
-#include "Language\CodeGenRecyclableData.h"
 #include "Types\JavascriptExceptionContext.h"
 #include "Types\JavascriptExceptionObject.h"
 #include "Types\PerfHint.h"
@@ -381,27 +377,12 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Library\ConcatString.h"
 #include "Library\CompoundString.h"
 #include "Library\PropertyString.h"
-#include "Library\LiteralStringObject.h"
-#include "Library\JavascriptNumber.h"
-#include "Library\JavascriptNumberObject.h"
 
-#ifdef SIMD_JS_ENABLED
-// SIMD types
-#include "Library\JavascriptSIMDFloat32x4.h"
-#include "Library\JavascriptSIMDFloat64x2.h"
-#include "Library\JavascriptSIMDInt32x4.h"
-#include "Library\JavascriptSIMDInt8x16.h"
-// SIMD operations
-#include "Library\SIMDFloat32x4Operation.h"
-#include "Library\SIMDFloat64x2Operation.h"
-#include "Library\SIMDInt32x4Operation.h"
-#include "Library\SIMDInt8x16Operation.h"
-#endif
+#include "Library\JavascriptNumber.h"
 
 #include "Library\JavascriptTypedNumber.h"
 #include "Library\SparseArraySegment.h"
 #include "Library\JavascriptError.h"
-#include "Library\JavascriptErrorDebug.h"
 #include "Library\JavascriptArray.h"
 
 #include "Library\ES5ArrayTypeHandler.h"
@@ -409,7 +390,7 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Library\ArrayBuffer.h"
 #include "Library\TypedArray.h"
 #include "Library\JavascriptBoolean.h"
-#include "Library\JavascriptBooleanObject.h"
+
 #include "Library\JavascriptFunction.h"
 #include "Library\ScriptFunctionType.h"
 #include "Library\ScriptFunction.h"
@@ -430,25 +411,14 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Language\JavascriptOperators.h"
 #include "Library\TaggedInt.h"
 #include "Library\HiResTimer.h"
-#include "Library\DateImplementation.h"
-#include "Library\JavascriptDate.h"
-
 #include "Library\MathLibrary.h"
-#include "Library\JSON.h"
+
 
 #include "Library\ThrowErrorObject.h"
 #include "Library\WindowsGlobalizationAdapter.h"
 #include "Library\WindowsFoundationAdapter.h"
 #include "Library\EngineInterfaceObject.h"
 #include "Library\Debug.h"
-
-#ifdef ENABLE_DOM_FAST_PATH
-#include "Library\DOMFastPathInfo.h"
-#endif
-
-#ifdef TEST_LOG
-#include "Library\HostLogger.h"
-#endif
 
 #ifdef _M_X64
 #include "Language\amd64\stackframe.h"
@@ -458,7 +428,6 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Language\PropertyRecord.h"
 #ifdef ENABLE_BASIC_TELEMETRY
 // REVIEW: ChakraCore Dependency
-#include "..\..\..\private\lib\Telemetry\Telemetry.h"
 #include "..\..\..\private\lib\Telemetry\DirectCall.h"
 #endif
 #include "Library\ThreadContext.h"

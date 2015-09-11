@@ -968,9 +968,6 @@ FLAGNR(Number,  ByteCodeBranchLimit,    "Short branch limit before we use the br
 FLAGNR(Boolean, MediumByteCodeLayout  , "Always use medium layout for bytecodes", false)
 FLAGNR(Boolean, LargeByteCodeLayout   , "Always use large layout for bytecodes", false)
 #endif
-#ifdef TEST_LOG
-FLAGNR(String,  HostLogging           , "Enable logging of host interactions to a file (requires filename)", nullptr)
-#endif
 #ifdef FAULT_INJECTION
 FLAGNR(Number,  FaultInjection        , "FaultInjectMode - 0 (count only), 1 (count equal), 2 (count at or above), 3 (stackhashing)",-1)
 FLAGNR(Number,  FaultInjectionCount   , "Injects an out of memory at the specified allocation", -1)

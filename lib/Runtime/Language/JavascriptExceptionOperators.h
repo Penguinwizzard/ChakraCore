@@ -20,6 +20,8 @@ extern "C" void *arm64_CallCatch(void *target, void *framePtr, void *localsPtr, 
 
 namespace Js
 {
+    class JavascriptExceptionContext;
+
     class JavascriptExceptionOperators  /* All static */
     {
     public:

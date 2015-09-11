@@ -9,7 +9,7 @@ namespace Js
     class ScriptContext;
     struct InlineCache;    
     class DebugManager;
-
+    class CodeGenRecyclableData;
     struct ReturnedValue;
     typedef JsUtil::List<ReturnedValue*> ReturnedValueList;
 }
@@ -672,10 +672,6 @@ private:
 
     __declspec(thread) static uint activeScriptSiteCount;
     bool isScriptActive;
-
-#ifdef TEST_LOG
-    Js::HostLogger *hostLogger;
-#endif
 
     // To synchronize with ETW rundown, which needs to walk scriptContext/functionBody/entryPoint lists.
     CriticalSection csEtwRundown;
@@ -1358,9 +1354,6 @@ public:
     bool IsDisableImplicitException() const { return (disableImplicitFlags & DisableImplicitExceptionFlag) != 0; }
     void DisableImplicitCall() { disableImplicitFlags = (DisableImplicitFlags)(disableImplicitFlags | DisableImplicitCallFlag); }
     void ClearDisableImplicitFlags() { disableImplicitFlags = DisableImplicitNoFlag; }
-#ifdef TEST_LOG
-    Js::HostLogger* GetHostLogger() { return hostLogger; }
-#endif
 
     virtual uint GetRandomNumber() override;
 

@@ -17,6 +17,8 @@ namespace Js {
     const DWORD  ExceptionParameters = 1;
     const int    ExceptionObjectIndex = 0;
 
+    class JavascriptExceptionContext;
+
     class JavascriptExceptionObject
     {
     public:

@@ -6,7 +6,10 @@
 #include "JsrtRuntime.h"
 #include "Library\ThreadContextTLSEntry.h"
 #include "Library\ThreadBoundThreadContextManager.h"
-
+#ifdef ENABLE_BASIC_TELEMETRY
+// REVIEW: ChakraCore Dependency
+#include "..\..\..\private\lib\Telemetry\Telemetry.h"
+#endif
 JsrtRuntime::JsrtRuntime(ThreadContext * threadContext, bool useIdle, bool dispatchExceptions)
 {       
     Assert(threadContext != NULL);

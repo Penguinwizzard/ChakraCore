@@ -11,6 +11,7 @@
 
 // Runtime includes
 #include "Library\ObjectPrototypeObject.h"
+#include "Library\JavascriptNumberObject.h"
 #include "Library\BoundFunction.h"
 #include "Library\JavascriptRegExpConstructor.h"
 #include "Library\SameValueComparer.h"

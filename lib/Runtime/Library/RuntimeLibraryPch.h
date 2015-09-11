@@ -12,6 +12,10 @@
 #include "Library\EtwTrace.h"
 #include "Library\AsyncDebug.h"
 
+#include "Library\JavascriptNumberObject.h"
+#include "Library\LiteralStringObject.h"
+#include "Library\JavascriptBooleanObject.h"
+
 #include "Library\ObjectPrototypeObject.h"
 
 #include "common\ByteSwap.h"
@@ -69,17 +73,25 @@
 #include "Library\UriHelper.h"
 #include "Library\HostObjectBase.h"
 
+#include "Library\DateImplementation.h"
+#include "Library\JavascriptDate.h"
+
 #ifdef SIMD_JS_ENABLED
+// SIMD types
+#include "Library\JavascriptSIMDFloat32x4.h"
+#include "Library\JavascriptSIMDFloat64x2.h"
+#include "Library\JavascriptSIMDInt32x4.h"
+#include "Library\JavascriptSIMDInt8x16.h"
+// SIMD operations
+#include "Library\SIMDFloat32x4Operation.h"
+#include "Library\SIMDFloat64x2Operation.h"
+#include "Library\SIMDInt32x4Operation.h"
+#include "Library\SIMDInt8x16Operation.h"
 // SIMD libs
 #include "Library\SIMDFloat32x4Lib.h"
 #include "Library\SIMDFloat64x2Lib.h"
 #include "Library\SIMDInt32x4Lib.h"
 #include "Library\SIMDInt8x16Lib.h"
-// SIMD operations
-#include "Library\SIMDFloat32x4Operation.h"
-#include "Library\SIMDInt32x4Operation.h"
-#include "Library\SIMDInt8x16Operation.h"
-#include "Library\SIMDFloat64x2Operation.h"
 #endif
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS

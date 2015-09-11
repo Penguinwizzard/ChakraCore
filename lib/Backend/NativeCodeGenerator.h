@@ -11,6 +11,7 @@ class InliningDecider;
 namespace Js
 {
     class ObjTypeSpecFldInfo;
+    class FunctionCodeGenJitTimeData;
 };
 
 class NativeCodeGenerator sealed : public JsUtil::WaitableJobManager

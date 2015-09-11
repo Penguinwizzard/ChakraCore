@@ -16,6 +16,7 @@
 #ifdef DYNAMIC_PROFILE_MUTATOR
 #include "Language\DynamicProfileMutator.h"
 #endif
+#include "Language\SourceDynamicProfileManager.h"
 
 #include "Debug\ProbeContainer.h"
 #include "Debug\DebugContext.h"
