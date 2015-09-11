@@ -136,6 +136,7 @@ namespace Js
     private:
         bool symInitialized;
         static PVOID vectoredExceptionHandler;
+        static DWORD exceptionFilterRemovalLastError;
         static bool InstallExceptionFilters();
         static void RemoveExceptionFilters();
         static UINT_PTR CalculateStackHash(void* frames[], WORD frameCount, WORD framesToSkip);

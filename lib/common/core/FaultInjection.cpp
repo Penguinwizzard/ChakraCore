@@ -344,6 +344,7 @@ namespace Js
     static CriticalSection cs_Sym; // for Sym* method is not thread safe
     const auto& globalFlags = Js::Configuration::Global.flags;
     PVOID FaultInjection::vectoredExceptionHandler = nullptr;
+    DWORD FaultInjection::exceptionFilterRemovalLastError = 0;
     int(*Js::FaultInjection::pfnHandleAV)(int, PEXCEPTION_POINTERS) = nullptr;
     static SymbolInfoPackage sip;
     static ModuleInfo mi;
@@ -881,7 +882,7 @@ namespace Js
                 case STATUS_ASSERTION_FAILURE:
                 case STATUS_STACK_OVERFLOW:
                     FaultInjectionExceptionFilter(ExceptionInfo);
-                    ExitProcess(ExceptionInfo->ExceptionRecord->ExceptionCode);
+                    TerminateProcess(::GetCurrentProcess(), ExceptionInfo->ExceptionRecord->ExceptionCode);
                 default:
                     return EXCEPTION_CONTINUE_SEARCH;
                 }
@@ -899,6 +900,7 @@ namespace Js
         if (vectoredExceptionHandler != nullptr)
         {
             RemoveVectoredExceptionHandler(vectoredExceptionHandler);
+            exceptionFilterRemovalLastError = GetLastError(); // looks sometimes the removal fails
             vectoredExceptionHandler = nullptr;
         }
     }
