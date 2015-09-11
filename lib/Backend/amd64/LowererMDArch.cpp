@@ -1390,11 +1390,23 @@ LowererMDArch::LowerEntryInstr(IR::EntryInstr * entryInstr)
     IR::RegOpnd *stackPointer   = IR::RegOpnd::New(nullptr, GetRegStackPointer(), TyMachReg, this->m_func);
     unsigned     xmmOffset      = 0;
 
+    if (this->m_func->GetJnFunction()->GetIsAsmJsFunction() && m_func->IsLoopBody())
+    {
+        IR::RegOpnd * bufferReg = IR::RegOpnd::New(nullptr, RegRBX, TyVar, m_func);
+        IR::Instr * instr = IR::Instr::New(Js::OpCode::MOV, bufferReg, IR::IndirOpnd::New(bufferReg, Js::ArrayBuffer::GetBufferOffset(), TyVar, m_func), m_func);
+        entryInstr->InsertAfter(instr);
+        instr = IR::Instr::New(Js::OpCode::MOV, bufferReg, IR::IndirOpnd::New(bufferReg, 0, TyVar, m_func), m_func);
+        entryInstr->InsertAfter(instr);
+        instr = IR::Instr::New(Js::OpCode::MOV, bufferReg, IR::AddrOpnd::New((Js::FunctionEntryPointInfo*)(m_func->m_workItem->GetEntryPoint())->GetModuleAddress(), IR::AddrOpndKindDynamicMisc, m_func, true), m_func);
+        entryInstr->InsertAfter(instr);
+    }
+
     // PDATA doesn't seem to like two consecutive "SUB RSP, size" instructions. Temporarily save and
     // restore RBX always so that the pattern doesn't occur in the prolog.
     for (RegNum reg = (RegNum)(RegNOREG + 1); reg < RegNumCount; reg = (RegNum)(reg + 1))
     {
-        if ((LinearScan::IsCalleeSaved(reg) && (this->m_func->HasTry() || this->m_func->m_regsUsed.Test(reg))))
+        if (((LinearScan::IsCalleeSaved(reg) && (this->m_func->HasTry() || this->m_func->m_regsUsed.Test(reg)))) ||
+            (this->m_func->GetJnFunction()->GetIsAsmJsFunction() && (LinearScan::GetRegAttribs(reg) & RA_ASMJSRESERVED) && m_func->IsLoopBody()))
         {
             IRType       type      = RegTypes[reg];
             IR::RegOpnd *regOpnd   = IR::RegOpnd::New(nullptr, reg, type, this->m_func);
@@ -1427,7 +1439,6 @@ LowererMDArch::LowerEntryInstr(IR::EntryInstr * entryInstr)
             }
         }
     }
-
     //
     // Now that we know the exact stack size, lets fix it for alignment
     // The stack on entry would be aligned. VC++ recommends that the stack
@@ -1793,7 +1804,8 @@ LowererMDArch::LowerExitInstr(IR::ExitInstr * exitInstr)
 
     for (RegNum reg = (RegNum)(RegNOREG + 1); reg < RegNumCount; reg = (RegNum)(reg+1))
     {
-        if ((LinearScan::IsCalleeSaved(reg) && (this->m_func->HasTry() || this->m_func->m_regsUsed.Test(reg))))
+        if ((LinearScan::IsCalleeSaved(reg) && (this->m_func->HasTry() || this->m_func->m_regsUsed.Test(reg))) ||
+            (this->m_func->GetJnFunction()->GetIsAsmJsFunction() && (LinearScan::GetRegAttribs(reg) & RA_ASMJSRESERVED) && m_func->IsLoopBody()))
         {
             IRType       type    = RegTypes[reg];
             IR::RegOpnd *regOpnd = IR::RegOpnd::New(nullptr, reg, type, this->m_func);
@@ -1935,6 +1947,13 @@ LowererMDArch::EmitPtrInstr(IR::Instr *instr)
     {
         LowererMD::MakeDstEquSrc1(instr);
     }
+}
+
+IR::Instr * LowererMDArch::LoadAsmJsHeap(IR::Instr * instr)
+{
+    instr->GetDst()->AsRegOpnd()->SetReg(RegRBX);
+    return instr->m_prev;
+
 }
 
 void

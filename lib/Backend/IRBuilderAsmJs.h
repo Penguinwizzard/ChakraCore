@@ -31,6 +31,11 @@ public:
     {
         func->m_workItem->InitializeReader(m_jnReader, m_statementReader);
         m_asmFuncInfo = m_func->GetJnFunction()->GetAsmJsFunctionInfo();
+        m_entryPoint = (Js::FunctionEntryPointInfo*)(func->m_workItem->GetEntryPoint());
+        Assert(m_entryPoint);
+        m_ModuleAddress = m_entryPoint->GetModuleAddress();
+        Assert(m_ModuleAddress);
+        if (m_entryPoint->IsLoopBody())
         if (func->m_workItem->GetEntryPoint()->IsLoopBody())
         {
             Js::LoopEntryPointInfo* loopEntryPointInfo = (Js::LoopEntryPointInfo*)(func->m_workItem->GetEntryPoint());
@@ -40,6 +45,7 @@ public:
                 func->isTJLoopBody = true;
             }
         }
+        m_ArrayBufferRef = (Js::ArrayBuffer**)((Js::Var *)m_ModuleAddress + Js::AsmJsModuleMemory::MemoryTableBeginOffset);
     }
 
     void Build();
@@ -180,4 +186,7 @@ private:
 #if DBG
     uint32                  m_offsetToInstructionCount;
 #endif
+    Js::ArrayBuffer**       m_ArrayBufferRef;
+    uintptr_t               m_ModuleAddress;
+    Js::FunctionEntryPointInfo* m_entryPoint;
 };

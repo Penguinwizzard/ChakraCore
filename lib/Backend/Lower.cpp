@@ -2454,6 +2454,10 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             instrPrev = this->LowerLdEnv(instr);
             break;
 
+        case Js::OpCode::LdAsmJsHeap:
+            instrPrev = this->LowerLdAsmJsHeap(instr);
+            break;
+
         case Js::OpCode::LdElemUndef:
             this->LowerLdElemUndef(instr);
             break;
@@ -8440,7 +8444,6 @@ Lowerer::LowerLdArrViewElem(IR::Instr * instr)
         }
         done = instr;
     }
-
     InsertMove(dst, src1, done);
 
     instr->Remove();
@@ -20811,6 +20814,7 @@ Lowerer::ValidOpcodeAfterLower(IR::Instr* instr, Func * func)
     case Js::OpCode::LoweredStartCall:
     case Js::OpCode::Nop:
     case Js::OpCode::ArgOut_A_InlineBuiltIn:
+    case Js::OpCode::LdAsmJsHeap:
         return func && !func->isPostPeeps;
 
     case Js::OpCode::InlineeStart:
@@ -22048,6 +22052,12 @@ Lowerer::LoadSlotArrayWithCachedProtoType(IR::Instr * instrInsert, IR::PropertyS
         // If we use inline slot return the address of the prototype object
         return IR::MemRefOpnd::New(prototypeObject, TyMachReg, this->m_func);
     }
+}
+
+IR::Instr *
+Lowerer::LowerLdAsmJsHeap(IR::Instr * instr)
+{
+    return m_lowererMD.LoadAsmJsHeap(instr);
 }
 
 IR::Instr *

@@ -390,8 +390,13 @@ setup_reg_args_3:
         movq xmm3, qword ptr [r11]
 SIMDArg3:
         movups xmm3, xmmword ptr [r11]
-
+        
 setup_args_done:
+
+        mov rbx, [rcx + 58h]
+        mov rbx, [rbx]
+        mov rbx, [rbx+30h]
+
         call rax
 done:
         lea rsp, [rbp]

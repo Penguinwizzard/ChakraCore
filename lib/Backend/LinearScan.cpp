@@ -274,7 +274,7 @@ LinearScan::RegAlloc()
         }
     }
     // review: should we introduce a method LowererMD::GetUsedRegCountForRegAlloc ...
-    AssertMsg((this->intRegUsedCount + this->floatRegUsedCount) == this->linearScanMD.UnAllocatableRegCount(this->func) , "RegUsedCount is wrong");
+    AssertMsg((this->intRegUsedCount + this->floatRegUsedCount) == this->linearScanMD.UnAllocatableRegCount(this->func) + (this->func->GetJnFunction()->GetIsAsmJsFunction() ? 1 : 0), "RegUsedCount is wrong");
     AssertMsg(this->activeLiveranges->Empty(), "Active list not empty");
     AssertMsg(this->stackPackInUseLiveRanges->Empty(), "Spilled list not empty");
 
@@ -2432,6 +2432,11 @@ LinearScan::AllocateNewLifetimes(IR::Instr *instr)
             }
             reg = this->FindReg(newLifetime, nullptr);     
         }
+        else if (!IsAllocatable(newLifetime->reg))
+        {
+            reg = newLifetime->reg;
+            continue;
+        }
         else
         {
             // This lifetime is already assigned a physical register.  Make
@@ -2824,6 +2829,7 @@ LinearScan::SpillLiveRange(Lifetime * spilledRange, IR::Instr *insertionInstr)
 void
 LinearScan::SpillReg(RegNum reg, bool forceSpill /* = false */)
 {
+    
     Lifetime *spilledRange = nullptr;
     if (activeRegs.Test(reg))
     {
@@ -3251,7 +3257,7 @@ LinearScan::IsCallerSaved(RegNum reg) const
 bool
 LinearScan::IsAllocatable(RegNum reg) const
 {
-    return !(RegAttribs[reg] & RA_DONTALLOCATE) && this->linearScanMD.IsAllocatable(reg, this->func);
+    return !(RegAttribs[reg] & RA_DONTALLOCATE) && this->linearScanMD.IsAllocatable(reg, this->func) && !(this->func->GetJnFunction()->GetIsAsmJsFunction() && (RegAttribs[reg] & RA_ASMJSRESERVED));
 }
 
 // LinearScan::KillImplicitRegs

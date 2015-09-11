@@ -711,8 +711,7 @@ IRBuilderAsmJs::BuildHeapBufferReload(uint32 offset)
 
     // ArrayBuffer buffer
     dstOpnd = BuildDstOpnd(AsmJsRegSlots::BufferReg, TyVar);
-    srcOpnd = IR::IndirOpnd::New(BuildSrcOpnd(AsmJsRegSlots::ArrayReg, TyVar), Js::ArrayBuffer::GetBufferOffset(), TyVar, m_func);
-    instr = IR::Instr::New(Js::OpCode::Ld_A, dstOpnd, srcOpnd, m_func);
+    instr = IR::Instr::New(Js::OpCode::LdAsmJsHeap, dstOpnd, m_func);
     AddInstr(instr, offset);
 
     // ArrayBuffer length
@@ -729,10 +728,13 @@ IRBuilderAsmJs::BuildConstantLoads()
     uint32 floatConstCount = m_func->GetJnFunction()->GetAsmJsFunctionInfo()->GetFloatConstCount();
     uint32 doubleConstCount = m_func->GetJnFunction()->GetAsmJsFunctionInfo()->GetDoubleConstCount();
     Js::Var * constTable = static_cast<Js::Var *>(m_func->GetJnFunction()->GetConstTable());
-
+    /*
     // Load FrameDisplay
     IR::RegOpnd * dstOpnd = BuildDstOpnd(AsmJsRegSlots::ModuleMemReg, TyVar);
     IR::Instr * instr = IR::Instr::New(Js::OpCode::LdAsmJsEnv, dstOpnd, m_func);
+    */
+    IR::RegOpnd * dstOpnd = BuildDstOpnd(AsmJsRegSlots::ModuleMemReg, TyVar);
+    IR::Instr * instr = IR::Instr::New(Js::OpCode::Ld_A, dstOpnd, IR::AddrOpnd::New((Js::FunctionEntryPointInfo*)(m_func->m_workItem->GetEntryPoint())->GetModuleAddress(), IR::AddrOpndKindDynamicMisc, m_func, true), m_func);
     AddInstr(instr, Js::Constants::NoByteCodeOffset);
 
     // Load heap buffer
@@ -1412,7 +1414,6 @@ IRBuilderAsmJs::BuildAsmTypedArr(Js::OpCodeAsmJs newOpcode, uint32 offset, uint3
     default:
         Assume(UNREACHED);
     }
-    IR::Opnd * sizeOpnd = nullptr;
     IR::Instr * instr = nullptr;
     IR::Instr * maskInstr = nullptr;
     IR::RegOpnd * regOpnd = nullptr;
@@ -1456,7 +1457,6 @@ IRBuilderAsmJs::BuildAsmTypedArr(Js::OpCodeAsmJs newOpcode, uint32 offset, uint3
         indirOpnd = IR::IndirOpnd::New(BuildSrcOpnd(AsmJsRegSlots::BufferReg, TyVar), maskedOpnd, type, m_func);
         indirOpnd->GetBaseOpnd()->SetValueType(arrayType);
 
-        sizeOpnd = BuildSrcOpnd(AsmJsRegSlots::LengthReg, TyUint32);
     }
     switch (newOpcode)
     {
@@ -1471,7 +1471,7 @@ IRBuilderAsmJs::BuildAsmTypedArr(Js::OpCodeAsmJs newOpcode, uint32 offset, uint3
             regOpnd = BuildDstOpnd(valueRegSlot, TyInt32);
             regOpnd->SetValueType(ValueType::GetInt(false));
         }
-        instr = IR::Instr::New(op, regOpnd, indirOpnd, sizeOpnd, m_func);
+        instr = IR::Instr::New(op, regOpnd, indirOpnd, m_func);
         break;
 
     case Js::OpCodeAsmJs::LdArrConst:
@@ -1486,10 +1486,9 @@ IRBuilderAsmJs::BuildAsmTypedArr(Js::OpCodeAsmJs newOpcode, uint32 offset, uint3
             regOpnd->SetValueType(ValueType::GetInt(false));
         }
 
-        sizeOpnd = BuildSrcOpnd(AsmJsRegSlots::LengthReg, TyUint32);
         indirOpnd = IR::IndirOpnd::New(BuildSrcOpnd(AsmJsRegSlots::BufferReg, TyVar), slotIndex, type, m_func);
         indirOpnd->GetBaseOpnd()->SetValueType(arrayType);
-        instr = IR::Instr::New(op, regOpnd, indirOpnd, sizeOpnd, m_func);
+        instr = IR::Instr::New(op, regOpnd, indirOpnd, m_func);
         break;
 
     case Js::OpCodeAsmJs::StArr:
@@ -1504,7 +1503,7 @@ IRBuilderAsmJs::BuildAsmTypedArr(Js::OpCodeAsmJs newOpcode, uint32 offset, uint3
             regOpnd = BuildSrcOpnd(valueRegSlot, TyInt32);
             regOpnd->SetValueType(ValueType::GetInt(false));
         }
-        instr = IR::Instr::New(op, indirOpnd, regOpnd, sizeOpnd, m_func);
+        instr = IR::Instr::New(op, indirOpnd, regOpnd, m_func);
         break;
 
     case Js::OpCodeAsmJs::StArrConst:
@@ -1519,10 +1518,9 @@ IRBuilderAsmJs::BuildAsmTypedArr(Js::OpCodeAsmJs newOpcode, uint32 offset, uint3
             regOpnd->SetValueType(ValueType::GetInt(false));
         }
 
-        sizeOpnd = BuildSrcOpnd(AsmJsRegSlots::LengthReg, TyUint32);
         indirOpnd = IR::IndirOpnd::New(BuildSrcOpnd(AsmJsRegSlots::BufferReg, TyVar), slotIndex, type, m_func);
         indirOpnd->GetBaseOpnd()->SetValueType(arrayType);
-        instr = IR::Instr::New(op, indirOpnd, regOpnd, sizeOpnd, m_func);
+        instr = IR::Instr::New(op, indirOpnd, regOpnd, m_func);
         break;
 
     default:
