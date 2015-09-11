@@ -224,7 +224,7 @@ void ThreadContext::InitAvailableCommit()
     // Once per process: get the available commit for the process from the OS and push it to the AutoSystemInfo.
     // (This must be done lazily, outside DllMain. And it must be done from the Runtime, since the common lib
     // doesn't have access to the DelayLoadLibrary stuff.)
-    ULONG64 commit;
+    ULONG64 commit = 0;
     BOOL success = AutoSystemInfo::Data.GetAvailableCommit(&commit);
     if (!success)
     {
