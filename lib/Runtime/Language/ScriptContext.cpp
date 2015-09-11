@@ -9,6 +9,7 @@
 #include "DebugWriter.h"
 #include "RegexStats.h"
 
+#include "ByteCode\ByteCodeAPI.h"
 #include "Library\AsyncDebug.h"
 #include "Library\ProfileString.h"
 #include "Debug\DiagHelperMethodWrapper.h"

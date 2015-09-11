@@ -4,6 +4,7 @@
 
 #include "RuntimeLibraryPch.h"
 #include <strsafe.h>
+#include "ByteCode\ByteCodeAPI.h"
 #include "Exceptions\EvalDisabledException.h"
 
 namespace Js

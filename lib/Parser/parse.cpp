@@ -3,6 +3,7 @@
 //----------------------------------------------------------------------------
 
 #include "ParserPch.h"
+#include "FormalsUtil.h"
 #if DBG_DUMP
 void PrintPnodeWIndent(ParseNode *pnode,int indentAmt);
 #endif

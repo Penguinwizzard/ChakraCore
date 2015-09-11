@@ -3,6 +3,7 @@
 //----------------------------------------------------------------------------
 
 #include "RuntimeLanguagePch.h"
+#include "Language\JavascriptFunctionArgIndex.h"
 
 #if !defined(_M_IX86_OR_ARM32) && !defined(_M_X64_OR_ARM64)
 #error Stack walker not defined for this arch

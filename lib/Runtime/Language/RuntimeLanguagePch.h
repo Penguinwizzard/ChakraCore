@@ -7,13 +7,12 @@
 #include "Parser.h"
 
 #include "Runtime.h"
-#include "ByteCode\AsmJsByteCodeWriter.h"
+
 
 #include "Language\ByteCodeSerializer.h"
 #include "Language\AsmJsTypes.h"
 #include "Language\AsmJsUtils.h"
 #include "Language\AsmJsLink.h"
-#include "Language\AsmJsByteCodeGenerator.h"
 #include "Language\AsmJsModule.h"
 #include "Language\AsmJs.h"
 #ifdef ASMJS_PLAT
@@ -29,13 +28,10 @@
 
 #include "Language\ScriptContextProfiler.h"
 #include "Language\JavascriptMathOperators.h"
-
+#include "Language\JavascriptStackWalker.h"
 #ifdef DYNAMIC_PROFILE_STORAGE
 #include "Language\DynamicProfileStorage.h"
 #endif
-
-
-#include "ByteCode\AsmJSByteCodeDumper.h"
 
 #include "Library\EtwTrace.h"
 
@@ -71,6 +67,10 @@
 #include "Debug\DebugManager.h"
 #include "Debug\ProbeContainer.h"
 #include "Debug\DebugContext.h"
+
+#ifdef ENABLE_BASIC_TELEMETRY
+#include "..\..\..\private\lib\Telemetry\ScriptContextTelemetry.h"
+#endif
 
 // .inl files
 #include "Language\CacheOperators.inl"

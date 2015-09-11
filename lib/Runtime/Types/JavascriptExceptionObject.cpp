@@ -3,6 +3,7 @@
 //----------------------------------------------------------------------------
 
 #include "RuntimeTypePch.h"
+#include "Language\JavascriptStackWalker.h"
 
 namespace Js
 {

@@ -82,10 +82,15 @@
 #include "Library\SIMDFloat64x2Operation.h"
 #endif
 
-#include "Library\ThreadBoundThreadContextManager.h"
+
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
 #include "Library\ScriptMemoryDumper.h"
 #endif
 
+#include "Language\JavascriptStackWalker.h"
+
+#ifdef ENABLE_BASIC_TELEMETRY
+#include "..\..\..\private\lib\Telemetry\ScriptContextTelemetry.h"
+#endif
 #endif // !IsJsDiag

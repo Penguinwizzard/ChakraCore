@@ -68,6 +68,7 @@
     <ClInclude Include="cmperr.h" />
     <ClInclude Include="DebugWriter.h" />
     <ClInclude Include="errstr.h" />
+    <ClInclude Include="formalsutil.h" />
     <ClInclude Include="globals.h" />
     <ClInclude Include="hash.h" />
     <ClInclude Include="idiom.h" />

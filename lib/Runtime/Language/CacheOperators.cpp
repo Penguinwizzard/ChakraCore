@@ -4,6 +4,9 @@
 
 #include "RuntimeLanguagePch.h"
 
+#if DBG_DUMP
+#include "Language\JavascriptStackWalker.h"
+#endif
 namespace Js
 {
     void CacheOperators::CachePropertyRead(

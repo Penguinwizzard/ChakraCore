@@ -3,6 +3,7 @@
 //----------------------------------------------------------------------------
 
 #include "RuntimeLibraryPch.h"
+#include "Language\JavascriptFunctionArgIndex.h"
 
 namespace Js
 { 

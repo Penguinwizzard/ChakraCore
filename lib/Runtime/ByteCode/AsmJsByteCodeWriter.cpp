@@ -3,6 +3,7 @@
 //----------------------------------------------------------------------------
 
 #include "RuntimeByteCodePch.h"
+#include "ByteCode\AsmJsByteCodeWriter.h"
 namespace Js {
 
     template <>

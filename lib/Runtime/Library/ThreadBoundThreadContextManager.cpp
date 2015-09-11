@@ -3,6 +3,8 @@
 //----------------------------------------------------------------------------
 
 #include "RuntimeLibraryPch.h"
+#include "Library\ThreadContextTLSEntry.h"
+#include "Library\ThreadBoundThreadContextManager.h"
 
 ThreadBoundThreadContextManager::EntryList ThreadBoundThreadContextManager::entries(&HeapAllocator::Instance);
 JsUtil::BackgroundJobProcessor * ThreadBoundThreadContextManager::s_sharedJobProcessor = NULL;

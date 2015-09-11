@@ -4,7 +4,7 @@
 
 #include "RuntimeLibraryPch.h"
 #include "Exception.h"
-
+#include "Library\ThreadContextTLSEntry.h"
 
 void JsUtil::ExternalApi::RecoverUnusedMemory()
 {

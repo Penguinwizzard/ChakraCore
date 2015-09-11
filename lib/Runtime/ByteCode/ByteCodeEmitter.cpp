@@ -3,7 +3,7 @@
 //----------------------------------------------------------------------------
 
 #include "RuntimeByteCodePch.h"
-#include "Language\AsmJsByteCodeGenerator.h"
+#include "FormalsUtil.h"
 #include "Language\AsmJs.h"
 
 // TODO (yongqu) get rid of pragma warning

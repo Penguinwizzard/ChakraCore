@@ -4,6 +4,7 @@
 
 #include "RuntimeLibraryPch.h"
 #include "BackEndAPI.h"
+
 extern "C" PVOID _ReturnAddress(VOID);
 #pragma intrinsic(_ReturnAddress)
 

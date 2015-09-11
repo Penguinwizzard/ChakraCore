@@ -16,6 +16,9 @@
 class NativeCodeGenerator;
 class BackgroundParser;
 struct IActiveScriptDirect;
+#ifdef ENABLE_BASIC_TELEMETRY
+class ScriptContextTelemetry;
+#endif
 namespace Js
 {
     class ScriptContext;

@@ -7,6 +7,7 @@
 
 #if DBG_DUMP
 #include "Language\AsmJsModule.h"
+#include "ByteCode\AsmJSByteCodeDumper.h"
 namespace Js
 {
 

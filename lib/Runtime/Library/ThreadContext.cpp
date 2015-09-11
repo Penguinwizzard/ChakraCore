@@ -5,13 +5,13 @@
 #include "RuntimeLibraryPch.h"
 #include "BackEndAPI.h"
 #include "ThreadServiceWrapper.h"
-#include "ThreadBoundThreadContextManager.h"
 #include "Types\TypePropertyCache.h"
 #include "Debug\DebuggingFlags.h"
 #include "Debug\DiagProbe.h"
 #include "Debug\DebugManager.h"
-
 #include "StandardChars.h"
+#include "Library\ThreadContextTLSEntry.h"
+#include "Library\ThreadBoundThreadContextManager.h"
 
 #if DBG
 #include "Memory\StressTest.h"

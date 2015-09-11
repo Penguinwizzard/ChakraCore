@@ -3,7 +3,7 @@
 //----------------------------------------------------------------------------
 
 #include "RuntimeDebugPch.h"
-
+#include "Language\JavascriptStackWalker.h"
 namespace Js
 {
     DebugManager::DebugManager(ThreadContext* _pThreadContext, AllocationPolicyManager * allocationPolicyManager) :

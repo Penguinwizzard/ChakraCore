@@ -12,6 +12,7 @@
 #include "common\ByteSwap.h"
 #include "Library\dataview.h"
 #include "Library\JavascriptSymbol.h"
+#include "Library\ThreadContextTLSEntry.h"
 
 // Parser Includes
 #include "cmperr.h"     // For ERRnoMemory

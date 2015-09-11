@@ -1,6 +1,8 @@
 // Copyright (C) Microsoft. All rights reserved.
 
 #include "RuntimeTypePch.h"
+#include "ByteCode\ByteCodeAPI.h"
+#include "ByteCode\ByteCodeDumper.h"
 #include "Language\AsmJsTypes.h"
 #include "Language\AsmJsModule.h"
 #include "Language\ByteCodeSerializer.h"

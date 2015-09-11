@@ -459,13 +459,11 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #ifdef ENABLE_BASIC_TELEMETRY
 // REVIEW: ChakraCore Dependency
 #include "..\..\..\private\lib\Telemetry\Telemetry.h"
-#include "..\..\..\private\lib\Telemetry\ScriptContextTelemetry.h"
 #include "..\..\..\private\lib\Telemetry\DirectCall.h"
 #endif
 #include "Library\ThreadContext.h"
 
 #include "Library\StackProber.h"
-#include "Library\ThreadContextTLSEntry.h"
 
 #include "Language\EvalMapRecord.h"
 #include "Language\RegexPatternMruMap.h"
@@ -475,13 +473,7 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Language\scriptContextbase.h"
 #include "Language\ScriptContext.h"
 
-#include "Language\JavascriptFunctionArgIndex.h"
-#include "Language\JavascriptStackWalker.h"
-#include "ByteCode\ByteCodeDumper.h"
 #include "ByteCode\ByteCodeReader.h"
-#include "ByteCode\ByteCodeWriter.h"
-#include "ByteCode\ByteCodeGenerator.h"
-
 #include "Language\InterpreterStackFrame.h"
 #include "Language\LeaveScriptObject.h"
 
