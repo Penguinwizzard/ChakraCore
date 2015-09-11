@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
+// Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
 #include "RuntimeLibraryPch.h"
@@ -62,7 +62,7 @@ namespace JSON
         __declspec (align(8)) JSONParser parser(scriptContext, reviver);
         Js::Var result = NULL;
 
-        __try 
+        __try
         {
             result = parser.Parse(input);
 
@@ -160,8 +160,8 @@ namespace JSON
         Js::JavascriptLibrary* library = function->GetType()->GetLibrary();
         Js::ScriptContext* scriptContext = library->GetScriptContext();
         AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"JSON.stringify");
-        
-        Assert(!(callInfo.Flags & Js::CallFlags_New)); 
+
+        Assert(!(callInfo.Flags & Js::CallFlags_New));
 
         if (args.Info.Count < 2)
         {
@@ -217,7 +217,7 @@ namespace JSON
                     length = Js::JavascriptConversion::ToUInt32(Js::JavascriptOperators::OP_GetLength(replacerArg, scriptContext), scriptContext);
                 }
 
-                uint32 count = 0; 
+                uint32 count = 0;
                 Js::Var item = nullptr;
 
                 if (isArray)
@@ -261,7 +261,7 @@ namespace JSON
                          nameTable = AnewArray(nameTableAlloc, StringifySession::StringTable, count);
                     }
                     if (isArray && !!reArray->IsCrossSiteObject())
-                    {        
+                    {
                         for (uint32 i = 0; i < length; i++)
                         {
                             item = reArray->DirectGetItem(i);
@@ -278,7 +278,6 @@ namespace JSON
                             }
                         }
                     }
-
 
                     //Eliminate duplicates in replacer array.
                     BEGIN_TEMP_ALLOCATOR(tempAlloc, scriptContext, L"JSON")
@@ -317,7 +316,7 @@ namespace JSON
         }
 
         BEGIN_TEMP_ALLOCATOR(tempAlloc, scriptContext, L"JSON")
-        {            
+        {
             stringifySession.CompleteInit(space, tempAlloc);
 
             Js::DynamicObject* wrapper = scriptContext->GetLibrary()->CreateObject();
@@ -333,7 +332,6 @@ namespace JSON
         RELEASE_TEMP_GUEST_ALLOCATOR(nameTableAlloc, scriptContext);
         return result;
     }
-
 
     // -------- StringifySession implementation ------------//
 
@@ -385,9 +383,10 @@ namespace JSON
         {
             gap = Js::JavascriptString::NewCopyBuffer(buffer, len, scriptContext);
         }
-        
+
         objectStack = Anew(tempAlloc, JSONStack, tempAlloc, scriptContext);
     }
+
     Js::Var StringifySession::Str(uint32 index, Js::Var holder)
     {
         Js::Var value;
@@ -400,7 +399,7 @@ namespace JSON
                 return value;
             }
         }
-        else 
+        else
         {
             Assert(Js::JavascriptOperators::IsArray(holder));
             Js::RecyclableObject *arr = RecyclableObject::FromVar(holder);
@@ -417,6 +416,7 @@ namespace JSON
         Js::JavascriptString *key = scriptContext->GetIntegerString(index);
         return StrHelper(key, value, holder);
     }
+
     Js::Var StringifySession::Str(Js::JavascriptString* key, Js::PropertyId keyId, Js::Var holder)
     {
         Js::Var value;
@@ -430,9 +430,9 @@ namespace JSON
         {
             return scriptContext->GetLibrary()->GetUndefined();;
         }
-        return StrHelper(key, value, holder);   
-
+        return StrHelper(key, value, holder);
     }
+
     Js::Var StringifySession::StrHelper(Js::JavascriptString* key, Js::Var value, Js::Var holder)
     {
         PROBE_STACK(scriptContext, Js::Constants::MinStackDefault);
@@ -441,7 +441,7 @@ namespace JSON
         Js::Var values[3];
         Js::Arguments args(0, values);
         Js::Var undefined = scriptContext->GetLibrary()->GetUndefined();
-        
+
         //check and apply 'toJSON' filter
         if (Js::JavascriptOperators::IsJsNativeObject(value) || (Js::JavascriptOperators::IsObject(value)))
         {
@@ -457,6 +457,7 @@ namespace JSON
                 value = Js::JavascriptFunction::CallFunction<true>(func, func->GetEntryPoint(), args);
             }
         }
+
         //check and apply the user defined replacer filter
         if (ReplacerFunction == replacerType)
         {
@@ -468,6 +469,7 @@ namespace JSON
             Js::RecyclableObject* func = replacer.ReplacerFunction;
             value = Js::JavascriptFunction::CallFunction<true>(func, func->GetEntryPoint(), args);
         }
+
         Js::TypeId id = Js::JavascriptOperators::GetTypeId(value);
         if (Js::TypeIds_NumberObject == id)
         {
@@ -481,11 +483,12 @@ namespace JSON
         {
             value = Js::JavascriptBooleanObject::FromVar(value)->GetValue() ? scriptContext->GetLibrary()->GetTrue() : scriptContext->GetLibrary()->GetFalse();
         }
-        
+
         id = Js::JavascriptOperators::GetTypeId(value);
         switch (id)
         {
         case Js::TypeIds_Undefined:
+        case Js::TypeIds_Symbol:
             return undefined;
 
         case Js::TypeIds_Null:
@@ -506,7 +509,7 @@ namespace JSON
             {
                 return scriptContext->GetLibrary()->GetNullDisplayString();
             }
-            
+
         case Js::TypeIds_UInt64Number:
             if (Js::NumberUtilities::IsFinite(static_cast<double>(Js::JavascriptUInt64Number::FromVar(value)->GetValue())))
             {
@@ -778,7 +781,7 @@ namespace JSON
         Js::JavascriptString* indentString = NULL;          // gap*indent
 
         uint32 length;
-        
+
         if (Js::JavascriptArray::Is(value))
         {
             length = Js::JavascriptArray::FromAnyArray(value)->GetLength();
@@ -796,7 +799,7 @@ namespace JSON
         {
             result = scriptContext->GetLibrary()->CreateStringFromCppLiteral(L"[]");
         }
-        else 
+        else
         {
             if (length == 1)
             {
