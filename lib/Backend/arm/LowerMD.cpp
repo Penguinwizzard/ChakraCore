@@ -3,6 +3,7 @@
 //----------------------------------------------------------------------------
 
 #include "BackEnd.h"
+#include "Language\JavascriptFunctionArgIndex.h"
 
 const Js::OpCode LowererMD::MDUncondBranchOpcode = Js::OpCode::B;
 const Js::OpCode LowererMD::MDTestOpcode = Js::OpCode::TST;

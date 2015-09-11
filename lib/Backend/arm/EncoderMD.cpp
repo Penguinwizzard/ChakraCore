@@ -4,6 +4,7 @@
 
 #include "BackEnd.h"
 #include "ARMEncode.h"
+#include "Language\JavascriptFunctionArgIndex.h"
 
 const FormTable * InstrEncode[]={
 #define MACRO(name, jnLayout, attrib, byte2, form, opbyte, ...) opbyte, 
