@@ -441,7 +441,6 @@ PHASE(All)
 #define DEFAULT_CONFIG_ProfileBasedSpeculationCap (1600)
 #define DEFAULT_CONFIG_Verbose              (false)
 #define DEFAULT_CONFIG_ForceStrictMode      (false)
-#define DEFAULT_CONFIG_NoWinRTFastSig       (false)
 #define DEFAULT_CONFIG_EnableEvalMapCleanup (true)
 #define DEFAULT_CONFIG_ExpirableCollectionGCCount (5)  // Number of GCs during which entry point profiling occurs
 #define DEFAULT_CONFIG_ExpirableCollectionTriggerThreshold (50)  // Threshold at which Entry Point Collection is triggered
@@ -580,7 +579,6 @@ PHASE(All)
 
 #define DEFAULT_CONFIG_Sse                  (-1)
 
-#define DEFAULT_CONFIG_TargetWinRTVersion   (1)
 #define DEFAULT_CONFIG_DeletedPropertyReuseThreshold (32)
 #define DEFAULT_CONFIG_BigDictionaryTypeHandlerThreshold (0xffff)
 #define DEFAULT_CONFIG_ForceStringKeyedSimpleDictionaryTypeHandler (false)
@@ -620,8 +618,12 @@ PHASE(All)
 #define DEFAULT_CONFIG_InvalidateSolutionContextsForGetStructure (true)
 
 #define DEFAULT_CONFIG_DeferLoadingAvailableSource  (false)
+#ifdef ENABLE_PROJECTION
+#define DEFAULT_CONFIG_NoWinRTFastSig       (false)
+#define DEFAULT_CONFIG_TargetWinRTVersion   (1)
 #define DEFAULT_CONFIG_WinRTDelegateInterfaces      (false)
 #define DEFAULT_CONFIG_WinRTAdaptiveApps            (true)
+#endif
 
 #define DEFAULT_CONFIG_RecyclerForceMarkInterior (false)
 
@@ -901,8 +903,10 @@ FLAGPR           (Boolean, ES6, ES6Verbose             , "Enable ES6 verbose tra
 FLAGPR_REGOVR_EXP(Boolean, ES6, ArrayBufferTransfer    , "Enable ArrayBuffer.transfer"                              , DEFAULT_CONFIG_ArrayBufferTransfer)
 // /ES6 (BLUE+1) features/flags
 
+#ifdef ENABLE_PROJECTION
 FLAGNR(Boolean, WinRTDelegateInterfaces , "Treat WinRT Delegates as Interfaces when determing their resolvability.", DEFAULT_CONFIG_WinRTDelegateInterfaces)
 FLAGR(Boolean, WinRTAdaptiveApps        , "Enable the adaptive apps feature, allowing for variable proejction."     , DEFAULT_CONFIG_WinRTAdaptiveApps)
+#endif
 
 // This flag to be removed once JITing generator functions is stable
 FLAGNR(Boolean, JitES6Generators        , "Enable JITing of ES6 generators", false)
@@ -1079,7 +1083,9 @@ FLAGR (Boolean, NoNative              , "Disable native codegen", false)
 FLAGNR(Number,  NopFrequency          , "Frequency of NOPs inserted by NOP insertion phase.  A NOP is guaranteed to be inserted within a range of (1<<n) instrs (default=8)", DEFAULT_CONFIG_NopFrequency)
 FLAGNR(Boolean, NoStrictMode          , "Disable strict mode checks on all functions", false)
 FLAGNR(Boolean, NormalizeStats        , "When dumping stats, do some normalization (used with -instrument:linearscan)", false)
+#ifdef ENABLE_PROJECTION
 FLAGNR(Boolean, NoWinRTFastSig        , "Disable fast call for common WinRT function signatures", false)
+#endif
 FLAGNR(Phases,  Off                   , "Turn off specific phases or feature.(Might not work for all phases)", )
 FLAGNR(Phases,  OffProfiledByteCode   , "Turn off specific byte code for phases or feature.(Might not work for all phases)", )
 FLAGNR(Phases,  On                    , "Turn on specific phases or feature.(Might not work for all phases)", )
@@ -1220,9 +1226,13 @@ FLAGNR(Boolean, UseFullName           , "Enable fully qualified name", DEFAULT_C
 FLAGNR(Boolean, UseFunctionIdForTrace , "Use function id instead of function number for trace output", false)
 FLAGNR(Boolean, Utf8                  , "Use UTF8 for file output", false)
 FLAGR (Number,  Version               , "Version in which to run the jscript engine. [one of 1,2,3,4,5,6]. Default is latest for jc/jshost, 1 for IE", 6 )
+#ifdef ENABLE_PROJECTION
 FLAGR (Number,  HostType              , "Host type in which to run the jscript engine. [one of 1,2]. Default is 1 = Browser.", 1)
+#endif
 FLAGR (Boolean, WERExceptionSupport   , "WER feature for extended exception support. Enabled when WinRT is enabled", false )
+#ifdef ENABLE_PROJECTION
 FLAGR (Boolean, WinRTConstructorAllowed, "Whether WinRT contructors is allowed in WebView host type. Constructor is always allowed in other host type ", false)
+#endif
 FLAGNR(Boolean, errorStackTrace       , "error.StackTrace feature. Remove when feature complete", DEFAULT_CONFIG_errorStackTrace)
 FLAGNR(Boolean, DoHeapEnumOnEngineShutdown, "Perform a heap enumeration whenever shut a script engine down", false)
 #ifdef HEAP_ENUMERATION_VALIDATION
@@ -1246,16 +1256,18 @@ FLAGNR(Boolean, EnableEvalMapCleanup, "Enable cleaning up the eval map", true)
 #ifdef PROFILE_MEM
 FLAGNR(Boolean, TraceObjectAllocation, "Enable cleaning up the eval map", false)
 #endif
+#ifdef ENABLE_PROJECTION
 FLAGNR(Boolean, EnableThirdPartyGCPressure, "Enable use of GCPressure attribute value on 3rd party WinRT objects (not in Windows namespace) (default: false)", false)
-FLAGNR(Number,  Sse                   , "Virtually disables SSE-based optimizations above the specified SSE level in the Chakra JIT (does not affect CRT SSE usage)", DEFAULT_CONFIG_Sse)
 FLAGNR(Number, TargetWinRTVersion, "Specifies WinRT version number to target. [one of 0,1,2,3,4]. Default is 1 = NTDDI_WIN8", DEFAULT_CONFIG_TargetWinRTVersion)
 FLAGNR(Boolean, EnableVersioningAllAssemblies, "Enable versioning behavior for all assemblies, regardless of host flag (default: false)", false)
+FLAGR(Boolean, FailFastIfDisconnectedDelegate, "When set fail fast if disconnected delegate is invoked", DEFAULT_CONFIG_FailFastIfDisconnectedDelegate)
+#endif
+FLAGNR(Number, Sse, "Virtually disables SSE-based optimizations above the specified SSE level in the Chakra JIT (does not affect CRT SSE usage)", DEFAULT_CONFIG_Sse)
 FLAGNR(Number,  DeletedPropertyReuseThreshold, "Start reusing deleted property indexes after this many properties are deleted. Zero to disable reuse.", DEFAULT_CONFIG_DeletedPropertyReuseThreshold)
 FLAGNR(Boolean, ForceStringKeyedSimpleDictionaryTypeHandler, "Force switch to string keyed version of SimpleDictionaryTypeHandler on first new property added to a SimpleDictionaryTypeHandler", DEFAULT_CONFIG_ForceStringKeyedSimpleDictionaryTypeHandler)
 FLAGNR(Number,  BigDictionaryTypeHandlerThreshold, "Min Slot Capacity required to convert DictionaryTypeHandler to BigDictionaryTypeHandler.(Advisable to give more than 15 - to avoid false positive cases)", DEFAULT_CONFIG_BigDictionaryTypeHandlerThreshold)
 FLAGNR(Boolean, TypeSnapshotEnumeration, "Create a true snapshot of the type of an object before enumeration and enumerate only those properties.", DEFAULT_CONFIG_TypeSnapshotEnumeration)
 FLAGR (Boolean, EnumerationCompat,      "When set in IE10 mode, restores enumeration behavior to RC behavior", DEFAULT_CONFIG_EnumerationCompat)
-FLAGR (Boolean, FailFastIfDisconnectedDelegate,      "When set fail fast if disconnected delegate is invoked", DEFAULT_CONFIG_FailFastIfDisconnectedDelegate)
 FLAGNR(Boolean, IsolatePrototypes, "Should prototypes get unique types not shared with other objects (default: true)?", DEFAULT_CONFIG_IsolatePrototypes)
 FLAGNR(Boolean, ChangeTypeOnProto, "When becoming a prototype should the object switch to a new type (default: true)?", DEFAULT_CONFIG_ChangeTypeOnProto)
 FLAGNR(Boolean, ShareInlineCaches, "Determines whether inline caches are shared between all loads (or all stores) of the same property ID", DEFAULT_CONFIG_ShareInlineCaches)

@@ -231,7 +231,7 @@ void ThreadContext::InitAvailableCommit()
     if (!success)
     {
 		commit = (ULONG64)-1;
-#if NTBUILD
+#ifdef NTBUILD
 		APP_MEMORY_INFORMATION AppMemInfo;
         success = GetWinCoreProcessThreads()->GetProcessInformation(
             GetCurrentProcess(),
@@ -3558,6 +3558,11 @@ ThreadServiceWrapper* ThreadContext::GetThreadServiceWrapper()
     return threadServiceWrapper;
 }
 
+uint ThreadContext::GetRandomNumber()
+{
+    return (uint)GetEntropy().GetRand();
+}
+
 #ifdef ENABLE_JS_ETW
 void ThreadContext::EtwLogPropertyIdList()
 {
@@ -3595,11 +3600,6 @@ void ThreadContext::ResolveExternalWeakReferencedObjects()
     {
         iteratorWeakRefCache.Data()->ResolveNow(recycler);
     }
-}
-
-uint ThreadContext::GetRandomNumber()
-{
-    return (uint)GetEntropy().GetRand();
 }
 
 #if DBG_DUMP
@@ -3809,6 +3809,7 @@ Js::DelayLoadWinRtString * ThreadContext::GetWinRTStringLibrary()
     return &delayLoadWinRtString;
 }
 
+#ifdef ENABLE_PROJECTION
 Js::DelayLoadWinRtError * ThreadContext::GetWinRTErrorLibrary()
 {
     delayLoadWinRtError.EnsureFromSystemDirOnly();
@@ -3816,7 +3817,6 @@ Js::DelayLoadWinRtError * ThreadContext::GetWinRTErrorLibrary()
     return &delayLoadWinRtError;
 }
 
-#ifdef ENABLE_PROJECTION
 Js::DelayLoadWinRtTypeResolution* ThreadContext::GetWinRTTypeResolutionLibrary()
 {
     delayLoadWinRtTypeResolution.EnsureFromSystemDirOnly();

@@ -338,8 +338,9 @@ namespace Js
                 DeferredTypeHandler<InitializeDatePrototype>::GetDefaultInstance()));   
         }
 
+#ifdef ENABLE_PROJECTION
         winrtErrorPrototype = nullptr;
-
+#endif
         if (scriptContext->GetConfig()->IsES6PrototypeChain())
         {
             errorPrototype = DynamicObject::New(recycler,
@@ -370,12 +371,14 @@ namespace Js
                 DynamicType::New(scriptContext, TypeIds_Object, errorPrototype, nullptr,
                 DeferredTypeHandler<InitializeURIErrorPrototype>::GetDefaultInstance()));
 
+#ifdef ENABLE_PROJECTION
             if (scriptContext->GetConfig()->IsWinRTEnabled())
             {
                 winrtErrorPrototype = DynamicObject::New(recycler,
                     DynamicType::New(scriptContext, TypeIds_Object, errorPrototype, nullptr,
                     DeferredTypeHandler<InitializeWinRTErrorPrototype>::GetDefaultInstance()));
             }
+#endif
         }
         else
         {
@@ -414,6 +417,7 @@ namespace Js
                 DeferredTypeHandler<InitializeURIErrorPrototype>::GetDefaultInstance()),
                 /*isExternalError*/FALSE, /*isPrototype*/TRUE);
 
+#ifdef ENABLE_PROJECTION
             if (scriptContext->GetConfig()->IsWinRTEnabled())
             {
                 winrtErrorPrototype = RecyclerNew(this->GetRecycler(), JavascriptError,
@@ -421,6 +425,7 @@ namespace Js
                     DeferredTypeHandler<InitializeWinRTErrorPrototype>::GetDefaultInstance()),
                     /*isExternalError*/FALSE, /*isPrototype*/TRUE);
             }
+#endif
         }
 
         functionPrototype = RecyclerNew(recycler, JavascriptFunction,
@@ -614,11 +619,13 @@ namespace Js
         uriErrorType = DynamicType::New(scriptContext, TypeIds_Error, uriErrorPrototype, nullptr,
             SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
 
+#ifdef ENABLE_PROJECTION
         if (config->IsWinRTEnabled())
         {
             winrtErrorType = DynamicType::New(scriptContext, TypeIds_Error, winrtErrorPrototype, nullptr,
                 SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
         }
+#endif
 
         symbolTypeStatic = nullptr;
         symbolTypeDynamic = nullptr;
@@ -668,8 +675,10 @@ namespace Js
         // Initialize Date types
         dateType = DynamicType::New(scriptContext, TypeIds_Date, datePrototype, nullptr,
             SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+#ifdef ENABLE_PROJECTION
         winrtDateType = DynamicType::New(scriptContext, TypeIds_WinRTDate, datePrototype, nullptr,
             SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+#endif
         variantDateType = StaticType::New(scriptContext, TypeIds_VariantDate, nullValue, nullptr);
 
         //  Initialize function types
@@ -1242,7 +1251,7 @@ namespace Js
         AddFunctionToLibraryObject(globalObject, PropertyIds::escape, &GlobalObject::EntryInfo::Escape, 1);
         AddFunctionToLibraryObject(globalObject, PropertyIds::unescape, &GlobalObject::EntryInfo::UnEscape, 1);
 
-        if (scriptContext->GetConfig()->SupportsES3Extensions())
+        if (scriptContext->GetConfig()->SupportsCollectGarbage())
         {
             AddFunctionToLibraryObject(globalObject, PropertyIds::CollectGarbage, &GlobalObject::EntryInfo::CollectGarbage, 0);
         }
@@ -1508,9 +1517,11 @@ namespace Js
             DeferredTypeHandler<InitializeErrorConstructor>::GetDefaultInstance());
         AddFunction(globalObject, PropertyIds::Error, errorConstructor);
 
+#ifdef ENABLE_PROJECTION
         winrtErrorConstructor = nullptr;
+#endif
 
-                RuntimeFunction* nativeErrorPrototype = nullptr;
+        RuntimeFunction* nativeErrorPrototype = nullptr;
         if (scriptContext->GetConfig()->IsES6PrototypeChain())
         {
             nativeErrorPrototype = errorConstructor;
@@ -1546,6 +1557,7 @@ namespace Js
             nativeErrorPrototype);
         AddFunction(globalObject, PropertyIds::URIError, uriErrorConstructor);
 
+#ifdef ENABLE_PROJECTION
         if (scriptContext->GetConfig()->IsWinRTEnabled())
         {
             winrtErrorConstructor = CreateBuiltinConstructor(&JavascriptError::EntryInfo::NewWinRTErrorInstance,
@@ -1553,6 +1565,7 @@ namespace Js
                 nativeErrorPrototype);
             AddFunction(globalObject, PropertyIds::WinRTError, winrtErrorConstructor);
         }
+#endif
         nullEnumerator = RecyclerNew(this->recycler, NullEnumerator, scriptContext);
     }
 
@@ -2068,7 +2081,9 @@ namespace Js
     INIT_ERROR_CONSTRUCTOR(SyntaxError);
     INIT_ERROR_CONSTRUCTOR(TypeError);
     INIT_ERROR_CONSTRUCTOR(URIError);
+#ifdef ENABLE_PROJECTION
     INIT_ERROR_CONSTRUCTOR(WinRTError);
+#endif
 
 #define INIT_ERROR_PROTOTYPE(error) \
     void JavascriptLibrary::Initialize##error##Prototype(DynamicObject* prototype, DeferredTypeHandlerBase* typeHandler, DeferredInitializeMode mode) \
@@ -2090,7 +2105,9 @@ namespace Js
     INIT_ERROR_PROTOTYPE(SyntaxError);
     INIT_ERROR_PROTOTYPE(TypeError);
     INIT_ERROR_PROTOTYPE(URIError);
+#ifdef ENABLE_PROJECTION
     INIT_ERROR_PROTOTYPE(WinRTError);
+#endif
 
     void JavascriptLibrary::InitializeBooleanConstructor(DynamicObject* booleanConstructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
@@ -2398,7 +2415,7 @@ namespace Js
             library->AddFunctionToLibraryObject(datePrototype, PropertyIds::getUTCMonth, &JavascriptDate::EntryInfo::GetUTCMonth, 0));
         scriptContext->SetBuiltInLibraryFunction(JavascriptDate::EntryInfo::GetUTCSeconds.GetOriginalEntryPoint(),
             library->AddFunctionToLibraryObject(datePrototype, PropertyIds::getUTCSeconds, &JavascriptDate::EntryInfo::GetUTCSeconds, 0));
-        if (scriptContext->GetConfig()->SupportsES3Extensions() && scriptContext->GetConfig()->GetHostType() != HostTypeApplication)
+        if (scriptContext->GetConfig()->SupportsES3Extensions())
         {
             scriptContext->SetBuiltInLibraryFunction(JavascriptDate::EntryInfo::GetVarDate.GetOriginalEntryPoint(),
                 library->AddFunctionToLibraryObject(datePrototype, PropertyIds::getVarDate, &JavascriptDate::EntryInfo::GetVarDate, 0));
@@ -3077,8 +3094,9 @@ namespace Js
             this->syntaxErrorPrototype,
             this->typeErrorPrototype,
             this->uriErrorPrototype,
+#ifdef ENABLE_PROJECTION
             this->winrtErrorPrototype,
-
+#endif
             this->objectConstructor,
             this->arrayConstructor,
             this->booleanConstructor,
@@ -3118,7 +3136,9 @@ namespace Js
             this->syntaxErrorConstructor,
             this->typeErrorConstructor,
             this->uriErrorConstructor,
+#ifdef ENABLE_PROJECTION
             this->winrtErrorConstructor
+#endif
         };
 
         for (int i = 0; i < _countof(objects); i++)
@@ -3781,7 +3801,7 @@ namespace Js
         scriptContext->SetBuiltInLibraryFunction(JavascriptString::EntryInfo::ValueOf.GetOriginalEntryPoint(),
                                                                   library->AddFunctionToLibraryObject(stringPrototype, PropertyIds::valueOf,            &JavascriptString::EntryInfo::ValueOf,              0));
 
-        if (scriptContext->GetConfig()->SupportsES3Extensions() && scriptContext->GetConfig()->GetHostType() != HostTypeApplication)
+        if (scriptContext->GetConfig()->SupportsES3Extensions())
         {
             /* No inlining                String_Anchor        */ library->AddFunctionToLibraryObject(stringPrototype, PropertyIds::anchor,             &JavascriptString::EntryInfo::Anchor,               1);
             /* No inlining                String_Big           */ library->AddFunctionToLibraryObject(stringPrototype, PropertyIds::big,                &JavascriptString::EntryInfo::Big,                  0);
@@ -4308,6 +4328,7 @@ namespace Js
         engineInterface->SetHasNoEnumerableProperties(true);
     }
 
+#ifdef ENABLE_PROJECTION
     void JavascriptLibrary::InitializeWinRTPromiseConstructor()
     {
         Assert(this->engineInterfaceObject != nullptr);
@@ -4326,7 +4347,8 @@ namespace Js
 
         return this->winRTPromiseConstructor;
     }
-
+#endif
+#ifdef NTBUILD
     void JavascriptLibrary::InitializeHostPromiseContinuationFunction()
     {
         // TODO: Below loads and returns WScript.SetTimeout or window.setTimeout. Later, we should instead use the task queue.
@@ -4383,7 +4405,7 @@ namespace Js
 
         return this->hostPromiseContinuationFunction;
     }
-
+#endif
     void JavascriptLibrary::SetNativeHostPromiseContinuationFunction(PromiseContinuationCallback function, void *state)
     {
         this->nativeHostPromiseContinuationFunction = function;
@@ -4428,6 +4450,7 @@ namespace Js
             }
             END_LEAVE_SCRIPT(scriptContext);
         }
+#ifdef NTBUILD
         else
         {
             JavascriptFunction* hostPromiseContinuationFunction = this->GetHostPromiseContinuationFunction();
@@ -4440,6 +4463,7 @@ namespace Js
                 taskVar,
                 JavascriptNumber::ToVar(0, scriptContext));
         }
+#endif
     }
 
 #ifdef ENABLE_INTL_OBJECT
@@ -5418,6 +5442,7 @@ namespace Js
         return outOfMemoryError;
     }
 
+#ifdef ENABLE_PROJECTION
     // Should only be called when WinRT is enabled
     JavascriptError* JavascriptLibrary::CreateWinRTError()
     {
@@ -5431,6 +5456,7 @@ namespace Js
         JavascriptError::SetErrorType(pError, kjstWinRTError);
         return pError;
     }
+#endif
 
     JavascriptFunction* JavascriptLibrary::CreateNonProfiledFunction(FunctionInfo * functionInfo)
     {
@@ -6104,7 +6130,7 @@ namespace Js
         REG_GLOBAL_LIB_FUNC(unescape, GlobalObject::EntryUnEscape);
 
         ScriptConfiguration const& config = *(scriptContext->GetConfig());
-        if (config.SupportsES3Extensions())
+        if (config.SupportsCollectGarbage())
         {
             REG_GLOBAL_LIB_FUNC(CollectGarbage, GlobalObject::EntryCollectGarbage);
         }
@@ -6188,11 +6214,12 @@ namespace Js
         REGISTER_ERROR_OBJECT(TypeError);
         REGISTER_ERROR_OBJECT(URIError);
 
+#ifdef ENABLE_PROJECTION
         if (config.IsWinRTEnabled())
         {
             REGISTER_ERROR_OBJECT(WinRTError);
         }
-
+#endif
         return hr;
     }
 
@@ -6350,7 +6377,7 @@ namespace Js
         REG_OBJECTS_LIB_FUNC(getUTCSeconds, JavascriptDate::EntryGetUTCSeconds);
 
         ScriptConfiguration const& config = *(scriptContext->GetConfig());
-        if (config.SupportsES3Extensions() && config.GetHostType() != HostTypeApplication)
+        if (config.SupportsES3Extensions())
         {
             REG_OBJECTS_LIB_FUNC(getVarDate, JavascriptDate::EntryGetVarDate);
         }
@@ -6517,7 +6544,7 @@ namespace Js
         REG_OBJECTS_LIB_FUNC(toUpperCase, JavascriptString::EntryToUpperCase);
         REG_OBJECTS_LIB_FUNC(trim, JavascriptString::EntryTrim);
         REG_OBJECTS_LIB_FUNC(valueOf, JavascriptString::EntryValueOf);
-        if (config.SupportsES3Extensions() && config.GetHostType() != HostTypeApplication)
+        if (config.SupportsES3Extensions())
         {
             REG_OBJECTS_LIB_FUNC(anchor, JavascriptString::EntryAnchor);
             REG_OBJECTS_LIB_FUNC(big, JavascriptString::EntryBig);

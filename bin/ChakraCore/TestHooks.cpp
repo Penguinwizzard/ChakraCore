@@ -14,11 +14,6 @@ HRESULT __stdcall SetConfigFlags(__in int argc, __in_ecount(argc) LPWSTR argv[])
         return E_FAIL;
     }
 
-    if(!Js::Configuration::Global.flags.IsEnabled(Js::HostTypeFlag))
-    {
-        Js::Configuration::Global.flags.HostType = Js::HostTypeBrowser;
-    }
-
     return S_OK;
 }
 

@@ -281,7 +281,6 @@ bool IsMathLibraryId(Js::PropertyId propertyId);
 const Js::ModuleID kmodGlobal = 0;
 
 class SourceContextInfo;
-class AsyncDebug;
 
 
 #include "activdbg100.h"

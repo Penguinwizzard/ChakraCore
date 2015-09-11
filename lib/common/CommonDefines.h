@@ -67,6 +67,8 @@
 //----------------------------------------------------------------------------------------------------
 // Enabled features
 //----------------------------------------------------------------------------------------------------
+
+
 #define SIMD_JS_ENABLED
 
 #define EDIT_AND_CONTINUE
@@ -77,7 +79,7 @@
 #define SUPPORT_FIXED_FIELDS_ON_PATH_TYPES
 
 #define ENABLE_INTL_OBJECT
-#define ENABLE_FOUNDATION_OBJECT
+
 
 #define BYTECODE_BRANCH_ISLAND
 
@@ -90,10 +92,10 @@
 
 // JIT features
 #define ENABLE_NATIVE_CODEGEN 1
-#define ENABLE_PROJECTION 1
-
 
 #ifdef NTBUILD
+#define ENABLE_PROJECTION 
+#define ENABLE_FOUNDATION_OBJECT
 #define ENABLE_EXPERIMENTAL_FLAGS
 #define ENABLE_WININET_PROFILE_DATA_CACHE
 #define ENABLE_BASIC_TELEMETRY

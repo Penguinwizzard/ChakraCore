@@ -324,6 +324,7 @@ namespace Js
         return DelayLoadWinRtString::WindowsDuplicateString(original, newString);
     }
 
+#ifdef ENABLE_PROJECTION
     HRESULT DelayLoadWinRtError::RoClearError()
     {
         if (m_hModule)
@@ -365,6 +366,7 @@ namespace Js
 
         return FALSE;
     }
+#endif
 
 #ifdef _CONTROL_FLOW_GUARD
 // Note. __declspec(guard(nocf)) causes the CFG check to be removed

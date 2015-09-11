@@ -60,8 +60,9 @@ namespace Js
             static FunctionInfo NewSyntaxErrorInstance;
             static FunctionInfo NewTypeErrorInstance;
             static FunctionInfo NewURIErrorInstance;
+#ifdef ENABLE_PROJECTION
             static FunctionInfo NewWinRTErrorInstance;
-
+#endif
             static FunctionInfo ToString;
         };
 
@@ -72,7 +73,9 @@ namespace Js
         static Var NewSyntaxErrorInstance(RecyclableObject* function, CallInfo callInfo, ...);
         static Var NewTypeErrorInstance(RecyclableObject* function, CallInfo callInfo, ...);
         static Var NewURIErrorInstance(RecyclableObject* function, CallInfo callInfo, ...);
+#ifdef ENABLE_PROJECTION
         static Var NewWinRTErrorInstance(RecyclableObject* function, CallInfo callInfo, ...);
+#endif
 
         static Var EntryToString(RecyclableObject* function, CallInfo callInfo, ...);
 
@@ -94,8 +97,10 @@ namespace Js
         THROW_ERROR_DECL(ThrowSyntaxError)
         THROW_ERROR_DECL(ThrowTypeError)
         THROW_ERROR_DECL(ThrowURIError)
+#ifdef ENABLE_PROJECTION
         THROW_ERROR_DECL(ThrowWinRTError)
-        
+#endif
+
 #undef THROW_ERROR_DECL
         static void __declspec(noreturn) ThrowDispatchError(ScriptContext* scriptContext, HRESULT hCode, PCWSTR message);
         static void __declspec(noreturn) ThrowOutOfMemoryError(ScriptContext *scriptContext);

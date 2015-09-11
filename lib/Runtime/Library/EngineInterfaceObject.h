@@ -38,7 +38,9 @@ namespace Js
         FunctionBody* promiseByteCode;
 
         void EnsureIntlByteCode(_In_ ScriptContext * scriptContext);
+#ifdef ENABLE_PROJECTION
         void EnsurePromiseByteCode(_In_ ScriptContext * scriptContext);
+#endif
 
     public:
         EngineInterfaceObject(DynamicType * type) : DynamicObject(type) {}
@@ -50,12 +52,16 @@ namespace Js
         void Initialize();
 #if DBG
         void DumpIntlByteCode(_In_ ScriptContext * scriptContext);
+#ifdef ENABLE_PROJECTION
         void DumpPromiseByteCode(_In_ ScriptContext * scriptContext);
+#endif
 #endif
 
         static void __cdecl InitializeCommonNativeInterfaces(DynamicObject* engineInterface, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
         static void __cdecl InitializeIntlNativeInterfaces(DynamicObject* intlNativeInterfaces, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
+#ifdef ENABLE_PROJECTION
         static void __cdecl InitializePromiseNativeInterfaces(DynamicObject* promiseNativeInterfaces, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
+#endif
 
 #ifdef ENABLE_INTL_OBJECT
         void InjectIntlLibraryCode(_In_ ScriptContext * scriptContext, DynamicObject* intlObject);
@@ -101,7 +107,9 @@ namespace Js
             static NoProfileFunctionInfo GetErrorMessage;
             static NoProfileFunctionInfo LogDebugMessage;
             static NoProfileFunctionInfo TagPublicLibraryCode;
+#ifdef ENABLE_PROJECTION
             static NoProfileFunctionInfo Promise_EnqueueTask;
+#endif
 
 #ifndef GlobalBuiltIn
 #define GlobalBuiltIn(global, method) \
@@ -160,7 +168,9 @@ namespace Js
         static Var Entry_GetErrorMessage(RecyclableObject *function, CallInfo callInfo, ...);
         static Var Entry_LogDebugMessage(RecyclableObject *function, CallInfo callInfo, ...);
         static Var Entry_TagPublicLibraryCode(RecyclableObject *function, CallInfo callInfo, ...);
+#ifdef ENABLE_PROJECTION
         static Var EntryPromise_EnqueueTask(RecyclableObject *function, CallInfo callInfo, ...);
+#endif
         
 #ifndef GlobalBuiltIn
 #define GlobalBuiltIn(global, method) 

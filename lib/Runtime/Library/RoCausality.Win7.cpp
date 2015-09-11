@@ -2,6 +2,8 @@
 // This is a snap of //fbl_rex_dev1/com/combase/RoDebug/RoCausality.cpp#7 (some pieces removed for chakra integration)
 
 #include "RuntimeLibraryPch.h"
+
+#ifdef ENABLE_PROJECTION
 #include "RoCausality.Win7.h"
 
 // Maps for events
@@ -330,3 +332,5 @@ HRESULT RoCausalityTraceSynchronousWorkItemCompletion(
     }
     return hr;
 }
+
+#endif

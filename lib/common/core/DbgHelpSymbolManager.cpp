@@ -51,7 +51,7 @@ DbgHelpSymbolManager::Initialize()
     isInitialized = true;
     hProcess = GetCurrentProcess();
 
-    // Let's make sure the directory where jscript9.dll is, is on the symbol path.
+    // Let's make sure the directory where chakra.dll is, is on the symbol path.
 
     wchar_t const * wszModule = AutoSystemInfo::GetJscriptDllFileName();
     wszModuleName = NoCheckHeapNewArray(wchar_t, ceModuleName);

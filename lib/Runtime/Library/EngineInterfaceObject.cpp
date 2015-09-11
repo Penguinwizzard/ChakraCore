@@ -196,7 +196,9 @@ namespace Js
     NoProfileFunctionInfo EngineInterfaceObject::EntryInfo::GetErrorMessage(EngineInterfaceObject::Entry_GetErrorMessage);
     NoProfileFunctionInfo EngineInterfaceObject::EntryInfo::LogDebugMessage(EngineInterfaceObject::Entry_LogDebugMessage);
     NoProfileFunctionInfo EngineInterfaceObject::EntryInfo::TagPublicLibraryCode(EngineInterfaceObject::Entry_TagPublicLibraryCode);
+#ifdef ENABLE_PROJECTION
     NoProfileFunctionInfo EngineInterfaceObject::EntryInfo::Promise_EnqueueTask(EngineInterfaceObject::EntryPromise_EnqueueTask);
+#endif
 
 #ifndef GlobalBuiltIn
 #define GlobalBuiltIn(global, method) \
@@ -289,12 +291,14 @@ namespace Js
         Js::ByteCodeDumper::DumpRecursively(intlByteCode);
     }
 
+#ifdef ENABLE_PROJECTION
     void EngineInterfaceObject::DumpPromiseByteCode(ScriptContext* scriptContext)
     {
         Output::Print(L"Dumping Promise Byte Code:");
         this->EnsurePromiseByteCode(scriptContext);
         Js::ByteCodeDumper::DumpRecursively(promiseByteCode);
     }
+#endif
 #endif
     void EngineInterfaceObject::InitializeCommonNativeInterfaces(DynamicObject* commonNativeInterfaces, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode) 
     {
@@ -374,6 +378,7 @@ namespace Js
         intlNativeInterfaces->SetHasNoEnumerableProperties(true);
     }
 
+#ifdef ENABLE_PROJECTION
     void EngineInterfaceObject::InitializePromiseNativeInterfaces(DynamicObject* promiseNativeInterfaces, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(promiseNativeInterfaces, mode, 9);
@@ -411,6 +416,7 @@ namespace Js
 
         promiseNativeInterfaces->SetHasNoEnumerableProperties(true);
     }
+#endif
 
     void EngineInterfaceObject::deletePrototypePropertyHelper(ScriptContext* scriptContext, DynamicObject* intlObject, Js::PropertyId objectPropertyId, Js::PropertyId getterFunctionId)
     {
@@ -489,7 +495,7 @@ namespace Js
             IfFailAssertMsgAndThrowHr(hr, "Failed to deserialize Intl.js bytecode - very probably the bytecode needs to be rebuilt.");
         }
     }
-
+#ifdef ENABLE_PROJECTION
     void EngineInterfaceObject::EnsurePromiseByteCode(_In_ ScriptContext * scriptContext)
     {
         if (this->promiseByteCode == nullptr)
@@ -512,6 +518,7 @@ namespace Js
             IfFailThrowHr(hr);
         }
     }
+#endif
 
     void EngineInterfaceObject::InjectIntlLibraryCode(_In_ ScriptContext * scriptContext, DynamicObject* intlObject)
     {
@@ -1598,6 +1605,7 @@ namespace Js
         return scriptContext->GetLibrary()->GetUndefined();
     }
 
+#ifdef ENABLE_PROJECTION
     Var EngineInterfaceObject::EntryPromise_EnqueueTask(RecyclableObject *function, CallInfo callInfo, ...)
     {
         EngineInterfaceObject_CommonFunctionProlog(function, callInfo);
@@ -1610,6 +1618,7 @@ namespace Js
         
         return scriptContext->GetLibrary()->GetUndefined();
     }
+#endif
 
 #ifndef GlobalBuiltIn
 #define GlobalBuiltIn(global, method) 

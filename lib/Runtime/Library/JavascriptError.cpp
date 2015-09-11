@@ -204,6 +204,7 @@ namespace Js
         return JavascriptError::NewInstance(function, pError, callInfo, args);
     }
 
+#ifdef ENABLE_PROJECTION
     Var JavascriptError::NewWinRTErrorInstance(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -214,6 +215,7 @@ namespace Js
 
         return JavascriptError::NewInstance(function, pError, callInfo, args);
     }
+#endif
 
     Var JavascriptError::EntryToString(RecyclableObject* function, CallInfo callInfo, ...)
     {
@@ -369,7 +371,9 @@ namespace Js
     THROW_ERROR_IMPL(ThrowSyntaxError, CreateSyntaxError, GetSyntaxErrorType, kjstSyntaxError)
     THROW_ERROR_IMPL(ThrowTypeError, CreateTypeError, GetTypeErrorType, kjstTypeError)
     THROW_ERROR_IMPL(ThrowURIError, CreateURIError, GetURIErrorType, kjstURIError)
+#ifdef ENABLE_PROJECTION
     THROW_ERROR_IMPL(ThrowWinRTError, CreateWinRTError, GetWinRTErrorType, kjstWinRTError)
+#endif
 #undef THROW_ERROR_IMPL
         
     JavascriptError* JavascriptError::MapError(ScriptContext* scriptContext, ErrorTypeEnum errorType, IErrorInfo * perrinfo /*= nullptr*/, RestrictedErrorStrings * proerrstr /*= nullptr*/)
@@ -388,6 +392,7 @@ namespace Js
           return CreateReferenceError(scriptContext, perrinfo, proerrstr);
         case kjstURIError:
           return CreateURIError(scriptContext, perrinfo, proerrstr);
+#ifdef ENABLE_PROJECTION
         case kjstWinRTError:
           if (scriptContext->GetConfig()->IsWinRTEnabled())
           {
@@ -398,6 +403,7 @@ namespace Js
               return CreateError(scriptContext, perrinfo, proerrstr);
           }
           break;
+#endif
         default:
             AssertMsg(FALSE, "Invaild error type");
             __assume(false);
@@ -490,6 +496,7 @@ namespace Js
         JavascriptError::SetErrorMessageProperties(pError, hr, allocatedString, scriptContext);
     }
 
+#ifdef ENABLE_PROJECTION
     void JavascriptError::OriginateLanguageException(JavascriptError *pError, ScriptContext* scriptContext)
     {
         // Only originate language exceptions when WinRT is enabled.
@@ -547,6 +554,7 @@ namespace Js
             delayLoadWinRtString->WindowsDeleteString(hstring);
         }
     }
+#endif
 
     void JavascriptError::SetErrorMessage(JavascriptError *pError, HRESULT hr, PCWSTR varName, ScriptContext* scriptContext)
     {
@@ -890,9 +898,11 @@ namespace Js
         case kjstURIError:
             jsNewError = targetJavascriptLibrary->CreateURIError();
             break;
+#ifdef ENABLE_PROJECTION
         case kjstWinRTError:
             jsNewError = targetJavascriptLibrary->CreateWinRTError();
             break;
+#endif
 
         case kjstCustomError:
         default:

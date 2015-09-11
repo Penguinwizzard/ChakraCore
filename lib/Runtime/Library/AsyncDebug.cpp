@@ -2,6 +2,8 @@
 // Copyright (C) Microsoft. All rights reserved.
 //---------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
+
+#ifdef ENABLE_PROJECTION
 #include "Debug\DiagProbe.h"
 #include "Debug\BreakpointProbe.h"
 #include "Debug\DebugDocument.h"
@@ -887,3 +889,4 @@ ushort AsyncDebug::ProcessNameAndGetLength(Js::StringBuilder<ArenaAllocator>* na
     return nameLen;
 }
 
+#endif

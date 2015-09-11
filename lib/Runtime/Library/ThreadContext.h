@@ -560,7 +560,7 @@ private:
     uint32 polymorphicCacheState;
     Js::TypeId wellKnownHostTypeHTMLAllCollectionTypeId;
 
-#if ENABLE_PROJECTION
+#ifdef ENABLE_PROJECTION
     SListBase<ExternalWeakReferenceCache *> externalWeakReferenceCacheList;
 #if DBG_DUMP
     IProjectionContextMemoryInfo *projectionMemoryInformation;
@@ -634,8 +634,8 @@ private:
     bool hasCatchHandlerToUserCode;
     
     Js::DelayLoadWinRtString delayLoadWinRtString;
-    Js::DelayLoadWinRtError delayLoadWinRtError;
 #ifdef ENABLE_PROJECTION
+    Js::DelayLoadWinRtError delayLoadWinRtError;
     Js::DelayLoadWinRtTypeResolution delayLoadWinRtTypeResolution;
     Js::DelayLoadWinRtRoParameterizedIID delayLoadWinRtRoParameterizedIID;
 #endif
@@ -725,8 +725,8 @@ public:
     UCrtC99MathApis* GetUCrtC99MathApis() { return &ucrtC99MathApis; }
 
     Js::DelayLoadWinRtString *GetWinRTStringLibrary();
-    Js::DelayLoadWinRtError *GetWinRTErrorLibrary();
 #ifdef ENABLE_PROJECTION
+    Js::DelayLoadWinRtError *GetWinRTErrorLibrary();
     Js::DelayLoadWinRtTypeResolution* GetWinRTTypeResolutionLibrary();
     Js::DelayLoadWinRtRoParameterizedIID* GetWinRTRoParameterizedIIDLibrary();
 #endif

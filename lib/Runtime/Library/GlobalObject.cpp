@@ -1555,7 +1555,7 @@ LHexError:
         }
 
 #if DBG_DUMP
-#if ENABLE_PROJECTION
+#ifdef ENABLE_PROJECTION
         scriptContext->GetThreadContext()->DumpProjectionContextMemoryStats(L"Stats after GlobalObject::EntryCollectGarbage call");
 #endif
 

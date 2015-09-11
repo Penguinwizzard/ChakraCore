@@ -220,6 +220,7 @@ namespace Js
             __out IActivationFactory** factory);
     };
 
+#ifdef ENABLE_PROJECTION
     class DelayLoadWinRtError sealed : public DelayLoadLibrary
     {
     private:
@@ -241,9 +242,10 @@ namespace Js
 
         LPCTSTR GetLibraryName() const { return L"api-ms-win-core-winrt-error-l1-1-1.dll"; } 
 
-        virtual HRESULT RoClearError();
-        virtual BOOL RoOriginateLanguageException(__in HRESULT error, __in_opt HSTRING message, __in IUnknown * languageException);
+        HRESULT RoClearError();
+        BOOL RoOriginateLanguageException(__in HRESULT error, __in_opt HSTRING message, __in IUnknown * languageException);
     };
+#endif
 
 #if defined(_CONTROL_FLOW_GUARD)
     class DelayLoadWinCoreMemory sealed : public DelayLoadLibrary
@@ -260,7 +262,7 @@ namespace Js
 
         LPCTSTR GetLibraryName() const { return L"api-ms-win-core-memory-l1-1-3.dll"; }
 
-        virtual BOOL SetProcessCallTargets(
+        BOOL SetProcessCallTargets(
             _In_ HANDLE hProcess,
             _In_ PVOID VirtualAddress,
             _In_ SIZE_T RegionSize,
@@ -292,14 +294,14 @@ namespace Js
 
         LPCTSTR GetLibraryName() const { return L"api-ms-win-core-processthreads-l1-1-3.dll"; }
 
-        virtual BOOL GetMitigationPolicyForProcess(
+        BOOL GetMitigationPolicyForProcess(
             __in HANDLE hProcess,
             __in PROCESS_MITIGATION_POLICY MitigationPolicy,
             __out_bcount(nLength) PVOID lpBuffer,
             __in SIZE_T nLength
             );
 
-        virtual BOOL GetProcessInformation(
+        BOOL GetProcessInformation(
             __in HANDLE hProcess,
             __in PROCESS_INFORMATION_CLASS ProcessInformationClass,
             __out_bcount(nLength) PVOID lpBuffer,

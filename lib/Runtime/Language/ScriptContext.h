@@ -148,9 +148,11 @@ namespace Js
     class ScriptConfiguration
     {
     public:
-        ScriptConfiguration(const bool isOptimizedForManyInstances) :            
+        ScriptConfiguration(const bool isOptimizedForManyInstances) :     
+#ifdef ENABLE_PROJECTION
             HostType(Configuration::Global.flags.HostType),
             WinRTConstructorAllowed(Configuration::Global.flags.WinRTConstructorAllowed),
+#endif
             NoNative(Configuration::Global.flags.NoNative),
             isOptimizedForManyInstances(isOptimizedForManyInstances)
         {
@@ -158,16 +160,16 @@ namespace Js
 
         // Version
         // TODO: Revisit this and check what other flags are required
-        bool SupportsES3()           const { return true; }
-        bool SupportsES3Extensions() const { return true; }        
-        bool IsCollectGarbageEnabled() const { return CONFIG_FLAG(CollectGarbage); }
-                                
-        Number GetHostType() const    // Returns one of enum HostType values (see ConfigFlagsTable.h).
-        {
-            AssertMsg(this->HostType >= HostTypeMin && this->HostType <= HostTypeMax, "HostType value is out of valid range.");
-            return this->HostType;
+        bool SupportsES3()                      const { return true; }
+        bool SupportsES3Extensions()            const { 
+#ifdef ENABLE_PROJECTION
+            return HostType != HostTypeApplication; 
+#else
+            return true;
+#endif
         }
-
+        bool SupportsCollectGarbage()           const { return true; }
+        bool IsCollectGarbageEnabled()          const { return CONFIG_FLAG(CollectGarbage); }                               
         bool IsErrorStackTraceEnabled()         const { return CONFIG_FLAG(errorStackTrace); }
         bool IsTypedArrayEnabled()              const { return true; }
         bool Is__proto__Enabled()               const { return CONFIG_FLAG(__proto__); }
@@ -211,8 +213,10 @@ namespace Js
         bool IsES6WeakSetEnabled()              const { return CONFIG_FLAG_RELEASE(ES6WeakSet); }
         bool IsES6RegExStickyEnabled()          const { return CONFIG_FLAG_RELEASE(ES6RegExSticky); }
         bool SkipSplitOnNoResult()              const { return CONFIG_FLAG_RELEASE(SkipSplitOnNoResult); }
+#ifdef ENABLE_PROJECTION
         bool AreWinRTDelegatesInterfaces()      const { return CONFIG_FLAG(WinRTDelegateInterfaces); }
         bool IsWinRTAdaptiveAppsEnabled()       const { return CONFIG_FLAG_RELEASE(WinRTAdaptiveApps); }
+#endif
 
         bool IsES7AsyncAndAwaitEnabled()        const { return CONFIG_FLAG_RELEASE(ES7AsyncAwait); }
 
@@ -220,45 +224,55 @@ namespace Js
         void ForceNative() { this->NoNative = false; }
         bool IsNoNative() const { return this->NoNative; }
 
-        void SetHostType(long hostType) { this->HostType = hostType; }
-        void SetWinRTConstructorAllowed(bool allowed) { this->WinRTConstructorAllowed = allowed; }
         void SetCanOptimizeGlobalLookupFlag(BOOL f){ this->fCanOptimizeGlobalLookup = f;}
         BOOL CanOptimizeGlobalLookup() const { return this->fCanOptimizeGlobalLookup;}
         bool IsOptimizedForManyInstances() const { return isOptimizedForManyInstances; }        
         bool IsBlockScopeEnabled() const { return true; }
         bool IsLetAndConstEnabled() const { return CONFIG_FLAG(LetConst); }
         bool BindDeferredPidRefs() const { return IsLetAndConstEnabled(); }        
-        void CopyFrom(ScriptConfiguration& other) { this->HostType = other.HostType; this->WinRTConstructorAllowed = other.WinRTConstructorAllowed; this->NoNative = other.NoNative; this->fCanOptimizeGlobalLookup = other.fCanOptimizeGlobalLookup; this->projectionConfiguration = other.projectionConfiguration; }
+        void CopyFrom(ScriptConfiguration& other) 
+        { 
+            this->NoNative = other.NoNative; 
+            this->fCanOptimizeGlobalLookup = other.fCanOptimizeGlobalLookup; 
+#ifdef ENABLE_PROJECTION
+            this->HostType = other.HostType;
+            this->WinRTConstructorAllowed = other.WinRTConstructorAllowed;
+            this->projectionConfiguration = other.projectionConfiguration; 
+#endif
+        }
+
+#ifdef ENABLE_PROJECTION
+        Number GetHostType() const    // Returns one of enum HostType values (see ConfigFlagsTable.h).
+        {
+            AssertMsg(this->HostType >= HostTypeMin && this->HostType <= HostTypeMax, "HostType value is out of valid range.");
+            return this->HostType;
+        }
 
         ProjectionConfiguration const * GetProjectionConfig() const
         {
-#ifdef ENABLE_PROJECTION
             return &projectionConfiguration;
-#else
             return nullptr;
-#endif
         }
+        void SetHostType(long hostType) { this->HostType = hostType; }
+        void SetWinRTConstructorAllowed(bool allowed) { this->WinRTConstructorAllowed = allowed; }
         void SetProjectionTargetVersion(DWORD version)
         {
-#ifdef ENABLE_PROJECTION
             projectionConfiguration.SetTargetVersion(version);
-#endif
         }
-
         bool IsWinRTEnabled()           const { return (GetHostType() == Js::HostTypeApplication) || (GetHostType() == Js::HostTypeWebview); }
 
         bool IsWinRTConstructorAllowed() const { return (GetHostType() != Js::HostTypeWebview) || this->WinRTConstructorAllowed; }
-
+#endif
     private:
 
-        // Per script configurations        
-        Number HostType;    // One of enum HostType values (see ConfigFlagsTable.h).
-        bool WinRTConstructorAllowed;  // whether allow constructor in webview host type. Also note that this is not a security feature.
+        // Per script configurations     
         bool NoNative;
         BOOL fCanOptimizeGlobalLookup;
         const bool isOptimizedForManyInstances;
 
 #ifdef ENABLE_PROJECTION
+        Number HostType;    // One of enum HostType values (see ConfigFlagsTable.h).
+        bool WinRTConstructorAllowed;  // whether allow constructor in webview host type. Also note that this is not a security feature.
         ProjectionConfiguration projectionConfiguration;
 #endif
     };
@@ -1022,11 +1036,14 @@ private:
         void Initialize();
         bool Close(bool inDestructor);
         void MarkForClose();
+#ifdef ENABLE_PROJECTION
         void SetHostType(long hostType) { config.SetHostType(hostType); }
         void SetWinRTConstructorAllowed(bool allowed) { config.SetWinRTConstructorAllowed(allowed); }
+        void SetProjectionTargetVersion(DWORD version) { config.SetProjectionTargetVersion(version); }
+#endif
         void SetCanOptimizeGlobalLookupFlag(BOOL f){ config.SetCanOptimizeGlobalLookupFlag(f);}
         BOOL CanOptimizeGlobalLookup(){ return config.CanOptimizeGlobalLookup();}        
-        void SetProjectionTargetVersion(DWORD version) { config.SetProjectionTargetVersion(version); }
+        
 
         bool IsClosed() { return isClosed; }
         bool IsFastDOMEnabled() { return fastDOMenabled; }

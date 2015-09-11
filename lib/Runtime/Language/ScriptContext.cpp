@@ -1227,7 +1227,9 @@ namespace Js
 #ifdef ENABLE_INTL_OBJECT
             this->javascriptLibrary->GetEngineInterfaceObject()->DumpIntlByteCode(this);
 #endif
+#ifdef ENABLE_PROJECTION
             this->javascriptLibrary->GetEngineInterfaceObject()->DumpPromiseByteCode(this);
+#endif
         }
 
         isInitialized = TRUE;

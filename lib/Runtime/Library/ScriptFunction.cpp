@@ -459,7 +459,11 @@ namespace Js
             // TODO: What about surrogate pairs?
             utf8::DecodeOptions options = pFuncBody->GetUtf8SourceInfo()->IsCesu8() ? utf8::doAllowThreeByteSurrogates : utf8::doDefault;
             utf8::DecodeInto(builder.DangerousGetWritableBuffer(), pFuncBody->GetSource(L"ScriptFunction::EnsureSourceString"), pFuncBody->LengthInChars(), options);
-            if (pFuncBody->IsLambda() || isActiveScript || scriptContext->GetConfig()->IsWinRTEnabled())
+            if (pFuncBody->IsLambda() || isActiveScript
+#ifdef ENABLE_PROJECTION
+                || scriptContext->GetConfig()->IsWinRTEnabled()
+#endif
+                )
             {
                 cachedSourceString = builder.ToString();
             }

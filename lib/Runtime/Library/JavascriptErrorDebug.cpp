@@ -70,6 +70,7 @@ namespace Js
     {
     }
 
+#ifdef ENABLE_PROJECTION
     void JavascriptErrorDebug::ClearErrorInfo(ScriptContext* scriptContext)
     {
         HRESULT hr = scriptContext->GetThreadContext()->GetWinRTErrorLibrary()->RoClearError();
@@ -84,6 +85,7 @@ namespace Js
             }
         }
     }
+#endif
 
     // Info:        Map and Throw a JavascriptError(Debug) containing restricted error information, if available
     // Parameters:  scriptContext - the script context
@@ -91,7 +93,11 @@ namespace Js
     void __declspec(noreturn) JavascriptErrorDebug::MapAndThrowErrorWithInfo(ScriptContext* scriptContext, HRESULT hr)
     {
         // Initialize error type to kjstWinRTError if WinRT is enabled, or to kjstError otherwise.
+#ifdef ENABLE_PROJECTION
         ErrorTypeEnum errorType = scriptContext->GetConfig()->IsWinRTEnabled() ? kjstWinRTError : kjstError;
+#else
+        ErrorTypeEnum errorType = kjstError;
+#endif
         // Get error type if hr is a runtime error.
         GetErrorTypeFromNumber(hr, &errorType);
         
@@ -129,6 +135,7 @@ namespace Js
         BSTR message = nullptr;
         uint32 length = 1; // +1 for null character
 
+#ifdef ENABLE_PROJECTION
         // Get the restricted error string - but only if the WinRT is enabled and we are targeting WinBlue+.
         if (JavascriptErrorDebug::Is(pError)
             && scriptContext->GetConfig()->IsWinRTEnabled()
@@ -138,6 +145,7 @@ namespace Js
             restrictedDescription = JavascriptErrorDebug::FromVar(pError)->GetRestrictedErrorString();
             length += SysStringLen(restrictedDescription);
         }
+#endif
 
         if (varDescription != nullptr)
         {
