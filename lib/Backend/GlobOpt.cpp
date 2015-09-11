@@ -7242,9 +7242,10 @@ GlobOpt::ValueNumberDst(IR::Instr **pInstr, Value *src1Val, Value *src2Val)
     case Js::OpCode::LdSlotArr:
     case Js::OpCode::LdSlotChkUndecl:
     case Js::OpCode::LdFld:
-    case Js::OpCode::LdFldForTypeOf:
-    case Js::OpCode::LdRootFldForTypeOf:
+    case Js::OpCode::LdFldForTypeOf: 
     case Js::OpCode::LdFldForCallApplyTarget:
+    // Do not transfer value type on ldFldForTypeOf to prevent copy-prop to LdRootFld in case the field doesn't exist since LdRootFldForTypeOf does not throw
+    //case Js::OpCode::LdRootFldForTypeOf:
     case Js::OpCode::LdRootFld:
     case Js::OpCode::LdMethodFld:
     case Js::OpCode::LdRootMethodFld:
