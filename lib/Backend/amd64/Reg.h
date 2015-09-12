@@ -9,7 +9,6 @@
 #define RA_CALLERSAVE       0x4
 
 #define RA_BYTEABLE         0x8
-#define RA_ASMJSRESERVED    0x10
 
 
 enum RegNum {

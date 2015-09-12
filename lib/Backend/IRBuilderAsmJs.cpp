@@ -711,7 +711,8 @@ IRBuilderAsmJs::BuildHeapBufferReload(uint32 offset)
 
     // ArrayBuffer buffer
     dstOpnd = BuildDstOpnd(AsmJsRegSlots::BufferReg, TyVar);
-    instr = IR::Instr::New(Js::OpCode::LdAsmJsHeap, dstOpnd, m_func);
+    srcOpnd = IR::IndirOpnd::New(BuildSrcOpnd(AsmJsRegSlots::ArrayReg, TyVar), Js::ArrayBuffer::GetBufferOffset(), TyVar, m_func);
+    instr = IR::Instr::New(Js::OpCode::Ld_A, dstOpnd, srcOpnd, m_func);
     AddInstr(instr, offset);
 
     // ArrayBuffer length
@@ -728,13 +729,10 @@ IRBuilderAsmJs::BuildConstantLoads()
     uint32 floatConstCount = m_func->GetJnFunction()->GetAsmJsFunctionInfo()->GetFloatConstCount();
     uint32 doubleConstCount = m_func->GetJnFunction()->GetAsmJsFunctionInfo()->GetDoubleConstCount();
     Js::Var * constTable = static_cast<Js::Var *>(m_func->GetJnFunction()->GetConstTable());
-    /*
+
     // Load FrameDisplay
     IR::RegOpnd * dstOpnd = BuildDstOpnd(AsmJsRegSlots::ModuleMemReg, TyVar);
     IR::Instr * instr = IR::Instr::New(Js::OpCode::LdAsmJsEnv, dstOpnd, m_func);
-    */
-    IR::RegOpnd * dstOpnd = BuildDstOpnd(AsmJsRegSlots::ModuleMemReg, TyVar);
-    IR::Instr * instr = IR::Instr::New(Js::OpCode::Ld_A, dstOpnd, IR::AddrOpnd::New((Js::FunctionEntryPointInfo*)(m_func->m_workItem->GetEntryPoint())->GetModuleAddress(), IR::AddrOpndKindDynamicMisc, m_func, true), m_func);
     AddInstr(instr, Js::Constants::NoByteCodeOffset);
 
     // Load heap buffer
@@ -743,7 +741,7 @@ IRBuilderAsmJs::BuildConstantLoads()
         BuildHeapBufferReload(Js::Constants::NoByteCodeOffset);
     }
     
-    uint32 regAllocated = 6;
+    uint32 regAllocated = AsmJsRegSlots::RegCount;
 
     // build int const loads
 
@@ -1531,6 +1529,9 @@ IRBuilderAsmJs::BuildAsmTypedArr(Js::OpCodeAsmJs newOpcode, uint32 offset, uint3
     {
         AddInstr(maskInstr, offset);
     }
+#if _M_IX86
+    instr->SetSrc2(BuildSrcOpnd(AsmJsRegSlots::LengthReg, TyUint32));
+#endif
     AddInstr(instr, offset);
 }
 

@@ -2151,7 +2151,7 @@ namespace Js
 
             // Todo:: add more runtime check here
             auto proxy = m_functionBody->GetNestedFuncReference(i);
-            ScriptFunction* scriptFuncObj = ScriptFunction::OP_NewScFunc(pDisplay, (FunctionProxy**)proxy);
+            AsmJsScriptFunction* scriptFuncObj = (AsmJsScriptFunction*)ScriptFunction::OP_NewScFunc(pDisplay, (FunctionProxy**)proxy);
             if (i == 0 && info->GetUsesChangeHeap())
             {
                 scriptFuncObj->GetDynamicType()->SetEntryPoint(AsmJsChangeHeapBuffer);
@@ -2160,7 +2160,7 @@ namespace Js
             {
                 scriptFuncObj->GetDynamicType()->SetEntryPoint(AsmJsExternalEntryPoint);
             }
-            scriptFuncObj->mModuleMemory = moduleMemoryPtr;
+            scriptFuncObj->SetModuleMemory(moduleMemoryPtr);
             FunctionEntryPointInfo* entypointInfo = (FunctionEntryPointInfo*)scriptFuncObj->GetEntryPointInfo();
             entypointInfo->SetIsAsmJSFunction(true);
             entypointInfo->SetModuleAddress((uintptr_t)moduleMemoryPtr);

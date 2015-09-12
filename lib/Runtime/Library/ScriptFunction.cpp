@@ -108,7 +108,19 @@ namespace Js
             }
             return pfuncScriptWithInlineCache;
         }
+        else if(functionProxy->IsFunctionBody() && functionProxy->GetFunctionBody()->GetIsAsmJsFunction())
+        {
+            AsmJsScriptFunction* asmJsFunc = scriptContext->GetLibrary()->CreateAsmJsScriptFunction(functionProxy);
+            asmJsFunc->SetEnvironment(environment);
 
+            Assert(!hasSuperReference);
+            asmJsFunc->SetHasSuperReference(hasSuperReference);
+            asmJsFunc->SetIsDefaultConstructor(isDefaultConstructor);
+
+            JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_FUNCTION(asmJsFunc, EtwTrace::GetFunctionId(functionProxy)));
+
+            return asmJsFunc;
+        }
         else
         {
             ScriptFunction* pfuncScript = scriptContext->GetLibrary()->CreateScriptFunction(functionProxy);
@@ -512,6 +524,14 @@ namespace Js
         return true;
     }
 
+
+    AsmJsScriptFunction::AsmJsScriptFunction(FunctionProxy * proxy, ScriptFunctionType* deferredPrototypeType) :
+        ScriptFunction(proxy, deferredPrototypeType)
+    {}
+
+    AsmJsScriptFunction::AsmJsScriptFunction(DynamicType * type) :
+        ScriptFunction(type)
+    {}
 
     ScriptFunctionWithInlineCache::ScriptFunctionWithInlineCache(FunctionProxy * proxy, ScriptFunctionType* deferredPrototypeType) :
         ScriptFunction(proxy, deferredPrototypeType), hasOwnInlineCaches(false)

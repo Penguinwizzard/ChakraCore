@@ -57,8 +57,6 @@ namespace Js
             Assert(this->GetFunctionProxy()->IsDeferred() == FALSE);
             return (FunctionEntryPointInfo*) this->GetEntryPointInfo();
         }
-        Var* mModuleMemory;
-        static uint32 GetOffsetOfModuleMemory() { return offsetof(ScriptFunction, mModuleMemory); }
         FunctionProxy * GetFunctionProxy() const;
         ScriptFunctionType * GetScriptFunctionType() const;
 
@@ -112,6 +110,24 @@ namespace Js
         virtual JavascriptFunction* GetRealFunctionObject() { return this; }
 
         virtual bool CloneMethod(JavascriptFunction** pnewMethod, const Var newHome) override;
+    };
+
+    class AsmJsScriptFunction : public ScriptFunction
+    {
+    public:
+        AsmJsScriptFunction(FunctionProxy * proxy, ScriptFunctionType* deferredPrototypeType);
+
+        void SetModuleMemory(Var* mem) { m_ModuleMemory = mem; }
+        Var * GetModuleMemory() const { return m_ModuleMemory; }
+
+        static uint32 GetOffsetOfModuleMemory() { return offsetof(AsmJsScriptFunction, m_ModuleMemory); }
+    protected:
+        AsmJsScriptFunction(DynamicType * type);
+        DEFINE_VTABLE_CTOR(AsmJsScriptFunction, ScriptFunction);
+        DEFINE_MARSHAL_OBJECT_TO_SCRIPT_CONTEXT(AsmJsScriptFunction);
+
+    private:
+        Var * m_ModuleMemory;
     };
 
     class ScriptFunctionWithInlineCache : public ScriptFunction

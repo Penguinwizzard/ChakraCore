@@ -393,10 +393,6 @@ SIMDArg3:
         
 setup_args_done:
 
-        mov rbx, [rcx + 58h]
-        mov rbx, [rbx]
-        mov rbx, [rbx+30h]
-
         call rax
 done:
         lea rsp, [rbp]

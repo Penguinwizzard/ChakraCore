@@ -157,10 +157,6 @@ Peeps::PeepFunc()
                     this->ClearReg(dst->AsRegOpnd()->GetReg());
                 }
             }
-            else if (instr->m_opcode == Js::OpCode::LdAsmJsHeap)
-            {
-                instr->Remove();
-            }
             else if ( (instr->m_opcode == Js::OpCode::INC ) || (instr->m_opcode == Js::OpCode::DEC) )
             {
                 // Check for any of the following patterns which can cause partial flag dependecy

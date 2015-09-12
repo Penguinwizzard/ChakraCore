@@ -208,7 +208,9 @@ namespace Js
         Assert(address);
         AsmJsFunctionInfo* info = func->GetFunctionBody()->GetAsmJsFunctionInfo();
         ScriptContext* scriptContext = func->GetScriptContext();
+
         AsmJsModuleInfo::EnsureHeapAttached(func);
+
         uint actualArgCount = callInfo.Count - 1; // -1 for ScriptFunction
         argDst = argDst + MachPtr; // add one first so as to skip the ScriptFunction argument
         for (uint i = 0; i < info->GetArgCount(); i++)

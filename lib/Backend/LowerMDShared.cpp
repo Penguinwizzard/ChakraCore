@@ -1930,12 +1930,6 @@ template void LowererMD::MakeDstEquSrc1<true>(IR::Instr *const instr);
 #endif
 
 IR::Instr *
-LowererMD::LoadAsmJsHeap(IR::Instr *instr)
-{
-    return lowererMDArch.LoadAsmJsHeap(instr);
-}
-
-IR::Instr *
 LowererMD::LoadFunctionObjectOpnd(IR::Instr *instr, IR::Opnd *&functionObjOpnd)
 {
     IR::Opnd * src1 = instr->GetSrc1();

@@ -323,7 +323,6 @@ align 16
 
         mov [rsp + 28h], rsi
         mov [rsp + 30h], rdi
-        mov [rsp + 38h], rbx
         
         mov rsi, rcx ; store entryObject in rsi
         mov rdi, rdx ; store callInfo in rdi
@@ -358,9 +357,7 @@ endif
         ; move first 4 arguments into registers.
         ; don't know types other than arg0 (which is ScriptFunction *), so put in both xmm and general purpose registers
         mov rcx, rsi
-        mov rbx, [rcx + 58h]
-        mov rbx, [rbx]
-        mov rbx, [rbx+30h]
+
         ; int GetArgsSizesArray(ScriptFunction* func)
         ; get args sizes of target asmjs function
         ; rcx has ScriptFunction*
@@ -433,7 +430,6 @@ endif
     Epilogue:
         mov rsi, [rsp + 28h]
         mov rdi, [rsp + 30h]
-        mov rbx, [rsp + 38h]
         
         lea  rsp, [rbp]
         pop rbp
