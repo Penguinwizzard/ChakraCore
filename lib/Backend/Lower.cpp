@@ -8394,10 +8394,8 @@ Lowerer::LowerLdArrViewElem(IR::Instr * instr)
     IR::Opnd * src1 = instr->GetSrc1();
     IR::Opnd * src2 = instr->GetSrc2();
 
-    // type of dst is the type of array
-    IRType type = src1->GetType();
     IR::Instr * done;
-    if (indexOpnd || (!m_func->GetJnFunction()->GetAsmJsFunctionInfo()->IsHeapBufferConst() && (uint32)src1->AsIndirOpnd()->GetOffset() >= 0x1000000))
+    if (indexOpnd || (uint32)src1->AsIndirOpnd()->GetOffset() >= 0x1000000)
     {
         // CMP indexOpnd, src2(arrSize)
         // JA $helper
@@ -8415,23 +8413,9 @@ Lowerer::LowerLdArrViewElem(IR::Instr * instr)
     }
     else
     {
+        // any access below 0x1000000 is safe
         instr->UnlinkDst();
         instr->UnlinkSrc1();
-
-        // this can happen in cases where globopt props a constant access which was not known at bytecodegen time or when heap non-constant
-        if (src2 && src2->IsIntConstOpnd() && ((uint32)src1->AsIndirOpnd()->GetOffset() >= (uint32)src2->AsIntConstOpnd()->m_value))
-        {
-            src1->Free(m_func);
-
-            if (IRType_IsFloat(type))
-            {
-                src1 = IR::FloatConstOpnd::New(Js::NumberConstants::NaN, type, m_func);
-            }
-            else
-            {
-                src1 = IR::IntConstOpnd::New(0, TyInt8, m_func);
-            }
-        }
         if (src2)
         {
             instr->FreeSrc2();
@@ -8616,8 +8600,7 @@ Lowerer::LowerStArrViewElem(IR::Instr * instr)
     Assert(!dst->IsFloat64() || src1->IsFloat64());
 
     IR::Instr * done;
-    bool doStore = true;
-    if (indexOpnd || (!m_func->GetJnFunction()->GetAsmJsFunctionInfo()->IsHeapBufferConst() && (uint32)dst->AsIndirOpnd()->GetOffset() >= 0x1000000))
+    if (indexOpnd || (uint32)dst->AsIndirOpnd()->GetOffset() >= 0x1000000)
     {
         // CMP indexOpnd, src2(arrSize)
         // JA $helper
@@ -8632,26 +8615,16 @@ Lowerer::LowerStArrViewElem(IR::Instr * instr)
     }
     else
     {
+        // any constant access below 0x1000000 is safe, as that is the min heap size
         instr->UnlinkDst();
         instr->UnlinkSrc1();
-        // TODO: fix OOB case
-        // we might have a constant index if globopt propped a constant store. we can ahead of time check if it is in-bounds
-        if (src2 && src2->IsIntConstOpnd() && ((uint32)dst->AsIndirOpnd()->GetOffset() >= (uint32)src2->AsIntConstOpnd()->m_value))
-        {
-            doStore = false;
-            src1->Free(m_func);
-            dst->Free(m_func);
-        }
         done = instr;
         if (src2)
         {
             instr->FreeSrc2();
         }
     }
-    if (doStore)
-    {
-        InsertMove(dst, src1, done);
-    }
+    InsertMove(dst, src1, done);
     instr->Remove();
     return instrPrev;
 }
