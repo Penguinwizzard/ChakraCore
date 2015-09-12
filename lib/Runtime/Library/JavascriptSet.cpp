@@ -43,7 +43,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
         JavascriptLibrary* library = scriptContext->GetLibrary();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Set");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Set");
 
         Var newTarget = callInfo.Flags & CallFlags_NewTarget ? args.Values[args.Info.Count] : args[0];
         bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && newTarget != nullptr && RecyclableObject::Is(newTarget);
@@ -183,7 +183,7 @@ namespace Js
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Set.prototype.forEach");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Set.prototype.forEach");
 
         if (!JavascriptSet::Is(args[0]))
         {

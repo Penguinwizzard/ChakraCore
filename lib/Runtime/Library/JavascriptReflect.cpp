@@ -13,7 +13,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
         Var undefinedValue = scriptContext->GetLibrary()->GetUndefined();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Reflect.defineProperty");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Reflect.defineProperty");
 
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         if  (args.Info.Flags & CallFlags_New)
@@ -60,7 +60,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
         Var undefinedValue = scriptContext->GetLibrary()->GetUndefined();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Reflect.deleteProperty");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Reflect.deleteProperty");
 
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         if  (args.Info.Flags & CallFlags_New)
@@ -84,7 +84,7 @@ namespace Js
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Reflect.enumerate");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Reflect.enumerate");
 
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         if  (args.Info.Flags & CallFlags_New)
@@ -112,7 +112,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
         Var undefinedValue = scriptContext->GetLibrary()->GetUndefined();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Reflect.get");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Reflect.get");
 
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         if  (args.Info.Flags & CallFlags_New)
@@ -140,7 +140,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
         Var undefinedValue = scriptContext->GetLibrary()->GetUndefined();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Reflect.getOwnPropertyDescriptor");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Reflect.getOwnPropertyDescriptor");
 
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         if  (args.Info.Flags & CallFlags_New)
@@ -173,7 +173,7 @@ namespace Js
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Reflect.getPrototypeOf");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Reflect.getPrototypeOf");
 
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         if  (args.Info.Flags & CallFlags_New)
@@ -196,7 +196,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
         Var undefinedValue = scriptContext->GetLibrary()->GetUndefined();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Reflect.has");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Reflect.has");
 
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         if  (args.Info.Flags & CallFlags_New)
@@ -221,7 +221,7 @@ namespace Js
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Reflect.issExtensible");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Reflect.issExtensible");
 
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         if  (args.Info.Flags & CallFlags_New)
@@ -252,7 +252,7 @@ namespace Js
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Reflect.ownKeys");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Reflect.ownKeys");
 
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         if  (args.Info.Flags & CallFlags_New)
@@ -275,7 +275,7 @@ namespace Js
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Reflect.preventExtensions");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Reflect.preventExtensions");
 
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         if (args.Info.Flags & CallFlags_New)
@@ -306,7 +306,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
         Var undefinedValue = scriptContext->GetLibrary()->GetUndefined();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Reflect.set");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Reflect.set");
 
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         if (args.Info.Flags & CallFlags_New)
@@ -334,7 +334,7 @@ namespace Js
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Reflect.setPrototypeOf");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Reflect.setPrototypeOf");
 
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         if  (args.Info.Flags & CallFlags_New)
@@ -367,7 +367,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
         Var undefinedValue = scriptContext->GetLibrary()->GetUndefined();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Reflect.apply");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Reflect.apply");
 
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         if (args.Info.Flags & CallFlags_New)
@@ -394,7 +394,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
         Var undefinedValue = scriptContext->GetLibrary()->GetUndefined();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Reflect.construct");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Reflect.construct");
 
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         if (args.Info.Flags & CallFlags_New)

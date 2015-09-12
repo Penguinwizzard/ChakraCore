@@ -49,7 +49,7 @@ namespace Js
 
         Assert(!(callInfo.Flags & CallFlags_New));
         AssertMsg(args.Info.Count > 0, "must have this pointer");
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Iterator.next");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Iterator.next");
         if (!JavascriptEnumeratorIterator::Is(args[0]))
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NeedArrayIterator, L"Iterator.next");

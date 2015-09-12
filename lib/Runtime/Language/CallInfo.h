@@ -21,6 +21,8 @@ namespace Js
 
     struct CallInfo
     {
+        CallInfo() {}
+
         /*
          * Removed the copy constructor because it forced the 64 bit compiler
          * to pass this object by reference. Interpreter stack setup code expects

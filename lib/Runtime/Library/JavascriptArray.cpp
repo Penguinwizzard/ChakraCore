@@ -6077,7 +6077,7 @@ Case0:
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Array.prototype.sort");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Array.prototype.sort");
 
         Assert(!(callInfo.Flags & CallFlags_New));
 
@@ -7777,7 +7777,7 @@ Case0:
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Array.prototype.every");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Array.prototype.every");
 
         Assert(!(callInfo.Flags & CallFlags_New));
 
@@ -7950,7 +7950,7 @@ Case0:
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Array.prototype.some");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Array.prototype.some");
        
         CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(ArraySomeCount);
 
@@ -8123,7 +8123,7 @@ Case0:
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Array.prototype.forEach");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Array.prototype.forEach");
 
         CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(ArrayForEachCount)
 
@@ -8538,7 +8538,7 @@ Case0:
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Array.prototype.map");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Array.prototype.map");
 
         CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(ArrayMapCount);
 
@@ -8787,7 +8787,7 @@ Case0:
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Array.prototype.filter");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Array.prototype.filter");
 
         CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(ArrayFilterCount);
 
@@ -8951,7 +8951,7 @@ Case0:
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Array.prototype.reduce");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Array.prototype.reduce");
        
         CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(ArrayReduceCount);
 
@@ -9157,7 +9157,7 @@ Case0:
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Array.prototype.reduceRight");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Array.prototype.reduceRight");
        
         CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(ArrayReduceRightCount);
 
@@ -9369,7 +9369,7 @@ Case0:
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Array.from");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Array.from");
 
         Assert(!(callInfo.Flags & CallFlags_New));
 

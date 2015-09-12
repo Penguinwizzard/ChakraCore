@@ -92,7 +92,7 @@ namespace Js
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Proxy.revocable");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Proxy.revocable");
 
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         if (args.Info.Flags & CallFlags_New)
@@ -121,7 +121,7 @@ namespace Js
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Proxy.revoke");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Proxy.revoke");
 
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         Var revokableProxy;

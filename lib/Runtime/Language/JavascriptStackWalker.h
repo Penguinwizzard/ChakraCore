@@ -295,6 +295,7 @@ namespace Js
         CallInfo                inlinedFrameCallInfo;
         bool                    inlinedFramesBeingWalked    : 1;
         bool                    isJavascriptFrame           : 1;
+        bool                    isNativeLibraryFrame        : 1;
         bool                    isInitialFrame              : 1; // If we need to walk the initial frame
         bool                    lastInternalFrameConsumed   : 1;
         bool                    shouldDetectPartiallyInitializedInterpreterFrame : 1;

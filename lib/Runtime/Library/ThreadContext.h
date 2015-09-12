@@ -214,8 +214,10 @@ class NativeLibraryEntryRecord
 public:
     struct Entry
     {
-        PVOID addr;
+        Js::RecyclableObject* function;
+        Js::CallInfo callInfo;
         PCWSTR name;
+        PVOID addr;
         Entry* next;
     };
 
@@ -247,11 +249,10 @@ public:
 class AutoTagNativeLibraryEntry
 {
 private:
-    ThreadContext* threadContext;
     NativeLibraryEntryRecord::Entry entry;
 
 public:
-    AutoTagNativeLibraryEntry(ThreadContext* threadContext, void* addr, PCWSTR name);
+    AutoTagNativeLibraryEntry(Js::RecyclableObject* function, Js::CallInfo callInfo, PCWSTR name, void* addr);
     ~AutoTagNativeLibraryEntry();
 };
 
@@ -305,8 +306,8 @@ public:
     void LogTime(double ms);
 };
 
-#define AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, name) \
-    AutoTagNativeLibraryEntry __tag(scriptContext->GetThreadContext(), _AddressOfReturnAddress(), name)
+#define AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, name) \
+    AutoTagNativeLibraryEntry __tag(function, callInfo, name, _AddressOfReturnAddress())
 
 class ThreadContext sealed : 
     public DefaultRecyclerCollectionWrapper,
@@ -1542,20 +1543,6 @@ private:
 };
 
 extern void(*InitializeAdditionalProperties)(ThreadContext *threadContext);
-
-inline AutoTagNativeLibraryEntry::AutoTagNativeLibraryEntry(ThreadContext* threadContext, void* addr, PCWSTR name) :
-    threadContext(threadContext)
-{
-    entry.addr = addr;
-    entry.name = name;
-    threadContext->PushNativeLibraryEntry(&entry);
-}
-
-inline AutoTagNativeLibraryEntry::~AutoTagNativeLibraryEntry()
-{
-    Assert(threadContext->PeekNativeLibraryEntry() == &entry);
-    threadContext->PopNativeLibraryEntry();
-}
 
 // Temporarily set script profiler isProfilingUserCode state, restore at destructor
 class AutoProfilingUserCode

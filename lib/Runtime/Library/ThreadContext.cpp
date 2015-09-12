@@ -4118,3 +4118,22 @@ void ParserTimer::LogTime(double ms)
         stats.greaterThan300ms++;
     }
 }
+
+AutoTagNativeLibraryEntry::AutoTagNativeLibraryEntry(Js::RecyclableObject* function, Js::CallInfo callInfo, PCWSTR name, void* addr)
+{
+    // Save function/callInfo values (for StackWalker). Compiler may stackpack/optimize them for built-in native functions.
+    entry.function = function;
+    entry.callInfo = callInfo;
+    entry.name = name;
+    entry.addr = addr;
+
+    ThreadContext* threadContext = function->GetScriptContext()->GetThreadContext();
+    threadContext->PushNativeLibraryEntry(&entry);
+}
+
+AutoTagNativeLibraryEntry::~AutoTagNativeLibraryEntry()
+{
+    ThreadContext* threadContext = entry.function->GetScriptContext()->GetThreadContext();
+    Assert(threadContext->PeekNativeLibraryEntry() == &entry);
+    threadContext->PopNativeLibraryEntry();
+}

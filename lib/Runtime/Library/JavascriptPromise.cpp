@@ -36,7 +36,7 @@ namespace Js
         Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == nullptr
             || JavascriptOperators::GetTypeId(args[0]) == TypeIds_HostDispatch);
 
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Promise");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Promise");
 
         JavascriptPromise* promise = nullptr;
 
@@ -153,7 +153,7 @@ namespace Js
 
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Promise.all");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Promise.all");
                 
         // 1. Let C be the this value.
         Var constructor = args[0];
@@ -286,7 +286,7 @@ namespace Js
 
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Promise.prototype.catch");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Promise.prototype.catch");
 
         RecyclableObject* promise;
 
@@ -331,7 +331,7 @@ namespace Js
 
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Promise.race");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Promise.race");
 
         // 1. Let C be the this value.
         Var constructor = args[0];
@@ -432,7 +432,7 @@ namespace Js
 
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Promise.reject");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Promise.reject");
 
         // 1. Let C be the this value.
         Var constructor = args[0];
@@ -479,7 +479,7 @@ namespace Js
 
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Promise.resolve");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Promise.resolve");
 
         Var undefinedVar = scriptContext->GetLibrary()->GetUndefined();
         Var x;
@@ -540,7 +540,7 @@ namespace Js
 
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Promise.prototype.then");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Promise.prototype.then");
 
         JavascriptPromise* promise;
 

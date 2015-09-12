@@ -500,6 +500,7 @@ namespace Js
 
         this->interpreterFrame = NULL;
         this->isJavascriptFrame = false;
+        this->isNativeLibraryFrame = false;
 
         if (entryExitRecord->frameIdOfScriptExitFunction != NULL)
         {
@@ -708,6 +709,8 @@ namespace Js
             ClearCachedInternalFrameAddress();
         }
 
+        this->isNativeLibraryFrame = false; // Clear previous result
+
         void * codeAddr = this->currentFrame.GetInstructionPointer();
         if (this->tempInterpreterFrame && codeAddr == this->tempInterpreterFrame->GetReturnAddress())
         {
@@ -760,6 +763,7 @@ namespace Js
             AssertMsg(addressOfReturnAddress <= this->nativeLibraryEntry->addr, "Missed matching native library entry?");
             if (addressOfReturnAddress == this->nativeLibraryEntry->addr)
             {
+                this->isNativeLibraryFrame = true;
                 this->shouldDetectPartiallyInitializedInterpreterFrame = false;
                 this->prevNativeLibraryEntry = this->nativeLibraryEntry; // Saves match in prevNativeLibraryEntry
                 this->nativeLibraryEntry = this->nativeLibraryEntry->next;
@@ -856,9 +860,14 @@ namespace Js
         {
             return inlinedFrameWalker.GetFunctionObject();
         }
+        else if (this->isNativeLibraryFrame)
+        {
+            // Return saved function. Do not read from stack as compiler may stackpack/optimize args.
+            return JavascriptFunction::FromVar(this->prevNativeLibraryEntry->function);
+        }
         else
         {
-            return  StackScriptFunction::GetCurrentFunctionObject((JavascriptFunction *)this->GetCurrentArgv()[JavascriptFunctionArgIndex_Function]);
+            return StackScriptFunction::GetCurrentFunctionObject((JavascriptFunction *)this->GetCurrentArgv()[JavascriptFunctionArgIndex_Function]);
         }
     }
 
@@ -893,6 +902,11 @@ namespace Js
         {
             JavascriptGenerator* gen = JavascriptGenerator::FromVar(this->GetCurrentArgv()[JavascriptFunctionArgIndex_This]);
             return &gen->GetArguments().Info;
+        }
+        else if (this->isNativeLibraryFrame)
+        {
+            // Return saved callInfo. Do not read from stack as compiler may stackpack/optimize args.
+            return &this->prevNativeLibraryEntry->callInfo;
         }
         else
         {

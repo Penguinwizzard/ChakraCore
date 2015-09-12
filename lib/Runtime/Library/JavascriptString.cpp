@@ -1399,7 +1399,7 @@ case_2:
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"String.prototype.replace");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"String.prototype.replace");
 
         Assert(!(callInfo.Flags & CallFlags_New));
 
