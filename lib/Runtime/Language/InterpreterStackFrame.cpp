@@ -2152,6 +2152,8 @@ namespace Js
             // Todo:: add more runtime check here
             auto proxy = m_functionBody->GetNestedFuncReference(i);
             AsmJsScriptFunction* scriptFuncObj = (AsmJsScriptFunction*)ScriptFunction::OP_NewScFunc(pDisplay, (FunctionProxy**)proxy);
+            localModuleFunctions[modFunc.location] = scriptFuncObj;
+
             if (i == 0 && info->GetUsesChangeHeap())
             {
                 scriptFuncObj->GetDynamicType()->SetEntryPoint(AsmJsChangeHeapBuffer);
@@ -2161,17 +2163,20 @@ namespace Js
                 scriptFuncObj->GetDynamicType()->SetEntryPoint(AsmJsExternalEntryPoint);
             }
             scriptFuncObj->SetModuleMemory(moduleMemoryPtr);
-            FunctionEntryPointInfo* entypointInfo = (FunctionEntryPointInfo*)scriptFuncObj->GetEntryPointInfo();
-            entypointInfo->SetIsAsmJSFunction(true);
-            entypointInfo->SetModuleAddress((uintptr_t)moduleMemoryPtr);
-            localModuleFunctions[modFunc.location] = scriptFuncObj;
+            if (!info->IsRuntimeProcessed())
+            {
+                // don't reset entrypoint upon relinking
+                FunctionEntryPointInfo* entypointInfo = (FunctionEntryPointInfo*)scriptFuncObj->GetEntryPointInfo();
+                entypointInfo->SetIsAsmJSFunction(true);
+                entypointInfo->SetModuleAddress((uintptr_t)moduleMemoryPtr);
 
 #if DYNAMIC_INTERPRETER_THUNK
-            if (!PHASE_ON1(AsmJsJITTemplatePhase))
-            {
-                entypointInfo->address = AsmJsDefaultEntryThunk;
-            }
+                if (!PHASE_ON1(AsmJsJITTemplatePhase))
+                {
+                    entypointInfo->address = AsmJsDefaultEntryThunk;
+                }
 #endif
+            }
         }
         
         // Initialise function table arrays
