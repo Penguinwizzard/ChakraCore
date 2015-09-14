@@ -4423,111 +4423,120 @@ GlobOpt::CollectMemcopyStElementI(IR::Instr *instr, Loop *loop)
         return;
     }
 
-    if (instr->GetSrc1()->IsRegOpnd())
+    if (!instr->GetSrc1()->IsRegOpnd())
     {
-        SymID srcSymID = GetVarSymID(instr->GetSrc1()->AsRegOpnd()->GetStackSym());
+        loop->InvalidateMemcopyCandidate(baseSymID);
+        return;
+    }
+    IR::RegOpnd* src1 = instr->GetSrc1()->AsRegOpnd();
 
-        //Prepare the memcopyCandidate entry
-        Loop::MemcopyCandidate* memcopyInfo = nullptr;
-        Loop::MemcopyCandidate* memcopyInfo2 = nullptr;
-        FOREACH_SLIST_ENTRY(Loop::MemcopyCandidate*, memcopyCandidate, (SList<Loop::MemcopyCandidate*>*)loop->memOpInfo->memcopyCandidates)
-        {
-            if (memcopyCandidate->stBase == baseSymID)
-            {
-                memcopyInfo2 = memcopyCandidate;
-            }
-            else if (memcopyCandidate->stBase == Js::Constants::InvalidSymID && memcopyCandidate->transferSym == srcSymID)
-            {
-                memcopyInfo = memcopyCandidate;
-                memcopyInfo->stBase = baseSymID;
-            }
-        } NEXT_SLIST_ENTRY;
+    if (!src1->GetIsDead())
+    {
+        // This must be the last use of the register.
+        // It will invalidate `var m = a[i]; b[i] = m;` but this is not a very interesting case.
+        loop->InvalidateMemcopyCandidate(baseSymID);
+        return;
+    }
 
-        if (!((uintptr_t)memcopyInfo ^ (uintptr_t)memcopyInfo2))
+    SymID srcSymID = GetVarSymID(src1->GetStackSym());
+
+    //Prepare the memcopyCandidate entry
+    Loop::MemcopyCandidate* memcopyInfo = nullptr;
+    Loop::MemcopyCandidate* memcopyInfo2 = nullptr;
+    FOREACH_SLIST_ENTRY(Loop::MemcopyCandidate*, memcopyCandidate, (SList<Loop::MemcopyCandidate*>*)loop->memOpInfo->memcopyCandidates)
+    {
+        if (memcopyCandidate->stBase == baseSymID)
         {
-            loop->InvalidateMemcopyCandidate(baseSymID);
-            return;
+            memcopyInfo2 = memcopyCandidate;
         }
-        if (memcopyInfo2)
+        else if (memcopyCandidate->stBase == Js::Constants::InvalidSymID && memcopyCandidate->transferSym == srcSymID)
         {
-            memcopyInfo = memcopyInfo2;
+            memcopyInfo = memcopyCandidate;
+            memcopyInfo->stBase = baseSymID;
         }
+    } NEXT_SLIST_ENTRY;
 
-        memcopyInfo->stCount++;
+    if (!((uintptr_t)memcopyInfo ^ (uintptr_t)memcopyInfo2))
+    {
+        loop->InvalidateMemcopyCandidate(baseSymID);
+        return;
+    }
+    if (memcopyInfo2)
+    {
+        memcopyInfo = memcopyInfo2;
+    }
 
-        // Process the Index Operand 
-        if (!indexOp)
+    memcopyInfo->stCount++;
+
+    // Process the Index Operand 
+    if (!indexOp)
+    {
+        loop->InvalidateMemcopyCandidate(baseSymID);
+        return;
+    }
+
+    if (!IsAllowedTypeForMemOpt(baseOp, indexOp))
+    {
+        loop->InvalidateMemcopyCandidate(baseSymID);
+        return;
+    }
+
+    Assert(indexOp->GetStackSym());
+
+    SymID inductionSymID = GetInductionVariableSymID(GetVarSymID(indexOp->GetStackSym()), this->currentBlock->loop);
+
+    if (inductionSymID == Js::Constants::InvalidSymID                               // if index is not an induction variable
+        || (memcopyInfo->stIndex != Js::Constants::InvalidSymID && memcopyInfo->stIndex != inductionSymID)         // if index variable doesnot match the previous index variable of this store
+        || (memcopyInfo->stCount != memcopyInfo->ldCount))                          //  load and store counts are not equal
+    {
+        loop->InvalidateMemcopyCandidate(baseSymID);
+        return;
+    }
+
+    if (memcopyInfo->stIndex == Js::Constants::InvalidSymID)
+    {
+        memcopyInfo->stIndex = inductionSymID;
+    }
+
+    if (!loop->memOpInfo->inductionVariableChangeInfoMap->ContainsKey(inductionSymID)) // We don't have information about the induction variable change yet
+    {
+        if (memcopyInfo->stCount == 1)
         {
-            loop->InvalidateMemcopyCandidate(baseSymID);
-            return;
-        }
-
-        if (!IsAllowedTypeForMemOpt(baseOp, indexOp))
-        {
-            loop->InvalidateMemcopyCandidate(baseSymID);
-            return;
-        }
-
-        Assert(indexOp->GetStackSym());
-
-        SymID inductionSymID = GetInductionVariableSymID(GetVarSymID(indexOp->GetStackSym()), this->currentBlock->loop);
-
-        if (inductionSymID == Js::Constants::InvalidSymID                               // if index is not an induction variable
-            || (memcopyInfo->stIndex != Js::Constants::InvalidSymID && memcopyInfo->stIndex != inductionSymID)         // if index variable doesnot match the previous index variable of this store
-            || (memcopyInfo->stCount != memcopyInfo->ldCount))                          //  load and store counts are not equal
-        {
-            loop->InvalidateMemcopyCandidate(baseSymID);
-            return;
-        }
-
-        if (memcopyInfo->stIndex == Js::Constants::InvalidSymID)
-        {
-            memcopyInfo->stIndex = inductionSymID;
-        }
-
-        if (!loop->memOpInfo->inductionVariableChangeInfoMap->ContainsKey(inductionSymID)) // We don't have information about the induction variable change yet
-        {
-            if (memcopyInfo->stCount == 1)
-            {
-                // populate the induction variable information and mark it as post order ie. the index changes after the setelementi
-                Loop::InductionVariableChangeInfo inductionVariableChangeInfo = { 0, 0 };
-                loop->memOpInfo->inductionVariableChangeInfoMap->AddNew(inductionSymID, inductionVariableChangeInfo);
-                memcopyInfo->bStIndexAlreadyChanged = false;
-            }
-            else
-            {
-                //if it's an existing memset and we don't have index information yet disable it.
-                Assert(memcopyInfo->stIndex != inductionSymID);
-                loop->InvalidateMemcopyCandidate(baseSymID);
-                return;
-            }
+            // populate the induction variable information and mark it as post order ie. the index changes after the setelementi
+            Loop::InductionVariableChangeInfo inductionVariableChangeInfo = { 0, 0 };
+            loop->memOpInfo->inductionVariableChangeInfoMap->AddNew(inductionSymID, inductionVariableChangeInfo);
+            memcopyInfo->bStIndexAlreadyChanged = false;
         }
         else
         {
-            Loop::InductionVariableChangeInfo inductionVariableChangeInfo = { 0, 0 };
-            inductionVariableChangeInfo = loop->memOpInfo->inductionVariableChangeInfoMap->Lookup(inductionSymID, inductionVariableChangeInfo);
-            byte count = inductionVariableChangeInfo.unroll;
-
-            if (memcopyInfo->stCount == 1)
-            {
-                memcopyInfo->bStIndexAlreadyChanged = !!count;
-            }
-
-            if (count == Js::Constants::InvalidLoopUnrollFactor                                                   // induction variable was not changed by 1
-                || memcopyInfo->stIndex != inductionSymID                                    // index is not same as before
-                || (memcopyInfo->bStIndexAlreadyChanged && count != memcopyInfo->stCount)          // induction variable is supposed to change first but the didnot
-                || (!memcopyInfo->bStIndexAlreadyChanged && count != memcopyInfo->stCount - 1)             // induction variable is supposed to change later but the didnot
-                )
-            {
-                loop->InvalidateMemcopyCandidate(baseSymID);
-                return;
-            }
+            //if it's an existing memset and we don't have index information yet disable it.
+            Assert(memcopyInfo->stIndex != inductionSymID);
+            loop->InvalidateMemcopyCandidate(baseSymID);
+            return;
         }
     }
     else
     {
-        loop->InvalidateMemcopyCandidate(baseSymID);
+        Loop::InductionVariableChangeInfo inductionVariableChangeInfo = { 0, 0 };
+        inductionVariableChangeInfo = loop->memOpInfo->inductionVariableChangeInfoMap->Lookup(inductionSymID, inductionVariableChangeInfo);
+        byte count = inductionVariableChangeInfo.unroll;
+
+        if (memcopyInfo->stCount == 1)
+        {
+            memcopyInfo->bStIndexAlreadyChanged = !!count;
+        }
+
+        if (count == Js::Constants::InvalidLoopUnrollFactor                                                   // induction variable was not changed by 1
+            || memcopyInfo->stIndex != inductionSymID                                    // index is not same as before
+            || (memcopyInfo->bStIndexAlreadyChanged && count != memcopyInfo->stCount)          // induction variable is supposed to change first but the didnot
+            || (!memcopyInfo->bStIndexAlreadyChanged && count != memcopyInfo->stCount - 1)             // induction variable is supposed to change later but the didnot
+            )
+        {
+            loop->InvalidateMemcopyCandidate(baseSymID);
+            return;
+        }
     }
+    
 }
 
 void
@@ -20665,7 +20674,7 @@ GlobOpt::EmitMemset(Loop * loop, LoopCount *loopCount, SymID base, SymID index, 
                     bailOutKind = instr->GetBailOutKind();
                     Assert(instr->IsProfiledInstr());
                     // Clone instruction to keep array optimisation in case of bailout
-                    memsetInstr = instr->AsProfiledInstr()->CloneProfiledInstr();
+                    //memsetInstr = instr->AsProfiledInstr()->CloneProfiledInstr();
                     break;
                 }
             }
@@ -20696,11 +20705,11 @@ GlobOpt::EmitMemset(Loop * loop, LoopCount *loopCount, SymID base, SymID index, 
     IR::Opnd *sizeOpnd = GenerateInductionVariableChangeForMemOp(loop, unroll, insertBeforeInstr);
     IR::RegOpnd *startIndexOpnd = GenerateStartIndexOpndForMemop(loop, indexOpnd, sizeOpnd, isInductionVariableChangeIncremental, bIndexAlreadyChanged, insertBeforeInstr);
     dstOpnd = IR::IndirOpnd::New(baseOpnd, startIndexOpnd, dstOpnd->GetType(), localFunc);
-    memsetInstr->m_opcode = Js::OpCode::Memset;
+    BailOutInfo* bi = loop->bailOutInfo->bailOutInstr->GetBailOutInfo();
+    memsetInstr = IR::BailOutInstr::New(Js::OpCode::Memset, bailOutKind, bi, localFunc);
     memsetInstr->SetDst(dstOpnd);
     memsetInstr->SetSrc1(src1);
     memsetInstr->SetSrc2(sizeOpnd);
-    memsetInstr->SetBailOutKind(bailOutKind);
     insertBeforeInstr->InsertBefore(memsetInstr);
 
 #if DBG_DUMP
@@ -20819,8 +20828,17 @@ GlobOpt::EmitMemcopy(Loop * loop, LoopCount *loopCount, SymID ldBase, SymID ldIn
 #if DBG_DUMP
                     if (PHASE_TRACE(Js::MemOpPhase, this->func->GetJnFunction()) || PHASE_TRACE(Js::MemCopyPhase, this->func->GetJnFunction()))
                     {
+                        wchar_t stValueTypeStr[VALUE_TYPE_MAX_STRING_SIZE];
+                        stValueType.ToString(stValueTypeStr);
+                        wchar_t ldValueTypeStr[VALUE_TYPE_MAX_STRING_SIZE];
+                        ldValueType->ToString(ldValueTypeStr);
                         wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
-                        Output::Print(L"Memcopy skipped for mismatch in Load and Store value type: Function: %s %s,  Loop: %d\n", this->func->GetJnFunction()->GetDisplayName(), this->func->GetJnFunction()->GetDebugNumberSet(debugStringBuffer), loop->GetLoopNumber());
+                        Output::Print(L"Memcopy skipped for mismatch in Load(%s) and Store(%s) value type: Function: %s %s,  Loop: %d\n",
+                                      ldValueTypeStr,
+                                      stValueTypeStr,
+                                      this->func->GetJnFunction()->GetDisplayName(),
+                                      this->func->GetJnFunction()->GetDebugNumberSet(debugStringBuffer),
+                                      loop->GetLoopNumber());
                         Output::Flush();
                     }
 #endif
@@ -20832,7 +20850,7 @@ GlobOpt::EmitMemcopy(Loop * loop, LoopCount *loopCount, SymID ldBase, SymID ldIn
 
                 Assert(instr->IsProfiledInstr());
                 // Clone instruction to keep array optimisation in case of bailout
-                memcopyInstr = instr->AsProfiledInstr()->CloneProfiledInstr();
+                //memcopyInstr = instr->AsProfiledInstr()->CloneProfiledInstr();
                 bailOutKind = instr->GetBailOutKind();
                 break;
             }
@@ -20887,13 +20905,11 @@ GlobOpt::EmitMemcopy(Loop * loop, LoopCount *loopCount, SymID ldBase, SymID ldIn
 
     dstOpnd = IR::IndirOpnd::New(dstBaseOpnd, stStartIndexOpnd, dstOpnd->GetType(), localFunc);
     srcOpnd = IR::IndirOpnd::New(srcBaseOpnd, ldStartIndexOpnd, srcOpnd->GetType(), localFunc);
-
-    memcopyInstr->m_opcode = Js::OpCode::Memcopy;
+    BailOutInfo* bi = loop->bailOutInfo->bailOutInstr->GetBailOutInfo();
+    memcopyInstr = IR::BailOutInstr::New(Js::OpCode::Memcopy, bailOutKind, bi, localFunc);
     memcopyInstr->SetDst(dstOpnd);
     memcopyInstr->SetSrc1(srcOpnd);
     memcopyInstr->SetSrc2(sizeOpnd);
-    memcopyInstr->SetBailOutKind(bailOutKind);
-
     insertBeforeInstr->InsertBefore(memcopyInstr);
 #if DBG_DUMP
     char valueTypeStr[VALUE_TYPE_MAX_STRING_SIZE];
@@ -20976,7 +20992,7 @@ GlobOpt::ProcessMemcopy(Loop *loop)
         if (EmitMemcopy(loop, loopCount, memcopyCandidate->ldBase, memcopyCandidate->ldIndex,
             memcopyCandidate->stBase, memcopyCandidate->stIndex,
             memcopyCandidate->ldCount,
-            memcopyCandidate->bLdIndexAlreadyChanged, memcopyCandidate->bLdIndexAlreadyChanged,
+            memcopyCandidate->bLdIndexAlreadyChanged, memcopyCandidate->bStIndexAlreadyChanged,
             ldInductionVariableChangeInfo.isIncremental, stInductionVariableChangeInfo.isIncremental) == false)
         {
             iterator.RemoveCurrent();
