@@ -24,7 +24,7 @@ public:
     ~ScriptMemoryDumper()
     {
         // just to reduce the noise on the stack.
-        dumpObject = null;
+        dumpObject = nullptr;
     }
 
     Js::Var Dump();

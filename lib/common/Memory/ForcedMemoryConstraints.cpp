@@ -41,7 +41,7 @@ void ForcedMemoryConstraint::FragmentAddressSpace(size_t usableSize)
     int j = _countof(address) - 2;
     do
     {
-        if (address[j + 1] == null)
+        if (address[j + 1] == nullptr)
         {
              j--;
              continue;

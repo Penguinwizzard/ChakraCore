@@ -39,7 +39,7 @@ FuncInfo::FuncInfo(
     yieldRegister(Js::Constants::NoRegister),
     paramScope(paramScope),
     bodyScope(bodyScope),
-    funcExprScope(NULL),
+    funcExprScope(nullptr),
     root(pnode),
     capturedSyms(nullptr),
     capturedSymMap(nullptr),
@@ -64,7 +64,7 @@ FuncInfo::FuncInfo(
     needEnvRegister(false),
     hasCapturedThis(false),
     staticFuncId(-1),
-    inlineCacheMap(null),
+    inlineCacheMap(nullptr),
     slotProfileIdMap(alloc),
     localPropIdOffset(-1),
     sameNameArgsPlaceHolderSlotCount(0),
@@ -80,7 +80,7 @@ FuncInfo::FuncInfo(
     rootObjectStoreInlineCacheCount(0),
     isInstInlineCacheCount(0),
     referencedPropertyIdCount(0),
-    argumentsSymbol(NULL),
+    argumentsSymbol(nullptr),
     nonUserNonTempRegistersToInitialize(alloc),
     constantToRegister(alloc, 17),
     stringToRegister(alloc, 17),
@@ -103,7 +103,7 @@ bool FuncInfo::IsGlobalFunction() const
 
 bool FuncInfo::IsDeferred() const
 {
-    return root && root->sxFnc.pnodeBody == NULL;
+    return root && root->sxFnc.pnodeBody == nullptr;
 }
 
 BOOL FuncInfo::HasSuperReference() const
@@ -159,7 +159,7 @@ FuncInfo::GetGlobalBlockScope() const
 {
     Assert(this->IsGlobalFunction());
     Scope * scope = this->root->sxFnc.pnodeScopes->sxBlock.scope;
-    Assert(scope == null || scope == this->GetBodyScope() || scope->GetEnclosingScope() == this->GetBodyScope());
+    Assert(scope == nullptr || scope == this->GetBodyScope() || scope->GetEnclosingScope() == this->GetBodyScope());
     return scope;
 }
 
@@ -176,7 +176,7 @@ uint
 FuncInfo::FindOrAddReferencedPropertyId(Js::PropertyId propertyId)
 {
     Assert(propertyId != Js::Constants::NoProperty);
-    Assert(referencedPropertyIdToMapIndex != null);
+    Assert(referencedPropertyIdToMapIndex != nullptr);
     if (propertyId < TotalNumberOfBuiltInProperties)
     {
         return propertyId;

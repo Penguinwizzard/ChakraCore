@@ -177,7 +177,7 @@ namespace Js
 
         virtual DescriptorFlags GetItemSetter(uint32 index, Var* setterValue, ScriptContext* requestContext) override
         {
-            Var value = null;
+            Var value = nullptr;
             return this->DirectGetItemAt(index, &value) ? WritableData : None;
         }
 
@@ -374,7 +374,7 @@ namespace Js
 
         static JavascriptArray *EnsureNonNativeArray(JavascriptArray *arr);
 
-        virtual JavascriptArray *FillFromArgs(uint length, uint start, Var *args, ArrayCallSiteInfo *info = null, bool dontCreateNewArray = false);
+        virtual JavascriptArray *FillFromArgs(uint length, uint start, Var *args, ArrayCallSiteInfo *info = nullptr, bool dontCreateNewArray = false);
 
     protected:
         // Use static New methods to create array.
@@ -816,13 +816,13 @@ namespace Js
 
     public:
         JavascriptNativeArray(DynamicType * type) :
-            JavascriptArray(type), weakRefToFuncBody(null)
+            JavascriptArray(type), weakRefToFuncBody(nullptr)
         {
         }
 
     protected:
         JavascriptNativeArray(uint32 length, DynamicType * type) :
-            JavascriptArray(length, type), weakRefToFuncBody(null) {}
+            JavascriptArray(length, type), weakRefToFuncBody(nullptr) {}
 
         // For BoxStackInstance
         JavascriptNativeArray(JavascriptNativeArray * instance);
@@ -843,7 +843,7 @@ namespace Js
         }
         void ClearArrayCallSiteIndex()
         {
-            weakRefToFuncBody = null;
+            weakRefToFuncBody = nullptr;
         }
 
         ArrayCallSiteInfo *GetArrayCallSiteInfo();
@@ -903,7 +903,7 @@ namespace Js
         virtual Var DirectGetItem(uint32 index);
         virtual DescriptorFlags GetItemSetter(uint32 index, Var* setterValue, ScriptContext* requestContext) override
         {
-            int32 value = null;
+            int32 value = 0;
             return this->DirectGetItemAt(index, &value) ? WritableData : None;
         }
 
@@ -920,7 +920,7 @@ namespace Js
         static Var Push(ScriptContext * scriptContext, Var array, int value);
         static int32 Pop(ScriptContext * scriptContext, Var nativeIntArray);
 
-        virtual JavascriptArray *FillFromArgs(uint length, uint start, Var *args, ArrayCallSiteInfo *info = null, bool dontCreateNewArray = false) override;
+        virtual JavascriptArray *FillFromArgs(uint length, uint start, Var *args, ArrayCallSiteInfo *info = nullptr, bool dontCreateNewArray = false) override;
         virtual void ClearElements(SparseArraySegmentBase *seg, uint32 newSegmentLength) override;        
         virtual void SetIsPrototype() override;
 		
@@ -1018,7 +1018,7 @@ namespace Js
         virtual Var DirectGetItem(uint32 index);
         virtual DescriptorFlags GetItemSetter(uint32 index, Var* setterValue, ScriptContext* requestContext) override
         {
-            double value = null;
+            double value = 0;
             return this->DirectGetItemAt(index, &value) ? WritableData : None;
         }
 
@@ -1032,7 +1032,7 @@ namespace Js
         static JavascriptArray * ToVarArray(JavascriptNativeFloatArray *fArray);
         static JavascriptArray * ConvertToVarArray(JavascriptNativeFloatArray *fArray);
 
-        virtual JavascriptArray *FillFromArgs(uint length, uint start, Var *args, ArrayCallSiteInfo *info = null, bool dontCreateNewArray = false) override;
+        virtual JavascriptArray *FillFromArgs(uint length, uint start, Var *args, ArrayCallSiteInfo *info = nullptr, bool dontCreateNewArray = false) override;
         virtual void ClearElements(SparseArraySegmentBase *seg, uint32 newSegmentLength) override;        
         virtual void SetIsPrototype() override;
 		
@@ -1056,28 +1056,4 @@ namespace Js
     private:
         virtual int32 HeadSegmentIndexOfHelper(Var search, uint32 &fromIndex, uint32 toIndex, ScriptContext * scriptContext) override;
     };
-
-#ifdef ARRLOG
-    struct ArrLogRec
-    {
-        UIntHashTable<uint32>* accessCounts;
-        uint32 minDex;
-        uint32 maxDex;
-        uint32 setCost;
-        uint32 setSegment;
-        uint32 getCost;
-        uint32 totalSetCount;
-        uint32 totalGetCount;
-        uint32 maxlength;
-    };
-    void PrintArrLog(UIntHashTable<ArrLogRec*>* logTable);
-    extern uint32 rawGet;
-    extern uint32 rawTypeGet;
-    extern uint32 totalSet;
-    extern uint32 totalSetCost;
-    extern uint32 totalGet;
-    extern uint32 totalGetCost;
-    extern uint32 rawSet;
-#endif
-
 } // namespace Js

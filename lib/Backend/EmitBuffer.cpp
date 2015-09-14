@@ -16,7 +16,7 @@ EmitBufferManager<SyncObject>::EmitBufferManager(AllocationPolicyManager * polic
     Js::ScriptContext * scriptContext, LPCWSTR name, bool allocXdata) :
     allocationHeap(policyManager, allocator, allocXdata), 
     allocator(allocator), 
-    allocations(NULL), 
+    allocations(nullptr), 
     scriptContext(scriptContext)
 {
 #if DBG_DUMP
@@ -66,11 +66,11 @@ EmitBufferManager<SyncObject>::FreeAllocations(bool release)
 #endif
 
     EmitBufferAllocation * allocation = this->allocations;
-    while (allocation != NULL)
+    while (allocation != nullptr)
     {
         BOOL isFreed;
         // In case of ThunkEmitter the script context would be null and we dont want to track that as code size.
-        if (!release && (scriptContext != null) && allocation->recorded)
+        if (!release && (scriptContext != nullptr) && allocation->recorded)
         {
             this->scriptContext->GetThreadContext()->SubCodeSize(allocation->bytesCommitted);
             allocation->recorded = false;
@@ -95,7 +95,7 @@ EmitBufferManager<SyncObject>::FreeAllocations(bool release)
     }
     if (release)
     {
-        this->allocations = null;
+        this->allocations = nullptr;
     }
 
 }
@@ -120,8 +120,8 @@ public:
     CustomHeap::Allocation* Detach()
     {
         CustomHeap::Allocation* allocation = _heapAllocation;
-        Assert(allocation != null);
-        _heapAllocation = null;
+        Assert(allocation != nullptr);
+        _heapAllocation = nullptr;
         return allocation;
     }
 
@@ -160,7 +160,7 @@ EmitBufferManager<SyncObject>::NewAllocation(size_t bytes, ushort pdataCount, us
         this->scriptContext->GetThreadContext()->ResetIsAllJITCodeInPreReservedRegion();
     }
 
-    if (heapAllocation  == NULL)
+    if (heapAllocation  == nullptr)
     {
         // This is used in interpreter scenario, thus we need to try to recover memory, if possible.
         // Can't simply throw as in JIT scenario, for which throw is what we want in order to give more mem to intepreter.
@@ -168,7 +168,7 @@ EmitBufferManager<SyncObject>::NewAllocation(size_t bytes, ushort pdataCount, us
         heapAllocation = this->allocationHeap.Alloc(bytes, pdataCount, xdataSize, canAllocInPreReservedHeapPageSegment, isAnyJittedCode, &isAllJITCodeInPreReservedRegion);
     }
 
-    if (heapAllocation  == NULL)
+    if (heapAllocation  == nullptr)
     {
         Js::Throw::OutOfMemory();
     }
@@ -202,13 +202,13 @@ EmitBufferManager<SyncObject>::FreeAllocation(void* address)
 {
     AutoRealOrFakeCriticalSection<SyncObject> autoCs(&this->criticalSection);
 
-    EmitBufferAllocation* previous = NULL;
+    EmitBufferAllocation* previous = nullptr;
     EmitBufferAllocation* allocation = allocations;
-    while(allocation != NULL)
+    while(allocation != nullptr)
     {
         if (address >= allocation->allocation->address && address < (allocation->allocation->address + allocation->bytesUsed))
         {
-            if (previous == NULL)
+            if (previous == nullptr)
             {
                 this->allocations = allocation->nextAllocation;
             }
@@ -217,7 +217,7 @@ EmitBufferManager<SyncObject>::FreeAllocation(void* address)
                 previous->nextAllocation = allocation->nextAllocation;
             }
 
-            if ((scriptContext != null) && allocation->recorded)
+            if ((scriptContext != nullptr) && allocation->recorded)
             {
                 this->scriptContext->GetThreadContext()->SubCodeSize(allocation->bytesCommitted);
             }
@@ -249,7 +249,7 @@ bool EmitBufferManager<SyncObject>::FinalizeAllocation(EmitBufferAllocation *all
     {
         BYTE* buffer;
         this->GetBuffer(allocation, bytes, &buffer, false /*readWrite*/);
-        if (!this->CommitBuffer(allocation, buffer, 0, /*sourceBuffer=*/ NULL, /*alignPad=*/ bytes))
+        if (!this->CommitBuffer(allocation, buffer, 0, /*sourceBuffer=*/ nullptr, /*alignPad=*/ bytes))
         {
             return false;
         }
@@ -296,7 +296,7 @@ EmitBufferAllocation* EmitBufferManager<SyncObject>::AllocateBuffer(__in size_t 
 {
     AutoRealOrFakeCriticalSection<SyncObject> autoCs(&this->criticalSection);
 
-    Assert(ppBuffer != NULL);
+    Assert(ppBuffer != nullptr);
 
     EmitBufferAllocation * allocation = this->NewAllocation(bytes, pdataCount, xdataSize, canAllocInPreReservedHeapPageSegment, isAnyJittedCode);
 
@@ -337,7 +337,7 @@ bool EmitBufferManager<SyncObject>::CommitReadWriteBufferForInterpreter(EmitBuff
 {
     Assert(this->criticalSection.IsLocked());
 
-    Assert(allocation != NULL);
+    Assert(allocation != nullptr);
     allocation->bytesUsed += bufferSize;
 #ifdef DEBUG
     this->totalBytesCode += bufferSize;
@@ -378,8 +378,8 @@ EmitBufferManager<SyncObject>::CommitBuffer(EmitBufferAllocation* allocation, __
 {    
     AutoRealOrFakeCriticalSection<SyncObject> autoCs(&this->criticalSection);
 
-    Assert(destBuffer != null);
-    Assert(allocation != NULL);
+    Assert(destBuffer != nullptr);
+    Assert(allocation != nullptr);
 
     DWORD oldProtect;
 
@@ -464,7 +464,7 @@ void
 EmitBufferManager<SyncObject>::CompletePreviousAllocation(EmitBufferAllocation* allocation)
 {
     AutoRealOrFakeCriticalSection<SyncObject> autoCs(&this->criticalSection);
-    if (allocation != null)
+    if (allocation != nullptr)
     {
         allocation->bytesUsed = allocation->bytesCommitted;
     }

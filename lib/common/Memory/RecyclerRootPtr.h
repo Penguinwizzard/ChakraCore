@@ -10,12 +10,12 @@ template <typename T>
 class RecyclerRootPtr 
 {
 public:
-    RecyclerRootPtr() : ptr(null) {};
-    ~RecyclerRootPtr() { Assert(ptr == null); }
-    void Root(T * ptr, Recycler * recycler) { Assert(this->ptr == null); recycler->RootAddRef(ptr); this->ptr = ptr; }
-    void Unroot(Recycler * recycler) { Assert(this->ptr != null); recycler->RootRelease(this->ptr); this->ptr = null; }
+    RecyclerRootPtr() : ptr(nullptr) {};
+    ~RecyclerRootPtr() { Assert(ptr == nullptr); }
+    void Root(T * ptr, Recycler * recycler) { Assert(this->ptr == nullptr); recycler->RootAddRef(ptr); this->ptr = ptr; }
+    void Unroot(Recycler * recycler) { Assert(this->ptr != nullptr); recycler->RootRelease(this->ptr); this->ptr = nullptr; }
     
-    T * operator->() const { Assert(ptr != null); return ptr; }
+    T * operator->() const { Assert(ptr != nullptr); return ptr; }
     operator T*() const { return ptr; }
 protected:
     T * ptr;
@@ -46,7 +46,7 @@ public:
     }
     void Unroot()
     {
-        if (ptr != null)
+        if (ptr != nullptr)
         {
             __super::Unroot(recycler);
         }

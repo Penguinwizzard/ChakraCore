@@ -150,7 +150,7 @@ void DictionaryStats::OutputStats()
         double maxlookupdepth = 0, max_maxlookupdepth = 0;
 
         bool dumpInstances = false;
-        //if(strstr(type->name, "SimpleDictionaryPropertyDescriptor") != null)
+        //if(strstr(type->name, "SimpleDictionaryPropertyDescriptor") != nullptr)
         //{
         //    dumpInstances = true;
         //}

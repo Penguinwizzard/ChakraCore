@@ -30,7 +30,7 @@ DynamicProfileInfo::NeedProfileInfoList()
         || DynamicProfileStorage::IsEnabled() 
 #endif
 #ifdef RUNTIME_DATA_COLLECTION
-        || (Configuration::Global.flags.RuntimeDataOutputFile != null)
+        || (Configuration::Global.flags.RuntimeDataOutputFile != nullptr)
 #endif
         ;
 }
@@ -77,7 +77,7 @@ DynamicProfileInfo* DynamicProfileInfo::New(Recycler* recycler, FunctionBody* fu
         totalAlloc += batch[i].size;
     }
 
-    DynamicProfileInfo* info = null;
+    DynamicProfileInfo* info = nullptr;
 
     // In the profile storage case (-only), always allocate a non-leaf profile
     // In the regular profile case, we need to allocate it as non-leaf only if it's 
@@ -124,7 +124,7 @@ DynamicProfileInfo* DynamicProfileInfo::New(Recycler* recycler, FunctionBody* fu
 
 DynamicProfileInfo::DynamicProfileInfo(FunctionBody * functionBody)
 #if DBG_DUMP || defined(DYNAMIC_PROFILE_STORAGE) || defined(RUNTIME_DATA_COLLECTION)
-    : functionBody(DynamicProfileInfo::NeedProfileInfoList()? functionBody : null)
+    : functionBody(DynamicProfileInfo::NeedProfileInfoList()? functionBody : nullptr)
 #endif
 {
     hasFunctionBody = true;
@@ -300,7 +300,7 @@ DynamicProfileInfo::EnsureDynamicProfileInfo(ScriptFunction * function)
     // If we're creating a dynamic profile, make sure that the function
     // has an entry point and this entry point is the "default" entrypoint
     // created when a function body is created
-    Assert(function->GetEntryPointInfo() != null);
+    Assert(function->GetEntryPointInfo() != nullptr);
     Assert(function->GetFunctionEntryPointInfo()->entryPointIndex == 0);
     FunctionBody * functionBody = function->GetFunctionBody();
 
@@ -343,7 +343,7 @@ DynamicProfileInfo::hasLdFldCallSiteInfo()
 }
 
 bool
-DynamicProfileInfo::RecordLdFldCallSiteInfo(FunctionBody* functionBody, RecyclableObject* callee)
+DynamicProfileInfo::RecordLdFldCallSiteInfo(FunctionBody* functionBody, RecyclableObject* callee, bool callApplyTarget)
 {
     auto SetBits = [&]() -> bool {
         this->bits.hasLdFldCallSite = true;
@@ -359,7 +359,8 @@ DynamicProfileInfo::RecordLdFldCallSiteInfo(FunctionBody* functionBody, Recyclab
     {
         // We can inline fastDOM getter/setter.
         // We can directly call Math.max/min as apply targets.
-        if (calleeFunctionInfo->GetAttributes() & Js::FunctionInfo::Attributes::BuiltInInlinableAsLdFldInlinee)
+        if ((calleeFunctionInfo->GetAttributes() & Js::FunctionInfo::Attributes::NeedCrossSiteSecurityCheck) ||
+            (callApplyTarget && (calleeFunctionInfo->GetAttributes() & Js::FunctionInfo::Attributes::BuiltInInlinableAsLdFldInlinee)))
         {
             if (functionBody->GetScriptContext() == callee->GetScriptContext())
             {
@@ -422,7 +423,7 @@ DynamicProfileInfo::RecordCallSiteInfo(FunctionBody* functionBody, ProfileId cal
 
         Js::SourceId sourceId = InvalidSourceId;
         Js::LocalFunctionId functionId;
-        if (calleeFunctionInfo == null)
+        if (calleeFunctionInfo == nullptr)
         {
             functionId = CallSiteNonFunction;
         }
@@ -619,7 +620,7 @@ DynamicProfileInfo::SetFunctionIdSlotForNewPolymorphicCall(ProfileId callSiteId,
 void DynamicProfileInfo::RecordPolymorphicCallSiteInfo(FunctionBody* functionBody, ProfileId callSiteId, FunctionInfo * calleeFunctionInfo)
 {
     Js::LocalFunctionId functionId;
-    if (calleeFunctionInfo == null || !calleeFunctionInfo->HasBody())
+    if (calleeFunctionInfo == nullptr || !calleeFunctionInfo->HasBody())
     {
         return ResetPolymorphicCallSiteInfo(callSiteId, CallSiteMixed);
     }
@@ -757,7 +758,7 @@ DynamicProfileInfo::GetCallSiteInfo(FunctionBody* functionBody, ProfileId callSi
     *isConstructorCall = callSiteInfo[callSiteId].isConstructorCall;
     if(callSiteInfo[callSiteId].dontInline)
     {
-        return null;
+        return nullptr;
     }
     if (!callSiteInfo[callSiteId].isPolymorphic)
     {
@@ -794,7 +795,7 @@ DynamicProfileInfo::GetCallSiteInfo(FunctionBody* functionBody, ProfileId callSi
     {
         *isPolymorphicCall = true;
     }
-    return null;
+    return nullptr;
 }
 
 uint 
@@ -961,7 +962,7 @@ __inline
 void
 DynamicProfileInfo::RecordPolymorphicFieldAccess(FunctionBody* functionBody, uint fieldAccessId)
 {
-    this->RecordFieldAccess(functionBody, fieldAccessId, null, FldInfo_Polymorphic);
+    this->RecordFieldAccess(functionBody, fieldAccessId, nullptr, FldInfo_Polymorphic);
 }
 
 __inline
@@ -982,7 +983,7 @@ __inline
 void
 DynamicProfileInfo::RecordParameterInfo(FunctionBody *functionBody, ArgSlot index, Var object)
 {
-    Assert(this->parameterInfo != null);
+    Assert(this->parameterInfo != nullptr);
     Assert(index < functionBody->GetProfiledInParamsCount());
     parameterInfo[index] = parameterInfo[index].Merge(object);
 }
@@ -990,7 +991,7 @@ DynamicProfileInfo::RecordParameterInfo(FunctionBody *functionBody, ArgSlot inde
 ValueType
 DynamicProfileInfo::GetParameterInfo(FunctionBody* functionBody, ArgSlot index) const
 {
-    Assert(this->parameterInfo != null);
+    Assert(this->parameterInfo != nullptr);
     Assert(index < functionBody->GetProfiledInParamsCount());
     return parameterInfo[index];
 }
@@ -1103,7 +1104,7 @@ DynamicProfileInfo::Save(ScriptContext * scriptContext)
         return;
     }
 
-    if (scriptContext->GetSourceContextInfoMap() == null)
+    if (scriptContext->GetSourceContextInfoMap() == nullptr)
     {
         // We don't have saveable code
         Assert(!scriptContext->GetProfileInfoList() || scriptContext->GetProfileInfoList()->Empty() || scriptContext->GetNoContextSourceContextInfo()->nextLocalFunctionId != 0);
@@ -1113,7 +1114,7 @@ DynamicProfileInfo::Save(ScriptContext * scriptContext)
 
     scriptContext->GetSourceContextInfoMap()->Map([&] (DWORD_PTR dwHostSourceContext, SourceContextInfo * sourceContextInfo)
     {
-        if (sourceContextInfo->sourceDynamicProfileManager != null && sourceContextInfo->url != null
+        if (sourceContextInfo->sourceDynamicProfileManager != nullptr && sourceContextInfo->url != nullptr
             && !sourceContextInfo->IsDynamic())
         {
             sourceContextInfo->sourceDynamicProfileManager->SaveToDynamicProfileStorage(sourceContextInfo->url);
@@ -1722,7 +1723,7 @@ DynamicProfileInfo::DumpScriptContext(ScriptContext * scriptContext)
     if (Configuration::Global.flags.Dump.IsEnabled(DynamicProfilePhase))
     {
         Output::Print(L"Sources:\n");
-        if(scriptContext->GetSourceContextInfoMap() != null)
+        if(scriptContext->GetSourceContextInfoMap() != nullptr)
         {
             scriptContext->GetSourceContextInfoMap()->Map([&] (DWORD_PTR dwHostSourceContext, SourceContextInfo * sourceContextInfo)
             {
@@ -1733,7 +1734,7 @@ DynamicProfileInfo::DumpScriptContext(ScriptContext * scriptContext)
             });
         }
 
-        if(scriptContext->GetDynamicSourceContextInfoMap() != null)
+        if(scriptContext->GetDynamicSourceContextInfoMap() != nullptr)
         {
             scriptContext->GetDynamicSourceContextInfoMap()->Map([&] (DWORD_PTR dwHostSourceContext, SourceContextInfo * sourceContextInfo)
             {
@@ -1817,17 +1818,17 @@ DynamicProfileInfo::Deserialize(T * reader, Recycler* recycler, Js::LocalFunctio
     ProfileId switchCount = 0;
     uint fldInfoCount = 0;
     uint loopCount = 0;
-    ValueType * paramInfo = null;
-    LdElemInfo * ldElemInfo = null;
-    StElemInfo * stElemInfo = null;
-    ArrayCallSiteInfo * arrayCallSiteInfo = null;
-    FldInfo * fldInfo = null;
-    ValueType * slotInfo = null;
-    CallSiteInfo * callSiteInfo = null;
-    ValueType * divTypeInfo = null;
-    ValueType * switchTypeInfo = null;
-    ValueType * returnTypeInfo = null;
-    ImplicitCallFlags * loopImplicitCallFlags = null;
+    ValueType * paramInfo = nullptr;
+    LdElemInfo * ldElemInfo = nullptr;
+    StElemInfo * stElemInfo = nullptr;
+    ArrayCallSiteInfo * arrayCallSiteInfo = nullptr;
+    FldInfo * fldInfo = nullptr;
+    ValueType * slotInfo = nullptr;
+    CallSiteInfo * callSiteInfo = nullptr;
+    ValueType * divTypeInfo = nullptr;
+    ValueType * switchTypeInfo = nullptr;
+    ValueType * returnTypeInfo = nullptr;
+    ImplicitCallFlags * loopImplicitCallFlags = nullptr;
     ImplicitCallFlags implicitCallFlags;
     ThisInfo thisInfo;
     Bits bits;
@@ -1839,12 +1840,12 @@ DynamicProfileInfo::Deserialize(T * reader, Recycler* recycler, Js::LocalFunctio
 
         if (!reader->Read(functionId))
         {
-            return null;
+            return nullptr;
         }
 
         if (!reader->Read(&paramInfoCount))
         {
-            return null;
+            return nullptr;
         }
 
         if (paramInfoCount != 0)
@@ -2046,7 +2047,7 @@ DynamicProfileInfo::Deserialize(T * reader, Recycler* recycler, Js::LocalFunctio
 
 
 Error:
-    return null;
+    return nullptr;
 }
 
 // Explicit instantiations - to force the compiler to generate these - so they can be referenced from other
@@ -2123,7 +2124,7 @@ DynamicProfileInfo::WriteData<FunctionInfo*>(FunctionInfo* functionInfo, FILE * 
 {
     bool isFunctionBody = false;
     bool isFunctionInfo = false;
-    if (functionInfo != null && (size_t)functionInfo < StartInvalidFunction)
+    if (functionInfo != nullptr && (size_t)functionInfo < StartInvalidFunction)
     {
         isFunctionInfo = true;
         isFunctionBody = !!functionInfo->HasBody();
@@ -2158,7 +2159,7 @@ DynamicProfileInfo::WriteData<FunctionBody *>(FunctionBody * functionBody, FILE 
 void
 DynamicProfileInfo::DumpScriptContextToFile(ScriptContext * scriptContext)
 {
-    if (Configuration::Global.flags.RuntimeDataOutputFile == null)
+    if (Configuration::Global.flags.RuntimeDataOutputFile == nullptr)
     {
         return;
     }
@@ -2172,7 +2173,7 @@ DynamicProfileInfo::DumpScriptContextToFile(ScriptContext * scriptContext)
     WriteData(scriptContext->GetAllocId(), file);
     WriteData(scriptContext->GetCreateTime(), file);
     WriteData(scriptContext->GetUrl(), file);
-    WriteData(scriptContext->GetSourceContextInfoMap() != null? scriptContext->GetSourceContextInfoMap()->Count() : 0, file);
+    WriteData(scriptContext->GetSourceContextInfoMap() != nullptr ? scriptContext->GetSourceContextInfoMap()->Count() : 0, file);
 
     if (scriptContext->GetSourceContextInfoMap())
     {
@@ -2225,10 +2226,10 @@ void DynamicProfileInfo::InstantiateForceInlinedMembers()
     // definition to inline the function in other translation units.
     Assert(false);
 
-    FunctionBody *const functionBody = null;
-    const Js::Var var = null;
+    FunctionBody *const functionBody = nullptr;
+    const Js::Var var = nullptr;
 
-    DynamicProfileInfo *const p = null;
+    DynamicProfileInfo *const p = nullptr;
     p->RecordFieldAccess(functionBody, 0, var, FldInfo_NoInfo);
     p->RecordDivideResultType(functionBody, 0, var);
     p->RecordModulusOpType(functionBody, 0, false);

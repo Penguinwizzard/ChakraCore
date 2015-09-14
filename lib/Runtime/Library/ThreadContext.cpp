@@ -5,13 +5,13 @@
 #include "RuntimeLibraryPch.h"
 #include "BackEndAPI.h"
 #include "ThreadServiceWrapper.h"
-#include "ThreadBoundThreadContextManager.h"
 #include "Types\TypePropertyCache.h"
 #include "Debug\DebuggingFlags.h"
 #include "Debug\DiagProbe.h"
 #include "Debug\DebugManager.h"
-
 #include "StandardChars.h"
+#include "Library\ThreadContextTLSEntry.h"
+#include "Library\ThreadBoundThreadContextManager.h"
 
 #if DBG
 #include "Memory\StressTest.h"
@@ -49,8 +49,8 @@ extern "C" void* MarkerForExternalDebugStep()
 
 CriticalSection ThreadContext::s_csThreadContext;
 size_t ThreadContext::processNativeCodeSize = 0;
-ThreadContext * ThreadContext::globalListFirst = null;
-ThreadContext * ThreadContext::globalListLast = null;
+ThreadContext * ThreadContext::globalListFirst = nullptr;
+ThreadContext * ThreadContext::globalListLast = nullptr;
 uint ThreadContext::activeScriptSiteCount = 0;
 
 #if !_M_X64_OR_ARM64 && _CONTROL_FLOW_GUARD
@@ -68,12 +68,12 @@ const Js::PropertyRecord * ThreadContext::builtInPropertyRecords[] =
 };
 
 ThreadContext::RecyclableData::RecyclableData(Recycler *const recycler) :
-    soErrorObject(NULL, NULL, NULL, true),
-    oomErrorObject(NULL, NULL, NULL, true),
-    terminatedErrorObject(NULL, NULL, NULL),
+    soErrorObject(nullptr, nullptr, nullptr, true),
+    oomErrorObject(nullptr, nullptr, nullptr, true),
+    terminatedErrorObject(nullptr, nullptr, nullptr),
     typesWithProtoPropertyCache(recycler),
     propertyGuards(recycler, 128),
-    oldEntryPointInfo(NULL),
+    oldEntryPointInfo(nullptr),
     returnedValueList(nullptr)
 {
 }
@@ -101,8 +101,8 @@ ThreadContext::ThreadContext(AllocationPolicyManager * allocationPolicyManager, 
 #endif
     interruptPoller(nullptr),
     expirableCollectModeGcCount(-1),
-    expirableObjectList(null),
-    expirableObjectDisposeList(null),
+    expirableObjectList(nullptr),
+    expirableObjectDisposeList(nullptr),
     numExpirableObjects(0),
     disableExpiration(false),
     callRootLevel(0),
@@ -197,7 +197,7 @@ ThreadContext::ThreadContext(AllocationPolicyManager * allocationPolicyManager, 
     PERF_COUNTER_INC(Basic, ThreadContext);
 
 #ifdef LEAK_REPORT
-    this->rootTrackerScriptContext = null;
+    this->rootTrackerScriptContext = nullptr;
     this->threadId = ::GetCurrentThreadId();
 #endif
 
@@ -217,6 +217,35 @@ ThreadContext::ThreadContext(AllocationPolicyManager * allocationPolicyManager, 
     this->projectionMemoryInformation = nullptr;
 #endif
 #endif
+
+    this->InitAvailableCommit();
+}
+
+void ThreadContext::InitAvailableCommit()
+{
+    // Once per process: get the available commit for the process from the OS and push it to the AutoSystemInfo.
+    // (This must be done lazily, outside DllMain. And it must be done from the Runtime, since the common lib
+    // doesn't have access to the DelayLoadLibrary stuff.)
+    ULONG64 commit;
+    BOOL success = AutoSystemInfo::Data.GetAvailableCommit(&commit);
+    if (!success)
+    {
+		commit = (ULONG64)-1;
+#ifdef NTBUILD
+		APP_MEMORY_INFORMATION AppMemInfo;
+        success = GetWinCoreProcessThreads()->GetProcessInformation(
+            GetCurrentProcess(),
+            ProcessAppMemoryInfo,
+            &AppMemInfo,
+            sizeof(AppMemInfo));
+        if (success)
+        {
+            commit = AppMemInfo.AvailableCommit;
+        }
+#endif
+        AutoSystemInfo::Data.SetAvailableCommit(commit);
+    }
+    Assert(commit != 0);
 }
 
 void ThreadContext::SetStackProber(StackProber * stackProber)
@@ -485,11 +514,11 @@ void ThreadContext::CloseForJSRT()
 ThreadContext* ThreadContext::GetContextForCurrentThread()
 {
     ThreadContextTLSEntry * tlsEntry = ThreadContextTLSEntry::GetEntryForCurrentThread();
-    if (tlsEntry != null)
+    if (tlsEntry != nullptr)
     {
         return static_cast<ThreadContext *>(tlsEntry->GetThreadContext());
     }
-    return null;
+    return nullptr;
 }
 
 void ThreadContext::ValidateThreadContext()
@@ -521,7 +550,7 @@ public:
     ~AutoRecyclerPtr()
     {
 #ifdef CONCURRENT_GC_ENABLED
-        if (ptr != null)
+        if (ptr != nullptr)
         {
             ptr->ShutdownThread();
         }
@@ -576,7 +605,7 @@ Recycler* ThreadContext::EnsureRecycler()
         catch(...)
         {
             // Initialization failed, undo what was done above. Callees that throw must clean up after themselves.
-            if (this->recyclableData != null)
+            if (this->recyclableData != nullptr)
             {
                 this->recyclableData.Unroot(this->recycler);               
             }
@@ -584,7 +613,7 @@ Recycler* ThreadContext::EnsureRecycler()
             {
                 // AutoRecyclerPtr's destructor takes care of shutting down the background thread and deleting the recycler
                 AutoRecyclerPtr recyclerToDelete(this->recycler);
-                this->recycler = null;
+                this->recycler = nullptr;
             }
 
             throw;
@@ -637,12 +666,12 @@ ThreadContext::GetPropertyNameImpl(Js::PropertyId propertyId)
         propertyIndex = 0;
     }
 
-    const Js::PropertyRecord * propertyRecord = null;
+    const Js::PropertyRecord * propertyRecord = nullptr;
     if (locked) { propertyMap->LockResize(); }
     bool found = propertyMap->TryGetValueAt(propertyIndex, &propertyRecord);
     if (locked) { propertyMap->UnlockResize(); }
 
-    AssertMsg(found && propertyRecord != null, "using invalid propertyid");
+    AssertMsg(found && propertyRecord != nullptr, "using invalid propertyid");
     return propertyRecord;
 }
 
@@ -672,7 +701,7 @@ ThreadContext::FindPropertyRecord(__in LPCWSTR propertyName, __in int propertyNa
 const Js::PropertyRecord *
 ThreadContext::FindPropertyRecord(const wchar_t * propertyName, int propertyNameLength)
 {
-    Js::PropertyRecord const * propertyRecord = null;
+    Js::PropertyRecord const * propertyRecord = nullptr;
 
     if (IsDirectPropertyName(propertyName, propertyNameLength))
     {
@@ -695,10 +724,10 @@ ThreadContext::UncheckedAddPropertyId(__in LPCWSTR propertyName, __in int proper
 
 void ThreadContext::InitializePropertyMaps()
 {
-    Assert(this->recycler != null);
-    Assert(this->recyclableData != null);
-    Assert(this->propertyMap == null);
-    Assert(this->caseInvariantPropertySet == null);
+    Assert(this->recycler != nullptr);
+    Assert(this->recyclableData != nullptr);
+    Assert(this->propertyMap == nullptr);
+    Assert(this->caseInvariantPropertySet == nullptr);
 
     try
     {
@@ -717,13 +746,13 @@ void ThreadContext::InitializePropertyMaps()
         // Initialization failed, undo what was done above. Callees that throw must clean up after themselves. The recycler will
         // be trashed, so clear members that point to recyclable memory. Stuff in 'recyclableData' will be taken care of by the
         // recycler, and the 'recyclableData' instance will be trashed as well.
-        if (this->propertyMap != null)
+        if (this->propertyMap != nullptr)
         {
             HeapDelete(this->propertyMap);
         }
-        this->propertyMap = null;
+        this->propertyMap = nullptr;
         
-        this->caseInvariantPropertySet = null;
+        this->caseInvariantPropertySet = nullptr;
         memset(propertyNamesDirect, 0, 128*sizeof(Js::PropertyRecord *));
         throw;
     }
@@ -835,7 +864,7 @@ ThreadContext::AddPropertyRecordInternal(const Js::PropertyRecord * propertyReco
     // For a symbol, the propertyName is not used and may collide with something in the map already.
     if (!propertyRecord->IsSymbol())
     {
-        Assert(FindPropertyRecord(propertyName, propertyNameLength) == null);
+        Assert(FindPropertyRecord(propertyName, propertyNameLength) == nullptr);
     }
 #endif
 
@@ -851,7 +880,7 @@ ThreadContext::AddPropertyRecordInternal(const Js::PropertyRecord * propertyReco
         // Store the pids for single character properties in the propertyNamesDirect array.
         // This property record should have been created as bound by the caller.
         Assert(propertyRecord->IsBound());
-        Assert(propertyNamesDirect[propertyName[0]] == null);
+        Assert(propertyNamesDirect[propertyName[0]] == nullptr);
         propertyNamesDirect[propertyName[0]] = propertyRecord;
     }
 
@@ -877,7 +906,7 @@ ThreadContext::AddPropertyRecordInternal(const Js::PropertyRecord * propertyReco
 void
 ThreadContext::AddCaseInvariantPropertyRecord(const Js::PropertyRecord * propertyRecord)
 {
-    Assert(this->caseInvariantPropertySet != null);
+    Assert(this->caseInvariantPropertySet != nullptr);
     
     // Create a weak reference to the property record here (since we no longer use weak refs in the property map)
     RecyclerWeakReference<const Js::PropertyRecord> * propertyRecordWeakRef = CreatePropertyRecordWeakRef(propertyRecord);
@@ -972,8 +1001,8 @@ void ThreadContext::AddBuiltInPropertyRecord(const Js::PropertyRecord *propertyR
 BOOL ThreadContext::IsNumericPropertyId(Js::PropertyId propertyId, uint32* value)
 {
     Js::PropertyRecord const * propertyRecord = this->GetPropertyName(propertyId);
-    Assert(propertyRecord != null);
-    if (propertyRecord == null || !propertyRecord->IsNumeric())
+    Assert(propertyRecord != nullptr);
+    if (propertyRecord == nullptr || !propertyRecord->IsNumeric())
     {
         return false;
     }
@@ -992,7 +1021,7 @@ bool ThreadContext::IsActivePropertyId(Js::PropertyId pid)
     int propertyIndex = pid - Js::PropertyIds::_none;
 
     const Js::PropertyRecord * propertyRecord;
-    if (propertyMap->TryGetValueAt(propertyIndex, &propertyRecord) && propertyRecord != null)
+    if (propertyMap->TryGetValueAt(propertyIndex, &propertyRecord) && propertyRecord != nullptr)
     {
         return true;
     }
@@ -1023,7 +1052,7 @@ Js::PropertyId ThreadContext::GetMaxPropertyId()
 
 void ThreadContext::CreateNoCasePropertyMap()
 {
-    Assert(caseInvariantPropertySet == null);
+    Assert(caseInvariantPropertySet == nullptr);
     caseInvariantPropertySet = RecyclerNew(recycler, PropertyNoCaseSetType, recycler, 173);
 
     // Prevent the set from being reclaimed
@@ -1039,7 +1068,7 @@ void ThreadContext::CreateNoCasePropertyMap()
     for (int propertyIndex = 0; propertyIndex <= this->propertyMap->GetLastIndex(); propertyIndex++)
     {
         const Js::PropertyRecord * propertyRecord;
-        if (this->propertyMap->TryGetValueAt(propertyIndex, &propertyRecord) && propertyRecord != null)
+        if (this->propertyMap->TryGetValueAt(propertyIndex, &propertyRecord) && propertyRecord != nullptr)
         {
             AddCaseInvariantPropertyRecord(propertyRecord);
         }
@@ -1055,7 +1084,7 @@ ThreadContext::FindPropertyIdNoCase(Js::ScriptContext * scriptContext, __in LPCW
 JsUtil::List<const RecyclerWeakReference<Js::PropertyRecord const>*>*
 ThreadContext::FindPropertyIdNoCase(Js::ScriptContext * scriptContext, __in JsUtil::CharacterBuffer<WCHAR> const& propertyName)
 {
-    if (caseInvariantPropertySet == null)
+    if (caseInvariantPropertySet == nullptr)
     {
         this->CreateNoCasePropertyMap();
     }
@@ -1064,7 +1093,7 @@ ThreadContext::FindPropertyIdNoCase(Js::ScriptContext * scriptContext, __in JsUt
     {
         return list;
     }
-    return null;
+    return nullptr;
 }
 
 bool 
@@ -1074,12 +1103,12 @@ ThreadContext::FindExistingPropertyRecord(_In_ JsUtil::CharacterBuffer<WCHAR> co
 
     (*list) = l;
 
-    return (l != null);
+    return (l != nullptr);
 }
 
 void ThreadContext::CleanNoCasePropertyMap()
 {
-    if (this->caseInvariantPropertySet != null)
+    if (this->caseInvariantPropertySet != nullptr)
     {
         this->caseInvariantPropertySet->MapAndRemoveIf([](Js::CaseInvariantPropertyListWithHashCode* value) -> bool {
             if (value && value->Count() == 0)
@@ -1259,15 +1288,15 @@ ThreadContext::EnterScriptEnd(Js::ScriptEntryExitRecord * record, bool doCleanup
         {
             // Since we're no longer in script, old entry points can now be collected
             Js::FunctionEntryPointInfo* current = this->recyclableData->oldEntryPointInfo;
-            this->recyclableData->oldEntryPointInfo = null;
+            this->recyclableData->oldEntryPointInfo = nullptr;
 
             // Clear out the next pointers so older entry points wont be held on
             // as a false positive
 
-            while (current != null)
+            while (current != nullptr)
             {
                 Js::FunctionEntryPointInfo* next = current->nextEntryPoint;
-                current->nextEntryPoint = null;
+                current->nextEntryPoint = nullptr;
                 current = next;
             }
         }
@@ -1516,7 +1545,7 @@ ThreadContext::ProbeStack(size_t size)
 /* static */ void
 ThreadContext::ProbeCurrentStack(size_t size, Js::ScriptContext *scriptContext)
 {
-    Assert(scriptContext != null);
+    Assert(scriptContext != nullptr);
     Assert(scriptContext->GetThreadContext() == GetContextForCurrentThread());
     scriptContext->GetThreadContext()->ProbeStack(size, scriptContext);
 }
@@ -1524,7 +1553,7 @@ ThreadContext::ProbeCurrentStack(size_t size, Js::ScriptContext *scriptContext)
 /* static */ void
 ThreadContext::ProbeCurrentStackNoDispose(size_t size, Js::ScriptContext *scriptContext)
 {
-    Assert(scriptContext != null);
+    Assert(scriptContext != nullptr);
     Assert(scriptContext->GetThreadContext() == GetContextForCurrentThread());
     scriptContext->GetThreadContext()->ProbeStackNoDispose(size, scriptContext);
 }
@@ -1547,7 +1576,7 @@ ThreadContext::LeaveScriptStart(void * frameAddress)
 
     Js::ScriptEntryExitRecord * entryExitRecord = this->GetScriptEntryExit();
 
-    AssertMsg(entryExitRecord && entryExitRecord->frameIdOfScriptExitFunction == null,
+    AssertMsg(entryExitRecord && entryExitRecord->frameIdOfScriptExitFunction == nullptr,
               "Missing LeaveScriptEnd or EnterScriptStart");
 
     entryExitRecord->frameIdOfScriptExitFunction = frameAddress;
@@ -1608,11 +1637,11 @@ ThreadContext::LeaveScriptEnd(void * frameAddress)
 
     AssertMsg(entryExitRecord && entryExitRecord->frameIdOfScriptExitFunction,
               "LeaveScriptEnd without LeaveScriptStart");
-    AssertMsg(frameAddress == null || frameAddress == entryExitRecord->frameIdOfScriptExitFunction,
+    AssertMsg(frameAddress == nullptr || frameAddress == entryExitRecord->frameIdOfScriptExitFunction,
               "Mismatched script exit frames");
     Assert(!!entryExitRecord->leaveForHost == leaveForHost);
 
-    entryExitRecord->frameIdOfScriptExitFunction = null;
+    entryExitRecord->frameIdOfScriptExitFunction = nullptr;
 
     AssertMsg(!this->IsScriptActive(), "Missing LeaveScriptStart or LeaveScriptStart");
     this->isScriptActive = true;
@@ -1715,7 +1744,7 @@ ThreadContext::ExecuteRecyclerCollectionFunction(Recycler * recycler, Collection
     }
     else
     {
-        void * frameAddr = null;
+        void * frameAddr = nullptr;
         GET_CURRENT_FRAME_ID(frameAddr);
 
         // We may need stack to call out from Dispose or QC
@@ -1760,7 +1789,7 @@ ThreadContext::DisposeObjects(Recycler * recycler)
     }
     else
     {
-        void * frameAddr = null;
+        void * frameAddr = nullptr;
         GET_CURRENT_FRAME_ID(frameAddr);
 
         // We may need stack to call out from Dispose
@@ -1776,11 +1805,11 @@ void
 ThreadContext::PushEntryExitRecord(Js::ScriptEntryExitRecord * record)
 {
     AssertMsg(record, "Didn't provide a script entry record to push");
-    Assert(record->next == null);
+    Assert(record->next == nullptr);
 
 
     Js::ScriptEntryExitRecord * lastRecord = this->entryExitRecord;
-    if (lastRecord != null)
+    if (lastRecord != nullptr)
     {
         // If we enter script again, we should have leave with leaveForHost or leave for dispose.
         Assert(lastRecord->leaveForHost || lastRecord->leaveForAsyncHostOperation);
@@ -1889,7 +1918,7 @@ ThreadContext::GetTemporaryAllocator(LPCWSTR name)
     {
         temporaryArenaAllocatorCount--;
         Js::TempArenaAllocatorObject * allocator = recyclableData->temporaryArenaAllocators[temporaryArenaAllocatorCount];
-        recyclableData->temporaryArenaAllocators[temporaryArenaAllocatorCount] = null;
+        recyclableData->temporaryArenaAllocators[temporaryArenaAllocatorCount] = nullptr;
         return allocator;
     }
 
@@ -1920,7 +1949,7 @@ ThreadContext::GetTemporaryGuestAllocator(LPCWSTR name)
     {
         temporaryGuestArenaAllocatorCount--;
         Js::TempGuestArenaAllocatorObject * allocator = recyclableData->temporaryGuestArenaAllocators[temporaryGuestArenaAllocatorCount];
-        recyclableData->temporaryGuestArenaAllocators[temporaryGuestArenaAllocatorCount] = null;
+        recyclableData->temporaryGuestArenaAllocators[temporaryGuestArenaAllocatorCount] = nullptr;
         return allocator;
     }
 
@@ -2275,7 +2304,7 @@ ThreadContext::InExpirableCollectMode()
     // We're in expirable collect if we have expirable objects registered,
     // and expirableCollectModeGcCount is not negative
     // and when debugger is attaching, it might have set the function to deferredParse. 
-    return (expirableObjectList != null && 
+    return (expirableObjectList != nullptr &&
             numExpirableObjects > 0 && 
             expirableCollectModeGcCount >= 0 &&
             (this->GetDebugManager() != nullptr && 
@@ -2313,7 +2342,7 @@ ThreadContext::TryEnterExpirableCollectMode()
             object->EnterExpirableCollectMode();
         }
 
-        if (this->entryExitRecord != null)
+        if (this->entryExitRecord != nullptr)
         {
             // If we're in script, we will do a stack walk, find the JavascriptFunction's on the stack
             // and mark their entry points as being used so that we don't prematurely expire them
@@ -2321,10 +2350,10 @@ ThreadContext::TryEnterExpirableCollectMode()
             Js::ScriptContext* topScriptContext = this->entryExitRecord->scriptContext;
             Js::JavascriptStackWalker walker(topScriptContext, TRUE);
 
-            Js::JavascriptFunction* javascriptFunction = null;
+            Js::JavascriptFunction* javascriptFunction = nullptr;
             while (walker.GetCallerWithoutInlinedFrames(&javascriptFunction))
             {
-                if (javascriptFunction != null && Js::ScriptFunction::Is(javascriptFunction))
+                if (javascriptFunction != nullptr && Js::ScriptFunction::Is(javascriptFunction))
                 {
                     Js::ScriptFunction* scriptFunction = (Js::ScriptFunction*) javascriptFunction;
                     Js::FunctionEntryPointInfo* entryPointInfo =  scriptFunction->GetFunctionEntryPointInfo();
@@ -2343,7 +2372,7 @@ void
 ThreadContext::RegisterExpirableObject(ExpirableObject* object)
 {
     Assert(this->expirableObjectList);
-    Assert(object->registrationHandle == null);
+    Assert(object->registrationHandle == nullptr);
 
     ExpirableObject** registrationData = this->expirableObjectList->PrependNode();
     (*registrationData) = object;
@@ -2357,14 +2386,14 @@ void
 ThreadContext::UnregisterExpirableObject(ExpirableObject* object)
 {
     Assert(this->expirableObjectList);
-    Assert(object->registrationHandle != null);
+    Assert(object->registrationHandle != nullptr);
     Assert(this->expirableObjectList->HasElement((ExpirableObject* const *) object->registrationHandle));
 
     ExpirableObject** registrationData = (ExpirableObject**) object->registrationHandle;
     Assert(*registrationData == object);
 
     this->expirableObjectList->MoveElementTo(registrationData, this->expirableObjectDisposeList);
-    object->registrationHandle = null;
+    object->registrationHandle = nullptr;
     OUTPUT_VERBOSE_TRACE(Js::ExpirableCollectPhase, L"Unregistered 0x%p\n", object);
     numExpirableObjects--;
 }
@@ -2373,7 +2402,7 @@ void
 ThreadContext::DisposeExpirableObject(ExpirableObject* object)
 {
     Assert(this->expirableObjectDisposeList);
-    Assert(object->registrationHandle == null);
+    Assert(object->registrationHandle == nullptr);
 
     this->expirableObjectDisposeList->Remove(object);
 
@@ -2603,7 +2632,7 @@ ThreadContext::RegisterInlineCache(InlineCacheListMapByPropertyId& inlineCacheMa
     }
 
     Js::InlineCache** inlineCacheRef = inlineCacheList->PrependNode();
-    Assert(inlineCacheRef != null);
+    Assert(inlineCacheRef != nullptr);
     *inlineCacheRef = inlineCache;
     inlineCache->invalidationListSlotPtr = inlineCacheRef;
     this->registeredInlineCacheCount++;
@@ -2657,13 +2686,13 @@ ThreadContext::InvalidateStoreFieldInlineCaches(Js::PropertyId propertyId)
 void
 ThreadContext::InvalidateInlineCacheList(InlineCacheList* inlineCacheList)
 {
-    Assert(inlineCacheList != null);
+    Assert(inlineCacheList != nullptr);
 
     uint cacheCount = 0;
     FOREACH_SLISTBASE_ENTRY(Js::InlineCache*, inlineCache, inlineCacheList)
     {
         cacheCount++;
-        if (inlineCache != null)
+        if (inlineCache != nullptr)
         {
             if (PHASE_VERBOSE_TRACE1(Js::TraceInlineCacheInvalidationPhase))
             {
@@ -2714,11 +2743,11 @@ ThreadContext::CompactStoreFieldInlineCaches()
 void
 ThreadContext::CompactInlineCacheList(InlineCacheList* inlineCacheList)
 {
-    Assert(inlineCacheList != null);
+    Assert(inlineCacheList != nullptr);
     uint cacheCount = 0;
     FOREACH_SLISTBASE_ENTRY_EDITING(Js::InlineCache*, inlineCache, inlineCacheList, iterator)
     {
-        if (inlineCache == null)
+        if (inlineCache == nullptr)
         {
             iterator.RemoveCurrent(&this->inlineCacheThreadInfoAllocator);
             cacheCount++;
@@ -2763,8 +2792,8 @@ ThreadContext::IsInlineCacheRegistered(InlineCacheListMapByPropertyId& inlineCac
 bool
 ThreadContext::IsInlineCacheInList(const Js::InlineCache* inlineCache, const InlineCacheList* inlineCacheList)
 {
-    Assert(inlineCache != null);
-    Assert(inlineCacheList != null);
+    Assert(inlineCache != nullptr);
+    Assert(inlineCacheList != nullptr);
 
     FOREACH_SLISTBASE_ENTRY(Js::InlineCache*, curInlineCache, inlineCacheList)
     {
@@ -2806,7 +2835,7 @@ ThreadContext::RegisterSharedPropertyGuard(Js::PropertyId propertyId)
     bool foundExistingGuard;
     PropertyGuardEntry* entry = EnsurePropertyGuardEntry(propertyRecord, foundExistingGuard);
     
-    if (entry->sharedGuard == null)
+    if (entry->sharedGuard == nullptr)
     {
         entry->sharedGuard = Js::PropertyGuard::New(GetRecycler());
     }
@@ -2832,14 +2861,14 @@ ThreadContext::RegisterLazyBailout(Js::PropertyId propertyId, Js::EntryPointInfo
     {
         entry->entryPoints = RecyclerNew(recycler, PropertyGuardEntry::EntryPointDictionary, recycler, /*capacity*/ 3);
     }
-    entry->entryPoints->UncheckedAdd(entryPoint, null);
+    entry->entryPoints->UncheckedAdd(entryPoint, NULL);
 }
 
 void
 ThreadContext::RegisterUniquePropertyGuard(Js::PropertyId propertyId, Js::PropertyGuard* guard)
 {
     Assert(IsActivePropertyId(propertyId));
-    Assert(guard != null);
+    Assert(guard != nullptr);
 
     RecyclerWeakReference<Js::PropertyGuard>* guardWeakRef = this->recycler->CreateWeakReferenceHandle(guard);
     RegisterUniquePropertyGuard(propertyId, guardWeakRef);
@@ -2849,10 +2878,10 @@ void
 ThreadContext::RegisterUniquePropertyGuard(Js::PropertyId propertyId, RecyclerWeakReference<Js::PropertyGuard>* guardWeakRef)
 {
     Assert(IsActivePropertyId(propertyId));
-    Assert(guardWeakRef != null);
+    Assert(guardWeakRef != nullptr);
 
     Js::PropertyGuard* guard = guardWeakRef->Get();
-    Assert(guard != null);
+    Assert(guard != nullptr);
 
     const Js::PropertyRecord * propertyRecord = GetPropertyName(propertyId);
 
@@ -2887,9 +2916,9 @@ ThreadContext::RegisterConstructorCache(Js::PropertyId propertyId, Js::Construct
 void
 ThreadContext::InvalidatePropertyGuardEntry(const Js::PropertyRecord* propertyRecord, PropertyGuardEntry* entry)
 {
-    Assert(entry != null);
+    Assert(entry != nullptr);
 
-    if (entry->sharedGuard != null)
+    if (entry->sharedGuard != nullptr)
     {
         Js::PropertyGuard* guard = entry->sharedGuard;
 
@@ -2912,7 +2941,7 @@ ThreadContext::InvalidatePropertyGuardEntry(const Js::PropertyRecord* propertyRe
     entry->uniqueGuards.Map([propertyRecord](RecyclerWeakReference<Js::PropertyGuard>* guardWeakRef)
     {
         Js::PropertyGuard* guard = guardWeakRef->Get();
-        if (guard != null)
+        if (guard != nullptr)
         {
             if (PHASE_TRACE1(Js::TracePropertyGuardsPhase) || PHASE_VERBOSE_TRACE1(Js::FixedMethodsPhase))
             {
@@ -3027,8 +3056,8 @@ ThreadContext::AreAllStoreFieldInlineCachesInvalidated()
 bool
 ThreadContext::IsIsInstInlineCacheRegistered(Js::IsInstInlineCache * inlineCache, Js::Var function)
 {
-    Assert(inlineCache != null);
-    Assert(function != null);
+    Assert(inlineCache != nullptr);
+    Assert(function != nullptr);
     Js::IsInstInlineCache* firstInlineCache;
     if (this->isInstInlineCacheByFunction.TryGetValue(function, &firstInlineCache))
     {
@@ -3044,12 +3073,12 @@ ThreadContext::IsIsInstInlineCacheRegistered(Js::IsInstInlineCache * inlineCache
 void
 ThreadContext::RegisterIsInstInlineCache(Js::IsInstInlineCache * inlineCache, Js::Var function)
 {
-    Assert(function != null);
-    Assert(inlineCache != null);
+    Assert(function != nullptr);
+    Assert(inlineCache != nullptr);
     // We should never cross-register or re-register a cache that is already on some invalidation list (for its function or some other function).
     // Every cache must be first cleared and unregistered before being registered again.
-    AssertMsg(inlineCache->function == null, "We should only register instance-of caches that have not yet been populated.");
-    Js::IsInstInlineCache** inlineCacheRef = null;
+    AssertMsg(inlineCache->function == nullptr, "We should only register instance-of caches that have not yet been populated.");
+    Js::IsInstInlineCache** inlineCacheRef = nullptr;
 
     if (this->isInstInlineCacheByFunction.TryGetReference(function, &inlineCacheRef))
     {
@@ -3059,7 +3088,7 @@ ThreadContext::RegisterIsInstInlineCache(Js::IsInstInlineCache * inlineCache, Js
     }
     else
     {
-        inlineCache->next = null;
+        inlineCache->next = nullptr;
         this->isInstInlineCacheByFunction.Add(function, inlineCache);
     }
 }
@@ -3067,7 +3096,7 @@ ThreadContext::RegisterIsInstInlineCache(Js::IsInstInlineCache * inlineCache, Js
 void
 ThreadContext::UnregisterIsInstInlineCache(Js::IsInstInlineCache * inlineCache, Js::Var function)
 {
-    Assert(inlineCache != null);
+    Assert(inlineCache != nullptr);
     Js::IsInstInlineCache** inlineCacheRef = NULL;
 
     if (this->isInstInlineCacheByFunction.TryGetReference(function, &inlineCacheRef))
@@ -3084,7 +3113,7 @@ ThreadContext::UnregisterIsInstInlineCache(Js::IsInstInlineCache * inlineCache, 
         {
             Js::IsInstInlineCache * prevInlineCache;
             Js::IsInstInlineCache * curInlineCache;
-            for (prevInlineCache = *inlineCacheRef, curInlineCache = (*inlineCacheRef)->next; curInlineCache != null;
+            for (prevInlineCache = *inlineCacheRef, curInlineCache = (*inlineCacheRef)->next; curInlineCache != nullptr;
                 prevInlineCache = curInlineCache, curInlineCache = curInlineCache->next)
             {
                 if (curInlineCache == inlineCache)
@@ -3101,10 +3130,10 @@ ThreadContext::UnregisterIsInstInlineCache(Js::IsInstInlineCache * inlineCache, 
 void
 ThreadContext::InvalidateIsInstInlineCacheList(Js::IsInstInlineCache* inlineCacheList)
 {
-    Assert(inlineCacheList != null);
+    Assert(inlineCacheList != nullptr);
     Js::IsInstInlineCache* curInlineCache;
     Js::IsInstInlineCache* nextInlineCache;
-    for (curInlineCache = inlineCacheList; curInlineCache != null; curInlineCache = nextInlineCache)
+    for (curInlineCache = inlineCacheList; curInlineCache != nullptr; curInlineCache = nextInlineCache)
     {
         if (PHASE_VERBOSE_TRACE1(Js::TraceInlineCacheInvalidationPhase))
         {
@@ -3148,10 +3177,10 @@ ThreadContext::AreAllIsInstInlineCachesInvalidated() const
 bool
 ThreadContext::IsIsInstInlineCacheInList(const Js::IsInstInlineCache* inlineCache, const Js::IsInstInlineCache* inlineCacheList)
 {
-    Assert(inlineCache != null);
-    Assert(inlineCacheList != null);
+    Assert(inlineCache != nullptr);
+    Assert(inlineCacheList != nullptr);
 
-    for (const Js::IsInstInlineCache* curInlineCache = inlineCacheList; curInlineCache != null; curInlineCache = curInlineCache->next)
+    for (const Js::IsInstInlineCache* curInlineCache = inlineCacheList; curInlineCache != nullptr; curInlineCache = curInlineCache->next)
     {
         if (curInlineCache == inlineCache)
         {
@@ -3342,7 +3371,7 @@ ThreadContext::AsyncHostOperationEnd(bool wasInAsync, void * suspendRecord)
 void DumpRecyclerObjectGraph()
 {
     ThreadContext * threadContext = ThreadContext::GetContextForCurrentThread();
-    if (threadContext == null)
+    if (threadContext == nullptr)
     {
         Output::Print(L"No thread context");
     }
@@ -3369,7 +3398,7 @@ BOOL ThreadContext::IsNativeAddress(void *pCodeAddr)
 
 void ThreadContext::EnsureSourceProfileManagersByUrlMap()
 {
-    if(this->recyclableData->sourceProfileManagersByUrl == null)
+    if(this->recyclableData->sourceProfileManagersByUrl == nullptr)
     {
         this->EnsureRecycler();
         this->recyclableData->sourceProfileManagersByUrl = RecyclerNew(GetRecycler(), SourceProfileManagersByUrlMap, GetRecycler());
@@ -3383,14 +3412,14 @@ void ThreadContext::EnsureSourceProfileManagersByUrlMap()
 Js::SourceDynamicProfileManager* ThreadContext::GetSourceDynamicProfileManager(_In_z_ const WCHAR* url, _In_ uint hash, _Inout_ bool* addRef)
 {
       EnsureSourceProfileManagersByUrlMap();
-      Js::SourceDynamicProfileManager* profileManager = null;
+      Js::SourceDynamicProfileManager* profileManager = nullptr;
       SourceDynamicProfileManagerCache* managerCache;
       bool newCache = false;
       if(!this->recyclableData->sourceProfileManagersByUrl->TryGetValue(url, &managerCache))
       {
           if(this->recyclableData->sourceProfileManagersByUrl->Count() >= INMEMORY_CACHE_MAX_URL)
           {
-              return null;
+              return nullptr;
           }
           managerCache = RecyclerNewZ(this->GetRecycler(), SourceDynamicProfileManagerCache);
           newCache = true;
@@ -3442,9 +3471,9 @@ Js::SourceDynamicProfileManager* ThreadContext::GetSourceDynamicProfileManager(_
 uint ThreadContext::ReleaseSourceDynamicProfileManagers(const WCHAR* url)
 {
     // If we've already freed the recyclable data, we're shutting down the thread context so skip clean up
-    if (this->recyclableData == null) return 0;
+    if (this->recyclableData == nullptr) return 0;
 
-    SourceDynamicProfileManagerCache* managerCache = this->recyclableData->sourceProfileManagersByUrl->Lookup(url, null);
+    SourceDynamicProfileManagerCache* managerCache = this->recyclableData->sourceProfileManagersByUrl->Lookup(url, nullptr);
     uint refCount = 0;
     if(managerCache)  // manager cache may be null we exceeded -INMEMORY_CACHE_MAX_URL 
     {
@@ -3529,6 +3558,11 @@ ThreadServiceWrapper* ThreadContext::GetThreadServiceWrapper()
     return threadServiceWrapper;
 }
 
+uint ThreadContext::GetRandomNumber()
+{
+    return (uint)GetEntropy().GetRand();
+}
+
 #ifdef ENABLE_JS_ETW
 void ThreadContext::EtwLogPropertyIdList()
 {
@@ -3566,11 +3600,6 @@ void ThreadContext::ResolveExternalWeakReferencedObjects()
     {
         iteratorWeakRefCache.Data()->ResolveNow(recycler);
     }
-}
-
-uint ThreadContext::GetRandomNumber()
-{
-    return (uint)GetEntropy().GetRand();
 }
 
 #if DBG_DUMP
@@ -3765,13 +3794,13 @@ Js::DelayLoadWinCoreMemory * ThreadContext::GetWinCoreMemoryLibrary()
     delayLoadWinCoreMemoryLibrary.EnsureFromSystemDirOnly();
     return &delayLoadWinCoreMemoryLibrary;
 }
+#endif
 
 Js::DelayLoadWinCoreProcessThreads * ThreadContext::GetWinCoreProcessThreads()
 {
     delayLoadWinCoreProcessThreads.EnsureFromSystemDirOnly();
     return &delayLoadWinCoreProcessThreads;
 }
-#endif
 
 Js::DelayLoadWinRtString * ThreadContext::GetWinRTStringLibrary()
 {
@@ -3780,6 +3809,7 @@ Js::DelayLoadWinRtString * ThreadContext::GetWinRTStringLibrary()
     return &delayLoadWinRtString;
 }
 
+#ifdef ENABLE_PROJECTION
 Js::DelayLoadWinRtError * ThreadContext::GetWinRTErrorLibrary()
 {
     delayLoadWinRtError.EnsureFromSystemDirOnly();
@@ -3787,7 +3817,6 @@ Js::DelayLoadWinRtError * ThreadContext::GetWinRTErrorLibrary()
     return &delayLoadWinRtError;
 }
 
-#ifdef ENABLE_PROJECTION
 Js::DelayLoadWinRtTypeResolution* ThreadContext::GetWinRTTypeResolutionLibrary()
 {
     delayLoadWinRtTypeResolution.EnsureFromSystemDirOnly();
@@ -3949,7 +3978,7 @@ void ThreadContext::ReportAndCheckLeaksOnProcessDetach()
 
             // HACK HACK: heuristically figure out which one is the root tracker script engine
             // and force close on it        
-            if (current->rootTrackerScriptContext != null)
+            if (current->rootTrackerScriptContext != nullptr)
             {
                 current->rootTrackerScriptContext->Close(false);
             }        
@@ -3968,7 +3997,7 @@ void ThreadContext::ReportAndCheckLeaksOnProcessDetach()
 void
 ThreadContext::SetRootTrackerScriptContext(Js::ScriptContext * scriptContext)
 {
-    Assert(this->rootTrackerScriptContext == null);
+    Assert(this->rootTrackerScriptContext == nullptr);
     this->rootTrackerScriptContext = scriptContext;
     scriptContext->isRootTrackerScriptContext = true;
 }
@@ -3978,7 +4007,7 @@ ThreadContext::ClearRootTrackerScriptContext(Js::ScriptContext * scriptContext)
 {
     Assert(this->rootTrackerScriptContext == scriptContext);
     this->rootTrackerScriptContext->isRootTrackerScriptContext = false;
-    this->rootTrackerScriptContext = null;
+    this->rootTrackerScriptContext = nullptr;
 }
 #endif
 
@@ -4088,4 +4117,23 @@ void ParserTimer::LogTime(double ms)
     {
         stats.greaterThan300ms++;
     }
+}
+
+AutoTagNativeLibraryEntry::AutoTagNativeLibraryEntry(Js::RecyclableObject* function, Js::CallInfo callInfo, PCWSTR name, void* addr)
+{
+    // Save function/callInfo values (for StackWalker). Compiler may stackpack/optimize them for built-in native functions.
+    entry.function = function;
+    entry.callInfo = callInfo;
+    entry.name = name;
+    entry.addr = addr;
+
+    ThreadContext* threadContext = function->GetScriptContext()->GetThreadContext();
+    threadContext->PushNativeLibraryEntry(&entry);
+}
+
+AutoTagNativeLibraryEntry::~AutoTagNativeLibraryEntry()
+{
+    ThreadContext* threadContext = entry.function->GetScriptContext()->GetThreadContext();
+    Assert(threadContext->PeekNativeLibraryEntry() == &entry);
+    threadContext->PopNativeLibraryEntry();
 }

@@ -174,7 +174,7 @@ IR::Instr* LowererMD::Simd128LowerUnMappedInstruction(IR::Instr *instr)
     default:
         AssertMsg(UNREACHED, "Unsupported Simd128 instruction");
     }
-    return NULL;
+    return nullptr;
 }
 
 IR::Instr* LowererMD::Simd128LoadConst(IR::Instr* instr)
@@ -184,7 +184,7 @@ IR::Instr* LowererMD::Simd128LoadConst(IR::Instr* instr)
     {
         Assert(instr->GetSrc1()->IsSimd128());
         Assert(instr->GetSrc1()->IsSimd128ConstOpnd());
-        Assert(instr->GetSrc2() == NULL);
+        Assert(instr->GetSrc2() == nullptr);
 
         AsmJsSIMDValue value = instr->GetSrc1()->AsSimd128ConstOpnd()->m_value;
         
@@ -204,18 +204,18 @@ IR::Instr* LowererMD::Simd128LoadConst(IR::Instr* instr)
     {
         AssertMsg(UNREACHED, "Non-typespecialized form of Simd128_LdC is unsupported");
     }
-    return NULL;
+    return nullptr;
 }
 
 IR::Instr* LowererMD::Simd128LowerConstructor(IR::Instr *instr)
 {
    
-    IR::Opnd* dst  = NULL;
-    IR::Opnd* src1 = NULL;
-    IR::Opnd* src2 = NULL;
-    IR::Opnd* src3 = NULL;
-    IR::Opnd* src4 = NULL;
-    IR::Instr* newInstr = NULL;
+    IR::Opnd* dst  = nullptr;
+    IR::Opnd* src1 = nullptr;
+    IR::Opnd* src2 = nullptr;
+    IR::Opnd* src3 = nullptr;
+    IR::Opnd* src4 = nullptr;
+    IR::Instr* newInstr = nullptr;
 
     if (instr->m_opcode == Js::OpCode::Simd128_FloatsToF4 || instr->m_opcode == Js::OpCode::Simd128_IntsToI4)
     {
@@ -457,7 +457,7 @@ IR::Instr* LowererMD::Simd128LowerSplat(IR::Instr *instr)
 IR::Instr* LowererMD::Simd128LowerRcp(IR::Instr *instr, bool removeInstr)
 {
     Js::OpCode opcode = Js::OpCode::DIVPS;
-    void* x86_allones_mask = NULL;
+    void* x86_allones_mask = nullptr;
     IR::Opnd *dst, *src1;
     dst = instr->GetDst();
     src1 = instr->GetSrc1();
@@ -465,7 +465,7 @@ IR::Instr* LowererMD::Simd128LowerRcp(IR::Instr *instr, bool removeInstr)
     
     Assert(dst && dst->IsRegOpnd());
     Assert(src1 && src1->IsRegOpnd());
-    Assert(instr->GetSrc2() == NULL);
+    Assert(instr->GetSrc2() == nullptr);
     if (instr->m_opcode == Js::OpCode::Simd128_Rcp_F4 || instr->m_opcode == Js::OpCode::Simd128_RcpSqrt_F4)
     {
         Assert(src1->IsSimd128F4() || src1->IsSimd128I4());
@@ -505,7 +505,7 @@ IR::Instr* LowererMD::Simd128LowerSqrt(IR::Instr *instr)
 
     Assert(dst && dst->IsRegOpnd());
     Assert(src1 && src1->IsRegOpnd());
-    Assert(instr->GetSrc2() == NULL);
+    Assert(instr->GetSrc2() == nullptr);
     if (instr->m_opcode == Js::OpCode::Simd128_Sqrt_F4)
     {
         opcode = Js::OpCode::SQRTPS;
@@ -546,10 +546,10 @@ IR::Instr* LowererMD::Simd128LowerRcpSqrt(IR::Instr *instr)
 IR::Instr* LowererMD::Simd128LowerSelect(IR::Instr *instr)
 {
     Assert(instr->m_opcode == Js::OpCode::Simd128_Select_F4 || instr->m_opcode == Js::OpCode::Simd128_Select_I4 || instr->m_opcode == Js::OpCode::Simd128_Select_D2);
-    IR::Opnd* dst = NULL;
-    IR::Opnd* src1 = NULL;
-    IR::Opnd* src2 = NULL;
-    IR::Opnd* src3 = NULL;
+    IR::Opnd* dst = nullptr;
+    IR::Opnd* src1 = nullptr;
+    IR::Opnd* src2 = nullptr;
+    IR::Opnd* src3 = nullptr;
     SList<IR::Opnd*> *args = Simd128GetExtendedArgs(instr);
     // The number of src opnds should be exact. Missing opnds means type-error, and we should generate an exception throw instead (or globopt does).
     Assert(args->Count() == 4);
@@ -566,7 +566,7 @@ IR::Instr* LowererMD::Simd128LowerSelect(IR::Instr *instr)
 
     
     IR::RegOpnd *tmp = IR::RegOpnd::New(src1->GetType(), m_func);
-    IR::Instr *pInstr = NULL;
+    IR::Instr *pInstr = nullptr;
     // ANDPS tmp1, mask, tvalue
     pInstr = IR::Instr::New(Js::OpCode::ANDPS, tmp, src1, src2, m_func);
     instr->InsertBefore(pInstr);
@@ -594,7 +594,7 @@ IR::Instr* LowererMD::Simd128LowerNegI4(IR::Instr *instr)
     
     Assert(dst->IsRegOpnd() && dst->IsSimd128());
     Assert(src1->IsRegOpnd() && src1->IsSimd128());
-    Assert(instr->GetSrc2() == NULL);
+    Assert(instr->GetSrc2() == nullptr);
 
     // MOVAPS dst, src1
     IR::Instr *pInstr = IR::Instr::New(Js::OpCode::MOVAPS, dst, src1, m_func);
@@ -755,7 +755,7 @@ IR::Instr* LowererMD::Simd128LowerShuffle(IR::Instr* instr)
     SList<IR::Opnd*> *args = Simd128GetExtendedArgs(instr);
     
     IR::Opnd *dst = args->Pop();
-    IR::Opnd *srcs[6] = { null, null, null, null, null, null };
+    IR::Opnd *srcs[6] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
     
     int i = 0;
     while (!args->Empty() && i < 6)
@@ -955,7 +955,7 @@ IR::Instr* LowererMD::Simd128LowerLoadElem(IR::Instr *instr)
         done = instr;
     }
     
-    IR::Instr *newInstr = null;
+    IR::Instr *newInstr = nullptr;
     switch (dataWidth)
     {
     case 16:
@@ -1136,7 +1136,7 @@ SList<IR::Opnd*> * LowererMD::Simd128GetExtendedArgs(IR::Instr *instr)
     IR::Instr *pInstr = instr;
     IR::Opnd *dst, *src1, *src2;
 
-    dst = src1 = src2 = NULL;
+    dst = src1 = src2 = nullptr;
 
     if (pInstr->GetDst())
     {
@@ -1168,7 +1168,7 @@ SList<IR::Opnd*> * LowererMD::Simd128GetExtendedArgs(IR::Instr *instr)
         }
         else
         {
-            pInstr = NULL;
+            pInstr = nullptr;
         }
 
     }
@@ -1274,7 +1274,7 @@ void LowererMD::GenerateCheckedSimdLoad(IR::Instr * instr)
     Assert(IRType_IsSimd128(instr->GetDst()->GetType()));
 
     bool checkRequired = instr->HasBailOutInfo();
-    IR::LabelInstr * labelHelper = null, * labelDone = null;
+    IR::LabelInstr * labelHelper = nullptr, * labelDone = nullptr;
     IR::Instr * insertInstr = instr, * newInstr;
     IR::RegOpnd * src = instr->GetSrc1()->AsRegOpnd(), * dst = instr->GetDst()->AsRegOpnd();
     Assert(!checkRequired || instr->GetBailOutKind() == IR::BailOutSimd128F4Only || instr->GetBailOutKind() == IR::BailOutSimd128I4Only);

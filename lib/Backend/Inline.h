@@ -52,7 +52,8 @@ private:
                                     const StackSym *symThis, IR::Instr ** returnInstr, uint recursiveInlineDepth);
 
     IR::Instr * InlineCall(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, const Js::FunctionCodeGenJitTimeData* inlinerData, const StackSym *symThis, bool* pIsInlined, uint callSiteId, uint recursiveInlineDepth);
-    bool        InlineCallTarget(IR::Instr *callInstr, const Js::FunctionCodeGenJitTimeData* inlinerData, Js::FunctionInfo *callFuncInfo, const StackSym *symThis, IR::Instr ** returnInstr, uint recursiveInlineDepth);
+    bool        InlineCallTarget(IR::Instr *callInstr, const Js::FunctionCodeGenJitTimeData* inlinerData, const Js::FunctionCodeGenJitTimeData** pInlineeData, Js::FunctionInfo *callFuncInfo, 
+                                    const StackSym *symThis, IR::Instr ** returnInstr, uint recursiveInlineDepth);
     
     bool        InlConstFoldArg(IR::Instr *instr, __in_ecount(callerArgOutCount) IR::Instr *callerArgOuts[], Js::ArgSlot callerArgOutCount);
     bool        InlConstFold(IR::Instr *instr, IntConstType *pValue, __in_ecount(callerArgOutCount) IR::Instr *callerArgOuts[], Js::ArgSlot callerArgOutCount);
@@ -65,7 +66,7 @@ private:
     
     IR::Instr * InlineBuiltInFunction(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, Js::OpCode inlineCallOpCode, const Js::FunctionCodeGenJitTimeData* inlinerData, const StackSym *symCallerThis, bool* pIsInlined, uint profileId, uint recursiveInlineDepth);
     IR::Instr * InlineFunc(IR::Instr *callInstr, const Js::FunctionCodeGenJitTimeData *const inlineeData, const uint profileId);
-    bool        SplitConstructorCall(IR::Instr *const newObjInstr, const bool isInlined, const bool doneFixedMethodFld, IR::Instr** createObjInstrOut = null, IR::Instr** callCtorInstrOut = null) const;
+    bool        SplitConstructorCall(IR::Instr *const newObjInstr, const bool isInlined, const bool doneFixedMethodFld, IR::Instr** createObjInstrOut = nullptr, IR::Instr** callCtorInstrOut = nullptr) const;
     bool        SplitConstructorCallCommon(IR::Instr *const newObjInstr, IR::Opnd *const lastArgOpnd, const Js::OpCode newObjOpCode, 
         const bool isInlined, const bool doneFixedMethodFld, IR::Instr** createObjInstrOut, IR::Instr** callCtorInstrOut) const;
     IR::Instr * InlinePolymorphicFunction(IR::Instr *callInstr, const Js::FunctionCodeGenJitTimeData* inlinerData, const StackSym *symCallerThis, const Js::ProfileId profileId, bool* pIsInlined, uint recursiveInlineDepth, bool triedUsingFixedMethods = false);

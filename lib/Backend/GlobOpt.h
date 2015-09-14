@@ -43,7 +43,7 @@ protected:
         // even be propagated forward.
         Assert(!type.IsTaggedInt());
 
-        SetSymStore(NULL);
+        SetSymStore(nullptr);
     }
 
 private:
@@ -256,7 +256,7 @@ public:
     void                    SetSymStore(Sym * sym)
     {
         // Sym store should always be a var sym
-        Assert(sym == NULL || sym->IsPropertySym() || !sym->AsStackSym()->IsTypeSpec()); // property syms always have a var stack sym
+        Assert(sym == nullptr || sym->IsPropertySym() || !sym->AsStackSym()->IsTypeSpec()); // property syms always have a var stack sym
         this->symStore = sym;
     }
 
@@ -553,13 +553,13 @@ private:
 public:
     JsTypeValueInfo(Js::Type * type)
         : ValueInfo(Uninitialized, ValueStructureKind::JsType), 
-        jsType(type), jsTypeSet(null), isShared(false)
+        jsType(type), jsTypeSet(nullptr), isShared(false)
     {
     }
 
     JsTypeValueInfo(Js::EquivalentTypeSet * typeSet)
         : ValueInfo(Uninitialized, ValueStructureKind::JsType), 
-        jsType(null), jsTypeSet(typeSet), isShared(false)
+        jsType(nullptr), jsTypeSet(typeSet), isShared(false)
     {
     }
 
@@ -981,7 +981,7 @@ namespace JsUtil
         void Clear()
         {
 #if DBG
-            this->value.propIds = null;
+            this->value.propIds = nullptr;
             this->value.currentInitFldCount = (uint)-1;            
 #endif
         }
@@ -996,32 +996,32 @@ class GlobOptBlockData
 {
 public:
     GlobOptBlockData(Func *func) :
-        symToValueMap(null),
-        exprToValueMap(null),
-        liveFields(null),
-        liveArrayValues(null),
-        maybeWrittenTypeSyms(null),
-        liveVarSyms(null),
-        liveInt32Syms(null),
-        liveLossyInt32Syms(null),
-        liveFloat64Syms(null),
-        liveSimd128F4Syms(null),
-        liveSimd128I4Syms(null),
-        hoistableFields(null),
-        argObjSyms(null),
-        maybeTempObjectSyms(null),
-        canStoreTempObjectSyms(null),
-        valuesToKillOnCalls(null),
+        symToValueMap(nullptr),
+        exprToValueMap(nullptr),
+        liveFields(nullptr),
+        liveArrayValues(nullptr),
+        maybeWrittenTypeSyms(nullptr),
+        liveVarSyms(nullptr),
+        liveInt32Syms(nullptr),
+        liveLossyInt32Syms(nullptr),
+        liveFloat64Syms(nullptr),
+        liveSimd128F4Syms(nullptr),
+        liveSimd128I4Syms(nullptr),
+        hoistableFields(nullptr),
+        argObjSyms(nullptr),
+        maybeTempObjectSyms(nullptr),
+        canStoreTempObjectSyms(nullptr),
+        valuesToKillOnCalls(nullptr),
         inductionVariables(nullptr),
         availableIntBoundChecks(nullptr),
         startCallCount(0),
         argOutCount(0),
         totalOutParamCount(0),
-        callSequence(null),
+        callSequence(nullptr),
         hasCSECandidates(false),
         curFunc(func),
-        hasDataRef(null),
-        stackLiteralInitFldDataMap(null)
+        hasDataRef(nullptr),
+        stackLiteralInitFldDataMap(nullptr)
     {
     }
 
@@ -1093,7 +1093,7 @@ public:
     void OnDataUnreferenced()
     {
         // Other blocks may still be using the data, we should only unreference the previous data
-        hasDataRef = null;
+        hasDataRef = nullptr;
     }
 
     void OnDataDeleted()
@@ -1124,7 +1124,7 @@ public:
             return liveSimd128I4Syms;
         default:
             Assert(UNREACHED);
-            return null;
+            return nullptr;
         }
     }
 };
@@ -1338,7 +1338,7 @@ public:
     IR::ByteCodeUsesInstr * ConvertToByteCodeUses(IR::Instr * isntr);
     bool GetIsAsmJSFunc()const{ return isAsmJSFunc; };
 private:
-    bool                    IsLoopPrePass() const { return this->prePassLoop != null; }    
+    bool                    IsLoopPrePass() const { return this->prePassLoop != nullptr; }
     void                    OptBlock(BasicBlock *block);
     void                    BackwardPass(Js::Phase tag);
     void                    ForwardPass();
@@ -1367,12 +1367,12 @@ private:
     IR::Instr *             OptInstr(IR::Instr *&instr, bool* isInstrCleared);
     Value*                  OptDst(IR::Instr **pInstr, Value *dstVal, Value *src1Val, Value *src2Val, Value *dstIndirIndexVal, Value *src1IndirIndexVal);
     void                    CopyPropDstUses(IR::Opnd *opnd, IR::Instr *instr, Value *src1Val);
-    Value *                 OptSrc(IR::Opnd *opnd, IR::Instr * *pInstr, Value **indirIndexValRef = null, IR::IndirOpnd *parentIndirOpnd = null);
+    Value *                 OptSrc(IR::Opnd *opnd, IR::Instr * *pInstr, Value **indirIndexValRef = nullptr, IR::IndirOpnd *parentIndirOpnd = nullptr);
     void                    MarkArgumentsUsedForBranch(IR::Instr *inst);
     bool                    OptTagChecks(IR::Instr *instr);
     void                    TryOptimizeInstrWithFixedDataProperty(IR::Instr * * const pInstr);
     bool                    CheckIfPropOpEmitsTypeCheck(IR::Instr *instr, IR::PropertySymOpnd *opnd);
-    bool                    FinishOptPropOp(IR::Instr *instr, IR::PropertySymOpnd *opnd, BasicBlock* block = null, bool updateExistingValue = false, bool* emitsTypeCheckOut = null, bool* changesTypeValueOut = null);
+    bool                    FinishOptPropOp(IR::Instr *instr, IR::PropertySymOpnd *opnd, BasicBlock* block = nullptr, bool updateExistingValue = false, bool* emitsTypeCheckOut = nullptr, bool* changesTypeValueOut = nullptr);
     void                    FinishOptHoistedPropOps(Loop * loop);
     IR::Instr *             SetTypeCheckBailOut(IR::Opnd *opnd, IR::Instr *instr, BailOutInfo *bailOutInfo);
     void                    OptArguments(IR::Instr *Instr);
@@ -1384,7 +1384,7 @@ private:
     BOOLEAN                 IsArgumentsSymID(SymID id, const GlobOptBlockData& blockData);
     Value *                 ValueNumberDst(IR::Instr **pInstr, Value *src1Val, Value *src2Val);
     Value *                 ValueNumberLdElemDst(IR::Instr **pInstr, Value *srcVal);
-    ValueType               GetPrepassValueTypeForDst(const ValueType desiredValueType, IR::Instr *const instr, Value *const src1Value, Value *const src2Value, bool *const isValueInfoPreciseRef = null) const;
+    ValueType               GetPrepassValueTypeForDst(const ValueType desiredValueType, IR::Instr *const instr, Value *const src1Value, Value *const src2Value, bool *const isValueInfoPreciseRef = nullptr) const;
     bool                    IsPrepassSrcValueInfoPrecise(IR::Opnd *const src, Value *const srcValue) const;
     Value *                 CreateDstUntransferredIntValue(const IntConstType min, const IntConstType max, IR::Instr *const instr, Value *const src1Value, Value *const src2Value);
     Value *                 CreateDstUntransferredValue(const ValueType desiredValueType, IR::Instr *const instr, Value *const src1Value, Value *const src2Value);
@@ -1405,8 +1405,8 @@ private:
     Value *                 FindObjectTypeValue(StackSym* typeSym, GlobHashTable *valueNumberMap, BVSparse<JitArenaAllocator>* liveFields);
     Value *                 FindObjectTypeValue(SymID typeSymId, GlobHashTable *valueNumberMap, BVSparse<JitArenaAllocator>* liveFields);
     Value *                 FindFuturePropertyValue(PropertySym *const propertySym);
-    IR::Opnd *              CopyProp(IR::Opnd *opnd, IR::Instr *instr, Value *val, IR::IndirOpnd *parentIndirOpnd = null);
-    IR::Opnd *              CopyPropReplaceOpnd(IR::Instr * instr, IR::Opnd * opnd, StackSym * copySym, IR::IndirOpnd *parentIndirOpnd = null);
+    IR::Opnd *              CopyProp(IR::Opnd *opnd, IR::Instr *instr, Value *val, IR::IndirOpnd *parentIndirOpnd = nullptr);
+    IR::Opnd *              CopyPropReplaceOpnd(IR::Instr * instr, IR::Opnd * opnd, StackSym * copySym, IR::IndirOpnd *parentIndirOpnd = nullptr);
     StackSym *              GetCopyPropSym(Sym * sym, Value * val);
     StackSym *              GetCopyPropSym(BasicBlock * block, Sym * sym, Value * val);
     void                    MarkTempLastUse(IR::Instr *instr, IR::RegOpnd *regOpnd);
@@ -1420,14 +1420,14 @@ private:
     Value *                 NewGenericValue(const ValueType valueType);
     Value *                 NewGenericValue(const ValueType valueType, IR::Opnd *const opnd);
     Value *                 NewGenericValue(const ValueType valueType, Sym *const sym);
-    Value *                 GetIntConstantValue(const IntConstType intConst, IR::Instr * instr, IR::Opnd *const opnd = null);
+    Value *                 GetIntConstantValue(const IntConstType intConst, IR::Instr * instr, IR::Opnd *const opnd = nullptr);
     Value *                 NewIntConstantValue(const IntConstType intConst, IR::Instr * instr, bool isTaggable);
     ValueInfo *             NewIntRangeValueInfo(const IntConstType min, const IntConstType max, const bool wasNegativeZeroPreventedByBailout);
     ValueInfo *             NewIntRangeValueInfo(const ValueInfo *const originalValueInfo, const IntConstType min, const IntConstType max) const;
-    Value *                 NewIntRangeValue(const IntConstType min, const IntConstType max, const bool wasNegativeZeroPreventedByBailout, IR::Opnd *const opnd = null);
+    Value *                 NewIntRangeValue(const IntConstType min, const IntConstType max, const bool wasNegativeZeroPreventedByBailout, IR::Opnd *const opnd = nullptr);
     IntBoundedValueInfo *   NewIntBoundedValueInfo(const ValueInfo *const originalValueInfo, const IntBounds *const bounds) const;
     Value *                 NewIntBoundedValue(const ValueType valueType, const IntBounds *const bounds, const bool wasNegativeZeroPreventedByBailout, IR::Opnd *const opnd = nullptr);    
-    Value *                 NewFloatConstantValue(const FloatConstType floatValue, IR::Opnd *const opnd = null);
+    Value *                 NewFloatConstantValue(const FloatConstType floatValue, IR::Opnd *const opnd = nullptr);
     Value *                 GetVarConstantValue(IR::AddrOpnd *addrOpnd);
     Value *                 NewVarConstantValue(IR::AddrOpnd *addrOpnd, bool isString);
     Value *                 HoistConstantLoadAndPropagateValueBackward(Js::Var varConst, IR::Instr * origInstr, Value * value);
@@ -1461,7 +1461,7 @@ private:
     Js::Var                 GetConstantVar(IR::Opnd *opnd, Value *val);
     bool                    IsWorthSpecializingToInt32DueToSrc(IR::Opnd *const src, Value *const val);
     bool                    IsWorthSpecializingToInt32DueToDst(IR::Opnd *const dst);
-    bool                    IsWorthSpecializingToInt32(IR::Instr *const instr, Value *const src1Val, Value *const src2Val = null);
+    bool                    IsWorthSpecializingToInt32(IR::Instr *const instr, Value *const src1Val, Value *const src2Val = nullptr);
     bool                    TypeSpecializeNumberUnary(IR::Instr *instr, Value *src1Val, Value **pDstVal);
     bool                    TypeSpecializeIntUnary(IR::Instr **pInstr, Value **pSrc1Val, Value **pDstVal, IntConstType min, IntConstType max, Value *const src1OriginalVal, bool *redoTypeSpecRef, bool skipDst = false);
     bool                    TypeSpecializeIntBinary(IR::Instr **pInstr, Value *src1Val, Value *src2Val, Value **pDstVal, IntConstType min, IntConstType max, bool skipDst = false);
@@ -1549,7 +1549,7 @@ private:
     void                    DetermineArrayBoundCheckHoistability(bool needLowerBoundCheck, bool needUpperBoundCheck, ArrayLowerBoundCheckHoistInfo &lowerHoistInfo, ArrayUpperBoundCheckHoistInfo &upperHoistInfo, const bool isJsArray, StackSym *const indexSym, Value *const indexValue, const IntConstantBounds &indexConstantBounds, StackSym *const headSegmentLengthSym, Value *const headSegmentLengthValue, const IntConstantBounds &headSegmentLengthConstantBounds, Loop *const headSegmentLengthInvariantLoop, bool &failedToUpdateCompatibleLowerBoundCheck, bool &failedToUpdateCompatibleUpperBoundCheck);
 
 private:
-    void                    CaptureNoImplicitCallUses(IR::Opnd *opnd, const bool usesNoMissingValuesInfo, IR::Instr *const includeCurrentInstr = null);
+    void                    CaptureNoImplicitCallUses(IR::Opnd *opnd, const bool usesNoMissingValuesInfo, IR::Instr *const includeCurrentInstr = nullptr);
     void                    InsertNoImplicitCallUses(IR::Instr *const instr);
     void                    PrepareLoopArrayCheckHoist();
 
@@ -1577,13 +1577,13 @@ private:
     IR::Instr *             ToVarUses(IR::Instr *instr, IR::Opnd *opnd, bool isDst, Value *val);
     void                    ToVar(BVSparse<JitArenaAllocator> *bv, BasicBlock *block);
     IR::Instr *             ToVar(IR::Instr *instr, IR::RegOpnd *regOpnd, BasicBlock *block, Value *val, bool needsUpdate);
-    void                    ToInt32(BVSparse<JitArenaAllocator> *bv, BasicBlock *block, bool lossy, IR::Instr *insertBeforeInstr = null);
+    void                    ToInt32(BVSparse<JitArenaAllocator> *bv, BasicBlock *block, bool lossy, IR::Instr *insertBeforeInstr = nullptr);
     void                    ToFloat64(BVSparse<JitArenaAllocator> *bv, BasicBlock *block);
-    void                    ToTypeSpec(BVSparse<JitArenaAllocator> *bv, BasicBlock *block, IRType toType, IR::BailOutKind bailOutKind = IR::BailOutInvalid, bool lossy = false, IR::Instr *insertBeforeInstr = null);
+    void                    ToTypeSpec(BVSparse<JitArenaAllocator> *bv, BasicBlock *block, IRType toType, IR::BailOutKind bailOutKind = IR::BailOutInvalid, bool lossy = false, IR::Instr *insertBeforeInstr = nullptr);
     IR::Instr *             ToInt32(IR::Instr *instr, IR::Opnd *opnd, BasicBlock *block, Value *val, IR::IndirOpnd *indir, bool lossy);
     IR::Instr *             ToFloat64(IR::Instr *instr, IR::Opnd *opnd, BasicBlock *block, Value *val, IR::IndirOpnd *indir, IR::BailOutKind bailOutKind);
     IR::Instr *             ToTypeSpecUse(IR::Instr *instr, IR::Opnd *opnd, BasicBlock *block, Value *val, IR::IndirOpnd *indir, 
-        IRType toType, IR::BailOutKind bailOutKind, bool lossy = false, IR::Instr *insertBeforeInstr = null);
+        IRType toType, IR::BailOutKind bailOutKind, bool lossy = false, IR::Instr *insertBeforeInstr = nullptr);
     void                    ToVarRegOpnd(IR::RegOpnd *dst, BasicBlock *block);
     void                    ToVarStackSym(StackSym *varSym, BasicBlock *block);
     void                    ToInt32Dst(IR::Instr *instr, IR::RegOpnd *dst, BasicBlock *block);    
@@ -1616,12 +1616,12 @@ private:
     static BOOL             IsLive(Sym *sym, BasicBlock *block);
     static BOOL             IsLive(Sym *sym, GlobOptBlockData *data);
     void                    MakeLive(StackSym *const sym, GlobOptBlockData *const blockData, const bool lossy) const;
-    void                    OptConstFoldBr(bool test, IR::Instr *instr, Value * intTypeSpecSrc1Val = null, Value * intTypeSpecSrc2Val = null);
+    void                    OptConstFoldBr(bool test, IR::Instr *instr, Value * intTypeSpecSrc1Val = nullptr, Value * intTypeSpecSrc2Val = nullptr);
     void                    PropagateIntRangeForNot(IntConstType minimum, IntConstType maximum, IntConstType *pNewMin, IntConstType* pNewMax);
     void                    PropagateIntRangeBinary(IR::Instr *instr, IntConstType min1, IntConstType max1,
                             IntConstType min2, IntConstType max2, IntConstType *pNewMin, IntConstType* pNewMax);
     bool                    OptIsInvariant(IR::Opnd *src, BasicBlock *block, Loop *loop, Value *srcVal, bool isNotTypeSpecConv, bool allowNonPrimitives);
-    bool                    OptIsInvariant(Sym *sym, BasicBlock *block, Loop *loop, Value *srcVal, bool isNotTypeSpecConv, bool allowNonPrimitives, Value **loopHeadValRef = null);
+    bool                    OptIsInvariant(Sym *sym, BasicBlock *block, Loop *loop, Value *srcVal, bool isNotTypeSpecConv, bool allowNonPrimitives, Value **loopHeadValRef = nullptr);
     bool                    OptDstIsInvariant(IR::RegOpnd *dst);
     bool                    OptIsInvariant(IR::Instr *instr, BasicBlock *block, Loop *loop, Value *src1Val, Value *src2Val, bool isNotTypeSpecConv, const bool forceInvariantHoisting = false);
     void                    OptHoistInvariant(IR::Instr *instr, BasicBlock *block, Loop *loop, Value *dstVal, Value *const src1Val, bool isNotTypeSpecConv, bool lossy = false);
@@ -1657,7 +1657,7 @@ private:
     bool                    DoFloatTypeSpec() const;
     bool                    DoStringTypeSpec() const { return GlobOpt::DoStringTypeSpec(this->func); }
     bool                    DoArrayCheckHoist() const;
-    bool                    DoArrayCheckHoist(const ValueType baseValueType, Loop* loop, IR::Instr *const instr = null) const;
+    bool                    DoArrayCheckHoist(const ValueType baseValueType, Loop* loop, IR::Instr *const instr = nullptr) const;
     bool                    DoArrayMissingValueCheckHoist() const;
     bool                    DoArraySegmentHoist(const ValueType baseValueType) const;
     bool                    DoTypedArraySegmentLengthHoist(Loop *const loop) const;
@@ -1737,7 +1737,7 @@ private:
     void                    PreparePrepassFieldHoisting(Loop * loop);
     void                    PrepareFieldHoisting(Loop * loop);    
     void                    CheckFieldHoistCandidate(IR::Instr * instr, PropertySym * sym);
-    Loop *                  FindFieldHoistStackSym(Loop * startLoop, SymID propertySymId, StackSym ** copySym, IR::Instr * instrToHoist = null) const;    
+    Loop *                  FindFieldHoistStackSym(Loop * startLoop, SymID propertySymId, StackSym ** copySym, IR::Instr * instrToHoist = nullptr) const;
     bool                    CopyPropHoistedFields(PropertySym * sym, IR::Opnd ** ppOpnd, IR::Instr * instr);
     void                    HoistFieldLoad(PropertySym * sym, Loop * loop, IR::Instr * instr, Value * oldValue, Value * newValue);
     void                    HoistNewFieldLoad(PropertySym * sym, Loop * loop, IR::Instr * instr, Value * oldValue, Value * newValue);
@@ -1781,11 +1781,11 @@ private:
     void                    SetSingleTypeOnObjectTypeValue(Value* value, const Js::Type* type);
     void                    SetTypeSetOnObjectTypeValue(Value* value, Js::EquivalentTypeSet* typeSet);
     void                    UpdateObjectTypeValue(Value* value, const Js::Type* type, bool setType, Js::EquivalentTypeSet* typeSet, bool setTypeSet);
-    void                    SetObjectTypeFromTypeSym(StackSym *typeSym, Value* value, BasicBlock* block = null);
-    void                    SetObjectTypeFromTypeSym(StackSym *typeSym, const Js::Type *type, Js::EquivalentTypeSet * typeSet, BasicBlock* block = null, bool updateExistingValue = false);
+    void                    SetObjectTypeFromTypeSym(StackSym *typeSym, Value* value, BasicBlock* block = nullptr);
+    void                    SetObjectTypeFromTypeSym(StackSym *typeSym, const Js::Type *type, Js::EquivalentTypeSet * typeSet, BasicBlock* block = nullptr, bool updateExistingValue = false);
     void                    SetObjectTypeFromTypeSym(StackSym *typeSym, const Js::Type *type, Js::EquivalentTypeSet * typeSet, GlobOptBlockData *blockData, bool updateExistingValue = false);
-    void                    KillObjectType(StackSym *objectSym, BVSparse<JitArenaAllocator>* liveFields = null);
-    void                    KillAllObjectTypes(BVSparse<JitArenaAllocator>* liveFields = null);
+    void                    KillObjectType(StackSym *objectSym, BVSparse<JitArenaAllocator>* liveFields = nullptr);
+    void                    KillAllObjectTypes(BVSparse<JitArenaAllocator>* liveFields = nullptr);
     void                    EndFieldLifetime(IR::SymOpnd *symOpnd);
     PropertySym *           CopyPropPropertySymObj(IR::SymOpnd *opnd, IR::Instr *instr);
     static bool             NeedsTypeCheckBailOut(const IR::Instr *instr, IR::PropertySymOpnd *propertySymOpnd, bool isStore, bool* pIsTypeCheckProtected, IR::BailOutKind *pBailOutKind);

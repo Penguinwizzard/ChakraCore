@@ -15,34 +15,34 @@ CompileAssert(false)
 #include "core\DelayLoadLibrary.h"
 
 XDataAllocator::XDataAllocator(BYTE* address, uint size) :
-    freeList(null),
+    freeList(nullptr),
     start(address),
     current(address),
     size(size),
-    pdataEntries(null),
-    functionTableHandles(null)
+    pdataEntries(nullptr),
+    functionTableHandles(nullptr)
 {
 #ifdef RECYCLER_MEMORY_VERIFY
         memset(this->start, Recycler::VerifyMemFill, this->size);
 #endif
     Assert(size > 0);
-    Assert(address != null);
+    Assert(address != nullptr);
 }
 
 bool XDataAllocator::Initialize(void* segmentStart, void* segmentEnd)
 {
     Assert(segmentEnd > segmentStart);
-    Assert(this->pdataEntries == null);
-    Assert(this->functionTableHandles == null);
+    Assert(this->pdataEntries == nullptr);
+    Assert(this->functionTableHandles == nullptr);
     
     bool success = true;
 
     this->pdataEntries = HeapNewNoThrowArrayZ(RUNTIME_FUNCTION, GetTotalPdataCount());
-    success = this->pdataEntries != null;
+    success = this->pdataEntries != nullptr;
     if(success && AutoSystemInfo::Data.IsWin8OrLater())
     {
         this->functionTableHandles = HeapNewNoThrowArrayZ(FunctionTableHandle,  GetTotalPdataCount());
-        success = this->functionTableHandles != null;
+        success = this->functionTableHandles != nullptr;
     }
     return success;
 }
@@ -65,7 +65,7 @@ XDataAllocator::~XDataAllocator()
             }
         }
         HeapDeleteArray(this->GetTotalPdataCount(), this->pdataEntries);
-        this->pdataEntries = null;
+        this->pdataEntries = nullptr;
     }
 
     if(this->functionTableHandles)
@@ -81,7 +81,7 @@ XDataAllocator::~XDataAllocator()
             }
         }
         HeapDeleteArray(this->GetTotalPdataCount(), this->functionTableHandles);
-        this->functionTableHandles = null;
+        this->functionTableHandles = nullptr;
     }
 
     ClearFreeList();
@@ -95,8 +95,8 @@ void XDataAllocator::Delete()
 bool XDataAllocator::Alloc(ULONG_PTR functionStart, DWORD functionSize, ushort pdataCount, ushort xdataSize, SecondaryAllocation* allocation)
 {
     XDataAllocation* xdata = static_cast<XDataAllocation*>(allocation);
-    Assert(start != null);
-    Assert(current != null);
+    Assert(start != nullptr);
+    Assert(current != nullptr);
     Assert(current >= start);
     Assert(xdataSize <= XDATA_SIZE);
     Assert(AutoSystemInfo::Data.IsWin8OrLater() || pdataCount == 1);
@@ -121,12 +121,12 @@ bool XDataAllocator::Alloc(ULONG_PTR functionStart, DWORD functionSize, ushort p
         OUTPUT_TRACE(Js::XDataAllocatorPhase, L"No space for XDATA.\n");
     }
 
-    if(xdata->address != null)
+    if(xdata->address != nullptr)
     {
         Register(xdata, functionStart, functionSize);
     }
 
-    return xdata->address != null;
+    return xdata->address != nullptr;
 }
 
 void XDataAllocator::Release(const SecondaryAllocation& allocation)
@@ -143,7 +143,7 @@ void XDataAllocator::Release(const SecondaryAllocation& allocation)
         this->freeList = freed;
     }
 
-    Assert(this->pdataEntries != null);
+    Assert(this->pdataEntries != nullptr);
     
     // Delete the table
     if (AutoSystemInfo::Data.IsWin8OrLater())
@@ -151,7 +151,7 @@ void XDataAllocator::Release(const SecondaryAllocation& allocation)
         FunctionTableHandle handle = GetFunctionTableHandle(xdata.pdataIndex);
         Assert(handle);
         NtdllLibrary::Instance->DeleteGrowableFunctionTable(handle);
-        functionTableHandles[xdata.pdataIndex] = null;
+        functionTableHandles[xdata.pdataIndex] = nullptr;
     }
     else
     {
@@ -226,7 +226,7 @@ void XDataAllocator::Register(XDataAllocation* const xdata, ULONG_PTR functionSt
 #if DBG
     // Validate that the PDATA registration succeeded
     ULONG64            imageBase       = 0;    
-    RUNTIME_FUNCTION  *runtimeFunction = RtlLookupFunctionEntry((DWORD64)functionStart, &imageBase, null);
+    RUNTIME_FUNCTION  *runtimeFunction = RtlLookupFunctionEntry((DWORD64)functionStart, &imageBase, nullptr);
     Assert(runtimeFunction != NULL);
 #endif
 }

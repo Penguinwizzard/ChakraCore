@@ -323,7 +323,7 @@ namespace Js
         HostScriptContext* calleeHostScriptContext = targetScriptContext->GetHostScriptContext();
         HostScriptContext* callerHostScriptContext = targetScriptContext->GetThreadContext()->GetPreviousHostScriptContext();
 
-        if (callerHostScriptContext == calleeHostScriptContext || (callerHostScriptContext == NULL && !calleeHostScriptContext->HasCaller()))
+        if (callerHostScriptContext == calleeHostScriptContext || (callerHostScriptContext == nullptr && !calleeHostScriptContext->HasCaller()))
         {
             return JavascriptFunction::CallFunction<true>(function, entryPoint, args);
         }
@@ -333,7 +333,7 @@ namespace Js
 #endif
 
         uint i = 0;
-        if (args.Values[0] == null)
+        if (args.Values[0] == nullptr)
         {
             i = 1;
             Assert(args.Info.Flags & CallFlags_New);
@@ -353,7 +353,7 @@ namespace Js
 
 #ifdef ENABLE_NATIVE_CODEGEN
         CheckCodeGenFunction checkCodeGenFunction = GetCheckCodeGenFunction(entryPoint);
-        if (checkCodeGenFunction != null)
+        if (checkCodeGenFunction != nullptr)
         {
             ScriptFunction* callFunc = ScriptFunction::FromVar(function);
             entryPoint = checkCodeGenFunction(callFunc);
@@ -369,9 +369,9 @@ namespace Js
         // and set that as the caller for current call, and Push a new DispatchExCaller for future calls
         // off this site. GetDispatchExCaller and ReleaseDispatchExCaller is used to get the current caller.
         // currentDispatchExCaller is cached to avoid multiple allocations.
-        IUnknown* sourceCaller = NULL, *previousSourceCaller = NULL;
+        IUnknown* sourceCaller = nullptr, *previousSourceCaller = nullptr;
         HRESULT hr = NOERROR;
-        Var result = NULL;
+        Var result = nullptr;
         BOOL wasDispatchExCallerPushed = FALSE, wasCallerSet = FALSE;
         __try
         {
@@ -400,11 +400,11 @@ namespace Js
         }
         __finally
         {
-            if (sourceCaller != NULL)
+            if (sourceCaller != nullptr)
             {
                 callerHostScriptContext->ReleaseDispatchExCaller(sourceCaller);
             }
-            IUnknown* originalCaller = NULL;
+            IUnknown* originalCaller = nullptr;
             if (wasDispatchExCallerPushed)
             {
                 calleeHostScriptContext->PopHostScriptContext();
@@ -422,7 +422,7 @@ namespace Js
                 }
             }
         }
-        Assert(result != NULL);
+        Assert(result != nullptr);
         return result;
     }
 

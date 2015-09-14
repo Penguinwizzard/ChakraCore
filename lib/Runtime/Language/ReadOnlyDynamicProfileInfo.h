@@ -48,10 +48,10 @@ namespace Js
             isSwitchOptDisabled(false),
             isEquivalentObjTypeSpecDisabled(false),
             isObjTypeSpecDisabled_jitLoopBody(false),
-            ldElemInfo(null),
-            stElemInfo(null)
+            ldElemInfo(nullptr),
+            stElemInfo(nullptr)
         {
-            if (profileInfo == NULL)
+            if (profileInfo == nullptr)
             {
                 return;
             }
@@ -92,8 +92,8 @@ namespace Js
         {
             // The background allocator was reset, so need to clear any references to data cloned using that allocator
             Assert(backgroundAllocator);
-            ldElemInfo = null;
-            stElemInfo = null;
+            ldElemInfo = nullptr;
+            stElemInfo = nullptr;
         }
 
         bool HasProfileInfo() const 

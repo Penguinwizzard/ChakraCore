@@ -6,6 +6,7 @@
 #include "Debug\DebuggingFlags.h"
 #include "Debug\DiagProbe.h"
 #include "Debug\DebugManager.h"
+#include "Language\JavascriptFunctionArgIndex.h"
 
 extern "C" const IRType RegTypes[RegNumCount];
 
@@ -62,7 +63,7 @@ BailOutInfo::NeedsStartCallAdjust(uint i, const IR::Instr * bailOutInstr) const
 
     IR::Instr * instr = this->startCallInfo[i].instr;
 
-    if (instr == null || instr->m_opcode == Js::OpCode::StartCall)
+    if (instr == nullptr || instr->m_opcode == Js::OpCode::StartCall)
     {
         // The StartCall was unlinked (because it was being deleted, or we know it was
         // moved below the bailout instr).
@@ -94,7 +95,7 @@ BailOutInfo::RecordStartCallInfo(uint i, uint argRestoreAdjustCount, IR::Instr *
 void
 BailOutInfo::UnlinkStartCall(const IR::Instr * instr)
 {
-    Assert(this->startCallCount == 0 || this->startCallInfo != null);
+    Assert(this->startCallCount == 0 || this->startCallInfo != nullptr);
 
     uint i;
     for (i = 0; i < this->startCallCount; i++)
@@ -102,7 +103,7 @@ BailOutInfo::UnlinkStartCall(const IR::Instr * instr)
         StartCallInfo *info = &this->startCallInfo[i];
         if (info->instr == instr)
         {
-            info->instr = null;
+            info->instr = nullptr;
             return;
         }
     }
@@ -171,7 +172,7 @@ BailOutInfo::FinalizeBailOutRecord(Func * func)
 {
     Assert(func->IsTopFunc());
     BailOutRecord * bailOutRecord = this->bailOutRecord;
-    if (bailOutRecord == null)
+    if (bailOutRecord == nullptr)
     {
         return;
     }
@@ -186,7 +187,7 @@ BailOutInfo::FinalizeBailOutRecord(Func * func)
     uint inlinedArgSlotAdjust = (func->m_localStackHeight + (2 * MachPtr));
 #endif
 
-    while (currentBailOutRecord->parent != null)
+    while (currentBailOutRecord->parent != nullptr)
     {
         Assert(currentBailOutRecord->globalBailOutRecordTable->firstActualStackOffset == -1 ||
             currentBailOutRecord->globalBailOutRecordTable->firstActualStackOffset == (int32)(currentBailOutFunc->firstActualStackOffset - inlinedArgSlotAdjust));
@@ -242,7 +243,7 @@ BailOutInfo::FinalizeBailOutRecord(Func * func)
           currentBailOutRecord->m_bailOutRecordId, [=](GlobalBailOutRecordDataRow *row) {
             int32 inlineeArgStackSize = func->GetInlineeArgumentStackSize();
             int localsSize = func->m_localStackHeight + func->m_ArgumentsOffset;
-            int offset = -(((int32)row->offset) + StackSymBias);
+            int offset = -(row->offset + StackSymBias);
             if (offset < 0)
             {
                 // Not stack offset
@@ -256,12 +257,12 @@ BailOutInfo::FinalizeBailOutRecord(Func * func)
         });
         currentBailOutRecord = currentBailOutRecord->parent;
     }
-    while (currentBailOutRecord != null);
-    this->FinalizeOffsets(this->outParamOffsets, this->totalOutParamCount, func, func->HasInlinee() ? this->outParamInlinedArgSlot : null);
+    while (currentBailOutRecord != nullptr);
+    this->FinalizeOffsets(this->outParamOffsets, this->totalOutParamCount, func, func->HasInlinee() ? this->outParamInlinedArgSlot : nullptr);
 
 #endif
     // set the bailOutRecord to null so we don't adjust it again if the info is shared
-    bailOutRecord = null;
+    bailOutRecord = nullptr;
 }
 
 #if DBG
@@ -569,7 +570,7 @@ BailOutRecord::RestoreValues(IR::BailOutKind bailOutKind, Js::JavascriptCallStac
                     uint propertyCount = obj->GetPropertyCount();
                     for (uint j = record.initFldCount; j < propertyCount; j++)
                     {
-                        obj->SetSlot(SetSlotArgumentsRoot(Js::Constants::NoProperty, false, j, null));
+                        obj->SetSlot(SetSlotArgumentsRoot(Js::Constants::NoProperty, false, j, nullptr));
                     }
                 }
             }
@@ -625,14 +626,14 @@ BailOutRecord::RestoreValues(IR::BailOutKind bailOutKind, Js::JavascriptCallStac
     Assert(newInstance->function && newInstance->function->GetFunctionBody());
     bool hasArgumentSlot =      // Be consistent with Func::HasArgumentSlot.
         !fromLoopBody && newInstance->function->GetFunctionBody()->GetInParamsCount() != 0;
-    if (hasArgumentSlot && newInstance->m_arguments == NULL)
+    if (hasArgumentSlot && newInstance->m_arguments == nullptr)
     {
         newInstance->m_arguments = *pArgumentsObject;
     }
 
-    if (bailOutReturnValue != null && bailOutReturnValue->returnValueRegSlot != Js::Constants::NoRegister)
+    if (bailOutReturnValue != nullptr && bailOutReturnValue->returnValueRegSlot != Js::Constants::NoRegister)
     {
-        Assert(bailOutReturnValue->returnValue != null);        
+        Assert(bailOutReturnValue->returnValue != nullptr);        
         Assert(bailOutReturnValue->returnValueRegSlot < newInstance->GetJavascriptFunction()->GetFunctionBody()->GetLocalsCount());
         newInstance->m_localSlots[bailOutReturnValue->returnValueRegSlot] = bailOutReturnValue->returnValue;
 
@@ -665,10 +666,10 @@ BailOutRecord::AdjustOffsetsForDiagMode(Js::JavascriptCallStackLayout * layout, 
     Assert(function->GetScriptContext()->IsInDebugMode());
 
     Js::FunctionBody *functionBody =  function->GetFunctionBody();
-    Assert(functionBody != NULL);
+    Assert(functionBody != nullptr);
 
     Js::FunctionEntryPointInfo *entryPointInfo = functionBody->GetDefaultFunctionEntryPointInfo();
-    Assert(entryPointInfo != NULL);
+    Assert(entryPointInfo != nullptr);
 
     // Note: the offset may be not initialized/InvalidOffset when there are no non-temp local vars.
     if (entryPointInfo->localVarChangedOffset != Js::Constants::InvalidOffset)
@@ -836,7 +837,7 @@ BailOutRecord::RestoreValue(IR::BailOutKind bailOutKind, Js::JavascriptCallStack
             Assert(!isInt32);
             Assert(!fromLoopBody);
             value = *pArgumentsObject;
-            if (value == null)
+            if (value == nullptr)
             {
                 value = EnsureArguments(newInstance, layout, scriptContext, pArgumentsObject);
             }
@@ -862,7 +863,9 @@ BailOutRecord::RestoreValue(IR::BailOutKind bailOutKind, Js::JavascriptCallStack
     }
     else
     {
+        // Assert(false) here?
         BAILOUT_VERBOSE_TRACE(newInstance->function->GetFunctionBody(), bailOutKind, L"Not live\n");
+        return;
     }
 
     if (isFloat64)
@@ -973,14 +976,14 @@ Js::Var BailOutRecord::BailOut(BailOutRecord const * bailOutRecord)
 uint32
 BailOutRecord::BailOutFromLoopBody(Js::JavascriptCallStackLayout * layout, BailOutRecord const * bailOutRecord)
 {
-    Assert(bailOutRecord->parent == null);
+    Assert(bailOutRecord->parent == nullptr);
     return BailOutFromLoopBodyCommon(layout, bailOutRecord, bailOutRecord->bailOutOffset, bailOutRecord->bailOutKind);
 }
 
 Js::Var
 BailOutRecord::BailOutFromFunction(Js::JavascriptCallStackLayout * layout, BailOutRecord const * bailOutRecord, void * returnAddress, void * argoutRestoreAddress)
 {
-    Assert(bailOutRecord->parent == null);
+    Assert(bailOutRecord->parent == nullptr);
 
     return BailOutCommon(layout, bailOutRecord, bailOutRecord->bailOutOffset, returnAddress, bailOutRecord->bailOutKind, nullptr, nullptr, argoutRestoreAddress);
 }
@@ -988,14 +991,14 @@ BailOutRecord::BailOutFromFunction(Js::JavascriptCallStackLayout * layout, BailO
 Js::Var
 BailOutRecord::BailOutInlined(Js::JavascriptCallStackLayout * layout, BailOutRecord const * bailOutRecord, void * returnAddress)
 {
-    Assert(bailOutRecord->parent != null);
+    Assert(bailOutRecord->parent != nullptr);
     return BailOutInlinedCommon(layout, bailOutRecord, bailOutRecord->bailOutOffset, returnAddress, bailOutRecord->bailOutKind);
 }
 
 uint32
 BailOutRecord::BailOutFromLoopBodyInlined(Js::JavascriptCallStackLayout * layout, BailOutRecord const * bailOutRecord, void * returnAddress)
 {
-    Assert(bailOutRecord->parent != null);
+    Assert(bailOutRecord->parent != nullptr);
     return BailOutFromLoopBodyInlinedCommon(layout, bailOutRecord, bailOutRecord->bailOutOffset, returnAddress, bailOutRecord->bailOutKind);
 }
 
@@ -1004,7 +1007,7 @@ BailOutRecord::BailOutCommonNoCodeGen(Js::JavascriptCallStackLayout * layout, Ba
     uint32 bailOutOffset, void * returnAddress, IR::BailOutKind bailOutKind, Js::Var branchValue, Js::Var * registerSaves, 
     BailOutReturnValue * bailOutReturnValue, void * argoutRestoreAddress)
 {
-    Assert(bailOutRecord->parent == null);
+    Assert(bailOutRecord->parent == nullptr);
     Assert(Js::ScriptFunction::Is(layout->functionObject));
     Js::ScriptFunction ** functionRef = (Js::ScriptFunction **)&layout->functionObject;
     Js::ArgumentReader args(&layout->callInfo, layout->args);
@@ -1024,7 +1027,7 @@ uint32 bailOutOffset, void * returnAddress, IR::BailOutKind bailOutKind, Js::Var
         sizeof(registerSaves));
 
     Js::Var result = BailOutCommonNoCodeGen(layout, bailOutRecord, bailOutOffset, returnAddress, bailOutKind, branchValue, nullptr, bailOutReturnValue, argoutRestoreAddress);
-    ScheduleFunctionCodeGen(Js::ScriptFunction::FromVar(layout->functionObject), null, bailOutRecord, bailOutKind, returnAddress);
+    ScheduleFunctionCodeGen(Js::ScriptFunction::FromVar(layout->functionObject), nullptr, bailOutRecord, bailOutKind, returnAddress);
     return result;
 }
 
@@ -1032,7 +1035,7 @@ Js::Var
 BailOutRecord::BailOutInlinedCommon(Js::JavascriptCallStackLayout * layout, BailOutRecord const * bailOutRecord, uint32 bailOutOffset, 
     void * returnAddress, IR::BailOutKind bailOutKind, Js::Var branchValue)
 {    
-    Assert(bailOutRecord->parent != null);
+    Assert(bailOutRecord->parent != nullptr);
     // Need to capture the register save, one of the bailout might get ingot jitted code again and bailout again
     // overwritting the current register saves
     Js::Var registerSaves[BailOutRegisterSaveSlotCount];
@@ -1053,7 +1056,7 @@ BailOutRecord::BailOutFromLoopBodyCommon(Js::JavascriptCallStackLayout * layout,
     IR::BailOutKind bailOutKind, Js::Var branchValue)
 {
     uint32 result = BailOutFromLoopBodyHelper(layout, bailOutRecord, bailOutOffset, bailOutKind, branchValue);
-    ScheduleLoopBodyCodeGen(Js::ScriptFunction::FromVar(layout->functionObject), null, bailOutRecord, bailOutKind);
+    ScheduleLoopBodyCodeGen(Js::ScriptFunction::FromVar(layout->functionObject), nullptr, bailOutRecord, bailOutKind);
     return result;
 }
 
@@ -1061,7 +1064,7 @@ uint32
 BailOutRecord::BailOutFromLoopBodyInlinedCommon(Js::JavascriptCallStackLayout * layout, BailOutRecord const * bailOutRecord, 
     uint32 bailOutOffset, void * returnAddress, IR::BailOutKind bailOutKind, Js::Var branchValue)
 {    
-    Assert(bailOutRecord->parent != null);
+    Assert(bailOutRecord->parent != nullptr);
     Js::Var registerSaves[BailOutRegisterSaveSlotCount];
     js_memcpy_s(registerSaves, sizeof(registerSaves), layout->functionObject->GetScriptContext()->GetThreadContext()->GetBailOutRegisterSaveSpace(),
         sizeof(registerSaves));
@@ -1079,9 +1082,9 @@ void
 BailOutRecord::BailOutInlinedHelper(Js::JavascriptCallStackLayout * layout, BailOutRecord const *& currentBailOutRecord,
     uint32 bailOutOffset, void * returnAddress, IR::BailOutKind bailOutKind, Js::Var * registerSaves, BailOutReturnValue * bailOutReturnValue, Js::ScriptFunction ** innerMostInlinee, Js::Var branchValue)
 {
-    Assert(currentBailOutRecord->parent != null);
-    BailOutReturnValue * lastBailOutReturnValue = null;
-    *innerMostInlinee = null;
+    Assert(currentBailOutRecord->parent != nullptr);
+    BailOutReturnValue * lastBailOutReturnValue = nullptr;
+    *innerMostInlinee = nullptr;
 
 
     Js::FunctionBody* functionBody = Js::ScriptFunction::FromVar(layout->functionObject)->GetFunctionBody();
@@ -1108,7 +1111,7 @@ BailOutRecord::BailOutInlinedHelper(Js::JavascriptCallStackLayout * layout, Bail
         
         Assert(Js::ScriptFunction::Is(inlinedFrame->function));
 
-        if (*innerMostInlinee == null)
+        if (*innerMostInlinee == nullptr)
         {
             *innerMostInlinee = *functionRef;
         }
@@ -1129,14 +1132,14 @@ BailOutRecord::BailOutInlinedHelper(Js::JavascriptCallStackLayout * layout, Bail
         currentBailOutRecord = currentBailOutRecord->parent;
         bailOutOffset = currentBailOutRecord->bailOutOffset;
     }
-    while (currentBailOutRecord->parent != null);
+    while (currentBailOutRecord->parent != nullptr);
 }
 
 uint32
 BailOutRecord::BailOutFromLoopBodyHelper(Js::JavascriptCallStackLayout * layout, BailOutRecord const * bailOutRecord,
     uint32 bailOutOffset, IR::BailOutKind bailOutKind, Js::Var branchValue, Js::Var *registerSaves, BailOutReturnValue * bailOutReturnValue)
 {
-    Assert(bailOutRecord->parent == null);
+    Assert(bailOutRecord->parent == nullptr);
 
     Js::JavascriptFunction * function = layout->functionObject;
     
@@ -1173,7 +1176,7 @@ BailOutRecord::BailOutFromLoopBodyHelper(Js::JavascriptCallStackLayout * layout,
 void BailOutRecord::UpdatePolymorphicFieldAccess(Js::JavascriptFunction *  function, BailOutRecord const * bailOutRecord)
 {
     Js::FunctionBody * executeFunction = function->GetFunctionBody();
-    Js::DynamicProfileInfo *dynamicProfileInfo = null;
+    Js::DynamicProfileInfo *dynamicProfileInfo = nullptr;
     if (executeFunction->HasDynamicProfileInfo())
     {
         dynamicProfileInfo = executeFunction->GetAnyDynamicProfileInfo();
@@ -2080,13 +2083,13 @@ void BailOutRecord::ScheduleLoopBodyCodeGen(Js::ScriptFunction * function, Js::S
         return;
     }
             
-    Js::LoopHeader * loopHeader = NULL;
+    Js::LoopHeader * loopHeader = nullptr;
 
     Js::InterpreterStackFrame * interpreterFrame = executeFunction->GetScriptContext()->GetThreadContext()->GetLeafInterpreterFrame();
 
     loopHeader = executeFunction->GetLoopHeader(interpreterFrame->GetCurrentLoopNum());
 
-    Assert(loopHeader != NULL);     
+    Assert(loopHeader != nullptr);     
     
     BailOutRecord * bailOutRecordNotConst = (BailOutRecord *)(void *)bailOutRecord;    
     RejitReason rejitReason = RejitReason::None;
@@ -2433,7 +2436,7 @@ Js::Var BranchBailOutRecord::BailOut(BranchBailOutRecord const * bailOutRecord, 
 Js::Var 
 BranchBailOutRecord::BailOutFromFunction(Js::JavascriptCallStackLayout * layout, BranchBailOutRecord const * bailOutRecord, BOOL cond, void * returnAddress, void * argoutRestoreAddress)
 {
-    Assert(bailOutRecord->parent == null);
+    Assert(bailOutRecord->parent == nullptr);
     uint32 bailOutOffset = cond? bailOutRecord->bailOutOffset : bailOutRecord->falseBailOutOffset;
     Js::Var branchValue = nullptr;
     if (bailOutRecord->branchValueRegSlot != Js::Constants::NoRegister)
@@ -2448,7 +2451,7 @@ BranchBailOutRecord::BailOutFromFunction(Js::JavascriptCallStackLayout * layout,
 uint32 
 BranchBailOutRecord::BailOutFromLoopBody(Js::JavascriptCallStackLayout * layout, BranchBailOutRecord const * bailOutRecord, BOOL cond)
 {
-    Assert(bailOutRecord->parent == null);
+    Assert(bailOutRecord->parent == nullptr);
     uint32 bailOutOffset = cond? bailOutRecord->bailOutOffset : bailOutRecord->falseBailOutOffset;
     Js::Var branchValue = nullptr;
     if (bailOutRecord->branchValueRegSlot != Js::Constants::NoRegister)
@@ -2462,7 +2465,7 @@ BranchBailOutRecord::BailOutFromLoopBody(Js::JavascriptCallStackLayout * layout,
 Js::Var 
 BranchBailOutRecord::BailOutInlined(Js::JavascriptCallStackLayout * layout, BranchBailOutRecord const * bailOutRecord, BOOL cond, void * returnAddress)
 {
-    Assert(bailOutRecord->parent != null);
+    Assert(bailOutRecord->parent != nullptr);
     uint32 bailOutOffset = cond? bailOutRecord->bailOutOffset : bailOutRecord->falseBailOutOffset;
     Js::Var branchValue = nullptr;
     if (bailOutRecord->branchValueRegSlot != Js::Constants::NoRegister)
@@ -2477,7 +2480,7 @@ BranchBailOutRecord::BailOutInlined(Js::JavascriptCallStackLayout * layout, Bran
 uint32 
 BranchBailOutRecord::BailOutFromLoopBodyInlined(Js::JavascriptCallStackLayout * layout, BranchBailOutRecord const * bailOutRecord, BOOL cond, void * returnAddress)
 {
-    Assert(bailOutRecord->parent != null);
+    Assert(bailOutRecord->parent != nullptr);
     uint32 bailOutOffset = cond? bailOutRecord->bailOutOffset : bailOutRecord->falseBailOutOffset;
     Js::Var branchValue = nullptr;
     if (bailOutRecord->branchValueRegSlot != Js::Constants::NoRegister)
@@ -2522,7 +2525,8 @@ void GlobalBailOutRecordDataTable::Finalize(NativeCodeData::Allocator *allocator
 #endif
 }
 
-void  GlobalBailOutRecordDataTable::AddOrUpdateRow(JitArenaAllocator *allocator, uint32 bailOutRecordId, uint32 regSlot, bool isFloat, bool isInt, bool isSimd128F4, bool isSimd128I4, uint32 offset, uint *lastUpdatedRowIndex)
+
+void  GlobalBailOutRecordDataTable::AddOrUpdateRow(JitArenaAllocator *allocator, uint32 bailOutRecordId, uint32 regSlot, bool isFloat, bool isInt, bool isSimd128F4, bool isSimd128I4, int32 offset, uint *lastUpdatedRowIndex)
 {
     Assert(offset != 0);
     const int INITIAL_TABLE_SIZE = 64;

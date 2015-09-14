@@ -33,13 +33,13 @@ public:
     {
         size_t sizeCat = GetAlignedAllocSize();
         this->recycler->RemoveSmallAllocator(&allocator, sizeCat);
-        this->recycler = null;
+        this->recycler = nullptr;
     }
 
     Recycler * GetRecycler() { return recycler; }
     char * Alloc(size_t size)
     {
-        Assert(recycler != null);
+        Assert(recycler != nullptr);
         Assert(!recycler->IsHeapEnumInProgress() || recycler->AllowAllocationDuringHeapEnum());
         Assert(size == sizeof(T));
 
@@ -51,10 +51,10 @@ public:
         Assert(HeapInfo::IsSmallObject(sizeCat));
         char * memBlock = allocator.InlinedAlloc<(ObjectInfoBits)(attributes & InternalObjectInfoBitMask)>(recycler, sizeCat);
 
-        if (memBlock == null)
+        if (memBlock == nullptr)
         {
             memBlock = recycler->SmallAllocatorAlloc<attributes>(&allocator, sizeCat);
-            Assert(memBlock != null);
+            Assert(memBlock != nullptr);
         }
 
 #ifdef PROFILE_RECYCLER_ALLOC

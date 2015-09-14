@@ -168,12 +168,12 @@ LargeHeapBlock::Delete(LargeHeapBlock * heapBlock)
 LargeHeapBlock::LargeHeapBlock(char * address, size_t pageCount, Segment * segment, uint objectCount, LargeHeapBucket* bucket)
     : HeapBlock(LargeBlockType), pageCount(pageCount), allocAddressEnd(address), objectCount(objectCount), bucket(bucket), freeList(this)
 {
-    Assert(address != null);
+    Assert(address != nullptr);
     Assert(pageCount != 0);
     Assert(objectCount != 0);
     Assert(lastCollectAllocCount == 0);
     Assert(finalizeCount == 0);
-    Assert(next == null);
+    Assert(next == nullptr);
     Assert(!hasPartialFreeObjects);
 
     this->address = address;
@@ -187,12 +187,12 @@ LargeHeapBlock::LargeHeapBlock(char * address, size_t pageCount, Segment * segme
 
 LargeHeapBlock::~LargeHeapBlock()
 {
-    AssertMsg(this->segment == null || this->heapInfo->recycler->recyclerLargeBlockPageAllocator.IsClosed(),
+    AssertMsg(this->segment == nullptr || this->heapInfo->recycler->recyclerLargeBlockPageAllocator.IsClosed(),
         "ReleasePages needs to be called before delete");
     RECYCLER_PERF_COUNTER_DEC(LargeHeapBlockCount);
 
 #ifdef RECYCLER_PAGE_HEAP
-    if (this->pageHeapAllocStack != null)
+    if (this->pageHeapAllocStack != nullptr)
     {
         this->pageHeapAllocStack->Delete(&NoCheckHeapAllocator::Instance);
         this->pageHeapAllocStack = nullptr;
@@ -200,7 +200,7 @@ LargeHeapBlock::~LargeHeapBlock()
 
     // REVIEW: This means that the old free stack is lost when we get free the heap block
     // Is this ok? Should we delay freeing heap blocks till process/thread shutdown time?
-    if (this->pageHeapFreeStack != null)
+    if (this->pageHeapFreeStack != nullptr)
     {
         this->pageHeapFreeStack->Delete(&NoCheckHeapAllocator::Instance);
         this->pageHeapFreeStack = nullptr;
@@ -230,7 +230,7 @@ LargeHeapBlock::FinalizeAllObjects()
         for (uint i = 0; i < allocCount; i++)
         {
             LargeObjectHeader * header = this->GetHeader(i);
-            if (header == null || ((header->GetAttributes(this->heapInfo->recycler->Cookie) & FinalizeBit) == 0))
+            if (header == nullptr || ((header->GetAttributes(this->heapInfo->recycler->Cookie) & FinalizeBit) == 0))
             {
                 continue;
             }
@@ -245,12 +245,12 @@ LargeHeapBlock::FinalizeAllObjects()
             DebugOnly(processedCount++);
         }
 
-        while (pendingDisposeObject != null)
+        while (pendingDisposeObject != nullptr)
         {
             LargeObjectHeader * header = pendingDisposeObject;
             pendingDisposeObject = header->GetNext(this->heapInfo->recycler->Cookie);
             Assert(header->GetAttributes(this->heapInfo->recycler->Cookie) & FinalizeBit);
-            Assert(this->HeaderList()[header->objectIndex] == null);
+            Assert(this->HeaderList()[header->objectIndex] == nullptr);
 
             void * objectAddress = header->GetAddress();
             ((FinalizableObject *)objectAddress)->Dispose(true);
@@ -297,7 +297,7 @@ template<bool pageheap>
 void
 LargeHeapBlock::ReleasePages(Recycler * recycler)
 {
-    Assert(segment != null);
+    Assert(segment != nullptr);
 
     char* pageAddress = address;
     size_t realPageCount = pageCount;
@@ -333,7 +333,7 @@ LargeHeapBlock::ReleasePages(Recycler * recycler)
     recycler->recyclerLargeBlockPageAllocator.Release(pageAddress, realPageCount, segment);
     RECYCLER_PERF_COUNTER_SUB(LargeHeapBlockPageSize, pageCount * AutoSystemInfo::PageSize);
 
-    this->segment = null;
+    this->segment = nullptr;
 }
 
 BOOL
@@ -348,7 +348,7 @@ BOOL
 LargeHeapBlock::IsFreeObject(void * objectAddress)
 {
     LargeObjectHeader * header = GetHeader(objectAddress);
-    return ((char *)header >= this->address && header->objectIndex < this->allocCount && this->GetHeader(header->objectIndex) == null);
+    return ((char *)header >= this->address && header->objectIndex < this->allocCount && this->GetHeader(header->objectIndex) == nullptr);
 }
 #endif
 size_t
@@ -377,7 +377,7 @@ LargeHeapBlock::TryAllocFromFreeList(size_t size, ObjectInfoBits attributes)
     LargeHeapBlockFreeListEntry** prev = &this->freeList.entries;
     LargeHeapBlockFreeListEntry* freeListEntry = this->freeList.entries;
 
-    char* memBlock = null;
+    char* memBlock = nullptr;
 
     // Walk through the free list, find the first entry that can fit our desired size
     while (freeListEntry)
@@ -400,7 +400,7 @@ LargeHeapBlock::TryAllocFromFreeList(size_t size, ObjectInfoBits attributes)
         freeListEntry = freeListEntry->next;
     }
 
-    if (this->freeList.entries == null)
+    if (this->freeList.entries == nullptr)
     {
         this->bucket->UnregisterFreeList(&this->freeList);
     }
@@ -416,7 +416,7 @@ LargeHeapBlock::AllocFreeListEntry(size_t size, ObjectInfoBits attributes, Large
     AssertMsg((attributes & TrackBit) == 0, "Large tracked object collection not implemented");
     Assert(entry->heapBlock == this);
     Assert(entry->headerIndex < this->objectCount);
-    Assert(this->HeaderList()[entry->headerIndex] == null);
+    Assert(this->HeaderList()[entry->headerIndex] == nullptr);
 
     uint headerIndex = entry->headerIndex;
     uint originalSize = entry->objectSize;
@@ -428,7 +428,7 @@ LargeHeapBlock::AllocFreeListEntry(size_t size, ObjectInfoBits attributes, Large
     char * originalAllocEnd = allocObject + originalSize;
     if (newAllocAddressEnd > addressEnd || newAllocAddressEnd < allocObject || (originalAllocEnd < newAllocAddressEnd))
     {
-        return null;
+        return nullptr;
     }
 
 #ifdef RECYCLER_MEMORY_VERIFY
@@ -458,8 +458,8 @@ LargeHeapBlock::AllocFreeListEntry(size_t size, ObjectInfoBits attributes, Large
     header->objectIndex = headerIndex;
     header->objectSize = originalSize;
     header->SetAttributes(this->heapInfo->recycler->Cookie, (attributes & StoredObjectInfoBitMask));
-    header->markOnOOMRescan = null;
-    header->SetNext(this->heapInfo->recycler->Cookie, null);
+    header->markOnOOMRescan = nullptr;
+    header->SetNext(this->heapInfo->recycler->Cookie, nullptr);
 
     HeaderList()[headerIndex] = header;
     finalizeCount += ((attributes & FinalizeBit) != 0);
@@ -491,7 +491,7 @@ LargeHeapBlock::Alloc(size_t size, ObjectInfoBits attributes)
     char * newAllocAddressEnd = allocObject + size;
     if (newAllocAddressEnd > addressEnd || newAllocAddressEnd < allocObject)
     {
-        return null;
+        return nullptr;
     }
 
     Recycler* recycler = this->heapInfo->recycler;
@@ -576,7 +576,7 @@ LargeHeapBlock::TestObjectMarkedBit(void* objectAddress)
 {
     Assert(IsValidObject(objectAddress));
 
-    LargeObjectHeader* pHeader = NULL;
+    LargeObjectHeader* pHeader = nullptr;
 
     if (GetObjectHeader(objectAddress, &pHeader))
     {
@@ -593,7 +593,7 @@ LargeHeapBlock::SetObjectMarkedBit(void* objectAddress)
 {
     Assert(IsValidObject(objectAddress));
 
-    LargeObjectHeader* pHeader = NULL;
+    LargeObjectHeader* pHeader = nullptr;
 
     if (GetObjectHeader(objectAddress, &pHeader))
     {
@@ -611,7 +611,7 @@ LargeHeapBlock::FindImplicitRootObject(void* objectAddress, Recycler * recycler,
         return false;
     }
 
-    LargeObjectHeader* pHeader = NULL;
+    LargeObjectHeader* pHeader = nullptr;
 
     if (!GetObjectHeader(objectAddress, &pHeader))
     {
@@ -619,7 +619,7 @@ LargeHeapBlock::FindImplicitRootObject(void* objectAddress, Recycler * recycler,
     }
 
 #ifdef LARGEHEAPBLOCK_ENCODING
-    heapObject = RecyclerHeapObjectInfo(objectAddress, recycler, this, NULL);
+    heapObject = RecyclerHeapObjectInfo(objectAddress, recycler, this, nullptr);
     heapObject.SetLargeHeapBlockHeader(pHeader);
 #else
     heapObject = RecyclerHeapObjectInfo(objectAddress, recycler, this, pHeader->GetAttributesPtr());
@@ -637,7 +637,7 @@ LargeHeapBlock::FindHeapObject(void* objectAddress, Recycler * recycler, FindHea
 bool
 LargeHeapBlock::GetObjectHeader(void* objectAddress, LargeObjectHeader** ppHeader)
 {
-    (*ppHeader) = NULL;
+    (*ppHeader) = nullptr;
 
     LargeObjectHeader * header = GetHeader(objectAddress);
     if ((char *)header < this->address)
@@ -677,7 +677,7 @@ LargeHeapBlock::ResetMarks(ResetMarkFlags flags, Recycler* recycler)
             // object is allocated during the concurrent mark or it is marked, do rescan
             LargeObjectHeader * header = this->GetHeader(objectIndex);
             // check if the object index is not allocated
-            if (header == null)
+            if (header == nullptr)
             {
                 continue;
             }
@@ -711,7 +711,7 @@ LargeHeapBlock::GetRealAddressFromInterior(void * interiorAddress)
     {
         LargeObjectHeader * header = this->HeaderList()[i];
 
-        if (header != null && !IsPartialSweptHeader(header))
+        if (header != nullptr && !IsPartialSweptHeader(header))
         {
             Assert(header->objectIndex == i);
             byte * startAddress = (byte *)header->GetAddress();
@@ -722,7 +722,7 @@ LargeHeapBlock::GetRealAddressFromInterior(void * interiorAddress)
         }
     }
 
-    return null;
+    return nullptr;
 }
 
 #ifdef RECYCLER_VERIFY_MARK
@@ -736,7 +736,7 @@ LargeHeapBlock::VerifyMark()
     for (uint i = 0; i < allocCount; i++)
     {
         LargeObjectHeader * header = this->GetHeader(i);
-        if (header == null)
+        if (header == nullptr)
         {
             continue;
         }
@@ -819,7 +819,7 @@ LargeHeapBlock::ScanInitialImplicitRoots(Recycler * recycler)
         // object is allocated during the concurrent mark or it is marked, do rescan
         LargeObjectHeader * header = this->GetHeader(objectIndex);
         // check if the object index is not allocated
-        if (header == null)
+        if (header == nullptr)
         {
             continue;
         }
@@ -859,7 +859,7 @@ LargeHeapBlock::ScanNewImplicitRoots(Recycler * recycler)
         objectIndex++;
 
         // check if the object index is not allocated
-        if (header == null)
+        if (header == nullptr)
         {
             continue;
         }
@@ -926,7 +926,7 @@ LargeHeapBlock::RescanOnePage(Recycler * recycler, DWORD const writeWatchFlags)
         LargeObjectHeader * header = this->GetHeader(objectIndex);
 
         // check if the object index is not allocated
-        if (header == null)
+        if (header == nullptr)
         {
             continue;
         }
@@ -1006,7 +1006,7 @@ LargeHeapBlock::RescanMultiPage(Recycler * recycler, DWORD const writeWatchFlags
     size_t rescanCount = 0;
     DWORD pageSize = AutoSystemInfo::PageSize;
     uint objectIndex = 0;
-    char * lastPageCheckedForWriteWatch = null;
+    char * lastPageCheckedForWriteWatch = nullptr;
     bool isLastPageCheckedForWriteWatchDirty = false;
 
     const HeapBlockMap& heapBlockMap = recycler->heapBlockMap;
@@ -1018,7 +1018,7 @@ LargeHeapBlock::RescanMultiPage(Recycler * recycler, DWORD const writeWatchFlags
         objectIndex++;
 
         // check if the object index is not allocated
-        if (header == null)
+        if (header == nullptr)
         {
             continue;
         }
@@ -1106,7 +1106,7 @@ LargeHeapBlock::RescanMultiPage(Recycler * recycler, DWORD const writeWatchFlags
                 */
                 if (lastPageCheckedForWriteWatch != pageStart)
                 {
-                    void * written = null;
+                    void * written = nullptr;
                     ULONG_PTR count = 1;
 
                     lastPageCheckedForWriteWatch = pageStart;
@@ -1196,7 +1196,7 @@ LargeHeapBlock::Sweep(RecyclerSweep& recyclerSweep, bool queuePendingSweep)
     if (isAllFreed)
     {
         recycler->NotifyFree<pageheap>(this);
-        Assert(this->pendingDisposeObject == null);
+        Assert(this->pendingDisposeObject == nullptr);
         return SweepStateEmpty;
     }
 
@@ -1247,11 +1247,11 @@ LargeHeapBlock::Sweep(RecyclerSweep& recyclerSweep, bool queuePendingSweep)
         isForceSweeping = false;
     }
 #endif
-    if (this->pendingDisposeObject != null)
+    if (this->pendingDisposeObject != nullptr)
     {
         return SweepStatePendingDispose;
     }
-    return (allocCount == objectCount || addressEnd - allocAddressEnd <= HeapConstants::MaxSmallObjectSize) && this->freeList.entries == null ?
+    return (allocCount == objectCount || addressEnd - allocAddressEnd <= HeapConstants::MaxSmallObjectSize) && this->freeList.entries == nullptr ?
     SweepStateFull : SweepStateSwept;
 }
 
@@ -1362,13 +1362,13 @@ LargeHeapBlock::SweepObject<SweepMode_InThread>(Recycler * recycler, LargeObject
     // If it's finalizable, it'll be zeroed out during dispose
     if ((header->GetAttributes(this->heapInfo->recycler->Cookie) & FinalizeBit) != FinalizeBit)
     {
-        this->HeaderList()[header->objectIndex] = null;
+        this->HeaderList()[header->objectIndex] = nullptr;
 
         uint sizeOfObject = header->objectSize;
 
         bool objectTrimmed = false;
 
-        if (this->bucket == null)
+        if (this->bucket == nullptr)
         {
             objectTrimmed = TrimObject(recycler, header, sizeOfObject);
         }
@@ -1401,7 +1401,7 @@ LargeHeapBlock::FinalizeObject(Recycler* recycler, LargeObjectHeader* header)
 
     // Null out the header in the header list- this means that this object has already
     // been finalized and is just pending dispose
-    this->HeaderList()[header->objectIndex] = null;
+    this->HeaderList()[header->objectIndex] = nullptr;
 
 #ifdef RECYCLER_FINALIZE_CHECK
     recycler->autoHeap.pendingDisposableObjectCount++;
@@ -1418,7 +1418,7 @@ LargeHeapBlock::SweepObject<SweepMode_Concurrent>(Recycler * recycler, LargeObje
 {
     Assert(!(header->GetAttributes(this->heapInfo->recycler->Cookie) & FinalizeBit));
     Assert(this->HeaderList()[header->objectIndex] == header);
-    this->HeaderList()[header->objectIndex] = null;
+    this->HeaderList()[header->objectIndex] = nullptr;
     FillFreeMemory(recycler, header, sizeof(LargeObjectHeader) + header->objectSize);
 }
 
@@ -1456,7 +1456,7 @@ void LargeHeapBlock::FinalizeObjects(Recycler* recycler)
     for (uint i = 0; i < this->lastCollectAllocCount; i++)
     {
         LargeObjectHeader * header = this->GetHeader(i);
-        if (header == null)
+        if (header == nullptr)
         {
             continue;
         }
@@ -1501,7 +1501,7 @@ LargeHeapBlock::SweepObjects(Recycler * recycler)
     {
         RECYCLER_STATS_ADD(recycler, objectSweepScanCount, !isForceSweeping);
         LargeObjectHeader * header = this->GetHeader(i);
-        if (header == null)
+        if (header == nullptr)
         {
 #if DBG
             Assert(expectedSweepCount != 0);
@@ -1531,7 +1531,7 @@ LargeHeapBlock::SweepObjects(Recycler * recycler)
 
         SweepObject<mode>(recycler, header);
 
-        if (this->bucket != null
+        if (this->bucket != nullptr
 #ifdef RECYCLER_STATS
             && !isForceSweeping
 #endif
@@ -1559,15 +1559,15 @@ bool
 LargeHeapBlock::TransferSweptObjects()
 {
     // TODO : Large heap block doesn't do free listing yet
-    return pendingDisposeObject != null;
+    return pendingDisposeObject != nullptr;
 }
 
 void
 LargeHeapBlock::DisposeObjects(Recycler * recycler)
 {
-    Assert(this->pendingDisposeObject != null || this->hasDisposeBeenCalled);
+    Assert(this->pendingDisposeObject != nullptr || this->hasDisposeBeenCalled);
 
-    while (pendingDisposeObject != null)
+    while (pendingDisposeObject != nullptr)
     {
 #if DBG
         this->hasDisposeBeenCalled = true;
@@ -1576,7 +1576,7 @@ LargeHeapBlock::DisposeObjects(Recycler * recycler)
         LargeObjectHeader * header = pendingDisposeObject;
         pendingDisposeObject = header->GetNext(this->heapInfo->recycler->Cookie);
         Assert(header->GetAttributes(this->heapInfo->recycler->Cookie) & FinalizeBit);
-        Assert(this->HeaderList()[header->objectIndex] == null);
+        Assert(this->HeaderList()[header->objectIndex] == nullptr);
 
         void * objectAddress = header->GetAddress();
         ((FinalizableObject *)objectAddress)->Dispose(false);
@@ -1586,7 +1586,7 @@ LargeHeapBlock::DisposeObjects(Recycler * recycler)
 
         bool objectTrimmed = false;
 
-        if (this->bucket == null)
+        if (this->bucket == nullptr)
         {
             objectTrimmed = TrimObject(recycler, header, header->objectSize, true /* need suspend */);
         }
@@ -1623,11 +1623,11 @@ LargeHeapBlock::FinishPartialCollect(Recycler * recycler)
     {
         LargeObjectHeader * header = this->HeaderList()[i];
 
-        if (header != null && IsPartialSweptHeader(header))
+        if (header != nullptr && IsPartialSweptHeader(header))
         {
             header = (LargeObjectHeader *)((size_t)header & ~PartialFreeBit);
             Assert(header->objectIndex == i);
-            this->HeaderList()[i] = null;
+            this->HeaderList()[i] = nullptr;
             FillFreeMemory(recycler, header, sizeof(LargeObjectHeader) + header->objectSize);
         }
     }
@@ -1641,7 +1641,7 @@ LargeHeapBlock::EnumerateObjects(ObjectInfoBits infoBits, void (*CallBackFunctio
     for (uint i = 0; i < allocCount; i++)
     {
         LargeObjectHeader * header = this->GetHeader(i);
-        if (header == null)
+        if (header == nullptr)
         {
             continue;
         }
@@ -1670,7 +1670,7 @@ LargeHeapBlock::Check(bool expectFull, bool expectPending)
     for (uint i = 0; i < allocCount; i++)
     {
         LargeObjectHeader * header = this->HeaderList()[i];
-        if (header == null)
+        if (header == nullptr)
         {
             continue;
         }
@@ -1721,12 +1721,12 @@ LargeHeapBlock::Verify(Recycler * recycler)
     for (uint i = 0; i < allocCount; i++)
     {
         LargeObjectHeader * header = this->HeaderList()[i];
-        if (header == null)
+        if (header == nullptr)
         {
             // Check if the object if on the free list
             LargeHeapBlockFreeListEntry* current = this->freeList.entries;
 
-            while (current != null)
+            while (current != nullptr)
             {
                 // Verify the free listed object
                 if (current->headerIndex == i)
@@ -1787,7 +1787,7 @@ LargeHeapBlock::UpdatePerfCountersOnFree()
     for (uint i = 0; i < allocCount; i++)
     {
         LargeObjectHeader * header = this->HeaderList()[i];
-        if (header == null)
+        if (header == nullptr)
         {
             continue;
         }

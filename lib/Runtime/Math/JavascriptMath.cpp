@@ -165,9 +165,9 @@ namespace Js
 #if FLOATVAR
         Var JavascriptMath::Add_Full(Var aLeft, Var aRight, ScriptContext* scriptContext)
         {
-            Assert(aLeft != null);
-            Assert(aRight != null);
-            Assert(scriptContext != null);
+            Assert(aLeft != nullptr);
+            Assert(aRight != nullptr);
+            Assert(scriptContext != nullptr);
 
             // If both sides are numbers, then we can do the addition directly, otherwise
             // we need to call the helper.
@@ -202,20 +202,20 @@ namespace Js
             }
             else if (TaggedInt::Is(aRight))
             {
-                return Add_FullHelper_Wrapper(aLeft, aRight, scriptContext, null, false);
+                return Add_FullHelper_Wrapper(aLeft, aRight, scriptContext, nullptr, false);
             }
             else if (RecyclableObject::FromVar(aLeft)->GetTypeId() == TypeIds_String && RecyclableObject::FromVar(aRight)->GetTypeId() == TypeIds_String)
             {
                 return JavascriptString::Concat(JavascriptString::FromVar(aLeft), JavascriptString::FromVar(aRight));
             }
-            return Add_FullHelper_Wrapper(aLeft, aRight, scriptContext, null, false);
+            return Add_FullHelper_Wrapper(aLeft, aRight, scriptContext, nullptr, false);
          }         
 #else
         Var JavascriptMath::Add_Full(Var aLeft, Var aRight, ScriptContext* scriptContext)
         {
-            Assert(aLeft != null);
-            Assert(aRight != null);
-            Assert(scriptContext != null);
+            Assert(aLeft != nullptr);
+            Assert(aRight != nullptr);
+            Assert(scriptContext != nullptr);
 
             Js::TypeId typeLeft = JavascriptOperators::GetTypeId(aLeft);
             Js::TypeId typeRight = JavascriptOperators::GetTypeId(aRight);
@@ -281,15 +281,15 @@ namespace Js
                 }
             }
 
-            return Add_FullHelper_Wrapper(aLeft, aRight, scriptContext, NULL, false);
+            return Add_FullHelper_Wrapper(aLeft, aRight, scriptContext, nullptr, false);
         }
 #endif
         Var JavascriptMath::Add_InPlace(Var aLeft, Var aRight, ScriptContext* scriptContext, __out JavascriptNumber* result)
         {
-            Assert(aLeft != null);
-            Assert(aRight != null);
-            Assert(scriptContext != null);
-            Assert(result != null);
+            Assert(aLeft != nullptr);
+            Assert(aRight != nullptr);
+            Assert(scriptContext != nullptr);
+            Assert(result != nullptr);
 
             // If both sides are numbers, then we can do the addition directly, otherwise
             // we need to call the helper.
@@ -393,7 +393,7 @@ StringCommon:
             if (JavascriptOperators::GetTypeId(primLeft) == TypeIds_String)
             {
                 JavascriptString* stringLeft = JavascriptString::FromVar(primLeft);
-                JavascriptString* stringRight = null;
+                JavascriptString* stringRight = nullptr;
 
                 if (JavascriptOperators::GetTypeId(primRight) == TypeIds_String)
                 {
@@ -781,9 +781,9 @@ StringCommon:
 
         Var JavascriptMath::Multiply_Full(Var aLeft, Var aRight, ScriptContext* scriptContext)
         {
-            Assert(aLeft != null);
-            Assert(aRight != null);
-            Assert(scriptContext != null);
+            Assert(aLeft != nullptr);
+            Assert(aRight != nullptr);
+            Assert(scriptContext != nullptr);
 
             if(JavascriptNumber::Is(aLeft))
             {
@@ -874,9 +874,9 @@ StringCommon:
 
         Var JavascriptMath::Modulus_InPlace(Var aLeft, Var aRight, ScriptContext* scriptContext, __out JavascriptNumber* result)
         {
-            Assert(aLeft != null);
-            Assert(aRight != null);
-            Assert(scriptContext != null);
+            Assert(aLeft != nullptr);
+            Assert(aRight != nullptr);
+            Assert(scriptContext != nullptr);
 
             // If both arguments are TaggedInt, then try to do integer division
             // This case is not handled by the lowerer.
@@ -931,7 +931,8 @@ StringCommon:
                     return scriptContext->GetLibrary()->GetNegativeInfinite();
                 }
 
-                if (((Js::SparseArraySegmentBase*)argsArray->GetHead())->next != nullptr)
+                if (((Js::SparseArraySegmentBase*)argsArray->GetHead())->next != nullptr || !argsArray->HasNoMissingValues() || 
+                    ((Js::SparseArraySegmentBase*)argsArray->GetHead())->length != len)
                 {
                     return JavascriptFunction::CalloutHelper<false>(function, thisArg, /* overridingNewTarget = */nullptr, arrayArg, scriptContext);
                 }
@@ -986,7 +987,8 @@ StringCommon:
                     return scriptContext->GetLibrary()->GetPositiveInfinite();
                 }
 
-                if (((Js::SparseArraySegmentBase*)argsArray->GetHead())->next != nullptr)
+                if (((Js::SparseArraySegmentBase*)argsArray->GetHead())->next != nullptr || !argsArray->HasNoMissingValues() ||
+                    ((Js::SparseArraySegmentBase*)argsArray->GetHead())->length != len)
                 {
                     return JavascriptFunction::CalloutHelper<false>(function, thisArg, /* overridingNewTarget = */nullptr, arrayArg, scriptContext);
                 }

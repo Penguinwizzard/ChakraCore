@@ -21,9 +21,7 @@ private:
     SymID               m_IDAdjustment;
 
 public:
-    SymTable() : m_currentID(0), m_func(null), m_IDAdjustment(0)
-
-
+    SymTable() : m_currentID(0), m_func(nullptr), m_IDAdjustment(0)
     {
         memset(m_table, 0, sizeof(m_table));
     }
@@ -51,6 +49,6 @@ private:
 #define FOREACH_SYM_IN_TABLE(sym, table) \
     for (uint i = 0; i < table->k_symTableSize; i++) \
     { \
-        for (Sym *sym = table->m_table[i]; sym != NULL; sym = sym->m_next) \
+        for (Sym *sym = table->m_table[i]; sym != nullptr; sym = sym->m_next) \
         { 
 #define NEXT_SYM_IN_TABLE } }

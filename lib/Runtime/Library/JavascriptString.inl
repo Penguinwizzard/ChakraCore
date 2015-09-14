@@ -131,7 +131,7 @@ namespace Js
     inline Var JavascriptString::StringBracketHelper(Arguments args, ScriptContext *scriptContext, const wchar_t (&tag)[N])
     {
         CompileAssert( 0 < N && N <= JavascriptString::MaxCharLength );
-        return StringBracketHelper(args, scriptContext, tag, static_cast<charcount_t>(N-1), null, 0);
+        return StringBracketHelper(args, scriptContext, tag, static_cast<charcount_t>(N-1), nullptr, 0);
     }
 
     template< size_t N1, size_t N2 >

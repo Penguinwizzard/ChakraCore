@@ -46,7 +46,7 @@ namespace Js
         // - If this was not provided, the block's contents will be uninitialized.
         //
 
-        if (initialContent != null)
+        if (initialContent != nullptr)
         {
             js_memcpy_s(newBlock->m_content, newBlock->GetLength(), initialContent, initialContentSize);
         }
@@ -65,7 +65,7 @@ namespace Js
         // - If this was not provided, the block's contents will be uninitialized.
         //
 
-        if (initialContent != null)
+        if (initialContent != nullptr)
         {
             js_memcpy_s(newBlock->m_content, newBlock->GetLength(), initialContent, initialContentSize);
         }
@@ -90,7 +90,7 @@ namespace Js
         // - If this was not provided, the block's contents will be uninitialized.
         //
 
-        if (initialContent != null)
+        if (initialContent != nullptr)
         {
             //
             // Treat initialcontent as array of vars

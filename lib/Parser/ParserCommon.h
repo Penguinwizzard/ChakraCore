@@ -26,7 +26,9 @@ enum ErrorTypeEnum
     kjstTypeError,
     kjstURIError,
     kjstCustomError,
+#ifdef ENABLE_PROJECTION
     kjstWinRTError,    
+#endif
 };
 
 struct ParseNode;

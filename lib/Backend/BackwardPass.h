@@ -118,7 +118,7 @@ private:
 #endif
 
     bool IsCollectionPass() const { return isCollectionPass; }
-    bool IsPrePass() const { return this->currentPrePassLoop != null; }
+    bool IsPrePass() const { return this->currentPrePassLoop != nullptr; }
 
     void DeleteBlockData(BasicBlock * block);
 

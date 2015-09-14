@@ -19,7 +19,7 @@ namespace Js
         // being created, except when call true a host dispatch
         Var newTarget = callInfo.Flags & CallFlags_NewTarget ? args.Values[args.Info.Count] : args[0];
         bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && newTarget != nullptr && RecyclableObject::Is(newTarget);
-        Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == null
+        Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == nullptr
             || JavascriptOperators::GetTypeId(args[0]) == TypeIds_HostDispatch);
 
         if (args.Info.Count > 1)
@@ -49,7 +49,7 @@ namespace Js
                     args[1];
 
             default:
-                RecyclableObject* result = null;
+                RecyclableObject* result = nullptr;
                 if (FALSE == JavascriptConversion::ToObject(args[1], scriptContext, &result))
                 {
                     // JavascriptConversion::ToObject should only return FALSE for null and undefined.
@@ -83,7 +83,7 @@ namespace Js
         
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
 
-        RecyclableObject* dynamicObject = null;
+        RecyclableObject* dynamicObject = nullptr;
         if (FALSE == JavascriptConversion::ToObject(args[0], scriptContext, &dynamicObject))
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NullOrUndefined, L"Object.prototype.hasOwnProperty");
@@ -117,7 +117,7 @@ namespace Js
 
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
 
-        RecyclableObject* dynamicObject = null;
+        RecyclableObject* dynamicObject = nullptr;
         if (FALSE == JavascriptConversion::ToObject(args[0], scriptContext, &dynamicObject))
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NullOrUndefined, L"Object.prototype.propertyIsEnumerable");
@@ -244,7 +244,7 @@ namespace Js
             return scriptContext->GetLibrary()->GetFalse();
         }
 
-        RecyclableObject* dynamicObject = null;
+        RecyclableObject* dynamicObject = nullptr;
         if (FALSE == JavascriptConversion::ToObject(args[0], scriptContext, &dynamicObject))
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NullOrUndefined, L"Object.prototype.isPrototypeOf");
@@ -279,7 +279,7 @@ namespace Js
         AssertMsg(args.Info.Count, "Should always have implicit 'this'");     
 
         /* Per ES5 spec we need to convert to object and then perform ToString operation */
-        RecyclableObject* dynamicObject = null;
+        RecyclableObject* dynamicObject = nullptr;
         if (FALSE == JavascriptConversion::ToObject(args[0], scriptContext, &dynamicObject))
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NullOrUndefined, L"Object.prototype.toLocaleString");
@@ -1123,7 +1123,7 @@ namespace Js
 
         JavascriptEnumerator *pEnumerator = JavascriptEnumerator::FromVar(enumeratorVar);
         RecyclableObject *undefined = scriptContext->GetLibrary()->GetUndefined();
-        Var propertyName = null;
+        Var propertyName = nullptr;
         PropertyId propertyId;
         uint32 propertyIndex = 0;
         uint32 symbolIndex = 0;
@@ -1255,7 +1255,7 @@ namespace Js
         }
 
         Var propertiesVar = args.Info.Count > 2 ? args[2] : object->GetLibrary()->GetUndefined();
-        RecyclableObject* properties = null;
+        RecyclableObject* properties = nullptr;
         if (FALSE == JavascriptConversion::ToObject(propertiesVar, scriptContext, &properties))
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_FunctionArgument_NullOrUndefined, L"Object.defineProperties");
@@ -1363,7 +1363,7 @@ namespace Js
 
         Assert(!(callInfo.Flags & CallFlags_New));
 
-        RecyclableObject* obj = null;
+        RecyclableObject* obj = nullptr;
         if (!JavascriptConversion::ToObject(args[0], scriptContext, &obj))
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NullOrUndefined, L"Object.prototype.__lookupGetter__");
@@ -1373,11 +1373,11 @@ namespace Js
         const PropertyRecord* propertyRecord;
         GetPropertyRecordFromVar<true>(propertyKey, scriptContext, &propertyRecord);
 
-        Var getter = null;
-        Var unused = null;
+        Var getter = nullptr;
+        Var unused = nullptr;
         if (JavascriptOperators::GetAccessors(obj, propertyRecord->GetPropertyId(), scriptContext, &getter, &unused))
         {
-            if (getter != null)
+            if (getter != nullptr)
             {
                 return getter;
             }
@@ -1396,7 +1396,7 @@ namespace Js
 
         Assert(!(callInfo.Flags & CallFlags_New));
 
-        RecyclableObject* obj = null;
+        RecyclableObject* obj = nullptr;
         if (!JavascriptConversion::ToObject(args[0], scriptContext, &obj))
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NullOrUndefined, L"Object.prototype.__lookupSetter__");
@@ -1406,11 +1406,11 @@ namespace Js
         const PropertyRecord* propertyRecord;
         GetPropertyRecordFromVar<true>(propertyKey, scriptContext, &propertyRecord);
 
-        Var unused = null;
-        Var setter = null;
+        Var unused = nullptr;
+        Var setter = nullptr;
         if (JavascriptOperators::GetAccessors(obj, propertyRecord->GetPropertyId(), scriptContext, &unused, &setter))
         {
-            if (setter != null)
+            if (setter != nullptr)
             {
                 return setter;
             }
@@ -1617,7 +1617,7 @@ namespace Js
 
         //Create a new DynamicType with first argument as prototype and non shared type
         RecyclableObject *prototype = RecyclableObject::FromVar(args[1]);
-        DynamicType *objectType = DynamicType::New(scriptContext, TypeIds_Object, prototype, null, NullTypeHandler<false>::GetDefaultInstance(), false);
+        DynamicType *objectType = DynamicType::New(scriptContext, TypeIds_Object, prototype, nullptr, NullTypeHandler<false>::GetDefaultInstance(), false);
 
         //Create a new Object using this type.
         DynamicObject* object = DynamicObject::New(recycler, objectType);
@@ -1631,7 +1631,7 @@ namespace Js
 
         if (args.Info.Count > 2 && JavascriptOperators::GetTypeId(args[2]) != TypeIds_Undefined)
         {
-            RecyclableObject* properties = null;
+            RecyclableObject* properties = nullptr;
             if (FALSE == JavascriptConversion::ToObject(args[2], scriptContext, &properties))
             {
                 JavascriptError::ThrowTypeError(scriptContext, JSERR_FunctionArgument_NullOrUndefined, L"Object.create");
@@ -1694,7 +1694,7 @@ namespace Js
             Var originalVar;
         };
 
-        Var tempVar = null;
+        Var tempVar = nullptr;
         if (!props->GetEnumerator(FALSE, &tempVar, scriptContext, false, true))
         {
             return object;
@@ -1708,7 +1708,7 @@ namespace Js
 
         PropertyId propId;
         PropertyRecord const * propertyRecord;
-        JavascriptString* propertyName = null;
+        JavascriptString* propertyName = nullptr;
         RecyclableObject *undefined = scriptContext->GetLibrary()->GetUndefined();
 
         //enumerate through each property of properties and fetch the property descriptor

@@ -276,7 +276,7 @@ namespace Js
 
     void JavascriptRegExp::CacheLastIndex()
     {
-        if (lastIndexVar == null)
+        if (lastIndexVar == nullptr)
             lastIndexOrFlag = 0;
         else
         {            
@@ -468,9 +468,9 @@ namespace Js
             int cBody = strBody->GetLength();
             const wchar_t *szRegex = strBody->GetSz(); // must be null terminated!
             int cOpts = 0;
-            const wchar_t *szOptions = null;
+            const wchar_t *szOptions = nullptr;
 
-            JavascriptString * strOptions = null;
+            JavascriptString * strOptions = nullptr;
             if (callInfo.Count > 2 && !JavascriptOperators::IsUndefinedObject(args[2], scriptContext))
             {
                 if (JavascriptString::Is(args[2]))
@@ -703,7 +703,7 @@ namespace Js
         PropertyRecord const* propertyRecord;
         this->GetScriptContext()->FindPropertyRecord(propertyNameString, &propertyRecord);
 
-        if (propertyRecord != null && GetPropertyBuiltIns(propertyRecord->GetPropertyId(), value, &result))
+        if (propertyRecord != nullptr && GetPropertyBuiltIns(propertyRecord->GetPropertyId(), value, &result))
         {
             return result;
         }
@@ -716,7 +716,7 @@ namespace Js
         switch (propertyId)
         {
         case PropertyIds::lastIndex:
-            if (this->lastIndexVar == null)
+            if (this->lastIndexVar == nullptr)
             {
                 Assert(lastIndexOrFlag <= MaxCharCount);
                 this->lastIndexVar = JavascriptNumber::ToVar(lastIndexOrFlag, GetScriptContext());
@@ -819,7 +819,7 @@ namespace Js
         PropertyRecord const * propertyRecord;
         this->GetScriptContext()->FindPropertyRecord(propertyNameString, &propertyRecord);
 
-        if (propertyRecord != null && SetPropertyBuiltIns(propertyRecord->GetPropertyId(), value, flags, &result))
+        if (propertyRecord != nullptr && SetPropertyBuiltIns(propertyRecord->GetPropertyId(), value, flags, &result))
         {
             return result;
         }
@@ -918,7 +918,7 @@ namespace Js
         PropertyRecord const * propertyRecord;
         this->GetScriptContext()->FindPropertyRecord(propertyNameString, &propertyRecord);
         
-        if (propertyRecord != null && GetSetterBuiltIns(propertyRecord->GetPropertyId(), info, &result))
+        if (propertyRecord != nullptr && GetSetterBuiltIns(propertyRecord->GetPropertyId(), info, &result))
         {
             return result;
         }

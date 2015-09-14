@@ -140,7 +140,7 @@ namespace Js
         {
             DumpReg(reg);
             Var varConst = dumpFunction->GetConstantVar(reg);
-            Assert(varConst != null);
+            Assert(varConst != nullptr);
             if (TaggedInt::Is(varConst))
             {
                 Output::Print(L"%-10s", OpCodeUtil::GetOpCodeName(OpCode::LdC_A_I4));

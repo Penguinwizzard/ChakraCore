@@ -6,8 +6,15 @@
 #include "ByteCode\Symbol.h"
 #include "ByteCode\FuncInfo.h"
 #ifdef DBG_DUMP
+#include "ByteCode\ByteCodeDumper.h"
 #include "ByteCode\AsmJSByteCodeDumper.h"
 #endif
+#include "ByteCode\ByteCodeWriter.h"
+#include "ByteCode\ByteCodeGenerator.h"
+#include "ByteCode\AsmJsByteCodeWriter.h"
+#include "Language\AsmJsByteCodeGenerator.h"
+
+
 namespace Js
 {
     enum EBinaryMathOpCodes
@@ -1678,7 +1685,7 @@ namespace Js
         
         // Arg2 - index
         ParseNode* indexNode = argNode;
-        ParseNode* valueNode = null;
+        ParseNode* valueNode = nullptr;
         if (simdFunction->IsSimdStoreFunc())
         {
             indexNode = ParserWrapper::GetBinaryLeft(argNode);

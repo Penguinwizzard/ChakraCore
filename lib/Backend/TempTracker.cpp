@@ -59,13 +59,13 @@ TempTrackerBase::TempTrackerBase(JitArenaAllocator * alloc, bool inLoop)
     }
     else
     {
-        tempTransferDependencies = null;
+        tempTransferDependencies = nullptr;
     }
 }
 
 TempTrackerBase::~TempTrackerBase()
 {
-    if (this->tempTransferDependencies != null)
+    if (this->tempTransferDependencies != nullptr)
     {
         JitArenaAllocator * alloc = this->GetAllocator();
         FOREACH_HASHTABLE_ENTRY(BVSparse<JitArenaAllocator> *, bucket, this->tempTransferDependencies)
@@ -89,7 +89,7 @@ TempTrackerBase::AddTransferDependencies(int sourceId, SymID dstSymID, HashTable
 {
     // Add to the transfer depencencies set
     BVSparse<JitArenaAllocator> ** pBVSparse = dependencies->FindOrInsertNew(sourceId);
-    if (*pBVSparse == null)
+    if (*pBVSparse == nullptr)
     {
         *pBVSparse = JitAnew(this->GetAllocator(), BVSparse<JitArenaAllocator>, this->GetAllocator());
     }
@@ -103,7 +103,7 @@ TempTrackerBase::AddTransferDependencies(BVSparse<JitArenaAllocator> * bv, SymID
 
     // Add the indirect transfers (always from tempTransferDepencies)
     BVSparse<JitArenaAllocator> *dstBVSparse = this->tempTransferDependencies->GetAndClear(dstSymID);
-    if (dstBVSparse != null)
+    if (dstBVSparse != nullptr)
     {
         bv->Or(dstBVSparse);
         JitAdelete(this->GetAllocator(), dstBVSparse);
@@ -137,7 +137,7 @@ TempTrackerBase::OrHashTableOfBitVector(HashTable<BVSparse<JitArenaAllocator> *>
     toData->Or(fromData,
         [=](BVSparse<JitArenaAllocator> * bv1, BVSparse<JitArenaAllocator> * bv2) -> BVSparse<JitArenaAllocator> *
     {
-        if (bv1 == null)
+        if (bv1 == nullptr)
         {
             if (deleteData)
             {
@@ -156,16 +156,16 @@ TempTrackerBase::OrHashTableOfBitVector(HashTable<BVSparse<JitArenaAllocator> *>
     if (deleteData)
     {
         fromData->Delete();
-        fromData = null;
+        fromData = nullptr;
     }
 }
 
 void
 TempTrackerBase::MergeDependencies(HashTable<BVSparse<JitArenaAllocator> *> * toData, HashTable<BVSparse<JitArenaAllocator> *> *& fromData, bool deleteData)
 {
-    if (fromData != null)
+    if (fromData != nullptr)
     {
-        if (toData != null)
+        if (toData != nullptr)
         {
             OrHashTableOfBitVector(toData, fromData, deleteData);
         }
@@ -177,7 +177,7 @@ TempTrackerBase::MergeDependencies(HashTable<BVSparse<JitArenaAllocator> *> * to
             }
             NEXT_HASHTABLE_ENTRY;
             fromData->Delete();
-            fromData = null;
+            fromData = nullptr;
         }
     }
 }
@@ -190,7 +190,7 @@ TempTrackerBase::Dump(wchar_t const * traceName)
     this->nonTempSyms.Dump();
     Output::Print(L"%s: Temp transfered syms:", traceName);
     this->tempTransferredSyms.Dump();
-    if (this->tempTransferDependencies != null)
+    if (this->tempTransferDependencies != nullptr)
     {
         Output::Print(L"%s: Temp transfer dependencies:\n", traceName);
         this->tempTransferDependencies->Dump();
@@ -229,7 +229,7 @@ TempTracker<T>::ProcessUse(StackSym * sym, BackwardPass * backwardPass)
         this->tempTransferredSyms.Set(usedSymID);
 
         // Track dependencies if we are in loop only        
-        if (this->tempTransferDependencies != null)
+        if (this->tempTransferDependencies != nullptr)
         {            
             IR::Opnd * dstOpnd = instr->GetDst();
             if (dstOpnd->IsRegOpnd())
@@ -290,14 +290,14 @@ TempTracker<T>::MarkTemp(StackSym * sym, BackwardPass * backwardPass)
     IR::Instr * instr = backwardPass->currentInstr;
     BOOLEAN nonTemp = this->nonTempSyms.TestAndClear(sym->m_id);
     BOOLEAN isTempTransfered;
-    BVSparse<JitArenaAllocator> * bvTempTransferDependencies = null;
+    BVSparse<JitArenaAllocator> * bvTempTransferDependencies = nullptr;
 
     bool const isTransferOperation = 
         T::IsTempTransfer(instr) 
         || T::IsTempPropertyTransferLoad(instr, backwardPass)
         || T::IsTempIndirTransferLoad(instr, backwardPass);
 
-    if (this->tempTransferDependencies != NULL)
+    if (this->tempTransferDependencies != nullptr)
     {
         // Since we don't iterate "while (!changed)" in loops, we don't have complete accurate dataflow
         // for loop carried dependencies. So don't clear the dependency transfer info.  WOOB:1121525
@@ -397,7 +397,7 @@ TempTracker<T>::MarkTemp(StackSym * sym, BackwardPass * backwardPass)
             // The temp is aliased, need to trace if there is another use of the set of aliased
             // sym that is still live so that we won't mark them this symbol and destroy the value
 
-            if (bvTempTransferDependencies != null)
+            if (bvTempTransferDependencies != nullptr)
             {
                 // Inside a loop we need to track if any of the reg that we transfered to is still live
                 //      s1 = Add
@@ -459,7 +459,7 @@ NumberTemp::NumberTemp(JitArenaAllocator * alloc, bool inLoop)
     : TempTrackerBase(alloc, inLoop), nonTempPropertyIds(alloc), elemLoadDependencies(alloc), nonTempElemLoad(false), 
     upwardExposedMarkTempObjectLiveFields(alloc), upwardExposedMarkTempObjectSymsProperties(nullptr)
 {
-    propertyIdsTempTransferDependencies = inLoop ? HashTable<BVSparse<JitArenaAllocator> *>::New(alloc, 16) : null;        
+    propertyIdsTempTransferDependencies = inLoop ? HashTable<BVSparse<JitArenaAllocator> *>::New(alloc, 16) : nullptr;        
 }
 
 void
@@ -682,8 +682,8 @@ NumberTemp::IsTempPropertyTransferLoad(IR::Instr * instr, BackwardPass * backwar
         };
 
         // All other opcode shouldn't have sym opnd that can store temp, See ObjectTemp::IsTempUseOpCodeSym.
-        Assert(instr->GetSrc1() == null 
-            || instr->GetDst() == null              // this isn't a value loading instruction
+        Assert(instr->GetSrc1() == nullptr 
+            || instr->GetDst() == nullptr              // this isn't a value loading instruction
             || instr->GetSrc1()->IsIndirOpnd()      // this is detected in IsTempIndirTransferLoad
             || !instr->GetSrc1()->CanStoreTemp());
     }
@@ -718,7 +718,7 @@ NumberTemp::IsTempPropertyTransferStore(IR::Instr * instr, BackwardPass * backwa
         // All other opcode shouldn't have sym opnd that can store temp, See ObjectTemp::IsTempUseOpCodeSym.
         // We also never mark the dst indir as can store temp for StElemI_A because we don't know what property 
         // it is storing in (or it could be an array index). 
-        Assert(instr->GetDst() == null || !instr->GetDst()->CanStoreTemp());
+        Assert(instr->GetDst() == nullptr || !instr->GetDst()->CanStoreTemp());
     }
     return false;
 }
@@ -741,7 +741,7 @@ NumberTemp::IsTempIndirTransferLoad(IR::Instr * instr, BackwardPass * backwardPa
         else
         {
             // All other opcode shouldn't have sym opnd that can store temp, See ObjectTemp::IsTempUseOpCodeSym.
-            Assert(instr->GetSrc1() == null || instr->GetSrc1()->IsSymOpnd()
+            Assert(instr->GetSrc1() == nullptr || instr->GetSrc1()->IsSymOpnd()
                 || !instr->GetSrc1()->CanStoreTemp());
         }
     }
@@ -763,8 +763,8 @@ NumberTemp::PropagateTempPropertyTransferStoreDependencies(SymID usedSymID, Prop
     Js::PropertyId storedPropertyId = propertySym->m_propertyId;
     // The the symbol this properties are transfered to
     BVSparse<JitArenaAllocator> ** pPropertyTransferDependencies = this->propertyIdsTempTransferDependencies->Get(storedPropertyId);
-    BVSparse<JitArenaAllocator> * transferDependencies = null;
-    if (pPropertyTransferDependencies == null)
+    BVSparse<JitArenaAllocator> * transferDependencies = nullptr;
+    if (pPropertyTransferDependencies == nullptr)
     {
         if (elemLoadDependencies.IsEmpty())
         {
@@ -780,7 +780,7 @@ NumberTemp::PropagateTempPropertyTransferStoreDependencies(SymID usedSymID, Prop
     }
 
     BVSparse<JitArenaAllocator> ** pBVSparse = this->tempTransferDependencies->FindOrInsertNew(usedSymID);
-    if (*pBVSparse == null)
+    if (*pBVSparse == nullptr)
     {
         *pBVSparse = transferDependencies->CopyNew(this->GetAllocator());
     }
@@ -865,7 +865,7 @@ NumberTemp::ProcessPropertySymUse(IR::SymOpnd * symOpnd, IR::Instr * instr, Back
 
     PropertySym * propertySym = symOpnd->m_sym->AsPropertySym();
     upwardExposedMarkTempObjectLiveFields.Set(propertySym->m_id);
-    if (upwardExposedMarkTempObjectSymsProperties == null)
+    if (upwardExposedMarkTempObjectSymsProperties == nullptr)
     {
         upwardExposedMarkTempObjectSymsProperties = HashTable<BVSparse<JitArenaAllocator> *>::New(this->GetAllocator(), 16);
     }
@@ -942,7 +942,7 @@ NumberTemp::Dump(wchar_t const * traceName)
     {
         Output::Print(L"%s: Non Temp PropertyIds", traceName);
         this->nonTempPropertyIds.Dump();
-        if (this->propertyIdsTempTransferDependencies != null)
+        if (this->propertyIdsTempTransferDependencies != nullptr)
         {
             Output::Print(L"%s: Temp transfer propertyId dependencies:\n", traceName);
             this->propertyIdsTempTransferDependencies->Dump();
@@ -962,7 +962,7 @@ ObjectTemp::IsTempUse(IR::Instr * instr, Sym * sym, BackwardPass * backwardPass)
     // TODO: More precise implicit call tracking
     if (instr->HasAnyImplicitCalls() 
         &&
-        ((backwardPass->currentBlock->loop != null ? 
+        ((backwardPass->currentBlock->loop != nullptr ? 
             !GlobOpt::ImplicitCallFlagsAllowOpts(backwardPass->currentBlock->loop) :
             !GlobOpt::ImplicitCallFlagsAllowOpts(backwardPass->func))
         || instr->CallsAccessor())
@@ -1162,7 +1162,7 @@ ObjectTemp::SetDstIsTemp(bool dstIsTemp, bool dstIsTempTransferred, IR::Instr * 
 StackSym *
 ObjectTemp::GetStackSym(IR::Opnd * opnd, IR::PropertySymOpnd ** pPropertySymOpnd)
 {
-    StackSym * stackSym = null;
+    StackSym * stackSym = nullptr;
     switch (opnd->GetKind())
     {
         case IR::OpndKindReg:   
@@ -1210,7 +1210,7 @@ ObjectTempVerify::IsTempUse(IR::Instr * instr, Sym * sym, BackwardPass * backwar
     bool isLandingPad = backwardPass->currentBlock->IsLandingPad();
     if (OpCodeAttr::HasImplicitCall(opcode) && !isLandingPad
         && 
-        ((backwardPass->currentBlock->loop != null ? 
+        ((backwardPass->currentBlock->loop != nullptr ? 
             !GlobOpt::ImplicitCallFlagsAllowOpts(backwardPass->currentBlock->loop) :
             !GlobOpt::ImplicitCallFlagsAllowOpts(backwardPass->func))
         || instr->CallsAccessor())
@@ -1228,7 +1228,7 @@ ObjectTempVerify::IsTempUse(IR::Instr * instr, Sym * sym, BackwardPass * backwar
     // In the backward pass, this would have been a temp use already.  Continue to verify 
     // if we have install sufficient bailout on implicit call
 
-    if (isLandingPad || !GlobOpt::MayNeedBailOnImplicitCall(instr, null, null))
+    if (isLandingPad || !GlobOpt::MayNeedBailOnImplicitCall(instr, nullptr, nullptr))
     {
         // Implicit call would not happen, or we are in the landin pad where implicit call is disabled.
         return true;
@@ -1487,7 +1487,7 @@ ObjectTempVerify::NotifyDeadByteCodeUses(IR::Instr * instr)
 
     IR::ByteCodeUsesInstr *byteCodeUsesInstr = instr->AsByteCodeUsesInstr();
     BVSparse<JitArenaAllocator> * byteCodeUpwardExposedUsed = byteCodeUsesInstr->byteCodeUpwardExposedUsed;
-    if (byteCodeUpwardExposedUsed != null)
+    if (byteCodeUpwardExposedUsed != nullptr)
     {        
         this->removedUpwardExposedUse.Or(byteCodeUpwardExposedUsed);
     }
@@ -1611,8 +1611,8 @@ ObjectTempVerify::DependencyCheck(IR::Instr * instr, BVSparse<JitArenaAllocator>
         {
             Assert(currentInstr == currentBlock->GetFirstInstr());
             // If we have try to propagate the symbol thru the loop before, we don't need to propagate it again
-            BVSparse<JitArenaAllocator> * currentLoopProcessedSyms = processedSyms.Lookup(currentBlock, null);
-            if (currentLoopProcessedSyms == null)
+            BVSparse<JitArenaAllocator> * currentLoopProcessedSyms = processedSyms.Lookup(currentBlock, nullptr);
+            if (currentLoopProcessedSyms == nullptr)
             {
                 processedSyms.Add(currentBlock, dependentSyms->CopyNew());                    
             }
@@ -1629,7 +1629,7 @@ ObjectTempVerify::DependencyCheck(IR::Instr * instr, BVSparse<JitArenaAllocator>
 
             FOREACH_PREDECESSOR_BLOCK(predBlock, currentBlock)
             {
-                if (predBlock->loop == null)
+                if (predBlock->loop == nullptr)
                 {
                     // No need to track outside of loops
                     continue;

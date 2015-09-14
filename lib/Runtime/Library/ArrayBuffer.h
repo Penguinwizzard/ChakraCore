@@ -211,7 +211,7 @@ namespace Js
         static void*__cdecl  AllocWrapper(size_t length)
         {
 #if _WIN64
-            LPVOID address = VirtualAlloc(null, MAX_ASMJS_ARRAYBUFFER_LENGTH, MEM_RESERVE, PAGE_NOACCESS);
+            LPVOID address = VirtualAlloc(nullptr, MAX_ASMJS_ARRAYBUFFER_LENGTH, MEM_RESERVE, PAGE_NOACCESS);
             //throw out of memory
             if (!address)
             {

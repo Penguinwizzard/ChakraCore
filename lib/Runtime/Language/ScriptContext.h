@@ -7,7 +7,7 @@
 
 #include "activprof.h"
 
-#if DBG || ENABLE_REGEX_CONFIG_OPTIONS || defined(ARRLOG) || defined(PROFILE_STRINGS)
+#if DBG || ENABLE_REGEX_CONFIG_OPTIONS || defined(PROFILE_STRINGS)
 #define NEED_MISC_ALLOCATOR
 #endif
 
@@ -16,6 +16,9 @@
 class NativeCodeGenerator;
 class BackgroundParser;
 struct IActiveScriptDirect;
+#ifdef ENABLE_BASIC_TELEMETRY
+class ScriptContextTelemetry;
+#endif
 namespace Js
 {
     class ScriptContext;
@@ -148,9 +151,11 @@ namespace Js
     class ScriptConfiguration
     {
     public:
-        ScriptConfiguration(const bool isOptimizedForManyInstances) :            
+        ScriptConfiguration(const bool isOptimizedForManyInstances) :     
+#ifdef ENABLE_PROJECTION
             HostType(Configuration::Global.flags.HostType),
             WinRTConstructorAllowed(Configuration::Global.flags.WinRTConstructorAllowed),
+#endif
             NoNative(Configuration::Global.flags.NoNative),
             isOptimizedForManyInstances(isOptimizedForManyInstances)
         {
@@ -158,15 +163,16 @@ namespace Js
 
         // Version
         // TODO: Revisit this and check what other flags are required
-        bool SupportsES3()           const { return true; }
-        bool SupportsES3Extensions() const { return true; }        
-                                
-        Number GetHostType() const    // Returns one of enum HostType values (see ConfigFlagsTable.h).
-        {
-            AssertMsg(this->HostType >= HostTypeMin && this->HostType <= HostTypeMax, "HostType value is out of valid range.");
-            return this->HostType;
+        bool SupportsES3()                      const { return true; }
+        bool SupportsES3Extensions()            const { 
+#ifdef ENABLE_PROJECTION
+            return HostType != HostTypeApplication; 
+#else
+            return true;
+#endif
         }
-
+        bool SupportsCollectGarbage()           const { return true; }
+        bool IsCollectGarbageEnabled()          const { return CONFIG_FLAG(CollectGarbage); }                               
         bool IsErrorStackTraceEnabled()         const { return CONFIG_FLAG(errorStackTrace); }
         bool IsTypedArrayEnabled()              const { return true; }
         bool Is__proto__Enabled()               const { return CONFIG_FLAG(__proto__); }
@@ -210,8 +216,10 @@ namespace Js
         bool IsES6WeakSetEnabled()              const { return CONFIG_FLAG_RELEASE(ES6WeakSet); }
         bool IsES6RegExStickyEnabled()          const { return CONFIG_FLAG_RELEASE(ES6RegExSticky); }
         bool SkipSplitOnNoResult()              const { return CONFIG_FLAG_RELEASE(SkipSplitOnNoResult); }
+#ifdef ENABLE_PROJECTION
         bool AreWinRTDelegatesInterfaces()      const { return CONFIG_FLAG(WinRTDelegateInterfaces); }
         bool IsWinRTAdaptiveAppsEnabled()       const { return CONFIG_FLAG_RELEASE(WinRTAdaptiveApps); }
+#endif
 
         bool IsES7AsyncAndAwaitEnabled()        const { return CONFIG_FLAG_RELEASE(ES7AsyncAwait); }
 
@@ -219,45 +227,55 @@ namespace Js
         void ForceNative() { this->NoNative = false; }
         bool IsNoNative() const { return this->NoNative; }
 
-        void SetHostType(long hostType) { this->HostType = hostType; }
-        void SetWinRTConstructorAllowed(bool allowed) { this->WinRTConstructorAllowed = allowed; }
         void SetCanOptimizeGlobalLookupFlag(BOOL f){ this->fCanOptimizeGlobalLookup = f;}
         BOOL CanOptimizeGlobalLookup() const { return this->fCanOptimizeGlobalLookup;}
         bool IsOptimizedForManyInstances() const { return isOptimizedForManyInstances; }        
         bool IsBlockScopeEnabled() const { return true; }
         bool IsLetAndConstEnabled() const { return CONFIG_FLAG(LetConst); }
         bool BindDeferredPidRefs() const { return IsLetAndConstEnabled(); }        
-        void CopyFrom(ScriptConfiguration& other) { this->HostType = other.HostType; this->WinRTConstructorAllowed = other.WinRTConstructorAllowed; this->NoNative = other.NoNative; this->fCanOptimizeGlobalLookup = other.fCanOptimizeGlobalLookup; this->projectionConfiguration = other.projectionConfiguration; }
+        void CopyFrom(ScriptConfiguration& other) 
+        { 
+            this->NoNative = other.NoNative; 
+            this->fCanOptimizeGlobalLookup = other.fCanOptimizeGlobalLookup; 
+#ifdef ENABLE_PROJECTION
+            this->HostType = other.HostType;
+            this->WinRTConstructorAllowed = other.WinRTConstructorAllowed;
+            this->projectionConfiguration = other.projectionConfiguration; 
+#endif
+        }
+
+#ifdef ENABLE_PROJECTION
+        Number GetHostType() const    // Returns one of enum HostType values (see ConfigFlagsTable.h).
+        {
+            AssertMsg(this->HostType >= HostTypeMin && this->HostType <= HostTypeMax, "HostType value is out of valid range.");
+            return this->HostType;
+        }
 
         ProjectionConfiguration const * GetProjectionConfig() const
         {
-#ifdef ENABLE_PROJECTION
             return &projectionConfiguration;
-#else
             return nullptr;
-#endif
         }
+        void SetHostType(long hostType) { this->HostType = hostType; }
+        void SetWinRTConstructorAllowed(bool allowed) { this->WinRTConstructorAllowed = allowed; }
         void SetProjectionTargetVersion(DWORD version)
         {
-#ifdef ENABLE_PROJECTION
             projectionConfiguration.SetTargetVersion(version);
-#endif
         }
-
         bool IsWinRTEnabled()           const { return (GetHostType() == Js::HostTypeApplication) || (GetHostType() == Js::HostTypeWebview); }
 
         bool IsWinRTConstructorAllowed() const { return (GetHostType() != Js::HostTypeWebview) || this->WinRTConstructorAllowed; }
-
+#endif
     private:
 
-        // Per script configurations        
-        Number HostType;    // One of enum HostType values (see ConfigFlagsTable.h).
-        bool WinRTConstructorAllowed;  // whether allow constructor in webview host type. Also note that this is not a security feature.
+        // Per script configurations     
         bool NoNative;
         BOOL fCanOptimizeGlobalLookup;
         const bool isOptimizedForManyInstances;
 
 #ifdef ENABLE_PROJECTION
+        Number HostType;    // One of enum HostType values (see ConfigFlagsTable.h).
+        bool WinRTConstructorAllowed;  // whether allow constructor in webview host type. Also note that this is not a security feature.
         ProjectionConfiguration projectionConfiguration;
 #endif
     };
@@ -584,9 +602,6 @@ public:
         uint byteCodeHistogram[OpCode::ByteCodeLast];
         uint32 forinCache;
         uint32 forinNoCache;
-#endif
-#if ARRLOG
-        UIntHashTable<ArrLogRec*>* logTable;
 #endif
 #ifdef BGJIT_STATS
         uint interpretedCount;
@@ -984,10 +999,10 @@ private:
 #if defined(LEAK_REPORT) || defined(CHECK_MEMORY_LEAK)
         void ClearSourceContextInfoMaps()
         {
-          if (this->cache != null)
+          if (this->cache != nullptr)
           {
-              this->cache->sourceContextInfoMap = null;
-              this->cache->dynamicSourceContextInfoMap = null;
+              this->cache->sourceContextInfoMap = nullptr;
+              this->cache->dynamicSourceContextInfoMap = nullptr;
               this->referencesSharedDynamicSourceContextInfo = false;
           }
         }
@@ -1009,11 +1024,11 @@ private:
         SRCINFO const * GetModuleSrcInfo(Js::ModuleID moduleID);
         SourceContextInfoMap* GetSourceContextInfoMap()
         {
-            return (this->cache ? this->cache->sourceContextInfoMap : null);
+            return (this->cache ? this->cache->sourceContextInfoMap : nullptr);
         }
         DynamicSourceContextInfoMap* GetDynamicSourceContextInfoMap()
         {
-            return (this->cache ? this->cache->dynamicSourceContextInfoMap : null);
+            return (this->cache ? this->cache->dynamicSourceContextInfoMap : nullptr);
         }
 
         void SetFirstInterpreterFrameReturnAddress(void * returnAddress) { firstInterpreterFrameReturnAddress = returnAddress;}
@@ -1024,16 +1039,19 @@ private:
         void Initialize();
         bool Close(bool inDestructor);
         void MarkForClose();
+#ifdef ENABLE_PROJECTION
         void SetHostType(long hostType) { config.SetHostType(hostType); }
         void SetWinRTConstructorAllowed(bool allowed) { config.SetWinRTConstructorAllowed(allowed); }
+        void SetProjectionTargetVersion(DWORD version) { config.SetProjectionTargetVersion(version); }
+#endif
         void SetCanOptimizeGlobalLookupFlag(BOOL f){ config.SetCanOptimizeGlobalLookupFlag(f);}
         BOOL CanOptimizeGlobalLookup(){ return config.CanOptimizeGlobalLookup();}        
-        void SetProjectionTargetVersion(DWORD version) { config.SetProjectionTargetVersion(version); }
+        
 
         bool IsClosed() { return isClosed; }
         bool IsFastDOMEnabled() { return fastDOMenabled; }
         void SetFastDOMenabled();
-        BOOL VerifyAlive(BOOL isJSFunction = FALSE, ScriptContext* requestScriptContext = NULL);
+        BOOL VerifyAlive(BOOL isJSFunction = FALSE, ScriptContext* requestScriptContext = nullptr);
         void VerifyAliveWithHostContext(BOOL isJSFunction, HostScriptContext* requestHostScriptContext);
         void AddFunctionBodyToPropIdMap(FunctionBody* body);
 
@@ -1158,7 +1176,7 @@ private:
         RecyclableObject *GetNullPropertyResult(Js::RecyclableObject *instance, Js::PropertyId id);
         RecyclableObject *GetNullItemResult(Js::RecyclableObject *instance, uint32 index);
 
-        bool HasRecordedException() const { return threadContext->GetRecordedException() != null; }
+        bool HasRecordedException() const { return threadContext->GetRecordedException() != nullptr; }
         Js::JavascriptExceptionObject * GetAndClearRecordedException(bool *considerPassingToDebugger = nullptr);
         void RecordException(Js::JavascriptExceptionObject * exceptionObject, bool propagateToDebugger = false);
         __declspec(noreturn) void RethrowRecordedException(JavascriptExceptionObject::HostWrapperCreateFuncType hostWrapperCreateFunc);
@@ -1171,7 +1189,7 @@ private:
         bool SaveSourceCopy(Utf8SourceInfo* const sourceInfo, int cchLength, bool isCesu8, uint * index);
 
         uint SaveSourceNoCopy(Utf8SourceInfo* sourceInfo, int cchLength, bool isCesu8);
-        Utf8SourceInfo* CloneSourceCrossContext(Utf8SourceInfo* crossContextSourceInfo, SRCINFO const* srcInfo = NULL);
+        Utf8SourceInfo* CloneSourceCrossContext(Utf8SourceInfo* crossContextSourceInfo, SRCINFO const* srcInfo = nullptr);
 
         void CloneSources(ScriptContext* sourceContext);
         Utf8SourceInfo* GetSource(uint sourceIndex);
@@ -1302,7 +1320,7 @@ private:
 
         BOOL IsProfiling()
         {
-            return (m_pProfileCallback != NULL);
+            return (m_pProfileCallback != nullptr);
         }
 
         BOOL IsInProfileCallback()
@@ -1315,19 +1333,19 @@ private:
 
         int GetProfileSession()
         {
-            AssertMsg(m_pProfileCallback != NULL, "Asking for profile session when we arent in any");
+            AssertMsg(m_pProfileCallback != nullptr, "Asking for profile session when we arent in any");
             return m_iProfileSession;
         }
 
         void StartNewProfileSession()
         {
-            AssertMsg(m_pProfileCallback != NULL, "New Session when the profiler isnt set to any callback");
+            AssertMsg(m_pProfileCallback != nullptr, "New Session when the profiler isnt set to any callback");
             m_iProfileSession++;
         }
 
         void StopProfileSession()
         {
-            AssertMsg(m_pProfileCallback == NULL, "How to stop when there is still the callback out there");
+            AssertMsg(m_pProfileCallback == nullptr, "How to stop when there is still the callback out there");
         }
 
         bool hadProfiled;
@@ -1574,7 +1592,7 @@ private:
     template <class TDelegate>
     FunctionBody* ScriptContext::FindFunction(TDelegate predicate)
     {
-        FunctionBody* functionBody = null;
+        FunctionBody* functionBody = nullptr;
 
         this->sourceList->MapUntil([&functionBody, &predicate](int, RecyclerWeakReference<Js::Utf8SourceInfo>* sourceInfo) -> bool
         {
@@ -1603,8 +1621,8 @@ private:
     scriptContext->ReleaseTemporaryAllocator(temp##allocator);
 
 #define DECLARE_TEMP_ALLOCATOR(allocator) \
-    Js::TempArenaAllocatorObject *temp##allocator = null; \
-    ArenaAllocator * allocator = null;
+    Js::TempArenaAllocatorObject *temp##allocator = nullptr; \
+    ArenaAllocator * allocator = nullptr;
 
 #define ACQUIRE_TEMP_ALLOCATOR(allocator, scriptContext, name) \
     temp##allocator = scriptContext->GetTemporaryAllocator(name); \
@@ -1615,8 +1633,8 @@ private:
     scriptContext->ReleaseTemporaryAllocator(temp##allocator);
 
 #define DECLARE_TEMP_GUEST_ALLOCATOR(allocator) \
-    Js::TempGuestArenaAllocatorObject *tempGuest##allocator = null; \
-    ArenaAllocator * allocator = null;
+    Js::TempGuestArenaAllocatorObject *tempGuest##allocator = nullptr; \
+    ArenaAllocator * allocator = nullptr;
 
 #define ACQUIRE_TEMP_GUEST_ALLOCATOR(allocator, scriptContext, name) \
     tempGuest##allocator = scriptContext->GetTemporaryGuestAllocator(name); \

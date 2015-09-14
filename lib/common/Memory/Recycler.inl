@@ -131,7 +131,7 @@ Recycler::AllocWithAttributesInlined(size_t size)
         HeapBlock* heapBlock = this->FindHeapBlock(memBlock);
         Assert(heapBlock->IsLargeHeapBlock());
         LargeHeapBlock* largeHeapBlock = (LargeHeapBlock*) heapBlock;
-        LargeObjectHeader* header = null;
+        LargeObjectHeader* header = nullptr;
         if (largeHeapBlock->GetObjectHeader(memBlock, &header))
         {
             size = header->objectSize - (verifyPad + sizeof(size_t));

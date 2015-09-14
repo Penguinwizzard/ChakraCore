@@ -122,7 +122,7 @@ GlobOpt::DoFieldCopyProp() const
 bool
 GlobOpt::DoFunctionFieldCopyProp() const
 {
-    return DoFieldCopyProp(null);
+    return DoFieldCopyProp(nullptr);
 }
 
 bool
@@ -157,7 +157,7 @@ GlobOpt::DoFieldCopyProp(Loop * loop) const
 bool
 GlobOpt::DoFieldHoisting(Loop *loop)
 {
-    if (loop == null)
+    if (loop == nullptr)
     {
         return false;
     }
@@ -221,10 +221,10 @@ GlobOpt::DoObjTypeSpec(Loop *loop) const
     }
     if (this->ImplicitCallFlagsAllowOpts(this->func))
     {        
-        Assert(loop == null || loop->CanDoFieldCopyProp());
+        Assert(loop == nullptr || loop->CanDoFieldCopyProp());
         return true;
     }    
-    return loop != null && loop->CanDoFieldCopyProp();
+    return loop != nullptr && loop->CanDoFieldCopyProp();
 }
 
 bool
@@ -232,10 +232,10 @@ GlobOpt::DoFieldOpts(Loop * loop) const
 {
     if (this->ImplicitCallFlagsAllowOpts(this->func))
     {        
-        Assert(loop == null || loop->CanDoFieldCopyProp());
+        Assert(loop == nullptr || loop->CanDoFieldCopyProp());
         return true;
     }    
-    return loop != null && loop->CanDoFieldCopyProp();
+    return loop != nullptr && loop->CanDoFieldCopyProp();
 }
 
 bool GlobOpt::DoFieldPRE() const
@@ -306,7 +306,7 @@ GlobOpt::KillLiveFields(StackSym * stackSym, BVSparse<JitArenaAllocator> * bv)
     // m_propertySymList of the object.
     ObjectSymInfo * objectSymInfo = stackSym->GetObjectInfo();
     PropertySym * propertySym = objectSymInfo->m_propertySymList;
-    while (propertySym != null)
+    while (propertySym != nullptr)
     {
         Assert(propertySym->m_stackSym == stackSym);
         bv->Clear(propertySym->m_id);
@@ -463,14 +463,14 @@ GlobOpt::ProcessFieldKills(IR::Instr *instr, BVSparse<JitArenaAllocator> *bv, bo
     {   
     case Js::OpCode::StElemI_A:
     case Js::OpCode::StElemI_A_Strict:
-        Assert(dstOpnd != null);
+        Assert(dstOpnd != nullptr);
         KillLiveFields(this->lengthEquivBv, bv);
         KillLiveElems(dstOpnd->AsIndirOpnd(), bv, inGlobOpt, instr->m_func);
         break;
         
     case Js::OpCode::DeleteElemI_A:
     case Js::OpCode::DeleteElemIStrict_A:
-        Assert(dstOpnd != null);
+        Assert(dstOpnd != nullptr);
         KillLiveElems(instr->GetSrc1()->AsIndirOpnd(), bv, inGlobOpt, instr->m_func);
         break;
 
@@ -506,7 +506,7 @@ GlobOpt::ProcessFieldKills(IR::Instr *instr, BVSparse<JitArenaAllocator> *bv, bo
     case Js::OpCode::StRootFldStrict:
     case Js::OpCode::StSlot:
     case Js::OpCode::StSlotChkUndecl:
-        Assert(dstOpnd != null);        
+        Assert(dstOpnd != nullptr);        
         sym = dstOpnd->AsSymOpnd()->m_sym;
         if (inGlobOpt)
         {
@@ -617,7 +617,7 @@ GlobOpt::PreparePrepassFieldHoisting(Loop * loop)
     BasicBlock * landingPad = loop->landingPad;
 
     // If it is live, don't need to be hoisted
-    Assert(loop->liveInFieldHoistCandidates == null);
+    Assert(loop->liveInFieldHoistCandidates == nullptr);
     BVSparse<JitArenaAllocator> * liveInFieldHoistCandidates = fieldHoistCandidates->AndNew(landingPad->globOptData.liveFields);
     loop->liveInFieldHoistCandidates = liveInFieldHoistCandidates;    
 
@@ -628,7 +628,7 @@ GlobOpt::PreparePrepassFieldHoisting(Loop * loop)
 
         // If it was hoisted in an outter loop, and the value is live coming in, we don't need to hoist it again
         Loop * currentLoop = loop->parent;
-        while (currentLoop != null && this->DoFieldHoisting(currentLoop))
+        while (currentLoop != nullptr && this->DoFieldHoisting(currentLoop))
         {
             if (currentLoop->hoistedFields)
             {
@@ -639,7 +639,7 @@ GlobOpt::PreparePrepassFieldHoisting(Loop * loop)
 
         FOREACH_BITSET_IN_SPARSEBV(index, liveInFieldHoistCandidates)
         {
-            if (this->FindValueFromHashTable(landingPad->globOptData.symToValueMap, index) == NULL)
+            if (this->FindValueFromHashTable(landingPad->globOptData.symToValueMap, index) == nullptr)
             {
                 // Create inital values if we don't have one already for live fields
                 Value * newValue = this->NewGenericValue(ValueType::Uninitialized);
@@ -680,7 +680,7 @@ GlobOpt::PreparePrepassFieldHoisting(Loop * loop)
                 loop->fieldHoistCandidateTypes->Set(typeSym->m_id);
 
                 // Set object type live on prepass so we can track if it got killed in the loop (see FinishOptHoistedPropOps).
-                JsTypeValueInfo* typeValueInfo = JsTypeValueInfo::New(this->alloc, null, null);
+                JsTypeValueInfo* typeValueInfo = JsTypeValueInfo::New(this->alloc, nullptr, nullptr);
                 typeValueInfo->SetSymStore(typeSym);
                 typeValueInfo->SetIsShared();
 
@@ -696,11 +696,11 @@ GlobOpt::PreparePrepassFieldHoisting(Loop * loop)
         // If the sym holding the hoisted value is used as an instance pointer in the outer loop,
         // its type may appear to be live into the inner loop. But the instance itself is being killed
         // here, so make sure the type is killed as well.
-        if (parentLoop != null)
+        if (parentLoop != nullptr)
         {
             StackSym * copySym;
-            Loop * hoistedLoop = FindFieldHoistStackSym(parentLoop, index, &copySym, null);
-            if (hoistedLoop != null)
+            Loop * hoistedLoop = FindFieldHoistStackSym(parentLoop, index, &copySym, nullptr);
+            if (hoistedLoop != nullptr)
             {
                 this->KillObjectType(copySym);
             }
@@ -739,7 +739,7 @@ GlobOpt::PrepareFieldHoisting(Loop * loop)
 {    
     Assert(!this->IsLoopPrePass());
 
-    if (loop->parent != null)
+    if (loop->parent != nullptr)
     {
         loop->hasHoistedFields = loop->parent->hasHoistedFields;
     }
@@ -761,8 +761,8 @@ GlobOpt::PrepareFieldHoisting(Loop * loop)
     }
  
     BasicBlock * landingPad = loop->landingPad;  
-    Assert(landingPad->globOptData.hoistableFields == null);
-    Assert(this->blockData.hoistableFields == null);
+    Assert(landingPad->globOptData.hoistableFields == nullptr);
+    Assert(this->blockData.hoistableFields == nullptr);
 
     BVSparse<JitArenaAllocator>* fieldHoistCandidateTypes = loop->fieldHoistCandidateTypes;
           
@@ -837,7 +837,7 @@ GlobOpt::PrepareFieldHoisting(Loop * loop)
         // If the value is live in, we shouldn't have a hoisted symbol already
         Assert(!this->IsHoistedPropertySym(symId, loop->parent));       
         Value * oldValue = this->FindPropertyValue(landingPad->globOptData.symToValueMap, symId);
-        AssertMsg(oldValue != null, "We should have created an initial value for the field");   
+        AssertMsg(oldValue != nullptr, "We should have created an initial value for the field");   
         ValueInfo *oldValueInfo = oldValue->GetValueInfo();
 
         Value * newValue = this->FindPropertyValue(this->blockData.symToValueMap, symId);       
@@ -864,9 +864,9 @@ GlobOpt::PrepareFieldHoisting(Loop * loop)
         else
         {
             // TODO: Fix this to look at the landpad's value
-            Sym * copySym = this->GetCopyPropSym(landingPad, NULL, oldValue);
+            Sym * copySym = this->GetCopyPropSym(landingPad, nullptr, oldValue);
 
-            if (copySym != null)
+            if (copySym != nullptr)
             {   
                 if (newValue && oldValue->GetValueNumber() == newValue->GetValueNumber())
                 {
@@ -900,8 +900,8 @@ GlobOpt::PrepareFieldHoisting(Loop * loop)
     this->FinishOptHoistedPropOps(loop);
 
     JitAdelete(this->alloc, loop->fieldHoistCandidateTypes);
-    fieldHoistCandidateTypes = null;
-    loop->fieldHoistCandidateTypes = null;
+    fieldHoistCandidateTypes = nullptr;
+    loop->fieldHoistCandidateTypes = nullptr;
 
     loop->regAlloc.liveOnBackEdgeSyms->Or(loop->hoistedFieldCopySyms);
 
@@ -926,11 +926,11 @@ GlobOpt::PrepareFieldHoisting(Loop * loop)
     }
 #else
     JitAdelete(this->alloc, liveInFieldHoistCandidates);
-    loop->liveInFieldHoistCandidates = null;
+    loop->liveInFieldHoistCandidates = nullptr;
 #endif 
 
     JitAdelete(this->alloc, fieldHoistCandidates);
-    loop->fieldHoistCandidates = null;    
+    loop->fieldHoistCandidates = nullptr;    
 }
 
 
@@ -999,7 +999,7 @@ GlobOpt::FinishOptHoistedPropOps(Loop * loop)
     if (!doFieldRefOpts && !forceFieldHoisting)
     {
         IR::Instr * instrEnd = loop->endDisableImplicitCall;
-        if (instrEnd == null)
+        if (instrEnd == nullptr)
         {
             return;
         }
@@ -1022,11 +1022,11 @@ GlobOpt::FinishOptHoistedPropOps(Loop * loop)
     // Walk the implicit-call-disabled region in the loop header, creating PropertySymOpnd's and
     // tracking liveness of the type/slot-array syms.
     IR::Instr * instrEnd = loop->endDisableImplicitCall;
-    if (instrEnd == null)
+    if (instrEnd == nullptr)
     {
         return;
     }
-    Assert(loop->bailOutInfo->bailOutInstr != null);
+    Assert(loop->bailOutInfo->bailOutInstr != nullptr);
 
     // Review (ObjTypeSpec): Do we really need all this extra tracking of live fields on back edges, so as to
     // remove them from the live fields on the loop header?  We already do this in MergeBlockData called from
@@ -1036,7 +1036,7 @@ GlobOpt::FinishOptHoistedPropOps(Loop * loop)
     // Use this to limit the type symbols we make live into the loop. We made the types of the hoisted fields
     // live-in in the prepass, so if they're not live on a back edge, that means some path through the loop
     // kills them.
-    BVSparse<JitArenaAllocator> *bvBackEdge = null;
+    BVSparse<JitArenaAllocator> *bvBackEdge = nullptr;
     FOREACH_PREDECESSOR_BLOCK(predBlock, loop->GetHeadBlock())
     {
         if (!loop->IsDescendentOrSelf(predBlock->loop))
@@ -1072,8 +1072,8 @@ GlobOpt::FinishOptHoistedPropOps(Loop * loop)
                     // so we can't use FindObjectTypeValue here.
                     Value* landingPadValue = FindValueFromHashTable(loop->landingPad->globOptData.symToValueMap, typeSym->m_id);
                     Value* headerValue = FindValueFromHashTable(loop->GetHeadBlock()->globOptData.symToValueMap, typeSym->m_id);
-                    isHoistedTypeValue = landingPadValue != null && loop->fieldHoistCandidateTypes->Test(typeSym->m_id);
-                    isTypeInvariant = landingPadValue != null && headerValue != null && landingPadValue->GetValueNumber() == headerValue->GetValueNumber();
+                    isHoistedTypeValue = landingPadValue != nullptr && loop->fieldHoistCandidateTypes->Test(typeSym->m_id);
+                    isTypeInvariant = landingPadValue != nullptr && headerValue != nullptr && landingPadValue->GetValueNumber() == headerValue->GetValueNumber();
                 }
 
                 // Prepare the operand for object type specialization by creating a type sym for it, if not yet present
@@ -1082,7 +1082,7 @@ GlobOpt::FinishOptHoistedPropOps(Loop * loop)
 
                 // Let's update the existing type value, if possible, to retain the value number created in pre-pass.
                 bool changesTypeValue = false;
-                FinishOptPropOp(instr, opnd->AsPropertySymOpnd(), loop->landingPad, /* updateExistingValue = */ isHoistedTypeValue, null, &changesTypeValue);
+                FinishOptPropOp(instr, opnd->AsPropertySymOpnd(), loop->landingPad, /* updateExistingValue = */ isHoistedTypeValue, nullptr, &changesTypeValue);
                 instr = SetTypeCheckBailOut(opnd, instr, loop->bailOutInfo);
 
                 // If we changed the type's value in the landing pad we want to reflect this change in the header block as well,
@@ -1102,12 +1102,12 @@ GlobOpt::FinishOptHoistedPropOps(Loop * loop)
 
                     // If we changed the type value in the landing pad, we must have set it live there.
                     Value* landingPadValue = FindObjectTypeValue(typeSym->m_id, loop->landingPad);
-                    Assert(landingPadValue != null && landingPadValue->GetValueInfo()->IsJsType());
+                    Assert(landingPadValue != nullptr && landingPadValue->GetValueInfo()->IsJsType());
 
                     // But in the loop header we may have only a value with the live bit still cleared,
                     // so we can't use FindObjectTypeValue here.
                     Value* headerValue = FindValueFromHashTable(loop->GetHeadBlock()->globOptData.symToValueMap, typeSym->m_id);
-                    Assert(headerValue != null && headerValue->GetValueInfo()->IsJsType());
+                    Assert(headerValue != nullptr && headerValue->GetValueInfo()->IsJsType());
 
                     Assert(!isHoistedTypeValue || landingPadValue->GetValueNumber() == headerValue->GetValueNumber());
                     JsTypeValueInfo* valueInfo = landingPadValue->GetValueInfo()->AsJsType();
@@ -1178,7 +1178,7 @@ GlobOpt::HoistFieldLoadValue(Loop * loop, Value * newValue, SymID symId, Js::OpC
     loop->varSymsOnEntry->Set(newStackSym->m_id);
 
     // Update value in the current block
-    if (newValue == null)
+    if (newValue == nullptr)
     {
         // Even though we don't use the symStore to copy prop the hoisted stack sym in the loop
         // We might be able to propagate it out of the loop.  Create a value just in case.
@@ -1210,7 +1210,7 @@ GlobOpt::HoistFieldLoadValue(Loop * loop, Value * newValue, SymID symId, Js::OpC
         const auto srcRegOpnd = newInstr->GetSrc1()->AsRegOpnd();
         if(!loop->landingPad->globOptData.liveVarSyms->Test(srcRegOpnd->m_sym->m_id))
         {
-            this->ToVar(newInstr, srcRegOpnd, loop->landingPad, null, false);
+            this->ToVar(newInstr, srcRegOpnd, loop->landingPad, nullptr, false);
         }
     }
 
@@ -1251,7 +1251,7 @@ GlobOpt::FindFieldHoistStackSym(Loop * startLoop, SymID propertySymId, StackSym 
 
     if (instrToHoist && instrToHoist->m_opcode == Js::OpCode::LdMethodFromFlags)
     {
-        return null;
+        return nullptr;
     }
 
     Loop * loop = startLoop;
@@ -1347,18 +1347,18 @@ GlobOpt::FindFieldHoistStackSym(Loop * startLoop, SymID propertySymId, StackSym 
         Assert(!loop->hoistedFields || !loop->hoistedFields->Test(propertySymId));
         loop = loop->parent;
     }
-    return null;
+    return nullptr;
 }
 
 void
 GlobOpt::HoistFieldLoad(PropertySym * sym, Loop * loop, IR::Instr * instr, Value * oldValue, Value * newValue)
 {
     Loop * parentLoop = loop->parent;
-    if (parentLoop != null)
+    if (parentLoop != nullptr)
     {
         StackSym * copySym;
         Loop * hoistedLoop = FindFieldHoistStackSym(parentLoop, sym->m_id, &copySym, instr);    
-        if (hoistedLoop != null)
+        if (hoistedLoop != nullptr)
         {
             // Use an outter loop pre-assigned stack sym if it is already hoisted there
             Assert(hoistedLoop != loop);
@@ -1387,7 +1387,7 @@ GlobOpt::HoistNewFieldLoad(PropertySym * sym, Loop * loop, IR::Instr * instr, Va
 void
 GlobOpt::GenerateHoistFieldLoad(PropertySym * sym, Loop * loop, IR::Instr * instr, StackSym * newStackSym, Value * oldValue, Value * newValue)
 {
-    Assert(loop != null);
+    Assert(loop != nullptr);
 
     SymID symId = sym->m_id;
     BasicBlock * landingPad = loop->landingPad;
@@ -1420,7 +1420,7 @@ GlobOpt::GenerateHoistFieldLoad(PropertySym * sym, Loop * loop, IR::Instr * inst
 
         // We only set guarded properties in the dead store pass, so they shouldn't be set here yet. If they were
         // we would need to move them from this operand to the operand which is being copy propagated.
-        Assert(srcPropertySymOpnd->GetGuardedPropOps() == null);
+        Assert(srcPropertySymOpnd->GetGuardedPropOps() == nullptr);
 
         // We're hoisting an instruction from the loop, so we're placing it in a different position in the flow. Make sure only the flow
         // insensitive info is copied.
@@ -1439,7 +1439,7 @@ GlobOpt::GenerateHoistFieldLoad(PropertySym * sym, Loop * loop, IR::Instr * inst
         newSrc = IR::SymOpnd::New(sym, TyVar, func);
     }
 
-    IR::Instr * newInstr = NULL;
+    IR::Instr * newInstr = nullptr;
     ValueType profiledFieldType;
     
     if (instr->IsProfiledInstr())
@@ -1469,10 +1469,10 @@ GlobOpt::GenerateHoistFieldLoad(PropertySym * sym, Loop * loop, IR::Instr * inst
     loop->lossyInt32SymsOnEntry->Clear(newStackSym->m_id);
     loop->float64SymsOnEntry->Clear(newStackSym->m_id);
 
-    Assert(oldValue != null);
+    Assert(oldValue != nullptr);
 
     // Create a value in case we can copy prop out of the loop
-    if (newValue == null || newValue->GetValueInfo()->IsUninitialized())
+    if (newValue == nullptr || newValue->GetValueInfo()->IsUninitialized())
     {
         const bool hoistValue = newValue && oldValue->GetValueNumber() == newValue->GetValueNumber();
 
@@ -1514,8 +1514,8 @@ GlobOpt::GenerateHoistFieldLoad(PropertySym * sym, Loop * loop, IR::Instr * inst
     // TODO (IE11): Restructure field hoisting to call OptBlock on the completed loop landing pad instead of
     // doing these optimizations and BV updates piecemeal.
 #ifdef DBG
-    PropertySym *propertySymUseBefore = NULL;
-    Assert(this->byteCodeUses == null);
+    PropertySym *propertySymUseBefore = nullptr;
+    Assert(this->byteCodeUses == nullptr);
     this->byteCodeUsesBeforeOpt->ClearAll();    
     GlobOpt::TrackByteCodeSymUsed(instr, this->byteCodeUsesBeforeOpt, &propertySymUseBefore);
 #endif
@@ -1527,7 +1527,7 @@ GlobOpt::GenerateHoistFieldLoad(PropertySym * sym, Loop * loop, IR::Instr * inst
     // the new type to fieldHoistCandidateTypes and produce a value for it in the landing pad and loop header.  If the
     // old type was live then its liveness and invariance are already correctly reflected and there is nothing to do.
     this->CopyPropPropertySymObj(newSrc, newInstr);
-    if (this->byteCodeUses != null)
+    if (this->byteCodeUses != nullptr)
     {
         sym = newSrc->m_sym->AsPropertySym();
         this->InsertByteCodeUses(newInstr);
@@ -1582,7 +1582,7 @@ GlobOpt::CreateFieldSrcValue(PropertySym * sym, PropertySym * originalSym, IR::O
     // copy prop LdSlot if there are other uses of local slots
     if (!this->DoFieldCopyProp())
     {      
-        return null;
+        return nullptr;
     }                   
 
     BOOL wasLive = this->blockData.liveFields->TestAndSet(sym->m_id);    
@@ -1597,7 +1597,7 @@ GlobOpt::CreateFieldSrcValue(PropertySym * sym, PropertySym * originalSym, IR::O
         {
             // We don't clear the value when we kill the field. Clear it to make sure we don't use the old value
             this->blockData.symToValueMap->Clear(sym->m_id);
-            return null;
+            return nullptr;
         }
     }    
     else if (sym != originalSym)
@@ -1702,7 +1702,7 @@ GlobOpt::CopyPropHoistedFields(PropertySym * sym, IR::Opnd ** ppOpnd, IR::Instr 
 
     StackSym * hoistedCopySym;
     Loop * loop = FindFieldHoistStackSym(this->currentBlock->loop, sym->m_id, &hoistedCopySym, instr);
-    Assert(loop != null || !this->IsHoistablePropertySym(sym->m_id));
+    Assert(loop != nullptr || !this->IsHoistablePropertySym(sym->m_id));
 
     if (loop)
     {                
@@ -1731,7 +1731,7 @@ GlobOpt::ReloadFieldHoistStackSym(IR::Instr * instr, PropertySym * propertySym)
     StackSym * fieldHoistSym;
     Loop * loop = this->FindFieldHoistStackSym(this->currentBlock->loop, propertySym->m_id, &fieldHoistSym, instr);
 
-    if (loop == null)
+    if (loop == nullptr)
     {
         return;
     }
@@ -1818,11 +1818,11 @@ GlobOpt::CopyStoreFieldHoistStackSym(IR::Instr * storeFldInstr, PropertySym * sy
 
     // We may use StSlot for all sort of things other then assigning TyVars
     Assert(storeFldInstr->GetSrc1()->GetType() == TyVar || storeFldInstr->m_opcode == Js::OpCode::StSlot || storeFldInstr->m_opcode == Js::OpCode::StSlotChkUndecl);
-    Assert(storeFldInstr->GetSrc2() == null);
+    Assert(storeFldInstr->GetSrc2() == nullptr);
     
     StackSym * copySym;
     Loop * loop = this->FindFieldHoistStackSym(this->currentBlock->loop, sym->m_id, &copySym);
-    if (loop == null)
+    if (loop == nullptr)
     {
         return;
     }
@@ -1863,7 +1863,7 @@ GlobOpt::CopyStoreFieldHoistStackSym(IR::Instr * storeFldInstr, PropertySym * sy
             {
                 StackSym * int32CopySym = copySym->GetInt32EquivSym(storeFldFunc);
                 IR::RegOpnd * int32CopyOpnd = IR::RegOpnd::New(int32CopySym, TyInt32, storeFldFunc);
-                IR::RegOpnd * int32SrcOpnd = IR::RegOpnd::New(srcSym->GetInt32EquivSym(null),
+                IR::RegOpnd * int32SrcOpnd = IR::RegOpnd::New(srcSym->GetInt32EquivSym(nullptr),
                     TyInt32, storeFldFunc);            
                 newInstr = IR::Instr::New(Js::OpCode::Ld_I4, int32CopyOpnd, int32SrcOpnd, storeFldFunc);
                 int32SrcOpnd->SetIsJITOptimizedReg(true);
@@ -1878,7 +1878,7 @@ GlobOpt::CopyStoreFieldHoistStackSym(IR::Instr * storeFldInstr, PropertySym * sy
             {
                 StackSym * float64CopySym = copySym->GetFloat64EquivSym(storeFldFunc);
                 IR::RegOpnd * float64CopyOpnd = IR::RegOpnd::New(float64CopySym, TyFloat64, storeFldFunc);
-                IR::RegOpnd * float64SrcOpnd = IR::RegOpnd::New(srcSym->GetFloat64EquivSym(null),
+                IR::RegOpnd * float64SrcOpnd = IR::RegOpnd::New(srcSym->GetFloat64EquivSym(nullptr),
                     TyFloat64, storeFldFunc);            
                 newInstr = IR::Instr::New(Js::OpCode::Ld_A, float64CopyOpnd, float64SrcOpnd, storeFldFunc);
                 float64SrcOpnd->SetIsJITOptimizedReg(true);
@@ -1946,7 +1946,7 @@ GlobOpt::NeedBailOnImplicitCallWithFieldOpts(Loop *loop, bool hasLiveFields) con
 IR::Instr *
 GlobOpt::EnsureDisableImplicitCallRegion(Loop * loop)
 {
-    Assert(loop->bailOutInfo != null);
+    Assert(loop->bailOutInfo != nullptr);
     IR::Instr * endDisableImplicitCall = loop->endDisableImplicitCall;
     if (endDisableImplicitCall)
     {
@@ -1995,7 +1995,7 @@ bool
 GlobOpt::IsHoistedPropertySym(SymID symId, Loop * loop) const
 {    
     StackSym * copySym;
-    return this->FindFieldHoistStackSym(loop, symId, &copySym) != null;
+    return this->FindFieldHoistStackSym(loop, symId, &copySym) != nullptr;
 }
 
 bool
@@ -2027,7 +2027,7 @@ GlobOpt::AssertCanCopyPropOrCSEFieldLoad(IR::Instr * instr)
     Assert(instr->m_opcode == Js::OpCode::CheckFixedFld || instr->GetDst()->GetType() == TyVar);
     Assert(instr->GetSrc1()->GetType() == TyVar);
     Assert(instr->GetSrc1()->AsSymOpnd()->m_sym->IsPropertySym());
-    Assert(instr->GetSrc2() == null); 
+    Assert(instr->GetSrc2() == nullptr); 
 }
 
 #endif
@@ -2045,7 +2045,7 @@ GlobOpt::EnsureObjectTypeSym(StackSym * objectSym)
         return objectSym->GetObjectTypeSym();
     }
 
-    if (this->objectTypeSyms == null)
+    if (this->objectTypeSyms == nullptr)
     {
         this->objectTypeSyms = JitAnew(this->alloc, BVSparse<JitArenaAllocator>, this->alloc);
     }
@@ -2167,7 +2167,7 @@ GlobOpt::FinishOptPropOp(IR::Instr *instr, IR::PropertySymOpnd *opnd, BasicBlock
 
     if (opnd == instr->GetDst() && this->objectTypeSyms && !isObjTypeChecked)
     {
-        if (block == null)
+        if (block == nullptr)
         {
             block = this->currentBlock;
         }
@@ -2180,7 +2180,7 @@ GlobOpt::FinishOptPropOp(IR::Instr *instr, IR::PropertySymOpnd *opnd, BasicBlock
         //   changed by the addition of a property.
 
         SymID opndId = opnd->HasObjectTypeSym() ? opnd->GetObjectTypeSym()->m_id : -1;
-        if (block->globOptData.maybeWrittenTypeSyms == null)
+        if (block->globOptData.maybeWrittenTypeSyms == nullptr)
         {
             block->globOptData.maybeWrittenTypeSyms = JitAnew(this->alloc, BVSparse<JitArenaAllocator>, this->alloc);
         }
@@ -2306,7 +2306,7 @@ GlobOpt::ProcessPropOpInTypeCheckSeq(IR::Instr* instr, IR::PropertySymOpnd *opnd
     bool emitsTypeCheck = false;
     bool addsProperty = false;
 
-    if (block == null)
+    if (block == nullptr)
     {
         block = this->currentBlock;
     }
@@ -2315,23 +2315,23 @@ GlobOpt::ProcessPropOpInTypeCheckSeq(IR::Instr* instr, IR::PropertySymOpnd *opnd
 
 #if DBG
     uint16 typeCheckSeqFlagsBefore = opnd->GetTypeCheckSeqFlags();
-    Value* valueBefore = null;
-    JsTypeValueInfo* valueInfoBefore = null;
+    Value* valueBefore = nullptr;
+    JsTypeValueInfo* valueInfoBefore = nullptr;
     if (!makeChanges)
     {
         valueBefore = FindObjectTypeValue(typeSym, block);
-        if (valueBefore != null)
+        if (valueBefore != nullptr)
         {
-            Assert(valueBefore->GetValueInfo() != null && valueBefore->GetValueInfo()->IsJsType());
+            Assert(valueBefore->GetValueInfo() != nullptr && valueBefore->GetValueInfo()->IsJsType());
             valueInfoBefore = valueBefore->GetValueInfo()->AsJsType();
         }
     }
 #endif
 
     Value *value = this->FindObjectTypeValue(typeSym, block);
-    JsTypeValueInfo* valueInfo = value != null ? value->GetValueInfo()->AsJsType() : null;
+    JsTypeValueInfo* valueInfo = value != nullptr ? value->GetValueInfo()->AsJsType() : nullptr;
 
-    if (consumeType && valueInfo != null)
+    if (consumeType && valueInfo != nullptr)
     {
         opnd->SetTypeAvailable(true);
     }
@@ -2352,7 +2352,7 @@ GlobOpt::ProcessPropOpInTypeCheckSeq(IR::Instr* instr, IR::PropertySymOpnd *opnd
             addsProperty = isStore && isSpecialized && opnd->HasInitialType();
             if (produceType)
             {
-                SetObjectTypeFromTypeSym(typeSym, opndType, null, block, updateExistingValue);
+                SetObjectTypeFromTypeSym(typeSym, opndType, nullptr, block, updateExistingValue);
             }
         }
         else if (valueInfo->GetJsType())
@@ -2388,7 +2388,7 @@ GlobOpt::ProcessPropOpInTypeCheckSeq(IR::Instr* instr, IR::PropertySymOpnd *opnd
                 }
                 if (produceType)
                 {
-                    SetObjectTypeFromTypeSym(typeSym, opndType, null, block, updateExistingValue);
+                    SetObjectTypeFromTypeSym(typeSym, opndType, nullptr, block, updateExistingValue);
                 }
                 isSpecialized = !isTypeDead || !objectMayHaveAcquiredAdditionalProperties;
                 emitsTypeCheck = isSpecialized && objectMayHaveAcquiredAdditionalProperties;
@@ -2464,7 +2464,7 @@ GlobOpt::ProcessPropOpInTypeCheckSeq(IR::Instr* instr, IR::PropertySymOpnd *opnd
         Js::EquivalentTypeSet * opndTypeSet = opnd->GetEquivalentTypeSet();
         uint16 checkedTypeSetIndex = (uint16)-1;
 
-        if (valueInfo == null || (valueInfo->GetJsType() == nullptr && valueInfo->GetJsTypeSet() == nullptr))
+        if (valueInfo == nullptr || (valueInfo->GetJsType() == nullptr && valueInfo->GetJsTypeSet() == nullptr))
         {
             // If we don't have a value for the type we will have to emit a type check and we produce a new type value here.
             if (produceType)
@@ -2551,10 +2551,10 @@ GlobOpt::ProcessPropOpInTypeCheckSeq(IR::Instr* instr, IR::PropertySymOpnd *opnd
     if (makeChanges && addsProperty)
     {
         Assert(isStore && isSpecialized);
-        Assert(this->objectTypeSyms != null);
+        Assert(this->objectTypeSyms != nullptr);
         Assert(this->objectTypeSyms->Test(typeSym->m_id));
 
-        if (block->globOptData.maybeWrittenTypeSyms == null)
+        if (block->globOptData.maybeWrittenTypeSyms == nullptr)
         {
             block->globOptData.maybeWrittenTypeSyms = JitAnew(this->alloc, BVSparse<JitArenaAllocator>, this->alloc);
         }
@@ -2567,7 +2567,7 @@ GlobOpt::ProcessPropOpInTypeCheckSeq(IR::Instr* instr, IR::PropertySymOpnd *opnd
     if (produceType && emitsTypeCheck && opnd->IsMono())
     {
         // TODO (ObjTypeSpec): Represent maybeWrittenTypeSyms as a flag on value info of the type sym.
-        if (block->globOptData.maybeWrittenTypeSyms != null)
+        if (block->globOptData.maybeWrittenTypeSyms != nullptr)
         {
             // We're doing a type check here, so objtypespec of property adds is safe for this type
             // from this point forward.
@@ -2592,7 +2592,7 @@ GlobOpt::ProcessPropOpInTypeCheckSeq(IR::Instr* instr, IR::PropertySymOpnd *opnd
         // function), let's mark the write guards as live here, so we can accurately track if their properties
         // have been written to. Make sure we only set those that we'll actually guard, i.e. those that match
         // with respect to polymorphism.
-        if (opnd->GetWriteGuards() != null)
+        if (opnd->GetWriteGuards() != nullptr)
         {
             block->globOptData.liveFields->Or(opnd->GetWriteGuards());
         }
@@ -2611,10 +2611,10 @@ GlobOpt::ProcessPropOpInTypeCheckSeq(IR::Instr* instr, IR::PropertySymOpnd *opnd
 
         Value* valueAfter = FindObjectTypeValue(typeSym, block);
         Assert(valueBefore == valueAfter);
-        if (valueAfter != null)
+        if (valueAfter != nullptr)
         {
-            Assert(valueBefore != null);
-            Assert(valueAfter->GetValueInfo() != null && valueAfter->GetValueInfo()->IsJsType());
+            Assert(valueBefore != nullptr);
+            Assert(valueAfter->GetValueInfo() != nullptr && valueAfter->GetValueInfo()->IsJsType());
             JsTypeValueInfo* valueInfoAfter = valueAfter->GetValueInfo()->AsJsType();
             Assert(valueInfoBefore == valueInfoAfter);
             Assert(valueInfoBefore->GetJsType() == valueInfoAfter->GetJsType());
@@ -2623,12 +2623,12 @@ GlobOpt::ProcessPropOpInTypeCheckSeq(IR::Instr* instr, IR::PropertySymOpnd *opnd
     }
 #endif
 
-    if (emitsTypeCheckOut != null)
+    if (emitsTypeCheckOut != nullptr)
     {
         *emitsTypeCheckOut = emitsTypeCheck;
     }
 
-    if (changesTypeValueOut != null)
+    if (changesTypeValueOut != nullptr)
     {
         *changesTypeValueOut = isSpecialized && (emitsTypeCheck || addsProperty);
     }
@@ -2658,12 +2658,12 @@ GlobOpt::OptNewScObject(IR::Instr** instrPtr, Value* srcVal)
 
     bool isCtorInlined = instr->m_opcode == Js::OpCode::NewScObjectNoCtor;
     const Js::JitTimeConstructorCache* ctorCache = instr->IsProfiledInstr() ?
-        instr->m_func->GetConstructorCache(static_cast<Js::ProfileId>(instr->AsProfiledInstr()->u.profileId)) : null;
+        instr->m_func->GetConstructorCache(static_cast<Js::ProfileId>(instr->AsProfiledInstr()->u.profileId)) : nullptr;
 
-    Assert(ctorCache == null || srcVal->GetValueInfo()->IsVarConstant() && Js::JavascriptFunction::Is(srcVal->GetValueInfo()->AsVarConstant()->VarValue()));
-    Assert(ctorCache == null || !ctorCache->typeIsFinal || ctorCache->ctorHasNoExplicitReturnValue);
+    Assert(ctorCache == nullptr || srcVal->GetValueInfo()->IsVarConstant() && Js::JavascriptFunction::Is(srcVal->GetValueInfo()->AsVarConstant()->VarValue()));
+    Assert(ctorCache == nullptr || !ctorCache->typeIsFinal || ctorCache->ctorHasNoExplicitReturnValue);
     
-    if (ctorCache != null && !ctorCache->skipNewScObject && (isCtorInlined || ctorCache->typeIsFinal))
+    if (ctorCache != nullptr && !ctorCache->skipNewScObject && (isCtorInlined || ctorCache->typeIsFinal))
     {
         GenerateBailAtOperation(instrPtr, IR::BailOutFailedCtorGuardCheck);
     }
@@ -2698,13 +2698,13 @@ GlobOpt::ValueNumberObjectType(IR::Opnd *dstOpnd, IR::Instr *instr)
 
             bool isCtorInlined = instr->m_opcode == Js::OpCode::NewScObjectNoCtor;
             const Js::JitTimeConstructorCache* ctorCache = instr->m_func->GetConstructorCache(static_cast<Js::ProfileId>(instr->AsProfiledInstr()->u.profileId));
-            Assert(ctorCache != null && (isCtorInlined || ctorCache->typeIsFinal));
+            Assert(ctorCache != nullptr && (isCtorInlined || ctorCache->typeIsFinal));
 
             StackSym* objSym = dstOpnd->AsRegOpnd()->m_sym;
             StackSym* dstTypeSym = EnsureObjectTypeSym(objSym);
-            Assert(this->FindValue(dstTypeSym) == null);
+            Assert(this->FindValue(dstTypeSym) == nullptr);
 
-            SetObjectTypeFromTypeSym(dstTypeSym, ctorCache->type, null);
+            SetObjectTypeFromTypeSym(dstTypeSym, ctorCache->type, nullptr);
         }
     }
     else
@@ -2714,7 +2714,7 @@ GlobOpt::ValueNumberObjectType(IR::Opnd *dstOpnd, IR::Instr *instr)
         // the src's type sym (if any).  If the dst doesn't have a type sym, but the src does, let's
         // give a dst a new type sym and transfer the value.
 
-        Value *newValue = null;
+        Value *newValue = nullptr;
 
         IR::Opnd * srcOpnd = instr->GetSrc1();
 
@@ -2725,7 +2725,7 @@ GlobOpt::ValueNumberObjectType(IR::Opnd *dstOpnd, IR::Instr *instr)
             newValue = this->FindValue(srcTypeSym);
         }
 
-        if (newValue == null)
+        if (newValue == nullptr)
         {
             if (dstOpnd->AsRegOpnd()->m_sym->HasObjectTypeSym())
             {
@@ -2739,7 +2739,7 @@ GlobOpt::ValueNumberObjectType(IR::Opnd *dstOpnd, IR::Instr *instr)
             StackSym * typeSym;
             if (!dstOpnd->AsRegOpnd()->m_sym->HasObjectTypeSym())
             {
-                typeSym = null;
+                typeSym = nullptr;
             }
             typeSym = EnsureObjectTypeSym(dstOpnd->AsRegOpnd()->m_sym);
             this->SetValue(&this->blockData, newValue, typeSym);
@@ -2763,7 +2763,7 @@ GlobOpt::SetTypeCheckBailOut(IR::Opnd *opnd, IR::Instr *instr, BailOutInfo *bail
     IR::PropertySymOpnd * propertySymOpnd = opnd->AsPropertySymOpnd();
 
     AssertMsg(propertySymOpnd->TypeCheckSeqBitsSetOnlyIfCandidate(), "Property sym operand optimized despite not being a candidate?");
-    AssertMsg(bailOutInfo == null || !instr->HasBailOutInfo(), "Why are we adding new bailout info to an instruction that already has it?");
+    AssertMsg(bailOutInfo == nullptr || !instr->HasBailOutInfo(), "Why are we adding new bailout info to an instruction that already has it?");
 
     auto HandleBailout = [&](IR::BailOutKind bailOutKind)->void {
         // At this point, we have a cached type that is live downstream or the type check is required
@@ -2842,19 +2842,19 @@ GlobOpt::SetTypeCheckBailOut(IR::Opnd *opnd, IR::Instr *instr, BailOutInfo *bail
 void
 GlobOpt::SetSingleTypeOnObjectTypeValue(Value* value, const Js::Type* type)
 {
-    UpdateObjectTypeValue(value, type, true, null, false);
+    UpdateObjectTypeValue(value, type, true, nullptr, false);
 }
 
 void
 GlobOpt::SetTypeSetOnObjectTypeValue(Value* value, Js::EquivalentTypeSet* typeSet)
 {
-    UpdateObjectTypeValue(value, null, false, typeSet, true);
+    UpdateObjectTypeValue(value, nullptr, false, typeSet, true);
 }
 
 void
 GlobOpt::UpdateObjectTypeValue(Value* value, const Js::Type* type, bool setType, Js::EquivalentTypeSet* typeSet, bool setTypeSet)
 {
-    Assert(value->GetValueInfo() != null && value->GetValueInfo()->IsJsType());
+    Assert(value->GetValueInfo() != nullptr && value->GetValueInfo()->IsJsType());
     JsTypeValueInfo* valueInfo = value->GetValueInfo()->AsJsType();
 
     if (valueInfo->GetIsShared())
@@ -2876,13 +2876,13 @@ GlobOpt::UpdateObjectTypeValue(Value* value, const Js::Type* type, bool setType,
 void
 GlobOpt::SetObjectTypeFromTypeSym(StackSym *typeSym, Value* value, BasicBlock* block)
 {
-    Assert(typeSym != null);
-    Assert(value != null);
-    Assert(value->GetValueInfo() != null && value->GetValueInfo()->IsJsType());
+    Assert(typeSym != nullptr);
+    Assert(value != nullptr);
+    Assert(value->GetValueInfo() != nullptr && value->GetValueInfo()->IsJsType());
 
     SymID typeSymId = typeSym->m_id;
 
-    if (block == null)
+    if (block == nullptr)
     {
         block = this->currentBlock;
     }
@@ -2894,7 +2894,7 @@ GlobOpt::SetObjectTypeFromTypeSym(StackSym *typeSym, Value* value, BasicBlock* b
 void
 GlobOpt::SetObjectTypeFromTypeSym(StackSym *typeSym, const Js::Type *type, Js::EquivalentTypeSet * typeSet, BasicBlock* block, bool updateExistingValue)
 {
-    if (block == null)
+    if (block == nullptr)
     {
         block = this->currentBlock;
     }
@@ -2905,11 +2905,11 @@ GlobOpt::SetObjectTypeFromTypeSym(StackSym *typeSym, const Js::Type *type, Js::E
 void
 GlobOpt::SetObjectTypeFromTypeSym(StackSym *typeSym, const Js::Type *type, Js::EquivalentTypeSet * typeSet, GlobOptBlockData *blockData, bool updateExistingValue)
 {
-    Assert(typeSym != null);
+    Assert(typeSym != nullptr);
 
     SymID typeSymId = typeSym->m_id;
 
-    if (blockData == null)
+    if (blockData == nullptr)
     {
         blockData = &this->blockData;
     }
@@ -2919,9 +2919,9 @@ GlobOpt::SetObjectTypeFromTypeSym(StackSym *typeSym, const Js::Type *type, Js::E
         Value* value = FindValueFromHashTable(blockData->symToValueMap, typeSymId);
         // If we're trying to update an existing value, the value better exist.  Also, we only do this when updating a generic
         // value created during loop pre-pass for field hoisting, so we expect the value info to still be blank.
-        Assert(value != null && value->GetValueInfo() != null && value->GetValueInfo()->IsJsType());
+        Assert(value != nullptr && value->GetValueInfo() != nullptr && value->GetValueInfo()->IsJsType());
         JsTypeValueInfo* valueInfo = value->GetValueInfo()->AsJsType();
-        Assert(valueInfo->GetJsType() == null && valueInfo->GetJsTypeSet() == null);
+        Assert(valueInfo->GetJsType() == nullptr && valueInfo->GetJsTypeSet() == nullptr);
         UpdateObjectTypeValue(value, type, true, typeSet, true);
     }
     else
@@ -2952,7 +2952,7 @@ GlobOpt::KillObjectType(StackSym* objectSym, BVSparse<JitArenaAllocator>* liveFi
         return;
     }
 
-    if (liveFields == null)
+    if (liveFields == nullptr)
     {
         liveFields = this->blockData.liveFields;
     }
@@ -2965,7 +2965,7 @@ GlobOpt::KillAllObjectTypes(BVSparse<JitArenaAllocator>* liveFields)
 {
     if (this->objectTypeSyms)
     {
-        if (liveFields == null)
+        if (liveFields == nullptr)
         {
             liveFields = this->blockData.liveFields;
         }
@@ -2994,7 +2994,7 @@ GlobOpt::CopyPropPropertySymObj(IR::SymOpnd *symOpnd, IR::Instr *instr)
     if (val && !PHASE_OFF(Js::ObjPtrCopyPropPhase, this->func))
     {
         StackSym *copySym = this->GetCopyPropSym(objSym, val);
-        if (copySym != null)
+        if (copySym != nullptr)
         {
             PropertySym *newProp = PropertySym::FindOrCreate(
                 copySym->m_id, propertySym->m_propertyId, propertySym->GetPropertyIdIndex(), propertySym->GetInlineCacheIndex(), propertySym->m_fieldKind, this->func);
@@ -3042,7 +3042,7 @@ GlobOpt::CopyPropPropertySymObj(IR::SymOpnd *symOpnd, IR::Instr *instr)
             if(instr->GetDst() && symOpnd->IsEqual(instr->GetDst()))
             {
                 // Make sure any stack sym uses in the new destination property sym are unspecialized
-                instr = ToVarUses(instr, symOpnd, true, NULL);
+                instr = ToVarUses(instr, symOpnd, true, nullptr);
             }
         }
     }

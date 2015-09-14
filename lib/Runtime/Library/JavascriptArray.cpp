@@ -353,7 +353,7 @@ namespace Js
         Assert(type->GetTypeId() == TypeIds_Array);
         InitArrayFlags(DynamicObjectFlags::InitialArrayValue);
         Recycler* recycler = GetRecycler();
-        SetHeadAndLastUsedSegment(SparseArraySegment<Var>::AllocateSegment(recycler, 0, 0, size, null));
+        SetHeadAndLastUsedSegment(SparseArraySegment<Var>::AllocateSegment(recycler, 0, 0, size, nullptr));
     }
 
     JavascriptArray::JavascriptArray(DynamicType * type, uint32 size)
@@ -375,7 +375,7 @@ namespace Js
         Assert(type->GetTypeId() == TypeIds_NativeIntArray);
         this->length = length;
         Recycler* recycler = GetRecycler();
-        SetHeadAndLastUsedSegment(SparseArraySegment<int32>::AllocateSegment(recycler, 0, 0, size, null));
+        SetHeadAndLastUsedSegment(SparseArraySegment<int32>::AllocateSegment(recycler, 0, 0, size, nullptr));
     }
 
     JavascriptNativeIntArray::JavascriptNativeIntArray(DynamicType * type, uint32 size)
@@ -392,7 +392,7 @@ namespace Js
         Assert(type->GetTypeId() == TypeIds_NativeFloatArray);
         this->length = length;
         Recycler* recycler = GetRecycler();
-        SetHeadAndLastUsedSegment(SparseArraySegment<double>::AllocateSegment(recycler, 0, 0, size, null));
+        SetHeadAndLastUsedSegment(SparseArraySegment<double>::AllocateSegment(recycler, 0, 0, size, nullptr));
     }
 
     JavascriptNativeFloatArray::JavascriptNativeFloatArray(DynamicType * type, uint32 size)
@@ -447,10 +447,10 @@ namespace Js
 
         if(!RecyclableObject::Is(var))
         {
-            return null;
+            return nullptr;
         }
 
-        JavascriptArray *array = null;
+        JavascriptArray *array = nullptr;
         INT_PTR vtable = VirtualTableInfoBase::GetVirtualTable(var);
         if(vtable == VirtualTableInfo<DynamicObject>::Address)
         {
@@ -458,7 +458,7 @@ namespace Js
             array = (objectArray && Is(objectArray)) ? FromVar(objectArray) : nullptr;
             if(!array)
             {
-                return null;
+                return nullptr;
             }
             *isObjectWithArrayRef = true;
             vtable = VirtualTableInfoBase::GetVirtualTable(array);
@@ -478,7 +478,7 @@ namespace Js
         }
         else
         {
-            return null;
+            return nullptr;
         }
 
         if(!array)
@@ -493,7 +493,7 @@ namespace Js
         // This is a helper function used by jitted code
 
         JavascriptArray *const array = GetArrayForArrayOrObjectWithArray(var);
-        return array ? array->head : null;
+        return array ? array->head : nullptr;
     }
 
     uint32 JavascriptArray::Jit_GetArrayHeadSegmentLength(const SparseArraySegmentBase *const headSegment)
@@ -1115,7 +1115,7 @@ namespace Js
             return function->GetLibrary()->CreateNativeIntArray();
         }
 
-        JavascriptArray* pNew = null;
+        JavascriptArray* pNew = nullptr;
         if (callInfo.Count == 2)
         {
             // Exactly one argument, which is the array length if it's a uint32.
@@ -1190,7 +1190,7 @@ namespace Js
             return function->GetLibrary()->CreateNativeFloatArray();
         }
 
-        JavascriptArray* pNew = null;
+        JavascriptArray* pNew = nullptr;
         if (callInfo.Count == 2)
         {
             // Exactly one argument, which is the array length if it's a uint32.
@@ -1314,7 +1314,7 @@ namespace Js
                 }
 
                 JavascriptArray *arr = JavascriptNativeIntArray::ToVarArray(this);
-                return arr->JavascriptArray::FillFromArgs(length, i, args, null, dontCreateNewArray);
+                return arr->JavascriptArray::FillFromArgs(length, i, args, nullptr, dontCreateNewArray);
             }
         }
 
@@ -1342,7 +1342,7 @@ namespace Js
                 {
                     arrayInfo->SetIsNotNativeArray();
                 }
-                return arr->JavascriptArray::FillFromArgs(length, i, args, null, dontCreateNewArray);
+                return arr->JavascriptArray::FillFromArgs(length, i, args, nullptr, dontCreateNewArray);
             }
         }
 
@@ -1373,10 +1373,6 @@ namespace Js
 
     JavascriptNativeFloatArray *JavascriptNativeIntArray::ToNativeFloatArray(JavascriptNativeIntArray *intArray)
     {
-#ifdef ARRLOG
-        ArrLogRec* rec = null;
-#endif
-
         ArrayCallSiteInfo *arrayInfo = intArray->GetArrayCallSiteInfo();
         if (arrayInfo)
         {
@@ -1426,7 +1422,7 @@ namespace Js
 
         ScriptContext *scriptContext = intArray->GetScriptContext();
         Recycler *recycler = scriptContext->GetRecycler();
-        SparseArraySegmentBase *seg, *nextSeg, *prevSeg = null;
+        SparseArraySegmentBase *seg, *nextSeg, *prevSeg = nullptr;
         for (seg = intArray->head; seg; seg = nextSeg)
         {
             nextSeg = seg->next;
@@ -1448,7 +1444,7 @@ namespace Js
                 // Some live elements are being pushed out of this segment, so allocate a new one.
                 SparseArraySegment<double> *newSeg =
                     SparseArraySegment<double>::AllocateSegment(recycler, left, length, nextSeg);
-                Assert((prevSeg == null) == (seg == intArray->head));
+                Assert((prevSeg == nullptr) == (seg == intArray->head));
                 newSeg->next = nextSeg;
                 intArray->LinkSegments((SparseArraySegment<double>*)prevSeg, newSeg);
                 if (intArray->GetLastUsedSegment() == seg)
@@ -1462,16 +1458,6 @@ namespace Js
                     segmentMap->SwapSegment(left, seg, newSeg);
                 }
 
-#ifdef ARRLOG
-                if (Js::Configuration::Global.flags.ArrayLog)
-                {
-                    UIntHashTable<ArrLogRec*>* logTable = scriptContext->logTable;
-                    if (rec || logTable->TryGetValue((unsigned int)intArray, &rec))
-                    {
-                        rec->setSegment++;
-                    }
-                }
-#endif
                 // Fill the new segment with the overflow.
                 for (i = 0; (uint)i < newSeg->length; i++)
                 {
@@ -1659,7 +1645,7 @@ namespace Js
         AssertMsg(!JavascriptNativeArray::Is(varArray), "Ensure that the incoming Array is a Var array");
 
         ScriptContext *scriptContext = varArray->GetScriptContext();
-        SparseArraySegmentBase *seg, *nextSeg, *prevSeg = null;
+        SparseArraySegmentBase *seg, *nextSeg, *prevSeg = nullptr;
         for (seg = varArray->head; seg; seg = nextSeg)
         {
             nextSeg = seg->next;
@@ -1699,13 +1685,10 @@ namespace Js
 
     JavascriptArray *JavascriptNativeIntArray::ConvertToVarArray(JavascriptNativeIntArray *intArray)
     {
-#ifdef ARRLOG
-        ArrLogRec* rec = null;
-#endif
         JavascriptLibrary::CheckAndConvertCopyOnAccessNativeIntArray<Var>(intArray);
         ScriptContext *scriptContext = intArray->GetScriptContext();
         Recycler *recycler = scriptContext->GetRecycler();
-        SparseArraySegmentBase *seg, *nextSeg, *prevSeg = null;
+        SparseArraySegmentBase *seg, *nextSeg, *prevSeg = nullptr;
         for (seg = intArray->head; seg; seg = nextSeg)
         {
             nextSeg = seg->next;
@@ -1730,7 +1713,7 @@ namespace Js
                 SparseArraySegment<Var> *newSeg =
                     SparseArraySegment<Var>::AllocateSegment(recycler, left, length, nextSeg);
 
-                Assert((prevSeg == null) == (seg == intArray->head));
+                Assert((prevSeg == nullptr) == (seg == intArray->head));
                 newSeg->next = nextSeg;
                 intArray->LinkSegments((SparseArraySegment<Var>*)prevSeg, newSeg);
                 if (intArray->GetLastUsedSegment() == seg)
@@ -1745,16 +1728,6 @@ namespace Js
                     segmentMap->SwapSegment(left, seg, newSeg);
                 }
 
-#ifdef ARRLOG
-                if (Js::Configuration::Global.flags.ArrayLog)
-                {
-                    UIntHashTable<ArrLogRec*>* logTable = scriptContext->logTable;
-                    if (rec || logTable->TryGetValue((unsigned int)intArray, &rec))
-                    {
-                        rec->setSegment++;
-                    }
-                }
-#endif
                 // Fill the new segment with the overflow.
                 for (i = 0; (uint)i < newSeg->length; i++)
                 {
@@ -1888,9 +1861,6 @@ namespace Js
     */
     JavascriptArray *JavascriptNativeFloatArray::ConvertToVarArray(JavascriptNativeFloatArray *fArray)
     {
-#ifdef ARRLOG
-        ArrLogRec* rec = null;
-#endif
         // We can't be growing the size of the element.
         Assert(sizeof(double) >= sizeof(Var));
 
@@ -1913,7 +1883,7 @@ namespace Js
                 // The old segment is not scanned by the recycler, so we need a new one to hold vars.
                 newSeg = 
                     SparseArraySegment<Var>::AllocateSegment(recycler, left, length, nextSeg);
-                Assert((prevSeg == null) == (seg == fArray->head));
+                Assert((prevSeg == nullptr) == (seg == fArray->head));
                 newSeg->next = nextSeg;
                 fArray->LinkSegments((SparseArraySegment<Var>*)prevSeg, newSeg);
                 if (fArray->GetLastUsedSegment() == seg)
@@ -1927,17 +1897,6 @@ namespace Js
                 {
                     segmentMap->SwapSegment(left, seg, newSeg);
                 }
-
-#ifdef ARRLOG
-                if (Js::Configuration::Global.flags.ArrayLog)
-                {
-                    UIntHashTable<ArrLogRec*>* logTable = scriptContext->logTable;
-                    if (rec || logTable->TryGetValue((unsigned int)fArray, &rec))
-                    {
-                        rec->setSegment++;
-                    }
-                }
-#endif
             }
             else 
             {
@@ -2224,7 +2183,7 @@ namespace Js
                 this->ClearArrayCallSiteIndex();
             }
         }
-        return null;
+        return nullptr;
     }
 
     void JavascriptNativeArray::SetArrayProfileInfo(RecyclerWeakReference<FunctionBody> *weakRef, ArrayCallSiteInfo *arrayInfo)
@@ -2270,35 +2229,20 @@ namespace Js
     template <typename T, bool checkNaNAndNegZero>
     Var JavascriptNativeArray::FindMinOrMax(Js::ScriptContext * scriptContext, bool findMax)
     {
+        AssertMsg(this->HasNoMissingValues(), "Fastpath is only for arrays with one segment and no missing values");
         uint len = this->GetLength();
+        
         Js::SparseArraySegment<T>* headSegment = ((Js::SparseArraySegment<T>*)this->GetHead());
-        bool hasNoMissingValues = this->HasNoMissingValues();
+        uint headSegLen = headSegment->length;
+        Assert(headSegLen == len);
 
         if (headSegment->next == nullptr)
         {
             T currentRes = headSegment->elements[0];
-            uint headSegLen = headSegment->length;
-            uint i = 0;
-            if (hasNoMissingValues)
-            {
-                for (; i < headSegLen; i++)
-                {
-                    T compare = headSegment->elements[i];
-                    if (checkNaNAndNegZero && JavascriptNumber::IsNan(double(compare)))
-                    {
-                        return scriptContext->GetLibrary()->GetNaN();
-                    }
-                    if (findMax ? currentRes < compare : currentRes > compare ||
-                        (checkNaNAndNegZero && compare == 0 && Js::JavascriptNumber::IsNegZero(double(currentRes))))
-                    {
-                        currentRes = compare;
-                    }
-                }
-            }
-            for (; i < len; i++)
+            for (uint i = 0; i < headSegLen; i++)
             {
                 T compare = headSegment->elements[i];
-                if (SparseArraySegment<T>::IsMissingItem(&compare) || (checkNaNAndNegZero && JavascriptNumber::IsNan(double(compare))))
+                if (checkNaNAndNegZero && JavascriptNumber::IsNan(double(compare)))
                 {
                     return scriptContext->GetLibrary()->GetNaN();
                 }
@@ -2313,7 +2257,7 @@ namespace Js
         else
         {
             AssertMsg(false, "FindMinOrMax currently supports native arrays with only one segment");
-            return nullptr;
+            Throw::FatalInternalError();
         }
     }
 
@@ -2347,7 +2291,7 @@ namespace Js
 
     SegmentBTreeRoot * JavascriptArray::GetSegmentMap() const
     {
-        return (HasSegmentMap() ? segmentUnion.segmentBTreeRoot : null);
+        return (HasSegmentMap() ? segmentUnion.segmentBTreeRoot : nullptr);
     }
 
     void JavascriptArray::SetSegmentMap(SegmentBTreeRoot * segmentMap)
@@ -2365,7 +2309,7 @@ namespace Js
         {
             SetFlags(GetFlags() & ~DynamicObjectFlags::HasSegmentMap);
             SparseArraySegmentBase * lastUsedSeg = segmentUnion.segmentBTreeRoot->lastUsedSegment;
-            segmentUnion.segmentBTreeRoot = null;
+            segmentUnion.segmentBTreeRoot = nullptr;
             segmentUnion.lastUsedSegment = lastUsedSeg;
         }
     }
@@ -2422,7 +2366,7 @@ namespace Js
         PropertyRecord const* propertyRecord;
         this->GetScriptContext()->FindPropertyRecord(propertyNameString, &propertyRecord);
 
-        if (propertyRecord != null && GetSetterBuiltIns(propertyRecord->GetPropertyId(), info, &flags))
+        if (propertyRecord != nullptr && GetSetterBuiltIns(propertyRecord->GetPropertyId(), info, &flags))
         {
             return flags;
         }
@@ -2443,9 +2387,9 @@ namespace Js
 
     SparseArraySegmentBase * JavascriptArray::GetBeginLookupSegment(uint32 index, const bool useSegmentMap) const
     {
-        SparseArraySegmentBase *seg = null;
+        SparseArraySegmentBase *seg = nullptr;
         SparseArraySegmentBase * lastUsedSeg = this->GetLastUsedSegment();
-        if (lastUsedSeg != null && lastUsedSeg->left <= index)
+        if (lastUsedSeg != nullptr && lastUsedSeg->left <= index)
         {
             seg = lastUsedSeg;
             if(index - lastUsedSeg->left < lastUsedSeg->size)
@@ -2513,7 +2457,7 @@ namespace Js
 
         SparseArraySegment<T>* current = (SparseArraySegment<T>*)this->GetBeginLookupSegment(candidateIndex);
 
-        while (current != null)
+        while (current != nullptr)
         {
             if ((current->left <= candidateIndex) && ((candidateIndex - current->left) < current->length))
             {
@@ -2552,7 +2496,7 @@ namespace Js
         {
             this->ClearElements(head, 0);
             head->length = 0;
-            head->next = null;
+            head->next = nullptr;
             SetHasNoMissingValues();
 
             ClearSegmentMap();
@@ -2574,12 +2518,12 @@ namespace Js
             SparseArraySegmentBase* next = GetBeginLookupSegment(newLength - 1); // head, or next.left < newLength
             SparseArraySegmentBase** prev = &head;
 
-            while(next != null)
+            while(next != nullptr)
             {
                 if (newLength <= next->left)
                 {
                     ClearSegmentMap(); // truncate segments, null out segmentMap
-                    *prev = null;
+                    *prev = nullptr;
                     break;
                 }
                 else if (newLength <= (next->left + next->length))
@@ -2591,7 +2535,7 @@ namespace Js
 
                     uint32 newSegmentLength = newLength - next->left;
                     this->ClearElements(next, newSegmentLength);
-                    next->next = null;
+                    next->next = nullptr;
                     next->length = newSegmentLength;
                     break;
                 }
@@ -2773,7 +2717,7 @@ namespace Js
             return true;
         }
         SparseArraySegment<T>* next = (SparseArraySegment<T>*)GetBeginLookupSegment(itemIndex);
-        while(next != null && next->left <= itemIndex)
+        while(next != nullptr && next->left <= itemIndex)
         {
             uint32 limit = next->left + next->length;
             if (itemIndex < limit)
@@ -3318,7 +3262,7 @@ namespace Js
         if (BoxConcatItem(aItem, idxArg, scriptContext))
         {
             // bug# 725784: ES5: not calling ToObject in Step 1 of 15.4.4.4
-            RecyclableObject* pObj = null;
+            RecyclableObject* pObj = nullptr;
             if (FALSE == JavascriptConversion::ToObject(aItem, scriptContext, &pObj))
             {
                 JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NullOrUndefined, L"Array.prototype.concat");
@@ -3973,7 +3917,7 @@ namespace Js
             scriptContext->PushObject(thisArg);
         }
         
-        JavascriptString* res = null;
+        JavascriptString* res = nullptr;
 
         __try
         {
@@ -4017,7 +3961,7 @@ namespace Js
             }
         }
 
-        if (res == null)
+        if (res == nullptr)
         {
             res = scriptContext->GetLibrary()->GetEmptyString();
         }
@@ -4071,7 +4015,7 @@ CaseDefault:
                     goto CaseDefault;
                 }
 
-                JavascriptString *res = null;
+                JavascriptString *res = nullptr;
                 Var item;
                 if (TemplatedGetItem(arr, 0u, &item, scriptContext))
                 {
@@ -4153,7 +4097,7 @@ CaseDefault:
                     goto CaseDefault;
                 }
 
-                JavascriptString *res = null;
+                JavascriptString *res = nullptr;
                 Var value;
                 if (JavascriptOperators::GetItem(object, 0u, &value, scriptContext))
                 {
@@ -4437,32 +4381,6 @@ Case0:
 
         uint32 index = length - 1;
         Var element;
-#ifdef ARRLOG
-        ArrLogRec* rec = 0;
-        if (Js::Configuration::Global.flags.ArrayLog)
-        {
-            UIntHashTable<ArrLogRec*>* logTable = arr->GetScriptContext()->logTable;
-
-            if (!logTable->TryGetValue((unsigned int)arr,&rec)) {
-                auto alloc = arr->GetScriptContext()->MiscAllocator();
-                rec=AnewStructZ(alloc,ArrLogRec);
-                rec->accessCounts=Anew(alloc,UIntHashTable<unsigned int>,alloc);
-                rec->maxDex=index;
-                rec->minDex=index;
-                rec->totalSetCount=0;
-                rec->totalGetCount=0;
-                rec->setCost=0;
-                rec->setSegment=0;
-                rec->getCost=0;
-                rec->maxlength = 0;
-                logTable->Add((unsigned int)arr,rec);
-            }
-            if (rec->maxlength < length)
-            {
-                rec->maxlength = length;
-            }
-        }
-#endif
 
         if (!arr->DirectGetItemAtFull(index, &element))
         {
@@ -4482,7 +4400,7 @@ Case0:
 
     Var JavascriptArray::EntryPopNonJavascriptArray(ScriptContext * scriptContext, Var object)
     {
-        RecyclableObject* dynamicObject = null;
+        RecyclableObject* dynamicObject = nullptr;
         if (FALSE == JavascriptConversion::ToObject(object, scriptContext, &dynamicObject))
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NullOrUndefined, L"Array.prototype.pop");
@@ -4642,7 +4560,7 @@ Case0:
     */
     Var JavascriptArray::EntryPushNonJavascriptArray(ScriptContext * scriptContext, Var * args, uint argCount)
     {
-            RecyclableObject* obj = null;
+            RecyclableObject* obj = nullptr;
             if (FALSE == JavascriptConversion::ToObject(args[0], scriptContext, &obj))
             {
                 JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NullOrUndefined, L"Array.prototype.push");
@@ -4677,7 +4595,7 @@ Case0:
                     }
                     else
                     {
-                        return null;
+                        return nullptr;
                     }
                 }
             }
@@ -4697,7 +4615,7 @@ Case0:
                         }
                         else
                         {
-                            return null;
+                            return nullptr;
                         }
                     }
                     
@@ -4712,7 +4630,7 @@ Case0:
                     }
                     else
                     {
-                        return null;
+                        return nullptr;
                     }
                 }
                 
@@ -4730,7 +4648,7 @@ Case0:
                     }
                     else
                     {
-                        return null;
+                        return nullptr;
                     }
                 }
                 
@@ -5329,7 +5247,7 @@ Case0:
         }
         else
         {
-            RecyclableObject* dynamicObject = null;
+            RecyclableObject* dynamicObject = nullptr;
             if (FALSE == JavascriptConversion::ToObject(args[0], scriptContext, &dynamicObject))
             {
                 JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NullOrUndefined, L"Array.prototype.shift");
@@ -5869,7 +5787,7 @@ Case0:
         AssertMsg(*(Var*)aRef, "No null expected in sort");
         AssertMsg(*(Var*)bRef, "No null expected in sort");
 
-        if (compFn != null)
+        if (compFn != nullptr)
         {
             ScriptContext* scriptContext = compFn->GetScriptContext();
             // The correct flag value is CallFlags_Value but we pass CallFlags_None in compat modes
@@ -5967,7 +5885,7 @@ Case0:
         cvInfo.scriptContext = scriptContext;
         cvInfo.compFn = compFn;
 
-        Assert(head != null);
+        Assert(head != nullptr);
 
         // Just dump the segment map on sort
         ClearSegmentMap();
@@ -5986,9 +5904,9 @@ Case0:
         __try
         {
             //The array is a continous array if there is only one segment
-            if (startSeg->next == null) //Single segment fast path
+            if (startSeg->next == nullptr) //Single segment fast path
             {
-                if (compFn != null)
+                if (compFn != nullptr)
                 {
                     countUndefined = startSeg->RemoveUndefined(scriptContext);
 
@@ -6005,7 +5923,7 @@ Case0:
             }
             else
             {
-                SparseArraySegment<Var>* allElements = SparseArraySegment<Var>::AllocateSegment(recycler, 0, 0, null);
+                SparseArraySegment<Var>* allElements = SparseArraySegment<Var>::AllocateSegment(recycler, 0, 0, nullptr);
                 SparseArraySegment<Var>* next = startSeg;
 
                 uint32 nextIndex = 0;
@@ -6025,7 +5943,7 @@ Case0:
 #endif
                 }
 
-                if (compFn != null)
+                if (compFn != nullptr)
                 {
                     hybridSort(allElements->elements, allElements->length, &cvInfo);
                 }
@@ -6035,7 +5953,7 @@ Case0:
                 }
 
                 head = allElements;
-                head->next = null;
+                head->next = nullptr;
             }
         }
         __finally
@@ -6159,7 +6077,7 @@ Case0:
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Array.prototype.sort");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Array.prototype.sort");
 
         Assert(!(callInfo.Flags & CallFlags_New));
 
@@ -6243,7 +6161,7 @@ Case0:
         }
         else
         {
-            RecyclableObject* pObj = null;
+            RecyclableObject* pObj = nullptr;
             if (FALSE == JavascriptConversion::ToObject(args[0], scriptContext, &pObj))
             {
                 JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NullOrUndefined, L"Array.prototype.sort");
@@ -6405,7 +6323,7 @@ Case0:
             break;
         }
 
-        Var* insertArgs = args.Info.Count > 3 ? &args.Values[3] : null;
+        Var* insertArgs = args.Info.Count > 3 ? &args.Values[3] : nullptr;
         uint32 insertLen = args.Info.Count > 3 ? args.Info.Count - 3 : 0;
 
         ::Math::RecordOverflowPolicy newLenOverflow;
@@ -6601,7 +6519,7 @@ Case0:
 
     inline BOOL JavascriptArray::IsSingleSegmentArray() const
     {
-        return null == head->next;
+        return nullptr == head->next;
     }
 
     template<typename T>
@@ -6680,7 +6598,7 @@ Case0:
 
         SparseArraySegmentBase** prevSeg  = &pArr->head;        // holds the next pointer of previous
         SparseArraySegmentBase** prevPrevSeg  = &pArr->head;    // this holds the previous pointer to prevSeg dirty trick.
-        SparseArraySegmentBase* savePrev = null;
+        SparseArraySegmentBase* savePrev = nullptr;
 
         Assert(pArr->head); // We should never have a null head.
         pArr->EnsureHead<T>();
@@ -6764,7 +6682,7 @@ Case0:
             }
             else
             {
-                SparseArraySegment<T>* newHeadSeg = null; //pnewArr->head is null
+                SparseArraySegment<T>* newHeadSeg = nullptr; //pnewArr->head is null
                 SparseArraySegmentBase** prevNewHeadSeg = &(pnewArr->head);
 
                 //delete till deleteLen and reuse segments for new array if it is possible.
@@ -6783,14 +6701,14 @@ Case0:
                         if (startSeg->next)
                         {
                             // We know the new segment will have a next segment, so allocate it as non-leaf.
-                            newHeadSeg = SparseArraySegment<T>::AllocateSegmentImpl<false>(recycler, 0, headDeleteLen, headDeleteLen, null);
+                            newHeadSeg = SparseArraySegment<T>::AllocateSegmentImpl<false>(recycler, 0, headDeleteLen, headDeleteLen, nullptr);
                         }
                         else
                         {
-                            newHeadSeg = SparseArraySegment<T>::AllocateSegment(recycler, 0, headDeleteLen, headDeleteLen, null);
+                            newHeadSeg = SparseArraySegment<T>::AllocateSegment(recycler, 0, headDeleteLen, headDeleteLen, nullptr);
                         }
                         newHeadSeg = SparseArraySegment<T>::CopySegment(recycler, newHeadSeg, 0, startSeg, start, headDeleteLen);
-                        newHeadSeg->next = null;
+                        newHeadSeg->next = nullptr;
                         *prevNewHeadSeg = newHeadSeg;
                         prevNewHeadSeg = &newHeadSeg->next;
                         startSeg->Truncate(start);
@@ -6811,11 +6729,11 @@ Case0:
                         if (startSeg->next)
                         {
                             // We know the new segment will have a next segment, so allocate it as non-leaf.
-                            newHeadSeg = SparseArraySegment<T>::AllocateSegmentImpl<false>(recycler, 0, headDeleteLen, headDeleteLen, null);
+                            newHeadSeg = SparseArraySegment<T>::AllocateSegmentImpl<false>(recycler, 0, headDeleteLen, headDeleteLen, nullptr);
                         }
                         else
                         {
-                            newHeadSeg = SparseArraySegment<T>::AllocateSegment(recycler, 0, headDeleteLen, headDeleteLen, null);
+                            newHeadSeg = SparseArraySegment<T>::AllocateSegment(recycler, 0, headDeleteLen, headDeleteLen, nullptr);
                         }
                         newHeadSeg = SparseArraySegment<T>::CopySegment(recycler, newHeadSeg, 0, startSeg, start, headDeleteLen);
                         *prevNewHeadSeg = newHeadSeg;
@@ -6834,14 +6752,14 @@ Case0:
                     }
                 }
                 //Step (2) proper
-                SparseArraySegmentBase *temp = null;
+                SparseArraySegmentBase *temp = nullptr;
                 while (startSeg && (startSeg->left + startSeg->length) <= limit)
                 {
                     temp = startSeg->next;
                     
                     //move that entire segment to new array
                     startSeg->left = startSeg->left - start;
-                    startSeg->next = null;
+                    startSeg->next = nullptr;
                     *prevNewHeadSeg = startSeg;    
                     prevNewHeadSeg = &startSeg->next;
 
@@ -6872,9 +6790,9 @@ Case0:
                     //copy the first part of the last segment to be delted to new array
                     uint32 headDeleteLen = start + deleteLen - startSeg->left ;
 
-                    newHeadSeg = SparseArraySegment<T>::AllocateSegment(recycler, startSeg->left -  start, headDeleteLen, (SparseArraySegmentBase *)null);
+                    newHeadSeg = SparseArraySegment<T>::AllocateSegment(recycler, startSeg->left -  start, headDeleteLen, (SparseArraySegmentBase *)nullptr);
                     newHeadSeg = SparseArraySegment<T>::CopySegment(recycler, newHeadSeg, startSeg->left -  start, startSeg, startSeg->left, headDeleteLen);
-                    newHeadSeg->next = null;
+                    newHeadSeg->next = nullptr;
                     *prevNewHeadSeg = newHeadSeg;
                     prevNewHeadSeg = &newHeadSeg->next;
 
@@ -6891,7 +6809,7 @@ Case0:
                     Assert(start + insertLen == 0);
                     //Remove the dummy head node to preserve array consistency.
                     pArr->head = startSeg;
-                    savePrev = null;
+                    savePrev = nullptr;
                     prevSeg = &pArr->head;
                 }
 
@@ -6920,7 +6838,7 @@ Case0:
             Assert(!JavascriptNativeIntArray::Is(pArr) && !JavascriptNativeFloatArray::Is(pArr));
 
             //InsertPhase
-            SparseArraySegment<T> *segInsert = null;
+            SparseArraySegment<T> *segInsert = nullptr;
 
             //see if we are just about the right of the previous segment
             Assert(!savePrev || savePrev->left <= start);
@@ -7084,7 +7002,7 @@ Case0:
         }
         else
         {
-            RecyclableObject* obj = null;
+            RecyclableObject* obj = nullptr;
             if (FALSE == JavascriptConversion::ToObject(args[0], scriptContext, &obj))
             {
                 JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NullOrUndefined, L"Array.prototype.toLocaleString");
@@ -7157,7 +7075,7 @@ Case0:
         SparseArraySegmentBase* nextToHeadSeg = pArr->head->next;
         Recycler* recycler = scriptContext->GetRecycler();
 
-        if (nextToHeadSeg == null)
+        if (nextToHeadSeg == nullptr)
         {
             pArr->EnsureHead<T>();
             pArr->head = ((SparseArraySegment<T>*)pArr->head)->GrowByMin(recycler, unshiftElements);
@@ -7189,7 +7107,7 @@ Case0:
             pArr->SetHasNoMissingValues(false);
         }
 
-        pArr->FillFromArgs(unshiftElements, 0, elements, null, true/*dontCreateNewArray*/);
+        pArr->FillFromArgs(unshiftElements, 0, elements, nullptr, true/*dontCreateNewArray*/);
 
         //Setting back to the old value
         pArr->SetHasNoMissingValues(hasNoMissingValues);
@@ -7275,7 +7193,7 @@ Case0:
                 while (renumberSeg)
                 {
                     renumberSeg->left += unshiftElements;
-                    if (renumberSeg->next == null)
+                    if (renumberSeg->next == nullptr)
                     {
                         // last segment can shift its left + size beyond MaxArrayLength, so truncate if so
                         renumberSeg->EnsureSizeInBound();
@@ -7312,7 +7230,7 @@ Case0:
         }
         else
         {
-            RecyclableObject* dynamicObject = null;
+            RecyclableObject* dynamicObject = nullptr;
             if (FALSE == JavascriptConversion::ToObject(args[0], scriptContext, &dynamicObject))
             {
                 JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NullOrUndefined, L"Array.prototype.unshift");
@@ -7385,7 +7303,7 @@ Case0:
 
          // ES5 15.4.4.2: call join, or built-in Object.prototype.toString
         
-        RecyclableObject* obj = null;
+        RecyclableObject* obj = nullptr;
         if (FALSE == JavascriptConversion::ToObject(args[0], scriptContext, &obj))
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NullOrUndefined, L"Array.prototype.toString");
@@ -7543,7 +7461,7 @@ Case0:
             }
         }
 
-        if (res == null)
+        if (res == nullptr)
         {
             res = scriptContext->GetLibrary()->GetEmptyString();
         }
@@ -7859,7 +7777,7 @@ Case0:
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Array.prototype.every");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Array.prototype.every");
 
         Assert(!(callInfo.Flags & CallFlags_New));
 
@@ -8032,7 +7950,7 @@ Case0:
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Array.prototype.some");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Array.prototype.some");
        
         CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(ArraySomeCount);
 
@@ -8205,7 +8123,7 @@ Case0:
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Array.prototype.forEach");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Array.prototype.forEach");
 
         CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(ArrayForEachCount)
 
@@ -8217,10 +8135,10 @@ Case0:
         }
 
         BigIndex length;
-        JavascriptArray* pArr = null;
-        RecyclableObject* dynamicObject = null;
-        RecyclableObject* callBackFn = null;
-        Var thisArg = null;
+        JavascriptArray* pArr = nullptr;
+        RecyclableObject* dynamicObject = nullptr;
+        RecyclableObject* callBackFn = nullptr;
+        Var thisArg = nullptr;
 
         JavascriptLibrary::CheckAndConvertCopyOnAccessNativeIntArray<Var>(args[0]);
         if (JavascriptArray::Is(args[0]) && scriptContext == JavascriptArray::FromVar(args[0])->GetScriptContext())
@@ -8620,7 +8538,7 @@ Case0:
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Array.prototype.map");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Array.prototype.map");
 
         CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(ArrayMapCount);
 
@@ -8869,7 +8787,7 @@ Case0:
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Array.prototype.filter");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Array.prototype.filter");
 
         CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(ArrayFilterCount);
 
@@ -9033,7 +8951,7 @@ Case0:
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Array.prototype.reduce");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Array.prototype.reduce");
        
         CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(ArrayReduceCount);
 
@@ -9239,7 +9157,7 @@ Case0:
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Array.prototype.reduceRight");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Array.prototype.reduceRight");
        
         CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(ArrayReduceRightCount);
 
@@ -9451,7 +9369,7 @@ Case0:
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Array.from");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Array.from");
 
         Assert(!(callInfo.Flags & CallFlags_New));
 
@@ -9764,7 +9682,7 @@ Case0:
     */
     bool JavascriptArray::IsFillFromPrototypes()
     {
-        return !(this->head->next == null && this->HasNoMissingValues() && this->length == this->head->length);
+        return !(this->head->next == nullptr && this->HasNoMissingValues() && this->length == this->head->length);
     }
 
     //Fill all missing value in the array and fill it from prototype between startIndex and limitIndex
@@ -9799,7 +9717,7 @@ Case0:
     template<typename T>
     void JavascriptArray::EnsureHeadStartsFromZero(Recycler * recycler)
     {
-        if (head == null || head->left != 0)
+        if (head == nullptr || head->left != 0)
         {
             // This is used to fix up altered arrays.
             // any segmentmap would be invalid at this point.
@@ -9843,7 +9761,7 @@ Case0:
     {
         Assert(DynamicObject::IsAnyArray(obj) || JavascriptOperators::IsObject(obj));
 
-        JavascriptArray* arr = null;
+        JavascriptArray* arr = nullptr;
         if (DynamicObject::IsAnyArray(obj))
         {
             arr = JavascriptArray::FromAnyArray(obj);
@@ -9854,7 +9772,7 @@ Case0:
             arr = dynobj->GetObjectArray();
         }
 
-        if (arr != null)
+        if (arr != nullptr)
         {
             if (JavascriptArray::Is(arr))
             {
@@ -9897,7 +9815,7 @@ Case0:
         Assert(DynamicObject::IsAnyArray(obj) || JavascriptOperators::IsObject(obj));
 
         Var oldValue;
-        JavascriptArray* arr = null;
+        JavascriptArray* arr = nullptr;
         if (DynamicObject::IsAnyArray(obj))
         {
             arr = JavascriptArray::FromAnyArray(obj);
@@ -9909,7 +9827,7 @@ Case0:
             arr = (objectArray && JavascriptArray::IsAnyArray(objectArray)) ? JavascriptArray::FromAnyArray(objectArray) : nullptr;
         }
 
-        if (arr != null)
+        if (arr != nullptr)
         {
             if (JavascriptArray::Is(arr))
             {
@@ -9975,7 +9893,7 @@ Case0:
     void JavascriptArray::ArrayElementEnumerator::Init(JavascriptArray* arr)
     {
         // Find start segment
-        seg = (arr ? arr->GetBeginLookupSegment(start) : null);
+        seg = (arr ? arr->GetBeginLookupSegment(start) : nullptr);
         while (seg && (seg->left + seg->length <= start))
         {
             seg = seg->next;
@@ -9986,7 +9904,7 @@ Case0:
         {
             if (seg->left >= end)
             {
-                seg = null;
+                seg = nullptr;
             }
             else
             {
@@ -10020,7 +9938,7 @@ Case0:
             {
                 if (seg->left >= end)
                 {
-                    seg = null;
+                    seg = nullptr;
                     break;
                 }
                 else
@@ -10938,13 +10856,13 @@ Case0:
     void JavascriptArray::ValidateArrayCommon()
     {
         SparseArraySegmentBase * lastUsedSegment = this->GetLastUsedSegment();
-        AssertMsg(this != null && head && lastUsedSegment, "Array should not be null");
+        AssertMsg(this != nullptr && head && lastUsedSegment, "Array should not be null");
         AssertMsg(head->left == 0, "Array always should have a segment starting at zero");
 
         // Simple segments validation
         bool foundLastUsedSegment = false;
         SparseArraySegmentBase *seg = head;
-        while(seg != null)
+        while(seg != nullptr)
         {
             if (seg == lastUsedSegment)
             {
@@ -10954,7 +10872,7 @@ Case0:
             AssertMsg(seg->length <= seg->size , "Length greater than size not possible");
 
             SparseArraySegmentBase* next = seg->next;
-            if (next != null)
+            if (next != nullptr)
             {
                 AssertMsg(seg->left < next->left, "Segment is adjacent to or overlaps with next segment");
                 AssertMsg(seg->size <= (next->left - seg->left), "Segment is adjacent to or overlaps with next segment");
@@ -11090,46 +11008,6 @@ Case0:
 
             seg = (SparseArraySegment<T>*)seg->next;
         }
-    }
-#endif
-
-#ifdef ARRLOG
-    FILE *arrlogfp=NULL;
-    //UIntHashTable<ArrLogRec*>* logTable=NULL;
-
-    uint32 rawGet=0;
-    uint32 rawTypeGet=0;
-    uint32 totalSet=0;
-    uint32 totalSetCost=0;
-    uint32 totalGet=0;
-    uint32 totalGetCost=0;
-    uint32 rawSet=0;
-
-    void PrintArrLog(UIntHashTable<ArrLogRec*>* logTable)
-    {
-        if (false == Js::Configuration::Global.flags.ArrayLog)
-        {
-            return;
-        }
-        fopen_s(&arrlogfp,"c:\\ie\\arrlog.txt","w");
-        fprintf(arrlogfp,"raw get total %d\n",rawGet);
-        fprintf(arrlogfp,"raw type get total %d\n",rawTypeGet);
-        fprintf(arrlogfp,"raw set total %d\n",rawSet);
-        fprintf(arrlogfp,"total set %d\n",totalSet);
-        fprintf(arrlogfp,"total get %d\n",totalGet);
-        logTable->Map([](unsigned int arrKey, ArrLogRec* rec)
-        {
-            if (rec->totalGetCount>100)
-                fprintf(arrlogfp, "B: arr 0x%x total set %d (cost %d) total get %d (cost %d) mindex %d maxdex %d maxlength %d\n", arrKey, rec->totalSetCount,
-                rec->setCost, rec->totalGetCount, rec->getCost, rec->minDex, rec->maxDex, rec->maxlength);
-            else fprintf(arrlogfp, "arr 0x%x total set %d (cost %d) total get %d (cost %d) mindex %d maxdex %d maxlength %d\n", arrKey, rec->totalSetCount,
-                rec->setCost, rec->totalGetCount, rec->getCost, rec->minDex, rec->maxDex, rec->maxlength);
-            totalSetCost += rec->setCost;
-            totalGetCost += rec->getCost;
-        });
-        fprintf(arrlogfp,"total set cost %d\n",totalSetCost);
-        fprintf(arrlogfp,"total get cost %d\n",totalGetCost);
-        fclose(arrlogfp);
     }
 #endif
 
@@ -11623,7 +11501,7 @@ Case0:
         PropertyRecord const* propertyRecord;
         this->GetScriptContext()->FindPropertyRecord(propertyNameString, &propertyRecord);
 
-        if (propertyRecord != null && GetPropertyBuiltIns(propertyRecord->GetPropertyId(), value))
+        if (propertyRecord != nullptr && GetPropertyBuiltIns(propertyRecord->GetPropertyId(), value))
         {
             return true;
         }
@@ -11759,7 +11637,7 @@ Case0:
         PropertyRecord const* propertyRecord;
         this->GetScriptContext()->FindPropertyRecord(propertyNameString, &propertyRecord);
 
-        if (propertyRecord != null && propertyRecord->GetPropertyId() == PropertyIds::length)
+        if (propertyRecord != nullptr && propertyRecord->GetPropertyId() == PropertyIds::length)
         {
             return this->SetLength(value);
         }

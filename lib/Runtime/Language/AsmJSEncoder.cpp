@@ -5,7 +5,10 @@
 
 #include "RuntimeLanguagePch.h"
 #include "..\Backend\CodeGenAllocators.h"
-
+#ifdef DBG_DUMP
+#include "ByteCode\ByteCodeDumper.h"
+#include "ByteCode\AsmJSByteCodeDumper.h"
+#endif
 #include "AsmJSEncoder.inl"
 
 #if DBG_DUMP

@@ -50,10 +50,10 @@ namespace JsUtil
         // Allow WeaklyReferencedKeyDictionary field to be inlined in classes with DEFINE_VTABLE_CTOR_MEMBER_INIT
         WeaklyReferencedKeyDictionary(VirtualTableInfoCtorEnum) { }
 
-        WeaklyReferencedKeyDictionary(Recycler* recycler, int capacity = 0, EntryRemovalCallback* pEntryRemovalCallback = NULL):
-            buckets(NULL),
+        WeaklyReferencedKeyDictionary(Recycler* recycler, int capacity = 0, EntryRemovalCallback* pEntryRemovalCallback = nullptr):
+            buckets(nullptr),
             size(0),
-            entries(NULL),
+            entries(nullptr),
             count(0),
             version(0),
             freeList(0),
@@ -62,14 +62,14 @@ namespace JsUtil
             lastWeakReferenceCleanupId(recycler->GetWeakReferenceCleanupId()),
             disableCleanup(false)
         {
-            if (pEntryRemovalCallback != NULL)
+            if (pEntryRemovalCallback != nullptr)
             {
                 this->entryRemovalCallback.fnCallback = pEntryRemovalCallback->fnCallback;
                 this->entryRemovalCallback.cookie = pEntryRemovalCallback->cookie;
             }
             else
             {
-                this->entryRemovalCallback.fnCallback = NULL;
+                this->entryRemovalCallback.fnCallback = nullptr;
             }
 
             if (capacity > 0) { Initialize(capacity); }
@@ -118,7 +118,7 @@ namespace JsUtil
 
         bool TryGetValueAndRemove(const TKey* key, TValue* value)
         {
-            if (buckets == NULL) return false;
+            if (buckets == nullptr) return false;
 
             hash_t hash = GetHashCode(key);
             uint targetBucket = hash % size;
@@ -144,7 +144,7 @@ namespace JsUtil
                 (*pKeyOut) = entries[i].key->Get();
                 return entries[i].value;
             }
-            (*pKeyOut) = null;
+            (*pKeyOut) = nullptr;
             return defaultValue;
         }
         
@@ -184,7 +184,7 @@ namespace JsUtil
                     {
                         EntryType &currentEntry = entries[currentIndex];
                         TKey * key = currentEntry.key->Get();
-                        if(key != null)
+                        if(key != nullptr)
                         {
                             fn(key, currentEntry.value, currentEntry.key);
 
@@ -255,7 +255,7 @@ namespace JsUtil
     private:
         const RecyclerWeakReference<TKey>* UncheckedInsert(const RecyclerWeakReference<TKey>* weakRef, TValue value)
         {
-            if (buckets == NULL) Initialize(0);
+            if (buckets == nullptr) Initialize(0);
 
             int hash = GetHashCode(weakRef->FastGet());
             uint bucket = (uint)hash % size;
@@ -266,7 +266,7 @@ namespace JsUtil
 
         const RecyclerWeakReference<TKey>* Insert(TKey* key, TValue value, bool add, bool checkForExisting = true)
         {
-            if (buckets == NULL) Initialize(0);
+            if (buckets == nullptr) Initialize(0);
 
             hash_t hash = GetHashCode(key);
             uint bucket = hash % size;
@@ -374,7 +374,7 @@ namespace JsUtil
         template <typename TLookup>
         inline int FindEntry(const TLookup* key)
         {
-            if (buckets != null)
+            if (buckets != nullptr)
             {
                 hash_t hash = GetHashCode(key);
                 uint bucket = (uint)hash % size;
@@ -388,7 +388,7 @@ namespace JsUtil
         template <typename TLookup>
         inline int FindEntry(const TLookup* key, hash_t const hash, uint& bucket, int& previous)
         {
-            if (buckets != null)
+            if (buckets != nullptr)
             {
                 BOOL inSweep = this->recycler->IsSweeping();
                 previous = -1;
@@ -396,7 +396,7 @@ namespace JsUtil
                 {
                     if (entries[i].hash == hash)
                     {
-                        TKey* strongRef = null;
+                        TKey* strongRef = nullptr;
 
                         if (!inSweep)
                         {
@@ -411,7 +411,7 @@ namespace JsUtil
                             strongRef = entries[i].key->Get();
                         }
 
-                        if (strongRef == null)
+                        if (strongRef == nullptr)
                         {
                             i = RemoveEntry(i, previous, bucket);
                             continue;
@@ -440,7 +440,7 @@ namespace JsUtil
 
             // No need for auto pointers here since these are both recycler
             // allocated objects
-            if (buckets != null && entries != null)
+            if (buckets != nullptr && entries != nullptr)
             {
                 this->size = size;
                 this->buckets = buckets;
@@ -463,16 +463,16 @@ namespace JsUtil
                 entries[previous].next = entries[i].next;
             }
 
-            if (this->entryRemovalCallback.fnCallback != NULL)
+            if (this->entryRemovalCallback.fnCallback != nullptr)
             {
                 this->entryRemovalCallback.fnCallback(entries[i], this->entryRemovalCallback.cookie);
             }
 
             entries[i].next = freeList;
-            entries[i].key = NULL;
+            entries[i].key = nullptr;
             entries[i].hash = EntryType::INVALID_HASH_VALUE;
             // Hold onto the pid here so that we can reuse it
-            // entries[i].value = NULL;
+            // entries[i].value = nullptr;
             freeList = i;
             freeCount++;
             version++;

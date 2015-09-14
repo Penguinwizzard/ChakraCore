@@ -195,7 +195,7 @@ namespace Js
             }
         }
 
-        TypedArray(DynamicType *type): TypedArrayBase(null, 0, 0, sizeof(TypeName), type) { buffer = null; }
+        TypedArray(DynamicType *type): TypedArrayBase(null, 0, 0, sizeof(TypeName), type) { buffer = nullptr; }
 
     public:
         class EntryInfo

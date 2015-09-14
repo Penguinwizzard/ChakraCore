@@ -348,7 +348,7 @@ namespace Js
         uint GetLdFldCacheIndexFromCallSiteInfo(FunctionBody* functionBody, ProfileId callSiteId);
         bool GetPolymorphicCallSiteInfo(FunctionBody* functionBody, ProfileId callSiteId, bool *isConstructorCall, __inout_ecount(functionBodyArrayLength) FunctionBody** functionBodyArray, uint functionBodyArrayLength);
 
-        bool RecordLdFldCallSiteInfo(FunctionBody* functionBody, RecyclableObject* callee);
+        bool RecordLdFldCallSiteInfo(FunctionBody* functionBody, RecyclableObject* callee, bool callApplyTarget);
 
         bool hasLdFldCallSiteInfo();
 

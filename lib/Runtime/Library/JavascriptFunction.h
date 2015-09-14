@@ -141,7 +141,7 @@ namespace Js
         bool IsLibraryCode() const;
 
         BOOL IsScriptFunction() const;
-        virtual Var GetSourceString() const { return null; }
+        virtual Var GetSourceString() const { return nullptr; }
         virtual Var EnsureSourceString();
         virtual BOOL IsExternalFunction() { return FALSE; }
         virtual BOOL IsWinRTFunction() { return FALSE; }
@@ -149,7 +149,7 @@ namespace Js
         BOOL IsLambda() const;
         virtual inline BOOL IsConstructor() const;
 
-        ConstructorCache* GetConstructorCache() { Assert(this->constructorCache != null); return this->constructorCache; }
+        ConstructorCache* GetConstructorCache() { Assert(this->constructorCache != nullptr); return this->constructorCache; }
         ConstructorCache* EnsureValidConstructorCache();
 
         void ResetConstructorCacheToDefault();

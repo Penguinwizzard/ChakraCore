@@ -10,17 +10,17 @@ template __forceinline BVSparseNode * BVSparse<JitArenaAllocator>::NodeFromIndex
 
 ArenaData::ArenaData(PageAllocator * pageAllocator) :
     pageAllocator(pageAllocator), 
-    bigBlocks(null),    
-    mallocBlocks(null), 
-    fullBlocks(null), 
-    cacheBlockCurrent(null),
+    bigBlocks(nullptr),    
+    mallocBlocks(nullptr), 
+    fullBlocks(nullptr), 
+    cacheBlockCurrent(nullptr),
     lockBlockList(false)
 {
 }
 
 void ArenaData::UpdateCacheBlock() const
 {
-    if (bigBlocks != null)
+    if (bigBlocks != nullptr)
     {
         size_t currentByte = (cacheBlockCurrent - bigBlocks->GetBytes());
         // Avoid writing to the page unnecessary, it might be write watched
@@ -39,9 +39,9 @@ ArenaAllocatorBase(__in LPCWSTR name, PageAllocator * pageAllocator, void(*outOf
 #ifdef ARENA_ALLOCATOR_FREE_LIST_SIZE
     freeListSize(0),
 #endif
-    freeList(null),
+    freeList(nullptr),
     largestHole(0),     
-    cacheBlockEnd(null),
+    cacheBlockEnd(nullptr),
     blockState(0)
 {
 #ifdef PROFILE_MEM
@@ -189,7 +189,7 @@ void
 ArenaAllocatorBase<TFreeListPolicy, ObjectAlignmentBitShiftArg, RequireObjectAlignment, MaxObjectSize>::
 SetCacheBlock(BigBlock * newCacheBlock)
 {
-    if (bigBlocks != null)
+    if (bigBlocks != nullptr)
     {
         Assert(cacheBlockEnd == bigBlocks->GetBytes() + bigBlocks->nbytes);
         Assert(bigBlocks->GetBytes() <= cacheBlockCurrent && cacheBlockCurrent <= cacheBlockEnd);
@@ -224,7 +224,7 @@ SnailAlloc(size_t nbytes)
 
     if (nbytes <= largestHole)
     {
-        Assert(bigBlocks != null);
+        Assert(bigBlocks != nullptr);
         Assert(cacheBlockEnd == bigBlocks->GetBytes() + bigBlocks->nbytes);
         Assert(bigBlocks->GetBytes() <= cacheBlockCurrent && cacheBlockCurrent <= cacheBlockEnd);
 
@@ -268,11 +268,11 @@ SnailAlloc(size_t nbytes)
             pPrev = &(blockp->nextBigBlock);
             blockp = blockp->nextBigBlock;
         }
-        while (blockp != null);
+        while (blockp != nullptr);
     }
 
     blockp = AddBigBlock(nbytes);   
-    if (blockp == null)
+    if (blockp == nullptr)
     {            
         return AllocFromHeap<false>(nbytes);    // Passing DoRecoverMemory=false as we already tried recovering memory in AddBigBlock, and it is costly.
     }        
@@ -300,7 +300,7 @@ AllocFromHeap(size_t requestBytes)
 
     char * buffer = HeapNewNoThrowArray(char, allocBytes);
     
-    if (buffer == null)
+    if (buffer == nullptr)
     {
         if (DoRecoverMemory && recoverMemoryFunc)
         {
@@ -309,13 +309,13 @@ AllocFromHeap(size_t requestBytes)
             buffer = HeapNewNoThrowArray(char, allocBytes);
         }
 
-        if (buffer == null)
+        if (buffer == nullptr)
         {
             if (outOfMemoryFunc)
             {
                 outOfMemoryFunc();
             }
-            return null;
+            return nullptr;
         }
     }
     
@@ -342,7 +342,7 @@ AddBigBlock(size_t requestBytes)
 
     PageAllocation * allocation = this->GetPageAllocator()->AllocPagesForBytes(allocBytes);
 
-    if (allocation == null)
+    if (allocation == nullptr)
     {
         // Try to recover some memory and see if after that we can allocate.
         if (recoverMemoryFunc)
@@ -350,9 +350,9 @@ AddBigBlock(size_t requestBytes)
             recoverMemoryFunc();
             allocation = this->GetPageAllocator()->AllocPagesForBytes(allocBytes);
         }
-        if (allocation == null)
+        if (allocation == nullptr)
         {
-            return null;
+            return nullptr;
         }
     }
     BigBlock * blockp = (BigBlock *)allocation->GetAddress();
@@ -372,12 +372,12 @@ ArenaAllocatorBase<TFreeListPolicy, ObjectAlignmentBitShiftArg, RequireObjectAli
 FullReset()
 {
     BigBlock * initBlock = this->bigBlocks;
-    if (initBlock != null)
+    if (initBlock != nullptr)
     {
         this->bigBlocks = initBlock->nextBigBlock;            
     }
     Clear();
-    if (initBlock != null)
+    if (initBlock != nullptr)
     {
         this->blockState = 1;
         initBlock->currentByte = 0;
@@ -439,7 +439,7 @@ ArenaAllocatorBase<TFreeListPolicy, ObjectAlignmentBitShiftArg, RequireObjectAli
 ReleaseHeapMemory()
 {
     ArenaMemoryBlock * memoryBlock = this->mallocBlocks;
-    while (memoryBlock != null)
+    while (memoryBlock != nullptr)
     {
         ArenaMemoryBlock * next = memoryBlock->next;
         HeapDeleteArray(memoryBlock->nbytes + sizeof(ArenaMemoryBlock), (char *)memoryBlock);
@@ -474,7 +474,7 @@ AllocInternal(size_t requestedBytes)
     ASSERT_THREAD();    
             
     size_t nbytes;
-    if (freeList != null && requestedBytes > 0 && requestedBytes <= ArenaAllocatorBase::MaxSmallObjectSize)
+    if (freeList != nullptr && requestedBytes > 0 && requestedBytes <= ArenaAllocatorBase::MaxSmallObjectSize)
     {
         // We have checked the size requested, so no integer overflow check
         nbytes = Math::Align(requestedBytes, ArenaAllocator::ObjectAlignment);
@@ -484,7 +484,7 @@ AllocInternal(size_t requestedBytes)
 #endif        
         void * freeObject = TFreeListPolicy::Allocate(this->freeList, nbytes);
 
-        if (freeObject != null)
+        if (freeObject != nullptr)
         {
 #ifdef ARENA_MEMORY_VERIFY
             TFreeListPolicy::VerifyFreeObjectIsFreeMemFilled(freeObject, nbytes);
@@ -560,12 +560,12 @@ Free(void * buffer, size_t byteSize)
         // and we never get to call TFreeListPolicy::Free.
         TFreeListPolicy::PrepareFreeObject(buffer, size);
 
-        if (freeList == null)
+        if (freeList == nullptr)
         {
             // Caution: TFreeListPolicy::New may fail silently if we're out of memory.
             freeList = TFreeListPolicy::New(this);
             
-            if (freeList == null)
+            if (freeList == nullptr)
             {
                 return;
             }
@@ -595,7 +595,7 @@ Realloc(void* buffer, size_t existingBytes, size_t requestedBytes)
 
     if (existingBytes == 0)
     {
-        Assert(buffer == null);
+        Assert(buffer == nullptr);
         return AllocInternal(requestedBytes);
     }
 
@@ -628,11 +628,11 @@ Realloc(void* buffer, size_t existingBytes, size_t requestedBytes)
         return (char *)buffer;
     }
     
-    char* replacementBuf = null;
+    char* replacementBuf = nullptr;
     if (requestedBytes > 0)
     {
         replacementBuf = AllocInternal(requestedBytes);
-        if (replacementBuf != null)
+        if (replacementBuf != nullptr)
         {
             js_memcpy_s(replacementBuf, requestedBytes, buffer, existingBytes);
         }
@@ -1084,7 +1084,7 @@ bool InlineCacheAllocator::IsAllZero()
     }
 
     ArenaMemoryBlock * memoryBlock = this->mallocBlocks;
-    while (memoryBlock != null)
+    while (memoryBlock != nullptr)
     {
         Assert(memoryBlock->nbytes % sizeof(CacheLayout) == 0);
         ArenaMemoryBlock * next = memoryBlock->next;
@@ -1166,7 +1166,7 @@ void InlineCacheAllocator::ZeroAll()
     }
 
     ArenaMemoryBlock * memoryBlock = this->mallocBlocks;
-    while (memoryBlock != null)
+    while (memoryBlock != nullptr)
     {
         Assert(memoryBlock->nbytes % sizeof(CacheLayout) == 0);
         ArenaMemoryBlock * next = memoryBlock->next;
@@ -1253,7 +1253,7 @@ bool InlineCacheAllocator::HasNoDeadWeakRefs(Recycler* recycler)
     }
 
     ArenaMemoryBlock * memoryBlock = this->mallocBlocks;
-    while (memoryBlock != null)
+    while (memoryBlock != nullptr)
     {
         Assert(memoryBlock->nbytes % sizeof(CacheLayout) == 0);
         ArenaMemoryBlock * next = memoryBlock->next;
@@ -1327,7 +1327,7 @@ void InlineCacheAllocator::ClearCachesWithDeadWeakRefs(Recycler* recycler)
     }
 
     ArenaMemoryBlock * memoryBlock = this->mallocBlocks;
-    while (memoryBlock != null)
+    while (memoryBlock != nullptr)
     {
         Assert(memoryBlock->nbytes % sizeof(CacheLayout) == 0);
         ArenaMemoryBlock * next = memoryBlock->next;
@@ -1375,7 +1375,7 @@ bool InlineCacheAllocator::IsAllZero()
     }
 
     ArenaMemoryBlock * memoryBlock = this->mallocBlocks;
-    while (memoryBlock != null)
+    while (memoryBlock != nullptr)
     {
         ArenaMemoryBlock * next = memoryBlock->next;
         for (size_t i = 0; i < memoryBlock->nbytes; i++)
@@ -1408,7 +1408,7 @@ void InlineCacheAllocator::ZeroAll()
     }
 
     ArenaMemoryBlock * memoryBlock = this->mallocBlocks;
-    while (memoryBlock != null)
+    while (memoryBlock != nullptr)
     {
         ArenaMemoryBlock * next = memoryBlock->next;
         memset(memoryBlock->GetBytes(), 0, memoryBlock->nbytes);
@@ -1451,7 +1451,7 @@ bool IsInstInlineCacheAllocator::IsAllZero()
     }
 
     ArenaMemoryBlock * memoryBlock = this->mallocBlocks;
-    while (memoryBlock != null)
+    while (memoryBlock != nullptr)
     {
         ArenaMemoryBlock * next = memoryBlock->next;
         for (size_t i = 0; i < memoryBlock->nbytes; i++)
@@ -1484,7 +1484,7 @@ void IsInstInlineCacheAllocator::ZeroAll()
     }
 
     ArenaMemoryBlock * memoryBlock = this->mallocBlocks;
-    while (memoryBlock != null)
+    while (memoryBlock != nullptr)
     {
         ArenaMemoryBlock * next = memoryBlock->next;
         memset(memoryBlock->GetBytes(), 0, memoryBlock->nbytes);

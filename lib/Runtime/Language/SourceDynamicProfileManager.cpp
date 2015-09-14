@@ -12,7 +12,7 @@ namespace Js
 ExecutionFlags
     SourceDynamicProfileManager::IsFunctionExecuted(Js::LocalFunctionId functionId)
 {
-    if (cachedStartupFunctions == null || cachedStartupFunctions->Length() <= functionId)
+    if (cachedStartupFunctions == nullptr || cachedStartupFunctions->Length() <= functionId)
     {
         return ExecutionFlags_HasNoInfo;
     }
@@ -23,7 +23,7 @@ DynamicProfileInfo *
     SourceDynamicProfileManager::GetDynamicProfileInfo(FunctionBody * functionBody)
 {
     Js::LocalFunctionId functionId = functionBody->GetLocalFunctionId();
-    DynamicProfileInfo * dynamicProfileInfo = null;
+    DynamicProfileInfo * dynamicProfileInfo = nullptr;
     if (dynamicProfileInfoMap.Count() > 0 && dynamicProfileInfoMap.TryGetValue(functionId, &dynamicProfileInfo))
     {
         if (dynamicProfileInfo->MatchFunctionBody(functionBody))
@@ -41,7 +41,7 @@ DynamicProfileInfo *
 #endif
         // TODO: We have profile mismatch, should we invalidate all other profile here?
     }
-    return null;
+    return nullptr;
 }
 
 void
@@ -52,14 +52,14 @@ void
 
 void SourceDynamicProfileManager::UpdateDynamicProfileInfo(LocalFunctionId functionId, DynamicProfileInfo * dynamicProfileInfo)
 {
-    Assert(dynamicProfileInfo != NULL);
+    Assert(dynamicProfileInfo != nullptr);
 
     dynamicProfileInfoMap.Item(functionId, dynamicProfileInfo);
 }
 
 void SourceDynamicProfileManager::MarkAsExecuted(LocalFunctionId functionId)
 {
-    Assert(startupFunctions != null);
+    Assert(startupFunctions != nullptr);
     Assert(functionId <= startupFunctions->Length());
     startupFunctions->Set(functionId);
 }
@@ -84,7 +84,7 @@ void SourceDynamicProfileManager::EnsureStartupFunctions(uint numberOfFunctions)
 //
 void SourceDynamicProfileManager::Reuse()
 {
-    AssertMsg(profileDataCache == NULL, "Persisted profiles cannot be re-used");
+    AssertMsg(profileDataCache == nullptr, "Persisted profiles cannot be re-used");
     cachedStartupFunctions = startupFunctions;
 }
 
@@ -106,7 +106,7 @@ bool SourceDynamicProfileManager::LoadFromProfileCache(IActiveScriptDataCache* p
     HRESULT hr = profileDataCache->GetReadDataStream(&readStream);    
     if(SUCCEEDED(hr))
     {
-        Assert(readStream != NULL);
+        Assert(readStream != nullptr);
         // stream reader owns the stream and will close it on destruction
         SimpleStreamReader streamReader(readStream);
         DWORD jscriptMajorVersion;
@@ -184,7 +184,7 @@ uint SourceDynamicProfileManager::SaveToProfileCacheAndRelease(SourceContextInfo
         }
 
         profileDataCache->Release();
-        profileDataCache = NULL;
+        profileDataCache = nullptr;
     }
 #endif
     return bytesWritten;
@@ -207,7 +207,7 @@ uint SourceDynamicProfileManager::SaveToProfileCache()
     {
         return 0;
     }
-    Assert(writeStream != NULL);
+    Assert(writeStream != nullptr);
     // stream writer owns the stream and will close it on destruction
     SimpleStreamWriter streamWriter(writeStream);
 
@@ -300,11 +300,11 @@ bool SourceDynamicProfileManager::ShouldSaveToProfileCache(SourceContextInfo* in
 SourceDynamicProfileManager * 
     SourceDynamicProfileManager::LoadFromDynamicProfileStorage(SourceContextInfo* info, ScriptContext* scriptContext, IActiveScriptDataCache* profileDataCache)
 {
-    SourceDynamicProfileManager* manager = NULL;
+    SourceDynamicProfileManager* manager = nullptr;
     Recycler* recycler = scriptContext->GetRecycler();
 
 #ifdef DYNAMIC_PROFILE_STORAGE
-    if(DynamicProfileStorage::IsEnabled() && info->url != NULL)
+    if(DynamicProfileStorage::IsEnabled() && info->url != nullptr)
     {
         manager = DynamicProfileStorage::Load(info->url, [recycler](char const * buffer, uint length) -> SourceDynamicProfileManager *
         {
@@ -313,11 +313,11 @@ SourceDynamicProfileManager *
         });
     }
 #endif
-    if(manager == null)
+    if(manager == nullptr)
     {
         manager = RecyclerNew(recycler, SourceDynamicProfileManager, recycler);
     }
-    if(profileDataCache != NULL)
+    if(profileDataCache != nullptr)
     {
         bool profileLoaded = manager->LoadFromProfileCache(profileDataCache, info->url);
         if(profileLoaded)
@@ -344,21 +344,21 @@ SourceDynamicProfileManager *
     uint functionCount;
     if (!reader->Peek(&functionCount))
     {
-        return null;
+        return nullptr;
     }        
 
     BVFixed * startupFunctions = BVFixed::New(functionCount, recycler);
     if (!reader->ReadArray(((char *)startupFunctions),
         BVFixed::GetAllocSize(functionCount)))
     {
-        return null;
+        return nullptr;
     }
 
     uint profileCount;
 
     if (!reader->Read(&profileCount))
     {
-        return null;
+        return nullptr;
     }    
 
     ThreadContext* threadContext = ThreadContext::GetContextForCurrentThread();
@@ -379,9 +379,9 @@ SourceDynamicProfileManager *
     {
         Js::LocalFunctionId functionId;   
         DynamicProfileInfo * dynamicProfileInfo = DynamicProfileInfo::Deserialize(reader, recycler, &functionId);
-        if (dynamicProfileInfo == null || functionId >= functionCount)
+        if (dynamicProfileInfo == nullptr || functionId >= functionCount)
         {            
-            return null;
+            return nullptr;
         }
         sourceDynamicProfileManager->dynamicProfileInfoMap.Add(functionId, dynamicProfileInfo);
     }    
@@ -424,7 +424,7 @@ bool
     for (int i = 0; i < this->dynamicProfileInfoMap.Count(); i++)
     {
         DynamicProfileInfo * dynamicProfileInfo = this->dynamicProfileInfoMap.GetValueAt(i);
-        if (dynamicProfileInfo == null || !dynamicProfileInfo->HasFunctionBody())
+        if (dynamicProfileInfo == nullptr || !dynamicProfileInfo->HasFunctionBody())
         {
             continue;
         }

@@ -41,7 +41,7 @@ void AgenPeeps::PeepFunc()
             return;
     }
     
-    blockStart = null;
+    blockStart = nullptr;
     FOREACH_INSTR_IN_FUNC_EDITING(instr, instrNext, this->func)
     {
         if (!instr->IsRealInstr() && !instr->IsLabelInstr())
@@ -118,9 +118,9 @@ bool AgenPeeps::AgenDependentInstrs(IR::Instr *instr1, IR::Instr *instr2)
 
     if (instr1->GetDst()->IsRegOpnd())
     {
-        IR::IndirOpnd *src1 = (instr2->GetSrc1() && instr2->GetSrc1()->IsIndirOpnd()) ? instr2->GetSrc1()->AsIndirOpnd() : null;
-        IR::IndirOpnd *src2 = (instr2->GetSrc2() && instr2->GetSrc2()->IsIndirOpnd()) ? instr2->GetSrc2()->AsIndirOpnd() : null;
-        IR::IndirOpnd *dst  = (instr2->GetDst()  && instr2->GetDst()->IsIndirOpnd())  ? instr2->GetDst()->AsIndirOpnd() : null;
+        IR::IndirOpnd *src1 = (instr2->GetSrc1() && instr2->GetSrc1()->IsIndirOpnd()) ? instr2->GetSrc1()->AsIndirOpnd() : nullptr;
+        IR::IndirOpnd *src2 = (instr2->GetSrc2() && instr2->GetSrc2()->IsIndirOpnd()) ? instr2->GetSrc2()->AsIndirOpnd() : nullptr;
+        IR::IndirOpnd *dst  = (instr2->GetDst()  && instr2->GetDst()->IsIndirOpnd())  ? instr2->GetDst()->AsIndirOpnd() : nullptr;
         IR::RegOpnd   *regOpnd = instr1->GetDst()->AsRegOpnd();
 
         IR::RegOpnd *base, *index;
@@ -210,8 +210,8 @@ bool AgenPeeps::DependentOpnds(IR::Opnd *opnd1, IR::Opnd *opnd2)
     // Memory dependence
     if (IsMemoryOpnd(opnd1) && IsMemoryOpnd(opnd2))
     {
-        IR::SymOpnd *symOpnd1 = opnd1->IsSymOpnd() ? opnd1->AsSymOpnd() : null;
-        IR::SymOpnd *symOpnd2 = opnd2->IsSymOpnd() ? opnd2->AsSymOpnd() : null;
+        IR::SymOpnd *symOpnd1 = opnd1->IsSymOpnd() ? opnd1->AsSymOpnd() : nullptr;
+        IR::SymOpnd *symOpnd2 = opnd2->IsSymOpnd() ? opnd2->AsSymOpnd() : nullptr;
 
         if (symOpnd1 || symOpnd2)
         {

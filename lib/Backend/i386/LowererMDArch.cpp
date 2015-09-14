@@ -162,7 +162,7 @@ LowererMDArch::LoadStackArgPtr(IR::Instr * instrArgPtr)
     //                                    within the area we just allocated on the callee frame
 
     IR::Instr * instrPrev = instrArgPtr;
-    IR::LabelInstr * instrLabelExtra = NULL;
+    IR::LabelInstr * instrLabelExtra = nullptr;
     IR::Instr * instr;
     IR::Opnd * opnd;
     Js::ArgSlot formalsCount = this->m_func->GetInParamsCount();
@@ -207,7 +207,7 @@ LowererMDArch::LoadStackArgPtr(IR::Instr * instrArgPtr)
         // REVIEW: Do we ever need to generate a chkstk call here?
         int formalsBytes = (formalsCount + 2) * sizeof(Js::Var);
         formalsBytes = Math::Align<size_t>(formalsBytes, MachStackAlignment);
-        IR::RegOpnd * espOpnd = IR::RegOpnd::New(NULL, this->GetRegStackPointer(), TyMachReg, this->m_func);
+        IR::RegOpnd * espOpnd = IR::RegOpnd::New(nullptr, this->GetRegStackPointer(), TyMachReg, this->m_func);
         opnd = IR::IndirOpnd::New(espOpnd, -formalsBytes, TyMachReg, this->m_func);
         instr = IR::Instr::New(Js::OpCode::LEA, espOpnd, opnd, this->m_func);
         instrLabelDone->InsertBefore(instr);
@@ -312,7 +312,7 @@ LowererMDArch::LoadHeapArguments(IR::Instr *instrArgs, bool force, IR::Opnd* opn
             this->LoadHelperArgument(instrArgs, instr->GetDst());
 
             // s2 = actual argument count (without counting "this")
-            if (opndInputParamCount == null)
+            if (opndInputParamCount == nullptr)
             {
                 instr = this->lowererMD->LoadInputParamCount(instrArgs, -1);
                 opndInputParamCount = instr->GetDst();
@@ -620,7 +620,7 @@ LowererMDArch::LowerCallIDynamic(IR::Instr * callInstr, IR::Instr*saveThisArgOut
     LowerCall(callInstr, 0);
 
     //Restore stack back to original state.
-    IR::RegOpnd * espOpnd = IR::RegOpnd::New(NULL, RegESP, TyMachReg, this->m_func);
+    IR::RegOpnd * espOpnd = IR::RegOpnd::New(nullptr, RegESP, TyMachReg, this->m_func);
     if (bIsInlinee)
     {
         // +2 for callInfo & function object;
@@ -657,7 +657,7 @@ LowererMDArch::LowerCallIDynamic(IR::Instr * callInstr, IR::Instr*saveThisArgOut
 void
 LowererMDArch::GeneratePreCall(IR::Instr * callInstr, IR::Opnd  *functionObjOpnd)
 {
-    IR::RegOpnd* functionTypeRegOpnd = null;
+    IR::RegOpnd* functionTypeRegOpnd = nullptr;
 
     // For calls to fixed functions we load the function's type directly from the known (hard-coded) function object address.
     // For other calls, we need to load it from the function object stored in a register operand.
@@ -1137,7 +1137,7 @@ LowererMDArch::LowerCall(IR::Instr * callInstr, uint32 argCount, RegNum regNum)
         IR::Opnd *       dstOpnd = callInstr->GetDst();
         IRType           dstType = dstOpnd->GetType();
         Js::OpCode       assignOp = GetAssignOp(dstType);
-        IR::Instr *      movInstr = null;
+        IR::Instr *      movInstr = nullptr;
         RegNum           reg = GetRegReturn(dstType);
 
         if (IRType_IsFloat(dstType))
@@ -1184,7 +1184,7 @@ LowererMDArch::LowerCall(IR::Instr * callInstr, uint32 argCount, RegNum regNum)
 
     if (argCount)
     {
-        IR::RegOpnd * espOpnd = IR::RegOpnd::New(NULL, RegESP, TyMachReg, this->m_func);
+        IR::RegOpnd * espOpnd = IR::RegOpnd::New(nullptr, RegESP, TyMachReg, this->m_func);
         IR::IndirOpnd * indirOpnd = IR::IndirOpnd::New(espOpnd, argCount * MachPtr, TyMachReg, this->m_func);
         IR::Instr * addInstr = IR::Instr::New(Js::OpCode::LEA,
             espOpnd, indirOpnd, this->m_func);
@@ -1230,7 +1230,7 @@ LowererMDArch::LowerStartCall(IR::Instr * startCallInstr, IR::Instr* insertInstr
         //     mov eax, sizeOpnd->m_value
         //     call _chkstk
 
-        IR::RegOpnd *eaxOpnd = IR::RegOpnd::New(NULL, this->GetRegChkStkParam(), TyMachReg, this->m_func);
+        IR::RegOpnd *eaxOpnd = IR::RegOpnd::New(nullptr, this->GetRegChkStkParam(), TyMachReg, this->m_func);
         this->lowererMD->CreateAssign(eaxOpnd, IR::IntConstOpnd::New(sizeValue, TyInt32, this->m_func, /*dontEncode*/true), insertInstr);
 
         newStartCall = IR::Instr::New(Js::OpCode::Call, this->m_func);
@@ -1244,7 +1244,7 @@ LowererMDArch::LowerStartCall(IR::Instr * startCallInstr, IR::Instr* insertInstr
         // Convert StartCall into
         //     lea esp, [esp - sizeValue]
 
-        IR::RegOpnd * espOpnd = IR::RegOpnd::New(NULL, this->GetRegStackPointer(), TyMachReg, this->m_func);
+        IR::RegOpnd * espOpnd = IR::RegOpnd::New(nullptr, this->GetRegStackPointer(), TyMachReg, this->m_func);
         newStartCall = IR::Instr::New(Js::OpCode::LEA, espOpnd, IR::IndirOpnd::New(espOpnd, -sizeValue, TyMachReg, this->m_func), this->m_func);
         insertInstr->InsertBefore(newStartCall);
     }
@@ -1285,7 +1285,7 @@ LowererMDArch::LowerStartCallAsmJs(IR::Instr * startCallInstr, IR::Instr * inser
         //     mov eax, sizeOpnd->m_value
         //     call _chkstk
 
-        IR::RegOpnd *eaxOpnd = IR::RegOpnd::New(NULL, GetRegChkStkParam(), TyMachReg, m_func);
+        IR::RegOpnd *eaxOpnd = IR::RegOpnd::New(nullptr, GetRegChkStkParam(), TyMachReg, m_func);
         lowererMD->CreateAssign(eaxOpnd, IR::IntConstOpnd::New(sizeValue, TyInt32, m_func, /*dontEncode*/true), insertInstr);
 
         newStartCall = IR::Instr::New(Js::OpCode::Call, m_func);
@@ -1299,7 +1299,7 @@ LowererMDArch::LowerStartCallAsmJs(IR::Instr * startCallInstr, IR::Instr * inser
         // Convert StartCall into
         //     lea esp, [esp - sizeValue]
 
-        IR::RegOpnd * espOpnd = IR::RegOpnd::New(NULL, this->GetRegStackPointer(), TyMachReg, m_func);
+        IR::RegOpnd * espOpnd = IR::RegOpnd::New(nullptr, this->GetRegStackPointer(), TyMachReg, m_func);
         newStartCall = IR::Instr::New(Js::OpCode::LEA, espOpnd, IR::IndirOpnd::New(espOpnd, -sizeValue, TyMachReg, m_func), m_func);
         insertInstr->InsertBefore(newStartCall);
     }
@@ -1354,7 +1354,7 @@ LowererMDArch::LoadDoubleHelperArgument(IR::Instr * instrInsert, IR::Opnd * opnd
     IR::Instr * instr;
     IR::Opnd * opnd;
     IR::Opnd * float64Opnd;
-    IR::RegOpnd * espOpnd = IR::RegOpnd::New(NULL, this->GetRegStackPointer(), TyMachReg, this->m_func);
+    IR::RegOpnd * espOpnd = IR::RegOpnd::New(nullptr, this->GetRegStackPointer(), TyMachReg, this->m_func);
 
     opnd = IR::IndirOpnd::New(espOpnd, -8, TyMachReg, this->m_func);
     instrPrev = IR::Instr::New(Js::OpCode::LEA, espOpnd, opnd, this->m_func);
@@ -1408,7 +1408,7 @@ LowererMDArch::LowerEntryInstr(IR::EntryInstr * entryInstr)
     {
         if (LinearScan::IsCalleeSaved(reg) && (this->m_func->m_regsUsed.Test(reg)))
         {
-            IR::RegOpnd * regOpnd = IR::RegOpnd::New(NULL, reg, TyMachReg, this->m_func);
+            IR::RegOpnd * regOpnd = IR::RegOpnd::New(nullptr, reg, TyMachReg, this->m_func);
             IR::Instr * pushInstr = IR::Instr::New(Js::OpCode::PUSH, this->m_func);
             pushInstr->SetSrc1(regOpnd);
             entryInstr->InsertAfter(pushInstr);
@@ -1418,8 +1418,8 @@ LowererMDArch::LowerEntryInstr(IR::EntryInstr * entryInstr)
 
     // Allocate frame
 
-    IR::RegOpnd * ebpOpnd = IR::RegOpnd::New(NULL, this->GetRegBlockPointer(), TyMachReg, this->m_func);
-    IR::RegOpnd * espOpnd = IR::RegOpnd::New(NULL, this->GetRegStackPointer(), TyMachReg, this->m_func);
+    IR::RegOpnd * ebpOpnd = IR::RegOpnd::New(nullptr, this->GetRegBlockPointer(), TyMachReg, this->m_func);
+    IR::RegOpnd * espOpnd = IR::RegOpnd::New(nullptr, this->GetRegStackPointer(), TyMachReg, this->m_func);
 
     // Dedicated argument slot is already included in the m_localStackHeight (see Func ctor)
 
@@ -1436,7 +1436,7 @@ LowererMDArch::LowerEntryInstr(IR::EntryInstr * entryInstr)
 
     Assert(Math::Align<int32>(bytesOnStack, MachStackAlignment) == bytesOnStack);
 
-    Assert(this->m_func->hasBailout || this->bailOutStackRestoreLabel == null);
+    Assert(this->m_func->hasBailout || this->bailOutStackRestoreLabel == nullptr);
     this->m_func->frameSize = bytesOnStack;
 
     if (this->m_func->GetMaxInlineeArgOutCount() && this->m_func->m_workItem->Type() == JsFunctionType)
@@ -1481,7 +1481,7 @@ LowererMDArch::LowerEntryInstr(IR::EntryInstr * entryInstr)
         {
             // Generate chkstk call
 
-            IR::RegOpnd *eaxOpnd = IR::RegOpnd::New(NULL, this->GetRegChkStkParam(), TyMachReg, this->m_func);
+            IR::RegOpnd *eaxOpnd = IR::RegOpnd::New(nullptr, this->GetRegChkStkParam(), TyMachReg, this->m_func);
             IR::Instr * callInstr = IR::Instr::New(Js::OpCode::Call, eaxOpnd,
                 IR::HelperCallOpnd::New(IR::HelperCRT_chkstk, this->m_func), this->m_func);
             entryInstr->InsertAfter(callInstr);
@@ -1552,8 +1552,8 @@ LowererMDArch::LowerEntryInstrAsmJs(IR::EntryInstr * entryInstr)
 
     IR::Instr * insertInstr = entryInstr->m_next;
 
-    IR::RegOpnd * ebpOpnd = IR::RegOpnd::New(NULL, GetRegBlockPointer(), TyMachReg, m_func);
-    IR::RegOpnd * espOpnd = IR::RegOpnd::New(NULL, GetRegStackPointer(), TyMachReg, m_func);
+    IR::RegOpnd * ebpOpnd = IR::RegOpnd::New(nullptr, GetRegBlockPointer(), TyMachReg, m_func);
+    IR::RegOpnd * espOpnd = IR::RegOpnd::New(nullptr, GetRegStackPointer(), TyMachReg, m_func);
 
     // Generate PUSH EBP
     IR::Instr * pushInstr = IR::Instr::New(Js::OpCode::PUSH, m_func);
@@ -1582,7 +1582,7 @@ LowererMDArch::LowerEntryInstrAsmJs(IR::EntryInstr * entryInstr)
         }
         else
         {
-            IR::RegOpnd *eaxOpnd = IR::RegOpnd::New(NULL, GetRegChkStkParam(), TyMachReg, m_func);
+            IR::RegOpnd *eaxOpnd = IR::RegOpnd::New(nullptr, GetRegChkStkParam(), TyMachReg, m_func);
 
             // Generate MOV EAX, LocalStackHeight
             IR::IntConstOpnd * stackSizeOpnd = IR::IntConstOpnd::New(stackSize, TyMachReg, m_func);
@@ -1604,7 +1604,7 @@ LowererMDArch::LowerEntryInstrAsmJs(IR::EntryInstr * entryInstr)
     {
         if (LinearScan::IsCalleeSaved(reg) && (m_func->m_regsUsed.Test(reg)))
         {
-            IR::RegOpnd * regOpnd = IR::RegOpnd::New(NULL, reg, TyMachReg, m_func);
+            IR::RegOpnd * regOpnd = IR::RegOpnd::New(nullptr, reg, TyMachReg, m_func);
             IR::Instr * pushInstr = IR::Instr::New(Js::OpCode::PUSH, m_func);
             pushInstr->SetSrc1(regOpnd);
             insertInstr->InsertBefore(pushInstr);
@@ -1673,7 +1673,7 @@ LowererMDArch::GeneratePrologueStackProbe(IR::Instr *entryInstr, size_t frameSiz
         // Load the current stack limit from the ThreadContext, then increment this value by the size of the
         // current frame. This is the value we'll compare against below.
 
-        stackLimitOpnd = IR::RegOpnd::New(NULL, RegEAX, TyMachReg, this->m_func);
+        stackLimitOpnd = IR::RegOpnd::New(nullptr, RegEAX, TyMachReg, this->m_func);
         void *pLimit = threadContext->GetAddressOfStackLimitForCurrentThread();
         IR::MemRefOpnd * memOpnd = IR::MemRefOpnd::New(pLimit, TyMachReg, this->m_func);
         this->lowererMD->CreateAssign(stackLimitOpnd, memOpnd, insertInstr);
@@ -1700,7 +1700,7 @@ LowererMDArch::GeneratePrologueStackProbe(IR::Instr *entryInstr, size_t frameSiz
     if (!IS_FAULTINJECT_STACK_PROBE_ON) // Do stack check fastpath only if not doing StackProbe fault injection
     {
         instr = IR::Instr::New(Js::OpCode::CMP, this->m_func);
-        instr->SetSrc1(IR::RegOpnd::New(NULL, GetRegStackPointer(), TyMachReg, this->m_func));
+        instr->SetSrc1(IR::RegOpnd::New(nullptr, GetRegStackPointer(), TyMachReg, this->m_func));
         instr->SetSrc2(stackLimitOpnd);
         insertInstr->InsertBefore(instr);
 
@@ -1744,7 +1744,7 @@ LowererMDArch::LowerExitInstr(IR::ExitInstr * exitInstr)
 
     // Insert RET
     IR::IntConstOpnd * intSrc = IR::IntConstOpnd::New(0, TyMachReg, this->m_func);
-    IR::RegOpnd *eaxReg = IR::RegOpnd::New(NULL, this->GetRegReturn(TyMachReg), TyMachReg, this->m_func);
+    IR::RegOpnd *eaxReg = IR::RegOpnd::New(nullptr, this->GetRegReturn(TyMachReg), TyMachReg, this->m_func);
     IR::Instr *retInstr = IR::Instr::New(Js::OpCode::RET, this->m_func);
     retInstr->SetSrc1(intSrc);
     retInstr->SetSrc2(eaxReg);
@@ -1792,7 +1792,7 @@ LowererMDArch::LowerExitInstrAsmJs(IR::ExitInstr * exitInstr)
     {
         // Insert RET
         IR::IntConstOpnd * intSrc = IR::IntConstOpnd::New(0, TyMachReg, this->m_func);
-        IR::RegOpnd *eaxReg = IR::RegOpnd::New(NULL, this->GetRegReturn(TyMachReg), TyMachReg, this->m_func);
+        IR::RegOpnd *eaxReg = IR::RegOpnd::New(nullptr, this->GetRegReturn(TyMachReg), TyMachReg, this->m_func);
         IR::Instr *retInstr = IR::Instr::New(Js::OpCode::RET, this->m_func);
         retInstr->SetSrc1(intSrc);
         retInstr->SetSrc2(eaxReg);
@@ -1804,7 +1804,7 @@ LowererMDArch::LowerExitInstrAsmJs(IR::ExitInstr * exitInstr)
         // Generate RET
         int32 alignedSize = Math::Align<int32>(m_func->GetJnFunction()->GetAsmJsFunctionInfo()->GetArgByteSize(), MachStackAlignment);
         IR::IntConstOpnd * intSrc = IR::IntConstOpnd::New(alignedSize + MachPtr, TyMachReg, m_func);
-        IR::RegOpnd * retReg = IR::RegOpnd::New(NULL, GetRegReturnAsmJs(regType), regType, m_func);
+        IR::RegOpnd * retReg = IR::RegOpnd::New(nullptr, GetRegReturnAsmJs(regType), regType, m_func);
         IR::Instr *retInstr = IR::Instr::New(Js::OpCode::RET, m_func);
         retInstr->SetSrc1(intSrc);
         retInstr->SetSrc2(retReg);
@@ -1817,8 +1817,8 @@ LowererMDArch::LowerExitInstrAsmJs(IR::ExitInstr * exitInstr)
 IR::ExitInstr *
 LowererMDArch::LowerExitInstrCommon(IR::ExitInstr * exitInstr)
 {
-    IR::RegOpnd * ebpOpnd = IR::RegOpnd::New(NULL, GetRegBlockPointer(), TyMachReg, m_func);
-    IR::RegOpnd * espOpnd = IR::RegOpnd::New(NULL, GetRegStackPointer(), TyMachReg, m_func);
+    IR::RegOpnd * ebpOpnd = IR::RegOpnd::New(nullptr, GetRegBlockPointer(), TyMachReg, m_func);
+    IR::RegOpnd * espOpnd = IR::RegOpnd::New(nullptr, GetRegStackPointer(), TyMachReg, m_func);
     
     // POP used callee-saved registers
 
@@ -1826,7 +1826,7 @@ LowererMDArch::LowerExitInstrCommon(IR::ExitInstr * exitInstr)
     {
         if (LinearScan::IsCalleeSaved(reg) && (m_func->m_regsUsed.Test(reg)))
         {
-            IR::RegOpnd * regOpnd = IR::RegOpnd::New(NULL, reg, TyMachReg, m_func);
+            IR::RegOpnd * regOpnd = IR::RegOpnd::New(nullptr, reg, TyMachReg, m_func);
             IR::Instr * popInstr = IR::Instr::New(Js::OpCode::POP, regOpnd, m_func);
             exitInstr->InsertBefore(popInstr);
         }
@@ -2057,8 +2057,8 @@ LowererMDArch::EmitLoadVar(IR::Instr *instrLoad, bool isFromUint32, bool isHelpe
     bool isInt = false;
     bool isNotInt = false;
     IR::RegOpnd *src1 = instrLoad->GetSrc1()->AsRegOpnd();
-    IR::LabelInstr *labelToVar = NULL;
-    IR::LabelInstr *labelDone = NULL;
+    IR::LabelInstr *labelToVar = nullptr;
+    IR::LabelInstr *labelDone = nullptr;
     IR::Instr *instr;
 
     if (src1->IsTaggedInt())
@@ -2131,7 +2131,7 @@ LowererMDArch::EmitLoadVar(IR::Instr *instrLoad, bool isFromUint32, bool isHelpe
             instrLoad->InsertBefore(labelToVar);
         }
 
-        this->lowererMD->EmitLoadVarNoCheck(instrLoad->GetDst()->AsRegOpnd(), src1, instrLoad, isFromUint32, isHelper || labelToVar != null);
+        this->lowererMD->EmitLoadVarNoCheck(instrLoad->GetDst()->AsRegOpnd(), src1, instrLoad, isFromUint32, isHelper || labelToVar != nullptr);
     }
     //$Done:
     if (labelDone)
@@ -2210,9 +2210,9 @@ LowererMDArch::EmitLoadInt32(IR::Instr *instrLoad)
     bool isInt = false;
     bool isNotInt = false;
     IR::RegOpnd *src1 = instrLoad->GetSrc1()->AsRegOpnd();
-    IR::LabelInstr *labelHelper = NULL;
-    IR::LabelInstr *labelDone = NULL;
-    IR::LabelInstr* labelFloat = NULL;
+    IR::LabelInstr *labelHelper = nullptr;
+    IR::LabelInstr *labelDone = nullptr;
+    IR::LabelInstr* labelFloat = nullptr;
     IR::Instr *instr;
 
     if (src1->IsTaggedInt())
@@ -2231,7 +2231,7 @@ LowererMDArch::EmitLoadInt32(IR::Instr *instrLoad)
         !(instrLoad->HasBailOutInfo() && (instrLoad->GetBailOutKind() == IR::BailOutIntOnly || instrLoad->GetBailOutKind() == IR::BailOutExpectingInteger)) &&
         AutoSystemInfo::Data.SSE2Available();
 
-    IR::RegOpnd * r1 = null;
+    IR::RegOpnd * r1 = nullptr;
     if(doShiftFirst)
     {
         // r1 = MOV src1
@@ -2445,7 +2445,7 @@ LowererMDArch::GetBailOutStackRestoreLabel(BailOutInfo * bailOutInfo, IR::LabelI
     // Via EBP, the prolog/epilog phase will fix up the size from EBP we need to restore to ESP before the epilog
     if (bailOutInfo->startCallCount != 0)
     {
-        if (this->bailOutStackRestoreLabel == null)
+        if (this->bailOutStackRestoreLabel == nullptr)
         {
             if (exitPrevInstr->HasFallThrough())
             {
@@ -2457,8 +2457,8 @@ LowererMDArch::GetBailOutStackRestoreLabel(BailOutInfo * bailOutInfo, IR::LabelI
 
             this->bailOutStackRestoreLabel = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, true);
 
-            IR::RegOpnd * ebpOpnd = IR::RegOpnd::New(NULL, RegEBP, TyMachReg, this->m_func);
-            IR::RegOpnd * espOpnd = IR::RegOpnd::New(NULL, RegESP, TyMachReg, this->m_func);
+            IR::RegOpnd * ebpOpnd = IR::RegOpnd::New(nullptr, RegEBP, TyMachReg, this->m_func);
+            IR::RegOpnd * espOpnd = IR::RegOpnd::New(nullptr, RegESP, TyMachReg, this->m_func);
 
             // -4 for now, fix up in prolog/epilog phase
             IR::IndirOpnd * indirOpnd = IR::IndirOpnd::New(ebpOpnd, (size_t)-4, TyMachReg, this->m_func);
@@ -2513,7 +2513,7 @@ bool
     //      (caller generates helper call)
     // $fallthru:
 
-    IR::LabelInstr * labelHelper = NULL;
+    IR::LabelInstr * labelHelper = nullptr;
     IR::LabelInstr * labelFallThru;
     IR::Instr *      instr;
     IR::RegOpnd *    opndReg1;
@@ -2781,12 +2781,12 @@ bool
     //$Done:
     // dst = MOV s3
 
-    IR::LabelInstr * labelS1ToInt = NULL;
-    IR::LabelInstr * labelSrc2 = NULL;
-    IR::LabelInstr * labelS2ToUInt = NULL;
-    IR::LabelInstr * labelShr = NULL;
-    IR::LabelInstr * labelToVar = NULL;
-    IR::LabelInstr * labelDone = NULL;
+    IR::LabelInstr * labelS1ToInt = nullptr;
+    IR::LabelInstr * labelSrc2 = nullptr;
+    IR::LabelInstr * labelS2ToUInt = nullptr;
+    IR::LabelInstr * labelShr = nullptr;
+    IR::LabelInstr * labelToVar = nullptr;
+    IR::LabelInstr * labelDone = nullptr;
     IR::Instr *      instr;
     IR::RegOpnd *    opndReg1;
     IR::RegOpnd *    opndReg2;
@@ -2844,7 +2844,7 @@ bool
         AssertMsg(opndSrc2->IsAddrOpnd() && Js::TaggedInt::Is(opndSrc2->AsAddrOpnd()->m_address),
             "Expect src2 of shift right to be reg or Var.");
         src2IsInt = src2IsIntConst = true;
-        opndReg2 = NULL;
+        opndReg2 = nullptr;
     }
     if (isUnsignedShift)
     {
@@ -3145,7 +3145,7 @@ bool
     // $fallthru:
 
     IR::Instr *      instr;
-    IR::LabelInstr * labelHelper=NULL;
+    IR::LabelInstr * labelHelper=nullptr;
     IR::LabelInstr * labelFallThru;
     IR::Opnd *       opndReg;
     IR::Opnd *       opndSrc1;
@@ -3266,7 +3266,7 @@ bool
     // $fallthru:
 
     IR::Instr *      instr;
-    IR::LabelInstr * labelHelper=NULL;
+    IR::LabelInstr * labelHelper=nullptr;
     IR::LabelInstr * labelFallThru;
     IR::Opnd *       opndReg;
     IR::Opnd *       opndSrc1;
@@ -3376,7 +3376,7 @@ bool
     // $fallthru:
 
     IR::Instr *      instr;
-    IR::LabelInstr * labelHelper=NULL;
+    IR::LabelInstr * labelHelper=nullptr;
     IR::LabelInstr * labelFallThru;
     IR::Opnd *       opndReg;
     IR::Opnd *       opndSrc1;
@@ -3489,8 +3489,8 @@ bool
     // $fallthru:
 
     IR::Instr *      instr;
-    IR::LabelInstr * labelHelper = NULL;
-    IR::LabelInstr * labelFallThru = NULL;
+    IR::LabelInstr * labelHelper = nullptr;
+    IR::LabelInstr * labelFallThru = nullptr;
     IR::Opnd *       opndSrc1;
     IR::Opnd *       opndDst;
 

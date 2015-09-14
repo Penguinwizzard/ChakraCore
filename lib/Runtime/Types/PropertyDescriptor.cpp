@@ -16,9 +16,9 @@ namespace Js
         Writable(false),
         Enumerable(false),
         Configurable(false),
-        Value(null),
-        Getter(null),
-        Setter(null),
+        Value(nullptr),
+        Getter(nullptr),
+        Setter(nullptr),
         originalVar(nullptr),
         fromProxy(false)
     {

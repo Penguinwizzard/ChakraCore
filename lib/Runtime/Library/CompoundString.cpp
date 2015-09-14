@@ -30,7 +30,7 @@ namespace Js
         const void *const buffer,
         const CharCount charLength,
         const CharCount charCapacity)
-        : bufferOwner(this), charLength(charLength), charCapacity(charCapacity), previous(null)
+        : bufferOwner(this), charLength(charLength), charCapacity(charCapacity), previous(nullptr)
     {
         Assert(buffer);
         Assert(charLength <= charCapacity);
@@ -267,10 +267,10 @@ namespace Js
         // the definition to inline the function in other translation units.
         Assert(false);
 
-        Block *const block = null;
-        void *const voidPointer = null;
+        Block *const block = nullptr;
+        void *const voidPointer = nullptr;
         const CharCount charCount = 0;
-        Recycler *const recycler = null;
+        Recycler *const recycler = nullptr;
 
         (Block(charCount, block));
         (Block(voidPointer, charCount, charCount));
@@ -289,7 +289,7 @@ namespace Js
     #ifndef IsJsDiag
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    CompoundString::BlockInfo::BlockInfo() : buffer(null), charLength(0), charCapacity(0)
+    CompoundString::BlockInfo::BlockInfo() : buffer(nullptr), charLength(0), charCapacity(0)
     {
     }
 
@@ -400,7 +400,7 @@ namespace Js
             AllocateBuffer(charCapacity, recycler);
             charLength = usedCharLength;
             js_wmemcpy_s((wchar_t*)(this->buffer), usedCharLength, (wchar_t*)(buffer), usedCharLength);
-            return null;
+            return nullptr;
         }
 
         Block *const block = Block::New(buffer, usedCharLength, reserveMoreSpace, recycler);
@@ -420,7 +420,7 @@ namespace Js
             const CharCount charLength = CharLength();
             js_wmemcpy_s((wchar_t*)newBuffer, charLength, (wchar_t*)buffer, charLength);
             buffer = newBuffer;
-            return null;
+            return nullptr;
         }
 
         Block *const block = Block::New(buffer, CharLength(), true, recycler);
@@ -446,7 +446,7 @@ namespace Js
 
     void CompoundString::BlockInfo::Unreference()
     {
-        buffer = null;
+        buffer = nullptr;
         charLength = 0;
         charCapacity = 0;
     }
@@ -459,10 +459,10 @@ namespace Js
         // the definition to inline the function in other translation units.
         Assert(false);
 
-        BlockInfo *const blockInfo = null;
+        BlockInfo *const blockInfo = nullptr;
         const CharCount charCount = 0;
-        void *const voidPointer = null;
-        Recycler *const recycler = null;
+        void *const voidPointer = nullptr;
+        Recycler *const recycler = nullptr;
 
         blockInfo->AllocateBuffer(charCount, recycler);
         blockInfo->CopyBuffer(voidPointer, charCount, false, recycler);
@@ -481,7 +481,7 @@ namespace Js
         : LiteralString(library->GetStringTypeStatic()),
         directCharLength(static_cast<CharCount>(-1)),
         ownsLastBlock(true),
-        lastBlock(null)
+        lastBlock(nullptr)
     {
         Assert(library);
 
@@ -499,7 +499,7 @@ namespace Js
         Assert(allocateBlock);
         Assert(library);
 
-        Block *const block = Block::New(initialBlockSize, null, library->GetRecycler());
+        Block *const block = Block::New(initialBlockSize, nullptr, library->GetRecycler());
         lastBlockInfo.CopyFrom(block);
         lastBlock = block;
     }
@@ -750,7 +750,7 @@ namespace Js
                 (static_cast<uintptr_t>(startIndex) << 32) +
                 (static_cast<uintptr_t>(length) << 1) +
                 1);
-        *packedSubstringInfo2Ref = null;
+        *packedSubstringInfo2Ref = nullptr;
     #else
         CompileAssert(sizeof(void *) == sizeof(int32));
 
@@ -763,7 +763,7 @@ namespace Js
                     (static_cast<uintptr_t>(startIndex) << 16) +
                     (static_cast<uintptr_t>(length) << 1) +
                     1);
-            *packedSubstringInfo2Ref = null;
+            *packedSubstringInfo2Ref = nullptr;
         }
         else
         {
@@ -1012,7 +1012,7 @@ namespace Js
         lastBlockInfo.Unreference();
         directCharLength = 0;
         ownsLastBlock = false;
-        lastBlock = null;
+        lastBlock = nullptr;
     }
 
     const wchar_t *CompoundString::GetSz()
@@ -1126,7 +1126,7 @@ namespace Js
     #endif
                 {
                     s = JavascriptString::FromVar(pointer2);
-                    pointer2 = null;
+                    pointer2 = nullptr;
                 }
 
                 CharCount startIndex, copyCharLength;
@@ -1250,13 +1250,13 @@ namespace Js
         // the definition to inline the function in other translation units.
         Assert(false);
 
-        CompoundString *const cs = null;
-        JavascriptLibrary *const library = null;
+        CompoundString *const cs = nullptr;
+        JavascriptLibrary *const library = nullptr;
         const CharCount charCount = 0;
-        JavascriptString *const s = null;
+        JavascriptString *const s = nullptr;
         const wchar_t c = L'\0';
-        void *voidPointer = null;
-        wchar_t *const charBuffer = null;
+        void *voidPointer = nullptr;
+        wchar_t *const charBuffer = nullptr;
 
         (CompoundString(charCount, library));
         (CompoundString(charCount, charCount, voidPointer, charCount, false, library));

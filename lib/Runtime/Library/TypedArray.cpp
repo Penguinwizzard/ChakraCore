@@ -245,7 +245,7 @@ namespace Js
 
         Var newTarget = callInfo.Flags & CallFlags_NewTarget ? args.Values[args.Info.Count] : args[0];
         bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && newTarget != nullptr && RecyclableObject::Is(newTarget);
-        Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == null);
+        Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == nullptr);
 
         JavascriptError::ThrowTypeError(scriptContext, JSERR_InvalidTypedArray_Constructor);
 
@@ -264,7 +264,7 @@ namespace Js
 
         Var newTarget = callInfo.Flags & CallFlags_NewTarget ? args.Values[args.Info.Count] : args[0];
         bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && newTarget != nullptr && RecyclableObject::Is(newTarget);
-        Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == null);
+        Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == nullptr);
         Var object = TypedArrayBase::CreateNewInstance(args, scriptContext, sizeof(TypeName), TypedArray<TypeName, clamped, virtualAllocated>::Create);
 #if ENABLE_DEBUG_CONFIG_OPTIONS
         if (Js::Configuration::Global.flags.IsEnabled(Js::autoProxyFlag))
@@ -387,7 +387,7 @@ namespace Js
         PropertyRecord const* propertyRecord;
         this->GetScriptContext()->FindPropertyRecord(propertyNameString, &propertyRecord);
 
-        if (propertyRecord != null && GetPropertyBuiltIns(propertyRecord->GetPropertyId(), value))
+        if (propertyRecord != nullptr && GetPropertyBuiltIns(propertyRecord->GetPropertyId(), value))
         {
             return true;
         }
@@ -1315,7 +1315,7 @@ namespace Js
         ScriptContext* scriptContext = function->GetScriptContext();
         JavascriptLibrary* library = scriptContext->GetLibrary();
 
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"[TypedArray].from");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"[TypedArray].from");
 
         Assert(!(callInfo.Flags & CallFlags_New));
         CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(TAFromCount);
@@ -1594,7 +1594,7 @@ namespace Js
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"[TypedArray].prototype.every");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"[TypedArray].prototype.every");
 
         Assert(!(callInfo.Flags & CallFlags_New));
         CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(TAEveryCount);
@@ -1640,7 +1640,7 @@ namespace Js
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"[TypedArray].prototype.filter");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"[TypedArray].prototype.filter");
 
         Assert(!(callInfo.Flags & CallFlags_New));
         CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(TAFilterCount);
@@ -1743,7 +1743,7 @@ namespace Js
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"[TypedArray].prototype.find");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"[TypedArray].prototype.find");
 
         Assert(!(callInfo.Flags & CallFlags_New));
         CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(TAFindCount);
@@ -1770,7 +1770,7 @@ namespace Js
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"[TypedArray].prototype.findIndex");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"[TypedArray].prototype.findIndex");
 
         Assert(!(callInfo.Flags & CallFlags_New));
         CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(TAFindIndexCount);
@@ -1798,7 +1798,7 @@ namespace Js
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"[TypedArray].prototype.forEach");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"[TypedArray].prototype.forEach");
 
         Assert(!(callInfo.Flags & CallFlags_New));
         CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(TAForEachCount);
@@ -2029,7 +2029,7 @@ namespace Js
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"[TypedArray].prototype.map");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"[TypedArray].prototype.map");
 
         Assert(!(callInfo.Flags & CallFlags_New));
         CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(TAMapCount);
@@ -2056,7 +2056,7 @@ namespace Js
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"[TypedArray].prototype.reduce");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"[TypedArray].prototype.reduce");
 
         Assert(!(callInfo.Flags & CallFlags_New));
         CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(TAReduceCount);
@@ -2083,7 +2083,7 @@ namespace Js
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"[TypedArray].prototype.reduceRight");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"[TypedArray].prototype.reduceRight");
 
         Assert(!(callInfo.Flags & CallFlags_New));
         CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(TAReduceRightCount);
@@ -2161,7 +2161,7 @@ namespace Js
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"[TypedArray].prototype.some");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"[TypedArray].prototype.some");
 
         Assert(!(callInfo.Flags & CallFlags_New));
         CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(TASomeCount);
@@ -2275,7 +2275,7 @@ namespace Js
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"[TypedArray].prototype.sort");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"[TypedArray].prototype.sort");
 
         Assert(!(callInfo.Flags & CallFlags_New));
         CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(TASortCount);
@@ -3265,7 +3265,7 @@ namespace Js
 
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
 
-        Assert(!(callInfo.Flags & CallFlags_New) || args[0] == null);
+        Assert(!(callInfo.Flags & CallFlags_New) || args[0] == nullptr);
         Var object = TypedArrayBase::CreateNewInstance(args, scriptContext, sizeof(wchar_t), CharArray::Create);
 #if ENABLE_DEBUG_CONFIG_OPTIONS
         if (Js::Configuration::Global.flags.IsEnabled(Js::autoProxyFlag))

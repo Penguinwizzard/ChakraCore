@@ -37,7 +37,9 @@ namespace Js
         void Dispose(bool isShutdown) override;
 
         static void __declspec(noreturn) MapAndThrowErrorWithInfo(ScriptContext* scriptContext, HRESULT hr);
+#ifdef ENABLE_PROJECTION
         static void ClearErrorInfo(ScriptContext* scriptContext);
+#endif
 
         static void SetErrorMessage(JavascriptError *pError, long errCode, PCWSTR varDescription, ScriptContext* scriptContext);
 

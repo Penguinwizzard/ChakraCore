@@ -632,7 +632,6 @@ namespace UnifiedRegex
         }
 
         void SetRange(ArenaAllocator* allocator, Char lc, Char hc);
-        void SubtractRange(ArenaAllocator* allocator, Char lc, Char hc);
         void SetRanges(ArenaAllocator* allocator, int numSortedPairs, const Char* sortedPairs);
         void SetNotRanges(ArenaAllocator* allocator, int numSortedPairs, const Char* sortedPairs);
         void UnionInPlace(ArenaAllocator* allocator, const  CharSet<Char>& other);
@@ -648,7 +647,7 @@ namespace UnifiedRegex
         {
             for (int i = 0; i < NumberOfPlanes; i++)
             {
-                if (this->characterPlanes[i].IsEmpty())
+                if (!this->characterPlanes[i].IsEmpty())
                 {
                     return false;
                 }

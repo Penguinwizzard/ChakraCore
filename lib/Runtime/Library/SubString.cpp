@@ -71,7 +71,7 @@ namespace Js
 
     const void * SubString::GetOriginalStringReference() 
     {
-        if (originalFullStringReference != null)
+        if (originalFullStringReference != nullptr)
         {
             return originalFullStringReference;
         }

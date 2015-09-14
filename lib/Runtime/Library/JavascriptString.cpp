@@ -52,7 +52,7 @@ namespace Js
     template <typename T, bool copyBuffer>
     JavascriptString* JavascriptString::NewWithBufferT(const wchar_t * content, size_t cchUseLength, ScriptContext * scriptContext)
     {
-        AssertMsg(content != null, "NULL value passed to JavascriptString::New");
+        AssertMsg(content != nullptr, "NULL value passed to JavascriptString::New");
         AssertMsg(IsValidCharCount(cchUseLength), "String length will overflow an int");
         switch (cchUseLength)
         {
@@ -78,13 +78,13 @@ namespace Js
 
     JavascriptString* JavascriptString::NewWithSz(const wchar_t * content, ScriptContext * scriptContext)
     {
-        AssertMsg(content != null, "NULL value passed to JavascriptString::New");
+        AssertMsg(content != nullptr, "NULL value passed to JavascriptString::New");
         return NewWithBuffer(content, GetBufferLength(content), scriptContext);
     }
 
     JavascriptString* JavascriptString::NewWithArenaSz(const wchar_t * content, ScriptContext * scriptContext)
     {
-        AssertMsg(content != null, "NULL value passed to JavascriptString::New");
+        AssertMsg(content != nullptr, "NULL value passed to JavascriptString::New");
         return NewWithArenaBuffer(content, GetBufferLength(content), scriptContext);
     }
 
@@ -110,7 +110,7 @@ namespace Js
 
     JavascriptString* JavascriptString::NewCopySzFromArena(const wchar_t* content, ScriptContext* scriptContext, ArenaAllocator *arena) 
     {
-        AssertMsg(content != null, "NULL value passed to JavascriptString::New");     
+        AssertMsg(content != nullptr, "NULL value passed to JavascriptString::New");
 
         charcount_t cchUseLength = JavascriptString::GetBufferLength(content);
         wchar_t* buffer = JavascriptString::AllocateAndCopySz(arena, content, cchUseLength);        
@@ -131,7 +131,7 @@ namespace Js
         // being created, except when call true a host dispatch
         Var newTarget = callInfo.Flags & CallFlags_NewTarget ? args.Values[args.Info.Count] : args[0];
         bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && newTarget != nullptr && RecyclableObject::Is(newTarget);
-        Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == null
+        Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == nullptr
             || JavascriptOperators::GetTypeId(args[0]) == TypeIds_HostDispatch);
 
         JavascriptString* str;
@@ -342,7 +342,7 @@ case_2:
             cs->Append(pstRight);
             return cs;
         }
-        return null;
+        return nullptr;
     }
 
     JavascriptString* JavascriptString::ConcatDestructive_OneEmpty(JavascriptString* pstRight)
@@ -398,8 +398,8 @@ case_2:
 
     __inline JavascriptString* JavascriptString::Concat(JavascriptString* pstLeft, JavascriptString* pstRight)
     {
-        AssertMsg(pstLeft != null, "Must have a valid left string");
-        AssertMsg(pstRight != null, "Must have a valid right string");
+        AssertMsg(pstLeft != nullptr, "Must have a valid left string");
+        AssertMsg(pstRight != nullptr, "Must have a valid right string");
 
         if(!pstLeft->IsFinalized())
         {
@@ -1399,7 +1399,7 @@ case_2:
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"String.prototype.replace");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"String.prototype.replace");
 
         Assert(!(callInfo.Flags & CallFlags_New));
 
@@ -1410,29 +1410,29 @@ case_2:
         JavascriptString * pThis = nullptr;
         GetThisStringArgument(args, scriptContext, L"String.prototype.replace", &pThis);
 
-        JavascriptRegExp * pRegEx = null;
-        JavascriptString * pMatch = null;
+        JavascriptRegExp * pRegEx = nullptr;
+        JavascriptString * pMatch = nullptr;
 
-        JavascriptString * pReplace = null;
-        JavascriptFunction* replacefn = null;
+        JavascriptString * pReplace = nullptr;
+        JavascriptFunction* replacefn = nullptr;
 
         SearchValueHelper(scriptContext, ((args.Info.Count > 1)?args[1]:scriptContext->GetLibrary()->GetNull()), &pRegEx, &pMatch);
         ReplaceValueHelper(scriptContext, ((args.Info.Count > 2) ? args[2] : scriptContext->GetLibrary()->GetUndefined()), &replacefn, &pReplace);        
 
-        if (pRegEx != null)
+        if (pRegEx != nullptr)
         {
-            if (replacefn != null)
+            if (replacefn != nullptr)
             {
-                return RegexHelper::RegexReplaceFunction(scriptContext, pRegEx, pThis, replacefn, null);
+                return RegexHelper::RegexReplaceFunction(scriptContext, pRegEx, pThis, replacefn, nullptr);
             }
             else
             {
-                return RegexHelper::RegexReplace(scriptContext, pRegEx, pThis, pReplace, null, RegexHelper::IsResultNotUsed(callInfo.Flags));
+                return RegexHelper::RegexReplace(scriptContext, pRegEx, pThis, pReplace, nullptr, RegexHelper::IsResultNotUsed(callInfo.Flags));
             }
         }
 
-        AssertMsg(pMatch != null, "Match string shouldn't be null");
-        if (replacefn != null)
+        AssertMsg(pMatch != nullptr, "Match string shouldn't be null");
+        if (replacefn != nullptr)
         {
             return RegexHelper::StringReplace(pMatch, pThis, replacefn);
         }
@@ -1448,8 +1448,8 @@ case_2:
 
     void JavascriptString::SearchValueHelper(ScriptContext* scriptContext, Var aValue, JavascriptRegExp ** ppSearchRegEx, JavascriptString ** ppSearchString)
     {
-        *ppSearchRegEx = null;
-        *ppSearchString = null;
+        *ppSearchRegEx = nullptr;
+        *ppSearchString = nullptr;
 
         if (JavascriptRegExp::Is(aValue))
         {
@@ -1467,8 +1467,8 @@ case_2:
 
     void JavascriptString::ReplaceValueHelper(ScriptContext* scriptContext, Var aValue, JavascriptFunction ** ppReplaceFn, JavascriptString ** ppReplaceString)
     {
-        *ppReplaceFn = null;
-        *ppReplaceString = null;
+        *ppReplaceFn = nullptr;
+        *ppReplaceString = nullptr;
 
         if (JavascriptFunction::Is(aValue))
         {
@@ -1512,7 +1512,7 @@ case_2:
         JavascriptString * pThis = nullptr;
         GetThisStringArgument(args, scriptContext, L"String.prototype.search", &pThis);
         
-        JavascriptRegExp * pRegEx = null;
+        JavascriptRegExp * pRegEx = nullptr;
         if(args.Info.Count > 1)
         {
             if (JavascriptRegExp::Is(args[1]))
@@ -1521,12 +1521,12 @@ case_2:
             }
             else
             {
-                pRegEx = JavascriptRegExp::CreateRegEx(args[1], null, scriptContext);
+                pRegEx = JavascriptRegExp::CreateRegEx(args[1], nullptr, scriptContext);
             }
         }
         else
         {
-            pRegEx = JavascriptRegExp::CreateRegEx(scriptContext->GetLibrary()->GetUndefined(), null, scriptContext);            
+            pRegEx = JavascriptRegExp::CreateRegEx(scriptContext->GetLibrary()->GetUndefined(), nullptr, scriptContext);
         }
         return RegexHelper::RegexSearch(scriptContext, pRegEx, pThis);
 
@@ -1815,7 +1815,7 @@ case_2:
         }
         AssertMsg(args.Info.Count > 0, "Negative argument count");
 
-        JavascriptString* str = null;
+        JavascriptString* str = nullptr;
         if (!GetThisValueVar(args[0], &str, scriptContext))
         {
             if (JavascriptOperators::GetTypeId(args[0]) == TypeIds_HostDispatch)
@@ -2220,7 +2220,7 @@ case_2:
         }
         AssertMsg(args.Info.Count > 0, "Negative argument count");
 
-        JavascriptString* str = null;
+        JavascriptString* str = nullptr;
         if (!GetThisValueVar(args[0], &str, scriptContext))
         {
             if (JavascriptOperators::GetTypeId(args[0]) == TypeIds_HostDispatch)
@@ -3298,9 +3298,9 @@ case_2:
         // the definition to inline the function in other translation units.
         Assert(false);
 
-        JavascriptString *const s = null;
+        JavascriptString *const s = nullptr;
 
-        s->ConcatDestructive(null);
+        s->ConcatDestructive(nullptr);
     }
 
     JavascriptString * 
@@ -3352,7 +3352,7 @@ case_2:
         PropertyRecord const* propertyRecord;
         this->GetScriptContext()->FindPropertyRecord(propertyNameString, &propertyRecord);
 
-        if (propertyRecord != null && GetPropertyBuiltIns(propertyRecord->GetPropertyId(), value))
+        if (propertyRecord != nullptr && GetPropertyBuiltIns(propertyRecord->GetPropertyId(), value))
         {
             return true;
         }

@@ -77,8 +77,8 @@ namespace Js
     {
     public:
         InlinedFrameWalker()
-            : parentFunction(null)
-            , frames(null)
+            : parentFunction(nullptr)
+            , frames(nullptr)
             , currentIndex(-1)
             , frameCount(0)
         {
@@ -128,7 +128,7 @@ namespace Js
 
             static InlinedFrame *FromPhysicalFrame(StackFrame& currentFrame, void *entry, FunctionEntryPointInfo* entryPointInfo)
             {
-                struct InlinedFrame *inlinedFrame = null;
+                struct InlinedFrame *inlinedFrame = nullptr;
                 if (!currentFrame.IsInStackCheckCode(entry))
                 {
                     void *frame = currentFrame.GetFrame();
@@ -295,6 +295,7 @@ namespace Js
         CallInfo                inlinedFrameCallInfo;
         bool                    inlinedFramesBeingWalked    : 1;
         bool                    isJavascriptFrame           : 1;
+        bool                    isNativeLibraryFrame        : 1;
         bool                    isInitialFrame              : 1; // If we need to walk the initial frame
         bool                    lastInternalFrameConsumed   : 1;
         bool                    shouldDetectPartiallyInitializedInterpreterFrame : 1;

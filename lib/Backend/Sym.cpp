@@ -54,9 +54,9 @@ StackSym::New(SymID id, IRType type, Js::RegSlot byteCodeRegSlot, Func *func)
 
     stackSym->m_type = type;
     stackSym->m_equivNext = stackSym;
-    stackSym->m_objectInfo = null;
+    stackSym->m_objectInfo = nullptr;
 
-    AssertMsg(func->m_symTable->Find(id) == NULL, "Trying to add new symbol which already exists.");
+    AssertMsg(func->m_symTable->Find(id) == nullptr, "Trying to add new symbol which already exists.");
     func->m_symTable->Add(stackSym);
 
     return stackSym;
@@ -80,7 +80,7 @@ ObjectSymInfo::New(StackSym * typeSym, Func * func)
 ObjectSymInfo *
 StackSym::EnsureObjectInfo(Func * func)
 {
-    if (this->m_objectInfo == null)
+    if (this->m_objectInfo == nullptr)
     {
         this->m_objectInfo = ObjectSymInfo::New(func);
     }
@@ -397,7 +397,7 @@ StackSym *
 StackSym::CloneDef(Func *func)
 {
     Cloner * cloner = func->GetCloner();
-    StackSym *  newSym = NULL;
+    StackSym *  newSym = nullptr;
 
     AssertMsg(cloner, "Use Func::BeginClone to initialize cloner");
 
@@ -424,7 +424,7 @@ StackSym::CloneDef(Func *func)
         return this;
     }
 
-    if (cloner->symMap == NULL)
+    if (cloner->symMap == nullptr)
     {
         cloner->symMap = HashTable<StackSym*>::New(cloner->alloc, 7);
     }
@@ -436,7 +436,7 @@ StackSym::CloneDef(Func *func)
             newSym = *entry;
         }
     }
-    if (newSym == NULL)
+    if (newSym == nullptr)
     {
         // NOTE: We don't care about the bytecode register information for cloned symbol
         // As those are the float sym that we will convert back to Var before jumping back
@@ -483,14 +483,14 @@ StackSym::CloneUse(Func *func)
 
     AssertMsg(cloner, "Use Func::BeginClone to initialize cloner");
 
-    if (cloner->symMap == NULL)
+    if (cloner->symMap == nullptr)
     {
         return this;
     }
 
     newSym = cloner->symMap->Get(m_id);
 
-    if (newSym == NULL)
+    if (newSym == nullptr)
     {
         return this;
     }
@@ -545,7 +545,7 @@ Js::Var StackSym::GetFloatConstValueAsVar_PostGlobOpt() const
     IR::Instr *defInstr = this->m_instrDef;
     IR::Opnd *src1 = defInstr->GetSrc1();
 
-    StackSym * stackSym = null;
+    StackSym * stackSym = nullptr;
 
     if (src1->IsRegOpnd())
     {
@@ -591,7 +591,7 @@ void *StackSym::GetConstAddress() const
     IR::Instr *defInstr = this->m_instrDef;
     IR::Opnd *src1 = defInstr->GetSrc1();
 
-    StackSym * stackSym = null;
+    StackSym * stackSym = nullptr;
 
     if (src1->IsRegOpnd())
     {
@@ -616,7 +616,7 @@ intptr_t StackSym::GetLiteralConstValue_PostGlobOpt() const
     IR::Instr *defInstr = this->m_instrDef;
     IR::Opnd *src1 = defInstr->GetSrc1();
 
-    StackSym * stackSym = null;
+    StackSym * stackSym = nullptr;
 
     if (src1->IsRegOpnd())
     {
@@ -761,7 +761,7 @@ StackSym::GetSimd128EquivSym(IRType type, Func *func)
         break;
     default:
         Assert(UNREACHED);
-        return null;
+        return nullptr;
     }
 }
 
@@ -820,9 +820,9 @@ StackSym::GetTypeEquivSym(IRType type, Func *func)
     }
 
     // Don't allocatate if func wasn't passed in.
-    if (func == null)
+    if (func == nullptr)
     {
-        return NULL;
+        return nullptr;
     }
 
     if (this->HasByteCodeRegSlot())
@@ -875,7 +875,7 @@ PropertySym::New(SymID stackSymID, int32 propertyId, uint32 propertyIdIndex, uin
     StackSym *  stackSym;
 
     stackSym = func->m_symTable->FindStackSym(stackSymID);
-    AssertMsg(stackSym != NULL, "Adding propertySym to non-existing stackSym...  Can this happen??");
+    AssertMsg(stackSym != nullptr, "Adding propertySym to non-existing stackSym...  Can this happen??");
 
     return PropertySym::New(stackSym, propertyId, propertyIdIndex, inlineCacheIndex, fieldKind, func);
 }
@@ -900,11 +900,11 @@ PropertySym::New(StackSym *stackSym, int32 propertyId, uint32 propertyIdIndex, u
     propertySym->m_inlineCacheIndex = inlineCacheIndex;
     Assert(propertyIdIndex == (uint)-1 || inlineCacheIndex == (uint)-1);
     propertySym->m_loadInlineCacheIndex = (uint)-1;
-    propertySym->m_loadInlineCacheFunc = NULL;
+    propertySym->m_loadInlineCacheFunc = nullptr;
     propertySym->m_fieldKind = fieldKind;
 
     propertySym->m_stackSym = stackSym;
-    propertySym->m_propertyEquivSet = NULL;
+    propertySym->m_propertyEquivSet = nullptr;
 
     // Add to list
 
@@ -1041,7 +1041,7 @@ Sym::Dump(IRDumpFlags flags, const ValueType valueType)
                 }
                 else
                 {
-                    StackSym *varSym = this->AsStackSym()->GetVarEquivSym(NULL);
+                    StackSym *varSym = this->AsStackSym()->GetVarEquivSym(nullptr);
                     if (varSym)
                     {
                         Output::Print(L"(s%d)", varSym->m_id);

@@ -119,7 +119,7 @@ namespace Js
         uint emptyStrings;      // # of requests for zero-length strings (literals or BufferStrings)
         uint singleCharStrings; // # of requests for single-char strings (literals of BufferStrings)
 
-        UIntHashTable<StringMetrics> stringLengthMetrics;
+        JsUtil::BaseDictionary<uint, StringMetrics, ArenaAllocator> stringLengthMetrics;
 
         struct UintUintPair
         {

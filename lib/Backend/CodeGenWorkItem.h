@@ -324,7 +324,7 @@ struct JsLoopBodyCodeGen sealed : public CodeGenWorkItem
         Js::EntryPointInfo* entryPointInfo,
         bool isJitInDebugMode)
         : CodeGenWorkItem(manager, functionBody, entryPointInfo, isJitInDebugMode, JsLoopBodyWorkItemType)
-        , symIdToValueTypeMap(null)
+        , symIdToValueTypeMap(nullptr)
     { 
     }
 

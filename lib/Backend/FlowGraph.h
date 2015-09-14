@@ -16,9 +16,9 @@ private:
     Js::Type* initialType;
     Js::Type* finalType;
 public:
-    AddPropertyCacheBucket() : initialType(null), finalType(null)
+    AddPropertyCacheBucket() : initialType(nullptr), finalType(nullptr)
 #if DBG
-        , deadStoreUnavailableInitialType(null), deadStoreUnavailableFinalType(null)
+        , deadStoreUnavailableInitialType(nullptr), deadStoreUnavailableFinalType(nullptr)
 #endif
     {
     }
@@ -74,22 +74,22 @@ private:
     bool needsMonoCheck;
 
 public:
-    ObjTypeGuardBucket() : guardedPropertyOps(null), needsMonoCheck(false) {}
+    ObjTypeGuardBucket() : guardedPropertyOps(nullptr), needsMonoCheck(false) {}
 
     ObjTypeGuardBucket(BVSparse<JitArenaAllocator>* guardedPropertyOps) : needsMonoCheck(false)
     { 
-        this->guardedPropertyOps = (guardedPropertyOps != null ? guardedPropertyOps->CopyNew() : null);
+        this->guardedPropertyOps = (guardedPropertyOps != nullptr ? guardedPropertyOps->CopyNew() : nullptr);
     }
 
     void Copy(ObjTypeGuardBucket *pNew) const 
     {
-        pNew->guardedPropertyOps = this->guardedPropertyOps ? this->guardedPropertyOps->CopyNew() : null;
+        pNew->guardedPropertyOps = this->guardedPropertyOps ? this->guardedPropertyOps->CopyNew() : nullptr;
         pNew->needsMonoCheck = this->needsMonoCheck;
     }
 
     BVSparse<JitArenaAllocator> *GetGuardedPropertyOps() const  { return this->guardedPropertyOps; }
     void SetGuardedPropertyOps(BVSparse<JitArenaAllocator> *guardedPropertyOps) { this->guardedPropertyOps = guardedPropertyOps; }
-    void AddToGuardedPropertyOps(uint propertyOpId) { Assert(this->guardedPropertyOps != null); this->guardedPropertyOps->Set(propertyOpId); }
+    void AddToGuardedPropertyOps(uint propertyOpId) { Assert(this->guardedPropertyOps != nullptr); this->guardedPropertyOps->Set(propertyOpId); }
 
     bool NeedsMonoCheck() const { return this->needsMonoCheck; }
     void SetNeedsMonoCheck(bool value) { this->needsMonoCheck = value; }
@@ -105,18 +105,18 @@ private:
     BVSparse<JitArenaAllocator>* writeGuards;
 
 public:
-    ObjWriteGuardBucket() : writeGuards(null) {}
+    ObjWriteGuardBucket() : writeGuards(nullptr) {}
 
-    ObjWriteGuardBucket(BVSparse<JitArenaAllocator>* writeGuards) { this->writeGuards = (writeGuards != null ? writeGuards->CopyNew() : null); }
+    ObjWriteGuardBucket(BVSparse<JitArenaAllocator>* writeGuards) { this->writeGuards = (writeGuards != nullptr ? writeGuards->CopyNew() : nullptr); }
 
     void Copy(ObjWriteGuardBucket *pNew) const 
     {
-        pNew->writeGuards = this->writeGuards ? this->writeGuards->CopyNew() : null;
+        pNew->writeGuards = this->writeGuards ? this->writeGuards->CopyNew() : nullptr;
     }
 
     BVSparse<JitArenaAllocator> *GetWriteGuards() const  { return this->writeGuards; }
     void SetWriteGuards(BVSparse<JitArenaAllocator> *writeGuards) { this->writeGuards = writeGuards; }
-    void AddToWriteGuards(uint writeGuardId) { Assert(this->writeGuards != null); this->writeGuards->Set(writeGuardId); }
+    void AddToWriteGuards(uint writeGuardId) { Assert(this->writeGuards != nullptr); this->writeGuards->Set(writeGuardId); }
 
 #if DBG_DUMP
     void Dump() const;
@@ -133,10 +133,10 @@ public:
     FlowGraph(Func *func, JitArenaAllocator *fgAlloc) : 
         func(func),
         alloc(fgAlloc),
-        blockList(null),
+        blockList(nullptr),
         blockCount(0),
-        tailBlock(null),
-        loopList(null),
+        tailBlock(nullptr),
+        loopList(nullptr),
         catchLabelStack(nullptr),
         hasBackwardPassInfo(false),
         hasLoop(false),
@@ -157,9 +157,9 @@ public:
     BasicBlock * InsertAirlockBlock(FlowEdge * edge);
     void         InsertCompBlockToLoopList(Loop *loop, BasicBlock* compBlock, BasicBlock* targetBlock, bool postTarget);
     void         RemoveUnreachableBlocks();
-    bool         RemoveUnreachableBlock(BasicBlock *block, GlobOpt * globOpt = null);
+    bool         RemoveUnreachableBlock(BasicBlock *block, GlobOpt * globOpt = nullptr);
     IR::Instr *  RemoveInstr(IR::Instr *instr, GlobOpt * globOpt);
-    void         RemoveBlock(BasicBlock *block, GlobOpt * globOpt = null, bool tailDuping = false);
+    void         RemoveBlock(BasicBlock *block, GlobOpt * globOpt = nullptr, bool tailDuping = false);
     BasicBlock * SetBlockTargetAndLoopFlag(IR::LabelInstr * labelInstr);
     Func*        GetFunc() { return func;};
     static void  SafeRemoveInstr(IR::Instr *instr);
@@ -182,7 +182,7 @@ public:
 private:
     void        FindLoops(void);
     bool        CanonicalizeLoops(void);
-    void        BuildLoop(BasicBlock *headBlock, BasicBlock *tailBlock, Loop *parentLoop = NULL);
+    void        BuildLoop(BasicBlock *headBlock, BasicBlock *tailBlock, Loop *parentLoop = nullptr);
     void        WalkLoopBlocks(BasicBlock *block, Loop *loop, JitArenaAllocator *tempAlloc);
     void        AddBlockToLoop(BasicBlock *block, Loop *loop);
     void        UpdateRegionForBlock(BasicBlock *block, Region **blockToRegion);
@@ -390,45 +390,45 @@ public:
 
 private:
     BasicBlock(JitArenaAllocator * alloc, Func *func) :
-        next(null),
-        prev(null),
-        firstInstr(null),
+        next(nullptr),
+        prev(nullptr),
+        firstInstr(nullptr),
         number(k_InvalidNum),
-        loop(null),
+        loop(nullptr),
         isDeleted(false),
         isDead(false),
         isLoopHeader(false),
         hasCall(false),
-        upwardExposedUses(null),
-        upwardExposedFields(null),
-        typesNeedingKnownObjectLayout(null),
-        slotDeadStoreCandidates(null),
-        tempNumberTracker(null),
-        tempObjectTracker(null),
+        upwardExposedUses(nullptr),
+        upwardExposedFields(nullptr),
+        typesNeedingKnownObjectLayout(nullptr),
+        slotDeadStoreCandidates(nullptr),
+        tempNumberTracker(nullptr),
+        tempObjectTracker(nullptr),
 #if DBG
-        tempObjectVerifyTracker(null),
+        tempObjectVerifyTracker(nullptr),
 #endif
-        stackSymToFinalType(null),
-        stackSymToGuardedProperties(null),
-        stackSymToWriteGuardsMap(null),
-        noImplicitCallUses(null),
-        noImplicitCallNoMissingValuesUses(null),
-        noImplicitCallNativeArrayUses(null),
-        noImplicitCallJsArrayHeadSegmentSymUses(null),
+        stackSymToFinalType(nullptr),
+        stackSymToGuardedProperties(nullptr),
+        stackSymToWriteGuardsMap(nullptr),
+        noImplicitCallUses(nullptr),
+        noImplicitCallNoMissingValuesUses(nullptr),
+        noImplicitCallNativeArrayUses(nullptr),
+        noImplicitCallJsArrayHeadSegmentSymUses(nullptr),
         noImplicitCallArrayLengthSymUses(nullptr),
         cloneStrCandidates(nullptr),
-        byteCodeUpwardExposedUsed(null),
+        byteCodeUpwardExposedUsed(nullptr),
         isAirLockCompensationBlock(false),
 #if DBG
-        byteCodeRestoreSyms(null),
+        byteCodeRestoreSyms(nullptr),
         isBreakBlock(false),
         isAirLockBlock(false),
         isBreakCompensationBlockAtSource(false),
         isBreakCompensationBlockAtSink(false),
 #endif
-        fieldHoistCandidates(null),
+        fieldHoistCandidates(nullptr),
         dataUseCount(0),
-        intOverflowDoesNotMatterRange(null),
+        intOverflowDoesNotMatterRange(nullptr),
         func(func),
         globOptData(func)
     {
@@ -461,9 +461,9 @@ public:
     static FlowEdge * New(FlowGraph * graph);
 
     FlowEdge() :
-        predBlock(null),
-        succBlock(null),
-        pathDependentInfo(null)
+        predBlock(nullptr),
+        succBlock(nullptr),
+        pathDependentInfo(nullptr)
     {
     }
         
@@ -509,7 +509,7 @@ public:
     void ClearPathDependentInfo(JitArenaAllocator * alloc)
     {
         JitAdelete(alloc, pathDependentInfo);
-        pathDependentInfo = null;
+        pathDependentInfo = nullptr;
     }
 
 private:
@@ -659,18 +659,18 @@ public:
         : topFunc(func),
         blockList(alloc),
         parent(nullptr),
-        landingPad(NULL),
+        landingPad(nullptr),
         loopTopLabel(nullptr),
-        symsUsedBeforeDefined(null),
-        likelyIntSymsUsedBeforeDefined(null),
-        likelyNumberSymsUsedBeforeDefined(null),
-        likelySimd128F4SymsUsedBeforeDefined(null),
-        likelySimd128I4SymsUsedBeforeDefined(null),
-        forceFloat64SymsOnEntry(null),
-        forceSimd128F4SymsOnEntry(null),
-        forceSimd128I4SymsOnEntry(null),
-        symsDefInLoop(null),
-        fieldHoistCandidateTypes(null),
+        symsUsedBeforeDefined(nullptr),
+        likelyIntSymsUsedBeforeDefined(nullptr),
+        likelyNumberSymsUsedBeforeDefined(nullptr),
+        likelySimd128F4SymsUsedBeforeDefined(nullptr),
+        likelySimd128I4SymsUsedBeforeDefined(nullptr),
+        forceFloat64SymsOnEntry(nullptr),
+        forceSimd128F4SymsOnEntry(nullptr),
+        forceSimd128I4SymsOnEntry(nullptr),
+        symsDefInLoop(nullptr),
+        fieldHoistCandidateTypes(nullptr),
         fieldHoistSymMap(alloc),
         needImplicitCallBailoutChecksForJsArrayCheckHoist(false),
         inductionVariables(nullptr),
@@ -746,7 +746,7 @@ private:
 
 #define FOREACH_BLOCK_ALL(block, graph) \
     for (BasicBlock *block = graph->blockList;\
-        block != NULL;\
+        block != nullptr;\
         block = block->next)\
     {
 
@@ -768,20 +768,20 @@ private:
     NEXT_BLOCK_ALL
 
 #define FOREACH_BLOCK_BACKWARD(block, graph)\
-    FOREACH_BLOCK_BACKWARD_IN_RANGE(block, graph->tailBlock, NULL)
+    FOREACH_BLOCK_BACKWARD_IN_RANGE(block, graph->tailBlock, nullptr)
 
 #define NEXT_BLOCK_BACKWARD \
     NEXT_BLOCK_BACKWARD_IN_RANGE
 
 #define FOREACH_BLOCK_BACKWARD_DEAD_OR_ALIVE(block, graph)\
-    FOREACH_BLOCK_BACKWARD_IN_RANGE_DEAD_OR_ALIVE(block, graph->tailBlock, NULL)
+    FOREACH_BLOCK_BACKWARD_IN_RANGE_DEAD_OR_ALIVE(block, graph->tailBlock, nullptr)
 
 #define NEXT_BLOCK_BACKWARD_DEAD_OR_ALIVE \
     NEXT_BLOCK_BACKWARD_IN_RANGE_DEAD_OR_ALIVE
 
 #define FOREACH_BLOCK_BACKWARD_IN_RANGE_ALL(block, blockList, blockLast)\
 {\
-    BasicBlock * blockStop = blockLast? ((BasicBlock *)blockLast)->prev : NULL; \
+    BasicBlock * blockStop = blockLast? ((BasicBlock *)blockLast)->prev : nullptr; \
     for (BasicBlock *block = blockList;\
         block != blockStop;\
         block = block->prev)\
@@ -800,7 +800,7 @@ private:
 #define FOREACH_BLOCK_BACKWARD_IN_RANGE_ALL_EDITING(block, blockList, blockLast, blockPrev)\
 {\
     BasicBlock *blockPrev;\
-    BasicBlock * blockStop = blockLast? ((BasicBlock *)blockLast)->prev : NULL; \
+    BasicBlock * blockStop = blockLast? ((BasicBlock *)blockLast)->prev : nullptr; \
     for (BasicBlock *block = blockList;\
         block != blockStop;\
         block = blockPrev)\
@@ -828,7 +828,7 @@ private:
     {\
         BasicBlock *blockNext;\
         for (BasicBlock *block = graph->blockList;\
-            block != NULL;\
+            block != nullptr;\
             block = blockNext)\
         {\
             blockNext = block->next; \
@@ -840,7 +840,7 @@ private:
     {\
         BasicBlock *blockPrev;\
         for (BasicBlock *block = graph->tailBlock;\
-            block != NULL;\
+            block != nullptr;\
             block = blockPrev)\
         {\
             blockPrev = block->prev; \
@@ -959,7 +959,7 @@ private:
         {\
         Loop* loopNext;\
         for (Loop* loop = graph->loopList;\
-            loop != NULL;\
+            loop != nullptr;\
             loop = loopNext)\
                 {\
             loopNext = loop->next;

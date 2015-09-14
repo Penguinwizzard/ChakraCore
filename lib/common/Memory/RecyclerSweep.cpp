@@ -40,7 +40,7 @@ RecyclerSweep::BeginSweep(Recycler * recycler, size_t rescanRootBytes, bool adju
     }
 
     Assert(!recycler->IsSweeping());
-    Assert(recycler->recyclerSweep == null);
+    Assert(recycler->recyclerSweep == nullptr);
 
     memset(this, 0, sizeof(RecyclerSweep));
     this->recycler = recycler;
@@ -77,20 +77,20 @@ RecyclerSweep::BeginSweep(Recycler * recycler, size_t rescanRootBytes, bool adju
     mediumFinalizableData.pendingMergeNewHeapBlockList = recycler->autoHeap.newMediumFinalizableHeapBlockList;
 
 
-    recycler->autoHeap.newLeafHeapBlockList = null;
-    recycler->autoHeap.newNormalHeapBlockList = null;
-    recycler->autoHeap.newFinalizableHeapBlockList = null;
+    recycler->autoHeap.newLeafHeapBlockList = nullptr;
+    recycler->autoHeap.newNormalHeapBlockList = nullptr;
+    recycler->autoHeap.newFinalizableHeapBlockList = nullptr;
 #ifdef RECYCLER_WRITE_BARRIER
-    recycler->autoHeap.newNormalWithBarrierHeapBlockList = null;
-    recycler->autoHeap.newFinalizableWithBarrierHeapBlockList = null;
+    recycler->autoHeap.newNormalWithBarrierHeapBlockList = nullptr;
+    recycler->autoHeap.newFinalizableWithBarrierHeapBlockList = nullptr;
 #endif
 
-    recycler->autoHeap.newMediumLeafHeapBlockList = null;
-    recycler->autoHeap.newMediumNormalHeapBlockList = null;
-    recycler->autoHeap.newMediumFinalizableHeapBlockList = null;
+    recycler->autoHeap.newMediumLeafHeapBlockList = nullptr;
+    recycler->autoHeap.newMediumNormalHeapBlockList = nullptr;
+    recycler->autoHeap.newMediumFinalizableHeapBlockList = nullptr;
 #ifdef RECYCLER_WRITE_BARRIER
-    recycler->autoHeap.newMediumNormalWithBarrierHeapBlockList = null;
-    recycler->autoHeap.newMediumFinalizableWithBarrierHeapBlockList = null;
+    recycler->autoHeap.newMediumNormalWithBarrierHeapBlockList = nullptr;
+    recycler->autoHeap.newMediumFinalizableWithBarrierHeapBlockList = nullptr;
 #endif
 
 #endif
@@ -244,7 +244,7 @@ RecyclerSweep::EndSweep()
 #endif
     }
     
-    recycler->recyclerSweep = null;
+    recycler->recyclerSweep = nullptr;
 
     // Clean up the HeapBlockMap.  
     // This will release any internal structures that are no longer needed after Sweep.
@@ -318,7 +318,7 @@ RecyclerSweep::ShutdownCleanup()
     {
         // For leaf, we can always reuse the page as we don't need to rescan them for partial GC
         // It should have been swept immeditately during Sweep
-        Assert(this->leafData.bucketData[i].pendingSweepList == null);
+        Assert(this->leafData.bucketData[i].pendingSweepList == nullptr);
         SmallNormalHeapBucket::DeleteHeapBlockList(this->normalData.bucketData[i].pendingSweepList, recycler);
         SmallFinalizableHeapBucket::DeleteHeapBlockList(this->finalizableData.bucketData[i].pendingSweepList, recycler);
 #ifdef RECYCLER_WRITE_BARRIER
@@ -329,9 +329,9 @@ RecyclerSweep::ShutdownCleanup()
         SmallNormalHeapBucket::DeleteEmptyHeapBlockList(this->normalData.bucketData[i].pendingEmptyBlockList);
 #ifdef RECYCLER_WRITE_BARRIER
         SmallNormalWithBarrierHeapBucket::DeleteEmptyHeapBlockList(this->withBarrierData.bucketData[i].pendingEmptyBlockList);
-        Assert(this->finalizableWithBarrierData.bucketData[i].pendingEmptyBlockList == null);
+        Assert(this->finalizableWithBarrierData.bucketData[i].pendingEmptyBlockList == nullptr);
 #endif
-        Assert(this->finalizableData.bucketData[i].pendingEmptyBlockList == null);
+        Assert(this->finalizableData.bucketData[i].pendingEmptyBlockList == nullptr);
     }
 
     MediumLeafHeapBucket::DeleteHeapBlockList(this->mediumLeafData.pendingMergeNewHeapBlockList, recycler);
@@ -345,7 +345,7 @@ RecyclerSweep::ShutdownCleanup()
     {
         // For leaf, we can always reuse the page as we don't need to rescan them for partial GC
         // It should have been swept immeditately during Sweep
-        Assert(this->mediumLeafData.bucketData[i].pendingSweepList == null);
+        Assert(this->mediumLeafData.bucketData[i].pendingSweepList == nullptr);
         MediumNormalHeapBucket::DeleteHeapBlockList(this->mediumNormalData.bucketData[i].pendingSweepList, recycler);
         MediumFinalizableHeapBucket::DeleteHeapBlockList(this->mediumFinalizableData.bucketData[i].pendingSweepList, recycler);
 #ifdef RECYCLER_WRITE_BARRIER
@@ -356,9 +356,9 @@ RecyclerSweep::ShutdownCleanup()
         MediumNormalHeapBucket::DeleteEmptyHeapBlockList(this->mediumNormalData.bucketData[i].pendingEmptyBlockList);
 #ifdef RECYCLER_WRITE_BARRIER
         MediumNormalWithBarrierHeapBucket::DeleteEmptyHeapBlockList(this->mediumWithBarrierData.bucketData[i].pendingEmptyBlockList);
-        Assert(this->mediumFinalizableWithBarrierData.bucketData[i].pendingEmptyBlockList == null);
+        Assert(this->mediumFinalizableWithBarrierData.bucketData[i].pendingEmptyBlockList == nullptr);
 #endif
-        Assert(this->mediumFinalizableData.bucketData[i].pendingEmptyBlockList == null);
+        Assert(this->mediumFinalizableData.bucketData[i].pendingEmptyBlockList == nullptr);
     }
 }
 
@@ -369,7 +369,7 @@ RecyclerSweep::MergePendingNewHeapBlockList()
 {
     TBlockType *& blockList = this->GetData<TBlockType>().pendingMergeNewHeapBlockList;
     TBlockType * list = blockList;
-    blockList = null;
+    blockList = nullptr;
     HeapInfo& heapInfo = recycler->autoHeap;
     HeapBlockList::ForEachEditing(list, [&heapInfo](TBlockType * heapBlock)
     {
@@ -391,7 +391,7 @@ RecyclerSweep::MergePendingNewMediumHeapBlockList()
 {
     TBlockType *& blockList = this->GetData<TBlockType>().pendingMergeNewHeapBlockList;
     TBlockType * list = blockList;
-    blockList = null;
+    blockList = nullptr;
     HeapInfo& heapInfo = recycler->autoHeap;
     HeapBlockList::ForEachEditing(list, [&heapInfo](TBlockType * heapBlock)
     {
@@ -445,19 +445,19 @@ RecyclerSweep::EndBackground()
 bool 
 RecyclerSweep::HasPendingNewHeapBlocks() const
 {
-    return leafData.pendingMergeNewHeapBlockList != null
-        || normalData.pendingMergeNewHeapBlockList != null
-        || finalizableData.pendingMergeNewHeapBlockList != null
+    return leafData.pendingMergeNewHeapBlockList != nullptr
+        || normalData.pendingMergeNewHeapBlockList != nullptr
+        || finalizableData.pendingMergeNewHeapBlockList != nullptr
 #ifdef RECYCLER_WRITE_BARRIER
-        || withBarrierData.pendingMergeNewHeapBlockList != null
-        || finalizableWithBarrierData.pendingMergeNewHeapBlockList != null
+        || withBarrierData.pendingMergeNewHeapBlockList != nullptr
+        || finalizableWithBarrierData.pendingMergeNewHeapBlockList != nullptr
 #endif
-        || mediumLeafData.pendingMergeNewHeapBlockList != null
-        || mediumNormalData.pendingMergeNewHeapBlockList != null
-        || mediumFinalizableData.pendingMergeNewHeapBlockList != null
+        || mediumLeafData.pendingMergeNewHeapBlockList != nullptr
+        || mediumNormalData.pendingMergeNewHeapBlockList != nullptr
+        || mediumFinalizableData.pendingMergeNewHeapBlockList != nullptr
 #ifdef RECYCLER_WRITE_BARRIER
-        || mediumWithBarrierData.pendingMergeNewHeapBlockList != null
-        || mediumFinalizableWithBarrierData.pendingMergeNewHeapBlockList != null
+        || mediumWithBarrierData.pendingMergeNewHeapBlockList != nullptr
+        || mediumFinalizableWithBarrierData.pendingMergeNewHeapBlockList != nullptr
 #endif
 
         ;

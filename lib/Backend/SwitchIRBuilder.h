@@ -89,7 +89,7 @@ public:
 
     SwitchIRBuilder(SwitchAdapter * adapter)
         : m_adapter(adapter)
-        , m_profiledSwitchInstr(null)
+        , m_profiledSwitchInstr(nullptr)
         , m_switchOptBuildBail(false)
         , m_switchIntDynProfile(false)
         , m_switchStrDynProfile(false)

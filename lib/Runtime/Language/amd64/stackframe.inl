@@ -8,7 +8,7 @@ __inline void Js::Amd64StackFrame::EnsureFunctionEntry()
 {
     if (!functionEntry)
     {
-        functionEntry = RtlLookupFunctionEntry(currentContext->Rip, &imageBase, null);
+        functionEntry = RtlLookupFunctionEntry(currentContext->Rip, &imageBase, nullptr);
     }
 }
 
@@ -44,6 +44,6 @@ __inline bool Js::Amd64StackFrame::EnsureCallerContext(bool isCurrentContextNati
 __inline void Js::Amd64StackFrame::OnCurrentContextUpdated()
 {
     imageBase = 0;
-    functionEntry = null;
+    functionEntry = nullptr;
     hasCallerContext = false;
 }

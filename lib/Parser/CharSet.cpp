@@ -1000,7 +1000,7 @@ namespace UnifiedRegex
             {
                 Char c = this->GetCompactChar(i);
                 uint uChar = CTU(c);
-                if (uChar < 0xD800 || uChar > 0xDFFF)
+                if (0xD800 <= uChar && uChar <= 0xDFFF)
                 {
                     other.Set(allocator, c);
                 }
@@ -1016,7 +1016,7 @@ namespace UnifiedRegex
             else
             {
                 other.rep.full.root = rep.full.root->Clone(allocator);
-                other.rep.full.root->ClearRange(allocator, CharSetNode::levels - 1, 0xD800, 0XDFFF);
+                other.rep.full.root->ClearRange(allocator, CharSetNode::levels - 1, 0, 0xD7FF);
             }
         }
     }
@@ -1604,56 +1604,15 @@ namespace UnifiedRegex
                 lowerIndex++;
             }
                 
-            if (partialHigher != Chars<wchar_t>::MaxUChar)
-            {
-                this->characterPlanes[upperIndex].SetRange(allocator, 0, partialHigher);
-            }
-            else
-            {
-                partialHigher++;
-            }
-
             for(; lowerIndex < upperIndex; lowerIndex++)
             {
                 this->characterPlanes[lowerIndex].SetRange(allocator, 0, Chars<wchar_t>::MaxUChar);
             }
+
+            this->characterPlanes[upperIndex].SetRange(allocator, 0, partialHigher);
         }
     }
-    void CharSet<codepoint_t>::SubtractRange(ArenaAllocator* allocator, Char lc, Char hc)
-    {
-        Assert(lc <= hc);
 
-        int lowerIndex = this->CharToIndex(lc);
-        int upperIndex = this->CharToIndex(hc);
-
-        if (lowerIndex == upperIndex)
-        {
-            this->characterPlanes[lowerIndex].SubtractRange(allocator, this->RemoveOffset(lc), this->RemoveOffset(hc));
-        }
-        else
-        {
-            // Do the partial ranges
-            wchar_t partialLower = this->RemoveOffset(lc);
-            wchar_t partialHigher = this->RemoveOffset(hc);
-                
-            if (partialLower != 0)
-            {
-                this->characterPlanes[lowerIndex].SubtractRange(allocator, partialLower, Chars<wchar_t>::MaxUChar);
-                lowerIndex++;
-            }
-                
-            if (partialHigher != Chars<wchar_t>::MaxUChar)
-            {
-                this->characterPlanes[lowerIndex].SubtractRange(allocator, 0, partialHigher);
-                upperIndex++;
-            }
-
-            for (; lowerIndex < upperIndex; lowerIndex++)
-            {
-                this->characterPlanes[lowerIndex].SubtractRange(allocator, 0, Chars<wchar_t>::MaxUChar);
-            }
-        }
-    }
     void CharSet<codepoint_t>::SetRanges(ArenaAllocator* allocator, int numSortedPairs, const Char* sortedPairs)
     {
         for (int i = 0; i < numSortedPairs * 2; i += 2)

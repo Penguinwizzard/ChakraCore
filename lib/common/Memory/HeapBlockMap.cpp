@@ -37,9 +37,9 @@ HeapBlockMap32::GetHeapBlock(void * address)
     uint id1 = GetLevel1Id(address);
 
     L2MapChunk * l2map = map[id1];
-    if (l2map == null) 
+    if (l2map == nullptr) 
     {
-        return null;
+        return nullptr;
     }
     
     return l2map->Get(address);
@@ -55,10 +55,10 @@ HeapBlockMap32::EnsureHeapBlock(void * address, uint pageCount)
 
     while (true)
     {
-        if (map[id1] == null)
+        if (map[id1] == nullptr)
         {
             L2MapChunk * newChunk = NoMemProtectHeapNewNoThrowZ(L2MapChunk);
-            if (newChunk == null)
+            if (newChunk == nullptr)
             {
                 // Leave any previously allocated L2MapChunks in place -- 
                 // the concurrent thread may have already accessed them.
@@ -94,7 +94,7 @@ HeapBlockMap32::SetHeapBlockNoCheck(void * address, uint pageCount, HeapBlock * 
 
     while (true)
     {
-        Assert(map[id1] != null);
+        Assert(map[id1] != nullptr);
         
         map[id1]->Set(id2, currentPageCount, heapBlock, blockType, bucketIndex);
         
@@ -135,7 +135,7 @@ HeapBlockMap32::ClearHeapBlock(void * address, uint pageCount)
 
     while (true)
     {
-        Assert(map[id1] != null);
+        Assert(map[id1] != nullptr);
         
         map[id1]->Clear(id2, currentPageCount);
         
@@ -157,9 +157,9 @@ HeapBlockMap32::GetPageMarkBitVector(void * address)
     uint id1 = GetLevel1Id(address);
 
     L2MapChunk * l2map = map[id1];
-    if (l2map == null)
+    if (l2map == nullptr)
     {
-        return null;
+        return nullptr;
     }
 
     return l2map->GetPageMarkBitVector(address);
@@ -172,9 +172,9 @@ HeapBlockMap32::GetMarkBitVectorForPages(void * address)
     uint id1 = GetLevel1Id(address);
 
     L2MapChunk * l2map = map[id1];
-    if (l2map == null)
+    if (l2map == nullptr)
     {
-        return null;
+        return nullptr;
     }
 
     return l2map->GetMarkBitVectorForPages<BitCount>(address);
@@ -206,9 +206,9 @@ HeapBlockMap32::ForEachChunkInAddressRange(void * address, size_t pageCount, Fn 
     while (true)
     {
         L2MapChunk * l2map = map[id1];
-        Assert(l2map != null);
+        Assert(l2map != nullptr);
 
-        if (l2map != null)
+        if (l2map != nullptr)
         {
             while (id2 < L2Count)
             {
@@ -235,7 +235,7 @@ HeapBlockMap32::IsMarked(void * address) const
 
     L2MapChunk * chunk = map[id1];
 
-    Assert(chunk != null);
+    Assert(chunk != nullptr);
     return chunk->IsMarked(address);
 }
 
@@ -245,7 +245,7 @@ HeapBlockMap32::SetMark(void * address)
     uint id1 = GetLevel1Id(address);
 
     L2MapChunk * chunk = map[id1];
-    Assert(chunk != null);
+    Assert(chunk != nullptr);
 
     return chunk->SetMark(address);
 }
@@ -256,7 +256,7 @@ HeapBlockMap32::TestAndSetMark(void * address)
     uint id1 = GetLevel1Id(address);
 
     L2MapChunk * chunk = map[id1];
-    if (chunk == null)
+    if (chunk == nullptr)
     {
         // False refernce
         return false;
@@ -272,7 +272,7 @@ HeapBlockMap32::ResetMarks()
     for (uint i = 0; i < L1Count; i++)
     {
         L2MapChunk * chunk = map[i];
-        if (chunk == null)
+        if (chunk == nullptr)
         {
             continue;
         }
@@ -299,7 +299,7 @@ HeapBlockMap32::GetPageMarkCount(void * address) const
     uint id1 = GetLevel1Id(address);
 
     L2MapChunk * l2map = map[id1];
-    Assert(l2map != null);
+    Assert(l2map != nullptr);
 
     uint id2 = GetLevel2Id(address);
 
@@ -312,7 +312,7 @@ HeapBlockMap32::SetPageMarkCount(void * address, ushort markCount)
     uint id1 = GetLevel1Id(address);
 
     L2MapChunk * l2map = map[id1];
-    Assert(l2map != null);
+    Assert(l2map != nullptr);
     
     uint id2 = GetLevel2Id(address);
 
@@ -335,7 +335,7 @@ HeapBlockMap32::VerifyMarkCountForPages(void * address, size_t pageCount)
     uint id1 = GetLevel1Id(address);
 
     L2MapChunk * l2map = map[id1];
-    Assert(l2map != null);
+    Assert(l2map != nullptr);
 
     uint id2 = GetLevel2Id(address);
 
@@ -396,7 +396,7 @@ HeapBlockMap32::L2MapChunk::Set(uint id2, uint pageCount, HeapBlock * heapBlock,
     for (uint i = id2; i < id2End; i++)
     {
         __analysis_assume(i < L2Count);
-        Assert(map[i] == null);
+        Assert(map[i] == nullptr);
         Assert(blockInfo[i].blockType == HeapBlock::HeapBlockType::FreeBlockType);
 
         // Set the blockType last, because we will test this first during marking.        
@@ -418,14 +418,14 @@ HeapBlockMap32::L2MapChunk::Clear(uint id2, uint pageCount)
     for (uint i = id2; i < id2End; i++)
     {
         __analysis_assume(i < L2Count);
-        Assert(map[i] != null);
+        Assert(map[i] != nullptr);
         Assert(blockInfo[i].blockType != HeapBlock::HeapBlockType::FreeBlockType);
 
         // This shouldn't be called when concurrent marking is happening, so order does not matter.
         // Regardless, set the blockType first just to be internally consistent.
         // We don't actually clear the bucketIndex because it doesn't matter if the blockType is FreeBlock.
         blockInfo[i].blockType = HeapBlock::HeapBlockType::FreeBlockType;
-        map[i] = null;
+        map[i] = nullptr;
     }
 }
 
@@ -434,7 +434,7 @@ HeapBlockMap32::L2MapChunk::IsEmpty() const
 {
     for (uint i = 0; i < L2Count; i++)
     {
-        if (map[i] != null)
+        if (map[i] != nullptr)
         {
             return false;
         }
@@ -494,7 +494,7 @@ HeapBlockMap32::InduceFalsePositives(Recycler * recycler)
     for (uint i = 0; i < L1Count; i++)
     {
         L2MapChunk * chunk = map[i];
-        if (chunk == null)
+        if (chunk == nullptr)
         {
             continue;
         }
@@ -503,11 +503,11 @@ HeapBlockMap32::InduceFalsePositives(Recycler * recycler)
         {
             HeapBlock * block = chunk->map[j];
 
-            if (block == null)
+            if (block == nullptr)
             {
                 // Unallocated block.  Try to mark the first offset, in case
                 // we are simultaneously allocating this block on the main thread.
-                recycler->TryMarkNonInterior((void *)GetAddressFromIds(i, j), null);
+                recycler->TryMarkNonInterior((void *)GetAddressFromIds(i, j), nullptr);
             }
             else if (!block->IsLargeHeapBlock())
             {
@@ -525,7 +525,7 @@ HeapBlockMap32::IsAddressInNewChunk(void * address)
     uint id1 = GetLevel1Id(address);
 
     L2MapChunk * l2map = map[id1];
-    Assert(l2map != null);
+    Assert(l2map != nullptr);
     return l2map->isNewChunk;
 }
 #endif
@@ -541,7 +541,7 @@ HeapBlockMap32::ForEachSegment(Recycler * recycler, Fn func)
     for (uint i = 0; i < L1Count; i++)
     {
         L2MapChunk * chunk = map[i];
-        if (chunk == null)
+        if (chunk == nullptr)
         {
             continue;
         }
@@ -549,7 +549,7 @@ HeapBlockMap32::ForEachSegment(Recycler * recycler, Fn func)
         for (uint j = 0; j < L2Count; j++)
         {
             HeapBlock * block = chunk->map[j];
-            if (block == null)
+            if (block == nullptr)
             {
                 continue;
             }
@@ -622,7 +622,7 @@ HeapBlockMap32::RescanPage(void * dirtyPage, bool* anyObjectsMarkedOnPage, Recyc
 {
     uint id1 = GetLevel1Id(dirtyPage);
     L2MapChunk * chunk = map[id1];
-    if (chunk != null)
+    if (chunk != nullptr)
     {
         uint id2 = GetLevel2Id(dirtyPage);
         HeapBlock::HeapBlockType blockType = chunk->blockInfo[id2].blockType;
@@ -664,7 +664,7 @@ template <class TBlockType>
 bool
 HeapBlockMap32::RescanHeapBlock(void * dirtyPage, HeapBlock::HeapBlockType blockType, L2MapChunk* chunk, uint id2, bool* anyObjectsMarkedOnPage, Recycler * recycler)
 {
-    Assert(chunk != null);
+    Assert(chunk != nullptr);
     char* heapBlockPageAddress = TBlockType::GetBlockStartAddress((char*) dirtyPage);
 
     typedef TBlockType::HeapBlockAttributes TBlockAttributes;
@@ -699,7 +699,7 @@ template <typename TBlockType>
 TBlockType*
 HeapBlockMap32::GetHeapBlockForRescan(HeapBlockMap32::L2MapChunk* chunk, uint id2) const
 {
-    return null;
+    return nullptr;
 }
 
 template <>
@@ -938,11 +938,11 @@ HeapBlockMap32::OOMRescan(Recycler * recycler)
 
                 uint id1 = GetLevel1Id(pageAddress);
                 L2MapChunk * chunk = map[id1];
-                if (chunk != null)
+                if (chunk != nullptr)
                 {
                     uint id2 = GetLevel2Id(pageAddress);
                     HeapBlock * heapBlock = chunk->map[id2];
-                    if (heapBlock != null && heapBlock->GetAddress() == pageAddress)
+                    if (heapBlock != nullptr && heapBlock->GetAddress() == pageAddress)
                     {
                         if (heapBlock->GetAndClearNeedOOMRescan())
                         {
@@ -1066,10 +1066,10 @@ HeapBlockMap32::Cleanup(bool concurrentFindImplicitRoot)
     for (uint id1 = 0; id1 < L1Count; id1++)
     {
         L2MapChunk * l2map = map[id1];
-        if (l2map != null && l2map->IsEmpty())
+        if (l2map != nullptr && l2map->IsEmpty())
         {
             // Concurrent searches for implicit roots will never see empty L2 maps.
-            map[id1] = null;
+            map[id1] = nullptr;
             NoMemProtectHeapDelete(l2map);
             Assert(count > 0);
             count--;
@@ -1080,16 +1080,16 @@ HeapBlockMap32::Cleanup(bool concurrentFindImplicitRoot)
 #if defined(_M_X64_OR_ARM64)
 
 HeapBlockMap64::HeapBlockMap64():
-    list(null)
+    list(nullptr)
 {
 }
 
 HeapBlockMap64::~HeapBlockMap64()
 {
     Node * node = list;
-    list = null;
+    list = nullptr;
 
-    while (node != null)
+    while (node != nullptr)
     {
         Node * next = node->next;
         NoMemProtectHeapDelete(node);
@@ -1111,7 +1111,7 @@ HeapBlockMap64::EnsureHeapBlock(void * address, size_t pageCount)
     do
     {        
         Node * node = FindOrInsertNode(address);      
-        if (node == null || !node->map.EnsureHeapBlock(address, nodePages))
+        if (node == nullptr || !node->map.EnsureHeapBlock(address, nodePages))
         {
             return false;
         }
@@ -1136,7 +1136,7 @@ HeapBlockMap64::SetHeapBlockNoCheck(void * address, size_t pageCount, HeapBlock 
 {
     ForEachNodeInAddressRange(address, pageCount, [&](Node * node, void * address, size_t nodePages)
     {
-        Assert(node != null);
+        Assert(node != nullptr);
         node->map.SetHeapBlockNoCheck(address, nodePages, heapBlock, blockType, bucketIndex);
     });
 }
@@ -1158,7 +1158,7 @@ void HeapBlockMap64::ClearHeapBlock(void * address, size_t pageCount)
 {
     ForEachNodeInAddressRange(address, pageCount, [&](Node* node, void* address, size_t nodePages)
     {
-        Assert(node != null);
+        Assert(node != nullptr);
         node->map.ClearHeapBlock(address, nodePages);
     });
 }
@@ -1197,9 +1197,9 @@ HeapBlock *
 HeapBlockMap64::GetHeapBlock(void * address) 
 { 
     Node * node = FindNode(address);
-    if (node == null)
+    if (node == nullptr)
     {
-        return null;
+        return nullptr;
     }
     return node->map.GetHeapBlock(address);
 }
@@ -1208,7 +1208,7 @@ HeapBlockMap32::PageMarkBitVector *
 HeapBlockMap64::GetPageMarkBitVector(void * address)
 {
     Node * node = FindNode(address);
-    Assert(node != null);
+    Assert(node != nullptr);
     return node->map.GetPageMarkBitVector(address);
 }
 
@@ -1216,7 +1216,7 @@ template <size_t BitCount>
 BVStatic<BitCount>* HeapBlockMap64::GetMarkBitVectorForPages(void * address)
 {
     Node * node = FindNode(address);
-    Assert(node != null);
+    Assert(node != nullptr);
     return node->map.GetMarkBitVectorForPages<BitCount>(address);
 }
 
@@ -1230,7 +1230,7 @@ HeapBlockMap64::GetMarkCount(void * address, uint pageCount)
 
     ForEachNodeInAddressRange(address, pageCount, [&](Node* node, void* address, size_t nodePageCount)
     {
-        Assert(node != null);
+        Assert(node != nullptr);
         markCount += node->map.GetMarkCount(address, nodePageCount);
     });
 
@@ -1241,7 +1241,7 @@ bool
 HeapBlockMap64::IsMarked(void * address) const
 {
     Node * node = FindNode(address);
-    if (node != null)
+    if (node != nullptr)
     {
         return node->map.IsMarked(address);
     }
@@ -1252,7 +1252,7 @@ void
 HeapBlockMap64::SetMark(void * address)
 {
     Node * node = FindNode(address);
-    if (node != null)
+    if (node != nullptr)
     {
         node->map.SetMark(address);
     }
@@ -1262,7 +1262,7 @@ bool
 HeapBlockMap64::TestAndSetMark(void * address)
 {
     Node * node = FindNode(address);
-    if (node == null)
+    if (node == nullptr)
     {
         return false;
     }
@@ -1275,10 +1275,10 @@ HeapBlockMap64::FindOrInsertNode(void * address)
 {
     Node * node = FindNode(address);
 
-    if (node == null)
+    if (node == nullptr)
     {
         node = NoMemProtectHeapNewNoThrowZ(Node, GetNodeStartAddress(address));
-        if (node != null)
+        if (node != nullptr)
         {
             node->nodeIndex = GetNodeIndex(address);
             node->next = list;
@@ -1299,7 +1299,7 @@ HeapBlockMap64::FindNode(void * address) const
     uint index = GetNodeIndex(address);
     
     Node * node = list;
-    while (node != null)
+    while (node != nullptr)
     {
         if (node->nodeIndex == index)
         {
@@ -1309,14 +1309,14 @@ HeapBlockMap64::FindNode(void * address) const
         node = node->next;
     }
 
-    return null;
+    return nullptr;
 }
 
 void
 HeapBlockMap64::ResetMarks()
 {
     Node * node = this->list;
-    while (node != null)
+    while (node != nullptr)
     {
         node->map.ResetMarks();
         node = node->next;
@@ -1328,7 +1328,7 @@ void
 HeapBlockMap64::ResetWriteWatch(Recycler * recycler)
 {
     Node * node = this->list;
-    while (node != null)
+    while (node != nullptr)
     {
         node->map.ResetWriteWatch(recycler);
         node = node->next;
@@ -1339,7 +1339,7 @@ void
 HeapBlockMap64::MakeAllPagesReadOnly(Recycler* recycler)
 {
     Node * node = this->list;
-    while (node != null)
+    while (node != nullptr)
     {
         node->map.MakeAllPagesReadOnly(recycler);
         node = node->next;
@@ -1350,7 +1350,7 @@ void
 HeapBlockMap64::MakeAllPagesReadWrite(Recycler* recycler)
 {
     Node * node = this->list;
-    while (node != null)
+    while (node != nullptr)
     {
         node->map.MakeAllPagesReadWrite(recycler);
         node = node->next;
@@ -1363,7 +1363,7 @@ HeapBlockMap64::Rescan(Recycler * recycler, bool resetWriteWatch)
     uint scannedPageCount = 0;
     
     Node * node = this->list;
-    while (node != null)
+    while (node != nullptr)
     {
         scannedPageCount += node->map.Rescan(recycler, resetWriteWatch);
         node = node->next;
@@ -1376,7 +1376,7 @@ bool
 HeapBlockMap64::OOMRescan(Recycler * recycler)
 {
     Node * node = this->list;
-    while (node != null)
+    while (node != nullptr)
     {
         if (!node->map.OOMRescan(recycler))
         {
@@ -1393,7 +1393,7 @@ HeapBlockMap64::Cleanup(bool concurrentFindImplicitRoot)
 {
     Node ** prevnext = &this->list;
     Node * node = *prevnext;    
-    while (node != null)
+    while (node != nullptr)
     {
         node->map.Cleanup(concurrentFindImplicitRoot);
         Node * nextNode = node->next;
@@ -1417,7 +1417,7 @@ ushort
 HeapBlockMap64::GetPageMarkCount(void * address) const
 {
     Node * node = FindNode(address);
-    Assert(node != null);
+    Assert(node != nullptr);
 
     return node->map.GetPageMarkCount(address);
 }
@@ -1426,7 +1426,7 @@ void
 HeapBlockMap64::SetPageMarkCount(void * address, ushort markCount)
 {
     Node * node = FindNode(address);
-    Assert(node != null);
+    Assert(node != nullptr);
 
     node->map.SetPageMarkCount(address, markCount);
 }
@@ -1439,7 +1439,7 @@ void
 HeapBlockMap64::VerifyMarkCountForPages(void * address, size_t pageCount)
 {
     Node * node = FindNode(address);
-    Assert(node != null);
+    Assert(node != nullptr);
 
     node->map.VerifyMarkCountForPages<BitVectorCount>(address, pageCount);
 }
@@ -1453,7 +1453,7 @@ void
 HeapBlockMap64::InduceFalsePositives(Recycler * recycler)
 {
     Node * node = this->list;
-    while (node != null)
+    while (node != nullptr)
     {
         node->map.InduceFalsePositives(recycler);
         node = node->next;
@@ -1466,7 +1466,7 @@ bool
 HeapBlockMap64::IsAddressInNewChunk(void * address)
 {
     Node * node = FindNode(address);
-    Assert(node != null);
+    Assert(node != nullptr);
 
     return node->map.IsAddressInNewChunk(address);
 }

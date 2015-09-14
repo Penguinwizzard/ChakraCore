@@ -13,7 +13,7 @@ namespace Js {
 
     class X86StackFrame {
     public:
-        X86StackFrame() : frame(null), codeAddr(null), stackCheckCodeHeight(0), addressOfCodeAddr(nullptr) {};
+        X86StackFrame() : frame(nullptr), codeAddr(nullptr), stackCheckCodeHeight(0), addressOfCodeAddr(nullptr) {};
 
         bool InitializeByFrameId(void * frameAddress, ScriptContext* scriptContext);
         bool InitializeByReturnAddress(void * returnAddress, ScriptContext* scriptContext);

@@ -6,9 +6,9 @@
 
 
 CodeGenNumberThreadAllocator::CodeGenNumberThreadAllocator(Recycler * recycler)
-    : recycler(recycler), currentNumberSegment(null), currentChunkSegment(null),
-    numberSegmentEnd(null), currentNumberBlockEnd(null), nextNumber(null), chunkSegmentEnd(null),
-    currentChunkBlockEnd(null), nextChunk(null), hasNewNumberBlock(null), hasNewChunkBlock(null),
+    : recycler(recycler), currentNumberSegment(nullptr), currentChunkSegment(nullptr),
+    numberSegmentEnd(nullptr), currentNumberBlockEnd(nullptr), nextNumber(nullptr), chunkSegmentEnd(nullptr),
+    currentChunkBlockEnd(nullptr), nextChunk(nullptr), hasNewNumberBlock(nullptr), hasNewChunkBlock(nullptr),
     pendingIntegrationNumberSegmentCount(0), pendingIntegrationChunkSegmentCount(0),
     pendingIntegrationNumberSegmentPageCount(0), pendingIntegrationChunkSegmentPageCount(0)
 {
@@ -107,11 +107,11 @@ CodeGenNumberThreadAllocator::AllocNewNumberBlock()
         Assert(cs.IsLocked());
         // Reserve the segment, but not committing it
         currentNumberSegment = PageAllocator::AllocPageSegment(pendingIntegrationNumberSegment, this->recycler->GetRecyclerLeafPageAllocator(), true);
-        if (currentNumberSegment == null)
+        if (currentNumberSegment == nullptr)
         {
-            currentNumberBlockEnd = null;
-            numberSegmentEnd = null;
-            nextNumber = null;
+            currentNumberBlockEnd = nullptr;
+            numberSegmentEnd = nullptr;
+            nextNumber = nullptr;
             Js::Throw::OutOfMemory();
         }
         pendingIntegrationNumberSegmentCount++;
@@ -154,11 +154,11 @@ CodeGenNumberThreadAllocator::AllocNewChunkBlock()
         Assert(cs.IsLocked());
         // Reserve the segment, but not committing it
         currentChunkSegment = PageAllocator::AllocPageSegment(pendingIntegrationChunkSegment, this->recycler->GetRecyclerPageAllocator(), true);
-        if (currentChunkSegment == null)
+        if (currentChunkSegment == nullptr)
         {
-            currentChunkBlockEnd = null;
-            chunkSegmentEnd = null;
-            nextChunk = null;
+            currentChunkBlockEnd = nullptr;
+            chunkSegmentEnd = nullptr;
+            nextChunk = nullptr;
             Js::Throw::OutOfMemory();
         }
         pendingIntegrationChunkSegmentCount++;
@@ -235,7 +235,7 @@ CodeGenNumberThreadAllocator::FlushAllocations()
 }
 
 CodeGenNumberAllocator::CodeGenNumberAllocator(CodeGenNumberThreadAllocator * threadAlloc, Recycler * recycler) :
-    threadAlloc(threadAlloc), recycler(recycler), chunk(null), chunkTail(null), currentChunkNumberCount(CodeGenNumberChunk::MaxNumberCount)
+    threadAlloc(threadAlloc), recycler(recycler), chunk(nullptr), chunkTail(nullptr), currentChunkNumberCount(CodeGenNumberChunk::MaxNumberCount)
 {
 #if DBG
     finalized = false;
@@ -255,8 +255,8 @@ CodeGenNumberAllocator::Alloc()
         // Need to always put the new chunk last, as when we flush
         // pages, new chunk's page might not be full yet, and won't
         // be flushed, and we will have a broken link in the link list.
-        newChunk->next = null;
-        if (this->chunkTail != null)
+        newChunk->next = nullptr;
+        if (this->chunkTail != nullptr)
         {
             this->chunkTail->next = newChunk;
         }
@@ -282,8 +282,8 @@ CodeGenNumberAllocator::Finalize()
     finalized = true;
 #endif
     CodeGenNumberChunk * finalizedChunk = this->chunk;
-    this->chunk = null;
-    this->chunkTail = null;
+    this->chunk = nullptr;
+    this->chunkTail = nullptr;
     this->currentChunkNumberCount = 0;
     return finalizedChunk;
 }

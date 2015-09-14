@@ -11,8 +11,8 @@ namespace Js
 
     DynamicObject::DynamicObject(DynamicType * type, const bool initSlots) :
         RecyclableObject(type),
-        auxSlots(null),
-        objectArray(null)
+        auxSlots(nullptr),
+        objectArray(nullptr)
     {
         Assert(!UsesObjectArrayOrFlagsAsFlags());
         if(initSlots)
@@ -31,8 +31,8 @@ namespace Js
 #else
         RecyclableObject(type),
 #endif
-        auxSlots(null),
-        objectArray(null)
+        auxSlots(nullptr),
+        objectArray(nullptr)
     {
         Assert(!UsesObjectArrayOrFlagsAsFlags());
         InitSlots(this, scriptContext);
@@ -382,12 +382,12 @@ namespace Js
     Var
     DynamicObject::GetNextProperty(PropertyIndex& index, DynamicType *typeToEnumerate, bool requireEnumerable, bool enumSymbols)
     {
-        JavascriptString* propertyString= null;
+        JavascriptString* propertyString= nullptr;
         PropertyId propertyId = Constants::NoProperty;
 
         if (!this->GetTypeHandler()->FindNextProperty(this->GetScriptContext(), index, &propertyString, &propertyId, nullptr, this->GetType(), typeToEnumerate, requireEnumerable, enumSymbols))
         {
-            return null;
+            return nullptr;
         }
 
         Assert(propertyString);
@@ -408,7 +408,7 @@ namespace Js
             }
         }
 
-        Var value = null;
+        Var value = nullptr;
         BOOL result;
         if (propertyId != Constants::NoProperty)
         {
@@ -426,12 +426,12 @@ namespace Js
     Var
     DynamicObject::GetNextProperty(BigPropertyIndex& index, DynamicType *typeToEnumerate, bool requireEnumerable, bool enumSymbols)
     {
-        JavascriptString* propertyString = null;
+        JavascriptString* propertyString = nullptr;
         PropertyId propertyId = Constants::NoProperty;
 
         if (!this->GetTypeHandler()->FindNextProperty(this->GetScriptContext(), index, &propertyString, &propertyId, nullptr, this->GetType(), typeToEnumerate, requireEnumerable, enumSymbols))
         {
-            return null;
+            return nullptr;
         }
 
         Assert(propertyString);
@@ -442,7 +442,7 @@ namespace Js
         //    return this->slots[cache->dataSlotIndex];
         //}
 
-        Var value = null;
+        Var value = nullptr;
         BOOL result;
         if (propertyId != Constants::NoProperty)
         {
@@ -601,7 +601,7 @@ namespace Js
     void DynamicObject::InitArrayFlags(const DynamicObjectFlags flags)
     {        
         Assert(IsAnyArray(this));
-        Assert(this->objectArray == null);            
+        Assert(this->objectArray == nullptr);            
         Assert((flags & DynamicObjectFlags::ObjectArrayFlagsTag) == DynamicObjectFlags::ObjectArrayFlagsTag);
         Assert((flags & ~DynamicObjectFlags::AllFlags) == DynamicObjectFlags::None);
         this->arrayFlags = flags;     
@@ -644,7 +644,7 @@ namespace Js
         // type transition (if any) earlier when the singleton object first became a prototype.
         if ((currentTypeHandler->GetFlags() & (DynamicTypeHandler::IsSharedFlag | DynamicTypeHandler::IsPrototypeFlag)) == DynamicTypeHandler::IsPrototypeFlag)
         {
-            Assert(this->GetObjectArray() == null || (this->GetObjectArray()->GetTypeHandler()->GetFlags() & DynamicTypeHandler::IsPrototypeFlag) != 0);
+            Assert(this->GetObjectArray() == nullptr || (this->GetObjectArray()->GetTypeHandler()->GetFlags() & DynamicTypeHandler::IsPrototypeFlag) != 0);
             return;
         }
 
@@ -886,7 +886,7 @@ namespace Js
             
             do
             {
-                recycler->TryMarkNonInterior(*obj, null);
+                recycler->TryMarkNonInterior(*obj, nullptr);
                 obj++;
             } while (obj != objEnd);
 

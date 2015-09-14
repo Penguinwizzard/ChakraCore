@@ -403,7 +403,7 @@ private:
 
     void FreeLargeObjects()
     {
-        FreeLargeObject<true>(null);
+        FreeLargeObject<true>(nullptr);
     }
 
     DWORD EnsurePageWriteable(Page* page)

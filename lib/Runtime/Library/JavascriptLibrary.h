@@ -188,7 +188,9 @@ namespace Js
         StaticType * booleanTypeStatic;
         DynamicType * booleanTypeDynamic;
         DynamicType * dateType;
+#ifdef ENABLE_PROJECTION
         DynamicType * winrtDateType;
+#endif
         StaticType * variantDateType;
         DynamicType * symbolTypeDynamic;
         StaticType * symbolTypeStatic;
@@ -237,7 +239,9 @@ namespace Js
         DynamicType * syntaxErrorType;
         DynamicType * typeErrorType;
         DynamicType * uriErrorType;
+#ifdef ENABLE_PROJECTION
         DynamicType * winrtErrorType;
+#endif
         StaticType  * numberTypeStatic;
         StaticType  * int64NumberTypeStatic;
         StaticType  * uint64NumberTypeStatic;
@@ -333,7 +337,9 @@ namespace Js
         JavascriptFunction* arrayPrototypeToLocaleStringFunction;
         JavascriptFunction* identityFunction;
         JavascriptFunction* throwerFunction;
+#ifdef NTBUILD
         JavascriptFunction* hostPromiseContinuationFunction;
+#endif
         JavascriptFunction* promiseResolveFunction;
 
         JavascriptFunction* objectValueOfFunction;
@@ -388,7 +394,7 @@ namespace Js
         bool inDispatchProfileMode;
         bool arrayObjectHasUserDefinedSpecies;
 
-        JavascriptFunction * AddFunctionToLibraryObjectWithPrototype(GlobalObject * globalObject, PropertyId propertyId, FunctionInfo * functionInfo, int length, DynamicObject * prototype = null, DynamicType * functionType = null);
+        JavascriptFunction * AddFunctionToLibraryObjectWithPrototype(GlobalObject * globalObject, PropertyId propertyId, FunctionInfo * functionInfo, int length, DynamicObject * prototype = nullptr, DynamicType * functionType = nullptr);
         JavascriptFunction * AddFunctionToLibraryObject(DynamicObject* object, PropertyId propertyId, FunctionInfo * functionInfo, int length, PropertyAttributes attributes = PropertyBuiltInMethodDefaults);
 
         JavascriptFunction * AddFunctionToLibraryObjectWithName(DynamicObject* object, PropertyId propertyId, PropertyId nameId, FunctionInfo * functionInfo, int length);
@@ -459,6 +465,7 @@ namespace Js
                               arrayPrototypeToStringFunction(nullptr),
                               identityFunction(nullptr),
                               throwerFunction(nullptr),
+                              jsrtContextObject(nullptr),
                               cachedForInEnumerator(nullptr),
                               cacheForCopyOnAccessArraySegments(nullptr),
 #ifdef ENABLE_PROJECTION
@@ -555,7 +562,9 @@ namespace Js
         JavascriptFunction* GetMapConstructor() const {return mapConstructor; }
         JavascriptFunction* GetSetConstructor() const {return  setConstructor; }
         JavascriptFunction* GetSymbolConstructor() const {return symbolConstructor; }
+#ifdef ENABLE_PROJECTION
         JavascriptFunction* GetWinRTPromiseConstructor();
+#endif
         JavascriptFunction* GetEvalFunctionObject() { return evalFunctionObject; }
         JavascriptFunction* GetArrayPrototypeValuesFunction() { return arrayPrototypeValuesFunction; }
         DynamicObject* GetMathObject() const {return mathObject; }
@@ -579,7 +588,9 @@ namespace Js
         StaticType  * GetBooleanTypeStatic() const { return booleanTypeStatic; }
         DynamicType * GetBooleanTypeDynamic() const { return booleanTypeDynamic; }
         DynamicType * GetDateType() const { return dateType; }
+#ifdef ENABLE_PROJECTION
         DynamicType * GetWinRTDateType() const { return winrtDateType; }
+#endif
         DynamicType * GetBoundFunctionType() const { return boundFunctionType; }
         DynamicType * GetRegExpConstructorType() const { return regexConstructorType; }
         StaticType  * GetEnumeratorType() const { return enumeratorType; }
@@ -592,7 +603,9 @@ namespace Js
         DynamicType * GetSyntaxErrorType() const { return syntaxErrorType; }
         DynamicType * GetTypeErrorType() const { return typeErrorType; }
         DynamicType * GetURIErrorType() const { return uriErrorType; }
+#ifdef ENABLE_PROJECTION
         DynamicType * GetWinRTErrorType() const { return winrtErrorType; }
+#endif
         StaticType  * GetNumberTypeStatic() const { return numberTypeStatic; }
         StaticType  * GetInt64TypeStatic() const { return int64NumberTypeStatic; }
         StaticType  * GetUInt64TypeStatic() const { return uint64NumberTypeStatic; }
@@ -628,7 +641,7 @@ namespace Js
         DynamicType * GetStringTypeDynamic() const { return stringTypeDynamic; }
         StaticType  * GetVariantDateType() const { return variantDateType; }
         void EnsureDebugObject(DynamicObject* newDebugObject);
-        DynamicObject* GetDebugObject() const { Assert(debugObject != null); return debugObject; }
+        DynamicObject* GetDebugObject() const { Assert(debugObject != nullptr); return debugObject; }
         DynamicType * GetMapType() const { return mapType; }
         DynamicType * GetSetType() const { return setType; }
         DynamicType * GetWeakMapType() const { return weakMapType; }
@@ -678,9 +691,12 @@ namespace Js
         JavascriptFunction* GetIdentityFunction() const { return identityFunction; }
         JavascriptFunction* GetThrowerFunction() const { return throwerFunction; }
 
+#ifdef NTBUILD
         void InitializeHostPromiseContinuationFunction();
         JavascriptFunction* GetHostPromiseContinuationFunction();
+#endif
         void SetNativeHostPromiseContinuationFunction(PromiseContinuationCallback function, void *state);
+
         void PinJsrtContextObject(FinalizableObject* jsrtContext);
         FinalizableObject* GetPinnedJsrtContextObject();
         void EnqueueTask(Var taskVar);
@@ -748,7 +764,9 @@ namespace Js
         JavascriptError* CreateURIError();
         JavascriptError* CreateStackOverflowError();
         JavascriptError* CreateOutOfMemoryError();
+#ifdef ENABLE_PROJECTION
         JavascriptError* CreateWinRTError();
+#endif
         JavascriptSymbol* CreateSymbol(JavascriptString* description);
         JavascriptSymbol* CreateSymbol(const wchar_t* description, int descriptionLength);
         JavascriptSymbol* CreateSymbol(const PropertyRecord* propertyRecord);
@@ -974,8 +992,10 @@ namespace Js
         static void __cdecl InitializeTypeErrorPrototype(DynamicObject* prototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
         static void __cdecl InitializeURIErrorConstructor(DynamicObject* constructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
         static void __cdecl InitializeURIErrorPrototype(DynamicObject* prototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
+#ifdef ENABLE_PROJECTION
         static void __cdecl InitializeWinRTErrorConstructor(DynamicObject* constructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
         static void __cdecl InitializeWinRTErrorPrototype(DynamicObject* prototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
+#endif
 
         static void __cdecl InitializeTypedArrayConstructor(DynamicObject* typedArrayConsructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
         static void __cdecl InitializeTypedArrayPrototype(DynamicObject* prototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
@@ -1036,8 +1056,9 @@ namespace Js
 #ifdef ENABLE_INTL_OBJECT
         static void __cdecl InitializeIntlObject(DynamicObject* IntlEngineObject, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
 #endif
+#ifdef ENABLE_PROJECTION
         void InitializeWinRTPromiseConstructor();
-
+#endif
         static void __cdecl InitializeMapConstructor(DynamicObject* mapConstructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
         static void __cdecl InitializeMapPrototype(DynamicObject* mapPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
         static void __cdecl InitializeSetConstructor(DynamicObject* setConstructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
@@ -1096,7 +1117,7 @@ namespace Js
         virtual void Finalize(bool isShutdown) override
         {
             __super::Finalize(isShutdown);
-            if (this->referencedPropertyRecords != null)
+            if (this->referencedPropertyRecords != nullptr)
             {
                 RECYCLER_PERF_COUNTER_SUB(PropertyRecordBindReference, this->referencedPropertyRecords->Count());
             }
@@ -1109,7 +1130,7 @@ namespace Js
         ReferencedPropertyRecordHashSet * EnsureReferencedPropertyRecordList()
         {
             ReferencedPropertyRecordHashSet* pidList = this->referencedPropertyRecords;
-            if (pidList == null)
+            if (pidList == nullptr)
             {
                 pidList = RecyclerNew(this->recycler, ReferencedPropertyRecordHashSet, this->recycler, 173);
                 this->referencedPropertyRecords = pidList;

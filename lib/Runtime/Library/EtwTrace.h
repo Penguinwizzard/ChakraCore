@@ -73,7 +73,7 @@ enum MethodType : uint16
          Url);
 
 #define LogMethodNativeEvent(Function, Body, entryPoint)                                            \
-    Assert(entryPoint->GetNativeAddress() != null);                                                 \
+    Assert(entryPoint->GetNativeAddress() != NULL);                                                 \
     Assert(entryPoint->GetCodeSize() > 0);                                                          \
     Assert(entryPoint->IsNativeCode());                                                             \
     wchar_t functionNameArray[NameBufferLength];                                                    \
@@ -139,7 +139,7 @@ enum MethodType : uint16
     }
 
 #define LogMethodInterpretedThunkEvent(Function, Body)                        \
-    Assert(Body->GetDynamicInterpreterEntryPoint() != null);                  \
+    Assert(Body->GetDynamicInterpreterEntryPoint() != NULL);                  \
     JS_ETW(Function(Body->GetScriptContext(),                                  \
     Body->GetDynamicInterpreterEntryPoint(),                                  \
     Body->GetDynamicInterpreterThunkSize(),                                   \
@@ -164,7 +164,7 @@ enum MethodType : uint16
     GetFunctionName(Body))                                                    
 
 #define LogLoopBodyEvent(Function, Body, loopHeader, entryPoint)                                           \
-    Assert(entryPoint->GetNativeAddress() != null);                                                        \
+    Assert(entryPoint->GetNativeAddress() != NULL);                                                        \
     Assert(entryPoint->GetCodeSize() > 0);                                                                 \
     WCHAR loopBodyNameArray[NameBufferLength];                                                             \
     WCHAR* loopBodyName = loopBodyNameArray;                                                               \

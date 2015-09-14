@@ -9,12 +9,12 @@ namespace JsUtil
     class CharacterBuffer
     {
     public:
-        CharacterBuffer() : string(null), len((charcount_t)-1) {}
+        CharacterBuffer() : string(nullptr), len((charcount_t)-1) {}
         CharacterBuffer(T const * string, charcount_t len) : string(string), len(len) {}
 
         bool operator==(CharacterBuffer const& other) const 
         {
-            Assert(string != null);
+            Assert(string != nullptr);
             if (this->len != other.len)
             {
                 return false;
@@ -24,20 +24,20 @@ namespace JsUtil
 
         operator hash_t() const 
         {
-            Assert(string != null);
+            Assert(string != nullptr);
             return StaticGetHashCode(string, len);
         }
 
         int FastHash() const 
         {
-            Assert(string != null);
+            Assert(string != nullptr);
             return InternalGetHashCode<true>(string, len);
         }
 
         CharacterBuffer& operator=(T const * s)
         {
-            Assert(s == null);
-            string = null;
+            Assert(s == nullptr);
+            string = nullptr;
             len = (charcount_t)-1;
             return *this;
         }

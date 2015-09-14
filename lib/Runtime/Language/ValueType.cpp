@@ -1348,7 +1348,7 @@ INT_PTR ValueType::GetVirtualTypedArrayVtable(const Js::TypeId typeId)
     {
         return TypeIdToVtable[typeId];
     }
-    return null;
+    return NULL;
 }
 
 ValueType ValueType::FromTypeId(const Js::TypeId typeId, bool useVirtual)
@@ -2148,9 +2148,9 @@ void ValueType::InstantiateForceInlinedMembers()
     // definition to inline the function in other translation units.
     Assert(false);
 
-    const Js::Var var = null;
+    const Js::Var var = nullptr;
 
-    ValueType *const t = null;
+    ValueType *const t = nullptr;
     t->Merge(*t);
     t->Merge(var);
 }

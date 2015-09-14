@@ -67,6 +67,8 @@
 //----------------------------------------------------------------------------------------------------
 // Enabled features
 //----------------------------------------------------------------------------------------------------
+
+
 #define SIMD_JS_ENABLED
 
 #define EDIT_AND_CONTINUE
@@ -77,7 +79,7 @@
 #define SUPPORT_FIXED_FIELDS_ON_PATH_TYPES
 
 #define ENABLE_INTL_OBJECT
-#define ENABLE_FOUNDATION_OBJECT
+
 
 #define BYTECODE_BRANCH_ISLAND
 
@@ -90,10 +92,10 @@
 
 // JIT features
 #define ENABLE_NATIVE_CODEGEN 1
-#define ENABLE_PROJECTION 1
-
 
 #ifdef NTBUILD
+#define ENABLE_PROJECTION 
+#define ENABLE_FOUNDATION_OBJECT
 #define ENABLE_EXPERIMENTAL_FLAGS
 #define ENABLE_WININET_PROFILE_DATA_CACHE
 #define ENABLE_BASIC_TELEMETRY
@@ -169,7 +171,6 @@
 //----------------------------------------------------------------------------------------------------
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
 
-#define WIN8_COMPAT                 // include code to allow jscript9.dll to run with Win8 WWAHost.exe
 #define BAILOUT_INJECTION
 #define DYNAMIC_PROFILE_STORAGE
 #define DYNAMIC_PROFILE_MUTATOR
@@ -234,7 +235,6 @@
 #endif
 
 #ifdef DBG
-#define ARRLOG 1
 #define VALIDATE_ARRAY
 #define GENERATE_DUMP
 #endif
@@ -482,7 +482,6 @@
 #undef DBG_DUMP
 #undef BGJIT_STATS
 #undef EXCEPTION_RECOVERY
-#undef ARRLOG
 #undef PROFILE_STRINGS
 #undef PROFILE_TYPES
 #undef PROFILE_OBJECT_LITERALS

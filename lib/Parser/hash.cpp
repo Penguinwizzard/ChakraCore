@@ -20,7 +20,7 @@ const HashTbl::KWD HashTbl::g_mptkkwd[tkLimKwd] =
 
 const HashTbl::ReservedWordInfo HashTbl::s_reservedWordInfo[tkID] =
 {
-    { NULL, fidNil },
+    { nullptr, fidNil },
 #define KEYWORD(tk,f,prec2,nop2,prec1,nop1,name) \
         { &g_ssym_##name, f },
 #include "keywords.h"
@@ -30,12 +30,12 @@ HashTbl * HashTbl::Create(uint cidHash, ErrHandler * perr)
 {
     HashTbl * phtbl;
 
-    if (NULL == (phtbl = HeapNewNoThrow(HashTbl,perr)))
-        return NULL;
+    if (nullptr == (phtbl = HeapNewNoThrow(HashTbl,perr)))
+        return nullptr;
     if (!phtbl->Init(cidHash))
     {
         delete phtbl;
-        return NULL;
+        return nullptr;
     }
 
     return phtbl;
@@ -62,7 +62,7 @@ BOOL HashTbl::Init(uint cidHash)
         return FALSE;
 
     cb = cbTemp;
-    if (NULL == (m_prgpidName = (Ident **)m_noReleaseAllocator.Alloc(cb)))
+    if (nullptr == (m_prgpidName = (Ident **)m_noReleaseAllocator.Alloc(cb)))
         return FALSE;
     memset(m_prgpidName, 0, cb);
 
@@ -90,7 +90,7 @@ void HashTbl::Grow()
     uint n_luMask = n_cidHash - 1;
 
     IdentPtr *n_prgpidName = (IdentPtr *)m_noReleaseAllocator.Alloc(cb);
-    if (n_prgpidName == NULL) 
+    if (n_prgpidName == nullptr)
         // It is fine to exit early here, we will just have a potentially densely populated hash table
         return;
 
@@ -100,7 +100,7 @@ void HashTbl::Grow()
     // Place each entry it's new bucket.
     for (uint i = 0; i < cidHash; i++)
     {
-        for (IdentPtr pid = m_prgpidName[i], next = pid ? pid->m_pidNext : NULL; pid; pid = next, next = pid ? pid->m_pidNext : NULL)
+        for (IdentPtr pid = m_prgpidName[i], next = pid ? pid->m_pidNext : nullptr; pid; pid = next, next = pid ? pid->m_pidNext : nullptr)
         {
             ulong luHash = pid->m_luHash;
             ulong luIndex = luHash & n_luMask;
@@ -121,7 +121,7 @@ void HashTbl::Grow()
         int emptyBuckets = 0;
         for (uint i = 0; i < n_cidHash; i++)
         {
-            if(m_prgpidName[i] == NULL)
+            if(m_prgpidName[i] == nullptr)
             {
                 emptyBuckets++;
             }
@@ -205,10 +205,10 @@ IdentPtr HashTbl::PidFromTk(tokens token)
     __analysis_assume(token > tkNone && token < tkID);
     // Create a pid so we can create a name node
     IdentPtr rpid = m_rpid[token];
-    if (NULL == rpid)
+    if (nullptr == rpid)
     {
         StaticSym const * sym = s_reservedWordInfo[token].sym;
-        Assert(sym != null);
+        Assert(sym != nullptr);
         rpid = this->PidHashNameLenWithHash(sym->sz, sym->cch, sym->luHash);
         rpid->SetTk(token, s_reservedWordInfo[token].grfid);
         m_rpid[token] = rpid;
@@ -294,7 +294,7 @@ IdentPtr HashTbl::PidHashNameLenWithHash(CharType const * prgch, long cch, ulong
     }
 
 
-    if (NULL == (pid = (IdentPtr)m_noReleaseAllocator.Alloc(cb)))
+    if (nullptr == (pid = (IdentPtr)m_noReleaseAllocator.Alloc(cb)))
         m_perr->Throw(ERRnoMemory);
 
     /* Insert the identifier into the hash list */
@@ -304,12 +304,12 @@ IdentPtr HashTbl::PidHashNameLenWithHash(CharType const * prgch, long cch, ulong
     m_luCount++;
 
     /* Fill in the identifier record */
-    pid->m_pidNext = NULL;
+    pid->m_pidNext = nullptr;
     pid->m_tk = tkLim;
     pid->m_grfid = fidNil;
     pid->m_luHash = luHash;
     pid->m_cch = cch;
-    pid->m_pidRefStack = NULL;
+    pid->m_pidRefStack = nullptr;
     pid->m_propertyId = Js::Constants::NoProperty;
     pid->assignmentState = NotAssigned;
 
@@ -337,7 +337,7 @@ IdentPtr HashTbl::FindExistingPid(
     /* Search the hash table for an existing match */
     ppid = &m_prgpidName[luHash & m_luMask];
 
-    for (bucketCount = 0; NULL != (pid = *ppid); ppid = &pid->m_pidNext, bucketCount++)
+    for (bucketCount = 0; nullptr != (pid = *ppid); ppid = &pid->m_pidNext, bucketCount++)
     {
         if (pid->m_luHash == luHash && (int)pid->m_cch == cch &&
             HashTbl::CharsAreEqual(pid->m_sz, prgch, cch))

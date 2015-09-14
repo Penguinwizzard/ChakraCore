@@ -2,6 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved. 
 //----------------------------------------------------------------------------
 #include "RuntimeDebugPch.h"
+#include "Language\JavascriptFunctionArgIndex.h"
 
 namespace Js
 {

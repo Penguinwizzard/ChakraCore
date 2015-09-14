@@ -44,8 +44,8 @@ class Lowerer
     friend class Func;
 
 public:
-    Lowerer(Func * func) : m_func(func), m_lowererMD(func), nextStackFunctionOpnd(nullptr), outerMostLoopLabel(null),
-        initializedTempSym(null), addToLiveOnBackEdgeSyms(nullptr), currentRegion(nullptr)
+    Lowerer(Func * func) : m_func(func), m_lowererMD(func), nextStackFunctionOpnd(nullptr), outerMostLoopLabel(nullptr),
+        initializedTempSym(nullptr), addToLiveOnBackEdgeSyms(nullptr), currentRegion(nullptr)
     {
     }
 
@@ -104,7 +104,7 @@ private:
     IR::Instr *     LowerProfiledLdSlot(IR::JitProfilingInstr *instr);
     void            LowerProfileLdSlot(IR::Opnd *const valueOpnd, Func *const ldSlotFunc, const Js::ProfileId profileId, IR::Instr *const insertBeforeInstr);
     void            LowerProfiledBinaryOp(IR::JitProfilingInstr* instr, IR::JnHelperMethod meth);
-    IR::Instr *     LowerLdFld(IR::Instr *instr, IR::JnHelperMethod helperMethod, IR::JnHelperMethod polymorphicHelperMethod, bool useInlineCache, IR::LabelInstr *labelBailOut = null, bool isHelper = false);
+    IR::Instr *     LowerLdFld(IR::Instr *instr, IR::JnHelperMethod helperMethod, IR::JnHelperMethod polymorphicHelperMethod, bool useInlineCache, IR::LabelInstr *labelBailOut = nullptr, bool isHelper = false);
     template<bool isRoot>
     IR::Instr*      GenerateCompleteLdFld(IR::Instr* instr, bool emitFastPath, IR::JnHelperMethod monoHelperAfterFastPath, IR::JnHelperMethod polyHelperAfterFastPath,
                         IR::JnHelperMethod monoHelperWithoutFastPath, IR::JnHelperMethod polyHelperWithoutFastPath);
@@ -120,7 +120,7 @@ private:
     bool            GenerateStFldWithCachedType(IR::Instr * instrStFld, bool* continueAsHelperOut, IR::LabelInstr** labelHelperOut, IR::RegOpnd** typeOpndOut);
     bool            GenerateStFldWithCachedFinalType(IR::Instr * instrStFld, IR::PropertySymOpnd *propertySymOpnd);
     IR::RegOpnd *   GenerateCachedTypeCheck(IR::Instr *instrInsert, IR::PropertySymOpnd *propertySymOpnd, 
-                        IR::LabelInstr* labelObjCheckFailed, IR::LabelInstr *labelTypeCheckFailed, IR::LabelInstr *labelSecondChance = null);
+                        IR::LabelInstr* labelObjCheckFailed, IR::LabelInstr *labelTypeCheckFailed, IR::LabelInstr *labelSecondChance = nullptr);
     void            GenerateCachedTypeWithoutPropertyCheck(IR::Instr *instrInsert, IR::PropertySymOpnd *propertySymOpnd, IR::Opnd *typeOpnd, IR::LabelInstr *labelTypeCheckFailed);
     void            GenerateFixedFieldGuardCheck(IR::Instr *insertPointInstr, IR::PropertySymOpnd *propertySymOpnd, IR::LabelInstr *labelBailOut);
     Js::JitTypePropertyGuard* CreateTypePropertyGuardForGuardedProperties(Js::Type* type, IR::PropertySymOpnd* propertySymOpnd);
@@ -151,7 +151,7 @@ private:
                         Js::FunctionProxyPtrPtr nestedProxy, IR::Opnd * envOpnd, IR::Instr * insertBeforeInstr, bool isZeroed = false);
     void            GenerateStackScriptFunctionInit(IR::RegOpnd * regOpnd, Js::FunctionProxyPtrPtr nestedProxy, IR::Opnd * envOpnd, IR::Instr * insertBeforeInstr);
     IR::Instr *     LowerProfiledStFld(IR::JitProfilingInstr * instr, Js::PropertyOperationFlags flags);
-    IR::Instr *     LowerStFld(IR::Instr * stFldInstr, IR::JnHelperMethod helperMethod, IR::JnHelperMethod polymorphicHelperMethod, bool withInlineCache, IR::LabelInstr *ppBailOutLabel = NULL, bool isHelper = false, bool withPutFlags = false, Js::PropertyOperationFlags flags = Js::PropertyOperation_None);
+    IR::Instr *     LowerStFld(IR::Instr * stFldInstr, IR::JnHelperMethod helperMethod, IR::JnHelperMethod polymorphicHelperMethod, bool withInlineCache, IR::LabelInstr *ppBailOutLabel = nullptr, bool isHelper = false, bool withPutFlags = false, Js::PropertyOperationFlags flags = Js::PropertyOperation_None);
     IR::Instr *     LowerScopedStFld(IR::Instr * stFldInstr, IR::JnHelperMethod helperMethod, bool withInlineCache,
                                 bool withPropertyOperationFlags = false, Js::PropertyOperationFlags flags = Js::PropertyOperation_None);
     void            LowerProfiledLdElemI(IR::JitProfilingInstr *const instr);
@@ -322,8 +322,8 @@ public:
     static IR::Instr *          InsertConvertFloat64ToFloat32(IR::Opnd *const dst, IR::Opnd *const src, IR::Instr *const insertBeforeInstr);
     
 public:
-    static void InsertIncUInt8PreventOverflow(IR::Opnd *const dst, IR::Opnd *const src, IR::Instr *const insertBeforeInstr, IR::Instr * *const onOverflowInsertBeforeInstrRef = null);
-    static void InsertDecUInt8PreventOverflow(IR::Opnd *const dst, IR::Opnd *const src, IR::Instr *const insertBeforeInstr, IR::Instr * *const onOverflowInsertBeforeInstrRef = null);
+    static void InsertIncUInt8PreventOverflow(IR::Opnd *const dst, IR::Opnd *const src, IR::Instr *const insertBeforeInstr, IR::Instr * *const onOverflowInsertBeforeInstrRef = nullptr);
+    static void InsertDecUInt8PreventOverflow(IR::Opnd *const dst, IR::Opnd *const src, IR::Instr *const insertBeforeInstr, IR::Instr * *const onOverflowInsertBeforeInstrRef = nullptr);
     void InsertFloatCheckForZeroOrNanBranch(IR::Opnd *const src, const bool branchOnZeroOrNan, IR::LabelInstr *const target, IR::LabelInstr *const fallthroughLabel, IR::Instr *const insertBeforeInstr);
 
 public:
@@ -343,8 +343,8 @@ public:
     }
 
 private:
-    IR::IndirOpnd * GenerateFastElemICommon(IR::Instr * ldElem, bool isStore, IR::IndirOpnd * indirOpnd, IR::LabelInstr * labelHelper, IR::LabelInstr * labelCantUseArray, IR::LabelInstr *labelFallthrough, bool * pIsTypedArrayElement, bool * pIsStringIndex, bool *emitBailoutRef, IR::LabelInstr **pLabelSegmentLengthIncreased = null, bool checkArrayLengthOverflow = true, bool forceGenerateFastPath = false, bool returnLength = false, IR::LabelInstr *bailOutLabelInstr = null);
-    IR::IndirOpnd * GenerateFastElemIIntIndexCommon(IR::Instr * ldElem, bool isStore, IR::IndirOpnd * indirOpnd, IR::LabelInstr * labelHelper, IR::LabelInstr * labelCantUseArray, IR::LabelInstr *labelFallthrough, bool * pIsTypedArrayElement, bool *emitBailoutRef, IR::LabelInstr **pLabelSegmentLengthIncreased, bool checkArrayLengthOverflow, bool forceGenerateFastPath = false, bool returnLength = false, IR::LabelInstr *bailOutLabelInstr = null);
+    IR::IndirOpnd * GenerateFastElemICommon(IR::Instr * ldElem, bool isStore, IR::IndirOpnd * indirOpnd, IR::LabelInstr * labelHelper, IR::LabelInstr * labelCantUseArray, IR::LabelInstr *labelFallthrough, bool * pIsTypedArrayElement, bool * pIsStringIndex, bool *emitBailoutRef, IR::LabelInstr **pLabelSegmentLengthIncreased = nullptr, bool checkArrayLengthOverflow = true, bool forceGenerateFastPath = false, bool returnLength = false, IR::LabelInstr *bailOutLabelInstr = nullptr);
+    IR::IndirOpnd * GenerateFastElemIIntIndexCommon(IR::Instr * ldElem, bool isStore, IR::IndirOpnd * indirOpnd, IR::LabelInstr * labelHelper, IR::LabelInstr * labelCantUseArray, IR::LabelInstr *labelFallthrough, bool * pIsTypedArrayElement, bool *emitBailoutRef, IR::LabelInstr **pLabelSegmentLengthIncreased, bool checkArrayLengthOverflow, bool forceGenerateFastPath = false, bool returnLength = false, IR::LabelInstr *bailOutLabelInstr = nullptr);
     bool            GenerateFastLdElemI(IR::Instr *& ldElem, bool *instrIsInHelperBlockRef);
     bool            GenerateFastStElemI(IR::Instr *& StElem, bool *instrIsInHelperBlockRef);
     bool            GenerateFastLdLen(IR::Instr *ldLen, bool *instrIsInHelperBlockRef);
@@ -372,16 +372,16 @@ private:
     IR::Instr *     GenerateHelperToArrayPushFastPath(IR::Instr * instr, IR::LabelInstr * bailOutLabelHelper);
     IR::Instr *     GenerateHelperToArrayPopFastPath(IR::Instr * instr, IR::LabelInstr * doneLabel, IR::LabelInstr * bailOutLabelHelper);
     IR::Instr *     LowerCondBranchCheckBailOut(IR::BranchInstr * instr, IR::Instr * helperCall, bool isHelper);
-    IR::Instr *     LowerBailOnEqualOrNotEqual(IR::Instr * instr, IR::BranchInstr * branchInstr = null, IR::LabelInstr * labelBailOut = null, IR::PropertySymOpnd * propSymOpnd = null, bool isHelper = false);
+    IR::Instr *     LowerBailOnEqualOrNotEqual(IR::Instr * instr, IR::BranchInstr * branchInstr = nullptr, IR::LabelInstr * labelBailOut = nullptr, IR::PropertySymOpnd * propSymOpnd = nullptr, bool isHelper = false);
     void            LowerBailOnNegative(IR::Instr *const instr);
     void            LowerBailoutCheckAndLabel(IR::Instr *instr, bool onEqual, bool isHelper);
     IR::Instr *     LowerBailOnNotSpreadable(IR::Instr *instr);
     IR::Instr *     LowerBailOnNotPolymorphicInlinee(IR::Instr * instr);
     IR::Instr *     LowerBailOnNotStackArgs(IR::Instr * instr);
-    IR::Instr *     LowerBailOnNotObject(IR::Instr *instr, IR::BranchInstr *branchInstr = null, IR::LabelInstr *labelBailOut = null);
-    IR::Instr *     LowerBailOnNotBuiltIn(IR::Instr *instr, IR::BranchInstr *branchInstr = null, IR::LabelInstr *labelBailOut = null);
-    IR::Instr *     LowerBailOnNotInteger(IR::Instr *instr, IR::BranchInstr *branchInstr = null, IR::LabelInstr *labelBailOut = null);
-    IR::Instr *     LowerBailOnIntMin(IR::Instr *instr, IR::BranchInstr *branchInstr = null, IR::LabelInstr *labelBailOut = null);
+    IR::Instr *     LowerBailOnNotObject(IR::Instr *instr, IR::BranchInstr *branchInstr = nullptr, IR::LabelInstr *labelBailOut = nullptr);
+    IR::Instr *     LowerBailOnNotBuiltIn(IR::Instr *instr, IR::BranchInstr *branchInstr = nullptr, IR::LabelInstr *labelBailOut = nullptr);
+    IR::Instr *     LowerBailOnNotInteger(IR::Instr *instr, IR::BranchInstr *branchInstr = nullptr, IR::LabelInstr *labelBailOut = nullptr);
+    IR::Instr *     LowerBailOnIntMin(IR::Instr *instr, IR::BranchInstr *branchInstr = nullptr, IR::LabelInstr *labelBailOut = nullptr);
     void            LowerBailOnNotString(IR::Instr *instr);
     IR::Instr *     LowerBailForDebugger(IR::Instr* instr, bool isInsideHelper = false);
     IR::Instr *     LowerBailOnException(IR::Instr* instr);
@@ -407,7 +407,7 @@ private:
     void            PreserveSourcesForBailOnResultCondition(IR::Instr *const instr, IR::LabelInstr *const skipBailOutLabel) const;
     void            LowerInstrWithBailOnResultCondition(IR::Instr *const instr, const IR::BailOutKind bailOutKind, IR::LabelInstr *const bailOutLabel, IR::LabelInstr *const skipBailOutLabel) const;
     void            GenerateObjectTestAndTypeLoad(IR::Instr *instrLdSt, IR::RegOpnd *opndBase, IR::RegOpnd *opndType, IR::LabelInstr *labelHelper);
-    IR::LabelInstr *GenerateBailOut(IR::Instr * instr, IR::BranchInstr * branchInstr = null, IR::LabelInstr * labelBailOut = null);
+    IR::LabelInstr *GenerateBailOut(IR::Instr * instr, IR::BranchInstr * branchInstr = nullptr, IR::LabelInstr * labelBailOut = nullptr);
     void            GenerateJumpToEpilogForBailOut(BailOutInfo * bailOutInfo, IR::Instr *instrAfter);
 
     void            LowerDivI4(IR::Instr * const instr);
@@ -491,7 +491,7 @@ private:
     void            GenerateMemCopy(IR::Opnd * dst, IR::Opnd * src, uint32 size, IR::Instr * insertBeforeInstr);
 
     void            GenerateDynamicObjectAlloc(IR::Instr * newObjInstr, uint inlineSlotCount, uint slotCount, IR::RegOpnd * newObjDst, IR::Opnd * typeSrc);
-    bool            GenerateSimplifiedInt4Rem(IR::Instr *const remInstr, IR::LabelInstr *const skipBailOutLabel = NULL) const;
+    bool            GenerateSimplifiedInt4Rem(IR::Instr *const remInstr, IR::LabelInstr *const skipBailOutLabel = nullptr) const;
     IR::Instr*      GenerateCallProfiling(Js::ProfileId profileId, Js::InlineCacheIndex inlineCacheIndex, IR::Opnd* retval, IR::Opnd*calleeFunctionObjOpnd, IR::Opnd* callInfo, bool returnTypeOnly, IR::Instr*callInstr, IR::Instr*insertAfter);
     IR::Opnd*       GetImplicitCallFlagsOpnd();    
     IR::Opnd*       CreateClearImplicitCallFlagsOpnd();

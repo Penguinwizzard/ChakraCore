@@ -16,7 +16,7 @@ bool TestEtwEventSink::Load()
         return false;
     }
     HMODULE hModule = ::LoadLibraryW(dllname);
-    if (hModule == null)
+    if (hModule == nullptr)
     {
         Output::Print(L"ERROR: Unable to load ETW event sink %s\n", dllname);
         Js::Throw::FatalInternalError();
@@ -24,7 +24,7 @@ bool TestEtwEventSink::Load()
 
     CreateEventSink procAddress = (CreateEventSink)::GetProcAddress(hModule, CreateEventSinkProcName);
 
-    if (procAddress == null)
+    if (procAddress == nullptr)
     {
         Output::Print(L"ERROR: Unable to get function %S from dll %s\n", CreateEventSinkProcName, dllname);
         Js::Throw::FatalInternalError();
@@ -32,7 +32,7 @@ bool TestEtwEventSink::Load()
 
     // CONSIDER: pass null and skip rundown testing (if a command line switch is present).
     Instance = procAddress(&EtwTrace::PerformRundown, PHASE_TRACE1(Js::EtwPhase));
-    if (Instance == null)
+    if (Instance == nullptr)
     {
         Output::Print(L"ERROR: Failed to create ETW event sink from dll %s\n", dllname);
         Js::Throw::FatalInternalError();

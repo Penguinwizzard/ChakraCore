@@ -26,10 +26,10 @@ namespace Js
     public:
 
         JavascriptError(DynamicType* type, BOOL isExternalError = FALSE, BOOL isPrototype = FALSE) :
-            DynamicObject(type), originalRuntimeErrorMessage(null), isExternalError(isExternalError), isPrototype(isPrototype), isStackPropertyRedefined(false)
+            DynamicObject(type), originalRuntimeErrorMessage(nullptr), isExternalError(isExternalError), isPrototype(isPrototype), isStackPropertyRedefined(false)
         {
             Assert(type->GetTypeId() == TypeIds_Error);
-            exceptionObject = null;
+            exceptionObject = nullptr;
             m_errorType = kjstCustomError;
         }
 
@@ -47,7 +47,7 @@ namespace Js
             return static_cast<JavascriptError *>(RecyclableObject::FromVar(aValue));
         }
 
-        void AdjustNameOrMessageProperty(PropertyId propertyId);
+        void SetNotEnumerable(PropertyId propertyId);
 
         static Var NewInstance(RecyclableObject* function, JavascriptError* pError, CallInfo callInfo, Arguments args);
         class EntryInfo
@@ -60,8 +60,9 @@ namespace Js
             static FunctionInfo NewSyntaxErrorInstance;
             static FunctionInfo NewTypeErrorInstance;
             static FunctionInfo NewURIErrorInstance;
+#ifdef ENABLE_PROJECTION
             static FunctionInfo NewWinRTErrorInstance;
-
+#endif
             static FunctionInfo ToString;
         };
 
@@ -72,18 +73,20 @@ namespace Js
         static Var NewSyntaxErrorInstance(RecyclableObject* function, CallInfo callInfo, ...);
         static Var NewTypeErrorInstance(RecyclableObject* function, CallInfo callInfo, ...);
         static Var NewURIErrorInstance(RecyclableObject* function, CallInfo callInfo, ...);
+#ifdef ENABLE_PROJECTION
         static Var NewWinRTErrorInstance(RecyclableObject* function, CallInfo callInfo, ...);
+#endif
 
         static Var EntryToString(RecyclableObject* function, CallInfo callInfo, ...);
 
         static void __declspec(noreturn) MapAndThrowError(ScriptContext* scriptContext, HRESULT hr);
-        static void __declspec(noreturn) MapAndThrowError(ScriptContext* scriptContext, HRESULT hr, ErrorTypeEnum errorType, EXCEPINFO *ei, IErrorInfo * perrinfo = null, RestrictedErrorStrings * proerrstr = null, bool useErrInfoDescription = false);
+        static void __declspec(noreturn) MapAndThrowError(ScriptContext* scriptContext, HRESULT hr, ErrorTypeEnum errorType, EXCEPINFO *ei, IErrorInfo * perrinfo = nullptr, RestrictedErrorStrings * proerrstr = nullptr, bool useErrInfoDescription = false);
         static void __declspec(noreturn) MapAndThrowError(ScriptContext* scriptContext, JavascriptError *pError, long hCode, EXCEPINFO* pei, bool useErrInfoDescription = false);
         static JavascriptError* MapError(ScriptContext* scriptContext, ErrorTypeEnum errorType, IErrorInfo * perrinfo = nullptr, RestrictedErrorStrings * proerrstr = nullptr);
 
 #define THROW_ERROR_DECL(err_method) \
-        static void __declspec(noreturn) err_method(ScriptContext* scriptContext, long hCode, EXCEPINFO* ei, IErrorInfo* perrinfo = null, RestrictedErrorStrings* proerrstr = null, bool useErrInfoDescription = false); \
-        static void __declspec(noreturn) err_method(ScriptContext* scriptContext, long hCode, PCWSTR varName = null); \
+        static void __declspec(noreturn) err_method(ScriptContext* scriptContext, long hCode, EXCEPINFO* ei, IErrorInfo* perrinfo = nullptr, RestrictedErrorStrings* proerrstr = nullptr, bool useErrInfoDescription = false); \
+        static void __declspec(noreturn) err_method(ScriptContext* scriptContext, long hCode, PCWSTR varName = nullptr); \
         static void __declspec(noreturn) err_method(ScriptContext* scriptContext, long hCode, JavascriptString* varName); \
         static void __declspec(noreturn) err_method##Var(ScriptContext* scriptContext, long hCode, ...);
 
@@ -94,8 +97,10 @@ namespace Js
         THROW_ERROR_DECL(ThrowSyntaxError)
         THROW_ERROR_DECL(ThrowTypeError)
         THROW_ERROR_DECL(ThrowURIError)
+#ifdef ENABLE_PROJECTION
         THROW_ERROR_DECL(ThrowWinRTError)
-        
+#endif
+
 #undef THROW_ERROR_DECL
         static void __declspec(noreturn) ThrowDispatchError(ScriptContext* scriptContext, HRESULT hCode, PCWSTR message);
         static void __declspec(noreturn) ThrowOutOfMemoryError(ScriptContext *scriptContext);

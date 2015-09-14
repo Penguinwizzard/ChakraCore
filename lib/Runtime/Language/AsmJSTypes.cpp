@@ -9,6 +9,9 @@
 
 
 #include "RuntimeLanguagePch.h"
+#include "ByteCode\ByteCodeWriter.h"
+#include "ByteCode\AsmJsByteCodeWriter.h"
+#include "Language\AsmJSByteCodeGenerator.h"
 
 namespace Js
 {

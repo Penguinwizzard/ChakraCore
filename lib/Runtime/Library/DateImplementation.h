@@ -86,7 +86,7 @@ namespace Js {
         static long GetStandardBias(const TIME_ZONE_INFORMATION *const pTz, const ScriptContext *const scriptContext);
 
         template <class ScriptContext>
-        static double GetTvLcl(double tv, ScriptContext * scriptContext, TZD *ptzd = null);
+        static double GetTvLcl(double tv, ScriptContext * scriptContext, TZD *ptzd = nullptr);
         template <class ScriptContext>
         static double GetTvUtc(double tv, ScriptContext * scriptContext);
         static boolean UtcTimeFromStrCore(
@@ -330,7 +330,7 @@ namespace Js {
 
         double tvLcl;
 
-        if (null != ptzd)
+        if (nullptr != ptzd)
         {
             ptzd->minutes = 0;
             ptzd->fDst = FALSE;
@@ -346,7 +346,7 @@ namespace Js {
         int offset;
         bool isDaylightSavings;
         tvLcl = scriptContext->GetDaylightTimeHelper()->UtcToLocal(tv, bias, offset, isDaylightSavings);
-        if (null != ptzd)
+        if (nullptr != ptzd)
         {
             ptzd->minutes = -bias;
             ptzd->offset = offset;

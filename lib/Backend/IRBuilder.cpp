@@ -54,7 +54,7 @@ IRBuilder::AddStatementBoundary(uint statementIndex, uint offset)
 
 // Add conditional bailout for breaking into interpreter debug thunk - for fast F12.
 void
-IRBuilder::InsertBailOutForDebugger(uint byteCodeOffset, IR::BailOutKind kind, IR::Instr* insertBeforeInstr /* default NULL */)
+IRBuilder::InsertBailOutForDebugger(uint byteCodeOffset, IR::BailOutKind kind, IR::Instr* insertBeforeInstr /* default nullptr */)
 {
     Assert(m_func->IsJitInDebugMode());
     Assert(byteCodeOffset != Js::Constants::NoByteCodeOffset);
@@ -129,7 +129,7 @@ IRBuilder::InsertBailOnNoProfile(uint offset)
         return;
     }
 
-    IR::Instr *startCall = NULL;
+    IR::Instr *startCall = nullptr;
     int count = 0;
     FOREACH_SLIST_ENTRY(IR::Instr *, argInstr, this->m_argStack)
     {
@@ -319,8 +319,8 @@ IRBuilder::Build()
     }
     else
     {
-        this->tempMap = NULL;
-        this->fbvTempUsed = NULL;
+        this->tempMap = nullptr;
+        this->fbvTempUsed = nullptr;
     }
 
     m_func->m_headInstr = IR::EntryInstr::New(Js::OpCode::FunctionEntry, m_func);
@@ -398,7 +398,7 @@ IRBuilder::Build()
     if (m_func->IsJitInDebugMode())
     {
         // This is first bailout in the function, the locals at stack have not initialized to undefined, so do not restore them.
-        this->InsertBailOutForDebugger(offset, IR::BailOutForceByFlag | IR::BailOutBreakPointInFunction | IR::BailOutStep, NULL);
+        this->InsertBailOutForDebugger(offset, IR::BailOutForceByFlag | IR::BailOutBreakPointInFunction | IR::BailOutStep, nullptr);
     }
 
 #ifdef BAILOUT_INJECTION
@@ -652,7 +652,7 @@ IRBuilder::InsertLabels()
             multiBranchInstr->UpdateMultiBrTargetOffsets([&](uint32 offset) -> IR::LabelInstr *
             {
                 labelInstr = this->CreateLabel(branchInstr, offset);
-                multiBranchInstr->ChangeLabelRef(null, labelInstr);
+                multiBranchInstr->ChangeLabelRef(nullptr, labelInstr);
                 return labelInstr;
             });
         }
@@ -693,7 +693,7 @@ IRBuilder::CreateLabel(IR::BranchInstr * branchInstr, uint& offset)
     {
         Assert(offset < m_offsetToInstructionCount);
         targetInstr = this->m_offsetToInstruction[offset];
-        if (targetInstr != null)
+        if (targetInstr != nullptr)
         {
 #ifdef BYTECODE_BRANCH_ISLAND
             // If we have a long branch, remap it to the target offset
@@ -754,7 +754,7 @@ IRBuilder::AddInstr(IR::Instr *instr, uint32 offset)
     if (offset != Js::Constants::NoByteCodeOffset)
     {
         Assert(offset < m_offsetToInstructionCount);
-        if (m_offsetToInstruction[offset] == null)
+        if (m_offsetToInstruction[offset] == nullptr)
         {
             m_offsetToInstruction[offset] = instr;
         }
@@ -1070,7 +1070,7 @@ IRBuilder::BuildConstantLoads()
     for (Js::RegSlot reg = Js::FunctionBody::FirstRegSlot; reg < count; reg++)
     {
         Js::Var varConst = func->GetConstantVar(reg);
-        Assert(varConst != null);
+        Assert(varConst != nullptr);
 
         IR::RegOpnd *dstOpnd = this->BuildDstOpnd(reg);
         Assert(this->RegIsConstant(reg));
@@ -1121,7 +1121,7 @@ IRBuilder::BuildReg1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot R0)
         return;
     }
 
-    IR::Opnd * srcOpnd = null;
+    IR::Opnd * srcOpnd = nullptr;
     bool isNotInt = false;
     bool dstIsCatchObject = false;
     ValueType dstValueType;
@@ -1446,7 +1446,7 @@ IRBuilder::BuildReg2(Js::OpCode newOpcode, uint32 offset, Js::RegSlot R0, Js::Re
     IR::RegOpnd *   dstOpnd = this->BuildDstOpnd(R0);
     StackSym *      dstSym = dstOpnd->m_sym;
 
-    IR::Instr * instr = null;
+    IR::Instr * instr = nullptr;
     switch (newOpcode)
     {
     case Js::OpCode::Ld_A:
@@ -1554,7 +1554,7 @@ IRBuilder::BuildReg2(Js::OpCode newOpcode, uint32 offset, Js::RegSlot R0, Js::Re
         return;
     }
 
-    if (instr == null)
+    if (instr == nullptr)
     {
         instr = IR::Instr::New(newOpcode, dstOpnd, src1Opnd, m_func);
     }
@@ -1622,7 +1622,7 @@ IRBuilder::BuildProfiledReg2(Js::OpCode newOpcode, uint32 offset, Js::RegSlot ds
     }
 
     bool isProfiled = true;
-    const Js::LdElemInfo *ldElemInfo = null;
+    const Js::LdElemInfo *ldElemInfo = nullptr;
     if (newOpcode == Js::OpCode::BeginSwitch)
     {
         m_switchBuilder.BeginSwitch();
@@ -2008,7 +2008,7 @@ IRBuilder::BuildReg3B1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot dstRegSl
     IR::RegOpnd * dstOpnd = this->BuildDstOpnd(dstRegSlot);
     dstOpnd->SetValueType(ValueType::String);
 
-    IR::Instr * newConcatStrMulti = null;
+    IR::Instr * newConcatStrMulti = nullptr;
     switch (newOpcode)
     {
     case Js::OpCode::NewConcatStrMulti:
@@ -2361,7 +2361,7 @@ IRBuilder::BuildProfiledReg1Unsigned1(Js::OpCode newOpcode, uint32 offset, Js::R
     }
 
     // Undefined values in array literals ([0, undefined, 1]) are treated as missing values in some versions
-    Js::ArrayCallSiteInfo *arrayInfo = null;
+    Js::ArrayCallSiteInfo *arrayInfo = nullptr;
     if (m_func->HasArrayInfo())
     {
         arrayInfo = m_func->GetProfileInfo()->GetArrayCallSiteInfo(m_func->GetJnFunction(), profileId);
@@ -3335,7 +3335,7 @@ IRBuilder::BuildAuxiliary(Js::OpCode newOpcode, uint32 offset)
                 m_argsOnStack++;
 
                 symDst = m_func->m_symTable->GetArgSlotSym((uint16)(i + 2));
-                if (symDst == NULL || (uint16)(i + 2) != (i + 2))
+                if (symDst == nullptr || (uint16)(i + 2) != (i + 2))
                 {
                     AssertMsg(UNREACHED, "Arg count too big...");
                     Fatal();
@@ -3411,7 +3411,7 @@ IRBuilder::BuildProfiledAuxiliary(Js::OpCode newOpcode, uint32 offset)
 
             Js::OpCodeUtil::ConvertNonCallOpToNonProfiled(newOpcode);
             IR::Instr *instr;
-            Js::ArrayCallSiteInfo *arrayInfo = null;
+            Js::ArrayCallSiteInfo *arrayInfo = nullptr;
             Js::TypeId arrayTypeId = Js::TypeIds_Array;
 
 
@@ -3573,7 +3573,7 @@ IRBuilder::BuildReg2Aux(Js::OpCode newOpcode, uint32 offset)
             Js::RegSlot     srcRegSlot = auxInsn->R1;
 
             src1Opnd = this->BuildSrcOpnd(srcRegSlot);
-            Assert(this->m_func->GetFuncObjSym() == null);
+            Assert(this->m_func->GetFuncObjSym() == nullptr);
             this->m_func->SetFuncObjSym(src1Opnd->m_sym);
 
             src2Opnd = this->BuildAuxArrayOpnd(AuxArrayValue::AuxPropertyIdArray, offset, auxInsn->Offset, 3);
@@ -3711,8 +3711,8 @@ IRBuilder::BuildElementI(Js::OpCode newOpcode, uint32 offset, Js::RegSlot baseRe
     Assert(OpCodeAttr::HasMultiSizeLayout(newOpcode));
 
     ValueType arrayType;
-    const Js::LdElemInfo *ldElemInfo = null;
-    const Js::StElemInfo *stElemInfo = null;
+    const Js::LdElemInfo *ldElemInfo = nullptr;
+    const Js::StElemInfo *stElemInfo = nullptr;
     bool isProfiledLoad = false;
     bool isProfiledStore = false;
     bool isProfiledInstr = (profileId != Js::Constants::NoProfileId);
@@ -3956,7 +3956,7 @@ IRBuilder::BuildElementUnsigned1(Js::OpCode newOpcode, uint32 offset, Js::RegSlo
         {
             baseOpnd = this->BuildSrcOpnd(baseRegSlot);
 
-            IR::Opnd *defOpnd = baseOpnd->m_sym->m_instrDef ? baseOpnd->m_sym->m_instrDef->GetDst() : null;
+            IR::Opnd *defOpnd = baseOpnd->m_sym->m_instrDef ? baseOpnd->m_sym->m_instrDef->GetDst() : nullptr;
             if (!defOpnd)
             {
                 // The array sym may be multi-def because of oddness in the renumbering of temps -- for instance,
@@ -4120,7 +4120,7 @@ IRBuilder::BuildArg(Js::OpCode newOpcode, uint32 offset, Js::ArgSlot argument, J
 
     Assert(argument < USHRT_MAX);
     symDst = m_func->m_symTable->GetArgSlotSym((uint16)(argument+1));
-    if (symDst == NULL || (uint16)(argument + 1) != (argument + 1))
+    if (symDst == nullptr || (uint16)(argument + 1) != (argument + 1))
     {
         AssertMsg(UNREACHED, "Arg count too big...");
         Fatal();
@@ -4534,7 +4534,7 @@ IRBuilder::BuildProfiled2CallI(Js::OpCode opcode, uint32 offset, Js::RegSlot ret
     Js::TypeId arrayTypeId = Js::TypeIds_Array;
     if (returnValue != Js::Constants::NoRegister)
     {
-        Js::ArrayCallSiteInfo *arrayCallSiteInfo = null;
+        Js::ArrayCallSiteInfo *arrayCallSiteInfo = nullptr;
         if (m_func->HasArrayInfo())
         {
             arrayCallSiteInfo = m_func->GetProfileInfo()->GetArrayCallSiteInfo(m_func->GetJnFunction(), profileId2);
@@ -4612,8 +4612,8 @@ IRBuilder::BuildCallI_Helper(Js::OpCode newOpcode, uint32 offset, Js::RegSlot ds
     src1Opnd = this->BuildSrcOpnd(Src1RegSlot);
     if (dstRegSlot == Js::Constants::NoRegister)
     {
-        dstOpnd = NULL;
-        symDst = NULL;
+        dstOpnd = nullptr;
+        symDst = nullptr;
     }
     else
     {
@@ -4657,7 +4657,7 @@ IRBuilder::BuildCallI_Helper(Js::OpCode newOpcode, uint32 offset, Js::RegSlot ds
     {
         instr = IR::Instr::New(newOpcode, m_func);
         instr->SetSrc1(src1Opnd);
-        if (dstOpnd != null)
+        if (dstOpnd != nullptr)
         {
             instr->SetDst(dstOpnd);
         }
@@ -4695,7 +4695,7 @@ IRBuilder::BuildCallCommon(IR::Instr * instr, StackSym * symDst, Js::ArgSlot arg
 {
     Js::OpCode newOpcode = instr->m_opcode;
 
-    IR::Instr *     argInstr = null;
+    IR::Instr *     argInstr = nullptr;
     IR::Instr *     prevInstr = instr;
 #if DBG
     int count = 0;
@@ -4826,7 +4826,7 @@ IRBuilder::BuildBrReg1(Js::OpCode newOpcode, uint32 offset, uint targetOffset, J
     IR::BranchInstr * branchInstr;
     IR::RegOpnd *     srcOpnd;
     srcOpnd = this->BuildSrcOpnd(srcRegSlot);
-    branchInstr = IR::BranchInstr::New(newOpcode, NULL, srcOpnd, m_func);
+    branchInstr = IR::BranchInstr::New(newOpcode, nullptr, srcOpnd, m_func);
     this->AddBranchInstr(branchInstr, offset, targetOffset);
 }
 
@@ -4854,7 +4854,7 @@ IRBuilder::BuildBrBReturn(Js::OpCode newOpcode, uint32 offset, Js::RegSlot DestR
 {
     IR::RegOpnd *     srcOpnd = this->BuildSrcOpnd(SrcRegSlot);
     IR::RegOpnd *     destOpnd = this->BuildDstOpnd(DestRegSlot);
-    IR::BranchInstr * branchInstr = IR::BranchInstr::New(newOpcode, destOpnd, NULL, srcOpnd, m_func);
+    IR::BranchInstr * branchInstr = IR::BranchInstr::New(newOpcode, destOpnd, nullptr, srcOpnd, m_func);
     this->AddBranchInstr(branchInstr, offset, targetOffset);
 
     switch (newOpcode)
@@ -4910,7 +4910,7 @@ IRBuilder::BuildBrReg2(Js::OpCode newOpcode, uint32 offset, uint targetOffset, J
     }
     else
     {
-        branchInstr = IR::BranchInstr::New(newOpcode, NULL, src1Opnd, src2Opnd, m_func);
+        branchInstr = IR::BranchInstr::New(newOpcode, nullptr, src1Opnd, src2Opnd, m_func);
         branchInstr->m_isSwitchBr = true;
         this->AddBranchInstr(branchInstr, offset, targetOffset);
     }
@@ -5025,7 +5025,7 @@ IRBuilder::EnsureConsumeBranchIsland()
             // the branch island
             Assert(longBranchMap);
             Assert(offset < m_offsetToInstructionCount);
-            Assert(m_offsetToInstruction[offset] == null);
+            Assert(m_offsetToInstruction[offset] == nullptr);
             m_offsetToInstruction[offset] = VirtualLongBranchInstr;
             longBranchMap->Add(offset, targetOffset);
         }
@@ -5065,7 +5065,7 @@ IRBuilder::BuildBrLong(Js::OpCode newOpcode, uint32 offset)
     unsigned int      targetOffset = m_jnReader.GetCurrentOffset() + branchInsn->RelativeJumpOffset;
 
     Assert(offset < m_offsetToInstructionCount);
-    Assert(m_offsetToInstruction[offset] == null);
+    Assert(m_offsetToInstruction[offset] == nullptr);
 
     // BrLong are also just the target of another branch, just set a virtual long branch instr
     // and remap the original branch to the actual destintation in ResolveVirtualLongBranch
@@ -5163,7 +5163,7 @@ IRBuilder::BuildBr(Js::OpCode newOpcode, uint32 offset)
         // Mark the jump around instruction as a virtual long branch as well so we can just
         // fall thru instead of branch to exit
         Assert(offset < m_offsetToInstructionCount);
-        if (m_offsetToInstruction[offset] == null)
+        if (m_offsetToInstruction[offset] == nullptr)
         {
             m_offsetToInstruction[offset] = VirtualLongBranchInstr;
             longBranchMap->Add(offset, targetOffset);
@@ -5187,7 +5187,7 @@ IRBuilder::BuildBr(Js::OpCode newOpcode, uint32 offset)
     {
         this->catchOffsetStack->Push(targetOffset);
     }
-    branchInstr = IR::BranchInstr::New(newOpcode, NULL, m_func);
+    branchInstr = IR::BranchInstr::New(newOpcode, nullptr, m_func);
     this->AddBranchInstr(branchInstr, offset, targetOffset);
 }
 
@@ -5201,7 +5201,7 @@ IRBuilder::BuildBrS(Js::OpCode newOpcode, uint32 offset)
 
     unsigned int      targetOffset = m_jnReader.GetCurrentOffset() + branchInsn->RelativeJumpOffset;
 
-    branchInstr = IR::BranchInstr::New(newOpcode, NULL,
+    branchInstr = IR::BranchInstr::New(newOpcode, nullptr,
         IR::IntConstOpnd::New(branchInsn->val,
         TyInt32, m_func),m_func);
     this->AddBranchInstr(branchInstr, offset, targetOffset);
@@ -5229,7 +5229,7 @@ IRBuilder::BuildBrProperty(Js::OpCode newOpcode, uint32 offset)
     unsigned int      targetOffset = m_jnReader.GetCurrentOffset() + branchInsn->RelativeJumpOffset;
     IR::SymOpnd *     fieldSymOpnd = this->BuildFieldOpnd(newOpcode, branchInsn->Instance, propertyId, branchInsn->PropertyIdIndex, PropertyKindData);
 
-    branchInstr = IR::BranchInstr::New(newOpcode, NULL, fieldSymOpnd, m_func);
+    branchInstr = IR::BranchInstr::New(newOpcode, nullptr, fieldSymOpnd, m_func);
     this->AddBranchInstr(branchInstr, offset, targetOffset);
 }
 
@@ -5261,7 +5261,7 @@ IRBuilder::AddBranchInstr(IR::BranchInstr * branchInstr, uint32 offset, uint32 t
         targetOffset = GetLoopBodyExitInstrOffset();
     }
 
-    BranchReloc *  reloc = null;
+    BranchReloc *  reloc = nullptr;
     reloc = this->CreateRelocRecord(branchInstr, offset, targetOffset);
 
     this->AddInstr(branchInstr, offset);
@@ -5332,7 +5332,7 @@ IRBuilder::CheckBuiltIn(PropertySym * propertySym, Js::BuiltinFunction *puBuiltI
         }
 
         IR::Instr *instr = propertySym->m_stackSym->m_instrDef;
-        AssertMsg(instr != NULL, "Single-def stack sym w/o def instr?");
+        AssertMsg(instr != nullptr, "Single-def stack sym w/o def instr?");
 
         if (instr->m_opcode != Js::OpCode::LdRootFld && instr->m_opcode != Js::OpCode::LdRootFldForTypeOf)
         {
@@ -5340,7 +5340,7 @@ IRBuilder::CheckBuiltIn(PropertySym * propertySym, Js::BuiltinFunction *puBuiltI
         }
 
         IR::Opnd * opnd = instr->GetSrc1();
-        AssertMsg(opnd != NULL && opnd->IsSymOpnd() && opnd->AsSymOpnd()->m_sym->IsPropertySym(),
+        AssertMsg(opnd != nullptr && opnd->IsSymOpnd() && opnd->AsSymOpnd()->m_sym->IsPropertySym(),
             "LdRootFld w/o propertySym src?");
 
         if (opnd->AsSymOpnd()->m_sym->AsPropertySym()->m_propertyId != Js::PropertyIds::Math)
@@ -5436,7 +5436,7 @@ IRBuilder::InsertLoopBodyReturnIPInstr(uint targetOffset, uint offset)
 void
 IRBuilder::InsertDoneLoopBodyLoopCounter(uint32 lastOffset)
 {
-    if (m_loopCounterSym == null)
+    if (m_loopCounterSym == nullptr)
     {
         return;
     }

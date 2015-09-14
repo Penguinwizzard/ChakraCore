@@ -326,7 +326,7 @@ namespace Js {
         virtual BOOL ToString(Js::Var* value, Js::ScriptContext* scriptContext) { AssertMsg(FALSE, "Do not use this function."); return false; }
 
         // don't need crosssite: in HostDispatch it's IDispatchEx based; in CustomExternalObject we have marshalling code explicitly.
-        virtual Var GetNamespaceParent(Js::Var aChild) { return null; }
+        virtual Var GetNamespaceParent(Js::Var aChild) { return nullptr; }
         virtual HRESULT QueryObjectInterface(REFIID riid, void **ppvObj);
 
         virtual BOOL GetDiagValueString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext);

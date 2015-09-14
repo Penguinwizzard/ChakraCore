@@ -21,7 +21,7 @@
 #pragma warning(disable:4075)
 #pragma init_seg(".CRT$XCAS")
 
-RecyclerObjectDumper::DumpFunctionMap * RecyclerObjectDumper::dumpFunctionMap = null;
+RecyclerObjectDumper::DumpFunctionMap * RecyclerObjectDumper::dumpFunctionMap = nullptr;
 RecyclerObjectDumper RecyclerObjectDumper::Instance;
 
 RecyclerObjectDumper::~RecyclerObjectDumper()
@@ -35,11 +35,11 @@ RecyclerObjectDumper::~RecyclerObjectDumper()
 BOOL
 RecyclerObjectDumper::EnsureDumpFunctionMap()
 {
-    if (dumpFunctionMap == null)
+    if (dumpFunctionMap == nullptr)
     {
         dumpFunctionMap = NoCheckHeapNew(DumpFunctionMap, &NoCheckHeapAllocator::Instance);
     }
-    return (dumpFunctionMap != null);
+    return (dumpFunctionMap != nullptr);
 }
 
 void 
@@ -47,7 +47,7 @@ RecyclerObjectDumper::RegisterDumper(type_info const * typeinfo, DumpFunction du
 {
     if (EnsureDumpFunctionMap())
     {
-        Assert(!dumpFunctionMap->HasEntry(typeinfo));
+        Assert(!dumpFunctionMap->ContainsKey(typeinfo));
         dumpFunctionMap->Add(typeinfo, dumperFunction);
     }
 }
@@ -55,14 +55,14 @@ RecyclerObjectDumper::RegisterDumper(type_info const * typeinfo, DumpFunction du
 void 
 RecyclerObjectDumper::DumpObject(type_info const * typeinfo, bool isArray, void * objectAddress)
 {
-    if (typeinfo == null)
+    if (typeinfo == nullptr)
     {
         Output::Print(L"Address %p", objectAddress);
     }
     else
     {
         DumpFunction dumpFunction;
-        if (dumpFunctionMap == null || !dumpFunctionMap->TryGetValue(typeinfo, &dumpFunction) || !dumpFunction(typeinfo, isArray, objectAddress))
+        if (dumpFunctionMap == nullptr || !dumpFunctionMap->TryGetValue(typeinfo, &dumpFunction) || !dumpFunction(typeinfo, isArray, objectAddress))
         {
             Output::Print(isArray? L"%S[] %p" : L"%S %p", typeinfo->name(), objectAddress);
         }        

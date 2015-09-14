@@ -293,7 +293,7 @@ namespace Js
         TypeId typeId = function->GetTypeId();
         rtErrors err = typeId == TypeIds_Undefined || typeId == TypeIds_Null ? JSERR_NeedObject : JSERR_NeedFunction;
         JavascriptError::ThrowTypeError(function->GetScriptContext(), err
-            /* TODO-ERROR: args.Info.Count > 0? args[0] : null); */);
+            /* TODO-ERROR: args.Info.Count > 0? args[0] : nullptr); */);
     }
 
     Var RecyclableObject::DefaultExternalEntryPoint(RecyclableObject* function, CallInfo callInfo, Var* arguments)
@@ -301,7 +301,7 @@ namespace Js
         TypeId typeId = function->GetTypeId();
         rtErrors err = typeId == TypeIds_Undefined || typeId == TypeIds_Null ? JSERR_NeedObject : JSERR_NeedFunction;
         JavascriptError::ThrowTypeError(function->GetScriptContext(), err
-            /* TODO-ERROR: args.Info.Count > 0? args[0] : null); */);
+            /* TODO-ERROR: args.Info.Count > 0? args[0] : nullptr); */);
     }
 
     BOOL RecyclableObject::HasProperty(PropertyId propertyId)
@@ -750,7 +750,7 @@ namespace Js
         // Handle x(y) = z.
         // Native jscript object behavior: throw an error in all such cases.
         JavascriptError::ThrowReferenceError(GetScriptContext(), JSERR_CantAsgCall);
-        return null;
+        return nullptr;
     }
 
     BOOL RecyclableObject::GetRemoteTypeId(TypeId * typeId)

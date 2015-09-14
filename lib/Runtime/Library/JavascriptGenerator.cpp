@@ -97,7 +97,7 @@ namespace Js
         ScriptContext* scriptContext = function->GetScriptContext();
         JavascriptLibrary* library = scriptContext->GetLibrary();
 
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Generator.prototype.next");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Generator.prototype.next");
 
         if (!JavascriptGenerator::Is(args[0]))
         {
@@ -124,7 +124,7 @@ namespace Js
         ScriptContext* scriptContext = function->GetScriptContext();
         JavascriptLibrary* library = scriptContext->GetLibrary();
 
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Generator.prototype.return");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Generator.prototype.return");
 
         if (!JavascriptGenerator::Is(args[0]))
         {
@@ -156,7 +156,7 @@ namespace Js
         ScriptContext* scriptContext = function->GetScriptContext();
         JavascriptLibrary* library = scriptContext->GetLibrary();
 
-        AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, L"Generator.prototype.throw");
+        AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Generator.prototype.throw");
 
         if (!JavascriptGenerator::Is(args[0]))
         {

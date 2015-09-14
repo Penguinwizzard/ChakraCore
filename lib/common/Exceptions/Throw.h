@@ -164,15 +164,15 @@ namespace Js {
 
 #define GET_RUNTIME_ERROR_IMPL(hr, GetRuntimeErrorFunc, exceptionObject) \
     {   \
-        Js::Var errorObject = exceptionObject->GetThrownObject(null);   \
-        if (errorObject != NULL && (Js::JavascriptError::Is(errorObject) ||  \
+        Js::Var errorObject = exceptionObject->GetThrownObject(nullptr);   \
+        if (errorObject != nullptr && (Js::JavascriptError::Is(errorObject) ||  \
             Js::JavascriptError::IsRemoteError(errorObject)))   \
         {       \
-            hr = GetRuntimeErrorFunc(Js::RecyclableObject::FromVar(errorObject), NULL);   \
+            hr = GetRuntimeErrorFunc(Js::RecyclableObject::FromVar(errorObject), nullptr);   \
         }   \
         else \
         {  \
-            AssertMsg(errorObject == NULL, "errorObject should be NULL");  \
+            AssertMsg(errorObject == nullptr, "errorObject should be NULL");  \
             hr = E_OUTOFMEMORY;  \
         }  \
     }

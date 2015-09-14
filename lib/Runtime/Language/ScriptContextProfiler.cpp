@@ -16,9 +16,9 @@ namespace Js
         ULONG count = --refcount;
         if (count == 0)
         {            
-            if (recycler != null && this->profiler == recycler->GetProfiler())
+            if (recycler != nullptr && this->profiler == recycler->GetProfiler())
             {
-                recycler->SetProfiler(null, null);
+                recycler->SetProfiler(nullptr, nullptr);
             }
             NoCheckHeapDelete(this);
         }
@@ -26,7 +26,7 @@ namespace Js
     }
 
     ScriptContextProfiler::ScriptContextProfiler() :
-        refcount(1), profilerArena(null), profiler(null), backgroundRecyclerProfilerArena(null), backgroundRecyclerProfiler(null), recycler(null), pageAllocator(null), next(null)
+        refcount(1), profilerArena(nullptr), profiler(nullptr), backgroundRecyclerProfilerArena(nullptr), backgroundRecyclerProfiler(nullptr), recycler(nullptr), pageAllocator(nullptr), next(nullptr)
     {                
     }
     

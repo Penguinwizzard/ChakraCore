@@ -19,7 +19,7 @@ namespace Js
 
         void DbgAssertNotFrozen() const
         {
-            AssertMsg(this->m_string != null, "Do not call BufferStringBuilder methods after ToString() has been called.");
+            AssertMsg(this->m_string != nullptr, "Do not call BufferStringBuilder methods after ToString() has been called.");
         }
 
         void SetContent(

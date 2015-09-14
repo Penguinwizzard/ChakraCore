@@ -98,7 +98,7 @@ Security::InsertNOPs()
         {
             instr = instr->GetNextRealInstr();
         }
-        if (instr == NULL)
+        if (instr == nullptr)
         {
             break;
         }
@@ -136,7 +136,7 @@ Security::InsertSmallNOP(IR::Instr * instr, DWORD nopSize)
     }
     else
     {
-        IR::Instr *nopInstr = NULL;
+        IR::Instr *nopInstr = nullptr;
         IR::RegOpnd *regOpnd;
         IR::IndirOpnd *indirOpnd;
         switch (nopSize)
@@ -147,18 +147,18 @@ Security::InsertSmallNOP(IR::Instr * instr, DWORD nopSize)
             break;
         case 2:
             // mov edi, edi         ; 2 bytes
-            regOpnd = IR::RegOpnd::New(NULL, RegEDI, TyInt32, instr->m_func);
+            regOpnd = IR::RegOpnd::New(nullptr, RegEDI, TyInt32, instr->m_func);
             nopInstr = IR::Instr::New(Js::OpCode::MOV, regOpnd, regOpnd, instr->m_func);
             break;
         case 3:
             // lea ecx, [ecx+00]    ; 3 bytes
-            regOpnd = IR::RegOpnd::New(NULL, RegECX, TyInt32, instr->m_func);
+            regOpnd = IR::RegOpnd::New(nullptr, RegECX, TyInt32, instr->m_func);
             indirOpnd = IR::IndirOpnd::New(regOpnd, (int32)0, TyInt32, instr->m_func);
             nopInstr = IR::Instr::New(Js::OpCode::LEA, regOpnd, indirOpnd, instr->m_func);
             break;
         case 4:
             // lea esp, [esp+00]    ; 4 bytes
-            regOpnd = IR::RegOpnd::New(NULL, RegESP, TyInt32, instr->m_func);
+            regOpnd = IR::RegOpnd::New(nullptr, RegESP, TyInt32, instr->m_func);
             indirOpnd = IR::IndirOpnd::New(regOpnd, (int32)0, TyInt32, instr->m_func);
             nopInstr = IR::Instr::New(Js::OpCode::LEA, regOpnd, indirOpnd, instr->m_func);
             break;
@@ -172,7 +172,7 @@ Security::InsertSmallNOP(IR::Instr * instr, DWORD nopSize)
 #elif defined(_M_ARM)   
     // Can't insert 3 bytes, must choose between 2 and 4.
 
-    IR::Instr *nopInstr = NULL;
+    IR::Instr *nopInstr = nullptr;
 
     switch(nopSize)
     {
@@ -211,7 +211,7 @@ Security::DontEncode(IR::Opnd *opnd)
         IR::AddrOpnd *addrOpnd = opnd->AsAddrOpnd();
         return (addrOpnd->m_dontEncode ||
                 !addrOpnd->IsVar() || 
-                addrOpnd->m_address == null ||
+                addrOpnd->m_address == nullptr ||
                 !Js::TaggedNumber::Is(addrOpnd->m_address));
     }
 
@@ -300,7 +300,7 @@ Security::EncodeOpnd(IR::Instr *instr, IR::Opnd *opnd)
         {
             return;
         }
-        AssertMsg(indirOpnd->GetIndexOpnd() == NULL, "Code currently doesn't support indir with offset and indexOpnd");
+        AssertMsg(indirOpnd->GetIndexOpnd() == nullptr, "Code currently doesn't support indir with offset and indexOpnd");
 
         IR::IntConstOpnd *indexOpnd = IR::IntConstOpnd::New(indirOpnd->GetOffset(), TyInt32, instr->m_func);
 #if DBG_DUMP || defined(ENABLE_IR_VIEWER)
@@ -362,7 +362,7 @@ Security::EncodeValue(IR::Instr *instr, IR::Opnd *opnd, IntConstType value, IR::
 
     StackSym * stackSym = regOpnd->m_sym;
     Assert(!stackSym->m_isSingleDef);
-    Assert(stackSym->m_instrDef == null);
+    Assert(stackSym->m_instrDef == nullptr);
     stackSym->m_isEncodedConstant = true;
     stackSym->constantValue = value;
 
@@ -374,7 +374,7 @@ Security::EncodeValue(IR::Instr *instr, IR::Opnd *opnd, IntConstType value, IR::
 size_t
 Security::EncodeAddress(IR::Instr *instr, IR::Opnd *opnd, size_t value, IR::RegOpnd **pNewOpnd)
 {
-    IR::Instr   *instrNew = null;
+    IR::Instr   *instrNew = nullptr;
     IR::RegOpnd *regOpnd  = IR::RegOpnd::New(TyMachReg, instr->m_func);
 
     instrNew = LowererMD::CreateAssign(regOpnd, opnd, instr);
@@ -387,7 +387,7 @@ Security::EncodeAddress(IR::Instr *instr, IR::Opnd *opnd, size_t value, IR::RegO
 
     StackSym * stackSym = regOpnd->m_sym;
     Assert(!stackSym->m_isSingleDef);
-    Assert(stackSym->m_instrDef == null);
+    Assert(stackSym->m_instrDef == nullptr);
     stackSym->m_isEncodedConstant = true;
     stackSym->constantValue = value;
 

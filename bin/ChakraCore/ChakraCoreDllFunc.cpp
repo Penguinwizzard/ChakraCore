@@ -1,5 +1,6 @@
 #include "Runtime.h"
 #include "core\ConfigParser.h"
+#include "Library\ThreadContextTLSEntry.h"
 #include "Library\ThreadBoundThreadContextManager.h"
 #ifdef DYNAMIC_PROFILE_STORAGE
 #include "Language\DynamicProfileStorage.h"

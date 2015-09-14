@@ -14,13 +14,13 @@ namespace Js
 
     void ByteCodeReader::Create(FunctionBody* functionRead, uint startOffset, bool useOriginalByteCode)
     {
-        AssertMsg(functionRead != null, "Must provide valid function to execute");
+        AssertMsg(functionRead != nullptr, "Must provide valid function to execute");
 
         ByteBlock * byteCodeBlock = useOriginalByteCode ? 
             functionRead->GetOriginalByteCode() : 
             functionRead->GetByteCode();
             
-        AssertMsg(byteCodeBlock != null, "Must have valid byte-code to read");
+        AssertMsg(byteCodeBlock != nullptr, "Must have valid byte-code to read");
 
         m_startLocation = byteCodeBlock->GetBuffer();
         m_currentLocation = m_startLocation + startOffset;
@@ -66,14 +66,14 @@ namespace Js
     template<>
     const unaligned OpLayoutEmpty * ByteCodeReader::GetLayout<OpLayoutEmpty>()
     {
-        return null;
+        return nullptr;
     }
 
     template<>
     const unaligned OpLayoutEmpty * ByteCodeReader::GetLayout<OpLayoutEmpty>(const byte*& ip)
     {
         m_currentLocation = ip;
-        return null;
+        return nullptr;
     }
 
     OpCode ByteCodeReader::ReadOp(const byte *&ip, LayoutSize& layoutSize) const

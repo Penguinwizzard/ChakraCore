@@ -123,7 +123,7 @@ namespace Js
     public:
         static FakePropertyGuardWeakReference* New(Recycler* recycler, Js::PropertyGuard* guard)
         {
-            Assert(guard != null);
+            Assert(guard != nullptr);
             return RecyclerNewLeaf(recycler, Js::FakePropertyGuardWeakReference, guard);
         }
         FakePropertyGuardWeakReference(const Js::PropertyGuard* guard)
@@ -134,8 +134,8 @@ namespace Js
 
         void Zero()
         {
-            Assert(this->strongRef != null);
-            this->strongRef = null;
+            Assert(this->strongRef != nullptr);
+            this->strongRef = nullptr;
         }
     };
 
@@ -177,7 +177,7 @@ namespace Js
 
     public:
         JitEquivalentTypeGuard(Type* type, int index, uint32 objTypeSpecFldId):
-            JitIndexedPropertyGuard(reinterpret_cast<intptr_t>(type), index), cache(null), objTypeSpecFldId(objTypeSpecFldId) {}
+            JitIndexedPropertyGuard(reinterpret_cast<intptr_t>(type), index), cache(nullptr), objTypeSpecFldId(objTypeSpecFldId) {}
 
         Js::Type* GetType() const { return reinterpret_cast<Js::Type*>(this->GetValue()); }
 
@@ -210,7 +210,7 @@ namespace Js
 
     public:
         PolymorphicCacheUtilizationArray()
-            : utilArray(null)
+            : utilArray(nullptr)
         {
         }
         void EnsureUtilArray(Recycler * const recycler, Js::FunctionBody * functionBody);
@@ -311,7 +311,7 @@ namespace Js
         // the user of this class does.
         void * address;        
 
-        ProxyEntryPointInfo(void* address, ThreadContext* context = null):
+        ProxyEntryPointInfo(void* address, ThreadContext* context = nullptr):
             ExpirableObject(context),
             address(address)
         {
@@ -384,10 +384,10 @@ namespace Js
 
         public:
             JitTransferData():
-                jitTimeTypeRefs(null), runtimeTypeRefCount(0), runtimeTypeRefs(null),
-                propertyGuardCount(0), propertyGuardsByPropertyId(null), propertyGuardsByPropertyIdPlusSize(0),
-                ctorCacheGuardsByPropertyId(null), ctorCacheGuardsByPropertyIdPlusSize(0),
-                equivalentTypeGuardCount(0), equivalentTypeGuards(null), data(null), 
+                jitTimeTypeRefs(nullptr), runtimeTypeRefCount(0), runtimeTypeRefs(nullptr),
+                propertyGuardCount(0), propertyGuardsByPropertyId(nullptr), propertyGuardsByPropertyIdPlusSize(0),
+                ctorCacheGuardsByPropertyId(nullptr), ctorCacheGuardsByPropertyIdPlusSize(0),
+                equivalentTypeGuardCount(0), equivalentTypeGuards(nullptr), data(nullptr),
                 falseReferencePreventionBit(true), isReady(false), lazyBailoutProperties(nullptr), lazyBailoutPropertyCount(0){}
 
             void AddJitTimeTypeRef(void* typeRef, Recycler* recycler);
@@ -493,12 +493,12 @@ namespace Js
         virtual bool IsFunctionEntryPointInfo() const override { return true; }
 
     protected:
-        EntryPointInfo(void* address, JavascriptLibrary* library, void* validationCookie, ThreadContext* context = null, bool isLoopBody = false) :
-            ProxyEntryPointInfo(address, context), nativeThrowSpanSequence(NULL),
-            workItem(NULL), codeSize(0), nativeAddress(NULL), weakFuncRefSet(null),
-            jitTransferData(null), sharedPropertyGuards(null), propertyGuardCount(0), propertyGuardWeakRefs(null),
-            equivalentTypeCacheCount(0), equivalentTypeCaches(null), constructorCaches(null), state(NotScheduled), data(NULL),
-            library(library), numberChunks(null), polymorphicInlineCacheInfo(null), runtimeTypeRefs(NULL), validationCookie(validationCookie),
+        EntryPointInfo(void* address, JavascriptLibrary* library, void* validationCookie, ThreadContext* context = nullptr, bool isLoopBody = false) :
+            ProxyEntryPointInfo(address, context), nativeThrowSpanSequence(nullptr),
+            workItem(nullptr), codeSize(0), nativeAddress(nullptr), weakFuncRefSet(nullptr),
+            jitTransferData(nullptr), sharedPropertyGuards(nullptr), propertyGuardCount(0), propertyGuardWeakRefs(nullptr),
+            equivalentTypeCacheCount(0), equivalentTypeCaches(nullptr), constructorCaches(nullptr), state(NotScheduled), data(nullptr),
+            library(library), numberChunks(nullptr), polymorphicInlineCacheInfo(nullptr), runtimeTypeRefs(nullptr), validationCookie(validationCookie),
             isLoopBody(isLoopBody), registeredEquivalentTypeCacheRef(nullptr), isAsmJsFunction(false), bailoutRecordMap(nullptr)
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
             , cleanupStack(nullptr)
@@ -508,7 +508,7 @@ namespace Js
             , nativeOffsetMaps(&HeapAllocator::Instance)
 #endif
 #ifdef FIELD_ACCESS_STATS
-            , fieldAccessStats(null)
+            , fieldAccessStats(nullptr)
 #endif
         {}
 
@@ -628,7 +628,7 @@ namespace Js
         void SetCodeGenPending(CodeGenWorkItem * workItem)
         {
             Assert(this->GetState() == NotScheduled || this->GetState() == CleanedUp);
-            Assert(workItem != NULL);
+            Assert(workItem != nullptr);
             this->workItem = workItem;
             this->state = CodeGenPending;
         }
@@ -648,15 +648,15 @@ namespace Js
         void RevertToNotScheduled()
         {
             Assert(this->GetState() == CodeGenPending);
-            Assert(this->workItem != NULL);
-            this->workItem = NULL;
+            Assert(this->workItem != nullptr);
+            this->workItem = nullptr;
             this->state = NotScheduled;
         }
 
         void SetCodeGenPendingWithStackAllocatedWorkItem()
         {
             Assert(this->GetState() == NotScheduled || this->GetState() == CleanedUp);
-            this->workItem = NULL;
+            this->workItem = nullptr;
             this->state = CodeGenPending;
         }
 
@@ -664,9 +664,9 @@ namespace Js
             NativeCodeData * data, NativeCodeData * transferData, CodeGenNumberChunk * numberChunks)
         {
             Assert(this->GetState() == CodeGenQueued);
-            Assert(nativeAddress != NULL);
+            Assert(nativeAddress != nullptr);
             Assert(codeSize > 0);
-            Assert(this->jitTransferData != null || transferData == nullptr);
+            Assert(this->jitTransferData != nullptr || transferData == nullptr);
             this->nativeAddress = (void *)nativeAddress;
             this->codeSize = codeSize;
             this->data = data;
@@ -686,14 +686,14 @@ namespace Js
         {
             Assert(this->GetState() == CodeGenRecorded);
             this->state = CodeGenDone;
-            this->workItem = NULL;
+            this->workItem = nullptr;
         }
 
         void SetJITCapReached()
         {
             Assert(this->GetState() == CodeGenQueued);
             this->state = JITCapReached;
-            this->workItem = NULL;
+            this->workItem = nullptr;
         }
 
         SmallSpanSequence* GetNativeThrowSpanSequence() const
@@ -706,7 +706,7 @@ namespace Js
         void SetNativeThrowSpanSequence(SmallSpanSequence* seq)
         {
             Assert(this->GetState() == CodeGenQueued);
-            Assert(this->nativeThrowSpanSequence == null);
+            Assert(this->nativeThrowSpanSequence == nullptr);
 
             nativeThrowSpanSequence = seq;
         }
@@ -733,7 +733,7 @@ namespace Js
         {
             State state = this->GetState();
             Assert(state != NotScheduled);
-            Assert(state == CleanedUp && this->workItem == NULL ||
+            Assert(state == CleanedUp && this->workItem == nullptr ||
                 state != CleanedUp);
 
             if (state == PendingCleanup)
@@ -768,7 +768,7 @@ namespace Js
         {
             Assert(isAsmJsFunction);
             this->state = CodeGenDone;
-            this->workItem = NULL;
+            this->workItem = nullptr;
         }
         void AddWeakFuncRef(RecyclerWeakReference<FunctionBody> *weakFuncRef, Recycler *recycler);
         WeakFuncRefSet *EnsureWeakFuncRefSet(Recycler *recycler);
@@ -779,7 +779,7 @@ namespace Js
         virtual void OnNativeCodeInstallFailure() = 0;
 
         Js::PropertyGuard* RegisterSharedPropertyGuard(Js::PropertyId propertyId, ScriptContext* scriptContext);
-        bool HasSharedPropertyGuards() { return this->sharedPropertyGuards != null; }
+        bool HasSharedPropertyGuards() { return this->sharedPropertyGuards != nullptr; }
         bool HasSharedPropertyGuard(Js::PropertyId propertyId);
         bool TryGetSharedPropertyGuard(Js::PropertyId propertyId, Js::PropertyGuard*& guard);
         void RecordTypeGuards(int propertyGuardCount, TypeGuardTransferEntry* typeGuardTransferRecord, size_t typeGuardTransferPlusSize);
@@ -791,7 +791,7 @@ namespace Js
         bool ClearEquivalentTypeCaches();
 
         void RegisterConstructorCache(Js::ConstructorCache* constructorCache, Recycler* recycler);
-        uint GetConstructorCacheCount() const { return this->constructorCaches != null ? this->constructorCaches->Count() : 0; }
+        uint GetConstructorCacheCount() const { return this->constructorCaches != nullptr ? this->constructorCaches->Count() : 0; }
         uint32 GetPendingPolymorphicCacheState() const { return this->pendingPolymorphicCacheState; }
         void SetPendingPolymorphicCacheState(uint32 state) { this->pendingPolymorphicCacheState = state; }
         BYTE GetPendingInlinerVersion() const { return this->pendingInlinerVersion; }
@@ -1002,12 +1002,12 @@ namespace Js
         {
             LoopEntryPointInfo * entryPoint = GetCurrentEntryPointInfo();
 
-            if (entryPoint != NULL)
+            if (entryPoint != nullptr)
             {
                 return this->entryPoints->Item(this->GetCurrentEntryPointIndex())->address;
             }
 
-            return NULL;
+            return nullptr;
         }
 
         LoopEntryPointInfo * GetCurrentEntryPointInfo() const
@@ -1038,7 +1038,7 @@ namespace Js
             {
                 this->entryPoints->Map([&](int index, LoopEntryPointInfo * entryPoint)
                 {
-                    if (entryPoint != NULL)
+                    if (entryPoint != nullptr)
                     {
                         fn(index, entryPoint);
                     }
@@ -1051,7 +1051,7 @@ namespace Js
         {
             return Map(site, this->entryPoints, [&](int index, LoopEntryPointInfo * entryPoint)
             {
-                if (entryPoint != NULL)
+                if (entryPoint != nullptr)
                 {
                     fn(index, entryPoint);
                 }
@@ -1265,7 +1265,7 @@ namespace Js
         static ParseableFunctionInfo* New(ScriptContext* scriptContext, int nestedFunctionCount, LocalFunctionId functionId, Utf8SourceInfo* utf8SourceInfo, const wchar_t* displayName, uint m_displayNameLength, Js::PropertyRecordList* propertyRecordList, Attributes attributes);
 
         DEFINE_VTABLE_CTOR_NO_REGISTER(ParseableFunctionInfo, FunctionProxy);
-        FunctionBody* Parse(ScriptFunction ** functionRef = null, bool isByteCodeDeserialization = false);
+        FunctionBody* Parse(ScriptFunction ** functionRef = nullptr, bool isByteCodeDeserialization = false);
         FunctionBody* ParseAsmJs(Parser * p, __out CompileScriptException * se, __out ParseNodePtr * ptree);
         virtual uint GetDisplayNameLength() const { return m_displayNameLength; }
         bool GetIsDeclaration() const { return m_isDeclaration; }
@@ -1331,7 +1331,7 @@ namespace Js
         Js::PropertyRecordList* GetBoundPropertyRecords() { return this->m_boundPropertyRecords; }
         void SetBoundPropertyRecords(Js::PropertyRecordList* boundPropertyRecords)
         {
-            Assert(this->m_boundPropertyRecords == NULL);
+            Assert(this->m_boundPropertyRecords == nullptr);
             this->m_boundPropertyRecords = boundPropertyRecords;
         }
         void ClearBoundPropertyRecords()
@@ -1430,7 +1430,7 @@ namespace Js
         }
         void SetCachedSourceString(Var sourceString)
         {
-            Assert(this->cachedSourceString == null);
+            Assert(this->cachedSourceString == nullptr);
             this->cachedSourceString = sourceString;
         }
 
@@ -1655,11 +1655,11 @@ namespace Js
                 SourceInfo():
                     frameDisplayRegister(0),
                     objectRegister(0),
-                    pScopeObjectChain(NULL),
-                    m_probeBackingBlock(NULL),
+                    pScopeObjectChain(nullptr),
+                    m_probeBackingBlock(nullptr),
                     m_probeCount(0),
-                    m_auxStatementData(NULL),
-                    pSpanSequence(NULL)
+                    m_auxStatementData(nullptr),
+                    pSpanSequence(nullptr)
                 {
                 }
             };
@@ -1894,7 +1894,7 @@ namespace Js
 
     public:
         FunctionBody(ByteCodeCache* cache, Utf8SourceInfo* sourceInfo, ScriptContext* scriptContext):
-            ParseableFunctionInfo((JavascriptMethod) null, 0, 0, (LocalFunctionId) 0, sourceInfo, scriptContext, 0, null, 0, None, null)
+            ParseableFunctionInfo((JavascriptMethod) nullptr, 0, 0, (LocalFunctionId) 0, sourceInfo, scriptContext, 0, nullptr, 0, None, nullptr)
         {
             // Dummy constructor- does nothing
             // Must be stack allocated
@@ -1945,7 +1945,7 @@ namespace Js
         Js::LoopHeader * GetLoopHeader(uint index) const;
         Js::Var GetLoopHeaderArrayPtr() const
         {
-            Assert(this->loopHeaderArray != null);
+            Assert(this->loopHeaderArray != nullptr);
             return this->loopHeaderArray;
         }       
         void SetIsAsmJsFullJitScheduled(bool val){ m_isAsmJsScheduledForFullJIT = val; }
@@ -2146,7 +2146,7 @@ namespace Js
         void RecordStatementMap(StatementMap* statementMap);
         void RecordStatementMap(SmallSpanSequenceIter &iter, StatementData * data);
         void RecordLoad(int ichMin, int bytecodeAfterLoad);
-        DebuggerScope* RecordStartScopeObject(DiagExtraScopesType scopeType, int start, RegSlot scopeLocation, int* index = NULL);
+        DebuggerScope* RecordStartScopeObject(DiagExtraScopesType scopeType, int start, RegSlot scopeLocation, int* index = nullptr);
         void RecordEndScopeObject(DebuggerScope* currentScope, int end);
         DebuggerScope* AddScopeObject(DiagExtraScopesType scopeType, int start, RegSlot scopeLocation);
         bool TryGetDebuggerScopeAt(int index, DebuggerScope*& debuggerScope);
@@ -2197,7 +2197,7 @@ namespace Js
         StatementMap* GetMatchingStatementMapFromByteCode(int byteCodeOffset, bool ignoreSubexpressions = false);
         int GetEnclosingStatementIndexFromByteCode(int byteCodeOffset, bool ignoreSubexpressions = false);
         StatementMap* GetEnclosingStatementMapFromByteCode(int byteCodeOffset, bool ignoreSubexpressions = false);
-        StatementMap* GetMatchingStatementMapFromSource(int byteCodeOffset, int* pMapIndex = NULL);
+        StatementMap* GetMatchingStatementMapFromSource(int byteCodeOffset, int* pMapIndex = nullptr);
         void RecordFrameDisplayRegister(RegSlot slot);
         void RecordObjectRegister(RegSlot slot);
 
@@ -2220,7 +2220,7 @@ namespace Js
         void SetIsFromNativeCodeModule(bool isFromNativeCodeModule) { m_isFromNativeCodeModule = isFromNativeCodeModule; }
 
         uint GetLoopNumber(LoopHeader const * loopHeader) const;
-        bool GetHasAllocatedLoopHeaders() { return this->loopHeaderArray != null; }
+        bool GetHasAllocatedLoopHeaders() { return this->loopHeaderArray != nullptr; }
 
         Js::JavascriptMethod GetLoopBodyEntryPoint(Js::LoopHeader * loopHeader, int entryPointIndex);
         void SetLoopBodyEntryPoint(Js::LoopHeader * loopHeader, EntryPointInfo* entryPointInfo, Js::JavascriptMethod entryPoint);
@@ -2242,7 +2242,7 @@ namespace Js
         }
         bool HasInterpreterThunkGenerated() const
         {
-            return m_dynamicInterpreterThunk != NULL;
+            return m_dynamicInterpreterThunk != nullptr;
         }
 
         DWORD GetDynamicInterpreterThunkSize() const;
@@ -2613,7 +2613,7 @@ namespace Js
 
         void LoadDynamicProfileInfo();
         bool HasExecutionDynamicProfileInfo() const { return hasExecutionDynamicProfileInfo; }
-        bool HasDynamicProfileInfo() const { return dynamicProfileInfo != null; }
+        bool HasDynamicProfileInfo() const { return dynamicProfileInfo != nullptr; }
         bool NeedEnsureDynamicProfileInfo() const;
         DynamicProfileInfo * GetDynamicProfileInfo() const { Assert(HasExecutionDynamicProfileInfo()); return dynamicProfileInfo; }
         DynamicProfileInfo * GetAnyDynamicProfileInfo() const { Assert(HasDynamicProfileInfo()); return dynamicProfileInfo; }
@@ -2624,7 +2624,7 @@ namespace Js
         ImplicitCallFlags GetSavedImplicitCallsFlags() const;
         bool HasNonBuiltInCallee();
 
-        bool HasFunctionBailOutRecord() const { return functionBailOutRecord != null; }
+        bool HasFunctionBailOutRecord() const { return functionBailOutRecord != nullptr; }
         FunctionBailOutRecord * GetFunctionBailOutRecord() const { Assert(HasFunctionBailOutRecord()); return functionBailOutRecord; }
         void SetFunctionBailOutRecord(FunctionBailOutRecord * record) { Assert(!HasFunctionBailOutRecord()); functionBailOutRecord = record; }
 
@@ -2635,8 +2635,8 @@ namespace Js
 
         void SetNativeThrowSpanSequence(SmallSpanSequence *seq, uint loopNum, LoopEntryPointInfo* entryPoint);
 
-        BOOL GetMatchingStatementMapFromNativeAddress(DWORD_PTR codeAddress, StatementData &data, uint loopNum, FunctionBody *inlinee = null);
-        BOOL GetMatchingStatementMapFromNativeOffset(DWORD_PTR codeAddress, uint32 offset, StatementData &data, FunctionBody *inlinee = null);
+        BOOL GetMatchingStatementMapFromNativeAddress(DWORD_PTR codeAddress, StatementData &data, uint loopNum, FunctionBody *inlinee = nullptr);
+        BOOL GetMatchingStatementMapFromNativeOffset(DWORD_PTR codeAddress, uint32 offset, StatementData &data, FunctionBody *inlinee = nullptr);
 
         FunctionEntryPointInfo * GetEntryPointFromNativeAddress(DWORD_PTR codeAddress);
 
@@ -2747,7 +2747,7 @@ namespace Js
 
         bool DoJITLoopBody() const
         {
-            return IsJitLoopBodyPhaseEnabled() && this->loopHeaderArray != null;
+            return IsJitLoopBodyPhaseEnabled() && this->loopHeaderArray != nullptr;
         }
 
         bool ForceJITLoopBody() const
@@ -3027,12 +3027,12 @@ namespace Js
 
         void Cleanup()
         {
-            if (pStatementBuffer != null)
+            if (pStatementBuffer != nullptr)
             {
                 HeapDelete(pStatementBuffer);
             }
 
-            if (pActualOffsetList != null)
+            if (pActualOffsetList != nullptr)
             {
                 HeapDelete(pActualOffsetList);
             }
@@ -3201,7 +3201,7 @@ namespace Js
         typedef JsUtil::List<DebuggerScope*> ScopeObjectChainList;
 
         ScopeObjectChain(Recycler* recycler)
-            : pScopeChain(null)
+            : pScopeChain(nullptr)
         {
             pScopeChain = RecyclerNew(recycler, ScopeObjectChainList, recycler);
         }

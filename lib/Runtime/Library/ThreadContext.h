@@ -119,7 +119,7 @@ extern "C" void* MarkerForExternalDebugStep();
 
 #define LEAVE_SCRIPT_START_EX(scriptContext, stackProbe, leaveForHost, isFPUControlRestoreNeeded) \
         { \
-            void * __frameAddr = null; \
+            void * __frameAddr = nullptr; \
             GET_CURRENT_FRAME_ID(__frameAddr); \
             Js::LeaveScriptObject<stackProbe, leaveForHost, isFPUControlRestoreNeeded> __leaveScriptObject(scriptContext, __frameAddr);
 
@@ -214,8 +214,10 @@ class NativeLibraryEntryRecord
 public:
     struct Entry
     {
-        PVOID addr;
+        Js::RecyclableObject* function;
+        Js::CallInfo callInfo;
         PCWSTR name;
+        PVOID addr;
         Entry* next;
     };
 
@@ -247,11 +249,10 @@ public:
 class AutoTagNativeLibraryEntry
 {
 private:
-    ThreadContext* threadContext;
     NativeLibraryEntryRecord::Entry entry;
 
 public:
-    AutoTagNativeLibraryEntry(ThreadContext* threadContext, void* addr, PCWSTR name);
+    AutoTagNativeLibraryEntry(Js::RecyclableObject* function, Js::CallInfo callInfo, PCWSTR name, void* addr);
     ~AutoTagNativeLibraryEntry();
 };
 
@@ -305,8 +306,8 @@ public:
     void LogTime(double ms);
 };
 
-#define AUTO_TAG_NATIVE_LIBRARY_ENTRY(scriptContext, name) \
-    AutoTagNativeLibraryEntry __tag(scriptContext->GetThreadContext(), _AddressOfReturnAddress(), name)
+#define AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, name) \
+    AutoTagNativeLibraryEntry __tag(function, callInfo, name, _AddressOfReturnAddress())
 
 class ThreadContext sealed : 
     public DefaultRecyclerCollectionWrapper,
@@ -326,7 +327,7 @@ public:
     {
         //Abstract notion to hold onto threadhandle of worker thread
         HANDLE threadHandle;
-        WorkerThread(HANDLE handle = null) :threadHandle(handle){};
+        WorkerThread(HANDLE handle = nullptr) :threadHandle(handle){};
     };
 
     void ReleasePreReservedSegment();
@@ -352,6 +353,7 @@ public:
 
         return &this->stackLimitForCurrentThread; 
     }
+    void InitAvailableCommit();
 
     // This is always on for JSRT APIs.
     bool IsRentalThreadingEnabledInJSRT() const { return true; }
@@ -407,7 +409,7 @@ private:
         PropertyGuardHashSet uniqueGuards;
         EntryPointDictionary* entryPoints;
 
-        PropertyGuardEntry(Recycler* recycler) : sharedGuard(null), uniqueGuards(recycler), entryPoints(nullptr) {}
+        PropertyGuardEntry(Recycler* recycler) : sharedGuard(nullptr), uniqueGuards(recycler), entryPoints(nullptr) {}
     };
 
 public:
@@ -427,7 +429,7 @@ private:
     class SourceDynamicProfileManagerCache
     {
     public:
-        SourceDynamicProfileManagerCache() : refCount(0), sourceProfileManagerMap(NULL) {}
+        SourceDynamicProfileManagerCache() : refCount(0), sourceProfileManagerMap(nullptr) {}
 
         SourceDynamicProfileManagerMap* sourceProfileManagerMap;
         void AddRef() { refCount++; }
@@ -559,7 +561,7 @@ private:
     uint32 polymorphicCacheState;
     Js::TypeId wellKnownHostTypeHTMLAllCollectionTypeId;
 
-#if ENABLE_PROJECTION
+#ifdef ENABLE_PROJECTION
     SListBase<ExternalWeakReferenceCache *> externalWeakReferenceCacheList;
 #if DBG_DUMP
     IProjectionContextMemoryInfo *projectionMemoryInformation;
@@ -633,8 +635,8 @@ private:
     bool hasCatchHandlerToUserCode;
     
     Js::DelayLoadWinRtString delayLoadWinRtString;
-    Js::DelayLoadWinRtError delayLoadWinRtError;
 #ifdef ENABLE_PROJECTION
+    Js::DelayLoadWinRtError delayLoadWinRtError;
     Js::DelayLoadWinRtTypeResolution delayLoadWinRtTypeResolution;
     Js::DelayLoadWinRtRoParameterizedIID delayLoadWinRtRoParameterizedIID;
 #endif
@@ -648,8 +650,8 @@ private:
 #endif
 #ifdef _CONTROL_FLOW_GUARD
     Js::DelayLoadWinCoreMemory delayLoadWinCoreMemoryLibrary;
-    Js::DelayLoadWinCoreProcessThreads delayLoadWinCoreProcessThreads;
 #endif
+    Js::DelayLoadWinCoreProcessThreads delayLoadWinCoreProcessThreads;
 
     // Number of script context attached with probe manager.
     // This counter will be used as addref when the script context is created, this way we maintain the life of diagnostic object.
@@ -724,8 +726,8 @@ public:
     UCrtC99MathApis* GetUCrtC99MathApis() { return &ucrtC99MathApis; }
 
     Js::DelayLoadWinRtString *GetWinRTStringLibrary();
-    Js::DelayLoadWinRtError *GetWinRTErrorLibrary();
 #ifdef ENABLE_PROJECTION
+    Js::DelayLoadWinRtError *GetWinRTErrorLibrary();
     Js::DelayLoadWinRtTypeResolution* GetWinRTTypeResolutionLibrary();
     Js::DelayLoadWinRtRoParameterizedIID* GetWinRTRoParameterizedIIDLibrary();
 #endif
@@ -739,8 +741,8 @@ public:
 #endif
 #ifdef _CONTROL_FLOW_GUARD
     Js::DelayLoadWinCoreMemory * GetWinCoreMemoryLibrary();
-    Js::DelayLoadWinCoreProcessThreads * GetWinCoreProcessThreads();
 #endif
+    Js::DelayLoadWinCoreProcessThreads * GetWinCoreProcessThreads();
 
     JITTimer JITTelemetry;
     ParserTimer ParserTelemetry;
@@ -792,7 +794,7 @@ public:
 
     void SetInterruptPoller(InterruptPoller *poller) { interruptPoller = poller; }
     InterruptPoller *GetInterruptPoller() const { return interruptPoller; }
-    BOOL HasInterruptPoller() const { return interruptPoller != null; }
+    BOOL HasInterruptPoller() const { return interruptPoller != nullptr; }
     void CheckScriptInterrupt();
     void CheckInterruptPoll();
 
@@ -894,7 +896,7 @@ public:
         }
 #endif
 #ifdef CONCURRENT_GC_ENABLED
-        if (this->recycler != null)
+        if (this->recycler != nullptr)
         {
             this->recycler->ShutdownThread();
         }
@@ -907,7 +909,7 @@ public:
     ArenaAllocator* GetThreadAlloc() { return &threadAlloc; }
     static CriticalSection * GetCriticalSection() { return &s_csThreadContext; }
 
-    ThreadContext(AllocationPolicyManager * allocationPolicyManager = null, JsUtil::ThreadService::ThreadServiceCallback threadServiceCallback = null);
+    ThreadContext(AllocationPolicyManager * allocationPolicyManager = nullptr, JsUtil::ThreadService::ThreadServiceCallback threadServiceCallback = nullptr);
     static void Add(ThreadContext *threadContext);
 
 public:
@@ -1187,7 +1189,7 @@ public:
         if (this->IsInScript())
         {
             // Add it to the list only if it's not already in it
-            if (oldEntryPointInfo->nextEntryPoint == null && !oldEntryPointInfo->IsCleanedUp())
+            if (oldEntryPointInfo->nextEntryPoint == nullptr && !oldEntryPointInfo->IsCleanedUp())
             {
                 oldEntryPointInfo->nextEntryPoint = recyclableData->oldEntryPointInfo;
                 recyclableData->oldEntryPointInfo = oldEntryPointInfo;
@@ -1199,8 +1201,8 @@ public:
     __declspec(noinline) bool IsStackAvailable(size_t size);
     __declspec(noinline) bool IsStackAvailableNoThrow(size_t size = Js::Constants::MinStackDefault);
     static bool IsCurrentStackAvailable(size_t size);
-    void ProbeStackNoDispose(size_t size, Js::ScriptContext *scriptContext, PVOID returnAddress = NULL);
-    void ProbeStack(size_t size, Js::ScriptContext *scriptContext, PVOID returnAddress = NULL);
+    void ProbeStackNoDispose(size_t size, Js::ScriptContext *scriptContext, PVOID returnAddress = nullptr);
+    void ProbeStack(size_t size, Js::ScriptContext *scriptContext, PVOID returnAddress = nullptr);
     void ProbeStack(size_t size, Js::RecyclableObject * obj, Js::ScriptContext *scriptContext);
     void ProbeStack(size_t size);
     static void __stdcall ProbeCurrentStackNoDispose(size_t size, Js::ScriptContext *scriptContext);
@@ -1449,7 +1451,7 @@ public:
     }
 
     void* GetJSRTRuntime() const { return jsrtRuntime; }
-    void SetJSRTRuntime(void* runtime) { Assert(jsrtRuntime == NULL); jsrtRuntime = runtime; }
+    void SetJSRTRuntime(void* runtime) { Assert(jsrtRuntime == nullptr); jsrtRuntime = runtime; }
 
     bool CanBeFalsy(Js::TypeId typeId);
 private:
@@ -1541,20 +1543,6 @@ private:
 };
 
 extern void(*InitializeAdditionalProperties)(ThreadContext *threadContext);
-
-inline AutoTagNativeLibraryEntry::AutoTagNativeLibraryEntry(ThreadContext* threadContext, void* addr, PCWSTR name) :
-    threadContext(threadContext)
-{
-    entry.addr = addr;
-    entry.name = name;
-    threadContext->PushNativeLibraryEntry(&entry);
-}
-
-inline AutoTagNativeLibraryEntry::~AutoTagNativeLibraryEntry()
-{
-    Assert(threadContext->PeekNativeLibraryEntry() == &entry);
-    threadContext->PopNativeLibraryEntry();
-}
 
 // Temporarily set script profiler isProfilingUserCode state, restore at destructor
 class AutoProfilingUserCode

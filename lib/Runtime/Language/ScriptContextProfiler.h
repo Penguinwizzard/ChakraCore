@@ -15,7 +15,7 @@ namespace Js
         ScriptContextProfiler();
         ~ScriptContextProfiler();
 
-        bool IsInitialized() const { return profilerArena != null; }
+        bool IsInitialized() const { return profilerArena != nullptr; }
         void Initialize(PageAllocator * pageAllocator, Recycler * recycler);
         
         ULONG AddRef();

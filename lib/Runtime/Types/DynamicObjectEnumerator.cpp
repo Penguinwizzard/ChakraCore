@@ -33,7 +33,7 @@ namespace Js
             return arrayEnumerator->GetCurrentIndex();
         }
 
-        JavascriptString* propertyString = null;
+        JavascriptString* propertyString = nullptr;
         PropertyId propertyId = Constants::NoProperty;
         if (!object->FindNextProperty(objectIndex, &propertyString, &propertyId, nullptr, GetTypeToEnumerate(), !enumNonEnumerable, enumSymbols))
         {
@@ -129,7 +129,7 @@ namespace Js
         do
         {
             objectIndex++;
-            propertyString = null;
+            propertyString = nullptr;
             if (!object->FindNextProperty(objectIndex, &propertyString, &propertyId, attributes, GetTypeToEnumerate(), !enumNonEnumerable, enumSymbols))
             {
                 // No more properties
@@ -153,7 +153,7 @@ namespace Js
         }
         else
         {
-            arrayEnumerator = null;
+            arrayEnumerator = nullptr;
         }
         initialType = object->GetDynamicType();
         objectIndex = (T)-1; // This is Constants::NoSlot or Constants::NoBigSlot

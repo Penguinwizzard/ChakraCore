@@ -241,7 +241,7 @@ namespace Js
                 return lib.CreateStringFromCppLiteral(L"-Infinity");
             }
         }
-        return null;
+        return nullptr;
     }
 
 }

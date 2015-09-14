@@ -120,7 +120,7 @@ Js::FunctionInfo *InliningDecider::InlineCallSite(Js::FunctionBody *const inline
     {
         return Inline(inliner, functionInfo, isConstructorCall, false, GetConstantArgInfo(inliner, profiledCallSiteId), profiledCallSiteId, recursiveInlineDepth, true);
     }
-    return null;
+    return nullptr;
 }
 
 uint InliningDecider::InlinePolymorhicCallSite(Js::FunctionBody *const inliner, const Js::ProfileId profiledCallSiteId, 
@@ -192,7 +192,7 @@ Js::FunctionInfo *InliningDecider::Inline(Js::FunctionBody *const inliner, Js::F
         {
             INLINE_TESTTRACE_VERBOSE(L"INLINING: Skip Inline: Jit loop body: %s (%s)\n", this->topFunc->GetDisplayName(),
                 this->topFunc->GetDebugNumberSet(debugStringBuffer));
-            return null;
+            return nullptr;
         }
 
         // Note: disable inline for debugger, as we can't bailout at return from function. 
@@ -204,16 +204,16 @@ Js::FunctionInfo *InliningDecider::Inline(Js::FunctionBody *const inliner, Js::F
             !inliningHeuristics.ContinueInliningUserDefinedFunctions(this->bytecodeInlinedCount) ||
             this->isInDebugMode)
         {
-            return null;
+            return nullptr;
         }
 
-        if (functionInfo->IsDeferred() || inlinee->GetByteCode() == NULL)
+        if (functionInfo->IsDeferred() || inlinee->GetByteCode() == nullptr)
         {
             // DeferredParse...
             INLINE_TESTTRACE(L"INLINING: Skip Inline: No bytecode\tInlinee: %s (%s)\tCaller: %s (%s)\n",
                 inlinee->GetDisplayName(), inlinee->GetDebugNumberSet(debugStringBuffer), inliner->GetDisplayName(),
                 inliner->GetDebugNumberSet(debugStringBuffer2));
-            return null;
+            return nullptr;
         }
 
         if (inlinee->GetHasTry())
@@ -221,7 +221,7 @@ Js::FunctionInfo *InliningDecider::Inline(Js::FunctionBody *const inliner, Js::F
             INLINE_TESTTRACE(L"INLINING: Skip Inline: Has try\tInlinee: %s (%s)\tCaller: %s (%s)\n",
                 inlinee->GetDisplayName(), inlinee->GetDebugNumberSet(debugStringBuffer), inliner->GetDisplayName(),
                 inliner->GetDebugNumberSet(debugStringBuffer2));
-            return null;
+            return nullptr;
         }
 
         // This is a hard limit as the argOuts array is statically sized.
@@ -230,7 +230,7 @@ Js::FunctionInfo *InliningDecider::Inline(Js::FunctionBody *const inliner, Js::F
             INLINE_TESTTRACE(L"INLINING: Skip Inline: Params count greater then MaxInlineeArgoutCount\tInlinee: %s (%s)\tParamcount: %d\tMaxInlineeArgoutCount: %d\tCaller: %s (%s)\n",
                 inlinee->GetDisplayName(), inlinee->GetDebugNumberSet(debugStringBuffer), inlinee->GetInParamsCount(), Js::InlineeCallInfo::MaxInlineeArgoutCount,
                 inliner->GetDisplayName(), inliner->GetDebugNumberSet(debugStringBuffer2));
-            return null;
+            return nullptr;
         }
 
         if (inlinee->GetInParamsCount() == 0)
@@ -240,7 +240,7 @@ Js::FunctionInfo *InliningDecider::Inline(Js::FunctionBody *const inliner, Js::F
             INLINE_TESTTRACE(L"INLINING: Skip Inline: Params count is zero!\tInlinee: %s (%s)\tParamcount: %d\tCaller: %s (%s)\n",
                 inlinee->GetDisplayName(), inlinee->GetDebugNumberSet(debugStringBuffer), inlinee->GetInParamsCount(),
                 inliner->GetDisplayName(), inliner->GetDebugNumberSet(debugStringBuffer2));
-            return null;
+            return nullptr;
         }
 
         // REVIEW: can we inline these for /force:inline
@@ -249,7 +249,7 @@ Js::FunctionInfo *InliningDecider::Inline(Js::FunctionBody *const inliner, Js::F
             INLINE_TESTTRACE(L"INLINING: Skip Inline: Do not inline\tInlinee: %s (%s)\tCaller: %s (%s)\n",
                 inlinee->GetDisplayName(), inlinee->GetDebugNumberSet(debugStringBuffer), inliner->GetDisplayName(),
                 inliner->GetDebugNumberSet(debugStringBuffer2));
-            return null;
+            return nullptr;
         }
 
         // Do not inline a call to a class constructor if it isn't part of a new expression since the call will throw a TypeError anyway.
@@ -258,12 +258,12 @@ Js::FunctionInfo *InliningDecider::Inline(Js::FunctionBody *const inliner, Js::F
             INLINE_TESTTRACE(L"INLINING: Skip Inline: Class constructor without new keyword\tInlinee: %s (%s)\tCaller: %s (%s)\n",
                 inlinee->GetDisplayName(), inlinee->GetDebugNumberSet(debugStringBuffer), inliner->GetDisplayName(),
                 inliner->GetDebugNumberSet(debugStringBuffer2));
-            return null;
+            return nullptr;
         }
 
         if (!inliningHeuristics.DeciderInlineIntoInliner(inlinee, inliner, isConstructorCall, isPolymorphicCall, this, constantArgInfo, recursiveInlineDepth, allowRecursiveInlining))
         {
-            return null;
+            return nullptr;
         }
 
 #if defined(ENABLE_DEBUG_CONFIG_OPTIONS)
@@ -280,7 +280,7 @@ Js::FunctionInfo *InliningDecider::Inline(Js::FunctionBody *const inliner, Js::F
 
     if(builtInInlineCandidateOpCode == 0 && builtInReturnType.IsUninitialized())
     {
-        return null;
+        return nullptr;
     }
 
     Assert(this->jitMode == ExecutionMode::FullJit);
@@ -291,7 +291,7 @@ Js::FunctionInfo *InliningDecider::Inline(Js::FunctionBody *const inliner, Js::F
             isConstructorCall
         ))
     {
-        return null;
+        return nullptr;
     }
 
     // Note: for built-ins at this time we don't have enough data (the instr) to decide whether it's going to be inlined.
@@ -302,7 +302,7 @@ bool InliningDecider::GetBuiltInInfo(
     Js::FunctionInfo *const funcInfo,
     Js::OpCode *const inlineCandidateOpCode,
     ValueType *const returnType, 
-    Js::ScriptContext *const scriptContext /* = null*/
+    Js::ScriptContext *const scriptContext /* = nullptr*/
     )
 {
     Assert(funcInfo);

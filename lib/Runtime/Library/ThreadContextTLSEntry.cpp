@@ -3,6 +3,7 @@
 //----------------------------------------------------------------------------
 
 #include "RuntimeLibraryPch.h"
+#include "Library\ThreadContextTLSEntry.h"
 
 ulong ThreadContextTLSEntry::s_tlsSlot = TLS_OUT_OF_INDEXES;
 

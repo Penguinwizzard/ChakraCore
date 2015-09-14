@@ -176,7 +176,7 @@ namespace Js
 
         Var newTarget = callInfo.Flags & CallFlags_NewTarget ? args.Values[args.Info.Count] : args[0];
         bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && newTarget != nullptr && RecyclableObject::Is(newTarget);
-        Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == null);
+        Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == nullptr);
 
         uint32 byteLength = 0;
         if (args.Info.Count > 1)
@@ -548,7 +548,7 @@ namespace Js
         PropertyRecord const* propertyRecord;
         this->GetScriptContext()->FindPropertyRecord(propertyNameString, &propertyRecord);
 
-        if (propertyRecord != null && GetPropertyBuiltIns(propertyRecord->GetPropertyId(), value, &result))
+        if (propertyRecord != nullptr && GetPropertyBuiltIns(propertyRecord->GetPropertyId(), value, &result))
         {
             return result;
         }
@@ -587,7 +587,7 @@ namespace Js
         PropertyRecord const* propertyRecord;
         this->GetScriptContext()->FindPropertyRecord(propertyNameString, &propertyRecord);
 
-        if (propertyRecord != null && IsBuiltinProperty(propertyRecord->GetPropertyId()))
+        if (propertyRecord != nullptr && IsBuiltinProperty(propertyRecord->GetPropertyId()))
         {
             return false;
         }

@@ -21,6 +21,7 @@
 #include "Language\JavascriptMathOperators.h"
 #include "Language\JavascriptMathOperators.inl"
 #include "Library\JavascriptRegularExpression.h"
+#include "Language\JavascriptStackWalker.h"
 // =================
 // Common Includes
 // =================

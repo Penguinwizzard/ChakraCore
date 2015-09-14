@@ -79,8 +79,8 @@ namespace Js
                                                     int            hasBailedOutOffset,
                                                     ScriptContext *scriptContext)
     {
-        void *continuation = null;
-        JavascriptExceptionObject *exception = null;
+        void *continuation = nullptr;
+        JavascriptExceptionObject *exception = nullptr;
 
         PROBE_STACK(scriptContext, Constants::MinStackDefault + spillSize + argsSize);
 
@@ -120,9 +120,9 @@ namespace Js
                                                       size_t         argsSize,
                                                       ScriptContext *scriptContext)
     {
-        void                      *tryContinuation     = null;
-        void                      *finallyContinuation = null;
-        JavascriptExceptionObject *exception           = null;
+        void                      *tryContinuation     = nullptr;
+        void                      *finallyContinuation = nullptr;
+        JavascriptExceptionObject *exception           = nullptr;
 
         PROBE_STACK(scriptContext, Constants::MinStackDefault + spillSize + argsSize);
 
@@ -165,8 +165,8 @@ namespace Js
         int hasBailedOutOffset,
         ScriptContext *scriptContext)
     {
-        void *continuation = null;
-        JavascriptExceptionObject *exception = null;
+        void *continuation = nullptr;
+        JavascriptExceptionObject *exception = nullptr;
 
         PROBE_STACK(scriptContext, Constants::MinStackDefault + argsSize);
 
@@ -215,9 +215,9 @@ namespace Js
         size_t argsSize,
         ScriptContext *scriptContext)
     {
-        void                      *tryContinuation     = null;
-        void                      *finallyContinuation = null;
-        JavascriptExceptionObject *exception           = null;
+        void                      *tryContinuation     = nullptr;
+        void                      *finallyContinuation = nullptr;
+        JavascriptExceptionObject *exception           = nullptr;
 
         PROBE_STACK(scriptContext, Constants::MinStackDefault + argsSize);
 
@@ -596,7 +596,7 @@ namespace Js
         DbgCheckEHChain();
 #endif
 
-        Assert(scriptContext != null);
+        Assert(scriptContext != nullptr);
         // TODO: FastDOM Trampolines will throw JS Exceptions but are not isScriptActive
         //AssertMsg(scriptContext->GetThreadContext()->IsScriptActive() ||
         //          (JavascriptError::Is(object) && (JavascriptError::FromVar(object))->IsExternalError()),
@@ -605,7 +605,7 @@ namespace Js
             (JavascriptError::Is(object) && (JavascriptError::FromVar(object))->IsExternalError()),
             "Javascript exception raised without being in CallRootFunction");
 
-        JavascriptError *javascriptError = null;
+        JavascriptError *javascriptError = nullptr;
         if (JavascriptError::Is(object))
         {
             // We keep track of the JavascriptExceptionObject that was created when this error
@@ -658,18 +658,18 @@ namespace Js
         uint32& callerByteCodeOffset, uint64 stackCrawlLimit, PVOID returnAddress, bool isThrownException, bool resetStack)
     {
         JavascriptStackWalker walker(&scriptContext, true, returnAddress);
-        JavascriptFunction* jsFunc = null;
+        JavascriptFunction* jsFunc = nullptr;
 
         if (!GetCaller(walker, jsFunc))
         {
-            return null;
+            return nullptr;
         }
 
         //Skip to first non-Library code 
         //Similiar behaviour to GetCaller returning false
         if(jsFunc->IsLibraryCode() && !walker.GetNonLibraryCodeCaller(&jsFunc))
         {
-            return null;
+            return nullptr;
         }
         
         JavascriptFunction * caller = jsFunc;
@@ -832,7 +832,7 @@ namespace Js
                 Assert(exceptionObject);
 
                 JavascriptExceptionContext exceptionContext;
-                Var thrownObject = exceptionObject->GetThrownObject(null);
+                Var thrownObject = exceptionObject->GetThrownObject(nullptr);
                 WalkStackForExceptionContext(*scriptContext, exceptionContext, thrownObject, StackCrawlLimitOnThrow(thrownObject, *scriptContext), returnAddress, /*isThrownException=*/ true, resetStack);
                 exceptionObject->FillError(exceptionContext, scriptContext);
                 AddStackTraceToObject(thrownObject, exceptionContext.GetStackTrace(), *scriptContext, /*isThrownException=*/ true, resetStack);
@@ -989,7 +989,7 @@ namespace Js
         stackPropertyDescriptor.SetSetter(accessor);
         stackPropertyDescriptor.SetGetter(accessor);
         stackPropertyDescriptor.SetConfigurable(true);
-        stackPropertyDescriptor.SetEnumerable(true);
+        stackPropertyDescriptor.SetEnumerable(false);
         HRESULT hr;
         BEGIN_TRANSLATE_EXCEPTION_AND_ERROROBJECT_TO_HRESULT_NESTED
         {

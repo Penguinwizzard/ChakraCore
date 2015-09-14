@@ -266,7 +266,7 @@ namespace Js
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         Var newTarget = callInfo.Flags & CallFlags_NewTarget ? args.Values[args.Info.Count] : args[0];
         bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && newTarget != nullptr && RecyclableObject::Is(newTarget);
-        Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == null
+        Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == nullptr
             || JavascriptOperators::GetTypeId(args[0]) == TypeIds_HostDispatch);
 
         Var result;
@@ -471,7 +471,7 @@ namespace Js
         }
 
         JavascriptString * nanF;
-        if ( null != (nanF = ToStringNanOrInfinite(value, scriptContext)))
+        if (nullptr != (nanF = ToStringNanOrInfinite(value, scriptContext)))
             return nanF;
 
         // If the Fraction param. is not present we have to output as many fractional digits as we can
@@ -629,7 +629,7 @@ namespace Js
         }
 
         JavascriptString * nanF;
-        if ( null != (nanF = ToStringNanOrInfinite(value, scriptContext)))
+        if (nullptr != (nanF = ToStringNanOrInfinite(value, scriptContext)))
         {
             return nanF;
         }
@@ -813,7 +813,7 @@ namespace Js
     JavascriptString* JavascriptNumber::ToStringNanOrInfiniteOrZero(double value, ScriptContext* scriptContext)
     {
         JavascriptString* nanF;
-        if (null != (nanF = ToStringNanOrInfinite(value, scriptContext)))
+        if (nullptr != (nanF = ToStringNanOrInfinite(value, scriptContext)))
         {
             return nanF;
         }
@@ -823,7 +823,7 @@ namespace Js
             return scriptContext->GetLibrary()->GetCharStringCache().GetStringForCharA('0');
         }
 
-        return null;
+        return nullptr;
     }
 
     static const int bufSize = 256;
@@ -831,13 +831,13 @@ namespace Js
     JavascriptString* JavascriptNumber::ToStringRadix10(double value, ScriptContext* scriptContext)
     {  
         JavascriptString* string = ToStringNanOrInfiniteOrZero(value, scriptContext);
-        if (string != null)
+        if (string != nullptr)
         {
             return string;
         }
 
         string = scriptContext->GetLastNumberToStringRadix10(value);
-        if (string == null)
+        if (string == nullptr)
         {
             wchar_t szBuffer[bufSize]; //TODO: This seems overly generous         
 
@@ -857,7 +857,7 @@ namespace Js
         Assert(radix >= 2 && radix <= 36);
 
         JavascriptString* string = ToStringNanOrInfiniteOrZero(value, scriptContext);
-        if (string != null)
+        if (string != nullptr)
         {
             return string;
         }
@@ -923,7 +923,7 @@ namespace Js
                 return ToStringNan(scriptContext);
             }
 
-            BSTR bstr = null;
+            BSTR bstr = nullptr;
             if (IsPosInf(value))
             {
                 bstr = BstrGetResourceString(IDS_INFINITY);
@@ -934,7 +934,7 @@ namespace Js
                 bstr = BstrGetResourceString(IDS_MINUSINFINITY);
             }
 
-            if (bstr == null)
+            if (bstr == nullptr)
             {
                 Js::JavascriptError::ThrowTypeError(scriptContext, VBSERR_InternalError /* TODO-ERROR: L"NEED MESSAGE" */);
             }
@@ -942,7 +942,7 @@ namespace Js
             SysFreeString(bstr);
             return str;
         }
-        return null;
+        return nullptr;
     }
 
     JavascriptString* JavascriptNumber::ToLocaleString(double value, ScriptContext* scriptContext)
@@ -961,7 +961,7 @@ namespace Js
             return ToLocaleStringNanOrInfinite(value, scriptContext);
         }
 
-        JavascriptString *result = null;
+        JavascriptString *result = nullptr;
 
         JavascriptString *dblStr = JavascriptString::FromVar(FormatDoubleToString(value, NumberUtilities::FormatFixed, -1, scriptContext));
         const wchar_t* szValue = dblStr->GetSz();

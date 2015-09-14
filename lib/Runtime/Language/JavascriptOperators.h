@@ -24,8 +24,8 @@ namespace Js
     } \
     catch (Js::JavascriptExceptionObject *exceptionObject) \
     { \
-        Js::Var errorObject = exceptionObject->GetThrownObject(null); \
-        if (errorObject != NULL && Js::JavascriptError::Is(errorObject)) \
+        Js::Var errorObject = exceptionObject->GetThrownObject(nullptr); \
+        if (errorObject != nullptr && Js::JavascriptError::Is(errorObject)) \
         { \
             HRESULT hr = Js::JavascriptError::GetRuntimeError(Js::RecyclableObject::FromVar(errorObject), nullptr); \
             if (JavascriptError::GetErrorNumberFromResourceID(JSERR_Property_CannotGet_NullOrUndefined) == hr \
@@ -255,7 +255,7 @@ namespace Js
         static Var OP_GetProperty(Var instance, PropertyId propertyId, ScriptContext* scriptContext);
         static Var OP_GetRootProperty(Var instance, PropertyId propertyId, PropertyValueInfo * info, ScriptContext* scriptContext);
 
-        static BOOL OP_SetProperty(Var instance, PropertyId propertyId, Var newValue, ScriptContext* scriptContext, PropertyValueInfo * info = null, PropertyOperationFlags flags = PropertyOperation_None);
+        static BOOL OP_SetProperty(Var instance, PropertyId propertyId, Var newValue, ScriptContext* scriptContext, PropertyValueInfo * info = nullptr, PropertyOperationFlags flags = PropertyOperation_None);
         static BOOL SetPropertyOnTaggedNumber(Var instance, RecyclableObject* object, PropertyId propertyId, Var newValue, ScriptContext* requestContext, PropertyOperationFlags flags);
         static BOOL SetItemOnTaggedNumber(Var instance, RecyclableObject* object, uint32 index, Var newValue, ScriptContext* requestContext, PropertyOperationFlags propertyOperationFlags);
         static BOOL OP_StFunctionExpression(Var instance, PropertyId propertyId, Var newValue);

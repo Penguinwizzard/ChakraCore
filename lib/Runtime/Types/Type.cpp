@@ -19,7 +19,7 @@ namespace Js
         javascriptLibrary(scriptContext->GetLibrary()),
         typeId(typeId),
         prototype(prototype),
-        propertyCache(null),
+        propertyCache(nullptr),
         flags(TypeFlagMask_None)
     {        
 #ifdef PROFILE_TYPES
@@ -28,7 +28,7 @@ namespace Js
             scriptContext->typeCount[typeId]++;
         }
 #endif
-        this->entryPoint = entryPoint != null ? entryPoint : RecyclableObject::DefaultEntryPoint;
+        this->entryPoint = entryPoint != nullptr ? entryPoint : RecyclableObject::DefaultEntryPoint;
         if (prototype)
         {
             Assert(! CrossSite::NeedMarshalVar(prototype,scriptContext));
@@ -42,7 +42,7 @@ namespace Js
         prototype(type->prototype),
         entryPoint(type->entryPoint),
         flags(type->flags),
-        propertyCache(null)
+        propertyCache(nullptr)
     {
 #ifdef PROFILE_TYPES
         if (typeId < sizeof(javascriptLibrary->GetScriptContext()->typeCount)/sizeof(int))

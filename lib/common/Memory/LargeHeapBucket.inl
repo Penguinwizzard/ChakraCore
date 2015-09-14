@@ -50,10 +50,10 @@ LargeHeapBucket::Alloc(Recycler * recycler, size_t sizeCat)
     Assert((attributes & InternalObjectInfoBitMask) == attributes);
     
     char * memBlock = TryAlloc(recycler, sizeCat, attributes);
-    if (memBlock == null)
+    if (memBlock == nullptr)
     {
         memBlock = SnailAlloc(recycler, sizeCat, attributes, nothrow);
-        Assert(memBlock != null);
+        Assert(memBlock != nullptr);
     }
     else
     {

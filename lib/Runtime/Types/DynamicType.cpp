@@ -20,7 +20,7 @@ namespace Js
     DynamicType::DynamicType(ScriptContext* scriptContext, TypeId typeId, RecyclableObject* prototype, JavascriptMethod entryPoint, DynamicTypeHandler * typeHandler, bool isLocked, bool isShared)
         : Type(scriptContext, typeId, prototype, entryPoint) , typeHandler(typeHandler), isLocked(isLocked), isShared(isShared), hasNoEnumerableProperties(false)
     {
-        Assert(typeHandler != null);        
+        Assert(typeHandler != nullptr);
         Assert(!this->isLocked || this->typeHandler->GetIsLocked());
         Assert(!this->isShared || this->typeHandler->GetIsShared());
     }
@@ -48,7 +48,7 @@ namespace Js
 
 #if DEBUG
         PropertyIndex propertyIndex = (PropertyIndex)-1;
-        JavascriptString* propertyString = null;
+        JavascriptString* propertyString = nullptr;
         PropertyId propertyId = Constants::NoProperty;
         Assert(!this->GetTypeHandler()->FindNextProperty(this->GetScriptContext(), propertyIndex, &propertyString, &propertyId, nullptr, this, this, true));
 #endif
@@ -137,7 +137,7 @@ namespace Js
     BOOL DynamicObject::GetInternalProperty(Var originalInstance, PropertyId propertyId, Var* value, PropertyValueInfo* info, ScriptContext* requestContext)
     {
         Assert(Js::IsInternalPropertyId(propertyId));
-        return GetTypeHandler()->GetProperty(this, originalInstance, propertyId, value, null, null);
+        return GetTypeHandler()->GetProperty(this, originalInstance, propertyId, value, nullptr, nullptr);
     }
 
     BOOL DynamicObject::GetPropertyReference(Var originalInstance, PropertyId propertyId, Var* value, PropertyValueInfo* info, ScriptContext* requestContext)
@@ -163,7 +163,7 @@ namespace Js
     BOOL DynamicObject::SetInternalProperty(PropertyId propertyId, Var value, PropertyOperationFlags flags, PropertyValueInfo* info)
     {
         Assert(Js::IsInternalPropertyId(propertyId));
-        return GetTypeHandler()->SetProperty(this, propertyId, value, flags, null);
+        return GetTypeHandler()->SetProperty(this, propertyId, value, flags, nullptr);
     }
 
     DescriptorFlags DynamicObject::GetSetter(PropertyId propertyId, Var* setterValue, PropertyValueInfo* info, ScriptContext* requestContext)

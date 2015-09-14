@@ -10,6 +10,8 @@
 #include "RuntimeLanguagePch.h"
 #include "ByteCode\Symbol.h"
 #include "ByteCode\FuncInfo.h"
+#include "ByteCode\ByteCodeWriter.h"
+#include "ByteCode\ByteCodeGenerator.h"
 
 namespace Js
 {

@@ -67,6 +67,7 @@
     <ClInclude Include="ScopeInfo.h" />
     <ClInclude Include="StatementReader.h" />
     <ClInclude Include="ByteBlock.h" />
+    <ClInclude Include="ByteCodeAPI.h" />
     <ClInclude Include="ByteCodeDumper.h" />
     <ClInclude Include="ByteCodeGenerator.h" />
     <ClInclude Include="ByteCodeReader.h" />    

@@ -140,9 +140,9 @@ public:
         } NEXT_SLISTBASE_ENTRY_EDITING;   
 
         HashBucket * newBucket = iter.InsertNodeBeforeNoThrow(this->alloc);
-        if (newBucket == null)
+        if (newBucket == nullptr)
         {
-            return null;
+            return nullptr;
         }
         newBucket->value = value;
 #if PROFILE_DICTIONARY
@@ -177,7 +177,7 @@ public:
         } NEXT_SLISTBASE_ENTRY_EDITING;   
 
         HashBucket * newBucket = iter.InsertNodeBefore(this->alloc);
-        Assert(newBucket != null);
+        Assert(newBucket != nullptr);
         newBucket->value = value;
         newBucket->element = element;
 #if PROFILE_DICTIONARY
@@ -242,7 +242,7 @@ public:
             first = false;
 #endif
         } NEXT_SLISTBASE_ENTRY_EDITING;
-        return null;
+        return nullptr;
     }
 
     void Clear(uint key)

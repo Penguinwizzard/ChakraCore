@@ -146,7 +146,7 @@ Recycler::Recycler(AllocationPolicyManager * policyManager, IdleDecommitPageAllo
 #endif
     externalRootMarker(NULL),
     externalRootMarkerContext(NULL),
-    recyclerSweep(null),
+    recyclerSweep(nullptr),
     inEndMarkOnLowMemory(false),
     enableScanInteriorPointers(CUSTOM_CONFIG_FLAG(configFlagsTable, RecyclerForceMarkInterior)),
     enableScanImplicitRoots(false),
@@ -178,7 +178,7 @@ Recycler::Recycler(AllocationPolicyManager * policyManager, IdleDecommitPageAllo
     isProcessingRescan(false),
 #endif
 #ifdef IDLE_DECOMMIT_ENABLED
-    concurrentIdleDecommitEvent(null),
+    concurrentIdleDecommitEvent(nullptr),
 #endif
 #endif
 #ifdef PARTIAL_GC_ENABLED
@@ -198,7 +198,7 @@ Recycler::Recycler(AllocationPolicyManager * policyManager, IdleDecommitPageAllo
     hasDisposableObject(false),
     tickCountNextDispose(0),
     hasPendingTransferDisposedObjects(false),
-    transientPinnedObject(null),
+    transientPinnedObject(nullptr),
     pinnedObjectMap(1024, HeapAllocator::GetNoMemProtectInstance()),
     weakReferenceMap(1024, HeapAllocator::GetNoMemProtectInstance()),
     weakReferenceCleanupId(0),
@@ -215,20 +215,20 @@ Recycler::Recycler(AllocationPolicyManager * policyManager, IdleDecommitPageAllo
     hasBackgroundFinishPartial(false),
     decommitOnFinish(false)
 #ifdef PROFILE_EXEC
-    , profiler(null)
-    , backgroundProfiler(null)
-    , backgroundProfilerPageAllocator(null, configFlagsTable, PageAllocatorType_GCThread)
+    , profiler(nullptr)
+    , backgroundProfiler(nullptr)
+    , backgroundProfilerPageAllocator(nullptr, configFlagsTable, PageAllocatorType_GCThread)
     , backgroundProfilerArena()
 #endif
 #ifdef PROFILE_MEM
-    , memoryData(null)
+    , memoryData(nullptr)
 #endif
 #ifdef RECYCLER_DUMP_OBJECT_GRAPH
-    , objectGraphDumper(null)
+    , objectGraphDumper(nullptr)
     , dumpObjectOnceOnCollect(false)
 #endif
 #ifdef PROFILE_RECYCLER_ALLOC
-    , trackerDictionary(null)    
+    , trackerDictionary(nullptr)    
 #endif
 #ifdef HEAP_ENUMERATION_VALIDATION
     ,pfPostHeapEnumScanCallback(nullptr)
@@ -471,17 +471,17 @@ Recycler::~Recycler()
     AUTO_LEAK_REPORT_SECTION(this->GetRecyclerFlagsTable(), L"Skipped finalizers");
 
 #ifdef CONCURRENT_GC_ENABLED
-    Assert(concurrentThread == null);
+    Assert(concurrentThread == nullptr);
 
     // We only sometime clean up the state after abort concurrent to not collection 
     // Still need to delete heap block that is held by the recyclerSweep
-    if (recyclerSweep != null)
+    if (recyclerSweep != nullptr)
     {
         recyclerSweep->ShutdownCleanup();
-        recyclerSweep = null;
+        recyclerSweep = nullptr;
     }
 
-    if (mainThreadHandle != null)
+    if (mainThreadHandle != nullptr)
     {
         CloseHandle(mainThreadHandle);
     }
@@ -508,7 +508,7 @@ Recycler::~Recycler()
     // references simply thinks the object has been reclaimed
     weakReferenceMap.Map([](RecyclerWeakReferenceBase * weakRef) -> bool
     {
-        weakRef->strongRef = null;
+        weakRef->strongRef = nullptr;
 
         // Put in a dummy heap block so that we can still do the isPendingConcurrentSweep check first.
         weakRef->strongRefHeapBlock = &CollectedRecyclerWeakRefHeapBlock::Instance;
@@ -522,7 +522,7 @@ Recycler::~Recycler()
 #endif
     
 #ifdef PROFILE_RECYCLER_ALLOC
-    if (trackerDictionary != null)
+    if (trackerDictionary != nullptr)
     {
         this->trackerDictionary->Map([](type_info const *, TrackerItem * item)
         {
@@ -536,7 +536,7 @@ Recycler::~Recycler()
 
 #ifdef RECYCLER_MARK_TRACK
     NoCheckHeapDelete(this->markMap);
-    this->markMap = null;
+    this->markMap = nullptr;
 #endif
 
 #if DBG
@@ -552,7 +552,7 @@ Recycler::~Recycler()
 void
 Recycler::SetIsThreadBound()
 {
-    Assert(mainThreadHandle == null);
+    Assert(mainThreadHandle == nullptr);
     ::DuplicateHandle(::GetCurrentProcess(), ::GetCurrentThread(), ::GetCurrentProcess(),  &mainThreadHandle,
         0, FALSE, DUPLICATE_SAME_ACCESS);
     stackBase = GetStackBase();
@@ -604,7 +604,7 @@ Recycler::RootRelease(void* obj, uint *count)
 
     if (transientPinnedObject == obj)
     {
-        transientPinnedObject = null;
+        transientPinnedObject = nullptr;
 
         if (count != nullptr)
         {
@@ -622,7 +622,7 @@ Recycler::RootRelease(void* obj, uint *count)
     else
     {
         PinRecord *refCount = pinnedObjectMap.TryGetReference(obj);
-        if (refCount == null)
+        if (refCount == nullptr)
         {
             if (count != nullptr)
             {
@@ -653,7 +653,7 @@ Recycler::RootRelease(void* obj, uint *count)
         }
 #if defined(CHECK_MEMORY_LEAK) || defined(LEAK_REPORT)
         StackBackTraceNode::DeleteAll(&NoCheckHeapAllocator::Instance, refCount->stackBackTraces);
-        refCount->stackBackTraces = null;
+        refCount->stackBackTraces = nullptr;
 #endif
         // Don't delete the entry if we are  in concurrent find root state
         // We will delete it later on in-thread find root
@@ -718,7 +718,7 @@ Recycler::Initialize(const bool forceInThread, JsUtil::ThreadService *threadServ
     bool dontNeedDetailedTracking = false;
 
 #if defined(PROFILE_RECYCLER_ALLOC)
-    dontNeedDetailedTracking = dontNeedDetailedTracking || this->trackerDictionary == null;
+    dontNeedDetailedTracking = dontNeedDetailedTracking || this->trackerDictionary == nullptr;
 #endif
 
 #if defined(RECYCLER_MEMORY_VERIFY)
@@ -925,7 +925,7 @@ void
 Recycler::LeaveIdleDecommit()
 {
 #ifdef IDLE_DECOMMIT_ENABLED
-    bool allowTimer = (this->concurrentIdleDecommitEvent != null);
+    bool allowTimer = (this->concurrentIdleDecommitEvent != nullptr);
     IdleDecommitSignal idleDecommitSignalRecycler = recyclerPageAllocator.LeaveIdleDecommit(allowTimer);
     IdleDecommitSignal idleDecommitSignalRecyclerLargeBlock = recyclerLargeBlockPageAllocator.LeaveIdleDecommit(allowTimer);
     IdleDecommitSignal idleDecommitSignal = max(idleDecommitSignalRecycler, idleDecommitSignalRecyclerLargeBlock);
@@ -1010,7 +1010,7 @@ void Recycler::SetExplicitFreeBitOnSmallBlock(HeapBlock* heapBlock, size_t sizeC
 template <ObjectInfoBits attributes>
 bool Recycler::ExplicitFreeInternalWrapper(void* buffer, size_t size)
 {
-    Assert(buffer != null);
+    Assert(buffer != nullptr);
     Assert(size > 0);
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
@@ -1062,7 +1062,7 @@ bool Recycler::ExplicitFreeInternal(void* buffer, size_t size, size_t sizeCat)
 
     HeapBlock* heapBlock = this->FindHeapBlock(buffer);
     
-    Assert(heapBlock != null);
+    Assert(heapBlock != nullptr);
 #ifdef RECYCLER_PAGE_HEAP
     if (this->IsPageHeapEnabled() && this->ShouldCapturePageHeapFreeStack())
     {
@@ -1103,7 +1103,7 @@ bool Recycler::ExplicitFreeInternal(void* buffer, size_t size, size_t sizeCat)
     }
 
 #ifdef PROFILE_RECYCLER_ALLOC
-    if (this->trackerDictionary != null)
+    if (this->trackerDictionary != nullptr)
     {
         this->SetTrackerData(buffer, &TrackerData::ExplicitFreeListObjectData);
     }
@@ -1132,14 +1132,14 @@ Recycler::TryLargeAlloc(HeapInfo * heap, size_t size, ObjectInfoBits attributes,
         {
             this->OutOfMemory();
         }
-        return null;
+        return nullptr;
     }
 
     char * memBlock;
-    if (heap->largeObjectBucket.largeBlockList != null)
+    if (heap->largeObjectBucket.largeBlockList != nullptr)
     {
         memBlock = heap->largeObjectBucket.largeBlockList->Alloc(sizeCat, attributes);
-        if (memBlock != null)
+        if (memBlock != nullptr)
         {
 #ifdef RECYCLER_ZERO_MEM_CHECK
             VerifyZeroFill(memBlock, sizeCat);
@@ -1162,7 +1162,7 @@ Recycler::TryLargeAlloc(HeapInfo * heap, size_t size, ObjectInfoBits attributes,
         if (heap->largeObjectBucket.IsPageHeapEnabled())
         {
             memBlock = heap->largeObjectBucket.PageHeapAlloc(this, size, (ObjectInfoBits)attributes, autoHeap.pageHeapMode, nothrow);
-            if (memBlock != null)
+            if (memBlock != nullptr)
             {
 #ifdef RECYCLER_ZERO_MEM_CHECK
                 VerifyZeroFill(memBlock, sizeCat);
@@ -1174,12 +1174,12 @@ Recycler::TryLargeAlloc(HeapInfo * heap, size_t size, ObjectInfoBits attributes,
 #endif
 
     LargeHeapBlock * heapBlock = heap->AddLargeHeapBlock(sizeCat);
-    if (heapBlock == null)
+    if (heapBlock == nullptr)
     {
-        return null;
+        return nullptr;
     }
     memBlock = heapBlock->Alloc(sizeCat, attributes);
-    Assert(memBlock != null);
+    Assert(memBlock != nullptr);
 #ifdef RECYCLER_ZERO_MEM_CHECK
     VerifyZeroFill(memBlock, sizeCat);
 #endif
@@ -1193,12 +1193,12 @@ Recycler::LargeAlloc(HeapInfo* heap, size_t size, ObjectInfoBits attributes)
     Assert((attributes & InternalObjectInfoBitMask) == attributes);
     
     char * addr = TryLargeAlloc(heap, size, attributes, nothrow);
-    if (addr == null)
+    if (addr == nullptr)
     {
         // Force a collection and try to allocate again.
         this->CollectNow<CollectNowForceInThread>();
         addr = TryLargeAlloc(heap, size, attributes, nothrow);
-        if (addr == null)
+        if (addr == nullptr)
         {
             if (nothrow == false)
             {
@@ -1246,7 +1246,7 @@ bool Recycler::AllowNativeCodeBumpAllocation()
     // In debug builds, if we need to track allocation info, we pretend there is no pointer-bump-allocation space
     // on this page, so that we always fail the check in native code and go to helper, which does the tracking.
 #ifdef PROFILE_RECYCLER_ALLOC
-    if (this->trackerDictionary != null)
+    if (this->trackerDictionary != nullptr)
     {
         return false;
     }
@@ -1400,7 +1400,7 @@ Recycler::ExpectStackSkip() const
     expectStackSkip = expectStackSkip || GetRecyclerFlagsTable().CheckMemoryLeak;
 #endif
 #ifdef RECYCLER_DUMP_OBJECT_GRAPH
-    expectStackSkip = expectStackSkip || (this->objectGraphDumper != null);
+    expectStackSkip = expectStackSkip || (this->objectGraphDumper != nullptr);
 #endif
 
 #if defined(INTERNAL_MEM_PROTECT_HEAP_ALLOC)
@@ -1494,7 +1494,7 @@ size_t Recycler::ScanPinnedObjects()
                 if (refCount == 0)
                 {
 #if defined(CHECK_MEMORY_LEAK) || defined(LEAK_REPORT)
-                    Assert(refCount.stackBackTraces == null);
+                    Assert(refCount.stackBackTraces == nullptr);
 #endif
                     // Only remove if we are not doing this in the background.
                     return !background;
@@ -2712,7 +2712,7 @@ Recycler::SweepWeakReference()
         if (!weakRef->strongRefHeapBlock->TestObjectMarkedBit(weakRef->strongRef))
         {
             hasCleanup = true;
-            weakRef->strongRef = null;
+            weakRef->strongRef = nullptr;
 
             // Put in a dummy heap block so that we can still do the isPendingConcurrentSweep check first.
             weakRef->strongRefHeapBlock = &CollectedRecyclerWeakRefHeapBlock::Instance;
@@ -2813,7 +2813,7 @@ void
 Recycler::BackgroundFinishPartialCollect(RecyclerSweep * recyclerSweep)
 {
     Assert(this->inPartialCollectMode);
-    Assert(recyclerSweep != null && recyclerSweep->IsBackground());
+    Assert(recyclerSweep != nullptr && recyclerSweep->IsBackground());
     this->hasBackgroundFinishPartial = true;
     this->autoHeap.FinishPartialCollect(recyclerSweep);
     this->inPartialCollectMode = false;
@@ -2834,7 +2834,7 @@ Recycler::DisposeObjects()
     // finalizer may allocate memory and dispose object can happen in the middle of allocation
     // save and restore the tracked object info
     TrackAllocData oldAllocData = { 0 };
-    if (trackerDictionary != null)
+    if (trackerDictionary != nullptr)
     {
         oldAllocData = nextAllocData;
         nextAllocData.Clear();
@@ -2862,7 +2862,7 @@ Recycler::DisposeObjects()
     }
 
 #ifdef PROFILE_RECYCLER_ALLOC
-    if (trackerDictionary != null)
+    if (trackerDictionary != nullptr)
     {
         Assert(nextAllocData.IsEmpty());
         nextAllocData = oldAllocData;
@@ -3660,7 +3660,7 @@ Recycler::ClearPartialCollect()
 void
 Recycler::FinishPartialCollect(RecyclerSweep * recyclerSweep)
 {
-    Assert(recyclerSweep == null || !recyclerSweep->IsBackground());
+    Assert(recyclerSweep == nullptr || !recyclerSweep->IsBackground());
     RECYCLER_PROFILE_EXEC_BEGIN(this, Js::FinishPartialPhase);
     Assert(inPartialCollectMode);
 #ifdef CONCURRENT_GC_ENABLED
@@ -4163,7 +4163,7 @@ Recycler::InitializeConcurrent(JsUtil::ThreadService *threadService)
         AUTO_NESTED_HANDLED_EXCEPTION_TYPE(ExceptionType_OutOfMemory);
 
         concurrentWorkDoneEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-        if (concurrentWorkDoneEvent == null)
+        if (concurrentWorkDoneEvent == nullptr)
         {
             throw Js::OutOfMemoryException();
         }
@@ -4175,14 +4175,14 @@ Recycler::InitializeConcurrent(JsUtil::ThreadService *threadService)
         {
 #ifdef IDLE_DECOMMIT_ENABLED
             concurrentIdleDecommitEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-            if (concurrentIdleDecommitEvent == null)
+            if (concurrentIdleDecommitEvent == nullptr)
             {
                 throw Js::OutOfMemoryException();
             }
 #endif
 
             concurrentWorkReadyEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-            if (concurrentWorkReadyEvent == null)
+            if (concurrentWorkReadyEvent == nullptr)
             {
                 throw Js::OutOfMemoryException();
             }
@@ -4190,17 +4190,17 @@ Recycler::InitializeConcurrent(JsUtil::ThreadService *threadService)
     }
     catch (Js::OutOfMemoryException)
     {
-        Assert(concurrentWorkReadyEvent == null);
+        Assert(concurrentWorkReadyEvent == nullptr);
         if (concurrentWorkDoneEvent)
         {
             CloseHandle(concurrentWorkDoneEvent);
-            concurrentWorkDoneEvent = null;
+            concurrentWorkDoneEvent = nullptr;
         }
 #ifdef IDLE_DECOMMIT_ENABLED
         if (concurrentIdleDecommitEvent)
         {
             CloseHandle(concurrentIdleDecommitEvent);
-            concurrentIdleDecommitEvent = null;
+            concurrentIdleDecommitEvent = nullptr;
         }
 #endif
 
@@ -4288,7 +4288,7 @@ Recycler::CleanupPendingUnroot()
         pinnedObjectMap.MapAndRemoveIf([](void * obj, PinRecord const &refCount)
         {
 #if defined(CHECK_MEMORY_LEAK) || defined(LEAK_REPORT)
-            Assert(refCount != 0 || refCount.stackBackTraces == null);
+            Assert(refCount != 0 || refCount.stackBackTraces == nullptr);
 #endif
             return refCount == 0;
         });
@@ -4360,20 +4360,20 @@ Recycler::FinalizeConcurrent(bool restoreState)
     parallelThread2.Shutdown();
     
 #ifdef IDLE_DECOMMIT_ENABLED
-    if (concurrentIdleDecommitEvent != null)
+    if (concurrentIdleDecommitEvent != nullptr)
     {
         CloseHandle(concurrentIdleDecommitEvent);
-        concurrentIdleDecommitEvent = null;
+        concurrentIdleDecommitEvent = nullptr;
     }
 #endif
 
     CloseHandle(concurrentWorkDoneEvent);
-    concurrentWorkDoneEvent = null;
+    concurrentWorkDoneEvent = nullptr;
 
     if (concurrentWorkReadyEvent != NULL)
     {
         CloseHandle(concurrentWorkReadyEvent);
-        concurrentWorkReadyEvent = null;
+        concurrentWorkReadyEvent = nullptr;
     }
 
     if (needCleanExitState)
@@ -4386,7 +4386,7 @@ Recycler::FinalizeConcurrent(bool restoreState)
     }
 
     this->threadService = nullptr;
-    this->concurrentThread = null;
+    this->concurrentThread = nullptr;
 }
 
 bool
@@ -4458,7 +4458,7 @@ Recycler::EnableConcurrent(JsUtil::ThreadService *threadService, bool startAllTh
         if (startConcurrentThread)
         {
             HANDLE concurrentThread = (HANDLE)_beginthreadex(NULL, Recycler::ConcurrentThreadStackSize, &Recycler::StaticThreadProc, this, STACK_SIZE_PARAM_IS_A_RESERVATION, NULL);
-            if (concurrentThread != null)
+            if (concurrentThread != nullptr)
             {
                 // Wait for recycler thread to initialize
                 HANDLE handle[2] = { this->concurrentWorkDoneEvent, concurrentThread };
@@ -4492,18 +4492,18 @@ Recycler::EnableConcurrent(JsUtil::ThreadService *threadService, bool startAllTh
     if (concurrentWorkReadyEvent)
     {
         CloseHandle(concurrentWorkReadyEvent);
-        concurrentWorkReadyEvent = null;
+        concurrentWorkReadyEvent = nullptr;
     }
     if (concurrentWorkDoneEvent)
     {
         CloseHandle(concurrentWorkDoneEvent);
-        concurrentWorkDoneEvent = null;
+        concurrentWorkDoneEvent = nullptr;
     }
 #ifdef IDLE_DECOMMIT_ENABLED
     if (concurrentIdleDecommitEvent)
     {
         CloseHandle(concurrentIdleDecommitEvent);
-        concurrentIdleDecommitEvent = null;
+        concurrentIdleDecommitEvent = nullptr;
     }
 #endif
 
@@ -4731,7 +4731,7 @@ Recycler::BackgroundScanStack()
         return 0;
     }
 
-    if (!this->isInScript || mainThreadHandle == null)
+    if (!this->isInScript || mainThreadHandle == nullptr)
     {
         // No point in scanning the main thread's stack if we are not in script
         // We also can't scan the main thread's stack if we are not thread bounded, and didn't create the main thread's handle
@@ -4740,7 +4740,7 @@ Recycler::BackgroundScanStack()
     
     char* stackTop = this->GetScriptThreadStackTop();
 
-    if (stackTop != null)
+    if (stackTop != nullptr)
     {
         size_t size = (char *)stackBase - stackTop;
         ScanMemoryInline((void **)stackTop, size);
@@ -5174,7 +5174,7 @@ Recycler::FinishConcurrentCollect(CollectionFlags flags)
         GCETW(GC_FLUSHZEROPAGE_STOP, (this));
         GCETW(GC_TRANSFERSWEPTOBJECTS_START, (this));
         
-        Assert(this->recyclerSweep != null);
+        Assert(this->recyclerSweep != nullptr);
         Assert(!this->recyclerSweep->IsBackground());
 #ifdef PARTIAL_GC_ENABLED
         if (this->inPartialCollectMode)
@@ -5369,7 +5369,7 @@ Recycler::DoBackgroundWork(bool forceForeground)
         GCETW(GC_BACKGROUNDZEROPAGE_STOP, (this));
         GCETW(GC_BACKGROUNDSWEEP_START, (this));
 
-        Assert(this->recyclerSweep != null);
+        Assert(this->recyclerSweep != nullptr);
         this->recyclerSweep->BackgroundSweep();
         size_t sweptBytes = 0;
 #ifdef RECYCLER_STATS
@@ -5627,11 +5627,11 @@ Recycler::Realloc(void* buffer, size_t existingBytes, size_t requestedBytes, boo
 
     if (existingBytes == 0)
     {
-        Assert(buffer == null);
+        Assert(buffer == nullptr);
         return Alloc(requestedBytes);
     }
 
-    Assert(buffer != null);
+    Assert(buffer != nullptr);
 
     size_t nbytes = AllocSizeMath::Align(requestedBytes, HeapConstants::ObjectGranularity);
 
@@ -5645,7 +5645,7 @@ Recycler::Realloc(void* buffer, size_t existingBytes, size_t requestedBytes, boo
     }
 
     char* replacementBuf = this->Alloc(requestedBytes);
-    if (replacementBuf != null)
+    if (replacementBuf != nullptr)
     {
         // Truncate
         if (existingBytes > requestedBytes && truncate)
@@ -5673,7 +5673,7 @@ Recycler::ForceSweepObject()
 #ifdef RECYCLER_TEST_SUPPORT
     if (BinaryFeatureControl::RecyclerTest())
     {
-        if (checkFn != null)
+        if (checkFn != nullptr)
         {
             return true;
         }
@@ -5681,7 +5681,7 @@ Recycler::ForceSweepObject()
 #endif
 
 #ifdef PROFILE_RECYCLER_ALLOC
-    if (trackerDictionary != null)
+    if (trackerDictionary != nullptr)
     {
         // Need to sweep object if we are tracing recycler allocs
         return true;
@@ -5772,7 +5772,7 @@ RecyclerParallelThread::StartConcurrent()
         if (this->concurrentWorkDoneEvent == NULL)
         {
             this->concurrentWorkDoneEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-            if (this->concurrentWorkDoneEvent == null)
+            if (this->concurrentWorkDoneEvent == nullptr)
             {
                 return false;
             }
@@ -5816,13 +5816,13 @@ RecyclerParallelThread::EnableConcurrent(bool waitForThread)
     Assert(this->concurrentThread == NULL);
 
     this->concurrentWorkDoneEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-    if (this->concurrentWorkDoneEvent == null)
+    if (this->concurrentWorkDoneEvent == nullptr)
     {
         return false;
     }
             
     this->concurrentWorkReadyEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-    if (this->concurrentWorkReadyEvent == null)
+    if (this->concurrentWorkReadyEvent == nullptr)
     {
         CloseHandle(this->concurrentWorkDoneEvent);
         this->concurrentWorkDoneEvent = NULL;
@@ -5831,7 +5831,7 @@ RecyclerParallelThread::EnableConcurrent(bool waitForThread)
             
     this->concurrentThread = (HANDLE)_beginthreadex(NULL, Recycler::ConcurrentThreadStackSize, &RecyclerParallelThread::StaticThreadProc, this, STACK_SIZE_PARAM_IS_A_RESERVATION, NULL);
     
-    if (this->concurrentThread != null && waitForThread)
+    if (this->concurrentThread != nullptr && waitForThread)
     {
         // Wait for thread to initialize
         HANDLE handle[2] = { this->concurrentWorkDoneEvent, this->concurrentThread };
@@ -5842,10 +5842,10 @@ RecyclerParallelThread::EnableConcurrent(bool waitForThread)
         }
 
         CloseHandle(concurrentThread);
-        concurrentThread = null;
+        concurrentThread = nullptr;
     }
 
-    if (this->concurrentThread == null)
+    if (this->concurrentThread == nullptr)
     {
         CloseHandle(this->concurrentWorkDoneEvent);
         this->concurrentWorkDoneEvent = NULL;
@@ -6856,7 +6856,7 @@ bool Recycler::DumpObjectGraph(RecyclerObjectGraphDumper::Param * param)
 
         this->Mark();
 
-        this->objectGraphDumper = null;
+        this->objectGraphDumper = nullptr;
 #ifdef RECYCLER_STATS
         if (param)
         {
@@ -6884,13 +6884,13 @@ void
 Recycler::DumpObjectDescription(void *objectAddress)
 {
 #ifdef PROFILE_RECYCLER_ALLOC
-    type_info const * typeinfo = null;
+    type_info const * typeinfo = nullptr;
     bool isArray = false;
 
     if (this->trackerDictionary)
     {
         TrackerData * trackerData = GetTrackerData(objectAddress);
-        if (trackerData != null)
+        if (trackerData != nullptr)
         {
             typeinfo = trackerData->typeinfo;
             isArray = trackerData->isArray;
@@ -6958,7 +6958,7 @@ Recycler *
 Recycler::TrackAllocInfo(TrackAllocData const& data)
 {
 #ifdef PROFILE_RECYCLER_ALLOC
-    if (this->trackerDictionary != null)
+    if (this->trackerDictionary != nullptr)
     {
         Assert(nextAllocData.IsEmpty());
         nextAllocData = data;
@@ -6971,7 +6971,7 @@ void
 Recycler::ClearTrackAllocInfo(TrackAllocData* data/* = NULL*/)
 {
 #ifdef PROFILE_RECYCLER_ALLOC
-    if (this->trackerDictionary != null)
+    if (this->trackerDictionary != nullptr)
     {
         AssertMsg(!nextAllocData.IsEmpty(), "Missing tracking information for this allocation, are you not using the macros?");
         if (data)
@@ -7026,8 +7026,8 @@ Recycler::InitializeProfileAllocTracker()
 void
 Recycler::TrackAllocCore(void * object, size_t size, const TrackAllocData& trackAllocData, bool traceLifetime)
 {
-    Assert(GetTrackerData(object) == null || GetTrackerData(object) == &TrackerData::ExplicitFreeListObjectData);
-    Assert(trackAllocData.GetTypeInfo() != null);
+    Assert(GetTrackerData(object) == nullptr || GetTrackerData(object) == &TrackerData::ExplicitFreeListObjectData);
+    Assert(trackAllocData.GetTypeInfo() != nullptr);
     TrackerItem * item;
     size_t allocCount = trackAllocData.GetCount();
     size_t itemSize = (size - trackAllocData.GetPlusSize());
@@ -7078,7 +7078,7 @@ Recycler::TrackAllocCore(void * object, size_t size, const TrackAllocData& track
 
 void* Recycler::TrackAlloc(void* object, size_t size, const TrackAllocData& trackAllocData, bool traceLifetime)
 {
-    if (this->trackerDictionary != null)
+    if (this->trackerDictionary != nullptr)
     {
         Assert(nextAllocData.IsEmpty()); // should have been cleared
         EnterCriticalSection(&trackerCriticalSection);
@@ -7091,7 +7091,7 @@ void* Recycler::TrackAlloc(void* object, size_t size, const TrackAllocData& trac
 void
 Recycler::TrackIntegrate(char * blockAddress, size_t blockSize, size_t allocSize, size_t objectSize, const TrackAllocData& trackAllocData)
 {
-    if (this->trackerDictionary != null)
+    if (this->trackerDictionary != nullptr)
     {
         Assert(nextAllocData.IsEmpty()); // should have been cleared
         EnterCriticalSection(&trackerCriticalSection);
@@ -7110,11 +7110,11 @@ Recycler::TrackIntegrate(char * blockAddress, size_t blockSize, size_t allocSize
 
 BOOL Recycler::TrackFree(const char* address, size_t size)
 {
-    if (this->trackerDictionary != null)
+    if (this->trackerDictionary != nullptr)
     {
         EnterCriticalSection(&trackerCriticalSection);
         TrackerData * data = GetTrackerData((char *)address);
-        if (data != null)
+        if (data != nullptr)
         {
             if (data != &TrackerData::EmptyData)
             {
@@ -7135,7 +7135,7 @@ BOOL Recycler::TrackFree(const char* address, size_t size)
                 }
 #endif
             }
-            SetTrackerData((char *)address, null);
+            SetTrackerData((char *)address, nullptr);
         }
         else
         {
@@ -7151,7 +7151,7 @@ Recycler::TrackerData *
 Recycler::GetTrackerData(void * address)
 {
     HeapBlock * heapBlock = this->FindHeapBlock(address);
-    Assert(heapBlock != null);
+    Assert(heapBlock != nullptr);
     return (Recycler::TrackerData *)heapBlock->GetTrackerData(address);         
 }
 
@@ -7159,19 +7159,19 @@ void
 Recycler::SetTrackerData(void * address, TrackerData * data)
 {
     HeapBlock * heapBlock = this->FindHeapBlock(address);
-    Assert(heapBlock != null);
+    Assert(heapBlock != nullptr);
     heapBlock->SetTrackerData(address, data);
 }
 
 void
 Recycler::TrackUnallocated(__in char* address, __in  char *endAddress, size_t sizeCat)
 {
-    if (this->trackerDictionary != null)
+    if (this->trackerDictionary != nullptr)
     {
         EnterCriticalSection(&trackerCriticalSection);
         while (address + sizeCat <= endAddress)
         {
-            Assert(GetTrackerData(address) == null);
+            Assert(GetTrackerData(address) == nullptr);
             SetTrackerData(address, &TrackerData::EmptyData);            
             address += sizeCat;
         }
@@ -7182,9 +7182,9 @@ Recycler::TrackUnallocated(__in char* address, __in  char *endAddress, size_t si
 void
 Recycler::TrackAllocWeakRef(RecyclerWeakReferenceBase * weakRef)
 {
-    Assert(weakRef->typeInfo != null);
+    Assert(weakRef->typeInfo != nullptr);
 #if DBG && defined(PERF_COUNTERS)
-    if (this->trackerDictionary != null)
+    if (this->trackerDictionary != nullptr)
     {
         TrackerItem * item;
         if (trackerDictionary->TryGetValue(weakRef->typeInfo, &item))
@@ -7204,7 +7204,7 @@ void
 Recycler::TrackFreeWeakRef(RecyclerWeakReferenceBase * weakRef)
 {
 #if DBG && defined(PERF_COUNTERS)
-    if (weakRef->counter != null)
+    if (weakRef->counter != nullptr)
     {
         --(*weakRef->counter);
     }
@@ -7214,7 +7214,7 @@ Recycler::TrackFreeWeakRef(RecyclerWeakReferenceBase * weakRef)
 void
 Recycler::PrintAllocStats()
 {
-    if (this->trackerDictionary == null)
+    if (this->trackerDictionary == nullptr)
     {
         return;
     }

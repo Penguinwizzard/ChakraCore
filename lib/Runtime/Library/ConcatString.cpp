@@ -346,7 +346,7 @@ namespace Js
     ConcatStringMulti::SetItem(_In_range_(0, slotCount - 1) uint index, JavascriptString* value)
     {
         Assert(index < slotCount);        
-        Assert(m_slots[index] == null);
+        Assert(m_slots[index] == nullptr);
         value = CompoundString::GetImmutableOrScriptUnreferencedString(value);
         this->SetLength(this->GetLength() + value->GetLength());
         m_slots[index] = value;
@@ -358,7 +358,7 @@ namespace Js
     {
         for (uint i = slotCount; i > 0; i--)
         {
-            if (m_slots[i - 1] == null) { return false; }
+            if (m_slots[i - 1] == nullptr) { return false; }
         }
         return true;
     }

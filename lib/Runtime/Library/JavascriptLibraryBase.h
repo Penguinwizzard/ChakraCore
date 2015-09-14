@@ -117,7 +117,9 @@ namespace Js
         DynamicObject* GetSyntaxErrorPrototype() const { return syntaxErrorPrototype; }
         DynamicObject* GetTypeErrorPrototype() const { return typeErrorPrototype; }
         DynamicObject* GetURIErrorPrototype() const { return uriErrorPrototype; }
+#ifdef ENABLE_PROJECTION
         DynamicObject* GetWinRTErrorPrototype() const { return winrtErrorPrototype; }
+#endif
 
     protected:
         GlobalObject* globalObject;
@@ -232,8 +234,10 @@ namespace Js
         DynamicObject* referenceErrorPrototype;
         DynamicObject* syntaxErrorPrototype;
         DynamicObject* typeErrorPrototype;
-        DynamicObject* uriErrorPrototype;        
+        DynamicObject* uriErrorPrototype; 
+#ifdef ENABLE_PROJECTION
         DynamicObject* winrtErrorPrototype;
+#endif
 
         JavascriptBoolean* booleanTrue;
         JavascriptBoolean* booleanFalse;

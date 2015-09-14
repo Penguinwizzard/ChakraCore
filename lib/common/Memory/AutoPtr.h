@@ -75,7 +75,7 @@ public:
 private: 
     void Clear()
     {
-        if (ptr != null){
+        if (ptr != nullptr){
             for (size_t i = 0; i < this->m_elementCount; i++)
             {
                 if (ptr[i] != nullptr)

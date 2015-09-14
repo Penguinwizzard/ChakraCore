@@ -237,7 +237,7 @@ namespace JsUtil
 
         void EnsureArray(int32 requiredCapacity)
         {
-            if (buffer == NULL)
+            if (buffer == nullptr)
             {
                 int32 newSize = max(requiredCapacity, increment);
 
@@ -428,10 +428,10 @@ namespace JsUtil
         template <bool weaklyRefItems>
         T CompactEnd()
         {
-            while (count != 0 && (weaklyRefItems ? buffer[count - 1]->Get() == null : buffer[count - 1] == 0)) 
+            while (count != 0 && (weaklyRefItems ? buffer[count - 1]->Get() == nullptr : buffer[count - 1] == 0))
             {
                 count--;
-                buffer[count] = null;
+                buffer[count] = nullptr;
             }
 
             if (count)
@@ -439,7 +439,7 @@ namespace JsUtil
                 return buffer[count - 1];
             }
 
-            return null;
+            return nullptr;
         }
 
         void Remove(const T& item)
@@ -570,12 +570,12 @@ namespace JsUtil
 
         void Reset()
         {           
-            if (this->buffer != NULL)
+            if (this->buffer != nullptr)
             {
                 auto freeFunc = AllocatorInfo::GetFreeFunc();
                 AllocatorFree(this->alloc, freeFunc, buffer, sizeof(T) * length); // TODO: Better version of DeleteArray?
 
-                this->buffer = NULL;
+                this->buffer = nullptr;
                 count = 0;
                 length = 0;
             }
@@ -792,7 +792,7 @@ namespace Js
 
         static bool IsItemValid(const TElementType& item)
         {
-            return (item != null && (((unsigned int) item) & 1) == 0);
+            return (item != nullptr && (((unsigned int) item) & 1) == 0);
         }
 
         bool IsItemValid(TListType* list, int index)
@@ -870,7 +870,7 @@ namespace Js
         {
             list->Map([list](int i, TElementType weakRef)
             {
-                if (weakRef->Get() == null)
+                if (weakRef->Get() == nullptr)
                 {
                     list->RemoveAt(i);
                 }

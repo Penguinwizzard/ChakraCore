@@ -18,7 +18,7 @@ namespace Js
         public:
             DataChunk* nextChunk;
             DataChunk(ArenaAllocator* allocator, size_t initSize) :
-                nextChunk(NULL),
+                nextChunk(nullptr),
                 byteSize(initSize)
             {
                 buffer = AnewArray(allocator, byte, initSize);
@@ -78,9 +78,9 @@ namespace Js
             void AddChunk(size_t byteSize);
 
         public:
-            Data(bool fixedGrowthPolicy = false) : head(NULL),
-                current(NULL),
-                tempAllocator(NULL),
+            Data(bool fixedGrowthPolicy = false) : head(nullptr),
+                current(nullptr),
+                tempAllocator(nullptr),
                 currentOffset(0),
                 fixedGrowthPolicy(fixedGrowthPolicy)
             {
@@ -348,7 +348,7 @@ namespace Js
 
 
         // Debugger methods.
-        DebuggerScope* RecordStartScopeObject(DiagExtraScopesType scopeType, RegSlot scopeLocation = Js::Constants::NoRegister, int* index = NULL);
+        DebuggerScope* RecordStartScopeObject(DiagExtraScopesType scopeType, RegSlot scopeLocation = Js::Constants::NoRegister, int* index = nullptr);
         void AddPropertyToDebuggerScope(DebuggerScope* debuggerScope, RegSlot location, Js::PropertyId propertyId, bool shouldConsumeRegister = true, DebuggerScopePropertyFlags flags = DebuggerScopePropertyFlags_None, bool isFunctionDeclaration = false);
         void RecordEndScopeObject();
         DebuggerScope* GetCurrentDebuggerScope() const { return m_currentDebuggerScope; }

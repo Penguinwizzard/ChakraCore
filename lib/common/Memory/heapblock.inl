@@ -8,8 +8,8 @@ template <class TBlockAttributes>
 void
 SmallHeapBlockT<TBlockAttributes>::SetAttributes(void * address, unsigned char attributes)
 {
-    Assert(this->address != null);
-    Assert(this->segment != null);
+    Assert(this->address != nullptr);
+    Assert(this->segment != nullptr);
     Assert(this->ObjectInfo(GetAddressIndex(address)) == 0);
     ushort index = GetAddressIndex(address);
     Assert(index != SmallHeapBlockT<TBlockAttributes>::InvalidAddressBit);

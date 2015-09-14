@@ -3,6 +3,8 @@
 //----------------------------------------------------------------------------
 
 #include "RuntimeLibraryPch.h"
+#include "Library\ThreadContextTLSEntry.h"
+#include "Library\ThreadBoundThreadContextManager.h"
 
 ThreadBoundThreadContextManager::EntryList ThreadBoundThreadContextManager::entries(&HeapAllocator::Instance);
 JsUtil::BackgroundJobProcessor * ThreadBoundThreadContextManager::s_sharedJobProcessor = NULL;
@@ -28,7 +30,7 @@ ThreadContext * ThreadBoundThreadContextManager::EnsureContextForCurrentThread()
     // DllCanUnload may have cleaned out all the TLS entry when the module lock count is 0,  
     // but the library didn't get unloaded because someone is holding onto ref count via LoadLibrary.
     // Just reinitialize the thread context.
-    if (threadContext == null)
+    if (threadContext == nullptr)
     {
         threadContext = HeapNew(ThreadContext);
         threadContext->SetIsThreadBound();
@@ -120,7 +122,7 @@ void ThreadBoundThreadContextManager::DestroyAllContexts()
             ThreadContextTLSEntry * entry = iter.Data();
             ThreadContext * threadContext =  static_cast<ThreadContext *>(entry->GetThreadContext());                           
 
-            if (threadContext != null)
+            if (threadContext != nullptr)
             {
                 // Found a thread context. Remove it from the containing entry.
                 ThreadContextTLSEntry::ClearThreadContext(entry, true);
@@ -163,7 +165,7 @@ void ThreadBoundThreadContextManager::DestroyAllContextsAndEntries()
                
         entries.RemoveHead();
 
-        if (threadContext != null)
+        if (threadContext != nullptr)
         {
 #if DBG
             PageAllocator* pageAllocator = threadContext->GetPageAllocator();

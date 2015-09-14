@@ -4,6 +4,7 @@
 
 #include "RuntimeTypePch.h"
 #include "cmperr.h"
+#include "Language\JavascriptStackWalker.h"
 
 namespace Js
 {
@@ -73,7 +74,7 @@ namespace Js
     {
         if (!DynamicObject::HasOwnProperty(propertyId))
         {
-            DynamicObject::SetPropertyWithAttributes(propertyId, this->GetLibrary()->GetUndefined(), PropertyDynamicTypeDefaults, NULL, PropertyOperation_NonFixedValue);
+            DynamicObject::SetPropertyWithAttributes(propertyId, this->GetLibrary()->GetUndefined(), PropertyDynamicTypeDefaults, nullptr, PropertyOperation_NonFixedValue);
         }
         return true;
     }
@@ -176,7 +177,7 @@ namespace Js
                 // cached scope chain. We can't rely on detecting the escape each time, because inline
                 // cache hits may keep us from entering the runtime. So set a flag to make sure the
                 // invalidation always happens.
-                JavascriptFunction *currentFunc = null;
+                JavascriptFunction *currentFunc = nullptr;
                 JavascriptStackWalker walker(requestContext);
                 while (walker.GetCaller(&currentFunc))
                 {
@@ -220,7 +221,7 @@ namespace Js
             // closure environment.
             memset(this->cache, 0, this->cachedFuncCount * sizeof(FuncCacheEntry));
         }
-        this->parentFunc->SetCachedScope(NULL);
+        this->parentFunc->SetCachedScope(nullptr);
     }
 
     void ActivationObjectEx::SetCachedFunc(uint i, ScriptFunction *func)

@@ -131,7 +131,7 @@ void HeapAllocator::Free(void * buffer, size_t byteSize)
 #endif
     }
 #elif defined(HEAP_PERF_COUNTERS)
-    if (buffer != null)
+    if (buffer != nullptr)
     {
         HEAP_PERF_COUNTER_DEC(LiveObject);
         size_t * allocSize = (size_t *)(((char *)buffer) - ::Math::Align<size_t>(sizeof(size_t), MEMORY_ALLOCATION_ALIGNMENT));
@@ -368,7 +368,7 @@ HeapAllocator::~HeapAllocator()
 #endif // HEAP_TRACK_ALLOC
 
 #ifdef INTERNAL_MEM_PROTECT_HEAP_ALLOC
-    if (memProtectHeapHandle != null)
+    if (memProtectHeapHandle != nullptr)
     {
         MemProtectHeapDestroy(memProtectHeapHandle);
     }
@@ -380,14 +380,14 @@ HeapAllocator::~HeapAllocator()
 void
 HeapAllocatorData::LogAlloc(HeapAllocRecord * record, size_t requestedBytes, TrackAllocData const& data)
 {
-    record->prev = null;
+    record->prev = nullptr;
     record->size = requestedBytes;
 
     record->data = this;
     record->next = head;
     record->allocId = allocCount;
     record->allocData = data;
-    if (head != null)
+    if (head != nullptr)
     {
         head->prev = record;
     }
@@ -404,7 +404,7 @@ HeapAllocatorData::LogAlloc(HeapAllocRecord * record, size_t requestedBytes, Tra
     }
     else
     {
-        record->stacktrace = null;
+        record->stacktrace = nullptr;
     }
 #endif
 }
@@ -417,7 +417,7 @@ HeapAllocatorData::LogFree(HeapAllocRecord * record)
     // This is an expensive check for double free
 #if 0
     HeapAllocRecord * curr = head;
-    while (curr != null)
+    while (curr != nullptr)
     {
         if (curr == record)
         {
@@ -425,13 +425,13 @@ HeapAllocatorData::LogFree(HeapAllocRecord * record)
         }
         curr = curr->next;
     }
-    Assert(curr != null);
+    Assert(curr != nullptr);
 #endif
-    if (record->next != null)
+    if (record->next != nullptr)
     {
         record->next->prev = record->prev;
     }
-    if (record->prev == null)
+    if (record->prev == nullptr)
     {
         head = record->next;
     }
@@ -443,7 +443,7 @@ HeapAllocatorData::LogFree(HeapAllocRecord * record)
     deleteCount++;
     outstandingBytes -= record->size;
 #if defined(CHECK_MEMORY_LEAK) || defined(LEAK_REPORT)
-    if (record->stacktrace != null)
+    if (record->stacktrace != nullptr)
     {
         record->stacktrace->Delete(&NoCheckHeapAllocator::Instance);
     }
@@ -459,7 +459,7 @@ HeapAllocatorData::CheckLeaks()
         needPause = true;
 
         HeapAllocRecord * current = head;
-        while (current != null)
+        while (current != nullptr)
         {
             Output::Print(L"%S%s", current->allocData.GetTypeInfo()->name(),
                 current->allocData.GetCount() == (size_t)-1? L"" : L"[]");
@@ -512,7 +512,7 @@ HeapAllocatorData::CheckLeaks()
 #ifdef CHECK_MEMORY_LEAK
 MemoryLeakCheck::~MemoryLeakCheck()
 {
-    if (head != null)
+    if (head != nullptr)
     {
         if (enableOutput)
         {
@@ -531,7 +531,7 @@ MemoryLeakCheck::~MemoryLeakCheck()
             free((void *)prev->dump);
             NoCheckHeapDelete(prev);
         }
-        while (current != null);
+        while (current != nullptr);
         if (enableOutput)
         {
             Output::Print(L"-------------------------------------------------------------------------------------\n");
@@ -551,8 +551,8 @@ MemoryLeakCheck::AddLeakDump(wchar_t const * dump, size_t bytes, size_t count)
     AutoCriticalSection autocs(&leakCheck.cs);
     LeakRecord * record = NoCheckHeapNewStruct(LeakRecord);
     record->dump = dump;
-    record->next = null;
-    if (leakCheck.tail == null)
+    record->next = nullptr;
+    if (leakCheck.tail == nullptr)
     {
         leakCheck.head = record;
         leakCheck.tail = record;

@@ -80,11 +80,11 @@ namespace Js
         BOOL result = __super::GetAccessors(propertyId, getter, setter, requestContext);
         if (result)
         {
-            if (*getter != null)
+            if (*getter != nullptr)
             {
                 *getter = CrossSite::MarshalVar(requestContext, *getter);
             }
-            if (*setter != null)
+            if (*setter != nullptr)
             {
                 *setter = CrossSite::MarshalVar(requestContext, *setter);
             }
@@ -215,11 +215,11 @@ namespace Js
     template <typename T>
     BOOL CrossSiteObject<T>::SetAccessors(PropertyId propertyId, Var getter, Var setter, PropertyOperationFlags flags)
     {        
-        if (getter != null)
+        if (getter != nullptr)
         {
             getter = CrossSite::MarshalVar(GetScriptContext(), getter);
         }
-        if (setter != null)
+        if (setter != nullptr)
         {
             setter = CrossSite::MarshalVar(GetScriptContext(), setter);
         }

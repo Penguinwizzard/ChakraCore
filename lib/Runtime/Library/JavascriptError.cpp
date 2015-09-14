@@ -51,12 +51,10 @@ namespace Js
         return false;
     }
 
-    void JavascriptError::AdjustNameOrMessageProperty(PropertyId propertyId)
+    void JavascriptError::SetNotEnumerable(PropertyId propertyId)
     {
-        // Error.prototype.name and Error.prototype.message are not enumerable in ES5.
-        // See section 15 and subsection 15.11.4.
-        // These properties were, however, enumerable, up to IE9.
-        Assert(propertyId == PropertyIds::name || propertyId == PropertyIds::message);        
+        // Not all the properties of Error objects (like description, stack, number etc.) are in the spec.
+        // Other browsers have all the properties as not-enumerable. With this change we are matching them.
         SetEnumerable(propertyId, false);
     }
 
@@ -68,7 +66,7 @@ namespace Js
 
         Var newTarget = callInfo.Flags & CallFlags_NewTarget ? args.Values[args.Info.Count] : args[0];
         bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && (callInfo.Flags & (CallFlags_Value|CallFlags_NewTarget)) && newTarget != nullptr && RecyclableObject::Is(newTarget);
-        JavascriptString* messageString = null;
+        JavascriptString* messageString = nullptr;
         
         if (args.Info.Count >= 2 && !JavascriptOperators::GetTypeId(args[1]) == TypeIds_Undefined)
         {
@@ -78,7 +76,7 @@ namespace Js
         if (messageString)
         {
             JavascriptOperators::SetProperty(pError, pError, PropertyIds::message, messageString, scriptContext);
-            pError->AdjustNameOrMessageProperty(PropertyIds::message);
+            pError->SetNotEnumerable(PropertyIds::message);
         }
         
         JavascriptExceptionContext exceptionContext;
@@ -101,7 +99,7 @@ namespace Js
 
         // Proceass the arguments for IE specific behaviors for numbers and description
 
-        JavascriptString* descriptionString = null;
+        JavascriptString* descriptionString = nullptr;
         bool hasNumber = false;
         double number = 0;
         if (args.Info.Count >= 3)
@@ -128,12 +126,14 @@ namespace Js
             descriptionString = scriptContext->GetLibrary()->GetEmptyString();                
         }
 
-        Assert(descriptionString != null);
+        Assert(descriptionString != nullptr);
         if (hasNumber)
         {
             JavascriptOperators::InitProperty(pError, PropertyIds::number, JavascriptNumber::ToVarNoCheck(number, scriptContext));
+            pError->SetNotEnumerable(PropertyIds::number);
         }
         JavascriptOperators::SetProperty(pError, pError, PropertyIds::description, descriptionString, scriptContext);
+        pError->SetNotEnumerable(PropertyIds::description);
 
         return JavascriptError::NewInstance(function, pError, callInfo, args);
     }
@@ -204,6 +204,7 @@ namespace Js
         return JavascriptError::NewInstance(function, pError, callInfo, args);
     }
 
+#ifdef ENABLE_PROJECTION
     Var JavascriptError::NewWinRTErrorInstance(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -214,6 +215,7 @@ namespace Js
 
         return JavascriptError::NewInstance(function, pError, callInfo, args);
     }
+#endif
 
     Var JavascriptError::EntryToString(RecyclableObject* function, CallInfo callInfo, ...)
     {
@@ -281,7 +283,7 @@ namespace Js
         ErrorTypeEnum errorType;
         hr = MapHr(hr, &errorType);
 
-        JavascriptError::MapAndThrowError(scriptContext, hr, errorType, null);
+        JavascriptError::MapAndThrowError(scriptContext, hr, errorType, nullptr);
     }
 
     void __declspec(noreturn) JavascriptError::MapAndThrowError(ScriptContext* scriptContext, HRESULT hr, ErrorTypeEnum errorType, EXCEPINFO* pei, IErrorInfo * perrinfo, RestrictedErrorStrings * proerrstr, bool useErrInfoDescription)
@@ -294,7 +296,7 @@ namespace Js
     {
         Assert(pError != nullptr);
 
-        PCWSTR varName = (pei ? pei->bstrDescription : null);
+        PCWSTR varName = (pei ? pei->bstrDescription : nullptr);
         if (useErrInfoDescription)
         {
             JavascriptErrorDebug::SetErrorMessage(pError, hCode, varName, scriptContext);
@@ -369,7 +371,9 @@ namespace Js
     THROW_ERROR_IMPL(ThrowSyntaxError, CreateSyntaxError, GetSyntaxErrorType, kjstSyntaxError)
     THROW_ERROR_IMPL(ThrowTypeError, CreateTypeError, GetTypeErrorType, kjstTypeError)
     THROW_ERROR_IMPL(ThrowURIError, CreateURIError, GetURIErrorType, kjstURIError)
+#ifdef ENABLE_PROJECTION
     THROW_ERROR_IMPL(ThrowWinRTError, CreateWinRTError, GetWinRTErrorType, kjstWinRTError)
+#endif
 #undef THROW_ERROR_IMPL
         
     JavascriptError* JavascriptError::MapError(ScriptContext* scriptContext, ErrorTypeEnum errorType, IErrorInfo * perrinfo /*= nullptr*/, RestrictedErrorStrings * proerrstr /*= nullptr*/)
@@ -388,6 +392,7 @@ namespace Js
           return CreateReferenceError(scriptContext, perrinfo, proerrstr);
         case kjstURIError:
           return CreateURIError(scriptContext, perrinfo, proerrstr);
+#ifdef ENABLE_PROJECTION
         case kjstWinRTError:
           if (scriptContext->GetConfig()->IsWinRTEnabled())
           {
@@ -398,6 +403,7 @@ namespace Js
               return CreateError(scriptContext, perrinfo, proerrstr);
           }
           break;
+#endif
         default:
             AssertMsg(FALSE, "Invaild error type");
             __assume(false);
@@ -414,7 +420,7 @@ namespace Js
     void JavascriptError::SetErrorMessageProperties(JavascriptError *pError, HRESULT hr, PCWSTR message, ScriptContext* scriptContext)
     {
         JavascriptString * messageString;
-        if (message != null)
+        if (message != nullptr)
         {
             // Save the runtime error message to be reported to IE.
             pError->originalRuntimeErrorMessage = message;
@@ -428,29 +434,31 @@ namespace Js
         }
 
         JavascriptOperators::InitProperty(pError, PropertyIds::message, messageString);
-        pError->AdjustNameOrMessageProperty(PropertyIds::message);
+        pError->SetNotEnumerable(PropertyIds::message);
 
         JavascriptOperators::InitProperty(pError, PropertyIds::description, messageString);
+        pError->SetNotEnumerable(PropertyIds::description);
 
         hr = JavascriptError::GetErrorNumberFromResourceID(hr);
         JavascriptOperators::InitProperty(pError, PropertyIds::number, JavascriptNumber::ToVar(hr, scriptContext));
+        pError->SetNotEnumerable(PropertyIds::number);
     }
 
     void JavascriptError::SetErrorMessage(JavascriptError *pError, HRESULT hr, ScriptContext* scriptContext, va_list argList)
     {
         Assert(FAILED(hr));
-        wchar_t * allocatedString = null;
+        wchar_t * allocatedString = nullptr;
         
         // FACILITY_CONTROL is used for internal (activscp.idl) and legacy errors
         // FACILITY_JSCRIPT is used for newer public errors
         if (FACILITY_CONTROL == HRESULT_FACILITY(hr) || FACILITY_JSCRIPT == HRESULT_FACILITY(hr))
         {
-            if (argList != null)
+            if (argList != nullptr)
             {
                 HRESULT hrAdjusted = GetAdjustedResourceStringHr(hr, /* isFormatString */ true);
 
                 BSTR message = BstrGetResourceString(hrAdjusted);
-                if (message != null)
+                if (message != nullptr)
                 {
                     int len = _vscwprintf(message, argList);
                     Assert(len > 0);
@@ -467,16 +475,16 @@ namespace Js
                     SysFreeString(message);
                 }
             }
-            if (allocatedString == null)
+            if (allocatedString == nullptr)
             {
                 HRESULT hrAdjusted = GetAdjustedResourceStringHr(hr, /* isFormatString */ false);
 
                 BSTR message = BstrGetResourceString(hrAdjusted);
-                if (message == null)
+                if (message == nullptr)
                 {
                     message = BstrGetResourceString(IDS_UNKNOWN_RUNTIME_ERROR);
                 }
-                if (message != null)
+                if (message != nullptr)
                 {
                     uint32 len = SysStringLen(message) +1;
                     allocatedString = RecyclerNewArrayLeaf(scriptContext->GetRecycler(), wchar_t, len);
@@ -488,6 +496,7 @@ namespace Js
         JavascriptError::SetErrorMessageProperties(pError, hr, allocatedString, scriptContext);
     }
 
+#ifdef ENABLE_PROJECTION
     void JavascriptError::OriginateLanguageException(JavascriptError *pError, ScriptContext* scriptContext)
     {
         // Only originate language exceptions when WinRT is enabled.
@@ -545,22 +554,23 @@ namespace Js
             delayLoadWinRtString->WindowsDeleteString(hstring);
         }
     }
+#endif
 
     void JavascriptError::SetErrorMessage(JavascriptError *pError, HRESULT hr, PCWSTR varName, ScriptContext* scriptContext)
     {
         Assert(FAILED(hr));
-        wchar_t * allocatedString = null;
+        wchar_t * allocatedString = nullptr;
 
         // FACILITY_CONTROL is used for internal (activscp.idl) and legacy errors
         // FACILITY_JSCRIPT is used for newer public errors
         if (FACILITY_CONTROL == HRESULT_FACILITY(hr) || FACILITY_JSCRIPT == HRESULT_FACILITY(hr))
         {
-            if (varName != null)
+            if (varName != nullptr)
             {
                 HRESULT hrAdjusted = GetAdjustedResourceStringHr(hr, /* isFormatString */ true);
 
                 BSTR message = BstrGetResourceString(hrAdjusted);
-                if (message != null)
+                if (message != nullptr)
                 {
                     uint32 msglen = SysStringLen(message);
                     size_t varlen = wcslen(varName);
@@ -588,20 +598,20 @@ namespace Js
                     SysFreeString(message);
                     if (outputIndex != len)
                     {
-                        allocatedString = null;
+                        allocatedString = nullptr;
                     }
                 }
             }
-            if (allocatedString == null)
+            if (allocatedString == nullptr)
             {
                 HRESULT hrAdjusted = GetAdjustedResourceStringHr(hr, /* isFormatString */ false);
 
                 BSTR message = BstrGetResourceString(hrAdjusted);
-                if (message == null)
+                if (message == nullptr)
                 {
                     message = BstrGetResourceString(IDS_UNKNOWN_RUNTIME_ERROR);
                 }
-                if (message != null)
+                if (message != nullptr)
                 {
                     uint32 len = SysStringLen(message) +1;
                     allocatedString = RecyclerNewArrayLeaf(scriptContext->GetRecycler(), wchar_t, len);
@@ -620,7 +630,7 @@ namespace Js
 
     BOOL JavascriptError::GetDiagValueString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext)
     {
-        wchar_t const *pszMessage = null;
+        wchar_t const *pszMessage = nullptr;
         GetRuntimeErrorWithScriptEnter(this, &pszMessage);
 
         if (pszMessage)
@@ -673,7 +683,7 @@ namespace Js
                 JavascriptString * messageString = JavascriptString::FromVar(description);
                 *pMessage = messageString->GetSz();
             }
-            else if (Js::JavascriptError::Is(errorObject) && Js::JavascriptError::FromVar(errorObject)->originalRuntimeErrorMessage != null)
+            else if (Js::JavascriptError::Is(errorObject) && Js::JavascriptError::FromVar(errorObject)->originalRuntimeErrorMessage != nullptr)
             {
                 // use the runtime error message
                 *pMessage = Js::JavascriptError::FromVar(errorObject)->originalRuntimeErrorMessage;
@@ -682,7 +692,7 @@ namespace Js
             {
                 // User might have create it's own Error object with JS error code, try to load the
                 // resource string from the HResult by returning null;
-                *pMessage = null;
+                *pMessage = nullptr;
             }
         }
 
@@ -888,9 +898,11 @@ namespace Js
         case kjstURIError:
             jsNewError = targetJavascriptLibrary->CreateURIError();
             break;
+#ifdef ENABLE_PROJECTION
         case kjstWinRTError:
             jsNewError = targetJavascriptLibrary->CreateWinRTError();
             break;
+#endif
 
         case kjstCustomError:
         default:

@@ -8,6 +8,7 @@
 #include "Memory\amd64\XDataAllocator.h"
 #elif defined(_M_ARM)
 #include "Memory\arm\XDataAllocator.h"
+#include <wchar.h>
 #elif defined(_M_ARM64)
 #include "Memory\arm64\XDataAllocator.h"
 #endif
@@ -65,9 +66,9 @@ void Heap::FreeAll()
 
 bool Heap::Free(__in Allocation* object)
 {
-    Assert(object != null);
+    Assert(object != nullptr);
 
-    if (object == null)
+    if (object == nullptr)
     {
         return false;
     }
@@ -108,9 +109,9 @@ bool Heap::Decommit(__in Allocation* object)
     // This function doesn't really touch the page allocator data structure.
     // DecommitPages is merely a wrapper for VirtualFree
     // So no need to take the critical section to synchronize
-    Assert(object != null);
+    Assert(object != nullptr);
 
-    if (object == null)
+    if (object == nullptr)
     {
         return false;
     }
@@ -200,7 +201,7 @@ Allocation* Heap::Alloc(size_t bytes, ushort pdataCount, ushort xdataSize, bool 
     VerboseHeapTrace(L"Bucket is %d\n", bucket);
     VerboseHeapTrace(L"Requested: %d bytes. Allocated: %d bytes\n", bytes, bytesToAllocate);
 
-    Page* page = null;
+    Page* page = nullptr;
     if(!this->buckets[bucket].Empty())
     {
         page = &this->buckets[bucket].Head();
@@ -210,15 +211,15 @@ Allocation* Heap::Alloc(size_t bytes, ushort pdataCount, ushort xdataSize, bool 
         page = FindPageToSplit(bucket, canAllocInPreReservedHeapPageSegment);
     }
 
-    if(page == null)
+    if(page == nullptr)
     {
         page = AllocNewPage(bucket, canAllocInPreReservedHeapPageSegment, isAnyJittedCode, isAllJITCodeInPreReservedRegion);
     }
     
     // Out of memory
-    if (page == null)
+    if (page == nullptr)
     {
-        return null;
+        return nullptr;
     }
 
     allocation = AllocInPage(page, bytesToAllocate, pdataCount, xdataSize);
@@ -227,16 +228,16 @@ Allocation* Heap::Alloc(size_t bytes, ushort pdataCount, ushort xdataSize, bool 
 
 BOOL Heap::ProtectAllocation(__in Allocation* allocation, DWORD dwVirtualProtectFlags, __out DWORD* dwOldVirtualProtectFlags, DWORD desiredOldProtectFlag)
 {
-    Assert(allocation != null);
+    Assert(allocation != nullptr);
     Assert(allocation->isAllocationUsed);
 
-    return ProtectAllocationInternal(allocation, null, dwVirtualProtectFlags, dwOldVirtualProtectFlags, desiredOldProtectFlag);
+    return ProtectAllocationInternal(allocation, nullptr, dwVirtualProtectFlags, dwOldVirtualProtectFlags, desiredOldProtectFlag);
 }
 
 BOOL Heap::ProtectAllocationPage(__in Allocation* allocation, __in char* addressInPage, DWORD dwVirtualProtectFlags, __out DWORD* dwOldVirtualProtectFlags, DWORD desiredOldProtectFlag)
 {
-    Assert(addressInPage != null);
-    Assert(allocation != null);
+    Assert(addressInPage != nullptr);
+    Assert(allocation != nullptr);
     Assert(addressInPage >= allocation->address);
     Assert(allocation->isAllocationUsed);
 
@@ -275,7 +276,7 @@ BOOL Heap::ProtectAllocationInternal(__in Allocation* allocation, __in_opt char*
         segment = allocation->largeObjectAllocation.segment;
         allocation->largeObjectAllocation.isReadWrite = ((dwVirtualProtectFlags & PAGE_READWRITE) == PAGE_READWRITE);
 
-        if (addressInPage != null)
+        if (addressInPage != nullptr)
         {
             if (addressInPage >= allocation->address + AutoSystemInfo::PageSize)
             {
@@ -320,11 +321,11 @@ Allocation* Heap::AllocLargeObject(size_t bytes, ushort pdataCount, ushort xdata
 
     if (pages == 0)
     {
-        return null;
+        return nullptr;
     }
 
-    void * segment = null;
-    char* address = null;
+    void * segment = nullptr;
+    char* address = nullptr;
 
 #if PDATA_ENABLED
     XDataAllocation xdata;
@@ -347,9 +348,9 @@ Allocation* Heap::AllocLargeObject(size_t bytes, ushort pdataCount, ushort xdata
         }
 
         // Out of memory
-        if (address == null)
+        if (address == nullptr)
         {
-            return null;
+            return nullptr;
         }
         
         FillDebugBreak((BYTE*) address, pages*AutoSystemInfo::PageSize);
@@ -361,7 +362,7 @@ Allocation* Heap::AllocLargeObject(size_t bytes, ushort pdataCount, ushort xdata
             {
                 AutoCriticalSection autocs(&this->cs);
                 this->Release(address, pages, segment);
-                return null;
+                return nullptr;
             }
         }
 #endif
@@ -369,7 +370,7 @@ Allocation* Heap::AllocLargeObject(size_t bytes, ushort pdataCount, ushort xdata
 
 
     Allocation* allocation = this->largeObjectAllocations.PrependNode(this->auxilliaryAllocator);
-    if (allocation == null)
+    if (allocation == nullptr)
     {
         AutoCriticalSection autocs(&this->cs);
         this->Release(address, pages, segment);
@@ -380,7 +381,7 @@ Allocation* Heap::AllocLargeObject(size_t bytes, ushort pdataCount, ushort xdata
             this->ReleaseSecondary(xdata, segment);
         }
 #endif
-        return null;
+        return nullptr;
     }  
 
     allocation->address = address;
@@ -392,7 +393,7 @@ Allocation* Heap::AllocLargeObject(size_t bytes, ushort pdataCount, ushort xdata
 #if PDATA_ENABLED
     allocation->xdata = xdata;
 
-    if (((Segment*)segment)->GetSecondaryAllocator() != null && !((Segment*)segment)->CanAllocSecondary())
+    if (((Segment*)segment)->GetSecondaryAllocator() != nullptr && !((Segment*)segment)->CanAllocSecondary())
     {
         TransferPages( 
             [&](Page* currentPage) -> bool
@@ -472,14 +473,14 @@ Allocation* Heap::AllocInPage(Page* page, size_t bytes, ushort pdataCount, ushor
         {
             if(!this->AllocSecondary(page->segment, (ULONG_PTR)address, bytes, pdataCount, xdataSize, &xdata))
             {
-                return null;
+                return nullptr;
             }
         }
     }
 #endif
 
     Allocation* allocation = AnewNoThrowStruct(this->auxilliaryAllocator, Allocation);
-    if (allocation == null)
+    if (allocation == nullptr)
     {
 #if PDATA_ENABLED
         if(pdataCount > 0)
@@ -488,7 +489,7 @@ Allocation* Heap::AllocInPage(Page* page, size_t bytes, ushort pdataCount, ushor
             this->ReleaseSecondary(xdata, page->segment);
         }
 #endif
-        return null;
+        return nullptr;
     } 
     
 #if DBG
@@ -525,7 +526,7 @@ Allocation* Heap::AllocInPage(Page* page, size_t bytes, ushort pdataCount, ushor
 #if PDATA_ENABLED
     allocation->xdata = xdata;
 
-    if(((Segment*)page->segment)->GetSecondaryAllocator() != null && !((Segment*)page->segment)->CanAllocSecondary())
+    if(((Segment*)page->segment)->GetSecondaryAllocator() != nullptr && !((Segment*)page->segment)->CanAllocSecondary())
     {
         TransferPages( 
             [&](Page* currentPage) -> bool
@@ -551,7 +552,7 @@ Heap::EnsurePreReservedPageAllocation(PreReservedVirtualAllocWrapper * preReserv
         Assert(preReservedHeapPageAllocator.GetVirtualAllocator() == preReservedVirtualAllocator);
         
         char * preReservedRegionStartAddress = (char*)preReservedVirtualAllocator->GetPreReservedStartAddress();
-        if (preReservedRegionStartAddress == null)
+        if (preReservedRegionStartAddress == nullptr)
         {
             preReservedRegionStartAddress = preReservedHeapPageAllocator.InitPageSegment();
         }
@@ -565,9 +566,9 @@ Heap::EnsurePreReservedPageAllocation(PreReservedVirtualAllocWrapper * preReserv
 
 Page* Heap::AllocNewPage(BucketId bucket, bool canAllocInPreReservedHeapPageSegment, bool isAnyJittedCode, __out bool* isAllJITCodeInPreReservedRegion)
 {
-    void* pageSegment = null;
+    void* pageSegment = nullptr;
 
-    char* address = null;
+    char* address = nullptr;
     {
         AutoCriticalSection autocs(&this->cs);
         
@@ -581,7 +582,7 @@ Page* Heap::AllocNewPage(BucketId bucket, bool canAllocInPreReservedHeapPageSegm
             }
         }
 
-        if (address == null)    // if no space in Pre-reserved Page Segment, then allocate in regular ones.
+        if (address == nullptr)    // if no space in Pre-reserved Page Segment, then allocate in regular ones.
         {
             if (isAnyJittedCode)
             {
@@ -595,9 +596,9 @@ Page* Heap::AllocNewPage(BucketId bucket, bool canAllocInPreReservedHeapPageSegm
         }
     }
 
-    if (address == null)
+    if (address == nullptr)
     {
-        return null;
+        return nullptr;
     }
 
     FillDebugBreak((BYTE*) address, AutoSystemInfo::PageSize);
@@ -606,11 +607,11 @@ Page* Heap::AllocNewPage(BucketId bucket, bool canAllocInPreReservedHeapPageSegm
     VerboseHeapTrace(L"Allocing new page in bucket %d\n", bucket);
     Page* page = this->buckets[bucket].PrependNode(this->auxilliaryAllocator, address, pageSegment, bucket);
 
-    if (page == null)
+    if (page == nullptr)
     {
         AutoCriticalSection autocs(&this->cs);
         this->ReleasePages(address, 1, pageSegment);
-        return null;
+        return nullptr;
     }
 
 #if DBG_DUMP
@@ -683,7 +684,7 @@ Page* Heap::FindPageToSplit(BucketId targetBucket, bool findPreReservedHeapPages
         NEXT_DLISTBASE_ENTRY_EDITING;
     }
 
-    return null;
+    return nullptr;
 }
 
 void Heap::RemovePageFromFullList(Page* pageToRemove)

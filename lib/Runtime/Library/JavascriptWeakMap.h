@@ -98,7 +98,7 @@ namespace Js
         {
             return keySet.Map([&](DynamicObject* key, bool, const RecyclerWeakReference<DynamicObject>*)
             {
-                Var value = null;
+                Var value = nullptr;
                 WeakMapKeyMap* keyMap = GetWeakMapKeyMapFromKey(key);
 
                 // It may be the case that a CEO was reset, removing its WeakMapKeyMap.  In this case it can

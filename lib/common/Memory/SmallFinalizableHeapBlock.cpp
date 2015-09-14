@@ -57,8 +57,8 @@ SmallFinalizableHeapBlockT<SmallAllocationBlockAttributes>::SmallFinalizableHeap
     // We used AllocZ
     Assert(this->finalizeCount == 0);
     Assert(this->pendingDisposeCount == 0);
-    Assert(this->disposedObjectList == null);
-    Assert(this->disposedObjectListTail == null);
+    Assert(this->disposedObjectList == nullptr);
+    Assert(this->disposedObjectListTail == nullptr);
     Assert(!this->isPendingDispose);
 }
 
@@ -69,8 +69,8 @@ SmallFinalizableHeapBlockT<MediumAllocationBlockAttributes>::SmallFinalizableHea
     // We used AllocZ
     Assert(this->finalizeCount == 0);
     Assert(this->pendingDisposeCount == 0);
-    Assert(this->disposedObjectList == null);
-    Assert(this->disposedObjectListTail == null);
+    Assert(this->disposedObjectList == nullptr);
+    Assert(this->disposedObjectListTail == nullptr);
     Assert(!this->isPendingDispose);
 }
 
@@ -82,8 +82,8 @@ SmallFinalizableHeapBlockT<TBlockAttributes>::SmallFinalizableHeapBlockT(HeapBuc
     // We used AllocZ
     Assert(this->finalizeCount == 0);
     Assert(this->pendingDisposeCount == 0);
-    Assert(this->disposedObjectList == null);
-    Assert(this->disposedObjectListTail == null);
+    Assert(this->disposedObjectList == nullptr);
+    Assert(this->disposedObjectListTail == nullptr);
     Assert(!this->isPendingDispose);
 }
 #endif
@@ -306,8 +306,8 @@ SmallFinalizableHeapBlockT<TBlockAttributes>::TransferDisposedObjects()
     DebugOnly(this->isPendingDispose = false);
 
     TransferProcessedObjects(this->disposedObjectList, this->disposedObjectListTail);
-    this->disposedObjectList = null;
-    this->disposedObjectListTail = null;
+    this->disposedObjectList = nullptr;
+    this->disposedObjectListTail = nullptr;
 
     // We already updated the bit vector on TransferSweptObjects
     // So just update the free object head.
@@ -324,7 +324,7 @@ SmallFinalizableHeapBlockT<TBlockAttributes>::AddDisposedObjectFreeBitVector(Sma
     ushort freeCount = 0;
     FreeObject * freeObject = this->disposedObjectList;
 
-    if (freeObject != null)
+    if (freeObject != nullptr)
     {
         while (true)
         {
@@ -386,8 +386,8 @@ template <class TBlockAttributes>
 void
 SmallFinalizableHeapBlockT<TBlockAttributes>::Init(ushort objectSize, ushort objectCount)
 {
-    Assert(this->disposedObjectList == null);
-    Assert(this->disposedObjectListTail == null);
+    Assert(this->disposedObjectList == nullptr);
+    Assert(this->disposedObjectListTail == nullptr);
     Assert(this->finalizeCount == 0);
     Assert(this->pendingDisposeCount == 0);
     __super::Init(objectSize, objectCount);
@@ -397,8 +397,8 @@ template <class TBlockAttributes>
 void
 SmallFinalizableHeapBlockT<TBlockAttributes>::FinishPartialCollect()
 {
-    Assert(this->disposedObjectList == null);
-    Assert(this->disposedObjectListTail == null);
+    Assert(this->disposedObjectList == nullptr);
+    Assert(this->disposedObjectListTail == nullptr);
     __super::FinishPartialCollect();
 }
 #endif
@@ -411,7 +411,7 @@ SmallFinalizableHeapBlockT<TBlockAttributes>::CheckDisposedObjectFreeBitVector()
     uint verifyFreeCount = 0;
     // all the finalized object are considered freed, but not allocable yet
     FreeObject *freeObject = this->disposedObjectList;
-    if (freeObject != null)
+    if (freeObject != nullptr)
     {
         SmallHeapBlockBitVector * free = this->GetFreeBitVector();
         while (true)

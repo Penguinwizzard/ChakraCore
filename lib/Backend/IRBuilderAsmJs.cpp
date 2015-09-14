@@ -94,8 +94,8 @@ IRBuilderAsmJs::Build()
     }
     else
     {
-        m_tempMap = NULL;
-        m_fbvTempUsed = NULL;
+        m_tempMap = nullptr;
+        m_fbvTempUsed = nullptr;
     }
 
     m_func->m_headInstr = IR::EntryInstr::New(Js::OpCode::FunctionEntry, m_func);
@@ -230,7 +230,7 @@ IRBuilderAsmJs::AddInstr(IR::Instr * instr, uint32 offset)
     if (offset != Js::Constants::NoByteCodeOffset)
     {
         Assert(offset < m_offsetToInstructionCount);
-        if (m_offsetToInstruction[offset] == null)
+        if (m_offsetToInstruction[offset] == nullptr)
         {
             m_offsetToInstruction[offset] = instr;
         }
@@ -680,7 +680,7 @@ IRBuilderAsmJs::AddBranchInstr(IR::BranchInstr * branchInstr, uint32 offset, uin
         // Jump the restore StSlot and Ret instruction
         targetOffset = GetLoopBodyExitInstrOffset();
     }
-    BranchReloc *  reloc = null;
+    BranchReloc *  reloc = nullptr;
     reloc = CreateRelocRecord(branchInstr, offset, targetOffset);
 
     AddInstr(branchInstr, offset);
@@ -977,7 +977,7 @@ IRBuilderAsmJs::InsertLabels()
             multiBranchInstr->UpdateMultiBrTargetOffsets([&](uint32 offset) -> IR::LabelInstr *
             {
                 labelInstr = this->CreateLabel(branchInstr, offset);
-                multiBranchInstr->ChangeLabelRef(null, labelInstr);
+                multiBranchInstr->ChangeLabelRef(nullptr, labelInstr);
                 return labelInstr;
             });
         }
@@ -997,8 +997,8 @@ IRBuilderAsmJs::InsertLabels()
 IR::LabelInstr *
 IRBuilderAsmJs::CreateLabel(IR::BranchInstr * branchInstr, uint & offset)
 {
-    IR::Instr * targetInstr = null;
-    while (targetInstr == null)
+    IR::Instr * targetInstr = nullptr;
+    while (targetInstr == nullptr)
     {
         targetInstr = m_offsetToInstruction[offset];
         Assert(offset < m_offsetToInstructionCount);
@@ -1356,8 +1356,7 @@ void
 IRBuilderAsmJs::BuildAsmTypedArr(Js::OpCodeAsmJs newOpcode, uint32 offset, uint32 slotIndex, Js::RegSlot value, int8 viewType)
 {
     IRType type = TyInt32;
-    Js::RegSlot valueRegSlot = null;
-    Js::RegSlot indexRegSlot = null;
+    Js::RegSlot valueRegSlot = Js::Constants::NoRegister;
     bool isLd = newOpcode == Js::OpCodeAsmJs::LdArr || newOpcode == Js::OpCodeAsmJs::LdArrConst;
     Js::OpCode op = Js::OpCode::InvalidOpCode;
     ValueType arrayType;
@@ -1444,7 +1443,7 @@ IRBuilderAsmJs::BuildAsmTypedArr(Js::OpCodeAsmJs newOpcode, uint32 offset, uint3
         default:
             Assume(UNREACHED);
         }
-        indexRegSlot = GetRegSlotFromIntReg(slotIndex);
+        Js::RegSlot indexRegSlot = GetRegSlotFromIntReg(slotIndex);
         IR::RegOpnd * maskedOpnd = nullptr;
         if (mask)
         {
@@ -2012,7 +2011,7 @@ IRBuilderAsmJs::BuildReg1Double1(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::R
     {
     case Js::OpCodeAsmJs::ArgOut_Db:
         symDst = m_func->m_symTable->GetArgSlotSym((uint16)(dstReg+1));
-        if (symDst == NULL || (uint16)(dstReg + 1) != (dstReg + 1))
+        if (symDst == nullptr || (uint16)(dstReg + 1) != (dstReg + 1))
         {
             AssertMsg(UNREACHED, "Arg count too big...");
             Fatal();
@@ -2033,7 +2032,7 @@ IRBuilderAsmJs::BuildReg1Double1(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::R
     case Js::OpCodeAsmJs::I_ArgOut_Db:
         symDst = StackSym::NewArgSlotSym((uint16)dstReg, m_func, TyFloat64);
         symDst->m_allocated = true;
-        if (symDst == NULL || (uint16)(dstReg) != (dstReg))
+        if (symDst == nullptr || (uint16)(dstReg) != (dstReg))
         {
             AssertMsg(UNREACHED, "Arg count too big...");
             Fatal();
@@ -2077,7 +2076,7 @@ IRBuilderAsmJs::BuildReg1Float1(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::Re
     {
         StackSym * symDst = StackSym::NewArgSlotSym((uint16)dstReg, m_func, TyFloat32);
         symDst->m_allocated = true;
-        if (symDst == NULL || (uint16)(dstReg) != (dstReg))
+        if (symDst == nullptr || (uint16)(dstReg) != (dstReg))
         {
             AssertMsg(UNREACHED, "Arg count too big...");
             Fatal();
@@ -2122,7 +2121,7 @@ IRBuilderAsmJs::BuildReg1Int1(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegS
     {
     case Js::OpCodeAsmJs::ArgOut_Int:
         symDst = m_func->m_symTable->GetArgSlotSym((uint16)(dstReg + 1));
-        if (symDst == NULL || (uint16)(dstReg + 1) != (dstReg + 1))
+        if (symDst == nullptr || (uint16)(dstReg + 1) != (dstReg + 1))
         {
             AssertMsg(UNREACHED, "Arg count too big...");
             Fatal();
@@ -2143,7 +2142,7 @@ IRBuilderAsmJs::BuildReg1Int1(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegS
     case Js::OpCodeAsmJs::I_ArgOut_Int:
         symDst = StackSym::NewArgSlotSym((uint16)dstReg, m_func, TyInt32);
         symDst->m_allocated = true;
-        if (symDst == NULL || (uint16)(dstReg) != (dstReg))
+        if (symDst == nullptr || (uint16)(dstReg) != (dstReg))
         {
             AssertMsg(UNREACHED, "Arg count too big...");
             Fatal();
@@ -2870,7 +2869,7 @@ IRBuilderAsmJs::BuildBrInt1(Js::OpCodeAsmJs newOpcode, uint32 offset, int32 rela
 
     uint targetOffset = m_jnReader.GetCurrentOffset() + relativeOffset;
 
-    IR::BranchInstr * branchInstr = IR::BranchInstr::New(Js::OpCode::BrTrue_I4, NULL, src1Opnd, m_func);
+    IR::BranchInstr * branchInstr = IR::BranchInstr::New(Js::OpCode::BrTrue_I4, nullptr, src1Opnd, m_func);
     AddBranchInstr(branchInstr, offset, targetOffset);
 }
 
@@ -2909,7 +2908,7 @@ IRBuilderAsmJs::BuildBrInt2(Js::OpCodeAsmJs newOpcode, uint32 offset, int32 rela
     else
     {
         Assert(newOpcode == Js::OpCodeAsmJs::BrEq_Int);
-        IR::BranchInstr * branchInstr = IR::BranchInstr::New(Js::OpCode::BrEq_I4, NULL, src1Opnd, src2Opnd, m_func);
+        IR::BranchInstr * branchInstr = IR::BranchInstr::New(Js::OpCode::BrEq_I4, nullptr, src1Opnd, src2Opnd, m_func);
         AddBranchInstr(branchInstr, offset, targetOffset);
     }
 }
@@ -3132,7 +3131,7 @@ IRBuilderAsmJs::GenerateLoopBodyStSlots(SymID loopParamSymId, uint offset)
         Assert(!this->RegIsConstant((Js::RegSlot)regSlot));               
         Js::PropertyId propOffSet = 0;
         IRType type = IRType::TyInt32;
-        IR::RegOpnd * regOpnd = NULL;
+        IR::RegOpnd * regOpnd = nullptr;
         if (RegIsIntVar(regSlot))
         {
             Js::PropertyId localsStartSlot = (Js::PropertyId)(localsOffset / sizeof(int));
@@ -3412,7 +3411,7 @@ IRBuilderAsmJs::BuildFloat32x4_4(Js::OpCodeAsmJs newOpcode, uint32 offset)
     // dst = op t3
     // Later phases will chain the arguments by following singleDefInstr of each use of ti.
 
-    instr = AddExtendedArg(src1Opnd, null, offset);
+    instr = AddExtendedArg(src1Opnd, nullptr, offset);
     instr = AddExtendedArg(src2Opnd, instr->GetDst()->AsRegOpnd(), offset);
     instr = AddExtendedArg(src3Opnd, instr->GetDst()->AsRegOpnd(), offset);
 
@@ -3452,7 +3451,7 @@ void IRBuilderAsmJs::BuildFloat32x4_1Float4(Js::OpCodeAsmJs newOpcode, uint32 of
     src4Opnd->SetValueType(ValueType::Float);
 
     
-    instr = AddExtendedArg(src1Opnd, null, offset);
+    instr = AddExtendedArg(src1Opnd, nullptr, offset);
     instr = AddExtendedArg(src2Opnd, instr->GetDst()->AsRegOpnd(), offset);
     instr = AddExtendedArg(src3Opnd, instr->GetDst()->AsRegOpnd(), offset);
     instr = AddExtendedArg(src4Opnd, instr->GetDst()->AsRegOpnd(), offset);
@@ -3487,7 +3486,7 @@ IRBuilderAsmJs::BuildFloat32x4_2Int4(Js::OpCodeAsmJs newOpcode, uint32 offset)
     src1Opnd->SetValueType(ValueType::GetSimd128(ObjectType::Simd128Float32x4));
     
 
-    instr = AddExtendedArg(src1Opnd, null, offset);
+    instr = AddExtendedArg(src1Opnd, nullptr, offset);
     instr = AddExtendedArg(src2Opnd, instr->GetDst()->AsRegOpnd(), offset);
     instr = AddExtendedArg(src3Opnd, instr->GetDst()->AsRegOpnd(), offset);
     instr = AddExtendedArg(src4Opnd, instr->GetDst()->AsRegOpnd(), offset);
@@ -3524,7 +3523,7 @@ IRBuilderAsmJs::BuildFloat32x4_3Int4(Js::OpCodeAsmJs newOpcode, uint32 offset)
     src2Opnd->SetValueType(ValueType::GetSimd128(ObjectType::Simd128Float32x4));
 
 
-    instr = AddExtendedArg(src1Opnd, null, offset);
+    instr = AddExtendedArg(src1Opnd, nullptr, offset);
     instr = AddExtendedArg(src2Opnd, instr->GetDst()->AsRegOpnd(), offset);
     instr = AddExtendedArg(src3Opnd, instr->GetDst()->AsRegOpnd(), offset);
     instr = AddExtendedArg(src4Opnd, instr->GetDst()->AsRegOpnd(), offset);
@@ -3663,7 +3662,7 @@ IRBuilderAsmJs::BuildFloat32x4_1Int32x4_1Float32x4_2(Js::OpCodeAsmJs newOpcode, 
     src2Opnd->SetValueType(ValueType::GetSimd128(ObjectType::Simd128Float32x4));
     src3Opnd->SetValueType(ValueType::GetSimd128(ObjectType::Simd128Float32x4));
 
-    instr = AddExtendedArg(src1Opnd, null, offset);
+    instr = AddExtendedArg(src1Opnd, nullptr, offset);
     instr = AddExtendedArg(src2Opnd, instr->GetDst()->AsRegOpnd(), offset);
     instr = AddExtendedArg(src3Opnd, instr->GetDst()->AsRegOpnd(), offset);
 
@@ -3692,7 +3691,7 @@ void IRBuilderAsmJs::BuildReg1Float32x4_1(Js::OpCodeAsmJs newOpcode, uint32 offs
     {
         symDst = StackSym::NewArgSlotSym((uint16)dstRegSlot, m_func, TySimd128F4);
         symDst->m_allocated = true;
-        if (symDst == NULL || (uint16)(dstRegSlot) != (dstRegSlot))
+        if (symDst == nullptr || (uint16)(dstRegSlot) != (dstRegSlot))
         {
             AssertMsg(UNREACHED, "Arg count too big...");
             Fatal();
@@ -3838,7 +3837,7 @@ IRBuilderAsmJs::BuildInt32x4_4(Js::OpCodeAsmJs newOpcode, uint32 offset)
     // dst = op t3
     // Later phases will chain the arguments by following singleDefInstr of each use of ti.
 
-    instr = AddExtendedArg(src1Opnd, null, offset);
+    instr = AddExtendedArg(src1Opnd, nullptr, offset);
     instr = AddExtendedArg(src2Opnd, instr->GetDst()->AsRegOpnd(), offset);
     instr = AddExtendedArg(src3Opnd, instr->GetDst()->AsRegOpnd(), offset);
 
@@ -3874,7 +3873,7 @@ void IRBuilderAsmJs::BuildInt32x4_1Int4(Js::OpCodeAsmJs newOpcode, uint32 offset
     src4Opnd->SetValueType(ValueType::GetInt(false));
 
 
-    instr = AddExtendedArg(src1Opnd, null, offset);
+    instr = AddExtendedArg(src1Opnd, nullptr, offset);
     instr = AddExtendedArg(src2Opnd, instr->GetDst()->AsRegOpnd(), offset);
     instr = AddExtendedArg(src3Opnd, instr->GetDst()->AsRegOpnd(), offset);
     instr = AddExtendedArg(src4Opnd, instr->GetDst()->AsRegOpnd(), offset);
@@ -3908,7 +3907,7 @@ void IRBuilderAsmJs::BuildInt32x4_2Int4(Js::OpCodeAsmJs newOpcode, uint32 offset
     src1Opnd->SetValueType(ValueType::GetSimd128(ObjectType::Simd128Int32x4));
 
 
-    instr = AddExtendedArg(src1Opnd, null, offset);
+    instr = AddExtendedArg(src1Opnd, nullptr, offset);
     instr = AddExtendedArg(src2Opnd, instr->GetDst()->AsRegOpnd(), offset);
     instr = AddExtendedArg(src3Opnd, instr->GetDst()->AsRegOpnd(), offset);
     instr = AddExtendedArg(src4Opnd, instr->GetDst()->AsRegOpnd(), offset);
@@ -3945,7 +3944,7 @@ void IRBuilderAsmJs::BuildInt32x4_3Int4(Js::OpCodeAsmJs newOpcode, uint32 offset
     src2Opnd->SetValueType(ValueType::GetSimd128(ObjectType::Simd128Int32x4));
 
 
-    instr = AddExtendedArg(src1Opnd, null, offset);
+    instr = AddExtendedArg(src1Opnd, nullptr, offset);
     instr = AddExtendedArg(src2Opnd, instr->GetDst()->AsRegOpnd(), offset);
     instr = AddExtendedArg(src3Opnd, instr->GetDst()->AsRegOpnd(), offset);
     instr = AddExtendedArg(src4Opnd, instr->GetDst()->AsRegOpnd(), offset);
@@ -4040,7 +4039,7 @@ IRBuilderAsmJs::BuildInt32x4_2Int2(Js::OpCodeAsmJs newOpcode, uint32 offset)
 
     IR::Instr* instr = nullptr;
 
-    instr = AddExtendedArg(src1Opnd, null, offset);
+    instr = AddExtendedArg(src1Opnd, nullptr, offset);
     instr = AddExtendedArg(src2Opnd, instr->GetDst()->AsRegOpnd(), offset);
     instr = AddExtendedArg(src3Opnd, instr->GetDst()->AsRegOpnd(), offset);
 
@@ -4110,7 +4109,7 @@ IRBuilderAsmJs::BuildFloat32x4_2Int1Float1(Js::OpCodeAsmJs newOpcode, uint32 off
 
     IR::Instr* instr = nullptr;
 
-    instr = AddExtendedArg(src1Opnd, null, offset);
+    instr = AddExtendedArg(src1Opnd, nullptr, offset);
     instr = AddExtendedArg(src2Opnd, instr->GetDst()->AsRegOpnd(), offset);
     instr = AddExtendedArg(src3Opnd, instr->GetDst()->AsRegOpnd(), offset);
 
@@ -4214,7 +4213,7 @@ void IRBuilderAsmJs::BuildReg1Int32x4_1(Js::OpCodeAsmJs newOpcode, uint32 offset
     {
         symDst = StackSym::NewArgSlotSym((uint16)dstRegSlot, m_func, TySimd128I4);
         symDst->m_allocated = true;
-        if (symDst == NULL || (uint16)(dstRegSlot) != (dstRegSlot))
+        if (symDst == nullptr || (uint16)(dstRegSlot) != (dstRegSlot))
         {
             AssertMsg(UNREACHED, "Arg count too big...");
             Fatal();
@@ -4361,7 +4360,7 @@ IRBuilderAsmJs::BuildFloat64x2_4(Js::OpCodeAsmJs newOpcode, uint32 offset)
     // dst = op t3
     // Later phases will chain the arguments by following singleDefInstr of each use of ti.
 
-    instr = AddExtendedArg(src1Opnd, null, offset);
+    instr = AddExtendedArg(src1Opnd, nullptr, offset);
     instr = AddExtendedArg(src2Opnd, instr->GetDst()->AsRegOpnd(), offset);
     instr = AddExtendedArg(src3Opnd, instr->GetDst()->AsRegOpnd(), offset);
 
@@ -4466,7 +4465,7 @@ IRBuilderAsmJs::BuildFloat64x2_2Int2(Js::OpCodeAsmJs newOpcode, uint32 offset)
     dstOpnd->SetValueType(ValueType::GetSimd128(ObjectType::Simd128Float64x2));
     src1Opnd->SetValueType(ValueType::GetSimd128(ObjectType::Simd128Float64x2));
 
-    instr = AddExtendedArg(src1Opnd, null, offset);
+    instr = AddExtendedArg(src1Opnd, nullptr, offset);
     instr = AddExtendedArg(src2Opnd, instr->GetDst()->AsRegOpnd(), offset);
     instr = AddExtendedArg(src3Opnd, instr->GetDst()->AsRegOpnd(), offset);
     
@@ -4499,7 +4498,7 @@ IRBuilderAsmJs::BuildFloat64x2_3Int2(Js::OpCodeAsmJs newOpcode, uint32 offset)
     src1Opnd->SetValueType(ValueType::GetSimd128(ObjectType::Simd128Float64x2));
     src2Opnd->SetValueType(ValueType::GetSimd128(ObjectType::Simd128Float64x2));
 
-    instr = AddExtendedArg(src1Opnd, null, offset);
+    instr = AddExtendedArg(src1Opnd, nullptr, offset);
     instr = AddExtendedArg(src2Opnd, instr->GetDst()->AsRegOpnd(), offset);
     instr = AddExtendedArg(src3Opnd, instr->GetDst()->AsRegOpnd(), offset);
     instr = AddExtendedArg(src4Opnd, instr->GetDst()->AsRegOpnd(), offset);
@@ -4582,7 +4581,7 @@ IRBuilderAsmJs::BuildFloat64x2_1Int32x4_1Float64x2_2(Js::OpCodeAsmJs newOpcode, 
     src2Opnd->SetValueType(ValueType::GetSimd128(ObjectType::Simd128Float64x2));
     src3Opnd->SetValueType(ValueType::GetSimd128(ObjectType::Simd128Float64x2));
 
-    instr = AddExtendedArg(src1Opnd, null, offset);
+    instr = AddExtendedArg(src1Opnd, nullptr, offset);
     instr = AddExtendedArg(src2Opnd, instr->GetDst()->AsRegOpnd(), offset);
     instr = AddExtendedArg(src3Opnd, instr->GetDst()->AsRegOpnd(), offset);
 
@@ -4611,7 +4610,7 @@ void IRBuilderAsmJs::BuildReg1Float64x2_1(Js::OpCodeAsmJs newOpcode, uint32 offs
     {
         symDst = StackSym::NewArgSlotSym((uint16)dstRegSlot, m_func, TySimd128D2);
         symDst->m_allocated = true;
-        if (symDst == NULL || (uint16)(dstRegSlot) != (dstRegSlot))
+        if (symDst == nullptr || (uint16)(dstRegSlot) != (dstRegSlot))
         {
             AssertMsg(UNREACHED, "Arg count too big...");
             Fatal();
@@ -4667,7 +4666,6 @@ IRBuilderAsmJs::BuildAsmSimdTypedArr(Js::OpCodeAsmJs newOpcode, uint32 offset, u
 {
     IRType type = TySimd128F4;
     Js::RegSlot valueRegSlot = GetRegSlotFromSimd128Reg(value);
-    Js::RegSlot indexRegSlot = null;
     
     IR::RegOpnd * maskedOpnd = nullptr;
     IR::Instr * maskInstr = nullptr;
@@ -4804,7 +4802,7 @@ IRBuilderAsmJs::BuildAsmSimdTypedArr(Js::OpCodeAsmJs newOpcode, uint32 offset, u
         }
 
 
-        indexRegSlot = GetRegSlotFromIntReg(slotIndex);
+        Js::RegSlot indexRegSlot = GetRegSlotFromIntReg(slotIndex);
         
         if (mask)
         {
@@ -4882,7 +4880,6 @@ IRBuilderAsmJs::BuildAsmSimdTypedArr(Js::OpCodeAsmJs newOpcode, uint32 offset, u
             // Js::OpCodeAsmJs::Simd128_StArr_I4:
             // Js::OpCodeAsmJs::Simd128_StArr_F4:
             // Js::OpCodeAsmJs::Simd128_StArr_D2:
-            indexRegSlot = GetRegSlotFromIntReg(slotIndex);
             indirOpnd = IR::IndirOpnd::New(baseOpnd, maskedOpnd, type, m_func);
             instr = IR::Instr::New(op, indirOpnd, regOpnd, sizeOpnd, m_func);
             

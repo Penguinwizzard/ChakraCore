@@ -442,10 +442,10 @@ namespace Js
         }
         if (tryInlineCacheIndex != inlineCacheIndex)
         {
-            if (inlineCaches[inlineCacheIndex].invalidationListSlotPtr != null)
+            if (inlineCaches[inlineCacheIndex].invalidationListSlotPtr != nullptr)
             {
                 Assert(*(inlineCaches[inlineCacheIndex].invalidationListSlotPtr) == &inlineCaches[inlineCacheIndex]);
-                if (inlineCaches[tryInlineCacheIndex].invalidationListSlotPtr != null)
+                if (inlineCaches[tryInlineCacheIndex].invalidationListSlotPtr != nullptr)
                 {
                     Assert(*(inlineCaches[tryInlineCacheIndex].invalidationListSlotPtr) == &inlineCaches[tryInlineCacheIndex]);
                 }
@@ -453,7 +453,7 @@ namespace Js
                 {
                     inlineCaches[tryInlineCacheIndex].invalidationListSlotPtr = inlineCaches[inlineCacheIndex].invalidationListSlotPtr;
                     *(inlineCaches[tryInlineCacheIndex].invalidationListSlotPtr) = &inlineCaches[tryInlineCacheIndex];
-                    inlineCaches[inlineCacheIndex].invalidationListSlotPtr = null;
+                    inlineCaches[inlineCacheIndex].invalidationListSlotPtr = nullptr;
                 }
             }
             inlineCaches[tryInlineCacheIndex].u = inlineCaches[inlineCacheIndex].u;
@@ -482,8 +482,8 @@ namespace Js
             success = mapper(tryInlineCacheIndex);
             if (success)
             {
-                Assert(inlineCaches[inlineCacheIndex].invalidationListSlotPtr == null || *inlineCaches[inlineCacheIndex].invalidationListSlotPtr == &inlineCaches[inlineCacheIndex]);
-                Assert(inlineCaches[tryInlineCacheIndex].invalidationListSlotPtr == null || *inlineCaches[tryInlineCacheIndex].invalidationListSlotPtr == &inlineCaches[tryInlineCacheIndex]);
+                Assert(inlineCaches[inlineCacheIndex].invalidationListSlotPtr == nullptr || *inlineCaches[inlineCacheIndex].invalidationListSlotPtr == &inlineCaches[inlineCacheIndex]);
+                Assert(inlineCaches[tryInlineCacheIndex].invalidationListSlotPtr == nullptr || *inlineCaches[tryInlineCacheIndex].invalidationListSlotPtr == &inlineCaches[tryInlineCacheIndex]);
 
                 // Swap inline caches, including their invalidationListSlotPtrs.
                 InlineCache temp = inlineCaches[tryInlineCacheIndex];
@@ -491,11 +491,11 @@ namespace Js
                 inlineCaches[inlineCacheIndex] = temp;
 
                 // Fix up invalidationListSlotPtrs to point to their owners.
-                if (inlineCaches[inlineCacheIndex].invalidationListSlotPtr != null)
+                if (inlineCaches[inlineCacheIndex].invalidationListSlotPtr != nullptr)
                 {
                     *inlineCaches[inlineCacheIndex].invalidationListSlotPtr = &inlineCaches[inlineCacheIndex];
                 }
-                if (inlineCaches[tryInlineCacheIndex].invalidationListSlotPtr != null)
+                if (inlineCaches[tryInlineCacheIndex].invalidationListSlotPtr != nullptr)
                 {
                     *inlineCaches[tryInlineCacheIndex].invalidationListSlotPtr = &inlineCaches[tryInlineCacheIndex];
                 }

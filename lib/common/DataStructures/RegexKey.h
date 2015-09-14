@@ -14,7 +14,7 @@ namespace UnifiedRegex
         RegexFlags flags;
 
     public:
-        RegexKey() : source(null), length(0), flags(static_cast<RegexFlags>(0))
+        RegexKey() : source(nullptr), length(0), flags(static_cast<RegexFlags>(0))
         {
         }
 
@@ -30,7 +30,7 @@ namespace UnifiedRegex
             // Needed to support KeyValueEntry::Clear for dictionaries
             Assert(!nullValue);
 
-            source = null;
+            source = nullptr;
             length = 0;
             flags = static_cast<RegexFlags>(0);
             return *this;

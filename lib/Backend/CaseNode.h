@@ -13,7 +13,7 @@ private:
     IR::Opnd*           lowerBound;	//lower bound - used for integer cases
 
 public:
-    CaseNode(IR::BranchInstr* caseInstr, uint32 offset, uint32 targetOffset, IR::Opnd* lowerBound = null)
+    CaseNode(IR::BranchInstr* caseInstr, uint32 offset, uint32 targetOffset, IR::Opnd* lowerBound = nullptr)
         : caseInstr(caseInstr),
         offset(offset),
         targetOffset(targetOffset),

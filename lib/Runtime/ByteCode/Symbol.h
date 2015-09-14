@@ -52,7 +52,7 @@ public:
     Symbol(SymbolName const& name, ParseNode *decl,SymbolType symbolType) :
         name(name),
         decl(decl),
-        next(null),
+        next(nullptr),
         location(Js::Constants::NoRegister),
         needDeclaration(false),
         isBlockVar(false),
@@ -323,7 +323,7 @@ public:
     bool IsInSlot(FuncInfo *funcInfo, bool ensureSlotAlloc = false);
     bool NeedsSlotAlloc(FuncInfo *funcInfo);
 
-    static void SaveToPropIdArray(Symbol *sym, Js::PropertyIdArray *propIds, ByteCodeGenerator *byteCodeGenerator, Js::PropertyId *pFirstSlot = null);
+    static void SaveToPropIdArray(Symbol *sym, Js::PropertyIdArray *propIds, ByteCodeGenerator *byteCodeGenerator, Js::PropertyId *pFirstSlot = nullptr);
 
     Symbol * GetFuncScopeVarSym() const;
 

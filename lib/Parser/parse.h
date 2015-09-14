@@ -116,7 +116,7 @@ private:
     template <OpCode nop> static ParseNodePtr StaticAllocNode(ArenaAllocator * alloc)
     {
         ParseNodePtr pnode = (ParseNodePtr)alloc->Alloc(GetNodeSize<nop>());
-        Assert(pnode != null);
+        Assert(pnode != nullptr);
         return pnode;
     }
 

@@ -415,13 +415,13 @@ namespace Js
 
     void DynamicTypeHandler::TraceUseFixedProperty(PropertyRecord const * propertyRecord, Var * pProperty, bool result, LPCWSTR typeHandlerName, ScriptContext * requestContext)
     {
-        String fixedPropertyResultType = null;
+        String fixedPropertyResultType = nullptr;
         bool log = false;
 
         if (pProperty && *pProperty && ((Js::JavascriptFunction::Is(*pProperty) && (PHASE_VERBOSE_TRACE1(Js::FixedMethodsPhase) || PHASE_VERBOSE_TESTTRACE1(Js::FixedMethodsPhase))) ||
             ((PHASE_VERBOSE_TRACE1(Js::UseFixedDataPropsPhase) || PHASE_VERBOSE_TESTTRACE1(Js::UseFixedDataPropsPhase))) ))
         {
-            if(*pProperty == null)
+            if(*pProperty == nullptr)
             {
                 fixedPropertyResultType = L"null";
             }
@@ -459,7 +459,7 @@ namespace Js
         // Type handlers that store internal properties differently from normal properties
         // override this method to provide access to them.  Otherwise, by default, simply
         // defer to GetProperty()
-        return this->GetProperty(instance, originalInstance, propertyId, value, null, null);
+        return this->GetProperty(instance, originalInstance, propertyId, value, nullptr, nullptr);
     }
 
     BOOL DynamicTypeHandler::InitProperty(DynamicObject* instance, PropertyId propertyId, Var value, PropertyOperationFlags flags, PropertyValueInfo* info)
@@ -473,7 +473,7 @@ namespace Js
         // Type handlers that store internal properties differently from normal properties
         // override this method to provide access to them.  Otherwise, by default, simply
         // defer to SetProperty()
-        return this->SetProperty(instance, propertyId, value, flags, null);
+        return this->SetProperty(instance, propertyId, value, flags, nullptr);
     }
 
     //

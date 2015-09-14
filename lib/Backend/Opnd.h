@@ -548,13 +548,13 @@ public:
     {
         if (this->m_runtimePolymorphicInlineCache && (this->m_polyCacheUtil < PolymorphicInlineCacheUtilizationThreshold))
         {
-            this->m_runtimePolymorphicInlineCache = null;
+            this->m_runtimePolymorphicInlineCache = nullptr;
         }
     }
 
     bool HasObjTypeSpecFldInfo() const 
     { 
-        return this->objTypeSpecFldInfo != null;
+        return this->objTypeSpecFldInfo != nullptr;
     }
 
     void SetObjTypeSpecFldInfo(Js::ObjTypeSpecFldInfo *const objTypeSpecFldInfo)
@@ -1025,7 +1025,7 @@ public:
 
     bool HasFinalType() const
     {
-        return this->finalType != null;
+        return this->finalType != nullptr;
     }
 
     Js::Type * GetFinalType() const
@@ -1035,13 +1035,13 @@ public:
 
     void SetFinalType(Js::Type* type)
     {        
-        Assert(type != null);
+        Assert(type != nullptr);
         this->finalType = type;
     }
 
     void ClearFinalType()
     {
-        this->finalType = null;
+        this->finalType = nullptr;
     }
 
     BVSparse<JitArenaAllocator>* GetGuardedPropOps()
@@ -1051,7 +1051,7 @@ public:
 
     void EnsureGuardedPropOps(JitArenaAllocator* allocator)
     {
-        if (this->guardedPropOps == null)
+        if (this->guardedPropOps == nullptr)
         {
             this->guardedPropOps = JitAnew(allocator, BVSparse<JitArenaAllocator>, allocator);
         }
@@ -1059,13 +1059,13 @@ public:
 
     void SetGuardedPropOp(uint propOpId)
     {
-        Assert(this->guardedPropOps != null);
+        Assert(this->guardedPropOps != nullptr);
         this->guardedPropOps->Set(propOpId);
     }
 
     void AddGuardedPropOps(const BVSparse<JitArenaAllocator>* propOps)
     {
-        Assert(this->guardedPropOps != null);
+        Assert(this->guardedPropOps != nullptr);
         this->guardedPropOps->Or(propOps);
     }
 
@@ -1076,13 +1076,13 @@ public:
 
     void SetWriteGuards(BVSparse<JitArenaAllocator>* value)
     {
-        Assert(this->writeGuards == null);
+        Assert(this->writeGuards == nullptr);
         this->writeGuards = value;
     }
 
     void ClearWriteGuards()
     {
-        this->writeGuards = null;
+        this->writeGuards = nullptr;
     }
 
 #if DBG
@@ -1384,7 +1384,7 @@ public:
 #endif
 
 public:
-    IndirOpnd() : Opnd(), m_baseOpnd(null), m_indexOpnd(null), m_offset(0), m_scale(0), m_func(null), m_dontEncode(false)
+    IndirOpnd() : Opnd(), m_baseOpnd(nullptr), m_indexOpnd(nullptr), m_offset(0), m_scale(0), m_func(nullptr), m_dontEncode(false)
 #if DBG_DUMP || defined(ENABLE_IR_VIEWER)
         , m_desc(nullptr)
 #endif
@@ -1525,11 +1525,11 @@ private:
     bool wasInUse;
 
 public:
-    AutoReuseOpnd() : opnd(null), wasInUse(true)
+    AutoReuseOpnd() : opnd(nullptr), wasInUse(true)
     {
     }
 
-    AutoReuseOpnd(Opnd *const opnd, Func *const func, const bool autoDelete = true) : opnd(null)
+    AutoReuseOpnd(Opnd *const opnd, Func *const func, const bool autoDelete = true) : opnd(nullptr)
     {
         Initialize(opnd, func, autoDelete);
     }

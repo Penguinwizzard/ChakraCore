@@ -3,6 +3,7 @@
 //----------------------------------------------------------------------------
 
 #include "RuntimeByteCodePch.h"
+#include "ByteCode\AsmJsByteCodeWriter.h"
 namespace Js {
 
     template <>
@@ -54,7 +55,7 @@ namespace Js {
     template <LayoutSize layoutSize>
     __inline size_t ByteCodeWriter::Data::EncodeT(OpCodeAsmJs op, const void* rawData, int byteSize, ByteCodeWriter* writer, bool isPatching)
     {
-        AssertMsg((rawData != null) && (byteSize < 100), "Ensure valid data for opcode");
+        AssertMsg((rawData != nullptr) && (byteSize < 100), "Ensure valid data for opcode");
 
         size_t offset = EncodeT<layoutSize>(op, writer, isPatching);
         Write(rawData, byteSize);

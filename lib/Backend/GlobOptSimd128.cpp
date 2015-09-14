@@ -35,7 +35,7 @@ Value **pDstVal
             {
                 ValueType valueType = (*pSrc1Val)->GetValueInfo()->Type();
                 Assert(valueType.IsSimd128());
-                ToTypeSpecUse(instr, instr->GetSrc1(), this->currentBlock, *pSrc1Val, null, GetIRTypeFromValueType(valueType), GetBailOutKindFromValueType(valueType));
+                ToTypeSpecUse(instr, instr->GetSrc1(), this->currentBlock, *pSrc1Val, nullptr, GetIRTypeFromValueType(valueType), GetBailOutKindFromValueType(valueType));
 
                 return true;
             }
@@ -62,7 +62,7 @@ Value **pDstVal
                 return false;
             }
 
-            ToTypeSpecUse(instr, instr->GetSrc1(), this->currentBlock, *pSrc1Val, null, type, IR::BailOutSimd128F4Only /*not used for Ld_A*/);
+            ToTypeSpecUse(instr, instr->GetSrc1(), this->currentBlock, *pSrc1Val, nullptr, type, IR::BailOutSimd128F4Only /*not used for Ld_A*/);
             TypeSpecializeSimd128Dst(type, instr, *pSrc1Val, *pSrc1Val, pDstVal);
             return true;
         }
@@ -82,7 +82,7 @@ Value **pDstVal
             //ToVarUses(instr, instr->GetSrc1(), false, *pSrc1Val);
 
             // Type-spec src1 only based on dst type. Dst type is set by the inliner based on func signature.
-            ToTypeSpecUse(instr, instr->GetSrc1(), this->currentBlock, *pSrc1Val, null, GetIRTypeFromValueType(valueType), GetBailOutKindFromValueType(valueType), true /*lossy*/);
+            ToTypeSpecUse(instr, instr->GetSrc1(), this->currentBlock, *pSrc1Val, nullptr, GetIRTypeFromValueType(valueType), GetBailOutKindFromValueType(valueType), true /*lossy*/);
             ToVarRegOpnd(instr->GetDst()->AsRegOpnd(), this->currentBlock);
             return true;
         }
@@ -105,16 +105,16 @@ Value **pDstVal
         if (simdFuncSignature.argCount <= 2)
         {
             Assert(instr->GetSrc1());
-            ToTypeSpecUse(instr, instr->GetSrc1(), this->currentBlock, *pSrc1Val, null, GetIRTypeFromValueType(simdFuncSignature.args[0]), GetBailOutKindFromValueType(simdFuncSignature.args[0]));
+            ToTypeSpecUse(instr, instr->GetSrc1(), this->currentBlock, *pSrc1Val, nullptr, GetIRTypeFromValueType(simdFuncSignature.args[0]), GetBailOutKindFromValueType(simdFuncSignature.args[0]));
 
             if (instr->GetSrc2())
             {
-                ToTypeSpecUse(instr, instr->GetSrc2(), this->currentBlock, *pSrc2Val, null, GetIRTypeFromValueType(simdFuncSignature.args[1]), GetBailOutKindFromValueType(simdFuncSignature.args[1]));
+                ToTypeSpecUse(instr, instr->GetSrc2(), this->currentBlock, *pSrc2Val, nullptr, GetIRTypeFromValueType(simdFuncSignature.args[1]), GetBailOutKindFromValueType(simdFuncSignature.args[1]));
             }
         }
         if (instr->GetDst())
         {
-            TypeSpecializeSimd128Dst(GetIRTypeFromValueType(simdFuncSignature.returnType), instr, null, *pSrc1Val, pDstVal);
+            TypeSpecializeSimd128Dst(GetIRTypeFromValueType(simdFuncSignature.returnType), instr, nullptr, *pSrc1Val, pDstVal);
         }
         return true;
     }
@@ -148,7 +148,7 @@ Value **pDstVal
                 // All inlined SIMD ops have jitOptimizedReg srcs
                 Assert(this->byteCodeUses->IsEmpty());
                 JitAdelete(this->alloc, this->byteCodeUses);
-                this->byteCodeUses = null;
+                this->byteCodeUses = nullptr;
             }
             RemoveCodeAfterNoFallthroughInstr(bailoutInstr);
             return true; 
@@ -301,7 +301,7 @@ IR::Instr * GlobOpt::GetExtendedArg(IR::Instr *instr)
         else
         {
             // end of chain
-            return null; 
+            return nullptr; 
         }
     }
     else

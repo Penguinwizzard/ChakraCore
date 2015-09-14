@@ -16,7 +16,7 @@ namespace Js
         {
             wrapper->externalGuestArenaRef = recycler->RegisterExternalGuestArena(wrapper->GetAllocator());
             wrapper->recycler = recycler;
-            if (wrapper->externalGuestArenaRef == null)
+            if (wrapper->externalGuestArenaRef == nullptr)
             {
                 Js::Throw::OutOfMemory();
             }
@@ -26,7 +26,7 @@ namespace Js
 
     template <bool isGuestArena>
     TempArenaAllocatorWrapper<isGuestArena>::TempArenaAllocatorWrapper(__in LPCWSTR name, PageAllocator * pageAllocator, void (*outOfMemoryFunc)()) :
-        allocator(name, pageAllocator, outOfMemoryFunc), recycler(null), externalGuestArenaRef(null)
+        allocator(name, pageAllocator, outOfMemoryFunc), recycler(nullptr), externalGuestArenaRef(nullptr)
     {
     }
 

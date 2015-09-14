@@ -8,7 +8,7 @@ namespace Js
         : originalEntryPoint(entryPoint), attributes(attributes), functionBodyImpl(functionBodyImpl), functionId(functionId)
     {
 #if !DYNAMIC_INTERPRETER_THUNK
-        Assert(entryPoint != null);
+        Assert(entryPoint != nullptr);
 #endif
     }
 
@@ -38,7 +38,7 @@ namespace Js
     FunctionBody *
     FunctionInfo::GetFunctionBody() const
     {
-        Assert(functionBodyImpl == null || functionBodyImpl->IsFunctionBody());
+        Assert(functionBodyImpl == nullptr || functionBodyImpl->IsFunctionBody());
         return (FunctionBody *)functionBodyImpl;
     }
 }

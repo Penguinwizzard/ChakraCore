@@ -25,17 +25,15 @@ void JsrtContext::OnScriptLoad(Js::JavascriptFunction * scriptFunction, Js::Utf8
 JsrtContextCore::JsrtContextCore(JsrtRuntime * runtime) :
     JsrtContext(runtime)
 {
+    EnsureScriptContext();
     Link();
+    PinCurrentJsrtContext();
 }
 
 /* static */
 JsrtContextCore *JsrtContextCore::New(JsrtRuntime * runtime)
 {        
-    auto result = RecyclerNewFinalizedLeaf(runtime->GetThreadContext()->EnsureRecycler(), JsrtContextCore, runtime);
-
-    result->EnsureScriptContext();
-
-    return result;
+    return RecyclerNewFinalizedLeaf(runtime->GetThreadContext()->EnsureRecycler(), JsrtContextCore, runtime);
 }
 
 void JsrtContextCore::Dispose(bool isShutdown)

@@ -6,14 +6,14 @@
 
 namespace Js
 {
-    CharStringCache::CharStringCache() : charStringCache(null) { memset(charStringCacheA, 0, sizeof charStringCacheA); }
+    CharStringCache::CharStringCache() : charStringCache(nullptr) { memset(charStringCacheA, 0, sizeof charStringCacheA); }
 
     JavascriptString* CharStringCache::GetStringForCharA(char c)
     {
         AssertMsg(JavascriptString::IsASCII7BitChar(c), "GetStringForCharA must be called with ASCII 7bit chars only");
 
         PropertyString * str = charStringCacheA[c];
-        if (str == null)
+        if (str == nullptr)
         {
             PropertyRecord const * propertyRecord;
             wchar_t wc = c;
@@ -47,7 +47,7 @@ namespace Js
         ScriptContext * scriptContext = JavascriptLibrary::FromCharStringCache(this)->GetScriptContext();
         if (!scriptContext->IsClosed())
         {
-            if (charStringCache == null)
+            if (charStringCache == nullptr)
             {
                 Recycler * recycler = scriptContext->GetRecycler();
                 charStringCache = RecyclerNew(recycler, CharStringCacheMap, recycler, 17);

@@ -158,7 +158,7 @@ bool BackgroundParser::ParseBackgroundItem(Parser *parser, ParseNode *parseNode,
     ASSERT_THREAD();
 
     AutoPtr<BackgroundParseItem> workItemAutoPtr(this->NewBackgroundParseItem(parser, parseNode, isDeferred));
-    if ((BackgroundParseItem*) workItemAutoPtr == null)
+    if ((BackgroundParseItem*) workItemAutoPtr == nullptr)
     {
         // OOM, just skip this work item and return.
         // TODO: Raise an OOM parse-time exception.
@@ -196,7 +196,7 @@ void BackgroundParser::AfterWaitForJob(BackgroundParseItem *const item) const
 
 void BackgroundParser::AddToParseQueue(BackgroundParseItem *const item, bool prioritize, bool lock) 
 {
-    AutoOptionalCriticalSection autoLock(lock ? Processor()->GetCriticalSection() : null);
+    AutoOptionalCriticalSection autoLock(lock ? Processor()->GetCriticalSection() : nullptr);
     ++this->pendingBackgroundItems;
     Processor()->AddJob(item, prioritize);   // This one can throw (really unlikely though), OOM specifically.
     this->AddUnprocessedItem(item);

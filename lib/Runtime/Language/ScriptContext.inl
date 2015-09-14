@@ -115,7 +115,7 @@ namespace Js
     template <class TDelegate>
     FunctionBody* ScriptContext::FindFunction(TDelegate predicate)
     {
-        FunctionBody* functionBody = null;
+        FunctionBody* functionBody = nullptr;
 
         this->sourceList->MapUntil([&functionBody, &predicate] (int, RecyclerWeakReference<Js::Utf8SourceInfo>* sourceInfo) -> bool
         {
@@ -142,7 +142,7 @@ namespace Js
 #if DEBUG
         PropertyRecord const * name = this->GetPropertyName(propertyId);
 
-        if (name != null)
+        if (name != nullptr)
         {
             // Symbol properties are not numeric - description should not be used.
             if (name->IsSymbol())
@@ -201,7 +201,7 @@ namespace Js
 
     __inline SRCINFO *ScriptContext::AddHostSrcInfo(SRCINFO const *pSrcInfo)
     {
-        Assert(pSrcInfo != null);
+        Assert(pSrcInfo != nullptr);
 
         return RecyclerNewZ(this->GetRecycler(), SRCINFO, *pSrcInfo);
     }

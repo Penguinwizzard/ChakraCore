@@ -8,7 +8,7 @@
 #include "Exceptions\EvalDisabledException.h"
 
 #define PARAM_NOT_NULL(p) \
-    if (p == NULL) \
+    if (p == nullptr) \
     { \
         return JsErrorNullArgument; \
     }
@@ -160,7 +160,7 @@ JsErrorCode ContextAPIWrapper(Fn fn)
     CATCH_JAVASCRIPT_EXCEPTION_OBJECT(scriptContext->GetThreadContext())
     catch (Js::ScriptAbortException)
     {
-        Assert(scriptContext->GetThreadContext()->GetRecordedException() == NULL);
+        Assert(scriptContext->GetThreadContext()->GetRecordedException() == nullptr);
         scriptContext->GetThreadContext()->SetRecordedException(scriptContext->GetThreadContext()->GetPendingTerminatedErrorObject());
         return JsErrorScriptTerminated;
     }
@@ -210,7 +210,7 @@ JsErrorCode ContextAPINoScriptWrapper(Fn fn, bool allowInObjectBeforeCollectCall
 
     catch (Js::ScriptAbortException)
     {
-        Assert(scriptContext->GetThreadContext()->GetRecordedException() == NULL);
+        Assert(scriptContext->GetThreadContext()->GetRecordedException() == nullptr);
         scriptContext->GetThreadContext()->SetRecordedException(scriptContext->GetThreadContext()->GetPendingTerminatedErrorObject());
         return JsErrorScriptTerminated;
     }

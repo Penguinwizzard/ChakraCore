@@ -21,11 +21,11 @@ struct XDataAllocation : public SecondaryAllocation
 
     bool IsFreed() const
     {
-        return address == null;
+        return address == nullptr;
     }
     void Free()
     {
-        address = null;
+        address = nullptr;
     }
     // ---- Data members ---- //
     ushort pdataIndex;

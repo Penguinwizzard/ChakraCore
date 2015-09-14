@@ -62,17 +62,17 @@ public:
     IRBuilder(Func * func)
         : m_func(func)
         , m_argsOnStack(0)
-        , m_loopBodyRetIPSym(null)
-        , m_ldSlots(null)
-        , m_loopCounterSym(null)
+        , m_loopBodyRetIPSym(nullptr)
+        , m_ldSlots(nullptr)
+        , m_loopCounterSym(nullptr)
         , callTreeHasSomeProfileInfo(false)
-        , m_saveLoopImplicitCallFlags(null)
+        , m_saveLoopImplicitCallFlags(nullptr)
         , catchOffsetStack(nullptr)
         , m_switchAdapter(this)
         , m_switchBuilder(&m_switchAdapter)
 #if DBG
         , m_callsOnStack(0)
-        , m_usedAsTemp(null)
+        , m_usedAsTemp(nullptr)
 #endif
 #ifdef BAILOUT_INJECTION
         , seenLdStackArgPtr(false)
@@ -80,7 +80,7 @@ public:
         , seenProfiledBeginSwitch(false)
 #endif
 #ifdef BYTECODE_BRANCH_ISLAND
-        , longBranchMap(null)
+        , longBranchMap(nullptr)
 #endif
     {
         auto loopCount = func->GetJnFunction()->GetLoopCount();
@@ -270,7 +270,7 @@ private:
     IR::Instr *         CreateLoopBodyReturnIPInstr(uint targetOffset, uint offset);
 
 
-    void                InsertBailOutForDebugger(uint offset, IR::BailOutKind kind, IR::Instr* insertBeforeInstr = NULL);
+    void                InsertBailOutForDebugger(uint offset, IR::BailOutKind kind, IR::Instr* insertBeforeInstr = nullptr);
     void                InsertBailOnNoProfile(uint offset);
     void                InsertBailOnNoProfile(IR::Instr *const insertBeforeInstr);
     bool                DoBailOnNoProfile();

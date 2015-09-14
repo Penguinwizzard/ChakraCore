@@ -530,42 +530,6 @@ namespace Js
     template<typename T>
     inline BOOL JavascriptArray::DirectGetItemAt(uint32 index, T* outVal)
     {
-#ifdef ARRLOG
-        ArrLogRec* rec = 0;
-        if (Js::Configuration::Global.flags.ArrayLog)
-        {
-            totalGet++;
-            UIntHashTable<ArrLogRec*>* logTable = this->GetScriptContext()->logTable;
-
-            if (!logTable->TryGetValue((unsigned int)this,&rec)) {
-                auto alloc = this->GetScriptContext()->MiscAllocator();
-                rec=AnewStructZ(alloc,ArrLogRec);
-                rec->accessCounts=Anew(alloc,UIntHashTable<unsigned int>,alloc);
-                rec->maxDex=index;
-                rec->minDex=index;
-                rec->totalSetCount=0;
-                rec->totalGetCount=0;
-                rec->setCost=0;
-                rec->setSegment=0;
-                rec->getCost=0;
-                rec->maxlength=0;
-                logTable->Add((unsigned int)this,rec);
-            }
-            if (index>rec->maxDex)
-                rec->maxDex=index;
-            if (index<rec->minDex)
-                rec->minDex=index;
-            rec->totalGetCount++;
-            uint32 count;
-            if (!rec->accessCounts->TryGetValue(index,&count)) {
-                rec->accessCounts->Add(index,1);
-            }
-            else {
-                count++;
-                rec->accessCounts->ReplaceValue(index,count);
-            }
-        }
-#endif
 #ifdef VALIDATE_ARRAY
         ValidateArray();
 #endif
@@ -577,7 +541,7 @@ namespace Js
 
 #ifdef VALIDATE_ARRAY
         T v_btree = NULL;
-        SparseArraySegmentBase* seg_btree = NULL;
+        SparseArraySegmentBase* seg_btree = nullptr;
         bool first_pass = true;
 #endif
 
@@ -601,15 +565,9 @@ SECOND_PASS:
             nextSeg = this->GetBeginLookupSegment(index, false);
         }
         uint probeCost = 0;
-        while (nextSeg != null && nextSeg->left <= index)
+        while (nextSeg != nullptr && nextSeg->left <= index)
         {
             uint32 limit =  nextSeg->left + nextSeg->length;
-#ifdef ARRLOG
-            if (Js::Configuration::Global.flags.ArrayLog)
-            {
-                rec->getCost++;
-            }
-#endif
             if (index < limit)
             {
                 T* v = &((SparseArraySegment<T>*)nextSeg)->elements[index - nextSeg->left];
@@ -665,13 +623,13 @@ SECOND_PASS:
         if (segmentMap && first_pass)
         {
             v_btree = NULL;
-            seg_btree= NULL;
+            seg_btree= nullptr;
             first_pass = false;
             goto SECOND_PASS;
         }
         else if (segmentMap && !first_pass)
         {
-            Assert(v_btree == NULL && seg_btree == NULL);
+            Assert(v_btree == NULL && seg_btree == nullptr);
         }
 #endif
 
@@ -698,12 +656,12 @@ SECOND_PASS:
         if (this->length)
         {
             allocLength = this->length <= MaxInitialDenseLength ? this->length : SparseArraySegmentBase::HEAD_CHUNK_SIZE;
-            this->head = SparseArraySegment<T>::AllocateSegment(recycler, 0, 0, allocLength, NULL); 
+            this->head = SparseArraySegment<T>::AllocateSegment(recycler, 0, 0, allocLength, nullptr);
         }
         else
         {
             allocLength = SparseArraySegmentBase::HEAD_CHUNK_SIZE;
-            this->head = SparseArraySegment<T>::AllocateSegment(recycler, 0, 0, allocLength, NULL); 
+            this->head = SparseArraySegment<T>::AllocateSegment(recycler, 0, 0, allocLength, nullptr);
         }
         this->SetLastUsedSegment(this->head);
         SetHasNoMissingValues();
@@ -1210,42 +1168,6 @@ SECOND_PASS:
     void JavascriptArray::DirectSetItem_Full(uint32 itemIndex, T newValue)
     {
         DebugOnly(VerifyNotNeedMarshal(newValue));
-#ifdef ARRLOG
-        ArrLogRec* rec=0;
-        if (Js::Configuration::Global.flags.ArrayLog)
-        {
-            totalSet++;
-            UIntHashTable<ArrLogRec*>* logTable = this->GetScriptContext()->logTable;
-            if (!logTable->TryGetValue((unsigned int)this,&rec)) {
-                auto alloc = this->GetScriptContext()->MiscAllocator();
-                rec=AnewStruct(alloc,ArrLogRec);
-                rec->accessCounts=Anew(alloc,UIntHashTable<unsigned int>,alloc);
-                rec->maxDex=itemIndex;
-                rec->minDex=itemIndex;
-                rec->totalSetCount=0;
-                rec->totalGetCount=0;
-                rec->setCost=0;
-                rec->setSegment=0;
-                rec->getCost=0;
-                rec->maxlength=0;
-                logTable->Add((unsigned int)this,rec);
-            }
-            if (itemIndex>rec->maxDex)
-                rec->maxDex=itemIndex;
-            if (itemIndex<rec->minDex)
-                rec->minDex=itemIndex;
-            rec->totalSetCount++;
-            uint32 count;
-            if (!rec->accessCounts->TryGetValue(itemIndex,&count)) {
-                rec->accessCounts->Add(itemIndex,1);
-            }
-            else {
-                count++;
-                rec->accessCounts->ReplaceValue(itemIndex,count);
-            }
-        }
-#endif
-
         this->EnsureHead<T>();
 
 #ifdef VALIDATE_ARRAY
@@ -1274,18 +1196,18 @@ SECOND_PASS:
         {
             current = (SparseArraySegment<T>*)head;
         }
-        SparseArraySegmentBase* prev = NULL;
+        SparseArraySegmentBase* prev = nullptr;
 
 #ifdef VALIDATE_ARRAY
-        SparseArraySegmentBase* current_btree = NULL;
-        SparseArraySegmentBase* prev_btree = NULL;
+        SparseArraySegmentBase* current_btree = nullptr;
+        SparseArraySegmentBase* prev_btree = nullptr;
         bool first_pass = true;
 #endif
 
         SegmentBTreeRoot * segmentMap = GetSegmentMap();
         if (segmentMap)
         {
-            SparseArraySegmentBase* prevSeg = NULL;
+            SparseArraySegmentBase* prevSeg = nullptr;
             SparseArraySegmentBase* currentBase = current;
             segmentMap->Find(itemIndex, prevSeg, currentBase);
             current = (SparseArraySegment<T>*)currentBase;
@@ -1298,7 +1220,7 @@ SECOND_PASS:
                 if (noExactMatch && extendPrevSeg)
                 {
                     current = (SparseArraySegment<T>*)head;
-                    prev = NULL;
+                    prev = nullptr;
                     if (prevSeg != head)
                     {
                         // Since we are going to extend prevSeg we need the
@@ -1332,20 +1254,14 @@ SECOND_PASS:
                 {
                     current = (SparseArraySegment<T>*)head;
                 }
-                prev = NULL;
+                prev = nullptr;
             }
 #endif
         }
 
         uint probeCost = 0;
-        while(current != null)
+        while(current != nullptr)
         {
-#ifdef ARRLOG
-            if (Js::Configuration::Global.flags.ArrayLog)
-            {
-                rec->setCost++;
-            }
-#endif
             uint32 offset = itemIndex - current->left;
             if (itemIndex < current->left)
             {
@@ -1353,7 +1269,7 @@ SECOND_PASS:
             }
             else if (offset <= current->size)
             {
-                if ((null == current->next) || (itemIndex < current->next->left))
+                if ((nullptr == current->next) || (itemIndex < current->next->left))
                 {
                     break;
                 }
@@ -1369,7 +1285,7 @@ SECOND_PASS:
                     // Build a SegmentMap
                     segmentMap = BuildSegmentMap();
 
-                    SparseArraySegmentBase* prevSeg = NULL;
+                    SparseArraySegmentBase* prevSeg = nullptr;
                     SparseArraySegmentBase* currentBase = current;
                     segmentMap->Find(itemIndex, prevSeg, currentBase);
                     current = (SparseArraySegment<T>*)currentBase;
@@ -1382,7 +1298,7 @@ SECOND_PASS:
                         if (noExactMatch && extendPrevSeg)
                         {
                             current = (SparseArraySegment<T>*)head;
-                            prev = NULL;
+                            prev = nullptr;
                             if (prevSeg != head)
                             {
                                 // Since we are going to extend prevSeg we need the
@@ -1423,7 +1339,7 @@ SECOND_PASS:
 #endif
 
 
-        if (current != null)
+        if (current != nullptr)
         {
             uint32 offset = itemIndex - current->left;
             if ((itemIndex >= current->left) && (offset < current->size))
@@ -1460,13 +1376,6 @@ SECOND_PASS:
                 TryAddToSegmentMap(recycler, newSeg);
 
                 Assert(current != head);
-
-#ifdef ARRLOG
-                if (Js::Configuration::Global.flags.ArrayLog)
-                {
-                    rec->setSegment++;
-                }
-#endif
             }
             else 
             {
@@ -1476,7 +1385,7 @@ SECOND_PASS:
                 SparseArraySegment<T>* next = (SparseArraySegment<T>*)current->next;       
 
                 Assert(segmentMap == GetSegmentMap());
-                if (!segmentMap && next != null && (itemIndex + 1) == next->left)
+                if (!segmentMap && next != nullptr && (itemIndex + 1) == next->left)
                 {
                     // Don't merge segments if we are using a segmentMap
 
@@ -1555,7 +1464,7 @@ SECOND_PASS:
             else
             {
                 //itemIndex is greater than the (left + size) of last segment in the linked list
-                current = SparseArraySegment<T>::AllocateSegment(recycler, itemIndex, 1, (SparseArraySegment<T> *)null); 
+                current = SparseArraySegment<T>::AllocateSegment(recycler, itemIndex, 1, (SparseArraySegment<T> *)nullptr); 
                 current->SetElement(recycler, itemIndex, newValue);
                 LinkSegments((SparseArraySegment<T>*)prev, current);
                 TryAddToSegmentMap(recycler, current);
@@ -1567,13 +1476,6 @@ SECOND_PASS:
                     SetHasNoMissingValues();
                 }
             }
-
-#ifdef ARRLOG
-            if (Js::Configuration::Global.flags.ArrayLog)
-            {
-                rec->setSegment++;
-            }
-#endif
         }
 
         this->SetLastUsedSegment(current);

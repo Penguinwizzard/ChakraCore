@@ -123,7 +123,7 @@ private:
 public:
     PrologEncoder(ArenaAllocator *alloc)
         : alloc(alloc),
-          pdata(null),
+          pdata(nullptr),
           requiredUnwindCodeNodeCount(0),
           currentUnwindCodeNodeIndex(0),
           currentInstrOffset(0)

@@ -11,8 +11,8 @@ namespace Js {
         m_byteCodeCount = 0;
         m_byteCodeWithoutLDACount = 0;
         m_byteCodeInLoopCount = 0;
-        m_functionWrite = null;
-        m_pMatchingNode = null;
+        m_functionWrite = nullptr;
+        m_pMatchingNode = nullptr;
         m_matchingNodeRefCount = 0;
         m_tmpRegCount = 0;
         DebugOnly(isInitialized = false);
@@ -63,9 +63,9 @@ namespace Js {
     void ByteCodeWriter::Begin(ByteCodeGenerator* byteCodeGenerator, FunctionBody* functionWrite, ArenaAllocator* alloc, bool doJitLoopBodies, bool hasLoop)
     {
         Assert(!isInUse);
-        AssertMsg(m_functionWrite == null, "Cannot nest Begin() calls");
-        AssertMsg(functionWrite != null, "Must have valid function to write");
-        AssertMsg(functionWrite->GetByteCode() == null, "Function should not alread have a byte-code body");
+        AssertMsg(m_functionWrite == nullptr, "Cannot nest Begin() calls");
+        AssertMsg(functionWrite != nullptr, "Must have valid function to write");
+        AssertMsg(functionWrite->GetByteCode() == nullptr, "Function should not alread have a byte-code body");
         AssertMsg(functionWrite->GetLocalsCount() > 0, "Must always have R0 for return-value");
 
         DebugOnly(isInUse = true);
@@ -272,14 +272,14 @@ namespace Js {
         rootObjectStoreInlineCacheOffsets.Clear(m_labelOffsets->GetAllocator());
         rootObjectLoadMethodInlineCacheOffsets.Clear(m_labelOffsets->GetAllocator());
         callRegToLdFldCacheIndexMap->ResetNoDelete();
-        m_pMatchingNode = null;
+        m_pMatchingNode = nullptr;
         m_matchingNodeRefCount = 0;
-        m_functionWrite = null;
+        m_functionWrite = nullptr;
         m_byteCodeCount = 0;
         m_byteCodeWithoutLDACount = 0;
         m_byteCodeInLoopCount = 0;
         m_loopNest = 0;
-        m_currentDebuggerScope = null;
+        m_currentDebuggerScope = nullptr;
     }
 
     inline Js::RegSlot ByteCodeWriter::ConsumeReg(Js::RegSlot reg)
@@ -291,7 +291,7 @@ namespace Js {
 
     inline void ByteCodeWriter::CheckOpen()
     {
-        AssertMsg(m_functionWrite != null, "Must Begin() a function to write byte-code into");
+        AssertMsg(m_functionWrite != nullptr, "Must Begin() a function to write byte-code into");
     }
 
     inline void ByteCodeWriter::CheckOp(OpCode op, OpLayoutType layoutType)
@@ -2448,7 +2448,7 @@ StoreCommon:
                 m_functionWrite->RecordStatementMap(spanIter, &currentStatement);
             }
         }
-        m_pMatchingNode = NULL;
+        m_pMatchingNode = nullptr;
     }
 
     void ByteCodeWriter::StartSubexpression(ParseNode* node)
@@ -2508,7 +2508,7 @@ StoreCommon:
         Assert(m_currentDebuggerScope);
 
         OUTPUT_VERBOSE_TRACE(Js::DebuggerPhase, L"PopDebuggerScope() - Popped scope 0x%p of type %d.\n", m_currentDebuggerScope, m_currentDebuggerScope->scopeType);
-        if (m_currentDebuggerScope != null)
+        if (m_currentDebuggerScope != nullptr)
         {
             m_currentDebuggerScope = m_currentDebuggerScope->GetParentScope();
         }
@@ -2707,7 +2707,7 @@ StoreCommon:
         //
 
         tempAllocator = tmpAlloc;
-        AssertMsg(head == NULL, "Missing dispose?");
+        AssertMsg(head == nullptr, "Missing dispose?");
         currentOffset = 0;
         head = Anew(tempAllocator, DataChunk, tempAllocator, initSize);
         current = head;
@@ -2736,16 +2736,16 @@ StoreCommon:
     /// Copies its contents to a final contiguous section of memory.
     void ByteCodeWriter::Data::Copy(Recycler* alloc, ByteBlock ** finalBlock)
     {
-        AssertMsg(finalBlock != null, "Must have valid storage");
+        AssertMsg(finalBlock != nullptr, "Must have valid storage");
 
         size_t cbFinalData = GetCurrentOffset();
         if (cbFinalData == 0)
         {
-            *finalBlock = null;
+            *finalBlock = nullptr;
         }
         else
         {
-            ByteBlock* finalByteCodeBlock = ByteBlock::New(alloc, /*intialContent*/NULL, cbFinalData);
+            ByteBlock* finalByteCodeBlock = ByteBlock::New(alloc, /*intialContent*/nullptr, cbFinalData);
 
             DataChunk* currentChunk = head;
             size_t bytesLeftToCopy = cbFinalData;
@@ -2835,7 +2835,7 @@ StoreCommon:
     template <LayoutSize layoutSize>
     __inline size_t ByteCodeWriter::Data::EncodeT(OpCode op, const void* rawData, int byteSize, ByteCodeWriter* writer)
     {
-        AssertMsg((rawData != null) && (byteSize < 100), "Ensure valid data for opcode");
+        AssertMsg((rawData != nullptr) && (byteSize < 100), "Ensure valid data for opcode");
 
         size_t offset = EncodeT<layoutSize>(op, writer);
         Write(rawData, byteSize);
@@ -2844,7 +2844,7 @@ StoreCommon:
 
     __inline size_t ByteCodeWriter::Data::Encode(const void* rawData, int byteSize)
     {
-        AssertMsg(rawData != null, "Ensure valid data for opcode");
+        AssertMsg(rawData != nullptr, "Ensure valid data for opcode");
         return Write(rawData, byteSize);
     }
 
@@ -2902,7 +2902,7 @@ StoreCommon:
 
     void ByteCodeWriter::Data::AddChunk(size_t byteSize)
     {
-        AssertMsg(current->nextChunk == NULL, "Do we really need to grow?");
+        AssertMsg(current->nextChunk == nullptr, "Do we really need to grow?");
 
         // For some data elements i.e. bytecode we have a good initial size and
         // therefore, we use a conservative growth strategy - and grow by a fixed size.

@@ -7,18 +7,18 @@
 namespace Js
 { 
     RootObjectInlineCache::RootObjectInlineCache(InlineCacheAllocator * allocator):
-        inlineCache(null), refCount(1)
+        inlineCache(nullptr), refCount(1)
     {
         inlineCache = AllocatorNewZ(InlineCacheAllocator, 
             allocator, Js::InlineCache);
     }   
 
     RootObjectBase::RootObjectBase(DynamicType * type) : 
-        DynamicObject(type), hostObject(null), loadInlineCacheMap(null), loadMethodInlineCacheMap(null), storeInlineCacheMap(null)
+        DynamicObject(type), hostObject(nullptr), loadInlineCacheMap(nullptr), loadMethodInlineCacheMap(nullptr), storeInlineCacheMap(nullptr)
     {}
 
     RootObjectBase::RootObjectBase(DynamicType * type, ScriptContext* scriptContext) :
-        DynamicObject(type, scriptContext), hostObject(null), loadInlineCacheMap(null), loadMethodInlineCacheMap(null), storeInlineCacheMap(null)
+        DynamicObject(type, scriptContext), hostObject(nullptr), loadInlineCacheMap(nullptr), loadMethodInlineCacheMap(nullptr), storeInlineCacheMap(nullptr)
     {}
 
     bool RootObjectBase::Is(Var var)
@@ -39,13 +39,13 @@ namespace Js
     }
     HostObjectBase * RootObjectBase::GetHostObject() const
     {
-        Assert(hostObject == null || Js::JavascriptOperators::GetTypeId(hostObject) == TypeIds_HostObject); 
+        Assert(hostObject == nullptr || Js::JavascriptOperators::GetTypeId(hostObject) == TypeIds_HostObject);
         return this->hostObject;
   
     }
     void RootObjectBase::SetHostObject(HostObjectBase * hostObject)
     {
-        Assert(hostObject == NULL || Js::JavascriptOperators::GetTypeId(hostObject) == TypeIds_HostObject);
+        Assert(hostObject == nullptr || Js::JavascriptOperators::GetTypeId(hostObject) == TypeIds_HostObject);
         this->hostObject = hostObject;
     }
 
@@ -62,7 +62,7 @@ namespace Js
         RootObjectInlineCacheMap * inlineCacheMap = isStore ? storeInlineCacheMap :
             isLoadMethod ? loadMethodInlineCacheMap : loadInlineCacheMap;
         Js::RootObjectInlineCache * rootObjectInlineCache;
-        if (inlineCacheMap == null)
+        if (inlineCacheMap == nullptr)
         {
             Recycler * recycler = this->GetLibrary()->GetRecycler();
             inlineCacheMap = RecyclerNew(recycler, RootObjectInlineCacheMap, recycler);

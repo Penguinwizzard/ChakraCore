@@ -9,7 +9,7 @@ extern "C" void *amd64_CallWithFakeFrame(void *target,
                                          void *frame,
                                          size_t spillSize,
                                          size_t argsSize,
-                                         void *arg0 = null) throw(...);
+                                         void *arg0 = nullptr) throw(...);
 #elif defined(_M_ARM)
 extern "C" void *arm_CallEhFrame(void *target, void *framePtr, void *localsPtr, size_t argsSize) throw(...);
 extern "C" void *arm_CallCatch(void *target, void *framePtr, void *localsPtr, size_t argsSize, void *catchObj) throw(...);

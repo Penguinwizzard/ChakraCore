@@ -31,8 +31,8 @@ public:
     JsFunctionCodeGen * NewFunctionCodeGen(Js::FunctionBody *functionBody, Js::EntryPointInfo* info);
     JsLoopBodyCodeGen * NewLoopBodyCodeGen(Js::FunctionBody *functionBody, Js::EntryPointInfo* info);
 
-    void GenerateFunction(Js::FunctionBody * fn, Js::ScriptFunction * function = NULL);    
-    void GenerateLoopBody(Js::FunctionBody * functionBody, Js::LoopHeader * loopHeader, Js::EntryPointInfo* info = null, uint localCount = 0, Js::Var localSlots[] = NULL);
+    void GenerateFunction(Js::FunctionBody * fn, Js::ScriptFunction * function = nullptr);
+    void GenerateLoopBody(Js::FunctionBody * functionBody, Js::LoopHeader * loopHeader, Js::EntryPointInfo* info = nullptr, uint localCount = 0, Js::Var localSlots[] = nullptr);
     static bool IsValidVar(const Js::Var var, Recycler *const recycler);
 
 #ifdef ENABLE_PREJIT
@@ -65,7 +65,7 @@ private:
     CodeGenWorkItem *GetJob(Js::EntryPointInfo *const entryPoint) const;     
     bool WasAddedToJobProcessor(JsUtil::Job *const job) const;
     bool ShouldProcessInForeground(const bool willWaitForJob, const unsigned int numJobsInQueue) const;
-    void Prioritize(JsUtil::Job *const job, const bool forceAddJobToProcessor = false, void* function = null);
+    void Prioritize(JsUtil::Job *const job, const bool forceAddJobToProcessor = false, void* function = nullptr);
     void PrioritizedButNotYetProcessed(JsUtil::Job *const job);
     void BeforeWaitForJob(Js::EntryPointInfo *const entryPoint) const;     
     void AfterWaitForJob(Js::EntryPointInfo *const entryPoint) const;
@@ -73,7 +73,7 @@ private:
     virtual bool Process(JsUtil::Job *const job, JsUtil::ParallelThreadData *threadData) override;
     virtual void JobProcessed(JsUtil::Job *const job, const bool succeeded) override;
     JsUtil::Job *GetJobToProcessProactively();
-    void AddToJitQueue(CodeGenWorkItem *const codeGenWorkItem, bool prioritize, bool lock, void* function = null);
+    void AddToJitQueue(CodeGenWorkItem *const codeGenWorkItem, bool prioritize, bool lock, void* function = nullptr);
     void RemoveProactiveJobs();
     typedef SListCounted<Js::ObjTypeSpecFldInfo*, ArenaAllocator> ObjTypeSpecFldInfoList;
 
@@ -89,7 +89,7 @@ private:
         Js::JavascriptFunction* function = nullptr,
         bool isJitTimeDataComputed = false,
         uint32 recursiveInlineDepth = 0);
-    Js::CodeGenRecyclableData *GatherCodeGenData(Js::FunctionBody *const topFunctionBody, Js::FunctionBody *const functionBody, Js::EntryPointInfo *const entryPoint, CodeGenWorkItem* workItem, void* function = null);
+    Js::CodeGenRecyclableData *GatherCodeGenData(Js::FunctionBody *const topFunctionBody, Js::FunctionBody *const functionBody, Js::EntryPointInfo *const entryPoint, CodeGenWorkItem* workItem, void* function = nullptr);
 
 public:
     void UpdateQueueForDebugMode();
@@ -129,7 +129,7 @@ private:
 
     CodeGenAllocators *EnsureForegroundAllocators(PageAllocator * pageAllocator)
     {
-        if (this->foregroundAllocators == null)
+        if (this->foregroundAllocators == nullptr)
         {
             this->foregroundAllocators = CreateAllocators(pageAllocator);
 

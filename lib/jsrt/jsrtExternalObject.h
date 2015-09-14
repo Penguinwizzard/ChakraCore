@@ -4,6 +4,7 @@
 
 #pragma once
 
+#define _JSRT_
 #include "chakrart.h"
 
 #define BEGIN_INTERCEPTOR(scriptContext) \

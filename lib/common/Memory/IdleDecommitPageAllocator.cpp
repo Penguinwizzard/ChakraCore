@@ -238,7 +238,7 @@ IdleDecommitPageAllocator::Prime(uint primePageCount)
     while (this->freePageCount < primePageCount)
     {
         PageSegment * segment = AddPageSegment(emptySegments);
-        if (segment == null)
+        if (segment == nullptr)
         {
             return;
         }

@@ -250,6 +250,7 @@ void ConfigParser::ParseRegistryKey(HKEY hk, CmdLineArgsParser &parser)
         }
     }
 
+#ifdef ENABLE_PROJECTION
     // FailFastIfDisconnectedDelegate
     // This setting allows enabling fail fast if the delegate invoked is disconnected
     //     0 - Default return the error RPC_E_DISCONNECTED if disconnected delegate is invoked
@@ -263,6 +264,7 @@ void ConfigParser::ParseRegistryKey(HKEY hk, CmdLineArgsParser &parser)
             Js::Configuration::Global.flags.FailFastIfDisconnectedDelegate = true;
         }
     }
+#endif
 
     // ES6 feature control
     // This setting allows enabling\disabling es6 features

@@ -4,7 +4,7 @@
 
 
 #if DBG
-typedef SimpleHashTable<INT_PTR, LPCSTR, ArenaAllocator, DefaultComparer, false, PowerOf2Policy> VtableHashMap;
+typedef JsUtil::BaseDictionary<INT_PTR, LPCSTR, ArenaAllocator> VtableHashMap;
 class VirtualTableRegistry
 {
 public:

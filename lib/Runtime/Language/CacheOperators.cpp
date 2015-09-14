@@ -4,6 +4,9 @@
 
 #include "RuntimeLanguagePch.h"
 
+#if DBG_DUMP
+#include "Language\JavascriptStackWalker.h"
+#endif
 namespace Js
 {
     void CacheOperators::CachePropertyRead(
@@ -158,7 +161,7 @@ namespace Js
         PropertyValueInfo* info,
         ScriptContext * requestContext)
     {
-        Assert(typeWithoutProperty != null);
+        Assert(typeWithoutProperty != nullptr);
 
         if (!CacheOperators::CanCachePropertyWrite(info, object, requestContext))
         {
@@ -264,7 +267,7 @@ namespace Js
             }
             else
             {
-                typeWithoutProperty = null;
+                typeWithoutProperty = nullptr;
                 requiredAuxSlotCapacity = 0;
             }
 

@@ -49,12 +49,12 @@ GlobOpt::CaptureValues(BasicBlock *block, BailOutInfo * bailOutInfo)
         Value* value = bucket.element;
         ValueInfo * valueInfo = value->GetValueInfo();
 
-        if (valueInfo->GetSymStore() == null && !valueInfo->HasIntConstantValue())
+        if (valueInfo->GetSymStore() == nullptr && !valueInfo->HasIntConstantValue())
         {
             continue;
         }
         Sym * sym = bucket.value;
-        if (sym == null || !sym->IsStackSym() || !sym->AsStackSym()->HasByteCodeRegSlot())
+        if (sym == nullptr || !sym->IsStackSym() || !sym->AsStackSym()->HasByteCodeRegSlot())
         {
             continue;
         }
@@ -69,7 +69,7 @@ GlobOpt::CaptureArguments(BasicBlock *block, BailOutInfo * bailOutInfo, JitArena
     FOREACH_BITSET_IN_SPARSEBV(id, this->blockData.argObjSyms)
     {
         StackSym * stackSym = this->func->m_symTable->FindStackSym(id);
-        Assert(stackSym != null);
+        Assert(stackSym != nullptr);
         if (!stackSym->HasByteCodeRegSlot())
         {
             continue;
@@ -184,7 +184,7 @@ GlobOpt::TrackByteCodeSymUsed(StackSym * sym, BVSparse<JitArenaAllocator> * inst
         if (sym->IsTypeSpec())
         {
             // It has to have a var version for byte code regs
-            sym = sym->GetVarEquivSym(null);
+            sym = sym->GetVarEquivSym(nullptr);
         }
         instrByteCodeStackSymUsed->Set(sym->m_id);
     }
@@ -259,7 +259,7 @@ GlobOpt::TrackCalls(IR::Instr * instr)
         Assert(instr->GetDst()->IsRegOpnd());
         Assert(instr->GetDst()->AsRegOpnd()->m_sym->m_isSingleDef);
 
-        if (this->blockData.callSequence == null)
+        if (this->blockData.callSequence == nullptr)
         {
             this->blockData.callSequence = JitAnew(this->alloc, SListBase<IR::Opnd *>);
             this->currentBlock->globOptData.callSequence = this->blockData.callSequence;
@@ -572,23 +572,23 @@ void GlobOpt::RecordInlineeFrameInfo(IR::Instr* inlineeEnd)
                 if (frameInfo->intSyms->TestEmpty() && frameInfo->intSyms->Test(argSym->m_id))
                 {
                     // Var version of the sym is not live, use the int32 version
-                    argSym = argSym->GetInt32EquivSym(null);
+                    argSym = argSym->GetInt32EquivSym(nullptr);
                     Assert(argSym);
                 }
                 else if (frameInfo->floatSyms->TestEmpty() && frameInfo->floatSyms->Test(argSym->m_id))
                 {
                     // Var/int32 version of the sym is not live, use the float64 version
-                    argSym = argSym->GetFloat64EquivSym(null);
+                    argSym = argSym->GetFloat64EquivSym(nullptr);
                     Assert(argSym);
                 }
                 // SIMD_JS
                 else if (frameInfo->simd128F4Syms->TestEmpty() && frameInfo->simd128F4Syms->Test(argSym->m_id))
                 {
-                    argSym = argSym->GetSimd128F4EquivSym(null);
+                    argSym = argSym->GetSimd128F4EquivSym(nullptr);
                 }
                 else if (frameInfo->simd128I4Syms->TestEmpty() && frameInfo->simd128I4Syms->Test(argSym->m_id))
                 {
-                    argSym = argSym->GetSimd128I4EquivSym(null);
+                    argSym = argSym->GetSimd128I4EquivSym(nullptr);
                 }
                 else
                 {
@@ -852,9 +852,9 @@ GlobOpt::FillBailOutInfo(BasicBlock *block, BailOutInfo * bailOutInfo)
 IR::ByteCodeUsesInstr *
 GlobOpt::InsertByteCodeUses(IR::Instr * instr, bool includeDef)
 {
-    IR::ByteCodeUsesInstr * byteCodeUsesInstr = null;
+    IR::ByteCodeUsesInstr * byteCodeUsesInstr = nullptr;
     Assert(this->byteCodeUses);
-    IR::RegOpnd * dstOpnd = null;
+    IR::RegOpnd * dstOpnd = nullptr;
     if (includeDef)
     {
         IR::Opnd * opnd = instr->GetDst();
@@ -863,11 +863,11 @@ GlobOpt::InsertByteCodeUses(IR::Instr * instr, bool includeDef)
             dstOpnd = opnd->AsRegOpnd();
             if (dstOpnd->GetIsJITOptimizedReg() || !dstOpnd->m_sym->HasByteCodeRegSlot())
             {
-                dstOpnd = null;
+                dstOpnd = nullptr;
             }
         }
     }
-    if (!this->byteCodeUses->IsEmpty() || this->propertySymUse || dstOpnd != null)
+    if (!this->byteCodeUses->IsEmpty() || this->propertySymUse || dstOpnd != nullptr)
     {
         byteCodeUsesInstr = IR::ByteCodeUsesInstr::New(instr->m_func);
         byteCodeUsesInstr->SetByteCodeOffset(instr);
@@ -875,7 +875,7 @@ GlobOpt::InsertByteCodeUses(IR::Instr * instr, bool includeDef)
         {
             byteCodeUsesInstr->byteCodeUpwardExposedUsed = byteCodeUses->CopyNew(instr->m_func->m_alloc);
         }
-        if (dstOpnd != null)
+        if (dstOpnd != nullptr)
         {
             byteCodeUsesInstr->SetFakeDst(dstOpnd);
         }
@@ -887,8 +887,8 @@ GlobOpt::InsertByteCodeUses(IR::Instr * instr, bool includeDef)
     }
 
     JitAdelete(this->alloc, this->byteCodeUses);
-    this->byteCodeUses = null;
-    this->propertySymUse = null;
+    this->byteCodeUses = nullptr;
+    this->propertySymUse = nullptr;
     return byteCodeUsesInstr;
 }
 
@@ -897,7 +897,7 @@ GlobOpt::ConvertToByteCodeUses(IR::Instr * instr)
 {
 #if DBG
     PropertySym *propertySymUseBefore = NULL;
-    Assert(this->byteCodeUses == null);
+    Assert(this->byteCodeUses == nullptr);
     this->byteCodeUsesBeforeOpt->ClearAll();
     GlobOpt::TrackByteCodeSymUsed(instr, this->byteCodeUsesBeforeOpt, &propertySymUseBefore);
 #endif
@@ -979,7 +979,7 @@ GlobOpt::IsImplicitCallBailOutCurrentlyNeeded(IR::Instr * instr, Value *src1Val,
 
 #if DBG
     if (Js::Configuration::Global.flags.IsEnabled(Js::BailOutAtEveryImplicitCallFlag) &&
-        !instr->HasBailOutInfo() && MayNeedBailOnImplicitCall(instr, null, null))
+        !instr->HasBailOutInfo() && MayNeedBailOnImplicitCall(instr, nullptr, nullptr))
     {
         // always add implicit call bailout even if we don't need it, but only on opcode that supports it
         return true;
@@ -1110,12 +1110,12 @@ GlobOpt::MayNeedBailOnImplicitCall(const IR::Instr * instr, Value *src1Val, Valu
     IR::Opnd * opnd = instr->GetSrc1();
 
     bool callsToPrimitive = OpCodeAttr::CallsValueOf(instr->m_opcode);
-    if (opnd != null && MayNeedBailOnImplicitCall(opnd, src1Val, callsToPrimitive))
+    if (opnd != nullptr && MayNeedBailOnImplicitCall(opnd, src1Val, callsToPrimitive))
     {
         return true;
     }
     opnd = instr->GetSrc2();
-    if (opnd != null && MayNeedBailOnImplicitCall(opnd, src2Val, callsToPrimitive))
+    if (opnd != nullptr && MayNeedBailOnImplicitCall(opnd, src2Val, callsToPrimitive))
     {
         return true;
     }
@@ -1209,7 +1209,7 @@ GlobOpt::EnsureBailTarget(Loop * loop)
 {
     BailOutInfo * bailOutInfo = loop->bailOutInfo;
     IR::Instr * bailOutInstr = bailOutInfo->bailOutInstr;
-    if (bailOutInstr == null)
+    if (bailOutInstr == nullptr)
     {
         bailOutInstr = IR::BailOutInstr::New(Js::OpCode::BailTarget, IR::BailOutShared, bailOutInfo, bailOutInfo->bailOutFunc);
         loop->landingPad->InsertAfter(bailOutInstr);

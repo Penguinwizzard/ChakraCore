@@ -30,13 +30,13 @@ namespace Js
 
     ScriptFunction::ScriptFunction(DynamicType * type) :
         ScriptFunctionBase(type), environment((FrameDisplay*)&NullFrameDisplay),
-        cachedScopeObj(null), hasInlineCaches(false), hasSuperReference(false),
+        cachedScopeObj(nullptr), hasInlineCaches(false), hasSuperReference(false),
         isDefaultConstructor(false), isActiveScript(false)
     {}
 
     ScriptFunction::ScriptFunction(FunctionProxy * proxy, ScriptFunctionType* deferredPrototypeType)
         : ScriptFunctionBase(deferredPrototypeType, proxy),
-        environment((FrameDisplay*)&NullFrameDisplay), cachedScopeObj(null),
+        environment((FrameDisplay*)&NullFrameDisplay), cachedScopeObj(nullptr),
         hasInlineCaches(false), hasSuperReference(false), isDefaultConstructor(false), isActiveScript(false)
     {
         Assert(proxy->GetFunctionProxy() == proxy);
@@ -65,9 +65,9 @@ namespace Js
 
     ScriptFunction * ScriptFunction::OP_NewScFunc(FrameDisplay *environment, FunctionProxy** proxyRef)
     {
-        AssertMsg(proxyRef!= null, "BYTE-CODE VERIFY: Must specify a valid function to create");
+        AssertMsg(proxyRef!= nullptr, "BYTE-CODE VERIFY: Must specify a valid function to create");
         FunctionProxy* functionProxy = (*proxyRef);
-        AssertMsg(functionProxy!= null, "BYTE-CODE VERIFY: Must specify a valid function to create");
+        AssertMsg(functionProxy!= nullptr, "BYTE-CODE VERIFY: Must specify a valid function to create");
 
         ScriptContext* scriptContext = functionProxy->GetScriptContext();
 
@@ -186,7 +186,7 @@ namespace Js
 
     uint32 ScriptFunction::GetFrameHeight(FunctionEntryPointInfo* entryPointInfo) const
     {
-        Assert(this->GetFunctionBody() != NULL);
+        Assert(this->GetFunctionBody() != nullptr);
 
         return this->GetFunctionBody()->GetFrameHeight(entryPointInfo);
     }
@@ -199,11 +199,11 @@ namespace Js
 
     void ScriptFunction::ChangeEntryPoint(ProxyEntryPointInfo* entryPointInfo, JavascriptMethod entryPoint)
     {
-        Assert(entryPoint != NULL);
+        Assert(entryPoint != nullptr);
         Assert(this->GetTypeId() == TypeIds_Function);
         Assert(!IsCrossSiteObject() || entryPoint != (Js::JavascriptMethod)checkCodeGenThunk);
 
-        Assert((entryPointInfo != null && this->GetFunctionProxy() != NULL));
+        Assert((entryPointInfo != nullptr && this->GetFunctionProxy() != nullptr));
         if (this->GetEntryPoint() == entryPoint && this->GetScriptFunctionType()->GetEntryPointInfo() == entryPointInfo)
         {
             return;
@@ -419,7 +419,7 @@ namespace Js
         FunctionProxy* proxy = this->GetFunctionProxy();
         ParseableFunctionInfo * pFuncBody = proxy->EnsureDeserialized();
         Var cachedSourceString = pFuncBody->GetCachedSourceString();
-        if (cachedSourceString != null)
+        if (cachedSourceString != nullptr)
         {
             return cachedSourceString;
         }
@@ -438,7 +438,7 @@ namespace Js
 
         //Library code should behave the same way as RuntimeFunctions
         Utf8SourceInfo* source = pFuncBody->GetUtf8SourceInfo();
-        if (source != null && source->GetIsLibraryCode())
+        if (source != nullptr && source->GetIsLibraryCode())
         {
             //Don't display if it is annonymous function
             size_t displayNameLength = 0;
@@ -459,7 +459,11 @@ namespace Js
             // TODO: What about surrogate pairs?
             utf8::DecodeOptions options = pFuncBody->GetUtf8SourceInfo()->IsCesu8() ? utf8::doAllowThreeByteSurrogates : utf8::doDefault;
             utf8::DecodeInto(builder.DangerousGetWritableBuffer(), pFuncBody->GetSource(L"ScriptFunction::EnsureSourceString"), pFuncBody->LengthInChars(), options);
-            if (pFuncBody->IsLambda() || isActiveScript || scriptContext->GetConfig()->IsWinRTEnabled())
+            if (pFuncBody->IsLambda() || isActiveScript
+#ifdef ENABLE_PROJECTION
+                || scriptContext->GetConfig()->IsWinRTEnabled()
+#endif
+                )
             {
                 cachedSourceString = builder.ToString();
             }
@@ -472,7 +476,7 @@ namespace Js
         {
             cachedSourceString = scriptContext->GetLibrary()->GetXDomainFunctionDisplayString();
         }
-        Assert(cachedSourceString != null);
+        Assert(cachedSourceString != nullptr);
         pFuncBody->SetCachedSourceString(cachedSourceString);
         return cachedSourceString;
     }
@@ -529,7 +533,7 @@ namespace Js
 
     InlineCache * ScriptFunctionWithInlineCache::GetInlineCache(uint index)
     {
-        Assert(this->m_inlineCaches != null);
+        Assert(this->m_inlineCaches != nullptr);
         Assert(index < this->GetInlineCacheCount());
 #if DBG
         Assert(this->m_inlineCacheTypes[index] == InlineCacheTypeNone ||
@@ -637,7 +641,7 @@ namespace Js
 
     void ScriptFunctionWithInlineCache::AllocateInlineCache()
     {
-        Assert(this->m_inlineCaches == null);
+        Assert(this->m_inlineCaches == nullptr);
         uint isInstInlineCacheStart = this->GetInlineCacheCount();
         uint totalCacheCount = isInstInlineCacheStart + isInstInlineCacheCount;
         Js::FunctionBody* functionBody = this->GetFunctionBody();

@@ -125,7 +125,7 @@ void EtwTrace::PerformRundown(bool start)
         JS_ETW(EventWriteDCEndInit());
     }
 
-    while(threadContext != null)
+    while(threadContext != nullptr)
     {             
         // Take etw rundown lock on this thread context
         AutoCriticalSection autoEtwRundownCs(threadContext->GetEtwRundownCriticalSection());
@@ -142,7 +142,7 @@ void EtwTrace::PerformRundown(bool start)
             {
                 JS_ETW(EventWriteScriptContextDCStart(scriptContext));
 
-                if(scriptContext->GetSourceContextInfoMap() != null)
+                if(scriptContext->GetSourceContextInfoMap() != nullptr)
                 {
                     scriptContext->GetSourceContextInfoMap()->Map( [=] (DWORD_PTR sourceContext, SourceContextInfo * sourceContextInfo)
                     {
@@ -161,7 +161,7 @@ void EtwTrace::PerformRundown(bool start)
             {
                 JS_ETW(EventWriteScriptContextDCEnd(scriptContext));
 
-                if(scriptContext->GetSourceContextInfoMap() != null)
+                if(scriptContext->GetSourceContextInfoMap() != nullptr)
                 {
                     scriptContext->GetSourceContextInfoMap()->Map( [=] (DWORD_PTR sourceContext, SourceContextInfo * sourceContextInfo)
                     {
@@ -270,7 +270,7 @@ uint EtwTrace::GetFunctionId(FunctionProxy* body)
 
 void EtwTrace::LogSourceUnloadEvents(ScriptContext* scriptContext)
 {
-    if(scriptContext->GetSourceContextInfoMap() != null)
+    if(scriptContext->GetSourceContextInfoMap() != nullptr)
     {
         scriptContext->GetSourceContextInfoMap()->Map( [&] (DWORD_PTR sourceContext, SourceContextInfo * sourceContextInfo)
         {

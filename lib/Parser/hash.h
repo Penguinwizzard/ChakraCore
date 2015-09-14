@@ -62,8 +62,8 @@ public:
 
 struct PidRefStack
 {
-    PidRefStack() : isAsg(false), isDynamic(false), id(0), span(), sym(null), prev(null) {}
-    PidRefStack(int id) : isAsg(false), isDynamic(false), id(id), span(), sym(null), prev(null) {}
+    PidRefStack() : isAsg(false), isDynamic(false), id(0), span(), sym(nullptr), prev(nullptr) {}
+    PidRefStack(int id) : isAsg(false), isDynamic(false), id(id), span(), sym(nullptr), prev(nullptr) {}
 
     charcount_t GetIchMin()   { return span.GetIchMin(); }
     charcount_t GetIchLim()   { return span.GetIchLim(); }
@@ -165,7 +165,7 @@ public:
                 break;
             }
         }
-        return null;
+        return nullptr;
     }
   
     charcount_t GetTopIchMin() const
@@ -308,7 +308,7 @@ public:
     {
         const KWD *pkwd = KwdOfTok(tk);
 
-        if (NULL == pkwd)
+        if (nullptr == pkwd)
             return FALSE;
         *popl = pkwd->prec2;
         *pnop = pkwd->nop2;
@@ -319,7 +319,7 @@ public:
     {
         const KWD *pkwd = KwdOfTok(tk);
 
-        if (NULL == pkwd)
+        if (nullptr == pkwd)
             return FALSE;
         *popl = pkwd->prec1;
         *pnop = pkwd->nop1;
@@ -369,7 +369,7 @@ private:
 
     HashTbl(ErrHandler * perr)
     {
-        m_prgpidName = NULL;
+        m_prgpidName = nullptr;
         m_perr = perr;
         memset(&m_rpid, 0, sizeof(m_rpid));
     }
@@ -443,7 +443,7 @@ private:
     static const ReservedWordInfo s_reservedWordInfo[tkID];
     static const KWD g_mptkkwd[tkLimKwd];
     static const KWD * KwdOfTok(tokens tk)
-    { return (unsigned int)tk < tkLimKwd ? g_mptkkwd + tk : NULL; }
+    { return (unsigned int)tk < tkLimKwd ? g_mptkkwd + tk : nullptr; }
 
 #if PROFILE_DICTIONARY
     DictionaryStats *stats;

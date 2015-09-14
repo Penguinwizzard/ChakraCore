@@ -38,7 +38,7 @@ SCCLiveness::Build()
         this->func->NumberInstrs();
     }
 
-    IR::LabelInstr *lastLabelInstr = NULL;
+    IR::LabelInstr *lastLabelInstr = nullptr;
 
     FOREACH_INSTR_IN_FUNC_EDITING(instr, instrNext, this->func)
     {
@@ -82,7 +82,7 @@ SCCLiveness::Build()
             // At this point, the bailout should be lowered to a CALL to BailOut
 #if DBG
             Assert(LowererMD::IsCall(instr));
-            IR::Opnd * helperOpnd = null;
+            IR::Opnd * helperOpnd = nullptr;
             if (instr->GetSrc1()->IsHelperCallOpnd())
             { 
                 helperOpnd = instr->GetSrc1();
@@ -122,7 +122,7 @@ SCCLiveness::Build()
         // Do not count call to bailout which exits anyways
         if (LowererMD::IsCall(instr) && !instr->HasBailOutInfo())
         {
-            if (this->lastOpHelperLabel == null)
+            if (this->lastOpHelperLabel == nullptr)
             {
                 // Catch only user calls (non op helper calls)
                 this->lastNonOpHelperCall = instr->GetNumber();
@@ -155,7 +155,7 @@ SCCLiveness::Build()
             {
                 // Unreferenced labels can potentially be removed. See if the label tells
                 // us we're transitioning between a helper and non-helper block.
-                if (labelInstr->isOpHelper == (this->lastOpHelperLabel != NULL)
+                if (labelInstr->isOpHelper == (this->lastOpHelperLabel != nullptr)
                     && lastLabelInstr && labelInstr->isOpHelper == lastLabelInstr->isOpHelper)
                 {
                     // No such transition. Remove the label.
@@ -167,17 +167,17 @@ SCCLiveness::Build()
             lastLabelInstr = labelInstr;
 
             Region * region = labelInstr->GetRegion();
-            if (region != NULL)
+            if (region != nullptr)
             {
                 if (this->curRegion && this->curRegion != region)
                 {
                     this->curRegion->SetEnd(labelInstr->m_prev);
                 }
-                if (region->GetStart() == NULL)
+                if (region->GetStart() == nullptr)
                 {
                     region->SetStart(labelInstr);
                 }
-                region->SetEnd(NULL);
+                region->SetEnd(nullptr);
                 this->curRegion = region;
             }
             else
@@ -192,7 +192,7 @@ SCCLiveness::Build()
 
                 IR::LabelInstr * labelInstr = instr->AsLabelInstr();
                 uint32 lastBranchNum = 0;
-                IR::BranchInstr *lastBranchInstr = NULL;
+                IR::BranchInstr *lastBranchInstr = nullptr;
 
                 FOREACH_SLISTCOUNTED_ENTRY(IR::BranchInstr *, ref, &labelInstr->labelRefs)
                 {
@@ -219,7 +219,7 @@ SCCLiveness::Build()
             }
 
             // track whether we are in a helper block or not
-            if (this->lastOpHelperLabel != NULL)
+            if (this->lastOpHelperLabel != nullptr)
             {
                 this->EndOpHelper(labelInstr);
             }
@@ -238,7 +238,7 @@ SCCLiveness::Build()
                 branchTarget->SetRegion(this->curRegion);
             }
         }
-        if (this->lastOpHelperLabel != NULL && instr->IsBranchInstr())
+        if (this->lastOpHelperLabel != nullptr && instr->IsBranchInstr())
         {
             IR::LabelInstr *targetLabel = instr->AsBranchInstr()->GetTarget();
 
@@ -316,15 +316,15 @@ SCCLiveness::Build()
 void
 SCCLiveness::EndOpHelper(IR::Instr * instr)
 {
-    Assert(this->lastOpHelperLabel != NULL);
+    Assert(this->lastOpHelperLabel != nullptr);
 
     OpHelperBlock * opHelperBlock = this->opHelperBlockList.PrependNode(this->tempAlloc);
-    Assert(opHelperBlock != null);
+    Assert(opHelperBlock != nullptr);
     opHelperBlock->opHelperLabel = this->lastOpHelperLabel;
     opHelperBlock->opHelperEndInstr = instr;
 
     this->totalOpHelperFullVisitedLength += opHelperBlock->Length();
-    this->lastOpHelperLabel = NULL;
+    this->lastOpHelperLabel = nullptr;
 }
 
 // SCCLiveness::ProcessSrc
@@ -388,7 +388,7 @@ SCCLiveness::ProcessBailOutUses(IR::Instr * instr)
     FOREACH_BITSET_IN_SPARSEBV(id, bailOutInfo->byteCodeUpwardExposedUsed)
     {
         StackSym * stackSym = this->func->m_symTable->FindStackSym(id);
-        Assert(stackSym != null);
+        Assert(stackSym != nullptr);
         ProcessStackSymUse(stackSym, instr);
     }
     NEXT_BITSET_IN_SPARSEBV;
@@ -443,7 +443,7 @@ SCCLiveness::ProcessStackSymUse(StackSym * stackSym, IR::Instr * instr, int usag
 {
     Lifetime * lifetime = stackSym->scratch.linearScan.lifetime;
     
-    if (lifetime == NULL)
+    if (lifetime == nullptr)
     {
 #if DBG
         wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
@@ -464,7 +464,7 @@ SCCLiveness::ProcessStackSymUse(StackSym * stackSym, IR::Instr * instr, int usag
 
         ExtendLifetime(lifetime, instr);
     }
-    lifetime->AddToUseCount(LinearScan::GetUseSpillCost(this->loopNest, (this->lastOpHelperLabel != NULL)), this->curLoop, this->func);
+    lifetime->AddToUseCount(LinearScan::GetUseSpillCost(this->loopNest, (this->lastOpHelperLabel != nullptr)), this->curLoop, this->func);
     if (lifetime->start < this->lastCall)
     {
         lifetime->isLiveAcrossCalls = true;
@@ -484,7 +484,7 @@ SCCLiveness::ProcessRegUse(IR::RegOpnd *regUse, IR::Instr *instr)
 {
     StackSym * stackSym = regUse->m_sym;  
 
-    if (stackSym == NULL)
+    if (stackSym == nullptr)
     {
         return;
     }
@@ -500,7 +500,7 @@ SCCLiveness::ProcessRegDef(IR::RegOpnd *regDef, IR::Instr *instr)
     StackSym * stackSym = regDef->m_sym;
    
     // PhysReg
-    if (stackSym == NULL || regDef->GetReg() != RegNOREG)
+    if (stackSym == nullptr || regDef->GetReg() != RegNOREG)
     {
         IR::Opnd *src = instr->GetSrc1();
 
@@ -517,7 +517,7 @@ SCCLiveness::ProcessRegDef(IR::RegOpnd *regDef, IR::Instr *instr)
         }
 
         // This physreg doesn't have a lifetime, just return.
-        if (stackSym == NULL)
+        if (stackSym == nullptr)
         {
             return;
         }
@@ -535,7 +535,7 @@ SCCLiveness::ProcessRegDef(IR::RegOpnd *regDef, IR::Instr *instr)
 
     Lifetime * lifetime = stackSym->scratch.linearScan.lifetime;
 
-    if (lifetime == NULL)
+    if (lifetime == nullptr)
     {
         lifetime = this->InsertLifetime(stackSym, regDef->GetReg(), instr);
         lifetime->region = this->curRegion;
@@ -555,7 +555,7 @@ SCCLiveness::ProcessRegDef(IR::RegOpnd *regDef, IR::Instr *instr)
             lifetime->dontAllocate = true;
         }
     }
-    lifetime->AddToUseCount(LinearScan::GetUseSpillCost(this->loopNest, (this->lastOpHelperLabel != NULL)), this->curLoop, this->func);
+    lifetime->AddToUseCount(LinearScan::GetUseSpillCost(this->loopNest, (this->lastOpHelperLabel != nullptr)), this->curLoop, this->func);
     lifetime->intUsageBv.Set(TySize[regDef->GetType()]);
 }
 
@@ -565,8 +565,8 @@ SCCLiveness::ProcessRegDef(IR::RegOpnd *regDef, IR::Instr *instr)
 void
 SCCLiveness::ExtendLifetime(Lifetime *lifetime, IR::Instr *instr)
 {
-    AssertMsg(lifetime != NULL, "Lifetime not provided");
-    AssertMsg(lifetime->sym != NULL, "Lifetime has no symbol");
+    AssertMsg(lifetime != nullptr, "Lifetime not provided");
+    AssertMsg(lifetime->sym != nullptr, "Lifetime has no symbol");
     Assert(this->extendedLifetimesLoopList->Empty());
 
     // Find the loop that we need to extend the lifetime to

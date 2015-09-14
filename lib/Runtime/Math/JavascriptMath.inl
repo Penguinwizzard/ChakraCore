@@ -123,8 +123,8 @@ namespace Js
 
         __inline double JavascriptMath::Negate_Helper(Var aRight,ScriptContext* scriptContext)
         {
-            Assert(aRight != null);
-            Assert(scriptContext != null);
+            Assert(aRight != nullptr);
+            Assert(scriptContext != nullptr);
 
             double value = JavascriptConversion::ToNumber(aRight, scriptContext);
             return -value;
@@ -132,9 +132,9 @@ namespace Js
 
         __inline int32 JavascriptMath::And_Helper(Var aLeft, Var aRight, ScriptContext* scriptContext)
         {
-            Assert(aLeft != null);
-            Assert(aRight != null);
-            Assert(scriptContext != null);
+            Assert(aLeft != nullptr);
+            Assert(aRight != nullptr);
+            Assert(scriptContext != nullptr);
 #if _M_IX86
             AssertMsg(!TaggedInt::IsPair(aLeft, aRight), "TaggedInt bitwise and should have been handled already");
 #endif
@@ -146,9 +146,9 @@ namespace Js
 
         __inline int32 JavascriptMath::Or_Helper(Var aLeft, Var aRight, ScriptContext* scriptContext)
         {
-            Assert(aLeft != null);
-            Assert(aRight != null);
-            Assert(scriptContext != null);
+            Assert(aLeft != nullptr);
+            Assert(aRight != nullptr);
+            Assert(scriptContext != nullptr);
 #if _M_IX86
             AssertMsg(!TaggedInt::IsPair(aLeft, aRight), "TaggedInt bitwise or should have been handled already");
 #endif
@@ -186,9 +186,9 @@ namespace Js
 
         __inline double JavascriptMath::Subtract_Helper(Var aLeft, Var aRight, ScriptContext* scriptContext)
         {
-            Assert(aLeft != null);
-            Assert(aRight != null);
-            Assert(scriptContext != null);
+            Assert(aLeft != nullptr);
+            Assert(aRight != nullptr);
+            Assert(scriptContext != nullptr);
 
             // The IEEE 754 floating point spec ensures that NaNs are preserved in all operations
             double dblLeft = JavascriptConversion::ToNumber(aLeft, scriptContext);
@@ -212,9 +212,9 @@ namespace Js
 
         __inline double JavascriptMath::Multiply_Helper(Var aLeft, Var aRight, ScriptContext* scriptContext)
         {
-            Assert(aLeft != null);
-            Assert(aRight != null);
-            Assert(scriptContext != null);
+            Assert(aLeft != nullptr);
+            Assert(aRight != nullptr);
+            Assert(scriptContext != nullptr);
 
     #ifdef DBG
             if( TaggedInt::IsPair(aLeft,aRight) )
@@ -238,9 +238,9 @@ namespace Js
 
         __inline double JavascriptMath::Divide_Helper(Var aLeft, Var aRight, ScriptContext* scriptContext)
         {
-            Assert(aLeft != null);
-            Assert(aRight != null);
-            Assert(scriptContext != null);
+            Assert(aLeft != nullptr);
+            Assert(aRight != nullptr);
+            Assert(scriptContext != nullptr);
 
 #if !defined(_M_ARM32_OR_ARM64)
             AssertMsg(!TaggedInt::IsPair(aLeft, aRight), "Integer division should have been handled already");

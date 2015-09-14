@@ -6,7 +6,7 @@
 
 ExpirableObject::ExpirableObject(ThreadContext* threadContext):
     isUsed(false),
-    registrationHandle(null)
+    registrationHandle(nullptr)
 {
     if (threadContext)
     {
@@ -16,7 +16,7 @@ ExpirableObject::ExpirableObject(ThreadContext* threadContext):
 
 void ExpirableObject::Finalize(bool isShutdown)
 {
-    if (!isShutdown && this->registrationHandle != null)
+    if (!isShutdown && this->registrationHandle != nullptr)
     {
         ThreadContext* threadContext = ThreadContext::GetContextForCurrentThread();
 
@@ -26,7 +26,7 @@ void ExpirableObject::Finalize(bool isShutdown)
 
 void ExpirableObject::Dispose(bool isShutdown)
 {
-    if (!isShutdown && this->registrationHandle == null)
+    if (!isShutdown && this->registrationHandle == nullptr)
     {
         ThreadContext* threadContext = ThreadContext::GetContextForCurrentThread();
         threadContext->DisposeExpirableObject(this);

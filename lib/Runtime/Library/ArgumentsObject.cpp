@@ -41,7 +41,7 @@ namespace Js
     {
         // The arguments.caller property is equivalent to callee.caller.arguments - that is, it's the 
         // caller's arguments object (if any). Just fetch the caller and compute its arguments.
-        JavascriptFunction* funcCaller = null;
+        JavascriptFunction* funcCaller = nullptr;
 
         while (walker->GetCaller(&funcCaller))
         {
@@ -53,12 +53,12 @@ namespace Js
                 {
                     continue;
                 }
-                funcCaller = null;
+                funcCaller = nullptr;
             }          
             break;
         }
 
-        if (funcCaller == null || JavascriptOperators::GetTypeId(funcCaller) == TypeIds_Null)
+        if (funcCaller == nullptr || JavascriptOperators::GetTypeId(funcCaller) == TypeIds_Null)
         {
             return scriptContext->GetLibrary()->GetNull();
         }
@@ -104,13 +104,13 @@ namespace Js
         return JavascriptOperators::GetTypeId(aValue) == TypeIds_Arguments;
     }
 
-    HeapArgumentsObject::HeapArgumentsObject(DynamicType * type) : ArgumentsObject(type), frameObject(null), formalCount(0), 
-        numOfArguments(0), callerDeleted(false), deletedArgs(null)
+    HeapArgumentsObject::HeapArgumentsObject(DynamicType * type) : ArgumentsObject(type), frameObject(nullptr), formalCount(0), 
+        numOfArguments(0), callerDeleted(false), deletedArgs(nullptr)
     {
     }
 
     HeapArgumentsObject::HeapArgumentsObject(Recycler *recyler, ActivationObject* obj, uint32 formalCount, DynamicType * type)
-        : ArgumentsObject(type), frameObject(obj), formalCount(formalCount), numOfArguments(0), callerDeleted(false), deletedArgs(null)
+        : ArgumentsObject(type), frameObject(obj), formalCount(formalCount), numOfArguments(0), callerDeleted(false), deletedArgs(nullptr)
     {
     }
 
@@ -166,7 +166,7 @@ namespace Js
         if ( ++index < formalCount )
         {
             // None of the arguments deleted
-            if ( deletedArgs == null )
+            if ( deletedArgs == nullptr )
             {
                 return index;
             }
@@ -189,7 +189,7 @@ namespace Js
     {
         // If this arg index is bound to a named formal argument, get it from the local frame.
         // If not, report this fact to the caller, which will defer to the normal get-value-by-index means.
-        if (IsFormalArgument(index) && (this->deletedArgs == null || !this->deletedArgs->Test(index)) )
+        if (IsFormalArgument(index) && (this->deletedArgs == nullptr || !this->deletedArgs->Test(index)) )
         {
             return true;
         }
@@ -227,7 +227,7 @@ namespace Js
     {
         if (index < formalCount)
         {
-            if (this->deletedArgs == null)
+            if (this->deletedArgs == nullptr)
             {
                 Recycler *recyler = GetScriptContext()->GetRecycler();
                 deletedArgs = RecyclerNew(recyler, BVSparse<Recycler>, recyler);

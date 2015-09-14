@@ -17,11 +17,11 @@ struct Cloner
 {
     Cloner(Lowerer *lowerer, JitArenaAllocator *alloc) : 
         alloc(alloc), 
-        symMap(NULL), 
-        labelMap(NULL), 
+        symMap(nullptr),
+        labelMap(nullptr),
         lowerer(lowerer),
-        instrFirst(NULL), 
-        instrLast(NULL), 
+        instrFirst(nullptr),
+        instrLast(nullptr),
         fRetargetClonedBranch(FALSE)
     {
     }
@@ -61,7 +61,7 @@ public:
     Func(JitArenaAllocator *alloc, CodeGenWorkItem* workItem, const Js::FunctionCodeGenRuntimeData *const runtimeData,
         Js::PolymorphicInlineCacheInfo * const polymorphicInlineCacheInfo, CodeGenAllocators *const codeGenAllocators, 
         CodeGenNumberAllocator * numberAllocator, Js::ReadOnlyDynamicProfileInfo *const profileInfo,
-        Js::ScriptContextProfiler *const codeGenProfiler, const bool isBackgroundJIT, Func * parentFunc = null,
+        Js::ScriptContextProfiler *const codeGenProfiler, const bool isBackgroundJIT, Func * parentFunc = nullptr,
         uint postCallByteCodeOffset = Js::Constants::NoByteCodeOffset,
         Js::RegSlot returnValueRegSlot = Js::Constants::NoRegister, const bool isInlinedConstructor = false, 
         Js::ProfileId callSiteIdInParentFunc = UINT16_MAX, bool isGetterSetter = false):
@@ -72,31 +72,31 @@ public:
       m_polymorphicInlineCacheInfo(polymorphicInlineCacheInfo),
       m_codeGenAllocators(codeGenAllocators),
       m_inlineeId(0),
-      pinnedTypeRefs(null),
-      singleTypeGuards(null),
-      equivalentTypeGuards(null),
-      propertyGuardsByPropertyId(null),
-      ctorCachesByPropertyId(null),
-      callSiteToArgumentsOffsetFixupMap(null),
+      pinnedTypeRefs(nullptr),
+      singleTypeGuards(nullptr),
+      equivalentTypeGuards(nullptr),
+      propertyGuardsByPropertyId(nullptr),
+      ctorCachesByPropertyId(nullptr),
+      callSiteToArgumentsOffsetFixupMap(nullptr),
       indexedPropertyGuardCount(0),
-      propertiesWrittenTo(null),
+      propertiesWrittenTo(nullptr),
       lazyBailoutProperties(alloc),
       anyPropertyMayBeWrittenTo(false),
 #ifdef PROFILE_EXEC
       m_codeGenProfiler(codeGenProfiler),
 #endif
       m_isBackgroundJIT(isBackgroundJIT),
-      m_cloner(NULL),
-      m_cloneMap(NULL),
-      m_loopParamSym(NULL),
-      m_funcObjSym(NULL),
-      m_localClosureSym(NULL),
-      m_localFrameDisplaySym(NULL),
-      m_bailoutReturnValueSym(null),
-      m_hasBailedOutSym(null),
-      m_inlineeFrameStartSym(null),
+      m_cloner(nullptr),
+      m_cloneMap(nullptr),
+      m_loopParamSym(nullptr),
+      m_funcObjSym(nullptr),
+      m_localClosureSym(nullptr),
+      m_localFrameDisplaySym(nullptr),
+      m_bailoutReturnValueSym(nullptr),
+      m_hasBailedOutSym(nullptr),
+      m_inlineeFrameStartSym(nullptr),
       m_regsUsed(0),
-      m_fg(null), 
+      m_fg(nullptr),
       m_labelCount(0),
       m_argSlotsForFunctionsCalled(0),
       m_isLeaf(false),    
@@ -110,8 +110,8 @@ public:
       maintainByteCodeOffset(true),
       frameSize(0),
       parentFunc(parentFunc),
-      argObjSyms(null),
-      m_nonTempLocalVars(null),
+      argObjSyms(nullptr),
+      m_nonTempLocalVars(nullptr),
       hasAnyStackNestedFunc(false),
       hasMarkTempObjects(false),
       postCallByteCodeOffset(postCallByteCodeOffset),
@@ -123,7 +123,7 @@ public:
       actualCount((Js::ArgSlot)-1),
       tryCatchNestingLevel(0),
       m_localStackHeight(0),
-      tempSymDouble(NULL),
+      tempSymDouble(nullptr),
       hasInlinee(false),
       thisOrParentInlinerHasArguments(false),
       hasStackArgs(false),
@@ -167,7 +167,7 @@ public:
       , isPostFinalLower(false)
 #endif
 #if DBG
-      , vtableMap(null)
+      , vtableMap(nullptr)
 #endif
       , m_yieldOffsetResumeLabelList(nullptr)
       , m_bailOutNoSaveLabel(nullptr)
@@ -211,7 +211,7 @@ public:
             thisOrParentInlinerHasArguments = true;
         }
 
-        if (parentFunc == null)
+        if (parentFunc == nullptr)
         {
             inlineDepth = 0;
             m_symTable = JitAnew(alloc, SymTable);
@@ -288,7 +288,7 @@ public:
 #ifdef PROFILE_EXEC
         return m_codeGenProfiler;
 #else
-        return null;
+        return nullptr;
 #endif
     }
 
@@ -389,7 +389,7 @@ static const unsigned __int64 c_debugFillPattern8 = 0xcececececececece;
     uint32 GetInstrCount();
     inline Js::ScriptContext* GetScriptContext() const { return m_workItem->GetScriptContext(); }
     void NumberInstrs();
-    bool IsTopFunc() const { return this->parentFunc == null; }        
+    bool IsTopFunc() const { return this->parentFunc == nullptr; }
     Func const * GetTopFunc() const;
     Func * GetTopFunc();
 
@@ -520,12 +520,12 @@ static const unsigned __int64 c_debugFillPattern8 = 0xcececececececece;
     bool IsInlinee() const
     {
         Assert(m_inlineeFrameStartSym ? (m_inlineeFrameStartSym->m_offset != -1) : true);
-        return m_inlineeFrameStartSym != null;
+        return m_inlineeFrameStartSym != nullptr;
     }
 
     void SetInlineeFrameStartSym(StackSym *sym)
     {
-        Assert(m_inlineeFrameStartSym == null);
+        Assert(m_inlineeFrameStartSym == nullptr);
         m_inlineeFrameStartSym = sym;
     }
 
@@ -559,7 +559,7 @@ static const unsigned __int64 c_debugFillPattern8 = 0xcececececececece;
 
     bool IsInlined() const
     {
-        return this->parentFunc != NULL;
+        return this->parentFunc != nullptr;
     }
 
     bool IsInlinedConstructor() const
@@ -721,7 +721,7 @@ public:
     void                EndClone();
     Cloner *            GetCloner() const { return GetTopFunc()->m_cloner; }
     InstrMap *          GetCloneMap() const { return GetTopFunc()->m_cloneMap; }
-    void                ClearCloneMap() { Assert(this->IsTopFunc()); this->m_cloneMap = null; }
+    void                ClearCloneMap() { Assert(this->IsTopFunc()); this->m_cloneMap = nullptr; }
 
     bool                HasByteCodeOffset() const { return !this->GetTopFunc()->hasInstrNumber; }
     bool                DoMaintainByteCodeOffset() const { return this->HasByteCodeOffset() && this->GetTopFunc()->maintainByteCodeOffset; }

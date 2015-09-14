@@ -98,7 +98,7 @@ namespace UnifiedRegex
             // Not a synchronizable node, or too short to be worth trying to synchronize on, or too many literals
             return false;
 
-        if (curr == null)
+        if (curr == nullptr)
             // We'll take whatever we can get
             return true;
 
@@ -183,9 +183,9 @@ namespace UnifiedRegex
         const ConcatNode* concatNode = (const ConcatNode *)this;
         if ((compiler.program->flags & (IgnoreCaseRegexFlag | MultilineRegexFlag)) != 0 ||
             concatNode->head->tag != Node::BOL ||
-            concatNode->tail == null ||
+            concatNode->tail == nullptr ||
             concatNode->tail->head->tag != Node::MatchLiteral ||
-            concatNode->tail->tail != null ||
+            concatNode->tail->tail != nullptr ||
             ((MatchLiteralNode *)concatNode->tail->head)->isEquivClass ||
             ((MatchLiteralNode *)concatNode->tail->head)->length != 2)
         {

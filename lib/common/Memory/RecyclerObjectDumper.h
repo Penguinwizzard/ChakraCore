@@ -22,7 +22,7 @@ private:
     static RecyclerObjectDumper Instance;
     static BOOL EnsureDumpFunctionMap();
 
-    typedef SimpleHashTable<type_info const *, RecyclerObjectDumper::DumpFunction, NoCheckHeapAllocator> DumpFunctionMap;
+    typedef JsUtil::BaseDictionary<type_info const *, RecyclerObjectDumper::DumpFunction, NoCheckHeapAllocator> DumpFunctionMap;
     static DumpFunctionMap * dumpFunctionMap;    
 };
 

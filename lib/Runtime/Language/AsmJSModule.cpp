@@ -4,6 +4,11 @@
 #include "RuntimeLanguagePch.h"
 #include "ByteCode\Symbol.h"
 #include "ByteCode\FuncInfo.h"
+#include "ByteCode\ByteCodeAPI.h"
+#include "ByteCode\ByteCodeWriter.h"
+#include "ByteCode\ByteCodeGenerator.h"
+#include "ByteCode\AsmJsByteCodeWriter.h"
+#include "Language\AsmJsByteCodeGenerator.h"
 
 namespace Js
 {

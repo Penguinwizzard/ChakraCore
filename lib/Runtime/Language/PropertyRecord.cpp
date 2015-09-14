@@ -90,12 +90,12 @@ namespace JsUtil
 {
     bool NoCaseComparer<Js::CaseInvariantPropertyListWithHashCode*>::Equals(_In_ Js::CaseInvariantPropertyListWithHashCode* list1, JsUtil::CharacterBuffer<WCHAR> const& str)
     {
-        Assert(list1 != null);
+        Assert(list1 != nullptr);
 
         const RecyclerWeakReference<Js::PropertyRecord const>* propRecordWeakRef = list1->CompactEnd<true>();
 
         // If the lists are empty post-compaction, thats fine, we'll just remove them later
-        if (propRecordWeakRef != null)
+        if (propRecordWeakRef != nullptr)
         {
             const Js::PropertyRecord* prop = propRecordWeakRef->Get();
 
@@ -113,7 +113,7 @@ namespace JsUtil
 
     bool NoCaseComparer<Js::CaseInvariantPropertyListWithHashCode*>::Equals(_In_ Js::CaseInvariantPropertyListWithHashCode* list1, _In_ Js::CaseInvariantPropertyListWithHashCode* list2)
     {
-        Assert(list1 != null && list2 != null);
+        Assert(list1 != nullptr && list2 != nullptr);
 
         // If the two lists are the same, they're equal
         if (list1 == list2)
@@ -131,7 +131,7 @@ namespace JsUtil
         // If it's the same when compared with a string from list 1 in a case insensitive way, they're equal
         const RecyclerWeakReference<Js::PropertyRecord const>* propRecordWeakRef = list2->CompactEnd<true>();
 
-        if (propRecordWeakRef != null)
+        if (propRecordWeakRef != nullptr)
         {
             const Js::PropertyRecord* prop = propRecordWeakRef->Get();
 
@@ -148,13 +148,13 @@ namespace JsUtil
 
     uint NoCaseComparer<Js::CaseInvariantPropertyListWithHashCode*>::GetHashCode(_In_ Js::CaseInvariantPropertyListWithHashCode* list)
     {
-        Assert(list != null);
+        Assert(list != nullptr);
 
         if (list->caseInvariantHashCode == 0)
         {
             const RecyclerWeakReference<Js::PropertyRecord const>* propRecordWeakRef = list->CompactEnd<true>();
 
-            if (propRecordWeakRef != null)
+            if (propRecordWeakRef != nullptr)
             {
                 const Js::PropertyRecord* prop = propRecordWeakRef->Get();
 

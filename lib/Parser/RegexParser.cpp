@@ -1911,6 +1911,23 @@ namespace UnifiedRegex
                     lastCodepoint = INVALID_CODEPOINT;
                     NextChar();
                 }
+
+                // If we have a pattern of the form [\ud800-\udfff], we need this to be interpreted as a range.
+                // In order to achieve this, the two variables that we use to track surrogate pairs, namely
+                // tempLocationOfSurrogatePair and previousSurrogatePart, need to be in a certain state.
+                //
+                // We need to reset tempLocationOfSurrogatePair as it points to the first Unicode escape (\ud800)
+                // when we're here. We need to clear it in order not to have a surrogate pair when we process the
+                // second escape (\udfff).
+                //
+                // previousSurrogatePart is used when we have a code point in the \u{...} extended format and the
+                // character is in a supplementary plane. However, there is no need to change its value here. When
+                // such an escape sequence is encountered, the first call to ClassEscapePass0() sets the variable
+                // to true, but it rewinds the input back to the beginning of the escape sequence. The next
+                // iteration of the loop here will again call ClassEscape0() with the same character and the
+                // variable will this time be set to false. Therefore, the variable will always be false here.
+                tempLocationOfSurrogatePair = nullptr;
+                Assert(!previousSurrogatePart);
             }
             else
             {
@@ -1996,7 +2013,7 @@ namespace UnifiedRegex
                         }
                     }
 
-                    pendingRangeStart = pendingRangeEnd = INVALID_CODEPOINT;
+                    pendingRangeStart = pendingRangeEnd = lastCodepoint = INVALID_CODEPOINT;
                 }
                 //The current char <0x10000 is a candidate for the range end, but we need to iterate one more time.
                 else
@@ -2151,155 +2168,113 @@ namespace UnifiedRegex
         //Everything past here must be under the flag
         Assert(scriptContext->GetConfig()->IsES6UnicodeExtensionsEnabled());
 
-        Node* prefixNode = nullptr;
-        Node* suffixNode = nullptr;
-
-        uint totalCodePointsCount = codePointSet.Count();
-        uint simpleCharsCount = codePointSet.SimpleCharCount();
-
-        CharSet<codepoint_t> *toUseForTranslation = &codePointSet;
-
-        if (totalCodePointsCount == 0)
+        if (codePointSet.IsEmpty())
         {
             return Anew(ctAllocator, MatchSetNode, false, false);
         }
 
-        // The second set of cases, is if we don't have caseInsensitiveRegex, negation we can handle in certain instances
-        // We only handle simple chars here.
+        Node* prefixNode = nullptr;
+        Node* suffixNode = nullptr;
+
+        CharSet<codepoint_t> *toUseForTranslation = &codePointSet;
+
+        // If a singleton, return a simple character
+        bool isSingleton = !this->caseInsensitiveFlagPresent && !isNegation && codePointSet.IsSingleton();
+        if (isSingleton)
+        {
+            codepoint_t singleton = codePointSet.Singleton();
+            Node* toReturn = nullptr;
+
+            if (singleton < 0x10000)
+            {
+                toReturn = Anew(ctAllocator, MatchCharNode, (wchar_t)singleton);
+            }
+            else
+            {
+                Assert(unicodeFlagPresent);
+                wchar_t lowerSurrogate, upperSurrogate;
+                Js::NumberUtilities::CodePointAsSurrogatePair(singleton, &lowerSurrogate, &upperSurrogate);
+                toReturn = CreateSurrogatePairAtom(lowerSurrogate, upperSurrogate);
+            }
+
+            codePointSet.Clear(ctAllocator);
+            return toReturn;
+        }
+
         if (!this->caseInsensitiveFlagPresent)
         {
-            // If a singleton, return a simple character
-            if (!isNegation && codePointSet.IsSingleton())
+            // If negation, we want to complement the simple chars.
+            // When a set is negated, optimizations skip checking if applicable, so we can go ahead and negate it here.
+            CharSet<codepoint_t> negatedSet;
+
+            if (isNegation)
             {
-                codepoint_t singleton = codePointSet.Singleton();
-                Node* toReturn = nullptr;
-
-                if (singleton < 0x10000)
-                {
-                    toReturn = Anew(ctAllocator, MatchCharNode, (wchar_t)singleton);
-                }
-                else
-                {
-                    Assert(unicodeFlagPresent);
-                    wchar_t lowerSurrogate, upperSurrogate;
-                    Js::NumberUtilities::CodePointAsSurrogatePair(singleton, &lowerSurrogate, &upperSurrogate);
-                    toReturn = CreateSurrogatePairAtom(lowerSurrogate, upperSurrogate);
-                }
-
-                codePointSet.Clear(ctAllocator);
-                return toReturn;
+                // Complement all characters, and use it as the set toTranslate
+                codePointSet.ToComplement(ctAllocator, negatedSet);
             }
-            
-            if(simpleCharsCount != 0)
+
+            toUseForTranslation = isNegation ? &negatedSet : &codePointSet;
+
+            if (isNegation)
             {
-                // If negation, we want to complement the simple chars.
-                // When a set is negated, optimizations skip checking if applicable, so we can go ahead and negate it here.
-                CharSet<codepoint_t> negatedSet;
-
-                if (isNegation)
-                {
-                    // Complement all characters, and use it as the set toTranslate
-                    codePointSet.ToComplement(ctAllocator, negatedSet);
-                }
-
-                toUseForTranslation = isNegation ? &negatedSet : &codePointSet;
-
-                totalCodePointsCount = toUseForTranslation->Count();
-                simpleCharsCount = toUseForTranslation->SimpleCharCount();
-
-                if (totalCodePointsCount == simpleCharsCount)
-                {
-                    MatchSetNode *simpleToReturn = Anew(ctAllocator, MatchSetNode, isNegation);
-                    toUseForTranslation->CloneSimpleCharsTo(ctAllocator, simpleToReturn->set);
-                    return simpleToReturn;
-                }
-
-                // Deal with preffix/suffix 
-                if (!toUseForTranslation->ContainSurrogateCodeUnits())
-                {
-                    MatchSetNode *node = Anew(ctAllocator, MatchSetNode, false);
-                    toUseForTranslation->CloneSimpleCharsTo(ctAllocator, node->set);
-                    prefixNode = node;
-                }
-                else
-                {
-                    MatchSetNode *node = Anew(ctAllocator, MatchSetNode, false);
-                    toUseForTranslation->CloneNonSurrogateCodeUnitsTo(ctAllocator, node->set);
-                    prefixNode = node;
-                    node = Anew(ctAllocator, MatchSetNode, false);
-                    toUseForTranslation->CloneSurrogateCodeUnitsTo(ctAllocator, node->set);
-                    suffixNode = node;
-                }
-
-                if (isNegation)
-                {
-                    // Clear this, as we will no longer need this.
-                    codePointSet.FreeBody(ctAllocator);
-                }
+                // Clear this, as we will no longer need this.
+                codePointSet.FreeBody(ctAllocator);
             }
         }
         else 
         {
+            CharSet<codepoint_t> caseEquivalent;
+            codePointSet.ToEquivClass(ctAllocator, caseEquivalent);
+            // Equiv set can't have a reduced count of chars
+            Assert(caseEquivalent.Count() >= codePointSet.Count());
+
             // Here we have a regex that has both case insensitive and unicode options.
             // The range might also be negated. If it is negated, we can go ahead and negate
             // the entire set as well as fill in cases, as optimizations wouldn't kick in anyways.
             if (isNegation)
             {
-                CharSet<codepoint_t> tmpSet;
-                codePointSet.ToEquivClass(ctAllocator, tmpSet);
                 codePointSet.Clear(ctAllocator);
-                //TMP set can't have a reduced count of chars
-                Assert(tmpSet.Count() >= totalCodePointsCount);
-                
-                tmpSet.ToComplement(ctAllocator, codePointSet);
-                
-                simpleCharsCount = codePointSet.SimpleCharCount();
-                totalCodePointsCount = codePointSet.Count();
-                Assert(toUseForTranslation == &codePointSet);
-                tmpSet.FreeBody(ctAllocator);
+                caseEquivalent.ToComplement(ctAllocator, codePointSet);
+                caseEquivalent.FreeBody(ctAllocator);
             }
             else
             {
-                CharSet<codepoint_t> caseEquivalent;
-                codePointSet.ToEquivClass(ctAllocator, caseEquivalent);
                 codePointSet.CloneFrom(ctAllocator, caseEquivalent);
-
-                simpleCharsCount = codePointSet.SimpleCharCount();
             }
 
-            Assert(simpleCharsCount == toUseForTranslation->SimpleCharCount());
-            Assert(toUseForTranslation->Count() >= totalCodePointsCount);
+            Assert(toUseForTranslation == &codePointSet);
+        }
 
-            totalCodePointsCount = toUseForTranslation->Count();
-            if (totalCodePointsCount == simpleCharsCount)
+        uint totalCodePointsCount = toUseForTranslation->Count();
+        uint simpleCharsCount = toUseForTranslation->SimpleCharCount();
+        if (totalCodePointsCount == simpleCharsCount)
+        {
+            MatchSetNode *simpleToReturn = Anew(ctAllocator, MatchSetNode, isNegation);
+            toUseForTranslation->CloneSimpleCharsTo(ctAllocator, simpleToReturn->set);
+            return simpleToReturn;
+        }
+
+        if  (simpleCharsCount > 0)
+        {
+            if (!toUseForTranslation->ContainSurrogateCodeUnits())
             {
-                MatchSetNode *simpleToReturn = Anew(ctAllocator, MatchSetNode, isNegation);
-                toUseForTranslation->CloneSimpleCharsTo(ctAllocator, simpleToReturn->set);
-                return simpleToReturn;
+                MatchSetNode *node = Anew(ctAllocator, MatchSetNode, false, false);
+                toUseForTranslation->CloneSimpleCharsTo(ctAllocator, node->set);
+                prefixNode = node;
             }
-
-            if  (simpleCharsCount > 0)
+            else
             {
-                if (!toUseForTranslation->ContainSurrogateCodeUnits())
-                {
-                    MatchSetNode *node = Anew(ctAllocator, MatchSetNode, false, false);
-                    toUseForTranslation->CloneSimpleCharsTo(ctAllocator, node->set);
-                    prefixNode = node;
-                }
-                else
-                {
-                    MatchSetNode *node = Anew(ctAllocator, MatchSetNode, false, false);
-                    toUseForTranslation->CloneNonSurrogateCodeUnitsTo(ctAllocator, node->set);
-                    prefixNode = node;
-                    node = Anew(ctAllocator, MatchSetNode, false, false);
-                    toUseForTranslation->CloneSurrogateCodeUnitsTo(ctAllocator, node->set);
-                    suffixNode = node;
-                }
+                MatchSetNode *node = Anew(ctAllocator, MatchSetNode, false, false);
+                toUseForTranslation->CloneNonSurrogateCodeUnitsTo(ctAllocator, node->set);
+                prefixNode = node;
+                node = Anew(ctAllocator, MatchSetNode, false, false);
+                toUseForTranslation->CloneSurrogateCodeUnitsTo(ctAllocator, node->set);
+                suffixNode = node;
             }
         }
 
         Assert(unicodeFlagPresent);
-        AltNode *headToReturn = prefixNode == nullptr ? nullptr : Anew(ctAllocator, AltNode, prefixNode, null);
+        AltNode *headToReturn = prefixNode == nullptr ? nullptr : Anew(ctAllocator, AltNode, prefixNode, nullptr);
         AltNode *currentTail = headToReturn;
 
         codepoint_t charRangeSearchIndex = 0x10000, lowerCharOfRange = 0, upperCharOfRange = 0;
@@ -2333,7 +2308,7 @@ namespace UnifiedRegex
         }
         toUseForTranslation->Clear(ctAllocator);
 
-        if (headToReturn != nullptr && headToReturn->tail == null)
+        if (headToReturn != nullptr && headToReturn->tail == nullptr)
         {
             return headToReturn->head;
         }

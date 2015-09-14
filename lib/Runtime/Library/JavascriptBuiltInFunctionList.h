@@ -121,7 +121,9 @@ BUILTIN(JavascriptError, NewReferenceErrorInstance, NewReferenceErrorInstance, F
 BUILTIN(JavascriptError, NewSyntaxErrorInstance, NewSyntaxErrorInstance, FunctionInfo::None)
 BUILTIN(JavascriptError, NewTypeErrorInstance, NewTypeErrorInstance, FunctionInfo::None)
 BUILTIN(JavascriptError, NewURIErrorInstance, NewURIErrorInstance, FunctionInfo::None)
+#ifdef ENABLE_PROJECTION
 BUILTIN(JavascriptError, NewWinRTErrorInstance, NewWinRTErrorInstance, FunctionInfo::None)
+#endif
 BUILTIN(JavascriptError, ToString, EntryToString, FunctionInfo::ErrorOnNew | FunctionInfo::HasNoSideEffect)
 BUILTIN(JavascriptExternalFunction, ExternalFunctionThunk, ExternalFunctionThunk, FunctionInfo::None)
 BUILTIN(JavascriptExternalFunction, WrappedFunctionThunk, WrappedFunctionThunk, FunctionInfo::None)

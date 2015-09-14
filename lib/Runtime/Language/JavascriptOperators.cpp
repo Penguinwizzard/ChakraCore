@@ -141,7 +141,7 @@ namespace Js
 
     IndexType GetIndexType(Var indexVar, ScriptContext* scriptContext, uint32* index, PropertyRecord const ** propertyRecord, bool createIfNotFound)
     {
-        return GetIndexType(indexVar, scriptContext, index, propertyRecord, null, createIfNotFound, false);
+        return GetIndexType(indexVar, scriptContext, index, propertyRecord, nullptr, createIfNotFound, false);
     }
 
     BOOL FEqualDbl(double dbl1, double dbl2)
@@ -328,7 +328,7 @@ namespace Js
 
     Var JavascriptOperators::TypeofFld_Internal(Var instance, const bool isRoot, PropertyId propertyId, ScriptContext* scriptContext)
     {
-        RecyclableObject* object = null;
+        RecyclableObject* object = nullptr;
         if (FALSE == JavascriptOperators::GetPropertyObject(instance, scriptContext, &object))
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_Property_CannotGet_NullOrUndefined , scriptContext->GetPropertyName(propertyId)->GetBuffer());
@@ -1141,7 +1141,7 @@ CommonNumber:
             {
                 return FALSE;
             }
-            if (null != value)
+            if (nullptr != value)
             {
                 propertyDescriptor->SetValue(value);
             }
@@ -1552,7 +1552,7 @@ CommonNumber:
                 Var property;
                 if (dynamicTypeHandler->CheckFixedProperty(requestContext->GetPropertyName(propertyId), &property, requestContext))
                 {
-                    Assert(value == null || *value == property);
+                    Assert(value == nullptr || *value == property);
                 }
             }
 #endif
@@ -1683,7 +1683,7 @@ CommonNumber:
 
     Var JavascriptOperators::OP_GetProperty(Var instance, PropertyId propertyId, ScriptContext* scriptContext)
     {
-        RecyclableObject* object = null;
+        RecyclableObject* object = nullptr;
         if (FALSE == JavascriptOperators::GetPropertyObject(instance, scriptContext, &object))
         {
             if (scriptContext->GetThreadContext()->RecordImplicitException())
@@ -1697,7 +1697,7 @@ CommonNumber:
         }
 
         Var result = JavascriptOperators::GetProperty(instance, object, propertyId, scriptContext);
-        AssertMsg(result != null, "result null in OP_GetProperty");
+        AssertMsg(result != nullptr, "result null in OP_GetProperty");
         return result;
     }
 
@@ -1717,13 +1717,13 @@ CommonNumber:
 
         const wchar_t* propertyName = scriptContext->GetPropertyName(propertyId)->GetBuffer();
 
-        JavascriptFunction * caller = NULL;
+        JavascriptFunction * caller = nullptr;
         if (JavascriptStackWalker::GetCaller(&caller, scriptContext))
         {
             FunctionBody * callerBody = caller->GetFunctionBody();
             if (callerBody && callerBody->GetUtf8SourceInfo()->GetIsXDomain())
             {
-                propertyName = NULL;
+                propertyName = nullptr;
             }
         }
 
@@ -1795,11 +1795,11 @@ CommonNumber:
 
     Var JavascriptOperators::GetPropertyReference(RecyclableObject *instance, PropertyId propertyId, ScriptContext* requestContext)
     {
-        Var value = null;
+        Var value = nullptr;
         PropertyValueInfo info;
         if (JavascriptOperators::GetPropertyReference(instance, propertyId, &value, requestContext, &info))
         {
-            Assert(value != null);
+            Assert(value != nullptr);
             return value;
         }
         return requestContext->GetLibrary()->GetUndefined();
@@ -1901,7 +1901,7 @@ CommonNumber:
             Var property;
             if (dynamicTypeHandler->CheckFixedProperty(requestContext->GetPropertyName(propertyId), &property, requestContext))
             {
-                Assert(value == null || *value == property);
+                Assert(value == nullptr || *value == property);
             }
         }
 #endif
@@ -2038,7 +2038,7 @@ CommonNumber:
         if (receiver)
         {
             Assert(!TaggedNumber::Is(receiver));
-            Var setterValueOrProxy = null;
+            Var setterValueOrProxy = nullptr;
             DescriptorFlags flags = None;
             if (JavascriptOperators::CheckPrototypesForAccessorOrNonWritableProperty(object, propertyKey, &setterValueOrProxy, &flags, NULL, requestContext))
             {
@@ -2114,7 +2114,7 @@ CommonNumber:
 
         if (requestContext->optimizationOverrides.GetSideEffects() & SideEffects_Accessor)
         {
-            Var setterValueOrProxy = null;
+            Var setterValueOrProxy = nullptr;
             DescriptorFlags flags = None;
             if (object == nullptr)
             {
@@ -2162,7 +2162,7 @@ CommonNumber:
 
         if (requestContext->optimizationOverrides.GetSideEffects() & SideEffects_Accessor)
         {
-            Var setterValueOrProxy = null;
+            Var setterValueOrProxy = nullptr;
             PropertyValueInfo info;
             DescriptorFlags flags = None;
             if (object == nullptr)
@@ -2226,7 +2226,7 @@ CommonNumber:
         if (receiver)
         {
             Assert(!TaggedNumber::Is(receiver));
-            Var setterValueOrProxy = null;
+            Var setterValueOrProxy = nullptr;
             DescriptorFlags flags = None;
             if ((isRoot && JavascriptOperators::CheckPrototypesForAccessorOrNonWritableRootProperty(object, propertyId, &setterValueOrProxy, &flags, info, requestContext)) ||
                 (!isRoot && JavascriptOperators::CheckPrototypesForAccessorOrNonWritableProperty(object, propertyId, &setterValueOrProxy, &flags, info, requestContext)))
@@ -2663,7 +2663,7 @@ CommonNumber:
             // is true, this must be a normal property.
             // TODO: merge OP_HasProperty and GetSetter in one pass if there is perf problem. In fastDOM we have quite
             // a lot of setters so separating the two might be actually faster.
-            Var setterValueOrProxy = null;
+            Var setterValueOrProxy = nullptr;
             DescriptorFlags flags = None;
             if (JavascriptOperators::CheckPrototypesForAccessorOrNonWritableProperty(object, propertyId, &setterValueOrProxy, &flags, &info, scriptContext))
             {
@@ -2722,7 +2722,7 @@ CommonNumber:
                     scriptContext->GetThreadContext()->SetDisableImplicitFlags(DisableImplicitCallAndExceptionFlag);
 
                     Var value;
-                    BOOL result = JavascriptOperators::GetProperty(object, propertyId, &value, scriptContext, null);
+                    BOOL result = JavascriptOperators::GetProperty(object, propertyId, &value, scriptContext, nullptr);
 
                     scriptContext->GetThreadContext()->SetDisableImplicitFlags(disableImplicitFlags);
 
@@ -2761,7 +2761,7 @@ CommonNumber:
 
         // No one in the scope stack has the property, so add it to the default instance provided by the caller.
         AssertMsg(!TaggedNumber::Is(defaultInstance), "Root object is an int or tagged float?");
-        Assert(defaultInstance != null);
+        Assert(defaultInstance != nullptr);
         RecyclableObject* obj = RecyclableObject::FromVar(defaultInstance);
         {
             //SetPropertyScoped does not use inline cache for default instance
@@ -2931,7 +2931,7 @@ CommonNumber:
 
     BOOL JavascriptOperators::SetItem(Var receiver, RecyclableObject* object, uint32 index, Var value, ScriptContext* scriptContext, PropertyOperationFlags propertyOperationFlags, BOOL skipPrototypeCheck /* = FALSE */)
     {
-        Var setterValueOrProxy = null;
+        Var setterValueOrProxy = nullptr;
         DescriptorFlags flags = None;
         Assert(!TaggedNumber::Is(receiver));
         if (JavascriptOperators::CheckPrototypesForAccessorOrNonWritableItem(object, index, &setterValueOrProxy, &flags, scriptContext, skipPrototypeCheck))
@@ -3198,9 +3198,6 @@ CommonNumber:
 
     Var JavascriptOperators::OP_GetElementI(Var instance, Var index, ScriptContext* scriptContext)
     {
-#ifdef ARRLOG
-        rawGet++;
-#endif
         JavascriptString *temp = NULL;
         JavascriptLibrary::CheckAndConvertCopyOnAccessNativeIntArray<Var>(instance);
 
@@ -3479,7 +3476,7 @@ CommonNumber:
             {
                 PropertyString * propertyString = (PropertyString*)temp;
                 PropertyCache const *cache = propertyString->GetPropertyCache();
-                RecyclableObject* object = null;
+                RecyclableObject* object = nullptr;
                 if (FALSE == JavascriptOperators::GetPropertyObject(instance, scriptContext, &object))
                 {
                     JavascriptError::ThrowTypeError(scriptContext, JSERR_Property_CannotGet_NullOrUndefined,
@@ -3536,7 +3533,7 @@ CommonNumber:
 
     Var JavascriptOperators::GetElementIHelper(Var instance, Var index, Var receiver, ScriptContext* scriptContext)
     {
-        RecyclableObject* object = null;
+        RecyclableObject* object = nullptr;
         if (FALSE == JavascriptOperators::GetPropertyObject(instance, scriptContext, &object))
         {
             if(scriptContext->GetThreadContext()->RecordImplicitException())
@@ -3560,9 +3557,6 @@ CommonNumber:
 
         if (indexType == IndexType_Number)
         {
-#ifdef ARRLOG
-            rawTypeGet++;
-#endif
             if (JavascriptOperators::GetItem(receiver, object, indexVal, &value, scriptContext))
             {
                 return value;
@@ -3570,7 +3564,7 @@ CommonNumber:
         }
         else if (indexType == IndexType_JavascriptString)
         {
-            if (JavascriptOperators::GetPropertyWPCache(receiver, object, propertyNameString, &value, scriptContext, null))
+            if (JavascriptOperators::GetPropertyWPCache(receiver, object, propertyNameString, &value, scriptContext, nullptr))
             {
                 return value;
             }
@@ -3582,7 +3576,7 @@ CommonNumber:
 
             Assert(propertyRecord);
 
-            if (JavascriptOperators::GetPropertyWPCache(receiver, object, propertyRecord->GetPropertyId(), &value, scriptContext, null))
+            if (JavascriptOperators::GetPropertyWPCache(receiver, object, propertyRecord->GetPropertyId(), &value, scriptContext, nullptr))
             {
                 return value;
             }
@@ -3752,7 +3746,7 @@ CommonNumber:
 
     Var JavascriptOperators::OP_GetMethodElement(Var instance, Var index, ScriptContext* scriptContext)
     {
-        RecyclableObject* object = null;
+        RecyclableObject* object = nullptr;
         if (FALSE == JavascriptOperators::GetPropertyObject(instance, scriptContext, &object))
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_Property_CannotGet_NullOrUndefined, GetPropertyDisplayNameForError(index, scriptContext));
@@ -3778,7 +3772,7 @@ CommonNumber:
         }
         else
         {
-            if (propertyRecord != null)
+            if (propertyRecord != nullptr)
             {
                 hasProperty = JavascriptOperators::GetPropertyReference(instance, object, propertyRecord->GetPropertyId(), &value, scriptContext, NULL);
             }
@@ -3852,9 +3846,6 @@ CommonNumber:
 
     BOOL JavascriptOperators::OP_SetElementI(Var instance, Var index, Var value, ScriptContext* scriptContext, PropertyOperationFlags flags)
     {
-#ifdef ARRLOG
-        rawSet++;
-#endif
         JavascriptLibrary::CheckAndConvertCopyOnAccessNativeIntArray<Var>(instance);
 
         TypeId instanceType = JavascriptOperators::GetTypeId(instance);
@@ -4657,7 +4648,7 @@ CommonNumber:
             else
             {
                 Js::ModuleRoot * moduleRoot = JavascriptOperators::GetModuleRoot(moduleID, scriptContext);
-                if (moduleRoot == null)
+                if (moduleRoot == nullptr)
                 {
                     Assert(false);
                     thisVar = scriptContext->GetLibrary()->GetUndefined();
@@ -4824,14 +4815,14 @@ CommonNumber:
          if (JavascriptOperators::GetTypeId(instance) == TypeIds_Function)
          {
              FunctionProxy *bod= ((JavascriptFunction*)instance)->GetFunctionProxy();
-             if (bod != null)
+             if (bod != nullptr)
              {
                  return bod->GetDirectEntryPoint(bod->GetDefaultEntryPointInfo()) == &Js::JavascriptFunction::EntryApply;
              }
              else
              {
                  FunctionInfo* info = ((JavascriptFunction *)instance)->GetFunctionInfo();
-                 if (info != null)
+                 if (info != nullptr)
                  {
                      return &Js::JavascriptFunction::EntryApply == info->GetOriginalEntryPoint();
                  }
@@ -4851,14 +4842,14 @@ CommonNumber:
          if (JavascriptOperators::GetTypeId(instance) == TypeIds_Function)
          {
              FunctionProxy *bod = ((JavascriptFunction *)instance)->GetFunctionProxy();
-             if (bod != null)
+             if (bod != nullptr)
              {
                  return bod->GetDirectEntryPoint(bod->GetDefaultEntryPointInfo()) != &Js::JavascriptFunction::EntryApply;
              }
              else
              {
                  FunctionInfo* info = ((JavascriptFunction *)instance)->GetFunctionInfo();
-                 if (info != null)
+                 if (info != nullptr)
                  {
                      return &Js::JavascriptFunction::EntryApply != info->GetOriginalEntryPoint();
                  }
@@ -4901,7 +4892,7 @@ CommonNumber:
         }
         else
         {
-            enumerableObject = null;
+            enumerableObject = nullptr;
             isCrossSite = false;
         }
         if (!isCrossSite)
@@ -5019,7 +5010,7 @@ CommonNumber:
     JavascriptOperators::EnsureObjectLiteralType(ScriptContext* scriptContext, const Js::PropertyIdArray *propIds, DynamicType ** literalType)
     {
         DynamicType * newType = *literalType;
-        if (newType != null)
+        if (newType != nullptr)
         {
             if (!newType->GetIsShared())
             {
@@ -5132,7 +5123,7 @@ CommonNumber:
         }
 
         DynamicType *type = *literalType;
-        if (type != null)
+        if (type != nullptr)
         {
 #ifdef PROFILE_OBJECT_LITERALS
             scriptContext->objectLiteralCacheCount++;
@@ -5427,7 +5418,7 @@ CommonNumber:
         Assert(functionInfo != &JavascriptObject::EntryInfo::NewInstance); // built-ins are not inlined
         Assert(functionInfo != &JavascriptArray::EntryInfo::NewInstance); // built-ins are not inlined
 
-        return functionInfo != null ?
+        return functionInfo != nullptr ?
             JavascriptOperators::NewScObjectCommon(object, functionInfo, requestContext, isBaseClassConstructorNewScObject) :
             JavascriptOperators::NewScObjectHostDispatchOrProxy(object, requestContext);
     }
@@ -5509,7 +5500,7 @@ CommonNumber:
             return newArray;
         }
 
-        Var newObject = functionInfo != null ?
+        Var newObject = functionInfo != nullptr ?
             JavascriptOperators::NewScObjectCommon(object, functionInfo, requestContext) :
             JavascriptOperators::NewScObjectHostDispatchOrProxy(object, requestContext);
 
@@ -5519,13 +5510,13 @@ CommonNumber:
             newObject = returnVar;
         }
 
-        ConstructorCache * constructorCache = null;
+        ConstructorCache * constructorCache = nullptr;
         if (JavascriptFunction::Is(instance))
         {
             constructorCache = JavascriptFunction::FromVar(instance)->GetConstructorCache();
         }
 
-        if (constructorCache != null && constructorCache->NeedsUpdateAfterCtor())
+        if (constructorCache != nullptr && constructorCache->NeedsUpdateAfterCtor())
         {
             JavascriptOperators::UpdateNewScObjectCache(object, newObject, requestContext);
         }
@@ -5610,12 +5601,12 @@ CommonNumber:
             return function;
         }
         ConstructorCache* constructorCache = constructor->GetConstructorCache();
-        AssertMsg(constructorCache->GetScriptContext() == null || constructorCache->GetScriptContext() == constructor->GetScriptContext(),
+        AssertMsg(constructorCache->GetScriptContext() == nullptr || constructorCache->GetScriptContext() == constructor->GetScriptContext(),
             "Why did we populate a constructor cache with a mismatched script context?");
 
-        Assert(constructorCache != null);
+        Assert(constructorCache != nullptr);
         DynamicType* type = constructorCache->GetGuardValueAsType();
-        if (type != null && constructorCache->GetScriptContext() == requestContext)
+        if (type != nullptr && constructorCache->GetScriptContext() == requestContext)
         {
 #if DBG
             bool cachedProtoCanBeCached;
@@ -5646,7 +5637,7 @@ CommonNumber:
             TraceUseConstructorCache(constructorCache, constructor, true);
 #endif
 
-            return null;
+            return nullptr;
         }
 
 #if DBG_DUMP
@@ -5666,22 +5657,22 @@ CommonNumber:
 
         // Slow path
         FunctionProxy * ctorProxy = constructor->GetFunctionProxy();
-        FunctionBody * functionBody = ctorProxy != null ? ctorProxy->EnsureDeserialized()->Parse() : null;
+        FunctionBody * functionBody = ctorProxy != nullptr ? ctorProxy->EnsureDeserialized()->Parse() : nullptr;
 
         if (attributes & FunctionInfo::SkipDefaultNewObject)
         {
             // The constructor doesn't use the default new object.
             // TODO (jedmiad): Add tracing.
             #pragma prefast(suppress:__WARNING_LOGICALORNONZERO, "DevDiv bug 830883. False positive when PHASE_OFF is #defined as '(false)'.")
-            if (!PHASE_OFF1(ConstructorCachePhase) && (functionBody == null || !PHASE_OFF(ConstructorCachePhase, functionBody)))
+            if (!PHASE_OFF1(ConstructorCachePhase) && (functionBody == nullptr || !PHASE_OFF(ConstructorCachePhase, functionBody)))
             {
                 constructorCache = constructor->EnsureValidConstructorCache();
                 constructorCache->PopulateForSkipDefaultNewObject(constructorScriptContext);
 
 #if DBG_DUMP
-                if ((functionBody != null && PHASE_TRACE(Js::ConstructorCachePhase, functionBody)) || (functionBody == null && PHASE_TRACE1(Js::ConstructorCachePhase)))
+                if ((functionBody != nullptr && PHASE_TRACE(Js::ConstructorCachePhase, functionBody)) || (functionBody == nullptr && PHASE_TRACE1(Js::ConstructorCachePhase)))
                 {
-                    const wchar_t* ctorName = functionBody != null ? functionBody->GetDisplayName() : L"<unknown>";
+                    const wchar_t* ctorName = functionBody != nullptr ? functionBody->GetDisplayName() : L"<unknown>";
                     wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
 
                     Output::Print(L"CtorCache: populated cache (0x%p) for ctor %s (%s): ", constructorCache, ctorName,
@@ -5695,7 +5686,7 @@ CommonNumber:
             }
 
             Assert(!constructorCache->NeedsUpdateAfterCtor());
-            return null;
+            return nullptr;
         }
 
         // TODO (jedmiad): Create some form of PatchGetProtoObjForCtorCache, which actually caches the prototype object in the constructor cache.
@@ -5718,7 +5709,7 @@ CommonNumber:
 
         Assert(newObject->GetTypeHandler()->GetPropertyCount() == 0);
 
-        if (prototypeCanBeCached && functionBody != null && requestContext == constructorScriptContext &&
+        if (prototypeCanBeCached && functionBody != nullptr && requestContext == constructorScriptContext &&
             !Js::JavascriptProxy::Is(newObject) &&
             !PHASE_OFF1(ConstructorCachePhase) && !PHASE_OFF(ConstructorCachePhase, functionBody))
         {
@@ -5736,9 +5727,9 @@ CommonNumber:
             Assert(constructorCache->IsConsistent());
 
 #if DBG_DUMP
-            if ((functionBody != null && PHASE_TRACE(Js::ConstructorCachePhase, functionBody)) || (functionBody == null && PHASE_TRACE1(Js::ConstructorCachePhase)))
+            if ((functionBody != nullptr && PHASE_TRACE(Js::ConstructorCachePhase, functionBody)) || (functionBody == nullptr && PHASE_TRACE1(Js::ConstructorCachePhase)))
             {
-                const wchar_t* ctorName = functionBody != null ? functionBody->GetDisplayName() : L"<unknown>";
+                const wchar_t* ctorName = functionBody != nullptr ? functionBody->GetDisplayName() : L"<unknown>";
                 wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
 
                 Output::Print(L"CtorCache: populated cache (0x%p) for ctor %s (%s): ", constructorCache, ctorName,
@@ -5752,15 +5743,15 @@ CommonNumber:
         else
         {
 #if DBG_DUMP
-            if ((functionBody != null && PHASE_TRACE(Js::ConstructorCachePhase, functionBody)) || (functionBody == null && PHASE_TRACE1(Js::ConstructorCachePhase)))
+            if ((functionBody != nullptr && PHASE_TRACE(Js::ConstructorCachePhase, functionBody)) || (functionBody == nullptr && PHASE_TRACE1(Js::ConstructorCachePhase)))
             {
-                const wchar_t* ctorName = functionBody != null ? functionBody->GetDisplayName() : L"<unknown>";
+                const wchar_t* ctorName = functionBody != nullptr ? functionBody->GetDisplayName() : L"<unknown>";
                 wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
 
                 Output::Print(L"CtorCache: did not populate cache (0x%p) for ctor %s (%s), because %s: prototype = 0x%p, functionBody = 0x%p, ctor context = 0x%p, request context = 0x%p",
                     constructorCache, ctorName, functionBody ? functionBody->GetDebugNumberSet(debugStringBuffer) : L"(null)",
                     !prototypeCanBeCached ? L"prototype cannot be cached" :
-                    functionBody == null ? L"function has no body" :
+                    functionBody == nullptr ? L"function has no body" :
                     requestContext != constructorScriptContext ? L"of cross-context call" : L"constructor cache phase is off",
                     prototype, functionBody, constructorScriptContext, requestContext);
                 Output::Print(L"\n");
@@ -5809,7 +5800,7 @@ CommonNumber:
         }
 
         FunctionBody* constructorBody = constructor->GetFunctionBody();
-        AssertMsg(constructorBody != null, "Constructor function doesn't have a function body.");
+        AssertMsg(constructorBody != nullptr, "Constructor function doesn't have a function body.");
         Assert(RecyclableObject::Is(instance));
 
         // The cache might have been invalidated between NewScObjectCommon and UpdateNewScObjectCache.  This could occur, for example, if
@@ -5823,7 +5814,7 @@ CommonNumber:
             return;
         }
 
-        Assert(constructorCache->GetGuardValueAsType() != null);
+        Assert(constructorCache->GetGuardValueAsType() != nullptr);
 
         if (DynamicType::Is(RecyclableObject::FromVar(instance)->GetTypeId()))
         {
@@ -5847,8 +5838,8 @@ CommonNumber:
                     // TODO (jedmiad): Remove only this for delayed type sharing.
                     type->ShareType();
 
-                    DynamicProfileInfo* profileInfo = constructorBody->HasDynamicProfileInfo() ? constructorBody->GetAnyDynamicProfileInfo() : null;
-                    if ((profileInfo != null && profileInfo->GetImplicitCallFlags() <= ImplicitCall_None) ||
+                    DynamicProfileInfo* profileInfo = constructorBody->HasDynamicProfileInfo() ? constructorBody->GetAnyDynamicProfileInfo() : nullptr;
+                    if ((profileInfo != nullptr && profileInfo->GetImplicitCallFlags() <= ImplicitCall_None) ||
                         CheckIfPrototypeChainHasOnlyWritableDataProperties(type->GetPrototype()))
                     {
                         Assert(typeHandler->GetPropertyCount() < Js::PropertyIndexRanges<PropertyIndex>::MaxValue);
@@ -5967,13 +5958,13 @@ CommonNumber:
 #if DBG_DUMP
         // We are under debug, so we can incurr the extra check here.
         FunctionProxy* ctorBody = ctor->GetFunctionProxy();
-        if (ctorBody != null && !ctorBody->GetScriptContext()->IsClosed())
+        if (ctorBody != nullptr && !ctorBody->GetScriptContext()->IsClosed())
         {
             ctorBody = ctorBody->EnsureDeserialized();
         }
-        if ((ctorBody != null && PHASE_TRACE(Js::ConstructorCachePhase, ctorBody)) || (ctorBody == null && PHASE_TRACE1(Js::ConstructorCachePhase)))
+        if ((ctorBody != nullptr && PHASE_TRACE(Js::ConstructorCachePhase, ctorBody)) || (ctorBody == nullptr && PHASE_TRACE1(Js::ConstructorCachePhase)))
         {
-            const wchar_t* ctorName = ctorBody != null ? ctorBody->GetDisplayName() : L"<unknown>";
+            const wchar_t* ctorName = ctorBody != nullptr ? ctorBody->GetDisplayName() : L"<unknown>";
             wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
 
             Output::Print(L"CtorCache: %s cache (0x%p) for ctor %s (%s): ", isHit ? L"hit" : L"missed", ctorCache, ctorName,
@@ -6045,7 +6036,7 @@ CommonNumber:
             return moduleRoot;
         }
         Assert(FALSE);
-        return null;
+        return nullptr;
     }
 
     Var JavascriptOperators::OP_LoadModuleRoot(int moduleID, ScriptContext* scriptContext)
@@ -6081,7 +6072,7 @@ CommonNumber:
 
     void JavascriptOperators::BuildHandlerScope(Var argThis, RecyclableObject * hostObject, FrameDisplay * pDisplay, ScriptContext * scriptContext)
     {
-        Assert(argThis != null);
+        Assert(argThis != nullptr);
         pDisplay->SetItem(0, TaggedNumber::Is(argThis) ? scriptContext->GetLibrary()->CreateNumberObject(argThis) : argThis);
         uint16 i = 1;
 
@@ -6094,7 +6085,7 @@ CommonNumber:
         {
             Var aParent = hostObject->GetNamespaceParent(aChild);
 
-            if (aParent == null)
+            if (aParent == nullptr)
             {
                 break;
             }
@@ -6128,11 +6119,11 @@ CommonNumber:
         if (argThis != NULL)
         {
             RecyclableObject* hostObject = scriptContext->GetGlobalObject()->GetHostObject();
-            if (hostObject == null)
+            if (hostObject == nullptr)
             {
                 hostObject = scriptContext->GetGlobalObject()->GetDirectHostObject();
             }
-            if (hostObject != null)
+            if (hostObject != nullptr)
             {
                 uint16 length = 7;
                 FrameDisplay *pDisplay =
@@ -6157,7 +6148,7 @@ CommonNumber:
         // worth the extra complexity to notify the nested functions that they can "skip" this slot in the
         // frame display when they're loading scopes nested outside it.
 
-        FrameDisplay *pDisplay = null;
+        FrameDisplay *pDisplay = nullptr;
         FrameDisplay *envDisplay = (FrameDisplay*)argEnv;
         uint16 length = envDisplay->GetLength() + 1;
 
@@ -6379,7 +6370,7 @@ CommonNumber:
         // Create and initialize the Arguments object.
 
         uint32 formalsCount = 0;
-        Js::PropertyIdArray *propIds = null;
+        Js::PropertyIdArray *propIds = nullptr;
         if (vArray != scriptContext->GetLibrary()->GetNull())
         {
             propIds = (Js::PropertyIdArray *)vArray;
@@ -6393,7 +6384,7 @@ CommonNumber:
 
         Var *tmpAddr = paramAddr;
 
-        if (propIds != null)
+        if (propIds != nullptr)
         {
             ActivationObject* frameObject = (ActivationObject*)frameObj;
             // No fixed fields for formal parameters of the arguments object.  Also, mark all fields as inititalized up-front, because
@@ -6553,7 +6544,7 @@ CommonNumber:
         else
         {
             JavascriptOperators::SetProperty(argsObj, argsObj, PropertyIds::callee,
-                StackScriptFunction::EnsureBoxed(BOX_PARAM(funcCallee, null, L"callee")), scriptContext);
+                StackScriptFunction::EnsureBoxed(BOX_PARAM(funcCallee, nullptr, L"callee")), scriptContext);
         }
 
         return argsObj;
@@ -6809,7 +6800,7 @@ CommonNumber:
 
         Assert(Js::JavascriptStackWalker::ValidateTopJitFrame(scriptContext));
 
-        RecyclableObject* object = null;
+        RecyclableObject* object = nullptr;
         if (FALSE == JavascriptOperators::GetPropertyObject(instance, scriptContext, &object))
         {
             if (scriptContext->GetThreadContext()->RecordImplicitException())
@@ -6860,7 +6851,7 @@ CommonNumber:
 
         Assert(Js::JavascriptStackWalker::ValidateTopJitFrame(scriptContext));
 
-        RecyclableObject* object = null;
+        RecyclableObject* object = nullptr;
         if (FALSE == JavascriptOperators::GetPropertyObject(instance, scriptContext, &object))
         {
             if (scriptContext->GetThreadContext()->RecordImplicitException())
@@ -6933,7 +6924,7 @@ CommonNumber:
     {
         ScriptContext *const scriptContext = functionBody->GetScriptContext();
 
-        RecyclableObject* object = null;
+        RecyclableObject* object = nullptr;
         if (FALSE == JavascriptOperators::GetPropertyObject(instance, scriptContext, &object))
         {
             if (scriptContext->GetThreadContext()->RecordImplicitException())
@@ -7118,11 +7109,11 @@ CommonNumber:
     template <bool IsFromFullJit, class TInlineCache>
     __inline Var JavascriptOperators::PatchGetMethod(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId)
     {
-        Assert(inlineCache != null);
+        Assert(inlineCache != nullptr);
 
         ScriptContext *const scriptContext = functionBody->GetScriptContext();
 
-        RecyclableObject* object = null;
+        RecyclableObject* object = nullptr;
         JavascriptLibrary::CheckAndConvertCopyOnAccessNativeIntArray<Var>(instance);
         if (FALSE == JavascriptOperators::GetPropertyObject(instance, scriptContext, &object))
         {
@@ -7179,7 +7170,7 @@ CommonNumber:
     template <bool IsFromFullJit, class TInlineCache>
     __inline Var JavascriptOperators::PatchGetRootMethod(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, DynamicObject* object, PropertyId propertyId)
     {
-        Assert(inlineCache != null);
+        Assert(inlineCache != nullptr);
 
         AssertMsg(RootObjectBase::Is(object), "Root must be a global object!");
 
@@ -7219,11 +7210,11 @@ CommonNumber:
     template <bool IsFromFullJit, class TInlineCache>
     __inline Var JavascriptOperators::PatchScopedGetMethod(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId)
     {
-        Assert(inlineCache != null);
+        Assert(inlineCache != nullptr);
 
         ScriptContext *const scriptContext = functionBody->GetScriptContext();
 
-        RecyclableObject* object = null;
+        RecyclableObject* object = nullptr;
         if (FALSE == JavascriptOperators::GetPropertyObject(instance, scriptContext, &object))
         {
             // Don't error if we disabled implicit calls
@@ -7266,7 +7257,7 @@ CommonNumber:
     {
         ScriptContext *const scriptContext = functionBody->GetScriptContext();
 
-        RecyclableObject* object = null;
+        RecyclableObject* object = nullptr;
         if (FALSE == JavascriptOperators::GetPropertyObject(instance, scriptContext, &object))
         {
             // Don't error if we disabled implicit calls
@@ -7310,7 +7301,7 @@ CommonNumber:
     {
         Assert(IsPropertyObject(propertyObject));
 
-        Var value = null;
+        Var value = nullptr;
         BOOL foundValue = FALSE;
 
         if (isRootLd)
@@ -7830,17 +7821,17 @@ CommonNumber:
         if (cache->nextEvictionVictim == EQUIVALENT_TYPE_CACHE_SIZE)
         {
             __analysis_assume(index < EQUIVALENT_TYPE_CACHE_SIZE);
-            if (equivTypes[index] != null)
+            if (equivTypes[index] != nullptr)
             {
                 uint initialIndex = index;
                 index = (initialIndex + 1) & (EQUIVALENT_TYPE_CACHE_SIZE - 1);
                 for (; index != initialIndex; index = (index + 1) & (EQUIVALENT_TYPE_CACHE_SIZE - 1))
                 {
-                    if (equivTypes[index] == null) break;
+                    if (equivTypes[index] == nullptr) break;
                 }
             }
             __analysis_assume(index < EQUIVALENT_TYPE_CACHE_SIZE);
-            if (equivTypes[index] != null)
+            if (equivTypes[index] != nullptr)
             {
                 cache->nextEvictionVictim = 0;
             }
@@ -8698,7 +8689,7 @@ CommonNumber:
     // Check if an accessor is undefined (null or defaultAccessor)
     bool JavascriptOperators::IsUndefinedAccessor(Var accessor, ScriptContext* scriptContext)
     {
-        return null == accessor || scriptContext->GetLibrary()->GetDefaultAccessorFunction() == accessor;
+        return nullptr == accessor || scriptContext->GetLibrary()->GetDefaultAccessorFunction() == accessor;
     }
 
     // Converts default accessor to undefined.
@@ -8827,7 +8818,7 @@ CommonNumber:
 
             Var result = marshalledFunction->GetEntryPoint()(function, CallInfo(flags, 2), thisVar, putValue);
             Assert(result);
-            return null;
+            return nullptr;
         });
     }
 
@@ -8889,7 +8880,7 @@ CommonNumber:
             if (next)
             {
                 Assert(next->prev == this);
-                next->prev = null;
+                next->prev = nullptr;
             }
             functionBody->SetPolymorphicInlineCachesHead(next);
         }
@@ -8906,8 +8897,8 @@ CommonNumber:
                 next->prev = prev;
             }
         }
-        prev = next = null;
-        inlineCaches = null;
+        prev = next = nullptr;
+        inlineCaches = nullptr;
         size = 0;
     }
 
@@ -9706,7 +9697,7 @@ CommonNumber:
 
     Var JavascriptOperators::ToObject(Var aRight, ScriptContext* scriptContext)
     {
-        RecyclableObject* object = null;
+        RecyclableObject* object = nullptr;
         if (FALSE == JavascriptConversion::ToObject(aRight, scriptContext, &object))
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedObject /* TODO-ERROR: get arg name - aValue */);

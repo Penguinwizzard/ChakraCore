@@ -544,7 +544,7 @@ namespace Js
             args.Info.Count,
             true);
 
-        args.Values[0] = null;
+        args.Values[0] = nullptr;
         Var array;
         if (arrayInfo->IsNativeIntArray())
         {
@@ -609,12 +609,12 @@ namespace Js
             const auto calleeFunctionInfo =
                 calleeObject->GetTypeId() == TypeIds_Function
                     ? JavascriptFunction::FromVar(calleeObject)->GetFunctionInfo()
-                    : null;
+                    : nullptr;
             callerFunctionBody->GetDynamicProfileInfo()->RecordCallSiteInfo(
                 callerFunctionBody,
                 profileId,
                 calleeFunctionInfo,
-                calleeFunctionInfo ? static_cast<JavascriptFunction *>(calleeObject) : null,
+                calleeFunctionInfo ? static_cast<JavascriptFunction *>(calleeObject) : nullptr,
                 args.Info.Count,
                 true,
                 inlineCacheIndex);
@@ -1094,7 +1094,7 @@ namespace Js
                 flags);
         }
 
-        functionBody->GetDynamicProfileInfo()->RecordFieldAccess(functionBody, inlineCacheIndex, null, fldInfoFlags);
+        functionBody->GetDynamicProfileInfo()->RecordFieldAccess(functionBody, inlineCacheIndex, nullptr, fldInfoFlags);
     }
 
     void ProfilingHelpers::ProfiledInitFld_Jit(
@@ -1166,7 +1166,7 @@ namespace Js
         fldInfoFlags = DynamicProfileInfo::MergeFldInfoFlags(fldInfoFlags, DynamicProfileInfo::FldInfoFlagsFromCacheType(operationInfo.cacheType));
         fldInfoFlags = DynamicProfileInfo::MergeFldInfoFlags(fldInfoFlags, DynamicProfileInfo::FldInfoFlagsFromSlotType(operationInfo.slotType));
 
-        functionBody->GetDynamicProfileInfo()->RecordFieldAccess(functionBody, inlineCacheIndex, null, fldInfoFlags);
+        functionBody->GetDynamicProfileInfo()->RecordFieldAccess(functionBody, inlineCacheIndex, nullptr, fldInfoFlags);
     }
 
     void ProfilingHelpers::UpdateFldInfoFlagsForGetSetInlineCandidate(
@@ -1176,11 +1176,11 @@ namespace Js
         InlineCache *const inlineCache,
         FunctionBody *const functionBody)
     {
-        RecyclableObject *callee = null;
+        RecyclableObject *callee = nullptr;
         if((cacheType & (CacheType_Getter | CacheType_Setter)) &&
             inlineCache->GetGetterSetter(object->GetType(), &callee))
         {
-            const bool canInline = functionBody->GetDynamicProfileInfo()->RecordLdFldCallSiteInfo(functionBody, callee);
+            const bool canInline = functionBody->GetDynamicProfileInfo()->RecordLdFldCallSiteInfo(functionBody, callee, false /*callApplyTarget*/);
             if(canInline)
             {
                 //updates this fldInfoFlags passed by referrence.
@@ -1196,10 +1196,10 @@ namespace Js
         InlineCache *const inlineCache,
         FunctionBody *const functionBody)
     {
-        RecyclableObject *callee = null;
+        RecyclableObject *callee = nullptr;
         if(!(fldInfoFlags & FldInfo_Polymorphic) && inlineCache->GetCallApplyTarget(object, &callee))
         {
-            const bool canInline = functionBody->GetDynamicProfileInfo()->RecordLdFldCallSiteInfo(functionBody, callee);
+            const bool canInline = functionBody->GetDynamicProfileInfo()->RecordLdFldCallSiteInfo(functionBody, callee, true /*callApplyTarget*/);
             if(canInline)
             {
                 //updates the fldInfoFlags passed by referrence.

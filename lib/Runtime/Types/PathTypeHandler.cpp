@@ -221,7 +221,7 @@ namespace Js
         else
         {
             requestContext->FindPropertyRecord(propertyName, propertyNameLength, &propertyRecord);
-            if (propertyRecord == null)
+            if (propertyRecord == nullptr)
             {
                 return false;
             }
@@ -247,7 +247,7 @@ namespace Js
         // Path type handler doesn't support pre-initialization (PropertyOperation_PreInit).  Pre-initialized properties 
         // will get marked as fixed when  pre-initialized and then as non-fixed when their actual values are set.
 
-        Assert(value != null || IsInternalPropertyId(propertyId));
+        Assert(value != nullptr || IsInternalPropertyId(propertyId));
         PropertyIndex index = PathTypeHandlerBase::GetPropertyIndex(propertyId);
         
         if (index != Constants::NoSlot)
@@ -455,11 +455,11 @@ namespace Js
             operationInternalPropertyRecord == InternalPropertyRecords::FrozenType,
             "Wrong/unsupported value of operationInternalPropertyRecord.");
 
-        RecyclerWeakReference<DynamicType>* newTypeWeakRef = null;
+        RecyclerWeakReference<DynamicType>* newTypeWeakRef = nullptr;
         DynamicType * oldType = instance->GetDynamicType();
 
         // See if we already have shared type for this type and convert to it, otherwise create a new one.
-        if (!GetSuccessor(operationInternalPropertyRecord, &newTypeWeakRef) || newTypeWeakRef->Get() == null)
+        if (!GetSuccessor(operationInternalPropertyRecord, &newTypeWeakRef) || newTypeWeakRef->Get() == nullptr)
         {
             // Convert to new shared type with shared simple dictionary type handler and call operation on it.
             SimpleDictionaryTypeHandlerWithNontExtensibleSupport* newTypeHandler = ConvertToSimpleDictionaryType
@@ -574,7 +574,7 @@ namespace Js
             if (DynamicTypeHandler::AreSingletonInstancesNeeded())
             {
                 RecyclerWeakReference<DynamicObject>* curSingletonInstance = oldTypeHandler->typePath->GetSingletonInstance();
-                if (curSingletonInstance != null && curSingletonInstance->Get() == instance)
+                if (curSingletonInstance != nullptr && curSingletonInstance->Get() == instance)
                 {
                     newTypeHandler->SetSingletonInstance(curSingletonInstance);
                 }
@@ -662,7 +662,7 @@ namespace Js
         // We use the duplicated typeHandler, if we deOptimized the object successfully, else we retain the earlier
         // behavior of using 'this' pointer.
 
-        PathTypeHandlerBase * oldTypeHandler = null;
+        PathTypeHandlerBase * oldTypeHandler = nullptr;
 
         if (instance->DeoptimizeObjectHeaderInlining())
         {
@@ -763,7 +763,7 @@ namespace Js
             if (DynamicTypeHandler::AreSingletonInstancesNeeded())
             {
                 RecyclerWeakReference<DynamicObject>* curSingletonInstance = oldTypeHandler->typePath->GetSingletonInstance();
-                if (curSingletonInstance != null && curSingletonInstance->Get() == instance)
+                if (curSingletonInstance != nullptr && curSingletonInstance->Get() == instance)
                 {
                     newTypeHandler->SetSingletonInstance(curSingletonInstance);
                 }
@@ -928,14 +928,14 @@ namespace Js
 #ifdef PROFILE_OBJECT_LITERALS
                 {
                     RecyclerWeakReference<DynamicType>* nextTypeWeakRef;
-                    if (!pathHandler->GetSuccessor(scriptContext->GetPropertyName(propertyId), &nextTypeWeakRef) || nextTypeWeakRef->Get() == null)
+                    if (!pathHandler->GetSuccessor(scriptContext->GetPropertyName(propertyId), &nextTypeWeakRef) || nextTypeWeakRef->Get() == nullptr)
                     {
                         scriptContext->objectLiteralPathCount++;
                     }
                 }
 #endif
                 //TODO: Transform PropertyIdArray to contain PropertyRecords?
-                type = pathHandler->PromoteType<true>(type, scriptContext->GetPropertyName(propertyId), shareType, scriptContext, null, &propertyIndex);
+                type = pathHandler->PromoteType<true>(type, scriptContext->GetPropertyName(propertyId), shareType, scriptContext, nullptr, &propertyIndex);
             }
         }
         else if (count <= static_cast<uint>(SimpleDictionaryTypeHandler::MaxPropertyIndexSize))
@@ -990,16 +990,16 @@ namespace Js
     template <bool isObjectLiteral>
     DynamicType* PathTypeHandlerBase::PromoteType(DynamicType* predecessorType, const PropertyRecord* propertyRecord, bool shareType, ScriptContext* scriptContext, DynamicObject* instance, PropertyIndex* propertyIndex)
     {
-        Assert(propertyIndex != null);
-        Assert(isObjectLiteral || instance != null);
+        Assert(propertyIndex != nullptr);
+        Assert(isObjectLiteral || instance != nullptr);
 
         Recycler* recycler = scriptContext->GetRecycler();
         PropertyIndex index;
         DynamicType * nextType;
-        RecyclerWeakReference<DynamicType>* nextTypeWeakRef = null;
+        RecyclerWeakReference<DynamicType>* nextTypeWeakRef = nullptr;
 
         PathTypeHandlerBase * nextPath;
-        if (!GetSuccessor(propertyRecord, &nextTypeWeakRef) || nextTypeWeakRef->Get() == null)
+        if (!GetSuccessor(propertyRecord, &nextTypeWeakRef) || nextTypeWeakRef->Get() == nullptr)
         {
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
@@ -1044,7 +1044,7 @@ namespace Js
                     typeHandlerToUpdate->typePath = newTypePath;
 
                     DynamicType * nextType = typeHandlerToUpdate->GetPredecessorType();
-                    if (nextType == null)
+                    if (nextType == nullptr)
                     {
                         break;
                     }
@@ -1586,7 +1586,7 @@ namespace Js
 
             // Consider: It would be nice to assert the slot is actually null.  However, we sometimes pre-initialize to
             // undefined or even some other special illegal value (for let or const, currently == null)
-            // Assert(instance->GetSlot(index) == null);
+            // Assert(instance->GetSlot(index) == nullptr);
 
             if (ShouldFixAnyProperties() && CanBeSingletonInstance(instance))
             {
@@ -1623,7 +1623,7 @@ namespace Js
                 // could remain fixed (or even uninitialized) and we would have to spin off a loop here to invalidate any 
                 // remaining fixed fields - a rather unfortunate overhead.
                 auto singletonWeakRef = newTypeHandler->typePath->GetSingletonInstance();
-                if (singletonWeakRef != null && instance != singletonWeakRef->Get())
+                if (singletonWeakRef != nullptr && instance != singletonWeakRef->Get())
                 {
                     Assert(newTypeHandler->HasSingletonInstanceOnlyIfNeeded());
                     newTypeHandler->typePath->ClearSingletonInstance();
@@ -1634,7 +1634,7 @@ namespace Js
         // If we branched and this is the singleton instance, we need to remove it from this type handler.  The only time
         // this can happen is when another not fully initialized instance is ahead of this one on the current path.
         auto singletonWeakRef = this->typePath->GetSingletonInstance();
-        if (newTypeHandler->typePath != this->typePath && singletonWeakRef != null && singletonWeakRef->Get() == instance)
+        if (newTypeHandler->typePath != this->typePath && singletonWeakRef != nullptr && singletonWeakRef->Get() == instance)
         {
             // If this is the singleton instance, there shouldn't be any other initialized instance ahead of it on the old path.
             Assert(GetPathLength() >= this->typePath->GetMaxInitializedLength());
@@ -1767,11 +1767,11 @@ namespace Js
     PathTypeHandlerBase* PathTypeHandlerBase::GetRootPathTypeHandler()
     {
         PathTypeHandlerBase* rootTypeHandler = this;
-        while (rootTypeHandler->predecessorType != null)
+        while (rootTypeHandler->predecessorType != nullptr)
         {
             rootTypeHandler = PathTypeHandlerBase::FromTypeHandler(rootTypeHandler->predecessorType->GetTypeHandler());
         }
-        Assert(rootTypeHandler->predecessorType == null);
+        Assert(rootTypeHandler->predecessorType == nullptr);
         return rootTypeHandler;
     }
 
@@ -1805,7 +1805,7 @@ namespace Js
         {
             Output::Print(L"FixedFields: %s 0x%p from %s to %s:\n", conversionName, instance, oldTypeHandlerName, newTypeHandlerName);
             Output::Print(L"   before: type = 0x%p, type handler = 0x%p, old singleton = 0x%p(0x%p)\n", 
-                oldType, oldTypeHandler, oldSingletonInstanceBefore, oldSingletonInstanceBefore != null ? oldSingletonInstanceBefore->Get() : null);
+                oldType, oldTypeHandler, oldSingletonInstanceBefore, oldSingletonInstanceBefore != nullptr ? oldSingletonInstanceBefore->Get() : nullptr);
             Output::Print(L"   fixed fields:");
             oldTypeHandler->DumpFixedFields();
             Output::Print(L"\n");
@@ -1813,7 +1813,7 @@ namespace Js
         if (PHASE_VERBOSE_TESTTRACE1(FixMethodPropsPhase))
         {
             Output::Print(L"FixedFields: %s instance from %s to %s:\n", conversionName, oldTypeHandlerName, newTypeHandlerName);
-            Output::Print(L"   old singleton before %s null \n", oldSingletonInstanceBefore == null ? L"==" : L"!=");
+            Output::Print(L"   old singleton before %s null \n", oldSingletonInstanceBefore == nullptr ? L"==" : L"!=");
             Output::Print(L"   fixed fields before:");
             oldTypeHandler->DumpFixedFields();
             Output::Print(L"\n");
@@ -1829,8 +1829,8 @@ namespace Js
             RecyclerWeakReference<DynamicObject>* oldSingletonInstanceAfter = oldTypeHandler->GetSingletonInstance();
             RecyclerWeakReference<DynamicObject>* newSingletonInstanceAfter = newTypeHandler->GetSingletonInstance();
             Output::Print(L"   after: type = 0x%p, type handler = 0x%p, old singleton = 0x%p(0x%p), new singleton = 0x%p(0x%p)\n", 
-                newType, newTypeHandler, oldSingletonInstanceAfter, oldSingletonInstanceAfter != null ? oldSingletonInstanceAfter->Get() : null, 
-                newSingletonInstanceAfter, newSingletonInstanceAfter != null ? newSingletonInstanceAfter->Get() : null);
+                newType, newTypeHandler, oldSingletonInstanceAfter, oldSingletonInstanceAfter != nullptr ? oldSingletonInstanceAfter->Get() : nullptr, 
+                newSingletonInstanceAfter, newSingletonInstanceAfter != nullptr ? newSingletonInstanceAfter->Get() : nullptr);
             Output::Print(L"   fixed fields:");
             newTypeHandler->DumpFixedFields();
             Output::Print(L"\n");
@@ -1841,9 +1841,9 @@ namespace Js
             Output::Print(L"   type %s, typeHandler %s, old singleton after %s null (%s), new singleton after %s null\n", 
                 oldTypeHandler != newTypeHandler ? L"changed" : L"unchanged", 
                 oldType != newType ? L"changed" : L"unchanged", 
-                oldTypeHandler->GetSingletonInstance() == null ? L"==" : L"!=",
+                oldTypeHandler->GetSingletonInstance() == nullptr ? L"==" : L"!=",
                 oldSingletonInstanceBefore != oldTypeHandler->GetSingletonInstance() ? L"changed" : L"unchanged",
-                newTypeHandler->GetSingletonInstance() == null ? L"==" : L"!=");
+                newTypeHandler->GetSingletonInstance() == nullptr ? L"==" : L"!=");
             Output::Print(L"   fixed fields after:");
             newTypeHandler->DumpFixedFields();
             Output::Print(L"\n");
@@ -1858,7 +1858,7 @@ namespace Js
         {
             Output::Print(L"FixedFields: PathTypeHandler::SetIsPrototype(0x%p):\n", instance);
             Output::Print(L"   before: type = 0x%p, type handler = 0x%p, old singleton = 0x%p(0x%p)\n", 
-                oldType, oldTypeHandler, oldSingletonInstanceBefore, oldSingletonInstanceBefore != null ? oldSingletonInstanceBefore->Get() : null);
+                oldType, oldTypeHandler, oldSingletonInstanceBefore, oldSingletonInstanceBefore != nullptr ? oldSingletonInstanceBefore->Get() : nullptr);
             Output::Print(L"   fixed fields:");
             oldTypeHandler->DumpFixedFields();
             Output::Print(L"\n");
@@ -1866,7 +1866,7 @@ namespace Js
         if (PHASE_VERBOSE_TESTTRACE1(FixMethodPropsPhase))
         {
             Output::Print(L"FixedFields: PathTypeHandler::SetIsPrototype():\n");
-            Output::Print(L"   old singleton before %s null \n", oldSingletonInstanceBefore == null ? L"==" : L"!=");
+            Output::Print(L"   old singleton before %s null \n", oldSingletonInstanceBefore == nullptr ? L"==" : L"!=");
             Output::Print(L"   fixed fields before:");
             oldTypeHandler->DumpFixedFields();
             Output::Print(L"\n");
@@ -1883,8 +1883,8 @@ namespace Js
             RecyclerWeakReference<DynamicObject>* newSingletonInstanceAfter = newTypeHandler->GetSingletonInstance();
             Output::Print(L"   after: type = 0x%p, type handler = 0x%p, old singleton = 0x%p(0x%p), new singleton = 0x%p(0x%p)\n", 
                 instance->GetType(), newTypeHandler, 
-                oldSingletonInstanceAfter, oldSingletonInstanceAfter != null ? oldSingletonInstanceAfter->Get() : null,
-                newSingletonInstanceAfter, newSingletonInstanceAfter != null ? newSingletonInstanceAfter->Get() : null);
+                oldSingletonInstanceAfter, oldSingletonInstanceAfter != nullptr ? oldSingletonInstanceAfter->Get() : nullptr,
+                newSingletonInstanceAfter, newSingletonInstanceAfter != nullptr ? newSingletonInstanceAfter->Get() : nullptr);
             Output::Print(L"   fixed fields:");
             newTypeHandler->DumpFixedFields();
             Output::Print(L"\n");
@@ -1894,7 +1894,7 @@ namespace Js
         {
             Output::Print(L"   type %s, old singleton after %s null (%s)\n", 
                 oldType != newType ? L"changed" : L"unchanged", 
-                oldSingletonInstanceBefore == null ? L"==" : L"!=",
+                oldSingletonInstanceBefore == nullptr ? L"==" : L"!=",
                 oldSingletonInstanceBefore != oldTypeHandler->GetSingletonInstance() ? L"changed" : L"unchanged");
             Output::Print(L"   fixed fields after:");
             newTypeHandler->DumpFixedFields();
@@ -1911,7 +1911,7 @@ namespace Js
 
     SimplePathTypeHandler * SimplePathTypeHandler::New(ScriptContext * scriptContext, TypePath* typePath, uint16 pathLength, const PropertyIndex slotCapacity, uint16 inlineSlotCapacity, uint16 offsetOfInlineSlots, bool isLocked, bool isShared, DynamicType* predecessorType)
     {
-        Assert(typePath != null);
+        Assert(typePath != nullptr);
 #ifdef PROFILE_TYPES
         scriptContext->simplePathTypeHandlerCount++;
 #endif
@@ -1920,14 +1920,14 @@ namespace Js
 
     SimplePathTypeHandler * SimplePathTypeHandler::New(ScriptContext * scriptContext, SimplePathTypeHandler * typeHandler, bool isLocked, bool isShared)
     {
-        Assert(typeHandler != null);
+        Assert(typeHandler != nullptr);
         return RecyclerNew(scriptContext->GetRecycler(), SimplePathTypeHandler, typeHandler->GetTypePath(), typeHandler->GetPathLength(), typeHandler->GetInlineSlotCapacity(), typeHandler->GetOffsetOfInlineSlots(), isLocked, isShared);
     }
 
     SimplePathTypeHandler::SimplePathTypeHandler(TypePath* typePath, uint16 pathLength, const PropertyIndex slotCapacity, uint16 inlineSlotCapacity, uint16 offsetOfInlineSlots, bool isLocked, bool isShared, DynamicType* predecessorType) :
         PathTypeHandlerBase(typePath, pathLength, slotCapacity, inlineSlotCapacity, offsetOfInlineSlots, isLocked, isShared, predecessorType),
-        successorPropertyRecord(null),
-        successorTypeWeakRef(null)
+        successorPropertyRecord(nullptr),
+        successorTypeWeakRef(nullptr)
     {
     }
 
@@ -2054,7 +2054,7 @@ namespace Js
     {
         if (successorPropertyRecord != propertyRecord)
         {
-            *typeWeakRef = null;
+            *typeWeakRef = nullptr;
             return false;
         }
         *typeWeakRef = successorTypeWeakRef;
@@ -2097,7 +2097,7 @@ namespace Js
 
     PathTypeHandler * PathTypeHandler::New(ScriptContext * scriptContext, TypePath* typePath, uint16 pathLength, const PropertyIndex slotCapacity, uint16 inlineSlotCapacity, uint16 offsetOfInlineSlots, bool isLocked, bool isShared, DynamicType* predecessorType)
     {
-        Assert(typePath != null);
+        Assert(typePath != nullptr);
 #ifdef PROFILE_TYPES
         scriptContext->pathTypeHandlerCount++;
 #endif
@@ -2106,13 +2106,13 @@ namespace Js
 
     PathTypeHandler * PathTypeHandler::New(ScriptContext * scriptContext, PathTypeHandler * typeHandler, bool isLocked, bool isShared)
     {
-        Assert(typeHandler != null);
+        Assert(typeHandler != nullptr);
         return RecyclerNew(scriptContext->GetRecycler(), PathTypeHandler, typeHandler->GetTypePath(), typeHandler->GetPathLength(), static_cast<PropertyIndex>(typeHandler->GetSlotCapacity()), typeHandler->GetInlineSlotCapacity(), typeHandler->GetOffsetOfInlineSlots(), isLocked, isShared);
     }
 
     PathTypeHandler::PathTypeHandler(TypePath* typePath, uint16 pathLength, const PropertyIndex slotCapacity, uint16 inlineSlotCapacity, uint16 offsetOfInlineSlots, bool isLocked, bool isShared, DynamicType* predecessorType) :
         PathTypeHandlerBase(typePath, pathLength, slotCapacity, inlineSlotCapacity, offsetOfInlineSlots, isLocked, isShared, predecessorType),
-        propertySuccessors(null)
+        propertySuccessors(nullptr)
     {
     }
 
@@ -2269,7 +2269,7 @@ namespace Js
     {
         if (!propertySuccessors || !propertySuccessors->TryGetValue(propertyRecord->GetPropertyId(), typeWeakRef))
         {
-            *typeWeakRef = null;
+            *typeWeakRef = nullptr;
             return false;
         }
         return true;

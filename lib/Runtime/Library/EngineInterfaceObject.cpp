@@ -5,6 +5,7 @@
 #include "RuntimeLibraryPch.h"
 #include "Language\ByteCodeSerializer.h"
 #include "errstr.h"
+#include "ByteCode\ByteCodeDumper.h"
 
 using namespace Windows::Globalization;
 #pragma warning(push)
@@ -154,7 +155,7 @@ namespace Js
         HSTRING operator*() const { Assert(value != nullptr); return value; }
 
         AutoHSTRING()
-            : value(null)
+            : value(nullptr)
         { }
 
         ~AutoHSTRING()
@@ -164,10 +165,10 @@ namespace Js
 
         void Clear()
         {
-            if(value != null)
+            if(value != nullptr)
             {
                 WindowsDeleteString(value);
-                value = null;
+                value = nullptr;
             }
         }
     };
@@ -196,7 +197,9 @@ namespace Js
     NoProfileFunctionInfo EngineInterfaceObject::EntryInfo::GetErrorMessage(EngineInterfaceObject::Entry_GetErrorMessage);
     NoProfileFunctionInfo EngineInterfaceObject::EntryInfo::LogDebugMessage(EngineInterfaceObject::Entry_LogDebugMessage);
     NoProfileFunctionInfo EngineInterfaceObject::EntryInfo::TagPublicLibraryCode(EngineInterfaceObject::Entry_TagPublicLibraryCode);
+#ifdef ENABLE_PROJECTION
     NoProfileFunctionInfo EngineInterfaceObject::EntryInfo::Promise_EnqueueTask(EngineInterfaceObject::EntryPromise_EnqueueTask);
+#endif
 
 #ifndef GlobalBuiltIn
 #define GlobalBuiltIn(global, method) \
@@ -257,7 +260,7 @@ namespace Js
         // CommonNativeInterfaces is used as a prototype for the other native interface objects 
         // to share the common APIs without requiring everyone to access EngineInterfaceObject.Common.
         this->commonNativeInterfaces = DynamicObject::New(recycler,
-            DynamicType::New(scriptContext, TypeIds_Object, library->GetObjectPrototype(), null,
+            DynamicType::New(scriptContext, TypeIds_Object, library->GetObjectPrototype(), nullptr,
             DeferredTypeHandler<InitializeCommonNativeInterfaces>::GetDefaultInstance()));
         library->AddMember(this, Js::PropertyIds::Common, this->commonNativeInterfaces);
         
@@ -265,7 +268,7 @@ namespace Js
         if (scriptContext->GetConfig()->IsIntlEnabled())
         {
             this->intlNativeInterfaces = DynamicObject::New(recycler,
-                DynamicType::New(scriptContext, TypeIds_Object, this->commonNativeInterfaces, null,
+                DynamicType::New(scriptContext, TypeIds_Object, this->commonNativeInterfaces, nullptr,
                 DeferredTypeHandler<InitializeIntlNativeInterfaces>::GetDefaultInstance()));
             library->AddMember(this, Js::PropertyIds::Intl, this->intlNativeInterfaces);
         }
@@ -275,7 +278,7 @@ namespace Js
         if (scriptContext->GetConfig()->IsWinRTEnabled())
         {
             this->promiseNativeInterfaces = DynamicObject::New(recycler,
-                DynamicType::New(scriptContext, TypeIds_Object, this->commonNativeInterfaces, null,
+                DynamicType::New(scriptContext, TypeIds_Object, this->commonNativeInterfaces, nullptr,
                 DeferredTypeHandler<InitializePromiseNativeInterfaces>::GetDefaultInstance()));
             library->AddMember(this, Js::PropertyIds::Promise, this->promiseNativeInterfaces);
         }
@@ -289,12 +292,14 @@ namespace Js
         Js::ByteCodeDumper::DumpRecursively(intlByteCode);
     }
 
+#ifdef ENABLE_PROJECTION
     void EngineInterfaceObject::DumpPromiseByteCode(ScriptContext* scriptContext)
     {
         Output::Print(L"Dumping Promise Byte Code:");
         this->EnsurePromiseByteCode(scriptContext);
         Js::ByteCodeDumper::DumpRecursively(promiseByteCode);
     }
+#endif
 #endif
     void EngineInterfaceObject::InitializeCommonNativeInterfaces(DynamicObject* commonNativeInterfaces, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode) 
     {
@@ -374,6 +379,7 @@ namespace Js
         intlNativeInterfaces->SetHasNoEnumerableProperties(true);
     }
 
+#ifdef ENABLE_PROJECTION
     void EngineInterfaceObject::InitializePromiseNativeInterfaces(DynamicObject* promiseNativeInterfaces, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(promiseNativeInterfaces, mode, 9);
@@ -411,6 +417,7 @@ namespace Js
 
         promiseNativeInterfaces->SetHasNoEnumerableProperties(true);
     }
+#endif
 
     void EngineInterfaceObject::deletePrototypePropertyHelper(ScriptContext* scriptContext, DynamicObject* intlObject, Js::PropertyId objectPropertyId, Js::PropertyId getterFunctionId)
     {
@@ -489,7 +496,7 @@ namespace Js
             IfFailAssertMsgAndThrowHr(hr, "Failed to deserialize Intl.js bytecode - very probably the bytecode needs to be rebuilt.");
         }
     }
-
+#ifdef ENABLE_PROJECTION
     void EngineInterfaceObject::EnsurePromiseByteCode(_In_ ScriptContext * scriptContext)
     {
         if (this->promiseByteCode == nullptr)
@@ -512,6 +519,7 @@ namespace Js
             IfFailThrowHr(hr);
         }
     }
+#endif
 
     void EngineInterfaceObject::InjectIntlLibraryCode(_In_ ScriptContext * scriptContext, DynamicObject* intlObject)
     {
@@ -1598,6 +1606,7 @@ namespace Js
         return scriptContext->GetLibrary()->GetUndefined();
     }
 
+#ifdef ENABLE_PROJECTION
     Var EngineInterfaceObject::EntryPromise_EnqueueTask(RecyclableObject *function, CallInfo callInfo, ...)
     {
         EngineInterfaceObject_CommonFunctionProlog(function, callInfo);
@@ -1610,6 +1619,7 @@ namespace Js
         
         return scriptContext->GetLibrary()->GetUndefined();
     }
+#endif
 
 #ifndef GlobalBuiltIn
 #define GlobalBuiltIn(global, method) 
