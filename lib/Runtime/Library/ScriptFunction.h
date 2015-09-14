@@ -57,6 +57,7 @@ namespace Js
             Assert(this->GetFunctionProxy()->IsDeferred() == FALSE);
             return (FunctionEntryPointInfo*) this->GetEntryPointInfo();
         }
+
         FunctionProxy * GetFunctionProxy() const;
         ScriptFunctionType * GetScriptFunctionType() const;
 

@@ -623,11 +623,6 @@ namespace Js
             return mModuleAddress;
         }
 
-        static const uint GetOffsetOfModuleAddress()
-        {
-            return offsetof(EntryPointInfo, mModuleAddress);
-        }
-
         void Reset(bool resetStateToNotScheduled = true);
 
         void SetCodeGenPending(CodeGenWorkItem * workItem)

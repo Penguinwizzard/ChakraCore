@@ -392,7 +392,6 @@ SIMDArg3:
         movups xmm3, xmmword ptr [r11]
         
 setup_args_done:
-
         call rax
 done:
         lea rsp, [rbp]

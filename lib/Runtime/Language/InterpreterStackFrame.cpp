@@ -2215,6 +2215,8 @@ namespace Js
         }
 #endif
 
+        info->SetIsRuntimeProcessed(true);
+
         // create export object
         if( info->GetExportsCount() )
         {
@@ -2230,7 +2232,6 @@ namespace Js
             return newObj;
         }
 
-        info->SetIsRuntimeProcessed(true);
 
         // export only 1 function
         Var exportFunc = localModuleFunctions[info->GetExportFunctionIndex()];
