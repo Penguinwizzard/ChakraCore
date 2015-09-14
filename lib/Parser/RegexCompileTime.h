@@ -21,7 +21,7 @@ namespace UnifiedRegex
     {
         // Optimization heuristics
         static const int maxSyncToSetSize = 256;
-        static const int minSyncToLiteralLength = 3;
+        static const int preferredMinSyncToLiteralLength = 3;
         static const int maxNumSyncLiterals = ScannersMixin::MaxNumSyncLiterals;
         static const int minRemainLengthForTest = 4;
         static const int maxCharsForConditionalTry = 20;

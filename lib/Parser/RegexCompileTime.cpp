@@ -99,8 +99,8 @@ namespace UnifiedRegex
         int proposedNumLiterals = 0;
         CharCount proposedLength = proposed->MinSyncronizingLiteralLength(compiler, proposedNumLiterals);
 
-        if (proposedLength < minSyncToLiteralLength || proposedNumLiterals > maxNumSyncLiterals)
-            // Not a synchronizable node, or too short to be worth trying to synchronize on, or too many literals
+        if (proposedLength == 0 || proposedNumLiterals > maxNumSyncLiterals)
+            // Not a synchronizable node or too many literals.
             return false;
 
         if (curr == nullptr)
@@ -111,10 +111,22 @@ namespace UnifiedRegex
         CharCount currLength = curr->MinSyncronizingLiteralLength(compiler, currNumLiterals);
 
         // Lexicographic ordering based on
+        //  - whether literal length is above a threshold (above is better)
         //  - number of literals (smaller is better)
         //  - upper bound on backup (finite is better)
         //  - minimum literal length (longer is better)
         //  - actual backup upper bound (shorter is better)
+
+        if (proposedLength >= preferredMinSyncToLiteralLength
+            && currLength < preferredMinSyncToLiteralLength)
+        {
+            return true;
+        }
+        if (proposedLength < preferredMinSyncToLiteralLength
+            && currLength >= preferredMinSyncToLiteralLength)
+        {
+            return false;
+        }
 
         if (proposedNumLiterals < currNumLiterals)
             return true;
@@ -1225,7 +1237,8 @@ namespace UnifiedRegex
 
     CharCount MatchCharNode::MinSyncronizingLiteralLength(Compiler& compiler, int& numLiterals) const
     {
-        return 0;
+        numLiterals++;
+        return 1;
     }
 
     void MatchCharNode::CollectSyncronizingLiterals(Compiler& compiler, ScannersMixin& scanners) const
@@ -1235,6 +1248,10 @@ namespace UnifiedRegex
 
     void MatchCharNode::BestSyncronizingNode(Compiler& compiler, Node*& bestNode)
     {
+        if (IsBetterSyncronizingNode(compiler, bestNode, this))
+        {
+            bestNode = this;
+        }
     }
 
     void MatchCharNode::AccumDefineGroups(Js::ScriptContext* scriptContext, int& minGroup, int& maxGroup)
@@ -2458,18 +2475,29 @@ namespace UnifiedRegex
     {
         PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
 
+        // Here, we ignore nodes with length 1, which are Char nodes. The way the Alt node synchronization
+        // is currently implemented, it expects all nodes to be Literal nodes. It requires quite a bit of
+        // refactoring to have Alt nodes support Char nodes for synchronization, so Char nodes are ignored
+        // for now.
+
         int localNumLiterals = numLiterals;
         CharCount minLen = head->MinSyncronizingLiteralLength(compiler, localNumLiterals);
-        if (minLen == 0)
+        if (minLen <= 1)
             return 0;
         for (AltNode* curr = tail; curr != 0; curr = curr->tail)
         {
             CharCount thisLen = curr->head->MinSyncronizingLiteralLength(compiler, localNumLiterals);
-            if (thisLen == 0)
+            if (thisLen <= 1)
                 return 0;
             minLen = min(minLen, thisLen);
         }
         numLiterals = localNumLiterals;
+
+        if (minLen <= 1)
+        {
+            return 0;
+        }
+
         return minLen;
     }
 
