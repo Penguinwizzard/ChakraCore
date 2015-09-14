@@ -89,7 +89,8 @@ namespace Js
     }();
 
     template<typename CharT>
-    static UINT_PTR HexStrToAddress(const CharT* str){
+    static UINT_PTR HexStrToAddress(const CharT* str)
+    {
         UINT_PTR address = 0;
         while (*str == '0' || *str == '`' || *str == 'x' || *str == 'X')
             str++; // leading zero
@@ -237,7 +238,8 @@ namespace Js
 
             if (StackFrame.AddrPC.Offset != 0)
             {
-                if (FrameCount >= FramesToSkip){
+                if (FrameCount >= FramesToSkip)
+                {
 #pragma warning(suppress: 22102)
 #pragma warning(suppress: 26014)
                     BackTrace[FrameCount - FramesToSkip] = (PVOID)StackFrame.AddrPC.Offset;
@@ -313,7 +315,7 @@ namespace Js
             fwprintf(stderr, L"Failed to load sigs:%s\n", L#fn); \
             fflush(stderr); \
             return false; \
-                }
+        }
         FIDELAYLOAD(SymInitialize);
         FIDELAYLOAD(SymCleanup);
         FIDELAYLOAD(SymFromAddrW);
@@ -461,7 +463,8 @@ namespace Js
             FILE *fp;
             if (fopen_s(&fp, "ChakraFaultInjectionHashes.txt", "w") == 0)
             {
-                for (uint i = 0; i < countOfInjectionPoints; i++){
+                for (uint i = 0; i < countOfInjectionPoints; i++)
+                {
                     fprintf(fp, "%p\n", (void*)stackHashOfAllInjectionPoints[i]);
                 }
                 fflush(fp);
@@ -483,7 +486,8 @@ namespace Js
         }
 
         InjectionRecord* head = InjectionFirstRecord;
-        while (head != nullptr){
+        while (head != nullptr)
+        {
             InjectionRecord* next = head->next;
             if (head->StackData)
             {
@@ -746,7 +750,8 @@ namespace Js
                 pfnSymEnumSymbolsW(GetCurrentProcess(), 0, baselineStack[i],
                     [](_In_ PSYMBOL_INFOW pSymInfo, _In_ ULONG SymbolSize, _In_opt_  PVOID UserContext)->BOOL
                 {
-                    if (pSymInfo->Size > 0) {
+                    if (pSymInfo->Size > 0) 
+                    {
                         PFUNCTION_SIGNATURES* sigs = (PFUNCTION_SIGNATURES*)UserContext;
                         int count = (*sigs) == nullptr ? 0 : (*sigs)->count;
                         auto tmp = (PFUNCTION_SIGNATURES)realloc(*sigs, sizeof(FUNCTION_SIGNATURES) + count*sizeof(RANGE));
@@ -1315,7 +1320,8 @@ namespace Js
         // always show stack for crash and fault injection points in console, 
         // this can be used for additional stack matching repro
 
-        auto printFrame = [&](LPVOID addr){
+        auto printFrame = [&](LPVOID addr)
+        {
             HANDLE hProcess = GetCurrentProcess();
             DWORD64 dwSymDisplacement = 0;
             sip.Init();
@@ -1350,7 +1356,8 @@ namespace Js
 
         // Print fault injecting point stacks
         auto record = InjectionFirstRecord;
-        while (record){
+        while (record)
+        {
             if (record->StackFrames)
             {
                 fwprintf(stderr, injectionStackStart);
