@@ -896,7 +896,7 @@ IR::Instr* LowererMD::Simd128LowerLoadElem(IR::Instr *instr)
     Assert(dst->IsSimd128() && src1->IsSimd128() && src2->GetType() == TyUint32);
 
     IR::Instr * done;
-    if (indexOpnd || (!m_func->GetJnFunction()->GetAsmJsFunctionInfo()->IsHeapBufferConst() && ((uint32)src1->AsIndirOpnd()->GetOffset() + dataWidth) > 0x1000000 /* 16 MB */))
+    if (indexOpnd ||  (((uint32)src1->AsIndirOpnd()->GetOffset() + dataWidth) > 0x1000000 /* 16 MB */))
     {
         // CMP indexOpnd, src2(arrSize)
         // JA $helper
@@ -943,8 +943,6 @@ IR::Instr* LowererMD::Simd128LowerLoadElem(IR::Instr *instr)
         instr->UnlinkDst();
         
         // this can happen in cases where globopt props a constant access which was not known at bytecodegen time or when heap is non-constant
-
-        Assert(src2->IsIntConstOpnd() || !m_func->GetJnFunction()->GetAsmJsFunctionInfo()->IsHeapBufferConst());
 
         if (src2->IsIntConstOpnd() && ((uint32)src1->AsIndirOpnd()->GetOffset() + dataWidth > (uint32)src2->AsIntConstOpnd()->m_value))
         {
@@ -1038,7 +1036,7 @@ IR::Instr* LowererMD::Simd128LowerStoreElem(IR::Instr *instr)
 
     IR::Instr * done;
     bool doStore = true;
-    if (indexOpnd || (!m_func->GetJnFunction()->GetAsmJsFunctionInfo()->IsHeapBufferConst() && (uint32)dst->AsIndirOpnd()->GetOffset() + dataWidth > 0x1000000))
+    if (indexOpnd || ((uint32)dst->AsIndirOpnd()->GetOffset() + dataWidth > 0x1000000))
     {
         // CMP indexOpnd, src2(arrSize)
         // JA $helper
@@ -1078,7 +1076,6 @@ IR::Instr* LowererMD::Simd128LowerStoreElem(IR::Instr *instr)
         instr->UnlinkDst();
         instr->UnlinkSrc1();
 
-        Assert(src2->IsIntConstOpnd() || !m_func->GetJnFunction()->GetAsmJsFunctionInfo()->IsHeapBufferConst());
         // we might have a constant index if globopt propped a constant store. we can ahead of time check if it is in-bounds
         if (src2->IsIntConstOpnd() && ((uint32)dst->AsIndirOpnd()->GetOffset() + dataWidth > (uint32)src2->AsIntConstOpnd()->m_value))
         {

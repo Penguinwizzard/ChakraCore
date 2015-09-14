@@ -2774,10 +2774,12 @@ namespace Js
             {
                 HRESULT hrEntryPointUpdate = S_OK;
                 BEGIN_TRANSLATE_OOM_TO_HRESULT_NESTED
+#ifdef ASMJS_PLAT
                     TempArenaAllocatorObject* tmpAlloc = GetTemporaryAllocator(L"DebuggerTransition");
                     debugTransitionAlloc = tmpAlloc->GetAllocator();
                     
                     asmJsEnvironmentMap = Anew(debugTransitionAlloc, AsmFunctionMap, debugTransitionAlloc);
+#endif
 
                     // Still do the pass on the function's entrypoint to reflect its state with the functionbody's entrypoint.
                     this->UpdateRecyclerFunctionEntryPointsForDebugger();
@@ -2798,9 +2800,8 @@ namespace Js
                         }
                         asmEnvIter.MoveNext();
                     }
-#endif
-
                     ReleaseTemporaryAllocator(tmpAlloc);
+#endif
                 END_TRANSLATE_OOM_TO_HRESULT(hrEntryPointUpdate);
 
                 if (hrEntryPointUpdate != S_OK)
