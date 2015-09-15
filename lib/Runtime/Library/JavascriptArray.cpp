@@ -10693,16 +10693,53 @@ Case0:
         }
 
         JavascriptArray *result = FromVar(OP_NewScArrayWithMissingValues(actualLength, scriptContext));
-            
+
         // Now we copy each element and expand the spread parameters inline.
         for (unsigned i = 0, spreadArrIndex = 0, resultIndex = 0; i < array->GetLength() && resultIndex < actualLength; ++i)
         {
             size_t spreadIndex = spreadIndices->elements[spreadArrIndex]; // The index of the next element to be spread.
 
+            // An array needs a slow copy if it is a cross-site object or we have missing values that need to be set to undefined. 
+            auto needArraySlowCopy = [&](Var instance) {
+                if (JavascriptArray::Is(instance)) {
+                    JavascriptArray *arr = JavascriptArray::FromVar(instance);
+                    return arr->IsCrossSiteObject() || arr->IsFillFromPrototypes();
+                }
+                return false;
+            };
+
+            // Designed to have interchangeable arguments with CopyAnyArrayElementsToVar.
+            auto slowCopy = [&scriptContext, &needArraySlowCopy](JavascriptArray *dstArray, unsigned dstIndex, Var srcArray, uint32 start, uint32 end) {
+                Assert(needArraySlowCopy(srcArray) || ArgumentsObject::Is(srcArray) || TypedArrayBase::Is(srcArray) || JavascriptString::Is(srcArray));
+
+                RecyclableObject *propertyObject;
+                if (!JavascriptOperators::GetPropertyObject(srcArray, scriptContext, &propertyObject))
+                {
+                    JavascriptError::ThrowTypeError(scriptContext, JSERR_InvalidSpreadArgument);
+                }
+
+                for (uint32 j = start; j < end; j++)
+                {
+                    Var element;
+                    if (!JavascriptOperators::GetItem(srcArray, propertyObject, j, &element, scriptContext))
+                    {
+                        // Copy across missing values as undefined as per 12.2.5.2 SpreadElement : ... AssignmentExpression 5f.
+                        element = scriptContext->GetLibrary()->GetUndefined();
+                    }
+                    dstArray->DirectSetItemAt(dstIndex++, element);
+                }
+            };
+
             if (i < spreadIndex)
             {
                 // Any non-spread elements can be copied in bulk.
-                CopyAnyArrayElementsToVar(result, resultIndex, array, i, spreadIndex);
+
+                if (needArraySlowCopy(array)) {
+                    slowCopy(result, resultIndex, (Var)array, i, spreadIndex);
+                }
+                else {
+                    CopyAnyArrayElementsToVar(result, resultIndex, array, i, spreadIndex);
+                }
                 resultIndex += spreadIndex - i;
                 i = spreadIndex - 1;
                 continue;
@@ -10711,12 +10748,18 @@ Case0:
             {
                 // Any non-spread elements terminating the array can also be copied in bulk.
                 Assert(spreadArrIndex == spreadIndices->count - 1);
-                CopyAnyArrayElementsToVar(result, resultIndex, array, i, array->GetLength());
+                if (needArraySlowCopy(array)) {
+                    slowCopy(result, resultIndex, array, i, array->GetLength());
+                }
+                else {
+                    CopyAnyArrayElementsToVar(result, resultIndex, array, i, array->GetLength());
+                }
                 break;
             }
             else
             {
                 Var instance = array->DirectGetItem(i);
+
                 if (SpreadArgument::Is(instance))
                 {
                     SpreadArgument* spreadArgument = SpreadArgument::FromVar(instance);
@@ -10730,7 +10773,6 @@ Case0:
                 }
                 else
                 {
-                    
                     // We first try to interpret the spread parameter as an array.
                     JavascriptArray *arr = nullptr;
                     if (JavascriptArray::Is(instance))
@@ -10738,11 +10780,16 @@ Case0:
                         arr = JavascriptArray::FromVar(instance);
                     }
 
-                    if (arr != nullptr && !arr->IsCrossSiteObject())
+                    if (arr != nullptr)
                     {
                         if (arr->GetLength() > 0)
                         {
-                            CopyAnyArrayElementsToVar(result, resultIndex, arr, 0, arr->GetLength());
+                            if (needArraySlowCopy(arr)) {
+                                slowCopy(result, resultIndex, arr, 0, arr->GetLength());
+                            }
+                            else {
+                                CopyAnyArrayElementsToVar(result, resultIndex, arr, 0, arr->GetLength());
+                            }
                             resultIndex += arr->GetLength();
                         }
                     }
@@ -10752,25 +10799,9 @@ Case0:
                         // Objects Need an @@iterator property now and thus hit the above iterator codepath. 
                         // TODO if CopyAnyArrayElementsToVar is really more performant than the code below we should add a function like this
                         // for typed arrays, strings, & arguments.
-                        
-                        Assert(JavascriptArray::Is(instance) || ArgumentsObject::Is(instance) || TypedArrayBase::Is(instance) || JavascriptString::Is(instance));
-
-                        RecyclableObject *propertyObject;
-                        if (!JavascriptOperators::GetPropertyObject(instance, scriptContext, &propertyObject))
-                        {
-                            JavascriptError::ThrowTypeError(scriptContext, JSERR_InvalidSpreadArgument);
-                        }
-
                         uint32 len = GetSpreadArgLen(instance, scriptContext);
-                        for (uint32 j = 0; j < len; j++)
-                        {
-                            Var element;
-                            if (!JavascriptOperators::GetItem(instance, propertyObject, j, &element, scriptContext))
-                            {
-                                element = scriptContext->GetLibrary()->GetUndefined();
-                            }
-                            result->DirectSetItemAt(resultIndex++, element);
-                        }
+                        slowCopy(result, resultIndex, instance, 0, len);
+                        resultIndex += len;
                     }
                 }
 
