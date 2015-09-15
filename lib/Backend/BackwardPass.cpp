@@ -3876,13 +3876,12 @@ BackwardPass::ProcessPropertySymOpndUse(IR::PropertySymOpnd * opnd)
             }
         }
 
-        bool doesNotNeedTypeTransition = false;
+        bool mayNeedTypeTransition = true;
         if (!opnd->HasTypeMismatch() && func->DoGlobOpt())
         {
-            doesNotNeedTypeTransition = isStore;
-            TrackAddPropertyTypes(opnd, block);
+            mayNeedTypeTransition = !isStore;
         }
-        if (!doesNotNeedTypeTransition &&
+        if (mayNeedTypeTransition &&
             !this->IsPrePass() &&
             !this->currentInstr->HasBailOutInfo() &&
             (opnd->NeedsPrimaryTypeCheck() ||
@@ -3906,6 +3905,11 @@ BackwardPass::ProcessPropertySymOpndUse(IR::PropertySymOpnd * opnd)
                 }
             }
         } 
+        if (!opnd->HasTypeMismatch() && func->DoGlobOpt())
+        {
+            // Do this after the above code, as the value of the final type may change there.
+            TrackAddPropertyTypes(opnd, block);
+        }
 
         TrackObjTypeSpecProperties(opnd, block);
         TrackObjTypeSpecWriteGuards(opnd, block);
@@ -4138,7 +4142,7 @@ BackwardPass::TrackAddPropertyTypes(IR::PropertySymOpnd *opnd, BasicBlock *block
         typeWithProperty == typeWithoutProperty || 
         (opnd->IsTypeChecked() && !opnd->IsInitialTypeChecked()))
     {
-        if (block->stackSymToFinalType != nullptr && !this->currentInstr->HasBailOutInfo())
+        if (!this->IsPrePass() && block->stackSymToFinalType != nullptr && !this->currentInstr->HasBailOutInfo())
         {
             PropertySym *propertySym = opnd->m_sym->AsPropertySym();
             AddPropertyCacheBucket *pBucket = 
