@@ -10701,7 +10701,8 @@ Case0:
 
             // An array needs a slow copy if it is a cross-site object or we have missing values that need to be set to undefined. 
             auto needArraySlowCopy = [&](Var instance) {
-                if (JavascriptArray::Is(instance)) {
+                if (JavascriptArray::Is(instance))
+                {
                     JavascriptArray *arr = JavascriptArray::FromVar(instance);
                     return arr->IsCrossSiteObject() || arr->IsFillFromPrototypes();
                 }
@@ -10734,10 +10735,12 @@ Case0:
             {
                 // Any non-spread elements can be copied in bulk.
 
-                if (needArraySlowCopy(array)) {
+                if (needArraySlowCopy(array))
+                {
                     slowCopy(result, resultIndex, (Var)array, i, spreadIndex);
                 }
-                else {
+                else
+                {
                     CopyAnyArrayElementsToVar(result, resultIndex, array, i, spreadIndex);
                 }
                 resultIndex += spreadIndex - i;
@@ -10748,10 +10751,12 @@ Case0:
             {
                 // Any non-spread elements terminating the array can also be copied in bulk.
                 Assert(spreadArrIndex == spreadIndices->count - 1);
-                if (needArraySlowCopy(array)) {
+                if (needArraySlowCopy(array))
+                {
                     slowCopy(result, resultIndex, array, i, array->GetLength());
                 }
-                else {
+                else
+                {
                     CopyAnyArrayElementsToVar(result, resultIndex, array, i, array->GetLength());
                 }
                 break;
@@ -10784,10 +10789,12 @@ Case0:
                     {
                         if (arr->GetLength() > 0)
                         {
-                            if (needArraySlowCopy(arr)) {
+                            if (needArraySlowCopy(arr))
+                            {
                                 slowCopy(result, resultIndex, arr, 0, arr->GetLength());
                             }
-                            else {
+                            else
+                            {
                                 CopyAnyArrayElementsToVar(result, resultIndex, arr, 0, arr->GetLength());
                             }
                             resultIndex += arr->GetLength();
