@@ -251,6 +251,8 @@ MACRO_BACKEND_ONLY(     CmUnGe_I4,          Reg3,           OpTempNumberSources|
 
 // Conversions
 MACRO_WMS(              Conv_Num,           Reg2,           OpSideEffect|OpTempNumberProducing|OpTempNumberTransfer|OpTempObjectSources|OpCallsValueOf|OpProducesNumber) // Convert to Number. [[ToNumber()]]
+// Operation ToString(str)
+MACRO_EXTEND_WMS(       Conv_Str,           Reg2,           OpCallsValueOf|OpHasImplicitCall|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut)
 
 // Conv_Obj:
 //      OpSideEffect - May throw exception on null/undefined.
@@ -549,9 +551,6 @@ MACRO_WMS(              SetConcatStrMultiItem2,  Reg3B1,         None) // Althou
 MACRO_BACKEND_ONLY(     LdStr,              Empty,          OpTempNumberProducing|OpCanCSE)   // Load string literal
 MACRO_BACKEND_ONLY(     CloneStr,           Empty,          OpTempNumberSources | OpTempNumberProducing)   // Load string literal
 
-
-// Operation ToString(str)
-MACRO_BACKEND_ONLY(Conv_Str, Empty, OpCallsValueOf|OpHasImplicitCall|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut)
 
 // Operation ToString(str) if str != null or str != undefined
 MACRO_BACKEND_ONLY(     Coerse_Str, Empty, OpCallsValueOf|OpHasImplicitCall|OpTempNumberSources|OpTempObjectSources|OpPostOpDbgBailOut)

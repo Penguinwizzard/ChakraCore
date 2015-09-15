@@ -7208,7 +7208,11 @@ void EmitStringTemplate(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, 
 
                 // Emit the expression and append it to the string we're building
                 Emit(expressionNode, byteCodeGenerator, funcInfo, false);
-                byteCodeGenerator->Writer()->Reg3(Js::OpCode::Add_A, pnode->location, pnode->location, expressionNode->location);
+
+                Js::RegSlot toStringLocation = funcInfo->AcquireTmpRegister();
+                byteCodeGenerator->Writer()->Reg2(Js::OpCode::Conv_Str, toStringLocation, expressionNode->location);
+                byteCodeGenerator->Writer()->Reg3(Js::OpCode::Add_A, pnode->location, pnode->location, toStringLocation);
+                funcInfo->ReleaseTmpRegister(toStringLocation);
                 funcInfo->ReleaseLoc(expressionNode);
 
                 // Move to the next string in the list - we already got ahead of the expressions in the first string literal above

@@ -87,6 +87,7 @@ EXDEF2    (BRLONG,                  BrLong,                     OP_Br)
   DEF3_WMS(CALL_FLAGS_None,         ProfiledReturnTypeCallIExtendedFlags,    PROFILEDOP(OP_ProfiledReturnTypeCallIExtendedFlags, OP_CallIExtendedFlags), ProfiledCallIExtendedFlags)
 
   DEF3_WMS(CALL_FLAGS_None,         ProfiledReturnTypeCallIFlags,            PROFILEDOP(OP_ProfiledReturnTypeCallIFlags, OP_CallIFlags), ProfiledCallIFlags)
+EXDEF2_WMS(A1toA1Mem,               Conv_Str,                   JavascriptConversion::ToString)
   DEF2_WMS(A1toA1Mem,               Conv_Obj,                   JavascriptOperators::ToObject)
 EXDEF2_WMS(A1toA1Mem,               NewWithObject,              JavascriptOperators::ToWithObject)
   DEF2_WMS(A1toA1Mem,               Conv_Num,                   JavascriptOperators::ToNumber)

@@ -1540,6 +1540,10 @@ IRBuilder::BuildReg2(Js::OpCode newOpcode, uint32 offset, Js::RegSlot R0, Js::Re
         }
         break;
 
+    case Js::OpCode::Conv_Str:
+        dstOpnd->SetValueType(ValueType::String);
+        break;
+
     case Js::OpCode::Yield:
         instr = IR::Instr::New(newOpcode, dstOpnd, src1Opnd, m_func);
         this->AddInstr(instr, offset);
