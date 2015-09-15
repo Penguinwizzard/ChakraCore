@@ -35,19 +35,26 @@ JsValueRef __stdcall WScriptJsrt::EchoCallback(JsValueRef callee, bool isConstru
 {
     for (unsigned int i = 1; i < argumentCount; i++)
     {          
-        if (i > 1)
-        {
-            wprintf(L" ");
-        }
         JsValueRef strValue;
-        if (ChakraRTInterface::JsConvertValueToString(arguments[i], &strValue) == JsNoError)
+        JsErrorCode error = ChakraRTInterface::JsConvertValueToString(arguments[i], &strValue);
+        if (error == JsNoError)
         {
             LPCWSTR str = nullptr;
             size_t length;
-            if (ChakraRTInterface::JsStringToPointer(strValue, &str, &length) == JsNoError)
+            error = ChakraRTInterface::JsStringToPointer(strValue, &str, &length);
+            if (error == JsNoError)
             {
+                if (i > 1)
+                {
+                    wprintf(L" ");
+                }
                 wprintf(L"%ls", str);
             }
+        }
+
+        if (error == JsErrorScriptException)
+        {
+            return nullptr;
         }
     }
 
