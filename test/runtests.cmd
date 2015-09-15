@@ -269,8 +269,8 @@ goto :main
   rem TODO: Move any apollo tests from core\test back into private unittests
   set _ExcludeApolloTests=
   if "%APOLLO%" == "1" (
-      set _ExcludeApolloTests=-nottags:exclude_apollo
-      set TARGET_OS=wp8
+    set _ExcludeApolloTests=-nottags:exclude_apollo
+    set TARGET_OS=wp8
   )
 
   if not "%_nightly%" == "1" (
@@ -280,7 +280,7 @@ goto :main
   )
 
   if not "%_includeSlow%" == "1" (
-      set _NOTTAGS=%_NOTTAGS% -nottags:Slow
+    set _NOTTAGS=%_NOTTAGS% -nottags:Slow
   )
 
   if not "%NUM_RL_THREADS%" == "" (
@@ -311,38 +311,44 @@ goto :main
   set EXTRA_RL_FLAGS=-appendtestnametoextraccflags
   set _exclude_serialized=
 
+  if "%_BuildType%" == "debug" (
+    rem Note: DumpOnCrash suppresses failed assert dialog popups in favor of
+    rem storing a dump of the assertion failure in the user's temp directory
+    set EXTRA_CC_FLAGS=%EXTRA_CC_FLAGS% -DumpOnCrash
+  )
+
   if "%_TESTCONFIG%"=="interpreted" (
-      set EXTRA_CC_FLAGS=%EXTRA_CC_FLAGS% -maxInterpretCount:1 -maxSimpleJitRunCount:1 -bgjit- %_dynamicprofilecache%
+    set EXTRA_CC_FLAGS=%EXTRA_CC_FLAGS% -maxInterpretCount:1 -maxSimpleJitRunCount:1 -bgjit- %_dynamicprofilecache%
   )
   if "%_TESTCONFIG%"=="nonative" (
-      set EXTRA_CC_FLAGS=%EXTRA_CC_FLAGS% -nonative
-      set EXTRA_RL_FLAGS=-nottags:exclude_interpreted -nottags:fails_interpreted
+    set EXTRA_CC_FLAGS=%EXTRA_CC_FLAGS% -nonative
+    set EXTRA_RL_FLAGS=-nottags:exclude_interpreted -nottags:fails_interpreted
   )
   if "%_TESTCONFIG%"=="dynapogo"    (
-      set EXTRA_CC_FLAGS=%EXTRA_CC_FLAGS% -forceNative -off:simpleJit -bgJitDelay:0 %_dynamicprofileinput%
+    set EXTRA_CC_FLAGS=%EXTRA_CC_FLAGS% -forceNative -off:simpleJit -bgJitDelay:0 %_dynamicprofileinput%
   )
 
   :: Variants after here are user supplied variants (not run by default).
   if "%_TESTCONFIG%"=="forcedeferparse" (
-      set EXTRA_CC_FLAGS=%EXTRA_CC_FLAGS% -forceDeferParse %_dynamicprofilecache%
-      set _exclude_forcedeferparse=-nottags:exclude_forcedeferparse
+    set EXTRA_CC_FLAGS=%EXTRA_CC_FLAGS% -forceDeferParse %_dynamicprofilecache%
+    set _exclude_forcedeferparse=-nottags:exclude_forcedeferparse
   )
   if "%_TESTCONFIG%"=="nodeferparse" (
-      set EXTRA_CC_FLAGS=%EXTRA_CC_FLAGS% -noDeferParse %_dynamicprofilecache%
-      set _exclude_nodeferparse=-nottags:exclude_nodeferparse
+    set EXTRA_CC_FLAGS=%EXTRA_CC_FLAGS% -noDeferParse %_dynamicprofilecache%
+    set _exclude_nodeferparse=-nottags:exclude_nodeferparse
   )
   if "%_TESTCONFIG%"=="forceundodefer" (
-      set EXTRA_CC_FLAGS=%EXTRA_CC_FLAGS% -forceUndoDefer %_dynamicprofilecache%
-      set _exclude_forceundodefer=-nottags:exclude_forceundodefer
+    set EXTRA_CC_FLAGS=%EXTRA_CC_FLAGS% -forceUndoDefer %_dynamicprofilecache%
+    set _exclude_forceundodefer=-nottags:exclude_forceundodefer
   )
   if "%_TESTCONFIG%"=="bytecodeserialized" (
-      set EXTRA_CC_FLAGS=%EXTRA_CC_FLAGS% -recreatebytecodefile -serialized:%TEMP%\ByteCode
-      set _exclude_serialized=-nottags:exclude_serialized
+    set EXTRA_CC_FLAGS=%EXTRA_CC_FLAGS% -recreatebytecodefile -serialized:%TEMP%\ByteCode
+    set _exclude_serialized=-nottags:exclude_serialized
   )
   if "%_TESTCONFIG%"=="forceserialized" (
-      set EXTRA_CC_FLAGS=%EXTRA_CC_FLAGS% -forceserialized
-      set EXTRA_RL_FLAGS=
-      set _exclude_serialized=-nottags:exclude_serialized
+    set EXTRA_CC_FLAGS=%EXTRA_CC_FLAGS% -forceserialized
+    set EXTRA_RL_FLAGS=
+    set _exclude_serialized=-nottags:exclude_serialized
   )
 
   echo.

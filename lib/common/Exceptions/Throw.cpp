@@ -168,6 +168,18 @@ namespace Js {
         }
     }
 
+    void Throw::GenerateDumpForAssert(LPCWSTR filePath)
+    {
+        __try
+        {
+            RaiseException(STATUS_ASSERTION_FAILURE, EXCEPTION_NONCONTINUABLE, 0, NULL);
+        }
+        __except (Throw::GenerateDump(GetExceptionInformation(), filePath, EXCEPTION_CONTINUE_SEARCH), false)
+        {
+            // no-op
+        }
+    }
+
     int Throw::GenerateDump(PEXCEPTION_POINTERS exceptInfo, LPCWSTR filePath, int ret, bool needLock)
     {
         WCHAR tempFilePath[MAX_PATH];
@@ -186,7 +198,7 @@ namespace Js {
             filePath = tempFilePath;
         }
 
-        StringCchPrintf(tempFileName, _countof(tempFileName), L"%s\\JC_%d_%d.dmp", filePath, GetCurrentProcessId(), GetCurrentThreadId());
+        StringCchPrintf(tempFileName, _countof(tempFileName), L"%s\\CH_%d_%d.dmp", filePath, GetCurrentProcessId(), GetCurrentThreadId());
         Output::Print(L"dump filename %s \n", tempFileName);
         Output::Flush();
 
@@ -281,7 +293,7 @@ namespace Js {
             {
                 return false;
             }
-            Throw::GenerateDump(Js::Configuration::Global.flags.DumpOnCrash, true);
+            Throw::GenerateDumpForAssert(Js::Configuration::Global.flags.DumpOnCrash);
 #else
             return false;
 #endif

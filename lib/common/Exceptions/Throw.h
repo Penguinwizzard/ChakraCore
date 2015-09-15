@@ -29,6 +29,7 @@ namespace Js {
         static void LogAssert();
         static int GenerateDump(PEXCEPTION_POINTERS exceptInfo, LPCWSTR filePath, int ret = EXCEPTION_CONTINUE_SEARCH, bool needLock = false);
         static void GenerateDump(LPCWSTR filePath, bool terminate = false, bool needLock = false);
+        static void GenerateDumpForAssert(LPCWSTR filePath);
     private:
         static CriticalSection csGenereateDump;
         __declspec(thread) static  StackBackTrace * stackBackTrace;
