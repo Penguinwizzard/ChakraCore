@@ -903,8 +903,16 @@ namespace Js
         Recycler* recycler = func->GetFuncBody()->GetScriptContext()->GetRecycler();
 
         mArgCount = func->GetArgCount();
-        mArgType = RecyclerNewArrayLeaf(recycler, AsmJsVarType::Which, mArgCount);
-        mArgSizes = RecyclerNewArrayLeaf(recycler, uint, mArgCount);
+        if (mArgCount > 0)
+        {
+            mArgType = RecyclerNewArrayLeaf(recycler, AsmJsVarType::Which, mArgCount);
+        }
+
+        // on x64, AsmJsExternalEntryPoint reads first 3 elements to figure out how to shadow args on stack
+        // always alloc space for these such that we need to do less work in the entrypoint
+        uint argSizeAlloc = max(mArgCount, 3U);
+        mArgSizes = RecyclerNewArrayLeafZ(recycler, uint, argSizeAlloc);
+
         mbyteCodeTJMap = RecyclerNew(recycler, ByteCodeToTJMap,recycler);
 
         for( uint i = 0; i < GetArgCount(); i++ )

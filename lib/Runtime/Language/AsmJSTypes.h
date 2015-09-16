@@ -977,7 +977,9 @@ namespace Js
                               mArgByteSize(0),
                               mTJBeginAddress(nullptr),
                               mUsesHeapBuffer(false),
-                              mIsHeapBufferConst(false) {}
+                              mIsHeapBufferConst(false),
+                              mArgType(nullptr),
+                              mArgSizes(nullptr) {}
         // the key is the bytecode address
         typedef JsUtil::BaseDictionary<int, ptrdiff_t, Recycler> ByteCodeToTJMap;
         ByteCodeToTJMap* mbyteCodeTJMap;
