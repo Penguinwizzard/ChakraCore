@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #define IDS_COMPILATION_ERROR_SOURCE    4096
 #define IDS_RUNTIME_ERROR_SOURCE        4097
 #define IDS_UNKNOWN_RUNTIME_ERROR        4098

@@ -1,5 +1,7 @@
-// Copyright (C) Microsoft. All rights reserved. 
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 //
 // Map Unicode characters to their equivalence classes induced by the modified ToUpper map.
 // Ie c1 and c2 are in the same class if ToUpper(c1) == ToUpper(c2).

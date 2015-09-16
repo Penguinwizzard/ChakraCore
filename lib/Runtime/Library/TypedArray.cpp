@@ -1,6 +1,7 @@
-//----------------------------------------------------------------------------
-// Copyright (C) by Microsoft Corporation.  All rights reserved.
-// 
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 // Implementation for typed arrays based on ArrayBuffer. 
 // There is one nested ArrayBuffer for each typed array. Multiple typed array
 // can share the same array buffer. 

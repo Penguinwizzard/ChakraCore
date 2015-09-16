@@ -1,12 +1,8 @@
-//---------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//
-// ATTENTION - THIS FILE CONTAINS THIRD PARTY OPEN SOURCE CODE: ASMJS COMPONENT OF ODINMONKEY
-// IT IS CLEARED ONLY FOR LIMITED USE BY CHAKRA TEAM FOR THE CHAKRA JAVASCRIPT RUNTIME COMPONENT. 
-// DO NOT USE OR SHARE THIS CODE WITHOUT APPROVAL PURSUANT TO THE MICROSOFT OPEN 
-// SOURCE SOFTWARE APPROVAL POLICY.
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+// Portions of this file are copyright 2014 Mozilla Foundation, available under the Apache 2.0 license.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeLanguagePch.h"
 #include "ByteCode\Symbol.h"
 #include "ByteCode\FuncInfo.h"

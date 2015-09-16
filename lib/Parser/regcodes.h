@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 // These byte codes _cannot_ appear in the regexOpCode field of a Node.
 RegOp(GreedyStar       ,Rev,Lng, 0 , 0 )   // 00/00 *   label, cchMinRem
 RegOp(RevBranch        ,Rev,Lng,Lng, 0 )   // 01/01     label, cchMinRem, pnode->cchMinTot

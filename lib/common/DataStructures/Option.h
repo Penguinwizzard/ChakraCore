@@ -1,6 +1,7 @@
-//---------------------------------------------------------------------------
-// Copyright (C) 1995 - 2010 by Microsoft Corporation.  All rights reserved.
-//
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 // Option represents a pointer with explicit null semantics. Use sites are
 // required to deal with the null possibility.
 //----------------------------------------------------------------------------

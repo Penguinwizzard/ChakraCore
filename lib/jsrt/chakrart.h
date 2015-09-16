@@ -1,5 +1,7 @@
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 /// \mainpage Chakra Hosting API Reference
 ///
 /// Chakra is Microsoft's JavaScript engine. It is an integral part of Internet Explorer but can

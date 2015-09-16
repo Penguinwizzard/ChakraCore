@@ -1,3 +1,7 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 // (hintCode, isNotOptimized, hintlevel, description, consequences, suggestion)
 
 PERFHINT_REASON(HasTryBlock,               true, PerfHintLevels::L1,      L"Function has try block",                 L"Un-optimized JIT code generated for this function", L"Move perf sensitive block inside of try to different function")
