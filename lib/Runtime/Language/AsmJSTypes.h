@@ -954,12 +954,10 @@ namespace Js
     class AsmJsFunctionInfo
     {
         int mIntConstCount, mDoubleConstCount, mFloatConstCount;
-        // support max 32 arguments
-        static const int MAX_ARGS = ( sizeof( int ) * 8 );
         uint mArgCount;
         int mIntVarCount, mDoubleVarCount, mFloatVarCount, mIntTmpCount, mDoubleTmpCount, mFloatTmpCount;
-        AsmJsVarType::Which mArgType[MAX_ARGS];
-        uint mArgSizes[MAX_ARGS];
+        AsmJsVarType::Which * mArgType;
+        uint * mArgSizes;
         int mArgByteSize;
         // offset in Byte from the beggining of the stack aka R0
         int mIntByteOffset, mDoubleByteOffset, mFloatByteOffset;
@@ -1014,41 +1012,11 @@ namespace Js
         inline int GetSimdAllCount() const { return GetSimdConstCount() + GetSimdVarCount() + GetSimdTmpCount(); }
 #endif
         int GetTotalSizeinBytes()const;
-        inline void SetArgType( AsmJsVarType type, int index )
+        void SetArgType(AsmJsVarType type, uint index);
+        inline AsmJsVarType GetArgType( uint index ) const
         {
-            // max number of arguments supported
-            Assert( index < MAX_ARGS );
-#ifdef SIMD_JS_ENABLED
-            Assert(type.which() == AsmJsVarType::Int || type.which() == AsmJsVarType::Float || type.which() == AsmJsVarType::Double || type.isSIMD());
-#else
-            Assert(type.which() == AsmJsVarType::Int || type.which() == AsmJsVarType::Float || type.which() == AsmJsVarType::Double);
-#endif
-            mArgType[index] = type.which();
-            mArgSizes[index] = 0;
-
-            // add 4 if int, 8 if double
-            if (type.isDouble())
-            {
-                mArgByteSize += sizeof(double);
-                mArgSizes[index] = sizeof(double);
-            }
-
-#ifdef SIMD_JS_ENABLED
-            else if (SIMD_JS_FLAG && type.isSIMD())
-            {
-                mArgByteSize += sizeof(AsmJsSIMDValue);
-                mArgSizes[index] = sizeof(AsmJsSIMDValue);
-            } 	
-#endif
-            else
-            {
-                mArgByteSize += MachPtr;
-                mArgSizes[index] = MachPtr;
-            }
-        }
-        inline AsmJsVarType GetArgType( int index ) const
-        {
-            Assert( index < MAX_ARGS );
+            Assert(mArgCount != Constants::UninitializedValue);
+            AnalysisAssert( index < mArgCount);
             return mArgType[index];
         }
         bool Init( AsmJsFunc* func );

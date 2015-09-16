@@ -900,9 +900,11 @@ namespace Js
             mSimdConstCount = (simdRegisterSpace.GetConstCount());
         }
 #endif
+        Recycler* recycler = func->GetFuncBody()->GetScriptContext()->GetRecycler();
 
         mArgCount = func->GetArgCount();
-        Recycler* recycler = func->GetFuncBody()->GetScriptContext()->GetRecycler();
+        mArgType = RecyclerNewArrayLeaf(recycler, AsmJsVarType::Which, mArgCount);
+        mArgSizes = RecyclerNewArrayLeaf(recycler, uint, mArgCount);
         mbyteCodeTJMap = RecyclerNew(recycler, ByteCodeToTJMap,recycler);
 
         for( uint i = 0; i < GetArgCount(); i++ )
@@ -987,6 +989,41 @@ namespace Js
         }
 #endif
         return size;
+    }
+
+
+    void AsmJsFunctionInfo::SetArgType(AsmJsVarType type, uint index)
+    {
+        Assert(mArgCount != Constants::UninitializedValue);
+        AnalysisAssert(index < mArgCount);
+
+#ifdef SIMD_JS_ENABLED
+        Assert(type.which() == AsmJsVarType::Int || type.which() == AsmJsVarType::Float || type.which() == AsmJsVarType::Double || type.isSIMD());
+#else
+        Assert(type.which() == AsmJsVarType::Int || type.which() == AsmJsVarType::Float || type.which() == AsmJsVarType::Double);
+#endif
+        mArgType[index] = type.which();
+        mArgSizes[index] = 0;
+
+        // add 4 if int, 8 if double
+        if (type.isDouble())
+        {
+            mArgByteSize += sizeof(double);
+            mArgSizes[index] = sizeof(double);
+        }
+
+#ifdef SIMD_JS_ENABLED
+        else if (SIMD_JS_FLAG && type.isSIMD())
+        {
+            mArgByteSize += sizeof(AsmJsSIMDValue);
+            mArgSizes[index] = sizeof(AsmJsSIMDValue);
+        }
+#endif
+        else
+        {
+            mArgByteSize += MachPtr;
+            mArgSizes[index] = MachPtr;
+        }
     }
 
     Js::AsmJsType AsmJsArrayView::GetType() const

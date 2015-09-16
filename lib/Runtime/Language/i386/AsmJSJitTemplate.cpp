@@ -3620,7 +3620,7 @@ namespace Js
 
         int LdArrDb::ApplyTemplate( TemplateContext context, BYTE*& buffer, int targetOffset, int slotVarIndex, ArrayBufferView::ViewType viewType )
         {
-            Assert(viewType == ArrayBufferView::TYPE_FLOAT64);
+            AnalysisAssert(viewType == ArrayBufferView::TYPE_FLOAT64);
             X86TemplateData* templateData = GetTemplateData( context );
             int size = 0;
             targetOffset -= templateData->GetBaseOffSet();
@@ -3659,7 +3659,7 @@ namespace Js
 
         int LdArrFlt::ApplyTemplate(TemplateContext context, BYTE*& buffer, int targetOffset, int slotVarIndex, ArrayBufferView::ViewType viewType)
         {
-            Assert(viewType == ArrayBufferView::TYPE_FLOAT32);
+            AnalysisAssert(viewType == ArrayBufferView::TYPE_FLOAT32);
             X86TemplateData* templateData = GetTemplateData(context);
             int size = 0;
             targetOffset -= templateData->GetBaseOffSet();
@@ -3700,7 +3700,7 @@ namespace Js
 
         int LdArr::ApplyTemplate( TemplateContext context, BYTE*& buffer, int targetOffset, int slotVarIndex, ArrayBufferView::ViewType viewType )
         {
-            Assert(viewType < ArrayBufferView::TYPE_FLOAT32 && viewType >= ArrayBufferView::TYPE_INT8);
+            AnalysisAssert(viewType >= ArrayBufferView::TYPE_INT8 && viewType < ArrayBufferView::TYPE_FLOAT32);
             X86TemplateData* templateData = GetTemplateData( context );
             int size = 0;
             targetOffset -= templateData->GetBaseOffSet();
@@ -3740,7 +3740,7 @@ namespace Js
 
         int StArrDb::ApplyTemplate( TemplateContext context, BYTE*& buffer, int srcOffset, int slotVarIndex, ArrayBufferView::ViewType viewType )
         {
-            Assert(viewType == ArrayBufferView::TYPE_FLOAT64);
+            AnalysisAssert(viewType == ArrayBufferView::TYPE_FLOAT64);
             X86TemplateData* templateData = GetTemplateData( context );
             int size = 0;
             srcOffset -= templateData->GetBaseOffSet();            
@@ -3770,7 +3770,7 @@ namespace Js
 
         int StArrFlt::ApplyTemplate(TemplateContext context, BYTE*& buffer, int srcOffset, int slotVarIndex, ArrayBufferView::ViewType viewType)
         {
-            Assert(viewType == ArrayBufferView::TYPE_FLOAT32);
+            AnalysisAssert(viewType == ArrayBufferView::TYPE_FLOAT32);
             X86TemplateData* templateData = GetTemplateData(context);
             int size = 0;
             srcOffset -= templateData->GetBaseOffSet();
@@ -3798,7 +3798,7 @@ namespace Js
         }
         int StArr::ApplyTemplate( TemplateContext context, BYTE*& buffer, int srcOffset, int slotVarIndex, ArrayBufferView::ViewType viewType )
         {
-            Assert(viewType < ArrayBufferView::TYPE_FLOAT32 && viewType >= ArrayBufferView::TYPE_INT8);
+            AnalysisAssert(viewType >= ArrayBufferView::TYPE_INT8 && viewType < ArrayBufferView::TYPE_FLOAT32);
             X86TemplateData* templateData = GetTemplateData( context );
             int size = 0;
             srcOffset -= templateData->GetBaseOffSet();
@@ -3831,7 +3831,7 @@ namespace Js
         // Version with const index
         int ConstLdArrDb::ApplyTemplate( TemplateContext context, BYTE*& buffer, int targetOffset, int constIndex, ArrayBufferView::ViewType viewType )
         {
-            Assert(viewType == ArrayBufferView::TYPE_FLOAT64);
+            AnalysisAssert(viewType == ArrayBufferView::TYPE_FLOAT64);
             X86TemplateData* templateData = GetTemplateData( context );
             int size = 0;
             targetOffset -= templateData->GetBaseOffSet();
@@ -3866,7 +3866,7 @@ namespace Js
         // Version with const index
         int ConstLdArrFlt::ApplyTemplate(TemplateContext context, BYTE*& buffer, int targetOffset, int constIndex, ArrayBufferView::ViewType viewType)
         {
-            Assert(viewType == ArrayBufferView::TYPE_FLOAT32);
+            AnalysisAssert(viewType == ArrayBufferView::TYPE_FLOAT32);
             X86TemplateData* templateData = GetTemplateData(context);
             int size = 0;
             targetOffset -= templateData->GetBaseOffSet();
@@ -3901,7 +3901,7 @@ namespace Js
         }
         int ConstLdArr::ApplyTemplate( TemplateContext context, BYTE*& buffer, int targetOffset, int constIndex, ArrayBufferView::ViewType viewType )
         {
-            Assert(viewType < ArrayBufferView::TYPE_FLOAT32 && viewType >= ArrayBufferView::TYPE_INT8);
+            AnalysisAssert(viewType < ArrayBufferView::TYPE_FLOAT32 && viewType >= ArrayBufferView::TYPE_INT8);
             X86TemplateData* templateData = GetTemplateData( context );
             int size = 0;
             targetOffset -= templateData->GetBaseOffSet();
@@ -3935,7 +3935,7 @@ namespace Js
         template<typename Size>
         int ConstStArrDbOrFlt(TemplateContext context, BYTE*& buffer, int srcOffset, int constIndex, ArrayBufferView::ViewType viewType)
         {
-            Assert(viewType == ArrayBufferView::TYPE_FLOAT32 || viewType == ArrayBufferView::TYPE_FLOAT64);
+            AnalysisAssert(viewType == ArrayBufferView::TYPE_FLOAT32 || viewType == ArrayBufferView::TYPE_FLOAT64);
             X86TemplateData* templateData = GetTemplateData(context);
             int size = 0;
             srcOffset -= templateData->GetBaseOffSet();
@@ -3972,7 +3972,7 @@ namespace Js
 
         int ConstStArr::ApplyTemplate( TemplateContext context, BYTE*& buffer, int srcOffset, int constIndex, ArrayBufferView::ViewType viewType )
         {
-            Assert(viewType < ArrayBufferView::TYPE_FLOAT32 && viewType >= ArrayBufferView::TYPE_INT8);
+            AnalysisAssert(viewType < ArrayBufferView::TYPE_FLOAT32 && viewType >= ArrayBufferView::TYPE_INT8);
             X86TemplateData* templateData = GetTemplateData( context );
             int size = 0;
             srcOffset -= templateData->GetBaseOffSet();

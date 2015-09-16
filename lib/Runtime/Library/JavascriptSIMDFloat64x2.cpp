@@ -129,16 +129,6 @@ namespace Js
         return JavascriptSIMDFloat64x2::New(&this->value, requestContext);
     }
 
-    Var JavascriptSIMDFloat64x2::CopyAndSetLane(uint index, double value, ScriptContext* requestContext)
-    {
-        AssertMsg(index < 2, "Out of range lane index");
-        Var instance = Copy(requestContext);
-        JavascriptSIMDFloat64x2 *insValue = JavascriptSIMDFloat64x2::FromVar(instance);
-        Assert(insValue);
-        insValue->value.f64[index] = value;
-        return instance;
-    }
-    
     __inline Var JavascriptSIMDFloat64x2::GetSignMask()
     {
         int signMask = SIMDFloat64x2Operation::OpGetSignMask(value);

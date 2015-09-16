@@ -40,14 +40,13 @@ namespace OpCodeAttrAsmJs
     static const int GetOpCodeAttributes( Js::OpCodeAsmJs op )
     {
         uint opIndex = (uint)op;
-        if (op <= (uint)Js::OpCodeAsmJs::MaxByteSizedOpcodes)
+        if (opIndex <= (uint)Js::OpCodeAsmJs::MaxByteSizedOpcodes)
         {
-            Assert(opIndex < _countof(OpcodeAttributesAsmJs));
+            AnalysisAssert(opIndex < _countof(OpcodeAttributesAsmJs));
             return OpcodeAttributesAsmJs[opIndex];
         }
         opIndex -= ( Js::OpCodeAsmJs::MaxByteSizedOpcodes + 1 );
-        Assert(opIndex < _countof(ExtendedOpcodeAttributesAsmJs));
-        __analysis_assume(opIndex < _countof(ExtendedOpcodeAttributesAsmJs));
+        AnalysisAssert(opIndex < _countof(ExtendedOpcodeAttributesAsmJs));
         return ExtendedOpcodeAttributesAsmJs[opIndex];
     }
 
