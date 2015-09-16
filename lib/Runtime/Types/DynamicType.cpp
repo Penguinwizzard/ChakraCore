@@ -85,7 +85,10 @@ namespace Js
 
     int DynamicObject::GetPropertyCount()
     {
-        this->GetTypeHandler()->EnsureObjectReady(this);
+        if (!this->GetTypeHandler()->EnsureObjectReady(this))
+        {
+            return 0;
+        }
         return GetTypeHandler()->GetPropertyCount();
     }
 
@@ -319,7 +322,11 @@ namespace Js
 
     BOOL DynamicObject::GetEnumerator(BOOL enumNonEnumerable, Var* enumerator, ScriptContext * requestContext, bool preferSnapshotSemantics, bool enumSymbols)
     {
-        this->GetTypeHandler()->EnsureObjectReady(this);
+        if (!this->GetTypeHandler()->EnsureObjectReady(this))
+        {
+            *enumerator = nullptr;
+            return FALSE;
+        }
 
         // Create the appropriate enumerator object.
         if (preferSnapshotSemantics)

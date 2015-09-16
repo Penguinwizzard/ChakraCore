@@ -50,7 +50,7 @@ namespace Js
                     len = JavascriptConversion::ToInt32(varLength, scriptContext);
                 }
             }
-            EnsureObjectReady();
+            GetTypeHandler()->EnsureObjectReady(this);
         }
 
         if (args.Info.Count > 1)

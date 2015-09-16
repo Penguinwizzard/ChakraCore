@@ -268,7 +268,6 @@ namespace Js
         BOOL FindNextProperty(BigPropertyIndex& index, __out JavascriptString** propertyString, __out PropertyId* propertyId, __out PropertyAttributes* attributes, DynamicType *typeToEnumerate, bool requireEnumerable, bool enumSymbols = false) const;
 
         virtual BOOL HasDeferredTypeHandler() const sealed;
-        void EnsureObjectReady();
         static DWORD GetOffsetOfAuxSlots();
         static DWORD GetOffsetOfObjectArray();
         static DWORD GetOffsetOfType();

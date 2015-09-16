@@ -55,6 +55,13 @@ namespace Js
         HRESULT hr = E_FAIL;
 
         ScriptContext* scriptContext = object->GetScriptContext();
+        // Don't call the implicit call if disable implicit call
+        if (scriptContext->GetThreadContext()->IsDisableImplicitCall())
+        {
+            scriptContext->GetThreadContext()->AddImplicitCallFlags(ImplicitCall_External);
+            //we will return if we get call further into implicitcalls.
+            return;
+        }
 
         if (scriptContext->IsClosed() || scriptContext->IsInvalidatedForHostObjects())
         {

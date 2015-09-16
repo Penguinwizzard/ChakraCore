@@ -110,15 +110,14 @@ namespace Js
         if (VirtualTableInfo<DynamicObject>::HasVirtualTable(object))
         {
             DynamicObject* dynamicObject = (DynamicObject*)object;
-            // Temporarily disabled UShortMax check in order to force BigProperyIndex. See Blue Bug 5397.
-            //if (dynamicObject->GetTypeHandler()->GetSlotCapacity() <= Constants::UShortMaxValue)
-            //{
-                dynamicObject->GetTypeHandler()->EnsureObjectReady(dynamicObject);
-                dynamicObject->GetDynamicType()->PrepareForTypeSnapshotEnumeration();
-                embeddedEnumerator.Initialize(dynamicObject, true);
-                currentEnumerator = &embeddedEnumerator;
-                return true;
-            //}
+            if (!dynamicObject->GetTypeHandler()->EnsureObjectReady(dynamicObject))
+            {
+                return false;
+            }
+            dynamicObject->GetDynamicType()->PrepareForTypeSnapshotEnumeration();
+            embeddedEnumerator.Initialize(dynamicObject, true);
+            currentEnumerator = &embeddedEnumerator;
+            return true;
         }
 
         if (!object->GetEnumerator(TRUE /*enumNonEnumerable*/, (Var *)&currentEnumerator, scriptContext, true /*preferSnapshotSemantics */, enumSymbols))

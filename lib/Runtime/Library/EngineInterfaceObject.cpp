@@ -390,7 +390,7 @@ namespace Js
         // Promise has a dependency on the Debug object type being constructed so
         // undefer it here.
         DynamicObject* debugObject = library->GetDebugObject();
-        debugObject->EnsureObjectReady();
+        debugObject->GetDynamicType()->GetTypeHandler()->EnsureObjectReady(debugObject);
 
         // msTraceAsyncCallbackStarting([asyncOperationId: number=-1], [workType: number=1], [logLevel: number=1]):undefined.
         library->AddFunctionToLibraryObject(promiseNativeInterfaces, Js::PropertyIds::msTraceAsyncCallbackStarting, &AsyncDebug::EntryInfo::BeginAsyncCallback, 3);

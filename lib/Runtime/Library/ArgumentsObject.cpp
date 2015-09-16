@@ -8,7 +8,11 @@ namespace Js
 {
     BOOL ArgumentsObject::GetEnumerator(BOOL enumNonEnumerable, Var* enumerator, ScriptContext * requestContext, bool preferSnapshotSemantics, bool enumSymbols)
     {
-        this->GetTypeHandler()->EnsureObjectReady(this);
+        if (!this->GetTypeHandler()->EnsureObjectReady(this))
+        {
+            *enumerator = nullptr;
+            return false;
+        }
         *enumerator = RecyclerNew(GetScriptContext()->GetRecycler(), ArgumentsObjectEnumerator, this, requestContext, enumNonEnumerable, enumSymbols);
         return true;
     }
@@ -583,7 +587,11 @@ namespace Js
 
     BOOL ES5HeapArgumentsObject::GetEnumerator(BOOL enumNonEnumerable, Var* enumerator, ScriptContext * requestContext, bool preferSnapshotSemantics, bool enumSymbols)
     {
-        this->GetTypeHandler()->EnsureObjectReady(this);
+        if (!this->GetTypeHandler()->EnsureObjectReady(this))
+        {
+            *enumerator = nullptr;
+            return FALSE;
+        }
         *enumerator = RecyclerNew(GetScriptContext()->GetRecycler(), ES5ArgumentsObjectEnumerator, this, requestContext, enumNonEnumerable, enumSymbols);
         return true;
     }

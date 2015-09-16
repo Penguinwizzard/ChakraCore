@@ -3036,7 +3036,11 @@ namespace Js
     {
         if (IsHybridDebugging())
         {
-            obj->EnsureObjectReady();
+            Assert(!obj->GetScriptContext()->GetThreadContext()->IsDisableImplicitCall());
+            if (!obj->GetTypeHandler()->EnsureObjectReady(obj))
+            {
+                return obj;
+            }
         }
         return obj;
     }
@@ -3141,11 +3145,12 @@ namespace Js
 #endif
         };
 
+        Assert(!scriptContext->GetThreadContext()->IsDisableImplicitCall());
         for (int i = 0; i < _countof(objects); i++)
         {
             if (objects[i]) // may be NULL for compat mode
             {
-                objects[i]->EnsureObjectReady();
+                objects[i]->GetTypeHandler()->EnsureObjectReady(objects[i]);
             }
         }
 
@@ -4483,7 +4488,7 @@ namespace Js
         // Intl.js and are registered into the EngineInterfaceObject as part of Intl object initialization.
         try
         {
-            this->IntlObject->EnsureObjectReady();
+            this->IntlObject->GetTypeHandler()->EnsureObjectReady(this->IntlObject);
         }
         catch (JavascriptExceptionObject *e)
         {

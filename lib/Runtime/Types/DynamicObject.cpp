@@ -483,12 +483,6 @@ namespace Js
         return this->GetTypeHandler()->IsDeferredTypeHandler();
     }
 
-    void
-    DynamicObject::EnsureObjectReady()
-    {
-        this->GetTypeHandler()->EnsureObjectReady(this);
-    }
-
     DynamicTypeHandler *
     DynamicObject::GetTypeHandler() const
     {
@@ -777,7 +771,11 @@ namespace Js
     bool
     DynamicObject::GetHasNoEnumerableProperties()
     {
-        this->GetTypeHandler()->EnsureObjectReady(this);
+        if (!this->GetTypeHandler()->EnsureObjectReady(this))
+        {
+            return false;
+        }
+
         if (!this->GetDynamicType()->GetHasNoEnumerableProperties())
         {
             return false;

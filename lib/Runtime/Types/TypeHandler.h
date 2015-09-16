@@ -415,7 +415,7 @@ namespace Js
         virtual bool IsObjTypeSpecEquivalent(const Type* type, const Js::TypeEquivalenceRecord& record, uint& failedPropertyIndex) = 0;
         virtual bool IsObjTypeSpecEquivalent(const Type* type, const EquivalentPropertyEntry* entry) = 0;
 
-        virtual void EnsureObjectReady(DynamicObject* instance) { }
+        virtual bool EnsureObjectReady(DynamicObject* instance) { return true; }
         virtual BOOL HasProperty(DynamicObject* instance, PropertyId propertyId, __out_opt bool *pNoRedecl = nullptr) = 0;
         virtual BOOL HasProperty(DynamicObject* instance, JavascriptString* propertyNameString) = 0;
         virtual BOOL GetProperty(DynamicObject* instance, Var originalInstance, PropertyId propertyId, Var* value, PropertyValueInfo* info, ScriptContext* requestContext) = 0;

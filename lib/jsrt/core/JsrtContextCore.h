@@ -94,8 +94,7 @@ public:
 
     void CleanDynamicCodeCache() override
     {
-        // TODO: do we need to support this? 
-        Assert(false);
+        // Don't need this for jsrt core.
         return;
     }
 
