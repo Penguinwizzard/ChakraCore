@@ -2640,6 +2640,6 @@ namespace Js
     template <bool allowLetConstGlobal>
     PropertyAttributes GetLetConstGlobalPropertyAttributes(PropertyAttributes attributes)
     {
-        return (allowLetConstGlobal && (attributes | PropertyLetConstGlobal)) ? (attributes | PropertyWritable) : attributes;
+        return (allowLetConstGlobal && (attributes & PropertyLetConstGlobal) != 0) ? (attributes | PropertyWritable) : attributes;
     }
 }
