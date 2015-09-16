@@ -149,19 +149,9 @@ namespace Js
         return JavascriptSIMDInt32x4::New(&this->value, requestContext);
     }
 
-    Var JavascriptSIMDInt32x4::CopyAndSetLane(uint index, int value, ScriptContext* requestContext)
-    {
-        AssertMsg(index < 4, "Out of range lane index");
-        Var instance = Copy(requestContext);
-        JavascriptSIMDInt32x4 *insValue = JavascriptSIMDInt32x4::FromVar(instance);
-        Assert(insValue);
-        insValue->value.i32[index] = value;
-        return instance;
-    }
-
     Var  JavascriptSIMDInt32x4::CopyAndSetLaneFlag(uint index, BOOL value, ScriptContext* requestContext)
     {
-        AssertMsg(index < 4, "Out of range lane index");
+        AnalysisAssert(index < 4);
         Var instance = Copy(requestContext);
         JavascriptSIMDInt32x4 *insValue = JavascriptSIMDInt32x4::FromVar(instance);
         Assert(insValue);
@@ -172,7 +162,7 @@ namespace Js
     __inline Var  JavascriptSIMDInt32x4::GetLaneAsFlag(uint index, ScriptContext* requestContext)
     {
         // convert value.i32[index] to TaggedInt 
-        AssertMsg(index < 4, "Out of range lane index");
+        AnalysisAssert(index < 4);
         return JavascriptNumber::ToVar(value.i32[index] != 0x0, requestContext);
     }
 

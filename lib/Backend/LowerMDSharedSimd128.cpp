@@ -751,22 +751,23 @@ IR::Instr* LowererMD::Simd128LowerShuffle(IR::Instr* instr)
     Js::OpCode shufOpcode = Js::OpCode::SHUFPS;
     Js::OpCode irOpcode = instr->m_opcode;
     bool isShuffle = false;
-    
+
     SList<IR::Opnd*> *args = Simd128GetExtendedArgs(instr);
-    
+
     IR::Opnd *dst = args->Pop();
     IR::Opnd *srcs[6] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
-    
+
     int i = 0;
     while (!args->Empty() && i < 6)
     {
         srcs[i++] = args->Pop();
     }
-    
+
     int8 shufMask = 0;
     int lane0 = 0, lane1 = 0, lane2 = 0, lane3 = 0;
     IR::Instr *pInstr = instr->m_prev;
 
+    AnalysisAssert(srcs[0] != nullptr && srcs[1] != nullptr && srcs[2] != nullptr);
     Assert(dst->IsSimd128() && srcs[0]->IsSimd128());
 
     // globOpt will type-spec if all lane indices are constants, and within range constraints to match a single SSE instruction
@@ -775,7 +776,7 @@ IR::Instr* LowererMD::Simd128LowerShuffle(IR::Instr* instr)
         irOpcode == Js::OpCode::Simd128_Swizzle_D2)
     {
         isShuffle = false;
-        
+
         AssertMsg(srcs[1]->IsIntConstOpnd() &&
             srcs[2]->IsIntConstOpnd() &&
             (irOpcode == Js::OpCode::Simd128_Swizzle_D2 || srcs[3]->IsIntConstOpnd()) &&
@@ -791,6 +792,7 @@ IR::Instr* LowererMD::Simd128LowerShuffle(IR::Instr* instr)
         }
         else
         {
+            AnalysisAssert(srcs[3] != nullptr && srcs[4] != nullptr);
             lane0 = srcs[1]->AsIntConstOpnd()->m_value;
             lane1 = srcs[2]->AsIntConstOpnd()->m_value;
             lane2 = srcs[3]->AsIntConstOpnd()->m_value;
@@ -807,6 +809,7 @@ IR::Instr* LowererMD::Simd128LowerShuffle(IR::Instr* instr)
         irOpcode == Js::OpCode::Simd128_Shuffle_D2)
     {
         isShuffle = true;
+        AnalysisAssert(srcs[3] != nullptr);
         Assert(srcs[1]->IsSimd128());
 
         AssertMsg(srcs[2]->IsIntConstOpnd() &&
@@ -824,8 +827,9 @@ IR::Instr* LowererMD::Simd128LowerShuffle(IR::Instr* instr)
             Assert(lane1 >= 0 && lane1 < 2);
             shufMask = (int8)((lane1 << 1) | lane0);
         }
-        else 
+        else
         {
+            AnalysisAssert(srcs[4] != nullptr && srcs[5] != nullptr);
             lane0 = srcs[2]->AsIntConstOpnd()->m_value;
             lane1 = srcs[3]->AsIntConstOpnd()->m_value;
             lane2 = srcs[4]->AsIntConstOpnd()->m_value - 4;
@@ -841,14 +845,14 @@ IR::Instr* LowererMD::Simd128LowerShuffle(IR::Instr* instr)
     {
         Assert(UNREACHED);
     }
-    
+
     if (instr->m_opcode == Js::OpCode::Simd128_Swizzle_D2 || instr->m_opcode == Js::OpCode::Simd128_Shuffle_D2)
     {
         shufOpcode = Js::OpCode::SHUFPD;
     }
 
     // Lower shuffle/swizzle
-    
+
     instr->m_opcode = shufOpcode;
     instr->SetDst(dst);
 
@@ -872,7 +876,6 @@ IR::Instr* LowererMD::Simd128LowerShuffle(IR::Instr* instr)
 IR::Instr* LowererMD::Simd128LowerLoadElem(IR::Instr *instr)
 {
     Assert(instr->m_opcode == Js::OpCode::Simd128_LdArr_I4 ||
-        instr->m_opcode == Js::OpCode::Simd128_LdArr_I4 ||
         instr->m_opcode == Js::OpCode::Simd128_LdArr_F4 ||
         instr->m_opcode == Js::OpCode::Simd128_LdArr_D2 ||
         instr->m_opcode == Js::OpCode::Simd128_LdArrConst_I4 ||

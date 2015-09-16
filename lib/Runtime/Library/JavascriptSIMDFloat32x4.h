@@ -57,7 +57,6 @@ namespace Js
         // End Entry Points
 
         Var  Copy(ScriptContext* requestContext);
-        Var  CopyAndSetLane(uint index, float value, ScriptContext* requestContext);
 
     private:
         bool GetPropertyBuiltIns(PropertyId propertyId, Var* value, ScriptContext* requestContext);

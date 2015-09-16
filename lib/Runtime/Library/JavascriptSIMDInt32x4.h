@@ -59,7 +59,6 @@ namespace Js
         // End Entry Points
 
         Var  Copy(ScriptContext* requestContext);
-        Var  CopyAndSetLane(uint index, int value, ScriptContext* requestContext);
         Var  CopyAndSetLaneFlag(uint index, BOOL value, ScriptContext* requestContext);
 
     private:
