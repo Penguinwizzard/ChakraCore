@@ -1765,7 +1765,7 @@ tokens Scanner<EncodingPolicy>::ScanCore(bool identifyKwds)
     codepoint_t ch;
     OLECHAR firstChar;
     OLECHAR secondChar;
-    EncodedCharPtr pchT;
+    EncodedCharPtr pchT = nullptr;
     size_t multiUnits = 0;
     EncodedCharPtr p = m_currentCharacter;
     EncodedCharPtr last = m_pchLast;

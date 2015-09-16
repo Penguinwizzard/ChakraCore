@@ -9813,7 +9813,7 @@ Parse the code.
 ***************************************************************************/
 ParseNodePtr Parser::Parse(LPCUTF8 pszSrc, size_t offset, size_t length, charcount_t charOffset, ULONG grfscr, ULONG lineNumber, Js::LocalFunctionId * nextFunctionId, CompileScriptException *pse)
 {
-    ParseNodePtr pnodeProg;
+    ParseNodePtr pnodeProg = nullptr;
     ParseNodePtr *lastNodeRef = nullptr;
 
     m_nextBlockId = 0;
