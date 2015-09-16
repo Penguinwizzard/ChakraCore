@@ -138,17 +138,18 @@ goto :main
 
   if /i "%1" == "-binary"           set _Binary=-binary:%2&                                     goto :ArgOkShift2
   if /i "%1" == "-bindir"           set _BinDir=%~f2&                                           goto :ArgOkShift2
-  if /i "%1" == "-dirs"             set _DIRS=-dirs:%2&                                         goto :ArgOkShift2
+  if /i "%1" == "-dirs"             set _DIRS=-dirs:%~2&                                        goto :ArgOkShift2
   if /i "%1" == "-win7"             set TARGET_OS=win7&                                         goto :ArgOk
   if /i "%1" == "-win8"             set TARGET_OS=win8&                                         goto :ArgOk
   if /i "%1" == "-winBlue"          set TARGET_OS=winBlue&                                      goto :ArgOk
   if /i "%1" == "-win10"            set TARGET_OS=win10&                                        goto :ArgOk
-  if /i "%1" == "-nottags"          set _NOTTAGS=%_NOTTAGS% -nottags:%2&                        goto :ArgOkShift2
-  if /i "%1" == "-tags"             set _TAGS=%_TAGS% -tags:%2&                                 goto :ArgOkShift2
-  if /i "%1" == "-dirtags"          set _DIRTAGS=%_DIRTAGS% -dirtags:%2&                        goto :ArgOkShift2
-  if /i "%1" == "-dirnottags"       set _DIRNOTTAGS=%_DIRNOTTAGS% -dirnottags:%2&               goto :ArgOkShift2
+  if /i "%1" == "-nottags"          set _NOTTAGS=%_NOTTAGS% -nottags:%~2&                       goto :ArgOkShift2
+  if /i "%1" == "-tags"             set _TAGS=%_TAGS% -tags:%~2&                                goto :ArgOkShift2
+  if /i "%1" == "-dirtags"          set _DIRTAGS=%_DIRTAGS% -dirtags:%~2&                       goto :ArgOkShift2
+  if /i "%1" == "-dirnottags"       set _DIRNOTTAGS=%_DIRNOTTAGS% -dirnottags:%~2&              goto :ArgOkShift2
   if /i "%1" == "-includeSlow"      set _includeSlow=1&                                         goto :ArgOk
   if /i "%1" == "-includeChBroken"  set _excludeChBroken=&                                      goto :ArgOk
+  if /i "%1" == "-onlyChBroken"     set _excludeChBroken=& set _TAGS=%_TAGS% -tags:exclude_ch&  goto :ArgOk
   if /i "%1" == "-quiet"            set _quiet=-quiet&                                          goto :ArgOk
   :: TODO Consider removing -drt and exclude_drt in some reasonable manner
   if /i "%1" == "-drt"              set _drt=1& set _NOTTAGS=%_NOTTAGS% -nottags:exclude_drt&   goto :ArgOk
