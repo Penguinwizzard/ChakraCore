@@ -18,4 +18,5 @@ Build/swum-cache.txt
 sd.ini
 *.vcxproj.user
 test/*/*.baseline.rebase
-test/*/profile.dpl.*
+testout*
+*.dpl.*

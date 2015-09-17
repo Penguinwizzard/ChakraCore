@@ -515,6 +515,7 @@ PHASE(All)
 #define DEFAULT_CONFIG_ES6Unscopables          (true)
 #define DEFAULT_CONFIG_ES6WeakSet              (true)
 #define DEFAULT_CONFIG_ES6RegExSticky          (true)
+#define DEFAULT_CONFIG_ES6HasInstanceOf        (false) // Before making this default, once we address instanceof inline cache
 #define DEFAULT_CONFIG_ArrayBufferTransfer     (false)
 #define DEFAULT_CONFIG_ES7ExponentionOperator  (false)
 
@@ -900,6 +901,7 @@ FLAGPR           (Boolean, ES6, ES6UnicodeVerbose      , "Enable ES6 Unicode 6.0
 FLAGPR           (Boolean, ES6, ES6Unscopables         , "Enable ES6 With Statement Unscopables"                    , DEFAULT_CONFIG_ES6Unscopables)
 FLAGPR           (Boolean, ES6, ES6WeakSet             , "Enable ES6 WeakSet"                                       , DEFAULT_CONFIG_ES6WeakSet)
 FLAGPR           (Boolean, ES6, ES6RegExSticky         , "Enable ES6 RegEx sticky flag"                             , DEFAULT_CONFIG_ES6RegExSticky)
+FLAGPR           (Boolean, ES6, ES6HasInstance       , "Enable ES6 @@hasInstance symbol"                        , DEFAULT_CONFIG_ES6HasInstanceOf)
 FLAGPR           (Boolean, ES6, ES6Verbose             , "Enable ES6 verbose trace"                                 , DEFAULT_CONFIG_ES6Verbose)
 FLAGPR_REGOVR_EXP(Boolean, ES6, ArrayBufferTransfer    , "Enable ArrayBuffer.transfer"                              , DEFAULT_CONFIG_ArrayBufferTransfer)
 // /ES6 (BLUE+1) features/flags

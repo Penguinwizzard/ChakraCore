@@ -434,7 +434,7 @@ namespace Js
 
             // For JS Objects, don't create the propertyId if not already added
             bool createIfNotFound = !IsJsNativeObject(object) ||
-                (DynamicType::Is(object->GetTypeId()) && static_cast<DynamicObject*>(object)->GetTypeHandler()->IsStringTypeHandler());
+                (DynamicType::Is(object->GetTypeId()) && static_cast<DynamicObject*>(object)->GetTypeHandler()->IsStringTypeHandler()) || JavascriptProxy::Is(object);
             if (GetIndexType(index, scriptContext, &indexVal, &propertyRecord, createIfNotFound) == IndexType_Number)
             {
                 // In edge mode, we don't need to worry about the special "unknown" behavior. If the item is not available from Get,
@@ -1069,11 +1069,7 @@ CommonNumber:
             {
                 element = proxyResult->DirectGetItem(i);
 
-                // skip symbols
-                if (JavascriptSymbol::Is(element))
-                {
-                    continue;
-                }
+                Assert(!JavascriptSymbol::Is(element));
 
                 PropertyDescriptor propertyDescriptor;
                 JavascriptObject::GetPropertyRecordFromVar<false>(element, scriptContext, &propertyRecord);
@@ -3023,7 +3019,9 @@ CommonNumber:
         // TODO: Perf optimization: If IsStringTypeHandler is true, convert indexVal to string instead of PropertyRecord and let
         // type handler decide whether to turn it into a string or not.  Perf is gained if PropertyRecords are avoided altogether
         // when dealing with a string based type handler.
-        bool createIfNotFound = DynamicType::Is(object->GetTypeId()) && static_cast<DynamicObject*>(object)->GetTypeHandler()->IsStringTypeHandler();
+        bool createIfNotFound = (DynamicType::Is(object->GetTypeId()) && 
+            static_cast<DynamicObject*>(object)->GetTypeHandler()->IsStringTypeHandler()) || 
+            JavascriptProxy::Is(object);
         if (GetIndexType(index, scriptContext, &indexVal, &propertyRecord, createIfNotFound) == IndexType_Number)
         {
             return HasItem(object, indexVal);
@@ -3784,7 +3782,7 @@ CommonNumber:
         // type handler decide whether to turn it into a string or not.  Perf is gained if PropertyRecords are avoided altogether
         // when dealing with a string based type handler.
         bool createIfNotFound = !IsJsNativeObject(object) ||
-            (DynamicType::Is(object->GetTypeId()) && static_cast<DynamicObject*>(object)->GetTypeHandler()->IsStringTypeHandler());
+            (DynamicType::Is(object->GetTypeId()) && static_cast<DynamicObject*>(object)->GetTypeHandler()->IsStringTypeHandler()) || JavascriptProxy::Is(object);
 
         if (GetIndexType(index, scriptContext, &indexVal, &propertyRecord, createIfNotFound) == IndexType_Number)
         {
@@ -4163,15 +4161,16 @@ CommonNumber:
             }
         }
 
+        // fastpath for PropertyStrings only if receiver == object
         if (!TaggedInt::Is(index) && JavascriptString::Is(index) &&
-            VirtualTableInfo<Js::PropertyString>::HasVirtualTable(JavascriptString::FromVar(index))) // fastpath for PropertyStrings
+            VirtualTableInfo<Js::PropertyString>::HasVirtualTable(JavascriptString::FromVar(index)))
         {
             propertyString = (PropertyString *)JavascriptString::FromVar(index);
 
             Assert(propertyString->GetScriptContext() == scriptContext);
 
             PropertyCache const * cache = propertyString->GetPropertyCache();
-            if (object->GetType() == cache->type && cache->isStoreFieldEnabled)
+            if (receiver == object && object->GetType() == cache->type && cache->isStoreFieldEnabled)
             {
 #if DBG
                 propertyRecord = propertyString->GetPropertyRecord();
@@ -4593,7 +4592,7 @@ CommonNumber:
         // type handler decide whether to turn it into a string or not.  Perf is gained if PropertyRecords are avoided altogether
         // when dealing with a string based type handler.
         bool createIfNotFound = !IsJsNativeObject(object) ||
-            (DynamicType::Is(object->GetTypeId()) && static_cast<DynamicObject*>(object)->GetTypeHandler()->IsStringTypeHandler());
+            (DynamicType::Is(object->GetTypeId()) && static_cast<DynamicObject*>(object)->GetTypeHandler()->IsStringTypeHandler()) || JavascriptProxy::Is(object);
 
         if (GetIndexType(index, scriptContext, &indexVal, &propertyRecord, createIfNotFound) == IndexType_Number)
         {
@@ -6625,7 +6624,33 @@ CommonNumber:
         }
 
         RecyclableObject* constructor = RecyclableObject::FromVar(aClass);
-        return JavascriptBoolean::ToVar(constructor->HasInstance(instance, scriptContext, inlineCache), scriptContext);
+        if (scriptContext->GetConfig()->IsES6HasInstanceEnabled())
+        {
+            Var instOfHandler = JavascriptOperators::GetProperty(constructor, PropertyIds::_symbolHasInstance, scriptContext);
+            if (JavascriptOperators::IsUndefinedObject(instOfHandler))
+            {
+                return JavascriptBoolean::ToVar(constructor->HasInstance(instance, scriptContext, inlineCache), scriptContext);
+            }
+            else
+            {
+                if (!JavascriptConversion::IsCallable(instOfHandler))
+                {
+                    JavascriptError::ThrowTypeError(scriptContext, JSERR_Property_NeedFunction, L"Symbol[Symbol.hasInstance]");
+                }
+                RecyclableObject *instFunc = RecyclableObject::FromVar(instOfHandler);
+                Js::Var values[2];
+                Js::CallInfo info(Js::CallFlags_Value, 2);
+                Js::Arguments args(info, values);
+                values[0] = constructor;
+                values[1] = instance;
+                Var result = JavascriptFunction::CallFunction<true>(instFunc, instFunc->GetEntryPoint(), args);
+                return  JavascriptBoolean::ToVar(JavascriptConversion::ToBoolean(result, scriptContext) ? TRUE : FALSE, scriptContext);
+            }
+        }
+        else
+        {
+            return JavascriptBoolean::ToVar(constructor->HasInstance(instance, scriptContext, inlineCache), scriptContext);
+        }
     }
 
     void JavascriptOperators::OP_InitClass(Var constructor, Var extends, ScriptContext * scriptContext)

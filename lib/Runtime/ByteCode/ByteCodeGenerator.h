@@ -260,7 +260,7 @@ public:
     void EmitInternalScopedSlotLoad(FuncInfo *funcInfo, Scope *scope, Js::PropertyId envIndex, Js::RegSlot slot, Js::RegSlot symbolRegister, bool chkUndecl = false);
     void EmitInternalScopedSlotLoad(FuncInfo *funcInfo, Scope *scope, Js::RegSlot scopeLocation, Js::RegSlot slot, Js::RegSlot symbolRegister, bool chkUndecl = false);
     void EmitInternalScopedSlotStore(FuncInfo *funcInfo, Js::RegSlot slot, Js::RegSlot symbolRegister);
-    void EmitPostSuperCall(FuncInfo *funcInfo, ParseNode* pnode);
+    void EmitSuperCall(FuncInfo* funcInfo, ParseNode* pnode, BOOL fReturnValue);
     void EmitScopeSlotLoadThis(FuncInfo *funcInfo, Js::RegSlot regLoc, bool chkUndecl = true);
     void EmitScopeSlotStoreThis(FuncInfo *funcInfo, Js::RegSlot regLoc, bool chkUndecl = false);
     void EmitClassConstructorEndCode(FuncInfo *funcInfo);

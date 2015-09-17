@@ -678,6 +678,7 @@ ENTRY(__constructor) // represents an invocation of the constructor function rat
 #endif
 
 // SymbolFunctionNameId: for RuntimeFunction nameId
+ENTRY2(_RuntimeFunctionNameId_hasInstance, L"[Symbol.hasInstance]")
 ENTRY2(_RuntimeFunctionNameId_toStringTag, L"[Symbol.toStringTag]")
 ENTRY2(_RuntimeFunctionNameId_toPrimitive, L"[Symbol.toPrimitive]")
 ENTRY2(_RuntimeFunctionNameId_iterator, L"[Symbol.iterator]")

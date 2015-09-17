@@ -82,8 +82,6 @@
 #include "Library\SIMDFloat64x2Operation.h"
 #endif
 
-
-
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
 #include "Library\ScriptMemoryDumper.h"
 #endif

@@ -1733,16 +1733,22 @@ namespace Js
             {
                 if (descriptor->IsAccessor && !(attributes & PropertyLetConstGlobal))
                 {
-                    AssertMsg(RootObjectBase::Is(instance) || JavascriptFunction::IsBuiltinProperty(instance, propertyId),
-                        "Expect to only come down this path for InitRootFld in script that is overwriting existing accessor property on the global object");
-                    // ValidateAndApplyPropertyDescriptor says to preserve Configurable and Enumerable flags
-                    // Since we expect to only come down this path for InitRootFld, which is equivalent to
-                    // CreateGlobalFunctionBinding called from GlobalDeclarationInstantiation in the spec,
-                    // we can assume that the attributes specified include enumerable and writable.  Thus
-                    // we don't need to preserve the original values of these two attributes and therefore
-                    // do not need to change InitRootFld from being a SetPropertyWithAttributes API call to
-                    // something else.  All we need to do is convert the descriptor to a data descriptor.
-                    // Built-in Function.prototype properties 'length', 'arguments', and 'caller' are special cases.
+                    AssertMsg(RootObjectBase::Is(instance) || JavascriptFunction::IsBuiltinProperty(instance, propertyId) ||
+                        // ValidateAndApplyPropertyDescriptor says to preserve Configurable and Enumerable flags
+
+                        // For InitRootFld, which is equivalent to
+                        // CreateGlobalFunctionBinding called from GlobalDeclarationInstantiation in the spec,
+                        // we can assume that the attributes specified include enumerable and writable.  Thus
+                        // we don't need to preserve the original values of these two attributes and therefore
+                        // do not need to change InitRootFld from being a SetPropertyWithAttributes API call to
+                        // something else.  All we need to do is convert the descriptor to a data descriptor.
+                        // Built-in Function.prototype properties 'length', 'arguments', and 'caller' are special cases.
+
+                        (JavascriptOperators::IsClassConstructor(JavascriptOperators::GetProperty(instance, PropertyIds::constructor, scriptContext)) &&
+                            (attributes & PropertyClassMemberDefaults) == PropertyClassMemberDefaults),
+                        // 14.3.9: InitClassMember sets property descriptor to {writable:true, enumerable:false, configurable:true}
+
+                        "Expect to only come down this path for InitClassMember or InitRootFld (on the global object) overwriting existing accessor property");
                     if (!(descriptor->Attributes & PropertyConfigurable))
                     {
                         if (scriptContext && scriptContext->GetThreadContext()->RecordImplicitException())

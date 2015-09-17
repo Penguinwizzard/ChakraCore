@@ -732,7 +732,7 @@ namespace Js
         CodeGenWorkItem * GetWorkItem() const
         {
             State state = this->GetState();
-            Assert(state != NotScheduled);
+            Assert(state != NotScheduled || this->workItem == nullptr);
             Assert(state == CleanedUp && this->workItem == nullptr ||
                 state != CleanedUp);
 

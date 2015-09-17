@@ -1603,7 +1603,7 @@ public:
         PrependInt32(builder, L"BitFlags", bitFlags);
         PrependInt32(builder, L"Relative Function ID", function->functionId - topFunctionId); // Serialized function ids are relative to the top function ID
         PrependInt32(builder, L"Serialization ID", function->GetSerializationIndex());
-        PrependInt16(builder, L"Attributes", function->GetAttributes());
+        PrependInt32(builder, L"Attributes", function->GetAttributes());
         AssertMsg((function->GetAttributes() &
                 ~(FunctionInfo::Attributes::ErrorOnNew
                   | FunctionInfo::Attributes::SuperReference
@@ -1612,8 +1612,9 @@ public:
                   | FunctionInfo::Attributes::Async
                   | FunctionInfo::Attributes::CapturesThis
                   | FunctionInfo::Attributes::Generator
-                  | FunctionInfo::Attributes::ClassConstructor)) == 0,
-                "Only the ErrorOnNew|SuperReference|DefaultConstructor|Lambda|CapturesThis|Generator|ClassConstructor attributes should be set on a serialized function");
+                  | FunctionInfo::Attributes::ClassConstructor
+                  | FunctionInfo::Attributes::ClassMethod)) == 0,
+                "Only the ErrorOnNew|SuperReference|DefaultConstructor|Lambda|CapturesThis|Generator|ClassConstructor|Async|ClassMember attributes should be set on a serialized function");
 
         PrependInt32(builder, L"Offset Into Source", sourceDiff);
         if (function->GetNestedCount() > 0)
@@ -2682,8 +2683,8 @@ public:
         current = ReadInt32(current, &functionId);
         int serializationIndex;
         current = ReadInt32(current, &serializationIndex);
-        int16 attributes;
-        current = ReadInt16(current, &attributes);
+        int32 attributes;
+        current = ReadInt32(current, &attributes);        
 
         uint32 offsetIntoSource = 0;
         current = ReadUInt32(current, &offsetIntoSource);

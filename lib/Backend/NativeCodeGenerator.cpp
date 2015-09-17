@@ -389,20 +389,23 @@ void NativeCodeGenerator::TransitionFromSimpleJit(Js::ScriptFunction *const func
         Assert(function->GetFunctionEntryPointInfo() == defaultEntryPointInfo);
 
         // The latest entry point is the simple JIT, transition to the next execution mode and schedule a full JIT
-        functionBody->GetScriptContext()->GetNativeCodeGenerator()->GenerateFunction(functionBody, function);
+        bool functionEntryPointUpdated = functionBody->GetScriptContext()->GetNativeCodeGenerator()->GenerateFunction(functionBody, function);
 
-        // Transition to the next execution mode after scheduling a full JIT, in case of OOM before the entry point is changed
-        const bool transitioned = functionBody->TryTransitionToNextExecutionMode();
-        Assert(transitioned);
-
-        if(PHASE_TRACE(Js::SimpleJitPhase, functionBody))
+        if (functionEntryPointUpdated)
         {
-            wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
-            Output::Print(
-                L"SimpleJit (TransitionFromSimpleJit): function: %s (%s)",
-                functionBody->GetDisplayName(),
-                functionBody->GetDebugNumberSet(debugStringBuffer));
-            Output::Flush();
+            // Transition to the next execution mode after scheduling a full JIT, in case of OOM before the entry point is changed
+            const bool transitioned = functionBody->TryTransitionToNextExecutionMode();
+            Assert(transitioned);
+
+            if (PHASE_TRACE(Js::SimpleJitPhase, functionBody))
+            {
+                wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
+                Output::Print(
+                    L"SimpleJit (TransitionFromSimpleJit): function: %s (%s)",
+                    functionBody->GetDisplayName(),
+                    functionBody->GetDebugNumberSet(debugStringBuffer));
+                Output::Flush();
+            }
         }
         return;
     }
@@ -453,7 +456,7 @@ NativeCodeGenerator::RejitIRViewerFunction(Js::FunctionBody *fn, Js::ScriptConte
 ///     generator.
 ///
 ///----------------------------------------------------------------------------
-void 
+bool
 NativeCodeGenerator::GenerateFunction(Js::FunctionBody *fn, Js::ScriptFunction * function) 
 {
     ASSERT_THREAD();
@@ -469,14 +472,14 @@ NativeCodeGenerator::GenerateFunction(Js::FunctionBody *fn, Js::ScriptFunction *
         // JITing generator functions is not complete nor stable yet so it is off by default.
         // Also try/catch JIT support in generator functions is not a goal for threshold
         // release so JITing generators containing try blocks is disabled for now.
-        return;
+        return false;
     }
 
     if (IsInDebugMode() && fn->GetHasTry())
     {
         // Under debug mode disable JIT for functions that:
         // - have try
-        return;
+        return false;
     }
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
@@ -484,7 +487,7 @@ NativeCodeGenerator::GenerateFunction(Js::FunctionBody *fn, Js::ScriptFunction *
         fn->GetDisplayName() &&
         ::wcsstr(Js::Configuration::Global.flags.Interpret, fn->GetDisplayName()))
     {
-        return;
+        return false;
     }
 #endif  
 
@@ -492,7 +495,7 @@ NativeCodeGenerator::GenerateFunction(Js::FunctionBody *fn, Js::ScriptFunction *
     {
         // Don't code gen the function if the function has loop, ForceJITLoopBody is on,
         // unless we are in debug mode in which case JIT loop body is disabled, even if it's forced.
-        return;
+        return false;
     }    
 
     // Create a work item with null entry point- we'll set it once its allocated
@@ -500,7 +503,7 @@ NativeCodeGenerator::GenerateFunction(Js::FunctionBody *fn, Js::ScriptFunction *
     if ((JsFunctionCodeGen*) workItemAutoPtr == nullptr)
     {
         // OOM, just skip this work item and return.
-        return;
+        return false;
     }    
 
     Js::FunctionEntryPointInfo* entryPointInfo = nullptr;
@@ -556,7 +559,7 @@ NativeCodeGenerator::GenerateFunction(Js::FunctionBody *fn, Js::ScriptFunction *
     if(!IS_PREJIT_ON())
     {
         workItems.LinkToEnd(workitem);
-        return;
+        return true;
     }
 
     const ExecutionMode prejitJitMode = PrejitJitMode(fn);
@@ -585,7 +588,9 @@ NativeCodeGenerator::GenerateFunction(Js::FunctionBody *fn, Js::ScriptFunction *
     fn->TraceExecutionMode("Prejit");
     Processor()->PrioritizeJobAndWait(this, entryPointInfo, function);
     CheckCodeGenDone(fn, entryPointInfo, function);
-
+    return true;
+#else
+    return false;
 #endif
 }
 

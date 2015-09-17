@@ -402,7 +402,7 @@ goto :main
   call :doSilent del /s *.bc
   call :doSilent del /s *.out
   call :doSilent del /s *.dpl
-  call :doSilent del /s profile.dpl.*
+  call :doSilent del /s profile.dpl.UnnamedTest*
   call :doSilent del /s testout*
 
   if "%_CleanUpAll%" == "1" (

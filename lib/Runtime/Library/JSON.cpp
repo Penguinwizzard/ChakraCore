@@ -599,77 +599,82 @@ namespace JSON
         }
         else
         {
-            uint32 precisePropertyCount = 0;
-            Js::Var enumeratorVar;
-            if(object->GetEnumerator(FALSE, &enumeratorVar, scriptContext, true, false))
+            if (JavascriptProxy::Is(object))
             {
-                Js::JavascriptEnumerator* enumerator = static_cast<Js::JavascriptEnumerator*>(enumeratorVar);
-                Js::RecyclableObject *undefined = scriptContext->GetLibrary()->GetUndefined();
+                JavascriptProxy* proxyObject = JavascriptProxy::FromVar(object);
+                Var propertyKeysTrapResult = proxyObject->PropertyKeysTrap(JavascriptProxy::KeysTrapKind::GetOwnPropertyNamesKind);
 
-                bool isPrecise;
-                uint32 propertyCount = GetPropertyCount(object, enumerator, &isPrecise);
-                if (isPrecise)
+                AssertMsg(JavascriptArray::Is(propertyKeysTrapResult), "PropertyKeysTrap should return JavascriptArray.");
+                JavascriptArray* proxyResult;
+                if (JavascriptArray::Is(propertyKeysTrapResult))
                 {
-                    precisePropertyCount = propertyCount;
+                    proxyResult = JavascriptArray::FromVar(propertyKeysTrapResult);
+                } else
+                {
+                    proxyResult = scriptContext->GetLibrary()->CreateArray(0);
                 }
 
-                result = Js::ConcatStringBuilder::New(this->scriptContext, propertyCount);    // Reserve initial slots for properties.
-
-                if(ReplacerFunction != replacerType)
+                // filter enumerable keys
+                uint32 resultLength = proxyResult->GetLength();
+                result = Js::ConcatStringBuilder::New(this->scriptContext, resultLength);    // Reserve initial slots for properties.
+                Var element;
+                for (uint32 i = 0; i < resultLength; i++)
                 {
-                    Js::Var propertyNameVar;
-                    if (!JavascriptProxy::Is(object))
+                    element = proxyResult->DirectGetItem(i);
+
+                    Assert(JavascriptString::Is(element));
+                    propertyName = JavascriptString::FromVar(element);
+
+                    PropertyDescriptor propertyDescriptor;
+                    JavascriptObject::GetPropertyRecordFromVar<false>(propertyName, scriptContext, &propRecord);
+                    id = propRecord->GetPropertyId();
+                    if (JavascriptOperators::GetOwnPropertyDescriptor(RecyclableObject::FromVar(proxyObject), id, scriptContext, &propertyDescriptor))
                     {
-                        // we won't have used the enumerator in proxy case.
-                        enumerator->Reset();
-                    }
-                    while((propertyNameVar = enumerator->GetCurrentAndMoveNext(id)) != NULL)
-                    {
-                        if(!Js::JavascriptOperators::IsUndefinedObject(propertyNameVar, undefined))
+                        if (propertyDescriptor.IsEnumerable())
                         {
-                            propertyName = Js::JavascriptString::FromVar(propertyNameVar);
-                            if(id == Js::Constants::NoProperty)
-                            {
-                                //if unsuccessful get propertyId from the string
-                                scriptContext->GetOrAddPropertyRecord(propertyName->GetString(), propertyName->GetLength(), &propRecord);
-                                id = propRecord->GetPropertyId();
-                            }
-                            StringifyMemberObject(propertyName, id, value, (Js::ConcatStringBuilder*)result, indentString, memberSeparator, isFirstMember,  isEmpty);
+                            StringifyMemberObject(propertyName, id, value, (Js::ConcatStringBuilder*)result, indentString, memberSeparator, isFirstMember, isEmpty);
                         }
                     }
                 }
-                else // case: ES5 && ReplacerFunction == replacerType.
+            }
+            else
+            {
+                uint32 precisePropertyCount = 0;
+                Js::Var enumeratorVar;
+                if (object->GetEnumerator(FALSE, &enumeratorVar, scriptContext, true, false))
                 {
-                    if (JavascriptProxy::Is(object))
+                    Js::JavascriptEnumerator* enumerator = static_cast<Js::JavascriptEnumerator*>(enumeratorVar);
+                    Js::RecyclableObject *undefined = scriptContext->GetLibrary()->GetUndefined();
+
+                    bool isPrecise;
+                    uint32 propertyCount = GetPropertyCount(object, enumerator, &isPrecise);
+                    if (isPrecise)
                     {
-                        GrowingVarArenaArray* nameTable = nullptr;
-                        Assert(precisePropertyCount == 0);
-                        DECLARE_TEMP_GUEST_ALLOCATOR(nameTableAlloc);
-                        ACQUIRE_TEMP_GUEST_ALLOCATOR(nameTableAlloc, scriptContext, L"JSON");
-                        nameTable = Anew(nameTableAlloc, GrowingVarArenaArray, nameTableAlloc, precisePropertyCount);
-                        uint32 index = 0;
+                        precisePropertyCount = propertyCount;
+                    }
+
+                    result = Js::ConcatStringBuilder::New(this->scriptContext, propertyCount);    // Reserve initial slots for properties.
+
+                    if (ReplacerFunction != replacerType)
+                    {
                         Js::Var propertyNameVar;
-                        while ((propertyNameVar = enumerator->GetCurrentAndMoveNext(id)) != nullptr)
+                        enumerator->Reset();
+                        while ((propertyNameVar = enumerator->GetCurrentAndMoveNext(id)) != NULL)
                         {
                             if (!Js::JavascriptOperators::IsUndefinedObject(propertyNameVar, undefined))
                             {
-                                nameTable->Add(propertyNameVar);
-                                index++;
+                                propertyName = Js::JavascriptString::FromVar(propertyNameVar);
+                                if (id == Js::Constants::NoProperty)
+                                {
+                                    //if unsuccessful get propertyId from the string
+                                    scriptContext->GetOrAddPropertyRecord(propertyName->GetString(), propertyName->GetLength(), &propRecord);
+                                    id = propRecord->GetPropertyId();
+                                }
+                                StringifyMemberObject(propertyName, id, value, (Js::ConcatStringBuilder*)result, indentString, memberSeparator, isFirstMember, isEmpty);
                             }
                         }
-                        precisePropertyCount = index;
-                        DebugOnly(enumerator = nullptr);
-                        // walk the property name list
-                        for (uint k = 0; k < precisePropertyCount; k++)
-                        {
-                            propertyName = Js::JavascriptString::FromVar(nameTable->ItemInBuffer(k));
-                            scriptContext->GetOrAddPropertyRecord(propertyName->GetString(), propertyName->GetLength(), &propRecord);
-                            id = propRecord->GetPropertyId();
-                            StringifyMemberObject(propertyName, id, value, (Js::ConcatStringBuilder*)result, indentString, memberSeparator, isFirstMember, isEmpty);
-                        }
-                        RELEASE_TEMP_GUEST_ALLOCATOR(nameTableAlloc, scriptContext);
-                    }
-                    else
+                    } 
+                    else // case: ES5 && ReplacerFunction == replacerType.
                     {
                         Js::Var* nameTable = nullptr;
                         // ES5 requires that the new properties introduced by the replacer to not be stringified
@@ -688,8 +693,7 @@ namespace JSON
                             {
                                 PROBE_STACK(scriptContext, (sizeof(Js::Var) * precisePropertyCount));
                                 nameTable = (Js::Var*)_alloca(sizeof(Js::Var) * precisePropertyCount);
-                            }
-                            else
+                            } else
                             {
                                 ACQUIRE_TEMP_GUEST_ALLOCATOR(nameTableAlloc, scriptContext, L"JSON");
                                 nameTable = AnewArray(nameTableAlloc, Js::Var, precisePropertyCount);

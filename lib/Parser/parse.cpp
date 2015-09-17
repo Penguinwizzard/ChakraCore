@@ -2092,6 +2092,7 @@ ParseNodePtr Parser::ParseTerm(BOOL fAllowCall, LPCOLESTR pNameHint, ulong *pHin
     size_t iuMin;
     IdentToken term;
     BOOL fInNew = FALSE;
+    BOOL fCanAssign = TRUE;
     bool isAsyncExpr = false;
     bool isLambdaExpr = false;
     Assert(pToken == nullptr || pToken->tk == tkNone); // Must be empty initially
@@ -2162,6 +2163,7 @@ ParseNodePtr Parser::ParseTerm(BOOL fAllowCall, LPCOLESTR pNameHint, ulong *pHin
         {
             pnode = CreateNodeWithScanner<knopThis>();
         }
+        fCanAssign = FALSE;
         m_pscan->Scan();
         break;
 
@@ -2190,7 +2192,7 @@ ParseNodePtr Parser::ParseTerm(BOOL fAllowCall, LPCOLESTR pNameHint, ulong *pHin
         }
 
         this->m_parenDepth++;
-        pnode = ParseExpr<buildAST>(koplNo, nullptr, TRUE, FALSE, nullptr, nullptr /*nameLength*/, &term, true);
+        pnode = ParseExpr<buildAST>(koplNo, &fCanAssign, TRUE, FALSE, nullptr, nullptr /*nameLength*/, &term, true);
         this->m_parenDepth--;
 
         ChkCurTok(tkRParen, ERRnoRparen);
@@ -2216,6 +2218,7 @@ ParseNodePtr Parser::ParseTerm(BOOL fAllowCall, LPCOLESTR pNameHint, ulong *pHin
         {
             pnode = CreateIntNodeWithScanner(m_token.GetLong());
         }
+        fCanAssign = FALSE;
         m_pscan->Scan();
         break;
 
@@ -2231,6 +2234,7 @@ ParseNodePtr Parser::ParseTerm(BOOL fAllowCall, LPCOLESTR pNameHint, ulong *pHin
             pnode->sxFlt.dbl = m_token.GetDouble();
             pnode->sxFlt.maybeInt = m_token.GetDoubleMayBeInt();
         }
+        fCanAssign = FALSE;
         m_pscan->Scan();
         break;
 
@@ -2250,6 +2254,7 @@ ParseNodePtr Parser::ParseTerm(BOOL fAllowCall, LPCOLESTR pNameHint, ulong *pHin
             // of deciding whether to defer parsing and byte code generation.
             this->ReduceDeferredScriptLength(m_pscan->IchLimTok() - m_pscan->IchMinTok());
         }
+        fCanAssign = FALSE;
         m_pscan->Scan();
         break;
 
@@ -2258,6 +2263,7 @@ ParseNodePtr Parser::ParseTerm(BOOL fAllowCall, LPCOLESTR pNameHint, ulong *pHin
         {
             pnode = CreateNodeWithScanner<knopTrue>();
         }
+        fCanAssign = FALSE;
         m_pscan->Scan();
         break;
 
@@ -2266,6 +2272,7 @@ ParseNodePtr Parser::ParseTerm(BOOL fAllowCall, LPCOLESTR pNameHint, ulong *pHin
         {
             pnode = CreateNodeWithScanner<knopFalse>();
         }
+        fCanAssign = FALSE;
         m_pscan->Scan();
         break;
 
@@ -2274,12 +2281,14 @@ ParseNodePtr Parser::ParseTerm(BOOL fAllowCall, LPCOLESTR pNameHint, ulong *pHin
         {
             pnode = CreateNodeWithScanner<knopNull>();
         }
+        fCanAssign = FALSE;
         m_pscan->Scan();
         break;
 
     case tkDiv:
     case tkAsgDiv:
         pnode = ParseRegExp<buildAST>();
+        fCanAssign = FALSE;
         m_pscan->Scan();
         break;
 
@@ -2290,7 +2299,7 @@ ParseNodePtr Parser::ParseTerm(BOOL fAllowCall, LPCOLESTR pNameHint, ulong *pHin
 
         if (m_token.tk == tkDot && m_scriptContext->GetConfig()->IsES6ClassAndExtendsEnabled())
         {
-            pnode = ParseMetaProperty<buildAST>(tkNEW, ichMin, pfCanAssign);
+            pnode = ParseMetaProperty<buildAST>(tkNEW, ichMin, &fCanAssign);
 
             m_pscan->Scan();
         }
@@ -2303,6 +2312,7 @@ ParseNodePtr Parser::ParseTerm(BOOL fAllowCall, LPCOLESTR pNameHint, ulong *pHin
                 pnode->ichMin = ichMin;
             }
             fInNew = TRUE;
+            fCanAssign = FALSE;
         }
         break;
     }
@@ -2326,8 +2336,12 @@ ParseNodePtr Parser::ParseTerm(BOOL fAllowCall, LPCOLESTR pNameHint, ulong *pHin
             this->m_funcInArrayDepth = 0;
         }
         ChkCurTok(tkRBrack, ERRnoRbrack);
-    }
+        if (!IsES6DestructuringEnabled())
+        {
+            fCanAssign = FALSE;
+        }
         break;
+    }
 
     case tkLCurly:
     {
@@ -2341,8 +2355,12 @@ ParseNodePtr Parser::ParseTerm(BOOL fAllowCall, LPCOLESTR pNameHint, ulong *pHin
             pnode->ichLim = m_pscan->IchLimTok();
         }
         ChkCurTok(tkRCurly, ERRnoRcurly);
-    }
+        if (!IsES6DestructuringEnabled())
+        {
+            fCanAssign = FALSE;
+        }
         break;
+    }
 
     case tkFUNCTION:
     {
@@ -2374,6 +2392,7 @@ LFunction :
             pnode->sxFnc.cbMin = iecpMin;
             pnode->ichMin = ichMin;
         }
+        fCanAssign = FALSE;
         break;
     }
 
@@ -2387,6 +2406,7 @@ LFunction :
         {
             goto LUnknown;
         }
+        fCanAssign = FALSE;
         break;
 
     case tkStrTmplBasic:
@@ -2394,6 +2414,7 @@ LFunction :
         Assert(m_scriptContext->GetConfig()->IsES6StringTemplateEnabled());
 
         pnode = ParseStringTemplateDecl<buildAST>(nullptr);
+        fCanAssign = FALSE;
         break;
 
     case tkSUPER:
@@ -2433,12 +2454,17 @@ LFunction :
         break;
     }
 
-    pnode = ParsePostfixOperators<buildAST>(pnode, fAllowCall, fInNew, &term);
+    pnode = ParsePostfixOperators<buildAST>(pnode, fAllowCall, fInNew, &fCanAssign, &term);
 
     // Pass back identifier if requested
     if (pToken && term.tk == tkID)
     {
         *pToken = term;
+    }
+
+    if (pfCanAssign)
+    {
+        *pfCanAssign = fCanAssign;
     }
 
     return pnode;
@@ -2517,8 +2543,12 @@ BOOL Parser::NodeIsIdent(ParseNodePtr pnode, IdentPtr pid)
 }
 
 template<bool buildAST>
-ParseNodePtr Parser::ParsePostfixOperators(ParseNodePtr pnode,
-                                           BOOL fAllowCall, BOOL fInNew, _Inout_ IdentToken* pToken)
+ParseNodePtr Parser::ParsePostfixOperators(
+    ParseNodePtr pnode,
+    BOOL fAllowCall, 
+    BOOL fInNew, 
+    BOOL *pfCanAssign,
+    _Inout_ IdentToken* pToken)
 {
     uint16 count = 0;
     bool callOfConstants = false;
@@ -2594,6 +2624,10 @@ ParseNodePtr Parser::ParsePostfixOperators(ParseNodePtr pnode,
                     }
                 }
                 ChkCurTok(tkRParen, ERRnoRparen);
+                if (pfCanAssign)
+                {
+                    *pfCanAssign = FALSE;
+                }
                 break;
             }
         case tkLBrack:
@@ -2610,6 +2644,10 @@ ParseNodePtr Parser::ParsePostfixOperators(ParseNodePtr pnode,
                     pToken->tk = tkNone; // This is no longer an identifier
                 }
                 ChkCurTok(tkRBrack, ERRnoRbrack);
+                if (pfCanAssign)
+                {
+                    *pfCanAssign = TRUE;
+                }
 
                 if (!buildAST)
                 {
@@ -2708,7 +2746,10 @@ ParseNodePtr Parser::ParsePostfixOperators(ParseNodePtr pnode,
                 pToken->tk = tkNone;
             }
 
-
+            if (pfCanAssign)
+            {
+                *pfCanAssign = TRUE;
+            }
             m_pscan->Scan();
 
             break;
@@ -2727,7 +2768,10 @@ ParseNodePtr Parser::ParsePostfixOperators(ParseNodePtr pnode,
                 }
 
                 pnode = templateNode;
-
+                if (pfCanAssign)
+                {
+                    *pfCanAssign = FALSE;
+                }
                 break;
             }
         default:
@@ -7027,7 +7071,6 @@ ParseNodePtr Parser::ParseExpr(int oplMin, BOOL *pfCanAssign, BOOL fAllowIn, BOO
         }
 
         m_pscan->Scan();
-        fCanAssign = FALSE;
 
         if (nop == knopYield && !m_pscan->FHadNewLine() && m_token.tk == tkStar)
         {
@@ -7049,13 +7092,17 @@ ParseNodePtr Parser::ParseExpr(int oplMin, BOOL *pfCanAssign, BOOL fAllowIn, BOO
         else
         {
             // Disallow spread after a Ellipsis token. This prevents chaining, and ensures spread is the top level expression.
-            pnodeT = ParseExpr<buildAST>(opl, NULL, TRUE, nop != knopEllipsis && fAllowEllipsis, nullptr /*hint*/, nullptr /*hintLength*/, &operandToken, true);
+            pnodeT = ParseExpr<buildAST>(opl, &fCanAssign, TRUE, nop != knopEllipsis && fAllowEllipsis, nullptr /*hint*/, nullptr /*hintLength*/, &operandToken, true);
         }
 
         if (nop != knopYieldLeaf)
         {
             if (nop == knopIncPre || nop == knopDecPre)
             {
+                if (!fCanAssign)
+                {
+                    Error(JSERR_CantAssignTo);
+                }
                 TrackAssignment<buildAST>(pnodeT, &operandToken, ichMin, m_pscan->IchLimTok());
                 if (buildAST)
                 {
@@ -7134,6 +7181,8 @@ ParseNodePtr Parser::ParseExpr(int oplMin, BOOL *pfCanAssign, BOOL fAllowIn, BOO
                 }
             }
         }
+
+        fCanAssign = FALSE;
     }
     else
     {
@@ -7193,6 +7242,10 @@ ParseNodePtr Parser::ParseExpr(int oplMin, BOOL *pfCanAssign, BOOL fAllowIn, BOO
         if (!m_pscan->FHadNewLine() &&
             (tkInc == m_token.tk || tkDec == m_token.tk))
         {
+            if (!fCanAssign)
+            {
+                Error(JSERR_CantAssignTo);
+            }
             TrackAssignment<buildAST>(pnode, &term, ichMin, m_pscan->IchLimTok());
             fCanAssign = FALSE;
             if (buildAST)
@@ -7271,7 +7324,7 @@ ParseNodePtr Parser::ParseExpr(int oplMin, BOOL *pfCanAssign, BOOL fAllowIn, BOO
             }
             if (m_token.tk != tkDArrow && !fCanAssign)
             {
-                Error(ERRsyntax);
+                Error(JSERR_CantAssignTo);
                 // No recovery necessary since this is a semantic, not structural, error.
             }
         }
@@ -8085,6 +8138,7 @@ ParseNodePtr Parser::ParseStatement(bool isSourceElement/* = false*/)
     StmtNest stmt;
     StmtNest *pstmt;
     BOOL fForInOrOfOkay;
+    BOOL fCanAssign;
     IdentPtr pid;
     uint fnop;
     ParseNodePtr pnodeLabel = nullptr;
@@ -8257,6 +8311,7 @@ LFunctionStatement:
 
         RestorePoint startExprOrIdentifier;
         fForInOrOfOkay = TRUE;
+        fCanAssign = TRUE;
         tok = m_token.tk;
         switch (tok)
         {
@@ -8324,7 +8379,7 @@ LDefaultTokenFor:
                 {
                     m_pscan->Capture(&startExprOrIdentifier);
                 }
-                pnodeT = ParseExpr<buildAST>(koplNo, &fForInOrOfOkay, /*fAllowIn = */FALSE);
+                pnodeT = ParseExpr<buildAST>(koplNo, &fCanAssign, /*fAllowIn = */FALSE);
                 if (IsES6DestructuringEnabled() && pnodeT != nullptr && (beforeToken == tkLBrack || beforeToken == tkLCurly))
                 {
                     m_pscan->SeekTo(exprStart);
@@ -8359,6 +8414,10 @@ LDefaultTokenFor:
             if ((buildAST && nullptr == pnodeT) || !fForInOrOfOkay)
             {
                 Error(ERRsyntax);
+            }
+            if (!fCanAssign)
+            {
+                Error(JSERR_CantAssignTo);
             }
 
             m_pscan->Scan();
@@ -11004,8 +11063,14 @@ ParseNodePtr Parser::ParseDestructuredVarDecl(tokens declarationType, bool isDec
         }
         else
         {
+            BOOL fCanAssign;
             // We aren't declaring anything, so scan the ID reference manually.
-            pnodeElem = ParseTerm<buildAST>(/* fAllowCall */ m_token.tk != tkSUPER);
+            pnodeElem = ParseTerm<buildAST>(/* fAllowCall */ m_token.tk != tkSUPER, nullptr, nullptr, nullptr, false,
+                                                             &fCanAssign);
+            if (!fCanAssign)
+            {
+                Error(JSERR_CantAssignTo);
+            }
         }
     }
     else if (!(m_token.tk == tkComma || m_token.tk == tkRBrack || m_token.tk == tkRCurly))

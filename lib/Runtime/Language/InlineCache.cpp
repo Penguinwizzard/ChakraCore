@@ -639,6 +639,7 @@ namespace Js
 
     void PolymorphicInlineCache::UpdateInlineCachesFillInfo(uint index, bool set)
     {
+        Assert(index < 0x20);
         if (set)
         {
             this->inlineCachesFillInfo |= 1 << index;
@@ -651,7 +652,8 @@ namespace Js
 
     bool PolymorphicInlineCache::IsFull()
     {
-        return this->inlineCachesFillInfo == ((1 << this->size) - 1);
+        Assert(this->size <= 0x20);
+        return this->inlineCachesFillInfo == ((1 << (this->size - 1)) << 1) - 1;
     }
 
     void PolymorphicInlineCache::CacheLocal(
