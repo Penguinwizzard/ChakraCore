@@ -1,14 +1,14 @@
 //----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
+// Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
 #include "CommonMemoryPch.h"
 
 #if defined(_M_X64_OR_ARM64)
-HeapBlockMap32::HeapBlockMap32(__in char * startAddress) : 
-    startAddress(startAddress), 
+HeapBlockMap32::HeapBlockMap32(__in char * startAddress) :
+    startAddress(startAddress),
 #else
-HeapBlockMap32::HeapBlockMap32() : 
+HeapBlockMap32::HeapBlockMap32() :
 #endif
     count(0)
 {
@@ -33,15 +33,15 @@ HeapBlockMap32::~HeapBlockMap32()
 
 HeapBlock *
 HeapBlockMap32::GetHeapBlock(void * address)
-{    
+{
     uint id1 = GetLevel1Id(address);
 
     L2MapChunk * l2map = map[id1];
-    if (l2map == nullptr) 
+    if (l2map == nullptr)
     {
         return nullptr;
     }
-    
+
     return l2map->Get(address);
 }
 
@@ -50,7 +50,7 @@ HeapBlockMap32::EnsureHeapBlock(void * address, uint pageCount)
 {
     uint id1 = GetLevel1Id(address);
     uint id2 = GetLevel2Id(address);
-    
+
     uint currentPageCount = min(pageCount, L2Count - id2);
 
     while (true)
@@ -60,7 +60,7 @@ HeapBlockMap32::EnsureHeapBlock(void * address, uint pageCount)
             L2MapChunk * newChunk = NoMemProtectHeapNewNoThrowZ(L2MapChunk);
             if (newChunk == nullptr)
             {
-                // Leave any previously allocated L2MapChunks in place -- 
+                // Leave any previously allocated L2MapChunks in place --
                 // the concurrent thread may have already accessed them.
                 // These will be cleaned up in the Cleanup method, after Sweep is complete.
                 return false;
@@ -69,16 +69,16 @@ HeapBlockMap32::EnsureHeapBlock(void * address, uint pageCount)
             map[id1] = newChunk;
             count++;
         }
-        
-        pageCount -= currentPageCount; 
+
+        pageCount -= currentPageCount;
         if (pageCount == 0)
         {
             break;
         }
-        
+
         id2 = 0;
         id1++;
-        currentPageCount = min(pageCount, L2Count);     
+        currentPageCount = min(pageCount, L2Count);
     }
 
     return true;
@@ -89,24 +89,24 @@ HeapBlockMap32::SetHeapBlockNoCheck(void * address, uint pageCount, HeapBlock * 
 {
     uint id1 = GetLevel1Id(address);
     uint id2 = GetLevel2Id(address);
-    
+
     uint currentPageCount = min(pageCount, L2Count - id2);
 
     while (true)
     {
         Assert(map[id1] != nullptr);
-        
+
         map[id1]->Set(id2, currentPageCount, heapBlock, blockType, bucketIndex);
-        
-        pageCount -= currentPageCount; 
+
+        pageCount -= currentPageCount;
         if (pageCount == 0)
         {
             return;
         }
-        
+
         id2 = 0;
         id1++;
-        currentPageCount = min(pageCount, L2Count);     
+        currentPageCount = min(pageCount, L2Count);
     }
 }
 
@@ -130,24 +130,24 @@ HeapBlockMap32::ClearHeapBlock(void * address, uint pageCount)
 {
     uint id1 = GetLevel1Id(address);
     uint id2 = GetLevel2Id(address);
-    
+
     uint currentPageCount = min(pageCount, L2Count - id2);
 
     while (true)
     {
         Assert(map[id1] != nullptr);
-        
+
         map[id1]->Clear(id2, currentPageCount);
-        
-        pageCount -= currentPageCount; 
+
+        pageCount -= currentPageCount;
         if (pageCount == 0)
         {
             return;
         }
-        
+
         id2 = 0;
         id1++;
-        currentPageCount = min(pageCount, L2Count);     
+        currentPageCount = min(pageCount, L2Count);
     }
 }
 
@@ -266,7 +266,7 @@ HeapBlockMap32::TestAndSetMark(void * address)
     return (chunk->markBits.TestAndSet(bitIndex) != 0);
 }
 
-void 
+void
 HeapBlockMap32::ResetMarks()
 {
     for (uint i = 0; i < L1Count; i++)
@@ -293,7 +293,7 @@ HeapBlockMap32::ResetMarks()
 }
 
 #if DBG
-ushort 
+ushort
 HeapBlockMap32::GetPageMarkCount(void * address) const
 {
     uint id1 = GetLevel1Id(address);
@@ -306,21 +306,20 @@ HeapBlockMap32::GetPageMarkCount(void * address) const
     return l2map->pageMarkCount[id2];
 }
 
-void 
+void
 HeapBlockMap32::SetPageMarkCount(void * address, ushort markCount)
 {
     uint id1 = GetLevel1Id(address);
 
     L2MapChunk * l2map = map[id1];
     Assert(l2map != nullptr);
-    
+
     uint id2 = GetLevel2Id(address);
 
     // Callers should already have updated the mark bits by the time they call this,
     // so check that the new count is correct for the current mark bits.
     // Not true right now, will be true...
     Assert(l2map->GetPageMarkBitVector(id2)->Count() == markCount);
-
 
     l2map->pageMarkCount[id2] = markCount;
 }
@@ -354,7 +353,7 @@ HeapBlockMap32::L2MapChunk::L2MapChunk()
 
     // Mark bits should be cleared by default
     Assert(markBits.Count() == 0);
-    
+
 #ifdef RECYCLER_VERIFY_MARK
     this->isNewChunk = true;
 #endif
@@ -367,9 +366,8 @@ HeapBlockMap32::L2MapChunk::L2MapChunk()
 #endif
 }
 
-
 HeapBlockMap32::L2MapChunk::~L2MapChunk()
-{    
+{
     // In debug builds, we guarantee that the heap block is clear on shutdown.
     // In free builds, we skip this to save time.
     // So this assert is only true in debug builds.
@@ -399,7 +397,7 @@ HeapBlockMap32::L2MapChunk::Set(uint id2, uint pageCount, HeapBlock * heapBlock,
         Assert(map[i] == nullptr);
         Assert(blockInfo[i].blockType == HeapBlock::HeapBlockType::FreeBlockType);
 
-        // Set the blockType last, because we will test this first during marking.        
+        // Set the blockType last, because we will test this first during marking.
         // If it's not FreeBlock, then we expect bucketIndex and heapBlock to be valid.
         map[i] = heapBlock;
         blockInfo[i].bucketIndex = bucketIndex;
@@ -409,7 +407,7 @@ HeapBlockMap32::L2MapChunk::Set(uint id2, uint pageCount, HeapBlock * heapBlock,
 
 void
 HeapBlockMap32::L2MapChunk::Clear(uint id2, uint pageCount)
-{ 
+{
     uint id2End = id2 + pageCount;
 
     Assert(id2 < L2Count);
@@ -498,7 +496,7 @@ HeapBlockMap32::InduceFalsePositives(Recycler * recycler)
         {
             continue;
         }
-        
+
         for (uint j = 0; j < L2Count; j++)
         {
             HeapBlock * block = chunk->map[j];
@@ -519,7 +517,7 @@ HeapBlockMap32::InduceFalsePositives(Recycler * recycler)
 #endif
 
 #ifdef RECYCLER_VERIFY_MARK
-bool 
+bool
 HeapBlockMap32::IsAddressInNewChunk(void * address)
 {
     uint id1 = GetLevel1Id(address);
@@ -533,11 +531,11 @@ HeapBlockMap32::IsAddressInNewChunk(void * address)
 #ifdef CONCURRENT_GC_ENABLED
 
 template <class Fn>
-void 
+void
 HeapBlockMap32::ForEachSegment(Recycler * recycler, Fn func)
 {
     Segment * currentSegment = nullptr;
-    
+
     for (uint i = 0; i < L1Count; i++)
     {
         L2MapChunk * chunk = map[i];
@@ -545,7 +543,7 @@ HeapBlockMap32::ForEachSegment(Recycler * recycler, Fn func)
         {
             continue;
         }
-        
+
         for (uint j = 0; j < L2Count; j++)
         {
             HeapBlock * block = chunk->map[j];
@@ -561,7 +559,7 @@ HeapBlockMap32::ForEachSegment(Recycler * recycler, Fn func)
                 continue;
             }
 
-            // New segment.  
+            // New segment.
             Assert(currentSegment == nullptr || !currentSegment->IsInSegment(block->GetAddress()));
             currentSegment = block->GetSegment();
 
@@ -582,9 +580,9 @@ HeapBlockMap32::ForEachSegment(Recycler * recycler, Fn func)
                 segmentStart = this->startAddress;
             }
 
-            if ((segmentStart - this->startAddress) + segmentLength > HeapBlockMap32::TotalSize) 
-            { 
-                segmentLength = HeapBlockMap32::TotalSize - (segmentStart - this->startAddress); 
+            if ((segmentStart - this->startAddress) + segmentLength > HeapBlockMap32::TotalSize)
+            {
+                segmentLength = HeapBlockMap32::TotalSize - (segmentStart - this->startAddress);
             }
 #endif
 
@@ -599,7 +597,7 @@ HeapBlockMap32::ResetWriteWatch(Recycler * recycler)
     this->ForEachSegment(recycler, [=] (char * segmentStart, size_t segmentLength, Segment * segment, PageAllocator * segmentPageAllocator) {
 
         Assert(segmentLength % AutoSystemInfo::PageSize == 0);
-        
+
         if (segmentPageAllocator == recycler->GetRecyclerPageAllocator() ||
             segmentPageAllocator == recycler->GetRecyclerLargeBlockPageAllocator())
         {
@@ -613,7 +611,7 @@ HeapBlockMap32::ResetWriteWatch(Recycler * recycler)
             // Reset software write barrier for barrier segments.
             RecyclerWriteBarrierManager::ResetWriteBarrier(segmentStart, segmentLength / AutoSystemInfo::PageSize);
         }
-#endif   
+#endif
     });
 }
 
@@ -669,7 +667,7 @@ HeapBlockMap32::RescanHeapBlock(void * dirtyPage, HeapBlock::HeapBlockType block
 
     typedef TBlockType::HeapBlockAttributes TBlockAttributes;
 
-    // We need to check the entire mark bit vector here. It's not sufficient to just check the page's 
+    // We need to check the entire mark bit vector here. It's not sufficient to just check the page's
     // mark bit vector because the object that's dirty on the page could have started on an earlier page
     auto markBits = chunk->GetMarkBitVectorForPages<TBlockAttributes::BitVectorCount>(heapBlockPageAddress);
     if (!markBits->IsAllClear())
@@ -680,7 +678,7 @@ HeapBlockMap32::RescanHeapBlock(void * dirtyPage, HeapBlock::HeapBlockType block
         // For others, this is null
         TBlockType* block = GetHeapBlockForRescan<TBlockType>(chunk, id2);
         uint bucketIndex = chunk->blockInfo[id2].bucketIndex;
-        if (!SmallNormalHeapBucketBase<TBlockType>::RescanObjectsOnPage(block, 
+        if (!SmallNormalHeapBucketBase<TBlockType>::RescanObjectsOnPage(block,
             (char *)dirtyPage, heapBlockPageAddress, markBits, HeapInfo::GetObjectSizeForBucketIndex<TBlockAttributes>(bucketIndex), bucketIndex, anyObjectsMarkedOnPage, recycler))
         {
             // Failed due to OOM
@@ -749,8 +747,9 @@ HeapBlockMap32::ChangeProtectionLevel(Recycler* recycler, DWORD protectFlags, DW
 /// (On Win10, > 255 pages). This helper is to handle the failure case. In the case of failure, we degrade to retrieving
 /// the write-watch one page at a time since that's expected to succeed
 ///
-UINT 
-HeapBlockMap32::GetWriteWatchHelper(Recycler * recycler, DWORD writeWatchFlags, void* baseAddress, size_t regionSize, void** addresses, ULONG_PTR* count, LPDWORD granularity)
+UINT
+HeapBlockMap32::GetWriteWatchHelper(Recycler * recycler, DWORD writeWatchFlags, void* baseAddress, size_t regionSize,
+    void** addresses, ULONG_PTR* count, LPDWORD granularity)
 {
     UINT ret = 0;
 
@@ -781,15 +780,16 @@ HeapBlockMap32::GetWriteWatchHelper(Recycler * recycler, DWORD writeWatchFlags, 
 // OOM codepath- Retrieve write-watch one page at a time
 // It's slow, but we are ok with that during OOM
 // Factored into its own function to help the compiler inline the parent
-UINT 
-HeapBlockMap32::GetWriteWatchHelperOnOOM(DWORD writeWatchFlags, void* baseAddress, size_t regionSize, void** addresses, ULONG_PTR* count, LPDWORD granularity)
+UINT
+HeapBlockMap32::GetWriteWatchHelperOnOOM(DWORD writeWatchFlags, _In_ void* baseAddress, size_t regionSize,
+    _Out_writes_(*count) void** addresses, _Inout_ ULONG_PTR* count, LPDWORD granularity)
 {
     const uint pageCount = (regionSize / AutoSystemInfo::PageSize);
 
-    // Ensure target buffer 
+    // Ensure target buffer
     AssertMsg(*count >= pageCount, "Not enough space in the buffer to store the write watch state for the given region size");
 
-    void* result;
+    void* result = nullptr;
     uint dirtyCount = 0;
 
     for (uint i = 0; i < pageCount; i++)
@@ -801,6 +801,7 @@ HeapBlockMap32::GetWriteWatchHelperOnOOM(DWORD writeWatchFlags, void* baseAddres
         DWORD r = ::GetWriteWatch(writeWatchFlags, pageAddress, AutoSystemInfo::PageSize, &result, &resultBufferCount, granularity);
         Assert(r == 0);
         Assert(resultBufferCount <= 1);
+        AnalysisAssert(dirtyCount <= pageCount);
 
         // The requested page was dirty
         if (resultBufferCount == 1)
@@ -819,15 +820,15 @@ HeapBlockMap32::GetWriteWatchHelperOnOOM(DWORD writeWatchFlags, void* baseAddres
 uint
 HeapBlockMap32::Rescan(Recycler * recycler, bool resetWriteWatch)
 {
-    // Loop through segments and find dirty pages.    
+    // Loop through segments and find dirty pages.
     const DWORD writeWatchFlags = (resetWriteWatch ? WRITE_WATCH_FLAG_RESET : 0);
 
     uint scannedPageCount = 0;
     bool anyObjectsScannedOnPage = false;
-    
+
     this->ForEachSegment(recycler, [&] (char * segmentStart, size_t segmentLength, Segment * currentSegment, PageAllocator * segmentPageAllocator) {
         Assert(segmentLength % AutoSystemInfo::PageSize == 0);
-        
+
         // Call GetWriteWatch for Small non-leaf segments.
         // Large blocks have their own separate write watch handling.
         if (segmentPageAllocator == recycler->GetRecyclerPageAllocator())
@@ -836,7 +837,7 @@ HeapBlockMap32::Rescan(Recycler * recycler, bool resetWriteWatch)
             void * dirtyPageAddresses[MaxGetWriteWatchPages];
 
             Assert(segmentLength <= MaxGetWriteWatchPages * PageSize);
-            
+
             ULONG_PTR pageCount = MaxGetWriteWatchPages;
             DWORD pageSize = PageSize;
 
@@ -845,7 +846,7 @@ HeapBlockMap32::Rescan(Recycler * recycler, bool resetWriteWatch)
             Assert(pageSize == PageSize);
             Assert(pageCount <= MaxGetWriteWatchPages);
 
-            // Process results: 
+            // Process results:
             // Loop through reported dirty pages and set their write watch bit.
             for (uint i = 0; i < pageCount; i++)
             {
@@ -853,14 +854,14 @@ HeapBlockMap32::Rescan(Recycler * recycler, bool resetWriteWatch)
                 Assert((((size_t)dirtyPage) % PageSize) == 0);
                 Assert(dirtyPage >= segmentStart);
                 Assert(dirtyPage < segmentStart + segmentLength);
-                
+
 #if defined(_M_X64_OR_ARM64)
                 Assert(HeapBlockMap64::GetNodeStartAddress(dirtyPage) == this->startAddress);
 #endif
 
                 if (RescanPage(dirtyPage, &anyObjectsScannedOnPage, recycler) && anyObjectsScannedOnPage)
                 {
-                    scannedPageCount++;            
+                    scannedPageCount++;
                 }
             }
         }
@@ -872,7 +873,7 @@ HeapBlockMap32::Rescan(Recycler * recycler, bool resetWriteWatch)
             {
                 char * pageAddress = segmentStart + (i * AutoSystemInfo::PageSize);
                 Assert((size_t)(pageAddress - segmentStart) < segmentLength);
-                
+
 #if defined(_M_X64_OR_ARM64)
                 Assert(HeapBlockMap64::GetNodeStartAddress(pageAddress) == this->startAddress);
 #endif
@@ -891,7 +892,7 @@ HeapBlockMap32::Rescan(Recycler * recycler, bool resetWriteWatch)
                         scannedPageCount++;
                     }
                 }
-            }            
+            }
         }
         else
         {
@@ -910,10 +911,10 @@ HeapBlockMap32::OOMRescan(Recycler * recycler)
     bool noHeapBlockNeedsRescan = true;
 
     // Loop through segments and find pages that need OOM Rescan.
-    
+
     this->ForEachSegment(recycler, [=, &noHeapBlockNeedsRescan] (char * segmentStart, size_t segmentLength, Segment * currentSegment, PageAllocator * segmentPageAllocator) {
         Assert(segmentLength % AutoSystemInfo::PageSize == 0);
-        
+
         // Process Small non-leaf segments (including write barrier blocks).
         // Large blocks have their own separate write watch handling.
         if (segmentPageAllocator == recycler->GetRecyclerPageAllocator() ||
@@ -924,14 +925,14 @@ HeapBlockMap32::OOMRescan(Recycler * recycler)
                 // We hit OOM again.  Don't try to process any more blocks, leave them for the next OOM pass.
                 return;
             }
-            
+
             // Loop through pages for this segment and check OOM flag.
             uint pageCount = segmentLength / AutoSystemInfo::PageSize;
             for (uint i = 0; i < pageCount; i++)
             {
                 char * pageAddress = segmentStart + (i * AutoSystemInfo::PageSize);
                 Assert((size_t)(pageAddress - segmentStart) < segmentLength);
-                
+
 #if defined(_M_X64_OR_ARM64)
                 Assert(HeapBlockMap64::GetNodeStartAddress(pageAddress) == this->startAddress);
 #endif
@@ -1102,20 +1103,20 @@ HeapBlockMap64::EnsureHeapBlock(void * address, size_t pageCount)
 {
     uint lowerBitsAddress = (uint)address;
     size_t pageCountLeft = pageCount;
-    uint nodePages = HeapBlockMap64::PagesPer4GB - lowerBitsAddress / AutoSystemInfo::PageSize;    
+    uint nodePages = HeapBlockMap64::PagesPer4GB - lowerBitsAddress / AutoSystemInfo::PageSize;
     if (pageCountLeft < nodePages)
     {
         nodePages = (uint)pageCountLeft;
     }
-    
+
     do
-    {        
-        Node * node = FindOrInsertNode(address);      
+    {
+        Node * node = FindOrInsertNode(address);
         if (node == nullptr || !node->map.EnsureHeapBlock(address, nodePages))
         {
             return false;
         }
-        
+
         pageCountLeft -= nodePages;
         if (pageCountLeft == 0)
         {
@@ -1126,13 +1127,13 @@ HeapBlockMap64::EnsureHeapBlock(void * address, size_t pageCount)
         if (pageCountLeft < HeapBlockMap64::PagesPer4GB)
         {
             nodePages = (uint)pageCountLeft;
-        }        
+        }
     }
     while (true);
 }
 
 void
-HeapBlockMap64::SetHeapBlockNoCheck(void * address, size_t pageCount, HeapBlock * heapBlock, HeapBlock::HeapBlockType blockType, byte bucketIndex) 
+HeapBlockMap64::SetHeapBlockNoCheck(void * address, size_t pageCount, HeapBlock * heapBlock, HeapBlock::HeapBlockType blockType, byte bucketIndex)
 {
     ForEachNodeInAddressRange(address, pageCount, [&](Node * node, void * address, size_t nodePages)
     {
@@ -1142,7 +1143,7 @@ HeapBlockMap64::SetHeapBlockNoCheck(void * address, size_t pageCount, HeapBlock 
 }
 
 bool
-HeapBlockMap64::SetHeapBlock(void * address, size_t pageCount, HeapBlock * heapBlock, HeapBlock::HeapBlockType blockType, byte bucketIndex) 
+HeapBlockMap64::SetHeapBlock(void * address, size_t pageCount, HeapBlock * heapBlock, HeapBlock::HeapBlockType blockType, byte bucketIndex)
 {
     if (!EnsureHeapBlock(address, pageCount))
     {
@@ -1194,8 +1195,8 @@ void HeapBlockMap64::ForEachNodeInAddressRange(void * address, size_t pageCount,
 }
 
 HeapBlock *
-HeapBlockMap64::GetHeapBlock(void * address) 
-{ 
+HeapBlockMap64::GetHeapBlock(void * address)
+{
     Node * node = FindNode(address);
     if (node == nullptr)
     {
@@ -1204,7 +1205,7 @@ HeapBlockMap64::GetHeapBlock(void * address)
     return node->map.GetHeapBlock(address);
 }
 
-HeapBlockMap32::PageMarkBitVector * 
+HeapBlockMap32::PageMarkBitVector *
 HeapBlockMap64::GetPageMarkBitVector(void * address)
 {
     Node * node = FindNode(address);
@@ -1266,7 +1267,7 @@ HeapBlockMap64::TestAndSetMark(void * address)
     {
         return false;
     }
-    
+
     return node->map.TestAndSetMark(address);
 }
 
@@ -1297,7 +1298,7 @@ HeapBlockMap64::Node *
 HeapBlockMap64::FindNode(void * address) const
 {
     uint index = GetNodeIndex(address);
-    
+
     Node * node = list;
     while (node != nullptr)
     {
@@ -1361,7 +1362,7 @@ uint
 HeapBlockMap64::Rescan(Recycler * recycler, bool resetWriteWatch)
 {
     uint scannedPageCount = 0;
-    
+
     Node * node = this->list;
     while (node != nullptr)
     {
@@ -1388,17 +1389,17 @@ HeapBlockMap64::OOMRescan(Recycler * recycler)
     return true;
 }
 
-void 
+void
 HeapBlockMap64::Cleanup(bool concurrentFindImplicitRoot)
 {
     Node ** prevnext = &this->list;
-    Node * node = *prevnext;    
+    Node * node = *prevnext;
     while (node != nullptr)
     {
         node->map.Cleanup(concurrentFindImplicitRoot);
         Node * nextNode = node->next;
         if (!concurrentFindImplicitRoot && node->map.Empty())
-        {            
+        {
             // Concurrent traversals of the node list would result in a race and possible UAF.
             // Currently we simply defer node free for the lifetime of the heap (only affects MemProtect).
             *prevnext = node->next;
@@ -1413,7 +1414,7 @@ HeapBlockMap64::Cleanup(bool concurrentFindImplicitRoot)
 }
 
 #if DBG
-ushort 
+ushort
 HeapBlockMap64::GetPageMarkCount(void * address) const
 {
     Node * node = FindNode(address);
@@ -1422,7 +1423,7 @@ HeapBlockMap64::GetPageMarkCount(void * address) const
     return node->map.GetPageMarkCount(address);
 }
 
-void 
+void
 HeapBlockMap64::SetPageMarkCount(void * address, ushort markCount)
 {
     Node * node = FindNode(address);

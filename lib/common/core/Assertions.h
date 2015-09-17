@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
+// Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
 #pragma once
@@ -12,14 +12,14 @@
 // AutoDebug functions that are only available in DEBUG builds
 _declspec(selectany) int AssertCount = 0;
 _declspec(selectany) int AssertsToConsole = false;
-_declspec(thread,selectany) int IsInAssert = false;
+_declspec(thread, selectany) int IsInAssert = false;
 
-#if !defined(USED_IN_STATIC_LIB) 
+#if !defined(USED_IN_STATIC_LIB)
 #define REPORT_ASSERT(f, comment) Js::Throw::ReportAssert(__FILE__, __LINE__, STRINGIZE((f)), comment)
 #define LOG_ASSERT() Js::Throw::LogAssert()
-#else 
+#else
 #define REPORT_ASSERT(f, comment) FALSE
-#define LOG_ASSERT() 
+#define LOG_ASSERT()
 #endif
 
 #ifdef NTBUILD
@@ -43,8 +43,8 @@ _declspec(thread,selectany) int IsInAssert = false;
             } \
             IsInAssert = FALSE; \
         } \
+        __analysis_assume(f); \
     }
-
 
 #define Assert(exp)           AssertMsg(exp, #exp)
 #define AssertVerify(exp)     Assert(exp)
@@ -78,26 +78,26 @@ _declspec(thread,selectany) int IsInAssert = false;
 // We set IsPointer<T>::IsTrue to true if T is a pointer type
 // Otherwise, it's set to false
 template <class T>
-struct IsPointer 
-{ 
-    enum 
-    { 
-        IsTrue = false 
+struct IsPointer
+{
+    enum
+    {
+        IsTrue = false
     };
 };
 
 template <class T>
-struct IsPointer<T*> 
-{ 
-    enum 
-    { 
+struct IsPointer<T*>
+{
+    enum
+    {
         IsTrue = true
     };
 };
 
 // Trick adopted from WinRT/WinTypes/Value.h
 template <class T1, class T2>
-struct IsSame 
+struct IsSame
 {
     enum
     {

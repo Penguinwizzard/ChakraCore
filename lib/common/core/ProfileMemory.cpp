@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
+// Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
 #include "CommonCorePch.h"
@@ -14,22 +14,22 @@ __declspec(thread) MemoryProfiler * MemoryProfiler::Instance = nullptr;
 CriticalSection MemoryProfiler::s_cs;
 AutoPtr<MemoryProfiler> MemoryProfiler::profilers(nullptr);
 
-MemoryProfiler::MemoryProfiler() :   
+MemoryProfiler::MemoryProfiler() :
     pageAllocator(nullptr, Js::Configuration::Global.flags, PageAllocatorType_Max, 0, false, nullptr),
-    alloc(L"MemoryProfiler", &pageAllocator, Js::Throw::OutOfMemory), 
+    alloc(L"MemoryProfiler", &pageAllocator, Js::Throw::OutOfMemory),
     arenaDataMap(&alloc, 10)
 {
     threadId = ::GetCurrentThreadId();
-    memset(&pageMemoryData, 0, sizeof(pageMemoryData));      
-    memset(&recyclerMemoryData, 0, sizeof(recyclerMemoryData));      
+    memset(&pageMemoryData, 0, sizeof(pageMemoryData));
+    memset(&recyclerMemoryData, 0, sizeof(recyclerMemoryData));
 }
 
 MemoryProfiler::~MemoryProfiler()
 {
 #if DBG
-    pageAllocator.SetDisableThreadAccessCheck();  
+    pageAllocator.SetDisableThreadAccessCheck();
 #endif
-    delete next;   
+    delete next;
 }
 
 MemoryProfiler *
@@ -40,12 +40,12 @@ MemoryProfiler::EnsureMemoryProfiler()
     if (memoryProfiler == nullptr)
     {
         memoryProfiler = new MemoryProfiler();
-        
+
         {
-            AutoCriticalSection autocs(&s_cs);            
+            AutoCriticalSection autocs(&s_cs);
             memoryProfiler->next = MemoryProfiler::profilers.Detach();
             MemoryProfiler::profilers = memoryProfiler;
-        }        
+        }
 
         MemoryProfiler::Instance = memoryProfiler;
     }
@@ -58,7 +58,7 @@ MemoryProfiler::GetPageMemoryData(PageAllocatorType type)
     if (!Js::Configuration::Global.flags.IsEnabled(Js::TraceMemoryFlag))
     {
         return nullptr;
-    } 
+    }
     if (type == PageAllocatorType_Max)
     {
         return nullptr;
@@ -78,7 +78,7 @@ MemoryProfiler::GetRecyclerMemoryData()
     return &memoryProfiler->recyclerMemoryData;
 }
 
-ArenaMemoryData * 
+ArenaMemoryData *
 MemoryProfiler::Begin(LPCWSTR name)
 {
     if (!Js::Configuration::Global.flags.IsEnabled(Js::TraceMemoryFlag))
@@ -92,7 +92,7 @@ MemoryProfiler::Begin(LPCWSTR name)
         return nullptr;
     }
 
-    // This is debug only code, we don't care if we catch the right exception        
+    // This is debug only code, we don't care if we catch the right exception
     AUTO_NESTED_HANDLED_EXCEPTION_TYPE(ExceptionType_DisableCheck);
     MemoryProfiler * memoryProfiler = EnsureMemoryProfiler();
     ArenaMemoryDataSummary * arenaTotalMemoryData;
@@ -112,13 +112,13 @@ MemoryProfiler::Begin(LPCWSTR name)
     {
         memoryData->next = arenaTotalMemoryData->data;
         arenaTotalMemoryData->data->prev = memoryData;
-        arenaTotalMemoryData->data = memoryData; 
+        arenaTotalMemoryData->data = memoryData;
     }
     memoryData->profiler = memoryProfiler;
     return memoryData;
 }
 
-void 
+void
 MemoryProfiler::Reset(LPCWSTR name, ArenaMemoryData * memoryData)
 {
     MemoryProfiler * memoryProfiler = memoryData->profiler;
@@ -127,7 +127,7 @@ MemoryProfiler::Reset(LPCWSTR name, ArenaMemoryData * memoryData)
     Assert(hasItem);
 
 
-    AccumulateData(arenaMemoryDataSummary, memoryData, true);    
+    AccumulateData(arenaMemoryDataSummary, memoryData, true);
     memoryData->allocatedBytes = 0;
     memoryData->alignmentBytes = 0;
     memoryData->requestBytes = 0;
@@ -151,9 +151,10 @@ MemoryProfiler::End(LPCWSTR name, ArenaMemoryData * memoryData)
     {
         memoryData->next->prev = memoryData->prev;
     }
+
     if (memoryData->prev != nullptr)
-    {            
-        memoryData->prev->next = memoryData->next;        
+    {
+        memoryData->prev->next = memoryData->next;
     }
     else
     {
@@ -205,14 +206,14 @@ MemoryProfiler::PrintPageMemoryData(PageMemoryData const& pageMemoryData, char c
             pageMemoryData.allocPageCount * AutoSystemInfo::PageSize,
             pageMemoryData.releasePageCount * AutoSystemInfo::PageSize,
             pageMemoryData.decommitPageCount * AutoSystemInfo::PageSize,
-            pageMemoryData.recommitPageCount * AutoSystemInfo::PageSize);  
+            pageMemoryData.recommitPageCount * AutoSystemInfo::PageSize);
     }
 }
 
 void
 MemoryProfiler::Print()
 {
-    Output::Print(L"-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n");    
+    Output::Print(L"-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n");
     Output::Print(L"Allocation for thread 0x%08X\n", threadId);
     Output::Print(L"-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n");
 
@@ -227,33 +228,33 @@ MemoryProfiler::Print()
     }
     if (hasData)
     {
-        Output::Print(L"%-10s:%-20s | %-15s | %-15s | %10s | %10s | %10s | %10s\n", L"", L"         Current", L"   Alloc Seg", L"    Free Seg", 
+        Output::Print(L"%-10s:%-20s | %-15s | %-15s | %10s | %10s | %10s | %10s\n", L"", L"         Current", L"   Alloc Seg", L"    Free Seg",
             L"Request", L"Released", L"Decommited", L"Recommited");
-        Output::Print(L"%-10s:%9s %10s | %4s %10s | %4s %10s | %10s | %10s | %10s | %10s\n", L"", L"Bytes", L"Peak", L"#", L"Bytes", L"#", L"Bytes", 
-             L"Bytes", L"Bytes", L"Bytes",  L"Bytes");                                
-        Output::Print(L"------------------------------------------------------------------------------------------------------------------\n");    
+        Output::Print(L"%-10s:%9s %10s | %4s %10s | %4s %10s | %10s | %10s | %10s | %10s\n", L"", L"Bytes", L"Peak", L"#", L"Bytes", L"#", L"Bytes",
+             L"Bytes", L"Bytes", L"Bytes",  L"Bytes");
+        Output::Print(L"------------------------------------------------------------------------------------------------------------------\n");
 
 #define PAGEALLOCATOR_PRINT(i) PrintPageMemoryData(pageMemoryData[PageAllocatorType_ ## i], STRINGIZE(i));
         PAGE_ALLOCATOR_TYPE(PAGEALLOCATOR_PRINT);
-        Output::Print(L"------------------------------------------------------------------------------------------------------------------\n");   
+        Output::Print(L"------------------------------------------------------------------------------------------------------------------\n");
     }
-    
+
     if (recyclerMemoryData.requestCount != 0)
     {
         Output::Print(L"%-10s:%7s %10s %10s %10s\n",
                 L"Recycler",
-                L"#Alloc",  
+                L"#Alloc",
                 L"AllocBytes",
                 L"ReqBytes",
-                L"AlignByte");         
-        Output::Print(L"--------------------------------------------------------------------------------------------------------\n");    
-        Output::Print(L"%-10s:%7d %10d %10d %10d\n", 
+                L"AlignByte");
+        Output::Print(L"--------------------------------------------------------------------------------------------------------\n");
+        Output::Print(L"%-10s:%7d %10d %10d %10d\n",
             L"",
             recyclerMemoryData.requestCount,
             recyclerMemoryData.requestBytes + recyclerMemoryData.alignmentBytes,
-            recyclerMemoryData.requestBytes, 
+            recyclerMemoryData.requestBytes,
             recyclerMemoryData.alignmentBytes);
-        Output::Print(L"--------------------------------------------------------------------------------------------------------\n");    
+        Output::Print(L"--------------------------------------------------------------------------------------------------------\n");
     }
 
     if (Js::Configuration::Global.flags.TraceMemory.IsEnabled(Js::AllPhase))
@@ -270,8 +271,8 @@ MemoryProfiler::PrintArenaHeader(wchar_t const * title)
 
     Output::Print(L"%-20s:%7s %9s %9s %9s %6s %9s %6s %9s %5s | %5s\n",
             title,
-            L"#Alloc",           
-            L"AllocByte",            
+            L"#Alloc",
+            L"AllocByte",
             L"ReqBytes",
             L"AlignByte",
             L"#Reuse",
@@ -284,9 +285,13 @@ MemoryProfiler::PrintArenaHeader(wchar_t const * title)
     Output::Print(L"--------------------------------------------------------------------------------------------------------\n");
 }
 
-int MemoryProfiler::CreateArenaUsageSummary(ArenaAllocator* alloc, bool liveOnly, LPWSTR *& name, ArenaMemoryDataSummary**& summaries)
+int MemoryProfiler::CreateArenaUsageSummary(ArenaAllocator * alloc, bool liveOnly,
+    _Outptr_result_buffer_(return) LPWSTR ** name_ptr, _Outptr_result_buffer_(return) ArenaMemoryDataSummary *** summaries_ptr)
 {
     Assert(alloc);
+
+    LPWSTR *& name = *name_ptr;
+    ArenaMemoryDataSummary **& summaries = *summaries_ptr;
 
     int count = arenaDataMap.Count();
     name = AnewArray(alloc, LPWSTR, count);
@@ -295,7 +300,7 @@ int MemoryProfiler::CreateArenaUsageSummary(ArenaAllocator* alloc, bool liveOnly
     {
         name[i++] = key;
     });
-    JsUtil::QuickSort<LPWSTR, DefaultComparer<LPWSTR>>::Sort(name, name + (count - 1));    
+    JsUtil::QuickSort<LPWSTR, DefaultComparer<LPWSTR>>::Sort(name, name + (count - 1));
 
     summaries = AnewArray(alloc, ArenaMemoryDataSummary *, count);
 
@@ -318,10 +323,10 @@ int MemoryProfiler::CreateArenaUsageSummary(ArenaAllocator* alloc, bool liveOnly
         {
             localSummary = Anew(alloc, ArenaMemoryDataSummary, *summary);
         }
-                  
+
         while (data != nullptr)
         {
-            localSummary->outstandingCount++;            
+            localSummary->outstandingCount++;
             AccumulateData(localSummary, data);
             data = data->next;
         }
@@ -336,12 +341,11 @@ int MemoryProfiler::CreateArenaUsageSummary(ArenaAllocator* alloc, bool liveOnly
     return count;
 }
 
-
 void
 MemoryProfiler::PrintArena(bool liveOnly)
 {
     WithArenaUsageSummary(liveOnly, [&] (int count, _In_reads_(count) LPWSTR * name, _In_reads_(count) ArenaMemoryDataSummary ** summaries)
-    {        
+    {
         int i = 0;
 
         if (liveOnly)
@@ -354,7 +358,7 @@ MemoryProfiler::PrintArena(bool liveOnly)
         }
 
         bool header = false;
-    
+
         for (i = 0; i < count; i++)
         {
             ArenaMemoryDataSummary * data = summaries[i];
@@ -367,21 +371,21 @@ MemoryProfiler::PrintArena(bool liveOnly)
                 header = true;
                 PrintArenaHeader(L"Arena Size");
             }
-    
-            Output::Print(L"%-20s %7d %9d %9d %9d %6d %9d %6d %9d %5d | %5d\n", 
+
+            Output::Print(L"%-20s %7d %9d %9d %9d %6d %9d %6d %9d %5d | %5d\n",
                 name[i],
                 data->total.requestCount,
-                data->total.allocatedBytes,                 
-                data->total.requestBytes, 
+                data->total.allocatedBytes,
+                data->total.requestBytes,
                 data->total.alignmentBytes,
                 data->total.reuseCount,
                 data->total.reuseBytes,
-                data->total.freelistCount, 
-                data->total.freelistBytes, 
-                data->total.resetCount, 
+                data->total.freelistCount,
+                data->total.freelistBytes,
+                data->total.resetCount,
                 data->arenaCount);
         }
-    
+
         header = false;
 
         for (i = 0; i < count; i++)
@@ -396,17 +400,17 @@ MemoryProfiler::PrintArena(bool liveOnly)
                 header = true;
                 PrintArenaHeader(L"Arena Max");
             }
-            Output::Print(L"%-20s %7d %9d %9d %9d %6d %9d %6d %9d %5d | %5d\n", 
+            Output::Print(L"%-20s %7d %9d %9d %9d %6d %9d %6d %9d %5d | %5d\n",
                 name[i],
-                data->max.requestCount, 
-                data->max.allocatedBytes,                 
-                data->max.requestBytes, 
-                data->max.alignmentBytes, 
-                data->max.reuseCount, 
+                data->max.requestCount,
+                data->max.allocatedBytes,
+                data->max.requestBytes,
+                data->max.alignmentBytes,
+                data->max.reuseCount,
                 data->max.reuseBytes,
-                data->max.freelistCount, data->max.freelistBytes, 
+                data->max.freelistCount, data->max.freelistBytes,
                 data->max.resetCount, data->outstandingCount);
-        }    
+        }
 
         header = false;
         for (i = 0; i < count; i++)
@@ -422,16 +426,17 @@ MemoryProfiler::PrintArena(bool liveOnly)
                 PrintArenaHeader(L"Arena Average");
             }
             Output::Print(L"%-20s %7d %9d %9d %9d %6d %9d %6d %9d %5d\n", name[i],
-                data->total.requestCount / data->arenaCount,  
-                data->total.allocatedBytes / data->arenaCount,                            
+                data->total.requestCount / data->arenaCount,
+                data->total.allocatedBytes / data->arenaCount,
                 data->total.requestBytes / data->arenaCount,
                 data->total.alignmentBytes / data->arenaCount,
-                data->total.reuseCount / data->arenaCount, 
-                data->total.reuseBytes / data->arenaCount, 
-                data->total.freelistCount / data->arenaCount, 
+                data->total.reuseCount / data->arenaCount,
+                data->total.reuseBytes / data->arenaCount,
+                data->total.freelistCount / data->arenaCount,
                 data->total.freelistBytes / data->arenaCount,
                 data->total.resetCount / data->arenaCount);
         }
+
         Output::Print(L"--------------------------------------------------------------------------------------------------------\n");
     });
 }
@@ -442,8 +447,7 @@ MemoryProfiler::PrintCurrentThread()
     MemoryProfiler* instance = NULL;
     instance = MemoryProfiler::Instance;
 
-
-    Output::Print(L"========================================================================================================\n");   
+    Output::Print(L"========================================================================================================\n");
     Output::Print(L"Memory Profile (Current thread)\n");
     if (instance != nullptr)
     {
@@ -452,14 +456,13 @@ MemoryProfiler::PrintCurrentThread()
 
     Output::Flush();
 }
- 
 
 void
 MemoryProfiler::PrintAll()
 {
-    Output::Print(L"========================================================================================================\n");   
+    Output::Print(L"========================================================================================================\n");
     Output::Print(L"Memory Profile (All threads)\n");
-    
+
     ForEachProfiler([] (MemoryProfiler * memoryProfiler)
     {
         memoryProfiler->Print();

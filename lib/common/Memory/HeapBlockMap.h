@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
+// Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
 
 #pragma once
@@ -9,7 +9,7 @@ namespace Memory
 {
 class HeapBlockMap32
 {
-public:    
+public:
     // Segment mapping
 
     static const uint L1Count = 4096;
@@ -44,7 +44,7 @@ public:
     void SetHeapBlockNoCheck(void * address, uint pageCount, HeapBlock * heapBlock, HeapBlock::HeapBlockType blockType, byte bucketIndex);
     bool SetHeapBlock(void * address, uint pageCount, HeapBlock * heapBlock, HeapBlock::HeapBlockType blockType, byte bucketIndex);
     void ClearHeapBlock(void * address, uint pageCount);
-    
+
     HeapBlock * GetHeapBlock(void * address);
     bool Empty() const { return count == 0; }
 
@@ -64,7 +64,7 @@ public:
     bool TestAndSetMark(void * address);
 
     void ResetMarks();
-    
+
 #ifdef CONCURRENT_GC_ENABLED
     void ResetWriteWatch(Recycler * recycler);
     uint Rescan(Recycler * recycler, bool resetWriteWatch);
@@ -109,14 +109,16 @@ public:
     }
 
 private:
-    static UINT GetWriteWatchHelper(Recycler * recycler, DWORD writeWatchFlags, void* baseAddress, size_t regionSize, void** addresses, ULONG_PTR* count, LPDWORD granularity);
-    static UINT GetWriteWatchHelperOnOOM(DWORD writeWatchFlags, void* baseAddress, size_t regionSize, void** addresses, ULONG_PTR* count, LPDWORD granularity);
+    static UINT GetWriteWatchHelper(Recycler * recycler, DWORD writeWatchFlags, void* baseAddress, size_t regionSize,
+        void** addresses, ULONG_PTR* count, LPDWORD granularity);
+    static UINT GetWriteWatchHelperOnOOM(DWORD writeWatchFlags, _In_ void* baseAddress, size_t regionSize,
+        _Out_writes_(*count) void** addresses, _Inout_ ULONG_PTR* count, LPDWORD granularity);
 
     static void * GetAddressFromIds(uint id1, uint id2)
     {
         Assert(id1 < L1Count);
         Assert(id2 < L2Count);
-        
+
         return (void *)(((id1 * L2Count) + id2) * PageSize);
     }
 
@@ -128,7 +130,7 @@ private:
 
     // We want HeapBlockInfo to be as small as possible to get the best cache locality for this info.
     CompileAssert(sizeof(HeapBlockInfo) == sizeof(ushort));
-    
+
     class L2MapChunk
     {
     public:
@@ -145,7 +147,7 @@ private:
 
         bool IsMarked(void * address) const;
         void SetMark(void * address);
-    
+
         static uint GetMarkBitIndex(void * address)
         {
             uint bitIndex = (((uint)address) % (L2Count * PageSize)) / HeapConstants::ObjectGranularity;
@@ -156,7 +158,7 @@ private:
 
         // Mark bits for objects that live in this particular chunk
         // Each L2 chunk has 1 bit for each object that lives in this chunk
-        // The L2 chunk represents 256 * 4096 bytes = 1 MB of address space 
+        // The L2 chunk represents 256 * 4096 bytes = 1 MB of address space
         // This means, that on 32 bit systems, where each object is at least 16 bytes, we can have 64K objects
         // On 64 bit systems, where each object is at least 32 bytes, we can have 32K objects
         // Therefore, that on 32 bit systems, the mark bits take up 8KB, and on 64 bit systems, they take up 4KB
@@ -164,10 +166,10 @@ private:
         // However, it's less memory efficient (eg. a large object which is 1 MB + 1 byte, rounded up to 1028 KB,
         // would before take up 1 byte for it's mark bits- now it'll have a cost of 16KB, one for each of the L2 segments it spans)
         L2ChunkMarkBitVector markBits;
-        
+
         // HeapBlockInfo for each page in our range
         HeapBlockInfo blockInfo[L2Count];
-        
+
         // HeapBlock * for each page in our range (or nullptr, if no block)
         HeapBlock* map[L2Count];
 
@@ -177,7 +179,7 @@ private:
 
 #if DBG
         ushort pageMarkCount[L2Count];
-#endif        
+#endif
     };
 
     template <bool interlocked>
@@ -203,7 +205,7 @@ private:
     // On 64 bit, this structure only maps one particular 32 bit space.
     // Store the startAddress of that 32 bit space so we know which it is.
     // This value should always be 4GB aligned.
-    char * startAddress;    
+    char * startAddress;
 #endif
 
 public:
@@ -228,7 +230,7 @@ class HeapBlockMap64
 public:
     HeapBlockMap64();
     ~HeapBlockMap64();
-    
+
     bool EnsureHeapBlock(void * address, size_t pageCount);
     void SetHeapBlockNoCheck(void * address, size_t pageCount, HeapBlock * heapBlock, HeapBlock::HeapBlockType blockType, byte bucketIndex);
     bool SetHeapBlock(void * address, size_t pageCount, HeapBlock * heapBlock, HeapBlock::HeapBlockType blockType, byte bucketIndex);
@@ -251,7 +253,7 @@ public:
     bool TestAndSetMark(void * address);
 
     void ResetMarks();
-    
+
 #ifdef CONCURRENT_GC_ENABLED
     void ResetWriteWatch(Recycler * recycler);
     uint Rescan(Recycler * recycler, bool resetWriteWatch);
@@ -280,7 +282,7 @@ private:
     struct Node
     {
         Node(__in char * startAddress) : map(startAddress) { }
-        
+
         uint nodeIndex;
         Node * next;
         HeapBlockMap32 map;
@@ -306,7 +308,7 @@ private:
 
     Node * list;
 
-public:    
+public:
 #if DBG
     ushort GetPageMarkCount(void * address) const;
     void SetPageMarkCount(void * address, ushort markCount);

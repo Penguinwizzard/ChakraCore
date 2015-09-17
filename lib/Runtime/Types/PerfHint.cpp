@@ -10,7 +10,7 @@ const PerfHintItem s_perfHintContainer[] =
 void WritePerfHint(PerfHints hint, Js::FunctionBody * functionBody, uint byteCodeOffset /*= Js::Constants::NoByteCodeOffset*/)
 {
     Assert(functionBody);
-    Assert(((int)hint) < _countof(s_perfHintContainer));
+    Assert(((uint)hint) < _countof(s_perfHintContainer));
 
     PerfHintItem item = s_perfHintContainer[(uint)hint];
 
@@ -46,4 +46,3 @@ void WritePerfHint(PerfHints hint, Js::FunctionBody * functionBody, uint byteCod
         Output::Flush();
     }
 }
-

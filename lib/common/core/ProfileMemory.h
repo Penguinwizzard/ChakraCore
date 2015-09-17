@@ -1,7 +1,6 @@
 //----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
+// Copyright (C) Microsoft. All rights reserved.
 //----------------------------------------------------------------------------
-
 
 #pragma once
 
@@ -34,32 +33,32 @@ struct ArenaMemoryDataSummary
     size_t arenaCount;
     size_t outstandingCount;
     ArenaMemoryData total;
-    ArenaMemoryData max;    
+    ArenaMemoryData max;
     ArenaMemoryData * data;
 };
+
 struct PageMemoryData
-{    
+{
     size_t allocSegmentCount;
     size_t allocSegmentBytes;
     size_t releaseSegmentCount;
     size_t releaseSegmentBytes;
-    size_t allocPageCount;    
-    size_t releasePageCount;    
-    size_t decommitPageCount;    
-    size_t recommitPageCount;    
+    size_t allocPageCount;
+    size_t releasePageCount;
+    size_t decommitPageCount;
+    size_t recommitPageCount;
 
     size_t currentCommittedPageCount;
     size_t peakCommittedPageCount;
 };
 
-struct RecyclerMemoryData 
-{    
+struct RecyclerMemoryData
+{
     size_t allocatedBytes;
     size_t alignmentBytes;
     size_t requestBytes;
     size_t requestCount;
 };
-
 
 class MemoryProfiler
 {
@@ -68,7 +67,7 @@ public:
     ~MemoryProfiler();
     static ArenaMemoryData * Begin(LPCWSTR name);
     static RecyclerMemoryData * GetRecyclerMemoryData();
-    static PageMemoryData * GetPageMemoryData(PageAllocatorType type); 
+    static PageMemoryData * GetPageMemoryData(PageAllocatorType type);
     static void Reset(LPCWSTR name, ArenaMemoryData * arena);
     static void End(LPCWSTR name, ArenaMemoryData * arena);
     static void PrintAll();
@@ -84,7 +83,7 @@ public:
         ForEachProfiler([&] (MemoryProfiler * memoryProfiler)
         {
             memoryProfiler->WithArenaUsageSummary(true, [&] (int count, _In_reads_(count) LPWSTR * name, _In_reads_(count) ArenaMemoryDataSummary * summaries)
-            {                
+            {
                 for (int i = 0; i < count; i++)
                 {
                     ArenaMemoryDataSummary * data = summaries[i];
@@ -99,7 +98,8 @@ public:
     }
 
 private:
-    int CreateArenaUsageSummary(ArenaAllocator* alloc, bool liveOnly, _Out_ LPWSTR *& name, _Out_ ArenaMemoryDataSummary **& summaries);
+    int MemoryProfiler::CreateArenaUsageSummary(ArenaAllocator * alloc, bool liveOnly,
+        _Outptr_result_buffer_(return) LPWSTR ** name_ptr, _Outptr_result_buffer_(return) ArenaMemoryDataSummary *** summaries_ptr);
 
     template<typename THandler>
     void WithArenaUsageSummary(bool liveOnly, THandler handler);
@@ -120,6 +120,7 @@ private:
     void Print();
     void PrintArenaHeader(wchar_t const * title);
     static void PrintPageMemoryData(PageMemoryData const& pageMemoryData, char const * title);
+
 private:
 
     void PrintArena(bool liveOnly);
@@ -132,25 +133,25 @@ private:
     PageAllocator pageAllocator;
     ArenaAllocator alloc;
     JsUtil::BaseDictionary<LPWSTR, ArenaMemoryDataSummary *, ArenaAllocator, PrimeSizePolicy> arenaDataMap;
-    PageMemoryData pageMemoryData[PageAllocatorType_Max];    
-    RecyclerMemoryData recyclerMemoryData;    
+    PageMemoryData pageMemoryData[PageAllocatorType_Max];
+    RecyclerMemoryData recyclerMemoryData;
     MemoryProfiler * next;
     DWORD threadId;
-   
+
 };
 
 template<typename THandler>
 void
 MemoryProfiler::WithArenaUsageSummary(bool liveOnly, THandler handler)
 {
-    // This is debug only code, we don't care if we catch the right exception        
+    // This is debug only code, we don't care if we catch the right exception
     AUTO_NESTED_HANDLED_EXCEPTION_TYPE(ExceptionType_DisableCheck);
 
-    PageAllocator tempPageAlloc(NULL, Js::Configuration::Global.flags);
+    PageAllocator tempPageAlloc(nullptr, Js::Configuration::Global.flags);
     ArenaAllocator tempAlloc(L"MemoryProfiler", &tempPageAlloc, Js::Throw::OutOfMemory);
-    LPWSTR * name;
-    ArenaMemoryDataSummary ** summaries;    
-    int count = CreateArenaUsageSummary(&tempAlloc, liveOnly, name, summaries);
+    LPWSTR * name = nullptr;
+    ArenaMemoryDataSummary ** summaries = nullptr;
+    int count = CreateArenaUsageSummary(&tempAlloc, liveOnly, &name, &summaries);
     handler(count, name, summaries);
 }
 
