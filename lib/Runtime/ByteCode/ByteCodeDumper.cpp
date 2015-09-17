@@ -631,6 +631,19 @@ namespace Js
                 DumpProfileId(data->PropertyIdIndex);
                 break;
             }
+            case OpCode::StSuperFld:
+            {
+                Output::Print(L" R%d.%s(this=R%d) = R%d #%d", data->Instance, pPropertyName->GetBuffer(),
+                    data->Value2, data->Value, data->PropertyIdIndex);
+                break;
+            }
+            case OpCode::ProfiledStSuperFld:
+            {
+                Output::Print(L" R%d.%s(this=R%d) = R%d #%d", data->Instance, pPropertyName->GetBuffer(),
+                    data->Value2, data->Value, data->PropertyIdIndex);
+                DumpProfileId(data->PropertyIdIndex);
+                break;
+            }
             default:
             {
                 AssertMsg(false, "Unknown OpCode for OpLayoutElementC2");

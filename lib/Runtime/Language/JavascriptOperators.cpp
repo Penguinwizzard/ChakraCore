@@ -2397,12 +2397,16 @@ CommonNumber:
         return result;
     }
 
-    BOOL JavascriptOperators::OP_SetProperty(Var instance, PropertyId propertyId, Var newValue, ScriptContext* scriptContext, PropertyValueInfo * info, PropertyOperationFlags flags)
+    BOOL JavascriptOperators::OP_SetProperty(Var instance, PropertyId propertyId, Var newValue, ScriptContext* scriptContext, PropertyValueInfo * info, PropertyOperationFlags flags, Var thisInstance)
     {
         // TODO:  version for ES5.
         // The call into ToObject(dynamicObject) is avoided here by checking for null and undefined and doing nothing when dynamicObject is a primitive value.
         // In ES5 this optimization has to be reviewed because the propertyid could be a setter with side effect in 'primitive'.prototype
-        TypeId typeId = JavascriptOperators::GetTypeId(instance);
+        if (thisInstance == nullptr)
+        {
+            thisInstance = instance;
+        }
+        TypeId typeId = JavascriptOperators::GetTypeId(thisInstance);
 
         if (typeId == TypeIds_Null || typeId == TypeIds_Undefined)
         {
@@ -2424,9 +2428,9 @@ CommonNumber:
             return TRUE;
         }
 
-        if (!TaggedNumber::Is(instance))
+        if (!TaggedNumber::Is(thisInstance))
         {
-            return JavascriptOperators::SetProperty(RecyclableObject::FromVar(instance), RecyclableObject::FromVar(instance), propertyId, newValue, info, scriptContext, flags);
+            return JavascriptOperators::SetProperty(RecyclableObject::FromVar(thisInstance), RecyclableObject::FromVar(instance), propertyId, newValue, info, scriptContext, flags);
         }
 
         JavascriptError::ThrowCantAssignIfStrictMode(flags, scriptContext);
@@ -7368,6 +7372,12 @@ CommonNumber:
     template <bool IsFromFullJit, class TInlineCache>
     __inline void JavascriptOperators::PatchPutValue(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, PropertyOperationFlags flags)
     {
+        return PatchPutValueWithThisPtr<IsFromFullJit, TInlineCache>(functionBody, inlineCache, inlineCacheIndex, instance, propertyId, newValue, instance, flags);
+    }
+
+    template <bool IsFromFullJit, class TInlineCache>
+    __inline void JavascriptOperators::PatchPutValueWithThisPtr(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, Var thisInstance, PropertyOperationFlags flags)
+    {
         ScriptContext *const scriptContext = functionBody->GetScriptContext();
 
         if (TaggedNumber::Is(instance))
@@ -7400,7 +7410,7 @@ CommonNumber:
         {
             prevImplicitCallFlags = CacheAndClearImplicitBit(scriptContext);
         }
-        if (!JavascriptOperators::OP_SetProperty(object, propertyId, newValue, scriptContext, &info, flags))
+        if (!JavascriptOperators::OP_SetProperty(object, propertyId, newValue, scriptContext, &info, flags, thisInstance))
         {
             // Add implicit call flags, to bail out if field copy prop may propagate the wrong value.
             scriptContext->GetThreadContext()->AddImplicitCallFlags(ImplicitCall_NoOpSet);
@@ -7518,6 +7528,62 @@ CommonNumber:
     template void JavascriptOperators::PatchPutValueNoLocalFastPath<true, PolymorphicInlineCache>(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, PropertyOperationFlags flags);
 
     template <bool IsFromFullJit, class TInlineCache>
+    __inline void JavascriptOperators::PatchPutValueWithThisPtrNoLocalFastPath(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, Var thisInstance, PropertyOperationFlags flags)
+    {
+        ScriptContext *const scriptContext = functionBody->GetScriptContext();
+
+        if (TaggedNumber::Is(instance))
+        {
+            JavascriptOperators::SetPropertyOnTaggedNumber(instance,
+                nullptr,
+                propertyId,
+                newValue,
+                scriptContext,
+                flags);
+            return;
+        }
+        JavascriptLibrary::CheckAndConvertCopyOnAccessNativeIntArray<Var>(instance);
+        RecyclableObject *object = RecyclableObject::FromVar(instance);
+
+        PropertyValueInfo info;
+        PropertyValueInfo::SetCacheInfo(&info, functionBody, inlineCache, inlineCacheIndex, !IsFromFullJit);
+        if (CacheOperators::TrySetProperty<!TInlineCache::IsPolymorphic, true, true, true, true, !TInlineCache::IsPolymorphic, TInlineCache::IsPolymorphic, false>(
+            object, false, propertyId, newValue, scriptContext, flags, nullptr, &info))
+        {
+            return;
+        }
+
+#if DBG_DUMP
+        if (PHASE_VERBOSE_TRACE1(Js::InlineCachePhase))
+        {
+            CacheOperators::TraceCache(inlineCache, L"PatchPutValueNoLocalFastPath", propertyId, scriptContext, object);
+        }
+#endif
+
+        ImplicitCallFlags prevImplicitCallFlags = ImplicitCall_None;
+        ImplicitCallFlags currImplicitCallFlags = ImplicitCall_None;
+        bool hasThisOnlyStatements = functionBody->GetHasOnlyThisStmts();
+        if (hasThisOnlyStatements)
+        {
+            prevImplicitCallFlags = CacheAndClearImplicitBit(scriptContext);
+        }
+        if (!JavascriptOperators::OP_SetProperty(instance, propertyId, newValue, scriptContext, &info, flags, thisInstance))
+        {
+            // Add implicit call flags, to bail out if field copy prop may propagate the wrong value.
+            scriptContext->GetThreadContext()->AddImplicitCallFlags(ImplicitCall_NoOpSet);
+        }
+        if (hasThisOnlyStatements)
+        {
+            currImplicitCallFlags = CheckAndUpdateFunctionBodyWithImplicitFlag(functionBody);
+            RestoreImplicitFlag(scriptContext, prevImplicitCallFlags, currImplicitCallFlags);
+        }
+    }
+    template void JavascriptOperators::PatchPutValueWithThisPtrNoLocalFastPath<false, InlineCache>(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, Var thisInstance, PropertyOperationFlags flags);
+    template void JavascriptOperators::PatchPutValueWithThisPtrNoLocalFastPath<true, InlineCache>(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, Var thisInstance, PropertyOperationFlags flags);
+    template void JavascriptOperators::PatchPutValueWithThisPtrNoLocalFastPath<false, PolymorphicInlineCache>(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, Var thisInstance, PropertyOperationFlags flags);
+    template void JavascriptOperators::PatchPutValueWithThisPtrNoLocalFastPath<true, PolymorphicInlineCache>(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, Var thisInstance, PropertyOperationFlags flags);
+
+    template <bool IsFromFullJit, class TInlineCache>
     __inline void JavascriptOperators::PatchPutRootValueNoLocalFastPath(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, PropertyOperationFlags flags)
     {
         ScriptContext *const scriptContext = functionBody->GetScriptContext();
@@ -7564,6 +7630,11 @@ CommonNumber:
 
     void JavascriptOperators::PatchPutValueNoFastPath(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, PropertyOperationFlags flags)
     {
+        PatchPutValueWithThisPtrNoFastPath(functionBody, inlineCache, inlineCacheIndex, instance, propertyId, newValue, instance, flags);
+    }
+
+    void JavascriptOperators::PatchPutValueWithThisPtrNoFastPath(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, Var thisInstance, PropertyOperationFlags flags)
+    {
         ScriptContext *const scriptContext = functionBody->GetScriptContext();
 
         if (TaggedNumber::Is(instance))
@@ -7575,7 +7646,7 @@ CommonNumber:
 
         PropertyValueInfo info;
         PropertyValueInfo::SetCacheInfo(&info, functionBody, inlineCache, inlineCacheIndex, true);
-        if (!JavascriptOperators::OP_SetProperty(object, propertyId, newValue, scriptContext, &info, flags))
+        if (!JavascriptOperators::OP_SetProperty(object, propertyId, newValue, scriptContext, &info, flags, thisInstance))
         {
             // Add implicit call flags, to bail out if field copy prop may propagate the wrong value.
             scriptContext->GetThreadContext()->AddImplicitCallFlags(ImplicitCall_NoOpSet);

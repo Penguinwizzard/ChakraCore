@@ -3607,7 +3607,6 @@ namespace Js
     template <class T>
     void InterpreterStackFrame::OP_ProfiledGetSuperProperty(unaligned T* playout)
     {
-        //ProfiledGetProperty<T, false, false, false>(playout, GetReg(playout->Instance)); // , GetReg(playout->Value2));
         SetReg(
             playout->Value,
             ProfilingHelpers::ProfiledLdFld<false, false, false>(
@@ -3866,6 +3865,13 @@ namespace Js
         DoSetProperty_NoFastPath(playout, instance, flags);
     }
 
+
+    template <class T>
+    __inline void InterpreterStackFrame::DoSetSuperProperty(unaligned T* playout, Var instance, PropertyOperationFlags flags)
+    {
+        DoSetSuperProperty_NoFastPath(playout, instance, flags);
+    }
+
     template <class T>
     __declspec(noinline) void InterpreterStackFrame::DoSetProperty_NoFastPath(unaligned T* playout, Var instance, PropertyOperationFlags flags)
     {
@@ -3895,6 +3901,33 @@ namespace Js
         }
     }
 
+    template <class T>
+    __declspec(noinline) void InterpreterStackFrame::DoSetSuperProperty_NoFastPath(unaligned T* playout, Var instance, PropertyOperationFlags flags)
+    {
+        JavascriptLibrary::CheckAndConvertCopyOnAccessNativeIntArray<Var>(instance);
+        InlineCache *const inlineCache = GetInlineCache(playout->PropertyIdIndex);
+
+        JavascriptOperators::PatchPutValueWithThisPtrNoLocalFastPath<false, InlineCache>(
+            GetFunctionBody(),
+            inlineCache,
+            playout->PropertyIdIndex,
+            instance,
+            GetPropertyIdFromCacheId(playout->PropertyIdIndex),
+            GetReg(playout->Value),
+            GetReg(playout->Value2),
+            flags);
+
+        if (!TaggedNumber::Is(instance) && GetJavascriptFunction()->GetConstructorCache()->NeedsUpdateAfterCtor())
+        {
+            // This function has only 'this' statements and is being used as a constructor. When the constructor exits, the
+            // function object's constructor cache will be updated with the type produced by the constructor. From that
+            // point on, when the same function object is used as a constructor, the a new object with the final type will
+            // be created. Whatever is stored in the inline cache currently will cause cache misses after the constructor
+            // cache update. So, just clear it now so that the caches won't be flagged as polymorphic.
+            inlineCache->Clear();
+        }
+    }
+
     template <class T, bool Root>
     void InterpreterStackFrame::ProfiledSetProperty(unaligned T* playout, Var instance, PropertyOperationFlags flags)
     {
@@ -3907,7 +3940,24 @@ namespace Js
             playout->inlineCacheIndex,
             GetReg(playout->Value),
             flags,
-            GetJavascriptFunction());
+            GetJavascriptFunction(),
+            instance);
+    }
+
+    template <class T, bool Root>
+    void InterpreterStackFrame::ProfiledSetSuperProperty(unaligned T* playout, Var instance, Var thisInstance, PropertyOperationFlags flags)
+    {
+        Assert(!Root || flags & PropertyOperation_Root);
+
+        ProfilingHelpers::ProfiledStFld<Root>(
+            instance,
+            GetPropertyIdFromCacheId(playout->PropertyIdIndex),
+            GetInlineCache(playout->PropertyIdIndex),
+            playout->PropertyIdIndex,
+            GetReg(playout->Value),
+            flags,
+            GetJavascriptFunction(),
+            thisInstance);
     }
 
     template <class T>
@@ -3917,9 +3967,21 @@ namespace Js
     }
 
     template <class T>
+    void InterpreterStackFrame::OP_SetSuperProperty(unaligned T* playout)
+    {
+        DoSetSuperProperty(playout, GetReg(playout->Instance), PropertyOperation_None);
+    }
+
+    template <class T>
     void InterpreterStackFrame::OP_ProfiledSetProperty(unaligned T* playout)
     {
         ProfiledSetProperty<T, false>(playout, GetReg(playout->Instance), PropertyOperation_None);
+    }
+
+    template <class T>
+    void InterpreterStackFrame::OP_ProfiledSetSuperProperty(unaligned T* playout)
+    {
+        ProfiledSetSuperProperty<T, false>(playout, GetReg(playout->Instance), GetReg(playout->Value2), PropertyOperation_None);
     }
 
     template <class T>

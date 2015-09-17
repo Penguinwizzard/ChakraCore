@@ -222,12 +222,16 @@ HELPERCALL(Op_PatchInitValue, ((void (*)(Js::FunctionBody *const, Js::InlineCach
 HELPERCALL(Op_PatchInitValuePolymorphic, ((void (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::RecyclableObject*, Js::PropertyId, Js::Var))Js::JavascriptOperators::PatchInitValue<true, Js::PolymorphicInlineCache>), AttrCanThrow)
 
 HELPERCALL(Op_PatchPutValue, ((void (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutValue<true, Js::InlineCache>), AttrCanThrow)
+HELPERCALL(Op_PatchPutValueWithThisPtr, ((void (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutValueWithThisPtr<true, Js::InlineCache>), AttrCanThrow)
 HELPERCALL(Op_PatchPutValuePolymorphic, ((void (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutValue<true, Js::PolymorphicInlineCache>), AttrCanThrow)
+HELPERCALL(Op_PatchPutValueWithThisPtrPolymorphic, ((void (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutValueWithThisPtr<true, Js::PolymorphicInlineCache>), AttrCanThrow)
 HELPERCALL(Op_PatchPutRootValue, ((void (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutRootValue<true, Js::InlineCache>), AttrCanThrow)
 HELPERCALL(Op_PatchPutRootValuePolymorphic, ((void (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutRootValue<true, Js::PolymorphicInlineCache>), AttrCanThrow)
 
 HELPERCALL(Op_PatchPutValueNoLocalFastPath, ((void (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutValueNoLocalFastPath<true, Js::InlineCache>), AttrCanThrow)
+HELPERCALL(Op_PatchPutValueWithThisPtrNoLocalFastPath, ((void (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutValueWithThisPtrNoLocalFastPath<true, Js::InlineCache>), AttrCanThrow)
 HELPERCALL(Op_PatchPutValueNoLocalFastPathPolymorphic, ((void (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutValueNoLocalFastPath<true, Js::PolymorphicInlineCache>), AttrCanThrow)
+HELPERCALL(Op_PatchPutValueWithThisPtrNoLocalFastPathPolymorphic, ((void (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutValueWithThisPtrNoLocalFastPath<true, Js::PolymorphicInlineCache>), AttrCanThrow)
 HELPERCALL(Op_PatchPutRootValueNoLocalFastPath, ((void (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutRootValueNoLocalFastPath<true, Js::InlineCache>), AttrCanThrow)
 HELPERCALL(Op_PatchPutRootValueNoLocalFastPathPolymorphic, ((void (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutRootValueNoLocalFastPath<true, Js::PolymorphicInlineCache>), AttrCanThrow)
 
@@ -375,6 +379,7 @@ HELPERCALL(ProfiledLdMethodFld, Js::ProfilingHelpers::ProfiledLdMethodFld_Jit, 0
 HELPERCALL(ProfiledLdRootFld, Js::ProfilingHelpers::ProfiledLdRootFld_Jit, 0)
 HELPERCALL(ProfiledLdRootMethodFld, Js::ProfilingHelpers::ProfiledLdRootMethodFld_Jit, 0)
 HELPERCALL(ProfiledStFld, Js::ProfilingHelpers::ProfiledStFld_Jit, 0)
+HELPERCALL(ProfiledStSuperFld, Js::ProfilingHelpers::ProfiledStSuperFld_Jit, 0)
 HELPERCALL(ProfiledStFld_Strict, Js::ProfilingHelpers::ProfiledStFld_Strict_Jit, 0)
 HELPERCALL(ProfiledStRootFld, Js::ProfilingHelpers::ProfiledStRootFld_Jit, 0)
 HELPERCALL(ProfiledStRootFld_Strict, Js::ProfilingHelpers::ProfiledStRootFld_Strict_Jit, 0)

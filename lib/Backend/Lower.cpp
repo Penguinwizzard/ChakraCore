@@ -437,6 +437,11 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
                 IR::HelperOp_PatchPutValue, IR::HelperOp_PatchPutValuePolymorphic, true, Js::PropertyOperation_None);
             break;
 
+        case Js::OpCode::StSuperFld:
+            instrPrev = GenerateCompleteStFld(instr, !noFieldFastPath, IR::HelperOp_PatchPutValueWithThisPtrNoLocalFastPath, IR::HelperOp_PatchPutValueWithThisPtrNoLocalFastPathPolymorphic,
+                IR::HelperOp_PatchPutValueWithThisPtr, IR::HelperOp_PatchPutValueWithThisPtrPolymorphic, true, Js::PropertyOperation_None);
+            break;
+
         case Js::OpCode::StRootFld:
             instrPrev = GenerateCompleteStFld(instr, !noFieldFastPath, IR::HelperOp_PatchPutRootValueNoLocalFastPath, IR::HelperOp_PatchPutRootValueNoLocalFastPathPolymorphic,
                 IR::HelperOp_PatchPutRootValue, IR::HelperOp_PatchPutRootValuePolymorphic, true, Js::PropertyOperation_Root);
@@ -6331,9 +6336,24 @@ Lowerer::LowerProfiledStFld(IR::JitProfilingInstr *stFldInstr, Js::PropertyOpera
             const InlineCacheIndex inlineCacheIndex,
             const Var value,
             void *const framePointer)
+
+        void ProfilingHelpers::ProfiledStSuperFld_Jit(
+            const Var instance,
+            const PropertyId propertyId,
+            const InlineCacheIndex inlineCacheIndex,
+            const Var value,
+            void *const framePointer,
+            const Var thisInstance)
+    {
     */
 
     m_lowererMD.LoadHelperArgument(stFldInstr, IR::Opnd::CreateFramePointerOpnd(m_func));
+
+    if (stFldInstr->m_opcode == Js::OpCode::StSuperFld)
+    {
+        m_lowererMD.LoadHelperArgument(stFldInstr, stFldInstr->UnlinkSrc2());
+    }
+
     m_lowererMD.LoadHelperArgument(stFldInstr, stFldInstr->UnlinkSrc1());
 
     IR::Opnd *dst = stFldInstr->UnlinkDst();
@@ -6350,6 +6370,10 @@ Lowerer::LowerProfiledStFld(IR::JitProfilingInstr *stFldInstr, Js::PropertyOpera
     case Js::OpCode::InitFld:
     case Js::OpCode::InitRootFld:
         helper = IR::HelperProfiledInitFld;
+        break;
+
+    case Js::OpCode::StSuperFld:
+        helper = IR::HelperProfiledStSuperFld;
         break;
 
     default:
@@ -6418,6 +6442,11 @@ Lowerer::LowerStFld(
     }
 
     IR::Opnd *src = stFldInstr->UnlinkSrc1();
+    if (stFldInstr->m_opcode == Js::OpCode::StSuperFld)
+    {
+        m_lowererMD.LoadHelperArgument(stFldInstr, stFldInstr->UnlinkSrc2());
+    }
+
     m_lowererMD.LoadHelperArgument(stFldInstr, src);
 
     this->LoadPropertySymAsArgument(stFldInstr, dst);

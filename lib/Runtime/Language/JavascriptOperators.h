@@ -255,7 +255,7 @@ namespace Js
         static Var OP_GetProperty(Var instance, PropertyId propertyId, ScriptContext* scriptContext);
         static Var OP_GetRootProperty(Var instance, PropertyId propertyId, PropertyValueInfo * info, ScriptContext* scriptContext);
 
-        static BOOL OP_SetProperty(Var instance, PropertyId propertyId, Var newValue, ScriptContext* scriptContext, PropertyValueInfo * info = nullptr, PropertyOperationFlags flags = PropertyOperation_None);
+        static BOOL OP_SetProperty(Var instance, PropertyId propertyId, Var newValue, ScriptContext* scriptContext, PropertyValueInfo * info = nullptr, PropertyOperationFlags flags = PropertyOperation_None, Var thisInstance = nullptr);
         static BOOL SetPropertyOnTaggedNumber(Var instance, RecyclableObject* object, PropertyId propertyId, Var newValue, ScriptContext* requestContext, PropertyOperationFlags flags);
         static BOOL SetItemOnTaggedNumber(Var instance, RecyclableObject* object, uint32 index, Var newValue, ScriptContext* requestContext, PropertyOperationFlags propertyOperationFlags);
         static BOOL OP_StFunctionExpression(Var instance, PropertyId propertyId, Var newValue);
@@ -451,10 +451,13 @@ namespace Js
         template <bool IsFromFullJit, class TInlineCache> static Var PatchGetPropertyForTypeOfScoped(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, FrameDisplay *pScope, PropertyId propertyId, Var defaultInstance);
         
         template <bool IsFromFullJit, class TInlineCache> static void PatchPutValue(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var obj, PropertyId propertyId, Var newValue, PropertyOperationFlags flags = PropertyOperation_None);
+        template <bool IsFromFullJit, class TInlineCache> static void PatchPutValueWithThisPtr(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var obj, PropertyId propertyId, Var newValue, Var thisInstance, PropertyOperationFlags flags = PropertyOperation_None);
         template <bool IsFromFullJit, class TInlineCache> static void PatchPutRootValue(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var obj, PropertyId propertyId, Var newValue, PropertyOperationFlags flags = PropertyOperation_None);
         template <bool IsFromFullJit, class TInlineCache> static void PatchPutValueNoLocalFastPath(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, PropertyOperationFlags flags = PropertyOperation_None);
+        template <bool IsFromFullJit, class TInlineCache> static void PatchPutValueWithThisPtrNoLocalFastPath(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, Var thisInstance, PropertyOperationFlags flags = PropertyOperation_None);
         template <bool IsFromFullJit, class TInlineCache> static void PatchPutRootValueNoLocalFastPath(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, PropertyOperationFlags flags = PropertyOperation_None);
         static void PatchPutValueNoFastPath(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var obj, PropertyId propertyId, Var newValue, PropertyOperationFlags flags = PropertyOperation_None);
+        static void PatchPutValueWithThisPtrNoFastPath(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var obj, PropertyId propertyId, Var newValue, Var thisInstance, PropertyOperationFlags flags = PropertyOperation_None);
         static void PatchPutRootValueNoFastPath(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var obj, PropertyId propertyId, Var newValue, PropertyOperationFlags flags = PropertyOperation_None);
 
         template <bool IsFromFullJit, class TInlineCache> static void PatchInitValue(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, RecyclableObject* object, PropertyId propertyId, Var newValue);

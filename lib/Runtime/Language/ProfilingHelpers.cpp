@@ -937,7 +937,29 @@ namespace Js
             inlineCacheIndex,
             value,
             PropertyOperation_None,
-            scriptFunction);
+            scriptFunction,
+            instance);
+    }
+
+    void ProfilingHelpers::ProfiledStSuperFld_Jit(
+        const Var instance,
+        const PropertyId propertyId,
+        const InlineCacheIndex inlineCacheIndex,
+        const Var value,
+        void *const framePointer,
+        const Var thisInstance)
+    {
+        ScriptFunction *const scriptFunction =
+            ScriptFunction::FromVar(JavascriptCallStackLayout::FromFramePointer(framePointer)->functionObject);
+        ProfiledStFld<false>(
+            instance,
+            propertyId,
+            GetInlineCache(scriptFunction, inlineCacheIndex),
+            inlineCacheIndex,
+            value,
+            PropertyOperation_None,
+            scriptFunction,
+            thisInstance);
     }
 
     void ProfilingHelpers::ProfiledStFld_Strict_Jit(
@@ -956,7 +978,8 @@ namespace Js
             inlineCacheIndex,
             value,
             PropertyOperation_StrictMode,
-            scriptFunction);
+            scriptFunction,
+            instance);
     }
 
     void ProfilingHelpers::ProfiledStRootFld_Jit(
@@ -975,7 +998,8 @@ namespace Js
             inlineCacheIndex,
             value,
             PropertyOperation_Root,
-            scriptFunction);
+            scriptFunction,
+            instance);
     }
 
     void ProfilingHelpers::ProfiledStRootFld_Strict_Jit(
@@ -994,7 +1018,8 @@ namespace Js
             inlineCacheIndex,
             value,
             PropertyOperation_StrictModeRoot,
-            scriptFunction);
+            scriptFunction,
+            instance);
     }
 
     template<bool Root>
@@ -1005,9 +1030,11 @@ namespace Js
         const InlineCacheIndex inlineCacheIndex,
         const Var value,
         const PropertyOperationFlags flags,
-        ScriptFunction *const scriptFunction)
+        ScriptFunction *const scriptFunction,
+        const Var thisInstance)
     {
         Assert(instance);
+        Assert(thisInstance);
         Assert(propertyId != Constants::NoProperty);
         Assert(inlineCache);
 
@@ -1021,14 +1048,15 @@ namespace Js
 
         ScriptContext *const scriptContext = functionBody->GetScriptContext();
         FldInfoFlags fldInfoFlags = FldInfo_NoInfo;
-        if(Root || RecyclableObject::Is(instance))
+        if(Root || (RecyclableObject::Is(instance) && RecyclableObject::Is(thisInstance)))
         {
             RecyclableObject *const object = RecyclableObject::FromVar(instance);
+            RecyclableObject *const thisObject = RecyclableObject::FromVar(thisInstance);
             PropertyCacheOperationInfo operationInfo;
             PropertyValueInfo propertyValueInfo;
             PropertyValueInfo::SetCacheInfo(&propertyValueInfo, functionBody, inlineCache, inlineCacheIndex, true);
             if(!CacheOperators::TrySetProperty<true, true, true, true, !Root, true, false, true>(
-                    object,
+                    thisObject,
                     Root,
                     propertyId,
                     value,
@@ -1038,10 +1066,15 @@ namespace Js
                     &propertyValueInfo))
             {
                 Type *const oldType = object->GetType();
-                const auto PatchPutValue = &JavascriptOperators::PatchPutValueNoFastPath;
-                const auto PatchPutRootValue = &JavascriptOperators::PatchPutRootValueNoFastPath;
-                const auto PatchPut = Root ? PatchPutRootValue : PatchPutValue;
-                PatchPut(functionBody, inlineCache, inlineCacheIndex, object, propertyId, value, flags);
+
+                if (Root)
+                {
+                    JavascriptOperators::PatchPutRootValueNoFastPath(functionBody, inlineCache, inlineCacheIndex, object, propertyId, value, flags);
+                }
+                else
+                {
+                    JavascriptOperators::PatchPutValueWithThisPtrNoFastPath(functionBody, inlineCache, inlineCacheIndex, object, propertyId, value, thisObject, flags);
+                }
                 CacheOperators::PretendTrySetProperty<true, false>(
                     object->GetType(),
                     oldType,

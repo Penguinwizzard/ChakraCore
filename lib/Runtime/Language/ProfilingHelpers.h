@@ -43,10 +43,11 @@ namespace Js
 
     public:
         static void ProfiledStFld_Jit(const Var instance, const PropertyId propertyId, const InlineCacheIndex inlineCacheIndex, const Var value, void *const framePointer);
+        static void ProfiledStSuperFld_Jit(const Var instance, const PropertyId propertyId, const InlineCacheIndex inlineCacheIndex, const Var value, void *const framePointer, const Var thisInstance);
         static void ProfiledStFld_Strict_Jit(const Var instance, const PropertyId propertyId, const InlineCacheIndex inlineCacheIndex, const Var value, void *const framePointer);
         static void ProfiledStRootFld_Jit(const Var instance, const PropertyId propertyId, const InlineCacheIndex inlineCacheIndex, const Var value, void *const framePointer);
         static void ProfiledStRootFld_Strict_Jit(const Var instance, const PropertyId propertyId, const InlineCacheIndex inlineCacheIndex, const Var value, void *const framePointer);
-        template<bool Root> static void ProfiledStFld(const Var instance, const PropertyId propertyId, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, const Var value, const PropertyOperationFlags flags, ScriptFunction *const scriptFunction);
+        template<bool Root> static void ProfiledStFld(const Var instance, const PropertyId propertyId, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, const Var value, const PropertyOperationFlags flags, ScriptFunction *const scriptFunction, const Var thisInstance);
 
     public:
         static void ProfiledInitFld_Jit(const Var instance, const PropertyId propertyId, const InlineCacheIndex inlineCacheIndex, const Var value, void *const framePointer);

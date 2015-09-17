@@ -5601,8 +5601,15 @@ void EmitAssignment(
             Js::PropertyId propertyId = lhs->sxBin.pnode2->sxPid.PropertyIdFromNameNode();
 
             uint cacheId = funcInfo->FindOrAddInlineCacheId(lhs->sxBin.pnode1->location, propertyId, false, true);
-            byteCodeGenerator->Writer()->PatchableProperty(
-                ByteCodeGenerator::GetStFldOpCode(funcInfo, false, false, false, false), rhsLocation, lhs->sxBin.pnode1->location, cacheId);
+            if (lhs->sxBin.pnode1->nop == knopSuper)
+            {
+                byteCodeGenerator->Writer()->PatchablePropertyWithThisPtr(Js::OpCode::StSuperFld, rhsLocation, lhs->sxBin.pnode1->location, funcInfo->thisPointerRegister, cacheId);
+            }
+            else
+            {
+                byteCodeGenerator->Writer()->PatchableProperty(
+                    ByteCodeGenerator::GetStFldOpCode(funcInfo, false, false, false, false), rhsLocation, lhs->sxBin.pnode1->location, cacheId);
+            }
             break;
         }
     case knopIndex:

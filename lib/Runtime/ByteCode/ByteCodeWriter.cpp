@@ -1753,6 +1753,14 @@ StoreCommon:
                 OpCodeUtil::ConvertNonCallOpToProfiled(op);
             }
             break;
+        case OpCode::StSuperFld:
+            if (DoDynamicProfileOpcode(ProfileBasedFldFastPathPhase) ||
+                DoDynamicProfileOpcode(InlinePhase) ||
+                DoDynamicProfileOpcode(ObjTypeSpecPhase))
+            {
+                OpCodeUtil::ConvertNonCallOpToProfiled(op);
+            }
+            break;
         default:
             AssertMsg(false, "The specified OpCode is not intended for patchable super field-access");
             break;

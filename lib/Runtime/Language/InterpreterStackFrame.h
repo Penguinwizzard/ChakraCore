@@ -382,7 +382,9 @@ namespace Js
                                                 DynamicProfileInfo * dynamicProfileInfo, uint inlineCacheIndex, RecyclableObject * obj);
         
         template <class T> void OP_SetProperty(unaligned T* playout);
+        template <class T> void OP_SetSuperProperty(unaligned T* playout);
         template <class T> void OP_ProfiledSetProperty(unaligned T* playout);
+        template <class T> void OP_ProfiledSetSuperProperty(unaligned T* playout);
         template <class T> void OP_SetRootProperty(unaligned T* playout);
         template <class T> void OP_ProfiledSetRootProperty(unaligned T* playout);
         template <class T> void OP_SetPropertyStrict(unaligned T* playout);
@@ -395,8 +397,11 @@ namespace Js
         template <class T> void OP_ConsoleSetPropertyScoped(unaligned T* playout);
 
         template <class T> void DoSetProperty(unaligned T* playout, Var instance, PropertyOperationFlags flags);
+        template <class T> void DoSetSuperProperty(unaligned T* playout, Var instance, PropertyOperationFlags flags);
         template <class T> void DoSetProperty_NoFastPath(unaligned T* playout, Var instance, PropertyOperationFlags flags);
+        template <class T> void DoSetSuperProperty_NoFastPath(unaligned T* playout, Var instance, PropertyOperationFlags flags);
         template <class T, bool Root> void ProfiledSetProperty(unaligned T* playout, Var instance, PropertyOperationFlags flags);
+        template <class T, bool Root> void ProfiledSetSuperProperty(unaligned T* playout, Var instance, Var thisInstance, PropertyOperationFlags flags);
 
         template <class T> void OP_InitProperty(unaligned T* playout);
         template <class T> void OP_InitRootProperty(unaligned T* playout);

@@ -3069,7 +3069,7 @@ void
 IRBuilder::BuildElementC2(Js::OpCode newOpcode, uint32 offset, Js::RegSlot instanceSlot, Js::RegSlot value2Slot,
                                 Js::RegSlot regSlot, Js::PropertyIdIndexType propertyIdIndex)
 {
-    IR::Instr *     instr;
+    IR::Instr *     instr = nullptr;
 
     Js::FunctionBody * functionBody = this->m_func->GetJnFunction();
     Js::PropertyId  propertyId;
@@ -3113,6 +3113,27 @@ IRBuilder::BuildElementC2(Js::OpCode newOpcode, uint32 offset, Js::RegSlot insta
             this->AddInstr(instr, offset);
         }
         break;
+
+    case Js::OpCode::ProfiledStSuperFld:
+        Js::OpCodeUtil::ConvertNonCallOpToNonProfiled(newOpcode);
+        // fall-through
+    case Js::OpCode::StSuperFld:
+    {
+        propertyId = this->m_func->GetJnFunction()->GetPropertyIdFromCacheId(propertyIdIndex);
+        fieldSymOpnd = this->BuildFieldOpnd(newOpcode, instanceSlot, propertyId, (Js::PropertyIdIndexType) - 1, PropertyKindData, propertyIdIndex);
+        if (fieldSymOpnd->IsPropertySymOpnd())
+        {
+            fieldSymOpnd->AsPropertySymOpnd()->TryDisableRuntimePolymorphicCache();
+        }
+    
+        regOpnd = this->BuildSrcOpnd(regSlot);
+        value2Opnd = this->BuildSrcOpnd(value2Slot);
+
+        instr = IR::Instr::New(newOpcode, fieldSymOpnd, regOpnd, value2Opnd, m_func);
+
+        this->AddInstr(instr, offset);
+        break;
+    }
 
     default:
         AssertMsg(UNREACHED, "Unknown ElementC2 opcode");
