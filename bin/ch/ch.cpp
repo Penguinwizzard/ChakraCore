@@ -118,18 +118,113 @@ void __stdcall PrintUsage()
     ChakraRTInterface::PrintConfigFlagsUsageString();
 }
 
+HRESULT RunScript(LPCWSTR fileName, LPCWSTR fileContents, BYTE *bcBuffer, wchar_t *fullPath)
+{
+    HRESULT hr = S_OK;
+    MessageQueue * messageQueue = new MessageQueue();
+    WScriptJsrt::AddMessageQueue(messageQueue);
+    Assert(fileContents != nullptr || bcBuffer != nullptr);
+    JsErrorCode runScript;
+    if (bcBuffer != nullptr)
+    {
+        runScript = ChakraRTInterface::JsRunSerializedScript(fileContents, bcBuffer, JS_SOURCE_CONTEXT_NONE, fullPath, nullptr/*result*/);
+    }
+    else
+    {
+        runScript = ChakraRTInterface::JsRunScript(fileContents, 0/*sourceContext*/, fullPath, nullptr/*result*/);
+    }
+
+    if (runScript != JsNoError)
+    {
+        WScriptJsrt::PrintException(fileName, runScript);
+    }
+    else
+    {
+        // Repeatedly flush the message queue until it's empty.  It is necessary to loop on this
+        // because setTimeout can add scripts to execute
+        do
+        {
+            IfFailGo(messageQueue->ProcessAll());
+        } while (!messageQueue->IsEmpty());
+    }
+Error:
+    if (messageQueue != nullptr)
+    {
+        delete messageQueue;
+    }
+    return hr;
+}
+
+HRESULT CreateAndRunSerializedScript(LPCWSTR fileName, LPCWSTR fileContents, wchar_t *fullPath)
+{
+    HRESULT hr = S_OK;
+    JsRuntimeHandle runtime = JS_INVALID_RUNTIME_HANDLE;
+    JsContextRef context = JS_INVALID_REFERENCE, current = JS_INVALID_REFERENCE;
+    BYTE *bcBuffer = nullptr;
+    DWORD bcBufferSize = 0;
+
+    IfJsErrorFailLog(ChakraRTInterface::JsSerializeScript(fileContents, bcBuffer, &bcBufferSize));
+    // Above call will return the size of the buffer only, once succeed we need to allocate memory of that much and call it again.
+    if (bcBufferSize == 0)
+    {
+        AssertMsg(false, "bufferSize should not be zero");
+        IfFailGo(E_FAIL);
+    }
+    bcBuffer = new BYTE[bcBufferSize];
+    DWORD newBcBufferSize = bcBufferSize;
+    IfJsErrorFailLog(ChakraRTInterface::JsSerializeScript(fileContents, bcBuffer, &newBcBufferSize));
+    Assert(bcBufferSize == newBcBufferSize);
+
+    // Bytecode buffer is created in one runtime and will be executed on different runtime.
+
+    IfJsErrorFailLog(ChakraRTInterface::JsCreateRuntime(jsrtAttributes, nullptr, &runtime));
+
+    IfJsErrorFailLog(ChakraRTInterface::JsCreateContext(runtime, &context));
+    IfJsErrorFailLog(ChakraRTInterface::JsGetCurrentContext(&current));
+    IfJsErrorFailLog(ChakraRTInterface::JsSetCurrentContext(context));
+
+    // Initialized the WScript object on the new context
+    if (!WScriptJsrt::Initialize())
+    {
+        IfFailGo(E_FAIL);
+    }
+
+    IfFailGo(RunScript(fileName, fileContents, bcBuffer, fullPath));
+
+Error:
+    if (bcBuffer != nullptr)
+    {
+        delete[] bcBuffer;
+    }
+
+    if (current != JS_INVALID_REFERENCE)
+    {
+        ChakraRTInterface::JsSetCurrentContext(current);
+    }
+
+    if (runtime != JS_INVALID_RUNTIME_HANDLE)
+    {
+        ChakraRTInterface::JsDisposeRuntime(runtime);
+    }
+    return hr;
+}
+
 HRESULT ExecuteTest(LPCWSTR fileName)
 {
     HRESULT hr = S_OK;
     LPCWSTR fileContents = nullptr;
     JsRuntimeHandle runtime = JS_INVALID_RUNTIME_HANDLE;
-    MessageQueue * messageQueue = nullptr;
-    hr = Helpers::LoadScriptFromFile(fileName, fileContents);
+    bool isUtf8 = false;
+    LPCOLESTR contentsRaw = nullptr;
+    UINT lengthBytes = 0;
+    hr = Helpers::LoadScriptFromFile(fileName, fileContents, &isUtf8, &contentsRaw, &lengthBytes);
+    contentsRaw; lengthBytes; // Unused for now.
+
     IfFailGo(hr);
 
     IfJsErrorFailLog(ChakraRTInterface::JsCreateRuntime(jsrtAttributes, nullptr, &runtime));
 
-    JsValueRef context = JS_INVALID_REFERENCE;
+    JsContextRef context = JS_INVALID_REFERENCE;
     IfJsErrorFailLog(ChakraRTInterface::JsCreateContext(runtime, &context));
     IfJsErrorFailLog(ChakraRTInterface::JsSetCurrentContext(context));
 
@@ -137,9 +232,6 @@ HRESULT ExecuteTest(LPCWSTR fileName)
     {
         IfFailGo(E_FAIL);
     }
-
-    messageQueue = new MessageQueue();
-    WScriptJsrt::AddMessageQueue(messageQueue);
 
     wchar_t fullPath[_MAX_PATH];
 
@@ -154,28 +246,47 @@ HRESULT ExecuteTest(LPCWSTR fileName)
     {
         fullPath[i] = towlower(fullPath[i]);
     }
-    JsErrorCode runScript = ChakraRTInterface::JsRunScript(fileContents, 0/*sourceContext*/, fullPath, nullptr/*result*/);
-    if (runScript != JsNoError)
+
+    if (HostConfigFlags::flags.GenerateLibraryByteCodeHeaderIsEnabled)
     {
-        WScriptJsrt::PrintException(fileName, runScript);
+        if (isUtf8)
+        {
+            if (HostConfigFlags::flags.GenerateLibraryByteCodeHeader != nullptr && *HostConfigFlags::flags.GenerateLibraryByteCodeHeader != L'\0')
+            {
+                Assert(false);
+                // TODO : functionality will be added in next checkin.
+            }
+            else
+            {
+                fwprintf(stderr, L"FATAL ERROR: -GenerateLibraryByteCodeHeader must provide the file name eg. -GenerateLibraryByteCodeHeader:<bytecode file name>, exiting\n");
+                IfFailGo(E_FAIL);
+            }
+        }
+        else
+        {
+            fwprintf(stderr, L"FATAL ERROR: GenerateLibraryByteCodeHeader flag can only be used on UTF8 file, exiting\n");
+            IfFailGo(E_FAIL);
+        }
+    }
+    else if (HostConfigFlags::flags.SerializedIsEnabled)
+    {
+        if (isUtf8)
+        {
+            CreateAndRunSerializedScript(fileName, fileContents, fullPath);
+        }
+        else
+        {
+            fwprintf(stderr, L"FATAL ERROR: Serialized flag can only be used on UTF8 file, exiting\n");
+            IfFailGo(E_FAIL);
+        }
     }
     else
     {
-        // Repeatedly flush the message queue until it's empty.  It is necessary to loop on this
-        // because setTimeout can add scripts to execute
-        do
-        {
-            IfFailGo(messageQueue->ProcessAll());
-        } while (!messageQueue->IsEmpty());
+        IfFailGo(RunScript(fileName, fileContents, nullptr, fullPath));
     }
 
 Error:
     ChakraRTInterface::JsSetCurrentContext(nullptr);
-
-    if (messageQueue != nullptr)
-    {
-        delete messageQueue;
-    }
 
     if (runtime != JS_INVALID_RUNTIME_HANDLE)
     {
@@ -233,7 +344,7 @@ int _cdecl wmain(int argc, __in_ecount(argc) LPWSTR argv[])
         return EXIT_FAILURE;
     }
 
-    Helpers::HandleArgsFlag(argc, argv);
+    HostConfigFlags::HandleArgsFlag(argc, argv);
 
     CComBSTR fileName;
     

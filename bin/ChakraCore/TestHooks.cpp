@@ -6,9 +6,9 @@
 
 #ifdef ENABLE_TEST_HOOKS
 
-HRESULT __stdcall SetConfigFlags(__in int argc, __in_ecount(argc) LPWSTR argv[])
+HRESULT __stdcall SetConfigFlags(__in int argc, __in_ecount(argc) LPWSTR argv[], ICustomConfigFlags* customConfigFlags)
 {
-    CmdLineArgsParser parser;
+    CmdLineArgsParser parser(customConfigFlags);
     if (parser.Parse(argc, argv) != 0)
     {
         return E_FAIL;

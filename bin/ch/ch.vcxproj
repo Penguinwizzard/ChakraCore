@@ -42,6 +42,8 @@
   <ItemGroup>
     <ClInclude Include="chakrartinterface.h" />
     <ClInclude Include="Helpers.h" />
+    <ClInclude Include="HostConfigFlags.h" />
+    <ClInclude Include="HostConfigFlagsList.h" />
     <ClInclude Include="MessageQueue.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="WScriptJsrt.h" />
@@ -50,11 +52,12 @@
     <ClCompile Include="ch.cpp" />
     <ClCompile Include="chakrartinterface.cpp" />
     <ClCompile Include="Helpers.cpp" />
+    <ClCompile Include="HostConfigFlags.cpp" />
     <ClCompile Include="WScriptJsrt.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ch.def" />
   </ItemGroup>
-  <Import Project="$(BuildConfigPropsPath)Chakra.Build.targets" Condition="exists('$(BuildConfigPropsPath)Chakra.Build.targets')"/>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />  
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.targets" Condition="exists('$(BuildConfigPropsPath)Chakra.Build.targets')" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

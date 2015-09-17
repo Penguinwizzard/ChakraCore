@@ -6,10 +6,11 @@
 #ifdef ENABLE_TEST_HOOKS
 
 HRESULT OnChakraCoreLoaded();
+interface ICustomConfigFlags;
 
 struct TestHooks
 {
-    typedef HRESULT(__stdcall *SetConfigFlagsPtr)(int argc, LPWSTR argv[]);
+    typedef HRESULT(__stdcall *SetConfigFlagsPtr)(int argc, LPWSTR argv[], ICustomConfigFlags* customConfigFlags);
     typedef HRESULT(__stdcall *PrintConfigFlagsUsageStringPtr)(void);
     typedef HRESULT(__stdcall *SetAssertToConsoleFlagPtr)(bool flag);
     typedef HRESULT(__stdcall *SetEnableCheckMemoryLeakOutputPtr)(bool flag);

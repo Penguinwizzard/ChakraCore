@@ -75,6 +75,7 @@ typedef void * Var;
 #include "TestHooks.h"
 #include "chakrartinterface.h"
 #include "Helpers.h"
+#include "HostConfigFlags.h"
 #include "MessageQueue.h"
 #include "WScriptJsrt.h"
 

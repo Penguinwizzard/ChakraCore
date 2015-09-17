@@ -8,15 +8,15 @@ MessageQueue* WScriptJsrt::s_messageQueue = nullptr;
 
 bool WScriptJsrt::CreateArgumentsObject(JsValueRef *argsObject)
 {
-    LPWSTR *argv = Helpers::argsVal;
+    LPWSTR *argv = HostConfigFlags::argsVal;
     JsValueRef retArr;
 
     Assert(argsObject);
     *argsObject = nullptr;
 
-    IfJsrtErrorFail(ChakraRTInterface::JsCreateArray(Helpers::argsCount, &retArr), false);
+    IfJsrtErrorFail(ChakraRTInterface::JsCreateArray(HostConfigFlags::argsCount, &retArr), false);
 
-    for (int i = 0; i < Helpers::argsCount; i++)
+    for (int i = 0; i < HostConfigFlags::argsCount; i++)
     {
         JsValueRef value;
         JsValueRef index;
