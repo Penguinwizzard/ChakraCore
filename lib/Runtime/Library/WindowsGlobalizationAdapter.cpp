@@ -259,11 +259,6 @@ namespace Js
         return this->EnsureInitialized(this->GetWindowsGlobalizationLibrary(scriptContext), scriptContext->GetConfig()->IsES6UnicodeExtensionsEnabled());
     }
 
-    HRESULT WindowsGlobalizationAdapter::EnsureInitialized(ThreadContext *threadContext, bool isES6Mode)
-    {
-        return this->EnsureInitialized(this->GetWindowsGlobalizationLibrary(threadContext), isES6Mode);
-    }
-    
     HRESULT WindowsGlobalizationAdapter::EnsureInitialized(DelayLoadWindowsGlobalization *library, bool isES6Mode)
     {
         HRESULT hr = S_OK;
@@ -285,12 +280,15 @@ namespace Js
         IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_NumberFormatting_DecimalFormatter, &decimalFormatterFactory));
         IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_NumberFormatting_PercentFormatter, &percentFormatterFactory));
         IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_DateTimeFormatting_DateTimeFormatter, &dateTimeFormatterFactory));
+        IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_Calendar, &calendarFactory));
         IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_NumberFormatting_SignificantDigitsNumberRounder, &significantDigitsRounderActivationFactory));
         IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_NumberFormatting_IncrementNumberRounder, &incrementNumberRounderActivationFactory));
         if(isES6Mode)
         {
             IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Data_Text_UnicodeCharacters, &unicodeStatics));
         }
+        IfFailedReturn(this->CreateTimeZoneOnCalendar(library, &timeZoneCalendar));
+        IfFailedReturn(this->CreateTimeZoneOnCalendar(library, &defaultTimeZoneCalendar));
 
         failedToInitialize = false;
         initialized = true;
@@ -318,6 +316,45 @@ namespace Js
         IfFailThrowHr(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(languageTag, wcslen(languageTag), &hStringHdr, &hString));
         IfFailThrowHr(this->languageStatics->IsWellFormed(hString, &retVal));
         return retVal;
+    }
+
+
+    boolean WindowsGlobalizationAdapter::ValidateAndCanonicalizeTimeZone(_In_ ScriptContext* scriptContext, _In_z_ PCWSTR timeZoneId, HSTRING *result)
+    {
+        HRESULT hr;
+        HSTRING timeZone;
+        HSTRING_HEADER timeZoneHeader;
+
+        // Construct HSTRING of timeZoneId passed
+        IfFailThrowHr(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(timeZoneId, wcslen(timeZoneId), &timeZoneHeader, &timeZone));
+
+        // ChangeTimeZone should fail if this is not a valid time zone
+        hr = timeZoneCalendar->ChangeTimeZone(timeZone);
+        if (hr != S_OK)
+        {
+            return false;
+        }
+        // Retrieve canonicalize timeZone name
+        IfFailThrowHr(timeZoneCalendar->GetTimeZone(result));
+        return true;
+    }
+
+    void WindowsGlobalizationAdapter::ClearTimeZoneCalendars()
+    {
+        if (this->timeZoneCalendar)
+        {
+            this->timeZoneCalendar.Detach()->Release();
+        }
+
+        if (this->defaultTimeZoneCalendar)
+        {
+            this->defaultTimeZoneCalendar.Detach()->Release();
+        }
+    }
+    void WindowsGlobalizationAdapter::GetDefaultTimeZoneId(_In_ ScriptContext* scriptContext, HSTRING *result)
+    {
+        HRESULT hr = S_OK;
+        IfFailThrowHr(defaultTimeZoneCalendar->GetTimeZone(result));
     }
 
     HRESULT WindowsGlobalizationAdapter::NormalizeLanguageTag(_In_ ScriptContext* scriptContext, _In_z_ PCWSTR languageTag, HSTRING *result)
@@ -453,6 +490,28 @@ namespace Js
             IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(clock, wcslen(clock), &clockStringHeader, &clockString));
             IfFailedReturn(this->dateTimeFormatterFactory->CreateDateTimeFormatterContext(fsHString, languages.Get(), geoString, calString, clockString, result));
         }
+        return hr;
+    }
+
+    HRESULT WindowsGlobalizationAdapter::CreateTimeZoneOnCalendar(_In_ DelayLoadWindowsGlobalization *library, __out ::ITimeZoneOnCalendar**  result)
+    {
+        AutoCOMPtr<::ICalendar> calendar;
+
+        HRESULT hr = S_OK;
+
+        // initialize hard-coded default languages
+        AutoArrayPtr<HSTRING> arr(HeapNewArray(HSTRING, 1), 1);
+        AutoArrayPtr<HSTRING_HEADER> headers(HeapNewArray(HSTRING_HEADER, 1), 1);
+        IfFailedReturn(library->WindowsCreateStringReference(L"en-US", wcslen(L"en-US"), (headers), (arr)));
+        Microsoft::WRL::ComPtr<IIterable<HSTRING>> defaultLanguages;
+        IfFailedReturn(Microsoft::WRL::MakeAndInitialize<HSTRINGIterable>(&defaultLanguages, arr, 1));
+
+        // Create calendar object
+        IfFailedReturn(this->calendarFactory->CreateCalendarDefaultCalendarAndClock(defaultLanguages.Get(), &calendar));
+
+        // Get ITimeZoneOnCalendar part of calendar object
+        IfFailedReturn(calendar->QueryInterface(__uuidof(::ITimeZoneOnCalendar), reinterpret_cast<void**>(result)));
+
         return hr;
     }
 
