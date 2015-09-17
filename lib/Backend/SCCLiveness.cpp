@@ -212,6 +212,29 @@ SCCLiveness::Build()
                 this->curLoop = loop;
                 loop->regAlloc.loopStart = instrNum;
                 loop->regAlloc.loopEnd = lastBranchNum;
+
+                // Tail duplication can result in cases in which an outer loop lexically ends before the inner loop.
+                // The register allocator could then thrash in the inner loop registers used for a live-on-back-edge 
+                // sym on the outer loop. To prevent this, we need to mark the end of the outer loop as the end of the
+                // inner loop and update the lifetimes already extended in the outer loop in keeping with this change.
+                for (Loop* parentLoop = loop->parent; parentLoop != nullptr; parentLoop = parentLoop->parent)
+                {
+                    if (parentLoop->regAlloc.loopEnd < loop->regAlloc.loopEnd)
+                    {
+                        // We need to go over extended lifetimes in outer loops to update the lifetimes of symbols that might
+                        // have had their lifetime extended to the outer loop end (which is before the current loop end) and 
+                        // may not have any uses in the current loop to extend their lifetimes to the current loop end.
+                        FOREACH_SLIST_ENTRY(Lifetime *, lifetime, parentLoop->regAlloc.extendedLifetime)
+                        {
+                            if (lifetime->end == parentLoop->regAlloc.loopEnd)
+                            {
+                                lifetime->end = loop->regAlloc.loopEnd;
+                            }
+                        }
+                        NEXT_SLIST_ENTRY;
+                        parentLoop->regAlloc.loopEnd = loop->regAlloc.loopEnd;
+                    }
+                }
                 loop->regAlloc.extendedLifetime = JitAnew(this->tempAlloc, SList<Lifetime *>, this->tempAlloc);
                 loop->regAlloc.hasNonOpHelperCall = false;
                 loop->regAlloc.hasCall = false;
