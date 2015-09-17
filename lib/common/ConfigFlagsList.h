@@ -382,6 +382,7 @@ PHASE(All)
 #define DEFAULT_CONFIG_ForceES5Array        (false)
 #define DEFAULT_CONFIG_ForceAsmJsLinkFail   (false)
 #define DEFAULT_CONFIG_DumpCommentsFromReferencedFiles (false)
+#define DEFAULT_CONFIG_ExtendedErrorStackForTestHost (false)
 
 
 //Following determines inline thresholds
@@ -1233,6 +1234,7 @@ FLAGR (Boolean, WERExceptionSupport   , "WER feature for extended exception supp
 #ifdef ENABLE_PROJECTION
 FLAGR (Boolean, WinRTConstructorAllowed, "Whether WinRT contructors is allowed in WebView host type. Constructor is always allowed in other host type ", false)
 #endif
+FLAGNR(Boolean, ExtendedErrorStackForTestHost, "Enable passing extended error stack string to test host.", DEFAULT_CONFIG_ExtendedErrorStackForTestHost)
 FLAGNR(Boolean, errorStackTrace       , "error.StackTrace feature. Remove when feature complete", DEFAULT_CONFIG_errorStackTrace)
 FLAGNR(Boolean, DoHeapEnumOnEngineShutdown, "Perform a heap enumeration whenever shut a script engine down", false)
 #ifdef HEAP_ENUMERATION_VALIDATION

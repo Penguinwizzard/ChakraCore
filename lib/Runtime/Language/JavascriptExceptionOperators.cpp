@@ -1134,8 +1134,23 @@ namespace Js
 
                     functionBody->GetLineCharOffset(currentFrame.GetByteCodeOffset(), &lineNumber, &characterPosition);
                     pUrl = functionBody->GetSourceName();
-
-                    AppendExternalFrameToStackTrace(stringBuilder, functionBody->GetExternalDisplayName(), pUrl ? pUrl : L"", lineNumber + 1, characterPosition + 1);
+                    LPCWSTR functionName = nullptr;
+                    if (CONFIG_FLAG(ExtendedErrorStackForTestHost))
+                    {
+                        BEGIN_LEAVE_SCRIPT_INTERNAL(scriptContext)
+                        {
+                            if (currentFrame.GetFunctionNameWithArguments(&functionName) != S_OK)
+                            {
+                                functionName = functionBody->GetExternalDisplayName();
+                            }
+                        }
+                        END_LEAVE_SCRIPT_INTERNAL(scriptContext)
+                    }
+                    else
+                    {
+                        functionName = functionBody->GetExternalDisplayName();
+                    }
+                    AppendExternalFrameToStackTrace(stringBuilder, functionName, pUrl ? pUrl : L"", lineNumber + 1, characterPosition + 1);
                 }
             }
 
@@ -1203,11 +1218,36 @@ namespace Js
             const errno_t err = _ultow_s(value, buffer, charCapacity, 10);
             Assert(err == 0);
         };
-
-        bs->AppendChars(L"\n   at ");
+        if (CONFIG_FLAG(ExtendedErrorStackForTestHost))
+        {
+            bs->AppendChars(L"\n\tat ");
+        }
+        else
+        {
+            bs->AppendChars(L"\n   at ");
+        }
         bs->AppendChars(functionName, wcslen(functionName));
         bs->AppendChars(L" (");
-        bs->AppendChars(fileName, wcslen(fileName));
+
+        if (CONFIG_FLAG(ExtendedErrorStackForTestHost) && fileName != L'\0')
+        {
+            wchar_t shortfilename[_MAX_FNAME];
+            wchar_t ext[_MAX_EXT];
+            errno_t err = _wsplitpath_s(fileName, NULL, 0, NULL, 0, shortfilename, _MAX_FNAME, ext, _MAX_EXT);
+            if (err != 0)
+            {
+                bs->AppendChars(fileName, wcslen(fileName));
+            }
+            else
+            {
+                bs->AppendChars(shortfilename, wcslen(shortfilename));
+                bs->AppendChars(ext, wcslen(ext));
+            }
+        }
+        else
+        {
+            bs->AppendChars(fileName, wcslen(fileName));
+        }
         bs->AppendChars(L':');
         bs->AppendChars(lineNumber, maxULongStringLength, ConvertULongToString);
         bs->AppendChars(L':');
