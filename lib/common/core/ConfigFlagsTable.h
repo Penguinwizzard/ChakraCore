@@ -490,13 +490,6 @@ namespace Js
         // a seperate config from the global one
         Configuration();
 
-        // TODO (goyakin): Remove once the issue with the RegExp prototype being nullptr is resolved (bug #4099044)
-        //
-        // Config flags currently change during JavascriptLibrary initialization and this causes the RegExp
-        // prototype to become nullptr. This variable is here temporarily while we're determining what's changing
-        // the config flags.
-        bool libraryIsInitializing;
-
     private:
         GUID hybridDebuggingGuid; // Set to HybridDebuggingGuid when hybrid debugging - set by the out of process debugging component - jscript9diag. 
                                   // Otherwise, remains un-itialized

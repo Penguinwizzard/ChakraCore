@@ -108,7 +108,7 @@ RT_ERROR_MSG(JSERR_NeedIndxObj, 5004, "'%s' is not an indexable object", "Cannot
 RT_ERROR_MSG(JSERR_NeedString, 5005, "'%s' is not a string", "String expected", kjstTypeError, 0)
 RT_ERROR_MSG(JSERR_NeedDate, 5006, "'%s' is not a date object", "Date object expected", kjstTypeError, 0)
 RT_ERROR_MSG(JSERR_NeedObject, 5007, "'%s' is null or not an object", "Object expected", kjstTypeError, 0)
-RT_ERROR_MSG(JSERR_CantAssignTo, 5008, "Cannot assign to '%s'", "Invalid left-hand side in assignment", kjstReferenceError, 0)
+RT_ERROR_MSG(JSERR_CantAssignTo, 5008, "", "Invalid left-hand side in assignment", kjstReferenceError, 0)
 RT_ERROR_MSG(JSERR_UndefVariable, 5009, "'%s' is undefined", "Undefined identifier", kjstTypeError, 0)
 RT_ERROR_MSG(JSERR_NeedBoolean, 5010, "'%s' is not a boolean", "Boolean expected", kjstTypeError, 0)
 
@@ -150,7 +150,7 @@ RT_ERROR_MSG(JSERR_CyclicProtoValue, 5040, "", "Cyclic __proto__ value", kjstErr
 
 RT_ERROR_MSG(JSERR_CantDeleteExpr, 5041, "Calling delete on '%s' is not allowed in strict mode", "Object member not configurable", kjstTypeError, 0) // string 4
 RT_ERROR_MSG(JSERR_RefErrorUndefVariable, 5042, "", "Variable undefined in strict mode",  kjstReferenceError, 0) // string 10
-RT_ERROR_MSG(JSERR_AccessCaller, 5043, "", "Accessing the 'caller' property of a function or arguments object is not allowed in strict mode", kjstTypeError, 0) // string 2
+RT_ERROR_MSG(JSERR_AccessCallerRestricted, 5043, "", "Accessing the 'caller' property is restricted in this context", kjstTypeError, 0)
 RT_ERROR_MSG(JSERR_AccessCallee, 5044, "", "Accessing the 'callee' property of an arguments object is not allowed in strict mode", kjstTypeError, 0) // string 2
 RT_ERROR_MSG(JSERR_CantAssignToReadOnly, 5045, "", "Assignment to read-only properties is not allowed in strict mode", kjstTypeError, 0) // string 5
 RT_ERROR_MSG(JSERR_NonExtensibleObject, 5046, "", "Cannot create property for a non-extensible object", kjstTypeError, 0) // string 6
@@ -211,7 +211,7 @@ RT_ERROR_MSG(JSERR_InvalidPropertySiganture, 5092, "The property '%s' has an inv
 RT_ERROR_MSG(JSERR_InvalidRTCPropertyValueIn, 5093, "The runtimeclass %s that has Windows.Foundation.IPropertyValue as default interface is not supported as input parameter type", "invalid input parameter type", kjstTypeError, 0)
 RT_ERROR_MSG(JSERR_RTCInvalidRTCPropertyValueOut, 5094, "The object with interface Windows.Foundation.IPropertyValue that has runtimeclass name %s is not supported as out parameter", "invalid ouput parameter", kjstTypeError, 0)
 
-RT_ERROR_MSG(JSERR_AccessArguments, 5095, "", "Accessing the 'arguments' property of a function is not allowed in strict mode", kjstTypeError, 0)
+RT_ERROR_MSG(JSERR_AccessArgumentsRestricted, 5095, "", "Accessing the 'arguments' property is restricted in this context", kjstTypeError, 0)
 
 RT_ERROR_MSG(JSERR_This_NeedInspectableObject, 5096, "%s: 'this' is not an Inspectable Object", "Inspectable Object expected", kjstTypeError, JSERR_NeedObject) // {Locked="\'this\'"}
 

@@ -61,6 +61,7 @@ namespace Js
             static FunctionInfo Call;
             static FunctionInfo ToString;
             static FunctionInfo ToMethod;
+            static FunctionInfo SymbolHasInstance;
         };
 
         static const int numberLinesPrependedToAnonymousFunction = 1;
@@ -75,6 +76,7 @@ namespace Js
         static Var EntryToMethod(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryCall(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryToString(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntrySymbolHasInstance(RecyclableObject* function, CallInfo callInfo, ...);
 
         static bool Is(Var aValue);
         static JavascriptFunction* FromVar(Var aValue);
@@ -145,9 +147,10 @@ namespace Js
         virtual Var EnsureSourceString();
         virtual BOOL IsExternalFunction() { return FALSE; }
         virtual BOOL IsWinRTFunction() { return FALSE; }
-        BOOL IsStrictMode();
+        BOOL IsStrictMode() const;
         BOOL IsLambda() const;
         virtual inline BOOL IsConstructor() const;
+        bool HasRestrictedProperties() const;
 
         ConstructorCache* GetConstructorCache() { Assert(this->constructorCache != nullptr); return this->constructorCache; }
         ConstructorCache* EnsureValidConstructorCache();
@@ -209,12 +212,13 @@ namespace Js
             bool isLoad : 1;
             bool isFloat32 : 1;
             bool isFloat64 : 1;
+            bool isSimd : 1;
             bool isInvalidInstr : 1;
             BYTE bufferReg = 0;
             BYTE dstReg = 0;
             uint instrSizeInByte = 0;
             uint64 bufferValue = 0;
-            InstructionData() :isLoad(0), isFloat32(0), isFloat64(0), isInvalidInstr(0){}
+            InstructionData() :isLoad(0), isFloat32(0), isFloat64(0), isSimd(0), isInvalidInstr(0){}
         };
         struct RexByteValue
         {
@@ -227,14 +231,6 @@ namespace Js
             RexByteValue() :isR(0), isX(0), isW(0), isB(0), rexValue(0){}
         };
         static InstructionData CheckValidInstr(BYTE* &pc, PEXCEPTION_POINTERS exceptionInfo, FunctionBody* funcBody);
-    };
-    class JavascriptFunctionSpecialProperties
-    {
-    public:
-        inline static bool IsSpecialProperty(PropertyId id)
-        {
-            return id == PropertyIds::caller || id == PropertyIds::arguments;
-        }
     };
 
     //

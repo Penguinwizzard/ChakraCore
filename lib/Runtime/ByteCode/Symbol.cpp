@@ -90,7 +90,7 @@ bool Symbol::IsInSlot(FuncInfo *funcInfo, bool ensureSlotAlloc)
 
 bool Symbol::GetIsCommittedToSlot() const
 {
-    return isCommittedToSlot || this->scope->GetIsObject();
+    return isCommittedToSlot || this->scope->GetFunc()->GetCallsEval() || this->scope->GetFunc()->GetChildCallsEval();
 }
 
 Js::PropertyId Symbol::EnsureScopeSlot(FuncInfo *funcInfo)

@@ -215,6 +215,7 @@ namespace Js
         bool IsES6UnscopablesEnabled()          const { return CONFIG_FLAG_RELEASE(ES6Unscopables); }
         bool IsES6WeakSetEnabled()              const { return CONFIG_FLAG_RELEASE(ES6WeakSet); }
         bool IsES6RegExStickyEnabled()          const { return CONFIG_FLAG_RELEASE(ES6RegExSticky); }
+        bool IsES6HasInstanceEnabled()        const { return CONFIG_FLAG_RELEASE(ES6HasInstance); }
         bool SkipSplitOnNoResult()              const { return CONFIG_FLAG_RELEASE(SkipSplitOnNoResult); }
 #ifdef ENABLE_PROJECTION
         bool AreWinRTDelegatesInterfaces()      const { return CONFIG_FLAG(WinRTDelegateInterfaces); }

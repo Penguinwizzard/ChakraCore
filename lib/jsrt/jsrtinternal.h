@@ -108,14 +108,7 @@ JsErrorCode GlobalAPIWrapper(Fn fn)
             errCode != JsErrorScriptException &&
             errCode != JsErrorScriptTerminated);
     }
-    catch (Js::OutOfMemoryException)
-    {
-        return JsErrorOutOfMemory;
-    } 
-    catch (Js::StackOverflowException)
-    {
-        return JsErrorOutOfMemory;
-    }
+    CATCH_STATIC_JAVASCRIPT_EXCEPTION_OBJECT
 
     CATCH_OTHER_EXCEPTIONS
 
@@ -157,7 +150,11 @@ JsErrorCode ContextAPIWrapper(Fn fn)
             errCode != JsErrorScriptException &&
             errCode != JsErrorScriptTerminated);
     }
-    CATCH_JAVASCRIPT_EXCEPTION_OBJECT(scriptContext->GetThreadContext())
+    catch (Js::JavascriptExceptionObject *  exceptionObject)
+    {
+        scriptContext->GetThreadContext()->SetRecordedException(exceptionObject);
+        return JsErrorScriptException;
+    }
     catch (Js::ScriptAbortException)
     {
         Assert(scriptContext->GetThreadContext()->GetRecordedException() == nullptr);
@@ -206,7 +203,14 @@ JsErrorCode ContextAPINoScriptWrapper(Fn fn, bool allowInObjectBeforeCollectCall
             errCode != JsErrorScriptException &&
             errCode != JsErrorScriptTerminated);
     }
-    CATCH_JAVASCRIPT_EXCEPTION_OBJECT(scriptContext->GetThreadContext())
+    CATCH_STATIC_JAVASCRIPT_EXCEPTION_OBJECT
+
+    catch (Js::JavascriptExceptionObject *  exceptionObject)
+    {
+        AssertMsg(false, "Should never get JavascriptExceptionObject for ContextAPINoScriptWrapper.");
+        scriptContext->GetThreadContext()->SetRecordedException(exceptionObject);
+        return JsErrorScriptException;
+    }
 
     catch (Js::ScriptAbortException)
     {
