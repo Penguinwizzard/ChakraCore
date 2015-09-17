@@ -2,7 +2,7 @@ function showProperty(x, y)
 {
     var value = y[x];
     if (x === "stack") {
-        value = value && value.replace(/\(.+unittest.Error./ig, "(");
+        value = value && value.replace(/\(.+\\test.Error./ig, "(");
     }
     WScript.Echo("    " + x + "\t  isOwn = " + y.hasOwnProperty(x) + "\t value = " + value);
 }

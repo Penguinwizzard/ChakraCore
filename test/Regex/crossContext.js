@@ -1,4 +1,4 @@
-WScript.LoadScriptFile("..\\..\\core\\test\\UnitTestFramework\\UnitTestFramework.js");
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 var x = WScript.LoadScriptFile("crossContext_remoteContext.js", "samethread");
 
 var tests = {

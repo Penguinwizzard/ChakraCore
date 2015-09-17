@@ -1,7 +1,7 @@
 // ES6 Subclassable async tests -- verifies subclass async behaviors
 
 if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in jc/jshost
-    this.WScript.LoadScriptFile("..\\..\\core\\test\\UnitTestFramework\\UnitTestFramework.js");
+    this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 }
 
 var tests = [
