@@ -448,7 +448,6 @@ namespace UnifiedRegex
         return nullptr;
     }
 
-    __declspec(guard(ignore))
     CharSetNode* CharSetInner::Set(ArenaAllocator* allocator, uint level, uint l, uint h)
     {
         Assert(level > 0);
