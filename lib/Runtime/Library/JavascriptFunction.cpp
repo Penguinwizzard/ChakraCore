@@ -767,8 +767,18 @@ namespace Js
         // Create the empty object if necessary:
         // - Built-in constructor functions will return a new object of a specific type, so a new empty object does not need to
         //   be created
+        // - If the newTarget is specified and the function is base kind then the this object will be already created. So we can
+        //   just use it instead of creating a new one.
         // - For user-defined constructor functions, an empty object is created with the function's prototype
-        Var resultObject = JavascriptOperators::NewScObjectNoCtor(v, scriptContext);
+        Var resultObject = nullptr;
+        if (overridingNewTarget != nullptr && args.Info.Count > 0)
+        {
+            resultObject = args.Values[0];
+        }
+        else
+        {
+            resultObject = JavascriptOperators::NewScObjectNoCtor(v, scriptContext);
+        }
 
         // JavascriptOperators::NewScObject should have thrown if 'v' is not a constructor
         RecyclableObject* functionObj = RecyclableObject::FromVar(v);

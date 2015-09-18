@@ -1117,6 +1117,11 @@ CommonNumber:
         return result;
     }
 
+    BOOL JavascriptOperators::GetOwnPropertyDescriptor(RecyclableObject* obj, JavascriptString* propertyKey, ScriptContext* scriptContext, PropertyDescriptor* propertyDescriptor)
+    {
+        return JavascriptOperators::GetOwnPropertyDescriptor(obj, JavascriptOperators::GetPropertyId(propertyKey, scriptContext), scriptContext, propertyDescriptor);
+    }
+
     // ES5's [[GetOwnProperty]].
     // Return value:
     //   FALSE means "undefined" PD.
@@ -2080,9 +2085,20 @@ CommonNumber:
                 return FALSE;
             }
 
-            PropertyValueInfo info;
-            // in 9.1.9, step 5, we should return false if receiver is not object, and that will happen in default RecyclableObject operation anyhow.
             RecyclableObject* receiverObject = RecyclableObject::FromVar(receiver);
+            if (receiver != object)
+            {
+                // If the receiver object has the property and it is an accessor then return false
+                PropertyDescriptor existingDesc;
+                if (JavascriptOperators::GetOwnPropertyDescriptor(receiverObject, propertyKey, requestContext, &existingDesc)
+                    && existingDesc.IsAccessorDescriptor())
+                {
+                    return FALSE;
+                }
+            }
+
+            // in 9.1.9, step 5, we should return false if receiver is not object, and that will happen in default RecyclableObject operation anyhow.
+            PropertyValueInfo info;
             if (receiverObject->SetProperty(propertyKey, newValue, propertyOperationFlags, &info))
             {
                 if (propertyString != NULL)
@@ -5640,6 +5656,10 @@ CommonNumber:
 #if DBG_DUMP
             TraceUseConstructorCache(constructorCache, constructor, true);
 #endif
+            if (isBaseClassConstructorNewScObject)
+            {
+                return JavascriptOperators::CreateFromConstructor(function, requestContext);
+            }
 
             return nullptr;
         }
@@ -9970,6 +9990,12 @@ CommonNumber:
         }
 
         return false;
+    }
+
+    RecyclableObject* JavascriptOperators::CreateFromConstructor(RecyclableObject* constructor, ScriptContext* scriptContext)
+    {
+        // Create a regular object and set the internal proto from the constructor
+        return JavascriptOperators::OrdinaryCreateFromConstructor(constructor, scriptContext->GetLibrary()->CreateObject(), nullptr, scriptContext);
     }
 
     RecyclableObject* JavascriptOperators::OrdinaryCreateFromConstructor(RecyclableObject* constructor, RecyclableObject* obj, DynamicObject* intrinsicProto, ScriptContext* scriptContext)

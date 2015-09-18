@@ -160,6 +160,7 @@ namespace Js
         static Var  GetOwnEnumerablePropertyNamesSymbols(Var instance, ScriptContext *scriptContext);
 
         static BOOL GetOwnPropertyDescriptor(RecyclableObject* obj, PropertyId propertyId, ScriptContext* scriptContext, PropertyDescriptor* propertyDescriptor);
+        static BOOL GetOwnPropertyDescriptor(RecyclableObject* obj, JavascriptString* propertyKey, ScriptContext* scriptContext, PropertyDescriptor* propertyDescriptor);
         static BOOL IsPropertyUnscopable (Var instanceVar, PropertyId propertyId);
         static BOOL IsPropertyUnscopable (Var instanceVar, JavascriptString *propertyString);
         template<bool unscopables>
@@ -227,7 +228,7 @@ namespace Js
         static BOOL DeleteItem(RecyclableObject* instance, uint64 index, PropertyOperationFlags propertyOperationFlags = PropertyOperation_None);
 
         static Var Construct(RecyclableObject* constructor, const Arguments args, ScriptContext* scriptContext);
-        static Var CreateFromConstructor(RecyclableObject* constructor, ScriptContext* scriptContext);
+        static RecyclableObject* CreateFromConstructor(RecyclableObject* constructor, ScriptContext* scriptContext);
         static RecyclableObject* OrdinaryCreateFromConstructor(RecyclableObject* constructor, RecyclableObject* obj, DynamicObject* intrinsicProto, ScriptContext* scriptContext);
 
         template<typename PropertyKeyType>

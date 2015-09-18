@@ -426,7 +426,13 @@ namespace Js
             }
         }
 
+        RecyclableObject* thisArg = RecyclableObject::FromVar(undefinedValue);
+        if (newTarget != nullptr)
+        {
+            thisArg = JavascriptOperators::CreateFromConstructor(RecyclableObject::FromVar(newTarget), scriptContext);
+        }
+
         Var argArray = args.Info.Count > 2 ? args[2] : undefinedValue;
-        return JavascriptFunction::ConstructHelper(RecyclableObject::FromVar(target), undefinedValue, newTarget, argArray, scriptContext);
+        return JavascriptFunction::ConstructHelper(RecyclableObject::FromVar(target), thisArg, newTarget, argArray, scriptContext);
     }
 }
