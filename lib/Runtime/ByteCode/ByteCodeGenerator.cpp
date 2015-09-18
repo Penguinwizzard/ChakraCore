@@ -4230,6 +4230,11 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
         CheckMaybeEscapedUse(pnode->sxParamPattern.pnode1, byteCodeGenerator);
         break;
 
+    case knopArrayPattern:
+        byteCodeGenerator->AssignUndefinedConstRegister();
+        CheckMaybeEscapedUse(pnode->sxUni.pnode1, byteCodeGenerator);
+        break;
+
     case knopDot:
         CheckMaybeEscapedUse(pnode->sxBin.pnode1, byteCodeGenerator);
         break;
