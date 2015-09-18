@@ -299,10 +299,10 @@ MACRO_WMS(              InitLetFld,                 ElementCP,      OpSideEffect
 MACRO_WMS(              InitRootLetFld,             ElementRootCP,  OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut)   // Declare a property with an initial value
 MACRO_WMS(              InitConstFld,               ElementCP,      OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut)   // Declare a property with an initial value
 MACRO_WMS(              InitRootConstFld,           ElementRootCP,  OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut)   // Declare a property with an initial value
-MACRO_WMS(              InitClassMember,            ElementCP,      OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Class member
+MACRO_WMS(              InitClassMember,            ElementCP,      OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut)   // Declare a property with an initial value
 MACRO_EXTEND_WMS(       InitClassMemberComputedName,ElementI,       OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Class member with computed property name
-MACRO_EXTEND_WMS(       InitClassMemberSet,         ElementC,       OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Class member in set syntax
-MACRO_EXTEND_WMS(       InitClassMemberGet,         ElementC,       OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Class member in get syntax
+MACRO_EXTEND_WMS(       InitClassMemberSet,         ElementC,       OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut)   // Class member in set syntax
+MACRO_EXTEND_WMS(       InitClassMemberGet,         ElementC,       OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut)   // Class member in get syntax
 MACRO_EXTEND_WMS(       InitClassMemberSetComputedName,ElementI,    OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Class member in set syntax with computed property name
 MACRO_EXTEND_WMS(       InitClassMemberGetComputedName,ElementI,    OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Class member in get syntax with computed property name
 MACRO_EXTEND_WMS(       BrOnClassConstructor,       BrReg1,         None)   // Branch if argument is a class constructor

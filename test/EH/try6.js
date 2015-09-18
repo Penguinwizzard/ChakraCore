@@ -109,7 +109,7 @@ function test() {
     };
     print(function a_indexing(fsznpi, kfoevo) {
         if (fsznpi.length == kfoevo) {
-            return [eval("''++")];
+            return [''++];
         }
         var iewhao = a_indexing(fsznpi, kfoevo + 1);
         return 4;

@@ -43,6 +43,8 @@ namespace Js
 
     void JavascriptLibrary::Initialize(ScriptContext* scriptContext, GlobalObject * globalObject)
     {
+        Configuration::Global.libraryIsInitializing = true;
+
         PROBE_STACK(scriptContext, Js::Constants::MinStackDefault);
 #ifdef PROFILE_EXEC
         scriptContext->ProfileBegin(Js::LibInitPhase);
@@ -97,6 +99,8 @@ namespace Js
 #ifdef PROFILE_EXEC
         scriptContext->ProfileEnd(Js::LibInitPhase);
 #endif
+
+        Configuration::Global.libraryIsInitializing = false;
     }
 
     void JavascriptLibrary::Uninitialize()
@@ -2151,10 +2155,7 @@ namespace Js
         {
             library->AddMember(symbolConstructor, PropertyIds::name, scriptContext->GetPropertyString(PropertyIds::Symbol), PropertyConfigurable);
         }
-        if (scriptContext->GetConfig()->IsES6HasInstanceEnabled())
-        {
-            library->AddMember(symbolConstructor, PropertyIds::hasInstance, library->GetSymbolHasInstance(), PropertyNone);
-        }
+        library->AddMember(symbolConstructor, PropertyIds::hasInstance, library->GetSymbolHasInstance(), PropertyNone);
         if (scriptContext->GetConfig()->IsES6IsConcatSpreadableEnabled())
         {
             library->AddMember(symbolConstructor, PropertyIds::isConcatSpreadable, library->GetSymbolIsConcatSpreadable(), PropertyNone);
@@ -2532,14 +2533,6 @@ namespace Js
             library->AddFunctionToLibraryObject(functionPrototype, PropertyIds::toMethod, &JavascriptFunction::EntryInfo::ToMethod, 1);
         }
 
-        if (scriptContext->GetConfig()->IsES6HasInstanceEnabled())
-        {
-            scriptContext->SetBuiltInLibraryFunction(JavascriptFunction::EntryInfo::SymbolHasInstance.GetOriginalEntryPoint(),
-                                                     library->AddFunctionToLibraryObjectWithName(functionPrototype, PropertyIds::_symbolHasInstance, PropertyIds::_RuntimeFunctionNameId_hasInstance,
-                                                                                                 &JavascriptFunction::EntryInfo::SymbolHasInstance, 1));
-            functionPrototype->SetWritable(PropertyIds::_symbolHasInstance, false);
-        }
-
         DebugOnly(CheckRegisteredBuiltIns(builtinFuncs, scriptContext));
 
         functionPrototype->SetHasNoEnumerableProperties(true);
@@ -2564,6 +2557,7 @@ namespace Js
                 DeferredTypeHandler<InitializeRegexPrototype>::GetDefaultInstance()));
         }
 
+        AssertMsg(regexPrototype, "Where's regexPrototype?");
         regexType = DynamicType::New(scriptContext, TypeIds_RegEx, regexPrototype, nullptr,
             SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
 
@@ -5847,6 +5841,7 @@ namespace Js
     JavascriptRegExp* JavascriptLibrary::CreateRegExp(UnifiedRegex::RegexPattern* pattern)
     {
         AssertMsg(regexType, "Where's regexType?");
+        AssertMsg(regexPrototype, "Where's regexPrototype?");
         return RecyclerNew(this->GetRecycler(), JavascriptRegExp, pattern, regexType);
     }
 

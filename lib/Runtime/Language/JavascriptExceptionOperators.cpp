@@ -1031,10 +1031,11 @@ namespace Js
         JavascriptError::ThrowTypeError(function->GetScriptContext(), VBSERR_ActionNotSupported);
     }
 
-    // Throw type error on access caller when in a restricted context
+
+    // Throw type error on access on caller when strict mode
     Var JavascriptExceptionOperators::ThrowTypeErrorCallerAccessor(RecyclableObject* function, CallInfo callInfo, ...)
     {
-        JavascriptError::ThrowTypeError(function->GetScriptContext(), JSERR_AccessCallerRestricted);
+        JavascriptError::ThrowTypeError(function->GetScriptContext(), JSERR_AccessCaller);
     }
 
     // Throw type error on access on callee when strict mode
@@ -1043,10 +1044,10 @@ namespace Js
         JavascriptError::ThrowTypeError(function->GetScriptContext(), JSERR_AccessCallee);
     }
 
-    // Throw type error on access arguments when in a restricted context
+    // Throw type error on access on caller when strict mode
     Var JavascriptExceptionOperators::ThrowTypeErrorArgumentsAccessor(RecyclableObject* function, CallInfo callInfo, ...)
     {
-        JavascriptError::ThrowTypeError(function->GetScriptContext(), JSERR_AccessArgumentsRestricted);
+        JavascriptError::ThrowTypeError(function->GetScriptContext(), JSERR_AccessArguments);
     }
 
     Var JavascriptExceptionOperators::StackTraceAccessor(RecyclableObject* function, CallInfo callInfo, ...) 

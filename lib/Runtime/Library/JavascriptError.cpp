@@ -736,26 +736,23 @@ namespace Js
         JavascriptError::MapAndThrowError(scriptContext, pError, ei.scode, &ei);
     }
 
-    ErrorTypeEnum JavascriptError::MapParseError(long hCode)
+    JavascriptError* JavascriptError::MapParseError(ScriptContext* scriptContext, long hCode)
     {
+        ErrorTypeEnum errorType;
         switch (hCode)
         {
 #define RT_ERROR_MSG(name, errnum, str1, str2, jst, errorNumSource) \
         case name: \
-            return jst; \
+        errorType = jst; \
         break;
 #define RT_PUBLICERROR_MSG(name, errnum, str1, str2, jst, errorNumSource) RT_ERROR_MSG(name, errnum, str1, str2, jst, errorNumSource)
 #include "rterrors.h"
 #undef RT_PUBLICERROR_MSG
 #undef RT_ERROR_MSG
         default:
-            return kjstSyntaxError;
+            errorType = kjstSyntaxError;
         }
-    }
 
-    JavascriptError* JavascriptError::MapParseError(ScriptContext* scriptContext, long hCode)
-    {
-        ErrorTypeEnum errorType = JavascriptError::MapParseError(hCode);
         return MapError(scriptContext, errorType);
     }
 

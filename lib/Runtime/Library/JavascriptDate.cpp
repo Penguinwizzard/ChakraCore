@@ -199,7 +199,7 @@ namespace Js
         return pDate;
     }
 
-    // Date.prototype[@@toPrimitive] as described in ES6 spec (Draft May 22, 2014) 20.3.4.45
+    // Symbol.prototype[@@toPrimitive] as described in ES6 spec (Draft May 22, 2014) 20.3.4.45
     Var JavascriptDate::EntrySymbolToPrimitive(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);

@@ -765,7 +765,7 @@ private:
         bool fUnaryOrParen = false,
         _Inout_opt_ BOOL* pfCanAssign = nullptr);
     template<bool buildAST> ParseNodePtr ParsePostfixOperators(ParseNodePtr pnode,
-        BOOL fAllowCall, BOOL fInNew, BOOL *pfCanAssign, _Inout_ IdentToken* pToken);
+        BOOL fAllowCall, BOOL fInNew, _Inout_ IdentToken* pToken);
 
     template<bool buildAST> ParseNodePtr ParseMetaProperty(
         tokens metaParentKeyword,

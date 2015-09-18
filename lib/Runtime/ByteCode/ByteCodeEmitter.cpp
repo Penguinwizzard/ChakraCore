@@ -14,7 +14,6 @@ void EmitReference(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncI
 void EmitAssignment(ParseNode *asgnNode, ParseNode *lhs, Js::RegSlot rhsLocation, ByteCodeGenerator *byteCodeGenerator,FuncInfo *funcInfo);
 void EmitLoad(ParseNode *rhs, ByteCodeGenerator *byteCodeGenerator,FuncInfo *funcInfo);
 void EmitCall(ParseNode* pnode, Js::RegSlot rhsLocation, ByteCodeGenerator* byteCodeGenerator, FuncInfo* funcInfo, BOOL fReturnValue, BOOL fAssignRegs, BOOL fHasNewTarget, Js::RegSlot overrideThisLocation = Js::Constants::NoRegister);
-void EmitSuperFieldPatch(FuncInfo* funcInfo, ParseNode* pnode, ByteCodeGenerator* byteCodeGenerator);
 
 bool EmitUseBeforeDeclaration(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *funcInfo);
 void EmitUseBeforeDeclarationRuntimeError(ByteCodeGenerator *byteCodeGenerator, Js::RegSlot location, bool fLoadUndef = true);
@@ -2178,104 +2177,33 @@ void ByteCodeGenerator::EmitScopeSlotStoreThis(FuncInfo *funcInfo, Js::RegSlot r
     }
 }
 
-void ByteCodeGenerator::EmitSuperCall(FuncInfo* funcInfo, ParseNode* pnode, BOOL fReturnValue)
+void ByteCodeGenerator::EmitPostSuperCall(FuncInfo *funcInfo, ParseNode* pnode)
 {
-    Assert(pnode->sxCall.pnodeTarget->nop == knopSuper);
-
     FuncInfo* nonLambdaFunc = funcInfo;
-
     if (funcInfo->IsLambda())
     {
-        nonLambdaFunc = this->FindEnclosingNonLambda();
-    }
-    if (nonLambdaFunc->IsBaseClassConstructor())
-    {
-        // super() is not allowed in base class constructors. If we detect this, emit a ReferenceError and skip making the call.
-        this->Writer()->W1(Js::OpCode::RuntimeReferenceError, SCODE_CODE(JSERR_ClassSuperInBaseClass));
-        return;
-    }
-    else
-    {
-        EmitSuperFieldPatch(funcInfo, pnode, this);
-        pnode->isUsed = true;
+        nonLambdaFunc = FindEnclosingNonLambda();
     }
 
-    // We already know pnode->sxCall.pnodeTarget->nop is super but we can't use the super register in case
-    // this is an eval and we will load super dynamically from the scope using ScopedLdSuper.
-    // That means we'll have to rely on the location of the call target to be sure.
-    // We have to make sure to allocate the location for the node now, before we try to branch on it.
-    Emit(pnode->sxCall.pnodeTarget, this, funcInfo, false);
-
-    // 
-    // if (super is class constructor) {
-    //   _this = new.target;
-    // } else {
-    //   _this = NewScObjFull(new.target);
-    // }
-    //
-    // temp = super.call(_this, new.target); // CallFlag_New | CallFlag_NewTarget | CallFlag_ExtraArg
-    // if (temp is object) {
-    //   _this = temp;
-    // }
-    //
-    // if (UndeclBlockVar === this) {
-    //   this = _this;
-    // } else {
-    //   throw ReferenceError;
-    // }
-    //
-    funcInfo->AcquireLoc(pnode);
-    Js::RegSlot thisForSuperCall = funcInfo->AcquireTmpRegister();
-    Js::ByteCodeLabel useNewTargetForThisLabel = this->Writer()->DefineLabel();
-    Js::ByteCodeLabel makeCallLabel = this->Writer()->DefineLabel();
-    Js::ByteCodeLabel useSuperCallResultLabel = this->Writer()->DefineLabel();
-    Js::ByteCodeLabel doneLabel = this->Writer()->DefineLabel();
-
-    this->Writer()->BrReg1(Js::OpCode::BrOnClassConstructor, useNewTargetForThisLabel, pnode->sxCall.pnodeTarget->location);
-
-    this->Writer()->Reg2(Js::OpCode::NewScObjectNoCtorFull, thisForSuperCall, funcInfo->newTargetRegister);
-    this->Writer()->Br(Js::OpCode::Br, makeCallLabel);
-
-    this->Writer()->MarkLabel(useNewTargetForThisLabel);
-    this->Writer()->Reg2(Js::OpCode::Ld_A, thisForSuperCall, funcInfo->newTargetRegister);
-
-    this->Writer()->MarkLabel(makeCallLabel);
-    EmitCall(pnode, Js::Constants::NoRegister, this, funcInfo, fReturnValue, /*fEvaluateComponents*/ true, /*fHasNewTarget*/ true, thisForSuperCall);
-
-    // We have to use another temp for the this value before assigning to this register.
-    // This is because IRBuilder does not expect us to use the value of a temp after potentially assigning to that same temp.
-    // Ex: 
-    // _this = new.target;
-    // temp = super.call(_this);
-    // if (temp is object) {
-    //   _this = temp; // creates a new sym for _this as it was previously used
-    // }
-    // this = _this; // tries to loads a value from the old sym (which is dead)
-    Js::RegSlot valueForThis = funcInfo->AcquireTmpRegister();
-
-    this->Writer()->BrReg1(Js::OpCode::BrOnObject_A, useSuperCallResultLabel, pnode->location);
-    this->Writer()->Reg2(Js::OpCode::Ld_A, valueForThis, thisForSuperCall);
-    this->Writer()->Br(Js::OpCode::Br, doneLabel);
-    this->Writer()->MarkLabel(useSuperCallResultLabel);
-    this->Writer()->Reg2(Js::OpCode::Ld_A, valueForThis, pnode->location);
-    this->Writer()->MarkLabel(doneLabel);
-
-    // The call is done and we know what we will bind to 'this' so let's check to see if 'this' is already decl.
     // We may need to load 'this' from the scope slot.
     EmitScopeSlotLoadThis(funcInfo, funcInfo->thisPointerRegister, false);
 
+    // const temp = super();
+    // if (UndeclBlockVar === this) {
+    //   this = temp;
+    // } else {
+    //   throw ReferenceError;
+    // }
     Js::ByteCodeLabel skipLabel = this->Writer()->DefineLabel();
     Js::RegSlot tmpUndeclReg = funcInfo->AcquireTmpRegister();
     this->Writer()->Reg1(Js::OpCode::InitUndecl, tmpUndeclReg);
     this->Writer()->BrReg2(Js::OpCode::BrSrEq_A, skipLabel, funcInfo->thisPointerRegister, tmpUndeclReg);
     funcInfo->ReleaseTmpRegister(tmpUndeclReg);
-
     this->Writer()->W1(Js::OpCode::RuntimeReferenceError, SCODE_CODE(JSERR_ClassThisAlreadyAssigned));
     this->Writer()->MarkLabel(skipLabel);
 
-    this->Writer()->Reg2(Js::OpCode::StrictLdThis, funcInfo->thisPointerRegister, valueForThis);
-    funcInfo->ReleaseTmpRegister(valueForThis);
-    funcInfo->ReleaseTmpRegister(thisForSuperCall);
+    funcInfo->AcquireLoc(pnode);
+    this->Writer()->Reg2(Js::OpCode::StrictLdThis, funcInfo->thisPointerRegister, pnode->location);
 
     // We already assigned the result of super() to the 'this' register but we need to store it in the scope slot, too. If there is one.
     this->EmitScopeSlotStoreThis(funcInfo, nonLambdaFunc->thisScopeSlot);
@@ -4196,7 +4124,7 @@ void ByteCodeGenerator::EmitLocalPropInit(Js::RegSlot rhsLocation, Symbol *sym, 
     Assert(sym->NeedsSlotAlloc(funcInfo) || sym->GetScopeSlot() == Js::Constants::NoProperty);
 
     // Arrived at the scope in which the property was defined.
-    if (sym->NeedsSlotAlloc(funcInfo))
+    if (sym->IsInSlot(funcInfo))
     {
         // The property is in memory rather than register. We'll have to load it from the slots.
         if (scope->GetIsObject())
@@ -4216,7 +4144,7 @@ void ByteCodeGenerator::EmitLocalPropInit(Js::RegSlot rhsLocation, Symbol *sym, 
             this->m_writer.Slot(Js::OpCode::StSlot, rhsLocation, slotReg, slot + Js::ScopeSlots::FirstSlotIndex);
         }
     }
-    if (sym->GetLocation() != Js::Constants::NoRegister && rhsLocation != sym->GetLocation())
+    else if (rhsLocation != sym->GetLocation())
     {
         this->m_writer.Reg2(Js::OpCode::Ld_A, sym->GetLocation(), rhsLocation);
     }
@@ -5691,6 +5619,13 @@ void EmitAssignment(
                 rhsLocation, lhs->sxBin.pnode1->location, lhs->sxBin.pnode2->location);
             break;
         }
+    case knopCall:
+        EmitCall(lhs, rhsLocation, byteCodeGenerator, funcInfo, /*fReturnValue*/false, /*fEvaluateComponents*/false, /*fHasNewTarget*/false);
+        break;
+
+    case knopParamPattern:
+        Assert(false);
+        break;
 
     case knopObjectPattern:
     {
@@ -5714,16 +5649,11 @@ void EmitAssignment(
         return EmitDestructuredArray(lhs, rhsLocation, byteCodeGenerator, funcInfo);
     }
 
-    case knopArray:
-        // Assignment to array can get through to byte code gen when the parser fails to convert destructuring
-        // assignment to pattern (because of structural mismatch between LHS & RHS?). Revisit when we nail
-        // down early vs. runtime errors for destructuring.
+    // fall through
+    default:
         byteCodeGenerator->Writer()->W1(Js::OpCode::RuntimeReferenceError, SCODE_CODE(JSERR_CantAssignTo));
         break;
 
-    default:
-        Assert(false);
-        break;
     }
 
     if (asgnNode != nullptr)
@@ -6855,12 +6785,10 @@ void EmitCall(
         EmitCallTargetES5(pnodeTarget, fSideEffectArgs, &thisLocation, &callObjLocation, byteCodeGenerator, funcInfo);
     }
 
-    bool releaseThisLocation = true;
     // If we are strictly overriding the this location, ignore what the call target set this location to.
     if (overrideThisLocation != Js::Constants::NoRegister)
     {
         thisLocation = overrideThisLocation;
-        releaseThisLocation = false;
     }
 
     // Evaluate the arguments (nothing mode-specific here).
@@ -6880,7 +6808,7 @@ void EmitCall(
     }
     else
     {
-        EmitCallInstrES5(pnode, fIsPut, fIsEval, fHasNewTarget, releaseThisLocation ? thisLocation : Js::Constants::NoRegister, callObjLocation, actualArgCount, byteCodeGenerator, funcInfo, callSiteId, spreadIndices);
+        EmitCallInstrES5(pnode, fIsPut, fIsEval, fHasNewTarget, thisLocation, callObjLocation, actualArgCount, byteCodeGenerator, funcInfo, callSiteId, spreadIndices);
     }
 
     // End call, pop param space
@@ -9088,13 +9016,56 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
     case knopCall:
         {
             byteCodeGenerator->StartStatement(pnode);
-
-            if (pnode->sxCall.pnodeTarget->nop == knopSuper)
+            bool performCall = true;
+            bool isSuperCall = pnode->sxCall.pnodeTarget->nop == knopSuper;
+            if (isSuperCall)
             {
-                byteCodeGenerator->EmitSuperCall(funcInfo, pnode, fReturnValue);
+                FuncInfo* nonLambdaFunc = funcInfo;
+                if (funcInfo->IsLambda())
+                {
+                    nonLambdaFunc = byteCodeGenerator->FindEnclosingNonLambda();
+                }
+                if (nonLambdaFunc->IsBaseClassConstructor())
+                {
+                    // super() is not allowed in base class constructors. If we detect this, emit a ReferenceError and skip making the call.
+                    byteCodeGenerator->Writer()->W1(Js::OpCode::RuntimeReferenceError, SCODE_CODE(JSERR_ClassSuperInBaseClass));
+                    performCall = false;
+                }
+                else
+                {
+                    EmitSuperFieldPatch(funcInfo, pnode, byteCodeGenerator);
+                    pnode->isUsed = true;
+                }
             }
-            else
+            if (performCall)
             {
+                Js::ByteCodeLabel doneLabel = (Js::ByteCodeLabel) - 1;
+
+                if (isSuperCall)
+                {
+                    // We already know pnode->sxCall.pnodeTarget->nop is super but we can't use the super register in case
+                    // this is an eval and we will load super dynamically from the scope using ScopedLdSuper.
+                    // That means we'll have to rely on the location of the call target to be sure.
+                    // We have to make sure to allocate the location for the node now, before we try to branch on it.
+                    Emit(pnode->sxCall.pnodeTarget, byteCodeGenerator, funcInfo, false);
+
+                    // if (super is class constructor) {
+                    //   this = super.call(new.target); // CallFlag_New
+                    // } else {
+                    //   temp = NewScObjFull(new.target);
+                    //   this = super.call(temp, new.target); // CallFlag_New | CallFlag_NewTarget | CallFlag_ExtraArg
+                    // }
+                    Js::ByteCodeLabel skipLabel = byteCodeGenerator->Writer()->DefineLabel();
+                    doneLabel = byteCodeGenerator->Writer()->DefineLabel();
+                    byteCodeGenerator->Writer()->BrReg1(Js::OpCode::BrOnClassConstructor, skipLabel, pnode->sxCall.pnodeTarget->location);
+
+                    Js::RegSlot tmpNewObj = funcInfo->AcquireTmpRegister();
+                    byteCodeGenerator->Writer()->Reg2(Js::OpCode::NewScObjectNoCtorFull, tmpNewObj, funcInfo->newTargetRegister);
+                    EmitCall(pnode, Js::Constants::NoRegister, byteCodeGenerator, funcInfo, fReturnValue, /*fEvaluateComponents*/ true, /*fHasNewTarget*/ true, tmpNewObj);
+                    byteCodeGenerator->Writer()->Br(Js::OpCode::Br, doneLabel);
+                    
+                    byteCodeGenerator->Writer()->MarkLabel(skipLabel);
+                }
                 if (pnode->sxCall.isApplyCall && funcInfo->GetApplyEnclosesArgs())
                 {
                     // TODO[ianhall]: Can we remove the ApplyCall bytecode gen time optimization?
@@ -9104,8 +9075,14 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
                 {
                     EmitCall(pnode, Js::Constants::NoRegister, byteCodeGenerator, funcInfo, fReturnValue, /*fEvaluateComponents*/ true, /*fHasNewTarget*/ false);
                 }
-            }
+                if (isSuperCall)
+                {
+                    Assert(doneLabel != (Js::ByteCodeLabel) - 1);
 
+                    byteCodeGenerator->Writer()->MarkLabel(doneLabel);
+                    byteCodeGenerator->EmitPostSuperCall(funcInfo, pnode);
+                }
+            }
             byteCodeGenerator->EndStatement(pnode);
             break;
         }

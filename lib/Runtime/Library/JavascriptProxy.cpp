@@ -1238,25 +1238,25 @@ namespace Js
     BOOL JavascriptProxy::SetWritable(PropertyId propertyId, BOOL value)
     {
         Assert(FALSE);
-        return FALSE;
+        return false;
     }
 
     BOOL JavascriptProxy::SetConfigurable(PropertyId propertyId, BOOL value)
     {
         Assert(FALSE);
-        return FALSE;
+        return false;
     }
 
     BOOL JavascriptProxy::SetEnumerable(PropertyId propertyId, BOOL value)
     {
         Assert(FALSE);
-        return FALSE;
+        return false;
     }
 
     BOOL JavascriptProxy::SetAttributes(PropertyId propertyId, PropertyAttributes attributes)
     {
         Assert(FALSE);
-        return FALSE;
+        return false;
     }
 
     BOOL JavascriptProxy::HasInstance(Var instance, ScriptContext* scriptContext, IsInstInlineCache* inlineCache)
@@ -1264,6 +1264,7 @@ namespace Js
         Var funcPrototype = JavascriptOperators::GetProperty(this, PropertyIds::prototype, scriptContext);
         return JavascriptFunction::HasInstance(funcPrototype, instance, scriptContext, NULL, NULL);
     }
+
 
     JavascriptString* JavascriptProxy::GetClassName(ScriptContext * requestContext)
     {
@@ -1890,21 +1891,9 @@ namespace Js
             }
         }
 
-        Var newTarget = nullptr;
         JavascriptProxy* proxy = JavascriptProxy::FromVar(function);
         JavascriptFunction* callMethod;
-        Var* varArgs;
         Assert(!scriptContext->IsHeapEnumInProgress());
-
-        // To conform with ES6 spec 7.3.13
-        if (hasOverridingNewTarget)
-        {
-            newTarget = args.Values[callInfo.Count];
-        }
-        else
-        {
-            newTarget = proxy;
-        }
 
         if (args.Info.Flags & CallFlags_New)
         {
@@ -1932,21 +1921,16 @@ namespace Js
                 newThisObject = JavascriptOperators::NewScObjectNoCtor(proxy->target, scriptContext);
                 args.Values[0] = newThisObject;
             }
-
-            // If we got overriden newTarget, then args[args.Info.Count] already hold the newTarget
-            // else add proxy has newTarget
-            ushort newCount = (ushort)(args.Info.Count + 1);
-            varArgs = (Var*)_alloca(newCount * sizeof(Var));
-            CallInfo calleeInfo((CallFlags)(args.Info.Flags | CallFlags_ExtraArg | CallFlags_NewTarget), newCount);
-
-            for (uint argCount = 0; argCount < args.Info.Count; argCount++)
+            if (hasOverridingNewTarget)
             {
-                varArgs[argCount] = args.Values[argCount];
+                // If we have the CallFlags_NewTarget flag, we know there's also an extra argument which is the new.target value.
+                // However, the ARGUMENTS macro above will have removed that so we need to put that flag back in and increment 
+                // the args count before we call to the target function.
+                args.Info.Flags = (CallFlags)(args.Info.Flags | CallFlags_ExtraArg);
+                args.Info.Count++;
             }
-            varArgs[args.Info.Count] = newTarget;
 
-            Js::Arguments arguments(calleeInfo, varArgs);
-            Var aReturnValue = JavascriptFunction::CallFunction<true>(proxy->target, proxy->target->GetEntryPoint(), arguments);
+            Var aReturnValue = JavascriptFunction::CallFunction<true>(proxy->target, proxy->target->GetEntryPoint(), args);
             // If this is constructor call, return the actual object instead of function result
             if ((callInfo.Flags & CallFlags_New) && !JavascriptOperators::IsObject(aReturnValue))
             {
@@ -1963,6 +1947,7 @@ namespace Js
 
         ushort newCount = 4;
         CallInfo calleeInfo(CallFlags_Value, newCount);
+        Var* varArgs;
         varArgs = (Var*)_alloca(newCount * sizeof(Var));
         Js::Arguments arguments(calleeInfo, varArgs);
 
@@ -1971,11 +1956,8 @@ namespace Js
         if (args.Info.Flags & CallFlags_New)
         {
             varArgs[2] = argList;
-            // 1st preference - overriden newTarget
-            // 2nd preference - 'this' in case of super() call
-            // 3rd preference - newTarget ( which is same as F)
-            varArgs[3] = hasOverridingNewTarget ? newTarget :
-                isCtorSuperCall ? args[0] : newTarget;
+            varArgs[3] = hasOverridingNewTarget ? args.Values[callInfo.Count] :
+                isCtorSuperCall ? args[0] : proxy;
          }
         else
         {
@@ -2031,21 +2013,7 @@ namespace Js
            
         if (nullptr == ownKeysMethod)
         {
-            switch (keysTrapKind)
-            {
-                case GetOwnPropertyNamesKind:
-                    targetResult = JavascriptOperators::GetOwnPropertyNames(this->target, scriptContext);
-                    break;
-                case GetOwnPropertySymbolKind:
-                    targetResult = JavascriptOperators::GetOwnPropertySymbols(this->target, scriptContext);
-                    break;
-                case KeysKind:
-                    targetResult = JavascriptOperators::GetOwnPropertyKeys(this->target, scriptContext);
-                    break;
-                default:
-                    AssertMsg(false, "Invalid KeysTrapKind.");
-                    return scriptContext->GetLibrary()->CreateArray(0);
-            }
+            targetResult = JavascriptOperators::GetOwnPropertyKeys(this->target, scriptContext);
             if (JavascriptArray::Is(targetResult))
             {
                 targetKeys = JavascriptArray::FromVar(targetResult);

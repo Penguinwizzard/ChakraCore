@@ -103,5 +103,7 @@ namespace JSON
         Js::JavascriptString* propertySeparator;     // colon or colon+space
         Js::Var StringifySession::StrHelper(Js::JavascriptString* key, Js::Var value, Js::Var holder);
     };
+    typedef JsUtil::GrowingArray<Js::Var, ArenaAllocator> GrowingVarArenaArray;
+
 } // namespace JSON
 

@@ -30,7 +30,7 @@ namespace Js
             scriptContext, functionPrototype, 
             address,
             proxy->GetDefaultEntryPointInfo(),
-            (proxy->IsLambda() || proxy->IsAsync() || proxy->IsClassMethod()) ?
+            proxy->IsLambda() || proxy->IsAsync() ?
                 library->GetDeferredFunctionTypeHandler() :
                 JavascriptLibrary::GetDeferredPrototypeFunctionTypeHandler(scriptContext),
             isShared, isShared);

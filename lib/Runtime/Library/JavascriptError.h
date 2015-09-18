@@ -105,7 +105,6 @@ namespace Js
         static void __declspec(noreturn) ThrowDispatchError(ScriptContext* scriptContext, HRESULT hCode, PCWSTR message);
         static void __declspec(noreturn) ThrowOutOfMemoryError(ScriptContext *scriptContext);
         static void __declspec(noreturn) ThrowParserError(ScriptContext* scriptContext, HRESULT hrParser, CompileScriptException* se);
-        static ErrorTypeEnum MapParseError(long hCode);
         static JavascriptError* MapParseError(ScriptContext* scriptContext, long hCode);
         static HRESULT GetRuntimeError(RecyclableObject* errorObject, __out_opt LPCWSTR * pMessage);
         static HRESULT GetRuntimeErrorWithScriptEnter(RecyclableObject* errorObject, __out_opt LPCWSTR * pMessage);

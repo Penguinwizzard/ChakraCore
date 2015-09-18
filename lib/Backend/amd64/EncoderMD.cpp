@@ -1197,28 +1197,6 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
             }
             *(m_pc++) = (valueImm & 0xff);
         }
-
-#if DEBUG
-        // Verify that the dissassembly code for out-of-bounds typedArray handling can decode all the MOVs we emit.
-        // Call it on every MOV 
-        if (LowererMD::IsAssign(instr) && (instr->GetDst()->IsIndirOpnd() || instr->GetSrc1()->IsIndirOpnd()))
-        {
-            CONTEXT context = { 0 };
-            EXCEPTION_POINTERS exceptionInfo;
-            exceptionInfo.ContextRecord = &context;
-            Js::ArrayAccessDecoder::InstructionData instrData;
-            BYTE *tempPc = instrStart;
-
-            instrData = Js::ArrayAccessDecoder::CheckValidInstr(tempPc, &exceptionInfo, instr->m_func->m_workItem->GetFunctionBody());
-
-            // Make sure we can decode the instr
-            Assert(!instrData.isInvalidInstr);
-            // Verify the instruction size matches
-            Assert(instrData.instrSizeInByte == m_pc - instrStart);
-            // Note: We could verify other properties if deemed useful, like types, register values, etc...
-        }
-#endif
-
         return m_pc - instrStart;
     }
 }

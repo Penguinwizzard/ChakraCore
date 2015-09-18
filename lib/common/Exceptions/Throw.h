@@ -193,14 +193,12 @@ namespace Js {
         END_TRANSLATE_OOM_TO_HRESULT(hr) \
     }
 
-#define CATCH_STATIC_JAVASCRIPT_EXCEPTION_OBJECT \
-    catch (Js::OutOfMemoryException)  \
-    {  \
-        return JsErrorOutOfMemory;  \
-    } catch (Js::StackOverflowException)  \
-    {  \
-        return JsErrorOutOfMemory;  \
-    }  \
+#define CATCH_JAVASCRIPT_EXCEPTION_OBJECT(threadContext) \
+    catch (Js::JavascriptExceptionObject *  exceptionObject)  \
+    {   \
+        threadContext->SetRecordedException(exceptionObject);   \
+        return JsErrorScriptException; \
+    }
 
 #define CATCH_OTHER_EXCEPTIONS  \
     catch (JsrtExceptionBase& e)  \

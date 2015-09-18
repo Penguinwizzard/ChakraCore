@@ -1152,7 +1152,13 @@ namespace Js
     ConfigFlagsTable::EnableExperimentalFlag()
     {
 #define FLAG(...) 
-#define FLAG_REGOVR_EXP(type, name, description, defaultValue, parentName, hasCallback) this->SetAsBoolean(Js::Flag::name##Flag, true);
+#define FLAG_REGOVR_EXP(type, name, description, defaultValue, parentName, hasCallback) \
+    do { \
+        if (Configuration::Global.libraryIsInitializing) { \
+            Throw::FatalInternalError(); \
+        } \
+        this->SetAsBoolean(Js::Flag::name##Flag, true); \
+    } while (false);
 #include "ConfigFlagsList.h"
 #undef FLAG
 #undef FLAG_REGOVR_EXP
@@ -1162,7 +1168,7 @@ namespace Js
     // Configuration options
     //
 
-    Configuration::Configuration() : isHybridDebugging(false)
+    Configuration::Configuration() : libraryIsInitializing(false), isHybridDebugging(false)
     {
         if(IsDebuggerPresent())
         {

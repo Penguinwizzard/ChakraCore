@@ -31,7 +31,7 @@ public:
     JsFunctionCodeGen * NewFunctionCodeGen(Js::FunctionBody *functionBody, Js::EntryPointInfo* info);
     JsLoopBodyCodeGen * NewLoopBodyCodeGen(Js::FunctionBody *functionBody, Js::EntryPointInfo* info);
 
-    bool GenerateFunction(Js::FunctionBody * fn, Js::ScriptFunction * function = nullptr);
+    void GenerateFunction(Js::FunctionBody * fn, Js::ScriptFunction * function = nullptr);
     void GenerateLoopBody(Js::FunctionBody * functionBody, Js::LoopHeader * loopHeader, Js::EntryPointInfo* info = nullptr, uint localCount = 0, Js::Var localSlots[] = nullptr);
     static bool IsValidVar(const Js::Var var, Recycler *const recycler);
 

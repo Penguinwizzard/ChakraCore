@@ -109,7 +109,7 @@ namespace Js
         return static_cast<JavascriptFunction *>(RecyclableObject::FromVar(aValue));
     }
 
-    BOOL JavascriptFunction::IsStrictMode() const
+    BOOL JavascriptFunction::IsStrictMode()
     {
         FunctionProxy * proxy = this->GetFunctionProxy();
         return proxy && proxy->EnsureDeserialized()->GetIsStrictMode();
@@ -130,7 +130,7 @@ namespace Js
     bool JavascriptFunction::IsBuiltinProperty(Var objectWithProperty, PropertyIds propertyId)
     {
         return ScriptFunction::Is(objectWithProperty)
-            && (propertyId == PropertyIds::length || (JavascriptFunction::FromVar(objectWithProperty)->HasRestrictedProperties() && (propertyId == PropertyIds::arguments || propertyId == PropertyIds::caller)));
+            && (propertyId == PropertyIds::length || propertyId == PropertyIds::arguments || propertyId == PropertyIds::caller);
     }
 #endif
 
@@ -787,7 +787,6 @@ namespace Js
         CallFlags newFlags = args.Info.Flags;
         ushort newCount = args.Info.Count;
         bool thisAlreadySpecified = false;
-
         if (overridingNewTarget != nullptr)
         {
             if (ScriptFunction::Is(functionObj) && ScriptFunction::FromVar(functionObj)->IsClassConstructor())
@@ -798,7 +797,7 @@ namespace Js
             else
             {
                 newCount++;
-                newFlags = (CallFlags)(newFlags | CallFlags_NewTarget | CallFlags_ExtraArg);
+                newFlags = (CallFlags)(newFlags | CallFlags_NewTarget | CallFlags_ExtraArg); 
                 const unsigned STACK_ARGS_ALLOCA_THRESHOLD = 8; // Number of stack args we allow before using _alloca
                 Var stackArgs[STACK_ARGS_ALLOCA_THRESHOLD];
                 if (newCount > STACK_ARGS_ALLOCA_THRESHOLD)
@@ -1758,18 +1757,6 @@ LABEL1:
                 instrData.isLoad = false;
                 instrData.isFloat64 = true;
             }
-            //MOVUPS - Load
-            else if (*pc == 0x10 && prefixValue == 0)
-            {
-                instrData.isLoad = true;
-                instrData.isSimd = true;
-            }
-            //MOVUPS - Store
-            else if (*pc == 0x11 && prefixValue == 0)
-            {
-                instrData.isLoad = false;
-                instrData.isSimd = true;
-            }
             else
             {
                 instrData.isInvalidInstr = true;
@@ -1789,20 +1776,13 @@ LABEL1:
             {
                 immBytes = 1;
             }
-            else if (rexByteValue.isW) // For MOV, REX.W set means we have a 32 bit immediate value, which gets extended to 64 bit.
+            else if (rexByteValue.rexValue) // if REX is set then we have a 32 bit immediate value
             {
                 immBytes = 4;
             }
             else
             {
-                if (prefixValue == 0x66)
-                {
-                    immBytes = 2;
-                }
-                else
-                {
-                    immBytes = 4;
-                }
+                immBytes = 2;
             }
             pc++;
             break;
@@ -1917,9 +1897,9 @@ LABEL1:
             instrData.bufferValue = exceptionInfo->ContextRecord->Rsp;
             break;
         case 0x5:
-            // RBP wouldn't point to an array buffer....
-            instrData.bufferValue = NULL;
-            break;
+            instrData.isInvalidInstr = true;
+            Assert(false);// should never reach here as the check for disp is done above
+            return instrData;
         case 0x6:
             instrData.bufferValue = exceptionInfo->ContextRecord->Rsi;
             break;
@@ -2049,20 +2029,8 @@ LABEL1:
             return EXCEPTION_CONTINUE_SEARCH;
         }
         
-        // If we didn't find the array buffer, ignore
-        if (!instrData.bufferValue)
-        {
-            return EXCEPTION_CONTINUE_SEARCH;
-        }
-
         // If asm.js, make sure the base address is that of the heap buffer
         if (isAsmJs && (instrData.bufferValue != (uint64)buffer))
-        {
-            return EXCEPTION_CONTINUE_SEARCH;
-        }
-
-        // SIMD loads/stores do bounds checks.
-        if (instrData.isSimd)
         {
             return EXCEPTION_CONTINUE_SEARCH;
         }
@@ -2133,22 +2101,13 @@ LABEL1:
         PropertyIds::arguments
     };
 
-    bool JavascriptFunction::HasRestrictedProperties() const
-    {
-        return !(this->functionInfo->IsClassMethod() || this->functionInfo->IsClassConstructor() || this->functionInfo->IsLambda());
-    }
-
     BOOL JavascriptFunction::HasProperty(PropertyId propertyId)
     {
         switch (propertyId)
         {
         case PropertyIds::caller:
         case PropertyIds::arguments:
-            if (this->HasRestrictedProperties() && !this->IsStrictMode())
-            {
-                return true;
-            }
-            break;
+            return true;
         case PropertyIds::length:
             if (this->IsScriptFunction())
             {
@@ -2167,26 +2126,23 @@ LABEL1:
         Assert(setter);
         Assert(requestContext);
 
-        if (this->HasRestrictedProperties())
+        switch (propertyId)
         {
-            switch (propertyId)
+        case PropertyIds::caller:
+            if (IsStrictMode())
             {
-            case PropertyIds::caller:
-                if (this->GetEntryPoint() == JavascriptFunction::PrototypeEntryPoint)
-                {
-                    *setter = *getter = requestContext->GetLibrary()->GetThrowTypeErrorCallerAccessorFunction();
-                    return true;
-                }
-                break;
-
-            case PropertyIds::arguments:
-                if (this->GetEntryPoint() == JavascriptFunction::PrototypeEntryPoint)
-                {
-                    *setter = *getter = requestContext->GetLibrary()->GetThrowTypeErrorArgumentsAccessorFunction();
-                    return true;
-                }
-                break;
+                *setter = *getter = requestContext->GetLibrary()->GetThrowTypeErrorCallerAccessorFunction();
+                return true;
             }
+            break;
+
+        case PropertyIds::arguments:
+            if (IsStrictMode())
+            {
+                *setter = *getter = requestContext->GetLibrary()->GetThrowTypeErrorArgumentsAccessorFunction();
+                return true;
+            }
+            break;
         }
 
         return __super::GetAccessors(propertyId, getter, setter, requestContext);
@@ -2195,7 +2151,7 @@ LABEL1:
     DescriptorFlags JavascriptFunction::GetSetter(PropertyId propertyId, Var *setterValue, PropertyValueInfo* info, ScriptContext* requestContext)
     {
         DescriptorFlags flags;
-        if (this->HasRestrictedProperties() && GetSetterBuiltIns(propertyId, setterValue, info, requestContext, &flags))
+        if (GetSetterBuiltIns(propertyId, setterValue, info, requestContext, &flags))
         {
             return flags;
         }
@@ -2209,7 +2165,7 @@ LABEL1:
         PropertyRecord const* propertyRecord;
         this->GetScriptContext()->FindPropertyRecord(propertyNameString, &propertyRecord);
 
-        if (this->HasRestrictedProperties() && propertyRecord != nullptr && GetSetterBuiltIns(propertyRecord->GetPropertyId(), setterValue, info, requestContext, &flags))
+        if (propertyRecord != nullptr && GetSetterBuiltIns(propertyRecord->GetPropertyId(), setterValue, info, requestContext, &flags))
         {
             return flags;
         }
@@ -2263,11 +2219,7 @@ LABEL1:
             {
             case PropertyIds::caller:
             case PropertyIds::arguments:
-                if (this->HasRestrictedProperties())
-                {
-                    return false;
-                }
-                break;
+                return false;
             case PropertyIds::length:
                 if (this->IsScriptFunction() || this->IsBoundFunction())
                 {
@@ -2287,11 +2239,7 @@ LABEL1:
             {
             case PropertyIds::caller:
             case PropertyIds::arguments:
-                if (this->HasRestrictedProperties())
-                {
-                    return false;
-                }
-                break;
+                return false;
             case PropertyIds::length:
                 if (this->IsScriptFunction())
                 {
@@ -2311,11 +2259,7 @@ LABEL1:
             {
             case PropertyIds::caller:
             case PropertyIds::arguments:
-                if (this->HasRestrictedProperties())
-                {
-                    return false;
-                }
-                break;
+                return false;
             case PropertyIds::length:
                 if (this->IsScriptFunction())
                 {
@@ -2355,9 +2299,7 @@ LABEL1:
     // Returns the number of special non-enumerable properties this type has.
     uint JavascriptFunction::GetSpecialPropertyCount() const
     {
-        return (this->HasRestrictedProperties() && !this->IsStrictMode()) ?
-            _countof(specialPropertyIds) :
-            0;
+        return _countof(specialPropertyIds);
     }
 
     // Returns the list of special non-enumerable properties for the type.
@@ -2410,13 +2352,7 @@ LABEL1:
     BOOL JavascriptFunction::GetCallerProperty(Var originalInstance, Var* value, ScriptContext* requestContext)
     {
         ScriptContext* scriptContext = this->GetScriptContext();
-
         if (this->IsStrictMode())
-        {
-            return false;
-        }
-
-        if (this->GetEntryPoint() == JavascriptFunction::PrototypeEntryPoint)
         {
             if (scriptContext->GetThreadContext()->RecordImplicitException())
             {
@@ -2477,7 +2413,7 @@ LABEL1:
                 // Note that for caller coming from remote context (see the check right above) we can't call IsStrictMode()
                 // unless CheckCrossDomainScriptContext succeeds. If it fails we don't know whether caller is strict mode
                 // function or not and throw if it's not, so just return Null.
-                JavascriptError::ThrowTypeError(scriptContext, JSERR_AccessCallerRestricted);
+                JavascriptError::ThrowTypeError(scriptContext, JSERR_AccessCaller);
             }
         }
 
@@ -2487,13 +2423,7 @@ LABEL1:
     BOOL JavascriptFunction::GetArgumentsProperty(Var originalInstance, Var* value, ScriptContext* requestContext)
     {
         ScriptContext* scriptContext = this->GetScriptContext();
-
         if (this->IsStrictMode())
-        {
-            return false;
-        }
-
-        if (this->GetEntryPoint() == JavascriptFunction::PrototypeEntryPoint)
         {
             if (scriptContext->GetThreadContext()->RecordImplicitException())
             {
@@ -2596,19 +2526,16 @@ LABEL1:
 
     bool JavascriptFunction::GetPropertyBuiltIns(Var originalInstance, PropertyId propertyId, Var* value, ScriptContext* requestContext, BOOL* result)
     {
-        if (this->HasRestrictedProperties())
+        if (propertyId == PropertyIds::caller)
         {
-            if (propertyId == PropertyIds::caller)
-            {
-                *result = GetCallerProperty(originalInstance, value, requestContext);
-                return true;
-            }
+            *result = GetCallerProperty(originalInstance, value, requestContext);
+            return true;
+        }
 
-            if (propertyId == PropertyIds::arguments)
-            {
-                *result = GetArgumentsProperty(originalInstance, value, requestContext);
-                return true;
-            }
+        if (propertyId == PropertyIds::arguments)
+        {
+            *result = GetArgumentsProperty(originalInstance, value, requestContext);
+            return true;
         }
 
         if (propertyId == PropertyIds::length)
@@ -2631,29 +2558,23 @@ LABEL1:
         switch (propertyId)
         {
         case PropertyIds::caller:
-            if (this->HasRestrictedProperties())
+            if (IsStrictMode())
             {
-                if (IsStrictMode())
-                {
-                    const auto thrower = GetLibrary()->GetThrowTypeErrorCallerAccessorFunction();
-                    thrower->GetEntryPoint()(thrower, 1, this);
-                    return false;
-                }
-                isReadOnly = true;
+                const auto thrower = GetLibrary()->GetThrowTypeErrorCallerAccessorFunction();
+                thrower->GetEntryPoint()(thrower, 1, this);
+                return false;
             }
+            isReadOnly = true;
             break;
 
         case PropertyIds::arguments:
-            if (this->HasRestrictedProperties())
+            if (IsStrictMode())
             {
-                if (IsStrictMode())
-                {
-                    const auto thrower = GetLibrary()->GetThrowTypeErrorArgumentsAccessorFunction();
-                    thrower->GetEntryPoint()(thrower, 1, this);
-                    return false;
-                }
-                isReadOnly = true;
+                const auto thrower = GetLibrary()->GetThrowTypeErrorArgumentsAccessorFunction();
+                thrower->GetEntryPoint()(thrower, 1, this);
+                return false;
             }
+            isReadOnly = true;
             break;
 
         case PropertyIds::length:
@@ -2718,12 +2639,8 @@ LABEL1:
         {
         case PropertyIds::caller:
         case PropertyIds::arguments:
-            if (this->HasRestrictedProperties())
-            {
-                JavascriptError::ThrowCantDeleteIfStrictMode(flags, this->GetScriptContext(), this->GetScriptContext()->GetPropertyName(propertyId)->GetBuffer());
-                return false;
-            }
-            break;
+            JavascriptError::ThrowCantDeleteIfStrictMode(flags, this->GetScriptContext(), this->GetScriptContext()->GetPropertyName(propertyId)->GetBuffer());
+            return false;
         case PropertyIds::length:
             if (this->IsScriptFunction())
             {
@@ -2929,33 +2846,6 @@ LABEL1:
     bool JavascriptFunction::IsLibraryCode() const
     {
         return !this->IsScriptFunction() || this->GetFunctionProxy()->GetUtf8SourceInfo()->GetIsLibraryCode();
-    }
-
-    // Implementation of Function.prototype[@@hasInstance](V) as specified in 19.2.3.6 of ES6 spec
-    // dated April 3rd 2015.
-    Var JavascriptFunction::EntrySymbolHasInstance(RecyclableObject* function, CallInfo callInfo, ...)
-    {
-        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
-
-        ARGUMENTS(args, callInfo);
-        ScriptContext* scriptContext = function->GetScriptContext();
-
-        Assert(!(callInfo.Flags & CallFlags_New));
-
-        if (args.Info.Count < 2)
-        {
-            JavascriptError::ThrowTypeError(scriptContext, JSERR_FunctionArgument_NeedObject, L"Function[Symbol.hasInstance]");
-        }
-
-        RecyclableObject * constructor = RecyclableObject::FromVar(args[0]);
-        Var instance = args[1];
-        if (!JavascriptConversion::IsCallable(constructor))
-        {
-            return JavascriptBoolean::ToVar(FALSE, scriptContext);
-        }
-
-        Assert(JavascriptProxy::Is(constructor) || JavascriptFunction::Is(constructor));
-        return JavascriptBoolean::ToVar(constructor->HasInstance(instance, scriptContext, NULL), scriptContext);
     }
 
     BOOL JavascriptFunction::HasInstance(Var instance, ScriptContext* scriptContext, IsInstInlineCache* inlineCache)
