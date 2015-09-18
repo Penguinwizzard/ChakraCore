@@ -333,7 +333,8 @@ namespace Js
 
         ScriptContext * scriptContext = this->GetScriptContext();
         JavascriptLibrary *javascriptLibrary = scriptContext->GetLibrary();
-        bool isClassMethod = this->GetHomeObj() != nullptr;
+        bool isClassMethod = this->GetFunctionInfo()->IsClassMethod();
+
         JavascriptString* prefixString = nullptr;
         uint prefixStringLength = 0;
         const wchar_t* name = L"";

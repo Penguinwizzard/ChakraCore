@@ -6947,7 +6947,8 @@ void EmitMemberNode(ParseNode *memberNode, Js::RegSlot objectLocation, ByteCodeG
     ParseNode *nameNode=memberNode->sxBin.pnode1;
     ParseNode *exprNode=memberNode->sxBin.pnode2;
 
-    bool isClassMember = exprNode->nop == knopFncDecl && exprNode->sxFnc.IsClassMember();
+    bool hasHomeObj = exprNode->nop == knopFncDecl;
+    bool isClassMember = hasHomeObj && exprNode->sxFnc.IsClassMember();
 
     // Moved SetComputedNameVar before LdFld of prototype b\c loading the prototype undeferres the function TypeHanlder
     // which makes this bytecode too late to influence the function.name
@@ -6986,8 +6987,8 @@ void EmitMemberNode(ParseNode *memberNode, Js::RegSlot objectLocation, ByteCodeG
 
         byteCodeGenerator->Writer()->Element(setOp, exprNode->location, objectLocation, nameNode->location, true);
 
-        // Class members need a reference back to the class.
-        if (isClassMember)
+        // Class and object members need a reference back to the class.
+        if (hasHomeObj)
         {
             byteCodeGenerator->Writer()->Reg2(Js::OpCode::SetHomeObj, exprNode->location, objectLocation);
         }
@@ -7057,8 +7058,8 @@ void EmitMemberNode(ParseNode *memberNode, Js::RegSlot objectLocation, ByteCodeG
         byteCodeGenerator->Writer()->Property(setOp, exprNode->location, objectLocation, funcInfo->FindOrAddReferencedPropertyId(propertyId));
     }
 
-    // Class members need a reference back to the class.
-    if (isClassMember)
+    // Class and object members need a reference back to the class.
+    if (hasHomeObj)
     {
         byteCodeGenerator->Writer()->Reg2(Js::OpCode::SetHomeObj, exprNode->location, objectLocation);
     }
