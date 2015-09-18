@@ -318,6 +318,10 @@ goto :main
     set EXTRA_CC_FLAGS=%EXTRA_CC_FLAGS% -DumpOnCrash
   )
 
+  if "%_Binary%" == "-binary:ch.exe" (
+    set EXTRA_CC_FLAGS=%EXTRA_CC_FLAGS% -WERExceptionSupport -ExtendedErrorStackForTestHost
+  )
+
   if "%_TESTCONFIG%"=="interpreted" (
     set EXTRA_CC_FLAGS=%EXTRA_CC_FLAGS% -maxInterpretCount:1 -maxSimpleJitRunCount:1 -bgjit- %_dynamicprofilecache%
   )
