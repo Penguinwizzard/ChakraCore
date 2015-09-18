@@ -10,14 +10,14 @@
   </test>
   <test>
     <default>
-      <tags>StackTrace</tags>
+      <tags>StackTrace,exclude_ch</tags>
       <files>PropertyValidation.js</files>
       <baseline>PropertyValidation.nostrict.baseline</baseline>
     </default>
   </test>
   <test>
     <default>
-      <tags>StackTrace,exclude_ship</tags>
+      <tags>StackTrace,exclude_ship,exclude_ch</tags>
       <files>PropertyValidation.js</files>
       <compile-flags>-forceStrictMode</compile-flags>
       <baseline>PropertyValidation.nostrict.baseline</baseline>
@@ -25,7 +25,7 @@
   </test>
   <test>
     <default>
-      <tags>StackTrace,exclude_ship</tags>
+      <tags>StackTrace,exclude_ship,exclude_ch</tags>
       <files>simpleThrow.js</files>
       <compile-flags>-args runTest -endargs</compile-flags>
       <baseline>simpleThrow.js.baseline</baseline>
@@ -33,7 +33,7 @@
   </test>
   <test>
     <default>
-      <tags>StackTrace,exclude_ship</tags>
+      <tags>StackTrace,exclude_ship,exclude_ch</tags>
       <files>LongCallStackThrow.js</files>
       <compile-flags>-args runTest 5 -endargs</compile-flags>
       <baseline>LongCallStackThrow.js.Args5.baseline</baseline>
@@ -41,7 +41,7 @@
   </test>
   <test>
     <default>
-      <tags>StackTrace,exclude_ship</tags>
+      <tags>StackTrace,exclude_ship,exclude_ch</tags>
       <files>LongCallStackThrow.js</files>
       <compile-flags>-args runTest 6 -endargs</compile-flags>
       <baseline>LongCallStackThrow.js.Args6.baseline</baseline>
@@ -49,7 +49,7 @@
   </test>
   <test>
     <default>
-      <tags>StackTrace,exclude_ship</tags>
+      <tags>StackTrace,exclude_ship,exclude_ch</tags>
       <files>LongCallStackThrow.js</files>
       <compile-flags>-args runTest 7 -endargs</compile-flags>
       <baseline>LongCallStackThrow.js.Args7.baseline</baseline>
@@ -57,7 +57,7 @@
   </test>
   <test>
     <default>
-      <tags>StackTrace,exclude_ship</tags>
+      <tags>StackTrace,exclude_ship,exclude_ch</tags>
       <files>LongCallStackThrow.js</files>
       <compile-flags>-args runTest 30 -endargs</compile-flags>
       <baseline>LongCallStackThrow.js.Args30.baseline</baseline>
@@ -65,21 +65,21 @@
   </test>
   <test>
     <default>
-      <tags>StackTrace</tags>
+      <tags>StackTrace,exclude_ch</tags>
       <files>StackTraceLimit.js</files>
       <baseline>StackTraceLimit.baseline</baseline>
     </default>
   </test>
   <test>
     <default>
-      <tags>StackTrace</tags>
+      <tags>StackTrace,exclude_ch</tags>
       <files>StackTraceLimitOOS.js</files>
       <baseline>StackTraceLimitOOS.baseline</baseline>
     </default>
   </test>
   <test>
     <default>
-      <tags>StackTrace,exclude_ship</tags>
+      <tags>StackTrace,exclude_ship,exclude_ch</tags>
       <files>StackTraceLimitOOS.js</files>
       <compile-flags>-on:interruptprobe</compile-flags>
       <baseline>StackTraceLimitOOS.baseline</baseline>
@@ -87,21 +87,21 @@
   </test>
   <test>
     <default>
-      <tags>StackTrace</tags>
+      <tags>StackTrace,exclude_ch</tags>
       <files>HostThrow.js</files>
       <baseline>HostThrow.baseline</baseline>
     </default>
   </test>
   <test>
     <default>
-      <tags>StackTrace</tags>
+      <tags>StackTrace,exclude_ch</tags>
       <files>dynamic.js</files>
       <baseline>dynamic.js.baseline</baseline>
     </default>
   </test>
   <test>
     <default>
-      <tags>StackTrace</tags>
+      <tags>StackTrace,exclude_ch</tags>
       <files>ErrorPrototype.js</files>
       <baseline>ErrorPrototype.baseline</baseline>
     </default>
@@ -115,14 +115,14 @@
   </test>
   <test>
     <default>
-      <tags>StackTrace</tags>
+      <tags>StackTrace,exclude_ch</tags>
       <files>FunctionName.js</files>
       <baseline>FunctionName.js.baseline</baseline>
     </default>
   </test>
   <test>
     <default>
-      <tags>StackTrace</tags>
+      <tags>StackTrace,exclude_ch</tags>
       <compile-flags>-jsrt:0</compile-flags>
       <files>reg_46298.js</files>
       <baseline>reg_46298.baseline</baseline>
@@ -131,14 +131,14 @@
   <test>
     <default>
       <files>x64StackWalk.js</files>
-      <tags>exclude_x86,exclude_arm,exclude_dynapogo</tags>
+      <tags>exclude_x86,exclude_arm,exclude_dynapogo,exclude_ch</tags>
       <baseline>x64StackWalk.baseline</baseline>
     </default>
   </test>
   <test>
     <default>
       <files>x64StackWalkLoopBody.js</files>
-      <tags>exclude_x86,exclude_arm,exclude_dynapogo</tags>
+      <tags>exclude_x86,exclude_arm,exclude_dynapogo,exclude_ch</tags>
       <baseline>x64StackWalkLoopBody.baseline</baseline>
       <compile-flags>-loopinterpretcount:1</compile-flags>
     </default>

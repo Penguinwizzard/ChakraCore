@@ -1,3 +1,3 @@
 function TrimStackTracePath(line) {
-    return line && line.replace(/\(.+unittest.StackTrace./ig, "(");
+    return line && line.replace(/\(.+\\test.StackTrace./ig, "(");
 }

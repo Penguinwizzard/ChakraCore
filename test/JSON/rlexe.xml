@@ -10,7 +10,8 @@
     <default>
       <files>jx2.js</files>
       <baseline>jx2.baseline</baseline>
-      <tags>fail_mutators</tags>
+      <!-- ch outputs ? characters -->
+      <tags>fail_mutators,exclude_ch</tags>
     </default>
   </test>
   <test>

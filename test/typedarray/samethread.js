@@ -13,9 +13,10 @@ function oneFile(fileName)
   WScript.Echo("Start same thread different engine test on file " + fileName);
   for (var i in frame)
   {
+      if (i == 'WScript' || i == 'SCA' || i == 'ImageData')
+          continue;
+
       WScript.Echo("property of global: " + i);
-      if (i == 'WScript')
-         continue;
       if (typeof frame[i] == "object")
       {
          for (var j in frame[i])

@@ -125,8 +125,9 @@
   <test>
     <default>
       <files>bailout-throw.js</files>
-      <compile-flags>-bailout:5 -ignorescripterrorcode</compile-flags>
-      <tags>exclude_fre</tags>
+      <compile-flags>-bailout:5</compile-flags>
+      <!-- broken in ch because ch doesn't output error stack trace when non-error object is thrown -->
+      <tags>exclude_fre,exclude_ch</tags>
       <baseline>bailout-throw.baseline</baseline>
     </default>
   </test>
@@ -283,7 +284,6 @@
   <test>
     <default>
       <files>bug10.js</files>
-      <compile-flags>-ignorescripterrorcode</compile-flags>
       <baseline>bug10.baseline</baseline>
     </default>
   </test>

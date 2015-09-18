@@ -57,6 +57,8 @@
     <default>
       <files>randombug.js</files>
       <baseline>randombug.baseline</baseline>
+      <!-- fails in ch due to different error stack trace formatting -->
+      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -164,6 +166,8 @@
     <default>
       <files>bug934443.js</files>
       <compile-flags>-force:fieldcopyprop -off:dynamicprofile</compile-flags>
+      <!-- fails in ch when trying to deserialize Intl.js -->
+      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>

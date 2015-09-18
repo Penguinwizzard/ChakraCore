@@ -92,7 +92,7 @@
   <test>
     <default>
       <files>fieldhoist6.js</files>
-      <compile-flags>-force:fieldhoist -IgnoreScriptErrorCode</compile-flags>
+      <compile-flags>-force:fieldhoist</compile-flags>
       <baseline>fieldhoist6.baseline</baseline>
       <tags>exclude_ship</tags>
     </default>
@@ -100,7 +100,7 @@
   <test>
     <default>
       <files>fieldhoist6b.js</files>
-      <compile-flags>-force:fieldhoist -IgnoreScriptErrorCode</compile-flags>
+      <compile-flags>-force:fieldhoist</compile-flags>
       <baseline>fieldhoist6b.baseline</baseline>
       <tags>exclude_ship</tags>
     </default>
@@ -108,7 +108,7 @@
   <test>
     <default>
       <files>fieldhoist7.js</files>
-      <compile-flags>-force:fieldhoist -IgnoreScriptErrorCode</compile-flags>
+      <compile-flags>-force:fieldhoist</compile-flags>
       <baseline>fieldhoist7.baseline</baseline>
       <tags>exclude_ship</tags>
     </default>
@@ -124,7 +124,7 @@
   <test>
     <default>
       <files>fieldhoist_nullfieldhoist.js</files>
-      <compile-flags>-force:fieldhoist -IgnoreScriptErrorCode</compile-flags>
+      <compile-flags>-force:fieldhoist</compile-flags>
       <baseline>fieldhoist_nullfieldhoist.baseline</baseline>
       <tags>exclude_ship,exclude_dynapogo</tags>
     </default>
@@ -139,7 +139,7 @@
   <test>
     <default>
       <files>fieldhoist_unreachable.js</files>
-      <compile-flags>-force:fieldhoist -IgnoreScriptErrorCode</compile-flags>
+      <compile-flags>-force:fieldhoist</compile-flags>
       <baseline>fieldhoist_unreachable.baseline</baseline>
       <tags>exclude_ship</tags>
     </default>
@@ -185,7 +185,7 @@
   <test>
     <default>
       <files>fieldhoist_undefined_global.js</files>
-      <compile-flags>-force:fieldhoist -IgnoreScriptErrorCode</compile-flags>
+      <compile-flags>-force:fieldhoist</compile-flags>
       <baseline>fieldhoist_undefined_global.baseline</baseline>
       <tags>exclude_ship</tags>
     </default>
@@ -193,7 +193,7 @@
   <test>
     <default>
       <files>fieldhoist_negzero.js</files>
-      <compile-flags>-force:fieldhoist -IgnoreScriptErrorCode</compile-flags>
+      <compile-flags>-force:fieldhoist</compile-flags>
       <baseline>fieldhoist_negzero.baseline</baseline>
       <tags>exclude_ship</tags>
     </default>
@@ -201,9 +201,10 @@
   <test>
     <default>
       <files>fieldhoist_negzero.js</files>
-      <compile-flags>-force:fieldhoist -IgnoreScriptErrorCode -Serialized</compile-flags>
+      <compile-flags>-force:fieldhoist -Serialized</compile-flags>
       <baseline>fieldhoist_negzero.baseline</baseline>
-      <tags>exclude_ship</tags>
+      <!-- -Serialized causing a bug with ch.exe -->
+      <tags>exclude_ship,exclude_ch</tags>
     </default>
   </test>
   <test>

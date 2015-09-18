@@ -21000,46 +21000,8 @@ undefined
 undefined
 10
 Start same thread different engine test on file dataview.js
-property of global: WScript
 property of global: print
 
-property of global: SCA
-sub object serialize in SCA is 
-function serialize() {
-    [native code]
-}
-
-sub object deserialize in SCA is 
-function deserialize() {
-    [native code]
-}
-
-sub object lookup in SCA is 
-function lookup() {
-    [native code]
-}
-
-sub object lookupEx in SCA is 
-function lookupEx() {
-    [native code]
-}
-
-sub object dataToKey in SCA is 
-function dataToKey() {
-    [native code]
-}
-
-sub object makeInt64 in SCA is 
-function makeInt64() {
-    [native code]
-}
-
-sub object makeUint64 in SCA is 
-function makeUint64() {
-    [native code]
-}
-
-property of global: ImageData
 property of global: printDataView
 exception is -2146823281Unable to get property 'toString' of undefined or null reference
 property of global: GetResult
@@ -21091,12 +21053,11 @@ sub object 2 in dataView is 10
 testing file int8array.js
 test1
 10
-[object Int8Array]
-prototype is
-[object Int8Array]
-byteLength = 0
+constructor is
+function Int8Array() { [native code] }
+byteLength = undefined
 object is
-[object Int8Array]
+0,1,-128,0,0,10,0,0,0
 0 == 0
 1 == 1
 2 == -128
@@ -21106,11 +21067,9 @@ object is
 6 == 0
 7 == 0
 8 == 0
--1 == 2
--3 == 4
 byteLength = 9
 object after expando is
-[object Int8Array]
+0,1,-128,0,0,10,0,0,0
 0 == 0
 1 == 1
 2 == -128
@@ -21120,37 +21079,29 @@ object after expando is
 6 == 0
 7 == 0
 8 == 0
--1 == 2
--3 == 4
 foo == bar
 byteLength = 9
 
 test2
 undefined
-[object Int8Array]
-prototype is
-[object Int8Array]
-byteLength = 0
+constructor is
+function Int8Array() { [native code] }
+byteLength = undefined
 object is
-[object Int8Array]
--1 == 2
--3 == 4
+
 byteLength = 0
 object after expando is
-[object Int8Array]
--1 == 2
--3 == 4
+
 foo == bar
 byteLength = 0
 
 test3
 10
-[object Int8Array]
-prototype is
-[object Int8Array]
-byteLength = 0
+constructor is
+function Int8Array() { [native code] }
+byteLength = undefined
 object is
-[object Int8Array]
+0,1,-128,0,0,10,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 0 == 0
 1 == 1
 2 == -128
@@ -21181,11 +21132,9 @@ object is
 27 == 0
 28 == 0
 29 == 0
--1 == 2
--3 == 4
 byteLength = 30
 object after expando is
-[object Int8Array]
+0,1,-128,0,0,10,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0,0,0,0,0,0,0,0,0
 0 == 0
 1 == 1
 2 == -128
@@ -21216,19 +21165,16 @@ object after expando is
 27 == 0
 28 == 0
 29 == 0
--1 == 2
--3 == 4
 foo == bar
 byteLength = 30
 
 test4
 10
-[object Int8Array]
-prototype is
-[object Int8Array]
-byteLength = 0
+constructor is
+function Int8Array() { [native code] }
+byteLength = undefined
 object is
-[object Int8Array]
+0,1,-128,0,0,10,0,0,0,0,0,0,0,0,0,0,0,20,0,0,0,0,0,0,0,0,0
 0 == 0
 1 == 1
 2 == -128
@@ -21256,11 +21202,9 @@ object is
 24 == 0
 25 == 0
 26 == 0
--1 == 2
--3 == 4
 byteLength = 27
 object after expando is
-[object Int8Array]
+0,1,-128,0,0,10,0,0,0,0,0,0,0,0,0,0,0,20,0,0,20,0,0,0,0,0,0
 0 == 0
 1 == 1
 2 == -128
@@ -21288,50 +21232,42 @@ object after expando is
 24 == 0
 25 == 0
 26 == 0
--1 == 2
--3 == 4
 foo == bar
 byteLength = 27
 
 test5
 10
-[object Int8Array]
-prototype is
-[object Int8Array]
-byteLength = 0
+constructor is
+function Int8Array() { [native code] }
+byteLength = undefined
 object is
-[object Int8Array]
+0,1,-128,0,0,10
 0 == 0
 1 == 1
 2 == -128
 3 == 0
 4 == 0
 5 == 10
--1 == 2
--3 == 4
 byteLength = 6
 object after expando is
-[object Int8Array]
+0,1,-128,0,0,10
 0 == 0
 1 == 1
 2 == -128
 3 == 0
 4 == 0
 5 == 10
--1 == 2
--3 == 4
 foo == bar
 byteLength = 6
 
 test6
 [object ArrayBuffer]
 10
-[object Int8Array]
-prototype is
-[object Int8Array]
-byteLength = 0
+constructor is
+function Int8Array() { [native code] }
+byteLength = undefined
 object is
-[object Int8Array]
+0,1,-128,0,0,10,0,0,0
 0 == 0
 1 == 1
 2 == -128
@@ -21341,11 +21277,9 @@ object is
 6 == 0
 7 == 0
 8 == 0
--1 == 2
--3 == 4
 byteLength = 9
 object after expando is
-[object Int8Array]
+0,1,-128,0,0,10,0,0,0
 0 == 0
 1 == 1
 2 == -128
@@ -21355,79 +21289,66 @@ object after expando is
 6 == 0
 7 == 0
 8 == 0
--1 == 2
--3 == 4
 foo == bar
 byteLength = 9
 
 test7
 10
-[object Int8Array]
-prototype is
-[object Int8Array]
-byteLength = 0
+constructor is
+function Int8Array() { [native code] }
+byteLength = undefined
 object is
-[object Int8Array]
+0,1,-128,0,0,10
 0 == 0
 1 == 1
 2 == -128
 3 == 0
 4 == 0
 5 == 10
--1 == 2
--3 == 4
 byteLength = 6
 object after expando is
-[object Int8Array]
+0,1,-128,0,0,10
 0 == 0
 1 == 1
 2 == -128
 3 == 0
 4 == 0
 5 == 10
--1 == 2
--3 == 4
 foo == bar
 byteLength = 6
 
 test8
 10
-[object Int8Array]
-prototype is
-[object Int8Array]
-byteLength = 0
+constructor is
+function Int8Array() { [native code] }
+byteLength = undefined
 object is
-[object Int8Array]
+-128,1,-128,-128,0,10
 0 == -128
 1 == 1
 2 == -128
 3 == -128
 4 == 0
 5 == 10
--1 == 2
--3 == 4
 byteLength = 6
 object after expando is
-[object Int8Array]
+-128,1,-128,-128,0,10
 0 == -128
 1 == 1
 2 == -128
 3 == -128
 4 == 0
 5 == 10
--1 == 2
--3 == 4
 foo == bar
 byteLength = 6
 
 test9
 10
-[object Int8Array]
-prototype is
-[object Int8Array]
-byteLength = 0
+constructor is
+function Int8Array() { [native code] }
+byteLength = undefined
 object is
-[object Int8Array]
+1,1,-128,4,5,10,7,8,9,10,11,12
 0 == 1
 1 == 1
 2 == -128
@@ -21440,11 +21361,9 @@ object is
 9 == 10
 10 == 11
 11 == 12
--1 == 2
--3 == 4
 byteLength = 12
 object after expando is
-[object Int8Array]
+1,1,-128,4,5,10,7,8,9,10,11,12
 0 == 1
 1 == 1
 2 == -128
@@ -21457,13 +21376,11 @@ object after expando is
 9 == 10
 10 == 11
 11 == 12
--1 == 2
--3 == 4
 foo == bar
 byteLength = 12
 
 test9.1
-[object Int8Array]
+0,1,-128,1,-128,-128,0,10,10
 0 == 0
 1 == 1
 2 == -128
@@ -21473,17 +21390,14 @@ test9.1
 6 == 0
 7 == 10
 8 == 10
--1 == 2
--3 == 4
 foo == bar
 byteLength = 9
 10
-[object Int8Array]
-prototype is
-[object Int8Array]
-byteLength = 0
+constructor is
+function Int8Array() { [native code] }
+byteLength = undefined
 object is
-[object Int8Array]
+0,1,-128,1,-128,10,0,10,10,10,11,12
 0 == 0
 1 == 1
 2 == -128
@@ -21496,12 +21410,10 @@ object is
 9 == 10
 10 == 11
 11 == 12
--1 == 2
--3 == 4
 foo == bar
 byteLength = 12
 object after expando is
-[object Int8Array]
+0,1,-128,1,-128,10,0,10,10,10,11,12
 0 == 0
 1 == 1
 2 == -128
@@ -21514,19 +21426,16 @@ object after expando is
 9 == 10
 10 == 11
 11 == 12
--1 == 2
--3 == 4
 foo == bar
 byteLength = 12
 
 test9.2
 10
-[object Int8Array]
-prototype is
-[object Int8Array]
-byteLength = 0
+constructor is
+function Int8Array() { [native code] }
+byteLength = undefined
 object is
-[object Int8Array]
+0,1,-128,0,0,10,0,10,10,10,11,12
 0 == 0
 1 == 1
 2 == -128
@@ -21539,12 +21448,10 @@ object is
 9 == 10
 10 == 11
 11 == 12
--1 == 2
--3 == 4
 foo == bar
 byteLength = 12
 object after expando is
-[object Int8Array]
+0,1,-128,0,0,10,0,10,10,10,11,12
 0 == 0
 1 == 1
 2 == -128
@@ -21557,8 +21464,6 @@ object after expando is
 9 == 10
 10 == 11
 11 == 12
--1 == 2
--3 == 4
 foo == bar
 byteLength = 12
 
@@ -21568,12 +21473,11 @@ test11
 succeed with catchingTypeError: Typed array constructor argument is invalid
 test11.1
 10
-[object Int8Array]
-prototype is
-[object Int8Array]
-byteLength = 0
+constructor is
+function Int8Array() { [native code] }
+byteLength = undefined
 object is
-[object Int8Array]
+0,1,-128,0,0,10,0
 0 == 0
 1 == 1
 2 == -128
@@ -21581,11 +21485,9 @@ object is
 4 == 0
 5 == 10
 6 == 0
--1 == 2
--3 == 4
 byteLength = 7
 object after expando is
-[object Int8Array]
+0,1,-128,0,0,10,0
 0 == 0
 1 == 1
 2 == -128
@@ -21593,37 +21495,29 @@ object after expando is
 4 == 0
 5 == 10
 6 == 0
--1 == 2
--3 == 4
 foo == bar
 byteLength = 7
 
 test12
 undefined
-[object Int8Array]
-prototype is
-[object Int8Array]
-byteLength = 0
+constructor is
+function Int8Array() { [native code] }
+byteLength = undefined
 object is
-[object Int8Array]
--1 == 2
--3 == 4
+
 byteLength = 0
 object after expando is
-[object Int8Array]
--1 == 2
--3 == 4
+
 foo == bar
 byteLength = 0
 
 test13
 10
-[object Int8Array]
-prototype is
-[object Int8Array]
-byteLength = 0
+constructor is
+function Int8Array() { [native code] }
+byteLength = undefined
 object is
-[object Int8Array]
+0,1,-128,0,1,10,0,0,10,0,0,0,0,0,0,0,0,0,0,0,20,0,0,20,0,0,0,0,0,0
 0 == 0
 1 == 1
 2 == -128
@@ -21654,11 +21548,9 @@ object is
 27 == 0
 28 == 0
 29 == 0
--1 == 2
--3 == 4
 byteLength = 30
 object after expando is
-[object Int8Array]
+0,1,-128,0,1,10,0,0,10,0,0,0,0,0,0,0,0,0,0,0,20,0,0,20,0,0,0,0,0,0
 0 == 0
 1 == 1
 2 == -128
@@ -21689,26 +21581,19 @@ object after expando is
 27 == 0
 28 == 0
 29 == 0
--1 == 2
--3 == 4
 foo == bar
 byteLength = 30
 
 test14
 undefined
-[object Int8Array]
-prototype is
-[object Int8Array]
-byteLength = 0
+constructor is
+function Int8Array() { [native code] }
+byteLength = undefined
 object is
-[object Int8Array]
--1 == 2
--3 == 4
+
 byteLength = 0
 object after expando is
-[object Int8Array]
--1 == 2
--3 == 4
+
 foo == bar
 byteLength = 0
 
@@ -21716,19 +21601,17 @@ test15
 succeed with catchingRangeError: Invalid offset/length when creating typed array
 test16
 succeed with catchingRangeError: Invalid offset/length when creating typed array
-[object Int8Array]
+0,1,10,0,0,10
 0 == 0
 1 == 1
 2 == 10
 3 == 0
 4 == 0
 5 == 10
--1 == 2
--3 == 4
 foo == bar
 byteLength = 6
 test17
-[object Int8Array]
+0,1,10,0,0,10
 0 == 0
 1 == 1
 2 == 10
@@ -21737,33 +21620,33 @@ test17
 5 == 10
 byteLength = 6
 test18
-[object Int8Array]
+0,10
 0 == 0
 1 == 10
 byteLength = 2
 test19
-[object Int8Array]
+0,1,10
 0 == 0
 1 == 1
 2 == 10
 byteLength = 3
 test20
-[object Int8Array]
+0,0
 0 == 0
 1 == 0
 byteLength = 2
 test21
-[object Int8Array]
+0,1,10,0
 0 == 0
 1 == 1
 2 == 10
 3 == 0
 byteLength = 4
 test22
-[object Int8Array]
+
 byteLength = 0
 test23
-[object Int8Array]
+1,10,0,0,10
 0 == 1
 1 == 10
 2 == 0
@@ -21771,7 +21654,7 @@ test23
 4 == 10
 byteLength = 5
 test24
-[object Int8Array]
+1,10
 0 == 1
 1 == 10
 byteLength = 2
@@ -21800,48 +21683,256 @@ test24
 undefined
 undefined
 undefined
+10
+test25
+undefined
+undefined
+5
+5
+undefined
+5
+5
+undefined
+5
+5
+undefined
+undefined
+NaN
+1
+undefined
+0
+1
+undefined
+1
+1
+0
+1
+2
+3
+4
+5
+6
+7
+8
+undefined
+undefined
+[object Object]
+6
+undefined
+[object Object]
+7
+undefined
+[object Object]
+6
+test25 JIT
+undefined
+undefined
+5
+5
+undefined
+5
+5
+undefined
+5
+5
+undefined
+undefined
+NaN
+1
+undefined
+0
+1
+undefined
+1
+1
+0
+1
+2
+3
+4
+5
+6
+7
+8
+undefined
+undefined
+[object Object]
+6
+undefined
+[object Object]
+7
+undefined
+[object Object]
+6
+test26
+***testing index 0 : 0
+5
+6
+***testing index 1 : "0"
+6
+7
+***testing index 2 : 0
+7
+8
+***testing index 3 : "-0"
+8
+undefined
+***testing index 4 : -2
+9
+undefined
+***testing index 5 : "-2"
+10
+undefined
+***testing index 6 : 1073741823
+11
+undefined
+***testing index 7 : "1073741823"
+12
+undefined
+***testing index 8 : 1
+13
+14
+***testing index 9 : "1"
+14
+15
+***testing index 10 : 2147483648
+15
+undefined
+***testing index 11 : "2147483648"
+16
+undefined
+***testing index 12 : 2147483647
+17
+undefined
+***testing index 13 : "2147483647"
+18
+undefined
+***testing index 14 : 4294967296
+19
+undefined
+***testing index 15 : "4294967296"
+20
+undefined
+***testing index 16 : 4294967295
+21
+undefined
+***testing index 17 : "4294967295"
+22
+undefined
+***testing index 18 : 1.5
+23
+undefined
+***testing index 19 : "1.5"
+24
+undefined
+***testing index 20 : "a"
+[object Object]
+***testing index 21 : 1000000000
+25
+undefined
+***testing index 22 : "1.0000000000000000000000000e-9"
+[object Object]
+***testing index 23 : NaN
+26
+undefined
+***testing index 24 : Infinity
+27
+undefined
+***testing index 25 : -Infinity
+28
+undefined
+***testing index 26 : "Infinity"
+29
+undefined
+***testing index 27 : "-Infinity"
+30
+undefined
+test26 JIT
+***testing index 0 : 0
+5
+6
+***testing index 1 : "0"
+6
+7
+***testing index 2 : 0
+7
+8
+***testing index 3 : "-0"
+8
+undefined
+***testing index 4 : -2
+9
+undefined
+***testing index 5 : "-2"
+10
+undefined
+***testing index 6 : 1073741823
+11
+undefined
+***testing index 7 : "1073741823"
+12
+undefined
+***testing index 8 : 1
+13
+14
+***testing index 9 : "1"
+14
+15
+***testing index 10 : 2147483648
+15
+undefined
+***testing index 11 : "2147483648"
+16
+undefined
+***testing index 12 : 2147483647
+17
+undefined
+***testing index 13 : "2147483647"
+18
+undefined
+***testing index 14 : 4294967296
+19
+undefined
+***testing index 15 : "4294967296"
+20
+undefined
+***testing index 16 : 4294967295
+21
+undefined
+***testing index 17 : "4294967295"
+22
+undefined
+***testing index 18 : 1.5
+23
+undefined
+***testing index 19 : "1.5"
+24
+undefined
+***testing index 20 : "a"
+[object Object]
+***testing index 21 : 1000000000
+25
+undefined
+***testing index 22 : "1.0000000000000000000000000e-9"
+[object Object]
+***testing index 23 : NaN
+26
+undefined
+***testing index 24 : Infinity
+27
+undefined
+***testing index 25 : -Infinity
+28
+undefined
+***testing index 26 : "Infinity"
+29
+undefined
+***testing index 27 : "-Infinity"
+30
 undefined
 Start same thread different engine test on file int8array.js
-property of global: WScript
 property of global: print
 undefined
-property of global: SCA
-sub object serialize in SCA is 
-function serialize() {
-    [native code]
-}
-
-sub object deserialize in SCA is 
-function deserialize() {
-    [native code]
-}
-
-sub object lookup in SCA is 
-function lookup() {
-    [native code]
-}
-
-sub object lookupEx in SCA is 
-function lookupEx() {
-    [native code]
-}
-
-sub object dataToKey in SCA is 
-function dataToKey() {
-    [native code]
-}
-
-sub object makeInt64 in SCA is 
-function makeInt64() {
-    [native code]
-}
-
-sub object makeUint64 in SCA is 
-function makeUint64() {
-    [native code]
-}
-
-property of global: ImageData
 property of global: oneTest
 exception is -2146823281Unable to set property '5' of undefined or null reference
 property of global: test1
@@ -21854,13 +21945,10 @@ sub object 5 in test1 is -128
 sub object 6 in test1 is 0
 sub object 7 in test1 is 10
 sub object 8 in test1 is 10
-sub object -1 in test1 is 2
-sub object -3 in test1 is 4
 sub object foo in test1 is bar
 property of global: test2
-sub object -1 in test2 is 2
-sub object -3 in test2 is 4
 sub object foo in test2 is bar
+sub object 2 in test2 is undefined
 property of global: arrayBuffer
 property of global: test3
 sub object 0 in test3 is 0
@@ -21893,8 +21981,6 @@ sub object 26 in test3 is 0
 sub object 27 in test3 is 0
 sub object 28 in test3 is 0
 sub object 29 in test3 is 0
-sub object -1 in test3 is 2
-sub object -3 in test3 is 4
 sub object foo in test3 is bar
 property of global: test4
 sub object 0 in test4 is 0
@@ -21924,8 +22010,6 @@ sub object 23 in test4 is 0
 sub object 24 in test4 is 0
 sub object 25 in test4 is 0
 sub object 26 in test4 is 0
-sub object -1 in test4 is 2
-sub object -3 in test4 is 4
 sub object foo in test4 is bar
 property of global: test5
 sub object 0 in test5 is 0
@@ -21934,8 +22018,6 @@ sub object 2 in test5 is 10
 sub object 3 in test5 is 0
 sub object 4 in test5 is 0
 sub object 5 in test5 is 10
-sub object -1 in test5 is 2
-sub object -3 in test5 is 4
 sub object foo in test5 is bar
 property of global: mybuffer
 property of global: test6
@@ -21948,8 +22030,6 @@ sub object 5 in test6 is -128
 sub object 6 in test6 is 0
 sub object 7 in test6 is 10
 sub object 8 in test6 is 10
-sub object -1 in test6 is 2
-sub object -3 in test6 is 4
 sub object foo in test6 is bar
 property of global: test7
 sub object 0 in test7 is 1
@@ -21958,8 +22038,6 @@ sub object 2 in test7 is -128
 sub object 3 in test7 is 0
 sub object 4 in test7 is 10
 sub object 5 in test7 is 10
-sub object -1 in test7 is 2
-sub object -3 in test7 is 4
 sub object foo in test7 is bar
 property of global: test8
 sub object 0 in test8 is -128
@@ -21968,8 +22046,6 @@ sub object 2 in test8 is -128
 sub object 3 in test8 is -128
 sub object 4 in test8 is 0
 sub object 5 in test8 is 10
-sub object -1 in test8 is 2
-sub object -3 in test8 is 4
 sub object foo in test8 is bar
 property of global: arr
 sub object 0 in arr is 1
@@ -21997,8 +22073,6 @@ sub object 8 in test9 is 10
 sub object 9 in test9 is 10
 sub object 10 in test9 is 11
 sub object 11 in test9 is 12
-sub object -1 in test9 is 2
-sub object -3 in test9 is 4
 sub object foo in test9 is bar
 property of global: test10
 property of global: test11
@@ -22010,13 +22084,10 @@ sub object 3 in test111 is 0
 sub object 4 in test111 is 0
 sub object 5 in test111 is 10
 sub object 6 in test111 is 0
-sub object -1 in test111 is 2
-sub object -3 in test111 is 4
 sub object foo in test111 is bar
 property of global: test12
-sub object -1 in test12 is 2
-sub object -3 in test12 is 4
 sub object foo in test12 is bar
+sub object 2 in test12 is undefined
 property of global: test13
 sub object 0 in test13 is 0
 sub object 1 in test13 is 1
@@ -22048,13 +22119,10 @@ sub object 26 in test13 is 0
 sub object 27 in test13 is 0
 sub object 28 in test13 is 0
 sub object 29 in test13 is 0
-sub object -1 in test13 is 2
-sub object -3 in test13 is 4
 sub object foo in test13 is bar
 property of global: test14
-sub object -1 in test14 is 2
-sub object -3 in test14 is 4
 sub object foo in test14 is bar
+sub object 2 in test14 is undefined
 property of global: test15
 property of global: test16
 property of global: test17
@@ -22067,6 +22135,7 @@ sub object 5 in test17 is 10
 property of global: test18
 sub object 0 in test18 is 0
 sub object 1 in test18 is 10
+sub object 2 in test18 is undefined
 property of global: test19
 sub object 0 in test19 is 0
 sub object 1 in test19 is 1
@@ -22074,12 +22143,14 @@ sub object 2 in test19 is 10
 property of global: test20
 sub object 0 in test20 is 0
 sub object 1 in test20 is 0
+sub object 2 in test20 is undefined
 property of global: test21
 sub object 0 in test21 is 0
 sub object 1 in test21 is 1
 sub object 2 in test21 is 10
 sub object 3 in test21 is 0
 property of global: test22
+sub object 2 in test22 is undefined
 property of global: test23
 sub object 0 in test23 is 1
 sub object 1 in test23 is 10
@@ -22089,6 +22160,7 @@ sub object 4 in test23 is 10
 property of global: test24
 sub object 0 in test24 is 1
 sub object 1 in test24 is 10
+sub object 2 in test24 is undefined
 property of global: validSizeValues
 sub object 0 in validSizeValues is abc
 sub object 1 in validSizeValues is 123
@@ -22107,15 +22179,28 @@ property of global: verifyThrow
 SUCCEEDED: get expected exception Object expected
 property of global: verifyNoThrow
 FAILED: get exception Object expected
+property of global: setIntValue
+property of global: setFloat32Value
+property of global: setFloat64Value
+property of global: testSetWithObj
+exception is -2146823281Unable to get property '0' of undefined or null reference
+property of global: testSetWithFloat
+exception is -2146823281Unable to get property '0' of undefined or null reference
+property of global: testSetWithInt
+exception is -2146823281Unable to get property '0' of undefined or null reference
+property of global: testIndexValueForSet
+***testing index 0 : 0
+exception is -2146823281Unable to set property '0' of undefined or null reference
+property of global: valueToSet
+sub object valueOf in valueToSet is function () { WScript.Echo(count); return count++; }
 testing file uint8array.js
 test1
 10
-[object Uint8Array]
-prototype is
-[object Uint8Array]
-byteLength = 0
+constructor is
+function Uint8Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint8Array]
+0,128,0,0,0,10,0,0,0
 0 == 0
 1 == 128
 2 == 0
@@ -22127,7 +22212,7 @@ object is
 8 == 0
 byteLength = 9
 object after expando is
-[object Uint8Array]
+0,128,0,0,0,10,0,0,0
 0 == 0
 1 == 128
 2 == 0
@@ -22142,26 +22227,24 @@ byteLength = 9
 
 test2
 undefined
-[object Uint8Array]
-prototype is
-[object Uint8Array]
-byteLength = 0
+constructor is
+function Uint8Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint8Array]
+
 byteLength = 0
 object after expando is
-[object Uint8Array]
+
 foo == bar
 byteLength = 0
 
 test3
 10
-[object Uint8Array]
-prototype is
-[object Uint8Array]
-byteLength = 0
+constructor is
+function Uint8Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint8Array]
+0,128,0,0,0,10,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 0 == 0
 1 == 128
 2 == 0
@@ -22194,7 +22277,7 @@ object is
 29 == 0
 byteLength = 30
 object after expando is
-[object Uint8Array]
+0,128,0,0,0,10,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0,0,0,0,0,0,0,0,0
 0 == 0
 1 == 128
 2 == 0
@@ -22230,12 +22313,11 @@ byteLength = 30
 
 test4
 10
-[object Uint8Array]
-prototype is
-[object Uint8Array]
-byteLength = 0
+constructor is
+function Uint8Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint8Array]
+0,128,10,0,0,10,0,0,0,0,0,0,0,0,0,0,0,20,0,0,0,0,0,0,0,0,0
 0 == 0
 1 == 128
 2 == 10
@@ -22265,7 +22347,7 @@ object is
 26 == 0
 byteLength = 27
 object after expando is
-[object Uint8Array]
+0,128,10,0,0,10,0,0,0,0,0,0,0,0,0,0,0,20,0,0,20,0,0,0,0,0,0
 0 == 0
 1 == 128
 2 == 10
@@ -22298,12 +22380,11 @@ byteLength = 27
 
 test5
 10
-[object Uint8Array]
-prototype is
-[object Uint8Array]
-byteLength = 0
+constructor is
+function Uint8Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint8Array]
+0,128,10,0,0,10
 0 == 0
 1 == 128
 2 == 10
@@ -22312,7 +22393,7 @@ object is
 5 == 10
 byteLength = 6
 object after expando is
-[object Uint8Array]
+0,128,10,0,0,10
 0 == 0
 1 == 128
 2 == 10
@@ -22325,12 +22406,11 @@ byteLength = 6
 test6
 [object ArrayBuffer]
 10
-[object Uint8Array]
-prototype is
-[object Uint8Array]
-byteLength = 0
+constructor is
+function Uint8Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint8Array]
+0,128,0,0,0,10,0,0,0
 0 == 0
 1 == 128
 2 == 0
@@ -22342,7 +22422,7 @@ object is
 8 == 0
 byteLength = 9
 object after expando is
-[object Uint8Array]
+0,128,0,0,0,10,0,0,0
 0 == 0
 1 == 128
 2 == 0
@@ -22357,12 +22437,11 @@ byteLength = 9
 
 test7
 10
-[object Uint8Array]
-prototype is
-[object Uint8Array]
-byteLength = 0
+constructor is
+function Uint8Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint8Array]
+0,128,10,0,0,10
 0 == 0
 1 == 128
 2 == 10
@@ -22371,7 +22450,7 @@ object is
 5 == 10
 byteLength = 6
 object after expando is
-[object Uint8Array]
+0,128,10,0,0,10
 0 == 0
 1 == 128
 2 == 10
@@ -22383,12 +22462,11 @@ byteLength = 6
 
 test8
 10
-[object Uint8Array]
-prototype is
-[object Uint8Array]
-byteLength = 0
+constructor is
+function Uint8Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint8Array]
+0,128,128,10,0,10
 0 == 0
 1 == 128
 2 == 128
@@ -22397,7 +22475,7 @@ object is
 5 == 10
 byteLength = 6
 object after expando is
-[object Uint8Array]
+0,128,128,10,0,10
 0 == 0
 1 == 128
 2 == 128
@@ -22409,12 +22487,11 @@ byteLength = 6
 
 test9
 10
-[object Uint8Array]
-prototype is
-[object Uint8Array]
-byteLength = 0
+constructor is
+function Uint8Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint8Array]
+1,128,3,4,5,10,7,8,9,10,11,12
 0 == 1
 1 == 128
 2 == 3
@@ -22429,7 +22506,7 @@ object is
 11 == 12
 byteLength = 12
 object after expando is
-[object Uint8Array]
+1,128,3,4,5,10,7,8,9,10,11,12
 0 == 1
 1 == 128
 2 == 3
@@ -22446,7 +22523,7 @@ foo == bar
 byteLength = 12
 
 test9.1
-[object Uint8Array]
+0,128,0,128,128,10,0,10,10
 0 == 0
 1 == 128
 2 == 0
@@ -22459,12 +22536,11 @@ test9.1
 foo == bar
 byteLength = 9
 10
-[object Uint8Array]
-prototype is
-[object Uint8Array]
-byteLength = 0
+constructor is
+function Uint8Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint8Array]
+0,128,0,128,128,10,0,10,10,10,11,12
 0 == 0
 1 == 128
 2 == 0
@@ -22480,7 +22556,7 @@ object is
 foo == bar
 byteLength = 12
 object after expando is
-[object Uint8Array]
+0,128,0,128,128,10,0,10,10,10,11,12
 0 == 0
 1 == 128
 2 == 0
@@ -22498,12 +22574,11 @@ byteLength = 12
 
 test9.2
 10
-[object Uint8Array]
-prototype is
-[object Uint8Array]
-byteLength = 0
+constructor is
+function Uint8Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint8Array]
+0,128,10,0,0,10,0,10,10,10,11,12
 0 == 0
 1 == 128
 2 == 10
@@ -22519,7 +22594,7 @@ object is
 foo == bar
 byteLength = 12
 object after expando is
-[object Uint8Array]
+0,128,10,0,0,10,0,10,10,10,11,12
 0 == 0
 1 == 128
 2 == 10
@@ -22541,12 +22616,11 @@ test11
 succeed with catchingTypeError: Typed array constructor argument is invalid
 test11.1
 10
-[object Uint8Array]
-prototype is
-[object Uint8Array]
-byteLength = 0
+constructor is
+function Uint8Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint16Array]
+0,128,0,0,0,10,0
 0 == 0
 1 == 128
 2 == 0
@@ -22556,7 +22630,7 @@ object is
 6 == 0
 byteLength = 14
 object after expando is
-[object Uint16Array]
+0,128,0,0,0,10,0
 0 == 0
 1 == 128
 2 == 0
@@ -22569,26 +22643,24 @@ byteLength = 14
 
 test12
 undefined
-[object Uint8Array]
-prototype is
-[object Uint8Array]
-byteLength = 0
+constructor is
+function Uint8Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint8Array]
+
 byteLength = 0
 object after expando is
-[object Uint8Array]
+
 foo == bar
 byteLength = 0
 
 test13
 10
-[object Uint8Array]
-prototype is
-[object Uint8Array]
-byteLength = 0
+constructor is
+function Uint8Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint8Array]
+0,128,0,0,128,10,0,0,10,0,0,0,0,0,0,0,0,0,0,0,20,0,0,20,0,0,0,0,0,0
 0 == 0
 1 == 128
 2 == 0
@@ -22621,7 +22693,7 @@ object is
 29 == 0
 byteLength = 30
 object after expando is
-[object Uint8Array]
+0,128,0,0,128,10,0,0,10,0,0,0,0,0,0,0,0,0,0,0,20,0,0,20,0,0,0,0,0,0
 0 == 0
 1 == 128
 2 == 0
@@ -22657,15 +22729,14 @@ byteLength = 30
 
 test14
 undefined
-[object Uint8Array]
-prototype is
-[object Uint8Array]
-byteLength = 0
+constructor is
+function Uint8Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint8Array]
+
 byteLength = 0
 object after expando is
-[object Uint8Array]
+
 foo == bar
 byteLength = 0
 
@@ -22674,7 +22745,7 @@ succeed with catchingRangeError: Invalid offset/length when creating typed array
 test16
 succeed with catchingRangeError: Invalid offset/length when creating typed array
 test17
-[object Uint8Array]
+0,128,10,0,0,10
 0 == 0
 1 == 128
 2 == 10
@@ -22683,12 +22754,12 @@ test17
 5 == 10
 byteLength = 6
 test18
-[object Uint8Array]
+0,10
 0 == 0
 1 == 10
 byteLength = 2
 test19
-[object Uint8Array]
+0,128,10
 0 == 0
 1 == 128
 2 == 10
@@ -22697,48 +22768,256 @@ test20
 undefined
 undefined
 undefined
+10
+test21
+undefined
+undefined
+5
+5
+undefined
+5
+5
+undefined
+5
+5
+undefined
+undefined
+NaN
+1
+undefined
+0
+1
+undefined
+1
+1
+0
+1
+2
+3
+4
+5
+6
+7
+8
+undefined
+undefined
+[object Object]
+6
+undefined
+[object Object]
+7
+undefined
+[object Object]
+6
+test21 JIT
+undefined
+undefined
+5
+5
+undefined
+5
+5
+undefined
+5
+5
+undefined
+undefined
+NaN
+1
+undefined
+0
+1
+undefined
+1
+1
+0
+1
+2
+3
+4
+5
+6
+7
+8
+undefined
+undefined
+[object Object]
+6
+undefined
+[object Object]
+7
+undefined
+[object Object]
+6
+test22
+***testing index 0 : 0
+5
+6
+***testing index 1 : "0"
+6
+7
+***testing index 2 : 0
+7
+8
+***testing index 3 : "-0"
+8
+undefined
+***testing index 4 : -2
+9
+undefined
+***testing index 5 : "-2"
+10
+undefined
+***testing index 6 : 1073741823
+11
+undefined
+***testing index 7 : "1073741823"
+12
+undefined
+***testing index 8 : 1
+13
+14
+***testing index 9 : "1"
+14
+15
+***testing index 10 : 2147483648
+15
+undefined
+***testing index 11 : "2147483648"
+16
+undefined
+***testing index 12 : 2147483647
+17
+undefined
+***testing index 13 : "2147483647"
+18
+undefined
+***testing index 14 : 4294967296
+19
+undefined
+***testing index 15 : "4294967296"
+20
+undefined
+***testing index 16 : 4294967295
+21
+undefined
+***testing index 17 : "4294967295"
+22
+undefined
+***testing index 18 : 1.5
+23
+undefined
+***testing index 19 : "1.5"
+24
+undefined
+***testing index 20 : "a"
+[object Object]
+***testing index 21 : 1000000000
+25
+undefined
+***testing index 22 : "1.0000000000000000000000000e-9"
+[object Object]
+***testing index 23 : NaN
+26
+undefined
+***testing index 24 : Infinity
+27
+undefined
+***testing index 25 : -Infinity
+28
+undefined
+***testing index 26 : "Infinity"
+29
+undefined
+***testing index 27 : "-Infinity"
+30
+undefined
+test22 JIT
+***testing index 0 : 0
+5
+6
+***testing index 1 : "0"
+6
+7
+***testing index 2 : 0
+7
+8
+***testing index 3 : "-0"
+8
+undefined
+***testing index 4 : -2
+9
+undefined
+***testing index 5 : "-2"
+10
+undefined
+***testing index 6 : 1073741823
+11
+undefined
+***testing index 7 : "1073741823"
+12
+undefined
+***testing index 8 : 1
+13
+14
+***testing index 9 : "1"
+14
+15
+***testing index 10 : 2147483648
+15
+undefined
+***testing index 11 : "2147483648"
+16
+undefined
+***testing index 12 : 2147483647
+17
+undefined
+***testing index 13 : "2147483647"
+18
+undefined
+***testing index 14 : 4294967296
+19
+undefined
+***testing index 15 : "4294967296"
+20
+undefined
+***testing index 16 : 4294967295
+21
+undefined
+***testing index 17 : "4294967295"
+22
+undefined
+***testing index 18 : 1.5
+23
+undefined
+***testing index 19 : "1.5"
+24
+undefined
+***testing index 20 : "a"
+[object Object]
+***testing index 21 : 1000000000
+25
+undefined
+***testing index 22 : "1.0000000000000000000000000e-9"
+[object Object]
+***testing index 23 : NaN
+26
+undefined
+***testing index 24 : Infinity
+27
+undefined
+***testing index 25 : -Infinity
+28
+undefined
+***testing index 26 : "Infinity"
+29
+undefined
+***testing index 27 : "-Infinity"
+30
 undefined
 Start same thread different engine test on file uint8array.js
-property of global: WScript
 property of global: print
 undefined
-property of global: SCA
-sub object serialize in SCA is 
-function serialize() {
-    [native code]
-}
-
-sub object deserialize in SCA is 
-function deserialize() {
-    [native code]
-}
-
-sub object lookup in SCA is 
-function lookup() {
-    [native code]
-}
-
-sub object lookupEx in SCA is 
-function lookupEx() {
-    [native code]
-}
-
-sub object dataToKey in SCA is 
-function dataToKey() {
-    [native code]
-}
-
-sub object makeInt64 in SCA is 
-function makeInt64() {
-    [native code]
-}
-
-sub object makeUint64 in SCA is 
-function makeUint64() {
-    [native code]
-}
-
-property of global: ImageData
 property of global: oneTest
 exception is -2146823281Unable to set property '1' of undefined or null reference
 property of global: test1
@@ -22754,6 +23033,7 @@ sub object 8 in test1 is 10
 sub object foo in test1 is bar
 property of global: test2
 sub object foo in test2 is bar
+sub object 2 in test2 is undefined
 property of global: arrayBuffer
 property of global: test3
 sub object 0 in test3 is 0
@@ -22892,6 +23172,7 @@ sub object 6 in test111 is 0
 sub object foo in test111 is bar
 property of global: test12
 sub object foo in test12 is bar
+sub object 2 in test12 is undefined
 property of global: test13
 sub object 0 in test13 is 0
 sub object 1 in test13 is 128
@@ -22926,6 +23207,7 @@ sub object 29 in test13 is 0
 sub object foo in test13 is bar
 property of global: test14
 sub object foo in test14 is bar
+sub object 2 in test14 is undefined
 property of global: test15
 property of global: test16
 property of global: test17
@@ -22938,6 +23220,7 @@ sub object 5 in test17 is 10
 property of global: test18
 sub object 0 in test18 is 0
 sub object 1 in test18 is 10
+sub object 2 in test18 is undefined
 property of global: test19
 sub object 0 in test19 is 0
 sub object 1 in test19 is 128
@@ -22948,16 +23231,29 @@ property of global: verifyThrow
 SUCCEEDED: get expected exception Object expected
 property of global: verifyNoThrow
 FAILED: get exception Object expected
+property of global: setIntValue
+property of global: setFloat32Value
+property of global: setFloat64Value
+property of global: testSetWithObj
+exception is -2146823281Unable to get property '0' of undefined or null reference
+property of global: testSetWithFloat
+exception is -2146823281Unable to get property '0' of undefined or null reference
+property of global: testSetWithInt
+exception is -2146823281Unable to get property '0' of undefined or null reference
+property of global: testIndexValueForSet
+***testing index 0 : 0
+exception is -2146823281Unable to set property '0' of undefined or null reference
 property of global: i
+property of global: valueToSet
+sub object valueOf in valueToSet is function () { WScript.Echo(count); return count++; }
 testing file int16array.js
 test1
 10
-[object Int16Array]
-prototype is
-[object Int16Array]
-byteLength = 0
+constructor is
+function Int16Array() { [native code] }
+byteLength = undefined
 object is
-[object Int16Array]
+0,-32768,0,0,0,10,0,0,0
 0 == 0
 1 == -32768
 2 == 0
@@ -22969,7 +23265,7 @@ object is
 8 == 0
 byteLength = 18
 object after expando is
-[object Int16Array]
+0,-32768,0,0,0,10,0,0,0
 0 == 0
 1 == -32768
 2 == 0
@@ -22984,26 +23280,24 @@ byteLength = 18
 
 test2
 undefined
-[object Int16Array]
-prototype is
-[object Int16Array]
-byteLength = 0
+constructor is
+function Int16Array() { [native code] }
+byteLength = undefined
 object is
-[object Int16Array]
+
 byteLength = 0
 object after expando is
-[object Int16Array]
+
 foo == bar
 byteLength = 0
 
 test3
 10
-[object Int16Array]
-prototype is
-[object Int16Array]
-byteLength = 0
+constructor is
+function Int16Array() { [native code] }
+byteLength = undefined
 object is
-[object Int16Array]
+0,-32768,0,0,0,10,0,0,0,0,0,0,0,0,0
 0 == 0
 1 == -32768
 2 == 0
@@ -23021,7 +23315,7 @@ object is
 14 == 0
 byteLength = 30
 object after expando is
-[object Int16Array]
+0,-32768,0,0,0,10,0,0,0,0,0,0,0,0,0
 0 == 0
 1 == -32768
 2 == 0
@@ -23042,12 +23336,11 @@ byteLength = 30
 
 test4
 10
-[object Int16Array]
-prototype is
-[object Int16Array]
-byteLength = 0
+constructor is
+function Int16Array() { [native code] }
+byteLength = undefined
 object is
-[object Int16Array]
+0,-32768,0,10,0,10,0,0,0,0,0,0,0
 0 == 0
 1 == -32768
 2 == 0
@@ -23063,7 +23356,7 @@ object is
 12 == 0
 byteLength = 26
 object after expando is
-[object Int16Array]
+0,-32768,0,10,0,10,0,0,0,0,0,0,0
 0 == 0
 1 == -32768
 2 == 0
@@ -23082,12 +23375,11 @@ byteLength = 26
 
 test5
 10
-[object Int16Array]
-prototype is
-[object Int16Array]
-byteLength = 0
+constructor is
+function Int16Array() { [native code] }
+byteLength = undefined
 object is
-[object Int16Array]
+0,-32768,0,10,0,10
 0 == 0
 1 == -32768
 2 == 0
@@ -23096,7 +23388,7 @@ object is
 5 == 10
 byteLength = 12
 object after expando is
-[object Int16Array]
+0,-32768,0,10,0,10
 0 == 0
 1 == -32768
 2 == 0
@@ -23109,12 +23401,11 @@ byteLength = 12
 test6
 [object ArrayBuffer]
 10
-[object Int16Array]
-prototype is
-[object Int16Array]
-byteLength = 0
+constructor is
+function Int16Array() { [native code] }
+byteLength = undefined
 object is
-[object Int16Array]
+0,-32768,0,0,0,10,0,0,0
 0 == 0
 1 == -32768
 2 == 0
@@ -23126,7 +23417,7 @@ object is
 8 == 0
 byteLength = 18
 object after expando is
-[object Int16Array]
+0,-32768,0,0,0,10,0,0,0
 0 == 0
 1 == -32768
 2 == 0
@@ -23141,12 +23432,11 @@ byteLength = 18
 
 test7
 10
-[object Int16Array]
-prototype is
-[object Int16Array]
-byteLength = 0
+constructor is
+function Int16Array() { [native code] }
+byteLength = undefined
 object is
-[object Int16Array]
+0,-32768,0,10,0,10,0
 0 == 0
 1 == -32768
 2 == 0
@@ -23156,7 +23446,7 @@ object is
 6 == 0
 byteLength = 14
 object after expando is
-[object Int16Array]
+0,-32768,0,10,0,10,0
 0 == 0
 1 == -32768
 2 == 0
@@ -23169,12 +23459,11 @@ byteLength = 14
 
 test8
 10
-[object Int16Array]
-prototype is
-[object Int16Array]
-byteLength = 0
+constructor is
+function Int16Array() { [native code] }
+byteLength = undefined
 object is
-[object Int16Array]
+-32768,-32768,-32768,0,10,10
 0 == -32768
 1 == -32768
 2 == -32768
@@ -23183,7 +23472,7 @@ object is
 5 == 10
 byteLength = 12
 object after expando is
-[object Int16Array]
+-32768,-32768,-32768,0,10,10
 0 == -32768
 1 == -32768
 2 == -32768
@@ -23195,12 +23484,11 @@ byteLength = 12
 
 test9
 10
-[object Int16Array]
-prototype is
-[object Int16Array]
-byteLength = 0
+constructor is
+function Int16Array() { [native code] }
+byteLength = undefined
 object is
-[object Int16Array]
+1,-32768,3,4,5,10,7,8,9,10,11,12
 0 == 1
 1 == -32768
 2 == 3
@@ -23215,7 +23503,7 @@ object is
 11 == 12
 byteLength = 24
 object after expando is
-[object Int16Array]
+1,-32768,3,4,5,10,7,8,9,10,11,12
 0 == 1
 1 == -32768
 2 == 3
@@ -23232,7 +23520,7 @@ foo == bar
 byteLength = 24
 
 test9.1
-[object Int16Array]
+0,-32768,-32768,-32768,0,10,10,10,0
 0 == 0
 1 == -32768
 2 == -32768
@@ -23245,12 +23533,11 @@ test9.1
 foo == bar
 byteLength = 18
 10
-[object Int16Array]
-prototype is
-[object Int16Array]
-byteLength = 0
+constructor is
+function Int16Array() { [native code] }
+byteLength = undefined
 object is
-[object Int16Array]
+0,-32768,-32768,-32768,0,10,10,10,0,10,11,12
 0 == 0
 1 == -32768
 2 == -32768
@@ -23266,7 +23553,7 @@ object is
 foo == bar
 byteLength = 24
 object after expando is
-[object Int16Array]
+0,-32768,-32768,-32768,0,10,10,10,0,10,11,12
 0 == 0
 1 == -32768
 2 == -32768
@@ -23284,12 +23571,11 @@ byteLength = 24
 
 test9.2
 10
-[object Int16Array]
-prototype is
-[object Int16Array]
-byteLength = 0
+constructor is
+function Int16Array() { [native code] }
+byteLength = undefined
 object is
-[object Int16Array]
+0,-32768,0,10,0,10,10,10,0,10,11,12
 0 == 0
 1 == -32768
 2 == 0
@@ -23305,7 +23591,7 @@ object is
 foo == bar
 byteLength = 24
 object after expando is
-[object Int16Array]
+0,-32768,0,10,0,10,10,10,0,10,11,12
 0 == 0
 1 == -32768
 2 == 0
@@ -23327,12 +23613,11 @@ test11
 succeed with catchingTypeError: Typed array constructor argument is invalid
 test11.1
 10
-[object Int16Array]
-prototype is
-[object Int16Array]
-byteLength = 0
+constructor is
+function Int16Array() { [native code] }
+byteLength = undefined
 object is
-[object Int16Array]
+0,-32768,0,0,0,10,0
 0 == 0
 1 == -32768
 2 == 0
@@ -23342,7 +23627,7 @@ object is
 6 == 0
 byteLength = 14
 object after expando is
-[object Int16Array]
+0,-32768,0,0,0,10,0
 0 == 0
 1 == -32768
 2 == 0
@@ -23355,26 +23640,24 @@ byteLength = 14
 
 test12
 undefined
-[object Int16Array]
-prototype is
-[object Int16Array]
-byteLength = 0
+constructor is
+function Int16Array() { [native code] }
+byteLength = undefined
 object is
-[object Int16Array]
+
 byteLength = 0
 object after expando is
-[object Int16Array]
+
 foo == bar
 byteLength = 0
 
 test13
 10
-[object Int16Array]
-prototype is
-[object Int16Array]
-byteLength = 0
+constructor is
+function Int16Array() { [native code] }
+byteLength = undefined
 object is
-[object Int16Array]
+0,-32768,0,-32768,0,10,0,10,0,0,0,0,0,0,0
 0 == 0
 1 == -32768
 2 == 0
@@ -23392,7 +23675,7 @@ object is
 14 == 0
 byteLength = 30
 object after expando is
-[object Int16Array]
+0,-32768,0,-32768,0,10,0,10,0,0,0,0,0,0,0
 0 == 0
 1 == -32768
 2 == 0
@@ -23413,15 +23696,14 @@ byteLength = 30
 
 test14
 undefined
-[object Int16Array]
-prototype is
-[object Int16Array]
-byteLength = 0
+constructor is
+function Int16Array() { [native code] }
+byteLength = undefined
 object is
-[object Int16Array]
+
 byteLength = 0
 object after expando is
-[object Int16Array]
+
 foo == bar
 byteLength = 0
 
@@ -23430,7 +23712,7 @@ succeed with catchingRangeError: Invalid offset/length when creating typed array
 test16
 succeed with catchingRangeError: Invalid offset/length when creating typed array
 test17
-[object Int16Array]
+0,-32768,0,10,0,10
 0 == 0
 1 == -32768
 2 == 0
@@ -23439,12 +23721,12 @@ test17
 5 == 10
 byteLength = 12
 test18
-[object Int16Array]
+0,10
 0 == 0
 1 == 10
 byteLength = 4
 test19
-[object Int16Array]
+0,-32768,0
 0 == 0
 1 == -32768
 2 == 0
@@ -23453,48 +23735,256 @@ test20
 undefined
 undefined
 undefined
+10
+test21
+undefined
+undefined
+5
+5
+undefined
+5
+5
+undefined
+5
+5
+undefined
+undefined
+NaN
+1
+undefined
+0
+1
+undefined
+1
+1
+0
+1
+2
+3
+4
+5
+6
+7
+8
+undefined
+undefined
+[object Object]
+6
+undefined
+[object Object]
+7
+undefined
+[object Object]
+6
+test21 JIT
+undefined
+undefined
+5
+5
+undefined
+5
+5
+undefined
+5
+5
+undefined
+undefined
+NaN
+1
+undefined
+0
+1
+undefined
+1
+1
+0
+1
+2
+3
+4
+5
+6
+7
+8
+undefined
+undefined
+[object Object]
+6
+undefined
+[object Object]
+7
+undefined
+[object Object]
+6
+test22
+***testing index 0 : 0
+5
+6
+***testing index 1 : "0"
+6
+7
+***testing index 2 : 0
+7
+8
+***testing index 3 : "-0"
+8
+undefined
+***testing index 4 : -2
+9
+undefined
+***testing index 5 : "-2"
+10
+undefined
+***testing index 6 : 1073741823
+11
+undefined
+***testing index 7 : "1073741823"
+12
+undefined
+***testing index 8 : 1
+13
+14
+***testing index 9 : "1"
+14
+15
+***testing index 10 : 2147483648
+15
+undefined
+***testing index 11 : "2147483648"
+16
+undefined
+***testing index 12 : 2147483647
+17
+undefined
+***testing index 13 : "2147483647"
+18
+undefined
+***testing index 14 : 4294967296
+19
+undefined
+***testing index 15 : "4294967296"
+20
+undefined
+***testing index 16 : 4294967295
+21
+undefined
+***testing index 17 : "4294967295"
+22
+undefined
+***testing index 18 : 1.5
+23
+undefined
+***testing index 19 : "1.5"
+24
+undefined
+***testing index 20 : "a"
+[object Object]
+***testing index 21 : 1000000000
+25
+undefined
+***testing index 22 : "1.0000000000000000000000000e-9"
+[object Object]
+***testing index 23 : NaN
+26
+undefined
+***testing index 24 : Infinity
+27
+undefined
+***testing index 25 : -Infinity
+28
+undefined
+***testing index 26 : "Infinity"
+29
+undefined
+***testing index 27 : "-Infinity"
+30
+undefined
+test22 JIT
+***testing index 0 : 0
+5
+6
+***testing index 1 : "0"
+6
+7
+***testing index 2 : 0
+7
+8
+***testing index 3 : "-0"
+8
+undefined
+***testing index 4 : -2
+9
+undefined
+***testing index 5 : "-2"
+10
+undefined
+***testing index 6 : 1073741823
+11
+undefined
+***testing index 7 : "1073741823"
+12
+undefined
+***testing index 8 : 1
+13
+14
+***testing index 9 : "1"
+14
+15
+***testing index 10 : 2147483648
+15
+undefined
+***testing index 11 : "2147483648"
+16
+undefined
+***testing index 12 : 2147483647
+17
+undefined
+***testing index 13 : "2147483647"
+18
+undefined
+***testing index 14 : 4294967296
+19
+undefined
+***testing index 15 : "4294967296"
+20
+undefined
+***testing index 16 : 4294967295
+21
+undefined
+***testing index 17 : "4294967295"
+22
+undefined
+***testing index 18 : 1.5
+23
+undefined
+***testing index 19 : "1.5"
+24
+undefined
+***testing index 20 : "a"
+[object Object]
+***testing index 21 : 1000000000
+25
+undefined
+***testing index 22 : "1.0000000000000000000000000e-9"
+[object Object]
+***testing index 23 : NaN
+26
+undefined
+***testing index 24 : Infinity
+27
+undefined
+***testing index 25 : -Infinity
+28
+undefined
+***testing index 26 : "Infinity"
+29
+undefined
+***testing index 27 : "-Infinity"
+30
 undefined
 Start same thread different engine test on file int16array.js
-property of global: WScript
 property of global: print
 undefined
-property of global: SCA
-sub object serialize in SCA is 
-function serialize() {
-    [native code]
-}
-
-sub object deserialize in SCA is 
-function deserialize() {
-    [native code]
-}
-
-sub object lookup in SCA is 
-function lookup() {
-    [native code]
-}
-
-sub object lookupEx in SCA is 
-function lookupEx() {
-    [native code]
-}
-
-sub object dataToKey in SCA is 
-function dataToKey() {
-    [native code]
-}
-
-sub object makeInt64 in SCA is 
-function makeInt64() {
-    [native code]
-}
-
-sub object makeUint64 in SCA is 
-function makeUint64() {
-    [native code]
-}
-
-property of global: ImageData
 property of global: oneTest
 exception is -2146823281Unable to set property '1' of undefined or null reference
 property of global: test1
@@ -23510,6 +24000,7 @@ sub object 8 in test1 is 0
 sub object foo in test1 is bar
 property of global: test2
 sub object foo in test2 is bar
+sub object 2 in test2 is undefined
 property of global: arrayBuffer
 property of global: test3
 sub object 0 in test3 is 0
@@ -23620,6 +24111,7 @@ sub object 6 in test111 is 0
 sub object foo in test111 is bar
 property of global: test12
 sub object foo in test12 is bar
+sub object 2 in test12 is undefined
 property of global: test13
 sub object 0 in test13 is 0
 sub object 1 in test13 is -32768
@@ -23639,6 +24131,7 @@ sub object 14 in test13 is 0
 sub object foo in test13 is bar
 property of global: test14
 sub object foo in test14 is bar
+sub object 2 in test14 is undefined
 property of global: test15
 property of global: test16
 property of global: test17
@@ -23651,6 +24144,7 @@ sub object 5 in test17 is 10
 property of global: test18
 sub object 0 in test18 is 0
 sub object 1 in test18 is 10
+sub object 2 in test18 is undefined
 property of global: test19
 sub object 0 in test19 is 0
 sub object 1 in test19 is -32768
@@ -23661,16 +24155,29 @@ property of global: verifyThrow
 SUCCEEDED: get expected exception Object expected
 property of global: verifyNoThrow
 FAILED: get exception Object expected
+property of global: setIntValue
+property of global: setFloat32Value
+property of global: setFloat64Value
+property of global: testSetWithObj
+exception is -2146823281Unable to get property '0' of undefined or null reference
+property of global: testSetWithFloat
+exception is -2146823281Unable to get property '0' of undefined or null reference
+property of global: testSetWithInt
+exception is -2146823281Unable to get property '0' of undefined or null reference
+property of global: testIndexValueForSet
+***testing index 0 : 0
+exception is -2146823281Unable to set property '0' of undefined or null reference
 property of global: i
+property of global: valueToSet
+sub object valueOf in valueToSet is function () { WScript.Echo(count); return count++; }
 testing file uint16array.js
 test1
 10
-[object Uint16Array]
-prototype is
-[object Uint16Array]
-byteLength = 0
+constructor is
+function Uint16Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint16Array]
+0,32768,0,0,0,10,0,0,0
 0 == 0
 1 == 32768
 2 == 0
@@ -23682,7 +24189,7 @@ object is
 8 == 0
 byteLength = 18
 object after expando is
-[object Uint16Array]
+0,32768,0,0,0,10,0,0,0
 0 == 0
 1 == 32768
 2 == 0
@@ -23697,26 +24204,24 @@ byteLength = 18
 
 test2
 undefined
-[object Uint16Array]
-prototype is
-[object Uint16Array]
-byteLength = 0
+constructor is
+function Uint16Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint16Array]
+
 byteLength = 0
 object after expando is
-[object Uint16Array]
+
 foo == bar
 byteLength = 0
 
 test3
 10
-[object Uint16Array]
-prototype is
-[object Uint16Array]
-byteLength = 0
+constructor is
+function Uint16Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint16Array]
+0,32768,0,0,0,10,0,0,0,0,0,0,0,0,0
 0 == 0
 1 == 32768
 2 == 0
@@ -23734,7 +24239,7 @@ object is
 14 == 0
 byteLength = 30
 object after expando is
-[object Uint16Array]
+0,32768,0,0,0,10,0,0,0,0,0,0,0,0,0
 0 == 0
 1 == 32768
 2 == 0
@@ -23755,12 +24260,11 @@ byteLength = 30
 
 test4
 10
-[object Uint16Array]
-prototype is
-[object Uint16Array]
-byteLength = 0
+constructor is
+function Uint16Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint16Array]
+32768,32768,0,0,10,10,0,0,0,0,0,0,0,0
 0 == 32768
 1 == 32768
 2 == 0
@@ -23777,7 +24281,7 @@ object is
 13 == 0
 byteLength = 28
 object after expando is
-[object Uint16Array]
+32768,32768,0,0,10,10,0,0,0,0,0,0,0,0
 0 == 32768
 1 == 32768
 2 == 0
@@ -23797,12 +24301,11 @@ byteLength = 28
 
 test5
 10
-[object Uint16Array]
-prototype is
-[object Uint16Array]
-byteLength = 0
+constructor is
+function Uint16Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint16Array]
+32768,32768,0,0,10,10
 0 == 32768
 1 == 32768
 2 == 0
@@ -23811,7 +24314,7 @@ object is
 5 == 10
 byteLength = 12
 object after expando is
-[object Uint16Array]
+32768,32768,0,0,10,10
 0 == 32768
 1 == 32768
 2 == 0
@@ -23824,12 +24327,11 @@ byteLength = 12
 test6
 [object ArrayBuffer]
 10
-[object Uint16Array]
-prototype is
-[object Uint16Array]
-byteLength = 0
+constructor is
+function Uint16Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint16Array]
+0,32768,0,0,0,10,0,0,0
 0 == 0
 1 == 32768
 2 == 0
@@ -23841,7 +24343,7 @@ object is
 8 == 0
 byteLength = 18
 object after expando is
-[object Uint16Array]
+0,32768,0,0,0,10,0,0,0
 0 == 0
 1 == 32768
 2 == 0
@@ -23856,12 +24358,11 @@ byteLength = 18
 
 test7
 10
-[object Uint16Array]
-prototype is
-[object Uint16Array]
-byteLength = 0
+constructor is
+function Uint16Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint16Array]
+32768,32768,0,0,10,10,0,0
 0 == 32768
 1 == 32768
 2 == 0
@@ -23872,7 +24373,7 @@ object is
 7 == 0
 byteLength = 16
 object after expando is
-[object Uint16Array]
+32768,32768,0,0,10,10,0,0
 0 == 32768
 1 == 32768
 2 == 0
@@ -23886,12 +24387,11 @@ byteLength = 16
 
 test8
 10
-[object Uint16Array]
-prototype is
-[object Uint16Array]
-byteLength = 0
+constructor is
+function Uint16Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint16Array]
+32768,32768,0,0,10,10
 0 == 32768
 1 == 32768
 2 == 0
@@ -23900,7 +24400,7 @@ object is
 5 == 10
 byteLength = 12
 object after expando is
-[object Uint16Array]
+32768,32768,0,0,10,10
 0 == 32768
 1 == 32768
 2 == 0
@@ -23912,12 +24412,11 @@ byteLength = 12
 
 test9
 10
-[object Uint16Array]
-prototype is
-[object Uint16Array]
-byteLength = 0
+constructor is
+function Uint16Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint16Array]
+1,32768,3,4,5,10,7,8,9,10,11,12
 0 == 1
 1 == 32768
 2 == 3
@@ -23932,7 +24431,7 @@ object is
 11 == 12
 byteLength = 24
 object after expando is
-[object Uint16Array]
+1,32768,3,4,5,10,7,8,9,10,11,12
 0 == 1
 1 == 32768
 2 == 3
@@ -23949,7 +24448,7 @@ foo == bar
 byteLength = 24
 
 test9.1
-[object Uint16Array]
+0,32768,32768,0,0,10,10,0,0
 0 == 0
 1 == 32768
 2 == 32768
@@ -23962,12 +24461,11 @@ test9.1
 foo == bar
 byteLength = 18
 10
-[object Uint16Array]
-prototype is
-[object Uint16Array]
-byteLength = 0
+constructor is
+function Uint16Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint16Array]
+0,32768,32768,0,0,10,10,0,0,10,11,12
 0 == 0
 1 == 32768
 2 == 32768
@@ -23983,7 +24481,7 @@ object is
 foo == bar
 byteLength = 24
 object after expando is
-[object Uint16Array]
+0,32768,32768,0,0,10,10,0,0,10,11,12
 0 == 0
 1 == 32768
 2 == 32768
@@ -24001,12 +24499,11 @@ byteLength = 24
 
 test9.2
 10
-[object Uint16Array]
-prototype is
-[object Uint16Array]
-byteLength = 0
+constructor is
+function Uint16Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint16Array]
+32768,32768,0,0,10,10,10,0,0,10,11,12
 0 == 32768
 1 == 32768
 2 == 0
@@ -24022,7 +24519,7 @@ object is
 foo == bar
 byteLength = 24
 object after expando is
-[object Uint16Array]
+32768,32768,0,0,10,10,10,0,0,10,11,12
 0 == 32768
 1 == 32768
 2 == 0
@@ -24046,12 +24543,11 @@ test11
 succeed with catchingTypeError: Typed array constructor argument is invalid
 test11.1
 10
-[object Uint16Array]
-prototype is
-[object Uint16Array]
-byteLength = 0
+constructor is
+function Uint16Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint16Array]
+0,32768,0,0,0,10,0
 0 == 0
 1 == 32768
 2 == 0
@@ -24061,7 +24557,7 @@ object is
 6 == 0
 byteLength = 14
 object after expando is
-[object Uint16Array]
+0,32768,0,0,0,10,0
 0 == 0
 1 == 32768
 2 == 0
@@ -24074,26 +24570,24 @@ byteLength = 14
 
 test12
 undefined
-[object Uint16Array]
-prototype is
-[object Uint16Array]
-byteLength = 0
+constructor is
+function Uint16Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint16Array]
+
 byteLength = 0
 object after expando is
-[object Uint16Array]
+
 foo == bar
 byteLength = 0
 
 test13
 10
-[object Uint16Array]
-prototype is
-[object Uint16Array]
-byteLength = 0
+constructor is
+function Uint16Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint16Array]
+0,32768,32768,0,0,10,10,0,0,0,0,0,0,0,0
 0 == 0
 1 == 32768
 2 == 32768
@@ -24111,7 +24605,7 @@ object is
 14 == 0
 byteLength = 30
 object after expando is
-[object Uint16Array]
+0,32768,32768,0,0,10,10,0,0,0,0,0,0,0,0
 0 == 0
 1 == 32768
 2 == 32768
@@ -24132,15 +24626,14 @@ byteLength = 30
 
 test14
 undefined
-[object Uint16Array]
-prototype is
-[object Uint16Array]
-byteLength = 0
+constructor is
+function Uint16Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint16Array]
+
 byteLength = 0
 object after expando is
-[object Uint16Array]
+
 foo == bar
 byteLength = 0
 
@@ -24148,7 +24641,7 @@ test15
 succeed with catchingRangeError: Invalid offset/length when creating typed array
 test16
 succeed with catchingRangeError: Invalid offset/length when creating typed array
-[object Uint16Array]
+32768,32768,0,0,10,10
 0 == 32768
 1 == 32768
 2 == 0
@@ -24158,7 +24651,7 @@ succeed with catchingRangeError: Invalid offset/length when creating typed array
 foo == bar
 byteLength = 12
 test17
-[object Uint16Array]
+32768,32768,0,0,10,10
 0 == 32768
 1 == 32768
 2 == 0
@@ -24167,12 +24660,12 @@ test17
 5 == 10
 byteLength = 12
 test18
-[object Uint16Array]
+10,10
 0 == 10
 1 == 10
 byteLength = 4
 test19
-[object Uint16Array]
+32768,32768,0
 0 == 32768
 1 == 32768
 2 == 0
@@ -24181,48 +24674,256 @@ test20
 undefined
 undefined
 undefined
+10
+test21
+undefined
+undefined
+5
+5
+undefined
+5
+5
+undefined
+5
+5
+undefined
+undefined
+NaN
+1
+undefined
+0
+1
+undefined
+1
+1
+0
+1
+2
+3
+4
+5
+6
+7
+8
+undefined
+undefined
+[object Object]
+6
+undefined
+[object Object]
+7
+undefined
+[object Object]
+6
+test21 JIT
+undefined
+undefined
+5
+5
+undefined
+5
+5
+undefined
+5
+5
+undefined
+undefined
+NaN
+1
+undefined
+0
+1
+undefined
+1
+1
+0
+1
+2
+3
+4
+5
+6
+7
+8
+undefined
+undefined
+[object Object]
+6
+undefined
+[object Object]
+7
+undefined
+[object Object]
+6
+test22
+***testing index 0 : 0
+5
+6
+***testing index 1 : "0"
+6
+7
+***testing index 2 : 0
+7
+8
+***testing index 3 : "-0"
+8
+undefined
+***testing index 4 : -2
+9
+undefined
+***testing index 5 : "-2"
+10
+undefined
+***testing index 6 : 1073741823
+11
+undefined
+***testing index 7 : "1073741823"
+12
+undefined
+***testing index 8 : 1
+13
+14
+***testing index 9 : "1"
+14
+15
+***testing index 10 : 2147483648
+15
+undefined
+***testing index 11 : "2147483648"
+16
+undefined
+***testing index 12 : 2147483647
+17
+undefined
+***testing index 13 : "2147483647"
+18
+undefined
+***testing index 14 : 4294967296
+19
+undefined
+***testing index 15 : "4294967296"
+20
+undefined
+***testing index 16 : 4294967295
+21
+undefined
+***testing index 17 : "4294967295"
+22
+undefined
+***testing index 18 : 1.5
+23
+undefined
+***testing index 19 : "1.5"
+24
+undefined
+***testing index 20 : "a"
+[object Object]
+***testing index 21 : 1000000000
+25
+undefined
+***testing index 22 : "1.0000000000000000000000000e-9"
+[object Object]
+***testing index 23 : NaN
+26
+undefined
+***testing index 24 : Infinity
+27
+undefined
+***testing index 25 : -Infinity
+28
+undefined
+***testing index 26 : "Infinity"
+29
+undefined
+***testing index 27 : "-Infinity"
+30
+undefined
+test22 JIT
+***testing index 0 : 0
+5
+6
+***testing index 1 : "0"
+6
+7
+***testing index 2 : 0
+7
+8
+***testing index 3 : "-0"
+8
+undefined
+***testing index 4 : -2
+9
+undefined
+***testing index 5 : "-2"
+10
+undefined
+***testing index 6 : 1073741823
+11
+undefined
+***testing index 7 : "1073741823"
+12
+undefined
+***testing index 8 : 1
+13
+14
+***testing index 9 : "1"
+14
+15
+***testing index 10 : 2147483648
+15
+undefined
+***testing index 11 : "2147483648"
+16
+undefined
+***testing index 12 : 2147483647
+17
+undefined
+***testing index 13 : "2147483647"
+18
+undefined
+***testing index 14 : 4294967296
+19
+undefined
+***testing index 15 : "4294967296"
+20
+undefined
+***testing index 16 : 4294967295
+21
+undefined
+***testing index 17 : "4294967295"
+22
+undefined
+***testing index 18 : 1.5
+23
+undefined
+***testing index 19 : "1.5"
+24
+undefined
+***testing index 20 : "a"
+[object Object]
+***testing index 21 : 1000000000
+25
+undefined
+***testing index 22 : "1.0000000000000000000000000e-9"
+[object Object]
+***testing index 23 : NaN
+26
+undefined
+***testing index 24 : Infinity
+27
+undefined
+***testing index 25 : -Infinity
+28
+undefined
+***testing index 26 : "Infinity"
+29
+undefined
+***testing index 27 : "-Infinity"
+30
 undefined
 Start same thread different engine test on file uint16array.js
-property of global: WScript
 property of global: print
 undefined
-property of global: SCA
-sub object serialize in SCA is 
-function serialize() {
-    [native code]
-}
-
-sub object deserialize in SCA is 
-function deserialize() {
-    [native code]
-}
-
-sub object lookup in SCA is 
-function lookup() {
-    [native code]
-}
-
-sub object lookupEx in SCA is 
-function lookupEx() {
-    [native code]
-}
-
-sub object dataToKey in SCA is 
-function dataToKey() {
-    [native code]
-}
-
-sub object makeInt64 in SCA is 
-function makeInt64() {
-    [native code]
-}
-
-sub object makeUint64 in SCA is 
-function makeUint64() {
-    [native code]
-}
-
-property of global: ImageData
 property of global: oneTest
 exception is -2146823281Unable to set property '1' of undefined or null reference
 property of global: test1
@@ -24238,6 +24939,7 @@ sub object 8 in test1 is 0
 sub object foo in test1 is bar
 property of global: test2
 sub object foo in test2 is bar
+sub object 2 in test2 is undefined
 property of global: arrayBuffer
 property of global: test3
 sub object 0 in test3 is 0
@@ -24351,6 +25053,7 @@ sub object 6 in test111 is 0
 sub object foo in test111 is bar
 property of global: test12
 sub object foo in test12 is bar
+sub object 2 in test12 is undefined
 property of global: test13
 sub object 0 in test13 is 0
 sub object 1 in test13 is 32768
@@ -24370,6 +25073,7 @@ sub object 14 in test13 is 0
 sub object foo in test13 is bar
 property of global: test14
 sub object foo in test14 is bar
+sub object 2 in test14 is undefined
 property of global: test15
 property of global: test16
 property of global: test17
@@ -24382,6 +25086,7 @@ sub object 5 in test17 is 10
 property of global: test18
 sub object 0 in test18 is 10
 sub object 1 in test18 is 10
+sub object 2 in test18 is undefined
 property of global: test19
 sub object 0 in test19 is 32768
 sub object 1 in test19 is 32768
@@ -24392,16 +25097,29 @@ property of global: verifyThrow
 SUCCEEDED: get expected exception Object expected
 property of global: verifyNoThrow
 FAILED: get exception Object expected
+property of global: setIntValue
+property of global: setFloat32Value
+property of global: setFloat64Value
+property of global: testSetWithObj
+exception is -2146823281Unable to get property '0' of undefined or null reference
+property of global: testSetWithFloat
+exception is -2146823281Unable to get property '0' of undefined or null reference
+property of global: testSetWithInt
+exception is -2146823281Unable to get property '0' of undefined or null reference
+property of global: testIndexValueForSet
+***testing index 0 : 0
+exception is -2146823281Unable to set property '0' of undefined or null reference
 property of global: i
+property of global: valueToSet
+sub object valueOf in valueToSet is function () { WScript.Echo(count); return count++; }
 testing file int32array.js
 test1
 10
-[object Int32Array]
-prototype is
-[object Int32Array]
-byteLength = 0
+constructor is
+function Int32Array() { [native code] }
+byteLength = undefined
 object is
-[object Int32Array]
+0,-2147483648,0,0,0,10,0,0,0
 0 == 0
 1 == -2147483648
 2 == 0
@@ -24413,7 +25131,7 @@ object is
 8 == 0
 byteLength = 36
 object after expando is
-[object Int32Array]
+0,-2147483648,0,0,0,10,0,0,0
 0 == 0
 1 == -2147483648
 2 == 0
@@ -24428,26 +25146,24 @@ byteLength = 36
 
 test2
 undefined
-[object Int32Array]
-prototype is
-[object Int32Array]
-byteLength = 0
+constructor is
+function Int32Array() { [native code] }
+byteLength = undefined
 object is
-[object Int32Array]
+
 byteLength = 0
 object after expando is
-[object Int32Array]
+
 foo == bar
 byteLength = 0
 
 test3
 10
-[object Int32Array]
-prototype is
-[object Int32Array]
-byteLength = 0
+constructor is
+function Int32Array() { [native code] }
+byteLength = undefined
 object is
-[object Int32Array]
+0,-2147483648,0,0,0,10,0,0
 0 == 0
 1 == -2147483648
 2 == 0
@@ -24458,7 +25174,7 @@ object is
 7 == 0
 byteLength = 32
 object after expando is
-[object Int32Array]
+0,-2147483648,0,0,0,10,0,0
 0 == 0
 1 == -2147483648
 2 == 0
@@ -24472,12 +25188,11 @@ byteLength = 32
 
 test4
 10
-[object Int32Array]
-prototype is
-[object Int32Array]
-byteLength = 0
+constructor is
+function Int32Array() { [native code] }
+byteLength = undefined
 object is
-[object Int32Array]
+-2147483648,-2147483648,0,0,10,10,0
 0 == -2147483648
 1 == -2147483648
 2 == 0
@@ -24487,7 +25202,7 @@ object is
 6 == 0
 byteLength = 28
 object after expando is
-[object Int32Array]
+-2147483648,-2147483648,0,0,10,10,0
 0 == -2147483648
 1 == -2147483648
 2 == 0
@@ -24500,12 +25215,11 @@ byteLength = 28
 
 test5
 10
-[object Int32Array]
-prototype is
-[object Int32Array]
-byteLength = 0
+constructor is
+function Int32Array() { [native code] }
+byteLength = undefined
 object is
-[object Int32Array]
+-2147483648,-2147483648,0,0,10,10
 0 == -2147483648
 1 == -2147483648
 2 == 0
@@ -24514,7 +25228,7 @@ object is
 5 == 10
 byteLength = 24
 object after expando is
-[object Int32Array]
+-2147483648,-2147483648,0,0,10,10
 0 == -2147483648
 1 == -2147483648
 2 == 0
@@ -24527,12 +25241,11 @@ byteLength = 24
 test6
 [object ArrayBuffer]
 10
-[object Int32Array]
-prototype is
-[object Int32Array]
-byteLength = 0
+constructor is
+function Int32Array() { [native code] }
+byteLength = undefined
 object is
-[object Int32Array]
+0,-2147483648,0,0,0,10,0,0,0
 0 == 0
 1 == -2147483648
 2 == 0
@@ -24544,7 +25257,7 @@ object is
 8 == 0
 byteLength = 36
 object after expando is
-[object Int32Array]
+0,-2147483648,0,0,0,10,0,0,0
 0 == 0
 1 == -2147483648
 2 == 0
@@ -24559,12 +25272,11 @@ byteLength = 36
 
 test7
 10
-[object Int32Array]
-prototype is
-[object Int32Array]
-byteLength = 0
+constructor is
+function Int32Array() { [native code] }
+byteLength = undefined
 object is
-[object Int32Array]
+-2147483648,-2147483648,0,0,10,10,0,0
 0 == -2147483648
 1 == -2147483648
 2 == 0
@@ -24575,7 +25287,7 @@ object is
 7 == 0
 byteLength = 32
 object after expando is
-[object Int32Array]
+-2147483648,-2147483648,0,0,10,10,0,0
 0 == -2147483648
 1 == -2147483648
 2 == 0
@@ -24589,12 +25301,11 @@ byteLength = 32
 
 test8
 10
-[object Int32Array]
-prototype is
-[object Int32Array]
-byteLength = 0
+constructor is
+function Int32Array() { [native code] }
+byteLength = undefined
 object is
-[object Int32Array]
+-2147483648,-2147483648,0,0,10,10
 0 == -2147483648
 1 == -2147483648
 2 == 0
@@ -24603,7 +25314,7 @@ object is
 5 == 10
 byteLength = 24
 object after expando is
-[object Int32Array]
+-2147483648,-2147483648,0,0,10,10
 0 == -2147483648
 1 == -2147483648
 2 == 0
@@ -24615,12 +25326,11 @@ byteLength = 24
 
 test9
 10
-[object Int32Array]
-prototype is
-[object Int32Array]
-byteLength = 0
+constructor is
+function Int32Array() { [native code] }
+byteLength = undefined
 object is
-[object Int32Array]
+1,-2147483648,3,4,5,10,7,8,9,10,11,12
 0 == 1
 1 == -2147483648
 2 == 3
@@ -24635,7 +25345,7 @@ object is
 11 == 12
 byteLength = 48
 object after expando is
-[object Int32Array]
+1,-2147483648,3,4,5,10,7,8,9,10,11,12
 0 == 1
 1 == -2147483648
 2 == 3
@@ -24652,7 +25362,7 @@ foo == bar
 byteLength = 48
 
 test9.1
-[object Int32Array]
+0,-2147483648,-2147483648,0,0,10,10,0,0
 0 == 0
 1 == -2147483648
 2 == -2147483648
@@ -24665,12 +25375,11 @@ test9.1
 foo == bar
 byteLength = 36
 10
-[object Int32Array]
-prototype is
-[object Int32Array]
-byteLength = 0
+constructor is
+function Int32Array() { [native code] }
+byteLength = undefined
 object is
-[object Int32Array]
+0,-2147483648,-2147483648,0,0,10,10,0,0,10,11,12
 0 == 0
 1 == -2147483648
 2 == -2147483648
@@ -24686,7 +25395,7 @@ object is
 foo == bar
 byteLength = 48
 object after expando is
-[object Int32Array]
+0,-2147483648,-2147483648,0,0,10,10,0,0,10,11,12
 0 == 0
 1 == -2147483648
 2 == -2147483648
@@ -24704,12 +25413,11 @@ byteLength = 48
 
 test9.2
 10
-[object Int32Array]
-prototype is
-[object Int32Array]
-byteLength = 0
+constructor is
+function Int32Array() { [native code] }
+byteLength = undefined
 object is
-[object Int32Array]
+-2147483648,-2147483648,0,0,10,10,10,0,0,10,11,12
 0 == -2147483648
 1 == -2147483648
 2 == 0
@@ -24725,7 +25433,7 @@ object is
 foo == bar
 byteLength = 48
 object after expando is
-[object Int32Array]
+-2147483648,-2147483648,0,0,10,10,10,0,0,10,11,12
 0 == -2147483648
 1 == -2147483648
 2 == 0
@@ -24747,12 +25455,11 @@ test11
 succeed with catchingTypeError: Typed array constructor argument is invalid
 test11.1
 10
-[object Int32Array]
-prototype is
-[object Int32Array]
-byteLength = 0
+constructor is
+function Int32Array() { [native code] }
+byteLength = undefined
 object is
-[object Int32Array]
+0,-2147483648,0,0,0,10,0
 0 == 0
 1 == -2147483648
 2 == 0
@@ -24762,7 +25469,7 @@ object is
 6 == 0
 byteLength = 28
 object after expando is
-[object Int32Array]
+0,-2147483648,0,0,0,10,0
 0 == 0
 1 == -2147483648
 2 == 0
@@ -24775,26 +25482,24 @@ byteLength = 28
 
 test12
 undefined
-[object Int32Array]
-prototype is
-[object Int32Array]
-byteLength = 0
+constructor is
+function Int32Array() { [native code] }
+byteLength = undefined
 object is
-[object Int32Array]
+
 byteLength = 0
 object after expando is
-[object Int32Array]
+
 foo == bar
 byteLength = 0
 
 test13
 10
-[object Int32Array]
-prototype is
-[object Int32Array]
-byteLength = 0
+constructor is
+function Int32Array() { [native code] }
+byteLength = undefined
 object is
-[object Int32Array]
+0,-2147483648,-2147483648,0,0,10,10,0
 0 == 0
 1 == -2147483648
 2 == -2147483648
@@ -24805,7 +25510,7 @@ object is
 7 == 0
 byteLength = 32
 object after expando is
-[object Int32Array]
+0,-2147483648,-2147483648,0,0,10,10,0
 0 == 0
 1 == -2147483648
 2 == -2147483648
@@ -24819,15 +25524,14 @@ byteLength = 32
 
 test14
 undefined
-[object Int32Array]
-prototype is
-[object Int32Array]
-byteLength = 0
+constructor is
+function Int32Array() { [native code] }
+byteLength = undefined
 object is
-[object Int32Array]
+
 byteLength = 0
 object after expando is
-[object Int32Array]
+
 foo == bar
 byteLength = 0
 
@@ -24836,7 +25540,7 @@ succeed with catchingRangeError: Invalid offset/length when creating typed array
 test16
 succeed with catchingRangeError: Invalid offset/length when creating typed array
 test17
-[object Int32Array]
+-2147483648,-2147483648,0,0,10,10
 0 == -2147483648
 1 == -2147483648
 2 == 0
@@ -24845,12 +25549,12 @@ test17
 5 == 10
 byteLength = 24
 test18
-[object Int32Array]
+10,10
 0 == 10
 1 == 10
 byteLength = 8
 test19
-[object Int32Array]
+-2147483648,-2147483648,0
 0 == -2147483648
 1 == -2147483648
 2 == 0
@@ -24859,48 +25563,256 @@ test20
 undefined
 undefined
 undefined
+10
+test21
+undefined
+undefined
+5
+5
+undefined
+5
+5
+undefined
+5
+5
+undefined
+undefined
+NaN
+1
+undefined
+0
+1
+undefined
+1
+1
+0
+1
+2
+3
+4
+5
+6
+7
+8
+undefined
+undefined
+[object Object]
+6
+undefined
+[object Object]
+7
+undefined
+[object Object]
+6
+test21 JIT
+undefined
+undefined
+5
+5
+undefined
+5
+5
+undefined
+5
+5
+undefined
+undefined
+NaN
+1
+undefined
+0
+1
+undefined
+1
+1
+0
+1
+2
+3
+4
+5
+6
+7
+8
+undefined
+undefined
+[object Object]
+6
+undefined
+[object Object]
+7
+undefined
+[object Object]
+6
+test22
+***testing index 0 : 0
+5
+6
+***testing index 1 : "0"
+6
+7
+***testing index 2 : 0
+7
+8
+***testing index 3 : "-0"
+8
+undefined
+***testing index 4 : -2
+9
+undefined
+***testing index 5 : "-2"
+10
+undefined
+***testing index 6 : 1073741823
+11
+undefined
+***testing index 7 : "1073741823"
+12
+undefined
+***testing index 8 : 1
+13
+14
+***testing index 9 : "1"
+14
+15
+***testing index 10 : 2147483648
+15
+undefined
+***testing index 11 : "2147483648"
+16
+undefined
+***testing index 12 : 2147483647
+17
+undefined
+***testing index 13 : "2147483647"
+18
+undefined
+***testing index 14 : 4294967296
+19
+undefined
+***testing index 15 : "4294967296"
+20
+undefined
+***testing index 16 : 4294967295
+21
+undefined
+***testing index 17 : "4294967295"
+22
+undefined
+***testing index 18 : 1.5
+23
+undefined
+***testing index 19 : "1.5"
+24
+undefined
+***testing index 20 : "a"
+[object Object]
+***testing index 21 : 1000000000
+25
+undefined
+***testing index 22 : "1.0000000000000000000000000e-9"
+[object Object]
+***testing index 23 : NaN
+26
+undefined
+***testing index 24 : Infinity
+27
+undefined
+***testing index 25 : -Infinity
+28
+undefined
+***testing index 26 : "Infinity"
+29
+undefined
+***testing index 27 : "-Infinity"
+30
+undefined
+test22 JIT
+***testing index 0 : 0
+5
+6
+***testing index 1 : "0"
+6
+7
+***testing index 2 : 0
+7
+8
+***testing index 3 : "-0"
+8
+undefined
+***testing index 4 : -2
+9
+undefined
+***testing index 5 : "-2"
+10
+undefined
+***testing index 6 : 1073741823
+11
+undefined
+***testing index 7 : "1073741823"
+12
+undefined
+***testing index 8 : 1
+13
+14
+***testing index 9 : "1"
+14
+15
+***testing index 10 : 2147483648
+15
+undefined
+***testing index 11 : "2147483648"
+16
+undefined
+***testing index 12 : 2147483647
+17
+undefined
+***testing index 13 : "2147483647"
+18
+undefined
+***testing index 14 : 4294967296
+19
+undefined
+***testing index 15 : "4294967296"
+20
+undefined
+***testing index 16 : 4294967295
+21
+undefined
+***testing index 17 : "4294967295"
+22
+undefined
+***testing index 18 : 1.5
+23
+undefined
+***testing index 19 : "1.5"
+24
+undefined
+***testing index 20 : "a"
+[object Object]
+***testing index 21 : 1000000000
+25
+undefined
+***testing index 22 : "1.0000000000000000000000000e-9"
+[object Object]
+***testing index 23 : NaN
+26
+undefined
+***testing index 24 : Infinity
+27
+undefined
+***testing index 25 : -Infinity
+28
+undefined
+***testing index 26 : "Infinity"
+29
+undefined
+***testing index 27 : "-Infinity"
+30
 undefined
 Start same thread different engine test on file int32array.js
-property of global: WScript
 property of global: print
 undefined
-property of global: SCA
-sub object serialize in SCA is 
-function serialize() {
-    [native code]
-}
-
-sub object deserialize in SCA is 
-function deserialize() {
-    [native code]
-}
-
-sub object lookup in SCA is 
-function lookup() {
-    [native code]
-}
-
-sub object lookupEx in SCA is 
-function lookupEx() {
-    [native code]
-}
-
-sub object dataToKey in SCA is 
-function dataToKey() {
-    [native code]
-}
-
-sub object makeInt64 in SCA is 
-function makeInt64() {
-    [native code]
-}
-
-sub object makeUint64 in SCA is 
-function makeUint64() {
-    [native code]
-}
-
-property of global: ImageData
 property of global: oneTest
 exception is -2146823281Unable to set property '1' of undefined or null reference
 property of global: test1
@@ -24916,6 +25828,7 @@ sub object 8 in test1 is 0
 sub object foo in test1 is bar
 property of global: test2
 sub object foo in test2 is bar
+sub object 2 in test2 is undefined
 property of global: arrayBuffer
 property of global: test3
 sub object 0 in test3 is 0
@@ -25014,6 +25927,7 @@ sub object 6 in test111 is 0
 sub object foo in test111 is bar
 property of global: test12
 sub object foo in test12 is bar
+sub object 2 in test12 is undefined
 property of global: test13
 sub object 0 in test13 is 0
 sub object 1 in test13 is -2147483648
@@ -25026,6 +25940,7 @@ sub object 7 in test13 is 0
 sub object foo in test13 is bar
 property of global: test14
 sub object foo in test14 is bar
+sub object 2 in test14 is undefined
 property of global: test15
 property of global: test16
 property of global: test17
@@ -25038,6 +25953,7 @@ sub object 5 in test17 is 10
 property of global: test18
 sub object 0 in test18 is 10
 sub object 1 in test18 is 10
+sub object 2 in test18 is undefined
 property of global: test19
 sub object 0 in test19 is -2147483648
 sub object 1 in test19 is -2147483648
@@ -25048,16 +25964,29 @@ property of global: verifyThrow
 SUCCEEDED: get expected exception Object expected
 property of global: verifyNoThrow
 FAILED: get exception Object expected
+property of global: setIntValue
+property of global: setFloat32Value
+property of global: setFloat64Value
+property of global: testSetWithObj
+exception is -2146823281Unable to get property '0' of undefined or null reference
+property of global: testSetWithFloat
+exception is -2146823281Unable to get property '0' of undefined or null reference
+property of global: testSetWithInt
+exception is -2146823281Unable to get property '0' of undefined or null reference
+property of global: testIndexValueForSet
+***testing index 0 : 0
+exception is -2146823281Unable to set property '0' of undefined or null reference
 property of global: i
+property of global: valueToSet
+sub object valueOf in valueToSet is function () { WScript.Echo(count); return count++; }
 testing file uint32array.js
 test1
 10
-[object Uint32Array]
-prototype is
-[object Uint32Array]
-byteLength = 0
+constructor is
+function Uint32Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint32Array]
+0,2147483648,0,0,0,10,0,0,0
 0 == 0
 1 == 2147483648
 2 == 0
@@ -25069,7 +25998,7 @@ object is
 8 == 0
 byteLength = 36
 object after expando is
-[object Uint32Array]
+0,2147483648,0,0,0,10,0,0,0
 0 == 0
 1 == 2147483648
 2 == 0
@@ -25084,26 +26013,24 @@ byteLength = 36
 
 test2
 undefined
-[object Uint32Array]
-prototype is
-[object Uint32Array]
-byteLength = 0
+constructor is
+function Uint32Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint32Array]
+
 byteLength = 0
 object after expando is
-[object Uint32Array]
+
 foo == bar
 byteLength = 0
 
 test3
 10
-[object Uint32Array]
-prototype is
-[object Uint32Array]
-byteLength = 0
+constructor is
+function Uint32Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint32Array]
+0,2147483648,0,0,0,10,0,0
 0 == 0
 1 == 2147483648
 2 == 0
@@ -25114,7 +26041,7 @@ object is
 7 == 0
 byteLength = 32
 object after expando is
-[object Uint32Array]
+0,2147483648,0,0,0,10,0,0
 0 == 0
 1 == 2147483648
 2 == 0
@@ -25128,12 +26055,11 @@ byteLength = 32
 
 test4
 10
-[object Uint32Array]
-prototype is
-[object Uint32Array]
-byteLength = 0
+constructor is
+function Uint32Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint32Array]
+2147483648,2147483648,0,0,10,10,0
 0 == 2147483648
 1 == 2147483648
 2 == 0
@@ -25143,7 +26069,7 @@ object is
 6 == 0
 byteLength = 28
 object after expando is
-[object Uint32Array]
+2147483648,2147483648,0,0,10,10,0
 0 == 2147483648
 1 == 2147483648
 2 == 0
@@ -25156,12 +26082,11 @@ byteLength = 28
 
 test5
 10
-[object Uint32Array]
-prototype is
-[object Uint32Array]
-byteLength = 0
+constructor is
+function Uint32Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint32Array]
+2147483648,2147483648,0,0,10,10
 0 == 2147483648
 1 == 2147483648
 2 == 0
@@ -25170,7 +26095,7 @@ object is
 5 == 10
 byteLength = 24
 object after expando is
-[object Uint32Array]
+2147483648,2147483648,0,0,10,10
 0 == 2147483648
 1 == 2147483648
 2 == 0
@@ -25183,12 +26108,11 @@ byteLength = 24
 test6
 [object ArrayBuffer]
 10
-[object Uint32Array]
-prototype is
-[object Uint32Array]
-byteLength = 0
+constructor is
+function Uint32Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint32Array]
+0,2147483648,0,0,0,10,0,0,0
 0 == 0
 1 == 2147483648
 2 == 0
@@ -25200,7 +26124,7 @@ object is
 8 == 0
 byteLength = 36
 object after expando is
-[object Uint32Array]
+0,2147483648,0,0,0,10,0,0,0
 0 == 0
 1 == 2147483648
 2 == 0
@@ -25215,12 +26139,11 @@ byteLength = 36
 
 test7
 10
-[object Uint32Array]
-prototype is
-[object Uint32Array]
-byteLength = 0
+constructor is
+function Uint32Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint32Array]
+2147483648,2147483648,0,0,10,10,0,0
 0 == 2147483648
 1 == 2147483648
 2 == 0
@@ -25231,7 +26154,7 @@ object is
 7 == 0
 byteLength = 32
 object after expando is
-[object Uint32Array]
+2147483648,2147483648,0,0,10,10,0,0
 0 == 2147483648
 1 == 2147483648
 2 == 0
@@ -25245,12 +26168,11 @@ byteLength = 32
 
 test8
 10
-[object Uint32Array]
-prototype is
-[object Uint32Array]
-byteLength = 0
+constructor is
+function Uint32Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint32Array]
+2147483648,2147483648,0,0,10,10
 0 == 2147483648
 1 == 2147483648
 2 == 0
@@ -25259,7 +26181,7 @@ object is
 5 == 10
 byteLength = 24
 object after expando is
-[object Uint32Array]
+2147483648,2147483648,0,0,10,10
 0 == 2147483648
 1 == 2147483648
 2 == 0
@@ -25271,12 +26193,11 @@ byteLength = 24
 
 test9
 10
-[object Uint32Array]
-prototype is
-[object Uint32Array]
-byteLength = 0
+constructor is
+function Uint32Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint32Array]
+1,2147483648,3,4,5,10,7,8,9,10,11,12
 0 == 1
 1 == 2147483648
 2 == 3
@@ -25291,7 +26212,7 @@ object is
 11 == 12
 byteLength = 48
 object after expando is
-[object Uint32Array]
+1,2147483648,3,4,5,10,7,8,9,10,11,12
 0 == 1
 1 == 2147483648
 2 == 3
@@ -25308,7 +26229,7 @@ foo == bar
 byteLength = 48
 
 test9.1
-[object Uint32Array]
+0,2147483648,2147483648,0,0,10,10,0,0
 0 == 0
 1 == 2147483648
 2 == 2147483648
@@ -25321,12 +26242,11 @@ test9.1
 foo == bar
 byteLength = 36
 10
-[object Uint32Array]
-prototype is
-[object Uint32Array]
-byteLength = 0
+constructor is
+function Uint32Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint32Array]
+0,2147483648,2147483648,0,0,10,10,0,0,10,11,12
 0 == 0
 1 == 2147483648
 2 == 2147483648
@@ -25342,7 +26262,7 @@ object is
 foo == bar
 byteLength = 48
 object after expando is
-[object Uint32Array]
+0,2147483648,2147483648,0,0,10,10,0,0,10,11,12
 0 == 0
 1 == 2147483648
 2 == 2147483648
@@ -25360,12 +26280,11 @@ byteLength = 48
 
 test9.2
 10
-[object Uint32Array]
-prototype is
-[object Uint32Array]
-byteLength = 0
+constructor is
+function Uint32Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint32Array]
+2147483648,2147483648,0,0,10,10,10,0,0,10,11,12
 0 == 2147483648
 1 == 2147483648
 2 == 0
@@ -25381,7 +26300,7 @@ object is
 foo == bar
 byteLength = 48
 object after expando is
-[object Uint32Array]
+2147483648,2147483648,0,0,10,10,10,0,0,10,11,12
 0 == 2147483648
 1 == 2147483648
 2 == 0
@@ -25405,12 +26324,11 @@ test11
 succeed with catchingTypeError: Typed array constructor argument is invalid
 test11.1
 10
-[object Uint32Array]
-prototype is
-[object Uint32Array]
-byteLength = 0
+constructor is
+function Uint32Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint32Array]
+0,2147483648,0,0,0,10,0
 0 == 0
 1 == 2147483648
 2 == 0
@@ -25420,7 +26338,7 @@ object is
 6 == 0
 byteLength = 28
 object after expando is
-[object Uint32Array]
+0,2147483648,0,0,0,10,0
 0 == 0
 1 == 2147483648
 2 == 0
@@ -25433,26 +26351,24 @@ byteLength = 28
 
 test12
 undefined
-[object Uint32Array]
-prototype is
-[object Uint32Array]
-byteLength = 0
+constructor is
+function Uint32Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint32Array]
+
 byteLength = 0
 object after expando is
-[object Uint32Array]
+
 foo == bar
 byteLength = 0
 
 test13
 10
-[object Uint32Array]
-prototype is
-[object Uint32Array]
-byteLength = 0
+constructor is
+function Uint32Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint32Array]
+0,2147483648,2147483648,0,0,10,10,0
 0 == 0
 1 == 2147483648
 2 == 2147483648
@@ -25463,7 +26379,7 @@ object is
 7 == 0
 byteLength = 32
 object after expando is
-[object Uint32Array]
+0,2147483648,2147483648,0,0,10,10,0
 0 == 0
 1 == 2147483648
 2 == 2147483648
@@ -25477,15 +26393,14 @@ byteLength = 32
 
 test14
 undefined
-[object Uint32Array]
-prototype is
-[object Uint32Array]
-byteLength = 0
+constructor is
+function Uint32Array() { [native code] }
+byteLength = undefined
 object is
-[object Uint32Array]
+
 byteLength = 0
 object after expando is
-[object Uint32Array]
+
 foo == bar
 byteLength = 0
 
@@ -25494,7 +26409,7 @@ succeed with catchingRangeError: Invalid offset/length when creating typed array
 test16
 succeed with catchingRangeError: Invalid offset/length when creating typed array
 test17
-[object Uint32Array]
+2147483648,2147483648,0,0,10,10
 0 == 2147483648
 1 == 2147483648
 2 == 0
@@ -25503,12 +26418,12 @@ test17
 5 == 10
 byteLength = 24
 test18
-[object Uint32Array]
+10,10
 0 == 10
 1 == 10
 byteLength = 8
 test19
-[object Uint32Array]
+2147483648,2147483648,0
 0 == 2147483648
 1 == 2147483648
 2 == 0
@@ -25517,48 +26432,256 @@ test20
 undefined
 undefined
 undefined
+10
+test21
+undefined
+undefined
+5
+5
+undefined
+5
+5
+undefined
+5
+5
+undefined
+undefined
+NaN
+1
+undefined
+0
+1
+undefined
+1
+1
+0
+1
+2
+3
+4
+5
+6
+7
+8
+undefined
+undefined
+[object Object]
+6
+undefined
+[object Object]
+7
+undefined
+[object Object]
+6
+test21 JIT
+undefined
+undefined
+5
+5
+undefined
+5
+5
+undefined
+5
+5
+undefined
+undefined
+NaN
+1
+undefined
+0
+1
+undefined
+1
+1
+0
+1
+2
+3
+4
+5
+6
+7
+8
+undefined
+undefined
+[object Object]
+6
+undefined
+[object Object]
+7
+undefined
+[object Object]
+6
+test22
+***testing index 0 : 0
+5
+6
+***testing index 1 : "0"
+6
+7
+***testing index 2 : 0
+7
+8
+***testing index 3 : "-0"
+8
+undefined
+***testing index 4 : -2
+9
+undefined
+***testing index 5 : "-2"
+10
+undefined
+***testing index 6 : 1073741823
+11
+undefined
+***testing index 7 : "1073741823"
+12
+undefined
+***testing index 8 : 1
+13
+14
+***testing index 9 : "1"
+14
+15
+***testing index 10 : 2147483648
+15
+undefined
+***testing index 11 : "2147483648"
+16
+undefined
+***testing index 12 : 2147483647
+17
+undefined
+***testing index 13 : "2147483647"
+18
+undefined
+***testing index 14 : 4294967296
+19
+undefined
+***testing index 15 : "4294967296"
+20
+undefined
+***testing index 16 : 4294967295
+21
+undefined
+***testing index 17 : "4294967295"
+22
+undefined
+***testing index 18 : 1.5
+23
+undefined
+***testing index 19 : "1.5"
+24
+undefined
+***testing index 20 : "a"
+[object Object]
+***testing index 21 : 1000000000
+25
+undefined
+***testing index 22 : "1.0000000000000000000000000e-9"
+[object Object]
+***testing index 23 : NaN
+26
+undefined
+***testing index 24 : Infinity
+27
+undefined
+***testing index 25 : -Infinity
+28
+undefined
+***testing index 26 : "Infinity"
+29
+undefined
+***testing index 27 : "-Infinity"
+30
+undefined
+test22 JIT
+***testing index 0 : 0
+5
+6
+***testing index 1 : "0"
+6
+7
+***testing index 2 : 0
+7
+8
+***testing index 3 : "-0"
+8
+undefined
+***testing index 4 : -2
+9
+undefined
+***testing index 5 : "-2"
+10
+undefined
+***testing index 6 : 1073741823
+11
+undefined
+***testing index 7 : "1073741823"
+12
+undefined
+***testing index 8 : 1
+13
+14
+***testing index 9 : "1"
+14
+15
+***testing index 10 : 2147483648
+15
+undefined
+***testing index 11 : "2147483648"
+16
+undefined
+***testing index 12 : 2147483647
+17
+undefined
+***testing index 13 : "2147483647"
+18
+undefined
+***testing index 14 : 4294967296
+19
+undefined
+***testing index 15 : "4294967296"
+20
+undefined
+***testing index 16 : 4294967295
+21
+undefined
+***testing index 17 : "4294967295"
+22
+undefined
+***testing index 18 : 1.5
+23
+undefined
+***testing index 19 : "1.5"
+24
+undefined
+***testing index 20 : "a"
+[object Object]
+***testing index 21 : 1000000000
+25
+undefined
+***testing index 22 : "1.0000000000000000000000000e-9"
+[object Object]
+***testing index 23 : NaN
+26
+undefined
+***testing index 24 : Infinity
+27
+undefined
+***testing index 25 : -Infinity
+28
+undefined
+***testing index 26 : "Infinity"
+29
+undefined
+***testing index 27 : "-Infinity"
+30
 undefined
 Start same thread different engine test on file uint32array.js
-property of global: WScript
 property of global: print
 undefined
-property of global: SCA
-sub object serialize in SCA is 
-function serialize() {
-    [native code]
-}
-
-sub object deserialize in SCA is 
-function deserialize() {
-    [native code]
-}
-
-sub object lookup in SCA is 
-function lookup() {
-    [native code]
-}
-
-sub object lookupEx in SCA is 
-function lookupEx() {
-    [native code]
-}
-
-sub object dataToKey in SCA is 
-function dataToKey() {
-    [native code]
-}
-
-sub object makeInt64 in SCA is 
-function makeInt64() {
-    [native code]
-}
-
-sub object makeUint64 in SCA is 
-function makeUint64() {
-    [native code]
-}
-
-property of global: ImageData
 property of global: oneTest
 exception is -2146823281Unable to set property '1' of undefined or null reference
 property of global: test1
@@ -25574,6 +26697,7 @@ sub object 8 in test1 is 0
 sub object foo in test1 is bar
 property of global: test2
 sub object foo in test2 is bar
+sub object 2 in test2 is undefined
 property of global: arrayBuffer
 property of global: test3
 sub object 0 in test3 is 0
@@ -25672,6 +26796,7 @@ sub object 6 in test11 is 0
 sub object foo in test11 is bar
 property of global: test12
 sub object foo in test12 is bar
+sub object 2 in test12 is undefined
 property of global: test13
 sub object 0 in test13 is 0
 sub object 1 in test13 is 2147483648
@@ -25684,6 +26809,7 @@ sub object 7 in test13 is 0
 sub object foo in test13 is bar
 property of global: test14
 sub object foo in test14 is bar
+sub object 2 in test14 is undefined
 property of global: test15
 property of global: test16
 property of global: test17
@@ -25696,6 +26822,7 @@ sub object 5 in test17 is 10
 property of global: test18
 sub object 0 in test18 is 10
 sub object 1 in test18 is 10
+sub object 2 in test18 is undefined
 property of global: test19
 sub object 0 in test19 is 2147483648
 sub object 1 in test19 is 2147483648
@@ -25706,16 +26833,29 @@ property of global: verifyThrow
 SUCCEEDED: get expected exception Object expected
 property of global: verifyNoThrow
 FAILED: get exception Object expected
+property of global: setIntValue
+property of global: setFloat32Value
+property of global: setFloat64Value
+property of global: testSetWithObj
+exception is -2146823281Unable to get property '0' of undefined or null reference
+property of global: testSetWithFloat
+exception is -2146823281Unable to get property '0' of undefined or null reference
+property of global: testSetWithInt
+exception is -2146823281Unable to get property '0' of undefined or null reference
+property of global: testIndexValueForSet
+***testing index 0 : 0
+exception is -2146823281Unable to set property '0' of undefined or null reference
 property of global: i
+property of global: valueToSet
+sub object valueOf in valueToSet is function () { WScript.Echo(count); return count++; }
 testing file float32array.js
 test1
 10
-[object Float32Array]
-prototype is
-[object Float32Array]
-byteLength = 0
+constructor is
+function Float32Array() { [native code] }
+byteLength = undefined
 object is
-[object Float32Array]
+0,0.5400000214576721,0,0,0,10,0,0,0
 0 == 0
 1 == 0.5400000214576721
 2 == 0
@@ -25727,7 +26867,7 @@ object is
 8 == 0
 byteLength = 36
 object after expando is
-[object Float32Array]
+0,0.5400000214576721,0,0,0,10,0,0,0
 0 == 0
 1 == 0.5400000214576721
 2 == 0
@@ -25742,26 +26882,24 @@ byteLength = 36
 
 test2
 undefined
-[object Float32Array]
-prototype is
-[object Float32Array]
-byteLength = 0
+constructor is
+function Float32Array() { [native code] }
+byteLength = undefined
 object is
-[object Float32Array]
+
 byteLength = 0
 object after expando is
-[object Float32Array]
+
 foo == bar
 byteLength = 0
 
 test3
 10
-[object Float32Array]
-prototype is
-[object Float32Array]
-byteLength = 0
+constructor is
+function Float32Array() { [native code] }
+byteLength = undefined
 object is
-[object Float32Array]
+0,0.5400000214576721,0,0,0,10,0,0
 0 == 0
 1 == 0.5400000214576721
 2 == 0
@@ -25772,7 +26910,7 @@ object is
 7 == 0
 byteLength = 32
 object after expando is
-[object Float32Array]
+0,0.5400000214576721,0,0,0,10,0,0
 0 == 0
 1 == 0.5400000214576721
 2 == 0
@@ -25786,12 +26924,11 @@ byteLength = 32
 
 test4
 10
-[object Float32Array]
-prototype is
-[object Float32Array]
-byteLength = 0
+constructor is
+function Float32Array() { [native code] }
+byteLength = undefined
 object is
-[object Float32Array]
+0.5400000214576721,0.5400000214576721,0,0,10,10,0
 0 == 0.5400000214576721
 1 == 0.5400000214576721
 2 == 0
@@ -25801,7 +26938,7 @@ object is
 6 == 0
 byteLength = 28
 object after expando is
-[object Float32Array]
+0.5400000214576721,0.5400000214576721,0,0,10,10,0
 0 == 0.5400000214576721
 1 == 0.5400000214576721
 2 == 0
@@ -25814,12 +26951,11 @@ byteLength = 28
 
 test5
 10
-[object Float32Array]
-prototype is
-[object Float32Array]
-byteLength = 0
+constructor is
+function Float32Array() { [native code] }
+byteLength = undefined
 object is
-[object Float32Array]
+0.5400000214576721,0.5400000214576721,0,0,10,10
 0 == 0.5400000214576721
 1 == 0.5400000214576721
 2 == 0
@@ -25828,7 +26964,7 @@ object is
 5 == 10
 byteLength = 24
 object after expando is
-[object Float32Array]
+0.5400000214576721,0.5400000214576721,0,0,10,10
 0 == 0.5400000214576721
 1 == 0.5400000214576721
 2 == 0
@@ -25841,12 +26977,11 @@ byteLength = 24
 test6
 [object ArrayBuffer]
 10
-[object Float32Array]
-prototype is
-[object Float32Array]
-byteLength = 0
+constructor is
+function Float32Array() { [native code] }
+byteLength = undefined
 object is
-[object Float32Array]
+0,0.5400000214576721,0,0,0,10,0,0,0
 0 == 0
 1 == 0.5400000214576721
 2 == 0
@@ -25858,7 +26993,7 @@ object is
 8 == 0
 byteLength = 36
 object after expando is
-[object Float32Array]
+0,0.5400000214576721,0,0,0,10,0,0,0
 0 == 0
 1 == 0.5400000214576721
 2 == 0
@@ -25873,12 +27008,11 @@ byteLength = 36
 
 test7
 10
-[object Float32Array]
-prototype is
-[object Float32Array]
-byteLength = 0
+constructor is
+function Float32Array() { [native code] }
+byteLength = undefined
 object is
-[object Float32Array]
+0.5400000214576721,0.5400000214576721,0,0,10,10,0,0
 0 == 0.5400000214576721
 1 == 0.5400000214576721
 2 == 0
@@ -25889,7 +27023,7 @@ object is
 7 == 0
 byteLength = 32
 object after expando is
-[object Float32Array]
+0.5400000214576721,0.5400000214576721,0,0,10,10,0,0
 0 == 0.5400000214576721
 1 == 0.5400000214576721
 2 == 0
@@ -25903,12 +27037,11 @@ byteLength = 32
 
 test8
 10
-[object Float32Array]
-prototype is
-[object Float32Array]
-byteLength = 0
+constructor is
+function Float32Array() { [native code] }
+byteLength = undefined
 object is
-[object Float32Array]
+0.5400000214576721,0.5400000214576721,0,0,10,10
 0 == 0.5400000214576721
 1 == 0.5400000214576721
 2 == 0
@@ -25917,7 +27050,7 @@ object is
 5 == 10
 byteLength = 24
 object after expando is
-[object Float32Array]
+0.5400000214576721,0.5400000214576721,0,0,10,10
 0 == 0.5400000214576721
 1 == 0.5400000214576721
 2 == 0
@@ -25929,12 +27062,11 @@ byteLength = 24
 
 test9
 10
-[object Float32Array]
-prototype is
-[object Float32Array]
-byteLength = 0
+constructor is
+function Float32Array() { [native code] }
+byteLength = undefined
 object is
-[object Float32Array]
+1,0.5400000214576721,3,4,5,10,7,8,9,10,11,12
 0 == 1
 1 == 0.5400000214576721
 2 == 3
@@ -25949,7 +27081,7 @@ object is
 11 == 12
 byteLength = 48
 object after expando is
-[object Float32Array]
+1,0.5400000214576721,3,4,5,10,7,8,9,10,11,12
 0 == 1
 1 == 0.5400000214576721
 2 == 3
@@ -25966,7 +27098,7 @@ foo == bar
 byteLength = 48
 
 test9.1
-[object Float32Array]
+0,0.5400000214576721,0.5400000214576721,0,0,10,10,0,0
 0 == 0
 1 == 0.5400000214576721
 2 == 0.5400000214576721
@@ -25979,12 +27111,11 @@ test9.1
 foo == bar
 byteLength = 36
 10
-[object Float32Array]
-prototype is
-[object Float32Array]
-byteLength = 0
+constructor is
+function Float32Array() { [native code] }
+byteLength = undefined
 object is
-[object Float32Array]
+0,0.5400000214576721,0.5400000214576721,0,0,10,10,0,0,10,11,12
 0 == 0
 1 == 0.5400000214576721
 2 == 0.5400000214576721
@@ -26000,7 +27131,7 @@ object is
 foo == bar
 byteLength = 48
 object after expando is
-[object Float32Array]
+0,0.5400000214576721,0.5400000214576721,0,0,10,10,0,0,10,11,12
 0 == 0
 1 == 0.5400000214576721
 2 == 0.5400000214576721
@@ -26018,12 +27149,11 @@ byteLength = 48
 
 test9.2
 10
-[object Float32Array]
-prototype is
-[object Float32Array]
-byteLength = 0
+constructor is
+function Float32Array() { [native code] }
+byteLength = undefined
 object is
-[object Float32Array]
+0.5400000214576721,0.5400000214576721,0,0,10,10,10,0,0,10,11,12
 0 == 0.5400000214576721
 1 == 0.5400000214576721
 2 == 0
@@ -26039,7 +27169,7 @@ object is
 foo == bar
 byteLength = 48
 object after expando is
-[object Float32Array]
+0.5400000214576721,0.5400000214576721,0,0,10,10,10,0,0,10,11,12
 0 == 0.5400000214576721
 1 == 0.5400000214576721
 2 == 0
@@ -26061,12 +27191,11 @@ test11
 succeed with catchingTypeError: Typed array constructor argument is invalid
 test11.1
 10
-[object Float32Array]
-prototype is
-[object Float32Array]
-byteLength = 0
+constructor is
+function Float32Array() { [native code] }
+byteLength = undefined
 object is
-[object Float32Array]
+NaN,0.5400000214576721,NaN,NaN,NaN,10,NaN
 0 == NaN
 1 == 0.5400000214576721
 2 == NaN
@@ -26076,7 +27205,7 @@ object is
 6 == NaN
 byteLength = 28
 object after expando is
-[object Float32Array]
+NaN,0.5400000214576721,NaN,NaN,NaN,10,NaN
 0 == NaN
 1 == 0.5400000214576721
 2 == NaN
@@ -26089,26 +27218,24 @@ byteLength = 28
 
 test12
 undefined
-[object Float32Array]
-prototype is
-[object Float32Array]
-byteLength = 0
+constructor is
+function Float32Array() { [native code] }
+byteLength = undefined
 object is
-[object Float32Array]
+
 byteLength = 0
 object after expando is
-[object Float32Array]
+
 foo == bar
 byteLength = 0
 
 test13
 10
-[object Float32Array]
-prototype is
-[object Float32Array]
-byteLength = 0
+constructor is
+function Float32Array() { [native code] }
+byteLength = undefined
 object is
-[object Float32Array]
+0,0.5400000214576721,0.5400000214576721,0,0,10,10,0
 0 == 0
 1 == 0.5400000214576721
 2 == 0.5400000214576721
@@ -26119,7 +27246,7 @@ object is
 7 == 0
 byteLength = 32
 object after expando is
-[object Float32Array]
+0,0.5400000214576721,0.5400000214576721,0,0,10,10,0
 0 == 0
 1 == 0.5400000214576721
 2 == 0.5400000214576721
@@ -26133,15 +27260,14 @@ byteLength = 32
 
 test14
 undefined
-[object Float32Array]
-prototype is
-[object Float32Array]
-byteLength = 0
+constructor is
+function Float32Array() { [native code] }
+byteLength = undefined
 object is
-[object Float32Array]
+
 byteLength = 0
 object after expando is
-[object Float32Array]
+
 foo == bar
 byteLength = 0
 
@@ -26149,7 +27275,7 @@ test15
 succeed with catchingRangeError: Invalid offset/length when creating typed array
 test16
 succeed with catchingRangeError: Invalid offset/length when creating typed array
-[object Float32Array]
+0.5400000214576721,0.5400000214576721,0,0,10,10
 0 == 0.5400000214576721
 1 == 0.5400000214576721
 2 == 0
@@ -26159,7 +27285,7 @@ succeed with catchingRangeError: Invalid offset/length when creating typed array
 foo == bar
 byteLength = 24
 test17
-[object Float32Array]
+0.5400000214576721,0.5400000214576721,0,0,10,10
 0 == 0.5400000214576721
 1 == 0.5400000214576721
 2 == 0
@@ -26168,12 +27294,12 @@ test17
 5 == 10
 byteLength = 24
 test18
-[object Float32Array]
+10,10
 0 == 10
 1 == 10
 byteLength = 8
 test19
-[object Float32Array]
+0.5400000214576721,0.5400000214576721,0
 0 == 0.5400000214576721
 1 == 0.5400000214576721
 2 == 0
@@ -26182,48 +27308,256 @@ test20
 undefined
 undefined
 undefined
+10
+test21
+undefined
+undefined
+5
+5
+undefined
+5
+5
+undefined
+5
+5
+undefined
+undefined
+NaN
+1
+undefined
+0
+1
+undefined
+1
+1
+0
+1
+2
+3
+4
+5
+6
+7
+8
+undefined
+undefined
+[object Object]
+6
+undefined
+[object Object]
+7
+undefined
+[object Object]
+6
+test21 JIT
+undefined
+undefined
+5
+5
+undefined
+5
+5
+undefined
+5
+5
+undefined
+undefined
+NaN
+1
+undefined
+0
+1
+undefined
+1
+1
+0
+1
+2
+3
+4
+5
+6
+7
+8
+undefined
+undefined
+[object Object]
+6
+undefined
+[object Object]
+7
+undefined
+[object Object]
+6
+test22
+***testing index 0 : 0
+5
+6
+***testing index 1 : "0"
+6
+7
+***testing index 2 : 0
+7
+8
+***testing index 3 : "-0"
+8
+undefined
+***testing index 4 : -2
+9
+undefined
+***testing index 5 : "-2"
+10
+undefined
+***testing index 6 : 1073741823
+11
+undefined
+***testing index 7 : "1073741823"
+12
+undefined
+***testing index 8 : 1
+13
+14
+***testing index 9 : "1"
+14
+15
+***testing index 10 : 2147483648
+15
+undefined
+***testing index 11 : "2147483648"
+16
+undefined
+***testing index 12 : 2147483647
+17
+undefined
+***testing index 13 : "2147483647"
+18
+undefined
+***testing index 14 : 4294967296
+19
+undefined
+***testing index 15 : "4294967296"
+20
+undefined
+***testing index 16 : 4294967295
+21
+undefined
+***testing index 17 : "4294967295"
+22
+undefined
+***testing index 18 : 1.5
+23
+undefined
+***testing index 19 : "1.5"
+24
+undefined
+***testing index 20 : "a"
+[object Object]
+***testing index 21 : 1000000000
+25
+undefined
+***testing index 22 : "1.0000000000000000000000000e-9"
+[object Object]
+***testing index 23 : NaN
+26
+undefined
+***testing index 24 : Infinity
+27
+undefined
+***testing index 25 : -Infinity
+28
+undefined
+***testing index 26 : "Infinity"
+29
+undefined
+***testing index 27 : "-Infinity"
+30
+undefined
+test22 JIT
+***testing index 0 : 0
+5
+6
+***testing index 1 : "0"
+6
+7
+***testing index 2 : 0
+7
+8
+***testing index 3 : "-0"
+8
+undefined
+***testing index 4 : -2
+9
+undefined
+***testing index 5 : "-2"
+10
+undefined
+***testing index 6 : 1073741823
+11
+undefined
+***testing index 7 : "1073741823"
+12
+undefined
+***testing index 8 : 1
+13
+14
+***testing index 9 : "1"
+14
+15
+***testing index 10 : 2147483648
+15
+undefined
+***testing index 11 : "2147483648"
+16
+undefined
+***testing index 12 : 2147483647
+17
+undefined
+***testing index 13 : "2147483647"
+18
+undefined
+***testing index 14 : 4294967296
+19
+undefined
+***testing index 15 : "4294967296"
+20
+undefined
+***testing index 16 : 4294967295
+21
+undefined
+***testing index 17 : "4294967295"
+22
+undefined
+***testing index 18 : 1.5
+23
+undefined
+***testing index 19 : "1.5"
+24
+undefined
+***testing index 20 : "a"
+[object Object]
+***testing index 21 : 1000000000
+25
+undefined
+***testing index 22 : "1.0000000000000000000000000e-9"
+[object Object]
+***testing index 23 : NaN
+26
+undefined
+***testing index 24 : Infinity
+27
+undefined
+***testing index 25 : -Infinity
+28
+undefined
+***testing index 26 : "Infinity"
+29
+undefined
+***testing index 27 : "-Infinity"
+30
 undefined
 Start same thread different engine test on file float32array.js
-property of global: WScript
 property of global: print
 undefined
-property of global: SCA
-sub object serialize in SCA is 
-function serialize() {
-    [native code]
-}
-
-sub object deserialize in SCA is 
-function deserialize() {
-    [native code]
-}
-
-sub object lookup in SCA is 
-function lookup() {
-    [native code]
-}
-
-sub object lookupEx in SCA is 
-function lookupEx() {
-    [native code]
-}
-
-sub object dataToKey in SCA is 
-function dataToKey() {
-    [native code]
-}
-
-sub object makeInt64 in SCA is 
-function makeInt64() {
-    [native code]
-}
-
-sub object makeUint64 in SCA is 
-function makeUint64() {
-    [native code]
-}
-
-property of global: ImageData
 property of global: oneTest
 exception is -2146823281Unable to set property '1' of undefined or null reference
 property of global: test1
@@ -26239,6 +27573,7 @@ sub object 8 in test1 is 0
 sub object foo in test1 is bar
 property of global: test2
 sub object foo in test2 is bar
+sub object 2 in test2 is undefined
 property of global: arrayBuffer
 property of global: test3
 sub object 0 in test3 is 0
@@ -26337,6 +27672,7 @@ sub object 6 in test111 is NaN
 sub object foo in test111 is bar
 property of global: test12
 sub object foo in test12 is bar
+sub object 2 in test12 is undefined
 property of global: test13
 sub object 0 in test13 is 0
 sub object 1 in test13 is 0.5400000214576721
@@ -26349,6 +27685,7 @@ sub object 7 in test13 is 0
 sub object foo in test13 is bar
 property of global: test14
 sub object foo in test14 is bar
+sub object 2 in test14 is undefined
 property of global: test15
 property of global: test16
 property of global: test17
@@ -26361,6 +27698,7 @@ sub object 5 in test17 is 10
 property of global: test18
 sub object 0 in test18 is 10
 sub object 1 in test18 is 10
+sub object 2 in test18 is undefined
 property of global: test19
 sub object 0 in test19 is 0.5400000214576721
 sub object 1 in test19 is 0.5400000214576721
@@ -26371,16 +27709,29 @@ property of global: verifyThrow
 SUCCEEDED: get expected exception Object expected
 property of global: verifyNoThrow
 FAILED: get exception Object expected
+property of global: setIntValue
+property of global: setFloat32Value
+property of global: setFloat64Value
+property of global: testSetWithObj
+exception is -2146823281Unable to get property '0' of undefined or null reference
+property of global: testSetWithFloat
+exception is -2146823281Unable to get property '0' of undefined or null reference
+property of global: testSetWithInt
+exception is -2146823281Unable to get property '0' of undefined or null reference
+property of global: testIndexValueForSet
+***testing index 0 : 0
+exception is -2146823281Unable to set property '0' of undefined or null reference
 property of global: i
+property of global: valueToSet
+sub object valueOf in valueToSet is function () { WScript.Echo(count); return count++; }
 testing file float64array.js
 test1
 10
-[object Float64Array]
-prototype is
-[object Float64Array]
-byteLength = 0
+constructor is
+function Float64Array() { [native code] }
+byteLength = undefined
 object is
-[object Float64Array]
+0,-0.65,0,0,0,10,0,0,0
 0 == 0
 1 == -0.65
 2 == 0
@@ -26392,7 +27743,7 @@ object is
 8 == 0
 byteLength = 72
 object after expando is
-[object Float64Array]
+0,-0.65,0,0,0,10,0,0,0
 0 == 0
 1 == -0.65
 2 == 0
@@ -26407,33 +27758,31 @@ byteLength = 72
 
 test2
 undefined
-[object Float64Array]
-prototype is
-[object Float64Array]
-byteLength = 0
+constructor is
+function Float64Array() { [native code] }
+byteLength = undefined
 object is
-[object Float64Array]
+
 byteLength = 0
 object after expando is
-[object Float64Array]
+
 foo == bar
 byteLength = 0
 
 test3
 undefined
-[object Float64Array]
-prototype is
-[object Float64Array]
-byteLength = 0
+constructor is
+function Float64Array() { [native code] }
+byteLength = undefined
 object is
-[object Float64Array]
+0,-0.65,0,0
 0 == 0
 1 == -0.65
 2 == 0
 3 == 0
 byteLength = 32
 object after expando is
-[object Float64Array]
+0,-0.65,0,0
 0 == 0
 1 == -0.65
 2 == 0
@@ -26443,18 +27792,17 @@ byteLength = 32
 
 test4
 undefined
-[object Float64Array]
-prototype is
-[object Float64Array]
-byteLength = 0
+constructor is
+function Float64Array() { [native code] }
+byteLength = undefined
 object is
-[object Float64Array]
+-0.65,-0.65,0
 0 == -0.65
 1 == -0.65
 2 == 0
 byteLength = 24
 object after expando is
-[object Float64Array]
+-0.65,-0.65,0
 0 == -0.65
 1 == -0.65
 2 == 0
@@ -26463,18 +27811,17 @@ byteLength = 24
 
 test5
 undefined
-[object Float64Array]
-prototype is
-[object Float64Array]
-byteLength = 0
+constructor is
+function Float64Array() { [native code] }
+byteLength = undefined
 object is
-[object Float64Array]
+-0.65,-0.65,0
 0 == -0.65
 1 == -0.65
 2 == 0
 byteLength = 24
 object after expando is
-[object Float64Array]
+-0.65,-0.65,0
 0 == -0.65
 1 == -0.65
 2 == 0
@@ -26484,12 +27831,11 @@ byteLength = 24
 test6
 [object ArrayBuffer]
 10
-[object Float64Array]
-prototype is
-[object Float64Array]
-byteLength = 0
+constructor is
+function Float64Array() { [native code] }
+byteLength = undefined
 object is
-[object Float64Array]
+0,-0.65,0,0,0,10,0,0,0
 0 == 0
 1 == -0.65
 2 == 0
@@ -26501,7 +27847,7 @@ object is
 8 == 0
 byteLength = 72
 object after expando is
-[object Float64Array]
+0,-0.65,0,0,0,10,0,0,0
 0 == 0
 1 == -0.65
 2 == 0
@@ -26516,12 +27862,11 @@ byteLength = 72
 
 test7
 10
-[object Float64Array]
-prototype is
-[object Float64Array]
-byteLength = 0
+constructor is
+function Float64Array() { [native code] }
+byteLength = undefined
 object is
-[object Float64Array]
+-0.65,-0.65,0,0,10,10,0,0
 0 == -0.65
 1 == -0.65
 2 == 0
@@ -26532,7 +27877,7 @@ object is
 7 == 0
 byteLength = 64
 object after expando is
-[object Float64Array]
+-0.65,-0.65,0,0,10,10,0,0
 0 == -0.65
 1 == -0.65
 2 == 0
@@ -26546,17 +27891,16 @@ byteLength = 64
 
 test8
 undefined
-[object Float64Array]
-prototype is
-[object Float64Array]
-byteLength = 0
+constructor is
+function Float64Array() { [native code] }
+byteLength = undefined
 object is
-[object Float64Array]
+-0.65,-0.65
 0 == -0.65
 1 == -0.65
 byteLength = 16
 object after expando is
-[object Float64Array]
+-0.65,-0.65
 0 == -0.65
 1 == -0.65
 foo == bar
@@ -26564,12 +27908,11 @@ byteLength = 16
 
 test9
 10
-[object Float64Array]
-prototype is
-[object Float64Array]
-byteLength = 0
+constructor is
+function Float64Array() { [native code] }
+byteLength = undefined
 object is
-[object Float64Array]
+1,-0.65,3,4,5,10,7,8,9,10,11,12
 0 == 1
 1 == -0.65
 2 == 3
@@ -26584,7 +27927,7 @@ object is
 11 == 12
 byteLength = 96
 object after expando is
-[object Float64Array]
+1,-0.65,3,4,5,10,7,8,9,10,11,12
 0 == 1
 1 == -0.65
 2 == 3
@@ -26601,7 +27944,7 @@ foo == bar
 byteLength = 96
 
 test9.1
-[object Float64Array]
+0,-0.65,-0.65,0,0,10,10,0,0
 0 == 0
 1 == -0.65
 2 == -0.65
@@ -26614,12 +27957,11 @@ test9.1
 foo == bar
 byteLength = 72
 10
-[object Float64Array]
-prototype is
-[object Float64Array]
-byteLength = 0
+constructor is
+function Float64Array() { [native code] }
+byteLength = undefined
 object is
-[object Float64Array]
+0,-0.65,-0.65,0,0,10,10,0,0,10,11,12
 0 == 0
 1 == -0.65
 2 == -0.65
@@ -26635,7 +27977,7 @@ object is
 foo == bar
 byteLength = 96
 object after expando is
-[object Float64Array]
+0,-0.65,-0.65,0,0,10,10,0,0,10,11,12
 0 == 0
 1 == -0.65
 2 == -0.65
@@ -26653,12 +27995,11 @@ byteLength = 96
 
 test9.2
 10
-[object Float64Array]
-prototype is
-[object Float64Array]
-byteLength = 0
+constructor is
+function Float64Array() { [native code] }
+byteLength = undefined
 object is
-[object Float64Array]
+-0.65,-0.65,0,0,0,10,10,0,0,10,11,12
 0 == -0.65
 1 == -0.65
 2 == 0
@@ -26674,7 +28015,7 @@ object is
 foo == bar
 byteLength = 96
 object after expando is
-[object Float64Array]
+-0.65,-0.65,0,0,0,10,10,0,0,10,11,12
 0 == -0.65
 1 == -0.65
 2 == 0
@@ -26696,12 +28037,11 @@ test11
 succeed with catchingTypeError: Typed array constructor argument is invalid
 test11.1
 10
-[object Float64Array]
-prototype is
-[object Float64Array]
-byteLength = 0
+constructor is
+function Float64Array() { [native code] }
+byteLength = undefined
 object is
-[object Float64Array]
+NaN,-0.65,NaN,NaN,NaN,10,NaN
 0 == NaN
 1 == -0.65
 2 == NaN
@@ -26711,7 +28051,7 @@ object is
 6 == NaN
 byteLength = 56
 object after expando is
-[object Float64Array]
+NaN,-0.65,NaN,NaN,NaN,10,NaN
 0 == NaN
 1 == -0.65
 2 == NaN
@@ -26724,33 +28064,31 @@ byteLength = 56
 
 test12
 undefined
-[object Float64Array]
-prototype is
-[object Float64Array]
-byteLength = 0
+constructor is
+function Float64Array() { [native code] }
+byteLength = undefined
 object is
-[object Float64Array]
+
 byteLength = 0
 object after expando is
-[object Float64Array]
+
 foo == bar
 byteLength = 0
 
 test13
 undefined
-[object Float64Array]
-prototype is
-[object Float64Array]
-byteLength = 0
+constructor is
+function Float64Array() { [native code] }
+byteLength = undefined
 object is
-[object Float64Array]
+0,-0.65,-0.65,0
 0 == 0
 1 == -0.65
 2 == -0.65
 3 == 0
 byteLength = 32
 object after expando is
-[object Float64Array]
+0,-0.65,-0.65,0
 0 == 0
 1 == -0.65
 2 == -0.65
@@ -26760,15 +28098,14 @@ byteLength = 32
 
 test14
 undefined
-[object Float64Array]
-prototype is
-[object Float64Array]
-byteLength = 0
+constructor is
+function Float64Array() { [native code] }
+byteLength = undefined
 object is
-[object Float64Array]
+
 byteLength = 0
 object after expando is
-[object Float64Array]
+
 foo == bar
 byteLength = 0
 
@@ -26776,36 +28113,36 @@ test15
 succeed with catchingRangeError: Invalid offset/length when creating typed array
 test16
 succeed with catchingRangeError: Invalid offset/length when creating typed array
-[object Float64Array]
+-0.65,-0.65,0
 0 == -0.65
 1 == -0.65
 2 == 0
 foo == bar
 byteLength = 24
 test17
-[object Float64Array]
+-0.65,-0.65,0
 0 == -0.65
 1 == -0.65
 2 == 0
 byteLength = 24
 test18
-[object Float64Array]
+
 byteLength = 0
 test19
-[object Float64Array]
+-0.65,-0.65,0
 0 == -0.65
 1 == -0.65
 2 == 0
 byteLength = 24
 test20
-[object Float64Array]
+-0.65,-0.65,0
 0 == -0.65
 1 == -0.65
 2 == 0
 byteLength = 24
 test21
-[object Float64Array]
-[object Float64Array]
+8
+0,0
 0 == 0
 1 == 0
 byteLength = 16
@@ -26813,48 +28150,256 @@ test22
 undefined
 undefined
 undefined
+10
+test23
+undefined
+undefined
+5
+5
+undefined
+5
+5
+undefined
+5
+5
+undefined
+undefined
+NaN
+1
+undefined
+0
+1
+undefined
+1
+1
+0
+1
+2
+3
+4
+5
+6
+7
+8
+undefined
+undefined
+[object Object]
+6
+undefined
+[object Object]
+7
+undefined
+[object Object]
+6
+test23 JIT
+undefined
+undefined
+5
+5
+undefined
+5
+5
+undefined
+5
+5
+undefined
+undefined
+NaN
+1
+undefined
+0
+1
+undefined
+1
+1
+0
+1
+2
+3
+4
+5
+6
+7
+8
+undefined
+undefined
+[object Object]
+6
+undefined
+[object Object]
+7
+undefined
+[object Object]
+6
+test24
+***testing index 0 : 0
+5
+6
+***testing index 1 : "0"
+6
+7
+***testing index 2 : 0
+7
+8
+***testing index 3 : "-0"
+8
+undefined
+***testing index 4 : -2
+9
+undefined
+***testing index 5 : "-2"
+10
+undefined
+***testing index 6 : 1073741823
+11
+undefined
+***testing index 7 : "1073741823"
+12
+undefined
+***testing index 8 : 1
+13
+14
+***testing index 9 : "1"
+14
+15
+***testing index 10 : 2147483648
+15
+undefined
+***testing index 11 : "2147483648"
+16
+undefined
+***testing index 12 : 2147483647
+17
+undefined
+***testing index 13 : "2147483647"
+18
+undefined
+***testing index 14 : 4294967296
+19
+undefined
+***testing index 15 : "4294967296"
+20
+undefined
+***testing index 16 : 4294967295
+21
+undefined
+***testing index 17 : "4294967295"
+22
+undefined
+***testing index 18 : 1.5
+23
+undefined
+***testing index 19 : "1.5"
+24
+undefined
+***testing index 20 : "a"
+[object Object]
+***testing index 21 : 1000000000
+25
+undefined
+***testing index 22 : "1.0000000000000000000000000e-9"
+[object Object]
+***testing index 23 : NaN
+26
+undefined
+***testing index 24 : Infinity
+27
+undefined
+***testing index 25 : -Infinity
+28
+undefined
+***testing index 26 : "Infinity"
+29
+undefined
+***testing index 27 : "-Infinity"
+30
+undefined
+test24 JIT
+***testing index 0 : 0
+5
+6
+***testing index 1 : "0"
+6
+7
+***testing index 2 : 0
+7
+8
+***testing index 3 : "-0"
+8
+undefined
+***testing index 4 : -2
+9
+undefined
+***testing index 5 : "-2"
+10
+undefined
+***testing index 6 : 1073741823
+11
+undefined
+***testing index 7 : "1073741823"
+12
+undefined
+***testing index 8 : 1
+13
+14
+***testing index 9 : "1"
+14
+15
+***testing index 10 : 2147483648
+15
+undefined
+***testing index 11 : "2147483648"
+16
+undefined
+***testing index 12 : 2147483647
+17
+undefined
+***testing index 13 : "2147483647"
+18
+undefined
+***testing index 14 : 4294967296
+19
+undefined
+***testing index 15 : "4294967296"
+20
+undefined
+***testing index 16 : 4294967295
+21
+undefined
+***testing index 17 : "4294967295"
+22
+undefined
+***testing index 18 : 1.5
+23
+undefined
+***testing index 19 : "1.5"
+24
+undefined
+***testing index 20 : "a"
+[object Object]
+***testing index 21 : 1000000000
+25
+undefined
+***testing index 22 : "1.0000000000000000000000000e-9"
+[object Object]
+***testing index 23 : NaN
+26
+undefined
+***testing index 24 : Infinity
+27
+undefined
+***testing index 25 : -Infinity
+28
+undefined
+***testing index 26 : "Infinity"
+29
+undefined
+***testing index 27 : "-Infinity"
+30
 undefined
 Start same thread different engine test on file float64array.js
-property of global: WScript
 property of global: print
 undefined
-property of global: SCA
-sub object serialize in SCA is 
-function serialize() {
-    [native code]
-}
-
-sub object deserialize in SCA is 
-function deserialize() {
-    [native code]
-}
-
-sub object lookup in SCA is 
-function lookup() {
-    [native code]
-}
-
-sub object lookupEx in SCA is 
-function lookupEx() {
-    [native code]
-}
-
-sub object dataToKey in SCA is 
-function dataToKey() {
-    [native code]
-}
-
-sub object makeInt64 in SCA is 
-function makeInt64() {
-    [native code]
-}
-
-sub object makeUint64 in SCA is 
-function makeUint64() {
-    [native code]
-}
-
-property of global: ImageData
 property of global: oneTest
 exception is -2146823281Unable to set property '1' of undefined or null reference
 property of global: test1
@@ -26870,6 +28415,7 @@ sub object 8 in test1 is 0
 sub object foo in test1 is bar
 property of global: test2
 sub object foo in test2 is bar
+sub object 2 in test2 is undefined
 property of global: arrayBuffer
 property of global: test3
 sub object 0 in test3 is 0
@@ -26913,6 +28459,7 @@ property of global: test8
 sub object 0 in test8 is -0.65
 sub object 1 in test8 is -0.65
 sub object foo in test8 is bar
+sub object 2 in test8 is undefined
 property of global: arr
 sub object 0 in arr is 1
 sub object 1 in arr is 2
@@ -26953,6 +28500,7 @@ sub object 6 in test111 is NaN
 sub object foo in test111 is bar
 property of global: test12
 sub object foo in test12 is bar
+sub object 2 in test12 is undefined
 property of global: test13
 sub object 0 in test13 is 0
 sub object 1 in test13 is -0.65
@@ -26961,6 +28509,7 @@ sub object 3 in test13 is 0
 sub object foo in test13 is bar
 property of global: test14
 sub object foo in test14 is bar
+sub object 2 in test14 is undefined
 property of global: test15
 property of global: test16
 property of global: test17
@@ -26968,6 +28517,7 @@ sub object 0 in test17 is -0.65
 sub object 1 in test17 is -0.65
 sub object 2 in test17 is 0
 property of global: test18
+sub object 2 in test18 is undefined
 property of global: test19
 sub object 0 in test19 is -0.65
 sub object 1 in test19 is -0.65
@@ -26979,10 +28529,25 @@ sub object 2 in test20 is 0
 property of global: test21
 sub object 0 in test21 is 0
 sub object 1 in test21 is 0
+sub object 2 in test21 is undefined
 property of global: printObj
 exception is -2146823281Unable to get property 'toString' of undefined or null reference
 property of global: verifyThrow
 SUCCEEDED: get expected exception Object expected
 property of global: verifyNoThrow
 FAILED: get exception Object expected
+property of global: setIntValue
+property of global: setFloat32Value
+property of global: setFloat64Value
+property of global: testSetWithObj
+exception is -2146823281Unable to get property '0' of undefined or null reference
+property of global: testSetWithFloat
+exception is -2146823281Unable to get property '0' of undefined or null reference
+property of global: testSetWithInt
+exception is -2146823281Unable to get property '0' of undefined or null reference
+property of global: testIndexValueForSet
+***testing index 0 : 0
+exception is -2146823281Unable to set property '0' of undefined or null reference
 property of global: i
+property of global: valueToSet
+sub object valueOf in valueToSet is function () { WScript.Echo(count); return count++; }

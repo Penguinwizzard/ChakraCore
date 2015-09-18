@@ -262,13 +262,16 @@
     <default>
       <files>eval_letconst.js</files>
       <compile-flags>-force:evalcompile</compile-flags>
+      <!-- fails assert in bytecodegen in ch -->
+      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
     <default>
       <files>eval_letconst.js</files>
       <compile-flags>-force:deferparse -force:evalcompile</compile-flags>
-      <tags>exclude_dynapogo</tags>
+      <!-- fails assert in bytecodegen in ch -->
+      <tags>exclude_dynapogo,exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -346,7 +349,8 @@
       <files>unassignedconst.js</files>
       <compile-flags>-Intl-</compile-flags>
       <baseline>unassignedconst.baseline</baseline>
-      <tags>exclude_dynapogo</tags>
+      <!-- ch stack trace prints correct file name; jshost prints wrong file name -->
+      <tags>exclude_dynapogo,exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -354,7 +358,8 @@
       <files>unassignedconst.js</files>
       <compile-flags>-Intl- -force:deferparse</compile-flags>
       <baseline>unassignedconst.baseline</baseline>
-      <tags>exclude_dynapogo</tags>
+      <!-- ch stack trace prints correct file name; jshost prints wrong file name -->
+      <tags>exclude_dynapogo,exclude_ch</tags>
     </default>
   </test>
   <test>

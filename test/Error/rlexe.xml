@@ -4,6 +4,8 @@
     <default>
       <files>errorProps.js</files>
       <baseline>errorProps_v4.baseline</baseline>
+      <!-- different stack trace formatting in ch -->
+      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -16,6 +18,8 @@
     <default>
       <files>NativeErrors.js</files>
       <baseline>NativeErrors_v4.baseline</baseline>
+      <!-- different stack trace formatting in ch -->
+      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -40,7 +44,8 @@
     <default>
       <files>errorCtor.js</files>
       <baseline>errorCtor_v4.baseline</baseline>
-      <tags>fail_mutators</tags>
+      <!-- different stack trace formatting in ch -->
+      <tags>fail_mutators,exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -130,6 +135,8 @@
     <default>
       <files>bug560940.js</files>
       <baseline>bug560940.baseline</baseline>
+      <!-- error stack trace missing in ch.exe -->
+      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -144,7 +151,8 @@
       <files>inlineSameFunc.js</files>
       <baseline>inlineSameFunc.baseline</baseline>
       <compile-flags>-maxinterpretcount:1 -off:simpleJit</compile-flags>
-      <tags>exclude_dynapogo</tags>
+      <!-- different stack trace formatting in ch -->
+      <tags>exclude_dynapogo,exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -152,7 +160,8 @@
       <files>PartInitStackFrame.js</files>
       <baseline>PartInitStackFrame.baseline</baseline>
       <compile-flags>-nonative -InjectPartiallyInitializedInterpreterFrameError:3 -InjectPartiallyInitializedInterpreterFrameErrorType:1</compile-flags>
-      <tags>exclude_dynapogo</tags>
+      <!-- error stack trace missing in ch.exe -->
+      <tags>exclude_dynapogo,exclude_ch</tags>
     </default>
   </test>
 </regress-exe>

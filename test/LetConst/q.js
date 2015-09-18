@@ -7,6 +7,8 @@ WScript.Echo(x);
 WScript.Echo(x);
 
 for (var a in this) {
+    if (a === "SCA" || a === "ImageData")
+        continue;
     WScript.Echo(a);
 }
 WScript.Echo();

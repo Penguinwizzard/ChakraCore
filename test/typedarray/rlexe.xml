@@ -137,7 +137,7 @@
   <test>
     <default>
       <files>samethread.js</files>
-      <baseline>samethread_es6.baseline</baseline>
+      <baseline>samethread.baseline</baseline>
       <tags>typedarray</tags>
     </default>
   </test>
@@ -216,13 +216,15 @@ Below test fails with difference in space. Investigate the cause and re-enable t
   <test>
     <default>
       <files>allocation.js</files>
-      <tags>typedarray,exclude_arm</tags>
+      <!-- randomly fails with ch.exe -->
+      <tags>typedarray,exclude_arm,exclude_ch</tags>
     </default>
   </test>
   <test>
     <default>
       <files>allocation2.js</files>
-      <tags>typedarray,exclude_arm</tags>
+      <!-- randomly fails with ch.exe -->
+      <tags>typedarray,exclude_arm,exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -253,7 +255,8 @@ Below test fails with difference in space. Investigate the cause and re-enable t
       <files>cseTypedArray.js</files>
       <baseline>cseTypedArray.baseline</baseline>
       <compile-flags>-maxInterpretCount:1 -off:simpleJit</compile-flags>
-      <tags>typedarray</tags>
+      <!-- crashes in ch -->
+      <tags>typedarray,exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -289,7 +292,8 @@ Below test fails with difference in space. Investigate the cause and re-enable t
       <files>transfer.js</files>
       <baseline>transfer.baseline</baseline>
       <compile-flags>-ArrayBufferTransfer</compile-flags>
-      <tags>typedarray</tags>
+      <!-- Fails in ch with AllocationPolicyMananger assertion -->
+      <tags>typedarray,exclude_ch</tags>
     </default>
   </test>
   <test>

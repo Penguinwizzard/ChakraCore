@@ -17,6 +17,8 @@
       <files>AsyncAwait-functionality.js</files>
       <compile-flags>-es6experimental -nodeferparse -args summary -endargs</compile-flags>
       <baseline>AsyncAwait-functionality.baseline</baseline>
+      <!-- ch does not finish running the test; promise callbacks not called? -->
+      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -24,6 +26,8 @@
       <files>AsyncAwait-functionality.js</files>
       <compile-flags>-es6experimental -forcedeferparse -args summary -endargs</compile-flags>
       <baseline>AsyncAwait-functionality.baseline</baseline>
+      <!-- ch does not finish running the test; promise callbacks not called? -->
+      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -110,6 +114,8 @@
     <default>
       <files>function.name.js</files>
       <compile-flags>-ES6Generators -es6toprimitive -ES6Classes -es6functionnamefull -args summary -endargs</compile-flags>
+      <!-- external function test fails in ch; is this a host dependent thing? -->
+      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -349,6 +355,8 @@
       <files>ES6SubclassableAsync.js</files>
       <compile-flags>-ES6Classes -ES6Lambda -ES6Spread -ES6Generators -Off:Deferparse</compile-flags>
       <baseline>ES6SubclassableAsync.baseline</baseline>
+      <!-- ch does not finish running the test; promise callbacks not called? -->
+      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -356,6 +364,8 @@
       <files>ES6SubclassableAsync.js</files>
       <compile-flags>-ES6Classes -ES6Lambda -ES6Spread -ES6Generators -Force:Deferparse</compile-flags>
       <baseline>ES6SubclassableAsync.baseline</baseline>
+      <!-- ch does not finish running the test; promise callbacks not called? -->
+      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -394,6 +404,8 @@
       <files>stringtemplate_basic.js</files>
       <baseline>stringtemplate_basic.baseline</baseline>
       <compile-flags> -ES6StringTemplate</compile-flags>
+      <!-- ch prints ? chars -->
+      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -451,6 +463,8 @@
       <files>ES6PromiseAsync.js</files>
       <baseline>ES6PromiseAsync.baseline</baseline>
       <compile-flags> -ES6 -ES6Promise -ES6Iterators</compile-flags>
+      <!-- Doesn't print all output in ch -->
+      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -458,6 +472,8 @@
       <files>ES6Promise_RemoveWScript.js</files>
       <baseline>ES6Promise_RemoveWScript.baseline</baseline>
       <compile-flags> -ES6 -ES6Promise</compile-flags>
+      <!-- Doesn't print all output in ch -->
+      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -465,6 +481,8 @@
       <files>es6_stable.js</files>
       <compile-flags>-verbose -es6</compile-flags>
       <baseline>es6_stable.baseline</baseline>
+      <!-- WERExceptionSupport line is missing in ch -->
+      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -472,6 +490,8 @@
       <files>es6_stable.js</files>
       <compile-flags>-verbose -es6 -es6- -ES6StringTemplate</compile-flags>
       <baseline>es6_stable.enable_disable.baseline</baseline>
+      <!-- WERExceptionSupport line is missing in ch -->
+      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -479,6 +499,8 @@
       <files>es6_all.js</files>
       <compile-flags>-verbose -es6all</compile-flags>
       <baseline>es6_all.baseline</baseline>
+      <!-- WERExceptionSupport line is missing in ch -->
+      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -493,7 +515,8 @@
       <files>unicode_escape_sequences.js</files>
       <baseline>unicode_escape_sequences.baseline</baseline>
       <compile-flags> -ES6Unicode -ES6RegExSticky</compile-flags>
-      <tags>exclude_ship</tags>
+      <!-- prints ? in ch where jshost prints nothing -->
+      <tags>exclude_ship,exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -593,7 +616,6 @@
     <default>
       <files>supersyntax02.js</files>
       <baseline>supersyntax02.baseline</baseline>
-      <compile-flags> -IgnoreScriptErrorCode</compile-flags>
       <tags>exclude_dynapogo</tags>
     </default>
   </test>
@@ -601,7 +623,7 @@
     <default>
       <files>supersyntax05.js</files>
       <baseline>supersyntax05.baseline</baseline>
-      <compile-flags> -ES6Classes -IgnoreScriptErrorCode</compile-flags>
+      <compile-flags> -ES6Classes</compile-flags>
       <tags>exclude_dynapogo</tags>
     </default>
   </test>
@@ -609,7 +631,7 @@
     <default>
       <files>supersyntax06.js</files>
       <baseline>supersyntax06.baseline</baseline>
-      <compile-flags> -ES6Classes -IgnoreScriptErrorCode</compile-flags>
+      <compile-flags> -ES6Classes</compile-flags>
       <tags>exclude_dynapogo</tags>
     </default>
   </test>
@@ -746,7 +768,8 @@
       <files>generators-apis.js</files>
       <compile-flags>-jsrt:32 -es6all</compile-flags>
       <baseline>generators-apis-jsrt.baseline</baseline>
-      <tags>exclude_arm</tags>
+      <!-- can this test be removed now that we have ch testing jsrt code paths? -->
+      <tags>exclude_arm,exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -840,7 +863,7 @@
     <default>
       <files>blue_641922.js</files>
       <baseline>blue_641922.baseline</baseline>
-      <compile-flags> -ES6Rest -RecyclerNoPageReuse -PageHeap:2 -IgnoreScriptErrorCode </compile-flags>
+      <compile-flags> -ES6Rest -RecyclerNoPageReuse -PageHeap:2</compile-flags>
       <tags>exclude_fre</tags>
     </default>
   </test>
@@ -971,7 +994,8 @@
   <test>
     <default>
       <files> bug_OS_2553885.js</files>
-      <tags>BugFix</tags>
+      <!-- fails in ch cannot load Intl.js bytecode -->
+      <tags>BugFix,exclude_ch</tags>
     </default>
   </test>
   <test>

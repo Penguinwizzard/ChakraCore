@@ -306,7 +306,8 @@
       <baseline>FuncBody.bug133933.baseline</baseline>
       <!--Top Level function parsing on first call to script is turned off here, as this tests order of functions executed-->
       <compile-flags>-DeferTopLevelTillFirstCall- -trace:FunctionSourceInfoParse</compile-flags>
-      <tags>exclude_fre,exclude_dynapogo</tags>
+      <!-- bug: prints no output for ch -->
+      <tags>exclude_fre,exclude_dynapogo,exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -350,6 +351,8 @@
     <default>
       <files>bug_258259.js</files>
       <baseline>bug_258259.baseline</baseline>
+      <!-- bug fails in ch -->
+      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>

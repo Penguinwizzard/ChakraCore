@@ -1,4 +1,6 @@
 for (a in this) {
+    if (a === "SCA" || a === "ImageData")
+        continue;
     WScript.Echo(a);
 }
 
@@ -14,6 +16,8 @@ WScript.Echo(x);
 
 
 for (a in this) {
+    if (a === "SCA" || a === "ImageData")
+        continue;
     WScript.Echo(a);
 }
 
