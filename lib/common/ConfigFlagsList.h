@@ -635,6 +635,7 @@ PHASE(All)
 
 #define DEFAULT_CONFIG_SkipSplitWhenResultIgnored (false)
 
+#define DEFAULT_CONFIG_ArrayLikeObjectStartIndex (64U)
 #define DEFAULT_CONFIG_MaxCopyOnAccessArrayLength (32U)
 #define DEFAULT_CONFIG_MinCopyOnAccessArrayLength (5U)
 #define DEFAULT_CONFIG_CopyOnAccessArraySegmentCacheSize (16)
@@ -1042,6 +1043,8 @@ FLAGNRA(Number, MaxSimpleJitRunCount  , Msjrc, "Maximum number of times a functi
 FLAGNR(Number,  MaxCopyOnAccessArrayLength, "Maximum length of copy-on-access array", DEFAULT_CONFIG_MaxCopyOnAccessArrayLength)
 FLAGNR(Number,  MinCopyOnAccessArrayLength, "Minimum length of copy-on-access array", DEFAULT_CONFIG_MinCopyOnAccessArrayLength)
 FLAGNR(Number,  CopyOnAccessArraySegmentCacheSize, "Size of copy-on-access array segment cache (1-32)", DEFAULT_CONFIG_CopyOnAccessArraySegmentCacheSize)
+
+FLAGNR(Number, ArrayLikeObjectStartIndex, "Start Index offset for testing of Array like objects with lengths larger than uint32max", 0)
 
 FLAGNR(Number, MinTemplatizedJitRunCount, "Mininum number of times a function must be Templatized Jited", DEFAULT_CONFIG_MinTemplatizedJitRunCount)
 FLAGNR(Number, MinAsmJsInterpreterRunCount, "Mininum number of times a function must be Asm Interpreted", DEFAULT_CONFIG_MinAsmJsInterpreterRunCount)

@@ -2868,7 +2868,25 @@ namespace Js
                     RecyclableObject* itemObject = RecyclableObject::FromVar(aItem);
                     Var subItem;
                     uint32 lengthToUin32Max = length.IsSmallIndex() ? length.GetSmallIndex() : MaxArrayLength;
-                    for (uint32 idxSubItem = 0u; idxSubItem < lengthToUin32Max; ++idxSubItem)
+                    uint32 i32 = 0u;
+                    uint64 i64 = MaxArrayLength;
+#if DBG
+                    uint64 arrayFlagIndex = CONFIG_FLAG(ArrayLikeObjectStartIndex);
+                    if (arrayFlagIndex != 0)
+                    {
+                        if (arrayFlagIndex <= MaxArrayLength)
+                        {
+                            i32 = (uint32) arrayFlagIndex;
+                        }
+                        else
+                        {
+                            i32 = MaxArrayLength;
+                            i64 = arrayFlagIndex;
+                        }
+
+                    }
+#endif
+                    for (uint32 idxSubItem = i32; idxSubItem < lengthToUin32Max; ++idxSubItem)
                     {
                         if (JavascriptOperators::HasItem(itemObject, idxSubItem))
                         {
@@ -2885,7 +2903,7 @@ namespace Js
                         ++idxDest;
                     }
 
-                    for (BigIndex idxSubItem = MaxArrayLength; idxSubItem < length; ++idxSubItem)
+                    for (BigIndex idxSubItem = i64; idxSubItem < length; ++idxSubItem)
                     {
                         PropertyRecord const * propertyRecord;
                         JavascriptOperators::GetPropertyIdForInt(idxSubItem.GetBigIndex(), scriptContext, &propertyRecord);
@@ -3546,7 +3564,7 @@ namespace Js
         }
         else
         {
-            fromIndex = 0;
+            fromIndex = (T)CONFIG_FLAG(ArrayLikeObjectStartIndex);
             search = args.Info.Count > 1 ? args[1] : scriptContext->GetLibrary()->GetUndefined();
         }
         return true;
@@ -5025,7 +5043,7 @@ Case0:
         }
         else
         {
-            for (T lower = 0; lower < middle; lower++)
+            for (T lower = (T)CONFIG_FLAG(ArrayLikeObjectStartIndex); lower < middle; lower++)
             {
                 T upper = length - lower - 1;
 
@@ -5277,7 +5295,27 @@ Case0:
             }
             --length;
             uint32 lengthToUin32Max = length.IsSmallIndex() ? length.GetSmallIndex() : MaxArrayLength;
-            for (uint32 i = 0u; i < lengthToUin32Max; i++)
+            
+            uint32 i32 = 0u;
+            uint64 i64 = MaxArrayLength;
+#if DBG
+            uint64 arrayFlagIndex = CONFIG_FLAG(ArrayLikeObjectStartIndex);
+            if (arrayFlagIndex != 0)
+            {
+                if (arrayFlagIndex <= MaxArrayLength)
+                {
+                    i32 = (uint32) arrayFlagIndex;
+                }
+                else
+                {
+                    i32 = MaxArrayLength;
+                    i64 = arrayFlagIndex;
+                }
+
+            }
+#endif
+
+            for (uint32 i = i32; i < lengthToUin32Max; i++)
             {
                 Var element;
                 if (JavascriptOperators::HasItem(dynamicObject, i + 1))
@@ -5292,7 +5330,7 @@ Case0:
                 }
             }
 
-            for (uint64 i = MaxArrayLength; length > i; i++)
+            for (uint64 i = i64; length > i; i++)
             {
                 Var element;
                 if (JavascriptOperators::HasItem(dynamicObject, i + 1))
@@ -7918,7 +7956,7 @@ Case0:
         }
         else
         {
-            for (T k = 0; k < length; k++)
+            for (T k = (T)CONFIG_FLAG(ArrayLikeObjectStartIndex); k < length; k++)
             {
                 // According to es6 spec, we need to call Has first before calling Get
                 if (!JavascriptOperators::HasItem(obj, k))
@@ -8094,7 +8132,7 @@ Case0:
         }
         else
         {
-            for (T k = 0; k < length; k++)
+            for (T k = (T)CONFIG_FLAG(ArrayLikeObjectStartIndex); k < length; k++)
             {
                 if (!JavascriptOperators::HasItem(obj, k))
                 {
@@ -8219,13 +8257,14 @@ Case0:
         }
         else
         {
+            uint64 index = CONFIG_FLAG(ArrayLikeObjectStartIndex);
             if (length.IsSmallIndex())
             {
-                TemplatedForEachItemInRange<true>(dynamicObject, 0u, length.GetSmallIndex(), scriptContext, fn32);
+                TemplatedForEachItemInRange<true>(dynamicObject, (uint32)index, length.GetSmallIndex(), scriptContext, fn32);
             }
             else
             {
-                TemplatedForEachItemInRange<true>(dynamicObject, 0uLL, length.GetBigIndex(), scriptContext, fn64);
+                TemplatedForEachItemInRange<true>(dynamicObject, index, length.GetBigIndex(), scriptContext, fn64);
             }
         }
         return scriptContext->GetLibrary()->GetUndefined();
@@ -8914,18 +8953,55 @@ Case0:
             // If source was not an array object, we will always return an array object 
             Assert(newArr);
 
-            for (BigIndex k = 0u; k < length; ++k)
+            uint32 k32 = 0u;
+            uint64 k64 = MaxArrayLength;
+#if DBG
+            uint64 arrayFlagIndex = CONFIG_FLAG(ArrayLikeObjectStartIndex);
+            if (arrayFlagIndex != 0)
             {
-                if (!JavascriptOperators::HasItem(dynamicObject, k.IsSmallIndex() ? k.GetSmallIndex() : k.GetBigIndex()))
+                if (arrayFlagIndex <= MaxArrayLength)
+                {
+                    k32 = (uint32) arrayFlagIndex;
+                }
+                else
+                {
+                    k32 = MaxArrayLength;
+                    k64 = arrayFlagIndex;
+                }
+
+            }
+#endif
+            for (uint32 k = k32; k < MaxArrayLength; k++)
+            {
+                if (!JavascriptOperators::HasItem(dynamicObject, k))
                 {
                     continue;
                 }
-                BOOL getResult = JavascriptOperators::GetItem(dynamicObject, k.IsSmallIndex() ? k.GetSmallIndex() : k.GetBigIndex(), &element, scriptContext);
+                BOOL getResult = JavascriptOperators::GetItem(dynamicObject, k, &element, scriptContext);
                 Assert(getResult);
                 selected = callBackFn->GetEntryPoint()(callBackFn, CallInfo(flags, 4), thisArg,
-                                                                element,
-                                                                JavascriptNumber::ToVar(k.IsSmallIndex() ? k.GetSmallIndex() : k.GetBigIndex(), scriptContext),
-                                                                dynamicObject);
+                    element,
+                    JavascriptNumber::ToVar(k, scriptContext),
+                    dynamicObject);
+
+                if (JavascriptConversion::ToBoolean(selected, scriptContext))
+                {
+                    newArr->DirectSetItemAt(i, element);
+                    ++i;
+                }
+            }
+            for (uint64 k = k64; length > k; k++)
+            {
+                if (!JavascriptOperators::HasItem(dynamicObject, k))
+                {
+                    continue;
+                }
+                BOOL getResult = JavascriptOperators::GetItem(dynamicObject, k, &element, scriptContext);
+                Assert(getResult);
+                selected = callBackFn->GetEntryPoint()(callBackFn, CallInfo(flags, 4), thisArg,
+                    element,
+                    JavascriptNumber::ToVar(k, scriptContext),
+                    dynamicObject);
 
                 if (JavascriptConversion::ToBoolean(selected, scriptContext))
                 {
@@ -9069,6 +9145,10 @@ Case0:
             }
             else
             {
+#if DBG
+                T arrayFlagIndex = (T)CONFIG_FLAG(ArrayLikeObjectStartIndex);
+                k = k  <  arrayFlagIndex ? arrayFlagIndex : k;
+#endif
                 for (; k < length && bPresent == false; k++)
                 {
                     if (!JavascriptOperators::HasItem(obj, k))
@@ -9280,6 +9360,10 @@ Case0:
             }
             else
             {
+#if DBG
+                T arrayFlagIndex = (T)CONFIG_FLAG(ArrayLikeObjectStartIndex);
+                k = k  <  arrayFlagIndex ? arrayFlagIndex : k;
+#endif
                 for (; k < length && bPresent == false; k++)
                 {
                     index = length - k - 1;
