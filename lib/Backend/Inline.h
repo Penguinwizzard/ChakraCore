@@ -32,7 +32,7 @@ private:
 
     IR::PragmaInstr * lastStatementBoundary;
 
-    void Optimize(Func *func, __in_ecount(actuals) IR::Instr *argOuts[] = NULL, Js::ArgSlot actuals = (Js::ArgSlot) - 1, uint recursiveInlineDepth = 0);
+    void Optimize(Func *func, __in_ecount_opt(actuals) IR::Instr *argOuts[] = NULL, Js::ArgSlot actuals = (Js::ArgSlot) - 1, uint recursiveInlineDepth = 0);
     bool TryOptimizeCallInstrWithFixedMethod(IR::Instr *callInstr, Js::FunctionInfo* functionInfo, bool isPolymorphic, bool isBuiltIn, bool isCtor, bool isInlined, bool& safeThis, 
                                             bool dontOptimizeJustCheck = false, uint i = 0 /*i-th inlinee at a polymorphic call site*/);
     Js::Var TryOptimizeInstrWithFixedDataProperty(IR::Instr *&instr);
@@ -55,8 +55,8 @@ private:
     bool        InlineCallTarget(IR::Instr *callInstr, const Js::FunctionCodeGenJitTimeData* inlinerData, const Js::FunctionCodeGenJitTimeData** pInlineeData, Js::FunctionInfo *callFuncInfo, 
                                     const StackSym *symThis, IR::Instr ** returnInstr, uint recursiveInlineDepth);
     
-    bool        InlConstFoldArg(IR::Instr *instr, __in_ecount(callerArgOutCount) IR::Instr *callerArgOuts[], Js::ArgSlot callerArgOutCount);
-    bool        InlConstFold(IR::Instr *instr, IntConstType *pValue, __in_ecount(callerArgOutCount) IR::Instr *callerArgOuts[], Js::ArgSlot callerArgOutCount);
+    bool        InlConstFoldArg(IR::Instr *instr, __in_ecount_opt(callerArgOutCount) IR::Instr *callerArgOuts[], Js::ArgSlot callerArgOutCount);
+    bool        InlConstFold(IR::Instr *instr, IntConstType *pValue, __in_ecount_opt(callerArgOutCount) IR::Instr *callerArgOuts[], Js::ArgSlot callerArgOutCount);
 
     IR::Instr * InlineCallApplyTarget_Shared(IR::Instr *callInstr, StackSym* originalCallTargetStackSym, Js::FunctionInfo *funcInfo, const Js::FunctionCodeGenJitTimeData *const inlineeData, 
                     uint inlineCacheIndex, bool safeThis, bool isApplyTarget, bool isCallTarget, uint recursiveInlineDepth);
@@ -80,7 +80,7 @@ private:
     void        FixupExtraActualParams(IR::Instr * instr, IR::Instr *argOuts[], IR::Instr *argOutsExtra[], uint index, uint actualCount, Js::ProfileId callSiteId);
     void        RemoveExtraFixupArgouts(IR::Instr* instr, uint argoutRemoveCount, Js::ProfileId callSiteId);
     IR::Instr*  PrepareInsertionPoint(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, IR::Instr *insertBeforeInstr, IR::BailOutKind bailOutKind = IR::BailOutOnInlineFunction);
-    Js::ArgSlot MapActuals(IR::Instr *callInstr, __out_ecount(maxParamCount) IR::Instr *argOuts[], Js::ArgSlot formalCount, Func *inlinee, Js::ProfileId callSiteId, bool *stackArgsArgOutExpanded, IR::Instr *argOutsExtra[] = nullptr, Js::ArgSlot maxParamCount = Js::InlineeCallInfo::MaxInlineeArgoutCount);
+    Js::ArgSlot MapActuals(IR::Instr *callInstr, __inout_ecount(maxParamCount) IR::Instr *argOuts[], Js::ArgSlot formalCount, Func *inlinee, Js::ProfileId callSiteId, bool *stackArgsArgOutExpanded, IR::Instr *argOutsExtra[] = nullptr, Js::ArgSlot maxParamCount = Js::InlineeCallInfo::MaxInlineeArgoutCount);
     uint32      CountActuals(IR::Instr *callIntr);
     void        MapFormals(Func *inlinee, __in_ecount(formalCount) IR::Instr *argOuts[], uint formalCount, uint actualCount, IR::RegOpnd *retOpnd, IR::Opnd * funcObjOpnd, const StackSym *symCallerThis, bool stackArgsArgOutExpanded, bool fixedFunctionSafeThis = false, IR::Instr *argOutsExtra[] = nullptr);
     IR::Instr * DoCheckThisOpt(IR::Instr * instr);
@@ -104,7 +104,7 @@ private:
     uint FillInlineesDataArray(
         const Js::FunctionCodeGenJitTimeData* inlineeJitTimeData, 
         const Js::FunctionCodeGenRuntimeData* inlineeRuntimeData,
-        __inout_ecount(inlineesDataArrayLength) InlineeData *inlineesDataArray,
+        _Out_writes_to_(inlineesDataArrayLength, (return >= inlineesDataArrayLength? inlineesDataArrayLength : return))  InlineeData *inlineesDataArray,
         uint inlineesDataArrayLength
         );
 

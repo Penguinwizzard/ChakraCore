@@ -9,13 +9,13 @@
 // Default operator new/delete overrides
 //----------------------------------------
 
-void * __cdecl
+_Ret_maybenull_ void * __cdecl
 operator new(size_t byteSize)
 {
     return HeapNewNoThrowArray(char, byteSize);
 }
 
-void * __cdecl
+_Ret_maybenull_ void * __cdecl
 operator new[](size_t byteSize)
 {
     return HeapNewNoThrowArray(char, byteSize);

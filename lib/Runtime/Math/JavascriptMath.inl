@@ -317,6 +317,7 @@ namespace Js
             const double k_2to32 = 4294967296.0;
             double floored;
 
+#pragma prefast(suppress:6031, "We don't care about the fraction part")
             modf(d, &floored);                      // take out the floating point part.
             double m2to32 = fmod(floored, k_2to32); // divide modulo 2^32.
             __int64 result = TryToInt64(m2to32);

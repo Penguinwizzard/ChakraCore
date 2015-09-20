@@ -1497,7 +1497,7 @@ namespace Js
         return debuggerScope->scopeProperties->Count();
     }
 
-    void CatchScopeWalker::FetchValueAndAddress(DebuggerScopeProperty &scopeProperty, __out Var *pValue, __out IDiagObjectAddress ** ppAddress)
+    void CatchScopeWalker::FetchValueAndAddress(DebuggerScopeProperty &scopeProperty, _Out_opt_ Var *pValue, _Out_opt_ IDiagObjectAddress ** ppAddress)
     {
         Assert(pValue != nullptr || ppAddress != nullptr);
 

@@ -63,7 +63,7 @@ public:
         GetScriptContext()->GetThreadContext()->PopHostScriptContext();
     }
 
-    HRESULT GetDispatchExCaller(__deref_out void** dispatchExCaller)
+    HRESULT GetDispatchExCaller(_Outptr_result_maybenull_ void** dispatchExCaller)
     {
         *dispatchExCaller = nullptr;
         return NOERROR;

@@ -28,8 +28,8 @@ namespace Js
         if (errorObject != nullptr && Js::JavascriptError::Is(errorObject)) \
         { \
             HRESULT hr = Js::JavascriptError::GetRuntimeError(Js::RecyclableObject::FromVar(errorObject), nullptr); \
-            if (JavascriptError::GetErrorNumberFromResourceID(JSERR_Property_CannotGet_NullOrUndefined) == hr \
-                || JavascriptError::GetErrorNumberFromResourceID(JSERR_UseBeforeDeclaration) == hr) \
+            if (JavascriptError::GetErrorNumberFromResourceID(JSERR_Property_CannotGet_NullOrUndefined) == (long)hr \
+                || JavascriptError::GetErrorNumberFromResourceID(JSERR_UseBeforeDeclaration) == (long)hr) \
             { \
                 if (scriptContext->IsInDebugMode()) \
                 { \
@@ -102,12 +102,12 @@ namespace Js
         static Var ToWithObject(Var aRight, ScriptContext* scriptContext);
         static Var OP_LdCustomSpreadIteratorList(Var aRight, ScriptContext* scriptContext);
         static Var ToNumber(Var aRight,ScriptContext* scriptContext);
-        static Var ToNumberInPlace(Var aRight,ScriptContext* scriptContext, __out JavascriptNumber* result);
+        static Var ToNumberInPlace(Var aRight,ScriptContext* scriptContext, JavascriptNumber* result);
 #ifdef _M_IX86
         static Var Int32ToVar(int32 value, ScriptContext* scriptContext);
-        static Var Int32ToVarInPlace(int32 value, ScriptContext* scriptContext, __out JavascriptNumber *result);
+        static Var Int32ToVarInPlace(int32 value, ScriptContext* scriptContext, JavascriptNumber *result);
         static Var UInt32ToVar(uint32 value, ScriptContext* scriptContext);
-        static Var UInt32ToVarInPlace(uint32 value, ScriptContext* scriptContext, __out JavascriptNumber *result);
+        static Var UInt32ToVarInPlace(uint32 value, ScriptContext* scriptContext, JavascriptNumber *result);
 #endif
 
         static Var OP_FinishOddDivBy2(uint32 value, ScriptContext *scriptContext);
@@ -563,7 +563,7 @@ namespace Js
             JsNativeValueType valueType,
             __in UINT length,
             __in UINT elementSize,
-            __out_xcount(length*elementSize) byte* contentBuffer,
+            __out_bcount(length*elementSize) byte* contentBuffer,
             Js::ScriptContext* scriptContext);
 
         static Var SpeciesConstructor(RecyclableObject* object, Var defaultConstructor, ScriptContext* scriptContext);

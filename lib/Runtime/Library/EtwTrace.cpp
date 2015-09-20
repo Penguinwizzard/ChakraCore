@@ -462,6 +462,7 @@ size_t EtwTrace::GetLoopBodyName(_In_ FunctionBody* body, _In_ LoopHeader* loopH
     return body->GetLoopBodyName(body->GetLoopNumber(loopHeader), nameBuffer, size);    
 }
 
+_Success_(return == 0)
 size_t EtwTrace::GetSimpleJitFunctionName(
     Js::FunctionBody *const body,
     _Out_writes_opt_z_(nameCharCapacity) wchar_t *const name,

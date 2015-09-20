@@ -270,7 +270,7 @@ namespace UnifiedRegex
         virtual bool IsSubsetOf(uint level, const CharSetNode* other) const = 0;
         virtual bool IsEqualTo(uint level, const CharSetNode* other) const = 0;
         virtual uint Count(uint level) const = 0;
-        virtual bool GetNextRange(uint level, Char searchCharStart, __out Char *outLowerChar, __out Char *outHigherChar) const = 0;
+        _Success_(return) virtual bool GetNextRange(uint level, Char searchCharStart, _Out_ Char *outLowerChar, _Out_ Char *outHigherChar) const = 0;
 #if DBG
         virtual bool IsLeaf() const = 0;
 #endif
@@ -301,7 +301,7 @@ namespace UnifiedRegex
         bool IsSubsetOf(uint level, const CharSetNode* other) const override;
         bool IsEqualTo(uint level, const CharSetNode* other) const override;
         uint Count(uint level) const override;
-        bool GetNextRange(uint level, Char searchCharStart, __out Char *outLowerChar, __out Char *outHigherChar) const override;
+        _Success_(return) bool GetNextRange(uint level, Char searchCharStart, _Out_ Char *outLowerChar, _Out_ Char *outHigherChar) const override;
 #if DBG
         bool IsLeaf() const override;
 #endif
@@ -329,7 +329,7 @@ namespace UnifiedRegex
         bool IsSubsetOf(uint level, const CharSetNode* other) const override;
         bool IsEqualTo(uint level, const CharSetNode* other) const override;
         uint Count(uint level) const override;
-        bool GetNextRange(uint level, Char searchCharStart, __out Char *outLowerChar, __out Char *outHigherChar) const override;
+        _Success_(return) bool GetNextRange(uint level, Char searchCharStart, _Out_ Char *outLowerChar, _Out_ Char *outHigherChar) const override;
 #if DBG
         bool IsLeaf() const override;
 #endif
@@ -356,7 +356,7 @@ namespace UnifiedRegex
         bool IsSubsetOf(uint level, const CharSetNode* other) const override;
         bool IsEqualTo(uint level, const CharSetNode* other) const override;
         uint Count(uint level) const override;
-        bool GetNextRange(uint level, Char searchCharStart, __out Char *outLowerChar, __out Char *outHigherChar) const override;
+        _Success_(return) bool GetNextRange(uint level, Char searchCharStart, _Out_ Char *outLowerChar, _Out_ Char *outHigherChar) const override;
 #if DBG
         bool IsLeaf() const override;
 #endif
@@ -417,7 +417,7 @@ namespace UnifiedRegex
         void SetRanges(ArenaAllocator* allocator, int numSortedPairs, const Char* sortedPairs);
         void SetNotRanges(ArenaAllocator* allocator, int numSortedPairs, const Char* sortedPairs);
         void UnionInPlace(ArenaAllocator* allocator, const  CharSet<Char>& other);
-        bool GetNextRange(Char searchCharStart, __out Char *outLowerChar, __out Char *outHigherChar);
+        _Success_(return) bool GetNextRange(Char searchCharStart, _Out_ Char *outLowerChar, _Out_ Char *outHigherChar);
         bool Get_helper(uint k) const;
 
         __inline bool Get(Char kc) const
@@ -636,7 +636,7 @@ namespace UnifiedRegex
         void SetNotRanges(ArenaAllocator* allocator, int numSortedPairs, const Char* sortedPairs);
         void UnionInPlace(ArenaAllocator* allocator, const  CharSet<Char>& other);
         void UnionInPlace(ArenaAllocator* allocator, const  CharSet<wchar_t>& other);
-        bool GetNextRange(Char searchCharStart, Char *outLowerChar, Char *outHigherChar);
+        _Success_(return) bool GetNextRange(Char searchCharStart, _Out_ Char *outLowerChar, _Out_ Char *outHigherChar);
         
         inline bool Get(Char kc) const
         {

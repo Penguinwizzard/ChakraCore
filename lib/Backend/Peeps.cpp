@@ -532,38 +532,42 @@ Peeps::PeepBranch(IR::BranchInstr *branchInstr, bool *const peepedRef)
             return instrNext;
         }
     }
-    else if (branchInstr->IsConditional() && instrNext->IsBranchInstr() 
-        && instrNext->AsBranchInstr()->IsUnconditional()
-        && targetInstr == instrNext->AsBranchInstr()->GetNextRealInstrOrLabel()
-        && !instrNext->AsBranchInstr()->IsMultiBranch())
+    else if (branchInstr->IsConditional())
     {
-        //
-        // Invert condBranch/uncondBranch/label:
-        //
-        //      JCC L1                   JinvCC L3   
-        //      JMP L3       =>
-        //      L1:
-        IR::BranchInstr *uncondBranch = instrNext->AsBranchInstr();
-
-        if (branchInstr->IsLowered())
+        Assert(instrNext);
+        if (instrNext->IsBranchInstr()
+            && instrNext->AsBranchInstr()->IsUnconditional()
+            && targetInstr == instrNext->AsBranchInstr()->GetNextRealInstrOrLabel()
+            && !instrNext->AsBranchInstr()->IsMultiBranch())
         {
-            LowererMD::InvertBranch(branchInstr);
-        }
-        else
-        {
-            branchInstr->Invert();
-        }
+            //
+            // Invert condBranch/uncondBranch/label:
+            //
+            //      JCC L1                   JinvCC L3   
+            //      JMP L3       =>
+            //      L1:
+            IR::BranchInstr *uncondBranch = instrNext->AsBranchInstr();
 
-        targetInstr = uncondBranch->GetTarget();
-        branchInstr->SetTarget(targetInstr);
-        if (targetInstr->IsUnreferenced())
-        {
-            Peeps::PeepUnreachableLabel(targetInstr, false);
+            if (branchInstr->IsLowered())
+            {
+                LowererMD::InvertBranch(branchInstr);
+            }
+            else
+            {
+                branchInstr->Invert();
+            }
+
+            targetInstr = uncondBranch->GetTarget();
+            branchInstr->SetTarget(targetInstr);
+            if (targetInstr->IsUnreferenced())
+            {
+                Peeps::PeepUnreachableLabel(targetInstr, false);
+            }
+
+            uncondBranch->Remove();
+
+            return PeepBranch(branchInstr, peepedRef);
         }
-
-        uncondBranch->Remove();
-
-        return PeepBranch(branchInstr, peepedRef);
     }
 
     if(branchInstr->IsMultiBranch())
@@ -778,7 +782,7 @@ Peeps::RetargetBrToBr(IR::BranchInstr *branchInstr, IR::LabelInstr * targetInstr
 #endif
 
         IR::LabelInstr * reTargetLabel = branchAtTarget->GetTarget();
-
+        Assert(reTargetLabel);
         if (targetInstr == reTargetLabel)
         {
             // Infinite loop.  

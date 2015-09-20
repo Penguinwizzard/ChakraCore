@@ -1600,6 +1600,7 @@ LError:
                 rgdbl[ivar] = (ivar == 2); 
                 continue;
             }
+#pragma prefast(suppress:6001, "rgdbl index ivar < args.Info.Count - 1 are initialized")
             dblT = rgdbl[ivar];
             if (!Js::NumberUtilities::IsFinite(dblT))
             {

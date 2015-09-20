@@ -22,7 +22,7 @@ SetProcessValidCallTargets(
 
 namespace Js
 {
-    HRESULT DelayLoadWinRtString::WindowsCreateString(__in_ecount_opt(length) const WCHAR * sourceString, UINT32 length, __out HSTRING * string)
+    HRESULT DelayLoadWinRtString::WindowsCreateString(_In_reads_opt_(length) const WCHAR * sourceString, UINT32 length, _Outptr_result_maybenull_ _Result_nullonfailure_ HSTRING * string)
     {
         if (m_hModule)
         {
@@ -31,6 +31,7 @@ namespace Js
                 m_pfnWindowsCreateString = (PFNCWindowsCreateString)GetFunction("WindowsCreateString");
                 if (m_pfnWindowsCreateString == nullptr)
                 {
+                    *string = nullptr;
                     return E_UNEXPECTED;
                 }
             }
@@ -39,10 +40,11 @@ namespace Js
             return m_pfnWindowsCreateString(sourceString, length, string);
         }
 
+        *string = nullptr;
         return E_NOTIMPL;
     }
 
-    HRESULT DelayLoadWinRtString::WindowsCreateStringReference(__in_ecount_opt(length+1) const WCHAR *sourceString, UINT32 length, __out HSTRING_HEADER *hstringHeader, __out HSTRING * string)
+    HRESULT DelayLoadWinRtString::WindowsCreateStringReference(_In_reads_opt_(length + 1) const WCHAR *sourceString, UINT32 length, _Out_ HSTRING_HEADER *hstringHeader, _Outptr_result_maybenull_ _Result_nullonfailure_ HSTRING * string)
     {
         if (m_hModule)
         {
@@ -51,6 +53,7 @@ namespace Js
                 m_pfnWindowsCreateStringReference = (PFNCWindowsCreateStringReference)GetFunction("WindowsCreateStringReference");
                 if (m_pfnWindowsCreateStringReference == nullptr)
                 {
+                    *string = nullptr;
                     return E_UNEXPECTED;
                 }
             }
@@ -59,10 +62,11 @@ namespace Js
             return m_pfnWindowsCreateStringReference(sourceString, length, hstringHeader, string);
         }
 
+        *string = nullptr;
         return E_NOTIMPL;
     }
 
-    HRESULT DelayLoadWinRtString::WindowsDeleteString(HSTRING string)
+    HRESULT DelayLoadWinRtString::WindowsDeleteString(_In_opt_ HSTRING string)
     {
         if (m_hModule)
         {
@@ -84,7 +88,7 @@ namespace Js
         return E_NOTIMPL;
     }
 
-    PCWSTR DelayLoadWinRtString::WindowsGetStringRawBuffer(HSTRING string, __out_opt UINT32 * length)
+    PCWSTR DelayLoadWinRtString::WindowsGetStringRawBuffer(_In_opt_ HSTRING string, _Out_opt_ UINT32 * length)
     {
         if (m_hModule)
         {
@@ -93,6 +97,10 @@ namespace Js
                 m_pfWindowsGetStringRawBuffer = (PFNCWindowsGetStringRawBuffer)GetFunction("WindowsGetStringRawBuffer");
                 if (m_pfWindowsGetStringRawBuffer == nullptr)
                 {
+                    if (length)
+                    {
+                        *length = 0;
+                    }
                     return L"\0";
                 }
             }
@@ -101,10 +109,14 @@ namespace Js
             return m_pfWindowsGetStringRawBuffer(string, length);
         }
 
+        if (length)
+        {
+            *length = 0;
+        }
         return L"\0";
     }
 
-    HRESULT DelayLoadWinRtString::WindowsCompareStringOrdinal(HSTRING string1, HSTRING string2, __out INT32 * result)
+    HRESULT DelayLoadWinRtString::WindowsCompareStringOrdinal(_In_opt_ HSTRING string1, _In_opt_ HSTRING string2, _Out_ INT32 * result)
     {
         if (m_hModule)
         {
@@ -123,7 +135,7 @@ namespace Js
 
         return E_NOTIMPL;
     }
-    HRESULT DelayLoadWinRtString::WindowsDuplicateString(HSTRING original, __out HSTRING *newString)
+    HRESULT DelayLoadWinRtString::WindowsDuplicateString(_In_opt_ HSTRING original, _Outptr_result_maybenull_ _Result_nullonfailure_ HSTRING *newString)
     {
         if(m_hModule)
         {
@@ -132,6 +144,7 @@ namespace Js
                 m_pfnWindowsDuplicateString = (PFNCWindowsDuplicateString)GetFunction("WindowsDuplicateString");
                 if(m_pfnWindowsDuplicateString == nullptr)
                 {
+                    *newString = nullptr;
                     return E_UNEXPECTED;
                 }
             }
@@ -139,6 +152,7 @@ namespace Js
             Assert(m_pfnWindowsDuplicateString != nullptr);
             return m_pfnWindowsDuplicateString(original, newString);
         }
+        *newString = nullptr;
         return E_NOTIMPL;
     }
 
@@ -262,7 +276,7 @@ namespace Js
         }
     }
 
-    HRESULT DelayLoadWindowsGlobalization::WindowsCreateString(__in_ecount_opt(length) const WCHAR * sourceString, UINT32 length, __out HSTRING * string)
+    HRESULT DelayLoadWindowsGlobalization::WindowsCreateString(_In_reads_opt_(length) const WCHAR * sourceString, UINT32 length, _Outptr_result_maybenull_ _Result_nullonfailure_ HSTRING * string)
     {
         //If winRtStringLibrary isn't nullptr, that means it is available and we are on Win8+
         if(!winRTStringsPresent && winRTStringLibrary->IsAvailable())
@@ -272,7 +286,7 @@ namespace Js
 
         return DelayLoadWinRtString::WindowsCreateString(sourceString, length, string);
     }
-    HRESULT DelayLoadWindowsGlobalization::WindowsCreateStringReference(__in_ecount_opt(length+1) const WCHAR * sourceString, UINT32 length, __out HSTRING_HEADER * header, __out HSTRING * string)
+    HRESULT DelayLoadWindowsGlobalization::WindowsCreateStringReference(_In_reads_opt_(length + 1) const WCHAR * sourceString, UINT32 length, _Out_ HSTRING_HEADER * header, _Outptr_result_maybenull_ _Result_nullonfailure_ HSTRING * string)
     {
         //First, we attempt to use the WinStringRT api encapsulated in the globalization dll; if it is available then it is a downlevel dll.
         //Otherwise; we might run into an error where we are using the Win8 (because testing is being done for instance) with the downlevel dll, and that would cause errors.
@@ -282,7 +296,7 @@ namespace Js
         }
         return DelayLoadWinRtString::WindowsCreateStringReference(sourceString, length, header, string);
     }
-    HRESULT DelayLoadWindowsGlobalization::WindowsDeleteString(HSTRING string)
+    HRESULT DelayLoadWindowsGlobalization::WindowsDeleteString(_In_opt_ HSTRING string)
     {
         //First, we attempt to use the WinStringRT api encapsulated in the globalization dll; if it is available then it is a downlevel dll.
         //Otherwise; we might run into an error where we are using the Win8 (because testing is being done for instance) with the downlevel dll, and that would cause errors.
@@ -292,7 +306,7 @@ namespace Js
         }
         return DelayLoadWinRtString::WindowsDeleteString(string);
     }
-    PCWSTR DelayLoadWindowsGlobalization::WindowsGetStringRawBuffer(HSTRING string, __out_opt UINT32 * length)
+    PCWSTR DelayLoadWindowsGlobalization::WindowsGetStringRawBuffer(_In_opt_ HSTRING string, _Out_opt_ UINT32 * length)
     {
         //First, we attempt to use the WinStringRT api encapsulated in the globalization dll; if it is available then it is a downlevel dll.
         //Otherwise; we might run into an error where we are using the Win8 (because testing is being done for instance) with the downlevel dll, and that would cause errors.
@@ -302,7 +316,7 @@ namespace Js
         }
         return DelayLoadWinRtString::WindowsGetStringRawBuffer(string, length);
     }
-    HRESULT DelayLoadWindowsGlobalization::WindowsCompareStringOrdinal(HSTRING string1, HSTRING string2, __out INT32 * result)
+    HRESULT DelayLoadWindowsGlobalization::WindowsCompareStringOrdinal(_In_opt_ HSTRING string1, _In_opt_ HSTRING string2, _Out_ INT32 * result)
     {
         //First, we attempt to use the WinStringRT api encapsulated in the globalization dll; if it is available then it is a downlevel dll.
         //Otherwise; we might run into an error where we are using the Win8 (because testing is being done for instance) with the downlevel dll, and that would cause errors.
@@ -313,7 +327,7 @@ namespace Js
         return DelayLoadWinRtString::WindowsCompareStringOrdinal(string1, string2, result);
     }
 
-    HRESULT DelayLoadWindowsGlobalization::WindowsDuplicateString(HSTRING original, __out HSTRING *newString)
+    HRESULT DelayLoadWindowsGlobalization::WindowsDuplicateString(_In_opt_ HSTRING original, _Outptr_result_maybenull_ _Result_nullonfailure_ HSTRING *newString)
     {
         //First, we attempt to use the WinStringRT api encapsulated in the globalization dll; if it is available then it is a downlevel dll.
         //Otherwise; we might run into an error where we are using the Win8 (because testing is being done for instance) with the downlevel dll, and that would cause errors.

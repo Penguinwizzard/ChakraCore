@@ -25,18 +25,18 @@ namespace Js
         return JavascriptNumber::NewInlined(value, scriptContext);
     }
 
-    Var JavascriptNumber::ToVarInPlace(double value, ScriptContext* scriptContext, __out JavascriptNumber *result)
+    Var JavascriptNumber::ToVarInPlace(double value, ScriptContext* scriptContext, JavascriptNumber *result)
     {
         return InPlaceNew(value, scriptContext, result);
     }
 
-    Var JavascriptNumber::ToVarInPlace(int64 value, ScriptContext* scriptContext, __out JavascriptNumber *result)
+    Var JavascriptNumber::ToVarInPlace(int64 value, ScriptContext* scriptContext, JavascriptNumber *result)
     {
         return InPlaceNew((double)value, scriptContext, result);
     }
 
 
-    Var JavascriptNumber::ToVarMaybeInPlace(double value, ScriptContext* scriptContext, __out_opt JavascriptNumber *result)
+    Var JavascriptNumber::ToVarMaybeInPlace(double value, ScriptContext* scriptContext, JavascriptNumber *result)
     {
         if (result)
         {
@@ -46,7 +46,7 @@ namespace Js
         return ToVarNoCheck(value, scriptContext);
     }
 
-    Var JavascriptNumber::ToVarInPlace(int32 nValue, ScriptContext* scriptContext, __out Js::JavascriptNumber *result)
+    Var JavascriptNumber::ToVarInPlace(int32 nValue, ScriptContext* scriptContext, Js::JavascriptNumber *result)
     {
         if (!TaggedInt::IsOverflow(nValue))
         {
@@ -56,7 +56,7 @@ namespace Js
         return InPlaceNew(static_cast<double>(nValue), scriptContext, result);
     }
 
-    Var JavascriptNumber::ToVarInPlace(uint32 nValue, ScriptContext* scriptContext, __out Js::JavascriptNumber *result)
+    Var JavascriptNumber::ToVarInPlace(uint32 nValue, ScriptContext* scriptContext, Js::JavascriptNumber *result)
     {
         if (!TaggedInt::IsOverflow(nValue))
         {
@@ -980,16 +980,16 @@ namespace Js
         {
             if( count > bufSize )
             {
-                pszRes = pszToBeFreed = (WCHAR *)malloc( count * sizeof(WCHAR));
+                pszRes = pszToBeFreed = HeapNewArray(wchar_t, count);
             }
             else
             {
                 pszRes = szRes;
             }
 
-            count = GetNumberFormatEx(LOCALE_NAME_USER_DEFAULT, 0, szValue, NULL, pszRes, count);
+            int newCount = GetNumberFormatEx(LOCALE_NAME_USER_DEFAULT, 0, szValue, NULL, pszRes, count);
 
-            if( count <= 0 )
+            if (newCount <= 0 )
             {
                 // This shouldn't happen.
                 AssertMsg(false, "GetNumberFormatEx failed");
@@ -1003,7 +1003,7 @@ namespace Js
 
         if (pszToBeFreed)
         {
-            free(pszToBeFreed);
+            HeapDeleteArray(count, pszToBeFreed);
         }
 
         return result;

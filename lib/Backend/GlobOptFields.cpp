@@ -2314,11 +2314,12 @@ GlobOpt::ProcessPropOpInTypeCheckSeq(IR::Instr* instr, IR::PropertySymOpnd *opnd
     StackSym * typeSym = opnd->GetObjectTypeSym();
 
 #if DBG
-    uint16 typeCheckSeqFlagsBefore = opnd->GetTypeCheckSeqFlags();
+    uint16 typeCheckSeqFlagsBefore;
     Value* valueBefore = nullptr;
     JsTypeValueInfo* valueInfoBefore = nullptr;
     if (!makeChanges)
     {
+        typeCheckSeqFlagsBefore = opnd->GetTypeCheckSeqFlags();
         valueBefore = FindObjectTypeValue(typeSym, block);
         if (valueBefore != nullptr)
         {

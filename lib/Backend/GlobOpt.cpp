@@ -5114,6 +5114,7 @@ bool GlobOpt::OptTagChecks(IR::Instr *instr)
                 if (!srcOpnd)
                 {
                     srcOpnd = IR::RegOpnd::New(stackSym, stackSym->GetType(), instr->m_func);
+                    Assert(symOpnd);
                     if (symOpnd->GetIsJITOptimizedReg())
                     {
                         srcOpnd->SetIsJITOptimizedReg(true);
@@ -12370,6 +12371,7 @@ GlobOpt::TypeSpecializeFloatUnary(IR::Instr **pInstr, Value *src1Val, Value **pD
             break;
 
         case Js::OpCode::Conv_Num:
+            Assert(src1Val);
             opcode = Js::OpCode::Ld_A;
             valueToTransfer = src1Val;
             if (!src1Val->GetValueInfo()->IsNumber())
@@ -14043,6 +14045,7 @@ GlobOpt::ToTypeSpecUse(IR::Instr *instr, IR::Opnd *opnd, BasicBlock *block, Valu
                 else
                 {
                     Assert(toType == TyFloat64);
+                    Assert(instr);
                     StackSym *const varSym = sym->IsTypeSpec() ? sym->GetVarEquivSym(instr->m_func) : sym;
                     block->globOptData.liveFloat64Syms->Set(varSym->m_id);
                 }
@@ -15297,6 +15300,7 @@ void GlobOpt::ProcessValueKills(BasicBlock *const block, GlobOptBlockData *const
 
     if(IsLoopPrePass() && block->loop == rootLoopPrePass)
     {
+        Assert(rootLoopPrePass);
         rootLoopPrePass->jsArrayKills.SetKillsAllArrays();
         Assert(!rootLoopPrePass->parent || rootLoopPrePass->jsArrayKills.AreSubsetOf(rootLoopPrePass->parent->jsArrayKills));
 
@@ -20831,6 +20835,7 @@ GlobOpt::EmitMemcopy(Loop * loop, LoopCount *loopCount, SymID ldBase, SymID ldIn
             {
                 dstOpnd = instr->GetDst()->AsIndirOpnd();
                 ValueType stValueType(dstOpnd->GetBaseOpnd()->GetValueType());
+                Assert(ldValueType);
                 if (stValueType != *ldValueType)
                 {
 #if DBG_DUMP

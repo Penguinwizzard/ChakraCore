@@ -51,9 +51,9 @@ namespace Js
 
         void Initialize();
 #if DBG
-        void DumpIntlByteCode(_In_ ScriptContext * scriptContext);
+        void DumpIntlByteCode(ScriptContext * scriptContext);
 #ifdef ENABLE_PROJECTION
-        void DumpPromiseByteCode(_In_ ScriptContext * scriptContext);
+        void DumpPromiseByteCode(ScriptContext * scriptContext);
 #endif
 #endif
 

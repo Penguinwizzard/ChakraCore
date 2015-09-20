@@ -458,7 +458,7 @@ namespace Js
     }
 
     BOOL
-    DynamicObject::FindNextProperty(PropertyIndex& index, __out JavascriptString** propertyString, __out PropertyId* propertyId, __out PropertyAttributes* attributes, DynamicType *typeToEnumerate, bool requireEnumerable, bool enumSymbols) const
+    DynamicObject::FindNextProperty(PropertyIndex& index, JavascriptString** propertyString, PropertyId* propertyId, PropertyAttributes* attributes, DynamicType *typeToEnumerate, bool requireEnumerable, bool enumSymbols) const
     {
         if (index == Constants::NoSlot)
         {
@@ -468,7 +468,7 @@ namespace Js
     }
 
     BOOL
-    DynamicObject::FindNextProperty(BigPropertyIndex& index, __out JavascriptString** propertyString, __out PropertyId* propertyId, __out PropertyAttributes* attributes, DynamicType *typeToEnumerate, bool requireEnumerable, bool enumSymbols) const
+    DynamicObject::FindNextProperty(BigPropertyIndex& index, JavascriptString** propertyString, PropertyId* propertyId, PropertyAttributes* attributes, DynamicType *typeToEnumerate, bool requireEnumerable, bool enumSymbols) const
     {
         if (index == Constants::NoBigSlot)
         {

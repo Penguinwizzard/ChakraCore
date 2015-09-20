@@ -64,7 +64,7 @@ private:
     class StorageInfo
     {
     public:
-        void GetFilename(__in_ecount(_MAX_PATH) wchar_t filename[_MAX_PATH]) const;
+        void GetFilename(_Out_writes_z_(_MAX_PATH) wchar_t filename[_MAX_PATH]) const;
         char const * ReadRecord() const;
         bool WriteRecord(__in_ecount(sizeof(DWORD) + *record) char const * record) const;
         bool isFileStorage;

@@ -23,7 +23,7 @@ namespace Js
 
     inline StringCopyInfo::StringCopyInfo(
         JavascriptString *const sourceString,
-        __out_xcount(sourceString->m_charLength) wchar_t *const destinationBuffer)
+        _Inout_count_(sourceString->m_charLength) wchar_t *const destinationBuffer)
         : sourceString(sourceString), destinationBuffer(destinationBuffer)
     {
         Assert(sourceString);

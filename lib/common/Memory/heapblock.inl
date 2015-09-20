@@ -115,6 +115,7 @@ void SmallHeapBlockT<TBlockAttributes>::ScanNewImplicitRootsBase(Fn fn)
             localMarkCount++;
 #if DBG
             uint pageNumber = objectOffset / AutoSystemInfo::PageSize;
+            Assert(pageNumber < TBlockAttributes::PageCount);
             newlyMarkedCountForPage[pageNumber]++;
 #endif
 

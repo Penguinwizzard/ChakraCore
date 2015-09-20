@@ -249,9 +249,7 @@ namespace Js
             return ToPrimitiveImpl<PropertyIds::valueOf>(result, requestContext)
                 || ToPrimitiveImpl<PropertyIds::toString>(result, requestContext);
 
-        }
-               
-        return false;
+        }                       
     }
 
     template <PropertyId propertyId>

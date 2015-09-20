@@ -121,17 +121,17 @@ namespace Js
         JavascriptError::ThrowTypeError(scriptContext, JSERR_Property_VarDate, scriptContext->GetPropertyName(propertyId)->GetBuffer());
     };
 
-    BOOL JavascriptVariantDate::GetItemReference(Js::Var originalInstance, __in uint32 index, __out Js::Var* value, __in Js::ScriptContext * scriptContext)
+    BOOL JavascriptVariantDate::GetItemReference(Js::Var originalInstance, uint32 index, Js::Var* value, Js::ScriptContext * scriptContext)
     {
         JavascriptError::ThrowTypeError(scriptContext, JSERR_Property_VarDate, JavascriptNumber::ToStringRadix10(index, scriptContext)->GetSz());
     };
 
-    BOOL JavascriptVariantDate::GetItem(Js::Var originalInstance, __in uint32 index, __out Js::Var* value, __in Js::ScriptContext * scriptContext) 
+    BOOL JavascriptVariantDate::GetItem(Js::Var originalInstance, uint32 index, Js::Var* value, Js::ScriptContext * scriptContext) 
     {
         JavascriptError::ThrowTypeError(scriptContext, JSERR_Property_VarDate, JavascriptNumber::ToStringRadix10(index, scriptContext)->GetSz());
     };
 
-    BOOL JavascriptVariantDate::SetItem(__in uint32 index, __in Js::Var value, __in Js::PropertyOperationFlags flags) 
+    BOOL JavascriptVariantDate::SetItem(uint32 index, Js::Var value, Js::PropertyOperationFlags flags) 
     {
         ScriptContext* scriptContext = this->GetScriptContext();
         JavascriptError::ThrowTypeError(scriptContext, JSERR_Property_VarDate, JavascriptNumber::ToStringRadix10(index, scriptContext)->GetSz());

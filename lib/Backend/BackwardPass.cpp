@@ -4137,7 +4137,7 @@ BackwardPass::TrackAddPropertyTypes(IR::PropertySymOpnd *opnd, BasicBlock *block
 
     Js::Type *typeWithProperty = opnd->IsMono() ? opnd->GetType() : opnd->GetFirstEquivalentType();
     Js::Type *typeWithoutProperty = opnd->HasInitialType() ? opnd->GetInitialType() : nullptr;
-
+    
     if (typeWithoutProperty == nullptr ||
         typeWithProperty == typeWithoutProperty || 
         (opnd->IsTypeChecked() && !opnd->IsInitialTypeChecked()))
@@ -4155,8 +4155,9 @@ BackwardPass::TrackAddPropertyTypes(IR::PropertySymOpnd *opnd, BasicBlock *block
 
         return;
     }
-
+        
 #if DBG
+    Assert(typeWithProperty != nullptr);
     Js::DynamicTypeHandler * typeWithoutPropertyTypeHandler = static_cast<Js::DynamicType *>(typeWithoutProperty)->GetTypeHandler();
     Js::DynamicTypeHandler * typeWithPropertyTypeHandler = static_cast<Js::DynamicType *>(typeWithProperty)->GetTypeHandler();
     Assert(typeWithoutPropertyTypeHandler->GetPropertyCount() + 1 == typeWithPropertyTypeHandler->GetPropertyCount());
@@ -5496,14 +5497,17 @@ BackwardPass::TrackIntUsage(IR::Instr *const instr)
             {
                 // MULs will always be at the start of a range. Either included in the range if int32 ovf is ignored, or excluded if int32 ovf matters. Even if int32 can be ignored, MULs can still bailout on 53-bit. 
                 // That's why it cannot be in the middle of a range.
-                if (instr->ignoreIntOverflowInRange){
+                if (instr->ignoreIntOverflowInRange)
+                {
+                    Assert(dstSym);
                     Assert(dstSym->scratch.globOpt.numCompoundedAddSubUses >= 0);
                     Assert(dstSym->scratch.globOpt.numCompoundedAddSubUses <= MaxCompoundedUsesInAddSubForIgnoringIntOverflow);
                     instr->ignoreOverflowBitCount = (uint8) (53 - dstSym->scratch.globOpt.numCompoundedAddSubUses);
                     // we have the max number of compounded adds/subs. 32-bit ovf cannot be ignored.
                     if (instr->ignoreOverflowBitCount == 32)
+                    {
                         instr->ignoreIntOverflowInRange = false;
-                
+                    }
                 }
 
                 SetIntOverflowMattersInRange(instr->GetSrc1());

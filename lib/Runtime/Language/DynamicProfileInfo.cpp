@@ -2166,7 +2166,7 @@ DynamicProfileInfo::DumpScriptContextToFile(ScriptContext * scriptContext)
 
     AutoCriticalSection autocs(&s_csOutput);
     FILE * file;
-    if (_wfopen_s(&file, Configuration::Global.flags.RuntimeDataOutputFile, L"ab+") != 0)
+    if (_wfopen_s(&file, Configuration::Global.flags.RuntimeDataOutputFile, L"ab+") != 0 || file == nullptr)
     {
         return;
     }

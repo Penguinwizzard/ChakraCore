@@ -20,7 +20,7 @@ namespace Js
 
     public:
         StringCopyInfo();
-        StringCopyInfo(JavascriptString *const sourceString, __out_xcount(sourceString->m_charLength) wchar_t *const destinationBuffer);
+        StringCopyInfo(JavascriptString *const sourceString, _Inout_count_(sourceString->m_charLength) wchar_t *const destinationBuffer);
 
     public:
         JavascriptString *SourceString() const;

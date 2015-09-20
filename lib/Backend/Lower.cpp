@@ -5757,7 +5757,7 @@ Lowerer::GenerateCheckFixedFld(IR::Instr * instrChkFld)
     OUTPUT_TRACE_FUNC(
         Js::ObjTypeSpecPhase,
         this->m_func,
-        L"Fixed field check: %s, property: %s, cache ID: %d, cloned cache: true, layout: %s, redundant check: %s count of props: %d \n",
+        L"Fixed field check: %s, property: %s, cache ID: %u, cloned cache: true, layout: %s, redundant check: %s count of props: %u \n",
         Js::OpCodeUtil::GetOpCodeName(instrChkFld->m_opcode),
         this->m_func->GetScriptContext()->GetPropertyNameLocked(propertySym->m_propertyId)->GetBuffer(),
         inlineCacheIndex, propertySymOpnd->GetCacheLayoutString(), propertySymOpnd->IsTypeChecked() ? L"true" : L"false", 
@@ -6803,7 +6803,7 @@ Lowerer::GenerateCachedTypeCheck(IR::Instr *instrChk, IR::PropertySymOpnd *prope
     
     if (PHASE_VERBOSE_TRACE(Js::ObjTypeSpecPhase, this->m_func))
     {
-        OUTPUT_VERBOSE_TRACE_FUNC(Js::ObjTypeSpecPhase, this->m_func, L"Emitted %s type check for type 0x % p",
+        OUTPUT_VERBOSE_TRACE_FUNC(Js::ObjTypeSpecPhase, this->m_func, L"Emitted %s type check for type 0x%p",
             emitDirectCheck ? L"direct" : propertySymOpnd->IsPoly() ? L"equivalent" : L"indirect", type);
 #if DBG
         if (propertySymOpnd->GetGuardedPropOps() != nullptr)
@@ -10146,6 +10146,7 @@ Lowerer::InlineBuiltInLibraryCall(IR::Instr *callInstr)
 
         linkOpnd = argInstr->GetSrc2();
     }
+    AnalysisAssert(argCount == -1);
 
     //  Move startcall
     Assert(linkOpnd->IsRegOpnd());
@@ -10163,21 +10164,21 @@ Lowerer::InlineBuiltInLibraryCall(IR::Instr *callInstr)
     bool success = true;
     switch(index)
     {
-        case Js::BuiltinFunction::Math_Abs:
+        case Js::BuiltinFunction::Math_Abs:            
             this->m_lowererMD.GenerateFastAbs(callInstr->GetDst(), argsOpnd[1], callInstr, labelHelper, labelHelper, doneLabel);
             break;
 
         case Js::BuiltinFunction::String_CharCodeAt:
-        case Js::BuiltinFunction::String_CharAt:
+        case Js::BuiltinFunction::String_CharAt:            
             success = this->m_lowererMD.GenerateFastCharAt(index, callInstr->GetDst(), argsOpnd[0], argsOpnd[1],
                 callInstr, labelHelper, labelHelper, doneLabel);
             break;
 
-        case Js::BuiltinFunction::Array_Push:
+        case Js::BuiltinFunction::Array_Push:            
             success = GenerateFastPush(argsOpnd[0], argsOpnd[1], callInstr, labelHelper, labelHelper, nullptr, doneLabel);
             break;
 
-        case Js::BuiltinFunction::String_Replace:
+        case Js::BuiltinFunction::String_Replace:            
             success = GenerateFastReplace(argsOpnd[0], argsOpnd[1], argsOpnd[2], callInstr, labelHelper, labelHelper, doneLabel);
             break;
 
@@ -17256,6 +17257,7 @@ Lowerer::GenerateFastInlineStringReplace(IR::Instr * instr)
     IR::Opnd * argsOpnd[3] = {0};
     bool result  = instr->FetchOperands(argsOpnd, 3);
     Assert(result);
+    Assert(argsOpnd[0] && argsOpnd[1] && argsOpnd[2]);
 
     if (!argsOpnd[0]->GetValueType().IsLikelyString()
         || argsOpnd[1]->GetValueType().IsNotObject()

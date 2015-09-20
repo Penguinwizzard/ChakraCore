@@ -6,7 +6,11 @@
 class CriticalSection
 {
 public:
-    CriticalSection(DWORD spincount = 0) { ::InitializeCriticalSectionAndSpinCount(&cs, spincount); }
+    CriticalSection(DWORD spincount = 0) 
+    { 
+#pragma prefast(suppress:6031, "InitializeCriticalSectionAndSpinCount always succeed since Vista. No need to check return value");
+        ::InitializeCriticalSectionAndSpinCount(&cs, spincount); 
+    }
     ~CriticalSection() { ::DeleteCriticalSection(&cs); }
     BOOL TryEnter() { return ::TryEnterCriticalSection(&cs); }
     void Enter() { ::EnterCriticalSection(&cs); }

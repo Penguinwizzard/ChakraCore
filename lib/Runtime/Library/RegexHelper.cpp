@@ -900,6 +900,7 @@ namespace Js
             lastSuccessfullMatch = lastActualMatch;
             for (int groupId = 0;  groupId < numGroups; groupId++)
                 replaceArgs[groupId + 1] = GetGroup(scriptContext, pattern, input, nonMatchValue, groupId);
+#pragma prefast(suppress:6386, "The write index numGroups + 1 is in the bound")
             replaceArgs[numGroups + 1] = JavascriptNumber::ToVar(lastActualMatch.offset, scriptContext);
 
             // The called function must see the global state updated by the current match

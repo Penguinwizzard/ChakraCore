@@ -902,7 +902,9 @@ private:
 #define FOREACH_SUCCESSOR_BLOCK(blockSucc, block)\
     FOREACH_EDGE_IN_LIST(__edge, block->GetSuccList())\
     {\
-        BasicBlock * blockSucc = __edge->GetSucc();
+        BasicBlock * blockSucc = __edge->GetSucc(); \
+        Assert(blockSucc);
+
 #define NEXT_SUCCESSOR_BLOCK\
     }\
     NEXT_EDGE_IN_LIST
@@ -910,7 +912,9 @@ private:
 #define FOREACH_SUCCESSOR_BLOCK_EDITING(blockSucc, block, iter)\
     FOREACH_EDGE_IN_LIST_EDITING(__edge, block->GetSuccList(), iter)\
     {\
-        BasicBlock * blockSucc = __edge->GetSucc();
+        BasicBlock * blockSucc = __edge->GetSucc(); \
+        Assert(blockSucc);
+
 #define NEXT_SUCCESSOR_BLOCK_EDITING\
     }\
     NEXT_EDGE_IN_LIST_EDITING
@@ -918,7 +922,9 @@ private:
 #define FOREACH_DEAD_SUCCESSOR_BLOCK(blockSucc, block)\
     FOREACH_EDGE_IN_LIST(__edge, block->GetDeadSuccList())\
     {\
-        BasicBlock * blockSucc = __edge->GetSucc();
+        BasicBlock * blockSucc = __edge->GetSucc(); \
+        Assert(blockSucc);
+
 #define NEXT_DEAD_SUCCESSOR_BLOCK\
     }\
     NEXT_EDGE_IN_LIST
@@ -926,7 +932,9 @@ private:
 #define FOREACH_PREDECESSOR_BLOCK(blockPred, block)\
     FOREACH_EDGE_IN_LIST(__edge, block->GetPredList())\
     {\
-        BasicBlock * blockPred = __edge->GetPred();
+        BasicBlock * blockPred = __edge->GetPred(); \
+        Assert(blockPred);
+
 #define NEXT_PREDECESSOR_BLOCK\
     }\
     NEXT_EDGE_IN_LIST
@@ -934,7 +942,9 @@ private:
 #define FOREACH_DEAD_PREDECESSOR_BLOCK(blockPred, block)\
     FOREACH_EDGE_IN_LIST(__edge, block->GetDeadPredList())\
     {\
-        BasicBlock * blockPred = __edge->GetPred();
+        BasicBlock * blockPred = __edge->GetPred(); \
+        Assert(blockPred);
+
 #define NEXT_DEAD_PREDECESSOR_BLOCK\
     }\
     NEXT_EDGE_IN_LIST

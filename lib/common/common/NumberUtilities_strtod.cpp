@@ -1264,6 +1264,7 @@ template double Js::NumberUtilities::StrToDbl<utf8char_t>(const utf8char_t * psz
 /***************************************************************************
 Uses big integer arithmetic to get the sequence of digits.
 ***************************************************************************/
+_Success_(return)
 static BOOL FDblToRgbPrecise(double dbl, __out_ecount(kcbMaxRgb) byte *prgb, int *pwExp10, byte **ppbLim)
 {
     byte bT;
@@ -1562,7 +1563,8 @@ LFail:
 /***************************************************************************
 Get mantissa bytes (BCD).
 ***************************************************************************/
-static BOOL FDblToRgbFast(double dbl, __out_ecount(kcbMaxRgb) byte *prgb, int *pwExp10, byte **ppbLim)
+_Success_(return)
+static BOOL FDblToRgbFast(double dbl, _Out_writes_to_(kcbMaxRgb, (*ppbLim - prgb)) byte *prgb, int *pwExp10, byte **ppbLim)
 {
     int ib;
     int iT;
@@ -1860,10 +1862,10 @@ LFail:
 }
 
 
-static BOOL FormatDigits(byte *pbSrc, byte *pbLim, int wExp10, __out_ecount(cchDst) OLECHAR *pchDst, int cchDst)
+static BOOL FormatDigits(_In_reads_(pbLim - pbSrc) byte *pbSrc, byte *pbLim, int wExp10, _Out_writes_(cchDst) OLECHAR *pchDst, int cchDst)
 {
     AssertArrMem(pbSrc, pbLim - pbSrc);
-    __analysis_assume(pbLim > pbSrc);
+    AnalysisAssert(pbLim > pbSrc);
 
     if (pbLim <= pbSrc)
     { 
@@ -1964,9 +1966,9 @@ static BOOL FormatDigits(byte *pbSrc, byte *pbLim, int wExp10, __out_ecount(cchD
 
 __success(return <= nDstBufSize) 
 static int FormatDigitsFixed(byte *pbSrc, byte *pbLim, int wExp10, int nFractionDigits, __out_ecount_part(nDstBufSize, return) wchar_t *pchDst, int nDstBufSize){
-    Assert(pbLim > pbSrc);
+    AnalysisAssert(pbLim > pbSrc);
     AssertArrMem(pbSrc, pbLim - pbSrc);
-    Assert(nFractionDigits >= -1);
+    AnalysisAssert(nFractionDigits >= -1);
     // nFractionDigits == -1 => print exactly as many fractional digits as necessary : no trailing 0's.
 
     int n = 1; // the no. of chars. in the result.
@@ -2057,11 +2059,11 @@ static int FormatDigitsExponential(
                             int     cchDst
                             )
 {
-    Assert(pbLim > pbSrc);
+    AnalysisAssert(pbLim > pbSrc);
     Assert(pbLim - pbSrc <= kcbMaxRgb);
     AssertArrMem(pbSrc, pbLim - pbSrc);
     AssertArrMem(pchDst, cchDst);
-    Assert(wExp10 < 1000);
+    AnalysisAssert(wExp10 < 1000);
 
     __analysis_assume(pbLim > pbSrc);
     __analysis_assume(pbLim - pbSrc <= kcbMaxRgb);
@@ -2173,11 +2175,11 @@ static int FormatDigitsExponential(
 *
 * Return value: 1 if an extra leading 1 needed to be added, 0 otherwise.
 */
-static int RoundTo(byte *pbSrc, byte *pbLim, int nDigits, __in_bcount(nDigits+1) byte *pbDst, byte **ppbLimRes )
+static int RoundTo(byte *pbSrc, byte *pbLim, int nDigits, __out_bcount(nDigits+1) byte *pbDst, byte **ppbLimRes )
 {
-    Assert(pbLim > pbSrc);
+    AnalysisAssert(pbLim > pbSrc);
     AssertArrMem(pbSrc, pbLim - pbSrc);
-    Assert(nDigits >= 0);
+    AnalysisAssert(nDigits >= 0);
 
     int retVal = 0;
 
@@ -2312,8 +2314,11 @@ int Js::NumberUtilities::FDblToStr(double dbl, Js::NumberUtilities::FormatType f
         if( nDigits >= 0 )
         {
             //Either session pointer is null or session is in compat mode switch to compat handling              
-            if((wExp10 + nDigits) > 0)
-                wExp10 += RoundTo( rgb, pbLim, max(wExp10 + nDigits, 1), rgbAdj, &pbLimAdj );
+            if ((wExp10 + nDigits) > 0)
+            {
+                Assert(wExp10 + nDigits + 1 <= kcbMaxRgb);
+                wExp10 += RoundTo(rgb, pbLim, wExp10 + nDigits, rgbAdj, &pbLimAdj);
+            }
             else
             {
                 //Special case: When negative power of 10 is more than most significant digit.
@@ -2333,14 +2338,18 @@ int Js::NumberUtilities::FDblToStr(double dbl, Js::NumberUtilities::FormatType f
         break;
 
     case Js::NumberUtilities::FormatExponential:
-        if( nDigits >= 0)
-            wExp10 += RoundTo( rgb, pbLim, nDigits + 1, rgbAdj, &pbLimAdj );
+        if (nDigits >= 0)
+        {
+            Assert(nDigits + 2 <= kcbMaxRgb);
+            wExp10 += RoundTo(rgb, pbLim, nDigits + 1, rgbAdj, &pbLimAdj);
+        }
         else
             RoundTo( rgb, pbLim, kcbMaxRgb-1, rgbAdj, &pbLimAdj );
         n += FormatDigitsExponential(rgbAdj, pbLimAdj, wExp10 , nDigits, pchDst, cchDst);
         break;
 
     case Js::NumberUtilities::FormatPrecision:
+        Assert(nDigits + 1 <= kcbMaxRgb);
         wExp10 += RoundTo( rgb, pbLim, nDigits, rgbAdj, &pbLimAdj );
 
         // NOTE: the 'e' in the toPrecision algorithm in the ECMA standard is equal to wExp - 1.
@@ -2457,6 +2466,7 @@ static const int g_rgcchSig[] =
 //
 // Convert a non-Nan, non-Zero, non-Infinite double value to string. (Moved from JavascriptNumber.cpp).
 //
+_Success_(return)
 BOOL Js::NumberUtilities::FNonZeroFiniteDblToStr(double dbl, _In_range_(2, 36) int radix, _Out_writes_(nDstBufSize) WCHAR* psz, int nDstBufSize)
 {
     Assert(!Js::NumberUtilities::IsNan(dbl));
@@ -2737,7 +2747,7 @@ double Js::NumberUtilities::DblFromDecimal(DECIMAL * pdecIn)
     return dblRet;
 }
 
-void Js::NumberUtilities::CodePointAsSurrogatePair(codepoint_t codePointValue, wchar_t* first, wchar_t* second)
+void Js::NumberUtilities::CodePointAsSurrogatePair(codepoint_t codePointValue, __out wchar_t* first, __out wchar_t* second)
 {
     AssertMsg(first != nullptr && second != nullptr, "Null ptr's passed in for out.");
     AssertMsg(IsInSupplementaryPlane(codePointValue), "Code point is not a surrogate pair.");

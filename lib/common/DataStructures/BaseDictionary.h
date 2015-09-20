@@ -1041,7 +1041,7 @@ namespace JsUtil
             entries = newEntries;
         }
 
-        __ecount(size) int *AllocateBuckets(const uint bucketCount)
+        __ecount(bucketCount) int *AllocateBuckets(const uint bucketCount)
         {
             return
                 AllocateArray<AllocatorType, int, false>(

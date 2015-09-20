@@ -508,6 +508,8 @@ Loop::RemoveBreakBlocks(FlowGraph *fg)
         loopTailBlock = block;
     }NEXT_BLOCK_IN_LOOP;
 
+    Assert(loopTailBlock);
+
     FOREACH_BLOCK_BACKWARD_IN_RANGE_EDITING(breakBlockEnd, loopTailBlock, this->GetHeadBlock(), blockPrev)
     {
         while (!this->IsDescendentOrSelf(breakBlockEnd->loop))
@@ -1735,6 +1737,8 @@ FlowGraph::InsertCompensationCodeForBlockMove(FlowEdge * edge,  bool insertToLoo
 void
 FlowGraph::RemoveUnreachableBlocks()
 {
+    Assert(this->blockList);
+
     FOREACH_BLOCK(block, this)
     {
         block->isVisited = false;

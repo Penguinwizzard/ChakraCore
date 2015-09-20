@@ -507,7 +507,7 @@ void InterpreterThunkEmitter::EncodeInterpreterThunk(__inout_bcount(thunkSize) B
 
 
 inline /*static*/
-DWORD InterpreterThunkEmitter::FillDebugBreak(__out_bcount(count) BYTE* dest, __in DWORD count)
+DWORD InterpreterThunkEmitter::FillDebugBreak(__out_bcount_full(count) BYTE* dest, __in DWORD count)
 {
 #if defined(_M_ARM)
     Assert(count % 2 == 0);

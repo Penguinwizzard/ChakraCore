@@ -137,7 +137,7 @@ LeakReport::EnsureLeakReportFile()
     wchar_t defaultFilename[_MAX_PATH];
     if (filename == nullptr)
     {
-        swprintf_s(defaultFilename, L"jsleakreport-%d.txt", ::GetCurrentProcessId());
+        swprintf_s(defaultFilename, L"jsleakreport-%u.txt", ::GetCurrentProcessId());
         filename = defaultFilename;
         openMode = L"a+";   // append mode
     }

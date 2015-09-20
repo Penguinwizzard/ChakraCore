@@ -24,15 +24,15 @@ WCHAR* DumpCallStack(uint frameCount = -1);
 
 #if ENABLE_DEBUG_CONFIG_OPTIONS
 #define OUTPUT_PRINT(FunctionBody) \
-    Output::Print(L"Function %s (#%d.%d, #%d) ", (FunctionBody)->GetDisplayName(), \
-            (FunctionBody)->GetSourceContextId(), (FunctionBody)->GetLocalFunctionId(), (FunctionBody)->GetFunctionNumber());
+    Output::Print(L"Function %s (#%d.%u, #%u) ", (FunctionBody)->GetDisplayName(), \
+            (int)(FunctionBody)->GetSourceContextId(), (FunctionBody)->GetLocalFunctionId(), (FunctionBody)->GetFunctionNumber());
 
 #define OUTPUT_TRACE2(Phase, FunctionBody, ...) \
    if(Js::Configuration::Global.flags.Trace.IsEnabled((Phase))) \
    { \
         WCHAR prefixValue[512]; \
-        swprintf_s(prefixValue, L"Function %s (#%d.%d, #%d)", (FunctionBody)->GetDisplayName(), \
-            (FunctionBody)->GetSourceContextId(), (FunctionBody)->GetLocalFunctionId(), (FunctionBody)->GetFunctionNumber()); \
+        swprintf_s(prefixValue, L"Function %s (#%d.%u, #%u)", (FunctionBody)->GetDisplayName(), \
+            (int)(FunctionBody)->GetSourceContextId(), (FunctionBody)->GetLocalFunctionId(), (FunctionBody)->GetFunctionNumber()); \
         Output::TraceWithPrefix((Phase), prefixValue, __VA_ARGS__); \
    }
 #define OUTPUT_TRACE_FUNC(Phase, Func, ...) \
@@ -41,8 +41,8 @@ WCHAR* DumpCallStack(uint frameCount = -1);
         WCHAR workItem[256]; \
         Func->m_workItem->GetDisplayName(workItem, _countof(workItem)); \
         WCHAR prefixValue[512]; \
-        swprintf_s(prefixValue, L"%s (#%d.%d, #%d)", workItem, \
-           (Func)->GetJnFunction()->GetSourceContextId(), (Func)->GetJnFunction()->GetLocalFunctionId(), (Func)->GetJnFunction()->GetFunctionNumber()); \
+        swprintf_s(prefixValue, L"%s (#%d.%u, #%u)", workItem, \
+           (int)(Func)->GetJnFunction()->GetSourceContextId(), (Func)->GetJnFunction()->GetLocalFunctionId(), (Func)->GetJnFunction()->GetFunctionNumber()); \
         Output::TraceWithPrefix((Phase), prefixValue, __VA_ARGS__); \
       } 
 #define OUTPUT_VERBOSE_TRACE2(Phase, FunctionBody, ...) \

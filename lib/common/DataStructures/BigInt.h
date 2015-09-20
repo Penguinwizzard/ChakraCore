@@ -24,8 +24,8 @@ namespace Js
         bool FResize(long clu);
 
 #if DBG
-        #define AssertBi(pbi) (pbi)->AssertValid(true);
-        #define AssertBiNoVal(pbi) (pbi)->AssertValid(false);
+        #define AssertBi(pbi) Assert(pbi); (pbi)->AssertValid(true);
+        #define AssertBiNoVal(pbi) Assert(pbi); (pbi)->AssertValid(false);
         inline void AssertValid(bool fCheckVal);
 #else //!DBG
         #define AssertBi(pbi)

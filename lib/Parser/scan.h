@@ -237,7 +237,11 @@ protected:
     template <bool bScan>
     OLECHAR ReadRest(OLECHAR ch, EncodedCharPtr &p, EncodedCharPtr last)
     {
-        EncodedCharPtr s = p;
+        EncodedCharPtr s;
+        if (bScan)
+        {
+            s = p;
+        }
         OLECHAR result = utf8::DecodeTail(ch, p, last, m_decodeOptions);
         if (bScan)
         {
@@ -751,14 +755,13 @@ private:
         return m_ptoken->tk = tkScanError;
     }
 
-    void Error(HRESULT hr)
+    __declspec(noreturn) void Error(HRESULT hr)
     {
         Assert(FAILED(hr));
         m_pchMinTok = m_currentCharacter;
         m_cMinTokMultiUnits = m_cMultiUnits;
         AssertMem(m_perr);
         m_perr->Throw(hr);
-        AssertMsg(false, "why did Throw return?");
     }
 
     const EncodedCharPtr PchBase(void)

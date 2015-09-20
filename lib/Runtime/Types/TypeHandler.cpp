@@ -250,8 +250,8 @@ namespace Js
     }
 
     BOOL
-        DynamicTypeHandler::FindNextProperty(ScriptContext* scriptContext, BigPropertyIndex& index, __out JavascriptString** propertyString,
-        __out PropertyId* propertyId, __out PropertyAttributes* attributes, Type* type, DynamicType *typeToEnumerate, bool requireEnumerable, bool enumSymbols)
+    DynamicTypeHandler::FindNextProperty(ScriptContext* scriptContext, BigPropertyIndex& index, JavascriptString** propertyString,
+        PropertyId* propertyId, PropertyAttributes* attributes, Type* type, DynamicType *typeToEnumerate, bool requireEnumerable, bool enumSymbols)
     {
         // Type handlers that support big property indexes override this function, so if we're here then this type handler does
         // not support big property indexes. Forward the call to the small property index version.
@@ -415,7 +415,7 @@ namespace Js
 
     void DynamicTypeHandler::TraceUseFixedProperty(PropertyRecord const * propertyRecord, Var * pProperty, bool result, LPCWSTR typeHandlerName, ScriptContext * requestContext)
     {
-        String fixedPropertyResultType = nullptr;
+        LPCWSTR fixedPropertyResultType = nullptr;
         bool log = false;
 
         if (pProperty && *pProperty && ((Js::JavascriptFunction::Is(*pProperty) && (PHASE_VERBOSE_TRACE1(Js::FixedMethodsPhase) || PHASE_VERBOSE_TESTTRACE1(Js::FixedMethodsPhase))) ||

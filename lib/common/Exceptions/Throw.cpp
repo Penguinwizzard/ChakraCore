@@ -198,7 +198,7 @@ namespace Js {
             filePath = tempFilePath;
         }
 
-        StringCchPrintf(tempFileName, _countof(tempFileName), L"%s\\CH_%d_%d.dmp", filePath, GetCurrentProcessId(), GetCurrentThreadId());
+        StringCchPrintf(tempFileName, _countof(tempFileName), L"%s\\CH_%u_%u.dmp", filePath, GetCurrentProcessId(), GetCurrentThreadId());
         Output::Print(L"dump filename %s \n", tempFileName);
         Output::Flush();
 
@@ -270,7 +270,11 @@ namespace Js {
         stackBackTrace = StackBackTrace::Capture(&NoCheckHeapAllocator::Instance, Throw::StackToSkip, Throw::StackTraceDepth);
     }
 
-    bool Throw::ReportAssert(LPSTR fileName, uint lineNumber, LPSTR error, LPSTR message)
+#ifdef ENABLE_DEBUG_CONFIG_OPTIONS
+    static const wchar_t * caption = L"CHAKRA ASSERT";
+#endif
+
+    bool Throw::ReportAssert(__in LPSTR fileName, uint lineNumber, __in LPSTR error, __in LPSTR message)
     {
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
         if (Js::Configuration::Global.flags.IsEnabled(Js::AssertBreakFlag))
@@ -285,7 +289,7 @@ namespace Js {
 #endif
         if (AssertsToConsole)
         {
-            fprintf(stderr, "ASSERTION %d: (%s, line %d) %s\n Failure: %s\n", GetCurrentProcessId(), fileName, lineNumber, message, error);
+            fprintf(stderr, "ASSERTION %u: (%s, line %u) %s\n Failure: %s\n", GetCurrentProcessId(), fileName, lineNumber, message, error);
             fflush(stderr);
 #ifdef GENERATE_DUMP
             // force dump if we have assert in jc.exe. check build only.
@@ -307,10 +311,10 @@ namespace Js {
         {
             wchar_t buff[1024];
 
-            swprintf_s(buff, _countof(buff), L"%S (%d)\n%S\n%S", fileName, lineNumber, message, error);
+            swprintf_s(buff, _countof(buff), L"%S (%u)\n%S\n%S", fileName, lineNumber, message, error);
             buff[_countof(buff)-1] = 0;
-
-            int ret = MessageBox(nullptr, buff, L"CHAKRA ASSERT", MB_ABORTRETRYIGNORE);
+            
+            int ret = MessageBox(nullptr, buff, caption, MB_ABORTRETRYIGNORE);
 
             switch (ret)
             {

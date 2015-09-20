@@ -106,13 +106,13 @@ namespace Js
         virtual BOOL GetPropertyReference(Js::Var originalInstance, Js::PropertyId propertyId, Js::Var* value, Js::PropertyValueInfo* info, Js::ScriptContext* requestContext) override;
         virtual BOOL HasItem(uint32 index) override;
         virtual BOOL DeleteItem(uint32 index, Js::PropertyOperationFlags flags) override { return false; }
-        virtual BOOL GetItem(Js::Var originalInstance, __in uint32 index, __out Js::Var* value, Js::ScriptContext * requestContext) override;
-        virtual BOOL SetItem(__in uint32 index, __in Js::Var value, __in Js::PropertyOperationFlags flags = PropertyOperation_None) override;
+        virtual BOOL GetItem(Js::Var originalInstance, uint32 index, Js::Var* value, Js::ScriptContext * requestContext) override;
+        virtual BOOL SetItem(uint32 index, Js::Var value, Js::PropertyOperationFlags flags = PropertyOperation_None) override;
         virtual BOOL SetProperty(Js::PropertyId propertyId, Js::Var value, Js::PropertyOperationFlags flags, Js::PropertyValueInfo* info) override;
         virtual BOOL SetProperty(Js::JavascriptString* propertyNameString, Js::Var value, Js::PropertyOperationFlags flags, Js::PropertyValueInfo* info) override;
         virtual BOOL DeleteProperty(Js::PropertyId propertyId, Js::PropertyOperationFlags flags) override;
-        virtual BOOL GetItemReference(Js::Var originalInstance, __in uint32 index, __out Js::Var* value, Js::ScriptContext * requestContext) override;
-        virtual BOOL GetEnumerator(__in BOOL enumNonEnumerable, __out Js::Var* enumerator, Js::ScriptContext * requestContext, __in bool preferSnapshotSemantics = true, __in bool enumSymbols = false) override;
+        virtual BOOL GetItemReference(Js::Var originalInstance, uint32 index, Js::Var* value, Js::ScriptContext * requestContext) override;
+        virtual BOOL GetEnumerator(BOOL enumNonEnumerable, Js::Var* enumerator, Js::ScriptContext * requestContext, bool preferSnapshotSemantics = true, bool enumSymbols = false) override;
 
         virtual BOOL IsEnumerable(PropertyId propertyId)  override;
         virtual BOOL IsConfigurable(PropertyId propertyId)  override;

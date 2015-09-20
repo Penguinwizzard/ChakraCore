@@ -163,10 +163,11 @@ namespace Js
 
         for (uint i=1; i < args.Info.Count && i < parameterCount+1; i++)
         {
-            values[i-1] = JavascriptConversion::ToNumber(args[i], scriptContext);
-            if (JavascriptNumber::IsNan(values[i-1]) || !NumberUtilities::IsFinite(values[i-1]))
+            double curr = JavascriptConversion::ToNumber(args[i], scriptContext);
+            values[i-1] = curr;
+            if (JavascriptNumber::IsNan(curr) || !NumberUtilities::IsFinite(curr))
             {
-                pDate->m_date.SetTvUtc(values[i-1]);
+                pDate->m_date.SetTvUtc(curr);
                 return pDate;
             }
         }
@@ -182,6 +183,7 @@ namespace Js
             // call ToInteger (which is same as JavascriptConversion::ToInteger) on arguments. 
             // All are finite (not Inf or Nan) as we check them explicitly in the previous loop.
             // +-0 & +0 are same in this context.
+#pragma prefast(suppress:6001, "value index i < args.Info.Count - 1 are initialized")
             values[i] = JavascriptConversion::ToInteger(values[i]);
         }
 

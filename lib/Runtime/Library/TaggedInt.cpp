@@ -146,7 +146,7 @@ namespace Js
             }
         }
     }
-    Var TaggedInt::DivideInPlace(Var aLeft,Var aRight,ScriptContext* scriptContext, __out JavascriptNumber *result) 
+    Var TaggedInt::DivideInPlace(Var aLeft,Var aRight,ScriptContext* scriptContext, JavascriptNumber *result) 
     {
         int nLeft   = ToInt32(aLeft);
         int nRight  = ToInt32(aRight);
@@ -211,7 +211,7 @@ namespace Js
         }
     }
 
-    Var TaggedInt::MultiplyInPlace(Var aLeft, Var aRight, ScriptContext* scriptContext, __out JavascriptNumber *result) 
+    Var TaggedInt::MultiplyInPlace(Var aLeft, Var aRight, ScriptContext* scriptContext, JavascriptNumber *result) 
     {
         //
         // Perform the signed integer multiplication.

@@ -128,7 +128,7 @@ private:
     static __declspec(thread) MemoryProfiler * Instance;
 
     static CriticalSection s_cs;
-    static AutoPtr<MemoryProfiler> profilers;
+    static AutoPtr<MemoryProfiler, NoCheckHeapAllocator> profilers;
 
     PageAllocator pageAllocator;
     ArenaAllocator alloc;

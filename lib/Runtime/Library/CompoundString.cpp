@@ -1068,7 +1068,7 @@ namespace Js
     }
 
     void CompoundString::CopyVirtual(
-        __out_xcount(m_charLength) wchar_t *const buffer,
+        _Out_writes_(m_charLength) wchar_t *const buffer,
         StringCopyInfoStack &nestedStringTreeCopyInfos,
         const byte recursionDepth)
     {

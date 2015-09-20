@@ -33,7 +33,7 @@ public:
     void *m_data;
     ErrorCallback m_callback;
 
-    void Throw(HRESULT hr);
+    __declspec(noreturn) void Throw(HRESULT hr);
 
 #if DEBUG
     BOOL fInited;

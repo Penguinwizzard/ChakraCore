@@ -1458,10 +1458,11 @@ namespace Js
                 Var loopHeaderArray = executeFunction->GetHasAllocatedLoopHeaders() ? executeFunction->GetLoopHeaderArrayPtr() : nullptr;
 
                 allocation = RecyclerNewPlus(functionScriptContext->GetRecycler(), varSizeInBytes, Var);
-
+                AnalysisAssert(allocation);
 #if DBG
                 // Allocate invalidVar on GC instead of stack since this InterpreterStackFrame will out live the current real frame
                 Js::RecyclableObject* invalidVar = (Js::RecyclableObject*)RecyclerNewPlusLeaf(functionScriptContext->GetRecycler(), sizeof(Js::RecyclableObject), Var);
+                AnalysisAssert(invalidVar);
                 memset(invalidVar, 0xFE, sizeof(Js::RecyclableObject));
                 newInstance = setup.InitializeAllocation(allocation, executeFunction->GetHasImplicitArgIns(), doProfile, loopHeaderArray, stackAddr, invalidVar);
 #else

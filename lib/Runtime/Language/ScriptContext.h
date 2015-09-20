@@ -254,8 +254,7 @@ namespace Js
 
         ProjectionConfiguration const * GetProjectionConfig() const
         {
-            return &projectionConfiguration;
-            return nullptr;
+            return &projectionConfiguration;            
         }
         void SetHostType(long hostType) { this->HostType = hostType; }
         void SetWinRTConstructorAllowed(bool allowed) { this->WinRTConstructorAllowed = allowed; }

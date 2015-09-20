@@ -144,6 +144,10 @@ LargeHeapBucket::PageHeapAlloc(Recycler * recycler, size_t size, ObjectInfoBits 
         address = baseAddress;
         guardPageAddress = baseAddress + pageCount* AutoSystemInfo::PageSize;
     }
+    else
+    {
+        AnalysisAssert(false);
+    }
 
     if (::VirtualProtect(static_cast<LPVOID>(guardPageAddress), AutoSystemInfo::PageSize, PAGE_NOACCESS, &guardPageOldProtectFlags) == FALSE)
     {

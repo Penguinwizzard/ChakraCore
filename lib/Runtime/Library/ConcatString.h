@@ -22,10 +22,10 @@ namespace Js
         ConcatStringBase(StaticType* stringTypeStatic);
         DEFINE_VTABLE_CTOR_ABSTRACT(ConcatStringBase, LiteralString);
 
-        virtual void CopyVirtual(__out_xcount(m_charLength) wchar_t *const buffer,
+        virtual void CopyVirtual(_Out_writes_(m_charLength) wchar_t *const buffer,
             StringCopyInfoStack &nestedStringTreeCopyInfos, const byte recursionDepth) = 0;
-        void CopyImpl(__out_xcount(m_charLength) wchar_t *const buffer, 
-            int itemCount, __in_ecount(itemCount) JavascriptString * const * items,
+        void CopyImpl(_Out_writes_(m_charLength) wchar_t *const buffer,
+            int itemCount, _In_reads_(itemCount) JavascriptString * const * items,
             StringCopyInfoStack &nestedStringTreeCopyInfos, const byte recursionDepth);
 
         // Subclass can call this to implement GetSz and use the actualy type to avoid virtual call to Copy.
@@ -55,7 +55,7 @@ namespace Js
         DEFINE_VTABLE_CTOR(ConcatStringN<N>, ConcatStringBase);
         DECLARE_CONCRETE_STRING_CLASS;
         
-        virtual void CopyVirtual(__out_xcount(m_charLength) wchar_t *const buffer, StringCopyInfoStack &nestedStringTreeCopyInfos, const byte recursionDepth) override
+        virtual void CopyVirtual(_Out_writes_(m_charLength) wchar_t *const buffer, StringCopyInfoStack &nestedStringTreeCopyInfos, const byte recursionDepth) override
         {
             __super::CopyImpl(buffer, N, m_slots, nestedStringTreeCopyInfos, recursionDepth);
         }
@@ -115,7 +115,7 @@ namespace Js
     protected:
         DEFINE_VTABLE_CTOR(ConcatStringBuilder, ConcatStringBase);
         DECLARE_CONCRETE_STRING_CLASS;        
-        virtual void CopyVirtual(__out_xcount(m_charLength) wchar_t *const buffer, StringCopyInfoStack &nestedStringTreeCopyInfos, const byte recursionDepth) override sealed;
+        virtual void CopyVirtual(_Out_writes_(m_charLength) wchar_t *const buffer, StringCopyInfoStack &nestedStringTreeCopyInfos, const byte recursionDepth) override sealed;
 
     public:
         static ConcatStringBuilder* New(ScriptContext* scriptContext, int initialSlotCount); 
@@ -148,7 +148,7 @@ namespace Js
     protected:
         DEFINE_VTABLE_CTOR(ConcatStringWrapping, ConcatStringBase);
         DECLARE_CONCRETE_STRING_CLASS;        
-        virtual void CopyVirtual(__out_xcount(m_charLength) wchar_t *const buffer, StringCopyInfoStack &nestedStringTreeCopyInfos, const byte recursionDepth) override sealed
+        virtual void CopyVirtual(_Out_writes_(m_charLength) wchar_t *const buffer, StringCopyInfoStack &nestedStringTreeCopyInfos, const byte recursionDepth) override sealed
         {
             const_cast<ConcatStringWrapping *>(this)->EnsureAllSlots();           
             __super::CopyImpl(buffer, _countof(m_slots), m_slots, nestedStringTreeCopyInfos, recursionDepth);
@@ -197,7 +197,7 @@ namespace Js
         DEFINE_VTABLE_CTOR(ConcatStringMulti, ConcatStringBase);
         DECLARE_CONCRETE_STRING_CLASS;
         
-        virtual void CopyVirtual(__out_xcount(m_charLength) wchar_t *const buffer, StringCopyInfoStack &nestedStringTreeCopyInfos, const byte recursionDepth) override
+        virtual void CopyVirtual(_Out_writes_(m_charLength) wchar_t *const buffer, StringCopyInfoStack &nestedStringTreeCopyInfos, const byte recursionDepth) override
         {
             Assert(IsFilled());
             __super::CopyImpl(buffer, slotCount, m_slots, nestedStringTreeCopyInfos, recursionDepth);

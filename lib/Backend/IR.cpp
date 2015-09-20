@@ -399,7 +399,7 @@ Instr::Unlink()
 
 #if DBG_DUMP
     //Transfering the globOptInstrString to the next non-Label Instruction
-    if(this->globOptInstrString != nullptr && m_next->globOptInstrString == nullptr && !m_next->IsLabelInstr())
+    if(this->globOptInstrString != nullptr && m_next && m_next->globOptInstrString == nullptr && !m_next->IsLabelInstr())
     {
         m_next->globOptInstrString = this->globOptInstrString;
     }
@@ -1167,7 +1167,7 @@ Opnd *Instr::FindCallArgumentOpnd(const Js::ArgSlot argSlot, IR::Instr * *const 
 
 
 bool
-Instr::FetchOperands(__ecount(argsOpndLength) IR::Opnd **argsOpnd, uint argsOpndLength)
+Instr::FetchOperands(_Out_writes_(argsOpndLength) IR::Opnd **argsOpnd, uint argsOpndLength)
 {
     return this->ForEachCallDirectArgOutInstrBackward([&](IR::Instr *argOutInstr, uint argNum)
     {

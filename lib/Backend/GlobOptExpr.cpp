@@ -668,6 +668,8 @@ GlobOpt::CSEOptimize(BasicBlock *block, IR::Instr * *const instrRef, Value **pSr
         return true;
     }
 
+    Assert(valueInfo);
+
     IR::Opnd *cseOpnd;
 
     cseOpnd = IR::RegOpnd::New(symStore->AsStackSym(), instr->GetDst()->GetType(), instr->m_func);

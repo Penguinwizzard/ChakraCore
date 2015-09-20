@@ -22,6 +22,7 @@ static BOOL AttachProcess(HANDLE hmod)
 
 #if defined(_M_IX86)
     // Enable SSE2 math functions in CRT if SSE2 is available
+#pragma prefast(suppress:6031, "We don't care if this succeeded or not")
     _set_SSE2_enable(TRUE);
 #endif
 

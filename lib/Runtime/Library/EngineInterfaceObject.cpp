@@ -1392,6 +1392,7 @@ namespace Js
             // IsValidTimeZone() has already verified that this is JavascriptString.
             JavascriptString* userDefinedTimeZoneId = JavascriptString::FromVar(propertyValue);
             IfFailThrowHr(WindowsCreateStringReference(userDefinedTimeZoneId->GetSz(), userDefinedTimeZoneId->GetLength(), &timeZoneHeader, &timeZone));
+            Assert(timeZone);
 
             IfFailThrowHr(formatter->FormatUsingTimeZone(winDate, timeZone, &result));
         }

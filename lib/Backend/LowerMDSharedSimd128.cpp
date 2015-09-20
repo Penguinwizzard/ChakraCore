@@ -767,8 +767,7 @@ IR::Instr* LowererMD::Simd128LowerShuffle(IR::Instr* instr)
     int lane0 = 0, lane1 = 0, lane2 = 0, lane3 = 0;
     IR::Instr *pInstr = instr->m_prev;
 
-    AnalysisAssert(srcs[0] != nullptr && srcs[1] != nullptr && srcs[2] != nullptr);
-    Assert(dst->IsSimd128() && srcs[0]->IsSimd128());
+    Assert(dst->IsSimd128() && srcs[0] && srcs[0]->IsSimd128());
 
     // globOpt will type-spec if all lane indices are constants, and within range constraints to match a single SSE instruction
     if (irOpcode == Js::OpCode::Simd128_Swizzle_I4 ||
@@ -776,11 +775,11 @@ IR::Instr* LowererMD::Simd128LowerShuffle(IR::Instr* instr)
         irOpcode == Js::OpCode::Simd128_Swizzle_D2)
     {
         isShuffle = false;
-
-        AssertMsg(srcs[1]->IsIntConstOpnd() &&
-            srcs[2]->IsIntConstOpnd() &&
-            (irOpcode == Js::OpCode::Simd128_Swizzle_D2 || srcs[3]->IsIntConstOpnd()) &&
-            (irOpcode == Js::OpCode::Simd128_Swizzle_D2 || srcs[4]->IsIntConstOpnd()), "Type-specialized swizzle is supported only with constant lane indices");
+        
+        AssertMsg(srcs[1] && srcs[1]->IsIntConstOpnd() &&
+            srcs[2] && srcs[2]->IsIntConstOpnd() &&
+            (irOpcode == Js::OpCode::Simd128_Swizzle_D2 || (srcs[3] && srcs[3]->IsIntConstOpnd())) &&
+            (irOpcode == Js::OpCode::Simd128_Swizzle_D2 || (srcs[4] && srcs[4]->IsIntConstOpnd())), "Type-specialized swizzle is supported only with constant lane indices");
 
         if (irOpcode == Js::OpCode::Simd128_Swizzle_D2)
         {
@@ -809,13 +808,12 @@ IR::Instr* LowererMD::Simd128LowerShuffle(IR::Instr* instr)
         irOpcode == Js::OpCode::Simd128_Shuffle_D2)
     {
         isShuffle = true;
-        AnalysisAssert(srcs[3] != nullptr);
-        Assert(srcs[1]->IsSimd128());
+        Assert(srcs[1] && srcs[1]->IsSimd128());
 
-        AssertMsg(srcs[2]->IsIntConstOpnd() &&
-            srcs[3]->IsIntConstOpnd() &&
-            (irOpcode == Js::OpCode::Simd128_Shuffle_D2 || srcs[4]->IsIntConstOpnd()) &&
-            (irOpcode == Js::OpCode::Simd128_Shuffle_D2 || srcs[5]->IsIntConstOpnd()), "Type-specialized shuffle is supported only with constant lane indices");
+        AssertMsg(srcs[2] && srcs[2]->IsIntConstOpnd() &&
+            srcs[3] && srcs[3]->IsIntConstOpnd() &&
+            (irOpcode == Js::OpCode::Simd128_Shuffle_D2 || (srcs[4] && srcs[4]->IsIntConstOpnd())) &&
+            (irOpcode == Js::OpCode::Simd128_Shuffle_D2 || (srcs[5] && srcs[5]->IsIntConstOpnd())), "Type-specialized shuffle is supported only with constant lane indices");
 
         if (irOpcode == Js::OpCode::Simd128_Shuffle_D2)
         {

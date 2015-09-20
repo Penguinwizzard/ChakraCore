@@ -65,7 +65,7 @@ namespace Js
         this->pszValue = NULL;
     }
  
-    String::String(__in LPWSTR psz)
+    String::String(__in_opt LPWSTR psz)
     {
         this->pszValue = NULL;
         Set(psz);
@@ -89,7 +89,7 @@ namespace Js
     ///----------------------------------------------------------------------------
 
     void 
-    String::Set(__in LPWSTR pszValue)
+    String::Set(__in_opt LPWSTR pszValue)
     {
         if(NULL != this->pszValue)
         {

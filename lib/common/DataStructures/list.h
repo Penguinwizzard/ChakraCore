@@ -428,15 +428,15 @@ namespace JsUtil
         template <bool weaklyRefItems>
         T CompactEnd()
         {
-            while (count != 0 && (weaklyRefItems ? buffer[count - 1]->Get() == nullptr : buffer[count - 1] == 0))
+            while (count != 0)
             {
+                Assert(!weaklyRefItems || (buffer[count - 1] != nullptr));
+                if ((weaklyRefItems ? buffer[count - 1]->Get() != nullptr : buffer[count - 1] != nullptr))
+                {
+                    return buffer[count - 1];
+                }
                 count--;
                 buffer[count] = nullptr;
-            }
-
-            if (count)
-            {
-                return buffer[count - 1];
             }
 
             return nullptr;

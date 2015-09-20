@@ -1932,6 +1932,7 @@ void ByteCodeGenerator::LoadAllConstants(FuncInfo *funcInfo)
             {
                 Assert(!this->TopFuncInfo()->GetParsedFunctionBody()->DoStackNestedFunc());
                 Js::RegSlot scopeLocation;
+                Assert(funcInfo->funcExprScope);
                 if (funcInfo->funcExprScope->GetIsObject())
                 {
                     scopeLocation = funcInfo->funcExprScope->GetLocation();
@@ -5957,7 +5958,7 @@ Js::ArgSlot EmitArgListEnd(
         byteCodeGenerator->Writer()->ArgOut<true>(argIndex + 1, newTargetLocation, callSiteId);
     }
 
-    size_t argIntCount = argIndex + 1 + fIsEval + fEvalInModule + fHasNewTarget;
+    size_t argIntCount = argIndex + 1 + (size_t)fIsEval + (size_t)fEvalInModule + (size_t)fHasNewTarget;
 
     Js::ArgSlot argumentsCount = (Js::ArgSlot)argIntCount;
 
@@ -6769,7 +6770,7 @@ void EmitCall(
     ParseNode *pnodeArgs = pnode->sxCall.pnodeArgs;
     uint16 spreadArgCount = pnode->sxCall.spreadArgCount;
 
-    unsigned int argCount = CountArguments(pnode->sxCall.pnodeArgs, &fSideEffectArgs) + fIsPut;
+    unsigned int argCount = CountArguments(pnode->sxCall.pnodeArgs, &fSideEffectArgs) + (unsigned int)fIsPut;
 
     BOOL fIsEval = !fIsPut && pnode->sxCall.isEvalCall;
 
@@ -7436,8 +7437,9 @@ void SetNewArrayElements(ParseNode *pnode, Js::RegSlot arrayLocation, ByteCodeGe
                     Js::RegSlot regVal = rhsLocation;
                     if (args->sxBin.pnode1->nop == knopEllipsis)
                     {
+                        Assert(spreadIndices);
                         regVal = funcInfo->AcquireTmpRegister();
-                        byteCodeGenerator->Writer()->Reg2(Js::OpCode::LdCustomSpreadIteratorList, regVal, rhsLocation);
+                        byteCodeGenerator->Writer()->Reg2(Js::OpCode::LdCustomSpreadIteratorList, regVal, rhsLocation);                        
                         spreadIndices->elements[spreadIndex++] = i;
                     }
 
@@ -7462,9 +7464,10 @@ void SetNewArrayElements(ParseNode *pnode, Js::RegSlot arrayLocation, ByteCodeGe
                 rhsLocation = args->location;
                 Js::RegSlot regVal = rhsLocation;
                 if (args->nop == knopEllipsis)
-                {
+                {                    
                     regVal = funcInfo->AcquireTmpRegister();
                     byteCodeGenerator->Writer()->Reg2(Js::OpCode::LdCustomSpreadIteratorList, regVal, rhsLocation);
+                    Assert(spreadIndices);
                     spreadIndices->elements[spreadIndex] = i;
                 }
                 

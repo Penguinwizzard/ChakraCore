@@ -749,8 +749,7 @@ namespace Js
     {
         // Handle x(y) = z.
         // Native jscript object behavior: throw an error in all such cases.
-        JavascriptError::ThrowReferenceError(GetScriptContext(), JSERR_CantAsgCall);
-        return nullptr;
+        JavascriptError::ThrowReferenceError(GetScriptContext(), JSERR_CantAsgCall);        
     }
 
     BOOL RecyclableObject::GetRemoteTypeId(TypeId * typeId)

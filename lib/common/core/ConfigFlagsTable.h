@@ -122,7 +122,7 @@ namespace Js
     // Construction
     public:
         inline String();
-        inline String(__in LPWSTR psz);
+        inline String(__in_opt LPWSTR psz);
         inline ~String();
     
 
@@ -135,7 +135,7 @@ namespace Js
         ///
         ///----------------------------------------------------------------------------
 
-        String& operator=(__in LPWSTR psz)
+        String& operator=(__in_opt LPWSTR psz)
         {
             Set(psz);
             return *this;
@@ -159,9 +159,7 @@ namespace Js
 
     // Implementation
     private:
-                void            Set(__in LPWSTR pszValue);
-
-
+        void Set(__in_opt LPWSTR pszValue);
     };
 
     class NumberSet

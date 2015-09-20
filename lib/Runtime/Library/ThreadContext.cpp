@@ -1076,13 +1076,13 @@ void ThreadContext::CreateNoCasePropertyMap()
 }
 
 JsUtil::List<const RecyclerWeakReference<Js::PropertyRecord const>*>*
-ThreadContext::FindPropertyIdNoCase(Js::ScriptContext * scriptContext, __in LPCWSTR propertyName, __in int propertyNameLength)
+ThreadContext::FindPropertyIdNoCase(Js::ScriptContext * scriptContext, LPCWSTR propertyName, int propertyNameLength)
 {
     return ThreadContext::FindPropertyIdNoCase(scriptContext, JsUtil::CharacterBuffer<WCHAR>(propertyName,  propertyNameLength));
 }
 
 JsUtil::List<const RecyclerWeakReference<Js::PropertyRecord const>*>*
-ThreadContext::FindPropertyIdNoCase(Js::ScriptContext * scriptContext, __in JsUtil::CharacterBuffer<WCHAR> const& propertyName)
+ThreadContext::FindPropertyIdNoCase(Js::ScriptContext * scriptContext, JsUtil::CharacterBuffer<WCHAR> const& propertyName)
 {
     if (caseInvariantPropertySet == nullptr)
     {
@@ -3097,20 +3097,21 @@ void
 ThreadContext::UnregisterIsInstInlineCache(Js::IsInstInlineCache * inlineCache, Js::Var function)
 {
     Assert(inlineCache != nullptr);
-    Js::IsInstInlineCache** inlineCacheRef = NULL;
+    Js::IsInstInlineCache** inlineCacheRef = nullptr;
 
     if (this->isInstInlineCacheByFunction.TryGetReference(function, &inlineCacheRef))
     {
+        Assert(*inlineCacheRef != nullptr);
         if (inlineCache == *inlineCacheRef)
         {
             *inlineCacheRef = (*inlineCacheRef)->next;
-            if (*inlineCacheRef == NULL)
+            if (*inlineCacheRef == nullptr)
             {
                 this->isInstInlineCacheByFunction.Remove(function);
             }
         }
         else
-        {
+        {            
             Js::IsInstInlineCache * prevInlineCache;
             Js::IsInstInlineCache * curInlineCache;
             for (prevInlineCache = *inlineCacheRef, curInlineCache = (*inlineCacheRef)->next; curInlineCache != nullptr;

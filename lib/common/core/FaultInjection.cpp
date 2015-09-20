@@ -189,7 +189,7 @@ namespace Js
         _In_ DWORD FramesToSkip,
         _In_ DWORD FramesToCapture,
         _Out_writes_to_(FramesToCapture, return) PVOID * BackTrace,
-        _Out_opt_ PDWORD BackTraceHash,
+        _Inout_opt_ PDWORD BackTraceHash,
         __in_opt CONST PCONTEXT InitialContext = NULL
         )
     {
@@ -435,14 +435,14 @@ namespace Js
         if (globalFlags.FaultInjection == FaultMode::CountOnly
             || globalFlags.FaultInjection == FaultMode::StackMatchCountOnly)
         {
-            fprintf(stderr, "FaultInjection - Total Allocation Count:%d\n", countOfInjectionPoints);
+            fprintf(stderr, "FaultInjection - Total Allocation Count:%u\n", countOfInjectionPoints);
             fflush(stderr);
             FILE *fp;
             char countFileName[64];
-            sprintf_s(countFileName, "ChakraFaultInjectionCount_%d.txt", GetCurrentProcessId());
+            sprintf_s(countFileName, "ChakraFaultInjectionCount_%u.txt", GetCurrentProcessId());
             if (fopen_s(&fp, countFileName, "w") == 0)
             {
-                fprintf(fp, "FaultInjection - Total Allocation Count:%d\n", countOfInjectionPoints);
+                fprintf(fp, "FaultInjection - Total Allocation Count:%u\n", countOfInjectionPoints);
                 fflush(fp);
                 fclose(fp);
             }
@@ -452,7 +452,7 @@ namespace Js
                 {
                     break;
                 }
-                fwprintf(stderr, L"FaultInjection stack matching rank %d: %d\n", i + 1, stackMatchRank[i]);
+                fwprintf(stderr, L"FaultInjection stack matching rank %d: %u\n", i + 1, stackMatchRank[i]);
             }
             fflush(stderr);
 
@@ -522,18 +522,15 @@ namespace Js
         if (faultInjectionTypes)
         {
             faultInjectionTypes->~FaultInjectionTypes();
-            free(faultInjectionTypes);
+            NoCheckHeapDelete(faultInjectionTypes);
         }
     }
 
     bool FaultInjection::IsFaultEnabled(FaultType faultType)
     {
         if (!faultInjectionTypes)
-        {
-            // use placement new since new is overloaded in Chakra to use recycler/arena allocators
-            faultInjectionTypes = (FaultInjectionTypes*)malloc(sizeof(FaultInjectionTypes));
-            faultInjectionTypes = new (faultInjectionTypes)FaultInjectionTypes();
-            Assert(faultInjectionTypes);
+        {            
+            faultInjectionTypes = NoCheckHeapNew(FaultInjectionTypes);         
             if ((const wchar_t*)globalFlags.FaultInjectionType == nullptr)
             {
                 // no -FaultInjectionType specified, inject all
@@ -750,6 +747,7 @@ namespace Js
                 pfnSymEnumSymbolsW(GetCurrentProcess(), 0, baselineStack[i],
                     [](_In_ PSYMBOL_INFOW pSymInfo, _In_ ULONG SymbolSize, _In_opt_  PVOID UserContext)->BOOL
                 {
+                    Assert(UserContext != nullptr); // did passed in the user context 
                     if (pSymInfo->Size > 0) 
                     {
                         PFUNCTION_SIGNATURES* sigs = (PFUNCTION_SIGNATURES*)UserContext;
@@ -866,7 +864,7 @@ namespace Js
                 return false;
             }
             //C28725:    Use Watson instead of this SetUnhandledExceptionFilter.
-#pragma warning(suppress: 28725)
+#pragma prefast(suppress: 28725)
             SetUnhandledExceptionFilter([](_In_  struct _EXCEPTION_POINTERS *ExceptionInfo)->LONG
             {
                 return FaultInjectionExceptionFilter(ExceptionInfo);
@@ -900,7 +898,7 @@ namespace Js
     void FaultInjection::RemoveExceptionFilters()
     {
         //C28725:    Use Watson instead of this SetUnhandledExceptionFilter.
-#pragma warning(suppress: 28725)
+#pragma prefast(suppress: 28725)
         SetUnhandledExceptionFilter(nullptr);
         if (vectoredExceptionHandler != nullptr)
         {

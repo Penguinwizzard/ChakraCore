@@ -25,6 +25,7 @@ namespace Js
         AssertMsg( IsValidCharCount(charLength), "String length is out of range" );
     }
 
+    _Ret_range_(m_charLength, m_charLength)
     inline charcount_t JavascriptString::GetLength() const
     {
         return m_charLength;
@@ -141,12 +142,6 @@ namespace Js
         CompileAssert( 0 < N2 && N2 <= JavascriptString::MaxCharLength );
         return StringBracketHelper(args, scriptContext, tag, static_cast<charcount_t>(N1-1), prop, static_cast<charcount_t>(N2-1));
     }
-    
-    inline BOOL JavascriptString::BufferEquals(LPCWSTR otherBuffer, charcount_t otherLength)
-    {
-        return otherLength == this->GetLength() &&
-            JsUtil::CharacterBuffer<WCHAR>::StaticEquals(this->GetString(), otherBuffer, otherLength);
-    }
 
     template <typename StringType>
     inline void JavascriptString::Copy(__out_ecount(bufLen) wchar_t *const buffer, const charcount_t bufLen)
@@ -154,11 +149,12 @@ namespace Js
         Assert(buffer);
 
         charcount_t stringLen = this->GetLength();
+        Assert(stringLen == m_charLength);
         if (bufLen < stringLen)
         {
             Throw::InternalError();
         }
-
+        
         if (IsFinalized())
         {
             CopyHelper(buffer, GetString(), stringLen);

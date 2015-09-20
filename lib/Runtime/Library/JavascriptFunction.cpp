@@ -1024,8 +1024,7 @@ namespace Js
     }
 
     Var JavascriptFunction::CallSpreadFunction(RecyclableObject* function, JavascriptMethod entryPoint, Arguments args, const Js::AuxArray<uint32> *spreadIndices)
-    {
-        CallInfo callInfo = args.Info;
+    {        
         ScriptContext* scriptContext = function->GetScriptContext();
 
         // Work out the expanded number of arguments.

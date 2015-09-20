@@ -3086,11 +3086,14 @@ void PreVisitBlock(ParseNode *pnodeBlock, ByteCodeGenerator *byteCodeGenerator)
     {
         scope = byteCodeGenerator->GetCurrentScope();
 
-        if (pnodeBlock->sxBlock.blockType == PnodeBlockType::Function
-            && pnodeBlock->sxBlock.scope->GetScopeType() == ScopeType_Parameter
-            && scope->GetScopeType() == ScopeType_FunctionBody)
+        if (pnodeBlock->sxBlock.blockType == PnodeBlockType::Function)
         {
-            scope = scope->GetEnclosingScope();
+            Assert(pnodeBlock->sxBlock.scope);
+            if (pnodeBlock->sxBlock.scope->GetScopeType() == ScopeType_Parameter
+                && scope->GetScopeType() == ScopeType_FunctionBody)
+            {
+                scope = scope->GetEnclosingScope();
+            }
         }
 
         pnodeBlock->sxBlock.scope = scope;

@@ -559,7 +559,7 @@ Js::Var StackSym::GetFloatConstValueAsVar_PostGlobOpt() const
         }
     }
 
-    Assert(this->IsFloatConst() || stackSym->IsFloatConst());
+    Assert(this->IsFloatConst() || (stackSym && stackSym->IsFloatConst()));
 
     IR::AddrOpnd *addrOpnd;
     if (src1->IsAddrOpnd())
@@ -643,7 +643,7 @@ intptr_t StackSym::GetLiteralConstValue_PostGlobOpt() const
     }
     if (src1->IsIntConstOpnd())
     {
-        Assert(this->IsIntConst() || stackSym->IsIntConst());
+        Assert(this->IsIntConst() || (stackSym && stackSym->IsIntConst()));
         if (defInstr->m_opcode == Js::OpCode::LdC_A_I4)
         {
             IR::AddrOpnd *const addrOpnd = IR::AddrOpnd::NewFromNumber(src1->AsIntConstOpnd()->m_value, defInstr->m_func);
@@ -660,7 +660,7 @@ intptr_t StackSym::GetLiteralConstValue_PostGlobOpt() const
     }
     if (src1->IsFloatConstOpnd())
     {
-        Assert(this->IsFloatConst() || stackSym->IsFloatConst());
+        Assert(this->IsFloatConst() || (stackSym && stackSym->IsFloatConst()));
         Assert(defInstr->m_opcode == Js::OpCode::LdC_A_R8);
 
         IR::AddrOpnd *const addrOpnd = src1->AsFloatConstOpnd()->GetAddrOpnd(defInstr->m_func);

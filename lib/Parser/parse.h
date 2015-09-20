@@ -145,7 +145,7 @@ public:
     static LPCOLESTR GetClassName(PnClass *pClass);
 
     ParseNode* CopyPnode(ParseNode* pnode);
-    IdentPtr GenerateIdentPtr(__ecount(len)wchar_t* name,long len);
+    IdentPtr GenerateIdentPtr(__ecount(len) wchar_t* name,long len);
 
     ArenaAllocator *GetAllocator() { return &m_nodeAllocator;}
 
@@ -647,7 +647,7 @@ private:
         ParseNodePtr **pppnodeLast = NULL,
         StrictModeEnvironment smEnvironment = SM_NotUsed,
         const bool isSourceElementList = false,
-        _Out_opt_ bool* strictModeOn = NULL);
+        bool* strictModeOn = NULL);
     bool FastScanFormalsAndBody();
     bool ScanAheadToFunctionEnd(uint count);
 
@@ -763,14 +763,14 @@ private:
         ulong *pHintLength = nullptr,
         _Inout_opt_ IdentToken* pToken = nullptr,
         bool fUnaryOrParen = false,
-        _Inout_opt_ BOOL* pfCanAssign = nullptr);
+        _Out_opt_ BOOL* pfCanAssign = nullptr);
     template<bool buildAST> ParseNodePtr ParsePostfixOperators(ParseNodePtr pnode,
         BOOL fAllowCall, BOOL fInNew, BOOL *pfCanAssign, _Inout_ IdentToken* pToken);
 
     template<bool buildAST> ParseNodePtr ParseMetaProperty(
         tokens metaParentKeyword,
         charcount_t ichMin,
-        _Inout_opt_ BOOL* pfCanAssign = nullptr);
+        _Out_opt_ BOOL* pfCanAssign = nullptr);
 
     BOOL NodeIsIdent(ParseNodePtr pnode, IdentPtr pid);
     BOOL NodeIsEvalName(ParseNodePtr pnode);        

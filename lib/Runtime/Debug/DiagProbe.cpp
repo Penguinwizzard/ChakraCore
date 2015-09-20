@@ -364,9 +364,7 @@ namespace Js
 
     bool AsyncBreakController::IsAtStoppingLocation(InterpreterHaltState* haltState)
     {
-        HaltCallback* callback;
-        InterlockedExchangePointer((PVOID*)&callback, this->haltCallback);
-
+        HaltCallback* callback = this->haltCallback;        
         if (callback)
         {
             return callback->CanHalt(haltState);
@@ -376,8 +374,7 @@ namespace Js
 
     void AsyncBreakController::DispatchAndReset(InterpreterHaltState* haltState)
     {
-        HaltCallback* callback;
-        InterlockedExchangePointer((PVOID*)&callback, this->haltCallback);
+        HaltCallback* callback = this->haltCallback;        
         Deactivate();
         if (callback)
         {

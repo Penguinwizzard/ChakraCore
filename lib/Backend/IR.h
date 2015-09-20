@@ -318,7 +318,7 @@ public:
     Opnd *          FindCallArgumentOpnd(const Js::ArgSlot argSlot, IR::Instr * *const ownerInstrRef = nullptr);
     void            CopyNumber(IR::Instr *instr) { this->SetNumber(instr->GetNumber()); }
 
-    bool            FetchOperands(__ecount(argsOpndLength) IR::Opnd **argsOpnd, uint argsOpndLength);
+    bool            FetchOperands(_Out_writes_(argsOpndLength) IR::Opnd **argsOpnd, uint argsOpndLength);
     template <typename Fn>
     bool            ForEachCallDirectArgOutInstrBackward(Fn fn, uint argsOpndLength) const;
     bool            IsCmCC_A();
@@ -373,7 +373,7 @@ public:
         // This is possible if some dead-code-removal/peeps code removed only part of the call sequence, while the whole sequence was dead (TH Bug 594245).
         // We allow this possibility here, while relying on the more involved dead-code-removal to remove the rest of the call sequence.
         // Inserting the opcode InvalidOpCode, with no lowering, here to safeguard against the possibility of a dead part of the call sequence not being removed. The lowerer would assert then.
-        if (argInstr->IsInvalidInstr())
+        if (argInstr && argInstr->IsInvalidInstr())
         {
             this->InsertBefore(Instr::New(Js::OpCode::InvalidOpCode, this->m_func));
         }

@@ -22,11 +22,11 @@ namespace Js
     {
     private:
         // WinRTString specific functions
-        typedef HRESULT FNCWindowsCreateString(const WCHAR *, UINT32, HSTRING *);
+        typedef HRESULT FNCWindowsCreateString(const WCHAR *, UINT32, _Outptr_result_maybenull_ _Result_nullonfailure_ HSTRING *);
         typedef FNCWindowsCreateString* PFNCWindowsCreateString;
         PFNCWindowsCreateString m_pfnWindowsCreateString;
 
-        typedef HRESULT FNCWindowsCreateStringReference(const WCHAR *, UINT32, HSTRING_HEADER *, HSTRING *);
+        typedef HRESULT FNCWindowsCreateStringReference(const WCHAR *, UINT32, HSTRING_HEADER *, _Outptr_result_maybenull_ _Result_nullonfailure_ HSTRING *);
         typedef FNCWindowsCreateStringReference* PFNCWindowsCreateStringReference;
         PFNCWindowsCreateStringReference m_pfnWindowsCreateStringReference;
 
@@ -42,7 +42,7 @@ namespace Js
         typedef FNCWindowsCompareStringOrdinal* PFNCWindowsCompareStringOrdinal;
         PFNCWindowsCompareStringOrdinal m_pfnWindowsCompareStringOrdinal;
         
-        typedef HRESULT FNCWindowsDuplicateString(HSTRING,HSTRING*);
+        typedef HRESULT FNCWindowsDuplicateString(HSTRING, _Outptr_result_maybenull_ _Result_nullonfailure_ HSTRING*);
         typedef FNCWindowsDuplicateString* PFNCWindowsDuplicateString;
         PFNCWindowsDuplicateString m_pfnWindowsDuplicateString;
 
@@ -59,12 +59,12 @@ namespace Js
 
         LPCTSTR GetLibraryName() const { return L"api-ms-win-core-winrt-string-l1-1-0.dll"; } 
 
-        virtual HRESULT WindowsCreateString(__in_ecount_opt(length) const WCHAR * sourceString, UINT32 length, __out HSTRING * string);
-        virtual HRESULT WindowsCreateStringReference(__in_ecount_opt(length+1) const WCHAR * sourceString, UINT32 length, __out HSTRING_HEADER * header, __out HSTRING * string);
-        virtual HRESULT WindowsDeleteString(HSTRING string);
-        virtual PCWSTR WindowsGetStringRawBuffer(HSTRING string, __out_opt UINT32 * length);
-        virtual HRESULT WindowsCompareStringOrdinal(HSTRING string1, HSTRING string2, __out INT32 * result);
-        virtual HRESULT WindowsDuplicateString(HSTRING original, __out HSTRING * newString);
+        virtual HRESULT WindowsCreateString(_In_reads_opt_(length) const WCHAR * sourceString, UINT32 length, _Outptr_result_maybenull_ _Result_nullonfailure_ HSTRING * string);
+        virtual HRESULT WindowsCreateStringReference(_In_reads_opt_(length + 1) const WCHAR * sourceString, UINT32 length, _Out_ HSTRING_HEADER * header, _Outptr_result_maybenull_ _Result_nullonfailure_  HSTRING * string);
+        virtual HRESULT WindowsDeleteString(_In_opt_ HSTRING string);
+        virtual PCWSTR WindowsGetStringRawBuffer(_In_opt_ HSTRING string, _Out_opt_ UINT32 * length);
+        virtual HRESULT WindowsCompareStringOrdinal(_In_opt_ HSTRING string1, _In_opt_ HSTRING string2, _Out_ INT32 * result);
+        virtual HRESULT WindowsDuplicateString(_In_opt_ HSTRING original, _Outptr_result_maybenull_ _Result_nullonfailure_ HSTRING * newString);
     };
 
     class DelayLoadWinRtTypeResolution sealed : public DelayLoadLibrary
@@ -188,12 +188,12 @@ namespace Js
 
         HRESULT DllGetActivationFactory(__in HSTRING activatibleClassId, __out IActivationFactory** factory);
 
-        HRESULT WindowsCreateString(__in_ecount_opt(length) const WCHAR * sourceString, UINT32 length, __out HSTRING * string) override;
-        HRESULT WindowsCreateStringReference(__in_ecount_opt(length+1) const WCHAR * sourceString, UINT32 length, __out HSTRING_HEADER * header, __out HSTRING * string) override;
-        HRESULT WindowsDeleteString(HSTRING string) override;
-        PCWSTR WindowsGetStringRawBuffer(HSTRING string, __out_opt UINT32 * length) override;
-        HRESULT WindowsCompareStringOrdinal(HSTRING string1, HSTRING string2, __out INT32 * result) override;
-        HRESULT WindowsDuplicateString(HSTRING original, __out HSTRING *newString) override;
+        HRESULT WindowsCreateString(_In_reads_opt_(length) const WCHAR * sourceString, UINT32 length, _Outptr_result_maybenull_ _Result_nullonfailure_ HSTRING * string) override;
+        HRESULT WindowsCreateStringReference(_In_reads_opt_(length+1) const WCHAR * sourceString, UINT32 length, _Out_ HSTRING_HEADER * header, _Outptr_result_maybenull_ _Result_nullonfailure_ HSTRING * string) override;
+        HRESULT WindowsDeleteString(_In_opt_ HSTRING string) override;
+        PCWSTR WindowsGetStringRawBuffer(_In_opt_ HSTRING string, _Out_opt_ UINT32 * length) override;
+        HRESULT WindowsCompareStringOrdinal(_In_opt_ HSTRING string1, _In_opt_ HSTRING string2, _Out_ INT32 * result) override;
+        HRESULT WindowsDuplicateString(_In_opt_ HSTRING original, _Outptr_result_maybenull_ _Result_nullonfailure_ HSTRING *newString) override;
     };
 
     class DelayLoadWinRtFoundation sealed : public DelayLoadLibrary

@@ -20,7 +20,7 @@ DictionaryStats* DictionaryStats::Create(const char* name, uint bucketCount)
 
 DictionaryStats* DictionaryStats::Clone()
 {
-    DictionaryStats* cloned = ::new DictionaryStats(pName, initialSize);
+    DictionaryStats* cloned = NoCheckHeapNew(DictionaryStats, pName, initialSize);
     cloned->finalSize = finalSize;
     cloned->countOfEmptyBuckets = countOfEmptyBuckets;
     cloned->countOfResize = countOfResize;
@@ -70,7 +70,7 @@ DictionaryStats::DictionaryStats(const char* name, uint bucketCount)
     if (!type)
     {
         // We haven't seen this type before so add a new entry for it
-        type = ::new DictionaryType();
+        type = NoCheckHeapNew(DictionaryType);
         type->pNext = dictionaryTypes;
         dictionaryTypes = type;
         type->instancesCount = 0;

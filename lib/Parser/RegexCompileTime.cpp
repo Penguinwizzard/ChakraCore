@@ -1262,7 +1262,7 @@ namespace UnifiedRegex
             EMIT(compiler, MatchCharInst, cs[0]);
     }
 
-    CharCount MatchCharNode::FindUniqueEquivs(const Char equivs[CaseInsensitive::EquivClassSize], Char uniqueEquivs[CaseInsensitive::EquivClassSize])
+    CharCount MatchCharNode::FindUniqueEquivs(const Char equivs[CaseInsensitive::EquivClassSize], __out_ecount(4) Char uniqueEquivs[CaseInsensitive::EquivClassSize])
     {
         uniqueEquivs[0] = equivs[0];
         CharCount uniqueCount = 1;

@@ -605,21 +605,21 @@ END {
             return false; // trivial
         }
 
-        bool RangeToEquivClass(uint & tblidx, uint l, uint h, uint & acth, wchar_t equivl[EquivClassSize])
+        bool RangeToEquivClass(uint & tblidx, uint l, uint h, uint & acth, __out_ecount(EquivClassSize) wchar_t equivl[EquivClassSize])
         {
             return RangeToEquivClass(tblidx, l, h, acth, equivl, [](MappingSource source) {
                 return source == MappingSource::UnicodeData;
             });
         }
 
-        bool RangeToEquivClass(uint & tblidx, uint l, uint h, uint & acth, codepoint_t equivl[EquivClassSize])
+        bool RangeToEquivClass(uint & tblidx, uint l, uint h, uint & acth, __out_ecount(EquivClassSize) codepoint_t equivl[EquivClassSize])
         {
             return RangeToEquivClass(tblidx, l, h, acth, equivl, [](MappingSource source) {
                 return source == MappingSource::CaseFolding || source == MappingSource::UnicodeData;
             });
         }
 
-        bool RangeToEquivClassOnlyInSource(MappingSource mappingSource, uint& tblidx, uint l, uint h, uint& acth, wchar_t equivl[EquivClassSize])
+        bool RangeToEquivClassOnlyInSource(MappingSource mappingSource, uint& tblidx, uint l, uint h, uint& acth, __out_ecount(EquivClassSize) wchar_t equivl[EquivClassSize])
         {
             return RangeToEquivClass(tblidx, l, h, acth, equivl, [&](MappingSource actualSource) {
                 return mappingSource == actualSource;

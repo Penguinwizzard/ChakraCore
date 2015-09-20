@@ -195,8 +195,7 @@ void Parser::OutOfMemory()
 void Parser::Error(HRESULT hr)
 {
     Assert(FAILED(hr));
-    m_err.Throw(hr);
-    AssertMsg(false, "why did Throw return?");
+    m_err.Throw(hr);    
 }
 
 void Parser::Error(HRESULT hr, ParseNodePtr pnode)
@@ -1027,8 +1026,9 @@ void Parser::RestorePidRefForSym(Symbol *sym)
     ref->SetSym(sym);
 }
 
-IdentPtr Parser::GenerateIdentPtr(wchar_t* name,long len) {
-  return m_phtbl->PidHashNameLen(name,len);
+IdentPtr Parser::GenerateIdentPtr(__ecount(len) wchar_t* name, long len)
+{
+    return m_phtbl->PidHashNameLen(name,len);
 }
 
 /*static*/
@@ -1597,13 +1597,14 @@ ParseNodePtr Parser::ParseBlock(ParseNodePtr pnodeLabel, LabelId* pLabelId)
     }
 
     ChkCurTok(tkLCurly, ERRnoLcurly);
-
+    ParseNodePtr * ppnodeList = nullptr;
     if (buildAST)
     {
         PushFuncBlockScope(pnodeBlock, &ppnodeScopeSave, &ppnodeExprScopeSave);
+        ppnodeList = &pnodeBlock->sxBlock.pnodeStmt;
     }
 
-    ParseStmtList<buildAST>(&pnodeBlock->sxBlock.pnodeStmt);
+    ParseStmtList<buildAST>(ppnodeList);
 
     if (buildAST)
     {
@@ -2054,7 +2055,7 @@ void Parser::EnsureStackAvailable()
 }
 
 template<bool buildAST>
-ParseNodePtr Parser::ParseMetaProperty(tokens metaParentKeyword, charcount_t ichMin, _Inout_opt_ BOOL* pfCanAssign)
+ParseNodePtr Parser::ParseMetaProperty(tokens metaParentKeyword, charcount_t ichMin, _Out_opt_ BOOL* pfCanAssign)
 {
     AssertMsg(metaParentKeyword == tkNEW, "Only supported for tkNEW parent keywords");
     AssertMsg(this->m_token.tk == tkDot, "We must be currently sitting on the dot after the parent keyword");
@@ -2084,7 +2085,7 @@ ParseNodePtr Parser::ParseMetaProperty(tokens metaParentKeyword, charcount_t ich
 Parse an expression term.
 ***************************************************************************/
 template<bool buildAST>
-ParseNodePtr Parser::ParseTerm(BOOL fAllowCall, LPCOLESTR pNameHint, ulong *pHintLength, _Inout_opt_ IdentToken* pToken/*= nullptr*/, bool fUnaryOrParen, _Inout_opt_ BOOL* pfCanAssign)
+ParseNodePtr Parser::ParseTerm(BOOL fAllowCall, LPCOLESTR pNameHint, ulong *pHintLength, _Inout_opt_ IdentToken* pToken/*= nullptr*/, bool fUnaryOrParen, _Out_opt_ BOOL* pfCanAssign)
 {
     ParseNodePtr pnode = nullptr;
     charcount_t ichMin = 0;
@@ -2595,16 +2596,16 @@ ParseNodePtr Parser::ParsePostfixOperators(
                     if (buildAST)
                     {
                         pnode = CreateCallNode(knopCall, pnode, pnodeArgs);
+                        Assert(pnode);
+
                         // Detect call to "eval" and record it on the function.
                         // Note: we used to leave it up to the byte code generator to detect eval calls
                         // at global scope, but now it relies on the flag the parser sets, so set it here.
-                        if (pnode != nullptr)
+
+                        if (count > 0 && this->NodeIsEvalName(pnode->sxCall.pnodeTarget))
                         {
-                            if (count > 0 && this->NodeIsEvalName(pnode->sxCall.pnodeTarget))
-                            {
-                                this->MarkEvalCaller();
-                                fCallIsEval = true;
-                            }
+                            this->MarkEvalCaller();
+                            fCallIsEval = true;
                         }
 
                         pnode->sxCall.callOfConstants = callOfConstants;
@@ -3828,6 +3829,7 @@ ParseNodePtr Parser::ParseFncDecl(ushort flags, LPCOLESTR pNameHint, const bool 
 
         if (BindDeferredPidRefs())
         {
+            Assert(pnodeFnc);
             pnodeFncSave = m_currentNodeDeferredFunc;
             m_currentNodeDeferredFunc = pnodeFnc;
 
@@ -3841,6 +3843,7 @@ ParseNodePtr Parser::ParseFncDecl(ushort flags, LPCOLESTR pNameHint, const bool 
 
     if (buildAST || BindDeferredPidRefs())
     {
+        Assert(pnodeFnc);
         pnodeFnc->sxFnc.SetIsAsync((flags & fFncAsync) != 0);
         pnodeFnc->sxFnc.SetIsLambda((flags & fFncLambda) != 0);
         pnodeFnc->sxFnc.SetIsMethod((flags & fFncMethod) != 0);
@@ -3858,6 +3861,8 @@ ParseNodePtr Parser::ParseFncDecl(ushort flags, LPCOLESTR pNameHint, const bool 
 
     if (buildAST || BindDeferredPidRefs())
     {
+        Assert(pnodeFnc);
+
         *m_ppnodeVar = nullptr;
         m_ppnodeVar = ppnodeVarSave;
 
@@ -4181,6 +4186,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
             !fDeclaration && pnodeFnc && pnodeFnc->sxFnc.pnodeName == nullptr && fUnaryOrParen;
 
         BOOL isDeferredFnc = IsDeferredFnc();
+        Assert(isDeferredFnc || pnodeFnc);
         isTopLevelDeferredFunc = 
             (!isDeferredFnc
              && DeferredParse(pnodeFnc->sxFnc.functionId)
@@ -4244,6 +4250,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
         ParseNodePtr pnodeBlock = nullptr;
         if (buildAST || BindDeferredPidRefs())
         {
+            Assert(pnodeFnc);
             pnodeBlock = StartParseBlock<buildAST>(PnodeBlockType::Parameter, ScopeType_Parameter);
             pnodeFnc->sxFnc.pnodeScopes = pnodeBlock;
             m_ppnodeVar = &pnodeFnc->sxFnc.pnodeArgs;
@@ -4366,6 +4373,8 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
 
             if (buildAST || BindDeferredPidRefs())
             {
+                Assert(pnodeFnc);
+
                 // Shouldn't be any temps in the arg list.
                 Assert(*m_ppnodeVar == nullptr);
 
@@ -4506,6 +4515,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
     }
 
     // after parsing asm.js module, we want to reset asm.js state before continuing
+    Assert(pnodeFnc);
     if (pnodeFnc->sxFnc.GetAsmjsMode())
     {
         m_InAsmMode = false;
@@ -5079,7 +5089,7 @@ bool Parser::ParseFncNames(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncParent, u
     }
 
     if ((m_token.tk != tkID || flags & fFncNoName)
-        && (IsStrictMode() || pnodeFnc->sxFnc.IsGenerator() || m_token.tk != tkYIELD || fDeclaration)) // Function expressions can have the name yield even inside generator functions
+        && (IsStrictMode() || (pnodeFnc && pnodeFnc->sxFnc.IsGenerator()) || m_token.tk != tkYIELD || fDeclaration)) // Function expressions can have the name yield even inside generator functions
     {
         if (fDeclaration  ||
             m_token.IsReservedWord())  // For example:  var x = (function break(){});
@@ -5123,6 +5133,7 @@ bool Parser::ParseFncNames(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncParent, u
 
     if (buildAST)
     {
+        Assert(pnodeFnc);
         ichLimNames = pnodeT->ichLim;
         AddToNodeList(&pnodeFnc->sxFnc.pnodeName, pLastNodeRef, pnodeT);
 
@@ -5368,6 +5379,7 @@ void Parser::ParseFncFormals(ParseNodePtr pnodeFnc, ushort flags)
 
                     if (buildAST || BindDeferredPidRefs())
                     {
+                        Assert(pnodeT);
                         pnodeT->sxVar.sym->SetIsNonSimpleParameter(true);
                         if (!isNonSimpleParameterList)
                         {
@@ -5642,6 +5654,8 @@ void Parser::CheckStrictFormalParameters()
 
 void Parser::FinishFncNode(ParseNodePtr pnodeFnc)
 {
+    Assert(pnodeFnc);
+
     // Finish the AST for a function that was deferred earlier, but which we decided
     // to finish after the fact.
     // We assume that the name(s) and arg(s) have already got parse nodes, so
@@ -7757,6 +7771,7 @@ ParseNodePtr Parser::ParseVariableDeclaration(
                 pnodeInit = ParseExpr<buildAST>(koplCma, nullptr, fAllowIn, FALSE, pNameHint, &nameHintLength);
                 if (buildAST)
                 {
+                    Assert(pnodeThis);
                     pnodeThis->sxVar.pnodeInit = pnodeInit;
                     pnodeThis->ichLim = pnodeInit->ichLim;
 
@@ -7774,7 +7789,7 @@ ParseNodePtr Parser::ParseVariableDeclaration(
 
                 //Track var a =, let a= , const a =
                 // This is for FixedFields Constant Heuristics
-                if (((pnodeThis)->sxVar).pnodeInit != nullptr)
+                if (pnodeThis && pnodeThis->sxVar.pnodeInit != nullptr)
                 {
                     pnodeThis->sxVar.sym->PromoteAssignmentState();
                 }
@@ -7956,7 +7971,11 @@ ParseNodePtr Parser::ParseCatch()
     //while (tkCATCH == m_token.tk)
     if (tkCATCH == m_token.tk)
     {
-        charcount_t ichMin = m_pscan->IchMinTok();
+        charcount_t ichMin;
+        if (buildAST)
+        {
+            ichMin = m_pscan->IchMinTok();
+        }
         m_pscan->Scan(); //catch
         ChkCurTok(tkLParen, ERRnoLparen); //catch(
 
@@ -8075,7 +8094,11 @@ ParseNodePtr Parser::ParseCatch()
             pnode->sxCatch.pnodeScopes = nullptr;
         }
 
-        charcount_t ichLim = m_pscan->IchLimTok();
+        charcount_t ichLim;
+        if (buildAST)
+        {
+            ichLim = m_pscan->IchLimTok();
+        }
         ChkCurTok(tkRParen, ERRnoRparen); //catch(id[:expr])
 
         if (tkLCurly != m_token.tk)
@@ -8411,6 +8434,7 @@ LDefaultTokenFor:
                 }
                 if (buildAST)
                 {
+                    Assert(pnodeT);
                     pnodeT->isUsed = false;
                 }
             }
@@ -9114,6 +9138,7 @@ LDefaultToken:
 
             expressionStmt = true;
 
+            Assert(pnode);
             pnode->isUsed = false;
         }
         else
@@ -9255,7 +9280,7 @@ LNeedTerminator:
 Parse a sequence of statements.
 ***************************************************************************/
 template<bool buildAST>
-void Parser::ParseStmtList(ParseNodePtr *ppnodeList, ParseNodePtr **pppnodeLast, StrictModeEnvironment smEnvironment, const bool isSourceElementList, _Out_opt_ bool* strictModeOn)
+void Parser::ParseStmtList(ParseNodePtr *ppnodeList, ParseNodePtr **pppnodeLast, StrictModeEnvironment smEnvironment, const bool isSourceElementList, bool* strictModeOn)
 {
     BOOL doneDirectives = !isSourceElementList; // directives may only exist in a SourceElementList, not a StatementList
     BOOL seenDirectiveContainingOctal = false; // Have we seen an octal directive before a use strict directive?

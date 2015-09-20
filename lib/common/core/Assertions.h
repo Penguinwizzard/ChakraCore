@@ -42,8 +42,8 @@ _declspec(thread, selectany) int IsInAssert = false;
                 RAISE_ASSERTION(comment); \
             } \
             IsInAssert = FALSE; \
+            __analysis_assume(false); \
         } \
-        __analysis_assume(f); \
     }
 
 #define Assert(exp)           AssertMsg(exp, #exp)

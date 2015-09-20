@@ -112,7 +112,7 @@ JsValueRef __stdcall WScriptJsrt::LoadScriptFileCallback(JsValueRef callee, bool
 
         if (errorCode == JsNoError)
         {
-            HRESULT hr = Helpers::LoadScriptFromFile(fileName, fileContent);
+            hr = Helpers::LoadScriptFromFile(fileName, fileContent);
             if (FAILED(hr))
             {
                 fwprintf(stderr, L"Couldn't load file.\n");

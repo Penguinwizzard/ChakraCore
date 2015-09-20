@@ -384,7 +384,7 @@ namespace Js
         {
             return;
         }
-        switch (hr)
+        switch ((HRESULT)hr)
         {
 #define RT_ERROR_MSG(name, errnum, str1, str2, jst, errorNumSource) \
         case name: \

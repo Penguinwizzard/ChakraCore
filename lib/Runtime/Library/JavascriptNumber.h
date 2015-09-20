@@ -30,13 +30,13 @@ namespace Js
         
         static Var ToVarWithCheck(double value, ScriptContext* scriptContext);
         static Var ToVarNoCheck(double value, ScriptContext* scriptContext);
-        static Var ToVarInPlace(double value, ScriptContext* scriptContext, __out JavascriptNumber *result);
-        static Var ToVarMaybeInPlace(double value, ScriptContext* scriptContext, __out_opt JavascriptNumber *result);        
+        static Var ToVarInPlace(double value, ScriptContext* scriptContext, JavascriptNumber *result);
+        static Var ToVarMaybeInPlace(double value, ScriptContext* scriptContext, JavascriptNumber *result);        
         static Var ToVarIntCheck(double value, ScriptContext* scriptContext);
         static Var ToVar(int32 nValue, ScriptContext* scriptContext);
-        static Var ToVarInPlace(int32 nValue, ScriptContext* scriptContext, __out JavascriptNumber *result);
-        static Var ToVarInPlace(int64 value, ScriptContext* scriptContext, __out JavascriptNumber *result);
-        static Var ToVarInPlace(uint32 nValue, ScriptContext* scriptContext, __out JavascriptNumber *result);        
+        static Var ToVarInPlace(int32 nValue, ScriptContext* scriptContext, JavascriptNumber *result);
+        static Var ToVarInPlace(int64 value, ScriptContext* scriptContext, JavascriptNumber *result);
+        static Var ToVarInPlace(uint32 nValue, ScriptContext* scriptContext, JavascriptNumber *result);        
         static Var ToVar(uint32 nValue, ScriptContext* scriptContext);
         static Var ToVar(int64 nValue, ScriptContext* scriptContext);
         static Var ToVar(uint64 nValue, ScriptContext* scriptContext);
@@ -111,7 +111,7 @@ namespace Js
         static Var New(double value, ScriptContext* scriptContext);
         static Var NewWithCheck(double value, ScriptContext* scriptContext);
         static Var NewInlined(double value, ScriptContext* scriptContext);
-        static JavascriptNumber* InPlaceNew(double value, ScriptContext* scriptContext, __out JavascriptNumber* result);
+        static JavascriptNumber* InPlaceNew(double value, ScriptContext* scriptContext, _Inout_ JavascriptNumber* result);
         static Var NewCodeGenInstance(CodeGenNumberAllocator *alloc, double value, ScriptContext* scriptContext);
 
         __inline static bool IsSpecial(double value, uint64 nSpecial) { return NumberUtilities::IsSpecial(value, nSpecial); }

@@ -160,6 +160,7 @@ void NoReleaseAllocator::FreeAll(void)
     while (NULL != m_pblkList)
     {
         NraBlock * pblk = m_pblkList;
+#pragma prefast(suppress:6001, "Not sure why it is complaining *m_plkList is uninitialized")
         m_pblkList = pblk->pblkNext;
         free(pblk);
     }

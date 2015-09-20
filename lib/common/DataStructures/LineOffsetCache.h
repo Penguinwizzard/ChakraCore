@@ -164,7 +164,8 @@ namespace JsUtil
         
         static bool FindNextLine(_In_z_ LPCUTF8 &currentSourcePosition, _In_z_ LPCUTF8 sourceEndCharacter, charcount_t &inOutCharacterOffset, charcount_t &inOutByteOffset, charcount_t maxCharacterOffset = MAXUINT32)
         {
-            charcount_t currentCharacterOffset = inOutCharacterOffset, currentByteOffset = inOutByteOffset;
+            charcount_t currentCharacterOffset = inOutCharacterOffset;
+            charcount_t currentByteOffset = inOutByteOffset;
             utf8::DecodeOptions options = utf8::doAllowThreeByteSurrogates;
 
             while (currentSourcePosition < sourceEndCharacter)

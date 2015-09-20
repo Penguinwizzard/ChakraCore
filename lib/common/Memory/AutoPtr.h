@@ -3,7 +3,7 @@
 //----------------------------------------------------------------------------
 #pragma once
 
-template <typename T>
+template <typename T, typename HeapAllocatorT = HeapAllocator>
 class AutoPtr : public BasePtr<T>
 {
 public:
@@ -25,7 +25,7 @@ private:
     {
         if (ptr != nullptr)
         {
-            HeapDelete(ptr);
+            AllocatorDelete(HeapAllocatorT, &HeapAllocatorT::Instance, ptr);
             ptr = nullptr;
         }
     }

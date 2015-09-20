@@ -60,9 +60,9 @@ public:
         disableResize = false;
         free = nullptr;
         table = AllocatorNewArrayZ(TAllocator, allocator, EntryType*, size);
-        #if PROFILE_DICTIONARY
+#if PROFILE_DICTIONARY
         stats = DictionaryStats::Create(typeid(this).name(), size);
-        #endif
+#endif
     }
 
     ~SimpleHashTable()
