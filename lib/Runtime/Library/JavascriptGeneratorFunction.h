@@ -39,6 +39,7 @@ namespace Js
         virtual void SetHomeObj(Var homeObj) override;
         virtual void SetComputedNameVar(Var computedNameVar) override;
         virtual Var GetComputedNameVar() const override;
+        virtual bool IsAnonymousFunction() const override;
 
         virtual Var GetSourceString() const;
         virtual Var EnsureSourceString();

@@ -779,6 +779,11 @@ namespace Js
         return returnStr;
     }
 
+    bool ScriptFunction::IsAnonymousFunction() const
+    {
+        return this->GetFunctionProxy()->GetIsAnonymousFunction();
+    }
+
     JavascriptString* ScriptFunction::GetComputedName() const
     {
         JavascriptString* computedName = nullptr;

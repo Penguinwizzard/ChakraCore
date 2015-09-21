@@ -677,6 +677,8 @@ namespace Js
 #endif
         variantDateType = StaticType::New(scriptContext, TypeIds_VariantDate, nullValue, nullptr);
 
+        anonymousFunctionTypeHandler = NullTypeHandler<false>::GetDefaultInstance();
+        anonymousFunctionWithPrototypeTypeHandler = &SharedFunctionWithPrototypeTypeHandlerV11;
         //  Initialize function types
         if (config->IsES6FunctionNameEnabled())
         {
@@ -684,7 +686,7 @@ namespace Js
         }
         else
         {
-            functionTypeHandler = NullTypeHandler<false>::GetDefaultInstance();
+            functionTypeHandler = anonymousFunctionTypeHandler;
         }
 
         if (config->IsES6FunctionNameEnabled())
@@ -693,13 +695,13 @@ namespace Js
         }
         else
         {
-            functionWithPrototypeTypeHandler = &SharedFunctionWithPrototypeTypeHandlerV11;
+            functionWithPrototypeTypeHandler = anonymousFunctionWithPrototypeTypeHandler;
         }
         functionWithPrototypeTypeHandler->SetHasKnownSlot0();
 
-        externalFunctionWithDeferredPrototypeType = CreateDeferredPrototypeFunctionTypeNoProfileThunk(JavascriptExternalFunction::ExternalFunctionThunk, true);
-        wrappedFunctionWithDeferredPrototypeType = CreateDeferredPrototypeFunctionTypeNoProfileThunk(JavascriptExternalFunction::WrappedFunctionThunk, true);
-        stdCallFunctionWithDeferredPrototypeType = CreateDeferredPrototypeFunctionTypeNoProfileThunk(JavascriptExternalFunction::StdCallExternalFunctionThunk, true);
+        externalFunctionWithDeferredPrototypeType = CreateDeferredPrototypeFunctionTypeNoProfileThunk(JavascriptExternalFunction::ExternalFunctionThunk, true /*isShared*/);
+        wrappedFunctionWithDeferredPrototypeType = CreateDeferredPrototypeFunctionTypeNoProfileThunk(JavascriptExternalFunction::WrappedFunctionThunk, true /*isShared*/);
+        stdCallFunctionWithDeferredPrototypeType = CreateDeferredPrototypeFunctionTypeNoProfileThunk(JavascriptExternalFunction::StdCallExternalFunctionThunk, true /*isShared*/);
         idMappedFunctionWithPrototypeType = DynamicType::New(scriptContext, TypeIds_Function, functionPrototype, JavascriptExternalFunction::ExternalFunctionThunk,
             &SharedIdMappedFunctionWithPrototypeTypeHandler, true, true);
         externalConstructorFunctionWithDeferredPrototypeType = DynamicType::New(scriptContext, TypeIds_Function, functionPrototype, JavascriptExternalFunction::ExternalFunctionThunk,
@@ -708,7 +710,7 @@ namespace Js
         if (config->IsES6FunctionNameEnabled())
         {
             boundFunctionType = DynamicType::New(scriptContext, TypeIds_Function, functionPrototype, BoundFunction::NewInstance,
-                GetDeferredBoundFunctionTypeHandler(scriptContext), true, true);
+                GetDeferredFunctionTypeHandler(), true, true);
         }
         else
         {
@@ -716,7 +718,7 @@ namespace Js
                 SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
         }
         crossSiteDeferredPrototypeFunctionType = CreateDeferredPrototypeFunctionTypeNoProfileThunk(
-            scriptContext->CurrentCrossSiteThunk, true);
+            scriptContext->CurrentCrossSiteThunk, true /*isShared*/);
         crossSiteIdMappedFunctionWithPrototypeType = DynamicType::New(scriptContext, TypeIds_Function, functionPrototype, scriptContext->CurrentCrossSiteThunk,
             &SharedIdMappedFunctionWithPrototypeTypeHandler, true, true);
         crossSiteExternalConstructFunctionWithPrototypeType = DynamicType::New(scriptContext, TypeIds_Function, functionPrototype, scriptContext->CurrentCrossSiteThunk,
@@ -857,10 +859,13 @@ namespace Js
 
     void JavascriptLibrary::InitializeGeneratorFunction(DynamicObject *function, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
-        typeHandler->Convert(function, function->GetType()->GetLibrary()->functionWithPrototypeTypeHandler);
-        function->SetPropertyWithAttributes(PropertyIds::prototype, function->GetType()->GetLibrary()->CreateGeneratorConstructorPrototypeObject(), PropertyWritable, nullptr);
+        bool isAnonymousFunction = JavascriptGeneratorFunction::FromVar(function)->IsAnonymousFunction();
+        
+        JavascriptLibrary* javascriptLibrary = function->GetType()->GetLibrary();
+        typeHandler->Convert(function, isAnonymousFunction ? javascriptLibrary->anonymousFunctionWithPrototypeTypeHandler : javascriptLibrary->functionWithPrototypeTypeHandler);
+        function->SetPropertyWithAttributes(PropertyIds::prototype, javascriptLibrary->CreateGeneratorConstructorPrototypeObject(), PropertyWritable, nullptr);
 
-        if (function->GetScriptContext()->GetConfig()->IsES6FunctionNameEnabled())
+        if (function->GetScriptContext()->GetConfig()->IsES6FunctionNameEnabled() && !isAnonymousFunction)
         {
             function->SetPropertyWithAttributes(PropertyIds::name, ((Js::JavascriptFunction*)function)->GetDisplayName(true), PropertyConfigurable, nullptr);
         }
@@ -871,22 +876,27 @@ namespace Js
     void JavascriptLibrary::InitializeFunction(DynamicObject *function, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         JavascriptLibrary* javascriptLibrary = function->GetType()->GetLibrary();
+        ScriptFunction *scriptFunction = nullptr;
+        bool useAnonymous = false;
+        if (ScriptFunction::Is(function))
+        {
+            scriptFunction = Js::ScriptFunction::FromVar(function);
+            useAnonymous = scriptFunction->IsAnonymousFunction();
+        }
+
         if (!addPrototype)
         {
+            Assert(!useAnonymous);
             typeHandler->Convert(function, javascriptLibrary->functionTypeHandler);
         }
         else
         {
-            typeHandler->Convert(function, javascriptLibrary->functionWithPrototypeTypeHandler);
+            typeHandler->Convert(function, useAnonymous ? javascriptLibrary->anonymousFunctionWithPrototypeTypeHandler : javascriptLibrary->functionWithPrototypeTypeHandler);
             function->SetProperty(PropertyIds::prototype, javascriptLibrary->CreateConstructorPrototypeObject((Js::JavascriptFunction *)function), PropertyOperation_None, nullptr);
         }
 
-        ScriptFunction *scriptFunction = nullptr;
-
-        if (ScriptFunction::Is(function))
+        if (scriptFunction)
         {
-            scriptFunction = Js::ScriptFunction::FromVar(function);
-
             if (scriptFunction->IsClassConstructor())
             {
                 scriptFunction->SetWritable(Js::PropertyIds::prototype, FALSE);
@@ -897,32 +907,16 @@ namespace Js
 
         if (scriptContext->GetConfig()->IsES6FunctionNameEnabled())
         {
-            if (scriptFunction && scriptFunction->GetFunctionProxy()->EnsureDeserialized()->GetIsStaticNameFunction())
+            JavascriptString * functionName = ((Js::JavascriptFunction*)function)->GetDisplayName(true);
+            if (functionName == nullptr || scriptFunction && (scriptFunction->GetFunctionProxy()->EnsureDeserialized()->GetIsStaticNameFunction() || scriptFunction->IsAnonymousFunction()))
             {
                 return;
             }
-            function->SetPropertyWithAttributes(PropertyIds::name, ((Js::JavascriptFunction*)function)->GetDisplayName(true), PropertyConfigurable, nullptr);
+            function->SetPropertyWithAttributes(PropertyIds::name, functionName, PropertyConfigurable, nullptr);
         }
     }
 
-
-    template<bool isNameAvailable>
-    class InitializeBoundFunctionDeferredTypeHandlerFilter
-    {
-    public:
-        static bool HasFilter() { return true; }
-        static bool HasProperty(PropertyId propertyId)
-        {
-            switch (propertyId)
-            {
-            case PropertyIds::name:
-                return isNameAvailable;
-            }
-            return false;
-        }
-    };
-
-    template<bool isNameAvailable>
+    template<bool isNameAvailable, bool isPrototypeAvailable>
     class InitializeFunctionDeferredTypeHandlerFilter
     {
     public:
@@ -932,7 +926,7 @@ namespace Js
             switch (propertyId)
             {
             case PropertyIds::prototype:
-                return true;
+                return isPrototypeAvailable;
             case PropertyIds::name:
                 return isNameAvailable;
             }
@@ -940,68 +934,71 @@ namespace Js
         }
     };
 
-    DynamicTypeHandler * JavascriptLibrary::GetDeferredBoundFunctionTypeHandler(ScriptContext* scriptContext)
+    template<bool isNameAvailable, bool isPrototypeAvailable>
+    DynamicTypeHandler * JavascriptLibrary::GetDeferredFunctionTypeHandlerBase()
     {
-        if (scriptContext->GetConfig()->IsES6FunctionNameEnabled())
-        {
-            return DeferredTypeHandler<InitializeFunction<false>, InitializeBoundFunctionDeferredTypeHandlerFilter<true>>::GetDefaultInstance();
-        }
-        else
-        {
-            return DeferredTypeHandler<InitializeFunction<false>, InitializeBoundFunctionDeferredTypeHandlerFilter<false>>::GetDefaultInstance();
-        }
+        return DeferredTypeHandler<InitializeFunction<isPrototypeAvailable>, InitializeFunctionDeferredTypeHandlerFilter<isNameAvailable, isPrototypeAvailable>>::GetDefaultInstance();
+    }
+
+    template<bool isNameAvailable, bool isPrototypeAvailable>
+    DynamicTypeHandler * JavascriptLibrary::GetDeferredGeneratorFunctionTypeHandlerBase()
+    {
+        return DeferredTypeHandler<InitializeGeneratorFunction, InitializeFunctionDeferredTypeHandlerFilter<isNameAvailable, isPrototypeAvailable>>::GetDefaultInstance();
+    }
+
+    DynamicTypeHandler * JavascriptLibrary::GetDeferredAnonymousGeneratorFunctionTypeHandler(ScriptContext* scriptContext)
+    {
+        return JavascriptLibrary::GetDeferredGeneratorFunctionTypeHandlerBase</*isNameAvailable*/ false>();
     }
 
     DynamicTypeHandler * JavascriptLibrary::GetDeferredPrototypeGeneratorFunctionTypeHandler(ScriptContext* scriptContext)
     {
         if (scriptContext->GetConfig()->IsES6FunctionNameEnabled())
         {
-            return DeferredTypeHandler<InitializeGeneratorFunction, InitializeFunctionDeferredTypeHandlerFilter<true>>::GetDefaultInstance();
+            return JavascriptLibrary::GetDeferredGeneratorFunctionTypeHandlerBase</*isNameAvailable*/ true>();
         }
         else
         {
-            return DeferredTypeHandler<InitializeGeneratorFunction, InitializeFunctionDeferredTypeHandlerFilter<false>>::GetDefaultInstance();
+            return JavascriptLibrary::GetDeferredGeneratorFunctionTypeHandlerBase</*isNameAvailable*/ false>();
         }
 
     }
+
+    DynamicTypeHandler * JavascriptLibrary::GetDeferredAnonymousPrototypeFunctionTypeHandler()
+    {
+        return JavascriptLibrary::GetDeferredFunctionTypeHandlerBase</*isNameAvailable*/ false>();
+    }
+
     DynamicTypeHandler * JavascriptLibrary::GetDeferredPrototypeFunctionTypeHandler(ScriptContext* scriptContext)
     {
         if (scriptContext->GetConfig()->IsES6FunctionNameEnabled())
         {
-            return DeferredTypeHandler<InitializeFunction<true>, InitializeFunctionDeferredTypeHandlerFilter<true>>::GetDefaultInstance();
+            return JavascriptLibrary::GetDeferredFunctionTypeHandlerBase</*isNameAvailable*/ true>();
         }
         else
         {
-            return DeferredTypeHandler<InitializeFunction<true>, InitializeFunctionDeferredTypeHandlerFilter<false>>::GetDefaultInstance();
+            return JavascriptLibrary::GetDeferredFunctionTypeHandlerBase</*isNameAvailable*/ false>();
         }
     }
-    DynamicType * JavascriptLibrary::CreateDeferredPrototypeGeneratorFunctionType(JavascriptMethod entrypoint, bool isShared)
+
+    DynamicTypeHandler * JavascriptLibrary::GetDeferredAnonymousFunctionTypeHandler()
     {
-        return DynamicType::New(scriptContext, TypeIds_Function, generatorFunctionPrototype, entrypoint,
-            GetDeferredPrototypeGeneratorFunctionTypeHandler(scriptContext), isShared, isShared);
+        return anonymousFunctionTypeHandler;
     }
 
     DynamicTypeHandler * JavascriptLibrary::GetDeferredFunctionTypeHandler()
     {
         if (this->GetScriptContext()->GetConfig()->IsES6FunctionNameEnabled())
         {
-            class InitializeFunctionDeferredTypeHandlerFilterName
-            {
-            public:
-                static bool HasFilter() { return true; }
-                static bool HasProperty(PropertyId propertyId)
-                {
-                    switch (propertyId)
-                    {
-                    case PropertyIds::name:
-                        return true;
-                    }
-                    return false;
-                }
-            };
-            return DeferredTypeHandler<InitializeFunction<false>, InitializeFunctionDeferredTypeHandlerFilterName>::GetDefaultInstance();
+            return GetDeferredFunctionTypeHandlerBase</*isNameAvailable*/ true, /*isPrototypeAvailable*/ false>();
         }
         return functionTypeHandler;
+    }
+
+    DynamicType * JavascriptLibrary::CreateDeferredPrototypeGeneratorFunctionType(JavascriptMethod entrypoint, bool isAnonymousFunction, bool isShared)
+    {
+        return DynamicType::New(scriptContext, TypeIds_Function, generatorFunctionPrototype, entrypoint,
+            isAnonymousFunction ? GetDeferredAnonymousGeneratorFunctionTypeHandler(scriptContext) : GetDeferredPrototypeGeneratorFunctionTypeHandler(scriptContext), isShared, isShared);
     }
 
     DynamicType * JavascriptLibrary::CreateDeferredPrototypeFunctionType(JavascriptMethod entrypoint)
@@ -1011,7 +1008,12 @@ namespace Js
 
     DynamicType * JavascriptLibrary::CreateDeferredPrototypeFunctionTypeNoProfileThunk(JavascriptMethod entrypoint, bool isShared)
     {
-        return DynamicType::New(scriptContext, TypeIds_Function, functionPrototype, entrypoint,
+        // Note: the lack of typehandler switching here based on the isAnonymousFunction flag is intentional
+        // This function handles the creation of ExternalFunctions, Promise based functions and WinRTFunctions (through CreateDeferredPrototypeFunctionType), and  other builtins through CreateNonProfiledFunction.
+        // All of these function types are derivatives of Runtime Functions which don't have a concept of anonymous functions. This may need to change, more investigation is needed, but it is beyond the scope of this bug fix.
+        // Further all External Functions have shared type handlers which makes switching the typehandler a mute strategy.
+        // Im not certain how you could write any of the above funcations as an anonymous function but if you could  we may have an issue where hasProperty would say you have a name propery but getProperty returns undefined
+        return DynamicType::New(scriptContext, TypeIds_Function, functionPrototype, entrypoint, 
             GetDeferredPrototypeFunctionTypeHandler(scriptContext), isShared, isShared);
     }
     DynamicType * JavascriptLibrary::CreateFunctionType(JavascriptMethod entrypoint, RecyclableObject* prototype)
@@ -2494,6 +2496,7 @@ namespace Js
         ScriptContext* scriptContext = functionConstructor->GetScriptContext();
         JavascriptLibrary* library = functionConstructor->GetLibrary();
         library->AddMember(functionConstructor, PropertyIds::prototype, library->functionPrototype, PropertyNone);
+        
         library->AddMember(functionConstructor, PropertyIds::length, TaggedInt::ToVarUnchecked(1), PropertyConfigurable);
         if (scriptContext->GetConfig()->IsES6FunctionNameEnabled())
         {
@@ -2513,11 +2516,6 @@ namespace Js
 
         library->AddMember(functionPrototype, PropertyIds::constructor, library->functionConstructor);
         library->AddMember(functionPrototype, PropertyIds::length, TaggedInt::ToVarUnchecked(0), PropertyConfigurable);
-
-        if (scriptContext->GetConfig()->IsES6FunctionNameEnabled())
-        {
-            library->AddMember(functionPrototype, PropertyIds::name, LiteralString::CreateEmptyString(scriptContext->GetLibrary()->GetStringTypeStatic()), PropertyConfigurable);
-        }
 
         JavascriptFunction *func = library->AddFunctionToLibraryObject(functionPrototype, PropertyIds::apply, &JavascriptFunction::EntryInfo::Apply, 2);
         builtinFuncs[BuiltinFunction::Function_Apply] = func;
@@ -4585,9 +4583,20 @@ namespace Js
 #endif
             if (ScriptFunction::Is(function))
         {
-            Assert(!function->GetFunctionInfo()->IsLambda() ?
-                function->GetDynamicType()->GetTypeHandler() == JavascriptLibrary::GetDeferredPrototypeFunctionTypeHandler(this->GetScriptContext()) :
-                function->GetDynamicType()->GetTypeHandler() == JavascriptLibrary::GetDeferredFunctionTypeHandler());
+#if DEBUG
+            if (!function->GetFunctionProxy()->GetIsAnonymousFunction())
+            {
+                Assert(!function->GetFunctionInfo()->IsLambda() ?
+                    function->GetDynamicType()->GetTypeHandler() == JavascriptLibrary::GetDeferredPrototypeFunctionTypeHandler(this->GetScriptContext()) :
+                    function->GetDynamicType()->GetTypeHandler() == JavascriptLibrary::GetDeferredFunctionTypeHandler());
+            }
+            else
+            {
+                Assert(!function->GetFunctionInfo()->IsLambda() ?
+                    function->GetDynamicType()->GetTypeHandler() == JavascriptLibrary::GetDeferredAnonymousPrototypeFunctionTypeHandler() :
+                    function->GetDynamicType()->GetTypeHandler() == JavascriptLibrary::GetDeferredAnonymousFunctionTypeHandler());
+            }
+#endif
             // TODO: Theoratically, we can share the cross site thunk here too, but the entry point
             // is a mess :(,   just create a new unshared type and set the cross site thunk
             function->ChangeType();
@@ -5534,7 +5543,7 @@ namespace Js
     {
         Assert(scriptContext->GetConfig()->IsES6GeneratorsEnabled());
 
-        DynamicType* type = CreateDeferredPrototypeGeneratorFunctionType(entryPoint);
+        DynamicType* type = CreateDeferredPrototypeGeneratorFunctionType(entryPoint, scriptFunction->IsAnonymousFunction());
 
         return EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptGeneratorFunction, type, scriptFunction));
     }

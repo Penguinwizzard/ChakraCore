@@ -1866,17 +1866,13 @@ STDAPI_(JsErrorCode) JsCreateNamedFunction(JsValueRef name, JsNativeFunction nat
         PARAM_NOT_NULL(nativeFunction);
         PARAM_NOT_NULL(function);
         *function = nullptr;
-
+        Js::JavascriptString* jsStringName = nullptr;
         if (name != JS_INVALID_REFERENCE)
         {
-            name = Js::JavascriptConversion::ToString(name, scriptContext);
+            jsStringName = Js::JavascriptString::FromVar(Js::JavascriptConversion::ToString(name, scriptContext));
         }
-        else
-        {
-            name = scriptContext->GetLibrary()->GetEmptyString();
-        }
-
-        Js::JavascriptExternalFunction *externalFunction = scriptContext->GetLibrary()->CreateStdCallExternalFunction((Js::StdCallJavascriptMethod)nativeFunction, Js::JavascriptString::FromVar(name), callbackState);
+        
+        Js::JavascriptExternalFunction *externalFunction = scriptContext->GetLibrary()->CreateStdCallExternalFunction((Js::StdCallJavascriptMethod)nativeFunction, jsStringName, callbackState);
 
         *function = (JsValueRef)externalFunction;
         return JsNoError;

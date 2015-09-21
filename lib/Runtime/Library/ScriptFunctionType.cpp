@@ -26,13 +26,26 @@ namespace Js
         JavascriptLibrary * library = scriptContext->GetLibrary();
         DynamicObject * functionPrototype = library->GetFunctionPrototype();
         JavascriptMethod address = (JavascriptMethod)proxy->GetDefaultEntryPointInfo()->address;
+        DynamicTypeHandler * scriptFunctionTypeHandler = nullptr;
+        if (proxy->GetIsAnonymousFunction())
+        {
+            
+            scriptFunctionTypeHandler = (proxy->IsLambda() || proxy->IsAsync() || proxy->IsClassMethod()) ?
+                library->GetDeferredAnonymousFunctionTypeHandler() :
+                JavascriptLibrary::GetDeferredAnonymousPrototypeFunctionTypeHandler();
+        }
+        else
+        {
+            scriptFunctionTypeHandler = (proxy->IsLambda() || proxy->IsAsync() || proxy->IsClassMethod()) ?
+                library->GetDeferredFunctionTypeHandler() :
+                JavascriptLibrary::GetDeferredPrototypeFunctionTypeHandler(scriptContext);
+        }
+
         return RecyclerNew(scriptContext->GetRecycler(), ScriptFunctionType,
             scriptContext, functionPrototype, 
             address,
             proxy->GetDefaultEntryPointInfo(),
-            (proxy->IsLambda() || proxy->IsAsync() || proxy->IsClassMethod()) ?
-                library->GetDeferredFunctionTypeHandler() :
-                JavascriptLibrary::GetDeferredPrototypeFunctionTypeHandler(scriptContext),
+            scriptFunctionTypeHandler,
             isShared, isShared);
     }
 };

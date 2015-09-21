@@ -2864,11 +2864,7 @@ LABEL1:
         ScriptContext* scriptContext = this->GetScriptContext();
         Assert(this->GetFunctionProxy() != nullptr); // The caller should guarantee a proxy exists
         ParseableFunctionInfo * func = this->GetFunctionProxy()->EnsureDeserialized();
-        if (wcscmp(func->GetDisplayName(), Js::Constants::AnonymousFunction) == 0)
-        {
-            return LiteralString::CreateEmptyString(scriptContext->GetLibrary()->GetStringTypeStatic());
-        }
-        else if (wcscmp(func->GetDisplayName(), Js::Constants::FunctionCode) == 0)
+        if (wcscmp(func->GetDisplayName(), Js::Constants::FunctionCode) == 0)
         {
             return LiteralString::NewCopyBuffer(Js::Constants::Anonymous, Js::Constants::AnonymousLength, scriptContext);
         }
@@ -2890,10 +2886,12 @@ LABEL1:
         ScriptContext* scriptContext = this->GetScriptContext();
         Var sourceString = this->GetSourceString();
         FunctionProxy* proxy = this->GetFunctionProxy();
+        JavascriptLibrary* library = scriptContext->GetLibrary();
+        
+        JavascriptFunction* thisFunction = const_cast<JavascriptFunction*>(this);
 
-
-        if (isFunctionName && (proxy || BoundFunction::Is(const_cast<JavascriptFunction*>(this)) ||
-            JavascriptGeneratorFunction::Is(const_cast<JavascriptFunction*>(this))))
+        if (isFunctionName && (proxy || thisFunction->IsBoundFunction() ||
+            JavascriptGeneratorFunction::Is(thisFunction)))
         {
             return GetDisplayNameImpl();
         }
@@ -2907,17 +2905,28 @@ LABEL1:
         {
             if (TaggedInt::Is(sourceString))
             {
-                return scriptContext->GetPropertyString(TaggedInt::ToInt32(sourceString));
+                int32 propertIdOfSourceString = TaggedInt::ToInt32(sourceString);
+
+                // I ran into an issue where the hybrid debugger treats scriptFunctions as ExternalFunctions
+                // JsCreateFunction the external function path for creating a function passes a nameId set to 0 for no name, 
+                // this gets coerced to empty string which is not the behavior we want for function.name
+                if (isFunctionName && thisFunction->IsExternalFunction() && propertIdOfSourceString == 0)
+                {
+                    return nullptr;
+                }
+                return scriptContext->GetPropertyString(propertIdOfSourceString);
             }
+           
             Assert(JavascriptString::Is(sourceString));
             return JavascriptString::FromVar(sourceString);
         }
 
         if (isFunctionName)
         {
-            return LiteralString::CreateEmptyString(scriptContext->GetLibrary()->GetStringTypeStatic()); // empty string for function prototype hits here
+            return nullptr;
         }
-        return scriptContext->GetLibrary()->GetFunctionDisplayString(); //TODO
+
+        return library->GetFunctionDisplayString();
     }
 
     Var JavascriptFunction::GetTypeOfString(ScriptContext * requestContext)

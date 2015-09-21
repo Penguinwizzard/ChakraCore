@@ -125,6 +125,10 @@ namespace Js
         return scriptFunction->GetComputedNameVar(); 
     }
 
+    bool JavascriptGeneratorFunction::IsAnonymousFunction() const
+    {
+        return scriptFunction->IsAnonymousFunction();
+    }
     
     Var JavascriptGeneratorFunction::GetSourceString() const
     {
