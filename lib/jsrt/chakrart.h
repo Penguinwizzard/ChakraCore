@@ -97,7 +97,7 @@
         /// <summary>
         ///     A hosting API that operates on object values was called with a non-object value.
         /// </summary>
-        JsErrorArgumentNotObject,        
+        JsErrorArgumentNotObject,
         /// <summary>
         ///     A script context is in the middle of a profile callback.
         /// </summary>
@@ -916,7 +916,7 @@
 
     /// <summary>
     ///     Called by the runtime when it is finished with all resources related to the script execution.
-    ///     The caller should free the source if loaded, the byte code, and the context at this time. 
+    ///     The caller should free the source if loaded, the byte code, and the context at this time.
     /// </summary>
     /// <param name="sourceContext">The context passed to Js[Parse|Run]SerializedScriptWithCallback</param>
     typedef void (CALLBACK * JsSerializedScriptUnloadCallback)(_In_ JsSourceContext sourceContext);
@@ -1281,9 +1281,6 @@
     /// <summary>
     ///     Retrieves the <c>bool</c> value of a Boolean value.
     /// </summary>
-    /// <remarks>
-    ///     Requires an active script context.
-    /// </remarks>
     /// <param name="value">The value to be converted.</param>
     /// <param name="boolValue">The converted value.</param>
     /// <returns>
@@ -1372,9 +1369,6 @@
     /// <summary>
     ///     Gets the JavaScript type of a JsValueRef.
     /// </summary>
-    /// <remarks>
-    ///     Requires an active script context.
-    /// </remarks>
     /// <param name="value">The value whose type is to be returned.</param>
     /// <param name="type">The type of the value.</param>
     /// <returns>
@@ -1421,13 +1415,8 @@
     ///     Retrieves the <c>double</c> value of a number value.
     /// </summary>
     /// <remarks>
-    ///     <para>
     ///     This function retrieves the value of a number value. It will fail with
     ///     <c>JsErrorInvalidArgument</c> if the type of the value is not number.
-    ///     </para>
-    ///     <para>
-    ///     Requires an active script context.
-    ///     </para>
     /// </remarks>
     /// <param name="value">The number value to convert to a <c>double</c> value.</param>
     /// <param name="doubleValue">The <c>double</c> value.</param>
@@ -1443,13 +1432,8 @@
     ///     Retrieves the <c>int</c> value of a number value.
     /// </summary>
     /// <remarks>
-    ///     <para>
     ///     This function retrieves the value of a number value and converts to an <c>int</c> value.
     ///     It will fail with <c>JsErrorInvalidArgument</c> if the type of the value is not number.
-    ///     </para>
-    ///     <para>
-    ///     Requires an active script context.
-    ///     </para>
     /// </remarks>
     /// <param name="value">The number value to convert to an <c>int</c> value.</param>
     /// <param name="intValue">The <c>int</c> value.</param>
@@ -1480,9 +1464,6 @@
     /// <summary>
     ///     Gets the length of a string value.
     /// </summary>
-    /// <remarks>
-    ///     Requires an active script context.
-    /// </remarks>
     /// <param name="stringValue">The string value to get the length of.</param>
     /// <param name="length">The length of the string.</param>
     /// <returns>
@@ -2049,9 +2030,6 @@
     /// <summary>
     ///     Determines whether an object is an external object.
     /// </summary>
-    /// <remarks>
-    ///     Requires an active script context.
-    /// </remarks>
     /// <param name="object">The object.</param>
     /// <param name="value">Whether the object is an external object.</param>
     /// <returns>
@@ -2065,9 +2043,6 @@
     /// <summary>
     ///     Retrieves the data from an external object.
     /// </summary>
-    /// <remarks>
-    ///     Requires an active script context.
-    /// </remarks>
     /// <param name="object">The external object.</param>
     /// <param name="externalData">
     ///     The external data stored in the object. Can be null if no external data is stored in the
@@ -2084,9 +2059,6 @@
     /// <summary>
     ///     Sets the external data on an external object.
     /// </summary>
-    /// <remarks>
-    ///     Requires an active script context.
-    /// </remarks>
     /// <param name="object">The external object.</param>
     /// <param name="externalData">
     ///     The external data to be stored in the object. Can be null if no external data is
@@ -2240,9 +2212,6 @@
     /// <summary>
     ///     Obtains the underlying memory storage used by an <c>ArrayBuffer</c>.
     /// </summary>
-    /// <remarks>
-    ///     Requires an active script context.
-    /// </remarks>
     /// <param name="arrayBuffer">The ArrayBuffer instance.</param>
     /// <param name="buffer">
     ///     The ArrayBuffer's buffer. The lifetime of the buffer returned is the same as the lifetime of the
@@ -2262,9 +2231,6 @@
     /// <summary>
     ///     Obtains the underlying memory storage used by a typed array.
     /// </summary>
-    /// <remarks>
-    ///     Requires an active script context.
-    /// </remarks>
     /// <param name="typedArray">The typed array instance.</param>
     /// <param name="buffer">
     ///     The array's buffer. The lifetime of the buffer returned is the same as the lifetime of the
@@ -2290,9 +2256,6 @@
     /// <summary>
     ///     Obtains the underlying memory storage used by a DataView.
     /// </summary>
-    /// <remarks>
-    ///     Requires an active script context.
-    /// </remarks>
     /// <param name="dataView">The DataView instance.</param>
     /// <param name="buffer">
     ///     The DataView's buffer. The lifetime of the buffer returned is the same as the lifetime of the
