@@ -7044,6 +7044,8 @@ ParseNodePtr Parser::ParseExpr(int oplMin, BOOL *pfCanAssign, BOOL fAllowIn, BOO
 
     EnsureStackAvailable();
 
+    m_pscan->Capture(&termStart);
+
     // Is the current token a unary operator?
     if (m_phtbl->TokIsUnop(m_token.tk, &opl, &nop) && nop != knopNone)
     {
@@ -7205,7 +7207,6 @@ ParseNodePtr Parser::ParseExpr(int oplMin, BOOL *pfCanAssign, BOOL fAllowIn, BOO
     else
     {
         tokens beforeToken = m_token.tk;
-        m_pscan->Capture(&termStart);
         ichMin = m_pscan->IchMinTok();
         pnode = ParseTerm<buildAST>(TRUE, pNameHint, &hintLength, &term, fUnaryOrParen, &fCanAssign);
 
