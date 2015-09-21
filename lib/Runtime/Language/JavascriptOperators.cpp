@@ -2574,28 +2574,21 @@ CommonNumber:
     template<bool unscopables>
     BOOL JavascriptOperators::DeleteProperty_Impl(RecyclableObject* instance, PropertyId propertyId, PropertyOperationFlags propertyOperationFlags)
     {
-        while (JavascriptOperators::GetTypeId(instance) != TypeIds_Null)
+        
+        if (unscopables && JavascriptOperators::IsPropertyUnscopable(instance, propertyId))
         {
-            if (unscopables && JavascriptOperators::IsPropertyUnscopable(instance, propertyId))
-            {
-                break;
-            }
-            else
-            {
-#ifdef ENABLE_MUTATION_BREAKPOINT
-                ScriptContext *scriptContext = instance->GetScriptContext();
-                if (MutationBreakpoint::IsFeatureEnabled(scriptContext)
-                    && scriptContext->HasMutationBreakpoints())
-                {
-                    MutationBreakpoint::HandleDeleteProperty(scriptContext, instance, propertyId);
-                }
-#endif
-                // !unscopables will hit the return statement on the first iteration
-                return instance->DeleteProperty(propertyId, propertyOperationFlags);
-            }
-            instance = JavascriptOperators::GetPrototypeNoTrap(instance);
+            return false;
         }
-        return false;
+#ifdef ENABLE_MUTATION_BREAKPOINT
+        ScriptContext *scriptContext = instance->GetScriptContext();
+        if (MutationBreakpoint::IsFeatureEnabled(scriptContext)
+            && scriptContext->HasMutationBreakpoints())
+        {
+            MutationBreakpoint::HandleDeleteProperty(scriptContext, instance, propertyId);
+        }
+#endif
+         // !unscopables will hit the return statement on the first iteration
+         return instance->DeleteProperty(propertyId, propertyOperationFlags);    
     }
 
     Var JavascriptOperators::OP_DeleteProperty(Var instance, PropertyId propertyId, ScriptContext* scriptContext, PropertyOperationFlags propertyOperationFlags)
