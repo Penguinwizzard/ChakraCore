@@ -333,7 +333,7 @@ namespace Js
 
         ScriptContext * scriptContext = this->GetScriptContext();
         JavascriptLibrary *javascriptLibrary = scriptContext->GetLibrary();
-        bool isClassMethod = this->GetFunctionInfo()->IsClassMethod();
+        bool isClassMethod = this->GetFunctionInfo()->IsClassMethod() || IsClassConstructor();
 
         JavascriptString* prefixString = nullptr;
         uint prefixStringLength = 0;
