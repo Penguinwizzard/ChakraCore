@@ -39,14 +39,15 @@ namespace Js
     bool JavascriptTypedObjectSlotAccessorFunction::InstanceOf(Var thisObj)
     {
         int allowedTypeId = GetAllowedTypeId();
-        if (Js::JavascriptOperators::GetTypeId(thisObj) == allowedTypeId)
+        TypeId typeId = Js::JavascriptOperators::GetTypeId(thisObj);
+        if (typeId == allowedTypeId)
         {
             return true;
         }
         Type* type = RecyclableObject::FromVar(thisObj)->GetType();
         if (ExternalTypeWithInheritedTypeIds::Is(type))
         {
-            return ((Js::ExternalTypeWithInheritedTypeIds*)type)->InstanceOf(allowedTypeId);
+            return ((Js::ExternalTypeWithInheritedTypeIds*)type)->InstanceOf(typeId);
         }
         return false;
     }
