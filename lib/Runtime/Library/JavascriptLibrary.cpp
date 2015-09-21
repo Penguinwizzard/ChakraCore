@@ -2495,8 +2495,7 @@ namespace Js
         // so that the update is in sync with profiler
         ScriptContext* scriptContext = functionConstructor->GetScriptContext();
         JavascriptLibrary* library = functionConstructor->GetLibrary();
-        library->AddMember(functionConstructor, PropertyIds::prototype, library->functionPrototype, PropertyNone);
-        
+        library->AddMember(functionConstructor, PropertyIds::prototype, library->functionPrototype, PropertyNone);        
         library->AddMember(functionConstructor, PropertyIds::length, TaggedInt::ToVarUnchecked(1), PropertyConfigurable);
         if (scriptContext->GetConfig()->IsES6FunctionNameEnabled())
         {
