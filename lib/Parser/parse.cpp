@@ -3447,6 +3447,10 @@ ParseNodePtr Parser::ParseMemberList(LPCOLESTR pNameHint, ulong* pNameHintLength
         }
         else if (m_token.tk == tkLParen && m_scriptContext->GetConfig()->IsES6ObjectLiteralsEnabled())
         {
+            if (isObjectPattern)
+            {
+                Error(ERRInvalidAssignmentTarget);
+            }
             // Shorthand syntax: foo() {} -> foo: function() {}
 
             // Rewind to the PID and parse a function expression.
@@ -3470,6 +3474,11 @@ ParseNodePtr Parser::ParseMemberList(LPCOLESTR pNameHint, ulong* pNameHintLength
             Assert(pidHint->Psz() != nullptr);
             if (pidHint == wellKnownPropertyPids.getter && tkHint.tk == tkID)
             {
+                if (isObjectPattern)
+                {
+                    Error(ERRInvalidAssignmentTarget);
+                }
+
                 LPCOLESTR pNameGet = nullptr;
                 pnodeArg = ParseMemberGetSet<buildAST>(knopGetMember, &pNameGet);
                 if (CONFIG_FLAG(UseFullName) && buildAST && pnodeArg->sxBin.pnode2->nop == knopFncDecl)
@@ -3488,6 +3497,11 @@ ParseNodePtr Parser::ParseMemberList(LPCOLESTR pNameHint, ulong* pNameHintLength
             }
             else if (pidHint == wellKnownPropertyPids.setter && tkHint.tk == tkID)
             {
+                if (isObjectPattern)
+                {
+                    Error(ERRInvalidAssignmentTarget);
+                }
+
                 LPCOLESTR pNameSet = nullptr;
                 pnodeArg = ParseMemberGetSet<buildAST>(knopSetMember, &pNameSet);
                 if (CONFIG_FLAG(UseFullName) && buildAST && pnodeArg->sxBin.pnode2->nop == knopFncDecl)

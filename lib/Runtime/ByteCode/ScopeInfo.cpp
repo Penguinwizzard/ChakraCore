@@ -38,6 +38,14 @@ namespace Js {
             ScopeInfo, parent, 0);
     }
 
+    inline void AddSlotCount(int& count, int addCount)
+    {
+        if (addCount != 0 && Int32Math::Add(count, addCount, &count))
+        {
+            ::Math::DefaultOverflowPolicy();
+        }
+    }
+
     //
     // Create scope info for an outer scope.
     //
@@ -46,17 +54,9 @@ namespace Js {
         int count = scope->Count();
 
         // Add same name args place holder slot counts
-        if (scope->GetFunc()->sameNameArgsPlaceHolderSlotCount
-            && Int32Math::Add(count, scope->GetFunc()->sameNameArgsPlaceHolderSlotCount, &count))
-        {
-            ::Math::DefaultOverflowPolicy();
-        }
-
-        if (scope->GetFunc()->thisScopeSlot != Js::Constants::NoRegister
-            && Int32Math::Add(count, 1, &count))
-        {
-            ::Math::DefaultOverflowPolicy();
-        }
+        AddSlotCount(count, scope->GetFunc()->sameNameArgsPlaceHolderSlotCount);
+        AddSlotCount(count, scope->GetFunc()->thisScopeSlot != Js::Constants::NoRegister ? 1 : 0);
+        AddSlotCount(count, scope->GetFunc()->newTargetScopeSlot != Js::Constants::NoRegister ? 1 : 0);
 
         ScopeInfo* scopeInfo = RecyclerNewPlusZ(scriptContext->GetRecycler(),
             count * sizeof(SymbolInfo),
