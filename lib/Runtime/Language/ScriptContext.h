@@ -738,8 +738,8 @@ private:
         AsmJsCodeGenerator* asmJsCodeGenerator;
         typedef JsUtil::BaseDictionary<void *, SList<AsmJsScriptFunction *>*, ArenaAllocator> AsmFunctionMap;
         AsmFunctionMap* asmJsEnvironmentMap;
-#endif
         ArenaAllocator* debugTransitionAlloc;
+#endif
 #if ENABLE_NATIVE_CODEGEN
         NativeCodeGenerator* nativeCodeGen;
 #endif

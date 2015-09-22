@@ -118,17 +118,17 @@ namespace Js
     public:
         AsmJsScriptFunction(FunctionProxy * proxy, ScriptFunctionType* deferredPrototypeType);
 
-        void SetModuleMemory(Var* mem) { m_ModuleMemory = mem; }
-        Var * GetModuleMemory() const { return m_ModuleMemory; }
+        void SetModuleMemory(Var* mem) { m_moduleMemory = mem; }
+        Var * GetModuleMemory() const { return m_moduleMemory; }
 
-        static uint32 GetOffsetOfModuleMemory() { return offsetof(AsmJsScriptFunction, m_ModuleMemory); }
+        static uint32 GetOffsetOfModuleMemory() { return offsetof(AsmJsScriptFunction, m_moduleMemory); }
     protected:
         AsmJsScriptFunction(DynamicType * type);
         DEFINE_VTABLE_CTOR(AsmJsScriptFunction, ScriptFunction);
         DEFINE_MARSHAL_OBJECT_TO_SCRIPT_CONTEXT(AsmJsScriptFunction);
 
     private:
-        Var * m_ModuleMemory;
+        Var * m_moduleMemory;
     };
 
     class ScriptFunctionWithInlineCache : public ScriptFunction
