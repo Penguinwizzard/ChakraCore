@@ -463,9 +463,8 @@ namespace Js
         this->hasInheritedTypeIds = true;
     }
 
-    bool ExternalTypeWithInheritedTypeIds::InstanceOf(int typeId)
+    bool ExternalTypeWithInheritedTypeIds::InstanceOf()
     {
-        Assert(this->typeId != typeId); // this should have been checked in JavascriptTypedObjectSlotAccessorFunction::InstanceOf
         if (inheritedTypeIds && ExternalTypeWithInheritedTypeIds::Is(this))
         {
             //TODO: check the strategy to get best perf, like binary search, reverse direction search?
