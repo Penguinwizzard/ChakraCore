@@ -784,7 +784,7 @@ namespace Js
         
         static DynamicTypeHandler * GetDeferredPrototypeFunctionTypeHandler(ScriptContext* scriptContext);
         static DynamicTypeHandler * GetDeferredAnonymousPrototypeFunctionTypeHandler();
-        static DynamicTypeHandler * GetDeferredAnonymousGeneratorFunctionTypeHandler(ScriptContext* scriptContext);
+        static DynamicTypeHandler * GetDeferredAnonymousGeneratorFunctionTypeHandler();
 
         DynamicTypeHandler * GetDeferredFunctionTypeHandler();
         DynamicTypeHandler * GetDeferredAnonymousFunctionTypeHandler();

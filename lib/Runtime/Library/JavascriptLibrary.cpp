@@ -948,7 +948,7 @@ namespace Js
         return DeferredTypeHandler<InitializeGeneratorFunction, InitializeFunctionDeferredTypeHandlerFilter<isNameAvailable, isPrototypeAvailable>>::GetDefaultInstance();
     }
 
-    DynamicTypeHandler * JavascriptLibrary::GetDeferredAnonymousGeneratorFunctionTypeHandler(ScriptContext* scriptContext)
+    DynamicTypeHandler * JavascriptLibrary::GetDeferredAnonymousGeneratorFunctionTypeHandler()
     {
         return JavascriptLibrary::GetDeferredGeneratorFunctionTypeHandlerBase</*isNameAvailable*/ false>();
     }
@@ -1000,7 +1000,7 @@ namespace Js
     DynamicType * JavascriptLibrary::CreateDeferredPrototypeGeneratorFunctionType(JavascriptMethod entrypoint, bool isAnonymousFunction, bool isShared)
     {
         return DynamicType::New(scriptContext, TypeIds_Function, generatorFunctionPrototype, entrypoint,
-            isAnonymousFunction ? GetDeferredAnonymousGeneratorFunctionTypeHandler(scriptContext) : GetDeferredPrototypeGeneratorFunctionTypeHandler(scriptContext), isShared, isShared);
+            isAnonymousFunction ? GetDeferredAnonymousGeneratorFunctionTypeHandler() : GetDeferredPrototypeGeneratorFunctionTypeHandler(scriptContext), isShared, isShared);
     }
 
     DynamicType * JavascriptLibrary::CreateDeferredPrototypeFunctionType(JavascriptMethod entrypoint)
