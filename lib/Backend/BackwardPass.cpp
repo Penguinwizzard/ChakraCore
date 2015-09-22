@@ -293,6 +293,9 @@ BackwardPass::Optimize()
     FloatSymEquivalenceMap localFloatSymEquivalenceMap(tempAlloc);
     floatSymEquivalenceMap = &localFloatSymEquivalenceMap;
 
+    NumberTempRepresentativePropertySymMap localNumberTempRepresentativePropertySym(tempAlloc);
+    numberTempRepresentativePropertySym = &localNumberTempRepresentativePropertySym;
+
     FOREACH_BLOCK_BACKWARD_IN_FUNC_DEAD_OR_ALIVE(block, this->func)
     {
         this->OptBlock(block);
@@ -4618,7 +4621,7 @@ BackwardPass::ProcessUse(IR::Opnd * opnd)
             if (sym->IsPropertySym())
             {
                 // TODO: We don't have last use info for property sym
-                // and we don't set the last use of the stacksym inside the proeprty sym
+                // and we don't set the last use of the stacksym inside the property sym
                 if (tag == Js::BackwardPhase)
                 {
                     if (opnd->AsSymOpnd()->IsPropertySymOpnd())

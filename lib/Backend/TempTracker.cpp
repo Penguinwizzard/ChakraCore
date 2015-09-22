@@ -258,7 +258,7 @@ TempTracker<T>::ProcessUse(StackSym * sym, BackwardPass * backwardPass)
     {
         this->tempTransferredSyms.Set(usedSymID);
         PropertySym * propertySym = instr->GetDst()->AsSymOpnd()->m_sym->AsPropertySym();
-        PropagateTempPropertyTransferStoreDependencies(usedSymID, propertySym);
+        PropagateTempPropertyTransferStoreDependencies(usedSymID, propertySym, backwardPass);
 
 #if DBG_DUMP
         if (T::DoTrace(backwardPass) && this->tempTransferDependencies)
@@ -456,8 +456,8 @@ TempTracker<T>::MarkTemp(StackSym * sym, BackwardPass * backwardPass)
 }
 
 NumberTemp::NumberTemp(JitArenaAllocator * alloc, bool inLoop) 
-    : TempTrackerBase(alloc, inLoop), nonTempPropertyIds(alloc), elemLoadDependencies(alloc), nonTempElemLoad(false), 
-    upwardExposedMarkTempObjectLiveFields(alloc), upwardExposedMarkTempObjectSymsProperties(nullptr)
+    : TempTrackerBase(alloc, inLoop), elemLoadDependencies(alloc), nonTempElemLoad(false), 
+      upwardExposedMarkTempObjectLiveFields(alloc), upwardExposedMarkTempObjectSymsProperties(nullptr)
 {
     propertyIdsTempTransferDependencies = inLoop ? HashTable<BVSparse<JitArenaAllocator> *>::New(alloc, 16) : nullptr;        
 }
@@ -468,7 +468,6 @@ NumberTemp::MergeData(NumberTemp * fromData, bool deleteData)
     nonTempElemLoad = nonTempElemLoad || fromData->nonTempElemLoad;
     if (!nonTempElemLoad)       // Don't bother merging other data if we already have a nonTempElemLoad
     {
-        nonTempPropertyIds.Or(&fromData->nonTempPropertyIds);
         if (IsInLoop())
         {
             // in loop
@@ -582,7 +581,6 @@ NumberTemp::ProcessInstr(IR::Instr * instr, BackwardPass * backwardPass)
         Assert(!this->nonTempElemLoad);
         Assert(this->nonTempSyms.IsEmpty());
         Assert(this->tempTransferredSyms.IsEmpty());        
-        Assert(this->nonTempPropertyIds.IsEmpty());
         Assert(this->elemLoadDependencies.IsEmpty());
         Assert(this->upwardExposedMarkTempObjectLiveFields.IsEmpty());        
     }
@@ -613,12 +611,15 @@ NumberTemp::ProcessInstr(IR::Instr * instr, BackwardPass * backwardPass)
     SymID dstSymId = dstSym->m_id;
     if (this->upwardExposedMarkTempObjectSymsProperties)
     {
+        // We are assigning to dstSym, it no longer has upward exposed use, get the information and clear it from the hash table
         BVSparse<JitArenaAllocator> * dstBv = this->upwardExposedMarkTempObjectSymsProperties->GetAndClear(dstSymId);
         if (dstBv)
         {
+            // Clear the upward exposed live fields of all the property sym id associated to dstSym
             this->upwardExposedMarkTempObjectLiveFields.Minus(dstBv);
             if (ObjectTemp::IsTempTransfer(instr) && instr->GetSrc1()->IsRegOpnd())
             {               
+                // If it is transfer, copy the dst info to the src
                 SymID srcStackSymId = instr->GetSrc1()->AsRegOpnd()->m_sym->AsStackSym()->m_id;
 
                 SymTable * symTable = backwardPass->func->m_symTable;
@@ -709,9 +710,10 @@ NumberTemp::IsTempPropertyTransferStore(IR::Instr * instr, BackwardPass * backwa
                 }
                 // We don't mark temp store of numeric properties (e.g. object literal [ 86: <blah> ]);
                 // This should only happen for InitFld, as StFld should have changed to StElem
-                Js::PropertyId propertyId = dst->AsSymOpnd()->m_sym->AsPropertySym()->m_propertyId;
-                return !this->nonTempPropertyIds.Test(propertyId) &&
-                    !instr->m_func->GetScriptContext()->GetPropertyNameLocked(propertyId)->IsNumeric();
+                PropertySym *propertySym = dst->AsSymOpnd()->m_sym->AsPropertySym();
+                SymID propertySymId = this->GetRepresentativePropertySymId(propertySym, backwardPass);
+                return !this->nonTempSyms.Test(propertySymId) &&
+                    !instr->m_func->GetScriptContext()->GetPropertyNameLocked(propertySym->m_propertyId)->IsNumeric();
             }
         };
 
@@ -748,7 +750,7 @@ NumberTemp::IsTempIndirTransferLoad(IR::Instr * instr, BackwardPass * backwardPa
     return false;
 }
 void 
-NumberTemp::PropagateTempPropertyTransferStoreDependencies(SymID usedSymID, PropertySym * propertySym)
+NumberTemp::PropagateTempPropertyTransferStoreDependencies(SymID usedSymID, PropertySym * propertySym, BackwardPass * backwardPass)
 {
     Assert(!this->nonTempElemLoad);
     upwardExposedMarkTempObjectLiveFields.Clear(propertySym->m_id);   
@@ -759,6 +761,10 @@ NumberTemp::PropagateTempPropertyTransferStoreDependencies(SymID usedSymID, Prop
         // use as temp transfer already and we won't have a case where the "dst" is reused again (outside of loop
         return;
     }
+
+    Assert(this->tempTransferDependencies != nullptr);
+    SymID dstSymID = this->GetRepresentativePropertySymId(propertySym, backwardPass);
+    AddTransferDependencies(usedSymID, dstSymID, this->tempTransferDependencies);
 
     Js::PropertyId storedPropertyId = propertySym->m_propertyId;
     // The the symbol this properties are transfered to
@@ -807,6 +813,21 @@ NumberTemp::PropagateTempPropertyTransferStoreDependencies(SymID usedSymID, Prop
     // We will will add the property sym int he dependency set and check with the upward exposed mark temp object live fields 
     // that we keep track of in NumberTemp
     (*pBVSparse)->Set(propertySym->m_id);
+}
+
+SymID
+NumberTemp::GetRepresentativePropertySymId(PropertySym * propertySym, BackwardPass * backwardPass)
+{
+    // Since we don't track alias with objects, all property access are all group together.
+    // Use a single property sym id to represent a propertyId to track dependencies.
+    SymID symId;
+    Js::PropertyId propertyId = propertySym->m_propertyId;
+    if (!backwardPass->numberTempRepresentativePropertySym->TryGetValue(propertyId, &symId))
+    {
+        symId = propertySym->m_id;
+        backwardPass->numberTempRepresentativePropertySym->Add(propertyId, symId);
+    }
+    return symId;
 }
 
 void
@@ -876,28 +897,28 @@ NumberTemp::ProcessPropertySymUse(IR::SymOpnd * symOpnd, IR::Instr * instr, Back
     }
     (*bv)->Set(propertySym->m_propertyId);
 
-    Js::PropertyId propertyId = symOpnd->m_sym->AsPropertySym()->m_propertyId;
+    SymID propertySymId = this->GetRepresentativePropertySymId(propertySym, backwardPass);
     bool isTempUse = instr->dstIsTempNumber;
     if (!isTempUse)
     {
-        // Use of the value is non temp, trace the property Id so we don't mark them
+        // Use of the value is non temp, track the property ID's property representative sym so we don't mark temp
         // assignment to this property on stack objects.
-        this->nonTempPropertyIds.Set(propertyId);
+        this->nonTempSyms.Set(propertySymId);
     }
-    else if (this->IsInLoop() && !this->nonTempPropertyIds.Test(propertyId))
+    else if (this->IsInLoop() && !this->nonTempSyms.Test(propertySymId))
     {
         // We didn't already detect non temp use of this property id. so we should track the dependencies in loops
         IR::Opnd * dstOpnd = instr->GetDst();
         Assert(dstOpnd->IsRegOpnd());
         SymID dstSymID = dstOpnd->AsRegOpnd()->m_sym->m_id;
-        AddTransferDependencies(propertyId, dstSymID, this->propertyIdsTempTransferDependencies);         
+        AddTransferDependencies(propertySym->m_propertyId, dstSymID, this->propertyIdsTempTransferDependencies);
 #if DBG_DUMP
         if (NumberTemp::DoTrace(backwardPass))
         {
             Output::Print(L"%s: %8s s%d -> PropId:%d %s: ", NumberTemp::GetTraceName(),
-                backwardPass->IsPrePass() ? L"Prepass " : L"", dstSymID, propertyId,
-                backwardPass->func->GetScriptContext()->GetPropertyNameLocked(propertyId)->GetBuffer());
-            (*this->propertyIdsTempTransferDependencies->Get(propertyId))->Dump();
+                backwardPass->IsPrePass() ? L"Prepass " : L"", dstSymID, propertySym->m_propertyId,
+                backwardPass->func->GetScriptContext()->GetPropertyNameLocked(propertySym->m_propertyId)->GetBuffer());
+            (*this->propertyIdsTempTransferDependencies->Get(propertySym->m_propertyId))->Dump();
         }
 #endif  
     }
@@ -906,8 +927,8 @@ NumberTemp::ProcessPropertySymUse(IR::SymOpnd * symOpnd, IR::Instr * instr, Back
     if (NumberTemp::DoTrace(backwardPass))
     {
         Output::Print(L"%s: %8s%4sTemp Use (PropId:%d %s)", NumberTemp::GetTraceName(),
-            backwardPass->IsPrePass() ? L"Prepass " : L"", isTempUse ? L"" : L"Non ", propertyId,
-            backwardPass->func->GetScriptContext()->GetPropertyNameLocked(propertyId)->GetBuffer());
+            backwardPass->IsPrePass() ? L"Prepass " : L"", isTempUse ? L"" : L"Non ", propertySym->m_propertyId,
+            backwardPass->func->GetScriptContext()->GetPropertyNameLocked(propertySym->m_propertyId)->GetBuffer());
         instr->DumpSimple();
     }
 #endif
@@ -940,8 +961,8 @@ NumberTemp::Dump(wchar_t const * traceName)
     }
     else
     {
-        Output::Print(L"%s: Non Temp PropertyIds", traceName);
-        this->nonTempPropertyIds.Dump();
+        Output::Print(L"%s: Non Temp Syms", traceName);
+        this->nonTempSyms.Dump();
         if (this->propertyIdsTempTransferDependencies != nullptr)
         {
             Output::Print(L"%s: Temp transfer propertyId dependencies:\n", traceName);
