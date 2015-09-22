@@ -1942,10 +1942,10 @@ namespace Js
 
     Var InterpreterStackFrame::ProcessAsmJsModule()
     {
+#ifdef ASMJS_PLAT
         Js::FunctionBody* asmJsModuleFunctionBody = GetFunctionBody();
         AsmJsModuleInfo* info = asmJsModuleFunctionBody->GetAsmJsModuleInfo();
 
-#ifdef ASMJS_PLAT
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
         if (Configuration::Global.flags.ForceAsmJsLinkFail)
         {
