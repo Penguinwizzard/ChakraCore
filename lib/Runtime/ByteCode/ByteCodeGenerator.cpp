@@ -2256,7 +2256,6 @@ FuncInfo* PreVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerato
     FuncInfo* funcInfo = pnode->sxFnc.funcInfo = byteCodeGenerator->StartBindFunction(funcName, funcNameLength, &funcExprWithName, pnode);
     funcInfo->byteCodeFunction->SetIsNamedFunctionExpression(funcExprWithName);
     funcInfo->byteCodeFunction->SetIsNameIdentifierRef (pnode->sxFnc.isNameIdentifierRef);
-    funcInfo->byteCodeFunction->SetIsAnonymousFunction(funcName == Js::Constants::AnonymousFunction);
     if (fIsRoot)
     {
         byteCodeGenerator->SetRootFuncInfo(funcInfo);

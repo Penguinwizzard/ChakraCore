@@ -189,8 +189,7 @@ enum FunctionFlags
     ffIsNameIdentifierRef              = 0x4000,
     ffChildCallsEval                   = 0x8000,
     ffHasReferenceableBuiltInArguments = 0x10000,
-    ffIsNamedFunctionExpression        = 0x20000,
-    ffIsAnonymousFunction              = 0x40000,
+    ffIsNamedFunctionExpression        = 0x20000
 };
 
 // Kinds of constant
@@ -1588,7 +1587,6 @@ public:
             | (function->m_isStaticNameFunction ? ffIsStaticNameFunction : 0)
             | (function->m_isNamedFunctionExpression ? ffIsNamedFunctionExpression : 0)
             | (function->m_isNameIdentifierRef  ? ffIsNameIdentifierRef  : 0)
-            | (function->m_isAnonymousFunction ? ffIsAnonymousFunction : 0)
             | (function->m_isGlobalFunc ? ffIsGlobalFunc : 0)
             | (function->m_dontInline ? ffDontInline : 0)
             | (function->m_isFuncRegistered ? ffIsFuncRegistered : 0)
@@ -2702,9 +2700,6 @@ public:
             Assert(sourceInfo->GetSrcInfo()->moduleID == kmodGlobal);
             Assert(!deserializeNested);
             *functionProxy = DeferDeserializeFunctionInfo::New(this->scriptContext, nestedCount, functionId, cache, functionBytes, sourceInfo, displayName, displayNameLength, nativeModule, (FunctionInfo::Attributes)attributes);
-            // Note: We set this flag here in addition to below ParseableFunctionInfo case b\c this flag is on 
-            // the functionproxy and we want it available even if we have partial deserialization
-            (*functionProxy)->SetIsAnonymousFunction((bitflags & ffIsAnonymousFunction) ? true : false);
             return S_OK;
         }
 
@@ -2754,7 +2749,6 @@ public:
         (*function)->m_isStaticNameFunction = (bitflags & ffIsStaticNameFunction) ? true : false;
         (*function)->m_isNamedFunctionExpression = (bitflags & ffIsNamedFunctionExpression) ? true : false;
         (*function)->m_isNameIdentifierRef  = (bitflags & ffIsNameIdentifierRef ) ? true : false;
-        (*function)->m_isAnonymousFunction = (bitflags & ffIsAnonymousFunction) ? true : false;
         (*function)->m_isGlobalFunc = (bitflags & ffIsGlobalFunc) ? true : false;
         (*function)->m_dontInline = (bitflags & ffDontInline) ? true : false;
         (*function)->m_isStrictMode = (bitflags & ffIsStrictMode) ? true : false;

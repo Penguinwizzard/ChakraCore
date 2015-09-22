@@ -1109,8 +1109,7 @@ namespace Js
         wchar_t* GetDebugNumberSet(wchar(&bufferToWriteTo)[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE]) const;
         bool GetIsTopLevel() { return m_isTopLevel; }
         void SetIsTopLevel(bool set) { m_isTopLevel = set;  }
-        void SetIsAnonymousFunction(const bool is) { m_isAnonymousFunction = is; }
-        bool GetIsAnonymousFunction() const { return m_isAnonymousFunction; }
+        bool GetIsAnonymousFunction() const { return this->GetDisplayName() == Js::Constants::AnonymousFunction; }
         uint GetNestedCount() const { return m_nestedCount; }
         void Copy(FunctionProxy* other);
         ParseableFunctionInfo* EnsureDeserialized();
@@ -1217,7 +1216,6 @@ namespace Js
 
         bool m_isTopLevel : 1; // Indicates that this function is top-level function, currently being used in script profiler and debugger
         bool m_isPublicLibraryCode: 1; // Indicates this function is public boundary library code that should be visible in JS stack
-        bool m_isAnonymousFunction : 1; //This flag is used to set the correct TypeHandler 
         void CleanupFunctionProxyCounters()
         {
             PERF_COUNTER_DEC(Code, TotalFunction);

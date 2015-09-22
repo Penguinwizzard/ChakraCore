@@ -53,7 +53,6 @@ namespace Js
         FunctionInfo(entryPoint, attributes, functionId, (FunctionBody*) this),
         m_nestedCount(nestedCount),
         m_isTopLevel(false),
-        m_isAnonymousFunction(false),
         m_isPublicLibraryCode(false),
         m_derivedSize(derivedSize),
         m_scriptContext(scriptContext),
