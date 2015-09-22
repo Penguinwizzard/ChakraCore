@@ -904,15 +904,17 @@ namespace Js
         }
 
         ScriptContext *scriptContext = function->GetScriptContext();
-
         if (scriptContext->GetConfig()->IsES6FunctionNameEnabled())
         {
-            JavascriptString * functionName = ((Js::JavascriptFunction*)function)->GetDisplayName(true);
-            if (functionName == nullptr || scriptFunction && (scriptFunction->GetFunctionProxy()->EnsureDeserialized()->GetIsStaticNameFunction() || scriptFunction->IsAnonymousFunction()))
+            if(scriptFunction && (useAnonymous || scriptFunction->GetFunctionProxy()->EnsureDeserialized()->GetIsStaticNameFunction()))
             {
                 return;
             }
-            function->SetPropertyWithAttributes(PropertyIds::name, functionName, PropertyConfigurable, nullptr);
+            JavascriptString * functionName = ((Js::JavascriptFunction*)function)->GetDisplayName(true);
+            if (functionName)
+            {
+                function->SetPropertyWithAttributes(PropertyIds::name, functionName, PropertyConfigurable, nullptr);
+            }
         }
     }
 
@@ -1010,9 +1012,8 @@ namespace Js
     {
         // Note: the lack of typehandler switching here based on the isAnonymousFunction flag is intentional
         // This function handles the creation of ExternalFunctions, Promise based functions and WinRTFunctions (through CreateDeferredPrototypeFunctionType), and  other builtins through CreateNonProfiledFunction.
-        // All of these function types are derivatives of Runtime Functions which don't have a concept of anonymous functions. This may need to change, more investigation is needed, but it is beyond the scope of this bug fix.
-        // Further all External Functions have shared type handlers which makes switching the typehandler a mute strategy.
-        // Im not certain how you could write any of the above funcations as an anonymous function but if you could  we may have an issue where hasProperty would say you have a name propery but getProperty returns undefined
+        // All of these function types are derivatives of Runtime Functions which don't get parsed. Further all External Functions have shared type handlers which makes switching the typehandler a mute strategy.
+        // we may have an issue where hasProperty would say you have a name propery but getProperty returns undefined. This issue is beyond the scope of this fix and will have to be investigated later.
         return DynamicType::New(scriptContext, TypeIds_Function, functionPrototype, entrypoint, 
             GetDeferredPrototypeFunctionTypeHandler(scriptContext), isShared, isShared);
     }
@@ -4175,6 +4176,7 @@ namespace Js
 
         if (scriptContext->GetConfig()->IsES6FunctionNameEnabled())
         {
+            // We assert NameId is valid above
             function->SetPropertyWithAttributes(PropertyIds::name, function->GetDisplayName(true), PropertyConfigurable, nullptr);
         }
 
@@ -4201,11 +4203,13 @@ namespace Js
 
     RuntimeFunction* JavascriptLibrary::DefaultCreateFunction(FunctionInfo * functionInfo, int length, DynamicObject * prototype, DynamicType * functionType, PropertyId nameId)
     {
+        Assert(nameId >= Js::InternalPropertyIds::Count && scriptContext->IsTrackedPropertyId(nameId));
         return DefaultCreateFunction(functionInfo, length, prototype, functionType, TaggedInt::ToVarUnchecked((int)nameId));
     }
 
     RuntimeFunction* JavascriptLibrary::DefaultCreateFunction(FunctionInfo * functionInfo, int length, DynamicObject * prototype, DynamicType * functionType, Var nameId)
     {
+        Assert(nameId != nullptr);
         RuntimeFunction * function;
         if (nullptr == functionType)
         {

@@ -2906,10 +2906,10 @@ LABEL1:
             if (TaggedInt::Is(sourceString))
             {
                 int32 propertIdOfSourceString = TaggedInt::ToInt32(sourceString);
-
-                // I ran into an issue where the hybrid debugger treats scriptFunctions as ExternalFunctions
-                // JsCreateFunction the external function path for creating a function passes a nameId set to 0 for no name, 
-                // this gets coerced to empty string which is not the behavior we want for function.name
+                // We have two ways of setting a name either through the parser which would be on function proxy
+                // or on the functionNameId (called sourceString in this function) which is how runtimeFunction, winrt functions, and some External function names are set
+                // runtime function names have thus far not been anonymous, but it is possible to have anonymous external functions
+                // So here we are returning a nullptr to denote an anonymous function
                 if (isFunctionName && thisFunction->IsExternalFunction() && propertIdOfSourceString == 0)
                 {
                     return nullptr;
@@ -2923,6 +2923,9 @@ LABEL1:
 
         if (isFunctionName)
         {
+            // any runtime functions without a nameId will hit here.
+            // This includes winRT functions b\c they use CreateStdCallExternalFunction with nameId set to 0/nullptr
+            Assert(!ScriptFunction::Is(thisFunction));
             return nullptr;
         }
 
