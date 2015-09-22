@@ -251,7 +251,6 @@ namespace Js
                 && oldEntryPointInfo != entryPointInfo
                 && oldEntryPointInfo->SupportsExpiration())
             {
-                Assert(oldEntryPointInfo->address != entryPoint);
                 // The old entry point could be executing so we need root it to make sure
                 // it isn't prematurely collected. The rooting is done by queueing it up on the threadContext
                 ThreadContext* threadContext = ThreadContext::GetContextForCurrentThread();
