@@ -186,7 +186,7 @@ enum FunctionFlags
     ffhasAllNonLocalReferenced         = 0x0800,
     ffhasSetIsObject                   = 0x1000,
     ffhasSetCallsEval                  = 0x2000,
-    ffIsNameIdentifierRef              = 0x4000,
+    ffIsNameIdentifierRef                   = 0x4000,
     ffChildCallsEval                   = 0x8000,
     ffHasReferenceableBuiltInArguments = 0x10000,
     ffIsNamedFunctionExpression        = 0x20000
@@ -2700,6 +2700,7 @@ public:
             Assert(sourceInfo->GetSrcInfo()->moduleID == kmodGlobal);
             Assert(!deserializeNested);
             *functionProxy = DeferDeserializeFunctionInfo::New(this->scriptContext, nestedCount, functionId, cache, functionBytes, sourceInfo, displayName, displayNameLength, nativeModule, (FunctionInfo::Attributes)attributes);
+
             return S_OK;
         }
 
