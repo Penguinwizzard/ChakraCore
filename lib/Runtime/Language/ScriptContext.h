@@ -736,6 +736,9 @@ private:
 #ifdef ASMJS_PLAT
         InterpreterThunkEmitter* asmJsInterpreterThunkEmitter;
         AsmJsCodeGenerator* asmJsCodeGenerator;
+        typedef JsUtil::BaseDictionary<void *, SList<AsmJsScriptFunction *>*, ArenaAllocator> AsmFunctionMap;
+        AsmFunctionMap* asmJsEnvironmentMap;
+        ArenaAllocator* debugTransitionAlloc;
 #endif
 #if ENABLE_NATIVE_CODEGEN
         NativeCodeGenerator* nativeCodeGen;
@@ -1387,7 +1390,7 @@ private:
         static void RecyclerFunctionCallbackForDebugger(void *address, size_t size);
 
 #ifdef ASMJS_PLAT
-        static void TransitionEnvironmentForDebugger(ScriptFunction * scriptFunction);
+        void TransitionEnvironmentForDebugger(ScriptFunction * scriptFunction);
 #endif
 
         HRESULT RecreateNativeCodeGenerator();

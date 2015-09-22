@@ -18065,6 +18065,14 @@ swap_srcs:
     case Js::OpCode::IsInst:
     case Js::OpCode::BailOnEqual:
     case Js::OpCode::BailOnNotEqual:
+    case Js::OpCode::StInt8ArrViewElem:
+    case Js::OpCode::StUInt8ArrViewElem:
+    case Js::OpCode::StInt16ArrViewElem:
+    case Js::OpCode::StUInt16ArrViewElem:
+    case Js::OpCode::StInt32ArrViewElem:
+    case Js::OpCode::StUInt32ArrViewElem:
+    case Js::OpCode::StFloat32ArrViewElem:
+    case Js::OpCode::StFloat64ArrViewElem:
         return;
     }
 

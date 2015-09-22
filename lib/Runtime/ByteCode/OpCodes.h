@@ -367,6 +367,8 @@ MACRO_WMS(              StSlot,                     ElementSlot,    None)
 MACRO_WMS(              StSlotChkUndecl,            ElementSlot,    OpSideEffect)
 MACRO_WMS(              StObjSlot,                  ElementSlot,    OpSideEffect)
 MACRO_WMS(              StObjSlotChkUndecl,         ElementSlot,    OpSideEffect)
+MACRO_BACKEND_ONLY(     LdAsmJsSlot,                ElementSlot,    OpTempNumberSources|OpCanCSE)
+MACRO_BACKEND_ONLY(     StAsmJsSlot,                ElementSlot,    None)
 #ifndef FLOAT_VAR
 MACRO_BACKEND_ONLY(     StSlotBoxTemp,              Empty,          OpSideEffect|OpTempNumberSources)
 #endif
@@ -418,6 +420,7 @@ MACRO_WMS(              LdInfinity,         Reg1,           OpByteCodeOnly|OpCan
 MACRO_WMS(              LdTrue,             Reg1,           OpByteCodeOnly|OpCanCSE)       // Load 'true' boolean primitive
 MACRO_WMS(              LdFalse,            Reg1,           OpByteCodeOnly|OpCanCSE)       // Load 'false' boolean primitive
 MACRO_WMS(              LdEnv,              Reg1,           OpCanCSE)       // Load the optional FixedSizeArray environment for closures
+MACRO_BACKEND_ONLY(     LdAsmJsEnv,         Reg1,           OpCanCSE)       // Load the asm.js memory
 
 MACRO_WMS(              LdArgCnt,           Reg1,           None)       // Load the argument count from the current function
 

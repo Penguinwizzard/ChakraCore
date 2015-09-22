@@ -5483,6 +5483,12 @@ namespace Js
         return EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, ScriptFunction, proxy, deferredPrototypeType));
     }
 
+    AsmJsScriptFunction* JavascriptLibrary::CreateAsmJsScriptFunction(FunctionProxy * proxy)
+    {
+        ScriptFunctionType* deferredPrototypeType = proxy->EnsureDeferredPrototypeType();
+        return EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, AsmJsScriptFunction, proxy, deferredPrototypeType));
+    }
+
     ScriptFunctionWithInlineCache* JavascriptLibrary::CreateScriptFunctionWithInlineCache(FunctionProxy * proxy)
     {
         ScriptFunctionType* deferredPrototypeType = proxy->EnsureDeferredPrototypeType();

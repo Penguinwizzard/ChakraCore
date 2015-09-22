@@ -1942,6 +1942,9 @@ namespace Js
 
     Var InterpreterStackFrame::ProcessAsmJsModule()
     {
+        Js::FunctionBody* asmJsModuleFunctionBody = GetFunctionBody();
+        AsmJsModuleInfo* info = asmJsModuleFunctionBody->GetAsmJsModuleInfo();
+
 #ifdef ASMJS_PLAT
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
         if (Configuration::Global.flags.ForceAsmJsLinkFail)
@@ -1950,17 +1953,6 @@ namespace Js
             return this->ProcessLinkFailedAsmJsModule();
         }
 #endif
-        Js::FunctionBody* asmJsModuleFunctionBody = GetFunctionBody();
-        AsmJsModuleInfo* info = asmJsModuleFunctionBody->GetAsmJsModuleInfo();
-
-        // if module was already processed, that means we are relinking, which is not currently supported
-        if (info->IsRuntimeProcessed())
-        {
-            Js::Throw::OutOfMemory();
-        }
-        // even if linking fails, we want this to be true so we don't try again, because asm.js state will be messed up after reparse
-        info->SetIsRuntimeProcessed(true);
-
         if( m_inSlotsCount != info->GetArgInCount() + 1 )
         {
             // Error reparse without asm.js
@@ -2159,7 +2151,9 @@ namespace Js
 
             // Todo:: add more runtime check here
             auto proxy = m_functionBody->GetNestedFuncReference(i);
-            ScriptFunction* scriptFuncObj = ScriptFunction::OP_NewScFunc(pDisplay, (FunctionProxy**)proxy);
+            AsmJsScriptFunction* scriptFuncObj = (AsmJsScriptFunction*)ScriptFunction::OP_NewScFunc(pDisplay, (FunctionProxy**)proxy);
+            localModuleFunctions[modFunc.location] = scriptFuncObj;
+
             if (i == 0 && info->GetUsesChangeHeap())
             {
                 scriptFuncObj->GetDynamicType()->SetEntryPoint(AsmJsChangeHeapBuffer);
@@ -2168,17 +2162,21 @@ namespace Js
             {
                 scriptFuncObj->GetDynamicType()->SetEntryPoint(AsmJsExternalEntryPoint);
             }
-            FunctionEntryPointInfo* entypointInfo = (FunctionEntryPointInfo*)scriptFuncObj->GetEntryPointInfo();
-            entypointInfo->SetIsAsmJSFunction(true);
-            entypointInfo->SetModuleAddress((uintptr_t)moduleMemoryPtr);
-            localModuleFunctions[modFunc.location] = scriptFuncObj;
+            scriptFuncObj->SetModuleMemory(moduleMemoryPtr);
+            if (!info->IsRuntimeProcessed())
+            {
+                // don't reset entrypoint upon relinking
+                FunctionEntryPointInfo* entypointInfo = (FunctionEntryPointInfo*)scriptFuncObj->GetEntryPointInfo();
+                entypointInfo->SetIsAsmJSFunction(true);
+                entypointInfo->SetModuleAddress((uintptr_t)moduleMemoryPtr);
 
 #if DYNAMIC_INTERPRETER_THUNK
-            if (!PHASE_ON1(AsmJsJITTemplatePhase))
-            {
-                entypointInfo->address = AsmJsDefaultEntryThunk;
-            }
+                if (!PHASE_ON1(AsmJsJITTemplatePhase))
+                {
+                    entypointInfo->address = AsmJsDefaultEntryThunk;
+                }
 #endif
+            }
         }
         
         // Initialise function table arrays
@@ -2217,6 +2215,8 @@ namespace Js
         }
 #endif
 
+        info->SetIsRuntimeProcessed(true);
+
         // create export object
         if( info->GetExportsCount() )
         {
@@ -2232,6 +2232,7 @@ namespace Js
             return newObj;
         }
 
+
         // export only 1 function
         Var exportFunc = localModuleFunctions[info->GetExportFunctionIndex()];
         SetReg((RegSlot)0, exportFunc);
@@ -2246,6 +2247,16 @@ namespace Js
     Var InterpreterStackFrame::ProcessLinkFailedAsmJsModule()
     {
         AsmJSCompiler::OutputError(this->scriptContext, L"asm.js linking failed.");
+
+        Js::FunctionBody* asmJsModuleFunctionBody = GetFunctionBody();
+        AsmJsModuleInfo* info = asmJsModuleFunctionBody->GetAsmJsModuleInfo();
+
+        // do not support relinking with failed relink
+        if (info->IsRuntimeProcessed())
+        {
+            Js::Throw::OutOfMemory();
+        }
+
         ScriptFunction * funcObj = GetJavascriptFunction();
         ScriptFunction::ReparseAsmJsModule(&funcObj);
         const bool doProfile =
