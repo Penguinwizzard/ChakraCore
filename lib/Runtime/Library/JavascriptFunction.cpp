@@ -2864,7 +2864,7 @@ LABEL1:
         ScriptContext* scriptContext = this->GetScriptContext();
         Assert(this->GetFunctionProxy() != nullptr); // The caller should guarantee a proxy exists
         ParseableFunctionInfo * func = this->GetFunctionProxy()->EnsureDeserialized();
-        if (wcscmp(func->GetDisplayName(), Js::Constants::FunctionCode) == 0)
+        if (func->GetDisplayName() == Js::Constants::FunctionCode)
         {
             return LiteralString::NewCopyBuffer(Js::Constants::Anonymous, Js::Constants::AnonymousLength, scriptContext);
         }

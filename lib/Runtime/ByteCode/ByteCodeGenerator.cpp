@@ -2217,8 +2217,8 @@ FuncInfo* PreVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerato
         parentFunc->IsGlobalFunction() &&
         parentFunc->root->sxFnc.GetTopLevelScope() == pnode);
 
-    const wchar_t *funcName = Js::Constants::Empty;
-    int funcNameLength = 0;
+    const wchar_t *funcName = Js::Constants::AnonymousFunction;
+    int funcNameLength = Js::Constants::AnonymousFunctionLength;
     bool funcExprWithName = false;
 
     if (pnode->sxFnc.hint != nullptr)
@@ -2253,18 +2253,10 @@ FuncInfo* PreVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerato
     }
 
     Assert(pnode->sxFnc.funcInfo == nullptr);
-    
-    bool isAnonymousFunction = funcName == Js::Constants::Empty;
-    if (isAnonymousFunction)
-    {
-        funcName = Js::Constants::AnonymousFunction;
-        funcNameLength = Js::Constants::AnonymousFunctionLength;
-    }
-
     FuncInfo* funcInfo = pnode->sxFnc.funcInfo = byteCodeGenerator->StartBindFunction(funcName, funcNameLength, &funcExprWithName, pnode);
     funcInfo->byteCodeFunction->SetIsNamedFunctionExpression(funcExprWithName);
     funcInfo->byteCodeFunction->SetIsNameIdentifierRef (pnode->sxFnc.isNameIdentifierRef);
-    funcInfo->byteCodeFunction->SetIsAnonymousFunction(isAnonymousFunction);
+    funcInfo->byteCodeFunction->SetIsAnonymousFunction(funcName == Js::Constants::AnonymousFunction);
     if (fIsRoot)
     {
         byteCodeGenerator->SetRootFuncInfo(funcInfo);

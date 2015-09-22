@@ -359,7 +359,7 @@ namespace Js
             {
                 name = pFuncBody->GetDisplayName();
                 nameLength = pFuncBody->GetDisplayNameLength();
-                if (wcscmp(name, Js::Constants::FunctionCode) == 0)
+                if (name == Js::Constants::FunctionCode)
                 {
                     name = Js::Constants::Anonymous;
                     nameLength = Js::Constants::AnonymousLength;
