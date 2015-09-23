@@ -1756,7 +1756,7 @@ void ByteCodeGenerator::LoadAllConstants(FuncInfo *funcInfo)
         uint count = 0;
         funcInfo->GetBodyScope()->ForEachSymbol([&](Symbol *const sym)
         {
-            if (sym->IsInSlot(funcInfo))
+            if (sym->NeedsSlotAlloc(funcInfo))
             {
                 // All properties should get correct propertyId here.
                 count++;
@@ -1767,7 +1767,7 @@ void ByteCodeGenerator::LoadAllConstants(FuncInfo *funcInfo)
         {
             funcInfo->GetParamScope()->ForEachSymbol([&](Symbol *const sym)
             {
-                if (sym->IsInSlot(funcInfo))
+                if (sym->NeedsSlotAlloc(funcInfo))
                 {
                     // All properties should get correct propertyId here.
                     count++;
