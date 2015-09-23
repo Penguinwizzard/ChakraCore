@@ -774,6 +774,18 @@ FlowGraph::BuildLoop(BasicBlock *headBlock, BasicBlock *tailBlock, Loop *parentL
     }
 }
 
+Loop::MemCopyCandidate* Loop::MemOpCandidate::AsMemCopy()
+{
+    Assert(this->IsMemCopy());
+    return (Loop::MemCopyCandidate*)this;
+}
+
+Loop::MemSetCandidate* Loop::MemOpCandidate::AsMemSet()
+{
+    Assert(this->IsMemSet());
+    return (Loop::MemSetCandidate*)this;
+}
+
 bool Loop::EnsureMemOpVariablesInitialized()
 {
     if (this->memOpInfo == nullptr)
@@ -799,24 +811,21 @@ bool Loop::EnsureMemOpVariablesInitialized()
             this->memOpInfo->inductionVariableChangeInfoMap = nullptr;
             this->memOpInfo->memcopyIgnore = nullptr;
             this->memOpInfo->memsetIgnore = nullptr;
-            this->memOpInfo->memsetCandidates = nullptr;
-            this->memOpInfo->memcopyCandidates = nullptr;
+            this->memOpInfo->candidates = nullptr;
             return false;
         }
-        this->memOpInfo->doMemcopy = true;
-        this->memOpInfo->doMemset = true;
+        this->memOpInfo->doMemOp = true;
         this->memOpInfo->inductionVariablesUsedAfterLoop = nullptr;
         this->memOpInfo->inductionVariableChangeInfoMap = JitAnew(allocator, Loop::InductionVariableChangeInfoMap, allocator);
         this->memOpInfo->memcopyIgnore = JitAnew(allocator, Loop::MemOpIgnoreSet, allocator);
         this->memOpInfo->memsetIgnore = JitAnew(allocator, Loop::MemOpIgnoreSet, allocator);
-        this->memOpInfo->memsetCandidates = JitAnew(allocator, Loop::MemsetList, allocator);
-        this->memOpInfo->memcopyCandidates = JitAnew(allocator, Loop::MemcopyList, allocator);
+        this->memOpInfo->candidates = JitAnew(allocator, Loop::MemOpList, allocator);
     }
     return true;
 }
 
 void
-Loop::InvalidateMemsetCandidate(SymID sym, MemsetCandidate *memsetInfo)
+Loop::InvalidateMemsetCandidate(SymID sym, MemSetCandidate *memsetInfo)
 {
     Assert(this->memOpInfo->memsetIgnore);
     if (this->memOpInfo->memsetIgnore->Contains(sym) == false)
@@ -824,23 +833,21 @@ Loop::InvalidateMemsetCandidate(SymID sym, MemsetCandidate *memsetInfo)
         this->memOpInfo->memsetIgnore->Add(sym);
     }
 
-    if (this->memOpInfo->memsetCandidates && memsetInfo)
+    if (this->memOpInfo->candidates && memsetInfo)
     {
-        this->memOpInfo->memsetCandidates->Remove(memsetInfo);
+        this->memOpInfo->candidates->Remove(memsetInfo);
     }
-    else if (this->memOpInfo->memsetCandidates)
+    else if (this->memOpInfo->candidates)
     {
-        FOREACH_SLISTCOUNTED_ENTRY_EDITING(Loop::MemsetCandidate*, memsetCandidate, (SListCounted<Loop::MemsetCandidate*>*)this->memOpInfo->memsetCandidates, iter)
+        FOREACH_MEMSET_CANDIDATES_EDITING(memsetCandidate, this, iter)
         {
             if (memsetCandidate->base == sym)
             {
                 iter.RemoveCurrent();
                 break;
             }
-        }
-        NEXT_SLISTCOUNTED_ENTRY_EDITING;
+        } NEXT_MEMSET_CANDIDATE_EDITING;
     }
-}
 
 void
 Loop::InvalidateMemcopyCandidate(SymID sym)
@@ -851,19 +858,19 @@ Loop::InvalidateMemcopyCandidate(SymID sym)
         this->memOpInfo->memcopyIgnore->Add(sym);
     }
 
-    if (this->memOpInfo->memcopyCandidates)
+    if (this->memOpInfo->candidates)
     {
-        FOREACH_SLISTCOUNTED_ENTRY_EDITING(Loop::MemcopyCandidate*, memcopyCandidate, (SListCounted<Loop::MemcopyCandidate*>*)this->memOpInfo->memcopyCandidates, iter)
+        FOREACH_MEMCOPY_CANDIDATES_EDITING(memcopyCandidate, this, iter)
         {
             if (memcopyCandidate->ldBase == sym)
             {
-                if (memcopyCandidate->stBase  && !this->memOpInfo->memcopyIgnore->Contains(memcopyCandidate->stBase))
+                    if (memcopyCandidate->base  && !this->memOpInfo->memcopyIgnore->Contains(memcopyCandidate->base))
                 {
-                    this->memOpInfo->memcopyIgnore->Add(memcopyCandidate->stBase);
+                        this->memOpInfo->memcopyIgnore->Add(memcopyCandidate->base);
                 }
                 iter.RemoveCurrent();
             }
-            else if (memcopyCandidate->stBase == sym)
+                else if (memcopyCandidate->base == sym)
             {
                 if (memcopyCandidate->ldBase  && !this->memOpInfo->memcopyIgnore->Contains(memcopyCandidate->ldBase))
                 {
@@ -871,8 +878,7 @@ Loop::InvalidateMemcopyCandidate(SymID sym)
                 }
                 iter.RemoveCurrent();
             }
-        }
-        NEXT_SLISTCOUNTED_ENTRY_EDITING;
+        } NEXT_MEMCOPY_CANDIDATE_EDITING;
     }
 }
 

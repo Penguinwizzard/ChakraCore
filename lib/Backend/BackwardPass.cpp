@@ -434,7 +434,7 @@ BackwardPass::MergeSuccBlocksInfo(BasicBlock * block)
             wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
 #endif
             // save the byteCodeUpwardExposedUsed from deleting for the block right after the memop loop
-            if (this->tag == Js::DeadStorePhase && !this->IsPrePass() && globOpt->DoMemop(block->loop) && blockSucc->loop != block->loop)
+            if (this->tag == Js::DeadStorePhase && !this->IsPrePass() && globOpt->DoMemOp(block->loop) && blockSucc->loop != block->loop)
             {
                 Assert(block->loop->memOpInfo->inductionVariablesUsedAfterLoop == nullptr);
                 block->loop->memOpInfo->inductionVariablesUsedAfterLoop = JitAnew(this->tempAlloc, BVSparse<JitArenaAllocator>, this->tempAlloc);
@@ -7033,47 +7033,34 @@ BackwardPass::DoDeadStoreLdStForMemop(IR::Instr *instr)
 
     Loop *loop = this->currentBlock->loop;
 
-    if (globOpt->DoMemset(loop))
+    if (globOpt->DoMemOp(loop))
     {
         if (instr->m_opcode == Js::OpCode::StElemI_A && instr->GetDst()->IsIndirOpnd())
         {
             SymID base = this->globOpt->GetVarSymID(instr->GetDst()->AsIndirOpnd()->GetBaseOpnd()->GetStackSym());
             SymID index = this->globOpt->GetVarSymID(instr->GetDst()->AsIndirOpnd()->GetIndexOpnd()->GetStackSym());
-            FOREACH_SLISTCOUNTED_ENTRY(Loop::MemsetCandidate*, memsetCandidate, (SListCounted<Loop::MemsetCandidate*>*)loop->memOpInfo->memsetCandidates)
+
+            FOREACH_MEMOP_CANDIDATES(candidate, loop)
             {
-                if (base == memsetCandidate->base  && index == memsetCandidate->index)
+                if (base == candidate->base && index == candidate->index)
                 {
                     return true;
                 }
-            } NEXT_SLISTCOUNTED_ENTRY;
+            } NEXT_MEMOP_CANDIDATE
         }
-    }
-
-    if (globOpt->DoMemcopy(loop) && (instr->m_opcode == Js::OpCode::StElemI_A || instr->m_opcode == Js::OpCode::LdElemI_A))
-    {
-        FOREACH_SLISTCOUNTED_ENTRY(Loop::MemcopyCandidate*, memcopyCandidate, (SListCounted<Loop::MemcopyCandidate*>*)loop->memOpInfo->memcopyCandidates)
+        else if (instr->m_opcode == Js::OpCode::LdElemI_A &&  instr->GetSrc1()->IsIndirOpnd())
         {
-            if (instr->m_opcode == Js::OpCode::StElemI_A && instr->GetDst()->IsIndirOpnd())
-            {
-                SymID base = this->globOpt->GetVarSymID(instr->GetDst()->AsIndirOpnd()->GetBaseOpnd()->GetStackSym());
-                SymID index = this->globOpt->GetVarSymID(instr->GetDst()->AsIndirOpnd()->GetIndexOpnd()->GetStackSym());
+            SymID base = this->globOpt->GetVarSymID(instr->GetSrc1()->AsIndirOpnd()->GetBaseOpnd()->GetStackSym());
+            SymID index = this->globOpt->GetVarSymID(instr->GetSrc1()->AsIndirOpnd()->GetIndexOpnd()->GetStackSym());
 
-                if (base == memcopyCandidate->stBase  && index == memcopyCandidate->stIndex)
+            FOREACH_MEMCOPY_CANDIDATES(candidate, loop)
+            {
+                if (base == candidate->ldBase && index == candidate->ldIndex)
                 {
                     return true;
                 }
-            }
-            else if (instr->m_opcode == Js::OpCode::LdElemI_A &&  instr->GetSrc1()->IsIndirOpnd())
-            {
-                SymID base = this->globOpt->GetVarSymID(instr->GetSrc1()->AsIndirOpnd()->GetBaseOpnd()->GetStackSym());
-                SymID index = this->globOpt->GetVarSymID(instr->GetSrc1()->AsIndirOpnd()->GetIndexOpnd()->GetStackSym());
-
-                if ((base == memcopyCandidate->ldBase) && (index == memcopyCandidate->ldIndex))
-                {
-                    return true;
-                }
-            }
-        } NEXT_SLISTCOUNTED_ENTRY;
+            } NEXT_MEMCOPY_CANDIDATE
+        }
     }
     return false;
 }
@@ -7114,7 +7101,7 @@ BackwardPass::RestoreInductionVariableValuesAfterMemOp(Loop *loop)
 bool
 BackwardPass::IsEmptyLoopAfterMemOp(Loop *loop)
 {
-    if (globOpt->DoMemop(loop))
+    if (globOpt->DoMemOp(loop))
     {
         const auto IsInductionVariableUse = [&](IR::Opnd *opnd) -> bool
         {
@@ -7205,16 +7192,10 @@ BackwardPass::RemoveEmptyLoops()
             return;
         }
 
-        if (loop->memOpInfo->memcopyCandidates)
+        if (loop->memOpInfo->candidates)
         {
-            loop->memOpInfo->memcopyCandidates->Clear();
-            JitAdelete(alloc, loop->memOpInfo->memcopyCandidates);
-        }
-
-        if (loop->memOpInfo->memsetCandidates)
-        {
-            loop->memOpInfo->memsetCandidates->Clear();
-            JitAdelete(alloc, loop->memOpInfo->memsetCandidates);
+            loop->memOpInfo->candidates->Clear();
+            JitAdelete(alloc, loop->memOpInfo->candidates);
         }
 
         if (loop->memOpInfo->inductionVariableChangeInfoMap)

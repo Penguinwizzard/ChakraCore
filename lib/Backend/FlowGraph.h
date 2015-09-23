@@ -594,25 +594,61 @@ public:
     bool                isLeaf : 1;
     bool                isProcessed : 1; // Set and reset at varying places according to the phase we're in. 
                                          // For example, in the lowerer, it'll be set to true when we process the loopTop for a certain loop
-    typedef struct {
+    struct MemCopyCandidate;
+    struct MemSetCandidate;
+    struct MemOpCandidate
+    {
         SymID base;
         SymID index;
-        int constant;
         byte count;
         bool bIndexAlreadyChanged;
-    } MemsetCandidate;
+        enum MemOpType
+        {
+            MEMSET,
+            MEMCOPY
+        } type;
+        bool IsMemSet() const { return type == MEMSET; }
+        bool IsMemCopy() const { return type == MEMCOPY; }
+        struct Loop::MemCopyCandidate* AsMemCopy();
+        struct Loop::MemSetCandidate* AsMemSet();
+        MemOpCandidate(MemOpType type) :
+            type(type)
+        {
+        }
+    };
 
-    typedef struct {
+    struct MemSetCandidate : public MemOpCandidate
+    {
+        int constant;
+        MemSetCandidate() : MemOpCandidate(MemOpCandidate::MEMSET) {}
+    };
+
+    struct MemCopyCandidate : public MemOpCandidate
+    {
         SymID ldBase;
         SymID ldIndex;
-        SymID stBase;
-        SymID stIndex;
         SymID transferSym;
         byte ldCount;
-        byte stCount;
         bool bLdIndexAlreadyChanged;
-        bool bStIndexAlreadyChanged;
-    } MemcopyCandidate;
+        MemCopyCandidate() : MemOpCandidate(MemOpCandidate::MEMCOPY) {}
+    };
+
+#define FOREACH_MEMOP_CANDIDATES_EDITING(data, loop, iterator) FOREACH_SLISTCOUNTED_ENTRY_EDITING(Loop::MemOpCandidate*, data, loop->memOpInfo->candidates, iterator)
+#define NEXT_MEMOP_CANDIDATE_EDITING NEXT_SLISTCOUNTED_ENTRY_EDITING
+#define FOREACH_MEMOP_CANDIDATES(data, loop) FOREACH_SLISTCOUNTED_ENTRY(Loop::MemOpCandidate*, data, loop->memOpInfo->candidates)
+#define NEXT_MEMOP_CANDIDATE NEXT_SLISTCOUNTED_ENTRY
+
+#define MEMOP_CANDIDATE_TYPE_CHECK(candidate, data, type) if(candidate->Is ## type()) {Loop:: ## type ## Candidate* data = candidate->As## type();
+
+#define FOREACH_MEMCOPY_CANDIDATES_EDITING(data, loop, iterator) {FOREACH_MEMOP_CANDIDATES_EDITING(_memopCandidate, loop, iterator) {MEMOP_CANDIDATE_TYPE_CHECK(_memopCandidate, data, MemCopy)
+#define NEXT_MEMCOPY_CANDIDATE_EDITING }}NEXT_MEMOP_CANDIDATE_EDITING}
+#define FOREACH_MEMCOPY_CANDIDATES(data, loop) {FOREACH_MEMOP_CANDIDATES(_memopCandidate, loop) {MEMOP_CANDIDATE_TYPE_CHECK(_memopCandidate, data, MemCopy)
+#define NEXT_MEMCOPY_CANDIDATE }}NEXT_MEMOP_CANDIDATE}
+
+#define FOREACH_MEMSET_CANDIDATES_EDITING(data, loop, iterator) {FOREACH_MEMOP_CANDIDATES_EDITING(_memopCandidate, loop, iterator) {MEMOP_CANDIDATE_TYPE_CHECK(_memopCandidate, data, MemSet)
+#define NEXT_MEMSET_CANDIDATE_EDITING }}NEXT_MEMOP_CANDIDATE_EDITING}
+#define FOREACH_MEMSET_CANDIDATES(data, loop) {FOREACH_MEMOP_CANDIDATES(_memopCandidate, loop) {MEMOP_CANDIDATE_TYPE_CHECK(_memopCandidate, data, MemSet)
+#define NEXT_MEMSET_CANDIDATE }}NEXT_MEMOP_CANDIDATE}
 
     typedef struct
     {
@@ -621,19 +657,17 @@ public:
     } InductionVariableChangeInfo;
 
     typedef JsUtil::BaseDictionary<SymID, InductionVariableChangeInfo, JitArenaAllocator> InductionVariableChangeInfoMap;
-    typedef SListCounted<MemsetCandidate *>  MemsetList;
-    typedef SListCounted<MemcopyCandidate *>  MemcopyList;
+    typedef SListCounted<MemOpCandidate *>  MemOpList;
     typedef JsUtil::BaseHashSet<SymID, JitArenaAllocator> MemOpIgnoreSet;
     typedef struct
     {
-        MemsetList *memsetCandidates;
-        MemcopyList *memcopyCandidates;
+        MemOpList *candidates;
+        uint memsetCandidatesCount, memcopyCandidatesCount;
         MemOpIgnoreSet *memsetIgnore;
         MemOpIgnoreSet *memcopyIgnore;
         BVSparse<JitArenaAllocator> *inductionVariablesUsedAfterLoop;
         InductionVariableChangeInfoMap *inductionVariableChangeInfoMap;
-        bool doMemset : 1;
-        bool doMemcopy : 1;
+        bool doMemOp : 1;
     } MemOpInfo;
 
     MemOpInfo *memOpInfo;
@@ -692,7 +726,7 @@ public:
     bool                IsDescendentOrSelf(Loop const * loop) const;
 
     bool                EnsureMemOpVariablesInitialized();
-    void                InvalidateMemsetCandidate(SymID symId, MemsetCandidate *memsetCandidate = nullptr);
+    void                InvalidateMemsetCandidate(SymID symId, MemSetCandidate *memsetCandidate = nullptr);
     void                InvalidateMemcopyCandidate(SymID);
 
     Js::ImplicitCallFlags GetImplicitCallFlags();
