@@ -795,8 +795,9 @@ bool Loop::EnsureMemOpVariablesInitialized()
         if (this->GetLoopFlags().isInterpreted && !this->GetLoopFlags().memopMinCountReached)
         {
 #if DBG_DUMP
+            // TODO:: find a way to use Macros currently defined in GlobOpt.cpp to trace memop
             Func* func = this->GetFunc();
-            if (PHASE_TRACE(Js::MemOpPhase, func))
+            if (Js::Configuration::Global.flags.Verbose && PHASE_TRACE(Js::MemOpPhase, func))
             {
                 wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
                 Output::Print(L"MemOp skipped: minimum loop count not reached: Function: %s %s,  Loop: %d\n",
@@ -806,7 +807,7 @@ bool Loop::EnsureMemOpVariablesInitialized()
                               );
             }
 #endif
-            this->memOpInfo->doMemcopy = this->memOpInfo->doMemset = false;
+            this->memOpInfo->doMemOp = false;
             this->memOpInfo->inductionVariablesUsedAfterLoop = nullptr;
             this->memOpInfo->inductionVariableChangeInfoMap = nullptr;
             this->memOpInfo->memcopyIgnore = nullptr;
@@ -824,8 +825,7 @@ bool Loop::EnsureMemOpVariablesInitialized()
     return true;
 }
 
-void
-Loop::InvalidateMemsetCandidate(SymID sym, MemSetCandidate *memsetInfo)
+void Loop::InvalidateMemsetCandidate(SymID sym, MemSetCandidate *memsetInfo)
 {
     Assert(this->memOpInfo->memsetIgnore);
     if (this->memOpInfo->memsetIgnore->Contains(sym) == false)
@@ -848,9 +848,9 @@ Loop::InvalidateMemsetCandidate(SymID sym, MemSetCandidate *memsetInfo)
             }
         } NEXT_MEMSET_CANDIDATE_EDITING;
     }
+}
 
-void
-Loop::InvalidateMemcopyCandidate(SymID sym)
+void Loop::InvalidateMemcopyCandidate(SymID sym)
 {
     Assert(this->memOpInfo->memcopyIgnore);
     if (this->memOpInfo->memcopyIgnore->Contains(sym) == false)
@@ -864,13 +864,13 @@ Loop::InvalidateMemcopyCandidate(SymID sym)
         {
             if (memcopyCandidate->ldBase == sym)
             {
-                    if (memcopyCandidate->base  && !this->memOpInfo->memcopyIgnore->Contains(memcopyCandidate->base))
+                if (memcopyCandidate->base  && !this->memOpInfo->memcopyIgnore->Contains(memcopyCandidate->base))
                 {
                         this->memOpInfo->memcopyIgnore->Add(memcopyCandidate->base);
                 }
                 iter.RemoveCurrent();
             }
-                else if (memcopyCandidate->base == sym)
+            else if (memcopyCandidate->base == sym)
             {
                 if (memcopyCandidate->ldBase  && !this->memOpInfo->memcopyIgnore->Contains(memcopyCandidate->ldBase))
                 {
