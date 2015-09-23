@@ -4959,7 +4959,11 @@ namespace Js
         if (fn->HasDynamicProfileInfo())
         {
             fn->GetAnyDynamicProfileInfo()->SetLoopInterpreted(loopNumber);
-            if (this->currentLoopCounter >= (uint)CONFIG_FLAG(MinMemOpCount))
+            // If the counter is 0, there is a high chance that some config disabled tracking that information. (ie: -off:jitloopbody)
+            // Assume it is valid for memop in this case.
+            if (this->currentLoopCounter >= (uint)CONFIG_FLAG(MinMemOpCount) ||
+                (this->currentLoopCounter == 0 && !this->m_functionBody->DoJITLoopBody())
+            )
             {
                 // This flag becomes relevant only if the loop has been interpreted
                 fn->GetAnyDynamicProfileInfo()->SetMemOpMinReached(loopNumber);
