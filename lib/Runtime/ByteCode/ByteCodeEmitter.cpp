@@ -5716,7 +5716,8 @@ void EmitAssignment(
     }
 
     case knopArray:
-        // Assignment to array can get through to byte code gen when the parser fails to convert destructuring
+    case knopObject:
+        // Assignment to array/object can get through to byte code gen when the parser fails to convert destructuring
         // assignment to pattern (because of structural mismatch between LHS & RHS?). Revisit when we nail
         // down early vs. runtime errors for destructuring.
         byteCodeGenerator->Writer()->W1(Js::OpCode::RuntimeReferenceError, SCODE_CODE(JSERR_CantAssignTo));
