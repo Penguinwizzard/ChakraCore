@@ -867,7 +867,10 @@ namespace Js
 
         if (function->GetScriptContext()->GetConfig()->IsES6FunctionNameEnabled() && !isAnonymousFunction)
         {
-            function->SetPropertyWithAttributes(PropertyIds::name, ((Js::JavascriptFunction*)function)->GetDisplayName(true), PropertyConfigurable, nullptr);
+            JavascriptString * functionName = nullptr;
+            bool status = ((Js::JavascriptFunction*)function)->GetFunctionName(&functionName);
+            Assert(status);
+            function->SetPropertyWithAttributes(PropertyIds::name,functionName, PropertyConfigurable, nullptr);
         }
     }
 
@@ -910,8 +913,8 @@ namespace Js
             {
                 return;
             }
-            JavascriptString * functionName = ((Js::JavascriptFunction*)function)->GetDisplayName(true);
-            if (functionName)
+            JavascriptString * functionName = nullptr;
+            if (((Js::JavascriptFunction*)function)->GetFunctionName(&functionName))
             {
                 function->SetPropertyWithAttributes(PropertyIds::name, functionName, PropertyConfigurable, nullptr);
             }
@@ -1000,7 +1003,7 @@ namespace Js
     DynamicType * JavascriptLibrary::CreateDeferredPrototypeGeneratorFunctionType(JavascriptMethod entrypoint, bool isAnonymousFunction, bool isShared)
     {
         return DynamicType::New(scriptContext, TypeIds_Function, generatorFunctionPrototype, entrypoint,
-            isAnonymousFunction ? GetDeferredAnonymousGeneratorFunctionTypeHandler() : GetDeferredPrototypeGeneratorFunctionTypeHandler(scriptContext), isShared, isShared);
+            isAnonymousFunction ? GetDeferredAnonymousPrototypeGeneratorFunctionTypeHandler() : GetDeferredPrototypeGeneratorFunctionTypeHandler(scriptContext), isShared, isShared);
     }
 
     DynamicType * JavascriptLibrary::CreateDeferredPrototypeFunctionType(JavascriptMethod entrypoint)
@@ -1010,10 +1013,9 @@ namespace Js
 
     DynamicType * JavascriptLibrary::CreateDeferredPrototypeFunctionTypeNoProfileThunk(JavascriptMethod entrypoint, bool isShared)
     {
-        // Note: the lack of typehandler switching here based on the isAnonymousFunction flag is intentional
-        // This function handles the creation of ExternalFunctions, Promise based functions and WinRTFunctions (through CreateDeferredPrototypeFunctionType), and  other builtins through CreateNonProfiledFunction.
-        // All of these function types are derivatives of Runtime Functions which don't get parsed. Further all External Functions have shared type handlers which makes switching the typehandler a mute strategy.
-        // we may have an issue where hasProperty would say you have a name propery but getProperty returns undefined. This issue is beyond the scope of this fix and will have to be investigated later.
+        // Note: the lack of typehandler switching here based on the isAnonymousFunction flag is intentional.
+        // We can't switch shared typeHandlers and RuntimeFunctions do not produce script code for us to know if a function is Anonymous.
+        // As a result we may have an issue where hasProperty would say you have a name property but getProperty returns undefined
         return DynamicType::New(scriptContext, TypeIds_Function, functionPrototype, entrypoint, 
             GetDeferredPrototypeFunctionTypeHandler(scriptContext), isShared, isShared);
     }
@@ -4176,8 +4178,10 @@ namespace Js
 
         if (scriptContext->GetConfig()->IsES6FunctionNameEnabled())
         {
-            // We assert NameId is valid above
-            function->SetPropertyWithAttributes(PropertyIds::name, function->GetDisplayName(true), PropertyConfigurable, nullptr);
+            JavascriptString * functionName = nullptr;
+            bool status = function->GetFunctionName(&functionName);
+            AssertMsg(status,"CreateExternalConstructor sets the functionNameId, status should always be true");
+            function->SetPropertyWithAttributes(PropertyIds::name, functionName, PropertyConfigurable, nullptr);
         }
 
         return function;
@@ -4229,7 +4233,10 @@ namespace Js
         function->SetFunctionNameId(nameId);
         if (function->GetScriptContext()->GetConfig()->IsES6FunctionNameEnabled())
         {
-            function->SetPropertyWithAttributes(PropertyIds::name, function->GetDisplayName(true), PropertyConfigurable, nullptr);
+            JavascriptString * functionName = nullptr;
+            bool status = function->GetFunctionName(&functionName);
+            AssertMsg(status, "DefaultCreateFunction sets the functionNameId, status should always be true");
+            function->SetPropertyWithAttributes(PropertyIds::name, functionName, PropertyConfigurable, nullptr);
         }
 
 #ifdef HEAP_ENUMERATION_VALIDATION

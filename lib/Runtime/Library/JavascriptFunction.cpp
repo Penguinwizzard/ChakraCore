@@ -2881,6 +2881,42 @@ LABEL1:
         return LiteralString::NewCopyBuffer(name, length, scriptContext);
     }
 
+    bool JavascriptFunction::GetFunctionName(JavascriptString** name) const
+    {
+        Assert(name != nullptr);
+        ScriptContext* scriptContext = this->GetScriptContext();
+        FunctionProxy* proxy = this->GetFunctionProxy();
+
+        JavascriptFunction* thisFunction = const_cast<JavascriptFunction*>(this);
+        if (proxy || thisFunction->IsBoundFunction() || JavascriptGeneratorFunction::Is(thisFunction))
+        {
+            *name = GetDisplayNameImpl();
+            return true;
+        }
+        Assert(!ScriptFunction::Is(thisFunction));
+        return GetSourceStringName(name);
+    }
+
+    bool JavascriptFunction::GetSourceStringName(JavascriptString** name) const
+    {
+        Assert(name != nullptr);
+        ScriptContext* scriptContext = this->GetScriptContext();
+        Var sourceString = this->GetSourceString();
+
+        if (sourceString)
+        {
+            if (TaggedInt::Is(sourceString))
+            {
+                int32 propertIdOfSourceString = TaggedInt::ToInt32(sourceString);
+                return scriptContext->GetPropertyString(propertIdOfSourceString);
+            }
+            Assert(JavascriptString::Is(sourceString));
+            *name = JavascriptString::FromVar(sourceString);
+            return true;
+        }
+        return false;
+    }
+
     JavascriptString* JavascriptFunction::GetDisplayName(bool isFunctionName) const
     {
         ScriptContext* scriptContext = this->GetScriptContext();
@@ -2888,45 +2924,15 @@ LABEL1:
         FunctionProxy* proxy = this->GetFunctionProxy();
         JavascriptLibrary* library = scriptContext->GetLibrary();
         
-        JavascriptFunction* thisFunction = const_cast<JavascriptFunction*>(this);
-
-        if (isFunctionName && (proxy || thisFunction->IsBoundFunction() ||
-            JavascriptGeneratorFunction::Is(thisFunction)))
-        {
-            return GetDisplayNameImpl();
-        }
-
         if (proxy)
         {
             ParseableFunctionInfo * func = proxy->EnsureDeserialized();
             return LiteralString::NewCopySz(func->GetDisplayName(), scriptContext);
         }
-        if (sourceString)
+        JavascriptString* sourceStringName = nullptr;
+        if (GetSourceStringName(sourceStringName))
         {
-            if (TaggedInt::Is(sourceString))
-            {
-                int32 propertIdOfSourceString = TaggedInt::ToInt32(sourceString);
-                // We have two ways of setting a name either through the parser which would be on function proxy
-                // or on the functionNameId (called sourceString in this function) which is how runtimeFunction, winrt functions, and some External function names are set
-                // runtime function names have thus far not been anonymous, but it is possible to have anonymous external functions
-                // So here we are returning a nullptr to denote an anonymous function
-                if (isFunctionName && thisFunction->IsExternalFunction() && propertIdOfSourceString == 0)
-                {
-                    return nullptr;
-                }
-                return scriptContext->GetPropertyString(propertIdOfSourceString);
-            }
-           
-            Assert(JavascriptString::Is(sourceString));
-            return JavascriptString::FromVar(sourceString);
-        }
-
-        if (isFunctionName)
-        {
-            // any runtime functions without a nameId will hit here.
-            // This includes winRT functions b\c they use CreateStdCallExternalFunction with nameId set to 0/nullptr
-            Assert(!ScriptFunction::Is(thisFunction));
-            return nullptr;
+            return sourceStringName;
         }
 
         return library->GetFunctionDisplayString();

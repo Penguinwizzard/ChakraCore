@@ -27,18 +27,17 @@ namespace Js
         DynamicObject * functionPrototype = library->GetFunctionPrototype();
         JavascriptMethod address = (JavascriptMethod)proxy->GetDefaultEntryPointInfo()->address;
         DynamicTypeHandler * scriptFunctionTypeHandler = nullptr;
-        if (proxy->GetIsAnonymousFunction())
+        
+        if ((proxy->IsLambda() || proxy->IsAsync() || proxy->IsClassMethod()))
         {
-            
-            scriptFunctionTypeHandler = (proxy->IsLambda() || proxy->IsAsync() || proxy->IsClassMethod()) ?
-                library->GetDeferredAnonymousFunctionTypeHandler() :
-                JavascriptLibrary::GetDeferredAnonymousPrototypeFunctionTypeHandler();
+
+            scriptFunctionTypeHandler = (proxy->GetIsAnonymousFunction()) ?
+                library->GetDeferredAnonymousFunctionTypeHandler() : library->GetDeferredFunctionTypeHandler();
         }
         else
         {
-            scriptFunctionTypeHandler = (proxy->IsLambda() || proxy->IsAsync() || proxy->IsClassMethod()) ?
-                library->GetDeferredFunctionTypeHandler() :
-                JavascriptLibrary::GetDeferredPrototypeFunctionTypeHandler(scriptContext);
+            scriptFunctionTypeHandler = (proxy->GetIsAnonymousFunction()) ?
+                JavascriptLibrary::GetDeferredAnonymousPrototypeFunctionTypeHandler() : JavascriptLibrary::GetDeferredPrototypeFunctionTypeHandler(scriptContext);
         }
 
         return RecyclerNew(scriptContext->GetRecycler(), ScriptFunctionType,

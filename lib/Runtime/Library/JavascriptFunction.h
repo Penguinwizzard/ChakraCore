@@ -40,6 +40,7 @@ namespace Js
         bool GetSetterBuiltIns(PropertyId propertyId, Var *setterValue, PropertyValueInfo* info, ScriptContext* requestContext, DescriptorFlags* descriptorFlags);
 
         void InvalidateConstructorCacheOnPrototypeChange();
+        bool GetSourceStringName(JavascriptString** name) const;
 
         static const charcount_t DIAG_MAX_FUNCTION_STRING = 256;
 
@@ -139,7 +140,8 @@ namespace Js
         FunctionBody * GetFunctionBody() const;
         virtual JavascriptString* GetDisplayNameImpl() const;
         JavascriptString* DisplayNameHelper(const wchar_t* name, charcount_t length) const;
-        JavascriptString* GetDisplayName(bool isFunctionName = false) const;
+        JavascriptString* GetDisplayName() const;
+        bool GetFunctionName(JavascriptString** name) const;
         bool IsLibraryCode() const;
 
         BOOL IsScriptFunction() const;
