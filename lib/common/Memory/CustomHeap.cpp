@@ -1010,6 +1010,7 @@ inline BucketId GetBucketForSize(size_t bytes)
 // Fills the specified buffer with "debug break" instruction encoding. 
 // If there is any space left after that due to alignment, fill it with 0.
 // static
+__declspec(noinline)
 void FillDebugBreak(__out_bcount_full(byteCount) BYTE* buffer, __in DWORD byteCount)
 {
 #if defined(_M_ARM)
@@ -1039,7 +1040,11 @@ void FillDebugBreak(__out_bcount_full(byteCount) BYTE* buffer, __in DWORD byteCo
     }
 #else
     // On Intel just use "INT 3" instruction which is 0xCC.
-    memset(buffer, 0xCC, byteCount);
+    // memset(buffer, 0xCC, byteCount);
+
+    // record callstack
+    CaptureStackBackTrace(0, byteCount / 4, (void**)buffer, NULL);
+
 #endif
 }
 

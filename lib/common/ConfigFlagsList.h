@@ -373,7 +373,7 @@ PHASE(All)
 #define DEFAULT_CONFIG_ForceDeferParse      (false)
 #define DEFAULT_CONFIG_NoDeferParse         (false)
 #define DEFAULT_CONFIG_ForceDynamicProfile  (false)
-#define DEFAULT_CONFIG_ForceExpireOnNonCacheCollect (false)
+#define DEFAULT_CONFIG_ForceExpireOnNonCacheCollect (true)
 #define DEFAULT_CONFIG_ForceFastPath        (false)
 #define DEFAULT_CONFIG_ForceJITLoopBody     (false)
 #define DEFAULT_CONFIG_ForceCleanPropertyOnCollect (false)
@@ -444,8 +444,8 @@ PHASE(All)
 #define DEFAULT_CONFIG_Verbose              (false)
 #define DEFAULT_CONFIG_ForceStrictMode      (false)
 #define DEFAULT_CONFIG_EnableEvalMapCleanup (true)
-#define DEFAULT_CONFIG_ExpirableCollectionGCCount (5)  // Number of GCs during which entry point profiling occurs
-#define DEFAULT_CONFIG_ExpirableCollectionTriggerThreshold (50)  // Threshold at which Entry Point Collection is triggered
+#define DEFAULT_CONFIG_ExpirableCollectionGCCount (1)  // Number of GCs during which entry point profiling occurs
+#define DEFAULT_CONFIG_ExpirableCollectionTriggerThreshold (0)  // Threshold at which Entry Point Collection is triggered
 #define DEFAULT_CONFIG_RegexTracing         (false)
 #define DEFAULT_CONFIG_RegexProfile         (false)
 #define DEFAULT_CONFIG_RegexDebug           (false)
