@@ -2885,15 +2885,15 @@ LABEL1:
     bool JavascriptFunction::GetFunctionName(JavascriptString** name) const
     {
         Assert(name != nullptr);
-        ScriptContext* scriptContext = this->GetScriptContext();
         FunctionProxy* proxy = this->GetFunctionProxy();
-
         JavascriptFunction* thisFunction = const_cast<JavascriptFunction*>(this);
+
         if (proxy || thisFunction->IsBoundFunction() || JavascriptGeneratorFunction::Is(thisFunction))
         {
             *name = GetDisplayNameImpl();
             return true;
         }
+
         Assert(!ScriptFunction::Is(thisFunction));
         return GetSourceStringName(name);
     }
@@ -2909,7 +2909,8 @@ LABEL1:
             if (TaggedInt::Is(sourceString))
             {
                 int32 propertIdOfSourceString = TaggedInt::ToInt32(sourceString);
-                return scriptContext->GetPropertyString(propertIdOfSourceString);
+                *name = scriptContext->GetPropertyString(propertIdOfSourceString);
+                return true;
             }
             Assert(JavascriptString::Is(sourceString));
             *name = JavascriptString::FromVar(sourceString);
@@ -2918,10 +2919,9 @@ LABEL1:
         return false;
     }
 
-    JavascriptString* JavascriptFunction::GetDisplayName(bool isFunctionName) const
+    JavascriptString* JavascriptFunction::GetDisplayName() const
     {
         ScriptContext* scriptContext = this->GetScriptContext();
-        Var sourceString = this->GetSourceString();
         FunctionProxy* proxy = this->GetFunctionProxy();
         JavascriptLibrary* library = scriptContext->GetLibrary();
         
@@ -2931,7 +2931,7 @@ LABEL1:
             return LiteralString::NewCopySz(func->GetDisplayName(), scriptContext);
         }
         JavascriptString* sourceStringName = nullptr;
-        if (GetSourceStringName(sourceStringName))
+        if (GetSourceStringName(&sourceStringName))
         {
             return sourceStringName;
         }
