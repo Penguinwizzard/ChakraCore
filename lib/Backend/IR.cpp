@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "BackEnd.h"
 
 namespace IR
@@ -399,7 +399,7 @@ Instr::Unlink()
 
 #if DBG_DUMP
     //Transfering the globOptInstrString to the next non-Label Instruction
-    if(this->globOptInstrString != nullptr && m_next->globOptInstrString == nullptr && !m_next->IsLabelInstr())
+    if(this->globOptInstrString != nullptr && m_next && m_next->globOptInstrString == nullptr && !m_next->IsLabelInstr())
     {
         m_next->globOptInstrString = this->globOptInstrString;
     }
@@ -536,7 +536,7 @@ LabelInstr::CloneLabel(BOOL fCreate)
         }
         if (this->IsProfiledLabelInstr())
         {
-            instrLabel = IR::ProfiledLabelInstr::New(this->m_opcode, func, this->AsProfiledLabelInstr()->loopImplicitCallFlags);   
+            instrLabel = IR::ProfiledLabelInstr::New(this->m_opcode, func, this->AsProfiledLabelInstr()->loopImplicitCallFlags, this->AsProfiledLabelInstr()->loopFlags);
 #if DBG
             instrLabel->AsProfiledLabelInstr()->loopNum = this->AsProfiledLabelInstr()->loopNum;
 #endif
@@ -558,11 +558,12 @@ ProfiledLabelInstr::ProfiledLabelInstr(JitArenaAllocator * allocator)
 }
 
 ProfiledLabelInstr *
-ProfiledLabelInstr::New(Js::OpCode opcode, Func *func, Js::ImplicitCallFlags flags)
+ProfiledLabelInstr::New(Js::OpCode opcode, Func *func, Js::ImplicitCallFlags flags, Js::LoopFlags loopFlags)
 {
     ProfiledLabelInstr * profiledLabelInstr = JitAnew(func->m_alloc, ProfiledLabelInstr, func->m_alloc);
     profiledLabelInstr->Init(opcode, InstrKindProfiledLabel, func, false);
     profiledLabelInstr->loopImplicitCallFlags = flags;
+    profiledLabelInstr->loopFlags = loopFlags;
     return profiledLabelInstr;
 }
 
@@ -1167,7 +1168,7 @@ Opnd *Instr::FindCallArgumentOpnd(const Js::ArgSlot argSlot, IR::Instr * *const 
 
 
 bool
-Instr::FetchOperands(__ecount(argsOpndLength) IR::Opnd **argsOpnd, uint argsOpndLength)
+Instr::FetchOperands(_Out_writes_(argsOpndLength) IR::Opnd **argsOpnd, uint argsOpndLength)
 {
     return this->ForEachCallDirectArgOutInstrBackward([&](IR::Instr *argOutInstr, uint argNum)
     {

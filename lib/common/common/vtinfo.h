@@ -1,6 +1,7 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 // These definitions allow us to programmatically access a class' vtable for:
 //
 // 1. Cross-context marshalling: when an object needs to be marshalled, we

@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 #include <strsafe.h>
 #include "ByteCode\ByteCodeAPI.h"
@@ -316,7 +316,7 @@ namespace Js
                 }
                 else
                 {
-                    StringCchPrintf(filenameBuffer, 128, L"[dynamic(hash:%d)]", srcContextInfo->hash);
+                    StringCchPrintf(filenameBuffer, 128, L"[dynamic(hash:%u)]", srcContextInfo->hash);
                     srcFileUrl = filenameBuffer;
                 }
 
@@ -772,7 +772,7 @@ namespace Js
             se.GetError(&hrParser, &ei);
 
             ErrorTypeEnum errorType;
-            switch (ei.scode)
+            switch ((HRESULT)ei.scode)
             {
     #define RT_ERROR_MSG(name, errnum, str1, str2, jst, errorNumSource) \
             case name: \
@@ -1064,7 +1064,7 @@ namespace Js
             se.GetError(&hrParser, &ei);
 
             ErrorTypeEnum errorType;
-            switch (ei.scode)
+            switch ((HRESULT)ei.scode)
             {
     #define RT_ERROR_MSG(name, errnum, str1, str2, jst, errorNumSource) \
             case name: \
@@ -1163,6 +1163,7 @@ namespace Js
                 if (absValue < 1.0e21 && absValue >= 1e-5)
                 {
                     double result;
+#pragma prefast(suppress:6031, "We don't care about the fraction part")
                     ::modf(value, &result);
                     return JavascriptNumber::ToVarIntCheck(result, scriptContext);
                 }

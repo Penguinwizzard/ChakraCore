@@ -1,5 +1,7 @@
-// Copyright (C) Microsoft. All rights reserved. 
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "ParserPch.h"
 
 namespace UnifiedRegex
@@ -337,8 +339,9 @@ namespace UnifiedRegex
     {
         return lim(level) + 1;
     }
-
-    bool CharSetFull::GetNextRange(uint level, Char searchCharStart, __out Char *outLowerChar, __out Char *outHigherChar) const 
+    
+    _Success_(return)
+    bool CharSetFull::GetNextRange(uint level, Char searchCharStart, _Out_ Char *outLowerChar, _Out_ Char *outHigherChar) const
     {
         Assert(searchCharStart < this->Count(level));
 
@@ -666,7 +669,8 @@ namespace UnifiedRegex
         return n;
     }
 
-    bool CharSetInner::GetNextRange(uint level, Char searchCharStart, __out Char *outLowerChar, __out Char *outHigherChar) const 
+    _Success_(return)
+    bool CharSetInner::GetNextRange(uint level, Char searchCharStart, _Out_ Char *outLowerChar, _Out_ Char *outHigherChar) const 
     {
         Assert(searchCharStart < this->lim(level) + 1);
         uint innerIndex = innerIdx(level--, searchCharStart);
@@ -844,7 +848,8 @@ namespace UnifiedRegex
         return vec.Count();
     }
 
-    bool CharSetLeaf::GetNextRange(uint level, Char searchCharStart, __out Char *outLowerChar, __out Char *outHigherChar) const 
+    _Success_(return)
+    bool CharSetLeaf::GetNextRange(uint level, Char searchCharStart, _Out_ Char *outLowerChar, _Out_ Char *outHigherChar) const 
     {
         Assert(searchCharStart < lim(level) + 1);
         int nextSet = vec.NextSet(searchCharStart);
@@ -1199,7 +1204,8 @@ namespace UnifiedRegex
             }
         }
     }
-    bool CharSet<wchar_t>::GetNextRange(Char searchCharStart, Char *outLowerChar, Char *outHigherChar)
+    _Success_(return)
+    bool CharSet<wchar_t>::GetNextRange(Char searchCharStart, _Out_ Char *outLowerChar, _Out_ Char *outHigherChar)
     {
         int count = this->Count();
         if (count == 0)
@@ -1223,8 +1229,8 @@ namespace UnifiedRegex
         {
             this->Sort();
             uint i = 0;
-
-            for (; i < this->GetCompactLength(); i++)
+            size_t compactLength = this->GetCompactLength();
+            for (; i < compactLength; i++)
             {
                 Char nextChar = this->GetCompactChar(i);
                 if (nextChar >= searchCharStart)
@@ -1234,14 +1240,14 @@ namespace UnifiedRegex
                 }
             }
 
-            if (i == this->GetCompactLength())
+            if (i == compactLength)
             {
                 return false;
             }
 
             i++;
 
-            for (; i < this->GetCompactLength(); i++)
+            for (; i < compactLength; i++)
             {
                 Char nextChar = this->GetCompactChar(i);
                 if (nextChar != *outHigherChar + 1)
@@ -1662,7 +1668,8 @@ namespace UnifiedRegex
         this->characterPlanes[0].UnionInPlace(allocator, other);
     }
 
-    bool CharSet<codepoint_t>::GetNextRange(Char searchCharStart, Char *outLowerChar, Char *outHigherChar)
+    _Success_(return)
+    bool CharSet<codepoint_t>::GetNextRange(Char searchCharStart, _Out_ Char *outLowerChar, _Out_ Char *outHigherChar)
     {
         Assert(outLowerChar != nullptr);
         Assert(outHigherChar != nullptr);

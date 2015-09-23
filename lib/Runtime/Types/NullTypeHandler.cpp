@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeTypePch.h"
 
 namespace Js
@@ -23,8 +23,8 @@ namespace Js
     }
 
     
-    BOOL NullTypeHandlerBase::FindNextProperty(ScriptContext* scriptContext, PropertyIndex& index, __out JavascriptString** propertyString, __out PropertyId* propertyId, 
-        __out PropertyAttributes* attributes, Type* type, DynamicType *typeToEnumerate, bool requireEnumerable, bool enumSymbols)
+    BOOL NullTypeHandlerBase::FindNextProperty(ScriptContext* scriptContext, PropertyIndex& index, JavascriptString** propertyString, PropertyId* propertyId, 
+        PropertyAttributes* attributes, Type* type, DynamicType *typeToEnumerate, bool requireEnumerable, bool enumSymbols)
     {
         Assert(propertyString);
         Assert(propertyId);

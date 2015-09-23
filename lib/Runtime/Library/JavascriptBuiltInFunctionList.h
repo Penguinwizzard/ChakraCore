@@ -1,6 +1,7 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 BUILTIN(JavascriptExceptionOperators, StackTraceAccessor, StackTraceAccessor, FunctionInfo::DoNotProfile)
 BUILTIN(JavascriptExceptionOperators, ThrowTypeErrorAccessor, ThrowTypeErrorAccessor, FunctionInfo::DoNotProfile)
 BUILTIN(JavascriptExceptionOperators, ThrowTypeErrorCallerAccessor, ThrowTypeErrorCallerAccessor, FunctionInfo::DoNotProfile)

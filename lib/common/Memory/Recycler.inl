@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------
-// Copyright (C) 1995 - 2009 by Microsoft Corporation.  All rights reserved.
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 
 
@@ -144,6 +144,7 @@ Recycler::AllocWithAttributesInlined(size_t size)
 #endif
 
 
+#pragma prefast(suppress:6313, "attributes is a template parameter and can be 0")
     if (attributes & (FinalizeBit | TrackBit))
     {
         // Make sure a valid vtable is installed in case of OOM before the real vtable set
@@ -153,6 +154,7 @@ Recycler::AllocWithAttributesInlined(size_t size)
 #ifdef RECYCLER_WRITE_BARRIER
     SwbVerboseTrace(this->GetRecyclerFlagsTable(), L"Allocated SWB memory: 0x%p\n", memBlock);
     
+#pragma prefast(suppress:6313, "attributes is a template parameter and can be 0")
     if (attributes & (NewTrackBit))
     {
         // For objects allocated with NewTrackBit, we need to trigger the write barrier since
@@ -164,6 +166,7 @@ Recycler::AllocWithAttributesInlined(size_t size)
 #endif
 
 #ifdef PARTIAL_GC_ENABLED
+#pragma prefast(suppress:6313, "attributes is a template parameter and can be 0")
     if (attributes & ClientTrackedBit)
     {
         if (this->inPartialCollectMode)

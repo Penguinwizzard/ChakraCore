@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "CommonMemoryPch.h"
 
 #if DBG
@@ -166,7 +166,7 @@ void TestObject::CreateFalseReferenceRandom(TestObject *val)
 StressTester::StressTester(Recycler *_recycler) : recycler(_recycler)
 {
     uint seed = (uint)time(NULL);
-    printf("Random seed: %d\n", seed);
+    printf("Random seed: %u\n", seed);
     srand(seed);
 }
 

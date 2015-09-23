@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 
 namespace Memory
@@ -15,6 +15,8 @@ template <class TBlockAttributes>
 class GenericRecyclerVerifyListConsistencyData
 {
 public:
+    GenericRecyclerVerifyListConsistencyData() {};
+
     // Temporary data for Sweep list consistency checks
     bool expectFull;
     bool expectDispose;
@@ -34,6 +36,7 @@ public:
 class RecyclerVerifyListConsistencyData
 {
 public:
+    RecyclerVerifyListConsistencyData() {};
     void SetupVerifyListConsistencyDataForSmallBlock(SmallHeapBlock* block, bool expectFull, bool expectDispose)
     {
         this->smallBlockVerifyListConsistencyData.nextAllocableBlockHead = block;

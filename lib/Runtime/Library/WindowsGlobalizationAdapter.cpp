@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 #include "strsafe.h"
 
@@ -33,32 +33,32 @@ using namespace ABI::Windows::Foundation::Collections;
 #define IfFailedGo(expr) IfFailedGoLabel(expr, LReturn)
 
 //The "helper" methods below are to resolve external symbol references to our delay-loaded libraries.
-HRESULT WindowsCreateString(__in_ecount_opt(length) const WCHAR * sourceString, UINT32 length, __out HSTRING * string)
+HRESULT WindowsCreateString(_In_reads_opt_(length) const WCHAR * sourceString, UINT32 length, _Outptr_result_maybenull_ _Result_nullonfailure_ HSTRING * string)
 {
     return ThreadContext::GetContextForCurrentThread()->GetWindowsGlobalizationLibrary()->WindowsCreateString(sourceString, length, string);
 }
 
-HRESULT WindowsCreateStringReference(__in_ecount_opt(length+1) const WCHAR * sourceString, UINT32 length, __out HSTRING_HEADER * header, __out HSTRING * string)
+HRESULT WindowsCreateStringReference(_In_reads_opt_(length + 1) const WCHAR * sourceString, UINT32 length, _Out_ HSTRING_HEADER * header, _Outptr_result_maybenull_ _Result_nullonfailure_ HSTRING * string)
 {
     return ThreadContext::GetContextForCurrentThread()->GetWindowsGlobalizationLibrary()->WindowsCreateStringReference(sourceString, length, header, string);
 }
 
-HRESULT WindowsDeleteString(HSTRING string)
+HRESULT WindowsDeleteString(_In_opt_ HSTRING string)
 {
     return ThreadContext::GetContextForCurrentThread()->GetWindowsGlobalizationLibrary()->WindowsDeleteString(string);
 }
 
-PCWSTR WindowsGetStringRawBuffer(HSTRING string, __out_opt UINT32 * length)
+PCWSTR WindowsGetStringRawBuffer(_In_opt_ HSTRING string, _Out_opt_ UINT32 * length)
 {
     return ThreadContext::GetContextForCurrentThread()->GetWindowsGlobalizationLibrary()->WindowsGetStringRawBuffer(string, length);
 }
 
-HRESULT WindowsCompareStringOrdinal(HSTRING string1, HSTRING string2, __out INT32 * result)
+HRESULT WindowsCompareStringOrdinal(_In_opt_ HSTRING string1, _In_opt_ HSTRING string2, _Out_ INT32 * result)
 {
     return ThreadContext::GetContextForCurrentThread()->GetWindowsGlobalizationLibrary()->WindowsCompareStringOrdinal(string1, string2, result);
 }
 
-HRESULT WindowsDuplicateString(HSTRING original, __out HSTRING *newString)
+HRESULT WindowsDuplicateString(_In_opt_ HSTRING original, _Outptr_result_maybenull_ _Result_nullonfailure_ HSTRING *newString)
 {
     return ThreadContext::GetContextForCurrentThread()->GetWindowsGlobalizationLibrary()->WindowsDuplicateString(original, newString);
 }
@@ -96,7 +96,7 @@ namespace Js
             {
                 return WindowsDuplicateString(items[currentPosition], current);
             }
-            return S_OK;
+            return E_BOUNDS;
         }
 
         IFACEMETHODIMP get_HasCurrent(_Out_ boolean *hasCurrent)
@@ -106,7 +106,7 @@ namespace Js
             return S_OK;
         }
 
-        IFACEMETHODIMP MoveNext(_Out_ boolean *hasCurrent) sealed
+        IFACEMETHODIMP MoveNext(_Out_opt_ boolean *hasCurrent) sealed
         {
             this->currentPosition++;
 
@@ -249,6 +249,7 @@ namespace Js
         HRESULT hr;
 
         IfFailedReturn(delayLoadLibrary->WindowsCreateStringReference(factoryName, wcslen(factoryName), &hStringHdr, &hString));
+        AnalysisAssert(hString);
         IfFailedReturn(delayLoadLibrary->DllGetActivationFactory(hString, &factory));
 
         return factory->QueryInterface(__uuidof(T), reinterpret_cast<void**>(instance));
@@ -303,6 +304,7 @@ namespace Js
         HSTRING hString;
         HSTRING_HEADER hStringHdr;
         IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(languageTag, wcslen(languageTag), &hStringHdr, &hString));
+        AnalysisAssert(hString);
         IfFailedReturn(this->languageFactory->CreateLanguage(hString, language));
         return hr;
     }
@@ -314,6 +316,7 @@ namespace Js
         HSTRING hString;
         HSTRING_HEADER hStringHdr;
         IfFailThrowHr(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(languageTag, wcslen(languageTag), &hStringHdr, &hString));
+        AnalysisAssert(hString);
         IfFailThrowHr(this->languageStatics->IsWellFormed(hString, &retVal));
         return retVal;
     }
@@ -327,6 +330,7 @@ namespace Js
 
         // Construct HSTRING of timeZoneId passed
         IfFailThrowHr(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(timeZoneId, wcslen(timeZoneId), &timeZoneHeader, &timeZone));
+        Assert(timeZone);
 
         // ChangeTimeZone should fail if this is not a valid time zone
         hr = timeZoneCalendar->ChangeTimeZone(timeZone);
@@ -374,6 +378,7 @@ namespace Js
         HSTRING hString;
         HSTRING_HEADER hStringHdr;
         IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(currencyCode, wcslen(currencyCode), &hStringHdr, &hString));
+        AnalysisAssert(hString);
         IfFailedReturn(this->currencyFormatterFactory->CreateCurrencyFormatterCode(hString, currencyFormatter));
         return hr;
     }
@@ -448,8 +453,8 @@ namespace Js
         return hr;
     }
 
-    HRESULT WindowsGlobalizationAdapter::CreateDateTimeFormatter(_In_ ScriptContext* scriptContext, _In_z_ PCWSTR formatString, _In_z_ PCWSTR* localeStrings, uint32 numLocaleStrings,
-        _In_z_ PCWSTR calendar, _In_z_ PCWSTR clock, __out DateTimeFormatting::IDateTimeFormatter** result)
+    HRESULT WindowsGlobalizationAdapter::CreateDateTimeFormatter(_In_ ScriptContext* scriptContext, _In_z_ PCWSTR formatString, _In_z_ PCWSTR* localeStrings,
+        uint32 numLocaleStrings, _In_opt_z_ PCWSTR calendar, _In_opt_z_ PCWSTR clock, _Out_ DateTimeFormatting::IDateTimeFormatter** result)
     {
         HRESULT hr = S_OK;
 

@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "BackEnd.h"
 #include "LowererMDArch.h"
 
@@ -2863,7 +2863,15 @@ bool
     }
     if (src2IsIntConst)
     {
-        s2Value = opndSrc2->IsRegOpnd() ? opndReg2->m_sym->GetIntConstValue() : Js::TaggedInt::ToInt32(opndSrc2->AsAddrOpnd()->m_address);
+        if (opndSrc2->IsRegOpnd())
+        {
+            Assert(opndReg2);
+            s2Value = opndReg2->m_sym->GetIntConstValue();
+        }
+        else
+        {
+            s2Value = Js::TaggedInt::ToInt32(opndSrc2->AsAddrOpnd()->m_address);
+        }
 
         s2Value = (s2Value & 0x1F);
 

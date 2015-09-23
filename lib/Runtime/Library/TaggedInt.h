@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 
 namespace Js {
@@ -17,10 +17,10 @@ namespace Js {
 
         static Var Add(Var aLeft, Var aRight, ScriptContext* scriptContext);
         static Var Divide(Var aLeft, Var aRight, ScriptContext* scriptContext);
-        static Var DivideInPlace(Var aLeft, Var aRight, ScriptContext* scriptContext, __out JavascriptNumber *result);
+        static Var DivideInPlace(Var aLeft, Var aRight, ScriptContext* scriptContext, JavascriptNumber *result);
         static Var Modulus(Var aLeft, Var aRight, ScriptContext* scriptContext);
         static Var Multiply(Var aLeft, Var aRight,ScriptContext* scriptContext);
-        static Var MultiplyInPlace(Var aLeft, Var aRight, ScriptContext* scriptContext, __out JavascriptNumber *result);
+        static Var MultiplyInPlace(Var aLeft, Var aRight, ScriptContext* scriptContext, JavascriptNumber *result);
         static Var Subtract(Var aLeft, Var aRight,ScriptContext* scriptContext);
 
         static Var And(Var aLeft, Var aRight);

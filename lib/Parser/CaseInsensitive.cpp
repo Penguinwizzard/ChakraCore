@@ -1,5 +1,7 @@
-// Copyright (C) Microsoft. All rights reserved. 
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 //
 // Map Unicode characters to their equivalence classes induced by the modified ToUpper map.
 // Ie c1 and c2 are in the same class if ToUpper(c1) == ToUpper(c2).
@@ -605,21 +607,21 @@ END {
             return false; // trivial
         }
 
-        bool RangeToEquivClass(uint & tblidx, uint l, uint h, uint & acth, wchar_t equivl[EquivClassSize])
+        bool RangeToEquivClass(uint & tblidx, uint l, uint h, uint & acth, __out_ecount(EquivClassSize) wchar_t equivl[EquivClassSize])
         {
             return RangeToEquivClass(tblidx, l, h, acth, equivl, [](MappingSource source) {
                 return source == MappingSource::UnicodeData;
             });
         }
 
-        bool RangeToEquivClass(uint & tblidx, uint l, uint h, uint & acth, codepoint_t equivl[EquivClassSize])
+        bool RangeToEquivClass(uint & tblidx, uint l, uint h, uint & acth, __out_ecount(EquivClassSize) codepoint_t equivl[EquivClassSize])
         {
             return RangeToEquivClass(tblidx, l, h, acth, equivl, [](MappingSource source) {
                 return source == MappingSource::CaseFolding || source == MappingSource::UnicodeData;
             });
         }
 
-        bool RangeToEquivClassOnlyInSource(MappingSource mappingSource, uint& tblidx, uint l, uint h, uint& acth, wchar_t equivl[EquivClassSize])
+        bool RangeToEquivClassOnlyInSource(MappingSource mappingSource, uint& tblidx, uint l, uint h, uint& acth, __out_ecount(EquivClassSize) wchar_t equivl[EquivClassSize])
         {
             return RangeToEquivClass(tblidx, l, h, acth, equivl, [&](MappingSource actualSource) {
                 return mappingSource == actualSource;

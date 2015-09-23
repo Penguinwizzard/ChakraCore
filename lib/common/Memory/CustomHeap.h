@@ -1,9 +1,7 @@
-/********************************************************
-*                                                       *
-*   Copyright (C) Microsoft. All rights reserved.       *
-*                                                       *
-********************************************************/
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 namespace Memory
 {
@@ -146,7 +144,7 @@ class Heap
 public:
     Heap(AllocationPolicyManager * policyManager, ArenaAllocator * alloc, bool allocXdata);
 
-    Allocation* Alloc(size_t bytes, ushort pdataCount, ushort xdataSize, bool canAllocInPreReservedHeapPageSegment, bool isAnyJittedCode, __out bool* isAllJITCodeInPreReservedRegion);
+    Allocation* Alloc(size_t bytes, ushort pdataCount, ushort xdataSize, bool canAllocInPreReservedHeapPageSegment, bool isAnyJittedCode, _Inout_ bool* isAllJITCodeInPreReservedRegion);
     bool Free(__in Allocation* allocation);
     bool Decommit(__in Allocation* allocation);
     void FreeAll();
@@ -338,30 +336,7 @@ public:
     ~Heap();
 
 #if DBG_DUMP
-    void DumpStats()
-    {
-        HeapTrace(L"Total allocation size: %d\n", totalAllocationSize);
-        HeapTrace(L"Total free size: %d\n", freeObjectSize);
-        HeapTrace(L"Total allocations since last compact: %d\n", allocationsSinceLastCompact);
-        HeapTrace(L"Total frees since last compact: %d\n", freesSinceLastCompact);
-        HeapTrace(L"Large object count: %d\n", this->largeObjectAllocations.Count());
-
-        HeapTrace(L"Buckets: \n");
-        for (int i = 0; i < BucketId::NumBuckets; i++)
-        {
-            printf("\t%d => %d [", (1 << (i + 7)), buckets[i].Count());
-
-            FOREACH_DLISTBASE_ENTRY_EDITING(Page, page, &this->buckets[i], bucketIter)
-            {
-                BVUnit usedBitVector = page.freeBitVector;
-                usedBitVector.ComplimentAll(); // Get the actual used bit vector
-                printf(" %d ", usedBitVector.Count() * Page::Alignment); // Print out the space used in this page
-            }
-
-            NEXT_DLISTBASE_ENTRY_EDITING
-            printf("] {{%d}}\n", this->fullPages[i].Count());
-        }
-    }
+    void DumpStats();
 #endif
 
 private:
@@ -396,7 +371,7 @@ private:
     /**
      * Large object methods
      */
-    Allocation* AllocLargeObject(size_t bytes, ushort pdataCount, ushort xdataSize, bool canAllocInPreReservedHeapPageSegment, bool isAnyJittedCode, __out bool* isAllJITCodeInPreReservedRegion);
+    Allocation* AllocLargeObject(size_t bytes, ushort pdataCount, ushort xdataSize, bool canAllocInPreReservedHeapPageSegment, bool isAnyJittedCode, _Inout_ bool* isAllJITCodeInPreReservedRegion);
     
     template<bool freeAll> 
     bool FreeLargeObject(Allocation* header);
@@ -511,7 +486,7 @@ private:
      */
     Page*       AddPageToBucket(Page* page, BucketId bucket, bool wasFull = false);
     Allocation* AllocInPage(Page* page, size_t bytes, ushort pdataCount, ushort xdataSize);
-    Page*       AllocNewPage(BucketId bucket, bool canAllocInPreReservedHeapPageSegment, bool isAnyJittedCode, __out bool* isAllJITCodeInPreReservedRegion);
+    Page*       AllocNewPage(BucketId bucket, bool canAllocInPreReservedHeapPageSegment, bool isAnyJittedCode, _Inout_ bool* isAllJITCodeInPreReservedRegion);
     Page*       FindPageToSplit(BucketId targetBucket, bool findPreReservedHeapPages = false);
     
     template<class Fn>

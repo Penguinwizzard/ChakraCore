@@ -1,5 +1,7 @@
-// Copyright (C) Microsoft. All rights reserved. 
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "BackEnd.h"
 
 InliningDecider::InliningDecider(Js::FunctionBody *const topFunc, bool isLoopBody, bool isInDebugMode, const ExecutionMode jitMode)
@@ -613,7 +615,7 @@ void InliningDecider::TraceInlining(Js::FunctionBody *const inliner, const wchar
     if (inlineeName == nullptr)
     {
 
-        int len = swprintf_s(debugStringBuffer3, MAX_FUNCTION_BODY_DEBUG_STRING_SIZE, L"built In Id: %d", builtIn);
+        int len = swprintf_s(debugStringBuffer3, MAX_FUNCTION_BODY_DEBUG_STRING_SIZE, L"built In Id: %u", builtIn);
         Assert(len > 14);
         inlineeName = debugStringBuffer3;
     }

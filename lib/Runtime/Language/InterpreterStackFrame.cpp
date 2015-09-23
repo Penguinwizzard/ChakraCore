@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeLanguagePch.h"
 #include "EHBailoutData.h"
 #include "Library\JavascriptRegularExpression.h"
@@ -1458,10 +1458,11 @@ namespace Js
                 Var loopHeaderArray = executeFunction->GetHasAllocatedLoopHeaders() ? executeFunction->GetLoopHeaderArrayPtr() : nullptr;
 
                 allocation = RecyclerNewPlus(functionScriptContext->GetRecycler(), varSizeInBytes, Var);
-
+                AnalysisAssert(allocation);
 #if DBG
                 // Allocate invalidVar on GC instead of stack since this InterpreterStackFrame will out live the current real frame
                 Js::RecyclableObject* invalidVar = (Js::RecyclableObject*)RecyclerNewPlusLeaf(functionScriptContext->GetRecycler(), sizeof(Js::RecyclableObject), Var);
+                AnalysisAssert(invalidVar);
                 memset(invalidVar, 0xFE, sizeof(Js::RecyclableObject));
                 newInstance = setup.InitializeAllocation(allocation, executeFunction->GetHasImplicitArgIns(), doProfile, loopHeaderArray, stackAddr, invalidVar);
 #else
@@ -1943,6 +1944,9 @@ namespace Js
     Var InterpreterStackFrame::ProcessAsmJsModule()
     {
 #ifdef ASMJS_PLAT
+        Js::FunctionBody* asmJsModuleFunctionBody = GetFunctionBody();
+        AsmJsModuleInfo* info = asmJsModuleFunctionBody->GetAsmJsModuleInfo();
+
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
         if (Configuration::Global.flags.ForceAsmJsLinkFail)
         {
@@ -1950,17 +1954,6 @@ namespace Js
             return this->ProcessLinkFailedAsmJsModule();
         }
 #endif
-        Js::FunctionBody* asmJsModuleFunctionBody = GetFunctionBody();
-        AsmJsModuleInfo* info = asmJsModuleFunctionBody->GetAsmJsModuleInfo();
-
-        // if module was already processed, that means we are relinking, which is not currently supported
-        if (info->IsRuntimeProcessed())
-        {
-            Js::Throw::OutOfMemory();
-        }
-        // even if linking fails, we want this to be true so we don't try again, because asm.js state will be messed up after reparse
-        info->SetIsRuntimeProcessed(true);
-
         if( m_inSlotsCount != info->GetArgInCount() + 1 )
         {
             // Error reparse without asm.js
@@ -2159,7 +2152,9 @@ namespace Js
 
             // Todo:: add more runtime check here
             auto proxy = m_functionBody->GetNestedFuncReference(i);
-            ScriptFunction* scriptFuncObj = ScriptFunction::OP_NewScFunc(pDisplay, (FunctionProxy**)proxy);
+            AsmJsScriptFunction* scriptFuncObj = (AsmJsScriptFunction*)ScriptFunction::OP_NewScFunc(pDisplay, (FunctionProxy**)proxy);
+            localModuleFunctions[modFunc.location] = scriptFuncObj;
+
             if (i == 0 && info->GetUsesChangeHeap())
             {
                 scriptFuncObj->GetDynamicType()->SetEntryPoint(AsmJsChangeHeapBuffer);
@@ -2168,17 +2163,21 @@ namespace Js
             {
                 scriptFuncObj->GetDynamicType()->SetEntryPoint(AsmJsExternalEntryPoint);
             }
-            FunctionEntryPointInfo* entypointInfo = (FunctionEntryPointInfo*)scriptFuncObj->GetEntryPointInfo();
-            entypointInfo->SetIsAsmJSFunction(true);
-            entypointInfo->SetModuleAddress((uintptr_t)moduleMemoryPtr);
-            localModuleFunctions[modFunc.location] = scriptFuncObj;
+            scriptFuncObj->SetModuleMemory(moduleMemoryPtr);
+            if (!info->IsRuntimeProcessed())
+            {
+                // don't reset entrypoint upon relinking
+                FunctionEntryPointInfo* entypointInfo = (FunctionEntryPointInfo*)scriptFuncObj->GetEntryPointInfo();
+                entypointInfo->SetIsAsmJSFunction(true);
+                entypointInfo->SetModuleAddress((uintptr_t)moduleMemoryPtr);
 
 #if DYNAMIC_INTERPRETER_THUNK
-            if (!PHASE_ON1(AsmJsJITTemplatePhase))
-            {
-                entypointInfo->address = AsmJsDefaultEntryThunk;
-            }
+                if (!PHASE_ON1(AsmJsJITTemplatePhase))
+                {
+                    entypointInfo->address = AsmJsDefaultEntryThunk;
+                }
 #endif
+            }
         }
         
         // Initialise function table arrays
@@ -2217,6 +2216,8 @@ namespace Js
         }
 #endif
 
+        info->SetIsRuntimeProcessed(true);
+
         // create export object
         if( info->GetExportsCount() )
         {
@@ -2232,6 +2233,7 @@ namespace Js
             return newObj;
         }
 
+
         // export only 1 function
         Var exportFunc = localModuleFunctions[info->GetExportFunctionIndex()];
         SetReg((RegSlot)0, exportFunc);
@@ -2246,6 +2248,16 @@ namespace Js
     Var InterpreterStackFrame::ProcessLinkFailedAsmJsModule()
     {
         AsmJSCompiler::OutputError(this->scriptContext, L"asm.js linking failed.");
+
+        Js::FunctionBody* asmJsModuleFunctionBody = GetFunctionBody();
+        AsmJsModuleInfo* info = asmJsModuleFunctionBody->GetAsmJsModuleInfo();
+
+        // do not support relinking with failed relink
+        if (info->IsRuntimeProcessed())
+        {
+            Js::Throw::OutOfMemory();
+        }
+
         ScriptFunction * funcObj = GetJavascriptFunction();
         ScriptFunction::ReparseAsmJsModule(&funcObj);
         const bool doProfile =
@@ -4936,21 +4948,32 @@ namespace Js
     template <LayoutSize layoutSize, bool profiled>
     const byte * InterpreterStackFrame::OP_ProfiledLoopEnd(const byte * ip)
     {
-        uint32 C1 = m_reader.GetLayout<OpLayoutT_Unsigned1<LayoutSizePolicy<layoutSize>>>(ip)->C1;
+        uint32 loopNumber = m_reader.GetLayout<OpLayoutT_Unsigned1<LayoutSizePolicy<layoutSize>>>(ip)->C1;
         if(!profiled && !isAutoProfiling)
         {
             return ip;
         }
 
         this->CheckIfLoopIsHot(this->currentLoopCounter);
+        Js::FunctionBody *fn = this->function->GetFunctionBody();
+        if (fn->HasDynamicProfileInfo())
+        {
+            fn->GetAnyDynamicProfileInfo()->SetLoopInterpreted(loopNumber);
+            if (this->currentLoopCounter >= (uint)CONFIG_FLAG(MinMemOpCount))
+            {
+                // This flag becomes relevant only if the loop has been interpreted
+                fn->GetAnyDynamicProfileInfo()->SetMemOpMinReached(loopNumber);
+            }
+        }
+        
         this->currentLoopCounter = 0;
 
         if (profiled)
         {
             Assert(Js::DynamicProfileInfo::EnableImplicitCallFlags(GetFunctionBody()));
-            OP_RecordImplicitCall(C1);
+            OP_RecordImplicitCall(loopNumber);
 
-            if(switchProfileModeOnLoopEndNumber == C1)
+            if(switchProfileModeOnLoopEndNumber == loopNumber)
             {
                 // Stop profiling since the jitted loop body would be exiting the loop
                 Assert(!switchProfileMode);
@@ -4961,7 +4984,7 @@ namespace Js
 
         // Restore the implicit call flags state and add with flags in the loop as well
         ThreadContext *const threadContext = GetScriptContext()->GetThreadContext();
-        threadContext->AddImplicitCallFlags(this->savedLoopImplicitCallFlags[C1]);
+        threadContext->AddImplicitCallFlags(this->savedLoopImplicitCallFlags[loopNumber]);
 
         threadContext->DecrementLoopDepth();
         return ip;
@@ -5245,6 +5268,7 @@ namespace Js
             fn->SetHasHotLoop();
         }
     }
+
     bool InterpreterStackFrame::CheckAndResetImplicitCall(DisableImplicitFlags prevDisableImplicitFlags, ImplicitCallFlags savedImplicitCallFlags)
     {
         ImplicitCallFlags curImplicitCallFlags = this->scriptContext->GetThreadContext()->GetImplicitCallFlags();

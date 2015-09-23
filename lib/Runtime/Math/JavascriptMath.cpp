@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 namespace Js
 {
 #ifdef SSE2MATH
@@ -20,7 +20,7 @@ namespace Js
             return JavascriptNumber::ToVarNoCheck(value, scriptContext);
         }
 
-        Var JavascriptMath::Negate_InPlace(Var aRight, ScriptContext* scriptContext, __out JavascriptNumber* result)
+        Var JavascriptMath::Negate_InPlace(Var aRight, ScriptContext* scriptContext, JavascriptNumber* result)
         {
             // Special case for zero. Must return -0
             if( aRight == TaggedInt::ToVarUnchecked(0) )
@@ -41,7 +41,7 @@ namespace Js
             return JavascriptNumber::ToVar(~nValue, scriptContext);
         }
 
-        Var JavascriptMath::Not_InPlace(Var aRight, ScriptContext* scriptContext, __out JavascriptNumber* result)
+        Var JavascriptMath::Not_InPlace(Var aRight, ScriptContext* scriptContext, JavascriptNumber* result)
         {
             AssertMsg(!TaggedInt::Is(aRight), "Should be detected");
 
@@ -49,7 +49,7 @@ namespace Js
             return JavascriptNumber::ToVarInPlace(~nValue, scriptContext, result);
         }
 
-        Var JavascriptMath::Increment_InPlace(Var aRight, ScriptContext* scriptContext, __out JavascriptNumber* result)
+        Var JavascriptMath::Increment_InPlace(Var aRight, ScriptContext* scriptContext, JavascriptNumber* result)
         {
             if (TaggedInt::Is(aRight))
             {
@@ -71,7 +71,7 @@ namespace Js
             return JavascriptNumber::ToVarNoCheck(inc, scriptContext);
         }
 
-        Var JavascriptMath::Decrement_InPlace(Var aRight, ScriptContext* scriptContext, __out JavascriptNumber* result)
+        Var JavascriptMath::Decrement_InPlace(Var aRight, ScriptContext* scriptContext, JavascriptNumber* result)
         {
             if (TaggedInt::Is(aRight))
             {
@@ -99,7 +99,7 @@ namespace Js
             return JavascriptNumber::ToVar(and, scriptContext);
         }
 
-        Var JavascriptMath::And_InPlace(Var aLeft, Var aRight, ScriptContext* scriptContext, __out JavascriptNumber* result)
+        Var JavascriptMath::And_InPlace(Var aLeft, Var aRight, ScriptContext* scriptContext, JavascriptNumber* result)
         {
             int32 and = And_Helper(aLeft, aRight, scriptContext);
             return JavascriptNumber::ToVarInPlace(and, scriptContext, result);
@@ -111,7 +111,7 @@ namespace Js
             return JavascriptNumber::ToVar(or, scriptContext);
         }
 
-        Var JavascriptMath::Or_InPlace(Var aLeft, Var aRight, ScriptContext* scriptContext, __out JavascriptNumber* result)
+        Var JavascriptMath::Or_InPlace(Var aLeft, Var aRight, ScriptContext* scriptContext, JavascriptNumber* result)
         {
             int32 or = Or_Helper(aLeft, aRight, scriptContext);
             return JavascriptNumber::ToVarInPlace(or, scriptContext, result);
@@ -125,7 +125,7 @@ namespace Js
             return JavascriptNumber::ToVar(nLeft ^ nRight,scriptContext);
         }
 
-        Var JavascriptMath::Xor_InPlace(Var aLeft, Var aRight, ScriptContext* scriptContext,  __out JavascriptNumber* result)
+        Var JavascriptMath::Xor_InPlace(Var aLeft, Var aRight, ScriptContext* scriptContext,  JavascriptNumber* result)
         {
             int32 nLeft = TaggedInt::Is(aLeft) ? TaggedInt::ToInt32(aLeft) : JavascriptConversion::ToInt32(aLeft, scriptContext);
             int32 nRight = TaggedInt::Is(aRight) ? TaggedInt::ToInt32(aRight) : JavascriptConversion::ToInt32(aRight, scriptContext);
@@ -284,7 +284,7 @@ namespace Js
             return Add_FullHelper_Wrapper(aLeft, aRight, scriptContext, nullptr, false);
         }
 #endif
-        Var JavascriptMath::Add_InPlace(Var aLeft, Var aRight, ScriptContext* scriptContext, __out JavascriptNumber* result)
+        Var JavascriptMath::Add_InPlace(Var aLeft, Var aRight, ScriptContext* scriptContext, JavascriptNumber* result)
         {
             Assert(aLeft != nullptr);
             Assert(aRight != nullptr);
@@ -330,7 +330,7 @@ namespace Js
             return Add_FullHelper_Wrapper(aLeft, aRight, scriptContext, result, false);
         }
 
-        Var JavascriptMath::AddLeftDead(Var aLeft, Var aRight, ScriptContext* scriptContext, __out_opt JavascriptNumber *result)
+        Var JavascriptMath::AddLeftDead(Var aLeft, Var aRight, ScriptContext* scriptContext, JavascriptNumber *result)
         {
             if (JavascriptOperators::GetTypeId(aLeft) == TypeIds_String)
             {
@@ -380,14 +380,14 @@ StringCommon:
             return Add_FullHelper_Wrapper(aLeft, aRight, scriptContext, result, true);
         }
 
-        Var JavascriptMath::Add_FullHelper_Wrapper(Var aLeft, Var aRight, ScriptContext* scriptContext, __out_opt JavascriptNumber* result, bool leftIsDead)
+        Var JavascriptMath::Add_FullHelper_Wrapper(Var aLeft, Var aRight, ScriptContext* scriptContext, JavascriptNumber* result, bool leftIsDead)
         {
             Var aLeftToPrim = JavascriptConversion::ToPrimitive(aLeft, JavascriptHint::None, scriptContext);;
             Var aRightToPrim = JavascriptConversion::ToPrimitive(aRight, JavascriptHint::None, scriptContext);;
             return Add_FullHelper(aLeftToPrim, aRightToPrim, scriptContext, result, leftIsDead);            
         }
 
-        Var JavascriptMath::Add_FullHelper(Var primLeft, Var primRight, ScriptContext* scriptContext, __out_opt JavascriptNumber *result, bool leftIsDead)
+        Var JavascriptMath::Add_FullHelper(Var primLeft, Var primRight, ScriptContext* scriptContext, JavascriptNumber *result, bool leftIsDead)
         {
             // If either side is a string, then the result is also a string
             if (JavascriptOperators::GetTypeId(primLeft) == TypeIds_String)
@@ -427,7 +427,7 @@ StringCommon:
             return JavascriptNumber::ToVarMaybeInPlace(sum, scriptContext, result);
         }
 
-        Var JavascriptMath::MulAddLeft(Var mulLeft, Var mulRight, Var addLeft, ScriptContext* scriptContext, __out_opt JavascriptNumber* result)
+        Var JavascriptMath::MulAddLeft(Var mulLeft, Var mulRight, Var addLeft, ScriptContext* scriptContext,  JavascriptNumber* result)
         {
             if(TaggedInt::Is(mulLeft))
             {
@@ -483,7 +483,7 @@ StringCommon:
             }
         }
 
-        Var JavascriptMath::MulAddRight(Var mulLeft, Var mulRight, Var addRight, ScriptContext* scriptContext, __out_opt JavascriptNumber* result)
+        Var JavascriptMath::MulAddRight(Var mulLeft, Var mulRight, Var addRight, ScriptContext* scriptContext, JavascriptNumber* result)
         {
             if(TaggedInt::Is(mulLeft))
             {
@@ -539,7 +539,7 @@ StringCommon:
             }
         }
 
-        Var JavascriptMath::MulSubLeft(Var mulLeft, Var mulRight, Var subLeft, ScriptContext* scriptContext, __out_opt JavascriptNumber* result)
+        Var JavascriptMath::MulSubLeft(Var mulLeft, Var mulRight, Var subLeft, ScriptContext* scriptContext, JavascriptNumber* result)
         {
             if(TaggedInt::Is(mulLeft))
             {
@@ -595,7 +595,7 @@ StringCommon:
             }
         }
 
-        Var JavascriptMath::MulSubRight(Var mulLeft, Var mulRight, Var subRight, ScriptContext* scriptContext, __out_opt JavascriptNumber* result)
+        Var JavascriptMath::MulSubRight(Var mulLeft, Var mulRight, Var subRight, ScriptContext* scriptContext, JavascriptNumber* result)
         {
             if(TaggedInt::Is(mulLeft))
             {
@@ -651,7 +651,7 @@ StringCommon:
             }
         }
 
-        Var __inline JavascriptMath::Add_DoubleHelper(double dblLeft, Var addRight, ScriptContext* scriptContext, __out_opt JavascriptNumber*result)
+        Var __inline JavascriptMath::Add_DoubleHelper(double dblLeft, Var addRight, ScriptContext* scriptContext, JavascriptNumber*result)
         {
             if (TaggedInt::Is(addRight))
             {
@@ -673,7 +673,7 @@ StringCommon:
             }
         }
 
-        Var __inline JavascriptMath::Add_DoubleHelper(Var addLeft, double dblRight, ScriptContext* scriptContext, __out_opt JavascriptNumber*result)
+        Var __inline JavascriptMath::Add_DoubleHelper(Var addLeft, double dblRight, ScriptContext* scriptContext, JavascriptNumber*result)
         {
             if (TaggedInt::Is(addLeft))
             {
@@ -695,7 +695,7 @@ StringCommon:
             }
         }
 
-        Var __inline JavascriptMath::Subtract_DoubleHelper(double dblLeft, Var subRight, ScriptContext* scriptContext, __out_opt JavascriptNumber* result)
+        Var __inline JavascriptMath::Subtract_DoubleHelper(double dblLeft, Var subRight, ScriptContext* scriptContext, JavascriptNumber* result)
         {
             if (TaggedInt::Is(subRight))
             {
@@ -717,7 +717,7 @@ StringCommon:
             }
         }
 
-        Var __inline JavascriptMath::Subtract_DoubleHelper(Var subLeft, double dblRight, ScriptContext* scriptContext, __out_opt JavascriptNumber*result)
+        Var __inline JavascriptMath::Subtract_DoubleHelper(Var subLeft, double dblRight, ScriptContext* scriptContext, JavascriptNumber*result)
         {
             if (TaggedInt::Is(subLeft))
             {
@@ -745,7 +745,7 @@ StringCommon:
             return JavascriptNumber::ToVarNoCheck(difference, scriptContext);
         }
 
-        Var JavascriptMath::Subtract_InPlace(Var aLeft, Var aRight, ScriptContext* scriptContext, __out JavascriptNumber* result)
+        Var JavascriptMath::Subtract_InPlace(Var aLeft, Var aRight, ScriptContext* scriptContext, JavascriptNumber* result)
         {
             double difference = Subtract_Helper(aLeft, aRight, scriptContext);
             return JavascriptNumber::InPlaceNew(difference, scriptContext, result);
@@ -770,7 +770,7 @@ StringCommon:
             return JavascriptNumber::ToVarNoCheck(Math::Pow(x, y), scriptContext);
         }
 
-        Var JavascriptMath::Exponentiation_InPlace(Var aLeft, Var aRight, ScriptContext* scriptContext, __out JavascriptNumber* result)
+        Var JavascriptMath::Exponentiation_InPlace(Var aLeft, Var aRight, ScriptContext* scriptContext, JavascriptNumber* result)
         {
             // The IEEE 754 floating point spec ensures that NaNs are preserved in all operations
             double dblLeft = JavascriptConversion::ToNumber(aLeft, scriptContext);
@@ -814,7 +814,7 @@ StringCommon:
             return JavascriptNumber::ToVarNoCheck(product, scriptContext);
         }
 
-        Var JavascriptMath::Multiply_InPlace(Var aLeft, Var aRight, ScriptContext* scriptContext, __out JavascriptNumber* result)
+        Var JavascriptMath::Multiply_InPlace(Var aLeft, Var aRight, ScriptContext* scriptContext, JavascriptNumber* result)
         {
             if(JavascriptNumber::Is(aLeft))
             {
@@ -846,7 +846,7 @@ StringCommon:
             return JavascriptNumber::InPlaceNew(product, scriptContext, result);
         }
 
-        Var JavascriptMath::Divide_InPlace(Var aLeft, Var aRight, ScriptContext* scriptContext, __out JavascriptNumber* result)
+        Var JavascriptMath::Divide_InPlace(Var aLeft, Var aRight, ScriptContext* scriptContext, JavascriptNumber* result)
         {
             // If both arguments are TaggedInt, then try to do integer division
             // This case is not handled by the lowerer.
@@ -872,7 +872,7 @@ StringCommon:
             return JavascriptNumber::ToVarNoCheck(remainder, scriptContext);
         }
 
-        Var JavascriptMath::Modulus_InPlace(Var aLeft, Var aRight, ScriptContext* scriptContext, __out JavascriptNumber* result)
+        Var JavascriptMath::Modulus_InPlace(Var aLeft, Var aRight, ScriptContext* scriptContext, JavascriptNumber* result)
         {
             Assert(aLeft != nullptr);
             Assert(aRight != nullptr);
@@ -895,7 +895,7 @@ StringCommon:
             return JavascriptNumber::New((double)(value + 0.5), scriptContext);
         }
 
-        Var JavascriptMath::FinishOddDivByPow2_InPlace(int32 value, ScriptContext *scriptContext, __out JavascriptNumber* result)
+        Var JavascriptMath::FinishOddDivByPow2_InPlace(int32 value, ScriptContext *scriptContext, JavascriptNumber* result)
         {
             return JavascriptNumber::InPlaceNew((double)(value + 0.5), scriptContext, result);
         }

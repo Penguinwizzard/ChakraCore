@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//---------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeLanguagePch.h"
 #include "ByteCode\Symbol.h"
 #include "ByteCode\FuncInfo.h"
@@ -367,7 +367,7 @@ namespace Js
 
                 // since we are parsing the same way we created variables the same time, it is safe to assume these are AsmJsVar*
                 AsmJsVar* var = (AsmJsVar*)mFunction->FindVar(ParserWrapper::VariableName(decl));
-
+                Assert(var);
                 if (var->GetType().isInt())
                 {
                     mWriter.AsmInt1Const1(Js::OpCodeAsmJs::Ld_IntConst, var->GetLocation(), var->GetIntInitialiser());

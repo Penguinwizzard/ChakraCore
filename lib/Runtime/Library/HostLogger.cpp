@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 
 #ifdef TEST_LOG
@@ -260,10 +260,10 @@ namespace Js
             Assert(Js::Configuration::Global.flags.IsEnabled(Js::HostLoggingFlag));
 
             LogInvokeCall(disp, id, flags);
-            fprintf(m_logfile, "arg_count: %d\n", args.Info.Count - 1);
+            fprintf(m_logfile, "arg_count: %u\n", args.Info.Count - 1);
             for(uint i = 1; i < args.Info.Count; ++i)
             {
-                fprintf(m_logfile, "arg%d: ", i - 1);
+                fprintf(m_logfile, "arg%u: ", i - 1);
                 DumpVar(args.Values[args.Info.Count - i]);
             }
         }

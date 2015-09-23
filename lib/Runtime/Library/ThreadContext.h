@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 
 namespace Js
@@ -9,7 +9,7 @@ namespace Js
     class ScriptContext;
     struct InlineCache;    
     class DebugManager;
-
+    class CodeGenRecyclableData;
     struct ReturnedValue;
     typedef JsUtil::List<ReturnedValue*> ReturnedValueList;
 }
@@ -673,10 +673,6 @@ private:
     __declspec(thread) static uint activeScriptSiteCount;
     bool isScriptActive;
 
-#ifdef TEST_LOG
-    Js::HostLogger *hostLogger;
-#endif
-
     // To synchronize with ETW rundown, which needs to walk scriptContext/functionBody/entryPoint lists.
     CriticalSection csEtwRundown;
 
@@ -942,8 +938,8 @@ public:
     void FindPropertyRecord(__in LPCWSTR propertyName, __in int propertyNameLength, Js::PropertyRecord const ** propertyRecord);
     const Js::PropertyRecord * FindPropertyRecord(const wchar_t * propertyName, int propertyNameLength);
 
-    JsUtil::List<const RecyclerWeakReference<Js::PropertyRecord const>*>* FindPropertyIdNoCase(Js::ScriptContext * scriptContext, __in LPCWSTR propertyName, int propertyNameLength);
-    JsUtil::List<const RecyclerWeakReference<Js::PropertyRecord const>*>* FindPropertyIdNoCase(Js::ScriptContext * scriptContext, __in JsUtil::CharacterBuffer<WCHAR> const& propertyName);
+    JsUtil::List<const RecyclerWeakReference<Js::PropertyRecord const>*>* FindPropertyIdNoCase(Js::ScriptContext * scriptContext, LPCWSTR propertyName, int propertyNameLength);
+    JsUtil::List<const RecyclerWeakReference<Js::PropertyRecord const>*>* FindPropertyIdNoCase(Js::ScriptContext * scriptContext, JsUtil::CharacterBuffer<WCHAR> const& propertyName);
     bool FindExistingPropertyRecord(_In_ JsUtil::CharacterBuffer<WCHAR> const& propertyName, Js::CaseInvariantPropertyListWithHashCode** propertyRecord);
     void CleanNoCasePropertyMap();
     void ForceCleanPropertyMap();
@@ -1358,9 +1354,6 @@ public:
     bool IsDisableImplicitException() const { return (disableImplicitFlags & DisableImplicitExceptionFlag) != 0; }
     void DisableImplicitCall() { disableImplicitFlags = (DisableImplicitFlags)(disableImplicitFlags | DisableImplicitCallFlag); }
     void ClearDisableImplicitFlags() { disableImplicitFlags = DisableImplicitNoFlag; }
-#ifdef TEST_LOG
-    Js::HostLogger* GetHostLogger() { return hostLogger; }
-#endif
 
     virtual uint GetRandomNumber() override;
 

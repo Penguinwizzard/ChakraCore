@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "CommonMemoryPch.h"
 #ifdef CONCURRENT_GC_ENABLED
 #include <process.h>
@@ -119,7 +119,7 @@ static void* GetStackBase();
 
 template __forceinline char * Recycler::AllocWithAttributesInlined<NoBit, false>(size_t size);
 template __forceinline char* Recycler::RealAlloc<NoBit, false>(HeapInfo* heap, size_t size);
-template __forceinline void * __cdecl operator new<Recycler>(size_t byteSize, Recycler * alloc, char * (Recycler::*AllocFunc)(size_t));
+template __forceinline _Ret_notnull_ void * __cdecl operator new<Recycler>(size_t byteSize, Recycler * alloc, char * (Recycler::*AllocFunc)(size_t));
 
 Recycler::Recycler(AllocationPolicyManager * policyManager, IdleDecommitPageAllocator * pageAllocator, void (*outOfMemoryFunc)(), Js::ConfigFlagsTable& configFlagsTable) :
     collectionState(CollectionStateNotCollecting),
@@ -3088,6 +3088,7 @@ BOOL
 Recycler::GetPartialFlag()
 {
 #ifdef PARTIAL_GC_ENABLED
+#pragma prefast(suppress:6313, "flags is a template parameter and can be 0")
     return(flags & CollectMode_Partial) && inPartialCollectMode;
 #else
     return false;
@@ -4518,7 +4519,10 @@ Recycler::ShutdownThread()
         Assert(concurrentThread != NULL || threadService->HasCallback());
         
         FinalizeConcurrent(false);
-        CloseHandle(concurrentThread);
+        if (concurrentThread)
+        {
+            CloseHandle(concurrentThread);
+        }
     }
 }
 
@@ -4530,7 +4534,10 @@ Recycler::DisableConcurrent()
         Assert(concurrentThread != NULL || threadService->HasCallback());
 
         FinalizeConcurrent(true);
-        CloseHandle(concurrentThread);
+        if (concurrentThread)
+        {
+            CloseHandle(concurrentThread);
+        }
         this->collectionState = CollectionStateNotCollecting;
     }
 }
@@ -5426,7 +5433,7 @@ Recycler::ThreadProc()
 
 #ifdef ENABLE_JS_ETW
     // Create an ETW ActivityId for this thread, to help tools correlate ETW events we generate
-    GUID activityId;
+    GUID activityId = { 0 };
     auto result = EventActivityIdControl(EVENT_ACTIVITY_CTRL_CREATE_SET_ID, &activityId);
     Assert(result == ERROR_SUCCESS);
 #endif
@@ -5954,7 +5961,7 @@ RecyclerParallelThread::StaticThreadProc(LPVOID lpParameter)
 
 #ifdef ENABLE_JS_ETW
         // Create an ETW ActivityId for this thread, to help tools correlate ETW events we generate
-        GUID activityId;
+        GUID activityId = { 0 };
         auto result = EventActivityIdControl(EVENT_ACTIVITY_CTRL_CREATE_SET_ID, &activityId);
         Assert(result == ERROR_SUCCESS);
 #endif
@@ -7017,7 +7024,8 @@ Recycler::InitializeProfileAllocTracker()
     {
         trackerDictionary = NoCheckHeapNew(TypeInfotoTrackerItemMap, &NoCheckHeapAllocator::Instance, 163);        
 
-        InitializeCriticalSectionAndSpinCount(&trackerCriticalSection, 1000);
+#pragma prefast(suppress:6031, "InitializeCriticalSectionAndSpinCount always succeed since Vista. No need to check return value");
+        InitializeCriticalSectionAndSpinCount(&trackerCriticalSection, 1000);        
     }
 
     nextAllocData.Clear();
@@ -7089,7 +7097,7 @@ void* Recycler::TrackAlloc(void* object, size_t size, const TrackAllocData& trac
 }
 
 void
-Recycler::TrackIntegrate(char * blockAddress, size_t blockSize, size_t allocSize, size_t objectSize, const TrackAllocData& trackAllocData)
+Recycler::TrackIntegrate(__in_ecount(blockSize) char * blockAddress, size_t blockSize, size_t allocSize, size_t objectSize, const TrackAllocData& trackAllocData)
 {
     if (this->trackerDictionary != nullptr)
     {

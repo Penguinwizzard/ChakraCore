@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 
 // Base class for TempTrackers.  Contain the basic data and merge logic 
@@ -77,7 +77,8 @@ protected:
     // Support for property transfer, so we can stack allocate number if it is assigned to another stack allocated object
     bool IsTempPropertyTransferLoad(IR::Instr * instr, BackwardPass * backwardPass);
     bool IsTempPropertyTransferStore(IR::Instr * instr, BackwardPass * backwardPass);
-    void PropagateTempPropertyTransferStoreDependencies(SymID usedSymID, PropertySym * propertySym);    
+    void PropagateTempPropertyTransferStoreDependencies(SymID usedSymID, PropertySym * propertySym, BackwardPass * backwardPass);    
+    SymID GetRepresentativePropertySymId(PropertySym * propertySym, BackwardPass * backwardPass);
 
     bool IsTempIndirTransferLoad(IR::Instr * instr, BackwardPass * backwardPass);
 
@@ -96,13 +97,11 @@ protected:
     // all the uses of values coming from LdElem_A, needed to detect dependencies on value set on stack objects
     BVSparse<JitArenaAllocator> elemLoadDependencies;
 
-    // PropertyIds that has Ld*Fld  from stack object that has non temp uses.
-    BVSparse<JitArenaAllocator> nonTempPropertyIds;
-
     // Per properties dependencies of Ld*Fld
     HashTable<BVSparse<JitArenaAllocator> *> * propertyIdsTempTransferDependencies;
 
-    // Trace upward exposed mark tmep object fields
+    // Trace upward exposed mark temp object fields to answer
+    // whether if there is any field value is still live on the next iteration    
     HashTable<BVSparse<JitArenaAllocator> * > * upwardExposedMarkTempObjectSymsProperties;
     BVSparse<JitArenaAllocator> upwardExposedMarkTempObjectLiveFields;
 };
@@ -133,7 +132,7 @@ protected:
     // (So we don't stack allocate object if it is assigned to another stack allocated object)
     bool IsTempPropertyTransferLoad(IR::Instr * instr, BackwardPass * backwardPass) { return false; }
     bool IsTempPropertyTransferStore(IR::Instr * instr, BackwardPass * backwardPass) { return false; }
-    void PropagateTempPropertyTransferStoreDependencies(SymID usedSymID, PropertySym * propertySym) { Assert(false); }
+    void PropagateTempPropertyTransferStoreDependencies(SymID usedSymID, PropertySym * propertySym, BackwardPass * backwardPass) { Assert(false); }
     bool IsTempIndirTransferLoad(IR::Instr * instr, BackwardPass * backwardPass) { return false; }
     bool HasExposedFieldDependencies(BVSparse<JitArenaAllocator> * bvTempTransferDependencies, BackwardPass * backwardPass) { return false; }
 
@@ -180,7 +179,7 @@ protected:
     // (So we don't stack allocate object if it is assigned to another stack allocated object)
     bool IsTempPropertyTransferLoad(IR::Instr * instr, BackwardPass * backwardPass) { return false; }
     bool IsTempPropertyTransferStore(IR::Instr * instr, BackwardPass * backwardPass) { return false; }
-    void PropagateTempPropertyTransferStoreDependencies(SymID usedSymID, PropertySym * propertySym)  { Assert(false); }
+    void PropagateTempPropertyTransferStoreDependencies(SymID usedSymID, PropertySym * propertySym, BackwardPass * backwardPass)  { Assert(false); }
     bool IsTempIndirTransferLoad(IR::Instr * instr, BackwardPass * backwardPass) { return false; }
     bool HasExposedFieldDependencies(BVSparse<JitArenaAllocator> * bvTempTransferDependencies, BackwardPass * backwardPass) { return false; }
 

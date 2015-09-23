@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 //
 // NOTE: This file is intended to be "#include" multiple times.  The call site should define various
 // macros to be executed for each entry.  Macros that are not provided will be given a default,
@@ -661,7 +661,6 @@ ENTRY(MissingProperty)
 
 // These are ES5/6/7+ builtins that are tracked for telemetry purposes, but currently not implemented by Chakra or are otherwise special.
 // IMPORTANT NOTE: See notes at top of this file regarding GenByteCode and test failures after changing this list.
-#ifdef TELEMETRY_ESB
 ENTRY(observe)
 ENTRY(unobserve)
 ENTRY(setUInt16)
@@ -675,7 +674,6 @@ ENTRY(lPad)
 ENTRY(padLeft)
 ENTRY(getOwnPropertyDescriptors)
 ENTRY(__constructor) // represents an invocation of the constructor function rather than a use of the constructor property (i.e. `new Foo()` rather than `(new Foo()).constructor`).
-#endif
 
 // SymbolFunctionNameId: for RuntimeFunction nameId
 ENTRY2(_RuntimeFunctionNameId_hasInstance, L"[Symbol.hasInstance]")

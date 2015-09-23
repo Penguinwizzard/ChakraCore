@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 
 class BasicBlock;
@@ -528,6 +528,7 @@ private:
     typedef JsUtil::BaseDictionary<PropertySym *, Value *, JitArenaAllocator> InitialValueFieldMap;
 
     Js::ImplicitCallFlags implicitCallFlags;
+    Js::LoopFlags loopFlags;
     BasicBlock *        headBlock;
 public:
     Func *              topFunc;
@@ -593,25 +594,61 @@ public:
     bool                isLeaf : 1;
     bool                isProcessed : 1; // Set and reset at varying places according to the phase we're in. 
                                          // For example, in the lowerer, it'll be set to true when we process the loopTop for a certain loop
-    typedef struct {
+    struct MemCopyCandidate;
+    struct MemSetCandidate;
+    struct MemOpCandidate
+    {
         SymID base;
         SymID index;
-        int constant;
         byte count;
         bool bIndexAlreadyChanged;
-    } MemsetCandidate;
+        enum MemOpType
+        {
+            MEMSET,
+            MEMCOPY
+        } type;
+        bool IsMemSet() const { return type == MEMSET; }
+        bool IsMemCopy() const { return type == MEMCOPY; }
+        struct Loop::MemCopyCandidate* AsMemCopy();
+        struct Loop::MemSetCandidate* AsMemSet();
+        MemOpCandidate(MemOpType type) :
+            type(type)
+        {
+        }
+    };
 
-    typedef struct {
+    struct MemSetCandidate : public MemOpCandidate
+    {
+        int constant;
+        MemSetCandidate() : MemOpCandidate(MemOpCandidate::MEMSET) {}
+    };
+
+    struct MemCopyCandidate : public MemOpCandidate
+    {
         SymID ldBase;
         SymID ldIndex;
-        SymID stBase;
-        SymID stIndex;
         SymID transferSym;
         byte ldCount;
-        byte stCount;
         bool bLdIndexAlreadyChanged;
-        bool bStIndexAlreadyChanged;
-    } MemcopyCandidate;
+        MemCopyCandidate() : MemOpCandidate(MemOpCandidate::MEMCOPY) {}
+    };
+
+#define FOREACH_MEMOP_CANDIDATES_EDITING(data, loop, iterator) FOREACH_SLISTCOUNTED_ENTRY_EDITING(Loop::MemOpCandidate*, data, loop->memOpInfo->candidates, iterator)
+#define NEXT_MEMOP_CANDIDATE_EDITING NEXT_SLISTCOUNTED_ENTRY_EDITING
+#define FOREACH_MEMOP_CANDIDATES(data, loop) FOREACH_SLISTCOUNTED_ENTRY(Loop::MemOpCandidate*, data, loop->memOpInfo->candidates)
+#define NEXT_MEMOP_CANDIDATE NEXT_SLISTCOUNTED_ENTRY
+
+#define MEMOP_CANDIDATE_TYPE_CHECK(candidate, data, type) if(candidate->Is ## type()) {Loop:: ## type ## Candidate* data = candidate->As## type();
+
+#define FOREACH_MEMCOPY_CANDIDATES_EDITING(data, loop, iterator) {FOREACH_MEMOP_CANDIDATES_EDITING(_memopCandidate, loop, iterator) {MEMOP_CANDIDATE_TYPE_CHECK(_memopCandidate, data, MemCopy)
+#define NEXT_MEMCOPY_CANDIDATE_EDITING }}NEXT_MEMOP_CANDIDATE_EDITING}
+#define FOREACH_MEMCOPY_CANDIDATES(data, loop) {FOREACH_MEMOP_CANDIDATES(_memopCandidate, loop) {MEMOP_CANDIDATE_TYPE_CHECK(_memopCandidate, data, MemCopy)
+#define NEXT_MEMCOPY_CANDIDATE }}NEXT_MEMOP_CANDIDATE}
+
+#define FOREACH_MEMSET_CANDIDATES_EDITING(data, loop, iterator) {FOREACH_MEMOP_CANDIDATES_EDITING(_memopCandidate, loop, iterator) {MEMOP_CANDIDATE_TYPE_CHECK(_memopCandidate, data, MemSet)
+#define NEXT_MEMSET_CANDIDATE_EDITING }}NEXT_MEMOP_CANDIDATE_EDITING}
+#define FOREACH_MEMSET_CANDIDATES(data, loop) {FOREACH_MEMOP_CANDIDATES(_memopCandidate, loop) {MEMOP_CANDIDATE_TYPE_CHECK(_memopCandidate, data, MemSet)
+#define NEXT_MEMSET_CANDIDATE }}NEXT_MEMOP_CANDIDATE}
 
     typedef struct
     {
@@ -620,19 +657,17 @@ public:
     } InductionVariableChangeInfo;
 
     typedef JsUtil::BaseDictionary<SymID, InductionVariableChangeInfo, JitArenaAllocator> InductionVariableChangeInfoMap;
-    typedef SListCounted<MemsetCandidate *>  MemsetList;
-    typedef SListCounted<MemcopyCandidate *>  MemcopyList;
+    typedef SListCounted<MemOpCandidate *>  MemOpList;
     typedef JsUtil::BaseHashSet<SymID, JitArenaAllocator> MemOpIgnoreSet;
     typedef struct
     {
-        MemsetList *memsetCandidates;
-        MemcopyList *memcopyCandidates;
+        MemOpList *candidates;
+        uint memsetCandidatesCount, memcopyCandidatesCount;
         MemOpIgnoreSet *memsetIgnore;
         MemOpIgnoreSet *memcopyIgnore;
         BVSparse<JitArenaAllocator> *inductionVariablesUsedAfterLoop;
         InductionVariableChangeInfoMap *inductionVariableChangeInfoMap;
-        bool doMemset : 1;
-        bool doMemcopy : 1;
+        bool doMemOp : 1;
     } MemOpInfo;
 
     MemOpInfo *memOpInfo;
@@ -690,12 +725,14 @@ public:
     BasicBlock *        GetHeadBlock() const { Assert(headBlock == blockList.Head()); return headBlock; }
     bool                IsDescendentOrSelf(Loop const * loop) const;
 
-    void                EnsureMemOpVariablesInitialized();
-    void                InvalidateMemsetCandidate(SymID symId, MemsetCandidate *memsetCandidate = nullptr);
+    bool                EnsureMemOpVariablesInitialized();
+    void                InvalidateMemsetCandidate(SymID symId, MemSetCandidate *memsetCandidate = nullptr);
     void                InvalidateMemcopyCandidate(SymID);
 
     Js::ImplicitCallFlags GetImplicitCallFlags();
-    void                SetImplicitCallFlags(Js::ImplicitCallFlags flags);    
+    void                SetImplicitCallFlags(Js::ImplicitCallFlags flags);
+    Js::LoopFlags GetLoopFlags() const { return loopFlags; }
+    void SetLoopFlags(Js::LoopFlags val) { loopFlags = val; }
     bool                CanHoistInvariants();
     bool                CanDoFieldCopyProp();    
     bool                CanDoFieldHoist();    
@@ -902,7 +939,9 @@ private:
 #define FOREACH_SUCCESSOR_BLOCK(blockSucc, block)\
     FOREACH_EDGE_IN_LIST(__edge, block->GetSuccList())\
     {\
-        BasicBlock * blockSucc = __edge->GetSucc();
+        BasicBlock * blockSucc = __edge->GetSucc(); \
+        Assert(blockSucc);
+
 #define NEXT_SUCCESSOR_BLOCK\
     }\
     NEXT_EDGE_IN_LIST
@@ -910,7 +949,9 @@ private:
 #define FOREACH_SUCCESSOR_BLOCK_EDITING(blockSucc, block, iter)\
     FOREACH_EDGE_IN_LIST_EDITING(__edge, block->GetSuccList(), iter)\
     {\
-        BasicBlock * blockSucc = __edge->GetSucc();
+        BasicBlock * blockSucc = __edge->GetSucc(); \
+        Assert(blockSucc);
+
 #define NEXT_SUCCESSOR_BLOCK_EDITING\
     }\
     NEXT_EDGE_IN_LIST_EDITING
@@ -918,7 +959,9 @@ private:
 #define FOREACH_DEAD_SUCCESSOR_BLOCK(blockSucc, block)\
     FOREACH_EDGE_IN_LIST(__edge, block->GetDeadSuccList())\
     {\
-        BasicBlock * blockSucc = __edge->GetSucc();
+        BasicBlock * blockSucc = __edge->GetSucc(); \
+        Assert(blockSucc);
+
 #define NEXT_DEAD_SUCCESSOR_BLOCK\
     }\
     NEXT_EDGE_IN_LIST
@@ -926,7 +969,9 @@ private:
 #define FOREACH_PREDECESSOR_BLOCK(blockPred, block)\
     FOREACH_EDGE_IN_LIST(__edge, block->GetPredList())\
     {\
-        BasicBlock * blockPred = __edge->GetPred();
+        BasicBlock * blockPred = __edge->GetPred(); \
+        Assert(blockPred);
+
 #define NEXT_PREDECESSOR_BLOCK\
     }\
     NEXT_EDGE_IN_LIST
@@ -934,7 +979,9 @@ private:
 #define FOREACH_DEAD_PREDECESSOR_BLOCK(blockPred, block)\
     FOREACH_EDGE_IN_LIST(__edge, block->GetDeadPredList())\
     {\
-        BasicBlock * blockPred = __edge->GetPred();
+        BasicBlock * blockPred = __edge->GetPred(); \
+        Assert(blockPred);
+
 #define NEXT_DEAD_PREDECESSOR_BLOCK\
     }\
     NEXT_EDGE_IN_LIST

@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "CommonCorePch.h"
 
 #ifdef PROFILE_MEM
@@ -12,7 +12,7 @@
 __declspec(thread) MemoryProfiler * MemoryProfiler::Instance = nullptr;
 
 CriticalSection MemoryProfiler::s_cs;
-AutoPtr<MemoryProfiler> MemoryProfiler::profilers(nullptr);
+AutoPtr<MemoryProfiler, NoCheckHeapAllocator> MemoryProfiler::profilers(nullptr);
 
 MemoryProfiler::MemoryProfiler() :
     pageAllocator(nullptr, Js::Configuration::Global.flags, PageAllocatorType_Max, 0, false, nullptr),
@@ -29,7 +29,7 @@ MemoryProfiler::~MemoryProfiler()
 #if DBG
     pageAllocator.SetDisableThreadAccessCheck();
 #endif
-    delete next;
+    NoCheckHeapDelete(next);   
 }
 
 MemoryProfiler *
@@ -39,8 +39,8 @@ MemoryProfiler::EnsureMemoryProfiler()
 
     if (memoryProfiler == nullptr)
     {
-        memoryProfiler = new MemoryProfiler();
-
+        memoryProfiler = NoCheckHeapNew(MemoryProfiler);
+        
         {
             AutoCriticalSection autocs(&s_cs);
             memoryProfiler->next = MemoryProfiler::profilers.Detach();

@@ -1,11 +1,12 @@
-//----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 #include <strsafe.h>
 #include "restrictederrorinfo.h"
 #include "errstr.h"
+#include "Library\JavascriptErrorDebug.h"
 
 // Temporarily undefining "null" (defined in Common.h) to avoid compile errors when importing mscorlib.tlb
 #import <mscorlib.tlb> raw_interfaces_only \
@@ -384,7 +385,7 @@ namespace Js
         {
             return;
         }
-        switch (hr)
+        switch ((HRESULT)hr)
         {
 #define RT_ERROR_MSG(name, errnum, str1, str2, jst, errorNumSource) \
         case name: \

@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 
 enum
@@ -33,7 +33,7 @@ public:
     void *m_data;
     ErrorCallback m_callback;
 
-    void Throw(HRESULT hr);
+    __declspec(noreturn) void Throw(HRESULT hr);
 
 #if DEBUG
     BOOL fInited;

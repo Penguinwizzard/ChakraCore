@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 
 #ifdef PROFILE_MEM
@@ -128,7 +128,7 @@ private:
     static __declspec(thread) MemoryProfiler * Instance;
 
     static CriticalSection s_cs;
-    static AutoPtr<MemoryProfiler> profilers;
+    static AutoPtr<MemoryProfiler, NoCheckHeapAllocator> profilers;
 
     PageAllocator pageAllocator;
     ArenaAllocator alloc;

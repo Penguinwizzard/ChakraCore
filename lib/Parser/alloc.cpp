@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "ParserPch.h"
 
 //IMPORTANT: keep in sync with duplicate: scriptengines\src\scrobj\core\alloc.cpp
@@ -160,6 +160,7 @@ void NoReleaseAllocator::FreeAll(void)
     while (NULL != m_pblkList)
     {
         NraBlock * pblk = m_pblkList;
+#pragma prefast(suppress:6001, "Not sure why it is complaining *m_plkList is uninitialized")
         m_pblkList = pblk->pblkNext;
         free(pblk);
     }

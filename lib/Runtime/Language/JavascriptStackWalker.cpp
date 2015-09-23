@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeLanguagePch.h"
 #include "Language\JavascriptFunctionArgIndex.h"
 
@@ -306,6 +306,7 @@ namespace Js
             {
                 if (lastInternalLoopBodyFrameType == InternalFrameType_LoopBody)
                 {
+                    Assert(this->interpreterFrame);
                     loopNum = this->interpreterFrame->GetCurrentLoopNum();
                     Assert(loopNum != LoopHeader::NoLoop);
                 }
@@ -826,6 +827,7 @@ namespace Js
 
             if (this->ehFramesBeingWalkedFromBailout)
             {
+                Assert(this->tempInterpreterFrame != nullptr);
                 this->interpreterFrame = this->tempInterpreterFrame;
                 this->tempInterpreterFrame = this->tempInterpreterFrame->GetPreviousFrame();
                 
@@ -1113,7 +1115,7 @@ namespace Js
         return args;
     }
 
-    void InlinedFrameWalker::FinalizeStackValues(Js::Var args[], size_t argCount) const
+    void InlinedFrameWalker::FinalizeStackValues(__in_ecount(argCount) Js::Var args[], size_t argCount) const
     {
         ScriptContext *scriptContext = this->GetFunctionObject()->GetScriptContext();
 

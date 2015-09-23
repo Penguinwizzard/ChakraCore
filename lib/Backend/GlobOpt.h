@@ -1,6 +1,7 @@
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 class BackwardPass;
 
 enum class ValueStructureKind
@@ -1497,8 +1498,6 @@ private:
     bool                    IsAllowedTypeForMemOpt(IR::Opnd *baseOpnd, IR::Opnd *indexOpnd);
 
     void                    ProcessMemOp();
-    void                    ProcessMemset(Loop *loop);
-    void                    ProcessMemcopy(Loop *loop);
     void                    HoistHeadSegmentForMemOp(IR::Instr *instr, IR::ArrayRegOpnd *arrayRegOpnd, IR::Instr *insertBeforeInstr);
     bool                    EmitMemset(Loop * loop, LoopCount *loopcount, SymID base, SymID index, int constant, byte unroll, bool isInductionVariableChangeIncremental, bool bIndexAlreadyChanged);
     bool                    EmitMemcopy(Loop * loop, LoopCount *loopcount, SymID ldBase, SymID ldIndex, SymID stBase, SymID stIndex, byte unroll, bool bLdIndexAlreadyChanged, bool bStIndexAlreadyChanged, bool isLdInductionVariableChangeIncremental, bool isStInductionVariableChangeIncremental);
@@ -1506,9 +1505,7 @@ private:
     IR::RegOpnd*            GenerateStartIndexOpndForMemop(Loop *loop, IR::Opnd *indexOpnd, IR::Opnd *sizeOpnd, bool isInductionVariableChangeIncremental, bool bIndexAlreadyChanged, IR::Instr *insertBeforeInstr = nullptr);
     LoopCount*              GetOrGenerateLoopCountForMemOp(Loop *loop);
 
-    bool                    DoMemop(Loop * loop);
-    bool                    DoMemset(Loop * loop);
-    bool                    DoMemcopy(Loop * loop);
+    bool                    DoMemOp(Loop * loop);
 
 private:
     void                    ChangeValueType(BasicBlock *const block, Value *const value, const ValueType newValueType, const bool preserveSubclassInfo, const bool allowIncompatibleType = false) const;

@@ -58,6 +58,7 @@
     <ClInclude Include="JsrtInternal.h" />
     <ClInclude Include="JsrtExceptionBase.h" />
     <ClInclude Include="JsrtPch.h" />
+    <ClInclude Include="TestHooksRt.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Condition="'$(USE_EXTERNAL_DEPENDENCIES)'!='yes'" Include="..\..\..\publish\Publish.vcxproj">
@@ -67,6 +68,6 @@
   <ItemGroup>
     <None Include="JsrtCommonExports.inc" />
   </ItemGroup>
-  <Import Project="$(BuildConfigPropsPath)Chakra.Build.targets" Condition="exists('$(BuildConfigPropsPath)Chakra.Build.targets')"/>
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.targets" Condition="exists('$(BuildConfigPropsPath)Chakra.Build.targets')" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

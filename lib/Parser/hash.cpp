@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "ParserPch.h"
 #if PROFILE_DICTIONARY
 #include "DictionaryStats.h"
@@ -229,7 +229,7 @@ template IdentPtr HashTbl::PidHashNameLen<char>(char const * prgch, ulong cch);
 template IdentPtr HashTbl::PidHashNameLen<wchar_t>(wchar_t const * prgch, ulong cch);
 
 template <typename CharType>
-IdentPtr HashTbl::PidHashNameLenWithHash(CharType const * prgch, long cch, ulong luHash)
+IdentPtr HashTbl::PidHashNameLenWithHash(_In_reads_(cch) CharType const * prgch, long cch, ulong luHash)
 {
     Assert(cch >= 0);
     AssertArrMemR(prgch, cch);
@@ -380,7 +380,7 @@ template IdentPtr HashTbl::FindExistingPid<wchar_t>(
 #endif
     );
 
-bool HashTbl::Contains(LPCOLESTR prgch, long cch)
+bool HashTbl::Contains(_In_reads_(cch) LPCOLESTR prgch, long cch)
 {
     ulong luHash = CaseSensitiveComputeHashCch(prgch, cch);
 
@@ -405,10 +405,8 @@ bool HashTbl::Contains(LPCOLESTR prgch, long cch)
 #pragma warning(disable:4740)  // flow in or out of inline asm code suppresses global optimization
 // Decide if token is keyword by string matching - 
 // This method is used during colorizing when scanner isnt interested in storing the actual id and does not care about conversion of escape sequences
-tokens HashTbl::TkFromNameLenColor(LPCOLESTR prgch, ulong cch)
+tokens HashTbl::TkFromNameLenColor(_In_reads_(cch) LPCOLESTR prgch, ulong cch)
 {
-    AssertArrMemR(prgch, cch);
-
     ulong luHash = CaseSensitiveComputeHashCch(prgch, cch);
 
     // look for a keyword
@@ -434,10 +432,8 @@ LDefault:
 
 // Decide if token is keyword by string matching - 
 // This method is used during colorizing when scanner isnt interested in storing the actual id and does not care about conversion of escape sequences
-tokens HashTbl::TkFromNameLen(LPCOLESTR prgch, ulong cch, bool isStrictMode)
+tokens HashTbl::TkFromNameLen(_In_reads_(cch) LPCOLESTR prgch, ulong cch, bool isStrictMode)
 {
-    AssertArrMemR(prgch, cch);
-
     ulong luHash = CaseSensitiveComputeHashCch(prgch, cch);
 
     // look for a keyword

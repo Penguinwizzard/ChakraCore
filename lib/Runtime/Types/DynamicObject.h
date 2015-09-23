@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 class ScriptSite;
 namespace Js
@@ -264,8 +264,8 @@ namespace Js
         Var GetNextProperty(PropertyIndex& index, DynamicType *typeToEnumerate, bool requireEnumerable, bool enumSymbols = false);
         Var GetNextProperty(BigPropertyIndex& index, DynamicType *typeToEnumerate, bool requireEnumerable, bool enumSymbols = false);
 
-        BOOL FindNextProperty(PropertyIndex& index, __out JavascriptString** propertyString, __out PropertyId* propertyId, __out PropertyAttributes* attributes, DynamicType *typeToEnumerate, bool requireEnumerable, bool enumSymbols = false) const;
-        BOOL FindNextProperty(BigPropertyIndex& index, __out JavascriptString** propertyString, __out PropertyId* propertyId, __out PropertyAttributes* attributes, DynamicType *typeToEnumerate, bool requireEnumerable, bool enumSymbols = false) const;
+        BOOL FindNextProperty(PropertyIndex& index, JavascriptString** propertyString, PropertyId* propertyId, PropertyAttributes* attributes, DynamicType *typeToEnumerate, bool requireEnumerable, bool enumSymbols = false) const;
+        BOOL FindNextProperty(BigPropertyIndex& index, JavascriptString** propertyString, PropertyId* propertyId, PropertyAttributes* attributes, DynamicType *typeToEnumerate, bool requireEnumerable, bool enumSymbols = false) const;
 
         virtual BOOL HasDeferredTypeHandler() const sealed;
         static DWORD GetOffsetOfAuxSlots();

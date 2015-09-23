@@ -1,8 +1,7 @@
-/********************************************************
-*                                                       *
-*   Copyright (C) Microsoft. All rights reserved.       *
-*                                                       *
-********************************************************/
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 
 namespace Js
@@ -55,6 +54,7 @@ namespace Js
         HRESULT hr = E_FAIL;
 
         ScriptContext* scriptContext = object->GetScriptContext();
+        Assert(scriptContext);
         // Don't call the implicit call if disable implicit call
         if (scriptContext->GetThreadContext()->IsDisableImplicitCall())
         {
@@ -303,6 +303,7 @@ namespace Js
         externalFunction->PrepareExternalCall(&args);
 
         ScriptContext * scriptContext = externalFunction->type->GetScriptContext();
+        Assert(scriptContext);
         Var result = NULL;
 
         BEGIN_LEAVE_SCRIPT(scriptContext)

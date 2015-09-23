@@ -1,8 +1,7 @@
-//----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 // PagePool caches freed pages in a pool for reuse, and more importantly,
 // defers freeing them until ReleaseFreePages is called.
 // This allows us to free the pages when we know it is multi-thread safe to do so,

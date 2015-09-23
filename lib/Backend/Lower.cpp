@@ -1,9 +1,7 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
-
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "BackEnd.h"
 #include "Debug\DebuggingFlags.h"
 #include "Debug\DiagProbe.h"
@@ -2423,6 +2421,12 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             }
             break;
         }
+        case Js::OpCode::LdAsmJsSlot:
+            this->LowerLdSlot(instr);
+            break;
+        case Js::OpCode::StAsmJsSlot:
+            this->LowerStSlot(instr);
+            break;
 
         case Js::OpCode::LdSlotChkUndecl:
             this->LowerLdSlotChkUndecl(instr);
@@ -2443,6 +2447,10 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
 
         case Js::OpCode::LdEnv:
             instrPrev = this->LowerLdEnv(instr);
+            break;
+
+        case Js::OpCode::LdAsmJsEnv:
+            instrPrev = this->LowerLdAsmJsEnv(instr);
             break;
 
         case Js::OpCode::LdElemUndef:
@@ -5747,7 +5755,7 @@ Lowerer::GenerateCheckFixedFld(IR::Instr * instrChkFld)
     OUTPUT_TRACE_FUNC(
         Js::ObjTypeSpecPhase,
         this->m_func,
-        L"Fixed field check: %s, property: %s, cache ID: %d, cloned cache: true, layout: %s, redundant check: %s count of props: %d \n",
+        L"Fixed field check: %s, property: %s, cache ID: %u, cloned cache: true, layout: %s, redundant check: %s count of props: %u \n",
         Js::OpCodeUtil::GetOpCodeName(instrChkFld->m_opcode),
         this->m_func->GetScriptContext()->GetPropertyNameLocked(propertySym->m_propertyId)->GetBuffer(),
         inlineCacheIndex, propertySymOpnd->GetCacheLayoutString(), propertySymOpnd->IsTypeChecked() ? L"true" : L"false", 
@@ -6793,7 +6801,7 @@ Lowerer::GenerateCachedTypeCheck(IR::Instr *instrChk, IR::PropertySymOpnd *prope
     
     if (PHASE_VERBOSE_TRACE(Js::ObjTypeSpecPhase, this->m_func))
     {
-        OUTPUT_VERBOSE_TRACE_FUNC(Js::ObjTypeSpecPhase, this->m_func, L"Emitted %s type check for type 0x % p",
+        OUTPUT_VERBOSE_TRACE_FUNC(Js::ObjTypeSpecPhase, this->m_func, L"Emitted %s type check for type 0x%p",
             emitDirectCheck ? L"direct" : propertySymOpnd->IsPoly() ? L"equivalent" : L"indirect", type);
 #if DBG
         if (propertySymOpnd->GetGuardedPropOps() != nullptr)
@@ -8387,10 +8395,8 @@ Lowerer::LowerLdArrViewElem(IR::Instr * instr)
     IR::Opnd * src1 = instr->GetSrc1();
     IR::Opnd * src2 = instr->GetSrc2();
 
-    // type of dst is the type of array
-    IRType type = src1->GetType();
     IR::Instr * done;
-    if (indexOpnd || (!m_func->GetJnFunction()->GetAsmJsFunctionInfo()->IsHeapBufferConst() && (uint32)src1->AsIndirOpnd()->GetOffset() >= 0x1000000))
+    if (indexOpnd || (uint32)src1->AsIndirOpnd()->GetOffset() >= 0x1000000)
     {
         // CMP indexOpnd, src2(arrSize)
         // JA $helper
@@ -8408,28 +8414,15 @@ Lowerer::LowerLdArrViewElem(IR::Instr * instr)
     }
     else
     {
+        // any access below 0x1000000 is safe
         instr->UnlinkDst();
         instr->UnlinkSrc1();
-
-        // this can happen in cases where globopt props a constant access which was not known at bytecodegen time or when heap non-constant
-        Assert(src2->IsIntConstOpnd() || !m_func->GetJnFunction()->GetAsmJsFunctionInfo()->IsHeapBufferConst());
-        if (src2->IsIntConstOpnd() && ((uint32)src1->AsIndirOpnd()->GetOffset() >= (uint32)src2->AsIntConstOpnd()->m_value))
+        if (src2)
         {
-            src1->Free(m_func);
-
-            if (IRType_IsFloat(type))
-            {
-                src1 = IR::FloatConstOpnd::New(Js::NumberConstants::NaN, type, m_func);
-            }
-            else
-            {
-                src1 = IR::IntConstOpnd::New(0, TyInt8, m_func);
-            }
+            instr->FreeSrc2();
         }
-        instr->FreeSrc2();
         done = instr;
     }
-
     InsertMove(dst, src1, done);
 
     instr->Remove();
@@ -8608,8 +8601,7 @@ Lowerer::LowerStArrViewElem(IR::Instr * instr)
     Assert(!dst->IsFloat64() || src1->IsFloat64());
 
     IR::Instr * done;
-    bool doStore = true;
-    if (indexOpnd || (!m_func->GetJnFunction()->GetAsmJsFunctionInfo()->IsHeapBufferConst() && (uint32)dst->AsIndirOpnd()->GetOffset() >= 0x1000000))
+    if (indexOpnd || (uint32)dst->AsIndirOpnd()->GetOffset() >= 0x1000000)
     {
         // CMP indexOpnd, src2(arrSize)
         // JA $helper
@@ -8624,24 +8616,16 @@ Lowerer::LowerStArrViewElem(IR::Instr * instr)
     }
     else
     {
+        // any constant access below 0x1000000 is safe, as that is the min heap size
         instr->UnlinkDst();
         instr->UnlinkSrc1();
-
-        Assert(src2->IsIntConstOpnd() || !m_func->GetJnFunction()->GetAsmJsFunctionInfo()->IsHeapBufferConst());
-        // we might have a constant index if globopt propped a constant store. we can ahead of time check if it is in-bounds
-        if (src2->IsIntConstOpnd() && ((uint32)dst->AsIndirOpnd()->GetOffset() >= (uint32)src2->AsIntConstOpnd()->m_value))
-        {
-            doStore = false;
-            src1->Free(m_func);
-            dst->Free(m_func);
-        }
         done = instr;
-        instr->FreeSrc2();
+        if (src2)
+        {
+            instr->FreeSrc2();
+        }
     }
-    if (doStore)
-    {
-        InsertMove(dst, src1, done);
-    }
+    InsertMove(dst, src1, done);
     instr->Remove();
     return instrPrev;
 }
@@ -9283,8 +9267,6 @@ Lowerer::CreateOpndForSlotAccess(IR::Opnd * opnd)
     {
         offset = offset - m_func->GetJnFunction()->GetAsmJsFunctionInfo()->GetTotalSizeinBytes();
     }
-    // asm.js should only have slot access in loop body code
-    Assert(!m_func->GetJnFunction()->GetIsAsmJsFunction() || m_func->IsLoopBody());
 
     IR::IndirOpnd *indirOpnd = IR::IndirOpnd::New(symOpnd->CreatePropertyOwnerOpnd(m_func),
        offset , opnd->GetType(), this->m_func);
@@ -10162,6 +10144,7 @@ Lowerer::InlineBuiltInLibraryCall(IR::Instr *callInstr)
 
         linkOpnd = argInstr->GetSrc2();
     }
+    AnalysisAssert(argCount == -1);
 
     //  Move startcall
     Assert(linkOpnd->IsRegOpnd());
@@ -10179,21 +10162,21 @@ Lowerer::InlineBuiltInLibraryCall(IR::Instr *callInstr)
     bool success = true;
     switch(index)
     {
-        case Js::BuiltinFunction::Math_Abs:
+        case Js::BuiltinFunction::Math_Abs:            
             this->m_lowererMD.GenerateFastAbs(callInstr->GetDst(), argsOpnd[1], callInstr, labelHelper, labelHelper, doneLabel);
             break;
 
         case Js::BuiltinFunction::String_CharCodeAt:
-        case Js::BuiltinFunction::String_CharAt:
+        case Js::BuiltinFunction::String_CharAt:            
             success = this->m_lowererMD.GenerateFastCharAt(index, callInstr->GetDst(), argsOpnd[0], argsOpnd[1],
                 callInstr, labelHelper, labelHelper, doneLabel);
             break;
 
-        case Js::BuiltinFunction::Array_Push:
+        case Js::BuiltinFunction::Array_Push:            
             success = GenerateFastPush(argsOpnd[0], argsOpnd[1], callInstr, labelHelper, labelHelper, nullptr, doneLabel);
             break;
 
-        case Js::BuiltinFunction::String_Replace:
+        case Js::BuiltinFunction::String_Replace:            
             success = GenerateFastReplace(argsOpnd[0], argsOpnd[1], argsOpnd[2], callInstr, labelHelper, labelHelper, doneLabel);
             break;
 
@@ -17272,6 +17255,7 @@ Lowerer::GenerateFastInlineStringReplace(IR::Instr * instr)
     IR::Opnd * argsOpnd[3] = {0};
     bool result  = instr->FetchOperands(argsOpnd, 3);
     Assert(result);
+    Assert(argsOpnd[0] && argsOpnd[1] && argsOpnd[2]);
 
     if (!argsOpnd[0]->GetValueType().IsLikelyString()
         || argsOpnd[1]->GetValueType().IsNotObject()
@@ -22040,13 +22024,27 @@ Lowerer::LoadSlotArrayWithCachedProtoType(IR::Instr * instrInsert, IR::PropertyS
 }
 
 IR::Instr *
+Lowerer::LowerLdAsmJsEnv(IR::Instr * instr)
+{
+    Assert(m_func->GetJnFunction()->GetIsAsmJsFunction());
+    IR::Opnd * functionObjOpnd;
+    IR::Instr * instrPrev = this->m_lowererMD.LoadFunctionObjectOpnd(instr, functionObjOpnd);
+    Assert(!instr->GetSrc1());
+    IR::IndirOpnd *indirOpnd = IR::IndirOpnd::New(functionObjOpnd->AsRegOpnd(), Js::AsmJsScriptFunction::GetOffsetOfModuleMemory(), TyMachPtr, m_func);
+    instr->SetSrc1(indirOpnd);
+
+    LowererMD::ChangeToAssign(instr);
+    return instrPrev;
+}
+
+IR::Instr *
 Lowerer::LowerLdEnv(IR::Instr * instr)
 {
     IR::Opnd * src1 = instr->GetSrc1();
     IR::Opnd * functionObjOpnd;
     IR::Instr * instrPrev = this->m_lowererMD.LoadFunctionObjectOpnd(instr, functionObjOpnd);
-
-    if (src1 == nullptr)
+    Assert(!instr->GetSrc1());
+    if (src1 == nullptr || functionObjOpnd->IsRegOpnd())
     {
         IR::IndirOpnd *indirOpnd = IR::IndirOpnd::New(functionObjOpnd->AsRegOpnd(),
             Js::ScriptFunction::GetOffsetOfEnvironment(), TyMachPtr, m_func);
@@ -22054,21 +22052,11 @@ Lowerer::LowerLdEnv(IR::Instr * instr)
     }
     else
     {
-        // Inlinee LdEnv, use the function object opnd on the instruction
-        if (functionObjOpnd->IsRegOpnd())
-        {
-            IR::IndirOpnd *indirOpnd = IR::IndirOpnd::New(functionObjOpnd->AsRegOpnd(),
-                Js::ScriptFunction::GetOffsetOfEnvironment(), TyMachPtr, m_func);
-            instr->SetSrc1(indirOpnd);
-        }
-        else
-        {
-            Assert(functionObjOpnd->IsAddrOpnd());
-            IR::AddrOpnd* functionObjAddrOpnd = functionObjOpnd->AsAddrOpnd();
-            IR::MemRefOpnd* functionEnvMemRefOpnd = IR::MemRefOpnd::New((void *)((intptr)functionObjAddrOpnd->m_address + Js::ScriptFunction::GetOffsetOfEnvironment()),
-                TyMachPtr, this->m_func, IR::AddrOpndKindDynamicFunctionEnvironmentRef);
-            instr->SetSrc1(functionEnvMemRefOpnd);
-        }
+        Assert(functionObjOpnd->IsAddrOpnd());
+        IR::AddrOpnd* functionObjAddrOpnd = functionObjOpnd->AsAddrOpnd();
+        IR::MemRefOpnd* functionEnvMemRefOpnd = IR::MemRefOpnd::New((void *)((intptr)functionObjAddrOpnd->m_address + Js::ScriptFunction::GetOffsetOfEnvironment()),
+            TyMachPtr, this->m_func, IR::AddrOpndKindDynamicFunctionEnvironmentRef);
+        instr->SetSrc1(functionEnvMemRefOpnd);
     }
 
     LowererMD::ChangeToAssign(instr);

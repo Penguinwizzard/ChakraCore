@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 class BackwardPass
 {
     template <typename T>
@@ -217,6 +217,10 @@ private:
 
     typedef JsUtil::BaseDictionary<SymID, FloatSymEquivalenceClass *, JitArenaAllocator> FloatSymEquivalenceMap;
     FloatSymEquivalenceMap *floatSymEquivalenceMap;
+
+    // Use by numberTemp to keep track of the property sym  that is used to represent a property, since we don't trace aliasing
+    typedef JsUtil::BaseDictionary<Js::PropertyId, SymID, JitArenaAllocator> NumberTempRepresentativePropertySymMap;
+    NumberTempRepresentativePropertySymMap * numberTempRepresentativePropertySym;
 
 #if DBG_DUMP
     uint32 numDeadStore;

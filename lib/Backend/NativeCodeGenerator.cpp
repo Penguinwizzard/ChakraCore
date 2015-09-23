@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "BackEnd.h"
 #include "Language\ScriptContextProfiler.h"
 
@@ -1084,7 +1084,7 @@ NativeCodeGenerator::CheckAsmJsCodeGen(Js::ScriptFunction * function)
     if ((PHASE_ON1(Js::AsmJsJITTemplatePhase) && CONFIG_FLAG(MaxTemplatizedJitRunCount) >= 0) || (!PHASE_ON1(Js::AsmJsJITTemplatePhase) && CONFIG_FLAG(MaxAsmJsInterpreterRunCount) >= 0))
     {
         nativeCodeGen->Processor()->PrioritizeJobAndWait(nativeCodeGen, entryPoint, function);
-    }
+    } else
 #endif
     if (!nativeCodeGen->Processor()->PrioritizeJob(nativeCodeGen, entryPoint, function))
     {
@@ -1211,7 +1211,7 @@ NativeCodeGenerator::CheckCodeGenDone(
         // TODO 603650 - assert that the entry point is in the state we expect it to be when code gen fails.
         // this happens if the codegen failed, install the profile thunk 
         // or use the original entry point, which should be the delay interpreter thunk or dynamic interpreter thunk 
-        address = functionBody->GetScriptContext()->CurrentThunk == ProfileEntryThunk ? ProfileEntryThunk : (functionBody->GetIsAsmJsFunction()) ? (Js::JavascriptMethod)entryPointInfo->address : functionBody->GetOriginalEntryPoint();
+        address = functionBody->GetScriptContext()->CurrentThunk == ProfileEntryThunk ? ProfileEntryThunk : functionBody->GetOriginalEntryPoint();
         entryPointInfo->address = address;
         if (entryPointInfo->IsPendingCleanup())
         {

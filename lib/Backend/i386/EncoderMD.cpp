@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "BackEnd.h"
 
 #include "X86Encode.h"
@@ -706,6 +706,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
         switch ((*form) & FORM_MASK) 
         {
         case AX_IM:
+            Assert(opr1);
             if (!opr1->IsRegOpnd() || opr1->AsRegOpnd()->GetReg() != RegEAX
                 || !opr2->IsImmediateOpnd())
             {

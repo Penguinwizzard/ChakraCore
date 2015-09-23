@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "JsrtPch.h"
 #include "JsrtSourceHolder.h"
 
@@ -10,7 +10,9 @@ namespace Js
     // Helper function for converting a Unicode script to utf8.
     // If heapAlloc is true the returned buffer must be freed with HeapDelete.
     // Otherwise scriptContext must be provided and GCed object is returned.
-    void JsrtSourceHolder::ScriptToUtf8(_When_(heapAlloc, _In_opt_) _When_(!heapAlloc, _In_) Js::ScriptContext *scriptContext, _In_z_ const wchar_t *script, _Outptr_result_buffer_(*utf8Length) utf8char_t **utf8Script, _Out_ size_t *utf8Length, _Out_ size_t *scriptLength, _Out_ size_t *utf8AllocLength, _In_ bool heapAlloc)
+    void JsrtSourceHolder::ScriptToUtf8(_When_(heapAlloc, _In_opt_) _When_(!heapAlloc, _In_) Js::ScriptContext *scriptContext, 
+        _In_z_ const wchar_t *script, _Outptr_result_buffer_(*utf8Length) utf8char_t **utf8Script, _Out_ size_t *utf8Length, 
+        _Out_ size_t *scriptLength, _Out_opt_ size_t *utf8AllocLength, _In_ bool heapAlloc)
     {
         Assert(utf8Script != nullptr);
         Assert(utf8Length != nullptr);

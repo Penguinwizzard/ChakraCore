@@ -1,6 +1,7 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeDebugPch.h"
 
 // Parser includes
@@ -10,6 +11,7 @@
 
 // Runtime includes
 #include "Library\ObjectPrototypeObject.h"
+#include "Library\JavascriptNumberObject.h"
 #include "Library\BoundFunction.h"
 #include "Library\JavascriptRegExpConstructor.h"
 #include "Library\SameValueComparer.h"
@@ -1497,7 +1499,7 @@ namespace Js
         return debuggerScope->scopeProperties->Count();
     }
 
-    void CatchScopeWalker::FetchValueAndAddress(DebuggerScopeProperty &scopeProperty, __out Var *pValue, __out IDiagObjectAddress ** ppAddress)
+    void CatchScopeWalker::FetchValueAndAddress(DebuggerScopeProperty &scopeProperty, _Out_opt_ Var *pValue, _Out_opt_ IDiagObjectAddress ** ppAddress)
     {
         Assert(pValue != nullptr || ppAddress != nullptr);
 

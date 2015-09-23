@@ -1,6 +1,7 @@
-//---------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//---------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeLanguagePch.h"
 #include "ByteCode\Symbol.h"
 #include "ByteCode\FuncInfo.h"
@@ -2183,7 +2184,7 @@ namespace Js
         }
     }
 
-    void AsmJsModuleInfo::ConvertFrameForJavascript(ScriptFunction* func)
+    void * AsmJsModuleInfo::ConvertFrameForJavascript(void * asmMemory, ScriptFunction* func)
     {
         FunctionBody * body = func->GetFunctionBody();
         AsmJsFunctionInfo * asmFuncInfo = body->GetAsmJsFunctionInfo();
@@ -2191,18 +2192,6 @@ namespace Js
         AsmJsModuleInfo * asmModuleInfo = moduleBody->GetAsmJsModuleInfo();
         Assert(asmModuleInfo);
 
-        if (asmModuleInfo->GetJavascriptSlots())
-        {
-            func->GetEnvironment()->SetItem(0, asmModuleInfo->GetJavascriptSlots());
-            body->ResetAsmJsInfo();
-            return;
-        }
-        if (asmModuleInfo->GetJavascriptScope())
-        {
-            func->GetEnvironment()->SetItem(0, asmModuleInfo->GetJavascriptScope());
-            body->ResetAsmJsInfo();
-            return;
-        }
         ScriptContext * scriptContext = func->GetScriptContext();
         // AsmJsModuleEnvironment is all laid out here
         Var * asmJsEnvironment = static_cast<Var*>(func->GetEnvironment()->GetItem(0));
@@ -2413,17 +2402,15 @@ namespace Js
                 scopeSlots.Set(i, value);
             }
         }
+
         if (activeScopeObject != nullptr)
         {
-            asmModuleInfo->SetJavascriptScope(activeScopeObject);
-            func->GetEnvironment()->SetItem(0, activeScopeObject);
+            return (void*)activeScopeObject;
         }
         else
         {
-            asmModuleInfo->SetJavascriptSlots(slotArray);
-            func->GetEnvironment()->SetItem(0, slotArray);
+            return (void*)slotArray;
         }
-        body->ResetAsmJsInfo();
     }
 
 #ifdef SIMD_JS_ENABLED

@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 
 #if DBG_DUMP
@@ -32,9 +32,9 @@ WCHAR* DumpCallStackFull(uint frameCount, bool print)
             const WCHAR* sourceFileName = L"NULL";
             ULONG line = 0; LONG column = 0;
             walker.GetSourcePosition(&sourceFileName, &line, &column);
-
-            StringCchPrintf(buffer, _countof(buffer), L"%s [%s] (0x%p, Args=%d", jsBody->GetDisplayName(),
-                jsBody->GetDebugNumberSet(debugStringBuffer), jsFunc, callInfo->Count);
+            
+            StringCchPrintf(buffer, _countof(buffer), L"%s [%s] (0x%p, Args=%u", jsBody->GetDisplayName(), jsBody->GetDebugNumberSet(debugStringBuffer), jsFunc,
+                callInfo->Count);
             sb.AppendSz(buffer);
 
             for (uint i = 0; i < callInfo->Count; i++)
@@ -42,7 +42,7 @@ WCHAR* DumpCallStackFull(uint frameCount, bool print)
                 StringCchPrintf(buffer, _countof(buffer), L", 0x%p", walker.GetJavascriptArgs()[i]);
                 sb.AppendSz(buffer);
             }
-            StringCchPrintf(buffer, _countof(buffer), L")[%s (%d, %d)]\n", sourceFileName, line + 1, column + 1);
+            StringCchPrintf(buffer, _countof(buffer), L")[%s (%u, %d)]\n", sourceFileName, line + 1, column + 1);
             sb.AppendSz(buffer);
             fc++;
             if(fc >= frameCount)

@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 
 #include "DataStructures\BigInt.h"
@@ -76,39 +76,39 @@ namespace Js
         return T::New(stringTypeStatic, buffer, cchUseLength, recycler);      
     }
 
-    JavascriptString* JavascriptString::NewWithSz(const wchar_t * content, ScriptContext * scriptContext)
+    JavascriptString* JavascriptString::NewWithSz(__in_z const wchar_t * content, ScriptContext * scriptContext)
     {
         AssertMsg(content != nullptr, "NULL value passed to JavascriptString::New");
         return NewWithBuffer(content, GetBufferLength(content), scriptContext);
     }
 
-    JavascriptString* JavascriptString::NewWithArenaSz(const wchar_t * content, ScriptContext * scriptContext)
+    JavascriptString* JavascriptString::NewWithArenaSz(__in_z const wchar_t * content, ScriptContext * scriptContext)
     {
         AssertMsg(content != nullptr, "NULL value passed to JavascriptString::New");
         return NewWithArenaBuffer(content, GetBufferLength(content), scriptContext);
     }
 
-    JavascriptString* JavascriptString::NewWithBuffer(const wchar_t * content, size_t cchUseLength, ScriptContext * scriptContext)
+    JavascriptString* JavascriptString::NewWithBuffer(__in_ecount(cchUseLength) const wchar_t * content, size_t cchUseLength, ScriptContext * scriptContext)
     {
         return NewWithBufferT<LiteralString, false>(content, cchUseLength, scriptContext);
     }
 
-    JavascriptString* JavascriptString::NewWithArenaBuffer(const wchar_t * content, size_t cchUseLength, ScriptContext * scriptContext)
+    JavascriptString* JavascriptString::NewWithArenaBuffer(__in_ecount(cchUseLength) const wchar_t* content, size_t cchUseLength, ScriptContext* scriptContext)
     {
         return NewWithBufferT<ArenaLiteralString, false>(content, cchUseLength, scriptContext);
     }
 
-    JavascriptString* JavascriptString::NewCopySz(const wchar_t* content, ScriptContext* scriptContext) 
+    JavascriptString* JavascriptString::NewCopySz(__in_z const wchar_t* content, ScriptContext* scriptContext)
     {
         return NewCopyBuffer(content, GetBufferLength(content), scriptContext);
     }
 
-    JavascriptString* JavascriptString::NewCopyBuffer(const wchar_t* content, size_t cchUseLength, ScriptContext* scriptContext) 
+    JavascriptString* JavascriptString::NewCopyBuffer(__in_ecount(cchUseLength) const wchar_t* content, size_t cchUseLength, ScriptContext* scriptContext)
     {
         return NewWithBufferT<LiteralString, true>(content, cchUseLength, scriptContext);        
     }
 
-    JavascriptString* JavascriptString::NewCopySzFromArena(const wchar_t* content, ScriptContext* scriptContext, ArenaAllocator *arena) 
+    JavascriptString* JavascriptString::NewCopySzFromArena(__in_z const wchar_t* content, ScriptContext* scriptContext, ArenaAllocator *arena)
     {
         AssertMsg(content != nullptr, "NULL value passed to JavascriptString::New");
 
@@ -164,6 +164,12 @@ namespace Js
         return isCtorSuperCall ?
             JavascriptOperators::OrdinaryCreateFromConstructor(RecyclableObject::FromVar(newTarget), RecyclableObject::FromVar(result), nullptr, scriptContext) :
             result;
+    }
+    
+    BOOL JavascriptString::BufferEquals(__in_ecount(otherLength) LPCWSTR otherBuffer, __in charcount_t otherLength)
+    {
+        return otherLength == this->GetLength() &&
+            JsUtil::CharacterBuffer<WCHAR>::StaticEquals(this->GetString(), otherBuffer, otherLength);
     }
 
     BOOL JavascriptString::HasItemAt(charcount_t index)
@@ -1288,17 +1294,19 @@ case_2:
 
         charcount_t sizeEstimate = 0;
         wchar_t* buffer = pThis->GetNormalizedString(form, tempAllocator, sizeEstimate);
+        JavascriptString * retVal;
         if (buffer == nullptr)
         {
             Assert(sizeEstimate == 0);
-            return scriptContext->GetLibrary()->GetEmptyString();
+            retVal = scriptContext->GetLibrary()->GetEmptyString();
         }
         else
         {
-            return JavascriptString::NewCopyBuffer(buffer, sizeEstimate, scriptContext);
+            retVal = JavascriptString::NewCopyBuffer(buffer, sizeEstimate, scriptContext);
         }
 
         END_TEMP_ALLOCATOR(tempAllocator, scriptContext);
+        return retVal;
     }
 
     ///----------------------------------------------------------------------------
@@ -2304,7 +2312,7 @@ case_2:
         return string->GetLength() == 2 && wmemcmp(string->GetString(), L"-0", 2) == 0;
     }
 
-    void JavascriptString::FinishCopy(__out_xcount(m_charLength) wchar_t *const buffer, StringCopyInfoStack &nestedStringTreeCopyInfos)
+    void JavascriptString::FinishCopy(__inout_xcount(m_charLength) wchar_t *const buffer, StringCopyInfoStack &nestedStringTreeCopyInfos)
     {
         while (!nestedStringTreeCopyInfos.IsEmpty())
         {
@@ -2317,7 +2325,7 @@ case_2:
     }
 
     void JavascriptString::CopyVirtual(
-        __out_xcount(m_charLength) wchar_t *const buffer,
+        _Out_writes_(m_charLength) wchar_t *const buffer,
         StringCopyInfoStack &nestedStringTreeCopyInfos,
         const byte recursionDepth)
     {

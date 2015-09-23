@@ -1,9 +1,7 @@
-/********************************************************
-*                                                       *
-*   Copyright (C) Microsoft. All rights reserved.       *
-*                                                       *
-********************************************************/
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #define HeapNew(T, ...) AllocatorNew(HeapAllocator, &HeapAllocator::Instance, T, __VA_ARGS__)
 #define HeapNewZ(T, ...) AllocatorNewZ(HeapAllocator, &HeapAllocator::Instance, T, __VA_ARGS__)
 #define HeapNewPlus(size, T, ...) AllocatorNewPlus(HeapAllocator, &HeapAllocator::Instance, size, T, __VA_ARGS__)
@@ -292,21 +290,21 @@ private:
 // NoThrowNoMemProtectHeapAllocator overrides
 //----------------------------------------
 template <>
-__inline void * __cdecl
+_Ret_maybenull_ __inline void * __cdecl
 operator new(size_t byteSize, NoThrowNoMemProtectHeapAllocator * alloc, char * (NoThrowNoMemProtectHeapAllocator::*AllocFunc)(size_t))
 {
     return ::operator new(byteSize, alloc, true, AllocFunc);
 }
 
 template <>
-__inline void * __cdecl
+_Ret_maybenull_ __inline void * __cdecl
 operator new[](size_t byteSize, NoThrowNoMemProtectHeapAllocator * alloc, char * (NoThrowNoMemProtectHeapAllocator::*AllocFunc)(size_t))
 {
     return ::operator new[](byteSize, alloc, true, AllocFunc);
 }
 
 template <>
-__inline void * __cdecl
+_Ret_maybenull_ __inline void * __cdecl
 operator new(size_t byteSize, NoThrowNoMemProtectHeapAllocator * alloc, char * (NoThrowNoMemProtectHeapAllocator::*AllocFunc)(size_t), size_t plusSize)
 {
     return ::operator new(byteSize, alloc, true, AllocFunc, plusSize);
@@ -331,8 +329,8 @@ typedef NoThrowHeapAllocator NoThrowNoMemProtectHeapAllocator;
 // Default operator new/delete overrides
 //----------------------------------------
 #if !defined(USED_IN_STATIC_LIB)
-void * __cdecl operator new(size_t byteSize);
-void * __cdecl operator new[](size_t byteSize);
+_Ret_maybenull_ void * __cdecl operator new(size_t byteSize);
+_Ret_maybenull_ void * __cdecl operator new[](size_t byteSize);
 void __cdecl operator delete(void * obj);
 void __cdecl operator delete[](void * obj);
 #endif
@@ -356,21 +354,21 @@ operator delete(void * obj, HeapAllocator * alloc, char * (HeapAllocator::*Alloc
 // NoThrowHeapAllocator overrides
 //----------------------------------------
 template <>
-__inline void * __cdecl
+_Ret_maybenull_ __inline void * __cdecl
 operator new(size_t byteSize, NoThrowHeapAllocator * alloc, char * (NoThrowHeapAllocator::*AllocFunc)(size_t))
 {
     return ::operator new(byteSize, alloc, true, AllocFunc);
 }
 
 template <>
-__inline void * __cdecl
+_Ret_maybenull_ __inline void * __cdecl
 operator new[](size_t byteSize, NoThrowHeapAllocator * alloc, char * (NoThrowHeapAllocator::*AllocFunc)(size_t))
 {
     return ::operator new[](byteSize, alloc, true, AllocFunc);
 }
 
 template <>
-__inline void * __cdecl
+_Ret_maybenull_ __inline void * __cdecl
 operator new(size_t byteSize, NoThrowHeapAllocator * alloc, char * (NoThrowHeapAllocator::*AllocFunc)(size_t), size_t plusSize)
 {
     return ::operator new(byteSize, alloc, true, AllocFunc, plusSize);
@@ -390,7 +388,7 @@ operator delete(void * obj, NoThrowHeapAllocator * alloc, char * (NoThrowHeapAll
 
 
 template <>
-__inline void * __cdecl
+_Ret_notnull_ __inline void * __cdecl
 operator new(size_t byteSize, NoCheckHeapAllocator * alloc, char * (NoCheckHeapAllocator::*AllocFunc)(size_t))
 {
     Assert(byteSize != 0);
@@ -400,7 +398,7 @@ operator new(size_t byteSize, NoCheckHeapAllocator * alloc, char * (NoCheckHeapA
 
 
 template <>
-__inline void * __cdecl
+_Ret_notnull_ __inline void * __cdecl
 operator new(size_t byteSize, NoCheckHeapAllocator * alloc, char * (NoCheckHeapAllocator::*AllocFunc)(size_t), size_t plusSize)
 {
     Assert(byteSize != 0);
@@ -410,7 +408,7 @@ operator new(size_t byteSize, NoCheckHeapAllocator * alloc, char * (NoCheckHeapA
 }
 
 
-__inline void * __cdecl
+_Ret_notnull_ __inline void * __cdecl
 operator new[](size_t byteSize, NoCheckHeapAllocator * alloc, char * (NoCheckHeapAllocator::*AllocFunc)(size_t))
 {
     void * buffer = (alloc->*AllocFunc)(byteSize);

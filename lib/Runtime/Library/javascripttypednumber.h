@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------
-// Copyright (C) by Microsoft Corporation.  All rights reserved.
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 
 namespace Js
@@ -58,10 +58,7 @@ namespace Js
             return TRUE;
         }
 
-        virtual RecyclableObject* ToObject(ScriptContext * requestContext) override
-        {
-            return requestContext->GetLibrary()->CreateNumberObjectWithCheck((double)m_value);
-        }
+        virtual RecyclableObject* ToObject(ScriptContext * requestContext) override;
 
         virtual Var GetTypeOfString(ScriptContext * requestContext) override {Assert(FALSE); return requestContext->GetLibrary()->GetNumberTypeDisplayString(); }
         virtual BOOL ToPrimitive(JavascriptHint hint, Var* value, ScriptContext * requestContext)override {Assert(false); *value = this; return true;}

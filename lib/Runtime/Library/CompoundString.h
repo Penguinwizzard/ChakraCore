@@ -1,5 +1,7 @@
-// Copyright (C) Microsoft. All rights reserved. 
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 
 namespace Js
@@ -445,7 +447,7 @@ namespace Js
     public:
         virtual const wchar_t *GetSz() override sealed;
         using JavascriptString::Copy;
-        virtual void CopyVirtual(__out_xcount(m_charLength) wchar_t *const buffer, StringCopyInfoStack &nestedStringTreeCopyInfos, const byte recursionDepth) override sealed;
+        virtual void CopyVirtual(_Out_writes_(m_charLength) wchar_t *const buffer, StringCopyInfoStack &nestedStringTreeCopyInfos, const byte recursionDepth) override sealed;
         virtual bool IsTree() const override sealed;
 
     protected:
@@ -1310,7 +1312,7 @@ namespace Js
             toString->SetLastBlockCharLength(blockCharLength + appendCharLength);
             return;
         }
-
+        AnalysisAssert(convertBuffer == localConvertBuffer);
         AppendGeneric(localConvertBuffer, appendCharLength, toString, appendChars);
     }
 

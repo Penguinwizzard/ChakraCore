@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 #include "BackEndAPI.h"
 #include "ThreadServiceWrapper.h"
@@ -12,6 +12,8 @@
 #include "StandardChars.h"
 #include "Library\ThreadContextTLSEntry.h"
 #include "Library\ThreadBoundThreadContextManager.h"
+#include "Language\SourceDynamicProfileManager.h"
+#include "Language\CodeGenRecyclableData.h"
 
 #if DBG
 #include "Memory\StressTest.h"
@@ -19,6 +21,12 @@
 
 #ifdef DYNAMIC_PROFILE_MUTATOR
 #include "Language\DynamicProfileMutator.h"
+#endif
+
+
+#ifdef ENABLE_BASIC_TELEMETRY
+// REVIEW: ChakraCore Dependency
+#include "..\..\..\private\lib\Telemetry\Telemetry.h"
 #endif
 
 int TotalNumberOfBuiltInProperties = Js::PropertyIds::_countJSOnlyProperty;
@@ -179,16 +187,6 @@ ThreadContext::ThreadContext(AllocationPolicyManager * allocationPolicyManager, 
 #if DBG_DUMP
     scriptSiteCount = 0;
     pageAllocator.debugName = L"Thread";
-#endif
-#ifdef TEST_LOG
-    if(Js::Configuration::Global.flags.IsEnabled(Js::HostLoggingFlag))
-    {
-        hostLogger = Anew(GetThreadAlloc(), Js::HostLogger, this);
-    }
-    else
-    {
-        hostLogger = NULL;
-    }
 #endif
 #ifdef DYNAMIC_PROFILE_MUTATOR
     this->dynamicProfileMutator = DynamicProfileMutator::GetMutator();
@@ -432,12 +430,7 @@ ThreadContext::~ThreadContext()
         jobProcessor = nullptr;
     }
 #endif
-#ifdef TEST_LOG
-    if(Js::Configuration::Global.flags.IsEnabled(Js::HostLoggingFlag))
-    {
-        hostLogger->HostLogger::~HostLogger();
-    }
-#endif
+
     // Do not require all GC callbacks to be revoked, because Trident may not revoke if there
     // is a leak, and we don't want the leak to be masked by an assert
 
@@ -1076,13 +1069,13 @@ void ThreadContext::CreateNoCasePropertyMap()
 }
 
 JsUtil::List<const RecyclerWeakReference<Js::PropertyRecord const>*>*
-ThreadContext::FindPropertyIdNoCase(Js::ScriptContext * scriptContext, __in LPCWSTR propertyName, __in int propertyNameLength)
+ThreadContext::FindPropertyIdNoCase(Js::ScriptContext * scriptContext, LPCWSTR propertyName, int propertyNameLength)
 {
     return ThreadContext::FindPropertyIdNoCase(scriptContext, JsUtil::CharacterBuffer<WCHAR>(propertyName,  propertyNameLength));
 }
 
 JsUtil::List<const RecyclerWeakReference<Js::PropertyRecord const>*>*
-ThreadContext::FindPropertyIdNoCase(Js::ScriptContext * scriptContext, __in JsUtil::CharacterBuffer<WCHAR> const& propertyName)
+ThreadContext::FindPropertyIdNoCase(Js::ScriptContext * scriptContext, JsUtil::CharacterBuffer<WCHAR> const& propertyName)
 {
     if (caseInvariantPropertySet == nullptr)
     {
@@ -3097,20 +3090,21 @@ void
 ThreadContext::UnregisterIsInstInlineCache(Js::IsInstInlineCache * inlineCache, Js::Var function)
 {
     Assert(inlineCache != nullptr);
-    Js::IsInstInlineCache** inlineCacheRef = NULL;
+    Js::IsInstInlineCache** inlineCacheRef = nullptr;
 
     if (this->isInstInlineCacheByFunction.TryGetReference(function, &inlineCacheRef))
     {
+        Assert(*inlineCacheRef != nullptr);
         if (inlineCache == *inlineCacheRef)
         {
             *inlineCacheRef = (*inlineCacheRef)->next;
-            if (*inlineCacheRef == NULL)
+            if (*inlineCacheRef == nullptr)
             {
                 this->isInstInlineCacheByFunction.Remove(function);
             }
         }
         else
-        {
+        {            
             Js::IsInstInlineCache * prevInlineCache;
             Js::IsInstInlineCache * curInlineCache;
             for (prevInlineCache = *inlineCacheRef, curInlineCache = (*inlineCacheRef)->next; curInlineCache != nullptr;

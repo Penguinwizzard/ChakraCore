@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeLanguagePch.h"
 
 #if DBG_DUMP
@@ -214,6 +214,8 @@ namespace Js
 
             DynamicType* newType = (DynamicType*)object->GetType();
             DynamicType* oldType = (DynamicType*)typeWithoutProperty;
+
+            Assert(newType);
 
             int requiredAuxSlotCapacity;
             // Don't cache property adds for types that aren't (yet) shared.  We must go down the slow path to force type sharing

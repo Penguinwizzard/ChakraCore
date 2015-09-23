@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "CommonCorePch.h"
 #include <io.h>
 #include <fcntl.h>
@@ -317,7 +317,7 @@ void ConfigParser::ParseConfig(HANDLE hmod, CmdLineArgsParser &parser)
     _wmakepath_s(filename, drive, dir, _configFileName, L".config");
 
     FILE* configFile;
-    if (_wfopen_s(&configFile, filename, L"r, ccs=UNICODE") != 0)
+    if (_wfopen_s(&configFile, filename, L"r, ccs=UNICODE") != 0 || configFile == nullptr)
     {
         WCHAR configFileFullName[MAX_PATH];
 
@@ -328,7 +328,7 @@ void ConfigParser::ParseConfig(HANDLE hmod, CmdLineArgsParser &parser)
         {
             return;
         }
-        if (_wfopen_s(&configFile, filename, L"r, ccs=UNICODE") != 0)
+        if (_wfopen_s(&configFile, filename, L"r, ccs=UNICODE") != 0 || configFile == nullptr)
         {
             return;
         }

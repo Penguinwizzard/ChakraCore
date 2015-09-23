@@ -1,6 +1,7 @@
-//----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeDebugPch.h"
 
 #define InvalidScriptId 0xFFFFFFFF
@@ -364,9 +365,7 @@ namespace Js
 
     bool AsyncBreakController::IsAtStoppingLocation(InterpreterHaltState* haltState)
     {
-        HaltCallback* callback;
-        InterlockedExchangePointer((PVOID*)&callback, this->haltCallback);
-
+        HaltCallback* callback = this->haltCallback;        
         if (callback)
         {
             return callback->CanHalt(haltState);
@@ -376,8 +375,7 @@ namespace Js
 
     void AsyncBreakController::DispatchAndReset(InterpreterHaltState* haltState)
     {
-        HaltCallback* callback;
-        InterlockedExchangePointer((PVOID*)&callback, this->haltCallback);
+        HaltCallback* callback = this->haltCallback;        
         Deactivate();
         if (callback)
         {

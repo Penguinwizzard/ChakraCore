@@ -1,8 +1,7 @@
-/********************************************************
-*                                                       *
-*   Copyright (C) Microsoft. All rights reserved.       *
-*                                                       *
-********************************************************/
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 
 
@@ -20,8 +19,8 @@ namespace Js
     }           
 
     // Copy the content of items into specified buffer.
-    void ConcatStringBase::CopyImpl(__out_xcount(m_charLength) wchar_t *const buffer, 
-            int itemCount, __in_ecount(itemCount) JavascriptString * const * items,
+    void ConcatStringBase::CopyImpl(_Out_writes_(m_charLength) wchar_t *const buffer,
+            int itemCount, _In_reads_(itemCount) JavascriptString * const * items,
             StringCopyInfoStack &nestedStringTreeCopyInfos, const byte recursionDepth)
     {
    
@@ -41,6 +40,7 @@ namespace Js
             {
                 // If we have the buffer already, just copy it
                 const CharCount copyCharLength = s->GetLength();
+                Assert(copiedCharLength + copyCharLength <= this->GetLength());
                 CopyHelper(&buffer[copiedCharLength], s->GetString(), copyCharLength);
                 copiedCharLength += copyCharLength;
                 continue;
@@ -253,7 +253,7 @@ namespace Js
     }
 
     void ConcatStringBuilder::CopyVirtual(
-        __out_xcount(m_charLength) wchar_t *const buffer,
+        _Out_writes_(m_charLength) wchar_t *const buffer,
         StringCopyInfoStack &nestedStringTreeCopyInfos,
         const byte recursionDepth)
     {

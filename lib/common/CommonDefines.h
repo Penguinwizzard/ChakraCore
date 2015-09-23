@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 
 #include "TargetVer.h"
@@ -224,7 +224,6 @@
 // Debug only features
 //----------------------------------------------------------------------------------------------------
 #ifdef DEBUG
-#define TEST_LOG
 #define BYTECODE_TESTING
 #define FAULT_INJECTION
 #define RECYCLER_NO_PAGE_REUSE
@@ -485,7 +484,6 @@
 #undef PROFILE_STRINGS
 #undef PROFILE_TYPES
 #undef PROFILE_OBJECT_LITERALS
-#undef TEST_LOG
 #undef SECURITY_TESTING
 #undef LEAK_REPORT
 #endif

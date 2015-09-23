@@ -1,8 +1,7 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 
 
@@ -102,7 +101,7 @@ private:
 #endif
 
     /*-------static helpers ---------*/
-    inline static DWORD FillDebugBreak(__in_bcount(count) BYTE* dest, __in DWORD count);
+    inline static DWORD FillDebugBreak(__out_bcount_full(count) BYTE* dest, __in DWORD count);
     inline static DWORD CopyWithAlignment(__in_bcount(sizeInBytes) BYTE* dest, __in const DWORD sizeInBytes, __in_bcount(srcSize) const BYTE* src, __in_range(0, sizeInBytes) const DWORD srcSize, __in const DWORD alignment);
     template<class T>
     inline static void Emit(__in_bcount(sizeof(T) + offset) BYTE* dest, __in const DWORD offset, __in const T value)

@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 
 #ifdef _M_AMD64
@@ -20,6 +20,8 @@ extern "C" void *arm64_CallCatch(void *target, void *framePtr, void *localsPtr, 
 
 namespace Js
 {
+    class JavascriptExceptionContext;
+
     class JavascriptExceptionOperators  /* All static */
     {
     public:

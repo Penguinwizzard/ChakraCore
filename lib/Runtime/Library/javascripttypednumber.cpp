@@ -1,9 +1,8 @@
-//----------------------------------------------------------------------------
-// Copyright (C) by Microsoft Corporation.  All rights reserved.
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
-#include "Library\JavascriptTypedNumber.h"
 
 namespace Js
 {   
@@ -51,5 +50,9 @@ namespace Js
         return JavascriptString::NewCopySz(szBuffer, scriptContext);
     }
 
-
+    template <typename T>
+    RecyclableObject* JavascriptTypedNumber<T>::ToObject(ScriptContext * requestContext)
+    {
+        return requestContext->GetLibrary()->CreateNumberObjectWithCheck((double)m_value);
+    }
 }

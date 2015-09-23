@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeLanguagePch.h"
 
 #ifdef DYNAMIC_PROFILE_STORAGE
@@ -38,7 +38,7 @@ public:
     template <typename T>
     bool ReadArray(T * t, size_t len);
    
-    bool ReadUtf8String(__deref_out_z wchar_t ** str, __out DWORD * len);
+    _Success_(return) bool ReadUtf8String(__deref_out_z wchar_t ** str, __out DWORD * len);
 
     template <typename T>
     bool Write(T const& t);
@@ -104,8 +104,8 @@ DynamicProfileStorageReaderWriter::ReadArray(T * t, size_t len)
     return true;
 }
 
-bool
-DynamicProfileStorageReaderWriter::ReadUtf8String(wchar_t ** str, DWORD * len)
+_Success_(return) bool
+DynamicProfileStorageReaderWriter::ReadUtf8String(__deref_out_z wchar_t ** str, __out DWORD * len)
 {
     DWORD urllen;
     if (!Read(&urllen))
@@ -221,7 +221,7 @@ DynamicProfileStorageReaderWriter::Close(bool deleteFile)
 }
 
 void
-DynamicProfileStorage::StorageInfo::GetFilename(wchar_t filename[_MAX_PATH]) const
+DynamicProfileStorage::StorageInfo::GetFilename(_Out_writes_z_(_MAX_PATH) wchar_t filename[_MAX_PATH]) const
 {
     wchar_t tempFile[_MAX_PATH];
     wcscpy_s(tempFile, L"jsdpcache_file");
@@ -266,7 +266,7 @@ DynamicProfileStorage::StorageInfo::ReadRecord() const
 }
 
 bool 
-DynamicProfileStorage::StorageInfo::WriteRecord(char const * record) const
+DynamicProfileStorage::StorageInfo::WriteRecord(__in_ecount(sizeof(DWORD) + *record)char const * record) const
 {
     wchar_t cacheFilename[_MAX_PATH];
     this->GetFilename(cacheFilename);
@@ -511,7 +511,7 @@ DynamicProfileStorage::ClearInfoMap(bool deleteFileStorage)
 }
 
 bool
-DynamicProfileStorage::ImportFile(wchar_t const * filename, bool allowNonExistingFile)
+DynamicProfileStorage::ImportFile(__in_z wchar_t const * filename, bool allowNonExistingFile)
 {
     Assert(enabled);
     DynamicProfileStorageReaderWriter reader;
@@ -617,7 +617,7 @@ DynamicProfileStorage::ImportFile(wchar_t const * filename, bool allowNonExistin
 }
 
 bool
-DynamicProfileStorage::ExportFile(wchar_t const * filename)
+DynamicProfileStorage::ExportFile(__in_z wchar_t const * filename)
 {
     Assert(enabled);
         
@@ -760,7 +760,7 @@ DynamicProfileStorage::ReleaseLock()
 }
 
 bool
-DynamicProfileStorage::SetupCacheDir(wchar_t const * dirname)
+DynamicProfileStorage::SetupCacheDir(__in_z wchar_t const * dirname)
 {
     Assert(enabled);
 
@@ -850,7 +850,7 @@ DynamicProfileStorage::CreateCacheCatalog()
 }
 
 bool
-DynamicProfileStorage::AppendCacheCatalog(wchar_t const * url)
+DynamicProfileStorage::AppendCacheCatalog(__in_z wchar_t const * url)
 {
     Assert(enabled);
     Assert(useCacheDir);
@@ -1071,7 +1071,7 @@ DynamicProfileStorage::ClearCacheCatalog()
 }
 
 void 
-DynamicProfileStorage::SaveRecord(wchar_t const * filename, char const * record)
+DynamicProfileStorage::SaveRecord(__in_z wchar_t const * filename, __in_ecount(sizeof(DWORD) + *record) char const * record)
 {
     Assert(enabled);
     AutoCriticalSection autocs(&cs);
@@ -1187,28 +1187,28 @@ DynamicProfileStorage::AllocRecord(size_t bufferSize)
 }
 
 DWORD
-DynamicProfileStorage::GetRecordSize(char const * buffer)
+DynamicProfileStorage::GetRecordSize(__in_ecount(sizeof(DWORD) + *buffer) char const * buffer)
 {
     Assert(enabled);
     return *(DWORD *)buffer;
 }
 
 char const *
-DynamicProfileStorage::GetRecordBuffer(char const * buffer)
+DynamicProfileStorage::GetRecordBuffer(__in_ecount(sizeof(DWORD) + *buffer) char const * buffer)
 {
     Assert(enabled);
     return buffer + sizeof(DWORD);
 }
 
 char *
-DynamicProfileStorage::GetRecordBuffer(char * buffer)
+DynamicProfileStorage::GetRecordBuffer(__in_ecount(sizeof(DWORD) + *buffer) char * buffer)
 {
     Assert(enabled);
     return buffer + sizeof(DWORD);
 }
 
 void
-DynamicProfileStorage::DeleteRecord(char const * buffer)
+DynamicProfileStorage::DeleteRecord(__in_ecount(sizeof(DWORD) + *buffer) char const * buffer)
 {
     Assert(enabled);
     NoCheckHeapDeleteArray(GetRecordSize(buffer) + sizeof(DWORD), buffer);

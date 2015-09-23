@@ -1,4 +1,7 @@
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 // Generated via jshost -GenerateValidPointersMapHeader
 // Target platforms: 32bit - x86 & arm
 #if USE_STATIC_VPM

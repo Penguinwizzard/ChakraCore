@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 
 namespace Js
@@ -113,6 +113,24 @@ namespace Js
         virtual JavascriptFunction* GetRealFunctionObject() { return this; }
 
         virtual bool CloneMethod(JavascriptFunction** pnewMethod, const Var newHome) override;
+    };
+
+    class AsmJsScriptFunction : public ScriptFunction
+    {
+    public:
+        AsmJsScriptFunction(FunctionProxy * proxy, ScriptFunctionType* deferredPrototypeType);
+
+        void SetModuleMemory(Var* mem) { m_moduleMemory = mem; }
+        Var * GetModuleMemory() const { return m_moduleMemory; }
+
+        static uint32 GetOffsetOfModuleMemory() { return offsetof(AsmJsScriptFunction, m_moduleMemory); }
+    protected:
+        AsmJsScriptFunction(DynamicType * type);
+        DEFINE_VTABLE_CTOR(AsmJsScriptFunction, ScriptFunction);
+        DEFINE_MARSHAL_OBJECT_TO_SCRIPT_CONTEXT(AsmJsScriptFunction);
+
+    private:
+        Var * m_moduleMemory;
     };
 
     class ScriptFunctionWithInlineCache : public ScriptFunction

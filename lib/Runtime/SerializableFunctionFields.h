@@ -1,3 +1,7 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #ifdef DEFINE_ALL_FIELDS
 #define DEFINE_FUNCTION_PROXY_FIELDS 1
 #define DEFINE_PARSEABLE_FUNCTION_INFO_FIELDS 1

@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 
 namespace Js
@@ -69,7 +69,7 @@ namespace Js
         BOOL GetItemAt(charcount_t idxChar, Var* value);
         wchar_t GetItem(charcount_t index);
 
-        charcount_t GetLength() const;
+        _Ret_range_(m_charLength, m_charLength) charcount_t GetLength() const;
         virtual uint GetAllocatedByteCount() const;
         virtual bool IsSubstring() const;
         int GetLengthAsSignedInt() const;
@@ -103,10 +103,10 @@ namespace Js
                 CopyVirtual(buffer, nestedStringTreeCopyInfos, recursionDepth);
             }
         }
-        virtual void CopyVirtual(__out_xcount(m_charLength) wchar_t *const buffer, StringCopyInfoStack &nestedStringTreeCopyInfos, const byte recursionDepth);
+        virtual void CopyVirtual(_Out_writes_(m_charLength) wchar_t *const buffer, StringCopyInfoStack &nestedStringTreeCopyInfos, const byte recursionDepth);
 
     private:
-        void FinishCopy(__out_xcount(m_charLength) wchar_t *const buffer, StringCopyInfoStack &nestedStringTreeCopyInfos);
+        void FinishCopy(__inout_xcount(m_charLength) wchar_t *const buffer, StringCopyInfoStack &nestedStringTreeCopyInfos);
 
     public:
         virtual int GetRandomAccessItemsFromConcatString(Js::JavascriptString * const *& items) const { return -1; }

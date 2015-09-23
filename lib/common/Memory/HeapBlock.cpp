@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "CommonMemoryPch.h"
 
 template <typename TBlockAttributes>
@@ -1806,7 +1806,7 @@ SmallHeapBlockT<TBlockAttributes>::MarkImplicitRoots()
 #if DBG
     uint localObjectSize = this->GetObjectSize();
     Assert(localObjectSize <= HeapConstants::MaxMediumObjectSize);
-
+    
     ushort markCountPerPage[TBlockAttributes::PageCount];
     for (uint i = 0; i < TBlockAttributes::PageCount; i++)
     {
@@ -1821,7 +1821,11 @@ SmallHeapBlockT<TBlockAttributes>::MarkImplicitRoots()
         if (this->ObjectInfo(i) & ImplicitRootBit)
         {
 #if DBG
-            markCountPerPage[(i * localObjectSize) / AutoSystemInfo::PageSize]++;
+            {
+                int index = (i * localObjectSize) / AutoSystemInfo::PageSize;
+                Assert(index < TBlockAttributes::PageCount);
+                markCountPerPage[index]++;
+            }
 #endif
 
             mark->Set(localObjectBitDelta * i);

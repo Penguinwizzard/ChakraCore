@@ -1,8 +1,7 @@
-
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 
 #include "activprof.h"
@@ -254,8 +253,7 @@ namespace Js
 
         ProjectionConfiguration const * GetProjectionConfig() const
         {
-            return &projectionConfiguration;
-            return nullptr;
+            return &projectionConfiguration;            
         }
         void SetHostType(long hostType) { this->HostType = hostType; }
         void SetWinRTConstructorAllowed(bool allowed) { this->WinRTConstructorAllowed = allowed; }
@@ -736,6 +734,9 @@ private:
 #ifdef ASMJS_PLAT
         InterpreterThunkEmitter* asmJsInterpreterThunkEmitter;
         AsmJsCodeGenerator* asmJsCodeGenerator;
+        typedef JsUtil::BaseDictionary<void *, SList<AsmJsScriptFunction *>*, ArenaAllocator> AsmFunctionMap;
+        AsmFunctionMap* asmJsEnvironmentMap;
+        ArenaAllocator* debugTransitionAlloc;
 #endif
 #if ENABLE_NATIVE_CODEGEN
         NativeCodeGenerator* nativeCodeGen;
@@ -1092,8 +1093,8 @@ private:
         WellKnownHostType GetWellKnownHostType(Js::TypeId typeId) { return threadContext->GetWellKnownHostType(typeId); }
         void SetWellKnownHostTypeId(WellKnownHostType wellKnownType, Js::TypeId typeId) { threadContext->SetWellKnownHostTypeId(wellKnownType, typeId); }
 
-        JavascriptFunction* LoadScript(const wchar_t* script, SRCINFO const * pSrcInfo, CompileScriptException * pse, bool isExpression, bool disableDeferredParse, Utf8SourceInfo** ppSourceInfo, const wchar_t *rootDisplayName);
-        JavascriptFunction* LoadScript(LPCUTF8 script, size_t cb, SRCINFO const * pSrcInfo, CompileScriptException * pse, bool isExpression, bool disableDeferredParse, Utf8SourceInfo** ppSourceInfo, const wchar_t *rootDisplayName);
+        JavascriptFunction* LoadScript(const wchar_t* script, SRCINFO const * pSrcInfo, CompileScriptException * pse, bool isExpression, bool disableDeferredParse, bool isByteCodeBufferForLibrary, Utf8SourceInfo** ppSourceInfo, const wchar_t *rootDisplayName);
+        JavascriptFunction* LoadScript(LPCUTF8 script, size_t cb, SRCINFO const * pSrcInfo, CompileScriptException * pse, bool isExpression, bool disableDeferredParse, bool isByteCodeBufferForLibrary, Utf8SourceInfo** ppSourceInfo, const wchar_t *rootDisplayName);
 
         ArenaAllocator* GeneralAllocator() { return &generalAllocator; }
 
@@ -1387,7 +1388,7 @@ private:
         static void RecyclerFunctionCallbackForDebugger(void *address, size_t size);
 
 #ifdef ASMJS_PLAT
-        static void TransitionEnvironmentForDebugger(ScriptFunction * scriptFunction);
+        void TransitionEnvironmentForDebugger(ScriptFunction * scriptFunction);
 #endif
 
         HRESULT RecreateNativeCodeGenerator();

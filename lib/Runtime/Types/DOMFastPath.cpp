@@ -1,10 +1,12 @@
-//----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeTypePch.h"
-
 #ifdef ENABLE_DOM_FAST_PATH
+#include "Types\DOMFastPath.h"
+#include "Library\DOMFastPathInfo.h"
+
 DECLARE_SIMPLEACCESSOR_INFO(0)
 DECLARE_SIMPLEACCESSOR_INFO(1)
 DECLARE_SIMPLEACCESSOR_INFO(2)

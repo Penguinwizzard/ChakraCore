@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//---------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 #define ASMMATH_BUILTIN_SIZE (32)
 #define ASMARRAY_BUILTIN_SIZE (16)
@@ -390,8 +390,6 @@ namespace Js {
 #ifdef SIMD_JS_ENABLED
         int mSimdRegCount; // part of mVarCount
 #endif
-        Var                          mJavascriptScope;
-        Var*                         mJavascriptSlots;
         PropertyIdArray*             mExports;
         RegSlot*                     mExportsFunctionLocation;
         RegSlot                      mExportFunctionIndex; // valid only if export object is empty
@@ -429,8 +427,6 @@ namespace Js {
             , mMaxHeapAccess(0)
             , mUsesChangeHeap(false)
             , mIsProcessed(false)
-            , mJavascriptScope(nullptr)
-            , mJavascriptSlots(nullptr)
             , mSlotMap(nullptr)
         {
 
@@ -481,24 +477,6 @@ namespace Js {
 
         // Accessors
     public:
-        inline Var GetJavascriptScope() const
-        {
-            return mJavascriptScope;
-        }
-        inline void SetJavascriptScope(Var val)
-        {
-            Assert(mJavascriptScope == nullptr);
-            mJavascriptScope = val;
-        }
-        inline Var* GetJavascriptSlots() const
-        {
-            return mJavascriptSlots;
-        }
-        inline void SetJavascriptSlots(Var* val)
-        {
-            Assert(mJavascriptSlots == nullptr);
-            mJavascriptSlots = val;
-        }
         inline Js::RegSlot GetExportFunctionIndex() const{return mExportFunctionIndex;}
         inline void SetExportFunctionIndex( Js::RegSlot val ){mExportFunctionIndex = val;}
         void SetExportsCount(int count);
@@ -607,7 +585,7 @@ namespace Js {
 #endif
 
         static void EnsureHeapAttached(ScriptFunction * func);
-        static void ConvertFrameForJavascript(ScriptFunction * func);
+        static void * ConvertFrameForJavascript(void* asmJsMemory, ScriptFunction * func);
     };
 
 

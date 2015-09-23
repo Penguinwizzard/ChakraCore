@@ -1,8 +1,7 @@
-
-//---------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//---------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 /*
 --------------------------------------------------------------------------------------------------------------------------------
 Original
@@ -732,6 +731,7 @@ namespace UnifiedRegex
                 return node;
             ECConsume(); // '|'
             Node* next = AlternativePass1();
+            Assert(next != nullptr);
             Node* revisedPrev = UnionNodes(last == 0 ? node : last->head, next);
             if (revisedPrev != 0)
             {
@@ -755,6 +755,7 @@ namespace UnifiedRegex
                         last->head = revisedPrev;
                     nextList = nextList->tail;
                 }
+                Assert(nextList != nullptr);
                 if (last == 0)
                     node = Anew(ctAllocator, AltNode, node, nextList);
                 else
@@ -888,6 +889,7 @@ namespace UnifiedRegex
         //  - a concat list never contains two consecutive match-character/match-literal nodes
         bool previousSurrogatePart = false;
         Node* node = TermPass1(&deferredCharNode, previousSurrogatePart);
+        Assert(node != nullptr);
         ConcatNode* last = 0;
         // First node may be a concat
         if (node->tag == Node::Concat)
@@ -919,7 +921,7 @@ namespace UnifiedRegex
         while (!IsEndOfAlternative())
         {
             Node* next = TermPass1(&deferredCharNode, previousSurrogatePart);
-
+            Assert(next != nullptr);
             if (next->LiteralLength() > 0)
             {
                 // Begin a new literal or grow the existing literal
@@ -2013,7 +2015,7 @@ namespace UnifiedRegex
                         }
                     }
 
-                    pendingRangeStart = pendingRangeEnd = lastCodepoint = INVALID_CODEPOINT;
+                    pendingRangeStart = pendingRangeEnd = INVALID_CODEPOINT;
                 }
                 //The current char <0x10000 is a candidate for the range end, but we need to iterate one more time.
                 else
@@ -2289,12 +2291,13 @@ namespace UnifiedRegex
             {
                 currentTail = this->AppendSurrogateRangeToDisjunction(lowerCharOfRange, upperCharOfRange, currentTail);   
             }
-
+            
             if (headToReturn == nullptr)
             {
                 headToReturn = currentTail;
             }
 
+            Assert(currentTail != nullptr);
             while (currentTail->tail != nullptr)
             {
                 currentTail = currentTail->tail;
@@ -2873,12 +2876,12 @@ namespace UnifiedRegex
           const RegexFlags flags )
     {
         Assert(IsLiteral);
-
-        const auto recycler = this->scriptContext->GetRecycler();
+        
         Program* program = nullptr;
 
         if (buildAST)
         {
+            const auto recycler = this->scriptContext->GetRecycler();
             program = Program::New(recycler, flags);
             this->CaptureSourceAndGroups(recycler, program, currentCharacter, bodyChars);
         }

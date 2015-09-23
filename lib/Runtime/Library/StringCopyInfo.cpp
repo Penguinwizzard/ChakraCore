@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 // JScriptDiag does not link with Runtime.lib and does not include .cpp files, so this file will be included as a header
 #pragma once
 #include "RuntimeLibraryPch.h"
@@ -23,7 +23,7 @@ namespace Js
 
     inline StringCopyInfo::StringCopyInfo(
         JavascriptString *const sourceString,
-        __out_xcount(sourceString->m_charLength) wchar_t *const destinationBuffer)
+        _Inout_count_(sourceString->m_charLength) wchar_t *const destinationBuffer)
         : sourceString(sourceString), destinationBuffer(destinationBuffer)
     {
         Assert(sourceString);

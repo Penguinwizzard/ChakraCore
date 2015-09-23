@@ -1,6 +1,7 @@
-//---------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//---------------------------------------------------------------------------
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 
 #ifdef ENABLE_PROJECTION
@@ -198,7 +199,8 @@ HRESULT AsyncDebug::WrapperForTraceOperationCreation(Js::ScriptContext* scriptCo
     {
         WCHAR guidStr[MAX_PROGID_LENGTH];
 
-        StringFromGUID2(platformId, guidStr, ARRAYSIZE(guidStr));
+        int ret = StringFromGUID2(platformId, guidStr, ARRAYSIZE(guidStr));
+        Assert(ret);
 
         Output::Print(L"Calling AsyncCausalityTracer.TraceOperationCreation(traceLevel=%d, source=%d, platformId=%s, operationId=%llu, operationName=%s, relatedContext=%llu)\n", logLevel, source, guidStr, operationId, operationName, relatedContext);
         Output::Flush();
@@ -239,7 +241,8 @@ HRESULT AsyncDebug::WrapperForTraceOperationCompletion(Js::ScriptContext* script
     {
         WCHAR guidStr[MAX_PROGID_LENGTH];
         
-        StringFromGUID2(platformId, guidStr, ARRAYSIZE(guidStr));
+        int ret = StringFromGUID2(platformId, guidStr, ARRAYSIZE(guidStr));
+        Assert(ret);
 
         Output::Print(L"Calling AsyncCausalityTracer.TraceOperationCompletion(traceLevel=%d, source=%d, platformId=%s, operationId=%llu, status=%d)\n", logLevel, source, guidStr, operationId, status);
         Output::Flush();
@@ -285,7 +288,8 @@ HRESULT AsyncDebug::WrapperForTraceSynchronousWorkStart(Js::ScriptContext* scrip
     {
         WCHAR guidStr[MAX_PROGID_LENGTH];
 
-        StringFromGUID2(platformId, guidStr, ARRAYSIZE(guidStr));
+        int ret = StringFromGUID2(platformId, guidStr, ARRAYSIZE(guidStr));
+        Assert(ret);
 
         Output::Print(L"Calling AsyncCausalityTracer.TraceSynchronousWorkStart(traceLevel=%d, source=%d, platformId=%s, operationId=%llu, work=%d)\n", logLevel, source, guidStr, operationId, workType);
         Output::Flush();
@@ -365,7 +369,8 @@ HRESULT AsyncDebug::WrapperForTraceOperationRelation(Js::ScriptContext* scriptCo
     {
         WCHAR guidStr[MAX_PROGID_LENGTH];
 
-        StringFromGUID2(platformId, guidStr, ARRAYSIZE(guidStr));
+        int ret = StringFromGUID2(platformId, guidStr, ARRAYSIZE(guidStr));
+        Assert(ret);
 
         Output::Print(L"Calling AsyncCausalityTracer.TraceOperationRelation(traceLevel=%d, source=%d, platformId=%s, operationId=%llu, relation=%d)\n", logLevel, source, guidStr, operationId, relation);
         Output::Flush();

@@ -1,9 +1,10 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 #include "errstr.h"
+#include "Library\JavascriptErrorDebug.h"
 
 #ifdef ERROR_TRACE
 #define TRACE_ERROR(...) { Trace(__VA_ARGS__); }

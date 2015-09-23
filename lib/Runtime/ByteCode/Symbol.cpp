@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeByteCodePch.h"
 
 const wchar_t *SymbolTypeNames[] = { L"Function", L"Variable", L"MemberName", L"Formal", L"Unknown" };
@@ -132,6 +132,7 @@ void Symbol::SetHasNonLocalReference(bool b, ByteCodeGenerator *byteCodeGenerato
         return;
     }
 
+    Assert(funcChild);
     ParseNode *pnodeChild = funcChild->root;
 
     Assert(pnodeChild && pnodeChild->nop == knopFncDecl);

@@ -1,10 +1,7 @@
-//---------------------------------------------------------------------------
-// Copyright (C) 1995 - 2010 by Microsoft Corporation.  All rights reserved.
-//
-// An efficient singly linked list with immutable semantics. Empty list is 
-// represented as nullptr.
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 
 #define IfNullThrowOutOfMemory(result) if(result == nullptr) { Js::Throw::OutOfMemory(); }

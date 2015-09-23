@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeTypePch.h"
 #include "Library\JavascriptSymbol.h"
 #include "Library\JavascriptSymbolObject.h"
@@ -749,8 +749,7 @@ namespace Js
     {
         // Handle x(y) = z.
         // Native jscript object behavior: throw an error in all such cases.
-        JavascriptError::ThrowReferenceError(GetScriptContext(), JSERR_CantAsgCall);
-        return nullptr;
+        JavascriptError::ThrowReferenceError(GetScriptContext(), JSERR_CantAsgCall);        
     }
 
     BOOL RecyclableObject::GetRemoteTypeId(TypeId * typeId)

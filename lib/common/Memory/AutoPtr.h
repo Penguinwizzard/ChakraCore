@@ -1,9 +1,10 @@
-//---------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 
-template <typename T>
+template <typename T, typename HeapAllocatorT = HeapAllocator>
 class AutoPtr : public BasePtr<T>
 {
 public:
@@ -25,7 +26,7 @@ private:
     {
         if (ptr != nullptr)
         {
-            HeapDelete(ptr);
+            AllocatorDelete(HeapAllocatorT, &HeapAllocatorT::Instance, ptr);
             ptr = nullptr;
         }
     }

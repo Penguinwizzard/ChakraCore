@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "BackEnd.h"
 
 namespace IR
@@ -2491,7 +2491,7 @@ Opnd::DumpAddress(void *address, bool printToConsole, bool skipMaskedAddress)
 }
 
 void
-Opnd::DumpFunctionInfo(_Outptr_result_buffer_(*count) wchar_t ** buffer, size_t * count, Js::FunctionInfo * info, bool printToConsole, _In_z_ wchar_t const * type)
+Opnd::DumpFunctionInfo(_Outptr_result_buffer_(*count) wchar_t ** buffer, size_t * count, Js::FunctionInfo * info, bool printToConsole, _In_opt_z_ wchar_t const * type)
 {
     wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
     if (info->HasBody())

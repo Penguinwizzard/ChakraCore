@@ -1,8 +1,7 @@
-/********************************************************
-*                                                       *
-*   Copyright (C) Microsoft. All rights reserved.       *
-*                                                       *
-********************************************************/
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "CommonMemoryPch.h"
 #include "Memory\PageHeapBlockTypeFilter.h"
 #if defined(_M_IX86_OR_ARM32)
@@ -207,7 +206,7 @@ HRESULT HeapInfo::ValidPointersMap<SmallAllocationBlockAttributes>::GenerateVali
         L"const SmallHeapBlockT<SmallAllocationBlockAttributes>::BlockInfo  HeapInfo::ValidPointersMap<SmallAllocationBlockAttributes>::blockInfoBuffer[SmallAllocationBlockAttributes::BucketCount][SmallAllocationBlockAttributes::PageCount] = {\n"));
     for (unsigned i = 0; i < HeapConstants::BucketCount; ++i)
     {
-        IfErrorGotoCleanup(fwprintf(file, L"    // Bucket: %d, Size: %d\n", i, (int) (HeapConstants::ObjectGranularity + (i * SmallAllocationBlockAttributes::BucketGranularity))));
+        IfErrorGotoCleanup(fwprintf(file, L"    // Bucket: %u, Size: %d\n", i, (int) (HeapConstants::ObjectGranularity + (i * SmallAllocationBlockAttributes::BucketGranularity))));
         IfErrorGotoCleanup(fwprintf(file, L"    {\n"));
 
         for (unsigned j = 0; j < SmallAllocationBlockAttributes::PageCount; ++j)
@@ -304,7 +303,7 @@ HRESULT HeapInfo::ValidPointersMap<MediumAllocationBlockAttributes>::GenerateVal
 
     for (unsigned i = 0; i < HeapConstants::MediumBucketCount; ++i)
     {
-        IfErrorGotoCleanup(fwprintf(file, L"    // Bucket: %d, Size: %d\n", i, (int)(HeapConstants::MaxSmallObjectSize + ((i + 1) * MediumAllocationBlockAttributes::BucketGranularity))));
+        IfErrorGotoCleanup(fwprintf(file, L"    // Bucket: %u, Size: %d\n", i, (int)(HeapConstants::MaxSmallObjectSize + ((i + 1) * MediumAllocationBlockAttributes::BucketGranularity))));
         IfErrorGotoCleanup(fwprintf(file, L"    {\n"));
 
         for (unsigned j = 0; j < MediumAllocationBlockAttributes::PageCount; ++j)
@@ -334,7 +333,7 @@ HRESULT HeapInfo::ValidPointersMap<TBlockAttributes>::GenerateValidPointersMapHe
     HRESULT hr = E_FAIL;
     FILE * file = nullptr;
 
-    if (_wfopen_s(&file, vpmFullPath, L"w") == 0)
+    if (_wfopen_s(&file, vpmFullPath, L"w") == 0 && file != nullptr)
     {
         const wchar_t * header =
             L"// Copyright (C) Microsoft. All rights reserved.\n"

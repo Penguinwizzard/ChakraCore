@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 
 #include "Parser.h"
@@ -32,6 +32,7 @@
 #ifdef DYNAMIC_PROFILE_STORAGE
 #include "Language\DynamicProfileStorage.h"
 #endif
+#include "Language\SourceDynamicProfileManager.h"
 
 #include "Library\EtwTrace.h"
 
@@ -50,16 +51,21 @@
 #include "Library\JavascriptGenerator.h"
 #include "Library\HostObjectBase.h"
 #ifdef SIMD_JS_ENABLED
+// SIMD types
+#include "Library\JavascriptSIMDFloat32x4.h"
+#include "Library\JavascriptSIMDFloat64x2.h"
+#include "Library\JavascriptSIMDInt32x4.h"
+#include "Library\JavascriptSIMDInt8x16.h"
+// SIMD operations
+#include "Library\SIMDFloat32x4Operation.h"
+#include "Library\SIMDFloat64x2Operation.h"
+#include "Library\SIMDInt32x4Operation.h"
+#include "Library\SIMDInt8x16Operation.h"
 // SIMD libs
 #include "Library\SIMDFloat32x4Lib.h"
 #include "Library\SIMDFloat64x2Lib.h"
 #include "Library\SIMDInt32x4Lib.h"
 #include "Library\SIMDInt8x16Lib.h"
-// SIMD operations
-#include "Library\SIMDFloat32x4Operation.h"
-#include "Library\SIMDInt32x4Operation.h"
-#include "Library\SIMDInt8x16Operation.h"
-#include "Library\SIMDFloat64x2Operation.h"
 #endif
 
 #include "Debug\DebuggingFlags.h"

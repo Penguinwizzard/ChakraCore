@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
-// Copyright (C) 2008 - 2009 by Microsoft Corporation.  All rights reserved.
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 
 namespace Js
@@ -686,7 +686,7 @@ namespace Js
     }
 
     template <class T>
-    BOOL ES5ArrayTypeHandlerBase<T>::HasProperty(DynamicObject* instance, PropertyId propertyId, __out_opt bool *noRedecl)
+    BOOL ES5ArrayTypeHandlerBase<T>::HasProperty(DynamicObject* instance, PropertyId propertyId, bool *noRedecl)
     {
         ScriptContext* scriptContext = instance->GetScriptContext();
         uint32 index;

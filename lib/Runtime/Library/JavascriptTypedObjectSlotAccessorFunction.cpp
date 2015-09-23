@@ -1,8 +1,7 @@
-/********************************************************
-*                                                       *
-*   Copyright (C) Microsoft. All rights reserved.       *
-*                                                       *
-********************************************************/
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 
 #ifdef ENABLE_DOM_FAST_PATH
@@ -39,14 +38,15 @@ namespace Js
     bool JavascriptTypedObjectSlotAccessorFunction::InstanceOf(Var thisObj)
     {
         int allowedTypeId = GetAllowedTypeId();
-        if (Js::JavascriptOperators::GetTypeId(thisObj) == allowedTypeId)
+        TypeId typeId = Js::JavascriptOperators::GetTypeId(thisObj);
+        if (typeId == allowedTypeId)
         {
             return true;
         }
         Type* type = RecyclableObject::FromVar(thisObj)->GetType();
         if (ExternalTypeWithInheritedTypeIds::Is(type))
         {
-            return ((Js::ExternalTypeWithInheritedTypeIds*)type)->InstanceOf(allowedTypeId);
+            return ((Js::ExternalTypeWithInheritedTypeIds*)type)->InstanceOf();
         }
         return false;
     }

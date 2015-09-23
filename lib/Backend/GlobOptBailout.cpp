@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "Backend.h"
 
 void
@@ -998,7 +998,7 @@ GlobOpt::IsTypeCheckProtected(const IR::Instr * instr)
     IR::Opnd* src2 = instr->GetSrc2();
     AssertMsg(!dst || !dst->IsSymOpnd() || !dst->AsSymOpnd()->IsPropertySymOpnd() || 
         !src1 || !src1->IsSymOpnd() || !src1->AsSymOpnd()->IsPropertySymOpnd(), "No instruction should have a src1 and dst be a PropertySymOpnd.");
-    AssertMsg(!src2 || !src1->IsSymOpnd() || !src1->AsSymOpnd()->IsPropertySymOpnd(), "No instruction should have a src2 be a PropertySymOpnd.");
+    AssertMsg(!src2 || !src2->IsSymOpnd() || !src2->AsSymOpnd()->IsPropertySymOpnd(), "No instruction should have a src2 be a PropertySymOpnd.");
 #endif
 
     IR::Opnd * opnd = instr->GetDst();

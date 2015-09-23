@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 #include <time.h>
 #include "DateImplementationData.h"
@@ -1600,6 +1600,7 @@ LError:
                 rgdbl[ivar] = (ivar == 2); 
                 continue;
             }
+#pragma prefast(suppress:6001, "rgdbl index ivar < args.Info.Count - 1 are initialized")
             dblT = rgdbl[ivar];
             if (!Js::NumberUtilities::IsFinite(dblT))
             {

@@ -1,10 +1,12 @@
-//---------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 #include "BackEndAPI.h"
-
+#ifdef ENABLE_DOM_FAST_PATH
+#include "Library\DOMFastPathInfo.h"
+#endif
 extern "C" PVOID _ReturnAddress(VOID);
 #pragma intrinsic(_ReturnAddress)
 
@@ -1024,8 +1026,7 @@ namespace Js
     }
 
     Var JavascriptFunction::CallSpreadFunction(RecyclableObject* function, JavascriptMethod entryPoint, Arguments args, const Js::AuxArray<uint32> *spreadIndices)
-    {
-        CallInfo callInfo = args.Info;
+    {        
         ScriptContext* scriptContext = function->GetScriptContext();
 
         // Work out the expanded number of arguments.

@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 #include "Language\ByteCodeSerializer.h"
 #include "errstr.h"
@@ -1392,6 +1392,7 @@ namespace Js
             // IsValidTimeZone() has already verified that this is JavascriptString.
             JavascriptString* userDefinedTimeZoneId = JavascriptString::FromVar(propertyValue);
             IfFailThrowHr(WindowsCreateStringReference(userDefinedTimeZoneId->GetSz(), userDefinedTimeZoneId->GetLength(), &timeZoneHeader, &timeZone));
+            Assert(timeZone);
 
             IfFailThrowHr(formatter->FormatUsingTimeZone(winDate, timeZone, &result));
         }

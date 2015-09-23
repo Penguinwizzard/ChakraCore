@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "StdAfx.h"
 
 MessageQueue* WScriptJsrt::s_messageQueue = nullptr;
@@ -112,7 +112,7 @@ JsValueRef __stdcall WScriptJsrt::LoadScriptFileCallback(JsValueRef callee, bool
 
         if (errorCode == JsNoError)
         {
-            HRESULT hr = Helpers::LoadScriptFromFile(fileName, fileContent);
+            hr = Helpers::LoadScriptFromFile(fileName, fileContent);
             if (FAILED(hr))
             {
                 fwprintf(stderr, L"Couldn't load file.\n");

@@ -1,8 +1,7 @@
-/********************************************************
-*                                                       *
-*   Copyright (C) Microsoft. All rights reserved.       *
-*                                                       *
-********************************************************/
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "CommonMemoryPch.h"
 #ifdef _M_X64
 #include "Memory\amd64\XDataAllocator.h"
@@ -168,7 +167,7 @@ bool Heap::Decommit(__in Allocation* object)
     return true;
 }
 
-bool Heap::IsInRange(void* address)
+bool Heap::IsInRange(__in void* address)
 {
     AutoCriticalSection autocs(&this->cs);
     
@@ -182,7 +181,7 @@ bool Heap::IsInRange(void* address)
  *   - Check pages in bigger buckers- if that has enough space, split that page and allocate from that chunk
  *   - Allocate new page
  */
-Allocation* Heap::Alloc(size_t bytes, ushort pdataCount, ushort xdataSize, bool canAllocInPreReservedHeapPageSegment, bool isAnyJittedCode, __out bool* isAllJITCodeInPreReservedRegion)
+Allocation* Heap::Alloc(size_t bytes, ushort pdataCount, ushort xdataSize, bool canAllocInPreReservedHeapPageSegment, bool isAnyJittedCode, _Inout_ bool* isAllJITCodeInPreReservedRegion)
 {
     Assert(bytes > 0);
     Assert((allocXdata || pdataCount == 0) && (!allocXdata || pdataCount > 0));
@@ -315,7 +314,7 @@ BOOL Heap::ProtectAllocationInternal(__in Allocation* allocation, __in_opt char*
 #pragma endregion
 
 #pragma region "Large object methods"
-Allocation* Heap::AllocLargeObject(size_t bytes, ushort pdataCount, ushort xdataSize, bool canAllocInPreReservedHeapPageSegment, bool isAnyJittedCode, __out bool* isAllJITCodeInPreReservedRegion)
+Allocation* Heap::AllocLargeObject(size_t bytes, ushort pdataCount, ushort xdataSize, bool canAllocInPreReservedHeapPageSegment, bool isAnyJittedCode, _Inout_ bool* isAllJITCodeInPreReservedRegion)
 {
     size_t pages = GetNumPagesForSize(bytes);
 
@@ -564,7 +563,7 @@ Heap::EnsurePreReservedPageAllocation(PreReservedVirtualAllocWrapper * preReserv
         return preReservedRegionStartAddress;
 }
 
-Page* Heap::AllocNewPage(BucketId bucket, bool canAllocInPreReservedHeapPageSegment, bool isAnyJittedCode, __out bool* isAllJITCodeInPreReservedRegion)
+Page* Heap::AllocNewPage(BucketId bucket, bool canAllocInPreReservedHeapPageSegment, bool isAnyJittedCode, _Inout_ bool* isAllJITCodeInPreReservedRegion)
 {
     void* pageSegment = nullptr;
 
@@ -926,6 +925,33 @@ void Heap::FreeXdata(XDataAllocation* xdata, void* segment)
         AutoCriticalSection autocs(&this->cs);
         this->ReleaseSecondary(*xdata, segment);
         xdata->Free();
+    }
+}
+#endif
+
+#if DBG_DUMP
+void Heap::DumpStats()
+{
+    HeapTrace(L"Total allocation size: %d\n", totalAllocationSize);
+    HeapTrace(L"Total free size: %d\n", freeObjectSize);
+    HeapTrace(L"Total allocations since last compact: %d\n", allocationsSinceLastCompact);
+    HeapTrace(L"Total frees since last compact: %d\n", freesSinceLastCompact);
+    HeapTrace(L"Large object count: %d\n", this->largeObjectAllocations.Count());
+
+    HeapTrace(L"Buckets: \n");
+    for (int i = 0; i < BucketId::NumBuckets; i++)
+    {
+        printf("\t%d => %u [", (1 << (i + 7)), buckets[i].Count());
+
+        FOREACH_DLISTBASE_ENTRY_EDITING(Page, page, &this->buckets[i], bucketIter)
+        {
+            BVUnit usedBitVector = page.freeBitVector;
+            usedBitVector.ComplimentAll(); // Get the actual used bit vector
+            printf(" %u ", usedBitVector.Count() * Page::Alignment); // Print out the space used in this page
+        }
+
+        NEXT_DLISTBASE_ENTRY_EDITING
+            printf("] {{%u}}\n", this->fullPages[i].Count());
     }
 }
 #endif

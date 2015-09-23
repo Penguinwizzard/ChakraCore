@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "CommonCorePch.h"
 
 #ifdef DBGHELP_SYMBOL_MANAGER
@@ -194,7 +194,7 @@ DbgHelpSymbolManager::SymFromAddr(PVOID address, DWORD64 * dwDisplacement, PSYMB
     return FALSE;
 }
 
-_Success_(return) BOOL
+BOOL
 DbgHelpSymbolManager::SymGetLineFromAddr64(_In_ PVOID address, _Out_ PDWORD pdwDisplacement, _Out_ PIMAGEHLP_LINEW64 pLine)
 {
     if (pdwDisplacement != nullptr)

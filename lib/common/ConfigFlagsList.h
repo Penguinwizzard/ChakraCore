@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #ifdef PHASE
 PHASE(All)
     PHASE(BGJit)
@@ -635,6 +635,8 @@ PHASE(All)
 
 #define DEFAULT_CONFIG_SkipSplitWhenResultIgnored (false)
 
+#define DEFAULT_CONFIG_MinMemOpCount (16U)
+
 #define DEFAULT_CONFIG_MaxCopyOnAccessArrayLength (32U)
 #define DEFAULT_CONFIG_MinCopyOnAccessArrayLength (5U)
 #define DEFAULT_CONFIG_CopyOnAccessArraySegmentCacheSize (16)
@@ -968,9 +970,6 @@ FLAGNR(Number,  ByteCodeBranchLimit,    "Short branch limit before we use the br
 FLAGNR(Boolean, MediumByteCodeLayout  , "Always use medium layout for bytecodes", false)
 FLAGNR(Boolean, LargeByteCodeLayout   , "Always use large layout for bytecodes", false)
 #endif
-#ifdef TEST_LOG
-FLAGNR(String,  HostLogging           , "Enable logging of host interactions to a file (requires filename)", nullptr)
-#endif
 #ifdef FAULT_INJECTION
 FLAGNR(Number,  FaultInjection        , "FaultInjectMode - 0 (count only), 1 (count equal), 2 (count at or above), 3 (stackhashing)",-1)
 FLAGNR(Number,  FaultInjectionCount   , "Injects an out of memory at the specified allocation", -1)
@@ -1038,6 +1037,7 @@ FLAGNR(Number,  MinInterpretCount     , "Mininum number of times a function must
 FLAGNR(Number,  MinSimpleJitRunCount  , "Mininum number of times a function must be run in simple jit", 0)
 FLAGNRA(Number, MaxInterpretCount     , Mic, "Maximum number of times a function can be interpreted", 0)
 FLAGNRA(Number, MaxSimpleJitRunCount  , Msjrc, "Maximum number of times a function will be run in SimpleJitted code", 0)
+FLAGNRA(Number, MinMemOpCount         , Mmoc, "Minimum count of a loop to ctivate MemOp", DEFAULT_CONFIG_MinMemOpCount)
 
 FLAGNR(Number,  MaxCopyOnAccessArrayLength, "Maximum length of copy-on-access array", DEFAULT_CONFIG_MaxCopyOnAccessArrayLength)
 FLAGNR(Number,  MinCopyOnAccessArrayLength, "Minimum length of copy-on-access array", DEFAULT_CONFIG_MinCopyOnAccessArrayLength)

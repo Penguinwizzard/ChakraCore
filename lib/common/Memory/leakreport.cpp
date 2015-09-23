@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "CommonMemoryPch.h"
 
 #ifdef LEAK_REPORT
@@ -137,7 +137,7 @@ LeakReport::EnsureLeakReportFile()
     wchar_t defaultFilename[_MAX_PATH];
     if (filename == nullptr)
     {
-        swprintf_s(defaultFilename, L"jsleakreport-%d.txt", ::GetCurrentProcessId());
+        swprintf_s(defaultFilename, L"jsleakreport-%u.txt", ::GetCurrentProcessId());
         filename = defaultFilename;
         openMode = L"a+";   // append mode
     }

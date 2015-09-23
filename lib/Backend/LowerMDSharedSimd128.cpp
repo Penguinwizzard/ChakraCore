@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "BackEnd.h"
 
 #define GET_SIMDOPCODE(irOpcode) m_simd128OpCodesMap[(uint32)(irOpcode - Js::OpCode::Simd128_Start)]
@@ -767,8 +767,7 @@ IR::Instr* LowererMD::Simd128LowerShuffle(IR::Instr* instr)
     int lane0 = 0, lane1 = 0, lane2 = 0, lane3 = 0;
     IR::Instr *pInstr = instr->m_prev;
 
-    AnalysisAssert(srcs[0] != nullptr && srcs[1] != nullptr && srcs[2] != nullptr);
-    Assert(dst->IsSimd128() && srcs[0]->IsSimd128());
+    Assert(dst->IsSimd128() && srcs[0] && srcs[0]->IsSimd128());
 
     // globOpt will type-spec if all lane indices are constants, and within range constraints to match a single SSE instruction
     if (irOpcode == Js::OpCode::Simd128_Swizzle_I4 ||
@@ -776,11 +775,11 @@ IR::Instr* LowererMD::Simd128LowerShuffle(IR::Instr* instr)
         irOpcode == Js::OpCode::Simd128_Swizzle_D2)
     {
         isShuffle = false;
-
-        AssertMsg(srcs[1]->IsIntConstOpnd() &&
-            srcs[2]->IsIntConstOpnd() &&
-            (irOpcode == Js::OpCode::Simd128_Swizzle_D2 || srcs[3]->IsIntConstOpnd()) &&
-            (irOpcode == Js::OpCode::Simd128_Swizzle_D2 || srcs[4]->IsIntConstOpnd()), "Type-specialized swizzle is supported only with constant lane indices");
+        
+        AssertMsg(srcs[1] && srcs[1]->IsIntConstOpnd() &&
+            srcs[2] && srcs[2]->IsIntConstOpnd() &&
+            (irOpcode == Js::OpCode::Simd128_Swizzle_D2 || (srcs[3] && srcs[3]->IsIntConstOpnd())) &&
+            (irOpcode == Js::OpCode::Simd128_Swizzle_D2 || (srcs[4] && srcs[4]->IsIntConstOpnd())), "Type-specialized swizzle is supported only with constant lane indices");
 
         if (irOpcode == Js::OpCode::Simd128_Swizzle_D2)
         {
@@ -809,13 +808,12 @@ IR::Instr* LowererMD::Simd128LowerShuffle(IR::Instr* instr)
         irOpcode == Js::OpCode::Simd128_Shuffle_D2)
     {
         isShuffle = true;
-        AnalysisAssert(srcs[3] != nullptr);
-        Assert(srcs[1]->IsSimd128());
+        Assert(srcs[1] && srcs[1]->IsSimd128());
 
-        AssertMsg(srcs[2]->IsIntConstOpnd() &&
-            srcs[3]->IsIntConstOpnd() &&
-            (irOpcode == Js::OpCode::Simd128_Shuffle_D2 || srcs[4]->IsIntConstOpnd()) &&
-            (irOpcode == Js::OpCode::Simd128_Shuffle_D2 || srcs[5]->IsIntConstOpnd()), "Type-specialized shuffle is supported only with constant lane indices");
+        AssertMsg(srcs[2] && srcs[2]->IsIntConstOpnd() &&
+            srcs[3] && srcs[3]->IsIntConstOpnd() &&
+            (irOpcode == Js::OpCode::Simd128_Shuffle_D2 || (srcs[4] && srcs[4]->IsIntConstOpnd())) &&
+            (irOpcode == Js::OpCode::Simd128_Shuffle_D2 || (srcs[5] && srcs[5]->IsIntConstOpnd())), "Type-specialized shuffle is supported only with constant lane indices");
 
         if (irOpcode == Js::OpCode::Simd128_Shuffle_D2)
         {
@@ -896,7 +894,7 @@ IR::Instr* LowererMD::Simd128LowerLoadElem(IR::Instr *instr)
     Assert(dst->IsSimd128() && src1->IsSimd128() && src2->GetType() == TyUint32);
 
     IR::Instr * done;
-    if (indexOpnd || (!m_func->GetJnFunction()->GetAsmJsFunctionInfo()->IsHeapBufferConst() && ((uint32)src1->AsIndirOpnd()->GetOffset() + dataWidth) > 0x1000000 /* 16 MB */))
+    if (indexOpnd ||  (((uint32)src1->AsIndirOpnd()->GetOffset() + dataWidth) > 0x1000000 /* 16 MB */))
     {
         // CMP indexOpnd, src2(arrSize)
         // JA $helper
@@ -943,8 +941,6 @@ IR::Instr* LowererMD::Simd128LowerLoadElem(IR::Instr *instr)
         instr->UnlinkDst();
         
         // this can happen in cases where globopt props a constant access which was not known at bytecodegen time or when heap is non-constant
-
-        Assert(src2->IsIntConstOpnd() || !m_func->GetJnFunction()->GetAsmJsFunctionInfo()->IsHeapBufferConst());
 
         if (src2->IsIntConstOpnd() && ((uint32)src1->AsIndirOpnd()->GetOffset() + dataWidth > (uint32)src2->AsIntConstOpnd()->m_value))
         {
@@ -1038,7 +1034,7 @@ IR::Instr* LowererMD::Simd128LowerStoreElem(IR::Instr *instr)
 
     IR::Instr * done;
     bool doStore = true;
-    if (indexOpnd || (!m_func->GetJnFunction()->GetAsmJsFunctionInfo()->IsHeapBufferConst() && (uint32)dst->AsIndirOpnd()->GetOffset() + dataWidth > 0x1000000))
+    if (indexOpnd || ((uint32)dst->AsIndirOpnd()->GetOffset() + dataWidth > 0x1000000))
     {
         // CMP indexOpnd, src2(arrSize)
         // JA $helper
@@ -1078,7 +1074,6 @@ IR::Instr* LowererMD::Simd128LowerStoreElem(IR::Instr *instr)
         instr->UnlinkDst();
         instr->UnlinkSrc1();
 
-        Assert(src2->IsIntConstOpnd() || !m_func->GetJnFunction()->GetAsmJsFunctionInfo()->IsHeapBufferConst());
         // we might have a constant index if globopt propped a constant store. we can ahead of time check if it is in-bounds
         if (src2->IsIntConstOpnd() && ((uint32)dst->AsIndirOpnd()->GetOffset() + dataWidth > (uint32)src2->AsIntConstOpnd()->m_value))
         {

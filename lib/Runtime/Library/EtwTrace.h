@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 
 #ifdef ENABLE_JS_ETW
@@ -241,6 +241,7 @@ public:
 
     static const wchar_t* GetFunctionName(Js::FunctionBody* body);
     static size_t GetLoopBodyName(_In_ Js::FunctionBody* body, _In_ Js::LoopHeader* loopHeader, _Out_writes_opt_z_(size) wchar_t* nameBuffer, _In_ size_t size );
+    _Success_(return == 0)
     static size_t GetSimpleJitFunctionName(Js::FunctionBody *const body, _Out_writes_opt_z_(nameCharCapacity) wchar_t *const name, const size_t nameCharCapacity);
     static DWORD_PTR GetSourceId(Js::FunctionBody* body);
     static uint GetFunctionId(Js::FunctionProxy* body);

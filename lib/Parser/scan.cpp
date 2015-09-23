@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "ParserPch.h"
 
 /*****************************************************************************
@@ -1023,8 +1023,7 @@ tokens Scanner<EncodingPolicy>::ScanRegExpConstant(ArenaAllocator* alloc)
             return ScanError(m_currentCharacter + e.encodedPos, tkRegExp);
 
         m_currentCharacter += e.encodedPos;
-        Error(e.error);
-        return m_ptoken->SetRegex(m_scriptContext->GetLibrary()->GetEmptyRegexPattern(), m_parser);
+        Error(e.error);        
     }
 
     UnifiedRegex::RegexPattern* pattern;
@@ -1231,8 +1230,6 @@ LEcmaLineBreak:
                 return ScanError(p - 1, tkStrCon);
             }
             Error(ERRnoStrEnd);
-            p--;
-            goto LBreak;
 
         case '"':
         case '\'':
@@ -1275,9 +1272,6 @@ LEcmaLineBreak:
                     return ScanError(p - 1, tkStrCon);
                 }
                 Error(ERRnoStrEnd);
-                p--;
-
-                goto LBreak;
             } 
             break;
 
@@ -1679,7 +1673,6 @@ LLineBreak:
                     return tkComment;
                 }
                 Error(ERRnoCmtEnd);
-                return tkNone;
             }
             break;
 
@@ -2072,7 +2065,6 @@ LIdentifier:
                     return ScanError(p, tkID);
 
                 Error(ERRillegalChar);
-                pchT = p;
             }
             p = pchT;
             break;

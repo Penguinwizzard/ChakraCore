@@ -1,6 +1,7 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 //
 // This type handler supports storage of a map of property Id to index along with
 // property descriptors for every property.
@@ -143,12 +144,12 @@ namespace Js
         virtual bool IsObjTypeSpecEquivalent(const Type* type, const TypeEquivalenceRecord& record, uint& failedPropertyIndex) override;
         virtual bool IsObjTypeSpecEquivalent(const Type* type, const EquivalentPropertyEntry* entry) override;
 
-        virtual BOOL FindNextProperty(ScriptContext* scriptContext, PropertyIndex& index, __out JavascriptString** propertyString,
-            __out PropertyId* propertyId, __out PropertyAttributes* attributes, Type* type, DynamicType *typeToEnumerate, bool requireEnumerable, bool enumSymbols = false) override;
-        virtual BOOL FindNextProperty(ScriptContext* scriptContext, BigPropertyIndex& index, __out JavascriptString** propertyString,
-            __out PropertyId* propertyId, __out PropertyAttributes* attributes, Type* type, DynamicType *typeToEnumerate, bool requireEnumerable, bool enumSymbols = false) override;
+        virtual BOOL FindNextProperty(ScriptContext* scriptContext, PropertyIndex& index, JavascriptString** propertyString,
+            PropertyId* propertyId, PropertyAttributes* attributes, Type* type, DynamicType *typeToEnumerate, bool requireEnumerable, bool enumSymbols = false) override;
+        virtual BOOL FindNextProperty(ScriptContext* scriptContext, BigPropertyIndex& index, JavascriptString** propertyString,
+            PropertyId* propertyId, PropertyAttributes* attributes, Type* type, DynamicType *typeToEnumerate, bool requireEnumerable, bool enumSymbols = false) override;
 
-        virtual BOOL HasProperty(DynamicObject* instance, PropertyId propertyId, __out_opt bool *noRedecl = nullptr) override;
+        virtual BOOL HasProperty(DynamicObject* instance, PropertyId propertyId, bool *noRedecl = nullptr) override;
         virtual BOOL HasProperty(DynamicObject* instance, JavascriptString* propertyNameString) override;
         virtual BOOL GetProperty(DynamicObject* instance, Var originalInstance, PropertyId propertyId, Var* value, PropertyValueInfo* info, ScriptContext* requestContext) override;
         virtual BOOL GetProperty(DynamicObject* instance, Var originalInstance, JavascriptString* propertyNameString, Var* value, PropertyValueInfo* info, ScriptContext* requestContext) override;
@@ -160,7 +161,7 @@ namespace Js
 
         virtual PropertyIndex GetRootPropertyIndex(const PropertyRecord* propertyRecord) override;
 
-        virtual BOOL HasRootProperty(DynamicObject* instance, PropertyId propertyId, __out_opt bool *noRedecl, __out_opt bool *pDeclaredProperty = nullptr) override;
+        virtual BOOL HasRootProperty(DynamicObject* instance, PropertyId propertyId, bool *noRedecl, bool *pDeclaredProperty = nullptr) override;
         virtual BOOL GetRootProperty(DynamicObject* instance, Var originalInstance, PropertyId propertyId, Var* value, PropertyValueInfo* info, ScriptContext* requestContext) override;
         virtual BOOL SetRootProperty(DynamicObject* instance, PropertyId propertyId, Var value, PropertyOperationFlags flags, PropertyValueInfo* info) override;
         virtual DescriptorFlags GetRootSetter(DynamicObject* instance, PropertyId propertyId, Var* setterValue, PropertyValueInfo* info, ScriptContext* requestContext) override;
@@ -287,7 +288,7 @@ namespace Js
         virtual BOOL FreezeImpl(DynamicObject* instance, bool isConvertedType) override;
 
         template <bool allowLetConstGlobal> 
-        __inline BOOL HasProperty_Internal(DynamicObject* instance, PropertyId propertyId, __out_opt bool *noRedecl, __out_opt bool *pDeclaredProperty);
+        __inline BOOL HasProperty_Internal(DynamicObject* instance, PropertyId propertyId, bool *noRedecl, bool *pDeclaredProperty);
         template <bool allowLetConstGlobal> 
         __inline PropertyIndex GetPropertyIndex_Internal(const PropertyRecord* propertyRecord);
         template <bool allowLetConstGlobal> 
@@ -317,8 +318,8 @@ namespace Js
         BOOL FreezeInternal(DynamicObject* instance, bool isConvertedType = false);
 
         // This was added to walk around not being able to specify partial template specialization of member function.
-        BOOL FindNextProperty_BigPropertyIndex(ScriptContext* scriptContext, TPropertyIndex& index, __out JavascriptString** propertyString,
-            __out PropertyId* propertyId, __out PropertyAttributes* attributes, Type* type, DynamicType *typeToEnumerate, bool requireEnumerable, bool enumSymbols = false);
+        BOOL FindNextProperty_BigPropertyIndex(ScriptContext* scriptContext, TPropertyIndex& index, JavascriptString** propertyString,
+            PropertyId* propertyId, PropertyAttributes* attributes, Type* type, DynamicType *typeToEnumerate, bool requireEnumerable, bool enumSymbols = false);
 
         template <bool check__proto__>
         static DynamicType* InternalCreateTypeForNewScObject(ScriptContext* scriptContext, DynamicType* type, const Js::PropertyIdArray *propIds, bool shareType);

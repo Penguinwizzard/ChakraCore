@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 
 namespace Js
@@ -108,7 +108,19 @@ namespace Js
             }
             return pfuncScriptWithInlineCache;
         }
+        else if(functionProxy->IsFunctionBody() && functionProxy->GetFunctionBody()->GetIsAsmJsFunction())
+        {
+            AsmJsScriptFunction* asmJsFunc = scriptContext->GetLibrary()->CreateAsmJsScriptFunction(functionProxy);
+            asmJsFunc->SetEnvironment(environment);
 
+            Assert(!hasSuperReference);
+            asmJsFunc->SetHasSuperReference(hasSuperReference);
+            asmJsFunc->SetIsDefaultConstructor(isDefaultConstructor);
+
+            JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_FUNCTION(asmJsFunc, EtwTrace::GetFunctionId(functionProxy)));
+
+            return asmJsFunc;
+        }
         else
         {
             ScriptFunction* pfuncScript = scriptContext->GetLibrary()->CreateScriptFunction(functionProxy);
@@ -333,7 +345,7 @@ namespace Js
 
         ScriptContext * scriptContext = this->GetScriptContext();
         JavascriptLibrary *javascriptLibrary = scriptContext->GetLibrary();
-        bool isClassMethod = this->GetFunctionInfo()->IsClassMethod();
+        bool isClassMethod = this->GetFunctionInfo()->IsClassMethod() || IsClassConstructor();
 
         JavascriptString* prefixString = nullptr;
         uint prefixStringLength = 0;
@@ -512,6 +524,14 @@ namespace Js
         return true;
     }
 
+
+    AsmJsScriptFunction::AsmJsScriptFunction(FunctionProxy * proxy, ScriptFunctionType* deferredPrototypeType) :
+        ScriptFunction(proxy, deferredPrototypeType), m_moduleMemory(nullptr)
+    {}
+
+    AsmJsScriptFunction::AsmJsScriptFunction(DynamicType * type) :
+        ScriptFunction(type), m_moduleMemory(nullptr)
+    {}
 
     ScriptFunctionWithInlineCache::ScriptFunctionWithInlineCache(FunctionProxy * proxy, ScriptFunctionType* deferredPrototypeType) :
         ScriptFunction(proxy, deferredPrototypeType), hasOwnInlineCaches(false)

@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 
 namespace Js
@@ -51,9 +51,9 @@ namespace Js
 
         void Initialize();
 #if DBG
-        void DumpIntlByteCode(_In_ ScriptContext * scriptContext);
+        void DumpIntlByteCode(ScriptContext * scriptContext);
 #ifdef ENABLE_PROJECTION
-        void DumpPromiseByteCode(_In_ ScriptContext * scriptContext);
+        void DumpPromiseByteCode(ScriptContext * scriptContext);
 #endif
 #endif
 

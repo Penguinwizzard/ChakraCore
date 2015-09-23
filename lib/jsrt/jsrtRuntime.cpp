@@ -1,12 +1,15 @@
-//---------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include <JsrtPch.h>
 #include "JsrtRuntime.h"
 #include "Library\ThreadContextTLSEntry.h"
 #include "Library\ThreadBoundThreadContextManager.h"
-
+#ifdef ENABLE_BASIC_TELEMETRY
+// REVIEW: ChakraCore Dependency
+#include "..\..\..\private\lib\Telemetry\Telemetry.h"
+#endif
 JsrtRuntime::JsrtRuntime(ThreadContext * threadContext, bool useIdle, bool dispatchExceptions)
 {       
     Assert(threadContext != NULL);
@@ -26,6 +29,10 @@ JsrtRuntime::JsrtRuntime(ThreadContext * threadContext, bool useIdle, bool dispa
 
 #ifdef ENABLE_BASIC_TELEMETRY
     atexit(firePackageTelemetry); // for node chakra purposes.
+#endif
+
+#ifdef ENABLE_DEBUG_CONFIG_OPTIONS
+    serializeByteCodeForLibrary = false;
 #endif
 }
 

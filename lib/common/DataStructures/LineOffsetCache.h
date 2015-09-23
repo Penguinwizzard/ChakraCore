@@ -1,11 +1,7 @@
-//----------------------------------------------------------------------------
-//
-// File: LineOffsetCache.h
-//
-// Copyright (C) Microsoft. All rights reserved. 
-//
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 
 namespace JsUtil
@@ -164,7 +160,8 @@ namespace JsUtil
         
         static bool FindNextLine(_In_z_ LPCUTF8 &currentSourcePosition, _In_z_ LPCUTF8 sourceEndCharacter, charcount_t &inOutCharacterOffset, charcount_t &inOutByteOffset, charcount_t maxCharacterOffset = MAXUINT32)
         {
-            charcount_t currentCharacterOffset = inOutCharacterOffset, currentByteOffset = inOutByteOffset;
+            charcount_t currentCharacterOffset = inOutCharacterOffset;
+            charcount_t currentByteOffset = inOutByteOffset;
             utf8::DecodeOptions options = utf8::doAllowThreeByteSurrogates;
 
             while (currentSourcePosition < sourceEndCharacter)

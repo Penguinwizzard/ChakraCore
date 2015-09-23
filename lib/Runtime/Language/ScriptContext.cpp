@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeLanguagePch.h"
 
 // Parser Includes
@@ -16,11 +16,6 @@
 #include "BackEndAPI.h"
 #if PROFILE_DICTIONARY
 #include "DictionaryStats.h"
-#endif
-
-#ifdef ENABLE_BASIC_TELEMETRY
-// REVIEW: ChakraCore Dependency
-#include "..\..\..\private\lib\Telemetry\ScriptContextTelemetry.h"
 #endif
 
 namespace Js
@@ -1614,7 +1609,7 @@ namespace Js
         Js::JavascriptError::MapAndThrowError(this, E_FAIL);
     }
 
-    JavascriptFunction* ScriptContext::LoadScript(const wchar_t* script, SRCINFO const * pSrcInfo, CompileScriptException * pse, bool isExpression, bool disableDeferredParse, Utf8SourceInfo** ppSourceInfo, const wchar_t *rootDisplayName)
+    JavascriptFunction* ScriptContext::LoadScript(const wchar_t* script, SRCINFO const * pSrcInfo, CompileScriptException * pse, bool isExpression, bool disableDeferredParse, bool isByteCodeBufferForLibrary, Utf8SourceInfo** ppSourceInfo, const wchar_t *rootDisplayName)
     {
         if (pSrcInfo == nullptr)
         {
@@ -1684,6 +1679,11 @@ namespace Js
                 grfscr |= fscrEval;
             }
 
+            if (isByteCodeBufferForLibrary)
+            {
+                grfscr |= (fscrNoAsmJs | fscrNoPreJit);
+            }
+
             ParseNodePtr parseTree;
             hr = parser.ParseCesu8Source(&parseTree, utf8Script, cbNeeded, grfscr, pse, &sourceContextInfo->nextLocalFunctionId,
                 sourceContextInfo);
@@ -1715,7 +1715,7 @@ namespace Js
         }
     }
 
-    JavascriptFunction* ScriptContext::LoadScript(LPCUTF8 script, size_t cb, SRCINFO const * pSrcInfo, CompileScriptException * pse, bool isExpression, bool disableDeferredParse, Utf8SourceInfo** ppSourceInfo, const wchar_t *rootDisplayName)
+    JavascriptFunction* ScriptContext::LoadScript(LPCUTF8 script, size_t cb, SRCINFO const * pSrcInfo, CompileScriptException * pse, bool isExpression, bool disableDeferredParse, bool isByteCodeBufferForLibrary, Utf8SourceInfo** ppSourceInfo, const wchar_t *rootDisplayName)
     {
         if (pSrcInfo == nullptr)
         {
@@ -1747,6 +1747,11 @@ namespace Js
             {
                 // pretend it is eval
                 grfscr |= fscrEval;
+            }
+
+            if (isByteCodeBufferForLibrary)
+            {
+                grfscr |= (fscrNoAsmJs | fscrNoPreJit);
             }
 
 #if DBG_DUMP
@@ -2774,8 +2779,34 @@ namespace Js
             {
                 HRESULT hrEntryPointUpdate = S_OK;
                 BEGIN_TRANSLATE_OOM_TO_HRESULT_NESTED
+#ifdef ASMJS_PLAT
+                    TempArenaAllocatorObject* tmpAlloc = GetTemporaryAllocator(L"DebuggerTransition");
+                    debugTransitionAlloc = tmpAlloc->GetAllocator();
+                    
+                    asmJsEnvironmentMap = Anew(debugTransitionAlloc, AsmFunctionMap, debugTransitionAlloc);
+#endif
+
                     // Still do the pass on the function's entrypoint to reflect its state with the functionbody's entrypoint.
                     this->UpdateRecyclerFunctionEntryPointsForDebugger();
+
+#ifdef ASMJS_PLAT
+                    auto asmEnvIter = asmJsEnvironmentMap->GetIterator();
+                    while (asmEnvIter.IsValid())
+                    {
+                        // we are attaching, change frame setup for asm.js frame to javascript frame
+                        SList<AsmJsScriptFunction*> * funcList = asmEnvIter.CurrentValue();
+                        Assert(!funcList->Empty());
+                        void* newEnv = AsmJsModuleInfo::ConvertFrameForJavascript(asmEnvIter.CurrentKey(), funcList->Head());
+                        while (!funcList->Empty())
+                        {
+                            AsmJsScriptFunction* func = funcList->Pop();
+                            func->GetEnvironment()->SetItem(0, newEnv);
+                            func->SetModuleMemory(nullptr);
+                        }
+                        asmEnvIter.MoveNext();
+                    }
+                    ReleaseTemporaryAllocator(tmpAlloc);
+#endif
                 END_TRANSLATE_OOM_TO_HRESULT(hrEntryPointUpdate);
 
                 if (hrEntryPointUpdate != S_OK)
@@ -3064,8 +3095,18 @@ namespace Js
     {
         if (scriptFunction->GetScriptContext()->IsInDebugMode() && scriptFunction->GetFunctionBody()->GetAsmJsFunctionInfo() != nullptr)
         {
-            // we are attaching, change frame setup for asm.js frame to javascript frame
-            AsmJsModuleInfo::ConvertFrameForJavascript(scriptFunction);
+            void* env = scriptFunction->GetEnvironment()->GetItem(0);
+            SList<AsmJsScriptFunction*> * funcList = nullptr;
+            if (asmJsEnvironmentMap->TryGetValue(env, &funcList))
+            {
+                funcList->Push((AsmJsScriptFunction*)scriptFunction);
+            }
+            else
+            {
+                SList<AsmJsScriptFunction*> * newList = Anew(debugTransitionAlloc, SList<AsmJsScriptFunction*>, debugTransitionAlloc);
+                asmJsEnvironmentMap->AddNew(env, newList);
+                newList->Push((AsmJsScriptFunction*)scriptFunction);
+            }
         }
     }
 #endif
@@ -3169,7 +3210,7 @@ namespace Js
         ScriptFunction * scriptFunction = ScriptFunction::FromVar(pFunction);
 
 #ifdef ASMJS_PLAT
-        TransitionEnvironmentForDebugger(scriptFunction);
+        scriptContext->TransitionEnvironmentForDebugger(scriptFunction);
 #endif
 
         JavascriptMethod newEntryPoint;

@@ -19,6 +19,7 @@
   <ItemDefinitionGroup>
     <ClCompile>
       <AdditionalIncludeDirectories>
+        $(ChakraCoreRootDirectory)Lib\Jsrt;
         %(AdditionalIncludeDirectories);
         $(MSBuildThisFileDirectory);
         $(ChakraCoreRootDirectory)Lib\Common;

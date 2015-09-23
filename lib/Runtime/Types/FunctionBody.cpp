@@ -1,5 +1,7 @@
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeTypePch.h"
 #include "ByteCode\ByteCodeAPI.h"
 #include "ByteCode\ByteCodeDumper.h"
@@ -14,6 +16,7 @@
 #ifdef DYNAMIC_PROFILE_MUTATOR
 #include "Language\DynamicProfileMutator.h"
 #endif
+#include "Language\SourceDynamicProfileManager.h"
 
 #include "Debug\ProbeContainer.h"
 #include "Debug\DebugContext.h"
@@ -73,8 +76,8 @@ namespace Js
     wchar_t* FunctionProxy::GetDebugNumberSet(wchar(&bufferToWriteTo)[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE]) const
     {
         // (#%u.%u), #%u --> (source file Id . function Id) , function Number
-        int len = swprintf_s(bufferToWriteTo, MAX_FUNCTION_BODY_DEBUG_STRING_SIZE, L" (#%d.%d), #%d",
-            this->GetSourceContextId(), this->GetLocalFunctionId(), this->GetFunctionNumber());
+        int len = swprintf_s(bufferToWriteTo, MAX_FUNCTION_BODY_DEBUG_STRING_SIZE, L" (#%d.%u), #%u",
+            (int)this->GetSourceContextId(), this->GetLocalFunctionId(), this->GetFunctionNumber());
         Assert(len > 8);
         return bufferToWriteTo;
     }
@@ -186,7 +189,7 @@ namespace Js
     }
 
     BOOL
-    FunctionBody::GetBranchOffsetWithin(uint start, uint end, __out StatementAdjustmentRecord* record)
+    FunctionBody::GetBranchOffsetWithin(uint start, uint end, StatementAdjustmentRecord* record)
     {
         Assert(start < end);
 
@@ -624,7 +627,7 @@ namespace Js
     }
 
     bool
-    FunctionBody::GetSlotOffset(RegSlot slotId, __out int32 * slotOffset, bool allowTemp)
+    FunctionBody::GetSlotOffset(RegSlot slotId, int32 * slotOffset, bool allowTemp)
     {
         if (IsNonTempLocalVar(slotId) || allowTemp)
         {
@@ -1393,7 +1396,8 @@ namespace Js
     ParseableFunctionInfo* ParseableFunctionInfo::GetNestedFunctionForExecution(uint index)
     {
         FunctionProxy* currentNestedFunction = this->GetNestedFunc(index);
-        if (currentNestedFunction && currentNestedFunction->IsDeferredDeserializeFunction())
+        Assert(currentNestedFunction);
+        if (currentNestedFunction->IsDeferredDeserializeFunction())
         {
             currentNestedFunction = currentNestedFunction->EnsureDeserialized();
             this->SetNestedFunc(currentNestedFunction, index, 0u);
@@ -6007,7 +6011,7 @@ namespace Js
 
     FunctionCodeGenRuntimeData *FunctionBody::EnsureLdFldInlineeCodeGenRuntimeData(
         Recycler *const recycler,
-        __in_range(0, m_inlineCacheCount - 1) const uint inlineCacheIndex,
+        __in_range(0, this->inlineCacheCount - 1) const uint inlineCacheIndex,
         FunctionBody *const inlinee)
     {
         Assert(recycler);
@@ -7719,7 +7723,7 @@ namespace Js
     }
 
     /*static*/
-    void FunctionBody::GetShortNameFromUrl(__in LPCWSTR pchUrl, __RPC__in_ecount_full(cchBuffer) LPWSTR pchShortName, __in size_t cchBuffer)
+    void FunctionBody::GetShortNameFromUrl(__in LPCWSTR pchUrl, _Out_writes_z_(cchBuffer) LPWSTR pchShortName, __in size_t cchBuffer)
     {
         // Note : We can use help from the wininet for cracking the url properly. but for now below logic will just do.
 
@@ -9205,7 +9209,7 @@ namespace Js
         {
             return length;
         }
-        int charsWritten = swprintf_s(nameBuffer, length, L"%s%s%d", functionName, LoopWStr, loopNumber + 1);
+        int charsWritten = swprintf_s(nameBuffer, length, L"%s%s%u", functionName, LoopWStr, loopNumber + 1);
         Assert(charsWritten != -1);
         return charsWritten + /*nullptr*/ 1;
     }

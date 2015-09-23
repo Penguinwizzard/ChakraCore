@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 
 struct StaticSym;
@@ -337,7 +337,7 @@ public:
     template <typename CharType>
     IdentPtr PidHashNameLen(CharType const * psz, ulong cch);
     template <typename CharType>
-    IdentPtr PidHashNameLenWithHash(CharType const * psz, long cch, ulong luHash);
+    IdentPtr PidHashNameLenWithHash(_In_reads_(cch) CharType const * psz, long cch, ulong luHash);
 
 
     template <typename CharType>
@@ -352,11 +352,11 @@ public:
 #endif
         );
 
-    tokens TkFromNameLen(LPCOLESTR prgch, ulong cch, bool isStrictMode);
-    tokens TkFromNameLenColor(LPCOLESTR prgch, ulong cch);
+    tokens TkFromNameLen(_In_reads_(cch) LPCOLESTR prgch, ulong cch, bool isStrictMode);
+    tokens TkFromNameLenColor(_In_reads_(cch) LPCOLESTR prgch, ulong cch);
     NoReleaseAllocator* GetAllocator() {return &m_noReleaseAllocator;}
 
-    bool Contains(LPCOLESTR prgch, long cch);
+    bool Contains(_In_reads_(cch) LPCOLESTR prgch, long cch);
 private:
 
     NoReleaseAllocator m_noReleaseAllocator;            // to allocate identifiers

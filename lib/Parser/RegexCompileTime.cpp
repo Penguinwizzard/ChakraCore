@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "ParserPch.h"
 
 namespace UnifiedRegex
@@ -1262,7 +1262,7 @@ namespace UnifiedRegex
             EMIT(compiler, MatchCharInst, cs[0]);
     }
 
-    CharCount MatchCharNode::FindUniqueEquivs(const Char equivs[CaseInsensitive::EquivClassSize], Char uniqueEquivs[CaseInsensitive::EquivClassSize])
+    CharCount MatchCharNode::FindUniqueEquivs(const Char equivs[CaseInsensitive::EquivClassSize], __out_ecount(4) Char uniqueEquivs[CaseInsensitive::EquivClassSize])
     {
         uniqueEquivs[0] = equivs[0];
         CharCount uniqueCount = 1;

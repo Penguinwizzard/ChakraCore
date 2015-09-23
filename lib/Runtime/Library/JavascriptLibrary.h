@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 
 #define InlineSlotCountIncrement (HeapConstants::ObjectGranularity / sizeof(Var))
@@ -801,6 +801,7 @@ namespace Js
         DynamicType * CreateFunctionWithLengthType(DynamicObject * prototype, FunctionInfo * functionInfo);
         DynamicType * CreateFunctionWithLengthAndPrototypeType(DynamicObject * prototype, FunctionInfo * functionInfo);
         ScriptFunction * CreateScriptFunction(FunctionProxy* proxy);
+        AsmJsScriptFunction * CreateAsmJsScriptFunction(FunctionProxy* proxy);
         RuntimeFunction * CloneBuiltinFunction(RuntimeFunction* func);
         ScriptFunctionWithInlineCache * CreateScriptFunctionWithInlineCache(FunctionProxy* proxy);
         GeneratorVirtualScriptFunction * CreateGeneratorVirtualScriptFunction(FunctionProxy* proxy);

@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "Backend.h"
 /*
 Field Hoisting
@@ -262,22 +262,19 @@ GlobOpt::DoFieldPRE(Loop *loop) const
     return DoFieldOpts(loop);
 }
 
-bool
-GlobOpt::DoMemset(Loop *loop)
+bool GlobOpt::DoMemOp(Loop *loop)
 {
-    return loop && !PHASE_OFF(Js::MemSetPhase, this->func) && loop->memOpInfo && loop->memOpInfo->doMemset &&  loop->memOpInfo->memsetCandidates && !loop->memOpInfo->memsetCandidates->Empty();
-}
-
-bool
-GlobOpt::DoMemcopy(Loop *loop)
-{
-    return loop && !PHASE_OFF(Js::MemCopyPhase, this->func) && loop->memOpInfo && loop->memOpInfo->doMemcopy && loop->memOpInfo->memcopyCandidates && !loop->memOpInfo->memcopyCandidates->Empty();
-}
-
-bool
-GlobOpt::DoMemop(Loop *loop)
-{
-    return loop && DoMemcopy(loop) || DoMemset(loop);
+    return (
+        loop &&
+        (
+            !PHASE_OFF(Js::MemSetPhase, this->func) ||
+            !PHASE_OFF(Js::MemCopyPhase, this->func)
+        ) &&
+        loop->memOpInfo &&
+        loop->memOpInfo->doMemOp &&
+        loop->memOpInfo->candidates &&
+        !loop->memOpInfo->candidates->Empty()
+    );
 }
 
 bool
@@ -2314,11 +2311,12 @@ GlobOpt::ProcessPropOpInTypeCheckSeq(IR::Instr* instr, IR::PropertySymOpnd *opnd
     StackSym * typeSym = opnd->GetObjectTypeSym();
 
 #if DBG
-    uint16 typeCheckSeqFlagsBefore = opnd->GetTypeCheckSeqFlags();
+    uint16 typeCheckSeqFlagsBefore;
     Value* valueBefore = nullptr;
     JsTypeValueInfo* valueInfoBefore = nullptr;
     if (!makeChanges)
     {
+        typeCheckSeqFlagsBefore = opnd->GetTypeCheckSeqFlags();
         valueBefore = FindObjectTypeValue(typeSym, block);
         if (valueBefore != nullptr)
         {

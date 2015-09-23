@@ -1,6 +1,7 @@
-//----------------------------------------------------------------------------
-// Copyright (C) by Microsoft Corporation.  All rights reserved.
-// 
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 // Implementation for typed arrays based on ArrayBuffer. 
 // There is one nested ArrayBuffer for each typed array. Multiple typed array
 // can share the same array buffer. 
@@ -247,9 +248,7 @@ namespace Js
         bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && newTarget != nullptr && RecyclableObject::Is(newTarget);
         Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == nullptr);
 
-        JavascriptError::ThrowTypeError(scriptContext, JSERR_InvalidTypedArray_Constructor);
-
-        return scriptContext->GetLibrary()->GetUndefined();
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_InvalidTypedArray_Constructor);        
     }
 
     template <typename TypeName, bool clamped, bool virtualAllocated>
@@ -486,14 +485,14 @@ namespace Js
         return DynamicObject::SetProperty(propertyNameString, value, flags, info);
     }
 
-    BOOL TypedArrayBase::GetEnumerator(__in BOOL enumNonEnumerable, __out Var* enumerator, ScriptContext* scriptContext, __in bool preferSnapshotSemantics, __in bool enumSymbols)
+    BOOL TypedArrayBase::GetEnumerator(BOOL enumNonEnumerable, Var* enumerator, ScriptContext* scriptContext, bool preferSnapshotSemantics, bool enumSymbols)
     {
         *enumerator = RecyclerNew(scriptContext->GetRecycler(), TypedArrayEnumerator, enumNonEnumerable, this, scriptContext, enumSymbols);
         return true;
     }
 
     // REVIEW: I don't see we need to use the flag here. 
-    BOOL TypedArrayBase::SetItem(__in uint32 index, __in Var value, __in PropertyOperationFlags flags)
+    BOOL TypedArrayBase::SetItem(uint32 index, Var value, PropertyOperationFlags flags)
     {
         // Skip set item if index >= GetLength()
         DirectSetItem(index, value, index >= GetLength());

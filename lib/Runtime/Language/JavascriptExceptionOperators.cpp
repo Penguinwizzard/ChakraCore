@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeLanguagePch.h"
 #include "shlwapi.h"
 
@@ -1056,6 +1056,8 @@ namespace Js
 
         ScriptContext *scriptContext = function->GetScriptContext();
 
+        Assert(scriptContext);
+
         // If the first argument to the accessor is not a recyclable object, return undefined
         // This behaviour is compatible with Chromes. 
         if (!RecyclableObject::Is(args[0]))
@@ -1113,6 +1115,7 @@ namespace Js
                 if (currentFrame.IsScriptFunction())
                 {
                     ScriptContext* funcScriptContext = currentFrame.GetFunctionBody()->GetScriptContext();
+                    Assert(funcScriptContext);
                     if (scriptContext != funcScriptContext && FAILED(scriptContext->GetHostScriptContext()->CheckCrossDomainScriptContext(funcScriptContext)))
                     {
                         continue; // Ignore this frame
@@ -1228,7 +1231,7 @@ namespace Js
         bs->AppendChars(functionName, wcslen(functionName));
         bs->AppendChars(L" (");
 
-        if (CONFIG_FLAG(ExtendedErrorStackForTestHost) && fileName != L'\0')
+        if (CONFIG_FLAG(ExtendedErrorStackForTestHost) && *fileName != L'\0')
         {
             wchar_t shortfilename[_MAX_FNAME];
             wchar_t ext[_MAX_EXT];

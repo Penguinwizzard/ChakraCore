@@ -1,4 +1,7 @@
-//  Copyright (c) Microsoft Corporation. All rights reserved.
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 // This is a snap of //fbl_rex_dev1/com/combase/RoDebug/RoCausality.cpp#7 (some pieces removed for chakra integration)
 
 #include "RuntimeLibraryPch.h"

@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeByteCodePch.h"
 #include "FormalsUtil.h"
 #include "Language\AsmJs.h"
@@ -213,7 +213,7 @@ bool IsArguments(ParseNode *pnode)
 
 bool ApplyEnclosesArgs(ParseNode* fncDecl,ByteCodeGenerator* byteCodeGenerator);
 void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *funcInfo, BOOL fReturnValue, bool isConstructorCall = false, ParseNode *bindPnode = nullptr);
-void EmitComputedNameVar(ParseNode *nameNode, ParseNode *exprNode, ByteCodeGenerator *byteCodeGenerator);
+void EmitComputedFunctionNameVar(ParseNode *nameNode, ParseNode *exprNode, ByteCodeGenerator *byteCodeGenerator);
 void EmitBinaryOpnds(ParseNode *pnode1, ParseNode *pnode2, ByteCodeGenerator *byteCodeGenerator, FuncInfo *funcInfo);
 bool IsExpressionStatement(ParseNode* stmt, const Js::ScriptContext *const scriptContext);
 void EmitInvoke(Js::RegSlot location, Js::RegSlot callObjLocation, Js::PropertyId propertyId, ByteCodeGenerator* byteCodeGenerator, FuncInfo* funcInfo);
@@ -1932,6 +1932,7 @@ void ByteCodeGenerator::LoadAllConstants(FuncInfo *funcInfo)
             {
                 Assert(!this->TopFuncInfo()->GetParsedFunctionBody()->DoStackNestedFunc());
                 Js::RegSlot scopeLocation;
+                Assert(funcInfo->funcExprScope);
                 if (funcInfo->funcExprScope->GetIsObject())
                 {
                     scopeLocation = funcInfo->funcExprScope->GetLocation();
@@ -5715,7 +5716,8 @@ void EmitAssignment(
     }
 
     case knopArray:
-        // Assignment to array can get through to byte code gen when the parser fails to convert destructuring
+    case knopObject:
+        // Assignment to array/object can get through to byte code gen when the parser fails to convert destructuring
         // assignment to pattern (because of structural mismatch between LHS & RHS?). Revisit when we nail
         // down early vs. runtime errors for destructuring.
         byteCodeGenerator->Writer()->W1(Js::OpCode::RuntimeReferenceError, SCODE_CODE(JSERR_CantAssignTo));
@@ -5957,7 +5959,7 @@ Js::ArgSlot EmitArgListEnd(
         byteCodeGenerator->Writer()->ArgOut<true>(argIndex + 1, newTargetLocation, callSiteId);
     }
 
-    size_t argIntCount = argIndex + 1 + fIsEval + fEvalInModule + fHasNewTarget;
+    size_t argIntCount = argIndex + 1 + (size_t)fIsEval + (size_t)fEvalInModule + (size_t)fHasNewTarget;
 
     Js::ArgSlot argumentsCount = (Js::ArgSlot)argIntCount;
 
@@ -6769,7 +6771,7 @@ void EmitCall(
     ParseNode *pnodeArgs = pnode->sxCall.pnodeArgs;
     uint16 spreadArgCount = pnode->sxCall.spreadArgCount;
 
-    unsigned int argCount = CountArguments(pnode->sxCall.pnodeArgs, &fSideEffectArgs) + fIsPut;
+    unsigned int argCount = CountArguments(pnode->sxCall.pnodeArgs, &fSideEffectArgs) + (unsigned int)fIsPut;
 
     BOOL fIsEval = !fIsPut && pnode->sxCall.isEvalCall;
 
@@ -6929,7 +6931,7 @@ void EmitInvoke(
     byteCodeGenerator->Writer()->CallI(Js::OpCode::CallI, location, location, 2, callSiteId);
 }
 
-void EmitComputedNameVar(ParseNode *nameNode, ParseNode *exprNode, ByteCodeGenerator *byteCodeGenerator)
+void EmitComputedFunctionNameVar(ParseNode *nameNode, ParseNode *exprNode, ByteCodeGenerator *byteCodeGenerator)
 {
     AssertMsg(exprNode != nullptr, "callers of this function should pass in a valid expression Node");
 
@@ -6947,8 +6949,8 @@ void EmitMemberNode(ParseNode *memberNode, Js::RegSlot objectLocation, ByteCodeG
     ParseNode *nameNode=memberNode->sxBin.pnode1;
     ParseNode *exprNode=memberNode->sxBin.pnode2;
 
-    bool hasHomeObj = exprNode->nop == knopFncDecl;
-    bool isClassMember = hasHomeObj && exprNode->sxFnc.IsClassMember();
+    bool isFncDecl = exprNode->nop == knopFncDecl;
+    bool isClassMember = isFncDecl && exprNode->sxFnc.IsClassMember();
 
     // Moved SetComputedNameVar before LdFld of prototype b\c loading the prototype undeferres the function TypeHanlder
     // which makes this bytecode too late to influence the function.name
@@ -6959,9 +6961,9 @@ void EmitMemberNode(ParseNode *memberNode, Js::RegSlot objectLocation, ByteCodeG
         // The Emit will replace this with a temp register if necessary to preserve the value.
         nameNode->location = nameNode->sxUni.pnode1->location;
         EmitBinaryOpnds(nameNode, exprNode, byteCodeGenerator, funcInfo);
-        if (!exprNode->sxFnc.IsClassConstructor())
+        if (isFncDecl && !exprNode->sxFnc.IsClassConstructor())
         {
-            EmitComputedNameVar(nameNode, exprNode, byteCodeGenerator);
+            EmitComputedFunctionNameVar(nameNode, exprNode, byteCodeGenerator);
         }
     }
 
@@ -6988,7 +6990,7 @@ void EmitMemberNode(ParseNode *memberNode, Js::RegSlot objectLocation, ByteCodeG
         byteCodeGenerator->Writer()->Element(setOp, exprNode->location, objectLocation, nameNode->location, true);
 
         // Class and object members need a reference back to the class.
-        if (hasHomeObj)
+        if (isFncDecl)
         {
             byteCodeGenerator->Writer()->Reg2(Js::OpCode::SetHomeObj, exprNode->location, objectLocation);
         }
@@ -7059,7 +7061,7 @@ void EmitMemberNode(ParseNode *memberNode, Js::RegSlot objectLocation, ByteCodeG
     }
 
     // Class and object members need a reference back to the class.
-    if (hasHomeObj)
+    if (isFncDecl)
     {
         byteCodeGenerator->Writer()->Reg2(Js::OpCode::SetHomeObj, exprNode->location, objectLocation);
     }
@@ -7436,6 +7438,7 @@ void SetNewArrayElements(ParseNode *pnode, Js::RegSlot arrayLocation, ByteCodeGe
                     Js::RegSlot regVal = rhsLocation;
                     if (args->sxBin.pnode1->nop == knopEllipsis)
                     {
+                        Assert(spreadIndices);
                         regVal = funcInfo->AcquireTmpRegister();
                         byteCodeGenerator->Writer()->Reg2(Js::OpCode::LdCustomSpreadIteratorList, regVal, rhsLocation);
                         spreadIndices->elements[spreadIndex++] = i;
@@ -7465,6 +7468,7 @@ void SetNewArrayElements(ParseNode *pnode, Js::RegSlot arrayLocation, ByteCodeGe
                 {
                     regVal = funcInfo->AcquireTmpRegister();
                     byteCodeGenerator->Writer()->Reg2(Js::OpCode::LdCustomSpreadIteratorList, regVal, rhsLocation);
+                    Assert(spreadIndices);
                     spreadIndices->elements[spreadIndex] = i;
                 }
                 
@@ -9513,7 +9517,7 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
 
             // Constructor
             Emit(pnode->sxClass.pnodeConstructor, byteCodeGenerator, funcInfo, false);
-            EmitComputedNameVar(bindPnode, pnode->sxClass.pnodeConstructor, byteCodeGenerator);
+            EmitComputedFunctionNameVar(bindPnode, pnode->sxClass.pnodeConstructor, byteCodeGenerator);
             if (pnode->sxClass.pnodeExtends)
             {
                 byteCodeGenerator->Writer()->InitClass(pnode->location, pnode->sxClass.pnodeExtends->location);

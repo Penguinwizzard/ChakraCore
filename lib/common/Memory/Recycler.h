@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 
 #include "CollectionState.h"
@@ -1535,11 +1535,6 @@ private:
     BOOL CollectOnAllocatorThread();
 
 #if DBG
-    // Verifies that a weak reference points to a valid object or is NULL
-    static void AssertValidWeakRef(_In_ char * obj, _In_ RecyclerWeakReferenceBase* weakRef, _In_ Recycler* recycler, __out_opt size_t * scanRootBytes)
-    {
-        Assert(obj == NULL || (recycler->IsValidObject(obj) && !recycler->IsFreeObject(obj)));
-    }
     void ResetThreadId();
 #endif
 
@@ -2376,7 +2371,7 @@ operator delete(void * obj, RecyclerFastAllocator<T> * alloc, char * (RecyclerFa
 }
 #endif
 
-inline void * __cdecl
+_Ret_notnull_ inline void * __cdecl
 operator new(size_t byteSize, Recycler * alloc, HeapInfo * heapInfo)
 {
     return alloc->HeapAllocR(heapInfo, byteSize);
@@ -2388,7 +2383,7 @@ operator delete(void * obj, Recycler * alloc, HeapInfo * heapInfo)
     alloc->HeapFree(heapInfo, obj);
 }
 
-inline void * __cdecl
+_Ret_notnull_ inline void * __cdecl
 operator new(size_t byteSize, Recycler * recycler, ObjectInfoBits enumClassBits)
 {
     AssertCanHandleOutOfMemory();
@@ -2401,7 +2396,7 @@ operator new(size_t byteSize, Recycler * recycler, ObjectInfoBits enumClassBits)
 }
 
 template<ObjectInfoBits infoBits>
-inline void * __cdecl
+_Ret_notnull_ inline void * __cdecl
 operator new(size_t byteSize, Recycler * recycler, const InfoBitsWrapper<infoBits>&)
 {
     AssertCanHandleOutOfMemory();

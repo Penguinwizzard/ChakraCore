@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "CommonCorePch.h"
 #include "Memory\PageHeapBlockTypeFilter.h"
 
@@ -65,7 +65,7 @@ namespace Js
         this->pszValue = NULL;
     }
  
-    String::String(__in LPWSTR psz)
+    String::String(__in_opt LPWSTR psz)
     {
         this->pszValue = NULL;
         Set(psz);
@@ -89,7 +89,7 @@ namespace Js
     ///----------------------------------------------------------------------------
 
     void 
-    String::Set(__in LPWSTR pszValue)
+    String::Set(__in_opt LPWSTR pszValue)
     {
         if(NULL != this->pszValue)
         {

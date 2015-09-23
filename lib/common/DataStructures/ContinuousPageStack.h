@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 
 // -----------------------------------------------------------------------------------------------------------------------------
@@ -273,15 +273,21 @@ void ContinuousPageStack<InitialPageCount>::Resize(size_t requestedSize)
     if(!bufferSize)
     {
         pageAllocation = pageAllocator->AllocAllocation(InitialPageCount);
-        if(!pageAllocation)
+        if (!pageAllocation)
+        {
             outOfMemoryFunc();
+            Assert(false);
+        }
         bufferSize = pageAllocation->GetSize();
         return;
     }
 
     PageAllocation *const newPageAllocation = pageAllocator->AllocAllocation(pageAllocation->GetPageCount() * 2);
-    if(!newPageAllocation)
+    if (!newPageAllocation)
+    {
         outOfMemoryFunc();
+        Assert(false);
+    }
     js_memcpy_s(newPageAllocation->GetAddress(), newPageAllocation->GetSize(), Buffer(), nextTop);
     pageAllocator->ReleaseAllocation(pageAllocation);
     pageAllocation = newPageAllocation;

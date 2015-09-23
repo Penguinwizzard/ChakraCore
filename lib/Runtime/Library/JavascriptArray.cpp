@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 
 namespace Js
@@ -1444,6 +1444,7 @@ namespace Js
                 // Some live elements are being pushed out of this segment, so allocate a new one.
                 SparseArraySegment<double> *newSeg =
                     SparseArraySegment<double>::AllocateSegment(recycler, left, length, nextSeg);
+                Assert(newSeg != nullptr);
                 Assert((prevSeg == nullptr) == (seg == intArray->head));
                 newSeg->next = nextSeg;
                 intArray->LinkSegments((SparseArraySegment<double>*)prevSeg, newSeg);
@@ -6068,7 +6069,7 @@ Case0:
 
     void JavascriptArray::SortElements(Element* elements, uint32 left, uint32 right)
     {
-        qsort_s(elements, right - left + 1, sizeof(Element), CompareElements, NULL);
+        qsort_s(elements, right - left + 1, sizeof(Element), CompareElements, this);
     }
 
     Var JavascriptArray::EntrySort(RecyclableObject* function, CallInfo callInfo, ...)

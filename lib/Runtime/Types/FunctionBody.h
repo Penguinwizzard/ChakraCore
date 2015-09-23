@@ -1,5 +1,7 @@
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 
 struct CodeGenWorkItem;
@@ -2159,7 +2161,7 @@ namespace Js
         void RecordCrossFrameEntryExitRecord(uint byteCodeOffset, bool isEnterBlock);
 
         // Find out an offset falls within the range. returns TRUE if found.
-        BOOL GetBranchOffsetWithin(uint start, uint end, __out StatementAdjustmentRecord* record);
+        BOOL GetBranchOffsetWithin(uint start, uint end, StatementAdjustmentRecord* record);
         bool GetLineCharOffset(int byteCodeOffset, ULONG* line, LONG* charOffset, bool canAllocateLineCache = true);
         bool GetLineCharOffsetFromStartChar(int startCharOfStatement, ULONG* _line, LONG* _charOffset, bool canAllocateLineCache = true);
 
@@ -2477,7 +2479,7 @@ namespace Js
         uint32 GetFirstNonTempLocalIndex();
         uint32 GetEndNonTempLocalIndex();
         bool IsNonTempLocalVar(uint32 varIndex);
-        bool GetSlotOffset(RegSlot slotId, __out int32 * slotOffset, bool allowTemp = false);
+        bool GetSlotOffset(RegSlot slotId, int32 * slotOffset, bool allowTemp = false);
 
         RegSlot GetOutParamsDepth();
         void SetOutParamDepth(RegSlot cOutParamsDepth);
@@ -2717,7 +2719,7 @@ namespace Js
             return sourceSpan->begin == 0 && sourceSpan->end == 0;
         }
 
-        static void GetShortNameFromUrl(__in LPCWSTR pchUrl, __RPC__in_ecount_full(cchBuffer) LPWSTR pchShortName, __in size_t cchBuffer);
+        static void GetShortNameFromUrl(__in LPCWSTR pchUrl, _Out_writes_z_(cchBuffer) LPWSTR pchShortName, __in size_t cchBuffer);
 
         template<class Fn>
         void MapLoopHeaders(Fn fn) const

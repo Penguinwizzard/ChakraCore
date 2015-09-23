@@ -1,7 +1,7 @@
-//---------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 
 namespace Js
@@ -146,7 +146,7 @@ namespace Js
             }
         }
     }
-    Var TaggedInt::DivideInPlace(Var aLeft,Var aRight,ScriptContext* scriptContext, __out JavascriptNumber *result) 
+    Var TaggedInt::DivideInPlace(Var aLeft,Var aRight,ScriptContext* scriptContext, JavascriptNumber *result) 
     {
         int nLeft   = ToInt32(aLeft);
         int nRight  = ToInt32(aRight);
@@ -211,7 +211,7 @@ namespace Js
         }
     }
 
-    Var TaggedInt::MultiplyInPlace(Var aLeft, Var aRight, ScriptContext* scriptContext, __out JavascriptNumber *result) 
+    Var TaggedInt::MultiplyInPlace(Var aLeft, Var aRight, ScriptContext* scriptContext, JavascriptNumber *result) 
     {
         //
         // Perform the signed integer multiplication.

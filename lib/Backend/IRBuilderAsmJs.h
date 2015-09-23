@@ -1,8 +1,21 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
+
+namespace AsmJsRegSlots
+{
+    enum ConstSlots
+    {
+        ReturnReg = 0,
+        ModuleMemReg,
+        ArrayReg,
+        BufferReg,
+        LengthReg,
+        RegCount
+    };
+};
 
 class IRBuilderAsmJs
 {
@@ -17,25 +30,21 @@ public:
     {
         func->m_workItem->InitializeReader(m_jnReader, m_statementReader);
         m_asmFuncInfo = m_func->GetJnFunction()->GetAsmJsFunctionInfo();
-        m_entryPoint = (Js::FunctionEntryPointInfo*)(func->m_workItem->GetEntryPoint());
-        Assert(m_entryPoint);
-        m_ModuleAddress = m_entryPoint->GetModuleAddress();
-        Assert(m_ModuleAddress);
-        if (m_entryPoint->IsLoopBody())
+        if (func->IsLoopBody())
         {
-            Js::LoopEntryPointInfo* loopEntryPointInfo = (Js::LoopEntryPointInfo*)m_entryPoint;
+            Js::LoopEntryPointInfo* loopEntryPointInfo = (Js::LoopEntryPointInfo*)(func->m_workItem->GetEntryPoint());
             if (loopEntryPointInfo->GetIsTJMode())
             {
                 m_IsTJLoopBody = true;
                 func->isTJLoopBody = true;
             }
         }
-        m_ArrayBufferRef = (Js::ArrayBuffer**)((Js::Var *)m_ModuleAddress + Js::AsmJsModuleMemory::MemoryTableBeginOffset);
     }
 
     void Build();
 
 private:
+
     void                    AddInstr(IR::Instr * instr, uint32 offset);
     bool                    IsLoopBody()const;
     uint                    GetLoopBodyExitInstrOffset() const;
@@ -52,8 +61,8 @@ private:
     IR::RegOpnd *           BuildIntConstOpnd(Js::RegSlot regSlot);
     SymID                   BuildSrcStackSymID(Js::RegSlot regSlot, IRType type = IRType::TyVar);
     
-    IR::SymOpnd *           BuildFieldOpnd(Js::RegSlot reg, Js::PropertyId propertyId, Js::PropertyIdIndexType propertyIdIndex, PropertyKind propertyKind, IRType type);
-    PropertySym *           BuildFieldSym(Js::RegSlot reg, Js::PropertyId propertyId, Js::PropertyIdIndexType propertyIdIndex, PropertyKind propertyKind);
+    IR::SymOpnd *           BuildFieldOpnd(Js::RegSlot reg, Js::PropertyId propertyId, PropertyKind propertyKind, IRType type, bool scale = true);
+    PropertySym *           BuildFieldSym(Js::RegSlot reg, Js::PropertyId propertyId, PropertyKind propertyKind);
     uint                    AddStatementBoundary(uint statementIndex, uint offset);
     BranchReloc *           AddBranchInstr(IR::BranchInstr *instr, uint32 offset, uint32 targetOffset);
     BranchReloc *           CreateRelocRecord(IR::BranchInstr * branchInstr, uint32 offset, uint32 targetOffset);
@@ -160,15 +169,13 @@ private:
     BVFixed *               m_fbvTempUsed;
     uint32                  m_functionStartOffset;
     Js::AsmJsFunctionInfo * m_asmFuncInfo;
-    Js::ArrayBuffer**       m_ArrayBufferRef;
-    uintptr_t               m_ModuleAddress;
-    Js::FunctionEntryPointInfo* m_entryPoint;
     StackSym *              m_loopBodyRetIPSym;
     BVFixed *               m_ldSlots;
     BVFixed *               m_stSlots;
     BOOL                    m_IsTJLoopBody;
     IRBuilderAsmJsSwitchAdapter m_switchAdapter;
     SwitchIRBuilder         m_switchBuilder;
+    IR::RegOpnd *           m_funcOpnd;
 #if DBG
     uint32                  m_offsetToInstructionCount;
 #endif

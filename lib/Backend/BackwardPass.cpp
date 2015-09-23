@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 class JitArenaAllocator;
 template <>
 void
@@ -293,6 +293,9 @@ BackwardPass::Optimize()
     FloatSymEquivalenceMap localFloatSymEquivalenceMap(tempAlloc);
     floatSymEquivalenceMap = &localFloatSymEquivalenceMap;
 
+    NumberTempRepresentativePropertySymMap localNumberTempRepresentativePropertySym(tempAlloc);
+    numberTempRepresentativePropertySym = &localNumberTempRepresentativePropertySym;
+
     FOREACH_BLOCK_BACKWARD_IN_FUNC_DEAD_OR_ALIVE(block, this->func)
     {
         this->OptBlock(block);
@@ -431,7 +434,7 @@ BackwardPass::MergeSuccBlocksInfo(BasicBlock * block)
             wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
 #endif
             // save the byteCodeUpwardExposedUsed from deleting for the block right after the memop loop
-            if (this->tag == Js::DeadStorePhase && !this->IsPrePass() && globOpt->DoMemop(block->loop) && blockSucc->loop != block->loop)
+            if (this->tag == Js::DeadStorePhase && !this->IsPrePass() && globOpt->DoMemOp(block->loop) && blockSucc->loop != block->loop)
             {
                 Assert(block->loop->memOpInfo->inductionVariablesUsedAfterLoop == nullptr);
                 block->loop->memOpInfo->inductionVariablesUsedAfterLoop = JitAnew(this->tempAlloc, BVSparse<JitArenaAllocator>, this->tempAlloc);
@@ -4137,7 +4140,7 @@ BackwardPass::TrackAddPropertyTypes(IR::PropertySymOpnd *opnd, BasicBlock *block
 
     Js::Type *typeWithProperty = opnd->IsMono() ? opnd->GetType() : opnd->GetFirstEquivalentType();
     Js::Type *typeWithoutProperty = opnd->HasInitialType() ? opnd->GetInitialType() : nullptr;
-
+    
     if (typeWithoutProperty == nullptr ||
         typeWithProperty == typeWithoutProperty || 
         (opnd->IsTypeChecked() && !opnd->IsInitialTypeChecked()))
@@ -4155,8 +4158,9 @@ BackwardPass::TrackAddPropertyTypes(IR::PropertySymOpnd *opnd, BasicBlock *block
 
         return;
     }
-
+        
 #if DBG
+    Assert(typeWithProperty != nullptr);
     Js::DynamicTypeHandler * typeWithoutPropertyTypeHandler = static_cast<Js::DynamicType *>(typeWithoutProperty)->GetTypeHandler();
     Js::DynamicTypeHandler * typeWithPropertyTypeHandler = static_cast<Js::DynamicType *>(typeWithProperty)->GetTypeHandler();
     Assert(typeWithoutPropertyTypeHandler->GetPropertyCount() + 1 == typeWithPropertyTypeHandler->GetPropertyCount());
@@ -4617,7 +4621,7 @@ BackwardPass::ProcessUse(IR::Opnd * opnd)
             if (sym->IsPropertySym())
             {
                 // TODO: We don't have last use info for property sym
-                // and we don't set the last use of the stacksym inside the proeprty sym
+                // and we don't set the last use of the stacksym inside the property sym
                 if (tag == Js::BackwardPhase)
                 {
                     if (opnd->AsSymOpnd()->IsPropertySymOpnd())
@@ -5496,14 +5500,17 @@ BackwardPass::TrackIntUsage(IR::Instr *const instr)
             {
                 // MULs will always be at the start of a range. Either included in the range if int32 ovf is ignored, or excluded if int32 ovf matters. Even if int32 can be ignored, MULs can still bailout on 53-bit. 
                 // That's why it cannot be in the middle of a range.
-                if (instr->ignoreIntOverflowInRange){
+                if (instr->ignoreIntOverflowInRange)
+                {
+                    Assert(dstSym);
                     Assert(dstSym->scratch.globOpt.numCompoundedAddSubUses >= 0);
                     Assert(dstSym->scratch.globOpt.numCompoundedAddSubUses <= MaxCompoundedUsesInAddSubForIgnoringIntOverflow);
                     instr->ignoreOverflowBitCount = (uint8) (53 - dstSym->scratch.globOpt.numCompoundedAddSubUses);
                     // we have the max number of compounded adds/subs. 32-bit ovf cannot be ignored.
                     if (instr->ignoreOverflowBitCount == 32)
+                    {
                         instr->ignoreIntOverflowInRange = false;
-                
+                    }
                 }
 
                 SetIntOverflowMattersInRange(instr->GetSrc1());
@@ -7026,47 +7033,34 @@ BackwardPass::DoDeadStoreLdStForMemop(IR::Instr *instr)
 
     Loop *loop = this->currentBlock->loop;
 
-    if (globOpt->DoMemset(loop))
+    if (globOpt->DoMemOp(loop))
     {
         if (instr->m_opcode == Js::OpCode::StElemI_A && instr->GetDst()->IsIndirOpnd())
         {
             SymID base = this->globOpt->GetVarSymID(instr->GetDst()->AsIndirOpnd()->GetBaseOpnd()->GetStackSym());
             SymID index = this->globOpt->GetVarSymID(instr->GetDst()->AsIndirOpnd()->GetIndexOpnd()->GetStackSym());
-            FOREACH_SLISTCOUNTED_ENTRY(Loop::MemsetCandidate*, memsetCandidate, (SListCounted<Loop::MemsetCandidate*>*)loop->memOpInfo->memsetCandidates)
+
+            FOREACH_MEMOP_CANDIDATES(candidate, loop)
             {
-                if (base == memsetCandidate->base  && index == memsetCandidate->index)
+                if (base == candidate->base && index == candidate->index)
                 {
                     return true;
                 }
-            } NEXT_SLISTCOUNTED_ENTRY;
+            } NEXT_MEMOP_CANDIDATE
         }
-    }
-
-    if (globOpt->DoMemcopy(loop) && (instr->m_opcode == Js::OpCode::StElemI_A || instr->m_opcode == Js::OpCode::LdElemI_A))
-    {
-        FOREACH_SLISTCOUNTED_ENTRY(Loop::MemcopyCandidate*, memcopyCandidate, (SListCounted<Loop::MemcopyCandidate*>*)loop->memOpInfo->memcopyCandidates)
+        else if (instr->m_opcode == Js::OpCode::LdElemI_A &&  instr->GetSrc1()->IsIndirOpnd())
         {
-            if (instr->m_opcode == Js::OpCode::StElemI_A && instr->GetDst()->IsIndirOpnd())
-            {
-                SymID base = this->globOpt->GetVarSymID(instr->GetDst()->AsIndirOpnd()->GetBaseOpnd()->GetStackSym());
-                SymID index = this->globOpt->GetVarSymID(instr->GetDst()->AsIndirOpnd()->GetIndexOpnd()->GetStackSym());
+            SymID base = this->globOpt->GetVarSymID(instr->GetSrc1()->AsIndirOpnd()->GetBaseOpnd()->GetStackSym());
+            SymID index = this->globOpt->GetVarSymID(instr->GetSrc1()->AsIndirOpnd()->GetIndexOpnd()->GetStackSym());
 
-                if (base == memcopyCandidate->stBase  && index == memcopyCandidate->stIndex)
+            FOREACH_MEMCOPY_CANDIDATES(candidate, loop)
+            {
+                if (base == candidate->ldBase && index == candidate->ldIndex)
                 {
                     return true;
                 }
-            }
-            else if (instr->m_opcode == Js::OpCode::LdElemI_A &&  instr->GetSrc1()->IsIndirOpnd())
-            {
-                SymID base = this->globOpt->GetVarSymID(instr->GetSrc1()->AsIndirOpnd()->GetBaseOpnd()->GetStackSym());
-                SymID index = this->globOpt->GetVarSymID(instr->GetSrc1()->AsIndirOpnd()->GetIndexOpnd()->GetStackSym());
-
-                if ((base == memcopyCandidate->ldBase) && (index == memcopyCandidate->ldIndex))
-                {
-                    return true;
-                }
-            }
-        } NEXT_SLISTCOUNTED_ENTRY;
+            } NEXT_MEMCOPY_CANDIDATE
+        }
     }
     return false;
 }
@@ -7107,7 +7101,7 @@ BackwardPass::RestoreInductionVariableValuesAfterMemOp(Loop *loop)
 bool
 BackwardPass::IsEmptyLoopAfterMemOp(Loop *loop)
 {
-    if (globOpt->DoMemop(loop))
+    if (globOpt->DoMemOp(loop))
     {
         const auto IsInductionVariableUse = [&](IR::Opnd *opnd) -> bool
         {
@@ -7198,16 +7192,10 @@ BackwardPass::RemoveEmptyLoops()
             return;
         }
 
-        if (loop->memOpInfo->memcopyCandidates)
+        if (loop->memOpInfo->candidates)
         {
-            loop->memOpInfo->memcopyCandidates->Clear();
-            JitAdelete(alloc, loop->memOpInfo->memcopyCandidates);
-        }
-
-        if (loop->memOpInfo->memsetCandidates)
-        {
-            loop->memOpInfo->memsetCandidates->Clear();
-            JitAdelete(alloc, loop->memOpInfo->memsetCandidates);
+            loop->memOpInfo->candidates->Clear();
+            JitAdelete(alloc, loop->memOpInfo->candidates);
         }
 
         if (loop->memOpInfo->inductionVariableChangeInfoMap)

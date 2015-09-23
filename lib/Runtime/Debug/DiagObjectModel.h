@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 namespace Js
 {
@@ -440,7 +440,7 @@ namespace Js
         virtual BOOL GetGroupObject(ResolvedObject* pResolvedObject) override { return FALSE; }
         virtual IDiagObjectAddress *FindPropertyAddress(PropertyId propId, bool& isConst) override;
     private:
-        void FetchValueAndAddress(DebuggerScopeProperty &scopeProperty, __out Var *pValue, __out IDiagObjectAddress ** ppAddress);
+        void FetchValueAndAddress(DebuggerScopeProperty &scopeProperty, _Out_opt_ Var *pValue, _Out_opt_ IDiagObjectAddress ** ppAddress);
     };
 
 

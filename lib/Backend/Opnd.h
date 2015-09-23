@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 
 class Value;
@@ -237,7 +237,7 @@ public:
 public:
 #if DBG_DUMP || defined(ENABLE_IR_VIEWER)
     static void         DumpAddress(void *address, bool printToConsole, bool skipMaskedAddress);
-    static void         DumpFunctionInfo(_Outptr_result_buffer_(*count) wchar_t ** buffer, size_t * count, Js::FunctionInfo * info, bool printToConsole, _In_z_ wchar_t const * type = nullptr);
+    static void         DumpFunctionInfo(_Outptr_result_buffer_(*count) wchar_t ** buffer, size_t * count, Js::FunctionInfo * info, bool printToConsole, _In_opt_z_ wchar_t const * type = nullptr);
     void                Dump(IRDumpFlags flags, Func *func);
     void                DumpOpndKindAddr(bool AsmDumpMode, Func *func);
     void                DumpOpndKindMemRef(bool AsmDumpMode, Func *func);

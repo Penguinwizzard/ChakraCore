@@ -1,6 +1,7 @@
-//----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "BackEnd.h"
 
 #ifdef _M_X64
@@ -507,7 +508,7 @@ void InterpreterThunkEmitter::EncodeInterpreterThunk(__inout_bcount(thunkSize) B
 
 
 inline /*static*/
-DWORD InterpreterThunkEmitter::FillDebugBreak(__out_bcount(count) BYTE* dest, __in DWORD count)
+DWORD InterpreterThunkEmitter::FillDebugBreak(__out_bcount_full(count) BYTE* dest, __in DWORD count)
 {
 #if defined(_M_ARM)
     Assert(count % 2 == 0);

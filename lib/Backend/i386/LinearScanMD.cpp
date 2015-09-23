@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "BackEnd.h"
 #include "SCCLiveness.h"
 
@@ -445,6 +445,7 @@ LinearScanMD::InsertOpHelperSpillsAndRestores(OpHelperBlock const& opHelperBlock
         if (opHelperSpilledLifetime.spillAsArg)
         {
             sym = opHelperSpilledLifetime.lifetime->sym;
+            Assert(sym);
             Assert(sym->IsAllocated());
         }
         if (RegTypes[opHelperSpilledLifetime.reg] == TyFloat64)

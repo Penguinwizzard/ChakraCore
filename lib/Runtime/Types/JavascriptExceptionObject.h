@@ -1,5 +1,7 @@
-// Copyright (C) Microsoft. All rights reserved. 
-
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 
 namespace Js {
@@ -14,6 +16,8 @@ namespace Js {
     
     const DWORD  ExceptionParameters = 1;
     const int    ExceptionObjectIndex = 0;
+
+    class JavascriptExceptionContext;
 
     class JavascriptExceptionObject
     {

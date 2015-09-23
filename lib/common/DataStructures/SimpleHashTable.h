@@ -1,7 +1,7 @@
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
-
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #pragma once
 
 template<typename TKey, typename TData>
@@ -60,9 +60,9 @@ public:
         disableResize = false;
         free = nullptr;
         table = AllocatorNewArrayZ(TAllocator, allocator, EntryType*, size);
-        #if PROFILE_DICTIONARY
+#if PROFILE_DICTIONARY
         stats = DictionaryStats::Create(typeid(this).name(), size);
-        #endif
+#endif
     }
 
     ~SimpleHashTable()
