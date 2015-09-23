@@ -98,6 +98,36 @@ namespace Js
         ImplicitCall_AsyncHostOperation     = 0x80
     };
 
+    // Todo:: include ImplicitCallFlags in this structure
+    struct LoopFlags
+    {
+        // maintain the bits and the enum at the same time, it must match
+        bool isInterpreted : 1;
+        bool memopMinCountReached : 1;
+        enum
+        {
+            INTERPRETED,
+            MEMOP_MIN_COUNT_FOUND,
+            COUNT
+        };
+        
+        LoopFlags() :
+            isInterpreted(false),
+            memopMinCountReached(false)
+        {
+            CompileAssert((sizeof(LoopFlags) * 8) >= LoopFlags::COUNT);
+        }
+        // Right now supports up to 8 bits.
+        typedef byte LoopFlags_t;
+        LoopFlags(uint64 flags)
+        {
+            Assert(flags >> LoopFlags::COUNT == 0);
+            LoopFlags_t* thisFlags = (LoopFlags_t *)this;
+            CompileAssert(sizeof(LoopFlags_t) == sizeof(LoopFlags));
+            *thisFlags = (LoopFlags_t)flags;
+        }
+    };
+
     enum FldInfoFlags : BYTE
     {
         FldInfo_NoInfo                      = 0x00,
@@ -439,6 +469,7 @@ namespace Js
         ValueType * slotInfo;
         ImplicitCallFlags * loopImplicitCallFlags;
         ImplicitCallFlags implicitCallFlags;
+        BVFixed* loopFlags;
         ThisInfo thisInfo;
 
         // TODO (jedmiad): Consider storing a pair of property ID bit vectors indicating which properties are
@@ -455,6 +486,7 @@ namespace Js
             bool disableDivIntTypeSpec : 1;
             bool disableDivIntTypeSpec_jitLoopBody : 1;
             bool disableLossyIntTypeSpec : 1;
+            // Todo:: put this flag in LoopFlags if we can find a reliable way to determine the loopNumber in bailout for a hoisted instr
             bool disableMemOp : 1;
             bool disableTrackCompoundedIntOverflow : 1;
             bool disableFloatTypeSpec : 1;
@@ -609,7 +641,14 @@ namespace Js
 
         bool IsLossyIntTypeSpecDisabled() const { return bits.disableLossyIntTypeSpec; }
         void DisableLossyIntTypeSpec() { this->bits.disableLossyIntTypeSpec = true; }
-        bool IsMemOpDisabled() const { return bits.disableMemOp; }
+        LoopFlags GetLoopFlags(int loopNumber) const
+        {
+            Assert(loopFlags);
+            return loopFlags->GetRange<LoopFlags>(loopNumber * LoopFlags::COUNT, LoopFlags::COUNT);
+        }
+        void SetLoopInterpreted(int loopNumber) { loopFlags->Set(loopNumber * LoopFlags::COUNT + LoopFlags::INTERPRETED); }
+        void SetMemOpMinReached(int loopNumber) { loopFlags->Set(loopNumber * LoopFlags::COUNT + LoopFlags::MEMOP_MIN_COUNT_FOUND); }
+        bool IsMemOpDisabled() const { return this->bits.disableMemOp; }
         void DisableMemOp() { this->bits.disableMemOp = true; }
         bool IsTrackCompoundedIntOverflowDisabled() const { return this->bits.disableTrackCompoundedIntOverflow; }
         void DisableTrackCompoundedIntOverflow() { this->bits.disableTrackCompoundedIntOverflow = true; }

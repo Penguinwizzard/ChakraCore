@@ -764,7 +764,8 @@ FlowGraph::BuildLoop(BasicBlock *headBlock, BasicBlock *tailBlock, Loop *parentL
 
     if (firstInstr->IsProfiledLabelInstr())
     {        
-        loop->SetImplicitCallFlags(firstInstr->AsProfiledLabelInstr()->loopImplicitCallFlags);             
+        loop->SetImplicitCallFlags(firstInstr->AsProfiledLabelInstr()->loopImplicitCallFlags);
+        loop->SetLoopFlags(firstInstr->AsProfiledLabelInstr()->loopFlags);
     }
     else
     {
@@ -773,13 +774,35 @@ FlowGraph::BuildLoop(BasicBlock *headBlock, BasicBlock *tailBlock, Loop *parentL
     }
 }
 
-void
-Loop::EnsureMemOpVariablesInitialized()
+bool Loop::EnsureMemOpVariablesInitialized()
 {
     if (this->memOpInfo == nullptr)
     {
         JitArenaAllocator *allocator = this->GetFunc()->GetTopFunc()->m_fg->alloc;
         this->memOpInfo = JitAnewStruct(allocator, Loop::MemOpInfo);
+        if (this->GetLoopFlags().isInterpreted && !this->GetLoopFlags().memopMinCountReached)
+        {
+#if DBG_DUMP
+            Func* func = this->GetFunc();
+            if (PHASE_TRACE(Js::MemOpPhase, func))
+            {
+                wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
+                Output::Print(L"MemOp skipped: minimum loop count not reached: Function: %s %s,  Loop: %d\n",
+                              func->GetJnFunction()->GetDisplayName(),
+                              func->GetJnFunction()->GetDebugNumberSet(debugStringBuffer),
+                              this->GetLoopNumber()
+                              );
+            }
+#endif
+            this->memOpInfo->doMemcopy = this->memOpInfo->doMemset = false;
+            this->memOpInfo->inductionVariablesUsedAfterLoop = nullptr;
+            this->memOpInfo->inductionVariableChangeInfoMap = nullptr;
+            this->memOpInfo->memcopyIgnore = nullptr;
+            this->memOpInfo->memsetIgnore = nullptr;
+            this->memOpInfo->memsetCandidates = nullptr;
+            this->memOpInfo->memcopyCandidates = nullptr;
+            return false;
+        }
         this->memOpInfo->doMemcopy = true;
         this->memOpInfo->doMemset = true;
         this->memOpInfo->inductionVariablesUsedAfterLoop = nullptr;
@@ -789,6 +812,7 @@ Loop::EnsureMemOpVariablesInitialized()
         this->memOpInfo->memsetCandidates = JitAnew(allocator, Loop::MemsetList, allocator);
         this->memOpInfo->memcopyCandidates = JitAnew(allocator, Loop::MemcopyList, allocator);
     }
+    return true;
 }
 
 void

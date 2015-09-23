@@ -83,6 +83,7 @@ public:
     {
         word = initial;
     }
+    typedef T BVUnitTContainer;
 // Implementation
 private:
 

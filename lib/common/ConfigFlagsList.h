@@ -635,6 +635,8 @@ PHASE(All)
 
 #define DEFAULT_CONFIG_SkipSplitWhenResultIgnored (false)
 
+#define DEFAULT_CONFIG_MinMemOpCount (16U)
+
 #define DEFAULT_CONFIG_MaxCopyOnAccessArrayLength (32U)
 #define DEFAULT_CONFIG_MinCopyOnAccessArrayLength (5U)
 #define DEFAULT_CONFIG_CopyOnAccessArraySegmentCacheSize (16)
@@ -1035,6 +1037,7 @@ FLAGNR(Number,  MinInterpretCount     , "Mininum number of times a function must
 FLAGNR(Number,  MinSimpleJitRunCount  , "Mininum number of times a function must be run in simple jit", 0)
 FLAGNRA(Number, MaxInterpretCount     , Mic, "Maximum number of times a function can be interpreted", 0)
 FLAGNRA(Number, MaxSimpleJitRunCount  , Msjrc, "Maximum number of times a function will be run in SimpleJitted code", 0)
+FLAGNRA(Number, MinMemOpCount         , Mmoc, "Minimum count of a loop to ctivate MemOp", DEFAULT_CONFIG_MinMemOpCount)
 
 FLAGNR(Number,  MaxCopyOnAccessArrayLength, "Maximum length of copy-on-access array", DEFAULT_CONFIG_MaxCopyOnAccessArrayLength)
 FLAGNR(Number,  MinCopyOnAccessArrayLength, "Minimum length of copy-on-access array", DEFAULT_CONFIG_MinCopyOnAccessArrayLength)

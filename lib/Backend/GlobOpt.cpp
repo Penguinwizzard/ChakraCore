@@ -4580,7 +4580,10 @@ GlobOpt::CollectMemOpInfo(IR::Instr *instr)
         return false;
     }
 
-    loop->EnsureMemOpVariablesInitialized();
+    if (!loop->EnsureMemOpVariablesInitialized())
+    {
+        return false;
+    }
 
     Assert(loop->memOpInfo->doMemcopy || loop->memOpInfo->doMemset);
 

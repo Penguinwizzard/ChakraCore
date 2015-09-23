@@ -130,6 +130,11 @@ public:
 
     BVIndex         WordCount() const;
     bool            IsAllClear() const;
+    template<typename Container>
+    Container GetRange(BVIndex start, BVIndex len) const;
+    template<typename Container>
+    void SetRange(Container* value, BVIndex start, BVIndex len);
+    
     BVUnit* GetData() const
     {
         return (BVUnit*)data;
@@ -165,6 +170,138 @@ template <typename TAllocator>
 void BVFixed::Delete(TAllocator * alloc)
 {    
     AllocatorDeletePlus(TAllocator, alloc, sizeof(BVUnit) * this->WordCount(), this);
+}
+
+template<typename Container>
+Container BVFixed::GetRange(BVIndex start, BVIndex len) const
+{
+    AssertRange(start);
+    if (len == 0)
+    {
+        return Container(0);
+    }
+    Assert(len <= sizeof(Container) * MachBits);
+    AssertMsg(len <= 64, "Currently doesn't support range bigger than 64 bits");
+    BVIndex end = start + len - 1;
+    AssertRange(end);
+    BVIndex iStart = BVUnit::Position(start);
+    BVIndex iEnd = BVUnit::Position(end);
+    BVIndex oStart = BVUnit::Offset(start);
+    BVIndex oEnd = BVUnit::Offset(end);
+    // Simply using uint64 because it is much easier than to juggle with BVUnit::BVUnitTContainer's size
+    // Special case, if oEnd == 63, 1 << 64 == 1. Therefore the result is incorrect
+    uint64 mask = oEnd < 63 ? (((uint64)1 << (oEnd + 1)) - 1) : 0xFFFFFFFFFFFFFFFF;
+    uint64 range;
+    // Trivial case
+    if (iStart == iEnd)
+    {
+        // remove the bits after oEnd with mask, then remove the bits before start with shift
+        range = (mask & this->data[iStart].GetWord()) >> oStart;
+    }
+    // Still simple enough
+    else if (iStart + 1 == iEnd)
+    {
+        auto startWord = this->data[iStart].GetWord();
+        auto endWord = this->data[iEnd].GetWord();
+        // remove the bits before start with shift
+        range = startWord >> oStart;
+        // remove the bits after oEnd with mask then position it after start bits
+        range |= (mask & endWord) << (BVUnit::BitsPerWord - oStart);
+    }
+    // Spans over multiple value, need to loop
+    else
+    {
+        // Get the first bits and move them to the beggining
+        range = this->data[iStart].GetWord() >> oStart;
+        // track how many bits have been read so far
+        int nBitsUsed = BVUnit::BitsPerWord - oStart;
+        for (uint i = iStart + 1; i < iEnd; ++i)
+        {
+            // put all bits from the data in the mid-range. Use the tracked read bits to position them
+            range |= ((uint64)(this->data[i].GetWord())) << nBitsUsed;
+            nBitsUsed += BVUnit::BitsPerWord;
+        }
+        // Read the last bits and remove those after oEnd with mask
+        range |= (mask & this->data[iEnd].GetWord()) << nBitsUsed;
+    }
+    return Container(range);
+}
+
+template<typename Container>
+void BVFixed::SetRange(Container* value, BVIndex start, BVIndex len)
+{
+    AssertRange(start);
+    if (len == 0)
+    {
+        return;
+    }
+    Assert(len <= sizeof(Container) * MachBits);
+    BVIndex end = start + len - 1;
+    AssertRange(end);
+    BVIndex iStart = BVUnit::Position(start);
+    BVIndex iEnd = BVUnit::Position(end);
+    BVIndex oStart = BVUnit::Offset(start);
+    BVIndex oEnd = BVUnit::Offset(end);
+    BVUnit::BVUnitTContainer* bits = (BVUnit::BVUnitTContainer*)value;
+    const int oStartComplement = BVUnit::BitsPerWord - oStart;
+    static_assert((BVUnit::BVUnitTContainer)BVUnit::AllOnesMask > 0, "Container type of BVFixed must be unsigned");
+    //When making the mask, check the special case when we need all bits
+#define MAKE_MASK(start, end) ( ((end) == BVUnit::BitsPerWord ? BVUnit::AllOnesMask : (((BVUnit::BVUnitTContainer)1 << ((end) - (start))) - 1))   << (start))
+    // Or the value to set the bits to 1. And the value to set the bits to 0
+    // The mask is used to make sure we don't modify the bits outside the range
+#define SET_RANGE(i, value, mask) \
+    this->data[i].Or((value) & mask);\
+    this->data[i].And((value) | ~mask);
+
+    BVUnit::BVUnitTContainer bitsToSet;
+    // Fast Path
+    if (iEnd == iStart)
+    {
+        const BVUnit::BVUnitTContainer mask = MAKE_MASK(oStart, oEnd + 1);
+        // Shift to position the bits
+        bitsToSet = (*bits << oStart);
+        SET_RANGE(iStart, bitsToSet, mask);
+    }
+    // Todo:: case iEnd == iStart + 1 to avoid a loop
+    else if (oStart == 0)
+    {
+        // Simpler case where we don't have to shift the bits around
+        for (uint i = iStart; i < iEnd; ++i)
+        {
+            SET_RANGE(i, *bits, BVUnit::AllOnesMask);
+            ++bits;
+        }
+        // We still need to use a mask to remove the unused bits 
+        const BVUnit::BVUnitTContainer mask = MAKE_MASK(0, oEnd + 1);
+        SET_RANGE(iEnd, *bits, mask);
+    }
+    else
+    {
+        // Default case. We need to process eveything 1 at a time
+        {
+            // First set the first bits
+            const BVUnit::BVUnitTContainer mask = MAKE_MASK(oStart, BVUnit::BitsPerWord);
+            SET_RANGE(iStart, *bits << oStart, mask);
+        }
+        // Set the bits in the middle
+        for (uint i = iStart + 1; i < iEnd; ++i)
+        {
+            bitsToSet = *bits >> oStartComplement;
+            ++bits;
+            bitsToSet |= *bits << oStart;
+            SET_RANGE(i, bitsToSet, BVUnit::AllOnesMask);
+        }
+        // Set the last bits
+        bitsToSet = *bits >> oStartComplement;
+        ++bits;
+        bitsToSet |= *bits << oStart;
+        {
+            const BVUnit::BVUnitTContainer mask = MAKE_MASK(0, oEnd + 1);
+            SET_RANGE(iEnd, bitsToSet, mask);
+        }
+    }
+#undef MAKE_MASK
+#undef SET_RANGE
 }
 
 template <size_t bitCount>

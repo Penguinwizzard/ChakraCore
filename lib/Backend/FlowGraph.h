@@ -528,6 +528,7 @@ private:
     typedef JsUtil::BaseDictionary<PropertySym *, Value *, JitArenaAllocator> InitialValueFieldMap;
 
     Js::ImplicitCallFlags implicitCallFlags;
+    Js::LoopFlags loopFlags;
     BasicBlock *        headBlock;
 public:
     Func *              topFunc;
@@ -690,12 +691,14 @@ public:
     BasicBlock *        GetHeadBlock() const { Assert(headBlock == blockList.Head()); return headBlock; }
     bool                IsDescendentOrSelf(Loop const * loop) const;
 
-    void                EnsureMemOpVariablesInitialized();
+    bool                EnsureMemOpVariablesInitialized();
     void                InvalidateMemsetCandidate(SymID symId, MemsetCandidate *memsetCandidate = nullptr);
     void                InvalidateMemcopyCandidate(SymID);
 
     Js::ImplicitCallFlags GetImplicitCallFlags();
-    void                SetImplicitCallFlags(Js::ImplicitCallFlags flags);    
+    void                SetImplicitCallFlags(Js::ImplicitCallFlags flags);
+    Js::LoopFlags GetLoopFlags() const { return loopFlags; }
+    void SetLoopFlags(Js::LoopFlags val) { loopFlags = val; }
     bool                CanHoistInvariants();
     bool                CanDoFieldCopyProp();    
     bool                CanDoFieldHoist();    

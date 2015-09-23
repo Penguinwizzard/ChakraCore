@@ -4948,21 +4948,32 @@ namespace Js
     template <LayoutSize layoutSize, bool profiled>
     const byte * InterpreterStackFrame::OP_ProfiledLoopEnd(const byte * ip)
     {
-        uint32 C1 = m_reader.GetLayout<OpLayoutT_Unsigned1<LayoutSizePolicy<layoutSize>>>(ip)->C1;
+        uint32 loopNumber = m_reader.GetLayout<OpLayoutT_Unsigned1<LayoutSizePolicy<layoutSize>>>(ip)->C1;
         if(!profiled && !isAutoProfiling)
         {
             return ip;
         }
 
         this->CheckIfLoopIsHot(this->currentLoopCounter);
+        Js::FunctionBody *fn = this->function->GetFunctionBody();
+        if (fn->HasDynamicProfileInfo())
+        {
+            fn->GetAnyDynamicProfileInfo()->SetLoopInterpreted(loopNumber);
+            if (this->currentLoopCounter >= (uint)CONFIG_FLAG(MinMemOpCount))
+            {
+                // This flag becomes relevant only if the loop has been interpreted
+                fn->GetAnyDynamicProfileInfo()->SetMemOpMinReached(loopNumber);
+            }
+        }
+        
         this->currentLoopCounter = 0;
 
         if (profiled)
         {
             Assert(Js::DynamicProfileInfo::EnableImplicitCallFlags(GetFunctionBody()));
-            OP_RecordImplicitCall(C1);
+            OP_RecordImplicitCall(loopNumber);
 
-            if(switchProfileModeOnLoopEndNumber == C1)
+            if(switchProfileModeOnLoopEndNumber == loopNumber)
             {
                 // Stop profiling since the jitted loop body would be exiting the loop
                 Assert(!switchProfileMode);
@@ -4973,7 +4984,7 @@ namespace Js
 
         // Restore the implicit call flags state and add with flags in the loop as well
         ThreadContext *const threadContext = GetScriptContext()->GetThreadContext();
-        threadContext->AddImplicitCallFlags(this->savedLoopImplicitCallFlags[C1]);
+        threadContext->AddImplicitCallFlags(this->savedLoopImplicitCallFlags[loopNumber]);
 
         threadContext->DecrementLoopDepth();
         return ip;
@@ -5257,6 +5268,7 @@ namespace Js
             fn->SetHasHotLoop();
         }
     }
+
     bool InterpreterStackFrame::CheckAndResetImplicitCall(DisableImplicitFlags prevDisableImplicitFlags, ImplicitCallFlags savedImplicitCallFlags)
     {
         ImplicitCallFlags curImplicitCallFlags = this->scriptContext->GetThreadContext()->GetImplicitCallFlags();

@@ -69,7 +69,8 @@ DynamicProfileInfo* DynamicProfileInfo::New(Recycler* recycler, FunctionBody* fu
         { (uint)offsetof(DynamicProfileInfo, slotInfo), functionBody->GetProfiledSlotCount() * sizeof(ValueType) },
         { (uint)offsetof(DynamicProfileInfo, parameterInfo), functionBody->GetProfiledInParamsCount() * sizeof(ValueType) },
         { (uint)offsetof(DynamicProfileInfo, returnTypeInfo), functionBody->GetProfiledReturnTypeCount() * sizeof(ValueType) },
-        { (uint)offsetof(DynamicProfileInfo, loopImplicitCallFlags), (EnableImplicitCallFlags(functionBody) ? (functionBody->GetLoopCount() * sizeof(ImplicitCallFlags)) : 0) }
+        { (uint)offsetof(DynamicProfileInfo, loopImplicitCallFlags), (EnableImplicitCallFlags(functionBody) ? (functionBody->GetLoopCount() * sizeof(ImplicitCallFlags)) : 0) },
+        { (uint)offsetof(DynamicProfileInfo, loopFlags), functionBody->GetLoopCount() ? BVFixed::GetAllocSize(functionBody->GetLoopCount() * LoopFlags::COUNT) : 0 }
     };
     
     for(uint i = 0; i < _countof(batch); i++)
@@ -138,6 +139,16 @@ DynamicProfileInfo::Initialize(FunctionBody *const functionBody)
 {
     // Need to make value types uninitialized, which is not equivalent to zero
     thisInfo.valueType = ValueType::Uninitialized;
+    const BVIndex loopFlagsCount = functionBody->GetLoopCount() * LoopFlags::COUNT;
+    if (loopFlagsCount)
+    {
+        this->loopFlags->Init(loopFlagsCount);
+        LoopFlags defaultValues;
+        for (uint i = 0; i < functionBody->GetLoopCount(); ++i)
+        {
+            this->loopFlags->SetRange(&defaultValues, i * LoopFlags::COUNT, LoopFlags::COUNT);
+        }
+    }
     for(ProfileId i = 0; i < functionBody->GetProfiledCallSiteCount(); ++i)
     {
         callSiteInfo[i].returnType = ValueType::Uninitialized;
@@ -1556,8 +1567,23 @@ void DynamicProfileInfo::Dump(FunctionBody* functionBody, ArenaAllocator * dynam
         {
             DumpProfiledValue(L"Loop Imp Call", this->loopImplicitCallFlags, functionBody->GetLoopCount());
         }
+        if (functionBody->GetLoopCount())
+        {
+            Output::Print(L"    Loop Flags:\n");
+            for (uint i = 0; i < functionBody->GetLoopCount(); ++i)
+            {
+                Output::Print(L"      Loop %d:\n", i);
+                LoopFlags lf = this->GetLoopFlags(i);
+                Output::Print(
+                    L"        isInterpreted        : %s\n"
+                    L"        memopMinCountReached : %s\n",
+                        IsTrueOrFalse(lf.isInterpreted),
+                        IsTrueOrFalse(lf.memopMinCountReached)
+                );
+            }
+        }
         Output::Print(
-            L"Settings:"
+            L"    Settings:"
             L" disableAggressiveIntTypeSpec : %s"
             L" disableAggressiveIntTypeSpec_jitLoopBody : %s"
             L" disableAggressiveMulIntTypeSpec : %s"
@@ -1588,8 +1614,8 @@ void DynamicProfileInfo::Dump(FunctionBody* functionBody, ArenaAllocator * dynam
             L" hasLdFldCallSite: %s"
             L" disableFloorInlining: %s"
             L" disableNoProfileBailouts: %s"
-            L" disableSwitchOpt : %s", 
-            L" disableEquivalentObjTypeSpec : %s\n",
+            L" disableSwitchOpt : %s"
+            L" disableEquivalentObjTypeSpec : %s\n"
             L" disableObjTypeSpec_jitLoopBody : %s\n",
             IsTrueOrFalse( this->bits.disableAggressiveIntTypeSpec ),
             IsTrueOrFalse( this->bits.disableAggressiveIntTypeSpec_jitLoopBody ),
@@ -1796,7 +1822,8 @@ DynamicProfileInfo::Serialize(T * writer)
         || !writer->Write(this->implicitCallFlags)
         || !writer->Write(this->thisInfo)
         || !writer->Write(this->bits)
-        || !writer->Write(this->m_recursiveInlineInfo))
+        || !writer->Write(this->m_recursiveInlineInfo)
+        || (this->loopFlags && !writer->WriteArray(this->loopFlags->GetData(), this->loopFlags->WordCount())))
     {
         return false;
     }
@@ -1829,6 +1856,7 @@ DynamicProfileInfo::Deserialize(T * reader, Recycler* recycler, Js::LocalFunctio
     ValueType * switchTypeInfo = nullptr;
     ValueType * returnTypeInfo = nullptr;
     ImplicitCallFlags * loopImplicitCallFlags = nullptr;
+    BVFixed * loopFlags = nullptr;
     ImplicitCallFlags implicitCallFlags;
     ThisInfo thisInfo;
     Bits bits;
@@ -2005,6 +2033,15 @@ DynamicProfileInfo::Deserialize(T * reader, Recycler* recycler, Js::LocalFunctio
             goto Error;
         }
 
+        if (loopCount != 0)
+        {
+            loopFlags = BVFixed::New(loopCount * LoopFlags::COUNT, recycler);
+            if (!reader->ReadArray(loopFlags->GetData(), loopFlags->WordCount()))
+            {
+                goto Error;
+            }
+        }
+
         DynamicProfileFunctionInfo * dynamicProfileFunctionInfo = RecyclerNewStructLeaf(recycler, DynamicProfileFunctionInfo);
         dynamicProfileFunctionInfo->paramInfoCount = paramInfoCount;
         dynamicProfileFunctionInfo->ldElemInfoCount = ldElemInfoCount;
@@ -2032,6 +2069,7 @@ DynamicProfileInfo::Deserialize(T * reader, Recycler* recycler, Js::LocalFunctio
         dynamicProfileInfo->returnTypeInfo = returnTypeInfo;
         dynamicProfileInfo->loopImplicitCallFlags = loopImplicitCallFlags;
         dynamicProfileInfo->implicitCallFlags = implicitCallFlags;
+        dynamicProfileInfo->loopFlags = loopFlags;
         dynamicProfileInfo->thisInfo = thisInfo;
         dynamicProfileInfo->bits = bits;
         dynamicProfileInfo->m_recursiveInlineInfo = recursiveInlineInfo;

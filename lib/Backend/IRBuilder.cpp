@@ -2159,7 +2159,7 @@ IRBuilder::BuildUnsigned1(Js::OpCode newOpcode, uint32 offset)
 }
 
 void
-IRBuilder::BuildUnsigned1(Js::OpCode newOpcode, uint32 offset, uint32 C1)
+IRBuilder::BuildUnsigned1(Js::OpCode newOpcode, uint32 offset, uint32 loopNumber)
 {
     switch (newOpcode)
     {
@@ -2184,7 +2184,7 @@ IRBuilder::BuildUnsigned1(Js::OpCode newOpcode, uint32 offset, uint32 C1)
             Assert(start->m_opcode == Js::OpCode::ProfiledLoopStart && start->GetDst());
             IR::JitProfilingInstr* instr = IR::JitProfilingInstr::New(Js::OpCode::ProfiledLoopBodyStart, fullJitExists, start->GetDst(), m_func);
             // profileId is used here to represent the loop number
-            instr->loopNumber = C1;
+            instr->loopNumber = loopNumber;
             this->AddInstr(instr, offset);
 
             //If fullJitExists isn't 0, bail out so that we can get the fulljitted version
@@ -2208,11 +2208,11 @@ IRBuilder::BuildUnsigned1(Js::OpCode newOpcode, uint32 offset, uint32 C1)
                 // In order for the JIT engine to correctly allocate registers we need to have this set up before lowering.
 
                 // There may be 0 to many LoopEnds, but there will only ever be one LoopStart
-                Assert(!this->m_saveLoopImplicitCallFlags[C1]);
+                Assert(!this->m_saveLoopImplicitCallFlags[loopNumber]);
 
                 const auto ty = Lowerer::GetImplicitCallFlagsType();
                 auto saveOpnd = IR::RegOpnd::New(ty, m_func);
-                this->m_saveLoopImplicitCallFlags[C1] = saveOpnd;
+                this->m_saveLoopImplicitCallFlags[loopNumber] = saveOpnd;
                 // Note that we insert this instruction /before/ the actual ProfiledLoopStart opcode. This is because Lowering is backwards
                 //    and this is just a fake instruction which is only used to pass on the saveOpnd; this instruction will eventually be removed.
                 auto instr = IR::JitProfilingInstr::New(Js::OpCode::Ld_A, saveOpnd, IR::MemRefOpnd::New(0, ty, m_func), m_func);
@@ -2220,27 +2220,28 @@ IRBuilder::BuildUnsigned1(Js::OpCode newOpcode, uint32 offset, uint32 C1)
                 this->AddInstr(instr, offset);
 
                 instr = IR::JitProfilingInstr::New(Js::OpCode::ProfiledLoopStart, IR::RegOpnd::New(TyMachPtr, m_func), nullptr, m_func);
-                instr->loopNumber = C1;
+                instr->loopNumber = loopNumber;
                 this->AddInstr(instr, offset);
             }
 
             Js::ImplicitCallFlags flags = Js::ImplicitCall_HasNoInfo;
-
+            Js::LoopFlags loopFlags;
             if (this->m_func->HasProfileInfo())
             {
                 Js::ReadOnlyDynamicProfileInfo * dynamicProfileInfo = this->m_func->GetProfileInfo();
-                flags = dynamicProfileInfo->GetLoopImplicitCallFlags(this->m_func->GetJnFunction(), C1);
+                flags = dynamicProfileInfo->GetLoopImplicitCallFlags(this->m_func->GetJnFunction(), loopNumber);
+                loopFlags = dynamicProfileInfo->GetLoopFlags(loopNumber);
             }
 
             if (this->IsLoopBody() && !m_loopCounterSym)
             {
-                InsertInitLoopBodyLoopCounter(C1);
+                InsertInitLoopBodyLoopCounter(loopNumber);
             }
 
             // Put a label the instruction stream to carry the profile info
-            IR::ProfiledLabelInstr * labelInstr = IR::ProfiledLabelInstr::New(Js::OpCode::Label, this->m_func, flags);
+            IR::ProfiledLabelInstr * labelInstr = IR::ProfiledLabelInstr::New(Js::OpCode::Label, this->m_func, flags, loopFlags);
 #if DBG
-            labelInstr->loopNum = C1;
+            labelInstr->loopNum = loopNumber;
 #endif
             m_lastInstr->InsertAfter(labelInstr);
             m_lastInstr = labelInstr;
@@ -2255,12 +2256,12 @@ IRBuilder::BuildUnsigned1(Js::OpCode newOpcode, uint32 offset, uint32 C1)
             // TODO: Decide whether we want the implicit loop call flags to be recorded in simplejitted loop bodies
             if (m_func->DoSimpleJitDynamicProfile() && m_func->GetJnFunction()->DoJITLoopBody())
             {
-                Assert(this->m_saveLoopImplicitCallFlags[C1]);
+                Assert(this->m_saveLoopImplicitCallFlags[loopNumber]);
 
                 //In profiling simplejit we need this opcode in order to restore the implicit call flags
-                auto instr = IR::JitProfilingInstr::New(Js::OpCode::ProfiledLoopEnd, nullptr, this->m_saveLoopImplicitCallFlags[C1], m_func);
+                auto instr = IR::JitProfilingInstr::New(Js::OpCode::ProfiledLoopEnd, nullptr, this->m_saveLoopImplicitCallFlags[loopNumber], m_func);
                 this->AddInstr(instr, offset);
-                instr->loopNumber = C1;
+                instr->loopNumber = loopNumber;
             }
 
             if (!this->IsLoopBody())
@@ -2281,8 +2282,7 @@ IRBuilder::BuildUnsigned1(Js::OpCode newOpcode, uint32 offset, uint32 C1)
             // See we are ending an outter loop and load the return IP to the ProfiledLoopEnd opcode
             // instead of following the normal branch
 
-            uint loopNum = C1;
-            Js::LoopHeader * loopHeader = this->m_func->GetJnFunction()->GetLoopHeader(loopNum);
+            Js::LoopHeader * loopHeader = this->m_func->GetJnFunction()->GetLoopHeader(loopNumber);
 
             JsLoopBodyCodeGen* loopBodyCodeGen = (JsLoopBodyCodeGen*)m_func->m_workItem;
             if (loopHeader != loopBodyCodeGen->loopHeader && loopHeader->Contains(loopBodyCodeGen->loopHeader))

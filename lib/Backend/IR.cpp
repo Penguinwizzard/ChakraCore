@@ -536,7 +536,7 @@ LabelInstr::CloneLabel(BOOL fCreate)
         }
         if (this->IsProfiledLabelInstr())
         {
-            instrLabel = IR::ProfiledLabelInstr::New(this->m_opcode, func, this->AsProfiledLabelInstr()->loopImplicitCallFlags);   
+            instrLabel = IR::ProfiledLabelInstr::New(this->m_opcode, func, this->AsProfiledLabelInstr()->loopImplicitCallFlags, this->AsProfiledLabelInstr()->loopFlags);
 #if DBG
             instrLabel->AsProfiledLabelInstr()->loopNum = this->AsProfiledLabelInstr()->loopNum;
 #endif
@@ -558,11 +558,12 @@ ProfiledLabelInstr::ProfiledLabelInstr(JitArenaAllocator * allocator)
 }
 
 ProfiledLabelInstr *
-ProfiledLabelInstr::New(Js::OpCode opcode, Func *func, Js::ImplicitCallFlags flags)
+ProfiledLabelInstr::New(Js::OpCode opcode, Func *func, Js::ImplicitCallFlags flags, Js::LoopFlags loopFlags)
 {
     ProfiledLabelInstr * profiledLabelInstr = JitAnew(func->m_alloc, ProfiledLabelInstr, func->m_alloc);
     profiledLabelInstr->Init(opcode, InstrKindProfiledLabel, func, false);
     profiledLabelInstr->loopImplicitCallFlags = flags;
+    profiledLabelInstr->loopFlags = loopFlags;
     return profiledLabelInstr;
 }
 

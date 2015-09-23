@@ -671,9 +671,10 @@ private:
     ProfiledLabelInstr(JitArenaAllocator * allocator);
 
 public:
-    static ProfiledLabelInstr *     New(Js::OpCode opcode, Func *func, Js::ImplicitCallFlags flags);
+    static ProfiledLabelInstr *     New(Js::OpCode opcode, Func *func, Js::ImplicitCallFlags flags, Js::LoopFlags loopFlags);
 
     Js::ImplicitCallFlags loopImplicitCallFlags;
+    Js::LoopFlags loopFlags;
 #if DBG_DUMP
     uint loopNum;
 #endif   
