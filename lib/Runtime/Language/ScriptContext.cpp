@@ -1609,7 +1609,7 @@ namespace Js
         Js::JavascriptError::MapAndThrowError(this, E_FAIL);
     }
 
-    JavascriptFunction* ScriptContext::LoadScript(const wchar_t* script, SRCINFO const * pSrcInfo, CompileScriptException * pse, bool isExpression, bool disableDeferredParse, Utf8SourceInfo** ppSourceInfo, const wchar_t *rootDisplayName)
+    JavascriptFunction* ScriptContext::LoadScript(const wchar_t* script, SRCINFO const * pSrcInfo, CompileScriptException * pse, bool isExpression, bool disableDeferredParse, bool isByteCodeBufferForLibrary, Utf8SourceInfo** ppSourceInfo, const wchar_t *rootDisplayName)
     {
         if (pSrcInfo == nullptr)
         {
@@ -1679,6 +1679,11 @@ namespace Js
                 grfscr |= fscrEval;
             }
 
+            if (isByteCodeBufferForLibrary)
+            {
+                grfscr |= (fscrNoAsmJs | fscrNoPreJit);
+            }
+
             ParseNodePtr parseTree;
             hr = parser.ParseCesu8Source(&parseTree, utf8Script, cbNeeded, grfscr, pse, &sourceContextInfo->nextLocalFunctionId,
                 sourceContextInfo);
@@ -1710,7 +1715,7 @@ namespace Js
         }
     }
 
-    JavascriptFunction* ScriptContext::LoadScript(LPCUTF8 script, size_t cb, SRCINFO const * pSrcInfo, CompileScriptException * pse, bool isExpression, bool disableDeferredParse, Utf8SourceInfo** ppSourceInfo, const wchar_t *rootDisplayName)
+    JavascriptFunction* ScriptContext::LoadScript(LPCUTF8 script, size_t cb, SRCINFO const * pSrcInfo, CompileScriptException * pse, bool isExpression, bool disableDeferredParse, bool isByteCodeBufferForLibrary, Utf8SourceInfo** ppSourceInfo, const wchar_t *rootDisplayName)
     {
         if (pSrcInfo == nullptr)
         {
@@ -1742,6 +1747,11 @@ namespace Js
             {
                 // pretend it is eval
                 grfscr |= fscrEval;
+            }
+
+            if (isByteCodeBufferForLibrary)
+            {
+                grfscr |= (fscrNoAsmJs | fscrNoPreJit);
             }
 
 #if DBG_DUMP

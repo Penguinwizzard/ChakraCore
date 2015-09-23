@@ -19,6 +19,7 @@
 #define IfJsrtErrorHR(expr) do { if((expr) != JsNoError) { hr = E_FAIL; goto Error; } } while(0)
 #define IfJsrtError(expr) do { if((expr) != JsNoError) { goto Error; } } while(0)
 #define IfJsrtErrorSetGo(expr) do { errorCode = (expr); if(errorCode != JsNoError) { hr = E_FAIL; goto Error; } } while(0)
+#define IfFalseGo(expr) do { if(!(expr)) { hr = E_FAIL; goto Error; } } while(0)
 
 #define WIN32_LEAN_AND_MEAN 1
 
@@ -65,11 +66,9 @@ if (!(exp)) \
 #endif //defined(DBG)
 
 #define Assert(exp)             AssertMsg(exp, #exp)
-
-#ifndef USE_EDGEMODE_JSRT
-#define USE_EDGEMODE_JSRT
-#endif // USE_EDGEMODE_JSRT
-#include "jsrt.h"
+#define _JSRT_
+#include "chakrart.h"
+#include "TestHooksRt.h"
 
 typedef void * Var;
 

@@ -18,6 +18,10 @@
 #include "cmperr.h"     // For ERRnoMemory
 #include "screrror.h"   // For CompileScriptException
 
+#ifdef ENABLE_DEBUG_CONFIG_OPTIONS
+#include "TestHooksRt.h"
+#endif
+
 JsErrorCode CheckContext(JsrtContext *currentContext, bool verifyRuntimeState, bool allowInObjectBeforeCollectCallback)
 {
     if (currentContext == nullptr)
@@ -113,7 +117,10 @@ STDAPI_(JsErrorCode) JsCreateRuntime(_In_ JsRuntimeAttributes attributes, _In_op
             JsRuntimeAttributeDisableNativeCodeGeneration |
             JsRuntimeAttributeEnableExperimentalFeatures |
             JsRuntimeAttributeDispatchSetExceptionsToDebugger
-            );
+#ifdef ENABLE_DEBUG_CONFIG_OPTIONS
+            | JsRuntimeAttributeSerializeLibraryByteCode
+#endif
+        );
 
         Assert((attributes & ~JsRuntimeAttributesAll) == 0);
         if ((attributes & ~JsRuntimeAttributesAll) != 0)
@@ -181,6 +188,9 @@ STDAPI_(JsErrorCode) JsCreateRuntime(_In_ JsRuntimeAttributes attributes, _In_op
         JsrtRuntime * runtime = HeapNew(JsrtRuntime, threadContext, enableIdle, dispatchExceptions);
         threadContext->SetCurrentThreadId(ThreadContext::NoThread);
         *runtimeHandle = runtime->ToHandle();
+#ifdef ENABLE_DEBUG_CONFIG_OPTIONS
+        runtime->SetSerializeByteCodeForLibrary((attributes & JsRuntimeAttributeSerializeLibraryByteCode) != 0);
+#endif
 
         return JsNoError;
     });
@@ -2418,7 +2428,7 @@ JsErrorCode RunScriptCore(const wchar_t *script, JsSourceContext sourceContext, 
         };
 
         Js::Utf8SourceInfo* utf8SourceInfo;
-        scriptFunction = scriptContext->LoadScript(script, &si, &se, result != nullptr, false, &utf8SourceInfo, Js::Constants::GlobalCode);
+        scriptFunction = scriptContext->LoadScript(script, &si, &se, result != nullptr, false /*disableDeferredParse*/, false /*isByteCodeBufferForLibrary*/, &utf8SourceInfo, Js::Constants::GlobalCode);
 
         JsrtContext * context = JsrtContext::GetCurrent();
         context->OnScriptLoad(scriptFunction, utf8SourceInfo);
@@ -2510,9 +2520,13 @@ JsErrorCode JsSerializeScriptCore(const wchar_t *script, BYTE *functionTable, in
             /* mod                 */ kmodGlobal,
             /* grfsi               */ 0
         };
+        bool isSerializeByteCodeForLibrary = false;
+#ifdef ENABLE_DEBUG_CONFIG_OPTIONS
+        isSerializeByteCodeForLibrary = JsrtContext::GetCurrent()->GetRuntime()->IsSerializeByteCodeForLibrary();
+#endif
 
         Js::Utf8SourceInfo* sourceInfo;
-        function = scriptContext->LoadScript(script, &si, &se, true, true, &sourceInfo, Js::Constants::GlobalCode);
+        function = scriptContext->LoadScript(script, &si, &se, !isSerializeByteCodeForLibrary, true, isSerializeByteCodeForLibrary, &sourceInfo, Js::Constants::GlobalCode);
         return JsNoError;
     });
 
@@ -2536,9 +2550,13 @@ JsErrorCode JsSerializeScriptCore(const wchar_t *script, BYTE *functionTable, in
         const Js::Utf8SourceInfo *sourceInfo = functionBody->GetUtf8SourceInfo();
         DWORD dwSourceCodeLength = sourceInfo->GetCbLength(L"JsSerializeScript");
         LPCUTF8 utf8Code = sourceInfo->GetSource(L"JsSerializeScript");
+        DWORD dwFlags = 0;
+#ifdef ENABLE_DEBUG_CONFIG_OPTIONS
+        dwFlags = JsrtContext::GetCurrent()->GetRuntime()->IsSerializeByteCodeForLibrary() ? GENERATE_BYTE_CODE_BUFFER_LIBRARY : 0;
+#endif
 
         BEGIN_TEMP_ALLOCATOR(tempAllocator, scriptContext, L"ByteCodeSerializer");
-        HRESULT hr = Js::ByteCodeSerializer::SerializeToBuffer(scriptContext, tempAllocator, dwSourceCodeLength, utf8Code, 0, nullptr, functionBody, functionBody->GetHostSrcInfo(), false, &buffer, bufferSize);        
+        HRESULT hr = Js::ByteCodeSerializer::SerializeToBuffer(scriptContext, tempAllocator, dwSourceCodeLength, utf8Code, 0, nullptr, functionBody, functionBody->GetHostSrcInfo(), false, &buffer, bufferSize, dwFlags);
         END_TEMP_ALLOCATOR(tempAllocator, scriptContext);
 
         if (SUCCEEDED(hr))

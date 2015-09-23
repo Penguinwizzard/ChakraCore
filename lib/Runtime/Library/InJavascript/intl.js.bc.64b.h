@@ -1,5 +1,4 @@
 // Copyright (C) Microsoft. All rights reserved.
-// Generated via jshost -GenerateLibraryByteCodeHeader
 #if 0 
 //-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.

@@ -30,6 +30,10 @@ JsrtRuntime::JsrtRuntime(ThreadContext * threadContext, bool useIdle, bool dispa
 #ifdef ENABLE_BASIC_TELEMETRY
     atexit(firePackageTelemetry); // for node chakra purposes.
 #endif
+
+#ifdef ENABLE_DEBUG_CONFIG_OPTIONS
+    serializeByteCodeForLibrary = false;
+#endif
 }
 
 JsrtRuntime::~JsrtRuntime()

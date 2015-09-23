@@ -37,6 +37,11 @@ public:
     void CloseContexts();
     void SetBeforeCollectCallback(JsBeforeCollectCallback beforeCollectCallback, void * callbackContext);
 
+#ifdef ENABLE_DEBUG_CONFIG_OPTIONS
+    void SetSerializeByteCodeForLibrary(bool set) { serializeByteCodeForLibrary = set; }
+    bool IsSerializeByteCodeForLibrary() const { return serializeByteCodeForLibrary; }
+#endif
+
 private:
     static void __cdecl RecyclerCollectCallbackStatic(void * context, RecyclerCollectCallBackFlags flags);
 
@@ -50,6 +55,9 @@ private:
     void * callbackContext;
     bool useIdle;
     bool dispatchExceptions;
+#ifdef ENABLE_DEBUG_CONFIG_OPTIONS
+    bool serializeByteCodeForLibrary;
+#endif
 };
 
 

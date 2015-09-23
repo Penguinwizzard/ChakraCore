@@ -119,6 +119,132 @@ void __stdcall PrintUsage()
     ChakraRTInterface::PrintConfigFlagsUsageString();
 }
 
+// On success the param byteCodeBuffer will be allocated in the function. 
+// The caller of this function should de-allocate the memory.
+HRESULT GetSerializedBuffer(LPCOLESTR fileContents, __out BYTE **byteCodeBuffer, __out DWORD *byteCodeBufferSize)
+{
+    HRESULT hr = S_OK;
+    *byteCodeBuffer = nullptr;
+    *byteCodeBufferSize = 0;
+    BYTE *bcBuffer = nullptr;
+
+    DWORD bcBufferSize = 0;
+    IfJsErrorFailLog(ChakraRTInterface::JsSerializeScript(fileContents, bcBuffer, &bcBufferSize));
+    // Above call will return the size of the buffer only, once succeed we need to allocate memory of that much and call it again.
+    if (bcBufferSize == 0)
+    {
+        AssertMsg(false, "bufferSize should not be zero");
+        IfFailGo(E_FAIL);
+    }
+    bcBuffer = new BYTE[bcBufferSize];
+    DWORD newBcBufferSize = bcBufferSize;
+    IfJsErrorFailLog(ChakraRTInterface::JsSerializeScript(fileContents, bcBuffer, &newBcBufferSize));
+    Assert(bcBufferSize == newBcBufferSize);
+
+Error:
+    if (hr != S_OK)
+    {
+        // In the failure release the buffer
+        if (bcBuffer != nullptr)
+        {
+            delete[] bcBuffer;
+        }
+    }
+    else
+    {
+        *byteCodeBuffer = bcBuffer;
+        *byteCodeBufferSize = bcBufferSize;
+    }
+
+    return hr;
+}
+
+HRESULT CreateLibraryByteCodeHeader(LPCOLESTR fileContents, BYTE * contentsRaw, DWORD lengthBytes, LPCWSTR bcFullPath, LPCWSTR libraryNameWide)
+{
+    HRESULT hr = S_OK;
+    HANDLE bcFileHandle = nullptr;
+    BYTE *bcBuffer = nullptr;
+    DWORD bcBufferSize = 0;
+    IfFailGo(GetSerializedBuffer(fileContents, &bcBuffer, &bcBufferSize));
+
+    bcFileHandle = CreateFile(bcFullPath, GENERIC_WRITE, FILE_SHARE_DELETE, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (bcFileHandle == INVALID_HANDLE_VALUE)
+    {
+        IfFailGo(E_FAIL);
+    }
+
+    DWORD written;
+
+    //For validating the header file against the library file
+    auto outputStr =
+        "// Copyright (C) Microsoft. All rights reserved.\r\n"
+        "#if 0 \r\n";
+    IfFalseGo(WriteFile(bcFileHandle, outputStr, strlen(outputStr), &written, nullptr));
+    IfFalseGo(WriteFile(bcFileHandle, contentsRaw, lengthBytes, &written, nullptr));
+    if (lengthBytes < 2 || contentsRaw[lengthBytes - 2] != '\r' || contentsRaw[lengthBytes - 1] != '\n')
+    {
+        outputStr = "\r\n#endif\r\n";
+    }
+    else
+    {
+        outputStr = "#endif\r\n";
+    }
+    IfFalseGo(WriteFile(bcFileHandle, outputStr, strlen(outputStr), &written, nullptr));
+
+    // Write out the bytecode
+    outputStr = "namespace Js \r\n{\r\n    const char Library_Bytecode_";
+    IfFalseGo(WriteFile(bcFileHandle, outputStr, strlen(outputStr), &written, nullptr));
+    size_t convertedChars;
+    char libraryNameNarrow[MAX_PATH + 1];
+    IfFalseGo((wcstombs_s(&convertedChars, libraryNameNarrow, libraryNameWide, _TRUNCATE) == 0));
+    IfFalseGo(WriteFile(bcFileHandle, libraryNameNarrow, strlen(libraryNameNarrow), &written, nullptr));
+    outputStr = "[] = \r\n/* 00000000 */ {";
+    IfFalseGo(WriteFile(bcFileHandle, outputStr, strlen(outputStr), &written, nullptr));
+
+    for (unsigned int i = 0; i < bcBufferSize; i++)
+    {
+        char scratch[5];
+        auto scratchLen = sizeof(scratch);
+        int num = _snprintf_s(scratch, scratchLen, "0x%02X", bcBuffer[i]);
+        Assert(num == 4);
+        IfFalseGo(WriteFile(bcFileHandle, scratch, scratchLen - 1, &written, nullptr));
+
+        //Add a comma and a space if this is not the last item
+        if (i < bcBufferSize - 1)
+        {
+            char commaSpace[3];
+            _snprintf_s(commaSpace, sizeof(commaSpace), ", ");  // close quote, new line, offset and open quote
+            IfFalseGo(WriteFile(bcFileHandle, commaSpace, strlen(commaSpace), &written, nullptr));
+        }
+
+        //Add a line break every 16 scratches, primarily so the compiler doesn't complain about the string being too long.
+        //Also, won't add for the last scratch
+        if (i % 16 == 15 && i < bcBufferSize - 1)
+        {
+            char offset[18];
+            _snprintf_s(offset, sizeof(offset), "\r\n/* %08X */ ", i + 1);  // close quote, new line, offset and open quote
+            IfFalseGo(WriteFile(bcFileHandle, offset, strlen(offset), &written, nullptr));
+        }
+    }
+    outputStr = "};\r\n\r\n";
+    IfFalseGo(WriteFile(bcFileHandle, outputStr, strlen(outputStr), &written, nullptr));
+
+    outputStr = "}";
+    IfFalseGo(WriteFile(bcFileHandle, outputStr, strlen(outputStr), &written, nullptr));
+
+Error:
+    if (bcFileHandle != nullptr)
+    {
+        CloseHandle(bcFileHandle);
+    }
+    if (bcBuffer != nullptr)
+    {
+        delete[] bcBuffer;
+    }
+
+    return hr;
+}
+
 HRESULT RunScript(LPCWSTR fileName, LPCWSTR fileContents, BYTE *bcBuffer, wchar_t *fullPath)
 {
     HRESULT hr = S_OK;
@@ -163,18 +289,7 @@ HRESULT CreateAndRunSerializedScript(LPCWSTR fileName, LPCWSTR fileContents, wch
     JsContextRef context = JS_INVALID_REFERENCE, current = JS_INVALID_REFERENCE;
     BYTE *bcBuffer = nullptr;
     DWORD bcBufferSize = 0;
-
-    IfJsErrorFailLog(ChakraRTInterface::JsSerializeScript(fileContents, bcBuffer, &bcBufferSize));
-    // Above call will return the size of the buffer only, once succeed we need to allocate memory of that much and call it again.
-    if (bcBufferSize == 0)
-    {
-        AssertMsg(false, "bufferSize should not be zero");
-        IfFailGo(E_FAIL);
-    }
-    bcBuffer = new BYTE[bcBufferSize];
-    DWORD newBcBufferSize = bcBufferSize;
-    IfJsErrorFailLog(ChakraRTInterface::JsSerializeScript(fileContents, bcBuffer, &newBcBufferSize));
-    Assert(bcBufferSize == newBcBufferSize);
+    IfFailGo(GetSerializedBuffer(fileContents, &bcBuffer, &bcBufferSize));
 
     // Bytecode buffer is created in one runtime and will be executed on different runtime.
 
@@ -222,7 +337,10 @@ HRESULT ExecuteTest(LPCWSTR fileName)
     contentsRaw; lengthBytes; // Unused for now.
 
     IfFailGo(hr);
-
+    if (HostConfigFlags::flags.GenerateLibraryByteCodeHeaderIsEnabled)
+    {
+        jsrtAttributes = (JsRuntimeAttributes)(jsrtAttributes | JsRuntimeAttributeSerializeLibraryByteCode);
+    }
     IfJsErrorFailLog(ChakraRTInterface::JsCreateRuntime(jsrtAttributes, nullptr, &runtime));
 
     JsContextRef context = JS_INVALID_REFERENCE;
@@ -254,8 +372,11 @@ HRESULT ExecuteTest(LPCWSTR fileName)
         {
             if (HostConfigFlags::flags.GenerateLibraryByteCodeHeader != nullptr && *HostConfigFlags::flags.GenerateLibraryByteCodeHeader != L'\0')
             {
-                Assert(false);
-                // TODO : functionality will be added in next checkin.
+                WCHAR libraryName[_MAX_PATH];
+                WCHAR ext[_MAX_EXT];
+                _wsplitpath_s(fullPath, NULL, 0, NULL, 0, libraryName, _countof(libraryName), ext, _countof(ext));
+
+                IfFailGo(CreateLibraryByteCodeHeader(fileContents, (BYTE*)contentsRaw, lengthBytes, HostConfigFlags::flags.GenerateLibraryByteCodeHeader, libraryName));
             }
             else
             {
