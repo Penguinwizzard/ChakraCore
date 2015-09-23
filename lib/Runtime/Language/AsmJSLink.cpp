@@ -93,20 +93,20 @@ namespace Js{
         if (mathBuiltinUsed.Test(AsmJSMathBuiltinFunction::AsmJSMathBuiltin_infinity))
         {
             Var asmInfinityObj = JavascriptOperators::OP_GetProperty(stdlib, PropertyIds::Infinity, scriptContext);
-            if (asmInfinityObj  != library->GetPositiveInfinite())
+            if (!JavascriptConversion::SameValue(asmInfinityObj, library->GetPositiveInfinite()))
             {
                 AsmJSCompiler::OutputError(scriptContext, L"Asm.js Runtime Error : Math constant Infinity is invalid");
                 return false;
-            } 
+            }
         }
         if (mathBuiltinUsed.Test(AsmJSMathBuiltinFunction::AsmJSMathBuiltin_nan))
         {
             Var asmNaNObj = JavascriptOperators::OP_GetProperty(stdlib, PropertyIds::NaN, scriptContext);
-            if (asmNaNObj != library->GetNaN())
+            if (!JavascriptConversion::SameValue(asmNaNObj, library->GetNaN()))
             {
                 AsmJSCompiler::OutputError(scriptContext, L"Asm.js Runtime Error : Math constant NaN is invalid");
                 return false;
-            }            
+            }
         }
         Var asmMathObject = JavascriptOperators::OP_GetProperty(stdlib, PropertyIds::Math, scriptContext);
         for (int i = 0; i < AsmJSMathBuiltinFunction::AsmJSMathBuiltin_COUNT; i++)
