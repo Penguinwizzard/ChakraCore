@@ -9121,21 +9121,23 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         funcInfo->ReleaseLoc(pnode->sxBin.pnode2);
         funcInfo->ReleaseLoc(pnode->sxBin.pnode1);
         funcInfo->AcquireLoc(pnode);
-        if (pnode->IsCallApplyTargetLoad())
-        {
+
             Js::RegSlot callObjLocation = pnode->sxBin.pnode1->location;
             Js::RegSlot protoLocation = callObjLocation;
             bool  protoRegisterAquired = false;
+        if (pnode->sxBin.pnode1->nop == knopSuper)
+        {
             EmitSuperMethodBegin(pnode, byteCodeGenerator, &protoLocation, callObjLocation, funcInfo, &protoRegisterAquired);
+        }
+
             byteCodeGenerator->Writer()->Element(
                 Js::OpCode::LdElemI_A, pnode->location, protoLocation, pnode->sxBin.pnode2->location);
+        
+        if (pnode->sxBin.pnode1->nop == knopSuper)
+        {
             EmitSuperMethodEnd(funcInfo, protoLocation, protoRegisterAquired);
         }
-        else
-        {
-            byteCodeGenerator->Writer()->Element(
-                Js::OpCode::LdElemI_A, pnode->location, pnode->sxBin.pnode1->location, pnode->sxBin.pnode2->location);
-        }
+
         byteCodeGenerator->EndStatement(pnode);
         break;
     }
@@ -9153,26 +9155,31 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
             else
             {
                 uint cacheId = funcInfo->FindOrAddInlineCacheId(pnode->sxBin.pnode1->location, propertyId, false, false);
-                if(pnode->IsCallApplyTargetLoad())
-                {
                     Js::RegSlot callObjLocation = pnode->sxBin.pnode1->location;
                     Js::RegSlot protoLocation = callObjLocation;
                     bool  protoRegisterAquired = false;
+                if (pnode->sxBin.pnode1->nop == knopSuper)
+                {
                     EmitSuperMethodBegin(pnode, byteCodeGenerator, &protoLocation, callObjLocation, funcInfo, &protoRegisterAquired);
+                }
+                if(pnode->IsCallApplyTargetLoad())
+                {
                     byteCodeGenerator->Writer()->PatchableProperty(Js::OpCode::LdFldForCallApplyTarget, pnode->location, protoLocation, cacheId);
-                    EmitSuperMethodEnd(funcInfo, protoLocation, protoRegisterAquired);
-
                 }
                 else
                 {
                     if (pnode->sxBin.pnode1->nop == knopSuper)
                     {
-                        byteCodeGenerator->Writer()->PatchablePropertyWithThisPtr(Js::OpCode::LdSuperFld, pnode->location, pnode->sxBin.pnode1->location, funcInfo->thisPointerRegister, cacheId, isConstructorCall);
+                        byteCodeGenerator->Writer()->PatchablePropertyWithThisPtr(Js::OpCode::LdSuperFld, pnode->location, protoLocation, funcInfo->thisPointerRegister, cacheId, isConstructorCall);
                     }
                     else
                     {
                         byteCodeGenerator->Writer()->PatchableProperty(Js::OpCode::LdFld, pnode->location, pnode->sxBin.pnode1->location, cacheId, isConstructorCall);
                     }
+                }
+                if (pnode->sxBin.pnode1->nop == knopSuper)
+                {
+                    EmitSuperMethodEnd(funcInfo, protoLocation, protoRegisterAquired);
                 }
             }
             break;
