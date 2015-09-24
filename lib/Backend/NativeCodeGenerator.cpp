@@ -204,6 +204,20 @@ NativeCodeGenerator::NewLoopBodyCodeGen(Js::FunctionBody *functionBody, Js::Entr
 }
 
 #ifdef ENABLE_PREJIT
+bool
+NativeCodeGenerator::DoBackEnd(Js::FunctionBody *fn)
+{
+    if (PHASE_OFF(Js::BackEndPhase, fn))
+    {
+        return false;
+    }
+    if (fn->IsAsmJSModule() || fn->IsGeneratorAndJitIsDisabled())
+    {
+        return false;
+    }
+    return true;
+}
+
 void
 NativeCodeGenerator::GenerateAllFunctions(Js::FunctionBody * fn)
 {
@@ -214,7 +228,7 @@ NativeCodeGenerator::GenerateAllFunctions(Js::FunctionBody * fn)
     Assert(fn->GetFunctionBody() == fn);
     Assert(!fn->IsDeferred());
 
-    if (!PHASE_OFF(Js::BackEndPhase, fn) && !fn->IsAsmJSModule())   
+    if (DoBackEnd(fn))   
     {
         if (fn->GetLoopCount() != 0 && fn->ForceJITLoopBody() && !IsInDebugMode())
         {
@@ -467,7 +481,7 @@ NativeCodeGenerator::GenerateFunction(Js::FunctionBody *fn, Js::ScriptFunction *
     
 #if !defined(_M_ARM64)
     
-    if (fn->IsGenerator() && !(CONFIG_ISENABLED(Js::JitES6GeneratorsFlag) && !fn->GetHasTry()))
+    if (fn->IsGeneratorAndJitIsDisabled())
     {
         // JITing generator functions is not complete nor stable yet so it is off by default.
         // Also try/catch JIT support in generator functions is not a goal for threshold

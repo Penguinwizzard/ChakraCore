@@ -1110,7 +1110,7 @@ namespace Js
         uint32 GetSourceContextId() const;
         wchar_t* GetDebugNumberSet(wchar(&bufferToWriteTo)[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE]) const;
         bool GetIsTopLevel() { return m_isTopLevel; }
-        void SetIsTopLevel(bool set) { m_isTopLevel = set;  }
+        void SetIsTopLevel(bool set) { m_isTopLevel = set; }
         uint GetNestedCount() const { return m_nestedCount; }
         void Copy(FunctionProxy* other);
         ParseableFunctionInfo* EnsureDeserialized();
@@ -1182,7 +1182,7 @@ namespace Js
                 #endif
                 );
         }
-        
+
         ULONG GetHostStartLine() const;
         ULONG GetHostStartColumn() const;
 
@@ -2755,6 +2755,11 @@ namespace Js
         bool ForceJITLoopBody() const
         {
             return IsJitLoopBodyPhaseForced() && !this->GetHasTry();
+        }
+
+        bool IsGeneratorAndJitIsDisabled()
+        {
+            return this->IsGenerator() && !(CONFIG_ISENABLED(Js::JitES6GeneratorsFlag) && !this->GetHasTry());
         }
 
         FunctionBodyFlags * GetAddressOfFlags() { return &this->flags; }

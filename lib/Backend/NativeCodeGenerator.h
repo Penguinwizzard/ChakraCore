@@ -38,6 +38,7 @@ public:
 
 #ifdef ENABLE_PREJIT
     void GenerateAllFunctions(Js::FunctionBody * fn);
+    bool DoBackEnd(Js::FunctionBody * fn);
 #endif
 
 #ifdef IR_VIEWER
