@@ -5288,11 +5288,11 @@ void Parser::ParseFncFormals(ParseNodePtr pnodeFnc, ushort flags)
                         *m_ppnodeVar = paramPattern;
                         paramPattern->sxParamPattern.pnodeNext = nullptr;
                         m_ppnodeVar = &paramPattern->sxParamPattern.pnodeNext;
+                        m_currentNodeFunc->sxFnc.SetHasDestructuringPattern();
                     }
 
                     isBindingPattern = true;
                     isNonSimpleParameterList = true;
-                    m_currentNodeFunc->sxFnc.SetHasDestructuringPattern();
                 }
                 else
                 {
