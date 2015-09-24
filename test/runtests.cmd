@@ -251,6 +251,11 @@ goto :main
     set fShowGetHelp=1
   )
 
+  if not exist %_binDir%\%_BuildArch%_%_BuildType%\%_Binary:~8% (
+    echo Error missing binary %_binDir%\%_BuildArch%_%_BuildType%\%_Binary:~8%
+    set fShowGetHelp=1
+  )
+
   goto :eof
 
 :: ============================================================================
