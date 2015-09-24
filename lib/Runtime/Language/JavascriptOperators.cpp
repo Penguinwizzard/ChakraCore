@@ -4146,14 +4146,6 @@ CommonNumber:
             }
             else
             {
-<<<<<<< 3aaf2ba70c3aa32a1ba134ea818952ab95f01cfb
-                if (!propertyRecord)
-                {
-                    //Lets get the propertyRecord from the propertyString
-                    scriptContext->GetOrAddPropertyRecord(propertyNameString->GetString(), propertyNameString->GetLength(), &propertyRecord);
-                }
-=======
->>>>>>> simple cleanup
                 return  JavascriptOperators::SetPropertyOnTaggedNumber(receiver, object, propertyRecord->GetPropertyId(), value, scriptContext, flags);
             }
         }
