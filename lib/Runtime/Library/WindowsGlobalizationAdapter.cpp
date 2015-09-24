@@ -24,7 +24,7 @@ using namespace ABI::Windows::Foundation::Collections;
 #define IfFailThrowHr(op) \
     if (FAILED(hr=(op))) \
     { \
-        JavascriptError::MapAndThrowError(scriptContext, hr); \
+        JavascriptError::MapAndThrowError(scriptContext, hr);\
     } \
 
 #define IfNullReturnError(EXPR, ERROR) do { if (!(EXPR)) { return (ERROR); } } while(FALSE)
@@ -92,17 +92,26 @@ namespace Js
         // IIterator
         IFACEMETHODIMP get_Current(_Out_ HSTRING *current)
         {
-            if(hasMore && current != nullptr)
+            if (current != nullptr)
             {
-                return WindowsDuplicateString(items[currentPosition], current);
+                if (hasMore)
+                {
+                    return WindowsDuplicateString(items[currentPosition], current);
+                }
+                else
+                {
+                    *current = nullptr;
+                }
             }
             return E_BOUNDS;
         }
 
         IFACEMETHODIMP get_HasCurrent(_Out_ boolean *hasCurrent)
         {
-            if(hasCurrent != nullptr)
+            if (hasCurrent != nullptr)
+            {
                 *hasCurrent = hasMore;
+            }
             return S_OK;
         }
 
@@ -111,8 +120,10 @@ namespace Js
             this->currentPosition++;
 
             this->hasMore = this->currentPosition < this->length;
-            if(hasCurrent != nullptr) *hasCurrent = hasMore;
-
+            if (hasCurrent != nullptr)
+            {
+                *hasCurrent = hasMore;
+            }
             return S_OK;
         }
 
@@ -127,12 +138,18 @@ namespace Js
                 {
                     break;
                 }
-                if(value != nullptr) get_Current(value + count);
+                if (value != nullptr)
+                {
+                    get_Current(value + count);
+                }
 
                 count ++;
                 this->MoveNext(nullptr);
             }
-            if(actual != nullptr) *actual = count;
+            if (actual != nullptr)
+            {
+                *actual = count;
+            }
 
             return S_OK;
         }
