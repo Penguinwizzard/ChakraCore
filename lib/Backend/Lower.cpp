@@ -11872,7 +11872,10 @@ Lowerer::SplitBailOnImplicitCall(IR::Instr *& instr)
             IR::Instr::New(
                 Js::OpCode::Ld_A,
                 disableImplicitCallAddress,
-                IR::IntConstOpnd::New(DisableImplicitCallFlag, TyInt8, instr->m_func, true),
+                IR::IntConstOpnd::New(
+                    // LossyToInt32 is a special case where we need to disable exceptions because the helper can throw where the interpreter wouldn't
+                    bailOutKind == IR::BailOutOnLossyToInt32ImplicitCalls ? DisableImplicitCallAndExceptionFlag : DisableImplicitCallFlag,
+                    TyInt8, instr->m_func, true),
                 instr->m_func);
         instr->InsertBefore(disableImplicitCallsInstr);
 
