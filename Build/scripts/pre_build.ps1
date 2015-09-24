@@ -30,6 +30,12 @@ if (Test-Path Env:\TF_BUILD_SOURCEGETVERSION)
 
     Push-Location $sourcesDir
     $outputFile = Join-Path -Path $outputDir -ChildPath "change.txt"
-    iex $command | Out-File $outputFile
+
+    Write-Output "TF_BUILD_BUILDDEFINITIONNAME = $Env:TF_BUILD_BUILDDEFINITIONNAME" | Out-File $outputFile -Append
+    Write-Output "TF_BUILD_BUILDNUMBER = $Env:TF_BUILD_BUILDNUMBER" | Out-File $outputFile -Append
+    Write-Output "TF_BUILD_SOURCEGETVERSION = $Env:TF_BUILD_SOURCEGETVERSION" | Out-File $outputFile -Append
+    Write-Output "TF_BUILD_BUILDURI = $Env:TF_BUILD_BUILDURI" | Out-File $outputFile -Append
+
+    iex $command | Out-File $outputFile -Append
     Pop-Location
 }
