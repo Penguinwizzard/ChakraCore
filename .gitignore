@@ -20,3 +20,5 @@ sd.ini
 test/*/*.baseline.rebase
 testout*
 *.dpl.*
+test/*/profile.dpl.*
+*.bc
