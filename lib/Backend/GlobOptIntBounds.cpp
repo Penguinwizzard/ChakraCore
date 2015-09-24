@@ -2580,7 +2580,7 @@ void GlobOpt::DetermineArrayBoundCheckHoistability(
         IntConstantBounds landingPadIndexConstantBounds;
         const bool landingPadIndexValueIsLikelyInt =
             landingPadIndexValue->GetValueInfo()->TryGetIntConstantBounds(&landingPadIndexConstantBounds, true);
-        int offset = 0;
+        int lowerOffset = 0, upperOffset = 0;
         if(indexValue->GetValueNumber() == landingPadIndexValue->GetValueNumber())
         {
             Assert(landingPadIndexValueIsLikelyInt);
@@ -2617,12 +2617,12 @@ void GlobOpt::DetermineArrayBoundCheckHoistability(
                         if(indexBounds->RelativeLowerBounds().TryGetReference(landingPadIndexValue->GetValueNumber(), &bound))
                         {
                             foundBound = true;
-                            offset = bound->Offset();
+                            lowerOffset = bound->Offset();
                             TRACE_PHASE_VERBOSE(
                                 Js::Phase::BoundCheckHoistPhase,
                                 4,
                                 L"Found lower bound (index + %d)\n",
-                                offset);
+                                lowerOffset);
                         }
                     }
                     if(!foundBound)
@@ -2661,12 +2661,12 @@ void GlobOpt::DetermineArrayBoundCheckHoistability(
                         if(indexBounds->RelativeUpperBounds().TryGetReference(landingPadIndexValue->GetValueNumber(), &bound))
                         {
                             foundBound = true;
-                            offset = bound->Offset();
+                            upperOffset = bound->Offset();
                             TRACE_PHASE_VERBOSE(
                                 Js::Phase::BoundCheckHoistPhase,
                                 4,
                                 L"Found upper bound (index + %d)\n",
-                                offset);
+                                upperOffset);
                         }
                     }
                     if(!foundBound)
@@ -2705,7 +2705,7 @@ void GlobOpt::DetermineArrayBoundCheckHoistability(
                 lowerHoistInfo.SetLoop(
                     loop,
                     indexSym,
-                    offset,
+                    lowerOffset,
                     landingPadIndexValue,
                     landingPadIndexConstantBounds);
             }
@@ -2757,12 +2757,12 @@ void GlobOpt::DetermineArrayBoundCheckHoistability(
         // Normalize the offset such that:
         //     boundBase <= headSegmentLength + offset
         // Where (offset = -1 - boundOffset), and -1 is to simulate < instead of <=.
-        offset = -1 - offset;
+        upperOffset = -1 - upperOffset;
 
         upperHoistInfo.SetLoop(
             loop,
             indexSym,
-            offset,
+            upperOffset,
             landingPadIndexValue,
             landingPadIndexConstantBounds,
             landingPadHeadSegmentLengthValue,

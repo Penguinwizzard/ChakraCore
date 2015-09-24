@@ -15451,6 +15451,29 @@ bool GlobOpt::NeedBailOnImplicitCallForLiveValues(BasicBlock *const block, const
     return true;
 }
 
+IR::Instr* GlobOpt::CreateBoundsCheckInstr(IR::Opnd* lowerBound, IR::Opnd* upperBound, int offset, Func* func)
+{
+    IR::Instr* instr = IR::Instr::New(Js::OpCode::BoundCheck, func);
+    return AttachBoundsCheckData(instr, lowerBound, upperBound, offset);
+}
+
+IR::Instr* GlobOpt::CreateBoundsCheckInstr(IR::Opnd* lowerBound, IR::Opnd* upperBound, int offset, IR::BailOutKind bailoutkind, BailOutInfo* bailoutInfo, Func * func)
+{
+    IR::Instr* instr = IR::BailOutInstr::New(Js::OpCode::BoundCheck, bailoutkind, bailoutInfo, func);
+    return AttachBoundsCheckData(instr, lowerBound, upperBound, offset);
+}
+
+IR::Instr* GlobOpt::AttachBoundsCheckData(IR::Instr* instr, IR::Opnd* lowerBound, IR::Opnd* upperBound, int offset)
+{
+    instr->SetSrc1(lowerBound);
+    instr->SetSrc2(upperBound);
+    if (offset != 0)
+    {
+        instr->SetDst(IR::IntConstOpnd::New(offset, TyInt32, instr->m_func, true));
+    }
+    return instr;
+}
+
 void GlobOpt::OptArraySrc(IR::Instr * *const instrRef)
 {
     Assert(instrRef);
@@ -16448,23 +16471,20 @@ void GlobOpt::OptArraySrc(IR::Instr * *const instrRef)
                                     hoistInfo.IndexSym());
                             }
 
-                            IR::BailOutInstr *const boundCheck =
-                                IR::BailOutInstr::New(
-                                    Js::OpCode::BoundCheck,
-                                    hoistInfo.IsLoopCountBasedBound()
-                                        ? IR::BailOutOnFailedHoistedLoopCountBasedBoundCheck
-                                        : IR::BailOutOnFailedHoistedBoundCheck,
-                                    hoistInfo.Loop()->bailOutInfo,
-                                    hoistInfo.Loop()->bailOutInfo->bailOutFunc);
+                            IR::Opnd* lowerBound = IR::IntConstOpnd::New(0, TyInt32, instr->m_func, true);
+                            IR::Opnd* upperBound = IR::RegOpnd::New(indexIntSym, TyInt32, instr->m_func);
+                            upperBound->SetIsJITOptimizedReg(true);
 
                             // 0 <= indexSym + offset (src1 <= src2 + dst)
-                            boundCheck->SetSrc1(IR::IntConstOpnd::New(0, TyInt32, instr->m_func, true));
-                            boundCheck->SetSrc2(IR::RegOpnd::New(indexIntSym, TyInt32, instr->m_func));
-                            boundCheck->GetSrc2()->SetIsJITOptimizedReg(true);
-                            if(hoistInfo.Offset() != 0)
-                            {
-                                boundCheck->SetDst(IR::IntConstOpnd::New(hoistInfo.Offset(), TyInt32, instr->m_func, true));
-                            }
+                            IR::Instr *const boundCheck = CreateBoundsCheckInstr(
+                                lowerBound,
+                                upperBound,
+                                hoistInfo.Offset(),
+                                hoistInfo.IsLoopCountBasedBound()
+                                    ? IR::BailOutOnFailedHoistedLoopCountBasedBoundCheck
+                                    : IR::BailOutOnFailedHoistedBoundCheck,
+                                hoistInfo.Loop()->bailOutInfo,
+                                hoistInfo.Loop()->bailOutInfo->bailOutFunc);
                             InsertInstrInLandingPad(boundCheck, hoistInfo.Loop());
 
                             TRACE_PHASE_INSTR(
@@ -16534,26 +16554,32 @@ void GlobOpt::OptArraySrc(IR::Instr * *const instrRef)
                 }
                 else
                 {
+                    IR::Opnd* lowerBound = IR::IntConstOpnd::New(0, TyInt32, instr->m_func, true);
+                    IR::Opnd* upperBound = baseOwnerIndir->GetIndexOpnd();
+                    upperBound->SetIsJITOptimizedReg(true);
+                    const int offset = 0;
+
                     IR::Instr *boundCheck;
                     if(shareableBailOutInfo)
                     {
                         ShareBailOut();
-                        boundCheck =
-                            IR::BailOutInstr::New(
-                                Js::OpCode::BoundCheck,
-                                IR::BailOutOnArrayAccessHelperCall,
-                                shareableBailOutInfo,
-                                shareableBailOutInfo->bailOutFunc);
+                        boundCheck = CreateBoundsCheckInstr(
+                            lowerBound,
+                            upperBound,
+                            offset,
+                            IR::BailOutOnArrayAccessHelperCall,
+                            shareableBailOutInfo,
+                            shareableBailOutInfo->bailOutFunc);
                     }
                     else
                     {
-                        boundCheck = IR::Instr::New(Js::OpCode::BoundCheck, instr->m_func);
+                        boundCheck = CreateBoundsCheckInstr(
+                            lowerBound,
+                            upperBound,
+                            offset,
+                            instr->m_func);
                     }
 
-                    // 0 <= index (src1 <= src2 + dst)
-                    boundCheck->SetSrc1(IR::IntConstOpnd::New(0, TyInt32, instr->m_func, true));
-                    boundCheck->SetSrc2(baseOwnerIndir->GetIndexOpnd());
-                    boundCheck->GetSrc2()->SetIsJITOptimizedReg(true);
 
                     boundCheck->SetByteCodeOffset(instr);
                     insertBeforeInstr->InsertBefore(boundCheck);
@@ -16692,32 +16718,28 @@ void GlobOpt::OptArraySrc(IR::Instr * *const instrRef)
                                     hoistInfo.IndexSym());
                             }
 
-                            IR::BailOutInstr *const boundCheck =
-                                IR::BailOutInstr::New(
-                                    Js::OpCode::BoundCheck,
-                                    hoistInfo.IsLoopCountBasedBound()
-                                        ? IR::BailOutOnFailedHoistedLoopCountBasedBoundCheck
-                                        : IR::BailOutOnFailedHoistedBoundCheck,
-                                    hoistInfo.Loop()->bailOutInfo,
-                                    hoistInfo.Loop()->bailOutInfo->bailOutFunc);
+                            IR::Opnd* lowerBound = indexIntSym
+                                ? static_cast<IR::Opnd *>(IR::RegOpnd::New(indexIntSym, TyInt32, instr->m_func))
+                                : IR::IntConstOpnd::New(
+                                    hoistInfo.IndexConstantBounds().LowerBound(),
+                                    TyInt32,
+                                    instr->m_func,
+                                    true);
+                            lowerBound->SetIsJITOptimizedReg(true);
+                            IR::Opnd* upperBound = IR::RegOpnd::New(headSegmentLengthSym, headSegmentLengthSym->GetType(), instr->m_func);
+                            upperBound->SetIsJITOptimizedReg(true);
 
                             // indexSym <= headSegmentLength + offset (src1 <= src2 + dst)
-                            boundCheck->SetSrc1(
-                                indexIntSym
-                                    ?   static_cast<IR::Opnd *>(IR::RegOpnd::New(indexIntSym, TyInt32, instr->m_func))
-                                    :   IR::IntConstOpnd::New(
-                                            hoistInfo.IndexConstantBounds().LowerBound(),
-                                            TyInt32,
-                                            instr->m_func,
-                                            true));
-                            boundCheck->GetSrc1()->SetIsJITOptimizedReg(true);
-                            boundCheck->SetSrc2(
-                                IR::RegOpnd::New(headSegmentLengthSym, headSegmentLengthSym->GetType(), instr->m_func));
-                            boundCheck->GetSrc2()->SetIsJITOptimizedReg(true);
-                            if(hoistInfo.Offset() != 0)
-                            {
-                                boundCheck->SetDst(IR::IntConstOpnd::New(hoistInfo.Offset(), TyInt32, instr->m_func, true));
-                            }
+                            IR::Instr *const boundCheck = CreateBoundsCheckInstr(
+                                lowerBound,
+                                upperBound,
+                                hoistInfo.Offset(),
+                                hoistInfo.IsLoopCountBasedBound()
+                                    ? IR::BailOutOnFailedHoistedLoopCountBasedBoundCheck
+                                    : IR::BailOutOnFailedHoistedBoundCheck,
+                                hoistInfo.Loop()->bailOutInfo,
+                                hoistInfo.Loop()->bailOutInfo->bailOutFunc);
+
                             InsertInstrInLandingPad(boundCheck, hoistInfo.Loop());
 
                             if(indexIntSym)
@@ -16846,31 +16868,35 @@ void GlobOpt::OptArraySrc(IR::Instr * *const instrRef)
                 }
                 else
                 {
+                    IR::Opnd* lowerBound = baseOwnerIndir->GetIndexOpnd()
+                        ? static_cast<IR::Opnd *>(baseOwnerIndir->GetIndexOpnd())
+                        : IR::IntConstOpnd::New(baseOwnerIndir->GetOffset(), TyInt32, instr->m_func, true);
+                    lowerBound->SetIsJITOptimizedReg(true);
+                    IR::Opnd* upperBound = IR::RegOpnd::New(headSegmentLengthSym, headSegmentLengthSym->GetType(), instr->m_func);
+                    upperBound->SetIsJITOptimizedReg(true);
+                    const int offset = -1;
+
                     IR::Instr *boundCheck;
-                    if(shareableBailOutInfo)
+                    // index <= headSegmentLength - 1 (src1 <= src2 + dst)
+                    if (shareableBailOutInfo)
                     {
                         ShareBailOut();
-                        boundCheck =
-                            IR::BailOutInstr::New(
-                                Js::OpCode::BoundCheck,
-                                IR::BailOutOnArrayAccessHelperCall,
-                                shareableBailOutInfo,
-                                shareableBailOutInfo->bailOutFunc);
+                        boundCheck = CreateBoundsCheckInstr(
+                            lowerBound,
+                            upperBound,
+                            offset,
+                            IR::BailOutOnArrayAccessHelperCall,
+                            shareableBailOutInfo,
+                            shareableBailOutInfo->bailOutFunc);
                     }
                     else
                     {
-                        boundCheck = IR::Instr::New(Js::OpCode::BoundCheck, instr->m_func);
+                        boundCheck = CreateBoundsCheckInstr(
+                            lowerBound,
+                            upperBound,
+                            offset,
+                            instr->m_func);
                     }
-
-                    // index <= headSegmentLength - 1 (src1 <= src2 + dst)
-                    boundCheck->SetSrc1(
-                        baseOwnerIndir->GetIndexOpnd()
-                            ? static_cast<IR::Opnd *>(baseOwnerIndir->GetIndexOpnd())
-                            : IR::IntConstOpnd::New(baseOwnerIndir->GetOffset(), TyInt32, instr->m_func, true));
-                    boundCheck->GetSrc1()->SetIsJITOptimizedReg(true);
-                    boundCheck->SetSrc2(IR::RegOpnd::New(headSegmentLengthSym, headSegmentLengthSym->GetType(), instr->m_func));
-                    boundCheck->GetSrc2()->SetIsJITOptimizedReg(true);
-                    boundCheck->SetDst(IR::IntConstOpnd::New(-1, TyInt32, instr->m_func, true));
 
                     boundCheck->SetByteCodeOffset(instr);
                     insertBeforeInstr->InsertBefore(boundCheck);

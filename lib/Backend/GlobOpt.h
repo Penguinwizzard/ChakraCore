@@ -1525,6 +1525,9 @@ private:
     void                    ProcessValueKills(BasicBlock *const block, GlobOptBlockData *const blockData);
     void                    ProcessValueKillsForLoopHeaderAfterBackEdgeMerge(BasicBlock *const block, GlobOptBlockData *const blockData);
     bool                    NeedBailOnImplicitCallForLiveValues(BasicBlock *const block, const bool isForwardPass) const;
+    IR::Instr*              CreateBoundsCheckInstr(IR::Opnd* lowerBound, IR::Opnd* upperBound, int offset, Func* func);
+    IR::Instr*              CreateBoundsCheckInstr(IR::Opnd* lowerBound, IR::Opnd* upperBound, int offset, IR::BailOutKind bailoutkind, BailOutInfo* bailoutInfo, Func* func);
+    IR::Instr*              AttachBoundsCheckData(IR::Instr* instr, IR::Opnd* lowerBound, IR::Opnd* upperBound, int offset);
     void                    OptArraySrc(IR::Instr * *const instrRef);
 
 private:
