@@ -267,9 +267,6 @@ namespace Js
             {
                 m_hModule = LoadLibraryEx(GetWin7LibraryName(), nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
             }
-#if DBG
-            AssertMsg(m_hModule != nullptr, "This assert means that we failed to load Windows.Globalization.dll, on rare occasion there might be a reason to ignore this assert but should be carefully assesed.");
-#endif
 
             this->winRTStringLibrary = winRTStringLibrary;
             this->winRTStringsPresent = GetFunction("WindowsDuplicateString") != nullptr;
