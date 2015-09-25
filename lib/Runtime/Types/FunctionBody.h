@@ -1111,6 +1111,7 @@ namespace Js
         wchar_t* GetDebugNumberSet(wchar(&bufferToWriteTo)[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE]) const;
         bool GetIsTopLevel() { return m_isTopLevel; }
         void SetIsTopLevel(bool set) { m_isTopLevel = set; }
+        bool GetIsAnonymousFunction() const { return this->GetDisplayName() == Js::Constants::AnonymousFunction; }
         uint GetNestedCount() const { return m_nestedCount; }
         void Copy(FunctionProxy* other);
         ParseableFunctionInfo* EnsureDeserialized();

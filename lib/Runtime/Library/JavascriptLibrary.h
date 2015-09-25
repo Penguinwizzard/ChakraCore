@@ -216,6 +216,8 @@ namespace Js
         const void *const*jnHelperMethods;
 
         // Function Types
+        DynamicTypeHandler * anonymousFunctionTypeHandler;
+        DynamicTypeHandler * anonymousFunctionWithPrototypeTypeHandler;
         DynamicTypeHandler * functionTypeHandler;
         DynamicTypeHandler * functionWithPrototypeTypeHandler;
         DynamicType * externalFunctionWithDeferredPrototypeType;
@@ -778,10 +780,19 @@ namespace Js
         JavascriptExternalFunction* CreateExternalConstructor(Js::ExternalMethod entryPoint, PropertyId nameId, RecyclableObject * prototype);
         JavascriptExternalFunction* CreateExternalConstructor(Js::ExternalMethod entryPoint, PropertyId nameId, InitializeMethod method, unsigned short deferredTypeSlots, bool hasAccessors);
         static DynamicTypeHandler * GetDeferredPrototypeGeneratorFunctionTypeHandler(ScriptContext* scriptContext);
-        DynamicType * CreateDeferredPrototypeGeneratorFunctionType(JavascriptMethod entrypoint, bool isShared = false);
+        DynamicType * CreateDeferredPrototypeGeneratorFunctionType(JavascriptMethod entrypoint, bool isAnonymousFunction, bool isShared = false);
+        
         static DynamicTypeHandler * GetDeferredPrototypeFunctionTypeHandler(ScriptContext* scriptContext);
-        static DynamicTypeHandler * GetDeferredBoundFunctionTypeHandler(ScriptContext* scriptContext);
+        static DynamicTypeHandler * GetDeferredAnonymousPrototypeFunctionTypeHandler();
+        static DynamicTypeHandler * GetDeferredAnonymousPrototypeGeneratorFunctionTypeHandler();
+
         DynamicTypeHandler * GetDeferredFunctionTypeHandler();
+        DynamicTypeHandler * GetDeferredAnonymousFunctionTypeHandler();
+        template<bool isNameAvailable, bool isPrototypeAvailable = true>
+        static DynamicTypeHandler * GetDeferredFunctionTypeHandlerBase();
+        template<bool isNameAvailable, bool isPrototypeAvailable = true>
+        static DynamicTypeHandler * GetDeferredGeneratorFunctionTypeHandlerBase();
+        
         DynamicType * CreateDeferredPrototypeFunctionType(JavascriptMethod entrypoint);
         DynamicType * CreateDeferredPrototypeFunctionTypeNoProfileThunk(JavascriptMethod entrypoint, bool isShared = false);
         DynamicType * CreateFunctionType(JavascriptMethod entrypoint, RecyclableObject* prototype = nullptr);

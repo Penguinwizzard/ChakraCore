@@ -33,7 +33,10 @@ namespace Js
             {
                 if (this->GetScriptContext()->GetConfig()->IsES6FunctionNameEnabled() && this->GetTypeHandler()->IsDeferredTypeHandler())
                 {
-                    this->SetPropertyWithAttributes(PropertyIds::name, this->GetDisplayName(true), PropertyConfigurable, nullptr);
+                    JavascriptString* functionName = nullptr;
+                    bool status = this->GetFunctionName(&functionName);
+                    Assert(status);
+                    this->SetPropertyWithAttributes(PropertyIds::name, functionName, PropertyConfigurable, nullptr);
                 }
                 this->functionNameId = GetNativeFunctionDisplayString(scriptContext, scriptContext->GetPropertyString(TaggedInt::ToInt32(this->functionNameId)));
             }          
