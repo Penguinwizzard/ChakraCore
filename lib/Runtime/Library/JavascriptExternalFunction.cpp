@@ -87,7 +87,8 @@ namespace Js
         }
 
         JavascriptString * functionName = nullptr;
-        if (scriptContext->GetConfig()->IsES6FunctionNameEnabled() &&  object->GetFunctionName(&functionName))
+        if (scriptContext->GetConfig()->IsES6FunctionNameEnabled() &&  
+            object->GetFunctionName(&functionName))
         {
             object->SetPropertyWithAttributes(PropertyIds::name, functionName, PropertyConfigurable, nullptr);
         }

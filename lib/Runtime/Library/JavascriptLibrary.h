@@ -787,6 +787,7 @@ namespace Js
         static DynamicTypeHandler * GetDeferredAnonymousPrototypeGeneratorFunctionTypeHandler();
 
         DynamicTypeHandler * GetDeferredFunctionTypeHandler();
+        DynamicTypeHandler * ScriptFunctionTypeHandler(bool hasPrototype, bool isAnonymousFunction);
         DynamicTypeHandler * GetDeferredAnonymousFunctionTypeHandler();
         template<bool isNameAvailable, bool isPrototypeAvailable = true>
         static DynamicTypeHandler * GetDeferredFunctionTypeHandlerBase();

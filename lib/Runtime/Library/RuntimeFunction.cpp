@@ -34,7 +34,7 @@ namespace Js
                 if (this->GetScriptContext()->GetConfig()->IsES6FunctionNameEnabled() && this->GetTypeHandler()->IsDeferredTypeHandler())
                 {
                     JavascriptString* functionName = nullptr;
-                    bool status = this->GetFunctionName(&functionName);
+                    DebugOnly(bool status = ) this->GetFunctionName(&functionName);
                     Assert(status);
                     this->SetPropertyWithAttributes(PropertyIds::name, functionName, PropertyConfigurable, nullptr);
                 }
