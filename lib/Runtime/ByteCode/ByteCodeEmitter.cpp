@@ -9147,7 +9147,7 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
 
             if (propertyId == Js::PropertyIds::length)
             {
-                byteCodeGenerator->Writer()->Reg2(Js::OpCode::LdLen_A, pnode->location, pnode->sxBin.pnode1->location);
+                byteCodeGenerator->Writer()->Reg2(Js::OpCode::LdLen_A, pnode->location, protoLocation);
             }
             else
             {

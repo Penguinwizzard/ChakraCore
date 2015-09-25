@@ -30,8 +30,8 @@ A.prototype.x = 42;
 A.prototype["y"] = 30;
 A.prototype[10] = 10;
 A.prototype[10.1] = 10.1;
-A.prototype.length = 2;
-A.length = -1
+Object.defineProperty(A.prototype, "length", {writable : true, value : 2 });
+Object.defineProperty(A, "length", {writable : true, value : -1 });
 var tests = [
    {
        name: "Access length",
@@ -48,6 +48,7 @@ var tests = [
                     print(super.length);
                 }
             }
+            var bar = new B();
        }
    },
    {
@@ -66,6 +67,7 @@ var tests = [
                     assert.areEqual(10.1, super["10.1"], "confirm we can make index property calls on float point properties accessed as strings");
                 }
             }
+            var bar = new B();
        }
    },
    {
@@ -87,7 +89,7 @@ var tests = [
                     super_arrow();
                 }
             }
-
+            var bar = new B();
        }
    },
    {
@@ -109,7 +111,7 @@ var tests = [
                     super_arrow();
                 }
             }
-
+            var bar = new B();
        }
    },
    {
