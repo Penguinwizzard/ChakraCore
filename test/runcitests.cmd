@@ -39,7 +39,10 @@ set _HadFailures=0
     exit /b 2
   )
 
-  call :doSilent rd /s/q %_RootDir%\test\logs
+  pushd %_RootDir%\test
+  set _TestDir=%CD%
+
+  call :doSilent rd /s/q %_TestDir%\logs
 
   call :runTests x86debug
   call :runTests x86test
@@ -56,6 +59,8 @@ set _HadFailures=0
   )
   echo runcitests.cmd ^>^> Logs at %_DropRootDir%\testlogs
 
+  popd
+
   exit /b %_HadFailures%
 
 :: ============================================================================
@@ -63,7 +68,7 @@ set _HadFailures=0
 :: ============================================================================
 :runTests
 
-  call :do %_RootDir%\test\runtests.cmd -%1 -quiet -cleanupall -binDir %_StagingDir%\bin
+  call :do %_TestDir%\runtests.cmd -%1 -quiet -cleanupall -binDir %_StagingDir%\bin
 
   if ERRORLEVEL 1 set _HadFailures=1
 
@@ -79,7 +84,7 @@ set _HadFailures=0
   :: /C Continue copying if there are errors
   :: /I Assume destination is a directory if it does not exist
 
-  call :do xcopy %_RootDir%\test\logs %_StagingDir%\testlogs /S /Y /C /I
+  call :do xcopy %_TestDir%\logs %_StagingDir%\testlogs /S /Y /C /I
 
   goto :eof
 
