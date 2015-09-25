@@ -9122,22 +9122,13 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         funcInfo->ReleaseLoc(pnode->sxBin.pnode1);
         funcInfo->AcquireLoc(pnode);
 
-            Js::RegSlot callObjLocation = pnode->sxBin.pnode1->location;
-            Js::RegSlot protoLocation = callObjLocation;
-            bool  protoRegisterAquired = false;
-        if (pnode->sxBin.pnode1->nop == knopSuper)
-        {
-            EmitSuperMethodBegin(pnode, byteCodeGenerator, &protoLocation, callObjLocation, funcInfo, &protoRegisterAquired);
-        }
-
-            byteCodeGenerator->Writer()->Element(
-                Js::OpCode::LdElemI_A, pnode->location, protoLocation, pnode->sxBin.pnode2->location);
-        
-        if (pnode->sxBin.pnode1->nop == knopSuper)
-        {
-            EmitSuperMethodEnd(funcInfo, protoLocation, protoRegisterAquired);
-        }
-
+        Js::RegSlot callObjLocation = pnode->sxBin.pnode1->location;
+        Js::RegSlot protoLocation = callObjLocation;
+        bool  protoRegisterAquired = false;
+        EmitSuperMethodBegin(pnode, byteCodeGenerator, &protoLocation, callObjLocation, funcInfo, &protoRegisterAquired);
+        byteCodeGenerator->Writer()->Element(
+            Js::OpCode::LdElemI_A, pnode->location, protoLocation, pnode->sxBin.pnode2->location);
+        EmitSuperMethodEnd(funcInfo, protoLocation, protoRegisterAquired);
         byteCodeGenerator->EndStatement(pnode);
         break;
     }
@@ -9148,20 +9139,19 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
             funcInfo->ReleaseLoc(pnode->sxBin.pnode1);
             funcInfo->AcquireLoc(pnode);
             Js::PropertyId propertyId = pnode->sxBin.pnode2->sxPid.PropertyIdFromNameNode();
+
+            Js::RegSlot callObjLocation = pnode->sxBin.pnode1->location;
+            Js::RegSlot protoLocation = callObjLocation;
+            bool  protoRegisterAquired = false;
+            EmitSuperMethodBegin(pnode, byteCodeGenerator, &protoLocation, callObjLocation, funcInfo, &protoRegisterAquired);
+
             if (propertyId == Js::PropertyIds::length)
             {
                 byteCodeGenerator->Writer()->Reg2(Js::OpCode::LdLen_A, pnode->location, pnode->sxBin.pnode1->location);
             }
             else
             {
-                uint cacheId = funcInfo->FindOrAddInlineCacheId(pnode->sxBin.pnode1->location, propertyId, false, false);
-                    Js::RegSlot callObjLocation = pnode->sxBin.pnode1->location;
-                    Js::RegSlot protoLocation = callObjLocation;
-                    bool  protoRegisterAquired = false;
-                if (pnode->sxBin.pnode1->nop == knopSuper)
-                {
-                    EmitSuperMethodBegin(pnode, byteCodeGenerator, &protoLocation, callObjLocation, funcInfo, &protoRegisterAquired);
-                }
+                uint cacheId = funcInfo->FindOrAddInlineCacheId(callObjLocation, propertyId, false, false);
                 if(pnode->IsCallApplyTargetLoad())
                 {
                     byteCodeGenerator->Writer()->PatchableProperty(Js::OpCode::LdFldForCallApplyTarget, pnode->location, protoLocation, cacheId);
@@ -9174,14 +9164,12 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
                     }
                     else
                     {
-                        byteCodeGenerator->Writer()->PatchableProperty(Js::OpCode::LdFld, pnode->location, pnode->sxBin.pnode1->location, cacheId, isConstructorCall);
+                        byteCodeGenerator->Writer()->PatchableProperty(Js::OpCode::LdFld, pnode->location, callObjLocation, cacheId, isConstructorCall);
                     }
                 }
-                if (pnode->sxBin.pnode1->nop == knopSuper)
-                {
-                    EmitSuperMethodEnd(funcInfo, protoLocation, protoRegisterAquired);
-                }
             }
+
+            EmitSuperMethodEnd(funcInfo, protoLocation, protoRegisterAquired);
             break;
         }
 
