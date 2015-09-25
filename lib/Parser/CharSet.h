@@ -453,9 +453,10 @@ namespace UnifiedRegex
         
         // Helpers to clean up the code
 
-        inline size_t GetCompactLength() const
+        inline uint GetCompactLength() const
         {
-            return rep.compact.countPlusOne - 1u;
+            Assert(IsCompact());
+            return (uint)(rep.compact.countPlusOne - 1u);
         }
 
         inline void SetCompactLength(size_t length)

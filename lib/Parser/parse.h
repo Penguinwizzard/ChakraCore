@@ -154,7 +154,7 @@ public:
     static ULONG GetDeferralThreshold(bool isProfileLoaded);
     BOOL DeferredParse(Js::LocalFunctionId functionId);
     BOOL IsDeferredFnc();
-    void ReduceDeferredScriptLength(ULONG chars);
+    void ReduceDeferredScriptLength(size_t chars);
 
     void RestorePidRefForSym(Symbol *sym);
 

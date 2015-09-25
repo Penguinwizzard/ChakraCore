@@ -1175,7 +1175,7 @@ DynamicProfileStorage::SaveRecord(__in_z wchar_t const * filename, __in_ecount(s
 }
 
 char *
-DynamicProfileStorage::AllocRecord(size_t bufferSize)
+DynamicProfileStorage::AllocRecord(DWORD bufferSize)
 {
     Assert(enabled);
     char * buffer = NoCheckHeapNewArray(char, bufferSize + sizeof(DWORD));

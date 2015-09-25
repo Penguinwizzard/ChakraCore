@@ -548,9 +548,9 @@ namespace Js
         template <typename T>
         static void WriteData(T data, FILE * file);
         template <>
-        static void WriteData<wchar_t const *>(wchar_t const * sz, FILE * file);
+        static void WriteData<wchar_t const *>(wchar_t const * sz, FILE * file);        
         template <>
-        static void WriteData<FunctionInfo *>(FunctionInfo * functionInfo, FILE * file);
+        static void WriteData<FunctionInfo *>(FunctionInfo * functionInfo, FILE * file);    // Not defined, to prevent accidentally writing function info
         template <>
         static void WriteData<FunctionBody *>(FunctionBody * functionInfo, FILE * file);
         template <typename T>

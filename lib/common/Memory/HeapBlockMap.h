@@ -214,7 +214,7 @@ public:
     void SetPageMarkCount(void * address, ushort markCount);
 
     template <uint BitVectorCount>
-    void VerifyMarkCountForPages(void * address, size_t pageCount);
+    void VerifyMarkCountForPages(void * address, uint pageCount);
 #endif
 
 private:
@@ -314,7 +314,7 @@ public:
     void SetPageMarkCount(void * address, ushort markCount);
 
     template <uint BitVectorCount>
-    void VerifyMarkCountForPages(void * address, size_t pageCount);
+    void VerifyMarkCountForPages(void * address, uint pageCount);
 #endif
 
 #if !defined(JD_PRIVATE)

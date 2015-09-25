@@ -20,6 +20,10 @@
 #define CDECL ORIGINAL_CDECL
 #endif
 
+#ifdef _M_X64_OR_ARM64
+// TODO: Clean this warning up
+#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
+#endif
 
 using namespace Js;
 
@@ -497,12 +501,15 @@ utf8char_t* EtwTrace::GetUrl( FunctionBody* body, uint* urlLength )
         const wchar* url = body->GetSourceContextInfo()->url;   
         if(url)
         {
-            uint urlCharLength = wcslen(url);
-            *urlLength = urlCharLength * 3 + 1;
-            utf8Url = HeapNewNoThrowArray(utf8char_t, *urlLength);
-            if(utf8Url)
+            size_t urlCharLength = wcslen(url);
+            if (urlCharLength <= UINT_MAX)
             {
-                utf8::EncodeIntoAndNullTerminate(utf8Url, url, urlCharLength);
+                *urlLength = urlCharLength * 3 + 1;
+                utf8Url = HeapNewNoThrowArray(utf8char_t, *urlLength);
+                if (utf8Url)
+                {
+                    utf8::EncodeIntoAndNullTerminate(utf8Url, url, urlCharLength);
+                }
             }
         }
     }

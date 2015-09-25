@@ -241,9 +241,9 @@ namespace Js
         void AllocateLoopHeaders();
 
 #if DBG_DUMP
-        int ByteCodeDataSize();
-        int AuxiliaryDataSize();
-        int AuxiliaryContextDataSize();
+        size_t ByteCodeDataSize();
+        size_t AuxiliaryDataSize();
+        size_t AuxiliaryContextDataSize();
 #endif
         void Empty(OpCode op);
         void Reg1(OpCode op, RegSlot R0);

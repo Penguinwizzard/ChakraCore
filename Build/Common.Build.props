@@ -16,9 +16,12 @@
       <!-- /Zi -->
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <!-- /EHsc- -->
-      <ExceptionHandling>SyncCThrow</ExceptionHandling>
-      <!-- TODO: clean up 4267 -->
-      <DisableSpecificWarnings>4100;4127;4267;4481</DisableSpecificWarnings>
+      <ExceptionHandling>SyncCThrow</ExceptionHandling>      
+      <DisableSpecificWarnings>
+        4100;
+        4127;
+        4481
+      </DisableSpecificWarnings>
       <!-- /Gz -->
       <CallingConvention Condition="'$(Platform)'=='Win32'">StdCall</CallingConvention>
       <!-- /Zp8 -->
@@ -63,7 +66,6 @@
   <!-- chk build flags -->
   <ItemDefinitionGroup Condition="'$(OptimizedBuild)'!='true'">
     <ClCompile>
-      <!-- ========= From inetcore\jscript\project.mk ========= -->
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);_DEBUG;DBG;DBG_DUMP</PreprocessorDefinitions>
     </ClCompile>
@@ -74,7 +76,6 @@
   <!-- fre and fretest build flags -->
   <ItemDefinitionGroup Condition="'$(OptimizedBuild)'=='true'">
     <ClCompile>
-      <!-- ========= From inetcore\jscript\project.mk ========= -->
       <PreprocessorDefinitions>%(PreprocessorDefinitions);NDEBUG</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)'=='Test'">%(PreprocessorDefinitions);ENABLE_DEBUG_CONFIG_OPTIONS=1</PreprocessorDefinitions>
       <Optimization>MaxSpeed</Optimization>

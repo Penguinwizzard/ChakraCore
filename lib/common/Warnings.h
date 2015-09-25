@@ -4,11 +4,15 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
+//=============================
+// Enabled Warnings
+//=============================
+#pragma warning(default:4242)   // convertion possible loss of data
 
-// 
-// Warnings
-// 
-
+//=============================
+// Disabled Warnings
+//=============================
+// Warnings that we don't care about
 #pragma warning(disable: 4100)  // unreferenced formal parameter
 #pragma warning(disable: 4127)  // constant expression for Trace/Assert
 #pragma warning(disable: 4200)  // nonstandard extension used: zero-sized array in struct/union
@@ -26,7 +30,7 @@
 #pragma warning(disable: 4390)  // empty controlled statement
 #endif // DBG
 
-// PREFAST
+// PREFAST warnings
 #ifdef _PREFAST_
 // Warnings that we don't care about
 #pragma warning(disable:6322)       // Empty _except block

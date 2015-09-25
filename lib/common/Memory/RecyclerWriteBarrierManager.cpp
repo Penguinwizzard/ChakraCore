@@ -16,7 +16,7 @@
 //  AS JavascriptDispatch/RecyclerObjectDumper
 //  AT HeapAllocator/RecyclerHeuristic
 //  AU RecyclerWriteBarrierManager
-#pragma warning(disable:4075)
+#pragma warning(disable:4075)       // initializers put in unrecognized initialization area on purpose
 #pragma init_seg(".CRT$XCAU")
 
 #ifdef RECYCLER_WRITE_BARRIER
@@ -332,7 +332,7 @@ RecyclerWriteBarrierManager::GetCardTableIndex(void *address)
 }
 
 void
-RecyclerWriteBarrierManager::ResetWriteBarrier(void * address, uint pageCount)
+RecyclerWriteBarrierManager::ResetWriteBarrier(void * address, size_t pageCount)
 {
     // WriteBarrier-TODO: This method works only when the card table granularity is equal to the page size or in the bitarray case, each bit represents 128 bytes
     // Need to make this more generic for arbitrary card table granularity

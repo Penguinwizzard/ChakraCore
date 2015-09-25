@@ -381,10 +381,6 @@ operator new[](size_t byteSize, TAllocator * alloc, char * (TAllocator::*AllocFu
     return buffer;
 }
 
-// Disable the warning about no matching operator delete found, we don't need those for the Arena and Recycler
-#pragma warning(disable:4291)
-
-
 template <typename TAllocator>
 _Ret_notnull_ __inline void * __cdecl
 operator new(size_t byteSize, TAllocator * alloc, char * (TAllocator::*AllocFunc)(size_t), size_t plusSize)

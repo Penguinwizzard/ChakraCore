@@ -12,9 +12,10 @@
 
 #include <wrl\implements.h>
 
-//#include <wrl\wrappers\corewrappers.h>
-
-
+#ifdef _M_X64_OR_ARM64
+// TODO: Clean this warning up
+#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
+#endif
 
 #ifdef NTBUILD
 using namespace Windows::Globalization;
@@ -519,7 +520,7 @@ namespace Js
         // initialize hard-coded default languages
         AutoArrayPtr<HSTRING> arr(HeapNewArray(HSTRING, 1), 1);
         AutoArrayPtr<HSTRING_HEADER> headers(HeapNewArray(HSTRING_HEADER, 1), 1);
-        IfFailedReturn(library->WindowsCreateStringReference(L"en-US", wcslen(L"en-US"), (headers), (arr)));
+        IfFailedReturn(library->WindowsCreateStringReference(L"en-US", _countof(L"en-US") - 1, (headers), (arr)));
         Microsoft::WRL::ComPtr<IIterable<HSTRING>> defaultLanguages;
         IfFailedReturn(Microsoft::WRL::MakeAndInitialize<HSTRINGIterable>(&defaultLanguages, arr, 1));
 

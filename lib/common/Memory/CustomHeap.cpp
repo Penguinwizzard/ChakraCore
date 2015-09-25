@@ -13,6 +13,11 @@
 #endif
 #include "CustomHeap.h"
 
+#ifdef _M_X64_OR_ARM64
+// TODO: Clean this warning up
+#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
+#endif
+
 namespace Memory
 {
 namespace CustomHeap

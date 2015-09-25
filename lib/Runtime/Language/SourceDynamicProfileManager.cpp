@@ -330,140 +330,146 @@ namespace Js
 
 #ifdef DYNAMIC_PROFILE_STORAGE
 
-void
-SourceDynamicProfileManager::SaveDynamicProfileInfo(LocalFunctionId functionId, DynamicProfileInfo * dynamicProfileInfo)
-{    
-    Assert(dynamicProfileInfo->GetFunctionBody()->HasExecutionDynamicProfileInfo());
-    dynamicProfileInfoMap.Item(functionId, dynamicProfileInfo);
-}
+    void
+    SourceDynamicProfileManager::SaveDynamicProfileInfo(LocalFunctionId functionId, DynamicProfileInfo * dynamicProfileInfo)
+    {    
+        Assert(dynamicProfileInfo->GetFunctionBody()->HasExecutionDynamicProfileInfo());
+        dynamicProfileInfoMap.Item(functionId, dynamicProfileInfo);
+    }
 
-template <typename T>
-SourceDynamicProfileManager *
+    template <typename T>
+    SourceDynamicProfileManager *
     SourceDynamicProfileManager::Deserialize(T * reader, Recycler* recycler)
-{
-    uint functionCount;
-    if (!reader->Peek(&functionCount))
     {
-        return nullptr;
-    }        
+        uint functionCount;
+        if (!reader->Peek(&functionCount))
+        {
+            return nullptr;
+        }        
 
-    BVFixed * startupFunctions = BVFixed::New(functionCount, recycler);
-    if (!reader->ReadArray(((char *)startupFunctions),
-        BVFixed::GetAllocSize(functionCount)))
-    {
-        return nullptr;
-    }
-
-    uint profileCount;
-
-    if (!reader->Read(&profileCount))
-    {
-        return nullptr;
-    }    
-
-    ThreadContext* threadContext = ThreadContext::GetContextForCurrentThread();
-
-    SourceDynamicProfileManager * sourceDynamicProfileManager = RecyclerNew(threadContext->GetRecycler(), SourceDynamicProfileManager, recycler);
-
-    sourceDynamicProfileManager->cachedStartupFunctions = startupFunctions;
-
-#if DBG_DUMP
-    if(Configuration::Global.flags.Dump.IsEnabled(DynamicProfilePhase))
-    {
-        Output::Print(L"Loaded: Startup functions bit vector:");
-        startupFunctions->Dump();
-    }
-#endif
-
-    for (uint i = 0; i < profileCount; i++)
-    {
-        Js::LocalFunctionId functionId;   
-        DynamicProfileInfo * dynamicProfileInfo = DynamicProfileInfo::Deserialize(reader, recycler, &functionId);
-        if (dynamicProfileInfo == nullptr || functionId >= functionCount)
-        {            
+        BVFixed * startupFunctions = BVFixed::New(functionCount, recycler);
+        if (!reader->ReadArray(((char *)startupFunctions),
+            BVFixed::GetAllocSize(functionCount)))
+        {
             return nullptr;
         }
-        sourceDynamicProfileManager->dynamicProfileInfoMap.Add(functionId, dynamicProfileInfo);
-    }    
-    return sourceDynamicProfileManager;
-}
 
-template <typename T>
-bool
+        uint profileCount;
+
+        if (!reader->Read(&profileCount))
+        {
+            return nullptr;
+        }    
+
+        ThreadContext* threadContext = ThreadContext::GetContextForCurrentThread();
+
+        SourceDynamicProfileManager * sourceDynamicProfileManager = RecyclerNew(threadContext->GetRecycler(), SourceDynamicProfileManager, recycler);
+
+        sourceDynamicProfileManager->cachedStartupFunctions = startupFunctions;
+
+#if DBG_DUMP
+        if(Configuration::Global.flags.Dump.IsEnabled(DynamicProfilePhase))
+        {
+            Output::Print(L"Loaded: Startup functions bit vector:");
+            startupFunctions->Dump();
+        }
+#endif
+
+        for (uint i = 0; i < profileCount; i++)
+        {
+            Js::LocalFunctionId functionId;   
+            DynamicProfileInfo * dynamicProfileInfo = DynamicProfileInfo::Deserialize(reader, recycler, &functionId);
+            if (dynamicProfileInfo == nullptr || functionId >= functionCount)
+            {            
+                return nullptr;
+            }
+            sourceDynamicProfileManager->dynamicProfileInfoMap.Add(functionId, dynamicProfileInfo);
+        }    
+        return sourceDynamicProfileManager;
+    }
+
+    template <typename T>
+    bool
     SourceDynamicProfileManager::Serialize(T * writer)
-{
-    // To simulate behavior of in memory profile cache - let's keep functions marked as executed if they were loaded
-    // to be so from the profile - this helps with ensure inlined functions are marked as executed.
-    if(!this->startupFunctions)
     {
-        this->startupFunctions = const_cast<BVFixed*>(this->cachedStartupFunctions);
-    }
-    else if(cachedStartupFunctions && this->cachedStartupFunctions->Length() == this->startupFunctions->Length())
-    {
-        this->startupFunctions->Or(cachedStartupFunctions);
-    }
-
-    if(this->startupFunctions)
-    {
-#if DBG_DUMP
-         if(Configuration::Global.flags.Dump.IsEnabled(DynamicProfilePhase))
+        // To simulate behavior of in memory profile cache - let's keep functions marked as executed if they were loaded
+        // to be so from the profile - this helps with ensure inlined functions are marked as executed.
+        if(!this->startupFunctions)
         {
-            Output::Print(L"Saving: Startup functions bit vector:");
-            this->startupFunctions->Dump();
+            this->startupFunctions = const_cast<BVFixed*>(this->cachedStartupFunctions);
         }
+        else if(cachedStartupFunctions && this->cachedStartupFunctions->Length() == this->startupFunctions->Length())
+        {
+            this->startupFunctions->Or(cachedStartupFunctions);
+        }
+
+        if(this->startupFunctions)
+        {
+#if DBG_DUMP
+             if(Configuration::Global.flags.Dump.IsEnabled(DynamicProfilePhase))
+            {
+                Output::Print(L"Saving: Startup functions bit vector:");
+                this->startupFunctions->Dump();
+            }
 #endif
 
-        DWORD bvSize = BVFixed::GetAllocSize(this->startupFunctions->Length()) ;
-        if (!writer->WriteArray((char *)this->startupFunctions, bvSize)
-            || !writer->Write(this->dynamicProfileInfoMap.Count()))
-        {
-            return false;
+            size_t bvSize = BVFixed::GetAllocSize(this->startupFunctions->Length()) ;
+            if (!writer->WriteArray((char *)this->startupFunctions, bvSize)
+                || !writer->Write(this->dynamicProfileInfoMap.Count()))
+            {
+                return false;
+            }
         }
-    }
 
-    for (int i = 0; i < this->dynamicProfileInfoMap.Count(); i++)
-    {
-        DynamicProfileInfo * dynamicProfileInfo = this->dynamicProfileInfoMap.GetValueAt(i);
-        if (dynamicProfileInfo == nullptr || !dynamicProfileInfo->HasFunctionBody())
+        for (int i = 0; i < this->dynamicProfileInfoMap.Count(); i++)
         {
-            continue;
-        }
+            DynamicProfileInfo * dynamicProfileInfo = this->dynamicProfileInfoMap.GetValueAt(i);
+            if (dynamicProfileInfo == nullptr || !dynamicProfileInfo->HasFunctionBody())
+            {
+                continue;
+            }
         
-        if (!dynamicProfileInfo->Serialize(writer))
-        {
-            return false;
+            if (!dynamicProfileInfo->Serialize(writer))
+            {
+                return false;
+            }
         }
+        return true;
     }
-    return true;
-}
 
-void
+    void
     SourceDynamicProfileManager::SaveToDynamicProfileStorage(wchar_t const * url)
-{
-    Assert(DynamicProfileStorage::IsEnabled());    
-    BufferSizeCounter counter;
-    if (!this->Serialize(&counter))
     {
-        return;
-    }
+        Assert(DynamicProfileStorage::IsEnabled());    
+        BufferSizeCounter counter;
+        if (!this->Serialize(&counter))
+        {
+            return;
+        }
 
-    char * record = DynamicProfileStorage::AllocRecord(counter.GetByteCount());    
+        if (counter.GetByteCount() > UINT_MAX)
+        {
+            // too big
+            return;
+        }
+
+        char * record = DynamicProfileStorage::AllocRecord(static_cast<DWORD>(counter.GetByteCount()));
 #if DBG_DUMP
-    if (PHASE_STATS1(DynamicProfilePhase))
-    {
-        Output::Print(L"%-180s : %d bytes\n", url, counter.GetByteCount());
-    }
+        if (PHASE_STATS1(DynamicProfilePhase))
+        {
+            Output::Print(L"%-180s : %d bytes\n", url, counter.GetByteCount());
+        }
 #endif
 
-    BufferWriter writer(DynamicProfileStorage::GetRecordBuffer(record), counter.GetByteCount());
-    if (!this->Serialize(&writer))
-    {
-        Assert(false);
-        DynamicProfileStorage::DeleteRecord(record);
-    }
+        BufferWriter writer(DynamicProfileStorage::GetRecordBuffer(record), counter.GetByteCount());
+        if (!this->Serialize(&writer))
+        {
+            Assert(false);
+            DynamicProfileStorage::DeleteRecord(record);
+        }
 
-    DynamicProfileStorage::SaveRecord(url, record);
-}
+        DynamicProfileStorage::SaveRecord(url, record);
+    }
 
 #endif
 };

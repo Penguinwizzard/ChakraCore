@@ -10,12 +10,12 @@ class ScriptMemoryDumper
 public:
     typedef struct HeapStats
     {
-        uint32 pageCount;
+        size_t pageCount;
         uint32 objectSize;
         uint32 freeObjectCount;
         uint32 activeObjectCount;
-        uint32 activeObjectByteSize;
-        uint32 totalByteCount;
+        size_t activeObjectByteSize;
+        size_t totalByteCount;
         uint32 finalizeCount; // hostdispatch etc.
     };
 

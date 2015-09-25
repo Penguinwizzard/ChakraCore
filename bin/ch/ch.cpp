@@ -179,7 +179,7 @@ HRESULT CreateLibraryByteCodeHeader(LPCOLESTR fileContents, BYTE * contentsRaw, 
     auto outputStr =
         "// Copyright (C) Microsoft. All rights reserved.\r\n"
         "#if 0 \r\n";
-    IfFalseGo(WriteFile(bcFileHandle, outputStr, strlen(outputStr), &written, nullptr));
+    IfFalseGo(WriteFile(bcFileHandle, outputStr, (DWORD)strlen(outputStr), &written, nullptr));
     IfFalseGo(WriteFile(bcFileHandle, contentsRaw, lengthBytes, &written, nullptr));
     if (lengthBytes < 2 || contentsRaw[lengthBytes - 2] != '\r' || contentsRaw[lengthBytes - 1] != '\n')
     {
@@ -189,17 +189,17 @@ HRESULT CreateLibraryByteCodeHeader(LPCOLESTR fileContents, BYTE * contentsRaw, 
     {
         outputStr = "#endif\r\n";
     }
-    IfFalseGo(WriteFile(bcFileHandle, outputStr, strlen(outputStr), &written, nullptr));
+    IfFalseGo(WriteFile(bcFileHandle, outputStr, (DWORD)strlen(outputStr), &written, nullptr));
 
     // Write out the bytecode
     outputStr = "namespace Js \r\n{\r\n    const char Library_Bytecode_";
-    IfFalseGo(WriteFile(bcFileHandle, outputStr, strlen(outputStr), &written, nullptr));
+    IfFalseGo(WriteFile(bcFileHandle, outputStr, (DWORD)strlen(outputStr), &written, nullptr));
     size_t convertedChars;
     char libraryNameNarrow[MAX_PATH + 1];
     IfFalseGo((wcstombs_s(&convertedChars, libraryNameNarrow, libraryNameWide, _TRUNCATE) == 0));
-    IfFalseGo(WriteFile(bcFileHandle, libraryNameNarrow, strlen(libraryNameNarrow), &written, nullptr));
+    IfFalseGo(WriteFile(bcFileHandle, libraryNameNarrow, (DWORD)strlen(libraryNameNarrow), &written, nullptr));
     outputStr = "[] = \r\n/* 00000000 */ {";
-    IfFalseGo(WriteFile(bcFileHandle, outputStr, strlen(outputStr), &written, nullptr));
+    IfFalseGo(WriteFile(bcFileHandle, outputStr, (DWORD)strlen(outputStr), &written, nullptr));
 
     for (unsigned int i = 0; i < bcBufferSize; i++)
     {
@@ -207,14 +207,14 @@ HRESULT CreateLibraryByteCodeHeader(LPCOLESTR fileContents, BYTE * contentsRaw, 
         auto scratchLen = sizeof(scratch);
         int num = _snprintf_s(scratch, scratchLen, "0x%02X", bcBuffer[i]);
         Assert(num == 4);
-        IfFalseGo(WriteFile(bcFileHandle, scratch, scratchLen - 1, &written, nullptr));
+        IfFalseGo(WriteFile(bcFileHandle, scratch, (DWORD)(scratchLen - 1), &written, nullptr));
 
         //Add a comma and a space if this is not the last item
         if (i < bcBufferSize - 1)
         {
             char commaSpace[3];
             _snprintf_s(commaSpace, sizeof(commaSpace), ", ");  // close quote, new line, offset and open quote
-            IfFalseGo(WriteFile(bcFileHandle, commaSpace, strlen(commaSpace), &written, nullptr));
+            IfFalseGo(WriteFile(bcFileHandle, commaSpace, (DWORD)strlen(commaSpace), &written, nullptr));
         }
 
         //Add a line break every 16 scratches, primarily so the compiler doesn't complain about the string being too long.
@@ -223,14 +223,14 @@ HRESULT CreateLibraryByteCodeHeader(LPCOLESTR fileContents, BYTE * contentsRaw, 
         {
             char offset[18];
             _snprintf_s(offset, sizeof(offset), "\r\n/* %08X */ ", i + 1);  // close quote, new line, offset and open quote
-            IfFalseGo(WriteFile(bcFileHandle, offset, strlen(offset), &written, nullptr));
+            IfFalseGo(WriteFile(bcFileHandle, offset, (DWORD)strlen(offset), &written, nullptr));
         }
     }
     outputStr = "};\r\n\r\n";
-    IfFalseGo(WriteFile(bcFileHandle, outputStr, strlen(outputStr), &written, nullptr));
+    IfFalseGo(WriteFile(bcFileHandle, outputStr, (DWORD)strlen(outputStr), &written, nullptr));
 
     outputStr = "}";
-    IfFalseGo(WriteFile(bcFileHandle, outputStr, strlen(outputStr), &written, nullptr));
+    IfFalseGo(WriteFile(bcFileHandle, outputStr, (DWORD)strlen(outputStr), &written, nullptr));
 
 Error:
     if (bcFileHandle != nullptr)

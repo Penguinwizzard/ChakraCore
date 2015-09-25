@@ -6,9 +6,11 @@
 #include "FormalsUtil.h"
 #include "Language\AsmJs.h"
 
-// TODO (yongqu) get rid of pragma warning
-#pragma warning(disable:4242)
-#pragma warning(disable:4244)
+// TODO: Clean this warning up
+#pragma warning(disable:4242) // 'identifier': conversion from 'type1' to 'type2', possible loss of data
+#pragma warning(disable:4244) // 'argument' : conversion from 'type1' to 'type2', possible loss of data
+#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
+
 
 void EmitReference(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *funcInfo);
 void EmitAssignment(ParseNode *asgnNode, ParseNode *lhs, Js::RegSlot rhsLocation, ByteCodeGenerator *byteCodeGenerator,FuncInfo *funcInfo);

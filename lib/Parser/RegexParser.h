@@ -30,10 +30,10 @@ namespace UnifiedRegex
             const EncodedChar* rangeLocation;
             codepoint_t value;
             uint32 length;
-            uint32 multiUnits;
+            size_t multiUnits;
             SurrogatePairTracker* next;
 
-            SurrogatePairTracker(const EncodedChar* location, codepoint_t value, uint32 length, uint32 multiUnits)
+            SurrogatePairTracker(const EncodedChar* location, codepoint_t value, uint32 length, size_t multiUnits)
                 : location(location)
                 , next(nullptr)
                 , value(value)
@@ -43,7 +43,7 @@ namespace UnifiedRegex
             {
             }
 
-            SurrogatePairTracker(const EncodedChar* location, const EncodedChar* rangeLocation, codepoint_t value, uint32 length, uint32 multiUnits)
+            SurrogatePairTracker(const EncodedChar* location, const EncodedChar* rangeLocation, codepoint_t value, uint32 length, size_t multiUnits)
                 : location(location)
                 , next(nullptr)
                 , value(value)

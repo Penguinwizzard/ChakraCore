@@ -144,7 +144,7 @@ public:
     static bool OnSegmentFree(_In_ char* segment, size_t pageCount);
 #endif
 
-    static void ResetWriteBarrier(void * address, uint pageCount);
+    static void ResetWriteBarrier(void * address, size_t pageCount);
 #ifdef RECYCLER_WRITE_BARRIER_BYTE
     static BYTE  GetWriteBarrier(void * address);
 #else

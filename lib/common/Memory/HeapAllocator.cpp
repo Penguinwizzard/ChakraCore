@@ -21,7 +21,7 @@
 //  AS JavascriptDispatch/RecyclerObjectDumper
 //  AT HeapAllocator/RecyclerHeuristic
 //  AU RecyclerWriteBarrierManager
-#pragma warning(disable:4075)
+#pragma warning(disable:4075)       // initializers put in unrecognized initialization area on purpose
 #pragma init_seg(".CRT$XCAT")
 
 #ifdef HEAP_TRACK_ALLOC

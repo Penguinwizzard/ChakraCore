@@ -800,7 +800,7 @@ ThreadContext::UncheckedAddPropertyId(JsUtil::CharacterBuffer<WCHAR> const& prop
     // Create the PropertyRecord
 
     int length = propertyName.GetLength();
-    size_t bytelength = sizeof(wchar_t) * length;
+    uint bytelength = sizeof(wchar_t) * length;
     
     uint32 indexVal = 0;
 

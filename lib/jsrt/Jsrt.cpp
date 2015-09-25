@@ -22,6 +22,11 @@
 #include "TestHooksRt.h"
 #endif
 
+#ifdef _M_X64_OR_ARM64
+// TODO: Clean this warning up
+#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
+#endif
+
 JsErrorCode CheckContext(JsrtContext *currentContext, bool verifyRuntimeState, bool allowInObjectBeforeCollectCallback)
 {
     if (currentContext == nullptr)
@@ -577,36 +582,34 @@ void HandleScriptCompileError(Js::ScriptContext * scriptContext, CompileScriptEx
     Js::JavascriptError * error = Js::JavascriptError::MapParseError(scriptContext, hr);
     const Js::PropertyRecord *record;
 
-    Js::Var value = Js::JavascriptString::NewCopySz(se->ei.bstrDescription, scriptContext);
-    scriptContext->GetOrAddPropertyRecord(L"message", wcslen(L"message"), &record);
-    Js::JavascriptOperators::OP_SetProperty(error, record->GetPropertyId(), value, scriptContext);
+    Js::Var value = Js::JavascriptString::NewCopySz(se->ei.bstrDescription, scriptContext);    
+    Js::JavascriptOperators::OP_SetProperty(error, Js::PropertyIds::message, value, scriptContext);
 
-    scriptContext->GetOrAddPropertyRecord(L"line", wcslen(L"line"), &record);
+    
     if (se->hasLineNumberInfo)
     {
         value = Js::JavascriptNumber::New(se->line, scriptContext);
+        scriptContext->GetOrAddPropertyRecord(L"line", &record);
         Js::JavascriptOperators::OP_SetProperty(error, record->GetPropertyId(), value, scriptContext);
     }
-
-    scriptContext->GetOrAddPropertyRecord(L"column", wcslen(L"column"), &record);
+    
     if (se->hasLineNumberInfo)
     {
         value = Js::JavascriptNumber::New(se->ichMin - se->ichMinLine, scriptContext);
+        scriptContext->GetOrAddPropertyRecord(L"column", &record);
         Js::JavascriptOperators::OP_SetProperty(error, record->GetPropertyId(), value, scriptContext);
     }
-
-    scriptContext->GetOrAddPropertyRecord(L"length", wcslen(L"length"), &record);
+    
     if (se->hasLineNumberInfo)
     {
         value = Js::JavascriptNumber::New(se->ichLim - se->ichMin, scriptContext);
-        Js::JavascriptOperators::OP_SetProperty(error, record->GetPropertyId(), value, scriptContext);
+        Js::JavascriptOperators::OP_SetProperty(error, Js::PropertyIds::length, value, scriptContext);
     }
-
-    scriptContext->GetOrAddPropertyRecord(L"source", wcslen(L"source"), &record);
+    
     if (se->bstrLine != nullptr)
     {
         value = Js::JavascriptString::NewCopySz(se->bstrLine, scriptContext);
-        Js::JavascriptOperators::OP_SetProperty(error, record->GetPropertyId(), value, scriptContext);
+        Js::JavascriptOperators::OP_SetProperty(error, Js::PropertyIds::source, value, scriptContext);
     }
 
     Js::JavascriptExceptionObject * exceptionObject = RecyclerNew(scriptContext->GetRecycler(),
@@ -1904,10 +1907,8 @@ STDAPI_(JsErrorCode) JsCreateNamedFunction(_In_ JsValueRef name, _In_ JsNativeFu
 }
 
 void SetErrorMessage(Js::ScriptContext *scriptContext, JsValueRef newError, JsValueRef message)
-{
-    const Js::PropertyRecord *record;
-    scriptContext->GetOrAddPropertyRecord(L"message", wcslen(L"message"), &record);
-    Js::JavascriptOperators::OP_SetProperty(newError, record->GetPropertyId(), message, scriptContext);
+{        
+    Js::JavascriptOperators::OP_SetProperty(newError, Js::PropertyIds::message, message, scriptContext);
 }
 
 STDAPI_(JsErrorCode) JsCreateError(_In_ JsValueRef message, _Out_ JsValueRef *error)

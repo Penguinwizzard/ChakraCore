@@ -434,7 +434,7 @@ LDone:
     ///----------------------------------------------------------------------------
 
 #pragma warning(push)
-#pragma warning(disable:4700)    // for call to _mm_round_sd
+#pragma warning(disable:4700)    // uninitialized local variable 'output' used,  for call to _mm_ceil_sd
 
     Var Math::Ceil(RecyclableObject* function, CallInfo callInfo, ...)
     {
@@ -657,8 +657,7 @@ LDone:
     }
 
 #pragma warning(push)
-#pragma warning(disable: 4700)
-    // _mm_floor_sd causes warning
+#pragma warning(disable:4700)  // // uninitialized local variable 'output' used, for call to _mm_floor_sd
     Var __inline Math::FloorDouble(double d, ScriptContext *scriptContext)
     {
 #if defined(_M_IX86) || defined(_M_X64)

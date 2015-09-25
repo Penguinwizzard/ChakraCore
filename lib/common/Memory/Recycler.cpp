@@ -2806,9 +2806,10 @@ Recycler::SweepHeap(bool concurrent, RecyclerSweep& recyclerSweep)
         Assert(!recyclerWithBarrierPageAllocator.HasZeroQueuedPages());
 #endif
 
-        size_t sweptBytes = 0;
+        uint sweptBytes = 0;
 #ifdef RECYCLER_STATS
-        sweptBytes = collectionStats.objectSweptBytes;
+        // TODO: Change to size_t
+        sweptBytes = (uint)collectionStats.objectSweptBytes;
 #endif
 
         GCETW(GC_SWEEP_STOP, (this, sweptBytes));
@@ -2897,10 +2898,11 @@ Recycler::DisposeObjects()
 
     ASYNC_HOST_OPERATION_END(collectionWrapper);
 
-    size_t sweptBytes = 0;
-    #ifdef RECYCLER_STATS
-    sweptBytes = collectionStats.objectSweptBytes;
-    #endif
+    uint sweptBytes = 0;
+#ifdef RECYCLER_STATS
+    // TODO: Change to size_t
+    sweptBytes = (uint)collectionStats.objectSweptBytes;
+#endif
 
     GCETW(GC_DISPOSE_STOP, (this, sweptBytes));
 }
@@ -4692,7 +4694,7 @@ Recycler::BackgroundRepeatMark()
     RECYCLER_PROFILE_EXEC_BACKGROUND_BEGIN(this, Js::BackgroundRepeatMarkPhase);
     Assert(this->backgroundRescanCount <= RecyclerHeuristic::MaxBackgroundRepeatMarkCount - 1);
     
-    uint rescannedPageCount = this->BackgroundRescan(RescanFlags_ResetWriteWatch);
+    size_t rescannedPageCount = this->BackgroundRescan(RescanFlags_ResetWriteWatch);
 
     if (this->NeedOOMRescan() || this->isAborting)
     {
@@ -4786,7 +4788,7 @@ Recycler::BackgroundMark()
     }
 
     // We always do one repeat mark pass.
-    uint rescannedPageCount = this->BackgroundRepeatMark();
+    size_t rescannedPageCount = this->BackgroundRepeatMark();
 
     if (this->NeedOOMRescan() || this->isAborting)
     {
@@ -5384,9 +5386,10 @@ Recycler::DoBackgroundWork(bool forceForeground)
 
         Assert(this->recyclerSweep != nullptr);
         this->recyclerSweep->BackgroundSweep();
-        size_t sweptBytes = 0;
+        uint sweptBytes = 0;
 #ifdef RECYCLER_STATS
-        sweptBytes = collectionStats.objectSweptBytes;
+        // TODO: Change to size_t
+        sweptBytes = (uint)collectionStats.objectSweptBytes;
 #endif
 
         GCETW(GC_BACKGROUNDSWEEP_STOP, (this, sweptBytes));
@@ -7737,7 +7740,8 @@ void Recycler::AppendFreeMemoryETWRecord(__in char *address, size_t size)
     Assert(bulkFreeMemoryWrittenCount < Recycler::BulkFreeMemoryCount);
     __analysis_assume(bulkFreeMemoryWrittenCount < Recycler::BulkFreeMemoryCount);
     etwFreeRecords[bulkFreeMemoryWrittenCount].memoryAddress = address;
-    etwFreeRecords[bulkFreeMemoryWrittenCount].objectSize = size;
+    // TODO: change to size_t or uint64?
+    etwFreeRecords[bulkFreeMemoryWrittenCount].objectSize = (uint)size;
     bulkFreeMemoryWrittenCount++;
     if (bulkFreeMemoryWrittenCount == Recycler::BulkFreeMemoryCount)
     {

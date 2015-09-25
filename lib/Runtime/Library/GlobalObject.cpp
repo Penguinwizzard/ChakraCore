@@ -813,7 +813,7 @@ namespace Js
         BEGIN_LEAVE_SCRIPT_INTERNAL(scriptContext);
         BEGIN_TRANSLATE_EXCEPTION_TO_HRESULT
         {
-            size_t cchSource = sourceLength;
+            uint cchSource = sourceLength;
             size_t cbUtf8Buffer = (cchSource + 1) * 3;
 
             ArenaAllocator tempArena(L"EvalHelperArena", scriptContext->GetThreadContext()->GetPageAllocator(), Js::Throw::OutOfMemory);

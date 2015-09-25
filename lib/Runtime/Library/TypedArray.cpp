@@ -2513,11 +2513,8 @@ namespace Js
                 dIndexValue = JavascriptNumber::GetValue(index);
             }
 
-// OK to lose data because we want to verify ToInteger()
-#pragma warning(push)
-#pragma warning(disable: 4244)
-            uint32 uint32Index = (double)dIndexValue;
-#pragma warning(pop)
+            // OK to lose data because we want to verify ToInteger()
+            uint32 uint32Index = (uint32)dIndexValue;
 
             // IsInteger()
             if ((double)uint32Index != dIndexValue)

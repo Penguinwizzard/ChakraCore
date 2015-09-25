@@ -11,6 +11,11 @@ extern "C" PVOID __guard_check_icall_fptr;
 #endif
 #endif
 
+#ifdef _M_X64_OR_ARM64
+// TODO: Clean this warning up
+#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
+#endif
+
 namespace Js
 {
     void JavascriptExceptionOperators::AutoCatchHandlerExists::FetchNonUserCodeStatus(ScriptContext * scriptContext)
@@ -261,8 +266,7 @@ namespace Js
 
 #else
 #pragma warning(push)
-#pragma warning(disable:4731)
-#pragma warning(disable:4532)
+#pragma warning(disable:4731) // frame pointer register 'ebp' modified by inline assembly code
     void* JavascriptExceptionOperators::OP_TryCatch(void* tryAddr, void* handlerAddr, void* framePtr, int hasBailedOutOffset, ScriptContext *scriptContext)
     {
         void* continuationAddr = NULL;

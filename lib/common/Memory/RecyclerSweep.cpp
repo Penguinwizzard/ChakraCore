@@ -517,7 +517,7 @@ RecyclerSweep::StartPartialCollectMode()
     Assert(recycler->partialUncollectedAllocBytes == 0 || this->inPartialCollect);
     this->lastPartialUncollectedAllocBytes = recycler->partialUncollectedAllocBytes;
 
-    uint currentUncollectedAllocBytes = recycler->autoHeap.uncollectedAllocBytes;
+    size_t currentUncollectedAllocBytes = recycler->autoHeap.uncollectedAllocBytes;
     Assert(currentUncollectedAllocBytes >= this->lastPartialUncollectedAllocBytes);
 
     if (!this->inPartialCollect)

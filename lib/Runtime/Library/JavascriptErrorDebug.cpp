@@ -134,7 +134,7 @@ namespace Js
         wchar_t* allocatedString = nullptr;
         BSTR restrictedDescription = nullptr;
         BSTR message = nullptr;
-        uint32 length = 1; // +1 for null character
+        size_t length = 1; // +1 for null character
 
 #ifdef ENABLE_PROJECTION
         // Get the restricted error string - but only if the WinRT is enabled and we are targeting WinBlue+.

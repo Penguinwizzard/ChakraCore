@@ -1446,7 +1446,7 @@ namespace UnifiedRegex
 #pragma warning(suppress: 22102)
             entries[i] = this->GetCompactChar(i);
         }
-        return rep.compact.countPlusOne - 1;
+        return static_cast<int>(rep.compact.countPlusOne - 1);
     }
 
     bool CharSet<wchar_t>::IsSubsetOf(const CharSet<Char>& other) const

@@ -17,7 +17,7 @@
 //  AS JavascriptDispatch/RecyclerObjectDumper
 //  AT HeapAllocator/RecyclerHeuristic
 //  AU RecyclerWriteBarrierManager
-#pragma warning(disable:4075)
+#pragma warning(disable:4075)       // initializers put in unrecognized initialization area on purpose
 #pragma init_seg(".CRT$XCAR")
 
 CriticalSection LeakReport::s_cs;
@@ -163,7 +163,7 @@ LeakReport::LogUrl(wchar_t const * url, void * globalObject)
 {
     UrlRecord * record = NoCheckHeapNewStruct(UrlRecord);
 
-    charcount_t length = wcslen(url) + 1; // Add 1 for the NULL.
+    size_t length = wcslen(url) + 1; // Add 1 for the NULL.
     wchar_t* urlCopy = NoCheckHeapNewArray(wchar_t, length);
     js_memcpy_s(urlCopy, (length - 1) * sizeof(wchar_t), url, (length - 1) * sizeof(wchar_t));
     urlCopy[length - 1] = L'\0';

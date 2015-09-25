@@ -322,7 +322,7 @@ namespace Js
                         size_t count = ScopeSlots(scopeSlots).GetCount();
                         if (count < ScopeSlots::MaxEncodedSlotCount)
                         {
-                            Var *boxedSlots = this->BoxScopeSlots(scopeSlots, count);
+                            Var *boxedSlots = this->BoxScopeSlots(scopeSlots, static_cast<uint>(count));
                             frameDisplay->SetItem(i, boxedSlots);
                         }
                     }
@@ -560,7 +560,7 @@ namespace Js
             // We don't do stack slots if we exceed max encoded slot count
             if (scopeSlotcount < ScopeSlots::MaxEncodedSlotCount)
             {                
-                scopeSlots = BoxScopeSlots(scopeSlots, scopeSlotcount);
+                scopeSlots = BoxScopeSlots(scopeSlots, static_cast<uint>(scopeSlotcount));
             }
             boxedFrameDisplay->SetItem(i, scopeSlots);
             frameDisplay->SetItem(i, scopeSlots);

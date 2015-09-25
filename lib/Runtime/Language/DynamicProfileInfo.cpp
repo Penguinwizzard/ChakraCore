@@ -17,7 +17,7 @@ DynamicProfileInfo::DynamicProfileInfo()
 struct Allocation
 {
     uint offset;
-    uint size;
+    size_t size;
 };
 
 #if DBG_DUMP || defined(DYNAMIC_PROFILE_STORAGE) || defined(RUNTIME_DATA_COLLECTION)
@@ -2154,36 +2154,6 @@ DynamicProfileInfo::WriteArray(uint count, T * arr, FILE * file)
     {
         WriteData(arr[i], file);
     }
-}
-
-template <>
-void
-DynamicProfileInfo::WriteData<FunctionInfo*>(FunctionInfo* functionInfo, FILE * file)
-{
-    bool isFunctionBody = false;
-    bool isFunctionInfo = false;
-    if (functionInfo != nullptr && (size_t)functionInfo < StartInvalidFunction)
-    {
-        isFunctionInfo = true;
-        isFunctionBody = !!functionInfo->HasBody();
-    }
-    WriteData(isFunctionBody, file);
-    if (isFunctionInfo)
-    {
-        if (isFunctionBody)
-        {
-            WriteData(functionInfo->GetFunctionBody(), file);
-        }
-        else
-        {
-            WriteData((byte)-4, file);
-        }
-    }
-    else
-    {
-        WriteData((byte)functionInfo, file);
-    }
-
 }
 
 template <>

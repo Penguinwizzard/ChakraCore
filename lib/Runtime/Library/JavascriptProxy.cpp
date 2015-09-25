@@ -1775,7 +1775,7 @@ namespace Js
 
         ::_i64tow_s(index, buffer, sizeof(buffer) / sizeof(wchar_t), 10);
 
-        GetScriptContext()->GetOrAddPropertyRecord((LPCWSTR)buffer, wcslen(buffer), propertyRecord);
+        GetScriptContext()->GetOrAddPropertyRecord((LPCWSTR)buffer, static_cast<int>(wcslen(buffer)), propertyRecord);
     }
 
     Var JavascriptProxy::GetName(ScriptContext* requestContext, PropertyId propertyId)
@@ -1811,7 +1811,7 @@ namespace Js
             }
 
             threadContext->handlerPropertyId = threadContext->GetOrAddPropertyRecordBind(
-                JsUtil::CharacterBuffer<WCHAR>(autoProxyName, wcslen(autoProxyName)))->GetPropertyId();
+                JsUtil::CharacterBuffer<WCHAR>(autoProxyName, static_cast<charcount_t>(wcslen(autoProxyName))))->GetPropertyId();
         }
         return threadContext->handlerPropertyId;
     }

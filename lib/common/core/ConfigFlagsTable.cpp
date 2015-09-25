@@ -23,7 +23,7 @@ DEFINE_GUID(HybridDebuggingGuid, 0x17dc713d, 0x8b3e, 0x4434, 0x9d, 0xc8, 0x90, 0
 //  AS JavascriptDispatch/RecyclerObjectDumper
 //  AT HeapAllocator/RecyclerHeuristic
 //  AU RecyclerWriteBarrierManager
-#pragma warning(disable:4075)
+#pragma warning(disable:4075)       // initializers put in unrecognized initialization area on purpose
 #pragma init_seg(".CRT$XCAM")
 namespace Js
 {

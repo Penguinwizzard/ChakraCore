@@ -1068,7 +1068,7 @@ namespace Js
         if (this->inSlotsCount > executeFunction->GetInParamsCount())
         {
             // Create the rest array and copy the args directly into the contigious head segment.
-            size_t excess = this->inSlotsCount - executeFunction->GetInParamsCount();
+            int excess = this->inSlotsCount - executeFunction->GetInParamsCount();
             *dest = JavascriptArray::OP_NewScArray(excess, executeFunction->GetScriptContext());
             JavascriptArray *array = static_cast<JavascriptArray *>(*dest);
             Var *elements = ((SparseArraySegment<Var>*)array->GetHead())->elements;

@@ -1300,8 +1300,8 @@ void LowererMD::GenerateCheckedSimdLoad(IR::Instr * instr)
         
     }
     size_t valueOffset = dst->GetType() == TySimd128F4 ? Js::JavascriptSIMDFloat32x4::GetOffsetOfValue() : Js::JavascriptSIMDInt32x4::GetOffsetOfValue();
-
-    newInstr = IR::Instr::New(Js::OpCode::MOVUPS, dst, IR::IndirOpnd::New(src, valueOffset, dst->GetType(), this->m_func), this->m_func);
+    Assert(valueOffset < INT_MAX);
+    newInstr = IR::Instr::New(Js::OpCode::MOVUPS, dst, IR::IndirOpnd::New(src, static_cast<int>(valueOffset), dst->GetType(), this->m_func), this->m_func);
     insertInstr->InsertBefore(newInstr);
 
     insertInstr->InsertBefore(IR::BranchInstr::New(Js::OpCode::JMP, labelDone, this->m_func));

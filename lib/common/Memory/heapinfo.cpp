@@ -85,7 +85,7 @@ void HeapInfo::ValidPointersMap<TBlockAttributes>::GenerateValidPointersMap(Vali
         SmallHeapBlockT<TBlockAttributes>::SmallHeapBlockBitVector * invalidBitVector = &invalidTable[i];
         invalidBitVector->SetAll();
 
-        size_t bucketSize;
+        uint bucketSize;
         
         if (TBlockAttributes::IsSmallBlock)
         {
@@ -438,7 +438,7 @@ HeapInfo::~HeapInfo()
     Recycler * recycler = this->recycler;
 
 #ifdef RECYCLER_SLOW_CHECK_ENABLED
-    uint largeBlockCount = this->largeObjectBucket.GetLargeHeapBlockCount(false);
+    size_t largeBlockCount = this->largeObjectBucket.GetLargeHeapBlockCount(false);
 
     uint mediumBlockCount = 0;
 #if defined(BUCKETIZE_MEDIUM_ALLOCATIONS) && !SMALLBLOCK_MEDIUM_ALLOC

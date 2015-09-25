@@ -461,7 +461,7 @@ namespace Js
                 BSTR message = BstrGetResourceString(hrAdjusted);
                 if (message != nullptr)
                 {
-                    int len = _vscwprintf(message, argList);
+                    size_t len = _vscwprintf(message, argList);
                     Assert(len > 0);
                     len = AllocSizeMath::Add(len, 1);
                     allocatedString = RecyclerNewArrayLeaf(scriptContext->GetRecycler(), wchar_t, len);

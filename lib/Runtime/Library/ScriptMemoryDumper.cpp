@@ -16,16 +16,16 @@ ScriptMemoryDumper::ScriptMemoryDumper(Js::ScriptContext* scriptContext)
 
 void ScriptMemoryDumper::Init()
 {
-    pageCountId = scriptContext->GetOrAddPropertyIdTracked(L"pageCount", wcslen(L"pageCount"));
-    objectSizeId = scriptContext->GetOrAddPropertyIdTracked(L"objectSize", wcslen(L"objectSize"));
-    freeObjectCountId = scriptContext->GetOrAddPropertyIdTracked(L"freeObjectCount", wcslen(L"freeObjectCount"));
-    activeObjectCountId = scriptContext->GetOrAddPropertyIdTracked(L"activeObjectCount", wcslen(L"activeObjectCount"));
-    totalByteCountId = scriptContext->GetOrAddPropertyIdTracked(L"totalByteCount", wcslen(L"totalByteCount"));
-    finalizeCountId = scriptContext->GetOrAddPropertyIdTracked(L"finalizeCount", wcslen(L"finalizeCount"));
-    weakReferenceCountId = scriptContext->GetOrAddPropertyIdTracked(L"weakReferenceCount", wcslen(L"weakReferenceCount"));
-    largeObjectsId = scriptContext->GetOrAddPropertyIdTracked(L"largeObjects", wcslen(L"largeObjects"));
-    activeObjectByteSizeId = scriptContext->GetOrAddPropertyIdTracked(L"activeObjectByteSize", wcslen(L"activeObjectByteSize"));
-    summaryId = scriptContext->GetOrAddPropertyIdTracked(L"summary", wcslen(L"summary"));
+    pageCountId = scriptContext->GetOrAddPropertyIdTracked(L"pageCount");
+    objectSizeId = scriptContext->GetOrAddPropertyIdTracked(L"objectSize");
+    freeObjectCountId = scriptContext->GetOrAddPropertyIdTracked(L"freeObjectCount");
+    activeObjectCountId = scriptContext->GetOrAddPropertyIdTracked(L"activeObjectCount");
+    totalByteCountId = scriptContext->GetOrAddPropertyIdTracked(L"totalByteCount");
+    finalizeCountId = scriptContext->GetOrAddPropertyIdTracked(L"finalizeCount");
+    weakReferenceCountId = scriptContext->GetOrAddPropertyIdTracked(L"weakReferenceCount");
+    largeObjectsId = scriptContext->GetOrAddPropertyIdTracked(L"largeObjects");
+    activeObjectByteSizeId = scriptContext->GetOrAddPropertyIdTracked(L"activeObjectByteSize");
+    summaryId = scriptContext->GetOrAddPropertyIdTracked(L"summary");
     dumpObject = scriptContext->GetLibrary()->CreateObject();
 }
 
@@ -217,12 +217,12 @@ void ScriptMemoryDumper::SaveSummary()
 
 void ScriptMemoryDumper::FillObjectWithStats(Js::DynamicObject* dynamicObject, HeapStats stats)
 {
-    dynamicObject->SetProperty(pageCountId, Js::JavascriptNumber::New(stats.pageCount, scriptContext),  Js::PropertyOperation_None, NULL);
+    dynamicObject->SetProperty(pageCountId, Js::JavascriptUInt64Number::ToVar(stats.pageCount, scriptContext),  Js::PropertyOperation_None, NULL);
     dynamicObject->SetProperty(objectSizeId, Js::JavascriptNumber::New(stats.objectSize, scriptContext),  Js::PropertyOperation_None, NULL);
     dynamicObject->SetProperty(freeObjectCountId, Js::JavascriptNumber::New(stats.freeObjectCount, scriptContext),  Js::PropertyOperation_None, NULL);
     dynamicObject->SetProperty(activeObjectCountId, Js::JavascriptNumber::New(stats.activeObjectCount, scriptContext),  Js::PropertyOperation_None, NULL);
-    dynamicObject->SetProperty(activeObjectByteSizeId, Js::JavascriptNumber::New(stats.activeObjectByteSize, scriptContext),  Js::PropertyOperation_None, NULL);
-    dynamicObject->SetProperty(totalByteCountId, Js::JavascriptNumber::New(stats.totalByteCount, scriptContext),  Js::PropertyOperation_None, NULL);
+    dynamicObject->SetProperty(activeObjectByteSizeId, Js::JavascriptUInt64Number::ToVar(stats.activeObjectByteSize, scriptContext),  Js::PropertyOperation_None, NULL);
+    dynamicObject->SetProperty(totalByteCountId, Js::JavascriptUInt64Number::ToVar(stats.totalByteCount, scriptContext),  Js::PropertyOperation_None, NULL);
     dynamicObject->SetProperty(finalizeCountId, Js::JavascriptNumber::New(stats.finalizeCount, scriptContext),  Js::PropertyOperation_None, NULL);
 }
 

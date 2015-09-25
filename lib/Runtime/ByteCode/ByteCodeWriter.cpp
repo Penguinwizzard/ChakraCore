@@ -3,6 +3,13 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeByteCodePch.h"
+
+#ifdef _M_X64_OR_ARM64
+// TODO: Clean this warning up
+#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
+#endif
+
+
 namespace Js {
 
     void ByteCodeWriter::Create()
@@ -2921,17 +2928,17 @@ StoreCommon:
     }
 
 #if DBG_DUMP
-    int ByteCodeWriter::ByteCodeDataSize()
+    size_t ByteCodeWriter::ByteCodeDataSize()
     {
         return m_byteCodeData.GetCurrentOffset();
     }
 
-    int ByteCodeWriter::AuxiliaryDataSize()
+    size_t ByteCodeWriter::AuxiliaryDataSize()
     {
         return m_auxiliaryData.GetCurrentOffset();
     }
 
-    int ByteCodeWriter::AuxiliaryContextDataSize()
+    size_t ByteCodeWriter::AuxiliaryContextDataSize()
     {
         return m_auxContextData.GetCurrentOffset();
     }

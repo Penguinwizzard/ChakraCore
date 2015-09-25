@@ -324,12 +324,12 @@ HeapBlockMap32::SetPageMarkCount(void * address, ushort markCount)
     l2map->pageMarkCount[id2] = markCount;
 }
 
-template void HeapBlockMap32::VerifyMarkCountForPages<SmallAllocationBlockAttributes::BitVectorCount>(void* address, size_t pageCount);
-template void HeapBlockMap32::VerifyMarkCountForPages<MediumAllocationBlockAttributes::BitVectorCount>(void* address, size_t pageCount);
+template void HeapBlockMap32::VerifyMarkCountForPages<SmallAllocationBlockAttributes::BitVectorCount>(void* address, uint pageCount);
+template void HeapBlockMap32::VerifyMarkCountForPages<MediumAllocationBlockAttributes::BitVectorCount>(void* address, uint pageCount);
 
 template <uint BitVectorCount>
 void
-HeapBlockMap32::VerifyMarkCountForPages(void * address, size_t pageCount)
+HeapBlockMap32::VerifyMarkCountForPages(void * address, uint pageCount)
 {
     uint id1 = GetLevel1Id(address);
 
@@ -339,7 +339,7 @@ HeapBlockMap32::VerifyMarkCountForPages(void * address, size_t pageCount)
     uint id2 = GetLevel2Id(address);
 
     Assert(id2 + pageCount <= L2Count);
-    for (size_t i = id2; i < pageCount + id2; i++)
+    for (uint i = id2; i < pageCount + id2; i++)
     {
         uint markCountForPage = l2map->GetPageMarkBitVector(i)->Count();
         Assert(markCountForPage == l2map->pageMarkCount[i]);
@@ -793,15 +793,15 @@ UINT
 HeapBlockMap32::GetWriteWatchHelperOnOOM(DWORD writeWatchFlags, _In_ void* baseAddress, size_t regionSize,
     _Out_writes_(*count) void** addresses, _Inout_ ULONG_PTR* count, LPDWORD granularity)
 {
-    const uint pageCount = (regionSize / AutoSystemInfo::PageSize);
+    const size_t pageCount = (regionSize / AutoSystemInfo::PageSize);
 
     // Ensure target buffer
     AssertMsg(*count >= pageCount, "Not enough space in the buffer to store the write watch state for the given region size");
 
     void* result = nullptr;
-    uint dirtyCount = 0;
+    size_t dirtyCount = 0;
 
-    for (uint i = 0; i < pageCount; i++)
+    for (size_t i = 0; i < pageCount; i++)
     {
         result = nullptr;
         char* pageAddress = ((char*)baseAddress) + (i * AutoSystemInfo::PageSize);
@@ -878,8 +878,8 @@ HeapBlockMap32::Rescan(Recycler * recycler, bool resetWriteWatch)
         else if (segmentPageAllocator == recycler->GetRecyclerWithBarrierPageAllocator())
         {
             // Loop through pages for this segment and check write barrier.
-            uint pageCount = segmentLength / AutoSystemInfo::PageSize;
-            for (uint i = 0; i < pageCount; i++)
+            size_t pageCount = segmentLength / AutoSystemInfo::PageSize;
+            for (size_t i = 0; i < pageCount; i++)
             {
                 char * pageAddress = segmentStart + (i * AutoSystemInfo::PageSize);
                 Assert((size_t)(pageAddress - segmentStart) < segmentLength);
@@ -941,8 +941,8 @@ HeapBlockMap32::OOMRescan(Recycler * recycler)
             }
 
             // Loop through pages for this segment and check OOM flag.
-            uint pageCount = segmentLength / AutoSystemInfo::PageSize;
-            for (uint i = 0; i < pageCount; i++)
+            size_t pageCount = segmentLength / AutoSystemInfo::PageSize;
+            for (size_t i = 0; i < pageCount; i++)
             {
                 char * pageAddress = segmentStart + (i * AutoSystemInfo::PageSize);
                 Assert((size_t)(pageAddress - segmentStart) < segmentLength);
@@ -1157,7 +1157,7 @@ HeapBlockMap64::EnsureHeapBlock(void * address, size_t pageCount)
 void
 HeapBlockMap64::SetHeapBlockNoCheck(void * address, size_t pageCount, HeapBlock * heapBlock, HeapBlock::HeapBlockType blockType, byte bucketIndex)
 {
-    ForEachNodeInAddressRange(address, pageCount, [&](Node * node, void * address, size_t nodePages)
+    ForEachNodeInAddressRange(address, pageCount, [&](Node * node, void * address, uint nodePages)
     {
         Assert(node != nullptr);
         node->map.SetHeapBlockNoCheck(address, nodePages, heapBlock, blockType, bucketIndex);
@@ -1179,7 +1179,7 @@ HeapBlockMap64::SetHeapBlock(void * address, size_t pageCount, HeapBlock * heapB
 
 void HeapBlockMap64::ClearHeapBlock(void * address, size_t pageCount)
 {
-    ForEachNodeInAddressRange(address, pageCount, [&](Node* node, void* address, size_t nodePages)
+    ForEachNodeInAddressRange(address, pageCount, [&](Node* node, void* address, uint nodePages)
     {
         Assert(node != nullptr);
         node->map.ClearHeapBlock(address, nodePages);
@@ -1251,7 +1251,7 @@ HeapBlockMap64::GetMarkCount(void * address, uint pageCount)
 {
     uint markCount = 0;
 
-    ForEachNodeInAddressRange(address, pageCount, [&](Node* node, void* address, size_t nodePageCount)
+    ForEachNodeInAddressRange(address, pageCount, [&](Node* node, void* address, uint nodePageCount)
     {
         Assert(node != nullptr);
         markCount += node->map.GetMarkCount(address, nodePageCount);
@@ -1454,12 +1454,12 @@ HeapBlockMap64::SetPageMarkCount(void * address, ushort markCount)
     node->map.SetPageMarkCount(address, markCount);
 }
 
-template void HeapBlockMap64::VerifyMarkCountForPages<SmallAllocationBlockAttributes::BitVectorCount>(void* address, size_t pageCount);
-template void HeapBlockMap64::VerifyMarkCountForPages<MediumAllocationBlockAttributes::BitVectorCount>(void* address, size_t pageCount);
+template void HeapBlockMap64::VerifyMarkCountForPages<SmallAllocationBlockAttributes::BitVectorCount>(void* address, uint pageCount);
+template void HeapBlockMap64::VerifyMarkCountForPages<MediumAllocationBlockAttributes::BitVectorCount>(void* address, uint pageCount);
 
 template <uint BitVectorCount>
 void
-HeapBlockMap64::VerifyMarkCountForPages(void * address, size_t pageCount)
+HeapBlockMap64::VerifyMarkCountForPages(void * address, uint pageCount)
 {
     Node * node = FindNode(address);
     Assert(node != nullptr);
