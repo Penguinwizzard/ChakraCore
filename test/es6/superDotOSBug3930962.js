@@ -30,8 +30,26 @@ A.prototype.x = 42;
 A.prototype["y"] = 30;
 A.prototype[10] = 10;
 A.prototype[10.1] = 10.1;
-
+A.prototype.length = 2;
+A.length = -1
 var tests = [
+   {
+       name: "Access length",
+       body: function () 
+       {
+            class B extends A {
+                constructor() {
+                    super();
+                    assert.areEqual(2, super.length, "confirm we can make dot property call to access A.prototype.length");
+                    var super_arrow = () => { 
+                        assert.areEqual(2, super.length, "confirm we can make dot property call to access A.prototype.length when it is in a lambda");
+                    }
+                    super_arrow();
+                    print(super.length);
+                }
+            }
+       }
+   },
    {
        name: "Access of property fields on super",
        body: function () 
@@ -48,7 +66,6 @@ var tests = [
                     assert.areEqual(10.1, super["10.1"], "confirm we can make index property calls on float point properties accessed as strings");
                 }
             }
-
        }
    },
    {
