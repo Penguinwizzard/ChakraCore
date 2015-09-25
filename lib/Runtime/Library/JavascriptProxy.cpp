@@ -1893,7 +1893,6 @@ namespace Js
         Var newTarget = nullptr;
         JavascriptProxy* proxy = JavascriptProxy::FromVar(function);
         JavascriptFunction* callMethod;
-        Var* varArgs;
         Assert(!scriptContext->IsHeapEnumInProgress());
 
         // To conform with ES6 spec 7.3.13
@@ -1933,19 +1932,36 @@ namespace Js
                 args.Values[0] = newThisObject;
             }
 
-            // If we got overriden newTarget, then args[args.Info.Count] already hold the newTarget
-            // else add proxy has newTarget
+            // too many arguments
+            if (args.Info.Count >= CallInfo::kMaxCountArgs)
+            {
+                JavascriptError::ThrowRangeError(scriptContext, JSERR_ArgListTooLarge);
+            }
+
             ushort newCount = (ushort)(args.Info.Count + 1);
-            varArgs = (Var*)_alloca(newCount * sizeof(Var));
+
+            
+            Var* newValues;
+            const unsigned STACK_ARGS_ALLOCA_THRESHOLD = 8; // Number of stack args we allow before using _alloca
+            Var stackArgs[STACK_ARGS_ALLOCA_THRESHOLD];
+            if (newCount > STACK_ARGS_ALLOCA_THRESHOLD)
+            {
+                PROBE_STACK(scriptContext, newCount * sizeof(Var) + Js::Constants::MinStackDefault); // args + function call
+                newValues = (Var*)_alloca(newCount * sizeof(Var));
+            }
+            else
+            {
+                newValues = stackArgs;
+            }
             CallInfo calleeInfo((CallFlags)(args.Info.Flags | CallFlags_ExtraArg | CallFlags_NewTarget), newCount);
 
             for (uint argCount = 0; argCount < args.Info.Count; argCount++)
             {
-                varArgs[argCount] = args.Values[argCount];
+                newValues[argCount] = args.Values[argCount];
             }
-            varArgs[args.Info.Count] = newTarget;
+            newValues[args.Info.Count] = newTarget;
 
-            Js::Arguments arguments(calleeInfo, varArgs);
+            Js::Arguments arguments(calleeInfo, newValues);
             Var aReturnValue = JavascriptFunction::CallFunction<true>(proxy->target, proxy->target->GetEntryPoint(), arguments);
             // If this is constructor call, return the actual object instead of function result
             if ((callInfo.Flags & CallFlags_New) && !JavascriptOperators::IsObject(aReturnValue))
@@ -1961,11 +1977,10 @@ namespace Js
             argList->DirectSetItemAt(i - 1, args[i]);
         }
 
-        ushort newCount = 4;
-        CallInfo calleeInfo(CallFlags_Value, newCount);
-        varArgs = (Var*)_alloca(newCount * sizeof(Var));
+        Var varArgs[4];
+        CallInfo calleeInfo(CallFlags_Value, 4);
         Js::Arguments arguments(calleeInfo, varArgs);
-
+        
         varArgs[0] = proxy->handler;
         varArgs[1] = proxy->target;
         if (args.Info.Flags & CallFlags_New)

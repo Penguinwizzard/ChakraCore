@@ -508,6 +508,17 @@ function test28(){
     print(receiver.p);
 }
 
+function test29() {
+    // CreateDynamicFunction -> GetPrototypeFromConstructor -> Get -> [[Get]]
+    var get = [];
+    var p = new Proxy(Function, {});
+    var funcInstance = new p('b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', "return 1;");
+    if (funcInstance.length != 9)
+    {
+        print('FAIL');
+    }  
+}
+
 test0();
 test1();
 test2();
@@ -537,3 +548,4 @@ test25();
 test26();
 test27();
 test28();
+test29();

@@ -77,10 +77,9 @@ namespace Js
             {
                 const PropertyRecord* propertyRecord = scriptContext->GetThreadContext()->GetPropertyName(propertyId);
                 Var name = index;
-                if (propertyRecord->IsSymbol())
-                {
-                    name = scriptContext->GetLibrary()->CreateSymbol(propertyRecord);
-                }
+                // This iterator is created using ForInObjectEnumeratorWrapper that doesn't enum symbols.
+                // If this changes in future, remove this assert.
+                AssertMsg(!propertyRecord->IsSymbol(), "JavascriptEnumeratorIterator created from ForInObjectEnumeratorWrapper shouldn't enumerate over symbols.");
                 return  library->CreateIteratorResultObjectValueFalse(name);
             }
         }
