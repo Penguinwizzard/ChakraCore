@@ -26,12 +26,14 @@ class A {
   ["foo"+1]() { return "foo1"; }
   [sym1](){return "bart";}
 }
+
 A.prototype.x = 42;
 A.prototype["y"] = 30;
 A.prototype[10] = 10;
 A.prototype[10.1] = 10.1;
 Object.defineProperty(A.prototype, "length", {writable : true, value : 2 });
 Object.defineProperty(A, "length", {writable : true, value : -1 });
+
 var tests = [
    {
        name: "Access length",
@@ -45,7 +47,6 @@ var tests = [
                         assert.areEqual(2, super.length, "confirm we can make dot property call to access A.prototype.length when it is in a lambda");
                     }
                     super_arrow();
-                    print(super.length);
                 }
             }
             var bar = new B();
