@@ -26,7 +26,75 @@ class A {
   ["foo"+1]() { return "foo1"; }
   [sym1](){return "bart";}
 }
+A.prototype.x = 42;
+A.prototype["y"] = 30;
+A.prototype[10] = 10;
+A.prototype[10.1] = 10.1;
+
 var tests = [
+   {
+       name: "Access of property fields on super",
+       body: function () 
+       {
+            class B extends A {
+                constructor() {
+                    super();
+                    assert.areEqual(42, super.x, "confirm we can make dot property calls on non function types");
+                    assert.areEqual(42, super["x"], "confirm we can make index property calls of properties defined as dot proerties");
+                    assert.areEqual(30, super["y"], "confirm we can make index property calls on string properties promoted to dot properties");
+                    assert.areEqual(10, super[10], "confirm we can make index property calls on integer properties");
+                    assert.areEqual(10.1, super[10.1], "confirm we can make index property calls on float point properties");
+                    assert.areEqual(10, super["10"], "confirm we can make index property calls on integer properties accessed as strings");
+                    assert.areEqual(10.1, super["10.1"], "confirm we can make index property calls on float point properties accessed as strings");
+                }
+            }
+
+       }
+   },
+   {
+       name: "Access of property fields on super in a lambda",
+       body: function () 
+       {
+            class B extends A {
+                constructor() {
+                        super();
+                        var super_arrow = () => { 
+                        assert.areEqual(42, super.x, "confirm we can make dot property calls on non function types");
+                        assert.areEqual(42, super["x"], "confirm we can make index property calls of properties defined as dot proerties");
+                        assert.areEqual(30, super["y"], "confirm we can make index property calls on string properties promoted to dot properties");
+                        assert.areEqual(10, super[10], "confirm we can make index property calls on integer properties");
+                        assert.areEqual(10.1, super[10.1], "confirm we can make index property calls on float point properties");
+                        assert.areEqual(10, super["10"], "confirm we can make index property calls on integer properties accessed as strings");
+                        assert.areEqual(10.1, super["10.1"], "confirm we can make index property calls on float point properties accessed as strings");
+                    }
+                    super_arrow();
+                }
+            }
+
+       }
+   },
+   {
+       name: "Access of property fields on super in a lambda with super also inside the lambda",
+       body: function () 
+       {
+            class B extends A {
+                constructor() {
+                    var super_arrow = () => { 
+                        super();
+                        assert.areEqual(42, super.x, "confirm we can make dot property calls on non function types");
+                        assert.areEqual(42, super["x"], "confirm we can make index property calls of properties defined as dot proerties");
+                        assert.areEqual(30, super["y"], "confirm we can make index property calls on string properties promoted to dot properties");
+                        assert.areEqual(10, super[10], "confirm we can make index property calls on integer properties");
+                        assert.areEqual(10.1, super[10.1], "confirm we can make index property calls on float point properties");
+                        assert.areEqual(10, super["10"], "confirm we can make index property calls on integer properties accessed as strings");
+                        assert.areEqual(10.1, super["10.1"], "confirm we can make index property calls on float point properties accessed as strings");
+                    }
+                    super_arrow();
+                }
+            }
+
+       }
+   },
    {
        name: "lamda call on super  before making a super call",
        body: function () 
