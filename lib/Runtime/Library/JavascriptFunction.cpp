@@ -2820,7 +2820,8 @@ LABEL1:
                 else
                 {
                     charcount_t count = min(DIAG_MAX_FUNCTION_STRING, func->LengthInChars());
-                    utf8::DecodeInto(stringBuilder->AllocBufferSpace(count), func->GetSource(L"JavascriptFunction::GetDiagValueString"), count, utf8::doAllowThreeByteSurrogates);
+                    utf8::DecodeOptions options = sourceInfo->IsCesu8() ? utf8::doAllowThreeByteSurrogates : utf8::doDefault;
+                    utf8::DecodeInto(stringBuilder->AllocBufferSpace(count), func->GetSource(L"JavascriptFunction::GetDiagValueString"), count, options);
                     stringBuilder->IncreaseCount(count);
                     return TRUE;
                 }
