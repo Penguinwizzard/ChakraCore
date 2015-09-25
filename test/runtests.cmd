@@ -148,6 +148,7 @@ goto :main
   if /i "%1" == "-dirtags"          set _DIRTAGS=%_DIRTAGS% -dirtags:%~2&                       goto :ArgOkShift2
   if /i "%1" == "-dirnottags"       set _DIRNOTTAGS=%_DIRNOTTAGS% -dirnottags:%~2&              goto :ArgOkShift2
   if /i "%1" == "-includeSlow"      set _includeSlow=1&                                         goto :ArgOk
+  if /i "%1" == "-onlySlow"         set _onlySlow=1&                                            goto :ArgOk
   if /i "%1" == "-includeChBroken"  set _excludeChBroken=&                                      goto :ArgOk
   if /i "%1" == "-onlyChBroken"     set _excludeChBroken=& set _TAGS=%_TAGS% -tags:exclude_ch&  goto :ArgOk
   if /i "%1" == "-quiet"            set _quiet=-quiet&                                          goto :ArgOk
@@ -227,6 +228,7 @@ goto :main
   set _dynamicprofilecache=-dynamicprofilecache:profile.dpl
   set _dynamicprofileinput=-dynamicprofileinput:profile.dpl
   set _includeSlow=
+  set _onlySlow=
   set _CleanUpAll=
   set _nightly=
   set TARGET_OS=win10
@@ -285,8 +287,11 @@ goto :main
     set _NOTTAGS=%_NOTTAGS% -nottags:exclude_nightly
   )
 
-  if not "%_includeSlow%" == "1" (
+  if "%_includeSlow%%_onlySlow%" == "" (
     set _NOTTAGS=%_NOTTAGS% -nottags:Slow
+  )
+  if "%_onlySlow%" == "1" (
+    set _TAGS=%_TAGS% -tags:Slow
   )
 
   if not "%NUM_RL_THREADS%" == "" (
