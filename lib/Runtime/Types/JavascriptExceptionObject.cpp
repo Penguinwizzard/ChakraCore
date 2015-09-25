@@ -185,7 +185,7 @@ namespace Js
         HRESULT hr = S_OK;
         if (IsScriptFunction())
         {
-            IfFailedReturn(argumentTypes.ToString(name, functionBody->GetScriptContext(), outResult));
+            hr = argumentTypes.ToString(name, functionBody->GetScriptContext(), outResult);            
         }
         else
         {

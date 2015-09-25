@@ -612,11 +612,13 @@ namespace Js
             }
         }
 
+#ifdef SUPPORT_FIXED_FIELDS_ON_PATH_TYPES
         if (PathTypeHandlerBase::FixPropsOnPathTypes())
         {
             Assert(oldTypeHandler->HasSingletonInstanceOnlyIfNeeded());
             oldTypeHandler->typePath->ClearSingletonInstanceIfSame(instance);
         }
+#endif
         
         // PathTypeHandlers are always shared, so if we're isolating prototypes, a PathTypeHandler should
         // never have the prototype flag set.
@@ -813,12 +815,14 @@ namespace Js
             // instance following this type path.  See point 3 above.
         }
 
+#ifdef SUPPORT_FIXED_FIELDS_ON_PATH_TYPES
         // Clear the singleton from this handler regardless of mayBecomeShared, because this instance no longer uses this handler.
         if (PathTypeHandlerBase::FixPropsOnPathTypes())
         {
             Assert(oldTypeHandler->HasSingletonInstanceOnlyIfNeeded());
             oldTypeHandler->typePath->ClearSingletonInstanceIfSame(instance);
         }
+#endif
 
         if (mayBecomeShared) 
         {

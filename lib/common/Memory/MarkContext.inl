@@ -31,7 +31,9 @@ bool MarkContext::AddTrackedObject(FinalizableObject * obj)
 {
     Assert(obj != nullptr);
     Assert(recycler->DoQueueTrackedObject());
+#ifdef PARTIAL_GC_ENABLED
     Assert(!recycler->inPartialCollectMode);
+#endif
 
     FAULTINJECT_MEMORY_MARK_NOTHROW(L"AddTrackedObject", 0);
 
@@ -134,7 +136,9 @@ __inline
 void MarkContext::MarkTrackedObject(FinalizableObject * trackedObject)
 {
     Assert(!recycler->queueTrackedObject);
+#ifdef PARTIAL_GC_ENABLED
     Assert(!recycler->inPartialCollectMode);
+#endif
     Assert(!recycler->IsConcurrentExecutingState());
     Assert(!(recycler->collectionState == CollectionStateParallelMark));
     

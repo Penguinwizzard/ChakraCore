@@ -478,6 +478,7 @@ public:
     template<bool checkPageHeap=true>
     bool HasFreeObject() const 
     {
+#ifdef RECYCLER_PAGE_HEAP
         // in pageheap, we point freeObjectList to end of the allocable block to cheat the system.
         // but sometimes we need to know if it's really no free block or not.
         if (checkPageHeap)
@@ -487,6 +488,7 @@ public:
                 return false;
             }
         }
+#endif
         return freeObjectList != nullptr;
     }
 
@@ -589,8 +591,8 @@ public:
     void SweepObjects(Recycler * recycler);
 
     uint GetAndClearLastFreeCount();
-    void ClearAllAllocBytes();      // Reset all unaccounted alloc bytes and the new alloc count
 #ifdef PARTIAL_GC_ENABLED
+    void ClearAllAllocBytes();      // Reset all unaccounted alloc bytes and the new alloc count
     uint GetAndClearUnaccountedAllocBytes();
     void AdjustPartialUncollectedAllocBytes(RecyclerSweep& recyclerSweep, uint const expectSweepCount);
     bool DoPartialReusePage(RecyclerSweep const& recyclerSweep, uint& expectFreeByteCount);

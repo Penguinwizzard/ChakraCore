@@ -20,7 +20,11 @@ HeapBucketT<TBlockType>::RealAlloc(Recycler * recycler, size_t sizeCat)
     }
     else
     {
+#ifdef RECYCLER_PAGE_HEAP
         Assert(allocatorHead.heapBlock == nullptr || !allocatorHead.heapBlock->InPageHeapMode());
+#else
+        Assert(allocatorHead.heapBlock == nullptr);
+#endif
     }
 
     // If this API is called and throwing is not allowed, 

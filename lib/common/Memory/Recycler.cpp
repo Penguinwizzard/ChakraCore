@@ -363,7 +363,7 @@ void
 Recycler::LogMemProtectHeapSize(bool fromGC)
 {
     Assert(IsMemProtectMode());
-
+#ifdef ENABLE_JS_ETW
     if (IS_JS_ETW(EventEnabledMEMPROTECT_GC_HEAP_SIZE()))
     {
         IdleDecommitPageAllocator* recyclerPageAllocator = GetRecyclerPageAllocator();
@@ -392,6 +392,7 @@ Recycler::LogMemProtectHeapSize(bool fromGC)
 
         JS_ETW(EventWriteMEMPROTECT_GC_HEAP_SIZE(this, usedBytes, reservedBytes, committedBytes, numberOfSegments, fromGC));
     }
+#endif
 }
 
 #if DBG
@@ -955,7 +956,7 @@ Recycler::LeaveIdleDecommit()
         }
     }
 #else
-    ForEachRecyclerPageAllocator(LeaveIdleDecommit(false));
+    ForEachRecyclerPageAllocatorIn(this, LeaveIdleDecommit(false));
 #endif
 }
 
@@ -2463,8 +2464,10 @@ Recycler::EndMarkOnLowMemory()
 
         // Always queue tracked objects during rescan, to avoid changes to mark state.
         // (Unless we're in a partial, in which case we ignore tracked objects)
-        Assert(!this->DoQueueTrackedObject());       
+        Assert(!this->DoQueueTrackedObject());    
+#ifdef PARTIAL_GC_ENABLED
         if (!this->inPartialCollectMode)
+#endif
         {
             this->StartQueueTrackedObject();
         }
@@ -2495,7 +2498,9 @@ Recycler::EndMarkOnLowMemory()
         this->ProcessMark(false);
 
         // Process any tracked objects we found
+#ifdef PARTIAL_GC_ENABLED
         if (!this->inPartialCollectMode)
+#endif
         {
             ProcessTrackedObjects();
         }
@@ -2518,10 +2523,12 @@ Recycler::EndMarkOnLowMemory()
     Assert(this->clientTrackedObjectList.Empty());
     Assert(!this->DoQueueTrackedObject());
     this->inEndMarkOnLowMemory = false;
+#ifdef PARTIAL_GC_ENABLED
     if (this->inPartialCollectMode)
     {
         this->FinishPartialCollect();
     }
+#endif
 
     GCETW(GC_ENDMARKONLOWMEMORY_STOP, (this));  
 }
@@ -3456,7 +3463,6 @@ Recycler::DoCollect(CollectionFlags flags)
             // PARTIALGC-CONSIDER: should we just pretend we did a GC, since we have made the free listed object
             // available to be used, instead of starting off another GC
         }
-
 #endif
 
 #ifdef CONCURRENT_GC_ENABLED
@@ -7944,7 +7950,7 @@ RecyclerHeapObjectInfo::GetSize() const
 #else
     if (m_heapBlock->IsLargeHeapBlock())
     {
-        size = ((LargeHeapBlock*)m_heapBlock)->GetObjectSize();
+        size = ((LargeHeapBlock*)m_heapBlock)->GetObjectSize(m_address);
     }
 #endif
     else

@@ -228,6 +228,7 @@ RecyclerSweep::FinishSweep()
 void
 RecyclerSweep::EndSweep()
 {
+#ifdef PARTIAL_GC_ENABLED
     // We clear out the old uncollectedAllocBytes, restore it now to get the adjustment for partial
     // We clear it again after we are done collecting and if we are not in partial collect
     if (this->inPartialCollect)
@@ -242,8 +243,9 @@ RecyclerSweep::EndSweep()
             Output::Print(L"  nextPartialUncollectedAllocBytes = %d\n", this->nextPartialUncollectedAllocBytes);
         }
 #endif
-    }
-    
+    }   
+#endif
+
     recycler->recyclerSweep = nullptr;
 
     // Clean up the HeapBlockMap.  

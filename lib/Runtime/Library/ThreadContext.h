@@ -640,7 +640,7 @@ private:
     Js::DelayLoadWinRtTypeResolution delayLoadWinRtTypeResolution;
     Js::DelayLoadWinRtRoParameterizedIID delayLoadWinRtRoParameterizedIID;
 #endif
-#ifdef ENABLE_INTL_OBJECT
+#if defined(ENABLE_INTL_OBJECT) || defined(ENABLE_ES6_CHAR_CLASSIFIER)
     Js::DelayLoadWindowsGlobalization delayLoadWindowsGlobalizationLibrary;
     Js::WindowsGlobalizationAdapter windowsGlobalizationAdapter;
 #endif
@@ -727,7 +727,7 @@ public:
     Js::DelayLoadWinRtTypeResolution* GetWinRTTypeResolutionLibrary();
     Js::DelayLoadWinRtRoParameterizedIID* GetWinRTRoParameterizedIIDLibrary();
 #endif
-#ifdef ENABLE_INTL_OBJECT
+#if defined(ENABLE_INTL_OBJECT) || defined(ENABLE_ES6_CHAR_CLASSIFIER)
     Js::DelayLoadWindowsGlobalization *GetWindowsGlobalizationLibrary();
     Js::WindowsGlobalizationAdapter *GetWindowsGlobalizationAdapter();
 #endif

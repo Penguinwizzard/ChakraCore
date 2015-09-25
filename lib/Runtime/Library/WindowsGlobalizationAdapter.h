@@ -4,8 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
-#ifdef ENABLE_INTL_OBJECT
-
+#if defined(ENABLE_INTL_OBJECT) || defined(ENABLE_ES6_CHAR_CLASSIFIER)
 #include "Windows.Globalization.h"
 #ifndef NTBUILD
 #include "windows.globalization.numberformatting.h"
@@ -14,8 +13,6 @@
 #include "activation.h"
 using namespace ABI;
 #endif
-
-#define IfFailedReturn(EXPR) do { hr = (EXPR); if (FAILED(hr)) { return hr; }} while(FALSE)
 
 class ThreadContext;
 
@@ -26,6 +23,7 @@ namespace Js
     private:
         bool initialized;
         bool failedToInitialize;
+#ifdef ENABLE_INTL_OBJECT
         AutoCOMPtr<Windows::Globalization::ILanguageFactory> languageFactory;
         AutoCOMPtr<Windows::Globalization::ILanguageStatics> languageStatics;
         AutoCOMPtr<Windows::Globalization::NumberFormatting::ICurrencyFormatterFactory> currencyFormatterFactory;
@@ -37,25 +35,22 @@ namespace Js
         AutoCOMPtr<Windows::Globalization::ITimeZoneOnCalendar> defaultTimeZoneCalendar; // default current time zone
         AutoCOMPtr<IActivationFactory> incrementNumberRounderActivationFactory;
         AutoCOMPtr<IActivationFactory> significantDigitsRounderActivationFactory;
+#endif
         AutoCOMPtr<Windows::Data::Text::IUnicodeCharactersStatics> unicodeStatics;
 
         DelayLoadWindowsGlobalization* GetWindowsGlobalizationLibrary(_In_ ScriptContext* scriptContext);
         DelayLoadWindowsGlobalization* GetWindowsGlobalizationLibrary(_In_ ThreadContext* threadContext);
-        
-        template <typename T>
-        HRESULT GetActivationFactory(ScriptContext *scriptContext, LPCWSTR factoryName, T** instance);
-        
-        template <typename T>
-        HRESULT GetActivationFactory(ThreadContext *threadContext, LPCWSTR factoryName, T** instance);
-
         template <typename T>
         HRESULT GetActivationFactory(DelayLoadWindowsGlobalization *library, LPCWSTR factoryName, T** instance);
 
-        
+#ifdef ENABLE_INTL_OBJECT
+        HRESULT CreateTimeZoneOnCalendar(_In_ DelayLoadWindowsGlobalization *library, __out Windows::Globalization::ITimeZoneOnCalendar**  result);
+#endif // ENABLE_INTL_OBJECT
     public:
         WindowsGlobalizationAdapter()
             : initialized(false),
             failedToInitialize(false),
+#ifdef ENABLE_INTL_OBJECT
             languageFactory(nullptr),
             languageStatics(nullptr),
             currencyFormatterFactory(nullptr),
@@ -67,11 +62,13 @@ namespace Js
             defaultTimeZoneCalendar(nullptr),
             incrementNumberRounderActivationFactory(nullptr),
             significantDigitsRounderActivationFactory(nullptr),
+#endif // ENABLE_INTL_OBJECT
             unicodeStatics(nullptr)
         { }
 
         HRESULT EnsureInitialized(ScriptContext *scriptContext);
         HRESULT EnsureInitialized(DelayLoadWindowsGlobalization *library, bool isES6Mode);
+#ifdef ENABLE_INTL_OBJECT
         HRESULT CreateLanguage(_In_ ScriptContext* scriptContext, _In_z_ PCWSTR languageTag, Windows::Globalization::ILanguage** language);
         boolean IsWellFormedLanguageTag(_In_ ScriptContext* scriptContext, _In_z_ PCWSTR languageTag);
         HRESULT NormalizeLanguageTag(_In_ ScriptContext* scriptContext, _In_z_ PCWSTR languageTag, HSTRING *result);
@@ -86,14 +83,12 @@ namespace Js
         boolean ValidateAndCanonicalizeTimeZone(_In_ ScriptContext* scriptContext, _In_z_ PCWSTR timeZoneId, HSTRING* result);
         void GetDefaultTimeZoneId(_In_ ScriptContext* scriptContext, HSTRING* result);
         void ClearTimeZoneCalendars();
-
+#endif // ENABLE_INTL_OBJECT
         Windows::Data::Text::IUnicodeCharactersStatics* GetUnicodeStatics()
         {
             return unicodeStatics;
         }
-
-    private:
-        HRESULT CreateTimeZoneOnCalendar(_In_ DelayLoadWindowsGlobalization *library, __out Windows::Globalization::ITimeZoneOnCalendar**  result);
     };
 }
+
 #endif

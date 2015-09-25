@@ -582,9 +582,12 @@ template class SmallNormalHeapBucketBase<MediumFinalizableWithBarrierHeapBlock>;
 
 template void SmallNormalHeapBucketBase<SmallNormalHeapBlock>::Sweep<true>(RecyclerSweep& recyclerSweep);
 template void SmallNormalHeapBucketBase<SmallNormalHeapBlock>::Sweep<false>(RecyclerSweep& recyclerSweep);
-template void SmallNormalHeapBucketBase<SmallNormalWithBarrierHeapBlock>::Sweep<true>(RecyclerSweep& recyclerSweep);
-template void SmallNormalHeapBucketBase<SmallNormalWithBarrierHeapBlock>::Sweep<false>(RecyclerSweep& recyclerSweep);
 template void SmallNormalHeapBucketBase<MediumNormalHeapBlock>::Sweep<true>(RecyclerSweep& recyclerSweep);
 template void SmallNormalHeapBucketBase<MediumNormalHeapBlock>::Sweep<false>(RecyclerSweep& recyclerSweep);
+
+#ifdef RECYCLER_WRITE_BARRIER
+template void SmallNormalHeapBucketBase<SmallNormalWithBarrierHeapBlock>::Sweep<true>(RecyclerSweep& recyclerSweep);
+template void SmallNormalHeapBucketBase<SmallNormalWithBarrierHeapBlock>::Sweep<false>(RecyclerSweep& recyclerSweep);
 template void SmallNormalHeapBucketBase<MediumNormalWithBarrierHeapBlock>::Sweep<true>(RecyclerSweep& recyclerSweep);
 template void SmallNormalHeapBucketBase<MediumNormalWithBarrierHeapBlock>::Sweep<false>(RecyclerSweep& recyclerSweep);
+#endif

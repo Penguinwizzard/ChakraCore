@@ -1460,16 +1460,20 @@ namespace Js
             AddMember(globalObject, PropertyIds::Intl, IntlObject);
         }
         else
-#endif
         {
             IntlObject = nullptr;
         }
+#endif
 
+#ifdef ENABLE_PROJECTION
         winRTPromiseConstructor = nullptr;
+#endif
 
+#if defined(ENABLE_INTL_OBJECT) || defined(ENABLE_PROJECTION)
         engineInterfaceObject = EngineInterfaceObject::New(recycler,
             DynamicType::New(scriptContext, TypeIds_EngineInterfaceObject, objectPrototype, nullptr,
             DeferredTypeHandler<InitializeEngineInterfaceObject>::GetDefaultInstance()));
+#endif
 
         mapConstructor = nullptr;
         setConstructor = nullptr;
@@ -3134,7 +3138,9 @@ namespace Js
             this->Float32ArrayConstructor,
             this->Float64ArrayConstructor,
             this->JSONObject,
+#ifdef ENABLE_INTL_OBJECT
             this->IntlObject,  //TODO: InitializeIntlObject executes script, needs from CallRootFunction
+#endif
             this->mapConstructor,
             this->setConstructor,
             this->weakMapConstructor,
@@ -4334,6 +4340,7 @@ namespace Js
         JSONObject->SetHasNoEnumerableProperties(true);
     }
 
+#if defined(ENABLE_INTL_OBJECT) || defined(ENABLE_PROJECTION)
     void JavascriptLibrary::InitializeEngineInterfaceObject(DynamicObject* engineInterface, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(engineInterface, mode, 3);
@@ -4342,6 +4349,7 @@ namespace Js
 
         engineInterface->SetHasNoEnumerableProperties(true);
     }
+#endif
 
 #ifdef ENABLE_PROJECTION
     void JavascriptLibrary::InitializeWinRTPromiseConstructor()

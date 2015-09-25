@@ -569,13 +569,13 @@ namespace Js
         JavascriptFunction* GetArrayPrototypeValuesFunction() { return arrayPrototypeValuesFunction; }
         DynamicObject* GetMathObject() const {return mathObject; }
         DynamicObject* GetJSONObject() const {return JSONObject; }
-        DynamicObject* GetINTLObject() const {return IntlObject; }
         DynamicObject* GetReflectObject() const { return reflectObject; }
         const PropertyDescriptor* GetDefaultPropertyDescriptor() const { return &defaultPropertyDescriptor; }
         DynamicObject* GetMissingPropertyHolder() const { return missingPropertyHolder; }
 
 
 #ifdef ENABLE_INTL_OBJECT
+        DynamicObject* GetINTLObject() const { return IntlObject; }
         void ResetIntlObject();
         void EnsureIntlObjectReady();
 #endif

@@ -198,7 +198,11 @@ SmallFinalizableHeapBlockT<TBlockAttributes>::RescanTrackedObject(FinalizableObj
 {
     RecyclerVerboseTrace(recycler->GetRecyclerFlagsTable(), L"Marking 0x%08x during rescan\n", object);
 #ifdef PARTIAL_GC_ENABLED
-    if (!recycler->inPartialCollectMode)
+    if (recycler->inPartialCollectMode)
+    {
+        Assert(!recycler->DoQueueTrackedObject());
+    }
+    else
 #endif
     {
         Assert(recycler->DoQueueTrackedObject());
@@ -208,10 +212,6 @@ SmallFinalizableHeapBlockT<TBlockAttributes>::RescanTrackedObject(FinalizableObj
             // Failed to add to track stack due to OOM.
             return false;
         }
-    }
-    else
-    {
-        Assert(!recycler->DoQueueTrackedObject());
     }
     
     RECYCLER_STATS_INC(recycler, trackCount);
@@ -393,6 +393,7 @@ SmallFinalizableHeapBlockT<TBlockAttributes>::Init(ushort objectSize, ushort obj
     __super::Init(objectSize, objectCount);
 }
 
+#ifdef PARTIAL_GC_ENABLED
 template <class TBlockAttributes>
 void
 SmallFinalizableHeapBlockT<TBlockAttributes>::FinishPartialCollect()
@@ -401,6 +402,7 @@ SmallFinalizableHeapBlockT<TBlockAttributes>::FinishPartialCollect()
     Assert(this->disposedObjectListTail == nullptr);
     __super::FinishPartialCollect();
 }
+#endif
 #endif
 
 #ifdef RECYCLER_SLOW_CHECK_ENABLED

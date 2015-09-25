@@ -31,11 +31,13 @@ SmallFinalizableHeapBucketBaseT<TBlockType>::FinalizeAllObjects()
     // Walk through the allocated object and call finalize and dispose on them
     this->ClearAllocators();
     FinalizeHeapBlockList(this->pendingDisposeList);
+#ifdef PARTIAL_GC_ENABLED
     FinalizeHeapBlockList(this->partialHeapBlockList);
+#endif
     FinalizeHeapBlockList(this->heapBlockList);
     FinalizeHeapBlockList(this->fullBlockList);
 
-#ifdef CONCURRENT_GC_ENABLED    
+#if defined(PARTIAL_GC_ENABLED) && defined(CONCURRENT_GC_ENABLED)
     FinalizeHeapBlockList(this->partialSweptHeapBlockList);
 #endif
 }
@@ -93,12 +95,15 @@ SmallFinalizableHeapBucketBaseT<TBlockType>::AggregateBucketStats(HeapBucketStat
 
 template void SmallFinalizableHeapBucketBaseT<SmallFinalizableHeapBlock>::Sweep<true>(RecyclerSweep& recyclerSweep);
 template void SmallFinalizableHeapBucketBaseT<SmallFinalizableHeapBlock>::Sweep<false>(RecyclerSweep& recyclerSweep);
-template void SmallFinalizableHeapBucketBaseT<SmallFinalizableWithBarrierHeapBlock>::Sweep<true>(RecyclerSweep& recyclerSweep);
-template void SmallFinalizableHeapBucketBaseT<SmallFinalizableWithBarrierHeapBlock>::Sweep<false>(RecyclerSweep& recyclerSweep);
 template void SmallFinalizableHeapBucketBaseT<MediumFinalizableHeapBlock>::Sweep<true>(RecyclerSweep& recyclerSweep);
 template void SmallFinalizableHeapBucketBaseT<MediumFinalizableHeapBlock>::Sweep<false>(RecyclerSweep& recyclerSweep);
+
+#ifdef RECYCLER_WRITE_BARRIER
+template void SmallFinalizableHeapBucketBaseT<SmallFinalizableWithBarrierHeapBlock>::Sweep<true>(RecyclerSweep& recyclerSweep);
+template void SmallFinalizableHeapBucketBaseT<SmallFinalizableWithBarrierHeapBlock>::Sweep<false>(RecyclerSweep& recyclerSweep);
 template void SmallFinalizableHeapBucketBaseT<MediumFinalizableWithBarrierHeapBlock>::Sweep<true>(RecyclerSweep& recyclerSweep);
 template void SmallFinalizableHeapBucketBaseT<MediumFinalizableWithBarrierHeapBlock>::Sweep<false>(RecyclerSweep& recyclerSweep);
+#endif
 
 
 template<class TBlockType>

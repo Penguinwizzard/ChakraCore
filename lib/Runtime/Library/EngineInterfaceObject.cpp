@@ -3,6 +3,9 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
+
+#if defined(ENABLE_INTL_OBJECT) || defined(ENABLE_PROJECTION)
+
 #include "Language\ByteCodeSerializer.h"
 #include "errstr.h"
 #include "ByteCode\ByteCodeDumper.h"
@@ -173,6 +176,7 @@ namespace Js
         }
     };
 
+#ifdef ENABLE_INTL_OBJECT
     //Public
     NoProfileFunctionInfo EngineInterfaceObject::EntryInfo::Intl_RaiseAssert(EngineInterfaceObject::EntryIntl_RaiseAssert);
     NoProfileFunctionInfo EngineInterfaceObject::EntryInfo::Intl_IsWellFormedLanguageTag(EngineInterfaceObject::EntryIntl_IsWellFormedLanguageTag);
@@ -195,10 +199,11 @@ namespace Js
     NoProfileFunctionInfo EngineInterfaceObject::EntryInfo::Intl_RegisterBuiltInFunction(EngineInterfaceObject::EntryIntl_RegisterBuiltInFunction);
     NoProfileFunctionInfo EngineInterfaceObject::EntryInfo::Intl_GetHiddenObject(EngineInterfaceObject::EntryIntl_GetHiddenObject);
     NoProfileFunctionInfo EngineInterfaceObject::EntryInfo::Intl_SetHiddenObject(EngineInterfaceObject::EntryIntl_SetHiddenObject);
-
+#endif
     NoProfileFunctionInfo EngineInterfaceObject::EntryInfo::GetErrorMessage(EngineInterfaceObject::Entry_GetErrorMessage);
     NoProfileFunctionInfo EngineInterfaceObject::EntryInfo::LogDebugMessage(EngineInterfaceObject::Entry_LogDebugMessage);
     NoProfileFunctionInfo EngineInterfaceObject::EntryInfo::TagPublicLibraryCode(EngineInterfaceObject::Entry_TagPublicLibraryCode);
+
 #ifdef ENABLE_PROJECTION
     NoProfileFunctionInfo EngineInterfaceObject::EntryInfo::Promise_EnqueueTask(EngineInterfaceObject::EntryPromise_EnqueueTask);
 #endif
@@ -226,6 +231,7 @@ namespace Js
 #undef GlobalBuiltIn
 #endif
 
+#ifdef ENABLE_INTL_OBJECT
     NoProfileFunctionInfo EngineInterfaceObject::EntryInfo::Intl_BuiltIn_GetArrayLength(EngineInterfaceObject::EntryIntl_BuiltIn_GetArrayLength);
     NoProfileFunctionInfo EngineInterfaceObject::EntryInfo::Intl_BuiltIn_SetPrototype(EngineInterfaceObject::EntryIntl_BuiltIn_SetPrototype);
     NoProfileFunctionInfo EngineInterfaceObject::EntryInfo::Intl_BuiltIn_RegexMatch(EngineInterfaceObject::EntryIntl_BuiltIn_RegexMatch);
@@ -235,6 +241,7 @@ namespace Js
     {
         return scriptContext->GetThreadContext()->GetWindowsGlobalizationAdapter();
     }
+#endif
 
     EngineInterfaceObject * EngineInterfaceObject::New(Recycler * recycler, DynamicType * type)
     {
@@ -287,12 +294,14 @@ namespace Js
 #endif
     }
 #if DBG
+#ifdef ENABLE_INTL_OBJECT
     void EngineInterfaceObject::DumpIntlByteCode(ScriptContext* scriptContext)
     {
         Output::Print(L"Dumping Intl Byte Code:");
         this->EnsureIntlByteCode(scriptContext);
         Js::ByteCodeDumper::DumpRecursively(intlByteCode);
     }
+#endif
 
 #ifdef ENABLE_PROJECTION
     void EngineInterfaceObject::DumpPromiseByteCode(ScriptContext* scriptContext)
@@ -332,12 +341,13 @@ namespace Js
 #undef GlobalBuiltIn
 #undef GlobalBuiltInConstructor
 #endif
-
+#ifdef ENABLE_INTL_OBJECT 
+        // TODO: Move these to IntlNativeInterfaces?
         library->AddFunctionToLibraryObject(commonNativeInterfaces, Js::PropertyIds::builtInSetPrototype, &EngineInterfaceObject::EntryInfo::Intl_BuiltIn_SetPrototype, 1);
         library->AddFunctionToLibraryObject(commonNativeInterfaces, Js::PropertyIds::builtInGetArrayLength, &EngineInterfaceObject::EntryInfo::Intl_BuiltIn_GetArrayLength, 1);
         library->AddFunctionToLibraryObject(commonNativeInterfaces, Js::PropertyIds::builtInRegexMatch, &EngineInterfaceObject::EntryInfo::Intl_BuiltIn_RegexMatch, 1);
         library->AddFunctionToLibraryObject(commonNativeInterfaces, Js::PropertyIds::builtInCallInstanceFunction, &EngineInterfaceObject::EntryInfo::Intl_BuiltIn_CallInstanceFunction, 1);
-
+#endif
         library->AddFunctionToLibraryObject(commonNativeInterfaces, Js::PropertyIds::builtInJavascriptObjectCreate, &JavascriptObject::EntryInfo::Create, 1);
         library->AddFunctionToLibraryObject(commonNativeInterfaces, Js::PropertyIds::builtInJavascriptObjectPreventExtensions, &JavascriptObject::EntryInfo::PreventExtensions, 1);
         library->AddFunctionToLibraryObject(commonNativeInterfaces, Js::PropertyIds::builtInJavascriptObjectGetOwnPropertyDescriptor, &JavascriptObject::EntryInfo::GetOwnPropertyDescriptor, 1);
@@ -351,6 +361,7 @@ namespace Js
         commonNativeInterfaces->SetHasNoEnumerableProperties(true);
     }
 
+#ifdef ENABLE_INTL_OBJECT
     void EngineInterfaceObject::InitializeIntlNativeInterfaces(DynamicObject* intlNativeInterfaces, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(intlNativeInterfaces, mode, 16);
@@ -382,7 +393,7 @@ namespace Js
 
         intlNativeInterfaces->SetHasNoEnumerableProperties(true);
     }
-
+#endif
 #ifdef ENABLE_PROJECTION
     void EngineInterfaceObject::InitializePromiseNativeInterfaces(DynamicObject* promiseNativeInterfaces, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
@@ -422,7 +433,7 @@ namespace Js
         promiseNativeInterfaces->SetHasNoEnumerableProperties(true);
     }
 #endif
-
+#ifdef ENABLE_INTL_OBJECT
     void EngineInterfaceObject::deletePrototypePropertyHelper(ScriptContext* scriptContext, DynamicObject* intlObject, Js::PropertyId objectPropertyId, Js::PropertyId getterFunctionId)
     {
         DynamicObject *prototypeVal = nullptr;
@@ -457,7 +468,6 @@ namespace Js
         functionObj->DeleteProperty(Js::PropertyIds::prototype, Js::PropertyOperationFlags::PropertyOperation_None);
     }
     
-#ifdef ENABLE_INTL_OBJECT
     void EngineInterfaceObject::cleanUpIntl(ScriptContext *scriptContext, DynamicObject* intlObject)
     {
         this->dateToLocaleString = nullptr;
@@ -614,7 +624,7 @@ namespace Js
         return value;
     }
 #endif
-
+#ifdef ENABLE_INTL_OBJECT
     // First parameter is boolean.
     Var EngineInterfaceObject::EntryIntl_RaiseAssert(RecyclableObject* function, CallInfo callInfo, ...)
     {
@@ -1581,6 +1591,7 @@ namespace Js
 
         return JavascriptFunction::CallFunction<true>(func, func->GetEntryPoint(), newArgs);
     }
+#endif
 
     Var EngineInterfaceObject::Entry_GetErrorMessage(RecyclableObject *function, CallInfo callInfo, ...)
     {
@@ -1739,3 +1750,4 @@ namespace Js
 #endif
 
 }
+#endif // ENABLE_INTL_OBJECT || ENABLE_PROJECTION

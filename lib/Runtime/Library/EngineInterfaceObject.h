@@ -4,6 +4,8 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
+#if defined(ENABLE_INTL_OBJECT) || defined(ENABLE_PROJECTION)
+
 namespace Js
 {
     class WindowsGlobalizationAdapter;
@@ -35,9 +37,13 @@ namespace Js
 
         FunctionBody* intlByteCode;
 #endif
+#ifdef ENABLE_PROJECTION
         FunctionBody* promiseByteCode;
+#endif
 
+#ifdef ENABLE_INTL_OBJECT
         void EnsureIntlByteCode(_In_ ScriptContext * scriptContext);
+#endif
 #ifdef ENABLE_PROJECTION
         void EnsurePromiseByteCode(_In_ ScriptContext * scriptContext);
 #endif
@@ -51,14 +57,18 @@ namespace Js
 
         void Initialize();
 #if DBG
+#ifdef ENABLE_INTL_OBJECT
         void DumpIntlByteCode(ScriptContext * scriptContext);
+#endif
 #ifdef ENABLE_PROJECTION
         void DumpPromiseByteCode(ScriptContext * scriptContext);
 #endif
 #endif
 
         static void __cdecl InitializeCommonNativeInterfaces(DynamicObject* engineInterface, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
+#ifdef ENABLE_INTL_OBJECT
         static void __cdecl InitializeIntlNativeInterfaces(DynamicObject* intlNativeInterfaces, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
+#endif
 #ifdef ENABLE_PROJECTION
         static void __cdecl InitializePromiseNativeInterfaces(DynamicObject* promiseNativeInterfaces, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
 #endif
@@ -80,6 +90,7 @@ namespace Js
         class EntryInfo
         {
         public:
+#ifdef ENABLE_INTL_OBJECT
             static NoProfileFunctionInfo Intl_RaiseAssert;
 
             static NoProfileFunctionInfo Intl_IsWellFormedLanguageTag;
@@ -105,10 +116,11 @@ namespace Js
             static NoProfileFunctionInfo Intl_RegisterBuiltInFunction;
             static NoProfileFunctionInfo Intl_GetHiddenObject;
             static NoProfileFunctionInfo Intl_SetHiddenObject;
-
+#endif
             static NoProfileFunctionInfo GetErrorMessage;
             static NoProfileFunctionInfo LogDebugMessage;
             static NoProfileFunctionInfo TagPublicLibraryCode;
+
 #ifdef ENABLE_PROJECTION
             static NoProfileFunctionInfo Promise_EnqueueTask;
 #endif
@@ -135,12 +147,14 @@ namespace Js
 #undef GlobalBuiltInConstructor
 #undef GlobalBuiltIn
 #endif
+#ifdef ENABLE_INTL_OBJECT 
             static NoProfileFunctionInfo Intl_BuiltIn_SetPrototype;
             static NoProfileFunctionInfo Intl_BuiltIn_GetArrayLength;
             static NoProfileFunctionInfo Intl_BuiltIn_RegexMatch;
             static NoProfileFunctionInfo Intl_BuiltIn_CallInstanceFunction;
+#endif
         };
-        
+#ifdef ENABLE_INTL_OBJECT        
         static Var EntryIntl_RaiseAssert(RecyclableObject* function, CallInfo callInfo, ...);
 
         static Var EntryIntl_IsWellFormedLanguageTag(RecyclableObject* function, CallInfo callInfo, ...);
@@ -168,7 +182,7 @@ namespace Js
         static Var EntryIntl_BuiltIn_GetArrayLength(RecyclableObject *function, CallInfo callInfo, ...);
         static Var EntryIntl_BuiltIn_RegexMatch(RecyclableObject *function, CallInfo callInfo, ...);
         static Var EntryIntl_BuiltIn_CallInstanceFunction(RecyclableObject *function, CallInfo callInfo, ...);
-
+#endif
         static Var Entry_GetErrorMessage(RecyclableObject *function, CallInfo callInfo, ...);
         static Var Entry_LogDebugMessage(RecyclableObject *function, CallInfo callInfo, ...);
         static Var Entry_TagPublicLibraryCode(RecyclableObject *function, CallInfo callInfo, ...);
@@ -198,6 +212,7 @@ namespace Js
 #undef GlobalBuiltIn
 #endif
 
+#ifdef ENABLE_INTL_OBJECT
     private:
         static void deletePrototypePropertyHelper(ScriptContext* scriptContext, DynamicObject* intlObject, Js::PropertyId objectPropertyId, Js::PropertyId getterFunctionId);
         static WindowsGlobalizationAdapter* GetWindowsGlobalizationAdapter(_In_ ScriptContext*);
@@ -206,8 +221,9 @@ namespace Js
         static void prepareWithSignificantDigits(ScriptContext* scriptContext, Windows::Globalization::NumberFormatting::INumberRounderOption* rounderOptions, Windows::Globalization::NumberFormatting::INumberFormatter *numberFormatter,
             Windows::Globalization::NumberFormatting::INumberFormatterOptions* formatterOptions, uint16 minSignificantDigits, uint16 maxSignificantDigits);
 
-#ifdef ENABLE_INTL_OBJECT
         void cleanUpIntl(ScriptContext* scriptContext, DynamicObject* intlObject);
 #endif
     };
 }
+
+#endif // ENABLE_INTL_OBJECT || ENABLE_PROJECTION

@@ -110,13 +110,13 @@ public:
 #endif
 
 public:
-    static BOOL IsSmallObject(size_t nBytes) { return nBytes <= HeapConstants::MaxSmallObjectSize; }
-    static BOOL IsMediumObject(size_t nBytes) 
+    static bool IsSmallObject(size_t nBytes) { return nBytes <= HeapConstants::MaxSmallObjectSize; }
+    static bool IsMediumObject(size_t nBytes)
     {
 #ifdef BUCKETIZE_MEDIUM_ALLOCATIONS
         return nBytes > HeapConstants::MaxSmallObjectSize && nBytes <= HeapConstants::MaxMediumObjectSize;
 #else
-        return FALSE;
+        return false;
 #endif
     }
 
@@ -129,7 +129,7 @@ public:
 #endif
     }
 
-    static BOOL IsLargeObject(size_t nBytes)
+    static bool IsLargeObject(size_t nBytes)
     {
 #ifdef BUCKETIZE_MEDIUM_ALLOCATIONS
         return nBytes > HeapConstants::MaxMediumObjectSize;

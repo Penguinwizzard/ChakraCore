@@ -222,7 +222,9 @@ HeapBucketT<TBlockType>::IntegrateBlock(char * blockAddress, PageSegment * segme
     }
 
     // TODO: Consider supporting guard pages for this codepath
+#ifdef RECYCLER_PAGE_HEAP
     heapBlock->ClearPageHeap();
+#endif
     if (!heapBlock->SetPage<false>(blockAddress, segment, recycler))
     {
         FreeHeapBlock(heapBlock);
@@ -687,7 +689,6 @@ template <typename TBlockType>
 void
 HeapBucketT<TBlockType>::VerifyBlockConsistencyInList(TBlockType * heapBlock, RecyclerVerifyListConsistencyData& recyclerSweep)
 {
-#if DBG
     bool* expectFull = nullptr;
     bool* expectDispose = nullptr;
     HeapBlock* nextAllocableBlockHead = nullptr;
@@ -708,7 +709,6 @@ HeapBucketT<TBlockType>::VerifyBlockConsistencyInList(TBlockType * heapBlock, Re
     {
         Assert(false);
     }
-#endif
 
     if (heapBlock == nextAllocableBlockHead)
     {
@@ -742,7 +742,6 @@ template <typename TBlockType>
 void
 HeapBucketT<TBlockType>::VerifyBlockConsistencyInList(TBlockType * heapBlock, RecyclerVerifyListConsistencyData const& recyclerSweep, SweepState state)
 {
-#if DBG
     bool expectFull = false;
     bool expectDispose = false;
 
@@ -760,7 +759,6 @@ HeapBucketT<TBlockType>::VerifyBlockConsistencyInList(TBlockType * heapBlock, Re
     {
         Assert(false);
     }
-#endif
 
     if (heapBlock->IsClearedFromAllocator())
     {
@@ -779,8 +777,9 @@ HeapBucketT<TBlockType>::VerifyBlockConsistencyInList(TBlockType * heapBlock, Re
     // If you were pending dispose before, you can only be pending dispose after
     Assert(!expectDispose || SweepStatePendingDispose == state);
 }
-#endif
+#endif // DBG
 
+#ifdef PARTIAL_GC_ENABLED
 template <typename TBlockType>
 bool
 HeapBucketT<TBlockType>::DoQueuePendingSweep(Recycler * recycler)
@@ -796,17 +795,20 @@ HeapBucketT<TBlockType>::DoPartialReuseSweep(Recycler * recycler)
     // WriteBarrier-TODO: We shouldn't need to do this for write barrier heap buckets either
     return !IsLeafBucket && recycler->inPartialCollectMode;
 }
+#endif
 
 template void HeapBucketT<SmallLeafHeapBlock>::SweepHeapBlockList<true>(RecyclerSweep&, SmallLeafHeapBlock *, bool);
 template void HeapBucketT<SmallLeafHeapBlock>::SweepHeapBlockList<false>(RecyclerSweep&, SmallLeafHeapBlock *, bool);
 template void HeapBucketT<SmallNormalHeapBlock>::SweepHeapBlockList<true>(RecyclerSweep&, SmallNormalHeapBlock *, bool);
 template void HeapBucketT<SmallNormalHeapBlock>::SweepHeapBlockList<false>(RecyclerSweep&, SmallNormalHeapBlock *, bool);
-template void HeapBucketT<SmallNormalWithBarrierHeapBlock>::SweepHeapBlockList<true>(RecyclerSweep&, SmallNormalWithBarrierHeapBlock *, bool);
-template void HeapBucketT<SmallNormalWithBarrierHeapBlock>::SweepHeapBlockList<false>(RecyclerSweep&, SmallNormalWithBarrierHeapBlock *, bool);
 template void HeapBucketT<SmallFinalizableHeapBlock>::SweepHeapBlockList<true>(RecyclerSweep&, SmallFinalizableHeapBlock *, bool);
 template void HeapBucketT<SmallFinalizableHeapBlock>::SweepHeapBlockList<false>(RecyclerSweep&, SmallFinalizableHeapBlock *, bool);
+#ifdef RECYCLER_WRITE_BARRIER
+template void HeapBucketT<SmallNormalWithBarrierHeapBlock>::SweepHeapBlockList<true>(RecyclerSweep&, SmallNormalWithBarrierHeapBlock *, bool);
+template void HeapBucketT<SmallNormalWithBarrierHeapBlock>::SweepHeapBlockList<false>(RecyclerSweep&, SmallNormalWithBarrierHeapBlock *, bool);
 template void HeapBucketT<SmallFinalizableWithBarrierHeapBlock>::SweepHeapBlockList<true>(RecyclerSweep&, SmallFinalizableWithBarrierHeapBlock *, bool);
 template void HeapBucketT<SmallFinalizableWithBarrierHeapBlock>::SweepHeapBlockList<false>(RecyclerSweep&, SmallFinalizableWithBarrierHeapBlock *, bool);
+#endif
 
 template <typename TBlockType>
 template <bool pageheap>
@@ -1456,7 +1458,7 @@ HeapBucketGroup<TBlockAttributes>::Rescan(Recycler * recycler, RescanFlags flags
         finalizableHeapBucket.Rescan(recycler, flags);
 }
 #endif
-#ifdef PARTIAL_GC_ENABLED
+#ifdef CONCURRENT_GC_ENABLED
 template <class TBlockAttributes>
 void
 HeapBucketGroup<TBlockAttributes>::PrepareSweep()
@@ -1480,7 +1482,8 @@ HeapBucketGroup<TBlockAttributes>::SetupBackgroundSweep(RecyclerSweep& recyclerS
     smallNormalWithBarrierHeapBucket.SetupBackgroundSweep(recyclerSweep);
 #endif
 }
-
+#endif
+#ifdef PARTIAL_GC_ENABLED
 template <class TBlockAttributes>
 void
 HeapBucketGroup<TBlockAttributes>::SweepPartialReusePages(RecyclerSweep& recyclerSweep)
@@ -1649,22 +1652,27 @@ template class HeapBucketGroup<MediumAllocationBlockAttributes>;
 
 template void HeapBucketT<SmallFinalizableHeapBlock>::SweepBucket<true>(RecyclerSweep&);
 template void HeapBucketT<SmallFinalizableHeapBlock>::SweepBucket<false>(RecyclerSweep&);
-template void HeapBucketT<SmallFinalizableWithBarrierHeapBlock>::SweepBucket<true>(RecyclerSweep&);
-template void HeapBucketT<SmallFinalizableWithBarrierHeapBlock>::SweepBucket<false>(RecyclerSweep&);
 template void HeapBucketT<SmallNormalHeapBlock>::SweepBucket<true>(RecyclerSweep&);
 template void HeapBucketT<SmallNormalHeapBlock>::SweepBucket<false>(RecyclerSweep&);
-template void HeapBucketT<SmallNormalWithBarrierHeapBlock>::SweepBucket<true>(RecyclerSweep&);
-template void HeapBucketT<SmallNormalWithBarrierHeapBlock>::SweepBucket<false>(RecyclerSweep&);
 template void HeapBucketT<SmallLeafHeapBlock>::SweepBucket<true>(RecyclerSweep&);
 template void HeapBucketT<SmallLeafHeapBlock>::SweepBucket<false>(RecyclerSweep&);
+#ifdef RECYCLER_WRITE_BARRIER
+template void HeapBucketT<SmallFinalizableWithBarrierHeapBlock>::SweepBucket<true>(RecyclerSweep&);
+template void HeapBucketT<SmallFinalizableWithBarrierHeapBlock>::SweepBucket<false>(RecyclerSweep&);
+template void HeapBucketT<SmallNormalWithBarrierHeapBlock>::SweepBucket<true>(RecyclerSweep&);
+template void HeapBucketT<SmallNormalWithBarrierHeapBlock>::SweepBucket<false>(RecyclerSweep&);
+#endif
 
 template void HeapBucketT<MediumFinalizableHeapBlock>::SweepBucket<true>(RecyclerSweep&);
 template void HeapBucketT<MediumFinalizableHeapBlock>::SweepBucket<false>(RecyclerSweep&);
-template void HeapBucketT<MediumFinalizableWithBarrierHeapBlock>::SweepBucket<true>(RecyclerSweep&);
-template void HeapBucketT<MediumFinalizableWithBarrierHeapBlock>::SweepBucket<false>(RecyclerSweep&);
+
 template void HeapBucketT<MediumNormalHeapBlock>::SweepBucket<true>(RecyclerSweep&);
 template void HeapBucketT<MediumNormalHeapBlock>::SweepBucket<false>(RecyclerSweep&);
-template void HeapBucketT<MediumNormalWithBarrierHeapBlock>::SweepBucket<true>(RecyclerSweep&);
-template void HeapBucketT<MediumNormalWithBarrierHeapBlock>::SweepBucket<false>(RecyclerSweep&);
 template void HeapBucketT<MediumLeafHeapBlock>::SweepBucket<true>(RecyclerSweep&);
 template void HeapBucketT<MediumLeafHeapBlock>::SweepBucket<false>(RecyclerSweep&);
+#ifdef RECYCLER_WRITE_BARRIER
+template void HeapBucketT<MediumFinalizableWithBarrierHeapBlock>::SweepBucket<true>(RecyclerSweep&);
+template void HeapBucketT<MediumFinalizableWithBarrierHeapBlock>::SweepBucket<false>(RecyclerSweep&);
+template void HeapBucketT<MediumNormalWithBarrierHeapBlock>::SweepBucket<true>(RecyclerSweep&);
+template void HeapBucketT<MediumNormalWithBarrierHeapBlock>::SweepBucket<false>(RecyclerSweep&);
+#endif

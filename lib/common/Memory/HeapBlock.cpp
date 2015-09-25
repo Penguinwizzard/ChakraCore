@@ -305,8 +305,9 @@ SmallHeapBlockT<TBlockAttributes>::Init(ushort objectSize, ushort objectCount)
     Assert(this->freeObjectList == nullptr);
 
     Assert(this->freeCount == 0);
+#ifdef PARTIAL_GC_ENABLED
     this->oldFreeCount = this->lastFreeCount = this->objectCount;
-
+#endif
     this->isPendingConcurrentSweep = false;
 
     Assert(!this->isInAllocator);
@@ -339,8 +340,13 @@ SmallHeapBlockT<TBlockAttributes>::ReassignPages(Recycler * recycler)
     Assert(this->segment == nullptr);
 
     PageSegment * segment;
+#ifdef RECYCLER_PAGE_HEAP
+    const PageHeapMode pageHeapModeLocal = this->pageHeapMode;
+#else
+    const PageHeapMode pageHeapModeLocal = PageHeapModeOff;
+#endif
 
-    char * address = this->GetPageAllocator(recycler)->AllocPagesPageAligned(this->GetPageHeapModePageCount<pageheap>(), &segment, this->pageHeapMode);
+    char * address = this->GetPageAllocator(recycler)->AllocPagesPageAligned(this->GetPageHeapModePageCount<pageheap>(), &segment, pageHeapModeLocal);
 
     if (address == NULL)
     {
@@ -611,7 +617,9 @@ SmallHeapBlockT<TBlockAttributes>::Reset()
 
     this->freeCount = 0;
     this->markCount = 0;
+#ifdef PARTIAL_GC_ENABLED
     this->oldFreeCount = this->lastFreeCount = this->objectCount;
+#endif
     this->freeObjectList = nullptr;
     this->lastFreeObjectHead = nullptr;
     this->ClearObjectInfoList();
@@ -984,7 +992,11 @@ SmallHeapBlockT<TBlockAttributes>::VerifyMark()
             // Since this situation is hard to detect, just don't verify mark for write barrier blocks.
             // We could fix this if we had object layout info.
 
-            if (!this->IsLeafBlock() && !this->IsWithBarrier())
+            if (!this->IsLeafBlock()
+#ifdef RECYCLER_WRITE_BARRIER
+                && !this->IsWithBarrier()
+#endif
+                )
             {
                 if ((ObjectInfo(objectIndex) & LeafBit) == 0)
                 {
@@ -1072,7 +1084,12 @@ SmallHeapBlockT<TBlockAttributes>::DoPartialReusePage(RecyclerSweep const& recyc
     return (expectFreeByteCount + objectSize >= recyclerSweep.GetPartialCollectSmallHeapBlockReuseMinFreeBytes());
 }
 
-#endif
+template <class TBlockAttributes>
+void
+SmallHeapBlockT<TBlockAttributes>::ClearAllAllocBytes()
+{
+    this->oldFreeCount = this->lastFreeCount = this->freeCount;
+}
 
 #if DBG
 // do debug assert for partial block that we are not going to sweep
@@ -1086,14 +1103,6 @@ SmallHeapBlockT<TBlockAttributes>::SweepVerifyPartialBlock(Recycler * recycler)
 }
 #endif
 
-template <class TBlockAttributes>
-void
-SmallHeapBlockT<TBlockAttributes>::ClearAllAllocBytes()
-{
-    this->oldFreeCount = this->lastFreeCount = this->freeCount;
-}
-
-#ifdef PARTIAL_GC_ENABLED
 template <class TBlockAttributes>
 uint
 SmallHeapBlockT<TBlockAttributes>::GetAndClearUnaccountedAllocBytes()
@@ -1189,10 +1198,10 @@ SmallHeapBlockT<TBlockAttributes>::GetMarkCountForSweep()
         bool marked = (this->GetMarkedBitVector()->Test(bitIndex) && !this->GetFreeBitVector()->Test(bitIndex));
         return marked ? 1 : 0;
     }
-#endif
 
     Assert(!InPageHeapMode());
-    
+#endif
+
     // Make a local copy of mark bits, so we don't modify the actual mark bits.
     SmallHeapBlockBitVector temp;
     temp.Copy(this->GetMarkedBitVector());
@@ -1224,10 +1233,14 @@ SmallHeapBlockT<TBlockAttributes>::Sweep(RecyclerSweep& recyclerSweep, bool queu
         // This block has been allocated from since the last GC.
         // We need to update its free bit vector so we can use it below.
         Assert(freeCount == this->GetFreeBitVector()->Count());
+#ifdef PARTIAL_GC_ENABLED
         Assert(this->lastFreeCount == 0 || this->oldFreeCount == this->lastFreeCount);
+#endif
         this->EnsureFreeBitVector();
         Assert(this->lastFreeCount >= this->freeCount);
+#ifdef PARTIAL_GC_ENABLED
         Assert(this->oldFreeCount >= this->freeCount);
+#endif
 
 #ifdef PARTIAL_GC_ENABLED
         // Accounting for partial heuristics
@@ -1395,6 +1408,7 @@ SmallHeapBlockT<TBlockAttributes>::SweepObjects(Recycler * recycler)
 
     SmallHeapBlockBitVector * marked = this->GetMarkedBitVector();
 
+#ifdef RECYCLER_PAGE_HEAP
     if (pageheap && this->InPageHeapMode())
     {
         // Page heap blocks are always swept in thread.
@@ -1429,13 +1443,18 @@ SmallHeapBlockT<TBlockAttributes>::SweepObjects(Recycler * recycler)
             // Update the free bit vector
             Assert(this->freeCount == 0);
             this->GetFreeBitVector()->Set(bitIndex);
+#ifdef PARTIAL_GC_ENABLED
             this->oldFreeCount = this->lastFreeCount = this->freeCount = 1;
+#endif
             this->lastFreeObjectHead = this->freeObjectList;
         }
     }
     else
+#endif
     {
+#ifdef RECYCLER_PAGE_HEAP
         Assert(!this->InPageHeapMode());
+#endif
         
         DebugOnly(const uint expectedSweepCount = objectCount - freeCount - markCount);
         Assert(expectedSweepCount != 0 || this->isForceSweeping);
@@ -1458,7 +1477,9 @@ SmallHeapBlockT<TBlockAttributes>::SweepObjects(Recycler * recycler)
                     Assert((this->ObjectInfo(objectIndex) & ImplicitRootBit) == 0);
                     FreeObject* addr = (FreeObject*)objectAddress;
 
+#ifdef PARTIAL_GC_ENABLED
                     if (mode != SweepMode_ConcurrentPartial)
+#endif
                     {
                         // Don't call NotifyFree if we are doing a partial sweep.
                         // Since we are not actually collecting the object, we will do the NotifyFree later
@@ -1485,24 +1506,30 @@ SmallHeapBlockT<TBlockAttributes>::SweepObjects(Recycler * recycler)
         Assert(sweepCount == expectedSweepCount);
         this->isPendingConcurrentSweep = false;
 
-        if (mode != SweepMode_ConcurrentPartial)
-        {
-            // Update the free bit vector
-            // Need to update even if there are not swept object because finalizable object are
-            // consider freed but not on the free list.
-            ushort currentFreeCount = GetExpectedFreeObjectCount();
-            this->GetFreeBitVector()->OrComplimented(marked);
-            this->GetFreeBitVector()->Minus(this->GetInvalidBitVector());
-            this->oldFreeCount = this->lastFreeCount = this->freeCount = currentFreeCount;
-
-            this->lastFreeObjectHead = this->freeObjectList;
-        }
-        else
+#ifdef PARTIAL_GC_ENABLED
+        if (mode == SweepMode_ConcurrentPartial)
         {
             Assert(recycler->inPartialCollectMode);
 
             // We didn't actually collect anything, so the free bit vector should still be valid.
             Assert(IsFreeBitsValid());
+        }
+        else
+#endif
+        {
+            // Update the free bit vector
+            // Need to update even if there are not swept object because finalizable object are
+            // consider freed but not on the free list.
+#ifdef PARTIAL_GC_ENABLED
+            ushort currentFreeCount = GetExpectedFreeObjectCount();
+#endif
+            this->GetFreeBitVector()->OrComplimented(marked);
+            this->GetFreeBitVector()->Minus(this->GetInvalidBitVector());
+#ifdef PARTIAL_GC_ENABLED
+            this->oldFreeCount = this->lastFreeCount = this->freeCount = currentFreeCount;
+#endif
+
+            this->lastFreeObjectHead = this->freeObjectList;
         }
     }
 

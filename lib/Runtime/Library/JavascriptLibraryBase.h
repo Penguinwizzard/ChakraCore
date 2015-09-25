@@ -84,8 +84,12 @@ namespace Js
 
         DynamicObject* GetMathObject() { return mathObject; }
         DynamicObject* GetJSONObject() { return JSONObject; }
+#ifdef ENABLE_INTL_OBJECT
         DynamicObject* GetINTLObject() { return IntlObject; }
+#endif
+#if defined(ENABLE_INTL_OBJECT) || defined(ENABLE_PROJECTION)
         EngineInterfaceObject* GetEngineInterfaceObject() { return engineInterfaceObject; }
+#endif
         DiagnosticsScriptObject* GetDiagnosticsScriptObect() { return diagnosticsScriptObject; }
 
         DynamicObject* GetArrayPrototype() { return arrayPrototype; }
@@ -159,8 +163,9 @@ namespace Js
         RuntimeFunction* typeErrorConstructor;
         RuntimeFunction* uriErrorConstructor;        
         RuntimeFunction* winrtErrorConstructor;
-
+#ifdef ENABLE_PROJECTION
         JavascriptFunction* winRTPromiseConstructor;
+#endif
         RuntimeFunction* proxyConstructor;
         RuntimeFunction* promiseConstructor;
         RuntimeFunction* generatorFunctionConstructor;
@@ -183,8 +188,12 @@ namespace Js
 #endif
         DynamicObject* debugObject;
         DynamicObject* JSONObject;
+#ifdef ENABLE_INTL_OBJECT
         DynamicObject* IntlObject;
+#endif
+#if defined(ENABLE_INTL_OBJECT) || defined(ENABLE_PROJECTION)
         EngineInterfaceObject* engineInterfaceObject;
+#endif
         DynamicObject* reflectObject;
         DiagnosticsScriptObject * diagnosticsScriptObject;
 

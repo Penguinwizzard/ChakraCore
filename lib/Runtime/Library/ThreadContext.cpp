@@ -580,11 +580,13 @@ Recycler* ThreadContext::EnsureRecycler()
 
         try
         {
+#ifdef RECYCLER_WRITE_BARRIER
 #ifdef _M_X64_OR_ARM64
             if (!RecyclerWriteBarrierManager::OnThreadInit())
             {
                 Js::Throw::OutOfMemory();
             }
+#endif
 #endif
 
             this->expirableObjectList = Anew(&this->threadAlloc, ExpirableObjectList, &this->threadAlloc);
@@ -3826,7 +3828,7 @@ Js::DelayLoadWinRtRoParameterizedIID* ThreadContext::GetWinRTRoParameterizedIIDL
 }
 #endif
 
-#ifdef ENABLE_INTL_OBJECT
+#if defined(ENABLE_INTL_OBJECT) || defined(ENABLE_ES6_CHAR_CLASSIFIER)
 Js::WindowsGlobalizationAdapter* ThreadContext::GetWindowsGlobalizationAdapter()
 {
     return &windowsGlobalizationAdapter;

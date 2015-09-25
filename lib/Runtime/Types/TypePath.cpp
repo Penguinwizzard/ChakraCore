@@ -125,11 +125,13 @@ namespace Js {
             clonedPath->AddInternal(assignments[i]);
         }
 
+#ifdef SUPPORT_FIXED_FIELDS_ON_PATH_TYPES
         // Copy fixed field info
         clonedPath->maxInitializedLength = this->maxInitializedLength;
         clonedPath->singletonInstance = this->singletonInstance;
         clonedPath->fixedFields = this->fixedFields;
         clonedPath->usedFixedFields = this->usedFixedFields;
+#endif
 
         return clonedPath;
     }

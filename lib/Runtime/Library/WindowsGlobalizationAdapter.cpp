@@ -3,6 +3,9 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
+
+#if defined(ENABLE_INTL_OBJECT) || defined(ENABLE_ES6_CHAR_CLASSIFIER)
+
 #include "strsafe.h"
 
 #define __WRL_ASSERT__(cond) Assert(cond)
@@ -11,7 +14,7 @@
 
 //#include <wrl\wrappers\corewrappers.h>
 
-#ifdef ENABLE_INTL_OBJECT
+
 
 #ifdef NTBUILD
 using namespace Windows::Globalization;
@@ -31,6 +34,9 @@ using namespace ABI::Windows::Foundation::Collections;
 #define IfFailedReturn(EXPR) do { hr = (EXPR); if (FAILED(hr)) { return hr; }} while(FALSE)
 #define IfFailedGoLabel(expr, label) if (FAILED(expr)) { goto label; }
 #define IfFailedGo(expr) IfFailedGoLabel(expr, LReturn)
+
+
+#ifdef ENABLE_INTL_OBJECT
 
 //The "helper" methods below are to resolve external symbol references to our delay-loaded libraries.
 HRESULT WindowsCreateString(_In_reads_opt_(length) const WCHAR * sourceString, UINT32 length, _Outptr_result_maybenull_ _Result_nullonfailure_ HSTRING * string)
@@ -62,11 +68,10 @@ HRESULT WindowsDuplicateString(_In_opt_ HSTRING original, _Outptr_result_maybenu
 {
     return ThreadContext::GetContextForCurrentThread()->GetWindowsGlobalizationLibrary()->WindowsDuplicateString(original, newString);
 }
-
+#endif
 namespace Js
 {
-
-
+#ifdef ENABLE_INTL_OBJECT
     class HSTRINGIterator : public Microsoft::WRL::RuntimeClass<IIterator<HSTRING>>
     {
 
@@ -232,6 +237,7 @@ namespace Js
             return E_NOTIMPL;
         }
     };
+#endif
 
     __inline DelayLoadWindowsGlobalization* WindowsGlobalizationAdapter::GetWindowsGlobalizationLibrary(_In_ ScriptContext* scriptContext)
     {
@@ -241,18 +247,6 @@ namespace Js
     __inline DelayLoadWindowsGlobalization* WindowsGlobalizationAdapter::GetWindowsGlobalizationLibrary(_In_ ThreadContext* threadContext)
     {
         return threadContext->GetWindowsGlobalizationLibrary();
-    }
-
-    template<typename T>
-    HRESULT WindowsGlobalizationAdapter::GetActivationFactory(ScriptContext *scriptContext, LPCWSTR factoryName, T** instance)
-    {
-        return this->GetActivationFactory<T>(this->GetWindowsGlobalizationLibrary(scriptContext), factoryName, instance);
-    }
-
-    template<typename T>
-    HRESULT WindowsGlobalizationAdapter::GetActivationFactory(ThreadContext *threadContext, LPCWSTR factoryName, T** instance)
-    {
-        return this->GetActivationFactory<T>(this->GetWindowsGlobalizationLibrary(threadContext), factoryName, instance);
     }
 
     template<typename T>
@@ -291,7 +285,7 @@ namespace Js
         }
 
         failedToInitialize = true;
-
+#ifdef ENABLE_INTL_OBJECT
         IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_Language, &languageFactory));
         IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_Language, &languageStatics));
         IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_NumberFormatting_CurrencyFormatter, &currencyFormatterFactory));
@@ -301,12 +295,13 @@ namespace Js
         IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_Calendar, &calendarFactory));
         IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_NumberFormatting_SignificantDigitsNumberRounder, &significantDigitsRounderActivationFactory));
         IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_NumberFormatting_IncrementNumberRounder, &incrementNumberRounderActivationFactory));
+        IfFailedReturn(this->CreateTimeZoneOnCalendar(library, &timeZoneCalendar));
+        IfFailedReturn(this->CreateTimeZoneOnCalendar(library, &defaultTimeZoneCalendar));
+#endif
         if(isES6Mode)
         {
             IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Data_Text_UnicodeCharacters, &unicodeStatics));
         }
-        IfFailedReturn(this->CreateTimeZoneOnCalendar(library, &timeZoneCalendar));
-        IfFailedReturn(this->CreateTimeZoneOnCalendar(library, &defaultTimeZoneCalendar));
 
         failedToInitialize = false;
         initialized = true;
@@ -314,7 +309,7 @@ namespace Js
         return hr;
     }
 
-
+#ifdef ENABLE_INTL_OBJECT
     HRESULT WindowsGlobalizationAdapter::CreateLanguage(_In_ ScriptContext* scriptContext, _In_z_ PCWSTR languageTag, ILanguage** language)
     {
         HRESULT hr = S_OK;
@@ -546,7 +541,8 @@ namespace Js
     {
         return significantDigitsRounderActivationFactory->ActivateInstance(reinterpret_cast<IInspectable**>(numberRounder));
     }
-
-}
 #endif
+}
 
+
+#endif

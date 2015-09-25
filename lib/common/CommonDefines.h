@@ -68,43 +68,57 @@
 // Enabled features
 //----------------------------------------------------------------------------------------------------
 
+// NOTE: Disabling these might not work and are not fully supported and maintained
+// Even if it builds, it may not work properly. Disable at your own risk
 
-#define SIMD_JS_ENABLED
+// ByteCode
+#define VARIABLE_INT_ENCODING 1                     // Byte code serialization variable size int field encoding 
+#define BYTECODE_BRANCH_ISLAND                      // Byte code short branch and branch island
 
-#define EDIT_AND_CONTINUE
+// Language features
+#define ENABLE_INTL_OBJECT                          // Intl support
+#define ENABLE_ES6_CHAR_CLASSIFIER                  // ES6 unicode charactor classifer support
+#define SIMD_JS_ENABLED                             // *** TODO: Won't build if disabled currently
 
-#define VARIABLE_INT_ENCODING 1
-
-#define PERSISTENT_INLINE_CACHES
-#define SUPPORT_FIXED_FIELDS_ON_PATH_TYPES
-
-#define ENABLE_INTL_OBJECT
-
-
-#define BYTECODE_BRANCH_ISLAND
+// Type system features
+#define PERSISTENT_INLINE_CACHES                    // *** TODO: Won't build if disabled currently
+#define SUPPORT_FIXED_FIELDS_ON_PATH_TYPES          // *** TODO: Won't build if disabled currently
 
 // GC features
-#define CONCURRENT_GC_ENABLED 1
-#define IDLE_DECOMMIT_ENABLED 1
-#define PARTIAL_GC_ENABLED 1
-#define BUCKETIZE_MEDIUM_ALLOCATIONS 1
-#define SMALLBLOCK_MEDIUM_ALLOC 1
+#define CONCURRENT_GC_ENABLED 1                     // *** TODO: Won't build if disabled currently
+#define PARTIAL_GC_ENABLED 1                        // *** TODO: Won't build if disabled currently
+#define BUCKETIZE_MEDIUM_ALLOCATIONS 1              // *** TODO: Won't build if disabled currently
+#define SMALLBLOCK_MEDIUM_ALLOC 1                   // *** TODO: Won't build if disabled currently
+#define LARGEHEAPBLOCK_ENCODING 1                   // Large heap block metadata encoding
+#define RECYCLER_WRITE_BARRIER                      // Write Barrier support
+#define IDLE_DECOMMIT_ENABLED 1                     // Idle Decommit
+#define RECYCLER_PAGE_HEAP                          // PageHeap support
 
 // JIT features
-#define ENABLE_NATIVE_CODEGEN 1
+#define ENABLE_NATIVE_CODEGEN 1                     // *** TODO: Won't build if disabled currently
 
+// Other features
+//saravind: Uncomment the following to build ChakraCore with CFG APIs to Delay Load.
+// #define CHAKRA_CORE_DOWN_COMPAT 1
+
+#if defined(ENABLE_DEBUG_CONFIG_OPTIONS) || defined(CHAKRA_CORE_DOWN_COMPAT)
+#define DELAYLOAD_SET_CFG_TARGET 1
+#endif
+
+// The feature below are disabled for ChakraCore
 #ifdef NTBUILD
+// These are only enable in full Chakra but not ChakraCore
 #define ENABLE_PROJECTION 
 #define ENABLE_FOUNDATION_OBJECT
 #define ENABLE_EXPERIMENTAL_FLAGS
 #define ENABLE_WININET_PROFILE_DATA_CACHE
 #define ENABLE_BASIC_TELEMETRY
 #define ENABLE_DOM_FAST_PATH
-
-// ETW support
-#define ENABLE_JS_ETW 
+#define ENABLE_JS_ETW                               // ETW support
+#define EDIT_AND_CONTINUE
 #endif
 
+// Telemetry flags
 #ifdef ENABLE_BASIC_TELEMETRY
 #define ENABLE_DIRECTCALL_TELEMETRY
 #endif
@@ -154,16 +168,6 @@
 
 #if ENABLE_DEBUG_CONFIG_OPTIONS
 #define ENABLE_DIRECTCALL_TELEMETRY_STATS
-#endif
-
-// PageHeap support
-#define RECYCLER_PAGE_HEAP
-
-//saravind: Uncomment the following to build ChakraCore with CFG APIs to Delay Load.
-// #define CHAKRA_CORE_DOWN_COMPAT 1
-
-#if defined(ENABLE_DEBUG_CONFIG_OPTIONS) || defined(CHAKRA_CORE_DOWN_COMPAT)
-    #define DELAYLOAD_SET_CFG_TARGET 1
 #endif
 
 //----------------------------------------------------------------------------------------------------
@@ -295,8 +299,7 @@
 #ifdef DBG_EXTRAFIELD
 #define HEAP_ENUMERATION_VALIDATION
 #endif
-#endif
-#define LARGEHEAPBLOCK_ENCODING 1
+#endif // DBG_DUMP
 
 //----------------------------------------------------------------------------------------------------
 // Special build features
@@ -499,5 +502,3 @@
 #ifndef PROFILE_DICTIONARY
 #define PROFILE_DICTIONARY 0
 #endif
-
-#define RECYCLER_WRITE_BARRIER
