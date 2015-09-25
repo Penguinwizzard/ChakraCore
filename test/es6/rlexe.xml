@@ -558,7 +558,7 @@
     <default>
       <files>unicode_convertUTF8.js</files>
       <compile-flags> -ES6Unicode</compile-flags>
-      <tags>Slow,Slow</tags>
+      <tags>Slow</tags>
     </default>
   </test>
   <test>
@@ -571,7 +571,7 @@
     <default>
       <files>bug620694.js</files>
       <compile-flags>-es6all -recyclerstress</compile-flags>
-      <tags>exclude_fre,Slow,Slow</tags>
+      <tags>exclude_fre,Slow</tags>
     </default>
   </test>
   <test>
@@ -630,7 +630,7 @@
       <files>unicode_regex_surrogate.js</files>
       <baseline>unicode_regex_surrogate.baseline</baseline>
       <compile-flags> -ES6Unicode -ES6RegExSticky</compile-flags>
-      <tags>exclude_ship,Slow,Slow</tags>
+      <tags>exclude_ship,Slow</tags>
     </default>
   </test>
   <test>

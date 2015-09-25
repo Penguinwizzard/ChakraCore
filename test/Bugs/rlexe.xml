@@ -70,7 +70,7 @@
   <test>
     <default>
       <files>bug56026.js</files>
-      <tags>Slow,Slow</tags>
+      <tags>Slow</tags>
     </default>
   </test>
   <test>

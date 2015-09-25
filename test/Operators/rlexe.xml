@@ -23,7 +23,7 @@
     <default>
       <files>biops.js</files>
       <baseline>biops.baseline</baseline>
-      <tags>fail_mutators,Slow,Slow</tags>
+      <tags>fail_mutators,Slow</tags>
     </default>
   </test>
   <test>

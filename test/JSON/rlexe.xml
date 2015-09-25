@@ -19,7 +19,7 @@
       <files>stringify-replacer.js</files>
       <baseline>stringify-replacer.baseline</baseline>
       <compile-flags>-recyclerstress</compile-flags>
-      <tags>exclude_fre,Slow,Slow</tags>
+      <tags>exclude_fre,Slow</tags>
     </default>
   </test>
   <test>
@@ -27,7 +27,7 @@
       <files>stringify-replacerfunc.js</files>
       <baseline>stringify-replacerfunc.baseline</baseline>
       <compile-flags>-recyclerstress</compile-flags>
-      <tags>exclude_fre,Slow,Slow</tags>
+      <tags>exclude_fre,Slow</tags>
     </default>
   </test>
   <test>

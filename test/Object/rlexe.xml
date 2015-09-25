@@ -147,7 +147,7 @@
     <default>
       <files>moreProperties-enumeration.js</files>
       <baseline>moreProperties-enumeration.baseline</baseline>
-      <tags>Slow,Slow</tags>
+      <tags>Slow</tags>
     </default>
   </test>
   <test>
@@ -160,7 +160,7 @@
     <default>
       <files>bigES5Array.js</files>
       <baseline>bigES5Array.baseline</baseline>
-      <tags>Slow,Slow</tags>
+      <tags>Slow</tags>
     </default>
   </test>
   <test>
