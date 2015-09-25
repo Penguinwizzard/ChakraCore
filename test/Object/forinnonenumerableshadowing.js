@@ -1,7 +1,7 @@
 // Tests for...in behavior when child object shadows a prototype property with a non-enumerable shadow
 // See OS bug #850013
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in jc/jshost
+if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
     this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 }
 

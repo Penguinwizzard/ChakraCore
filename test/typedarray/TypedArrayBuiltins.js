@@ -1,6 +1,6 @@
 // Verifies TypedArray builtin properties 
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in jc/jshost
+if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
     this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 }
 

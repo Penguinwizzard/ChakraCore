@@ -2,7 +2,7 @@
 // Usage:
 //   How to import UTF -- add the following to the beginning of your test:
 //     /// <reference path="../UnitTestFramework/UnitTestFramework.js" />
-//     if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in jc/jshost
+//     if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
 //         this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 //     }
 //   How to define and run tests:

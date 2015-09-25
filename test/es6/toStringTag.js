@@ -1,4 +1,4 @@
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in jc/jshost
+if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
     this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 }
 //TODO remove -nonative & exclude_dynapogo when Ian has generator native code support & Taylor has subclassable native support remove -nonnative and native code test exclusions

@@ -1,7 +1,7 @@
 // Number tests
 
 if (this.WScript && this.WScript.LoadScriptFile)
-{ // Check for running in jc/jshost
+{ // Check for running in ch
     this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 }
 

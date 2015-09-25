@@ -1,6 +1,6 @@
 // ES6 Iterators for-of loop tests -- verifies the for-of loop behavior
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in jc/jshost
+if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
     this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 }
 

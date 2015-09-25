@@ -2,7 +2,7 @@
 // Found that arguments to Array.prototype.splice which altered the length
 // of the array caused an assert.
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in jc/jshost
+if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
     this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 }
 
