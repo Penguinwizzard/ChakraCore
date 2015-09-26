@@ -197,7 +197,7 @@ void Parser::OutOfMemory()
 void Parser::Error(HRESULT hr)
 {
     Assert(FAILED(hr));
-    m_err.Throw(hr);    
+    m_err.Throw(hr);
 }
 
 void Parser::Error(HRESULT hr, ParseNodePtr pnode)
@@ -1413,7 +1413,12 @@ ParseNodePtr Parser::AddVarDeclNode(IdentPtr pid, ParseNodePtr pnodeFnc)
     Assert(pnodeFnc);
 
     ParseNodePtr *const ppnodeVarSave = m_ppnodeVar;
+
     m_ppnodeVar = &pnodeFnc->sxFnc.pnodeVars;
+    while (*m_ppnodeVar != nullptr)
+    {
+        m_ppnodeVar = &(*m_ppnodeVar)->sxVar.pnodeNext;
+    }
 
     ParseNodePtr pnode = CreateVarDeclNode(pid, STUnknown, false, 0, /* checkReDecl = */ false);
 
@@ -2087,7 +2092,13 @@ ParseNodePtr Parser::ParseMetaProperty(tokens metaParentKeyword, charcount_t ich
 Parse an expression term.
 ***************************************************************************/
 template<bool buildAST>
-ParseNodePtr Parser::ParseTerm(BOOL fAllowCall, LPCOLESTR pNameHint, ulong *pHintLength, _Inout_opt_ IdentToken* pToken/*= nullptr*/, bool fUnaryOrParen, _Out_opt_ BOOL* pfCanAssign)
+ParseNodePtr Parser::ParseTerm(BOOL fAllowCall,
+    LPCOLESTR pNameHint,
+    ulong *pHintLength,
+    _Inout_opt_ IdentToken* pToken/*= nullptr*/,
+    bool fUnaryOrParen /*= false*/,
+    _Inout_opt_ BOOL* pfCanAssign /* = nullptr*/,
+    _Inout_opt_ BOOL* pfLikelyPattern /* = nullptr*/)
 {
     ParseNodePtr pnode = nullptr;
     charcount_t ichMin = 0;
@@ -2343,6 +2354,10 @@ ParseNodePtr Parser::ParseTerm(BOOL fAllowCall, LPCOLESTR pNameHint, ulong *pHin
         {
             fCanAssign = FALSE;
         }
+        else if (pfLikelyPattern != nullptr && !IsPostFixOperators())
+        {
+            *pfLikelyPattern = TRUE;
+        }
         break;
     }
 
@@ -2361,6 +2376,10 @@ ParseNodePtr Parser::ParseTerm(BOOL fAllowCall, LPCOLESTR pNameHint, ulong *pHin
         if (!IsES6DestructuringEnabled())
         {
             fCanAssign = FALSE;
+        }
+        else if (pfLikelyPattern != nullptr && !IsPostFixOperators())
+        {
+            *pfLikelyPattern = TRUE;
         }
         break;
     }
@@ -7039,7 +7058,15 @@ Parse a sub expression.
 expression ( it is not allowed in the context of the first expression in a  'for' loop).
 ***************************************************************************/
 template<bool buildAST>
-ParseNodePtr Parser::ParseExpr(int oplMin, BOOL *pfCanAssign, BOOL fAllowIn, BOOL fAllowEllipsis, LPCOLESTR pNameHint, ulong *pHintLength, _Inout_opt_ IdentToken* pToken, bool fUnaryOrParen)
+ParseNodePtr Parser::ParseExpr(int oplMin,
+    BOOL *pfCanAssign,
+    BOOL fAllowIn,
+    BOOL fAllowEllipsis,
+    LPCOLESTR pNameHint,
+    ulong *pHintLength,
+    _Inout_opt_ IdentToken* pToken,
+    bool fUnaryOrParen,
+    _Inout_opt_ bool* pfLikelyPattern)
 {
     Assert(pToken == nullptr || pToken->tk == tkNone); // Must be empty initially
     int opl;
@@ -7222,14 +7249,15 @@ ParseNodePtr Parser::ParseExpr(int oplMin, BOOL *pfCanAssign, BOOL fAllowIn, BOO
     }
     else
     {
-        tokens beforeToken = m_token.tk;
         ichMin = m_pscan->IchMinTok();
-        pnode = ParseTerm<buildAST>(TRUE, pNameHint, &hintLength, &term, fUnaryOrParen, &fCanAssign);
+        BOOL fLikelyPattern = FALSE;
+        pnode = ParseTerm<buildAST>(TRUE, pNameHint, &hintLength, &term, fUnaryOrParen, &fCanAssign, IsES6DestructuringEnabled() ? &fLikelyPattern : nullptr);
+        if (pfLikelyPattern != nullptr)
+        {
+            *pfLikelyPattern = !!fLikelyPattern;
+        }
 
-        if (IsES6DestructuringEnabled()
-            && m_token.tk == tkAsg && (beforeToken == tkLBrack || beforeToken == tkLCurly)
-            && pnode != nullptr
-            && (pnode->nop == knopArray || pnode->nop == knopObject))
+        if (m_token.tk == tkAsg && fLikelyPattern)
         {
             m_pscan->SeekTo(termStart);
 
@@ -8423,8 +8451,24 @@ LDefaultTokenFor:
                 {
                     m_pscan->Capture(&startExprOrIdentifier);
                 }
-                pnodeT = ParseExpr<buildAST>(koplNo, &fCanAssign, /*fAllowIn = */FALSE);
-                if (IsES6DestructuringEnabled() && pnodeT != nullptr && (beforeToken == tkLBrack || beforeToken == tkLCurly))
+                bool fLikelyPattern = false;
+                if (IsES6DestructuringEnabled() && (beforeToken == tkLBrack || beforeToken == tkLCurly))
+                {
+                    pnodeT = ParseExpr<buildAST>(koplNo,
+                        &fCanAssign,
+                        /*fAllowIn = */FALSE,
+                        /*fAllowEllipsis*/FALSE,
+                        /*pHint*/nullptr,
+                        /*pHintLength*/nullptr,
+                        /*pToken*/nullptr,
+                        /**fUnaryOrParen*/false,
+                        &fLikelyPattern);
+                }
+                else
+                {
+                    pnodeT = ParseExpr<buildAST>(koplNo, &fCanAssign, /*fAllowIn = */FALSE);
+                }
+                if (fLikelyPattern)
                 {
                     m_pscan->SeekTo(exprStart);
                     ParseDestructuredLiteralWithScopeSave(tkNone, false/*isDecl*/, false /*topLevel*/);
@@ -11110,12 +11154,28 @@ ParseNodePtr Parser::ParseDestructuredVarDecl(tokens declarationType, bool isDec
         else
         {
             BOOL fCanAssign;
+            IdentToken token;
             // We aren't declaring anything, so scan the ID reference manually.
-            pnodeElem = ParseTerm<buildAST>(/* fAllowCall */ m_token.tk != tkSUPER, nullptr, nullptr, nullptr, false,
+            pnodeElem = ParseTerm<buildAST>(/* fAllowCall */ m_token.tk != tkSUPER, nullptr, nullptr, &token, false,
                                                              &fCanAssign);
             if (!fCanAssign)
             {
                 Error(JSERR_CantAssignTo);
+            }
+            if (buildAST)
+            {
+                if (IsStrictMode() && pnodeElem != nullptr && pnodeElem->nop == knopName)
+                {
+                    CheckStrictModeEvalArgumentsUsage(pnodeElem->sxPid.pid);
+                }
+            }
+            else
+            {
+                if (IsStrictMode() && token.tk == tkID)
+                {
+                    CheckStrictModeEvalArgumentsUsage(token.pid);
+                }
+                token.tk = tkNone;
             }
         }
     }

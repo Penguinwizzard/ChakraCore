@@ -756,14 +756,16 @@ private:
         LPCOLESTR pHint = NULL,
         ulong *pHintLength = nullptr,
         _Inout_opt_ IdentToken* pToken = NULL,
-        bool fUnaryOrParen = false);
+        bool fUnaryOrParen = false,
+        _Inout_opt_ bool* pfLikelyPattern = nullptr);
     template<bool buildAST> ParseNodePtr ParseTerm(
         BOOL fAllowCall = TRUE,
         LPCOLESTR pNameHint = nullptr,
         ulong *pHintLength = nullptr,
         _Inout_opt_ IdentToken* pToken = nullptr,
         bool fUnaryOrParen = false,
-        _Out_opt_ BOOL* pfCanAssign = nullptr);
+        _Inout_opt_ BOOL* pfCanAssign = nullptr,
+        _Inout_opt_ BOOL* pfLikelyPattern = nullptr);
     template<bool buildAST> ParseNodePtr ParsePostfixOperators(ParseNodePtr pnode,
         BOOL fAllowCall, BOOL fInNew, BOOL *pfCanAssign, _Inout_ IdentToken* pToken);
 
@@ -805,7 +807,14 @@ private:
 
     bool IsES6DestructuringEnabled() const;
     bool IsPossiblePatternStart() const { return m_token.tk == tkLCurly || m_token.tk == tkLBrack; }
-
+    bool IsPostFixOperators() const
+    { 
+        return m_token.tk == tkLParen ||
+            m_token.tk == tkLBrack ||
+            m_token.tk == tkDot ||
+            m_token.tk == tkStrTmplBasic ||
+            m_token.tk == tkStrTmplBegin;
+    }
     template<bool buildAST> ParseNodePtr ParseTryCatchFinally();
     template<bool buildAST> ParseNodePtr ParseTry();
     template<bool buildAST> ParseNodePtr ParseCatch();

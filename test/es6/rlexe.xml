@@ -849,6 +849,13 @@
   </test>
   <test>
     <default>
+      <files>destructuring_bugs.js</files>
+      <compile-flags>-ES6Destructuring -ForceDeferParse -args summary -endargs</compile-flags>
+      <tags>BugFix</tags>
+    </default>
+  </test>
+  <test>
+    <default>
       <files>bug_279376.js</files>
       <compile-flags>-es6spread</compile-flags>
     </default>

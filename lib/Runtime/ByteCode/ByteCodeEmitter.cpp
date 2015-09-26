@@ -5218,6 +5218,13 @@ void EmitDestructuredElement(ParseNode *elem, Js::RegSlot sourceLocation, ByteCo
         elem->sxVar.sym->SetNeedDeclaration(false);
         break;
 
+    case knopName:
+        if (elem->sxPid.sym != nullptr && elem->sxPid.sym->GetNeedDeclaration())
+        {
+            EmitUseBeforeDeclaration(elem, byteCodeGenerator, funcInfo);
+        }
+        break;
+
     default:
         EmitReference(elem, byteCodeGenerator, funcInfo);
     }
