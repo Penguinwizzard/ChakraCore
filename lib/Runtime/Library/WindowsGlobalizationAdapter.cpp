@@ -356,14 +356,24 @@ namespace Js
         return true;
     }
 
-    void WindowsGlobalizationAdapter::ClearTimeZoneCalendars()
+    void WindowsGlobalizationAdapter::ReleaseWindowsGlobalizationObjects()
     {
-        if (this->timeZoneCalendar)
+        if (this->dateTimeFormatterFactory != nullptr)
+        {
+            this->dateTimeFormatterFactory.Detach()->Release();
+        }
+
+        if (this->calendarFactory != nullptr)
+        {
+            this->calendarFactory.Detach()->Release();
+        }
+
+        if (this->timeZoneCalendar != nullptr)
         {
             this->timeZoneCalendar.Detach()->Release();
         }
 
-        if (this->defaultTimeZoneCalendar)
+        if (this->defaultTimeZoneCalendar != nullptr)
         {
             this->defaultTimeZoneCalendar.Detach()->Release();
         }
