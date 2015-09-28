@@ -175,7 +175,7 @@ namespace Js
                 }
             }
 
-            if (args.Info.Count > 3)
+            if (args.Info.Count > 3 && !JavascriptOperators::IsUndefinedObject(args[3]))
             {
                 Var thirdArgument = args[3];
                 mappedLength = JavascriptConversion::ToInt32(thirdArgument, scriptContext);
@@ -1247,7 +1247,7 @@ namespace Js
         }
 
         int32 end;
-        if (args.Info.Count > 2)
+        if (args.Info.Count > 2 && !JavascriptOperators::IsUndefinedObject(args[2], scriptContext))
         {
             end = JavascriptConversion::ToInt32(args[2], scriptContext);
             if (end < 0 )

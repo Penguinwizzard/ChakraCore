@@ -114,7 +114,7 @@ namespace Js
         //      a.  Let viewByteLength be ToLength(byteLength).
         //      b.  ReturnIfAbrupt(viewLength).
         //      c.  If offset + viewByteLength > bufferByteLength, throw a RangeError exception.
-        if (args.Info.Count > 3)
+        if (args.Info.Count > 3 && !JavascriptOperators::IsUndefinedObject(args[3]))
             {
                 Var thirdArgument = args[3];
                 // TODO: Change length of ArrayObject from uint32 to uint64?

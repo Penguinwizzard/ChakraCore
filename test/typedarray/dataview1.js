@@ -54,6 +54,32 @@ function test3() {
     var v2 = new DataView(new ArrayBuffer(1), 1, 0);
 }
 
+function test4() {
+    var arrayBuffer = (new Uint32Array([0, 1, 2, 3])).buffer;
+    var view1 = new DataView(arrayBuffer);
+    var view2 = new DataView(arrayBuffer, 0);
+    var view3 = new DataView(arrayBuffer, 0, undefined);
+    if ((view1.byteLength === view2.byteLength) && (view2.byteLength === view3.byteLength)) {
+        WScript.Echo('PASS');
+        for (var i = 0; i < 4; i++) {
+            if ((view1.getUint32(i) === view2.getUint32(i)) && (view2.getUint32(i) === view3.getUint32(i))) {
+                WScript.Echo('PASS');
+            } else {
+                WScript.Echo('FAIL');
+                WScript.Echo(view1.getUint32(i));
+                WScript.Echo(view2.getUint32(i));
+                WScript.Echo(view3.getUint32(i));
+            }
+        }
+    } else {
+        WScript.Echo('FAIL');
+        WScript.Echo(view1.byteLength);
+        WScript.Echo(view2.byteLength);
+        WScript.Echo(view3.byteLength);
+    }
+}
+
 test1();
 test2();
 test3();
+test4();

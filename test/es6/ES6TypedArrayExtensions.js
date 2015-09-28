@@ -943,6 +943,7 @@ var tests = [
             
             function testMethod(getDataFn) {
                 assert.areEqual([0,0,0,0,0,0,0,0,0,0], fill.call(getDataFn(), 0), "%TypedArrayPrototype%.fill filling the entire array with 0");
+                assert.areEqual([0,0,0,0,0,0,0,0,0,0], fill.call(getDataFn(), 0, undefined), "%TypedArrayPrototype%.fill should use length as the end value when undefined is specified");
                 assert.areEqual([0,0,0,0,0,0,0,0,0,0], fill.call(getDataFn(), 0, 0), "%TypedArrayPrototype%.fill filling the entire array with 0");
                 assert.areEqual([0,0,0,0,0,0,0,0,0,0], fill.call(getDataFn(), 0, 0, 100), "%TypedArrayPrototype%.fill filling the entire array with 0");
                 assert.areEqual([0,0,0,0,0,0,0,0,0,0], fill.call(getDataFn(), 0, -50), "%TypedArrayPrototype%.fill filling the entire array with 0");

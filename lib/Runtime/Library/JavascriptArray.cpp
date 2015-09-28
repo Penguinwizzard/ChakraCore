@@ -8467,7 +8467,7 @@ Case0:
         {
             k = JavascriptArray::GetIndexFromVar(args[2], length, scriptContext);
 
-            if (args.Info.Count > 3)
+            if (args.Info.Count > 3 && !JavascriptOperators::IsUndefinedObject(args[3]))
             {
                 finalVal = JavascriptArray::GetIndexFromVar(args[3], length, scriptContext);
             }
