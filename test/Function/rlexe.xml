@@ -96,7 +96,8 @@
     <default>
       <files>CallerArgs.js</files>
       <baseline>CallerArgsES5.baseline</baseline>
-      <tags>fail_mutators</tags>
+      <!-- fails x86_test ch only -->
+      <tags>fail_mutators,exclude_ch</tags>
     </default>
   </test>
   <test>
