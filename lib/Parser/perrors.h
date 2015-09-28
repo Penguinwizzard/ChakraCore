@@ -65,7 +65,6 @@ LSC_ERROR_MSG( 1058, ERRInvalidSuper        , "Invalid use of the 'super' keywor
 LSC_ERROR_MSG( 1059, ERRInvalidSuperScope   , "The 'super' keyword cannot be used at global scope")
 LSC_ERROR_MSG( 1060, ERRSuperInIndirectEval , "The 'super' keyword cannot be used in an indirect eval() call")
 LSC_ERROR_MSG( 1061, ERRSuperInGlobalEval   , "The 'super' keyword cannot be used in a globally scoped eval() call")
-
 LSC_ERROR_MSG( 1062, ERRnoDArrow      , "Expected '=>'")
 
 LSC_ERROR_MSG( 1063, ERRInvalidCodePoint      , "Invalid codepoint value in the escape sequence.")
@@ -86,3 +85,4 @@ LSC_ERROR_MSG( 1075, ERRInvalidAssignmentTarget, "Invalid destructuring assignme
 LSC_ERROR_MSG( 1076, ERRFormalSame, "Duplicate formal parameter names not allowed in this context")
 LSC_ERROR_MSG( 1077, ERRDestructNotInit, "Destructuring declarations cannot have an initializer")
 LSC_ERROR_MSG( 1078, ERRDestructExprNotInit, "Destructuring expression cannot have an initializer")
+LSC_ERROR_MSG(1079, ERRInvalidNewTarget, "Invalid use of the 'new.target' keyword")
