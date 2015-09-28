@@ -4881,7 +4881,6 @@ CommonNumber:
         return (scriptContext->optimizationOverrides.GetSideEffects() & se) == SideEffects_None;
     }
 
-
     // returns NULL if there is no more elements to enumerate.
     Var JavascriptOperators::OP_BrOnEmpty(ForInObjectEnumerator * aEnumerator)
     {

@@ -2119,12 +2119,12 @@ void ByteCodeGenerator::EmitScopeSlotLoadThis(FuncInfo *funcInfo, Js::RegSlot re
             // a ReferenceError.
             EmitUseBeforeDeclarationRuntimeError(this, regLoc, false);
         }
-    } 
+    }
     else if (this->flags & fscrEval && (funcInfo->IsGlobalFunction() || (funcInfo->IsLambda() && nonLambdaFunc->IsGlobalFunction()))
         && funcInfo->GetBodyScope()->GetIsObject())
     {
         Js::RegSlot scopeLocation;
-        
+
         if (funcInfo->byteCodeFunction->GetIsStrictMode() && funcInfo->IsGlobalFunction())
         {
             scopeLocation = funcInfo->frameDisplayRegister;
@@ -2141,11 +2141,8 @@ void ByteCodeGenerator::EmitScopeSlotLoadThis(FuncInfo *funcInfo, Js::RegSlot re
 
         // CONSIDER [tawoll] - Should we add a ByteCodeGenerator flag (fscrEvalWithClassConstructorParent) and avoid doing this runtime check?
         Js::ByteCodeLabel skipLabel = this->Writer()->DefineLabel();
-        Js::RegSlot tmpUndeclReg = funcInfo->AcquireTmpRegister();
-        this->Writer()->Reg1(Js::OpCode::InitUndecl, tmpUndeclReg);
-        this->Writer()->BrReg2(Js::OpCode::BrSrNeq_A, skipLabel, funcInfo->thisPointerRegister, tmpUndeclReg);
-        funcInfo->ReleaseTmpRegister(tmpUndeclReg);
-        
+        this->Writer()->BrReg1(Js::OpCode::BrNotUndecl_A, skipLabel, funcInfo->thisPointerRegister);
+
         uint cacheId = funcInfo->FindOrAddInlineCacheId(scopeLocation, Js::PropertyIds::_lexicalThisSlotSymbol, false, false);
         this->m_writer.PatchableProperty(Js::OpCode::ScopedLdFld, funcInfo->thisPointerRegister, scopeLocation, cacheId);
         if (chkUndecl)

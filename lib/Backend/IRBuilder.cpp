@@ -4851,7 +4851,15 @@ IRBuilder::BuildBrReg1(Js::OpCode newOpcode, uint32 offset, uint targetOffset, J
     IR::BranchInstr * branchInstr;
     IR::RegOpnd *     srcOpnd;
     srcOpnd = this->BuildSrcOpnd(srcRegSlot);
-    branchInstr = IR::BranchInstr::New(newOpcode, nullptr, srcOpnd, m_func);
+
+    if (newOpcode == Js::OpCode::BrNotUndecl_A) {
+        IR::AddrOpnd *srcOpnd2 = IR::AddrOpnd::New(this->m_func->GetScriptContext()->GetLibrary()->GetUndeclBlockVar(),
+            IR::AddrOpndKindDynamicVar, this->m_func);
+        branchInstr = IR::BranchInstr::New(Js::OpCode::BrNotAddr_A, nullptr, srcOpnd, srcOpnd2, m_func);
+    } else {
+        branchInstr = IR::BranchInstr::New(newOpcode, nullptr, srcOpnd, m_func);
+    }
+
     this->AddBranchInstr(branchInstr, offset, targetOffset);
 }
 

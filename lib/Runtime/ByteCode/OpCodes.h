@@ -99,6 +99,7 @@ MACRO(                  BrOnHasProperty,    BrProperty,     OpSideEffect|OpHasIm
 MACRO(                  BrOnNoProperty,     BrProperty,     OpSideEffect|OpHasImplicitCall|OpTempNumberSources|OpTempObjectSources)        // Branch if object does not have the given property (NOTE: May have DOM implicit calls)
 MACRO_WMS(              BrOnObject_A,       BrReg1,         OpSideEffect|OpTempNumberSources|OpTempObjectSources)                                       // Branch if typeId is not primitive type (i.e. > TypeIds_LastJavascriptPrimitiveType)
 MACRO_WMS(              BrNotNull_A,        BrReg1,         OpSideEffect|OpTempNumberSources|OpTempObjectSources)                          // Branch if not NULL
+MACRO_EXTEND_WMS(       BrNotUndecl_A,      BrReg1,         OpSideEffect|OpTempNumberSources|OpTempObjectSources)                          // Branch if source reg is NEQ to Undecl
 MACRO_BACKEND_ONLY(     BrNotEq_A,          Empty,          OpSideEffect|OpCallsValueOf|OpHasImplicitCall|OpTempNumberSources|OpTempObjectSources) // Branch if !'>='
 MACRO_BACKEND_ONLY(     BrNotNeq_A,         Empty,          OpSideEffect|OpCallsValueOf|OpHasImplicitCall|OpTempNumberSources|OpTempObjectSources) // Branch if !'>='
 MACRO_BACKEND_ONLY(     BrSrNotEq_A,        Empty,          OpSideEffect|OpHasImplicitCall|OpTempNumberSources|OpTempObjectSources) // Branch if !'>='

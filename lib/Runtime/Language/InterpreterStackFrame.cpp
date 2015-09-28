@@ -6713,6 +6713,16 @@ namespace Js
         return aValue != NULL;
     }
 
+    BOOL InterpreterStackFrame::OP_BrUndecl_A(Var aValue)
+    {
+        return this->scriptContext->GetLibrary()->IsUndeclBlockVar(aValue);
+    }
+
+    BOOL InterpreterStackFrame::OP_BrNotUndecl_A(Var aValue)
+    {
+        return !this->scriptContext->GetLibrary()->IsUndeclBlockVar(aValue);
+    }
+
     BOOL InterpreterStackFrame::OP_BrOnHasProperty(Var argInstance, uint propertyIdIndex, ScriptContext* scriptContext)
     {
         return JavascriptOperators::OP_HasProperty(argInstance,

@@ -308,6 +308,8 @@ namespace Js
         BOOL OP_BrFalse_A(Var aValue, ScriptContext* scriptContext);
         BOOL OP_BrTrue_A(Var aValue, ScriptContext* scriptContext);
         BOOL OP_BrNotNull_A(Var aValue);
+        BOOL OP_BrUndecl_A(Var aValue);
+        BOOL OP_BrNotUndecl_A(Var aValue);
         BOOL OP_BrOnHasProperty(Var argInstance, uint propertyIdIndex, ScriptContext* scriptContext);
         BOOL OP_BrOnNoProperty(Var argInstance, uint propertyIdIndex, ScriptContext* scriptContext);
         BOOL OP_BrOnClassConstructor(Var aValue);
