@@ -44,6 +44,36 @@ var tests = [
        }
    },
    {
+       name: "anonymous function",
+       body: function () 
+       {
+            var f = function() { };
+            assert.areEqual("f", f.name, "function name is determined on assignment");
+            f.name = "foo"; 
+            assert.areEqual("f", f.name, "function names are read only");
+            assert.areEqual(undefined, (function (){}).prototype.name, "function.prototype.name is undefined");
+            assert.isFalse(Object.hasOwnProperty.call((function(){}), 'name'), "[hasProperyCheck]: anonymous function does not have a name property");
+            assert.areEqual(undefined, (function(){}).name,"[getDotProperyCheck]: anonymous function does not have a name property");
+            assert.areEqual(undefined, (function(){})["name"],"[getIndexProperyCheck]: anonymous function does not have a name property");
+            
+            //lambdas () => {}
+            assert.isFalse(Object.hasOwnProperty.call((() => {}), 'name'), "[hasProperyCheck]: anonymous lambda function does not have a name property");
+            assert.areEqual(undefined, (() => {}).name, "[getDotProperyCheck]: anonymous lambda function does not have name property");
+            assert.areEqual(undefined, (() => {})["name"], "[getIndexProperyCheck]: anonymous lambda function does not have name property");
+            
+            //generators
+            assert.isFalse(Object.hasOwnProperty.call((function*(){}), 'name'), "[hasProperyCheck]: anonymous generator function does not have name propropertyperties");
+            assert.areEqual(undefined, (function*(){}).name, "[getDotProperyCheck]: anonymous generator function does not have name property");
+            assert.areEqual(undefined, (function*(){})["name"], "[getIndexProperyCheck]: anonymous generator function does not have name property");
+            
+            //classes
+            assert.isFalse(Object.hasOwnProperty.call(class {}, 'name'), "[hasProperyCheck]: anonymous class does not have a name property");
+            assert.areEqual(undefined, class {}.name, "[getDotProperyCheck]: anonymous class does not have a name property");
+            assert.areEqual(undefined, class {}['name'], "[getIndexProperyCheck]: anonymous class does not have a name property");
+
+       }
+   },
+   {
        name: "function.name for external functions",
        body: function () 
        {
@@ -77,6 +107,20 @@ var tests = [
                 "confirm qux.prototype.constructor.name is the same function as qux.name");
              assert.areEqual("Function",qux.constructor.name,"The function constructor should still have the name Function");
        }
+    },
+    {
+       name: "function.name's that match IsConstantFunctionName",
+       body: function () 
+       {
+            var o = {
+                "" : function() {},
+                "Anonymous function" : function() {},
+                "Function code" : function() {}
+            }
+            assert.areEqual("", o[""].name);
+            assert.areEqual("Anonymous function", o["Anonymous function"].name, "should not get converted to empty string");
+            assert.areEqual("Function code", o["Function code"].name, "should not get converted to Anonymous");
+       },
     },
     {
        name: "function.name for built in constructors",
@@ -364,25 +408,12 @@ var tests = [
             assert.areEqual(true,testGetProperyNames([].splice,false),"Properties on foo");
        }
     },
-   
-    {
-       name: "anonymous function",
-       body: function () 
-       {
-            var f = function() { };
-            assert.areEqual("f",f.name, "f should no longer be an empty string");
-            f.name = "foo"; 
-            assert.areEqual("f",f.name, "function names are read only");
-            assert.areEqual("",(function(){}).name,"this anonymous function should be an empty string");
-
-       }
-    },
     {
        name: "anonymous function special cases",
        body: function () 
        {
            assert.areEqual("anonymous",(new Function).name,"Should be anonymous");
-           assert.areEqual("",Function.prototype.name,"Should be empty string");
+           assert.areEqual(undefined,Function.prototype.name,"Prototype should not have a name Property");
 
        }
     },

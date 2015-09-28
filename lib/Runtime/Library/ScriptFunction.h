@@ -20,8 +20,9 @@ namespace Js
 
         virtual Var  GetHomeObj() const = 0;
         virtual void SetHomeObj(Var homeObj) = 0;
-        virtual void SetComputedNameVar(Var homeObj) = 0;
+        virtual void SetComputedNameVar(Var computedNameVar) = 0;
         virtual Var GetComputedNameVar() const = 0;
+        virtual bool IsAnonymousFunction() const = 0;
     };
 
     class ScriptFunction : public ScriptFunctionBase
@@ -103,6 +104,7 @@ namespace Js
         virtual Var GetComputedNameVar() const override { return this->computedNameVar; }
         virtual JavascriptString* GetDisplayNameImpl() const;
         JavascriptString* GetComputedName() const;
+        virtual bool IsAnonymousFunction() const override;
         virtual BOOL GetDiagValueString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext) override;
         
         // In Bytecode we make a circular reference on the constructor to associate it with the class. 

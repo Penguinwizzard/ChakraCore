@@ -29,7 +29,7 @@ var tests = [
             assert.throws(function() { p.set(); }, TypeError, "Function.prototype['arguments'] has set accessor which throws");
             assert.isTrue(p.get === p.set, "Function.prototype returns the same ThrowTypeError function for get/set accessor of 'arguments' property");
             
-            assert.areEqual('["apply","arguments","bind","call","caller","constructor","length","name","toMethod","toString"]', JSON.stringify(Object.getOwnPropertyNames(obj).sort()), "Function.prototype function has 'caller' and 'arguments' own properties");
+            assert.areEqual('["apply","arguments","bind","call","caller","constructor","length","toMethod","toString"]', JSON.stringify(Object.getOwnPropertyNames(obj).sort()), "Function.prototype function has 'caller' and 'arguments' own properties");
             
             assert.throws(function() { obj.caller; }, TypeError, "Function.prototype throws on access to 'caller' property", "Accessing the 'caller' property is restricted in this context");
             assert.throws(function() { obj.arguments; }, TypeError, "Function.prototype throws on access to 'arguments' property", "Accessing the 'arguments' property is restricted in this context");

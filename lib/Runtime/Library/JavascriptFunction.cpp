@@ -2865,11 +2865,7 @@ LABEL1:
         ScriptContext* scriptContext = this->GetScriptContext();
         Assert(this->GetFunctionProxy() != nullptr); // The caller should guarantee a proxy exists
         ParseableFunctionInfo * func = this->GetFunctionProxy()->EnsureDeserialized();
-        if (wcscmp(func->GetDisplayName(), Js::Constants::AnonymousFunction) == 0)
-        {
-            return LiteralString::CreateEmptyString(scriptContext->GetLibrary()->GetStringTypeStatic());
-        }
-        else if (wcscmp(func->GetDisplayName(), Js::Constants::FunctionCode) == 0)
+        if (func->GetDisplayName() == Js::Constants::FunctionCode)
         {
             return LiteralString::NewCopyBuffer(Js::Constants::Anonymous, Js::Constants::AnonymousLength, scriptContext);
         }
@@ -2886,39 +2882,61 @@ LABEL1:
         return LiteralString::NewCopyBuffer(name, length, scriptContext);
     }
 
-    JavascriptString* JavascriptFunction::GetDisplayName(bool isFunctionName) const
+    bool JavascriptFunction::GetFunctionName(JavascriptString** name) const
     {
-        ScriptContext* scriptContext = this->GetScriptContext();
-        Var sourceString = this->GetSourceString();
+        Assert(name != nullptr);
         FunctionProxy* proxy = this->GetFunctionProxy();
+        JavascriptFunction* thisFunction = const_cast<JavascriptFunction*>(this);
 
-
-        if (isFunctionName && (proxy || BoundFunction::Is(const_cast<JavascriptFunction*>(this)) ||
-            JavascriptGeneratorFunction::Is(const_cast<JavascriptFunction*>(this))))
+        if (proxy || thisFunction->IsBoundFunction() || JavascriptGeneratorFunction::Is(thisFunction))
         {
-            return GetDisplayNameImpl();
+            *name = GetDisplayNameImpl();
+            return true;
         }
 
+        Assert(!ScriptFunction::Is(thisFunction));
+        return GetSourceStringName(name);
+    }
+
+    bool JavascriptFunction::GetSourceStringName(JavascriptString** name) const
+    {
+        Assert(name != nullptr);
+        ScriptContext* scriptContext = this->GetScriptContext();
+        Var sourceString = this->GetSourceString();
+
+        if (sourceString)
+        {
+            if (TaggedInt::Is(sourceString))
+            {
+                int32 propertIdOfSourceString = TaggedInt::ToInt32(sourceString);
+                *name = scriptContext->GetPropertyString(propertIdOfSourceString);
+                return true;
+            }
+            Assert(JavascriptString::Is(sourceString));
+            *name = JavascriptString::FromVar(sourceString);
+            return true;
+        }
+        return false;
+    }
+
+    JavascriptString* JavascriptFunction::GetDisplayName() const
+    {
+        ScriptContext* scriptContext = this->GetScriptContext();
+        FunctionProxy* proxy = this->GetFunctionProxy();
+        JavascriptLibrary* library = scriptContext->GetLibrary();
+        
         if (proxy)
         {
             ParseableFunctionInfo * func = proxy->EnsureDeserialized();
             return LiteralString::NewCopySz(func->GetDisplayName(), scriptContext);
         }
-        if (sourceString)
+        JavascriptString* sourceStringName = nullptr;
+        if (GetSourceStringName(&sourceStringName))
         {
-            if (TaggedInt::Is(sourceString))
-            {
-                return scriptContext->GetPropertyString(TaggedInt::ToInt32(sourceString));
-            }
-            Assert(JavascriptString::Is(sourceString));
-            return JavascriptString::FromVar(sourceString);
+            return sourceStringName;
         }
 
-        if (isFunctionName)
-        {
-            return LiteralString::CreateEmptyString(scriptContext->GetLibrary()->GetStringTypeStatic()); // empty string for function prototype hits here
-        }
-        return scriptContext->GetLibrary()->GetFunctionDisplayString(); //TODO
+        return library->GetFunctionDisplayString();
     }
 
     Var JavascriptFunction::GetTypeOfString(ScriptContext * requestContext)
