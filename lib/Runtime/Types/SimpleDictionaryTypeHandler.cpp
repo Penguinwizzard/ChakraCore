@@ -2726,7 +2726,7 @@ namespace Js
                 return;
             }  
             // REVIEW: Can the root object be used as a prototype and have this set?  What do we do about PropertyLetConstGlobal properties here?
-            if (!(descriptor->Attributes & PropertyDeleted))
+            if (!(descriptor->Attributes & PropertyDeleted) && !(descriptor->Attributes & PropertyLetConstGlobal))
             {
                 // See PathTypeHandlerBase::ConvertToSimpleDictionaryType for rules governing fixed field bits during type
                 // handler transitions.  In addition, we know that the current instance is not yet a prototype.

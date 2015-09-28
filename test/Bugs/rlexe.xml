@@ -217,6 +217,13 @@
       <compile-flags>-bgjit- -on:asmjs -simdjs -testtrace:asmjs -AsmJsStopOnError -maic:0</compile-flags>
     </default>
   </test>
+  <test>
+    <default>
+      <files>bug_OS_4683246.js</files>
+      <tags>exclude_dynapogo</tags>
+      <compile-flags>-loopinterpretcount:0 -args summary -endargs</compile-flags>
+    </default>
+  </test>
   <!-- Disable until we figure out how to handle the early error while preserving the coverage
   <test>
     <default>
