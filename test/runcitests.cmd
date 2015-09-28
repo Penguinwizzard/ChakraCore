@@ -49,15 +49,16 @@ set _HadFailures=0
   call :runTests x64debug
   call :runTests x64test
 
+  call :summarizeLogs
   call :copyLogsToDrop
 
   echo.
   if "%_HadFailures%" == "1" (
-    echo runcitests.cmd ^>^> Tests failed!
+    echo -- runcitests.cmd ^>^> Tests failed! 1>&2
   ) else (
-    echo runcitests.cmd ^>^> Tests passed!
+    echo -- runcitests.cmd ^>^> Tests passed!
   )
-  echo runcitests.cmd ^>^> Logs at %_DropRootDir%\testlogs
+  echo -- runcitests.cmd ^>^> Logs at %_DropRootDir%\testlogs
 
   popd
 
@@ -87,6 +88,17 @@ set _HadFailures=0
   call :do xcopy %_TestDir%\logs %_StagingDir%\testlogs /S /Y /C /I
 
   goto :eof
+
+:: ============================================================================
+:: Summarize the logs into a listing of only the failures
+:: ============================================================================
+:summarizeLogs
+
+  pushd %_TestDir%\logs
+  findstr /sp failed rl.results.log > summary.log
+  rem Echo to stderr so that VSO includes the output in the build summary
+  type summary.log 1>&2
+  popd
 
 :: ============================================================================
 :: Echo a command line before executing it
