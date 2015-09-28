@@ -197,7 +197,7 @@ namespace UnifiedRegex
     private:
         // Map character to:
         //  - -1 if trivial equivalence class
-        //  - otherwise to four 16-bit fields: <0><equiv 3><equiv 2><equiv 1>
+        //  - otherwise to four 16-bit fields: <equiv 4><equiv 3><equiv 2><equiv 1>
         const static uint64 EQUIV_MISSING = static_cast<uint64>(-1);
         CharMap<wchar_t, uint64> toEquivs;
 
@@ -245,7 +245,8 @@ namespace UnifiedRegex
 
         typedef CaseMapper<TrivialCaseMapper> UnicodeDataCaseMapper;
         const UnicodeDataCaseMapper unicodeDataCaseMapper;
-        const CaseMapper<UnicodeDataCaseMapper> caseFoldingCaseMapper;
+        typedef CaseMapper<UnicodeDataCaseMapper> CaseFoldingCaseMapper;
+        const CaseFoldingCaseMapper caseFoldingCaseMapper;
 
         CharSet<Char>* fullSet;
         CharSet<Char>* emptySet;

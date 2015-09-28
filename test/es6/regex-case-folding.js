@@ -97,13 +97,23 @@ var tests = [
         }
     },
     {
+        name: "Case-folding should be applied for quantifiers when the unicode flag is present",
+        body: function () {
+            assert.isTrue(/^aa(?:\u004b)?/ui.test("aa\u212a"), "?");
+            assert.isTrue(/^aa(?:\u004b)+/ui.test("aa\u004b\u212a"), "+");
+            assert.isTrue(/^aa(?:\u004b)*/ui.test("aa\u004b\u212a"), "*");
+            assert.isTrue(/^aa(?:\u004b){2}/ui.test("aa\u004b\u212a"), "{2}");
+        }
+    },
+    {
         name: "Up to four code points should be in the same case-folding equivalence group",
         body: function () {
             var equivs = ["0399", "03b9", "1fbe"];
             equivs.forEach(function (hex) {
                 var equivChar = eval("'\\u" + hex + "'");
                 assert.isTrue(/\u0345/ui.test(equivChar), "\\u0345 -> \\u" + hex + " as a single character pattern");
-                assert.isTrue(/aa|\u0345/ui.test(equivChar), "\\u0345 -> \\u" + hex + " as a single character term");
+                assert.isTrue(/^\u0345/ui.test(equivChar), "MatchChar4Inst: \\u0345 -> \\u" + hex + " as a single character pattern");
+                assert.isTrue(/aa|\u0345/ui.test(equivChar), "SyncToSetAndContinue: \\u0345 -> \\u" + hex + " as a single character term");
                 assert.isTrue(/aa\u0345/ui.test("aa" + equivChar), "\\u0345 -> \\u" + hex + " in literal");
                 assert.isTrue(/[a\u0345]/ui.test(equivChar), "\\u0345 -> \\u" + hex + " in character set");
                 assert.isTrue(/(\u0345)\1/ui.test("\u0345" + equivChar), "\\u0345 -> \\u" + hex + " in back reference");

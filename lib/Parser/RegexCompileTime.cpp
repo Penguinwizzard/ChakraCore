@@ -1302,8 +1302,11 @@ namespace UnifiedRegex
                 }
             }
 
-            uniqueEquivs[uniqueCount] = equivs[equivIndex];
-            uniqueCount += 1;
+            if (!alreadyHave)
+            {
+                uniqueEquivs[uniqueCount] = equivs[equivIndex];
+                uniqueCount += 1;
+            }
         }
 
         return uniqueCount;

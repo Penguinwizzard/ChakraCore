@@ -1813,7 +1813,7 @@ namespace UnifiedRegex
 
         // Specialized matcher for regex c - case insensitive
         __inline bool MatchSingleCharCaseInsensitive(const Char* const input, const CharCount inputLength, CharCount offset, const Char c);
-        __inline bool MatchSingleCharCaseInsensitiveSticky(const Char* const input, CharCount offset, const Char c);
+        __inline bool MatchSingleCharCaseInsensitiveHere(CaseInsensitive::MappingSource mappingSource, const Char* const input, CharCount offset, const Char c);
 
         // Specialized matcher for regex c - case sensitive
         __inline bool MatchSingleCharCaseSensitive(const Char* const input, const CharCount inputLength, CharCount offset, const Char c);

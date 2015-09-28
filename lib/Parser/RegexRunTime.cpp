@@ -1513,7 +1513,7 @@ namespace UnifiedRegex
         const CharCount literalEndOffset = offset + length * CaseInsensitive::EquivClassSize;
 
         Assert(literalEndOffset <= matcher.program->rep.insts.litbufLen);
-        Assert(CaseInsensitive::EquivClassSize == 4);
+        CompileAssert(CaseInsensitive::EquivClassSize == 4);
 
         do
         {
@@ -2209,11 +2209,11 @@ namespace UnifiedRegex
             CharCount groupOffset = info->offset;
             const CharCount groupEndOffset = groupOffset + info->length;
 
-            bool isCaseInsensitivieMatch = (matcher.program->flags & IgnoreCaseRegexFlag) != 0;
+            bool isCaseInsensitiveMatch = (matcher.program->flags & IgnoreCaseRegexFlag) != 0;
             bool isCodePointList = (matcher.program->flags & UnicodeRegexFlag) != 0;
 
             // This is the only place in the runtime machinery we need to convert characters to their equivalence class
-            if (isCaseInsensitivieMatch && isCodePointList)
+            if (isCaseInsensitiveMatch && isCodePointList)
             {
                 auto getNextCodePoint = [=](CharCount &offset, CharCount endOffset, codepoint_t &codePoint) {
                     if (endOffset <= offset)
@@ -2244,6 +2244,7 @@ namespace UnifiedRegex
                     return true;
                 };
 
+                codepoint_t equivs[CaseInsensitive::EquivClassSize];
                 while (true)
                 {
                     codepoint_t groupCodePoint;
@@ -2253,30 +2254,42 @@ namespace UnifiedRegex
                         break;
                     }
 
+                    // We don't need to verify that there is a valid input code point since at the beginning
+                    // of the function, we make sure that the length of the input is at least as long as the
+                    // length of the group.
                     codepoint_t inputCodePoint;
-                    bool hasInputCodePoint = getNextCodePoint(inputOffset, inputLength, inputCodePoint);
-                    if (!hasInputCodePoint)
+                    getNextCodePoint(inputOffset, inputLength, inputCodePoint);
+
+                    bool doesMatch = false;
+                    if (!Js::NumberUtilities::IsInSupplementaryPlane(groupCodePoint))
                     {
-                        return matcher.Fail(FAIL_PARAMETERS);
+                        auto toCanonical = [&](codepoint_t c) {
+                            return matcher.standardChars->ToCanonical(
+                                CaseInsensitive::MappingSource::CaseFolding,
+                                static_cast<wchar_t>(c));
+                        };
+                        doesMatch = (toCanonical(groupCodePoint) == toCanonical(inputCodePoint));
+                    }
+                    else
+                    {
+                        uint tblidx = 0;
+                        uint acth = 0;
+                        CaseInsensitive::RangeToEquivClass(tblidx, groupCodePoint, groupCodePoint, acth, equivs);
+                        CompileAssert(CaseInsensitive::EquivClassSize == 4);
+                        doesMatch =
+                            inputCodePoint == equivs[0]
+                            || inputCodePoint == equivs[1]
+                            || inputCodePoint == equivs[2]
+                            || inputCodePoint == equivs[3];
                     }
 
-                    codepoint_t equivs[CaseInsensitive::EquivClassSize];
-                    uint tblidx = 0;
-                    uint acth = 0;
-                    CaseInsensitive::RangeToEquivClass(tblidx, groupCodePoint, groupCodePoint, acth, equivs);
-                    CompileAssert(CaseInsensitive::EquivClassSize == 4);
-                    bool doesMatch =
-                        inputCodePoint == equivs[0]
-                        || inputCodePoint == equivs[1]
-                        || inputCodePoint == equivs[2]
-                        || inputCodePoint == equivs[3];
                     if (!doesMatch)
                     {
                         return matcher.Fail(FAIL_PARAMETERS);
                     }
                 }
             }
-            else if (isCaseInsensitivieMatch)
+            else if (isCaseInsensitiveMatch)
             {
                 do
                 {
@@ -4437,13 +4450,15 @@ namespace UnifiedRegex
 
     __inline bool Matcher::MatchSingleCharCaseInsensitive(const Char* const input, const CharCount inputLength, CharCount offset, const Char c)
     {
+        CaseInsensitive::MappingSource mappingSource = program->GetCaseMappingSource();
+
         // If sticky flag present, break since the 1st character didn't match the pattern character
         if ((program->flags & StickyRegexFlag) != 0)
         {
 #if ENABLE_REGEX_CONFIG_OPTIONS
             CompStats();
 #endif
-            if (MatchSingleCharCaseInsensitiveSticky(input, offset, c))
+            if (MatchSingleCharCaseInsensitiveHere(mappingSource, input, offset, c))
             {
                 GroupInfo* const info = GroupIdToGroupInfo(0);
                 info->offset = offset;
@@ -4462,7 +4477,7 @@ namespace UnifiedRegex
 #if ENABLE_REGEX_CONFIG_OPTIONS
             CompStats();
 #endif
-            if (MatchSingleCharCaseInsensitiveSticky(input, offset, c))
+            if (MatchSingleCharCaseInsensitiveHere(mappingSource, input, offset, c))
             {
                 GroupInfo* const info = GroupIdToGroupInfo(0);
                 info->offset = offset;
@@ -4476,9 +4491,12 @@ namespace UnifiedRegex
         return false;
     }
 
-    __inline bool Matcher::MatchSingleCharCaseInsensitiveSticky(const Char* const input, const CharCount offset, const Char c)
+    __inline bool Matcher::MatchSingleCharCaseInsensitiveHere(
+        CaseInsensitive::MappingSource mappingSource,
+        const Char* const input,
+        const CharCount offset,
+        const Char c)
     {
-        CaseInsensitive::MappingSource mappingSource = program->GetCaseMappingSource();
         return (standardChars->ToCanonical(mappingSource, input[offset]) == standardChars->ToCanonical(mappingSource, c));
     }
 
