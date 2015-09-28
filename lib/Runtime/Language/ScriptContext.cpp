@@ -50,7 +50,7 @@ namespace Js
         trigramAlphabet(nullptr),
         regexStacks(nullptr),
         arrayMatchInit(false),
-        config(threadContext->IsOptimizedForManyInstances()),
+        config(threadContext->GetConfig(), threadContext->IsOptimizedForManyInstances()),
         backgroundParser(nullptr),
 #if ENABLE_NATIVE_CODEGEN
         nativeCodeGen(nullptr),
@@ -5397,11 +5397,6 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
         OUTPUT_FLUSH();
     }
 #endif
-
-    bool ScriptConfiguration::IsIntlEnabled() const
-    {       
-        return Js::Configuration::Global.flags.Intl;
-    }
 
 } // End namespace Js
 

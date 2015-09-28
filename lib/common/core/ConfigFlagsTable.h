@@ -468,6 +468,27 @@ namespace Js
         void FinalizeConfiguration();
         void EnableExperimentalFlag();
 
+        // Some config flags are expected to be constant during the lifetime of
+        // a ScriptContext object. However, some other flags can change,
+        // possibly multiple times.
+        //
+        // To keep the flags constant during the lifetime of a ScriptContext
+        // object, we copy the ones that it needs into ThreadContext and have
+        // it fetch them from ThreadContext instead of here. Given that a
+        // ScriptContext object is bound to a ThreadContext object and never
+        // gets reassigned, this keeps the flags constant while the
+        // ScriptContext object is alive.
+        //
+        // Currently, among the flags used by ScriptContext, only the
+        // experimental flags are altered after initialization. Therefore, only
+        // access to these flags are serialized.
+        //
+        // Note that this lock is acquired automatically only when the
+        // experimental flags are initialized via the EnableExperimentalFlag()
+        // method. It should be manually acquired anywhere else where these
+        // flags are accessed.
+        CriticalSection csExperimentalFlags;
+
     private:
         void TransferAcronymFlagConfiguration();
         void TranslateFlagConfiguration();

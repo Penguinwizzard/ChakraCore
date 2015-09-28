@@ -1151,6 +1151,7 @@ namespace Js
     void
     ConfigFlagsTable::EnableExperimentalFlag()
     {
+        AutoCriticalSection autocs(&csExperimentalFlags);
 #define FLAG(...) 
 #define FLAG_REGOVR_EXP(type, name, description, defaultValue, parentName, hasCallback) this->SetAsBoolean(Js::Flag::name##Flag, true);
 #include "ConfigFlagsList.h"

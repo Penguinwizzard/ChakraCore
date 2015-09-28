@@ -150,13 +150,14 @@ namespace Js
     class ScriptConfiguration
     {
     public:
-        ScriptConfiguration(const bool isOptimizedForManyInstances) :     
+        ScriptConfiguration(const ThreadConfiguration * const threadConfig, const bool isOptimizedForManyInstances) :
 #ifdef ENABLE_PROJECTION
             HostType(Configuration::Global.flags.HostType),
             WinRTConstructorAllowed(Configuration::Global.flags.WinRTConstructorAllowed),
 #endif
             NoNative(Configuration::Global.flags.NoNative),
-            isOptimizedForManyInstances(isOptimizedForManyInstances)
+            isOptimizedForManyInstances(isOptimizedForManyInstances),
+            threadConfig(threadConfig)
         {
         }
 
@@ -170,58 +171,18 @@ namespace Js
             return true;
 #endif
         }
-        bool SupportsCollectGarbage()           const { return true; }
-        bool IsCollectGarbageEnabled()          const { return CONFIG_FLAG(CollectGarbage); }                               
-        bool IsErrorStackTraceEnabled()         const { return CONFIG_FLAG(errorStackTrace); }
-        bool IsTypedArrayEnabled()              const { return true; }
-        bool Is__proto__Enabled()               const { return CONFIG_FLAG(__proto__); }
-        bool IsES6MapEnabled()                  const { return CONFIG_FLAG(Map); }
-        bool IsES6SetEnabled()                  const { return CONFIG_FLAG(Set); }
-        bool IsES6WeakMapEnabled()              const { return CONFIG_FLAG(WeakMap); }
-        bool IsDefineGetterSetterEnabled()      const { return CONFIG_FLAG(DefineGetterSetter); }
-        bool IsIntlEnabled() const;
-        bool IsES6SpeciesEnabled()              const { return CONFIG_FLAG_RELEASE(ES6Species); }
-        bool IsES6ClassAndExtendsEnabled()      const { return CONFIG_FLAG_RELEASE(ES6Classes); } 
-        bool IsES6DateParseFixEnabled()         const { return CONFIG_FLAG_RELEASE(ES6DateParseFix); }
-        bool IsES6DefaultArgsEnabled()          const { return CONFIG_FLAG_RELEASE(ES6DefaultArgs); }
-        bool IsES6DestructuringEnabled()        const { return CONFIG_FLAG_RELEASE(ES6Destructuring); }
-        bool IsES6FunctionNameEnabled()         const { return CONFIG_FLAG_RELEASE(ES6FunctionName); }
-        bool IsES6FunctionNameFullEnabled()     const { return CONFIG_FLAG_RELEASE(ES6FunctionNameFull); }
-        bool IsES6GeneratorsEnabled()           const { return CONFIG_FLAG_RELEASE(ES6Generators); }
-        bool IsES7ExponentiationOperatorEnabled() const { return CONFIG_FLAG_RELEASE(ES7ExponentiationOperator); }
-        bool IsES6IteratorsEnabled()            const { return CONFIG_FLAG_RELEASE(ES6Iterators); }
-        bool IsES6IsConcatSpreadableEnabled()   const { return CONFIG_FLAG_RELEASE(ES6IsConcatSpreadable); }
-        bool IsES6LambdaEnabled()               const { return CONFIG_FLAG_RELEASE(ES6Lambda); }
-        bool IsES6MathExtensionsEnabled()       const { return CONFIG_FLAG_RELEASE(ES6Math); }
-        bool IsES6ObjectExtensionsEnabled()     const { return CONFIG_FLAG_RELEASE(ES6Object); }
-        bool IsES6NumberExtensionsEnabled()     const { return CONFIG_FLAG_RELEASE(ES6Number); }
-        bool IsES6NumericLiteralEnabled()       const { return CONFIG_FLAG_RELEASE(ES6NumericLiterals); }
-        bool IsES6ObjectLiteralsEnabled()       const { return CONFIG_FLAG_RELEASE(ES6ObjectLiterals); }
-        bool IsES6PromiseEnabled()              const { return CONFIG_FLAG_RELEASE(ES6Promise); }
-        bool IsES6ProxyEnabled()                const { return CONFIG_FLAG_RELEASE(ES6Proxy); }
-        bool IsES6RestEnabled()                 const { return CONFIG_FLAG_RELEASE(ES6Rest); }
-        bool IsES6SpreadEnabled()               const { return CONFIG_FLAG_RELEASE(ES6Spread); }
-        bool IsES6StringExtensionsEnabled()     const { return CONFIG_FLAG_RELEASE(ES6String); }
-        bool IsES6StringPrototypeFixEnabled()   const { return CONFIG_FLAG_RELEASE(ES6StringPrototypeFixes); }
-        bool IsES6StringTemplateEnabled()       const { return CONFIG_FLAG_RELEASE(ES6StringTemplate); }
-        bool IsES6PrototypeChain()              const { return CONFIG_FLAG_RELEASE(ES6PrototypeChain); }
-        bool IsES6SymbolEnabled()               const { return CONFIG_FLAG_RELEASE(ES6Symbol); }
-        bool IsES6ToPrimitiveEnabled()          const { return CONFIG_FLAG_RELEASE(ES6ToPrimitive); }
-        bool IsES6ToLengthEnabled()             const { return CONFIG_FLAG_RELEASE(ES6ToLength); }
-        bool IsES6ToStringTagEnabled()          const { return CONFIG_FLAG_RELEASE(ES6ToStringTag); }
-        bool IsES6TypedArrayExtensionsEnabled() const { return CONFIG_FLAG_RELEASE(ES6TypedArrayExtensions); }
-        bool IsES6UnicodeExtensionsEnabled()    const { return CONFIG_FLAG_RELEASE(ES6Unicode); }
-        bool IsES6UnscopablesEnabled()          const { return CONFIG_FLAG_RELEASE(ES6Unscopables); }
-        bool IsES6WeakSetEnabled()              const { return CONFIG_FLAG_RELEASE(ES6WeakSet); }
-        bool IsES6RegExStickyEnabled()          const { return CONFIG_FLAG_RELEASE(ES6RegExSticky); }
-        bool IsES6HasInstanceEnabled()        const { return CONFIG_FLAG_RELEASE(ES6HasInstance); }
-        bool SkipSplitOnNoResult()              const { return CONFIG_FLAG_RELEASE(SkipSplitOnNoResult); }
-#ifdef ENABLE_PROJECTION
-        bool AreWinRTDelegatesInterfaces()      const { return CONFIG_FLAG(WinRTDelegateInterfaces); }
-        bool IsWinRTAdaptiveAppsEnabled()       const { return CONFIG_FLAG_RELEASE(WinRTAdaptiveApps); }
-#endif
 
-        bool IsES7AsyncAndAwaitEnabled()        const { return CONFIG_FLAG_RELEASE(ES7AsyncAwait); }
+#define FORWARD_THREAD_CONFIG(flag) inline bool flag() const { return threadConfig->flag(); }
+#define FLAG(threadFlag, globalFlag) FORWARD_THREAD_CONFIG(threadFlag)
+#define FLAG_RELEASE(threadFlag, globalFlag) FORWARD_THREAD_CONFIG(threadFlag)
+#include "../Library/ThreadConfigFlagsList.h"
+#undef FLAG_RELEASE
+#undef FLAG
+#undef FORWARD_THREAD_CONFIG
+
+        bool SupportsCollectGarbage() const { return true; }
+        bool IsTypedArrayEnabled() const { return true; }
+        bool BindDeferredPidRefs() const { return IsLetAndConstEnabled(); }
 
         void ForceNoNative() { this->NoNative = true; }
         void ForceNative() { this->NoNative = false; }
@@ -231,8 +192,6 @@ namespace Js
         BOOL CanOptimizeGlobalLookup() const { return this->fCanOptimizeGlobalLookup;}
         bool IsOptimizedForManyInstances() const { return isOptimizedForManyInstances; }        
         bool IsBlockScopeEnabled() const { return true; }
-        bool IsLetAndConstEnabled() const { return CONFIG_FLAG(LetConst); }
-        bool BindDeferredPidRefs() const { return IsLetAndConstEnabled(); }        
         void CopyFrom(ScriptConfiguration& other) 
         { 
             this->NoNative = other.NoNative; 
@@ -271,6 +230,7 @@ namespace Js
         bool NoNative;
         BOOL fCanOptimizeGlobalLookup;
         const bool isOptimizedForManyInstances;
+        const ThreadConfiguration * const threadConfig;
 
 #ifdef ENABLE_PROJECTION
         Number HostType;    // One of enum HostType values (see ConfigFlagsTable.h).

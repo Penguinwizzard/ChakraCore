@@ -309,6 +309,40 @@ public:
 #define AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, name) \
     AutoTagNativeLibraryEntry __tag(function, callInfo, name, _AddressOfReturnAddress())
 
+class ThreadConfiguration
+{
+public:
+    ThreadConfiguration()
+    {
+        CopyGlobalFlags();
+    }
+
+#define DEFINE_FLAG(flag) \
+    public: \
+        inline bool flag() const { return m_##flag##; } \
+    \
+    private: \
+        bool m_##flag##;
+#define FLAG(threadFlag, globalFlag) DEFINE_FLAG(threadFlag)
+#define FLAG_RELEASE(threadFlag, globalFlag) DEFINE_FLAG(threadFlag)
+#include "ThreadConfigFlagsList.h"
+#undef FLAG_RELEASE
+#undef FLAG
+#undef DEFINE_FLAG
+
+private:
+    void CopyGlobalFlags()
+    {
+        AutoCriticalSection autocs(&Js::Configuration::Global.flags.csExperimentalFlags);
+
+#define FLAG(threadFlag, globalFlag) m_##threadFlag## = CONFIG_FLAG(globalFlag);
+#define FLAG_RELEASE(threadFlag, globalFlag) m_##threadFlag## = CONFIG_FLAG_RELEASE(globalFlag);
+#include "ThreadConfigFlagsList.h"
+#undef FLAG_RELEASE
+#undef FLAG
+    }
+};
+
 class ThreadContext sealed : 
     public DefaultRecyclerCollectionWrapper,
     public JsUtil::DoublyLinkedListElement<ThreadContext>
@@ -696,6 +730,8 @@ private:
     // entering and leaving a loop.
     uint8 loopDepth;
 
+    ThreadConfiguration configuration;
+
 public:
     static ThreadContext * globalListFirst;
 
@@ -907,6 +943,8 @@ public:
 
     ThreadContext(AllocationPolicyManager * allocationPolicyManager = nullptr, JsUtil::ThreadService::ThreadServiceCallback threadServiceCallback = nullptr);
     static void Add(ThreadContext *threadContext);
+
+    ThreadConfiguration const * GetConfig() const { return &configuration; }
 
 public:
     void SetTelemetryBlock(ThreadContextWatsonTelemetryBlock * telemetryBlock) { this->telemetryBlock = telemetryBlock; }
