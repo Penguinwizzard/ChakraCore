@@ -82,6 +82,7 @@ namespace Js
         FunctionBody * GetFunctionBody() const;
 
         Attributes GetAttributes() const { return attributes; }
+        static Attributes GetAttributes(Js::RecyclableObject * function);
         Js::LocalFunctionId GetLocalFunctionId() const { return functionId; }
         virtual void Finalize(bool isShutdown)
         {

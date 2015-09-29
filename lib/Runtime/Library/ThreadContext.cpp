@@ -228,9 +228,9 @@ void ThreadContext::InitAvailableCommit()
     BOOL success = AutoSystemInfo::Data.GetAvailableCommit(&commit);
     if (!success)
     {
-		commit = (ULONG64)-1;
+        commit = (ULONG64)-1;
 #ifdef NTBUILD
-		APP_MEMORY_INFORMATION AppMemInfo;
+        APP_MEMORY_INFORMATION AppMemInfo;
         success = GetWinCoreProcessThreads()->GetProcessInformation(
             GetCurrentProcess(),
             ProcessAppMemoryInfo,
@@ -3534,6 +3534,25 @@ void ThreadContext::CheckAndResetImplicitCallAccessorFlag()
         ClearImplicitCallFlags(accessorCallFlag);
         AddImplicitCallFlags(Js::ImplicitCall_NonProfiledAccessor);
     }
+}
+
+bool ThreadContext::HasNoSideEffect(Js::RecyclableObject * function) const
+{
+    Js::FunctionInfo::Attributes attributes = Js::FunctionInfo::GetAttributes(function);
+
+    return this->HasNoSideEffect(function, attributes);
+}
+
+bool ThreadContext::HasNoSideEffect(Js::RecyclableObject * function, Js::FunctionInfo::Attributes attributes) const
+{
+    if (((attributes & Js::FunctionInfo::CanBeHoisted) != 0)
+        || ((attributes & Js::FunctionInfo::HasNoSideEffect) != 0 && !IsDisableImplicitException()))
+    {
+        Assert((attributes & Js::FunctionInfo::HasNoSideEffect) != 0);
+        return true;
+    }
+
+    return false;
 }
 
 bool

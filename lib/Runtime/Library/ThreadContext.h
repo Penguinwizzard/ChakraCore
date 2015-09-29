@@ -1348,15 +1348,12 @@ public:
         // so that we don't throw exception when disableImplicitCall is set before we allow these function to be called 
         // as an optimization.  (These functions are valueOf and toString calls for built-in non primitive types)
 
-        Js::FunctionInfo::Attributes attributes = 
-            function->GetTypeId() == Js::TypeIds_Function ? Js::JavascriptFunction::FromVar(function)->GetFunctionInfo()->GetAttributes() : Js::FunctionInfo::None;
-        
+        Js::FunctionInfo::Attributes attributes = Js::FunctionInfo::GetAttributes(function);
+
         // we can hoist out const method if we know the function doesn't have side effect, 
         // and the value can be hoisted.
-        if (((attributes & Js::FunctionInfo::CanBeHoisted) != 0)
-            || ((attributes & Js::FunctionInfo::HasNoSideEffect) != 0 && !IsDisableImplicitException()))
+        if (this->HasNoSideEffect(function, attributes))
         {        
-            Assert((attributes & Js::FunctionInfo::HasNoSideEffect) != 0);
             // Has no side effect means the function does not change global value or 
             // will check for implicit call flags
             return implicitCall();
@@ -1385,6 +1382,8 @@ public:
         this->SetImplicitCallFlags((Js::ImplicitCallFlags)(saveImplicitCallFlags | flags));
         return result;        
     }
+    bool HasNoSideEffect(Js::RecyclableObject * function) const;
+    bool HasNoSideEffect(Js::RecyclableObject * function, Js::FunctionInfo::Attributes attr) const;
     bool RecordImplicitException();
     DisableImplicitFlags GetDisableImplicitFlags() const { return disableImplicitFlags; }
     void SetDisableImplicitFlags(DisableImplicitFlags flags) { disableImplicitFlags = flags; }

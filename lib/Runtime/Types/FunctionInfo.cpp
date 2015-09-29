@@ -43,4 +43,10 @@ namespace Js
         Assert(functionBodyImpl == nullptr || functionBodyImpl->IsFunctionBody());
         return (FunctionBody *)functionBodyImpl;
     }
+
+    FunctionInfo::Attributes FunctionInfo::GetAttributes(Js::RecyclableObject * function)
+    { 
+        return function->GetTypeId() == Js::TypeIds_Function ? 
+            Js::JavascriptFunction::FromVar(function)->GetFunctionInfo()->GetAttributes() : Js::FunctionInfo::None;
+    }
 }
