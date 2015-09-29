@@ -1270,11 +1270,12 @@ Program {
     numGroups:    2
     numLoops:     1
     instructions: {
-        L0000: BeginLoopFixedGroupLastIteration(loopId: 0, repeats: [1-inf], exitLabel: L0078, hasOuterLoops: false, hasInnerNondet: false, length: 1, groupId: 1, noNeedToSave: true)
-        L0030: BOITest(hardFail: false)
-        L0048: MatchChar(c: 'a')
-        L0060: RepeatLoopFixedGroupLastIteration(beginLabel: L0000)
-        L0078: Succ()
+        L0000: SyncToCharAndBackup(c: 'a', backup: [0-inf])
+        L0020: BeginLoopFixedGroupLastIteration(loopId: 0, repeats: [1-inf], exitLabel: L0098, hasOuterLoops: false, hasInnerNondet: false, length: 1, groupId: 1, noNeedToSave: true)
+        L0050: BOITest(hardFail: false)
+        L0068: MatchChar(c: 'a')
+        L0080: RepeatLoopFixedGroupLastIteration(beginLabel: L0020)
+        L0098: Succ()
     }
 }
 REGEX AST /(?=^)/ {
