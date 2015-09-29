@@ -638,7 +638,7 @@
   <test>
     <default>
       <files>objlit.js</files>
-      <compile-flags> -ES6 -ES6ObjectLiterals -args summary -endargs</compile-flags>
+      <compile-flags> -ES6 -ES6ObjectLiterals -ES6DefaultArgs -args summary -endargs</compile-flags>
     </default>
   </test>
   <test>

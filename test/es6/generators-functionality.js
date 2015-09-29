@@ -1519,30 +1519,6 @@ var tests = [
         }
     },
     {
-        name: "The HomeObject of Functions declared as methods is the Object prototype.",
-        body: function () {
-            var obj = {
-                method() {  return super.toString; }
-            };
-
-            obj.toString = null;
-
-            assert.areEqual(Object.prototype.toString, obj.method());
-        }
-    },
-    {
-        name: "The HomeObject accessed through default argument of Functions declared as methods is the Object prototype.",
-        body: function () {
-            var obj = {
-                method(x = super.toString) {  return x; }
-            };
-
-            obj.toString = null;
-
-            assert.areEqual(Object.prototype.toString, obj.method());
-        }
-    },
-    {
         name: "Generator method body using super property",
         body: function () {
             var obj = {

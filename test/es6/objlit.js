@@ -397,6 +397,49 @@ var tests = [
             assert.areEqual(42, Object.getPrototypeOf(object)._x, "The value of `Object.getPrototypeOf(object)._x` is `42`");
         }
     },
+    {
+        name: "super method calls in object literal setter",
+        body: function () {
+            var proto = {
+                _x: 0,
+                set x(v) { return this._x = v; }
+            };
+
+            var object = {
+                set x(v) { super.x = v; }
+            };
+
+            Object.setPrototypeOf(object, proto);
+
+            assert.areEqual(1, object.x = 1, "`object.x = 1` is `1`, after executing `Object.setPrototypeOf(object, proto);`");
+            assert.areEqual(1, object._x, "The value of `object._x` is `1`, after executing `Object.setPrototypeOf(object, proto);`");
+            assert.areEqual(0, Object.getPrototypeOf(object)._x, "The value of `Object.getPrototypeOf(object)._x` is `0`");
+        }
+    },
+    {
+        name: "The HomeObject of Functions declared as methods is the Object prototype.",
+        body: function () {
+            var obj = {
+                method() {  return super.toString; }
+            };
+
+            obj.toString = null;
+
+            assert.areEqual(Object.prototype.toString, obj.method());
+        }
+    },
+    {
+        name: "The HomeObject accessed through default argument of Functions declared as methods is the Object prototype.",
+        body: function () {
+            var obj = {
+                method(x = super.toString) {  return x; }
+            };
+
+            obj.toString = null;
+
+            assert.areEqual(Object.prototype.toString, obj.method());
+        }
+    },
 ];
 
 testRunner.runTests(tests, { verbose: WScript.Arguments[0] != "summary" });
