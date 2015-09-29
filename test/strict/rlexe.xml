@@ -412,6 +412,14 @@
   </test>
   <test>
     <default>
+      <files>11.this_sm.js</files>
+      <baseline>11.this_sm.baseline</baseline>
+      <compile-flags>-maxInterpretCount:10</compile-flags>
+      <tags>exclude_dynapogo</tags>
+    </default>
+  </test>
+  <test>
+    <default>
       <files>12.delete.js</files>
       <baseline>12.delete.baseline</baseline>
     </default>
