@@ -1248,6 +1248,8 @@ namespace UnifiedRegex
 
     void MatchCharNode::BestSyncronizingNode(Compiler& compiler, Node*& bestNode)
     {
+        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+
         if (IsBetterSyncronizingNode(compiler, bestNode, this))
         {
             bestNode = this;
