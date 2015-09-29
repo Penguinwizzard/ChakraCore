@@ -166,6 +166,7 @@ namespace Js
     protected:
         inline BOOL IsBuiltinProperty(PropertyId);
         static Var CreateNewInstance(Arguments& args, ScriptContext* scriptContext, uint32 elementSize, PFNCreateTypedArray pfnCreateTypedArray );
+        static int32 ToLengthChecked(Var lengthVar, uint32 elementSize, ScriptContext* scriptContext);
         
         virtual void* GetCompareElementsFunction() = 0;
 

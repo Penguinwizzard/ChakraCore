@@ -289,6 +289,12 @@ Below test fails with difference in space. Investigate the cause and re-enable t
   </test>
   <test>
     <default>
+      <files>bug_4653428.js</files>
+      <tags>typedarray,BUG</tags>
+    </default>
+  </test>
+  <test>
+    <default>
       <files>transfer.js</files>
       <baseline>transfer.baseline</baseline>
       <compile-flags>-ArrayBufferTransfer</compile-flags>

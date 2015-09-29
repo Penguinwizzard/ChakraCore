@@ -89,13 +89,7 @@ namespace Js
             else if (JavascriptNumber::Is(firstArgument) ||
                     TaggedInt::Is(firstArgument))
             {
-                // always convert the input to int, event if it's not number. 
-                elementCount = JavascriptConversion::ToInt32(firstArgument, scriptContext);
-                if (elementCount < 0 ||
-                    (uint32)elementCount >= ArrayBuffer::MaxArrayBufferLength/elementSize)
-                {
-                    JavascriptError::ThrowRangeError(scriptContext, JSERR_InvalidTypedArrayLength);
-                }
+                elementCount = ToLengthChecked(firstArgument, elementSize, scriptContext);
             }
             else
             {
@@ -140,12 +134,7 @@ namespace Js
                             JavascriptError::ThrowTypeError(
                                 scriptContext, JSERR_InvalidTypedArray_Constructor);
                         }
-                        elementCount = JavascriptConversion::ToUInt32(lengthVar, scriptContext);
-                        if ((uint32)elementCount >= ArrayBuffer::MaxArrayBufferLength/elementSize)
-                        {
-                            JavascriptError::ThrowRangeError(
-                                scriptContext, JSERR_InvalidTypedArrayLength);
-                        }
+                        elementCount = ToLengthChecked(lengthVar, elementSize, scriptContext);
                     }
                 }
                 else
@@ -233,6 +222,19 @@ namespace Js
         }
 
         return newArray;
+    }
+
+    int32 TypedArrayBase::ToLengthChecked(Var lengthVar, uint32 elementSize, ScriptContext* scriptContext)
+    {
+        int32 length = JavascriptConversion::ToInt32(lengthVar, scriptContext);
+        if (length < 0 ||
+            (uint32)length >= ArrayBuffer::MaxArrayBufferLength / elementSize ||
+            !JavascriptConversion::SameValueZero(lengthVar, JavascriptNumber::ToVar(length, scriptContext)))
+        {
+            JavascriptError::ThrowRangeError(scriptContext, JSERR_InvalidTypedArrayLength);
+        }
+
+        return length;
     }
 
     Var TypedArrayBase::NewInstance(RecyclableObject* function, CallInfo callInfo, ...)
