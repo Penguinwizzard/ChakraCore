@@ -36,6 +36,7 @@ namespace Js
         bool hasSuperReference;
         bool isDefaultConstructor;
         bool isActiveScript;
+        uint32 changeEntryPointLocation;
         static const wchar_t diagDefaultCtor[];
         static const wchar_t diagDefaultExtendsCtor[];
         

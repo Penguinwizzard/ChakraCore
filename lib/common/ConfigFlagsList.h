@@ -768,7 +768,7 @@ FLAGNR(Boolean, BailOutAtEveryImplicitCall, "Force generating implicit call bail
 FLAGR (NumberSet, BailOutByteCode     , "Byte code location to insert BailOut. Use with -prejit only", )
 #endif
 FLAGNR(Boolean, Benchmark             , "Disable security code which introduce variability in benchmarks", false)
-FLAGR (Boolean, BgJit                 , "Background JIT. Disable to force heuristic-based foreground JITting. (default: true)", true)
+FLAGR (Boolean, BgJit                 , "Background JIT. Disable to force heuristic-based foreground JITting. (default: true)", false)
 FLAGNR(Number,  BgJitDelay            , "Delay to wait for speculative jitting before starting script execution", DEFAULT_CONFIG_BgJitDelay)
 FLAGNR(Number,  BgJitDelayFgBuffer    , "When speculatively jitting in the foreground thread, do so for (BgJitDelay - BgJitDelayBuffer) milliseconds", DEFAULT_CONFIG_BgJitDelayFgBuffer)
 FLAGNR(Number,  BgJitPendingFuncCap   , "Disable delay if pending function count larger then cap", DEFAULT_CONFIG_BgJitPendingFuncCap)
