@@ -240,21 +240,53 @@ namespace Js
         
         JavascriptLibrary::CheckAndConvertCopyOnAccessNativeIntArray<Var>(instance);
         JavascriptArray * arrayInstance = JavascriptArray::EnsureNonNativeArray(JavascriptArray::FromVar(instance));
-        if (!CrossSite::IsCrossSiteObjectTyped(arrayInstance))
+#if DBG
+        bool doneConversion = false;
+        Js::Type* oldType = arrayInstance->GetType();
+#endif
+        bool isCrossSiteObject = false;
+        __try
         {
-            // Convert instance to an ES5Array
-            Assert(VirtualTableInfo<JavascriptArray>::HasVirtualTable(arrayInstance));
-            VirtualTableInfo<ES5Array>::SetVirtualTable(arrayInstance);            
-        }
-        else
-        {
-            // If instance was a cross-site JavascriptArray, convert to a cross-site ES5Array
-            Assert(VirtualTableInfo<CrossSiteObject<JavascriptArray>>::HasVirtualTable(arrayInstance));
-            VirtualTableInfo<CrossSiteObject<ES5Array>>::SetVirtualTable(arrayInstance);
-        }
+            if (!CrossSite::IsCrossSiteObjectTyped(arrayInstance))
+            {
+                // Convert instance to an ES5Array
+                Assert(VirtualTableInfo<JavascriptArray>::HasVirtualTable(arrayInstance));
+                VirtualTableInfo<ES5Array>::SetVirtualTable(arrayInstance);
+            }
+            else
+            {
+                // If instance was a cross-site JavascriptArray, convert to a cross-site ES5Array
+                Assert(VirtualTableInfo<CrossSiteObject<JavascriptArray>>::HasVirtualTable(arrayInstance));
+                VirtualTableInfo<CrossSiteObject<ES5Array>>::SetVirtualTable(arrayInstance);
+                isCrossSiteObject = true;
+            }
 
-        arrayInstance->ChangeType(); // force change TypeId
-        __super::SetInstanceTypeHandler(arrayInstance, hasChanged);
+            arrayInstance->ChangeType(); // force change TypeId
+            __super::SetInstanceTypeHandler(arrayInstance, false); // after forcing the type change, we don't need to changeType again.
+#if DBG
+            doneConversion = true;
+#endif
+        }
+        __finally
+        {
+            if (AbnormalTermination())
+            {
+                Assert(!doneConversion);
+                // change vtbl shouldn't OOM. revert back the vtable.
+                if (isCrossSiteObject)
+                {
+                    Assert(VirtualTableInfo<CrossSiteObject<ES5Array>>::HasVirtualTable(arrayInstance));
+                    VirtualTableInfo<CrossSiteObject<JavascriptArray>>::SetVirtualTable(arrayInstance);
+                }
+                else
+                {
+                    Assert(VirtualTableInfo<ES5Array>::HasVirtualTable(arrayInstance));
+                    VirtualTableInfo<JavascriptArray>::SetVirtualTable(arrayInstance);
+                }
+                // The only allocation is in ChangeType, which won't have changed the type yet.
+                Assert(arrayInstance->GetType() == oldType);
+            }
+        }
     }
 
     template <class T>
