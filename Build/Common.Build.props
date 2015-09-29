@@ -16,12 +16,7 @@
       <!-- /Zi -->
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <!-- /EHsc- -->
-      <ExceptionHandling>SyncCThrow</ExceptionHandling>      
-      <DisableSpecificWarnings>
-        4100;
-        4127;
-        4481
-      </DisableSpecificWarnings>
+      <ExceptionHandling>SyncCThrow</ExceptionHandling>
       <!-- /Gz -->
       <CallingConvention Condition="'$(Platform)'=='Win32'">StdCall</CallingConvention>
       <!-- /Zp8 -->

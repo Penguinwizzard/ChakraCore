@@ -1469,7 +1469,7 @@ namespace UnifiedRegex
     }
 
 #pragma warning(push)
-#pragma warning(disable:4702)
+#pragma warning(disable:4702)   // unreachable code
     template <typename P, const bool IsLiteral>
     bool Parser<P, IsLiteral>::AtomEscapePass0()
     {
@@ -2319,7 +2319,7 @@ namespace UnifiedRegex
     }
 
 #pragma warning(push)
-#pragma warning(disable:4702)
+#pragma warning(disable:4702)   // unreachable code
     template <typename P, const bool IsLiteral>
     bool Parser<P, IsLiteral>::ClassEscapePass0(Char& singleton, bool& previousSurrogatePart)
     {

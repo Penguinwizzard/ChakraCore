@@ -54,8 +54,8 @@ namespace Js
     Multiply two unsigned longs. Return the low ulong and fill *pluHi with
     the high ulong.
     ***************************************************************************/
-    // Turn off warning that there is no return value
-#pragma warning(disable:4035)  // re-enable below
+#pragma warning(push)
+#pragma warning(disable:4035)   // Turn off warning that there is no return value
     ulong NumberUtilities::MulLu(ulong lu1, ulong lu2, ulong *pluHi)
     {
 #if _WIN32 || _WIN64
@@ -79,7 +79,7 @@ namespace Js
 #error Neither _WIN32, nor _WIN64 is defined
 #endif
     }
-#pragma warning(default:4035)
+#pragma warning(pop)
 
     /***************************************************************************
     Add two unsigned longs and return the carry bit.

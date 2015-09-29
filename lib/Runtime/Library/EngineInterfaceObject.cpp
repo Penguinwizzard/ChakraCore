@@ -636,10 +636,10 @@ namespace Js
             return scriptContext->GetLibrary()->GetUndefined();
         }
 #if DEBUG
-        JavascriptExceptionOperators::Throw(JavascriptError::FromVar(args.Values[1]), scriptContext);
-        AssertMsg(false, "Intl raised an assert in the JS implementation. An exception was thrown with the msg.")
-#endif
+        JavascriptExceptionOperators::Throw(JavascriptError::FromVar(args.Values[1]), scriptContext);        
+#else
         return scriptContext->GetLibrary()->GetUndefined();
+#endif
     }
 
     Var EngineInterfaceObject::EntryIntl_IsWellFormedLanguageTag(RecyclableObject* function, CallInfo callInfo, ...)

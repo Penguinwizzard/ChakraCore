@@ -477,8 +477,7 @@ namespace Js
                 ss = MOD3;
                 break;
             default:
-                __assume( false );
-                Assert( false );
+                Assume( false );                
             }
             BYTE sibReg = RegEncode[regEffAddr];
             if( regEffAddr == RegNOREG )
@@ -606,8 +605,7 @@ namespace Js
                 break;
                 break;
             default:
-                __assume( false );
-                Assert( false );
+                Assume( false );
             }
             return 1;
         }
@@ -672,9 +670,8 @@ namespace Js
             case Js::AsmJsJitTemplate::PTR:
                 *buffer++ = 0x9A;
                 break;
-            default:
-                __assume( false );
-                Assert( false );
+            default:                
+                Assume( false );
             }
             return 1;
         }
@@ -818,7 +815,7 @@ namespace Js
                 *buffer++ = 0xFE | (int)( instrSize != 1 );
                 return 1;
             default:
-                __assume( false );
+                Assume( false );
                 break;
             }
             return 0;
@@ -837,8 +834,7 @@ namespace Js
                 *buffer++ = 0xE9 | ( ( sizeof(ImmType) == 1 ) << 1 );
                 break;
             default:
-                __assume( false );
-                Assert( false );
+                Assume( false );                
                 break;
             }
             return 1;
@@ -872,8 +868,7 @@ namespace Js
                 *buffer++ = 0xC6 | (int)( instrSize != 1 );
                 break;
             default:
-                __assume( false );
-                Assert( false );
+                Assume( false );                
             }
             return size;
         }
@@ -921,8 +916,7 @@ namespace Js
                 return 3;
             }
             default:
-                __assume( false );
-                Assert( false );
+                Assume( false );
             }
             return 0;
         }
@@ -1002,8 +996,7 @@ namespace Js
                 *buffer++ = 0x8F;
                 break;
             default:
-                __assume( false );
-                Assert( false );
+                Assume( false );
                 break;
             }
             return 1;
@@ -1022,8 +1015,7 @@ namespace Js
                 *buffer++ = 0x68 | ( ( sizeof(ImmType) == 1 ) << 1 );
                 break;
             default:
-                __assume( false );
-                Assert( false );
+                Assume( false );
                 break;
             }
             return 1;
@@ -1058,8 +1050,7 @@ namespace Js
                 *buffer++ = 0xC0 | (BYTE)(instrSize!= 1);\
                 break;\
             default:\
-                __assume( false );\
-                Assert( false );\
+                Assume( false );\
                 break;\
             }\
             return 1;\
@@ -1105,8 +1096,7 @@ namespace Js
                 *buffer++ = 0xF6 | (int)( instrSize != 1 );
                 break;
             default:
-                __assume( false );
-                Assert( false );
+                Assume( false );
             }
             return 1;
         }
@@ -1141,8 +1131,7 @@ namespace Js
                 *buffer++ = 0x80 | (int)( instrSize != 1 );
                 break;
             default:
-                __assume( false );
-                Assert( false );
+                Assume( false );
             }
             return 1;
         }

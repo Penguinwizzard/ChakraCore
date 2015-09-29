@@ -16,13 +16,11 @@ namespace Js
         {
             switch (kind) {
             case ExceptionKind_OutOfMemory:
-                JavascriptError::ThrowOutOfMemoryError(scriptContext);
                 AssertMsg(returnAddress == NULL, "should not have returnAddress passed in");
-                AssertMsg(false, "This shouldn't return");
+                JavascriptError::ThrowOutOfMemoryError(scriptContext);                
 
             case ExceptionKind_StackOverflow:
                 JavascriptError::ThrowStackOverflowError(scriptContext, returnAddress);
-                AssertMsg(false, "This shouldn't return");
 
             default:
                 AssertMsg(false, "Invalid ExceptionKind");

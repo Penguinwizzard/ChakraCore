@@ -34,7 +34,6 @@
           $(ManifestsInboxIncludeDirectory);
           %(AdditionalIncludeDirectories)
       </AdditionalIncludeDirectories>
-      <DisableSpecificWarnings>%(DisableSpecificWarnings);4702</DisableSpecificWarnings>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>RuntimeDebugPch.h</PrecompiledHeaderFile>
     </ClCompile>

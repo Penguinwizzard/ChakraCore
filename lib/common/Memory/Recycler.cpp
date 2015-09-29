@@ -1412,7 +1412,7 @@ Recycler::ExpectStackSkip() const
 #endif
 
 #pragma warning(push)
-#pragma warning(disable:4731) 
+#pragma warning(disable:4731) // 'pointer' : frame pointer register 'register' modified by inline assembly code
 size_t
 Recycler::ScanStack()
 {

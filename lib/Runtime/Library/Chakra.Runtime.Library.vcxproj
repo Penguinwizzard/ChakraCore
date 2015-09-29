@@ -27,7 +27,6 @@
       <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)..;$(MSBuildThisFileDirectory)..\..\Common;$(MSBuildThisFileDirectory)..\..\Parser;$(MSBuildThisFileDirectory)..\..\Backend;$(ChakraManifestsIncludeDirectory);$(ManifestsInboxIncludeDirectory);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <!-- For mscorlib.tlb used in JavascriptErrorDebug.cpp -->
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SdkLibPath)\clr45</AdditionalIncludeDirectories>
-      <DisableSpecificWarnings>%(DisableSpecificWarnings);4702</DisableSpecificWarnings>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>RuntimeLibraryPch.h</PrecompiledHeaderFile>
     </ClCompile>

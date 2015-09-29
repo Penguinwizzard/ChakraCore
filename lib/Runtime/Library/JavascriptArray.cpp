@@ -3603,7 +3603,6 @@ namespace Js
         // This should never get called.
         Assert(false);
         Throw::InternalError();
-        return false;
     }
 
     template <>
@@ -3620,7 +3619,6 @@ namespace Js
         // This should never get called.
         Assert(false);
         Throw::InternalError();
-        return false;
     }
 
     template <>
@@ -3637,7 +3635,6 @@ namespace Js
         // This should never get called.
         Assert(false);
         Throw::InternalError();
-        return false;
     }
 
     template <>
@@ -3662,7 +3659,6 @@ namespace Js
         // This should never get called.
         Assert(false);
         Throw::InternalError();
-        return false;
     }
 
 

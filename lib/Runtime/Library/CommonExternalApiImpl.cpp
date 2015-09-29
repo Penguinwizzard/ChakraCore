@@ -14,8 +14,6 @@ void JsUtil::ExternalApi::RecoverUnusedMemory()
 bool JsUtil::ExternalApi::RaiseOnIntOverflow()
 {
     ::Math::DefaultOverflowPolicy();
-
-    return true;
 }
 
 
