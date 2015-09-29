@@ -220,6 +220,7 @@ namespace Js
         Assert(this->GetTypeId() == TypeIds_Function);
         Assert(!IsCrossSiteObject() || entryPoint != (Js::JavascriptMethod)checkCodeGenThunk);
 
+        this->changeEntryPointLocation = 0;
         Assert((entryPointInfo != nullptr && this->GetFunctionProxy() != nullptr));
         if (this->GetEntryPoint() == entryPoint && this->GetScriptFunctionType()->GetEntryPointInfo() == entryPointInfo)
         {
