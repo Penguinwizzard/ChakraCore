@@ -2085,6 +2085,10 @@ ParseNodePtr Parser::ParseMetaProperty(tokens metaParentKeyword, charcount_t ich
             }
             
         }
+        case ScopeType_GlobalEvalBlock:
+        {
+            break; //TODO we need to distinguish eval in global scope vs in a function
+        }
         default:  
             Error(ERRInvalidNewTarget);
     }
