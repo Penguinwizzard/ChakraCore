@@ -336,7 +336,10 @@ HRESULT HeapInfo::ValidPointersMap<TBlockAttributes>::GenerateValidPointersMapHe
     if (_wfopen_s(&file, vpmFullPath, L"w") == 0 && file != nullptr)
     {
         const wchar_t * header =
+            L"//-------------------------------------------------------------------------------------------------------\n"
             L"// Copyright (C) Microsoft. All rights reserved.\n"
+            L"// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.\n"
+            L"//-------------------------------------------------------------------------------------------------------\n"
             L"// Generated via jshost -GenerateValidPointersMapHeader\n"
 #if defined(_M_IX86_OR_ARM32)
             L"// Target platforms: 32bit - x86 & arm\n"
