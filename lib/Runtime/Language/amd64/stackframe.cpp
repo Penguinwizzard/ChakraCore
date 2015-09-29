@@ -4,6 +4,8 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLanguagePch.h"
 
+#pragma warning(disable:4302)  // truncation from 'pointer' to 'integral'
+
 #if !defined(_M_X64)
 #error Amd64StackFrame is not supported on this architecture.
 #endif

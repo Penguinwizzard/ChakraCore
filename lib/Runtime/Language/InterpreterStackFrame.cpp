@@ -5310,7 +5310,7 @@ namespace Js
         //       and do ISB only for 1st time this entry point is called (potential working set regression though).
         _InstructionSynchronizationBarrier();
 #endif
-        uint newOffset = (uint)address(function, CallInfo(CallFlags_InternalFrame, 1), this);
+        uint newOffset = ::Math::PointerCastToIntegral<uint>(address(function, CallInfo(CallFlags_InternalFrame, 1), this));
 
 #ifdef _M_IX86
         _asm
@@ -5343,7 +5343,7 @@ namespace Js
             //       and do ISB only for 1st time this entry point is called (potential working set regression though).
             _InstructionSynchronizationBarrier();
 #endif
-            uint newOffset = (uint)address(function, CallInfo(CallFlags_InternalFrame, 1), this);
+            uint newOffset = ::Math::PointerCastToIntegral<uint>(address(function, CallInfo(CallFlags_InternalFrame, 1), this));
 
 #ifdef _M_IX86
             _asm
@@ -5718,11 +5718,11 @@ namespace Js
         int newOffset = 0;
         if (scriptContext->IsInDebugMode())
         {
-            newOffset = (int)this->DebugProcess();
+            newOffset = ::Math::PointerCastToIntegral<int>(this->DebugProcess());
         }
         else
         {
-            newOffset = (int)this->Process();
+            newOffset = ::Math::PointerCastToIntegral<int>(this->Process());
         }
 
         if (--this->nestedFinallyDepth == -1)
@@ -6002,11 +6002,11 @@ namespace Js
         int newOffset = 0;
         if (scriptContext->IsInDebugMode())
         {
-            newOffset = (int)this->DebugProcess();
+            newOffset = ::Math::PointerCastToIntegral<int>(this->DebugProcess());
         }
         else
         {
-            newOffset = (int)this->Process();
+            newOffset = ::Math::PointerCastToIntegral<int>(this->Process());
         }
 
         this->m_flags &= ~InterpreterStackFrameFlags_WithinFinallyBlock;
@@ -6015,7 +6015,7 @@ namespace Js
         if (endOfFinallyBlock)
         {
             // Finally completed without taking over the flow. Resume where we left off before calling it.
-            int currOffset = reinterpret_cast<int>(GetNonVarReg(offsetRegSlot));
+            int currOffset = ::Math::PointerCastToIntegral<int>(GetNonVarReg(offsetRegSlot));
             m_reader.SetCurrentOffset(currOffset);
         }
         else

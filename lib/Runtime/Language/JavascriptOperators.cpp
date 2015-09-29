@@ -10,6 +10,8 @@
 #include "Library\JavascriptPromise.h"
 #include "Library\JavascriptRegularExpression.h"
 
+#pragma warning(disable:4302)  // truncation from 'pointer' to 'integral'
+
 #ifndef SCRIPT_DIRECT_TYPE
 typedef enum JsNativeValueType
 {
@@ -9559,7 +9561,8 @@ CommonNumber:
         {
             if (TaggedInt::Is(aRight))
             {
-                return (int)aLeft >= (int)aRight;
+                // Works whether it is TaggedInt31 or TaggedInt32
+                return ::Math::PointerCastToIntegral<int>(aLeft) >= ::Math::PointerCastToIntegral<int>(aRight);
             }
             if (JavascriptNumber::Is_NoTaggedIntCheck(aRight))
             {
@@ -9590,7 +9593,8 @@ CommonNumber:
         {
             if (TaggedInt::Is(aRight))
             {
-                return (int)aLeft <= (int)aRight;
+                // Works whether it is TaggedInt31 or TaggedInt32
+                return ::Math::PointerCastToIntegral<int>(aLeft) <= ::Math::PointerCastToIntegral<int>(aRight);
             }
 
             if (JavascriptNumber::Is_NoTaggedIntCheck(aRight))
@@ -9753,7 +9757,8 @@ CommonNumber:
         {
             if (TaggedInt::Is(aRight))
             {
-                return (int)aLeft > (int)aRight;
+                // Works whether it is TaggedInt31 or TaggedInt32
+                return ::Math::PointerCastToIntegral<int>(aLeft) > ::Math::PointerCastToIntegral<int>(aRight);
             }
             if (JavascriptNumber::Is_NoTaggedIntCheck(aRight))
             {
@@ -9784,7 +9789,8 @@ CommonNumber:
         {
             if (TaggedInt::Is(aRight))
             {
-                return (int)aLeft < (int)aRight;
+                // Works whether it is TaggedInt31 or TaggedInt32
+                return ::Math::PointerCastToIntegral<int>(aLeft) < ::Math::PointerCastToIntegral<int>(aRight);
             }
             if (JavascriptNumber::Is_NoTaggedIntCheck(aRight))
             {

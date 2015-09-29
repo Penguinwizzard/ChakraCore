@@ -367,7 +367,7 @@ LblDone:
 #if INT32VAR
     Var TaggedInt::Xor(Var aLeft, Var aRight)
     {
-        int32 nResult = ((int32) aLeft) ^ ((int32) aRight);
+        int32 nResult = ToInt32(aLeft) ^ ToInt32(aRight);
         return TaggedInt::ToVarUnchecked(nResult);
     }
 #else
@@ -469,12 +469,12 @@ LblDone:
 
     Var TaggedInt::NegateUnchecked(Var aValue)
     {
-        AssertMsg( Is(aValue), "Ensure var is actually an 'Int31'");
+        AssertMsg( Is(aValue), "Ensure var is actually an 'TaggedInt'");
         AssertMsg( aValue != ToVarUnchecked(0), "Do not use NegateUnchecked on zero because NegativeZero is special");
         AssertMsg( aValue != ToVarUnchecked(k_nMinValue), "Do not use NegateUnchecked on min value because it cannot be represented");
 
 #if INT32VAR
-        int n = reinterpret_cast<int>(aValue);
+        int n = ToInt32(aValue);
         Var result = ToVarUnchecked( 0 - n );
 #else
         int n = reinterpret_cast<int>(aValue);

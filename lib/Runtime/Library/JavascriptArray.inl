@@ -1050,7 +1050,7 @@ SECOND_PASS:
         {
             if (newValue == (T)0 || newValue == (T)(-1))
             {
-                memset(((Js::SparseArraySegment<T>*)head)->elements, ((int)newValue), sizeof(T)* length);
+                memset(((Js::SparseArraySegment<T>*)head)->elements, ((int)(intptr_t)newValue), sizeof(T)* length);
             }
             else
             {
@@ -1099,7 +1099,7 @@ SECOND_PASS:
 
             if (newValue == (T)0 || newValue == (T)(-1))
             {
-                memset(((Js::SparseArraySegment<T>*)current)->elements, ((int)newValue), sizeof(T)* length);
+                memset(((Js::SparseArraySegment<T>*)current)->elements, ((int)(intptr_t)newValue), sizeof(T)* length);
             }
             else
             {
@@ -1142,7 +1142,7 @@ SECOND_PASS:
 
         if (newValue == (T)0 || newValue == (T)(-1))
         {
-            memset((((Js::SparseArraySegment<T>*)current)->elements + (startIndex - current->left)), ((int)newValue), sizeof(T)* length);
+            memset((((Js::SparseArraySegment<T>*)current)->elements + (startIndex - current->left)), ((int)(intptr_t)newValue), sizeof(T)* length);
         }
         else
         {

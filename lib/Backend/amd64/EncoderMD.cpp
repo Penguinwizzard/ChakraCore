@@ -6,6 +6,7 @@
 
 #include "X64Encode.h"
 
+#pragma warning(disable:4302)  // truncation from 'pointer' to 'integral'
 
 static const BYTE OpcodeByte2[]={
 #define MACRO(name, jnLayout, attrib, byte2, ...) byte2, 
@@ -1536,7 +1537,8 @@ EncoderMD::EncodeInlineeCallInfo(IR::Instr *instr, uint32 codeOffset)
     // 60 (AMD64) bits on the InlineeCallInfo to store the
     // offset of the start of the inlinee. We shouldn't have gotten here with more arguments
     // than can fit in as many bits.
-    const bool encodeResult = Js::InlineeCallInfo::Encode(inlineeCallInfo, (uint32)instr->GetSrc1()->AsAddrOpnd()->m_address, codeOffset);
+    const bool encodeResult = Js::InlineeCallInfo::Encode(inlineeCallInfo, 
+        ::Math::PointerCastToIntegral<uint32>(instr->GetSrc1()->AsAddrOpnd()->m_address), codeOffset);
     Assert(encodeResult);
 
     instr->GetSrc1()->AsAddrOpnd()->m_address = inlineeCallInfo;

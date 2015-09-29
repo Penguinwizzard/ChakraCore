@@ -4706,7 +4706,7 @@ StatusWorker( void *arg )
 DWORD __stdcall
 ThreadWorker( void *arg )
 {
-   ThreadId = (int)arg;    // thread-local global variable for thread id
+   ThreadId = (int)(intptr_t)(arg);    // thread-local global variable for thread id
    MaxThreads++;
    ThreadOut = new COutputBuffer(FQuiet ? (FILE*)NULL : stdout, FSyncImmediate ? false : true);
    ThreadLog = new COutputBuffer(LogName, FSyncImmediate ? false : true);

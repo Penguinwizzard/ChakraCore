@@ -808,10 +808,10 @@ public:
     template<class Fn>
     void MapMultiBrLabels(Fn fn) 
     {           
-                MapMultiBrTargetByAddress([fn](void ** value) -> void
-                {
-                        fn((LabelInstr*) *value);
-                });
+        MapMultiBrTargetByAddress([fn](void ** value) -> void
+        {
+            fn((LabelInstr*) *value);
+        });
     }
 
 ///---------------------------------------------------------------------------
@@ -842,10 +842,10 @@ public:
     template<class Fn>
     void UpdateMultiBrTargetOffsets(Fn fn) 
     {                   
-                MapMultiBrTargetByAddress([fn](void ** value) -> void
-                {
-                        *value = (void*) fn((uint32) *value);
-                });
+        MapMultiBrTargetByAddress([fn](void ** value) -> void
+        {
+            *value = (void*)fn(::Math::PointerCastToIntegral<uint32>(*value));
+        });
     }
 
 ///--------------------------------------------------------------------------------------------
@@ -856,13 +856,13 @@ public:
     template<class Fn>
     void UpdateMultiBrLabels(Fn fn) 
     {   
-                MapMultiBrTargetByAddress([fn](void ** value) -> void
-                {
-                        IR::LabelInstr * oldLabelInstr = (LabelInstr*)*value;
+        MapMultiBrTargetByAddress([fn](void ** value) -> void
+        {
+            IR::LabelInstr * oldLabelInstr = (LabelInstr*)*value;
             IR::LabelInstr * newLabelInstr = fn(oldLabelInstr);
 
             *value = (void*)newLabelInstr;
-                });
+        });
     }
 
 ///-------------------------------------------------------------------------------------------------------------

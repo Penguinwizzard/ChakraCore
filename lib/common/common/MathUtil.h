@@ -22,6 +22,13 @@ public:
         return ((size + (alignment-1)) & ~(alignment-1));
     }
 
+    // Explicit cast to integral(may truncate).  Avoids warning C4302 'type cast': truncation
+    template <typename T>
+    static      T                   PointerCastToIntegral(void * pointer)
+    {
+        return (T)(uintptr)pointer;
+    }
+
     static      bool                FitsInDWord(size_t value);
     static      UINT_PTR            Rand();
     static      bool                IsPow2(int32 val) { return (val > 0 && ((val-1) & val) == 0); }

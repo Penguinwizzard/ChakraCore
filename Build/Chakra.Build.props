@@ -34,7 +34,6 @@
         4838;     <!-- conversion from 'unsigned int' to 'int requires a narrowing conversion -->
         4499;     <!-- explicit specialization cannot have a storage class (ignored) -->
         4463;     <!-- overflow; assigning 1 to bit-field that can only hold values from -1 to 0 -->
-        4302;     <!-- 'cast': truncation from '' to '' -->
         4311;     <!-- 'type cast': pointer truncation from '' to '' -->
         4312;     <!-- 'type cast': conversion from '' to '' of greater size -->
       </DisableSpecificWarnings>
