@@ -274,7 +274,7 @@ namespace UnifiedRegex
     // OctoquadMatcher
     // ----------------------------------------------------------------------
 
-    OctoquadMatcher::OctoquadMatcher(const StandardChars<Char>* standardChars, OctoquadIdentifier* identifier)
+    OctoquadMatcher::OctoquadMatcher(const StandardChars<Char>* standardChars, CaseInsensitive::MappingSource mappingSource, OctoquadIdentifier* identifier)
     {
         for (int i = 0; i < TrigramAlphabet::AlphaCount; i++)
             codeToChar[i] = (Char)identifier->codeToChar[i];
@@ -285,7 +285,7 @@ namespace UnifiedRegex
         for (int i = 0; i < TrigramAlphabet::AlphaCount; i++)
         {
             Char equivs[CaseInsensitive::EquivClassSize];
-            standardChars->ToEquivs(CaseInsensitive::MappingSource::UnicodeData, codeToChar[i], equivs);
+            standardChars->ToEquivs(mappingSource, codeToChar[i], equivs);
             for (int j = 0; j < CaseInsensitive::EquivClassSize; j++)
             {
                 if (CTU(equivs[j]) < TrigramAlphabet::AsciiTableSize)
@@ -307,9 +307,10 @@ namespace UnifiedRegex
     OctoquadMatcher *OctoquadMatcher::New(
         Recycler* recycler,
         const StandardChars<Char>* standardChars,
+        CaseInsensitive::MappingSource mappingSource,
         OctoquadIdentifier* identifier)
     {
-        return RecyclerNewLeaf(recycler, OctoquadMatcher, standardChars, identifier);
+        return RecyclerNewLeaf(recycler, OctoquadMatcher, standardChars, mappingSource, identifier);
     }
 
 #if defined(_M_IX86) &&  defined(USE_POPCNT_INSTRUCTION)

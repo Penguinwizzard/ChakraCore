@@ -4476,7 +4476,7 @@ namespace UnifiedRegex
                     program->rep.insts.litbuf = 0;
                     oi.InitializeTrigramInfo(scriptContext, pattern);
                     program->tag = Program::OctoquadTag;
-                    program->rep.octoquad.matcher = OctoquadMatcher::New(scriptContext->GetRecycler(), standardChars, &oi);
+                    program->rep.octoquad.matcher = OctoquadMatcher::New(scriptContext->GetRecycler(), standardChars, program->GetCaseMappingSource(), &oi);
                     compiled = true;
                 }
                 else

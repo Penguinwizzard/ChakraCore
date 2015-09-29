@@ -885,6 +885,13 @@
   </test>
   <test>
     <default>
+      <files>regex-octoquad.js</files>
+      <compile-flags>-RegexOptimize -args summary -endargs</compile-flags>
+      <tags>exclude_fre</tags>
+    </default>
+  </test>
+  <test>
+    <default>
       <files>regex-code-point.js</files>
       <compile-flags>-ES6RegExSticky -args summary -endargs</compile-flags>
     </default>

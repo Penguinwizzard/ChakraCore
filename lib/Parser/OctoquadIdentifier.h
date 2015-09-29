@@ -135,6 +135,8 @@ namespace UnifiedRegex
     class OctoquadMatcher : private Chars<wchar_t>
     {
     private:
+        OctoquadMatcher(const StandardChars<Char>* standardChars, CaseInsensitive::MappingSource mappingSource, OctoquadIdentifier* identifier);
+
         Char codeToChar[TrigramAlphabet::AlphaCount];
 
         // Maps characters (0..AsciTableSize-1) to 0 if not in alphabet, or 0x1, 0x2, 0x4 or 0x8. 
@@ -144,8 +146,7 @@ namespace UnifiedRegex
         uint32 patterns[OctoquadIdentifier::NumPatterns];
 
     public:
-        OctoquadMatcher(const StandardChars<Char>* standardChars, OctoquadIdentifier* identifier);
-        static OctoquadMatcher *New(Recycler* recycler, const StandardChars<Char>* standardChars, OctoquadIdentifier* identifier);
+        static OctoquadMatcher *New(Recycler* recycler, const StandardChars<Char>* standardChars, CaseInsensitive::MappingSource mappingSource, OctoquadIdentifier* identifier);
 
         bool Match
             ( const Char* const input
