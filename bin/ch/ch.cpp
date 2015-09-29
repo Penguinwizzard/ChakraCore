@@ -245,11 +245,24 @@ Error:
     return hr;
 }
 
+static void CALLBACK PromiseContinuationCallback(JsValueRef task, void *callbackState)
+{
+    Assert(task != JS_INVALID_REFERENCE);
+    Assert(callbackState != JS_INVALID_REFERENCE);
+    MessageQueue * messageQueue = (MessageQueue *)callbackState;
+
+    WScriptJsrt::CallbackMessage *msg = new WScriptJsrt::CallbackMessage(0, task);
+    messageQueue->Push(msg);
+}
+
 HRESULT RunScript(LPCWSTR fileName, LPCWSTR fileContents, BYTE *bcBuffer, wchar_t *fullPath)
 {
     HRESULT hr = S_OK;
     MessageQueue * messageQueue = new MessageQueue();
     WScriptJsrt::AddMessageQueue(messageQueue);
+
+    IfJsErrorFailLog(ChakraRTInterface::JsSetPromiseContinuationCallback(PromiseContinuationCallback, (void*)messageQueue));
+
     Assert(fileContents != nullptr || bcBuffer != nullptr);
     JsErrorCode runScript;
     if (bcBuffer != nullptr)

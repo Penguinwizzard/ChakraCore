@@ -17,8 +17,6 @@
       <files>AsyncAwait-functionality.js</files>
       <compile-flags>-es6experimental -nodeferparse -args summary -endargs</compile-flags>
       <baseline>AsyncAwait-functionality.baseline</baseline>
-      <!-- ch does not finish running the test; promise callbacks not called? -->
-      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -26,8 +24,6 @@
       <files>AsyncAwait-functionality.js</files>
       <compile-flags>-es6experimental -forcedeferparse -args summary -endargs</compile-flags>
       <baseline>AsyncAwait-functionality.baseline</baseline>
-      <!-- ch does not finish running the test; promise callbacks not called? -->
-      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -355,8 +351,6 @@
       <files>ES6SubclassableAsync.js</files>
       <compile-flags>-ES6Classes -ES6Lambda -ES6Spread -ES6Generators -Off:Deferparse</compile-flags>
       <baseline>ES6SubclassableAsync.baseline</baseline>
-      <!-- ch does not finish running the test; promise callbacks not called? -->
-      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -364,8 +358,6 @@
       <files>ES6SubclassableAsync.js</files>
       <compile-flags>-ES6Classes -ES6Lambda -ES6Spread -ES6Generators -Force:Deferparse</compile-flags>
       <baseline>ES6SubclassableAsync.baseline</baseline>
-      <!-- ch does not finish running the test; promise callbacks not called? -->
-      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -463,8 +455,6 @@
       <files>ES6PromiseAsync.js</files>
       <baseline>ES6PromiseAsync.baseline</baseline>
       <compile-flags> -ES6 -ES6Promise -ES6Iterators</compile-flags>
-      <!-- Doesn't print all output in ch -->
-      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -472,35 +462,29 @@
       <files>ES6Promise_RemoveWScript.js</files>
       <baseline>ES6Promise_RemoveWScript.baseline</baseline>
       <compile-flags> -ES6 -ES6Promise</compile-flags>
-      <!-- Doesn't print all output in ch -->
+      <!-- This looks like host dependent -->
       <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
     <default>
       <files>es6_stable.js</files>
-      <compile-flags>-verbose -es6</compile-flags>
+      <compile-flags>-verbose -es6 -WERExceptionSupport</compile-flags>
       <baseline>es6_stable.baseline</baseline>
-      <!-- WERExceptionSupport line is missing in ch -->
-      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
     <default>
       <files>es6_stable.js</files>
-      <compile-flags>-verbose -es6 -es6- -ES6StringTemplate</compile-flags>
+      <compile-flags>-verbose -es6 -es6- -ES6StringTemplate -WERExceptionSupport</compile-flags>
       <baseline>es6_stable.enable_disable.baseline</baseline>
-      <!-- WERExceptionSupport line is missing in ch -->
-      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
     <default>
       <files>es6_all.js</files>
-      <compile-flags>-verbose -es6all</compile-flags>
+      <compile-flags>-verbose -es6all -WERExceptionSupport</compile-flags>
       <baseline>es6_all.baseline</baseline>
-      <!-- WERExceptionSupport line is missing in ch -->
-      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -1001,8 +985,7 @@
   <test>
     <default>
       <files> bug_OS_2553885.js</files>
-      <!-- fails in ch cannot load Intl.js bytecode -->
-      <tags>BugFix,exclude_ch</tags>
+      <tags>BugFix</tags>
     </default>
   </test>
   <test>
