@@ -281,22 +281,22 @@ namespace Js
 
 #ifdef SIMD_JS_ENABLED
         case TypeIds_SIMDFloat32x4:
-            if (Js::Configuration::Global.flags.Simdjs)
+            if (scriptContext->GetConfig()->IsSimdjsEnabled())
             {
                 return scriptContext->GetLibrary()->GetSIMDFloat32x4DisplayString();
             }
         case TypeIds_SIMDFloat64x2:
-            if (Js::Configuration::Global.flags.Simdjs)
+            if (scriptContext->GetConfig()->IsSimdjsEnabled())
             {
                 return scriptContext->GetLibrary()->GetSIMDFloat64x2DisplayString();
             }
         case TypeIds_SIMDInt32x4:
-            if (Js::Configuration::Global.flags.Simdjs)
+            if (scriptContext->GetConfig()->IsSimdjsEnabled())
             {
                 return scriptContext->GetLibrary()->GetSIMDInt32x4DisplayString();
             }
         case TypeIds_SIMDInt8x16:
-            if (Js::Configuration::Global.flags.Simdjs)
+            if (scriptContext->GetConfig()->IsSimdjsEnabled())
             {
                 return scriptContext->GetLibrary()->GetSIMDInt8x16DisplayString();
             }

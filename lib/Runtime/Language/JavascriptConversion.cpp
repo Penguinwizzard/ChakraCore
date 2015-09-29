@@ -756,7 +756,7 @@ CommonNumber:
         case TypeIds_SIMDFloat64x2:
         case TypeIds_SIMDInt32x4:
         {   // SIMD review: may need update once spec is finalized
-            if (Js::Configuration::Global.flags.Simdjs)
+            if (scriptContext->GetConfig()->IsSimdjsEnabled())
             {
                 return true;
             }

@@ -6,8 +6,9 @@ FLAG(IsES6MapEnabled, Map)
 FLAG(IsES6SetEnabled, Set)
 FLAG(IsES6WeakMapEnabled, WeakMap)
 FLAG(IsDefineGetterSetterEnabled, DefineGetterSetter)
-FLAG(IsIntlEnabled, Intl)
 FLAG(IsLetAndConstEnabled, LetConst)
+FLAG(IsES6UnicodeVerboseEnabled, ES6UnicodeVerbose)
+FLAG_RELEASE(IsIntlEnabled, Intl)
 FLAG_RELEASE(IsES6SpeciesEnabled, ES6Species)
 FLAG_RELEASE(IsES6ClassAndExtendsEnabled, ES6Classes)
 FLAG_RELEASE(IsES6DateParseFixEnabled, ES6DateParseFix)
@@ -45,7 +46,11 @@ FLAG_RELEASE(IsES6RegExStickyEnabled, ES6RegExSticky)
 FLAG_RELEASE(IsES6HasInstanceEnabled, ES6HasInstance)
 FLAG_RELEASE(SkipSplitOnNoResult, SkipSplitOnNoResult)
 FLAG_RELEASE(IsES7AsyncAndAwaitEnabled, ES7AsyncAwait)
+FLAG_RELEASE(IsArrayBufferTransferEnabled, ArrayBufferTransfer)
 #ifdef ENABLE_PROJECTION
 FLAG(AreWinRTDelegatesInterfaces, WinRTDelegateInterfaces)
 FLAG_RELEASE(IsWinRTAdaptiveAppsEnabled, WinRTAdaptiveApps)
+#endif
+#ifdef SIMD_JS_ENABLED
+FLAG_RELEASE(IsSimdjsEnabled, Simdjs)
 #endif

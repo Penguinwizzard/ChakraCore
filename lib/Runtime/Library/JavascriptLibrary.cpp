@@ -737,7 +737,7 @@ namespace Js
 #ifdef SIMD_JS_ENABLED
         // SIMD
         // Initialize types
-        if (Js::Configuration::Global.flags.Simdjs)
+        if (scriptContext->GetConfig()->IsSimdjsEnabled())
         {
             simdFloat32x4TypeStatic = StaticType::New(scriptContext, TypeIds_SIMDFloat32x4, nullValue /*prototype*/, nullptr);
             simdFloat64x2TypeStatic = StaticType::New(scriptContext, TypeIds_SIMDFloat64x2, nullValue /*prototype*/, nullptr);
@@ -1178,7 +1178,7 @@ namespace Js
         promiseResolveFunction = nullptr;
 
 #ifdef SIMD_JS_ENABLED
-        if (Js::Configuration::Global.flags.Simdjs)
+        if (scriptContext->GetConfig()->IsSimdjsEnabled())
         {
             simdFloat32x4DisplayString = CreateStringFromCppLiteral(L"Float32x4");
             simdFloat64x2DisplayString = CreateStringFromCppLiteral(L"Float64x2");
@@ -1348,7 +1348,7 @@ namespace Js
 #ifdef SIMD_JS_ENABLED
         // SIMD
         // we declare global objects and lib functions only if SSE2 is available. Else, we use the polyfill.
-        if (AutoSystemInfo::Data.SSE2Available() && Js::Configuration::Global.flags.Simdjs)
+        if (AutoSystemInfo::Data.SSE2Available() && scriptContext->GetConfig()->IsSimdjsEnabled())
         {
             simdObject = DynamicObject::New(recycler,
                 DynamicType::New(scriptContext, TypeIds_Object, objectPrototype, nullptr,
@@ -1793,7 +1793,7 @@ namespace Js
         }
         library->AddFunctionToLibraryObject(arrayBufferConstructor, PropertyIds::isView, &ArrayBuffer::EntryInfo::IsView, 1);
 
-        if (CONFIG_FLAG_RELEASE(ArrayBufferTransfer))
+        if (scriptContext->GetConfig()->IsArrayBufferTransferEnabled())
         {
             library->AddFunctionToLibraryObject(arrayBufferConstructor, PropertyIds::transfer, &ArrayBuffer::EntryInfo::Transfer, 2);
         }

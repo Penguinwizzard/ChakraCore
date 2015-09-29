@@ -598,33 +598,6 @@ BOOL Js::CharClassifier::IsIdContinueFast(codepoint_t ch) const
     return isBigChar ? this->bigCharIsIdContinueFunc(ch, this) : (charFlags[ch] & CharTypeFlags::IdChar);
 }
 
-Js::CharClassifier::CharClassifier(CharClassifierModes identifierSupport, CharClassifierModes whiteSpaceSupport, CharClassifierModes generalCharClassificationSupport, bool codePointSupport, CharClassifierModes fallbackMode)
-{   
-#ifdef ENABLE_ES6_CHAR_CLASSIFIER
-    ThreadContext* threadContext = ThreadContext::GetContextForCurrentThread();
-    Js::WindowsGlobalizationAdapter* globalizationAdapter = threadContext->GetWindowsGlobalizationAdapter();
-    Js::DelayLoadWindowsGlobalization* delayLoadLibrary = threadContext->GetWindowsGlobalizationLibrary();
-#else
-    Js::WindowsGlobalizationAdapter* globalizationAdapter = nullptr;
-    Js::DelayLoadWindowsGlobalization* delayLoadLibrary = nullptr;
-#endif
-
-    initClassifier(globalizationAdapter, delayLoadLibrary, identifierSupport, whiteSpaceSupport, generalCharClassificationSupport, codePointSupport, fallbackMode);
-}
-
-Js::CharClassifier::CharClassifier(CharClassifierModes overallSupport, bool codePointSupport, CharClassifierModes fallbackMode)
-{
-#ifdef ENABLE_ES6_CHAR_CLASSIFIER
-    ThreadContext* threadContext = ThreadContext::GetContextForCurrentThread();
-    Js::WindowsGlobalizationAdapter* globalizationAdapter = threadContext->GetWindowsGlobalizationAdapter();
-    Js::DelayLoadWindowsGlobalization* delayLoadLibrary = threadContext->GetWindowsGlobalizationLibrary();
-#else
-    Js::WindowsGlobalizationAdapter* globalizationAdapter = nullptr;
-    Js::DelayLoadWindowsGlobalization* delayLoadLibrary = nullptr;
-#endif
-    initClassifier(globalizationAdapter, delayLoadLibrary, overallSupport, overallSupport, overallSupport, codePointSupport, fallbackMode);
-}
-
 Js::CharClassifier::CharClassifier(ScriptContext * scriptContext) 
 {   
 #ifdef ENABLE_ES6_CHAR_CLASSIFIER
@@ -638,12 +611,13 @@ Js::CharClassifier::CharClassifier(ScriptContext * scriptContext)
 
     CharClassifierModes overallMode = (CONFIG_FLAG(ES6Unicode)) ? CharClassifierModes::ES6 : CharClassifierModes::ES5;
     bool codePointSupport = overallMode == CharClassifierModes::ES6;
+    bool isES6UnicodeVerboseEnabled = scriptContext->GetConfig()->IsES6UnicodeVerboseEnabled();
     
-    initClassifier(globalizationAdapter, delayLoadLibrary, overallMode, overallMode, overallMode, codePointSupport, CharClassifierModes::ES6); // no fallback for chk
+    initClassifier(globalizationAdapter, delayLoadLibrary, overallMode, overallMode, overallMode, codePointSupport, isES6UnicodeVerboseEnabled, CharClassifierModes::ES6); // no fallback for chk
 }
 
 void Js::CharClassifier::initClassifier(Js::WindowsGlobalizationAdapter* globalizationAdapter, Js::DelayLoadWindowsGlobalization* globLibrary, CharClassifierModes identifierSupport, 
-                                        CharClassifierModes whiteSpaceSupport, CharClassifierModes generalCharClassificationSupport, bool codePointSupport, CharClassifierModes es6FallbackMode)
+                                        CharClassifierModes whiteSpaceSupport, CharClassifierModes generalCharClassificationSupport, bool codePointSupport, bool isES6UnicodeVerboseEnabled, CharClassifierModes es6FallbackMode)
 {
     bool es6Supported = true;
     bool es6ModeNeeded = identifierSupport == CharClassifierModes::ES6 || whiteSpaceSupport == CharClassifierModes::ES6 || generalCharClassificationSupport == CharClassifierModes::ES6;
@@ -662,7 +636,7 @@ void Js::CharClassifier::initClassifier(Js::WindowsGlobalizationAdapter* globali
                 //Fallback to ES5 just in case for fre builds.
                 es6FallbackMode = CharClassifierModes::ES5;
             }
-            if (CONFIG_FLAG(ES6UnicodeVerbose))
+            if (isES6UnicodeVerboseEnabled)
             {
 		        Output::Print(L"Windows::Data::Text::IUnicodeCharactersStatics not initialized\r\n");
             }

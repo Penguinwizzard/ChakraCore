@@ -182,7 +182,7 @@ namespace Js
         const LPCUTF8 (*skipIdentifierStartEndFunc)(LPCUTF8 psz, LPCUTF8 end, const CharClassifier* instance);
 
         void initClassifier(WindowsGlobalizationAdapter* globalizationAdapter, DelayLoadWindowsGlobalization *globLibrary, CharClassifierModes identifierSupport, 
-            CharClassifierModes whiteSpaceSupport, CharClassifierModes generalCharClassificationSupport, bool codePointSupport, CharClassifierModes fallbackMode = CharClassifierModes::ES5);
+            CharClassifierModes whiteSpaceSupport, CharClassifierModes generalCharClassificationSupport, bool codePointSupport, bool isES6UnicodeVerboseEnabled, CharClassifierModes fallbackMode = CharClassifierModes::ES5);
 
     public:
 
@@ -296,8 +296,6 @@ namespace Js
         }
 
         CharClassifier(Js::ScriptContext* scriptContext);
-        CharClassifier(CharClassifierModes identifierSupport, CharClassifierModes whiteSpaceSupport, CharClassifierModes generalCharClassificationSupport, bool codePointSupport, CharClassifierModes es6FallbackMode = CharClassifierModes::ES5);
-        CharClassifier(CharClassifierModes overallSupport, bool codePointSupport, CharClassifierModes es6FallbackMode = CharClassifierModes::ES5);
     };
 
 };
