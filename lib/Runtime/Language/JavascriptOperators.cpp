@@ -9708,6 +9708,30 @@ CommonNumber:
 
         return true;
     }
+    BOOL JavascriptOperators::IsEvalInClassConstructor(ScriptContext* scriptContext)
+    {
+        JavascriptFunction* pfuncCaller = nullptr;
+        JavascriptStackWalker walker(scriptContext);
+        while (walker.GetCaller(&pfuncCaller))
+        {
+            if (walker.IsEvalCaller() || pfuncCaller->GetFunctionInfo()->IsLambda())
+            {
+                continue;
+            }
+            
+            break;
+        }
+        if (pfuncCaller != nullptr)
+        {
+            FunctionInfo* functionInfo = pfuncCaller->GetFunctionInfo();
+            if (functionInfo->IsClassConstructor() && functionInfo->HasSuperReference())
+            {
+                return TRUE;
+            }
+        }
+
+        return  FALSE;
+    }
 
     BOOL JavascriptOperators::Equal(Var aLeft, Var aRight, ScriptContext* scriptContext)
     {

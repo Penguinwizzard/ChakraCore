@@ -311,6 +311,7 @@ namespace Js
         BOOL OP_BrOnHasProperty(Var argInstance, uint propertyIdIndex, ScriptContext* scriptContext);
         BOOL OP_BrOnNoProperty(Var argInstance, uint propertyIdIndex, ScriptContext* scriptContext);
         BOOL OP_BrOnClassConstructor(Var aValue);
+        BOOL OP_BrOnEvalInClassConstructor(Var aValue);
 
         RecyclableObject * OP_CallGetFunc(Var target);
 

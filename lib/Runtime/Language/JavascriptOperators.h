@@ -97,6 +97,7 @@ namespace Js
 
         static BOOL IsArray(Var instanceVar);
         static BOOL IsConstructor(Var instanceVar);
+        static BOOL IsEvalInClassConstructor(ScriptContext* scriptContext);
         static BOOL IsConcatSpreadable(Var instanceVar);
         static Var ToObject(Var aRight,ScriptContext* scriptContext);
         static Var ToWithObject(Var aRight, ScriptContext* scriptContext);

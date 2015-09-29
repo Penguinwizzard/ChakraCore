@@ -306,6 +306,7 @@ MACRO_EXTEND_WMS(       InitClassMemberGet,         ElementC,       OpSideEffect
 MACRO_EXTEND_WMS(       InitClassMemberSetComputedName,ElementI,    OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Class member in set syntax with computed property name
 MACRO_EXTEND_WMS(       InitClassMemberGetComputedName,ElementI,    OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Class member in get syntax with computed property name
 MACRO_EXTEND_WMS(       BrOnClassConstructor,       BrReg1,         None)   // Branch if argument is a class constructor
+MACRO_EXTEND_WMS(       BrOnEvalInClassConstructor, BrReg1,         None)   // Branch if argument is an eval in a class constructor
 
 MACRO_BACKEND_ONLY(     ArgIn_A,                    Empty,          OpSideEffect)        // Copy from "in slot" to "local slot", unchecked
 MACRO_WMS(              ArgIn0,                     Reg1,           OpByteCodeOnly)       // Copy from "in slot" to "local slot", unchecked

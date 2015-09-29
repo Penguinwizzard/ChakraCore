@@ -6373,21 +6373,49 @@ void EmitSuperMethodBegin(
     FuncInfo *funcInfo,
     bool* protoRegisterAquired)
 {
+    int cacheId = 0;
     FuncInfo *parentFuncInfo = funcInfo;
     if (parentFuncInfo->IsLambda())
     {
         parentFuncInfo = byteCodeGenerator->FindEnclosingNonLambda();
     }
     
-    if (pnodeTarget->sxBin.pnode1->nop == knopSuper && parentFuncInfo->IsClassConstructor() && !parentFuncInfo->IsBaseClassConstructor())
+    bool isClassConstructor = parentFuncInfo->IsClassConstructor() && !parentFuncInfo->IsBaseClassConstructor();
+    bool isEvalCase = byteCodeGenerator->GetFlags() & fscrEval &&
+        (funcInfo->IsGlobalFunction() || (funcInfo->IsLambda() && parentFuncInfo->IsGlobalFunction()));
+    
+    bool isSuper = pnodeTarget->sxBin.pnode1->nop == knopSuper;
+
+    if (isSuper && (isClassConstructor || isEvalCase))
     {
         *protoRegisterAquired = true;
         *protoLocation = funcInfo->AcquireTmpRegister();
-        
-        int cacheId = funcInfo->FindOrAddInlineCacheId(callObjLocation, Js::PropertyIds::prototype, false, false);
+        cacheId = funcInfo->FindOrAddInlineCacheId(callObjLocation, Js::PropertyIds::prototype, false, false);
+    }
+
+    if (isSuper && isClassConstructor)
+    {
         byteCodeGenerator->Writer()->PatchableProperty(Js::OpCode::LdFld, *protoLocation, callObjLocation, cacheId);
         byteCodeGenerator->EmitScopeSlotLoadThis(funcInfo, funcInfo->thisPointerRegister, /*chkUndecl*/ true);
     }
+    else if (isSuper && isEvalCase)
+    {
+        
+        Js::ByteCodeLabel ldProtoOffCallObject = byteCodeGenerator->Writer()->DefineLabel();
+        Js::ByteCodeLabel ldCallObject = byteCodeGenerator->Writer()->DefineLabel();
+        
+        byteCodeGenerator->Writer()->BrReg1(Js::OpCode::BrOnEvalInClassConstructor, ldProtoOffCallObject, *protoLocation);
+        byteCodeGenerator->Writer()->Reg2(Js::OpCode::Ld_A, *protoLocation, callObjLocation); // only ld if we do not branch
+        
+        byteCodeGenerator->Writer()->Br(Js::OpCode::Br, ldCallObject);
+       
+        byteCodeGenerator->Writer()->MarkLabel(ldProtoOffCallObject);
+        byteCodeGenerator->Writer()->PatchableProperty(Js::OpCode::LdFld, *protoLocation, callObjLocation, cacheId);
+        byteCodeGenerator->EmitScopeSlotLoadThis(funcInfo, funcInfo->thisPointerRegister, /*chkUndecl*/ true);
+        
+        byteCodeGenerator->Writer()->MarkLabel(ldCallObject);
+    }
+
 }
 
 void EmitSuperMethodEnd(

@@ -198,6 +198,7 @@ EXDEF3_WMS(CUSTOM,                  InitClassMemberGetComputedName, OP_InitClass
 EXDEF3_WMS(CUSTOM,                  InitClassMemberGet,         OP_InitClassMemberGet, ElementC)
 EXDEF3_WMS(CUSTOM,                  InitClassMemberSetComputedName, OP_InitClassMemberSetComputedName, ElementI)
 EXDEF2_WMS(BRB,                     BrOnClassConstructor,       OP_BrOnClassConstructor)
+EXDEF2_WMS(BRB,                     BrOnEvalInClassConstructor, OP_BrOnEvalInClassConstructor)
   DEF2_WMS(FALLTHROUGH,             LdSlotArr,                  /* Common case with LdSlot */)
   DEF3_WMS(GET_ELEM_SLOTNonVar,     LdSlot,                     OP_LdSlot, ElementSlot)
   DEF3_WMS(GET_ELEM_SLOTNonVar,     ProfiledLdSlot,             PROFILEDOP(OP_ProfiledLdSlot, OP_LdSlot), ProfiledElementSlot)

@@ -6730,6 +6730,11 @@ namespace Js
         return JavascriptOperators::IsClassConstructor(aValue);
     }
 
+    BOOL InterpreterStackFrame::OP_BrOnEvalInClassConstructor(Var aValue)
+    {
+        return JavascriptOperators::IsEvalInClassConstructor(this->GetScriptContext());
+    }
+
     template<class T>
     void InterpreterStackFrame::OP_LdLen(const unaligned T * const playout)
     {
