@@ -21023,6 +21023,7 @@ GlobOpt::ProcessMemOp()
             {
                 // Emit
                 Loop::MemOpCandidate* candidate = inOrderCandidates[i];
+                bool success = false;
                 if (candidate->IsMemSet())
                 {
                     Loop::MemSetCandidate* memsetCandidate = candidate->AsMemSet();
@@ -21033,7 +21034,7 @@ GlobOpt::ProcessMemOp()
                     loop->memOpInfo->inductionVariableChangeInfoMap->TryGetValue(candidate->index, &inductionVariableChangeInfo);
                     Assert(tg);
 
-                    EmitMemset(loop, loopCount, memsetCandidate->base, memsetCandidate->index,
+                    success = EmitMemset(loop, loopCount, memsetCandidate->base, memsetCandidate->index,
                                memsetCandidate->constant, inductionVariableChangeInfo.unroll,
                                 inductionVariableChangeInfo.isIncremental, memsetCandidate->bIndexAlreadyChanged);
                 }
@@ -21052,11 +21053,23 @@ GlobOpt::ProcessMemOp()
                     loop->memOpInfo->inductionVariableChangeInfoMap->TryGetValue(memcopyCandidate->index, &stInductionVariableChangeInfo);
                     Assert(tg1 && tg2);
 
-                    EmitMemcopy(loop, loopCount, memcopyCandidate->ldBase, memcopyCandidate->ldIndex,
+                    success = EmitMemcopy(loop, loopCount, memcopyCandidate->ldBase, memcopyCandidate->ldIndex,
                                 memcopyCandidate->base, memcopyCandidate->index,
                                 memcopyCandidate->ldCount,
                                 memcopyCandidate->bLdIndexAlreadyChanged, memcopyCandidate->bIndexAlreadyChanged,
                                 ldInductionVariableChangeInfo.isIncremental, stInductionVariableChangeInfo.isIncremental);
+                }
+
+                if (!success)
+                {
+                    FOREACH_MEMOP_CANDIDATES_EDITING(memopCandidate, loop, iterator)
+                    {
+                        if (memopCandidate == candidate)
+                        {
+                            iterator.RemoveCurrent();
+                            break;
+                        }
+                    } NEXT_MEMOP_CANDIDATE_EDITING;
                 }
             }
 
