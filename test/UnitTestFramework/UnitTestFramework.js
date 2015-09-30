@@ -93,9 +93,9 @@ var testRunner = function testRunner() {
             }
 
             for (var i in testsToRun) {
-                var isRunnable = typeof tests[i] === objectType;
+                var isRunnable = typeof testsToRun[i] === objectType;
                 if (isRunnable) {
-                    this.runTest(i, tests[i].name, tests[i].body);
+                    this.runTest(i, testsToRun[i].name, testsToRun[i].body);
                 }
             }
 
