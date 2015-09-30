@@ -2549,17 +2549,6 @@ BackwardPass::ProcessBlock(BasicBlock * block)
             #endif
             }
 
-            if (this->tag == Js::DeadStorePhase &&  !this->IsPrePass() && !PHASE_OFF(Js::MemOpPhase, this->func))
-            {
-                if (block->loop != nullptr &&  this->DoDeadStoreLdStForMemop(instr))
-                {
-                    block->RemoveInstr(instr);
-                    Assert(!preOpBailOutInstrToProcess || preOpBailOutInstrToProcess == instr);
-                    preOpBailOutInstrToProcess = nullptr;
-                    continue;
-                }
-            }
-
             DeadStoreTypeCheckBailOut(instr);
             DeadStoreImplicitCallBailOut(instr, hasLiveFields);
 
@@ -3092,23 +3081,13 @@ BackwardPass::ProcessArrayRegOpndUse(IR::Instr *const instr, IR::ArrayRegOpnd *c
         if(headSegmentLengthIsLoadedButUnused && instr->extractedUpperBoundCheckWithoutHoisting)
         {
             // Find the upper bound check (index[src1] <= headSegmentLength[src2] + offset[dst])
-            IR::Instr *upperBoundCheck = instr;
-            do
-            {
-                upperBoundCheck = upperBoundCheck->m_prev;
-                Assert(upperBoundCheck);
-                Assert(!upperBoundCheck->IsLabelInstr());
-            } while(upperBoundCheck->m_opcode != Js::OpCode::BoundCheck);
+            IR::Instr *upperBoundCheck = this->globOpt->FindUpperBoundsCheckInstr(instr);
+            Assert(upperBoundCheck && upperBoundCheck != instr);
             Assert(upperBoundCheck->GetSrc2()->AsRegOpnd()->m_sym == arrayRegOpnd->HeadSegmentLengthSym());
 
             // Find the head segment length load
-            IR::Instr *headSegmentLengthLoad = upperBoundCheck;
-            do
-            {
-                headSegmentLengthLoad = headSegmentLengthLoad->m_prev;
-                Assert(headSegmentLengthLoad);
-                Assert(!headSegmentLengthLoad->IsLabelInstr());
-            } while(headSegmentLengthLoad->m_opcode != Js::OpCode::LdIndir);
+            IR::Instr *headSegmentLengthLoad = this->globOpt->FindArraySegmentLoadInstr(upperBoundCheck);
+
             Assert(headSegmentLengthLoad->GetDst()->AsRegOpnd()->m_sym == arrayRegOpnd->HeadSegmentLengthSym());
             Assert(
                 headSegmentLengthLoad->GetSrc1()->AsIndirOpnd()->GetBaseOpnd()->m_sym ==
@@ -3218,6 +3197,7 @@ BackwardPass::ProcessArrayRegOpndUse(IR::Instr *const instr, IR::ArrayRegOpnd *c
                 // For JS arrays, the head segment length load is dependent on the head segment. So, only remove the head
                 // segment load if the head segment length load can also be removed.
                 arrayRegOpnd->RemoveHeadSegmentSym();
+                instr->loadedArrayHeadSegment = false;
                 if(noImplicitCallArrayUse)
                 {
                     noImplicitCallArrayUse->RemoveHeadSegmentSym();
@@ -3226,6 +3206,7 @@ BackwardPass::ProcessArrayRegOpndUse(IR::Instr *const instr, IR::ArrayRegOpnd *c
             if(headSegmentLengthIsLoadedButUnused)
             {
                 arrayRegOpnd->RemoveHeadSegmentLengthSym();
+                instr->loadedArrayHeadSegmentLength = false;
                 if(noImplicitCallArrayUse)
                 {
                     noImplicitCallArrayUse->RemoveHeadSegmentLengthSym();
@@ -3388,13 +3369,13 @@ BackwardPass::ProcessNewScObject(IR::Instr* instr)
 }
 
 void
-BackwardPass::UpdateArrayValueTypes(IR::Instr *const instr, IR::Opnd *opnd)
+BackwardPass::UpdateArrayValueTypes(IR::Instr *const instr, IR::Opnd *origOpnd)
 {
     Assert(tag == Js::DeadStorePhase);
     Assert(!IsPrePass());
     Assert(instr);
 
-    if(!opnd)
+    if(!origOpnd)
     {
         return;
     }
@@ -3410,6 +3391,7 @@ BackwardPass::UpdateArrayValueTypes(IR::Instr *const instr, IR::Opnd *opnd)
     }
 
     Sym *sym;
+    IR::Opnd* opnd = origOpnd;
     IR::ArrayRegOpnd *arrayOpnd;
     switch(opnd->GetKind())
     {
@@ -3573,7 +3555,14 @@ BackwardPass::UpdateArrayValueTypes(IR::Instr *const instr, IR::Opnd *opnd)
         if(arrayOpnd)
         {
             opnd = arrayOpnd->CopyAsRegOpnd(opndOwnerInstr->m_func);
-            opndOwnerInstr->Replace(arrayOpnd, opnd);
+            if (origOpnd->IsIndirOpnd())
+            {
+                origOpnd->AsIndirOpnd()->ReplaceBaseOpnd(opnd->AsRegOpnd());
+            }
+            else
+            {
+                opndOwnerInstr->Replace(arrayOpnd, opnd);
+            }
             arrayOpnd = nullptr;
         }
         opnd->SetValueType(valueType.ToLikely());
@@ -3643,13 +3632,9 @@ BackwardPass::UpdateArrayBailOutKind(IR::Instr *const instr)
             // the right reason. Even though the store may actually occur in a non-head segment, which would not invalidate the
             // head segment or length, any store outside the head segment bounds causes head segment load elimination to be
             // turned off for the store, because the segment structure of the array is not guaranteed to be the same every time.
-            IR::Instr *upperBoundCheck = instr;
-            do
-            {
-                upperBoundCheck = upperBoundCheck->m_prev;
-                Assert(upperBoundCheck);
-                Assert(!upperBoundCheck->IsLabelInstr());
-            } while(upperBoundCheck->m_opcode != Js::OpCode::BoundCheck);
+            IR::Instr *upperBoundCheck = this->globOpt->FindUpperBoundsCheckInstr(instr);
+            Assert(upperBoundCheck && upperBoundCheck != instr);
+
             if(upperBoundCheck->GetBailOutKind() == IR::BailOutOnArrayAccessHelperCall)
             {
                 upperBoundCheck->SetBailOutKind(IR::BailOutOnInvalidatedArrayHeadSegment);

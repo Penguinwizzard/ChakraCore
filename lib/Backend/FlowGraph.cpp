@@ -778,6 +778,7 @@ bool Loop::EnsureMemOpVariablesInitialized()
     {
         JitArenaAllocator *allocator = this->GetFunc()->GetTopFunc()->m_fg->alloc;
         this->memOpInfo = JitAnewStruct(allocator, Loop::MemOpInfo);
+        this->memOpInfo->inductionVariablesUsedAfterLoop = nullptr;
         if (this->GetLoopFlags().isInterpreted && !this->GetLoopFlags().memopMinCountReached)
         {
 #if DBG_DUMP
@@ -793,13 +794,11 @@ bool Loop::EnsureMemOpVariablesInitialized()
             }
 #endif
             this->memOpInfo->doMemOp = false;
-            this->memOpInfo->inductionVariablesUsedAfterLoop = nullptr;
             this->memOpInfo->inductionVariableChangeInfoMap = nullptr;
             this->memOpInfo->candidates = nullptr;
             return false;
         }
         this->memOpInfo->doMemOp = true;
-        this->memOpInfo->inductionVariablesUsedAfterLoop = nullptr;
         this->memOpInfo->inductionVariableChangeInfoMap = JitAnew(allocator, Loop::InductionVariableChangeInfoMap, allocator);
         this->memOpInfo->candidates = JitAnew(allocator, Loop::MemOpList, allocator);
     }

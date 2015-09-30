@@ -1435,13 +1435,18 @@ private:
     bool                    IsAllowedForMemOpt(IR::Instr* instr, IR::RegOpnd *baseOpnd, IR::Opnd *indexOpnd);
 
     void                    ProcessMemOp();
+    bool                    InspectInstrForMemSetCandidate(Loop* loop, IR::Instr* instr, struct MemSetEmitData* emitData, bool& errorInInstr);
+    bool                    InspectInstrForMemCopyCandidate(Loop* loop, IR::Instr* instr, struct MemCopyEmitData* emitData, bool& errorInInstr);
     bool                    ValidateMemOpCandidates(Loop * loop, struct MemOpEmitData** emitData, int& iEmitData);
     void                    HoistHeadSegmentForMemOp(IR::Instr *instr, IR::ArrayRegOpnd *arrayRegOpnd, IR::Instr *insertBeforeInstr);
     void                    EmitMemop(Loop * loop, LoopCount *loopCount, const struct MemOpEmitData* emitData);
     IR::Opnd*               GenerateInductionVariableChangeForMemOp(Loop *loop, byte unroll, IR::Instr *insertBeforeInstr = nullptr);
     IR::RegOpnd*            GenerateStartIndexOpndForMemop(Loop *loop, IR::Opnd *indexOpnd, IR::Opnd *sizeOpnd, bool isInductionVariableChangeIncremental, bool bIndexAlreadyChanged, IR::Instr *insertBeforeInstr = nullptr);
     LoopCount*              GetOrGenerateLoopCountForMemOp(Loop *loop);
-
+    IR::Instr*              FindUpperBoundsCheckInstr(IR::Instr* instr);
+    IR::Instr*              FindArraySegmentLoadInstr(IR::Instr* instr);
+    void                    RemoveMemOpSrcInstr(IR::Instr* memopInstr, IR::Instr* srcInstr, BasicBlock* block);
+    void                    GetMemOpSrcInfo(Loop* loop, IR::Instr* instr, IR::RegOpnd*& base, IR::RegOpnd*& index, IRType& arrayType);
     bool                    DoMemOp(Loop * loop);
 
 private:

@@ -744,53 +744,19 @@ private:
 struct MemOpEmitData
 {
     Loop::MemOpCandidate* candidate;
-    IR::IndirOpnd* dstOpnd;
+    IR::Instr* stElemInstr;
+    BasicBlock* block;
     Loop::InductionVariableChangeInfo inductionVar;
-    IR::BailOutKind bailoutKind;
-    // Constructor
-    MemOpEmitData(
-        Loop::MemOpCandidate* candidate,
-        IR::IndirOpnd* dstOpnd,
-        Loop::InductionVariableChangeInfo inductionVar,
-        IR::BailOutKind bailoutKind
-        ) :
-        candidate(candidate),
-        dstOpnd(dstOpnd),
-        inductionVar(inductionVar),
-        bailoutKind(bailoutKind)
-    {
-    }
+    IR::BailOutKind bailOutKind;
 };
 
 struct MemSetEmitData : public MemOpEmitData
 {
-    // Constructor
-    MemSetEmitData(
-        Loop::MemSetCandidate* candidate,
-        IR::IndirOpnd* dstOpnd,
-        Loop::InductionVariableChangeInfo inductionVar,
-        IR::BailOutKind bailoutKind
-        ) :
-        MemOpEmitData(candidate, dstOpnd, inductionVar, bailoutKind)
-    {
-    }
 };
 
 struct MemCopyEmitData : public MemOpEmitData
 {
-    IR::IndirOpnd* srcOpnd;
-    // Constructor
-    MemCopyEmitData(
-        Loop::MemCopyCandidate* candidate,
-        IR::IndirOpnd* dstOpnd,
-        Loop::InductionVariableChangeInfo inductionVar,
-        IR::BailOutKind bailoutKind,
-        IR::IndirOpnd* srcOpnd
-        ) :
-        MemOpEmitData(candidate, dstOpnd, inductionVar, bailoutKind),
-        srcOpnd(srcOpnd)
-    {
-    }
+    IR::Instr* ldElemInstr;
 };
 
 #define FOREACH_BLOCK_IN_FUNC(block, func)\
