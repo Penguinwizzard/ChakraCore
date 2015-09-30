@@ -6739,21 +6739,17 @@ ParseNodePtr Parser::CreateAsyncSpawnGenerator()
     pnodeFncGenerator = CreateDummyFuncNode(false);
     pnodeFncGenerator->sxFnc.functionId = (*m_nextFunctionId)++;
 
+    pnodeFncGenerator->sxFnc.cbMin = m_pscan->IecpMinTok();
+    pnodeFncGenerator->sxFnc.cbLim = m_pscan->IecpLimTok();
     pnodeFncGenerator->sxFnc.lineNumber = m_pscan->LineCur();
     pnodeFncGenerator->sxFnc.columnNumber = CalculateFunctionColumnNumber();
     pnodeFncGenerator->sxFnc.SetNested(m_currentNodeFunc != nullptr);
     pnodeFncGenerator->sxFnc.SetStrictMode(IsStrictMode());
-    pnodeFncGenerator->sxFnc.firstDefaultArg = 0;
 
     pnodeFncGenerator->sxFnc.SetIsGenerator();
-    pnodeFncGenerator->sxFnc.pnodeName = nullptr;
     pnodeFncGenerator->sxFnc.scope = nullptr;
 
     AppendFunctionToScopeList(false, pnodeFncGenerator);
-
-    m_pCurrentAstSize = &pnodeFncGenerator->sxFnc.astSize;
-    m_pnestedCount = &pnodeFncGenerator->sxFnc.nestedCount;
-    m_currentNodeFunc = pnodeFncGenerator;
 
     return pnodeFncGenerator;
 }
