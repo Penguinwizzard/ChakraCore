@@ -483,8 +483,8 @@ namespace Js
         case AsmJsRetType::Void:
             __asm
             {
-#ifdef _CONTROL_FLOW_GUARD
                 mov  ecx, asmJSEntryPoint
+#ifdef _CONTROL_FLOW_GUARD
                 call[__guard_check_icall_fptr]
 #endif
                 push func
@@ -496,8 +496,8 @@ namespace Js
             int32 ival = 0;
             __asm
             {
-#ifdef _CONTROL_FLOW_GUARD
                 mov  ecx, asmJSEntryPoint
+#ifdef _CONTROL_FLOW_GUARD
                 call[__guard_check_icall_fptr]
 #endif
                 push func
@@ -511,8 +511,8 @@ namespace Js
             double dval = 0;
             __asm
             {
-#ifdef _CONTROL_FLOW_GUARD
                 mov  ecx, asmJSEntryPoint
+#ifdef _CONTROL_FLOW_GUARD
                 call[__guard_check_icall_fptr]
 #endif
                 push func
@@ -526,8 +526,8 @@ namespace Js
             float fval = 0;
             __asm
             {
-#ifdef _CONTROL_FLOW_GUARD
                 mov  ecx, asmJSEntryPoint
+#ifdef _CONTROL_FLOW_GUARD
                 call[__guard_check_icall_fptr]
 #endif
                 push func
@@ -545,9 +545,13 @@ namespace Js
             {
                 __asm
                 {
+                    mov  ecx, asmJSEntryPoint
+#ifdef _CONTROL_FLOW_GUARD
+                    call[__guard_check_icall_fptr]
+#endif
                     push func
-                        call asmJSEntryPoint
-                        movups simdVal, xmm0
+                    call ecx
+                    movups simdVal, xmm0
                 }
                 returnValue = JavascriptSIMDInt32x4::New(&simdVal, func->GetScriptContext());
                 break;
@@ -559,9 +563,13 @@ namespace Js
             {
                 __asm
                 {
+                    mov  ecx, asmJSEntryPoint
+#ifdef _CONTROL_FLOW_GUARD
+                    call[__guard_check_icall_fptr]
+#endif
                     push func
-                        call asmJSEntryPoint
-                        movups simdVal, xmm0
+                    call ecx
+                    movups simdVal, xmm0
                 }
                 returnValue = JavascriptSIMDFloat32x4::New(&simdVal, func->GetScriptContext());
                 break;
@@ -573,9 +581,13 @@ namespace Js
             {
                 __asm
                 {
+                    mov  ecx, asmJSEntryPoint
+#ifdef _CONTROL_FLOW_GUARD
+                    call[__guard_check_icall_fptr]
+#endif
                     push func
-                        call asmJSEntryPoint
-                        movups simdVal, xmm0
+                    call ecx
+                    movups simdVal, xmm0
                 }
                 returnValue = JavascriptSIMDFloat64x2::New(&simdVal, func->GetScriptContext());
                 break;
