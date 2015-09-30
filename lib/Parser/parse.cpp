@@ -6223,10 +6223,7 @@ ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulo
 
             {
                 AutoParsingSuperRestrictionStateRestorer restorer(this);
-                if (hasExtends)
-                {
-                    this->m_parsingSuperRestrictionState = ParsingSuperRestrictionState_SuperCallAndPropertyAllowed;
-                }
+                this->m_parsingSuperRestrictionState = hasExtends ? ParsingSuperRestrictionState_SuperCallAndPropertyAllowed : ParsingSuperRestrictionState_SuperPropertyAllowed;
                 pnodeConstructor = ParseFncDecl<buildAST>(fncDeclFlags, pConstructorName, false, /* needsPIDOnRCurlyScan */ true, /* resetParsingSuperRestrictionState = */false);
             }
 
@@ -6287,10 +6284,7 @@ ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulo
                 ParseNodePtr pnodeFnc = nullptr;
                 {
                     AutoParsingSuperRestrictionStateRestorer restorer(this);
-                    if (hasExtends)
-                    {
-                        this->m_parsingSuperRestrictionState = ParsingSuperRestrictionState_SuperPropertyAllowed;
-                    }
+                    this->m_parsingSuperRestrictionState = ParsingSuperRestrictionState_SuperPropertyAllowed;
                     pnodeFnc = ParseFncDecl<buildAST>((isGetter ? fFncNoArg : fFncSetter) | fncDeclFlags, pidHint ? pidHint->Psz() : nullptr, false, /* needsPIDOnRCurlyScan */ true, /* resetParsingSuperRestrictionState */false);
                 }
 
@@ -6313,10 +6307,7 @@ ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulo
                 ParseNodePtr pnodeFnc = nullptr;
                 {
                     AutoParsingSuperRestrictionStateRestorer restorer(this);
-                    if (hasExtends)
-                    {
-                        this->m_parsingSuperRestrictionState = ParsingSuperRestrictionState_SuperPropertyAllowed;
-                    }
+                    this->m_parsingSuperRestrictionState = ParsingSuperRestrictionState_SuperPropertyAllowed;
 
                     if (isAsyncMethod)
                     {

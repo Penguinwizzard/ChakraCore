@@ -6384,14 +6384,27 @@ void EmitSuperMethodBegin(
         parentFuncInfo = byteCodeGenerator->FindEnclosingNonLambda();
     }
     
-    if (pnodeTarget->sxBin.pnode1->nop == knopSuper && parentFuncInfo->IsClassConstructor() && !parentFuncInfo->IsBaseClassConstructor())
+    if (pnodeTarget->sxBin.pnode1->nop == knopSuper && parentFuncInfo->IsClassConstructor())
     {
         *protoRegisterAquired = true;
         *protoLocation = funcInfo->AcquireTmpRegister();
-        
-        int cacheId = funcInfo->FindOrAddInlineCacheId(callObjLocation, Js::PropertyIds::prototype, false, false);
-        byteCodeGenerator->Writer()->PatchableProperty(Js::OpCode::LdFld, *protoLocation, callObjLocation, cacheId);
-        byteCodeGenerator->EmitScopeSlotLoadThis(funcInfo, funcInfo->thisPointerRegister, /*chkUndecl*/ true);
+
+        if (!parentFuncInfo->IsBaseClassConstructor())
+        {
+            // For derived class ctor F, F.prototype.__proto__ === F.__proto__.prototype
+            int cacheId = funcInfo->FindOrAddInlineCacheId(callObjLocation, Js::PropertyIds::prototype, false, false);
+            byteCodeGenerator->Writer()->PatchableProperty(Js::OpCode::LdFld, *protoLocation, callObjLocation, cacheId);
+            byteCodeGenerator->EmitScopeSlotLoadThis(funcInfo, funcInfo->thisPointerRegister, /*chkUndecl*/ true);
+        }
+        else
+        {
+            // For base class ctor F, F.__proto__.prototype != F.prototype.__proto__, therefore explicitly load Object.prototype
+            // (ECMA262-2015 14.5.14-5) F.__proto__ === Function.prototype, F.prototype.__proto__ === Object.prototype
+            int cacheId = funcInfo->FindOrAddRootObjectInlineCacheId(Js::PropertyIds::Object, false, false);
+            byteCodeGenerator->Writer()->PatchableRootProperty(Js::OpCode::LdRootFld, *protoLocation, cacheId, false, false);
+            cacheId = funcInfo->FindOrAddInlineCacheId(*protoLocation, Js::PropertyIds::prototype, false, false);
+            byteCodeGenerator->Writer()->PatchableProperty(Js::OpCode::LdFld, *protoLocation, *protoLocation, cacheId);
+        }
     }
 }
 

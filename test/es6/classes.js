@@ -357,6 +357,9 @@ var tests = [
       assert.throws(function () { eval("super();") },        ReferenceError, "Invalid use of super");
       assert.throws(function () { eval("super[1];") },       ReferenceError, "Invalid use of super");
       assert.throws(function () { eval("super.method();") }, ReferenceError, "Invalid use of super");
+
+      // Syntax Error for base class constructor with direct super call
+      assert.throws(function () { eval("class A { constructor() { super(); } }") }, SyntaxError, "Base class constructor cannot call super");
     }
   },
   {
@@ -489,6 +492,31 @@ var tests = [
       assert.areEqual("A3",                  instanceB1.method(), "Instance methods should be affected after B.prototype.__proto__ change");
       assert.areEqual("static A2",           B.staticMethod(),    "Static methods should be unaffected after B.prototype.__proto__ change");
       assert.areEqual(instanceB1.method(),   instanceB2.method(), "All instances should have been changed by B.prototype.__proto__ change");
+    }
+  },
+  {
+    name: "No restrictions on SuperProperty",
+    body: function () {
+        class A {
+            constructor() { super.toString(); }
+            dontDoThis() { super.makeBugs = 1; }
+        }
+        class B {
+            constructor() {
+                this.string = super.toString.call(this);
+                this.func = super.toString;
+            }
+        }
+
+        assert.areEqual("function", typeof A);
+
+        var a = new A();
+        var b = new B();
+
+        a.dontDoThis();
+        assert.areEqual(1, a.makeBugs);
+        assert.areEqual("[object Object]", b.string);
+        assert.areEqual(Object.prototype.toString, b.func);
     }
   },
   {
