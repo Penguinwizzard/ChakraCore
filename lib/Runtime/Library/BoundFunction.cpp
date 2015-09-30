@@ -109,22 +109,6 @@ namespace Js
         return boundFunc;
     }
 
-    bool BoundFunction::CloneMethod(JavascriptFunction** pnewMethod, const Var newHome)
-    {
-        ScriptContext* scriptContext = this->GetScriptContext();
-        Recycler* recycler = scriptContext->GetRecycler();
-
-        BoundFunction* boundFunc = RecyclerNew(recycler, BoundFunction,
-            this->GetTargetFunction(),
-            this->boundThis,
-            this->GetArgsForHeapEnum(),
-            this->GetArgsCountForHeapEnum(),
-            scriptContext->GetLibrary()->GetBoundFunctionType());
-
-        *pnewMethod = boundFunc;
-        return true;
-    }
-
     Var BoundFunction::NewInstance(RecyclableObject* function, CallInfo callInfo, ...)
     {
         RUNTIME_ARGUMENTS(args, callInfo);

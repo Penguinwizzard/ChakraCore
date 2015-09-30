@@ -357,12 +357,4 @@ namespace Js
         return DynamicObject::SetPropertyWithAttributes(PropertyIds::length, length, PropertyConfigurable, NULL, PropertyOperation_None, SideEffects_None);
     }
 
-
-    bool JavascriptExternalFunction::CloneMethod(JavascriptFunction** pnewMethod, const Var newHome)
-    {
-        ScriptContext* scriptContext = this->GetScriptContext();
-        *pnewMethod = scriptContext->GetLibrary()->CreateExternalFunction(this->GetNativeMethod(),
-            this->functionNameId, this->GetSignature(), this->prototypeTypeId, this->flags);
-        return true;
-    }
 }

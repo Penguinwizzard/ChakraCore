@@ -543,36 +543,6 @@ namespace Js
         return boundFunc;
     }
 
-    Var JavascriptFunction::EntryToMethod(RecyclableObject* function, CallInfo callInfo, ...)
-    {
-        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
-
-        ARGUMENTS(args, callInfo);
-        ScriptContext* scriptContext = function->GetScriptContext();
-
-        Assert(!(callInfo.Flags & CallFlags_New));
-
-        if (args.Info.Count <= 1 || !RecyclableObject::Is(args[1]) || !JavascriptOperators::IsObject(RecyclableObject::FromVar(args[1])))
-        {
-            JavascriptError::ThrowTypeError(scriptContext, JSERR_FunctionArgument_NeedObject, L"Function.prototype.toMethod");
-        }
-
-        Var newHome = RecyclableObject::FromVar(args[1]);
-        JavascriptFunction* newMethod = nullptr;
-
-        if (!JavascriptFunction::Is(args[0]))
-        {
-            JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NeedFunction, L"Function.prototype.toMethod");
-        }
-        
-        if (!JavascriptFunction::FromVar(args[0])->CloneMethod(&newMethod, newHome))
-        {
-            JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NeedCloneMethod, L"Function.prototype.toMethod");
-        }
-
-        return newMethod;
-    }
-
     // ES5 15.3.4.4
     // Function.prototype.call (thisArg [ , arg1 [ , arg2, ... ] ] )
     //    When the call method is called on an object func with argument thisArg and optional arguments arg1, arg2 etc, the following steps are taken:

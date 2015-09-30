@@ -2991,7 +2991,6 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
             EmitInitCapturedThis(funcInfo, funcInfo->bodyScope);
         }
 
-        // TODO: (suwc) To implement Function.prototype.toMethod(), remove pre-emptive LdSuper or remove BadSuperReference throwing from Op_LdSuper
         // Any function with a super reference or an eval call inside a class method needs to load super
         if ((funcInfo->HasSuperReference() || (funcInfo->GetCallsEval() && funcInfo->root->sxFnc.IsClassMember()))
             // unless we are already inside the 'global' scope inside an eval (in which case 'ScopedLdSuper' is emitted at every 'super' reference)

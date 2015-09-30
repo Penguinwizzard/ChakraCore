@@ -112,7 +112,6 @@ namespace Js
         bool IsClassConstructor() { return homeObj && this == homeObj;}
         virtual JavascriptFunction* GetRealFunctionObject() { return this; }
 
-        virtual bool CloneMethod(JavascriptFunction** pnewMethod, const Var newHome) override;
     };
 
     class AsmJsScriptFunction : public ScriptFunction

@@ -61,8 +61,6 @@ namespace Js
         virtual BOOL IsWritable(PropertyId propertyId) override;
         virtual BOOL IsEnumerable(PropertyId propertyId) override;
 
-        virtual bool CloneMethod(JavascriptFunction** pnewMethod, const Var newHome) override;
-
         class EntryInfo
         {
         public:

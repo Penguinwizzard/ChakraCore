@@ -139,22 +139,4 @@ namespace Js
     {
         return scriptFunction->EnsureSourceString();
     }
-
-    bool JavascriptGeneratorFunction::CloneMethod(JavascriptFunction** pnewMethod, const Var newHome)
-    {
-        ScriptContext* scriptContext = this->GetScriptContext();
-        FunctionProxy* proxy = JavascriptOperators::GetDeferredDeserializedFunctionProxy(this->scriptFunction);
-
-        GeneratorVirtualScriptFunction* scriptFunction = scriptContext->GetLibrary()->CreateGeneratorVirtualScriptFunction(proxy);
-        scriptFunction->SetEnvironment(this->scriptFunction->GetEnvironment());
-        scriptFunction->SetHasSuperReference(this->scriptFunction->HasSuperReference());
-        JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_FUNCTION(scriptFunction, EtwTrace::GetFunctionId(proxy)));
-        
-        JavascriptGeneratorFunction* genFunc = scriptContext->GetLibrary()->CreateGeneratorFunction(this->GetFunctionInfo()->GetOriginalEntryPoint(), scriptFunction);
-        scriptFunction->SetRealGeneratorFunction(genFunc);
-        genFunc->SetHomeObj(newHome);
-
-        *pnewMethod = genFunc;
-        return true;
-    }
 }

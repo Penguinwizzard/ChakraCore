@@ -303,7 +303,6 @@ RT_ERROR_MSG(JSERROR_SetPrototypeOf, 5616, "Failed to set prototype", "Failed to
 RT_ERROR_MSG(JSERR_ObjectIsNotInitialized, 5617, "%s: Object internal state is not initialized", "Object internal state is not initialized", kjstTypeError, 0)
 
 RT_ERROR_MSG(JSERR_GeneratorAlreadyExecuting, 5618, "%s: Cannot execute generator function because it is currently executing", "", kjstTypeError, 0)
-RT_ERROR_MSG(JSERR_This_NeedCloneMethod, 5619, "%s: 'this' must support CloneMethod", "CloneMethod expected", kjstTypeError, 0) // {Locked="\'this\'"}
 
 #ifdef SIMD_JS_ENABLED
 RT_ERROR_MSG(JSERR_This_NeedSimd, 5620, "%s: 'this' is not a SIMD type", "SIMD type expected", kjstTypeError, 0)

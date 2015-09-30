@@ -514,22 +514,6 @@ namespace Js
         return TRUE;
     }
 
-    bool ScriptFunction::CloneMethod(JavascriptFunction** pnewMethod, const Var newHome)
-    {
-        ScriptContext* scriptContext = this->GetScriptContext();
-        FunctionProxy* proxy = JavascriptOperators::GetDeferredDeserializedFunctionProxy(this);
-
-        ScriptFunction* cloneScriptFunc = scriptContext->GetLibrary()->CreateScriptFunction(proxy);
-        cloneScriptFunc->SetEnvironment(this->GetEnvironment());
-        cloneScriptFunc->SetHasSuperReference(this->HasSuperReference());
-        JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_FUNCTION(cloneScriptFunc, EtwTrace::GetFunctionId(proxy)));
-        cloneScriptFunc->SetHomeObj(newHome);
-
-        *pnewMethod = cloneScriptFunc;
-        return true;
-    }
-
-
     AsmJsScriptFunction::AsmJsScriptFunction(FunctionProxy * proxy, ScriptFunctionType* deferredPrototypeType) :
         ScriptFunction(proxy, deferredPrototypeType), m_moduleMemory(nullptr)
     {}

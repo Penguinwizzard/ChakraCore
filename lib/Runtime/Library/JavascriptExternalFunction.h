@@ -42,8 +42,6 @@ namespace Js
         ExternalMethod GetNativeMethod() { return nativeMethod; }
         BOOL SetLengthProperty(Var length);        
 
-        virtual bool CloneMethod(JavascriptFunction** pnewMethod, const Var newHome) override;
-
         void SetPrototypeTypeId(JavascriptTypeId prototypeTypeId) { this->prototypeTypeId = prototypeTypeId; }
         void SetExternalFlags(UINT64 flags) { this->flags = flags; }
 

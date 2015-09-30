@@ -61,7 +61,6 @@ namespace Js
             static FunctionInfo Bind;
             static FunctionInfo Call;
             static FunctionInfo ToString;
-            static FunctionInfo ToMethod;
             static FunctionInfo SymbolHasInstance;
         };
 
@@ -74,7 +73,6 @@ namespace Js
         static Var PrototypeEntryPoint(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryApply(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryBind(RecyclableObject* function, CallInfo callInfo, ...);
-        static Var EntryToMethod(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryCall(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryToString(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntrySymbolHasInstance(RecyclableObject* function, CallInfo callInfo, ...);
@@ -191,8 +189,6 @@ namespace Js
 
         // This will be overriden for the BoundFunction
         virtual bool IsBoundFunction() { return false; }
-
-        virtual bool CloneMethod(JavascriptFunction** pnewMethod, const Var newHome) { return false; }
 
         BOOL IsThrowTypeErrorFunction();
 

@@ -27,7 +27,6 @@ GlobalBuiltIn(JavascriptArray, EntryPush)
 GlobalBuiltIn(JavascriptArray, EntryJoin)
         
 GlobalBuiltIn(JavascriptFunction, EntryBind)
-GlobalBuiltIn(JavascriptFunction, EntryToMethod)
 GlobalBuiltIn(JavascriptDate, EntryGetDate)
 GlobalBuiltIn(JavascriptDate, EntryNow)
 

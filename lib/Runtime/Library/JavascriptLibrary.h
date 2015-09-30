@@ -803,7 +803,6 @@ namespace Js
         DynamicType * CreateFunctionWithLengthAndPrototypeType(DynamicObject * prototype, FunctionInfo * functionInfo);
         ScriptFunction * CreateScriptFunction(FunctionProxy* proxy);
         AsmJsScriptFunction * CreateAsmJsScriptFunction(FunctionProxy* proxy);
-        RuntimeFunction * CloneBuiltinFunction(RuntimeFunction* func);
         ScriptFunctionWithInlineCache * CreateScriptFunctionWithInlineCache(FunctionProxy* proxy);
         GeneratorVirtualScriptFunction * CreateGeneratorVirtualScriptFunction(FunctionProxy* proxy);
 #ifdef ENABLE_DOM_FAST_PATH

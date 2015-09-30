@@ -25,6 +25,5 @@ namespace Js
         Var functionNameId;
         virtual Var GetSourceString() const { return functionNameId; }
         virtual Var EnsureSourceString();
-        virtual bool CloneMethod(JavascriptFunction** pnewMethod, const Var newHome) override;
     };  
 };

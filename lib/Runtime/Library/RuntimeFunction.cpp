@@ -55,11 +55,4 @@ namespace Js
         Assert(!TaggedInt::Is(nameId) || this->GetScriptContext()->IsTrackedPropertyId(TaggedInt::ToInt32(nameId)));        
         this->functionNameId = nameId;
     }
-
-    bool RuntimeFunction::CloneMethod(JavascriptFunction** pnewMethod, const Var newHome)
-    {
-        ScriptContext* scriptContext = this->GetScriptContext();
-        *pnewMethod = scriptContext->GetLibrary()->CloneBuiltinFunction(this);
-        return true;
-    }
 };

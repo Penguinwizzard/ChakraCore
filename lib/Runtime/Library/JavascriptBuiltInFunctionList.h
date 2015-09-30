@@ -134,7 +134,6 @@ BUILTIN(JavascriptFunction, PrototypeEntryPoint, PrototypeEntryPoint, FunctionIn
 BUILTIN(JavascriptFunction, Apply, EntryApply, FunctionInfo::ErrorOnNew)
 BUILTIN(JavascriptFunction, Bind, EntryBind, FunctionInfo::ErrorOnNew)
 BUILTIN(JavascriptFunction, Call, EntryCall, FunctionInfo::ErrorOnNew)
-BUILTIN(JavascriptFunction, ToMethod, EntryToMethod, FunctionInfo::ErrorOnNew)
 BUILTIN(JavascriptFunction, ToString, EntryToString, FunctionInfo::ErrorOnNew | FunctionInfo::HasNoSideEffect)
 BUILTIN(JavascriptFunction, SymbolHasInstance, EntrySymbolHasInstance, FunctionInfo::ErrorOnNew)
 BUILTIN(JavascriptNumber, IsNaN, EntryIsNaN, FunctionInfo::ErrorOnNew)

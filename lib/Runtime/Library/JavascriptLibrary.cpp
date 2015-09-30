@@ -2553,11 +2553,6 @@ namespace Js
         builtinFuncs[BuiltinFunction::Function_Call] = func;
         library->AddFunctionToLibraryObject(functionPrototype, PropertyIds::toString, &JavascriptFunction::EntryInfo::ToString, 0);
 
-        if (scriptContext->GetConfig()->IsES6ClassAndExtendsEnabled())
-        {
-            library->AddFunctionToLibraryObject(functionPrototype, PropertyIds::toMethod, &JavascriptFunction::EntryInfo::ToMethod, 1);
-        }
-
         if (scriptContext->GetConfig()->IsES6HasInstanceEnabled())
         {
             scriptContext->SetBuiltInLibraryFunction(JavascriptFunction::EntryInfo::SymbolHasInstance.GetOriginalEntryPoint(),
@@ -4699,23 +4694,6 @@ namespace Js
         return function;
     }
 
-    RuntimeFunction*
-    JavascriptLibrary::CloneBuiltinFunction(RuntimeFunction* func)
-    {
-        FunctionInfo* funcInfo = func->GetFunctionInfo();
-        Var length = nullptr;
-        Var prototype = nullptr;
-        PropertyValueInfo info;
-
-        BOOL builtinFuncHasLength = func->GetProperty(func, PropertyIds::length, &length, &info, scriptContext);
-        BOOL builtinFuncHasPrototype = func->GetProperty(func, PropertyIds::prototype, &prototype, &info, scriptContext);
-
-        Assert(builtinFuncHasLength);
-
-        return scriptContext->GetLibrary()->DefaultCreateFunction(funcInfo, TaggedInt::ToInt32(length),
-            builtinFuncHasPrototype ? DynamicObject::FromVar(prototype) : nullptr, nullptr, func->functionNameId);
-    }
-
     void JavascriptLibrary::EnsureStringTemplateCallsiteObjectList()
     {
         if (this->stringTemplateCallsiteObjectList == nullptr)
@@ -6490,11 +6468,6 @@ namespace Js
         REG_OBJECTS_LIB_FUNC(call, JavascriptFunction::EntryCall);
         REG_OBJECTS_LIB_FUNC(toString, JavascriptFunction::EntryToString);
         
-        if (scriptContext->GetConfig()->IsES6ClassAndExtendsEnabled())
-        {
-            REG_OBJECTS_LIB_FUNC(toMethod, JavascriptFunction::EntryToMethod);
-        }
-
         return hr;
     }
 

@@ -46,8 +46,6 @@ namespace Js
         virtual BOOL HasInstance(Var instance, ScriptContext* scriptContext, IsInstInlineCache* inlineCache = NULL) override;
         virtual inline BOOL IsConstructor() const override;        
 
-        virtual bool CloneMethod(JavascriptFunction** pnewMethod, const Var newHome) override;
-
         // Below functions are used by debugger to identify and emit event handler information
         virtual bool IsBoundFunction() { return true; }
         JavascriptFunction * GetTargetFunction() const;
