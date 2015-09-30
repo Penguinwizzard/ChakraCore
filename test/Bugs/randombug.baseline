@@ -63,10 +63,10 @@ Test case 30
 Passed
 Test case 31
 Error
-   at func2 (randombug.js:292:9)
-   at testlinenumber (randombug.js:298:3)
-   at test31 (randombug.js:302:2)
-   at Global code (randombug.js:288:2)
+	at func2 (randombug.js:292:9)
+	at testlinenumber (randombug.js:298:3)
+	at test31 (randombug.js:302:2)
+	at Global code (randombug.js:288:2)
 Passed
 Test case 32
 arrObj0.length setter
@@ -92,9 +92,9 @@ Test case 38
 passed
 Test case 40
 ReferenceError: Invalid left-hand side in assignment
-   at testRuntimeError (randombug.js:465:9)
-   at test31 (randombug.js:469:2)
-   at Global code (randombug.js:461:2)
+	at testRuntimeError (randombug.js:465:9)
+	at test31 (randombug.js:469:2)
+	at Global code (randombug.js:461:2)
 Passed
 Test case 41
 Passed

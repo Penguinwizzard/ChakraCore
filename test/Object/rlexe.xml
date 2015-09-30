@@ -221,8 +221,7 @@
     <default>
       <files>forIn.error.js</files>
       <baseline>forIn.error.baseline</baseline>
-      <!-- stack trace is formatted incorrectly in ch -->
-      <tags>exclude_ch</tags>
+      <compile-flags>-ExtendedErrorStackForTestHost</compile-flags>
     </default>
   </test>
   <test>
