@@ -64,8 +64,6 @@
     <default>
       <files>argumentsLimits.js</files>
       <baseline>argumentsLimits.baseline</baseline>
-      <!-- This test fails native serialization b/c the script can't be jitted (i.e. falls back to interpreted) -->
-      <tags>exclude_chk</tags>
     </default>
   </test>
   <test>
@@ -96,8 +94,6 @@
     <default>
       <files>CallerArgs.js</files>
       <baseline>CallerArgsES5.baseline</baseline>
-      <!-- fails x86_test ch only -->
-      <tags>fail_mutators,exclude_ch</tags>
     </default>
   </test>
   <test>

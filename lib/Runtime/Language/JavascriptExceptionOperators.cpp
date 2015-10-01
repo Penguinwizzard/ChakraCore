@@ -418,9 +418,12 @@ namespace Js
         {
             // Bug in compiler optimizer: try-catch can be optimized away if the try block contains __asm calls into function
             // that may throw. The current workaround is to add the following dummy throw to prevent this optimization.
+            // It seems like compiler got smart and still optimizes if the exception is not JavascriptExceptionObject (see catch handler below).
+            // In order to circumvent that we are throwing OutOfMemory.
             if (!tryAddr)
             {
-                Js::Throw::InternalError();
+                Assert(false);
+                ThrowOutOfMemory(scriptContext);
             }
 
 #ifdef _M_IX86

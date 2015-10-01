@@ -30,8 +30,6 @@
     <default>
       <files>Stack.js</files>
       <baseline>Stack.baseline</baseline>
-      <!-- fails x86_test ch dynapogo only -->
-      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>

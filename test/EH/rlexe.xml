@@ -41,24 +41,18 @@
     <default>
       <files>try1.js</files>
       <baseline>try1.baseline</baseline>
-      <!-- fails ch x86_test dynapogo only -->
-      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
     <default>
       <files>try2.js</files>
       <baseline>try2-es5.baseline</baseline>
-      <!-- fails ch x86_test only -->
-      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
     <default>
       <files>try3.js</files>
       <baseline>try3.baseline</baseline>
-      <!-- fails ch x86_test dynapogo only -->
-      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -77,8 +71,6 @@
     <default>
       <files>try6.js</files>
       <baseline>try6.baseline</baseline>
-      <!-- fails ch x86_test only -->
-      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -97,8 +89,6 @@
     <default>
       <files>so.js</files>
       <baseline>so.baseline</baseline>
-      <!-- fails ch x86_test dynapogo only -->
-      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
