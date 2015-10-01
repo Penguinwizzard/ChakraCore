@@ -296,8 +296,7 @@ namespace Js
         IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_Calendar, &calendarFactory));
         IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_NumberFormatting_SignificantDigitsNumberRounder, &significantDigitsRounderActivationFactory));
         IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_NumberFormatting_IncrementNumberRounder, &incrementNumberRounderActivationFactory));
-        IfFailedReturn(this->CreateTimeZoneOnCalendar(library, &timeZoneCalendar));
-        IfFailedReturn(this->CreateTimeZoneOnCalendar(library, &defaultTimeZoneCalendar));
+       
 #endif
         if(isES6Mode)
         {
@@ -337,7 +336,7 @@ namespace Js
 
     boolean WindowsGlobalizationAdapter::ValidateAndCanonicalizeTimeZone(_In_ ScriptContext* scriptContext, _In_z_ PCWSTR timeZoneId, HSTRING *result)
     {
-        HRESULT hr;
+        HRESULT hr = S_OK;
         HSTRING timeZone;
         HSTRING_HEADER timeZoneHeader;
 
@@ -345,6 +344,10 @@ namespace Js
         IfFailThrowHr(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(timeZoneId, wcslen(timeZoneId), &timeZoneHeader, &timeZone));
         Assert(timeZone);
 
+        if (timeZoneCalendar == nullptr)
+        {
+            IfFailThrowHr(this->CreateTimeZoneOnCalendar(this->GetWindowsGlobalizationLibrary(scriptContext), &timeZoneCalendar));
+        }
         // ChangeTimeZone should fail if this is not a valid time zone
         hr = timeZoneCalendar->ChangeTimeZone(timeZone);
         if (hr != S_OK)
@@ -354,6 +357,17 @@ namespace Js
         // Retrieve canonicalize timeZone name
         IfFailThrowHr(timeZoneCalendar->GetTimeZone(result));
         return true;
+    }
+
+    void WindowsGlobalizationAdapter::GetDefaultTimeZoneId(_In_ ScriptContext* scriptContext, HSTRING *result)
+    {
+        HRESULT hr = S_OK;
+        if (defaultTimeZoneCalendar == nullptr)
+        {
+            IfFailThrowHr(this->CreateTimeZoneOnCalendar(this->GetWindowsGlobalizationLibrary(scriptContext), &defaultTimeZoneCalendar));
+        }
+
+        IfFailThrowHr(defaultTimeZoneCalendar->GetTimeZone(result));
     }
 
     void WindowsGlobalizationAdapter::ReleaseWindowsGlobalizationObjects()
@@ -378,12 +392,7 @@ namespace Js
             this->defaultTimeZoneCalendar.Detach()->Release();
         }
     }
-    void WindowsGlobalizationAdapter::GetDefaultTimeZoneId(_In_ ScriptContext* scriptContext, HSTRING *result)
-    {
-        HRESULT hr = S_OK;
-        IfFailThrowHr(defaultTimeZoneCalendar->GetTimeZone(result));
-    }
-
+   
     HRESULT WindowsGlobalizationAdapter::NormalizeLanguageTag(_In_ ScriptContext* scriptContext, _In_z_ PCWSTR languageTag, HSTRING *result)
     {
         HRESULT hr;
