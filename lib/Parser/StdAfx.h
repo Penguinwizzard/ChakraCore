@@ -8,7 +8,9 @@
 
 #pragma once
 
+#ifdef WINDOWS
 #include <intsafe.h>
+#endif
 
 // Parser Includes
 #include "Parser.h"

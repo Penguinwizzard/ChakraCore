@@ -14,10 +14,13 @@
 #define INC_OLE2                 /* for windows.h */
 #define CONST_VTABLE             /* for objbase.h */
 //#define WIN32_LEAN_AND_MEAN      /* for windows.h */
+#ifdef WINDOWS
 #include <windows.h>
+#endif
 
 #undef Yield /* winbase.h defines this but we want to use it for Js::OpCode::Yield; it is Win16 legacy, no harm undef'ing it */
 
+#ifdef WINDOWS
 template<class T> inline
     _Post_equal_to_(a < b ? a : b) _Post_satisfies_(return <= a && return <= b)
     const T& min(const T& a, const T& b) { return a < b ? a : b; }
@@ -28,6 +31,7 @@ typedef _Return_type_success_(return >= 0) LONG NTSTATUS;
 template<class T> inline
     _Post_equal_to_(a > b ? a : b)
     const T& max(const T& a, const T& b) { return a > b ? a : b; }
+#endif
 
 #if (defined(_M_IX86) && (_MSC_FULL_VER > 13009037)) || ((defined(_M_AMD64) || defined(_M_IA64)) && (_MSC_FULL_VER > 13009175)) || defined(_M_ARM32_OR_ARM64)
 #ifdef __cplusplus
@@ -48,6 +52,7 @@ extern "C" {
 #define RtlUlonglongByteSwap(_x) _byteswap_uint64((_x))
 #else
 
+#ifdef WINDOWS
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 NTSYSAPI
 USHORT
@@ -76,6 +81,7 @@ RtlUlonglongByteSwap(
 #endif
 
 #endif
+#endif
 
 #include <wchar.h>
 //#include "spymem.h"
@@ -94,14 +100,20 @@ RtlUlonglongByteSwap(
 #endif
 #include <time.h>
 
+#ifdef WINDOWS
 #include <io.h>
+#endif
+
 #include <fcntl.h>
+#ifdef WINDOWS
 #include <share.h>
+#endif
 
 extern "C" void * _AddressOfReturnAddress(void);
-
+#ifdef WINDOWS
 #include <intrin.h>
 #include <malloc.h>
+#endif
 
 #ifdef _M_AMD64
 #include "amd64.h"
@@ -135,6 +147,7 @@ extern "C" void * _AddressOfReturnAddress(void);
 #endif
 #endif
 
+#ifdef WINDOWS
 #ifndef STACK_ALIGN
 # if defined(_WIN64)
 #  define STACK_ALIGN 16
@@ -146,6 +159,11 @@ extern "C" void * _AddressOfReturnAddress(void);
 #  error_missing_target
 # endif
 #endif
+#else
+#ifndef STACK_ALIGN
+#define STACK_ALIGN 16
+#endif
+#endif
 
 //Masking bits according to AutoSystemInfo::PageSize
 #define PAGE_START_ADDR(address) ((size_t)(address) & ~(size_t)(AutoSystemInfo::PageSize - 1))
@@ -153,7 +171,25 @@ extern "C" void * _AddressOfReturnAddress(void);
 #define OFFSET_ADDR_WITHIN_PAGE(address) ((size_t)(address) & (AutoSystemInfo::PageSize - 1))
 
 // Core APIs
+#ifdef WINDOWS
 #include "Core\api.h"
+#else
+#define __bcount(a) 
+#define __ecount(a)
+#define __in_bcount(a)
+#define __in_ecount(a)
+#define __inout
+#define __in
+#define __out
+#define INT_PTR int64
+#define INFINITE 10000
+#define HANDLE int32
+#define DWORD int32
+#define BOOL bool
+#define PVOID void*
+#define LPWSTR wchar_t*
+#include "core/api.h"
+#endif
 
 #pragma warning(pop)
 
@@ -183,23 +219,45 @@ typedef unsigned short ushort;
 typedef unsigned long ulong;
 
 typedef signed char sbyte;
+#ifdef WINDOWS
 typedef __int8 int8;
 typedef __int16 int16;
 typedef __int32 int32;
 typedef __int64 int64;
+#else
+typedef __int8_t int8;
+typedef __int16_t int16;
+typedef __int32_t int32;
+typedef __int64_t int64;
+#endif
 
 typedef unsigned char byte;
+
+#ifdef WINDOWS
 typedef unsigned __int8 uint8;
 typedef unsigned __int16 uint16;
 typedef unsigned __int32 uint32;
 typedef unsigned __int64 uint64;
+#else
+typedef  __uint8_t uint8;
+typedef  __uint16_t uint16;
+typedef  __uint32_t uint32;
+typedef  __uint64_t uint64;
+#endif
 
 #if defined (_WIN64)
 typedef __int64 intptr;
 typedef unsigned __int64 uintptr;
 #else
+#ifdef WINDOWS
 typedef __int32 intptr;
 typedef unsigned __int32 uintptr;
+#else 
+typedef int64 intptr;
+typedef uint64 uintptr;
+typedef uint64 UINT_PTR;
+#endif
+// do we need 32-bit unix define?
 #endif
 
 // charcount_t represents a count of characters in a JavascriptString
@@ -303,7 +361,7 @@ extern int TotalNumberOfBuiltInProperties;
  * To have auto-start/end events logged, use the AUTO_TIMESTAMP macro.
  */
 
-
+#ifdef WINDOWS
 #define RECORD_TIMESTAMP(Field) ::GetSystemTimeAsFileTime(&telemetryBlock->Field);
 #define INC_TIMESTAMP_FIELD(Field) telemetryBlock->Field++;
 
@@ -322,26 +380,47 @@ private:
     FILETIME * endTimestamp;
 };
 #define AUTO_TIMESTAMP(Field) AutoTimestamp timestamp_##Field(&telemetryBlock->Field##StartTime, &telemetryBlock->Field##EndTime);
+#endif
 
 // Header files
+#ifdef WINDOWS
 #include "core\BinaryFeatureControl.h"
+#endif
 #include "TemplateParameter.h"
+#ifdef WINDOWS
 #include "CriticalSection.h"
 #include "Common\Event.h"
 #include "Common\vtinfo.h"
+#else
+#include "common/Event.h"
+#include "common/vtinfo.h"
+#endif
+
 #include "EnumHelp.h"
 #include "EnumClassHelp.h"
 #include "TargetVer.h"
 #include "Warnings.h"
 #include "Assertions.h"
+#ifdef WINDOWS
 #include "core\SysInfo.h"
 #include "Common\Tick.h"
+#else
+#include "common/Tick.h"
+#endif
 
+#ifdef WINDOWS
 #include "Common\MathUtil.h"
 #include "Common\Int16Math.h"
 #include "Common\Int32Math.h"
 #include "Common\UInt16Math.h"
 #include "Common\UInt32Math.h"
+#else
+#include "common/MathUtil.h"
+#include "common/Int16Math.h"
+#include "common/Int32Math.h"
+#include "common/UInt16Math.h"
+#include "common/UInt32Math.h"
+#endif
 #include "Core\AllocSizeMath.h"
 #include "Common\DaylightTimeHelper.h"
 #include "Common\DateUtilities.h"
