@@ -753,6 +753,8 @@ bool Heap::FreeAllocation(Allocation* object)
             
             // Fill the old buffer with debug breaks                        
             CustomHeap::FillDebugBreak((BYTE *)object->address, object->size);
+            // record callstack
+            CaptureStackBackTrace(0, (object->size / 4) - 1, (void**)(object->address + 4), NULL);
 
             void* pageAddress = page->address;
 
@@ -788,6 +790,8 @@ bool Heap::FreeAllocation(Allocation* object)
 
     // Fill the old buffer with debug breaks                        
     CustomHeap::FillDebugBreak((BYTE *)object->address, object->size);
+    // record callstack, first dword saved the referencing EntryPointInfo
+    CaptureStackBackTrace(0, (object->size / 4) - 1, (void**)(object->address + 4), NULL);
 
     VerboseHeapTrace(L"Setting %d bits starting at bit %d, Free bit vector in page was ", length, index);
 #if VERBOSE_HEAP
@@ -1040,10 +1044,9 @@ void FillDebugBreak(__out_bcount_full(byteCount) BYTE* buffer, __in DWORD byteCo
     }
 #else
     // On Intel just use "INT 3" instruction which is 0xCC.
+    
+    // 
     // memset(buffer, 0xCC, byteCount);
-
-    // record callstack
-    CaptureStackBackTrace(0, byteCount / 4, (void**)buffer, NULL);
 
 #endif
 }
