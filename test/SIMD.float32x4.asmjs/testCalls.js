@@ -1,3 +1,4 @@
+WScript.LoadScriptFile("..\\UnitTestFramework\\SimdJsHelpers.js");
 function asmModule(stdlib, imports) {
     "use asm";
     
@@ -213,63 +214,15 @@ var s6 = SIMD.Float32x4(1.0, 2.0, 3.0, 4.0);
 var s7 = SIMD.Float32x4(1.0, 2.0, 3.0, 4.0);
 var s8 = SIMD.Float32x4(1.0, 2.0, 3.0, 4.0);
 
-var ret1 = m.func1(s1, 1, s2, 3);
-var ret2 = m.func2(s1, 3, s2, s3, s4, 1);
-var ret3 = m.func3(s1, 33.2, s2, s3, 35.1, s4, 1, s5, s6, 1.0, s7, s8, 5.3);
+var c;
+c = m.func1(s1, 1, s2, 3);
+equalSimd([2.000000,4.000000,6.000000,8.000000], c, SIMD.Float32x4, "func1");
 
+c = m.func2(s1, 3, s2, s3, s4, 1);
+equalSimd([4.000000,8.000000,12.000000,16.000000], c, SIMD.Float32x4, "func1");
 
-var ret4 = m.func4();
-/*
-var ret5 = m.func5();
-var ret6 = m.func6();
-*/
-/*
-var ret7 = m.func7();
-var ret8 = m.func8();
-var ret9 = m.func9();
+c = m.func3(s1, 33.2, s2, s3, 35.1, s4, 1, s5, s6, 1.0, s7, s8, 5.3);
+equalSimd([8.000000,16.000000,24.000000,32.000000], c, SIMD.Float32x4, "func1");
 
-
-var ret10 = m.func10();
-var ret11 = m.func11();
-var ret12 = m.func12();
-
-*/
-
-WScript.Echo(typeof(ret1));
-WScript.Echo(ret1.toString());
-
-WScript.Echo(typeof(ret2));
-WScript.Echo(ret2.toString());
-
-WScript.Echo(typeof(ret3));
-WScript.Echo(ret3.toString());
-
-WScript.Echo(typeof(ret4));
-WScript.Echo(ret4.toString());
-
-/*
-WScript.Echo(typeof(ret5));
-WScript.Echo(ret5.toString());
-
-WScript.Echo(typeof(ret6));
-WScript.Echo(ret6.toString());
-*/
-/*
-WScript.Echo(typeof(ret7));
-WScript.Echo(ret7.toString());
-
-WScript.Echo(typeof(ret8));
-WScript.Echo(ret8.toString());
-
-WScript.Echo(typeof(ret9));
-WScript.Echo(ret9.toString());
-
-WScript.Echo(typeof(ret10));
-WScript.Echo(ret10.toString());
-
-WScript.Echo(typeof(ret11));
-WScript.Echo(ret11.toString());
-
-WScript.Echo(typeof(ret12));
-WScript.Echo(ret12.toString());
-*/
+c = m.func4();
+equalSimd([301.000000,301.000000,301.000000,301.000000], c, SIMD.Float32x4, "func1");

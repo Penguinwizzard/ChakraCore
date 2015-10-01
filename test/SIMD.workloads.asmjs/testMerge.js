@@ -1,3 +1,6 @@
+this.WScript.LoadScriptFile("..\\UnitTestFramework\\SimdJsHelpers.js");
+
+
 function asmModule(stdlib, imports, buffer) {
     "use asm";
     
@@ -254,34 +257,82 @@ function initI32(buffer) {
 	}
 	return values.length;
 }
-function printBuffer(buffer, count)
+function validateBuffer(buffer, count)
 {
     var f4;
+    var data = [
+    SIMD.Float32x4(0.0,10.0,20.0,30.0),
+    SIMD.Float32x4(40.0,50.0,60.0,70.0),
+    SIMD.Float32x4(80.0,90.0,100.0,110.0),
+    SIMD.Float32x4(120.0,130.0,140.0,150.0),
+    SIMD.Float32x4(160.0,170.0,180.0,190.0),
+    SIMD.Float32x4(200.0,210.0,220.0,230.0),
+    SIMD.Float32x4(240.0,250.0,260.0,270.0),
+    SIMD.Float32x4(280.0,290.0,300.0,310.0),
+    SIMD.Float32x4(320.0,330.0,340.0,350.0),
+    SIMD.Float32x4(360.0,370.0,380.0,390.0),
+    SIMD.Float32x4(0.0,10.0,20.0,30.0),
+    SIMD.Float32x4(200.0,210.0,220.0,230.0),
+    SIMD.Float32x4(40.0,50.0,60.0,70.0),
+    SIMD.Float32x4(240.0,250.0,260.0,270.0),
+    SIMD.Float32x4(80.0,90.0,100.0,110.0),
+    SIMD.Float32x4(280.0,290.0,300.0,310.0),
+    SIMD.Float32x4(120.0,130.0,140.0,150.0),
+    SIMD.Float32x4(320.0,330.0,340.0,350.0),
+    SIMD.Float32x4(160.0,170.0,180.0,190.0),
+    SIMD.Float32x4(360.0,370.0,380.0,390.0),
+    SIMD.Float32x4(800.0,810.0,820.0,830.0),
+    SIMD.Float32x4(840.0,850.0,860.0,870.0),
+    SIMD.Float32x4(880.0,890.0,900.0,910.0),
+    SIMD.Float32x4(920.0,930.0,940.0,950.0),
+    SIMD.Float32x4(960.0,970.0,980.0,990.0)
+    ];
     for (var i = 0; i < count/* * 16*/; i += 4)
     {
         f4 = SIMD.Float32x4.load(buffer, i);
-        WScript.Echo(f4.toString());
+        //printF4(f4);
+        //printF4(data[i/4]);
+        equalSimd(data[i/4], f4, SIMD.Float32x4, "validateBuffer");
     }
 }
-function printBuffer1(buffer, count)
+function validateBuffer1(buffer, count)
 {
     var i4;
+        var data = [
+    SIMD.Int32x4(0,10,20,30),
+    SIMD.Int32x4(40,50,60,70),
+    SIMD.Int32x4(80,90,100,110),
+    SIMD.Int32x4(120,130,140,150),
+    SIMD.Int32x4(160,170,180,190),
+    SIMD.Int32x4(200,210,220,230),
+    SIMD.Int32x4(240,250,260,270),
+    SIMD.Int32x4(280,290,300,310),
+    SIMD.Int32x4(320,330,340,350),
+    SIMD.Int32x4(360,370,380,390),
+    SIMD.Int32x4(0,10,20,30),
+    SIMD.Int32x4(200,210,220,230),
+    SIMD.Int32x4(40,50,60,70),
+    SIMD.Int32x4(240,250,260,270),
+    SIMD.Int32x4(80,90,100,110),
+    SIMD.Int32x4(280,290,300,310),
+    SIMD.Int32x4(120,130,140,150),
+    SIMD.Int32x4(320,330,340,350),
+    SIMD.Int32x4(160,170,180,190),
+    SIMD.Int32x4(360,370,380,390),
+    SIMD.Int32x4(800,810,820,830),
+    SIMD.Int32x4(840,850,860,870),
+    SIMD.Int32x4(880,890,900,910),
+    SIMD.Int32x4(920,930,940,950),
+    SIMD.Int32x4(960,970,980,990)
+    ];
     for (var i = 0; i < count/* * 16*/; i += 4)
     {
         i4 = SIMD.Int32x4.load(buffer, i);
-        WScript.Echo(i4.toString());
+        equalSimd(data[i/4], i4, SIMD.Int32x4, "validateBuffer1");
     }
 }
 
-function printBuffer2(buffer, count)
-{
-    var d2;
-    for (var i = 0; i < count/* * 16*/; i += 4)
-    {
-        d2 = SIMD.Float64x2.load(buffer, i);
-        WScript.Echo(d2.toString());
-    }
-}
+
 
 function printResults(res)
 {
@@ -290,7 +341,6 @@ function printResults(res)
 }
 
 inputLength = initF32(buffer);
-WScript.Echo(inputLength);
 
 
 //Module initialization
@@ -302,23 +352,18 @@ var values = new Float32Array(buffer);
 initF32(buffer);
 
 
-WScript.Echo("Heap");
-printBuffer(values, 4 * 25);
-WScript.Echo("Merging 5 vectors from 0 and 5 indices and writing the results to the index 10.");
 var ret = m.merge(0, 5 * 16, 10 * 16, 5);
-printBuffer(values, 4 * 25);
+validateBuffer(values, 4 * 25);
 
 
 initI32(buffer);
-WScript.Echo("Heap");
-printBuffer1(values, 4 * 25);
-WScript.Echo("Merging 5 vectors from 0 and 5 indices and writing the results to the index 10.");
 var ret = m.merge1(0, 5 * 16, 10 * 16, 5);
-printBuffer1(values, 4 * 25);
+validateBuffer1(values, 4 * 25);
 
+/*
 initF32(buffer);
 WScript.Echo("Heap");
 printBuffer2(values, 4 * 25);
 WScript.Echo("Merging 5 vectors from 0 and 5 indices and writing the results to the index 10.");
 var ret = m.merge2(0, 5 * 16, 10 * 16, 5);
-printBuffer2(values, 4 * 25);
+printBuffer2(values, 4 * 25);*/

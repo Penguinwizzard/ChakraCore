@@ -1,3 +1,4 @@
+WScript.LoadScriptFile("..\\UnitTestFramework\\SimdJsHelpers.js");
 function asmModule(stdlib, imports) {
     "use asm";
     var i4 = stdlib.SIMD.Int32x4;
@@ -171,13 +172,12 @@ function asmModule(stdlib, imports) {
 
 var m = asmModule(this, { g1: SIMD.Float32x4(90934.2, 123.9, 419.39, 449.0), g2: SIMD.Int32x4(-1065353216, -1073741824, -1077936128, -1082130432) });
 
+var c;
+c = m.func1();
+equalSimd([1678.960205,44.931900,0.995500,2.747400], c, SIMD.Float32x4, "func1");
 
-WScript.Echo("Func1");
-WScript.Echo(m.func1().toString());
+c = m.func2();
+equalSimd([46602.898438,-64339908.000000,16134.360352,0.000000], c, SIMD.Float32x4, "func2");
 
-WScript.Echo("Func2");
-WScript.Echo(m.func2().toString());
-
-WScript.Echo("Func3");
-WScript.Echo(m.func3().toString());
-
+c = m.func3();
+equalSimd([5033.200195,-6802.000000,-8387942.500000,-31000.099609], c, SIMD.Float32x4, "func3");

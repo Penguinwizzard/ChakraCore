@@ -1,3 +1,5 @@
+this.WScript.LoadScriptFile("..\\UnitTestFramework\\SimdJsHelpers.js");
+
 function asmModule(stdlib, imports, buffer) {
     "use asm";
     
@@ -232,34 +234,58 @@ function initI32(buffer) {
 	}
 	return values.length;
 }
-function printBuffer(buffer, count)
+function validateBuffer(buffer, count)
 {
     var f4;
+    var data = [
+    SIMD.Float32x4(0.0,20.0,40.0,60.0),
+    SIMD.Float32x4(80.0,100.0,120.0,140.0),
+    SIMD.Float32x4(160.0,180.0,200.0,220.0),
+    SIMD.Float32x4(240.0,260.0,280.0,300.0),
+    SIMD.Float32x4(320.0,340.0,360.0,380.0),
+    SIMD.Float32x4(400.0,420.0,440.0,460.0),
+    SIMD.Float32x4(480.0,500.0,520.0,540.0),
+    SIMD.Float32x4(560.0,580.0,600.0,620.0),
+    SIMD.Float32x4(640.0,660.0,680.0,700.0),
+    SIMD.Float32x4(720.0,740.0,760.0,780.0)
+    ];
     for (var i = 0; i < count/* * 16*/; i += 4)
     {
         f4 = SIMD.Float32x4.load(buffer, i);
-        WScript.Echo(f4.toString());
+        
+        //values = data[i/4];
+        //printF4(f4);
+        //printF4(values);
+        equalSimd(data[i/4], f4, SIMD.Float32x4, "validateBuffer");
+        
     }
 }
-function printBuffer2(buffer, count)
+function validateBuffer2(buffer, count)
 {
     var i4;
-    for (var i = 0; i < count/* * 16*/; i += 4)
+    var data = [
+        SIMD.Int32x4(0,20,40,60),
+        SIMD.Int32x4(80,100,120,140),
+        SIMD.Int32x4(160,180,200,220),
+        SIMD.Int32x4(240,260,280,300),
+        SIMD.Int32x4(320,340,360,380),
+        SIMD.Int32x4(400,420,440,460),
+        SIMD.Int32x4(480,500,520,540),
+        SIMD.Int32x4(560,580,600,620),
+        SIMD.Int32x4(640,660,680,700),
+        SIMD.Int32x4(720,740,760,780)
+    ];
+    
+    for (var i = 0; i < count; i += 4)
     {
         i4 = SIMD.Int32x4.load(buffer, i);
-        WScript.Echo(i4.toString());
+        //values = data[i/4];
+        //WScript.Echo(i4.toString());
+        //WScript.Echo(values.toString());
+        equalSimd(data[i/4], i4, SIMD.Int32x4, "validateBuffer2");
     }
 }
 
-function printBuffer3(buffer, count)
-{
-    var d2;
-    for (var i = 0; i < count/* * 16*/; i += 4)
-    {
-        d2 = SIMD.Float64x2.load(buffer, i);
-        WScript.Echo(d2.toString());
-    }
-}
 
 
 function printResults(res)
@@ -269,7 +295,6 @@ function printResults(res)
 }
 
 inputLength = initF32(buffer);
-WScript.Echo(inputLength);
 
 
 //Module initialization
@@ -282,20 +307,18 @@ var values = new Float32Array(buffer);
 //var ret = m.nestedLoadStoreUint8(10); //Int8Heap load
 //printResults(ret); 
 
-WScript.Echo("Heap");
-printBuffer(values, 4 * 10);
-WScript.Echo("Scaling 5 f4 vectors by factor of 2.0");
+
 m.scale(0, 16 * 10); //Scale
-printBuffer(values, 4 * 10);
+validateBuffer(values, 4 * 10);
 
 initI32(buffer);
 
-WScript.Echo("Heap");
-printBuffer2(values, 4 * 10);
-WScript.Echo("Scaling 5 i4 vectors by factor of 2.0");
-m.scale2(0, 16 * 10); //Scale
-printBuffer2(values, 4 * 10);
 
+m.scale2(0, 16 * 10); //Scale
+validateBuffer2(values, 4 * 10);
+
+/*
+// D2 not supported for now
 initF32(buffer);
 
 WScript.Echo("Heap");
@@ -303,4 +326,4 @@ printBuffer3(values, 4 * 10);
 WScript.Echo("Scaling 5 d2 vectors by factor of 2.0");
 m.scale3(0, 16 * 10); //Scale
 printBuffer3(values, 4 * 10);
-
+*/

@@ -1,3 +1,4 @@
+WScript.LoadScriptFile("..\\UnitTestFramework\\SimdJsHelpers.js");
 function asmModule(stdlib, imports) {
     "use asm";
     
@@ -147,7 +148,7 @@ function asmModule(stdlib, imports) {
             loopIndex = (loopIndex - 1) | 0;
         }
         while ( (loopIndex | 0) > 0);
-
+    
         return f4check(x);
     }
     
@@ -315,64 +316,39 @@ function asmModule(stdlib, imports) {
 
 var m = asmModule(this, {g1:SIMD.Float32x4(90934.2,123.9,419.39,449.0), g2:SIMD.Int32x4(-1065353216, -1073741824,-1077936128, -1082130432), g3:SIMD.Float64x2(110.20, 58967.0, 14511.670, 191766.23431)});
 
-var ret1 = m.func1();
-var ret1 = m.func1();
+var c;
+c = m.func1();
+equalSimd([5033.200195,3401.000000,665.340027,32234.099609], c, SIMD.Float32x4, "func1");
 
-var ret2 = m.func2();
+c = m.func2();
+equalSimd([110.199997,58967.000000,0.000000,0.000000], c, SIMD.Float32x4, "func2");
 
-var ret3 = m.func3();
+c = m.func3();
+equalSimd([0.123440,1.657800,0.000000,0.000000], c, SIMD.Float32x4, "func3");
 
+c = m.func4();
+equalSimd([405648183006089761369226215424.000000,2.836562,0.000000,2.041750], c, SIMD.Float32x4, "func4");
 
-var ret4 = m.func4();
-var ret5 = m.func5();
-var ret6 = m.func6();
+c = m.func5();
+equalSimd([-107374184.000000,3.430469,0.000000,7.399765], c, SIMD.Float32x4, "func5");
 
+c = m.func6();
+equalSimd([-0.000000,1.496880,8026220.000000,1.957225], c, SIMD.Float32x4, "func6");
 
-var ret7 = m.func7();
-var ret8 = m.func8();
-var ret9 = m.func9();
+c = m.func7();
+equalSimd([1034.000000,22342.000000,1233.000000,40443.000000], c, SIMD.Float32x4, "func7");
 
+c = m.func8();
+equalSimd([-1065353216.000000,-1073741824.000000,-1077936128.000000,-1082130432.000000], c, SIMD.Float32x4, "func8");
 
-var ret10 = m.func10();
-var ret11 = m.func11();
-var ret12 = m.func12();
+c = m.func9();
+equalSimd([1065353216.000000,1073741824.000000,1077936128.000000,1082130432.000000], c, SIMD.Float32x4, "func9");
 
+c = m.func10();
+equalSimd([1.0,2.0,3.0,4.0], c, SIMD.Float32x4, "func10");
 
+c = m.func11();
+equalSimd([-4.0,-2.0,-1.5,-1.0], c, SIMD.Float32x4, "func11");
 
-
-WScript.Echo(typeof(ret1));
-WScript.Echo(ret1.toString());
-
-WScript.Echo(typeof(ret2));
-WScript.Echo(ret2.toString());
-
-WScript.Echo(typeof(ret3));
-WScript.Echo(ret3.toString());
-
-WScript.Echo(typeof(ret4));
-WScript.Echo(ret4.toString());
-
-WScript.Echo(typeof(ret5));
-WScript.Echo(ret5.toString());
-
-WScript.Echo(typeof(ret6));
-WScript.Echo(ret6.toString());
-
-WScript.Echo(typeof(ret7));
-WScript.Echo(ret7.toString());
-
-WScript.Echo(typeof(ret8));
-WScript.Echo(ret8.toString());
-
-WScript.Echo(typeof(ret9));
-WScript.Echo(ret9.toString());
-
-WScript.Echo(typeof(ret10));
-WScript.Echo(ret10.toString());
-
-WScript.Echo(typeof(ret11));
-WScript.Echo(ret11.toString());
-
-WScript.Echo(typeof(ret12));
-WScript.Echo(ret12.toString());
-
+c = m.func12();
+equalSimd([1.0,2.0,3.0,4.0], c, SIMD.Float32x4, "func12");

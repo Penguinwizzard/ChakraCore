@@ -1,3 +1,5 @@
+WScript.LoadScriptFile("..\\UnitTestFramework\\SimdJsHelpers.js");
+
 function asmModule(stdlib, imports) {
     "use asm";
     
@@ -230,61 +232,40 @@ function asmModule(stdlib, imports) {
 
 var m = asmModule(this, {g1:SIMD.Float32x4(90934.2,123.9,419.39,449.0), g2:SIMD.Int32x4(-1065353216, -1073741824,-1077936128, -1082130432), g3:SIMD.Float64x2(110.20, 58967.0, 14511.670, 191766.23431)});
 
-var ret1 = m.func1();
-var ret2 = m.func2();
-var ret3 = m.func3();
+var c;
+c = m.func1();
+equalSimd([-5033.2001953125, 3401, -665.3400268554687, 32234.099609375], c, SIMD.Float32x4, "func1");
+
+c = m.func2();
+equalSimd([-90934.203125, -123.9000015258789, -419.3900146484375, -449], c, SIMD.Float32x4, "func2");
+
+c = m.func3();
+equalSimd([5033.2001953125,3401.0,-665.3400268554687,-32234.099609375], c, SIMD.Float32x4, "func3");
+
+c = m.func4();
+equalSimd([5033.2001953125, 3401, 665.3400268554687, 32234.099609375], c, SIMD.Float32x4, "func4");
+
+c = m.func5();
+equalSimd([90934.203125, 123.9000015258789, 419.3900146484375, 449.0], c, SIMD.Float32x4, "func5");
+
+c = m.func6();
+equalSimd([5033.2001953125, 3401.0, 665.3400268554687, 32234.099609375], c, SIMD.Float32x4, "func6");
 
 
-var ret4 = m.func4();
-var ret5 = m.func5();
-var ret6 = m.func6();
-
-/*
-var ret7 = m.func7();
-var ret8 = m.func8();
-var ret9 = m.func9();
 
 
-var ret10 = m.func10();
-var ret11 = m.func11();
-var ret12 = m.func12();
 
-*/
 
-WScript.Echo(typeof(ret1));
-WScript.Echo(ret1.toString());
 
-WScript.Echo(typeof(ret2));
-WScript.Echo(ret2.toString());
 
-WScript.Echo(typeof(ret3));
-WScript.Echo(ret3.toString());
 
-WScript.Echo(typeof(ret4));
-WScript.Echo(ret4.toString());
 
-WScript.Echo(typeof(ret5));
-WScript.Echo(ret5.toString());
 
-WScript.Echo(typeof(ret6));
-WScript.Echo(ret6.toString());
 
-/*
-WScript.Echo(typeof(ret7));
-WScript.Echo(ret7.toString());
 
-WScript.Echo(typeof(ret8));
-WScript.Echo(ret8.toString());
 
-WScript.Echo(typeof(ret9));
-WScript.Echo(ret9.toString());
 
-WScript.Echo(typeof(ret10));
-WScript.Echo(ret10.toString());
 
-WScript.Echo(typeof(ret11));
-WScript.Echo(ret11.toString());
 
-WScript.Echo(typeof(ret12));
-WScript.Echo(ret12.toString());
-*/
+
+

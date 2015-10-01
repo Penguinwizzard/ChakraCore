@@ -1,3 +1,4 @@
+WScript.LoadScriptFile("..\\UnitTestFramework\\SimdJsHelpers.js");
 function asmModule(stdlib, imports) {
     "use asm";
     var i4 = stdlib.SIMD.Int32x4;
@@ -223,20 +224,17 @@ function asmModule(stdlib, imports) {
 var m = asmModule(this, { g1: SIMD.Float32x4(90934.2, 123.9, 419.39, 449.0), g2: SIMD.Int32x4(-1065353216, -1073741824, -1077936128, -1082130432) });
 
 var ret;
-WScript.Echo("Func1");
+
 ret = m.func1();
-WScript.Echo(typeof (ret));
-WScript.Echo(ret.toString());
+equalSimd([-459958181167104.000000,2570.530518,-8223534.000000,8215190.500000], ret, SIMD.Float32x4, "func1");
 
-WScript.Echo("Func2");
+
 ret = m.func2();
-WScript.Echo(typeof (ret));
-WScript.Echo(ret.toString());
+equalSimd([109628176.000000,18.593628,3401.000000,1194581.375000], ret, SIMD.Float32x4, "func2");
 
-WScript.Echo("Func3");
+
 ret = m.func3();
-WScript.Echo(typeof (ret));
-WScript.Echo(ret.toString());
+equalSimd([90940.203125,7929.600098,0.00001581354445079342,669.599976], ret, SIMD.Float32x4, "func3");
 
 WScript.Echo("Func4");
 ret = m.func4();
@@ -253,7 +251,5 @@ ret = m.func6();
 WScript.Echo(typeof (ret));
 WScript.Echo(ret.toString());
 
-WScript.Echo("Func7");
 ret = m.func7();
-WScript.Echo(typeof (ret));
-WScript.Echo(ret.toString());
+equalSimd([2089.901855,1.140000,-1.000000,2089.901855], ret, SIMD.Float32x4, "func7");
