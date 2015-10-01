@@ -9366,109 +9366,108 @@ CommonNumber:
         Js::ScriptContext* scriptContext)
     {
         Var element;
-#if DBG
         uint64 allocSize = length * elementSize;
-#endif
+
         // TODO:further fast path the call for things like IntArray convert to int, floatarray convert to float etc.
         // such that we don't need boxing.
         switch (valueType)
         {
         case JsInt8Type:
-            Assert(elementSize == sizeof(int8));
+            AnalysisAssert(elementSize == sizeof(int8));
             for (UINT i = 0; i < length; i++)
             {
                 element = GetElementAtIndex(arrayObject, i, scriptContext);
-                Assert((i + 1) * sizeof(int8) <= allocSize);
+                AnalysisAssert((i + 1) * sizeof(int8) <= allocSize);
                 ((int8*)buffer)[i] = Js::JavascriptConversion::ToInt8(element, scriptContext);                
             }
             break;
         case JsUint8Type:
-            Assert(elementSize == sizeof(uint8));
+            AnalysisAssert(elementSize == sizeof(uint8));
             for (UINT i = 0; i < length; i++)
             {
                 element = GetElementAtIndex(arrayObject, i, scriptContext);
-                Assert((i + 1) * sizeof(uint8) <= allocSize);
+                AnalysisAssert((i + 1) * sizeof(uint8) <= allocSize);
                 ((uint8*)buffer)[i] = Js::JavascriptConversion::ToUInt8(element, scriptContext);                
             }
             break;
         case JsInt16Type:
-            Assert(elementSize == sizeof(int16));
+            AnalysisAssert(elementSize == sizeof(int16));
             for (UINT i = 0; i < length; i++)
             {
                 element = GetElementAtIndex(arrayObject, i, scriptContext);
-                Assert((i + 1) * sizeof(int16) <= allocSize);
+                AnalysisAssert((i + 1) * sizeof(int16) <= allocSize);
                 ((int16*)buffer)[i] = Js::JavascriptConversion::ToInt16(element, scriptContext);                
             }
             break;
         case JsUint16Type:
-            Assert(elementSize == sizeof(uint16));
+            AnalysisAssert(elementSize == sizeof(uint16));
             for (UINT i = 0; i < length; i++)
             {
                 element = GetElementAtIndex(arrayObject, i, scriptContext);
-                Assert((i + 1) * sizeof(uint16) <= allocSize);
+                AnalysisAssert((i + 1) * sizeof(uint16) <= allocSize);
                 ((uint16*)buffer)[i] = Js::JavascriptConversion::ToUInt16(element, scriptContext);                
             }
             break;
         case JsInt32Type:
-            Assert(elementSize == sizeof(int32));
+            AnalysisAssert(elementSize == sizeof(int32));
             for (UINT i = 0; i < length; i++)
             {
                 element = GetElementAtIndex(arrayObject, i, scriptContext);
-                Assert((i + 1) * sizeof(int32) <= allocSize);
+                AnalysisAssert((i + 1) * sizeof(int32) <= allocSize);
                 ((int32*)buffer)[i] = Js::JavascriptConversion::ToInt32(element, scriptContext);                
             }
             break;
         case JsUint32Type:
-            Assert(elementSize == sizeof(uint32));
+            AnalysisAssert(elementSize == sizeof(uint32));
             for (UINT i = 0; i < length; i++)
             {
                 element = GetElementAtIndex(arrayObject, i, scriptContext);
-                Assert((i + 1) * sizeof(uint32) <= allocSize);
+                AnalysisAssert((i + 1) * sizeof(uint32) <= allocSize);
                 ((uint32*)buffer)[i] = Js::JavascriptConversion::ToUInt32(element, scriptContext);                
             }
             break;
         case JsInt64Type:
-            Assert(elementSize == sizeof(int64));
+            AnalysisAssert(elementSize == sizeof(int64));
             for (UINT i = 0; i < length; i++)
             {
                 element = GetElementAtIndex(arrayObject, i, scriptContext);
-                Assert((i + 1) * sizeof(int64) <= allocSize);
+                AnalysisAssert((i + 1) * sizeof(int64) <= allocSize);
                 ((int64*)buffer)[i] = Js::JavascriptConversion::ToInt64(element, scriptContext);                
             }
             break;
         case JsUint64Type:
-            Assert(elementSize == sizeof(uint64));
+            AnalysisAssert(elementSize == sizeof(uint64));
             for (UINT i = 0; i < length; i++)
             {
                 element = GetElementAtIndex(arrayObject, i, scriptContext);
-                Assert((i + 1) * sizeof(uint64) <= allocSize);
+                AnalysisAssert((i + 1) * sizeof(uint64) <= allocSize);
                 ((uint64*)buffer)[i] = Js::JavascriptConversion::ToUInt64(element, scriptContext);                
             }
             break;
         case JsFloatType:
-            Assert(elementSize == sizeof(float));
+            AnalysisAssert(elementSize == sizeof(float));
             for (UINT i = 0; i < length; i++)
             {
                 element = GetElementAtIndex(arrayObject, i, scriptContext);
-                Assert((i + 1) * sizeof(float) <= allocSize);
+                AnalysisAssert((i + 1) * sizeof(float) <= allocSize);
                 ((float*)buffer)[i] = Js::JavascriptConversion::ToFloat(element, scriptContext);                
             }
             break;
         case JsDoubleType:
-            Assert(elementSize == sizeof(double));
+            AnalysisAssert(elementSize == sizeof(double));
             for (UINT i = 0; i < length; i++)
             {
                 element = GetElementAtIndex(arrayObject, i, scriptContext);
-                Assert((i + 1) * sizeof(double) <= allocSize);
+                AnalysisAssert((i + 1) * sizeof(double) <= allocSize);
                 ((double*)buffer)[i] = Js::JavascriptConversion::ToNumber(element, scriptContext);                
             }
             break;
         case JsNativeStringType:
-            Assert(elementSize == sizeof(JsNativeString));
+            AnalysisAssert(elementSize == sizeof(JsNativeString));
             for (UINT i = 0; i < length; i++)
             {
                 element = GetElementAtIndex(arrayObject, i, scriptContext);
-                Assert((i + 1) * sizeof(JsNativeString) <= allocSize);
+                AnalysisAssert((i + 1) * sizeof(JsNativeString) <= allocSize);
                 Js::JavascriptString* string = Js::JavascriptConversion::ToString(element, scriptContext);
                 (((JsNativeString*)buffer)[i]).str = string->GetSz();
                 (((JsNativeString*)buffer)[i]).length = string->GetLength();                

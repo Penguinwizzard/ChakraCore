@@ -796,7 +796,7 @@ HeapBlockMap32::GetWriteWatchHelperOnOOM(DWORD writeWatchFlags, _In_ void* baseA
     const size_t pageCount = (regionSize / AutoSystemInfo::PageSize);
 
     // Ensure target buffer
-    AssertMsg(*count >= pageCount, "Not enough space in the buffer to store the write watch state for the given region size");
+    AnalysisAssertMsg(*count >= pageCount, "Not enough space in the buffer to store the write watch state for the given region size");
 
     void* result = nullptr;
     size_t dirtyCount = 0;

@@ -64,7 +64,8 @@ _declspec(thread, selectany) int IsInAssert = false;
 #define DebugOnly(x)
 #endif // DBG
 
-#define AnalysisAssert(x)     Assert(x); __analysis_assume(x)
+#define AnalysisAssert(x)               Assert(x); __analysis_assume(x)
+#define AnalysisAssertMsg(x, comment)   AssertMsg(x, comment); __analysis_assume(x)
 
 #define Unused(var) var;
 
