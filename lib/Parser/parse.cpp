@@ -7154,7 +7154,7 @@ ParseNodePtr Parser::ParseExpr(int oplMin,
         {
             if (nop == knopIncPre || nop == knopDecPre)
             {
-                if (!fCanAssign)
+                if (!fCanAssign && PHASE_ON1(Js::EarlyReferenceErrorsPhase))
                 {
                     Error(JSERR_CantAssignTo);
                 }
@@ -7297,7 +7297,7 @@ ParseNodePtr Parser::ParseExpr(int oplMin,
         if (!m_pscan->FHadNewLine() &&
             (tkInc == m_token.tk || tkDec == m_token.tk))
         {
-            if (!fCanAssign)
+            if (!fCanAssign && PHASE_ON1(Js::EarlyReferenceErrorsPhase))
             {
                 Error(JSERR_CantAssignTo);
             }
@@ -7377,7 +7377,7 @@ ParseNodePtr Parser::ParseExpr(int oplMin,
             {
                 break;
             }
-            if (m_token.tk != tkDArrow && !fCanAssign)
+            if (m_token.tk != tkDArrow && !fCanAssign && PHASE_ON1(Js::EarlyReferenceErrorsPhase))
             {
                 Error(JSERR_CantAssignTo);
                 // No recovery necessary since this is a semantic, not structural, error.
@@ -8496,7 +8496,7 @@ LDefaultTokenFor:
             {
                 Error(ERRsyntax);
             }
-            if (!fCanAssign)
+            if (!fCanAssign && PHASE_ON1(Js::EarlyReferenceErrorsPhase))
             {
                 Error(JSERR_CantAssignTo);
             }
@@ -11150,7 +11150,7 @@ ParseNodePtr Parser::ParseDestructuredVarDecl(tokens declarationType, bool isDec
             // We aren't declaring anything, so scan the ID reference manually.
             pnodeElem = ParseTerm<buildAST>(/* fAllowCall */ m_token.tk != tkSUPER, nullptr, nullptr, &token, false,
                                                              &fCanAssign);
-            if (!fCanAssign)
+            if (!fCanAssign && PHASE_ON1(Js::EarlyReferenceErrorsPhase))
             {
                 Error(JSERR_CantAssignTo);
             }

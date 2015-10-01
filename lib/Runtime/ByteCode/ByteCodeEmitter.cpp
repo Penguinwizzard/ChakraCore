@@ -5729,7 +5729,8 @@ void EmitAssignment(
         break;
 
     default:
-        Assert(false);
+        Assert(!PHASE_ON1(Js::EarlyReferenceErrorsPhase));
+        byteCodeGenerator->Writer()->W1(Js::OpCode::RuntimeReferenceError, SCODE_CODE(JSERR_CantAssignTo));
         break;
     }
 
