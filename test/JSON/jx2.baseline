@@ -130,11 +130,11 @@ J*************************** JSON test stringify - simple, no space, not replace
 "SampleTest"
 
 ------ JSON test stringify: String complex  ------
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with reviver and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 
 ------ JSON test stringify: Number(1)  ------
 1
@@ -264,11 +264,11 @@ true
 "SampleTest"
 
 ------ JSON test stringify: String complex  ------
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with no reviver and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with reviver2 and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 
 ------ JSON test stringify: Number(1)  ------
 1
@@ -398,11 +398,11 @@ true
 "SampleTest"
 
 ------ JSON test stringify: String complex  ------
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with no reviver and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with reviver2 and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 
 ------ JSON test stringify: Number(1)  ------
 1
@@ -591,11 +591,11 @@ true
 "SampleTest"
 
 ------ JSON test stringify: String complex  ------
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with no reviver and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with reviver2 and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 
 ------ JSON test stringify: Number(1)  ------
 1
@@ -784,11 +784,11 @@ true
 "SampleTest"
 
 ------ JSON test stringify: String complex  ------
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with no reviver and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with reviver2 and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 
 ------ JSON test stringify: Number(1)  ------
 1
@@ -965,11 +965,11 @@ true
 "SampleTest"
 
 ------ JSON test stringify: String complex  ------
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with no reviver and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with reviver2 and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 
 ------ JSON test stringify: Number(1)  ------
 1
@@ -1099,11 +1099,11 @@ true
 "SampleTest"
 
 ------ JSON test stringify: String complex  ------
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with no reviver and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with reviver2 and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 
 ------ JSON test stringify: Number(1)  ------
 1
@@ -1255,11 +1255,11 @@ true
 "SampleTest"
 
 ------ JSON test stringify: String complex  ------
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with no reviver and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with reviver2 and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 
 ------ JSON test stringify: Number(1)  ------
 1
@@ -1411,11 +1411,11 @@ true
 "SampleTest"
 
 ------ JSON test stringify: String complex  ------
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with no reviver and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with reviver2 and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 
 ------ JSON test stringify: Number(1)  ------
 1
@@ -1561,11 +1561,11 @@ true
 "SampleTest"
 
 ------ JSON test stringify: String complex  ------
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with no reviver and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with reviver2 and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 
 ------ JSON test stringify: Number(1)  ------
 1
@@ -1695,11 +1695,11 @@ true
 "SampleTest"
 
 ------ JSON test stringify: String complex  ------
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with no reviver and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with reviver2 and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 
 ------ JSON test stringify: Number(1)  ------
 1
@@ -1861,11 +1861,11 @@ true
 "SampleTest"
 
 ------ JSON test stringify: String complex  ------
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with no reviver and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with reviver2 and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 
 ------ JSON test stringify: Number(1)  ------
 1
@@ -2027,11 +2027,11 @@ true
 "SampleTest"
 
 ------ JSON test stringify: String complex  ------
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with no reviver and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with reviver2 and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 
 ------ JSON test stringify: Number(1)  ------
 1
@@ -2184,11 +2184,11 @@ true
 "SampleTest"
 
 ------ JSON test stringify: String complex  ------
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with no reviver and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with reviver2 and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 
 ------ JSON test stringify: Number(1)  ------
 1
@@ -2318,11 +2318,11 @@ true
 "SampleTest"
 
 ------ JSON test stringify: String complex  ------
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with no reviver and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with reviver2 and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 
 ------ JSON test stringify: Number(1)  ------
 1
@@ -2484,11 +2484,11 @@ true
 "SampleTest"
 
 ------ JSON test stringify: String complex  ------
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with no reviver and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with reviver2 and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 
 ------ JSON test stringify: Number(1)  ------
 1
@@ -2650,11 +2650,11 @@ true
 "SampleTest"
 
 ------ JSON test stringify: String complex  ------
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with no reviver and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with reviver2 and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 
 ------ JSON test stringify: Number(1)  ------
 1
@@ -2807,11 +2807,11 @@ true
 "SampleTest"
 
 ------ JSON test stringify: String complex  ------
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with no reviver and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with reviver2 and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 
 ------ JSON test stringify: Number(1)  ------
 1
@@ -2941,11 +2941,11 @@ true
 "SampleTest"
 
 ------ JSON test stringify: String complex  ------
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with no reviver and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with reviver2 and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 
 ------ JSON test stringify: Number(1)  ------
 1
@@ -3138,11 +3138,11 @@ true
 "SampleTest"
 
 ------ JSON test stringify: String complex  ------
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with no reviver and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with reviver2 and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 
 ------ JSON test stringify: Number(1)  ------
 1
@@ -3335,11 +3335,11 @@ true
 "SampleTest"
 
 ------ JSON test stringify: String complex  ------
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with no reviver and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 === Parsed with reviver2 and restringified :
-"/test ze\u0000ro\u000bString\n_u4:_u2:º_u1:\u000e_u2clean:è"
+"/test ze\u0000ro\u000bString\n_u4:a_u2:º_u1:\u000e_u2clean:è"
 
 ------ JSON test stringify: Number(1)  ------
 1

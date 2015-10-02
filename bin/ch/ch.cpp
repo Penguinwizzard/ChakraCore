@@ -267,7 +267,7 @@ HRESULT RunScript(LPCWSTR fileName, LPCWSTR fileContents, BYTE *bcBuffer, wchar_
     JsErrorCode runScript;
     if (bcBuffer != nullptr)
     {
-        runScript = ChakraRTInterface::JsRunSerializedScript(fileContents, bcBuffer, JS_SOURCE_CONTEXT_NONE, fullPath, nullptr/*result*/);
+        runScript = ChakraRTInterface::JsRunSerializedScript(fileContents, bcBuffer, 0/*sourceContext*/, fullPath, nullptr/*result*/);
     }
     else
     {

@@ -126,8 +126,7 @@
     <default>
       <files>bailout-throw.js</files>
       <compile-flags>-bailout:5</compile-flags>
-      <!-- broken in ch because ch doesn't output error stack trace when non-error object is thrown -->
-      <tags>exclude_fre,exclude_ch</tags>
+      <tags>exclude_fre</tags>
       <baseline>bailout-throw.baseline</baseline>
     </default>
   </test>

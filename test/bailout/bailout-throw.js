@@ -10,5 +10,11 @@ function test()
     throw 1;
 }
 
-
-test();
+(function () {
+    try {
+        test();
+    }
+    catch (e) {
+        print(e === 1);
+    }
+})();
