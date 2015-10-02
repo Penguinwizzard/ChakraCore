@@ -133,13 +133,6 @@
   </test>
   <test>
     <default>
-      <files>invalidoutput-reduced.js</files>
-      <baseline>invalidoutput-reduced.baseline</baseline>
-      <compile-flags>-testtrace:asmjs -simdjs -maic:0</compile-flags>
-    </default>
-  </test>
-  <test>
-    <default>
       <files>MathBuiltinsCall.js</files>
       <baseline>MathBuiltinsCall.baseline</baseline>
       <compile-flags>-testtrace:asmjs -simdjs -maic:0</compile-flags>
@@ -333,14 +326,6 @@
   </test>
   <test>
     <default>
-      <files>invalidoutput-reduced.js</files>
-      <baseline>invalidoutput-reduced.baseline</baseline>
-      <tags>exclude_amd64</tags>
-      <compile-flags>-testtrace:asmjs -simdjs -on:asmjsjittemplate -off:fulljit</compile-flags>
-    </default>
-  </test>
-  <test>
-    <default>
       <files>MathBuiltinsCall.js</files>
       <baseline>MathBuiltinsCall.baseline</baseline>
       <tags>exclude_amd64</tags>
@@ -506,13 +491,6 @@
     <default>
       <files>functiontablecalls.js</files>
       <baseline>functiontablecalls.baseline</baseline>
-      <compile-flags>-testtrace:asmjs -simdjs -nonative</compile-flags>
-    </default>
-  </test>
-  <test>
-    <default>
-      <files>invalidoutput-reduced.js</files>
-      <baseline>invalidoutput-reduced.baseline</baseline>
       <compile-flags>-testtrace:asmjs -simdjs -nonative</compile-flags>
     </default>
   </test>

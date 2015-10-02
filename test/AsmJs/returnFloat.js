@@ -11,16 +11,16 @@
         var n = 10;
         var z = 1.1;
 
-       a: while( m < 30)
+       a: while( (m|0) < 30)
         {
             x = fr(x+y);
             do
             {
-                if(n > 50)
+                if((n|0) > 50)
                     return fr(x);
                 x = fr(x+y);                
                 n = (n+1)|0
-            }while(n < 100)
+            }while((n|0) < 100)
         }
         return fr(x);
     }

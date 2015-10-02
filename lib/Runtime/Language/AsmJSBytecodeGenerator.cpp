@@ -650,54 +650,46 @@ namespace Js
     {
         ParseNode* lhs = ParserWrapper::GetBinaryLeft(pnode);
         ParseNode* rhs = ParserWrapper::GetBinaryRight(pnode);
+
         EmitExpressionInfo lhsEmit = Emit( lhs );
         EmitExpressionInfo rhsEmit = Emit( rhs );
-        const AsmJsType& lType = lhsEmit.type;
-        const AsmJsType& rType = rhsEmit.type;
+        AsmJsType& lType = lhsEmit.type;
+        AsmJsType& rType = rhsEmit.type;
 
-        if( !lType.isVarAsmJsType() || !rType.isVarAsmJsType() )
+        // don't need coercion inside an a+b+c type expression
+        if (op == BMO_ADD || op == BMO_SUB)
         {
-            throw AsmJsCompilationException( L"Type of expression unknown" );
+            if (lType.GetWhich() == AsmJsType::Intish && (lhs->nop == knopAdd || lhs->nop == knopSub))
+            {
+                lType = AsmJsType::Int;
+            }
+            if (rType.GetWhich() == AsmJsType::Intish && (rhs->nop == knopAdd || rhs->nop == knopSub))
+            {
+                rType = AsmJsType::Int;
+            }
         }
 
         EmitExpressionInfo emitInfo( AsmJsType::Double );
         StartStatement(pnode);
-        if( (lType.GetWhich() == AsmJsType::Unsigned && rType.isUnsigned()) ||
-            (rType.GetWhich() == AsmJsType::Unsigned && lType.isInt())
-            )
+        if( lType.isInt() && rType.isInt() )
         {
             CheckNodeLocation( lhsEmit, int );
             CheckNodeLocation( rhsEmit, int );
-
-            if( BinaryMathOpCodes[op][BMOT_UInt] == OpCodeAsmJs::Nop )
+            auto opType = lType.isUnsigned() ? BMOT_UInt : BMOT_Int;
+            if (op == BMO_REM || op == BMO_DIV)
             {
-                throw AsmJsCompilationException( L"invalid Binary unsigned operation" );
-            }
-
-            // try to reuse tmp register
-            RegSlot intReg = GetAndReleaseBinaryLocations<int>( &lhsEmit, &rhsEmit );
-            mWriter.AsmReg3( BinaryMathOpCodes[op][BMOT_UInt], intReg, lhsEmit.location, rhsEmit.location );
-            emitInfo.location = intReg;
-            emitInfo.type = AsmJsType::Unsigned;
-        }
-        else if( lType.isInt() && rType.isInt() )
-        {
-            CheckNodeLocation( lhsEmit, int );
-            CheckNodeLocation( rhsEmit, int );
-
-            if( op == BMO_REM || op == BMO_DIV )
-            {
-                if( !lType.isSigned() || !rType.isSigned() )
+                // div and rem must have explicit sign
+                if (!(lType.isSigned() && rType.isSigned()) && !(lType.isUnsigned() && rType.isUnsigned()))
                 {
-                    throw AsmJsCompilationException( L"arguments to / or %% must both be double?, float?, signed, or unsigned; %s and %s given", lType.toChars(), rType.toChars() );
+                    throw AsmJsCompilationException(L"arguments to / or %% must both be double?, float?, signed, or unsigned; %s and %s given", lType.toChars(), rType.toChars());
                 }
             }
 
             // try to reuse tmp register
             RegSlot intReg = GetAndReleaseBinaryLocations<int>( &lhsEmit, &rhsEmit );
-            mWriter.AsmReg3( BinaryMathOpCodes[op][BMOT_Int], intReg, lhsEmit.location, rhsEmit.location );
+            mWriter.AsmReg3(BinaryMathOpCodes[op][opType], intReg, lhsEmit.location, rhsEmit.location );
             emitInfo.location = intReg;
-            emitInfo.type = AsmJsType::Int;
+            emitInfo.type = AsmJsType::Intish;
         }
         else if (lType.isMaybeDouble() && rType.isMaybeDouble())
         {
@@ -2620,20 +2612,15 @@ namespace Js
         StartStatement(pnode);
         EmitExpressionInfo emitInfo(AsmJsType::Int);
         OpCodeAsmJs compOp;
-        // Must check for Unsigned first, because isInt() checks for isUnsigned()
-        if( lType.isUnsigned() && ( rType.isUnsigned() || rhs->nop == knopFlt ) )
+
+        if (lType.isUnsigned() && rType.isUnsigned())
         {
-            if( rhs->nop == knopFlt )
-            {
-                // try to see if that value is actually an unsigned int
-                rhsEmit.location = mFunction->GetConstRegister<int>( (int)( (uint32)rhs->sxFlt.dbl ) );
-            }
-            CheckNodeLocation( lhsEmit, int );
-            CheckNodeLocation( rhsEmit, int );
-            emitInfo.location = GetAndReleaseBinaryLocations<int>( &lhsEmit, &rhsEmit );
+            CheckNodeLocation(lhsEmit, int);
+            CheckNodeLocation(rhsEmit, int);
+            emitInfo.location = GetAndReleaseBinaryLocations<int>(&lhsEmit, &rhsEmit);
             compOp = BinaryComparatorOpCodes[op][BCOT_UInt];
         }
-        else if( lType.isInt() && rType.isInt() )
+        else if( lType.isSigned() && rType.isSigned() )
         {
             CheckNodeLocation( lhsEmit, int );
             CheckNodeLocation( rhsEmit, int );
