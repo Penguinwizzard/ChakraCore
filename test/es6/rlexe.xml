@@ -1053,6 +1053,20 @@
 </test>
 <test>
     <default>
+        <files>globalLambdaNewTargetSyntaxError.js</files>
+        <baseline>globalLambdaNewTargetSyntaxError.baseline</baseline>
+        <tags>exclude_dynapogo</tags>
+    </default>
+</test>
+<test>
+    <default>
+        <files>globalNewTargetSyntaxError.js</files>
+        <baseline>globalNewTargetSyntaxError.baseline</baseline>
+        <tags>exclude_dynapogo</tags>
+    </default>
+</test>
+<test>
+    <default>
         <files>ES6Class_BaseClassConstruction.js</files>
         <compile-flags>-es6classes -args summary -endargs -es6generators</compile-flags>
     </default>

@@ -4,14 +4,6 @@ if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
     this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 }
 
-// global test cases
-assert.isTrue(new.target === undefined, "new.target in global scope is undefined");
-
-var arrow = () => {
-    assert.isTrue(new.target === undefined, "new.target in global arrow is undefined");
-}
-arrow();
-
 var tests = [
     {
         name: "Test new.target parsing path doesn't confuse 'new target'",

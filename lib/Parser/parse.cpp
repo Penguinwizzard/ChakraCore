@@ -134,6 +134,8 @@ Parser::Parser(Js::ScriptContext* scriptContext, BOOL strictMode, PageAllocator 
     m_UsesArgumentsAtGlobal = false;
     m_currentNodeFunc = nullptr;
     m_currentNodeDeferredFunc = nullptr;
+    m_currentNodeNonLambdaFunc = nullptr;
+    m_currentNodeNonLambdaDeferredFunc = nullptr;
     m_currentNodeProg = nullptr;
     m_currDeferredStub = nullptr;
     m_pstmtCur = nullptr;
@@ -1907,6 +1909,15 @@ ParseNode *Parser::GetCurrentFunctionNode()
     }
 }
 
+ParseNode *Parser::GetCurrentNonLamdaFunctionNode()
+{
+    if (m_currentNodeNonLambdaDeferredFunc != nullptr)
+    {
+        return m_currentNodeNonLambdaDeferredFunc;
+    }
+    return m_currentNodeNonLambdaFunc;
+    
+}
 void Parser::RegisterRegexPattern(UnifiedRegex::RegexPattern *const regexPattern)
 {
     Assert(regexPattern);
@@ -2071,6 +2082,27 @@ ParseNodePtr Parser::ParseMetaProperty(tokens metaParentKeyword, charcount_t ich
 {
     AssertMsg(metaParentKeyword == tkNEW, "Only supported for tkNEW parent keywords");
     AssertMsg(this->m_token.tk == tkDot, "We must be currently sitting on the dot after the parent keyword");
+    
+    PnBlock currBlock = GetCurrentBlockInfo()->pnodeBlock->sxBlock;
+    switch (currBlock.scope->GetScopeType())
+    {
+        case ScopeType_GlobalEvalBlock:
+        {
+            break; //TODO we need to distinguish eval in global scope vs in a function
+        }
+        case ScopeType_FunctionBody:
+        {
+            ParseNode* currentFunction = GetCurrentFunctionNode();
+            Assert(currentFunction->nop == knopFncDecl);
+            if (!currentFunction->sxFnc.IsLambda() || GetCurrentNonLamdaFunctionNode() != nullptr)
+            {
+                break;
+            }
+            
+        }
+        default:  
+            Error(ERRInvalidNewTarget);
+    }
 
     m_pscan->Scan();
     
@@ -3715,11 +3747,13 @@ ParseNodePtr Parser::ParseFncDecl(ushort flags, LPCOLESTR pNameHint, const bool 
     ParseNodePtr pnodeFnc = nullptr;
     ParseNodePtr *ppnodeVarSave = nullptr;
     ParseNodePtr pnodeFncSave = nullptr;
+    ParseNodePtr pnodeFncSaveNonLambda = nullptr;
     ParseNodePtr pnodeFncBlockScope = nullptr;
     ParseNodePtr *ppnodeScopeSave = nullptr;
     ParseNodePtr *ppnodeExprScopeSave = nullptr;
     bool funcHasName = false;
     bool fDeclaration = flags & fFncDeclaration;
+    bool fLambda = (flags & fFncLambda) != 0;
     charcount_t ichMin = this->m_pscan->IchMinTok();
     bool wasInDeferredNestedFunc = false;
     CatchPidRefList *catchPidRefList = nullptr;
@@ -3814,6 +3848,12 @@ ParseNodePtr Parser::ParseFncDecl(ushort flags, LPCOLESTR pNameHint, const bool 
         pnodeFncSave = m_currentNodeFunc;
         m_currentNodeFunc = pnodeFnc;
 
+        if (!fLambda)
+        {
+            pnodeFncSaveNonLambda = m_currentNodeNonLambdaFunc;
+            m_currentNodeNonLambdaFunc = pnodeFnc;
+        }
+
         m_pnestedCount = &pnodeFnc->sxFnc.nestedCount;
 
         catchPidRefList = this->GetCatchPidRefList();
@@ -3856,9 +3896,15 @@ ParseNodePtr Parser::ParseFncDecl(ushort flags, LPCOLESTR pNameHint, const bool 
         if (BindDeferredPidRefs())
         {
             Assert(pnodeFnc);
+            
+            if (!fLambda)
+            {
+                pnodeFncSaveNonLambda = m_currentNodeNonLambdaDeferredFunc;
+                m_currentNodeNonLambdaDeferredFunc = pnodeFnc;
+            }
+
             pnodeFncSave = m_currentNodeDeferredFunc;
             m_currentNodeDeferredFunc = pnodeFnc;
-
             m_pnestedCount = &pnodeFnc->sxFnc.nestedCount;
         }
         else
@@ -3871,7 +3917,7 @@ ParseNodePtr Parser::ParseFncDecl(ushort flags, LPCOLESTR pNameHint, const bool 
     {
         Assert(pnodeFnc);
         pnodeFnc->sxFnc.SetIsAsync((flags & fFncAsync) != 0);
-        pnodeFnc->sxFnc.SetIsLambda((flags & fFncLambda) != 0);
+        pnodeFnc->sxFnc.SetIsLambda(fLambda);
         pnodeFnc->sxFnc.SetIsMethod((flags & fFncMethod) != 0);
         pnodeFnc->sxFnc.SetIsClassMember((flags & fFncClassMember) != 0);
     }
@@ -3899,11 +3945,21 @@ ParseNodePtr Parser::ParseFncDecl(ushort flags, LPCOLESTR pNameHint, const bool 
 
             m_currentNodeFunc = pnodeFncSave;
             m_pCurrentAstSize = pAstSizeSave;
+
+            if (!fLambda)
+            {
+                Assert(pnodeFnc == m_currentNodeNonLambdaFunc);
+                m_currentNodeNonLambdaFunc = pnodeFncSaveNonLambda;
+            }
         }
         else
         {
             Assert(pnodeFnc == m_currentNodeDeferredFunc);
-
+            if (!fLambda)
+            {
+                Assert(pnodeFnc == m_currentNodeNonLambdaDeferredFunc);
+                m_currentNodeNonLambdaDeferredFunc = pnodeFncSaveNonLambda;
+            }
             m_currentNodeDeferredFunc = pnodeFncSave;
             if (m_currentNodeFunc && pnodeFnc->sxFnc.HasWithStmt())
             {

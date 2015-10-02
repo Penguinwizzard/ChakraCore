@@ -371,6 +371,8 @@ private:
     static void InitBlockNode(ParseNodePtr pnode, int blockId, PnodeBlockType blockType);
 
 private:
+    ParseNodePtr m_currentNodeNonLambdaFunc; // current function or NULL
+    ParseNodePtr m_currentNodeNonLambdaDeferredFunc; // current function or NULL
     ParseNodePtr m_currentNodeFunc; // current function or NULL
     ParseNodePtr m_currentNodeDeferredFunc; // current function or NULL
     ParseNodePtr m_currentNodeProg; // current programm
@@ -449,6 +451,7 @@ private:
     BlockInfoStack* GetCurrentBlockInfo();
     BlockInfoStack* GetCurrentFunctionBlockInfo();
     ParseNode *GetCurrentFunctionNode();
+    ParseNode *GetCurrentNonLamdaFunctionNode();
     bool IsNodeAllowedForDeferParse(OpCode op) {return !this->m_deferringAST ||
         (op == knopBlock || op == knopVarDecl || op == knopConstDecl || op == knopLetDecl || op == knopFncDecl); }
     bool NextTokenConfirmsLetDecl() const { return m_token.tk == tkID || m_token.tk == tkLBrack || m_token.tk == tkLCurly || m_token.IsReservedWord(); }
