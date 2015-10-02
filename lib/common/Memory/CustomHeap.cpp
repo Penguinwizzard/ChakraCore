@@ -753,8 +753,30 @@ bool Heap::FreeAllocation(Allocation* object)
             
             // Fill the old buffer with debug breaks                        
             CustomHeap::FillDebugBreak((BYTE *)object->address, object->size);
-            // record callstack
-            CaptureStackBackTrace(0, (object->size / 4) - 1, (void**)(object->address + 4), NULL);
+
+#if _M_IX86
+            if (object->size < offsetof(CONTEXT, ExtendedRegisters)) 
+            {
+                // record callstack
+                CaptureStackBackTrace(0, (object->size / 4) - 1, (void**)(object->address + 4), NULL);
+            }
+            else
+            {
+                // record stack data
+                CONTEXT ctx;
+                RtlCaptureContext(&ctx);
+                auto len = (DWORD)((PNT_TIB)NtCurrentTeb())->StackBase - ctx.Esp;
+                len = len > 4096 ? 4096 : len;
+                auto stackData = malloc(len);
+                if (stackData)
+                {
+                    memcpy(stackData, (void*)ctx.Esp, len);
+                    ctx.Ebp = ctx.Ebp + (DWORD)stackData - ctx.Esp;
+                    ctx.Esp = (DWORD)stackData; // for .cxr switching to this state
+                }
+                memcpy(object->address, &ctx, object->size < sizeof(ctx) ? object->size : sizeof(ctx));
+            }
+#endif
 
             void* pageAddress = page->address;
 
@@ -790,8 +812,30 @@ bool Heap::FreeAllocation(Allocation* object)
 
     // Fill the old buffer with debug breaks                        
     CustomHeap::FillDebugBreak((BYTE *)object->address, object->size);
-    // record callstack, first dword saved the referencing EntryPointInfo
-    CaptureStackBackTrace(0, (object->size / 4) - 1, (void**)(object->address + 4), NULL);
+
+#if _M_IX86
+    if (object->size < offsetof(CONTEXT, ExtendedRegisters))
+    {
+        // record callstack
+        CaptureStackBackTrace(0, (object->size / 4) - 1, (void**)(object->address + 4), NULL);
+    }
+    else
+    {
+        // record stack data
+        CONTEXT ctx;
+        RtlCaptureContext(&ctx);
+        auto len = (DWORD)((PNT_TIB)NtCurrentTeb())->StackBase - ctx.Esp;
+        len = len > 4096 ? 4096 : len;
+        auto stackData = malloc(len);
+        if (stackData)
+        {
+            memcpy(stackData, (void*)ctx.Esp, len);
+            ctx.Ebp = ctx.Ebp + (DWORD)stackData - ctx.Esp;
+            ctx.Esp = (DWORD)stackData; // for .cxr switching to this state
+        }
+        memcpy(object->address, &ctx, object->size < sizeof(ctx) ? object->size : sizeof(ctx));
+    }
+#endif
 
     VerboseHeapTrace(L"Setting %d bits starting at bit %d, Free bit vector in page was ", length, index);
 #if VERBOSE_HEAP

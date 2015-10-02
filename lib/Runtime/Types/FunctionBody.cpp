@@ -8817,7 +8817,6 @@ namespace Js
                 Assert(this->validationCookie != nullptr);
                 if (validationCookie == (void*) current)
                 {
-                    *((FunctionEntryPointInfo**)this->GetNativeAddress()) = this;
                     scriptContext->FreeFunctionEntryPoint((Js::JavascriptMethod)this->GetNativeAddress());
                 }
             }
