@@ -878,7 +878,29 @@ namespace Js
     ArrayBuffer * JavascriptArrayBuffer::TransferInternal(uint32 newBufferLength)
     {
         ArrayBuffer* newArrayBuffer;
-        if (newBufferLength == 0 || GetByteLength() == 0)
+        Recycler* recycler = this->GetRecycler();
+
+        // Report differential external memory allocation.
+        // If current bufferLength == 0, new ArrayBuffer creation records the allocation
+        // so no need to do it here.
+        if (this->bufferLength > 0 && newBufferLength != this->bufferLength)
+        {
+            // Expanding buffer
+            if (newBufferLength > this->bufferLength)
+            {
+                if (!recycler->ReportExternalMemoryAllocation(newBufferLength - this->bufferLength))
+                {
+                    JavascriptError::ThrowOutOfMemoryError(GetScriptContext());
+                }
+            }
+            // Contracting buffer
+            else
+            {
+                recycler->ReportExternalMemoryFree(this->bufferLength - newBufferLength);
+            }
+        }
+        
+        if (newBufferLength == 0 || this->bufferLength == 0)
         {
             newArrayBuffer = GetLibrary()->CreateArrayBuffer(newBufferLength);
         }
@@ -900,6 +922,7 @@ namespace Js
                         LPVOID newMem = VirtualAlloc(this->buffer + this->bufferLength, newBufferLength - this->bufferLength, MEM_COMMIT, PAGE_READWRITE);
                         if (!newMem)
                         {
+                            recycler->ReportExternalMemoryFailure(newBufferLength);
                             JavascriptError::ThrowOutOfMemoryError(GetScriptContext());
                         }
                     }
@@ -911,6 +934,7 @@ namespace Js
                     newBuffer = (BYTE*)malloc(newBufferLength);
                     if (!newBuffer)
                     {
+                        recycler->ReportExternalMemoryFailure(newBufferLength);
                         JavascriptError::ThrowOutOfMemoryError(GetScriptContext());
                     }
                     js_memcpy_s(newBuffer, newBufferLength, this->buffer, newBufferLength);
@@ -930,6 +954,7 @@ namespace Js
                     newBuffer = (BYTE*)realloc(this->buffer, newBufferLength);
                     if (!newBuffer)
                     {
+                        recycler->ReportExternalMemoryFailure(newBufferLength);
                         JavascriptError::ThrowOutOfMemoryError(GetScriptContext());
                     }
                 }
@@ -939,9 +964,8 @@ namespace Js
                 }
             }
             newArrayBuffer = GetLibrary()->CreateArrayBuffer(newBuffer, newBufferLength);
+            
         }
-
-
         AutoDiscardPTR<Js::ArrayBufferDetachedStateBase> state(DetachAndGetState());
         state->MarkAsClaimed();
 

@@ -298,8 +298,7 @@ Below test fails with difference in space. Investigate the cause and re-enable t
       <files>transfer.js</files>
       <baseline>transfer.baseline</baseline>
       <compile-flags>-ArrayBufferTransfer</compile-flags>
-      <!-- Fails in ch with AllocationPolicyMananger assertion -->
-      <tags>typedarray,exclude_ch</tags>
+      <tags>typedarray</tags>
     </default>
   </test>
   <test>
