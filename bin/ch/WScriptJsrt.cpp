@@ -505,7 +505,7 @@ WScriptJsrt::CallbackMessage::~CallbackMessage()
     m_function = JS_INVALID_REFERENCE;
 }
 
-HRESULT WScriptJsrt::CallbackMessage::Call()
+HRESULT WScriptJsrt::CallbackMessage::Call(LPCWSTR fileName)
 {
     HRESULT hr = S_OK;
 
@@ -513,6 +513,7 @@ HRESULT WScriptJsrt::CallbackMessage::Call()
     JsValueRef result;
     JsValueRef stringValue;
     JsValueType type;
+    JsErrorCode errorCode = JsNoError;
 
     IfJsrtErrorHR(ChakraRTInterface::JsGetGlobalObject(&global));
     IfJsrtErrorHR(ChakraRTInterface::JsGetValueType(m_function, &type));
@@ -526,26 +527,20 @@ HRESULT WScriptJsrt::CallbackMessage::Call()
         IfJsrtErrorHR(ChakraRTInterface::JsStringToPointer(stringValue, &script, &length));
 
         // Run the code
-        IfJsrtErrorHR(ChakraRTInterface::JsRunScript(script, JS_SOURCE_CONTEXT_NONE, L"" /*sourceUrl*/, nullptr /*no result needed*/));
+        errorCode = ChakraRTInterface::JsRunScript(script, JS_SOURCE_CONTEXT_NONE, L"" /*sourceUrl*/, nullptr /*no result needed*/);
     }
     else
     {
-        IfJsrtErrorHR(ChakraRTInterface::JsCallFunction(m_function, &global, 1, &result));
+        errorCode = ChakraRTInterface::JsCallFunction(m_function, &global, 1, &result);
+    }
+
+    if (errorCode != JsNoError)
+    {
+        hr = E_FAIL;
+        PrintException(fileName, errorCode);
     }
 
 Error:
-    if(FAILED(hr))
-    {
-        JsValueRef exception;
-        JsValueRef strExcep;
-        LPCWSTR msg;
-        size_t length;
-        IfJsrtErrorFail(ChakraRTInterface::JsGetAndClearException(&exception), E_FAIL);
-        IfJsrtErrorFail(ChakraRTInterface::JsConvertValueToString(exception, &strExcep), E_FAIL);
-        IfJsrtErrorFail(ChakraRTInterface::JsStringToPointer(strExcep, &msg, &length), E_FAIL);
-
-        wprintf(L"Script Error: %ls\n", msg);        
-    }
     return hr;
 }
 

@@ -284,7 +284,7 @@ HRESULT RunScript(LPCWSTR fileName, LPCWSTR fileContents, BYTE *bcBuffer, wchar_
         // because setTimeout can add scripts to execute
         do
         {
-            IfFailGo(messageQueue->ProcessAll());
+            IfFailGo(messageQueue->ProcessAll(fileName));
         } while (!messageQueue->IsEmpty());
     }
 Error:

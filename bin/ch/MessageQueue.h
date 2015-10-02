@@ -22,7 +22,7 @@ public:
     unsigned int GetTime() { return m_time; };
     unsigned int GetId() { return m_id; };
 
-    virtual HRESULT Call() = 0;
+    virtual HRESULT Call(LPCWSTR fileName) = 0;
 
     struct Comparator
     {
@@ -83,12 +83,12 @@ public:
         }
     }
 
-    HRESULT ProcessAll()
+    HRESULT ProcessAll(LPCWSTR fileName)
     {
         while(!IsEmpty())
         {
             MessageBase *msg = PopAndWait();
-            msg->Call();                     // Ommiting return value, its async function call it shouldn't affect others.
+            msg->Call(fileName);                     // Ommiting return value, its async function call it shouldn't affect others.
             delete msg;
         }
         return S_OK;
@@ -109,7 +109,7 @@ public:
         CustomBase(time, customArg), m_func(func)
     {}
 
-    virtual HRESULT Call() override
+    virtual HRESULT Call(LPCWSTR fileName) override
     {
         return m_func(*this);
     }

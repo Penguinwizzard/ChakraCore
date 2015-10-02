@@ -19,7 +19,7 @@ public:
         CallbackMessage(unsigned int time, JsValueRef function);
         ~CallbackMessage();
 
-        HRESULT Call();
+        HRESULT Call(LPCWSTR fileName);
     };
 
     static void AddMessageQueue(MessageQueue *messageQueue);
