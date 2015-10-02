@@ -53,8 +53,7 @@
       <files>testBitwise.js</files>
       <baseline>testBitwise.baseline</baseline>
       <compile-flags>-bgjit- -on:asmjs -testtrace:asmjs -simdjs -AsmJsStopOnError -maic:0</compile-flags>
-      <!-- different precision with ch, probably due to VS 2015 crt -->
-      <tags>exclude_dynapogo,exclude_ship,exclude_ch</tags>
+      <tags>exclude_dynapogo,exclude_ship</tags>
     </default>
   </test>
   <test>
@@ -62,8 +61,7 @@
       <files>testBitwise.js</files>
       <baseline>testBitwise.baseline</baseline>
       <compile-flags>-bgjit- -on:asmjs -testtrace:asmjs -simdjs -AsmJsStopOnError -lic:1</compile-flags>
-      <!-- different precision with ch, probably due to VS 2015 crt -->
-      <tags>exclude_dynapogo,exclude_ship,exclude_ch</tags>
+      <tags>exclude_dynapogo,exclude_ship</tags>
     </default>
   </test>
   <test>
@@ -71,8 +69,7 @@
       <files>testBitwise.js</files>
       <baseline>testBitwise.baseline</baseline>
       <compile-flags>-on:asmjs -testtrace:asmjs -simdjs -AsmJsStopOnError -on:asmjs -testtrace:asmjsInterpreter -off:fulljit -off:backend</compile-flags>
-      <!-- different precision with ch, probably due to VS 2015 crt -->
-      <tags>exclude_dynapogo,exclude_ship,exclude_ch</tags>
+      <tags>exclude_dynapogo,exclude_ship</tags>
     </default>
   </test>
   <test>
@@ -128,8 +125,7 @@
       <files>testConversion.js</files>
       <baseline>testConversion.baseline</baseline>
       <compile-flags>-bgjit- -on:asmjs -testtrace:asmjs -simdjs -AsmJsStopOnError -maic:0</compile-flags>
-      <!-- different precision with ch, probably due to VS 2015 crt -->
-      <tags>exclude_dynapogo,exclude_ship,exclude_ch</tags>
+      <tags>exclude_dynapogo,exclude_ship</tags>
     </default>
   </test>
   <test>
@@ -137,8 +133,7 @@
       <files>testConversion.js</files>
       <baseline>testConversion.baseline</baseline>
       <compile-flags>-bgjit- -on:asmjs -testtrace:asmjs -simdjs -AsmJsStopOnError -lic:1</compile-flags>
-      <!-- different precision with ch, probably due to VS 2015 crt -->
-      <tags>exclude_dynapogo,exclude_ship,exclude_ch</tags>
+      <tags>exclude_dynapogo,exclude_ship</tags>
     </default>
   </test>
   <test>
@@ -146,8 +141,7 @@
       <files>testConversion.js</files>
       <baseline>testConversion.baseline</baseline>
       <compile-flags>-on:asmjs -testtrace:asmjs -simdjs -AsmJsStopOnError -on:asmjs -testtrace:asmjsInterpreter -off:fulljit -off:backend</compile-flags>
-      <!-- different precision with ch, probably due to VS 2015 crt -->
-      <tags>exclude_dynapogo,exclude_ship,exclude_ch</tags>
+      <tags>exclude_dynapogo,exclude_ship</tags>
     </default>
   </test>
   <test>
@@ -227,8 +221,7 @@
       <files>testMulDiv.js</files>
       <baseline>testMulDiv.baseline</baseline>
       <compile-flags>-bgjit- -on:asmjs -testtrace:asmjs -simdjs -AsmJsStopOnError -maic:0</compile-flags>
-      <!-- different precision with ch, probably due to VS 2015 crt -->
-      <tags>exclude_dynapogo,exclude_ship,exclude_ch</tags>
+      <tags>exclude_dynapogo,exclude_ship</tags>
     </default>
   </test>
   <test>
@@ -236,8 +229,7 @@
       <files>testMulDiv.js</files>
       <baseline>testMulDiv.baseline</baseline>
       <compile-flags>-bgjit- -on:asmjs -testtrace:asmjs -simdjs -AsmJsStopOnError -lic:1</compile-flags>
-      <!-- different precision with ch, probably due to VS 2015 crt -->
-      <tags>exclude_dynapogo,exclude_ship,exclude_ch</tags>
+      <tags>exclude_dynapogo,exclude_ship</tags>
     </default>
   </test>
   <test>
@@ -245,8 +237,7 @@
       <files>testMulDiv.js</files>
       <baseline>testMulDiv.baseline</baseline>
       <compile-flags>-on:asmjs -testtrace:asmjs -simdjs -AsmJsStopOnError -on:asmjs -testtrace:asmjsInterpreter -off:fulljit -off:backend</compile-flags>
-      <!-- different precision with ch, probably due to VS 2015 crt -->
-      <tags>exclude_dynapogo,exclude_ship,exclude_ch</tags>
+      <tags>exclude_dynapogo,exclude_ship</tags>
     </default>
   </test>
   <test>

@@ -35,8 +35,6 @@
       <files>ArrayView.js</files>
       <baseline>ArrayView.baseline</baseline>
       <compile-flags>-testtrace:asmjs -simdjs -maic:0</compile-flags>
-      <!-- crashes in ch.exe -->
-      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -190,8 +188,6 @@
       <files>ReadArrayView.js</files>
       <baseline>ReadArrayView.baseline</baseline>
       <compile-flags>-testtrace:asmjs -simdjs -maic:0</compile-flags>
-      <!-- crashes in ch.exe -->
-      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -220,8 +216,7 @@
       <files>WriteArrayView.js</files>
       <baseline>WriteArrayView.baseline</baseline>
       <compile-flags>-testtrace:asmjs -simdjs -maic:0</compile-flags>
-      <!-- crashes in ch.exe -->
-      <tags>Slow,exclude_ch</tags>
+      <tags>Slow</tags>
     </default>
   </test>
   <test>
@@ -1097,8 +1092,6 @@
       <files>changeHeap.js</files>
       <baseline>changeHeap.baseline</baseline>
       <compile-flags>-testtrace:asmjs -off:deferparse -simdjs -maic:0</compile-flags>
-      <!-- crashes in ch.exe -->
-      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
