@@ -342,9 +342,15 @@ public:
             if (argInstr->GetSrc2() && argInstr->GetSrc2()->IsSymOpnd())
             {
                 linkSym = argInstr->GetSrc2()->AsSymOpnd()->m_sym->AsStackSym();
-                Assert(linkSym->IsSingleDef());
                 Assert(linkSym->IsArgSlotSym());
-                nextArg = linkSym->m_instrDef;
+
+                // Due to dead code elimination in FGPeeps, it is possible for the definitions of the
+                // the instructions that we are visiting during FG to have been freed. In this case,
+                // the ArgSlot, even though its was a single def, will report IsSingleDef() as false
+                // since instrDef is reset to nullptr when the def instr is freed
+                Assert(linkSym->IsSingleDef() ||
+                    (m_func->IsInPhase(Js::Phase::FGPeepsPhase) || m_func->IsInPhase(Js::Phase::FGBuildPhase)));
+                nextArg = linkSym->GetInstrDef();
             }
             else
             {

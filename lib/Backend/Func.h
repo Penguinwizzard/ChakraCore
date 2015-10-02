@@ -516,6 +516,11 @@ public:
     bool                isPostPeeps:1;
     bool                isPostLayout:1;
     bool                isPostFinalLower:1;
+
+    typedef JsUtil::Stack<Js::Phase> CurrentPhasesStack;
+    CurrentPhasesStack  currentPhases;
+
+    bool                IsInPhase(Js::Phase tag);
 #endif
 
     void                BeginPhase(Js::Phase tag);
