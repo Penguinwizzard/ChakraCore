@@ -196,7 +196,7 @@ public:
         }
         else
         {
-            this->GetPageAllocator<VirtualAllocWrapper>(segment)->ReleasePages(pageAddress, pageCount, segment);
+            this->GetPageAllocator<VirtualAllocWrapper>(segment)->ReleasePages(pageAddress, pageCount, segment, true);
         }
     }
 

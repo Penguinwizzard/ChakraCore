@@ -452,7 +452,7 @@ public:
     char * AllocPages(uint pageCount, PageSegmentBase<TVirtualAlloc> ** pageSegment);
     char * AllocPagesPageAligned(uint pageCount, PageSegmentBase<TVirtualAlloc> ** pageSegment, PageHeapMode pageHeapFlags);
 
-    void ReleasePages(__in void * address, uint pageCount, __in void * pageSegment);
+    void ReleasePages(__in void * address, uint pageCount, __in void * pageSegment, bool fakeDecommit = false);
     void BackgroundReleasePages(void * address, uint pageCount, PageSegmentBase<TVirtualAlloc> * pageSegment);
 
     // Decommit

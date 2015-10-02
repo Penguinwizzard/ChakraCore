@@ -1334,7 +1334,7 @@ PageAllocatorBase<T>::AddFreePageCount(uint count)
 
 template<typename T>
 void
-PageAllocatorBase<T>::ReleasePages(__in void * address, uint pageCount, __in void * segmentParam)
+PageAllocatorBase<T>::ReleasePages(__in void * address, uint pageCount, __in void * segmentParam, bool fakeDecommit/* = false*/)
 {
     PageSegmentBase<T> * segment = (PageSegmentBase<T>*) segmentParam;
     ASSERT_THREAD();
@@ -1393,8 +1393,15 @@ PageAllocatorBase<T>::ReleasePages(__in void * address, uint pageCount, __in voi
 
         }
         else
-        {            
-            segment->DecommitPages<false>(address, pageCount);
+        {
+            if (fakeDecommit)
+            {
+                segment->DecommitPages<true>(address, pageCount);
+            }
+            else
+            {
+                segment->DecommitPages<false>(address, pageCount);
+            }
             LogFreePages(pageCount);
             LogDecommitPages(pageCount);
 #if DBG_DUMP
