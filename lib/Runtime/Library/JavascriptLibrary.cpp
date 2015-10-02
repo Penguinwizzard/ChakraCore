@@ -734,8 +734,7 @@ namespace Js
         uint64NumberTypeStatic = StaticType::New(scriptContext, TypeIds_UInt64Number, numberPrototype, nullptr);
         numberTypeDynamic = DynamicType::New(scriptContext, TypeIds_NumberObject, numberPrototype, nullptr, NullTypeHandler<false>::GetDefaultInstance(), true, true);
 
-#ifdef SIMD_JS_ENABLED
-        // SIMD
+        // SIMD_JS
         // Initialize types
         if (scriptContext->GetConfig()->IsSimdjsEnabled())
         {
@@ -744,8 +743,12 @@ namespace Js
             simdInt32x4TypeStatic = StaticType::New(scriptContext, TypeIds_SIMDInt32x4, nullValue /*prototype*/, nullptr);
             simdInt16x8TypeStatic = StaticType::New(scriptContext, TypeIds_SIMDInt16x8, nullValue /*prototype*/, nullptr);
             simdInt8x16TypeStatic = StaticType::New(scriptContext, TypeIds_SIMDInt8x16, nullValue /*prototype*/, nullptr);
+
+            simdBool32x4TypeStatic = StaticType::New(scriptContext, TypeIds_SIMDBool32x4, nullValue /*prototype*/, nullptr);
+            simdBool16x8TypeStatic = StaticType::New(scriptContext, TypeIds_SIMDBool16x8, nullValue /*prototype*/, nullptr);
+            simdBool8x16TypeStatic = StaticType::New(scriptContext, TypeIds_SIMDBool8x16, nullValue /*prototype*/, nullptr);
         }
-#endif
+
 
         // Initialize Object types
         for (int16 i = 0; i < PreInitializedObjectTypeCount; i++)
@@ -1178,17 +1181,20 @@ namespace Js
         numberTypeDisplayString = CreateStringFromCppLiteral(L"number");
         promiseResolveFunction = nullptr;
 
-#ifdef SIMD_JS_ENABLED
-        if (scriptContext->GetConfig()->IsSimdjsEnabled())
+        // SIMD_JS
+    	if (scriptContext->GetConfig()->IsSimdjsEnabled())
         {
             simdFloat32x4DisplayString = CreateStringFromCppLiteral(L"Float32x4");
             simdFloat64x2DisplayString = CreateStringFromCppLiteral(L"Float64x2");
             simdInt32x4DisplayString = CreateStringFromCppLiteral(L"Int32x4");
             simdInt16x8DisplayString = CreateStringFromCppLiteral(L"Int16x8");
             simdInt8x16DisplayString = CreateStringFromCppLiteral(L"Int8x16");  
-
+           
+            simdBool32x4DisplayString = CreateStringFromCppLiteral(L"Bool32x4");
+            simdBool16x8DisplayString = CreateStringFromCppLiteral(L"Bool16x8");
+            simdBool8x16DisplayString = CreateStringFromCppLiteral(L"Bool8x16");
         }
-#endif
+
 
         if (scriptContext->GetConfig()->IsES6SymbolEnabled())
         {
@@ -1349,8 +1355,7 @@ namespace Js
             DeferredTypeHandler<InitializeMathObject>::GetDefaultInstance()));
         AddMember(globalObject, PropertyIds::Math, mathObject);
 
-#ifdef SIMD_JS_ENABLED
-        // SIMD
+        // SIMD_JS
         // we declare global objects and lib functions only if SSE2 is available. Else, we use the polyfill.
         if (AutoSystemInfo::Data.SSE2Available() && scriptContext->GetConfig()->IsSimdjsEnabled())
         {
@@ -1360,6 +1365,7 @@ namespace Js
 
             AddMember(globalObject, PropertyIds::SIMD, simdObject, PropertyNone);
 
+            // TODO: Move these to constructors' prototypes per spec.
             // Initialize toString functions. Do it here instead of InitializeSIMDObject, since we can possible access those fields before SIMD object is deferred initialized (e.g. SIMD object coming from ASMJS code).
             simdFloat32x4ToStringFunction = DefaultCreateFunction(&JavascriptSIMDFloat32x4::EntryInfo::ToString, 1, nullptr, nullptr, PropertyIds::toString);
             simdFloat64x2ToStringFunction = DefaultCreateFunction(&JavascriptSIMDFloat64x2::EntryInfo::ToString, 1, nullptr, nullptr, PropertyIds::toString);
@@ -1367,7 +1373,7 @@ namespace Js
             simdInt16x8ToStringFunction = DefaultCreateFunction(&JavascriptSIMDInt16x8::EntryInfo::ToString, 1, nullptr, nullptr, PropertyIds::toString);
             simdInt8x16ToStringFunction = DefaultCreateFunction(&JavascriptSIMDInt8x16::EntryInfo::ToString, 1, nullptr, nullptr, PropertyIds::toString);
         }
-#endif
+
 
         debugObject = nullptr;
         diagnosticsScriptObject = nullptr;
@@ -2934,6 +2940,26 @@ namespace Js
         library->AddFunctionToLibraryObject(int8x16Function, PropertyIds::replaceLane, &SIMDInt8x16Lib::EntryInfo::ReplaceLane, 4, PropertyNone);
 
         // end Int8x16
+
+        // Bool32x4
+        JavascriptFunction* bool32x4Function = library->AddFunctionToLibraryObject(simdObject, PropertyIds::Bool32x4, &SIMDBool32x4Lib::EntryInfo::Bool32x4, 5, PropertyNone);
+        library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::check, &SIMDBool32x4Lib::EntryInfo::Check, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::splat, &SIMDBool32x4Lib::EntryInfo::Splat, 2, PropertyNone);
+
+        // UnaryOps
+        library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::not, &SIMDBool32x4Lib::EntryInfo::Not, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::allTrue, &SIMDBool32x4Lib::EntryInfo::AllTrue, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::anyTrue, &SIMDBool32x4Lib::EntryInfo::AnyTrue, 2, PropertyNone);
+        
+        // BinaryOps
+        library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::and, &SIMDBool32x4Lib::EntryInfo::And, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::or, &SIMDBool32x4Lib::EntryInfo::Or, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::xor, &SIMDBool32x4Lib::EntryInfo::Xor, 2, PropertyNone);
+        
+        // Lane Access
+        library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::extractLane, &SIMDBool32x4Lib::EntryInfo::ExtractLane, 3, PropertyNone);
+        library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::replaceLane, &SIMDBool32x4Lib::EntryInfo::ReplaceLane, 4, PropertyNone);
+        // end Bool32x4
     }
 
     void JavascriptLibrary::AddSimdFuncToMaps(Js::OpCode op, ...)
@@ -3083,6 +3109,7 @@ namespace Js
         vtableAddresses[VTableValue::VtableCompoundString] = VirtualTableInfo<Js::CompoundString>::Address;
 
         // SIMD_JS
+        // Needed for type-spec
         vtableAddresses[VTableValue::VtableSimd128F4] = VirtualTableInfo<Js::JavascriptSIMDFloat32x4>::Address;
         vtableAddresses[VTableValue::VtableSimd128I4] = VirtualTableInfo<Js::JavascriptSIMDInt32x4>::Address;
     }
@@ -6962,7 +6989,7 @@ namespace Js
         return hr;
     }
 
-#ifdef SIMD_JS_ENABLED
+    // SIMD_JS
     HRESULT JavascriptLibrary::ProfilerRegisterSIMD()
     {
         HRESULT hr = S_OK;
@@ -7130,9 +7157,22 @@ namespace Js
         REG_OBJECTS_LIB_FUNC(extractLane, SIMDInt8x16Lib::EntryExtractLane);
         REG_OBJECTS_LIB_FUNC(replaceLane, SIMDInt8x16Lib::EntryReplaceLane);
 
+
+        // Bool32x4
+        REG_OBJECTS_LIB_FUNC(Bool32x4, SIMDBool32x4Lib::EntryBool32x4);
+        REG_OBJECTS_LIB_FUNC(check, SIMDBool32x4Lib::EntryCheck);
+        REG_OBJECTS_LIB_FUNC(splat, SIMDBool32x4Lib::EntrySplat);
+        REG_OBJECTS_LIB_FUNC(not, SIMDBool32x4Lib::EntryNot);
+        REG_OBJECTS_LIB_FUNC(and, SIMDBool32x4Lib::EntryAnd);
+        REG_OBJECTS_LIB_FUNC(or, SIMDBool32x4Lib::EntryOr);
+        REG_OBJECTS_LIB_FUNC(xor, SIMDBool32x4Lib::EntryXor);
+        REG_OBJECTS_LIB_FUNC(anyTrue, SIMDBool32x4Lib::EntryExtractLane);
+        REG_OBJECTS_LIB_FUNC(allTrue, SIMDBool32x4Lib::EntryReplaceLane);
+        REG_OBJECTS_LIB_FUNC(extractLane, SIMDBool32x4Lib::EntryExtractLane);
+        REG_OBJECTS_LIB_FUNC(replaceLane, SIMDBool32x4Lib::EntryReplaceLane);
         return hr;
     }
-#endif
+
 
 #ifdef IR_VIEWER
     HRESULT JavascriptLibrary::ProfilerRegisterIRViewer()

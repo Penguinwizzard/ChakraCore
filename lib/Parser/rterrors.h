@@ -304,23 +304,43 @@ RT_ERROR_MSG(JSERR_ObjectIsNotInitialized, 5617, "%s: Object internal state is n
 
 RT_ERROR_MSG(JSERR_GeneratorAlreadyExecuting, 5618, "%s: Cannot execute generator function because it is currently executing", "", kjstTypeError, 0)
 
-#ifdef SIMD_JS_ENABLED
+
 RT_ERROR_MSG(JSERR_This_NeedSimd, 5620, "%s: 'this' is not a SIMD type", "SIMD type expected", kjstTypeError, 0)
 RT_ERROR_MSG(JSERR_SimdFloat32x4TypeMismatch, 5621, "SIMD.Float32x4.%s: Invalid SIMD types for operation", "Expecting Float32x4 values", kjstTypeError, 0)
 RT_ERROR_MSG(JSERR_SimdFloat64x2TypeMismatch, 5622, "SIMD.Float64x2.%s: Invalid SIMD types for operation", "Expecting Float64x2 values", kjstTypeError, 0)
 RT_ERROR_MSG(JSERR_SimdInt32x4TypeMismatch, 5623, "SIMD.Int32x4.%s: Invalid SIMD types for operation", "Expecting Int32x4 values", kjstTypeError, 0)
+<<<<<<< HEAD
 RT_ERROR_MSG(JSERR_SimdInt16x8TypeMismatch, 5624, "SIMD.Int16x8.%s: Invalid SIMD types for operation", "Expecting Int16x8 values", kjstTypeError, 0)
 RT_ERROR_MSG(JSERR_SimdInt8x16TypeMismatch, 5625, "SIMD.Int8x16.%s: Invalid SIMD types for operation", "Expecting Int8x16 values", kjstTypeError, 0)
 RT_ERROR_MSG(JSERR_SimdLaneRangeError, 5626, "Lane index is out of range for this SIMD type", "Lane index is out of range", kjstRangeError, 0)
 RT_ERROR_MSG(JSERR_SimdInvalidArgType, 5627, "%s: Invalid argument type for SIMD operation", "Invalid argument type for SIMD operation", kjstTypeError, 0)
 #endif
+=======
+RT_ERROR_MSG(JSERR_SimdInt8x16TypeMismatch, 5624, "SIMD.Int8x16.%s: Invalid SIMD types for operation", "Expecting Int8x16 values", kjstTypeError, 0)
+
+RT_ERROR_MSG(JSERR_SimdLaneRangeError, 5625, "Lane index is out of range for this SIMD type", "Lane index is out of range", kjstRangeError, 0)
+RT_ERROR_MSG(JSERR_SimdInvalidArgType, 5626, "%s: Invalid argument type for SIMD operation", "Invalid argument type for SIMD operation", kjstTypeError, 0)
+
+>>>>>>> Bool32x4 initial implementation
 
 RT_ERROR_MSG(JSERR_NeedConstructor, 5628, "'%s' is not a constructor", "Constructor expected", kjstTypeError, 0)
 
 RT_ERROR_MSG(VBSERR_CantDisplayDate, 32812, "", "The specified date is not available in the current locale's calendar", kjstRangeError, 0)
 
+<<<<<<< HEAD
 RT_ERROR_MSG(JSERR_ClassThisAlreadyAssigned, 5629, "", "Multiple calls to 'super' in a class constructor are not allowed", kjstReferenceError, 0)
 RT_ERROR_MSG(JSERR_ClassSuperInBaseClass, 5630, "", "Unexpected call to 'super' in a base class constructor", kjstReferenceError, 0)
 RT_ERROR_MSG(JSERR_ClassDerivedConstructorInvalidReturnType, 5631, "", "Derived class constructor can return only object or undefined", kjstTypeError, 0)
 RT_ERROR_MSG(JSERR_ClassStaticMethodCannotBePrototype, 5632, "", "Class static member cannot be named 'prototype'", kjstTypeError, 0)
 RT_ERROR_MSG(JSERR_ClassConstructorCannotBeCalledWithoutNew, 5633, "", "Class constructor cannot be called without the new keyword", kjstTypeError, 0)
+=======
+RT_ERROR_MSG(JSERR_ClassThisAlreadyAssigned, 5628, "", "Multiple calls to 'super' in a class constructor are not allowed", kjstReferenceError, 0)
+RT_ERROR_MSG(JSERR_ClassSuperInBaseClass, 5629, "", "Unexpected call to 'super' in a base class constructor", kjstReferenceError, 0)
+RT_ERROR_MSG(JSERR_ClassDerivedConstructorInvalidReturnType, 5630, "", "Derived class constructor can return only object or undefined", kjstTypeError, 0)
+RT_ERROR_MSG(JSERR_ClassStaticMethodCannotBePrototype, 5631, "", "Class static member cannot be named 'prototype'", kjstTypeError, 0)
+RT_ERROR_MSG(JSERR_ClassConstructorCannotBeCalledWithoutNew, 5632, "", "Class constructor cannot be called without the new keyword", kjstTypeError, 0)
+
+RT_ERROR_MSG(JSERR_SimdBool32x4TypeMismatch, 5633, "SIMD.Bool32x4.%s: Invalid SIMD types for operation", "Expecting Bool32x4 values", kjstTypeError, 0)
+RT_ERROR_MSG(JSERR_SimdBool16x8TypeMismatch, 5634, "SIMD.Bool16x8.%s: Invalid SIMD types for operation", "Expecting Bool16x8 values", kjstTypeError, 0)
+RT_ERROR_MSG(JSERR_SimdBool8x16TypeMismatch, 5635, "SIMD.Bool8x16.%s: Invalid SIMD types for operation", "Expecting Bool8x16 values", kjstTypeError, 0)
+>>>>>>> Bool32x4 initial implementation

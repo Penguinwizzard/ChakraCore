@@ -33,9 +33,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSIMDFloat32x4.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSIMDFloat64x2.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSIMDInt32x4.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSIMDInt16x8.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)SIMDFloat32x4Lib.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)SIMDFloat32x4Operation.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'!='ARM' AND '$(Platform)'!='Arm64'">true</ExcludedFromBuild>
@@ -43,6 +40,8 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)SIMDfloat32x4OperationX86X64.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'!='Win32' AND '$(Platform)'!='x64'">true</ExcludedFromBuild>
     </ClCompile>
+    
+    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSIMDFloat64x2.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)SIMDFloat64x2Lib.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)SIMDFloat64x2Operation.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'!='ARM' AND '$(Platform)'!='Arm64'">true</ExcludedFromBuild>
@@ -50,6 +49,8 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)SIMDfloat64x2OperationX86X64.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'!='Win32' AND '$(Platform)'!='x64'">true</ExcludedFromBuild>
     </ClCompile>
+    
+    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSIMDInt32x4.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)SIMDInt32x4Lib.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)SIMDInt32x4Operation.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'!='ARM' AND '$(Platform)'!='Arm64'">true</ExcludedFromBuild>
@@ -57,6 +58,8 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)SIMDInt32x4OperationX86X64.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'!='Win32' AND '$(Platform)'!='x64'">true</ExcludedFromBuild>
     </ClCompile>
+
+    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSIMDInt16x8.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)SIMDInt16x8Lib.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)SIMDInt16x8Operation.cpp">
         <ExcludedFromBuild Condition="'$(Platform)'!='ARM' AND '$(Platform)'!='Arm64'">true</ExcludedFromBuild>
@@ -64,6 +67,34 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)SIMDInt16x8OperationX86X64.cpp">
         <ExcludedFromBuild Condition="'$(Platform)'!='Win32' AND '$(Platform)'!='x64'">true</ExcludedFromBuild>
     </ClCompile>
+    
+   <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSIMDBool32x4.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDBool32x4Lib.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDBool32x4Operation.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'!='ARM' AND '$(Platform)'!='Arm64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDBool32x4OperationX86X64.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'!='Win32' AND '$(Platform)'!='x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    
+    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSIMDBool16x8.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDBool16x8Lib.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDBool16x8Operation.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'!='ARM' AND '$(Platform)'!='Arm64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDBool16x8OperationX86X64.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'!='Win32' AND '$(Platform)'!='x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    
+    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSIMDBool8x16.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDBool8x16Lib.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDBool8x16Operation.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'!='ARM' AND '$(Platform)'!='Arm64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDBool8x16OperationX86X64.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'!='Win32' AND '$(Platform)'!='x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    
     <ClCompile Include="$(MSBuildThisFileDirectory)CharStringCache.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ArrayBuffer.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)AsyncDebug.cpp" />
@@ -196,6 +227,10 @@
     <ClInclude Include="JavascriptSIMDInt32x4.h" />
     <ClInclude Include="JavascriptSIMDInt16x8.h" />
     <ClInclude Include="JavascriptSIMDInt8x16.h" />
+    <ClInclude Include="JavascriptSIMDBool32x4.h" />
+    <ClInclude Include="JavascriptSIMDBool16x8.h" />
+    <ClInclude Include="JavascriptSIMDBool8x16.h" />
+    
     <ClInclude Include="SIMDFloat32x4Lib.h" />
     <ClInclude Include="SIMDFloat32x4Operation.h" />
     <ClInclude Include="SIMDFloat64x2Lib.h" />
@@ -206,6 +241,13 @@
     <ClInclude Include="SIMDInt16x8Operation.h" />
     <ClInclude Include="SIMDInt8x16Lib.h" />
     <ClInclude Include="SIMDInt8x16Operation.h" />
+    <ClInclude Include="SIMDBool32x4Lib.h" />
+    <ClInclude Include="SIMDBool32x4Operation.h" />
+    <ClInclude Include="SIMDBool16x8Lib.h" />
+    <ClInclude Include="SIMDBool16x8Operation.h" />
+    <ClInclude Include="SIMDBool8x16Lib.h" />
+    <ClInclude Include="SIMDBool8x16Operation.h" />
+
     <ClInclude Include="SIMDShuffleMasks.h" />
     <ClInclude Include="LibraryFunction.h" />
     <ClInclude Include="ArrayBuffer.h" />

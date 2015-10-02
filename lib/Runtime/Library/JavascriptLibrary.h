@@ -248,14 +248,17 @@ namespace Js
         StaticType  * int64NumberTypeStatic;
         StaticType  * uint64NumberTypeStatic;
 
-#ifdef SIMD_JS_ENABLED
-        // SIMD
+        // SIMD_JS
         StaticType * simdFloat32x4TypeStatic;
         StaticType * simdInt32x4TypeStatic;
         StaticType * simdInt8x16TypeStatic;
         StaticType * simdFloat64x2TypeStatic;
+
         StaticType * simdInt16x8TypeStatic;
-#endif
+
+        StaticType * simdBool32x4TypeStatic;
+        StaticType * simdBool16x8TypeStatic;
+        StaticType * simdBool8x16TypeStatic;
 
         DynamicType * numberTypeDynamic;
         DynamicType * objectTypes[PreInitializedObjectTypeCount];
@@ -299,14 +302,18 @@ namespace Js
         JavascriptString* booleanTypeDisplayString;
         JavascriptString* numberTypeDisplayString;
 
-#ifdef SIMD_JS_ENABLED
-        // SIMD
+
+        // SIMD_JS
         JavascriptString* simdFloat32x4DisplayString;
         JavascriptString* simdFloat64x2DisplayString;
         JavascriptString* simdInt32x4DisplayString;
         JavascriptString* simdInt16x8DisplayString;
         JavascriptString* simdInt8x16DisplayString;
-#endif
+        JavascriptString* simdBool32x4DisplayString;
+        JavascriptString* simdBool16x8DisplayString;
+        JavascriptString* simdBool8x16DisplayString;
+
+
 
         JavascriptString* symbolTypeDisplayString;
         JavascriptString* debuggerDeadZoneBlockVariableString;
@@ -349,19 +356,14 @@ namespace Js
         JavascriptFunction* objectValueOfFunction;
         JavascriptFunction* objectToStringFunction;
 
-#ifdef SIMD_JS_ENABLED
-        // SIMD
-        // Float32x4
+
+        // SIMD_JS
         JavascriptFunction* simdFloat32x4ToStringFunction;
-        // Float64x2
         JavascriptFunction* simdFloat64x2ToStringFunction;
-        // Int32x4
         JavascriptFunction* simdInt32x4ToStringFunction;
-        // Int16x8
         JavascriptFunction* simdInt16x8ToStringFunction;
-        // Int8x16
         JavascriptFunction* simdInt8x16ToStringFunction;
-#endif
+
 
         UnifiedRegex::RegexPattern * emptyRegexPattern;
 
@@ -436,7 +438,7 @@ namespace Js
         static SimplePropertyDescriptor FunctionWithLengthAndPrototypeTypeDescriptors[2];
 
     public:
-#ifdef SIMD_JS_ENABLED
+        // SIMD_JS
         // used by inliner. Maps Simd FuncInfo (library func) to equivalent opcode.
         typedef JsUtil::BaseDictionary<FunctionInfo *, Js::OpCode, Recycler> FuncInfoToOpcodeMap;
         FuncInfoToOpcodeMap * simdFuncInfoToOpcodeMap;
@@ -453,7 +455,7 @@ namespace Js
         void AddSimdFuncToMaps(Js::OpCode op, ...);
         Js::OpCode GetSimdOpcodeFromFuncInfo(FunctionInfo * funcInfo);
         bool GetSimdFuncSignatureFromOpcode(Js::OpCode op, SimdFuncSignature &funcSignature);
-#endif
+
 
         static const ObjectInfoBits EnumFunctionClass = EnumClass_1_Bit;
 
@@ -536,13 +538,17 @@ namespace Js
         JavascriptString* GetBooleanTypeDisplayString() const { return booleanTypeDisplayString; }
         JavascriptString* GetNumberTypeDisplayString() const { return numberTypeDisplayString; }
 
-#ifdef SIMD_JS_ENABLED
+        // SIMD_JS
         JavascriptString* GetSIMDFloat32x4DisplayString() const { return simdFloat32x4DisplayString; }
         JavascriptString* GetSIMDFloat64x2DisplayString() const { return simdFloat64x2DisplayString; }
         JavascriptString* GetSIMDInt32x4DisplayString()   const { return simdInt32x4DisplayString; }
         JavascriptString* GetSIMDInt16x8DisplayString()   const { return simdInt16x8DisplayString; }
         JavascriptString* GetSIMDInt8x16DisplayString()   const { return simdInt8x16DisplayString; }
-#endif
+
+        JavascriptString* GetSIMDBool32x4DisplayString()   const { return simdBool32x4DisplayString; }
+        JavascriptString* GetSIMDBool16x8DisplayString()   const { return simdBool16x8DisplayString; }
+        JavascriptString* GetSIMDBool8x16DisplayString()   const { return simdBool8x16DisplayString; }
+
 
         JavascriptString* GetSymbolTypeDisplayString() const { return symbolTypeDisplayString; }
         JavascriptString* GetDebuggerDeadZoneBlockVariableString() { Assert(debuggerDeadZoneBlockVariableString); return debuggerDeadZoneBlockVariableString; }
@@ -619,14 +625,17 @@ namespace Js
         DynamicType * GetNumberTypeDynamic() const { return numberTypeDynamic; }
         DynamicType * GetPromiseType() const { return promiseType; }
 
-#ifdef SIMD_JS_ENABLED
-        // SIMD
+        // SIMD_JS
         StaticType* GetSIMDFloat32x4TypeStatic() const { return simdFloat32x4TypeStatic; }
         StaticType* GetSIMDFloat64x2TypeStatic() const { return simdFloat64x2TypeStatic; }
         StaticType* GetSIMDInt32x4TypeStatic()   const { return simdInt32x4TypeStatic; }
         StaticType* GetSIMDInt16x8TypeStatic()   const { return simdInt16x8TypeStatic; }
         StaticType* GetSIMDInt8x16TypeStatic()   const { return simdInt8x16TypeStatic; }
-#endif
+
+        StaticType* GetSIMDBool32x4TypeStatic() const { return simdBool32x4TypeStatic; }
+        StaticType* GetSIMDBool16x8TypeStatic() const { return simdBool16x8TypeStatic; }
+        StaticType* GetSIMDBool8x16TypeStatic() const { return simdBool8x16TypeStatic; }
+
 
         DynamicType * GetObjectLiteralType(uint16 requestedInlineSlotCapacity);
         DynamicType * GetObjectHeaderInlinedLiteralType(uint16 requestedInlineSlotCapacity);
@@ -670,14 +679,13 @@ namespace Js
         JavascriptFunction* GetObjectValueOfFunction() const { return objectValueOfFunction; }
         JavascriptFunction* GetObjectToStringFunction() const { return objectToStringFunction; }
 
-#ifdef SIMD_JS_ENABLED
-        // SIMD
+        // SIMD_JS
         JavascriptFunction* GetSIMDFloat32x4ToStringFunction() const { return simdFloat32x4ToStringFunction;  }
         JavascriptFunction* GetSIMDFloat64x2ToStringFunction() const { return simdFloat64x2ToStringFunction; }
         JavascriptFunction* GetSIMDInt32x4ToStringFunction()   const { return simdInt32x4ToStringFunction; }
         JavascriptFunction* GetSIMDInt16x8ToStringFunction()   const { return simdInt16x8ToStringFunction; }
         JavascriptFunction* GetSIMDInt8x16ToStringFunction()   const { return simdInt8x16ToStringFunction; }
-#endif
+        
 
         JavascriptFunction* GetDebugObjectNonUserGetterFunction() const { return debugObjectNonUserGetterFunction; }
         JavascriptFunction* GetDebugObjectNonUserSetterFunction() const { return debugObjectNonUserSetterFunction; }

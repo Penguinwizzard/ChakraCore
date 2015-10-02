@@ -77,8 +77,8 @@ ENTRY(clz32)
 ENTRY(fround)
 // End math functions
 
-#ifdef SIMD_JS_ENABLED
-// SIMD 
+
+// SIMD_JS
 ENTRY(check)
 ENTRY(signMask)
 ENTRY(Float32x4)
@@ -86,6 +86,10 @@ ENTRY(Float64x2)
 ENTRY(Int32x4)
 ENTRY(Int8x16)
 ENTRY(Int16x8)
+ENTRY(Bool32x4)
+ENTRY(Bool16x8)
+ENTRY(Bool8x16)
+
 ENTRY(zero)
 ENTRY(splat)
 ENTRY2(bool_, L"bool") // "bool" cannot be an identifier in C++ so using "bool_" instead
@@ -145,14 +149,19 @@ ENTRY(shiftLeftByScalar)
 ENTRY(shiftRightLogicalByScalar)
 ENTRY(shiftRightArithmeticByScalar)
 
+<<<<<<< HEAD
 ENTRY(allTrue)
 ENTRY(anyTrue)
 ENTRY(addSaturate)
 ENTRY(subSaturate)
 ENTRY(extractLaneAsBool)
 ENTRY(selectBits)
+=======
+ENTRY(anyTrue)
+ENTRY(allTrue)
+>>>>>>> Bool32x4 initial implementation
 // End SIMD
-#endif
+
 
 ENTRY(add)
 ENTRY(all)

@@ -4,7 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
-#ifdef SIMD_JS_ENABLED
+//SIMD_JS
 
 namespace Js {
     
@@ -133,4 +133,3 @@ namespace Js {
     };
 } // namespace Js
 
-#endif

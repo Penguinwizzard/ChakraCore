@@ -273,7 +273,7 @@ BUILTIN(Math, Cbrt, Cbrt, FunctionInfo::ErrorOnNew)
 BUILTIN(Math, Imul, Imul, FunctionInfo::ErrorOnNew)
 BUILTIN(Math, Clz32, Clz32, FunctionInfo::ErrorOnNew)
 
-#ifdef SIMD_JS_ENABLED
+//SIMD_JS
 // SIMDFloat32x4Lib entry points
 BUILTIN(SIMDFloat32x4Lib, Float32x4, EntryFloat32x4, FunctionInfo::None)
 BUILTIN(SIMDFloat32x4Lib, Check, EntryCheck, FunctionInfo::None)
@@ -508,6 +508,23 @@ BUILTIN(SIMDFloat64x2Lib, Load1, EntryLoad1, FunctionInfo::None)
 BUILTIN(SIMDFloat64x2Lib, Store,  EntryStore,  FunctionInfo::None)
 BUILTIN(SIMDFloat64x2Lib, Store1, EntryStore1, FunctionInfo::None)
 
+// SIMDBool32x4Lib entry points
+BUILTIN(SIMDBool32x4Lib, Bool32x4, EntryBool32x4, FunctionInfo::None)
+BUILTIN(SIMDBool32x4Lib, Check, EntryCheck, FunctionInfo::None)
+BUILTIN(SIMDBool32x4Lib, Splat, EntrySplat, FunctionInfo::None)
+
+// Lane Access
+BUILTIN(SIMDBool32x4Lib, ExtractLane, EntryExtractLane, FunctionInfo::None)
+BUILTIN(SIMDBool32x4Lib, ReplaceLane, EntryReplaceLane, FunctionInfo::None)
+
+// UnaryOps
+BUILTIN(SIMDBool32x4Lib, Not, EntryNot, FunctionInfo::None)
+BUILTIN(SIMDBool32x4Lib, AnyTrue, EntryAnyTrue, FunctionInfo::None)
+BUILTIN(SIMDBool32x4Lib, AllTrue, EntryAllTrue, FunctionInfo::None)
+// BinaryOps
+BUILTIN(SIMDBool32x4Lib, And, EntryAnd, FunctionInfo::None)
+BUILTIN(SIMDBool32x4Lib, Or, EntryOr, FunctionInfo::None)
+BUILTIN(SIMDBool32x4Lib, Xor, EntryXor, FunctionInfo::None)
 
 // JavascriptFloat32x4 entry points
 BUILTIN(JavascriptSIMDFloat32x4, ToString, EntryToString, FunctionInfo::None)
@@ -520,10 +537,10 @@ BUILTIN(JavascriptSIMDInt32x4, ToString, EntryToString, FunctionInfo::None)
 
 // JavascriptInt16x8 entry points
 BUILTIN(JavascriptSIMDInt16x8, ToString, EntryToString, FunctionInfo::None)
-// JavascriptInt32x4 entry points
+
+// JavascriptInt8x16 entry points
 BUILTIN(JavascriptSIMDInt8x16, ToString, EntryToString, FunctionInfo::None)
 
-#endif
 
 BUILTIN(Math, Fround, Fround, FunctionInfo::ErrorOnNew)
 BUILTIN(TypedArrayBase, NewInstance, NewInstance, FunctionInfo::SkipDefaultNewObject)
