@@ -45,12 +45,12 @@ function asmModule(stdlib, imports, buffer) {
         Int32Heap[cIndex << 2 >> 2] = dim1;
         Int32Heap[cIndex + 1 << 2 >> 2] = dim2;
 
-        while (i < matrixSize) {
+        while ((i|0) < (matrixSize|0)) {
             aPiece = f4load(Float32Heap, aIndex + 2 + i << 2 >> 2);
             bPiece = f4load(Float32Heap, bIndex + 2 + i << 2 >> 2);
             f4store(Float32Heap, cIndex + 2 + i << 2 >> 2, f4add(aPiece, bPiece));
 
-            i = i + BLOCK_SIZE;
+            i = (i + BLOCK_SIZE)|0;
         }
 
         return 0;
@@ -65,11 +65,11 @@ function asmModule(stdlib, imports, buffer) {
         matrixSize = imul(dim1, dim2);
         Int32Heap[startIndex << 2 >> 2] = dim1;
         Int32Heap[startIndex + 1 << 2 >> 2] = dim2;
-        for (i = 0; i < matrixSize - BLOCK_SIZE; i = i + BLOCK_SIZE) {
-            f4store(Float32Heap, startIndex + 2 + i << 2 >> 2, f4(toF(i + 1), toF(i + 2), toF(i + 3), toF(i + 4)));
+        for (i = 0; (i|0) < ((matrixSize - BLOCK_SIZE)|0); i = (i + BLOCK_SIZE)|0) {
+            f4store(Float32Heap, startIndex + 2 + i << 2 >> 2, f4(toF((i + 1)|0), toF((i + 2)|0), toF((i + 3)|0), toF((i + 4)|0)));
         }
-        for (; i < matrixSize; i = i + 1) {
-            Float32Heap[(startIndex + 2 + i) << 2 >> 2] = toF(i + 1);
+        for (; (i|0) < (matrixSize|0); i = (i + 1)|0) {
+            Float32Heap[(startIndex + 2 + i) << 2 >> 2] = toF((i + 1)|0);
         }
         return (startIndex + 2 + i) | 0;
     }

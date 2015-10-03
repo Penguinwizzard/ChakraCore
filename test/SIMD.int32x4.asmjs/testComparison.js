@@ -123,14 +123,14 @@ var i4 = stdlib.SIMD.Int32x4;
         var loopIndex = 0;
         while ( (loopIndex|0) < (loopCOUNT|0)) {
 
-            if (a == 0)
+            if ((a|0) == 0)
             {
                 d = i4lessThan(b, c);
                 
-            } else if (a == 1)
+            } else if ((a|0) == 1)
             {
                 d = i4equal(b, c);
-            } else if (a == 2)
+            } else if ((a|0) == 2)
             {
                 d = i4greaterThan(b, c);
             }
@@ -152,14 +152,14 @@ var i4 = stdlib.SIMD.Int32x4;
         for (loopIndex = 0; (loopIndex | 0) < (loopCOUNT | 0) ; loopIndex = (loopIndex + 1) | 0)
         {
 
-            if (a == 0)
+            if ((a|0) == 0)
             {
                 d = i4lessThan(i4g1, i4g2);
                 
-            } else if (a == 1)
+            } else if ((a|0) == 1)
             {
                 d = i4equal(i4g1, i4g2);
-            } else if (a == 2)
+            } else if ((a|0) == 2)
             {
                 d = i4greaterThan(i4g1, i4g2);
             }
@@ -180,14 +180,14 @@ var i4 = stdlib.SIMD.Int32x4;
         loopIndex = loopCOUNT | 0;
         do {
 
-            if (a == 0)
+            if ((a|0) == 0)
             {
                 globImportI4 = i4lessThan(globImportI4, i4g2);
                 
-            } else if (a == 1)
+            } else if ((a|0) == 1)
             {
                 globImportI4 = i4equal(globImportI4, i4g2);
-            } else if (a == 2)
+            } else if ((a|0) == 2)
             {
                 globImportI4 = i4greaterThan(globImportI4, i4g2);
             }

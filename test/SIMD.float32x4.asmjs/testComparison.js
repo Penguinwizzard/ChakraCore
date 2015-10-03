@@ -121,23 +121,23 @@ function asmModule(stdlib, imports) {
         var loopIndex = 0;
         while ( (loopIndex|0) < (loopCOUNT|0)) {
 
-            if (a == 0)
+            if ((a|0) == 0)
             {
                 d = f4lessThan(b, c);
                 
-            } else if (a == 1)
+            } else if ((a|0) == 1)
             {
                 d = f4lessThanOrEqual(b, c);
-            } else if (a == 2)
+            } else if ((a|0) == 2)
             {
                 d = f4equal(b, c);
-            } else if (a == 3)
+            } else if ((a|0) == 3)
             {
                 d = f4notEqual(b, c);
-            } else if (a == 4)
+            } else if ((a|0) == 4)
             {
                 d = f4greaterThanOrEqual(b, c);
-            } else if (a == 5)
+            } else if ((a|0) == 5)
             {
                 d = f4greaterThan(b, c);
             }
@@ -159,23 +159,23 @@ function asmModule(stdlib, imports) {
         for (loopIndex = 0; (loopIndex | 0) < (loopCOUNT | 0) ; loopIndex = (loopIndex + 1) | 0)
         {
 
-            if (a == 0)
+            if ((a|0) == 0)
             {
                 d = f4lessThan(f4g1, f4g2);
                 
-            } else if (a == 1)
+            } else if ((a|0) == 1)
             {
                 d = f4lessThanOrEqual(f4g1, f4g2);
-            } else if (a == 2)
+            } else if ((a|0) == 2)
             {
                 d = f4equal(f4g1, f4g2);
-            } else if (a == 3)
+            } else if ((a|0) == 3)
             {
                 d = f4notEqual(f4g1, f4g2);
-            } else if (a == 4)
+            } else if ((a|0) == 4)
             {
                 d = f4greaterThanOrEqual(f4g1, f4g2);
-            } else if (a == 5)
+            } else if ((a|0) == 5)
             {
                 d = f4greaterThan(f4g1, f4g2);
             }
@@ -196,23 +196,23 @@ function asmModule(stdlib, imports) {
         loopIndex = loopCOUNT | 0;
         do {
 
-            if (a == 0)
+            if ((a|0) == 0)
             {
                 globImportI4 = f4lessThan(globImportF4, f4g2);
                 
-            } else if (a == 1)
+            } else if ((a|0) == 1)
             {
                 globImportI4 = f4lessThanOrEqual(globImportF4, f4g2);
-            } else if (a == 2)
+            } else if ((a|0) == 2)
             {
                 globImportI4 = f4equal(globImportF4, f4g2);
-            } else if (a == 3)
+            } else if ((a|0) == 3)
             {
                 globImportI4 = f4notEqual(globImportF4, f4g2);
-            } else if (a == 4)
+            } else if ((a|0) == 4)
             {
                 globImportI4 = f4greaterThanOrEqual(globImportF4, f4g2);
-            } else if (a == 5)
+            } else if ((a|0) == 5)
             {
                 globImportI4 = f4greaterThan(globImportF4, f4g2);
             }

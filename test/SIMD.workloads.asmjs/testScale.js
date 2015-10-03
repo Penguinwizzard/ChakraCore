@@ -163,7 +163,7 @@ function asmModule(stdlib, imports, buffer) {
 	    var xx = f4(0.0, 0.0, 0.0, 0.0);
 
         //No bound check to enable negative tests.  
-		 for (i = fromIdx; i < toIdx; i = (i + 16) | 0)
+		 for (i = fromIdx; (i|0) < (toIdx|0); i = (i + 16) | 0)
 		 {
 		     xx = f4load(Int8Heap, i | 0);
 		     xx = f4mul(xx, f4(2.0, 2.0, 2.0, 2.0));
@@ -181,7 +181,7 @@ function asmModule(stdlib, imports, buffer) {
 	    var xx = i4(0, 0, 0, 0);
 
         //No bound check to enable negative tests.  
-		 for (i = fromIdx; i < toIdx; i = (i + 16) | 0)
+		 for (i = fromIdx;(i|0) < (toIdx|0); i = (i + 16) | 0)
 		 {
 		     xx = i4load(Int8Heap, i | 0);
 		     xx = i4mul(xx, i4(2, 2, 2, 2));
@@ -199,7 +199,7 @@ function asmModule(stdlib, imports, buffer) {
 	    var xx = d2(0.0, 0.0);
 
         //No bound check to enable negative tests.  
-		 for (i = fromIdx; i < toIdx; i = (i + 16) | 0)
+		 for (i = fromIdx; (i|0) < (toIdx|0); i = (i + 16) | 0)
 		 {
 		     xx = d2load(Int8Heap, i | 0);
 		     xx = d2mul(xx, d2(2.0, 2.0));

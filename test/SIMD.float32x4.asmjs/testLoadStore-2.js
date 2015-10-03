@@ -208,7 +208,7 @@ function asmModule(stdlib, imports, buffer) {
 		{
 			idx = 0;
 			v0 = f4(5.1,-12.3,-0.0,0.0);
-			for(idx = idx << 2; idx < end|0 << 2; idx = (idx + 16)|0)
+			for(idx = idx << 2; (idx|0) < (end|0 << 2); idx = (idx + 16)|0)
 			{
 				switch(functionPicker|0)
 				{
@@ -244,7 +244,7 @@ function asmModule(stdlib, imports, buffer) {
         {
 			idx = 0;
 			v0 = f4(0.0,0.0,0.0,0.0);
-			for(idx = idx << 2; idx < end|0 << 2; idx = (idx + 16)|0)
+			for(idx = idx << 2; (idx|0) < (end|0 << 2); idx = (idx + 16)|0)
 			{
 				switch(functionPicker|0)
 				{
@@ -278,7 +278,7 @@ function asmModule(stdlib, imports, buffer) {
         do {
 			idx = 0;
 			v0 = f4(0.0,0.0,0.0,0.0);
-			for(idx = idx << 2; idx < end|0 << 2; idx = (idx + 16)|0)
+			for(idx = idx << 2; (idx|0) < (end|0 << 2); idx = (idx + 16)|0)
 			{
 				switch(functionPicker|0)
 				{
@@ -309,12 +309,12 @@ function asmModule(stdlib, imports, buffer) {
 		length = length|0;
 		var v0 = f4(0.0,0.0,0.0,0.0);
 		var loopIndex = 0, idx = 0, end = 0;
-		end = length * 4; 
+		end = (length * 4)|0; 
 		while((loopIndex|0) < (loopCOUNT|0)) 
 		{
 			idx = 0;
 			v0 = f4(0.0,0.0,0.0,0.0);
-			for(idx = idx << 0; idx < end|0 << 0; idx = (idx + 16)|0)
+			for(idx = idx << 0; (idx|0) < (end|0 << 0); idx = (idx + 16)|0)
 			{
 				f4store(Int8Heap, idx>>0, v0); 
 				v0 = f4add(v0, f4(1.0,1.0,1.0,1.0));
@@ -329,12 +329,12 @@ function asmModule(stdlib, imports, buffer) {
 		length = length|0;
 		var v0 = f4(0.0,0.0,0.0,0.0);
 		var loopIndex = 0, idx = 0, end = 0;
-		end = length * 4; 
+		end = (length * 4)|0; 
 		while((loopIndex|0) < (loopCOUNT|0)) 
 		{
 			idx = 0;
 			v0 = f4(0.0,0.0,0.0,0.0);
-			for(idx = idx << 0; idx < end|0 << 0; idx = (idx + 16)|0)
+			for(idx = idx << 0; (idx|0) < (end|0 << 0); idx = (idx + 16)|0)
 			{
 				f4store(Uint8Heap, idx>>0, v0); 
 				v0 = f4add(v0, f4(1.0,1.0,1.0,1.0));
@@ -349,12 +349,12 @@ function asmModule(stdlib, imports, buffer) {
 		length = length|0;
 		var v0 = f4(0.0,0.0,0.0,0.0);
 		var loopIndex = 0, idx = 0, end = 0;
-		end = length * 4; 
+		end = (length * 4)|0; 
 		while((loopIndex|0) < (loopCOUNT|0)) 
 		{
 			idx = 0;
 			v0 = f4(0.0,0.0,0.0,0.0);
-			for(idx = idx << 1; idx < end|0 << 1; idx = (idx + 16)|0)
+			for(idx = idx << 1; (idx|0) < (end|0 << 1); idx = (idx + 16)|0)
 			{
 				f4store(Int16Heap, idx>>1, v0); 
 				v0 = f4add(v0, f4(1.0,1.0,1.0,1.0));
@@ -369,12 +369,12 @@ function asmModule(stdlib, imports, buffer) {
 		length = length|0;
 		var v0 = f4(0.0,0.0,0.0,0.0);
 		var loopIndex = 0, idx = 0, end = 0;
-		end = length * 4; 
+		end = (length * 4)|0; 
 		while((loopIndex|0) < (loopCOUNT|0)) 
 		{
 			idx = 0;
 			v0 = f4(0.0,0.0,0.0,0.0);
-			for(idx = idx << 1; idx < end|0 << 1; idx = (idx + 16)|0)
+			for(idx = idx << 1; (idx|0) < (end|0 << 1); idx = (idx + 16)|0)
 			{
 				f4store(Uint16Heap, idx>>1, v0); 
 				v0 = f4add(v0, f4(1.0,1.0,1.0,1.0));
@@ -389,12 +389,12 @@ function asmModule(stdlib, imports, buffer) {
 		length = length|0;
 		var v0 = f4(0.0,0.0,0.0,0.0);
 		var loopIndex = 0, idx = 0, end = 0;
-		end = length*4;
+		end = (length * 4)|0; 
 		while((loopIndex|0) < (loopCOUNT|0)) 
 		{
 			idx = 0;
 			v0 = f4(0.0,0.0,0.0,0.0);
-			for(idx = idx << 2; idx < end|0 << 2; idx = (idx + 16)|0)
+			for(idx = idx << 2; (idx|0) < (end|0 << 2); idx = (idx + 16)|0)
 			{
 				f4store(Int32Heap, idx>>2, v0); 
 				v0 = f4add(v0, f4(1.0,1.0,1.0,1.0));
@@ -409,12 +409,12 @@ function asmModule(stdlib, imports, buffer) {
 		length = length|0;
 		var v0 = f4(0.0,0.0,0.0,0.0);
 		var loopIndex = 0, idx = 0, end = 0;
-		end = length*4; 
+		end = (length * 4)|0; 
 		while((loopIndex|0) < (loopCOUNT|0)) 
 		{
 			idx = 0;
 			v0 = f4(0.0,0.0,0.0,0.0);
-			for(idx = idx << 2; idx < end|0 << 2; idx = (idx + 16)|0)
+			for(idx = idx << 2; (idx|0) < (end|0 << 2); idx = (idx + 16)|0)
 			{
 				f4store(Uint32Heap, idx>>2, v0); 
 				v0 = f4add(v0, f4(1.0,1.0,1.0,1.0));
@@ -439,7 +439,7 @@ function asmModule(stdlib, imports, buffer) {
 			
             idx=0;
 			
-			for(idx = idx<<2; idx <= end<<2; idx = (idx + 1)|0)
+			for(idx = idx<<2; (idx|0) <= (end<<2); idx = (idx + 1)|0)
 			{		
 				switch(functionPicker|0)
 				{
@@ -477,7 +477,7 @@ function asmModule(stdlib, imports, buffer) {
         {
 			 idx=0;
 			
-			for(idx = idx<<2; idx <= end<<2; idx = (idx + 1)|0)
+			for(idx = idx<<2; (idx|0) <= (end<<2); idx = (idx + 1)|0)
 			{		
 				switch(functionPicker|0)
 				{
@@ -513,7 +513,7 @@ function asmModule(stdlib, imports, buffer) {
         loopIndex = loopCOUNT | 0;
         do {
 			idx = 0;
-			for(idx = idx<<2; idx <= end<<2; idx = (idx + 1)|0)
+			for(idx = idx<<2; (idx|0) <= (end<<2); idx = (idx + 1)|0)
 			{		
 				switch(functionPicker|0)
 				{
@@ -544,10 +544,10 @@ function asmModule(stdlib, imports, buffer) {
 		var idx=0,end=0;
         var loopIndex = 0;
 		var v = f4(0.0,0.0,0.0,0.0);
-		end = length * 4 - 16; 
+		end = (((length * 4)|0) - 16)|0; 
         while ( (loopIndex|0) < (loopCOUNT|0)) {
             idx=0;
-			for(idx = idx<<0; idx <= end<<0; idx = (idx + 1)|0)
+			for(idx = idx<<0; (idx|0) <= (end<<0); idx = (idx + 1)|0)
 			{		
 				v = f4load(Int8Heap, idx>>0); 
 			}
@@ -561,10 +561,10 @@ function asmModule(stdlib, imports, buffer) {
 		var idx=0,end=0;
         var loopIndex = 0;
 		var v = f4(0.0,0.0,0.0,0.0);
-		end = length * 4 - 16; 
+		end = (((length * 4)|0) - 16)|0; 
         while ( (loopIndex|0) < (loopCOUNT|0)) {
             idx=0;
-			for(idx = idx<<0; idx <= end<<0; idx = (idx + 1)|0)
+			for(idx = idx<<0; (idx|0) <= (end<<0); idx = (idx + 1)|0)
 			{		
 				v = f4load(Uint8Heap, idx>>0); 
 			}
@@ -578,10 +578,10 @@ function asmModule(stdlib, imports, buffer) {
 		var idx=0,end=0;
         var loopIndex = 0;
 		var v = f4(0.0,0.0,0.0,0.0);
-		end = length * 2 - 8;
+		end = (((length * 2)|0) - 8)|0; 
         while ( (loopIndex|0) < (loopCOUNT|0)) {
             idx=0;
-			for(idx = idx<<1; idx <= end<<1; idx = (idx + 1)|0)
+			for(idx = idx<<1; (idx|0) <= (end<<1); idx = (idx + 1)|0)
 			{		
 				v = f4load(Int16Heap, idx>>1); 
 			}
@@ -595,10 +595,10 @@ function asmModule(stdlib, imports, buffer) {
 		var idx=0,end=120;
         var loopIndex = 0;
 		var v = f4(0.0,0.0,0.0,0.0);
-		end = length * 2 - 8;
+		end = (((length * 2)|0) - 8)|0; 
         while ( (loopIndex|0) < (loopCOUNT|0)) {
             idx=0;
-			for(idx = idx<<1; idx <= end<<1; idx = (idx + 1)|0)
+			for(idx = idx<<1; (idx|0) <= (end<<1); idx = (idx + 1)|0)
 			{		
 				v = f4load(Uint16Heap, idx>>1); 
 			}
@@ -612,10 +612,10 @@ function asmModule(stdlib, imports, buffer) {
 		var idx=0,end=60;
         var loopIndex = 0;
 		var v = f4(0.0,0.0,0.0,0.0);
-		end = length * 1 - 4;
+		end = (((length * 1)|0) - 4)|0; 
         while ( (loopIndex|0) < (loopCOUNT|0)) {
             idx=0;
-			for(idx = idx<<2; idx <= end<<2; idx = (idx + 1)|0)
+			for(idx = idx<<2; (idx|0) <= (end<<2); idx = (idx + 1)|0)
 			{		
 				v = f4load(Int32Heap, idx>>2); 
 			}
@@ -629,10 +629,10 @@ function asmModule(stdlib, imports, buffer) {
 		var idx=0,end=60;
         var loopIndex = 0;
 		var v = f4(0.0,0.0,0.0,0.0);
-		end = length * 1 - 4;
+		end = (((length * 1)|0) - 4)|0; 
         while ( (loopIndex|0) < (loopCOUNT|0)) {
             idx=0;
-			for(idx = idx<<2; idx <= end<<2; idx = (idx + 1)|0)
+			for(idx = idx<<2; (idx|0) <= (end<<2); idx = (idx + 1)|0)
 			{		
 				v = f4load(Uint32Heap, idx>>2); 
 			}

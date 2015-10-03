@@ -156,9 +156,9 @@ function asmModule(stdlib, imports, buffer) {
 	    
 	    var i = 0;
 	       
-	    for (; i < 2 * count; i = (i + 1) |0)
+	    for (; (i|0) < ((2 * count)|0); i = (i + 1) |0)
 	    { 
-	        if (((i | 0) % 2) == 0)
+	        if ((((i | 0) % 2)|0) == 0)
 	        {
 	            f4store(Int8Heap, dstIdx, f4load(Int8Heap, srcIdx1));
 	            //f4store(Int8Heap, (dstIdx + 0), f4load(Int8Heap, (srcIdx1 + 0)));
@@ -185,9 +185,9 @@ function asmModule(stdlib, imports, buffer) {
 	    
 	    var i = 0;
 	       
-	    for (; i < 2 * count; i = (i + 1) |0)
+	    for (; (i|0) < ((2 * count)|0); i = (i + 1) |0)
 	    { 
-	        if (((i | 0) % 2) == 0)
+	        if ((((i | 0) % 2)|0) == 0)
 	        {
 	            i4store(Int8Heap, dstIdx, i4load(Int8Heap, srcIdx1));
 	            //f4store(Int8Heap, (dstIdx + 0), f4load(Int8Heap, (srcIdx1 + 0)));
@@ -214,9 +214,9 @@ function asmModule(stdlib, imports, buffer) {
 	    
 	    var i = 0;
 	       
-	    for (; i < 2 * count; i = (i + 1) |0)
+	    for (; (i|0) < ((2 * count)|0); i = (i + 1) |0)
 	    { 
-	        if (((i | 0) % 2) == 0)
+	        if ((((i | 0) % 2)|0) == 0)
 	        {
 	            d2store(Int8Heap, dstIdx, d2load(Int8Heap, srcIdx1));
 	            //f4store(Int8Heap, (dstIdx + 0), f4load(Int8Heap, (srcIdx1 + 0)));

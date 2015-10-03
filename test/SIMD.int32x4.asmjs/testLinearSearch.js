@@ -42,11 +42,11 @@ function asmModule(stdlib, imports, buffer) {
 		var i4Flipped = i4(0, 0, 0, 0);
 		
 		i4Value = i4splat(value | 0);
-		for(i = 0; (i | 0) < length; i = (i + BLOCK_SIZE) | 0) {
+		for(i = 0; (i | 0) < (length|0); i = (i + BLOCK_SIZE) | 0) {
 				i4Heap = i4((HEAP32[(i << 2) >> 2] | 0), (HEAP32[((i + 1) << 2) >> 2] | 0), (HEAP32[((i + 2) << 2) >> 2] | 0), (HEAP32[((i + 3) << 2) >> 2] | 0));
 				i4Result = i4equal(i4Heap, i4Value);
 				
-				if(i4Result.signMask != 0) {
+				if((i4Result.signMask|0) != 0) {
 					i4Flipped = i4swizzle(i4Result, 3, 2, 1, 0);
 					return (i + BLOCK_SIZE - ~~(log(+(i4Flipped.signMask|0)) / log(2.0)) - 1)|0
 				}

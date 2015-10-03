@@ -52,7 +52,7 @@ function asmModule(stdlib, imports, buffer) {
 
         f4Value = f4splat(value);
 
-        for (i = 0; (i | 0) < length; i = (i + BLOCK_SIZE) | 0) {
+        for (i = 0; (i | 0) < (length|0); i = (i + BLOCK_SIZE) | 0) {
             //f4Heap = f4(HEAP32[(i << 2) >> 2], HEAP32[((i + 1) << 2) >> 2], HEAP32[((i + 2) << 2) >> 2], HEAP32[((i + 3) << 2) >> 2]);
             f4Heap = f4load(HEAP32, (i << 2) >> 2);
             i4Result = i4check(f4nearlyEqual(f4Heap, f4Value, toF(0.0001)));

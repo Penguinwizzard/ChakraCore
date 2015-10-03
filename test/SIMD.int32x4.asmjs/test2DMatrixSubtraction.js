@@ -48,12 +48,12 @@ function asmModule(stdlib, imports, buffer) {
         Int32Heap[cIndex << 2 >> 2] = dim1;
         Int32Heap[cIndex + 1 << 2 >> 2] = dim2;
 
-        while (i < matrixSize) {
+        while ((i|0) < (matrixSize|0)) {
             aPiece = i4load(Int32Heap, aIndex + 2 + i << 2 >> 2);
             bPiece = i4load(Int32Heap, bIndex + 2 + i << 2 >> 2);
             i4store(Int32Heap, cIndex + 2 + i << 2 >> 2, i4sub(aPiece, bPiece));
 
-            i = i + BLOCK_SIZE;
+            i = (i + BLOCK_SIZE)|0;
         }
 
         return 0;
@@ -68,10 +68,10 @@ function asmModule(stdlib, imports, buffer) {
         matrixSize = imul(dim1, dim2);
         Int32Heap[startIndex << 2 >> 2] = dim1;
         Int32Heap[startIndex + 1 << 2 >> 2] = dim2;
-        for (i = 0; i < matrixSize - BLOCK_SIZE; i = i + BLOCK_SIZE) {
+        for (i = 0; (i|0) < ((matrixSize - BLOCK_SIZE)|0); i = (i + BLOCK_SIZE)|0) {
             i4store(Int32Heap, startIndex + 2 + i << 2 >> 2, i4((i + 1), (i + 2), (i + 3), (i + 4)));
         }
-        for (; i < matrixSize; i = i + 1) {
+        for (; (i|0) < (matrixSize|0); i = (i + 1)|0) {
             Int32Heap[(startIndex + 2 + i) << 2 >> 2] = (i + 1) | 0;
         }
         return (startIndex + 2 + i) | 0;
