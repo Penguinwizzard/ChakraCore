@@ -54,11 +54,9 @@ LAYOUT_TYPE_WMS_FE ( AsmReg2       ) // Generic layout with 2 RegSlot
 LAYOUT_TYPE_WMS_FE ( AsmReg3       ) // Generic layout with 3 RegSlot
 LAYOUT_TYPE_WMS_FE ( AsmReg4       ) // Generic layout with 4 RegSlot
 LAYOUT_TYPE_WMS_FE ( AsmReg5       ) // Generic layout with 5 RegSlot
-#ifdef SIMD_JS_ENABLED
 LAYOUT_TYPE_WMS_FE ( AsmReg6       ) // Generic layout with 6 RegSlot
 LAYOUT_TYPE_WMS_FE ( AsmReg7       ) // Generic layout with 7 RegSlot
 LAYOUT_TYPE_WMS_FE ( AsmReg2IntConst1 ) // Generic layout with 2 RegSlots and 1 Int Constant
-#endif
 LAYOUT_TYPE_WMS    ( Int1Double1   ) // 1 int register and 1 double register
 LAYOUT_TYPE_WMS    ( Int1Float1    ) // 1 int register and 1 float register
 LAYOUT_TYPE_WMS    ( Double1Int1   ) // 1 double register and 1 int register
@@ -85,7 +83,6 @@ LAYOUT_TYPE_WMS    ( BrInt1        ) // Conditionnal branching with 1 int
 LAYOUT_TYPE_WMS    ( BrInt2        ) // Conditionnal branching with 2 int
 LAYOUT_TYPE_WMS    ( AsmUnsigned1        ) // Conditionnal branching with 2 int
 
-#ifdef SIMD_JS_ENABLED
 // Float32x4
 LAYOUT_TYPE_WMS    ( Float32x4_2 )
 LAYOUT_TYPE_WMS    ( Float32x4_3 )
@@ -117,8 +114,6 @@ LAYOUT_TYPE_WMS    ( Int32x4_1Float64x2_1 )
 LAYOUT_TYPE_WMS    ( Int1Int32x4_1)
 LAYOUT_TYPE_WMS    ( Int1Int32x4_1Int1 )
 LAYOUT_TYPE_WMS    ( Int32x4_2Int2 )
-
-
 // Float64x2
 LAYOUT_TYPE_WMS    ( Float64x2_2 ) 
 LAYOUT_TYPE_WMS    ( Float64x2_3 ) 
@@ -133,9 +128,7 @@ LAYOUT_TYPE_WMS    ( Float64x2_1Int32x4_1 )
 LAYOUT_TYPE_WMS    ( Float64x2_1Int32x4_1Float64x2_2 ) 
 LAYOUT_TYPE_WMS    ( Reg1Float64x2_1 )
 LAYOUT_TYPE_WMS    ( Int1Float64x2_1)
-
 LAYOUT_TYPE_WMS    ( AsmSimdTypedArr )
-#endif
 
 #undef LAYOUT_TYPE_DUP
 #undef LAYOUT_TYPE_WMS_DUP

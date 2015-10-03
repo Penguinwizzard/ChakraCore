@@ -88,13 +88,12 @@ namespace Js
             varCount += (int)(floatRegisterSpace.GetTotalVarCount() * FLOAT_SLOTS_SPACE + 0.5);
             varCount += doubleRegisterSpace.GetTotalVarCount() * DOUBLE_SLOTS_SPACE;
 
-#ifdef SIMD_JS_ENABLED
-            if (SIMD_JS_FLAG)
+            if (IsSimdjsEnabled())
             {
                 const auto& simdRegisterSpace = func->GetRegisterSpace<AsmJsSIMDValue>();
                 varCount += (int)(simdRegisterSpace.GetTotalVarCount() * SIMD_SLOTS_SPACE);
             }
-#endif
+
             functionBody->SetOutParamDepth(func->GetMaxArgOutDepth());
             functionBody->SetVarCount(varCount);
             // should be set in EmitOneFunction
@@ -154,13 +153,13 @@ namespace Js
         asmInfo->SetAsmArrayBuiltinUsed(mAsmArrayBuiltinUsedBV);
         asmInfo->SetUsesChangeHeap(mUsesChangeHeap);
         asmInfo->SetMaxHeapAccess(mMaxHeapAccess);
-#ifdef SIMD_JS_ENABLED
-        if (SIMD_JS_FLAG)
+
+        if (IsSimdjsEnabled())
         {
             asmInfo->SetAsmSimdBuiltinUsed(mAsmSimdBuiltinUsedBV);
             asmInfo->SetSimdRegCount(mSimdVarSpace.GetTotalVarCount());
         }
-#endif
+
         int varCount = 3; // 3 possible arguments
 
         functionBody->SetInParamsCount(4); // Always set 4 inParams so the memory space is the same (globalEnv,stdlib,foreign,buffer)
@@ -215,8 +214,7 @@ namespace Js
                     {
                         modVar.initialiser.doubleInit = var->GetDoubleInitialiser();
                     }
-#ifdef SIMD_JS_ENABLED
-                    else if (SIMD_JS_FLAG && modVar.type.isSIMD())
+                    else if (IsSimdjsEnabled() && modVar.type.isSIMD())
                     {
                         modVar.initialiser.simdInit = var->GetSimdConstInitialiser();
                     }
@@ -224,7 +222,7 @@ namespace Js
                     {
                         Assert(UNREACHED);
                     }
-#endif
+
                     modVar.isMutable = var->isMutable();
 
                     slot->location = modVar.location;
@@ -308,14 +306,12 @@ namespace Js
                     slot->builtinArrayFunc = mathFunc->GetArrayBuiltInFunction();
                     break;
                 }
-#ifdef SIMD_JS_ENABLED
                 case AsmJsSymbol::SIMDBuiltinFunction:
                 {
                     AsmJsSIMDFunction * mathFunc = sym->Cast<AsmJsSIMDFunction>();
                     slot->builtinSIMDFunc = mathFunc->GetSimdBuiltInFunction();
                     break;
                 }
-#endif
                 default:
                     Assume(UNREACHED);
                 }
@@ -416,8 +412,7 @@ namespace Js
                         }
                     }
                 }
-#ifdef SIMD_JS_ENABLED
-                else if (SIMD_JS_FLAG)
+                else if (IsSimdjsEnabled())
                 {
                     /*
                     Float32x4 operations work on Float reg space. 
@@ -450,8 +445,7 @@ namespace Js
                         }
                     }
                 }
-#endif
-                
+               
             }
             if (evalArgs)
             {
@@ -769,8 +763,7 @@ namespace Js
                     var->SetVarType(AsmJsVarType::Float);
                     var->SetLocation(func->AcquireRegister<float>());
                 }
-#ifdef SIMD_JS_ENABLED
-                else if (SIMD_JS_FLAG && funcDecl->GetSymbolType() == AsmJsSymbol::SIMDBuiltinFunction)
+                else if (IsSimdjsEnabled() && funcDecl->GetSymbolType() == AsmJsSymbol::SIMDBuiltinFunction)
                 {
                     AsmJsSIMDFunction* simdFunc = funcDecl->Cast<AsmJsSIMDFunction>();
                     // x = f4check(x)
@@ -783,7 +776,6 @@ namespace Js
                     // This allows us to capture all SIMD constants from locals initializations, add them to the register space before we assign registers to args and locals.
                     func->GetSimdVarsList().Add(var);
                 }
-#endif
                 else
                 {
                     return Fail(rhs, L"Wrong function used for argument definition");
@@ -822,13 +814,9 @@ namespace Js
         ParseNodePtr pnode = func->GetBodyNode();
         MathBuiltin mathBuiltin;
         AsmJsMathFunction* mathFunc = nullptr;
-#ifdef SIMD_JS_ENABLED
         AsmJsSIMDFunction* simdFunc = nullptr;
         AsmJsSIMDValue simdValue;
         simdValue.Zero();
-#endif
-        
-
         // define all variables
         while (pnode->nop == knopList)
         {
@@ -888,8 +876,7 @@ namespace Js
                             return Fail(decl, L"Var declaration with something else than a literal value|fround call");
                         }
                     }
-#ifdef SIMD_JS_ENABLED
-                    else if (SIMD_JS_FLAG && funcDecl->GetSymbolType() == AsmJsSymbol::SIMDBuiltinFunction)
+                    else if (IsSimdjsEnabled() && funcDecl->GetSymbolType() == AsmJsSymbol::SIMDBuiltinFunction)
                     {
                         // var x = f4(1.0, 2.0, 3.0, 4.0);
                         simdFunc = funcDecl->Cast<AsmJsSIMDFunction>();
@@ -898,7 +885,6 @@ namespace Js
                             return Fail(varNode, L"Invalid SIMD local declaration");
                         }
                     }
-#endif
                 }
                 else if (pnodeInit->nop != knopInt && pnodeInit->nop != knopFlt)
                 {
@@ -1015,8 +1001,7 @@ namespace Js
                             loc = func->GetConstRegister<float>(fVal);
                         }
                     }
-#ifdef SIMD_JS_ENABLED
-                    else if (SIMD_JS_FLAG && simdFunc)
+                    else if (IsSimdjsEnabled() && simdFunc)
                     {
                         // simd constructor call
                         // en-register the simdvalue constant first
@@ -1027,7 +1012,6 @@ namespace Js
                         // add to list. assign register after all constants.
                         func->GetSimdVarsList().Add(var);
                     }
-#endif
                     else
                     {
                         Assert(UNREACHED);
@@ -1048,9 +1032,8 @@ namespace Js
         }
 
         varDeclEnd:
-#ifdef SIMD_JS_ENABLED
         // this code has to be on all exit-path from the function
-        if (SIMD_JS_FLAG)
+        if (IsSimdjsEnabled())
         {
             // Now, assign registers to all SIMD vars after all constants are en-registered.
             for (int i = 0; i < func->GetSimdVarsList().Count(); i++)
@@ -1060,8 +1043,6 @@ namespace Js
             }
             func->GetSimdVarsList().Reset(); // list not needed anymore
         }
-#endif
-
         return true;
     }
 
@@ -1428,22 +1409,17 @@ namespace Js
                 return false;
             }
         }
-
-#ifdef SIMD_JS_ENABLED
         // similiar to math functions maps initialization.
-        if (SIMD_JS_FLAG)
+        if (IsSimdjsEnabled())
         {
             if (!InitSIMDBuiltins())
             {
                 return false;
             }
         }
-#endif
-
         return true;
     }
 
-#ifdef SIMD_JS_ENABLED
     bool AsmJsModuleCompiler::InitSIMDBuiltins()
     {
         struct SIMDFunc
@@ -1607,7 +1583,6 @@ namespace Js
         }
         return true;
     }
-#endif
 
     AsmJsModuleCompiler::AsmJsModuleCompiler( ExclusiveContext *cx, AsmJSParser &parser ) :
         mCx( cx )
@@ -1639,11 +1614,9 @@ namespace Js
         , mForeignArgNameInit(false)
         , mBufferArgNameInit(false)
 #endif
-#ifdef SIMD_JS_ENABLED
         , mStdLibSIMDInt32x4Map(&mAllocator)
         , mStdLibSIMDFloat32x4Map(&mAllocator)
         , mStdLibSIMDFloat64x2Map(&mAllocator)
-#endif
     {
         InitModuleNode( parser );
     }
@@ -1850,10 +1823,8 @@ namespace Js
             var->SetVarType( AsmJsVarType::Float );      
             var->SetLocation(mFloatVarSpace.AcquireRegister());
             break;
-
-#ifdef SIMD_JS_ENABLED
         case Js::AsmJS_Int32x4:
-            if (SIMD_JS_FLAG)
+            if (IsSimdjsEnabled())
             {
                 var->SetVarType(AsmJsVarType::Int32x4);
                 var->SetLocation(mSimdVarSpace.AcquireRegister());
@@ -1861,7 +1832,7 @@ namespace Js
             }
             Assert(UNREACHED);
         case AsmJS_Float32x4:
-            if (SIMD_JS_FLAG)
+            if (IsSimdjsEnabled())
             {
                 var->SetVarType(AsmJsVarType::Float32x4);
                 var->SetLocation(mSimdVarSpace.AcquireRegister());
@@ -1869,14 +1840,13 @@ namespace Js
             }
             Assert(UNREACHED);
         case AsmJS_Float64x2:
-            if (SIMD_JS_FLAG)
+            if (IsSimdjsEnabled())
             {
                 var->SetVarType(AsmJsVarType::Float64x2);
                 var->SetLocation(mSimdVarSpace.AcquireRegister());
                 break;
             }
             Assert(UNREACHED);
-#endif
         default:
             break;
         }
@@ -1976,9 +1946,7 @@ namespace Js
             {
                 switch (sym->GetSymbolType())
                 {
-#ifdef SIMD_JS_ENABLED
                 case AsmJsSymbol::SIMDBuiltinFunction:
-#endif
                 case AsmJsSymbol::MathBuiltinFunction:
                 case AsmJsSymbol::ModuleFunction:
                 case AsmJsSymbol::ImportFunction:
@@ -2026,8 +1994,8 @@ namespace Js
         mModuleMemory.mFloatOffset = mModuleMemory.mFuncPtrOffset + GetFuncPtrTableCount();
         mModuleMemory.mIntOffset = mModuleMemory.mFloatOffset + (int32)(mFloatVarSpace.GetTotalVarCount() * FLOAT_SLOTS_SPACE + 0.5);
         mModuleMemory.mMemorySize    = mModuleMemory.mIntOffset + (int32)(mIntVarSpace.GetTotalVarCount() * INT_SLOTS_SPACE + 0.5);
-#ifdef SIMD_JS_ENABLED
-        if (SIMD_JS_FLAG)
+
+        if (IsSimdjsEnabled())
         {
             mModuleMemory.mSimdOffset = (int) ::ceil(mModuleMemory.mMemorySize / SIMD_SLOTS_SPACE);
             if (mSimdVarSpace.GetTotalVarCount())
@@ -2037,7 +2005,6 @@ namespace Js
                 // mModuleMemory.mMemorySize += (int)SIMD_SLOTS_SPACE;
             }
         }
-#endif
     }
 
     void AsmJsModuleCompiler::AccumulateCompileTime()
@@ -2208,9 +2175,9 @@ namespace Js
         double * asmDoubleVars = reinterpret_cast<double*>(asmJsEnvironment + asmModuleInfo->GetModuleMemory().mDoubleOffset);
         int * asmIntVars = reinterpret_cast<int*>(asmJsEnvironment + asmModuleInfo->GetModuleMemory().mIntOffset);
         float * asmFloatVars = reinterpret_cast<float*>(asmJsEnvironment + asmModuleInfo->GetModuleMemory().mFloatOffset);
-#ifdef SIMD_JS_ENABLED
+
         AsmJsSIMDValue * asmSIMDVars = reinterpret_cast<AsmJsSIMDValue*>(asmJsEnvironment + asmModuleInfo->GetModuleMemory().mSimdOffset);
-#endif
+
 
 #if DEBUG
         Var * slotArray = RecyclerNewArrayZ(scriptContext->GetRecycler(), Var, moduleBody->scopeSlotArraySize + ScopeSlots::FirstSlotIndex);
@@ -2254,7 +2221,6 @@ namespace Js
                 case AsmJsVarType::Int:
                     value = JavascriptNumber::ToVar(asmIntVars[asmSlot->location], scriptContext);
                     break;
-#ifdef SIMD_JS_ENABLED
                 case AsmJsVarType::Float32x4:
                     value = JavascriptSIMDFloat32x4::New(&asmSIMDVars[asmSlot->location], scriptContext);
                     break;
@@ -2264,7 +2230,6 @@ namespace Js
                 case AsmJsVarType::Int32x4:
                     value = JavascriptSIMDInt32x4::New(&asmSIMDVars[asmSlot->location], scriptContext);
                     break;
-#endif
                 default:
                     Assume(UNREACHED);
                 }
@@ -2370,7 +2335,7 @@ namespace Js
                     Assume(UNREACHED);
                 }
                 break;
-#ifdef SIMD_JS_ENABLED
+
             case AsmJsSymbol::SIMDBuiltinFunction:
                 switch (asmSlot->builtinSIMDFunc)
                 {
@@ -2383,7 +2348,7 @@ namespace Js
                     Assume(UNREACHED);
                 }
                 break;
-#endif
+
             default:
                 Assume(UNREACHED);
             }
@@ -2413,7 +2378,6 @@ namespace Js
         }
     }
 
-#ifdef SIMD_JS_ENABLED
     bool AsmJsModuleCompiler::LookupStdLibSIMDNameInMap(PropertyName name, AsmJsSIMDFunction **simdFunc, SIMDNameMap* map) const
     {
         return map->TryGetValue(name->GetPropertyId(), simdFunc);
@@ -2607,6 +2571,4 @@ namespace Js
         }
         return true;
     }
-#endif
-
 };

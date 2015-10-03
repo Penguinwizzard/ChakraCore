@@ -43,19 +43,16 @@ namespace Js
     template<> uint GetRegMask<int>() { return Mask32BitsReg; }
     template<> uint GetRegMask<double>() { return Mask64BitsReg; }
     template<> uint GetRegMask<float>() { return Mask64BitsReg; }
-#ifdef SIMD_JS_ENABLED
     template<> uint GetRegMask<AsmJsSIMDValue>() { return Mask64BitsReg; }
-    
-#endif
+   
 
     // Template version to access first register available
     template<typename T> RegNum GetFirstReg();
     template<> RegNum GetFirstReg<int>() { return FIRST_INT_REG; }
     template<> RegNum GetFirstReg<double>() { return FIRST_FLOAT_REG; }
     template<> RegNum GetFirstReg<float>() { return FIRST_FLOAT_REG; }
-#ifdef SIMD_JS_ENABLED
     template<> RegNum GetFirstReg<AsmJsSIMDValue>() { return FIRST_FLOAT_REG; }
-#endif
+
     // Returns the last register available + 1, forms an upper bound  [GetFirstReg, GetLastReg[
     template<typename T> RegNum GetLastReg() { return RegNum(GetFirstReg<T>()+8); }
 
@@ -292,21 +289,17 @@ namespace Js
                 ++reg;
             }
         }
-#ifdef SIMD_JS_ENABLED
+
         template<> RegNum GetReg<AsmJsSIMDValue>(const int registerRestriction)
         {
             return GetReg<float>(registerRestriction);
         }
-#endif
 
         // Search for a register already holding the value at this location
         template<typename T> bool FindRegWithStackOffset( RegNum& outReg, int stackOffset, int registerRestriction = 0 )
         {
-#ifdef SIMD_JS_ENABLED
             CompileAssert( sizeof(T) == 4 || sizeof(T) == 8 || sizeof(T) == 16);
-#else
-            CompileAssert(sizeof(T) == 4 || sizeof(T) == 8);
-#endif
+
             int stackSavedReg = mAnyStackSaved & GetRegMask<T>() & ~registerRestriction;
             if( stackSavedReg )
             {
@@ -547,16 +540,14 @@ namespace Js
         const int intConstCount = asmInfo->GetIntConstCount();
         const int doubleConstCount = asmInfo->GetDoubleConstCount();
         const int floatConstCount = asmInfo->GetFloatConstCount();
-#ifdef SIMD_JS_ENABLED
         const int simdConstCount = asmInfo->GetSimdConstCount();
-#endif
+
         // Offset of doubles from (double*)m_localSlot 
         const int intOffsets = asmInfo->GetIntByteOffset() / sizeof(int);
         const int doubleOffsets = asmInfo->GetDoubleByteOffset() / sizeof(double);
         const int floatOffset = asmInfo->GetFloatByteOffset() / sizeof(float);
-#ifdef SIMD_JS_ENABLED
         const int simdByteOffset = asmInfo->GetSimdByteOffset(); // in bytes
-#endif
+
         // (2*sizeof(Var)) -- push ebp and ret address 
         //sizeof(ScriptFunction*) -- this is the argument passed to the TJ function
         int argoffset = (2*sizeof(Var)) + sizeof(ScriptFunction*);
@@ -565,9 +556,8 @@ namespace Js
         int* intArg;
         double* doubleArg;
         float* floatArg;
-#ifdef SIMD_JS_ENABLED
         AsmJsSIMDValue* simdArg;
-#endif
+
         // setup stack memory
         FrameDisplay* frame = func->GetEnvironment();
         Var moduleEnv = frame->GetItem(0);
@@ -584,9 +574,8 @@ namespace Js
         int* m_localIntSlots;
         double* m_localDoubleSlots;
         float* m_localFloatSlots;
-#ifdef SIMD_JS_ENABLED
         AsmJsSIMDValue* m_localSimdSlots;
-#endif
+
 #if DBG_DUMP
         const bool tracingFunc = PHASE_TRACE( AsmjsFunctionEntryPhase, body );
         if( tracingFunc )
@@ -625,23 +614,19 @@ namespace Js
             m_localDoubleSlots = ((double*)m_localSlots) + doubleOffsets;
             memcpy_s(m_localDoubleSlots, doubleConstCount*sizeof(double), constTable, doubleConstCount*sizeof(double));
 
-#ifdef SIMD_JS_ENABLED
-            if (SIMD_JS_FLAG)
+            if (func->GetScriptContext()->GetConfig()->IsSimdjsEnabled())
             {
                 // Copy SIMD constants to TJ stack frame. No data alignment.
                 constTable = (void*)(((double*)constTable) + doubleConstCount);
                 m_localSimdSlots = (AsmJsSIMDValue*)((char*)m_localSlots + simdByteOffset);
                 memcpy_s(m_localSimdSlots, simdConstCount*sizeof(AsmJsSIMDValue), constTable, simdConstCount*sizeof(AsmJsSIMDValue));
             }
-#endif
-
 
             intArg = m_localIntSlots + intConstCount;
             doubleArg = m_localDoubleSlots + doubleConstCount;
             floatArg = m_localFloatSlots + floatConstCount;
-#ifdef SIMD_JS_ENABLED
             simdArg = m_localSimdSlots + simdConstCount;
-#endif
+
             for( int i = 0; i < argCount; i++ )
             {
                 if(asmInfo->GetArgType(i).isInt())
@@ -698,8 +683,7 @@ namespace Js
                     ++doubleArg;
                     argoffset += sizeof( double );
                 }
-#ifdef SIMD_JS_ENABLED
-                else if (SIMD_JS_FLAG && asmInfo->GetArgType(i).isSIMD())
+                else if (asmInfo->GetArgType(i).isSIMD())
                 {
                     __asm
                     {
@@ -733,7 +717,6 @@ namespace Js
                     ++simdArg;
                     argoffset += sizeof(AsmJsSIMDValue);
                 }
-#endif
             }
         }
 #if DBG_DUMP
@@ -888,9 +871,7 @@ namespace Js
         template<> struct InstructionBySize < int > { typedef MOV MoveInstruction; };
         template<> struct InstructionBySize < double > { typedef MOVSD MoveInstruction; };
         template<> struct InstructionBySize < float > { typedef MOVSS MoveInstruction; };
-#ifdef SIMD_JS_ENABLED
         template<> struct InstructionBySize < AsmJsSIMDValue > { typedef MOVUPS MoveInstruction; };
-#endif
         namespace EncodingHelpers 
         {
             // put the value on the stack into a register
@@ -916,7 +897,6 @@ namespace Js
                 templateData->SetStackInfo( reg, targetOffset );
                 return InstructionBySize<RegisterSize>::MoveInstruction::EncodeInstruction<RegisterSize>( buffer, InstrParamsAddrReg( RegEBP, targetOffset, reg ) );
             }
-#ifdef SIMD_JS_ENABLED
             template<typename LaneType=int>
             int SIMDSetStackReg(BYTE*& buffer, X86TemplateData* templateData, int targetOffset, RegNum reg)
             {
@@ -1185,7 +1165,7 @@ namespace Js
                 size += EncodingHelpers::SIMDSetStackReg<double>(buffer, templateData, targetOffset, tmpReg);
                 return size;
             }
-#endif
+
             // Retrieve the value of the array buffer and put it in a register to use
             RegNum GetArrayBufferRegister( BYTE*& buffer, TemplateContext context, int &size, const int registerRestriction = 0 )
             {
@@ -3996,7 +3976,6 @@ namespace Js
             return size;
         }
 
-#ifdef SIMD_JS_ENABLED
         int Simd128_Ld_F4::ApplyTemplate(TemplateContext context, BYTE*& buffer, int targetOffsetF4, int srcOffsetF4)
         {
             X86TemplateData* templateData = GetTemplateData(context);
@@ -4847,7 +4826,6 @@ namespace Js
         {
             return Simd128_I_Conv_VTF4::ApplyTemplate(context, buffer, targetOffset, srcOffset);
         }
-#endif
     };
 
 } 

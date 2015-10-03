@@ -5,8 +5,6 @@
 #include "RuntimeLibraryPch.h"
 #include "SIMDInt8x16Operation.h"
 
-#ifdef SIMD_JS_ENABLED
-
 #if _M_IX86 || _M_AMD64
 
 namespace Js
@@ -353,7 +351,5 @@ namespace Js
         }
     }
 }
-
-#endif
 
 #endif

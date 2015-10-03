@@ -20,9 +20,7 @@ namespace Js
     template<> int AsmJsEncoder::GetOffset<Var>() const{return AsmJsJitTemplate::Globals::StackVarCount * sizeof( Var );}
     template<> int AsmJsEncoder::GetOffset<double>() const{ return mDoubleOffset; }
     template<> int AsmJsEncoder::GetOffset<float>() const{ return mFloatOffset; }
-#ifdef SIMD_JS_ENABLED
     template<> int AsmJsEncoder::GetOffset<AsmJsSIMDValue>() const{ return mSimdOffset; }
-#endif
 
     template<> 
     void AsmJsEncoder::ReadOpTemplate<Js::SmallLayout>( OpCodeAsmJs op )
@@ -168,9 +166,8 @@ namespace Js
         mIntOffset = asmInfo->GetIntByteOffset() + GetOffset<Var>();
         mDoubleOffset = asmInfo->GetDoubleByteOffset() + GetOffset<Var>();
         mFloatOffset = asmInfo->GetFloatByteOffset() + GetOffset<Var>();
-#ifdef SIMD_JS_ENABLED
         mSimdOffset = asmInfo->GetSimdByteOffset() + GetOffset<Var>();
-#endif
+
         NoRecoverMemoryArenaAllocator localAlloc(L"BE-AsmJsEncoder", GetPageAllocator(), Js::Throw::OutOfMemory);
         mLocalAlloc = &localAlloc;
 

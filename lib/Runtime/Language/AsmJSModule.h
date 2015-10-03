@@ -87,10 +87,7 @@ namespace Js {
             , mFuncPtrOffset
             , mIntOffset
             , mFloatOffset
-
-#ifdef SIMD_JS_ENABLED
             , mSimdOffset // in SIMDValues
-#endif
             ;
         int32   mMemorySize;
     };
@@ -142,14 +139,12 @@ namespace Js {
         typedef AsmJsRegisterSpaceGeneric<float, 0> ModuleFloatVars;
         typedef AsmJsRegisterSpaceGeneric<AsmJsImportFunction, 0> ModuleImportFunctions;
 
-#ifdef SIMD_JS_ENABLED
         typedef AsmJsRegisterSpaceGeneric<AsmJsSIMDValue, 0> ModuleSIMDVars;
         typedef JsUtil::BaseDictionary<PropertyId, AsmJsSIMDFunction*, ArenaAllocator> SIMDNameMap;
 
         inline bool LookupStdLibSIMDNameInMap   (PropertyName name, AsmJsSIMDFunction **simdFunc, SIMDNameMap* map) const;
         bool AddStandardLibrarySIMDNameInMap    (PropertyId id, AsmJsSIMDFunction* simdFunc, SIMDNameMap* map);
-        
-#endif
+
         // Keep allocator first to free Dictionnary before deleting the allocator
         ArenaAllocator                  mAllocator;
         ExclusiveContext *              mCx;
@@ -165,7 +160,7 @@ namespace Js {
         ModuleDoubleVars                mDoubleVarSpace;
         ModuleFloatVars                 mFloatVarSpace;
         ModuleImportFunctions           mImportFunctions;
-#ifdef SIMD_JS_ENABLED
+
         // Maps functions names to func symbols. Three maps since names are not unique across SIMD types (e.g. SIMD.{float32x4|int32x4}.add)
         // Also used to find if an operation is supported on a SIMD type. 
         SIMDNameMap                         mStdLibSIMDInt32x4Map;
@@ -174,7 +169,7 @@ namespace Js {
         // global simd values space. 
         ModuleSIMDVars                  mSimdVarSpace;
         BVStatic<ASMSIMD_BUILTIN_SIZE>  mAsmSimdBuiltinUsedBV;
-#endif
+
         ModuleExportArray               mExports;
         RegSlot                         mExportFuncIndex; // valid only if export object is empty
         ModuleFunctionTableArray        mFunctionTableArray;
@@ -201,7 +196,6 @@ namespace Js {
     public:
         AsmJsModuleCompiler( ExclusiveContext *cx, AsmJSParser &parser );
         bool Init();
-#ifdef SIMD_JS_ENABLED
         bool InitSIMDBuiltins();
 
         // Resolves a SIMD function name to its symbol
@@ -216,8 +210,7 @@ namespace Js {
         void AddSimdBuiltinUse(int index){ mAsmSimdBuiltinUsedBV.Set(index); }
         // adds simd constant var to module 
         bool AddSimdValueVar(PropertyName name, ParseNode* pnode, AsmJsSIMDFunction* simdFunc);
-        
-#endif
+
         AsmJsCompileTime GetTick();
         void AccumulateCompileTime();
         void AccumulateCompileTime(AsmJsCompilation::Phases phase);
@@ -298,9 +291,8 @@ namespace Js {
         inline int32 GetFFIOffset        () const{return mModuleMemory.mFFIOffset;}
         inline int32 GetFuncOffset       () const{return mModuleMemory.mFuncOffset;}
         inline int32 GetDoubleOffset     () const{return mModuleMemory.mDoubleOffset; }
-#ifdef SIMD_JS_ENABLED
         inline int32 GetSimdOffset       () const{ return mModuleMemory.mSimdOffset;  }
-#endif
+
         inline int32 GetFuncPtrTableCount() const{return mFuncPtrTableCount;}
         inline void SetFuncPtrTableCount ( int32 val ){mFuncPtrTableCount = val;}
 
@@ -314,9 +306,8 @@ namespace Js {
         bool AddStandardLibraryMathName(PropertyId id, const double* cstAddr, AsmJSMathBuiltinFunction mathLibFunctionName);
         bool AddStandardLibraryArrayName(PropertyId id, AsmJsTypedArrayFunction * func, AsmJSTypedArrayBuiltinFunction mathLibFunctionName);
         bool CheckByteLengthCall(ParseNode * node, ParseNode * newBufferDecl);
-#ifdef SIMD_JS_ENABLED
         bool ValidateSimdConstructor(ParseNode* pnode, AsmJsSIMDFunction* simdFunc, AsmJsSIMDValue& value);
-#endif
+        bool IsSimdjsEnabled() { return GetScriptContext()->GetConfig()->IsSimdjsEnabled(); }
     };
 
 
@@ -350,9 +341,7 @@ namespace Js {
                 int intInit;
                 float floatInit;
                 double doubleInit;
-#ifdef SIMD_JS_ENABLED
                 AsmJsSIMDValue simdInit;
-#endif
             } initialiser;
             bool isMutable;
         };
@@ -387,9 +376,8 @@ namespace Js {
         Recycler* mRecycler;
         int mArgInCount; // for runtime validation of arguments in
         int mVarCount, mVarImportCount, mFunctionImportCount, mFunctionCount, mFunctionTableCount, mExportsCount, mSlotsCount;
-#ifdef SIMD_JS_ENABLED
         int mSimdRegCount; // part of mVarCount
-#endif
+
         PropertyIdArray*             mExports;
         RegSlot*                     mExportsFunctionLocation;
         RegSlot                      mExportFunctionIndex; // valid only if export object is empty
@@ -402,9 +390,8 @@ namespace Js {
         AsmJsSlotMap*                mSlotMap;
         BVStatic<ASMMATH_BUILTIN_SIZE>  mAsmMathBuiltinUsed;
         BVStatic<ASMARRAY_BUILTIN_SIZE> mAsmArrayBuiltinUsed;
-#ifdef SIMD_JS_ENABLED
         BVStatic<ASMSIMD_BUILTIN_SIZE>  mAsmSimdBuiltinUsed;
-#endif
+
         uint                         mMaxHeapAccess;
         bool                         mUsesChangeHeap;
         bool                         mIsProcessed;
@@ -417,9 +404,8 @@ namespace Js {
             , mFunctionImportCount( 0 )
             , mFunctionCount( 0 )
             , mFunctionTableCount( 0 )
-#ifdef SIMD_JS_ENABLED
             , mSimdRegCount(0)
-#endif
+
             , mVars( nullptr )
             , mVarImports( nullptr )
             , mFunctionImports( nullptr )
@@ -571,7 +557,7 @@ namespace Js {
         {
             return mMaxHeapAccess;
         }
-#ifdef SIMD_JS_ENABLED
+
         inline void SetSimdRegCount(int val) { mSimdRegCount = val;  }
         inline int GetSimdRegCount() const   { return mSimdRegCount; }
         inline void SetAsmSimdBuiltinUsed(const BVStatic<ASMSIMD_BUILTIN_SIZE> val)
@@ -582,7 +568,6 @@ namespace Js {
         {
             return mAsmSimdBuiltinUsed;
         }
-#endif
 
         static void EnsureHeapAttached(ScriptFunction * func);
         static void * ConvertFrameForJavascript(void* asmJsMemory, ScriptFunction * func);

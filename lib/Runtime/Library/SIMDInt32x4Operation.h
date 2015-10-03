@@ -4,8 +4,6 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
-#ifdef SIMD_JS_ENABLED
-
 namespace Js {
 
     struct SIMDInt32x4Operation
@@ -59,5 +57,3 @@ namespace Js {
     };
 
 } // namespace Js
-
-#endif

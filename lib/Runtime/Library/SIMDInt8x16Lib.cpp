@@ -5,8 +5,6 @@
 #include "RuntimeLibraryPch.h"
 #include "SIMDInt8x16Operation.h"
 
-#ifdef SIMD_JS_ENABLED
-
 namespace Js
 {
     
@@ -586,5 +584,3 @@ namespace Js
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat32x4TypeMismatch, L"ReplaceLane");
     }
 }
-
-#endif

@@ -226,12 +226,8 @@ void DbCheckPostLower::Check(IR::RegOpnd *regOpnd)
     {
         if (IRType_IsFloat(LinearScan::GetRegType(reg)))
         {
-#ifdef SIMD_JS_ENABLED
             // both simd128 and float64 map to float64 regs
             Assert(IRType_IsFloat(regOpnd->GetType()) || IRType_IsSimd128(regOpnd->GetType()));
-#else
-            Assert(IRType_IsFloat(regOpnd->GetType()));
-#endif
         }
         else
         {

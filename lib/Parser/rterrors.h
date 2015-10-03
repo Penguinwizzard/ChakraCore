@@ -304,7 +304,7 @@ RT_ERROR_MSG(JSERR_ObjectIsNotInitialized, 5617, "%s: Object internal state is n
 
 RT_ERROR_MSG(JSERR_GeneratorAlreadyExecuting, 5618, "%s: Cannot execute generator function because it is currently executing", "", kjstTypeError, 0)
 
-#ifdef SIMD_JS_ENABLED
+// SIMD_JS
 RT_ERROR_MSG(JSERR_This_NeedSimd, 5620, "%s: 'this' is not a SIMD type", "SIMD type expected", kjstTypeError, 0)
 RT_ERROR_MSG(JSERR_SimdFloat32x4TypeMismatch, 5621, "SIMD.Float32x4.%s: Invalid SIMD types for operation", "Expecting Float32x4 values", kjstTypeError, 0)
 RT_ERROR_MSG(JSERR_SimdFloat64x2TypeMismatch, 5622, "SIMD.Float64x2.%s: Invalid SIMD types for operation", "Expecting Float64x2 values", kjstTypeError, 0)
@@ -312,7 +312,6 @@ RT_ERROR_MSG(JSERR_SimdInt32x4TypeMismatch, 5623, "SIMD.Int32x4.%s: Invalid SIMD
 RT_ERROR_MSG(JSERR_SimdInt8x16TypeMismatch, 5624, "SIMD.Int8x16.%s: Invalid SIMD types for operation", "Expecting Int8x16 values", kjstTypeError, 0)
 RT_ERROR_MSG(JSERR_SimdLaneRangeError, 5625, "Lane index is out of range for this SIMD type", "Lane index is out of range", kjstRangeError, 0)
 RT_ERROR_MSG(JSERR_SimdInvalidArgType, 5626, "%s: Invalid argument type for SIMD operation", "Invalid argument type for SIMD operation", kjstTypeError, 0)
-#endif
 
 RT_ERROR_MSG(JSERR_NeedConstructor, 5627, "'%s' is not a constructor", "Constructor expected", kjstTypeError, 0)
 

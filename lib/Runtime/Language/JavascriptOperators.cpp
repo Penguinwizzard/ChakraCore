@@ -281,7 +281,6 @@ namespace Js
         case TypeIds_UInt64Number:
             return scriptContext->GetLibrary()->GetNumberTypeDisplayString();
 
-#ifdef SIMD_JS_ENABLED
         case TypeIds_SIMDFloat32x4:
             if (scriptContext->GetConfig()->IsSimdjsEnabled())
             {
@@ -302,7 +301,6 @@ namespace Js
             {
                 return scriptContext->GetLibrary()->GetSIMDInt8x16DisplayString();
             }
-#endif
 
         default:
 

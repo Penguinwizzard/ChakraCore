@@ -159,7 +159,6 @@ EXDEF2    (NOPASMJS          , NopEx        , Empty                             
 
   DEF2_WMS( IP_TARG_ASM      , AsmJsLoopBodyStart, OP_ProfiledLoopBodyStart                      )
 
-#ifdef SIMD_JS_ENABLED
   //unary ops
   DEF2_WMS( SIMD_F4_1toF4_1  , Simd128_Ld_F4        , (AsmJsSIMDValue)                                   )
   DEF2_WMS( SIMD_I4_1toI4_1  , Simd128_Ld_I4        , (AsmJsSIMDValue)                                   )
@@ -322,4 +321,3 @@ EXDEF2    (NOPASMJS          , NopEx        , Empty                             
   EXDEF3_WMS   ( CUSTOM_ASMJS      , Simd128_StArrConst_F4        , OP_SimdStArrConstIndex  , AsmSimdTypedArr       )
   EXDEF3_WMS   ( CUSTOM_ASMJS      , Simd128_StArrConst_I4        , OP_SimdStArrConstIndex  , AsmSimdTypedArr       )
   EXDEF3_WMS   ( CUSTOM_ASMJS      , Simd128_StArrConst_D2        , OP_SimdStArrConstIndex  , AsmSimdTypedArr       )
-#endif

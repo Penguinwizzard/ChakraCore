@@ -78,7 +78,6 @@
 // Language features
 #define ENABLE_INTL_OBJECT                          // Intl support
 #define ENABLE_ES6_CHAR_CLASSIFIER                  // ES6 unicode charactor classifer support
-#define SIMD_JS_ENABLED                             // *** TODO: Won't build if disabled currently
 
 // Type system features
 #define PERSISTENT_INLINE_CACHES                    // *** TODO: Won't build if disabled currently

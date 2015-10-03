@@ -11,9 +11,7 @@ namespace IR {
 
 class IntConstOpnd;
 class FloatConstOpnd;
-#ifdef SIMD_JS_ENABLED
 class Simd128ConstOpnd;
-#endif
 class HelperCallOpnd;
 class SymOpnd;
 class PropertySymOpnd;
@@ -25,15 +23,11 @@ class LabelOpnd;
 class MemRefOpnd;
 class RegBVOpnd;
 
-
-
 enum OpndKind : BYTE {
     OpndKindInvalid,
     OpndKindIntConst,
     OpndKindFloatConst,
-#ifdef SIMD_JS_ENABLED
     OpndKindSimd128Const,
-#endif
     OpndKindHelperCall,
     OpndKindSym,
     OpndKindReg,
@@ -150,10 +144,8 @@ public:
     IntConstOpnd *      AsIntConstOpnd();
     bool                IsFloatConstOpnd() const;
     FloatConstOpnd *    AsFloatConstOpnd();
-#ifdef SIMD_JS_ENABLED
     bool                IsSimd128ConstOpnd() const;
     Simd128ConstOpnd *  AsSimd128ConstOpnd();
-#endif
     bool                IsHelperCallOpnd() const;
     HelperCallOpnd *    AsHelperCallOpnd();
     bool                IsSymOpnd() const;
@@ -196,12 +188,10 @@ public:
     bool                IsFloat32() const { return this->m_type == TyFloat32; }
     bool                IsFloat64() const { return this->m_type == TyFloat64; }
     bool                IsFloat() const { return this->IsFloat32() || this->IsFloat64(); }
-#ifdef SIMD_JS_ENABLED
     bool                IsSimd128() const { return IRType_IsSimd128(this->m_type);  }
     bool                IsSimd128F4() const { return this->m_type == TySimd128F4; }
     bool                IsSimd128I4() const { return this->m_type == TySimd128I4; }
     bool                IsSimd128D2() const { return this->m_type == TySimd128D2; }
-#endif
     bool                IsVar() const { return this->m_type == TyVar; }
     bool                IsTaggedInt() const;
     bool                IsTaggedValue() const;
@@ -338,7 +328,6 @@ private:
 #endif
 };
 
-#ifdef SIMD_JS_ENABLED
 class Simd128ConstOpnd sealed : public Opnd
 {
    
@@ -354,7 +343,6 @@ public:
 public:
     AsmJsSIMDValue          m_value;
 };
-#endif
 
 ///---------------------------------------------------------------------------
 ///

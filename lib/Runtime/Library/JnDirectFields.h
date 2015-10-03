@@ -77,7 +77,6 @@ ENTRY(clz32)
 ENTRY(fround)
 // End math functions
 
-#ifdef SIMD_JS_ENABLED
 // SIMD 
 ENTRY(check)
 ENTRY(signMask)
@@ -144,8 +143,6 @@ ENTRY(shiftLeftByScalar)
 ENTRY(shiftRightLogicalByScalar)
 ENTRY(shiftRightArithmeticByScalar)
 
-// End SIMD
-#endif
 
 ENTRY(add)
 ENTRY(all)
@@ -270,10 +267,8 @@ ENTRY(map)
 ENTRY(Map)
 ENTRY(Math)
 
-// SIMD
-#ifdef SIMD_JS_ENABLED
+// SIMD_JS
 ENTRY(SIMD)
-#endif
 
 ENTRY(max)
 ENTRY(MAX_SAFE_INTEGER)

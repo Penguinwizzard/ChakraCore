@@ -734,17 +734,15 @@ namespace Js
         uint64NumberTypeStatic = StaticType::New(scriptContext, TypeIds_UInt64Number, numberPrototype, nullptr);
         numberTypeDynamic = DynamicType::New(scriptContext, TypeIds_NumberObject, numberPrototype, nullptr, NullTypeHandler<false>::GetDefaultInstance(), true, true);
 
-#ifdef SIMD_JS_ENABLED
-        // SIMD
+        // SIMD_JS
         // Initialize types
-        if (scriptContext->GetConfig()->IsSimdjsEnabled())
+        if (GetScriptContext()->GetConfig()->IsSimdjsEnabled())
         {
             simdFloat32x4TypeStatic = StaticType::New(scriptContext, TypeIds_SIMDFloat32x4, nullValue /*prototype*/, nullptr);
             simdFloat64x2TypeStatic = StaticType::New(scriptContext, TypeIds_SIMDFloat64x2, nullValue /*prototype*/, nullptr);
             simdInt32x4TypeStatic = StaticType::New(scriptContext, TypeIds_SIMDInt32x4, nullValue /*prototype*/, nullptr);
             simdInt8x16TypeStatic = StaticType::New(scriptContext, TypeIds_SIMDInt8x16, nullValue /*prototype*/, nullptr);
         }
-#endif
 
         // Initialize Object types
         for (int16 i = 0; i < PreInitializedObjectTypeCount; i++)
@@ -1177,14 +1175,12 @@ namespace Js
         numberTypeDisplayString = CreateStringFromCppLiteral(L"number");
         promiseResolveFunction = nullptr;
 
-#ifdef SIMD_JS_ENABLED
-        if (scriptContext->GetConfig()->IsSimdjsEnabled())
+        if (GetScriptContext()->GetConfig()->IsSimdjsEnabled())
         {
             simdFloat32x4DisplayString = CreateStringFromCppLiteral(L"Float32x4");
             simdFloat64x2DisplayString = CreateStringFromCppLiteral(L"Float64x2");
             simdInt32x4DisplayString = CreateStringFromCppLiteral(L"Int32x4");
         }
-#endif
 
         if (scriptContext->GetConfig()->IsES6SymbolEnabled())
         {
@@ -1345,10 +1341,9 @@ namespace Js
             DeferredTypeHandler<InitializeMathObject>::GetDefaultInstance()));
         AddMember(globalObject, PropertyIds::Math, mathObject);
 
-#ifdef SIMD_JS_ENABLED
-        // SIMD
+        // SIMD_JS
         // we declare global objects and lib functions only if SSE2 is available. Else, we use the polyfill.
-        if (AutoSystemInfo::Data.SSE2Available() && scriptContext->GetConfig()->IsSimdjsEnabled())
+        if (AutoSystemInfo::Data.SSE2Available() && GetScriptContext()->GetConfig()->IsSimdjsEnabled())
         {
             simdObject = DynamicObject::New(recycler,
                 DynamicType::New(scriptContext, TypeIds_Object, objectPrototype, nullptr,
@@ -1362,7 +1357,6 @@ namespace Js
             simdInt32x4ToStringFunction = DefaultCreateFunction(&JavascriptSIMDInt32x4::EntryInfo::ToString, 1, nullptr, nullptr, PropertyIds::toString);
             simdInt8x16ToStringFunction = DefaultCreateFunction(&JavascriptSIMDInt8x16::EntryInfo::ToString, 1, nullptr, nullptr, PropertyIds::toString);
         }
-#endif
 
         debugObject = nullptr;
         diagnosticsScriptObject = nullptr;
@@ -2662,8 +2656,7 @@ namespace Js
         mathObject->SetHasNoEnumerableProperties(true);
     }
 
-#ifdef SIMD_JS_ENABLED
-    // SIMD
+    // SIMD_JS
     void JavascriptLibrary::InitializeSIMDObject(DynamicObject* simdObject, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         // Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterSIMD so that the update is in sync with profiler
@@ -2934,7 +2927,6 @@ namespace Js
         }
         return false;
     }
-#endif
 
     void JavascriptLibrary::InitializeReflectObject(DynamicObject* reflectObject, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
@@ -6909,7 +6901,6 @@ namespace Js
         return hr;
     }
 
-#ifdef SIMD_JS_ENABLED
     HRESULT JavascriptLibrary::ProfilerRegisterSIMD()
     {
         HRESULT hr = S_OK;
@@ -7044,7 +7035,6 @@ namespace Js
 
         return hr;
     }
-#endif
 
 #ifdef IR_VIEWER
     HRESULT JavascriptLibrary::ProfilerRegisterIRViewer()

@@ -209,7 +209,7 @@ MACRO_WMS   ( Fround_Flt                , Float2        , None           )
 MACRO_WMS   ( Fround_Db                 , Float1Double1 , None           )
 MACRO_WMS   ( Fround_Int                , Float1Int1    , None           )
 
-#ifdef SIMD_JS_ENABLED
+
 #define MACRO_SIMD(opcode, asmjsLayout, opCodeAttrAsmJs, OpCodeAttr, ...) MACRO(opcode, asmjsLayout, opCodeAttrAsmJs)
 #define MACRO_SIMD_WMS(opcode, asmjsLayout, opCodeAttrAsmJs, OpCodeAttr, ...) MACRO_WMS(opcode, asmjsLayout, opCodeAttrAsmJs)
 #define MACRO_SIMD_ASMJS_ONLY_WMS(opcode, asmjsLayout, opCodeAttrAsmJs, OpCodeAttr, ...) MACRO_WMS(opcode, asmjsLayout, opCodeAttrAsmJs)
@@ -219,7 +219,6 @@ MACRO_WMS   ( Fround_Int                , Float1Int1    , None           )
 #define MACRO_SIMD_ASMJS_ONLY_EXTEND_WMS(opcode, asmjsLayout, opCodeAttrAsmJs, OpCodeAttr, ...) MACRO_EXTEND_WMS(opcode, asmjsLayout, opCodeAttrAsmJs)
 
 #include "OpCodesSimd.h"
-#endif
 
 // help the caller to undefine all the macros
 #undef MACRO

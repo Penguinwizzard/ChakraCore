@@ -72,13 +72,11 @@ __inline ValueType ValueType::GetObject(const ObjectType objectType)
     return Verify(valueType);
 }
 
-#ifdef SIMD_JS_ENABLED
 ValueType ValueType::GetSimd128(const ObjectType objectType)
 {
     Assert(objectType >= ObjectType::Simd128Float32x4 && objectType <= ObjectType::Simd128Float64x2);
     return GetObject(objectType);
 }
-#endif
 
 __inline ValueType ValueType::GetArray(const ObjectType objectType)
 {
@@ -436,9 +434,7 @@ bool ValueType::HasBeenPrimitive() const
         OneOn(Bits::Object)
             ?
                 AnyOn(Bits::Undefined | Bits::Null)
-#ifdef SIMD_JS_ENABLED
               || GetObjectType() >= ObjectType::Simd128Float32x4
-#endif
             :
                 AnyOn(
                     Bits::Undefined |
@@ -458,9 +454,8 @@ bool ValueType::IsPrimitive() const
             Bits::Undefined | Bits::Null | Bits::Int | Bits::Float | Bits::Number | Bits::Boolean | Bits::String,
             Bits::IntCanBeUntagged | Bits::IntIsLikelyUntagged | Bits::CanBeTaggedValue);
 
-#ifdef SIMD_JS_ENABLED
     result =  result || IsSimd128();
-#endif
+
     return result;
 }
 
@@ -470,9 +465,9 @@ bool ValueType::IsLikelyPrimitive() const
         AnyOnOthersOff(
             Bits::Undefined | Bits::Null | Bits::Int | Bits::Float | Bits::Number | Bits::Boolean | Bits::String,
             Bits::Likely | Bits::IntCanBeUntagged | Bits::IntIsLikelyUntagged | Bits::CanBeTaggedValue);
-#ifdef SIMD_JS_ENABLED
+
     result = result || IsLikelySimd128();
-#endif
+
     return result;
 }
 
@@ -695,7 +690,7 @@ bool ValueType::IsLikelyAnyUnOptimizedArray() const
     return IsLikelyObject() && GetObjectType() >= ObjectType::Int64Array && GetObjectType() <= ObjectType::CharArray;
 }
 
-#ifdef SIMD_JS_ENABLED
+
 // Simd128 values
 // Note that SIMD types are primitives
 bool ValueType::IsSimd128() const
@@ -763,7 +758,7 @@ bool ValueType::IsLikelySimd128Float64x2() const
 {
     return IsLikelyObject() && GetObjectType() == ObjectType::Simd128Float64x2;
 }
-#endif
+
 
 ObjectType ValueType::GetObjectType() const
 {
@@ -1011,12 +1006,10 @@ ValueType ValueType::ToDefinitePrimitiveSubset() const
     Assert(HasBeenPrimitive());
     Assert(HasBeenObject());
 
-#ifdef SIMD_JS_ENABLED
     // If we have an object format of a type (object bit = 1) that represents a primitive (e.g. SIMD128), 
     // we want to keep the object bit and type along with other merged primitives (Undefined and/or Null).
     if (IsLikelyObject() && IsLikelyPrimitive())
         return Verify(bits & (Bits::Undefined | Bits::Null) | ToDefiniteObject().bits);
-#endif
 
     return
         Verify(
@@ -1200,14 +1193,12 @@ void ValueType::InitializeTypeIdToBitsMap()
     TypeIdToBits[TypeIds_Uint64Array       ] = GetObject(ObjectType::Uint64Array).bits;
     TypeIdToBits[TypeIds_CharArray         ] = GetObject(ObjectType::CharArray).bits;
     TypeIdToBits[TypeIds_BoolArray         ] = GetObject(ObjectType::BoolArray).bits;
-#ifdef SIMD_JS_ENABLED
+
     TypeIdToBits[TypeIds_SIMDFloat32x4     ] = GetObject(ObjectType::Simd128Float32x4).bits;
     TypeIdToBits[TypeIds_SIMDInt32x4       ] = GetObject(ObjectType::Simd128Int32x4).bits;
     TypeIdToBits[TypeIds_SIMDInt8x16       ] = GetObject(ObjectType::Simd128Int8x16).bits;
     TypeIdToBits[TypeIds_SIMDFloat64x2     ] = GetObject(ObjectType::Simd128Float64x2).bits;
-#endif
-
-
+    
 
     VirtualTypeIdToBits[TypeIds_Int8Array] = GetObject(ObjectType::Int8VirtualArray).bits;
     VirtualTypeIdToBits[TypeIds_Uint8Array] = GetObject(ObjectType::Uint8VirtualArray).bits;

@@ -478,9 +478,7 @@ LowererMD::Init(Lowerer *lowerer)
 {
     m_lowerer = lowerer;
     this->lowererMDArch.Init(this);
-#ifdef SIMD_JS_ENABLED
     Simd128InitOpcodeMap();
-#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -782,7 +780,6 @@ LowererMD::LowerRet(IR::Instr * retInstr)
             
             regType = TyInt32;
         }
-#ifdef SIMD_JS_ENABLED
         else if (asmType.which() == Js::AsmJsRetType::Float32x4)
         {
             regType = TySimd128F4;
@@ -795,7 +792,6 @@ LowererMD::LowerRet(IR::Instr * retInstr)
         {
             regType = TySimd128D2;
         }
-#endif
         else
         {
             Assert(UNREACHED);

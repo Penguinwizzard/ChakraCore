@@ -444,11 +444,9 @@ private:
     void            SetBailOutKind_NoAssert(const IR::BailOutKind bailOutKind);
 
 public:  
-#ifdef SIMD_JS_ENABLED
     // used only for SIMD Ld/St from typed arrays.
     // we keep these here to avoid increase in number of opcodes and to not use ExtendedArgs
     uint8           dataWidth;
-#endif
 
 #ifdef BAILOUT_INJECTION
     uint            bailOutByteCodeLocation;

@@ -160,8 +160,8 @@ namespace Js
             doubleTable++;
         }
 
-#ifdef SIMD_JS_ENABLED
-        if (SIMD_JS_FLAG)
+		// SIMD_JS
+        if (IsSimdjsEnabled())
         {
             AsmJsSIMDValue* simdTable = (AsmJsSIMDValue*)doubleTable;
             // SIMD return register
@@ -177,7 +177,6 @@ namespace Js
                 simdTable[entry.Value()] = entry.Key();
             }
         }
-#endif
     }
 
     void AsmJSByteCodeGenerator::FinalizeRegisters( FunctionBody* byteCodeFunction )
@@ -189,23 +188,22 @@ namespace Js
             + (int)((mFunction->GetRegisterSpace<float>().GetConstCount() + 1)* FLOAT_SLOTS_SPACE + 0.5 /*ceil*/) // space required for all float constants + 1 return register reserved
             + (int)((mFunction->GetRegisterSpace<int>().GetConstCount() + 1) * INT_SLOTS_SPACE + 0.5/*ceil*/) // space required for all int constants + 1 return register reserved
             + AsmJsFunctionMemory::RequiredVarConstants;
-#ifdef SIMD_JS_ENABLED
-        if (SIMD_JS_FLAG)
+
+        if (IsSimdjsEnabled())
         {
             nbConst += (int)((mFunction->GetRegisterSpace<AsmJsSIMDValue>().GetConstCount() + 1) * SIMD_SLOTS_SPACE); // Return register is already reserved in the regspace.
         }
-#endif
+
         byteCodeFunction->SetConstantCount(nbConst);
         
         // add 3 for each of I0, F0, and D0
         RegSlot regCount = mInfo->RegCount() + 3 + AsmJsFunctionMemory::RequiredVarConstants;
-#ifdef SIMD_JS_ENABLED
-        if (SIMD_JS_FLAG)
+
+        if (IsSimdjsEnabled())
         {
             // 1 return reg for SIMD
             regCount++;
         }
-#endif
         
         byteCodeFunction->SetFirstTmpReg(regCount);
     }
@@ -405,9 +403,9 @@ namespace Js
                         {
                             mWriter.AsmReg2(Js::OpCodeAsmJs::Ld_Flt, var->GetLocation(), mFunction->GetConstRegister<float>(initSource->GetFloatInitialiser()));
                         }
-#ifdef SIMD_JS_ENABLED
-                        else if (SIMD_JS_FLAG)
+                        else
                         {
+                            // SIMD_JS
                             Assert(var->GetType().isSIMDType());
                             switch (var->GetType().GetWhich())
                             {
@@ -424,11 +422,6 @@ namespace Js
                                     Assert(UNREACHED);
 
                             }
-                        }
-#endif
-                        else
-                        {
-                            Assert(UNREACHED);
                         }
                     }
                 }
@@ -629,15 +622,9 @@ namespace Js
         case knopVarDecl:
             throw AsmJsCompilationException( L"Variable declaration must happen at the top of the function" );
             break;
-#ifdef SIMD_JS_ENABLED
         case knopDot:
-            if (SIMD_JS_FLAG)
-            {
-                // expr.(x|y|z|w) or expr.signMask
-                return EmitDotExpr(pnode);
-            }
-            // fall-through
-#endif
+            // To handle expr.signMask for now, until Bools are suppored.
+            return EmitDotExpr(pnode);
         default:
             throw AsmJsCompilationException( L"Unhandled parse opcode for asm.js" );
             break;
@@ -818,8 +805,7 @@ namespace Js
                 emitInfo.type = AsmJsType::Float;
                 retType = AsmJsRetType::Float;
             }
-#ifdef SIMD_JS_ENABLED
-            else if (SIMD_JS_FLAG && info.type.isSubType(AsmJsType::Float32x4))
+            else if (info.type.isSubType(AsmJsType::Float32x4))
             {
                 CheckNodeLocation(info, AsmJsSIMDValue);
                 mWriter.Conv(OpCodeAsmJs::Simd128_Return_F4, 0, info.location);
@@ -827,7 +813,7 @@ namespace Js
                 emitInfo.type = AsmJsType::Float32x4;
                 retType = AsmJsRetType::Float32x4;
             }
-            else if (SIMD_JS_FLAG && info.type.isSubType(AsmJsType::Int32x4))
+            else if (info.type.isSubType(AsmJsType::Int32x4))
             {
                 CheckNodeLocation(info, AsmJsSIMDValue);
                 mWriter.Conv(OpCodeAsmJs::Simd128_Return_I4, 0, info.location);
@@ -835,7 +821,7 @@ namespace Js
                 emitInfo.type = AsmJsType::Int32x4;
                 retType = AsmJsRetType::Int32x4;
             }
-            else if (SIMD_JS_FLAG && info.type.isSubType(AsmJsType::Float64x2))
+            else if (info.type.isSubType(AsmJsType::Float64x2))
             {
                 CheckNodeLocation(info, AsmJsSIMDValue);
                 mWriter.Conv(OpCodeAsmJs::Simd128_Return_D2, 0, info.location);
@@ -843,7 +829,6 @@ namespace Js
                 emitInfo.type = AsmJsType::Float64x2;
                 retType = AsmJsRetType::Float64x2;
             }
-#endif
             else
             {
                 throw AsmJsCompilationException(L"Expression for return must be subtype of Signed, Double, or Float");
@@ -964,24 +949,21 @@ namespace Js
             throw AsmJsCompilationException( L"Undefined function %s", funcName );
         }
 
-#ifdef SIMD_JS_ENABLED
-        if (SIMD_JS_FLAG)
+        
+        if (sym->GetSymbolType() == AsmJsSymbol::SIMDBuiltinFunction)
         {
-            if (sym->GetSymbolType() == AsmJsSymbol::SIMDBuiltinFunction)
+            // Special handling for .load*/.store* operations
+            AsmJsSIMDFunction *simdFun = sym->Cast<AsmJsSIMDFunction>();
+            if (simdFun->IsSimdLoadFunc() || simdFun->IsSimdStoreFunc())
             {
-                // Special handling for .load*/.store* operations
-                AsmJsSIMDFunction *simdFun = sym->Cast<AsmJsSIMDFunction>();
-                if (simdFun->IsSimdLoadFunc() || simdFun->IsSimdStoreFunc())
-                {
-                    return EmitSimdLoadStoreBuiltin(pnode, sym->Cast<AsmJsSIMDFunction>(), expectedType);
-                }
-                else
-                {
-                    return EmitSimdBuiltin(pnode, sym->Cast<AsmJsSIMDFunction>(), expectedType);
-                }
-            }         
-        }
-#endif
+                return EmitSimdLoadStoreBuiltin(pnode, sym->Cast<AsmJsSIMDFunction>(), expectedType);
+            }
+            else
+            {
+                return EmitSimdBuiltin(pnode, sym->Cast<AsmJsSIMDFunction>(), expectedType);
+            }
+        }         
+        
         
         if (IsFRound((AsmJsMathFunction*)sym))
         {
@@ -1093,8 +1075,7 @@ namespace Js
                     regSlotLocation++;
                     mFunction->ReleaseLocation<int>( &argInfo );
                 }
-#ifdef SIMD_JS_ENABLED
-                else if (SIMD_JS_FLAG && argInfo.type.isSIMDType())
+                else if (argInfo.type.isSIMDType())
                 {
                     if (isFFI)
                     {
@@ -1117,7 +1098,6 @@ namespace Js
                     regSlotLocation += sizeof(AsmJsSIMDValue) / sizeof(Var);
                     mFunction->ReleaseLocation<AsmJsSIMDValue>(&argInfo);
                 }
-#endif
                 else
                 {
                     throw AsmJsCompilationException(L"Function %s doesn't support argument of type %s", funcName->Psz(), argInfo.type.toChars());
@@ -1232,38 +1212,30 @@ namespace Js
             info.location = fltReg;
             break;
         }
-#ifdef SIMD_JS_ENABLED
         case AsmJsRetType::Float32x4:
-            if (SIMD_JS_FLAG)
-            {
-                Assert(!isFFI);
-                RegSlot simdReg = mFunction->AcquireTmpRegister<AsmJsSIMDValue>();
-                mWriter.AsmReg2(OpCodeAsmJs::Simd128_I_Conv_VTF4, simdReg, AsmJsFunctionMemory::CallReturnRegister);
-                info.location = simdReg;
-                break;
-            }
-            Assert(UNREACHED);
+        {
+            Assert(!isFFI);
+            RegSlot simdReg = mFunction->AcquireTmpRegister<AsmJsSIMDValue>();
+            mWriter.AsmReg2(OpCodeAsmJs::Simd128_I_Conv_VTF4, simdReg, AsmJsFunctionMemory::CallReturnRegister);
+            info.location = simdReg;
+            break;
+        }
         case AsmJsRetType::Int32x4:
-            if (SIMD_JS_FLAG)
-            {
-                Assert(!isFFI);
-                RegSlot simdReg = mFunction->AcquireTmpRegister<AsmJsSIMDValue>();
-                mWriter.AsmReg2(OpCodeAsmJs::Simd128_I_Conv_VTI4, simdReg, AsmJsFunctionMemory::CallReturnRegister);
-                info.location = simdReg;
-                break;
-            }
-            Assert(UNREACHED);
+        {
+            Assert(!isFFI);
+            RegSlot simdReg = mFunction->AcquireTmpRegister<AsmJsSIMDValue>();
+            mWriter.AsmReg2(OpCodeAsmJs::Simd128_I_Conv_VTI4, simdReg, AsmJsFunctionMemory::CallReturnRegister);
+            info.location = simdReg;
+            break;
+        }
         case AsmJsRetType::Float64x2:
-            if (SIMD_JS_FLAG)
-            {
-                Assert(!isFFI);
-                RegSlot simdReg = mFunction->AcquireTmpRegister<AsmJsSIMDValue>();
-                mWriter.AsmReg2(OpCodeAsmJs::Simd128_I_Conv_VTD2, simdReg, AsmJsFunctionMemory::CallReturnRegister);
-                info.location = simdReg;
-                break;
-            }
-            Assert(UNREACHED);
-#endif
+        {
+            Assert(!isFFI);
+            RegSlot simdReg = mFunction->AcquireTmpRegister<AsmJsSIMDValue>();
+            mWriter.AsmReg2(OpCodeAsmJs::Simd128_I_Conv_VTD2, simdReg, AsmJsFunctionMemory::CallReturnRegister);
+            info.location = simdReg;
+            break;
+        }
         default:
             break;
         }
@@ -1274,7 +1246,6 @@ namespace Js
         return info;
     }
 
-#ifdef SIMD_JS_ENABLED
     EmitExpressionInfo* AsmJSByteCodeGenerator::EmitSimdBuiltinArguments(ParseNode* pnode, AsmJsFunctionDeclaration* func, __out_ecount(pnode->sxCall.argCount) AsmJsType *argsTypes, EmitExpressionInfo *argsInfo)
     {
         const uint16 argCount = pnode->sxCall.argCount;
@@ -1295,7 +1266,7 @@ namespace Js
                     arg = ParserWrapper::GetBinaryLeft(argNode);
                     argNode = ParserWrapper::GetBinaryRight(argNode);
                 }
-                if (SIMD_JS_FLAG && (func->GetSymbolType() == AsmJsSymbol::SIMDBuiltinFunction))
+                if (func->GetSymbolType() == AsmJsSymbol::SIMDBuiltinFunction)
                 {
                     AsmJsSIMDFunction *simdFunc = func->Cast<AsmJsSIMDFunction>();
 
@@ -1463,7 +1434,7 @@ namespace Js
         return argsInfo;
     }
 
-    bool    AsmJSByteCodeGenerator::ValidateSimdFieldAccess(PropertyName field, const AsmJsType& receiverType, OpCodeAsmJs &op, int &laneIndex, AsmJsType &laneType)
+    bool AsmJSByteCodeGenerator::ValidateSimdFieldAccess(PropertyName field, const AsmJsType& receiverType, OpCodeAsmJs &op)
     {
         PropertyId fieldId = field->GetPropertyId();
         // Bind propertyId if not already.
@@ -1501,54 +1472,26 @@ namespace Js
         Assert(ParserWrapper::IsDotMember(pnode));
         EmitExpressionInfo exprInfo(Constants::NoRegister, AsmJsType::Void);
         OpCodeAsmJs opcode;
-        int laneIndex = -1;
-        AsmJsType laneType = AsmJsType::Void;
         RegSlot dst = Constants::NoRegister;
         ParseNode* base = ParserWrapper::DotBase(pnode);
         PropertyName field = ParserWrapper::DotMember(pnode);
         EmitExpressionInfo baseInfo = Emit(base);
        
-        if (!ValidateSimdFieldAccess(field, baseInfo.type, opcode, laneIndex, laneType))
+        if (!ValidateSimdFieldAccess(field, baseInfo.type, opcode))
         {
             throw AsmJsCompilationException(L"Expression does not support field access or invalid field name");
         }
         
         AssertMsg(baseInfo.type.isSIMDType(), "Expecting SIMD value");
         mFunction->ReleaseLocation<AsmJsSIMDValue>(&baseInfo);
-        
-        if (laneType != AsmJsType::Void)
-        {
-            // lane access
-            AssertMsg((laneIndex >= SIMD_X && laneIndex <= SIMD_Y) || (laneIndex >= SIMD_Z && laneIndex <= SIMD_W && (baseInfo.type.isSIMDFloat32x4() || baseInfo.type.isSIMDInt32x4())), "Invalid SIMD lane index");
-            
-            switch (laneType.GetWhich())
-            {
-            case AsmJsType::Signed:
-                dst = mFunction->AcquireTmpRegister<int>();
-                break;
-            case AsmJsType::Float:
-                dst = mFunction->AcquireTmpRegister<float>();
-                break;
-            case AsmJsType::Double:
-                dst = mFunction->AcquireTmpRegister<double>();
-                break;
-            default:
-                Assert(UNREACHED);
-            }
-            mWriter.AsmReg2IntConst1(opcode, dst, baseInfo.location, laneIndex);
-            exprInfo.type = laneType;
-            exprInfo.location = dst;
-        }
-        else
-        {
-            // sign mask
-            dst = mFunction->AcquireTmpRegister<int>();
-            mWriter.AsmReg2(opcode, dst, baseInfo.location);
-            exprInfo.type = AsmJsType::Signed;
-            exprInfo.location = dst;
-        }
-        
-        return exprInfo;
+
+		// sign mask
+        dst = mFunction->AcquireTmpRegister<int>();
+        mWriter.AsmReg2(opcode, dst, baseInfo.location);
+        exprInfo.type = AsmJsType::Signed;
+        exprInfo.location = dst;
+
+		return exprInfo;
     }
 
     EmitExpressionInfo AsmJSByteCodeGenerator::EmitSimdBuiltin(ParseNode* pnode, AsmJsSIMDFunction* simdFunction, AsmJsRetType expectedType)
@@ -1791,7 +1734,6 @@ namespace Js
 
         return emitInfo;
     }
-#endif
    
     EmitExpressionInfo AsmJSByteCodeGenerator::EmitMathBuiltin(ParseNode* pnode, AsmJsMathFunction* mathFunction, AsmJsRetType expectedType)
     {
@@ -2138,13 +2080,11 @@ namespace Js
                     emitInfo.location = mFunction->AcquireTmpRegister<double>();
                     LoadModuleDouble(emitInfo.location, var->GetLocation());
                 }
-#ifdef SIMD_JS_ENABLED
-                else if (SIMD_JS_FLAG && var->GetVarType().isSIMD())
+                else if (var->GetVarType().isSIMD())
                 {
                     emitInfo.location = mFunction->AcquireTmpRegister<AsmJsSIMDValue>();
                     LoadModuleSimd( emitInfo.location, var->GetLocation(), var->GetVarType());
                 }
-#endif
                 else
                 {
                     Assert(UNREACHED);
@@ -2169,9 +2109,7 @@ namespace Js
             break;
         }
 
-#ifdef SIMD_JS_ENABLED
         case AsmJsSymbol::SIMDBuiltinFunction:
-#endif
         case AsmJsSymbol::ImportFunction     :
         case AsmJsSymbol::FuncPtrTable       :
         case AsmJsSymbol::ModuleFunction     :
@@ -2455,14 +2393,11 @@ namespace Js
                     CheckNodeLocation( rhsEmit, double );
                     SetModuleDouble( var->GetLocation(), rhsEmit.location );
                 }
-#ifdef SIMD_JS_ENABLED
-                else if (SIMD_JS_FLAG && var->GetVarType().isSIMD())
+                else if (var->GetVarType().isSIMD())
                 {
-                    
                     CheckNodeLocation(rhsEmit, AsmJsSIMDValue);
                     SetModuleSimd(var->GetLocation(), rhsEmit.location, var->GetVarType());
                 }
-#endif
                 else
                 {
                     Assert(UNREACHED);
@@ -2484,13 +2419,11 @@ namespace Js
                     CheckNodeLocation( rhsEmit, double );
                     mWriter.AsmReg2( Js::OpCodeAsmJs::Ld_Db, var->GetLocation(), rhsEmit.location );
                 }
-#ifdef SIMD_JS_ENABLED
-                else if (SIMD_JS_FLAG && var->GetVarType().isSIMD())
+                else if (var->GetVarType().isSIMD())
                 {
                     CheckNodeLocation(rhsEmit, AsmJsSIMDValue);
                     LoadSimd(var->GetLocation(), rhsEmit.location, var->GetVarType());
                 }
-#endif
                 else
                 {
                     Assert(UNREACHED);
@@ -3252,8 +3185,6 @@ namespace Js
         mWriter.AsmSlot(OpCodeAsmJs::StSlot_Db, src, AsmJsFunctionMemory::ModuleEnvRegister, dst + mCompiler->GetDoubleOffset() / DOUBLE_SLOTS_SPACE);
     }
 
-
-#ifdef SIMD_JS_ENABLED
     void AsmJSByteCodeGenerator::LoadModuleSimd(RegSlot dst, RegSlot index, AsmJsVarType type)
     {
         switch (type.which())
@@ -3310,7 +3241,6 @@ namespace Js
         }
 
     }
-#endif
 
     void AsmJsFunctionCompilation::CleanUp()
     {

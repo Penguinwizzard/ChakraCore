@@ -178,10 +178,9 @@ void Opnd::Free(Func *func)
         //NOTE: use to be Sealed do not do sub class checks like in CloneUse
         return static_cast<IntConstOpnd*>(this)->FreeInternal(func);
 
-#ifdef SIMD_JS_ENABLED
     case OpndKindSimd128Const:
         return static_cast<Simd128ConstOpnd*>(this)->FreeInternal(func);
-#endif
+
     case OpndKindFloatConst:
         return static_cast<FloatConstOpnd*>(this)->FreeInternal(func);
 
@@ -1537,7 +1536,6 @@ FloatConstOpnd::FreeInternal(Func *func)
     JitAdelete(func->m_alloc, this);
 }
 
-#ifdef SIMD_JS_ENABLED
 ///----------------------------------------------------------------------------
 ///
 /// Simd128ConstOpnd::New
@@ -1609,8 +1607,6 @@ Simd128ConstOpnd::FreeInternal(Func *func)
     Assert(m_kind == OpndKindSimd128Const);
     JitAdelete(func->m_alloc, this);
 }
-#endif
-
 
 
 ///----------------------------------------------------------------------------

@@ -4,8 +4,6 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
-#ifdef SIMD_JS_ENABLED
-
 namespace Js {
 
     class SIMDInt8x16Lib
@@ -83,5 +81,3 @@ namespace Js {
     };
 
 } // namespace Js
-
-#endif

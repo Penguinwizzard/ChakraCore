@@ -4,8 +4,6 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
-#ifdef SIMD_JS_ENABLED
-
 namespace Js {
     
 
@@ -132,5 +130,3 @@ namespace Js {
         // End entry points
     };
 } // namespace Js
-
-#endif

@@ -340,10 +340,10 @@ namespace Js
         ScriptContext *next;
         ScriptContext *prev;
         double retAsmIntDbVal; // stores the double & float result for Asm interpreter
-#ifdef SIMD_JS_ENABLED
+
         AsmJsSIMDValue retAsmSimdVal; // stores raw simd result for Asm interpreter
         static DWORD GetAsmSimdValOffset() { return offsetof(ScriptContext, retAsmSimdVal); }
-#endif
+
         ScriptContextOptimizationOverrideInfo optimizationOverrides;
 
         Js::JavascriptMethod CurrentThunk;

@@ -467,7 +467,6 @@ if (switchProfileMode) \
         break; \
     }
 
-#ifdef SIMD_JS_ENABLED
 
 // initializers
 #define PROCESS_SIMD_F4_1toR1Mem_COMMON(name, func, suffix) \
@@ -874,5 +873,5 @@ if (switchProfileMode) \
     break; \
     }
 #define PROCESS_SIMD_D2_2I4toD2_1(name, func, suffix) PROCESS_SIMD_D2_2I2toD2_1COMMON(name, func, suffix)
-#endif
+
 //////////////////////////////////////////////////////////////////////////

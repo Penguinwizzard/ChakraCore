@@ -94,10 +94,9 @@ LIBRARY_FUNCTION(Math,          Cbrt,               1,    /* TODO: What flags sh
 // Note: 1st column is currently used only for debug tracing.
 
 // REVIEW: We are allowed to ignore DST for a SIMD opcode, if it is null. This will enable inlining, and later dead-store in the globOpt. Is it safe to do that ?
-#ifdef SIMD_JS_ENABLED
+// SIMD_JS
 LIBRARY_FUNCTION(SIMD_Float32x4,    Float32x4,         4, BIF_IgnoreDst                                                 , SIMDFloat32x4Lib::EntryInfo::Float32x4)
 LIBRARY_FUNCTION(SIMD_Float32x4,    Add,               2, BIF_IgnoreDst                                                 , SIMDFloat32x4Lib::EntryInfo::Add)
 
 LIBRARY_FUNCTION(SIMD_Int32x4,      Int32x4,           4, BIF_IgnoreDst                                                 , SIMDInt32x4Lib::EntryInfo::Int32x4)
 LIBRARY_FUNCTION(SIMD_Int32x4,      Add,               2, BIF_IgnoreDst                                                 , SIMDInt32x4Lib::EntryInfo::Add)
-#endif

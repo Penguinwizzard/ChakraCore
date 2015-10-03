@@ -133,7 +133,7 @@ StackSym::NewArgSlotRegSym(Js::ArgSlot argSlotNum, Func * func, IRType type /* =
     stackSym->m_isArgSlotSym = false;
     stackSym->m_argSlotNum = argSlotNum;
 
-#if defined(SIMD_JS_ENABLED) && defined(_M_X64)
+#if defined(_M_X64)
     stackSym->m_argPosition = 0;
 #endif
 
@@ -147,7 +147,7 @@ StackSym::NewArgSlotSym(Js::ArgSlot argSlotNum, Func * func, IRType type /* = Ty
     stackSym->m_isArgSlotSym = true;
     stackSym->m_argSlotNum = argSlotNum;
 
-#if defined(SIMD_JS_ENABLED) && defined(_M_X64)
+#if defined(_M_X64)
     stackSym->m_argPosition = 0;
 #endif
 
@@ -222,7 +222,6 @@ StackSym::IsFloatConst() const
     return m_isFltConst;
 }
 
-#ifdef SIMD_JS_ENABLED
 bool 
 StackSym::IsSimd128Const() const
 {
@@ -231,7 +230,7 @@ StackSym::IsSimd128Const() const
 #endif
     return m_isSimd128Const;
 }
-#endif
+
 
 void
 StackSym::SetIsConst()
@@ -240,11 +239,8 @@ StackSym::SetIsConst()
     Assert(this->m_instrDef);
     IR::Opnd * src = this->m_instrDef->GetSrc1();
 
-#ifdef SIMD_JS_ENABLED
     Assert(src->IsImmediateOpnd() || src->IsFloatConstOpnd() || src->IsSimd128ConstOpnd());
-#else
-    Assert(src->IsImmediateOpnd() || src->IsFloatConstOpnd());
-#endif
+
     if (src->IsIntConstOpnd())
     {               
         Assert(this->m_instrDef->m_opcode == Js::OpCode::Ld_I4 ||  this->m_instrDef->m_opcode == Js::OpCode::LdC_A_I4 || LowererMD::IsAssign(this->m_instrDef));
@@ -255,12 +251,10 @@ StackSym::SetIsConst()
         Assert(this->m_instrDef->m_opcode == Js::OpCode::LdC_A_R8);
         this->SetIsFloatConst();
     }
-#ifdef SIMD_JS_ENABLED
     else if (src->IsSimd128ConstOpnd()){
         Assert(this->m_instrDef->m_opcode == Js::OpCode::Simd128_LdC);
         this->SetIsSimd128Const();
     }
-#endif
     else
     {        
         Assert(this->m_instrDef->m_opcode == Js::OpCode::Ld_A || LowererMD::IsAssign(this->m_instrDef));
@@ -305,7 +299,6 @@ StackSym::SetIsFloatConst()
     this->m_isFltConst = true;    
 }
 
-#ifdef SIMD_JS_ENABLED
 void
 StackSym::SetIsSimd128Const()
 {
@@ -317,7 +310,6 @@ StackSym::SetIsSimd128Const()
     this->m_isFltConst = false;
     this->m_isSimd128Const = true;
 }
-#endif
 
 Js::RegSlot     
 StackSym::GetByteCodeRegSlot() const 
@@ -450,7 +442,7 @@ StackSym::CloneDef(Func *func)
         newSym->m_isBailOutReferenced = m_isBailOutReferenced;
         newSym->m_argSlotNum = m_argSlotNum;
 
-#if defined(SIMD_JS_ENABLED) && defined(_M_X64)
+#if defined(_M_X64)
         newSym->m_argPosition = m_argPosition;
 #endif
 
@@ -721,11 +713,7 @@ StackSym::GetConstOpnd() const
     }
     else if (src1->IsMemRefOpnd())
     {
-#ifdef SIMD_JS_ENABLED
         Assert(this->IsFloatConst() || this->IsSimd128Const());
-#else
-        Assert(this->IsFloatConst());
-#endif
     }
     else
     {
