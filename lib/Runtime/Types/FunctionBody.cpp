@@ -8790,6 +8790,10 @@ namespace Js
 
     void FunctionEntryPointInfo::OnCleanup(bool isShutdown)
     {
+        // stack data recording can record this.
+        char localCopy[sizeof(FunctionEntryPointInfo)];
+        memcpy(&localCopy, this, sizeof(FunctionEntryPointInfo));
+
         if (this->IsCodeGenDone())
         {
             Assert(this->functionProxy->HasBody());
