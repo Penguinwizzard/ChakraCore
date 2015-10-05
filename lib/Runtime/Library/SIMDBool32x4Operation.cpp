@@ -6,8 +6,6 @@
 #include "SIMDBool32x4Operation.h"
 
 #if defined(_M_ARM32_OR_ARM64)
-#ifdef SIMD_JS_ENABLED
-
 namespace Js
 {
     SIMDValue SIMDBool32x4Operation::OpBool32x4(bool x, bool y, bool z, bool w)
@@ -41,11 +39,5 @@ namespace Js
     {
         return simd.i32[SIMD_X] && simd.i32[SIMD_Y] && simd.i32[SIMD_Z] && simd.i32[SIMD_W];
     }
-
-    
-
-    
 }
-
-#endif
 #endif

@@ -19,10 +19,12 @@ struct _SIMDValue
 {
     union{
         int     i32[4];
+	int16   i16[8];
+	int8    i8[16];
+
         float   f32[4];
         double  f64[2];
         int16   i16[8];
-        int8    i8[16];
     };
 
     void SetValue(_SIMDValue value)
@@ -160,6 +162,10 @@ namespace Js {
 
     SIMDValue SIMD128InnerReplaceLaneI16(const SIMDValue& src1, const int32 lane, const int8 value);
     int8 SIMD128InnerExtractLaneI16(const SIMDValue& src1, const int32 lane);
+
+
+	SIMDValue SIMD128InnerReplaceLaneI8(const SIMDValue& src1, const int32 lane, const int16 value);
+	int16 SIMD128InnerExtractLaneI8(const SIMDValue& src1, const int16 lane);
 
 
     int32 SIMDCheckInt32Number(ScriptContext* scriptContext, Var value);

@@ -5,7 +5,6 @@
 #include "RuntimeLibraryPch.h"
 #include "SIMDBool32x4Operation.h"
 
-#ifdef SIMD_JS_ENABLED
 
 namespace Js
 {
@@ -79,5 +78,3 @@ namespace Js
         return JavascriptSIMDBool32x4::New(&this->value, requestContext);
     }
 }
-
-#endif

@@ -266,6 +266,32 @@ namespace Js {
         return SIMD128InnerReplaceLaneI4(jsVal->GetValue(), laneValue, value ? -1 : 0);
     }
 
+	// Enable with Int16x8
+	/*
+	//Bool16x8 LaneAccess
+	static inline bool SIMD128GetLaneValue(JavascriptSIMDBool16x8 *jsVal, const int laneValue)
+	{
+		Assert(jsVal);
+		return SIMD128InnerExtractLaneI8(jsVal->GetValue(), laneValue) == -1;
+	}
+	static inline SIMDValue SIMD128SetLaneValue(JavascriptSIMDBool16x8 *jsVal, const int laneValue, bool value)
+	{
+		Assert(jsVal);
+		return SIMD128InnerReplaceLaneI8(jsVal->GetValue(), laneValue, value ? -1 : 0);
+	}
+	*/
+	//Bool8x16 LaneAccess
+	static inline bool SIMD128GetLaneValue(JavascriptSIMDBool8x16 *jsVal, const int laneValue)
+	{
+		Assert(jsVal);
+		return SIMD128InnerExtractLaneI16(jsVal->GetValue(), laneValue) == -1;
+	}
+	static inline SIMDValue SIMD128SetLaneValue(JavascriptSIMDBool8x16 *jsVal, const int laneValue, bool value)
+	{
+		Assert(jsVal);
+		return SIMD128InnerReplaceLaneI16(jsVal->GetValue(), laneValue, value ? -1 : 0);
+	}
+
     template<class SIMDType, int laneCount, typename T>
     inline T SIMD128ExtractLane(const Var src, const Var lane, ScriptContext* scriptContext)
     {
@@ -301,6 +327,16 @@ namespace Js {
 
     template bool SIMD128ExtractLane<JavascriptSIMDBool32x4, 4, bool>(Var src, Var lane, ScriptContext* scriptContext);
     template SIMDValue SIMD128ReplaceLane<JavascriptSIMDBool32x4, 4, bool>(Var src, Var lane, bool value, ScriptContext* scriptContext);
+
+	// TODO: Enable with Int16x8
+	/*
+	template bool SIMD128ExtractLane<JavascriptSIMDBool16x8, 8, bool>(Var src, Var lane, ScriptContext* scriptContext);
+	template SIMDValue SIMD128ReplaceLane<JavascriptSIMDBool16x8, 8, bool>(Var src, Var lane, bool value, ScriptContext* scriptContext);
+	*/
+	
+	template bool SIMD128ExtractLane<JavascriptSIMDBool8x16, 16, bool>(Var src, Var lane, ScriptContext* scriptContext);
+	template SIMDValue SIMD128ReplaceLane<JavascriptSIMDBool8x16, 16, bool>(Var src, Var lane, bool value, ScriptContext* scriptContext);
+	
 
 
     bool SIMDIsSupportedTypedArray(Var value)

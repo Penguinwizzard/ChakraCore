@@ -4,7 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
-namespace Js
+namespace Js 
 {
     class JavascriptSIMDBool32x4 sealed : public RecyclableObject
     {
@@ -15,9 +15,6 @@ namespace Js
 
 
     public:
-        class EntryInfo
-        {
-        };
 
         JavascriptSIMDBool32x4(StaticType *type);
         JavascriptSIMDBool32x4(SIMDValue *val, StaticType *type);

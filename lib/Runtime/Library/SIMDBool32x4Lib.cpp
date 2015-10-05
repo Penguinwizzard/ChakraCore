@@ -19,8 +19,6 @@ namespace Js
         Assert(!(callInfo.Flags & CallFlags_New));
         Var undefinedVar = scriptContext->GetLibrary()->GetUndefined();
 
-        // Convert all args to float32 
-
         bool bSIMDX = JavascriptConversion::ToBool(args.Info.Count >= 2 ? args[1] : undefinedVar, scriptContext);
         bool bSIMDY = JavascriptConversion::ToBool(args.Info.Count >= 3 ? args[2] : undefinedVar, scriptContext);
         bool bSIMDZ = JavascriptConversion::ToBool(args.Info.Count >= 4 ? args[3] : undefinedVar, scriptContext);
@@ -96,7 +94,6 @@ namespace Js
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         Assert(!(callInfo.Flags & CallFlags_New));
 
-        // first arg has to be of type float32x4, so cannot be missing. 
         if (args.Info.Count >= 4 && JavascriptSIMDBool32x4::Is(args[1]))
         {
             // if value arg is missing, then it is undefined.

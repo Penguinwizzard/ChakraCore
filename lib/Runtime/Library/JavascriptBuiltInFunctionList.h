@@ -526,6 +526,43 @@ BUILTIN(SIMDBool32x4Lib, And, EntryAnd, FunctionInfo::None)
 BUILTIN(SIMDBool32x4Lib, Or, EntryOr, FunctionInfo::None)
 BUILTIN(SIMDBool32x4Lib, Xor, EntryXor, FunctionInfo::None)
 
+// SIMDBool16x8Lib entry points
+BUILTIN(SIMDBool16x8Lib, Bool16x8, EntryBool16x8, FunctionInfo::None)
+BUILTIN(SIMDBool16x8Lib, Check, EntryCheck, FunctionInfo::None)
+BUILTIN(SIMDBool16x8Lib, Splat, EntrySplat, FunctionInfo::None)
+
+// Lane Access
+BUILTIN(SIMDBool16x8Lib, ExtractLane, EntryExtractLane, FunctionInfo::None)
+BUILTIN(SIMDBool16x8Lib, ReplaceLane, EntryReplaceLane, FunctionInfo::None)
+
+// UnaryOps
+BUILTIN(SIMDBool16x8Lib, Not, EntryNot, FunctionInfo::None)
+BUILTIN(SIMDBool16x8Lib, AnyTrue, EntryAnyTrue, FunctionInfo::None)
+BUILTIN(SIMDBool16x8Lib, AllTrue, EntryAllTrue, FunctionInfo::None)
+// BinaryOps
+BUILTIN(SIMDBool16x8Lib, And, EntryAnd, FunctionInfo::None)
+BUILTIN(SIMDBool16x8Lib, Or, EntryOr, FunctionInfo::None)
+BUILTIN(SIMDBool16x8Lib, Xor, EntryXor, FunctionInfo::None)
+
+// SIMDBool8x16Lib entry points
+BUILTIN(SIMDBool8x16Lib, Bool8x16, EntryBool8x16, FunctionInfo::None)
+BUILTIN(SIMDBool8x16Lib, Check, EntryCheck, FunctionInfo::None)
+BUILTIN(SIMDBool8x16Lib, Splat, EntrySplat, FunctionInfo::None)
+
+// Lane Access
+BUILTIN(SIMDBool8x16Lib, ExtractLane, EntryExtractLane, FunctionInfo::None)
+BUILTIN(SIMDBool8x16Lib, ReplaceLane, EntryReplaceLane, FunctionInfo::None)
+
+// UnaryOps
+BUILTIN(SIMDBool8x16Lib, Not, EntryNot, FunctionInfo::None)
+BUILTIN(SIMDBool8x16Lib, AnyTrue, EntryAnyTrue, FunctionInfo::None)
+BUILTIN(SIMDBool8x16Lib, AllTrue, EntryAllTrue, FunctionInfo::None)
+// BinaryOps
+BUILTIN(SIMDBool8x16Lib, And, EntryAnd, FunctionInfo::None)
+BUILTIN(SIMDBool8x16Lib, Or, EntryOr, FunctionInfo::None)
+BUILTIN(SIMDBool8x16Lib, Xor, EntryXor, FunctionInfo::None)
+
+
 // JavascriptFloat32x4 entry points
 BUILTIN(JavascriptSIMDFloat32x4, ToString, EntryToString, FunctionInfo::None)
 

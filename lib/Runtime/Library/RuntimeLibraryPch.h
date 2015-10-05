@@ -84,7 +84,8 @@
 #include "Library\JavascriptSIMDInt8x16.h"
 #include "Library\JavascriptSIMDInt16x8.h"
 #include "Library\JavascriptSIMDBool32x4.h"
-
+#include "Library\JavascriptSIMDBool16x8.h"
+#include "Library\JavascriptSIMDBool8x16.h"
 // SIMD operations
 #include "Library\SIMDFloat32x4Operation.h"
 #include "Library\SIMDFloat64x2Operation.h"
@@ -92,7 +93,8 @@
 #include "Library\SIMDInt8x16Operation.h"
 #include "Library\SIMDInt16x8Operation.h"
 #include "Library\SIMDBool32x4Operation.h"
-
+#include "Library\SIMDBool16x8Operation.h"
+#include "Library\SIMDBool8x16Operation.h"
 // SIMD libs
 #include "Library\SIMDFloat32x4Lib.h"
 #include "Library\SIMDFloat64x2Lib.h"
@@ -100,6 +102,9 @@
 #include "Library\SIMDInt8x16Lib.h"
 #include "Library\SIMDInt16x8Lib.h"
 #include "Library\SIMDBool32x4Lib.h"
+#include "Library\SIMDBool16x8Lib.h"
+#include "Library\SIMDBool8x16Lib.h"
+
 #endif
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS

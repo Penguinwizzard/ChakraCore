@@ -2941,25 +2941,73 @@ namespace Js
 
         // end Int8x16
 
-        // Bool32x4
-        JavascriptFunction* bool32x4Function = library->AddFunctionToLibraryObject(simdObject, PropertyIds::Bool32x4, &SIMDBool32x4Lib::EntryInfo::Bool32x4, 5, PropertyNone);
-        library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::check, &SIMDBool32x4Lib::EntryInfo::Check, 2, PropertyNone);
-        library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::splat, &SIMDBool32x4Lib::EntryInfo::Splat, 2, PropertyNone);
+		// Bool32x4
+		JavascriptFunction* bool32x4Function = library->AddFunctionToLibraryObject(simdObject, PropertyIds::Bool32x4, &SIMDBool32x4Lib::EntryInfo::Bool32x4, 5, PropertyNone);
+		library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::check, &SIMDBool32x4Lib::EntryInfo::Check, 2, PropertyNone);
+		library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::splat, &SIMDBool32x4Lib::EntryInfo::Splat, 2, PropertyNone);
+
+		// UnaryOps
+		library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::not, &SIMDBool32x4Lib::EntryInfo::Not, 2, PropertyNone);
+		library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::allTrue, &SIMDBool32x4Lib::EntryInfo::AllTrue, 2, PropertyNone);
+		library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::anyTrue, &SIMDBool32x4Lib::EntryInfo::AnyTrue, 2, PropertyNone);
+
+		// BinaryOps
+		library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::and, &SIMDBool32x4Lib::EntryInfo::And, 2, PropertyNone);
+		library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds:: or , &SIMDBool32x4Lib::EntryInfo::Or, 2, PropertyNone);
+		library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::xor, &SIMDBool32x4Lib::EntryInfo::Xor, 2, PropertyNone);
+
+		// Lane Access
+		library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::extractLane, &SIMDBool32x4Lib::EntryInfo::ExtractLane, 3, PropertyNone);
+		library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::replaceLane, &SIMDBool32x4Lib::EntryInfo::ReplaceLane, 4, PropertyNone);
+		// end Bool32x4
+
+        // Bool16x8
+        JavascriptFunction* bool16x8Function = library->AddFunctionToLibraryObject(simdObject, PropertyIds::Bool16x8, &SIMDBool16x8Lib::EntryInfo::Bool16x8, 9, PropertyNone);
+        library->AddFunctionToLibraryObject(bool16x8Function, PropertyIds::check, &SIMDBool16x8Lib::EntryInfo::Check, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(bool16x8Function, PropertyIds::splat, &SIMDBool16x8Lib::EntryInfo::Splat, 2, PropertyNone);
 
         // UnaryOps
-        library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::not, &SIMDBool32x4Lib::EntryInfo::Not, 2, PropertyNone);
-        library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::allTrue, &SIMDBool32x4Lib::EntryInfo::AllTrue, 2, PropertyNone);
-        library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::anyTrue, &SIMDBool32x4Lib::EntryInfo::AnyTrue, 2, PropertyNone);
+		// TODO: Enable with Int16x8
+		/*
+        library->AddFunctionToLibraryObject(bool16x8Function, PropertyIds::not, &SIMDBool16x8Lib::EntryInfo::Not, 2, PropertyNone);
+		*/
+        library->AddFunctionToLibraryObject(bool16x8Function, PropertyIds::allTrue, &SIMDBool16x8Lib::EntryInfo::AllTrue, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(bool16x8Function, PropertyIds::anyTrue, &SIMDBool16x8Lib::EntryInfo::AnyTrue, 2, PropertyNone);
         
+		// TODO: Enable with Int16x8
+		/*
         // BinaryOps
-        library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::and, &SIMDBool32x4Lib::EntryInfo::And, 2, PropertyNone);
-        library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::or, &SIMDBool32x4Lib::EntryInfo::Or, 2, PropertyNone);
-        library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::xor, &SIMDBool32x4Lib::EntryInfo::Xor, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(bool16x8Function, PropertyIds::and, &SIMDBool16x8Lib::EntryInfo::And, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(bool16x8Function, PropertyIds::or, &SIMDBool16x8Lib::EntryInfo::Or, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(bool16x8Function, PropertyIds::xor, &SIMDBool16x8Lib::EntryInfo::Xor, 2, PropertyNone);
         
         // Lane Access
-        library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::extractLane, &SIMDBool32x4Lib::EntryInfo::ExtractLane, 3, PropertyNone);
-        library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::replaceLane, &SIMDBool32x4Lib::EntryInfo::ReplaceLane, 4, PropertyNone);
-        // end Bool32x4
+        library->AddFunctionToLibraryObject(bool16x8Function, PropertyIds::extractLane, &SIMDBool16x8Lib::EntryInfo::ExtractLane, 3, PropertyNone);
+        library->AddFunctionToLibraryObject(bool16x8Function, PropertyIds::replaceLane, &SIMDBool16x8Lib::EntryInfo::ReplaceLane, 4, PropertyNone);
+        // end Bool16x8
+		*/
+
+		// Bool8x16
+		JavascriptFunction* bool8x16Function = library->AddFunctionToLibraryObject(simdObject, PropertyIds::Bool8x16, &SIMDBool8x16Lib::EntryInfo::Bool8x16, 17, PropertyNone);
+		library->AddFunctionToLibraryObject(bool8x16Function, PropertyIds::check, &SIMDBool8x16Lib::EntryInfo::Check, 2, PropertyNone);
+		library->AddFunctionToLibraryObject(bool8x16Function, PropertyIds::splat, &SIMDBool8x16Lib::EntryInfo::Splat, 2, PropertyNone);
+
+		// UnaryOps
+		library->AddFunctionToLibraryObject(bool8x16Function, PropertyIds::not, &SIMDBool8x16Lib::EntryInfo::Not, 2, PropertyNone);
+		library->AddFunctionToLibraryObject(bool8x16Function, PropertyIds::allTrue, &SIMDBool8x16Lib::EntryInfo::AllTrue, 2, PropertyNone);
+		library->AddFunctionToLibraryObject(bool8x16Function, PropertyIds::anyTrue, &SIMDBool8x16Lib::EntryInfo::AnyTrue, 2, PropertyNone);
+
+		// BinaryOps
+		library->AddFunctionToLibraryObject(bool8x16Function, PropertyIds::and, &SIMDBool8x16Lib::EntryInfo::And, 2, PropertyNone);
+		library->AddFunctionToLibraryObject(bool8x16Function, PropertyIds:: or , &SIMDBool8x16Lib::EntryInfo::Or, 2, PropertyNone);
+		library->AddFunctionToLibraryObject(bool8x16Function, PropertyIds::xor, &SIMDBool8x16Lib::EntryInfo::Xor, 2, PropertyNone);
+
+		// Lane Access
+		library->AddFunctionToLibraryObject(bool8x16Function, PropertyIds::extractLane, &SIMDBool8x16Lib::EntryInfo::ExtractLane, 3, PropertyNone);
+		library->AddFunctionToLibraryObject(bool8x16Function, PropertyIds::replaceLane, &SIMDBool8x16Lib::EntryInfo::ReplaceLane, 4, PropertyNone);
+		// end Bool8x16
+
+
     }
 
     void JavascriptLibrary::AddSimdFuncToMaps(Js::OpCode op, ...)
@@ -7166,10 +7214,37 @@ namespace Js
         REG_OBJECTS_LIB_FUNC(and, SIMDBool32x4Lib::EntryAnd);
         REG_OBJECTS_LIB_FUNC(or, SIMDBool32x4Lib::EntryOr);
         REG_OBJECTS_LIB_FUNC(xor, SIMDBool32x4Lib::EntryXor);
-        REG_OBJECTS_LIB_FUNC(anyTrue, SIMDBool32x4Lib::EntryExtractLane);
-        REG_OBJECTS_LIB_FUNC(allTrue, SIMDBool32x4Lib::EntryReplaceLane);
+        REG_OBJECTS_LIB_FUNC(anyTrue, SIMDBool32x4Lib::EntryAnyTrue);
+        REG_OBJECTS_LIB_FUNC(allTrue, SIMDBool32x4Lib::EntryAllTrue);
         REG_OBJECTS_LIB_FUNC(extractLane, SIMDBool32x4Lib::EntryExtractLane);
         REG_OBJECTS_LIB_FUNC(replaceLane, SIMDBool32x4Lib::EntryReplaceLane);
+
+		// Bool16x8
+		// TODO: Enable with Int16x8 type.
+		REG_OBJECTS_LIB_FUNC(Bool16x8, SIMDBool16x8Lib::EntryBool16x8);
+		REG_OBJECTS_LIB_FUNC(check, SIMDBool16x8Lib::EntryCheck);
+		REG_OBJECTS_LIB_FUNC(splat, SIMDBool16x8Lib::EntrySplat);
+		//REG_OBJECTS_LIB_FUNC(not, SIMDBool16x8Lib::EntryNot);
+		//REG_OBJECTS_LIB_FUNC(and, SIMDBool16x8Lib::EntryAnd);
+		//REG_OBJECTS_LIB_FUNC(or , SIMDBool16x8Lib::EntryOr);
+		//REG_OBJECTS_LIB_FUNC(xor, SIMDBool16x8Lib::EntryXor);
+		REG_OBJECTS_LIB_FUNC(anyTrue, SIMDBool16x8Lib::EntryAnyTrue);
+		REG_OBJECTS_LIB_FUNC(allTrue, SIMDBool16x8Lib::EntryAllTrue);
+		//REG_OBJECTS_LIB_FUNC(extractLane, SIMDBool16x8Lib::EntryExtractLane);
+		//REG_OBJECTS_LIB_FUNC(replaceLane, SIMDBool16x8Lib::EntryReplaceLane);
+
+		// Bool8x16
+		REG_OBJECTS_LIB_FUNC(Bool8x16, SIMDBool8x16Lib::EntryBool8x16);
+		REG_OBJECTS_LIB_FUNC(check, SIMDBool8x16Lib::EntryCheck);
+		REG_OBJECTS_LIB_FUNC(splat, SIMDBool8x16Lib::EntrySplat);
+		REG_OBJECTS_LIB_FUNC(not, SIMDBool8x16Lib::EntryNot);
+		REG_OBJECTS_LIB_FUNC(and, SIMDBool8x16Lib::EntryAnd);
+		REG_OBJECTS_LIB_FUNC(or , SIMDBool8x16Lib::EntryOr);
+		REG_OBJECTS_LIB_FUNC(xor, SIMDBool8x16Lib::EntryXor);
+		REG_OBJECTS_LIB_FUNC(anyTrue, SIMDBool8x16Lib::EntryAnyTrue);
+		REG_OBJECTS_LIB_FUNC(allTrue, SIMDBool8x16Lib::EntryAllTrue);
+		REG_OBJECTS_LIB_FUNC(extractLane, SIMDBool8x16Lib::EntryExtractLane);
+		REG_OBJECTS_LIB_FUNC(replaceLane, SIMDBool8x16Lib::EntryReplaceLane);
         return hr;
     }
 
