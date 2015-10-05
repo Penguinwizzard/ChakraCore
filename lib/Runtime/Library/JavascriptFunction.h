@@ -80,8 +80,8 @@ namespace Js
         static bool Is(Var aValue);
         static JavascriptFunction* FromVar(Var aValue);
         Var CallFunction(Arguments args);
-        Var CallRootFunction(Arguments args, ScriptContext * scriptContext);
-        Var CallRootFunctionInternal(Arguments args, ScriptContext * scriptContext);
+        Var CallRootFunction(Arguments args, ScriptContext * scriptContext, bool inScript);
+        Var CallRootFunctionInternal(Arguments args, ScriptContext * scriptContext, bool inScript);
         template <typename T>
         static T CallAsmJsFunction(RecyclableObject * function, void* entryPoint, uint argc, Var * argv);
         template <bool isConstruct>

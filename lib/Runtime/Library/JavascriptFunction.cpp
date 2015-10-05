@@ -601,9 +601,9 @@ namespace Js
             ScriptContext* requestContext = scriptContext->GetThreadContext()->GetPreviousHostScriptContext()->GetScriptContext();
             func = JavascriptFunction::FromVar(CrossSite::MarshalVar(requestContext, func));
         }
-        return JavascriptFunction::CallFunction<true>(func, func->GetEntryPoint(), args);
+        return func->CallRootFunction(args, scriptContext, true);
     }
-    Var JavascriptFunction::CallRootFunction(Arguments args, ScriptContext * scriptContext)
+    Var JavascriptFunction::CallRootFunction(Arguments args, ScriptContext * scriptContext, bool inScript)
     {
 
 #ifdef _M_X64
@@ -615,7 +615,7 @@ namespace Js
             Js::FaultInjection::pfnHandleAV = JavascriptFunction::ResumeForOutOfBoundsArrayRefs;
             __try
             {
-                ret = CallRootFunctionInternal(args, scriptContext);
+                ret = CallRootFunctionInternal(args, scriptContext, inScript);
             }
             __finally 
             {
@@ -629,8 +629,8 @@ namespace Js
 
         __try
         {
-            ret = CallRootFunctionInternal(args, scriptContext);
-        }        
+            ret = CallRootFunctionInternal(args, scriptContext, inScript);
+        }
         __except (ResumeForOutOfBoundsArrayRefs(GetExceptionCode(), GetExceptionInformation()))
         {
             // should never reach here
@@ -640,10 +640,10 @@ namespace Js
         Assert(ret);
         return ret;
 #else
-        return CallRootFunctionInternal(args, scriptContext);
+        return CallRootFunctionInternal(args, scriptContext, inScript);
 #endif
     }
-    Var JavascriptFunction::CallRootFunctionInternal(Arguments args, ScriptContext * scriptContext)
+    Var JavascriptFunction::CallRootFunctionInternal(Arguments args, ScriptContext * scriptContext, bool inScript)
     {
 #if DBG
         if (IsInAssert != 0)
@@ -653,6 +653,13 @@ namespace Js
             throw Js::InternalErrorException();
         }
 #endif
+
+        if (inScript)
+        {
+            Assert(!(args.Info.Flags & CallFlags_New));
+            return JavascriptFunction::CallFunction<true>(this, GetEntryPoint(), args);
+        }
+
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
         Js::Var varThis;
         if (PHASE_FORCE1(Js::EvalCompilePhase) && args.Info.Count == 0)

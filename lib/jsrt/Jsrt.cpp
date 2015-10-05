@@ -1826,11 +1826,10 @@ STDAPI_(JsErrorCode) JsCallFunction(_In_ JsValueRef function, _In_reads_(cargs) 
         }
 
         Js::JavascriptFunction *jsFunction = Js::JavascriptFunction::FromVar(function);
-        Js::JavascriptMethod entryPoint = jsFunction->GetEntryPoint();
         Js::CallInfo callInfo(cargs);
         Js::Arguments jsArgs(callInfo, reinterpret_cast<Js::Var *>(args));
 
-        Js::Var varResult = Js::JavascriptFunction::CallFunction<true>(jsFunction, entryPoint, jsArgs);
+        Js::Var varResult = jsFunction->CallRootFunction(jsArgs, scriptContext, true);
         if (result != nullptr)
         {
             *result = varResult;
@@ -2467,7 +2466,7 @@ JsErrorCode RunScriptCore(const wchar_t *script, JsSourceContext sourceContext, 
                 args.Values = &varThis;
             }
 #endif
-            Js::Var varResult = Js::JavascriptFunction::CallFunction<true>(scriptFunction, scriptFunction->GetEntryPoint(), args);
+            Js::Var varResult = scriptFunction->CallRootFunction(args, scriptContext, true);
             if (result != nullptr)
             {
                 *result = varResult;
@@ -2679,7 +2678,7 @@ JsErrorCode RunSerializedScriptCore(const wchar_t *script, JsSerializedScriptLoa
         }
         else
         {
-            Js::Var varResult = Js::JavascriptFunction::CallFunction<true>(function, function->GetEntryPoint(), Js::Arguments(0, nullptr));
+            Js::Var varResult = function->CallRootFunction(Js::Arguments(0, nullptr), scriptContext, true);
             if (result != nullptr)
             {
                 *result = varResult;
