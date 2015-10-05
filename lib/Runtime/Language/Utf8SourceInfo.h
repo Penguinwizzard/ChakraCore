@@ -273,9 +273,9 @@ namespace Js
         virtual void Dispose(bool isShutdown) override;
         virtual void Mark(Recycler *recycler) override { AssertMsg(false, "Mark called on object that isnt TrackableObject"); }
 
-        static Utf8SourceInfo* NewWithHolder(ScriptContext* scriptContext, ISourceHolder* sourceHolder, int32 length, SRCINFO const* srcInfo);
-        static Utf8SourceInfo* New(ScriptContext* scriptContext, LPCUTF8 utf8String, int32 length, size_t numBytes, SRCINFO const* srcInfo);
-        static Utf8SourceInfo* NewWithNoCopy(ScriptContext* scriptContext, LPCUTF8 utf8String, int32 length, size_t numBytes, SRCINFO const* srcInfo);
+        static Utf8SourceInfo* NewWithHolder(ScriptContext* scriptContext, ISourceHolder* sourceHolder, size_t length, SRCINFO const* srcInfo);
+        static Utf8SourceInfo* New(ScriptContext* scriptContext, LPCUTF8 utf8String, size_t length, size_t numBytes, SRCINFO const* srcInfo);
+        static Utf8SourceInfo* NewWithNoCopy(ScriptContext* scriptContext, LPCUTF8 utf8String, size_t length, size_t numBytes, SRCINFO const* srcInfo);
         static Utf8SourceInfo* Clone(ScriptContext* scriptContext, const Utf8SourceInfo* sourceinfo);
         static Utf8SourceInfo* CloneNoCopy(ScriptContext* scriptContext, const Utf8SourceInfo* sourceinfo, SRCINFO const * srcInfo);
 

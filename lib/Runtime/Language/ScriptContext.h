@@ -1039,7 +1039,7 @@ private:
         {
             return GetOrAddPropertyIdTracked(propertyName, N - 1);
         }
-        PropertyId GetOrAddPropertyIdTracked(__in_ecount(propertyNameLength) LPCWSTR pszPropertyName, __in int propertyNameLength);
+        PropertyId GetOrAddPropertyIdTracked(__in_ecount(propertyNameLength) LPCWSTR pszPropertyName, __in charcount_t propertyNameLength);
         void GetOrAddPropertyRecord(__in_ecount(propertyNameLength) LPCWSTR pszPropertyName, __in int propertyNameLength, PropertyRecord const** propertyRecord);
         BOOL IsNumericPropertyId(PropertyId propertyId, uint32* value);
 
@@ -1147,10 +1147,10 @@ private:
         BOOL IsNativeAddress(void * codeAddr);
 #endif
 
-        uint SaveSourceCopy(Utf8SourceInfo* sourceInfo, int cchLength, bool isCesu8);
-        bool SaveSourceCopy(Utf8SourceInfo* const sourceInfo, int cchLength, bool isCesu8, uint * index);
+        uint SaveSourceCopy(Utf8SourceInfo* sourceInfo, size_t cchLength, bool isCesu8);
+        bool SaveSourceCopy(Utf8SourceInfo* const sourceInfo, size_t cchLength, bool isCesu8, uint * index);
 
-        uint SaveSourceNoCopy(Utf8SourceInfo* sourceInfo, int cchLength, bool isCesu8);
+        uint SaveSourceNoCopy(Utf8SourceInfo* sourceInfo, size_t cchLength, bool isCesu8);
         Utf8SourceInfo* CloneSourceCrossContext(Utf8SourceInfo* crossContextSourceInfo, SRCINFO const* srcInfo = nullptr);
 
         void CloneSources(ScriptContext* sourceContext);

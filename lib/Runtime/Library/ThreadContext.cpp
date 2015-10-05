@@ -30,7 +30,7 @@
 #endif
 
 int TotalNumberOfBuiltInProperties = Js::PropertyIds::_countJSOnlyProperty;
-     
+
 /*
  * When we aren't adding any additional properties
  */
@@ -678,7 +678,7 @@ ThreadContext::FindPropertyRecord(Js::JavascriptString *pstName, Js::PropertyRec
 }
 
 void
-ThreadContext::FindPropertyRecord(__in LPCWSTR propertyName, __in int propertyNameLength, Js::PropertyRecord const ** propertyRecord)
+ThreadContext::FindPropertyRecord(__in LPCWSTR propertyName, __in charcount_t propertyNameLength, Js::PropertyRecord const ** propertyRecord)
 {
     // !!! DON'T REMOVE THIS!!! 
     // This is a workaround for aggressive C++ compiler optimization. When a propertyRecord is added throughout jscript9 source code,
@@ -694,7 +694,7 @@ ThreadContext::FindPropertyRecord(__in LPCWSTR propertyName, __in int propertyNa
 }
 
 const Js::PropertyRecord *
-ThreadContext::FindPropertyRecord(const wchar_t * propertyName, int propertyNameLength)
+ThreadContext::FindPropertyRecord(const wchar_t * propertyName, charcount_t propertyNameLength)
 {
     Js::PropertyRecord const * propertyRecord = nullptr;
 
@@ -712,7 +712,7 @@ ThreadContext::FindPropertyRecord(const wchar_t * propertyName, int propertyName
 }
 
 Js::PropertyRecord const *
-ThreadContext::UncheckedAddPropertyId(__in LPCWSTR propertyName, __in int propertyNameLength, bool bind, bool isSymbol)
+ThreadContext::UncheckedAddPropertyId(__in LPCWSTR propertyName, __in charcount_t propertyNameLength, bool bind, bool isSymbol)
 {
     return UncheckedAddPropertyId(JsUtil::CharacterBuffer<WCHAR>(propertyName, propertyNameLength), bind, isSymbol);
 }
@@ -762,7 +762,7 @@ void ThreadContext::UncheckedAddBuiltInPropertyId()
 }
 
 bool 
-ThreadContext::IsDirectPropertyName(const wchar_t * propertyName, int propertyNameLength)
+ThreadContext::IsDirectPropertyName(const wchar_t * propertyName, charcount_t propertyNameLength)
 {
     return ((propertyNameLength == 1) && ((propertyName[0] & 0xFF80) == 0));
 }
@@ -848,7 +848,7 @@ ThreadContext::AddPropertyRecordInternal(const Js::PropertyRecord * propertyReco
     // At this point the PropertyRecord is constructed but not added to the map.
 
     const wchar_t * propertyName = propertyRecord->GetBuffer();
-    int propertyNameLength = propertyRecord->GetLength();
+    charcount_t propertyNameLength = propertyRecord->GetLength();
     Js::PropertyId propertyId = propertyRecord->GetPropertyId();
     
     Assert(propertyId == GetNextPropertyId());
@@ -939,7 +939,7 @@ ThreadContext::BindPropertyRecord(const Js::PropertyRecord * propertyRecord)
     }
 }
 
-void ThreadContext::GetOrAddPropertyId(__in LPCWSTR propertyName, __in int propertyNameLength, Js::PropertyRecord const ** propertyRecord)
+void ThreadContext::GetOrAddPropertyId(__in LPCWSTR propertyName, __in charcount_t propertyNameLength, Js::PropertyRecord const ** propertyRecord)
 {
     GetOrAddPropertyId(JsUtil::CharacterBuffer<WCHAR>(propertyName, propertyNameLength), propertyRecord);
 }
@@ -1026,11 +1026,11 @@ bool ThreadContext::IsActivePropertyId(Js::PropertyId pid)
 
 void ThreadContext::InvalidatePropertyRecord(const Js::PropertyRecord * propertyRecord)
 {
-    InternalInvalidateProtoTypePropertyCaches(propertyRecord->GetPropertyId());     // use the internal version so we don't check for active property id
+    InternalInvalidateProtoTypePropertyCaches(propertyRecord->GetPropertyId()); // use the internal version so we don't check for active property id
 
     this->propertyMap->Remove(propertyRecord);
 
-    PropertyRecordTrace(L"Reclaimed property '%s' at 0x%08x, pid = %d\n", 
+    PropertyRecordTrace(L"Reclaimed property '%s' at 0x%08x, pid = %d\n",
         propertyRecord->GetBuffer(), propertyRecord, propertyRecord->GetPropertyId());
 }
 
@@ -1071,9 +1071,9 @@ void ThreadContext::CreateNoCasePropertyMap()
 }
 
 JsUtil::List<const RecyclerWeakReference<Js::PropertyRecord const>*>*
-ThreadContext::FindPropertyIdNoCase(Js::ScriptContext * scriptContext, LPCWSTR propertyName, int propertyNameLength)
+ThreadContext::FindPropertyIdNoCase(Js::ScriptContext * scriptContext, LPCWSTR propertyName, charcount_t propertyNameLength)
 {
-    return ThreadContext::FindPropertyIdNoCase(scriptContext, JsUtil::CharacterBuffer<WCHAR>(propertyName,  propertyNameLength));
+    return ThreadContext::FindPropertyIdNoCase(scriptContext, JsUtil::CharacterBuffer<WCHAR>(propertyName, propertyNameLength));
 }
 
 JsUtil::List<const RecyclerWeakReference<Js::PropertyRecord const>*>*

@@ -18,11 +18,6 @@
 #include "DictionaryStats.h"
 #endif
 
-#ifdef _M_X64_OR_ARM64
-// TODO: Clean this warning up
-#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
-#endif
-
 namespace Js
 {
     ScriptContext * ScriptContext::New(ThreadContext * threadContext)
@@ -131,7 +126,7 @@ namespace Js
 #endif
 #ifdef FIELD_ACCESS_STATS
         , fieldAccessStatsByFunctionNumber(nullptr)
-#endif        
+#endif
         , webWorkerId(Js::Constants::NonWebWorkerContextId)
         , url(L"")
         , startupComplete(false)
@@ -160,13 +155,13 @@ namespace Js
         , debugContext(nullptr)
 #endif
     {
-       // This may allocate memory and cause exception, but it is ok, as we all we have done so far
-       // are field init and those dtor will be called if exception occurs
-       threadContext->EnsureDebugManager();
+        // This may allocate memory and cause exception, but it is ok, as we all we have done so far
+        // are field init and those dtor will be called if exception occurs
+        threadContext->EnsureDebugManager();
 
-       // Don't use throwing memory allocation in ctor, as exception in ctor doesn't cause the dtor to be called
-       // potentially causing memory leaks
-       BEGIN_NO_EXCEPTION;
+        // Don't use throwing memory allocation in ctor, as exception in ctor doesn't cause the dtor to be called
+        // potentially causing memory leaks
+        BEGIN_NO_EXCEPTION;
 
 #ifdef RUNTIME_DATA_COLLECTION
         createTime = time(nullptr);
@@ -272,7 +267,7 @@ namespace Js
     }
 
     void ScriptContext::InitializeAllocations()
-    {        
+    {
         this->charClassifier = Anew(GeneralAllocator(), CharClassifier, this);
 
         this->valueOfInlineCache = AllocatorNewZ(InlineCacheAllocator, GetInlineCacheAllocator(), InlineCache);
@@ -812,7 +807,7 @@ namespace Js
         threadContext->GetOrAddPropertyId(propertyName, propertyRecord);
     }
 
-    PropertyId ScriptContext::GetOrAddPropertyIdTracked(__in_ecount(propertyNameLength) LPCWSTR propertyName, __in int propertyNameLength)
+    PropertyId ScriptContext::GetOrAddPropertyIdTracked(__in_ecount(propertyNameLength) LPCWSTR propertyName, __in charcount_t propertyNameLength)
     {
         Js::PropertyRecord const * propertyRecord;
         threadContext->GetOrAddPropertyId(propertyName, propertyNameLength, &propertyRecord);
@@ -1974,7 +1969,7 @@ namespace Js
     }
 #endif
 
-    bool ScriptContext::SaveSourceCopy(Utf8SourceInfo* const sourceInfo, int cchLength, bool isCesu8, uint * index)
+    bool ScriptContext::SaveSourceCopy(Utf8SourceInfo* const sourceInfo, size_t cchLength, bool isCesu8, uint * index)
     {
         HRESULT hr = S_OK;
         BEGIN_TRANSLATE_OOM_TO_HRESULT
@@ -1985,21 +1980,18 @@ namespace Js
         return hr == S_OK;
     }
 
-    uint ScriptContext::SaveSourceCopy(Utf8SourceInfo* sourceInfo, int cchLength, bool isCesu8)
+    uint ScriptContext::SaveSourceCopy(Utf8SourceInfo* sourceInfo, size_t cchLength, bool isCesu8)
     {
         Utf8SourceInfo* newSource = Utf8SourceInfo::Clone(this, sourceInfo);
-
         return SaveSourceNoCopy(newSource, cchLength, isCesu8);
     }
-
 
     Utf8SourceInfo* ScriptContext::CloneSourceCrossContext(Utf8SourceInfo* crossContextSourceInfo, SRCINFO const* srcInfo)
     {
         return Utf8SourceInfo::CloneNoCopy(this, crossContextSourceInfo, srcInfo);
     }
 
-
-    uint ScriptContext::SaveSourceNoCopy(Utf8SourceInfo* sourceInfo, int cchLength, bool isCesu8)
+    uint ScriptContext::SaveSourceNoCopy(Utf8SourceInfo* sourceInfo, size_t cchLength, bool isCesu8)
     {
         Assert(sourceInfo->GetScriptContext() == this);
         if (this->IsInDebugMode() && sourceInfo->debugModeSource == nullptr && !sourceInfo->debugModeSourceIsEmpty)
@@ -3890,7 +3882,10 @@ namespace Js
         {
             // Create name as "object.function"
             swprintf_s(szTempName, 70, L"%s.%s", pwszObjectName, pwszFunctionName);
-            functionPropertyId = GetOrAddPropertyIdTracked(szTempName, wcslen(szTempName));
+
+            // We know szTempName is to be used as a JS identifier and is declared above as an array of length 70.
+            AssertMsg(wcslen(szTempName) <= MaxCharCount, "JS identifier lengths must fit into charcount_t");
+            functionPropertyId = GetOrAddPropertyIdTracked(szTempName, (charcount_t) wcslen(szTempName));
         }
 
         Js::PropertyId cachedFunctionId;

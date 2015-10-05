@@ -31,14 +31,14 @@ typedef unsigned __int32 uintptr;
 // It is unsigned and the maximum value is (INT_MAX-1)
 typedef uint32 charcount_t;
 
-//A Unicode code point
+// A Unicode code point
 typedef uint32 codepoint_t;
 const codepoint_t INVALID_CODEPOINT = (codepoint_t)-1;
 
 // Synonym for above, 2^31-1 is used as the limit to protect against addition overflow
 typedef uint32 CharCount;
 const CharCount MaxCharCount = INT_MAX-1;
-// As above, but 2^32-1 is used to signal a 'flag' condition (eg undefined)
+// As above, but 2^32-1 is used to signal a 'flag' condition (e.g. undefined)
 typedef uint32 CharCountOrFlag;
 const CharCountOrFlag CharCountFlag = (CharCountOrFlag)-1;
 
@@ -50,4 +50,3 @@ namespace Js
 {
     typedef uint32 LocalFunctionId;
 };
-

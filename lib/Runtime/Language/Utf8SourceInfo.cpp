@@ -159,8 +159,8 @@ namespace Js
         }
     }
 
-    Utf8SourceInfo* 
-    Utf8SourceInfo::NewWithHolder(ScriptContext* scriptContext, ISourceHolder* sourceHolder, int32 length, SRCINFO const* srcInfo)
+    Utf8SourceInfo*
+    Utf8SourceInfo::NewWithHolder(ScriptContext* scriptContext, ISourceHolder* sourceHolder, size_t length, SRCINFO const* srcInfo)
     {
         // TODO: make this finalizable? Or have a finalizable version which would HeapDelete the string? Is this needed?
         DWORD_PTR secondaryHostSourceContext = Js::Constants::NoHostSourceContext;
@@ -170,7 +170,7 @@ namespace Js
         }
 
         Recycler * recycler = scriptContext->GetRecycler();
-        Utf8SourceInfo* toReturn = RecyclerNewFinalized(recycler, 
+        Utf8SourceInfo* toReturn = RecyclerNewFinalized(recycler,
             Utf8SourceInfo, sourceHolder, length, SRCINFO::Copy(recycler, srcInfo), secondaryHostSourceContext, scriptContext);
 
         if (scriptContext->IsInDebugMode())
@@ -183,27 +183,25 @@ namespace Js
         return toReturn;
     }
 
-    Utf8SourceInfo* 
-    Utf8SourceInfo::New(ScriptContext* scriptContext, LPCUTF8 utf8String, int32 length, size_t numBytes, SRCINFO const* srcInfo)
+    Utf8SourceInfo*
+    Utf8SourceInfo::New(ScriptContext* scriptContext, LPCUTF8 utf8String, size_t length, size_t numBytes, SRCINFO const* srcInfo)
     {
         utf8char_t * newUtf8String = RecyclerNewArrayLeaf(scriptContext->GetRecycler(), utf8char_t, numBytes + 1);
-        js_memcpy_s(newUtf8String, numBytes + 1, utf8String, numBytes + 1);      
+        js_memcpy_s(newUtf8String, numBytes + 1, utf8String, numBytes + 1);
         return NewWithNoCopy(scriptContext, newUtf8String, length, numBytes, srcInfo);
     }
 
-    Utf8SourceInfo* 
-    Utf8SourceInfo::NewWithNoCopy(ScriptContext* scriptContext, LPCUTF8 utf8String, int32 length, size_t numBytes, SRCINFO const * srcInfo)
+    Utf8SourceInfo*
+    Utf8SourceInfo::NewWithNoCopy(ScriptContext* scriptContext, LPCUTF8 utf8String, size_t length, size_t numBytes, SRCINFO const * srcInfo)
     {
         ISourceHolder* sourceHolder = RecyclerNew(scriptContext->GetRecycler(), SimpleSourceHolder, utf8String, numBytes);
-        
         return NewWithHolder(scriptContext, sourceHolder, length, srcInfo);
     }
 
-
-    Utf8SourceInfo* 
+    Utf8SourceInfo*
     Utf8SourceInfo::Clone(ScriptContext* scriptContext, const Utf8SourceInfo* sourceInfo)
     {
-        Utf8SourceInfo* newSourceInfo = Utf8SourceInfo::NewWithHolder(scriptContext, sourceInfo->GetSourceHolder()->Clone(scriptContext), sourceInfo->m_cchLength, 
+        Utf8SourceInfo* newSourceInfo = Utf8SourceInfo::NewWithHolder(scriptContext, sourceInfo->GetSourceHolder()->Clone(scriptContext), sourceInfo->m_cchLength,
              SRCINFO::Copy(scriptContext->GetRecycler(), sourceInfo->GetSrcInfo()));
         newSourceInfo->m_isXDomain = sourceInfo->m_isXDomain;
         newSourceInfo->m_isXDomainString = sourceInfo->m_isXDomainString;
@@ -217,7 +215,7 @@ namespace Js
         return newSourceInfo;
     }
 
-    Utf8SourceInfo* 
+    Utf8SourceInfo*
     Utf8SourceInfo::CloneNoCopy(ScriptContext* scriptContext, const Utf8SourceInfo* sourceInfo, SRCINFO const* srcInfo)
     {
         Utf8SourceInfo* newSourceInfo = Utf8SourceInfo::NewWithHolder(scriptContext, sourceInfo->GetSourceHolder(), sourceInfo->m_cchLength, 

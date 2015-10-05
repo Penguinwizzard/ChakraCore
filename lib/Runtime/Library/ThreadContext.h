@@ -973,10 +973,10 @@ private:
     template <bool locked> Js::PropertyRecord const * GetPropertyNameImpl(Js::PropertyId propertyId);
 public:
     void FindPropertyRecord(Js::JavascriptString *pstName, Js::PropertyRecord const ** propertyRecord);
-    void FindPropertyRecord(__in LPCWSTR propertyName, __in int propertyNameLength, Js::PropertyRecord const ** propertyRecord);
-    const Js::PropertyRecord * FindPropertyRecord(const wchar_t * propertyName, int propertyNameLength);
+    void FindPropertyRecord(__in LPCWSTR propertyName, __in charcount_t propertyNameLength, Js::PropertyRecord const ** propertyRecord);
+    const Js::PropertyRecord * FindPropertyRecord(const wchar_t * propertyName, charcount_t propertyNameLength);
 
-    JsUtil::List<const RecyclerWeakReference<Js::PropertyRecord const>*>* FindPropertyIdNoCase(Js::ScriptContext * scriptContext, LPCWSTR propertyName, int propertyNameLength);
+    JsUtil::List<const RecyclerWeakReference<Js::PropertyRecord const>*>* FindPropertyIdNoCase(Js::ScriptContext * scriptContext, LPCWSTR propertyName, charcount_t propertyNameLength);
     JsUtil::List<const RecyclerWeakReference<Js::PropertyRecord const>*>* FindPropertyIdNoCase(Js::ScriptContext * scriptContext, JsUtil::CharacterBuffer<WCHAR> const& propertyName);
     bool FindExistingPropertyRecord(_In_ JsUtil::CharacterBuffer<WCHAR> const& propertyName, Js::CaseInvariantPropertyListWithHashCode** propertyRecord);
     void CleanNoCasePropertyMap();
@@ -986,16 +986,16 @@ public:
     {
         return GetOrAddPropertyRecordImpl(propertyName, false);
     }
-    const Js::PropertyRecord * GetOrAddPropertyRecordBind(JsUtil::CharacterBuffer<wchar_t> propertyName)        
+    const Js::PropertyRecord * GetOrAddPropertyRecordBind(JsUtil::CharacterBuffer<wchar_t> propertyName)
     {
         return GetOrAddPropertyRecordImpl(propertyName, true);
     }
     void AddBuiltInPropertyRecord(const Js::PropertyRecord *propertyRecord);
-    
-    void GetOrAddPropertyId(__in LPCWSTR propertyName, __in int propertyNameLength, Js::PropertyRecord const** propertyRecord);
-    void GetOrAddPropertyId(JsUtil::CharacterBuffer<WCHAR> const& propertName, Js::PropertyRecord const** propertyRecord);   
+
+    void GetOrAddPropertyId(__in LPCWSTR propertyName, __in charcount_t propertyNameLength, Js::PropertyRecord const** propertyRecord);
+    void GetOrAddPropertyId(JsUtil::CharacterBuffer<WCHAR> const& propertName, Js::PropertyRecord const** propertyRecord);
     Js::PropertyRecord const * UncheckedAddPropertyId(JsUtil::CharacterBuffer<WCHAR> const& propertyName, bool bind, bool isSymbol = false);
-    Js::PropertyRecord const * UncheckedAddPropertyId(__in LPCWSTR propertyName, __in int propertyNameLength, bool bind = false, bool isSymbol = false);
+    Js::PropertyRecord const * UncheckedAddPropertyId(__in LPCWSTR propertyName, __in charcount_t propertyNameLength, bool bind = false, bool isSymbol = false);
 
 #ifdef ENABLE_JS_ETW
     void EtwLogPropertyIdList();
@@ -1005,7 +1005,7 @@ private:
     const Js::PropertyRecord * GetOrAddPropertyRecordImpl(JsUtil::CharacterBuffer<wchar_t> propertyName, bool bind);
     void AddPropertyRecordInternal(const Js::PropertyRecord * propertyRecord);
     void BindPropertyRecord(const Js::PropertyRecord * propertyRecord);
-    bool IsDirectPropertyName(const wchar_t * propertyName, int propertyNameLength);
+    bool IsDirectPropertyName(const wchar_t * propertyName, charcount_t propertyNameLength);
     
     RecyclerWeakReference<const Js::PropertyRecord> * CreatePropertyRecordWeakRef(const Js::PropertyRecord * propertyRecord);
     void AddCaseInvariantPropertyRecord(const Js::PropertyRecord * propertyRecord);
