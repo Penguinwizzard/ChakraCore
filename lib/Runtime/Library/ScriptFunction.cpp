@@ -36,13 +36,13 @@ namespace Js
     ScriptFunction::ScriptFunction(DynamicType * type) :
         ScriptFunctionBase(type), environment((FrameDisplay*)&NullFrameDisplay),
         cachedScopeObj(nullptr), hasInlineCaches(false), hasSuperReference(false),
-        isDefaultConstructor(false), isActiveScript(false), changeEntryPointLocation(0)
+        isDefaultConstructor(false), isActiveScript(false)
     {}
 
     ScriptFunction::ScriptFunction(FunctionProxy * proxy, ScriptFunctionType* deferredPrototypeType)
         : ScriptFunctionBase(deferredPrototypeType, proxy),
         environment((FrameDisplay*)&NullFrameDisplay), cachedScopeObj(nullptr),
-        hasInlineCaches(false), hasSuperReference(false), isDefaultConstructor(false), isActiveScript(false), changeEntryPointLocation(0)
+        hasInlineCaches(false), hasSuperReference(false), isDefaultConstructor(false), isActiveScript(false)
     {
         Assert(proxy->GetFunctionProxy() == proxy);
         Assert(proxy->EnsureDeferredPrototypeType() == deferredPrototypeType)
@@ -220,45 +220,45 @@ namespace Js
         Assert(this->GetTypeId() == TypeIds_Function);
         Assert(!IsCrossSiteObject() || entryPoint != (Js::JavascriptMethod)checkCodeGenThunk);
 
-        this->changeEntryPointLocation = 0;
+        uint32 changeEntryPointLocation = 0;
         Assert((entryPointInfo != nullptr && this->GetFunctionProxy() != nullptr));
         if (this->GetEntryPoint() == entryPoint && this->GetScriptFunctionType()->GetEntryPointInfo() == entryPointInfo)
         {
-            this->changeEntryPointLocation |= 0x1;
+            changeEntryPointLocation |= 0x1;
             return;
         }
         bool isAsmJS = false;
         if (HasFunctionBody())
         {
-            this->changeEntryPointLocation |= 0x2;
+            changeEntryPointLocation |= 0x2;
             isAsmJS = this->GetFunctionBody()->GetIsAsmjsMode();
         }
         //ASMJS:- for asmjs we dont need to update the entry point here as it updates the types entry point
         if (!isAsmJS)
         {
-            this->changeEntryPointLocation |= 0x4;
+            changeEntryPointLocation |= 0x4;
             // We can't go from cross-site to non-cross-site. Update only in the non-cross site case
             if (!CrossSite::IsThunk(this->GetEntryPoint()))
             {
-                this->changeEntryPointLocation |= 0x8;
+                changeEntryPointLocation |= 0x8;
                 this->SetEntryPoint(entryPoint);
             }
         }
         //instead update the address in the function entrypoint info
         else
         {
-            this->changeEntryPointLocation |= 0x10;
+            changeEntryPointLocation |= 0x10;
             entryPointInfo->address = entryPoint;
         }
         if (!isAsmJS)
         {
-            this->changeEntryPointLocation |= 0x20;
+            changeEntryPointLocation |= 0x20;
             ProxyEntryPointInfo* oldEntryPointInfo = this->GetScriptFunctionType()->GetEntryPointInfo();
             if (oldEntryPointInfo
                 && oldEntryPointInfo != entryPointInfo
                 && oldEntryPointInfo->SupportsExpiration())
             {
-                this->changeEntryPointLocation |= 0x40;
+                changeEntryPointLocation |= 0x40;
                 // The old entry point could be executing so we need root it to make sure
                 // it isn't prematurely collected. The rooting is done by queueing it up on the threadContext
                 ThreadContext* threadContext = ThreadContext::GetContextForCurrentThread();
@@ -267,8 +267,8 @@ namespace Js
             }
         }
 
-        this->changeEntryPointLocation |= 0x80;
-        this->GetScriptFunctionType()->SetEntryPointInfo(entryPointInfo);
+        changeEntryPointLocation |= 0x80;
+        this->GetScriptFunctionType()->SetEntryPointInfo(entryPointInfo, changeEntryPointLocation);
     }
 
     FunctionProxy * ScriptFunction::GetFunctionProxy() const
@@ -278,10 +278,12 @@ namespace Js
     }
     JavascriptMethod ScriptFunction::UpdateUndeferredBody(FunctionBody* newFunctionInfo)
     {
+        uint32 changeEntryPointLocation = 0;
         // Update deferred parsed/serialized function to the real function body
         Assert(this->functionInfo->HasBody());
         if (this->functionInfo != newFunctionInfo)
         {
+            changeEntryPointLocation |= 0x1;
             Assert(this->functionInfo->GetFunctionBody() == newFunctionInfo);
             Assert(!newFunctionInfo->IsDeferred());
             DynamicType * type = this->GetDynamicType();
@@ -293,6 +295,7 @@ namespace Js
 
             if (type->GetIsShared())
             {
+                changeEntryPointLocation |= 0x2;
                 // if it is shared, it must still be the deferred prototype from the old proxy
                 Assert(type == oldProxy->GetDeferredPrototypeType());
 
@@ -301,6 +304,7 @@ namespace Js
             }
         }
 
+        changeEntryPointLocation |= 0x4;
         // The type has change from the default, it is not share, just use that one.
         JavascriptMethod directEntryPoint = newFunctionInfo->GetDirectEntryPoint(newFunctionInfo->GetDefaultEntryPointInfo());
         Assert(directEntryPoint != DefaultDeferredParsingThunk && directEntryPoint != ProfileDeferredParsingThunk);
@@ -309,7 +313,7 @@ namespace Js
         JavascriptMethod thunkEntryPoint = this->UpdateThunkEntryPoint(defaultEntryPointInfo,
                 directEntryPoint);
 
-        this->GetScriptFunctionType()->SetEntryPointInfo(defaultEntryPointInfo);
+        this->GetScriptFunctionType()->SetEntryPointInfo(defaultEntryPointInfo, changeEntryPointLocation);
 
         return thunkEntryPoint;
 

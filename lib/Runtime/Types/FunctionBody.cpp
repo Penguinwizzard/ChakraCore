@@ -4542,6 +4542,7 @@ namespace Js
 
     void FunctionBody::SetEntryToProfileMode()
     {
+        uint32 changeEntryPointLocation = 0;
 #ifdef ENABLE_NATIVE_CODEGEN
         AssertMsg(this->m_scriptContext->CurrentThunk == ProfileEntryThunk, "ScriptContext not in profile mode");
 #if DBG
@@ -4556,16 +4557,20 @@ namespace Js
         if (!IsIntermediateCodeGenThunk((JavascriptMethod) defaultEntryPointInfo->address)
             && defaultEntryPointInfo->address != DynamicProfileInfo::EnsureDynamicProfileInfoThunk)
         {
+            changeEntryPointLocation |= 0x1;
             if (this->originalEntryPoint == DefaultDeferredParsingThunk)
             {
+                changeEntryPointLocation |= 0x2;
                 defaultEntryPointInfo->address = ProfileDeferredParsingThunk;
             }
             else if (this->originalEntryPoint == DefaultDeferredDeserializeThunk)
             {
+                changeEntryPointLocation |= 0x4;
                 defaultEntryPointInfo->address = ProfileDeferredDeserializeThunk;
             }
             else
             {
+                changeEntryPointLocation |= 0x8;
                 defaultEntryPointInfo->address = ProfileEntryThunk;
             }
         }
@@ -4574,8 +4579,9 @@ namespace Js
         // to make sure that new JavascriptFunction instances use profile thunk.
         if (this->deferredPrototypeType)
         {
+            changeEntryPointLocation |= 0x10;
             this->deferredPrototypeType->SetEntryPoint((JavascriptMethod)this->GetDefaultEntryPointInfo()->address);
-            this->deferredPrototypeType->SetEntryPointInfo(this->GetDefaultEntryPointInfo());
+            this->deferredPrototypeType->SetEntryPointInfo(this->GetDefaultEntryPointInfo(), changeEntryPointLocation);
         }
 
 #if DBG
@@ -4771,8 +4777,10 @@ namespace Js
     //
     void FunctionBody::ResetEntryPoint()
     {
+        uint32 changeEntryPointLocation = 0;
         if (this->entryPoints)
         {
+            changeEntryPointLocation |= 0x1;
             this->MapEntryPoints([] (int index, FunctionEntryPointInfo* entryPoint)
             {
                 if (nullptr != entryPoint)
@@ -4791,6 +4799,7 @@ namespace Js
                 });
             });
         }
+        changeEntryPointLocation |= 0x2;
 
         this->entryPoints->ClearAndZero();
         this->CreateNewDefaultEntryPoint();
@@ -4799,10 +4808,11 @@ namespace Js
 
         if (this->deferredPrototypeType)
         {
+            changeEntryPointLocation |= 0x4;
             // Update old entry points on the deferred prototype type,
             // as they may point to old native code gen regions which age gone now.
             this->deferredPrototypeType->SetEntryPoint((JavascriptMethod)this->GetDefaultEntryPointInfo()->address);
-            this->deferredPrototypeType->SetEntryPointInfo(this->GetDefaultEntryPointInfo());
+            this->deferredPrototypeType->SetEntryPointInfo(this->GetDefaultEntryPointInfo(), changeEntryPointLocation);
         }
         ReinitializeExecutionModeAndLimits();
     }
@@ -8854,6 +8864,7 @@ namespace Js
 
     void FunctionEntryPointInfo::Invalidate(bool prolongEntryPoint)
     {
+        uint32 changeEntryPointLocation = 0;
         Assert(!this->functionProxy->IsDeferred());
         FunctionBody* functionBody = this->functionProxy->GetFunctionBody();
         Assert(this != functionBody->GetSimpleJitEntryPointInfo());
@@ -8864,10 +8875,12 @@ namespace Js
         FunctionEntryPointInfo* entryPoint = functionBody->GetDefaultFunctionEntryPointInfo();
         if (entryPoint->IsCodeGenPending())
         {
+            changeEntryPointLocation |= 0x1;
             OUTPUT_TRACE(Js::LazyBailoutPhase, L"Skipping creating new entrypoint as one is already pending\n");
         }
         else
         {
+            changeEntryPointLocation |= 0x2;
             class AutoCleanup
             {
                 EntryPointInfo *entryPointInfo;
@@ -8902,7 +8915,8 @@ namespace Js
             ScriptFunctionType* functionType = (ScriptFunctionType*)type;
             if (functionType->GetEntryPointInfo() == this)
             {
-                functionType->SetEntryPointInfo(entryPoint);
+                changeEntryPointLocation |= 0x4;
+                functionType->SetEntryPointInfo(entryPoint, changeEntryPointLocation);
                 functionType->SetEntryPoint(this->functionProxy->GetDirectEntryPoint(entryPoint));
             }
         });
@@ -8915,6 +8929,7 @@ namespace Js
 
     void FunctionEntryPointInfo::Expire()
     {
+        uint32 changeEntryPointLocation = 0;
         if (this->lastCallsCount != this->callsCount || !this->nativeEntryPointProcessed || this->IsCleanedUp())
         {
             return;
@@ -8929,25 +8944,30 @@ namespace Js
         const bool expiringSimpleJitEntryPointInfo = simpleJitEntryPointInfo == this;
         if(expiringSimpleJitEntryPointInfo)
         {
+            changeEntryPointLocation |= 0x1;
             if(functionBody->GetExecutionMode() != ExecutionMode::FullJit)
             {
                 // Don't expire simple JIT code until the transition to full JIT
                 return;
             }
+            changeEntryPointLocation |= 0x2;
             simpleJitEntryPointInfo = nullptr;
             functionBody->SetSimpleJitEntryPointInfo(nullptr);
         }
 
         try
         {
+            changeEntryPointLocation |= 0x4;
             AUTO_NESTED_HANDLED_EXCEPTION_TYPE(ExceptionType_OutOfMemory);
 
             FunctionEntryPointInfo* newEntryPoint = nullptr;
             FunctionEntryPointInfo *const defaultEntryPointInfo = functionBody->GetDefaultFunctionEntryPointInfo();
             if(this == defaultEntryPointInfo)
             {
+                changeEntryPointLocation |= 0x8;
                 if(simpleJitEntryPointInfo)
                 {
+                    changeEntryPointLocation |= 0x10;
                     newEntryPoint = simpleJitEntryPointInfo;
                     functionBody->SetDefaultFunctionEntryPointInfo(
                         simpleJitEntryPointInfo,
@@ -8958,6 +8978,7 @@ namespace Js
 #ifdef ASMJS_PLAT
                 else if (functionBody->GetIsAsmJsFunction())
                 {
+                    changeEntryPointLocation |= 0x20;
                     // the new entrypoint will be set to interpreter
                     // REVIEW: Should we check here to not expire TJ code ?
                     newEntryPoint = functionBody->CreateNewDefaultEntryPoint();
@@ -8971,6 +8992,7 @@ namespace Js
 #endif
                 else
                 {
+                    changeEntryPointLocation |= 0x40;
                     newEntryPoint = functionBody->CreateNewDefaultEntryPoint();
                     functionBody->SetExecutionMode(functionBody->GetDefaultInterpreterExecutionMode());
                 }
@@ -8978,6 +9000,7 @@ namespace Js
             }
             else
             {
+                changeEntryPointLocation |= 0x80;
                 newEntryPoint = defaultEntryPointInfo;
             }
 
@@ -8989,8 +9012,9 @@ namespace Js
                 ScriptFunctionType* functionType = (ScriptFunctionType*) type;
                 if (functionType->GetEntryPointInfo() == this)
                 {
+                    changeEntryPointLocation |= 0x100;
                     OUTPUT_TRACE(Js::ExpirableCollectPhase, L"Type 0x%p uses this entry point- switching to default entry point\n", this);
-                    functionType->SetEntryPointInfo(newEntryPoint);
+                    functionType->SetEntryPointInfo(newEntryPoint, changeEntryPointLocation);
                     //we are allowed to replace the entry point on the type only if it's directly using the jitted code or a type is referencing this entry point but hasn't been called since the codegen thunk was installed on it
                     if (functionType->GetEntryPoint() == functionProxy->GetDirectEntryPoint(this) || IsIntermediateCodeGenThunk(functionType->GetEntryPoint()))
                     {

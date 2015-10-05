@@ -7,14 +7,14 @@
 namespace Js
 {    
     ScriptFunctionType::ScriptFunctionType(ScriptFunctionType * type)
-        : DynamicType(type), entryPointInfo(type->GetEntryPointInfo())
+        : DynamicType(type), entryPointInfo(type->GetEntryPointInfo()), extra(nullptr)
     {}
 
     ScriptFunctionType::ScriptFunctionType(ScriptContext* scriptContext, RecyclableObject* prototype, 
         JavascriptMethod entryPoint, ProxyEntryPointInfo * entryPointInfo, DynamicTypeHandler * typeHandler,
         bool isLocked, bool isShared)
         : DynamicType(scriptContext, TypeIds_Function, prototype, entryPoint, typeHandler, isLocked, isShared), 
-        entryPointInfo(entryPointInfo)
+        entryPointInfo(entryPointInfo), extra(nullptr)
     {
 
     }
