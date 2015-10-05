@@ -91,13 +91,6 @@
   </test>
   <test>
     <default>
-      <tags>StackTrace,exclude_ch</tags>
-      <files>HostThrow.js</files>
-      <baseline>HostThrow.baseline</baseline>
-    </default>
-  </test>
-  <test>
-    <default>
       <tags>StackTrace</tags>
       <files>dynamic.js</files>
       <baseline>dynamic.js.baseline</baseline>
@@ -125,14 +118,6 @@
       <files>FunctionName.js</files>
       <baseline>FunctionName.js.baseline</baseline>
       <compile-flags>-ExtendedErrorStackForTestHost</compile-flags>
-    </default>
-  </test>
-  <test>
-    <default>
-      <tags>StackTrace,exclude_ch</tags>
-      <compile-flags>-jsrt:0</compile-flags>
-      <files>reg_46298.js</files>
-      <baseline>reg_46298.baseline</baseline>
     </default>
   </test>
   <test>

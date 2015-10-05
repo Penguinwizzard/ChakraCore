@@ -55,8 +55,6 @@
     <default>
       <files>SetTimeout.js</files>
       <baseline>SetTimeout.baseline</baseline>
-      <!-- ch thrown error output completely different than jshost baseline -->
-      <tags>exclude_ch</tags>
     </default>
   </test>
 </regress-exe>
