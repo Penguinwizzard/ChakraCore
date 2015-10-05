@@ -1,0 +1,54 @@
+
+******* Int8x16 constructor *******
+passed
+
+******* Int8x16 check *******
+passed
+
+******* Int8x16 replaceLane *******
+passed
+
+******* Int8x16 equal *******
+passed
+
+******* Int8x16 lessThan *******
+passed
+
+******* Int8x16 greaterThan *******
+passed
+
+******* Int8x16 add *******
+passed
+
+******* Int8x16 sub *******
+passed
+
+******* Int8x16 mul *******
+passed
+
+******* Int8x16 and *******
+passed
+
+******* Int8x16 or *******
+passed
+
+******* Int8x16 xor *******
+passed
+
+******* Int8x16 neg *******
+passed
+
+******* Int8x16 not *******
+passed
+
+******* Int8x16 shiftLeftByScalar *******
+passed
+
+******* Int8x16 shiftRightArithmeticByScalar *******
+passed
+
+******* Int8x16 fromFloat32x4Bits *******
+passed
+
+******* Int8x16 fromInt32x4Bits *******
+passed

@@ -1,0 +1,51 @@
+
+******* Int32x4 constructor *******
+passed
+
+******* Int32x4 check *******
+passed
+
+******* Int32x4 replaceLane *******
+passed
+
+******* Int32x4 equal *******
+passed
+
+******* Int32x4 lessThan *******
+passed
+
+******* Int32x4 greaterThan *******
+passed
+
+******* Int32x4 add *******
+passed
+
+******* Int32x4 sub *******
+passed
+
+******* Int32x4 mul *******
+passed
+
+******* Int32x4 select *******
+passed
+
+******* Int32x4 swizzle *******
+passed
+
+******* Int32x4 shuffle *******
+passed
+
+******* Int32x4 and *******
+passed
+
+******* Int32x4 or *******
+passed
+
+******* Int32x4 xor *******
+passed
+
+******* Int32x4 neg *******
+passed
+
+******* Int32x4 not *******
+passed
