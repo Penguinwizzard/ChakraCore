@@ -1007,6 +1007,86 @@ var tests = [
             });
         }
     },
+    {
+        name: "Promise executor resolves with the first call resolve function",
+        body: function (index) {
+            var p = new Promise(function(resolve,reject) {
+                resolve('success');
+                resolve('failure');
+            });
+            p.then(
+                (res) => { echo(`Test #${index} - Success handler #1 called with res = '${res}'`); },
+                (err) => { echo(`Test #${index} - Error handler #1 called with err = '${err}'`); }
+            );
+        }
+    },
+    {
+        name: "Promise executor rejects with the first call reject function",
+        body: function (index) {
+            var p = new Promise(function(resolve,reject) {
+                reject('success');
+                reject('failure');
+            });
+            p.then(
+                (res) => { echo(`Test #${index} - Success handler #1 called with res = '${res}'`); },
+                (err) => { echo(`Test #${index} - Error handler #1 called with err = '${err}'`); }
+            );
+        }
+    },
+    {
+        name: "Promise executor resolves/rejects with the first call to either function",
+        body: function (index) {
+            var p = new Promise(function(resolve,reject) {
+                resolve('success');
+                reject('failure');
+            });
+            p.then(
+                (res) => { echo(`Test #${index} - Success handler #1 called with res = '${res}'`); },
+                (err) => { echo(`Test #${index} - Error handler #1 called with err = '${err}'`); }
+            );
+        }
+    },
+    {
+        name: "Promise executor rejects/resolves with the first call to either function",
+        body: function (index) {
+            var p = new Promise(function(resolve,reject) {
+                reject('success');
+                resolve('failure');
+            });
+            p.then(
+                (res) => { echo(`Test #${index} - Success handler #1 called with res = '${res}'`); },
+                (err) => { echo(`Test #${index} - Error handler #1 called with err = '${err}'`); }
+            );
+        }
+    },
+    {
+        name: "Promise executor rejects/resolves/rejects with the first call to either function",
+        body: function (index) {
+            var p = new Promise(function(resolve,reject) {
+                reject('success');
+                resolve('failure');
+                reject('failure');
+            });
+            p.then(
+                (res) => { echo(`Test #${index} - Success handler #1 called with res = '${res}'`); },
+                (err) => { echo(`Test #${index} - Error handler #1 called with err = '${err}'`); }
+            );
+        }
+    },
+    {
+        name: "Promise executor resolves/rejects/resolves with the first call to either function",
+        body: function (index) {
+            var p = new Promise(function(resolve,reject) {
+                resolve('success');
+                reject('failure');
+                resolve('failure');
+            });
+            p.then(
+                (res) => { echo(`Test #${index} - Success handler #1 called with res = '${res}'`); },
+                (err) => { echo(`Test #${index} - Error handler #1 called with err = '${err}'`); }
+            );
+        }
+    },
 ];
 
 var index = 1;
