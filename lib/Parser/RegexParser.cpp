@@ -438,6 +438,7 @@ namespace UnifiedRegex
         else 
         {
             Node* prefixNode = nullptr, *suffixNode = nullptr;
+            const bool twoConsecutiveRanges = minorBoundary == majorBoundary;
             
             //For minorBoundary, 
             if (minorBoundary - minorCodePoint == 1) // Single character in minor range
@@ -474,10 +475,13 @@ namespace UnifiedRegex
                 majorBoundary -= 0x400u;
             }
 
-            const bool nonFullConsecutiveRanges = prefixNode != nullptr && minorBoundary == majorBoundary && minorCodePoint != minorBoundary - 0x400u && majorBoundary + 0x3FFu != majorCodePoint;
+            const bool nonFullConsecutiveRanges = twoConsecutiveRanges && prefixNode != nullptr && suffixNode != nullptr;
             if (nonFullConsecutiveRanges)
             {
                 Assert(suffixNode != nullptr);
+                Assert(minorCodePoint != minorBoundary - 0x400u);
+                Assert(majorBoundary + 0x3FFu != majorCodePoint);
+
                 // If the minor boundary is equal to major boundary, that means we have a cross boundary range that only needs 2 nodes for prefix/suffix.
                 // We can only cross one boundary.
                 Assert(majorCodePoint - minorCodePoint < 0x800u);

@@ -117,6 +117,11 @@ var normalTests = [
         acceptedCharacters: ['b', 'c', 'd', '\u{10001}', '\u{10002}', '\u{10003}'],
         rejectedCharacters: ['-', 'a', 'e', '\u{10000}', '\u{10004}']
     },
+    {
+        // Make sure we don't omit the \u{10400}-\u{107FF} range
+        regExp: /[\u{10001}-\u{10BFE}]/u,
+        acceptedCharacters: ['\u{10001}', '\u{103FF}', '\u{10400}', '\u{107FF}', '\u{10800}', '\u{10BFE}']
+    },
 ];
 
 var testsForRunner = normalTests.map(function (test) {
