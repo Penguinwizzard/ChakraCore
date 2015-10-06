@@ -122,6 +122,15 @@ var normalTests = [
         regExp: /[\u{10001}-\u{10BFE}]/u,
         acceptedCharacters: ['\u{10001}', '\u{103FF}', '\u{10400}', '\u{107FF}', '\u{10800}', '\u{10BFE}']
     },
+    {
+        regExp: /[\u{10000}-\u{107FF}]/u,
+        acceptedCharacters: ['\u{10000}', '\u{103FF}', '\u{10400}', '\u{107FF}']
+    },
+    {
+        // Make sure we don't omit the \u{10400}-\u{107FF} range
+        regExp: /[\u{10000}-\u{10802}]/u,
+        acceptedCharacters: ['\u{10000}', '\u{103FF}', '\u{10400}', '\u{107FF}', '\u{10800}', '\u{10802}']
+    }
 ];
 
 var testsForRunner = normalTests.map(function (test) {

@@ -499,7 +499,7 @@ namespace UnifiedRegex
                 wchar_t lowerMinorBoundary, lowerMajorBoundary, ignore;
                 Js::NumberUtilities::CodePointAsSurrogatePair(minorBoundary, &lowerMinorBoundary, &ignore);
                 
-                bool singleFullRange = majorBoundary - minorBoundary == 0x400u;
+                bool singleFullRange = majorBoundary == minorBoundary;
                 if (singleFullRange)
                 {
                     // The lower part of the full range is simple a surrogate lower char
