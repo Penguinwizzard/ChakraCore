@@ -348,7 +348,6 @@
     <default>
       <files>unassignedconst.js</files>
       <compile-flags>-Intl-</compile-flags>
-      <baseline>unassignedconst.baseline</baseline>
       <tags>exclude_dynapogo</tags>
     </default>
   </test>
@@ -356,7 +355,6 @@
     <default>
       <files>unassignedconst.js</files>
       <compile-flags>-Intl- -force:deferparse</compile-flags>
-      <baseline>unassignedconst.baseline</baseline>
       <tags>exclude_dynapogo</tags>
     </default>
   </test>

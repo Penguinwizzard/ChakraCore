@@ -16,15 +16,13 @@ function assertPropertyDoesNotExist(o, p) {
 WScript.LoadScriptFile("vso_os_1091425_1.js");
 WScript.LoadScriptFile("vso_os_1091425_2.js");
 try {
-    WScript.LoadScriptFile("vso_os_1091425_3.js");
+    eval('function nonConfigurableFoo() { /* try to override non-configurable global accessor property with a function definition */ }');
 } catch (e) {
-    // unfortunatly LoadScriptFile doesn't provide us a way to get at the thrown error
-    // that made it fail, instead we just get a generic Error.  Further it always prints
-    // out the thrown error message and callstack.  With these two details we must use
-    // a baseline to verify the expected throwing behavior of the redefinition of a
-    // non-configurable global property by a global function definition.
-    if (!(e instanceof Error))
-        throw e;
+    if (e.message === "Cannot redefine non-configurable property 'nonConfigurableFoo'") {
+        print("Pass");
+    }
+    else {
+        print("Fail");
+    }
 }
 
-WScript.Echo("Pass");
