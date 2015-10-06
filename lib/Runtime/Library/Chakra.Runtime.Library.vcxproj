@@ -35,6 +35,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSIMDFloat32x4.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSIMDFloat64x2.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSIMDInt32x4.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSIMDInt16x8.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)SIMDFloat32x4Lib.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)SIMDFloat32x4Operation.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'!='ARM' AND '$(Platform)'!='Arm64'">true</ExcludedFromBuild>
@@ -55,6 +56,13 @@
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)SIMDInt32x4OperationX86X64.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'!='Win32' AND '$(Platform)'!='x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDInt16x8Lib.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDInt16x8Operation.cpp">
+        <ExcludedFromBuild Condition="'$(Platform)'!='ARM' AND '$(Platform)'!='Arm64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDInt16x8OperationX86X64.cpp">
+        <ExcludedFromBuild Condition="'$(Platform)'!='Win32' AND '$(Platform)'!='x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)CharStringCache.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ArrayBuffer.cpp" />
@@ -186,6 +194,7 @@
     <ClInclude Include="JavascriptSIMDFloat32x4.h" />
     <ClInclude Include="JavascriptSIMDFloat64x2.h" />
     <ClInclude Include="JavascriptSIMDInt32x4.h" />
+    <ClInclude Include="JavascriptSIMDInt16x8.h" />
     <ClInclude Include="JavascriptSIMDInt8x16.h" />
     <ClInclude Include="SIMDFloat32x4Lib.h" />
     <ClInclude Include="SIMDFloat32x4Operation.h" />
@@ -193,6 +202,8 @@
     <ClInclude Include="SIMDFloat64x2Operation.h" />
     <ClInclude Include="SIMDInt32x4Lib.h" />
     <ClInclude Include="SIMDInt32x4Operation.h" />
+    <ClInclude Include="SIMDInt16x8Lib.h" />
+    <ClInclude Include="SIMDInt16x8Operation.h" />
     <ClInclude Include="SIMDInt8x16Lib.h" />
     <ClInclude Include="SIMDInt8x16Operation.h" />
     <ClInclude Include="SIMDShuffleMasks.h" />

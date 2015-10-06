@@ -85,6 +85,7 @@ ENTRY(Float32x4)
 ENTRY(Float64x2)
 ENTRY(Int32x4)
 ENTRY(Int8x16)
+ENTRY(Int16x8)
 ENTRY(zero)
 ENTRY(splat)
 ENTRY2(bool_, L"bool") // "bool" cannot be an identifier in C++ so using "bool_" instead
@@ -137,6 +138,7 @@ ENTRY(notEqual)
 ENTRY(greaterThanOrEqual)
 ENTRY(greaterThan)
 
+//arun::ToDo: following should be replaced by shift*ByScalar
 ENTRY(shiftLeft)
 ENTRY(shiftRightLogical)
 ENTRY(shiftRightArithmetic)
@@ -144,6 +146,12 @@ ENTRY(shiftLeftByScalar)
 ENTRY(shiftRightLogicalByScalar)
 ENTRY(shiftRightArithmeticByScalar)
 
+ENTRY(allTrue)
+ENTRY(anyTrue)
+ENTRY(addSaturate)
+ENTRY(subSaturate)
+ENTRY(extractLaneAsBool)
+ENTRY(selectBits)
 // End SIMD
 #endif
 

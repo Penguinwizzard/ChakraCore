@@ -295,6 +295,11 @@ namespace Js
             {
                 return scriptContext->GetLibrary()->GetSIMDInt32x4DisplayString();
             }
+        case TypeIds_SIMDInt16x8:
+            if (scriptContext->GetConfig()->IsSimdjsEnabled())
+            {
+                return scriptContext->GetLibrary()->GetSIMDInt16x8DisplayString();
+            }
         case TypeIds_SIMDInt8x16:
             if (scriptContext->GetConfig()->IsSimdjsEnabled())
             {

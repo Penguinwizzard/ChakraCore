@@ -113,6 +113,7 @@ OBJECT_TYPE(Simd128Float32x4    )
 OBJECT_TYPE(Simd128Int32x4      )
 OBJECT_TYPE(Simd128Int8x16      )
 OBJECT_TYPE(Simd128Float64x2    )
+OBJECT_TYPE(Simd128Int16x8      )
 #endif
 OBJECT_TYPE(Count)
 

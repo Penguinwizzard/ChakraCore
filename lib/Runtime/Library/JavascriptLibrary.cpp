@@ -742,6 +742,7 @@ namespace Js
             simdFloat32x4TypeStatic = StaticType::New(scriptContext, TypeIds_SIMDFloat32x4, nullValue /*prototype*/, nullptr);
             simdFloat64x2TypeStatic = StaticType::New(scriptContext, TypeIds_SIMDFloat64x2, nullValue /*prototype*/, nullptr);
             simdInt32x4TypeStatic = StaticType::New(scriptContext, TypeIds_SIMDInt32x4, nullValue /*prototype*/, nullptr);
+            simdInt16x8TypeStatic = StaticType::New(scriptContext, TypeIds_SIMDInt16x8, nullValue /*prototype*/, nullptr);
             simdInt8x16TypeStatic = StaticType::New(scriptContext, TypeIds_SIMDInt8x16, nullValue /*prototype*/, nullptr);
         }
 #endif
@@ -1183,6 +1184,9 @@ namespace Js
             simdFloat32x4DisplayString = CreateStringFromCppLiteral(L"Float32x4");
             simdFloat64x2DisplayString = CreateStringFromCppLiteral(L"Float64x2");
             simdInt32x4DisplayString = CreateStringFromCppLiteral(L"Int32x4");
+     	    simdInt16x8DisplayString = CreateStringFromCppLiteral(L"Int16x8");
+            simdInt8x16DisplayString = CreateStringFromCppLiteral(L"Int8x16");  //arun::ToDo :bugfix move to a different changelist.
+
         }
 #endif
 
@@ -1360,6 +1364,7 @@ namespace Js
             simdFloat32x4ToStringFunction = DefaultCreateFunction(&JavascriptSIMDFloat32x4::EntryInfo::ToString, 1, nullptr, nullptr, PropertyIds::toString);
             simdFloat64x2ToStringFunction = DefaultCreateFunction(&JavascriptSIMDFloat64x2::EntryInfo::ToString, 1, nullptr, nullptr, PropertyIds::toString);
             simdInt32x4ToStringFunction = DefaultCreateFunction(&JavascriptSIMDInt32x4::EntryInfo::ToString, 1, nullptr, nullptr, PropertyIds::toString);
+            simdInt16x8ToStringFunction = DefaultCreateFunction(&JavascriptSIMDInt16x8::EntryInfo::ToString, 1, nullptr, nullptr, PropertyIds::toString);
             simdInt8x16ToStringFunction = DefaultCreateFunction(&JavascriptSIMDInt8x16::EntryInfo::ToString, 1, nullptr, nullptr, PropertyIds::toString);
         }
 #endif
@@ -2844,6 +2849,54 @@ namespace Js
 
         // end Int32x4
 
+        // Int16x8
+        JavascriptFunction* int16x8Function = library->AddFunctionToLibraryObject(simdObject, PropertyIds::Int16x8, &SIMDInt16x8Lib::EntryInfo::Int16x8, 5, PropertyNone);
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::splat, &SIMDInt16x8Lib::EntryInfo::Splat, 2, PropertyNone);
+		library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::check, &SIMDInt16x8Lib::EntryInfo::Check, 2, PropertyNone);
+        // type conversions
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::fromInt32x4Bits, &SIMDInt16x8Lib::EntryInfo::FromInt32x4Bits, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::fromFloat32x4Bits, &SIMDInt16x8Lib::EntryInfo::FromFloat32x4Bits, 2, PropertyNone);
+
+        // UnaryOps
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::neg, &SIMDInt16x8Lib::EntryInfo::Neg, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::not, &SIMDInt16x8Lib::EntryInfo::Not, 2, PropertyNone);
+
+        // binary ops
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::add, &SIMDInt16x8Lib::EntryInfo::Add, 3, PropertyNone);
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::sub, &SIMDInt16x8Lib::EntryInfo::Sub, 3, PropertyNone);
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::mul, &SIMDInt16x8Lib::EntryInfo::Mul, 3, PropertyNone);
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::and, &SIMDInt16x8Lib::EntryInfo::And, 3, PropertyNone);
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::or, &SIMDInt16x8Lib::EntryInfo::Or, 3, PropertyNone);
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::xor, &SIMDInt16x8Lib::EntryInfo::Xor, 3, PropertyNone);
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::addSaturate, &SIMDInt16x8Lib::EntryInfo::AddSaturate, 3, PropertyNone);
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::subSaturate, &SIMDInt16x8Lib::EntryInfo::SubSaturate, 3, PropertyNone);
+		library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::min, &SIMDInt16x8Lib::EntryInfo::Min, 3, PropertyNone);
+		library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::max, &SIMDInt16x8Lib::EntryInfo::Max, 3, PropertyNone);
+
+        // compare ops
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::lessThan, &SIMDInt16x8Lib::EntryInfo::LessThan, 3, PropertyNone);
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::lessThanOrEqual, &SIMDInt16x8Lib::EntryInfo::LessThanOrEqual, 3, PropertyNone);
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::equal, &SIMDInt16x8Lib::EntryInfo::Equal, 3, PropertyNone);
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::notEqual, &SIMDInt16x8Lib::EntryInfo::NotEqual, 3, PropertyNone);
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::greaterThan, &SIMDInt16x8Lib::EntryInfo::GreaterThan, 3, PropertyNone);
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::greaterThanOrEqual, &SIMDInt16x8Lib::EntryInfo::GreaterThanOrEqual, 3, PropertyNone);
+        // Lane Access
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::extractLane, &SIMDInt16x8Lib::EntryInfo::ExtractLane, 3, PropertyNone);
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::replaceLane, &SIMDInt16x8Lib::EntryInfo::ReplaceLane, 3, PropertyNone);
+        // shift
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::shiftLeftByScalar, &SIMDInt16x8Lib::EntryInfo::ShiftLeftByScalar, 3, PropertyNone);
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::shiftRightLogicalByScalar, &SIMDInt16x8Lib::EntryInfo::ShiftRightLogicalByScalar, 3, PropertyNone);
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::shiftRightArithmeticByScalar, &SIMDInt16x8Lib::EntryInfo::ShiftRightArithmeticByScalar, 3, PropertyNone);
+        // load/store
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::load, &SIMDInt16x8Lib::EntryInfo::Load, 3, PropertyNone);
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::store, &SIMDInt16x8Lib::EntryInfo::Store, 3, PropertyNone);
+        // others
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::swizzle, &SIMDInt16x8Lib::EntryInfo::Swizzle, 10, PropertyNone);
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::shuffle, &SIMDInt16x8Lib::EntryInfo::Shuffle, 3, PropertyNone);
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::select, &SIMDInt16x8Lib::EntryInfo::Select, 4, PropertyNone);
+        // end Int16x8
+
+        // SIMD shuffle masks
         // Int8x16
         JavascriptFunction* int8x16Function = library->AddFunctionToLibraryObject(simdObject, PropertyIds::Int8x16, &SIMDInt8x16Lib::EntryInfo::Int8x16, 17, PropertyNone);
         library->AddFunctionToLibraryObject(int8x16Function, PropertyIds::check, &SIMDInt8x16Lib::EntryInfo::Check, 2, PropertyNone);
@@ -7017,6 +7070,41 @@ namespace Js
         REG_OBJECTS_LIB_FUNC(shiftRightLogical, SIMDInt32x4Lib::EntryShiftRightLogical);
         REG_OBJECTS_LIB_FUNC(shiftRightArithmetic, SIMDInt32x4Lib::EntryShiftRightArithmetic);
         REG_OBJECTS_LIB_FUNC(select, SIMDInt32x4Lib::EntrySelect);
+
+        // Int16x8
+        REG_OBJECTS_LIB_FUNC(Int16x8, SIMDInt16x8Lib::EntryInt16x8);
+		REG_OBJECTS_LIB_FUNC(splat, SIMDInt16x8Lib::EntryCheck);
+        REG_OBJECTS_LIB_FUNC(splat, SIMDInt16x8Lib::EntrySplat);
+        REG_OBJECTS_LIB_FUNC(fromInt32x4Bits, SIMDInt16x8Lib::EntryFromInt32x4Bits);
+        REG_OBJECTS_LIB_FUNC(fromFloat32x4Bits, SIMDInt16x8Lib::EntryFromFloat32x4Bits);
+        REG_OBJECTS_LIB_FUNC(neg, SIMDInt16x8Lib::EntryNeg);
+        REG_OBJECTS_LIB_FUNC(not, SIMDInt16x8Lib::EntryNot);
+        REG_OBJECTS_LIB_FUNC(add, SIMDInt16x8Lib::EntryAdd);
+        REG_OBJECTS_LIB_FUNC(sub, SIMDInt16x8Lib::EntrySub);
+        REG_OBJECTS_LIB_FUNC(mul, SIMDInt16x8Lib::EntryMul);
+        REG_OBJECTS_LIB_FUNC(and, SIMDInt16x8Lib::EntryAnd);
+        REG_OBJECTS_LIB_FUNC(or, SIMDInt16x8Lib::EntryOr);
+        REG_OBJECTS_LIB_FUNC(xor, SIMDInt16x8Lib::EntryXor);
+		REG_OBJECTS_LIB_FUNC(min, SIMDInt16x8Lib::EntryMin);
+		REG_OBJECTS_LIB_FUNC(max, SIMDInt16x8Lib::EntryMax);
+        REG_OBJECTS_LIB_FUNC(addSaturate, SIMDInt16x8Lib::EntryAddSaturate);
+        REG_OBJECTS_LIB_FUNC(subSaturate, SIMDInt16x8Lib::EntrySubSaturate);
+        REG_OBJECTS_LIB_FUNC(lessThan, SIMDInt16x8Lib::EntryLessThan);
+        REG_OBJECTS_LIB_FUNC(lessThanOrEqual, SIMDInt16x8Lib::EntryLessThanOrEqual);
+        REG_OBJECTS_LIB_FUNC(equal, SIMDInt16x8Lib::EntryEqual);
+        REG_OBJECTS_LIB_FUNC(notEqual, SIMDInt16x8Lib::EntryNotEqual);
+        REG_OBJECTS_LIB_FUNC(greaterThan, SIMDInt16x8Lib::EntryGreaterThan);
+        REG_OBJECTS_LIB_FUNC(greaterThanOrEqual, SIMDInt16x8Lib::EntryGreaterThanOrEqual);
+        REG_OBJECTS_LIB_FUNC(extractLane, SIMDInt16x8Lib::EntryExtractLane);
+        REG_OBJECTS_LIB_FUNC(replaceLane, SIMDInt16x8Lib::EntryReplaceLane);
+        REG_OBJECTS_LIB_FUNC(shiftLeftByScalar, SIMDInt16x8Lib::EntryShiftLeftByScalar);
+        REG_OBJECTS_LIB_FUNC(shiftRightLogicalByScalar, SIMDInt16x8Lib::EntryShiftRightLogicalByScalar);
+        REG_OBJECTS_LIB_FUNC(shiftRightArithmeticByScalar, SIMDInt16x8Lib::EntryShiftRightArithmeticByScalar);
+        REG_OBJECTS_LIB_FUNC(load, SIMDInt16x8Lib::EntryLoad);
+        REG_OBJECTS_LIB_FUNC(store, SIMDInt16x8Lib::EntryStore);
+        REG_OBJECTS_LIB_FUNC(swizzle, SIMDInt16x8Lib::EntrySwizzle);
+        REG_OBJECTS_LIB_FUNC(shuffle, SIMDInt16x8Lib::EntryShuffle);
+        REG_OBJECTS_LIB_FUNC(select, SIMDInt16x8Lib::EntrySelect);
 
         // Int8x16
         REG_OBJECTS_LIB_FUNC(Int8x16, SIMDInt8x16Lib::EntryInt8x16);

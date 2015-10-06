@@ -755,6 +755,8 @@ CommonNumber:
         case TypeIds_SIMDFloat32x4:
         case TypeIds_SIMDFloat64x2:
         case TypeIds_SIMDInt32x4:
+        case TypeIds_SIMDInt16x8:
+        case TypeIds_SIMDInt8x16:
         {   // SIMD review: may need update once spec is finalized
             if (scriptContext->GetConfig()->IsSimdjsEnabled())
             {
@@ -860,6 +862,8 @@ CommonNumber:
 
             case TypeIds_SIMDFloat32x4:
             case TypeIds_SIMDInt32x4:
+            case TypeIds_SIMDInt8x16:
+            case TypeIds_SIMDInt16x8:
             case TypeIds_SIMDFloat64x2:
                 JavascriptError::ThrowError(scriptContext, JSERR_NeedNumber);
 

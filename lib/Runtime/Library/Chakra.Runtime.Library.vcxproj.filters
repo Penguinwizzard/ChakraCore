@@ -4,6 +4,7 @@
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptSIMDFloat32x4.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptSIMDFloat64x2.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptSIMDInt32x4.cpp" />
+    <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptSIMDInt16x8.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)SIMDFloat32x4Lib.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)SIMDFloat32x4Operation.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)SIMDfloat32x4OperationX86X64.cpp" />
@@ -13,6 +14,9 @@
     <ClCompile Include="$(MsBuildThisFileDirectory)SIMDInt32x4Lib.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)SIMDInt32x4Operation.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)SIMDInt32x4OperationX86X64.cpp" />
+    <ClCompile Include="$(MsBuildThisFileDirectory)SIMDInt16x8Lib.cpp" />
+    <ClCompile Include="$(MsBuildThisFileDirectory)SIMDInt16x8Operation.cpp" />
+    <ClCompile Include="$(MsBuildThisFileDirectory)SIMDInt16x8OperationX86X64.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)CharStringCache.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)ArrayBuffer.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)AsyncDebug.cpp" />
@@ -138,12 +142,15 @@
     <ClInclude Include="JavascriptSIMDFloat32x4.h" />
     <ClInclude Include="JavascriptSIMDFloat64x2.h" />
     <ClInclude Include="JavascriptSIMDInt32x4.h" />
+    <ClInclude Include="JavascriptSIMDInt16x8.h" />
     <ClInclude Include="SIMDFloat32x4Lib.h" />
     <ClInclude Include="SIMDFloat32x4Operation.h" />
     <ClInclude Include="SIMDFloat64x2Lib.h" />
     <ClInclude Include="SIMDFloat64x2Operation.h" />
     <ClInclude Include="SIMDInt32x4Lib.h" />
     <ClInclude Include="SIMDInt32x4Operation.h" />
+    <ClInclude Include="SIMDInt16x8Lib.h" />
+    <ClInclude Include="SIMDInt16x8Operation.h" />
     <ClInclude Include="SIMDShuffleMasks.h" />
     <ClInclude Include="LibraryFunction.h" />
     <ClInclude Include="ArrayBuffer.h" />

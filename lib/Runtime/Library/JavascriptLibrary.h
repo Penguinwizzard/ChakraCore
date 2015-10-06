@@ -254,6 +254,7 @@ namespace Js
         StaticType * simdInt32x4TypeStatic;
         StaticType * simdInt8x16TypeStatic;
         StaticType * simdFloat64x2TypeStatic;
+        StaticType * simdInt16x8TypeStatic;
 #endif
 
         DynamicType * numberTypeDynamic;
@@ -303,6 +304,7 @@ namespace Js
         JavascriptString* simdFloat32x4DisplayString;
         JavascriptString* simdFloat64x2DisplayString;
         JavascriptString* simdInt32x4DisplayString;
+        JavascriptString* simdInt16x8DisplayString;
         JavascriptString* simdInt8x16DisplayString;
 #endif
 
@@ -355,6 +357,8 @@ namespace Js
         JavascriptFunction* simdFloat64x2ToStringFunction;
         // Int32x4
         JavascriptFunction* simdInt32x4ToStringFunction;
+        // Int16x8
+        JavascriptFunction* simdInt16x8ToStringFunction;
         // Int8x16
         JavascriptFunction* simdInt8x16ToStringFunction;
 #endif
@@ -536,6 +540,7 @@ namespace Js
         JavascriptString* GetSIMDFloat32x4DisplayString() const { return simdFloat32x4DisplayString; }
         JavascriptString* GetSIMDFloat64x2DisplayString() const { return simdFloat64x2DisplayString; }
         JavascriptString* GetSIMDInt32x4DisplayString()   const { return simdInt32x4DisplayString; }
+        JavascriptString* GetSIMDInt16x8DisplayString()   const { return simdInt16x8DisplayString; }
         JavascriptString* GetSIMDInt8x16DisplayString()   const { return simdInt8x16DisplayString; }
 #endif
 
@@ -619,6 +624,7 @@ namespace Js
         StaticType* GetSIMDFloat32x4TypeStatic() const { return simdFloat32x4TypeStatic; }
         StaticType* GetSIMDFloat64x2TypeStatic() const { return simdFloat64x2TypeStatic; }
         StaticType* GetSIMDInt32x4TypeStatic()   const { return simdInt32x4TypeStatic; }
+        StaticType* GetSIMDInt16x8TypeStatic()   const { return simdInt16x8TypeStatic; }
         StaticType* GetSIMDInt8x16TypeStatic()   const { return simdInt8x16TypeStatic; }
 #endif
 
@@ -669,6 +675,7 @@ namespace Js
         JavascriptFunction* GetSIMDFloat32x4ToStringFunction() const { return simdFloat32x4ToStringFunction;  }
         JavascriptFunction* GetSIMDFloat64x2ToStringFunction() const { return simdFloat64x2ToStringFunction; }
         JavascriptFunction* GetSIMDInt32x4ToStringFunction()   const { return simdInt32x4ToStringFunction; }
+        JavascriptFunction* GetSIMDInt16x8ToStringFunction()   const { return simdInt16x8ToStringFunction; }
         JavascriptFunction* GetSIMDInt8x16ToStringFunction()   const { return simdInt8x16ToStringFunction; }
 #endif
 
