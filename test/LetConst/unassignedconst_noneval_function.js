@@ -1,1 +1,1 @@
-function a() { const x; }
+eval('function a() { const x; }');

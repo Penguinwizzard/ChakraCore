@@ -1,1 +1,1 @@
-const x;
+eval('const x');

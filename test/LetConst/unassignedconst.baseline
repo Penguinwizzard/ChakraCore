@@ -1,6 +1,8 @@
 SyntaxError: Const must be initialized
 SyntaxError: Const must be initialized
 SyntaxError: Const must be initialized
-	at code (unassignedconst.js:1:8)
+	at Global code (unassignedconst.js:1:1)
+	at Global code (unassignedconst.js:5:7)
 SyntaxError: Const must be initialized
-	at code (unassignedconst.js:1:23)
+	at Global code (unassignedconst.js:1:1)
+	at Global code (unassignedconst.js:6:7)

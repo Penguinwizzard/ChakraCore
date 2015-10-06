@@ -349,8 +349,7 @@
       <files>unassignedconst.js</files>
       <compile-flags>-Intl-</compile-flags>
       <baseline>unassignedconst.baseline</baseline>
-      <!-- ch stack trace prints correct file name; jshost prints wrong file name -->
-      <tags>exclude_dynapogo,exclude_ch</tags>
+      <tags>exclude_dynapogo</tags>
     </default>
   </test>
   <test>
@@ -358,8 +357,7 @@
       <files>unassignedconst.js</files>
       <compile-flags>-Intl- -force:deferparse</compile-flags>
       <baseline>unassignedconst.baseline</baseline>
-      <!-- ch stack trace prints correct file name; jshost prints wrong file name -->
-      <tags>exclude_dynapogo,exclude_ch</tags>
+      <tags>exclude_dynapogo</tags>
     </default>
   </test>
   <test>
