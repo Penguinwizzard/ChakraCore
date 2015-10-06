@@ -4,7 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 
-#if defined(_M_ARM32_OR_ARM64)
+#if _M_IX86 || _M_AMD64
 namespace Js
 {
 	SIMDValue SIMDBool16x8Operation::OpBool16x8(bool b[])
