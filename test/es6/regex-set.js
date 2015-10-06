@@ -97,6 +97,12 @@ var normalTests = [
         rejectedCharacters: ['b', 'f']
     },
     {
+        // Third non-dash character's mathematical value is lower than the second's
+        regExp: /[\u{10002}-\u{10004}-\u{10000}]/u,
+        acceptedCharacters: ['\u{10002}', '\u{10003}', '\u{10004}', '-', '\u{10000}'],
+        rejectedCharacters: ['\u{10001}', '\u{10005}']
+    },
+    {
         regExp: /[b-df-h]/u,
         acceptedCharacters: ['b', 'c', 'd', 'f', 'g', 'h'],
         rejectedCharacters: ['-', 'a', 'e', 'i']
@@ -149,6 +155,7 @@ var testsForRunner = normalTests.map(function (test) {
 
 var disallowedPatterns = [
     '/[b-a]/',
+    '/[\\u{10001}-\\u{10000}]/u',
 ];
 testsForRunner = testsForRunner.concat(disallowedPatterns.map(function (pattern) {
     return {

@@ -1909,7 +1909,9 @@ namespace UnifiedRegex
                 }
                 else
                 {
-                    pendingRangeStart = lastCodepoint;
+                    pendingRangeStart = this->next == this->positionAfterLastSurrogate
+                        ? this->valueOfLastSurrogate
+                        : lastCodepoint;
                     lastCodepoint = INVALID_CODEPOINT;
                     NextChar();
                 }
@@ -1965,6 +1967,8 @@ namespace UnifiedRegex
                     lastCodepoint = this->valueOfLastSurrogate;
                     Assert(!previousSurrogatePart);
                     pendingRangeEnd = lastCodepoint;
+
+                    lastCodepoint = INVALID_CODEPOINT;
                 }
                 // If we the next character is the end of range ']', then we can't have a surrogate pair.
                 // The current character is the range end, if we don't already have a candidate.
