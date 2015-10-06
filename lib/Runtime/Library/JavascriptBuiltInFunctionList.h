@@ -578,6 +578,15 @@ BUILTIN(JavascriptSIMDInt16x8, ToString, EntryToString, FunctionInfo::None)
 // JavascriptInt8x16 entry points
 BUILTIN(JavascriptSIMDInt8x16, ToString, EntryToString, FunctionInfo::None)
 
+// JavascriptBool32x4 entry points
+BUILTIN(JavascriptSIMDBool32x4, ToString, EntryToString, FunctionInfo::None)
+
+// JavascriptBool16x8 entry points
+BUILTIN(JavascriptSIMDBool16x8, ToString, EntryToString, FunctionInfo::None)
+
+// JavascriptBool32x4 entry points
+BUILTIN(JavascriptSIMDBool8x16, ToString, EntryToString, FunctionInfo::None)
+
 
 BUILTIN(Math, Fround, Fround, FunctionInfo::ErrorOnNew)
 BUILTIN(TypedArrayBase, NewInstance, NewInstance, FunctionInfo::SkipDefaultNewObject)

@@ -1365,13 +1365,17 @@ namespace Js
 
             AddMember(globalObject, PropertyIds::SIMD, simdObject, PropertyNone);
 
-            // TODO: Move these to constructors' prototypes per spec.
+            // TODO: Move these to constructors' prototypes per spec with wrapper object implementation.
+
             // Initialize toString functions. Do it here instead of InitializeSIMDObject, since we can possible access those fields before SIMD object is deferred initialized (e.g. SIMD object coming from ASMJS code).
             simdFloat32x4ToStringFunction = DefaultCreateFunction(&JavascriptSIMDFloat32x4::EntryInfo::ToString, 1, nullptr, nullptr, PropertyIds::toString);
             simdFloat64x2ToStringFunction = DefaultCreateFunction(&JavascriptSIMDFloat64x2::EntryInfo::ToString, 1, nullptr, nullptr, PropertyIds::toString);
             simdInt32x4ToStringFunction = DefaultCreateFunction(&JavascriptSIMDInt32x4::EntryInfo::ToString, 1, nullptr, nullptr, PropertyIds::toString);
             simdInt16x8ToStringFunction = DefaultCreateFunction(&JavascriptSIMDInt16x8::EntryInfo::ToString, 1, nullptr, nullptr, PropertyIds::toString);
             simdInt8x16ToStringFunction = DefaultCreateFunction(&JavascriptSIMDInt8x16::EntryInfo::ToString, 1, nullptr, nullptr, PropertyIds::toString);
+            simdBool32x4ToStringFunction = DefaultCreateFunction(&JavascriptSIMDBool32x4::EntryInfo::ToString, 1, nullptr, nullptr, PropertyIds::toString);
+            simdBool16x8ToStringFunction = DefaultCreateFunction(&JavascriptSIMDBool32x4::EntryInfo::ToString, 1, nullptr, nullptr, PropertyIds::toString);
+            simdBool8x16ToStringFunction = DefaultCreateFunction(&JavascriptSIMDBool32x4::EntryInfo::ToString, 1, nullptr, nullptr, PropertyIds::toString);
         }
 
 

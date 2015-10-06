@@ -757,11 +757,11 @@ CommonNumber:
         case TypeIds_SIMDInt32x4:
         case TypeIds_SIMDInt16x8:
         case TypeIds_SIMDInt8x16:
-        {   // SIMD review: may need update once spec is finalized
-            if (scriptContext->GetConfig()->IsSimdjsEnabled())
-            {
-                return true;
-            }
+        case TypeIds_SIMDBool32x4:
+        case TypeIds_SIMDBool16x8:
+        case TypeIds_SIMDBool8x16:
+        { 
+            return true;
         }
 #endif
 
@@ -865,6 +865,11 @@ CommonNumber:
             case TypeIds_SIMDInt8x16:
             case TypeIds_SIMDInt16x8:
             case TypeIds_SIMDFloat64x2:
+            case TypeIds_SIMDInt16x8:
+            case TypeIds_SIMDInt8x16:
+            case TypeIds_SIMDBool32x4:
+            case TypeIds_SIMDBool16x8:
+            case TypeIds_SIMDBool8x16:
                 JavascriptError::ThrowError(scriptContext, JSERR_NeedNumber);
 
             default:
@@ -922,6 +927,16 @@ CommonNumber:
 
             case TypeIds_VariantDate:
                 return ToInteger(ToNumber_Full(aValue, scriptContext));
+
+            case TypeIds_SIMDFloat32x4:
+            case TypeIds_SIMDInt32x4:
+            case TypeIds_SIMDFloat64x2:
+            case TypeIds_SIMDInt16x8:
+            case TypeIds_SIMDInt8x16:
+            case TypeIds_SIMDBool32x4:
+            case TypeIds_SIMDBool16x8:
+            case TypeIds_SIMDBool8x16:
+                JavascriptError::ThrowError(scriptContext, JSERR_NeedNumber);
 
             default:
                 {
@@ -1031,6 +1046,16 @@ CommonNumber:
         case TypeIds_VariantDate:
             return ToInt32(ToNumber_Full(aValue, scriptContext));
 
+        case TypeIds_SIMDFloat32x4:
+        case TypeIds_SIMDInt32x4:
+        case TypeIds_SIMDFloat64x2:
+        case TypeIds_SIMDInt16x8:
+        case TypeIds_SIMDInt8x16:
+        case TypeIds_SIMDBool32x4:
+        case TypeIds_SIMDBool16x8:
+        case TypeIds_SIMDBool8x16:
+            JavascriptError::ThrowError(scriptContext, JSERR_NeedNumber);
+
         default:
             AssertMsg(JavascriptOperators::IsObject(aValue), "bad type object in conversion ToInteger32");
             aValue = ToPrimitive(aValue, JavascriptHint::HintNumber, scriptContext);
@@ -1135,6 +1160,16 @@ CommonNumber:
 
             case TypeIds_VariantDate:
                 return ToInt32Finite(ToNumber_Full(aValue, scriptContext), result);
+
+            case TypeIds_SIMDFloat32x4:
+            case TypeIds_SIMDInt32x4:
+            case TypeIds_SIMDFloat64x2:
+            case TypeIds_SIMDInt16x8:
+            case TypeIds_SIMDInt8x16:
+            case TypeIds_SIMDBool32x4:
+            case TypeIds_SIMDBool16x8:
+            case TypeIds_SIMDBool8x16:
+                JavascriptError::ThrowError(scriptContext, JSERR_NeedNumber);
 
             default:
                 {
@@ -1273,6 +1308,16 @@ CommonNumber:
             case TypeIds_VariantDate:
                 return JavascriptMath::ToUInt32(ToNumber_Full(aValue, scriptContext));
 
+            case TypeIds_SIMDFloat32x4:
+            case TypeIds_SIMDInt32x4:
+            case TypeIds_SIMDFloat64x2:
+            case TypeIds_SIMDInt16x8:
+            case TypeIds_SIMDInt8x16:
+            case TypeIds_SIMDBool32x4:
+            case TypeIds_SIMDBool16x8:
+            case TypeIds_SIMDBool8x16:
+                JavascriptError::ThrowError(scriptContext, JSERR_NeedNumber);
+
             default:
                 {
                     AssertMsg(JavascriptOperators::IsObject(aValue), "bad type object in conversion ToUInt32");
@@ -1347,6 +1392,16 @@ CommonNumber:
 
             case TypeIds_VariantDate:
                 return ToUInt16(ToNumber_Full(aValue, scriptContext));
+
+            case TypeIds_SIMDFloat32x4:
+            case TypeIds_SIMDInt32x4:
+            case TypeIds_SIMDFloat64x2:
+            case TypeIds_SIMDInt16x8:
+            case TypeIds_SIMDInt8x16:
+            case TypeIds_SIMDBool32x4:
+            case TypeIds_SIMDBool16x8:
+            case TypeIds_SIMDBool8x16:
+                JavascriptError::ThrowError(scriptContext, JSERR_NeedNumber);
 
             default:
                 {

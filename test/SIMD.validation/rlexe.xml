@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <regress-exe>
-<!-- Unimplemented
+
   <test>
     <default>
       <files>SIMD.Bool8x16.polyfill.js</files>
@@ -67,7 +67,7 @@
       <compile-flags>-bgjit- -simdjs -simd128typespec -off:simplejit -mic:1</compile-flags>
     </default>
   </test>
-  -->
+
 
   <test>
     <default>

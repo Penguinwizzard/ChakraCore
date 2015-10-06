@@ -66,11 +66,44 @@ namespace Js
 
     bool JavascriptSIMDBool32x4::GetPropertyBuiltIns(PropertyId propertyId, Var* value, ScriptContext* requestContext)
     {
+        if (propertyId == PropertyIds::toString)
+        {
+            *value = requestContext->GetLibrary()->GetSIMDBool32x4ToStringFunction();
+            return true;
+        }
         return false;
     }
 
     // Entry Points
-    // None
+
+    Var JavascriptSIMDBool32x4::EntryToString(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
+
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
+        Assert(!(callInfo.Flags & CallFlags_New));
+
+        if (args.Info.Count == 0 || JavascriptOperators::GetTypeId(args[0]) != TypeIds_SIMDBool32x4)
+        {
+            JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NeedSimd, L"SIMDBool32x4.toString");
+        }
+
+        JavascriptSIMDBool32x4 *instance = JavascriptSIMDBool32x4::FromVar(args[0]);
+        Assert(instance);
+
+        wchar_t stringBuffer[1024];
+        SIMDValue value = instance->GetValue();
+
+        swprintf_s(stringBuffer, 1024, L"SIMD.Bool32x4(%s,%s,%s,%s)", value.i32[SIMD_X] ? L"true" : L"false", value.i32[SIMD_Y] ? L"true" : L"false", value.i32[SIMD_Z] ? L"true" : L"false", value.i32[SIMD_W] ? L"true" : L"false");
+
+        JavascriptString* string = JavascriptString::NewCopySzFromArena(stringBuffer, scriptContext, scriptContext->GeneralAllocator());
+
+        return string;
+    }
+
     // End Entry Points
 
     Var JavascriptSIMDBool32x4::Copy(ScriptContext* requestContext)

@@ -363,6 +363,10 @@ namespace Js
         JavascriptFunction* simdInt32x4ToStringFunction;
         JavascriptFunction* simdInt16x8ToStringFunction;
         JavascriptFunction* simdInt8x16ToStringFunction;
+        JavascriptFunction* simdBool32x4ToStringFunction;
+        JavascriptFunction* simdBool16x8ToStringFunction;
+        JavascriptFunction* simdBool8x16ToStringFunction;
+
 
 
         UnifiedRegex::RegexPattern * emptyRegexPattern;
@@ -685,6 +689,9 @@ namespace Js
         JavascriptFunction* GetSIMDInt32x4ToStringFunction()   const { return simdInt32x4ToStringFunction; }
         JavascriptFunction* GetSIMDInt16x8ToStringFunction()   const { return simdInt16x8ToStringFunction; }
         JavascriptFunction* GetSIMDInt8x16ToStringFunction()   const { return simdInt8x16ToStringFunction; }
+        JavascriptFunction* GetSIMDBool32x4ToStringFunction()   const { return simdBool32x4ToStringFunction; }
+        JavascriptFunction* GetSIMDBool16x8ToStringFunction()   const { return simdBool16x8ToStringFunction; }
+        JavascriptFunction* GetSIMDBool8x16ToStringFunction()   const { return simdBool8x16ToStringFunction; }
         
 
         JavascriptFunction* GetDebugObjectNonUserGetterFunction() const { return debugObjectNonUserGetterFunction; }

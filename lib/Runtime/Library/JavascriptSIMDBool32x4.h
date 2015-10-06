@@ -15,6 +15,12 @@ namespace Js
 
 
     public:
+        class EntryInfo
+        {
+        public:
+            static FunctionInfo ToString;
+
+        };
 
         JavascriptSIMDBool32x4(StaticType *type);
         JavascriptSIMDBool32x4(SIMDValue *val, StaticType *type);
@@ -33,7 +39,11 @@ namespace Js
         static size_t GetOffsetOfValue() { return offsetof(JavascriptSIMDBool32x4, value); }
 
         // Entry Points
-        // None
+        /*
+        There is one toString per SIMD type. The code is entrant from value objects (e.g. a.toString()) or on arithmetic operations.
+        It will also be a property of SIMD.*.prototype for SIMD dynamic objects.
+        */
+        static Var EntryToString(RecyclableObject* function, CallInfo callInfo, ...);
         // End Entry Points
 
         Var  Copy(ScriptContext* requestContext);
