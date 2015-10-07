@@ -9562,7 +9562,7 @@ CommonNumber:
             if (TaggedInt::Is(aRight))
             {
                 // Works whether it is TaggedInt31 or TaggedInt32
-                return ::Math::PointerCastToIntegral<int>(aLeft) >= ::Math::PointerCastToIntegral<int>(aRight);
+                return ::Math::PointerCastToIntegralTruncate<int>(aLeft) >= ::Math::PointerCastToIntegralTruncate<int>(aRight);
             }
             if (JavascriptNumber::Is_NoTaggedIntCheck(aRight))
             {
@@ -9594,7 +9594,7 @@ CommonNumber:
             if (TaggedInt::Is(aRight))
             {
                 // Works whether it is TaggedInt31 or TaggedInt32
-                return ::Math::PointerCastToIntegral<int>(aLeft) <= ::Math::PointerCastToIntegral<int>(aRight);
+                return ::Math::PointerCastToIntegralTruncate<int>(aLeft) <= ::Math::PointerCastToIntegralTruncate<int>(aRight);
             }
 
             if (JavascriptNumber::Is_NoTaggedIntCheck(aRight))
@@ -9758,7 +9758,7 @@ CommonNumber:
             if (TaggedInt::Is(aRight))
             {
                 // Works whether it is TaggedInt31 or TaggedInt32
-                return ::Math::PointerCastToIntegral<int>(aLeft) > ::Math::PointerCastToIntegral<int>(aRight);
+                return ::Math::PointerCastToIntegralTruncate<int>(aLeft) > ::Math::PointerCastToIntegralTruncate<int>(aRight);
             }
             if (JavascriptNumber::Is_NoTaggedIntCheck(aRight))
             {
@@ -9790,7 +9790,7 @@ CommonNumber:
             if (TaggedInt::Is(aRight))
             {
                 // Works whether it is TaggedInt31 or TaggedInt32
-                return ::Math::PointerCastToIntegral<int>(aLeft) < ::Math::PointerCastToIntegral<int>(aRight);
+                return ::Math::PointerCastToIntegralTruncate<int>(aLeft) < ::Math::PointerCastToIntegralTruncate<int>(aRight);
             }
             if (JavascriptNumber::Is_NoTaggedIntCheck(aRight))
             {

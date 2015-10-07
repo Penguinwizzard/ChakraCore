@@ -22,11 +22,20 @@ public:
         return ((size + (alignment-1)) & ~(alignment-1));
     }
 
-    // Explicit cast to integral(may truncate).  Avoids warning C4302 'type cast': truncation
+    // Explicit cast to integral (may truncate).  Avoids warning C4302 'type cast': truncation
+    template <typename T>
+    static      T                   PointerCastToIntegralTruncate(void * pointer)
+    {
+        return (T)(uintptr)pointer;
+    }
+
+    // Explicit cast to integral. Assert that it doesn't truncate.  Avoids warning C4302 'type cast': truncation
     template <typename T>
     static      T                   PointerCastToIntegral(void * pointer)
     {
-        return (T)(uintptr)pointer;
+        T value = PointerCastToIntegralTruncate<T>(pointer);
+        Assert((uintptr)value == (uintptr)pointer);
+        return value;
     }
 
     static      bool                FitsInDWord(size_t value);

@@ -40,7 +40,7 @@ private:
 
         static int GetHashCode(TSlotKey key)
         {
-            return ::Math::PointerCastToIntegral<int>(key.scope) | key.slot & ArenaAllocator::ObjectAlignmentMask;
+            return ::Math::PointerCastToIntegralTruncate<int>(key.scope) | key.slot & ArenaAllocator::ObjectAlignmentMask;
         }
     };
 

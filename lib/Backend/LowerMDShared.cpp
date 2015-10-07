@@ -3005,7 +3005,7 @@ LowererMD::GenerateFastAdd(IR::Instr * instrAdd)
     if (opndSrc2->IsAddrOpnd())
     {
         // truncate to untag
-        int value = ::Math::PointerCastToIntegral<int>(opndSrc2->AsAddrOpnd()->m_address);
+        int value = ::Math::PointerCastToIntegralTruncate<int>(opndSrc2->AsAddrOpnd()->m_address);
         if (value == 1)
         {
             instr = IR::Instr::New(Js::OpCode::INC, opndReg, opndReg, this->m_func);
