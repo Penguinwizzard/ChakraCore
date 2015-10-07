@@ -1,6 +1,6 @@
 function test0() {
     var a = new Int32Array();
-    a.constructor();
+    new a.constructor();
 }
 test0();
 test0();

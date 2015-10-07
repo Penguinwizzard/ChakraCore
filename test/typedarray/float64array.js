@@ -168,7 +168,7 @@ printObj(test20);
 
 
 WScript.Echo("test21");
-var test21 = test5.constructor(2);
+var test21 = new test5.constructor(2);
 
 try {
     WScript.Echo(Object.getPrototypeOf(test21));

@@ -958,7 +958,7 @@ WScript.Echo("test58: " + test58(0));
 WScript.Echo("test58: " + test58(0));
 
 function test59() {
-    var f64 = Float64Array(256);
+    var f64 = new Float64Array(256);
     if(!f64.length) {
         while(f64[120]) {
         }

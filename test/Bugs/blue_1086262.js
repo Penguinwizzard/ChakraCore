@@ -34,8 +34,8 @@ function test0() {
     prototype = arrObj0;
     var ary = Array();
     var i8 = new Int8Array();
-    var i16 = Int16Array();
-    var i32 = Int32Array(256);
+    var i16 = new Int16Array();
+    var i32 = new Int32Array(256);
     var IntArr0 = [];
     var IntArr1 = new Array();
     var FloatArr0 = Array();

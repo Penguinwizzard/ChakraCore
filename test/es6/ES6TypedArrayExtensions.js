@@ -2542,6 +2542,23 @@ var tests = [
             assert.throws(function () { arr.slice(); }, TypeError, "Calling ArrayBuffer.prototype.slice will use default constructor if [constructor] has [@@species] == undefined", "Function '[@@species]' is not a constructor");
         }
     },
+    {
+        name: "TypedArray constructors cannot be called without new keyword",
+        body: function() { 
+            assert.throws(function() { Int8Array(64); }, TypeError, "Calling Int8Array() without new keyword throws TypeError", "[TypedArray]: cannot be called without the new keyword");
+            assert.throws(function() { Uint8Array(64); }, TypeError, "Calling Uint8Array() without new keyword throws TypeError", "[TypedArray]: cannot be called without the new keyword");
+            assert.throws(function() { Uint8ClampedArray(64); }, TypeError, "Calling Uint8ClampedArray() without new keyword throws TypeError", "[TypedArray]: cannot be called without the new keyword");
+            assert.throws(function() { Int16Array(64); }, TypeError, "Calling Int16Array() without new keyword throws TypeError", "[TypedArray]: cannot be called without the new keyword");
+            assert.throws(function() { Uint16Array(64); }, TypeError, "Calling Uint16Array() without new keyword throws TypeError", "[TypedArray]: cannot be called without the new keyword");
+            assert.throws(function() { Int32Array(64); }, TypeError, "Calling Int32Array() without new keyword throws TypeError", "[TypedArray]: cannot be called without the new keyword");
+            assert.throws(function() { Uint32Array(64); }, TypeError, "Calling Uint32Array() without new keyword throws TypeError", "[TypedArray]: cannot be called without the new keyword");
+            assert.throws(function() { Float32Array(64); }, TypeError, "Calling Float32Array() without new keyword throws TypeError", "[TypedArray]: cannot be called without the new keyword");
+            assert.throws(function() { Float64Array(64); }, TypeError, "Calling Float64Array() without new keyword throws TypeError", "[TypedArray]: cannot be called without the new keyword");
+            
+            assert.throws(function() { ArrayBuffer(64); }, TypeError, "Calling ArrayBuffer() without new keyword throws TypeError", "ArrayBuffer: cannot be called without the new keyword");
+            assert.throws(function() { DataView(64); }, TypeError, "Calling DataView() without new keyword throws TypeError", "DataView: cannot be called without the new keyword");
+        }
+    },
 ];
 
 testRunner.runTests(tests, { verbose: WScript.Arguments[0] != "summary" });

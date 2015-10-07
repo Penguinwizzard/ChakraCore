@@ -1,7 +1,7 @@
 // -nonative
 //  -maxsimplejitruncount:1 -maxinterpretcount:1 
 var arrObj0 = {};
-var uic8 = Uint8ClampedArray(256);
+var uic8 = new Uint8ClampedArray(256);
 var proxyHandler = {};
 for (var _strvar28 in uic8) {
     arrObj0.__proto__ = Array;

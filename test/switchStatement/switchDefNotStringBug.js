@@ -5,7 +5,7 @@ function test0() {
     return Math.floor();
   }
   var obj0 = {};
-  var f64 = Float64Array();
+  var f64 = new Float64Array();
   var strvar7 = '!';
   makeArrayLength();
   switch (strvar7) {

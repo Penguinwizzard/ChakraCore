@@ -11,7 +11,7 @@ function test() {
         }
     };
     var ary = Array();
-    var ui8 = Uint8Array(1);
+    var ui8 = new Uint8Array(1);
     var proxyHandler = {};
     proxyHandler['get'] = function () {
         count++;

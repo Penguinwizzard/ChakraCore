@@ -81,9 +81,9 @@ function testSetZero(single) {
 
 function testSameArrayBuffer() {
   WScript.Echo('Testing two different types with the same arraybuffer');
-  var buffer = ArrayBuffer(4);
-  var int8array = Int8Array(buffer);
-  var int16array = Int16Array(buffer);
+  var buffer = new ArrayBuffer(4);
+  var int8array = new Int8Array(buffer);
+  var int16array = new Int16Array(buffer);
   int16array[0] = 123;
   int16array[1] = 456;
   int8array[3] = 100;

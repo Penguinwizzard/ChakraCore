@@ -55,7 +55,7 @@ test0();
 function test7() {
     var e = -1458200662;
     for(var i = 0; i < 1; ++i) {
-        Int16Array()[e, {}, 2147483650] ? Int16Array()[(-1458200662, 2147483650) & 255] : 0;
+        new Int16Array()[e, {}, 2147483650] ? new Int16Array()[(-1458200662, 2147483650) & 255] : 0;
     }
     function test7a() { e; }
 }

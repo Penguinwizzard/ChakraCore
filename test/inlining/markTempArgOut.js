@@ -5,7 +5,7 @@ var obj0 = {};
 var func0 = function () {
 };
 obj0.method0 = func0;
-var f32 = Float32Array(256);
+var f32 = new Float32Array(256);
 protoObj0 = Object(obj0);
 for (var _strvar30 in f32) {
   function v9() {

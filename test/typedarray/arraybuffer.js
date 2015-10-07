@@ -39,7 +39,7 @@ WScript.Echo(i);
 
 WScript.Echo("arraybuffer.prototype")
 var f = Object.getPrototypeOf(e);
-var g = f.constructor(20);
+var g = new f.constructor(20);
 WScript.Echo(g)
 WScript.Echo(g.byteLength);
 WScript.Echo(typeof f);

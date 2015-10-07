@@ -25,12 +25,18 @@ namespace Js
         int32 mappedLength;
         int32 offset = 0;
         double numberOffset = 0;
-        ArrayBuffer* arrayBuffer = NULL;
+        ArrayBuffer* arrayBuffer = nullptr;
         DataView* dataView;
+
+        //1.    If NewTarget is undefined, throw a TypeError exception.
+        if (!(callInfo.Flags & CallFlags_New) || (newTarget && JavascriptOperators::IsUndefinedObject(newTarget)))
+        {
+            JavascriptError::ThrowTypeError(scriptContext, JSERR_ClassConstructorCannotBeCalledWithoutNew, L"DataView");
+        }
 
         if (args.Info.Count < 2)
         {
-            JavascriptError::ThrowTypeError(scriptContext, JSERR_DataView_NeedArgument, L"arrayBuffer");
+            JavascriptError::ThrowTypeError(scriptContext, JSERR_DataView_NeedArgument, L"buffer");
         }
 
 #ifdef ENABLE_PROJECTION
@@ -70,7 +76,7 @@ namespace Js
             }
             else
             {
-                JavascriptError::ThrowTypeError(scriptContext, JSERR_DataView_NeedArgument, L"arrayBuffer");
+                JavascriptError::ThrowTypeError(scriptContext, JSERR_DataView_NeedArgument, L"buffer");
             }
         }
 
@@ -88,7 +94,7 @@ namespace Js
                 numberOffset != offset)
             {
                 JavascriptError::ThrowRangeError(
-                    scriptContext, JSERR_DataView_InvalidArugment, L"offset");
+                    scriptContext, JSERR_DataView_InvalidArugment, L"byteOffset");
             }
         }
 
@@ -105,7 +111,7 @@ namespace Js
         if ((uint32)offset > byteLength)
         {
             JavascriptError::ThrowRangeError(
-                scriptContext, JSERR_DataView_InvalidArugment, L"offset");
+                scriptContext, JSERR_DataView_InvalidArugment, L"byteOffset");
         }
 
         //11.   If byteLength is undefined, then
@@ -125,7 +131,7 @@ namespace Js
                 if ((uint32)(mappedLength + offset) > byteLength)
                 {
                     JavascriptError::ThrowRangeError(
-                        scriptContext, JSERR_DataView_InvalidArugment, L"length");
+                        scriptContext, JSERR_DataView_InvalidArugment, L"byteLength");
                 }
             }
         else

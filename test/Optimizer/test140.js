@@ -12,8 +12,8 @@ function test0() {
     obj0.method1 = obj0.method0;
     obj2.method0 = func4;
     Object.prototype.method0 = obj0.method0;
-    var i32 = Int32Array();
-    var f64 = Float64Array();
+    var i32 = new Int32Array();
+    var f64 = new Float64Array();
     var FloatArr0 = Array();
     var VarArr0 = [
         obj0,

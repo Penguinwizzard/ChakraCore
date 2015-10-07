@@ -23,9 +23,9 @@ var func0 = function(argObj0) {
 };
 var func2 = function() {
 };
-var i16 = Int16Array(256);
-var ui32 = Uint32Array(256);
-var f64 = Float64Array(256);
+var i16 = new Int16Array(256);
+var ui32 = new Uint32Array(256);
+var f64 = new Float64Array(256);
 var b = 1;
 var g = 1602848414.1;
 function bar0() {

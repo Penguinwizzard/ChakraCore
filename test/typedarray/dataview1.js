@@ -27,7 +27,7 @@ function test2() {
         var view1 = new DataView(arrayBuffer, undefined);
     } catch (e) {
         if (e instanceof RangeError) {
-            if(e.message !== "DataView constructor argument offset is invalid"){
+            if(e.message !== "DataView constructor argument byteOffset is invalid"){
                 WScript.Echo('FAIL');
             }
         } else {
@@ -39,7 +39,7 @@ function test2() {
         var view2 = new DataView(arrayBuffer, 1.5);
     } catch (e) {
         if (e instanceof RangeError) {
-            if (e.message !== "DataView constructor argument offset is invalid") {
+            if (e.message !== "DataView constructor argument byteOffset is invalid") {
                 WScript.Echo('FAIL');
             }
         } else {
