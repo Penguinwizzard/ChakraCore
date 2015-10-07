@@ -78,6 +78,7 @@ void HostConfigFlags::PrintUsage()
         return;
     }
     HostConfigFlags::PrintUsageString();
+    ChakraRTInterface::PrintConfigFlagsUsageString();
 }
 
 void HostConfigFlags::HandleArgsFlag(int& argc, _Inout_updates_to_(argc, argc) LPWSTR argv[])

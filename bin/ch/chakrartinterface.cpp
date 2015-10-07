@@ -8,6 +8,8 @@ LPCWSTR chakraDllName = L"chakracore.dll";
 
 bool ChakraRTInterface::m_testHooksSetup = false;
 bool ChakraRTInterface::m_testHooksInitialized = false;
+bool ChakraRTInterface::m_usageStringPrinted = false;
+
 ChakraRTInterface::ArgInfo ChakraRTInterface::m_argInfo = { 0 };
 TestHooks ChakraRTInterface::m_testHooks = { 0 };
 JsAPIHooks ChakraRTInterface::m_jsApiHooks = { 0 };
@@ -32,6 +34,12 @@ HINSTANCE ChakraRTInterface::LoadChakraDll(ArgInfo& argInfo)
     {
         int ret = GetLastError();
         fwprintf(stderr, L"FATAL ERROR: Unable to load %ls GetLastError=0x%x\n", chakraDllName, ret);
+        return nullptr;
+    }
+
+    if (m_usageStringPrinted)
+    {
+        UnloadChakraDll(library);
         return nullptr;
     }
 
@@ -105,19 +113,35 @@ HRESULT ChakraRTInterface::ParseConfigFlags()
 
     if (m_testHooks.pfSetAssertToConsoleFlag)
     {
-        IfFailedReturn(SetAssertToConsoleFlag(true));
+        SetAssertToConsoleFlag(true);
     }
 
     if (m_testHooks.pfSetConfigFlags)
     {
-        IfFailedReturn(SetConfigFlags(m_argInfo.argc, m_argInfo.argv, &HostConfigFlags::flags));
+        hr = SetConfigFlags(m_argInfo.argc, m_argInfo.argv, &HostConfigFlags::flags);
+        if (hr != S_OK && !m_usageStringPrinted)
+        {
+            m_argInfo.hostPrintUsage();
+            m_usageStringPrinted = true;
+        }
     }
 
-    Assert(m_argInfo.filename != nullptr);
+    if (hr == S_OK)
+    {
+        Assert(m_argInfo.filename != nullptr);
 
-    *(m_argInfo.filename) = nullptr;
-    Assert(m_testHooks.pfGetFilenameFlag != nullptr);
-    return GetFileNameFlag(m_argInfo.filename);
+        *(m_argInfo.filename) = nullptr;
+        Assert(m_testHooks.pfGetFilenameFlag != nullptr);
+        hr = GetFileNameFlag(m_argInfo.filename);
+        if (hr != S_OK)
+        {
+            wprintf(L"Error: no script file specified.");
+            m_argInfo.hostPrintUsage();
+            m_usageStringPrinted = true;
+        }
+    }
+
+    return S_OK;
 }
 
 /*static*/

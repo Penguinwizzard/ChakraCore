@@ -106,6 +106,7 @@ public:
 private:
     static bool m_testHooksSetup;
     static bool m_testHooksInitialized;
+    static bool m_usageStringPrinted;
     static ArgInfo m_argInfo;
     static TestHooks m_testHooks;
     static JsAPIHooks m_jsApiHooks;
@@ -122,7 +123,7 @@ public:
     static HRESULT SetAssertToConsoleFlag(bool flag) { return CHECKED_CALL(SetAssertToConsoleFlag, flag); }
     static HRESULT SetConfigFlags(__in int argc, __in_ecount(argc) LPWSTR argv[], ICustomConfigFlags* customConfigFlags) { return CHECKED_CALL(SetConfigFlags, argc, argv, customConfigFlags); }
     static HRESULT GetFileNameFlag(BSTR * filename) { return CHECKED_CALL(GetFilenameFlag, filename); }
-    static HRESULT PrintConfigFlagsUsageString() { return CHECKED_CALL(PrintConfigFlagsUsageString); }
+    static HRESULT PrintConfigFlagsUsageString() { m_usageStringPrinted = true;  return CHECKED_CALL(PrintConfigFlagsUsageString); }
 
 #ifdef CHECK_MEMORY_LEAK
     static bool IsEnabledCheckMemoryFlag() { return CHECKED_CALL_RETURN(IsEnabledCheckMemoryLeakFlag, FALSE); }
