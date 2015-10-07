@@ -210,6 +210,7 @@ namespace Js
     SIMDValue SIMDInt16x8Operation::OpAddSaturate(const SIMDValue& aValue, const SIMDValue& bValue)
     {
         SIMDValue result;
+        int mask 0x8000;
         for (uint idx = 0; idx < 8; ++idx)
         {
             int16 val1 = aValue.i16[idx];
@@ -220,7 +221,7 @@ namespace Js
             if (val1 > 0 && val2 > 0 && sum < 0)
                 result.i16[idx] = 0x7fff;
             else if (val1 < 0 && val2 < 0 && sum > 0)
-                result.i16[idx] = result.i16[idx] & 0x8000;
+                result.i16[idx] = static_cast<int16>(mask);
         }
         return result;
     }
@@ -228,6 +229,7 @@ namespace Js
     SIMDValue SIMDInt16x8Operation::OpSubSaturate(const SIMDValue& aValue, const SIMDValue& bValue)
     {
         SIMDValue result;
+        int mask 0x8000;
         for (uint idx = 0; idx < 8; ++idx)
         {
             int16 val1 = aValue.i16[idx];
@@ -238,32 +240,32 @@ namespace Js
             if (diff > 0x7fff)
                 result.i16[idx] = 0x7fff;
             else if (diff < 0x8000)
-                result.i16[idx] = result.i16[idx]  & 0x8000;
+                result.i16[idx] = static_cast<int16>(mask);
         }
         return result;
     }
 
-	SIMDValue SIMDInt16x8Operation::OpMin(const SIMDValue& aValue, const SIMDValue& bValue)
-	{
-		SIMDValue result;
-		for (int idx = 0; idx < 8; ++idx)
-		{
-			result.i16[idx] = (aValue.i16[idx] < bValue.i16[idx]) ? aValue.i16[idx] : bValue.i16[idx];
-		}
-		return result;
-	}
+    SIMDValue SIMDInt16x8Operation::OpMin(const SIMDValue& aValue, const SIMDValue& bValue)
+    {
+        SIMDValue result;
+        for (int idx = 0; idx < 8; ++idx)
+        {
+            result.i16[idx] = (aValue.i16[idx] < bValue.i16[idx]) ? aValue.i16[idx] : bValue.i16[idx];
+        }
+        return result;
+    }
 
-	SIMDValue SIMDInt16x8Operation::OpMax(const SIMDValue& aValue, const SIMDValue& bValue)
-	{
-		SIMDValue result;
-
-		for (int idx = 0; idx < 8; ++idx)
-		{
-			result.i16[idx] = (aValue.i16[idx] > bValue.i16[idx]) ? aValue.i16[idx] : bValue.i16[idx];
-		}
-
-		return result;
-	}
+    SIMDValue SIMDInt16x8Operation::OpMax(const SIMDValue& aValue, const SIMDValue& bValue)
+    {
+        SIMDValue result;
+        
+        for (int idx = 0; idx < 8; ++idx)
+        {
+            result.i16[idx] = (aValue.i16[idx] > bValue.i16[idx]) ? aValue.i16[idx] : bValue.i16[idx];
+        }
+        
+        return result;
+    }
 
     // compare ops
     SIMDValue SIMDInt16x8Operation::OpLessThan(const SIMDValue& aValue, const SIMDValue& bValue)
@@ -441,82 +443,7 @@ namespace Js
 
         return result;
     }
-
-    // load&store
-    //static SIMDValue OpLoad(int* tarray, const int index)
-    //{
-    //    SIMDValue result;
-
-    //    /* todo: Need implement this 
-    //    // private stuff.
-    //    // Temporary buffers for swizzles and bitcasts.
-    //    var _f32x4 = new Float32Array(4);
-    //    var _f64x2 = new Float64Array(_f32x4.buffer);
-    //    var _i32x4 = new Int32Array(_f32x4.buffer);
-    //    var _i16x8 = new Int16Array(_f32x4.buffer);
-    //    var _i8x16 = new Int8Array(_f32x4.buffer);
-
-    //    // @param {Typed array} tarray An instance of a typed array.
-    //    // @param {Number} index An instance of Number.
-    //    // @return {Int16x8} New instance of Int16x8.
-    //    SIMD.Int16x8.load = function(tarray, index) {
-    //        if (!isTypedArray(tarray))
-    //            throw new TypeError("The 1st argument must be a typed array.");
-    //        if (!isInt32(index))
-    //            throw new TypeError("The 2nd argument must be an Int32.");
-    //        var bpe = tarray.BYTES_PER_ELEMENT;
-    //        if (index < 0 || (index * bpe + 16) > tarray.byteLength)
-    //            throw new RangeError("The value of index is invalid.");
-    //        var i16temp = _i16x8;
-    //        var array = bpe == 1 ? _i8x16 :
-    //            bpe == 2 ? i16temp :
-    //            bpe == 4 ? (tarray instanceof Float32Array ? _f32x4 : _i32x4) :
-    //            _f64x2;
-    //        var n = 16 / bpe;
-    //        for (var i = 0; i < n; ++i)
-    //            array[i] = tarray[index + i];
-    //        return SIMD.Int16x8(i16temp[0], i16temp[1], i16temp[2], i16temp[3],
-    //            i16temp[4], i16temp[5], i16temp[6], i16temp[7]);
-    //    }
-    //    */
-
-    //    return result;
-    //}
-
-    //static SIMDValue OpStore(const SIMDValue& v, const int maskValue)
-    //{
-    //    SIMDValue result;
-
-    //    /*
-    //    // @param {Typed array} tarray An instance of a typed array.
-    //    // @param {Number} index An instance of Number.
-    //    // @return {Int16x8} New instance of Int16x8.
-    //    SIMD.Int16x8.load = function(tarray, index) {
-    //        if (!isTypedArray(tarray))
-    //            throw new TypeError("The 1st argument must be a typed array.");
-    //        if (!isInt32(index))
-    //            throw new TypeError("The 2nd argument must be an Int32.");
-    //        var bpe = tarray.BYTES_PER_ELEMENT;
-    //        if (index < 0 || (index * bpe + 16) > tarray.byteLength)
-    //            throw new RangeError("The value of index is invalid.");
-    //        var i16temp = _i16x8;
-    //        var array = bpe == 1 ? _i8x16 :
-    //            bpe == 2 ? i16temp :
-    //            bpe == 4 ? (tarray instanceof Float32Array ? _f32x4 : _i32x4) :
-    //            _f64x2;
-    //        var n = 16 / bpe;
-    //        for (var i = 0; i < n; ++i)
-    //            array[i] = tarray[index + i];
-    //        return SIMD.Int16x8(i16temp[0], i16temp[1], i16temp[2], i16temp[3],
-    //            i16temp[4], i16temp[5], i16temp[6], i16temp[7]);
-    //    }
-    //    */
-
-    //    return result;
-    //}
-    
-    // others
-   
+  
 }
 
 #endif

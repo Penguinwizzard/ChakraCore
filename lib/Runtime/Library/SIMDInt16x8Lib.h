@@ -15,7 +15,7 @@ namespace Js {
         {
         public:
             static FunctionInfo Int16x8; 
-			static FunctionInfo Check;
+            static FunctionInfo Check;
             static FunctionInfo Splat;   
             // Conversions
             static FunctionInfo FromInt32x4Bits;
@@ -31,8 +31,8 @@ namespace Js {
             static FunctionInfo And; 
             static FunctionInfo Or;
             static FunctionInfo Xor;
-			static FunctionInfo Min;
-			static FunctionInfo Max;
+            static FunctionInfo Min;
+            static FunctionInfo Max;
             // CompareOps
             static FunctionInfo LessThan; 
             static FunctionInfo LessThanOrEqual; 
@@ -61,7 +61,7 @@ namespace Js {
         // Entry points to library
         // constructor
         static Var EntryInt16x8(RecyclableObject* function, CallInfo callInfo, ...);
-		static Var EntryCheck(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryCheck(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntrySplat(RecyclableObject* function, CallInfo callInfo, ...);
 
         // conversions
@@ -79,8 +79,8 @@ namespace Js {
         static Var EntryAnd(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryOr(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryXor(RecyclableObject* function, CallInfo callInfo, ...);
-		static Var EntryMin(RecyclableObject* function, CallInfo callInfo, ...);
-		static Var EntryMax(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryMin(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryMax(RecyclableObject* function, CallInfo callInfo, ...);
 
         // CompareOps
         static Var EntryLessThan(RecyclableObject* function, CallInfo callInfo, ...);

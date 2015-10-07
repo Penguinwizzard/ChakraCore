@@ -61,19 +61,19 @@ namespace Js
         return JavascriptSIMDInt16x8::New(&lanes, scriptContext);
     }
 
-	Var SIMDInt16x8Lib::EntryCheck(RecyclableObject* function, CallInfo callInfo, ...)
-	{
-		PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
-
-		ARGUMENTS(args, callInfo);
-		ScriptContext* scriptContext = function->GetScriptContext();
-		AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
-		if (args.Info.Count >= 2 && JavascriptSIMDInt16x8::Is(args[1]))
-		{
-			return args[1];
-		}
-		JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"Int16x8");
-	}
+    Var SIMDInt16x8Lib::EntryCheck(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+        
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
+        if (args.Info.Count >= 2 && JavascriptSIMDInt16x8::Is(args[1]))
+        {
+            return args[1];
+        }
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"Int16x8");
+    }
 
     Var SIMDInt16x8Lib::EntryFromInt32x4Bits(RecyclableObject* function, CallInfo callInfo, ...)
     {
@@ -527,34 +527,6 @@ namespace Js
 
     Var SIMDInt16x8Lib::EntryExtractLane(RecyclableObject* function, CallInfo callInfo, ...)
     {
-        //PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
-
-        //ARGUMENTS(args, callInfo);
-        //ScriptContext* scriptContext = function->GetScriptContext();
-
-        //AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
-        //Assert(!(callInfo.Flags & CallFlags_New));
-
-        //// If any of the args are missing, then it is Undefined type which causes TypeError exception.
-        //// strict type on both operands
-        //if (args.Info.Count >= 3 && JavascriptSIMDInt16x8::Is(args[1]))
-        //{
-        //    JavascriptSIMDInt16x8 *a = JavascriptSIMDInt16x8::FromVar(args[1]);
-        //    Assert(a);
-
-        //    SIMDValue aValue;
-
-        //    aValue = a->GetValue();
-        //    Var value = args.Info.Count >= 3 ? args[2] : scriptContext->GetLibrary()->GetUndefined();
-        //    int index = JavascriptConversion::ToInt32(value, scriptContext);
-
-        //    short result = SIMDInt16x8Operation::OpExtractLane(aValue, index);
-
-        //    return JavascriptNumber::ToVar(result, scriptContext);
-        //}
-
-        //JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"extractLane");
-
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
 
         ARGUMENTS(args, callInfo);
@@ -578,28 +550,28 @@ namespace Js
 
     Var SIMDInt16x8Lib::EntryReplaceLane(RecyclableObject* function, CallInfo callInfo, ...)
     {
-		PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+        
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
+        
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
+        Assert(!(callInfo.Flags & CallFlags_New));
 
-		ARGUMENTS(args, callInfo);
-		ScriptContext* scriptContext = function->GetScriptContext();
-
-		AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
-		Assert(!(callInfo.Flags & CallFlags_New));
-
-		// first arg has to be of type Int16x8, so cannot be missing. 
-		if (args.Info.Count >= 4 && JavascriptSIMDInt16x8::Is(args[1]))
-		{
-			// if value arg is missing, then it is undefined.
-			Var laneVar = args.Info.Count >= 4 ? args[2] : scriptContext->GetLibrary()->GetUndefined();
-			Var argVal = args.Info.Count >= 4 ? args[3] : scriptContext->GetLibrary()->GetUndefined();
-			int16 value = JavascriptConversion::ToInt16(argVal, scriptContext);
-
-			SIMDValue result = SIMD128ReplaceLane<JavascriptSIMDInt16x8, 8, int16>(args[1], laneVar, value, scriptContext);
-
-			return JavascriptSIMDInt16x8::New(&result, scriptContext);
-		}
-
-		JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"ReplaceLane");
+        // first arg has to be of type Int16x8, so cannot be missing. 
+        if (args.Info.Count >= 4 && JavascriptSIMDInt16x8::Is(args[1]))
+        {
+            // if value arg is missing, then it is undefined.
+            Var laneVar = args.Info.Count >= 4 ? args[2] : scriptContext->GetLibrary()->GetUndefined();
+            Var argVal = args.Info.Count >= 4 ? args[3] : scriptContext->GetLibrary()->GetUndefined();
+            int16 value = JavascriptConversion::ToInt16(argVal, scriptContext);
+            
+            SIMDValue result = SIMD128ReplaceLane<JavascriptSIMDInt16x8, 8, int16>(args[1], laneVar, value, scriptContext);
+            
+            return JavascriptSIMDInt16x8::New(&result, scriptContext);
+        }
+        
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"ReplaceLane");
     }
 
 
@@ -713,26 +685,13 @@ namespace Js
 
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         Assert(!(callInfo.Flags & CallFlags_New));
-        SIMDValue result;
 
-        if (args.Info.Count >= 3 && JavascriptSIMDInt16x8::Is(args[1]))
-        { //arun::ToDo  Need to implement this
-        //JavascriptSIMDInt16x8 *a = JavascriptSIMDInt16x8::FromVar(args[1]);
-        //Assert(a);
-
-        //SIMDValue result, aValue;
-
-        //aValue = a->GetValue();
-        //Var countVar = args[2]; // {int} bits Bit count
-        //int32 count = JavascriptConversion::ToInt32(countVar, scriptContext);
-
-        //result = SIMDInt16x8Operation::OpShiftRightArithmeticByScalar(aValue, count);
-
-        return JavascriptSIMDInt16x8::New(&result, scriptContext);
+        if (args.Info.Count >= 4 && JavascriptSIMDInt16x8::Is(args[3]))
+        {
+            SIMD128TypedArrayStore<JavascriptSIMDInt16x8>(args[1], args[2], args[3], 4 * TySize[TyFloat32], scriptContext);
+            return NULL;
         }
-        
-
-        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"store");
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInvalidArgType, L"SIMD.Int16x8.store");
     }
 
     Var SIMDInt16x8Lib::EntrySwizzle(RecyclableObject* function, CallInfo callInfo, ...)
@@ -747,22 +706,21 @@ namespace Js
 
         if (args.Info.Count >= 2 && JavascriptSIMDInt16x8::Is(args[1]))
         {
-			// type check on lane indices
-			if (args.Info.Count < 10)
-			{
-				// missing lane args
-				JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedNumber, L"Lane index");
-			}
+            // type check on lane indices
+            if (args.Info.Count < 10)
+            {
+                // missing lane args
+                JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedNumber, L"Lane index");
+            }
 
-			Var lanes[8];
-			for (uint i = 0; i < 8; ++i)
-			{
-				lanes[i] = args[i + 2];
-			}
-
-			return SIMD128SlowShuffle<JavascriptSIMDInt16x8>(args[1], args[1], lanes, 8, 8, scriptContext);
-		}
-		JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"swizzle");
+            Var lanes[8];
+            for (uint i = 0; i < 8; ++i)
+            {
+                lanes[i] = args[i + 2];
+            }
+            return SIMD128SlowShuffle<JavascriptSIMDInt16x8>(args[1], args[1], lanes, 8, 8, scriptContext);
+        }
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"swizzle");
     }
 
     Var SIMDInt16x8Lib::EntryShuffle(RecyclableObject* function, CallInfo callInfo, ...)
@@ -775,27 +733,27 @@ namespace Js
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         Assert(!(callInfo.Flags & CallFlags_New));
 
-		// If any of the args are missing, then it is Undefined type which causes TypeError exception.
-		// strict type on both operands
-		if (args.Info.Count >= 3 && JavascriptSIMDInt16x8::Is(args[1]) && JavascriptSIMDInt16x8::Is(args[2]))
-		{
-			// type check on lane indices
-			if (args.Info.Count < 11)
-			{
-				// missing lane args
-				JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedNumber, L"Lane index");
-			}
+        // If any of the args are missing, then it is Undefined type which causes TypeError exception.
+        // strict type on both operands
+        if (args.Info.Count >= 3 && JavascriptSIMDInt16x8::Is(args[1]) && JavascriptSIMDInt16x8::Is(args[2]))
+        {
+            // type check on lane indices
+            if (args.Info.Count < 11)
+            {
+                // missing lane args
+                JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedNumber, L"Lane index");
+            }
 
-			Var lanes[8];
-			for (uint i = 0; i < 8; ++i)
-			{
-				lanes[i] = args[i + 3];
-			}
+            Var lanes[8];
+            for (uint i = 0; i < 8; ++i)
+            {
+                lanes[i] = args[i + 3];
+            }
 
-			return SIMD128SlowShuffle<JavascriptSIMDInt16x8>(args[1], args[2], lanes, 8, 16, scriptContext);
+            return SIMD128SlowShuffle<JavascriptSIMDInt16x8>(args[1], args[2], lanes, 8, 16, scriptContext);
 
-		}
-		JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"shuffle");
+        }
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"shuffle");
     }
 
     Var SIMDInt16x8Lib::EntryAddSaturate(RecyclableObject* function, CallInfo callInfo, ...)
@@ -856,95 +814,88 @@ namespace Js
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"subSaturate");
     }
 
-	Var SIMDInt16x8Lib::EntryMin(RecyclableObject* function, CallInfo callInfo, ...)
-	{
-		PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+    Var SIMDInt16x8Lib::EntryMin(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+        
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
+        Assert(!(callInfo.Flags & CallFlags_New));
+        // If any of the args are missing, then it is Undefined type which causes TypeError exception.
+        if (args.Info.Count >= 3 && JavascriptSIMDInt16x8::Is(args[1]) && JavascriptSIMDInt16x8::Is(args[2]))
+        {
+            JavascriptSIMDInt16x8 *a = JavascriptSIMDInt16x8::FromVar(args[1]);
+            JavascriptSIMDInt16x8*b = JavascriptSIMDInt16x8::FromVar(args[2]);
+            Assert(a && b);
+        
+            SIMDValue result, aValue, bValue;
+        
+            aValue = a->GetValue();
+            bValue = b->GetValue();
+            result = SIMDInt16x8Operation::OpMin(aValue, bValue);
+            return JavascriptSIMDInt16x8::New(&result, scriptContext);
+        }
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"min");
+    }
 
-		ARGUMENTS(args, callInfo);
-		ScriptContext* scriptContext = function->GetScriptContext();
+    Var SIMDInt16x8Lib::EntryMax(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+    
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
+        
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
+        Assert(!(callInfo.Flags & CallFlags_New));
+        
+        // If any of the args are missing, then it is Undefined type which causes TypeError exception.  
+        if (args.Info.Count >= 3 && JavascriptSIMDInt16x8::Is(args[1]) && JavascriptSIMDInt16x8::Is(args[2]))
+        {
+            JavascriptSIMDInt16x8 *a = JavascriptSIMDInt16x8::FromVar(args[1]);
+            JavascriptSIMDInt16x8 *b = JavascriptSIMDInt16x8::FromVar(args[2]);
+            Assert(a && b);
+            
+            SIMDValue result, aValue, bValue;
+            
+            aValue = a->GetValue();
+            bValue = b->GetValue();
+            result = SIMDInt16x8Operation::OpMax(aValue, bValue);
+            
+            return JavascriptSIMDInt16x8::New(&result, scriptContext);
+        }   
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"max");
+    }
+    
+    Var SIMDInt16x8Lib::EntrySelect(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+        
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
+        Assert(!(callInfo.Flags & CallFlags_New));
+        
+        if (args.Info.Count >= 4 && JavascriptSIMDInt16x8::Is(args[1]) &&
+            JavascriptSIMDInt16x8::Is(args[2]) && JavascriptSIMDInt16x8::Is(args[3]))
+        {
+            JavascriptSIMDInt16x8 *m = JavascriptSIMDInt16x8::FromVar(args[1]);
+            JavascriptSIMDInt16x8 *t = JavascriptSIMDInt16x8::FromVar(args[2]);
+            JavascriptSIMDInt16x8 *f = JavascriptSIMDInt16x8::FromVar(args[3]);
+            Assert(m && t && f);
 
-		AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
-		Assert(!(callInfo.Flags & CallFlags_New));
+            SIMDValue result, maskValue, trueValue, falseValue;
+            maskValue = m->GetValue();
+            trueValue = t->GetValue();
+            falseValue = f->GetValue();
+            //To Do once the boolean types are available
+            //result = SIMDInt16x8Operation::OpSelect(maskValue, trueValue, falseValue); 
 
-		// If any of the args are missing, then it is Undefined type which causes TypeError exception.
-		if (args.Info.Count >= 3 && JavascriptSIMDInt16x8::Is(args[1]) && JavascriptSIMDInt16x8::Is(args[2]))
-		{
-			JavascriptSIMDInt16x8 *a = JavascriptSIMDInt16x8::FromVar(args[1]);
-			JavascriptSIMDInt16x8*b = JavascriptSIMDInt16x8::FromVar(args[2]);
-			Assert(a && b);
-
-			SIMDValue result, aValue, bValue;
-
-			aValue = a->GetValue();
-			bValue = b->GetValue();
-			result = SIMDInt16x8Operation::OpMin(aValue, bValue);
-
-			return JavascriptSIMDInt16x8::New(&result, scriptContext);
-		}
-
-		JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"min");
-	}
-
-	Var SIMDInt16x8Lib::EntryMax(RecyclableObject* function, CallInfo callInfo, ...)
-	{
-		PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
-
-		ARGUMENTS(args, callInfo);
-		ScriptContext* scriptContext = function->GetScriptContext();
-
-		AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
-		Assert(!(callInfo.Flags & CallFlags_New));
-
-		// If any of the args are missing, then it is Undefined type which causes TypeError exception.
-		if (args.Info.Count >= 3 && JavascriptSIMDInt16x8::Is(args[1]) && JavascriptSIMDInt16x8::Is(args[2]))
-		{
-			JavascriptSIMDInt16x8 *a = JavascriptSIMDInt16x8::FromVar(args[1]);
-			JavascriptSIMDInt16x8 *b = JavascriptSIMDInt16x8::FromVar(args[2]);
-			Assert(a && b);
-
-			SIMDValue result, aValue, bValue;
-
-			aValue = a->GetValue();
-			bValue = b->GetValue();
-			result = SIMDInt16x8Operation::OpMax(aValue, bValue);
-
-			return JavascriptSIMDInt16x8::New(&result, scriptContext);
-		}
-
-		JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"max");
-	}
-
-	Var SIMDInt16x8Lib::EntrySelect(RecyclableObject* function, CallInfo callInfo, ...)
-	{
-		PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
-
-		ARGUMENTS(args, callInfo);
-		ScriptContext* scriptContext = function->GetScriptContext();
-
-		AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
-		Assert(!(callInfo.Flags & CallFlags_New));
-
-		if (args.Info.Count >= 4 && JavascriptSIMDInt16x8::Is(args[1]) &&
-			JavascriptSIMDInt16x8::Is(args[2]) && JavascriptSIMDInt16x8::Is(args[3]))
-		{
-			JavascriptSIMDInt16x8 *m = JavascriptSIMDInt16x8::FromVar(args[1]);
-			JavascriptSIMDInt16x8 *t = JavascriptSIMDInt16x8::FromVar(args[2]);
-			JavascriptSIMDInt16x8 *f = JavascriptSIMDInt16x8::FromVar(args[3]);
-			Assert(m && t && f);
-
-			SIMDValue result, maskValue, trueValue, falseValue;
-
-			maskValue = m->GetValue();
-			trueValue = t->GetValue();
-			falseValue = f->GetValue();
-
-			//result = SIMDInt16x8Operation::OpSelect(maskValue, trueValue, falseValue);
-
-			return JavascriptSIMDInt16x8::New(&result, scriptContext);
-		}
-
-		JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"select");
-	}
+            return JavascriptSIMDInt16x8::New(&result, scriptContext);
+        }
+        
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"select");
+    }
 }
 
 #endif

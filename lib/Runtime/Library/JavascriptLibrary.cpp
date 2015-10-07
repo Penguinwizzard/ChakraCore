@@ -1184,8 +1184,8 @@ namespace Js
             simdFloat32x4DisplayString = CreateStringFromCppLiteral(L"Float32x4");
             simdFloat64x2DisplayString = CreateStringFromCppLiteral(L"Float64x2");
             simdInt32x4DisplayString = CreateStringFromCppLiteral(L"Int32x4");
-     	    simdInt16x8DisplayString = CreateStringFromCppLiteral(L"Int16x8");
-            simdInt8x16DisplayString = CreateStringFromCppLiteral(L"Int8x16");  //arun::ToDo :bugfix move to a different changelist.
+            simdInt16x8DisplayString = CreateStringFromCppLiteral(L"Int16x8");
+            simdInt8x16DisplayString = CreateStringFromCppLiteral(L"Int8x16");  
 
         }
 #endif
@@ -2852,7 +2852,7 @@ namespace Js
         // Int16x8
         JavascriptFunction* int16x8Function = library->AddFunctionToLibraryObject(simdObject, PropertyIds::Int16x8, &SIMDInt16x8Lib::EntryInfo::Int16x8, 5, PropertyNone);
         library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::splat, &SIMDInt16x8Lib::EntryInfo::Splat, 2, PropertyNone);
-		library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::check, &SIMDInt16x8Lib::EntryInfo::Check, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::check, &SIMDInt16x8Lib::EntryInfo::Check, 2, PropertyNone);
         // type conversions
         library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::fromInt32x4Bits, &SIMDInt16x8Lib::EntryInfo::FromInt32x4Bits, 2, PropertyNone);
         library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::fromFloat32x4Bits, &SIMDInt16x8Lib::EntryInfo::FromFloat32x4Bits, 2, PropertyNone);
@@ -2870,8 +2870,8 @@ namespace Js
         library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::xor, &SIMDInt16x8Lib::EntryInfo::Xor, 3, PropertyNone);
         library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::addSaturate, &SIMDInt16x8Lib::EntryInfo::AddSaturate, 3, PropertyNone);
         library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::subSaturate, &SIMDInt16x8Lib::EntryInfo::SubSaturate, 3, PropertyNone);
-		library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::min, &SIMDInt16x8Lib::EntryInfo::Min, 3, PropertyNone);
-		library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::max, &SIMDInt16x8Lib::EntryInfo::Max, 3, PropertyNone);
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::min, &SIMDInt16x8Lib::EntryInfo::Min, 3, PropertyNone);
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::max, &SIMDInt16x8Lib::EntryInfo::Max, 3, PropertyNone);
 
         // compare ops
         library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::lessThan, &SIMDInt16x8Lib::EntryInfo::LessThan, 3, PropertyNone);
@@ -7073,7 +7073,7 @@ namespace Js
 
         // Int16x8
         REG_OBJECTS_LIB_FUNC(Int16x8, SIMDInt16x8Lib::EntryInt16x8);
-		REG_OBJECTS_LIB_FUNC(splat, SIMDInt16x8Lib::EntryCheck);
+        REG_OBJECTS_LIB_FUNC(splat, SIMDInt16x8Lib::EntryCheck);
         REG_OBJECTS_LIB_FUNC(splat, SIMDInt16x8Lib::EntrySplat);
         REG_OBJECTS_LIB_FUNC(fromInt32x4Bits, SIMDInt16x8Lib::EntryFromInt32x4Bits);
         REG_OBJECTS_LIB_FUNC(fromFloat32x4Bits, SIMDInt16x8Lib::EntryFromFloat32x4Bits);
@@ -7085,8 +7085,8 @@ namespace Js
         REG_OBJECTS_LIB_FUNC(and, SIMDInt16x8Lib::EntryAnd);
         REG_OBJECTS_LIB_FUNC(or, SIMDInt16x8Lib::EntryOr);
         REG_OBJECTS_LIB_FUNC(xor, SIMDInt16x8Lib::EntryXor);
-		REG_OBJECTS_LIB_FUNC(min, SIMDInt16x8Lib::EntryMin);
-		REG_OBJECTS_LIB_FUNC(max, SIMDInt16x8Lib::EntryMax);
+        REG_OBJECTS_LIB_FUNC(min, SIMDInt16x8Lib::EntryMin);
+        REG_OBJECTS_LIB_FUNC(max, SIMDInt16x8Lib::EntryMax);
         REG_OBJECTS_LIB_FUNC(addSaturate, SIMDInt16x8Lib::EntryAddSaturate);
         REG_OBJECTS_LIB_FUNC(subSaturate, SIMDInt16x8Lib::EntrySubSaturate);
         REG_OBJECTS_LIB_FUNC(lessThan, SIMDInt16x8Lib::EntryLessThan);

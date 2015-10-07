@@ -358,8 +358,8 @@ BUILTIN(SIMDInt32x4Lib, Mul, EntryMul, FunctionInfo::None)
 BUILTIN(SIMDInt32x4Lib, And, EntryAnd, FunctionInfo::None)
 BUILTIN(SIMDInt32x4Lib, Or,  EntryOr,  FunctionInfo::None)
 BUILTIN(SIMDInt32x4Lib, Xor, EntryXor, FunctionInfo::None)
-BUILTIN(SIMDInt32x4Lib, Min, EntryMin, FunctionInfo::None)  //arun::ToDo Seems like a  bug. Adding fix.
-BUILTIN(SIMDInt32x4Lib, Max, EntryMax, FunctionInfo::None)  
+BUILTIN(SIMDInt32x4Lib, Min, EntryXor, FunctionInfo::None)
+BUILTIN(SIMDInt32x4Lib, Max, EntryXor, FunctionInfo::None)
 // CompareOps
 BUILTIN(SIMDInt32x4Lib, LessThan,    EntryLessThan,    FunctionInfo::None)
 BUILTIN(SIMDInt32x4Lib, Equal,       EntryEqual,       FunctionInfo::None)

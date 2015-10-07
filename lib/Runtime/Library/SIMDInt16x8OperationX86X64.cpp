@@ -187,27 +187,27 @@ namespace Js
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
 
-	SIMDValue SIMDInt16x8Operation::OpMin(const SIMDValue& aValue, const SIMDValue& bValue)
-	{
-		X86SIMDValue x86Result;
-		X86SIMDValue tmpaValue = X86SIMDValue::ToX86SIMDValue(aValue);
-		X86SIMDValue tmpbValue = X86SIMDValue::ToX86SIMDValue(bValue);
+    SIMDValue SIMDInt16x8Operation::OpMin(const SIMDValue& aValue, const SIMDValue& bValue)
+    {
+        X86SIMDValue x86Result;
+        X86SIMDValue tmpaValue = X86SIMDValue::ToX86SIMDValue(aValue);
+        X86SIMDValue tmpbValue = X86SIMDValue::ToX86SIMDValue(bValue);
+        
+        x86Result.m128i_value = _mm_min_epi16(tmpaValue.m128i_value, tmpbValue.m128i_value); // min a b
+        
+        return X86SIMDValue::ToSIMDValue(x86Result);
+    }
 
-		x86Result.m128i_value = _mm_min_epi16(tmpaValue.m128i_value, tmpbValue.m128i_value); // min a b
+    SIMDValue SIMDInt16x8Operation::OpMax(const SIMDValue& aValue, const SIMDValue& bValue)
+    {
+        X86SIMDValue x86Result;
+        X86SIMDValue tmpaValue = X86SIMDValue::ToX86SIMDValue(aValue);
+        X86SIMDValue tmpbValue = X86SIMDValue::ToX86SIMDValue(bValue);
 
-		return X86SIMDValue::ToSIMDValue(x86Result);
-	}
+        x86Result.m128i_value = _mm_max_epi16(tmpaValue.m128i_value, tmpbValue.m128i_value); // min a b
 
-	SIMDValue SIMDInt16x8Operation::OpMax(const SIMDValue& aValue, const SIMDValue& bValue)
-	{
-		X86SIMDValue x86Result;
-		X86SIMDValue tmpaValue = X86SIMDValue::ToX86SIMDValue(aValue);
-		X86SIMDValue tmpbValue = X86SIMDValue::ToX86SIMDValue(bValue);
-
-		x86Result.m128i_value = _mm_max_epi16(tmpaValue.m128i_value, tmpbValue.m128i_value); // min a b
-
-		return X86SIMDValue::ToSIMDValue(x86Result);
-	}
+        return X86SIMDValue::ToSIMDValue(x86Result);
+    }
 
     SIMDValue SIMDInt16x8Operation::OpLessThan(const SIMDValue& aValue, const SIMDValue& bValue)
     {
@@ -274,39 +274,6 @@ namespace Js
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
 
-    // Lane Access
-    short SIMDInt16x8Operation::OpExtractLane(const SIMDValue& aValue, int index)
-    {
-        Assert(index >= 0 && index < 8);
-
-        if (index >= 0 && index < 8)
-        {
-            return aValue.i16[index];
-        }
-
-        Assert(FALSE);
-        return 0;
-        //JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"lane index must be in bounds");
-    }
-
-    SIMDValue SIMDInt16x8Operation::OpReplaceLane(const SIMDValue& aValue, int index, short newValue)
-    {
-        SIMDValue result = aValue;
-
-        Assert(index >= 0 && index < 8);
-
-        if (index >= 0 && index < 8)
-        {
-            result.i16[index] = newValue;
-            return result;
-        }
-
-        Assert(FALSE);
-        return result;
-        //JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"lane index must be in bounds");
-
-    }
-
     // ShiftOps
     SIMDValue SIMDInt16x8Operation::OpShiftLeftByScalar(const SIMDValue& value, int count)
     {
@@ -337,9 +304,6 @@ namespace Js
 
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
-
-    // Others
-
 }
 
 #endif

@@ -138,7 +138,6 @@ ENTRY(notEqual)
 ENTRY(greaterThanOrEqual)
 ENTRY(greaterThan)
 
-//arun::ToDo: following should be replaced by shift*ByScalar
 ENTRY(shiftLeft)
 ENTRY(shiftRightLogical)
 ENTRY(shiftRightArithmetic)

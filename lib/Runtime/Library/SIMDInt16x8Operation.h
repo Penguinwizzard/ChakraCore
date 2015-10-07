@@ -35,8 +35,8 @@ namespace Js {
         static SIMDValue OpXor(const SIMDValue& aValue, const SIMDValue& bValue);
         static SIMDValue OpAddSaturate(const SIMDValue& aValue, const SIMDValue& bValue); 
         static SIMDValue OpSubSaturate(const SIMDValue& aValue, const SIMDValue& bValue); 
-		static SIMDValue OpMin(const SIMDValue& aValue, const SIMDValue& bValue);
-		static SIMDValue OpMax(const SIMDValue& aValue, const SIMDValue& bValue);
+        static SIMDValue OpMin(const SIMDValue& aValue, const SIMDValue& bValue);
+        static SIMDValue OpMax(const SIMDValue& aValue, const SIMDValue& bValue);
 
         // CompareOps
         static SIMDValue OpLessThan(const SIMDValue& aValue, const SIMDValue& bValue);
@@ -46,23 +46,15 @@ namespace Js {
         static SIMDValue OpGreaterThan(const SIMDValue& aValue, const SIMDValue& bValue);
         static SIMDValue OpGreaterThanOrEqual(const SIMDValue& aValue, const SIMDValue& bValue);
 
-        // Lane Access
-        static short OpExtractLane(const SIMDValue& aValue, int index);
-        static SIMDValue OpReplaceLane(const SIMDValue& aValue, int index, short newValue);
-
         // ShiftOps
         static SIMDValue OpShiftLeftByScalar(const SIMDValue& value, int count);
         static SIMDValue OpShiftRightLogicalByScalar(const SIMDValue& value, int count);
         static SIMDValue OpShiftRightArithmeticByScalar(const SIMDValue& value, int count);
 
         // load&store
-        static SIMDValue OpLoad(int* v, const int index); 
-        static SIMDValue OpStore(int* v, const int index); 
+        //static SIMDValue OpLoad(int* v, const int index); 
+        //static SIMDValue OpStore(int* v, const int index); 
 
-        // Others
-        /*static SIMDValue OpSwizzle(const SIMDValue& v, short x0, short x1, short x2, short x3, short x4, short x5, short x6, short x7);
-        static SIMDValue OpShuffle(const SIMDValue& v, const SIMDValue& t1, short s0, short s1, short s2, short s3, short s4, short s5, short s6, short s7);
-        static SIMDValue OpSelect(const SIMDValue& t, const SIMDValue& tV, const SIMDValue& fV);*/
     };
 
 } // namespace Js

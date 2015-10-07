@@ -72,9 +72,9 @@ namespace Js {
     }
     SIMDValue SIMD128InnerShuffle(SIMDValue src1, SIMDValue src2, const uint laneCount, const int32* lanes)
     {
-	SIMDValue result = { 0 };
+        SIMDValue result = { 0 };
         Assert(laneCount == 16 || laneCount == 8);
-	Assert(lanes != nullptr);
+        Assert(lanes != nullptr);
         if (laneCount == 16)
         {
             for (uint i = 0; i < 16; ++i)
@@ -82,13 +82,13 @@ namespace Js {
                 result.i8[i] = lanes[i] < 16 ? src1.i8[lanes[i]] : src2.i8[lanes[i] - 16];
             }
         }
-	    else if (laneCount == 8)
-	    {
-	        for (uint i = 0; i < 8; ++i)
+        else if (laneCount == 8)
+        {
+            for (uint i = 0; i < 8; ++i)
             {
-		        result.i16[i] = lanes[i] < 8 ? src1.i16[lanes[i]] : src2.i16[lanes[i] - 8];
+                result.i16[i] = lanes[i] < 8 ? src1.i16[lanes[i]] : src2.i16[lanes[i] - 8];
 	        }
-	    }
+        }
         return result;
     }
 
@@ -189,27 +189,27 @@ namespace Js {
         return SIMD128InnerReplaceLaneI16(jsVal->GetValue(), laneValue, value);
     }
 
-	//Int16x8 LaneAccess
-	inline int16 SIMD128InnerExtractLaneI8(const SIMDValue& src1, const int32 lane)
-	{
-		return src1.i16[lane];
-	}
-	inline SIMDValue SIMD128InnerReplaceLaneI8(const SIMDValue& src1, const int32 lane, const int16 value)
-	{
-		SIMDValue result = src1;
-		result.i16[lane] = value;
-		return result;
-	}
-	static inline int16 SIMD128GetLaneValue(JavascriptSIMDInt16x8 *jsVal, const int laneValue)
-	{
-		Assert(jsVal);
-		return SIMD128InnerExtractLaneI8(jsVal->GetValue(), laneValue);
-	}
-	static inline SIMDValue SIMD128SetLaneValue(JavascriptSIMDInt16x8 *jsVal, const int laneValue, int16 value)
-	{
-		Assert(jsVal);
-		return SIMD128InnerReplaceLaneI8(jsVal->GetValue(), laneValue, value);
-	}
+    //Int16x8 LaneAccess
+    inline int16 SIMD128InnerExtractLaneI8(const SIMDValue& src1, const int32 lane)
+    {
+        return src1.i16[lane];
+    }
+    inline SIMDValue SIMD128InnerReplaceLaneI8(const SIMDValue& src1, const int32 lane, const int16 value)
+    {
+        SIMDValue result = src1;
+        result.i16[lane] = value;
+        return result;
+    }
+    static inline int16 SIMD128GetLaneValue(JavascriptSIMDInt16x8 *jsVal, const int laneValue)
+    {
+        Assert(jsVal);
+        return SIMD128InnerExtractLaneI8(jsVal->GetValue(), laneValue);
+    }
+    static inline SIMDValue SIMD128SetLaneValue(JavascriptSIMDInt16x8 *jsVal, const int laneValue, int16 value)
+    {
+        Assert(jsVal);
+        return SIMD128InnerReplaceLaneI8(jsVal->GetValue(), laneValue, value);
+    }
 
     //Int32x4 LaneAccess
     inline int SIMD128InnerExtractLaneI4(const SIMDValue& src1, const int32 lane)
@@ -281,8 +281,8 @@ namespace Js {
 
     template int8  SIMD128ExtractLane<JavascriptSIMDInt8x16, 16, int8>(Var src, Var lane, ScriptContext* scriptContext);
     template SIMDValue SIMD128ReplaceLane<JavascriptSIMDInt8x16, 16, int8>(Var src, Var lane, int8 value, ScriptContext* scriptContext);
-	template int16  SIMD128ExtractLane<JavascriptSIMDInt16x8, 8, int16>(Var src, Var lane, ScriptContext* scriptContext);
-	template SIMDValue SIMD128ReplaceLane<JavascriptSIMDInt16x8, 8, int16>(Var src, Var lane, int16 value, ScriptContext* scriptContext);
+    template int16  SIMD128ExtractLane<JavascriptSIMDInt16x8, 8, int16>(Var src, Var lane, ScriptContext* scriptContext);
+    template SIMDValue SIMD128ReplaceLane<JavascriptSIMDInt16x8, 8, int16>(Var src, Var lane, int16 value, ScriptContext* scriptContext);
     template int   SIMD128ExtractLane<JavascriptSIMDInt32x4, 4, int>(Var src, Var lane, ScriptContext* scriptContext);
     template SIMDValue SIMD128ReplaceLane<JavascriptSIMDInt32x4, 4, int>(Var src, Var lane, int value, ScriptContext* scriptContext);    
     template float SIMD128ExtractLane<JavascriptSIMDFloat32x4, 4, float>(Var src, Var lane, ScriptContext* scriptContext);
@@ -415,5 +415,7 @@ namespace Js {
     template void SIMD128TypedArrayStore<JavascriptSIMDFloat32x4>(Var arg1, Var arg2, Var simdVar, uint32 dataWidth, ScriptContext *scriptContext);
     template void SIMD128TypedArrayStore<JavascriptSIMDInt32x4>(Var arg1, Var arg2, Var simdVar, uint32 dataWidth, ScriptContext *scriptContext);
     template void SIMD128TypedArrayStore<JavascriptSIMDFloat64x2>(Var arg1, Var arg2, Var simdVar, uint32 dataWidth, ScriptContext *scriptContext);
+    template void SIMD128TypedArrayStore<JavascriptSIMDInt16x8>(Var arg1, Var arg2, Var simdVar, uint32 dataWidth, ScriptContext *scriptContext);
+
 
 }

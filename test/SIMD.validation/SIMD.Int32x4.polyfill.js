@@ -191,7 +191,7 @@ var bool8x16 = {
 
 // Each SIMD type has a corresponding Boolean SIMD type, which is returned by
 // relational ops.
-//MODIFIED BY CONNOR, should be bool32x4
+
 float32x4.boolType = int32x4.boolType = uint32x4.boolType = bool32x4.boolType = int32x4;
 int16x8.boolType = uint16x8.boolType = bool16x8.boolType = bool16x8;
 int8x16.boolType = uint8x16.boolType = bool8x16.boolType = bool8x16;
@@ -429,7 +429,7 @@ function testRelationalOp(type, op, refOp) {
       var a = type.fn.splat(av);
       var b = type.fn.splat(bv);
       var result = type.fn[op](a, b);
-      //MODIFIED BY CONNOR
+      
       //when bool types are implemented remove the if statement
       if(type.boolType.name === "Int32x4") {
         if(expected) {
@@ -536,7 +536,7 @@ function testSelect(type) {
   // test all selectors with a single 'true' lane.
   for (var i = 0; i < type.lanes; i++) {
     var selector = type.boolType.fn();
-    //MODIFIED BY CONNOR
+    
     //when bool types are implemented remove the if statement
     if(type.boolType.name === "Int32x4") {
       selector = type.boolType.fn.replaceLane(selector, i, -1);
@@ -1061,7 +1061,7 @@ function fail(str) {
 }
 
 function test(name, func) {
-  //MODIFIED BY CONNOR
+  
   if(name.indexOf(int32x4.name) !== 0) return;
   if(name.indexOf('Int32x4 load') > -1) return; //negative index fatal error bug
   if(name.indexOf('Int32x4 store') > -1) return; //negative index fatal error bug

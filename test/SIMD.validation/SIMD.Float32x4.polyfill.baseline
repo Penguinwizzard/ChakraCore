@@ -50,30 +50,6 @@ passed
 ******* Float32x4 shuffle *******
 passed
 
-******* Float32x4 load *******
-passed
-
-******* Float32x4 store *******
-passed
-
-******* Float32x4 load1 *******
-passed
-
-******* Float32x4 load2 *******
-passed
-
-******* Float32x4 load3 *******
-passed
-
-******* Float32x4 store1 *******
-passed
-
-******* Float32x4 store1 *******
-passed
-
-******* Float32x4 store3 *******
-passed
-
 ******* Float32x4 neg *******
 passed
 
