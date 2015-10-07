@@ -42,6 +42,7 @@ PHASE(All)
             PHASE(SwitchOpt)
             PHASE(BailOnNoProfile)
             PHASE(BackendConcatExprOpt)
+            PHASE(Depolymorphize)
         PHASE(Inline)
             PHASE(InlineRecursive)
             PHASE(InlineAtEveryCaller)     //Inlines a function say foo at every caller of foo. Doesn't guarantee all the calls within foo are inlined too.

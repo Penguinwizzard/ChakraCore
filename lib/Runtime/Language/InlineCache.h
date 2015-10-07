@@ -183,6 +183,12 @@ namespace Js
             return TypeWithoutAuxSlotTag(GetRawType());
         }
 
+        uint16 GetSlotIndex()
+        {
+            return IsLocal() ? u.local.slotIndex : (IsProto() ? u.proto.slotIndex : (IsAccessor() ? u.accessor.slotIndex : -1));
+        }
+
+
         template<bool isAccessor>
         bool HasDifferentType(const bool isProto, const Type * type, const Type * typeWithoutProperty) const;
 
