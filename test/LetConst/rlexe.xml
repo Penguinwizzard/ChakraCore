@@ -262,16 +262,13 @@
     <default>
       <files>eval_letconst.js</files>
       <compile-flags>-force:evalcompile</compile-flags>
-      <!-- fails assert in bytecodegen in ch -->
-      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
     <default>
       <files>eval_letconst.js</files>
       <compile-flags>-force:deferparse -force:evalcompile</compile-flags>
-      <!-- fails assert in bytecodegen in ch -->
-      <tags>exclude_dynapogo,exclude_ch</tags>
+      <tags>exclude_dynapogo</tags>
     </default>
   </test>
   <test>

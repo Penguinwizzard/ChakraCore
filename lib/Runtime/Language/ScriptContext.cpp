@@ -1681,7 +1681,7 @@ namespace Js
             if (PHASE_FORCE1(Js::EvalCompilePhase))
             {
                 // pretend it is eval
-                grfscr |= fscrEval;
+                grfscr |= (fscrEval | fscrEvalCode);
             }
 
             if (isByteCodeBufferForLibrary)
@@ -1751,7 +1751,7 @@ namespace Js
             if (PHASE_FORCE1(Js::EvalCompilePhase))
             {
                 // pretend it is eval
-                grfscr |= fscrEval;
+                grfscr |= (fscrEval | fscrEvalCode);
             }
 
             if (isByteCodeBufferForLibrary)
