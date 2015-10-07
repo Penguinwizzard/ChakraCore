@@ -113,7 +113,7 @@
     </default>
   </test>
   
-  <!-- Unimplemented
+
   <test>
     <default>
       <files>SIMD.Int16x8.polyfill.js</files>
@@ -135,7 +135,7 @@
       <compile-flags>-bgjit- -simdjs -simd128typespec -off:simplejit -mic:1</compile-flags>
     </default>
   </test>
-  -->
+  
   
   
   <test>

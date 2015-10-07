@@ -29,16 +29,19 @@
 #include "Library\JavascriptSIMDFloat64x2.h"
 #include "Library\JavascriptSIMDInt32x4.h"
 #include "Library\JavascriptSIMDInt8x16.h"
+#include "Library\JavascriptSIMDInt16x8.h"
 // SIMD operations
 #include "Library\SIMDFloat32x4Operation.h"
 #include "Library\SIMDFloat64x2Operation.h"
 #include "Library\SIMDInt32x4Operation.h"
 #include "Library\SIMDInt8x16Operation.h"
+#include "Library\SIMDInt16x8Operation.h"
 // SIMD libs
 #include "Library\SIMDFloat32x4Lib.h"
 #include "Library\SIMDFloat64x2Lib.h"
 #include "Library\SIMDInt32x4Lib.h"
 #include "Library\SIMDInt8x16Lib.h"
+#include "Library\SIMDInt16x8Lib.h"
 #endif
 // =================
 // Common Includes
