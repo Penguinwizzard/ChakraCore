@@ -968,7 +968,7 @@ public:
 
     Js::PropertyRecord const * GetPropertyName(Js::PropertyId propertyId);
     Js::PropertyRecord const * GetPropertyNameLocked(Js::PropertyId propertyId);
-    
+
 private:
     template <bool locked> Js::PropertyRecord const * GetPropertyNameImpl(Js::PropertyId propertyId);
 public:
@@ -1001,17 +1001,17 @@ public:
     void EtwLogPropertyIdList();
 #endif
 
-private:    
+private:
     const Js::PropertyRecord * GetOrAddPropertyRecordImpl(JsUtil::CharacterBuffer<wchar_t> propertyName, bool bind);
     void AddPropertyRecordInternal(const Js::PropertyRecord * propertyRecord);
     void BindPropertyRecord(const Js::PropertyRecord * propertyRecord);
     bool IsDirectPropertyName(const wchar_t * propertyName, charcount_t propertyNameLength);
-    
+
     RecyclerWeakReference<const Js::PropertyRecord> * CreatePropertyRecordWeakRef(const Js::PropertyRecord * propertyRecord);
     void AddCaseInvariantPropertyRecord(const Js::PropertyRecord * propertyRecord);
 
     uint scriptContextCount;
-    
+
 public:
     void UncheckedAddBuiltInPropertyId();
 

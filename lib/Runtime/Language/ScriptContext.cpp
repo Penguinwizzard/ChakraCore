@@ -3885,7 +3885,7 @@ namespace Js
 
             // We know szTempName is to be used as a JS identifier and is declared above as an array of length 70.
             AssertMsg(wcslen(szTempName) <= MaxCharCount, "JS identifier lengths must fit into charcount_t");
-            functionPropertyId = GetOrAddPropertyIdTracked(szTempName, (charcount_t) wcslen(szTempName));
+            functionPropertyId = GetOrAddPropertyIdTracked(szTempName, (charcount_t)wcslen(szTempName));
         }
 
         Js::PropertyId cachedFunctionId;
