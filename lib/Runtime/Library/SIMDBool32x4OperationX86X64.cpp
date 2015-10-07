@@ -37,7 +37,7 @@ namespace Js
     {
         X86SIMDValue x86Simd = X86SIMDValue::ToX86SIMDValue(simd);
         int mask_8 = _mm_movemask_epi8(x86Simd.m128i_value); //latency 3, throughput 1
-        return mask_8 == -1;
+        return mask_8 == 0xFFFF;
     }
 }
 

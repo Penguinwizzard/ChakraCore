@@ -19,18 +19,20 @@ struct _SIMDValue
 {
     union{
         int     i32[4];
+<<<<<<< HEAD
+	int16   i16[8];
+	int8    i8[16];
+||||||| merged common ancestors
 		int16   i16[8];
 		int8    i8[16];
+=======
+        int16   i16[8];
+        int8    i8[16];
+>>>>>>> Bool32x4, Bool8x16 tests pass. Fixed tabs to spaces
 
         float   f32[4];
         double  f64[2];
-<<<<<<< HEAD
         int16   i16[8];
-        int8    i8[16];
-||||||| merged common ancestors
-        int8    i8[16];
-=======
->>>>>>> Bool16x8, Bool8x16. Build error
     };
 
     void SetValue(_SIMDValue value)
@@ -170,8 +172,8 @@ namespace Js {
     int8 SIMD128InnerExtractLaneI16(const SIMDValue& src1, const int32 lane);
 
 
-	SIMDValue SIMD128InnerReplaceLaneI8(const SIMDValue& src1, const int32 lane, const int16 value);
-	int16 SIMD128InnerExtractLaneI8(const SIMDValue& src1, const int16 lane);
+    SIMDValue SIMD128InnerReplaceLaneI8(const SIMDValue& src1, const int32 lane, const int16 value);
+    int16 SIMD128InnerExtractLaneI8(const SIMDValue& src1, const int16 lane);
 
 
     int32 SIMDCheckInt32Number(ScriptContext* scriptContext, Var value);

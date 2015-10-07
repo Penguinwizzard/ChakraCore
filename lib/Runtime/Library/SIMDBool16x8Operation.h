@@ -6,20 +6,20 @@
 
 namespace Js {
 
-	struct SIMDBool16x8Operation
-	{
-		// following are operation wrappers of SIMD.Bool16x8 general implementation
-		static SIMDValue OpBool16x8(bool b[]);
-		static SIMDValue OpBool16x8(const SIMDValue& v);
+    struct SIMDBool16x8Operation
+    {
+        // following are operation wrappers of SIMD.Bool16x8 general implementation
+        static SIMDValue OpBool16x8(bool b[]);
+        static SIMDValue OpBool16x8(const SIMDValue& v);
 
-		static SIMDValue OpSplat(bool x);
-		static SIMDValue OpSplat(const SIMDValue& v);
+        static SIMDValue OpSplat(bool x);
+        static SIMDValue OpSplat(const SIMDValue& v);
 
-		// Unary Ops
-		// Done via Int16x8 ops and Bool32x4
-		
-		// Binary Ops
-		// Done via Int16x8 ops
-	};
+        // Unary Ops
+        // Done via Int16x8 ops and Bool32x4
+        
+        // Binary Ops
+        // Done via Int16x8 ops
+    };
 
 } // namespace Js

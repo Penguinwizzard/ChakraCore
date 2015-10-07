@@ -26,9 +26,9 @@ namespace Js {
             static FunctionInfo Or;
             static FunctionInfo Xor;
 
-			//Lane access
-			static FunctionInfo ExtractLane;
-			static FunctionInfo ReplaceLane;
+            //Lane access
+            static FunctionInfo ExtractLane;
+            static FunctionInfo ReplaceLane;
 
             
         };
@@ -39,9 +39,9 @@ namespace Js {
         static Var EntryCheck(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntrySplat(RecyclableObject* function, CallInfo callInfo, ...);
 
-		// Lane Access
-		static Var EntryExtractLane(RecyclableObject* function, CallInfo callInfo, ...);
-		static Var EntryReplaceLane(RecyclableObject* function, CallInfo callInfo, ...);
+        // Lane Access
+        static Var EntryExtractLane(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryReplaceLane(RecyclableObject* function, CallInfo callInfo, ...);
 
         // UnaryOps
         static Var EntryNot(RecyclableObject* function, CallInfo callInfo, ...);

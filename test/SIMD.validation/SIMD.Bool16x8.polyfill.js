@@ -503,12 +503,9 @@ function testAnyTrue(type) {
 
 function testAllTrue(type) {
   equal('function', typeof type.fn.allTrue);
-  
   // All lanes 'true'.
   var a = type.fn.splat(true);
-  
   ok(type.fn.allTrue(a));
-  
   // One lane 'false'.
   for (var i = 0; i < type.lanes; i++) {
     a = type.fn.replaceLane(a, i, false);
@@ -722,6 +719,7 @@ function testOperators(type) {
   equal(!inst, false);
   equal(inst ? 1 : 2, 1);
   equal(inst ? 1 : 2, 1);
+
   equal('function', typeof inst.toString);
   equal(inst.toString(), simdToString(type, inst));
   //equal('function', typeof inst.toLocaleString);
@@ -1047,22 +1045,20 @@ function fail(str) {
 }
 
 function test(name, func) {
-    
-  if(name.indexOf(bool32x4.name) !== 0) return;
-  if(name.indexOf('Bool32x4 value semantics') > -1) return; //unsupported function
-  
-  
+  if(name.indexOf(bool16x8.name) !== 0) return;
+  if(name.indexOf('Bool16x8 value semantics') > -1) return; //unsupported function
   /*
-  if(name.indexOf('Bool32x4 operators') > -1) return; //unsupported function
-  if(name.indexOf('Bool32x4 allTrue') > -1) return; //unsupported function
-  if(name.indexOf('Bool32x4 anyTrue') > -1) return; //unsupported function
-  if(name.indexOf('Bool32x4 not') > -1) return; //unsupported function
-  if(name.indexOf('Bool32x4 xor') > -1) return; //unsupported function
-  if(name.indexOf('Bool32x4 or') > -1) return; //unsupported function
-  if(name.indexOf('Bool32x4 and') > -1) return; //unsupported function
-  if(name.indexOf('Bool32x4 replaceLane') > -1) return; //unsupported function
-  if(name.indexOf('Bool32x4 check') > -1) return; //unsupported function
-  if(name.indexOf('Bool32x4 constructor') > -1) return; //unsupported function
+  if(name.indexOf('Bool16x8 allTrue') > -1) return; //unsupported function
+  if(name.indexOf('Bool16x8 anyTrue') > -1) return; //unsupported function
+  if(name.indexOf('Bool16x8 not') > -1) return; //unsupported function
+  if(name.indexOf('Bool16x8 xor') > -1) return; //unsupported function
+  if(name.indexOf('Bool16x8 or') > -1) return; //unsupported function
+  if(name.indexOf('Bool16x8 and') > -1) return; //unsupported function
+  if(name.indexOf('Bool16x8 replaceLane') > -1) return; //unsupported function
+  
+  if(name.indexOf('Bool16x8 operators') > -1) return; //unsupported function
+  if(name.indexOf('Bool16x8 check') > -1) return; //unsupported function
+  if(name.indexOf('Bool16x8 constructor') > -1) return; //unsupported function
   */
   
   

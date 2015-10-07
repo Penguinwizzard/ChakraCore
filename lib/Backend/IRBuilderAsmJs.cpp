@@ -3296,7 +3296,7 @@ IRBuilderAsmJs::BuildFloat32x4_2(Js::OpCodeAsmJs newOpcode, uint32 offset)
 
     Js::OpCode opcode;
 
-	switch (newOpcode)
+    switch (newOpcode)
 	{
 	case Js::OpCodeAsmJs::Simd128_Return_F4:
 		if (m_func->IsLoopBody())

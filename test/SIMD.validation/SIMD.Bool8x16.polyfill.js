@@ -305,6 +305,7 @@ function checkValue(type, a, expect) {
   for (var i = 0; i < type.lanes; i++) {
     var v = type.fn.extractLane(a, i);
     var ev = simdConvert(type, expect(i));
+    
     if (!sameValue(ev, v) && Math.abs(ev - v) >= 0.00001)
       ok = false;
   }
@@ -503,12 +504,9 @@ function testAnyTrue(type) {
 
 function testAllTrue(type) {
   equal('function', typeof type.fn.allTrue);
-  
   // All lanes 'true'.
   var a = type.fn.splat(true);
-  
   ok(type.fn.allTrue(a));
-  
   // One lane 'false'.
   for (var i = 0; i < type.lanes; i++) {
     a = type.fn.replaceLane(a, i, false);
@@ -722,7 +720,9 @@ function testOperators(type) {
   equal(!inst, false);
   equal(inst ? 1 : 2, 1);
   equal(inst ? 1 : 2, 1);
+
   equal('function', typeof inst.toString);
+  
   equal(inst.toString(), simdToString(type, inst));
   //equal('function', typeof inst.toLocaleString);
   //equal(inst.toLocaleString(), simdToLocaleString(type, inst));
@@ -1047,23 +1047,22 @@ function fail(str) {
 }
 
 function test(name, func) {
-    
-  if(name.indexOf(bool32x4.name) !== 0) return;
-  if(name.indexOf('Bool32x4 value semantics') > -1) return; //unsupported function
-  
-  
+  if(name.indexOf(bool8x16.name) !== 0) return;
+  if(name.indexOf('Bool8x16 value semantics') > -1) return; //unsupported function
   /*
-  if(name.indexOf('Bool32x4 operators') > -1) return; //unsupported function
-  if(name.indexOf('Bool32x4 allTrue') > -1) return; //unsupported function
-  if(name.indexOf('Bool32x4 anyTrue') > -1) return; //unsupported function
-  if(name.indexOf('Bool32x4 not') > -1) return; //unsupported function
-  if(name.indexOf('Bool32x4 xor') > -1) return; //unsupported function
-  if(name.indexOf('Bool32x4 or') > -1) return; //unsupported function
-  if(name.indexOf('Bool32x4 and') > -1) return; //unsupported function
-  if(name.indexOf('Bool32x4 replaceLane') > -1) return; //unsupported function
-  if(name.indexOf('Bool32x4 check') > -1) return; //unsupported function
-  if(name.indexOf('Bool32x4 constructor') > -1) return; //unsupported function
+  if(name.indexOf('Bool8x16 allTrue') > -1) return; //unsupported function
+  if(name.indexOf('Bool8x16 anyTrue') > -1) return; //unsupported function
+  if(name.indexOf('Bool8x16 not') > -1) return; //unsupported function
+  if(name.indexOf('Bool8x16 xor') > -1) return; //unsupported function
+  if(name.indexOf('Bool8x16 or') > -1) return; //unsupported function
+  if(name.indexOf('Bool8x16 and') > -1) return; //unsupported function
+  if(name.indexOf('Bool8x16 replaceLane') > -1) return; //unsupported function
+  
+  if(name.indexOf('Bool8x16 operators') > -1) return; //unsupported function
+  if(name.indexOf('Bool8x16 check') > -1) return; //unsupported function
+  if(name.indexOf('Bool8x16 constructor') > -1) return; //unsupported function
   */
+  
   
   
   

@@ -24,7 +24,6 @@ struct _SIMDValue
 
         float   f32[4];
         double  f64[2];
-        int16   i16[8];
     };
 
     void SetValue(_SIMDValue value)
@@ -131,12 +130,12 @@ namespace Js {
     
     template <int laneCount = 4>
     SIMDValue SIMD128InnerShuffle(SIMDValue src1, SIMDValue src2, int32 lane0, int32 lane1, int32 lane2, int32 lane3); 
-    SIMDValue SIMD128InnerShuffle(SIMDValue src1, SIMDValue src2, int range, const int32* lanes = nullptr);
+    SIMDValue SIMD128InnerShuffle(SIMDValue src1, SIMDValue src2, const int32* lanes = nullptr);
 
     template <class SIMDType, int laneCount = 4> 
     Var SIMD128SlowShuffle(Var src1, Var src2, Var lane0, Var lane1, Var lane2, Var lane3, int range, ScriptContext* scriptContext);
-    template <class SIMDType>
-    Var SIMD128SlowShuffle(Var src1, Var src2, Var *lanes, const uint numLanes, const uint range, ScriptContext* scriptContext);
+    template <class SIMDType, int laneCount = 8>
+    Var SIMD128SlowShuffle(Var src1, Var src2, Var *lanes, const uint range, ScriptContext* scriptContext);
 
     //Lane Access
     template<class SIMDType, int laneCount, typename T>
@@ -164,8 +163,8 @@ namespace Js {
     int8 SIMD128InnerExtractLaneI16(const SIMDValue& src1, const int32 lane);
 
 
-	SIMDValue SIMD128InnerReplaceLaneI8(const SIMDValue& src1, const int32 lane, const int16 value);
-	int16 SIMD128InnerExtractLaneI8(const SIMDValue& src1, const int16 lane);
+    SIMDValue SIMD128InnerReplaceLaneI8(const SIMDValue& src1, const int32 lane, const int16 value);
+    int16 SIMD128InnerExtractLaneI8(const SIMDValue& src1, const int16 lane);
 
 
     int32 SIMDCheckInt32Number(ScriptContext* scriptContext, Var value);
