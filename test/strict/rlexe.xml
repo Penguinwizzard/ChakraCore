@@ -674,20 +674,6 @@
   </test>
   <test>
     <default>
-      <files>test262_bug349123.js</files>
-      <baseline>test262_bug349123.baseline</baseline>
-      <compile-flags>-Off:Deferparse</compile-flags>
-    </default>
-  </test>
-  <test>
-    <default>
-      <files>test262_bug349123.js</files>
-      <baseline>test262_bug349123.baseline</baseline>
-      <compile-flags>-Force:Deferparse</compile-flags>
-    </default>
-  </test>
-  <test>
-    <default>
       <files>nestedfnnameargs.js</files>
       <baseline>nestedfnnameargs.baseline</baseline>
       <compile-flags>-Off:Deferparse</compile-flags>
