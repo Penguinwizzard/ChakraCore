@@ -1566,7 +1566,8 @@ NativeCodeGenerator::JobProcessed(JsUtil::Job *const job, const bool succeeded)
         JsFunctionCodeGen * functionCodeGen = (JsFunctionCodeGen *)workItem;
         functionBody = functionCodeGen->GetFunctionBody();
 
-        if (false)
+        static int count = 0;
+        if (succeeded && (count++ % 3))
         {
             Js::FunctionEntryPointInfo* entryPointInfo = static_cast<Js::FunctionEntryPointInfo*>(functionCodeGen->GetEntryPoint());
             entryPointInfo->SetJitMode(jitMode);
