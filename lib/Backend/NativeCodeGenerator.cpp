@@ -1220,6 +1220,7 @@ NativeCodeGenerator::CheckCodeGenDone(
 
     // Replace the entry point
     Js::JavascriptMethod address;
+    bool cleanedUpEntryPoint = false;
     if (!entryPointInfo->IsCodeGenDone())
     {        
         // TODO 603650 - assert that the entry point is in the state we expect it to be when code gen fails.
@@ -1230,6 +1231,7 @@ NativeCodeGenerator::CheckCodeGenDone(
         if (entryPointInfo->IsPendingCleanup())
         {
             entryPointInfo->Cleanup(false /* isShutdown */, true /* capture cleanup stack */);
+            cleanedUpEntryPoint = true;
         }
     }    
     else
@@ -1247,7 +1249,7 @@ NativeCodeGenerator::CheckCodeGenDone(
 
     if(function)
     {
-        function->UpdateThunkEntryPoint(entryPointInfo, address);
+        function->UpdateThunkEntryPoint(entryPointInfo, address, cleanedUpEntryPoint);
     }
 
     // call the direct entry point, which will ensure dynamic profile info if necessary
@@ -1564,7 +1566,7 @@ NativeCodeGenerator::JobProcessed(JsUtil::Job *const job, const bool succeeded)
         JsFunctionCodeGen * functionCodeGen = (JsFunctionCodeGen *)workItem;
         functionBody = functionCodeGen->GetFunctionBody();
 
-        if (succeeded)
+        if (false)
         {
             Js::FunctionEntryPointInfo* entryPointInfo = static_cast<Js::FunctionEntryPointInfo*>(functionCodeGen->GetEntryPoint());
             entryPointInfo->SetJitMode(jitMode);

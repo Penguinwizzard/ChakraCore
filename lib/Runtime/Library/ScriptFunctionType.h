@@ -10,7 +10,9 @@ namespace Js
     {
         ScriptFunctionTypeExtra* next;
         uint32 codePath;
-        PVOID stack[64];
+        bool cleanedUpEntryPoint;
+        CONTEXT ctx;
+        PVOID stack[2048];
     };
     class ScriptFunctionType : public DynamicType
     {
@@ -18,23 +20,36 @@ namespace Js
         static ScriptFunctionType * New(FunctionProxy * proxy, bool isShared);
         static DWORD GetEntryPointInfoOffset() { return offsetof(ScriptFunctionType, entryPointInfo); }
         ProxyEntryPointInfo * GetEntryPointInfo() const { return entryPointInfo; }
-        void SetEntryPointInfo(ProxyEntryPointInfo * entryPointInfo, uint32 codePath) 
+        void SetEntryPointInfo(ProxyEntryPointInfo * entryPointInfo, uint32 codePath, bool cleanedUpEntryPoint = false)
         {
-            this->entryPointInfo = entryPointInfo; 
-            auto tmp = (ScriptFunctionTypeExtra*)malloc(sizeof(ScriptFunctionTypeExtra));
-            auto e = this->extra;
-            if (e == nullptr) 
+            this->entryPointInfo = entryPointInfo;
+            if (cleanedUpEntryPoint)
             {
-                this->extra = tmp;
+                auto tmp = (ScriptFunctionTypeExtra*)malloc(sizeof(ScriptFunctionTypeExtra));
+                auto e = this->extra;
+                if (e == nullptr)
+                {
+                    this->extra = tmp;
+                }
+                else
+                {
+                    while (e->next != nullptr)e = e->next;
+                    e->next = tmp;
+                }
+                tmp->next = nullptr;
+                tmp->codePath = codePath;
+                tmp->cleanedUpEntryPoint = cleanedUpEntryPoint;
+
+#if _M_IX86
+                // record stack data
+                RtlCaptureContext(&tmp->ctx);
+                auto len = (DWORD)((PNT_TIB)NtCurrentTeb())->StackBase - tmp->ctx.Esp;
+                len = len > sizeof(tmp->stack) ? sizeof(tmp->stack) : len;
+                memcpy(tmp->stack, (void*)tmp->ctx.Esp, len);
+                tmp->ctx.Ebp = tmp->ctx.Ebp + (DWORD)tmp->stack - tmp->ctx.Esp;
+                tmp->ctx.Esp = (DWORD)tmp->stack; // for .cxr switching to this state
+#endif
             }
-            else
-            {
-                while (e->next != nullptr)e = e->next;
-                e->next = tmp;                
-            }
-            tmp->next = nullptr;
-            tmp->codePath = codePath;
-            CaptureStackBackTrace(0, 64, tmp->stack, 0);
         }
     private:
         ScriptFunctionType(ScriptFunctionType * type);

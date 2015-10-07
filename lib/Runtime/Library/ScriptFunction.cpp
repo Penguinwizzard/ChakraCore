@@ -214,7 +214,7 @@ namespace Js
         return  !this->GetFunctionInfo()->IsDeferredParseFunction() && !this->GetFunctionInfo()->IsDeferredDeserializeFunction() && GetParseableFunctionInfo()->IsFunctionParsed();
     }
 
-    void ScriptFunction::ChangeEntryPoint(ProxyEntryPointInfo* entryPointInfo, JavascriptMethod entryPoint)
+    void ScriptFunction::ChangeEntryPoint(ProxyEntryPointInfo* entryPointInfo, JavascriptMethod entryPoint, bool cleanedUpEntryPoint)
     {
         Assert(entryPoint != nullptr);
         Assert(this->GetTypeId() == TypeIds_Function);
@@ -268,7 +268,7 @@ namespace Js
         }
 
         changeEntryPointLocation |= 0x80;
-        this->GetScriptFunctionType()->SetEntryPointInfo(entryPointInfo, changeEntryPointLocation);
+        this->GetScriptFunctionType()->SetEntryPointInfo(entryPointInfo, changeEntryPointLocation, cleanedUpEntryPoint);
     }
 
     FunctionProxy * ScriptFunction::GetFunctionProxy() const
@@ -319,9 +319,9 @@ namespace Js
 
     }
 
-    JavascriptMethod ScriptFunction::UpdateThunkEntryPoint(FunctionEntryPointInfo* entryPointInfo, JavascriptMethod entryPoint)
+    JavascriptMethod ScriptFunction::UpdateThunkEntryPoint(FunctionEntryPointInfo* entryPointInfo, JavascriptMethod entryPoint, bool cleanedUpEntryPoint)
     {
-        this->ChangeEntryPoint(entryPointInfo, entryPoint);
+        this->ChangeEntryPoint(entryPointInfo, entryPoint, cleanedUpEntryPoint);
 
         if (!CrossSite::IsThunk(this->GetEntryPoint()))
         {

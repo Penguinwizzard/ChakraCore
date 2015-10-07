@@ -73,8 +73,8 @@ namespace Js
         static uint32 GetOffsetOfCachedScopeObj() { return offsetof(ScriptFunction, cachedScopeObj); };
         static uint32 GetOffsetOfHasInlineCaches() { return offsetof(ScriptFunction, hasInlineCaches); };
 
-        void ChangeEntryPoint(ProxyEntryPointInfo* entryPointInfo, JavascriptMethod entryPoint);
-        JavascriptMethod UpdateThunkEntryPoint(FunctionEntryPointInfo* entryPointInfo, JavascriptMethod entryPoint);
+        void ChangeEntryPoint(ProxyEntryPointInfo* entryPointInfo, JavascriptMethod entryPoint, bool cleanedUpEntryPoint = false);
+        JavascriptMethod UpdateThunkEntryPoint(FunctionEntryPointInfo* entryPointInfo, JavascriptMethod entryPoint, bool cleanedUpEntryPoint = false);
         JavascriptMethod UpdateUndeferredBody(FunctionBody* newFunctionInfo);
 
         virtual ScriptFunctionType * DuplicateType() override;            

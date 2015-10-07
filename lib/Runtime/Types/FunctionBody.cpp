@@ -8788,11 +8788,13 @@ namespace Js
         return functionProxy->GetFunctionBody();
     }
 
+    char* globalCopy;
     void FunctionEntryPointInfo::OnCleanup(bool isShutdown)
     {
         // stack data recording can record this.
         char localCopy[sizeof(FunctionEntryPointInfo)];
         memcpy(&localCopy, this, sizeof(FunctionEntryPointInfo));
+        globalCopy = localCopy;
 
         if (this->IsCodeGenDone())
         {
