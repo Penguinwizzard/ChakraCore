@@ -214,7 +214,7 @@ namespace Js
         return  !this->GetFunctionInfo()->IsDeferredParseFunction() && !this->GetFunctionInfo()->IsDeferredDeserializeFunction() && GetParseableFunctionInfo()->IsFunctionParsed();
     }
 
-    void ScriptFunction::ChangeEntryPoint(ProxyEntryPointInfo* entryPointInfo, JavascriptMethod entryPoint, bool cleanedUpEntryPoint)
+    void ScriptFunction::ChangeEntryPoint(ProxyEntryPointInfo* entryPointInfo, JavascriptMethod entryPoint, void* cleanedUpEntryPoint)
     {
         Assert(entryPoint != nullptr);
         Assert(this->GetTypeId() == TypeIds_Function);
@@ -319,7 +319,7 @@ namespace Js
 
     }
 
-    JavascriptMethod ScriptFunction::UpdateThunkEntryPoint(FunctionEntryPointInfo* entryPointInfo, JavascriptMethod entryPoint, bool cleanedUpEntryPoint)
+    JavascriptMethod ScriptFunction::UpdateThunkEntryPoint(FunctionEntryPointInfo* entryPointInfo, JavascriptMethod entryPoint, void* cleanedUpEntryPoint)
     {
         this->ChangeEntryPoint(entryPointInfo, entryPoint, cleanedUpEntryPoint);
 

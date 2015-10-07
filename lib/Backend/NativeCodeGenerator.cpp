@@ -1190,6 +1190,16 @@ NativeCodeGenerator::CheckCodeGen(Js::ScriptFunction * function)
     return CheckCodeGenDone(functionBody, entryPoint, function);
 }
 
+struct CleanedUpEntryPoint
+{
+    CleanedUpEntryPoint* next;
+    Js::FunctionEntryPointInfo *entryPointInfo;
+    Js::JavascriptMethod address;
+};
+
+CleanedUpEntryPoint* g_CleanedUpEntryPoint = nullptr;
+CleanedUpEntryPoint** g_LastCleanedUpEntryPoint = &g_CleanedUpEntryPoint;
+
 Js::JavascriptMethod
 NativeCodeGenerator::CheckCodeGenDone(
     Js::FunctionBody *const functionBody,
@@ -1228,7 +1238,7 @@ NativeCodeGenerator::CheckCodeGenDone(
 
     // Replace the entry point
     Js::JavascriptMethod address;
-    bool cleanedUpEntryPoint = false;
+    void* cleanedUpEntryPoint = nullptr;
     if (!entryPointInfo->IsCodeGenDone())
     {        
         // TODO 603650 - assert that the entry point is in the state we expect it to be when code gen fails.
@@ -1238,8 +1248,13 @@ NativeCodeGenerator::CheckCodeGenDone(
         entryPointInfo->address = address;
         if (entryPointInfo->IsPendingCleanup())
         {
+            *g_LastCleanedUpEntryPoint = (CleanedUpEntryPoint*)malloc(sizeof(CleanedUpEntryPoint));
+            (*g_LastCleanedUpEntryPoint)->address = address;
+            (*g_LastCleanedUpEntryPoint)->entryPointInfo = entryPointInfo;
+            (*g_LastCleanedUpEntryPoint)->next = nullptr;
+            g_LastCleanedUpEntryPoint = &(*g_LastCleanedUpEntryPoint)->next;
             entryPointInfo->Cleanup(false /* isShutdown */, true /* capture cleanup stack */);
-            cleanedUpEntryPoint = true;
+            cleanedUpEntryPoint = address;
         }
     }    
     else
