@@ -4,7 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
-namespace JsUtil
+namespace JsUtil 
 {
     static const charcount_t MAX_FAST_HASH_LENGTH = 256;
     // A buffer of characters, may have embedded null.
