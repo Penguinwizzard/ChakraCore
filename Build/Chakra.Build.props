@@ -7,14 +7,14 @@
     <Win32_WinNTVersion Condition="'$(NtTargetVersion)'=='$(NtTargetVersion_Win10)'">0x0A00</Win32_WinNTVersion>
   </PropertyGroup>
   <PropertyGroup>
-    <NoThrowNewLib>nothrownew.obj</NoThrowNewLib>    
+    <NoThrowNewLib>nothrownew.obj</NoThrowNewLib>
   </PropertyGroup>
   <PropertyGroup>
-    <RunCodeAnalysis>$(BuildWithCodeAnalysis)</RunCodeAnalysis>    
+    <RunCodeAnalysis>$(BuildWithCodeAnalysis)</RunCodeAnalysis>
   </PropertyGroup>
   <!-- Allow prefast only for x86 debug for now -->
-  <PropertyGroup Condition="'$(Platform)'!='Win32' OR '$(Configuration)'!='Debug'">    
-    <RunCodeAnalysis>false</RunCodeAnalysis>    
+  <PropertyGroup Condition="'$(Platform)'!='Win32' OR '$(Configuration)'!='Debug'">
+    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
@@ -38,7 +38,8 @@
         4312;     <!-- 'type cast': conversion from '' to '' of greater size -->
       </DisableSpecificWarnings>
       <!-- Use the debug CRT in debug build -->
-      <RuntimeLibrary Condition="'$(Configuration)'=='Debug'">MultiThreadedDebugDLL</RuntimeLibrary>      
+      <RuntimeLibrary Condition="'$(Configuration)'=='Debug' AND '$(RuntimeLib)'!='static_library'">MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeLibrary Condition="'$(Configuration)'=='Debug' AND '$(RuntimeLib)'=='static_library'">MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
-  </ItemDefinitionGroup>  
+  </ItemDefinitionGroup>
 </Project>
