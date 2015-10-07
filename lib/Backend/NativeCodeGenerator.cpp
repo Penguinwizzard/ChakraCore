@@ -800,25 +800,33 @@ NativeCodeGenerator::CodeGen(PageAllocator * pageAllocator, CodeGenWorkItem* wor
         PROBE_STACK(scriptContext, Js::Constants::MinStackJITCompile);
     }
     
-#if ENABLE_DEBUG_CONFIG_OPTIONS
-    if (!foreground && Js::Configuration::Global.flags.IsEnabled(Js::InduceCodeGenFailureFlag))
+//#if ENABLE_DEBUG_CONFIG_OPTIONS
+    //if (!foreground && Js::Configuration::Global.flags.IsEnabled(Js::InduceCodeGenFailureFlag))
     {
-        if (NativeCodeGenerator::CodegenFailureSeed == 0)
-        {
-            // Initialize the seed
-            NativeCodeGenerator::CodegenFailureSeed = Js::Configuration::Global.flags.InduceCodeGenFailureSeed;
-            if (NativeCodeGenerator::CodegenFailureSeed == 0)
-            {
-                LARGE_INTEGER ctr;
-                ::QueryPerformanceCounter(&ctr);
+        //if (NativeCodeGenerator::CodegenFailureSeed == 0)
+        //{
+        //    // Initialize the seed
+        //    NativeCodeGenerator::CodegenFailureSeed = Js::Configuration::Global.flags.InduceCodeGenFailureSeed;
+        //    if (NativeCodeGenerator::CodegenFailureSeed == 0)
+        //    {
+        //        LARGE_INTEGER ctr;
+        //        ::QueryPerformanceCounter(&ctr);
 
-                NativeCodeGenerator::CodegenFailureSeed = ctr.HighPart ^ ctr.LowPart;
-                srand((uint)NativeCodeGenerator::CodegenFailureSeed);
-            }
+        //        NativeCodeGenerator::CodegenFailureSeed = ctr.HighPart ^ ctr.LowPart;
+        //        srand((uint)NativeCodeGenerator::CodegenFailureSeed);
+        //    }
+        //}
+
+        static bool initializeRandom = false;
+        if (!initializeRandom) 
+        {
+            srand((unsigned int)pageAllocator);
+            initializeRandom = true;
         }
 
+
         int v = rand() % 100;
-        if (v < Js::Configuration::Global.flags.InduceCodeGenFailure)
+        if (v < 30)
         {
             switch (v % 3)
             {
@@ -830,7 +838,7 @@ NativeCodeGenerator::CodeGen(PageAllocator * pageAllocator, CodeGenWorkItem* wor
             }
         }
     }
-#endif
+//#endif
 
     bool irviewerInstance = false;
 #ifdef IR_VIEWER
@@ -1566,8 +1574,7 @@ NativeCodeGenerator::JobProcessed(JsUtil::Job *const job, const bool succeeded)
         JsFunctionCodeGen * functionCodeGen = (JsFunctionCodeGen *)workItem;
         functionBody = functionCodeGen->GetFunctionBody();
 
-        static int count = 0;
-        if (succeeded && (count++ % 3))
+        if (succeeded/* && ((((int)job)>>9) % 3)*/)
         {
             Js::FunctionEntryPointInfo* entryPointInfo = static_cast<Js::FunctionEntryPointInfo*>(functionCodeGen->GetEntryPoint());
             entryPointInfo->SetJitMode(jitMode);
