@@ -64,6 +64,8 @@
     <default>
       <files>argumentsLimits.js</files>
       <baseline>argumentsLimits.baseline</baseline>
+      <!-- this test takes a long time with dynapogo on chk build -->
+      <tags>exclude_chk</tags>
     </default>
   </test>
   <test>
