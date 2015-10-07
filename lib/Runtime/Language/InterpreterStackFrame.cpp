@@ -9,6 +9,10 @@
 #include "ByteCode\OpCodeUtilAsmJs.h"
 #endif
 
+#include "Language\InterpreterStackFrame.h"
+#include "Library\JavascriptGeneratorFunction.h"
+
+
 ///----------------------------------------------------------------------------
 ///
 /// macros PROCESS_INtoOUT

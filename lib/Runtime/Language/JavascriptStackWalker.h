@@ -194,11 +194,7 @@ namespace Js
         Js::Var * GetJavascriptArgs() const;
         void **GetCurrentArgv() const;
 
-        ScriptContext* GetCurrentScriptContext() const
-        {
-            return this->scriptContext;
-        }
-
+        ScriptContext* GetCurrentScriptContext() const;
         InterpreterStackFrame* GetCurrentInterpreterFrame() const
         {
             Assert(this->IsJavascriptFrame());

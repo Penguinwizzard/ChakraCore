@@ -773,7 +773,7 @@ namespace Js
 #endif
         DynamicType * CreateGeneratorType(RecyclableObject* prototype);
 
-        NullEnumerator * GetNullEnumerator() { return nullEnumerator; }
+        JavascriptEnumerator * GetNullEnumerator() const;
 #if 0
         JavascriptNumber* CreateNumber(double value);
 #endif
@@ -1073,6 +1073,9 @@ namespace Js
             }
         }
         
+#if DBG
+        void DumpLibraryByteCode();
+#endif
     private:
         typedef JsUtil::BaseHashSet<Js::PropertyRecord const *, Recycler, PowerOf2SizePolicy> ReferencedPropertyRecordHashSet;
         ReferencedPropertyRecordHashSet* referencedPropertyRecords;

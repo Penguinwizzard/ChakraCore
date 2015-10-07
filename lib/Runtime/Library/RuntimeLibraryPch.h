@@ -24,8 +24,10 @@
 #include "Library\ProfileString.h"
 #include "Library\SingleCharString.h"
 #include "Library\SubString.h"
+#include "Library\BufferStringBuilder.h"
 
 #include "Library\BoundFunction.h"
+#include "Library\JavascriptGeneratorFunction.h"
 
 #include "Library\RegexHelper.h"
 #include "Library\JavascriptRegularExpression.h"
@@ -46,6 +48,11 @@
 #include "Library\JavascriptSet.h"
 #include "Library\JavascriptWeakMap.h"
 #include "Library\JavascriptWeakSet.h"
+
+#include "Types\PropertyIndexRanges.h"
+#include "Types\DictionaryPropertyDescriptor.h"
+#include "Types\DictionaryTypeHandler.h"
+#include "Library\ES5ArrayTypeHandler.h"
 
 #include "Library\ArgumentsObjectEnumerator.h"
 #include "Library\JavascriptArrayEnumeratorBase.h"
@@ -75,6 +82,8 @@
 #include "Library\DateImplementation.h"
 #include "Library\JavascriptDate.h"
 
+#include "Library\ModuleRoot.h"
+#include "Library\ArgumentsObject.h"
 // SIMD_JS
 // SIMD types
 #include "Library\JavascriptSIMDFloat32x4.h"
@@ -101,4 +110,10 @@
 #ifdef ENABLE_BASIC_TELEMETRY
 #include "..\..\..\private\lib\Telemetry\ScriptContextTelemetry.h"
 #endif
+
+// .inl files
+#include "Library\JavascriptString.inl"
+#include "Library\ConcatString.inl"
+
 #endif // !IsJsDiag
+

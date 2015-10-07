@@ -4,8 +4,6 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
-class ActiveScriptProfilerHeapEnum;
-
 namespace Js
 {
     class ArgumentsObject abstract : public DynamicObject

@@ -186,6 +186,7 @@ namespace Js
 #pragma optimize( "g", off )
 #pragma warning( push )
 #pragma warning( disable : 4748 )
+#pragma warning( disable : 4995 )
     WORD StackTrace86(
         _In_ DWORD FramesToSkip,
         _In_ DWORD FramesToCapture,

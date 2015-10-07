@@ -493,7 +493,7 @@ protected:
     
 
 
-    void Init(Js::OpCode opcode, IRKind kind, Func * func);       
+    void Init(Js::OpCode opcode, IRKind kind, Func * func);
     IR::Instr *     CloneInstr() const;
 };
 

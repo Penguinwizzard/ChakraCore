@@ -14,6 +14,7 @@
 #include "Library\ThreadBoundThreadContextManager.h"
 #include "Language\SourceDynamicProfileManager.h"
 #include "Language\CodeGenRecyclableData.h"
+#include "Language\InterpreterStackFrame.h"
 
 #if DBG
 #include "Memory\StressTest.h"

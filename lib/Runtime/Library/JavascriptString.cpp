@@ -5,6 +5,8 @@
 #include "RuntimeLibraryPch.h"
 
 #include "DataStructures\BigInt.h"
+#include "Library\EngineInterfaceObject.h"
+#include "Library\IntlEngineInterfaceExtensionObject.h"
 
 #ifdef _M_X64_OR_ARM64
 // TODO: Clean this warning up
@@ -171,6 +173,143 @@ namespace Js
             result;
     }
     
+    // static
+    bool IsValidCharCount(size_t charCount)
+    {
+        return charCount <= JavascriptString::MaxCharLength;
+    }
+
+    JavascriptString::JavascriptString(StaticType * type)
+        : RecyclableObject(type), m_charLength(0), m_pszValue(0)
+    {
+        Assert(type->GetTypeId() == TypeIds_String);
+    }
+
+    JavascriptString::JavascriptString(StaticType * type, charcount_t charLength, const wchar_t* szValue)
+        : RecyclableObject(type), m_charLength(charLength), m_pszValue(szValue)
+    {
+        Assert(type->GetTypeId() == TypeIds_String);
+        AssertMsg(IsValidCharCount(charLength), "String length is out of range");
+    }
+
+    _Ret_range_(m_charLength, m_charLength)
+    charcount_t JavascriptString::GetLength() const
+    {
+        return m_charLength;
+    }
+
+    int JavascriptString::GetLengthAsSignedInt() const
+    {
+        Assert(IsValidCharCount(m_charLength));
+        return static_cast<int>(m_charLength);
+    }
+
+    const wchar_t* JavascriptString::UnsafeGetBuffer() const
+    {
+        return m_pszValue;
+    }
+
+    void JavascriptString::SetLength(charcount_t newLength)
+    {
+        if (!IsValidCharCount(newLength))
+        {
+            JavascriptExceptionOperators::ThrowOutOfMemory(this->GetScriptContext());
+        }
+        m_charLength = newLength;
+    }
+
+    void JavascriptString::SetBuffer(const wchar_t* buffer)
+    {
+        m_pszValue = buffer;
+    }
+
+    bool JavascriptString::IsValidIndexValue(charcount_t idx) const
+    {
+        return IsValidCharCount(idx) && idx < GetLength();
+    }
+
+    bool JavascriptString::Is(Var aValue)
+    {
+        return JavascriptOperators::GetTypeId(aValue) == TypeIds_String;
+    }
+
+    JavascriptString* JavascriptString::FromVar(Var aValue)
+    {
+        AssertMsg(Is(aValue), "Ensure var is actually a 'JavascriptString'");
+
+        return static_cast<JavascriptString *>(RecyclableObject::FromVar(aValue));
+    }
+
+    charcount_t
+    JavascriptString::GetBufferLength(const wchar_t * content)
+    {
+        size_t cchActual = wcslen(content);
+
+#if defined(_M_X64_OR_ARM64)
+        if (!IsValidCharCount(cchActual))
+        {
+            // Limit javascript string to 31-bit length
+            Js::Throw::OutOfMemory();
+        }
+#else
+        // There shouldn't be enought mamory to have UINT_MAX character.
+        // INT_MAX is the upper bound for 32-bit;
+        Assert(IsValidCharCount(cchActual));
+#endif
+        return static_cast<charcount_t>(cchActual);
+    }
+
+    charcount_t
+    JavascriptString::GetBufferLength(
+        const wchar_t * content,                     // Value to examine
+        int charLengthOrMinusOne)                    // Optional length, in characters
+    {
+        //
+        // Determine the actual length, in characters, not including a terminating '\0':
+        // - If a length was not specified (charLength < 0), search for a terminating '\0'.
+        //
+
+        charcount_t cchActual;
+        if (charLengthOrMinusOne < 0)
+        {
+            AssertMsg(charLengthOrMinusOne == -1, "The only negative value allowed is -1");
+            cchActual = GetBufferLength(content);
+        }
+        else
+        {
+            cchActual = static_cast<charcount_t>(charLengthOrMinusOne);
+        }
+#ifdef CHECK_STRING
+        // removed this to accommodate much larger string constant in regex-dna.js
+        if (cchActual > 64 * 1024)
+        {
+            //
+            // String was probably not '\0' terminated:
+            // - We need to validate that the string's contents always fit within 1 GB to avoid
+            //   overflow checking on 32-bit when using 'int' for 'byte *' pointer operations.
+            //
+
+            Throw::OutOfMemory();  // TODO: determine argument error
+        }
+#endif
+        return cchActual;
+    }
+
+    template< size_t N >
+    Var JavascriptString::StringBracketHelper(Arguments args, ScriptContext *scriptContext, const wchar_t(&tag)[N])
+    {
+        CompileAssert(0 < N && N <= JavascriptString::MaxCharLength);
+        return StringBracketHelper(args, scriptContext, tag, static_cast<charcount_t>(N - 1), nullptr, 0);
+    }
+
+    template< size_t N1, size_t N2 >
+    Var JavascriptString::StringBracketHelper(Arguments args, ScriptContext *scriptContext, const wchar_t(&tag)[N1], const wchar_t(&prop)[N2])
+    {
+        CompileAssert(0 < N1 && N1 <= JavascriptString::MaxCharLength);
+        CompileAssert(0 < N2 && N2 <= JavascriptString::MaxCharLength);
+        return StringBracketHelper(args, scriptContext, tag, static_cast<charcount_t>(N1 - 1), prop, static_cast<charcount_t>(N2 - 1));
+    }
+
     BOOL JavascriptString::BufferEquals(__in_ecount(otherLength) LPCWSTR otherBuffer, __in charcount_t otherLength)
     {
         return otherLength == this->GetLength() &&

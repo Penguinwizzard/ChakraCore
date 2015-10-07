@@ -4,6 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLanguagePch.h"
 #include "Language\JavascriptFunctionArgIndex.h"
+#include "Language\InterpreterStackFrame.h"
 
 #if !defined(_M_IX86_OR_ARM32) && !defined(_M_X64_OR_ARM64)
 #error Stack walker not defined for this arch
@@ -90,6 +91,11 @@ namespace Js
     Js::Var* JavascriptCallStackLayout::GetArgv() const
     {
         return const_cast<Js::Var*>(&this->args[0]);
+    }
+
+    ScriptContext* JavascriptStackWalker::GetCurrentScriptContext() const
+    {
+        return this->GetCurrentInterpreterFrame() ? this->GetCurrentInterpreterFrame()->GetScriptContext() : this->scriptContext;
     }
 
     Var JavascriptStackWalker::GetCurrentArgumentsObject() const

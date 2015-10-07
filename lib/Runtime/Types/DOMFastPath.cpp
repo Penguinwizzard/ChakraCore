@@ -5,6 +5,7 @@
 #include "RuntimeTypePch.h"
 #ifdef ENABLE_DOM_FAST_PATH
 #include "Types\DOMFastPath.h"
+#include "Library\JavascriptTypedObjectSlotAccessorFunction.h"
 #include "Library\DOMFastPathInfo.h"
 
 DECLARE_SIMPLEACCESSOR_INFO(0)

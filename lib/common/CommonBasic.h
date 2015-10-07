@@ -4,6 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
+#include "Banned.h"
 #include "CommonDefines.h"
 #define _CRT_RAND_S         // Enable rand_s in the CRT
 

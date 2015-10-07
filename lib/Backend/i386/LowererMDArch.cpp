@@ -4,6 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 #include "BackEnd.h"
 #include "LowererMDArch.h"
+#include "Library\JavascriptGeneratorFunction.h"
 
 const Js::OpCode LowererMD::MDExtend32Opcode = Js::OpCode::MOV;
 

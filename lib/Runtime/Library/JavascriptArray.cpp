@@ -3,6 +3,8 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
+#include "Types\PathTypeHandler.h"
+#include "Types\SpreadArgument.h"
 
 #ifdef _M_X64_OR_ARM64
 // TODO: Clean this warning up
@@ -406,6 +408,52 @@ namespace Js
         SetHeadAndLastUsedSegment(DetermineInlineHeadSegmentPointer<JavascriptNativeFloatArray, 0, false>(this));
         head->size = size;
         ((SparseArraySegment<double>*)head)->FillSegmentBuffer(0, size);
+    }
+
+    bool JavascriptArray::Is(Var aValue)
+    {
+        TypeId typeId = JavascriptOperators::GetTypeId(aValue);
+        return JavascriptArray::Is(typeId);
+    }
+
+    bool JavascriptArray::Is(TypeId typeId)
+    {
+        return typeId >= TypeIds_ArrayFirst && typeId <= TypeIds_ArrayLast;
+    }
+
+    bool JavascriptArray::IsVarArray(Var aValue)
+    {
+        TypeId typeId = JavascriptOperators::GetTypeId(aValue);
+        return JavascriptArray::IsVarArray(typeId);
+    }
+
+    bool JavascriptArray::IsVarArray(TypeId typeId)
+    {
+        return typeId == TypeIds_Array;
+    }
+
+    JavascriptArray* JavascriptArray::FromVar(Var aValue)
+    {
+        AssertMsg(Is(aValue), "Ensure var is actually a 'JavascriptArray'");
+
+        return static_cast<JavascriptArray *>(RecyclableObject::FromVar(aValue));
+    }
+
+    // Get JavascriptArray* from a Var, which is either a JavascriptArray* or ESArray*.
+    JavascriptArray* JavascriptArray::FromAnyArray(Var aValue)
+    {
+        AssertMsg(Is(aValue) || ES5Array::Is(aValue), "Ensure var is actually a 'JavascriptArray' or 'ES5Array'");
+
+        return static_cast<JavascriptArray *>(RecyclableObject::FromVar(aValue));
+    }
+
+    // Check if a Var is a direct-accessible (fast path) JavascriptArray.
+    bool JavascriptArray::IsDirectAccessArray(Var aValue)
+    {
+        return RecyclableObject::Is(aValue) &&
+            (VirtualTableInfo<JavascriptArray>::HasVirtualTable(aValue) ||
+                VirtualTableInfo<JavascriptNativeIntArray>::HasVirtualTable(aValue) ||
+                VirtualTableInfo<JavascriptNativeFloatArray>::HasVirtualTable(aValue));
     }
 
     DynamicObjectFlags JavascriptArray::GetFlags() const
@@ -11886,5 +11934,91 @@ Case0:
     {
         stringBuilder->AppendCppLiteral(L"Object, (Array)");
         return TRUE;
+    }
+
+    bool JavascriptNativeArray::Is(Var aValue)
+    {
+        TypeId typeId = JavascriptOperators::GetTypeId(aValue);
+        return JavascriptNativeArray::Is(typeId);
+    }
+
+    bool JavascriptNativeArray::Is(TypeId typeId)
+    {
+        return JavascriptNativeIntArray::Is(typeId) || JavascriptNativeFloatArray::Is(typeId);
+    }
+
+    JavascriptNativeArray* JavascriptNativeArray::FromVar(Var aValue)
+    {
+        AssertMsg(Is(aValue), "Ensure var is actually a 'JavascriptNativeArray'");
+
+        return static_cast<JavascriptNativeArray *>(RecyclableObject::FromVar(aValue));
+    }
+
+    bool JavascriptNativeIntArray::Is(Var aValue)
+    {
+        TypeId typeId = JavascriptOperators::GetTypeId(aValue);
+        return JavascriptNativeIntArray::Is(typeId);
+    }
+
+    bool JavascriptCopyOnAccessNativeIntArray::Is(Var aValue)
+    {
+        TypeId typeId = JavascriptOperators::GetTypeId(aValue);
+        return JavascriptCopyOnAccessNativeIntArray::Is(typeId);
+    }
+
+    bool JavascriptNativeIntArray::Is(TypeId typeId)
+    {
+        return typeId == TypeIds_NativeIntArray;
+    }
+
+    bool JavascriptCopyOnAccessNativeIntArray::Is(TypeId typeId)
+    {
+        return typeId == TypeIds_CopyOnAccessNativeIntArray;
+    }
+
+    bool JavascriptNativeIntArray::IsNonCrossSite(Var aValue)
+    {
+        bool ret = !TaggedInt::Is(aValue) && VirtualTableInfo<JavascriptNativeIntArray>::HasVirtualTable(aValue);
+        Assert(ret == (JavascriptNativeIntArray::Is(aValue) && !JavascriptNativeIntArray::FromVar(aValue)->IsCrossSiteObject()));
+        return ret;
+    }
+
+    JavascriptNativeIntArray* JavascriptNativeIntArray::FromVar(Var aValue)
+    {
+        AssertMsg(Is(aValue), "Ensure var is actually a 'JavascriptNativeIntArray'");
+
+        return static_cast<JavascriptNativeIntArray *>(RecyclableObject::FromVar(aValue));
+    }
+
+    JavascriptCopyOnAccessNativeIntArray* JavascriptCopyOnAccessNativeIntArray::FromVar(Var aValue)
+    {
+        AssertMsg(Is(aValue), "Ensure var is actually a 'JavascriptCopyOnAccessNativeIntArray'");
+
+        return static_cast<JavascriptCopyOnAccessNativeIntArray *>(RecyclableObject::FromVar(aValue));
+    }
+
+    bool JavascriptNativeFloatArray::Is(Var aValue)
+    {
+        TypeId typeId = JavascriptOperators::GetTypeId(aValue);
+        return JavascriptNativeFloatArray::Is(typeId);
+    }
+
+    bool JavascriptNativeFloatArray::Is(TypeId typeId)
+    {
+        return typeId == TypeIds_NativeFloatArray;
+    }
+
+    bool JavascriptNativeFloatArray::IsNonCrossSite(Var aValue)
+    {
+        bool ret = !TaggedInt::Is(aValue) && VirtualTableInfo<JavascriptNativeFloatArray>::HasVirtualTable(aValue);
+        Assert(ret == (JavascriptNativeFloatArray::Is(aValue) && !JavascriptNativeFloatArray::FromVar(aValue)->IsCrossSiteObject()));
+        return ret;
+    }
+
+    JavascriptNativeFloatArray* JavascriptNativeFloatArray::FromVar(Var aValue)
+    {
+        AssertMsg(Is(aValue), "Ensure var is actually a 'JavascriptNativeFloatArray'");
+
+        return static_cast<JavascriptNativeFloatArray *>(RecyclableObject::FromVar(aValue));
     }
 } //namespace Js

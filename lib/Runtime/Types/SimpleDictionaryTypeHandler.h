@@ -18,31 +18,6 @@
 
 namespace Js
 {
-    template <typename Ranges>
-    struct PropertyIndexRangesBase
-    {
-        static void VerifySlotCapacity(int requestedCapacity);
-    };
-
-    template <typename TPropertyIndex>
-    struct PropertyIndexRanges
-    {
-    };
-
-    template <>
-    struct PropertyIndexRanges<PropertyIndex> : public PropertyIndexRangesBase<PropertyIndexRanges<PropertyIndex>>
-    {
-        static const PropertyIndex MaxValue = Constants::PropertyIndexMax;
-        static const PropertyIndex NoSlots  = Constants::NoSlot;
-    };
-
-    template <>
-    struct PropertyIndexRanges<BigPropertyIndex> : public PropertyIndexRangesBase<PropertyIndexRanges<BigPropertyIndex>>
-    {
-        static const BigPropertyIndex MaxValue = 0x3FFFFFFF;
-        static const BigPropertyIndex NoSlots  = Constants::NoBigSlot;
-    };
-
     template <typename TMapKey>
     struct PropertyMapKeyTraits
     {

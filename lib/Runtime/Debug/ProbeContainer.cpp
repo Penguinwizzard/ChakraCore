@@ -111,7 +111,7 @@ namespace Js
             {
                 DiagStackFrame* frm = nullptr;
                 InterpreterStackFrame *interpreterFrame = walker.GetCurrentInterpreterFrame();
-                ScriptContext* frameScriptContext = interpreterFrame ? interpreterFrame->GetScriptContext() : walker.GetCurrentScriptContext();
+                ScriptContext* frameScriptContext = walker.GetCurrentScriptContext();
                 Assert(frameScriptContext);
 
                 if (!fMatchWithCurrentScriptContext && !frameScriptContext->IsInDebugMode() && tempFramePointers->Count() == 0)

@@ -5,6 +5,10 @@
 
 #include "BackEnd.h"
 #include "Language\JavascriptFunctionArgIndex.h"
+#include "Types\DynamicObjectEnumerator.h"
+#include "Types\DynamicObjectSnapshotEnumerator.h"
+#include "Types\DynamicObjectSnapshotEnumeratorWPCache.h"
+#include "Library\ForInObjectEnumerator.h"
 
 const Js::OpCode LowererMD::MDUncondBranchOpcode = Js::OpCode::B;
 const Js::OpCode LowererMD::MDTestOpcode = Js::OpCode::TST;

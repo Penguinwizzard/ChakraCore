@@ -4,6 +4,8 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 #include "errstr.h"
+#include "Library\EngineInterfaceObject.h"
+#include "Library\IntlEngineInterfaceExtensionObject.h"
 
 namespace Js
 {

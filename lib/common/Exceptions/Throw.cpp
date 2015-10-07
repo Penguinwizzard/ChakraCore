@@ -5,7 +5,12 @@
 #pragma once
 
 #include "CommonExceptionsPch.h"
+// === C Runtime Header Files ===
+#pragma warning(push)
+#pragma warning(disable: 4995) /* 'function': name was marked as #pragma deprecated */
 #include <strsafe.h>
+#pragma warning(pop)
+
 #include "StackOverflowException.h"
 #include "AsmJsParseException.h"
 #include "InternalErrorException.h"

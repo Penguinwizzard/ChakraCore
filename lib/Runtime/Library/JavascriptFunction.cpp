@@ -4,9 +4,19 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 #include "BackEndAPI.h"
+#include "Library\StackScriptFunction.h"
+#include "Types\SpreadArgument.h"
+
 #ifdef ENABLE_DOM_FAST_PATH
 #include "Library\DOMFastPathInfo.h"
 #endif
+
+#ifdef _M_X64
+#include "ByteCode\PropertyIdArray.h"
+#include "Language\AsmJsTypes.h"
+#include "Language\AsmJsModule.h"
+#endif
+
 extern "C" PVOID _ReturnAddress(VOID);
 #pragma intrinsic(_ReturnAddress)
 
@@ -15,12 +25,6 @@ extern "C" PVOID _ReturnAddress(VOID);
 extern "C" PVOID __guard_check_icall_fptr;
 #endif
 extern "C" void __cdecl _alloca_probe_16();
-#endif
-
-#ifdef _M_X64
-#include "ByteCode\PropertyIdArray.h"
-#include "Language\AsmJsTypes.h"
-#include "Language\AsmJsModule.h"
 #endif
 
 #ifdef _M_X64_OR_ARM64

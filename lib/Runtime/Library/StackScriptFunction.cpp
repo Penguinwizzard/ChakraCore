@@ -4,6 +4,8 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 #include "Language\JavascriptFunctionArgIndex.h"
+#include "Language\InterpreterStackFrame.h"
+#include "Library\StackScriptFunction.h"
 
 namespace Js
 { 

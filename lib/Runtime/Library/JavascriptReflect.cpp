@@ -4,6 +4,11 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 
+#include "Types\DynamicObjectEnumerator.h"
+#include "Types\DynamicObjectSnapshotEnumerator.h"
+#include "Types\DynamicObjectSnapshotEnumeratorWPCache.h"
+#include "Library\ForInObjectEnumerator.h"
+
 namespace Js
 {
     Var JavascriptReflect::EntryDefineProperty(RecyclableObject* function, CallInfo callInfo, ...)

@@ -4,6 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 #include "Backend.h"
 #ifdef ENABLE_DOM_FAST_PATH
+#include "Library\JavascriptTypedObjectSlotAccessorFunction.h"
 #include "Types\DOMFastPath.h"
 #endif
 // Parser includes
@@ -16,6 +17,7 @@
 #include "Math\JavascriptSSE2MathOperators.h"
 #include "Math\JavascriptSSE2MathOperators.inl"
 #include "Math\CrtSSE2Math.h"
+#include "Library\JavascriptGeneratorFunction.h"
 
 namespace IR
 {

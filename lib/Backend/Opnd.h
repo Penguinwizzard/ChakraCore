@@ -467,7 +467,7 @@ public:
     PropertySymOpnd * CopyForTypeCheckOnly(Func *func);
     PropertySymOpnd * CopyInternalSub(Func *func);
     PropertySymOpnd * CloneDefInternalSub(Func *func);
-    PropertySymOpnd * CloneUseInternalSub(Func *func);    
+    PropertySymOpnd * CloneUseInternalSub(Func *func);
     void              Init(uint inlineCacheIndex, Func *func);
 
 private:

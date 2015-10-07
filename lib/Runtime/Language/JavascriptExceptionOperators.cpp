@@ -4,6 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLanguagePch.h"
 #include "shlwapi.h"
+#include "Language\InterpreterStackFrame.h"
 
 #ifdef _M_IX86
 #ifdef _CONTROL_FLOW_GUARD

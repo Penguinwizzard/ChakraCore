@@ -4,6 +4,12 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 
+#include "Types\DynamicObjectEnumerator.h"
+#include "Types\DynamicObjectSnapshotEnumerator.h"
+#include "Types\DynamicObjectSnapshotEnumeratorWPCache.h"
+#include "Library\ForInObjectEnumerator.h"
+#include "Library\NullEnumerator.h"
+
 namespace Js
 {
 
@@ -365,38 +371,5 @@ namespace Js
     BOOL ForInObjectEnumerator::CanBeReused()
     {
         return object == nullptr || (object->GetScriptContext() == GetScriptContext() && !JavascriptProxy::Is(object));
-    }
-
-    Var NullEnumerator::GetCurrentIndex()
-    {
-        // This function may be called without calling MoveNext to verify element availbility 
-        // by JavascriptDispatch::GetNextDispIDWithScriptEnter which call 
-        // GetEnumeratorCurrentPropertyId to resume an enumeration
-        return this->GetLibrary()->GetUndefined();
-    }
-
-    Var NullEnumerator::GetCurrentValue()
-    {
-        Assert(false);
-        return this->GetLibrary()->GetUndefined();
-    }
-
-    BOOL NullEnumerator::MoveNext(PropertyAttributes* attributes)
-    {
-        return FALSE;
-    }
-
-    void NullEnumerator::Reset()
-    {
-    }
-
-    Var NullEnumerator::GetCurrentAndMoveNext(PropertyId& propertyId, PropertyAttributes* attributes)
-    {
-        return NULL;
-    }
-
-    BOOL NullEnumerator::GetCurrentPropertyId(PropertyId *propertyId)
-    {
-        return FALSE;
     }
 }

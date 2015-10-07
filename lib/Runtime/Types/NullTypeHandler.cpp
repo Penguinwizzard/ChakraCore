@@ -4,6 +4,9 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeTypePch.h"
 
+#include "Types\NullTypeHandler.h"
+#include "Types\SimpleTypeHandler.h"
+
 namespace Js
 {
     int NullTypeHandlerBase::GetPropertyCount()

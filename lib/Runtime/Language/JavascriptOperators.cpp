@@ -5,10 +5,19 @@
 #include "RuntimeLanguagePch.h"
 
 #include "Memory\LanguageTelemetry.h"
-
+#include "Types\PathTypeHandler.h"
+#include "Types\PropertyIndexRanges.h"
 #include "Types\WithScopeObject.h"
+#include "Types\SpreadArgument.h"
 #include "Library\JavascriptPromise.h"
 #include "Library\JavascriptRegularExpression.h"
+#include "Library\ThrowErrorObject.h"
+#include "Library\JavascriptGeneratorFunction.h"
+
+#include "Types\DynamicObjectEnumerator.h"
+#include "Types\DynamicObjectSnapshotEnumerator.h"
+#include "Types\DynamicObjectSnapshotEnumeratorWPCache.h"
+#include "Library\ForInObjectEnumerator.h"
 
 #pragma warning(disable:4302)  // truncation from 'pointer' to 'integral'
 
@@ -4634,8 +4643,8 @@ CommonNumber:
 
     __inline Var JavascriptOperators::GetThisFromModuleRoot(Var thisVar)
     {
-        ModuleRoot *moduleRoot = static_cast<ModuleRoot*>(thisVar);
-        RecyclableObject* hostObject = moduleRoot->GetHostObject();
+        RootObjectBase * rootObject = static_cast<RootObjectBase*>(thisVar);
+        RecyclableObject* hostObject = rootObject->GetHostObject();
 
         //
         // if the module root has the host object, use that as "this"

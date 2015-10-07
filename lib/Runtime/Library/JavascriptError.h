@@ -6,12 +6,12 @@
 
 namespace Js
 {
-    typedef struct
+    struct RestrictedErrorStrings
     {
         BSTR restrictedErrStr;
         BSTR referenceStr;
         BSTR capabilitySid;
-    } RestrictedErrorStrings;
+    };
 
     class JavascriptError : public DynamicObject
     {

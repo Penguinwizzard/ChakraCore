@@ -754,7 +754,7 @@ private:
     bool                hasAnyStackNestedFunc;
     bool                hasMarkTempObjects;
     Cloner *            m_cloner;
-    InstrMap *          m_cloneMap;          
+    InstrMap *          m_cloneMap;
     Js::ReadOnlyDynamicProfileInfo *const profileInfo;
     NativeCodeData::Allocator       nativeCodeDataAllocator;
     NativeCodeData::Allocator       transferDataAllocator;

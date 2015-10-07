@@ -36,12 +36,7 @@
 
 #include "Library\EtwTrace.h"
 
-
-#ifdef ENABLE_MUTATION_BREAKPOINT
-// REVIEW: ChakraCore Dependency
-#include "activdbg_private.h"
-#include "Debug\MutationBreakpoint.h"
-#endif
+#include "Library\ArgumentsObject.h"
 
 #include "Types\TypePropertyCache.h"
 #include "Library\JavascriptVariantDate.h"
@@ -49,7 +44,16 @@
 #include "Library\JavascriptSymbol.h"
 #include "Library\JavascriptSymbolObject.h"
 #include "Library\JavascriptGenerator.h"
+#include "Library\StackScriptFunction.h"
 #include "Library\HostObjectBase.h"
+
+
+#ifdef ENABLE_MUTATION_BREAKPOINT
+// REVIEW: ChakraCore Dependency
+#include "activdbg_private.h"
+#include "Debug\MutationBreakpoint.h"
+#endif
+
 
 // SIMD_JS
 // SIMD types
@@ -82,3 +86,4 @@
 // .inl files
 #include "Language\CacheOperators.inl"
 #include "Language\JavascriptMathOperators.inl"
+

@@ -17,6 +17,8 @@
 #include "DictionaryStats.h"
 #endif
 
+#include "Language\InterpreterStackFrame.h"
+
 #ifdef _M_X64_OR_ARM64
 // TODO: Clean this warning up
 #pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
@@ -1220,19 +1222,7 @@ namespace Js
 #endif
 
 #if DBG
-        // We aren't going to be passing in a number to check range of -dump:LibInit, that will be done by Intl/Promise
-        // This is just to force init Intl code if dump:LibInit has been passed
-        if (CONFIG_ISENABLED(DumpFlag) && Js::Configuration::Global.flags.Dump.IsEnabled(Js::JsLibInitPhase))
-        {
-            for (uint i = 0; i <= MaxEngineInterfaceExtensionKind; i++)
-            {
-                EngineExtensionObjectBase* engineExtension = this->javascriptLibrary->GetEngineInterfaceObject()->GetEngineExtension((Js::EngineInterfaceExtensionKind)i);
-                if (engineExtension != nullptr)
-                {
-                    engineExtension->DumpByteCode();
-                }
-            }
-        }
+        this->javascriptLibrary->DumpLibraryByteCode();
 
         isInitialized = TRUE;
 #endif

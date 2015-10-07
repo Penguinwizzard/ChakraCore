@@ -98,6 +98,7 @@
     <ClInclude Include="PerfHint.h" />
     <ClInclude Include="PerfHintDescriptions.h" />
     <ClInclude Include="PropertyDescriptor.h" />
+    <ClInclude Include="PropertyIndexRanges.h" />
     <ClInclude Include="RecyclableObject.h" />
     <ClInclude Include="RuntimeTypePch.h" />    
     <ClInclude Include="SimpleDictionaryPropertyDescriptor.h" />

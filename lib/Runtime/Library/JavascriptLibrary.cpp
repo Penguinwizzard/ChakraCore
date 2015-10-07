@@ -6,9 +6,29 @@
 
 #include "Library\JSON.h"
 #include "Types\MissingPropertyTypeHandler.h"
+#include "Types\NullTypeHandler.h"
+#include "Types\SimpleTypeHandler.h"
+#include "Types\DeferredTypeHandler.h"
+#include "Types\PathTypeHandler.h"
+#include "Types\PropertyIndexRanges.h"
+#include "Types\SimpleDictionaryPropertyDescriptor.h"
+#include "Types\SimpleDictionaryTypeHandler.h"
+
 #ifdef ENABLE_DOM_FAST_PATH
+#include "Library\JavascriptTypedObjectSlotAccessorFunction.h"
 #include "Library\DOMFastPathInfo.h"
 #endif
+
+#include "Types\DynamicObjectEnumerator.h"
+#include "Types\DynamicObjectSnapshotEnumerator.h"
+#include "Types\DynamicObjectSnapshotEnumeratorWPCache.h"
+#include "Library\ForInObjectEnumerator.h"
+#include "Library\NullEnumerator.h"
+#include "Library\EngineInterfaceObject.h"
+#include "Library\IntlEngineInterfaceExtensionObject.h"
+#include "Library\ThrowErrorObject.h"
+#include "Library\StackScriptFunction.h"
+
 namespace Js
 {
     SimplePropertyDescriptor JavascriptLibrary::SharedFunctionPropertyDescriptors[2] =
@@ -1083,6 +1103,11 @@ namespace Js
             HeapDelete(scriptContext);
             scriptContext = nullptr;
         }
+    }
+
+    JavascriptEnumerator * JavascriptLibrary::GetNullEnumerator() const
+    {
+        return nullEnumerator;
     }
 
 #define  ADD_TYPEDARRAY_CONSTRUCTOR(typedarrayConstructor, TypedArray) \
@@ -6882,6 +6907,24 @@ namespace Js
         return hr;
     }
 
+#if DBG
+    void JavascriptLibrary::DumpLibraryByteCode()
+    {
+        // We aren't going to be passing in a number to check range of -dump:LibInit, that will be done by Intl/Promise
+        // This is just to force init Intl code if dump:LibInit has been passed
+        if (CONFIG_ISENABLED(DumpFlag) && Js::Configuration::Global.flags.Dump.IsEnabled(Js::JsLibInitPhase))
+        {
+            for (uint i = 0; i <= MaxEngineInterfaceExtensionKind; i++)
+            {
+                EngineExtensionObjectBase* engineExtension = this->GetEngineInterfaceObject()->GetEngineExtension((Js::EngineInterfaceExtensionKind)i);
+                if (engineExtension != nullptr)
+                {
+                    engineExtension->DumpByteCode();
+                }
+            }
+        }
+    }
+#endif
 #ifdef IR_VIEWER
     HRESULT JavascriptLibrary::ProfilerRegisterIRViewer()
     {

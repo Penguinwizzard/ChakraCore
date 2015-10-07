@@ -4,6 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeTypePch.h"
 #include "Language\JavascriptStackWalker.h"
+#include "Library\StackScriptFunction.h"
 
 namespace Js
 {

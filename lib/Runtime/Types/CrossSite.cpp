@@ -194,7 +194,7 @@ namespace Js
 
         if (typeId == TypeIds_ModuleRoot)
         {
-            ModuleRoot *moduleRoot = static_cast<ModuleRoot*>(object);
+            RootObjectBase *moduleRoot = static_cast<RootObjectBase*>(object);
             HostObjectBase * hostObject = moduleRoot->GetHostObject();
 
             // When marshaling module root, all we need is the host object.

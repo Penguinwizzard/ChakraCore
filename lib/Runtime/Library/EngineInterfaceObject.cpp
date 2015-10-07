@@ -1,4 +1,4 @@
-//-------------------------------------------------------------------------------------------------------
+ //-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
@@ -7,6 +7,8 @@
 #if defined(ENABLE_INTL_OBJECT) || defined(ENABLE_PROJECTION)
 
 #include "errstr.h"
+#include "Library\EngineInterfaceObject.h"
+#include "Types\DeferredTypeHandler.h"
 
 #define IfFailThrowHr(op) \
     if (FAILED(hr=(op))) \

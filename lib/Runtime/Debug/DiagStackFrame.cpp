@@ -4,6 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeDebugPch.h"
 #include "Language\JavascriptFunctionArgIndex.h"
+#include "Language\InterpreterStackFrame.h"
 
 namespace Js
 {
