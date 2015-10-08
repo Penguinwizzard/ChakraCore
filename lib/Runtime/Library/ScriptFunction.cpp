@@ -268,7 +268,7 @@ namespace Js
         }
 
         changeEntryPointLocation |= 0x80;
-        this->GetScriptFunctionType()->SetEntryPointInfo(entryPointInfo, changeEntryPointLocation, cleanedUpEntryPoint);
+        this->GetScriptFunctionType()->SetEntryPointInfo(entryPointInfo, changeEntryPointLocation, cleanedUpEntryPoint, entryPoint);
     }
 
     FunctionProxy * ScriptFunction::GetFunctionProxy() const

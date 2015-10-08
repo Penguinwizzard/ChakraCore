@@ -8792,8 +8792,9 @@ namespace Js
     void FunctionEntryPointInfo::OnCleanup(bool isShutdown)
     {
         // stack data recording can record this.
-        char localCopy[sizeof(FunctionEntryPointInfo)];
-        memcpy(&localCopy, this, sizeof(FunctionEntryPointInfo));
+        char localCopy[sizeof(FunctionEntryPointInfo)+4];
+        *((FunctionEntryPointInfo**)&localCopy[0]) = this;
+        memcpy(&localCopy[4], this, sizeof(FunctionEntryPointInfo)-4);
         globalCopy = localCopy;
 
         if (this->IsCodeGenDone())
