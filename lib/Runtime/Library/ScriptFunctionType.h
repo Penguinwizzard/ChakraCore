@@ -53,7 +53,7 @@ namespace Js
             if (this->entryPointInfo->IsFunctionEntryPointInfo()) 
             {
                 tmp->nativeAddr = (void*)((Js::FunctionEntryPointInfo*)this->entryPointInfo)->GetNativeAddress();
-                if (((Js::FunctionEntryPointInfo*)this->entryPointInfo)->functionProxy)
+                if (((Js::FunctionEntryPointInfo*)this->entryPointInfo)->functionProxy && ((Js::FunctionEntryPointInfo*)this->entryPointInfo)->functionProxy->IsFunctionBody())
                 {
                     memcpy(&tmp->fbCopy, ((Js::FunctionEntryPointInfo*)this->entryPointInfo)->GetFunctionBody(), sizeof(FunctionBody));
                 }
