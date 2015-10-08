@@ -210,7 +210,7 @@ namespace Js
     SIMDValue SIMDInt16x8Operation::OpAddSaturate(const SIMDValue& aValue, const SIMDValue& bValue)
     {
         SIMDValue result;
-        int mask 0x8000;
+        int mask = 0x8000;
         for (uint idx = 0; idx < 8; ++idx)
         {
             int16 val1 = aValue.i16[idx];
@@ -229,7 +229,7 @@ namespace Js
     SIMDValue SIMDInt16x8Operation::OpSubSaturate(const SIMDValue& aValue, const SIMDValue& bValue)
     {
         SIMDValue result;
-        int mask 0x8000;
+        int mask = 0x8000;
         for (uint idx = 0; idx < 8; ++idx)
         {
             int16 val1 = aValue.i16[idx];
@@ -339,43 +339,6 @@ namespace Js
 
         return result;
     }
-
-    // Lane Access
-    short SIMDInt16x8Operation::OpExtractLane(const SIMDValue& aValue, int index)
-    {
-        Assert(index >= 0 && index < 8);
-        int16 result = 0;
-        if (index >= 0 && index < 8)
-        {
-            result = aValue.i16[index];
-        }
-        else
-        {
-            Assert(FALSE);
-        }
-        return result;
-    }
-
-    SIMDValue SIMDInt16x8Operation::OpReplaceLane(const SIMDValue& aValue, int index, short newValue)
-    {
-        SIMDValue result = aValue;
-
-        Assert(index >= 0 && index < 8);
-
-        if (index >= 0 && index < 8)
-        {
-            result.i16[index] = newValue;
-            return result;
-        }
-        else
-        {
-            Assert(FALSE);
-
-        }
-        return result;
-
-    }
-
 
     // ShiftOps
     SIMDValue SIMDInt16x8Operation::OpShiftLeftByScalar(const SIMDValue& value, int count)
