@@ -43,7 +43,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Opnd.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)PDataManager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Peeps.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)PEWriter.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)PreLowerPeeps.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)PrologEncoder.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)QueuedFullJitWorkItem.cpp" />
@@ -106,6 +105,8 @@
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)arm64\EncoderMD.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Inline.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)GlobOptSimd128.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)SwitchIRBuilder.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AgenPeeps.h" />
@@ -124,7 +125,6 @@
     <ClInclude Include="CodeGenWorkItemType.h" />
     <ClInclude Include="codegenworkitem.h" />
     <ClInclude Include="DbCheckPostLower.h" />
-    <ClInclude Include="DisassembleX86.h" />
     <ClInclude Include="EmitBuffer.h" />
     <ClInclude Include="Encoder.h" />
     <ClInclude Include="FlowGraph.h" />
@@ -153,7 +153,6 @@
     <ClInclude Include="LowerMDShared.h" />
     <ClInclude Include="NativeCodeData.h" />
     <ClInclude Include="PDataManager.h" />
-    <ClInclude Include="PEWriter.h" />
     <ClInclude Include="PrologEncoder.h" />
     <ClInclude Include="Lower.h" />
     <ClInclude Include="NativeCodeGenerator.h" />
@@ -299,7 +298,7 @@
       <Filter>arm</Filter>
     </ClInclude>
     <ClInclude Include="IRBaseTypeList.h" />
-    <ClInclude Include="IRKind.h" />
+    <ClInclude Include="SwitchIRBuilder.h" />
   </ItemGroup>
   <ItemGroup>
     <MASM Include="$(MSBuildThisFileDirectory)amd64\LinearScanMdA.asm">
@@ -313,7 +312,6 @@
     <None Include="IR.inl" />
     <None Include="Opnd.inl" />
     <None Include="Sym.inl" />
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="arm">

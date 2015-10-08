@@ -29,7 +29,6 @@
     <ClCompile Include="$(MsBuildThisFileDirectory)EtwTrace.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)Exception.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)ExpirableObject.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)HostLogger.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)IteratorObjectEnumerator.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptArrayIterator.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptBuiltInFunctions.cpp" />
@@ -145,7 +144,6 @@
     <ClInclude Include="SIMDInt32x4Lib.h" />
     <ClInclude Include="SIMDInt32x4Operation.h" />
     <ClInclude Include="SIMDShuffleMasks.h" />
-    <ClInclude Include="LibraryFunction.h" />
     <ClInclude Include="ArrayBuffer.h" />
     <ClInclude Include="AsyncDebug.h" />
     <ClInclude Include="BoundFunction.h" />
@@ -166,7 +164,6 @@
     <ClInclude Include="EtwTrace.h" />
     <ClInclude Include="Exception.h" />
     <ClInclude Include="ExpirableObject.h" />
-    <ClInclude Include="HostLogger.h" />
     <ClInclude Include="HostObjectBase.h" />
     <ClInclude Include="InJavascript\intl.js.bc.32b.h" />
     <ClInclude Include="InJavascript\intl.js.bc.64b.h" />
@@ -202,7 +199,6 @@
     <ClInclude Include="JavascriptTypedObjectSlotAccessorFunction.h" />
     <ClInclude Include="JavascriptWeakMap.h" />
     <ClInclude Include="JavascriptWeakSet.h" />
-    <ClInclude Include="JavascriptWinRTFunction.h" />
     <ClInclude Include="JSONParser.h" />
     <ClInclude Include="JSONScanner.h" />
     <ClInclude Include="JSONString.h" />
