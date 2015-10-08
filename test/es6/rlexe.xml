@@ -1011,7 +1011,7 @@
 <test>
     <default>
         <files>ES6NewTarget.js</files>
-        <compile-flags>-es6classes -args summary -endargs -es6generators</compile-flags>
+        <compile-flags>-es6classes -ES6Destructuring -args summary -endargs -es6generators</compile-flags>
     </default>
 </test>
 
@@ -1048,6 +1048,21 @@
         <files>globalNewTargetSyntaxError.js</files>
         <baseline>globalNewTargetSyntaxError.baseline</baseline>
         <tags>exclude_dynapogo</tags>
+    </default>
+</test>
+<test>
+    <default>
+        <files>globalCatchNewTargetSyntaxError.js</files>
+        <baseline>globalCatchNewTargetSyntaxError.baseline</baseline>
+        <tags>exclude_dynapogo</tags>
+    </default>
+</test>
+<test>
+    <default>
+        <files>globalParamCatchNewTargetSyntaxError.js</files>
+        <baseline>globalParamCatchNewTargetSyntaxError.baseline</baseline>
+        <tags>exclude_dynapogo</tags>
+        <compile-flags>-ES6Destructuring</compile-flags>
     </default>
 </test>
 <test>
