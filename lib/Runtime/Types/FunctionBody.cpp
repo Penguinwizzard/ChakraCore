@@ -8817,6 +8817,14 @@ namespace Js
                 // release LoopHeaders here if the entrypointInfo is TJ 
                 this->GetFunctionBody()->ReleaseLoopHeaders();
             }
+
+            if (!isShutdown 
+                && functionBody->GetSimpleJitEntryPointInfo() == this
+                && this->GetNativeAddress() == (DWORD_PTR)(functionBody->GetOriginalEntryPoint_Unchecked()))
+            {
+                DebugBreak();
+            }
+
             if(functionBody->GetSimpleJitEntryPointInfo() == this)
             {
                 functionBody->SetSimpleJitEntryPointInfo(nullptr);
@@ -8834,11 +8842,6 @@ namespace Js
                 Assert(this->validationCookie != nullptr);
                 if (validationCookie == (void*) current)
                 {
-                    if (this->GetNativeAddress() == (DWORD_PTR)(functionBody->GetOriginalEntryPoint_Unchecked()))
-                    {
-                        DebugBreak();
-                    }
-
                     scriptContext->FreeFunctionEntryPoint((Js::JavascriptMethod)this->GetNativeAddress());
                 }
             }
