@@ -7203,6 +7203,12 @@ BackwardPass::RemoveEmptyLoops()
             JitAdelete(alloc, loop->memOpInfo->inductionVariableChangeInfoMap);
         }
 
+        if (loop->memOpInfo->inductionVariableOpndPerUnrollMap)
+        {
+            loop->memOpInfo->inductionVariableOpndPerUnrollMap->Clear();
+            JitAdelete(alloc, loop->memOpInfo->inductionVariableOpndPerUnrollMap);
+        }
+
         if (loop->memOpInfo->inductionVariablesUsedAfterLoop)
         {
             JitAdelete(this->tempAlloc, loop->memOpInfo->inductionVariablesUsedAfterLoop);

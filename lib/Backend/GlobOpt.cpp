@@ -20460,11 +20460,11 @@ GlobOpt::GetOrGenerateLoopCountForMemOp(Loop *loop)
 {
     LoopCount *loopCount = loop->loopCount;
 
-    if (loopCount && !loopCount->HasBeenGenerated())
+    if (loopCount && !loopCount->HasGeneratedLoopCountSym())
     {
         Assert(loop->bailOutInfo);
         EnsureBailTarget(loop);
-        GenerateLoopCount(loop, loopCount);
+        GenerateLoopCountPlusOne(loop, loopCount);
     }
 
     return loopCount;
@@ -20476,6 +20476,11 @@ GlobOpt::GenerateInductionVariableChangeForMemOp(Loop *loop, byte unroll, IR::In
     LoopCount *loopCount = loop->loopCount;
     IR::Opnd *sizeOpnd = nullptr;
     Assert(loopCount);
+    Assert(loop->memOpInfo->inductionVariableOpndPerUnrollMap);
+    if (loop->memOpInfo->inductionVariableOpndPerUnrollMap->TryGetValue(unroll, &sizeOpnd))
+    {
+        return sizeOpnd;
+    }
 
     Func *localFunc = loop->GetFunc();
 
@@ -20493,19 +20498,10 @@ GlobOpt::GenerateInductionVariableChangeForMemOp(Loop *loop, byte unroll, IR::In
 
     if (loopCount->LoopCountMinusOneSym())
     {
-        IRType type = loopCount->LoopCountMinusOneSym()->GetType();
+        IRType type = loopCount->LoopCountSym()->GetType();
 
         // Loop count is off by one, so add one
-        IR::RegOpnd *loopCountOpnd = IR::RegOpnd::New(type, localFunc);
-        IR::RegOpnd *minusOneOpnd = IR::RegOpnd::New(loopCount->LoopCountMinusOneSym(), type, localFunc);
-        minusOneOpnd->SetIsJITOptimizedReg(true);
-        InsertInstr(IR::Instr::New(Js::OpCode::Add_I4,
-            loopCountOpnd,
-            minusOneOpnd,
-            IR::IntConstOpnd::New(1, type, localFunc, true),
-            localFunc));
-
-
+        IR::RegOpnd *loopCountOpnd = IR::RegOpnd::New(loopCount->LoopCountSym(), type, localFunc);
         sizeOpnd = loopCountOpnd;
 
         if (unroll != 1)
@@ -20527,6 +20523,7 @@ GlobOpt::GenerateInductionVariableChangeForMemOp(Loop *loop, byte unroll, IR::In
         uint size = (loopCount->LoopCountMinusOneConstantValue() + 1)  * unroll;
         sizeOpnd = IR::IntConstOpnd::New(size, IRType::TyUint32, localFunc, true);
     }
+    loop->memOpInfo->inductionVariableOpndPerUnrollMap->Add(unroll, sizeOpnd);
     return sizeOpnd;
 }
 
@@ -20537,6 +20534,11 @@ GlobOpt::GenerateStartIndexOpndForMemop(Loop *loop, IR::Opnd *indexOpnd, IR::Opn
     Func *localFunc = loop->GetFunc();
     IRType type = indexOpnd->GetType();
 
+    const int cacheIndex = ((int)isInductionVariableChangeIncremental << 1) | (int)bIndexAlreadyChanged;
+    if (loop->memOpInfo->startIndexOpndCache[cacheIndex])
+    {
+        return loop->memOpInfo->startIndexOpndCache[cacheIndex];
+    }
     const auto InsertInstr = [&](IR::Instr *instr)
     {
         if (insertBeforeInstr == nullptr)
@@ -20578,6 +20580,7 @@ GlobOpt::GenerateStartIndexOpndForMemop(Loop *loop, IR::Opnd *indexOpnd, IR::Opn
                                    localFunc));
     }
 
+    loop->memOpInfo->startIndexOpndCache[cacheIndex] = startIndexOpnd;
     return startIndexOpnd;
 }
 

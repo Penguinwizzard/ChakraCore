@@ -1485,6 +1485,7 @@ private:
     void                    DetermineDominatingLoopCountableBlock(Loop *const loop, BasicBlock *const headerBlock);
     void                    DetermineLoopCount(Loop *const loop);
     void                    GenerateLoopCount(Loop *const loop, LoopCount *const loopCount);
+    void                    GenerateLoopCountPlusOne(Loop *const loop, LoopCount *const loopCount);
     void                    GenerateSecondaryInductionVariableBound(Loop *const loop, StackSym *const inductionVariableSym, const LoopCount *const loopCount, const int maxMagnitudeChange, StackSym *const boundSym);
 
 private:

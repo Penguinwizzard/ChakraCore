@@ -654,13 +654,19 @@ public:
     } InductionVariableChangeInfo;
 
     typedef JsUtil::BaseDictionary<SymID, InductionVariableChangeInfo, JitArenaAllocator> InductionVariableChangeInfoMap;
+    typedef JsUtil::BaseDictionary<byte, IR::Opnd*, JitArenaAllocator> InductionVariableOpndPerUnrollMap;
     typedef SListCounted<MemOpCandidate *>  MemOpList;
     typedef struct
     {
         MemOpList *candidates;
+        bool doMemOp : 1;
         BVSparse<JitArenaAllocator> *inductionVariablesUsedAfterLoop;
         InductionVariableChangeInfoMap *inductionVariableChangeInfoMap;
-        bool doMemOp : 1;
+        InductionVariableOpndPerUnrollMap *inductionVariableOpndPerUnrollMap;
+        // This assumes that all memop operation use the same index and has the same length
+        // Temporary map to reuse existing startIndexOpnd while emiting
+        // 0 = !increment & !alreadyChanged, 1 = !increment & alreadyChanged, 2 = increment & !alreadyChanged, 3 = increment & alreadyChanged
+        IR::RegOpnd* startIndexOpndCache[4];
     } MemOpInfo;
 
     MemOpInfo *memOpInfo;

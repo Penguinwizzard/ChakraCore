@@ -2072,6 +2072,45 @@ void GlobOpt::GenerateLoopCount(Loop *const loop, LoopCount *const loopCount)
     loopCount->SetLoopCountMinusOneSym(intermediateValueSym);
 }
 
+void GlobOpt::GenerateLoopCountPlusOne(Loop *const loop, LoopCount *const loopCount)
+{
+    Assert(loop);
+    Assert(loopCount);
+    Assert(loopCount == loop->loopCount);
+    if (loopCount->HasGeneratedLoopCountSym())
+    {
+        return;
+    }
+    if (!loopCount->HasBeenGenerated())
+    {
+        GenerateLoopCount(loop, loopCount);
+    }
+    Assert(loopCount->HasBeenGenerated());
+    // If this is null then the loop count is a constant and there is nothing more to do here
+    if (loopCount->LoopCountMinusOneSym())
+    {
+        // Prepare the landing pad for bailouts and instruction insertion
+        BailOutInfo *const bailOutInfo = loop->bailOutInfo;
+        Assert(bailOutInfo);
+        IR::Instr *const insertBeforeInstr = bailOutInfo->bailOutInstr;
+        Assert(insertBeforeInstr);
+        Func *const func = bailOutInfo->bailOutFunc;
+
+        IRType type = loopCount->LoopCountMinusOneSym()->GetType();
+
+        // loop count is off by one, so add one
+        IR::RegOpnd *loopCountOpnd = IR::RegOpnd::New(type, func);
+        IR::RegOpnd *minusOneOpnd = IR::RegOpnd::New(loopCount->LoopCountMinusOneSym(), type, func);
+        minusOneOpnd->SetIsJITOptimizedReg(true);
+        insertBeforeInstr->InsertBefore(IR::Instr::New(Js::OpCode::Add_I4,
+                                                       loopCountOpnd,
+                                                       minusOneOpnd,
+                                                       IR::IntConstOpnd::New(1, type, func, true),
+                                                       func));
+        loopCount->SetLoopCountSym(loopCountOpnd->GetStackSym());
+    }
+}
+
 void GlobOpt::GenerateSecondaryInductionVariableBound(
     Loop *const loop,
     StackSym *const inductionVariableSym,
