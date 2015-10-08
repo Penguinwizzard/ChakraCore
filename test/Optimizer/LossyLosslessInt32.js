@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // Lossless conversion to int32 for compensation, needs to bail out even with aggressive int spec disabled. Incr_A is not
 // type-specialized on loop second pass, because 'a' is live on the back-edge and becomes a NumberValue on merge, in turn
 // because '++a' may overflow a 32-bit integer during the loop. The lossless conversion to int32 therefore must include bailout,

@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 function testES6Whitespace(whitespaceChar, whitespaceCode) {
     try {
         var str = "var " + whitespaceChar + "a = 5;";

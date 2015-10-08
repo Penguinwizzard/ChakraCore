@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // Tests for...in behavior when child object shadows a prototype property with a non-enumerable shadow
 // See OS bug #850013
 

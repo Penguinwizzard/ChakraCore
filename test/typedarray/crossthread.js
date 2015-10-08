@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // TODO: in order for objects from another thread to have correct typeof, we need to make sure that 
 //       proxies are registered, in other words, WScript.RegisterCrossThreadInterfacePS() is called 
 //       for each thread (Win8 - done during OS setup, Win7 - need to do that explicitly). 

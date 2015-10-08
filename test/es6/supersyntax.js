@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // Using super is invalid in many places.
 // These tests are generated and are intended to use to verify the restriction is done properly in various contexts
 // Here is the C# code used the generate these test cases

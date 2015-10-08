@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 var shouldBailout = false;
 var func0 = function(argArr1) {
     for(var __loopvar2 = 0; __loopvar2 < 1 && argArr1[(shouldBailout ? argArr1[0] : 0) ? 0 : 0]; __loopvar2++) {

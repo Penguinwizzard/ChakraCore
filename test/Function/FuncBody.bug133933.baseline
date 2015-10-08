@@ -1,16 +1,16 @@
 
 
-  Line   2: function getUnicodeString() {
+  Line   6: function getUnicodeString() {
   Col    1: ^
 
 
-  Line  11: function run() {
+  Line  10: function noop(a, b) {
   Col    1: ^
 
 
-  Line   2: function getUnicodeString() {
+  Line  15: function run() {
   Col    1: ^
 
 
-  Line   6: function noop(a, b) {
+  Line   6: function getUnicodeString() {
   Col    1: ^

@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 //Adding this in unittests as it is highly unlikely to hit again in exprgen and we may lose the pattern in this bug
 //Switches: -maxinterpretcount:1 -maxsimplejitruncount:2
 

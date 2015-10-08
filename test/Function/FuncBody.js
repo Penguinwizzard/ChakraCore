@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 
 // Check new Function with various inputs. Handles 2 parameters and a function body
 function CheckNewFunction2(id, arg1, arg2, fnbody, expectsSuccess)

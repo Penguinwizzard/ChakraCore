@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 function print(x) { WScript.Echo(x) }
 
 // Verify that side-effects happen in the right order w.r.t. evaluation of operands.

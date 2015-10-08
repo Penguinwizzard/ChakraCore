@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // This test case contains duplicated test262 tests that were broken by the
 // regression mentioned in this bug. They have been slightly modified. We can
 // remove this when test262 becomes a standard part of SNAP.

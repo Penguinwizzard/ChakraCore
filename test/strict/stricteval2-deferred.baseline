@@ -1,2 +1,2 @@
 SyntaxError: Invalid usage of 'eval' in strict mode
-	at code (stricteval2-deferred.js:3:74)
+	at code (stricteval2-deferred.js:8:74)

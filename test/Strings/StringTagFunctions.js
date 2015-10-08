@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // String tag function tests -- verifies behavior of functions like String.prototype.link
 
 if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch

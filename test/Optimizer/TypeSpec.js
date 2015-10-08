@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // Conv_Num gets changed to Nop during copy-prop. The Nop instruction should not go through type specialization.
 function test0(a) {
     a &= 1;

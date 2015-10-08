@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 function GenerateArray(seed, arrayType, arraySize, missingValuePercent, typeOfDeclaration) {
     for (var arrayIndex = 0; arrayIndex < arraySize; arrayIndex++) {
         if (isVarArray && arrayIndex != 0) {}

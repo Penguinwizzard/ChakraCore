@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 (function module(a){
   var func1 = function func1(p0) {};
   var c = 1 / Math.abs(func1(1, 1, 1, 1));

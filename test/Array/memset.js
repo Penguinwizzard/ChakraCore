@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // Compares the value set by interpreter with the jitted code
 // need to run with -mic:1 -off:simplejit -off:JITLoopBody -off:inline
 // Run locally with -trace:memop -trace:bailout to help find bugs

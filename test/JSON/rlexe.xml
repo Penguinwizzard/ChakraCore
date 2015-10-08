@@ -50,12 +50,6 @@
   </test>
   <test>
     <default>
-      <files>simple.kraken.js</files>
-      <baseline>simple.kraken.baseline</baseline>
-    </default>
-  </test>
-  <test>
-    <default>
       <files>simple.stringify.js</files>
       <baseline>simple.stringify.baseline</baseline>
     </default>

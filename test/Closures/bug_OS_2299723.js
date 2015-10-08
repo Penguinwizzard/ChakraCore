@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // let and const variables should exhibit redeclaration and assignment to const errors
 // even when they are located in an ActivationObjectEx cached scope.
 // Test them independently due to OS bug ###

@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 function assertPropertyExists(o, p, v) {
     if (!o.hasOwnProperty(p)) {
         throw new Error("Object does not have expected property '" + p + "'");

@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // Switches: -bgJit- -maxInterpretCount:2 
 
 // Test 1: Invalidate constructor cache by changing the constructor's prototype property.

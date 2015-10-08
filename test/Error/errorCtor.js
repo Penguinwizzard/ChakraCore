@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // TrimStackTracePath is needed because same file is run in version 1/2 where LoadScriptFile is not defined
 function TrimStackTracePath(obj)
 {

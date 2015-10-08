@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // - 'a' is considered a field since it's used by a nested function
 // - 'a' is hoisted out of the outermost loop
 // - At 'a |= 1', the hoisted stack sym for 'a' is int-specialized

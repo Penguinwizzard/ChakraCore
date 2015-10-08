@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 //Configuration: constructors.xml
 //Testcase Number: 34970
 //Switches: -maxinterpretcount:5 -maxsimplejitruncount:6

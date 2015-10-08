@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 var requestGlobal = WScript.LoadScriptFile("TypePropertyCache_CrossContext_RequestContext.js", "samethread");
 
 // Access 'o.p' (property on the object) from a different script context

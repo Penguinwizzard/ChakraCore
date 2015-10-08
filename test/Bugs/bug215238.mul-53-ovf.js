@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 //Configuration: TrackIntUsage.xml
 //Testcase Number: 5965
 //Switches:   -maxinterpretcount:1 -maxsimplejitruncount:2  -MaxLinearStringCaseCount:2 -MaxLinearIntCaseCount:2 -forceserialized -MinSwitchJumpTableSize:3 -bgjit- -loopinterpretcount:1 -force:fieldhoist -force:polymorphicinlinecache -force:fieldcopyprop -sse:2 -force:interpreterautoprofile

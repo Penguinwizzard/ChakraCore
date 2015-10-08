@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 //Bug number 101772
 //flags: -forcejitloopbody -ForceArrayBTree -off:ArrayCheckHoist 
 var debugOn = false //if this test fails turn this flag on and see if the array is correct

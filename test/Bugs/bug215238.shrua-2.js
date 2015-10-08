@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 //Configuration: TrackIntUsage.xml
 //Testcase Number: 1894
 //Switches:   -maxinterpretcount:1 -maxsimplejitruncount:1  -force:polymorphicinlinecache -MinSwitchJumpTableSize:2 -force:rejit -force:ScriptFunctionWithInlineCache -force:atom -off:ArrayCheckHoist -force:fixdataprops -ForceArrayBTree

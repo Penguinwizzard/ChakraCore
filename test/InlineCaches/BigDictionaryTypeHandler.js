@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 /*
  * Behaviour of inline caches when the TypeHandler switches to BigDictionaryTypeHandler. 
  * Based on a bug: Blue 179018

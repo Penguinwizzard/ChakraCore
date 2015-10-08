@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 runTest('new Number("444" + "123")');
 runTest('new Number(-444123)');
 runTest('new Number("444" + "123.789123456789875436")');

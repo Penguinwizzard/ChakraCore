@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 function sameValue(x, y) {
   if (x == y)
     return x != 0 || y != 0 || (1/x == 1/y); // 0.0 != -0.0

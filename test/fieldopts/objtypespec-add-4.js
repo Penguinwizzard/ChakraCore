@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 //Switches:   -bgJit- -maxInterpretCount:2
 
 // This test verifies that we mark all types (not just the type of the object being modified) as potentially having been

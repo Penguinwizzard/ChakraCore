@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 //Configuration: ..\inline.xml
 //Testcase Number: 126423
 //Switches:-maxinterpretcount:1  -bgjit- -loopinterpretcount:1 -force:fieldhoist -off:floattypespec 

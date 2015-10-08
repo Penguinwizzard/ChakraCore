@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 var trackStep = 10; var trackCnt=1; function print(s) {};
 try{eval("\"use strict\"; let(z) { (null);}throw StopIteration;");}catch(ex){}
 try{eval("const x = ~-1383803673;gc()");}catch(ex){}

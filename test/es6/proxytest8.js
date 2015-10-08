@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 var str = new String('testing contains');
 var p = new Proxy(str, {});
 // Object.defineProperty(p, "toString", {value : function(arg) { print('proxys toString'); return "b"; }});

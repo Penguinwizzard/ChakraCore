@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 (function addAccessorPropertiesToGlobal() {
     var getter = function () { throw new Error("This getter should not get called"); };
     var setter = function () { throw new Error("This setter should not get called"); };

@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 var arr = new Int8Array([-256,255,0,-0,NaN,null,undefined,-1,256,-128,-127,127,128]);
 var dst1 = new Uint8ClampedArray(arr.length);
 var dst2 = new Uint8Array(arr.length);

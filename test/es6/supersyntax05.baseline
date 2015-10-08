@@ -1,2 +1,2 @@
 SyntaxError: Invalid use of the 'super' keyword
-	at code (supersyntax05.js:3:23)
+	at code (supersyntax05.js:8:23)

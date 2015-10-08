@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // The tests in this file are GENERATED. Don't add tests to this file manually; instead, modify
 // ArrayCheckHoist_Generate.js and regenerate this file, or use a different file for the new test.
 

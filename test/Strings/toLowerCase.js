@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 //String.prototype.toLowerCase()
 //TO DO  : Need to add Unicode and Upper Ascii Characters test cases and also Test cases that would throw exception(NaN and undefined Objects)
 

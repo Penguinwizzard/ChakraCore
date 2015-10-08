@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // ES6 Genertors Syntax tests -- verifies function* and yield syntax spec conformance
 
 if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch

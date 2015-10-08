@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // This test doesn't care about output as long as there are no AV's or Asserts.
 // There was a bug in generating LineOffsetCache that has easy repro with -dump:globlopt,
 // however, because globopt dump changes frequently we don't want a baseline

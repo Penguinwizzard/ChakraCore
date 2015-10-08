@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // Ranges of valid hexadecimal characters
 var v0 = 48, v9 = 57, vA = 65, vZ = 90, va = 97, vz = 122;
 

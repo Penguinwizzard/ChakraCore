@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 function generateTestFunctionAndCall(
     functionTypeAndName,            // integer: 0 is declaration, 1 is declaration named 'arguments', 2 is unnamed expression, 3 is expression named 'arguments'
     parameterArguments,             // boolean

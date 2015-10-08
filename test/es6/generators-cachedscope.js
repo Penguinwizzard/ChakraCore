@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // This is a sketchy test because it relies on knowing that the following pattern
 // hits the heuristics that decide to cache the scopes within the generator function.
 // If those heuristics were to change this test could no longer be hitting the

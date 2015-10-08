@@ -11,12 +11,12 @@ Function glo ( (#1.0), #1) () (size: 12 [12])
     0007   LdUndef              R0 
 
 
-  Line   1: var a =5;
-  Col    1: ^
+  Line   6: var a =5;
+  Col    2: ^
     0009   ProfiledStRootFld    root.a = R2 #2 <2> 
 
 
-  Line   2: WScript.Echo("Passed");
+  Line   7: WScript.Echo("Passed");
   Col    1: ^
     000f   ProfiledLdRootFld    R5 = root.WScript #1 <1> 
     0015   ProfiledLdMethodFld  R4 = R5.Echo #0 <0> 

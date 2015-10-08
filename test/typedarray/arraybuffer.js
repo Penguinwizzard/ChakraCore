@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 WScript.Echo("new ArrayBuffer without argument");
 var a = new ArrayBuffer();
 WScript.Echo(a.byteLength);

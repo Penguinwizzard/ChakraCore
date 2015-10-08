@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 var a = [true, false, new Boolean(true), new Boolean(false)];
 var b = [true, false, new Boolean(true), new Boolean(false), -1, 0, 1, 2, 1.0, 1.1, 0.0, +0, -0, null, undefined, new Object(), "", "abc", "-1", "0", "1", "2", "true", "false", "t", "f", "True", "False", " 1.00 ", " 1. ", " +1.0 ", new Number(0), new Number(1)];
 

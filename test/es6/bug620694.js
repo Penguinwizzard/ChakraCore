@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // OS: Bug 620694: Assertion when evaluating 'new Map();' in F12
 //
 //     Object.toString() incorrectly returns Var from temporary allocator.

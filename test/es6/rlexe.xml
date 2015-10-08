@@ -623,14 +623,6 @@
   </test>
   <test>
     <default>
-      <files>unicode_sunspider_regexp-dna.js</files>
-      <baseline />
-      <compile-flags> -ES6Unicode -ES6RegExSticky</compile-flags>
-      <tags>exclude_ship</tags>
-    </default>
-  </test>
-  <test>
-    <default>
       <files>unicode_blue_533163.js</files>
       <baseline>unicode_blue_533163.baseline</baseline>
       <compile-flags> -ES6Unicode</compile-flags>

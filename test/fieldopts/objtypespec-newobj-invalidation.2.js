@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // This test verifies that we correctly bail out if a constructor cache is invalidated as part
 // of evaluating one of the arguments of the call to the constructor.
 

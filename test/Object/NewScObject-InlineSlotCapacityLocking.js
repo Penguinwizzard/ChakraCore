@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 (function testInlineSlotCapacityLocking1() {
     WScript.Echo("Test: testInlineSlotCapacityLocking1...");
     // Wrap the constructors into an object literal with PathTypeHandler to make sure we get fixed functions.

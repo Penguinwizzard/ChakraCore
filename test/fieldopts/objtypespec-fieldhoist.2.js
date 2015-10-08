@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // Windows Blue Bug 146740
 // Run with -maxInterpretCount:1
 // When hoisting a field load or store would hoist the associated type check as well.  However, this type check may
