@@ -18,7 +18,9 @@ namespace Js
         uint32 codePath;
         ProxyEntryPointInfo* oldEntryPointInfo;
         ProxyEntryPointInfo* newEntryPointInfo;
+        void* address;
         void* cleanedUpEntryPoint;
+        PVOID stack[32];
         StackData* stackData;
     };
     class ScriptFunctionType : public DynamicType
@@ -27,7 +29,7 @@ namespace Js
         static ScriptFunctionType * New(FunctionProxy * proxy, bool isShared);
         static DWORD GetEntryPointInfoOffset() { return offsetof(ScriptFunctionType, entryPointInfo); }
         ProxyEntryPointInfo * GetEntryPointInfo() const { return entryPointInfo; }
-        void SetEntryPointInfo(ProxyEntryPointInfo * entryPointInfo, uint32 codePath, void* cleanedUpEntryPoint = nullptr)
+        void SetEntryPointInfo(ProxyEntryPointInfo * entryPointInfo, uint32 codePath, void* cleanedUpEntryPoint = nullptr, void* address = nullptr)
         {          
             auto tmp = (ScriptFunctionTypeExtra*)malloc(sizeof(ScriptFunctionTypeExtra));
             auto e = this->extra;
@@ -44,7 +46,9 @@ namespace Js
             tmp->codePath = codePath;
             tmp->oldEntryPointInfo = this->entryPointInfo;
             tmp->newEntryPointInfo = entryPointInfo;
+            tmp->address = address;
             tmp->cleanedUpEntryPoint = cleanedUpEntryPoint;
+            CaptureStackBackTrace(0, 32, tmp->stack, 0);
 
             if (cleanedUpEntryPoint)
             {
