@@ -21,6 +21,7 @@ namespace Js
         void* address;
         void* nativeAddr;
         void* cleanedUpEntryPoint;
+        char fbCopy[sizeof(FunctionBody)];
         PVOID stack[32];
         StackData* stackData;
     };
@@ -33,6 +34,7 @@ namespace Js
         void SetEntryPointInfo(ProxyEntryPointInfo * entryPointInfo, uint32 codePath, void* cleanedUpEntryPoint = nullptr, void* address = nullptr)
         {          
             auto tmp = (ScriptFunctionTypeExtra*)malloc(sizeof(ScriptFunctionTypeExtra));
+            memset(tmp, 0, sizeof(tmp));
             auto e = this->extra;
             if (e == nullptr)
             {
@@ -48,8 +50,13 @@ namespace Js
             tmp->oldEntryPointInfo = this->entryPointInfo;
             tmp->newEntryPointInfo = entryPointInfo;
             tmp->address = address;
-            tmp->nativeAddr = this->entryPointInfo->IsFunctionEntryPointInfo() ? (void*)((Js::FunctionEntryPointInfo*)this->entryPointInfo)->GetNativeAddress() : nullptr;
+            if (this->entryPointInfo->IsFunctionEntryPointInfo()) 
+            {
+                tmp->nativeAddr = (void*)((Js::FunctionEntryPointInfo*)this->entryPointInfo)->GetNativeAddress();
+                memcpy(&tmp->fbCopy, ((Js::FunctionEntryPointInfo*)this->entryPointInfo)->GetFunctionBody(), sizeof(FunctionBody));
+            }
             tmp->cleanedUpEntryPoint = cleanedUpEntryPoint;
+            
             CaptureStackBackTrace(0, 32, tmp->stack, 0);
 
             //if (this->entryPointInfo->IsFunctionEntryPointInfo())
