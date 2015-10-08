@@ -1010,6 +1010,14 @@ ObjectTemp::IsTempUseOpCodeSym(IR::Instr * instr, Js::OpCode opcode, Sym * sym)
     case Js::OpCode::LdMethodFromFlags:
         return instr->GetSrc1()->AsPropertySymOpnd()->GetObjectSym() == sym;
     case Js::OpCode::InitFld:
+        if (Js::PropertyRecord::DefaultAttributesForPropertyId(
+                instr->GetDst()->AsPropertySymOpnd()->GetPropertySym()->m_propertyId, true) & PropertyDeleted)
+        {
+            // If the property record is marked PropertyDeleted, the InitFld will cause a type handler conversion,
+            // which may result in creation of a weak reference to the object itself.
+            return false;
+        }
+        // Fall through
     case Js::OpCode::StFld:
     case Js::OpCode::StFldStrict:
         return 
