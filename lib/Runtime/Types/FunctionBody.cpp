@@ -8829,13 +8829,6 @@ namespace Js
                 this->GetFunctionBody()->ReleaseLoopHeaders();
             }
 
-            if (!isShutdown 
-                && functionBody->GetSimpleJitEntryPointInfo() == this
-                && this->GetNativeAddress() == (DWORD_PTR)(functionBody->GetOriginalEntryPoint_Unchecked()))
-            {
-                DebugBreak();
-            }
-
             if(functionBody->GetSimpleJitEntryPointInfo() == this)
             {
                 functionBody->SetSimpleJitEntryPointInfo(nullptr);
