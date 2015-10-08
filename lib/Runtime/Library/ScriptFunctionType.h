@@ -19,6 +19,7 @@ namespace Js
         ProxyEntryPointInfo* oldEntryPointInfo;
         ProxyEntryPointInfo* newEntryPointInfo;
         void* address;
+        void* nativeAddr;
         void* cleanedUpEntryPoint;
         PVOID stack[32];
         StackData* stackData;
@@ -47,8 +48,17 @@ namespace Js
             tmp->oldEntryPointInfo = this->entryPointInfo;
             tmp->newEntryPointInfo = entryPointInfo;
             tmp->address = address;
+            tmp->nativeAddr = this->entryPointInfo->IsFunctionEntryPointInfo() ? (void*)((Js::FunctionEntryPointInfo*)this->entryPointInfo)->GetNativeAddress() : nullptr;
             tmp->cleanedUpEntryPoint = cleanedUpEntryPoint;
             CaptureStackBackTrace(0, 32, tmp->stack, 0);
+
+            //if (this->entryPointInfo->IsFunctionEntryPointInfo())
+            //{
+            //    if (((Js::FunctionEntryPointInfo*)this->entryPointInfo)->GetNativeAddress() == (DWORD_PTR)entryPointInfo->address) 
+            //    {
+            //        DebugBreak();
+            //    }
+            //}
 
             if (cleanedUpEntryPoint)
             {
