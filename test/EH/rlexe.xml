@@ -22,18 +22,6 @@
   </test>
   <test>
     <default>
-      <files>oos1.js</files>
-      <baseline>oos1.baseline</baseline>
-      <!--
-         TODO broken in ch: uncaught error stack trace includes absolute paths
-         which break baseline comparison; requires host reporting of stack trace
-         rather than getting the stacktrace property from the error object.
-       -->
-      <tags>exclude_dynapogo,exclude_ch</tags>
-    </default>
-  </test>
-  <test>
-    <default>
       <files>oos2.js</files>
     </default>
   </test>

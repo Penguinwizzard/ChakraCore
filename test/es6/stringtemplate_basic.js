@@ -105,16 +105,12 @@ function verifyCallSite(siteObj, cookedVals, rawVals) {
         echo("Verifying siteObj against a known set of cooked and raw values...");
 
         for(var i = 0; i < siteObj.length; i++) {
-                echo(`siteObj[${i}] = ${siteObj[i]}`);
-
                 if(siteObj[i] !== cookedVals[i]) {
                         echo(`FAILED! (expected = ${cookedVals[i]})`);
                         success = false;
                 }
         }
         for(var i = 0; i < siteObj.raw.length; i++) {
-                echo(`siteObj.raw[${i}] = ${siteObj.raw[i]}`);
-
                 if(siteObj.raw[i] !== rawVals[i]) {
                         echo(`FAILED! (expected = ${rawVals[i]})`);
                         success = false;
