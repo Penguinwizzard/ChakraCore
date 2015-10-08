@@ -204,7 +204,8 @@ namespace Js
 
         JavascriptFunction* builtinFunctions[BuiltinFunction::Count];
 
-        typedef JsUtil::BaseDictionary<FunctionInfo *, BuiltinFunction, Recycler> FuncInfoToBuiltinIdMap;
+        typedef JsUtil::BaseDictionary<FunctionInfo *, BuiltinFunction, ArenaAllocator > FuncInfoToBuiltinIdMap;
+
         FuncInfoToBuiltinIdMap * funcInfoToBuiltinIdMap;
 
 
@@ -444,7 +445,7 @@ namespace Js
     public:
         // SIMD_JS
         // used by inliner. Maps Simd FuncInfo (library func) to equivalent opcode.
-        typedef JsUtil::BaseDictionary<FunctionInfo *, Js::OpCode, Recycler> FuncInfoToOpcodeMap;
+        typedef JsUtil::BaseDictionary<FunctionInfo *, Js::OpCode, ArenaAllocator> FuncInfoToOpcodeMap;
         FuncInfoToOpcodeMap * simdFuncInfoToOpcodeMap;
 
         struct SimdFuncSignature
@@ -453,7 +454,7 @@ namespace Js
             ValueType returnType;
             ValueType *args;        // argument types
         };
-        typedef JsUtil::BaseDictionary<Js::OpCode, SimdFuncSignature, Recycler> OpcodeToSignatureMap;
+        typedef JsUtil::BaseDictionary<Js::OpCode, SimdFuncSignature, ArenaAllocator > OpcodeToSignatureMap;
         OpcodeToSignatureMap * simdOpcodeToSignatureMap;
 
         void AddSimdFuncToMaps(Js::OpCode op, ...);

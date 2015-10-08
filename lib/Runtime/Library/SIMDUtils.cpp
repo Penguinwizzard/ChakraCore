@@ -78,13 +78,19 @@ namespace Js {
         SIMDValue result = { 0 };
         CompileAssert(laneCount == 16 || laneCount == 8);
         Assert(lanes != nullptr);
-        const inst *srcValues1 = laneCount == 8 ? src1.i8 : src1.i16;
-        const inst *srcValues2 = laneCount == 8 ? src2.i8 : src2.i16;
-        const int *resValues = laneCount == 8 ? result.i8 : result.i16;
-
-        for (uint i = 0; i < laneCount; ++i)
-       	{
-            resValues[i] = lanes[i] < laneCount ? srcValues1[lanes[i]] : srcValues2[lanes[i] - laneCount];
+        if (laneCount == 8)
+        {
+            for (uint i = 0; i < laneCount; ++i)
+            {
+                result.i16[i] = lanes[i] < laneCount ? src1.i16[lanes[i]] : src2.i16[lanes[i] - laneCount];
+            }
+        }
+        else
+        {
+            for (uint i = 0; i < laneCount; ++i)
+            {
+                result.i8[i] = lanes[i] < laneCount ? src1.i8[lanes[i]] : src2.i8[lanes[i] - laneCount];
+            }
         }
 
         return result;
@@ -110,14 +116,15 @@ namespace Js {
             laneValue[i] = SIMDCheckLaneIndex(scriptContext, lanes[i], range);
         }
         
-        result = SIMD128InnerShuffle<laneCount>(src1Value, src2Value, numLanes, laneValue);
+        result = SIMD128InnerShuffle<laneCount>(src1Value, src2Value, laneValue);
         
         return SIMDType::New(&result, scriptContext);
     }
     template Var SIMD128SlowShuffle<JavascriptSIMDInt8x16, 16>(Var src1, Var src2, Var *lanes, const uint range, ScriptContext* scriptContext);
     template Var SIMD128SlowShuffle<JavascriptSIMDInt16x8, 8>(Var src1, Var src2, Var *lanes, const uint range, ScriptContext* scriptContext);
 
-    template <class SIMDType, int laneCount> Var SIMD128SlowShuffle(Var src1, Var src2, Var lane0, Var lane1, Var lane2, Var lane3, int range, ScriptContext* scriptContext)
+    template <class SIMDType, int laneCount> 
+    Var SIMD128SlowShuffle(Var src1, Var src2, Var lane0, Var lane1, Var lane2, Var lane3, int range, ScriptContext* scriptContext)
     {
         SIMDType *a = SIMDType::FromVar(src1);
         SIMDType *b = SIMDType::FromVar(src2);
@@ -266,8 +273,6 @@ namespace Js {
         return SIMD128InnerReplaceLaneI4(jsVal->GetValue(), laneValue, value ? -1 : 0);
     }
 
-    // Enable with Int16x8
-    /*
     //Bool16x8 LaneAccess
     static inline bool SIMD128GetLaneValue(JavascriptSIMDBool16x8 *jsVal, const int laneValue)
     {
@@ -279,7 +284,7 @@ namespace Js {
         Assert(jsVal);
         return SIMD128InnerReplaceLaneI8(jsVal->GetValue(), laneValue, value ? -1 : 0);
     }
-    */
+    
     //Bool8x16 LaneAccess
     static inline bool SIMD128GetLaneValue(JavascriptSIMDBool8x16 *jsVal, const int laneValue)
     {
@@ -328,11 +333,8 @@ namespace Js {
     template bool SIMD128ExtractLane<JavascriptSIMDBool32x4, 4, bool>(Var src, Var lane, ScriptContext* scriptContext);
     template SIMDValue SIMD128ReplaceLane<JavascriptSIMDBool32x4, 4, bool>(Var src, Var lane, bool value, ScriptContext* scriptContext);
 
-    // TODO: Enable with Int16x8
-    /*
     template bool SIMD128ExtractLane<JavascriptSIMDBool16x8, 8, bool>(Var src, Var lane, ScriptContext* scriptContext);
     template SIMDValue SIMD128ReplaceLane<JavascriptSIMDBool16x8, 8, bool>(Var src, Var lane, bool value, ScriptContext* scriptContext);
-    */
     
     template bool SIMD128ExtractLane<JavascriptSIMDBool8x16, 16, bool>(Var src, Var lane, ScriptContext* scriptContext);
     template SIMDValue SIMD128ReplaceLane<JavascriptSIMDBool8x16, 16, bool>(Var src, Var lane, bool value, ScriptContext* scriptContext);

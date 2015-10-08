@@ -65,14 +65,14 @@ namespace Js
         memset(builtinFunctions, 0, sizeof(JavascriptFunction *) * BuiltinFunction::Count);
         
         
-        funcInfoToBuiltinIdMap = RecyclerNew(recycler, FuncInfoToBuiltinIdMap, recycler);
+        funcInfoToBuiltinIdMap = Anew(scriptContext->GeneralAllocator(), FuncInfoToBuiltinIdMap, scriptContext->GeneralAllocator());
 #define LIBRARY_FUNCTION(target, name, argc, flags, entry) \
     funcInfoToBuiltinIdMap->AddNew(&entry, BuiltinFunction::##target##_##name);
 #include "LibraryFunction.h"
 #undef LIBRARY_FUNCTION
 
-        simdFuncInfoToOpcodeMap = RecyclerNew(recycler, FuncInfoToOpcodeMap, recycler);
-        simdOpcodeToSignatureMap = RecyclerNew(recycler, OpcodeToSignatureMap, recycler);
+        simdFuncInfoToOpcodeMap = Anew(scriptContext->GeneralAllocator(), FuncInfoToOpcodeMap, scriptContext->GeneralAllocator());
+        simdOpcodeToSignatureMap = Anew(scriptContext->GeneralAllocator(), OpcodeToSignatureMap, scriptContext->GeneralAllocator());
         {
 
 #define MACRO_SIMD_WMS(op, LayoutAsmJs, OpCodeAttrAsmJs, OpCodeAttr, ...) \
@@ -2971,15 +2971,10 @@ namespace Js
         library->AddFunctionToLibraryObject(bool16x8Function, PropertyIds::splat, &SIMDBool16x8Lib::EntryInfo::Splat, 2, PropertyNone);
 
         // UnaryOps
-        // TODO: Enable with Int16x8
-        /*
         library->AddFunctionToLibraryObject(bool16x8Function, PropertyIds::not, &SIMDBool16x8Lib::EntryInfo::Not, 2, PropertyNone);
-        */
         library->AddFunctionToLibraryObject(bool16x8Function, PropertyIds::allTrue, &SIMDBool16x8Lib::EntryInfo::AllTrue, 2, PropertyNone);
         library->AddFunctionToLibraryObject(bool16x8Function, PropertyIds::anyTrue, &SIMDBool16x8Lib::EntryInfo::AnyTrue, 2, PropertyNone);
         
-        // TODO: Enable with Int16x8
-        /*
         // BinaryOps
         library->AddFunctionToLibraryObject(bool16x8Function, PropertyIds::and, &SIMDBool16x8Lib::EntryInfo::And, 2, PropertyNone);
         library->AddFunctionToLibraryObject(bool16x8Function, PropertyIds::or, &SIMDBool16x8Lib::EntryInfo::Or, 2, PropertyNone);
@@ -2989,7 +2984,6 @@ namespace Js
         library->AddFunctionToLibraryObject(bool16x8Function, PropertyIds::extractLane, &SIMDBool16x8Lib::EntryInfo::ExtractLane, 3, PropertyNone);
         library->AddFunctionToLibraryObject(bool16x8Function, PropertyIds::replaceLane, &SIMDBool16x8Lib::EntryInfo::ReplaceLane, 4, PropertyNone);
         // end Bool16x8
-        */
 
         // Bool8x16
         JavascriptFunction* bool8x16Function = library->AddFunctionToLibraryObject(simdObject, PropertyIds::Bool8x16, &SIMDBool8x16Lib::EntryInfo::Bool8x16, 17, PropertyNone);
@@ -3034,7 +3028,7 @@ namespace Js
         SimdFuncSignature simdFuncSignature;
         simdFuncSignature.argCount = argumentsCount - 2; // arg count to Simd func = argumentsCount - FuncInfo and return Type fields.
         simdFuncSignature.returnType = va_arg(arguments, ValueType);
-        simdFuncSignature.args = RecyclerNewPlus(recycler, simdFuncSignature.argCount * sizeof(ValueType), ValueType);
+        simdFuncSignature.args = AnewArrayZ(scriptContext->GeneralAllocator(), ValueType, simdFuncSignature.argCount);
         for (uint iArg = 0; iArg < simdFuncSignature.argCount; iArg++)
         {
             simdFuncSignature.args[iArg] = va_arg(arguments, ValueType);
@@ -7228,14 +7222,14 @@ namespace Js
         REG_OBJECTS_LIB_FUNC(Bool16x8, SIMDBool16x8Lib::EntryBool16x8);
         REG_OBJECTS_LIB_FUNC(check, SIMDBool16x8Lib::EntryCheck);
         REG_OBJECTS_LIB_FUNC(splat, SIMDBool16x8Lib::EntrySplat);
-        //REG_OBJECTS_LIB_FUNC(not, SIMDBool16x8Lib::EntryNot);
-        //REG_OBJECTS_LIB_FUNC(and, SIMDBool16x8Lib::EntryAnd);
-        //REG_OBJECTS_LIB_FUNC(or , SIMDBool16x8Lib::EntryOr);
-        //REG_OBJECTS_LIB_FUNC(xor, SIMDBool16x8Lib::EntryXor);
+        REG_OBJECTS_LIB_FUNC(not, SIMDBool16x8Lib::EntryNot);
+        REG_OBJECTS_LIB_FUNC(and, SIMDBool16x8Lib::EntryAnd);
+        REG_OBJECTS_LIB_FUNC(or , SIMDBool16x8Lib::EntryOr);
+        REG_OBJECTS_LIB_FUNC(xor, SIMDBool16x8Lib::EntryXor);
         REG_OBJECTS_LIB_FUNC(anyTrue, SIMDBool16x8Lib::EntryAnyTrue);
         REG_OBJECTS_LIB_FUNC(allTrue, SIMDBool16x8Lib::EntryAllTrue);
-        //REG_OBJECTS_LIB_FUNC(extractLane, SIMDBool16x8Lib::EntryExtractLane);
-        //REG_OBJECTS_LIB_FUNC(replaceLane, SIMDBool16x8Lib::EntryReplaceLane);
+        REG_OBJECTS_LIB_FUNC(extractLane, SIMDBool16x8Lib::EntryExtractLane);
+        REG_OBJECTS_LIB_FUNC(replaceLane, SIMDBool16x8Lib::EntryReplaceLane);
 
         // Bool8x16
         REG_OBJECTS_LIB_FUNC(Bool8x16, SIMDBool8x16Lib::EntryBool8x16);

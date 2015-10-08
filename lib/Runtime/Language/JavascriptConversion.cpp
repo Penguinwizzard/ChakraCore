@@ -865,8 +865,6 @@ CommonNumber:
             case TypeIds_SIMDInt8x16:
             case TypeIds_SIMDInt16x8:
             case TypeIds_SIMDFloat64x2:
-            case TypeIds_SIMDInt16x8:
-            case TypeIds_SIMDInt8x16:
             case TypeIds_SIMDBool32x4:
             case TypeIds_SIMDBool16x8:
             case TypeIds_SIMDBool8x16:

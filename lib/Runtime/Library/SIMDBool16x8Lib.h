@@ -26,7 +26,6 @@ namespace Js {
             static FunctionInfo Or;
             static FunctionInfo Xor;
 
-            // TODO: Enable with Int16x8
             //Lane access
             static FunctionInfo ExtractLane;
             static FunctionInfo ReplaceLane;

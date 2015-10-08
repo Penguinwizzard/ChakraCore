@@ -97,7 +97,7 @@ namespace Js
         wchar_t stringBuffer[1024];
         SIMDValue value = instance->GetValue();
 
-        swprintf_s(stringBuffer, 1024, L"SIMD.Bool8x16(%s, %s, %s, %s, %s, %s, %s, %s)", \
+        swprintf_s(stringBuffer, 1024, L"SIMD.Bool16x8(%s, %s, %s, %s, %s, %s, %s, %s)", \
             value.i16[0] ? L"true" : L"false", value.i16[1] ? L"true" : L"false", value.i16[2] ? L"true" : L"false", value.i16[3] ? L"true" : L"false", \
             value.i16[4] ? L"true" : L"false", value.i16[5] ? L"true" : L"false", value.i16[6] ? L"true" : L"false", value.i16[7] ? L"true" : L"false"
             );

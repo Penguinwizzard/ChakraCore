@@ -149,17 +149,12 @@ ENTRY(shiftLeftByScalar)
 ENTRY(shiftRightLogicalByScalar)
 ENTRY(shiftRightArithmeticByScalar)
 
-<<<<<<< HEAD
 ENTRY(allTrue)
 ENTRY(anyTrue)
 ENTRY(addSaturate)
 ENTRY(subSaturate)
 ENTRY(extractLaneAsBool)
 ENTRY(selectBits)
-=======
-ENTRY(anyTrue)
-ENTRY(allTrue)
->>>>>>> Bool32x4 initial implementation
 // End SIMD
 
 

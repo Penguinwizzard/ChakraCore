@@ -50,8 +50,6 @@ namespace Js
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
         
-        /*
-        // TODO: dependent on Int16x8
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
@@ -64,16 +62,12 @@ namespace Js
         SIMDValue lanes = SIMDInt16x8Operation::OpSplat(value ? -1 : 0);
 
         return JavascriptSIMDBool16x8::New(&lanes, scriptContext);
-        */
-        return NULL;
     }
 
-    // TODO: Dependent on Int16x8
     //Lane Access
     Var SIMDBool16x8Lib::EntryExtractLane(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
-        /*
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
@@ -88,14 +82,12 @@ namespace Js
             return JavascriptBoolean::ToVar(result, scriptContext);
         }
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdBool8x16TypeMismatch, L"ExtractLane");
-        */
-        return NULL;
     }
 
     Var SIMDBool16x8Lib::EntryReplaceLane(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
-        /*
+        
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
@@ -116,9 +108,6 @@ namespace Js
         }
 
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdBool16x8TypeMismatch, L"ReplaceLane");
-        */
-
-        return NULL;
     }
     
     // UnaryOps
