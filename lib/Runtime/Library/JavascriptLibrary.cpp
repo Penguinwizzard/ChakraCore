@@ -736,7 +736,7 @@ namespace Js
 
         // SIMD_JS
         // Initialize types
-        if (scriptContext->GetConfig()->IsSimdjsEnabled())
+        if (GetScriptContext()->GetConfig()->IsSimdjsEnabled())
         {
             simdFloat32x4TypeStatic = StaticType::New(scriptContext, TypeIds_SIMDFloat32x4, nullValue /*prototype*/, nullptr);
             simdFloat64x2TypeStatic = StaticType::New(scriptContext, TypeIds_SIMDFloat64x2, nullValue /*prototype*/, nullptr);
@@ -748,7 +748,6 @@ namespace Js
             simdBool16x8TypeStatic = StaticType::New(scriptContext, TypeIds_SIMDBool16x8, nullValue /*prototype*/, nullptr);
             simdBool8x16TypeStatic = StaticType::New(scriptContext, TypeIds_SIMDBool8x16, nullValue /*prototype*/, nullptr);
         }
-
 
         // Initialize Object types
         for (int16 i = 0; i < PreInitializedObjectTypeCount; i++)
@@ -1181,8 +1180,7 @@ namespace Js
         numberTypeDisplayString = CreateStringFromCppLiteral(L"number");
         promiseResolveFunction = nullptr;
 
-        // SIMD_JS
-        if (scriptContext->GetConfig()->IsSimdjsEnabled())
+        if (GetScriptContext()->GetConfig()->IsSimdjsEnabled())
         {
             simdFloat32x4DisplayString = CreateStringFromCppLiteral(L"Float32x4");
             simdFloat64x2DisplayString = CreateStringFromCppLiteral(L"Float64x2");
@@ -1194,7 +1192,6 @@ namespace Js
             simdBool16x8DisplayString = CreateStringFromCppLiteral(L"Bool16x8");
             simdBool8x16DisplayString = CreateStringFromCppLiteral(L"Bool8x16");
         }
-
 
         if (scriptContext->GetConfig()->IsES6SymbolEnabled())
         {
@@ -1357,7 +1354,7 @@ namespace Js
 
         // SIMD_JS
         // we declare global objects and lib functions only if SSE2 is available. Else, we use the polyfill.
-        if (AutoSystemInfo::Data.SSE2Available() && scriptContext->GetConfig()->IsSimdjsEnabled())
+        if (AutoSystemInfo::Data.SSE2Available() && GetScriptContext()->GetConfig()->IsSimdjsEnabled())
         {
             simdObject = DynamicObject::New(recycler,
                 DynamicType::New(scriptContext, TypeIds_Object, objectPrototype, nullptr,
@@ -1377,7 +1374,6 @@ namespace Js
             simdBool16x8ToStringFunction = DefaultCreateFunction(&JavascriptSIMDBool16x8::EntryInfo::ToString, 1, nullptr, nullptr, PropertyIds::toString);
             simdBool8x16ToStringFunction = DefaultCreateFunction(&JavascriptSIMDBool8x16::EntryInfo::ToString, 1, nullptr, nullptr, PropertyIds::toString);
         }
-
 
         debugObject = nullptr;
         diagnosticsScriptObject = nullptr;
@@ -1757,11 +1753,11 @@ namespace Js
 
         if (scriptContext->GetConfig()->IsES6IteratorsEnabled())
         {
-            /* No inlining                                Array_Entries        */ library->AddFunctionToLibraryObject(arrayPrototype, PropertyIds::entries, &JavascriptArray::EntryInfo::Entries, 0);
-            /* No inlining                                Array_Keys           */ library->AddFunctionToLibraryObject(arrayPrototype, PropertyIds::keys, &JavascriptArray::EntryInfo::Keys, 0);
+            /* No inlining								Array_Entries        */ library->AddFunctionToLibraryObject(arrayPrototype, PropertyIds::entries, &JavascriptArray::EntryInfo::Entries, 0);
+            /* No inlining								Array_Keys           */ library->AddFunctionToLibraryObject(arrayPrototype, PropertyIds::keys, &JavascriptArray::EntryInfo::Keys, 0);
 
             JavascriptFunction *values = library->arrayPrototypeValuesFunction ? library->arrayPrototypeValuesFunction : /* No inlining Array_Values     */ library->AddFunctionToLibraryObject(arrayPrototype, PropertyIds::values, &JavascriptArray::EntryInfo::Values, 0);
-            /* No inlining                            Array_SymbolIterator */ library->AddMember(arrayPrototype, PropertyIds::_symbolIterator, values);
+            /* No inlining							Array_SymbolIterator */ library->AddMember(arrayPrototype, PropertyIds::_symbolIterator, values);
         }
 
         if (scriptContext->GetConfig()->IsES6UnscopablesEnabled())
@@ -2677,8 +2673,7 @@ namespace Js
         mathObject->SetHasNoEnumerableProperties(true);
     }
 
-#ifdef SIMD_JS_ENABLED
-    // SIMD
+    // SIMD_JS
     void JavascriptLibrary::InitializeSIMDObject(DynamicObject* simdObject, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         // Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterSIMD so that the update is in sync with profiler
@@ -3059,7 +3054,6 @@ namespace Js
         }
         return false;
     }
-#endif
 
     void JavascriptLibrary::InitializeReflectObject(DynamicObject* reflectObject, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
@@ -5726,13 +5720,13 @@ namespace Js
         return function;
     }
 
-    JavascriptPromiseResolveOrRejectFunction* JavascriptLibrary::CreatePromiseResolveOrRejectFunction(JavascriptMethod entryPoint, JavascriptPromise* promise, bool isReject)
+    JavascriptPromiseResolveOrRejectFunction* JavascriptLibrary::CreatePromiseResolveOrRejectFunction(JavascriptMethod entryPoint, JavascriptPromise* promise, bool isReject, JavascriptPromiseResolveOrRejectFunctionAlreadyResolvedWrapper* alreadyResolvedRecord)
     {
         Assert(scriptContext->GetConfig()->IsES6PromiseEnabled());
 
         FunctionInfo* functionInfo = &Js::JavascriptPromise::EntryInfo::ResolveOrRejectFunction;
         DynamicType* type = CreateDeferredPrototypeFunctionType(entryPoint);
-        JavascriptPromiseResolveOrRejectFunction* function = EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptPromiseResolveOrRejectFunction, type, functionInfo, promise, isReject));
+        JavascriptPromiseResolveOrRejectFunction* function = EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptPromiseResolveOrRejectFunction, type, functionInfo, promise, isReject, alreadyResolvedRecord));
 
         function->SetPropertyWithAttributes(PropertyIds::length, TaggedInt::ToVarUnchecked(1), PropertyConfigurable, nullptr);
 
@@ -7245,7 +7239,6 @@ namespace Js
         REG_OBJECTS_LIB_FUNC(replaceLane, SIMDBool8x16Lib::EntryReplaceLane);
         return hr;
     }
-
 
 #ifdef IR_VIEWER
     HRESULT JavascriptLibrary::ProfilerRegisterIRViewer()

@@ -102,13 +102,12 @@ namespace Js
         EmitExpressionInfo EmitIf( ParseNode * pnode );
         EmitExpressionInfo EmitBooleanExpression( ParseNode* pnodeCond, Js::ByteCodeLabel trueLabel, Js::ByteCodeLabel falseLabel );
         
-#ifdef SIMD_JS_ENABLED
         EmitExpressionInfo* EmitSimdBuiltinArguments(ParseNode* pnode, AsmJsFunctionDeclaration* func, __out_ecount(pnode->sxCall.argCount) AsmJsType *argsTypes, EmitExpressionInfo *argsInfo);
-        bool ValidateSimdFieldAccess(PropertyName field, const AsmJsType& receiverType, OpCodeAsmJs &op, int &laneIndex, AsmJsType &laneType);
+        bool ValidateSimdFieldAccess(PropertyName field, const AsmJsType& receiverType, OpCodeAsmJs &op);
         EmitExpressionInfo EmitDotExpr(ParseNode* pnode);
         EmitExpressionInfo EmitSimdBuiltin(ParseNode* pnode, AsmJsSIMDFunction* simdFunction, AsmJsRetType expectedType);
         EmitExpressionInfo EmitSimdLoadStoreBuiltin(ParseNode* pnode, AsmJsSIMDFunction* simdFunction, AsmJsRetType expectedType);
-#endif
+
         void FinalizeRegisters( FunctionBody* byteCodeFunction );
         void LoadAllConstants();
         void StartStatement(ParseNode* pnode);
@@ -132,11 +131,10 @@ namespace Js
         void SetModuleFloat(Js::RegSlot dst, RegSlot src);
         void SetModuleDouble( Js::RegSlot dst, RegSlot src );
 
-#ifdef SIMD_JS_ENABLED
         void LoadModuleSimd(RegSlot dst, RegSlot index, AsmJsVarType type);
         void SetModuleSimd(RegSlot dst, RegSlot src, AsmJsVarType type);
         void LoadSimd(RegSlot dst, RegSlot src, AsmJsVarType type);
-#endif
+
         bool IsFRound(AsmJsMathFunction* sym);
         /// TODO:: Finish removing references to old bytecode generator
         ByteCodeGenerator* GetOldByteCodeGenerator() const
@@ -144,7 +142,10 @@ namespace Js
             return mByteCodeGenerator;
         }
 
-
+        bool IsSimdjsEnabled()
+        {
+            return mFunction->GetFuncBody()->GetScriptContext()->GetConfig()->IsSimdjsEnabled();
+        }
         // try to reuse a tmp register or acquire a new one
         // also takes care of releasing tmp register
         template<typename T>

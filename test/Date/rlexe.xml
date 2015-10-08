@@ -22,8 +22,6 @@
     <default>
       <files>DateParse2.js</files>
       <baseline>DateParse2.v5.baseline</baseline>
-      <!-- ch outputs ?? chars differing from baseline -->
-      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>

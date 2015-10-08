@@ -4,8 +4,6 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
-#ifdef SIMD_JS_ENABLED
-
 namespace Js {
 
     class SIMDFloat64x2Lib
@@ -119,5 +117,3 @@ namespace Js {
         
     };
 } // namespace Js
-
-#endif

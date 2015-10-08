@@ -120,10 +120,8 @@ namespace Js
         double* m_localDoubleSlots;
         float* m_localFloatSlots;
 
-#ifdef SIMD_JS_ENABLED
          _SIMDValue* m_localSimdSlots;
         
-#endif
         EHBailoutData * ehBailoutData;
 
         //////////////////////////////////////////////////////////////////////////
@@ -149,9 +147,8 @@ namespace Js
         void OP_I_SetOutAsmInt(RegSlot outRegisterID, int val);
         void OP_I_SetOutAsmDb(RegSlot outRegisterID, double val);
         void OP_I_SetOutAsmFlt(RegSlot outRegisterID, float val);
-#ifdef SIMD_JS_ENABLED
+
         void OP_I_SetOutAsmSimd(RegSlot outRegisterID, AsmJsSIMDValue val);
-#endif
 
         void SetOut(ArgSlot outRegisterID, Var bValue);
         void SetOut(ArgSlot_OneByte outRegisterID, Var bValue);
@@ -173,9 +170,6 @@ namespace Js
         template <typename T> T GetRegRaw( RegSlot localRegisterID ) const;
         template <typename T> void SetRegRaw( RegSlot localRegisterID, T bValue );
 
-
-#ifdef SIMD_JS_ENABLED
-        //template<>  void SetRegRaw<AsmJsSIMDValue>(RegSlot localRegisterID, AsmJsSIMDValue bValue);
         template <typename RegSlotType> AsmJsSIMDValue GetRegRawSimd(RegSlotType localRegisterID) const;
         template <typename RegSlotType> void           SetRegRawSimd(RegSlotType localRegisterID, AsmJsSIMDValue bValue);
         static DWORD GetAsmSimdValOffSet(AsmJsCallStackLayout* stack);
@@ -183,8 +177,6 @@ namespace Js
         template <class T> void OP_SimdLdArrConstIndex(const unaligned T* playout);
         template <class T> void OP_SimdStArrGeneric(const unaligned T* playout);
         template <class T> void OP_SimdStArrConstIndex(const unaligned T* playout);
-
-#endif
 
         template <typename RegSlotType>
         Var GetRegAllowStackVarEnableOnly(RegSlotType localRegisterID) const;
@@ -248,9 +240,9 @@ namespace Js
         static T GetAsmJsRetVal(InterpreterStackFrame* instance);
 
         static Var AsmJsDelayDynamicInterpreterThunk(RecyclableObject* function, CallInfo callInfo, ...);
-#ifdef SIMD_JS_ENABLED
+
         static __m128 AsmJsInterpreterSimdJs(AsmJsCallStackLayout* func);
-#endif
+
 #endif
 
 #ifdef ASMJS_PLAT

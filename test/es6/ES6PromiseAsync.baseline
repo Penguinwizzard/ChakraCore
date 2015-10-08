@@ -47,6 +47,12 @@ Executing test #44 - Simple tampering of Promise.all promise changes resolved re
 Executing test #45 - Promise.all - can't prevent remaining elements counter from reaching zero
 Executing test #46 - Promise from Promise.all never resolved before arguments
 Executing test #47 - Promise from Promise.all never resolved if rejected promise in arguments
+Executing test #48 - Promise executor resolves with the first call resolve function
+Executing test #49 - Promise executor rejects with the first call reject function
+Executing test #50 - Promise executor resolves/rejects with the first call to either function
+Executing test #51 - Promise executor rejects/resolves with the first call to either function
+Executing test #52 - Promise executor rejects/resolves/rejects with the first call to either function
+Executing test #53 - Promise executor resolves/rejects/resolves with the first call to either function
 
 Completion Results:
 Test #1 - Success handler called with result = basic:success
@@ -83,6 +89,12 @@ Test #43 - Success handler #1 called with result = '' (length = 0) (isArray = tr
 Test #44 - Success handler called with result = 'tampered' (length = 1) (isArray = true)
 Test #45 - Success handler called with result = '' (length = 1) (isArray = true)
 Test #46 - Success handler #1a called with result = '2' (isArray = false) (fulfillCalled = false)
+Test #48 - Success handler #1 called with res = 'success'
+Test #49 - Error handler #1 called with err = 'success'
+Test #50 - Success handler #1 called with res = 'success'
+Test #51 - Error handler #1 called with err = 'success'
+Test #52 - Error handler #1 called with err = 'success'
+Test #53 - Success handler #1 called with res = 'success'
 Test #6 - Error handler #2 called with err = thenable.get:error!
 Test #8 - Error handler #2 called with err = success.throw:error
 Test #9 - Error handler #2 called with err = error.throw:error

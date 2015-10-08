@@ -2221,7 +2221,7 @@ HeapPageAllocator<T>::ProtectPages(__in char* address, size_t pageCount, __in vo
 #endif
 
     // check address alignment, and address in correct range
-    if (((DWORD)address & (AutoSystemInfo::PageSize - 1)) != 0
+    if (((uintptr_t)address & (AutoSystemInfo::PageSize - 1)) != 0
         || address < segment->GetAddress()
         || ((uint)(((char *)address) - segment->GetAddress()) > (segment->GetPageCount() - pageCount) * AutoSystemInfo::PageSize))
     {

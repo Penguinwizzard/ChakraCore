@@ -9,20 +9,20 @@
         var n = 10;
         var z = 1.1;
 
-       a: while(x < 30)
+       a: while((x|0) < 30)
         {
             x = (x+1)|0
-            if( x > 10)
+            if( (x|0) > 10)
             {
                 n = 0;
                 do
                 {
-                    if(n > 50)
+                    if((n|0) > 50)
                         break a;
                     x = (x+1)|0;
                     y = +(y * z) 
                     n = (n + 1)|0
-                }while(n < 100)
+                }while((n|0) < 100)
             }            
         }
         return +y;

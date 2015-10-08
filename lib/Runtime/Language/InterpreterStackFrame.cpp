@@ -1109,14 +1109,14 @@ namespace Js
         ScriptContext* scriptContext = func->GetScriptContext();
         return (DWORD)scriptContext + ScriptContext::GetAsmIntDbValOffset();
     }
-#ifdef SIMD_JS_ENABLED
+
     DWORD InterpreterStackFrame::GetAsmSimdValOffSet(AsmJsCallStackLayout* stack)
     {
         JavascriptFunction * func = stack->functionObject;
         ScriptContext* scriptContext = func->GetScriptContext();
         return (DWORD)scriptContext + ScriptContext::GetAsmSimdValOffset();
     }
-#endif
+
     /*
                             AsmInterpreterThunk 
                             -------------------
@@ -1143,11 +1143,9 @@ namespace Js
                 Signed     = AsmJsRetType::Signed,
                 Float      = AsmJsRetType::Float,
                 Double     = AsmJsRetType::Double,
-#ifdef SIMD_JS_ENABLED
                 Int32x4    = AsmJsRetType::Int32x4,
                 Float32x4  = AsmJsRetType::Float32x4,
                 Float64x2  = AsmJsRetType::Float64x2
-#endif
             };
             
             //Prolog
@@ -1181,12 +1179,10 @@ namespace Js
                 movsd xmm0, [eax];
                 jmp end;
             skipDouble:
-#ifdef SIMD_JS_ENABLED
                 // simd value
                 push layout;
                 call InterpreterStackFrame::GetAsmSimdValOffSet;
                 movups xmm0, [eax];
-#endif
            end:
                 push layout;
                 call InterpreterStackFrame::GetAsmJsArgSize;
@@ -1601,17 +1597,15 @@ namespace Js
 
         switch (retType)
         {
-#ifdef SIMD_JS_ENABLED
         case AsmJsRetType::Int32x4:
         case AsmJsRetType::Float32x4:
         case AsmJsRetType::Float64x2:
-            if (SIMD_JS_FLAG)
+            if (function->GetScriptContext()->GetConfig()->IsSimdjsEnabled())
             {
                 function->GetScriptContext()->retAsmSimdVal = newInstance->m_localSimdSlots[0];
                 break;
             }
             Assert(UNREACHED);
-#endif
         // double return 
         case AsmJsRetType::Double: 
             function->GetScriptContext()->retAsmIntDbVal = newInstance->m_localDoubleSlots[0];
@@ -1659,7 +1653,6 @@ namespace Js
             entryPoint = (AsmJsInterpreterIntEP)Js::InterpreterStackFrame::AsmJsInterpreter < int > ;
             break;
         }
-#ifdef SIMD_JS_ENABLED
         case Js::AsmJsRetType::Int32x4:
         case Js::AsmJsRetType::Float32x4:
         case Js::AsmJsRetType::Float64x2:
@@ -1667,7 +1660,6 @@ namespace Js
             entryPoint = Js::InterpreterStackFrame::AsmJsInterpreterSimdJs;
             break;
         }
-#endif
         default:
             Assume(UNREACHED);
         }
@@ -1689,13 +1681,12 @@ namespace Js
     {
         return instance->m_localFloatSlots[0];
     }
-#ifdef SIMD_JS_ENABLED
     template<>
     X86SIMDValue InterpreterStackFrame::GetAsmJsRetVal<X86SIMDValue>(InterpreterStackFrame* instance)
     {
         return X86SIMDValue::ToX86SIMDValue(instance->m_localSimdSlots[0]);
     }
-#endif
+
 
     template<typename T>
     T InterpreterStackFrame::AsmJsInterpreter(AsmJsCallStackLayout* layout)
@@ -1781,13 +1772,11 @@ namespace Js
         *(double*)(&(m_outParams[outRegisterID])) = val;
     }
 
-#ifdef SIMD_JS_ENABLED
     inline void InterpreterStackFrame::OP_I_SetOutAsmSimd(RegSlot outRegisterID, AsmJsSIMDValue val)
     {
         Assert(m_outParams + outRegisterID < m_outSp);
         *(AsmJsSIMDValue*)(&(m_outParams[outRegisterID])) = val;
     }
-#endif
 
     inline void InterpreterStackFrame::PushOut(Var aValue)
     {
@@ -1973,9 +1962,8 @@ namespace Js
         Var* localModuleFunctions = moduleMemoryPtr + moduleMemory.mFuncOffset ;
         Var** localFunctionTables = (Var**)(moduleMemoryPtr + moduleMemory.mFuncPtrOffset) ;   
 
-#ifdef SIMD_JS_ENABLED
         AsmJsSIMDValue* localSimdSlots = nullptr;
-        if (SIMD_JS_FLAG)
+        if (scriptContext->GetConfig()->IsSimdjsEnabled())
         {
             localSimdSlots = ((AsmJsSIMDValue*)moduleMemoryPtr) + moduleMemory.mSimdOffset; // simdOffset is in SIMDValues
         }
@@ -1987,7 +1975,6 @@ namespace Js
             AssertMsg((moduleMemory.mMemorySize / SIMD_SLOTS_SPACE) - moduleMemory.mSimdOffset >= 1, "Not enough space in module memory to align SIMD vars");
             localSimdSlots = (AsmJsSIMDValue*)::Math::Align<int>((int)localSimdSlots, sizeof(AsmJsSIMDValue));
         }
-#endif
 #endif
 
         ThreadContext* threadContext = this->scriptContext->GetThreadContext();
@@ -2028,13 +2015,11 @@ namespace Js
             {
                 localDoubleSlots[var.location] = var.initialiser.doubleInit;
             }
-#ifdef SIMD_JS_ENABLED
-            else if (SIMD_JS_FLAG && var.type.isSIMD())
+            else if (scriptContext->GetConfig()->IsSimdjsEnabled() && var.type.isSIMD())
             {
                 // e.g. var g = f4(0.0, 0.0, 0.0, 0.0);
                 localSimdSlots[var.location] = var.initialiser.simdInit;
             }
-#endif
             else {
                 Assert(UNREACHED);
             }
@@ -2077,8 +2062,7 @@ namespace Js
                 double val = JavascriptConversion::ToNumber( value, scriptContext );
                 localDoubleSlots[import.location] = val;
             }
-#ifdef SIMD_JS_ENABLED
-            else if (SIMD_JS_FLAG && import.type.isSIMD())
+            else if (scriptContext->GetConfig()->IsSimdjsEnabled() && import.type.isSIMD())
             {
                 // e.g. var g = f4(imports.v);
                 bool valid = false;
@@ -2110,7 +2094,7 @@ namespace Js
                 }
                 localSimdSlots[import.location] = val;
             }
-#endif
+
             // check for implicit call after converting to number
             if (this->CheckAndResetImplicitCall(prevDisableImplicitFlags, saveImplicitcallFlags))
             {
@@ -2413,16 +2397,16 @@ namespace Js
         const int intConstCount = info->GetIntConstCount();
         const int doubleConstCount = info->GetDoubleConstCount();
         const int floatConstCount = info->GetFloatConstCount();
-#ifdef SIMD_JS_ENABLED
+
         const int simdConstCount = info->GetSimdConstCount();
-#endif
+
         // Offset of doubles from (double*)m_localSlot 
         const int intOffset = info->GetIntByteOffset() / sizeof(int);
         const int doubleOffset = info->GetDoubleByteOffset() / sizeof(double);
         const int floatOffset = info->GetFloatByteOffset() / sizeof(float);
-#ifdef SIMD_JS_ENABLED
+
         const int simdByteOffset = info->GetSimdByteOffset();// in bytes;
-#endif
+
 
         int* intSrc = (int*)(m_localSlots + AsmJsFunctionMemory::RequiredVarConstants);
 
@@ -2447,14 +2431,14 @@ namespace Js
         // Where double arguments starts
         // double* doubleArgDst = m_localDoubleSlots + doubleConstCount;
 
-#ifdef SIMD_JS_ENABLED
+
         AsmJsSIMDValue* simdSrc = nullptr;
-        if (SIMD_JS_FLAG)
+        if (scriptContext->GetConfig()->IsSimdjsEnabled())
         {
             simdSrc = (AsmJsSIMDValue*)(doubleSrc + doubleConstCount);
             m_localSimdSlots = (AsmJsSIMDValue*)((char*)m_localSlots + simdByteOffset);
         }
-#if 0         // Alignment disabled
+#if 0         // Alignment disabled for now
         // Align to 16-byte boundary, only if we have any SIMD vars in the code
         if (info->GetSimdAllCount())
         {
@@ -2464,7 +2448,6 @@ namespace Js
         }
 #endif
         
-#endif
 
         // Load module environment
         FrameDisplay* frame = this->function->GetEnvironment();
@@ -2479,12 +2462,11 @@ namespace Js
         }
         
         // Copying has to happen in that order in order not to overwrite constants
-#ifdef SIMD_JS_ENABLED
-        if (SIMD_JS_FLAG)
+        if (scriptContext->GetConfig()->IsSimdjsEnabled())
         {
             memcpy_s(m_localSimdSlots, simdConstCount*sizeof(AsmJsSIMDValue), simdSrc, simdConstCount*sizeof(AsmJsSIMDValue));
         }
-#endif
+
         // Moving the double and floats  to their slot position. We must move the doubles first so that we do not overwrite the doubles stack with floats
         memcpy_s(m_localDoubleSlots, doubleConstCount*sizeof(double), doubleSrc, doubleConstCount*sizeof(double));
         memcpy_s(m_localFloatSlots, floatConstCount*sizeof(float), floatSrc, floatConstCount*sizeof(float));
@@ -2501,9 +2483,8 @@ namespace Js
         intArg = m_localIntSlots + intConstCount;
         doubleArg = m_localDoubleSlots + doubleConstCount;
         floatArg = m_localFloatSlots + floatConstCount;
-#ifdef SIMD_JS_ENABLED
+
         AsmJsSIMDValue* simdArg = m_localSimdSlots + simdConstCount;
-#endif
         // Move the arguments to the right location
         uint argCount = info->GetArgCount();
         
@@ -2556,7 +2537,6 @@ namespace Js
                     ++doubleArg;
                     homingAreaSize += MachPtr;
                 }
-#ifdef SIMD_JS_ENABLED
                 else
                 {
                     Assert(info->GetArgType(i).isSIMD());
@@ -2564,8 +2544,7 @@ namespace Js
                     ++simdArg;
                     homingAreaSize += sizeof(AsmJsSIMDValue);
                 }
-#endif
-                if (SIMD_JS_FLAG && i == 2) // last argument ?
+                if (scriptContext->GetConfig()->IsSimdjsEnabled() && i == 2) // last argument ?
                 {
                     // If we have simd arguments, the homing area in m_inParams can be larger than 3 64-bit slots. This is because SIMD values are unboxed there too.
                     // After unboxing, the homing area is overwritten by rdx, r8 and r9, and we read/skip 64-bit slots from the homing area (argAddress += MachPtr). 
@@ -2598,14 +2577,12 @@ namespace Js
                 ++doubleArg;
                 argAddress += sizeof(double);
             }
-#ifdef SIMD_JS_ENABLED
-            else if (SIMD_JS_FLAG && info->GetArgType(i).isSIMD())
+            else if (scriptContext->GetConfig()->IsSimdjsEnabled() && info->GetArgType(i).isSIMD())
             {
                 *simdArg = *(AsmJsSIMDValue*)argAddress;
                 ++simdArg;
                 argAddress += sizeof(AsmJsSIMDValue);
             }
-#endif
             else
             {
                 AssertMsg(UNREACHED, "Invalid function arg type.");
@@ -3077,7 +3054,6 @@ namespace Js
         case AsmJsRetType::Float:
             m_localFloatSlots[0] = JavascriptFunction::CallAsmJsFunction<float>(function, entrypointInfo->address, asmInfo->GetArgCount(), m_outParams);
             break;
-#ifdef SIMD_JS_ENABLED
         case AsmJsRetType::Float32x4:
         case AsmJsRetType::Int32x4:
         case AsmJsRetType::Float64x2:
@@ -3085,10 +3061,9 @@ namespace Js
             simdVal.m128_value = JavascriptFunction::CallAsmJsFunction<__m128>(function, entrypointInfo->address, asmInfo->GetArgCount(), m_outParams);
             m_localSimdSlots[0] = X86SIMDValue::ToSIMDValue(simdVal);
             break;
-#endif
         }
         Assert((uint)((ArgSlot)asmInfo->GetArgCount() + 1) == (uint)(asmInfo->GetArgCount() + 1));
-        if (SIMD_JS_FLAG)
+        if (scriptContext->GetConfig()->IsSimdjsEnabled())
         {
             PopOut((ArgSlot)(asmInfo->GetArgByteSize() / sizeof(Var)) + 1);
         }
@@ -3107,11 +3082,9 @@ namespace Js
             Signed = AsmJsRetType::Signed,
             Float = AsmJsRetType::Float,
             Double = AsmJsRetType::Double,
-#ifdef SIMD_JS_ENABLED
             Int32x4 = AsmJsRetType::Int32x4,
             Float32x4 = AsmJsRetType::Float32x4,
             Float64x2 = AsmJsRetType::Float64x2
-#endif
         };
 
         AsmJsFunctionInfo* asmInfo = ((ScriptFunction*)function)->GetFunctionBody()->GetAsmJsFunctionInfo();
@@ -3128,10 +3101,9 @@ namespace Js
         float retFloatVal = NULL;
         double retDoubleVal = NULL;
 
-#ifdef SIMD_JS_ENABLED
         AsmJsSIMDValue retSimdVal;
         retSimdVal.Zero();
-#endif
+
         AsmJsRetType::Which retType = (AsmJsRetType::Which) GetRetType(scriptFunc);
 
         void *data = nullptr;
@@ -3183,10 +3155,8 @@ namespace Js
             je FloatLabel;
             cmp ebx, Double;
             je DoubleLabel;
-#ifdef SIMD_JS_ENABLED
             // simd
             movups retSimdVal, xmm0;
-#endif
             jmp end
         VoidLabel:
         SignedLabel:
@@ -3203,17 +3173,15 @@ namespace Js
         }
         switch (retType)
         {
-#ifdef SIMD_JS_ENABLED
         case AsmJsRetType::Int32x4:
         case AsmJsRetType::Float32x4:
         case AsmJsRetType::Float64x2:
-            if (SIMD_JS_FLAG)
+            if (scriptContext->GetConfig()->IsSimdjsEnabled())
             {
                 m_localSimdSlots[0] = retSimdVal;
                 break;
             }
             Assert(UNREACHED);
-#endif
         case AsmJsRetType::Double:
             m_localDoubleSlots[0] = retDoubleVal;
             break;
@@ -4959,7 +4927,11 @@ namespace Js
         if (fn->HasDynamicProfileInfo())
         {
             fn->GetAnyDynamicProfileInfo()->SetLoopInterpreted(loopNumber);
-            if (this->currentLoopCounter >= (uint)CONFIG_FLAG(MinMemOpCount))
+            // If the counter is 0, there is a high chance that some config disabled tracking that information. (ie: -off:jitloopbody)
+            // Assume it is valid for memop in this case.
+            if (this->currentLoopCounter >= (uint)CONFIG_FLAG(MinMemOpCount) ||
+                (this->currentLoopCounter == 0 && !this->m_functionBody->DoJITLoopBody())
+            )
             {
                 // This flag becomes relevant only if the loop has been interpreted
                 fn->GetAnyDynamicProfileInfo()->SetMemOpMinReached(loopNumber);
@@ -5306,7 +5278,7 @@ namespace Js
         //       and do ISB only for 1st time this entry point is called (potential working set regression though).
         _InstructionSynchronizationBarrier();
 #endif
-        uint newOffset = (uint)address(function, CallInfo(CallFlags_InternalFrame, 1), this);
+        uint newOffset = ::Math::PointerCastToIntegral<uint>(address(function, CallInfo(CallFlags_InternalFrame, 1), this));
 
 #ifdef _M_IX86
         _asm
@@ -5339,7 +5311,7 @@ namespace Js
             //       and do ISB only for 1st time this entry point is called (potential working set regression though).
             _InstructionSynchronizationBarrier();
 #endif
-            uint newOffset = (uint)address(function, CallInfo(CallFlags_InternalFrame, 1), this);
+            uint newOffset = ::Math::PointerCastToIntegral<uint>(address(function, CallInfo(CallFlags_InternalFrame, 1), this));
 
 #ifdef _M_IX86
             _asm
@@ -5714,11 +5686,11 @@ namespace Js
         int newOffset = 0;
         if (scriptContext->IsInDebugMode())
         {
-            newOffset = (int)this->DebugProcess();
+            newOffset = ::Math::PointerCastToIntegral<int>(this->DebugProcess());
         }
         else
         {
-            newOffset = (int)this->Process();
+            newOffset = ::Math::PointerCastToIntegral<int>(this->Process());
         }
 
         if (--this->nestedFinallyDepth == -1)
@@ -5998,11 +5970,11 @@ namespace Js
         int newOffset = 0;
         if (scriptContext->IsInDebugMode())
         {
-            newOffset = (int)this->DebugProcess();
+            newOffset = ::Math::PointerCastToIntegral<int>(this->DebugProcess());
         }
         else
         {
-            newOffset = (int)this->Process();
+            newOffset = ::Math::PointerCastToIntegral<int>(this->Process());
         }
 
         this->m_flags &= ~InterpreterStackFrameFlags_WithinFinallyBlock;
@@ -6011,7 +5983,7 @@ namespace Js
         if (endOfFinallyBlock)
         {
             // Finally completed without taking over the flow. Resume where we left off before calling it.
-            int currOffset = reinterpret_cast<int>(GetNonVarReg(offsetRegSlot));
+            int currOffset = ::Math::PointerCastToIntegral<int>(GetNonVarReg(offsetRegSlot));
             m_reader.SetCurrentOffset(currOffset);
         }
         else
@@ -6541,7 +6513,6 @@ namespace Js
         m_localSlots[localRegisterID] = value;
     }
 
-#ifdef SIMD_JS_ENABLED
     template <>
     AsmJsSIMDValue InterpreterStackFrame::GetRegRaw(RegSlot localRegisterID) const
     {
@@ -6646,7 +6617,6 @@ namespace Js
         SIMDStData(data, value, dataWidth);
 
     }
-#endif
 
     Var InterpreterStackFrame::GetNonVarReg(RegSlot localRegisterID) const
     {

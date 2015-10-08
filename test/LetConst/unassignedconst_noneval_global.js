@@ -1,1 +1,3 @@
-const x;
+function test1() {
+    eval('const x');
+}

@@ -205,7 +205,6 @@ Opnd::AsFloatConstOpnd()
     return reinterpret_cast<FloatConstOpnd *>(this);
 }
 
-#ifdef SIMD_JS_ENABLED
 inline bool 
 Opnd::IsSimd128ConstOpnd() const
 {
@@ -219,7 +218,6 @@ Opnd::AsSimd128ConstOpnd()
 
     return reinterpret_cast<Simd128ConstOpnd *>(this);
 }
-#endif
 
 ///----------------------------------------------------------------------------
 ///
@@ -382,9 +380,8 @@ inline bool
 Opnd::IsConstOpnd() const
 {
     bool result =  this->IsImmediateOpnd() || this->IsFloatConstOpnd();
-#ifdef SIMD_JS_ENABLED
+
     result = result || this->IsSimd128ConstOpnd();
-#endif
     return result;
 }
 

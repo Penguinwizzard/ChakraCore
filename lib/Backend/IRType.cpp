@@ -15,9 +15,7 @@ enum IRBaseTypes : BYTE {
     IRBaseType_Int,
     IRBaseType_Uint,
     IRBaseType_Float,
-#ifdef SIMD_JS_ENABLED
     IRBaseType_Simd,
-#endif
     IRBaseType_Var,
     IRBaseType_Condcode,
     IRBaseType_Misc
@@ -47,7 +45,6 @@ bool IRType_IsNativeInt(IRType type)
     return TyBaseType[type] > IRBaseType_Illegal && TyBaseType[type] < IRBaseType_Float; 
 }
 
-#ifdef SIMD_JS_ENABLED
 bool IRType_IsSimd(IRType type)
 {
     return TyBaseType[type] == IRBaseType_Simd;
@@ -57,7 +54,7 @@ bool IRType_IsSimd128(IRType type)
 {
     return type == TySimd128F4 || type == TySimd128I4 || type == TySimd128D2;
 }
-#endif
+
 #if DBG_DUMP || defined(ENABLE_IR_VIEWER)
 void IRType_Dump(IRType type)
 {

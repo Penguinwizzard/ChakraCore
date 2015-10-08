@@ -4,7 +4,13 @@
 //-------------------------------------------------------------------------------------------------------
 #include "StdAfx.h"
 
-MessageQueue* WScriptJsrt::s_messageQueue = nullptr;
+MessageQueue* WScriptJsrt::messageQueue = nullptr;
+DWORD_PTR WScriptJsrt::sourceContext = 0;
+
+DWORD_PTR WScriptJsrt::GetNextSourceContext()
+{
+    return sourceContext++;
+}
 
 bool WScriptJsrt::CreateArgumentsObject(JsValueRef *argsObject)
 {
@@ -190,7 +196,7 @@ JsValueRef WScriptJsrt::LoadScript(LPCWSTR fileName, size_t fileNameLength, LPCW
 
     if (wcscmp(scriptInjectType, L"self") == 0)
     {
-        errorCode = ChakraRTInterface::JsRunScript(fileContent, 0, fullPath, &returnValue);
+        errorCode = ChakraRTInterface::JsRunScript(fileContent, GetNextSourceContext(), fullPath, &returnValue);
         if (errorCode != JsNoError)
         {
             PrintException(fileName, errorCode);
@@ -216,7 +222,7 @@ JsValueRef WScriptJsrt::LoadScript(LPCWSTR fileName, size_t fileNameLength, LPCW
         // Initialize the host objects
         Initialize();
 
-        errorCode = ChakraRTInterface::JsRunScript(fileContent, 0, fullPath, &returnValue);
+        errorCode = ChakraRTInterface::JsRunScript(fileContent, GetNextSourceContext(), fullPath, &returnValue);
         if (errorCode != JsNoError)
         {
             PrintException(fileName, errorCode);
@@ -286,7 +292,7 @@ JsValueRef WScriptJsrt::SetTimeoutCallback(JsValueRef callee, bool isConstructCa
 
     time = static_cast<int>(tmp);
     msg = new CallbackMessage(time, function);
-    s_messageQueue->Push(msg);
+    messageQueue->Push(msg);
 
     IfJsrtError(ChakraRTInterface::JsDoubleToNumber(static_cast<double>(msg->GetId()), &timerId));
     return timerId;
@@ -327,7 +333,7 @@ JsValueRef WScriptJsrt::ClearTimeoutCallback(JsValueRef callee, bool isConstruct
     IfJsrtError(ChakraRTInterface::JsNumberToDouble(arguments[1], &tmp));
 
     timerId = static_cast<int>(tmp);
-    s_messageQueue->RemoveById(timerId);
+    messageQueue->RemoveById(timerId);
 
     IfJsrtError(ChakraRTInterface::JsGetGlobalObject(&global));
     IfJsrtError(ChakraRTInterface::JsGetUndefinedValue(&undef));
@@ -487,11 +493,11 @@ bool WScriptJsrt::PrintException(LPCWSTR fileName, JsErrorCode jsErrorCode)
     return false;
 }
 
-void WScriptJsrt::AddMessageQueue(MessageQueue *messageQueue)
+void WScriptJsrt::AddMessageQueue(MessageQueue *_messageQueue)
 {
-    Assert(s_messageQueue == nullptr);
+    Assert(messageQueue == nullptr);
 
-    s_messageQueue = messageQueue;
+    messageQueue = _messageQueue;
 }
 
 WScriptJsrt::CallbackMessage::CallbackMessage(unsigned int time, JsValueRef function) : MessageBase(time), m_function(function)
@@ -505,7 +511,7 @@ WScriptJsrt::CallbackMessage::~CallbackMessage()
     m_function = JS_INVALID_REFERENCE;
 }
 
-HRESULT WScriptJsrt::CallbackMessage::Call()
+HRESULT WScriptJsrt::CallbackMessage::Call(LPCWSTR fileName)
 {
     HRESULT hr = S_OK;
 
@@ -513,6 +519,7 @@ HRESULT WScriptJsrt::CallbackMessage::Call()
     JsValueRef result;
     JsValueRef stringValue;
     JsValueType type;
+    JsErrorCode errorCode = JsNoError;
 
     IfJsrtErrorHR(ChakraRTInterface::JsGetGlobalObject(&global));
     IfJsrtErrorHR(ChakraRTInterface::JsGetValueType(m_function, &type));
@@ -526,26 +533,20 @@ HRESULT WScriptJsrt::CallbackMessage::Call()
         IfJsrtErrorHR(ChakraRTInterface::JsStringToPointer(stringValue, &script, &length));
 
         // Run the code
-        IfJsrtErrorHR(ChakraRTInterface::JsRunScript(script, JS_SOURCE_CONTEXT_NONE, L"" /*sourceUrl*/, nullptr /*no result needed*/));
+        errorCode = ChakraRTInterface::JsRunScript(script, JS_SOURCE_CONTEXT_NONE, L"" /*sourceUrl*/, nullptr /*no result needed*/);
     }
     else
     {
-        IfJsrtErrorHR(ChakraRTInterface::JsCallFunction(m_function, &global, 1, &result));
+        errorCode = ChakraRTInterface::JsCallFunction(m_function, &global, 1, &result);
+    }
+
+    if (errorCode != JsNoError)
+    {
+        hr = E_FAIL;
+        PrintException(fileName, errorCode);
     }
 
 Error:
-    if(FAILED(hr))
-    {
-        JsValueRef exception;
-        JsValueRef strExcep;
-        LPCWSTR msg;
-        size_t length;
-        IfJsrtErrorFail(ChakraRTInterface::JsGetAndClearException(&exception), E_FAIL);
-        IfJsrtErrorFail(ChakraRTInterface::JsConvertValueToString(exception, &strExcep), E_FAIL);
-        IfJsrtErrorFail(ChakraRTInterface::JsStringToPointer(strExcep, &msg, &length), E_FAIL);
-
-        wprintf(L"Script Error: %ls\n", msg);        
-    }
     return hr;
 }
 

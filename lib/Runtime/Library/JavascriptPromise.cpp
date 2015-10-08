@@ -105,8 +105,11 @@ namespace Js
         promise->resolveReactions = RecyclerNew(recycler, JavascriptPromiseReactionList, recycler);
         promise->rejectReactions = RecyclerNew(recycler, JavascriptPromiseReactionList, recycler);
 
-        *resolve = library->CreatePromiseResolveOrRejectFunction(EntryResolveOrRejectFunction, promise, false);
-        *reject = library->CreatePromiseResolveOrRejectFunction(EntryResolveOrRejectFunction, promise, true);
+        JavascriptPromiseResolveOrRejectFunctionAlreadyResolvedWrapper* alreadyResolvedRecord = RecyclerNewStructZ(scriptContext->GetRecycler(), JavascriptPromiseResolveOrRejectFunctionAlreadyResolvedWrapper);
+        alreadyResolvedRecord->alreadyResolved = false;
+
+        *resolve = library->CreatePromiseResolveOrRejectFunction(EntryResolveOrRejectFunction, promise, false, alreadyResolvedRecord);
+        *reject = library->CreatePromiseResolveOrRejectFunction(EntryResolveOrRejectFunction, promise, true, alreadyResolvedRecord);
     }
 
     bool JavascriptPromise::Is(Var aValue)
@@ -784,8 +787,11 @@ namespace Js
         RecyclableObject* thenable = resolveThenableTaskFunction->GetThenable();
         RecyclableObject* thenFunction = resolveThenableTaskFunction->GetThenFunction();
 
-        JavascriptPromiseResolveOrRejectFunction* resolve = library->CreatePromiseResolveOrRejectFunction(EntryResolveOrRejectFunction, promise, false);
-        JavascriptPromiseResolveOrRejectFunction* reject = library->CreatePromiseResolveOrRejectFunction(EntryResolveOrRejectFunction, promise, true);
+        JavascriptPromiseResolveOrRejectFunctionAlreadyResolvedWrapper* alreadyResolvedRecord = RecyclerNewStructZ(scriptContext->GetRecycler(), JavascriptPromiseResolveOrRejectFunctionAlreadyResolvedWrapper);
+        alreadyResolvedRecord->alreadyResolved = false;
+
+        JavascriptPromiseResolveOrRejectFunction* resolve = library->CreatePromiseResolveOrRejectFunction(EntryResolveOrRejectFunction, promise, false, alreadyResolvedRecord);
+        JavascriptPromiseResolveOrRejectFunction* reject = library->CreatePromiseResolveOrRejectFunction(EntryResolveOrRejectFunction, promise, true, alreadyResolvedRecord);
 
         try
         {
@@ -1145,11 +1151,11 @@ namespace Js
     }
 
     JavascriptPromiseResolveOrRejectFunction::JavascriptPromiseResolveOrRejectFunction(DynamicType* type)
-        : RuntimeFunction(type, &Js::JavascriptPromise::EntryInfo::ResolveOrRejectFunction), promise(nullptr), isReject(false), isAlreadyResolved(false)
+        : RuntimeFunction(type, &Js::JavascriptPromise::EntryInfo::ResolveOrRejectFunction), promise(nullptr), isReject(false), alreadyResolvedWrapper(nullptr)
     { }
 
-    JavascriptPromiseResolveOrRejectFunction::JavascriptPromiseResolveOrRejectFunction(DynamicType* type, FunctionInfo* functionInfo, JavascriptPromise* promise, bool isReject)
-        : RuntimeFunction(type, functionInfo), promise(promise), isReject(isReject), isAlreadyResolved(false)
+    JavascriptPromiseResolveOrRejectFunction::JavascriptPromiseResolveOrRejectFunction(DynamicType* type, FunctionInfo* functionInfo, JavascriptPromise* promise, bool isReject, JavascriptPromiseResolveOrRejectFunctionAlreadyResolvedWrapper* alreadyResolvedRecord)
+        : RuntimeFunction(type, functionInfo), promise(promise), isReject(isReject), alreadyResolvedWrapper(alreadyResolvedRecord)
     { }
 
     bool JavascriptPromiseResolveOrRejectFunction::Is(Var var)
@@ -1184,12 +1190,16 @@ namespace Js
 
     bool JavascriptPromiseResolveOrRejectFunction::IsAlreadyResolved()
     {
-        return this->isAlreadyResolved;
+        Assert(this->alreadyResolvedWrapper);
+
+        return this->alreadyResolvedWrapper->alreadyResolved;
     }
 
     void JavascriptPromiseResolveOrRejectFunction::SetAlreadyResolved(bool is)
     {
-        this->isAlreadyResolved = is;
+        Assert(this->alreadyResolvedWrapper);
+
+        this->alreadyResolvedWrapper->alreadyResolved = is;
     }
 
     JavascriptPromiseAsyncSpawnExecutorFunction::JavascriptPromiseAsyncSpawnExecutorFunction(DynamicType* type, FunctionInfo* functionInfo, JavascriptGenerator* generatorFunction, Var target)

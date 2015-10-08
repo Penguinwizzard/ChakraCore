@@ -39,7 +39,7 @@ testParseDate(new Date(12, 1, 2, 1, 2, 3).toISOString());
 myPrint("Phase 2 - parsing sample date strings");
 testParseDate("Tue Feb 02 2012 01:02:03 GMT-0800 (Pacific Standard Time)");
 testParseDate("Tue Feb 02 2012 01:02:03 GMT+0800 (prisec)");
-testParseDate("Tue Feb 02 2012 01:02:03 GMT+0000 (ﾊﾇ)");
+testParseDate2("Tue Feb 02 2012 01:02:03 GMT+0000", " (ﾊﾇ)");
 testParseDate("Tue Feb 02 2012 01:02:03 GMT-0000");
 testParseDate("Tue Feb 02 2012 01:02:03 GMT+0430 (prisec@)");
 testParseDate("Tue Feb 2 01:02:03 PST 2013 B.C.");
@@ -52,6 +52,17 @@ function testDate(date) {
 function testParseDate(dateStr) {
     myPrint("Date string:\t\t" + dateStr);
     var d = Date.parse(dateStr);
+    testParseDateCore(d);
+}
+
+// This is to avoid printing non-printable chars
+function testParseDate2(dateStr, appendThis) {
+    myPrint("Date string:\t\t" + dateStr);
+    var d = Date.parse(dateStr + appendThis);
+    testParseDateCore(d);
+}
+
+function testParseDateCore(d) {
     myPrint("\t raw:\t\t" + d);
     d = new Date(d);
     myPrint("\t toString:\t" + d.toString());

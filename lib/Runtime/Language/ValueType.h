@@ -50,9 +50,8 @@ public:
     static ValueType GetNumberAndLikelyInt(const bool isLikelyTagged);
     static ValueType GetObject(const ObjectType objectType);
 
-#ifdef SIMD_JS_ENABLED
+    // SIMD_JS
     static ValueType GetSimd128(const ObjectType objectType);
-#endif
 
 private:
     static ValueType GetArray(const ObjectType objectType);

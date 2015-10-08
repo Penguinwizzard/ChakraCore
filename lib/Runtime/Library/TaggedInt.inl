@@ -48,21 +48,21 @@ namespace Js
     {
         AssertMsg(Is(aValue), "Ensure var is actually an 'TaggedInt'");
 
-        return (int32)(aValue);
+        return ::Math::PointerCastToIntegralTruncate<int32>(aValue);
     }
 
     __inline uint32 TaggedInt::ToUInt32(Var aValue)
     {
         AssertMsg(Is(aValue), "Ensure var is actually an 'TaggedInt'");
 
-        return (uint32)(aValue);
+        return ::Math::PointerCastToIntegralTruncate<uint32>(aValue);
     }
 
     __inline int64 TaggedInt::ToInt64(Var aValue)
     {
         AssertMsg(Is(aValue), "Ensure var is actually an 'TaggedInt'");
 
-        int64 nValue = (int64)((int32)(aValue));
+        int64 nValue = (int64)(::Math::PointerCastToIntegralTruncate<int32>(aValue));
         AssertMsg(nValue == (int64) ToInt32(aValue),
                 "Ensure 32-bit and 64-bit operations return same result");
 
@@ -73,12 +73,12 @@ namespace Js
     {
         AssertMsg(Is(aValue), "Ensure var is actually an 'TaggedInt'");
 
-        return (uint16)(aValue);
+        return ::Math::PointerCastToIntegralTruncate<uint16>(aValue);
     }
 
     __inline double TaggedInt::ToDouble(Var aValue)
     {
-        return (double)(int32)(aValue);
+        return (double)::Math::PointerCastToIntegralTruncate<int32>(aValue);
     }
     
     __inline Var TaggedInt::ToVarUnchecked(int nValue)

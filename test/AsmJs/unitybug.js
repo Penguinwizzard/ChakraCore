@@ -12,7 +12,7 @@ function AsmModule(glob) {
         var b = 0;
         var c = 0;
         var d = 0;
-        c = a + d;
+        c = (a + d)|0;
         d = (a >>> 0) % 10 | 0;
         b = c;
         return b|0;

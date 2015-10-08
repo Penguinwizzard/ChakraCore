@@ -8778,7 +8778,8 @@ GlobOpt::OptConstPeep(IR::Instr *instr, IR::Opnd *constSrc, Value **pDstVal, Val
         }
         else
         {
-            value = (IntConstType)constSrc->AsAddrOpnd()->m_address;
+            // We asserted that the address will fit in a DWORD above
+            value = ::Math::PointerCastToIntegral<IntConstType>(constSrc->AsAddrOpnd()->m_address);
         }
     }
     else if (constSrc->IsIntConstOpnd())

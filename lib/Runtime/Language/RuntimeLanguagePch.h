@@ -50,7 +50,8 @@
 #include "Library\JavascriptSymbolObject.h"
 #include "Library\JavascriptGenerator.h"
 #include "Library\HostObjectBase.h"
-#ifdef SIMD_JS_ENABLED
+
+// SIMD_JS
 // SIMD types
 #include "Library\JavascriptSIMDFloat32x4.h"
 #include "Library\JavascriptSIMDFloat64x2.h"
@@ -69,7 +70,6 @@
 #include "Library\SIMDInt32x4Lib.h"
 #include "Library\SIMDInt8x16Lib.h"
 #include "Library\SIMDInt16x8Lib.h"
-#endif
 
 #include "Debug\DebuggingFlags.h"
 #include "Debug\DiagProbe.h"

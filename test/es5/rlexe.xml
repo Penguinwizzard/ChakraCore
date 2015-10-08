@@ -67,11 +67,7 @@
     <default>
       <files>jx2.js</files>
       <baseline>jx3.baseline</baseline>
-      <!--
-         TODO broken in ch: printing ? characters in the output that are
-         not in the baseline
-      -->
-      <tags>fail_mutators,exclude_ch</tags>
+      <tags>fail_mutators</tags>
     </default>
   </test>
   <test>
@@ -169,13 +165,6 @@
       <compile-flags>-Serialized</compile-flags>
       <files>defineProperty.js</files>
       <baseline>defineProperty.baseline</baseline>
-      <!--
-         TODO broken in ch: Uses -Serialized which is jshost only.
-         Consider integrating all serialized tests back to full
-         in their own test suite and running code coverage to whittle
-         them down to only the core tests needed.
-      -->
-      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -189,13 +178,6 @@
       <compile-flags>-Serialized</compile-flags>
       <files>defineIndexProperty.js</files>
       <baseline>defineIndexProperty.baseline</baseline>
-      <!--
-         TODO broken in ch: Uses -Serialized which is jshost only.
-         Consider integrating all serialized tests back to full
-         in their own test suite and running code coverage to whittle
-         them down to only the core tests needed.
-      -->
-      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>

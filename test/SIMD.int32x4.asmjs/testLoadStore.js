@@ -175,7 +175,7 @@ function asmModule(stdlib, imports, buffer) {
         var size = 10;
         var loopIndex = 0;
         
-        index = 0x10000-160;
+        index = (0x10000-160)|0;
         for (loopIndex = 0; (loopIndex | 0) < (size | 0) ; loopIndex = (loopIndex + 1) | 0)
         {
             i4store(Int8Heap, index >> 0, x);
@@ -183,7 +183,7 @@ function asmModule(stdlib, imports, buffer) {
         }
         
         // No OOB
-        index = 0x10000-160;
+        index = (0x10000-160)|0;
         for (loopIndex = 0; (loopIndex | 0) < (size | 0) ; loopIndex = (loopIndex + 1) | 0)
         {
             t = i4load(Uint8Heap, index >> 0);
@@ -202,7 +202,7 @@ function asmModule(stdlib, imports, buffer) {
         var size = 10;
         var loopIndex = 0;
         
-        index = 0x10000-160
+        index = (0x10000-160)|0;
         for (loopIndex = 0; (loopIndex | 0) < (size | 0) ; loopIndex = (loopIndex + 1) | 0)
         {
             i4store(Int8Heap, index >> 0, x);
@@ -210,7 +210,7 @@ function asmModule(stdlib, imports, buffer) {
         }
         
         // OOB
-        index = (0x10000-160) + 1;
+        index = ((0x10000-160) + 1)|0;
         for (loopIndex = 0; (loopIndex | 0) < (size | 0) ; loopIndex = (loopIndex + 1) | 0)
         {
             t = i4load(Uint8Heap, index >> 0);
@@ -253,7 +253,7 @@ function asmModule(stdlib, imports, buffer) {
         var size = 10;
         var loopIndex = 0;
         
-        index = 0x10000 - 160;
+        index = (0x10000-160)|0;
         for (loopIndex = 0; (loopIndex | 0) < (size | 0) ; loopIndex = (loopIndex + 1) | 0)
         {
             i4store3(Uint16Heap, index >> 1, x);
@@ -262,7 +262,7 @@ function asmModule(stdlib, imports, buffer) {
         
         
         // No OOB here
-        index = (0x10000 - 160) + 4;
+        index = ((0x10000 - 160) + 4)|0;
         for (loopIndex = 0; (loopIndex | 0) < (size | 0) ; loopIndex = (loopIndex + 1) | 0)
         {
             t = i4load3(Int16Heap, index >> 1);
@@ -281,14 +281,14 @@ function asmModule(stdlib, imports, buffer) {
         var size = 10;
         var loopIndex = 0;
         
-        index = (0x10000 - 160);
+        index = (0x10000-160)|0;
         for (loopIndex = 0; (loopIndex | 0) < (size | 0) ; loopIndex = (loopIndex + 1) | 0)
         {
             i4store3(Uint16Heap, index >> 1, x);
             index = (index + 16 ) | 0;
         }
 
-        index = (0x10000 - 160) + 6;
+        index = ((0x10000 - 160) + 6)|0;
         // OOB here
         for (loopIndex = 0; (loopIndex | 0) < (size | 0) ; loopIndex = (loopIndex + 1) | 0)
         {
@@ -333,14 +333,14 @@ function asmModule(stdlib, imports, buffer) {
         var size = 10;
         var loopIndex = 0;
         
-        index = 0x10000 - 160;
+        index = (0x10000-160)|0;
         for (loopIndex = 0; (loopIndex | 0) < (size | 0) ; loopIndex = (loopIndex + 1) | 0)
         {
             i4store2(Uint16Heap, index >> 1, x);
             index = (index + 16 ) | 0;
         }
         
-        index = (0x10000 - 160 ) + 8;
+        index = ((0x10000 - 160) + 8)|0;
         // No OOB
         for (loopIndex = 0; (loopIndex | 0) < (size | 0) ; loopIndex = (loopIndex + 1) | 0)
         {
@@ -360,14 +360,14 @@ function asmModule(stdlib, imports, buffer) {
         var size = 10;
         var loopIndex = 0;
         
-        index = 0x10000 - 160;
+        index = (0x10000-160)|0;
         for (loopIndex = 0; (loopIndex | 0) < (size | 0) ; loopIndex = (loopIndex + 1) | 0)
         {
             i4store2(Uint16Heap, index >> 1, x);
             index = (index + 16 ) | 0;
         }
         
-        index = (0x10000 - 160 ) + 32;
+        index = ((0x10000 - 160) + 32)|0;
         // OOB
         for (loopIndex = 0; (loopIndex | 0) < (size | 0) ; loopIndex = (loopIndex + 1) | 0)
         {
@@ -411,14 +411,14 @@ function asmModule(stdlib, imports, buffer) {
         var size = 10;
         var loopIndex = 0;
         
-        index = 0x10000 - 160;
+        index = (0x10000-160)|0;
         for (loopIndex = 0; (loopIndex | 0) < (size | 0) ; loopIndex = (loopIndex + 1) | 0)
         {
             i4store1(Uint32Heap, index >> 2, x);
             index = (index + 16 ) | 0;
         }
         
-        index = 0x10000 - 160 + 12;
+        index = ((0x10000 - 160) + 12)|0;
         // No OOB
         for (loopIndex = 0; (loopIndex | 0) < (size | 0) ; loopIndex = (loopIndex + 1) | 0)
         {
@@ -438,14 +438,14 @@ function asmModule(stdlib, imports, buffer) {
         var size = 10;
         var loopIndex = 0;
         
-        index = 0x10000 - 160;
+        index = (0x10000-160)|0;
         for (loopIndex = 0; (loopIndex | 0) < (size | 0) ; loopIndex = (loopIndex + 1) | 0)
         {
             i4store1(Uint32Heap, index >> 2, x);
             index = (index + 16 ) | 0;
         }
         
-        index = 0x10000 - 160 + 16;
+        index = ((0x10000 - 160) + 16)|0;
         // OOB
         for (loopIndex = 0; (loopIndex | 0) < (size | 0) ; loopIndex = (loopIndex + 1) | 0)
         {
@@ -488,14 +488,14 @@ function asmModule(stdlib, imports, buffer) {
         var index = 0;
         var size = 10;
         var loopIndex = 0;
-        index = 0x10000 - 160;
+        index = (0x10000-160)|0;
         for (loopIndex = 0; (loopIndex | 0) < (size | 0) ; loopIndex = (loopIndex + 1) | 0)
         {
             i4store(Uint32Heap, index >> 2, x);
             index = (index + 16 ) | 0;
         }
         
-        index = 0x10000 - 160 + 8;
+        index = ((0x10000 - 160) + 8)|0;
         // No OOB
         for (loopIndex = 0; (loopIndex | 0) < (size | 0) ; loopIndex = (loopIndex + 1) | 0)
         {
@@ -515,14 +515,14 @@ function asmModule(stdlib, imports, buffer) {
         var size = 10;
         var loopIndex = 0;
         
-        index = 0x10000 - 160;
+        index = (0x10000-160)|0;
         for (loopIndex = 0; (loopIndex | 0) < (size | 0) ; loopIndex = (loopIndex + 1) | 0)
         {
             i4store(Uint32Heap, index >> 2, x);
             index = (index + 16 ) | 0;
         }
         
-        index = 0x10000 - 160 + 12;
+        index = ((0x10000 - 160) + 12)|0;
         // OOB
         for (loopIndex = 0; (loopIndex | 0) < (size | 0) ; loopIndex = (loopIndex + 1) | 0)
         {
@@ -566,14 +566,14 @@ function asmModule(stdlib, imports, buffer) {
         var size = 10;
         var loopIndex = 0;
         
-        index = 0x10000 - 160;
+        index = (0x10000-160)|0;
         for (loopIndex = 0; (loopIndex | 0) < (size | 0) ; loopIndex = (loopIndex + 1) | 0)
         {
             i4store(Uint32Heap, index >> 2, x);
             index = (index + 16 ) | 0;
         }
         
-        index = 0x10000 - 160 + 12;
+        index = ((0x10000 - 160) + 12)|0;
         // No OOB
         for (loopIndex = 0; (loopIndex | 0) < (size | 0) ; loopIndex = (loopIndex + 1) | 0)
         {
@@ -593,14 +593,14 @@ function asmModule(stdlib, imports, buffer) {
         var size = 10;
         var loopIndex = 0;
         
-        index = 0x10000 - 160;
+        index = (0x10000-160)|0;
         for (loopIndex = 0; (loopIndex | 0) < (size | 0) ; loopIndex = (loopIndex + 1) | 0)
         {
             i4store(Uint32Heap, index >> 2, x);
             index = (index + 16 ) | 0;
         }
         
-        index = 0x10000 - 160 + 16;
+        index = ((0x10000 - 160) + 16)|0;
         // OOB
         for (loopIndex = 0; (loopIndex | 0) < (size | 0) ; loopIndex = (loopIndex + 1) | 0)
         {

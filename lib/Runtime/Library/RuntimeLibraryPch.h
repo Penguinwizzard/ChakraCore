@@ -76,7 +76,7 @@
 #include "Library\DateImplementation.h"
 #include "Library\JavascriptDate.h"
 
-#ifdef SIMD_JS_ENABLED
+// SIMD_JS
 // SIMD types
 #include "Library\JavascriptSIMDFloat32x4.h"
 #include "Library\JavascriptSIMDFloat64x2.h"
@@ -105,7 +105,6 @@
 #include "Library\SIMDBool16x8Lib.h"
 #include "Library\SIMDBool8x16Lib.h"
 
-#endif
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
 #include "Library\ScriptMemoryDumper.h"

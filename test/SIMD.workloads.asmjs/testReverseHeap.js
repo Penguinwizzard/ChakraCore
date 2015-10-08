@@ -153,7 +153,7 @@ function asmModule(stdlib, imports, buffer) {
 		var ret1 = i4(0, 0, 0, 0), ret2 = i4(0, 0, 0, 0);
 		var i = 0, temp = 0;
 		
-		while((BLOCK_SIZE * 2) <= ((end - start) - (i * 2)))
+		while(((BLOCK_SIZE * 2)|0) <= (((end - start) - ((i * 2)|0))|0))
 		{
 			ret1 = i4swizzle(i4load(Int32Heap, (start + i) << 2 >> 2), 3, 2, 1, 0);
 			ret2 = i4swizzle(i4load(Int32Heap, (end - i - BLOCK_SIZE) << 2 >> 2), 3, 2, 1, 0);
@@ -161,15 +161,15 @@ function asmModule(stdlib, imports, buffer) {
 			i4store(Int32Heap, (end - i - BLOCK_SIZE) << 2 >> 2, ret1);
 			i4store(Int32Heap, (start + i) << 2 >> 2, ret2);
 			
-			i = i + BLOCK_SIZE;
+			i = (i + BLOCK_SIZE)|0;
 		}
 		
-		while(1 < (((end - start) + 0) - (i * 2)))
+		while(1 < ((((end - start) + 0) - ((i * 2)|0))|0))
 		{
 			temp = Int32Heap[start + i << 2 >> 2] | 0;
 			Int32Heap[start + i << 2 >> 2] = Int32Heap[(end - i - 1) << 2 >> 2];
 			Int32Heap[(end - i - 1) << 2 >> 2] = temp;
-			i = i + 1;
+			i = (i + 1)|0;
 		}
 	}
 	//Reverses heap values at start index and end index
@@ -182,7 +182,7 @@ function asmModule(stdlib, imports, buffer) {
 		var ret1 = f4(0.0, 0.0, 0.0, 0.0), ret2 = f4(0.0, 0.0, 0.0, 0.0);
 		var i = 0, temp = 0;
 		
-		while((BLOCK_SIZE * 2) <= ((end - start) - (i * 2)))
+		while(((BLOCK_SIZE * 2)|0) <= (((end - start) - ((i * 2)|0))|0))
 		{
 			ret1 = f4swizzle(f4load(Int32Heap, (start + i) << 2 >> 2), 3, 2, 1, 0);
 			ret2 = f4swizzle(f4load(Int32Heap, (end - i - BLOCK_SIZE) << 2 >> 2), 3, 2, 1, 0);
@@ -190,15 +190,15 @@ function asmModule(stdlib, imports, buffer) {
 			f4store(Int32Heap, (end - i - BLOCK_SIZE) << 2 >> 2, ret1);
 			f4store(Int32Heap, (start + i) << 2 >> 2, ret2);
 			
-			i = i + BLOCK_SIZE;
+			i = (i + BLOCK_SIZE)|0;
 		}
 		
-		while(1 < (((end - start) + 0) - (i * 2)))
+		while(1 < ((((end - start) + 0) - ((i * 2)|0))|0))
 		{
 			temp = Int32Heap[start + i << 2 >> 2] | 0;
 			Int32Heap[start + i << 2 >> 2] = Int32Heap[(end - i - 1) << 2 >> 2];
 			Int32Heap[(end - i - 1) << 2 >> 2] = temp;
-			i = i + 1;
+			i = (i + 1)|0;
 		}
 	}
 	
@@ -213,9 +213,9 @@ function asmModule(stdlib, imports, buffer) {
 		var start32 = 0, end32 = 0;
 		var i = 0, i64 = 0, temp = 0.0;
 		
-		start32 = start * 2;
-		end32 = end * 2;
-		while((BLOCK_SIZE * 2) <= ((end32 - start32) - (i * 2)))
+		start32 = (start * 2)|0;
+		end32 = (end * 2)|0;
+		while(((BLOCK_SIZE * 2)|0) <= (((end32 - start32) - ((i * 2)|0))|0))
 		{
 			ret1 = d2swizzle(d2load(Float32Heap, (start32 + i) << 2 >> 2), 1, 0);
 			ret2 = d2swizzle(d2load(Float32Heap, (end32 - i - BLOCK_SIZE) << 2 >> 2), 1, 0);
@@ -223,16 +223,16 @@ function asmModule(stdlib, imports, buffer) {
 			d2store(Float32Heap, (end32 - i - BLOCK_SIZE) << 2 >> 2, ret1);
 			d2store(Float32Heap, (start32 + i) << 2 >> 2, ret2);
 			
-			i = i + BLOCK_SIZE;
-			i64 = i64 + 2;
+			i = (i + BLOCK_SIZE)|0;
+			i64 = (i64 + 2)|0;
 		}
 		
-		while(1 < (((end - start) + 0) - (i64 * 2)))
+		while(1 < ((((end - start) + 0) - ((i64 * 2)|0))|0))
 		{
 			temp = +Float64Heap[start + i64 << 3 >> 3];
 			Float64Heap[start + i64 << 3 >> 3] = Float64Heap[(end - i64 - 1) << 3 >> 3];
 			Float64Heap[(end - i64 - 1) << 3 >> 3] = temp;
-			i64 = i64 + 1;
+			i64 = (i64 + 1)|0;
 		}
 	}
 	

@@ -6,7 +6,6 @@
 #include "SIMDInt32x4Operation.h"
 
 #if defined(_M_ARM32_OR_ARM64)
-#ifdef SIMD_JS_ENABLED
 
 namespace Js
 {
@@ -381,6 +380,4 @@ namespace Js
         return result;
     }
 }
-
-#endif
 #endif

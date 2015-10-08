@@ -418,11 +418,13 @@ namespace UnifiedRegex
         Assert(majorBoundary >= 0x10000);
 
         AltNode* tailToAdd = nullptr;
-        if (minorBoundary > majorBoundary)
+
+        // If the minor boundary is higher than major boundary, that means we have a range within the boundary and is less than 0x400
+        // Ex: 0x10430 - 0x10700 will have minor boundary of 0x10800 and major of 0x10400
+        // This pair will be represented in single range set.
+        const bool singleRange = minorBoundary > majorBoundary;
+        if (singleRange)
         {
-            // If the minor boundary is higher than major boundary, that means we have a range within the boundary and is less than 0x400
-            // Ex: 0x10430 - 0x10700 will have minor boundary of 0x10800 and major of 0x10400
-            // This pair will be represented in single range set.
             Assert(majorCodePoint - minorCodePoint < 0x400u);
             Assert(lowerMinorCodeUnit == lowerMajorCodeUnit);
             
@@ -436,14 +438,15 @@ namespace UnifiedRegex
         else 
         {
             Node* prefixNode = nullptr, *suffixNode = nullptr;
+            const bool twoConsecutiveRanges = minorBoundary == majorBoundary;
             
             //For minorBoundary, 
-            if (minorBoundary - minorCodePoint == 1)
+            if (minorBoundary - minorCodePoint == 1) // Single character in minor range
             {
                 // The prefix is only a surrogate pair atom
                 prefixNode = CreateSurrogatePairAtom(lowerMinorCodeUnit, upperMinorCodeUnit);
             }
-            else if (minorCodePoint != minorBoundary - 0x400u)
+            else if (minorCodePoint != minorBoundary - 0x400u) // Minor range isn't full
             {
                 Assert(minorBoundary - minorCodePoint < 0x400u);
                 MatchCharNode* lowerCharNode = Anew(ctAllocator, MatchCharNode, (Char)lowerMinorCodeUnit);
@@ -451,18 +454,18 @@ namespace UnifiedRegex
                 upperSetNode->set.SetRange(ctAllocator, (Char)upperMinorCodeUnit, (Char)0xDFFFu);
                 prefixNode = Anew(ctAllocator, ConcatNode, lowerCharNode, Anew(ctAllocator, ConcatNode, upperSetNode, nullptr));
             }
-            else
+            else // Full minor range
             {
-                minorBoundary = minorCodePoint;
+                minorBoundary -= 0x400u;
             }
 
-            if (majorBoundary == majorCodePoint)
+            if (majorBoundary == majorCodePoint) // Single character in major range
             {
                 // The suffix is only a surrogate pair atom
                 suffixNode = CreateSurrogatePairAtom(lowerMajorCodeUnit, upperMajorCodeUnit);
                 majorBoundary -= 0x400u;
             }
-            else if (majorBoundary + 0x3FFu != majorCodePoint)
+            else if (majorBoundary + 0x3FFu != majorCodePoint) // Major range isn't full
             {
                 Assert(majorCodePoint - majorBoundary < 0x3FFu);
                 MatchCharNode* lowerCharNode = Anew(ctAllocator, MatchCharNode, (Char)lowerMajorCodeUnit);
@@ -472,9 +475,13 @@ namespace UnifiedRegex
                 majorBoundary -= 0x400u;
             }
 
-            if (prefixNode != nullptr && minorBoundary == majorBoundary && minorCodePoint != minorBoundary - 0x400u && majorBoundary + 0x3FFu != majorCodePoint)
+            const bool nonFullConsecutiveRanges = twoConsecutiveRanges && prefixNode != nullptr && suffixNode != nullptr;
+            if (nonFullConsecutiveRanges)
             {
                 Assert(suffixNode != nullptr);
+                Assert(minorCodePoint != minorBoundary - 0x400u);
+                Assert(majorBoundary + 0x3FFu != majorCodePoint);
+
                 // If the minor boundary is equal to major boundary, that means we have a cross boundary range that only needs 2 nodes for prefix/suffix.
                 // We can only cross one boundary.
                 Assert(majorCodePoint - minorCodePoint < 0x800u);
@@ -484,13 +491,16 @@ namespace UnifiedRegex
             {
                 // We have 3 sets of ranges, comprising of prefix, full and suffix.
                 Assert(majorCodePoint - minorCodePoint >= 0x400u);
-                Assert(minorBoundary != majorBoundary || (prefixNode == nullptr && suffixNode == nullptr) || (prefixNode == nullptr && minorBoundary == minorCodePoint));
+                Assert((prefixNode != nullptr && suffixNode != nullptr) // Spanning more than two ranges
+                    || (prefixNode == nullptr && minorBoundary == minorCodePoint) // Two consecutive ranges and the minor is full
+                    || (suffixNode == nullptr && majorBoundary + 0x3FFu == majorCodePoint)); // Two consecutive ranges and the major is full
 
                 Node* lowerOfFullRange;
                 wchar_t lowerMinorBoundary, lowerMajorBoundary, ignore;
                 Js::NumberUtilities::CodePointAsSurrogatePair(minorBoundary, &lowerMinorBoundary, &ignore);
                 
-                if (majorBoundary - minorBoundary == 0x400u)
+                bool singleFullRange = majorBoundary == minorBoundary;
+                if (singleFullRange)
                 {
                     // The lower part of the full range is simple a surrogate lower char
                     lowerOfFullRange = Anew(ctAllocator, MatchCharNode, (Char)lowerMinorBoundary);
@@ -1909,7 +1919,9 @@ namespace UnifiedRegex
                 }
                 else
                 {
-                    pendingRangeStart = lastCodepoint;
+                    pendingRangeStart = this->next == this->positionAfterLastSurrogate
+                        ? this->valueOfLastSurrogate
+                        : lastCodepoint;
                     lastCodepoint = INVALID_CODEPOINT;
                     NextChar();
                 }
@@ -1965,6 +1977,8 @@ namespace UnifiedRegex
                     lastCodepoint = this->valueOfLastSurrogate;
                     Assert(!previousSurrogatePart);
                     pendingRangeEnd = lastCodepoint;
+
+                    lastCodepoint = INVALID_CODEPOINT;
                 }
                 // If we the next character is the end of range ']', then we can't have a surrogate pair.
                 // The current character is the range end, if we don't already have a candidate.

@@ -173,7 +173,7 @@ function asmModule(stdlib, imports) {
         var value1 = i4(0, 0, 0, 0);
         var i = 0;
 
-        for (i = 0; (i | 0) < 1000; i = i + 1) {
+        for (i = 0; (i | 0) < 1000; i = (i + 1)|0) {
             value1 = i4add(value1, i4splat(1));
             if ((i | 0) == 300) {
                 return i4check(value1);

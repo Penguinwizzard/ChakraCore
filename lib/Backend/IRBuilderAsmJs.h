@@ -78,12 +78,10 @@ private:
     Js::RegSlot             GetRegSlotFromFloatReg(Js::RegSlot srcFloatReg);
     Js::RegSlot             GetRegSlotFromDoubleReg(Js::RegSlot srcDoubleReg);
     Js::RegSlot             GetRegSlotFromVarReg(Js::RegSlot srcVarReg);
-#ifdef SIMD_JS_ENABLED
     Js::OpCode              GetSimdOpcode(Js::OpCodeAsmJs asmjsOpcode);
     Js::RegSlot             GetRegSlotFromSimd128Reg(Js::RegSlot srcSimd128Reg);
     IR::Instr *             AddExtendedArg(IR::RegOpnd *src1, IR::RegOpnd *src2, uint32 offset);
     BOOL                    RegIsSimd128Var(Js::RegSlot reg);
-#endif
     SymID                   GetMappedTemp(Js::RegSlot reg);
     void                    SetMappedTemp(Js::RegSlot reg, SymID tempId);
     BOOL                    GetTempUsed(Js::RegSlot reg);
@@ -159,12 +157,11 @@ private:
     Js::RegSlot             m_firstFloatTemp;
     Js::RegSlot             m_firstDoubleTemp;
     Js::RegSlot             m_firstIRTemp;
-#ifdef SIMD_JS_ENABLED
     Js::RegSlot             m_firstSimdConst;
     Js::RegSlot             m_firstSimdVar;
     Js::RegSlot             m_firstSimdTemp;
     Js::OpCode *            m_simdOpcodesMap;
-#endif
+
     SymID *                 m_tempMap;
     BVFixed *               m_fbvTempUsed;
     uint32                  m_functionStartOffset;

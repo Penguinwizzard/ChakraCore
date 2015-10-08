@@ -50,8 +50,6 @@ namespace Js
     inline bool operator>=(OpCodeAsmJs &o, uint i) { return ((uint)(o) >= i); }
     inline bool operator>=(uint i, OpCodeAsmJs &o) { return (i >= (uint)(o)); }
 
-
-#ifdef SIMD_JS_ENABLED
     inline bool IsSimd128AsmJsOpcode(OpCodeAsmJs o) 
     { 
         return (o > Js::OpCodeAsmJs::Simd128_Start && o < Js::OpCodeAsmJs::Simd128_End) || (o > Js::OpCodeAsmJs::Simd128_Start_Extend && o < Js::OpCodeAsmJs::Simd128_End_Extend); 
@@ -60,7 +58,6 @@ namespace Js
     { 
         return (uint)(Js::OpCodeAsmJs::Simd128_End - Js::OpCodeAsmJs::Simd128_Start) + 1 + (uint)(Js::OpCodeAsmJs::Simd128_End_Extend - Js::OpCodeAsmJs::Simd128_Start_Extend) + 1; 
     }
-#endif
 
     ///----------------------------------------------------------------------------
     ///
@@ -134,7 +131,7 @@ namespace Js
         typename SizePolicy::RegSlotType     R3;
         typename SizePolicy::RegSlotType     R4;
     };
-#ifdef SIMD_JS_ENABLED
+
     template <typename SizePolicy>
     struct OpLayoutT_AsmReg6
     {
@@ -163,7 +160,6 @@ namespace Js
         typename SizePolicy::RegSlotType     R1;
         typename int                         C2;
     };
-#endif
 
     template <typename SizePolicy>
     struct OpLayoutT_Int1Double1
@@ -373,7 +369,7 @@ namespace Js
         typename SizePolicy::RegSlotType     I2;
     };
 
-#ifdef SIMD_JS_ENABLED
+
     /* Float32x4 layouts */
     //--------------------
     template <typename SizePolicy>
@@ -760,7 +756,6 @@ namespace Js
         int8                                 DataWidth; // # of bytes to load/store
     };
 
-#endif
 
     // Generate the multi size layout type defs
 #define LAYOUT_TYPE_WMS(layout) \

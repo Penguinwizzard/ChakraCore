@@ -342,9 +342,15 @@ public:
             if (argInstr->GetSrc2() && argInstr->GetSrc2()->IsSymOpnd())
             {
                 linkSym = argInstr->GetSrc2()->AsSymOpnd()->m_sym->AsStackSym();
-                Assert(linkSym->IsSingleDef());
                 Assert(linkSym->IsArgSlotSym());
-                nextArg = linkSym->m_instrDef;
+
+                // Due to dead code elimination in FGPeeps, it is possible for the definitions of the
+                // the instructions that we are visiting during FG to have been freed. In this case,
+                // the ArgSlot, even though its was a single def, will report IsSingleDef() as false
+                // since instrDef is reset to nullptr when the def instr is freed
+                Assert(linkSym->IsSingleDef() ||
+                    (m_func->IsInPhase(Js::Phase::FGPeepsPhase) || m_func->IsInPhase(Js::Phase::FGBuildPhase)));
+                nextArg = linkSym->GetInstrDef();
             }
             else
             {
@@ -438,11 +444,9 @@ private:
     void            SetBailOutKind_NoAssert(const IR::BailOutKind bailOutKind);
 
 public:  
-#ifdef SIMD_JS_ENABLED
     // used only for SIMD Ld/St from typed arrays.
     // we keep these here to avoid increase in number of opcodes and to not use ExtendedArgs
     uint8           dataWidth;
-#endif
 
 #ifdef BAILOUT_INJECTION
     uint            bailOutByteCodeLocation;
@@ -802,10 +806,10 @@ public:
     template<class Fn>
     void MapMultiBrLabels(Fn fn) 
     {           
-                MapMultiBrTargetByAddress([fn](void ** value) -> void
-                {
-                        fn((LabelInstr*) *value);
-                });
+        MapMultiBrTargetByAddress([fn](void ** value) -> void
+        {
+            fn((LabelInstr*) *value);
+        });
     }
 
 ///---------------------------------------------------------------------------
@@ -836,10 +840,10 @@ public:
     template<class Fn>
     void UpdateMultiBrTargetOffsets(Fn fn) 
     {                   
-                MapMultiBrTargetByAddress([fn](void ** value) -> void
-                {
-                        *value = (void*) fn((uint32) *value);
-                });
+        MapMultiBrTargetByAddress([fn](void ** value) -> void
+        {
+            *value = (void*)fn(::Math::PointerCastToIntegral<uint32>(*value));
+        });
     }
 
 ///--------------------------------------------------------------------------------------------
@@ -850,13 +854,13 @@ public:
     template<class Fn>
     void UpdateMultiBrLabels(Fn fn) 
     {   
-                MapMultiBrTargetByAddress([fn](void ** value) -> void
-                {
-                        IR::LabelInstr * oldLabelInstr = (LabelInstr*)*value;
+        MapMultiBrTargetByAddress([fn](void ** value) -> void
+        {
+            IR::LabelInstr * oldLabelInstr = (LabelInstr*)*value;
             IR::LabelInstr * newLabelInstr = fn(oldLabelInstr);
 
             *value = (void*)newLabelInstr;
-                });
+        });
     }
 
 ///-------------------------------------------------------------------------------------------------------------

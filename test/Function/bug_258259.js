@@ -1,6 +1,6 @@
 ﻿//                   000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889
 //                   123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890
-var expectedError = "Error: aİc\n   at aTurkish (bug_258259.js:7:5)\n   at Global code (bug_258259.js:29:9)";
+var expectedError = "Error: aİc\n\tat aTurkish (bug_258259.js:7:5)\n\tat Global code (bug_258259.js:29:9)";
 
 //-- Turkish 'i' character in error message and file name
 function aTurkish() {

@@ -7,8 +7,6 @@
 #include "SIMDInt32x4Operation.h"
 
 #if defined(_M_ARM32_OR_ARM64)
-#ifdef SIMD_JS_ENABLED
-
 namespace Js
 {
     SIMDValue SIMDFloat64x2Operation::OpFloat64x2(double x, double y)
@@ -366,5 +364,4 @@ namespace Js
     }
 }
 
-#endif
 #endif

@@ -460,7 +460,7 @@ BUILTIN(SIMDFloat64x2Lib, Shuffle,  EntryShuffle, FunctionInfo::None)
 BUILTIN(SIMDFloat64x2Lib, Clamp,    EntryClamp, FunctionInfo::None)
 BUILTIN(SIMDFloat64x2Lib, Select,   EntrySelect, FunctionInfo::None)
 
-// SIMDInt16x8Lib entry points ////////////////////////////////////////////////
+// SIMDInt16x8Lib entry points
 BUILTIN(SIMDInt16x8Lib, Int16x8, EntryInt16x8, FunctionInfo::None)
 BUILTIN(SIMDInt16x8Lib, Check, EntryCheck, FunctionInfo::None)
 BUILTIN(SIMDInt16x8Lib, Splat, EntrySplat, FunctionInfo::None)
@@ -578,13 +578,8 @@ BUILTIN(JavascriptSIMDInt16x8, ToString, EntryToString, FunctionInfo::None)
 // JavascriptInt8x16 entry points
 BUILTIN(JavascriptSIMDInt8x16, ToString, EntryToString, FunctionInfo::None)
 
-// JavascriptBool32x4 entry points
 BUILTIN(JavascriptSIMDBool32x4, ToString, EntryToString, FunctionInfo::None)
-
-// JavascriptBool16x8 entry points
 BUILTIN(JavascriptSIMDBool16x8, ToString, EntryToString, FunctionInfo::None)
-
-// JavascriptBool32x4 entry points
 BUILTIN(JavascriptSIMDBool8x16, ToString, EntryToString, FunctionInfo::None)
 
 

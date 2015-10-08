@@ -679,13 +679,6 @@ void ByteCodeGenerator::SetRootFuncInfo(FuncInfo* func)
 {
     Assert(pRootFunc == nullptr || pRootFunc == func->byteCodeFunction || !IsInNonDebugMode());
 
-    if (pRootFunc)
-    {
-        return;
-    }
-
-    this->pRootFunc = func->byteCodeFunction->GetParseableFunctionInfo();
-
     if (this->flags & (fscrImplicitThis | fscrImplicitParents))
     {
         // Mark a top-level event handler, since it will need to construct the "this" pointer's
@@ -693,6 +686,13 @@ void ByteCodeGenerator::SetRootFuncInfo(FuncInfo* func)
         Assert(!func->IsGlobalFunction());
         func->SetIsEventHandler(true);
     }
+
+    if (pRootFunc)
+    {
+        return;
+    }
+
+    this->pRootFunc = func->byteCodeFunction->GetParseableFunctionInfo();
 }
 
 Js::RegSlot ByteCodeGenerator::NextVarRegister()

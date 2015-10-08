@@ -5,8 +5,6 @@
 #include "RuntimeLibraryPch.h"
 #include "SIMDFloat64x2Operation.h"
 
-#ifdef SIMD_JS_ENABLED
-
 namespace Js
 {
 
@@ -980,5 +978,3 @@ namespace Js
 
     
 }
-
-#endif

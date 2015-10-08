@@ -480,7 +480,7 @@ SmallHeapBlockT<TBlockAttributes>::GetAddressBitIndex(void * objectAddress)
 {
     Assert(HeapInfo::IsAlignedAddress(objectAddress));
 
-    ushort offset = (ushort)((uint)objectAddress % (TBlockAttributes::PageCount * AutoSystemInfo::PageSize));
+    ushort offset = (ushort)(::Math::PointerCastToIntegralTruncate<uint>(objectAddress) % (TBlockAttributes::PageCount * AutoSystemInfo::PageSize));
     offset = offset >> HeapConstants::ObjectAllocationShift;
 
     Assert(offset <= USHRT_MAX);

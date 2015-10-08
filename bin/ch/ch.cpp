@@ -115,8 +115,8 @@ int HostExceptionFilter(int exceptionCode, _EXCEPTION_POINTERS *ep)
 
 void __stdcall PrintUsage()
 {
-    wprintf(L"\n\nUsage: ch.exe [flaglist] [filename]\n");
-    ChakraRTInterface::PrintConfigFlagsUsageString();
+    wprintf(L"\nUsage: ch.exe [flaglist] [filename]\n");
+    wprintf(L"Try 'ch.exe -?' for help\n");
 }
 
 // On success the param byteCodeBuffer will be allocated in the function. 
@@ -267,11 +267,11 @@ HRESULT RunScript(LPCWSTR fileName, LPCWSTR fileContents, BYTE *bcBuffer, wchar_
     JsErrorCode runScript;
     if (bcBuffer != nullptr)
     {
-        runScript = ChakraRTInterface::JsRunSerializedScript(fileContents, bcBuffer, JS_SOURCE_CONTEXT_NONE, fullPath, nullptr/*result*/);
+        runScript = ChakraRTInterface::JsRunSerializedScript(fileContents, bcBuffer, WScriptJsrt::GetNextSourceContext(), fullPath, nullptr/*result*/);
     }
     else
     {
-        runScript = ChakraRTInterface::JsRunScript(fileContents, 0/*sourceContext*/, fullPath, nullptr/*result*/);
+        runScript = ChakraRTInterface::JsRunScript(fileContents, WScriptJsrt::GetNextSourceContext(), fullPath, nullptr/*result*/);
     }
 
     if (runScript != JsNoError)
@@ -284,7 +284,7 @@ HRESULT RunScript(LPCWSTR fileName, LPCWSTR fileContents, BYTE *bcBuffer, wchar_
         // because setTimeout can add scripts to execute
         do
         {
-            IfFailGo(messageQueue->ProcessAll());
+            IfFailGo(messageQueue->ProcessAll(fileName));
         } while (!messageQueue->IsEmpty());
     }
 Error:

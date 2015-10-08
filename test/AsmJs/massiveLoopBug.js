@@ -47,7 +47,7 @@ function Module()
 
         a: while (1) {
 
-                if (x  > 5) {
+                if ((x|0)  > 5) {
                     o = 224;
                     return +V;
                 } 
@@ -58,7 +58,7 @@ function Module()
                 M = M * .1
                 if ((I | 0) < (T | 0) | (I | 0) == (T | 0) & J >>> 0 < U >>> 0){}             
 
-            x = x + 1;
+            x = (x + 1)|0;
         }
         
     return +V;

@@ -35,8 +35,6 @@
       <files>ArrayView.js</files>
       <baseline>ArrayView.baseline</baseline>
       <compile-flags>-testtrace:asmjs -simdjs -maic:0</compile-flags>
-      <!-- crashes in ch.exe -->
-      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -108,8 +106,7 @@
       <files>clang.js</files>
       <baseline>clang.baseline</baseline>
       <compile-flags>-testtrace:asmjs -simdjs</compile-flags>
-      <!-- very long running in ch -->
-      <tags>Slow,exclude_ch</tags>
+      <tags>Slow</tags>
     </default>
   </test>
   <test>
@@ -130,13 +127,6 @@
     <default>
       <files>functiontablecalls.js</files>
       <baseline>functiontablecalls.baseline</baseline>
-      <compile-flags>-testtrace:asmjs -simdjs -maic:0</compile-flags>
-    </default>
-  </test>
-  <test>
-    <default>
-      <files>invalidoutput-reduced.js</files>
-      <baseline>invalidoutput-reduced.baseline</baseline>
       <compile-flags>-testtrace:asmjs -simdjs -maic:0</compile-flags>
     </default>
   </test>
@@ -181,8 +171,7 @@
       <files>pi.js</files>
       <baseline>pi.baseline</baseline>
       <compile-flags>-testtrace:asmjs -simdjs -maic:0</compile-flags>
-      <!-- very long running in ch -->
-      <tags>Slow,exclude_ch</tags>
+      <tags>Slow</tags>
     </default>
   </test>
   <test>
@@ -190,8 +179,6 @@
       <files>ReadArrayView.js</files>
       <baseline>ReadArrayView.baseline</baseline>
       <compile-flags>-testtrace:asmjs -simdjs -maic:0</compile-flags>
-      <!-- crashes in ch.exe -->
-      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -220,8 +207,7 @@
       <files>WriteArrayView.js</files>
       <baseline>WriteArrayView.baseline</baseline>
       <compile-flags>-testtrace:asmjs -simdjs -maic:0</compile-flags>
-      <!-- crashes in ch.exe -->
-      <tags>Slow,exclude_ch</tags>
+      <tags>Slow</tags>
     </default>
   </test>
   <test>
@@ -332,14 +318,6 @@
     <default>
       <files>functiontablecalls.js</files>
       <baseline>functiontablecalls.baseline</baseline>
-      <tags>exclude_amd64</tags>
-      <compile-flags>-testtrace:asmjs -simdjs -on:asmjsjittemplate -off:fulljit</compile-flags>
-    </default>
-  </test>
-  <test>
-    <default>
-      <files>invalidoutput-reduced.js</files>
-      <baseline>invalidoutput-reduced.baseline</baseline>
       <tags>exclude_amd64</tags>
       <compile-flags>-testtrace:asmjs -simdjs -on:asmjsjittemplate -off:fulljit</compile-flags>
     </default>
@@ -382,8 +360,7 @@
       <baseline>pi.baseline</baseline>
       <tags>exclude_amd64</tags>
       <compile-flags>-testtrace:asmjs -simdjs -on:asmjsjittemplate -off:fulljit</compile-flags>
-      <!-- very long running in ch -->
-      <tags>Slow,exclude_ch</tags>
+      <tags>Slow</tags>
     </default>
   </test>
   <test>
@@ -511,13 +488,6 @@
     <default>
       <files>functiontablecalls.js</files>
       <baseline>functiontablecalls.baseline</baseline>
-      <compile-flags>-testtrace:asmjs -simdjs -nonative</compile-flags>
-    </default>
-  </test>
-  <test>
-    <default>
-      <files>invalidoutput-reduced.js</files>
-      <baseline>invalidoutput-reduced.baseline</baseline>
       <compile-flags>-testtrace:asmjs -simdjs -nonative</compile-flags>
     </default>
   </test>
@@ -570,8 +540,7 @@
       <files>WriteArrayView.js</files>
       <baseline>WriteArrayView.baseline</baseline>
       <compile-flags>-testtrace:asmjs -simdjs -nonative</compile-flags>
-      <!-- crashes in ch.exe -->
-      <tags>Slow,exclude_ch</tags>
+      <tags>Slow</tags>
     </default>
   </test>
   <test>
@@ -694,7 +663,6 @@
     <default>
       <files>mandelbrot.js</files>
       <baseline>mandelbrot.baseline</baseline>
-      <tags>,exclude_arm,exclude_arm64</tags>
       <compile-flags>-testtrace:asmjs -simdjs -nonative</compile-flags>
     </default>
   </test>
@@ -1072,8 +1040,7 @@
       <files>pi.js</files>
       <baseline>pi.baseline</baseline>
       <compile-flags>-testtrace:asmjs -simdjs</compile-flags>
-      <!-- very long running in ch -->
-      <tags>Slow,exclude_ch</tags>
+      <tags>Slow</tags>
     </default>
   </test>
   <test>
@@ -1097,15 +1064,12 @@
       <files>changeHeap.js</files>
       <baseline>changeHeap.baseline</baseline>
       <compile-flags>-testtrace:asmjs -off:deferparse -simdjs -maic:0</compile-flags>
-      <!-- crashes in ch.exe -->
-      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
     <default>
       <files>changeHeap.js</files>
       <baseline>changeHeap.baseline</baseline>
-      <tags></tags>
       <compile-flags>-testtrace:asmjs -simdjs -off:deferparse -off:fulljit</compile-flags>
     </default>
   </test>
@@ -1121,7 +1085,6 @@
     <default>
       <files>ReadAV1.js</files>
       <baseline>ReadAV1.baseline</baseline>
-      <tags></tags>
       <compile-flags>-testtrace:asmjs -off:deferparse -simdjs</compile-flags>
     </default>
   </test>

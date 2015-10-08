@@ -459,15 +459,6 @@
   </test>
   <test>
     <default>
-      <files>ES6Promise_RemoveWScript.js</files>
-      <baseline>ES6Promise_RemoveWScript.baseline</baseline>
-      <compile-flags> -ES6 -ES6Promise</compile-flags>
-      <!-- This looks like host dependent -->
-      <tags>exclude_ch</tags>
-    </default>
-  </test>
-  <test>
-    <default>
       <files>es6_stable.js</files>
       <compile-flags>-verbose -es6 -WERExceptionSupport</compile-flags>
       <baseline>es6_stable.baseline</baseline>
@@ -749,15 +740,6 @@
   </test>
   <test>
     <default>
-      <files>generators-apis.js</files>
-      <compile-flags>-jsrt:32 -es6all</compile-flags>
-      <baseline>generators-apis-jsrt.baseline</baseline>
-      <!-- can this test be removed now that we have ch testing jsrt code paths? -->
-      <tags>exclude_arm,exclude_ch</tags>
-    </default>
-  </test>
-  <test>
-    <default>
       <files>generators-functionality.js</files>
       <!-- <compile-flags>-ES6Generators -JitES6Generators -ES6Classes -args summary -endargs</compile-flags> -->
       <compile-flags>-ES6Generators -ES6Classes -ES6DefaultArgs -args summary -endargs</compile-flags>
@@ -899,6 +881,12 @@
   <test>
     <default>
       <files>regex-unicode.js</files>
+      <compile-flags>-args summary -endargs</compile-flags>
+    </default>
+  </test>
+  <test>
+    <default>
+      <files>regex-set.js</files>
       <compile-flags>-args summary -endargs</compile-flags>
     </default>
   </test>
@@ -1049,6 +1037,20 @@
     <default>
         <files>ES6Class_SuperChain.js</files>
         <compile-flags>-es6classes -args summary -endargs -es6generators</compile-flags>
+    </default>
+</test>
+<test>
+    <default>
+        <files>globalLambdaNewTargetSyntaxError.js</files>
+        <baseline>globalLambdaNewTargetSyntaxError.baseline</baseline>
+        <tags>exclude_dynapogo</tags>
+    </default>
+</test>
+<test>
+    <default>
+        <files>globalNewTargetSyntaxError.js</files>
+        <baseline>globalNewTargetSyntaxError.baseline</baseline>
+        <tags>exclude_dynapogo</tags>
     </default>
 </test>
 <test>

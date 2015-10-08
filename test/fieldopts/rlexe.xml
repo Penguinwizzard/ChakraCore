@@ -203,8 +203,7 @@
       <files>fieldhoist_negzero.js</files>
       <compile-flags>-force:fieldhoist -Serialized</compile-flags>
       <baseline>fieldhoist_negzero.baseline</baseline>
-      <!-- -Serialized causing a bug with ch.exe -->
-      <tags>exclude_ship,exclude_ch</tags>
+      <tags>exclude_ship</tags>
     </default>
   </test>
   <test>

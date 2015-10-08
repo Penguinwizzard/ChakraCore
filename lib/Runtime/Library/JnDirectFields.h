@@ -281,10 +281,8 @@ ENTRY(map)
 ENTRY(Map)
 ENTRY(Math)
 
-// SIMD
-#ifdef SIMD_JS_ENABLED
+// SIMD_JS
 ENTRY(SIMD)
-#endif
 
 ENTRY(max)
 ENTRY(MAX_SAFE_INTEGER)

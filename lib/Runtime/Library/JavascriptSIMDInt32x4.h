@@ -4,8 +4,6 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
-#ifdef SIMD_JS_ENABLED
-
 class JavascriptSIMDFloat32x4;
 class JavascriptSIMDFloat64x2;
 
@@ -67,5 +65,3 @@ namespace Js
         Var  GetSignMask();
     };
 }
-
-#endif

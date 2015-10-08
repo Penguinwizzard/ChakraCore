@@ -82,10 +82,8 @@ namespace Js
             ADDR_REG,
             REG_IMM,
             ADDR_IMM,
-#ifdef SIMD_JS_ENABLED
             REG_REG_IMM,
             REG_ADDR_IMM,
-#endif
         };
 
         struct InstrParamsReg
@@ -281,7 +279,6 @@ namespace Js
 #endif
         };
 
-#ifdef SIMD_JS_ENABLED
         // op   reg, [regEffAddr1 + regEffAddr2*multiplier + offset], imm8
         template<typename ImmType>
         struct InstrParamsRegAddrImm
@@ -337,7 +334,6 @@ namespace Js
             }
 #endif
         };
-#endif
 
         bool FitsInByte(size_t value)
         {
@@ -1275,7 +1271,6 @@ namespace Js
     CMOV(CMOVZ  , 0x44)
 #undef CMOV
 
-#ifdef SIMD_JS_ENABLED
     // SSE2 instructions
     OpFuncSignature( MOVUPS ){
         CompileAssert(instrSize == sizeof(AsmJsSIMDValue));
@@ -1619,8 +1614,6 @@ namespace Js
         return 3;
     }
 
-#endif
-
     struct EncodingInfo
     {
         int opSize, operandSize, immSize;
@@ -1862,8 +1855,6 @@ namespace Js
         ,encodingfunc\
     )
 
-#ifdef SIMD_JS_ENABLED
-
 #define Format2RegImm8(encodingfunc) \
     InstructionFormat_Imm(\
     (Is128BitsOper() && Is128BitsReg(params.reg) && Is128BitsReg(params.reg2) && FitsInByteUnsigned(params.imm))\
@@ -1884,10 +1875,8 @@ namespace Js
     , InstrParamsRegImm\
     , encodingfunc\
     )
-#endif
 
-
-#include "AsmJsInstructionTemplate.inl"
+    #include "AsmJsInstructionTemplate.inl"
 // cleanup macros
 #undef InstructionStart
 

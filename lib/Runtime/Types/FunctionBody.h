@@ -2835,7 +2835,7 @@ namespace Js
 
         uint GetCount() const
         {
-            return (uint)slotArray[EncodedSlotCountSlotIndex];
+            return ::Math::PointerCastToIntegralTruncate<uint>(slotArray[EncodedSlotCountSlotIndex]);
         }
 
         void SetCount(uint count)

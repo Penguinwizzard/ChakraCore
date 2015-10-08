@@ -182,7 +182,7 @@ function repf(key, value) {
 
 var objectArray = [
 { obj: "SampleTest", desc: "String simple" },
-{ obj: "/test ze\0ro\vString\n_u4:\ua07f_u2:\xbc_u1:\x0e_u2clean:\x8f", desc: "String complex" },
+{ obj: "/test ze\0ro\vString\n_u4:\u0061_u2:\xbc_u1:\x0e_u2clean:\x8f", desc: "String complex" },
 { obj: 1,           desc: "Number(1)" },
 { obj: num,         desc: "Number(1234)" },
 { obj: 3.14,        desc: "Number(3.14)" },

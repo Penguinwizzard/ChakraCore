@@ -170,7 +170,6 @@
   <test>
     <default>
       <files>vso_os_1091425.js</files>
-      <baseline>vso_os_1091425.baseline</baseline>
     </default>
   </test>
   <test>

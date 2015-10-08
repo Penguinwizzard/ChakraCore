@@ -243,7 +243,6 @@ void ThreadContext::InitAvailableCommit()
 #endif
         AutoSystemInfo::Data.SetAvailableCommit(commit);
     }
-    Assert(commit != 0);
 }
 
 void ThreadContext::SetStackProber(StackProber * stackProber)
@@ -1395,7 +1394,7 @@ ThreadContext::IsStackAvailable(size_t size)
     bool stackAvailable = ((size_t)sp > size && (sp - size) > stackLimit);
 
     // Verify that JIT'd frames didn't mess up the ABI stack alignment
-    Assert(((uint)sp & (AutoSystemInfo::StackAlign - 1)) == (sizeof(void*) & (AutoSystemInfo::StackAlign - 1)));
+    Assert(((uintptr_t)sp & (AutoSystemInfo::StackAlign - 1)) == (sizeof(void*) & (AutoSystemInfo::StackAlign - 1)));
 
 #if DBG
     // TODO: make this work for JITted code.

@@ -119,8 +119,6 @@
     <default>
       <files>trim.js</files>
       <baseline>trim.baseline</baseline>
-      <!-- Fails in ch, outputs unicode characters that jshost does not -->
-      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>

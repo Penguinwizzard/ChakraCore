@@ -323,8 +323,7 @@ goto :main
   set _exclude_serialized=
 
   if "%_BuildType%" == "debug" (
-    rem Note: DumpOnCrash suppresses failed assert dialog popups in favor of
-    rem storing a dump of the assertion failure in the user's temp directory
+    rem Enabling storing dumps on user directory.
     set EXTRA_CC_FLAGS=%EXTRA_CC_FLAGS% -DumpOnCrash
   )
 

@@ -6,7 +6,6 @@
 
 #include "X64Encode.h"
 
-
 static const BYTE OpcodeByte2[]={
 #define MACRO(name, jnLayout, attrib, byte2, ...) byte2, 
 #include "MdOpcodes.h"
@@ -1326,7 +1325,9 @@ EncoderMD::FixRelocListEntry(uint32 index, int totalBytesSaved, BYTE *buffStart,
         // find the number of nops needed to align this loop top
         if (relocRecord.isAlignedLabel() && !PHASE_OFF(Js::LoopAlignPhase, m_func))
         {
-            uint32 offset = (uint32)newPC - (uint32)buffStart;
+            ptrdiff_t diff = newPC - buffStart;
+            Assert(diff >= 0 && diff <= UINT_MAX);
+            uint32 offset = (uint32)diff;
             // Since the final code buffer is page aligned, it is enough to align the offset of the label.
             BYTE nopCount = (16 - (BYTE)(offset & 0xf)) % 16;
             if (nopCount <= Js::Configuration::Global.flags.LoopAlignNopLimit)
@@ -1536,7 +1537,8 @@ EncoderMD::EncodeInlineeCallInfo(IR::Instr *instr, uint32 codeOffset)
     // 60 (AMD64) bits on the InlineeCallInfo to store the
     // offset of the start of the inlinee. We shouldn't have gotten here with more arguments
     // than can fit in as many bits.
-    const bool encodeResult = Js::InlineeCallInfo::Encode(inlineeCallInfo, (uint32)instr->GetSrc1()->AsAddrOpnd()->m_address, codeOffset);
+    const bool encodeResult = Js::InlineeCallInfo::Encode(inlineeCallInfo, 
+        ::Math::PointerCastToIntegral<uint32>(instr->GetSrc1()->AsAddrOpnd()->m_address), codeOffset);
     Assert(encodeResult);
 
     instr->GetSrc1()->AsAddrOpnd()->m_address = inlineeCallInfo;

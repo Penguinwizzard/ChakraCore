@@ -18,13 +18,9 @@ namespace Js {
         static void DumpDoubleReg(RegSlot reg);
         static void DumpFloatReg(RegSlot reg);
         static void DumpR8Float(float value);
-#ifdef SIMD_JS_ENABLED
         static void DumpFloat32x4Reg(RegSlot reg);
         static void DumpInt32x4Reg(RegSlot reg);
         static void DumpFloat64x2Reg(RegSlot reg);
-#endif
-        
-
 
 #define LAYOUT_TYPE(layout) \
     static void Dump##layout(OpCodeAsmJs op, const unaligned OpLayout##layout* data, FunctionBody * dumpFunction, ByteCodeReader& reader);

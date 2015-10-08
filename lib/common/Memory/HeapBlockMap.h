@@ -99,13 +99,13 @@ private:
 
     static uint GetLevel1Id(void * address)
     {
-        return ((uint)address) / L2Count / PageSize;
+        return ::Math::PointerCastToIntegralTruncate<uint>(address) / L2Count / PageSize;
     }
 
 public:
     static uint GetLevel2Id(void * address)
     {
-        return ((uint)address) % (L2Count * PageSize) / PageSize;
+        return ::Math::PointerCastToIntegralTruncate<uint>(address) % (L2Count * PageSize) / PageSize;
     }
 
 private:
@@ -150,7 +150,7 @@ private:
 
         static uint GetMarkBitIndex(void * address)
         {
-            uint bitIndex = (((uint)address) % (L2Count * PageSize)) / HeapConstants::ObjectGranularity;
+            uint bitIndex = (::Math::PointerCastToIntegralTruncate<uint>(address) % (L2Count * PageSize)) / HeapConstants::ObjectGranularity;
             Assert(bitIndex < L2ChunkMarkBitCount);
             return bitIndex;
         }

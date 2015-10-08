@@ -713,7 +713,7 @@ namespace Js
         }
         else
         {
-            returnedReg = (RegSlot)displayInfo->aVar;
+            returnedReg = ::Math::PointerCastToIntegral<RegSlot>(displayInfo->aVar);
             returnedVar = pFrame->GetRegValue(returnedReg);
         }
 

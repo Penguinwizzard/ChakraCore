@@ -289,7 +289,7 @@ Js::Var InlineeFrameRecord::Restore(int offset, bool isFloat64, bool isInt32, Js
 
     if (isInt32)
     {
-        int32 int32Value = (int32)value;
+        int32 int32Value = ::Math::PointerCastToIntegralTruncate<int32>(value);
         value = Js::JavascriptNumber::ToVar(int32Value, functionBody->GetScriptContext());
         BAILOUT_VERBOSE_TRACE(functionBody, L", value: %10d (ToVar: 0x%p)", int32Value, value);
     }

@@ -10,12 +10,12 @@
         var n = 20;
         var z = 11;
 
-       a: for( m = 0; m < 50 ; m = m+1)
+       a: for( m = 0; (m|0) < 50 ; m = (m+1)|0)
         {
             x = fr(x + y);
-            for( n = 0; n < 100 ; n = n+1)
+            for( n = 0; (n|0) < 100 ; n = (n+1)|0)
             {
-                if(n >  50)
+                if((n|0) >  50)
                     break a;
                 x = fr(x + y);
                 z = (z+1)|0;

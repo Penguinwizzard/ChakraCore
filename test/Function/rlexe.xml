@@ -64,6 +64,8 @@
     <default>
       <files>argumentsLimits.js</files>
       <baseline>argumentsLimits.baseline</baseline>
+      <!-- this test takes a long time with dynapogo on chk build -->
+      <tags>exclude_chk</tags>
     </default>
   </test>
   <test>
@@ -348,8 +350,7 @@
     <default>
       <files>bug_258259.js</files>
       <baseline>bug_258259.baseline</baseline>
-      <!-- bug fails in ch -->
-      <tags>exclude_ch</tags>
+      <compile-flags>-ExtendedErrorStackForTestHost</compile-flags>
     </default>
   </test>
   <test>

@@ -4,8 +4,6 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
-#ifdef SIMD_JS_ENABLED
-
 class JavascriptSIMDInt32x4;
 class JavascriptSIMDFloat64x2;
 
@@ -64,5 +62,3 @@ namespace Js
         
     };
 }
-
-#endif

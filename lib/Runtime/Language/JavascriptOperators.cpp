@@ -10,6 +10,8 @@
 #include "Library\JavascriptPromise.h"
 #include "Library\JavascriptRegularExpression.h"
 
+#pragma warning(disable:4302)  // truncation from 'pointer' to 'integral'
+
 #ifndef SCRIPT_DIRECT_TYPE
 typedef enum JsNativeValueType
 {
@@ -279,7 +281,6 @@ namespace Js
         case TypeIds_UInt64Number:
             return scriptContext->GetLibrary()->GetNumberTypeDisplayString();
 
-#ifdef SIMD_JS_ENABLED
         case TypeIds_SIMDFloat32x4:
             if (scriptContext->GetConfig()->IsSimdjsEnabled())
             {
@@ -305,7 +306,6 @@ namespace Js
             {
                 return scriptContext->GetLibrary()->GetSIMDInt8x16DisplayString();
             }
-#endif
 
         default:
 
@@ -9564,7 +9564,8 @@ CommonNumber:
         {
             if (TaggedInt::Is(aRight))
             {
-                return (int)aLeft >= (int)aRight;
+                // Works whether it is TaggedInt31 or TaggedInt32
+                return ::Math::PointerCastToIntegralTruncate<int>(aLeft) >= ::Math::PointerCastToIntegralTruncate<int>(aRight);
             }
             if (JavascriptNumber::Is_NoTaggedIntCheck(aRight))
             {
@@ -9595,7 +9596,8 @@ CommonNumber:
         {
             if (TaggedInt::Is(aRight))
             {
-                return (int)aLeft <= (int)aRight;
+                // Works whether it is TaggedInt31 or TaggedInt32
+                return ::Math::PointerCastToIntegralTruncate<int>(aLeft) <= ::Math::PointerCastToIntegralTruncate<int>(aRight);
             }
 
             if (JavascriptNumber::Is_NoTaggedIntCheck(aRight))
@@ -9758,7 +9760,8 @@ CommonNumber:
         {
             if (TaggedInt::Is(aRight))
             {
-                return (int)aLeft > (int)aRight;
+                // Works whether it is TaggedInt31 or TaggedInt32
+                return ::Math::PointerCastToIntegralTruncate<int>(aLeft) > ::Math::PointerCastToIntegralTruncate<int>(aRight);
             }
             if (JavascriptNumber::Is_NoTaggedIntCheck(aRight))
             {
@@ -9789,7 +9792,8 @@ CommonNumber:
         {
             if (TaggedInt::Is(aRight))
             {
-                return (int)aLeft < (int)aRight;
+                // Works whether it is TaggedInt31 or TaggedInt32
+                return ::Math::PointerCastToIntegralTruncate<int>(aLeft) < ::Math::PointerCastToIntegralTruncate<int>(aRight);
             }
             if (JavascriptNumber::Is_NoTaggedIntCheck(aRight))
             {

@@ -107,6 +107,7 @@ namespace Js
     class JavascriptPromiseResolveThenableTaskFunction;
     class JavascriptPromiseAllResolveElementFunction;
     struct JavascriptPromiseAllResolveElementFunctionRemainingElementsWrapper;
+    struct JavascriptPromiseResolveOrRejectFunctionAlreadyResolvedWrapper;
     class JavascriptGenerator;
     class LiteralString;
     class ArenaLiteralString;
@@ -139,7 +140,7 @@ namespace Js
     class ES5ArgumentsObjectEnumerator;
     class ScriptContextProfiler;
 
-#ifdef SIMD_JS_ENABLED
+//SIMD_JS
     // SIMD
     class SIMDFloat32x4Lib;
     class JavascriptSIMDFloat32x4;
@@ -151,7 +152,6 @@ namespace Js
     class JavascriptSIMDInt16x8;
     class SIMDInt8x16Lib;
     class JavascriptSIMDInt8x16;    
-#endif
 
     class RecyclableObject;
     class JavascriptRegExp;

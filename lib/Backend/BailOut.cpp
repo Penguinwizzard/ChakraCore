@@ -820,7 +820,7 @@ BailOutRecord::RestoreValue(IR::BailOutKind bailOutKind, Js::JavascriptCallStack
                 else if (isInt32)
                 {
                     Assert(RegTypes[LinearScanMD::GetRegisterFromSaveIndex(offset)] != TyFloat64);
-                    int32Value = (int32)registerSaveSpace[offset - 1];
+                    int32Value = ::Math::PointerCastToIntegralTruncate<int32>(registerSaveSpace[offset - 1]);
                 }
                 else
                 {
@@ -851,7 +851,7 @@ BailOutRecord::RestoreValue(IR::BailOutKind bailOutKind, Js::JavascriptCallStack
             uint constantIndex = offset - (GetBailOutRegisterSaveSlotCount() + GetBailOutReserveSlotCount()) - 1;
             if (isInt32)
             {
-                int32Value = (int32)this->constants[constantIndex];
+                int32Value = ::Math::PointerCastToIntegralTruncate<int32>(this->constants[constantIndex]);
             }
             else
             {

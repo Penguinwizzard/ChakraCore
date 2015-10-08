@@ -31,35 +31,24 @@ IRBuilderAsmJs::Build()
     m_firstFloatConst = m_asmFuncInfo->GetIntConstCount() + m_firstIntConst;
     m_firstDoubleConst = m_asmFuncInfo->GetFloatConstCount() + m_firstFloatConst;
 
-#ifdef SIMD_JS_ENABLED
+
     m_firstSimdConst = m_asmFuncInfo->GetDoubleConstCount() + m_firstDoubleConst;
     m_firstIntVar = m_asmFuncInfo->GetSimdConstCount() + m_firstSimdConst;
-#else
-    m_firstIntVar = m_asmFuncInfo->GetDoubleConstCount() + m_firstDoubleConst;
-#endif
+
 
     m_firstFloatVar = m_asmFuncInfo->GetIntVarCount() + m_firstIntVar;
     m_firstDoubleVar = m_asmFuncInfo->GetFloatVarCount() + m_firstFloatVar;
 
-#ifdef SIMD_JS_ENABLED
     m_firstSimdVar = m_asmFuncInfo->GetDoubleVarCount() + m_firstDoubleVar;
     m_firstIntTemp = m_asmFuncInfo->GetSimdVarCount() + m_firstSimdVar;
-#else
-    m_firstIntTemp = m_asmFuncInfo->GetDoubleVarCount() + m_firstDoubleVar;
-#endif
 
     m_firstFloatTemp = m_asmFuncInfo->GetIntTmpCount() + m_firstIntTemp;
     m_firstDoubleTemp = m_asmFuncInfo->GetFloatTmpCount() + m_firstFloatTemp;
 
-#ifdef SIMD_JS_ENABLED
+
     m_firstSimdTemp = m_asmFuncInfo->GetDoubleTmpCount() + m_firstDoubleTemp;
     m_firstIRTemp = m_asmFuncInfo->GetSimdTmpCount() + m_firstSimdTemp;
-#else
 
-    m_firstIRTemp = m_asmFuncInfo->GetDoubleTmpCount() + m_firstDoubleTemp;
-#endif
-
-#ifdef SIMD_JS_ENABLED
     m_simdOpcodesMap = JitAnewArrayZ(m_tempAlloc, Js::OpCode, Js::Simd128AsmJsOpcodeCount());
     {
 
@@ -76,16 +65,13 @@ IRBuilderAsmJs::Build()
 #include "ByteCode\OpCodesSimd.h"
 
     }
-#endif // SIMD_JS_ENABLED
 
     // we will be using lower space for type specialized syms, so bump up where new temp syms can be created
     m_func->m_symTable->IncreaseStartingID(m_firstIRTemp - m_func->m_symTable->GetMaxSymID());
 
     Js::RegSlot tempCount = m_asmFuncInfo->GetDoubleTmpCount() + m_asmFuncInfo->GetFloatTmpCount() + m_asmFuncInfo->GetIntTmpCount();
 
-#ifdef SIMD_JS_ENABLED
     tempCount += m_asmFuncInfo->GetSimdTmpCount();
-#endif
 
     if (tempCount > 0)
     {
@@ -485,34 +471,22 @@ IRBuilderAsmJs::GetRegSlotFromDoubleReg(Js::RegSlot srcDoubleReg)
     if (srcDoubleReg < (Js::RegSlot)m_asmFuncInfo->GetDoubleConstCount())
     {
         reg = srcDoubleReg + m_firstDoubleConst;
-#ifdef SIMD_JS_ENABLED
         Assert(reg >= m_firstDoubleConst && reg < m_firstSimdConst);
-#else
-        Assert(reg >= m_firstDoubleConst && reg < m_firstIntVar);
-#endif
     }
     else if (srcDoubleReg < (Js::RegSlot)(m_asmFuncInfo->GetDoubleVarCount() + m_asmFuncInfo->GetDoubleConstCount()))
     {
         reg = srcDoubleReg - m_asmFuncInfo->GetDoubleConstCount() + m_firstDoubleVar;
-#ifdef SIMD_JS_ENABLED
         Assert(reg >= m_firstDoubleVar && reg < m_firstSimdVar);
-#else
-        Assert(reg >= m_firstDoubleVar && reg < m_firstIntTemp);
-#endif
     }
     else
     {
         reg = srcDoubleReg - (m_asmFuncInfo->GetDoubleVarCount() + m_asmFuncInfo->GetDoubleConstCount()) + m_firstDoubleTemp;
-#ifdef SIMD_JS_ENABLED
         Assert(reg >= m_firstDoubleTemp && reg < m_firstSimdTemp);
-#else
-        Assert(reg >= m_firstDoubleTemp && reg < m_firstIRTemp);
-#endif
+
     }
     return reg;
 }
 
-#ifdef SIMD_JS_ENABLED
 Js::RegSlot
 IRBuilderAsmJs::GetRegSlotFromSimd128Reg(Js::RegSlot srcSimd128Reg)
 {
@@ -550,8 +524,6 @@ IRBuilderAsmJs::AddExtendedArg(IR::RegOpnd *src1, IR::RegOpnd *src2, uint32 offs
     AddInstr(instr, offset);
     return instr;
 }
-
-#endif
 
 Js::RegSlot
 IRBuilderAsmJs::GetRegSlotFromVarReg(Js::RegSlot srcVarReg)
@@ -623,9 +595,7 @@ BOOL
 IRBuilderAsmJs::RegIsVar(Js::RegSlot reg)
 {    
     BOOL result =  RegIsIntVar(reg) || RegIsFloatVar(reg) || RegIsDoubleVar(reg);
-#ifdef SIMD_JS_ENABLED
     result = result || RegIsSimd128Var(reg);
-#endif
     return result;
 }
 
@@ -650,7 +620,6 @@ IRBuilderAsmJs::RegIsDoubleVar(Js::RegSlot reg)
     return reg >= m_firstDoubleVar && reg < endVarSlotCount;
 
 }
-#ifdef SIMD_JS_ENABLED
 BOOL
 IRBuilderAsmJs::RegIsSimd128Var(Js::RegSlot reg)
 {
@@ -658,7 +627,6 @@ IRBuilderAsmJs::RegIsSimd128Var(Js::RegSlot reg)
     return reg >= m_firstSimdVar && reg < endVarSlotCount;
 
 }
-#endif
 
 BOOL
 IRBuilderAsmJs::RegIsConstant(Js::RegSlot reg)
@@ -827,7 +795,6 @@ IRBuilderAsmJs::BuildConstantLoads()
         ++regAllocated;
     }
 
-#ifdef SIMD_JS_ENABLED
     uint32 simdConstCount = m_func->GetJnFunction()->GetAsmJsFunctionInfo()->GetSimdConstCount();
     // Space for SIMD0
     ++regAllocated;
@@ -857,8 +824,6 @@ IRBuilderAsmJs::BuildConstantLoads()
         AddInstr(instr, Js::Constants::NoByteCodeOffset);
         ++regAllocated;
     }
-#endif
-
 }
 
 void
@@ -867,9 +832,8 @@ IRBuilderAsmJs::BuildImplicitArgIns()
     int32 intArgInCount = 0;
     int32 floatArgInCount = 0;
     int32 doubleArgInCount = 0;
-#ifdef SIMD_JS_ENABLED
     int32 simd128ArgInCount = 0;
-#endif
+
     // formal params are offset from EBP by the EBP chain, return address, and function object
     int32 offset = 3 * MachPtr;
     for (Js::ArgSlot i = 1; i < m_func->GetJnFunction()->GetInParamsCount(); ++i)
@@ -912,7 +876,7 @@ IRBuilderAsmJs::BuildImplicitArgIns()
             offset += MachDouble;
             ++doubleArgInCount;
             break;
-#ifdef SIMD_JS_ENABLED
+
         case Js::AsmJsVarType::Which::Float32x4:
         case Js::AsmJsVarType::Which::Int32x4:
         case Js::AsmJsVarType::Which::Float64x2:
@@ -942,7 +906,6 @@ IRBuilderAsmJs::BuildImplicitArgIns()
             ++simd128ArgInCount;
             break;
         }
-#endif
         default:
             Assume(UNREACHED);
         }
@@ -1070,7 +1033,7 @@ IRBuilderAsmJs::BuildEmpty(Js::OpCodeAsmJs newOpcode, uint32 offset)
             retSlot = GetRegSlotFromVarReg(0);
             regOpnd = BuildDstOpnd(retSlot, TyVar);
             break;
-#ifdef SIMD_JS_ENABLED
+
         case Js::AsmJsRetType::Which::Float32x4:
             retSlot = GetRegSlotFromSimd128Reg(0);
             regOpnd = BuildDstOpnd(retSlot, TySimd128F4);
@@ -1086,7 +1049,7 @@ IRBuilderAsmJs::BuildEmpty(Js::OpCodeAsmJs newOpcode, uint32 offset)
             regOpnd = BuildDstOpnd(retSlot, TySimd128D2);
             regOpnd->SetValueType(ValueType::GetSimd128(ObjectType::Simd128Float64x2));
             break;
-#endif
+
         default:
             Assume(UNREACHED);
         }
@@ -1226,7 +1189,7 @@ IRBuilderAsmJs::BuildElementSlot(Js::OpCodeAsmJs newOpcode, uint32 offset, int32
         instr = IR::Instr::New(Js::OpCode::Ld_A, regOpnd, indirOpnd, m_func);
         break;
     }
-#ifdef SIMD_JS_ENABLED
+
     case Js::OpCodeAsmJs::Simd128_LdSlot_I4:
     {
         valueRegSlot = GetRegSlotFromSimd128Reg(value);
@@ -1283,7 +1246,7 @@ IRBuilderAsmJs::BuildElementSlot(Js::OpCodeAsmJs newOpcode, uint32 offset, int32
         instr = IR::Instr::New(Js::OpCode::StSlot, slotOpnd, regOpnd, m_func);
         break;
     }
-#endif
+
     default:
         Assume(UNREACHED);
     }
@@ -1586,7 +1549,6 @@ IRBuilderAsmJs::BuildAsmCall(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::ArgSl
         case Js::AsmJsRetType::Which::Void:
             break;
 
-#ifdef SIMD_JS_ENABLED
         case Js::AsmJsRetType::Which::Float32x4:
             dstRegSlot = GetRegSlotFromSimd128Reg(ret);
             dstOpnd = BuildDstOpnd(dstRegSlot, TySimd128F4);
@@ -1599,8 +1561,8 @@ IRBuilderAsmJs::BuildAsmCall(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::ArgSl
             dstRegSlot = GetRegSlotFromSimd128Reg(ret);
             dstOpnd = BuildDstOpnd(dstRegSlot, TySimd128D2);
             break;
-#endif
-        default:
+
+            default:
             Assume(UNREACHED);
         }
 
@@ -1652,8 +1614,8 @@ IRBuilderAsmJs::BuildAsmCall(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::ArgSl
         prevInstr->SetSrc2(argInstr->GetDst());
         prevInstr = argInstr;
 
-#if defined(SIMD_JS_ENABLED) && defined(_M_X64)
-        if (SIMD_JS_FLAG)
+#if defined(_M_X64)
+        if (m_func->GetScriptContext()->GetConfig()->IsSimdjsEnabled())
         {
             m_tempList->Push(argInstr);
         }
@@ -1667,10 +1629,10 @@ IRBuilderAsmJs::BuildAsmCall(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::ArgSl
     Assert(argInstr);
     prevInstr->SetSrc2(argInstr->GetDst());
 
-#if defined(SIMD_JS_ENABLED) && defined(_M_X64)
+#if defined(_M_X64)
     // Without SIMD vars, all args are Var in size. So offset in Var = arg position in args list.
     // With SIMD, args have variable size, so we need to track argument position in the args list to be able to assign arg register for first four args on x64.
-    if (SIMD_JS_FLAG)
+    if (m_func->GetScriptContext()->GetConfig()->IsSimdjsEnabled())
     {
         IR::Instr *instr;
         for (uint i = 1; !m_tempList->Empty(); i++)
@@ -2989,7 +2951,6 @@ IRBuilderAsmJs::BuildAsmJsLoopBodySlotOpnd(SymID symId, IRType opndType)
 
         type = IRType::TyFloat64;
     }
-#ifdef SIMD_JS_ENABLED
     else if (RegIsSimd128Var(symId))
     {
         // SimdByteOffset is not guaranteed to be divisible by Simd size. So we do computation in bytes.
@@ -3003,7 +2964,6 @@ IRBuilderAsmJs::BuildAsmJsLoopBodySlotOpnd(SymID symId, IRType opndType)
         type = opndType;
         scale = false;
     }
-#endif
     else
     {
         Assert(UNREACHED);
@@ -3148,7 +3108,6 @@ IRBuilderAsmJs::GenerateLoopBodyStSlots(SymID loopParamSymId, uint offset)
             regOpnd = this->BuildSrcOpnd((Js::RegSlot)regSlot, type);
             regOpnd->SetValueType(ValueType::Float);
         }
-#ifdef SIMD_JS_ENABLED
         else if (RegIsSimd128Var(regSlot))
         {
             Js::PropertyId localsStartSlot = (Js::PropertyId)(localsOffset);
@@ -3167,7 +3126,6 @@ IRBuilderAsmJs::GenerateLoopBodyStSlots(SymID loopParamSymId, uint offset)
             regOpnd->SetValueType(ValueType::GetObject(ObjectType::UninitializedObject));
             scale = false;
         }
-#endif
         else
         {
             Assert(UNREACHED);
@@ -3203,9 +3161,8 @@ IR::Instr* IRBuilderAsmJs::GenerateStSlotForReturn(IR::RegOpnd* srcOpnd, IRType 
     const int intOffset = m_asmFuncInfo->GetIntByteOffset() / sizeof(int);
     const int doubleOffset = m_asmFuncInfo->GetDoubleByteOffset() / sizeof(double);
     const int floatOffset = m_asmFuncInfo->GetFloatByteOffset() / sizeof(float);
-#ifdef SIMD_JS_ENABLED
     const int simdOffset = m_asmFuncInfo->GetSimdByteOffset();
-#endif
+
     BOOL scale = true;
     Js::PropertyId localsStartSlot = (Js::PropertyId)(localsOffset / sizeof(int));
     IRType type = IRType::TyInt32;
@@ -3226,7 +3183,6 @@ IR::Instr* IRBuilderAsmJs::GenerateStSlotForReturn(IR::RegOpnd* srcOpnd, IRType 
         type = IRType::TyFloat64;
         break;
 
-#ifdef SIMD_JS_ENABLED
     case IRType::TySimd128F4:
     case IRType::TySimd128I4:
     case IRType::TySimd128D2:
@@ -3235,7 +3191,6 @@ IR::Instr* IRBuilderAsmJs::GenerateStSlotForReturn(IR::RegOpnd* srcOpnd, IRType 
         type = retType;
         scale = false;
         break;
-#endif
 
     default:
         Assume(false);
@@ -3255,8 +3210,6 @@ IR::Instr* IRBuilderAsmJs::GenerateStSlotForReturn(IR::RegOpnd* srcOpnd, IRType 
     return stSlotInstr;
 }
 
-
-#ifdef SIMD_JS_ENABLED
 inline Js::OpCode IRBuilderAsmJs::GetSimdOpcode(Js::OpCodeAsmJs asmjsOpcode)
 {
     Js::OpCode opcode = (Js::OpCode) 0;
@@ -4838,5 +4791,3 @@ IRBuilderAsmJs::BuildAsmSimdTypedArr(Js::OpCodeAsmJs newOpcode, uint32 offset, u
     AddInstr(instr, offset);
     
 }
-#endif
-

@@ -751,7 +751,6 @@ CommonNumber:
                 return pstValue->GetLength() > 0;
             }
 
-#ifdef SIMD_JS_ENABLED
         case TypeIds_SIMDFloat32x4:
         case TypeIds_SIMDFloat64x2:
         case TypeIds_SIMDInt32x4:
@@ -763,7 +762,6 @@ CommonNumber:
         { 
             return true;
         }
-#endif
 
         default:
             {

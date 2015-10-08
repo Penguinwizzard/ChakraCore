@@ -27,7 +27,7 @@ _declspec(thread, selectany) int IsInAssert = false;
 #define RAISE_ASSERTION(comment) NT_ASSERTMSG(comment, FALSE)
 #else
 #include <assert.h>
-#define RAISE_ASSERTION(comment) _wassert(_CRT_WIDE(comment), _CRT_WIDE(__FILE__), __LINE__)
+#define RAISE_ASSERTION(comment) DbgRaiseAssertionFailure()
 #endif
 
 #define AssertMsg(f, comment) \

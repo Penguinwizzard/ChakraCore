@@ -216,15 +216,13 @@ Below test fails with difference in space. Investigate the cause and re-enable t
   <test>
     <default>
       <files>allocation.js</files>
-      <!-- randomly fails with ch.exe -->
-      <tags>typedarray,exclude_arm,exclude_ch</tags>
+      <tags>typedarray,exclude_arm</tags>
     </default>
   </test>
   <test>
     <default>
       <files>allocation2.js</files>
-      <!-- randomly fails with ch.exe -->
-      <tags>typedarray,exclude_arm,exclude_ch</tags>
+      <tags>typedarray,exclude_arm</tags>
     </default>
   </test>
   <test>
@@ -255,8 +253,7 @@ Below test fails with difference in space. Investigate the cause and re-enable t
       <files>cseTypedArray.js</files>
       <baseline>cseTypedArray.baseline</baseline>
       <compile-flags>-maxInterpretCount:1 -off:simpleJit</compile-flags>
-      <!-- crashes in ch -->
-      <tags>typedarray,exclude_ch</tags>
+      <tags>typedarray</tags>
     </default>
   </test>
   <test>
@@ -298,8 +295,7 @@ Below test fails with difference in space. Investigate the cause and re-enable t
       <files>transfer.js</files>
       <baseline>transfer.baseline</baseline>
       <compile-flags>-ArrayBufferTransfer</compile-flags>
-      <!-- Fails in ch with AllocationPolicyMananger assertion -->
-      <tags>typedarray,exclude_ch</tags>
+      <tags>typedarray</tags>
     </default>
   </test>
   <test>

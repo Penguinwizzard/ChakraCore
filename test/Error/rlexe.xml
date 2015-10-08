@@ -131,9 +131,6 @@
   <test>
     <default>
       <files>bug560940.js</files>
-      <baseline>bug560940.baseline</baseline>
-      <!-- error stack trace missing in ch.exe -->
-      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>

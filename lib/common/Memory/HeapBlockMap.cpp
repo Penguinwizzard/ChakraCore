@@ -1123,7 +1123,7 @@ HeapBlockMap64::~HeapBlockMap64()
 bool
 HeapBlockMap64::EnsureHeapBlock(void * address, size_t pageCount)
 {
-    uint lowerBitsAddress = (uint)address;
+    uint lowerBitsAddress = ::Math::PointerCastToIntegralTruncate<uint>(address);
     size_t pageCountLeft = pageCount;
     uint nodePages = HeapBlockMap64::PagesPer4GB - lowerBitsAddress / AutoSystemInfo::PageSize;
     if (pageCountLeft < nodePages)
@@ -1189,7 +1189,7 @@ void HeapBlockMap64::ClearHeapBlock(void * address, size_t pageCount)
 template <class Fn>
 void HeapBlockMap64::ForEachNodeInAddressRange(void * address, size_t pageCount, Fn fn)
 {
-    uint lowerBitsAddress = (uint)address;
+    uint lowerBitsAddress = ::Math::PointerCastToIntegralTruncate<uint>(address);
     uint nodePages = HeapBlockMap64::PagesPer4GB - lowerBitsAddress / AutoSystemInfo::PageSize;
     if (pageCount < nodePages)
     {

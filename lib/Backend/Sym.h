@@ -192,9 +192,7 @@ public:
     uint8           m_isTaggableIntConst : 1;   // a constant and it's value is taggable (Int31 in 32-bit, Int32 in x64)
     uint8           m_isEncodedConstant : 1;    // the constant has 
     uint8           m_isFltConst: 1;    
-#ifdef SIMD_JS_ENABLED
     uint8           m_isSimd128Const : 1;
-#endif
     uint8           m_isStrConst:1;
     uint8           m_isStrEmpty:1;    
     uint8           m_allocated:1;
@@ -215,8 +213,8 @@ public:
 
 
     int32           m_offset;
-#ifdef SIMD_JS_ENABLED
-    // Only for AsmJs. Argument position for ArgSyms.
+#ifdef  _M_AMD64
+    // Only for AsmJs on x64. Argument position for ArgSyms.
     int32           m_argPosition; 
 #endif
     union

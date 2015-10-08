@@ -107,6 +107,7 @@ Func::Func(JitArenaAllocator *alloc, CodeGenWorkItem* workItem, const Js::Functi
 #if DBG
     , hasCalledSetDoFastPaths(false)
     , allowRemoveBailOutArgInstr(false)
+    , currentPhases(alloc)
     , isPostLower(false)
     , isPostRegAlloc(false)
     , isPostPeeps(false)
@@ -230,7 +231,7 @@ void
 Func::Codegen()
 {
     Assert(!IsJitInDebugMode() || !m_jnFunction->GetHasTry());
-
+    
     Js::ScriptContext* scriptContext = this->GetScriptContext();
 
     {
@@ -965,6 +966,23 @@ Func::NumberInstrs()
     NEXT_INSTR_IN_FUNC;
 }
 
+///----------------------------------------------------------------------------
+///
+/// Func::IsInPhase
+///
+/// Determines whether the function is currently in the provided phase
+///
+///----------------------------------------------------------------------------
+
+#if DBG
+
+bool
+Func::IsInPhase(Js::Phase tag)
+{
+    return currentPhases.Contains(tag);
+}
+
+#endif
 
 ///----------------------------------------------------------------------------
 ///
@@ -978,6 +996,10 @@ Func::NumberInstrs()
 void
 Func::BeginPhase(Js::Phase tag)
 {
+#ifdef DBG
+    currentPhases.Push(tag);
+#endif
+
 #ifdef PROFILE_EXEC
     AssertMsg((this->m_codeGenProfiler != nullptr) == Js::Configuration::Global.flags.IsEnabled(Js::ProfileFlag),
         "Profiler tag is supplied but the profiler pointer is NULL");
@@ -1000,6 +1022,12 @@ void
 
 Func::EndProfiler(Js::Phase tag)
 {
+#ifdef DBG
+    Assert(currentPhases.Count() > 0);
+    Js::Phase popped = currentPhases.Pop();
+    Assert(tag == popped);
+#endif
+
 #ifdef PROFILE_EXEC
     AssertMsg((this->m_codeGenProfiler != nullptr) == Js::Configuration::Global.flags.IsEnabled(Js::ProfileFlag),
         "Profiler tag is supplied but the profiler pointer is NULL");

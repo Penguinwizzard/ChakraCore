@@ -48,20 +48,20 @@ function asmModule(stdlib, imports, buffer) {
         Int32Heap[cIndex << 2 >> 2] = dim1;
         Int32Heap[cIndex + 1 << 2 >> 2] = dim2;
 
-        while (i < matrixSize) {
+        while ((i|0) < (matrixSize|0)) {
             cPiece = f4(0.0, 0.0, 0.0, 0.0);
             j = 0;
-            while (j < intersectionNum) {
+            while ((j|0) < (intersectionNum|0)) {
                 newPiece = f4(toF(getIntersectionPiece(aIndex, bIndex, dim2, i, 0, j)),
 							toF(getIntersectionPiece(aIndex, bIndex, dim2, i, 1, j)),
 							toF(getIntersectionPiece(aIndex, bIndex, dim2, i, 2, j)),
 							toF(getIntersectionPiece(aIndex, bIndex, dim2, i, 3, j)));
                 cPiece = f4add(cPiece, newPiece);
-                j = j + 1;
+                j = (j + 1)|0;
             }
             f4store(Float32Heap, cIndex + 2 + i << 2 >> 2, cPiece);
 
-            i = i + BLOCK_SIZE;
+            i = (i + BLOCK_SIZE)|0;
         }
 
         return 0;
@@ -76,8 +76,8 @@ function asmModule(stdlib, imports, buffer) {
         intersectionNum = intersectionNum | 0;
         var aElem = 0.0, bElem = 0.0, cElem = 0.0;
 
-        aElem = +toF(getElement(aIndex, ((resultBlock | 0) / (dim2 | 0)), intersectionNum));
-        bElem = +toF(getElement(bIndex, intersectionNum, resultBlock + resultIndex));
+        aElem = +toF(getElement(aIndex, ((resultBlock | 0) / (dim2 | 0))|0, intersectionNum));
+        bElem = +toF(getElement(bIndex, intersectionNum, (resultBlock + resultIndex)|0));
 
         //return toF(getElement(aIndex, ((resultBlock|0) / (dim2|0)), intersectionNum));
         return toF(aElem * bElem);
@@ -105,11 +105,11 @@ function asmModule(stdlib, imports, buffer) {
         matrixSize = imul(dim1, dim2);
         Int32Heap[startIndex << 2 >> 2] = dim1;
         Int32Heap[startIndex + 1 << 2 >> 2] = dim2;
-        for (i = 0; i < matrixSize - BLOCK_SIZE; i = i + BLOCK_SIZE) {
-            f4store(Float32Heap, startIndex + 2 + i << 2 >> 2, f4(toF(i + 1), toF(i + 2), toF(i + 3), toF(i + 4)));
+        for (i = 0; (i|0) < ((matrixSize - BLOCK_SIZE)|0); i = (i + BLOCK_SIZE)|0) {
+            f4store(Float32Heap, startIndex + 2 + i << 2 >> 2, f4(toF((i + 1)|0), toF((i + 2)|0), toF((i + 3)|0), toF((i + 4)|0)));
         }
-        for (; i < matrixSize; i = i + 1) {
-            Float32Heap[(startIndex + 2 + i) << 2 >> 2] = toF(i + 1);
+        for (; (i|0) < (matrixSize|0); i = (i + 1)|0) {
+            Float32Heap[(startIndex + 2 + i) << 2 >> 2] = toF((i + 1)|0);
         }
         return (startIndex + 2 + i) | 0;
     }

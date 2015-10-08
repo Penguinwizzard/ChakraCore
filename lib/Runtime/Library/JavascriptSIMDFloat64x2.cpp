@@ -5,8 +5,6 @@
 #include "RuntimeLibraryPch.h"
 #include "SIMDFloat64x2Operation.h"
 
-#ifdef SIMD_JS_ENABLED
-
 namespace Js
 {
     JavascriptSIMDFloat64x2::JavascriptSIMDFloat64x2(SIMDValue *val, StaticType *type) : RecyclableObject(type), value(*val)
@@ -137,5 +135,3 @@ namespace Js
     }
 
 }
-
-#endif
