@@ -8788,14 +8788,21 @@ namespace Js
         return functionProxy->GetFunctionBody();
     }
 
-    char* globalCopy;
+    struct LocalCopy
+    {
+        FunctionEntryPointInfo* _thisptr;
+        char _this[sizeof(FunctionEntryPointInfo)];
+        FunctionEntryPointInfo* simpleJITInfoPtr;
+        void* fbOriginalEntryPoint;
+    };
+    LocalCopy* globalCopy;
     void FunctionEntryPointInfo::OnCleanup(bool isShutdown)
     {
         // stack data recording can record this.
-        char localCopy[sizeof(FunctionEntryPointInfo)+4];
-        *((FunctionEntryPointInfo**)&localCopy[0]) = this;
-        memcpy(&localCopy[4], this, sizeof(FunctionEntryPointInfo)-4);
-        globalCopy = localCopy;
+        LocalCopy localData = { 0 };
+        localData._thisptr = this;
+        memcpy(localData._this, this, sizeof(FunctionEntryPointInfo));
+        globalCopy = &localData;
 
         if (this->IsCodeGenDone())
         {
@@ -8812,6 +8819,10 @@ namespace Js
             }
 
             FunctionBody* functionBody = this->functionProxy->GetFunctionBody();
+
+            localData.simpleJITInfoPtr = functionBody->GetSimpleJitEntryPointInfo();
+            localData.fbOriginalEntryPoint = functionBody->GetOriginalEntryPoint_Unchecked();
+
             if (this->GetIsTJMode())
             {
                 // release LoopHeaders here if the entrypointInfo is TJ 
