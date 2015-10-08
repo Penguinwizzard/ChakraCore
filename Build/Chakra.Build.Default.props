@@ -16,8 +16,4 @@
     <BuildMachine Condition="'$(OfficialBuild)'!='true'">$(BuildMachine)($(UserName))</BuildMachine>
     <BuildDate>$([System.DateTime]::Now.ToString("yyMMdd-hhmm"))</BuildDate>
   </PropertyGroup>
-
-  <PropertyGroup>
-    <USE_EXTERNAL_DEPENDENCIES>yes</USE_EXTERNAL_DEPENDENCIES>
-  </PropertyGroup>
 </Project> 

@@ -27,8 +27,6 @@
         $(MSBuildThisFileDirectory)..\..\Common;
         $(MSBuildThisFileDirectory)..\..\Parser;
         $(MSBuildThisFileDirectory)..\..\Backend;
-        $(ChakraManifestsIncludeDirectory);
-        $(ManifestsInboxIncludeDirectory);
         %(AdditionalIncludeDirectories)
       </AdditionalIncludeDirectories>      
     </ClCompile>

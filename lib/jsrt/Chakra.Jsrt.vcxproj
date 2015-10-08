@@ -26,8 +26,6 @@
         $(MSBuildThisFileDirectory)..\Common;
         $(MSBuildThisFileDirectory)..\Parser;
         $(MSBuildThisFileDirectory)..\Backend;
-        $(ChakraManifestsIncludeDirectory);
-        $(ManifestsInboxIncludeDirectory);
         %(AdditionalIncludeDirectories)
       </AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -58,11 +56,6 @@
     <ClInclude Include="JsrtExceptionBase.h" />
     <ClInclude Include="JsrtPch.h" />
     <ClInclude Include="TestHooksRt.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Condition="'$(USE_EXTERNAL_DEPENDENCIES)'!='yes'" Include="..\..\..\publish\Publish.vcxproj">
-      <Project>{1876e800-ad77-48c4-a2f7-e5265f24ac35}</Project>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="JsrtCommonExports.inc" />

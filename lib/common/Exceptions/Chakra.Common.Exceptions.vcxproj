@@ -21,7 +21,10 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)..;$(ChakraManifestsIncludeDirectory);$(ManifestsInboxIncludeDirectory);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>
+        $(MSBuildThisFileDirectory)..;
+        %(AdditionalIncludeDirectories)
+      </AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>CommonExceptionsPch.h</PrecompiledHeaderFile>
     </ClCompile>
@@ -36,14 +39,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Throw.cpp">
       <AdditionalIncludeDirectories>..\..\lib\runtime;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Condition="'$(USE_EXTERNAL_DEPENDENCIES)'!='yes'" Include="..\..\..\..\dep\manifests-inbox.vcxproj">
-      <Project>{14bbb4b1-da6a-4c69-bf07-f8d4865e0815}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Manifests\Manifests.vcxproj">
-      <Project>{bcc5c029-2f2c-4eaa-8e60-664d72766936}</Project>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CommonExceptionsPch.h" />

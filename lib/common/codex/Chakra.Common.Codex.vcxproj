@@ -1,13 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Condition="'$(BuildingWithBuildExe)'=='true'" Project="..\..\..\..\Build\Chakra.Build.Paths.props"/>
   <Import Condition="'$(ChakraBuildPathImported)'!='true'" Project="$(SolutionDir)Chakra.Build.Paths.props"/>
   <Import Project="$(BuildConfigPropsPath)Chakra.Build.ProjectConfiguration.props" />
   <ItemGroup>
-    <ClCompile Include="Utf8Codex.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)\Utf8Codex.cpp" />
     <ClInclude Include="Utf8Codex.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
+    <TargetName>Chakra.Common.Codex</TargetName>
     <ProjectGuid>{1876E800-AD77-48C4-A2F7-E5265F24AC38}</ProjectGuid>
   </PropertyGroup>  
   <PropertyGroup Label="Configuration">

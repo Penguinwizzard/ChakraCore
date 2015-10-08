@@ -25,8 +25,6 @@
     <ClCompile>
       <AdditionalIncludeDirectories>
         $(MSBuildThisFileDirectory)..;
-        $(ChakraManifestsIncludeDirectory);
-        $(ManifestsInboxIncludeDirectory);
         %(AdditionalIncludeDirectories)
       </AdditionalIncludeDirectories>
       <!-- For windowsdatetimep.h -->
@@ -87,14 +85,6 @@
     <ARMASM Include="$(MSBuildThisFileDirectory)arm64\arm64_GET_CURRENT_FRAME.asm">
       <ExcludedFromBuild Condition="'$(Platform)'!='ARM64'">true</ExcludedFromBuild>
     </ARMASM>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Condition="'$(USE_EXTERNAL_DEPENDENCIES)'!='yes'" Include="..\..\..\..\dep\manifests-inbox.vcxproj">
-      <Project>{14bbb4b1-da6a-4c69-bf07-f8d4865e0815}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Manifests\Manifests.vcxproj">
-      <Project>{bcc5c029-2f2c-4eaa-8e60-664d72766936}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(BuildConfigPropsPath)Chakra.Build.targets" Condition="exists('$(BuildConfigPropsPath)Chakra.Build.targets')" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

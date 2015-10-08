@@ -24,7 +24,12 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)..;$(MSBuildThisFileDirectory)..\..\Common;$(MSBuildThisFileDirectory)..\..\Parser;$(MSBuildThisFileDirectory)..\..\Backend;$(ChakraManifestsIncludeDirectory);$(ManifestsInboxIncludeDirectory);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>
+        $(MSBuildThisFileDirectory)..;
+        $(MSBuildThisFileDirectory)..\..\Common;
+        $(MSBuildThisFileDirectory)..\..\Parser;
+        $(MSBuildThisFileDirectory)..\..\Backend;
+        %(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <!-- For mscorlib.tlb used in JavascriptErrorDebug.cpp -->
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SdkLibPath)\clr45</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -173,7 +178,7 @@
       <ExcludedFromBuild Condition="'$(Platform)'!='Win32' AND '$(Platform)'!='x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSIMDInt8x16.cpp" />
-    <ClCompile Include="ExternalLibraryBase.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)ExternalLibraryBase.cpp" />
     <ClCompile Include="IntlEngineInterfaceExtensionObject.cpp" />
     <ClCompile Include="JavascriptErrorDebug.cpp" />
     <ClCompile Include="RoCausality.Win7.cpp" />
@@ -359,11 +364,6 @@
     <None Include="JavascriptLibrary.inl" />
     <None Include="JavascriptNumber.inl" />
     <None Include="JavascriptString.inl" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Condition="'$(USE_EXTERNAL_DEPENDENCIES)'!='yes'" Include="..\..\..\..\publish\Publish.vcxproj">
-      <Project>{1876e800-ad77-48c4-a2f7-e5265f24ac35}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(BuildConfigPropsPath)Chakra.Build.targets" Condition="exists('$(BuildConfigPropsPath)Chakra.Build.targets')" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

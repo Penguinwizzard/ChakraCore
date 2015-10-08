@@ -1,4 +1,0 @@
-DIRS = \
-    manifests{!MOBILECORE} \
-    lib \
-    bin{!cs_xbox} \
