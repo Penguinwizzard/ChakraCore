@@ -171,12 +171,10 @@ var m = asmModule(this, {g1:SIMD.Float32x4(9,9,9,9), g2:SIMD.Int32x4(1, 2, 3, 4)
 
 var ret1 = m.func1();
 
-WScript.Echo(typeof(ret1));
 WScript.Echo(ret1.toString());
 
 var ret2 = m.func2();
 
-WScript.Echo(typeof(ret2));
 WScript.Echo(ret2.toString());
 
 

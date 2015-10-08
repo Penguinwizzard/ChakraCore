@@ -118,7 +118,7 @@ namespace Js
         if (args.Info.Count >= 2 && JavascriptSIMDFloat32x4::Is(args[1]))
         {
             JavascriptSIMDFloat32x4 *instance = JavascriptSIMDFloat32x4::FromVar(args[1]);
-            return  SIMDConvertTypeFromBits<JavascriptSIMDFloat32x4, JavascriptSIMDInt8x16>(*instance, *scriptContext);
+            return  SIMDConvertTypeFromBits<JavascriptSIMDFloat32x4, JavascriptSIMDInt8x16>(instance, scriptContext);
         }
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat32x4TypeMismatch, L"fromFloat32x4Bits");
     }
@@ -135,7 +135,7 @@ namespace Js
         if (args.Info.Count >= 2 && JavascriptSIMDInt32x4::Is(args[1]))
         {
             JavascriptSIMDInt32x4 *instance = JavascriptSIMDInt32x4::FromVar(args[1]);
-            return  SIMDConvertTypeFromBits<JavascriptSIMDInt32x4, JavascriptSIMDInt8x16>(*instance, *scriptContext);
+            return  SIMDConvertTypeFromBits<JavascriptSIMDInt32x4, JavascriptSIMDInt8x16>(instance, scriptContext);
         }
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat32x4TypeMismatch, L"fromInt32x4Bits");
     }
@@ -152,7 +152,7 @@ namespace Js
         if (args.Info.Count >= 2 && JavascriptSIMDInt16x8::Is(args[1]))
         {
             JavascriptSIMDInt16x8 *instance = JavascriptSIMDInt16x8::FromVar(args[1]);
-            return  SIMDConvertTypeFromBits<JavascriptSIMDInt16x8, JavascriptSIMDInt8x16>(*instance, *scriptContext);
+            return  SIMDConvertTypeFromBits<JavascriptSIMDInt16x8, JavascriptSIMDInt8x16>(instance, scriptContext);
         }
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat32x4TypeMismatch, L"fromInt16x8Bits");
     }

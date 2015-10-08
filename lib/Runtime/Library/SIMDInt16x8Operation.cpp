@@ -1,6 +1,7 @@
-//----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//---------------------------------------------------------------------------- 
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 
 #include "RuntimeLibraryPch.h"
 #include "SIMDInt16x8Operation.h"
@@ -48,30 +49,6 @@ namespace Js
 
         result.i16[0] = result.i16[1] = result.i16[2] = result.i16[3] = v.i16[0];
         result.i16[4] = result.i16[5] = result.i16[6] = result.i16[7] = v.i16[0];
-
-        return result;
-    }
-
-    // Conversions
-    SIMDValue SIMDInt16x8Operation::OpFromInt32x4Bits(const SIMDValue& v)
-    {
-        SIMDValue result;
-
-        result.i32[0] = v.i32[0];
-        result.i32[1] = v.i32[1];
-        result.i32[2] = v.i32[2];
-        result.i32[3] = v.i32[3];
-
-        return result;
-    }
-
-
-    SIMDValue SIMDInt16x8Operation::OpFromFloat32x4Bits(const SIMDValue& v)
-    {
-        SIMDValue result;
-
-        result.f64[0] = v.f64[0];
-        result.f64[1] = v.f64[1];
 
         return result;
     }

@@ -35,15 +35,6 @@ namespace Js
         return result;
     }
 
-    SIMDValue SIMDInt8x16Operation::OpInt8x16(const SIMDValue& v)
-    {// overload function with input paramter as SIMDValue for completeness, may not need
-        SIMDValue result;
-
-        result = v;
-
-        return result;
-    }
-
     SIMDValue SIMDInt8x16Operation::OpSplat(int8 x)
     {
         SIMDValue result;
@@ -51,29 +42,6 @@ namespace Js
         result.i8[0] = result.i8[1] = result.i8[2] = result.i8[3] = result.i8[4] = result.i8[5] = result.i8[6]= result.i8[7] = result.i8[8] = result.i8[9]= result.i8[10] = result.i8[11] = result.i8[12]= result.i8[13] = result.i8[14] = result.i8[15] = result.i8[16] = x;
 
         return result;
-    }
-
-    SIMDValue SIMDInt8x16Operation::OpSplat(const SIMDValue& v)  //not in polyfill or spec
-    {
-        SIMDValue result;
-
-        result.i8[0] = result.i8[1] = result.i8[2] = result.i8[3] = result.i8[4] = result.i8[5] = result.i8[6]= result.i8[7] = result.i8[8] = result.i8[9]= result.i8[10] = result.i8[11] = result.i8[12]= result.i8[13] = result.i8[14] = result.i8[15] = result.i8[16] = v.i8[0];
-
-        return result;
-    }
-
-     SIMDValue SIMDInt8x16Operation::OpFromFloat32x4Bits(const SIMDValue& v)
-    {
-        SIMDValue result;
-
-        result.f64[SIMD_X] = v.f64[SIMD_X];
-        result.f64[SIMD_Y] = v.f64[SIMD_Y];
-
-        return result;
-    }
-    SIMDValue SIMDInt8x16Operation::OpFromInt32x4Bits(const SIMDValue& v)
-    {
-        return OpFromFloat32x4Bits(v);
     }
 
     //// Unary Ops

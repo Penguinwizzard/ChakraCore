@@ -11,10 +11,8 @@ namespace Js {
         // following are operation wrappers for SIMDInt8x16 general implementation
         // input and output are typically SIMDValue
         static SIMDValue OpInt8x16(int8 x0, int8 x1, int8 x2, int8 x3, int8 x4, int8 x5, int8 x6, int8 x7, int8 x8, int8 x9, int8 x10, int8 x11, int8 x12, int8 x13, int8 x14, int8 x15);
-        static SIMDValue OpInt8x16(const SIMDValue& v);
 
         static SIMDValue OpSplat(int8 x);
-        static SIMDValue OpSplat(const SIMDValue& v);
 
         //// conversion
         static SIMDValue OpFromInt32x4Bits(const SIMDValue& value);

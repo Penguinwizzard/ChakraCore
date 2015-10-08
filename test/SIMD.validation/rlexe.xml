@@ -161,6 +161,27 @@
     </default>
   </test>
   
+  <test>
+    <default>
+      <files>SIMD.Uint32x4.polyfill.js</files>
+      <baseline>SIMD.Uint32x4.polyfill.baseline</baseline>
+      <compile-flags>-Simdjs</compile-flags>
+    </default>
+  </test>
+  <test>
+    <default>
+      <files>SIMD.Uint32x4.polyfill.js</files>
+      <baseline>SIMD.Uint32x4.polyfill.baseline</baseline>
+      <compile-flags>-bgjit- -simdjs -simd128typespec -on:simplejit -mic:1</compile-flags>
+    </default>
+  </test>
+  <test>
+    <default>
+      <files>SIMD.Uint32x4.polyfill.js</files>
+      <baseline>SIMD.Uint32x4.polyfill.baseline</baseline>
+      <compile-flags>-bgjit- -simdjs -simd128typespec -off:simplejit -mic:1</compile-flags>
+    </default>
+  </test>
   
   <!-- Unimplemented
   <test>
@@ -207,26 +228,5 @@
     </default>
   </test>
   
-  <test>
-    <default>
-      <files>SIMD.Uint32x4.polyfill.js</files>
-      <baseline>SIMD.Uint32x4.polyfill.baseline</baseline>
-      <compile-flags>-Simdjs</compile-flags>
-    </default>
-  </test>
-  <test>
-    <default>
-      <files>SIMD.Uint32x4.polyfill.js</files>
-      <baseline>SIMD.Uint32x4.polyfill.baseline</baseline>
-      <compile-flags>-bgjit- -simdjs -simd128typespec -on:simplejit -mic:1</compile-flags>
-    </default>
-  </test>
-  <test>
-    <default>
-      <files>SIMD.Uint32x4.polyfill.js</files>
-      <baseline>SIMD.Uint32x4.polyfill.baseline</baseline>
-      <compile-flags>-bgjit- -simdjs -simd128typespec -off:simplejit -mic:1</compile-flags>
-    </default>
-  </test>
-  -->
+    -->
 </regress-exe>

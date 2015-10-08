@@ -1,6 +1,7 @@
-//---------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 
 #include "RuntimeLibraryPch.h"
 #include "SIMDInt16x8Operation.h"
@@ -29,16 +30,6 @@ namespace Js
         AssertMsg(Is(aValue), "Ensure var is actually a 'JavascriptSIMDInt16x8'");
 
         return reinterpret_cast<JavascriptSIMDInt16x8 *>(aValue);
-    }
-
-    JavascriptSIMDInt16x8* JavascriptSIMDInt16x8::FromFloat32x4Bits(JavascriptSIMDFloat32x4   *instance, ScriptContext* requestContext)
-    {
-        return JavascriptSIMDInt16x8::New(&instance->GetValue(), requestContext);
-    }
-
-    JavascriptSIMDInt16x8* JavascriptSIMDInt16x8::FromInt32x4Bits(JavascriptSIMDInt32x4   *instance, ScriptContext* requestContext)
-    {
-        return JavascriptSIMDInt16x8::New(&instance->GetValue(), requestContext);
     }
 
     BOOL JavascriptSIMDInt16x8::GetProperty(Var originalInstance, PropertyId propertyId, Var* value, PropertyValueInfo* info, ScriptContext* requestContext)

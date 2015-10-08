@@ -19,16 +19,7 @@ namespace Js
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
 
-    SIMDValue SIMDFloat32x4Operation::OpFloat32x4(const SIMDValue& v)
-    {
-        X86SIMDValue x86Result;
-        // Sets the 4 single-precision, floating-point values, note in revised order: W, Z, Y, X
-        x86Result.m128_value = _mm_set_ps(v.f32[SIMD_W], v.f32[SIMD_Z], v.f32[SIMD_Y], v.f32[SIMD_X]);
-
-        return X86SIMDValue::ToSIMDValue(x86Result);
-    }
-
-    SIMDValue SIMDFloat32x4Operation::OpZero()
+	SIMDValue SIMDFloat32x4Operation::OpZero()
     {
         X86SIMDValue x86Result;
         // Sets the 128-bit value to zero
@@ -37,7 +28,7 @@ namespace Js
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
 
-    SIMDValue SIMDFloat32x4Operation::OpSplat(float x)
+	SIMDValue SIMDFloat32x4Operation::OpSplat(float x)
     {
         X86SIMDValue x86Result;
         // Sets the four single-precision, floating-point values to x
@@ -45,16 +36,7 @@ namespace Js
 
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
-
-    SIMDValue SIMDFloat32x4Operation::OpSplat(const SIMDValue& v)
-    {
-        X86SIMDValue x86Result;
-        // Sets the four single-precision, floating-point values to v.f32[SIMD_X]
-        x86Result.m128_value = _mm_set1_ps(v.f32[SIMD_X]);
-
-        return X86SIMDValue::ToSIMDValue(x86Result);
-    }
-
+	
     // Conversions
     SIMDValue SIMDFloat32x4Operation::OpFromFloat64x2(const SIMDValue& value)
     {

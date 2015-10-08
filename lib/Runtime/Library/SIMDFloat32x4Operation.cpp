@@ -21,15 +21,6 @@ namespace Js
         return result;
     }
 
-    SIMDValue SIMDFloat32x4Operation::OpFloat32x4(const SIMDValue& v)
-    { // overload function with input paramter as SIMDValue for completeness
-        SIMDValue result;
-
-        result = v;
-
-        return result;
-    }
-
     SIMDValue SIMDFloat32x4Operation::OpZero()
     {
         SIMDValue result;
@@ -44,15 +35,6 @@ namespace Js
         SIMDValue result;
 
         result.f32[SIMD_X] = result.f32[SIMD_Y] = result.f32[SIMD_Z] = result.f32[SIMD_W] = x;
-
-        return result;
-    }
-
-    SIMDValue SIMDFloat32x4Operation::OpSplat(const SIMDValue& v)
-    {
-        SIMDValue result;
-
-        result.f32[SIMD_X] = result.f32[SIMD_Y] = result.f32[SIMD_Z] = result.f32[SIMD_W] = v.f32[SIMD_X];
 
         return result;
     }

@@ -116,6 +116,9 @@ OBJECT_TYPE(Simd128Int16x8      )
 OBJECT_TYPE(Simd128Bool32x4     )
 OBJECT_TYPE(Simd128Bool16x8     )
 OBJECT_TYPE(Simd128Bool8x16     )
+OBJECT_TYPE(Simd128Uint32x4     )
+OBJECT_TYPE(Simd128Uint8x16     )
+OBJECT_TYPE(Simd128Uint16x8     )
 OBJECT_TYPE(Simd128Float64x2    ) // !! This is a marker for last SIMD type. Insert new SIMD types above.
 
 

@@ -15,7 +15,6 @@ namespace Js {
         static SIMDValue OpZero();
         
         static SIMDValue OpSplat(float x);
-        static SIMDValue OpSplat(const SIMDValue& v);
 
         // conversion
         static SIMDValue OpFromFloat64x2(const SIMDValue& value);

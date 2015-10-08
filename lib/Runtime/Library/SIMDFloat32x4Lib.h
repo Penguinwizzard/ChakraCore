@@ -56,9 +56,9 @@ namespace Js {
             static FunctionInfo Clamp;
             static FunctionInfo Select;
 
-			//Lane access
-			static FunctionInfo ExtractLane;
-			static FunctionInfo ReplaceLane;
+            //Lane access
+            static FunctionInfo ExtractLane;
+            static FunctionInfo ReplaceLane;
 
             static FunctionInfo Load;
             static FunctionInfo Load1;
@@ -84,9 +84,9 @@ namespace Js {
         static Var EntryFromInt32x4(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryFromInt32x4Bits(RecyclableObject* function, CallInfo callInfo, ...);
         
-		// Lane Access
-		static Var EntryExtractLane(RecyclableObject* function, CallInfo callInfo, ...);
-		static Var EntryReplaceLane(RecyclableObject* function, CallInfo callInfo, ...);
+        // Lane Access
+        static Var EntryExtractLane(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryReplaceLane(RecyclableObject* function, CallInfo callInfo, ...);
 
         // UnaryOps
         static Var EntryAbs(RecyclableObject* function, CallInfo callInfo, ...);

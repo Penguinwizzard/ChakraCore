@@ -1,6 +1,7 @@
-//----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 
 #pragma once
 
@@ -11,14 +12,8 @@ namespace Js {
         // following are operation wrappers for SIMDInt16x8 general implementation
         // input and output are typically SIMDValue
         static SIMDValue OpInt16x8(short x0, short x1, short x2, short x3, short x4, short x5, short x6, short x7);
-        static SIMDValue OpInt16x8(const SIMDValue& v);
         
         static SIMDValue OpSplat(short x);
-        static SIMDValue OpSplat(const SIMDValue& v);
-
-        // conversion
-        static SIMDValue OpFromInt32x4Bits(const SIMDValue& value); 
-        static SIMDValue OpFromFloat32x4Bits(const SIMDValue& value);
 
         // Unary Ops
         static SIMDValue OpNeg(const SIMDValue& v);

@@ -88,7 +88,7 @@ namespace Js
             JavascriptSIMDInt32x4 *instance = JavascriptSIMDInt32x4::FromVar(args[1]);
             Assert(instance);
 
-            return JavascriptSIMDInt16x8::FromInt32x4Bits(instance, scriptContext);
+            return SIMDConvertTypeFromBits<JavascriptSIMDInt32x4, JavascriptSIMDInt16x8>(instance, scriptContext);
         }
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat32x4TypeMismatch, L"fromInt32x4Bits");
     }
@@ -107,7 +107,7 @@ namespace Js
             JavascriptSIMDFloat32x4 *instance = JavascriptSIMDFloat32x4::FromVar(args[1]);
             Assert(instance);
 
-            return JavascriptSIMDInt16x8::FromFloat32x4Bits(instance, scriptContext);
+            return SIMDConvertTypeFromBits<JavascriptSIMDFloat32x4, JavascriptSIMDInt16x8>(instance, scriptContext);
         }
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat32x4TypeMismatch, L"fromFloat32x4Bits");
     }

@@ -21,52 +21,11 @@ namespace Js
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
 
-    SIMDValue SIMDInt8x16Operation::OpInt8x16(const SIMDValue& v)
-    {
-        X86SIMDValue x86Result;
-        // Sets the 16 signed 8-bit integer values, note in revised order: starts with x15 below
-        x86Result.m128i_value = _mm_set_epi8(v.i8[15], v.i8[14], v.i8[13], v.i8[12], v.i8[11]
-                                            , v.i8[10], v.i8[9], v.i8[8], v.i8[7], v.i8[6]
-                                            , v.i8[5], v.i8[4], v.i8[3], v.i8[2], v.i8[1], v.i8[0]);
-
-        return X86SIMDValue::ToSIMDValue(x86Result);
-    }
-
     SIMDValue SIMDInt8x16Operation::OpSplat(int8 x)
     {
         X86SIMDValue x86Result;
         // set 16 signed 8-bit integers values to input value x
         x86Result.m128i_value = _mm_set1_epi8(x);
-
-        return X86SIMDValue::ToSIMDValue(x86Result);
-    }
-
-    SIMDValue SIMDInt8x16Operation::OpSplat(const SIMDValue& v)  //arun::ToDo  not in spec
-    {
-        X86SIMDValue x86Result;
-        // set 16 signed 8-bit integers values to input value(v.i8[SIMD_X]) 
-        x86Result.m128i_value = _mm_set1_epi8(v.i8[0]); 
-
-        return X86SIMDValue::ToSIMDValue(x86Result);
-    }
-
-    SIMDValue SIMDInt8x16Operation::OpFromFloat32x4Bits(const SIMDValue& value)
-    {
-        X86SIMDValue x86Result;
-        X86SIMDValue v = X86SIMDValue::ToX86SIMDValue(value);
-
-        _mm_store_ps(x86Result.simdValue.f32, v.m128_value);
-
-        return X86SIMDValue::ToSIMDValue(x86Result);
-    }
-    SIMDValue SIMDInt8x16Operation::OpFromInt32x4Bits(const SIMDValue& value)  
-    {
-        X86SIMDValue x86Result;
-
-        x86Result.m128i_value = _mm_set_epi8(value.i8[15], value.i8[14], value.i8[13], value.i8[12]
-            , value.i8[11], value.i8[10], value.i8[9], value.i8[8]
-            , value.i8[7], value.i8[6], value.i8[5], value.i8[4]
-            , value.i8[5], value.i8[2], value.i8[1], value.i8[0]);
 
         return X86SIMDValue::ToSIMDValue(x86Result);
     }

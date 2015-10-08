@@ -11,10 +11,8 @@ namespace Js {
         // following are operation wrappers for SIMDInt32x4 general implementation
         // input and output are typically SIMDValue
         static SIMDValue OpInt32x4(int x, int y, int z, int w);
-        static SIMDValue OpInt32x4(const SIMDValue& v);
         
         static SIMDValue OpSplat(int x);
-        static SIMDValue OpSplat(const SIMDValue& v);
         
         static SIMDValue OpBool(int x, int y, int z, int w);
         static SIMDValue OpBool(const SIMDValue& v);
@@ -23,9 +21,6 @@ namespace Js {
         static SIMDValue OpFromBool(const SIMDValue& value);
         static SIMDValue OpFromFloat32x4(const SIMDValue& value);
         static SIMDValue OpFromFloat64x2(const SIMDValue& value);
-        static SIMDValue OpFromFloat32x4Bits(const SIMDValue& value);
-        static SIMDValue OpFromFloat64x2Bits(const SIMDValue& value);
-        static SIMDValue OpFromInt8x16Bits(const SIMDValue& value);
 
         // Unary Ops
         static SIMDValue OpAbs(const SIMDValue& v);

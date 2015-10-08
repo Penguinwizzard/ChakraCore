@@ -1,6 +1,7 @@
-//----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//---------------------------------------------------------------------------- 
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 
 #include "RuntimeLibraryPch.h"
 #include "SIMDInt16x8Operation.h"
@@ -19,50 +20,11 @@ namespace Js
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
 
-    SIMDValue SIMDInt16x8Operation::OpInt16x8(const SIMDValue& v)
-    {
-        X86SIMDValue x86Result;
-        // Sets the 8 signed 16-bit integer values, note in revised order: starts with [7] below
-        x86Result.m128i_value = _mm_set_epi16(v.i16[7], v.i16[6], v.i16[5], v.i16[4], v.i16[3], v.i16[2], v.i16[1], v.i16[0]);
-
-        return X86SIMDValue::ToSIMDValue(x86Result);
-    }
-
     SIMDValue SIMDInt16x8Operation::OpSplat(short x)
     {
         X86SIMDValue x86Result;
         // set 8 signed 16-bit integers values to input value x
         x86Result.m128i_value = _mm_set1_epi16(x);
-
-        return X86SIMDValue::ToSIMDValue(x86Result);
-    }
-
-    SIMDValue SIMDInt16x8Operation::OpSplat(const SIMDValue& v)
-    {
-        X86SIMDValue x86Result;
-        // set 8 signed 16-bit integers values to input value(v.i16[0])
-        x86Result.m128i_value = _mm_set1_epi16(v.i16[0]);
-
-        return X86SIMDValue::ToSIMDValue(x86Result);
-    }
-
-    // Conversions
-    SIMDValue SIMDInt16x8Operation::OpFromInt32x4Bits(const SIMDValue& v)
-    {
-        X86SIMDValue x86Result;
-
-        // Sets the 8 signed 16-bit integer values, note in revised order: starts with [7] below
-        x86Result.m128i_value = _mm_set_epi16(v.i16[7], v.i16[6], v.i16[5], v.i16[4], v.i16[3], v.i16[2], v.i16[1], v.i16[0]);
-        
-        return X86SIMDValue::ToSIMDValue(x86Result);
-    }
-
-    SIMDValue SIMDInt16x8Operation::OpFromFloat32x4Bits(const SIMDValue& value)
-    {
-        X86SIMDValue x86Result;
-        X86SIMDValue v = X86SIMDValue::ToX86SIMDValue(value);
-
-        _mm_store_ps(x86Result.simdValue.f32, v.m128_value);
 
         return X86SIMDValue::ToSIMDValue(x86Result);
     }

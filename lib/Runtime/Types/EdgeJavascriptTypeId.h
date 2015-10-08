@@ -35,9 +35,9 @@ enum TypeId
     TypeIds_SIMDInt16x8 = 14, 
     TypeIds_SIMDInt8x16 = 15,
 
-    TypeIds_SIMDUInt32x4 = 16,
-    TypeIds_SIMDUInt16x8 = 17,
-    TypeIds_SIMDUInt8x16 = 18,
+    TypeIds_SIMDUint32x4 = 16,
+    TypeIds_SIMDUint16x8 = 17,
+    TypeIds_SIMDUint8x16 = 18,
     
     TypeIds_SIMDBool32x4 = 19, 
     TypeIds_SIMDBool16x8 = 20,

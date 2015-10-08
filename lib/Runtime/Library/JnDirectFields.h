@@ -79,6 +79,7 @@ ENTRY(fround)
 
 
 // SIMD_JS
+// ToDo: Cleanup to remove unsupported operations.
 ENTRY(check)
 ENTRY(signMask)
 ENTRY(Float32x4)
@@ -89,6 +90,8 @@ ENTRY(Int16x8)
 ENTRY(Bool32x4)
 ENTRY(Bool16x8)
 ENTRY(Bool8x16)
+
+ENTRY(Uint32x4)
 
 ENTRY(zero)
 ENTRY(splat)
@@ -102,6 +105,8 @@ ENTRY(fromFloat64x2)
 ENTRY(fromFloat64x2Bits)
 ENTRY(fromInt16x8Bits)
 ENTRY(fromInt8x16Bits)
+ENTRY(fromUint16x8Bits)
+ENTRY(fromUint8x16Bits)
 
 // keep these contiguous
 ENTRY(withFlagX)

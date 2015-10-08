@@ -3,7 +3,6 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
-#include "SIMDFloat32x4Operation.h"
 
 namespace Js
 {
@@ -47,21 +46,12 @@ namespace Js
         return JavascriptSIMDFloat32x4::New(&result, requestContext);
     }
     
-    JavascriptSIMDFloat32x4* JavascriptSIMDFloat32x4::FromFloat64x2Bits(JavascriptSIMDFloat64x2 *instance, ScriptContext* requestContext)
-    {
-        return JavascriptSIMDFloat32x4::New(&instance->GetValue(), requestContext);
-    }
-
     JavascriptSIMDFloat32x4* JavascriptSIMDFloat32x4::FromInt32x4(JavascriptSIMDInt32x4 *instance, ScriptContext* requestContext)
     {
         SIMDValue result = SIMDFloat32x4Operation::OpFromInt32x4(instance->GetValue());
         return JavascriptSIMDFloat32x4::New(&result, requestContext);
     }
-    JavascriptSIMDFloat32x4* JavascriptSIMDFloat32x4::FromInt32x4Bits(JavascriptSIMDInt32x4 *instance, ScriptContext* requestContext)
-    {
-        return JavascriptSIMDFloat32x4::New(&instance->GetValue(), requestContext);
-    }
-
+    
     BOOL JavascriptSIMDFloat32x4::GetProperty(Var originalInstance, PropertyId propertyId, Var* value, PropertyValueInfo* info, ScriptContext* requestContext)
     {
         return GetPropertyBuiltIns(propertyId, value, requestContext);

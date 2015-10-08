@@ -19,29 +19,11 @@ namespace Js
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
 
-    SIMDValue SIMDInt32x4Operation::OpInt32x4(const SIMDValue& v)
-    {
-        X86SIMDValue x86Result;
-        // Sets the 4 signed 32-bit integer values, note in revised order: starts with W below
-        x86Result.m128i_value = _mm_set_epi32(v.i32[SIMD_W], v.i32[SIMD_Z], v.i32[SIMD_Y], v.i32[SIMD_X]);
-
-        return X86SIMDValue::ToSIMDValue(x86Result);
-    }
-
     SIMDValue SIMDInt32x4Operation::OpSplat(int x)
     {
         X86SIMDValue x86Result;
         // set 4 signed 32-bit integers values to input value x
         x86Result.m128i_value = _mm_set1_epi32(x);
-
-        return X86SIMDValue::ToSIMDValue(x86Result);
-    }
-
-    SIMDValue SIMDInt32x4Operation::OpSplat(const SIMDValue& v)
-    {
-        X86SIMDValue x86Result;
-        // set 4 signed 32-bit integers values to input value(v.i32[SIMD_X])
-        x86Result.m128i_value = _mm_set1_epi32(v.i32[SIMD_X]);
 
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
@@ -104,26 +86,6 @@ namespace Js
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
 
-    SIMDValue SIMDInt32x4Operation::OpFromFloat32x4Bits(const SIMDValue& value)
-    {
-        X86SIMDValue x86Result;
-        X86SIMDValue v = X86SIMDValue::ToX86SIMDValue(value);
-
-        _mm_store_ps(x86Result.simdValue.f32, v.m128_value);
-
-        return X86SIMDValue::ToSIMDValue(x86Result);
-    }
-
-    SIMDValue SIMDInt32x4Operation::OpFromFloat64x2Bits(const SIMDValue& value)
-    {
-        return OpFromFloat32x4Bits(value);
-    }
-
-    SIMDValue SIMDInt32x4Operation::OpFromInt8x16Bits(const SIMDValue& value)
-    {
-        return OpFromFloat32x4Bits(value);
-    }
-
     // Unary Ops
     SIMDValue SIMDInt32x4Operation::OpAbs(const SIMDValue& value)
     {
@@ -136,7 +98,7 @@ namespace Js
             x86Result.m128i_value = _mm_abs_epi32(v.m128i_value); // only available after SSE3 
             result = X86SIMDValue::ToSIMDValue(x86Result);
         }
-        else if (AutoSystemInfo::Data.SSE2Available())
+        else
         {
             X86SIMDValue  temp, SIGNMASK;
             SIGNMASK.m128i_value = _mm_srai_epi32(v.m128i_value, 31);                // mask = value >> 31
@@ -144,14 +106,6 @@ namespace Js
             x86Result.m128i_value = _mm_sub_epi32(temp.m128i_value, SIGNMASK.m128i_value);  // temp - mask
             result = X86SIMDValue::ToSIMDValue(x86Result);
         }
-        else
-        {
-            result.i32[SIMD_X] = (value.i32[SIMD_X] < 0) ? -1 * value.i32[SIMD_X] : value.i32[SIMD_X];
-            result.i32[SIMD_Y] = (value.i32[SIMD_Y] < 0) ? -1 * value.i32[SIMD_Y] : value.i32[SIMD_Y];
-            result.i32[SIMD_Z] = (value.i32[SIMD_Z] < 0) ? -1 * value.i32[SIMD_Z] : value.i32[SIMD_Z];
-            result.i32[SIMD_W] = (value.i32[SIMD_W] < 0) ? -1 * value.i32[SIMD_W] : value.i32[SIMD_W];
-        }
-
         return result;
     }
 
@@ -210,28 +164,18 @@ namespace Js
         X86SIMDValue tmpaValue = X86SIMDValue::ToX86SIMDValue(aValue);
         X86SIMDValue tmpbValue = X86SIMDValue::ToX86SIMDValue(bValue);
 
-        if (AutoSystemInfo::Data.SSE4_1Available())
-        {   // a * b, only available in SSE4
-            x86Result.m128i_value = _mm_mullo_epi32(tmpaValue.m128i_value, tmpbValue.m128i_value);  
-            result = X86SIMDValue::ToSIMDValue(x86Result);
-        }
-        else if (AutoSystemInfo::Data.SSE2Available())
-        {
-            // mul 2,0: r0 = a0*b0; r1 = a2*b2
-            __m128i tmp1 = _mm_mul_epu32(tmpaValue.m128i_value, tmpbValue.m128i_value);
-            // mul 3,1: r0=a1*b1; r1=a3*b3
-            __m128i tmp2 = _mm_mul_epu32(_mm_srli_si128(tmpaValue.m128i_value, 4), _mm_srli_si128(tmpbValue.m128i_value, 4));
-            // shuffle x86Results to [63..0] and pack 
-            x86Result.m128i_value = _mm_unpacklo_epi32(_mm_shuffle_epi32(tmp1, _MM_SHUFFLE(0, 0, 2, 0)), _mm_shuffle_epi32(tmp2, _MM_SHUFFLE(0, 0, 2, 0))); 
-            result = X86SIMDValue::ToSIMDValue(x86Result);
-        }
-        else
-        {
-            result.i32[SIMD_X] = aValue.i32[SIMD_X] * bValue.i32[SIMD_X];
-            result.i32[SIMD_Y] = aValue.i32[SIMD_Y] * bValue.i32[SIMD_Y];
-            result.i32[SIMD_Z] = aValue.i32[SIMD_Z] * bValue.i32[SIMD_Z];
-            result.i32[SIMD_W] = aValue.i32[SIMD_W] * bValue.i32[SIMD_W];
-        }
+        // a * b, only available in SSE4
+        // x86Result.m128i_value = _mm_mullo_epi32(tmpaValue.m128i_value, tmpbValue.m128i_value);  
+        // result = X86SIMDValue::ToSIMDValue(x86Result);
+
+        // SSE2
+        // mul 2,0: r0 = a0*b0; r1 = a2*b2
+        __m128i tmp1 = _mm_mul_epu32(tmpaValue.m128i_value, tmpbValue.m128i_value);
+        // mul 3,1: r0=a1*b1; r1=a3*b3
+        __m128i tmp2 = _mm_mul_epu32(_mm_srli_si128(tmpaValue.m128i_value, 4), _mm_srli_si128(tmpbValue.m128i_value, 4));
+        // shuffle x86Results to [63..0] and pack 
+        x86Result.m128i_value = _mm_unpacklo_epi32(_mm_shuffle_epi32(tmp1, _MM_SHUFFLE(0, 0, 2, 0)), _mm_shuffle_epi32(tmp2, _MM_SHUFFLE(0, 0, 2, 0))); 
+        result = X86SIMDValue::ToSIMDValue(x86Result);
 
         return result;
     }
@@ -271,48 +215,24 @@ namespace Js
 
     SIMDValue SIMDInt32x4Operation::OpMin(const SIMDValue& aValue, const SIMDValue& bValue)
     {
-        SIMDValue result;
-        X86SIMDValue x86Result;
-        X86SIMDValue tmpaValue = X86SIMDValue::ToX86SIMDValue(aValue);
-        X86SIMDValue tmpbValue = X86SIMDValue::ToX86SIMDValue(bValue);
-
-        if (AutoSystemInfo::Data.SSE4_1Available())
-        {   // choose the smaller value of the two parameters, only available after SSE4
-            x86Result.m128i_value = _mm_min_epi32(tmpaValue.m128i_value, tmpbValue.m128i_value);
-            result = X86SIMDValue::ToSIMDValue(x86Result);
-        }
-        else 
-        {
-            result.i32[SIMD_X] = (aValue.i32[SIMD_X] < bValue.i32[SIMD_X]) ? aValue.i32[SIMD_X] : bValue.i32[SIMD_X];
-            result.i32[SIMD_Y] = (aValue.i32[SIMD_Y] < bValue.i32[SIMD_Y]) ? aValue.i32[SIMD_Y] : bValue.i32[SIMD_Y];
-            result.i32[SIMD_Z] = (aValue.i32[SIMD_Z] < bValue.i32[SIMD_Z]) ? aValue.i32[SIMD_Z] : bValue.i32[SIMD_Z];
-            result.i32[SIMD_W] = (aValue.i32[SIMD_W] < bValue.i32[SIMD_W]) ? aValue.i32[SIMD_W] : bValue.i32[SIMD_W];
-        }
-
-        return result;
+        // choose the smaller value of the two parameters, only available after SSE4
+        // x86Result.m128i_value = _mm_min_epi32(tmpaValue.m128i_value, tmpbValue.m128i_value);
+        // result = X86SIMDValue::ToSIMDValue(x86Result);
+        
+        // SSE2 
+        SIMDValue selector = SIMDInt32x4Operation::OpLessThan(aValue, bValue);
+        return SIMDInt32x4Operation::OpSelect(selector, aValue, bValue);
     }
 
     SIMDValue SIMDInt32x4Operation::OpMax(const SIMDValue& aValue, const SIMDValue& bValue)
     {
-        SIMDValue result;
-        X86SIMDValue x86Result;
-        X86SIMDValue tmpaValue = X86SIMDValue::ToX86SIMDValue(aValue);
-        X86SIMDValue tmpbValue = X86SIMDValue::ToX86SIMDValue(bValue);
-
-        if (AutoSystemInfo::Data.SSE4_1Available())
-        {   // choose the larger value of the two parameters, only available after SSE4
-            x86Result.m128i_value = _mm_max_epi32(tmpaValue.m128i_value, tmpbValue.m128i_value); // a ^ b
-            result = X86SIMDValue::ToSIMDValue(x86Result);
-        }
-        else
-        {
-            result.i32[SIMD_X] = (aValue.i32[SIMD_X] > bValue.i32[SIMD_X]) ? aValue.i32[SIMD_X] : bValue.i32[SIMD_X];
-            result.i32[SIMD_Y] = (aValue.i32[SIMD_Y] > bValue.i32[SIMD_Y]) ? aValue.i32[SIMD_Y] : bValue.i32[SIMD_Y];
-            result.i32[SIMD_Z] = (aValue.i32[SIMD_Z] > bValue.i32[SIMD_Z]) ? aValue.i32[SIMD_Z] : bValue.i32[SIMD_Z];
-            result.i32[SIMD_W] = (aValue.i32[SIMD_W] > bValue.i32[SIMD_W]) ? aValue.i32[SIMD_W] : bValue.i32[SIMD_W];
-        }
-
-        return result;
+        // choose the larger value of the two parameters, only available after SSE4
+        // x86Result.m128i_value = _mm_max_epi32(tmpaValue.m128i_value, tmpbValue.m128i_value); // a ^ b
+        // result = X86SIMDValue::ToSIMDValue(x86Result);
+        
+        // SSE2
+        SIMDValue selector = SIMDInt32x4Operation::OpLessThan(bValue, aValue);
+        return SIMDInt32x4Operation::OpSelect(selector, aValue, bValue);
     }
 
     SIMDValue SIMDInt32x4Operation::OpLessThan(const SIMDValue& aValue, const SIMDValue& bValue)

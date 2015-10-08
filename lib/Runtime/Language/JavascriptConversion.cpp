@@ -759,6 +759,9 @@ CommonNumber:
         case TypeIds_SIMDBool32x4:
         case TypeIds_SIMDBool16x8:
         case TypeIds_SIMDBool8x16:
+        case TypeIds_SIMDUint32x4:
+        case TypeIds_SIMDUint16x8:
+        case TypeIds_SIMDUint8x16:
         { 
             return true;
         }
@@ -866,6 +869,9 @@ CommonNumber:
             case TypeIds_SIMDBool32x4:
             case TypeIds_SIMDBool16x8:
             case TypeIds_SIMDBool8x16:
+            case TypeIds_SIMDUint32x4:
+            case TypeIds_SIMDUint8x16:
+            case TypeIds_SIMDUint16x8:
                 JavascriptError::ThrowError(scriptContext, JSERR_NeedNumber);
 
             default:
@@ -932,6 +938,9 @@ CommonNumber:
             case TypeIds_SIMDBool32x4:
             case TypeIds_SIMDBool16x8:
             case TypeIds_SIMDBool8x16:
+            case TypeIds_SIMDUint32x4:
+            case TypeIds_SIMDUint16x8:
+            case TypeIds_SIMDUint8x16:
                 JavascriptError::ThrowError(scriptContext, JSERR_NeedNumber);
 
             default:
@@ -1050,6 +1059,9 @@ CommonNumber:
         case TypeIds_SIMDBool32x4:
         case TypeIds_SIMDBool16x8:
         case TypeIds_SIMDBool8x16:
+        case TypeIds_SIMDUint32x4:
+        case TypeIds_SIMDUint16x8:
+        case TypeIds_SIMDUint8x16:
             JavascriptError::ThrowError(scriptContext, JSERR_NeedNumber);
 
         default:
@@ -1165,6 +1177,9 @@ CommonNumber:
             case TypeIds_SIMDBool32x4:
             case TypeIds_SIMDBool16x8:
             case TypeIds_SIMDBool8x16:
+            case TypeIds_SIMDUint32x4:
+            case TypeIds_SIMDUint16x8:
+            case TypeIds_SIMDUint8x16:
                 JavascriptError::ThrowError(scriptContext, JSERR_NeedNumber);
 
             default:
@@ -1312,6 +1327,9 @@ CommonNumber:
             case TypeIds_SIMDBool32x4:
             case TypeIds_SIMDBool16x8:
             case TypeIds_SIMDBool8x16:
+            case TypeIds_SIMDUint32x4:
+            case TypeIds_SIMDUint16x8:
+            case TypeIds_SIMDUint8x16:
                 JavascriptError::ThrowError(scriptContext, JSERR_NeedNumber);
 
             default:
@@ -1397,6 +1415,9 @@ CommonNumber:
             case TypeIds_SIMDBool32x4:
             case TypeIds_SIMDBool16x8:
             case TypeIds_SIMDBool8x16:
+            case TypeIds_SIMDUint32x4:
+            case TypeIds_SIMDUint16x8:
+            case TypeIds_SIMDUint8x16:
                 JavascriptError::ThrowError(scriptContext, JSERR_NeedNumber);
 
             default:

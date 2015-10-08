@@ -571,26 +571,74 @@ BUILTIN(SIMDBool8x16Lib, And, EntryAnd, FunctionInfo::None)
 BUILTIN(SIMDBool8x16Lib, Or, EntryOr, FunctionInfo::None)
 BUILTIN(SIMDBool8x16Lib, Xor, EntryXor, FunctionInfo::None)
 
+// Uint32x4
+BUILTIN(SIMDUint32x4Lib, Uint32x4, EntryUint32x4, FunctionInfo::None)
+BUILTIN(SIMDUint32x4Lib, Check, EntryCheck, FunctionInfo::None)
+BUILTIN(SIMDUint32x4Lib, Splat, EntrySplat, FunctionInfo::None)
 
-// JavascriptFloat32x4 entry points
+BUILTIN(SIMDUint32x4Lib, FromFloat32x4, EntryFromFloat32x4, FunctionInfo::None)
+BUILTIN(SIMDUint32x4Lib, FromFloat32x4Bits, EntryFromFloat32x4Bits, FunctionInfo::None)
+BUILTIN(SIMDUint32x4Lib, FromInt32x4Bits, EntryFromInt32x4Bits, FunctionInfo::None)
+
+BUILTIN(SIMDUint32x4Lib, FromInt16x8Bits,  EntryFromInt16x8Bits, FunctionInfo::None)
+BUILTIN(SIMDUint32x4Lib, FromInt8x16Bits,  EntryFromInt8x16Bits, FunctionInfo::None)
+BUILTIN(SIMDUint32x4Lib, FromUint16x8Bits, EntryFromUint16x8Bits, FunctionInfo::None)
+BUILTIN(SIMDUint32x4Lib, FromUint8x16Bits, EntryFromUint8x16Bits, FunctionInfo::None)
+
+// Lane Access
+BUILTIN(SIMDUint32x4Lib, ExtractLane, EntryExtractLane, FunctionInfo::None)
+BUILTIN(SIMDUint32x4Lib, ReplaceLane, EntryReplaceLane, FunctionInfo::None)
+
+// UnaryOps
+BUILTIN(SIMDUint32x4Lib, Not, EntryNot, FunctionInfo::None)
+
+// BinaryOps
+BUILTIN(SIMDUint32x4Lib, Add, EntryAdd, FunctionInfo::None)
+BUILTIN(SIMDUint32x4Lib, Sub, EntrySub, FunctionInfo::None)
+BUILTIN(SIMDUint32x4Lib, Mul, EntryMul, FunctionInfo::None)
+BUILTIN(SIMDUint32x4Lib, And, EntryAnd, FunctionInfo::None)
+BUILTIN(SIMDUint32x4Lib, Or, EntryOr, FunctionInfo::None)
+BUILTIN(SIMDUint32x4Lib, Xor, EntryXor, FunctionInfo::None)
+
+// CompareOp
+BUILTIN(SIMDUint32x4Lib, LessThan, EntryLessThan, FunctionInfo::None)
+BUILTIN(SIMDUint32x4Lib, LessThanOrEqual, EntryLessThanOrEqual, FunctionInfo::None)
+BUILTIN(SIMDUint32x4Lib, Equal, EntryEqual, FunctionInfo::None)
+BUILTIN(SIMDUint32x4Lib, NotEqual, EntryNotEqual, FunctionInfo::None)
+BUILTIN(SIMDUint32x4Lib, GreaterThan, EntryGreaterThan, FunctionInfo::None)
+BUILTIN(SIMDUint32x4Lib, GreaterThanOrEqual, EntryGreaterThanOrEqual, FunctionInfo::None)
+BUILTIN(SIMDUint32x4Lib, Min,EntryMin, FunctionInfo::None)
+BUILTIN(SIMDUint32x4Lib, Max,EntryMax, FunctionInfo::None)
+
+// ShiftOps
+BUILTIN(SIMDUint32x4Lib, ShiftLeftByScalar, EntryShiftLeftByScalar, FunctionInfo::None)
+BUILTIN(SIMDUint32x4Lib, ShiftRightByScalar, EntryShiftRightByScalar, FunctionInfo::None)
+
+// Others
+BUILTIN(SIMDUint32x4Lib, Swizzle, EntrySwizzle, FunctionInfo::None)
+BUILTIN(SIMDUint32x4Lib, Shuffle, EntryShuffle, FunctionInfo::None)
+BUILTIN(SIMDUint32x4Lib, Select, EntrySelect, FunctionInfo::None)
+
+BUILTIN(SIMDUint32x4Lib, Load, EntryLoad, FunctionInfo::None)
+BUILTIN(SIMDUint32x4Lib, Load1, EntryLoad1, FunctionInfo::None)
+BUILTIN(SIMDUint32x4Lib, Load2, EntryLoad2, FunctionInfo::None)
+BUILTIN(SIMDUint32x4Lib, Load3, EntryLoad3, FunctionInfo::None)
+
+BUILTIN(SIMDUint32x4Lib, Store, EntryStore, FunctionInfo::None)
+BUILTIN(SIMDUint32x4Lib, Store1, EntryStore1, FunctionInfo::None)
+BUILTIN(SIMDUint32x4Lib, Store2, EntryStore2, FunctionInfo::None)
+BUILTIN(SIMDUint32x4Lib, Store3, EntryStore3, FunctionInfo::None)
+
+// SIMD ToString entry point
 BUILTIN(JavascriptSIMDFloat32x4, ToString, EntryToString, FunctionInfo::None)
-
-// JavascriptFloat64x2 entry points
 BUILTIN(JavascriptSIMDFloat64x2, ToString, EntryToString, FunctionInfo::None)
-
-// JavascriptInt32x4 entry points
 BUILTIN(JavascriptSIMDInt32x4, ToString, EntryToString, FunctionInfo::None)
-
-// JavascriptInt16x8 entry points
 BUILTIN(JavascriptSIMDInt16x8, ToString, EntryToString, FunctionInfo::None)
-
-// JavascriptInt8x16 entry points
 BUILTIN(JavascriptSIMDInt8x16, ToString, EntryToString, FunctionInfo::None)
-
 BUILTIN(JavascriptSIMDBool32x4, ToString, EntryToString, FunctionInfo::None)
 BUILTIN(JavascriptSIMDBool16x8, ToString, EntryToString, FunctionInfo::None)
 BUILTIN(JavascriptSIMDBool8x16, ToString, EntryToString, FunctionInfo::None)
-
+BUILTIN(JavascriptSIMDUint32x4, ToString, EntryToString, FunctionInfo::None)
 
 BUILTIN(Math, Fround, Fround, FunctionInfo::ErrorOnNew)
 BUILTIN(TypedArrayBase, NewInstance, NewInstance, FunctionInfo::SkipDefaultNewObject)

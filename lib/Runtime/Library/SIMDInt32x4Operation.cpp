@@ -21,38 +21,11 @@ namespace Js
         return result;
     }
 
-    SIMDValue SIMDInt32x4Operation::OpInt32x4(const SIMDValue& v)
-    {// overload function with input paramter as SIMDValue for completeness, may not need
-        SIMDValue result;
-
-        result = v;
-
-        return result;
-    }
-
-    SIMDValue SIMDInt32x4Operation::OpZero()
-    {
-        SIMDValue result;
-
-        result.i32[SIMD_X] = result.i32[SIMD_Y] = result.i32[SIMD_Z] = result.i32[SIMD_W] = 0;
-
-        return result;
-    }
-
     SIMDValue SIMDInt32x4Operation::OpSplat(int x)
     {
         SIMDValue result;
 
         result.i32[SIMD_X] = result.i32[SIMD_Y] = result.i32[SIMD_Z] = result.i32[SIMD_W] = x;
-
-        return result;
-    }
-
-    SIMDValue SIMDInt32x4Operation::OpSplat(const SIMDValue& v)
-    {
-        SIMDValue result;
-
-        result.i32[SIMD_X] = result.i32[SIMD_Y] = result.i32[SIMD_Z] = result.i32[SIMD_W] = v.i32[SIMD_X];
 
         return result;
     }
@@ -124,32 +97,6 @@ namespace Js
         return result;
     }
 
-    SIMDValue SIMDInt32x4Operation::OpFromFloat32x4Bits(const SIMDValue& v)
-    {
-        SIMDValue result;
-
-        result.f64[SIMD_X] = v.f64[SIMD_X];
-        result.f64[SIMD_Y] = v.f64[SIMD_Y];
-
-        return result;
-    }
-
-    SIMDValue SIMDInt32x4Operation::OpFromFloat64x2Bits(const SIMDValue& v)
-    {
-        return OpFromFloat32x4Bits(v);
-    }
-
-    SIMDValue SIMDInt32x4Operation::OpFromInt8x16Bits(const SIMDValue& v)
-    {
-        SIMDValue result;
-
-        result.i32[SIMD_X] = v.i32[SIMD_X];
-        result.i32[SIMD_Y] = v.i32[SIMD_Y];
-        result.i32[SIMD_Z] = v.i32[SIMD_Z];
-        result.i32[SIMD_W] = v.i32[SIMD_W];
-
-        return result;
-    }
 
     // Unary Ops
     SIMDValue SIMDInt32x4Operation::OpAbs(const SIMDValue& value)

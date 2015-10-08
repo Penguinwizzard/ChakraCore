@@ -325,3 +325,6 @@ RT_ERROR_MSG(JSERR_SimdBool32x4TypeMismatch, 5633, "SIMD.Bool32x4.%s: Invalid SI
 RT_ERROR_MSG(JSERR_SimdBool16x8TypeMismatch, 5634, "SIMD.Bool16x8.%s: Invalid SIMD types for operation", "Expecting Bool16x8 values", kjstTypeError, 0)
 RT_ERROR_MSG(JSERR_SimdBool8x16TypeMismatch, 5635, "SIMD.Bool8x16.%s: Invalid SIMD types for operation", "Expecting Bool8x16 values", kjstTypeError, 0)
 RT_ERROR_MSG(JSERR_SimdInt16x8TypeMismatch, 5636, "SIMD.Int16x8.%s: Invalid SIMD types for operation", "Expecting Int16x8 values", kjstTypeError, 0)
+RT_ERROR_MSG(JSERR_SimdUint32x4TypeMismatch, 5637, "SIMD.Uint32x4.%s: Invalid SIMD types for operation", "Expecting UInt32x4 values", kjstTypeError, 0)
+RT_ERROR_MSG(JSERR_SimdUint16x8TypeMismatch, 5638, "SIMD.Uint16x8.%s: Invalid SIMD types for operation", "Expecting UInt16x8 values", kjstTypeError, 0)
+RT_ERROR_MSG(JSERR_SimdUint8x16TypeMismatch, 5639, "SIMD.Uint8x16.%s: Invalid SIMD types for operation", "Expecting UInt8x16 values", kjstTypeError, 0)
