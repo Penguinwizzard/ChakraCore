@@ -6,6 +6,11 @@
 
 namespace Js
 {
+    struct JavascriptPromiseResolveOrRejectFunctionAlreadyResolvedWrapper
+    {
+        bool alreadyResolved;
+    };
+
     class JavascriptPromiseResolveOrRejectFunction : public RuntimeFunction
     {
     protected:
@@ -14,7 +19,7 @@ namespace Js
 
     public:
         JavascriptPromiseResolveOrRejectFunction(DynamicType* type);
-        JavascriptPromiseResolveOrRejectFunction(DynamicType* type, FunctionInfo* functionInfo, JavascriptPromise* promise, bool isReject);
+        JavascriptPromiseResolveOrRejectFunction(DynamicType* type, FunctionInfo* functionInfo, JavascriptPromise* promise, bool isReject, JavascriptPromiseResolveOrRejectFunctionAlreadyResolvedWrapper* alreadyResolvedRecord);
 
         inline static bool Is(Var var);
         inline static JavascriptPromiseResolveOrRejectFunction* FromVar(Var var);        
@@ -27,7 +32,7 @@ namespace Js
     private:
         JavascriptPromise* promise;
         bool isReject;
-        bool isAlreadyResolved;
+        JavascriptPromiseResolveOrRejectFunctionAlreadyResolvedWrapper* alreadyResolvedWrapper;
     };
 
     class JavascriptPromiseAsyncSpawnExecutorFunction : public RuntimeFunction
