@@ -488,12 +488,6 @@
   </test>
   <test>
     <default>
-      <files>sort.host.htm</files>
-      <baseline />
-    </default>
-  </test>
-  <test>
-    <default>
       <files>nativeArrayPushInlining.js</files>
       <baseline>nativeArrayPushInlining.baseline</baseline>
       <compile-flags>-maxinterpretcount:1 -off:arraycheckhoist -off:fixedmethods</compile-flags>
