@@ -8834,6 +8834,11 @@ namespace Js
                 Assert(this->validationCookie != nullptr);
                 if (validationCookie == (void*) current)
                 {
+                    if (this->GetNativeAddress() == (DWORD_PTR)(functionBody->GetOriginalEntryPoint_Unchecked()))
+                    {
+                        DebugBreak();
+                    }
+
                     scriptContext->FreeFunctionEntryPoint((Js::JavascriptMethod)this->GetNativeAddress());
                 }
             }

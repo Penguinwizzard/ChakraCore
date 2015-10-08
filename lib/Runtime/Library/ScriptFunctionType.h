@@ -21,8 +21,9 @@ namespace Js
         void* address;
         void* nativeAddr;
         void* cleanedUpEntryPoint;
-        char fbCopy[sizeof(FunctionBody)];
-        PVOID stack[32];
+        FunctionEntryPointInfo* simpleJitInfoOnFB;
+        FunctionBody* fbCopy;
+        PVOID stack[16];
         StackData* stackData;
     };
     class ScriptFunctionType : public DynamicType
@@ -55,12 +56,18 @@ namespace Js
                 tmp->nativeAddr = (void*)((Js::FunctionEntryPointInfo*)this->entryPointInfo)->GetNativeAddress();
                 if (((Js::FunctionEntryPointInfo*)this->entryPointInfo)->functionProxy && ((Js::FunctionEntryPointInfo*)this->entryPointInfo)->functionProxy->IsFunctionBody())
                 {
-                    memcpy(&tmp->fbCopy, ((Js::FunctionEntryPointInfo*)this->entryPointInfo)->GetFunctionBody(), sizeof(FunctionBody));
+                    if (((Js::FunctionEntryPointInfo*)this->entryPointInfo)->GetFunctionBody()->GetSimpleJitEntryPointInfo()) 
+                    {
+                        tmp->simpleJitInfoOnFB = (FunctionEntryPointInfo*)malloc(sizeof(FunctionEntryPointInfo));
+                        memcpy(tmp->simpleJitInfoOnFB, ((Js::FunctionEntryPointInfo*)this->entryPointInfo)->GetFunctionBody()->GetSimpleJitEntryPointInfo(), sizeof(FunctionEntryPointInfo));
+                    }
+                    tmp->fbCopy = (FunctionBody*)malloc(sizeof(FunctionBody));
+                    memcpy(tmp->fbCopy, ((Js::FunctionEntryPointInfo*)this->entryPointInfo)->GetFunctionBody(), sizeof(FunctionBody));
                 }
             }
             tmp->cleanedUpEntryPoint = cleanedUpEntryPoint;
             
-            CaptureStackBackTrace(0, 32, tmp->stack, 0);
+            CaptureStackBackTrace(0, 16, tmp->stack, 0);
 
             //if (this->entryPointInfo->IsFunctionEntryPointInfo())
             //{
