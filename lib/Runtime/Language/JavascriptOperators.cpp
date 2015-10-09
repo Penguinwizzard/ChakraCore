@@ -2644,11 +2644,6 @@ CommonNumber:
         // Set the property using a scope stack rather than an individual instance.
         // Walk the stack until we find an instance that has the property and store
         // the new value there.
-        //
-        // To propagate 'this' pointer, walk up the stack and update scopes
-        // where field '_lexicalThisSlotSymbol' exists and stop at the
-        // scope where field '_lexicalNewTargetSymbol' also exists, which
-        // indicates class constructor.
 
         ScriptContext *const scriptContext = functionBody->GetScriptContext();
 
@@ -2659,7 +2654,6 @@ CommonNumber:
         PropertyValueInfo::SetCacheInfo(&info, functionBody, inlineCache, inlineCacheIndex, !IsFromFullJit);
 
         bool allowUndecInConsoleScope = (propertyOperationFlags & PropertyOperation_AllowUndeclInConsoleScope) == PropertyOperation_AllowUndeclInConsoleScope;
-        bool isLexicalThisSlotSymbol = (propertyId == PropertyIds::_lexicalThisSlotSymbol);
 
         for (uint16 i = 0; i < length; i++)
         {
@@ -2671,11 +2665,6 @@ CommonNumber:
             if (CacheOperators::TrySetProperty<true, true, true, true, true, !TInlineCache::IsPolymorphic, TInlineCache::IsPolymorphic, false>(
                     object, false, propertyId, newValue, scriptContext, propertyOperationFlags, nullptr, &info))
             {
-                if (isLexicalThisSlotSymbol && !JavascriptOperators::HasProperty(object, PropertyIds::_lexicalNewTargetSymbol))
-                {
-                    continue;
-                }
-
                 return;
             }
 
@@ -2697,8 +2686,6 @@ CommonNumber:
                         CacheOperators::CachePropertyWrite(object, false, type, propertyId, &info, scriptContext);
                         JavascriptOperators::CallSetter(func, object, newValue, scriptContext);
                     }
-
-                    Assert(!isLexicalThisSlotSymbol);
                     return;
                 }
                 else if ((flags & Proxy) == Proxy)
@@ -2723,8 +2710,6 @@ CommonNumber:
                         {
                             JavascriptError::ThrowReferenceError(scriptContext, ERRAssignmentToConst);
                         }
-
-                        Assert(!isLexicalThisSlotSymbol);
                         return;
                     }
                 }
@@ -2751,7 +2736,7 @@ CommonNumber:
 
                     scriptContext->GetThreadContext()->SetDisableImplicitFlags(disableImplicitFlags);
 
-                    if (result && scriptContext->IsUndeclBlockVar(value) && !allowUndecInConsoleScope && !isLexicalThisSlotSymbol)
+                    if (result && scriptContext->IsUndeclBlockVar(value) && !allowUndecInConsoleScope && propertyId != PropertyIds::_lexicalThisSlotSymbol)
                     {
                         JavascriptError::ThrowReferenceError(scriptContext, JSERR_UseBeforeDeclaration);
                     }
@@ -2771,17 +2756,9 @@ CommonNumber:
                 {
                     CacheOperators::CachePropertyWrite(object, false, type, propertyId, &info, scriptContext);
                 }
-
-                if (isLexicalThisSlotSymbol && !JavascriptOperators::HasProperty(object, PropertyIds::_lexicalNewTargetSymbol))
-                {
-                    continue;
-                }
-
                 return;
             }
         }
-
-        Assert(!isLexicalThisSlotSymbol);
 
         // If we have console scope and no one in the scope had the property add it to console scope
         if ((length > 0) && ConsoleScopeActivationObject::Is(pDisplay->GetItem(length - 1)))
