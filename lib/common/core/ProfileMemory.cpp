@@ -29,7 +29,10 @@ MemoryProfiler::~MemoryProfiler()
 #if DBG
     pageAllocator.SetDisableThreadAccessCheck();
 #endif
-    NoCheckHeapDelete(next);   
+    if (next != nullptr)
+    {
+        NoCheckHeapDelete(next);
+    }
 }
 
 MemoryProfiler *
