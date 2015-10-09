@@ -5,15 +5,6 @@ function equal(a, b) {
         WScript.Echo(">> Fail!");
 }
 
-function testZero() {
-    WScript.Echo("zero");
-    var z = SIMD.Int32x4.zero();
-    equal(0, SIMD.Int32x4.extractLane(z, 0));
-    equal(0, SIMD.Int32x4.extractLane(z, 1));
-    equal(0, SIMD.Int32x4.extractLane(z, 2));
-    equal(0, SIMD.Int32x4.extractLane(z, 3));
-}
-
 function testSplat() {
     var n = SIMD.Int32x4.splat(3);
     WScript.Echo("splat");
@@ -31,15 +22,6 @@ function testBool() {
     equal(-1, SIMD.Int32x4.extractLane(n, 2));
     equal(0, SIMD.Int32x4.extractLane(n, 3));
 }
-
-testZero();
-testZero();
-testZero();
-testZero();
-testZero();
-testZero();
-testZero();
-testZero();
 
 testSplat();
 testSplat();

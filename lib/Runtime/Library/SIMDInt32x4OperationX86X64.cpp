@@ -28,15 +28,6 @@ namespace Js
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
 
-    SIMDValue SIMDInt32x4Operation::OpZero()
-    {
-        X86SIMDValue x86Result;
-        // Sets the 128-bit value to zero
-        x86Result.m128i_value = _mm_setzero_si128();
-
-        return X86SIMDValue::ToSIMDValue(x86Result);
-    }
-
     SIMDValue SIMDInt32x4Operation::OpSplat(int x)
     {
         X86SIMDValue x86Result;
@@ -124,6 +115,11 @@ namespace Js
     }
 
     SIMDValue SIMDInt32x4Operation::OpFromFloat64x2Bits(const SIMDValue& value)
+    {
+        return OpFromFloat32x4Bits(value);
+    }
+
+    SIMDValue SIMDInt32x4Operation::OpFromInt8x16Bits(const SIMDValue& value)
     {
         return OpFromFloat32x4Bits(value);
     }
@@ -350,7 +346,7 @@ namespace Js
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
 
-    SIMDValue SIMDInt32x4Operation::OpShiftLeft(const SIMDValue& value, int count)
+    SIMDValue SIMDInt32x4Operation::OpShiftLeftByScalar(const SIMDValue& value, int count)
     {
         X86SIMDValue x86Result;
         X86SIMDValue tmpValue = X86SIMDValue::ToX86SIMDValue(value);
@@ -360,17 +356,7 @@ namespace Js
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
 
-    SIMDValue SIMDInt32x4Operation::OpShiftRightLogical(const SIMDValue& value, int count)
-    {
-        X86SIMDValue x86Result;
-        X86SIMDValue tmpValue = X86SIMDValue::ToX86SIMDValue(value);
-        // Shifts the 4 signed 32-bit integers in a right by count bits while shifting in zeros
-        x86Result.m128i_value = _mm_srli_epi32(tmpValue.m128i_value, count);
-
-        return X86SIMDValue::ToSIMDValue(x86Result);
-    }
-
-    SIMDValue SIMDInt32x4Operation::OpShiftRightArithmetic(const SIMDValue& value, int count)
+    SIMDValue SIMDInt32x4Operation::OpShiftRightByScalar(const SIMDValue& value, int count)
     {
         X86SIMDValue x86Result;
         X86SIMDValue tmpValue = X86SIMDValue::ToX86SIMDValue(value);

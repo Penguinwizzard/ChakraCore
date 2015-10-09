@@ -71,7 +71,7 @@ passed
 ******* Int8x16 shiftLeftByScalar *******
 passed
 
-******* Int8x16 shiftRightArithmeticByScalar *******
+******* Int8x16 shiftRightByScalar *******
 passed
 
 ******* Int8x16 addSaturate *******

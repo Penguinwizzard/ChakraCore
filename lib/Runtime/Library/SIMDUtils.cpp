@@ -60,6 +60,9 @@ namespace Js {
     template Var SIMDConvertTypeFromBits<JavascriptSIMDFloat32x4, JavascriptSIMDInt8x16>(JavascriptSIMDFloat32x4& instance, ScriptContext& scriptContext);
     template Var SIMDConvertTypeFromBits<JavascriptSIMDInt32x4, JavascriptSIMDInt8x16>(JavascriptSIMDInt32x4& instance, ScriptContext& scriptContext);
     template Var SIMDConvertTypeFromBits<JavascriptSIMDInt16x8, JavascriptSIMDInt8x16>(JavascriptSIMDInt16x8& instance, ScriptContext& scriptContext);
+    template Var SIMDConvertTypeFromBits<JavascriptSIMDFloat32x4, JavascriptSIMDInt32x4>(JavascriptSIMDFloat32x4& instance, ScriptContext& scriptContext);
+    template Var SIMDConvertTypeFromBits<JavascriptSIMDFloat64x2, JavascriptSIMDInt32x4>(JavascriptSIMDFloat64x2& instance, ScriptContext& scriptContext);
+    template Var SIMDConvertTypeFromBits<JavascriptSIMDInt8x16  , JavascriptSIMDInt32x4>(JavascriptSIMDInt8x16& instance, ScriptContext& scriptContext);
 
     template <int laneCount> 
     SIMDValue SIMD128InnerShuffle(SIMDValue src1, SIMDValue src2, int32 lane0, int32 lane1, int32 lane2, int32 lane3)

@@ -915,28 +915,13 @@ for (var type of intTypes) {
 }
 
 for (var type of signedIntTypes) {
-  test(type.name + ' shiftRightArithmeticByScalar', function() {
+  test(type.name + ' shiftRightByScalar', function() {
     function shift(a, bits) {
       if (bits>>>0 >= type.laneSize * 8)
         bits = type.laneSize * 8 - 1;
       return a >> bits;
     }
-    testShiftOp(type, 'shiftRightArithmeticByScalar', shift);
-  });
-}
-
-for (var type of unsignedIntTypes) {
-  test(type.name + ' shiftRightLogicalByScalar', function() {
-    function shift(a, bits) {
-      if (bits>>>0 >= type.laneSize * 8) return 0;
-      if (type.laneMask)
-        a &= type.laneMask;
-      return a >>> bits;
-    }
-    testShiftOp(type, 'shiftRightLogicalByScalar', shift);
-  });
-  test(type.name + ' horizontalSum', function() {
-    testHorizontalSum(type);
+    testShiftOp(type, 'shiftRightByScalar', shift);
   });
 }
 
@@ -1071,13 +1056,8 @@ function test(name, func) {
   if(name.indexOf('Int32x4 fromUint8x16Bits') > -1) return; //unsupported function
   if(name.indexOf('Int32x4 fromUint16x8Bits') > -1) return; //unsupported function
   if(name.indexOf('Int32x4 fromUint32x4Bits') > -1) return; //unsupported function
-  if(name.indexOf('Int32x4 fromInt8x16Bits') > -1) return; //unsupported function
   if(name.indexOf('Int32x4 fromInt16x8Bits') > -1) return; //unsupported function
   if(name.indexOf('Int32x4 fromUint32x4') > -1) return; //unsupported function
-  if(name.indexOf('Int32x4 shiftRightArithmeticByScalar') > -1) return; //unsupported function
-  if(name.indexOf('Int32x4 shiftLeftByScalar') > -1) return; //unsupported function
-  if(name.indexOf('Int32x4 max') > -1) return; //unsupported function
-  if(name.indexOf('Int32x4 min') > -1) return; //unsupported function
   if(name.indexOf('Int32x4 greaterThanOrEqual') > -1) return; //unsupported function
   if(name.indexOf('Int32x4 lessThanOrEqual') > -1) return; //unsupported function
   if(name.indexOf('Int32x4 notEqual') > -1) return; //unsupported function

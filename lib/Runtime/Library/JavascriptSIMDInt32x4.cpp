@@ -52,20 +52,10 @@ namespace Js
         return JavascriptSIMDInt32x4::New(&result, requestContext);
     }
     
-    JavascriptSIMDInt32x4* JavascriptSIMDInt32x4::FromFloat64x2Bits(JavascriptSIMDFloat64x2 *instance, ScriptContext* requestContext)
-    {
-        return JavascriptSIMDInt32x4::New(&instance->GetValue(), requestContext);
-    }
-
     JavascriptSIMDInt32x4* JavascriptSIMDInt32x4::FromFloat32x4(JavascriptSIMDFloat32x4   *instance, ScriptContext* requestContext)
     {
         SIMDValue result = SIMDInt32x4Operation::OpFromFloat32x4(instance->GetValue());
         return JavascriptSIMDInt32x4::New(&result, requestContext);
-    }
-
-    JavascriptSIMDInt32x4* JavascriptSIMDInt32x4::FromFloat32x4Bits(JavascriptSIMDFloat32x4   *instance, ScriptContext* requestContext)
-    {
-        return JavascriptSIMDInt32x4::New(&instance->GetValue(), requestContext);
     }
 
     BOOL JavascriptSIMDInt32x4::GetProperty(Var originalInstance, PropertyId propertyId, Var* value, PropertyValueInfo* info, ScriptContext* requestContext)

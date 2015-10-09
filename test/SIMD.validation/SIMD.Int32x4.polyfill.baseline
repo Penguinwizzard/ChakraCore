@@ -26,6 +26,12 @@ passed
 ******* Int32x4 mul *******
 passed
 
+******* Int32x4 min *******
+passed
+
+******* Int32x4 max *******
+passed
+
 ******* Int32x4 select *******
 passed
 
@@ -48,4 +54,13 @@ passed
 passed
 
 ******* Int32x4 not *******
+passed
+
+******* Int32x4 shiftLeftByScalar *******
+passed
+
+******* Int32x4 shiftRightByScalar *******
+passed
+
+******* Int32x4 fromInt8x16Bits *******
 passed

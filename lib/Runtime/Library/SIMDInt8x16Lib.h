@@ -42,8 +42,7 @@ namespace Js {
             static FunctionInfo GreaterThanOrEqual;
             // ShiftOps
             static FunctionInfo ShiftLeftByScalar;
-            static FunctionInfo ShiftRightLogicalByScalar;
-            static FunctionInfo ShiftRightArithmeticByScalar;
+            static FunctionInfo ShiftRightByScalar;
             //Shuffle/Swizzle
             static FunctionInfo Shuffle;
             static FunctionInfo Swizzle;
@@ -87,8 +86,7 @@ namespace Js {
         static Var EntryGreaterThanOrEqual(RecyclableObject* function, CallInfo callInfo, ...);
         //// ShiftOps
         static Var EntryShiftLeftByScalar(RecyclableObject* function, CallInfo callInfo, ...);
-        static Var EntryShiftRightLogicalByScalar(RecyclableObject* function, CallInfo callInfo, ...);
-        static Var EntryShiftRightArithmeticByScalar(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryShiftRightByScalar(RecyclableObject* function, CallInfo callInfo, ...);
         //Shuffle/Swizzle
         static Var EntrySwizzle(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryShuffle(RecyclableObject* function, CallInfo callInfo, ...);

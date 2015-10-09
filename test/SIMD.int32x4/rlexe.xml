@@ -112,4 +112,25 @@
       <compile-flags>-Simdjs</compile-flags>
     </default>
   </test>
+  <test>
+    <default>
+      <files>testMinMax.js</files>
+      <baseline>testMinMax.baseline</baseline>
+      <compile-flags>-Simdjs</compile-flags>
+    </default>
+  </test>
+  <test>
+    <default>
+      <files>testLoad.js</files>
+      <baseline>testLoad.baseline</baseline>
+      <compile-flags>-Simdjs</compile-flags>
+    </default>
+  </test>
+  <test>
+    <default>
+      <files>testStore.js</files>
+      <baseline>testStore.baseline</baseline>
+      <compile-flags>-Simdjs</compile-flags>
+    </default>
+  </test>
 </regress-exe>

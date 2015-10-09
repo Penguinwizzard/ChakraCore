@@ -46,8 +46,7 @@ namespace Js {
 
         // ShiftOps
         static SIMDValue OpShiftLeftByScalar(const SIMDValue& value, int count);
-        static SIMDValue OpShiftRightLogicalByScalar(const SIMDValue& value, int count);
-        static SIMDValue OpShiftRightArithmeticByScalar(const SIMDValue& value, int count);
+        static SIMDValue OpShiftRightByScalar(const SIMDValue& value, int count);
 
         // load&store
         //static SIMDValue OpLoad(int* v, const int index); 

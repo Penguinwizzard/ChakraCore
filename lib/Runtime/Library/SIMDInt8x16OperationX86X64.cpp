@@ -289,30 +289,7 @@ namespace Js
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
 
-    SIMDValue SIMDInt8x16Operation::OpShiftRightLogicalByScalar(const SIMDValue& value, int8 count)
-    {
-        X86SIMDValue x86Result;
-        X86SIMDValue tmpaValue = X86SIMDValue::ToX86SIMDValue(value);
-        X86SIMDValue x86tmp1;
-
-        const _x86_SIMDValue X86_LOWBYTE_MASK = { 0x00ff00ff, 0x00ff00ff, 0x00ff00ff, 0x00ff00ff };
-        const _x86_SIMDValue X86_HIGHBYTE_MASK = { 0xff00ff00, 0xff00ff00, 0xff00ff00, 0xff00ff00 };
-
-        if (count < 0 || count > 8)
-            count = 8;
-
-        x86tmp1.m128i_value = _mm_and_si128(tmpaValue.m128i_value, X86_LOWBYTE_MASK.m128i_value);
-        x86tmp1.m128i_value = _mm_srli_epi16(x86tmp1.m128i_value, count);
-
-        tmpaValue.m128i_value = _mm_srli_epi16(tmpaValue.m128i_value, count);
-        tmpaValue.m128i_value = _mm_and_si128(tmpaValue.m128i_value, X86_HIGHBYTE_MASK.m128i_value);
-
-        x86Result.m128i_value = _mm_or_si128(tmpaValue.m128i_value, x86tmp1.m128i_value);
-
-        return X86SIMDValue::ToSIMDValue(x86Result);
-    }
-
-    SIMDValue SIMDInt8x16Operation::OpShiftRightArithmeticByScalar(const SIMDValue& value, int8 count)
+    SIMDValue SIMDInt8x16Operation::OpShiftRightByScalar(const SIMDValue& value, int8 count)
     {
         X86SIMDValue x86Result;
         X86SIMDValue tmpaValue = X86SIMDValue::ToX86SIMDValue(value);

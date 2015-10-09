@@ -23,6 +23,7 @@ namespace Js {
             static FunctionInfo FromFloat64x2Bits;
             static FunctionInfo FromFloat32x4;
             static FunctionInfo FromFloat32x4Bits;
+            static FunctionInfo FromInt8x16Bits;
             // UnaryOps
             static FunctionInfo Abs;
             static FunctionInfo Neg;
@@ -46,13 +47,12 @@ namespace Js {
             static FunctionInfo WithFlagY;
             static FunctionInfo WithFlagZ;
             static FunctionInfo WithFlagW;
-			//Lane access
-			static FunctionInfo ExtractLane;
-			static FunctionInfo ReplaceLane;
+            //Lane access
+            static FunctionInfo ExtractLane;
+            static FunctionInfo ReplaceLane;
             // ShiftOps
-            static FunctionInfo ShiftLeft;
-            static FunctionInfo ShiftRightLogical;
-            static FunctionInfo ShiftRightArithmetic;
+            static FunctionInfo ShiftLeftByScalar;
+            static FunctionInfo ShiftRightByScalar;
             // Others
             static FunctionInfo Swizzle;
             static FunctionInfo Shuffle;
@@ -75,7 +75,6 @@ namespace Js {
         // type-check
         static Var EntryCheck(RecyclableObject* function, CallInfo callInfo, ...);
 
-        static Var EntryZero(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntrySplat(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryBool(RecyclableObject* function, CallInfo callInfo, ...);
 
@@ -83,6 +82,7 @@ namespace Js {
         static Var EntryFromFloat64x2Bits(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryFromFloat32x4(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryFromFloat32x4Bits(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryFromInt8x16Bits(RecyclableObject* function, CallInfo callInfo, ...);
 
         // UnaryOps
         static Var EntryAbs(RecyclableObject* function, CallInfo callInfo, ...);
@@ -105,14 +105,13 @@ namespace Js {
         static Var EntryWithFlagX(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryWithFlagY(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryWithFlagZ(RecyclableObject* function, CallInfo callInfo, ...);
-		static Var EntryWithFlagW(RecyclableObject* function, CallInfo callInfo, ...);
-		// Lane Access
-		static Var EntryExtractLane(RecyclableObject* function, CallInfo callInfo, ...);
-		static Var EntryReplaceLane(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryWithFlagW(RecyclableObject* function, CallInfo callInfo, ...);
+        // Lane Access
+        static Var EntryExtractLane(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryReplaceLane(RecyclableObject* function, CallInfo callInfo, ...);
         // ShiftOps
-        static Var EntryShiftLeft(RecyclableObject* function, CallInfo callInfo, ...);
-        static Var EntryShiftRightLogical(RecyclableObject* function, CallInfo callInfo, ...);
-        static Var EntryShiftRightArithmetic(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryShiftLeftByScalar(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryShiftRightByScalar(RecyclableObject* function, CallInfo callInfo, ...);
         // Others
         static Var EntrySwizzle(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryShuffle(RecyclableObject* function, CallInfo callInfo, ...);

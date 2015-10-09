@@ -43,8 +43,7 @@ namespace Js {
             static FunctionInfo ReplaceLane;
             // ShiftOps
             static FunctionInfo ShiftLeftByScalar; 
-            static FunctionInfo ShiftRightLogicalByScalar; 
-            static FunctionInfo ShiftRightArithmeticByScalar; 
+            static FunctionInfo ShiftRightByScalar; 
             // load&store
             static FunctionInfo Load;       
             static FunctionInfo Store;      
@@ -94,8 +93,7 @@ namespace Js {
 
         // ShiftOps
         static Var EntryShiftLeftByScalar(RecyclableObject* function, CallInfo callInfo, ...);
-        static Var EntryShiftRightLogicalByScalar(RecyclableObject* function, CallInfo callInfo, ...);
-        static Var EntryShiftRightArithmeticByScalar(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryShiftRightByScalar(RecyclableObject* function, CallInfo callInfo, ...);
 
         // load&store
         static Var EntryLoad(RecyclableObject* function, CallInfo callInfo, ...);

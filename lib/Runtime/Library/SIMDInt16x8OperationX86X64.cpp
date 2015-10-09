@@ -283,17 +283,7 @@ namespace Js
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
 
-    SIMDValue SIMDInt16x8Operation::OpShiftRightLogicalByScalar(const SIMDValue& value, int count)
-    {
-        X86SIMDValue x86Result;
-        X86SIMDValue tmpValue = X86SIMDValue::ToX86SIMDValue(value);
-        // Shifts the 8 signed 16-bit integers in a right by count bits while shifting in zeros
-        x86Result.m128i_value = _mm_srli_epi16(tmpValue.m128i_value, count);
-
-        return X86SIMDValue::ToSIMDValue(x86Result);
-    }
-
-    SIMDValue SIMDInt16x8Operation::OpShiftRightArithmeticByScalar(const SIMDValue& value, int count)
+    SIMDValue SIMDInt16x8Operation::OpShiftRightByScalar(const SIMDValue& value, int count)
     {
         X86SIMDValue x86Result;
         X86SIMDValue tmpValue = X86SIMDValue::ToX86SIMDValue(value);

@@ -139,6 +139,18 @@ namespace Js
         return OpFromFloat32x4Bits(v);
     }
 
+    SIMDValue SIMDInt32x4Operation::OpFromInt8x16Bits(const SIMDValue& v)
+    {
+        SIMDValue result;
+
+        result.i32[SIMD_X] = v.i32[SIMD_X];
+        result.i32[SIMD_Y] = v.i32[SIMD_Y];
+        result.i32[SIMD_Z] = v.i32[SIMD_Z];
+        result.i32[SIMD_W] = v.i32[SIMD_W];
+
+        return result;
+    }
+
     // Unary Ops
     SIMDValue SIMDInt32x4Operation::OpAbs(const SIMDValue& value)
     {
@@ -309,7 +321,7 @@ namespace Js
         return result;
     }
 
-       SIMDValue SIMDInt32x4Operation::OpShiftLeft(const SIMDValue& value, int count)
+    SIMDValue SIMDInt32x4Operation::OpShiftLeftByScalar(const SIMDValue& value, int count)
     {
         SIMDValue result;
 
@@ -321,22 +333,7 @@ namespace Js
         return result;
     }
 
-    SIMDValue SIMDInt32x4Operation::OpShiftRightLogical(const SIMDValue& value, int count)
-    {
-        SIMDValue result;
-
-        int nIntMin = INT_MIN; // INT_MIN = -2147483648 = 0x80000000
-        int mask = ~((nIntMin >> count) << 1); // now first count bits are 0
-        // right shift count bits and shift in with 0
-        result.i32[SIMD_X] = (value.i32[SIMD_X] >> count) & mask;
-        result.i32[SIMD_Y] = (value.i32[SIMD_Y] >> count) & mask;
-        result.i32[SIMD_Z] = (value.i32[SIMD_Z] >> count) & mask;
-        result.i32[SIMD_W] = (value.i32[SIMD_W] >> count) & mask;
-
-        return result;
-    }
-
-    SIMDValue SIMDInt32x4Operation::OpShiftRightArithmetic(const SIMDValue& value, int count)
+    SIMDValue SIMDInt32x4Operation::OpShiftRightByScalar(const SIMDValue& value, int count)
     {
         SIMDValue result;
 
@@ -367,7 +364,7 @@ namespace Js
         int result;
 
         // shift right 31 bits while shiftting in with zero 
-        SIMDValue value = SIMDInt32x4Operation::OpShiftRightLogical(v, 31);
+        SIMDValue value = SIMDInt32x4Operation::OpShiftRightByScalar(v, 31);
 
         // extract sign bit from each lane
         int mx = value.i32[SIMD_X];

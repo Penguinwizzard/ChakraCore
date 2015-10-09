@@ -13,8 +13,6 @@ namespace Js {
         static SIMDValue OpInt32x4(int x, int y, int z, int w);
         static SIMDValue OpInt32x4(const SIMDValue& v);
         
-        static SIMDValue OpZero();
-        
         static SIMDValue OpSplat(int x);
         static SIMDValue OpSplat(const SIMDValue& v);
         
@@ -27,6 +25,7 @@ namespace Js {
         static SIMDValue OpFromFloat64x2(const SIMDValue& value);
         static SIMDValue OpFromFloat32x4Bits(const SIMDValue& value);
         static SIMDValue OpFromFloat64x2Bits(const SIMDValue& value);
+        static SIMDValue OpFromInt8x16Bits(const SIMDValue& value);
 
         // Unary Ops
         static SIMDValue OpAbs(const SIMDValue& v);
@@ -46,9 +45,8 @@ namespace Js {
         static SIMDValue OpEqual(const SIMDValue& aValue, const SIMDValue& bValue);
         static SIMDValue OpGreaterThan(const SIMDValue& aValue, const SIMDValue& bValue);
 
-        static SIMDValue OpShiftLeft(const SIMDValue& value, int count);
-        static SIMDValue OpShiftRightLogical(const SIMDValue& value, int count);
-        static SIMDValue OpShiftRightArithmetic(const SIMDValue& value, int count);
+        static SIMDValue OpShiftLeftByScalar(const SIMDValue& value, int count);
+        static SIMDValue OpShiftRightByScalar(const SIMDValue& value, int count);
 
         static SIMDValue OpSelect(const SIMDValue& mV, const SIMDValue& tV, const SIMDValue& fV);
 

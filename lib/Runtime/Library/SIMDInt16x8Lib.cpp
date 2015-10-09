@@ -603,36 +603,7 @@ namespace Js
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"shiftLeftByScalar");
     }
 
-    Var SIMDInt16x8Lib::EntryShiftRightLogicalByScalar(RecyclableObject* function, CallInfo callInfo, ...)
-    {
-        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
-
-        ARGUMENTS(args, callInfo);
-        ScriptContext* scriptContext = function->GetScriptContext();
-
-        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
-        Assert(!(callInfo.Flags & CallFlags_New));
-
-        if (args.Info.Count >= 3 && JavascriptSIMDInt16x8::Is(args[1]))
-        {
-            JavascriptSIMDInt16x8 *a = JavascriptSIMDInt16x8::FromVar(args[1]);
-            Assert(a);
-
-            SIMDValue result, aValue;
-
-            aValue = a->GetValue();
-            //Var countVar = args[2]; // {int} bits Bit count
-            int32 count = JavascriptConversion::ToInt32(args[2], scriptContext);
-
-            result = SIMDInt16x8Operation::OpShiftRightLogicalByScalar(aValue, count);
-
-            return JavascriptSIMDInt16x8::New(&result, scriptContext);
-        }
-
-        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"shiftRightLogicalByScalar");
-    }
-
-    Var SIMDInt16x8Lib::EntryShiftRightArithmeticByScalar(RecyclableObject* function, CallInfo callInfo, ...)
+    Var SIMDInt16x8Lib::EntryShiftRightByScalar(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
 
@@ -653,12 +624,12 @@ namespace Js
             Var countVar = args[2]; // {int} bits Bit count
             int32 count = JavascriptConversion::ToInt32(countVar, scriptContext);
 
-            result = SIMDInt16x8Operation::OpShiftRightArithmeticByScalar(aValue, count);
+            result = SIMDInt16x8Operation::OpShiftRightByScalar(aValue, count);
 
             return JavascriptSIMDInt16x8::New(&result, scriptContext);
         }
 
-        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"shiftRightArithmeticByScalar");
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"shiftRightByScalar");
     }
 
     Var SIMDInt16x8Lib::EntryLoad(RecyclableObject* function, CallInfo callInfo, ...)

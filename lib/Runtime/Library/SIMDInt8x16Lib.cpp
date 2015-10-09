@@ -714,7 +714,7 @@ namespace Js
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt8x16TypeMismatch, L"shiftLeft");
     }
 
-    Var SIMDInt8x16Lib::EntryShiftRightLogicalByScalar(RecyclableObject* function, CallInfo callInfo, ...)
+    Var SIMDInt8x16Lib::EntryShiftRightByScalar(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
 
@@ -735,41 +735,12 @@ namespace Js
             Var countVar = args[2]; // {int} bits Bit count
             int8 count = JavascriptConversion::ToInt8(countVar, scriptContext);
 
-            result = SIMDInt8x16Operation::OpShiftRightLogicalByScalar(aValue, count);
+            result = SIMDInt8x16Operation::OpShiftRightByScalar(aValue, count);
 
             return JavascriptSIMDInt8x16::New(&result, scriptContext);
         }
 
-        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt8x16TypeMismatch, L"shiftRightLogical");
-    }
-
-    Var SIMDInt8x16Lib::EntryShiftRightArithmeticByScalar(RecyclableObject* function, CallInfo callInfo, ...)
-    {
-        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
-
-        ARGUMENTS(args, callInfo);
-        ScriptContext* scriptContext = function->GetScriptContext();
-
-        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
-        Assert(!(callInfo.Flags & CallFlags_New));
-
-        if (args.Info.Count >= 3 && JavascriptSIMDInt8x16::Is(args[1]))
-        {
-            JavascriptSIMDInt8x16 *a = JavascriptSIMDInt8x16::FromVar(args[1]);
-            Assert(a);
-
-            SIMDValue result, aValue;
-
-            aValue = a->GetValue();
-            Var countVar = args[2]; // {int} bits Bit count
-            int8 count = JavascriptConversion::ToInt8(countVar, scriptContext);
-
-            result = SIMDInt8x16Operation::OpShiftRightArithmeticByScalar(aValue, count);
-
-            return JavascriptSIMDInt8x16::New(&result, scriptContext);
-        }
-
-        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt8x16TypeMismatch, L"shiftRightArithmetic");
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt8x16TypeMismatch, L"shiftRightByScalar");
     }
 
     //Shuffle/Swizzle

@@ -361,31 +361,7 @@ namespace Js
         return result;
     }
 
-    SIMDValue SIMDInt16x8Operation::OpShiftRightLogicalByScalar(const SIMDValue& value, int count)
-    {
-        SIMDValue result;
-
-        if (count < 0 || count > 16)
-        {  
-            count = 16;
-        }
-
-        int nIntMin = INT_MIN; // INT_MIN = -2147483648 = 0x80000000
-        int mask = ~((nIntMin >> count) << 1); // now first count bits are 0
-        // right shift count bits and shift in with 0
-        result.i16[0] = (value.i16[0] >> count) & mask;
-        result.i16[1] = (value.i16[1] >> count) & mask;
-        result.i16[2] = (value.i16[2] >> count) & mask;
-        result.i16[3] = (value.i16[3] >> count) & mask;
-        result.i16[4] = (value.i16[4] >> count) & mask;
-        result.i16[5] = (value.i16[5] >> count) & mask;
-        result.i16[6] = (value.i16[6] >> count) & mask;
-        result.i16[7] = (value.i16[7] >> count) & mask;
-
-        return result;
-    }
-
-    SIMDValue SIMDInt16x8Operation::OpShiftRightArithmeticByScalar(const SIMDValue& value, int count)
+    SIMDValue SIMDInt16x8Operation::OpShiftRightByScalar(const SIMDValue& value, int count)
     {
         SIMDValue result;
 

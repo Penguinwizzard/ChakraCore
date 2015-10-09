@@ -56,6 +56,22 @@ function testFromFloat32x4Bits() {
     equal(0x40800000, SIMD.Int32x4.extractLane(b, 3));
 }
 
+function testFromInt8x16Bits() {
+    var m = SIMD.Int8x16.fromInt32x4Bits(SIMD.Int32x4(0x3F800000, 0x40000000, 0x40400000, 0x40800000));
+    var n = SIMD.Int32x4.fromInt8x16Bits(m);
+    WScript.Echo("FromInt8x16Bits");
+    equal(0x3F800000, SIMD.Int32x4.extractLane(n, 0));
+    equal(0x40000000, SIMD.Int32x4.extractLane(n, 1));
+    equal(0x40400000, SIMD.Int32x4.extractLane(n, 2));
+    equal(0x40800000, SIMD.Int32x4.extractLane(n, 3));
+    var a = SIMD.Int8x16(1, 2, 3, 4, 5, 6, 7, 8);
+    var b = SIMD.Int32x4.fromInt8x16Bits(a);
+    equal(0x04030201, SIMD.Int32x4.extractLane(b, 0));
+    equal(0x08070605, SIMD.Int32x4.extractLane(b, 1));
+    equal(0x00000000, SIMD.Int32x4.extractLane(b, 2));
+    equal(0x00000000, SIMD.Int32x4.extractLane(b, 3));
+}
+
 testConstructor();
 testFromFloat32x4();
 testFromFloat32x4Bits();
@@ -80,3 +96,7 @@ testFromFloat32x4Bits();
 testConstructor();
 testFromFloat32x4();
 testFromFloat32x4Bits();
+
+testFromInt8x16Bits();
+testFromInt8x16Bits();
+testFromInt8x16Bits();

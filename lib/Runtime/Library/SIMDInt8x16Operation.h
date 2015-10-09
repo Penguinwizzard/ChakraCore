@@ -43,8 +43,7 @@ namespace Js {
         static SIMDValue OpGreaterThanOrEqual(const SIMDValue& aValue, const SIMDValue& bValue);
 
         static SIMDValue OpShiftLeftByScalar(const SIMDValue& value, int8 count);
-        static SIMDValue OpShiftRightLogicalByScalar(const SIMDValue& value, int8 count);
-        static SIMDValue OpShiftRightArithmeticByScalar(const SIMDValue& value, int8 count);
+        static SIMDValue OpShiftRightByScalar(const SIMDValue& value, int8 count);
 
         //Select
         static SIMDValue OpSelect(const SIMDValue& mV, const SIMDValue& tV, const SIMDValue& fV);
