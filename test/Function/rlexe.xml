@@ -64,6 +64,8 @@
     <default>
       <files>argumentsLimits.js</files>
       <baseline>argumentsLimits.baseline</baseline>
+      <!-- this test takes a long time with dynapogo on chk build -->
+      <tags>exclude_chk</tags>
     </default>
   </test>
   <test>
@@ -303,8 +305,7 @@
       <baseline>FuncBody.bug133933.baseline</baseline>
       <!--Top Level function parsing on first call to script is turned off here, as this tests order of functions executed-->
       <compile-flags>-DeferTopLevelTillFirstCall- -trace:FunctionSourceInfoParse</compile-flags>
-      <!-- bug: prints no output for ch -->
-      <tags>exclude_fre,exclude_dynapogo,exclude_ch</tags>
+      <tags>exclude_fre,exclude_dynapogo</tags>
     </default>
   </test>
   <test>

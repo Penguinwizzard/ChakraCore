@@ -23,7 +23,7 @@
 #include "Language\CodeGenRecyclableData.h"
 #include "Library\JavascriptGenerator.h"
 #include "Library\JavascriptRegularExpression.h"
-#ifdef SIMD_JS_ENABLED
+
 // SIMD types
 #include "Library\JavascriptSIMDFloat32x4.h"
 #include "Library\JavascriptSIMDFloat64x2.h"
@@ -39,7 +39,7 @@
 #include "Library\SIMDFloat64x2Lib.h"
 #include "Library\SIMDInt32x4Lib.h"
 #include "Library\SIMDInt8x16Lib.h"
-#endif
+
 // =================
 // Common Includes
 // =================

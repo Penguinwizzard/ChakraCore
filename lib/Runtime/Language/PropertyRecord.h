@@ -50,6 +50,8 @@ namespace Js
 #endif
         static PropertyRecord * New(Recycler * recycler, JsUtil::CharacterBuffer<WCHAR> const& propertyName);
 
+        static PropertyAttributes DefaultAttributesForPropertyId(PropertyId propertyId, bool __proto__AsDeleted);
+
         PropertyId GetPropertyId() const { return pid; }
         uint GetHashCode() const { return hash; }
 

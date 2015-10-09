@@ -51,6 +51,6 @@ FLAG_RELEASE(IsArrayBufferTransferEnabled, ArrayBufferTransfer)
 FLAG(AreWinRTDelegatesInterfaces, WinRTDelegateInterfaces)
 FLAG_RELEASE(IsWinRTAdaptiveAppsEnabled, WinRTAdaptiveApps)
 #endif
-#ifdef SIMD_JS_ENABLED
+//SIMD_JS
 FLAG_RELEASE(IsSimdjsEnabled, Simdjs)
-#endif
+

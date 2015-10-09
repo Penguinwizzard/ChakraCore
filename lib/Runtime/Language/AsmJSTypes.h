@@ -17,11 +17,9 @@ namespace Js
         AsmJS_ToInt32,
         AsmJS_ToNumber,
         AsmJS_FRound,
-#ifdef SIMD_JS_ENABLED
         AsmJS_Int32x4,
         AsmJS_Float32x4,
         AsmJS_Float64x2,
-#endif
     };
 
     
@@ -78,11 +76,9 @@ namespace Js
             Unsigned,
             Intish,
             Void,
-#ifdef SIMD_JS_ENABLED
             Int32x4,
             Float32x4,
             Float64x2
-#endif
         };
 
     private:
@@ -112,13 +108,11 @@ namespace Js
         bool isSubType( AsmJsType type ) const;
         bool isSuperType( AsmJsType type ) const;
         const wchar_t *toChars() const;
-#ifdef SIMD_JS_ENABLED
         bool isSIMDType() const;
         bool isSIMDInt32x4() const;
         bool isSIMDFloat32x4() const;
         bool isSIMDFloat64x2() const;
         AsmJsRetType toRetType() const;
-#endif
     };
 
     // Represents the subset of AsmJsType that can be used as the return AsmJsType of a
@@ -135,12 +129,9 @@ namespace Js
             Fixnum = AsmJsType::Fixnum,
             Unsigned = AsmJsType::Unsigned,
             Floatish = AsmJsType::Floatish,
-#ifdef SIMD_JS_ENABLED
             Int32x4 = AsmJsType::Int32x4,
             Float32x4 = AsmJsType::Float32x4,
             Float64x2 = AsmJsType::Float64x2
-#endif
-
         };
 
     private:
@@ -187,11 +178,9 @@ namespace Js
             Int = AsmJsType::Int,
             Double = AsmJsType::Double,
             Float = AsmJsType::Float,
-#ifdef SIMD_JS_ENABLED
             Int32x4 = AsmJsType::Int32x4,
             Float32x4 = AsmJsType::Float32x4,
             Float64x2 = AsmJsType::Float64x2
-#endif
         };
 
     private:
@@ -208,12 +197,10 @@ namespace Js
         inline bool isInt()const {return which_ == Int; }
         inline bool isDouble()const {return which_ == Double; }
         inline bool isFloat()const {return which_ == Float; }
-#ifdef SIMD_JS_ENABLED
         inline bool isInt32x4()const    { return which_ == Int32x4; }
         inline bool isFloat32x4()const  { return which_ == Float32x4; }
         inline bool isFloat64x2()const  { return which_ == Float64x2; }
         inline bool isSIMD()    const   { return isInt32x4() || isFloat32x4() || isFloat64x2(); }
-#endif
         bool operator==( AsmJsVarType rhs ) const;
         bool operator!=( AsmJsVarType rhs ) const;
     };
@@ -366,9 +353,7 @@ namespace Js
             double doubleVal;
             float floatVal;
             int intVal;
-#ifdef SIMD_JS_ENABLED
             AsmJsSIMDValue simdVal;
-#endif
         }mConstInitialiser;
     public:
         // Constructors
@@ -386,11 +371,8 @@ namespace Js
         inline void   SetConstInitialiser ( int val )   { mConstInitialiser.intVal = val; }
         inline int    GetIntInitialiser   () const      { return mConstInitialiser.intVal; }
 
-#ifdef SIMD_JS_ENABLED
         inline void SetConstInitialiser(AsmJsSIMDValue val) { mConstInitialiser.simdVal = val; }
         inline AsmJsSIMDValue GetSimdConstInitialiser()      { return mConstInitialiser.simdVal; }
-#endif
-
     };
 
     // AsmJsArgument defines the arguments of a function
@@ -822,12 +804,10 @@ namespace Js
         AsmJsRegisterSpace<int> mIntRegisterSpace;
         AsmJsRegisterSpace<float> mFloatRegisterSpace;
         AsmJsRegisterSpace<double> mDoubleRegisterSpace;
-#ifdef SIMD_JS_ENABLED
         typedef JsUtil::List<AsmJsVarBase*, ArenaAllocator> SIMDVarsList;
         AsmJsRegisterSpace<AsmJsSIMDValue> mSimdRegisterSpace;
         SIMDVarsList                 mSimdVarsList;
-        
-#endif
+
         FuncInfo*       mFuncInfo;
         FunctionBody*   mFuncBody;
         int             mArgOutDepth;
@@ -858,10 +838,8 @@ namespace Js
         template<> inline AsmJsRegisterSpace<double>& GetRegisterSpace(){return mDoubleRegisterSpace;}
         template<> inline AsmJsRegisterSpace<float>& GetRegisterSpace(){ return mFloatRegisterSpace; }
 
-#ifdef SIMD_JS_ENABLED
         template<> inline AsmJsRegisterSpace<AsmJsSIMDValue>& GetRegisterSpace() { return mSimdRegisterSpace; }
         inline SIMDVarsList& GetSimdVarsList()    { return mSimdVarsList;  }
-#endif
 
         /// Wrapper for RegisterSpace methods
         template<typename T> inline RegSlot AcquireRegister   (){return GetRegisterSpace<T>().AcquireRegister();}
@@ -961,9 +939,7 @@ namespace Js
 
         bool mIsHeapBufferConst;
         bool mUsesHeapBuffer;
-#ifdef SIMD_JS_ENABLED
         int mSimdConstCount, mSimdVarCount, mSimdTmpCount, mSimdByteOffset;
-#endif
 
         FunctionBody* asmJsModuleFunctionBody;
     public:
@@ -1002,13 +978,12 @@ namespace Js
         inline void SetUsesHeapBuffer(bool val) { mUsesHeapBuffer = val; }
         inline bool UsesHeapBuffer() const{ return mUsesHeapBuffer; }
 
-#ifdef SIMD_JS_ENABLED
         inline int GetSimdConstCount() const { return mSimdConstCount;  }
         inline int GetSimdVarCount() const { return mSimdVarCount; }
         inline int GetSimdTmpCount() const { return mSimdTmpCount; }
         inline int GetSimdByteOffset() const { return mSimdByteOffset; }
         inline int GetSimdAllCount() const { return GetSimdConstCount() + GetSimdVarCount() + GetSimdTmpCount(); }
-#endif
+
         int GetTotalSizeinBytes()const;
         void SetArgType(AsmJsVarType type, uint index);
         inline AsmJsVarType GetArgType( uint index ) const
@@ -1028,8 +1003,6 @@ namespace Js
 
     };
 
-
-#ifdef SIMD_JS_ENABLED
     // The asm.js spec recognizes this set of builtin SIMD functions.
     // !! Note: keep these grouped by SIMD type
     enum AsmJsSIMDBuiltinFunction
@@ -1130,6 +1103,5 @@ namespace Js
         virtual bool SupportsArgCall(uint argCount, AsmJsType* args, AsmJsRetType& retType) override;
         
     };
-#endif // SIMD_JS_ENABLED
 
 };

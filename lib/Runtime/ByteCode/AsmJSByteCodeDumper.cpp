@@ -38,7 +38,6 @@ namespace Js
             {
                 Output::Print( L"In%hu|0", i );
             }
-#ifdef SIMD_JS_ENABLED
             else if (var.isSIMDType())
             {
                 switch (var.GetWhich())
@@ -54,7 +53,6 @@ namespace Js
                     break;
                 }
             }
-#endif
             else
             {
                 Assert(UNREACHED);
@@ -83,23 +81,20 @@ namespace Js
             floatRegisters.GetTmpCount(),
             floatRegisters.GetFirstTmpRegister());
 
-#ifdef SIMD_JS_ENABLED
         const auto& simdRegisters = func->GetRegisterSpace<AsmJsSIMDValue>();
         Output::Print(
             L"      SIMDs : %u locals (%u temps from SIMD%u)\n",
             simdRegisters.GetVarCount(),
             simdRegisters.GetTmpCount(),
             simdRegisters.GetFirstTmpRegister());
-#endif
+
 
         uint32 statementIndex = 0;
         DumpConstants( func, body );
 
         Output::Print( L"    Implicit Arg Ins:\n    ======== =====\n    " );
         int iArg = intRegisters.GetConstCount(), dArg = doubleRegisters.GetConstCount(), fArg = floatRegisters.GetConstCount();
-#ifdef SIMD_JS_ENABLED
         int simdArg = simdRegisters.GetConstCount();
-#endif
         for( int i = 0; i < argCount; i++ )
         {
             const AsmJsType& var = func->GetArgType( i );
@@ -115,12 +110,10 @@ namespace Js
             {
                 Output::Print( L" I%d  In%d",iArg++, i );
             }
-#ifdef SIMD_JS_ENABLED
             else if (var.isSIMDType())
             {
                 Output::Print(L" SIMD%d  In%d", simdArg++, i);
             }
-#endif
             else
             {
                 Assert(UNREACHED);
@@ -248,7 +241,6 @@ namespace Js
                 ++doubleTable;
             }
         }
-#ifdef SIMD_JS_ENABLED
         // SIMD reg space is un-typed. 
         // We print each register in its 3 possible types to ease debugging.
         const auto& simdRegisters = func->GetRegisterSpace<AsmJsSIMDValue>();
@@ -268,9 +260,6 @@ namespace Js
                 ++simdTable;
             }
         }
-#endif
-
-
         Output::Print(L"\n");
     }
 
@@ -323,7 +312,6 @@ namespace Js
         Output::Print(L" float:%f ", value);
     }
 
-#ifdef SIMD_JS_ENABLED
     // Float32x4
     void AsmJsByteCodeDumper::DumpFloat32x4Reg(RegSlot reg)
     {
@@ -341,7 +329,6 @@ namespace Js
     {
         Output::Print(L"D2_%d ", (int)reg);
     }
-#endif
 
     template <class T>
     void AsmJsByteCodeDumper::DumpElementSlot( OpCodeAsmJs op, const unaligned T * data, FunctionBody * dumpFunction, ByteCodeReader& reader )
@@ -373,7 +360,6 @@ namespace Js
             case OpCodeAsmJs::LdSlot_Db:
                 Output::Print( L" D%d = R%d[%d] ", data->Value, data->Instance, data->SlotIndex );
                 break;
-#ifdef SIMD_JS_ENABLED
             case OpCodeAsmJs::Simd128_LdSlot_F4:
                 Output::Print(L" F4_%d = R%d[%d] ", data->Value, data->Instance, data->SlotIndex);
                 break;
@@ -393,8 +379,6 @@ namespace Js
             case OpCodeAsmJs::Simd128_StSlot_D2:
                 Output::Print(L" R%d[%d]  = D2_%d", data->Instance, data->SlotIndex, data->Value);
                 break;
-
-#endif
             default:
             {
                 AssertMsg(false, "Unknown OpCode for OpLayoutElementSlot");
@@ -515,7 +499,6 @@ namespace Js
         DumpReg(data->R3);
         DumpReg(data->R4);
     }
-#ifdef SIMD_JS_ENABLED
     template <class T>
     void AsmJsByteCodeDumper::DumpAsmReg6(OpCodeAsmJs op, const unaligned T * data, FunctionBody * dumpFunction, ByteCodeReader& reader)
     {
@@ -545,7 +528,6 @@ namespace Js
         DumpReg(data->R1);
         DumpI4(data->C2);
     }
-#endif
     template <class T>
     void AsmJsByteCodeDumper::DumpInt1Double1( OpCodeAsmJs op, const unaligned T * data, FunctionBody * dumpFunction, ByteCodeReader& reader )
     {
@@ -716,7 +698,6 @@ namespace Js
         DumpIntReg( data->I2 );
     }
 
-#ifdef SIMD_JS_ENABLED
     // Float32x4
     template <class T>
     void AsmJsByteCodeDumper::DumpFloat32x4_2(OpCodeAsmJs op, const unaligned T * data, FunctionBody * dumpFunction, ByteCodeReader& reader)
@@ -1149,7 +1130,5 @@ namespace Js
         // data width
         Output::Print(L" %d bytes ", data->DataWidth);
     }
-#endif
-
 }
 #endif

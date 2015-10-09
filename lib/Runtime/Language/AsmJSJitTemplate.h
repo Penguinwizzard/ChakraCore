@@ -186,7 +186,6 @@ namespace Js
 
         CreateTemplate(AsmJsLoopBody, int offset);
 
-#ifdef SIMD_JS_ENABLED
         CreateTemplate(Simd128_Ld_F4, int targetOffsetF4, int srcOffsetF4);
         CreateTemplate(Simd128_Ld_I4, int targetOffsetI4, int srcOffsetI4);
         CreateTemplate(Simd128_Ld_D2, int targetOffsetD2, int srcOffsetD2);
@@ -315,7 +314,6 @@ namespace Js
         CreateTemplate(Simd128_I_Conv_VTF4, int targetOffset, int srcOffset);
         CreateTemplate(Simd128_I_Conv_VTI4, int targetOffset, int srcOffset);
         CreateTemplate(Simd128_I_Conv_VTD2, int targetOffset, int srcOffset);
-#endif
     };
 
 };

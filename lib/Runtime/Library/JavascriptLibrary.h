@@ -248,13 +248,11 @@ namespace Js
         StaticType  * int64NumberTypeStatic;
         StaticType  * uint64NumberTypeStatic;
 
-#ifdef SIMD_JS_ENABLED
         // SIMD
         StaticType * simdFloat32x4TypeStatic;
         StaticType * simdInt32x4TypeStatic;
         StaticType * simdInt8x16TypeStatic;
         StaticType * simdFloat64x2TypeStatic;
-#endif
 
         DynamicType * numberTypeDynamic;
         DynamicType * objectTypes[PreInitializedObjectTypeCount];
@@ -298,13 +296,11 @@ namespace Js
         JavascriptString* booleanTypeDisplayString;
         JavascriptString* numberTypeDisplayString;
 
-#ifdef SIMD_JS_ENABLED
         // SIMD
         JavascriptString* simdFloat32x4DisplayString;
         JavascriptString* simdFloat64x2DisplayString;
         JavascriptString* simdInt32x4DisplayString;
         JavascriptString* simdInt8x16DisplayString;
-#endif
 
         JavascriptString* symbolTypeDisplayString;
         JavascriptString* debuggerDeadZoneBlockVariableString;
@@ -347,8 +343,7 @@ namespace Js
         JavascriptFunction* objectValueOfFunction;
         JavascriptFunction* objectToStringFunction;
 
-#ifdef SIMD_JS_ENABLED
-        // SIMD
+        // SIMD_JS
         // Float32x4
         JavascriptFunction* simdFloat32x4ToStringFunction;
         // Float64x2
@@ -357,7 +352,6 @@ namespace Js
         JavascriptFunction* simdInt32x4ToStringFunction;
         // Int8x16
         JavascriptFunction* simdInt8x16ToStringFunction;
-#endif
 
         UnifiedRegex::RegexPattern * emptyRegexPattern;
 
@@ -432,7 +426,6 @@ namespace Js
         static SimplePropertyDescriptor FunctionWithLengthAndPrototypeTypeDescriptors[2];
 
     public:
-#ifdef SIMD_JS_ENABLED
         // used by inliner. Maps Simd FuncInfo (library func) to equivalent opcode.
         typedef JsUtil::BaseDictionary<FunctionInfo *, Js::OpCode, Recycler> FuncInfoToOpcodeMap;
         FuncInfoToOpcodeMap * simdFuncInfoToOpcodeMap;
@@ -449,7 +442,6 @@ namespace Js
         void AddSimdFuncToMaps(Js::OpCode op, ...);
         Js::OpCode GetSimdOpcodeFromFuncInfo(FunctionInfo * funcInfo);
         bool GetSimdFuncSignatureFromOpcode(Js::OpCode op, SimdFuncSignature &funcSignature);
-#endif
 
         static const ObjectInfoBits EnumFunctionClass = EnumClass_1_Bit;
 
@@ -532,12 +524,10 @@ namespace Js
         JavascriptString* GetBooleanTypeDisplayString() const { return booleanTypeDisplayString; }
         JavascriptString* GetNumberTypeDisplayString() const { return numberTypeDisplayString; }
 
-#ifdef SIMD_JS_ENABLED
         JavascriptString* GetSIMDFloat32x4DisplayString() const { return simdFloat32x4DisplayString; }
         JavascriptString* GetSIMDFloat64x2DisplayString() const { return simdFloat64x2DisplayString; }
         JavascriptString* GetSIMDInt32x4DisplayString()   const { return simdInt32x4DisplayString; }
         JavascriptString* GetSIMDInt8x16DisplayString()   const { return simdInt8x16DisplayString; }
-#endif
 
         JavascriptString* GetSymbolTypeDisplayString() const { return symbolTypeDisplayString; }
         JavascriptString* GetDebuggerDeadZoneBlockVariableString() { Assert(debuggerDeadZoneBlockVariableString); return debuggerDeadZoneBlockVariableString; }
@@ -614,13 +604,11 @@ namespace Js
         DynamicType * GetNumberTypeDynamic() const { return numberTypeDynamic; }
         DynamicType * GetPromiseType() const { return promiseType; }
 
-#ifdef SIMD_JS_ENABLED
-        // SIMD
+        // SIMD_JS
         StaticType* GetSIMDFloat32x4TypeStatic() const { return simdFloat32x4TypeStatic; }
         StaticType* GetSIMDFloat64x2TypeStatic() const { return simdFloat64x2TypeStatic; }
         StaticType* GetSIMDInt32x4TypeStatic()   const { return simdInt32x4TypeStatic; }
         StaticType* GetSIMDInt8x16TypeStatic()   const { return simdInt8x16TypeStatic; }
-#endif
 
         DynamicType * GetObjectLiteralType(uint16 requestedInlineSlotCapacity);
         DynamicType * GetObjectHeaderInlinedLiteralType(uint16 requestedInlineSlotCapacity);
@@ -664,13 +652,11 @@ namespace Js
         JavascriptFunction* GetObjectValueOfFunction() const { return objectValueOfFunction; }
         JavascriptFunction* GetObjectToStringFunction() const { return objectToStringFunction; }
 
-#ifdef SIMD_JS_ENABLED
-        // SIMD
+        // SIMD_JS
         JavascriptFunction* GetSIMDFloat32x4ToStringFunction() const { return simdFloat32x4ToStringFunction;  }
         JavascriptFunction* GetSIMDFloat64x2ToStringFunction() const { return simdFloat64x2ToStringFunction; }
         JavascriptFunction* GetSIMDInt32x4ToStringFunction()   const { return simdInt32x4ToStringFunction; }
         JavascriptFunction* GetSIMDInt8x16ToStringFunction()   const { return simdInt8x16ToStringFunction; }
-#endif
 
         JavascriptFunction* GetDebugObjectNonUserGetterFunction() const { return debugObjectNonUserGetterFunction; }
         JavascriptFunction* GetDebugObjectNonUserSetterFunction() const { return debugObjectNonUserSetterFunction; }
@@ -1048,11 +1034,9 @@ namespace Js
         void InitializeComplexThings();
         void InitializeStaticValues();
         static void __cdecl InitializeMathObject(DynamicObject* mathObject, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
-#ifdef SIMD_JS_ENABLED
-        // SIMD
+        // SIMD_JS
         static void __cdecl InitializeSIMDObject(DynamicObject* simdObject, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
         static void __cdecl InitializeSIMDOpCodeMaps();
-#endif
 
         static void __cdecl InitializeNumberConstructor(DynamicObject* numberConstructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
         static void __cdecl InitializeNumberPrototype(DynamicObject* numberPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
@@ -1181,9 +1165,8 @@ namespace Js
         HRESULT ProfilerRegisterProxy();
         HRESULT ProfilerRegisterReflect();
         HRESULT ProfilerRegisterGenerator();
-#ifdef SIMD_JS_ENABLED
         HRESULT ProfilerRegisterSIMD();
-#endif
+
 #ifdef IR_VIEWER
         HRESULT ProfilerRegisterIRViewer();
 #endif /* IR_VIEWER */

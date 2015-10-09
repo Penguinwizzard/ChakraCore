@@ -115,8 +115,8 @@ int HostExceptionFilter(int exceptionCode, _EXCEPTION_POINTERS *ep)
 
 void __stdcall PrintUsage()
 {
-    wprintf(L"\n\nUsage: ch.exe [flaglist] [filename]\n");
-    ChakraRTInterface::PrintConfigFlagsUsageString();
+    wprintf(L"\nUsage: ch.exe [flaglist] [filename]\n");
+    wprintf(L"Try 'ch.exe -?' for help\n");
 }
 
 // On success the param byteCodeBuffer will be allocated in the function. 

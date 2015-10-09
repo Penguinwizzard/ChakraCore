@@ -281,7 +281,6 @@ namespace Js
         case TypeIds_UInt64Number:
             return scriptContext->GetLibrary()->GetNumberTypeDisplayString();
 
-#ifdef SIMD_JS_ENABLED
         case TypeIds_SIMDFloat32x4:
             if (scriptContext->GetConfig()->IsSimdjsEnabled())
             {
@@ -302,7 +301,6 @@ namespace Js
             {
                 return scriptContext->GetLibrary()->GetSIMDInt8x16DisplayString();
             }
-#endif
 
         default:
 
@@ -9562,7 +9560,7 @@ CommonNumber:
             if (TaggedInt::Is(aRight))
             {
                 // Works whether it is TaggedInt31 or TaggedInt32
-                return ::Math::PointerCastToIntegral<int>(aLeft) >= ::Math::PointerCastToIntegral<int>(aRight);
+                return ::Math::PointerCastToIntegralTruncate<int>(aLeft) >= ::Math::PointerCastToIntegralTruncate<int>(aRight);
             }
             if (JavascriptNumber::Is_NoTaggedIntCheck(aRight))
             {
@@ -9594,7 +9592,7 @@ CommonNumber:
             if (TaggedInt::Is(aRight))
             {
                 // Works whether it is TaggedInt31 or TaggedInt32
-                return ::Math::PointerCastToIntegral<int>(aLeft) <= ::Math::PointerCastToIntegral<int>(aRight);
+                return ::Math::PointerCastToIntegralTruncate<int>(aLeft) <= ::Math::PointerCastToIntegralTruncate<int>(aRight);
             }
 
             if (JavascriptNumber::Is_NoTaggedIntCheck(aRight))
@@ -9758,7 +9756,7 @@ CommonNumber:
             if (TaggedInt::Is(aRight))
             {
                 // Works whether it is TaggedInt31 or TaggedInt32
-                return ::Math::PointerCastToIntegral<int>(aLeft) > ::Math::PointerCastToIntegral<int>(aRight);
+                return ::Math::PointerCastToIntegralTruncate<int>(aLeft) > ::Math::PointerCastToIntegralTruncate<int>(aRight);
             }
             if (JavascriptNumber::Is_NoTaggedIntCheck(aRight))
             {
@@ -9790,7 +9788,7 @@ CommonNumber:
             if (TaggedInt::Is(aRight))
             {
                 // Works whether it is TaggedInt31 or TaggedInt32
-                return ::Math::PointerCastToIntegral<int>(aLeft) < ::Math::PointerCastToIntegral<int>(aRight);
+                return ::Math::PointerCastToIntegralTruncate<int>(aLeft) < ::Math::PointerCastToIntegralTruncate<int>(aRight);
             }
             if (JavascriptNumber::Is_NoTaggedIntCheck(aRight))
             {

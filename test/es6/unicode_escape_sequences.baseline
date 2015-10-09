@@ -27,7 +27,6 @@ true
 true
 true
 true
-["\u0001","\u0010","","","","","","","\u0000"]
 true
 true
 true
@@ -37,17 +36,11 @@ true
 true
 true
 true
-["A","A","A","",""]
 true
-A
 true
-A
 true
-A
 true
-
 true
-
 SyntaxError: Invalid character
 SyntaxError: Invalid character
 SyntaxError: Invalid character

@@ -5,8 +5,6 @@
 #include "RuntimeLibraryPch.h"
 #include "SIMDFloat64x2Operation.h"
 
-#ifdef SIMD_JS_ENABLED
-
 #if _M_IX86 || _M_AMD64
 
 namespace Js
@@ -388,7 +386,5 @@ namespace Js
         return _mm_movemask_pd(v.m128d_value);
     }
 }
-
-#endif
 
 #endif

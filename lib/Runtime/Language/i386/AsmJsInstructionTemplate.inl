@@ -429,7 +429,6 @@ InstructionEnd ( name )
     CMOV(CMOVZ)
 #undef CMOV
 
-#ifdef SIMD_JS_ENABLED
     //SSE2 instructions
 InstructionStart(MOVUPS, 16, 8, AffectOp1)
     Format2Reg(EncodeModRM_2Reg)
@@ -669,4 +668,3 @@ InstructionEnd(MOVMSKPS)
 InstructionStart(MOVMSKPD, 4 | 16, 4, AffectOp1)
     Format2Reg(EncodeModRM_2Reg)
 InstructionEnd(MOVMSKPD)
-#endif

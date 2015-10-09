@@ -38,9 +38,7 @@ namespace Js
         ArenaAllocator* mLocalAlloc;
         // Byte offset of first int and double
         int mIntOffset, mDoubleOffset, mFloatOffset;
-#ifdef SIMD_JS_ENABLED
         int mSimdOffset;
-#endif
         // architecture dependant data to build templatized JIT
         void* mTemplateData;
     public:
@@ -117,7 +115,6 @@ namespace Js
 
         template <class T> void OP_AsmJsLoopBody(const unaligned T* playout);
 
-#ifdef SIMD_JS_ENABLED
         template <class T> void OP_Simd128_LdF4(const unaligned T* playout);
         template <class T> void OP_Simd128_LdI4(const unaligned T* playout);
         template <class T> void OP_Simd128_LdD2(const unaligned T* playout);
@@ -229,10 +226,5 @@ namespace Js
         template <class T> void OP_Simd128_I_Conv_VTF4(const unaligned T* playout);
         template <class T> void OP_Simd128_I_Conv_VTI4(const unaligned T* playout);
         template <class T> void OP_Simd128_I_Conv_VTD2(const unaligned T* playout);
-
-        
-#endif
     };
-
-
 }

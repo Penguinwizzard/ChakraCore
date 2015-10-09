@@ -243,7 +243,6 @@ void ThreadContext::InitAvailableCommit()
 #endif
         AutoSystemInfo::Data.SetAvailableCommit(commit);
     }
-    Assert(commit != 0);
 }
 
 void ThreadContext::SetStackProber(StackProber * stackProber)

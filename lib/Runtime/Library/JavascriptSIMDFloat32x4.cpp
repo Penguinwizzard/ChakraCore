@@ -5,8 +5,6 @@
 #include "RuntimeLibraryPch.h"
 #include "SIMDFloat32x4Operation.h"
 
-#ifdef SIMD_JS_ENABLED
-
 namespace Js
 {
     JavascriptSIMDFloat32x4::JavascriptSIMDFloat32x4(StaticType *type) : RecyclableObject(type)
@@ -145,5 +143,3 @@ namespace Js
         return TaggedInt::ToVarUnchecked(signMask);
     }
 }
-
-#endif

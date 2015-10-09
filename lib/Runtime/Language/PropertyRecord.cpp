@@ -77,6 +77,28 @@ namespace Js
         Throw::FatalInternalError();
     }
 
+
+    PropertyAttributes PropertyRecord::DefaultAttributesForPropertyId(PropertyId propertyId, bool __proto__AsDeleted)
+    {
+        switch (propertyId)
+        {
+        case PropertyIds::__proto__:
+            if (__proto__AsDeleted)
+            {
+                //
+                // If the property name is __proto__, it could be either [[prototype]] or ignored, or become a local
+                // property depending on later environment and property value. To maintain enumeration order when it
+                // becomes a local property, add the entry as deleted.
+                //
+                return PropertyDeletedDefaults;
+            }
+            return PropertyDynamicTypeDefaults;
+
+        default:
+            return PropertyDynamicTypeDefaults;
+        }
+    }
+
     // Initialize all BuiltIn property records
     const BuiltInPropertyRecord<1> BuiltInPropertyRecords::EMPTY = { PropertyRecord(PropertyIds::_none, 0, false, 0, false), L"" };
 #define ENTRY_INTERNAL_SYMBOL(n) const BuiltInPropertyRecord<ARRAYSIZE(L"<" L#n L">")> BuiltInPropertyRecords::n = { PropertyRecord(PropertyIds::n, (uint)PropertyIds::n, false, (ARRAYSIZE(L"<" L#n L">") - 1) * sizeof(wchar_t), true), L"<" L#n L">" };

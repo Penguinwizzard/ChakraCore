@@ -31,9 +31,7 @@ public:
         lowererMDArch(func),
         floatTmpMap(nullptr),
         bvFloatTmpInits(nullptr),
-#ifdef SIMD_JS_ENABLED
         m_simd128OpCodesMap(nullptr)
-#endif
     {
     }
 
@@ -303,7 +301,6 @@ public:
     static void InsertIncUInt8PreventOverflow(IR::Opnd *const dst, IR::Opnd *const src, IR::Instr *const insertBeforeInstr, IR::Instr * *const onOverflowInsertBeforeInstrRef = nullptr);
     static void InsertDecUInt8PreventOverflow(IR::Opnd *const dst, IR::Opnd *const src, IR::Instr *const insertBeforeInstr, IR::Instr * *const onOverflowInsertBeforeInstrRef = nullptr);
 
-#ifdef SIMD_JS_ENABLED
     void                Simd128InitOpcodeMap();
     IR::Instr*          Simd128Instruction(IR::Instr* instr);
     IR::Instr*          Simd128LoadConst(IR::Instr* instr);
@@ -326,7 +323,6 @@ public:
     SList<IR::Opnd*>  * Simd128GetExtendedArgs(IR::Instr *instr);
     void                GenerateCheckedSimdLoad(IR::Instr * instr);
     void                GenerateSimdStore(IR::Instr * instr);
-#endif
 
 private:
     void GenerateFlagInlineCacheCheckForGetterSetter(
@@ -354,7 +350,5 @@ protected:
     LowererMDArch             lowererMDArch;
     StackSymMap              *floatTmpMap;
     BVSparse<JitArenaAllocator> *bvFloatTmpInits;
-#ifdef SIMD_JS_ENABLED
     Js::OpCode              *m_simd128OpCodesMap; // used to map single-opcode SIMD operations
-#endif
 };

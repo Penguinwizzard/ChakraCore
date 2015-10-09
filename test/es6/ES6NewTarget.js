@@ -15,6 +15,20 @@ var tests = [
         }
     },
     {
+        name: "Test new.target in various block scopes'",
+        body: function() {
+            assert.doesNotThrow(function(){{new.target;}}, "new.target one level block do not throw in a function");
+            assert.doesNotThrow(function(){{{new.target;}}}, "new.target two level block do not throw in a function");
+            assert.doesNotThrow(function(){with({}) {new.target;}}, "new.target with scope body call does not throw");
+            assert.doesNotThrow(function() { function parent(x) { new x();}; function child(){ with(new.target) {toString();}}; parent(child); }, "new.target with scope parameter does not throw");
+            assert.doesNotThrow(function(){{if(true){new.target;}}}, "new.target condition block in nested block do not throw in a function");
+            assert.doesNotThrow(function(){try { throw Error;} catch(e){new.target;}}, "new.target catch block do not throw in a function");
+            assert.doesNotThrow(function(){ var a = b = c = 1; try {} catch([a,b,c]) { new.target;}}, "new.target in CatchParamPattern block do not throw in a function");
+            assert.doesNotThrow(function(){ var x = function() {new.target;}; x();}, "new.target in function expression do not throw in a function");
+            assert.doesNotThrow(function(){ var o = { "foo" : function () { new.target}}; o.foo();}, "new.target in named function expression do not throw in a function");
+        }
+    },
+    {
         name: "Test new.target parsing path with badly-formed meta-property references",
         body: function() {
             assert.throws(function() { return new['target']; }, TypeError, "Meta-property new.target is not a real property lookup", "Object doesn't support this action");

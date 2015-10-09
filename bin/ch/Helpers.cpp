@@ -21,12 +21,13 @@ HRESULT Helpers::LoadScriptFromFile(LPCWSTR filename, LPCWSTR& contents, bool* i
     {
         if (printFileOpenError)
         {
+            DWORD lastError = GetLastError();
             wchar_t wszBuff[512];
-            fwprintf(stderr, L"_wfopen of %s failed", filename);
+            fwprintf(stderr, L"Error in opening file '%s' ", filename);
             wszBuff[0] = 0;
             if (FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
                 nullptr,
-                GetLastError(),
+                lastError,
                 0,
                 wszBuff,
                 _countof(wszBuff),

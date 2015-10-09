@@ -2077,37 +2077,28 @@ void Parser::EnsureStackAvailable()
     }
 }
 
+void Parser::ThrowNewTargetSyntaxErrForGlobalScope()
+{
+    //TODO: (falotfi) we need reliably distinguish eval in global scope vs in a function
+    // The rule for this syntax error is any time new.target is called at global scope
+    // we are excluding new.target in eval at global scope for now.
+    if(GetCurrentNonLamdaFunctionNode() == nullptr  && (this->m_grfscr & fscrEvalCode) == 0)
+    {
+        Error(ERRInvalidNewTarget);
+    }
+}
+
 template<bool buildAST>
 ParseNodePtr Parser::ParseMetaProperty(tokens metaParentKeyword, charcount_t ichMin, _Out_opt_ BOOL* pfCanAssign)
 {
     AssertMsg(metaParentKeyword == tkNEW, "Only supported for tkNEW parent keywords");
     AssertMsg(this->m_token.tk == tkDot, "We must be currently sitting on the dot after the parent keyword");
     
-    PnBlock currBlock = GetCurrentBlockInfo()->pnodeBlock->sxBlock;
-    switch (currBlock.scope->GetScopeType())
-    {
-        case ScopeType_GlobalEvalBlock:
-        {
-            break; //TODO we need to distinguish eval in global scope vs in a function
-        }
-        case ScopeType_FunctionBody:
-        {
-            ParseNode* currentFunction = GetCurrentFunctionNode();
-            Assert(currentFunction->nop == knopFncDecl);
-            if (!currentFunction->sxFnc.IsLambda() || GetCurrentNonLamdaFunctionNode() != nullptr)
-            {
-                break;
-            }
-            
-        }
-        default:  
-            Error(ERRInvalidNewTarget);
-    }
-
     m_pscan->Scan();
     
     if (this->m_token.tk == tkID && this->m_token.GetIdentifier(m_phtbl) == this->GetTargetPid())
     {
+        ThrowNewTargetSyntaxErrForGlobalScope();
         if (pfCanAssign)
         {
             *pfCanAssign = FALSE;

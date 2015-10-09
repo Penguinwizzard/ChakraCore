@@ -157,20 +157,15 @@ namespace Js
 
 #if _M_X64
 
-#ifdef SIMD_JS_ENABLED
-    
     // returns an array containing the size of each argument
     uint *GetArgsSizesArray(ScriptFunction* func)
     {
         AsmJsFunctionInfo* info = func->GetFunctionBody()->GetAsmJsFunctionInfo();
         return info->GetArgsSizesArray();
     }
-    
-#endif
 
     int GetStackSizeForAsmJsUnboxing(ScriptFunction* func)
     {
-#ifdef SIMD_JS_ENABLED
         AsmJsFunctionInfo* info = func->GetFunctionBody()->GetAsmJsFunctionInfo();
         int argSize = MachPtr;
         for (uint i = 0; i < info->GetArgCount(); i++)
@@ -185,10 +180,6 @@ namespace Js
             }
         }
         argSize = ::Math::Align<int32>(argSize, 16);
-        
-#else
-        int argSize = ::Math::Align<int32>((func->GetFunctionBody()->GetAsmJsFunctionInfo()->GetArgCount() + 1) * MachPtr, 16);
-#endif
 
         if (argSize < 32)
         {
@@ -259,8 +250,7 @@ namespace Js
                 *(double*)argDst = doubleVal;
                 argDst = argDst + MachPtr;
             }
-#ifdef SIMD_JS_ENABLED
-            else if (SIMD_JS_FLAG && info->GetArgType(i).isSIMD())
+            else if (info->GetArgType(i).isSIMD())
             {
                 AsmJsVarType argType = info->GetArgType(i);
                 AsmJsSIMDValue simdVal = { 0, 0, 0, 0 };
@@ -295,18 +285,14 @@ namespace Js
                 *(AsmJsSIMDValue*)argDst = simdVal;
                 argDst = argDst + sizeof(AsmJsSIMDValue); 
             }
-#endif
             ++origArgs;
         }
         // for convenience, lets take the opportunity to return the asm.js entrypoint address
         return address;
     }
 
-#ifdef SIMD_JS_ENABLED
+
     Var BoxAsmJsReturnValue(ScriptFunction* func, int intRetVal, double doubleRetVal, float floatRetVal, __m128 simdRetVal)
-#else
-    Var BoxAsmJsReturnValue(ScriptFunction* func, int intRetVal, double doubleRetVal, float floatRetVal)
-#endif
     {
         // ExternalEntryPoint doesn't know the return value, so it will send garbage for everything except actual return type
         Var returnValue = nullptr;
@@ -328,7 +314,7 @@ namespace Js
         case AsmJsRetType::Float:{
             returnValue = JavascriptNumber::New(floatRetVal, func->GetScriptContext());
             break;
-#ifdef SIMD_JS_ENABLED
+        }
         case AsmJsRetType::Float32x4:
         {
             X86SIMDValue simdVal;
@@ -350,8 +336,6 @@ namespace Js
             returnValue = JavascriptSIMDFloat64x2::New(&X86SIMDValue::ToSIMDValue(simdVal), func->GetScriptContext());
             break;
         }
-#endif
-        }
         default:
             Assume(UNREACHED);
         }
@@ -362,14 +346,13 @@ namespace Js
 #elif _M_IX86
     Var AsmJsExternalEntryPoint(RecyclableObject* entryObject, CallInfo callInfo, ...)
     {
+        ARGUMENTS(args, callInfo);
         ScriptFunction* func = (ScriptFunction*)entryObject;
         FunctionBody* body = func->GetFunctionBody();
         AsmJsFunctionInfo* info = body->GetAsmJsFunctionInfo();
         ScriptContext* scriptContext = func->GetScriptContext();
-        const int argOffset = 2 * sizeof(void*) + sizeof(Js::RecyclableObject*) + sizeof(Js::CallInfo) + sizeof(Var);
         const uint argInCount = callInfo.Count - 1;
         int argSize = info->GetArgByteSize();
-        Var* args;
         char* dst;
         Var returnValue = 0;
 
@@ -380,9 +363,6 @@ namespace Js
 
         __asm
         {
-            mov eax, ebp
-            add eax, argOffset
-            mov args, eax
             sub esp, argSize
             mov dst, esp
         };
@@ -396,7 +376,7 @@ namespace Js
                 {
                     if (i < argInCount)
                     {
-                        intVal = JavascriptMath::ToInt32(*args, scriptContext);
+                        intVal = JavascriptMath::ToInt32(args.Values[i + 1], scriptContext);
                     }
                     else
                     {
@@ -409,7 +389,7 @@ namespace Js
                 {
                     if (i < argInCount)
                     {
-                        floatVal = (float)(JavascriptConversion::ToNumber(*args, scriptContext));
+                        floatVal = (float)(JavascriptConversion::ToNumber(args.Values[i + 1], scriptContext));
                     }
                     else
                     {
@@ -422,7 +402,7 @@ namespace Js
                 {
                     if (i < argInCount)
                     {
-                        doubleVal = JavascriptConversion::ToNumber(*args, scriptContext);
+                        doubleVal = JavascriptConversion::ToNumber(args.Values[i + 1], scriptContext);
                     }
                     else
                     {
@@ -431,8 +411,7 @@ namespace Js
                     *(double*)dst = doubleVal;
                     dst += sizeof(double);
                 }
-#ifdef SIMD_JS_ENABLED
-                else if (SIMD_JS_FLAG && info->GetArgType(i).isSIMD())
+                else if (info->GetArgType(i).isSIMD())
                 {
                     AsmJsVarType argType = info->GetArgType(i);
                     AsmJsSIMDValue simdVal;
@@ -441,25 +420,25 @@ namespace Js
                     switch (argType.which())
                     {
                     case AsmJsType::Int32x4:
-                        if (!JavascriptSIMDInt32x4::Is(*args))
+                        if (i >= argInCount || !JavascriptSIMDInt32x4::Is(args.Values[i + 1]))
                         {
                             JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt32x4TypeMismatch, L"Int32x4");
                         }
-                        simdVal = ((JavascriptSIMDInt32x4*)(*args))->GetValue();
+                        simdVal = ((JavascriptSIMDInt32x4*)(args.Values[i + 1]))->GetValue();
                         break;
                     case AsmJsType::Float32x4:
-                        if (!JavascriptSIMDFloat32x4::Is(*args))
+                        if (i >= argInCount || !JavascriptSIMDFloat32x4::Is(args.Values[i + 1]))
                         {
                             JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat32x4TypeMismatch, L"Float32x4");
                         }
-                        simdVal = ((JavascriptSIMDFloat32x4*)(*args))->GetValue();
+                        simdVal = ((JavascriptSIMDFloat32x4*)(args.Values[i + 1]))->GetValue();
                         break;
                     case AsmJsType::Float64x2:
-                        if (!JavascriptSIMDFloat64x2::Is(*args))
+                        if (i >= argInCount || !JavascriptSIMDFloat64x2::Is(args.Values[i + 1]))
                         {
                             JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat64x2TypeMismatch, L"Float64x2");
                         }
-                        simdVal = ((JavascriptSIMDFloat64x2*)(*args))->GetValue();
+                        simdVal = ((JavascriptSIMDFloat64x2*)(args.Values[i + 1]))->GetValue();
                         break;
                     default:
                         Assert(UNREACHED);
@@ -467,12 +446,10 @@ namespace Js
                     *(AsmJsSIMDValue*)dst = simdVal;
                     dst += sizeof(AsmJsSIMDValue);
                 }
-#endif
                 else
                 {
                     AssertMsg(UNREACHED, "Invalid function arg type.");
                 }
-                ++args;
             }
         }
 
@@ -537,63 +514,52 @@ namespace Js
             returnValue = JavascriptNumber::New((double)fval, func->GetScriptContext());
             break;
         }
-#ifdef SIMD_JS_ENABLED
         case AsmJsRetType::Int32x4:
             AsmJsSIMDValue simdVal;
             simdVal.Zero();
-            if (SIMD_JS_FLAG)
+            __asm
             {
-                __asm
-                {
-                    mov  ecx, asmJSEntryPoint
+                mov  ecx, asmJSEntryPoint
 #ifdef _CONTROL_FLOW_GUARD
-                    call[__guard_check_icall_fptr]
+                call[__guard_check_icall_fptr]
 #endif
-                    push func
-                    call ecx
-                    movups simdVal, xmm0
-                }
-                returnValue = JavascriptSIMDInt32x4::New(&simdVal, func->GetScriptContext());
-                break;
+                push func
+                call ecx
+                movups simdVal, xmm0
             }
-            Assert(UNREACHED);
+            returnValue = JavascriptSIMDInt32x4::New(&simdVal, func->GetScriptContext());
+            break;
+
         case AsmJsRetType::Float32x4:
             simdVal.Zero();
-            if (SIMD_JS_FLAG)
+            __asm
             {
-                __asm
-                {
-                    mov  ecx, asmJSEntryPoint
+                mov  ecx, asmJSEntryPoint
 #ifdef _CONTROL_FLOW_GUARD
-                    call[__guard_check_icall_fptr]
+                call[__guard_check_icall_fptr]
 #endif
-                    push func
-                    call ecx
-                    movups simdVal, xmm0
-                }
+                push func
+                call ecx
+                movups simdVal, xmm0
+            }
                 returnValue = JavascriptSIMDFloat32x4::New(&simdVal, func->GetScriptContext());
                 break;
-            }
-            Assert(UNREACHED);
+            
         case AsmJsRetType::Float64x2:
             simdVal.Zero();
-            if (SIMD_JS_FLAG)
+            __asm
             {
-                __asm
-                {
-                    mov  ecx, asmJSEntryPoint
+                mov  ecx, asmJSEntryPoint
 #ifdef _CONTROL_FLOW_GUARD
-                    call[__guard_check_icall_fptr]
+                call[__guard_check_icall_fptr]
 #endif
-                    push func
-                    call ecx
-                    movups simdVal, xmm0
-                }
-                returnValue = JavascriptSIMDFloat64x2::New(&simdVal, func->GetScriptContext());
-                break;
+                push func
+                call ecx
+                movups simdVal, xmm0
             }
-            Assert(UNREACHED);
-#endif
+            returnValue = JavascriptSIMDFloat64x2::New(&simdVal, func->GetScriptContext());
+            break;
+
         default:
             Assume(UNREACHED);
         }

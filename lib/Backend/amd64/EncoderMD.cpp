@@ -6,8 +6,6 @@
 
 #include "X64Encode.h"
 
-#pragma warning(disable:4302)  // truncation from 'pointer' to 'integral'
-
 static const BYTE OpcodeByte2[]={
 #define MACRO(name, jnLayout, attrib, byte2, ...) byte2, 
 #include "MdOpcodes.h"
@@ -1327,7 +1325,9 @@ EncoderMD::FixRelocListEntry(uint32 index, int totalBytesSaved, BYTE *buffStart,
         // find the number of nops needed to align this loop top
         if (relocRecord.isAlignedLabel() && !PHASE_OFF(Js::LoopAlignPhase, m_func))
         {
-            uint32 offset = (uint32)newPC - (uint32)buffStart;
+            ptrdiff_t diff = newPC - buffStart;
+            Assert(diff >= 0 && diff <= UINT_MAX);
+            uint32 offset = (uint32)diff;
             // Since the final code buffer is page aligned, it is enough to align the offset of the label.
             BYTE nopCount = (16 - (BYTE)(offset & 0xf)) % 16;
             if (nopCount <= Js::Configuration::Global.flags.LoopAlignNopLimit)

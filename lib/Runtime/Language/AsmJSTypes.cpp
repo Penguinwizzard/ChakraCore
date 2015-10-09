@@ -42,7 +42,6 @@ namespace Js
             Output::Print(L"-I%d\n", loc);
     }
 
-#ifdef SIMD_JS_ENABLED
     template<> void PrintTmpRegisterAllocation<AsmJsSIMDValue>(RegSlot loc)
     {
         if (PHASE_ON1(AsmjsTmpRegisterAllocationPhase))
@@ -54,7 +53,6 @@ namespace Js
         if (PHASE_ON1(AsmjsTmpRegisterAllocationPhase))
             Output::Print(L"-SIMD%d\n", loc);
     }
-#endif
     template<typename T> void PrintTmpRegisterAllocation(RegSlot loc) {}
     template<typename T> void PrintTmpRegisterDeAllocation(RegSlot loc) {}
 #endif
@@ -76,18 +74,14 @@ namespace Js
         case Unsigned:    return L"unsigned";
         case Intish:      return L"intish";
         case Void:        return L"void";
-#ifdef SIMD_JS_ENABLED
         case Int32x4:     return L"SIMD.Int32x4";
         case Float32x4:   return L"SIMD.Float32x4";
         case Float64x2:   return L"SIMD.Float64x2";
-#endif
-
         }
         Assert(false);
         return L"none";
     }
 
-#ifdef SIMD_JS_ENABLED
     bool AsmJsType::isSIMDType() const
     {
         return isSIMDInt32x4() || isSIMDFloat32x4() || isSIMDFloat64x2();
@@ -105,7 +99,6 @@ namespace Js
     {
         return which_ == Float64x2;
     }
-#endif
 
     bool AsmJsType::isVarAsmJsType() const
     {
@@ -231,7 +224,6 @@ namespace Js
         case Js::AsmJsType::Void:
             return isVoid();
             break;
-#ifdef SIMD_JS_ENABLED
         case AsmJsType::Int32x4:
             return isSIMDInt32x4();
             break;
@@ -241,7 +233,6 @@ namespace Js
         case AsmJsType::Float64x2:
             return isSIMDFloat64x2();
             break;
-#endif
         default:
             break;
         }
@@ -298,11 +289,9 @@ namespace Js
         case AsmJS_ToInt32: which_ = Signed; break;
         case AsmJS_ToNumber: which_ = Double; break;
         case AsmJS_FRound: which_ = Float; break;
-#ifdef SIMD_JS_ENABLED
         case AsmJS_Int32x4: which_ = Int32x4; break;
         case AsmJS_Float32x4: which_ = Float32x4; break;
         case AsmJS_Float64x2: which_ = Float64x2; break;
-#endif
         }
     }
 
@@ -330,24 +319,19 @@ namespace Js
 
     Js::AsmJsVarType AsmJsVarType::FromCheckedType(AsmJsType type)
     {
-#ifdef SIMD_JS_ENABLED
         Assert( type.isInt() || type.isMaybeDouble() || type.isFloatish() || type.isSIMDType());
-#else
-        Assert(type.isInt() || type.isMaybeDouble() || type.isFloatish());
-#endif
+
         if (type.isMaybeDouble())
             return Double;
         else if (type.isFloatish())
             return Float;
         else if (type.isInt())
             return Int;
-#ifdef SIMD_JS_ENABLED
         else
         {
             // SIMD type
             return AsmJsVarType::Which(type.GetWhich());
         }
-#endif
 
     }
 
@@ -358,11 +342,9 @@ namespace Js
         case Int:     return AsmJS_ToInt32;
         case Double:  return AsmJS_ToNumber;
         case Float:   return AsmJS_FRound;
-#ifdef SIMD_JS_ENABLED
         case Int32x4:   return AsmJS_Int32x4;
         case Float32x4: return AsmJS_Float32x4;
         case Float64x2: return AsmJS_Float64x2;
-#endif
         }
         Assert(false);
         return AsmJS_ToInt32;
@@ -385,11 +367,9 @@ namespace Js
         case AsmJS_ToInt32: which_ = Int; break;
         case AsmJS_ToNumber: which_ = Double; break;
         case AsmJS_FRound: which_ = Float; break;
-#ifdef SIMD_JS_ENABLED
         case AsmJS_Int32x4: which_ = Int32x4; break;
         case AsmJS_Float32x4: which_ = Float32x4; break;
         case AsmJS_Float64x2: which_ = Float64x2; break;
-#endif
         }
     }
 
@@ -452,14 +432,12 @@ namespace Js
         return (AsmJsMathFunction*)this;
     }
 
-#ifdef SIMD_JS_ENABLED
     template<>
     AsmJsSIMDFunction* Js::AsmJsSymbol::Cast()
     {
         Assert(mType == SIMDBuiltinFunction);
         return  (AsmJsSIMDFunction*) this;
     }
-#endif
     template<>
     AsmJsArrayView* Js::AsmJsSymbol::Cast()
     {
@@ -603,12 +581,10 @@ namespace Js
                 {
                     mArgumentsType[i] = AsmJsType::Int;
                 }
-#ifdef SIMD_JS_ENABLED
                 else if (args[i].isSIMDType())
                 {
                     mArgumentsType[i] = args[i];
                 }
-#endif
                 else
                 {
                     // call did not have valid argument type
@@ -657,12 +633,10 @@ namespace Js
             {
                 bytesize += sizeof(float);
             }
-#ifdef SIMD_JS_ENABLED
             else if (GetArgType(i).isSIMDType())
             {
                 bytesize += sizeof(AsmJsSIMDValue);
             }
-#endif
 #if DBG
             else
             {
@@ -683,7 +657,6 @@ namespace Js
         {
             ArgSlot bytesize = 0;
 
-#ifdef SIMD_JS_ENABLED
             for (uint i = 0; i < GetArgCount(); i++)
             {
                 if (GetArgType(i).isSIMDType())
@@ -696,10 +669,6 @@ namespace Js
                 }
             }
             return bytesize;
-#else
-            return static_cast<ArgSlot>(GetArgCount() * MachPtr);
-#endif // SIMD_JS_ENABLED
-
         }
 #else
         Assert(UNREACHED);
@@ -783,10 +752,8 @@ namespace Js
         , mDoubleRegisterSpace( allocator )
         , mFuncInfo(pnodeFnc->sxFnc.funcInfo)
         , mFuncBody(nullptr)
-#ifdef SIMD_JS_ENABLED
         , mSimdRegisterSpace(allocator)
         , mSimdVarsList(allocator)
-#endif
         , mArgOutDepth(0)
         , mMaxArgOutDepth(0)
         , mDefined( false )
@@ -880,21 +847,18 @@ namespace Js
         const auto& intRegisterSpace = func->GetRegisterSpace<int>();
         const auto& doubleRegisterSpace = func->GetRegisterSpace<double>();
         const auto& floatRegisterSpace = func->GetRegisterSpace<float>();
-
-#ifdef SIMD_JS_ENABLED
         const auto& simdRegisterSpace = func->GetRegisterSpace<AsmJsSIMDValue>();
-#endif
 
         mIntConstCount = (intRegisterSpace.GetConstCount());
         mDoubleConstCount = (doubleRegisterSpace.GetConstCount());
         mFloatConstCount = (floatRegisterSpace.GetConstCount());
-
-#ifdef SIMD_JS_ENABLED
-        if (SIMD_JS_FLAG)
+        
+        bool isSimdjsEnabled = func->GetFuncBody()->GetScriptContext()->GetConfig()->IsSimdjsEnabled();
+        if (isSimdjsEnabled)
         {
             mSimdConstCount = (simdRegisterSpace.GetConstCount());
         }
-#endif
+
         Recycler* recycler = func->GetFuncBody()->GetScriptContext()->GetRecycler();
 
         mArgCount = func->GetArgCount();
@@ -918,21 +882,20 @@ namespace Js
         mIntVarCount = intRegisterSpace.GetVarCount();
         mDoubleVarCount = doubleRegisterSpace.GetVarCount();
         mFloatVarCount = floatRegisterSpace.GetVarCount();
-#ifdef SIMD_JS_ENABLED
-        if (SIMD_JS_FLAG)
+        if (isSimdjsEnabled)
         {
             mSimdVarCount = simdRegisterSpace.GetVarCount();
         }
-#endif
+
         mIntTmpCount = intRegisterSpace.GetTmpCount();
         mDoubleTmpCount = doubleRegisterSpace.GetTmpCount();
         mFloatTmpCount = floatRegisterSpace.GetTmpCount();
-#ifdef SIMD_JS_ENABLED
-        if (SIMD_JS_FLAG)
+
+        if (isSimdjsEnabled)
         {
             mSimdTmpCount = simdRegisterSpace.GetTmpCount();
         }
-#endif
+
         mReturnType = func->GetReturnType();
 
         mIntByteOffset = AsmJsFunctionMemory::RequiredVarConstants * sizeof(Var);
@@ -952,13 +915,13 @@ namespace Js
         // Offset of doubles from (double*)m_localSlot 
         mDoubleByteOffset = (doubleOffset32bitsFix *sizeof(int));
 
-#ifdef SIMD_JS_ENABLED
-        if (SIMD_JS_FLAG)
+
+        if (isSimdjsEnabled)
         {
             const int totalDoubleCount = mDoubleConstCount + mDoubleVarCount + mDoubleTmpCount;
             mSimdByteOffset = mDoubleByteOffset + totalDoubleCount * sizeof(double);
         }
-#endif       
+
         if (PHASE_TRACE1(AsmjsInterpreterStackPhase))
         {
             Output::Print(L"ASMFunctionInfo Stack Data\n");
@@ -967,13 +930,11 @@ namespace Js
             Output::Print(L"IntOffset:%d  IntConstCount:%d  IntVarCount:%d  IntTmpCount:%d\n", mIntByteOffset, mIntConstCount, mIntVarCount, mIntTmpCount);
             Output::Print(L"FloatOffset:%d  FloatConstCount:%d  FloatVarCount:%d FloatTmpCount:%d\n", mFloatByteOffset, mFloatConstCount, mFloatVarCount, mFloatTmpCount);
             Output::Print(L"DoubleOffset:%d  DoubleConstCount:%d  DoubleVarCount:%d  DoubleTmpCount:%d\n", mDoubleByteOffset, mDoubleConstCount, mDoubleVarCount, mDoubleTmpCount);
-#ifdef SIMD_JS_ENABLED
-            if (SIMD_JS_FLAG)
+
+            if (isSimdjsEnabled)
             {
                 Output::Print(L"SimdOffset:%d  SimdConstCount:%d  SimdVarCount:%d  SimdTmpCount:%d\n", mSimdByteOffset, mSimdConstCount, mSimdVarCount, mSimdTmpCount);
             }
-            
-#endif
             Output::Print(L"\n");
         }
 
@@ -984,13 +945,9 @@ namespace Js
     int AsmJsFunctionInfo::GetTotalSizeinBytes() const
     {
         int size = mDoubleByteOffset + (mDoubleConstCount + mDoubleVarCount + mDoubleTmpCount) * sizeof(double);
-#ifdef SIMD_JS_ENABLED
-        if (SIMD_JS_FLAG && GetSimdAllCount())
-        {
-            // No space for alignment is added.
-            size += GetSimdAllCount()* sizeof(AsmJsSIMDValue);
-        }
-#endif
+        
+        // SimdJs values
+        size += GetSimdAllCount()* sizeof(AsmJsSIMDValue);
         return size;
     }
 
@@ -1000,11 +957,8 @@ namespace Js
         Assert(mArgCount != Constants::UninitializedValue);
         AnalysisAssert(index < mArgCount);
 
-#ifdef SIMD_JS_ENABLED
         Assert(type.which() == AsmJsVarType::Int || type.which() == AsmJsVarType::Float || type.which() == AsmJsVarType::Double || type.isSIMD());
-#else
-        Assert(type.which() == AsmJsVarType::Int || type.which() == AsmJsVarType::Float || type.which() == AsmJsVarType::Double);
-#endif
+
         mArgType[index] = type.which();
         mArgSizes[index] = 0;
 
@@ -1014,14 +968,11 @@ namespace Js
             mArgByteSize += sizeof(double);
             mArgSizes[index] = sizeof(double);
         }
-
-#ifdef SIMD_JS_ENABLED
-        else if (SIMD_JS_FLAG && type.isSIMD())
+        else if (type.isSIMD())
         {
             mArgByteSize += sizeof(AsmJsSIMDValue);
             mArgSizes[index] = sizeof(AsmJsSIMDValue);
         }
-#endif
         else
         {
             mArgByteSize += MachPtr;
@@ -1112,7 +1063,6 @@ namespace Js
         return true;
     }
 
-#ifdef SIMD_JS_ENABLED
     AsmJsSIMDFunction::AsmJsSIMDFunction(PropertyName name, ArenaAllocator* allocator, int argCount, AsmJsSIMDBuiltinFunction builtIn, OpCodeAsmJs op, AsmJsRetType retType, ...) :
         AsmJsFunctionDeclaration(name, AsmJsSymbol::SIMDBuiltinFunction, allocator)
         , mBuiltIn(builtIn)
@@ -1217,6 +1167,4 @@ namespace Js
         Assert(this->IsConstructor());
         return GetReturnType().toVarType();
     }
-#endif
-
 }

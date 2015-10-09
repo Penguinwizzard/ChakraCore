@@ -498,7 +498,6 @@ namespace Js
         }
     }
 
-#ifdef SIMD_JS_ENABLED
     template <class T>
     void Js::AsmJsEncoder::OP_Simd128_LdF4(const unaligned T* playout)
     {
@@ -1005,6 +1004,4 @@ namespace Js
     {
         AsmJsJitTemplate::Simd128_I_Conv_VTD2::ApplyTemplate(this, mPc, CalculateOffset<AsmJsSIMDValue>(playout->D2_0), CalculateOffset<AsmJsSIMDValue>(playout->D2_1));
     }
-#endif
-
 }

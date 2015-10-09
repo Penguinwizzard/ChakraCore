@@ -5,8 +5,6 @@
 #include "RuntimeLibraryPch.h"
 #include "SIMDInt8x16Operation.h"
 
-#ifdef SIMD_JS_ENABLED
-
 namespace Js
 {
     JavascriptSIMDInt8x16::JavascriptSIMDInt8x16(SIMDValue *val, StaticType *type) : RecyclableObject(type), value(*val)
@@ -106,5 +104,3 @@ namespace Js
         return JavascriptSIMDInt8x16::New(&this->value, requestContext);
     }
 }
-
-#endif

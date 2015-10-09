@@ -182,10 +182,9 @@ namespace Js
         JavascriptFunction* __proto__getterFunction;
         JavascriptFunction* __proto__setterFunction;
         DynamicObject* mathObject;
-#ifdef SIMD_JS_ENABLED
-        // SIMD
+        // SIMD_JS
         DynamicObject* simdObject;
-#endif
+
         DynamicObject* debugObject;
         DynamicObject* JSONObject;
 #ifdef ENABLE_INTL_OBJECT

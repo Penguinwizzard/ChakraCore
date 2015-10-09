@@ -478,9 +478,7 @@ LowererMD::Init(Lowerer *lowerer)
 {
     m_lowerer = lowerer;
     this->lowererMDArch.Init(this);
-#ifdef SIMD_JS_ENABLED
     Simd128InitOpcodeMap();
-#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -782,7 +780,6 @@ LowererMD::LowerRet(IR::Instr * retInstr)
             
             regType = TyInt32;
         }
-#ifdef SIMD_JS_ENABLED
         else if (asmType.which() == Js::AsmJsRetType::Float32x4)
         {
             regType = TySimd128F4;
@@ -795,7 +792,6 @@ LowererMD::LowerRet(IR::Instr * retInstr)
         {
             regType = TySimd128D2;
         }
-#endif
         else
         {
             Assert(UNREACHED);
@@ -3005,7 +3001,7 @@ LowererMD::GenerateFastAdd(IR::Instr * instrAdd)
     if (opndSrc2->IsAddrOpnd())
     {
         // truncate to untag
-        int value = ::Math::PointerCastToIntegral<int>(opndSrc2->AsAddrOpnd()->m_address);
+        int value = ::Math::PointerCastToIntegralTruncate<int>(opndSrc2->AsAddrOpnd()->m_address);
         if (value == 1)
         {
             instr = IR::Instr::New(Js::OpCode::INC, opndReg, opndReg, this->m_func);

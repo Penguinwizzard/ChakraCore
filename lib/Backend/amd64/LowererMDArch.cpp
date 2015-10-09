@@ -34,12 +34,10 @@ LowererMDArch::GetRegReturnAsmJs(IRType type)
     {
         return RegXMM0;
     }
-#ifdef SIMD_JS_ENABLED
     else if (IRType_IsSimd128(type))
     {
         return RegXMM0;
     }
-#endif
     else
     {
         return RegRAX;
@@ -884,17 +882,15 @@ LowererMDArch::GetArgSlotOpnd(uint16 index, StackSym * argSym)
 
     uint16 argPosition = index;
     
-#if defined(SIMD_JS_ENABLED)
     // Without SIMD the index is the Var offset and is also the argument index. Since each arg = 1 Var.
     // With SIMD, args are of variable length and we need to the argument position in the args list.
-    if (SIMD_JS_FLAG &&
+    if (m_func->GetScriptContext()->GetConfig()->IsSimdjsEnabled() &&
         m_func->GetJnFunction()->GetIsAsmJsFunction() &&
         argSym != nullptr &&
         argSym->m_argPosition != 0)
     {
         argPosition = (uint16)argSym->m_argPosition;
     }
-#endif
 
     IR::Opnd *argSlotOpnd = nullptr;
 
@@ -1511,7 +1507,6 @@ LowererMDArch::LowerEntryInstr(IR::EntryInstr * entryInstr)
                 this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TyFloat64);
                 offset++;
                 break;
-#ifdef SIMD_JS_ENABLED
             case Js::AsmJsVarType::Float32x4:
                 this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TySimd128F4);
                 offset += 2;
@@ -1524,7 +1519,6 @@ LowererMDArch::LowerEntryInstr(IR::EntryInstr * entryInstr)
                 this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TySimd128D2);
                 offset += 2;
                 break;
-#endif
             default:
                 Assume(UNREACHED);
             }
@@ -1782,7 +1776,6 @@ LowererMDArch::LowerExitInstr(IR::ExitInstr * exitInstr)
         case Js::AsmJsRetType::Float:
             retReg = IR::RegOpnd::New(nullptr, this->GetRegReturnAsmJs(TyMachDouble), TyMachDouble, this->m_func);
             break;
-#ifdef SIMD_JS_ENABLED
         case Js::AsmJsRetType::Int32x4:
             retReg = IR::RegOpnd::New(nullptr, this->GetRegReturnAsmJs(TySimd128I4), TySimd128I4, this->m_func);
             break;
@@ -1792,7 +1785,6 @@ LowererMDArch::LowerExitInstr(IR::ExitInstr * exitInstr)
         case Js::AsmJsRetType::Float64x2:
             retReg = IR::RegOpnd::New(nullptr, this->GetRegReturnAsmJs(TySimd128D2), TySimd128D2, this->m_func);
             break;
-#endif
         case Js::AsmJsRetType::Signed:
         case Js::AsmJsRetType::Void:
             retReg = IR::RegOpnd::New(nullptr, this->GetRegReturn(TyMachReg), TyMachReg, this->m_func);

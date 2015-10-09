@@ -32,12 +32,10 @@ LowererMDArch::GetRegReturnAsmJs(IRType type)
     {
         return RegXMM0;
     }
-#ifdef SIMD_JS_ENABLED
     else if (IRType_IsSimd128(type))
     {
         return RegXMM0;
     }
-#endif
     else
     {
         return RegEAX;
@@ -1769,7 +1767,6 @@ LowererMDArch::LowerExitInstrAsmJs(IR::ExitInstr * exitInstr)
     {
         regType = TyFloat32;
     }
-#ifdef SIMD_JS_ENABLED
     else if (asmRetType.toVarType().isFloat32x4())
     {
         regType = TySimd128F4;
@@ -1782,7 +1779,6 @@ LowererMDArch::LowerExitInstrAsmJs(IR::ExitInstr * exitInstr)
     {
         regType = TySimd128D2;
     }
-#endif
     else
     {
         Assert(asmRetType.which() == Js::AsmJsRetType::Signed || asmRetType.which() == Js::AsmJsRetType::Void);

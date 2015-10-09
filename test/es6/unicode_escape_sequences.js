@@ -130,15 +130,12 @@ try{
 ////Valid
 var validStrings = [ "\u{1}", "\u{10}", "\u{100}", "\u{1000}", "\u{10000}", "\u{100000}", "\u{10FFFF}", "\u{00000001000}", "\u{00000000000000000000000000000}"];
 var validIDs = [ "\u{41}", "\u{0041}", "\u{00041}", "\u{20BB7}", "\u{0000000020BB7}" ];
-validStrings.echos();
 validStrings.forEach(function (str) {
     eval("/" + str + "/.test('" + str + "').echo()");
 });
 
-validIDs.echos();
 validIDs.forEach(function (str) {
     eval("/" + str + "/.test('" + str + "').echo()");
-    eval("var " + str + "= '" + str + "'; " + str + ".echo();");
 });
 
 var invalidStrings = ["\\u\{\}", "\\u\{1000000000\}", "\\u\{110000\}"];

@@ -396,8 +396,6 @@
       <files>stringtemplate_basic.js</files>
       <baseline>stringtemplate_basic.baseline</baseline>
       <compile-flags> -ES6StringTemplate</compile-flags>
-      <!-- ch prints ? chars -->
-      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
@@ -490,8 +488,7 @@
       <files>unicode_escape_sequences.js</files>
       <baseline>unicode_escape_sequences.baseline</baseline>
       <compile-flags> -ES6Unicode -ES6RegExSticky</compile-flags>
-      <!-- prints ? in ch where jshost prints nothing -->
-      <tags>exclude_ship,exclude_ch</tags>
+      <tags>exclude_ship</tags>
     </default>
   </test>
   <test>
@@ -1014,7 +1011,7 @@
 <test>
     <default>
         <files>ES6NewTarget.js</files>
-        <compile-flags>-es6classes -args summary -endargs -es6generators</compile-flags>
+        <compile-flags>-es6classes -ES6Destructuring -args summary -endargs -es6generators</compile-flags>
     </default>
 </test>
 
@@ -1051,6 +1048,21 @@
         <files>globalNewTargetSyntaxError.js</files>
         <baseline>globalNewTargetSyntaxError.baseline</baseline>
         <tags>exclude_dynapogo</tags>
+    </default>
+</test>
+<test>
+    <default>
+        <files>globalCatchNewTargetSyntaxError.js</files>
+        <baseline>globalCatchNewTargetSyntaxError.baseline</baseline>
+        <tags>exclude_dynapogo</tags>
+    </default>
+</test>
+<test>
+    <default>
+        <files>globalParamCatchNewTargetSyntaxError.js</files>
+        <baseline>globalParamCatchNewTargetSyntaxError.baseline</baseline>
+        <tags>exclude_dynapogo</tags>
+        <compile-flags>-ES6Destructuring</compile-flags>
     </default>
 </test>
 <test>

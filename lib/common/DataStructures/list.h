@@ -792,7 +792,7 @@ namespace Js
 
         static bool IsItemValid(const TElementType& item)
         {
-            return (item != nullptr && (::Math::PointerCastToIntegral<unsigned int>(item) & 1) == 0);
+            return (item != nullptr && (::Math::PointerCastToIntegralTruncate<unsigned int>(item) & 1) == 0);
         }
 
         bool IsItemValid(TListType* list, int index)
@@ -821,7 +821,7 @@ namespace Js
             int currentFreeIndex = this->freeItemIndex;
             if (currentFreeIndex != -1)
             {
-                unsigned int nextFreeIndex  = ::Math::PointerCastToIntegral<unsigned int>(list->Item(currentFreeIndex));
+                unsigned int nextFreeIndex = ::Math::PointerCastToIntegralTruncate<unsigned int>(list->Item(currentFreeIndex));
 
                 if (nextFreeIndex != ((unsigned int) -1))
                 {

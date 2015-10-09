@@ -4,9 +4,6 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
-#ifdef SIMD_JS_ENABLED
-
-#define SIMD_JS_FLAG Js::Configuration::Global.flags.Simdjs
 #define SIMD128_TYPE_SPEC_FLAG Js::Configuration::Global.flags.Simd128TypeSpec
 
 // The representations below assume little-endian.
@@ -165,5 +162,3 @@ namespace Js {
     template <class SIMDType> 
     void  SIMD128TypedArrayStore(Var arg1, Var arg2, Var simdVar, uint32 dataWidth, ScriptContext *scriptContext);
 }
-
-#endif // SIMD_JS_ENABLED
