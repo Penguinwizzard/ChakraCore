@@ -6144,8 +6144,30 @@ namespace Js
         return simpleJitEntryPointInfo;
     }
 
+    struct History
+    {
+        History* next;
+        FunctionEntryPointInfo* _old;
+        FunctionEntryPointInfo* _new;
+        void* fbOriginalEntryPoint;
+        PVOID stack[16];
+        static void Record(History** h, FunctionEntryPointInfo*const a, FunctionEntryPointInfo*const b, void* original)
+        {
+            while (*h != nullptr) {
+                (*h) = (*h)->next;
+            }
+            (*h) = (History*)malloc(sizeof(History));
+            (*h)->next = nullptr;
+            (*h)->_old = a;
+            (*h)->_new = b;
+            (*h)->fbOriginalEntryPoint = original;
+            CaptureStackBackTrace(0, 16, (*h)->stack, 0);
+        }
+    };
+
     void FunctionBody::SetSimpleJitEntryPointInfo(FunctionEntryPointInfo *const entryPointInfo)
     {
+        History::Record((History**)&simpleJitEntryPointInfoHistory, simpleJitEntryPointInfo, entryPointInfo, this->originalEntryPoint);
         simpleJitEntryPointInfo = entryPointInfo;
     }
 

@@ -16,13 +16,16 @@ namespace Js
     {
         ScriptFunctionTypeExtra* next;
         uint32 codePath;
-        ProxyEntryPointInfo* oldEntryPointInfo;
-        ProxyEntryPointInfo* newEntryPointInfo;
         void* address;
-        void* nativeAddr;
         void* cleanedUpEntryPoint;
+        FunctionEntryPointInfo* oldEntryPointInfo;
+        FunctionEntryPointInfo* oldEntryPointInfoData;
+        FunctionEntryPointInfo* newEntryPointInfo;
+        FunctionEntryPointInfo* newEntryPointInfoData;
         FunctionEntryPointInfo* simpleJitInfoOnFB;
+        FunctionEntryPointInfo* simpleJitInfoOnFBData;
         FunctionBody* fbCopy;
+        FunctionBody* fbCopyData;
         PVOID stack[16];
         StackData* stackData;
     };
@@ -35,7 +38,7 @@ namespace Js
         void SetEntryPointInfo(ProxyEntryPointInfo * entryPointInfo, uint32 codePath, void* cleanedUpEntryPoint = nullptr, void* address = nullptr)
         {          
             auto tmp = (ScriptFunctionTypeExtra*)malloc(sizeof(ScriptFunctionTypeExtra));
-            memset(tmp, 0, sizeof(tmp));
+            memset(tmp, 0, sizeof(ScriptFunctionTypeExtra));
             auto e = this->extra;
             if (e == nullptr)
             {
@@ -48,21 +51,36 @@ namespace Js
             }
             tmp->next = nullptr;
             tmp->codePath = codePath;
-            tmp->oldEntryPointInfo = this->entryPointInfo;
-            tmp->newEntryPointInfo = entryPointInfo;
             tmp->address = address;
+            tmp->oldEntryPointInfo = (FunctionEntryPointInfo*)this->entryPointInfo;
+            if (tmp->oldEntryPointInfo) 
+            {
+                tmp->oldEntryPointInfoData = (FunctionEntryPointInfo*)malloc(sizeof(FunctionEntryPointInfo));
+                memcpy(tmp->oldEntryPointInfoData, tmp->oldEntryPointInfo, sizeof(FunctionEntryPointInfo));
+            }
+            tmp->newEntryPointInfo = (FunctionEntryPointInfo*)entryPointInfo;
+            if (tmp->newEntryPointInfo) 
+            {
+                tmp->newEntryPointInfoData = (FunctionEntryPointInfo*)malloc(sizeof(FunctionEntryPointInfo));
+                memcpy(tmp->newEntryPointInfoData, tmp->newEntryPointInfo, sizeof(FunctionEntryPointInfo));
+            }
+            
             if (this->entryPointInfo->IsFunctionEntryPointInfo()) 
             {
-                tmp->nativeAddr = (void*)((Js::FunctionEntryPointInfo*)this->entryPointInfo)->GetNativeAddress();
-                if (((Js::FunctionEntryPointInfo*)this->entryPointInfo)->functionProxy && ((Js::FunctionEntryPointInfo*)this->entryPointInfo)->functionProxy->IsFunctionBody())
+                if (((FunctionEntryPointInfo*)this->entryPointInfo)->functionProxy && ((FunctionEntryPointInfo*)this->entryPointInfo)->functionProxy->IsFunctionBody())
                 {
-                    if (((Js::FunctionEntryPointInfo*)this->entryPointInfo)->GetFunctionBody()->GetSimpleJitEntryPointInfo()) 
+                    tmp->simpleJitInfoOnFB = ((FunctionEntryPointInfo*)this->entryPointInfo)->GetFunctionBody()->GetSimpleJitEntryPointInfo();
+                    if (tmp->simpleJitInfoOnFB)
                     {
-                        tmp->simpleJitInfoOnFB = (FunctionEntryPointInfo*)malloc(sizeof(FunctionEntryPointInfo));
-                        memcpy(tmp->simpleJitInfoOnFB, ((Js::FunctionEntryPointInfo*)this->entryPointInfo)->GetFunctionBody()->GetSimpleJitEntryPointInfo(), sizeof(FunctionEntryPointInfo));
+                        tmp->simpleJitInfoOnFBData = (FunctionEntryPointInfo*)malloc(sizeof(FunctionEntryPointInfo));
+                        memcpy(tmp->simpleJitInfoOnFBData, tmp->simpleJitInfoOnFB, sizeof(FunctionEntryPointInfo));
                     }
-                    tmp->fbCopy = (FunctionBody*)malloc(sizeof(FunctionBody));
-                    memcpy(tmp->fbCopy, ((Js::FunctionEntryPointInfo*)this->entryPointInfo)->GetFunctionBody(), sizeof(FunctionBody));
+                    tmp->fbCopy = ((FunctionEntryPointInfo*)this->entryPointInfo)->GetFunctionBody();
+                    if (tmp->fbCopy) 
+                    {
+                        tmp->fbCopy = (FunctionBody*)malloc(sizeof(FunctionBody));
+                        memcpy(tmp->fbCopy, ((FunctionEntryPointInfo*)this->entryPointInfo)->GetFunctionBody(), sizeof(FunctionBody));
+                    }
                 }
             }
             tmp->cleanedUpEntryPoint = cleanedUpEntryPoint;
@@ -93,6 +111,7 @@ namespace Js
             {
                 tmp->stackData = nullptr;
             }
+            //end instrumentation
 
             this->entryPointInfo = entryPointInfo;
         }

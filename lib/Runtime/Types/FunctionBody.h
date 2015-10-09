@@ -1855,6 +1855,7 @@ namespace Js
         WriteBarrierPtr<DynamicType*> objLiteralTypes;
         WriteBarrierPtr<FunctionEntryPointInfo> defaultFunctionEntryPointInfo;
         WriteBarrierPtr<FunctionEntryPointInfo> simpleJitEntryPointInfo;
+        void* simpleJitEntryPointInfoHistory;
         WriteBarrierPtr<DynamicProfileInfo> dynamicProfileInfo;
         WriteBarrierPtr<PolymorphicCallSiteInfo> polymorphicCallSiteInfoHead;
         FunctionBailOutRecord * functionBailOutRecord;  // REVIEW: Not used? In any case, appears to be an arena object so doesn't need a write barrier
