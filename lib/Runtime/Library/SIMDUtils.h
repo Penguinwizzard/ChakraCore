@@ -134,6 +134,10 @@ namespace Js {
     template <class SIMDType, int laneCount = 8>
     Var SIMD128SlowShuffle(Var src1, Var src2, Var *lanes, const uint range, ScriptContext* scriptContext);
 
+    //TypeConvert
+    template<class SIMDType1, class SIMDType2>
+    Var SIMDConvertTypeFromBits(SIMDType1 &instance, ScriptContext& requestContext);
+
     //Lane Access
     template<class SIMDType, int laneCount, typename T>
     inline T SIMD128ExtractLane(Var src, Var lane, ScriptContext* scriptContext);

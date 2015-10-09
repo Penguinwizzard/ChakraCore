@@ -192,9 +192,9 @@ var bool8x16 = {
 // Each SIMD type has a corresponding Boolean SIMD type, which is returned by
 // relational ops.
 
-float32x4.boolType = int32x4.boolType = uint32x4.boolType = bool32x4.boolType = int32x4;
-int16x8.boolType = uint16x8.boolType = bool16x8.boolType = int16x8;
-int8x16.boolType = uint8x16.boolType = bool8x16.boolType = int8x16;
+float32x4.boolType = int32x4.boolType = uint32x4.boolType = bool32x4.boolType = bool32x4;
+int16x8.boolType = uint16x8.boolType = bool16x8.boolType = bool16x8;
+int8x16.boolType = uint8x16.boolType = bool8x16.boolType = bool8x16;
 
 // SIMD fromTIMD types.
 float32x4.from = [int32x4, uint32x4];
@@ -429,15 +429,7 @@ function testRelationalOp(type, op, refOp) {
       var a = type.fn.splat(av);
       var b = type.fn.splat(bv);
       var result = type.fn[op](a, b);
-      
-      //when bool types are implemented remove the if statement
-      if(type.boolType.name === "Int8x16") {
-        if(expected) {
-          expected = -1;
-        } else {
-          expected = 0;
-        }
-      }
+
       checkValue(type.boolType, result, function(index) { return expected; });
     }
   }
@@ -732,8 +724,8 @@ function testOperators(type) {
 
   equal('function', typeof inst.toString);
   equal(inst.toString(), simdToString(type, inst));
-  equal('function', typeof inst.toLocaleString);
-  equal(inst.toLocaleString(), simdToLocaleString(type, inst));
+  //equal('function', typeof inst.toLocaleString); //ToDo implement ToLocaleString
+  //equal(inst.toLocaleString(), simdToLocaleString(type, inst));
   // TODO: test valueOf?
 }
 
@@ -1062,20 +1054,9 @@ function test(name, func) {
   if(name.indexOf('Int8x16 fromUint8x16Bits') > -1) return; //unsupported function
   if(name.indexOf('Int8x16 fromUint16x8Bits') > -1) return; //unsupported function
   if(name.indexOf('Int8x16 fromUint32x4Bits') > -1) return; //unsupported function
-  if(name.indexOf('Int8x16 fromInt16x8Bits') > -1) return; //unsupported function
   if(name.indexOf('Int8x16 fromUint8x16') > -1) return; //unsupported function
-  if(name.indexOf('Int8x16 subSaturate') > -1) return; //unsupported function
-  if(name.indexOf('Int8x16 addSaturate') > -1) return; //unsupported function
-  if(name.indexOf('Int8x16 shuffle') > -1) return; //unsupported function
-  if(name.indexOf('Int8x16 swizzle') > -1) return; //unsupported function
-  if(name.indexOf('Int8x16 select') > -1) return; //unsupported function
-  if(name.indexOf('Int8x16 max') > -1) return; //unsupported function
-  if(name.indexOf('Int8x16 min') > -1) return; //unsupported function
-  if(name.indexOf('Int8x16 greaterThanOrEqual') > -1) return; //unsupported function
-  if(name.indexOf('Int8x16 lessThanOrEqual') > -1) return; //unsupported function
-  if(name.indexOf('Int8x16 notEqual') > -1) return; //unsupported function
   if(name.indexOf('Int8x16 value semantics') > -1) return; //unsupported function
-  if(name.indexOf('Int8x16 operators') > -1) return; //unsupported function
+  //if(name.indexOf('Int8x16 operators') > -1) return; //unsupported function
   
   if (skipValueTests && name.indexOf("value semantics") != -1) return;
 

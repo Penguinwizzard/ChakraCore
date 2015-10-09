@@ -100,6 +100,8 @@ ENTRY(fromInt32x4)
 ENTRY(fromInt32x4Bits)
 ENTRY(fromFloat64x2)
 ENTRY(fromFloat64x2Bits)
+ENTRY(fromInt16x8Bits)
+ENTRY(fromInt8x16Bits)
 
 // keep these contiguous
 ENTRY(withFlagX)
