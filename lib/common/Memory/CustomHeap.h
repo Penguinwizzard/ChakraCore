@@ -76,7 +76,7 @@ struct Page: public PageAllocatorAllocation
     // Each bit in the bit vector corresponds to 128 bytes of memory
     // This implies that 128 bytes is the smallest allocation possible
     static const uint Alignment = 128;
-    static const int MaxAllocationSize = 4096;
+    static const uint MaxAllocationSize = 4096;
 };
 
 struct Allocation
@@ -239,7 +239,7 @@ public:
         }
     }
 
-    void DecommitPages(__in char* address, int pageCount, void* segment)
+    void DecommitPages(__in char* address, size_t pageCount, void* segment)
     {
         Assert(segment);
         if (IsPreReservedSegment(segment))
@@ -252,8 +252,10 @@ public:
         }
     }
 
-    bool AllocSecondary(void* segment, ULONG_PTR functionStart, DWORD functionSize, ushort pdataCount, ushort xdataSize, SecondaryAllocation* allocation)
+    bool AllocSecondary(void* segment, ULONG_PTR functionStart, size_t functionSize_t, ushort pdataCount, ushort xdataSize, SecondaryAllocation* allocation)
     {
+        Assert(functionSize_t <= MAXUINT32);
+        DWORD functionSize = static_cast<DWORD>(functionSize_t);
         Assert(segment);
         if (IsPreReservedSegment(segment))
         {
@@ -548,6 +550,6 @@ private:
 // Helpers
 unsigned int log2(size_t number);
 BucketId GetBucketForSize(size_t bytes);
-void FillDebugBreak(__out_bcount_full(byteCount) BYTE* buffer, __in DWORD byteCount);
+void FillDebugBreak(__out_bcount_full(byteCount) BYTE* buffer, __in size_t byteCount);
 };
 }

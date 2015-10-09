@@ -1098,16 +1098,18 @@ void PageAllocatorBase<T>::ClearMinFreePageCount()
 
 template<>
 char *
-PageAllocatorBase<VirtualAllocWrapper>::AllocPages(uint pageCount, PageSegmentBase<VirtualAllocWrapper> ** pageSegment)
+PageAllocatorBase<VirtualAllocWrapper>::AllocPages(size_t pageCount, PageSegmentBase<VirtualAllocWrapper> ** pageSegment)
 {
+    Assert(pageCount <= MAXUINT32);
     Assert(virtualAllocator == nullptr);
     return AllocPagesInternal<true /* noPageAligned */>(pageCount, pageSegment);
 }
 
 template<>
 char *
-PageAllocatorBase<PreReservedVirtualAllocWrapper>::AllocPages(uint pageCount, PageSegmentBase<PreReservedVirtualAllocWrapper> ** pageSegment)
+PageAllocatorBase<PreReservedVirtualAllocWrapper>::AllocPages(size_t pageCount, PageSegmentBase<PreReservedVirtualAllocWrapper> ** pageSegment)
 {
+    Assert(pageCount <= MAXUINT32);
     Assert(virtualAllocator);
     if (virtualAllocator->IsPreReservedRegionPresent())
     {
@@ -1121,8 +1123,9 @@ PageAllocatorBase<PreReservedVirtualAllocWrapper>::AllocPages(uint pageCount, Pa
 
 template<typename T>
 char *
-PageAllocatorBase<T>::AllocPagesPageAligned(uint pageCount, PageSegmentBase<T> ** pageSegment, PageHeapMode pageHeapFlags)
+PageAllocatorBase<T>::AllocPagesPageAligned(size_t pageCount, PageSegmentBase<T> ** pageSegment, PageHeapMode pageHeapFlags)
 {
+    Assert(pageCount <= MAXUINT32);
     return AllocPagesInternal<false /* noPageAligned */>(pageCount, pageSegment, pageHeapFlags);
 }
 
@@ -1334,13 +1337,13 @@ PageAllocatorBase<T>::AddFreePageCount(uint count)
 
 template<typename T>
 void
-PageAllocatorBase<T>::ReleasePages(__in void * address, uint pageCount, __in void * segmentParam)
+PageAllocatorBase<T>::ReleasePages(__in void * address, size_t pageCount, __in void * segmentParam)
 {
+    Assert(pageCount <= this->maxAllocPageCount);
     PageSegmentBase<T> * segment = (PageSegmentBase<T>*) segmentParam;
     ASSERT_THREAD();
     Assert(!HasMultiThreadAccess());
-    Assert(pageCount <= this->maxAllocPageCount);
-
+    
 #if defined(RECYCLER_MEMORY_VERIFY) || defined(ARENA_MEMORY_VERIFY)
     if (disablePageReuse)
     {
@@ -2181,8 +2184,9 @@ HeapPageAllocator<T>::ReleaseDecommitedSegment(__in SegmentBase<T>* segment)
 // decommit the page but don't release it
 template<typename T>
 void
-HeapPageAllocator<T>::DecommitPages(__in char* address, int pageCount = 1)
+HeapPageAllocator<T>::DecommitPages(__in char* address, size_t pageCount = 1)
 {
+    Assert(pageCount <= MAXUINT32);
 #pragma prefast(suppress:__WARNING_WIN32UNRELEASEDVADS, "The remainder of the clean-up is done later.");
     virtualAllocator->Free(address, pageCount * AutoSystemInfo::PageSize, MEM_DECOMMIT);
     LogFreePages(pageCount);

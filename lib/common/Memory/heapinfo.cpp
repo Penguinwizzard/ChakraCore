@@ -1039,10 +1039,10 @@ HeapInfo::SweepSmallNonFinalizable(RecyclerSweep& recyclerSweep)
 
 #if defined(PARTIAL_GC_ENABLED) || defined(CONCURRENT_GC_ENABLED)
 
-uint
+size_t
 HeapInfo::Rescan(RescanFlags flags)
 {
-    uint scannedPageCount = 0;
+    size_t scannedPageCount = 0;
     
     for (uint i = 0; i < HeapConstants::BucketCount; i++)
     {

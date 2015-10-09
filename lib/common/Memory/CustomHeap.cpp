@@ -13,11 +13,6 @@
 #endif
 #include "CustomHeap.h"
 
-#ifdef _M_X64_OR_ARM64
-// TODO: Clean this warning up
-#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
-#endif
-
 namespace Memory
 {
 namespace CustomHeap
@@ -464,7 +459,7 @@ Allocation* Heap::AllocInPage(Page* page, size_t bytes, ushort pdataCount, ushor
 {
     Assert(Math::IsPow2((int32)bytes));
     
-    size_t length = GetChunkSizeForBytes(bytes);
+    uint length = GetChunkSizeForBytes(bytes);
     BVIndex index = GetFreeIndexForPage(page, bytes);
     Assert(index != BVInvalidIndex);
     char* address = page->address + Page::Alignment * index;
@@ -1010,8 +1005,8 @@ inline BucketId GetBucketForSize(size_t bytes)
 // Fills the specified buffer with "debug break" instruction encoding. 
 // If there is any space left after that due to alignment, fill it with 0.
 // static
-void FillDebugBreak(__out_bcount_full(byteCount) BYTE* buffer, __in DWORD byteCount)
-{
+void FillDebugBreak(__out_bcount_full(byteCount) BYTE* buffer, __in size_t byteCount)
+{   
 #if defined(_M_ARM)
     // On ARM there is breakpoint instruction (BKPT) which is 0xBEii, where ii (immediate 8) can be any value, 0xBE in particular.
     // While it could be easier to put 0xBE (same way as 0xCC on x86), BKPT is not recommended -- it may cause unexpected side efffects.

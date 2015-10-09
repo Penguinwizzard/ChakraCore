@@ -210,7 +210,7 @@ private:
     template <SweepMode>
     void SweepObject(Recycler * recycler, LargeObjectHeader * header);
 
-    bool TrimObject(Recycler* recycler, LargeObjectHeader* header, uint sizeOfObject, bool needSuspend = false);
+    bool TrimObject(Recycler* recycler, LargeObjectHeader* header, size_t sizeOfObject, bool needSuspend = false);
 
     void FinalizeObject(Recycler* recycler, LargeObjectHeader* header);
 

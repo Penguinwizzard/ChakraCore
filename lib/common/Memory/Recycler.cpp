@@ -3811,7 +3811,7 @@ Recycler::BackgroundResetWriteWatchAll()
 #endif
 
 #if defined(PARTIAL_GC_ENABLED) || defined(CONCURRENT_GC_ENABLED)
-uint
+size_t
 Recycler::FinishMarkRescan(bool background)
 {
     if (background)
@@ -3837,7 +3837,7 @@ Recycler::FinishMarkRescan(bool background)
     this->isProcessingRescan = true;
 #endif
 
-    uint scannedPageCount = heapBlockMap.Rescan(this, ((flags & RescanFlags_ResetWriteWatch) != 0));
+    size_t scannedPageCount = heapBlockMap.Rescan(this, ((flags & RescanFlags_ResetWriteWatch) != 0));
 
     scannedPageCount += autoHeap.Rescan(flags);
     

@@ -70,7 +70,7 @@ public:
     void VerifyLargeHeapBlockCount();
 
 #if defined(PARTIAL_GC_ENABLED) || defined(CONCURRENT_GC_ENABLED)
-    uint Rescan(RescanFlags flags);
+    size_t Rescan(RescanFlags flags);
     void SweepPendingObjects(RecyclerSweep& recyclerSweep);
 #ifdef PARTIAL_GC_ENABLED
     void FinishPartialCollect(RecyclerSweep * recyclerSweep);
@@ -87,7 +87,7 @@ public:
 #if DBG || defined(RECYCLER_SLOW_CHECK_ENABLED)
     size_t GetLargeHeapBlockCount(bool checkCount = false) const;
 #ifdef RECYCLER_SLOW_CHECK_ENABLED
-    uint Check();
+    size_t Check();
     template <typename TBlockType>
     size_t Check(bool expectFull, bool expectPending, TBlockType * list, TBlockType * tail = nullptr);
 #endif

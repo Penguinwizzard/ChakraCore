@@ -1631,7 +1631,7 @@ private:
 #if defined(PARTIAL_GC_ENABLED) || defined(CONCURRENT_GC_ENABLED)
     size_t RescanMark(DWORD waitTime);
     size_t FinishMark(DWORD waitTime);
-    uint FinishMarkRescan(bool background);
+    size_t FinishMarkRescan(bool background);
     void ProcessTrackedObjects();
 #endif
 
