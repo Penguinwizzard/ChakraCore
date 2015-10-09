@@ -78,8 +78,8 @@ namespace Js
                     tmp->fbCopy = ((FunctionEntryPointInfo*)this->entryPointInfo)->GetFunctionBody();
                     if (tmp->fbCopy) 
                     {
-                        tmp->fbCopy = (FunctionBody*)malloc(sizeof(FunctionBody));
-                        memcpy(tmp->fbCopy, ((FunctionEntryPointInfo*)this->entryPointInfo)->GetFunctionBody(), sizeof(FunctionBody));
+                        tmp->fbCopyData = (FunctionBody*)malloc(sizeof(FunctionBody));
+                        memcpy(tmp->fbCopyData, ((FunctionEntryPointInfo*)this->entryPointInfo)->GetFunctionBody(), sizeof(FunctionBody));
                     }
                 }
             }

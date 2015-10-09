@@ -3482,7 +3482,7 @@ namespace Js
         newFunctionBody->objLiteralCount = this->objLiteralCount;
         newFunctionBody->AllocateObjectLiteralTypeArray();
 
-        newFunctionBody->simpleJitEntryPointInfo = nullptr;
+        newFunctionBody->SetSimpleJitEntryPointInfo(nullptr);
         newFunctionBody->loopInterpreterLimit = loopInterpreterLimit;
         newFunctionBody->ReinitializeExecutionModeAndLimits();
 
@@ -6151,23 +6151,23 @@ namespace Js
         FunctionEntryPointInfo* _new;
         void* fbOriginalEntryPoint;
         PVOID stack[16];
-        static void Record(History** h, FunctionEntryPointInfo*const a, FunctionEntryPointInfo*const b, void* original)
+        static void Record(History** h, FunctionEntryPointInfo*const a, FunctionEntryPointInfo*const b, FunctionBody* fb)
         {
             while (*h != nullptr) {
-                (*h) = (*h)->next;
+                h = &(*h)->next;
             }
             (*h) = (History*)malloc(sizeof(History));
             (*h)->next = nullptr;
             (*h)->_old = a;
             (*h)->_new = b;
-            (*h)->fbOriginalEntryPoint = original;
+            (*h)->fbOriginalEntryPoint = fb->GetOriginalEntryPoint_Unchecked();
             CaptureStackBackTrace(0, 16, (*h)->stack, 0);
         }
     };
 
     void FunctionBody::SetSimpleJitEntryPointInfo(FunctionEntryPointInfo *const entryPointInfo)
     {
-        History::Record((History**)&simpleJitEntryPointInfoHistory, simpleJitEntryPointInfo, entryPointInfo, this->originalEntryPoint);
+        History::Record((History**)&simpleJitEntryPointInfoHistory, simpleJitEntryPointInfo, entryPointInfo, this);
         simpleJitEntryPointInfo = entryPointInfo;
     }
 
