@@ -1250,7 +1250,7 @@ STDAPI_(JsErrorCode) JsCreateTypedArray(_In_ JsTypedArrayType arrayType, _In_ Js
             values[3] = Js::JavascriptNumber::ToVar(elementLength, scriptContext);
         }
 
-        Js::CallInfo info(Js::CallFlags_Value, fromArrayBuffer ? 4 : 2);
+        Js::CallInfo info(Js::CallFlags_New, fromArrayBuffer ? 4 : 2);
         Js::Arguments args(info, values);
 
         switch (arrayType)
@@ -1286,7 +1286,7 @@ STDAPI_(JsErrorCode) JsCreateTypedArray(_In_ JsTypedArrayType arrayType, _In_ Js
             return JsErrorInvalidArgument;
         }
 
-        *result = Js::JavascriptFunction::CallFunction<true>(constructorFunc, constructorFunc->GetEntryPoint(), args);
+        *result = Js::JavascriptFunction::CallAsConstructor(constructorFunc, /* overridingNewTarget = */nullptr, args, scriptContext);
 
         JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(*result));
         return JsNoError;
