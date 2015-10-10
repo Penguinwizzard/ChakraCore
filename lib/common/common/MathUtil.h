@@ -12,8 +12,6 @@
 
 class Math
 {
-    static volatile UINT_PTR RandSeed;
-
 public:
 
     // Explicit cast to integral (may truncate).  Avoids warning C4302 'type cast': truncation

@@ -69,8 +69,7 @@ SegmentBase<T>::Initialize(DWORD allocFlags, bool excludeGuardPages)
     {
         addGuardPages = (this->segmentPageCount * AutoSystemInfo::PageSize) > VirtualAllocThreshold;
 #if _M_IX86_OR_ARM32
-        unsigned int randomNumber;
-        rand_s(&randomNumber);
+        unsigned int randomNumber = static_cast<unsigned int>(Math::Rand());
         addGuardPages = addGuardPages && (randomNumber % 4 == 1);
 #endif
 #if DEBUG
@@ -78,8 +77,7 @@ SegmentBase<T>::Initialize(DWORD allocFlags, bool excludeGuardPages)
 #endif
         if (addGuardPages)
         {
-            unsigned int randomNumber;
-            rand_s(&randomNumber);
+            unsigned int randomNumber = static_cast<unsigned int>(Math::Rand());
             this->leadingGuardPageCount = randomNumber % maxGuardPages + minGuardPages;
             this->trailingGuardPageCount = minGuardPages;
         }
@@ -1226,8 +1224,8 @@ PageAllocatorBase<T>::SnailAllocPages(uint pageCount, PageSegmentBase<T> ** page
 
     Assert(pages == nullptr);
 
-    // At this point, we haven't been able to allocate either from the 
-    // decommitted pages, or from the empty segment list, so we'll 
+    // At this point, we haven't been able to allocate either from the
+    // decommitted pages, or from the empty segment list, so we'll
     // try allocating a segment. In a page allocator with a pre-reserved segment,
     // we're not allowed to allocate additional segments so return here.
     // Otherwise, add a new segment and allocate from it
@@ -1343,7 +1341,7 @@ PageAllocatorBase<T>::ReleasePages(__in void * address, size_t pageCount, __in v
     PageSegmentBase<T> * segment = (PageSegmentBase<T>*) segmentParam;
     ASSERT_THREAD();
     Assert(!HasMultiThreadAccess());
-    
+
 #if defined(RECYCLER_MEMORY_VERIFY) || defined(ARENA_MEMORY_VERIFY)
     if (disablePageReuse)
     {

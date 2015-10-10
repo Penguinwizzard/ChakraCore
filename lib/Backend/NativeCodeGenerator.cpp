@@ -815,7 +815,7 @@ NativeCodeGenerator::CodeGen(PageAllocator * pageAllocator, CodeGenWorkItem* wor
             }
         }
 
-        int v = rand() % 100;
+        int v = Math::Rand() % 100;
         if (v < Js::Configuration::Global.flags.InduceCodeGenFailure)
         {
             switch (v % 3)
