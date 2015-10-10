@@ -152,11 +152,11 @@ namespace Js
         Js::LocalFunctionId GetLocalFunctionId() const { return functionId; }
         virtual void Finalize(bool isShutdown)
         {
+            originalEntryPoint.Cleanup();
         }
 
         virtual void Dispose(bool isShutdown)
         {
-            originalEntryPoint.Cleanup();
         }
 
         virtual void Mark(Recycler *recycler) override { AssertMsg(false, "Mark called on object that isnt TrackableObject"); }
