@@ -9,6 +9,72 @@ namespace Js
     class ParseableFunctionInfo;
     class DeferDeserializeFunctionInfo;
 
+    template <typename T>
+    class SetterRecorder
+    {
+        struct Record
+        {
+            Record* next;
+            T ptr;
+            PVOID stack[14];
+        };
+        T ptr;
+        Record* record;
+    public:
+        SetterRecorder() {}
+        SetterRecorder(T ptr)
+        {
+            record = nullptr;
+            Set(ptr);
+        }
+
+        // Getters
+        T operator->() const { return ptr; }
+        operator T() const { return ptr; }
+        operator void*()const { return ptr; }
+
+        // Setters
+        SetterRecorder& operator=(void * ptr)
+        {
+            Set((T)ptr);
+            return *this;
+        }
+
+        SetterRecorder& operator=(SetterRecorder const& other)
+        {
+            Set(other.ptr);
+            return *this;
+        }
+
+        void Set(T ptr)
+        {
+            Record** h = &record;
+            while (*h != nullptr) {
+                h = &(*h)->next;
+            }
+            (*h) = (Record*)malloc(sizeof(Record));
+            (*h)->next = nullptr;
+            (*h)->ptr = this->ptr;
+            CaptureStackBackTrace(0, 14, (*h)->stack, 0);
+
+            this->ptr = ptr;
+        }
+        void Cleanup() {
+            Record** h = &record;
+            while (*h != nullptr) {
+                auto x = *h;
+                h = &(*h)->next;
+                free(x);
+            }
+        }
+    };
+
+    template<class T>
+    inline bool operator==(SetterRecorder<T>& lhs, const void*& rhs)
+    {
+        return lhs.ptr == (T)rhs;
+    }
+
     class FunctionInfo: public FinalizableObject
     {
         friend class RemoteFunctionBody;
@@ -90,6 +156,7 @@ namespace Js
 
         virtual void Dispose(bool isShutdown)
         {
+            originalEntryPoint.Cleanup();
         }
 
         virtual void Mark(Recycler *recycler) override { AssertMsg(false, "Mark called on object that isnt TrackableObject"); }
@@ -98,7 +165,7 @@ namespace Js
         BOOL IsDeferredParseFunction() const { return ((this->attributes & DeferredParse) == DeferredParse); }
 
     protected:
-        JavascriptMethod originalEntryPoint;
+        SetterRecorder<JavascriptMethod> originalEntryPoint;
         // WriteBarrier-TODO: Fix this? This is used only by proxies to keep the deserialized version around
         // However, proxies are not allocated as write barrier memory currently so its fine to not set the write barrier for this field
         FunctionProxy * functionBodyImpl;     // Implementation of the function- null if the function doesn't have a body
