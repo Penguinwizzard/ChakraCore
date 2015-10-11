@@ -6144,30 +6144,8 @@ namespace Js
         return simpleJitEntryPointInfo;
     }
 
-    struct History
-    {
-        History* next;
-        FunctionEntryPointInfo* _old;
-        FunctionEntryPointInfo* _new;
-        void* fbOriginalEntryPoint;
-        PVOID stack[16];
-        static void Record(History** h, FunctionEntryPointInfo*const a, FunctionEntryPointInfo*const b, FunctionBody* fb)
-        {
-            while (*h != nullptr) {
-                h = &(*h)->next;
-            }
-            (*h) = (History*)malloc(sizeof(History));
-            (*h)->next = nullptr;
-            (*h)->_old = a;
-            (*h)->_new = b;
-            (*h)->fbOriginalEntryPoint = fb->GetOriginalEntryPoint_Unchecked();
-            CaptureStackBackTrace(0, 16, (*h)->stack, 0);
-        }
-    };
-
     void FunctionBody::SetSimpleJitEntryPointInfo(FunctionEntryPointInfo *const entryPointInfo)
     {
-        History::Record((History**)&simpleJitEntryPointInfoHistory, simpleJitEntryPointInfo, entryPointInfo, this);
         simpleJitEntryPointInfo = entryPointInfo;
     }
 
@@ -7166,6 +7144,7 @@ namespace Js
         this->CleanupSourceInfo(isShutdown);
         this->ClearNestedFunctionParentFunctionReference();
         this->CleanupFunctionProxyCounters();
+        simpleJitEntryPointInfo.Cleanup();
     }
 
     void FunctionBody::CleanupSourceInfo(bool isScriptContextClosing)

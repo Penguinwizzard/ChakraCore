@@ -141,7 +141,7 @@ public:
         // assigning NULL don't need write barrier, just cast it and null it out
         memset((void *)dst, 0, sizeof(WriteBarrierPtr<T>) * count);
     }
-private:
+protected:
     T * ptr;
 };
 }

@@ -9,20 +9,42 @@ namespace Js
     class ParseableFunctionInfo;
     class DeferDeserializeFunctionInfo;
 
-    template <typename T>
-    class SetterRecorder
+    template<typename T>
+    struct Record
     {
-        struct Record
-        {
-            Record* next;
-            T ptr;
-            PVOID stack[14];
-        };
+        Record* next;
         T ptr;
-        Record* record;
+        DWORD time;
+        PVOID stack[14];
+        static void DoRecord(Record **h, T ptr)
+        {
+            while (*h != nullptr) {
+                h = &(*h)->next;
+            }
+            (*h) = (Record*)malloc(sizeof(Record));
+            (*h)->next = nullptr;
+            (*h)->ptr = ptr;
+            (*h)->time = ::GetTickCount();
+            CaptureStackBackTrace(0, 14, (*h)->stack, 0);
+        }
+
+        static void Cleanup(Record** h) {
+            while (*h != nullptr) {
+                auto x = *h;
+                h = &(*h)->next;
+                free(x);
+            }
+        }
+    };
+
+    template <typename T, typename R=Record<typename T>>
+    class PointerTracker
+    {
+        T ptr;
+        R* record;
     public:
-        SetterRecorder() {}
-        SetterRecorder(T ptr)
+        PointerTracker() {}
+        PointerTracker(T ptr)
         {
             record = nullptr;
             Set(ptr);
@@ -34,13 +56,13 @@ namespace Js
         operator void*()const { return ptr; }
 
         // Setters
-        SetterRecorder& operator=(void * ptr)
+        PointerTracker& operator=(void * ptr)
         {
             Set((T)ptr);
             return *this;
         }
 
-        SetterRecorder& operator=(SetterRecorder const& other)
+        PointerTracker& operator=(PointerTracker const& other)
         {
             Set(other.ptr);
             return *this;
@@ -48,32 +70,40 @@ namespace Js
 
         void Set(T ptr)
         {
-            Record** h = &record;
-            while (*h != nullptr) {
-                h = &(*h)->next;
-            }
-            (*h) = (Record*)malloc(sizeof(Record));
-            (*h)->next = nullptr;
-            (*h)->ptr = this->ptr;
-            CaptureStackBackTrace(0, 14, (*h)->stack, 0);
-
+            R::DoRecord(&this->record, ptr);
             this->ptr = ptr;
         }
         void Cleanup() {
-            Record** h = &record;
-            while (*h != nullptr) {
-                auto x = *h;
-                h = &(*h)->next;
-                free(x);
-            }
+            R::Cleanup(&this->record);
         }
     };
 
     template<class T>
-    inline bool operator==(SetterRecorder<T>& lhs, const void*& rhs)
+    inline bool operator==(PointerTracker<T>& lhs, const void*& rhs)
     {
         return lhs.ptr == (T)rhs;
     }
+
+    template <typename T>
+    class WriteBarrierPtrWithTracker : public WriteBarrierPtr<T>
+    {
+        Record<T*>* record;
+    public:
+        WriteBarrierPtrWithTracker() {}
+        WriteBarrierPtrWithTracker(T * ptr)
+        {
+            this->record = nullptr;
+            NoWriteBarrierSet(ptr);
+        }
+        void NoWriteBarrierSet(T * ptr)
+        {
+            Record<T*>::DoRecord(&this->record, ptr);
+            this->ptr = ptr;
+        }
+        void Cleanup() {
+            Record<T*>::Cleanup(&this->record);
+        }
+    };
 
     class FunctionInfo: public FinalizableObject
     {
@@ -165,7 +195,7 @@ namespace Js
         BOOL IsDeferredParseFunction() const { return ((this->attributes & DeferredParse) == DeferredParse); }
 
     protected:
-        SetterRecorder<JavascriptMethod> originalEntryPoint;
+        PointerTracker<JavascriptMethod> originalEntryPoint;
         // WriteBarrier-TODO: Fix this? This is used only by proxies to keep the deserialized version around
         // However, proxies are not allocated as write barrier memory currently so its fine to not set the write barrier for this field
         FunctionProxy * functionBodyImpl;     // Implementation of the function- null if the function doesn't have a body
