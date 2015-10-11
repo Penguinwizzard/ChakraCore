@@ -3482,7 +3482,7 @@ namespace Js
         newFunctionBody->objLiteralCount = this->objLiteralCount;
         newFunctionBody->AllocateObjectLiteralTypeArray();
 
-        newFunctionBody->SetSimpleJitEntryPointInfo(nullptr);
+        newFunctionBody->simpleJitEntryPointInfo = nullptr;
         newFunctionBody->loopInterpreterLimit = loopInterpreterLimit;
         newFunctionBody->ReinitializeExecutionModeAndLimits();
 

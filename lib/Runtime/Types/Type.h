@@ -18,6 +18,81 @@ ENUM_CLASS_HELPERS(TypeFlagMask, uint8);
 
 namespace Js
 {
+    template<typename T>
+    struct Record
+    {
+        Record* next;
+        T ptr;
+        DWORD time;
+        PVOID stack[14];
+        static void DoRecord(Record **h, T ptr)
+        {
+            while (*h != nullptr) {
+                h = &(*h)->next;
+            }
+            (*h) = (Record*)malloc(sizeof(Record));
+            (*h)->next = nullptr;
+            (*h)->ptr = ptr;
+            (*h)->time = ::GetTickCount();
+            CaptureStackBackTrace(0, 14, (*h)->stack, 0);
+        }
+
+        static void Cleanup(Record** h) {
+            while (*h != nullptr) {
+                auto x = *h;
+                h = &(*h)->next;
+                free(x);
+            }
+        }
+    };
+
+    template <typename T, typename R = Record<typename T>>
+    class PointerTracker
+    {
+        T ptr;
+        R* record;
+    public:
+        PointerTracker() {}
+        PointerTracker(T ptr)
+        {
+            record = nullptr;
+            Set(ptr);
+        }
+
+        // Getters
+        T operator->() const { return ptr; }
+        operator T() const { return ptr; }
+        operator void*()const { return ptr; }
+
+        // Setters
+        PointerTracker& operator=(void * ptr)
+        {
+            Set((T)ptr);
+            return *this;
+        }
+
+        PointerTracker& operator=(PointerTracker const& other)
+        {
+            Set(other.ptr);
+            return *this;
+        }
+
+        void Set(T ptr)
+        {
+            R::DoRecord(&this->record, ptr);
+            this->ptr = ptr;
+        }
+        void Cleanup() {
+            R::Cleanup(&this->record);
+        }
+    };
+
+    template<class T>
+    inline bool operator==(PointerTracker<T>& lhs, const void*& rhs)
+    {
+        return lhs.ptr == (T)rhs;
+    }
+
     class TypePropertyCache;
     class Type
     {
@@ -32,7 +107,7 @@ namespace Js
         JavascriptLibrary* javascriptLibrary;
                            
         RecyclableObject* prototype;
-        JavascriptMethod entryPoint;        
+        PointerTracker<JavascriptMethod> entryPoint;
     private:
         TypePropertyCache *propertyCache;
     protected:
