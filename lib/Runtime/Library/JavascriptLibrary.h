@@ -37,7 +37,7 @@ namespace Js
     {
         static const uint32 MAX_SIZE = 31;
         SparseArraySegment<int32> *cache[MAX_SIZE];
-        int count;
+        uint32 count;
 
         uint32 AddSegment(SparseArraySegment<int32> *segment)
         {
@@ -58,10 +58,10 @@ namespace Js
 
         bool IsNotFull()
         {
-            return count < CONFIG_FLAG(CopyOnAccessArraySegmentCacheSize);
+            return count < (uint32) CONFIG_FLAG(CopyOnAccessArraySegmentCacheSize);
         }
 
-        bool IsValidIndex(int index)
+        bool IsValidIndex(uint32 index)
         {
             return count && index && index <= count;
         }

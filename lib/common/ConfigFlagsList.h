@@ -638,7 +638,7 @@ PHASE(All)
 
 #define DEFAULT_CONFIG_MaxCopyOnAccessArrayLength (32U)
 #define DEFAULT_CONFIG_MinCopyOnAccessArrayLength (5U)
-#define DEFAULT_CONFIG_CopyOnAccessArraySegmentCacheSize (16)
+#define DEFAULT_CONFIG_CopyOnAccessArraySegmentCacheSize (16U)
 
 #if defined(_M_IX86) || defined(_M_X64)
 #define DEFAULT_CONFIG_LoopAlignNopLimit (6)
