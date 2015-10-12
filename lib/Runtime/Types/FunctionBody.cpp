@@ -7144,7 +7144,6 @@ namespace Js
         this->CleanupSourceInfo(isShutdown);
         this->ClearNestedFunctionParentFunctionReference();
         this->CleanupFunctionProxyCounters();
-        simpleJitEntryPointInfo.Cleanup();
     }
 
     void FunctionBody::CleanupSourceInfo(bool isScriptContextClosing)

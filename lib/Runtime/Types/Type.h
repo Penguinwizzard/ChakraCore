@@ -28,7 +28,7 @@ namespace Js
         PVOID stack[12];
         static void DoRecord(Record **h, T _old, T _new)
         {
-            while (*h != nullptr) {
+            while (h != nullptr && *h != nullptr) {
                 h = &(*h)->next;
             }
             (*h) = (Record*)malloc(sizeof(Record));
@@ -40,9 +40,9 @@ namespace Js
         }
 
         static void Cleanup(Record** h) {
-            while (*h != nullptr) {
+            while (h !=nullptr && *h != nullptr) {
                 auto x = *h;
-                h = &(*h)->next;
+                h = &((*h)->next);
                 free(x);
             }
         }

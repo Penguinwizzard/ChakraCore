@@ -86,7 +86,6 @@ namespace Js
         Js::LocalFunctionId GetLocalFunctionId() const { return functionId; }
         virtual void Finalize(bool isShutdown)
         {
-            originalEntryPoint.Cleanup();
         }
 
         virtual void Dispose(bool isShutdown)
