@@ -9,27 +9,6 @@ namespace Js
     class ParseableFunctionInfo;
     class DeferDeserializeFunctionInfo;
 
-    template <typename T>
-    class WriteBarrierPtrWithTracker : public WriteBarrierPtr<T>
-    {
-        Record<T*>* record;
-    public:
-        WriteBarrierPtrWithTracker() {}
-        WriteBarrierPtrWithTracker(T * ptr)
-        {
-            this->record = nullptr;
-            NoWriteBarrierSet(ptr);
-        }
-        void NoWriteBarrierSet(T * ptr)
-        {
-            Record<T*>::DoRecord(&this->record, ptr);
-            this->ptr = ptr;
-        }
-        void Cleanup() {
-            Record<T*>::Cleanup(&this->record);
-        }
-    };
-
     class FunctionInfo: public FinalizableObject
     {
         friend class RemoteFunctionBody;

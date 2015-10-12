@@ -22,19 +22,21 @@ namespace Js
     struct Record
     {
         Record* next;
-        T ptr;
+        T _old;
+        T _new;
         DWORD time;
-        PVOID stack[14];
-        static void DoRecord(Record **h, T ptr)
+        PVOID stack[12];
+        static void DoRecord(Record **h, T _old, T _new)
         {
             while (*h != nullptr) {
                 h = &(*h)->next;
             }
             (*h) = (Record*)malloc(sizeof(Record));
             (*h)->next = nullptr;
-            (*h)->ptr = ptr;
+            (*h)->_old = _old;
+            (*h)->_new = _new;
             (*h)->time = ::GetTickCount();
-            CaptureStackBackTrace(0, 14, (*h)->stack, 0);
+            CaptureStackBackTrace(0, 12, (*h)->stack, 0);
         }
 
         static void Cleanup(Record** h) {
@@ -87,7 +89,7 @@ namespace Js
 
         void Set(T ptr)
         {
-            R::DoRecord(&this->record, ptr);
+            R::DoRecord(&this->record, this->ptr, ptr);
             this->ptr = ptr;
         }
         void Cleanup() {
@@ -104,6 +106,42 @@ namespace Js
     {
         return lhs.ptr == (T)rhs;
     }
+
+    template <typename T>
+    class WriteBarrierPtrWithTracker : public WriteBarrierPtr<T>
+    {
+        Record<T*>* record;
+    public:
+        WriteBarrierPtrWithTracker()
+        {
+            this->record = nullptr;
+            NoWriteBarrierSet(nullptr);
+        }
+        WriteBarrierPtrWithTracker(T * ptr)
+        {
+            this->record = nullptr;
+            NoWriteBarrierSet(ptr);
+        }
+        ~WriteBarrierPtrWithTracker()
+        {
+            Cleanup();
+        }
+        void NoWriteBarrierSet(T * ptr)
+        {
+            Record<T*>::DoRecord(&this->record, this->ptr, ptr);
+            this->ptr = ptr;
+        }
+        void Cleanup()
+        {
+            if (this->record)
+            {
+                Record<T*>::Cleanup(&this->record);
+                this->record = nullptr;
+            }
+        }
+    };
+
+
 
     class TypePropertyCache;
     class Type
