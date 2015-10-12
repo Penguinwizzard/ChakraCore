@@ -52,11 +52,19 @@ namespace Js
         T ptr;
         R* record;
     public:
-        PointerTracker() {}
+        PointerTracker() 
+        {
+            record = nullptr;
+            Set(nullptr);
+        }
         PointerTracker(T ptr)
         {
             record = nullptr;
             Set(ptr);
+        }
+        ~PointerTracker()
+        {
+            Cleanup();
         }
 
         // Getters
@@ -83,7 +91,11 @@ namespace Js
             this->ptr = ptr;
         }
         void Cleanup() {
-            R::Cleanup(&this->record);
+            if (this->record)
+            {
+                R::Cleanup(&this->record);
+                this->record = nullptr;
+            }
         }
     };
 
