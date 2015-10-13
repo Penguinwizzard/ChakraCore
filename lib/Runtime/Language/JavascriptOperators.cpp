@@ -7957,13 +7957,13 @@ CommonNumber:
         }
 
         // TODO (EquivObjTypeSpec): Invent some form of least recently used eviction scheme.
-        uint index = (reinterpret_cast<uint>(type) >> 4) & (EQUIVALENT_TYPE_CACHE_SIZE - 1);
+        uintptr_t index = (reinterpret_cast<uintptr_t>(type) >> 4) & (EQUIVALENT_TYPE_CACHE_SIZE - 1);
         if (cache->nextEvictionVictim == EQUIVALENT_TYPE_CACHE_SIZE)
         {
             __analysis_assume(index < EQUIVALENT_TYPE_CACHE_SIZE);
             if (equivTypes[index] != nullptr)
             {
-                uint initialIndex = index;
+                uintptr_t initialIndex = index;
                 index = (initialIndex + 1) & (EQUIVALENT_TYPE_CACHE_SIZE - 1);
                 for (; index != initialIndex; index = (index + 1) & (EQUIVALENT_TYPE_CACHE_SIZE - 1))
                 {
