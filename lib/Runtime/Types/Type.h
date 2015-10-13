@@ -26,7 +26,7 @@ namespace Js
         T _old;
         T _new;
         DWORD time;
-        PVOID stack[11];
+        PVOID stack[32-5];
         static void DoRecord(Record **h, T _old, T _new)
         {
             static DWORD recordCounter = 0;
