@@ -406,6 +406,13 @@
   </test>
   <test>
     <default>
+      <files>ES6StringTemplateSlow.js</files>
+      <compile-flags> -ES6StringTemplate -args summary -endargs</compile-flags>
+      <tags>Nightly</tags>
+    </default>
+  </test>
+  <test>
+    <default>
       <files>ES6TypedArrayExtensions.js</files>
       <compile-flags> -ES6 -ES6TypedArrayExtensions -es6tostringtag -ES6ObjectLiterals -ES6Iterators -ES6Species -args summary -endargs</compile-flags>
       <tags>Slow</tags>

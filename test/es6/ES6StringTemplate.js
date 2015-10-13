@@ -440,7 +440,8 @@ after`;
     {
         name: "Octal escape sequences are not allowed in string template literals",
         body: function() {
-            assert.throws(function () { eval('print(`\\0`)'); }, SyntaxError, "Scanning an octal escape sequence throws SyntaxError.", "Octal numeric literals and escape characters not allowed in strict mode");
+            assert.throws(function () { eval('print(`\\00`)'); }, SyntaxError, "Scanning an octal escape sequence throws SyntaxError.", "Octal numeric literals and escape characters not allowed in strict mode");
+            assert.throws(function () { eval('print(`\\01`)'); }, SyntaxError, "Scanning an octal escape sequence throws SyntaxError.", "Octal numeric literals and escape characters not allowed in strict mode");
             assert.throws(function () { eval('print(`\\1`)'); }, SyntaxError, "Scanning an octal escape sequence throws SyntaxError.", "Octal numeric literals and escape characters not allowed in strict mode");
             assert.throws(function () { eval('print(`\\2`)'); }, SyntaxError, "Scanning an octal escape sequence throws SyntaxError.", "Octal numeric literals and escape characters not allowed in strict mode");
             assert.throws(function () { eval('print(`\\3`)'); }, SyntaxError, "Scanning an octal escape sequence throws SyntaxError.", "Octal numeric literals and escape characters not allowed in strict mode");
@@ -448,6 +449,13 @@ after`;
             assert.throws(function () { eval('print(`\\5`)'); }, SyntaxError, "Scanning an octal escape sequence throws SyntaxError.", "Octal numeric literals and escape characters not allowed in strict mode");
             assert.throws(function () { eval('print(`\\6`)'); }, SyntaxError, "Scanning an octal escape sequence throws SyntaxError.", "Octal numeric literals and escape characters not allowed in strict mode");
             assert.throws(function () { eval('print(`\\7`)'); }, SyntaxError, "Scanning an octal escape sequence throws SyntaxError.", "Octal numeric literals and escape characters not allowed in strict mode");
+            assert.throws(function () { eval('print(`\\10`)'); }, SyntaxError, "Scanning an octal escape sequence throws SyntaxError.", "Octal numeric literals and escape characters not allowed in strict mode");
+            assert.throws(function () { eval('print(`\\50`)'); }, SyntaxError, "Scanning an octal escape sequence throws SyntaxError.", "Octal numeric literals and escape characters not allowed in strict mode");
+            assert.throws(function () { eval('print(`\\30`)'); }, SyntaxError, "Scanning an octal escape sequence throws SyntaxError.", "Octal numeric literals and escape characters not allowed in strict mode");
+            assert.throws(function () { eval('print(`\\70`)'); }, SyntaxError, "Scanning an octal escape sequence throws SyntaxError.", "Octal numeric literals and escape characters not allowed in strict mode");
+            assert.throws(function () { eval('print(`\\123`)'); }, SyntaxError, "Scanning an octal escape sequence throws SyntaxError.", "Octal numeric literals and escape characters not allowed in strict mode");
+            assert.throws(function () { eval('print(`\\377`)'); }, SyntaxError, "Scanning an octal escape sequence throws SyntaxError.", "Octal numeric literals and escape characters not allowed in strict mode");
+            
             assert.throws(function () { eval('print(`\\0123`)'); }, SyntaxError, "Scanning an octal escape sequence throws SyntaxError.", "Octal numeric literals and escape characters not allowed in strict mode");
             assert.throws(function () { eval('print(`\\567`)'); }, SyntaxError, "Scanning an octal escape sequence throws SyntaxError.", "Octal numeric literals and escape characters not allowed in strict mode");
         }
@@ -557,6 +565,25 @@ after`;
 			assert.areEqual(`${a}`, "foo", "toString should be called instead of valueOf on the substitution expression");
 		}
 	},
+    {
+        name: "String template converts `\\0` into a null character - not an octal escape sequence",
+        body: function() {
+            assert.areEqual('\0', `\0`, "Simple null escape sequence in string template is treated the same as in a normal string");
+            assert.areEqual('\08', `\08`, "Null escape sequence followed by non-octal number is valid");
+            assert.areEqual('\0abc', `\0abc`, "Null escape sequence followed by non-number is valid");
+            assert.areEqual('\0\0', `\0\0`, "Null escape sequence followed by another null escape sequence is valid");
+            
+            var called = false;
+            function tag(obj) {
+                assert.areEqual('\0', obj[0], "Null escape sequence is cooked into null character");
+                assert.areEqual('\\0', obj.raw[0], "Null escape sequence is not cooked in raw string");
+                called = true;
+            }
+            
+            tag`\0`;
+            assert.isTrue(called);
+		}
+    },
 ];
 
 testRunner.runTests(tests, { verbose: WScript.Arguments[0] != "summary" });
