@@ -18,7 +18,7 @@
     <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
     <Import Project="$(BuildConfig_ARMASM_Path)armasm.props" />
   </ImportGroup>
-  <Import Project="$(BuildConfigPropsPath)Chakra.Build.Props" /> 
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.Props" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
   </PropertyGroup>
@@ -27,6 +27,7 @@
       <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory);$(MSBuildThisFileDirectory)\$(PlatformPathNameAlt);$(MSBuildThisFileDirectory)..\Common;$(MSBuildThisFileDirectory)..\Runtime;$(MSBuildThisFileDirectory)..\Parser;$(ChakraManifestsIncludeDirectory);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>BackEnd.h</PrecompiledHeaderFile>
+      <InlineFunctionExpansion Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Disabled</InlineFunctionExpansion>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(OptimizedBuild)'!='true'">
@@ -409,7 +410,7 @@
       <Project>{1876e800-ad77-48c4-a2f7-e5265f24ac35}</Project>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="$(BuildConfigPropsPath)Chakra.Build.targets" Condition="exists('$(BuildConfigPropsPath)Chakra.Build.targets')"/>
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.targets" Condition="exists('$(BuildConfigPropsPath)Chakra.Build.targets')" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" />

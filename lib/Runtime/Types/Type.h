@@ -18,7 +18,6 @@ ENUM_CLASS_HELPERS(TypeFlagMask, uint8);
 
 namespace Js
 {
-    static volatile DWORD recordCounter = 0;
     template<typename T, DWORD MAGIC>
     struct Record
     {
@@ -27,9 +26,10 @@ namespace Js
         T _old;
         T _new;
         DWORD time;
-        PVOID stack[12];
+        PVOID stack[11];
         static void DoRecord(Record **h, T _old, T _new)
         {
+            static DWORD recordCounter = 0;
             while (h != nullptr && *h != nullptr) {
                 h = &(*h)->next;
             }
@@ -51,7 +51,7 @@ namespace Js
         }
     };
 
-    template <typename T, DWORD MAGIC = 0x11111111, typename R = Record<typename T, MAGIC>>
+    template <typename T, DWORD MAGIC = 0x77777777, typename R = Record<typename T, MAGIC>>
     class PointerTracker
     {
         T ptr;
@@ -95,7 +95,8 @@ namespace Js
             R::DoRecord(&this->record, this->ptr, ptr);
             this->ptr = ptr;
         }
-        void Cleanup() {
+        void Cleanup() 
+        {
             if (this->record)
             {
                 R::Cleanup(&this->record);
@@ -110,9 +111,10 @@ namespace Js
         return lhs.ptr == (T)rhs;
     }
 
-    template <typename T, DWORD MAGIC = 0x11111111>
-    class WriteBarrierPtrWithTracker : public WriteBarrierPtr<T>
+    template <typename T, DWORD MAGIC = 0x88888888>
+    class WriteBarrierPtrWithTracker
     {
+        T * ptr;
         Record<T*, MAGIC>* record;
     public:
         WriteBarrierPtrWithTracker()
@@ -129,6 +131,24 @@ namespace Js
         {
             Cleanup();
         }
+
+        T * operator->() const { return ptr; }
+        operator T*() const { return ptr; }
+
+        // Setters
+        WriteBarrierPtrWithTracker& operator=(T * ptr)
+        {
+            WriteBarrierSet(ptr);
+            return *this;
+        }
+        void WriteBarrierSet(T * ptr)
+        {
+            NoWriteBarrierSet(ptr);
+#ifdef RECYCLER_WRITE_BARRIER
+            RecyclerWriteBarrierManager::WriteBarrier(this);
+#endif
+        }
+
         void NoWriteBarrierSet(T * ptr)
         {
             Record<T*, MAGIC>::DoRecord(&this->record, this->ptr, ptr);
