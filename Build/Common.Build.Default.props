@@ -59,7 +59,8 @@
     <OutBaseDir Condition="'$(OutBaseDir)'==''">$(SolutionDir)VcBuild</OutBaseDir>
     <IntBaseDir Condition="'$(IntBaseDir)'=='' AND '$(TF_BUILD_BUILDDIRECTORY)'!=''">$(TF_BUILD_BUILDDIRECTORY)</IntBaseDir>
     <IntBaseDir Condition="'$(IntBaseDir)'==''">$(OutBaseDir)</IntBaseDir>
-    <OutDir>$(OutBaseDir)\bin\$(PlatformPathName.ToLower())_$(Configuration.ToLower())\</OutDir>
+    <OutDirName Condition="'$(OutDirName)'==''">$(Configuration.ToLower())</OutDirName>
+    <OutDir>$(OutBaseDir)\bin\$(PlatformPathName.ToLower())_$(OutDirName)\</OutDir>
     <IntDir>$(IntBaseDir)\obj\$(PlatformPathName.ToLower())_$(Configuration.ToLower())\$(MSBuildProjectName)\</IntDir>
     <OutDir Condition="'$(ConfigurationType)'=='StaticLibrary'">$(IntDir)</OutDir>
     <OutputPath>$(OutDir)</OutputPath>
