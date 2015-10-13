@@ -421,7 +421,7 @@ namespace Js
         SmallSpanSequence *nativeThrowSpanSequence;
         NativeCodeData * data;
         CodeGenNumberChunk * numberChunks;
-        void * nativeAddress;
+        PointerTracker< void *, 0x33333333> nativeAddress;
         ptrdiff_t codeSize;
         typedef JsUtil::BaseHashSet<RecyclerWeakReference<FunctionBody>*, Recycler, PowerOf2SizePolicy> WeakFuncRefSet;
         WeakFuncRefSet *weakFuncRefSet;
@@ -722,7 +722,7 @@ namespace Js
         {
             // need the assert to skip for asmjsFunction as nativeAddress can be interpreter too for asmjs
             Assert(this->GetState() == CodeGenRecorded || this->GetState() == CodeGenDone || this->isAsmJsFunction);
-            return (DWORD_PTR)this->nativeAddress;
+            return (DWORD_PTR)(void*)this->nativeAddress;
         }
 
         ptrdiff_t GetCodeSize() const

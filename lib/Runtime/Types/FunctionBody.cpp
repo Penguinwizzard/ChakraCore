@@ -8301,7 +8301,7 @@ namespace Js
     {
         BYTE* instructionPointer = *addressOfInstructionPointer;
         Assert(instructionPointer > (BYTE*)this->nativeAddress && instructionPointer < ((BYTE*)this->nativeAddress + this->codeSize));
-        size_t offset = instructionPointer - (BYTE*)this->nativeAddress;
+        size_t offset = instructionPointer - (BYTE*)(void*)this->nativeAddress;
         LazyBailOutRecord record;
         int found = this->bailoutRecordMap->BinarySearch([=](const LazyBailOutRecord& record, int index)
         {

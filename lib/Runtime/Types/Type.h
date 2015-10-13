@@ -22,9 +22,9 @@ namespace Js
     struct Record
     {
         Record* next;
-        DWORD magic;
         T _old;
         T _new;
+        DWORD magic;
         DWORD time;
         PVOID stack[32-5];
         static void DoRecord(Record **h, T _old, T _new)
@@ -75,7 +75,7 @@ namespace Js
         // Getters
         T operator->() const { return ptr; }
         operator T() const { return ptr; }
-        operator void*()const { return ptr; }
+//        operator void*()const { return ptr; }
 
         // Setters
         PointerTracker& operator=(void * ptr)
