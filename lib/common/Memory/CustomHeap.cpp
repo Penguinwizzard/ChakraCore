@@ -1023,11 +1023,11 @@ void FillDebugBreak(__out_bcount_full(byteCount) BYTE* buffer, __in size_t byteC
 #elif defined(_M_ARM64)
     CompileAssert(sizeof(DWORD) == 4);
     DWORD pattern = 0xd4200000 | (0xf000 << 5);
-    for (DWORD i = 0; i < byteCount / 4; i++)
+    for (size_t i = 0; i < byteCount / 4; i++)
     {
-        ((DWORD *)buffer)[i] = pattern;
+        reinterpret_cast<DWORD*>(buffer)[i] = pattern;
     }
-    for (DWORD i = (byteCount / 4) * 4; i < byteCount; i++)
+    for (size_t i = (byteCount / 4) * 4; i < byteCount; i++)
     {
         // Note: this is valid scenario: in JIT mode, we may not be 2-byte-aligned in the end of unwind info.
         buffer[i] = 0;  // Fill last remaining bytes.
