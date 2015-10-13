@@ -4,8 +4,10 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeTypePch.h"
 
+DWORD recordCounter = 0;
 namespace Js
 {   
+    
     DEFINE_RECYCLER_TRACKER_WEAKREF_PERF_COUNTER(Type);
 
     InternalString Type::ObjectTypeNameString    = InternalString(L"object", 6);

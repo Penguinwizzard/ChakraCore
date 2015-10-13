@@ -16,6 +16,7 @@ enum TypeFlagMask : uint8
 };
 ENUM_CLASS_HELPERS(TypeFlagMask, uint8);
 
+extern DWORD recordCounter;
 namespace Js
 {
     template<typename T, DWORD MAGIC>
@@ -29,7 +30,6 @@ namespace Js
         PVOID stack[32-5];
         static void DoRecord(Record **h, T _old, T _new)
         {
-            static DWORD recordCounter = 0;
             while (h != nullptr && *h != nullptr) {
                 h = &(*h)->next;
             }
@@ -75,7 +75,6 @@ namespace Js
         // Getters
         T operator->() const { return ptr; }
         operator T() const { return ptr; }
-//        operator void*()const { return ptr; }
 
         // Setters
         PointerTracker& operator=(void * ptr)
