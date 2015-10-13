@@ -460,6 +460,7 @@
       <files>es6_stable.js</files>
       <compile-flags>-verbose -es6 -WERExceptionSupport</compile-flags>
       <baseline>es6_stable.baseline</baseline>
+      <tags>exclude_dynapogo</tags>
     </default>
   </test>
   <test>
@@ -467,6 +468,7 @@
       <files>es6_stable.js</files>
       <compile-flags>-verbose -es6 -es6- -ES6StringTemplate -WERExceptionSupport</compile-flags>
       <baseline>es6_stable.enable_disable.baseline</baseline>
+      <tags>exclude_dynapogo</tags>
     </default>
   </test>
   <test>
@@ -474,6 +476,7 @@
       <files>es6_all.js</files>
       <compile-flags>-verbose -es6all -WERExceptionSupport</compile-flags>
       <baseline>es6_all.baseline</baseline>
+      <tags>exclude_dynapogo</tags>
     </default>
   </test>
   <test>
