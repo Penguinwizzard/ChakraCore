@@ -4,7 +4,7 @@
     <default>
       <files>invalidutf8.js</files>
       <baseline>invalidutf8.baseline</baseline>
-      <tags>exclude_serialized,exclude_ch</tags>
+      <tags>exclude_serialized</tags>
     </default>
   </test>
   <test>

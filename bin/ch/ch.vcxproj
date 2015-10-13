@@ -52,12 +52,18 @@
   <ItemGroup>
     <ClCompile Include="ch.cpp" />
     <ClCompile Include="chakrartinterface.cpp" />
+    <ClCompile Include="CodexAssert.cpp" />
     <ClCompile Include="Helpers.cpp" />
     <ClCompile Include="HostConfigFlags.cpp" />
     <ClCompile Include="WScriptJsrt.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ch.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\lib\common\codex\Chakra.Common.Codex.vcxproj">
+      <Project>{1876e800-ad77-48c4-a2f7-e5265f24ac38}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(BuildConfigPropsPath)Chakra.Build.targets" Condition="exists('$(BuildConfigPropsPath)Chakra.Build.targets')" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
