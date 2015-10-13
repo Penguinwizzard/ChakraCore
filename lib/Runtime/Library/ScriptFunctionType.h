@@ -56,13 +56,17 @@ namespace Js
             if (tmp->oldEntryPointInfo) 
             {
                 tmp->oldEntryPointInfoData = (FunctionEntryPointInfo*)malloc(sizeof(FunctionEntryPointInfo));
-                memcpy(tmp->oldEntryPointInfoData, tmp->oldEntryPointInfo, sizeof(FunctionEntryPointInfo));
+                memset(tmp->oldEntryPointInfoData, 0, sizeof(FunctionEntryPointInfo));
+                memcpy(tmp->oldEntryPointInfoData, tmp->oldEntryPointInfo, 
+                    tmp->oldEntryPointInfo->IsFunctionEntryPointInfo()?sizeof(FunctionEntryPointInfo): sizeof(ProxyEntryPointInfo));
             }
             tmp->newEntryPointInfo = (FunctionEntryPointInfo*)entryPointInfo;
             if (tmp->newEntryPointInfo) 
             {
                 tmp->newEntryPointInfoData = (FunctionEntryPointInfo*)malloc(sizeof(FunctionEntryPointInfo));
-                memcpy(tmp->newEntryPointInfoData, tmp->newEntryPointInfo, sizeof(FunctionEntryPointInfo));
+                memset(tmp->newEntryPointInfoData, 0, sizeof(FunctionEntryPointInfo));
+                memcpy(tmp->newEntryPointInfoData, tmp->newEntryPointInfo, 
+                    tmp->newEntryPointInfo->IsFunctionEntryPointInfo() ? sizeof(FunctionEntryPointInfo) : sizeof(ProxyEntryPointInfo));
             }
             
             if (this->entryPointInfo->IsFunctionEntryPointInfo()) 
@@ -73,7 +77,9 @@ namespace Js
                     if (tmp->simpleJitInfoOnFB)
                     {
                         tmp->simpleJitInfoOnFBData = (FunctionEntryPointInfo*)malloc(sizeof(FunctionEntryPointInfo));
-                        memcpy(tmp->simpleJitInfoOnFBData, tmp->simpleJitInfoOnFB, sizeof(FunctionEntryPointInfo));
+                        memset(tmp->simpleJitInfoOnFBData, 0, sizeof(FunctionEntryPointInfo));
+                        memcpy(tmp->simpleJitInfoOnFBData, tmp->simpleJitInfoOnFB, 
+                            tmp->simpleJitInfoOnFB->IsFunctionEntryPointInfo() ? sizeof(FunctionEntryPointInfo) : sizeof(ProxyEntryPointInfo));
                     }
                     tmp->fbCopy = ((FunctionEntryPointInfo*)(void*)this->entryPointInfo)->GetFunctionBody();
                     if (tmp->fbCopy) 
