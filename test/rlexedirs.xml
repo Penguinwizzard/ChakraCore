@@ -245,7 +245,7 @@
 <dir>
   <default>
     <files>PerfHint</files>
-    <tags>exclude_serialized,exclude_snap,Slow</tags>
+    <tags>exclude_serialized,exclude_snap</tags>
   </default>
 </dir>
 <dir>
