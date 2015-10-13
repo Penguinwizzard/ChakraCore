@@ -52,7 +52,7 @@ namespace Js
             tmp->next = nullptr;
             tmp->codePath = codePath;
             tmp->address = address;
-            tmp->oldEntryPointInfo = (FunctionEntryPointInfo*)this->entryPointInfo;
+            tmp->oldEntryPointInfo = (FunctionEntryPointInfo*)(void*)this->entryPointInfo;
             if (tmp->oldEntryPointInfo) 
             {
                 tmp->oldEntryPointInfoData = (FunctionEntryPointInfo*)malloc(sizeof(FunctionEntryPointInfo));
@@ -67,19 +67,19 @@ namespace Js
             
             if (this->entryPointInfo->IsFunctionEntryPointInfo()) 
             {
-                if (((FunctionEntryPointInfo*)this->entryPointInfo)->functionProxy && ((FunctionEntryPointInfo*)this->entryPointInfo)->functionProxy->IsFunctionBody())
+                if (((FunctionEntryPointInfo*)(void*)this->entryPointInfo)->functionProxy && ((FunctionEntryPointInfo*)(void*)this->entryPointInfo)->functionProxy->IsFunctionBody())
                 {
-                    tmp->simpleJitInfoOnFB = ((FunctionEntryPointInfo*)this->entryPointInfo)->GetFunctionBody()->GetSimpleJitEntryPointInfo();
+                    tmp->simpleJitInfoOnFB = ((FunctionEntryPointInfo*)(void*)this->entryPointInfo)->GetFunctionBody()->GetSimpleJitEntryPointInfo();
                     if (tmp->simpleJitInfoOnFB)
                     {
                         tmp->simpleJitInfoOnFBData = (FunctionEntryPointInfo*)malloc(sizeof(FunctionEntryPointInfo));
                         memcpy(tmp->simpleJitInfoOnFBData, tmp->simpleJitInfoOnFB, sizeof(FunctionEntryPointInfo));
                     }
-                    tmp->fbCopy = ((FunctionEntryPointInfo*)this->entryPointInfo)->GetFunctionBody();
+                    tmp->fbCopy = ((FunctionEntryPointInfo*)(void*)this->entryPointInfo)->GetFunctionBody();
                     if (tmp->fbCopy) 
                     {
                         tmp->fbCopyData = (FunctionBody*)malloc(sizeof(FunctionBody));
-                        memcpy(tmp->fbCopyData, ((FunctionEntryPointInfo*)this->entryPointInfo)->GetFunctionBody(), sizeof(FunctionBody));
+                        memcpy(tmp->fbCopyData, ((FunctionEntryPointInfo*)(void*)this->entryPointInfo)->GetFunctionBody(), sizeof(FunctionBody));
                     }
                 }
             }
@@ -120,7 +120,7 @@ namespace Js
         ScriptFunctionType(ScriptContext* scriptContext, RecyclableObject* prototype, 
             JavascriptMethod entryPoint, ProxyEntryPointInfo * entryPointInfo, DynamicTypeHandler * typeHandler, 
             bool isLocked, bool isShared);
-        ProxyEntryPointInfo * entryPointInfo;
+        PointerTracker<ProxyEntryPointInfo *, 0xdddddddd> entryPointInfo;
         ScriptFunctionTypeExtra* extra;
 
         friend class ScriptFunction;

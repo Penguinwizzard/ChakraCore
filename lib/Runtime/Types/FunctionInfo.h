@@ -98,7 +98,7 @@ namespace Js
         BOOL IsDeferredParseFunction() const { return ((this->attributes & DeferredParse) == DeferredParse); }
 
     protected:
-        PointerTracker<JavascriptMethod> originalEntryPoint;
+        PointerTracker<JavascriptMethod, 0x11111111> originalEntryPoint;
         // WriteBarrier-TODO: Fix this? This is used only by proxies to keep the deserialized version around
         // However, proxies are not allocated as write barrier memory currently so its fine to not set the write barrier for this field
         FunctionProxy * functionBodyImpl;     // Implementation of the function- null if the function doesn't have a body

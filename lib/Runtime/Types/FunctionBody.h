@@ -1207,7 +1207,7 @@ namespace Js
 
         // Script function types not including the deferred prototype type
         WriteBarrierPtr<FunctionTypeWeakRefList> m_functionObjectTypeList;
-        WriteBarrierPtrWithTracker<ProxyEntryPointInfo> m_defaultEntryPointInfo; // The default entry point info for the function proxy
+        WriteBarrierPtrWithTracker<ProxyEntryPointInfo, 0x99999999> m_defaultEntryPointInfo; // The default entry point info for the function proxy
 
         NoWriteBarrierField<uint> m_derivedSize;
         NoWriteBarrierField<uint> m_functionNumber;  // Per thread global function number
@@ -1853,8 +1853,8 @@ namespace Js
         static bool shareInlineCaches;
 #endif     
         WriteBarrierPtr<DynamicType*> objLiteralTypes;
-        WriteBarrierPtrWithTracker<FunctionEntryPointInfo> defaultFunctionEntryPointInfo;
-        WriteBarrierPtrWithTracker<FunctionEntryPointInfo> simpleJitEntryPointInfo;
+        WriteBarrierPtrWithTracker<FunctionEntryPointInfo, 0xaaaaaaaa> defaultFunctionEntryPointInfo;
+        WriteBarrierPtrWithTracker<FunctionEntryPointInfo, 0xbbbbbbbb> simpleJitEntryPointInfo;
         WriteBarrierPtr<DynamicProfileInfo> dynamicProfileInfo;
         WriteBarrierPtr<PolymorphicCallSiteInfo> polymorphicCallSiteInfoHead;
         FunctionBailOutRecord * functionBailOutRecord;  // REVIEW: Not used? In any case, appears to be an arena object so doesn't need a write barrier

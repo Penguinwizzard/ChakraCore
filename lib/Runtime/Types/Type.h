@@ -18,10 +18,12 @@ ENUM_CLASS_HELPERS(TypeFlagMask, uint8);
 
 namespace Js
 {
-    template<typename T>
+    static volatile DWORD recordCounter = 0;
+    template<typename T, DWORD MAGIC>
     struct Record
     {
         Record* next;
+        DWORD magic;
         T _old;
         T _new;
         DWORD time;
@@ -33,9 +35,10 @@ namespace Js
             }
             (*h) = (Record*)malloc(sizeof(Record));
             (*h)->next = nullptr;
+            (*h)->magic = MAGIC;
             (*h)->_old = _old;
             (*h)->_new = _new;
-            (*h)->time = ::GetTickCount();
+            (*h)->time = recordCounter++;
             CaptureStackBackTrace(0, 12, (*h)->stack, 0);
         }
 
@@ -48,7 +51,7 @@ namespace Js
         }
     };
 
-    template <typename T, typename R = Record<typename T>>
+    template <typename T, DWORD MAGIC = 0x11111111, typename R = Record<typename T, MAGIC>>
     class PointerTracker
     {
         T ptr;
@@ -107,10 +110,10 @@ namespace Js
         return lhs.ptr == (T)rhs;
     }
 
-    template <typename T>
+    template <typename T, DWORD MAGIC = 0x11111111>
     class WriteBarrierPtrWithTracker : public WriteBarrierPtr<T>
     {
-        Record<T*>* record;
+        Record<T*, MAGIC>* record;
     public:
         WriteBarrierPtrWithTracker()
         {
@@ -128,14 +131,14 @@ namespace Js
         }
         void NoWriteBarrierSet(T * ptr)
         {
-            Record<T*>::DoRecord(&this->record, this->ptr, ptr);
+            Record<T*, MAGIC>::DoRecord(&this->record, this->ptr, ptr);
             this->ptr = ptr;
         }
         void Cleanup()
         {
             if (this->record)
             {
-                Record<T*>::Cleanup(&this->record);
+                Record<T*, MAGIC>::Cleanup(&this->record);
                 this->record = nullptr;
             }
         }
@@ -157,7 +160,7 @@ namespace Js
         JavascriptLibrary* javascriptLibrary;
                            
         RecyclableObject* prototype;
-        PointerTracker<JavascriptMethod> entryPoint;
+        PointerTracker<JavascriptMethod, 0x22222222> entryPoint;
     private:
         TypePropertyCache *propertyCache;
     protected:
