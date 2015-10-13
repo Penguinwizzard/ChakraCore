@@ -39,7 +39,7 @@ namespace Js
             (*h)->_old = _old;
             (*h)->_new = _new;
             (*h)->time = recordCounter++;
-            CaptureStackBackTrace(0, 12, (*h)->stack, 0);
+            CaptureStackBackTrace(0, sizeof((*h)->stack)/sizeof(PVOID), (*h)->stack, 0);
         }
 
         static void Cleanup(Record** h) {
