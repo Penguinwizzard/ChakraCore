@@ -37,8 +37,11 @@ namespace Js {
         static SIMDValue OpMax(const SIMDValue& aValue, const SIMDValue& bValue);
 
         static SIMDValue OpLessThan(const SIMDValue& aValue, const SIMDValue& bValue);
+        static SIMDValue OpLessThanOrEqual(const SIMDValue& aValue, const SIMDValue& bValue);
         static SIMDValue OpEqual(const SIMDValue& aValue, const SIMDValue& bValue);
+        static SIMDValue OpNotEqual(const SIMDValue& aValue, const SIMDValue& bValue);
         static SIMDValue OpGreaterThan(const SIMDValue& aValue, const SIMDValue& bValue);
+        static SIMDValue OpGreaterThanOrEqual(const SIMDValue& aValue, const SIMDValue& bValue);
 
         static SIMDValue OpShiftLeftByScalar(const SIMDValue& value, int count);
         static SIMDValue OpShiftRightByScalar(const SIMDValue& value, int count);

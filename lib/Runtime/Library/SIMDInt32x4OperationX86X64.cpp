@@ -245,6 +245,17 @@ namespace Js
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
 
+    SIMDValue SIMDInt32x4Operation::OpLessThanOrEqual(const SIMDValue& aValue, const SIMDValue& bValue)
+    {
+        SIMDValue tmpResult = SIMDInt32x4Operation::OpGreaterThan(aValue, bValue);
+        X86SIMDValue x86Result = X86SIMDValue::ToX86SIMDValue(tmpResult);
+
+        X86SIMDValue negativeOnes = X86_ALL_NEG_ONES; // { { -1, -1, -1, -1 } };
+        x86Result.m128i_value = _mm_andnot_si128(x86Result.m128i_value, negativeOnes.m128i_value);
+
+        return X86SIMDValue::ToSIMDValue(x86Result);
+    }
+
     SIMDValue SIMDInt32x4Operation::OpEqual(const SIMDValue& aValue, const SIMDValue& bValue)
     {
         X86SIMDValue x86Result;
@@ -256,12 +267,34 @@ namespace Js
     }
 
 
+    SIMDValue SIMDInt32x4Operation::OpNotEqual(const SIMDValue& aValue, const SIMDValue& bValue)
+    {
+        SIMDValue tmpResult = SIMDInt32x4Operation::OpEqual(aValue, bValue);
+        X86SIMDValue x86Result = X86SIMDValue::ToX86SIMDValue(tmpResult);
+
+        X86SIMDValue negativeOnes = X86_ALL_NEG_ONES; // { { -1, -1, -1, -1 } };
+        x86Result.m128i_value = _mm_andnot_si128(x86Result.m128i_value, negativeOnes.m128i_value);
+
+        return X86SIMDValue::ToSIMDValue(x86Result);
+    }
+
     SIMDValue SIMDInt32x4Operation::OpGreaterThan(const SIMDValue& aValue, const SIMDValue& bValue)
     {
         X86SIMDValue x86Result;
         X86SIMDValue tmpaValue = X86SIMDValue::ToX86SIMDValue(aValue);
         X86SIMDValue tmpbValue = X86SIMDValue::ToX86SIMDValue(bValue);
         x86Result.m128i_value = _mm_cmpgt_epi32(tmpaValue.m128i_value, tmpbValue.m128i_value); // compare a > b?
+
+        return X86SIMDValue::ToSIMDValue(x86Result);
+    }
+
+    SIMDValue SIMDInt32x4Operation::OpGreaterThanOrEqual(const SIMDValue& aValue, const SIMDValue& bValue)
+    {
+        SIMDValue tmpResult = SIMDInt32x4Operation::OpLessThan(aValue, bValue);
+        X86SIMDValue x86Result = X86SIMDValue::ToX86SIMDValue(tmpResult);
+
+        X86SIMDValue negativeOnes = X86_ALL_NEG_ONES; // { { -1, -1, -1, -1 } };
+        x86Result.m128i_value = _mm_andnot_si128(x86Result.m128i_value, negativeOnes.m128i_value); 
 
         return X86SIMDValue::ToSIMDValue(x86Result);
     }

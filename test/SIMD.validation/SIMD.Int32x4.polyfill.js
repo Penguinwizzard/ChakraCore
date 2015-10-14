@@ -30,15 +30,8 @@ function test(name, func) {
   //if(name.indexOf('Int32x4 store') > -1) return; //negative index fatal error bug
   if(name.indexOf('Int32x4 fromFloat32x4') > -1) return; //range error bug
   if(name.indexOf('Int32x4 value semantics') > -1) return; //value semantics bug
-  if(name.indexOf('Int32x4 operators') > -1) return; //unsupported function: toLocalString
-  if(name.indexOf('Int32x4 fromUint8x16Bits') > -1) return; //unsupported function
-  if(name.indexOf('Int32x4 fromUint16x8Bits') > -1) return; //unsupported function
-  if(name.indexOf('Int32x4 fromUint32x4Bits') > -1) return; //unsupported function
-  if(name.indexOf('Int32x4 fromInt16x8Bits') > -1) return; //unsupported function
+  //if(name.indexOf('Int32x4 operators') > -1) return; //unsupported function: toLocalString
   if(name.indexOf('Int32x4 fromUint32x4') > -1) return; //unsupported function
-  if(name.indexOf('Int32x4 greaterThanOrEqual') > -1) return; //unsupported function
-  if(name.indexOf('Int32x4 lessThanOrEqual') > -1) return; //unsupported function
-  if(name.indexOf('Int32x4 notEqual') > -1) return; //unsupported function
   
   if (skipValueTests && name.indexOf("value semantics") != -1) return;
 

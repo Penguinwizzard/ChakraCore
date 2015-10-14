@@ -23,7 +23,11 @@ namespace Js {
             static FunctionInfo FromFloat64x2Bits;
             static FunctionInfo FromFloat32x4;
             static FunctionInfo FromFloat32x4Bits;
+            static FunctionInfo FromUint32x4Bits;
+            static FunctionInfo FromUint8x16Bits;
+            static FunctionInfo FromUint16x8Bits;
             static FunctionInfo FromInt8x16Bits;
+            static FunctionInfo FromInt16x8Bits;
             // UnaryOps
             static FunctionInfo Abs;
             static FunctionInfo Neg;
@@ -39,8 +43,12 @@ namespace Js {
             static FunctionInfo Max;
             // CompareOps
             static FunctionInfo LessThan;
+            static FunctionInfo LessThanOrEqual;
             static FunctionInfo Equal;
+            static FunctionInfo NotEqual;
             static FunctionInfo GreaterThan;
+            static FunctionInfo GreaterThanOrEqual;
+
 
             // WithFlagX/Y/Z/W
             static FunctionInfo WithFlagX;
@@ -82,7 +90,11 @@ namespace Js {
         static Var EntryFromFloat64x2Bits(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryFromFloat32x4(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryFromFloat32x4Bits(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryFromUint32x4Bits(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryFromUint8x16Bits(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryFromUint16x8Bits(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryFromInt8x16Bits(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryFromInt16x8Bits(RecyclableObject* function, CallInfo callInfo, ...);
 
         // UnaryOps
         static Var EntryAbs(RecyclableObject* function, CallInfo callInfo, ...);
@@ -99,8 +111,11 @@ namespace Js {
         static Var EntryMax(RecyclableObject* function, CallInfo callInfo, ...);
         // CompareOps
         static Var EntryLessThan(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryLessThanOrEqual(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryEqual(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryNotEqual(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryGreaterThan(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryGreaterThanOrEqual(RecyclableObject* function, CallInfo callInfo, ...);
         // WithFlagX/Y/Z/W
         static Var EntryWithFlagX(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryWithFlagY(RecyclableObject* function, CallInfo callInfo, ...);

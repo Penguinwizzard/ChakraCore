@@ -242,6 +242,18 @@ namespace Js
         return result;
     }
 
+    SIMDValue SIMDInt32x4Operation::OpLessThanOrEqual(const SIMDValue& aValue, const SIMDValue& bValue)
+    {
+        SIMDValue result;
+
+        result.i32[SIMD_X] = (aValue.i32[SIMD_X] <= bValue.i32[SIMD_X]) ? 0xffffffff : 0x0;
+        result.i32[SIMD_Y] = (aValue.i32[SIMD_Y] <= bValue.i32[SIMD_Y]) ? 0xffffffff : 0x0;
+        result.i32[SIMD_Z] = (aValue.i32[SIMD_Z] <= bValue.i32[SIMD_Z]) ? 0xffffffff : 0x0;
+        result.i32[SIMD_W] = (aValue.i32[SIMD_W] <= bValue.i32[SIMD_W]) ? 0xffffffff : 0x0;
+
+        return result;
+    }
+
     SIMDValue SIMDInt32x4Operation::OpEqual(const SIMDValue& aValue, const SIMDValue& bValue)
     {
         SIMDValue result;
@@ -254,6 +266,17 @@ namespace Js
         return result;
     }
 
+    SIMDValue SIMDInt32x4Operation::OpNotEqual(const SIMDValue& aValue, const SIMDValue& bValue)
+    {
+        SIMDValue result;
+
+        result.i32[SIMD_X] = (aValue.i32[SIMD_X] != bValue.i32[SIMD_X]) ? 0xffffffff : 0x0;
+        result.i32[SIMD_Y] = (aValue.i32[SIMD_Y] != bValue.i32[SIMD_Y]) ? 0xffffffff : 0x0;
+        result.i32[SIMD_Z] = (aValue.i32[SIMD_Z] != bValue.i32[SIMD_Z]) ? 0xffffffff : 0x0;
+        result.i32[SIMD_W] = (aValue.i32[SIMD_W] != bValue.i32[SIMD_W]) ? 0xffffffff : 0x0;
+
+        return result;
+    }
 
     SIMDValue SIMDInt32x4Operation::OpGreaterThan(const SIMDValue& aValue, const SIMDValue& bValue)
     {
@@ -263,6 +286,18 @@ namespace Js
         result.i32[SIMD_Y] = (aValue.i32[SIMD_Y] > bValue.i32[SIMD_Y]) ? 0xffffffff : 0x0;
         result.i32[SIMD_Z] = (aValue.i32[SIMD_Z] > bValue.i32[SIMD_Z]) ? 0xffffffff : 0x0;
         result.i32[SIMD_W] = (aValue.i32[SIMD_W] > bValue.i32[SIMD_W]) ? 0xffffffff : 0x0;
+
+        return result;
+    }
+
+    SIMDValue SIMDInt32x4Operation::OpGreaterThanOrEqual(const SIMDValue& aValue, const SIMDValue& bValue)
+    {
+        SIMDValue result;
+
+        result.i32[SIMD_X] = (aValue.i32[SIMD_X] >= bValue.i32[SIMD_X]) ? 0xffffffff : 0x0;
+        result.i32[SIMD_Y] = (aValue.i32[SIMD_Y] >= bValue.i32[SIMD_Y]) ? 0xffffffff : 0x0;
+        result.i32[SIMD_Z] = (aValue.i32[SIMD_Z] >= bValue.i32[SIMD_Z]) ? 0xffffffff : 0x0;
+        result.i32[SIMD_W] = (aValue.i32[SIMD_W] >= bValue.i32[SIMD_W]) ? 0xffffffff : 0x0;
 
         return result;
     }

@@ -13,32 +13,17 @@ Correct
 Correct
 Correct
 Correct
-Int32x4 lessThan
+Int32x4 lessThanOrEqual
 Correct
 Correct
 Correct
 Correct
-Int32x4 equal
+Int32x4 notEqual
 Correct
 Correct
 Correct
 Correct
-Int32x4 greaterThan
-Correct
-Correct
-Correct
-Correct
-Int32x4 lessThan
-Correct
-Correct
-Correct
-Correct
-Int32x4 equal
-Correct
-Correct
-Correct
-Correct
-Int32x4 greaterThan
+Int32x4 greaterThanOrEqual
 Correct
 Correct
 Correct
@@ -58,32 +43,17 @@ Correct
 Correct
 Correct
 Correct
-Int32x4 lessThan
+Int32x4 lessThanOrEqual
 Correct
 Correct
 Correct
 Correct
-Int32x4 equal
+Int32x4 notEqual
 Correct
 Correct
 Correct
 Correct
-Int32x4 greaterThan
-Correct
-Correct
-Correct
-Correct
-Int32x4 lessThan
-Correct
-Correct
-Correct
-Correct
-Int32x4 equal
-Correct
-Correct
-Correct
-Correct
-Int32x4 greaterThan
+Int32x4 greaterThanOrEqual
 Correct
 Correct
 Correct
@@ -103,6 +73,21 @@ Correct
 Correct
 Correct
 Correct
+Int32x4 lessThanOrEqual
+Correct
+Correct
+Correct
+Correct
+Int32x4 notEqual
+Correct
+Correct
+Correct
+Correct
+Int32x4 greaterThanOrEqual
+Correct
+Correct
+Correct
+Correct
 Int32x4 lessThan
 Correct
 Correct
@@ -114,6 +99,141 @@ Correct
 Correct
 Correct
 Int32x4 greaterThan
+Correct
+Correct
+Correct
+Correct
+Int32x4 lessThanOrEqual
+Correct
+Correct
+Correct
+Correct
+Int32x4 notEqual
+Correct
+Correct
+Correct
+Correct
+Int32x4 greaterThanOrEqual
+Correct
+Correct
+Correct
+Correct
+Int32x4 lessThan
+Correct
+Correct
+Correct
+Correct
+Int32x4 equal
+Correct
+Correct
+Correct
+Correct
+Int32x4 greaterThan
+Correct
+Correct
+Correct
+Correct
+Int32x4 lessThanOrEqual
+Correct
+Correct
+Correct
+Correct
+Int32x4 notEqual
+Correct
+Correct
+Correct
+Correct
+Int32x4 greaterThanOrEqual
+Correct
+Correct
+Correct
+Correct
+Int32x4 lessThan
+Correct
+Correct
+Correct
+Correct
+Int32x4 equal
+Correct
+Correct
+Correct
+Correct
+Int32x4 greaterThan
+Correct
+Correct
+Correct
+Correct
+Int32x4 lessThanOrEqual
+Correct
+Correct
+Correct
+Correct
+Int32x4 notEqual
+Correct
+Correct
+Correct
+Correct
+Int32x4 greaterThanOrEqual
+Correct
+Correct
+Correct
+Correct
+Int32x4 lessThan
+Correct
+Correct
+Correct
+Correct
+Int32x4 equal
+Correct
+Correct
+Correct
+Correct
+Int32x4 greaterThan
+Correct
+Correct
+Correct
+Correct
+Int32x4 lessThanOrEqual
+Correct
+Correct
+Correct
+Correct
+Int32x4 notEqual
+Correct
+Correct
+Correct
+Correct
+Int32x4 greaterThanOrEqual
+Correct
+Correct
+Correct
+Correct
+Int32x4 lessThan
+Correct
+Correct
+Correct
+Correct
+Int32x4 equal
+Correct
+Correct
+Correct
+Correct
+Int32x4 greaterThan
+Correct
+Correct
+Correct
+Correct
+Int32x4 lessThanOrEqual
+Correct
+Correct
+Correct
+Correct
+Int32x4 notEqual
+Correct
+Correct
+Correct
+Correct
+Int32x4 greaterThanOrEqual
 Correct
 Correct
 Correct

@@ -4,12 +4,10 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
-class JavascriptSIMDFloat32x4;
-class JavascriptSIMDFloat64x2;
-class JavascriptSIMDInt8x16;
-
 namespace Js
 {
+    class JavascriptSIMDUint32x4;
+
     class JavascriptSIMDInt32x4 sealed : public RecyclableObject
     {
     private:
