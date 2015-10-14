@@ -4458,6 +4458,12 @@ CommonNumber:
                 // This is not supported, Bailout
                 break;
             }
+            // Upper bounds check for source array
+            uint32 end;
+            if (UInt32Math::Add(srcStart, length, &end) || end > ((ArrayObject*)srcInstance)->GetLength())
+            {
+                return false;
+            }
             if (scriptContext->optimizationOverrides.IsEnabledArraySetElementFastPath())
             {
                 INT_PTR vt = VirtualTableInfoBase::GetVirtualTable(dstInstance);

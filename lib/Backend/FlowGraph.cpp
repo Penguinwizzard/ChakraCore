@@ -810,76 +810,15 @@ bool Loop::EnsureMemOpVariablesInitialized()
             this->memOpInfo->doMemOp = false;
             this->memOpInfo->inductionVariablesUsedAfterLoop = nullptr;
             this->memOpInfo->inductionVariableChangeInfoMap = nullptr;
-            this->memOpInfo->memcopyIgnore = nullptr;
-            this->memOpInfo->memsetIgnore = nullptr;
             this->memOpInfo->candidates = nullptr;
             return false;
         }
         this->memOpInfo->doMemOp = true;
         this->memOpInfo->inductionVariablesUsedAfterLoop = nullptr;
         this->memOpInfo->inductionVariableChangeInfoMap = JitAnew(allocator, Loop::InductionVariableChangeInfoMap, allocator);
-        this->memOpInfo->memcopyIgnore = JitAnew(allocator, Loop::MemOpIgnoreSet, allocator);
-        this->memOpInfo->memsetIgnore = JitAnew(allocator, Loop::MemOpIgnoreSet, allocator);
         this->memOpInfo->candidates = JitAnew(allocator, Loop::MemOpList, allocator);
     }
     return true;
-}
-
-void Loop::InvalidateMemsetCandidate(SymID sym, MemSetCandidate *memsetInfo)
-{
-    Assert(this->memOpInfo->memsetIgnore);
-    if (this->memOpInfo->memsetIgnore->Contains(sym) == false)
-    {
-        this->memOpInfo->memsetIgnore->Add(sym);
-    }
-
-    if (this->memOpInfo->candidates && memsetInfo)
-    {
-        this->memOpInfo->candidates->Remove(memsetInfo);
-    }
-    else if (this->memOpInfo->candidates)
-    {
-        FOREACH_MEMSET_CANDIDATES_EDITING(memsetCandidate, this, iter)
-        {
-            if (memsetCandidate->base == sym)
-            {
-                iter.RemoveCurrent();
-                break;
-            }
-        } NEXT_MEMSET_CANDIDATE_EDITING;
-    }
-}
-
-void Loop::InvalidateMemcopyCandidate(SymID sym)
-{
-    Assert(this->memOpInfo->memcopyIgnore);
-    if (this->memOpInfo->memcopyIgnore->Contains(sym) == false)
-    {
-        this->memOpInfo->memcopyIgnore->Add(sym);
-    }
-
-    if (this->memOpInfo->candidates)
-    {
-        FOREACH_MEMCOPY_CANDIDATES_EDITING(memcopyCandidate, this, iter)
-        {
-            if (memcopyCandidate->ldBase == sym)
-            {
-                if (memcopyCandidate->base  && !this->memOpInfo->memcopyIgnore->Contains(memcopyCandidate->base))
-                {
-                        this->memOpInfo->memcopyIgnore->Add(memcopyCandidate->base);
-                }
-                iter.RemoveCurrent();
-            }
-            else if (memcopyCandidate->base == sym)
-            {
-                if (memcopyCandidate->ldBase  && !this->memOpInfo->memcopyIgnore->Contains(memcopyCandidate->ldBase))
-                {
-                    this->memOpInfo->memcopyIgnore->Add(memcopyCandidate->ldBase);
-                }
-                iter.RemoveCurrent();
-            }
-        } NEXT_MEMCOPY_CANDIDATE_EDITING;
-    }
 }
 
 // Walk the basic blocks backwards until we find the loop header.

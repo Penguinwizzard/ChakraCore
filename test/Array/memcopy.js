@@ -4,7 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 
 // Compares the value set by interpreter with the jitted code
-// need to run with -mic:1 -off:simplejit -off:JITLoopBody -off:inline
+// need to run with -mic:1 -off:simplejit -off:jitloopbody -off:inline -off:globopt:1.18-1.30
 // Run locally with -trace:memop -trace:bailout to help find bugs
 
 let testCases = [
@@ -20,14 +20,42 @@ let testCases = [
     };
   },
   function() {
+    return {
+      start: 0,
+      end: 100,
+      test: function testChangedIndex(a, src) {
+        // This is an invalid memcopy
+        for(let i = 0; i < 100;) {
+          a[i] = src[++i];
+        }
+      }
+    };
+  },
+  function() {
+    let src = new Array(100);
+    for(let i = 0; i < 100; ++i) {
+      src[i] = i;
+    }
+    return {
+      start: 0,
+      end: 100,
+      test: function testLdSlot(a) {
+        // Invalid pattern, src is not considered invariant
+        for(let i = 0; i < 100; ++i) {
+          a[i] = src[i];
+        }
+      }
+    };
+  },
+  function() {
     let start = 5, end = 101;
     return {
       start: start,
       end: end,
-      size: end - start,
+      size: end,
       test: function testReverse(a, src) {
         // Currently this is not a valid memcopy pattern
-        for(let i = end - 1; i >= start; i--) {
+        for(let i = 100; i >= 5; i--) {
           a[i] = src[i];
         }
       }
@@ -41,7 +69,7 @@ let testCases = [
       end: end,
       runner: function testMultipleMemcopy(arrayGen, src) {
         let a = arrayGen(), b = arrayGen(), c = arrayGen();
-        // Currently this is not a valid memcopy pattern
+        // Currently this is not a valid memcopy pattern (would it be more performant?)
         for(let i = 0; i < 10; i++) {
           a[i] = b[i] = c[i] = src[i];
         }
@@ -51,7 +79,7 @@ let testCases = [
         let base = results[0];
         for(let i = 1; i < results.length; ++i) {
           for(let j = 0; j < 3; ++j) {
-            compareResult(base[j], results[i][j], start, end);
+            compareResult("testMultipleMemcopy", base[j], results[i][j], start, end);
           }
         }
       }
@@ -64,29 +92,20 @@ let testCases = [
       test: function preIncr(a, src) {
         let ri = -1;
         for(let i = 0; i < 10; ++i) {
-          a[++ri] = src[i];
+          a[++ri] = src[ri];
         }
       }
     };
   },
   function() {
-    let int = true;
     return {
-      size: 60,
-      loop: 10, // Run this a few times to cause rejit
+      start: -50,
+      end: 10,
+      loop: 10, // Run this a few times to cause rejit,
       test: function testNegativeStartIndex(a, src) {
-        let start = int ? 0 : -50;
-        let end = start + 60;
-        for(let i = start, j = 0; i < end; i++, j++) {
+        for(let i = -50; i < 10; i++) {
           // This should bailout on MemOp because the index will be negative
-          a[i] = src[j];
-        }
-        int = false;
-      },
-      check: function(results) {
-        let base = results[0]; // result from the interpreter
-        for(let i = 1; i < results.length; ++i) {
-          compareResult(base, results[i], 0, 60, -50);
+          a[i] = src[i];
         }
       }
     };
@@ -108,9 +127,24 @@ let testCases = [
   }
 ];
 
+let passed = true;
+function compareResult(name, a, b, start, end, start2) {
+  for(let i = start, j = start2 || start; i < end; ++i, ++j) {
+    if(a[i] !== b[j]) {
+      print(`Error ${name}: a[${i}](${a[i]}) !== b[${j}](${b[j]})`);
+      passed = false;
+      return false;
+    }
+  }
+  return true;
+}
+
 function makeArray(size) {
-  let a = new Array(size || 10);
-  a.fill(1);
+  size = size || 10;
+  let a = new Array(size);
+  for(let i = 0; i < size; ++i) {
+    a[i] = 0;
+  }
   return a;
 }
 
@@ -128,21 +162,28 @@ function makeSource(size) {
   return s;
 }
 
+//testCases = [testCases[4]] // to run only one test case
 for(let testCase of testCases) {
   let results = [];
   let testInfo = testCase();
+  let name = testInfo.runner && testInfo.runner.name || testInfo.test && testInfo.test.name || "Unknown";
 
   let src;
-  if (testInfo.size !== undefined) {
-    src = makeSource(testInfo.size);
-  } else if(
-    testInfo.start !== undefined &&
-    testInfo.end !== undefined
-  ) {
-    src = makeSource(testInfo.end - testInfo.start);
+  if(!testInfo.makeSource) {
+    if (testInfo.size !== undefined) {
+      src = makeSource(testInfo.size);
+    } else if(
+      testInfo.start !== undefined &&
+      testInfo.end !== undefined
+    ) {
+      src = makeSource(testInfo.end - testInfo.start);
+    }
   }
-
   function run(gen) {
+    if(testInfo.makeSource) {
+      src = testInfo.makeSource();
+    }
+
     if(testInfo.runner) {
       let result = testInfo.runner(gen, src);
       results.push(result);
@@ -166,25 +207,15 @@ for(let testCase of testCases) {
     }
   }
 
+
   if(testInfo.check) {
     testInfo.check(results);
   } else {
     let base = results[0]; // result from the interpreter
     for(let i = 1; i < results.length; ++i) {
-      compareResult(base, results[i], testInfo.start, testInfo.end);
+      compareResult(name, base, results[i], testInfo.start, testInfo.end);
     }
   }
-}
-let passed = true;
-function compareResult(a, b, start, end, start2) {
-  for(let i = start, j = start2 || start; i < end; ++i, ++j) {
-    if(a[i] !== b[j]) {
-      print(`a[${i}](${a[i]}) !== b[${j}](${b[j]})`);
-      passed = false;
-      return false;
-    }
-  }
-  return true;
 }
 
 if(passed) {
