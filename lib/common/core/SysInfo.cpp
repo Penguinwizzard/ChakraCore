@@ -30,6 +30,13 @@ WCHAR AutoSystemInfo::binaryName[MAX_PATH + 1];
 DWORD AutoSystemInfo::majorVersion = 0;
 DWORD AutoSystemInfo::minorVersion = 0;
 
+// AutoSystemInfo is included in a shared static lib that is linked into multiple DLLs.
+// The implementation of GetDeviceFamilyInfo is provided by each DLL.
+bool GetDeviceFamilyInfo(
+    _Out_opt_ ULONGLONG* pullUAPInfo,
+    _Out_opt_ ULONG* pulDeviceFamily,
+    _Out_opt_ ULONG* pulDeviceForm);
+
 void 
 AutoSystemInfo::Initialize()
 {
@@ -70,24 +77,7 @@ AutoSystemInfo::Initialize()
         disableDebugScopeCapture = false;
     }
 
-    HMODULE hModNtDll = GetModuleHandle(L"ntdll.dll");
-    if (hModNtDll == nullptr)
-    {
-        RaiseException(0, EXCEPTION_NONCONTINUABLE, 0, 0);
-    }
-    typedef void(*PFNRTLGETDEVICEFAMILYINFOENUM)(ULONGLONG*, ULONG*, ULONG*);
-    PFNRTLGETDEVICEFAMILYINFOENUM pfnRtlGetDeviceFamilyInfoEnum =
-        reinterpret_cast<PFNRTLGETDEVICEFAMILYINFOENUM>(GetProcAddress(hModNtDll, "RtlGetDeviceFamilyInfoEnum"));
-
-    if (pfnRtlGetDeviceFamilyInfoEnum)
-    {
-        pfnRtlGetDeviceFamilyInfoEnum(&this->UAPInfo, &this->DeviceFamily, &this->DeviceForm);
-        deviceInfoRetrived = true;
-    }
-    else
-    {
-        deviceInfoRetrived = false;
-    }
+    deviceInfoRetrived = GetDeviceFamilyInfo(&this->UAPInfo, &this->DeviceFamily, &this->DeviceForm);
 
     // 0 indicates we haven't retrieved the available commit. We get it lazily.
     this->availableCommit = 0;

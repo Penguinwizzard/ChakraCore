@@ -293,7 +293,6 @@ namespace Js
         IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_NumberFormatting_DecimalFormatter, &decimalFormatterFactory));
         IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_NumberFormatting_PercentFormatter, &percentFormatterFactory));
         IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_DateTimeFormatting_DateTimeFormatter, &dateTimeFormatterFactory));
-        IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_Calendar, &calendarFactory));
         IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_NumberFormatting_SignificantDigitsNumberRounder, &significantDigitsRounderActivationFactory));
         IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_NumberFormatting_IncrementNumberRounder, &incrementNumberRounderActivationFactory));
        
@@ -331,66 +330,6 @@ namespace Js
         AnalysisAssert(hString);
         IfFailThrowHr(this->languageStatics->IsWellFormed(hString, &retVal));
         return retVal;
-    }
-
-
-    boolean WindowsGlobalizationAdapter::ValidateAndCanonicalizeTimeZone(_In_ ScriptContext* scriptContext, _In_z_ PCWSTR timeZoneId, HSTRING *result)
-    {
-        HRESULT hr = S_OK;
-        HSTRING timeZone;
-        HSTRING_HEADER timeZoneHeader;
-
-        // Construct HSTRING of timeZoneId passed
-        IfFailThrowHr(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(timeZoneId, wcslen(timeZoneId), &timeZoneHeader, &timeZone));
-        Assert(timeZone);
-
-        if (timeZoneCalendar == nullptr)
-        {
-            IfFailThrowHr(this->CreateTimeZoneOnCalendar(this->GetWindowsGlobalizationLibrary(scriptContext), &timeZoneCalendar));
-        }
-        // ChangeTimeZone should fail if this is not a valid time zone
-        hr = timeZoneCalendar->ChangeTimeZone(timeZone);
-        if (hr != S_OK)
-        {
-            return false;
-        }
-        // Retrieve canonicalize timeZone name
-        IfFailThrowHr(timeZoneCalendar->GetTimeZone(result));
-        return true;
-    }
-
-    void WindowsGlobalizationAdapter::GetDefaultTimeZoneId(_In_ ScriptContext* scriptContext, HSTRING *result)
-    {
-        HRESULT hr = S_OK;
-        if (defaultTimeZoneCalendar == nullptr)
-        {
-            IfFailThrowHr(this->CreateTimeZoneOnCalendar(this->GetWindowsGlobalizationLibrary(scriptContext), &defaultTimeZoneCalendar));
-        }
-
-        IfFailThrowHr(defaultTimeZoneCalendar->GetTimeZone(result));
-    }
-
-    void WindowsGlobalizationAdapter::ReleaseWindowsGlobalizationObjects()
-    {
-        if (this->dateTimeFormatterFactory != nullptr)
-        {
-            this->dateTimeFormatterFactory.Detach()->Release();
-        }
-
-        if (this->calendarFactory != nullptr)
-        {
-            this->calendarFactory.Detach()->Release();
-        }
-
-        if (this->timeZoneCalendar != nullptr)
-        {
-            this->timeZoneCalendar.Detach()->Release();
-        }
-
-        if (this->defaultTimeZoneCalendar != nullptr)
-        {
-            this->defaultTimeZoneCalendar.Detach()->Release();
-        }
     }
    
     HRESULT WindowsGlobalizationAdapter::NormalizeLanguageTag(_In_ ScriptContext* scriptContext, _In_z_ PCWSTR languageTag, HSTRING *result)
@@ -527,28 +466,6 @@ namespace Js
             IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(clock, wcslen(clock), &clockStringHeader, &clockString));
             IfFailedReturn(this->dateTimeFormatterFactory->CreateDateTimeFormatterContext(fsHString, languages.Get(), geoString, calString, clockString, result));
         }
-        return hr;
-    }
-
-    HRESULT WindowsGlobalizationAdapter::CreateTimeZoneOnCalendar(_In_ DelayLoadWindowsGlobalization *library, __out ::ITimeZoneOnCalendar**  result)
-    {
-        AutoCOMPtr<::ICalendar> calendar;
-
-        HRESULT hr = S_OK;
-
-        // initialize hard-coded default languages
-        AutoArrayPtr<HSTRING> arr(HeapNewArray(HSTRING, 1), 1);
-        AutoArrayPtr<HSTRING_HEADER> headers(HeapNewArray(HSTRING_HEADER, 1), 1);
-        IfFailedReturn(library->WindowsCreateStringReference(L"en-US", _countof(L"en-US") - 1, (headers), (arr)));
-        Microsoft::WRL::ComPtr<IIterable<HSTRING>> defaultLanguages;
-        IfFailedReturn(Microsoft::WRL::MakeAndInitialize<HSTRINGIterable>(&defaultLanguages, arr, 1));
-
-        // Create calendar object
-        IfFailedReturn(this->calendarFactory->CreateCalendarDefaultCalendarAndClock(defaultLanguages.Get(), &calendar));
-
-        // Get ITimeZoneOnCalendar part of calendar object
-        IfFailedReturn(calendar->QueryInterface(__uuidof(::ITimeZoneOnCalendar), reinterpret_cast<void**>(result)));
-
         return hr;
     }
 

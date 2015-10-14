@@ -109,8 +109,6 @@ namespace Js
             static NoProfileFunctionInfo Intl_BestFitFormatter;
             static NoProfileFunctionInfo Intl_LookupMatcher;
             static NoProfileFunctionInfo Intl_FormatDateTime;
-            static NoProfileFunctionInfo Intl_ValidateAndCanonicalizeTimeZone;
-            static NoProfileFunctionInfo Intl_GetDefaultTimeZone;
             static NoProfileFunctionInfo Intl_GetPatternForLocale;
 
             static NoProfileFunctionInfo Intl_RegisterBuiltInFunction;
@@ -171,8 +169,6 @@ namespace Js
         static Var EntryIntl_CreateDateTimeFormat(RecyclableObject* function, CallInfo callInfo, ...);
 
         static Var EntryIntl_FormatDateTime(RecyclableObject* function, CallInfo callInfo, ...);
-        static Var EntryIntl_ValidateAndCanonicalizeTimeZone(RecyclableObject* function, CallInfo callInfo, ...);
-        static Var EntryIntl_GetDefaultTimeZone(RecyclableObject* function, CallInfo callInfo, ...);
 
         static Var EntryIntl_RegisterBuiltInFunction(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryIntl_GetHiddenObject(RecyclableObject* function, CallInfo callInfo, ...);

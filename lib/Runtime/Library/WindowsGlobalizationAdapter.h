@@ -30,9 +30,6 @@ namespace Js
         AutoCOMPtr<Windows::Globalization::NumberFormatting::IDecimalFormatterFactory> decimalFormatterFactory;
         AutoCOMPtr<Windows::Globalization::NumberFormatting::IPercentFormatterFactory> percentFormatterFactory;
         AutoCOMPtr<Windows::Globalization::DateTimeFormatting::IDateTimeFormatterFactory> dateTimeFormatterFactory;
-        AutoCOMPtr<Windows::Globalization::ICalendarFactory> calendarFactory;
-        AutoCOMPtr<Windows::Globalization::ITimeZoneOnCalendar> timeZoneCalendar; // use to validate timeZone
-        AutoCOMPtr<Windows::Globalization::ITimeZoneOnCalendar> defaultTimeZoneCalendar; // default current time zone
         AutoCOMPtr<IActivationFactory> incrementNumberRounderActivationFactory;
         AutoCOMPtr<IActivationFactory> significantDigitsRounderActivationFactory;
 #endif
@@ -43,9 +40,6 @@ namespace Js
         template <typename T>
         HRESULT GetActivationFactory(DelayLoadWindowsGlobalization *library, LPCWSTR factoryName, T** instance);
 
-#ifdef ENABLE_INTL_OBJECT
-        HRESULT CreateTimeZoneOnCalendar(_In_ DelayLoadWindowsGlobalization *library, __out Windows::Globalization::ITimeZoneOnCalendar**  result);
-#endif // ENABLE_INTL_OBJECT
     public:
         WindowsGlobalizationAdapter()
             : initialized(false),
@@ -56,10 +50,7 @@ namespace Js
             currencyFormatterFactory(nullptr),
             decimalFormatterFactory(nullptr),
             percentFormatterFactory(nullptr),
-            calendarFactory(nullptr),
             dateTimeFormatterFactory(nullptr),
-            timeZoneCalendar(nullptr),
-            defaultTimeZoneCalendar(nullptr),
             incrementNumberRounderActivationFactory(nullptr),
             significantDigitsRounderActivationFactory(nullptr),
 #endif // ENABLE_INTL_OBJECT
@@ -80,9 +71,6 @@ namespace Js
             _In_opt_z_ PCWSTR calendar, _In_opt_z_ PCWSTR clock, _Out_ Windows::Globalization::DateTimeFormatting::IDateTimeFormatter** formatter);
         HRESULT CreateIncrementNumberRounder(_In_ ScriptContext* scriptContext, Windows::Globalization::NumberFormatting::INumberRounder** numberRounder);
         HRESULT CreateSignificantDigitsRounder(_In_ ScriptContext* scriptContext, Windows::Globalization::NumberFormatting::INumberRounder** numberRounder);
-        boolean ValidateAndCanonicalizeTimeZone(_In_ ScriptContext* scriptContext, _In_z_ PCWSTR timeZoneId, HSTRING* result);
-        void GetDefaultTimeZoneId(_In_ ScriptContext* scriptContext, HSTRING* result);
-        void ReleaseWindowsGlobalizationObjects();
 #endif // ENABLE_INTL_OBJECT
         Windows::Data::Text::IUnicodeCharactersStatics* GetUnicodeStatics()
         {

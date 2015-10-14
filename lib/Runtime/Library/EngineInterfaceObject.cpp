@@ -193,8 +193,6 @@ namespace Js
     NoProfileFunctionInfo EngineInterfaceObject::EntryInfo::Intl_CreateDateTimeFormat(EngineInterfaceObject::EntryIntl_CreateDateTimeFormat);
 
     NoProfileFunctionInfo EngineInterfaceObject::EntryInfo::Intl_FormatDateTime(EngineInterfaceObject::EntryIntl_FormatDateTime);
-    NoProfileFunctionInfo EngineInterfaceObject::EntryInfo::Intl_ValidateAndCanonicalizeTimeZone(EngineInterfaceObject::EntryIntl_ValidateAndCanonicalizeTimeZone);
-    NoProfileFunctionInfo EngineInterfaceObject::EntryInfo::Intl_GetDefaultTimeZone(EngineInterfaceObject::EntryIntl_GetDefaultTimeZone);
 
     NoProfileFunctionInfo EngineInterfaceObject::EntryInfo::Intl_RegisterBuiltInFunction(EngineInterfaceObject::EntryIntl_RegisterBuiltInFunction);
     NoProfileFunctionInfo EngineInterfaceObject::EntryInfo::Intl_GetHiddenObject(EngineInterfaceObject::EntryIntl_GetHiddenObject);
@@ -384,8 +382,6 @@ namespace Js
 
         library->AddFunctionToLibraryObject(intlNativeInterfaces, Js::PropertyIds::currencyDigits, &EngineInterfaceObject::EntryInfo::Intl_CurrencyDigits, 1);
         library->AddFunctionToLibraryObject(intlNativeInterfaces, Js::PropertyIds::formatDateTime, &EngineInterfaceObject::EntryInfo::Intl_FormatDateTime, 1);
-        library->AddFunctionToLibraryObject(intlNativeInterfaces, Js::PropertyIds::validateAndCanonicalizeTimeZone, &EngineInterfaceObject::EntryInfo::Intl_ValidateAndCanonicalizeTimeZone, 2);
-        library->AddFunctionToLibraryObject(intlNativeInterfaces, Js::PropertyIds::getDefaultTimeZone, &EngineInterfaceObject::EntryInfo::Intl_GetDefaultTimeZone, 1);
 
         library->AddFunctionToLibraryObject(intlNativeInterfaces, Js::PropertyIds::registerBuiltInFunction, &EngineInterfaceObject::EntryInfo::Intl_RegisterBuiltInFunction, 1);
         library->AddFunctionToLibraryObject(intlNativeInterfaces, Js::PropertyIds::getHiddenObject, &EngineInterfaceObject::EntryInfo::Intl_GetHiddenObject, 1);
@@ -1259,55 +1255,6 @@ namespace Js
     }
 
     /*
-    *   This function validates the timeZone passed by user has defined in IsValidTimeZoneName() section
-    *   of ECMA-402 dated June 2015.
-    *   Returns true if timeZoneId is a valid zone or link name of the IANA time zone database
-    */
-    Var EngineInterfaceObject::EntryIntl_ValidateAndCanonicalizeTimeZone(RecyclableObject* function, CallInfo callInfo, ...)
-    {
-        EngineInterfaceObject_CommonFunctionProlog(function, callInfo);
-
-        // Return false if timeZoneId is not string
-        if (args.Info.Count < 2 || !JavascriptString::Is(args.Values[1]))
-        {
-            AssertMsg(false, "Need valid timeZoneId");
-            return scriptContext->GetLibrary()->GetUndefined();
-        }
-
-        JavascriptString *argString = JavascriptString::FromVar(args.Values[1]);
-
-        AutoHSTRING canonicalizedTimeZone;
-        boolean isValidTimeZone = GetWindowsGlobalizationAdapter(scriptContext)->ValidateAndCanonicalizeTimeZone(scriptContext, argString->GetSz(), &canonicalizedTimeZone);
-        if (isValidTimeZone)
-        {
-            DelayLoadWindowsGlobalization* wsl = scriptContext->GetThreadContext()->GetWindowsGlobalizationLibrary();
-            PCWSTR strBuf = wsl->WindowsGetStringRawBuffer(*canonicalizedTimeZone, NULL);
-            return Js::JavascriptString::NewCopySz(strBuf, scriptContext);
-        }
-        else
-        {
-            return scriptContext->GetLibrary()->GetUndefined();
-        }
-    }
-
-    /*
-    *   This function returns defaultTimeZone for host's current environement has specified in 
-    *   DefaultTimeZone () section of ECMA-402 dated June 2015.
-    */
-    Var EngineInterfaceObject::EntryIntl_GetDefaultTimeZone(RecyclableObject* function, CallInfo callInfo, ...)
-    {
-        EngineInterfaceObject_CommonFunctionProlog(function, callInfo);
-
-        WindowsGlobalizationAdapter* wga = GetWindowsGlobalizationAdapter(scriptContext);
-        DelayLoadWindowsGlobalization* wsl = scriptContext->GetThreadContext()->GetWindowsGlobalizationLibrary();
-        AutoHSTRING str;
-        wga->GetDefaultTimeZoneId(scriptContext, &str);
-
-        PCWSTR strBuf = wsl->WindowsGetStringRawBuffer(*str, NULL);
-        return Js::JavascriptString::NewCopySz(strBuf, scriptContext);
-    }
-
-    /*
     * This function has the following options:
     *  - Format as Percent.
     *  - Format as Number.
@@ -1399,10 +1346,7 @@ namespace Js
             HSTRING timeZone;
             HSTRING_HEADER timeZoneHeader;
 
-            // IsValidTimeZone() has already verified that this is JavascriptString.
-            JavascriptString* userDefinedTimeZoneId = JavascriptString::FromVar(propertyValue);
-            IfFailThrowHr(WindowsCreateStringReference(userDefinedTimeZoneId->GetSz(), userDefinedTimeZoneId->GetLength(), &timeZoneHeader, &timeZone));
-            Assert(timeZone);
+            IfFailThrowHr(WindowsCreateStringReference(L"UTC", static_cast<uint32>(wcslen(L"UTC")), &timeZoneHeader, &timeZone));
 
             IfFailThrowHr(formatter->FormatUsingTimeZone(winDate, timeZone, &result));
         }
