@@ -4,8 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
-#define _JSRT_
-#include "chakrart.h"
+#include "chakracommon.h"
 
 #define BEGIN_INTERCEPTOR(scriptContext) \
     BEGIN_LEAVE_SCRIPT(scriptContext) \
