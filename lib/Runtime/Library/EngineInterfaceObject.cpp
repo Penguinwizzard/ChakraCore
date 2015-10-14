@@ -542,7 +542,7 @@ namespace Js
 
             HRESULT hr;
             //Ensure we have initialized all appropriate COM objects for the adapter (we will be using them now)
-            IfFailAssertMsgAndThrowHr(GetWindowsGlobalizationAdapter(scriptContext)->EnsureInitialized(scriptContext), "Failed to initialize COM interfaces, verify correct version of globalization dll is used.");
+            IfFailAssertMsgAndThrowHr(GetWindowsGlobalizationAdapter(scriptContext)->EnsureGlobObjectsInitialized(scriptContext), "Failed to initialize COM interfaces, verify correct version of globalization dll is used.");
 
             Js::ScriptFunction *function = scriptContext->GetLibrary()->CreateScriptFunction(intlByteCode->GetNestedFunc(0)->EnsureDeserialized());
 

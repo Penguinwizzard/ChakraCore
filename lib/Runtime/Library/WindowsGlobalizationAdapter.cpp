@@ -28,6 +28,7 @@ using namespace ABI::Windows::Foundation::Collections;
 
 #define IfNullReturnError(EXPR, ERROR) do { if (!(EXPR)) { return (ERROR); } } while(FALSE)
 #define IfFailedReturn(EXPR) do { hr = (EXPR); if (FAILED(hr)) { return hr; }} while(FALSE)
+#define IfFailedSetErrorCodeAndReturn(EXPR, hrVariable) do { hr = (EXPR); if (FAILED(hr)) { hrVariable = hr; return hr; }} while(FALSE)
 #define IfFailedGoLabel(expr, label) if (FAILED(expr)) { goto label; }
 #define IfFailedGo(expr) IfFailedGoLabel(expr, LReturn)
 
@@ -263,43 +264,60 @@ namespace Js
         return factory->QueryInterface(__uuidof(T), reinterpret_cast<void**>(instance));
     }
 
-    HRESULT WindowsGlobalizationAdapter::EnsureInitialized(ScriptContext *scriptContext)
+    HRESULT WindowsGlobalizationAdapter::EnsureGlobObjectsInitialized(ScriptContext *scriptContext)
     {
-        return this->EnsureInitialized(this->GetWindowsGlobalizationLibrary(scriptContext), scriptContext->GetConfig()->IsES6UnicodeExtensionsEnabled());
-    }
-
-    HRESULT WindowsGlobalizationAdapter::EnsureInitialized(DelayLoadWindowsGlobalization *library, bool isES6Mode)
-    {
+        DelayLoadWindowsGlobalization *library = this->GetWindowsGlobalizationLibrary(scriptContext);
+        bool isES6Mode = scriptContext->GetConfig()->IsES6UnicodeExtensionsEnabled();
         HRESULT hr = S_OK;
 
-        if (initialized)
+        if (initializedGlobObjects)
         {
             return hr;
         }
-        else if (failedToInitialize)
+        else if (hrForGlobObjectsInit != S_OK)
         {
-            return S_FALSE;
+            return hrForGlobObjectsInit;
         }
 
-        failedToInitialize = true;
 #ifdef ENABLE_INTL_OBJECT
-        IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_Language, &languageFactory));
-        IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_Language, &languageStatics));
-        IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_NumberFormatting_CurrencyFormatter, &currencyFormatterFactory));
-        IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_NumberFormatting_DecimalFormatter, &decimalFormatterFactory));
-        IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_NumberFormatting_PercentFormatter, &percentFormatterFactory));
-        IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_DateTimeFormatting_DateTimeFormatter, &dateTimeFormatterFactory));
-        IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_NumberFormatting_SignificantDigitsNumberRounder, &significantDigitsRounderActivationFactory));
-        IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_NumberFormatting_IncrementNumberRounder, &incrementNumberRounderActivationFactory));
-       
+        IfFailedSetErrorCodeAndReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_Language, &languageFactory), hrForGlobObjectsInit);
+        IfFailedSetErrorCodeAndReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_Language, &languageStatics), hrForGlobObjectsInit);
+        IfFailedSetErrorCodeAndReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_NumberFormatting_CurrencyFormatter, &currencyFormatterFactory), hrForGlobObjectsInit);
+        IfFailedSetErrorCodeAndReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_NumberFormatting_DecimalFormatter, &decimalFormatterFactory), hrForGlobObjectsInit);
+        IfFailedSetErrorCodeAndReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_NumberFormatting_PercentFormatter, &percentFormatterFactory), hrForGlobObjectsInit);
+        IfFailedSetErrorCodeAndReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_DateTimeFormatting_DateTimeFormatter, &dateTimeFormatterFactory), hrForGlobObjectsInit);
+        IfFailedSetErrorCodeAndReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_NumberFormatting_SignificantDigitsNumberRounder, &significantDigitsRounderActivationFactory), hrForGlobObjectsInit);
+        IfFailedSetErrorCodeAndReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_NumberFormatting_IncrementNumberRounder, &incrementNumberRounderActivationFactory), hrForGlobObjectsInit);
 #endif
-        if(isES6Mode)
+        if (isES6Mode)
         {
-            IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Data_Text_UnicodeCharacters, &unicodeStatics));
+            IfFailedSetErrorCodeAndReturn(EnsureDataTextObjectsInitialized(library), hrForGlobObjectsInit);
         }
 
-        failedToInitialize = false;
-        initialized = true;
+        hrForGlobObjectsInit = S_OK;
+        initializedGlobObjects = true;
+
+        return hr;
+        
+    }
+
+    HRESULT WindowsGlobalizationAdapter::EnsureDataTextObjectsInitialized(DelayLoadWindowsGlobalization *library)
+    {
+        HRESULT hr = S_OK;
+
+        if (initializedDataTextObjects)
+        {
+            return hr;
+        }
+        else if (hrForDataTextObjectsInit != S_OK)
+        {
+            return hrForDataTextObjectsInit;
+        }
+
+        IfFailedSetErrorCodeAndReturn(GetActivationFactory(library, RuntimeClass_Windows_Data_Text_UnicodeCharacters, &unicodeStatics), hrForDataTextObjectsInit);
+
+        hrForDataTextObjectsInit = S_OK;
+        initializedDataTextObjects = true;
 
         return hr;
     }

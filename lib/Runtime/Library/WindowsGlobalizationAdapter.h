@@ -21,8 +21,10 @@ namespace Js
     class WindowsGlobalizationAdapter
     {
     private:
-        bool initialized;
-        bool failedToInitialize;
+        bool initializedGlobObjects;
+        HRESULT hrForGlobObjectsInit;
+        bool initializedDataTextObjects;
+        HRESULT hrForDataTextObjectsInit;
 #ifdef ENABLE_INTL_OBJECT
         AutoCOMPtr<Windows::Globalization::ILanguageFactory> languageFactory;
         AutoCOMPtr<Windows::Globalization::ILanguageStatics> languageStatics;
@@ -42,8 +44,10 @@ namespace Js
 
     public:
         WindowsGlobalizationAdapter()
-            : initialized(false),
-            failedToInitialize(false),
+            : initializedGlobObjects(false),
+            hrForGlobObjectsInit(S_OK),
+            initializedDataTextObjects(false),
+            hrForDataTextObjectsInit(S_OK),
 #ifdef ENABLE_INTL_OBJECT
             languageFactory(nullptr),
             languageStatics(nullptr),
@@ -57,8 +61,8 @@ namespace Js
             unicodeStatics(nullptr)
         { }
 
-        HRESULT EnsureInitialized(ScriptContext *scriptContext);
-        HRESULT EnsureInitialized(DelayLoadWindowsGlobalization *library, bool isES6Mode);
+        HRESULT EnsureGlobObjectsInitialized(ScriptContext *scriptContext);
+        HRESULT EnsureDataTextObjectsInitialized(DelayLoadWindowsGlobalization *library);
 #ifdef ENABLE_INTL_OBJECT
         HRESULT CreateLanguage(_In_ ScriptContext* scriptContext, _In_z_ PCWSTR languageTag, Windows::Globalization::ILanguage** language);
         boolean IsWellFormedLanguageTag(_In_ ScriptContext* scriptContext, _In_z_ PCWSTR languageTag);
