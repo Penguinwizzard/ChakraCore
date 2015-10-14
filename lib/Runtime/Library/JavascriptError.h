@@ -97,9 +97,6 @@ namespace Js
         THROW_ERROR_DECL(ThrowSyntaxError)
         THROW_ERROR_DECL(ThrowTypeError)
         THROW_ERROR_DECL(ThrowURIError)
-#ifdef ENABLE_PROJECTION
-        THROW_ERROR_DECL(ThrowWinRTError)
-#endif
 
 #undef THROW_ERROR_DECL
         static void __declspec(noreturn) ThrowDispatchError(ScriptContext* scriptContext, HRESULT hCode, PCWSTR message);
@@ -137,8 +134,6 @@ namespace Js
         }
 
         JavascriptExceptionObject *GetJavascriptExceptionObject() { return exceptionObject; }
-
-        static void OriginateLanguageException(JavascriptError *pError, ScriptContext* scriptContext);
 
         static DWORD GetAdjustedResourceStringHr(DWORD hr, bool isFormatString);
         

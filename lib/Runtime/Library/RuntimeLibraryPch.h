@@ -10,7 +10,6 @@
 #include "Runtime.h"
 
 #include "Library\EtwTrace.h"
-#include "Library\AsyncDebug.h"
 
 #include "Library\JavascriptNumberObject.h"
 #include "Library\LiteralStringObject.h"

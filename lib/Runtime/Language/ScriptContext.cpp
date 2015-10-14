@@ -10,7 +10,6 @@
 #include "RegexStats.h"
 
 #include "ByteCode\ByteCodeAPI.h"
-#include "Library\AsyncDebug.h"
 #include "Library\ProfileString.h"
 #include "Debug\DiagHelperMethodWrapper.h"
 #include "BackEndAPI.h"
@@ -1225,12 +1224,14 @@ namespace Js
         // This is just to force init Intl code if dump:LibInit has been passed
         if (CONFIG_ISENABLED(DumpFlag) && Js::Configuration::Global.flags.Dump.IsEnabled(Js::JsLibInitPhase))
         {
-#ifdef ENABLE_INTL_OBJECT
-            this->javascriptLibrary->GetEngineInterfaceObject()->DumpIntlByteCode(this);
-#endif
-#ifdef ENABLE_PROJECTION
-            this->javascriptLibrary->GetEngineInterfaceObject()->DumpPromiseByteCode(this);
-#endif
+            for (uint i = 0; i <= MaxEngineInterfaceExtensionKind; i++)
+            {
+                EngineExtensionObjectBase* engineExtension = this->javascriptLibrary->GetEngineInterfaceObject()->GetEngineExtension((Js::EngineInterfaceExtensionKind)i);
+                if (engineExtension != nullptr)
+                {
+                    engineExtension->DumpByteCode();
+                }
+            }
         }
 
         isInitialized = TRUE;
@@ -5342,7 +5343,7 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
                         name = walker.GetCurrentNativeLibraryEntryName();
                     }
 
-                    ushort nameLen = AsyncDebug::ProcessNameAndGetLength(&nameBuffer, name);
+                    ushort nameLen = ProcessNameAndGetLength(&nameBuffer, name);
 
                     methodIdOrNameId = nameBufferLength;
 
@@ -5397,6 +5398,81 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
         OUTPUT_FLUSH();
     }
 #endif
+
+    // Info:        Append sourceString to stringBuilder after escaping charToEscape with escapeChar.
+    //              "SomeBadly\0Formed\0String" => "SomeBadly\\\0Formed\\\0String"
+    // Parameters:  stringBuilder - The Js::StringBuilder to which we should append sourceString.
+    //              sourceString - The string we want to escape and append to stringBuilder.
+    //              sourceStringLen - Length of sourceString.
+    //              escapeChar - Char to use for escaping.
+    //              charToEscape - The char which we should escape with escapeChar.
+    // Returns:     Count of chars written to stringBuilder.
+    charcount_t ScriptContext::AppendWithEscapeCharacters(Js::StringBuilder<ArenaAllocator>* stringBuilder, const WCHAR* sourceString, charcount_t sourceStringLen, WCHAR escapeChar, WCHAR charToEscape)
+    {
+        const WCHAR* charToEscapePtr = wcschr(sourceString, charToEscape);
+        charcount_t charsPadding = 0;
+
+        // Only escape characters if sourceString contains one.
+        if (charToEscapePtr)
+        {
+            charcount_t charsWritten = 0;
+            charcount_t charsToAppend = 0;
+
+            while (charToEscapePtr)
+            {
+                charsToAppend = static_cast<charcount_t>(charToEscapePtr - sourceString) - charsWritten;
+
+                stringBuilder->Append(sourceString + charsWritten, charsToAppend);
+                stringBuilder->Append(escapeChar);
+                stringBuilder->Append(charToEscape);
+
+                // Keep track of this extra escapeChar character so we can update the buffer length correctly below.
+                charsPadding++;
+
+                // charsWritten is a count of the chars from sourceString which have been written - not count of chars Appended to stringBuilder.
+                charsWritten += charsToAppend + 1;
+
+                // Find next charToEscape.
+                charToEscapePtr++;
+                charToEscapePtr = wcschr(charToEscapePtr, charToEscape);
+            }
+
+            // Append the final part of the string if there is any left after the final charToEscape.
+            if (charsWritten != sourceStringLen)
+            {
+                charsToAppend = sourceStringLen - charsWritten;
+                stringBuilder->Append(sourceString + charsWritten, charsToAppend);
+            }
+        }
+        else
+        {
+            stringBuilder->AppendSz(sourceString);
+        }
+
+        return sourceStringLen + charsPadding;
+    }
+
+    /*static*/
+    ushort ScriptContext::ProcessNameAndGetLength(Js::StringBuilder<ArenaAllocator>* nameBuffer, const WCHAR* name)
+    {
+        Assert(nameBuffer);
+        Assert(name);
+
+        ushort nameLen = (ushort)wcslen(name);
+
+        // Surround each function name with quotes and escape any quote characters in the function name itself with '\\'.
+        nameBuffer->Append('\"');
+
+        // Adjust nameLen based on any escape characters we added to escape the '\"' in name.
+        nameLen = (unsigned short)AppendWithEscapeCharacters(nameBuffer, name, nameLen, '\\', '\"');
+
+        nameBuffer->AppendCppLiteral(L"\";");
+
+        // Add 3 padding characters here - one for initial '\"' character, too.
+        nameLen += 3;
+
+        return nameLen;
+    }
 
 } // End namespace Js
 

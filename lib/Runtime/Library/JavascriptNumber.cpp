@@ -662,7 +662,8 @@ namespace Js
             EngineInterfaceObject* nativeEngineInterfaceObj = scriptContext->GetLibrary()->GetEngineInterfaceObject();
             if (nativeEngineInterfaceObj)
             {
-                JavascriptFunction* func = nativeEngineInterfaceObj->GetNumberToLocaleString();
+                IntlEngineInterfaceExtensionObject* intlExtenionObject = static_cast<IntlEngineInterfaceExtensionObject*>(nativeEngineInterfaceObj->GetEngineExtension(EngineInterfaceExtensionKind_Intl));
+                JavascriptFunction* func = intlExtenionObject->GetNumberToLocaleString();
                 if (func)
                 {
                     return func->CallFunction(args);

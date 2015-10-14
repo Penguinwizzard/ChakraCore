@@ -95,38 +95,28 @@ namespace Js
             {
                 if (JavascriptOperators::IsObject(firstArgument) && JavascriptConversion::ToObject(firstArgument, scriptContext, &jsArraySource))
                 {
-#ifdef ENABLE_PROJECTION
-                    // Currently the only reason we check for an external object is projection related, so it remains under conditional compilation.
-                    JavascriptLibrary::ArrayBufferFromExternalObject pfArrayBufferFromExternalObject = jsArraySource->GetLibrary()->getpfArrayBufferFromExternalObject();
-                    // If the function pointer is null then Projection has not been initialized yet and we are not interested in this object.
-                    if (pfArrayBufferFromExternalObject != nullptr && jsArraySource->IsExternal())
+                    HRESULT hr = scriptContext->GetHostScriptContext()->ArrayBufferFromExternalObject(jsArraySource, &arrayBuffer);
+                    switch (hr)
                     {
-                        OUTPUT_TRACE(TypedArrayPhase, L"Suspected Projection ArrayBuffer source - attempting to get buffer\n");
-                        // Check for potential external object ArrayBuffer
-                        HRESULT hr = (*pfArrayBufferFromExternalObject)(jsArraySource, &arrayBuffer);
-                        switch (hr)
-                        {
-                        case S_OK:
-                            // We found an IBuffer
-                            fromExternalObject = true;
-                            OUTPUT_TRACE(TypedArrayPhase, L"Projection ArrayBuffer query suceeded with HR=0x%08X\n", hr);
-                            // We have an ArrayBuffer now, so we can skip all the object probing.
-                            break;
+                    case S_OK:
+                        // We found an IBuffer
+                        fromExternalObject = true;
+                        OUTPUT_TRACE(TypedArrayPhase, L"Projection ArrayBuffer query suceeded with HR=0x%08X\n", hr);
+                        // We have an ArrayBuffer now, so we can skip all the object probing.
+                        break;
 
-                        case S_FALSE:
-                            // We didn't find an IBuffer - fall through
-                            OUTPUT_TRACE(TypedArrayPhase, L"Projection ArrayBuffer query aborted safely with HR=0x%08X (non-handled type)\n", hr);
-                            break;
+                    case S_FALSE:
+                        // We didn't find an IBuffer - fall through
+                        OUTPUT_TRACE(TypedArrayPhase, L"Projection ArrayBuffer query aborted safely with HR=0x%08X (non-handled type)\n", hr);
+                        break;
 
-                        default:
-                            // Any FAILURE HRESULT or unexpected HRESULT
-                            OUTPUT_TRACE(TypedArrayPhase, L"Projection ArrayBuffer query failed with HR=0x%08X\n", hr);
-                            JavascriptError::ThrowTypeError(scriptContext, JSERR_InvalidTypedArray_Constructor);
-                            break;
-                        }
+                    default:
+                        // Any FAILURE HRESULT or unexpected HRESULT
+                        OUTPUT_TRACE(TypedArrayPhase, L"Projection ArrayBuffer query failed with HR=0x%08X\n", hr);
+                        JavascriptError::ThrowTypeError(scriptContext, JSERR_InvalidTypedArray_Constructor);
+                        break;
                     }
                     if (!fromExternalObject)
-#endif
                     {
                         Var lengthVar = JavascriptOperators::OP_GetProperty(jsArraySource, PropertyIds::length, scriptContext);
                         if (JavascriptOperators::GetTypeId(lengthVar) == TypeIds_Undefined)

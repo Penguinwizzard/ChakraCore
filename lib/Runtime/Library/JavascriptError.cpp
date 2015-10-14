@@ -212,7 +212,7 @@ namespace Js
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        JavascriptError* pError = scriptContext->GetLibrary()->CreateWinRTError();
+        JavascriptError* pError = scriptContext->GetHostScriptContext()->CreateWinRTError(nullptr, nullptr);
 
         return JavascriptError::NewInstance(function, pError, callInfo, args);
     }
@@ -269,7 +269,7 @@ namespace Js
         if (nameLen > 0 && msgLen > 0)
         {
            outputStr = JavascriptString::Concat(outputStr, scriptContext->GetLibrary()->CreateStringFromCppLiteral(L": "));
-           outputStr = JavascriptString::Concat(outputStr, message);           
+           outputStr = JavascriptString::Concat(outputStr, message);
         }
         else if (msgLen > 0)
         {
@@ -372,11 +372,7 @@ namespace Js
     THROW_ERROR_IMPL(ThrowSyntaxError, CreateSyntaxError, GetSyntaxErrorType, kjstSyntaxError)
     THROW_ERROR_IMPL(ThrowTypeError, CreateTypeError, GetTypeErrorType, kjstTypeError)
     THROW_ERROR_IMPL(ThrowURIError, CreateURIError, GetURIErrorType, kjstURIError)
-#ifdef ENABLE_PROJECTION
-    THROW_ERROR_IMPL(ThrowWinRTError, CreateWinRTError, GetWinRTErrorType, kjstWinRTError)
-#endif
 #undef THROW_ERROR_IMPL
-        
     JavascriptError* JavascriptError::MapError(ScriptContext* scriptContext, ErrorTypeEnum errorType, IErrorInfo * perrinfo /*= nullptr*/, RestrictedErrorStrings * proerrstr /*= nullptr*/)
     {
         switch (errorType)
@@ -397,7 +393,7 @@ namespace Js
         case kjstWinRTError:
           if (scriptContext->GetConfig()->IsWinRTEnabled())
           {
-              return CreateWinRTError(scriptContext, perrinfo, proerrstr);
+              return scriptContext->GetHostScriptContext()->CreateWinRTError(perrinfo, proerrstr);
           }
           else
           {
@@ -496,66 +492,6 @@ namespace Js
         }
         JavascriptError::SetErrorMessageProperties(pError, hr, allocatedString, scriptContext);
     }
-
-#ifdef ENABLE_PROJECTION
-    void JavascriptError::OriginateLanguageException(JavascriptError *pError, ScriptContext* scriptContext)
-    {
-        // Only originate language exceptions when WinRT is enabled.
-        if (!scriptContext->GetConfig()->IsWinRTEnabled())
-        {
-            TRACE_ERROR(L"OriginateLanguageException called when WinRT wasn't enabled.");
-
-            return;
-        }
-
-        Var value;
-
-        if (!JavascriptOperators::GetProperty(pError, PropertyIds::number, &value, scriptContext))
-        {
-            TRACE_ERROR(L"JavascriptError object missing number property.");
-
-            return;
-        }
-
-        if (!JavascriptNumber::Is(value))
-        {
-            TRACE_ERROR(L"JavascriptError object number property is not a JavascriptNumber.");
-
-            return;
-        }
-
-        HRESULT hrError = JavascriptConversion::ToUInt32_Full(value, scriptContext);
-
-        if (!JavascriptOperators::GetProperty(pError, PropertyIds::message, &value, scriptContext))
-        {
-            TRACE_ERROR(L"JavascriptError object missing message property.");
-
-            return;
-        }
-
-        if (!JavascriptString::Is(value))
-        {
-            TRACE_ERROR(L"JavascriptError object message property is not a JavascriptString.");
-
-            return;
-        }
-
-        JavascriptString* message = JavascriptString::FromVar(value);
-        HSTRING hstring = nullptr;
-        Js::DelayLoadWinRtString *delayLoadWinRtString = scriptContext->GetThreadContext()->GetWinRTStringLibrary();
-        HRESULT hr = delayLoadWinRtString->WindowsCreateString(message->GetSz(), message->GetLength(), &hstring);
-
-        if (SUCCEEDED(hr))
-        {
-            scriptContext->GetThreadContext()->GetWinRTErrorLibrary()->RoOriginateLanguageException(hrError, hstring, nullptr);
-        }
-
-        if (hstring != nullptr)
-        {
-            delayLoadWinRtString->WindowsDeleteString(hstring);
-        }
-    }
-#endif
 
     void JavascriptError::SetErrorMessage(JavascriptError *pError, HRESULT hr, PCWSTR varName, ScriptContext* scriptContext)
     {
@@ -904,7 +840,7 @@ namespace Js
             break;
 #ifdef ENABLE_PROJECTION
         case kjstWinRTError:
-            jsNewError = targetJavascriptLibrary->CreateWinRTError();
+            jsNewError = targetJavascriptLibrary->GetScriptContext()->GetHostScriptContext()->CreateWinRTError(nullptr, nullptr);
             break;
 #endif
 

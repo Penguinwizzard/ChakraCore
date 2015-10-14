@@ -58,7 +58,6 @@
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)CharStringCache.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ArrayBuffer.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)AsyncDebug.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)BoundFunction.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)BufferStringBuilder.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)CommonExternalApiImpl.cpp" />
@@ -76,7 +75,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptArrayIterator.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptBuiltInFunctions.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptEnumeratorIterator.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptErrorDebug.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptExternalFunction.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptGenerator.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptGeneratorFunction.cpp" />
@@ -101,7 +99,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)JSONScanner.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JSONString.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ProfileString.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)RoCausality.Win7.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)RootObjectBase.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)RuntimeFunction.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ScriptFunction.cpp" />
@@ -176,6 +173,10 @@
       <ExcludedFromBuild Condition="'$(Platform)'!='Win32' AND '$(Platform)'!='x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSIMDInt8x16.cpp" />
+    <ClCompile Include="ExternalLibraryBase.cpp" />
+    <ClCompile Include="IntlEngineInterfaceExtensionObject.cpp" />
+    <ClCompile Include="JavascriptErrorDebug.cpp" />
+    <ClCompile Include="RoCausality.Win7.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\DiagGlobalList.h" />
@@ -183,10 +184,14 @@
     <ClInclude Include="..\InternalPropertyList.h" />
     <ClInclude Include="..\RuntimeCommon.h" />
     <ClInclude Include="..\SerializableFunctionFields.h" />
+    <ClInclude Include="ExternalLibraryBase.h" />
+    <ClInclude Include="IntlEngineInterfaceExtensionObject.h" />
+    <ClInclude Include="JavascriptErrorDebug.h" />
     <ClInclude Include="JavascriptSIMDFloat32x4.h" />
     <ClInclude Include="JavascriptSIMDFloat64x2.h" />
     <ClInclude Include="JavascriptSIMDInt32x4.h" />
     <ClInclude Include="JavascriptSIMDInt8x16.h" />
+    <ClInclude Include="RoCausality.Win7.h" />
     <ClInclude Include="SIMDFloat32x4Lib.h" />
     <ClInclude Include="SIMDFloat32x4Operation.h" />
     <ClInclude Include="SIMDFloat64x2Lib.h" />
@@ -197,7 +202,6 @@
     <ClInclude Include="SIMDInt8x16Operation.h" />
     <ClInclude Include="SIMDShuffleMasks.h" />
     <ClInclude Include="ArrayBuffer.h" />
-    <ClInclude Include="AsyncDebug.h" />
     <ClInclude Include="BoundFunction.h" />
     <ClInclude Include="BufferStringBuilder.h" />
     <ClInclude Include="BuiltInFlags.h" />
@@ -209,7 +213,6 @@
     <ClInclude Include="DelayLoadLibrary.h" />
     <ClInclude Include="DOMFastPathInfo.h" />
     <ClInclude Include="EngineInterfaceObject.h" />
-    <ClInclude Include="EngineInterfaceObjectBuiltIns.h" />
     <ClInclude Include="Entropy.h" />
     <ClInclude Include="ES5ArrayIndexEnumerator.h" />
     <ClInclude Include="ES5ArrayNonIndexEnumerator.h" />
@@ -230,7 +233,6 @@
     <ClInclude Include="JavascriptBuiltInFunctionList.h" />
     <ClInclude Include="JavascriptBuiltInFunctions.h" />
     <ClInclude Include="JavascriptEnumeratorIterator.h" />
-    <ClInclude Include="JavascriptErrorDebug.h" />
     <ClInclude Include="JavascriptExternalFunction.h" />
     <ClInclude Include="JavascriptGenerator.h" />
     <ClInclude Include="JavascriptGeneratorFunction.h" />
@@ -256,7 +258,6 @@
     <ClInclude Include="JSONString.h" />
     <ClInclude Include="MapOrSetDataList.h" />
     <ClInclude Include="ProfileString.h" />
-    <ClInclude Include="RoCausality.Win7.h" />
     <ClInclude Include="RootObjectBase.h" />
     <ClInclude Include="RuntimeFunction.h" />
     <ClInclude Include="RuntimeLibraryPch.h" />

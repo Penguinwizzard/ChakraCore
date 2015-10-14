@@ -13,12 +13,15 @@
 CompileAssert(MaxPreInitializedObjectTypeInlineSlotCount <= USHRT_MAX);
 
 class ScriptSite;
+class ActiveScriptExternalLibrary;
+class ProjectionExternalLibrary;
 class EditAndContinue;
 
 #ifdef ENABLE_PROJECTION
 namespace Projection
 {
     class ProjectionContext;
+    class WinRTPromiseEngineInterfaceExtensionObject;
 }
 #endif
 
@@ -110,7 +113,12 @@ namespace Js
         friend class GlobalObject;
         friend class ScriptContext;
         friend class EngineInterfaceObject;
+        friend class ExternalLibraryBase;
+        friend class ActiveScriptExternalLibrary;
+        friend class IntlEngineInterfaceExtensionObject;
 #ifdef ENABLE_PROJECTION
+        friend class ProjectionExternalLibrary;
+        friend class Projection::WinRTPromiseEngineInterfaceExtensionObject;
         friend class Projection::ProjectionContext;
 #endif
         static const wchar_t* domBuiltinPropertyNames[];
@@ -158,6 +166,7 @@ namespace Js
 
     private:
         Recycler * recycler;
+        ExternalLibraryBase* externalLibraryList;
 
         UndeclaredBlockVariable* undeclBlockVarSentinel;
 
@@ -188,9 +197,6 @@ namespace Js
         StaticType * booleanTypeStatic;
         DynamicType * booleanTypeDynamic;
         DynamicType * dateType;
-#ifdef ENABLE_PROJECTION
-        DynamicType * winrtDateType;
-#endif
         StaticType * variantDateType;
         DynamicType * symbolTypeDynamic;
         StaticType * symbolTypeStatic;
@@ -206,8 +212,6 @@ namespace Js
 
         typedef JsUtil::BaseDictionary<FunctionInfo *, BuiltinFunction, Recycler> FuncInfoToBuiltinIdMap;
         FuncInfoToBuiltinIdMap * funcInfoToBuiltinIdMap;
-
-
 
         INT_PTR vtableAddresses[VTableValue::Count];
         ConstructorCache *constructorCacheDefaultInstance;
@@ -241,9 +245,6 @@ namespace Js
         DynamicType * syntaxErrorType;
         DynamicType * typeErrorType;
         DynamicType * uriErrorType;
-#ifdef ENABLE_PROJECTION
-        DynamicType * winrtErrorType;
-#endif
         StaticType  * numberTypeStatic;
         StaticType  * int64NumberTypeStatic;
         StaticType  * uint64NumberTypeStatic;
@@ -305,12 +306,6 @@ namespace Js
         JavascriptString* symbolTypeDisplayString;
         JavascriptString* debuggerDeadZoneBlockVariableString;
 
-        DynamicType * extensionEnumeratorType;
-        DynamicType * moduleRootType;
-
-        StaticType * dispMemberProxyType;
-        StaticType * hostDispatchType;
-        DynamicType * hostObjectType;
         DynamicObject* missingPropertyHolder;
 
         StaticType* throwErrorObjectType;
@@ -460,11 +455,9 @@ namespace Js
                               identityFunction(nullptr),
                               throwerFunction(nullptr),
                               jsrtContextObject(nullptr),
+                              externalLibraryList(nullptr),
                               cachedForInEnumerator(nullptr),
                               cacheForCopyOnAccessArraySegments(nullptr),
-#ifdef ENABLE_PROJECTION
-                              pfArrayBufferFromExternalObject(nullptr),
-#endif
                               isHybridDebugging(false),
                               isLibraryReadyForHybridDebugging(false),
                               referencedPropertyRecords(nullptr),
@@ -554,9 +547,6 @@ namespace Js
         JavascriptFunction* GetMapConstructor() const {return mapConstructor; }
         JavascriptFunction* GetSetConstructor() const {return  setConstructor; }
         JavascriptFunction* GetSymbolConstructor() const {return symbolConstructor; }
-#ifdef ENABLE_PROJECTION
-        JavascriptFunction* GetWinRTPromiseConstructor();
-#endif
         JavascriptFunction* GetEvalFunctionObject() { return evalFunctionObject; }
         JavascriptFunction* GetArrayPrototypeValuesFunction() { return arrayPrototypeValuesFunction; }
         DynamicObject* GetMathObject() const {return mathObject; }
@@ -580,9 +570,6 @@ namespace Js
         StaticType  * GetBooleanTypeStatic() const { return booleanTypeStatic; }
         DynamicType * GetBooleanTypeDynamic() const { return booleanTypeDynamic; }
         DynamicType * GetDateType() const { return dateType; }
-#ifdef ENABLE_PROJECTION
-        DynamicType * GetWinRTDateType() const { return winrtDateType; }
-#endif
         DynamicType * GetBoundFunctionType() const { return boundFunctionType; }
         DynamicType * GetRegExpConstructorType() const { return regexConstructorType; }
         StaticType  * GetEnumeratorType() const { return enumeratorType; }
@@ -595,9 +582,6 @@ namespace Js
         DynamicType * GetSyntaxErrorType() const { return syntaxErrorType; }
         DynamicType * GetTypeErrorType() const { return typeErrorType; }
         DynamicType * GetURIErrorType() const { return uriErrorType; }
-#ifdef ENABLE_PROJECTION
-        DynamicType * GetWinRTErrorType() const { return winrtErrorType; }
-#endif
         StaticType  * GetNumberTypeStatic() const { return numberTypeStatic; }
         StaticType  * GetInt64TypeStatic() const { return int64NumberTypeStatic; }
         StaticType  * GetUInt64TypeStatic() const { return uint64NumberTypeStatic; }
@@ -752,9 +736,6 @@ namespace Js
         JavascriptError* CreateURIError();
         JavascriptError* CreateStackOverflowError();
         JavascriptError* CreateOutOfMemoryError();
-#ifdef ENABLE_PROJECTION
-        JavascriptError* CreateWinRTError();
-#endif
         JavascriptSymbol* CreateSymbol(JavascriptString* description);
         JavascriptSymbol* CreateSymbol(const wchar_t* description, int descriptionLength);
         JavascriptSymbol* CreateSymbol(const PropertyRecord* propertyRecord);
@@ -857,13 +838,6 @@ namespace Js
 
         RecyclableObject* CreateThrowErrorObject(JavascriptError* error);
 
-        StaticType * GetDispMemberProxyType() { return dispMemberProxyType; }
-        StaticType * GetHostDispatchType() { return hostDispatchType; }
-        DynamicType * GetHostObjectType() { return hostObjectType;}
-
-        DynamicType * GetModuleRootType() { return moduleRootType; }
-        DynamicType * GetExtensionEnumeratorType() { return extensionEnumeratorType; }
-
         JavascriptFunction* EnsurePromiseResolveFunction();
 
         void SetCrossSiteForSharedFunctionType(JavascriptFunction * function, bool useSlotAccessCrossSiteThunk);
@@ -873,7 +847,6 @@ namespace Js
 
         void SetProfileMode(bool fSet);
         void SetDispatchProfile(bool fSet, JavascriptMethod dispatchInvoke);
-        void SetDispatchInvoke(Js::JavascriptMethod dispatchInvoke);
         HRESULT ProfilerRegisterBuiltIns();
 
         static bool IsCopyOnAccessArrayCallSite(JavascriptLibrary *lib, ArrayCallSiteInfo *arrayInfo, uint32 length);
@@ -990,10 +963,6 @@ namespace Js
         static void __cdecl InitializeTypeErrorPrototype(DynamicObject* prototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
         static void __cdecl InitializeURIErrorConstructor(DynamicObject* constructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
         static void __cdecl InitializeURIErrorPrototype(DynamicObject* prototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
-#ifdef ENABLE_PROJECTION
-        static void __cdecl InitializeWinRTErrorConstructor(DynamicObject* constructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
-        static void __cdecl InitializeWinRTErrorPrototype(DynamicObject* prototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
-#endif
 
         static void __cdecl InitializeTypedArrayConstructor(DynamicObject* typedArrayConsructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
         static void __cdecl InitializeTypedArrayPrototype(DynamicObject* prototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
@@ -1052,7 +1021,7 @@ namespace Js
 #ifdef ENABLE_INTL_OBJECT
         static void __cdecl InitializeIntlObject(DynamicObject* IntlEngineObject, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
 #endif
-#ifdef ENABLE_PROJECTION
+#ifdef ENABLE_PROJECTION  
         void InitializeWinRTPromiseConstructor();
 #endif
         static void __cdecl InitializeMapConstructor(DynamicObject* mapConstructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
@@ -1086,7 +1055,6 @@ namespace Js
         void AddMember(DynamicObject* object, PropertyId propertyId, Var value, PropertyAttributes attributes);
         JavascriptString* CreateEmptyString();
 
-        void InitializeDiagnosticsScriptObject(DiagnosticsScriptObject* newDiagnosticsScriptObject);
 
         static void __cdecl InitializeGeneratorFunction(DynamicObject* function, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
         template<bool addPrototype>
@@ -1098,15 +1066,6 @@ namespace Js
 #if ENABLE_DEBUG_CONFIG_OPTIONS
         static wchar_t* LibraryFunctionName[BuiltinFunction::Count + 1];
 #endif
-#endif
-
-#ifdef ENABLE_PROJECTION
-    public:
-        typedef HRESULT (*ArrayBufferFromExternalObject)(__in RecyclableObject *obj,
-                                                         __out ArrayBuffer **ppArrayBuffer);
-        ArrayBufferFromExternalObject getpfArrayBufferFromExternalObject() { return pfArrayBufferFromExternalObject; }
-    private:
-        ArrayBufferFromExternalObject pfArrayBufferFromExternalObject;
 #endif
 
     public:
