@@ -306,7 +306,7 @@ GlobOpt::CSEAddInstr(
         return;
     }
 
-    IntConstType intConstantValue;
+    int32 intConstantValue;
     if(valueInfo && !valueInfo->GetSymStore() && valueInfo->TryGetIntConstantValue(&intConstantValue))
     {
         Assert(isArray);
@@ -489,7 +489,7 @@ GlobOpt::CSEOptimize(BasicBlock *block, IR::Instr * *const instrRef, Value **pSr
         symStore = valueInfo->GetSymStore();
         Value * symStoreVal = NULL;
 
-        IntConstType intConstantValue;
+        int32 intConstantValue;
         if (!symStore && valueInfo->TryGetIntConstantValue(&intConstantValue))
         {
             // Handle:
@@ -684,7 +684,7 @@ GlobOpt::CSEOptimize(BasicBlock *block, IR::Instr * *const instrRef, Value **pSr
         this->CaptureNoImplicitCallUses(cseOpnd, false);
     }
 
-    IntConstType intConstantValue;
+    int32 intConstantValue;
     if (valueInfo->TryGetIntConstantValue(&intConstantValue) && valueInfo->IsIntAndLikelyTagged())
     {
         cseOpnd->Free(func);

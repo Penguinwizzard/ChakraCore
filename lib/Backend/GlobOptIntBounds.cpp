@@ -36,7 +36,7 @@ void GlobOpt::AddSubConstantInfo::Set(
     StackSym *const srcSym,
     Value *const srcValue,
     const bool srcValueIsLikelyConstant,
-    const IntConstType offset)
+    const int32 offset)
 {
     Assert(srcSym);
     Assert(!srcSym->IsTypeSpec());
@@ -173,11 +173,11 @@ void GlobOpt::ArrayUpperBoundCheckHoistInfo::SetLoop(
 
 bool ValueInfo::HasIntConstantValue(const bool includeLikelyInt) const
 {
-    IntConstType constantValue;
+    int32 constantValue;
     return TryGetIntConstantValue(&constantValue, includeLikelyInt);
 }
 
-bool ValueInfo::TryGetIntConstantValue(IntConstType *const intValueRef, const bool includeLikelyInt) const
+bool ValueInfo::TryGetIntConstantValue(int32 *const intValueRef, const bool includeLikelyInt) const
 {
     Assert(intValueRef);
 
@@ -214,7 +214,7 @@ bool ValueInfo::TryGetIntConstantValue(IntConstType *const intValueRef, const bo
     return false;
 }
 
-bool ValueInfo::TryGetIntConstantLowerBound(IntConstType *const intConstantBoundRef, const bool includeLikelyInt) const
+bool ValueInfo::TryGetIntConstantLowerBound(int32 *const intConstantBoundRef, const bool includeLikelyInt) const
 {
     Assert(intConstantBoundRef);
 
@@ -250,7 +250,7 @@ bool ValueInfo::TryGetIntConstantLowerBound(IntConstType *const intConstantBound
     return true;
 }
 
-bool ValueInfo::TryGetIntConstantUpperBound(IntConstType *const intConstantBoundRef, const bool includeLikelyInt) const
+bool ValueInfo::TryGetIntConstantUpperBound(int32 *const intConstantBoundRef, const bool includeLikelyInt) const
 {
     Assert(intConstantBoundRef);
 
@@ -300,7 +300,7 @@ bool ValueInfo::TryGetIntConstantBounds(IntConstantBounds *const intConstantBoun
         case ValueStructureKind::IntConstant:
             if(!includeLikelyInt || IsInt())
             {
-                const IntConstType intValue = AsIntConstant()->IntValue();
+                const int32 intValue = AsIntConstant()->IntValue();
                 *intConstantBoundsRef = IntConstantBounds(intValue, intValue);
                 return true;
             }
@@ -322,7 +322,7 @@ bool ValueInfo::TryGetIntConstantBounds(IntConstantBounds *const intConstantBoun
     *intConstantBoundsRef =
         IsTaggedInt()
             ? IntConstantBounds(Js::Constants::Int31MinValue, Js::Constants::Int31MaxValue)
-            : IntConstantBounds(IntConstMin, IntConstMax);
+            : IntConstantBounds(INT32_MIN, INT32_MAX);
     return true;
 }
 
@@ -346,11 +346,11 @@ bool ValueInfo::WasNegativeZeroPreventedByBailout() const
 
 bool ValueInfo::IsEqualTo(
     const Value *const src1Value,
-    const IntConstType min1,
-    const IntConstType max1,
+    const int32 min1,
+    const int32 max1,
     const Value *const src2Value,
-    const IntConstType min2,
-    const IntConstType max2)
+    const int32 min2,
+    const int32 max2)
 {
     const bool result =
         IsEqualTo_NoConverse(src1Value, min1, max1, src2Value, min2, max2) ||
@@ -362,11 +362,11 @@ bool ValueInfo::IsEqualTo(
 
 bool ValueInfo::IsNotEqualTo(
     const Value *const src1Value,
-    const IntConstType min1,
-    const IntConstType max1,
+    const int32 min1,
+    const int32 max1,
     const Value *const src2Value,
-    const IntConstType min2,
-    const IntConstType max2)
+    const int32 min2,
+    const int32 max2)
 {
     const bool result =
         IsNotEqualTo_NoConverse(src1Value, min1, max1, src2Value, min2, max2) ||
@@ -378,11 +378,11 @@ bool ValueInfo::IsNotEqualTo(
 
 bool ValueInfo::IsEqualTo_NoConverse(
     const Value *const src1Value,
-    const IntConstType min1,
-    const IntConstType max1,
+    const int32 min1,
+    const int32 max1,
     const Value *const src2Value,
-    const IntConstType min2,
-    const IntConstType max2)
+    const int32 min2,
+    const int32 max2)
 {
     return
         IsGreaterThanOrEqualTo(src1Value, min1, max1, src2Value, min2, max2) &&
@@ -391,11 +391,11 @@ bool ValueInfo::IsEqualTo_NoConverse(
 
 bool ValueInfo::IsNotEqualTo_NoConverse(
     const Value *const src1Value,
-    const IntConstType min1,
-    const IntConstType max1,
+    const int32 min1,
+    const int32 max1,
     const Value *const src2Value,
-    const IntConstType min2,
-    const IntConstType max2)
+    const int32 min2,
+    const int32 max2)
 {
     return
         IsGreaterThan(src1Value, min1, max1, src2Value, min2, max2) ||
@@ -404,55 +404,55 @@ bool ValueInfo::IsNotEqualTo_NoConverse(
 
 bool ValueInfo::IsGreaterThanOrEqualTo(
     const Value *const src1Value,
-    const IntConstType min1,
-    const IntConstType max1,
+    const int32 min1,
+    const int32 max1,
     const Value *const src2Value,
-    const IntConstType min2,
-    const IntConstType max2)
+    const int32 min2,
+    const int32 max2)
 {
     return IsGreaterThanOrEqualTo(src1Value, min1, max1, src2Value, min2, max2, 0);
 }
 
 bool ValueInfo::IsGreaterThan(
     const Value *const src1Value,
-    const IntConstType min1,
-    const IntConstType max1,
+    const int32 min1,
+    const int32 max1,
     const Value *const src2Value,
-    const IntConstType min2,
-    const IntConstType max2)
+    const int32 min2,
+    const int32 max2)
 {
     return IsGreaterThanOrEqualTo(src1Value, min1, max1, src2Value, min2, max2, 1);
 }
 
 bool ValueInfo::IsLessThanOrEqualTo(
     const Value *const src1Value,
-    const IntConstType min1,
-    const IntConstType max1,
+    const int32 min1,
+    const int32 max1,
     const Value *const src2Value,
-    const IntConstType min2,
-    const IntConstType max2)
+    const int32 min2,
+    const int32 max2)
 {
     return IsLessThanOrEqualTo(src1Value, min1, max1, src2Value, min2, max2, 0);
 }
 
 bool ValueInfo::IsLessThan(
     const Value *const src1Value,
-    const IntConstType min1,
-    const IntConstType max1,
+    const int32 min1,
+    const int32 max1,
     const Value *const src2Value,
-    const IntConstType min2,
-    const IntConstType max2)
+    const int32 min2,
+    const int32 max2)
 {
     return IsLessThanOrEqualTo(src1Value, min1, max1, src2Value, min2, max2, -1);
 }
 
 bool ValueInfo::IsGreaterThanOrEqualTo(
     const Value *const src1Value,
-    const IntConstType min1,
-    const IntConstType max1,
+    const int32 min1,
+    const int32 max1,
     const Value *const src2Value,
-    const IntConstType min2,
-    const IntConstType max2,
+    const int32 min2,
+    const int32 max2,
     const int src2Offset)
 {
     return
@@ -463,11 +463,11 @@ bool ValueInfo::IsGreaterThanOrEqualTo(
 
 bool ValueInfo::IsLessThanOrEqualTo(
     const Value *const src1Value,
-    const IntConstType min1,
-    const IntConstType max1,
+    const int32 min1,
+    const int32 max1,
     const Value *const src2Value,
-    const IntConstType min2,
-    const IntConstType max2,
+    const int32 min2,
+    const int32 max2,
     const int src2Offset)
 {
     return
@@ -480,11 +480,11 @@ bool ValueInfo::IsLessThanOrEqualTo(
 
 bool ValueInfo::IsGreaterThanOrEqualTo_NoConverse(
     const Value *const src1Value,
-    const IntConstType min1,
-    const IntConstType max1,
+    const int32 min1,
+    const int32 max1,
     const Value *const src2Value,
-    const IntConstType min2,
-    const IntConstType max2,
+    const int32 min2,
+    const int32 max2,
     const int src2Offset)
 {
     Assert(src1Value || min1 == max1);
@@ -514,11 +514,11 @@ bool ValueInfo::IsGreaterThanOrEqualTo_NoConverse(
 
 bool ValueInfo::IsLessThanOrEqualTo_NoConverse(
     const Value *const src1Value,
-    const IntConstType min1,
-    const IntConstType max1,
+    const int32 min1,
+    const int32 max1,
     const Value *const src2Value,
-    const IntConstType min2,
-    const IntConstType max2,
+    const int32 min2,
+    const int32 max2,
     const int src2Offset)
 {
     Assert(src1Value || min1 == max1);
@@ -555,7 +555,7 @@ bool ValueInfo::IsLessThanOrEqualTo_NoConverse(
 void GlobOpt::UpdateIntBoundsForEqualBranch(
     Value *const src1Value,
     Value *const src2Value,
-    const IntConstType src2ConstantValue)
+    const int32 src2ConstantValue)
 {
     Assert(src1Value);
 
@@ -608,7 +608,7 @@ void GlobOpt::UpdateIntBoundsForEqualBranch(
 void GlobOpt::UpdateIntBoundsForNotEqualBranch(
     Value *const src1Value,
     Value *const src2Value,
-    const IntConstType src2ConstantValue)
+    const int32 src2ConstantValue)
 {
     Assert(src1Value);
 
@@ -842,8 +842,8 @@ ValueInfo *GlobOpt::UpdateIntBoundsForEqual(
         return nullptr;
     }
 
-    const IntConstType newMin = max(constantBounds.LowerBound(), boundConstantBounds.LowerBound());
-    const IntConstType newMax = min(constantBounds.UpperBound(), boundConstantBounds.UpperBound());
+    const int32 newMin = max(constantBounds.LowerBound(), boundConstantBounds.LowerBound());
+    const int32 newMax = min(constantBounds.UpperBound(), boundConstantBounds.UpperBound());
     return newMin <= newMax ? NewIntRangeValueInfo(valueInfo, newMin, newMax) : nullptr;
 }
 
@@ -894,10 +894,10 @@ ValueInfo *GlobOpt::UpdateIntBoundsForNotEqual(
     {
         return nullptr;
     }
-    const IntConstType constantBound = boundConstantBounds.LowerBound();
+    const int32 constantBound = boundConstantBounds.LowerBound();
 
     // The value is not equal to a constant, so narrow the range if the constant is equal to the value's lower or upper bound
-    IntConstType newMin = constantBounds.LowerBound(), newMax = constantBounds.UpperBound();
+    int32 newMin = constantBounds.LowerBound(), newMax = constantBounds.UpperBound();
     if(constantBound == newMin)
     {
         Assert(newMin <= newMax);
@@ -974,7 +974,7 @@ ValueInfo *GlobOpt::UpdateIntBoundsForGreaterThanOrEqual(
         return nullptr;
     }
 
-    IntConstType adjustedBoundMin;
+    int32 adjustedBoundMin;
     if(boundOffset == 0)
     {
         adjustedBoundMin = boundConstantBounds.LowerBound();
@@ -991,7 +991,7 @@ ValueInfo *GlobOpt::UpdateIntBoundsForGreaterThanOrEqual(
     {
         return nullptr;
     }
-    const IntConstType newMin = max(constantBounds.LowerBound(), adjustedBoundMin);
+    const int32 newMin = max(constantBounds.LowerBound(), adjustedBoundMin);
     return
         newMin <= constantBounds.UpperBound()
             ? NewIntRangeValueInfo(valueInfo, newMin, constantBounds.UpperBound())
@@ -1059,7 +1059,7 @@ ValueInfo *GlobOpt::UpdateIntBoundsForLessThanOrEqual(
         return nullptr;
     }
 
-    IntConstType adjustedBoundMax;
+    int32 adjustedBoundMax;
     if(boundOffset == 0)
     {
         adjustedBoundMax = boundConstantBounds.UpperBound();
@@ -1076,7 +1076,7 @@ ValueInfo *GlobOpt::UpdateIntBoundsForLessThanOrEqual(
     {
         return nullptr;
     }
-    const IntConstType newMax = min(constantBounds.UpperBound(), adjustedBoundMax);
+    const int32 newMax = min(constantBounds.UpperBound(), adjustedBoundMax);
     return
         newMax >= constantBounds.LowerBound()
             ? NewIntRangeValueInfo(valueInfo, constantBounds.LowerBound(), newMax)
@@ -1256,7 +1256,7 @@ void GlobOpt::TrackIntSpecializedAddSubConstant(
             if(bounds)
             {
                 const ValueNumber valueNumber = value->GetValueNumber();
-                const IntConstType dstOffset = -addSubConstantInfo->Offset();
+                const int32 dstOffset = -addSubConstantInfo->Offset();
                 bounds->SetLowerBound(valueNumber, dstValue, dstOffset, true);
                 bounds->SetUpperBound(valueNumber, dstValue, dstOffset, true);
                 ChangeValueInfo(nullptr, value, NewIntBoundedValueInfo(valueInfo, bounds));
@@ -2062,10 +2062,10 @@ void GlobOpt::GenerateLoopCount(Loop *const loop, LoopCount *const loopCount)
         instr->SetSrc1(IR::RegOpnd::New(intermediateValueSym, intermediateValueSym->GetType(), func));
         instr->GetSrc1()->SetIsJITOptimizedReg(true);
 
-        if(offset->m_value < 0 && offset->m_value != IntConstMin)
+        if(offset->GetValue() < 0 && offset->GetValue() != IntConstMin)
         {
             instr->m_opcode = Js::OpCode::Sub_I4;
-            offset->m_value = -offset->m_value;
+            offset->SetValue(-offset->GetValue());
         }
         instr->SetSrc2(offset);
 

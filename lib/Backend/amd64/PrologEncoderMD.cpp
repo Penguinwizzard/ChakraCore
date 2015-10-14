@@ -41,7 +41,7 @@ unsigned __int8 PrologEncoderMD::GetOp(IR::Instr *instr)
         Assert(instr->GetSrc1() && instr->GetSrc2());
         Assert(instr->GetSrc1()->AsRegOpnd()->GetReg() == RegRSP &&
                instr->GetSrc2()->IsIntConstOpnd());
-        if (instr->GetSrc2()->AsIntConstOpnd()->m_value <= 128)
+        if (instr->GetSrc2()->AsIntConstOpnd()->GetValue() <= 128)
             return UWOP_ALLOC_SMALL;
         else
             return UWOP_ALLOC_LARGE;
@@ -103,9 +103,9 @@ size_t PrologEncoderMD::GetAllocaSize(IR::Instr *instr)
     Assert(instr->GetSrc1() && instr->GetSrc2());
     Assert(instr->GetSrc1()->AsRegOpnd()->GetReg() == RegRSP &&
            instr->GetSrc2()->IsIntConstOpnd());
-    Assert(instr->GetSrc2()->AsIntConstOpnd()->m_value % 8 == 0);
+    Assert(instr->GetSrc2()->AsIntConstOpnd()->GetValue() % 8 == 0);
 
-    return instr->GetSrc2()->AsIntConstOpnd()->m_value;
+    return instr->GetSrc2()->AsIntConstOpnd()->GetValue();
 }
 
 unsigned __int8 PrologEncoderMD::GetFPReg()

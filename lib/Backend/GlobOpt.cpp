@@ -354,7 +354,7 @@ bool GlobOpt::ShouldExpectConventionalArrayIndexValue(IR::IndirOpnd *const indir
     }
 
     ValueInfo *const indexValueInfo = indexValue->GetValueInfo();
-    IntConstType indexConstantValue;
+    int32 indexConstantValue;
     if(indexValueInfo->TryGetIntConstantValue(&indexConstantValue))
     {
         return indexConstantValue >= 0;
@@ -398,7 +398,7 @@ ValueType GlobOpt::GetDivValueType(IR::Instr* instr, Value* src1Val, Value* src2
         }
         return resultType;
     }
-    IntConstType src1IntConstantValue;
+    int32 src1IntConstantValue;
     if(!src1ValueInfo || !src1ValueInfo->TryGetIntConstantValue(&src1IntConstantValue))
     {
         return ValueType::Number;
@@ -407,7 +407,7 @@ ValueType GlobOpt::GetDivValueType(IR::Instr* instr, Value* src1Val, Value* src2
     {
         return ValueType::Float;
     }
-    IntConstType src2IntConstantValue;
+    int32 src2IntConstantValue;
     if(!src2Val || !src2ValueInfo->TryGetIntConstantValue(&src2IntConstantValue))
     {
         return ValueType::Number;
@@ -3311,7 +3311,7 @@ GlobOpt::MergeLikelyIntValueInfo(Value *toDataVal, Value *fromDataVal, ValueType
     bool wasNegativeZeroPreventedByBailout;
     if(newValueType.IsInt())
     {
-        IntConstType toDataIntConstantValue, fromDataIntConstantValue;
+        int32 toDataIntConstantValue, fromDataIntConstantValue;
         if (toDataValueInfo->TryGetIntConstantValue(&toDataIntConstantValue) &&
             fromDataValueInfo->TryGetIntConstantValue(&fromDataIntConstantValue) &&
             toDataIntConstantValue == fromDataIntConstantValue)
@@ -3374,7 +3374,7 @@ GlobOpt::MergeLikelyIntValueInfo(Value *toDataVal, Value *fromDataVal, ValueType
 
     if(newValueType.IsInt())
     {
-        IntConstType min1, max1, min2, max2;
+        int32 min1, max1, min2, max2;
         toDataValueInfo->GetIntValMinMax(&min1, &max1, false);
         fromDataValueInfo->GetIntValMinMax(&min2, &max2, false);
         return NewIntRangeValueInfo(min(min1, min2), max(max1, max2), wasNegativeZeroPreventedByBailout);
@@ -4291,10 +4291,10 @@ bool GlobOpt::CollectMemsetStElementI(IR::Instr *instr, Loop *loop)
 
     SymID baseSymID = GetVarSymID(baseOp->GetStackSym());
     
-    IntConstType constant;
+    int32 constant;
     if (instr->GetSrc1()->IsIntConstOpnd())
     {
-        constant = instr->GetSrc1()->AsIntConstOpnd()->m_value;
+        constant = instr->GetSrc1()->AsIntConstOpnd()->AsInt32();
     }
     else if (instr->GetSrc1()->IsAddrOpnd())
     {
@@ -4326,7 +4326,6 @@ bool GlobOpt::CollectMemsetStElementI(IR::Instr *instr, Loop *loop)
     memsetInfo->bIndexAlreadyChanged = isIndexPreIncr;
     loop->memOpInfo->candidates->Prepend(memsetInfo);
     return true;
-
 }
 
 bool GlobOpt::CollectMemcopyStElementI(IR::Instr *instr, Loop *loop)
@@ -4498,7 +4497,7 @@ MemOpCheckInductionVariable:
                 }
                 else if (src2->IsIntConstOpnd())
                 {
-                    if (src2->AsIntConstOpnd()->m_value == 1)
+                    if (src2->AsIntConstOpnd()->GetValue() == 1)
                     {
                         isChangedByOne = true;
                     }
@@ -5025,7 +5024,7 @@ bool GlobOpt::TypeSpecializeBailoutExpectedInteger(IR::Instr* instr, Value* src1
         this->ToTypeSpecUse(instr, instr->GetSrc1(), this->currentBlock, src1Val, nullptr, TyInt32, IR::BailOutExpectingInteger, false, instr);
 
         //TypeSpecialize the dst of Ld_A
-        TypeSpecializeIntDst(instr, instr->m_opcode, src1Val, src1Val, nullptr, IR::BailOutInvalid, IntConstMin, IntConstMax, dstVal);
+        TypeSpecializeIntDst(instr, instr->m_opcode, src1Val, src1Val, nullptr, IR::BailOutInvalid, INT32_MIN, INT32_MAX, dstVal);
         isAlreadyTypeSpecialized = true;
     }
 
@@ -5359,7 +5358,7 @@ GlobOpt::OptSrc(IR::Opnd *opnd, IR::Instr * *pInstr, Value **indirIndexValRef, I
     switch(opnd->GetKind())
     {
     case IR::OpndKindIntConst:
-        val = this->GetIntConstantValue(opnd->AsIntConstOpnd()->m_value, instr);
+        val = this->GetIntConstantValue(opnd->AsIntConstOpnd()->AsInt32(), instr);
         opnd->SetValueType(val->GetValueInfo()->Type());
         return val;
 
@@ -6053,7 +6052,7 @@ GlobOpt::CopyProp(IR::Opnd *opnd, IR::Instr *instr, Value *val, IR::IndirOpnd *p
     ValueInfo *valueInfo = val->GetValueInfo();
 
     // Constant prop?
-    IntConstType intConstantValue;
+    int32 intConstantValue;
     if (valueInfo->TryGetIntConstantValue(&intConstantValue))
     {
         if (PHASE_OFF(Js::ConstPropPhase, this->func))
@@ -6476,7 +6475,7 @@ GlobOpt::NewGenericValue(const ValueType valueType, Sym *const sym)
 }
 
 Value *
-GlobOpt::GetIntConstantValue(const IntConstType intConst, IR::Instr * instr, IR::Opnd *const opnd)
+GlobOpt::GetIntConstantValue(const int32 intConst, IR::Instr * instr, IR::Opnd *const opnd)
 {
     Value *value = nullptr;
     Value *const cachedValue = this->intConstantToValueMap->Lookup(intConst, nullptr);
@@ -6493,7 +6492,7 @@ GlobOpt::GetIntConstantValue(const IntConstType intConst, IR::Instr * instr, IR:
         {
 
             Value *const symStoreValue = FindValue(symStore);
-            IntConstType symStoreIntConstantValue;
+            int32 symStoreIntConstantValue;
             if (symStoreValue &&
                 symStoreValue->GetValueNumber() == cachedValue->GetValueNumber() &&
                 symStoreValue->GetValueInfo()->TryGetIntConstantValue(&symStoreIntConstantValue) &&
@@ -6513,7 +6512,7 @@ GlobOpt::GetIntConstantValue(const IntConstType intConst, IR::Instr * instr, IR:
 }
 
 Value *
-GlobOpt::NewIntConstantValue(const IntConstType intConst, IR::Instr * instr, bool isTaggable)
+GlobOpt::NewIntConstantValue(const int32 intConst, IR::Instr * instr, bool isTaggable)
 {
     Value * value = NewValue(IntConstantValueInfo::New(this->alloc, intConst));
     this->intConstantToValueMap->Item(intConst, value);
@@ -6548,7 +6547,7 @@ GlobOpt::NewIntConstantValue(const IntConstType intConst, IR::Instr * instr, boo
 }
 
 ValueInfo *
-GlobOpt::NewIntRangeValueInfo(const IntConstType min, const IntConstType max, const bool wasNegativeZeroPreventedByBailout)
+GlobOpt::NewIntRangeValueInfo(const int32 min, const int32 max, const bool wasNegativeZeroPreventedByBailout)
 {
     if (min == max)
     {
@@ -6562,8 +6561,8 @@ GlobOpt::NewIntRangeValueInfo(const IntConstType min, const IntConstType max, co
 
 ValueInfo *GlobOpt::NewIntRangeValueInfo(
     const ValueInfo *const originalValueInfo,
-    const IntConstType min,
-    const IntConstType max) const
+    const int32 min,
+    const int32 max) const
 {
     Assert(originalValueInfo);
 
@@ -6589,8 +6588,8 @@ ValueInfo *GlobOpt::NewIntRangeValueInfo(
 
 Value *
 GlobOpt::NewIntRangeValue(
-    const IntConstType min,
-    const IntConstType max,
+    const int32 min,
+    const int32 max,
     const bool wasNegativeZeroPreventedByBailout,
     IR::Opnd *const opnd)
 {
@@ -6847,14 +6846,14 @@ GlobOpt::SetValueToHashTable(GlobHashTable *valueNumberMap, Value *val, Sym *sym
     *pValue = val;
 }
 
-StackSym *GlobOpt::GetTaggedIntConstantStackSym(const IntConstType intConstantValue) const
+StackSym *GlobOpt::GetTaggedIntConstantStackSym(const int32 intConstantValue) const
 {
     Assert(!Js::TaggedInt::IsOverflow(intConstantValue));
 
     return intConstantToStackSymMap->Lookup(intConstantValue, nullptr);
 }
 
-StackSym *GlobOpt::GetOrCreateTaggedIntConstantStackSym(const IntConstType intConstantValue) const
+StackSym *GlobOpt::GetOrCreateTaggedIntConstantStackSym(const int32 intConstantValue) const
 {
     StackSym *stackSym = GetTaggedIntConstantStackSym(intConstantValue);
     if(stackSym)
@@ -7010,7 +7009,7 @@ GlobOpt::ValueNumberDst(IR::Instr **pInstr, Value *src1Val, Value *src2Val)
         return nullptr;
     }
 
-    IntConstType min1, max1, min2, max2, newMin, newMax;
+    int32 min1, max1, min2, max2, newMin, newMax;
     ValueInfo *src1ValueInfo = (src1Val ? src1Val->GetValueInfo() : nullptr);
     ValueInfo *src2ValueInfo = (src2Val ? src2Val->GetValueInfo() : nullptr);
 
@@ -7263,8 +7262,8 @@ GlobOpt::ValueNumberDst(IR::Instr **pInstr, Value *src1Val, Value *src2Val)
     {
         if (!src1Val || !src1ValueInfo->GetIntValMinMax(&min1, &max1, this->DoAggressiveIntTypeSpec()))
         {
-            min1 = IntConstMin;
-            max1 = IntConstMax;
+            min1 = INT32_MIN;
+            max1 = INT32_MAX;
         }
 
         this->PropagateIntRangeForNot(min1, max1, &newMin, &newMax);
@@ -7280,13 +7279,13 @@ GlobOpt::ValueNumberDst(IR::Instr **pInstr, Value *src1Val, Value *src2Val)
     {
         if (!src1Val || !src1ValueInfo->GetIntValMinMax(&min1, &max1, this->DoAggressiveIntTypeSpec()))
         {
-            min1 = IntConstMin;
-            max1 = IntConstMax;
+            min1 = INT32_MIN;
+            max1 = INT32_MAX;
         }
         if (!src2Val || !src2ValueInfo->GetIntValMinMax(&min2, &max2, this->DoAggressiveIntTypeSpec()))
         {
-            min2 = IntConstMin;
-            max2 = IntConstMax;
+            min2 = INT32_MIN;
+            max2 = INT32_MAX;
         }
 
         if (instr->m_opcode == Js::OpCode::ShrU_A &&
@@ -7581,7 +7580,7 @@ GlobOpt::ValueNumberLdElemDst(IR::Instr **pInstr, Value *srcVal)
     IR::Instr *&instr = *pInstr;
     IR::Opnd *dst = instr->GetDst();
     Value *dstVal = nullptr;
-    IntConstType newMin, newMax;
+    int32 newMin, newMax;
     ValueInfo *srcValueInfo = (srcVal ? srcVal->GetValueInfo() : nullptr);
 
     ValueType profiledElementType;
@@ -7873,7 +7872,7 @@ bool GlobOpt::IsPrepassSrcValueInfoPrecise(IR::Opnd *const src, Value *const src
 
     StackSym *srcSym = src->AsRegOpnd()->m_sym;
     Assert(!srcSym->IsTypeSpec());
-    IntConstType intConstantValue;
+    int32 intConstantValue;
     return
         srcSym->IsFromByteCodeConstantTable() ||
         (
@@ -7886,8 +7885,8 @@ bool GlobOpt::IsPrepassSrcValueInfoPrecise(IR::Opnd *const src, Value *const src
 }
 
 Value *GlobOpt::CreateDstUntransferredIntValue(
-    const IntConstType min,
-    const IntConstType max,
+    const int32 min,
+    const int32 max,
     IR::Instr *const instr,
     Value *const src1Value,
     Value *const src2Value)
@@ -7990,7 +7989,7 @@ bool GlobOpt::IsSafeToTransferInPrePass(IR::Opnd *src, Value *srcValue)
 
         ValueInfo *srcValueInfo = srcValue->GetValueInfo();
 
-        IntConstType srcIntConstantValue;
+        int32 srcIntConstantValue;
         if (srcValueInfo->TryGetIntConstantValue(&srcIntConstantValue) && !Js::TaggedInt::IsOverflow(srcIntConstantValue)
             && GetTaggedIntConstantStackSym(srcIntConstantValue) == srcSym)
         {
@@ -8048,8 +8047,8 @@ GlobOpt::ValueNumberTransferDstInPrepass(IR::Instr *const instr, Value *const sr
                 IntConstantBounds src1IntConstantBounds;
                 if (src1ValueInfo->TryGetIntConstantBounds(&src1IntConstantBounds) &&
                     !(
-                    src1IntConstantBounds.LowerBound() == IntConstMin &&
-                    src1IntConstantBounds.UpperBound() == IntConstMax
+                    src1IntConstantBounds.LowerBound() == INT32_MIN &&
+                    src1IntConstantBounds.UpperBound() == INT32_MAX
                     ))
                 {
                     const ValueType valueType(
@@ -8091,9 +8090,9 @@ GlobOpt::ValueNumberTransferDstInPrepass(IR::Instr *const instr, Value *const sr
 }
 
 void
-GlobOpt::PropagateIntRangeForNot(IntConstType minimum, IntConstType maximum, IntConstType *pNewMin, IntConstType* pNewMax)
+GlobOpt::PropagateIntRangeForNot(int32 minimum, int32 maximum, int32 *pNewMin, int32* pNewMax)
 {
-    IntConstType tmp;
+    int32 tmp;
     Int32Math::Not(minimum, pNewMin);
     *pNewMax = *pNewMin;
     Int32Math::Not(maximum, &tmp);
@@ -8102,13 +8101,13 @@ GlobOpt::PropagateIntRangeForNot(IntConstType minimum, IntConstType maximum, Int
 }
 
 void
-GlobOpt::PropagateIntRangeBinary(IR::Instr *instr, IntConstType min1, IntConstType max1,
-    IntConstType min2, IntConstType max2, IntConstType *pNewMin, IntConstType* pNewMax)
+GlobOpt::PropagateIntRangeBinary(IR::Instr *instr, int32 min1, int32 max1,
+    int32 min2, int32 max2, int32 *pNewMin, int32* pNewMax)
 {
-    IntConstType min, max, tmp, tmp2;
+    int32 min, max, tmp, tmp2;
 
-    min = IntConstMin;
-    max = IntConstMax;
+    min = INT32_MIN;
+    max = INT32_MAX;
 
     switch (instr->m_opcode)
     {
@@ -8129,8 +8128,8 @@ GlobOpt::PropagateIntRangeBinary(IR::Instr *instr, IntConstType min1, IntConstTy
 
         if (max < 0)
         {
-            min = IntConstMin;  // REVIEW: conservative...
-            max = IntConstMax;
+            min = INT32_MIN;  // REVIEW: conservative...
+            max = INT32_MAX;
         }
         else
         {
@@ -8144,7 +8143,7 @@ GlobOpt::PropagateIntRangeBinary(IR::Instr *instr, IntConstType min1, IntConstTy
 
     case Js::OpCode::And_A:
 
-        if (min1 == IntConstMin && min2 == IntConstMin)
+        if (min1 == INT32_MIN && min2 == INT32_MIN)
         {
             // Shortcut
             break;
@@ -8174,7 +8173,7 @@ GlobOpt::PropagateIntRangeBinary(IR::Instr *instr, IntConstType min1, IntConstTy
         // If max is negative, max let's assume it could be -1, so result in MAX_INT
         if (max < 0)
         {
-            max = IntConstMax;
+            max = INT32_MAX;
         }
 
         // If min is positive, the resulting min is zero
@@ -8184,7 +8183,7 @@ GlobOpt::PropagateIntRangeBinary(IR::Instr *instr, IntConstType min1, IntConstTy
         }
         else
         {
-            min = IntConstMin;
+            min = INT32_MIN;
         }
         break;
 
@@ -8202,13 +8201,13 @@ GlobOpt::PropagateIntRangeBinary(IR::Instr *instr, IntConstType min1, IntConstTy
                 max2 &= 0x1F;
             }
 
-            int32 min1FreeTopBitCount = min1 ? (sizeof(IntConstType) * 8) - (Math::Log2(min1) + 1) : (sizeof(IntConstType) * 8);
-            int32 max1FreeTopBitCount = max1 ? (sizeof(IntConstType) * 8) - (Math::Log2(max1) + 1) : (sizeof(IntConstType) * 8);
+            int32 min1FreeTopBitCount = min1 ? (sizeof(int32) * 8) - (Math::Log2(min1) + 1) : (sizeof(int32) * 8);
+            int32 max1FreeTopBitCount = max1 ? (sizeof(int32) * 8) - (Math::Log2(max1) + 1) : (sizeof(int32) * 8);
             if (min1FreeTopBitCount <= max2 || max1FreeTopBitCount <= max2)
             {
                 // If the shift is going to touch the sign bit return the max range
-                min = IntConstMin;
-                max = IntConstMax;
+                min = INT32_MIN;
+                max = INT32_MAX;
             }
             else
             {
@@ -8227,9 +8226,9 @@ GlobOpt::PropagateIntRangeBinary(IR::Instr *instr, IntConstType min1, IntConstTy
 
                 if (max1 > 0)
                 {
-                    int32 nrTopBits = (sizeof(IntConstType) * 8) - Math::Log2(max1);
+                    int32 nrTopBits = (sizeof(int32) * 8) - Math::Log2(max1);
                     if (nrTopBits < ::min(max2, 30))
-                        max = IntConstMax;
+                        max = INT32_MAX;
                     else
                         max = ::max((max1 << ::min(max2, 30)) & ~0x80000000, (min1 << min2) & ~0x80000000);
                 }
@@ -8315,12 +8314,12 @@ GlobOpt::PropagateIntRangeBinary(IR::Instr *instr, IntConstType min1, IntConstTy
         // zero shift count is only allowed if result is used as int32 and/or value is positive
         Assert(min2 > 0 || instr->ignoreIntOverflow || min1 >= 0);
 
-        UIntConstType umin1 = (UIntConstType)min1;
-        UIntConstType umax1 = (UIntConstType)max1;
+        uint32 umin1 = (uint32)min1;
+        uint32 umax1 = (uint32)max1;
 
         if (umin1 > umax1)
         {
-            UIntConstType temp = umax1;
+            uint32 temp = umax1;
             umax1 = umin1;
             umin1 = temp;
         }
@@ -8331,7 +8330,7 @@ GlobOpt::PropagateIntRangeBinary(IR::Instr *instr, IntConstType min1, IntConstTy
 
         if (min1 < 0)
         {
-            umax1 = (UIntConstType)-1;
+            umax1 = UINT32_MAX;
         }
         max = umax1 >> min2;
 
@@ -8438,7 +8437,7 @@ GlobOpt::TypeSpecialization(
     {
         // Unary
         // Note make sure that native array StElemI gets to TypeSpecializeStElem. Do this for typed arrays, too?
-        IntConstType intConstantValue;
+        int32 intConstantValue;
         if (!this->IsLoopPrePass() &&
             !instr->IsBranchInstr() &&
             src1Val->GetValueInfo()->TryGetIntConstantValue(&intConstantValue) &&
@@ -8588,7 +8587,7 @@ GlobOpt::TypeSpecialization(
 bool
 GlobOpt::OptConstPeep(IR::Instr *instr, IR::Opnd *constSrc, Value **pDstVal, ValueInfo *valuInfo)
 {
-    IntConstType value;
+    int32 value;
     IR::Opnd *src;
     IR::Opnd *nonConstSrc = (constSrc == instr->GetSrc1() ? instr->GetSrc2() : instr->GetSrc1());
 
@@ -8612,12 +8611,12 @@ GlobOpt::OptConstPeep(IR::Instr *instr, IR::Opnd *constSrc, Value **pDstVal, Val
         else
         {
             // We asserted that the address will fit in a DWORD above
-            value = ::Math::PointerCastToIntegral<IntConstType>(constSrc->AsAddrOpnd()->m_address);
+            value = ::Math::PointerCastToIntegral<int32>(constSrc->AsAddrOpnd()->m_address);
         }
     }
     else if (constSrc->IsIntConstOpnd())
     {
-        value = constSrc->AsIntConstOpnd()->m_value;
+        value = constSrc->AsIntConstOpnd()->AsInt32();
     }
     else
     {
@@ -8762,9 +8761,9 @@ Js::Var GlobOpt::GetConstantVar(IR::Opnd *opnd, Value *val)
     }
     else if (opnd->IsIntConstOpnd())
     {
-        if (!Js::TaggedInt::IsOverflow(opnd->AsIntConstOpnd()->m_value))
+        if (!Js::TaggedInt::IsOverflow(opnd->AsIntConstOpnd()->AsInt32()))
         {
-            return Js::TaggedInt::ToVarUnchecked(opnd->AsIntConstOpnd()->m_value);
+            return Js::TaggedInt::ToVarUnchecked(opnd->AsIntConstOpnd()->AsInt32());
         }
     }
     else if (opnd->IsRegOpnd() && opnd->AsRegOpnd()->m_sym->IsSingleDef())
@@ -8820,7 +8819,7 @@ GlobOpt::OptConstFoldBranch(IR::Instr *instr, Value *src1Val, Value*src2Val, Val
     Assert(!src2Var || !Js::JavascriptOperators::IsObject(src2Var));
 
     BOOL result;
-    IntConstType constVal;
+    int32 constVal;
     switch (instr->m_opcode)
     {
     case Js::OpCode::BrEq_A:
@@ -8960,12 +8959,12 @@ GlobOpt::OptConstFoldBranch(IR::Instr *instr, Value *src1Val, Value*src2Val, Val
 bool
 GlobOpt::OptConstFoldUnary(
     IR::Instr * *pInstr,
-    const IntConstType intConstantValue,
+    const int32 intConstantValue,
     const bool isUsingOriginalSrc1Value,
     Value **pDstVal)
 {
     IR::Instr * &instr = *pInstr;
-    IntConstType value = 0;
+    int32 value = 0;
     IR::Opnd *constOpnd;
     bool isInt = true;
     bool doSetDstVal = true;
@@ -9087,7 +9086,7 @@ GlobOpt::OptConstFoldUnary(
         break;
 
     case Js::OpCode::InlineMathAbs:
-        if (intConstantValue == IntConstMin)
+        if (intConstantValue == INT32_MIN)
         {
             if (instr->GetDst()->IsInt32())
             {
@@ -9097,7 +9096,7 @@ GlobOpt::OptConstFoldUnary(
             else
             {
                 isInt = false;
-                fValue = -(FloatConstType)IntConstMin;
+                fValue = -(FloatConstType)INT32_MIN;
             }
         }
         else
@@ -9154,7 +9153,7 @@ GlobOpt::OptConstFoldUnary(
                                       // Make sure that it is cleared if it was initially present.
     if (!isInt)
     {
-        value = (IntConstType)fValue;
+        value = (int32)fValue;
         if (fValue == (double)value)
         {
             isInt = true;
@@ -9395,7 +9394,7 @@ GlobOpt::TypeSpecializeUnary(
     }
 
     IR::Instr *&instr = *pInstr;
-    IntConstType min, max;
+    int32 min, max;
 
     // Inline built-ins explicitly specify how srcs/dst must be specialized.
     if (OpCodeAttr::IsInlineBuiltIn(instr->m_opcode))
@@ -9477,7 +9476,7 @@ GlobOpt::TypeSpecializeInlineBuiltInUnary(IR::Instr **pInstr, Value **pSrc1Val, 
             {
                 // Create bailout for INT_MIN which does not have corresponding int value on the positive side.
                 // Check int range: if we know the range is out of overflow, we do not need the bail out at all.
-                if (minVal == IntConstMin)
+                if (minVal == INT32_MIN)
                 {
                     GenerateBailAtOperation(&instr, IR::BailOnIntMin);
                 }
@@ -9516,8 +9515,8 @@ GlobOpt::TypeSpecializeInlineBuiltInUnary(IR::Instr **pInstr, Value **pSrc1Val, 
             src1Val,
             nullptr,
             IR::BailOutInvalid,
-            IntConstMin,
-            IntConstMax,
+            INT32_MIN,
+            INT32_MAX,
             pDstVal);
     }
     else if(instr->m_opcode == Js::OpCode::InlineArrayPop)
@@ -9543,7 +9542,7 @@ GlobOpt::TypeSpecializeInlineBuiltInUnary(IR::Instr **pInstr, Value **pSrc1Val, 
         //Try Type Specializing the element (return item from Pop) based on the array's profile data.
         if(thisOpnd->GetValueType().IsLikelyNativeIntArray())
         {
-            this->TypeSpecializeIntDst(instr, instr->m_opcode, nullptr, nullptr, nullptr, IR::BailOutInvalid, IntConstMin, IntConstMax, pDstVal);
+            this->TypeSpecializeIntDst(instr, instr->m_opcode, nullptr, nullptr, nullptr, IR::BailOutInvalid, INT32_MIN, INT32_MAX, pDstVal);
         }
         else if(thisOpnd->GetValueType().IsLikelyNativeFloatArray())
         {
@@ -9563,7 +9562,7 @@ GlobOpt::TypeSpecializeInlineBuiltInUnary(IR::Instr **pInstr, Value **pSrc1Val, 
         Assert(this->DoAggressiveIntTypeSpec());
         Assert(this->DoLossyIntTypeSpec());
         //Type specialize to int
-        bool retVal = this->TypeSpecializeIntUnary(pInstr, &src1Val, pDstVal, IntConstMin, IntConstMax, src1OriginalVal, redoTypeSpecRef);
+        bool retVal = this->TypeSpecializeIntUnary(pInstr, &src1Val, pDstVal, INT32_MIN, INT32_MAX, src1OriginalVal, redoTypeSpecRef);
         AssertMsg(retVal, "For clz32, the arg has to be type-specialized to int.");
     }
     else
@@ -9604,7 +9603,7 @@ GlobOpt::TypeSpecializeInlineBuiltInBinary(IR::Instr **pInstr, Value *src1Val, V
             Assert(this->DoAggressiveIntTypeSpec());
             Assert(this->DoLossyIntTypeSpec());
             //Type specialize to int
-            bool retVal = this->TypeSpecializeIntBinary(pInstr, src1Val, src2Val, pDstVal, IntConstMin, IntConstMax, false /* skipDst */);
+            bool retVal = this->TypeSpecializeIntBinary(pInstr, src1Val, src2Val, pDstVal, INT32_MIN, INT32_MAX, false /* skipDst */);
             AssertMsg(retVal, "For imul, the args have to be type-specialized to int but something failed during the process.");
             break;
         }
@@ -9615,7 +9614,7 @@ GlobOpt::TypeSpecializeInlineBuiltInBinary(IR::Instr **pInstr, Value *src1Val, V
             if(src1Val->GetValueInfo()->IsLikelyInt() && src2Val->GetValueInfo()->IsLikelyInt())
             {
                 // Compute resulting range info
-                IntConstType min1, max1, min2, max2, newMin, newMax;
+                int32 min1, max1, min2, max2, newMin, newMax;
 
                 Assert(this->DoAggressiveIntTypeSpec());
                 src1Val->GetValueInfo()->GetIntValMinMax(&min1, &max1, this->DoAggressiveIntTypeSpec());
@@ -9682,7 +9681,7 @@ GlobOpt::TypeSpecializeInlineBuiltInBinary(IR::Instr **pInstr, Value *src1Val, V
                 src1Val = src1OriginalVal;
                 src2Val = src2OriginalVal;
             }
-            if((thisOpnd->GetValueType().IsLikelyNativeIntArray() && this->TypeSpecializeIntBinary(pInstr, src1Val, src2Val, pDstVal, IntConstMin, IntConstMax, true))
+            if((thisOpnd->GetValueType().IsLikelyNativeIntArray() && this->TypeSpecializeIntBinary(pInstr, src1Val, src2Val, pDstVal, INT32_MIN, INT32_MAX, true))
                 || (thisOpnd->GetValueType().IsLikelyNativeFloatArray() && this->TypeSpecializeFloatBinary(instr, src1Val, src2Val, pDstVal)))
             {
                 break;
@@ -9732,7 +9731,7 @@ GlobOpt::TryTypeSpecializeUnaryToFloatHelper(IR::Instr** pInstr, Value** pSrc1Va
 }
 
 bool
-GlobOpt::TypeSpecializeIntBinary(IR::Instr **pInstr, Value *src1Val, Value *src2Val, Value **pDstVal, IntConstType min, IntConstType max, bool skipDst /* = false */)
+GlobOpt::TypeSpecializeIntBinary(IR::Instr **pInstr, Value *src1Val, Value *src2Val, Value **pDstVal, int32 min, int32 max, bool skipDst /* = false */)
 {
     // TODO move the code for int type spec-ing binary functions here.
     IR::Instr *&instr = *pInstr;
@@ -9742,13 +9741,12 @@ GlobOpt::TypeSpecializeIntBinary(IR::Instr **pInstr, Value *src1Val, Value *src2
     {
         if(instr->m_opcode == Js::OpCode::InlineArrayPush)
         {
-            IntConstType intConstantValue;
+            int32 intConstantValue;
             bool isIntConstMissingItem = src2Val->GetValueInfo()->TryGetIntConstantValue(&intConstantValue);
 
             if(isIntConstMissingItem)
             {
-                IntConstType intValue = intConstantValue;
-                isIntConstMissingItem = Js::SparseArraySegment<int>::IsMissingItem(&intValue);
+                isIntConstMissingItem = Js::SparseArraySegment<int>::IsMissingItem(&intConstantValue);
             }
 
             //Don't specialize if the element is not likelyInt or a IntConst which is a missing item value.
@@ -9791,8 +9789,8 @@ GlobOpt::TypeSpecializeIntUnary(
     IR::Instr **pInstr,
     Value **pSrc1Val,
     Value **pDstVal,
-    IntConstType min,
-    IntConstType max,
+    int32 min,
+    int32 max,
     Value *const src1OriginalVal,
     bool *redoTypeSpecRef,
     bool skipDst /* = false */)
@@ -9804,7 +9802,7 @@ GlobOpt::TypeSpecializeIntUnary(
 
     bool isTransfer = false;
     Js::OpCode opcode;
-    IntConstType newMin, newMax;
+    int32 newMin, newMax;
     bool lossy = false;
     IR::BailOutKind bailOutKind = IR::BailOutInvalid;
     bool ignoredIntOverflow = this->ignoredIntOverflowForCurrentInstr;
@@ -9845,7 +9843,7 @@ GlobOpt::TypeSpecializeIntUnary(
         break;
 
     case Js::OpCode::LdC_A_I4:
-        newMin = newMax = instr->GetSrc1()->AsIntConstOpnd()->m_value;
+        newMin = newMax = instr->GetSrc1()->AsIntConstOpnd()->AsInt32();
         opcode = Js::OpCode::Ld_I4;
         break;
 
@@ -9888,7 +9886,7 @@ GlobOpt::TypeSpecializeIntUnary(
                     return TryTypeSpecializeUnaryToFloatHelper(pInstr, &src1Val, src1OriginalVal, pDstVal);
                 }
                 bailOutKind |= IR::BailOutOnOverflow;
-                newMax = IntConstMax;
+                newMax = INT32_MAX;
             }
             else
             {
@@ -9905,7 +9903,7 @@ GlobOpt::TypeSpecializeIntUnary(
                     return TryTypeSpecializeUnaryToFloatHelper(pInstr, &src1Val, src1OriginalVal, pDstVal);
                 }
                 bailOutKind |= IR::BailOutOnOverflow;
-                newMin = IntConstMax;
+                newMin = INT32_MAX;
             }
             else
             {
@@ -9918,8 +9916,8 @@ GlobOpt::TypeSpecializeIntUnary(
             // overflows on Neg, and the value resulting from overflow is also MIN_INT, if calculating only the new min or new
             // max overflowed but not both, then the new min will be greater than the new max. In that case we need to consider
             // the full range of int32s as possible resulting values.
-            newMin = IntConstMin;
-            newMax = IntConstMax;
+            newMin = INT32_MIN;
+            newMax = INT32_MAX;
         }
         opcode = Js::OpCode::Neg_I4;
         checkTypeSpecWorth = true;
@@ -9951,7 +9949,7 @@ GlobOpt::TypeSpecializeIntUnary(
             {
                 if(CannotOverflowBasedOnRelativeBounds())
                 {
-                    newMin = IntConstMax;
+                    newMin = INT32_MAX;
                 }
                 else if(instr->ShouldCheckForIntOverflow())
                 {
@@ -9964,8 +9962,8 @@ GlobOpt::TypeSpecializeIntUnary(
                     // causes the value to wrap around, and we don't have a way to specify a lower and upper range of ints,
                     // we use the full range of int32s.
                     ignoredIntOverflow = true;
-                    newMin = IntConstMin;
-                    newMax = IntConstMax;
+                    newMin = INT32_MIN;
+                    newMax = INT32_MAX;
                     break;
                 }
             }
@@ -9973,7 +9971,7 @@ GlobOpt::TypeSpecializeIntUnary(
             {
                 if(CannotOverflowBasedOnRelativeBounds())
                 {
-                    newMax = IntConstMax;
+                    newMax = INT32_MAX;
                 }
                 else if(instr->ShouldCheckForIntOverflow())
                 {
@@ -9983,14 +9981,14 @@ GlobOpt::TypeSpecializeIntUnary(
                         return TryTypeSpecializeUnaryToFloatHelper(pInstr, &src1Val, src1OriginalVal, pDstVal);
                     }
                     bailOutKind |= IR::BailOutOnOverflow;
-                    newMax = IntConstMax;
+                    newMax = INT32_MAX;
                 }
                 else
                 {
                     // See comment about ignoring overflow above
                     ignoredIntOverflow = true;
-                    newMin = IntConstMin;
-                    newMax = IntConstMax;
+                    newMin = INT32_MIN;
+                    newMax = INT32_MAX;
                     break;
                 }
             }
@@ -10025,7 +10023,7 @@ GlobOpt::TypeSpecializeIntUnary(
             {
                 if(CannotOverflowBasedOnRelativeBounds())
                 {
-                    newMax = IntConstMin;
+                    newMax = INT32_MIN;
                 }
                 else if(instr->ShouldCheckForIntOverflow())
                 {
@@ -10038,8 +10036,8 @@ GlobOpt::TypeSpecializeIntUnary(
                     // causes the value to wrap around, and we don't have a way to specify a lower and upper range of ints, we
                     // use the full range of int32s.
                     ignoredIntOverflow = true;
-                    newMin = IntConstMin;
-                    newMax = IntConstMax;
+                    newMin = INT32_MIN;
+                    newMax = INT32_MAX;
                     break;
                 }
             }
@@ -10047,7 +10045,7 @@ GlobOpt::TypeSpecializeIntUnary(
             {
                 if(CannotOverflowBasedOnRelativeBounds())
                 {
-                    newMin = IntConstMin;
+                    newMin = INT32_MIN;
                 }
                 else if(instr->ShouldCheckForIntOverflow())
                 {
@@ -10057,14 +10055,14 @@ GlobOpt::TypeSpecializeIntUnary(
                         return TryTypeSpecializeUnaryToFloatHelper(pInstr, &src1Val, src1OriginalVal, pDstVal);
                     }
                     bailOutKind |= IR::BailOutOnOverflow;
-                    newMin = IntConstMin;
+                    newMin = INT32_MIN;
                 }
                 else
                 {
                     // See comment about ignoring overflow above
                     ignoredIntOverflow = true;
-                    newMin = IntConstMin;
-                    newMax = IntConstMax;
+                    newMin = INT32_MIN;
+                    newMax = INT32_MAX;
                     break;
                 }
             }
@@ -10305,7 +10303,7 @@ GlobOpt::TypeSpecializeIntUnary(
     return true;
 }
 
-void GlobOpt::TypeSpecializeIntDst(IR::Instr* instr, Js::OpCode originalOpCode, Value* valToTransfer, Value *const src1Value, Value *const src2Value, const IR::BailOutKind bailOutKind, IntConstType newMin, IntConstType newMax, Value** pDstVal, const AddSubConstantInfo *const addSubConstantInfo)
+void GlobOpt::TypeSpecializeIntDst(IR::Instr* instr, Js::OpCode originalOpCode, Value* valToTransfer, Value *const src1Value, Value *const src2Value, const IR::BailOutKind bailOutKind, int32 newMin, int32 newMax, Value** pDstVal, const AddSubConstantInfo *const addSubConstantInfo)
 {
     this->TypeSpecializeIntDst(instr, originalOpCode, valToTransfer, src1Value, src2Value, bailOutKind, ValueType::GetInt(IntConstantBounds(newMin, newMax).IsLikelyTaggable()), newMin, newMax, pDstVal, addSubConstantInfo);
 }
@@ -10315,7 +10313,7 @@ void GlobOpt::TypeSpecializeIntDst(IR::Instr* instr, Js::OpCode originalOpCode, 
     this->TypeSpecializeIntDst(instr, originalOpCode, valToTransfer, src1Value, src2Value, bailOutKind, valueType, 0, 0, pDstVal, addSubConstantInfo);
 }
 
-void GlobOpt::TypeSpecializeIntDst(IR::Instr* instr, Js::OpCode originalOpCode, Value* valToTransfer, Value *const src1Value, Value *const src2Value, const IR::BailOutKind bailOutKind, ValueType valueType, IntConstType newMin, IntConstType newMax, Value** pDstVal, const AddSubConstantInfo *const addSubConstantInfo)
+void GlobOpt::TypeSpecializeIntDst(IR::Instr* instr, Js::OpCode originalOpCode, Value* valToTransfer, Value *const src1Value, Value *const src2Value, const IR::BailOutKind bailOutKind, ValueType valueType, int32 newMin, int32 newMax, Value** pDstVal, const AddSubConstantInfo *const addSubConstantInfo)
 {
     Assert(valueType.IsInt() || (valueType.IsNumber() && valueType.IsLikelyInt() && newMin == 0 && newMax == 0));
     Assert(!valToTransfer || valToTransfer == src1Value);
@@ -10357,8 +10355,8 @@ void GlobOpt::TypeSpecializeIntDst(IR::Instr* instr, Js::OpCode originalOpCode, 
         // the constant value.
         if(!valueType.IsInt() || !isValueInfoPrecise)
         {
-            newMin = IntConstMin;
-            newMax = IntConstMax;
+            newMin = INT32_MIN;
+            newMax = INT32_MAX;
         }
         dstBounds =
             IntBounds::Add(
@@ -10435,7 +10433,7 @@ bool
 GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc2Val, Value **pDstVal, Value *const src1OriginalVal, Value *const src2OriginalVal, bool *redoTypeSpecRef)
 {
     IR::Instr *&instr = *pInstr;
-    IntConstType min1 = IntConstMin, max1 = IntConstMax, min2 = IntConstMin, max2 = IntConstMax, newMin, newMax, tmp;
+    int32 min1 = INT32_MIN, max1 = INT32_MAX, min2 = INT32_MIN, max2 = INT32_MAX, newMin, newMax, tmp;
     Js::OpCode opcode;
     IR::Opnd *src1, *src2;
     Value *&src1Val = *pSrc1Val;
@@ -10551,7 +10549,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
             // Only handle positive values since this is unsigned...
 
             // Bounds are tracked only for likely int values. Only likely int values may have bounds that are not the defaults
-            // (IntConstMin, IntConstMax), so we're good.
+            // (INT32_MIN, INT32_MAX), so we're good.
             Assert(src1Val);
             Assert(src1Val->GetValueInfo()->IsLikelyInt());
             Assert(src2Val);
@@ -10583,7 +10581,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
             // Only handle positive values since this is unsigned...
 
             // Bounds are tracked only for likely int values. Only likely int values may have bounds that are not the defaults
-            // (IntConstMin, IntConstMax), so we're good.
+            // (INT32_MIN, INT32_MAX), so we're good.
             Assert(src1Val);
             Assert(src1Val->GetValueInfo()->IsLikelyInt());
             Assert(src2Val);
@@ -10615,7 +10613,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
             // Only handle positive values since this is unsigned...
 
             // Bounds are tracked only for likely int values. Only likely int values may have bounds that are not the defaults
-            // (IntConstMin, IntConstMax), so we're good.
+            // (INT32_MIN, INT32_MAX), so we're good.
             Assert(src1Val);
             Assert(src1Val->GetValueInfo()->IsLikelyInt());
             Assert(src2Val);
@@ -10647,7 +10645,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
             // Only handle positive values since this is unsigned...
 
             // Bounds are tracked only for likely int values. Only likely int values may have bounds that are not the defaults
-            // (IntConstMin, IntConstMax), so we're good.
+            // (INT32_MIN, INT32_MAX), so we're good.
             Assert(src1Val);
             Assert(src1Val->GetValueInfo()->IsLikelyInt());
             Assert(src2Val);
@@ -10810,17 +10808,17 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                 if (max1 > 0)
                 {
                     // Take only the positive numerator range
-                    IntConstType positive_Min1 = max(1, min1);
-                    IntConstType positive_Max1 = max1;
+                    int32 positive_Min1 = max(1, min1);
+                    int32 positive_Max1 = max1;
                     if (max2 > 0)
                     {
                         // Take only the positive denominator range
-                        IntConstType positive_Min2 = max(1, min2);
-                        IntConstType positive_Max2 = max2;
+                        int32 positive_Min2 = max(1, min2);
+                        int32 positive_Max2 = max2;
 
                         // Positive / Positive
-                        IntConstType quadrant1_Min = positive_Min1 <= positive_Max2? 1 : positive_Min1 / positive_Max2;
-                        IntConstType quadrant1_Max = positive_Max1 <= positive_Min2? 1 : positive_Max1 / positive_Min2;
+                        int32 quadrant1_Min = positive_Min1 <= positive_Max2? 1 : positive_Min1 / positive_Max2;
+                        int32 quadrant1_Max = positive_Max1 <= positive_Min2? 1 : positive_Max1 / positive_Min2;
 
                         Assert(1 <= quadrant1_Min && quadrant1_Min <= quadrant1_Max);
 
@@ -10832,12 +10830,12 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                     if (min2 < 0)
                     {
                         // Take only the negative denominator range
-                        IntConstType negative_Min2 = min2;
-                        IntConstType negative_Max2 = min(-1, max2);
+                        int32 negative_Min2 = min2;
+                        int32 negative_Max2 = min(-1, max2);
 
                         // Positive / Negative
-                        IntConstType quadrant2_Min = -positive_Max1 >= negative_Max2? -1 : positive_Max1 / negative_Max2;
-                        IntConstType quadrant2_Max = -positive_Min1 >= negative_Min2? -1 : positive_Min1 / negative_Min2;
+                        int32 quadrant2_Min = -positive_Max1 >= negative_Max2? -1 : positive_Max1 / negative_Max2;
+                        int32 quadrant2_Max = -positive_Min1 >= negative_Min2? -1 : positive_Min1 / negative_Min2;
 
                         // The result should negative
                         Assert(quadrant2_Min <= quadrant2_Max && quadrant2_Max <= -1);
@@ -10849,18 +10847,18 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                 if (min1 < 0)
                 {
                     // Take only the native numerator range
-                    IntConstType negative_Min1 = min1;
-                    IntConstType negative_Max1 = min(-1, max1);
+                    int32 negative_Min1 = min1;
+                    int32 negative_Max1 = min(-1, max1);
 
                     if (max2 > 0)
                     {
                         // Take only the positive denominator range
-                        IntConstType positive_Min2 = max(1, min2);
-                        IntConstType positive_Max2 = max2;
+                        int32 positive_Min2 = max(1, min2);
+                        int32 positive_Max2 = max2;
 
                         // Negative / Positive
-                        IntConstType quadrant4_Min = negative_Min1 >= -positive_Min2? -1 : negative_Min1 / positive_Min2;
-                        IntConstType quadrant4_Max = negative_Max1 >= -positive_Max2? -1 : negative_Max1 / positive_Max2;
+                        int32 quadrant4_Min = negative_Min1 >= -positive_Min2? -1 : negative_Min1 / positive_Min2;
+                        int32 quadrant4_Max = negative_Max1 >= -positive_Max2? -1 : negative_Max1 / positive_Max2;
 
                         // The result should negative
                         Assert(quadrant4_Min <= quadrant4_Max && quadrant4_Max <= -1);
@@ -10873,11 +10871,11 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                     {
 
                         // Take only the negative denominator range
-                        IntConstType negative_Min2 = min2;
-                        IntConstType negative_Max2 = min(-1, max2);
+                        int32 negative_Min2 = min2;
+                        int32 negative_Max2 = min(-1, max2);
 
-                        IntConstType quadrant3_Min;
-                        IntConstType quadrant3_Max;
+                        int32 quadrant3_Min;
+                        int32 quadrant3_Max;
                         // Negative / Negative
                         if (negative_Max1 == 0x80000000 && negative_Min2 == -1)
                         {
@@ -11005,7 +11003,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
             case Js::OpCode::Add_A:
                 do // while(false)
                 {
-                    const auto CannotOverflowBasedOnRelativeBounds = [&](IntConstType *const constantValueRef)
+                    const auto CannotOverflowBasedOnRelativeBounds = [&](int32 *const constantValueRef)
                     {
                         Assert(constantValueRef);
 
@@ -11029,10 +11027,10 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
 
                     if (Int32Math::Add(min1, min2, &newMin))
                     {
-                        IntConstType constantSrcValue;
+                        int32 constantSrcValue;
                         if(CannotOverflowBasedOnRelativeBounds(&constantSrcValue))
                         {
-                            newMin = constantSrcValue >= 0 ? IntConstMax : IntConstMin;
+                            newMin = constantSrcValue >= 0 ? INT32_MAX : INT32_MIN;
                         }
                         else if(instr->ShouldCheckForIntOverflow())
                         {
@@ -11042,7 +11040,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                                 return trySpecializeToFloat(true);
                             }
                             bailOutKind |= IR::BailOutOnOverflow;
-                            newMin = min1 < 0 ? IntConstMin : IntConstMax;
+                            newMin = min1 < 0 ? INT32_MIN : INT32_MAX;
                         }
                         else
                         {
@@ -11050,17 +11048,17 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                             // overflow causes the value to wrap around, and we don't have a way to specify a lower and upper
                             // range of ints, we use the full range of int32s.
                             ignoredIntOverflow = true;
-                            newMin = IntConstMin;
-                            newMax = IntConstMax;
+                            newMin = INT32_MIN;
+                            newMax = INT32_MAX;
                             break;
                         }
                     }
                     if (Int32Math::Add(max1, max2, &newMax))
                     {
-                        IntConstType constantSrcValue;
+                        int32 constantSrcValue;
                         if(CannotOverflowBasedOnRelativeBounds(&constantSrcValue))
                         {
-                            newMax = constantSrcValue >= 0 ? IntConstMax : IntConstMin;
+                            newMax = constantSrcValue >= 0 ? INT32_MAX : INT32_MIN;
                         }
                         else if(instr->ShouldCheckForIntOverflow())
                         {
@@ -11070,14 +11068,14 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                                 return trySpecializeToFloat(true);
                             }
                             bailOutKind |= IR::BailOutOnOverflow;
-                            newMax = max1 < 0 ? IntConstMin : IntConstMax;
+                            newMax = max1 < 0 ? INT32_MIN : INT32_MAX;
                         }
                         else
                         {
                             // See comment about ignoring overflow above
                             ignoredIntOverflow = true;
-                            newMin = IntConstMin;
-                            newMax = IntConstMax;
+                            newMin = INT32_MIN;
+                            newMax = INT32_MAX;
                             break;
                         }
                     }
@@ -11085,7 +11083,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                     {
                         Assert(bailOutKind == IR::BailOutOnOverflow);
                         Assert(instr->ShouldCheckForIntOverflow());
-                        IntConstType temp;
+                        int32 temp;
                         if(Int32Math::Add(
                             Int32Math::NearestInRangeTo(0, min1, max1),
                             Int32Math::NearestInRangeTo(0, min2, max2),
@@ -11103,7 +11101,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                     this->CaptureByteCodeSymUses(instr);
                     IR::Opnd *src;
                     bool isAddZero = true;
-                    IntConstType intConstantValue;
+                    int32 intConstantValue;
                     if (src1Val->GetValueInfo()->TryGetIntConstantValue(&intConstantValue) && intConstantValue == 0)
                     {
                         src = instr->UnlinkSrc2();
@@ -11177,7 +11175,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                         if(CannotOverflowBasedOnRelativeBounds())
                         {
                             Assert(min2 == max2);
-                            newMin = min2 >= 0 ? IntConstMin : IntConstMax;
+                            newMin = min2 >= 0 ? INT32_MIN : INT32_MAX;
                         }
                         else if(instr->ShouldCheckForIntOverflow())
                         {
@@ -11187,7 +11185,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                                 return trySpecializeToFloat(true);
                             }
                             bailOutKind |= IR::BailOutOnOverflow;
-                            newMin = min1 < 0 ? IntConstMin : IntConstMax;
+                            newMin = min1 < 0 ? INT32_MIN : INT32_MAX;
                         }
                         else
                         {
@@ -11195,8 +11193,8 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                             // causes the value to wrap around, and we don't have a way to specify a lower and upper range of ints,
                             // we use the full range of int32s.
                             ignoredIntOverflow = true;
-                            newMin = IntConstMin;
-                            newMax = IntConstMax;
+                            newMin = INT32_MIN;
+                            newMax = INT32_MAX;
                             break;
                         }
                     }
@@ -11205,7 +11203,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                         if(CannotOverflowBasedOnRelativeBounds())
                         {
                             Assert(min2 == max2);
-                            newMax = min2 >= 0 ? IntConstMin : IntConstMax;
+                            newMax = min2 >= 0 ? INT32_MIN: INT32_MAX;
                         }
                         else if(instr->ShouldCheckForIntOverflow())
                         {
@@ -11215,14 +11213,14 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                                 return trySpecializeToFloat(true);
                             }
                             bailOutKind |= IR::BailOutOnOverflow;
-                            newMax = max1 < 0 ? IntConstMin : IntConstMax;
+                            newMax = max1 < 0 ? INT32_MIN : INT32_MAX;
                         }
                         else
                         {
                             // See comment about ignoring overflow above
                             ignoredIntOverflow = true;
-                            newMin = IntConstMin;
-                            newMax = IntConstMax;
+                            newMin = INT32_MIN;
+                            newMax = INT32_MAX;
                             break;
                         }
                     }
@@ -11230,7 +11228,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                     {
                         Assert(bailOutKind == IR::BailOutOnOverflow);
                         Assert(instr->ShouldCheckForIntOverflow());
-                        IntConstType temp;
+                        int32 temp;
                         if(Int32Math::Sub(
                             Int32Math::NearestInRangeTo(-1, min1, max1),
                             Int32Math::NearestInRangeTo(0, min2, max2),
@@ -11244,7 +11242,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
 
                 if(!ignoredIntOverflow &&
                     min2 == max2 &&
-                    min2 != IntConstMin &&
+                    min2 != INT32_MIN &&
                     (!IsLoopPrePass() || IsPrepassSrcValueInfoPrecise(instr->GetSrc2(), src2Val)) &&
                     instr->GetSrc1()->IsRegOpnd())
                 {
@@ -11264,7 +11262,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                         return trySpecializeToFloat(true);
                     }
                     bailOutKind |= IR::BailOutOnMulOverflow;
-                    newMin = (min1 < 0) ^ (min2 < 0) ? IntConstMin : IntConstMax;
+                    newMin = (min1 < 0) ^ (min2 < 0) ? INT32_MIN : INT32_MAX;
                 }
                 newMax = newMin;
                 if (Int32Math::Mul(max1, max2, &tmp))
@@ -11275,7 +11273,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                         return trySpecializeToFloat(true);
                     }
                     bailOutKind |= IR::BailOutOnMulOverflow;
-                    tmp = (max1 < 0) ^ (max2 < 0) ? IntConstMin : IntConstMax;
+                    tmp = (max1 < 0) ^ (max2 < 0) ? INT32_MIN : INT32_MAX;
                 }
                 newMin = min(newMin, tmp);
                 newMax = max(newMax, tmp);
@@ -11287,7 +11285,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                         return trySpecializeToFloat(true);
                     }
                     bailOutKind |= IR::BailOutOnMulOverflow;
-                    tmp = (min1 < 0) ^ (max2 < 0) ? IntConstMin : IntConstMax;
+                    tmp = (min1 < 0) ^ (max2 < 0) ? INT32_MIN : INT32_MAX;
                 }
                 newMin = min(newMin, tmp);
                 newMax = max(newMax, tmp);
@@ -11299,7 +11297,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                         return trySpecializeToFloat(true);
                     }
                     bailOutKind |= IR::BailOutOnMulOverflow;
-                    tmp = (max1 < 0) ^ (min2 < 0) ? IntConstMin : IntConstMax;
+                    tmp = (max1 < 0) ^ (min2 < 0) ? INT32_MIN : INT32_MAX;
                 }
                 newMin = min(newMin, tmp);
                 newMax = max(newMax, tmp);
@@ -11369,7 +11367,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                 src2 = instr->GetSrc2();
                 if (!this->IsLoopPrePass() && min2 == max2 && min1 >= 0)
                 {
-                    IntConstType value = min2;
+                    int32 value = min2;
 
                     if (value == (1 << Math::Log2(value)) && src2->IsAddrOpnd())
                     {
@@ -11391,10 +11389,10 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                 if (min1 < 0)
                 {
                     // The most negative it can be is min1, unless limited by min2/max2
-                    IntConstType negMaxAbs2;
-                    if (min2 == IntConstMin)
+                    int32 negMaxAbs2;
+                    if (min2 == INT32_MIN)
                     {
-                        negMaxAbs2 = IntConstMin;
+                        negMaxAbs2 = INT32_MIN;
                     }
                     else
                     {
@@ -11446,11 +11444,11 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                     }
                 }
                 {
-                    IntConstType absMax2;
-                    if (min2 == IntConstMin)
+                    int32 absMax2;
+                    if (min2 == INT32_MIN)
                     {
-                        // abs(IntConstMin) == IntConstMin because of overflow
-                        absMax2 = IntConstMax;
+                        // abs(INT32_MIN) == INT32_MAX because of overflow
+                        absMax2 = INT32_MAX;
                     }
                     else
                     {
@@ -11877,8 +11875,8 @@ GlobOpt::IsWorthSpecializingToInt32Branch(IR::Instr * instr, Value * src1Val, Va
 bool GlobOpt::TryOptConstFoldBrFalse(
     IR::Instr *const instr,
     Value *const srcValue,
-    const IntConstType min,
-    const IntConstType max)
+    const int32 min,
+    const int32 max)
 {
     Assert(instr);
     Assert(instr->m_opcode == Js::OpCode::BrFalse_A || instr->m_opcode == Js::OpCode::BrTrue_A);
@@ -11905,11 +11903,11 @@ bool GlobOpt::TryOptConstFoldBrEqual(
     IR::Instr *const instr,
     const bool branchOnEqual,
     Value *const src1Value,
-    const IntConstType min1,
-    const IntConstType max1,
+    const int32 min1,
+    const int32 max1,
     Value *const src2Value,
-    const IntConstType min2,
-    const IntConstType max2)
+    const int32 min2,
+    const int32 max2)
 {
     Assert(instr);
     Assert(src1Value);
@@ -11934,11 +11932,11 @@ bool GlobOpt::TryOptConstFoldBrGreaterThan(
     IR::Instr *const instr,
     const bool branchOnGreaterThan,
     Value *const src1Value,
-    const IntConstType min1,
-    const IntConstType max1,
+    const int32 min1,
+    const int32 max1,
     Value *const src2Value,
-    const IntConstType min2,
-    const IntConstType max2)
+    const int32 min2,
+    const int32 max2)
 {
     Assert(instr);
     Assert(src1Value);
@@ -11963,11 +11961,11 @@ bool GlobOpt::TryOptConstFoldBrGreaterThanOrEqual(
     IR::Instr *const instr,
     const bool branchOnGreaterThanOrEqual,
     Value *const src1Value,
-    const IntConstType min1,
-    const IntConstType max1,
+    const int32 min1,
+    const int32 max1,
     Value *const src2Value,
-    const IntConstType min2,
-    const IntConstType max2)
+    const int32 min2,
+    const int32 max2)
 {
     Assert(instr);
     Assert(src1Value);
@@ -11992,11 +11990,11 @@ bool GlobOpt::TryOptConstFoldBrUnsignedLessThan(
     IR::Instr *const instr,
     const bool branchOnLessThan,
     Value *const src1Value,
-    const IntConstType min1,
-    const IntConstType max1,
+    const int32 min1,
+    const int32 max1,
     Value *const src2Value,
-    const IntConstType min2,
-    const IntConstType max2)
+    const int32 min2,
+    const int32 max2)
 {
     Assert(DoConstFold());
     Assert(!IsLoopPrePass());
@@ -12036,11 +12034,11 @@ bool GlobOpt::TryOptConstFoldBrUnsignedGreaterThan(
     IR::Instr *const instr,
     const bool branchOnGreaterThan,
     Value *const src1Value,
-    const IntConstType min1,
-    const IntConstType max1,
+    const int32 min1,
+    const int32 max1,
     Value *const src2Value,
-    const IntConstType min2,
-    const IntConstType max2)
+    const int32 min2,
+    const int32 max2)
 {
     Assert(DoConstFold());
     Assert(!IsLoopPrePass());
@@ -12440,7 +12438,7 @@ bool GlobOpt::TypeSpecializeLdLen(
         nullptr,
         bailOutKind,
         0,
-        IntConstMax,
+        INT32_MAX,
         &dstValue);
     return true;
 }
@@ -12682,7 +12680,7 @@ GlobOpt::TypeSpecializeStElem(IR::Instr ** pInstr, Value *src1Val, Value **pDstV
         }
     }
 
-    IntConstType src1IntConstantValue;
+    int32 src1IntConstantValue;
     if(baseValueType.IsLikelyNativeIntArray() && src1Val && src1Val->GetValueInfo()->TryGetIntConstantValue(&src1IntConstantValue))
     {
         if(Js::SparseArraySegment<int32>::IsMissingItem(&src1IntConstantValue))
@@ -12828,8 +12826,8 @@ GlobOpt::TypeSpecializeStElem(IR::Instr ** pInstr, Value *src1Val, Value **pDstV
                 if (baseValueType.HasIntElements())
                 {
                     //Native int array requires a missing element check & bailout
-                    int min = IntConstMin;
-                    int max = IntConstMin;
+                    int32 min = INT32_MIN;
+                    int32 max = INT32_MAX;
                     if (src1Val->GetValueInfo()->GetIntValMinMax(&min, &max, false))
                     {
                         bConvertToBailoutInstr = ((min <= Js::JavascriptNativeIntArray::MissingItem) && (max >= Js::JavascriptNativeIntArray::MissingItem));
@@ -13113,7 +13111,7 @@ GlobOpt::ToVar(IR::Instr *instr, IR::RegOpnd *regOpnd, BasicBlock *block, Value 
     }
     Assert(valueInfo);
 
-    IntConstType intConstantValue;
+    int32 intConstantValue;
     if (valueInfo->TryGetIntConstantValue(&intConstantValue))
     {
         // Lower will tag or create a number directly
@@ -13779,7 +13777,7 @@ GlobOpt::ToTypeSpecUse(IR::Instr *instr, IR::Opnd *opnd, BasicBlock *block, Valu
                     valueInfo = valueInfo->SpecializeToInt32(alloc, isPerformingLoopBackEdgeCompensation);
                     ChangeValueInfo(nullptr, val, valueInfo);
 
-                    IntConstType intConstantValue;
+                    int32 intConstantValue;
                     if(indir && needReplaceSrc && valueInfo->TryGetIntConstantValue(&intConstantValue))
                     {
                         // A likely-int value can have constant bounds due to conditional branches narrowing its range. Now that
@@ -13945,7 +13943,7 @@ GlobOpt::ToTypeSpecUse(IR::Instr *instr, IR::Opnd *opnd, BasicBlock *block, Valu
         }
 
         IR::Opnd *constOpnd;
-        IntConstType intConstantValue;
+        int32 intConstantValue;
         if(valueInfo->TryGetIntConstantValue(&intConstantValue))
         {
             if(toType == TyInt32)
@@ -14003,7 +14001,7 @@ GlobOpt::ToTypeSpecUse(IR::Instr *instr, IR::Opnd *opnd, BasicBlock *block, Valu
                 {
                     Assert(opnd == indir->GetIndexOpnd());
                     indir->UnlinkIndexOpnd()->Free(instr->m_func);
-                    indir->SetOffset(constOpnd->AsIntConstOpnd()->m_value);
+                    indir->SetOffset(constOpnd->AsIntConstOpnd()->AsInt32());
                 }
                 else
                 {
@@ -14458,7 +14456,7 @@ GlobOpt::OptConstFoldBinary(
     Value **pDstVal)
 {
     IR::Instr * &instr = *pInstr;
-    IntConstType value;
+    int32 value;
     IR::IntConstOpnd *constOpnd;
 
     if (!DoConstFold())
@@ -14466,13 +14464,13 @@ GlobOpt::OptConstFoldBinary(
         return false;
     }
 
-    IntConstType src1IntConstantValue = -1;
-    IntConstType src2IntConstantValue = -1;
+    int32 src1IntConstantValue = -1;
+    int32 src2IntConstantValue = -1;
 
-    IntConstType src1MaxIntConstantValue = -1;
-    IntConstType src2MaxIntConstantValue = -1;
-    IntConstType src1MinIntConstantValue = -1;
-    IntConstType src2MinIntConstantValue = -1;
+    int32 src1MaxIntConstantValue = -1;
+    int32 src2MaxIntConstantValue = -1;
+    int32 src1MinIntConstantValue = -1;
+    int32 src2MinIntConstantValue = -1;
 
     if (instr->IsBranchInstr())
     {
@@ -14491,10 +14489,14 @@ GlobOpt::OptConstFoldBinary(
         return false;
     }
 
-    if (!instr->BinaryCalculator(src1IntConstantValue, src2IntConstantValue, &value))
+    IntConstType tmpValueOut;
+    if (!instr->BinaryCalculator(src1IntConstantValue, src2IntConstantValue, &tmpValueOut)
+        || !Math::FitsInDWord(tmpValueOut))
     {
         return false;
     }
+
+    value = (int32)tmpValueOut;
 
     this->CaptureByteCodeSymUses(instr);
     constOpnd = IR::IntConstOpnd::New(value, TyInt32, instr->m_func);
@@ -15694,14 +15696,14 @@ void GlobOpt::OptArraySrc(IR::Instr * *const instrRef)
             }
             else
             {
-                const IntConstType indexConstantValue = baseOwnerIndir->GetOffset();
+                const int32 indexConstantValue = baseOwnerIndir->GetOffset();
                 if(indexConstantValue < 0)
                 {
                     eliminatedUpperBoundCheck = true;
                     doExtractBoundChecks = false;
                     break;
                 }
-                if(indexConstantValue == IntConstMax)
+                if(indexConstantValue == INT32_MAX)
                 {
                     eliminatedLowerBoundCheck = true;
                     doExtractBoundChecks = false;
@@ -15925,7 +15927,7 @@ void GlobOpt::OptArraySrc(IR::Instr * *const instrRef)
 
             // Create an initial value for the length
             blockData.liveVarSyms->Set(newLengthSym->m_id);
-            Value *const lengthValue = NewIntRangeValue(0, IntConstMax, false);
+            Value *const lengthValue = NewIntRangeValue(0, INT32_MAX, false);
             SetValue(&blockData, lengthValue, newLengthSym);
 
             // SetValue above would have set the sym store to newLengthSym. This sym won't be used for copy-prop though, so
@@ -16370,7 +16372,7 @@ void GlobOpt::OptArraySrc(IR::Instr * *const instrRef)
                     }
 
                     // Update values of the syms involved in the bound check to reflect the bound check
-                    if(hoistBlock != currentBlock && hoistInfo.IndexSym() && hoistInfo.Offset() != IntConstMin)
+                    if(hoistBlock != currentBlock && hoistInfo.IndexSym() && hoistInfo.Offset() != INT32_MIN)
                     {
                         for(InvariantBlockBackwardIterator it(
                                 this,
@@ -16694,7 +16696,7 @@ void GlobOpt::OptArraySrc(IR::Instr * *const instrRef)
                                     indexConstantBounds = leftConstantBounds;
                                 }
                             }
-                            if(hoistInfo.Offset() != IntConstMin)
+                            if(hoistInfo.Offset() != INT32_MIN)
                             {
                                 ValueInfo *const newValueInfo =
                                     UpdateIntBoundsForGreaterThanOrEqual(
@@ -20212,7 +20214,7 @@ GlobOpt::TrackTempObjectSyms(IR::Instr * instr, IR::RegOpnd * opnd)
                 // to disappear. Do it is flow base make it easier to stop propagate those entries.
 
                 IR::IntConstOpnd * propertyArrayIdOpnd = instr->GetSrc1()->AsIntConstOpnd();
-                const Js::PropertyIdArray * propIds = Js::ByteCodeReader::ReadPropertyIdArray(propertyArrayIdOpnd->m_value, instr->m_func->GetJnFunction());
+                const Js::PropertyIdArray * propIds = Js::ByteCodeReader::ReadPropertyIdArray(propertyArrayIdOpnd->AsUint32(), instr->m_func->GetJnFunction());
 
                 // duplicates are removed by parser
                 Assert(!propIds->hadDuplicates);

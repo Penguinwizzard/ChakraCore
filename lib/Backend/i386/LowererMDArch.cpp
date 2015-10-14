@@ -595,7 +595,7 @@ LowererMDArch::LowerCallIDynamic(IR::Instr * callInstr, IR::Instr*saveThisArgOut
 
     if (bIsInlinee)
     {
-        Assert(argsLength->AsIntConstOpnd()->m_value == callInstr->m_func->actualCount);
+        Assert(argsLength->AsIntConstOpnd()->GetValue() == callInstr->m_func->actualCount);
     }
     else
     {
@@ -1206,7 +1206,7 @@ LowererMDArch::LowerStartCall(IR::Instr * startCallInstr, IR::Instr* insertInstr
     AssertMsg(startCallInstr->GetSrc1()->IsIntConstOpnd(), "Bad src on StartCall");
 
     IR::IntConstOpnd *sizeOpnd = startCallInstr->GetSrc1()->AsIntConstOpnd();
-    IntConstType sizeValue = sizeOpnd->m_value;
+    IntConstType sizeValue = sizeOpnd->GetValue();
 
     // Maintain 8 byte alignment of the stack.
     // We do this by adjusting the SUB for stackCall to make sure it maintains 8 byte alignment.
@@ -1257,7 +1257,7 @@ LowererMDArch::LowerStartCallAsmJs(IR::Instr * startCallInstr, IR::Instr * inser
 
     IR::IntConstOpnd * sizeOpnd = startCallInstr->GetSrc1()->AsIntConstOpnd();
 
-    IntConstType sizeValue = sizeOpnd->m_value;
+    IntConstType sizeValue = sizeOpnd->GetValue();
     if (callInstr->m_opcode == Js::OpCode::AsmJsCallI)
     {
         // we will push FunctionObject, so don't need to worry about that

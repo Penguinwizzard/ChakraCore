@@ -293,13 +293,35 @@ public:
     bool                    IsEqualInternal(Opnd *opnd);
     void                    FreeInternal(Func * func) ;
 public:
-    IntConstType            m_value;
     bool                    m_dontEncode;       // Setting this to true turns off XOR encoding for this constant.  Only set this on
                                                 // constants not controllable by the user.
+
+    IntConstType GetValue()
+    {
+        return m_value;
+    }
+    
+    void IncrValue(IntConstType by)
+    {
+        SetValue(m_value + by);
+    }
+
+    void DecrValue(IntConstType by)
+    {
+        SetValue(m_value - by);
+    }
+    
+    void SetValue(IntConstType value);
+    int32 AsInt32();
+    uint32 AsUint32();
+
 #if DBG_DUMP || defined(ENABLE_IR_VIEWER)
     IntConstType            decodedValue;  // FIXME (t-doilij) set ENABLE_IR_VIEWER blocks where this is set
     wchar_t const *         name;  // FIXME (t-doilij) set ENABLE_IR_VIEWER blocks where this is set
 #endif
+
+private:
+    IntConstType            m_value;
 };
 
 ///---------------------------------------------------------------------------

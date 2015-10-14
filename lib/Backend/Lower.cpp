@@ -831,7 +831,7 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             AssertMsg(src1->IsIntConstOpnd(), "Source of LdC_A_I4 should be an IntConst...");
 
             instrPrev = this->LowerLoadVar(instr,
-                IR::AddrOpnd::NewFromNumber(static_cast<int32>(src1->AsIntConstOpnd()->m_value), this->m_func));
+                IR::AddrOpnd::NewFromNumber(static_cast<int32>(src1->AsIntConstOpnd()->GetValue()), this->m_func));
             src1->Free(this->m_func);
             break;
 
@@ -3436,7 +3436,7 @@ Lowerer::LowerNewScObjectLiteral(IR::Instr *newObjInstr)
 {
     Func * func = m_func;
     IR::IntConstOpnd * literalObjectIdOpnd = newObjInstr->UnlinkSrc2()->AsIntConstOpnd();
-    Js::DynamicType ** literalTypeRef = newObjInstr->m_func->GetJnFunction()->GetObjectLiteralTypeRef(literalObjectIdOpnd->m_value);
+    Js::DynamicType ** literalTypeRef = newObjInstr->m_func->GetJnFunction()->GetObjectLiteralTypeRef(literalObjectIdOpnd->AsUint32());
     Js::DynamicType * literalType = *literalTypeRef;
 
     IR::LabelInstr * helperLabel = nullptr;
@@ -3446,7 +3446,7 @@ Lowerer::LowerNewScObjectLiteral(IR::Instr *newObjInstr)
     IR::Opnd * propertyArrayOpnd;
 
     IR::IntConstOpnd * propertyArrayIdOpnd = newObjInstr->UnlinkSrc1()->AsIntConstOpnd();
-    const Js::PropertyIdArray * propIds = Js::ByteCodeReader::ReadPropertyIdArray(propertyArrayIdOpnd->m_value, newObjInstr->m_func->GetJnFunction());
+    const Js::PropertyIdArray * propIds = Js::ByteCodeReader::ReadPropertyIdArray(propertyArrayIdOpnd->AsUint32(), newObjInstr->m_func->GetJnFunction());
     Js::ScriptContext *const scriptContext = newObjInstr->m_func->GetJnFunction()->GetScriptContext();
     uint inlineSlotCapacity = Js::JavascriptOperators::GetLiteralInlineSlotCapacity(propIds, scriptContext);
     uint slotCapacity = Js::JavascriptOperators::GetLiteralSlotCapacity(propIds, scriptContext);
@@ -3565,8 +3565,7 @@ Lowerer::LowerNewScArray(IR::Instr *arrInstr)
 
 
         Assert(arrInstr->GetSrc1()->IsConstOpnd());
-
-        GenerateProfiledNewScArrayFastPath(arrInstr, arrayInfo, weakFuncRef, arrInstr->GetSrc1()->AsIntConstOpnd()->m_value);
+        GenerateProfiledNewScArrayFastPath(arrInstr, arrayInfo, weakFuncRef, arrInstr->GetSrc1()->AsIntConstOpnd()->AsUint32());
 
         if (arrInstr->GetDst() && arrInstr->GetDst()->GetValueType().IsLikelyNativeArray())
         {
@@ -5286,7 +5285,7 @@ Lowerer::LoadFunctionBodyAsArgument(IR::Instr *instr, IR::IntConstOpnd * functio
     // At which point the deferred function proxy may be collect.
     // Just pass it the address where we will find the function proxy/body
 
-    Js::FunctionProxyPtrPtr proxyRef = instr->m_func->GetJnFunction()->GetNestedFuncReference((uint)functionBodySlotOpnd->m_value);
+    Js::FunctionProxyPtrPtr proxyRef = instr->m_func->GetJnFunction()->GetNestedFuncReference((uint)functionBodySlotOpnd->GetValue());
     AssertMsg(proxyRef, "Expected FunctionProxy for index of NewScFunc or NewScGenFunc opnd");
     AssertMsg(*proxyRef, "Expected FunctionProxy for index of NewScFunc or NewScGenFunc opnd");
 
@@ -5942,7 +5941,7 @@ Lowerer::LowerIsInst(IR::Instr * isInstInstr, IR::JnHelperMethod helperMethod)
     IR::RegOpnd * argOpnd;
 
     // inlineCache
-    instrPrev = m_lowererMD.LoadHelperArgument(isInstInstr, LoadIsInstInlineCacheOpnd(isInstInstr, isInstInstr->GetSrc1()->AsIntConstOpnd()->m_value));
+    instrPrev = m_lowererMD.LoadHelperArgument(isInstInstr, LoadIsInstInlineCacheOpnd(isInstInstr, isInstInstr->GetSrc1()->AsIntConstOpnd()->AsUint32()));
     isInstInstr->FreeSrc1();
 
     argOpnd = isInstInstr->UnlinkSrc2()->AsRegOpnd();
@@ -6112,7 +6111,7 @@ Lowerer::GenerateNewStackScFunc(IR::Instr * newScFuncInstr)
 {
     Assert(newScFuncInstr->m_func->DoStackNestedFunc());
     Func * func = newScFuncInstr->m_func;
-    uint index = newScFuncInstr->GetSrc1()->AsIntConstOpnd()->m_value;
+    uint index = newScFuncInstr->GetSrc1()->AsIntConstOpnd()->AsUint32();
     Assert(index < func->GetJnFunction()->GetNestedCount());
 
     Js::FunctionProxyPtrPtr nestedProxy = func->GetJnFunction()->GetNestedFuncReference(index);
@@ -7851,7 +7850,7 @@ Lowerer::LowerAddLeftDeadForString(IR::Instr *instr)
 
     // if left->m_directCharLength == -1
     InsertCompareBranch(IR::IndirOpnd::New(opndLeft->AsRegOpnd(), (int32)Js::CompoundString::GetOffsetOfDirectCharLength(), TyUint32, m_func),
-        IR::IntConstOpnd::New(-1, TyUint32, m_func), 
+        IR::IntConstOpnd::New(UINT32_MAX, TyUint32, m_func), 
         Js::OpCode::BrNeq_A, labelHelper, insertBeforeInstr);
 
     // if lastBlockInfo.charLength < lastBlockInfo.charCapacity
@@ -9521,7 +9520,9 @@ Lowerer::LowerStElemC(IR::Instr * stElem)
     //  MOV [r3 + offset(element) + index], src
     const BYTE indirScale =
         baseValueType.IsLikelyAnyOptimizedArray() ? GetArrayIndirScale(baseValueType) : m_lowererMD.GetDefaultIndirScale();
-    indirOpnd->SetOffset(base + (value << indirScale));
+    IntConstType offset = base + (value << indirScale);
+    Assert(Math::FitsInDWord(offset));
+    indirOpnd->SetOffset((int32)offset);
     m_lowererMD.ChangeToWriteBarrierAssign(stElem);
 
     return instrPrev;
@@ -9573,7 +9574,7 @@ IR::Instr *Lowerer::LowerRestParameter(IR::Opnd *formalsOpnd, IR::Opnd *dstOpnd,
     IR::RegOpnd *srcOpnd = isGenerator ? generatorArgsPtrOpnd : IR::Opnd::CreateFramePointerOpnd(this->m_func);
     uint16 actualOffset = isGenerator ? 0 : GetFormalParamOffset(); //4
     IR::RegOpnd *argPtrOpnd = IR::RegOpnd::New(TyMachPtr, this->m_func);
-    InsertAdd(false, argPtrOpnd, srcOpnd, IR::IntConstOpnd::New((formalsOpnd->AsIntConstOpnd()->m_value + actualOffset) * MachPtr, TyUint32, this->m_func), helperCallInstr);
+    InsertAdd(false, argPtrOpnd, srcOpnd, IR::IntConstOpnd::New((formalsOpnd->AsIntConstOpnd()->GetValue() + actualOffset) * MachPtr, TyUint32, this->m_func), helperCallInstr);
     m_lowererMD.LoadHelperArgument(helperCallInstr, argPtrOpnd);
 
     m_lowererMD.LoadHelperArgument(helperCallInstr, excessOpnd);
@@ -10704,7 +10705,7 @@ Lowerer::LowerBailoutCheckAndLabel(IR::Instr *instr, bool onEqual, bool isHelper
         // BailOnEqual 0, 0
         Assert(onEqual);
         Assert(instr->GetSrc1()->IsEqual(instr->GetSrc2()));
-        Assert(instr->GetSrc1()->AsIntConstOpnd()->m_value == 0);
+        Assert(instr->GetSrc1()->AsIntConstOpnd()->GetValue() == 0);
 
         // The operands cannot be equal when generating a compare (assert) but since this is for testing purposes, hoist a src.
         // Ideally, we would just create a BailOut instruction that generates a guaranteed bailout, but there seem to be issues
@@ -10755,7 +10756,7 @@ Lowerer::LowerBailOnEqualOrNotEqual(IR::Instr * instr,
 
         IR::Opnd * implicitCallFlags = GetImplicitCallFlagsOpnd();
         IR::Opnd * accessorImplicitCall = IR::IntConstOpnd::New(Js::ImplicitCall_Accessor & ~Js::ImplicitCall_None, GetImplicitCallFlagsType(), instr->m_func, true);
-        IR::Opnd * maskNoImplicitCall = IR::IntConstOpnd::New(~Js::ImplicitCall_None, GetImplicitCallFlagsType(), instr->m_func, true);
+        IR::Opnd * maskNoImplicitCall = IR::IntConstOpnd::New((Js::ImplicitCallFlags)~Js::ImplicitCall_None, GetImplicitCallFlagsType(), instr->m_func, true);
         IR::Opnd * fldInfoAccessor = IR::IntConstOpnd::New(Js::FldInfo_FromAccessor, GetFldInfoFlagsType(), instr->m_func, true);
         IR::LabelInstr * label = IR::LabelInstr::New(Js::OpCode::Label, instr->m_func, true);
 
@@ -10830,7 +10831,7 @@ Lowerer::LowerBailOnNotBuiltIn(IR::Instr       *instr,
     IR::Instr *prevInstr = instr->m_prev;
 
     Js::JavascriptFunction ** builtInFuncs = this->m_func->GetScriptContext()->GetLibrary()->GetBuiltinFunctions();
-    Js::BuiltinFunction builtInIndex = instr->UnlinkSrc2()->AsIntConstOpnd()->m_value;
+    Js::BuiltinFunction builtInIndex = instr->UnlinkSrc2()->AsIntConstOpnd()->AsInt32();
 
     IR::Opnd *builtIn = IR::MemRefOpnd::New((void*)(builtInFuncs + builtInIndex), TyMachReg, instr->m_func);
 
@@ -11065,7 +11066,7 @@ Lowerer::LowerBailOnIntMin(IR::Instr *instr, IR::BranchInstr *branchInstr  /* = 
         {
             // For consts we can check the value at JIT time. Note: without this check we'll have to legalize the CMP instr.
             IR::IntConstOpnd* intConst = instr->UnlinkSrc1()->AsIntConstOpnd();
-            if (intConst->m_value == INT_MIN)
+            if (intConst->GetValue() == INT_MIN)
             {
                 this->GenerateBailOut(instr, branchInstr, labelBailOut);
                 intConst->Free(instr->m_func);
@@ -11637,7 +11638,7 @@ void Lowerer::LowerBoundCheck(IR::Instr *const instr)
         Assert(!instr->GetSrc2()->IsIntConstOpnd());
         if(instr->GetDst())
         {
-            const int c = instr->GetDst()->AsIntConstOpnd()->m_value;
+            const int32 c = instr->GetDst()->AsIntConstOpnd()->AsInt32();
             Assert(c == 0 || c == -1);
         }
     }
@@ -11665,7 +11666,7 @@ void Lowerer::LowerBoundCheck(IR::Instr *const instr)
         }
         if(opnd->IsIntConstOpnd())
         {
-            Assert(!isRightOpnd || opnd->AsIntConstOpnd()->m_value != 0);
+            Assert(!isRightOpnd || opnd->AsIntConstOpnd()->GetValue() != 0);
             return;
         }
         Assert(opnd->GetType() == TyInt32 || opnd->GetType() == TyUint32);
@@ -11679,13 +11680,13 @@ void Lowerer::LowerBoundCheck(IR::Instr *const instr)
     DebugOnly(VerifyLeftOrRightOpnd(rightOpnd, true));
     Assert(!leftOpnd->IsIntConstOpnd() || rightOpnd && !rightOpnd->IsIntConstOpnd());
     IR::IntConstOpnd *offsetOpnd = instr->GetDst() ? instr->UnlinkDst()->AsIntConstOpnd() : nullptr;
-    Assert(!offsetOpnd || offsetOpnd->m_value != 0);
+    Assert(!offsetOpnd || offsetOpnd->GetValue() != 0);
     const bool doUnsignedCompare = instr->m_opcode == Js::OpCode::UnsignedBoundCheck;
     instr->Remove();
 
     Func *const func = insertBeforeInstr->m_func;
 
-    int offset = offsetOpnd ? offsetOpnd->m_value : 0;
+    IntConstType offset = offsetOpnd ? offsetOpnd->GetValue() : 0;
     Js::OpCode compareOpCode = Js::OpCode::BrLe_A;
     if(leftOpnd->IsIntConstOpnd() && rightOpnd->IsRegOpnd() && offset != IntConstMin)
     {
@@ -11700,8 +11701,8 @@ void Lowerer::LowerBoundCheck(IR::Instr *const instr)
     if(rightOpnd->IsIntConstOpnd())
     {
         // Try to aggregate right + offset into a constant offset
-        int newOffset;
-        if(!Int32Math::Add(offset, rightOpnd->AsIntConstOpnd()->m_value, &newOffset))
+        IntConstType newOffset;
+        if(!IntConstMath::Add(offset, rightOpnd->AsIntConstOpnd()->GetValue(), &newOffset))
         {
             offset = newOffset;
             rightOpnd = nullptr;
@@ -11731,14 +11732,14 @@ void Lowerer::LowerBoundCheck(IR::Instr *const instr)
         //     add  temp, offset
         //     jo   $bailOut
         // $bailOut: (insertBeforeInstr)
-        Assert(!offsetOpnd || offsetOpnd->m_value == offset);
-        IR::RegOpnd *const addResultOpnd = IR::RegOpnd::New(TyInt32, func);
+        Assert(!offsetOpnd || offsetOpnd->GetValue() == offset);
+        IR::RegOpnd *const addResultOpnd = IR::RegOpnd::New(TyMachReg, func);
         autoReuseAddResultOpnd.Initialize(addResultOpnd, func);
         InsertAdd(
             true,
             addResultOpnd,
             rightOpnd,
-            offsetOpnd ? offsetOpnd : IR::IntConstOpnd::New(offset, TyInt32, func, true),
+            offsetOpnd ? offsetOpnd : IR::IntConstOpnd::New(offset, TyMachReg, func, true),
             insertBeforeInstr);
         InsertBranch(LowererMD::MDOverflowBranchOpcode, bailOutLabel, insertBeforeInstr);
 
@@ -12542,11 +12543,11 @@ Lowerer::LoadFloatFromNonReg(IR::Opnd * opndSrc, IR::Opnd * opndDst, IR::Instr *
     {
         if (opndSrc->IsUInt32())
         {
-            value = (double)(uint32)opndSrc->AsIntConstOpnd()->m_value;
+            value = (double)(uint32)opndSrc->AsIntConstOpnd()->GetValue();
         }
         else
         {
-            value = (double)opndSrc->AsIntConstOpnd()->m_value;
+            value = (double)opndSrc->AsIntConstOpnd()->GetValue();
         }
     }
     else if (opndSrc->IsFloatConstOpnd())
@@ -13490,7 +13491,7 @@ IR::BranchInstr *Lowerer::InsertCompareBranch(
             // Check for compare with zero, to prefer using Test instead of Cmp
             if( !compareSrc1->IsRegOpnd() ||
                 !(
-                    compareSrc2->IsIntConstOpnd() && compareSrc2->AsIntConstOpnd()->m_value == 0 ||
+                    compareSrc2->IsIntConstOpnd() && compareSrc2->AsIntConstOpnd()->GetValue() == 0 ||
                     compareSrc2->IsAddrOpnd() && !compareSrc2->AsAddrOpnd()->m_address
                 ) ||
                 branchOpCode == Js::OpCode::BrGt_A || branchOpCode == Js::OpCode::BrLe_A)
@@ -13579,25 +13580,25 @@ IR::Instr *Lowerer::InsertAdd(
     if(src2->IsIntConstOpnd())
     {
         IR::IntConstOpnd *const intConstOpnd = src2->AsIntConstOpnd();
-        const IntConstType value = intConstOpnd->m_value;
+        const IntConstType value = intConstOpnd->GetValue();
         if(value < 0 && value != IntConstMin)
         {
             // Change (s1 = s1 + -5) into (s1 = s1 - 5)
             IR::IntConstOpnd *const newSrc2 = intConstOpnd->CopyInternal(func);
-            newSrc2->m_value = -value;
+            newSrc2->SetValue(-value);
             return InsertSub(needFlags, dst, src1, newSrc2, insertBeforeInstr);
         }
     }
     else if(src1->IsIntConstOpnd())
     {
         IR::IntConstOpnd *const intConstOpnd = src1->AsIntConstOpnd();
-        const IntConstType value = intConstOpnd->m_value;
+        const IntConstType value = intConstOpnd->GetValue();
         if(value < 0 && value != IntConstMin)
         {
             // Change (s1 = -5 + s1) into (s1 = s1 - 5)
             IR::Opnd *const newSrc1 = src2;
             IR::IntConstOpnd *const newSrc2 = intConstOpnd->CopyInternal(func);
-            newSrc2->m_value = -value;
+            newSrc2->SetValue(-value);
             return InsertSub(needFlags, dst, newSrc1, newSrc2, insertBeforeInstr);
         }
     }
@@ -13627,12 +13628,12 @@ IR::Instr *Lowerer::InsertSub(
     if(src2->IsIntConstOpnd())
     {
         IR::IntConstOpnd *const intConstOpnd = src2->AsIntConstOpnd();
-        const IntConstType value = intConstOpnd->m_value;
+        const IntConstType value = intConstOpnd->GetValue();
         if(value < 0 && value != IntConstMin)
         {
             // Change (s1 = s1 - -5) into (s1 = s1 + 5)
             IR::IntConstOpnd *const newSrc2 = intConstOpnd->CopyInternal(func);
-            newSrc2->m_value = -value;
+            newSrc2->SetValue(-value);
             return InsertAdd(needFlags, dst, src1, newSrc2, insertBeforeInstr);
         }
     }
@@ -14161,7 +14162,7 @@ Lowerer::GenerateFastElemIIntIndexCommon(
 
         if (isStore &&
             baseValueType.IsLikelyNativeIntArray() &&
-            (!element->IsIntConstOpnd() || Js::SparseArraySegment<int32>::IsMissingItem(&element->AsIntConstOpnd()->m_value)))
+            (!element->IsIntConstOpnd() || Js::SparseArraySegment<int32>::GetMissingItem() == element->AsIntConstOpnd()->AsInt32()))
         {
             Assert(ldElem->m_opcode != Js::OpCode::InlineArrayPush || bailOutLabelInstr);
 
@@ -14577,7 +14578,9 @@ Lowerer::GenerateFastElemIIntIndexCommon(
             if (indexValueOpnd->IsIntConstOpnd())
             {
                 // indirOpnd = [headSegment + index + offset(elements)]
-                indirOpnd = IR::IndirOpnd::New(headSegmentOpnd, (int)offsetof(Js::SparseArraySegment<Js::Var>, elements) + (value << indirScale), indirType, this->m_func);
+                IntConstType offset = offsetof(Js::SparseArraySegment<Js::Var>, elements) + (value << indirScale);
+                // TODO: Assert(Math::FitsInDWord(offset));
+                indirOpnd = IR::IndirOpnd::New(headSegmentOpnd, (int32)offset, indirType, this->m_func);
             }
             else
             {
@@ -14670,7 +14673,9 @@ Lowerer::GenerateFastElemIIntIndexCommon(
         //  indirOpnd = [headSegment + index]
         if (indexValueOpnd->IsIntConstOpnd())
         {
-            indirOpnd = IR::IndirOpnd::New(headSegmentOpnd, (value << indirScale), indirType, this->m_func);
+            IntConstType offset = (value << indirScale);
+            // TODO: Assert(Math::FitsInDWord(offset));
+            indirOpnd = IR::IndirOpnd::New(headSegmentOpnd, (int32)offset, indirType, this->m_func);
         }
         else
         {
@@ -14680,7 +14685,9 @@ Lowerer::GenerateFastElemIIntIndexCommon(
     else if (indexValueOpnd->IsIntConstOpnd())
     {
         // indirOpnd = [headSegment + index + offset(elements)]
-        indirOpnd = IR::IndirOpnd::New(headSegmentOpnd, (int)offsetof(Js::SparseArraySegment<Js::Var>, elements) + (value << indirScale), indirType, this->m_func);
+        IntConstType offset = offsetof(Js::SparseArraySegment<Js::Var>, elements) + (value << indirScale);
+        // TODO: Assert(Math::FitsInDWord(offset));
+        indirOpnd = IR::IndirOpnd::New(headSegmentOpnd, (int32)offset, indirType, this->m_func);
     }
     else
     {
@@ -16738,7 +16745,7 @@ Lowerer::GenerateFastInlineStringSplitMatch(IR::Instr * instr)
     {
         //limit
         //As we are optimizing only for two operands, make limit UINT_MAX
-        IR::Opnd* limit = IR::IntConstOpnd::New(UINT_MAX, TyInt32, instr->m_func);
+        IR::Opnd* limit = IR::IntConstOpnd::New(UINT_MAX, TyUint32, instr->m_func);
         this->m_lowererMD.LoadHelperArgument(instr, limit);
     }
 
@@ -17853,8 +17860,9 @@ Lowerer::GetArgsIndirOpndForInlinee(IR::Instr* ldElem, IR::Opnd* valueOpnd)
 
     if (valueOpnd->IsIntConstOpnd())
     {
-        int32 offset = valueOpnd->AsIntConstOpnd()->m_value * MachPtr;
-        argIndirOpnd = IR::IndirOpnd::New(baseOpnd, offset, TyMachReg, ldElem->m_func);
+        IntConstType offset = valueOpnd->AsIntConstOpnd()->GetValue() * MachPtr;
+        // TODO: Assert(Math::FitsInDWord(offset));
+        argIndirOpnd = IR::IndirOpnd::New(baseOpnd, (int32)offset, TyMachReg, ldElem->m_func);
     }
     else
     {
@@ -17887,7 +17895,9 @@ Lowerer::GetArgsIndirOpndForTopFunction(IR::Instr* ldElem, IR::Opnd* valueOpnd)
     Assert(actualOffset == 5 || m_func->GetJnFunction()->IsGenerator());
     if (valueOpnd->IsIntConstOpnd())
     {
-        argIndirOpnd = IR::IndirOpnd::New(baseOpnd, (valueOpnd->AsIntConstOpnd()->m_value + actualOffset) * MachPtr, TyMachReg, this->m_func);
+        IntConstType offset = (valueOpnd->AsIntConstOpnd()->GetValue() + actualOffset) * MachPtr;
+        // TODO: Assert(Math::FitsInDWord(offset));
+        argIndirOpnd = IR::IndirOpnd::New(baseOpnd, (int32)offset, TyMachReg, this->m_func);
     }
     else
     {
@@ -19585,7 +19595,7 @@ Lowerer::GenerateFalsyObjectTest(IR::Instr *insertInstr, IR::RegOpnd *TypeOpnd, 
 void
 Lowerer::GenerateFastBrTypeOf(IR::Instr *branch, IR::RegOpnd *object, IR::IntConstOpnd *typeIdOpnd, IR::Instr *typeOf, bool *pfNoLower)
 {
-    Js::TypeId      typeId   = static_cast<Js::TypeId>(typeIdOpnd->m_value);
+    Js::TypeId      typeId   = static_cast<Js::TypeId>(typeIdOpnd->GetValue());
     IR::LabelInstr *target   = branch->AsBranchInstr()->GetTarget();
     IR::LabelInstr *done     = IR::LabelInstr::New(Js::OpCode::Label, m_func, false);
     IR::LabelInstr *helper = IR::LabelInstr::New(Js::OpCode::Label, m_func, true);
@@ -19721,7 +19731,7 @@ Lowerer::GenerateFastCmTypeOf(IR::Instr *compare, IR::RegOpnd *object, IR::IntCo
            compare->m_opcode == Js::OpCode::CmSrNeq_A ||
            compare->m_opcode == Js::OpCode::CmNeq_A);
 
-    Js::TypeId      typeId   = static_cast<Js::TypeId>(typeIdOpnd->m_value);
+    Js::TypeId      typeId   = static_cast<Js::TypeId>(typeIdOpnd->GetValue());
     IR::LabelInstr *movFalse = IR::LabelInstr::New(Js::OpCode::Label, m_func, false);
     IR::LabelInstr *done = IR::LabelInstr::New(Js::OpCode::Label, m_func, false);
     IR::LabelInstr *helper= IR::LabelInstr::New(Js::OpCode::Label, m_func, true);
@@ -20079,7 +20089,7 @@ Lowerer::LowerNewConcatStrMulti(IR::Instr * instr)
 {
     IR::IntConstOpnd * countOpnd = instr->UnlinkSrc1()->AsIntConstOpnd();
     IR::RegOpnd * dstOpnd = instr->UnlinkDst()->AsRegOpnd();
-    uint8 count = (uint8)countOpnd->m_value;
+    uint8 count = (uint8)countOpnd->GetValue();
 
     Assert(dstOpnd->GetValueType().IsString());
 
@@ -20090,7 +20100,7 @@ Lowerer::LowerNewConcatStrMulti(IR::Instr * instr)
         this->LoadLibraryValueOpnd(instr, LibraryValue::ValueStringTypeStatic), instr);
     GenerateRecyclerMemInitNull(dstOpnd, Js::ConcatStringMulti::GetOffsetOfpszValue(), instr);
     GenerateRecyclerMemInit(dstOpnd, Js::ConcatStringMulti::GetOffsetOfcharLength(), 0, instr);
-    GenerateRecyclerMemInit(dstOpnd, Js::ConcatStringMulti::GetOffsetOfSlotCount(), countOpnd->m_value, instr);
+    GenerateRecyclerMemInit(dstOpnd, Js::ConcatStringMulti::GetOffsetOfSlotCount(), countOpnd->AsUint32(), instr);
 
     instr->Remove();
 }
@@ -20114,7 +20124,7 @@ Lowerer::LowerNewConcatStrMultiBE(IR::Instr * instr)
     IR::RegOpnd * newString = instr->GetDst()->AsRegOpnd();
 
     IR::Opnd * newConcatItemOpnd = nullptr;
-    uint index = instr->GetSrc1()->AsIntConstOpnd()->m_value - 1;
+    uint index = instr->GetSrc1()->AsIntConstOpnd()->AsUint32() - 1;
     IR::Instr * concatItemInstr = nullptr;
     IR::Opnd * linkOpnd = instr->GetSrc2();
     while (linkOpnd)
@@ -20484,7 +20494,7 @@ Lowerer::GenerateSimplifiedInt4Rem(
     if (PHASE_OFF(Js::Phase::MathFastPathPhase, remInstr->m_func->GetTopFunc()) && !isModByPowerOf2)
         return false;
 
-    if (!(src2->IsIntConstOpnd() && Math::IsPow2(src2->AsIntConstOpnd()->m_value)) && !isModByPowerOf2)
+    if (!(src2->IsIntConstOpnd() && Math::IsPow2(src2->AsIntConstOpnd()->AsInt32())) && !isModByPowerOf2)
     {
         return false;
     }
@@ -20541,7 +20551,7 @@ Lowerer::GenerateSimplifiedInt4Rem(
     else
     {
         Assert(src2->IsIntConstOpnd());
-        IntConstType mask =  src2->AsIntConstOpnd()->m_value - 1;
+        int32 mask =  src2->AsIntConstOpnd()->AsInt32() - 1;
         maskOpnd = IR::IntConstOpnd::New(mask, TyInt32, remInstr->m_func);
     }
 
@@ -20878,10 +20888,10 @@ Lowerer::LowerDivI4Common(IR::Instr * instr)
     {
         IR::LabelInstr * minIntLabel = nullptr;
         // we need to check for INT_MIN/-1 if divisor is either -1 or variable, and dividend is either INT_MIN or variable
-        bool needsMinOverNeg1Check = !(instr->GetSrc2()->IsIntConstOpnd() && instr->GetSrc2()->AsIntConstOpnd()->m_value != -1);
+        bool needsMinOverNeg1Check = !(instr->GetSrc2()->IsIntConstOpnd() && instr->GetSrc2()->AsIntConstOpnd()->GetValue() != -1);
         if (instr->GetSrc1()->IsIntConstOpnd())
         {
-            if (needsMinOverNeg1Check && instr->GetSrc1()->AsIntConstOpnd()->m_value == INT_MIN)
+            if (needsMinOverNeg1Check && instr->GetSrc1()->AsIntConstOpnd()->GetValue() == INT_MIN)
             {
                 minIntLabel = InsertLabel(true, divLabel);
                 InsertBranch(Js::OpCode::Br, minIntLabel, div0Label);
@@ -20899,7 +20909,7 @@ Lowerer::LowerDivI4Common(IR::Instr * instr)
         if (needsMinOverNeg1Check)
         {
             Assert(minIntLabel);
-            Assert(!instr->GetSrc2()->IsIntConstOpnd() || instr->GetSrc2()->AsIntConstOpnd()->m_value == -1);
+            Assert(!instr->GetSrc2()->IsIntConstOpnd() || instr->GetSrc2()->AsIntConstOpnd()->GetValue() == -1);
             if (!instr->GetSrc2()->IsIntConstOpnd())
             {
                 InsertCompareBranch(instr->GetSrc2(), IR::IntConstOpnd::New(-1, TyInt32, m_func), Js::OpCode::BrNeq_A, divLabel, divLabel);
@@ -20969,13 +20979,13 @@ Lowerer::LowerDivI4(IR::Instr * instr)
     {
         // Bailout if numerator is MIN_INT  (could also check for denominator being -1
         // before bailing out, but does not seem worth the extra code..)
-        InsertCompareBranch(nominatorOpnd, IR::IntConstOpnd::New(0x80000000, TyInt32, this->m_func, true), Js::OpCode::BrEq_A, bailOutLabel, nonBailOutInstr);
+        InsertCompareBranch(nominatorOpnd, IR::IntConstOpnd::New(INT32_MIN, TyInt32, this->m_func, true), Js::OpCode::BrEq_A, bailOutLabel, nonBailOutInstr);
     }
 
-    if (denominatorOpnd->IsIntConstOpnd() && Math::IsPow2(denominatorOpnd->AsIntConstOpnd()->m_value))
+    if (denominatorOpnd->IsIntConstOpnd() && Math::IsPow2(denominatorOpnd->AsIntConstOpnd()->AsInt32()))
     {
         Assert((bailOutKind & (IR::BailOutOnNegativeZero | IR::BailOutOnDivByZero)) == 0);
-        int pow2 = denominatorOpnd->AsIntConstOpnd()->m_value;
+        int pow2 = denominatorOpnd->AsIntConstOpnd()->AsInt32();
         InsertTestBranch(nominatorOpnd, IR::IntConstOpnd::New(pow2 - 1, TyInt32, this->m_func, true),
             Js::OpCode::BrNeq_A, bailOutLabel, nonBailOutInstr);
         nonBailOutInstr->m_opcode = Js::OpCode::Shr_A;
@@ -21043,7 +21053,7 @@ Lowerer::LowerNewScopeSlots(IR::Instr * instr, bool doStackSlots)
         return;
     }
 
-    uint const count = instr->GetSrc1()->AsIntConstOpnd()->m_value;
+    uint const count = instr->GetSrc1()->AsIntConstOpnd()->AsUint32();
     uint const allocSize = count * sizeof(Js::Var);
     uint const actualSlotCount = count - Js::ScopeSlots::FirstSlotIndex;
 
@@ -21495,7 +21505,7 @@ void Lowerer::GenerateSwitchStringLookup(IR::Instr * instr)
         IR::IntConstOpnd * lenBitMaskOpnd = IR::IntConstOpnd::New(bvLength.GetWord(), TyUint32, func);
         InsertBitTestBranch(lenBitMaskOpnd, strLengthOpnd, false, defaultLabelInstr, instr);
         // Jump to default label if the bit is > 32
-        InsertTestBranch(strLengthOpnd, IR::IntConstOpnd::New(~31, TyUint32, func), Js::OpCode::BrNeq_A, defaultLabelInstr, instr);
+        InsertTestBranch(strLengthOpnd, IR::IntConstOpnd::New(UINT32_MAX ^ 31, TyUint32, func), Js::OpCode::BrNeq_A, defaultLabelInstr, instr);
     }
     else
     {

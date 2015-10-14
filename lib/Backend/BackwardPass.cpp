@@ -2516,7 +2516,7 @@ BackwardPass::ProcessBlock(BasicBlock * block)
                     }
                     if(instr->GetDst())
                     {
-                        const int c = instr->GetDst()->AsIntConstOpnd()->m_value;
+                        const int c = instr->GetDst()->AsIntConstOpnd()->GetValue();
                         if(c != 0 && c != -1)
                         {
                             break;
@@ -2528,10 +2528,10 @@ BackwardPass::ProcessBlock(BasicBlock * block)
                     IR::Instr *const lowerBoundCheck = instr->m_prev;
                     if(lowerBoundCheck->m_opcode != Js::OpCode::BoundCheck ||
                         !lowerBoundCheck->GetSrc1()->IsIntConstOpnd() ||
-                        lowerBoundCheck->GetSrc1()->AsIntConstOpnd()->m_value != 0 ||
+                        lowerBoundCheck->GetSrc1()->AsIntConstOpnd()->GetValue() != 0 ||
                         !lowerBoundCheck->GetSrc2() ||
                         !instr->GetSrc1()->AsRegOpnd()->IsEqual(lowerBoundCheck->GetSrc2()) ||
-                        lowerBoundCheck->GetDst() && lowerBoundCheck->GetDst()->AsIntConstOpnd()->m_value != 0)
+                        lowerBoundCheck->GetDst() && lowerBoundCheck->GetDst()->AsIntConstOpnd()->GetValue() != 0)
                     {
                         break;
                     }
@@ -5154,7 +5154,7 @@ BackwardPass::TrackIntUsage(IR::Instr *const instr)
 
                 if(instr->ignoreNegativeZero ||
                     !(instr->GetSrc1()->IsRegOpnd() && instr->GetSrc1()->AsRegOpnd()->m_wasNegativeZeroPreventedByBailout) ||
-                    instr->GetSrc2()->IsIntConstOpnd() && instr->GetSrc2()->AsIntConstOpnd()->m_value != 0)
+                    instr->GetSrc2()->IsIntConstOpnd() && instr->GetSrc2()->AsIntConstOpnd()->GetValue() != 0)
                 {
                     // At least one of the following is true:
                     //     - -0 does not matter for dst

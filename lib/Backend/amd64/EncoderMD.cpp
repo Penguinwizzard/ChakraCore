@@ -476,7 +476,7 @@ EncoderMD::EmitImmed(IR::Opnd * opnd, int opSize, int sbit, bool allow64Immediat
         goto intConst;
 
     case IR::OpndKindIntConst:
-        value = opnd->AsIntConstOpnd()->m_value;
+        value = opnd->AsIntConstOpnd()->GetValue();
 intConst:
         if (sbit && opSize > 1 && this->FitsInByte(value))
         {
@@ -900,7 +900,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
             {
                 IntConstType value;
                 AssertMsg(opr2->IsIntConstOpnd(), "Expected register or constant as shift amount opnd");
-                value = opr2->AsIntConstOpnd()->m_value;
+                value = opr2->AsIntConstOpnd()->GetValue();
                 if (value == 1)
                 {
                     opcodeByte |= 0x10;
@@ -943,8 +943,8 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
             case Js::OpCode::RET:
             {
                 AssertMsg(opr1->IsIntConstOpnd(), "RET should have intConst as src");
-                IntConstType value = opr1->AsIntConstOpnd()->m_value;
-                if (value==0)
+                IntConstType value = opr1->AsIntConstOpnd()->GetValue();
+                if (value==0) 
                 {
                     opcodeByte |= 0x1; // no imm16 follows
                 }
@@ -1041,10 +1041,10 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
                 break;
 
             case Js::OpCode::INT:
-                if (opr1->AsIntConstOpnd()->m_value != 3)
+                if (opr1->AsIntConstOpnd()->GetValue() != 3)
                 {
                     opcodeByte |= 1;
-                    *(m_pc)++ = (char)opr1->AsIntConstOpnd()->m_value;
+                    *(m_pc)++ = (char)opr1->AsIntConstOpnd()->GetValue();
                 }
                 break;
 
@@ -1096,7 +1096,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
                 {
                     // Multibyte NOP.
                     Assert(instr->GetSrc1()->IsIntConstOpnd() && instr->GetSrc1()->GetType() == TyInt8);
-                    unsigned nopSize = instr->GetSrc1()->AsIntConstOpnd()->m_value;
+                    unsigned nopSize = instr->GetSrc1()->AsIntConstOpnd()->AsUint32();
                     Assert(nopSize >= 2 && nopSize <= 4);
                     nopSize = max(2u, min(4u, nopSize)); // satisfy oacr
                     const BYTE *nopEncoding = Nop[nopSize - 1];
@@ -1639,7 +1639,7 @@ bool EncoderMD::TryConstFold(IR::Instr *instr, IR::RegOpnd *regOpnd)
             }
 
             // offset = indir.offset + (index << scale)
-            IntConstType offset = regOpnd->m_sym->GetIntConstValue();
+            int32 offset = regOpnd->m_sym->GetIntConstValue();
             if (indir->GetScale() != 0 && Int32Math::Shl(offset, indir->GetScale(), &offset) ||
                 indir->GetOffset() != 0 && Int32Math::Add(indir->GetOffset(), offset, &offset))
             {

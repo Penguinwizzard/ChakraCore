@@ -2384,7 +2384,7 @@ Instr::HoistSrc2(Js::OpCode assignOpcode, RegNum regNum, StackSym *newSym)
         }
         else if (oldSrc->IsIntConstOpnd())
         {
-            newSym->SetIsIntConst(oldSrc->AsIntConstOpnd()->m_value);
+            newSym->SetIsIntConst(oldSrc->AsIntConstOpnd()->GetValue());
         }
     }
 
@@ -2403,7 +2403,7 @@ Instr::HoistSrc2(Js::OpCode assignOpcode, RegNum regNum, StackSym *newSym)
 Instr *
 Instr::HoistIndirOffset(IR::IndirOpnd *indirOpnd, RegNum regNum)
 {
-    IntConstType offset = indirOpnd->GetOffset();
+    int32 offset = indirOpnd->GetOffset();
     if (indirOpnd->GetIndexOpnd())
     {
         return HoistIndirOffsetAsAdd(indirOpnd, indirOpnd->GetBaseOpnd(), offset, regNum);
@@ -3318,12 +3318,12 @@ uint Instr::GetArgOutCount(bool getInterpreterArgOutCount)
            opcode == Js::OpCode::EndCallForPolymorphicInlinee || opcode == Js::OpCode::LoweredStartCall);
     if (!getInterpreterArgOutCount)
     {
-        return this->GetSrc1()->AsIntConstOpnd()->m_value;
+        return this->GetSrc1()->AsIntConstOpnd()->AsUint32();
     }
 
     Assert(opcode == Js::OpCode::StartCall);
-    IntConstType argOutCount = !this->GetSrc2() ? this->GetSrc1()->AsIntConstOpnd()->m_value : this->GetSrc2()->AsIntConstOpnd()->m_value;
-    Assert(argOutCount >= 0);
+    IntConstType argOutCount = !this->GetSrc2() ? this->GetSrc1()->AsIntConstOpnd()->GetValue() : this->GetSrc2()->AsIntConstOpnd()->GetValue();
+    Assert(argOutCount >= 0 && argOutCount < UINT32_MAX);
     return (uint)argOutCount;
 }
 
@@ -3578,21 +3578,21 @@ bool Instr::BinaryCalculator(IntConstType src1Const, IntConstType src2Const, Int
     switch (this->m_opcode)
     {
     case Js::OpCode::Add_A:
-        if (Int32Math::Add(src1Const, src2Const, &value))
+        if (IntConstMath::Add(src1Const, src2Const, &value))
         {
             return false;
         }
         break;
 
     case Js::OpCode::Sub_A:
-        if (Int32Math::Sub(src1Const, src2Const, &value))
+        if (IntConstMath::Sub(src1Const, src2Const, &value))
         {
             return false;
         }
         break;
 
     case Js::OpCode::Mul_A:
-        if (Int32Math::Mul(src1Const, src2Const, &value))
+        if (IntConstMath::Mul(src1Const, src2Const, &value))
         {
             return false;
         }
@@ -3616,7 +3616,7 @@ bool Instr::BinaryCalculator(IntConstType src1Const, IntConstType src2Const, Int
             // folds to -0. Bail for now...
             return false;
         }
-        if (Int32Math::Div(src1Const, src2Const, &value))
+        if (IntConstMath::Div(src1Const, src2Const, &value))
         {
             return false;
         }
@@ -3634,7 +3634,7 @@ bool Instr::BinaryCalculator(IntConstType src1Const, IntConstType src2Const, Int
             // Bail for now...
             return false;
         }
-        if (Int32Math::Mod(src1Const, src2Const, &value))
+        if (IntConstMath::Mod(src1Const, src2Const, &value))
         {
             return false;
         }
@@ -3648,17 +3648,17 @@ bool Instr::BinaryCalculator(IntConstType src1Const, IntConstType src2Const, Int
 
     case Js::OpCode::Shl_A:
         // We don't care about overflow here
-        Int32Math::Shl(src1Const, src2Const & 0x1F, &value);
+        IntConstMath::Shl(src1Const, src2Const & 0x1F, &value);
         break;
 
     case Js::OpCode::Shr_A:
         // We don't care about overflow here, and there shouldn't be any
-        Int32Math::Shr(src1Const, src2Const & 0x1F, &value);
+        IntConstMath::Shr(src1Const, src2Const & 0x1F, &value);
         break;
 
     case Js::OpCode::ShrU_A:
         // We don't care about overflow here, and there shouldn't be any
-        Int32Math::ShrU(src1Const, src2Const & 0x1F, &value);
+        IntConstMath::ShrU(src1Const, src2Const & 0x1F, &value);
         if (value < 0)
         {
             // ShrU produces a UInt32.  If it doesn't fit in a Int32, bail as we don't
@@ -3669,17 +3669,17 @@ bool Instr::BinaryCalculator(IntConstType src1Const, IntConstType src2Const, Int
 
     case Js::OpCode::And_A:
         // We don't care about overflow here, and there shouldn't be any
-        Int32Math::And(src1Const, src2Const, &value);
+        IntConstMath::And(src1Const, src2Const, &value);
         break;
 
     case Js::OpCode::Or_A:
         // We don't care about overflow here, and there shouldn't be any
-        Int32Math::Or(src1Const, src2Const, &value);
+        IntConstMath::Or(src1Const, src2Const, &value);
         break;
 
     case Js::OpCode::Xor_A:
         // We don't care about overflow here, and there shouldn't be any
-        Int32Math::Xor(src1Const, src2Const, &value);
+        IntConstMath::Xor(src1Const, src2Const, &value);
         break;
 
     case Js::OpCode::InlineMathMin:
@@ -3712,14 +3712,14 @@ bool Instr::UnaryCalculator(IntConstType src1Const, IntConstType *pResult)
             return false;
         }
 
-        if (Int32Math::Neg(src1Const, &value))
+        if (IntConstMath::Neg(src1Const, &value))
         {
             return false;
         }
         break;
 
     case Js::OpCode::Not_A:
-        Int32Math::Not(src1Const, &value);
+        IntConstMath::Not(src1Const, &value);
         break;
 
     case Js::OpCode::Ld_A:
@@ -3737,14 +3737,14 @@ bool Instr::UnaryCalculator(IntConstType src1Const, IntConstType *pResult)
         break;
 
     case Js::OpCode::Incr_A:
-        if (Int32Math::Inc(src1Const, &value))
+        if (IntConstMath::Inc(src1Const, &value))
         {
             return false;
         }
         break;
 
     case Js::OpCode::Decr_A:
-        if (Int32Math::Dec(src1Const, &value))
+        if (IntConstMath::Dec(src1Const, &value))
         {
             return false;
         }
@@ -3758,13 +3758,15 @@ bool Instr::UnaryCalculator(IntConstType src1Const, IntConstType *pResult)
         }
         else
         {
-            value = ::abs(src1Const);
+            value = src1Const < 0 ? -src1Const : src1Const;
         }
         break;
 
     case Js::OpCode::InlineMathClz32:
         DWORD clz;
-        if (_BitScanReverse(&clz, src1Const))
+        DWORD src1Const32;
+        src1Const32 = (DWORD)src1Const;
+        if (_BitScanReverse(&clz, src1Const32))
         {
             value = 31 - clz;
         }
@@ -4004,7 +4006,7 @@ Instr::Dump(IRDumpFlags flags)
         Assert(GetSrc1());
         if(GetSrc1()->IsIntConstOpnd())
         {
-            Output::Print(L"%d", GetSrc1()->AsIntConstOpnd()->m_value);
+            Output::Print(L"%d", GetSrc1()->AsIntConstOpnd()->GetValue());
         }
         else
         {
@@ -4014,16 +4016,16 @@ Instr::Dump(IRDumpFlags flags)
         bool useLessThanOrEqual = true;
         bool usePlus = true;
         bool dumpSrc2 = false;
-        int offset = GetDst() ? GetDst()->AsIntConstOpnd()->m_value : 0;
+        int32 offset = GetDst() ? GetDst()->AsIntConstOpnd()->AsInt32() : 0;
         if(GetSrc2())
         {
             if(GetSrc2()->IsIntConstOpnd())
             {
             #if DBG
                 int32 temp;
-                Assert(!Int32Math::Add(offset, GetSrc2()->AsIntConstOpnd()->m_value, &temp));
+                Assert(!Int32Math::Add(offset, GetSrc2()->AsIntConstOpnd()->AsInt32(), &temp));
             #endif
-                offset += GetSrc2()->AsIntConstOpnd()->m_value;
+                offset += GetSrc2()->AsIntConstOpnd()->AsInt32();
             }
             else
             {
@@ -4176,7 +4178,7 @@ Instr::Dump(IRDumpFlags flags)
     if (this->m_opcode == Js::OpCode::NewScFunc || this->m_opcode == Js::OpCode::NewScGenFunc)
     {
         Assert(src1->IsIntConstOpnd());
-        Js::ParseableFunctionInfo *function = this->m_func->GetJnFunction()->GetNestedFunctionForExecution((uint)src1->AsIntConstOpnd()->m_value)->GetParseableFunctionInfo();
+        Js::ParseableFunctionInfo *function = this->m_func->GetJnFunction()->GetNestedFunctionForExecution((uint)src1->AsIntConstOpnd()->GetValue())->GetParseableFunctionInfo();
         Output::Print(L"func:%s()", function ? function->GetDisplayName() : L"???");
         Output::Print(L", env:");
         this->GetSrc2()->AsRegOpnd()->m_sym->Dump(flags);

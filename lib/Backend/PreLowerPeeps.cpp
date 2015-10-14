@@ -58,7 +58,7 @@ IR::Instr *Lowerer::PeepShl(IR::Instr *instrShl)
     }
     instrDef = src1->AsRegOpnd()->m_sym->GetInstrDef();
     if (instrDef->m_opcode != Js::OpCode::Shr_I4 || !instrDef->GetSrc2()->IsIntConstOpnd()
-        || instrDef->GetSrc2()->AsIntConstOpnd()->m_value != src2->AsIntConstOpnd()->m_value
+        || instrDef->GetSrc2()->AsIntConstOpnd()->GetValue() != src2->AsIntConstOpnd()->GetValue()
         || !instrDef->GetSrc1()->IsRegOpnd())
     {
         return instrShl;
@@ -95,7 +95,11 @@ IR::Instr *Lowerer::PeepShl(IR::Instr *instrShl)
     instrShl->FreeSrc1();
     instrShl->SetSrc1(instrDef->UnlinkSrc1());
     instrDef->Remove();
-    src2->AsIntConstOpnd()->m_value = ~((1 << src2->AsIntConstOpnd()->m_value) - 1);
+
+    IntConstType oldValue = src2->AsIntConstOpnd()->GetValue();
+    oldValue = ~((1 << oldValue) - 1);
+    src2->AsIntConstOpnd()->SetValue(oldValue);
+
     instrShl->m_opcode = Js::OpCode::And_I4;
 
     return instrShl;

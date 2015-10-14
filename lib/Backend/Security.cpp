@@ -240,7 +240,7 @@ Security::EncodeOpnd(IR::Instr *instr, IR::Opnd *opnd)
     {
         IR::IntConstOpnd *intConstOpnd = opnd->AsIntConstOpnd();
 
-        if (!this->IsLargeConstant(intConstOpnd->m_value))
+        if (!this->IsLargeConstant(intConstOpnd->AsInt32()))
         {
             return;
         }
@@ -257,9 +257,10 @@ Security::EncodeOpnd(IR::Instr *instr, IR::Opnd *opnd)
         }
 
 #if DBG_DUMP || defined(ENABLE_IR_VIEWER)
-        intConstOpnd->decodedValue = intConstOpnd->m_value;
+        intConstOpnd->decodedValue = intConstOpnd->GetValue();
 #endif
-        intConstOpnd->m_value = this->EncodeValue(instr, intConstOpnd, intConstOpnd->m_value, &newOpnd);
+
+        intConstOpnd->SetValue(EncodeValue(instr, intConstOpnd, intConstOpnd->GetValue(), &newOpnd));
     }
     break;
 
@@ -287,6 +288,7 @@ Security::EncodeOpnd(IR::Instr *instr, IR::Opnd *opnd)
 #ifdef _M_X64
         addrOpnd->SetEncodedValue((Js::Var)this->EncodeAddress(instr, addrOpnd, (size_t)addrOpnd->m_address, &newOpnd), addrOpnd->GetAddrOpndKind());
 #else
+        
         addrOpnd->SetEncodedValue((Js::Var)this->EncodeValue(instr, addrOpnd, (IntConstType)addrOpnd->m_address, &newOpnd), addrOpnd->GetAddrOpndKind());
 #endif
     }
@@ -304,9 +306,10 @@ Security::EncodeOpnd(IR::Instr *instr, IR::Opnd *opnd)
 
         IR::IntConstOpnd *indexOpnd = IR::IntConstOpnd::New(indirOpnd->GetOffset(), TyInt32, instr->m_func);
 #if DBG_DUMP || defined(ENABLE_IR_VIEWER)
-        indexOpnd->decodedValue = indexOpnd->m_value;
+        indexOpnd->decodedValue = indexOpnd->GetValue();
 #endif
-        indexOpnd->m_value = EncodeValue(instr, indexOpnd, indexOpnd->m_value, &newOpnd);
+
+        indexOpnd->SetValue(EncodeValue(instr, indexOpnd, indexOpnd->GetValue(), &newOpnd));
         indirOpnd->SetOffset(0);
         indirOpnd->SetIndexOpnd(newOpnd);
     }
@@ -343,31 +346,79 @@ Security::EncodeOpnd(IR::Instr *instr, IR::Opnd *opnd)
 }
 
 IntConstType
-Security::EncodeValue(IR::Instr *instr, IR::Opnd *opnd, IntConstType value, IR::RegOpnd **pNewOpnd)
+Security::EncodeValue(IR::Instr *instr, IR::Opnd *opnd, IntConstType constValue, IR::RegOpnd **pNewOpnd)
 {
-    IR::Instr *instrNew;
-    IR::RegOpnd *regOpnd = IR::RegOpnd::New(StackSym::New(opnd->GetType(), instr->m_func), opnd->GetType(), instr->m_func);
-
-    instrNew = LowererMD::CreateAssign(regOpnd, opnd, instr);
-
-    IntConstType cookie = (IntConstType)Math::Rand();
-    IR::IntConstOpnd * cookieOpnd = IR::IntConstOpnd::New(cookie, opnd->GetType(), instr->m_func);
-#if DBG_DUMP
-    cookieOpnd->name = L"cookie";
+    if (opnd->GetType() == TyInt32 || opnd->GetType() == TyInt16 || opnd->GetType() == TyInt8
+#if _M_IX86
+        || opnd->GetType() == TyVar
 #endif
-    instrNew = IR::Instr::New(Js::OpCode::Xor_I4, regOpnd, regOpnd, cookieOpnd, instr->m_func);
-    instr->InsertBefore(instrNew);
+        )
+    {
+        int32 cookie = (int32)Math::Rand();
+        IR::RegOpnd *regOpnd = IR::RegOpnd::New(StackSym::New(opnd->GetType(), instr->m_func), opnd->GetType(), instr->m_func);
+        IR::Instr * instrNew = LowererMD::CreateAssign(regOpnd, opnd, instr);
 
-    LowererMD::EmitInt4Instr(instrNew);
+        IR::IntConstOpnd * cookieOpnd = IR::IntConstOpnd::New(cookie, TyInt32, instr->m_func);
 
-    StackSym * stackSym = regOpnd->m_sym;
-    Assert(!stackSym->m_isSingleDef);
-    Assert(stackSym->m_instrDef == nullptr);
-    stackSym->m_isEncodedConstant = true;
-    stackSym->constantValue = value;
+#if DBG_DUMP
+        cookieOpnd->name = L"cookie";
+#endif
 
-    *pNewOpnd = regOpnd;
-    return value ^ cookie;
+        instrNew = IR::Instr::New(Js::OpCode::Xor_I4, regOpnd, regOpnd, cookieOpnd, instr->m_func);
+        instr->InsertBefore(instrNew);
+
+        LowererMD::EmitInt4Instr(instrNew);
+
+        StackSym * stackSym = regOpnd->m_sym;
+        Assert(!stackSym->m_isSingleDef);
+        Assert(stackSym->m_instrDef == nullptr);
+        stackSym->m_isEncodedConstant = true;
+        stackSym->constantValue = (int32)constValue;
+
+        *pNewOpnd = regOpnd;
+
+        int32 value = (int32)constValue;
+        value = value ^ cookie;
+        return value;
+    }
+    else if (opnd->GetType() == TyUint32 || opnd->GetType() == TyUint16 || opnd->GetType() == TyUint8)
+    {
+        uint32 cookie = (uint32)Math::Rand();
+        IR::RegOpnd *regOpnd = IR::RegOpnd::New(StackSym::New(opnd->GetType(), instr->m_func), opnd->GetType(), instr->m_func);
+        IR::Instr * instrNew = LowererMD::CreateAssign(regOpnd, opnd, instr);
+
+        IR::IntConstOpnd * cookieOpnd = IR::IntConstOpnd::New(cookie, TyUint32, instr->m_func);
+
+#if DBG_DUMP
+        cookieOpnd->name = L"cookie";
+#endif
+
+        instrNew = IR::Instr::New(Js::OpCode::Xor_I4, regOpnd, regOpnd, cookieOpnd, instr->m_func);
+        instr->InsertBefore(instrNew);
+
+        LowererMD::EmitInt4Instr(instrNew);
+
+        StackSym * stackSym = regOpnd->m_sym;
+        Assert(!stackSym->m_isSingleDef);
+        Assert(stackSym->m_instrDef == nullptr);
+        stackSym->m_isEncodedConstant = true;
+        stackSym->constantValue = (uint32)constValue;
+
+        *pNewOpnd = regOpnd;
+
+        uint32 value = (uint32)constValue;
+        value = value ^ cookie;
+        return (IntConstType)value;
+    }
+    else
+    {
+#ifdef _M_X64
+        return this->EncodeAddress(instr, opnd, constValue, pNewOpnd);
+#else
+        Assert(false);
+        return 0;
+#endif
+    }
 }
 
 #ifdef _M_X64

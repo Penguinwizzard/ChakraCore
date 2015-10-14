@@ -1376,7 +1376,7 @@ IRBuilder::BuildReg1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot R0)
             }
             else if (srcOpnd->IsIntConstOpnd())
             {
-                dstSym->SetIsIntConst(srcOpnd->AsIntConstOpnd()->m_value);
+                dstSym->SetIsIntConst(srcOpnd->AsIntConstOpnd()->GetValue());
             }
             else if (srcOpnd->IsFloatConstOpnd())
             {
@@ -2339,7 +2339,7 @@ IRBuilder::BuildProfiledReg1Unsigned1(Js::OpCode newOpcode, uint32 offset, Js::R
     IR::RegOpnd *   dstOpnd = this->BuildDstOpnd(dstRegSlot);
 
     StackSym *      dstSym = dstOpnd->m_sym;
-    IntConstType    value = C1;
+    int32           value = C1;
     IR::IntConstOpnd * srcOpnd;
 
     srcOpnd = IR::IntConstOpnd::New(value, TyInt32, m_func);
@@ -4759,7 +4759,7 @@ IRBuilder::BuildCallCommon(IR::Instr * instr, StackSym * symDst, Js::ArgSlot arg
         AssertMsg(instr->m_prev->m_opcode == Js::OpCode::LdSpreadIndices
             // All non-spread calls need StartCall to have the same number of args
             || (argInstr->GetSrc1()->IsIntConstOpnd()
-                    && argInstr->GetSrc1()->AsIntConstOpnd()->m_value == count
+                    && argInstr->GetSrc1()->AsIntConstOpnd()->GetValue() == count
                     && count == argCount), "StartCall has wrong number of arguments...");
     }
     else

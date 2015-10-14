@@ -99,7 +99,7 @@ public:
     bool            IsArgSlotSym() const;
     bool            IsParamSlotSym() const;
     bool            IsAllocated() const;
-    IntConstType    GetIntConstValue() const;
+    int32           GetIntConstValue() const;
     Js::Var         GetFloatConstValueAsVar_PostGlobOpt() const;
     void *          GetConstAddress() const;
     StackSym *      CloneDef(Func *func);

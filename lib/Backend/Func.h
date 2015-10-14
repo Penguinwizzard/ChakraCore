@@ -291,32 +291,32 @@ static const unsigned __int64 c_debugFillPattern8 = 0xcececececececece;
     IR::LabelInstr * GetFuncEndLabel();
 
 #ifdef _M_X64
-    void SetSpillSize(IntConstType spillSize)
+    void SetSpillSize(int32 spillSize)
     {
         m_spillSize = spillSize;
     }
 
-    IntConstType GetSpillSize()
+    int32 GetSpillSize()
     {
         return m_spillSize;
     }
 
-    void SetArgsSize(IntConstType argsSize)
+    void SetArgsSize(int32 argsSize)
     {
         m_argsSize = argsSize;
     }
 
-    IntConstType GetArgsSize()
+    int32 GetArgsSize()
     {
         return m_argsSize;
     }
 
-    void SetSavedRegSize(IntConstType savedRegSize)
+    void SetSavedRegSize(int32 savedRegSize)
     {
         m_savedRegSize = savedRegSize;
     }
 
-    IntConstType GetSavedRegSize()
+    int32 GetSavedRegSize()
     {
         return m_savedRegSize;
     }
@@ -444,9 +444,9 @@ public:
     IR::Instr *         m_exitInstr;
     IR::Instr *         m_tailInstr;
 #ifdef _M_X64
-    IntConstType        m_spillSize;
-    IntConstType        m_argsSize;
-    IntConstType        m_savedRegSize;
+    int32               m_spillSize;
+    int32               m_argsSize;
+    int32               m_savedRegSize;
     PrologEncoder       m_prologEncoder;
 #endif
 

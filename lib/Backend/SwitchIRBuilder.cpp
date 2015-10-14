@@ -907,9 +907,8 @@ SwitchIRBuilder::BuildMultiBrCaseInstrForInts(uint32 start, uint32 end, uint32 t
 
     uint32 lastCaseOffset = m_caseNodes->Item(end)->GetOffset();
 
-    IntConstType baseCaseValue = m_caseNodes->Item(start)->GetLowerBound()->GetStackSym()->GetIntConstValue();
-
-    IntConstType lastCaseValue = m_caseNodes->Item(end)->GetUpperBound()->GetStackSym()->GetIntConstValue();
+    int32 baseCaseValue = m_caseNodes->Item(start)->GetLowerBound()->GetStackSym()->GetIntConstValue();
+    int32 lastCaseValue = m_caseNodes->Item(end)->GetUpperBound()->GetStackSym()->GetIntConstValue();
 
     multiBranchInstr->m_baseCaseValue = baseCaseValue;
     multiBranchInstr->m_lastCaseValue = lastCaseValue;

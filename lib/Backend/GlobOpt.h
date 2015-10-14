@@ -214,32 +214,32 @@ public:
 
 public:
     bool HasIntConstantValue(const bool includeLikelyInt = false) const;
-    bool TryGetIntConstantValue(IntConstType *const intValueRef, const bool includeLikelyInt = false) const;
-    bool TryGetIntConstantLowerBound(IntConstType *const intConstantBoundRef, const bool includeLikelyInt = false) const;
-    bool TryGetIntConstantUpperBound(IntConstType *const intConstantBoundRef, const bool includeLikelyInt = false) const;
+    bool TryGetIntConstantValue(int32 *const intValueRef, const bool includeLikelyInt = false) const;
+    bool TryGetIntConstantLowerBound(int32 *const intConstantBoundRef, const bool includeLikelyInt = false) const;
+    bool TryGetIntConstantUpperBound(int32 *const intConstantBoundRef, const bool includeLikelyInt = false) const;
     bool TryGetIntConstantBounds(IntConstantBounds *const intConstantBoundsRef, const bool includeLikelyInt = false) const;
     bool WasNegativeZeroPreventedByBailout() const;
 
 public:
-    static bool IsEqualTo(const Value *const src1Value, const IntConstType min1, const IntConstType max1, const Value *const src2Value, const IntConstType min2, const IntConstType max2);
-    static bool IsNotEqualTo(const Value *const src1Value, const IntConstType min1, const IntConstType max1, const Value *const src2Value, const IntConstType min2, const IntConstType max2);
+    static bool IsEqualTo(const Value *const src1Value, const int32 min1, const int32 max1, const Value *const src2Value, const int32 min2, const int32 max2);
+    static bool IsNotEqualTo(const Value *const src1Value, const int32 min1, const int32 max1, const Value *const src2Value, const int32 min2, const int32 max2);
 private:
-    static bool IsEqualTo_NoConverse(const Value *const src1Value, const IntConstType min1, const IntConstType max1, const Value *const src2Value, const IntConstType min2, const IntConstType max2);
-    static bool IsNotEqualTo_NoConverse(const Value *const src1Value, const IntConstType min1, const IntConstType max1, const Value *const src2Value, const IntConstType min2, const IntConstType max2);
+    static bool IsEqualTo_NoConverse(const Value *const src1Value, const int32 min1, const int32 max1, const Value *const src2Value, const int32 min2, const int32 max2);
+    static bool IsNotEqualTo_NoConverse(const Value *const src1Value, const int32 min1, const int32 max1, const Value *const src2Value, const int32 min2, const int32 max2);
 
 public:
-    static bool IsGreaterThanOrEqualTo(const Value *const src1Value, const IntConstType min1, const IntConstType max1, const Value *const src2Value, const IntConstType min2, const IntConstType max2);
-    static bool IsGreaterThan(const Value *const src1Value, const IntConstType min1, const IntConstType max1, const Value *const src2Value, const IntConstType min2, const IntConstType max2);
-    static bool IsLessThanOrEqualTo(const Value *const src1Value, const IntConstType min1, const IntConstType max1, const Value *const src2Value, const IntConstType min2, const IntConstType max2);
-    static bool IsLessThan(const Value *const src1Value, const IntConstType min1, const IntConstType max1, const Value *const src2Value, const IntConstType min2, const IntConstType max2);
+    static bool IsGreaterThanOrEqualTo(const Value *const src1Value, const int32 min1, const int32 max1, const Value *const src2Value, const int32 min2, const int32 max2);
+    static bool IsGreaterThan(const Value *const src1Value, const int32 min1, const int32 max1, const Value *const src2Value, const int32 min2, const int32 max2);
+    static bool IsLessThanOrEqualTo(const Value *const src1Value, const int32 min1, const int32 max1, const Value *const src2Value, const int32 min2, const int32 max2);
+    static bool IsLessThan(const Value *const src1Value, const int32 min1, const int32 max1, const Value *const src2Value, const int32 min2, const int32 max2);
 
 public:
-    static bool IsGreaterThanOrEqualTo(const Value *const src1Value, const IntConstType min1, const IntConstType max1, const Value *const src2Value, const IntConstType min2, const IntConstType max2, const int src2Offset);
-    static bool IsLessThanOrEqualTo(const Value *const src1Value, const IntConstType min1, const IntConstType max1, const Value *const src2Value, const IntConstType min2, const IntConstType max2, const int src2Offset);
+    static bool IsGreaterThanOrEqualTo(const Value *const src1Value, const int32 min1, const int32 max1, const Value *const src2Value, const int32 min2, const int32 max2, const int src2Offset);
+    static bool IsLessThanOrEqualTo(const Value *const src1Value, const int32 min1, const int32 max1, const Value *const src2Value, const int32 min2, const int32 max2, const int src2Offset);
 
 private:
-    static bool IsGreaterThanOrEqualTo_NoConverse(const Value *const src1Value, const IntConstType min1, const IntConstType max1, const Value *const src2Value, const IntConstType min2, const IntConstType max2, const int src2Offset);
-    static bool IsLessThanOrEqualTo_NoConverse(const Value *const src1Value, const IntConstType min1, const IntConstType max1, const Value *const src2Value, const IntConstType min2, const IntConstType max2, const int src2Offset);
+    static bool IsGreaterThanOrEqualTo_NoConverse(const Value *const src1Value, const int32 min1, const int32 max1, const Value *const src2Value, const int32 min2, const int32 max2, const int src2Offset);
+    static bool IsLessThanOrEqualTo_NoConverse(const Value *const src1Value, const int32 min1, const int32 max1, const Value *const src2Value, const int32 min2, const int32 max2, const int src2Offset);
 
 public:
     ValueInfo *SpecializeToInt32(JitArenaAllocator *const allocator, const bool isForLoopBackEdgeCompensation = false);
@@ -323,17 +323,17 @@ ValueNumber JsUtil::ValueToKey<ValueNumber, Value *>::ToKey(Value *const &value)
 class IntConstantValueInfo : public ValueInfo
 {
 private:
-    const IntConstType intValue;
+    const int32 intValue;
 
 protected:
-    IntConstantValueInfo(const IntConstType intValue)
+    IntConstantValueInfo(const int32 intValue)
         : ValueInfo(GetInt(IsTaggable(intValue)), ValueStructureKind::IntConstant),
         intValue(intValue)
     {
     }
 
 public:
-    static IntConstantValueInfo *New(JitArenaAllocator *const allocator, const IntConstType intValue)
+    static IntConstantValueInfo *New(JitArenaAllocator *const allocator, const int32 intValue)
     {
         return JitAnew(allocator, IntConstantValueInfo, intValue);
     }
@@ -344,13 +344,13 @@ public:
     }
 
 public:
-    IntConstType IntValue() const
+    int32 IntValue() const
     {
         return intValue;
     }
 
 private:
-    static bool IsTaggable(const IntConstType i)
+    static bool IsTaggable(const int32 i)
     {
 #if INT32VAR
         // All 32-bit ints are taggable on 64-bit architectures
@@ -385,8 +385,8 @@ protected:
 public:
     static IntRangeValueInfo *New(
         JitArenaAllocator *const allocator,
-        const IntConstType lowerBound,
-        const IntConstType upperBound,
+        const int32 lowerBound,
+        const int32 upperBound,
         const bool wasNegativeZeroPreventedByBailout)
     {
         return
@@ -864,7 +864,7 @@ class PathDependentInfo
 {
 private:
     Value *leftValue, *rightValue;
-    IntConstType rightConstantValue;
+    int32 rightConstantValue;
     PathDependentRelationship relationship;
 
 public:
@@ -879,7 +879,7 @@ public:
         const PathDependentRelationship relationship,
         Value *const leftValue,
         Value *const rightValue,
-        const IntConstType rightConstantValue)
+        const int32 rightConstantValue)
         : relationship(relationship), leftValue(leftValue), rightValue(rightValue), rightConstantValue(rightConstantValue)
     {
         Assert(leftValue);
@@ -909,7 +909,7 @@ public:
         return rightValue;
     }
 
-    IntConstType RightConstantValue() const
+    int32 RightConstantValue() const
     {
         Assert(!RightValue());
         return rightConstantValue;
@@ -1387,7 +1387,7 @@ private:
     Value *                 ValueNumberLdElemDst(IR::Instr **pInstr, Value *srcVal);
     ValueType               GetPrepassValueTypeForDst(const ValueType desiredValueType, IR::Instr *const instr, Value *const src1Value, Value *const src2Value, bool *const isValueInfoPreciseRef = nullptr) const;
     bool                    IsPrepassSrcValueInfoPrecise(IR::Opnd *const src, Value *const srcValue) const;
-    Value *                 CreateDstUntransferredIntValue(const IntConstType min, const IntConstType max, IR::Instr *const instr, Value *const src1Value, Value *const src2Value);
+    Value *                 CreateDstUntransferredIntValue(const int32 min, const int32 max, IR::Instr *const instr, Value *const src1Value, Value *const src2Value);
     Value *                 CreateDstUntransferredValue(const ValueType desiredValueType, IR::Instr *const instr, Value *const src1Value, Value *const src2Value);
     Value *                 ValueNumberTransferDst(IR::Instr *const instr, Value *src1Val);
     bool                    IsSafeToTransferInPrePass(IR::Opnd *src, Value *srcValue);
@@ -1421,11 +1421,11 @@ private:
     Value *                 NewGenericValue(const ValueType valueType);
     Value *                 NewGenericValue(const ValueType valueType, IR::Opnd *const opnd);
     Value *                 NewGenericValue(const ValueType valueType, Sym *const sym);
-    Value *                 GetIntConstantValue(const IntConstType intConst, IR::Instr * instr, IR::Opnd *const opnd = nullptr);
-    Value *                 NewIntConstantValue(const IntConstType intConst, IR::Instr * instr, bool isTaggable);
-    ValueInfo *             NewIntRangeValueInfo(const IntConstType min, const IntConstType max, const bool wasNegativeZeroPreventedByBailout);
-    ValueInfo *             NewIntRangeValueInfo(const ValueInfo *const originalValueInfo, const IntConstType min, const IntConstType max) const;
-    Value *                 NewIntRangeValue(const IntConstType min, const IntConstType max, const bool wasNegativeZeroPreventedByBailout, IR::Opnd *const opnd = nullptr);
+    Value *                 GetIntConstantValue(const int32 intConst, IR::Instr * instr, IR::Opnd *const opnd = nullptr);
+    Value *                 NewIntConstantValue(const int32 intConst, IR::Instr * instr, bool isTaggable);
+    ValueInfo *             NewIntRangeValueInfo(const int32 min, const int32 max, const bool wasNegativeZeroPreventedByBailout);
+    ValueInfo *             NewIntRangeValueInfo(const ValueInfo *const originalValueInfo, const int32 min, const int32 max) const;
+    Value *                 NewIntRangeValue(const int32 min, const int32 max, const bool wasNegativeZeroPreventedByBailout, IR::Opnd *const opnd = nullptr);
     IntBoundedValueInfo *   NewIntBoundedValueInfo(const ValueInfo *const originalValueInfo, const IntBounds *const bounds) const;
     Value *                 NewIntBoundedValue(const ValueType valueType, const IntBounds *const bounds, const bool wasNegativeZeroPreventedByBailout, IR::Opnd *const opnd = nullptr);
     Value *                 NewFloatConstantValue(const FloatConstType floatValue, IR::Opnd *const opnd = nullptr);
@@ -1434,8 +1434,8 @@ private:
     Value *                 HoistConstantLoadAndPropagateValueBackward(Js::Var varConst, IR::Instr * origInstr, Value * value);
     Value *                 NewFixedFunctionValue(Js::JavascriptFunction *functionValue, IR::AddrOpnd *addrOpnd);
 
-    StackSym *              GetTaggedIntConstantStackSym(const IntConstType intConstantValue) const;
-    StackSym *              GetOrCreateTaggedIntConstantStackSym(const IntConstType intConstantValue) const;
+    StackSym *              GetTaggedIntConstantStackSym(const int32 intConstantValue) const;
+    StackSym *              GetOrCreateTaggedIntConstantStackSym(const int32 intConstantValue) const;
     Sym *                   SetSymStore(ValueInfo *valueInfo, Sym *sym);
     Value *                 InsertNewValue(Value *val, IR::Opnd *opnd);
     Value *                 InsertNewValue(GlobOptBlockData * blockData, Value *val, IR::Opnd *opnd);
@@ -1456,7 +1456,7 @@ private:
 
     IR::Instr *             OptNewScObject(IR::Instr** instrPtr, Value* srcVal);
     bool                    OptConstFoldBinary(IR::Instr * *pInstr, const IntConstantBounds &src1IntConstantBounds, const IntConstantBounds &src2IntConstantBounds, Value **pDstVal);
-    bool                    OptConstFoldUnary(IR::Instr * *pInstr, const IntConstType intConstantValue, const bool isUsingOriginalSrc1Value, Value **pDstVal);
+    bool                    OptConstFoldUnary(IR::Instr * *pInstr, const int32 intConstantValue, const bool isUsingOriginalSrc1Value, Value **pDstVal);
     bool                    OptConstPeep(IR::Instr *instr, IR::Opnd *constSrc, Value **pDstVal, ValueInfo *vInfo);
     bool                    OptConstFoldBranch(IR::Instr *instr, Value *src1Val, Value*src2Val, Value **pDstVal);
     Js::Var                 GetConstantVar(IR::Opnd *opnd, Value *val);
@@ -1464,8 +1464,8 @@ private:
     bool                    IsWorthSpecializingToInt32DueToDst(IR::Opnd *const dst);
     bool                    IsWorthSpecializingToInt32(IR::Instr *const instr, Value *const src1Val, Value *const src2Val = nullptr);
     bool                    TypeSpecializeNumberUnary(IR::Instr *instr, Value *src1Val, Value **pDstVal);
-    bool                    TypeSpecializeIntUnary(IR::Instr **pInstr, Value **pSrc1Val, Value **pDstVal, IntConstType min, IntConstType max, Value *const src1OriginalVal, bool *redoTypeSpecRef, bool skipDst = false);
-    bool                    TypeSpecializeIntBinary(IR::Instr **pInstr, Value *src1Val, Value *src2Val, Value **pDstVal, IntConstType min, IntConstType max, bool skipDst = false);
+    bool                    TypeSpecializeIntUnary(IR::Instr **pInstr, Value **pSrc1Val, Value **pDstVal, int32 min, int32 max, Value *const src1OriginalVal, bool *redoTypeSpecRef, bool skipDst = false);
+    bool                    TypeSpecializeIntBinary(IR::Instr **pInstr, Value *src1Val, Value *src2Val, Value **pDstVal, int32 min, int32 max, bool skipDst = false);
     void                    TypeSpecializeInlineBuiltInUnary(IR::Instr **pInstr, Value **pSrc1Val, Value **pDstVal, Value *const src1OriginalVal, bool *redoTypeSpecRef);
     void                    TypeSpecializeInlineBuiltInBinary(IR::Instr **pInstr, Value *src1Val, Value* src2Val, Value **pDstVal, Value *const src1OriginalVal, Value *const src2OriginalVal);
     void                    TypeSpecializeInlineBuiltInDst(IR::Instr **pInstr, Value **pDstVal);
@@ -1475,14 +1475,14 @@ private:
     bool                    TypeSpecializeFloatBinary(IR::Instr *instr, Value *src1Val, Value *src2Val, Value **pDstVal);
     void                    TypeSpecializeFloatDst(IR::Instr *instr, Value *valToTransfer, Value *const src1Value, Value *const src2Value, Value **pDstVal);
     bool                    TypeSpecializeLdLen(IR::Instr * *const instrRef, Value * *const src1ValueRef, Value * *const dstValueRef, bool *const forceInvariantHoistingRef);
-    void                    TypeSpecializeIntDst(IR::Instr* instr, Js::OpCode originalOpCode, Value* valToTransfer, Value *const src1Value, Value *const src2Value, const IR::BailOutKind bailOutKind, IntConstType newMin, IntConstType newMax, Value** pDstVal, const AddSubConstantInfo *const addSubConstantInfo = nullptr);
+    void                    TypeSpecializeIntDst(IR::Instr* instr, Js::OpCode originalOpCode, Value* valToTransfer, Value *const src1Value, Value *const src2Value, const IR::BailOutKind bailOutKind, int32 newMin, int32 newMax, Value** pDstVal, const AddSubConstantInfo *const addSubConstantInfo = nullptr);
     void                    TypeSpecializeIntDst(IR::Instr* instr, Js::OpCode originalOpCode, Value* valToTransfer, Value *const src1Value, Value *const src2Value, const IR::BailOutKind bailOutKind, ValueType valueType, Value** pDstVal, const AddSubConstantInfo *const addSubConstantInfo = nullptr);
-    void                    TypeSpecializeIntDst(IR::Instr* instr, Js::OpCode originalOpCode, Value* valToTransfer, Value *const src1Value, Value *const src2Value, const IR::BailOutKind bailOutKind, ValueType valueType, IntConstType newMin, IntConstType newMax, Value** pDstVal, const AddSubConstantInfo *const addSubConstantInfo = nullptr);
+    void                    TypeSpecializeIntDst(IR::Instr* instr, Js::OpCode originalOpCode, Value* valToTransfer, Value *const src1Value, Value *const src2Value, const IR::BailOutKind bailOutKind, ValueType valueType, int32 newMin, int32 newMax, Value** pDstVal, const AddSubConstantInfo *const addSubConstantInfo = nullptr);
 
     bool                    TryTypeSpecializeUnaryToFloatHelper(IR::Instr** pInstr, Value** pSrc1Val, Value* const src1OriginalVal, Value **pDstVal);
     bool                    TypeSpecializeBailoutExpectedInteger(IR::Instr* instr, Value* src1Val, Value** dstVal);
     bool                    TypeSpecializeStElem(IR::Instr **pInstr, Value *src1Val, Value **pDstVal);
-    bool                    TryGetIntConstIndexValue(IR::Instr *instr, IR::IndirOpnd *indirOpnd, bool checkSym, IntConstType *pValue, bool *isNotInt);
+    bool                    TryGetIntConstIndexValue(IR::Instr *instr, IR::IndirOpnd *indirOpnd, bool checkSym, int32 *pValue, bool *isNotInt);
     bool                    ShouldExpectConventionalArrayIndexValue(IR::IndirOpnd *const indirOpnd);
     ValueType               GetDivValueType(IR::Instr* instr, Value* src1Val, Value* src2Val, bool specialize);
 
@@ -1617,9 +1617,9 @@ private:
     static BOOL             IsLive(Sym *sym, GlobOptBlockData *data);
     void                    MakeLive(StackSym *const sym, GlobOptBlockData *const blockData, const bool lossy) const;
     void                    OptConstFoldBr(bool test, IR::Instr *instr, Value * intTypeSpecSrc1Val = nullptr, Value * intTypeSpecSrc2Val = nullptr);
-    void                    PropagateIntRangeForNot(IntConstType minimum, IntConstType maximum, IntConstType *pNewMin, IntConstType* pNewMax);
-    void                    PropagateIntRangeBinary(IR::Instr *instr, IntConstType min1, IntConstType max1,
-                            IntConstType min2, IntConstType max2, IntConstType *pNewMin, IntConstType* pNewMax);
+    void                    PropagateIntRangeForNot(int32 minimum, int32 maximum, int32 *pNewMin, int32 * pNewMax);
+    void                    PropagateIntRangeBinary(IR::Instr *instr, int32 min1, int32 max1,
+                            int32 min2, int32 max2, int32 *pNewMin, int32 *pNewMax);
     bool                    OptIsInvariant(IR::Opnd *src, BasicBlock *block, Loop *loop, Value *srcVal, bool isNotTypeSpecConv, bool allowNonPrimitives);
     bool                    OptIsInvariant(Sym *sym, BasicBlock *block, Loop *loop, Value *srcVal, bool isNotTypeSpecConv, bool allowNonPrimitives, Value **loopHeadValRef = nullptr);
     bool                    OptDstIsInvariant(IR::RegOpnd *dst);
@@ -1819,15 +1819,15 @@ private:
 
     bool                    IsWorthSpecializingToInt32Branch(IR::Instr * instr, Value * src1Val, Value * src2Val);
 
-    bool                    TryOptConstFoldBrFalse(IR::Instr *const instr, Value *const srcValue, const IntConstType min, const IntConstType max);
-    bool                    TryOptConstFoldBrEqual(IR::Instr *const instr, const bool branchOnEqual, Value *const src1Value, const IntConstType min1, const IntConstType max1, Value *const src2Value, const IntConstType min2, const IntConstType max2);
-    bool                    TryOptConstFoldBrGreaterThan(IR::Instr *const instr, const bool branchOnGreaterThan, Value *const src1Value, const IntConstType min1, const IntConstType max1, Value *const src2Value, const IntConstType min2, const IntConstType max2);
-    bool                    TryOptConstFoldBrGreaterThanOrEqual(IR::Instr *const instr, const bool branchOnGreaterThanOrEqual, Value *const src1Value, const IntConstType min1, const IntConstType max1, Value *const src2Value, const IntConstType min2, const IntConstType max2);
-    bool                    TryOptConstFoldBrUnsignedLessThan(IR::Instr *const instr, const bool branchOnLessThan, Value *const src1Value, const IntConstType min1, const IntConstType max1, Value *const src2Value, const IntConstType min2, const IntConstType max2);
-    bool                    TryOptConstFoldBrUnsignedGreaterThan(IR::Instr *const instr, const bool branchOnGreaterThan, Value *const src1Value, const IntConstType min1, const IntConstType max1, Value *const src2Value, const IntConstType min2, const IntConstType max2);
+    bool                    TryOptConstFoldBrFalse(IR::Instr *const instr, Value *const srcValue, const int32 min, const int32 max);
+    bool                    TryOptConstFoldBrEqual(IR::Instr *const instr, const bool branchOnEqual, Value *const src1Value, const int32 min1, const int32 max1, Value *const src2Value, const int32 min2, const int32 max2);
+    bool                    TryOptConstFoldBrGreaterThan(IR::Instr *const instr, const bool branchOnGreaterThan, Value *const src1Value, const int32 min1, const int32 max1, Value *const src2Value, const int32 min2, const int32 max2);
+    bool                    TryOptConstFoldBrGreaterThanOrEqual(IR::Instr *const instr, const bool branchOnGreaterThanOrEqual, Value *const src1Value, const int32 min1, const int32 max1, Value *const src2Value, const int32 min2, const int32 max2);
+    bool                    TryOptConstFoldBrUnsignedLessThan(IR::Instr *const instr, const bool branchOnLessThan, Value *const src1Value, const int32 min1, const int32 max1, Value *const src2Value, const int32 min2, const int32 max2);
+    bool                    TryOptConstFoldBrUnsignedGreaterThan(IR::Instr *const instr, const bool branchOnGreaterThan, Value *const src1Value, const int32 min1, const int32 max1, Value *const src2Value, const int32 min2, const int32 max2);
 
-    void                    UpdateIntBoundsForEqualBranch(Value *const src1Value, Value *const src2Value, const IntConstType src2ConstantValue = 0);
-    void                    UpdateIntBoundsForNotEqualBranch(Value *const src1Value, Value *const src2Value, const IntConstType src2ConstantValue = 0);
+    void                    UpdateIntBoundsForEqualBranch(Value *const src1Value, Value *const src2Value, const int32 src2ConstantValue = 0);
+    void                    UpdateIntBoundsForNotEqualBranch(Value *const src1Value, Value *const src2Value, const int32 src2ConstantValue = 0);
     void                    UpdateIntBoundsForGreaterThanOrEqualBranch(Value *const src1Value, Value *const src2Value);
     void                    UpdateIntBoundsForGreaterThanBranch(Value *const src1Value, Value *const src2Value);
     void                    UpdateIntBoundsForLessThanOrEqualBranch(Value *const src1Value, Value *const src2Value);

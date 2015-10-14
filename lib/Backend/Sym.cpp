@@ -244,7 +244,7 @@ StackSym::SetIsConst()
     if (src->IsIntConstOpnd())
     {
         Assert(this->m_instrDef->m_opcode == Js::OpCode::Ld_I4 ||  this->m_instrDef->m_opcode == Js::OpCode::LdC_A_I4 || LowererMD::IsAssign(this->m_instrDef));
-        this->SetIsIntConst(src->AsIntConstOpnd()->m_value);
+        this->SetIsIntConst(src->AsIntConstOpnd()->GetValue());
     }
     else if (src->IsFloatConstOpnd())
     {
@@ -496,7 +496,7 @@ StackSym::CopySymAttrs(StackSym *symSrc)
 }
 
 // StackSym::GetIntConstValue
-IntConstType
+int32
 StackSym::GetIntConstValue() const
 {
     Assert(this->IsIntConst());
@@ -506,7 +506,7 @@ StackSym::GetIntConstValue() const
     if (src1->IsIntConstOpnd())
     {
         Assert(defInstr->m_opcode == Js::OpCode::Ld_I4 || defInstr->m_opcode == Js::OpCode::LdC_A_I4 || defInstr->m_opcode == Js::OpCode::ArgOut_A_InlineBuiltIn || LowererMD::IsAssign(defInstr));
-        return src1->AsIntConstOpnd()->m_value;
+        return src1->AsIntConstOpnd()->AsInt32();
     }
 
     if (src1->IsAddrOpnd())
@@ -635,7 +635,7 @@ intptr_t StackSym::GetLiteralConstValue_PostGlobOpt() const
         Assert(this->IsIntConst() || (stackSym && stackSym->IsIntConst()));
         if (defInstr->m_opcode == Js::OpCode::LdC_A_I4)
         {
-            IR::AddrOpnd *const addrOpnd = IR::AddrOpnd::NewFromNumber(src1->AsIntConstOpnd()->m_value, defInstr->m_func);
+            IR::AddrOpnd *const addrOpnd = IR::AddrOpnd::NewFromNumber(src1->AsIntConstOpnd()->GetValue(), defInstr->m_func);
             const Js::Var address = addrOpnd->m_address;
 
             // This is just to prevent creating multiple numbers when the sym is used multiple times. We can only do this
@@ -645,7 +645,7 @@ intptr_t StackSym::GetLiteralConstValue_PostGlobOpt() const
             return reinterpret_cast<intptr_t>(address);
         }
         Assert(defInstr->m_opcode == Js::OpCode::Ld_I4 || LowererMD::IsAssign(defInstr) || defInstr->m_opcode == Js::OpCode::ArgOut_A_InlineBuiltIn);
-        return src1->AsIntConstOpnd()->m_value;
+        return src1->AsIntConstOpnd()->GetValue();
     }
     if (src1->IsFloatConstOpnd())
     {
@@ -685,7 +685,7 @@ StackSym::GetConstOpnd() const
         Assert(this->IsIntConst());
         if (defInstr->m_opcode == Js::OpCode::LdC_A_I4)
         {
-            src1 = IR::AddrOpnd::NewFromNumber(src1->AsIntConstOpnd()->m_value, defInstr->m_func);
+            src1 = IR::AddrOpnd::NewFromNumber(src1->AsIntConstOpnd()->GetValue(), defInstr->m_func);
             defInstr->ReplaceSrc1(src1);
             defInstr->m_opcode = Js::OpCode::Ld_A;
         }

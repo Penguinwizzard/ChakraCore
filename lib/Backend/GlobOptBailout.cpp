@@ -18,7 +18,7 @@ GlobOpt::CaptureValue(BasicBlock *block, StackSym * stackSym, Value * value, Bai
     ValueInfo * valueInfo = value->GetValueInfo();
     Assert(stackSym->HasByteCodeRegSlot() || stackSym->HasArgSlotNum());
     Assert(!stackSym->IsTypeSpec());
-    IntConstType intConstantValue;
+    int32 intConstantValue;
     if (valueInfo->TryGetIntConstantValue(&intConstantValue))
     {
         BailoutConstantValue constValue;

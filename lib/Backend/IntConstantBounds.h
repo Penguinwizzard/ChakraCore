@@ -7,27 +7,27 @@
 class IntConstantBounds
 {
 private:
-    IntConstType lowerBound;
-    IntConstType upperBound;
+    int32 lowerBound;
+    int32 upperBound;
 
 public:
     IntConstantBounds() : lowerBound(0), upperBound(0)
     {
     }
 
-    IntConstantBounds(const IntConstType lowerBound, const IntConstType upperBound)
+    IntConstantBounds(const int32 lowerBound, const int32 upperBound)
         : lowerBound(lowerBound), upperBound(upperBound)
     {
         Assert(lowerBound <= upperBound);
     }
 
 public:
-    IntConstType LowerBound() const
+    int32 LowerBound() const
     {
         return lowerBound;
     }
 
-    IntConstType UpperBound() const
+    int32 UpperBound() const
     {
         return upperBound;
     }
@@ -64,7 +64,7 @@ public:
 
     IntConstantBounds And_0x1f() const
     {
-        const IntConstType mask = 0x1f;
+        const int32 mask = 0x1f;
         if(static_cast<UIntConstType>(upperBound - lowerBound) >= static_cast<UIntConstType>(mask) ||
             (lowerBound & mask) > (upperBound & mask))
         {
@@ -75,7 +75,7 @@ public:
         return IntConstantBounds(lowerBound & mask, upperBound & mask);
     }
 
-    bool Contains(const IntConstType value) const
+    bool Contains(const int32 value) const
     {
         return lowerBound <= value && value <= upperBound;
     }

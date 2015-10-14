@@ -40,6 +40,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)DateUtilities.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Event.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Int32Math.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Int64Math.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Jobs.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)MathUtil.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)NumberUtilities.cpp" />
@@ -54,6 +55,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Int64Math.h" />
     <ClInclude Include="ByteSwap.h" />
     <ClInclude Include="CommonCommonPch.h" />
     <ClInclude Include="cfglogger.h" />

@@ -25,7 +25,7 @@ public:
     {
     }
 
-    IntConstType GetSrc2IntConst()
+    int32 GetSrc2IntConst()
     {
         AssertMsg(caseInstr->GetSrc2()->GetStackSym()->IsIntConst(),"Source2 operand is not an integer constant");
         return caseInstr->GetSrc2()->GetStackSym()->GetIntConstValue();

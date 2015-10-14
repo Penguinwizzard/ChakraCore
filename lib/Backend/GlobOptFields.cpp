@@ -839,7 +839,7 @@ GlobOpt::PrepareFieldHoisting(Loop * loop)
 
         // The value of the loop isn't invariant, we need to create a value to hold the field through the loop
 
-        IntConstType oldIntConstantValue;
+        int32 oldIntConstantValue;
         if (oldValueInfo->TryGetIntConstantValue(&oldIntConstantValue))
         {
             // Generate the constant load

@@ -554,4 +554,3 @@ EmitBufferManager<SyncObject>::DumpAndResetStats(wchar_t const * filename)
     this->totalBytesReserved = 0;
 }
 #endif
-
