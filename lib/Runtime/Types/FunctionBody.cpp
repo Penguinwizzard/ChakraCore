@@ -9040,6 +9040,10 @@ namespace Js
                         functionType->SetEntryPoint(this->functionProxy->GetDirectEntryPoint(newEntryPoint));
                     }
                 }
+                else if ((DWORD_PTR)functionType->GetEntryPoint() == this->GetNativeAddress())
+                {
+                    DebugBreak();
+                }
             });
 
             if(expiringSimpleJitEntryPointInfo)
