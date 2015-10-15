@@ -547,8 +547,25 @@ var tests = [
                 assert.areEqual(1,b,"b is not unscopable");
             }
         }
-    }
-
+    },
+    {
+        name: "Array.prototype[@@unscopables] [[prototype]] slot is null",
+        body: function () 
+        {
+            assert.areEqual(null, Object.getPrototypeOf(Array.prototype[Symbol.unscopables]), "Array.prototype[@@unscopables].__proto__ === null");
+        }
+    },
+    {
+        name: "Array.prototype[@@unscopables] property descriptor",
+        body: function () 
+        {
+            var p = Object.getOwnPropertyDescriptor(Array.prototype, Symbol.unscopables);
+            
+            assert.isFalse(p.writable, "Object.getOwnPropertyDescriptor(Array.prototype, Symbol.unscopables).writable === false");
+            assert.isFalse(p.enumerable, "Object.getOwnPropertyDescriptor(Array.prototype, Symbol.unscopables).enumerable === false");
+            assert.isTrue(p.configurable, "Object.getOwnPropertyDescriptor(Array.prototype, Symbol.unscopables).configurable === true");
+        }
+    },
 ];
     
 testRunner.runTests(tests, { verbose: WScript.Arguments[0] != "summary" });
