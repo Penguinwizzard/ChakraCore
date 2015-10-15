@@ -1503,16 +1503,6 @@ private:
     void InitializePropertyMaps();
     void CreateNoCasePropertyMap();
 
-    // !!! DON'T REMOVE THIS!!! Used in GetOrAddPropertyId
-    // This is a workaround for aggressive C++ compiler optimization. When a propertyRecord is added throughout jscript9 source code,
-    // we usually have the pattern of
-    // PropertyRecord const* propertyRecord;
-    //  scriptContext->GetOrAddPropertyRecord(..., &propertyRecord);
-    // JavascriptOperators::GetProperty(... propertyRecord->GetPropertyId()...);
-    // C++ compiler can inline the JavascriptOperators method, and given that propertyRecord is not used after getting the propertyId,
-    // it can reuse the stack space for propertyRecord, causing it to be reclaimed right away.
-    // The workaround here is to provide an escape path to use the stack variable so the compiler cannot reclaim the stack right away.
-    Js::PropertyRecord const ** dummyPropertyRecord;
     InterruptPoller *interruptPoller;
 
     void CollectionCallBack(RecyclerCollectCallBackFlags flags);
