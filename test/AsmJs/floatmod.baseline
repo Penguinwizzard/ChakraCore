@@ -1,5 +1,5 @@
 
-floatmod.js(4, 5)
+floatmod.js(9, 5)
 	Asm.js Compilation Error function : AsmModuleFloat::rem
 	invalid Binary float operation
 

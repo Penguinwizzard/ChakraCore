@@ -2,7 +2,6 @@
 <regress-exe>
   <test>
     <default>
-      <tags>exclude_dynapogo,exclude_ship</tags>
       <compile-flags>-on:asmjs -testtrace:asmjs -simdjs -on:asmjs -testtrace:asmjsinterpreter</compile-flags>
       <files>BasicMathOp.js</files>
       <baseline>BasicMathOp.baseline</baseline>
@@ -10,7 +9,6 @@
   </test>
   <test>
     <default>
-      <tags>exclude_dynapogo,exclude_ship</tags>
       <compile-flags>-on:asmjs -testtrace:asmjs -simdjs -on:asmjs -testtrace:asmjsinterpreter</compile-flags>
       <files>Float64-LoadandStore.js</files>
       <baseline>Float64-LoadandStore.baseline</baseline>
@@ -18,7 +16,6 @@
   </test>
   <test>
     <default>
-      <tags>exclude_dynapogo,exclude_ship</tags>
       <compile-flags>-on:asmjs -testtrace:asmjs -simdjs -on:asmjs -testtrace:asmjsinterpreter</compile-flags>
       <files>LdUndefFromHeap.js</files>
       <baseline>LdUndefFromHeap.baseline</baseline>
@@ -26,7 +23,6 @@
   </test>
   <test>
     <default>
-      <tags>exclude_dynapogo,exclude_ship</tags>
       <compile-flags>-on:asmjs -testtrace:asmjs -simdjs -on:asmjs -testtrace:asmjsinterpreter</compile-flags>
       <files>NestedMathLibCalls.js</files>
       <baseline>NestedMathLibCalls.baseline</baseline>
@@ -34,7 +30,6 @@
   </test>
   <test>
     <default>
-      <tags>exclude_dynapogo,exclude_ship</tags>
       <compile-flags>-on:asmjs -testtrace:asmjs -simdjs -on:asmjs -testtrace:asmjsinterpreter</compile-flags>
       <files>NotOperator.js</files>
       <baseline>NotOperator.baseline</baseline>
@@ -42,7 +37,6 @@
   </test>
   <test>
     <default>
-      <tags>exclude_dynapogo,exclude_ship</tags>
       <compile-flags>-on:asmjs -testtrace:asmjs -simdjs -on:asmjs -testtrace:asmjsinterpreter</compile-flags>
       <files>StoreDoubleToFloat32.js</files>
       <baseline>StoreDoubleToFloat32.baseline</baseline>
@@ -50,7 +44,6 @@
   </test>
   <test>
     <default>
-      <tags>exclude_dynapogo,exclude_ship</tags>
       <compile-flags>-on:asmjs -testtrace:asmjs -simdjs -on:asmjs -testtrace:asmjsinterpreter</compile-flags>
       <files>StoreFloatToFloat32.js</files>
       <baseline>StoreFloatToFloat32.baseline</baseline>
@@ -58,7 +51,6 @@
   </test>
   <test>
     <default>
-      <tags>exclude_dynapogo,exclude_ship</tags>
       <compile-flags>-on:asmjs -testtrace:asmjs -simdjs -mtjrc:1</compile-flags>
       <files>BasicMathOp.js</files>
       <baseline>BasicMathOp.baseline</baseline>
@@ -66,7 +58,6 @@
   </test>
   <test>
     <default>
-      <tags>exclude_dynapogo,exclude_ship</tags>
       <compile-flags>-on:asmjs -testtrace:asmjs -simdjs -mtjrc:1</compile-flags>
       <files>Float64-LoadandStore.js</files>
       <baseline>Float64-LoadandStore.baseline</baseline>
@@ -74,7 +65,6 @@
   </test>
   <test>
     <default>
-      <tags>exclude_dynapogo,exclude_ship</tags>
       <compile-flags>-on:asmjs -testtrace:asmjs -simdjs -mtjrc:1</compile-flags>
       <files>LdUndefFromHeap.js</files>
       <baseline>LdUndefFromHeap.baseline</baseline>
@@ -82,7 +72,6 @@
   </test>
   <test>
     <default>
-      <tags>exclude_dynapogo,exclude_ship</tags>
       <compile-flags>-on:asmjs -testtrace:asmjs -simdjs -mtjrc:1</compile-flags>
       <files>NestedMathLibCalls.js</files>
       <baseline>NestedMathLibCalls.baseline</baseline>
@@ -90,7 +79,6 @@
   </test>
   <test>
     <default>
-      <tags>exclude_dynapogo,exclude_ship</tags>
       <compile-flags>-on:asmjs -testtrace:asmjs -simdjs -mtjrc:1</compile-flags>
       <files>NotOperator.js</files>
       <baseline>NotOperator.baseline</baseline>
@@ -98,7 +86,6 @@
   </test>
   <test>
     <default>
-      <tags>exclude_dynapogo,exclude_ship</tags>
       <compile-flags>-on:asmjs -testtrace:asmjs -simdjs -mtjrc:1</compile-flags>
       <files>StoreDoubleToFloat32.js</files>
       <baseline>StoreDoubleToFloat32.baseline</baseline>
@@ -106,7 +93,6 @@
   </test>
   <test>
     <default>
-      <tags>exclude_dynapogo,exclude_ship</tags>
       <compile-flags>-on:asmjs -testtrace:asmjs -simdjs -mtjrc:1</compile-flags>
       <files>StoreFloatToFloat32.js</files>
       <baseline>StoreFloatToFloat32.baseline</baseline>

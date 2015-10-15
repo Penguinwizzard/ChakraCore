@@ -2,7 +2,6 @@
 <regress-exe>
   <test>
     <default>
-      <tags>exclude_dynapogo,exclude_ship</tags>
       <compile-flags>-on:asmjs -testtrace:asmjs -simdjs</compile-flags>
       <files>UnaryPos.js</files>
       <baseline>UnaryPos.baseline</baseline>

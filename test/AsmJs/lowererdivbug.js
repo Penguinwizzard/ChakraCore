@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 var asmModule = 
 (function(stdlib, foreign, heap) { 'use asm';   var NaN = stdlib.NaN;
   var abs = stdlib.Math.abs;
