@@ -29,15 +29,42 @@ Int32Math::Mul(int32 left, int32 right, int32 *pResult)
     __asm
     {
         mov eax, left
-        imul eax, right
-            seto fOverflow
-            mov ecx, pResult
-            mov[ecx], eax
+        imul right
+        seto fOverflow
+        mov ecx, pResult
+        mov[ecx], eax
     }
 #else
     int64 result64 = (int64)left * (int64)right;
 
     *pResult = (int32)result64;
+
+    fOverflow = (result64 != (int64)(*pResult));
+#endif
+
+    return fOverflow;
+}
+
+bool
+Int32Math::Mul(int32 left, int32 right, int32 *pResult, int32* pOverflowValue)
+{
+    bool fOverflow;
+#if _M_IX86
+    __asm
+    {
+        mov eax, left
+        imul right
+        seto fOverflow
+        mov ecx, pResult
+        mov[ecx], eax
+        mov ecx, pOverflowValue
+        mov[ecx], edx
+    }
+#else
+    int64 result64 = (int64)left * (int64)right;
+
+    *pResult = (int32)result64;
+    *pOverflowValue = (int32)(result64 >> 32);
 
     fOverflow = (result64 != (int64)(*pResult));
 #endif

@@ -7493,6 +7493,7 @@ LowererMD::EmitNon32BitOvfCheck(IR::Instr *instr, IR::Instr *insertInstr, IR::La
     insertInstr->InsertBefore(newInstr);
 
     IR::RegOpnd *temp = IR::RegOpnd::New(TyInt32, instr->m_func);
+    Assert(instr->ignoreOverflowBitCount > 32);
     uint8 shamt = 64 - instr->ignoreOverflowBitCount;
 
     // MOV temp, edx

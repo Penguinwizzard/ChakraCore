@@ -11254,10 +11254,11 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                 opcode = Js::OpCode::Sub_I4;
                 break;
 
-            case Js::OpCode::Mul_A:
+            case Js::OpCode::Mul_A: 
+            {
                 if (Int32Math::Mul(min1, min2, &newMin))
                 {
-                    if(involesLargeInt32 || !DoAggressiveMulIntTypeSpec() || !DoAggressiveIntTypeSpec())
+                    if (involesLargeInt32 || !DoAggressiveMulIntTypeSpec() || !DoAggressiveIntTypeSpec())
                     {
                         // May overflow
                         return trySpecializeToFloat(true);
@@ -11268,7 +11269,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                 newMax = newMin;
                 if (Int32Math::Mul(max1, max2, &tmp))
                 {
-                    if(involesLargeInt32 || !DoAggressiveMulIntTypeSpec() || !DoAggressiveIntTypeSpec())
+                    if (involesLargeInt32 || !DoAggressiveMulIntTypeSpec() || !DoAggressiveIntTypeSpec())
                     {
                         // May overflow
                         return trySpecializeToFloat(true);
@@ -11280,7 +11281,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                 newMax = max(newMax, tmp);
                 if (Int32Math::Mul(min1, max2, &tmp))
                 {
-                    if(involesLargeInt32 || !DoAggressiveMulIntTypeSpec() || !DoAggressiveIntTypeSpec())
+                    if (involesLargeInt32 || !DoAggressiveMulIntTypeSpec() || !DoAggressiveIntTypeSpec())
                     {
                         // May overflow
                         return trySpecializeToFloat(true);
@@ -11292,7 +11293,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                 newMax = max(newMax, tmp);
                 if (Int32Math::Mul(max1, min2, &tmp))
                 {
-                    if(involesLargeInt32 || !DoAggressiveMulIntTypeSpec() || !DoAggressiveIntTypeSpec())
+                    if (involesLargeInt32 || !DoAggressiveMulIntTypeSpec() || !DoAggressiveIntTypeSpec())
                     {
                         // May overflow
                         return trySpecializeToFloat(true);
@@ -11302,18 +11303,8 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                 }
                 newMin = min(newMin, tmp);
                 newMax = max(newMax, tmp);
-                if(bailOutKind & IR::BailOutOnMulOverflow)
+                if (bailOutKind & IR::BailOutOnMulOverflow)
                 {
-                    IntConstType temp;
-                    if(Int32Math::Mul(
-                        Int32Math::NearestInRangeTo(0, min1, max1),
-                        Int32Math::NearestInRangeTo(0, min2, max2),
-                        &temp))
-                    {
-                        // Always overflows
-                        return trySpecializeToFloat(true);
-                    }
-
                     // CSE only if two MULs have the same overflow check behavior.
                     // Currently this is set to be ignore int32 overflow, but not 53-bit, or int32 overflow matters.
                     if (!instr->ShouldCheckFor32BitOverflow() && instr->ShouldCheckForNon32BitOverflow())
@@ -11323,6 +11314,26 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                         newMax = IntConstMax;
                         ignoredIntOverflow = true;
                     }
+
+                    int32 temp, overflowValue;
+                    if (Int32Math::Mul(
+                        Int32Math::NearestInRangeTo(0, min1, max1),
+                        Int32Math::NearestInRangeTo(0, min2, max2),
+                        &temp,
+                        &overflowValue))
+                    {
+                        Assert(instr->ignoreOverflowBitCount >= 32);
+                        int overflowMatters = 64 - instr->ignoreOverflowBitCount;
+                        if (!ignoredIntOverflow ||
+                            // Use shift to check high bits in case its negative
+                            ((overflowValue << overflowMatters) >> overflowMatters) != overflowValue
+                            )
+                        {
+                            // Always overflows
+                            return trySpecializeToFloat(true);
+                        }
+                    }
+
                 }
 
                 if (newMin <= 0 && newMax >= 0 &&                   // new range crosses zero
@@ -11330,15 +11341,15 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                     !(min1 > 0 || min2 > 0) &&                      // neither operand's range contains only positive integers
                     !instr->GetSrc1()->IsEqual(instr->GetSrc2()))   // the operands don't have the same value
                 {
-                    if(instr->ShouldCheckForNegativeZero())
+                    if (instr->ShouldCheckForNegativeZero())
                     {
                         // -0 matters since the sym is not a local, or is used in a way in which -0 would differ from +0
-                        if(!DoAggressiveIntTypeSpec())
+                        if (!DoAggressiveIntTypeSpec())
                         {
                             // May result in -0
                             return trySpecializeToFloat(false);
                         }
-                        if((min1 == 0 && max1 == 0 || min2 == 0 && max2 == 0) && (max1 < 0 || max2 < 0))
+                        if ((min1 == 0 && max1 == 0 || min2 == 0 && max2 == 0) && (max1 < 0 || max2 < 0))
                         {
                             // Always results in -0
                             return trySpecializeToFloat(false);
@@ -11352,7 +11363,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                 }
                 opcode = Js::OpCode::Mul_I4;
                 break;
-
+            }
             case Js::OpCode::Rem_A:
             {
                 src2 = instr->GetSrc2();
