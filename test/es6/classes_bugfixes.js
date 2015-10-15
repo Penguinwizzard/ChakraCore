@@ -10,22 +10,6 @@ if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in
 
 var tests = [
   {
-    name: "BLUE: 516448 Deleting properties which references to super should be a ReferenceError",
-    body: function () {
-      class a {
-        static b(){ }
-      };
-
-      class b extends a {
-        static test(){
-          super.b();
-        }
-      };
-
-      assert.throws(function () { delete b.test; }, ReferenceError);
-    }
-  },
-  {
     name: "BLUE 540289: AV on deferred parse of first class method",
     body: function () {
       assert.throws(function() { eval("function f() { var o = { \"a\": class { \"b\""); }, SyntaxError);

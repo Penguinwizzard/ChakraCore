@@ -47,7 +47,7 @@ namespace Js
         virtual inline BOOL IsConstructor() const override;        
 
         // Below functions are used by debugger to identify and emit event handler information
-        virtual bool IsBoundFunction() { return true; }
+        virtual bool IsBoundFunction() const { return true; }
         JavascriptFunction * GetTargetFunction() const;
         // Below functions are used by heap enumerator
         uint GetArgsCountForHeapEnum() { return count;}

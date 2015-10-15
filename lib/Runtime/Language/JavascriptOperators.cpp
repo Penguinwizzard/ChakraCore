@@ -2607,23 +2607,6 @@ CommonNumber:
         }
 
         RecyclableObject *recyclableObject = RecyclableObject::FromVar(instance);
-        if (ScriptFunction::Is(instance) && ScriptFunction::FromVar(instance)->GetHomeObj() == instance)
-        {
-            // Only do a prop lookup on a class constructor.
-            if (Var prop = JavascriptOperators::GetProperty(recyclableObject, propertyId, scriptContext))
-            {
-                if (ScriptFunction::Is(prop))
-                {
-                    // Properties that reference super cannot be deleted.
-                    ScriptFunction *scriptFunction = ScriptFunction::FromVar(prop);
-                    if (scriptFunction->HasSuperReference())
-                    {
-                        JavascriptError::ThrowReferenceError(scriptContext, JSERR_DeletePropertyWithSuper,
-                            scriptContext->GetPropertyName(propertyId)->GetBuffer());
-                    }
-                }
-            }
-        }
 
         return scriptContext->GetLibrary()->CreateBoolean(
             JavascriptOperators::DeleteProperty(recyclableObject, propertyId, propertyOperationFlags));
