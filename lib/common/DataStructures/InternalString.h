@@ -8,18 +8,18 @@ namespace Js
 {
     class InternalString 
     {
-        int m_charLength;
+        charcount_t m_charLength;
         unsigned char m_offset; 
         const wchar_t* m_content; 
 
     public:
         InternalString() : m_charLength(0), m_content(NULL), m_offset(0) { };
-        InternalString(__in const wchar_t* content, int charLength, unsigned char offset = 0);
-        static InternalString* New(ArenaAllocator* alloc, const wchar_t* content, int length = -1);
-        static InternalString* New(Recycler* recycler, const wchar_t* content, int length = -1);
-        static InternalString* NewNoCopy(ArenaAllocator* alloc, const wchar_t* content, int length = -1);
+        InternalString(__in const wchar_t* content, charcount_t charLength, unsigned char offset = 0);
+        static InternalString* New(ArenaAllocator* alloc, const wchar_t* content, charcount_t length);
+        static InternalString* New(Recycler* recycler, const wchar_t* content, charcount_t length);
+        static InternalString* NewNoCopy(ArenaAllocator* alloc, const wchar_t* content, charcount_t length);
     
-        inline int GetLength() const
+        inline charcount_t GetLength() const
         {
             return m_charLength;
         }

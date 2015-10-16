@@ -321,7 +321,7 @@ namespace Js
             else
             {
                 bool escape = false;
-                for (int i = 0; i < str.GetLength(); ++i)
+                for (charcount_t i = 0; i < str.GetLength(); ++i)
                 {
                     const wchar_t c = str.GetBuffer()[i];
 
