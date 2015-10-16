@@ -4,11 +4,6 @@
 //-------------------------------------------------------------------------------------------------------
 #include "ParserPch.h"
 
-#ifdef _M_X64_OR_ARM64
-// TODO: Clean this warning up
-#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
-#endif
-
 namespace UnifiedRegex
 {
 
@@ -18,16 +13,27 @@ namespace UnifiedRegex
 
     uint8* Compiler::Emit(size_t size)
     {
+        Assert(size <= UINT32_MAX);
+
         if (instLen - instNext < size)
         {
             size_t newLen = max(instLen, initInstBufSize);
             while (newLen < instLen + size)
+            {
                 newLen *= 2;
+            }
+
+            // check for overflow
+            if (newLen > UINT32_MAX)
+            {
+                Js::Throw::OutOfMemory();
+            }
+
             instBuf = (uint8*)ctAllocator->Realloc(instBuf, instLen, newLen);
-            instLen = newLen;
+            instLen = (CharCount)newLen;
         }
         uint8* inst = instBuf + instNext;
-        instNext += size;
+        instNext += (CharCount)size;
         return inst;
     }
 

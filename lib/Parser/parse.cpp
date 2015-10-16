@@ -6,10 +6,6 @@
 #include "FormalsUtil.h"
 #include "..\Runtime\Language\SourceDynamicProfileManager.h"
 
-#ifdef _M_X64_OR_ARM64
-// TODO: Clean this warning up
-#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
-#endif
 
 #if DBG_DUMP
 void PrintPnodeWIndent(ParseNode *pnode,int indentAmt);
@@ -5321,7 +5317,7 @@ void Parser::ParseFncFormals(ParseNodePtr pnodeFnc, ushort flags)
         ParseNodePtr pnodeT = nullptr;
         bool seenRestParameter = false;
         bool isNonSimpleParameterList = false;
-        for (uint argPos = 0; ; ++argPos)
+        for (Js::ArgSlot argPos = 0; ; ++argPos)
         {
             bool isBindingPattern = false;
             if (m_scriptContext->GetConfig()->IsES6RestEnabled() && m_token.tk == tkEllipsis)
@@ -6962,15 +6958,20 @@ LPCOLESTR Parser::AppendNameHints(IdentPtr left, IdentPtr right, ulong *returnLe
 
 LPCOLESTR Parser::AppendNameHints(IdentPtr left, LPCOLESTR right, ulong *returnLength, bool ignoreAddDotWithSpace, bool wrapInBrackets)
 {
-    ulong leftLen = 0, rightLen = 0;
+    size_t rightLenL = (right == nullptr) ? 0 : wcslen(right);
+
+    Assert(rightLenL <= ULONG_MAX); // name hints should not exceed ULONG_MAX characters
+
+    ulong rightLen = (ulong)rightLenL;
 
     if (left == nullptr && !wrapInBrackets)
     {
-        *returnLength = right ? wcslen(right) : 0;
+        *returnLength = rightLen;
         return right;
     }
 
     LPCOLESTR leftStr = L"";
+    ulong leftLen = 0;
 
     if (left != nullptr) // if wrapInBrackets is true
     {
@@ -6978,7 +6979,7 @@ LPCOLESTR Parser::AppendNameHints(IdentPtr left, LPCOLESTR right, ulong *returnL
         leftLen = left->Cch();
     }
 
-    if ((right == nullptr || ((rightLen = wcslen(right)) == 0)) && !wrapInBrackets)
+    if (rightLen == 0 && !wrapInBrackets)
     {
         *returnLength = leftLen;
         return left->Psz();
@@ -6989,10 +6990,15 @@ LPCOLESTR Parser::AppendNameHints(IdentPtr left, LPCOLESTR right, ulong *returnL
 
 LPCOLESTR Parser::AppendNameHints(LPCOLESTR left, IdentPtr right, ulong *returnLength, bool ignoreAddDotWithSpace, bool wrapInBrackets)
 {
-    ulong leftLen = 0, rightLen = 0;
-    if (left == nullptr || ((leftLen = wcslen(left)) == 0) && !wrapInBrackets)
+    size_t leftLenL = (left == nullptr) ? 0 : wcslen(left);
+
+    Assert(leftLenL <= ULONG_MAX); // name hints should not exceed ULONG_MAX characters
+
+    ulong leftLen = (ulong)leftLenL;
+
+    if (left == nullptr || leftLen == 0 && !wrapInBrackets)
     {
-        if (right)
+        if (right != nullptr)
         {
             *returnLength = right->Cch();
             return right->Psz();
@@ -7005,7 +7011,7 @@ LPCOLESTR Parser::AppendNameHints(LPCOLESTR left, IdentPtr right, ulong *returnL
         *returnLength = leftLen;
         return left;
     }
-    rightLen = right->Cch();
+    ulong rightLen = right->Cch();
 
     return AppendNameHints(left, leftLen, right->Psz(), rightLen, returnLength, ignoreAddDotWithSpace, wrapInBrackets);
 }
@@ -7013,14 +7019,21 @@ LPCOLESTR Parser::AppendNameHints(LPCOLESTR left, IdentPtr right, ulong *returnL
 
 LPCOLESTR Parser::AppendNameHints(LPCOLESTR left, LPCOLESTR right, ulong *returnLength, bool ignoreAddDotWithSpace, bool wrapInBrackets)
 {
-    ulong leftLen = 0, rightLen = 0;
-    if ((left == nullptr || ((leftLen = wcslen(left)) == 0)) && !wrapInBrackets)
+    size_t leftLenL = (left == nullptr) ? 0 : wcslen(left);
+    size_t rightLenL = (right == nullptr) ? 0 : wcslen(right);
+
+    Assert(rightLenL <= ULONG_MAX && leftLenL <= ULONG_MAX); // name hints should not exceed ULONG_MAX characters
+
+    ulong leftLen = (ulong)leftLenL;
+    ulong rightLen = (ulong)rightLenL;
+
+    if (leftLen == 0 && !wrapInBrackets)
     {
-        *returnLength = right ? wcslen(right) : 0;
+        *returnLength = right ? rightLen : 0;
         return right;
     }
 
-    if ((right == nullptr || ((rightLen = wcslen(right)) == 0)) && !wrapInBrackets)
+    if (rightLen == 0 && !wrapInBrackets)
     {
         *returnLength = leftLen;
         return left;
@@ -11356,9 +11369,9 @@ ParseNodePtr Parser::ParseDestructuredArrayLiteral(tokens declarationType, bool 
 void Parser::CaptureContext(ParseContext *parseContext) const
 {
     parseContext->pszSrc = m_pscan->PchBase();
-    parseContext->offset = m_pscan->IchMinTok() + m_pscan->m_cMultiUnits;
     parseContext->length = this->m_originalLength;
-    parseContext->characterOffset = parseContext->offset - m_pscan->m_cMultiUnits;
+    parseContext->characterOffset = m_pscan->IchMinTok();
+    parseContext->offset = parseContext->characterOffset + m_pscan->m_cMultiUnits;
     parseContext->grfscr = this->m_grfscr;
     parseContext->lineNumber = m_pscan->LineCur();
 

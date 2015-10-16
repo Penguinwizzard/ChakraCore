@@ -227,7 +227,7 @@ struct PnFnc
     uint nestedCount; // Nested function count (valid until children have been processed)
     uint nestedIndex; // Index within the parent function
 
-    uint firstDefaultArg; // Position of the first default argument, if any
+    uint16 firstDefaultArg; // Position of the first default argument, if any
 
     unsigned int fncFlags;
     long astSize;

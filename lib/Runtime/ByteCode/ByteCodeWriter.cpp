@@ -4,11 +4,6 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeByteCodePch.h"
 
-#ifdef _M_X64_OR_ARM64
-// TODO: Clean this warning up
-#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
-#endif
-
 
 namespace Js {
 
@@ -32,7 +27,7 @@ namespace Js {
         Assert(!isInitialized);
         DebugOnly(isInitialized = true);
 
-        m_labelOffsets = JsUtil::List<size_t, ArenaAllocator>::New(alloc);
+        m_labelOffsets = JsUtil::List<uint, ArenaAllocator>::New(alloc);
         m_jumpOffsets = JsUtil::List<JumpInfo, ArenaAllocator>::New(alloc);
         m_loopHeaders = JsUtil::List<LoopHeaderData, ArenaAllocator>::New(alloc);
         m_byteCodeData.Create(initCodeBufferSize, alloc);
@@ -84,14 +79,14 @@ namespace Js {
     }
 
     template <typename T>
-    void ByteCodeWriter::PatchJumpOffset(JsUtil::List<JumpInfo, ArenaAllocator> * jumpOffset, byte * byteBuffer, int byteCount)
+    void ByteCodeWriter::PatchJumpOffset(JsUtil::List<JumpInfo, ArenaAllocator> * jumpOffset, byte * byteBuffer, uint byteCount)
     {
         jumpOffset->Map([=](int index, JumpInfo& jumpInfo)
         {
             //
             // Read "labelID" stored at the offset within the byte-code.
             //
-            size_t jumpByteOffset = jumpInfo.patchOffset;
+            uint jumpByteOffset = jumpInfo.patchOffset;
             AssertMsg(jumpByteOffset < byteCount - sizeof(T) ,
                     "Must have valid jump site within byte-code to back-patch");
 
@@ -100,7 +95,7 @@ namespace Js {
             ByteCodeLabel labelID = jumpInfo.labelId;
             CheckLabel(labelID);
 
-            size_t offsetToEndOfLayoutByteSize = *pnBackPatch;
+            uint offsetToEndOfLayoutByteSize = *pnBackPatch;
             Assert(offsetToEndOfLayoutByteSize < 0x20);
 
             //
@@ -108,8 +103,8 @@ namespace Js {
             // byte-code.
             //
 
-            size_t labelByteOffset = m_labelOffsets->Item(labelID);
-            AssertMsg(labelByteOffset != (size_t)-1, "ERROR: Destination labels must be marked before closing");
+            uint labelByteOffset = m_labelOffsets->Item(labelID);
+            AssertMsg(labelByteOffset != UINT_MAX, "ERROR: Destination labels must be marked before closing");
 
             int relativeJumpOffset = labelByteOffset - jumpByteOffset - offsetToEndOfLayoutByteSize;
 #ifdef BYTECODE_BRANCH_ISLAND
@@ -143,7 +138,7 @@ namespace Js {
         m_byteCodeData.Copy(scriptContext->GetRecycler(), &finalByteCodeBlock);
 
         byte * byteBuffer = finalByteCodeBlock->GetBuffer();
-        int byteCount = m_byteCodeData.GetCurrentOffset();
+        uint byteCount = m_byteCodeData.GetCurrentOffset();
 
         //
         // Update all branch targets with their actual label destinations.
@@ -975,7 +970,7 @@ namespace Js {
         return false;
     }
 
-    void ByteCodeWriter::CallIExtended(OpCode op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount, CallIExtendedOptions options, const void *buffer, size_t byteCount, ProfileId callSiteId, CallFlags callFlags)
+    void ByteCodeWriter::CallIExtended(OpCode op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount, CallIExtendedOptions options, const void *buffer, uint byteCount, ProfileId callSiteId, CallFlags callFlags)
     {
         CheckOpen();
         bool hasCallFlags = !(callFlags == CallFlags_None);
@@ -1048,7 +1043,7 @@ namespace Js {
         }
         
 
-        size_t spreadArgsOffset = 0;
+        uint spreadArgsOffset = 0;
         if (options & CallIExtended_SpreadArgs)
         {
             Assert(buffer != nullptr && byteCount > 0);
@@ -1956,7 +1951,7 @@ StoreCommon:
         MULTISIZE_LAYOUT_WRITE(Reg2Int1, op, R0, R1, C1);
     }
 
-    int ByteCodeWriter::Auxiliary(OpCode op, RegSlot destinationRegister, const void* buffer, int byteCount, int C1)
+    void ByteCodeWriter::Auxiliary(OpCode op, RegSlot destinationRegister, const void* buffer, int byteCount, int C1)
     {
         CheckOpen();
         destinationRegister = ConsumeReg(destinationRegister);
@@ -1965,7 +1960,8 @@ StoreCommon:
         // Write the buffer's contents
         //
 
-        int currentOffset   = m_auxiliaryData.GetCurrentOffset();
+        uint currentOffset = m_auxiliaryData.GetCurrentOffset();
+
         if (byteCount > 0)
         {
             m_auxiliaryData.Encode(buffer, byteCount);
@@ -2000,8 +1996,6 @@ StoreCommon:
 
             m_byteCodeData.Encode(op, &data, sizeof(data), this);
         }
-
-        return currentOffset;
     }
 
     void ByteCodeWriter::Auxiliary(OpCode op, RegSlot destinationRegister, uint byteOffset, int C1)
@@ -2103,9 +2097,9 @@ StoreCommon:
         m_byteCodeData.Encode(op, &data, sizeof(data), this);
     }
 
-    size_t ByteCodeWriter::InsertAuxiliaryData(const void* buffer, size_t byteCount)
+    uint ByteCodeWriter::InsertAuxiliaryData(const void* buffer, uint byteCount)
     {
-        size_t offset = m_auxiliaryData.GetCurrentOffset();
+        uint offset = m_auxiliaryData.GetCurrentOffset();
         if (byteCount > 0)
         {
             m_auxiliaryData.Encode(buffer, byteCount);
@@ -2133,7 +2127,7 @@ StoreCommon:
         //   the byte-code, this will be updated.
         //
 
-        return (ByteCodeLabel) m_labelOffsets->Add((size_t)-1);
+        return (ByteCodeLabel) m_labelOffsets->Add(UINT_MAX);
     }
 
     void ByteCodeWriter::MarkLabel(ByteCodeLabel labelID)
@@ -2152,17 +2146,17 @@ StoreCommon:
         // Define the label as the current offset within the byte-code.
         //
 
-        AssertMsg(m_labelOffsets->Item(labelID) == (size_t)-1, "A label may only be defined at one location");
+        AssertMsg(m_labelOffsets->Item(labelID) == UINT_MAX, "A label may only be defined at one location");
         m_labelOffsets->SetExistingItem(labelID,  m_byteCodeData.GetCurrentOffset());
     }
 
-    void ByteCodeWriter::AddJumpOffset(Js::OpCode op, ByteCodeLabel labelId, size_t fieldByteOffsetFromEnd)  // Offset of "Offset" field in OpLayout, in bytes
+    void ByteCodeWriter::AddJumpOffset(Js::OpCode op, ByteCodeLabel labelId, uint fieldByteOffsetFromEnd)  // Offset of "Offset" field in OpLayout, in bytes
     {
         AssertMsg(fieldByteOffsetFromEnd < 100, "Ensure valid field offset");
         CheckOpen();
         CheckLabel(labelId);
 
-        size_t jumpByteOffset = m_byteCodeData.GetCurrentOffset() - fieldByteOffsetFromEnd;
+        uint jumpByteOffset = m_byteCodeData.GetCurrentOffset() - fieldByteOffsetFromEnd;
 #ifdef BYTECODE_BRANCH_ISLAND
         if( useBranchIsland )
         {
@@ -2171,8 +2165,8 @@ StoreCommon:
             // emit a branch around any way
             this->nextBranchIslandOffset -= LongBranchSize;
 
-            size_t labelOffset = m_labelOffsets->Item(labelId);
-            if (labelOffset != (size_t)-1)
+            uint labelOffset = m_labelOffsets->Item(labelId);
+            if (labelOffset != UINT_MAX)
             {
                 // Back branch, see if it needs to be long
                 Assert(labelOffset < m_byteCodeData.GetCurrentOffset());
@@ -2231,7 +2225,7 @@ StoreCommon:
 
         return SHRT_MAX + 1;
     }
-    void ByteCodeWriter::AddLongJumpOffset(ByteCodeLabel labelId, size_t fieldByteOffsetFromEnd)  // Offset of "Offset" field in OpLayout, in bytes
+    void ByteCodeWriter::AddLongJumpOffset(ByteCodeLabel labelId, uint fieldByteOffsetFromEnd)  // Offset of "Offset" field in OpLayout, in bytes
     {
         Assert(useBranchIsland);
         AssertMsg(fieldByteOffsetFromEnd < 100, "Ensure valid field offset");
@@ -2244,7 +2238,7 @@ StoreCommon:
         //   destinations.
         //
 
-        size_t jumpByteOffset = m_byteCodeData.GetCurrentOffset() - fieldByteOffsetFromEnd;
+        uint jumpByteOffset = m_byteCodeData.GetCurrentOffset() - fieldByteOffsetFromEnd;
         JumpInfo jumpInfo = { labelId, jumpByteOffset };
         m_longJumpOffsets->Add(jumpInfo);
     }
@@ -2309,7 +2303,7 @@ StoreCommon:
             //
             // Read "labelID" stored at the offset within the byte-code.
             //
-            size_t jumpByteOffset = jumpInfo.patchOffset;
+            uint jumpByteOffset = jumpInfo.patchOffset;
             AssertMsg(jumpByteOffset <= this->m_byteCodeData.GetCurrentOffset()  - sizeof(JumpOffset) ,
                     "Must have valid jump site within byte-code to back-patch");
 
@@ -2317,8 +2311,8 @@ StoreCommon:
             CheckLabel(labelID);
 
             // See if the label has bee marked yet.
-            size_t const labelByteOffset = m_labelOffsets->Item(labelID);
-            if (labelByteOffset != (size_t)-1)
+            uint const labelByteOffset = m_labelOffsets->Item(labelID);
+            if (labelByteOffset != UINT_MAX)
             {
                 // If a label is already defined, then it should be short
                 // (otherwise we should have emitted a branch island for it already)
@@ -2715,7 +2709,7 @@ StoreCommon:
         }
     }
 
-    void ByteCodeWriter::Data::Create(size_t initSize, ArenaAllocator* tmpAlloc)
+    void ByteCodeWriter::Data::Create(uint initSize, ArenaAllocator* tmpAlloc)
     {
         //
         // Allocate the initial byte-code block to write into.
@@ -2742,7 +2736,7 @@ StoreCommon:
         current = head;
     }
 
-    void ByteCodeWriter::Data::SetCurrent(size_t offset, DataChunk* currChunk)
+    void ByteCodeWriter::Data::SetCurrent(uint offset, DataChunk* currChunk)
     {
         this->current = currChunk;
         this->currentOffset = offset;
@@ -2753,7 +2747,7 @@ StoreCommon:
     {
         AssertMsg(finalBlock != nullptr, "Must have valid storage");
 
-        size_t cbFinalData = GetCurrentOffset();
+        uint cbFinalData = GetCurrentOffset();
         if (cbFinalData == 0)
         {
             *finalBlock = nullptr;
@@ -2786,7 +2780,7 @@ StoreCommon:
     }
 
     template <>
-    __inline size_t ByteCodeWriter::Data::EncodeT<SmallLayout>(OpCode op, ByteCodeWriter* writer)
+    __inline uint ByteCodeWriter::Data::EncodeT<SmallLayout>(OpCode op, ByteCodeWriter* writer)
     {
 #ifdef BYTECODE_BRANCH_ISLAND
         if( writer->useBranchIsland )
@@ -2796,7 +2790,7 @@ StoreCommon:
 #endif
         Assert(op < Js::OpCode::ByteCodeLast);
         Assert(!OpCodeAttr::BackEndOnly(op));
-        size_t offset;
+        uint offset;
         if (op <= Js::OpCode::MaxByteSizedOpcodes)
         {
             byte byteop = (byte)op;
@@ -2819,7 +2813,7 @@ StoreCommon:
     }
 
     template <LayoutSize layoutSize>
-    __inline size_t ByteCodeWriter::Data::EncodeT(OpCode op, ByteCodeWriter* writer)
+    __inline uint ByteCodeWriter::Data::EncodeT(OpCode op, ByteCodeWriter* writer)
     {
 #ifdef BYTECODE_BRANCH_ISLAND
         if( writer->useBranchIsland )
@@ -2836,7 +2830,7 @@ StoreCommon:
             (layoutSize == LargeLayout? Js::OpCode::LargeLayoutPrefix : Js::OpCode::MediumLayoutPrefix) :
             (layoutSize == LargeLayout? Js::OpCode::ExtendedLargeLayoutPrefix : Js::OpCode::ExtendedMediumLayoutPrefix));
 
-        size_t offset = Write(&exop, sizeof(byte));        
+        uint offset = Write(&exop, sizeof(byte));
         Write(&op, sizeof(byte));
         
         if (op != Js::OpCode::Ld_A)
@@ -2848,25 +2842,25 @@ StoreCommon:
     }
 
     template <LayoutSize layoutSize>
-    __inline size_t ByteCodeWriter::Data::EncodeT(OpCode op, const void* rawData, int byteSize, ByteCodeWriter* writer)
+    __inline uint ByteCodeWriter::Data::EncodeT(OpCode op, const void* rawData, int byteSize, ByteCodeWriter* writer)
     {
         AssertMsg((rawData != nullptr) && (byteSize < 100), "Ensure valid data for opcode");
 
-        size_t offset = EncodeT<layoutSize>(op, writer);
+        uint offset = EncodeT<layoutSize>(op, writer);
         Write(rawData, byteSize);
         return offset;
     }
 
-    __inline size_t ByteCodeWriter::Data::Encode(const void* rawData, int byteSize)
+    __inline uint ByteCodeWriter::Data::Encode(const void* rawData, int byteSize)
     {
         AssertMsg(rawData != nullptr, "Ensure valid data for opcode");
         return Write(rawData, byteSize);
     }
 
-    __inline size_t ByteCodeWriter::Data::Write(__in_bcount(byteSize) const void* data, __in size_t byteSize)
+    __inline uint ByteCodeWriter::Data::Write(__in_bcount(byteSize) const void* data, __in uint byteSize)
     {
         // Simple case where the current chunk has enough space.
-        size_t bytesFree = current->RemainingBytes();
+        uint bytesFree = current->RemainingBytes();
         if(bytesFree >= byteSize)
         {
             current->WriteUnsafe(data, byteSize);
@@ -2876,16 +2870,16 @@ StoreCommon:
             SlowWrite(data, byteSize);
         }
 
-        size_t offset = currentOffset;
+        uint offset = currentOffset;
         currentOffset = offset + byteSize;
         return offset;
     }
 
     /// Requires buffer extension.
-    __declspec(noinline) void ByteCodeWriter::Data::SlowWrite(__in_bcount(byteSize) const void* data, __in size_t byteSize)
+    __declspec(noinline) void ByteCodeWriter::Data::SlowWrite(__in_bcount(byteSize) const void* data, __in uint byteSize)
     {
         AssertMsg(byteSize > current->RemainingBytes(), "We should not need an extension if there is enough space in the current chunk");
-        size_t bytesLeftToWrite = byteSize;
+        uint bytesLeftToWrite = byteSize;
         byte* dataToBeWritten = (byte*)data;
         // the next chunk may already be created in the case that we are patching bytecode.
         // If so, we want to move the pointer to the beginning of the buffer
@@ -2895,7 +2889,7 @@ StoreCommon:
         }
         while(true)
         {
-            size_t bytesFree = current->RemainingBytes();
+            uint bytesFree = current->RemainingBytes();
             if(bytesFree >= bytesLeftToWrite)
             {
                 current->WriteUnsafe(dataToBeWritten, bytesLeftToWrite);
@@ -2915,30 +2909,30 @@ StoreCommon:
         }
     }
 
-    void ByteCodeWriter::Data::AddChunk(size_t byteSize)
+    void ByteCodeWriter::Data::AddChunk(uint byteSize)
     {
         AssertMsg(current->nextChunk == nullptr, "Do we really need to grow?");
 
         // For some data elements i.e. bytecode we have a good initial size and
         // therefore, we use a conservative growth strategy - and grow by a fixed size.
-        size_t newSize = fixedGrowthPolicy ? max(byteSize, static_cast<size_t>(3 * AutoSystemInfo::PageSize)) : max(byteSize, static_cast<size_t>(current->GetSize() * 2));
+        uint newSize = fixedGrowthPolicy ? max(byteSize, static_cast<uint>(3 * AutoSystemInfo::PageSize)) : max(byteSize, static_cast<uint>(current->GetSize() * 2));
 
         DataChunk* newChunk = Anew(tempAllocator, DataChunk, tempAllocator, newSize);
         current->nextChunk = newChunk;
     }
 
 #if DBG_DUMP
-    size_t ByteCodeWriter::ByteCodeDataSize()
+    uint ByteCodeWriter::ByteCodeDataSize()
     {
         return m_byteCodeData.GetCurrentOffset();
     }
 
-    size_t ByteCodeWriter::AuxiliaryDataSize()
+    uint ByteCodeWriter::AuxiliaryDataSize()
     {
         return m_auxiliaryData.GetCurrentOffset();
     }
 
-    size_t ByteCodeWriter::AuxiliaryContextDataSize()
+    uint ByteCodeWriter::AuxiliaryContextDataSize()
     {
         return m_auxContextData.GetCurrentOffset();
     }

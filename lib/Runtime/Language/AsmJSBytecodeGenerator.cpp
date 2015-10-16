@@ -1004,7 +1004,7 @@ namespace Js
         
         uint startCallOffset = mWriter.GetCurrentOffset();
         auto startCallChunk = mWriter.GetCurrentChunk();
-        size_t startCallChunkOffset = startCallChunk->GetCurrentOffset();
+        uint startCallChunkOffset = startCallChunk->GetCurrentOffset();
 
         bool patchStartCall = sym->GetArgCount() == Constants::UninitializedValue;
         if (patchStartCall)
@@ -1150,7 +1150,7 @@ namespace Js
         {
             uint latestOffset = mWriter.GetCurrentOffset();
             auto latestChunk = mWriter.GetCurrentChunk();
-            size_t latestChunkOffset = latestChunk->GetCurrentOffset();
+            uint latestChunkOffset = latestChunk->GetCurrentOffset();
 
             // now that we know the types, we can patch the StartCall instr
             startCallChunk->SetCurrentOffset(startCallChunkOffset);
