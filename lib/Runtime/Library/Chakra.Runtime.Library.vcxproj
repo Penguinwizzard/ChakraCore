@@ -179,9 +179,9 @@
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSIMDInt8x16.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ExternalLibraryBase.cpp" />
-    <ClCompile Include="IntlEngineInterfaceExtensionObject.cpp" />
-    <ClCompile Include="JavascriptErrorDebug.cpp" />
-    <ClCompile Include="RoCausality.Win7.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)IntlEngineInterfaceExtensionObject.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptErrorDebug.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)RoCausality.Win7.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\DiagGlobalList.h" />

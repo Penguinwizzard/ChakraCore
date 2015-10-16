@@ -22,7 +22,6 @@
 #pragma warning(disable:4075)       // initializers put in unrecognized initialization area on purpose
 #pragma init_seg(".CRT$XCAB")
 
-
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 
 AutoSystemInfo AutoSystemInfo::Data;
@@ -30,12 +29,6 @@ WCHAR AutoSystemInfo::binaryName[MAX_PATH + 1];
 DWORD AutoSystemInfo::majorVersion = 0;
 DWORD AutoSystemInfo::minorVersion = 0;
 
-// AutoSystemInfo is included in a shared static lib that is linked into multiple DLLs.
-// The implementation of GetDeviceFamilyInfo is provided by each DLL.
-bool GetDeviceFamilyInfo(
-    _Out_opt_ ULONGLONG* pullUAPInfo,
-    _Out_opt_ ULONG* pulDeviceFamily,
-    _Out_opt_ ULONG* pulDeviceForm);
 
 void 
 AutoSystemInfo::Initialize()
@@ -77,10 +70,14 @@ AutoSystemInfo::Initialize()
         disableDebugScopeCapture = false;
     }
 
-    deviceInfoRetrived = GetDeviceFamilyInfo(&this->UAPInfo, &this->DeviceFamily, &this->DeviceForm);
+    this->shouldQCMoreFrequently = false;
+    this->supportsOnlyMultiThreadedCOM = false;
+    this->isLowMemoryDevice = false;
 
     // 0 indicates we haven't retrieved the available commit. We get it lazily.
     this->availableCommit = 0;
+
+    ::ChakraInitPerImageSystemPolicy(this);
 }
 
 
