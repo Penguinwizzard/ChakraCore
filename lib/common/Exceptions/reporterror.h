@@ -16,7 +16,8 @@ enum ErrorReason
     CustomHeap_MEMORYCORRUPTION = 8,
     LargeHeapBlock_Metadata_Corrupt = 9,
     Fatal_Version_Inconsistency = 10,
-    MarkStack_OUTOFMEMORY = 11
+    MarkStack_OUTOFMEMORY = 11,
+    Fatal_FailedToBox_OUTOFMEMORY = 12,
 };
 
 extern "C" void ReportFatalException(
@@ -34,6 +35,9 @@ void CustomHeap_BadPageState_fatal_error(
     __in ULONG_PTR context);
 
 void Amd64StackWalkerOutOfContexts_fatal_error(
+    __in ULONG_PTR context);
+
+void FailedToBox_OOM_fatal_error(
     __in ULONG_PTR context);
 
 #if defined(RECYCLER_WRITE_BARRIER) && defined(_M_X64_OR_ARM64)
