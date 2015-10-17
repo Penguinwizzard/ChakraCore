@@ -1690,7 +1690,7 @@ namespace Js
 
         if (scriptContext->GetConfig()->IsES6UnscopablesEnabled())
         {
-            DynamicType* dynamicType = library->CreateObjectType(library->nullValue, 7);
+            DynamicType* dynamicType = DynamicType::New(scriptContext, TypeIds_Object, library->nullValue, nullptr, NullTypeHandler<false>::GetDefaultInstance(), false);
             DynamicObject* unscopables_blacklist = DynamicObject::New(library->GetRecycler(), dynamicType);
             unscopables_blacklist->SetProperty(PropertyIds::find, JavascriptBoolean::ToVar(true, scriptContext), PropertyOperation_None, nullptr);
             unscopables_blacklist->SetProperty(PropertyIds::findIndex, JavascriptBoolean::ToVar(true, scriptContext), PropertyOperation_None, nullptr);
