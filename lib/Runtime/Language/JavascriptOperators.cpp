@@ -71,6 +71,8 @@ namespace Js
 
     IndexType GetIndexType(Var indexVar, ScriptContext* scriptContext, uint32* index, PropertyRecord const ** propertyRecord, JavascriptString ** propertyNameString, bool createIfNotFound, bool preferJavascriptStringOverPropertyRecord)
     {
+        indexVar = JavascriptConversion::ToPrimitive(indexVar, JavascriptHint::HintString, scriptContext);
+
         // TODO: At time of this comment, only OP_SetElementI and OP_GetElementI use and take advantage of the
         // IndexType_JavascriptString result. Consider modifying other callers of GetIndexType to take
         // advantage of non-interned property strings where appropriate.
@@ -109,14 +111,6 @@ namespace Js
             // We already know what the PropertyRecord is since it is stored in the JavascriptSymbol itself so just return it.
 
             *propertyRecord = symbol->GetValue();
-
-            return IndexType_PropertyId;
-        }
-        else if (JavascriptSymbolObject::Is(indexVar))
-        {
-            JavascriptSymbolObject* symbolObject = JavascriptSymbolObject::FromVar(indexVar);
-
-            *propertyRecord = symbolObject->GetValue();
 
             return IndexType_PropertyId;
         }
@@ -1072,7 +1066,7 @@ CommonNumber:
                 Assert(!JavascriptSymbol::Is(element));
 
                 PropertyDescriptor propertyDescriptor;
-                JavascriptObject::GetPropertyRecordFromVar<false>(element, scriptContext, &propertyRecord);
+                JavascriptConversion::ToPropertyKey(element, scriptContext, &propertyRecord);
                 if (JavascriptOperators::GetOwnPropertyDescriptor(RecyclableObject::FromVar(instance), propertyRecord->GetPropertyId(), scriptContext, &propertyDescriptor))
                 {
                     if (propertyDescriptor.IsEnumerable())

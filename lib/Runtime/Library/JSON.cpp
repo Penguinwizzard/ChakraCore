@@ -627,7 +627,7 @@ namespace JSON
                     propertyName = JavascriptString::FromVar(element);
 
                     PropertyDescriptor propertyDescriptor;
-                    JavascriptObject::GetPropertyRecordFromVar<false>(propertyName, scriptContext, &propRecord);
+                    JavascriptConversion::ToPropertyKey(propertyName, scriptContext, &propRecord);
                     id = propRecord->GetPropertyId();
                     if (JavascriptOperators::GetOwnPropertyDescriptor(RecyclableObject::FromVar(proxyObject), id, scriptContext, &propertyDescriptor))
                     {

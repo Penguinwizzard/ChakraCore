@@ -96,7 +96,7 @@ namespace Js
         }
 
         const PropertyRecord* propertyRecord;
-        GetPropertyRecordFromVar<true>(args[1], scriptContext, &propertyRecord);
+        JavascriptConversion::ToPropertyKey(args[1], scriptContext, &propertyRecord);
 
         if (JavascriptOperators::HasOwnProperty(dynamicObject, propertyRecord->GetPropertyId(), scriptContext))
         {
@@ -126,7 +126,7 @@ namespace Js
         if (args.Info.Count >= 2)
         {
             const PropertyRecord* propertyRecord;
-            GetPropertyRecordFromVar<true>(args[1], scriptContext, &propertyRecord);
+            JavascriptConversion::ToPropertyKey(args[1], scriptContext, &propertyRecord);
             PropertyId propertyId = propertyRecord->GetPropertyId();
 
             PropertyDescriptor currentDescriptor;
@@ -724,7 +724,7 @@ namespace Js
     Var JavascriptObject::GetOwnPropertyDescriptorHelper(RecyclableObject* obj, Var propertyKey, ScriptContext* scriptContext)
     {
         const PropertyRecord* propertyRecord;
-        GetPropertyRecordFromVar<true>(propertyKey, scriptContext,&propertyRecord);
+        JavascriptConversion::ToPropertyKey(propertyKey, scriptContext, &propertyRecord);
         PropertyId propertyId = propertyRecord->GetPropertyId();
 
         obj->ThrowIfCannotGetOwnPropertyDescriptor(propertyId);
@@ -1207,7 +1207,7 @@ namespace Js
         
         Var propertyKey = args.Info.Count > 2 ? args[2] : obj->GetLibrary()->GetUndefined();
         PropertyRecord const * propertyRecord;
-        GetPropertyRecordFromVar<true>(propertyKey, scriptContext, &propertyRecord);
+        JavascriptConversion::ToPropertyKey(propertyKey, scriptContext, &propertyRecord);
 
         Var descVar = args.Info.Count > 3 ? args[3] : obj->GetLibrary()->GetUndefined();
         PropertyDescriptor propertyDescriptor;
@@ -1289,7 +1289,7 @@ namespace Js
 
         Var propertyKey = args.Info.Count > 1 ? args[1] : obj->GetLibrary()->GetUndefined();
         const PropertyRecord* propertyRecord;
-        GetPropertyRecordFromVar<true>(propertyKey, scriptContext,&propertyRecord);
+        JavascriptConversion::ToPropertyKey(propertyKey, scriptContext, &propertyRecord);
 
         Var getterFunc = args.Info.Count > 2 ? args[2] : obj->GetLibrary()->GetUndefined();
 
@@ -1333,7 +1333,7 @@ namespace Js
 
         Var propertyKey = args.Info.Count > 1 ? args[1] : obj->GetLibrary()->GetUndefined();
         const PropertyRecord* propertyRecord;
-        GetPropertyRecordFromVar<true>(propertyKey, scriptContext, &propertyRecord);
+        JavascriptConversion::ToPropertyKey(propertyKey, scriptContext, &propertyRecord);
 
         Var setterFunc = args.Info.Count > 2 ? args[2] : obj->GetLibrary()->GetUndefined();
 
@@ -1371,7 +1371,7 @@ namespace Js
 
         Var propertyKey = args.Info.Count > 1 ? args[1] : obj->GetLibrary()->GetUndefined();
         const PropertyRecord* propertyRecord;
-        GetPropertyRecordFromVar<true>(propertyKey, scriptContext, &propertyRecord);
+        JavascriptConversion::ToPropertyKey(propertyKey, scriptContext, &propertyRecord);
 
         Var getter = nullptr;
         Var unused = nullptr;
@@ -1404,7 +1404,7 @@ namespace Js
 
         Var propertyKey = args.Info.Count > 1 ? args[1] : obj->GetLibrary()->GetUndefined();
         const PropertyRecord* propertyRecord;
-        GetPropertyRecordFromVar<true>(propertyKey, scriptContext, &propertyRecord);
+        JavascriptConversion::ToPropertyKey(propertyKey, scriptContext, &propertyRecord);
 
         Var unused = nullptr;
         Var setter = nullptr;
@@ -1570,7 +1570,9 @@ namespace Js
         {
             PropertyDescriptor propertyDescriptor;
             nextKey = keys->DirectGetItem(j);
-            JavascriptObject::GetPropertyRecordFromVar<true>(nextKey, scriptContext, &propertyRecord);
+            AssertMsg(JavascriptSymbol::Is(nextKey) || JavascriptString::Is(nextKey), "Invariant check during ownKeys proxy trap should make sure we only get property key here. (symbol or string primitives)");
+            // Spec doesn't strictly call for us to use ToPropertyKey but since we know nextKey is already a symbol or string primitive, ToPropertyKey will be a nop and return us the propertyRecord
+            JavascriptConversion::ToPropertyKey(nextKey, scriptContext, &propertyRecord);
             propertyId = propertyRecord->GetPropertyId();
             AssertMsg(propertyId != Constants::NoProperty, "AssignForProxyObjects - OwnPropertyKeys returned a propertyId with value NoPrpoerty.");
             if (JavascriptOperators::GetOwnPropertyDescriptor(from, propertyRecord->GetPropertyId(), scriptContext, &propertyDescriptor))
@@ -1640,35 +1642,6 @@ namespace Js
         }
         return object;
     }
-
-    template<bool includeSymbols>
-    void JavascriptObject::GetPropertyRecordFromVar(Var propertyKey, ScriptContext* scriptContext, const PropertyRecord** propertyRecord)
-    {
-        if (includeSymbols && JavascriptSymbol::Is(propertyKey))
-        {
-            // If we are looking up the property keyed by a symbol, we already have the PropertyId in the symbol
-            *propertyRecord = JavascriptSymbol::FromVar(propertyKey)->GetValue();
-        }
-        else
-        {
-            // For all other types, convert the key into a string and use that as the property name
-            JavascriptString * propName = JavascriptConversion::ToString(propertyKey, scriptContext);
-
-            if (VirtualTableInfo<Js::PropertyString>::HasVirtualTable(propName))
-            {
-                PropertyString * propertyString = (PropertyString *)propName;
-                *propertyRecord = propertyString->GetPropertyRecord();
-            }
-            else
-            {
-                scriptContext->GetOrAddPropertyRecord(propName->GetString(), propName->GetLength(), propertyRecord);
-            }
-        }
-    }
-
-    template void JavascriptObject::GetPropertyRecordFromVar<false>(Var propertyKey, ScriptContext* scriptContext, const PropertyRecord** propertyRecord);
-    template void JavascriptObject::GetPropertyRecordFromVar<true>(Var propertyKey, ScriptContext* scriptContext, const PropertyRecord** propertyRecord);
-
 
     Var JavascriptObject::DefinePropertiesHelper(RecyclableObject *object, RecyclableObject* props, ScriptContext *scriptContext)
     {
@@ -1779,6 +1752,8 @@ namespace Js
     //ES5 15.2.3.7
     Var JavascriptObject::DefinePropertiesHelperForProxyObjects(RecyclableObject *object, RecyclableObject* props, ScriptContext *scriptContext)
     {
+        Assert(JavascriptProxy::Is(props));
+
         //1.  If Type(O) is not Object throw a TypeError exception.
         //2.  Let props be ToObject(Properties).
 
@@ -1826,7 +1801,8 @@ namespace Js
         {
             PropertyDescriptor propertyDescriptor;
             nextKey = keys->DirectGetItem(j);
-            JavascriptObject::GetPropertyRecordFromVar<true>(nextKey, scriptContext, &propertyRecord);
+            AssertMsg(JavascriptSymbol::Is(nextKey) || JavascriptString::Is(nextKey), "Invariant check during ownKeys proxy trap should make sure we only get property key here. (symbol or string primitives)");
+            JavascriptConversion::ToPropertyKey(nextKey, scriptContext, &propertyRecord);
             propertyId = propertyRecord->GetPropertyId();
             AssertMsg(propertyId != Constants::NoProperty, "DefinePropertiesHelper - OwnPropertyKeys returned a propertyId with value NoPrpoerty.");
 

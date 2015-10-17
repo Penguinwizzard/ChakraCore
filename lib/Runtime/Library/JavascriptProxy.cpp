@@ -1072,7 +1072,7 @@ namespace Js
         return target->GetDefaultPropertyDescriptor(descriptor);
     }
 
-    // 7.3.12 in ES6. While this should have been no observable behavior change. Till there is obvious change warrant this 
+    // 7.3.15 in ES6. While this should have been no observable behavior change. Till there is obvious change warrant this 
     // to be moved to JavascriptOperators, let's keep it in proxy only first.
     BOOL JavascriptProxy::TestIntegrityLevel(IntegrityLevel integrityLevel, RecyclableObject* obj, ScriptContext* scriptContext)
     {
@@ -1112,7 +1112,8 @@ namespace Js
         for (uint i = 0; i < resultArray->GetLength(); i++)
         {
             itemVar = resultArray->DirectGetItem(i);
-            JavascriptObject::GetPropertyRecordFromVar<true>(itemVar, scriptContext, &propertyRecord);
+            AssertMsg(JavascriptSymbol::Is(itemVar) || JavascriptString::Is(itemVar), "Invariant check during ownKeys proxy trap should make sure we only get property key here. (symbol or string primitives)");
+            JavascriptConversion::ToPropertyKey(itemVar, scriptContext, &propertyRecord);
             PropertyId propertyId = propertyRecord->GetPropertyId();
             if (JavascriptObject::GetOwnPropertyDescriptorHelper(obj, propertyId, scriptContext, propertyDescriptor))
             {
@@ -1168,7 +1169,8 @@ namespace Js
             for (uint i = 0; i < resultArray->GetLength(); i++)
             {
                 itemVar = resultArray->DirectGetItem(i);
-                JavascriptObject::GetPropertyRecordFromVar<true>(itemVar, scriptContext, &propertyRecord);
+                AssertMsg(JavascriptSymbol::Is(itemVar) || JavascriptString::Is(itemVar), "Invariant check during ownKeys proxy trap should make sure we only get property key here. (symbol or string primitives)");
+                JavascriptConversion::ToPropertyKey(itemVar, scriptContext, &propertyRecord);
                 PropertyId propertyId = propertyRecord->GetPropertyId();
                 JavascriptObject::DefineOwnPropertyHelper(obj, propertyId, propertyDescriptor, scriptContext);
             }
@@ -1195,7 +1197,8 @@ namespace Js
             for (uint i = 0; i < resultArray->GetLength(); i++)
             {
                 itemVar = resultArray->DirectGetItem(i);
-                JavascriptObject::GetPropertyRecordFromVar<true>(itemVar, scriptContext, &propertyRecord);
+                AssertMsg(JavascriptSymbol::Is(itemVar) || JavascriptString::Is(itemVar), "Invariant check during ownKeys proxy trap should make sure we only get property key here. (symbol or string primitives)");
+                JavascriptConversion::ToPropertyKey(itemVar, scriptContext, &propertyRecord);
                 PropertyId propertyId = propertyRecord->GetPropertyId();
                 if (JavascriptObject::GetOwnPropertyDescriptorHelper(obj, propertyId, scriptContext, propertyDescriptor))
                 {
@@ -2229,7 +2232,8 @@ namespace Js
             for (uint32 i = 0; i < targetKeys->GetLength(); i++)
             {
                 element = targetKeys->DirectGetItem(i);
-                JavascriptObject::GetPropertyRecordFromVar<true>(element, scriptContext, &propertyRecord);
+                AssertMsg(JavascriptSymbol::Is(element) || JavascriptString::Is(element), "Invariant check during ownKeys proxy trap should make sure we only get property key here. (symbol or string primitives)");
+                JavascriptConversion::ToPropertyKey(element, scriptContext, &propertyRecord);
                 propertyId = propertyRecord->GetPropertyId();
 
                 if (propertyId == Constants::NoProperty)

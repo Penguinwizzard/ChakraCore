@@ -169,7 +169,7 @@ namespace Js
                     JavascriptError::ThrowTypeError(scriptContext, JSERR_InconsistentTrapResult, L"ownKeys");
                 }
 
-                JavascriptObject::GetPropertyRecordFromVar<true>(element, scriptContext, &propertyRecord);
+                JavascriptConversion::ToPropertyKey(element, scriptContext, &propertyRecord);
                 propertyId = propertyRecord->GetPropertyId();
                 
                 if (propertyId != Constants::NoProperty)

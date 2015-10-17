@@ -285,6 +285,38 @@ CommonNumber:
     }
 
     //----------------------------------------------------------------------------
+    // ToPropertyKey() takes a value and converts it to a property key
+    // Implementation of ES6 7.1.14
+    //----------------------------------------------------------------------------
+    BOOL JavascriptConversion::ToPropertyKey(Var argument, ScriptContext* scriptContext, const PropertyRecord** propertyRecord)
+    {
+        Var key = JavascriptConversion::ToPrimitive(argument, JavascriptHint::HintString, scriptContext);
+
+        if (JavascriptSymbol::Is(key))
+        {
+            // If we are looking up a property keyed by a symbol, we already have the PropertyId in the symbol
+            *propertyRecord = JavascriptSymbol::FromVar(key)->GetValue();
+        }
+        else
+        {
+            // For all other types, convert the key into a string and use that as the property name
+            JavascriptString * propName = JavascriptConversion::ToString(key, scriptContext);
+
+            if (VirtualTableInfo<Js::PropertyString>::HasVirtualTable(propName))
+            {
+                PropertyString * propertyString = (PropertyString *)propName;
+                *propertyRecord = propertyString->GetPropertyRecord();
+            }
+            else
+            {
+                scriptContext->GetOrAddPropertyRecord(propName->GetString(), propName->GetLength(), propertyRecord);
+            }
+        }
+
+        return TRUE;
+    }
+
+    //----------------------------------------------------------------------------
     // ToPrimitive() takes a value and an optional argument and converts it to a non Object type
     // Implementation of ES5 9.1
     //
@@ -323,6 +355,7 @@ CommonNumber:
 
                 return CrossSite::MarshalVar(requestContext, stringObject->Unwrap());
             }
+
         case TypeIds_NumberObject:
             {
                 JavascriptNumberObject * numberObject = JavascriptNumberObject::FromVar(aValue);
@@ -343,6 +376,14 @@ CommonNumber:
                     }
                     return CrossSite::MarshalVar(requestContext, numberObject->Unwrap());
                 }
+            }
+
+
+        case TypeIds_SymbolObject:
+            {
+                JavascriptSymbolObject* symbolObject = JavascriptSymbolObject::FromVar(aValue);
+
+                return requestContext->GetLibrary()->CreateSymbol(symbolObject->GetValue());
             }
 
         case TypeIds_Date:
