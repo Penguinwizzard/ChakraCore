@@ -4,11 +4,6 @@
 //-------------------------------------------------------------------------------------------------------
 #include "CommonMemoryPch.h"
 
-#ifdef _M_X64_OR_ARM64
-// TODO: Clean this warning up
-#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
-#endif
-
 RecyclerPageAllocator::RecyclerPageAllocator(Recycler* recycler, AllocationPolicyManager * policyManager, 
 #ifndef JD_PRIVATE
     Js::ConfigFlagsTable& flagTable, 
@@ -79,9 +74,10 @@ RecyclerPageAllocator::ResetWriteWatch(DListBase<PageSegment> * segmentList)
     while (i.Next())
     {
         PageSegment& segment = i.Data();        
-        uint pageCount = segment.GetAvailablePageCount();
+        size_t pageCount = segment.GetAvailablePageCount();
+        Assert(pageCount <= MAXUINT32);
         PageSegment::PageBitVector unallocPages = segment.GetUnAllocatedPages();
-        for (uint index = 0; index < pageCount; index++)
+        for (uint index = 0u; index < pageCount; index++)
         {
             if (unallocPages.Test(index))
             {
@@ -157,9 +153,10 @@ RecyclerPageAllocator::GetWriteWatchPageCount(DListBase<PageSegment> * segmentLi
     while (i.Next())
     {
         PageSegment& segment = i.Data();        
-        uint pageCount = segment.GetAvailablePageCount();
+        size_t pageCount = segment.GetAvailablePageCount();
+        Assert(pageCount <= MAXUINT32);
         PageSegment::PageBitVector unallocPages = segment.GetUnAllocatedPages();
-        for (uint index = 0; index < pageCount; index++)
+        for (uint index = 0u; index < pageCount; index++)
         {
             if (unallocPages.Test(index))
             {

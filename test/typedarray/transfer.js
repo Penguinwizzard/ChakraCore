@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 var buf1 = new ArrayBuffer(1<<21);
 new Int8Array(buf1)[0] = 42;
 new Int8Array(buf1)[1<<21-1] = 43;

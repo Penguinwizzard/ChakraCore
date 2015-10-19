@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // -nonative
 // -maxsimplejitruncount:2 -maxinterpretcount:1 -forcejitloopbody -off:bailonnoprofile
 function test() {
@@ -11,7 +16,7 @@ function test() {
         }
     };
     var ary = Array();
-    var ui8 = Uint8Array(1);
+    var ui8 = new Uint8Array(1);
     var proxyHandler = {};
     proxyHandler['get'] = function () {
         count++;

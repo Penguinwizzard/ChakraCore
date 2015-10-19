@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Condition="'$(ChakraBuildPathImported)'!='true'" Project="$(SolutionDir)Chakra.Build.Paths.props" />
   <Import Project="$(BuildConfigPropsPath)Chakra.Build.ProjectConfiguration.props" />
   <PropertyGroup Label="Globals">
@@ -20,7 +20,11 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)..\Common;$(MSBuildThisFileDirectory)..\Backend;$(ChakraManifestsIncludeDirectory);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>
+        $(MSBuildThisFileDirectory)..\Common;
+        $(MSBuildThisFileDirectory)..\Backend;
+        %(AdditionalIncludeDirectories)
+      </AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>ParserPch.h</PrecompiledHeaderFile>
     </ClCompile>
@@ -47,7 +51,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)RegexStats.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)rterror.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)scan.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)screrror.cpp" />    
+    <ClCompile Include="$(MSBuildThisFileDirectory)screrror.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)StandardChars.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ParserPch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -94,24 +98,22 @@
     <ClInclude Include="ptree.h" />
     <ClInclude Include="regcodes.h" />
     <ClInclude Include="RegexCommon.h" />
-    <ClInclude Include="RegexCompileTime.h" />    
+    <ClInclude Include="RegexCompileTime.h" />
     <ClInclude Include="RegexContcodes.h" />
     <ClInclude Include="RegexFlags.h" />
     <ClInclude Include="RegexOpcodes.h" />
     <ClInclude Include="RegexParser.h" />
     <ClInclude Include="RegexPattern.h" />
-    <ClInclude Include="RegexGroupInfo.h" />
     <ClInclude Include="RegexRunTime.h" />
     <ClInclude Include="RegexStats.h" />
     <ClInclude Include="rterror.h" />
     <ClInclude Include="rterrors.h" />
     <ClInclude Include="rterrors_limits.h" />
     <ClInclude Include="scan.h" />
-    <ClInclude Include="screrror.h" />  
-    <ClInclude Include="StandardChars.h" />    
+    <ClInclude Include="screrror.h" />
+    <ClInclude Include="StandardChars.h" />
     <ClInclude Include="TextbookBoyerMoore.h" />
     <ClInclude Include="tokens.h" />
-    <ClInclude Include="unicode.h" />    
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)jserr.gen">
@@ -120,21 +122,14 @@
       <ObjectFileName>$(IntDir)jserr.rc2</ObjectFileName>
       <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory);$(MSBuildThisFileDirectory)..\Common</AdditionalIncludeDirectories>
       <LibCompiled>false</LibCompiled>
-      <ForcedIncludeFiles></ForcedIncludeFiles>
+      <ForcedIncludeFiles>
+      </ForcedIncludeFiles>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
-  <ItemGroup>    
+  <ItemGroup>
     <None Include="jsscan.js" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\Manifests\Manifests.vcxproj">
-      <Project>{bcc5c029-2f2c-4eaa-8e60-664d72766936}</Project>
-    </ProjectReference>
-    <ProjectReference Condition="'$(USE_EXTERNAL_DEPENDENCIES)'!='yes'" Include="..\..\..\publish\Publish.vcxproj">
-      <Project>{1876e800-ad77-48c4-a2f7-e5265f24ac35}</Project>
-    </ProjectReference>
-  </ItemGroup>
-  <Import Project="$(BuildConfigPropsPath)Chakra.Build.targets" Condition="exists('$(BuildConfigPropsPath)Chakra.Build.targets')"/>
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.targets" Condition="exists('$(BuildConfigPropsPath)Chakra.Build.targets')" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

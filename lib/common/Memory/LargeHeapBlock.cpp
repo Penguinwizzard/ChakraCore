@@ -4,11 +4,6 @@
 //-------------------------------------------------------------------------------------------------------
 #include "CommonMemoryPch.h"
 
-#ifdef _M_X64_OR_ARM64
-// TODO: Clean this warning up
-#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
-#endif
-
 CompileAssert(
     sizeof(LargeObjectHeader) == HeapConstants::ObjectGranularity ||
     sizeof(LargeObjectHeader) == HeapConstants::ObjectGranularity * 2);
@@ -425,7 +420,7 @@ LargeHeapBlock::AllocFreeListEntry(size_t size, ObjectInfoBits attributes, Large
     Assert(this->HeaderList()[entry->headerIndex] == nullptr);
 
     uint headerIndex = entry->headerIndex;
-    uint originalSize = entry->objectSize;
+    size_t originalSize = entry->objectSize;
 
     LargeObjectHeader * header = (LargeObjectHeader *) entry;
 
@@ -1262,7 +1257,7 @@ LargeHeapBlock::Sweep(RecyclerSweep& recyclerSweep, bool queuePendingSweep)
 }
 
 bool
-LargeHeapBlock::TrimObject(Recycler* recycler, LargeObjectHeader* header, uint sizeOfObject, bool inDispose)
+LargeHeapBlock::TrimObject(Recycler* recycler, LargeObjectHeader* header, size_t sizeOfObject, bool inDispose)
 {
     IdleDecommitPageAllocator* pageAllocator = recycler->GetRecyclerLargeBlockPageAllocator();
     uint pageSize = AutoSystemInfo::PageSize ;
@@ -1370,7 +1365,7 @@ LargeHeapBlock::SweepObject<SweepMode_InThread>(Recycler * recycler, LargeObject
     {
         this->HeaderList()[header->objectIndex] = nullptr;
 
-        uint sizeOfObject = header->objectSize;
+        size_t sizeOfObject = header->objectSize;
 
         bool objectTrimmed = false;
 
@@ -1532,7 +1527,7 @@ LargeHeapBlock::SweepObjects(Recycler * recycler)
             continue;
         }
 
-        uint objectSize = header->objectSize;
+        size_t objectSize = header->objectSize;
         recycler->NotifyFree((char *)header->GetAddress(), objectSize);
 
         SweepObject<mode>(recycler, header);

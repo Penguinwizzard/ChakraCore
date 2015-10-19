@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 function ScriptEngineBuildVersion() { return 10000; }
 var bpfjfw = function() { return this };
 var E = function() { return this };
@@ -440,7 +445,7 @@ try { var shouldBailout = (WScript.Arguments[0] == 'bailout'); } catch(linkedLis
 })();
 //(function(){/*sStart*/;gczeal('strict');/*replaced*/for (var p in a) { addPropertyName(p); }/*replaced*/;;/*sEnd*/})();
 (function() {/*sStart*/; "use strict"; try { try { let (functional)((function() { try { ''.functional = x; } catch(linkedList) { } })()); } catch(linkedList) { } try { throw gczeal; } catch(linkedList) { } } catch(linkedList) { };;/*sEnd*/ })();
-(function() {/*sStart*/; (Float64Array());;;/*sEnd*/ })();
+(function() {/*sStart*/; (new Float64Array());;;/*sEnd*/ })();
 (function() {/*sStart*/; "use strict"; print(new Float32Array());;;/*sEnd*/ })();
 (function() {/*sStart*/; print(x);;/*sEnd*/ })();
 (function() {/*sStart*/; "use strict"; try { try { linkedList = x; } catch(linkedList) { } try { let (functional)((function() { try { throw eval; } catch(linkedList) { } })()); } catch(linkedList) { } } catch(linkedList) { };;/*sEnd*/ })();

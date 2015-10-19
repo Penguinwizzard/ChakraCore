@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 
 var funcstr = "var t = function() { var a = 1073741823; var arr = new Array(); ";
 for (var i = 0; i < 2048; i++)

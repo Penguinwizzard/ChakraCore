@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 //FileName: \\ezeqasrv1\users\runtimetoolsbugs\casanalyzed\exprgen\fbl_ie_script_dev\130421-2030\x86\nebularun_x86\201304231347\ddltd2_269a5520-bce0-4753-a54d-6ac358f9cdd4\bug0.js
 //Configuration: inline.xml
 //Testcase Number: 3445

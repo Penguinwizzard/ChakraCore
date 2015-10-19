@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 function makeArrayLength() {
 }
 function leaf() {
@@ -13,7 +18,7 @@ var func3 = function () {
 };
 arrObj0.method1 = func3;
 var ary = new Array();
-var f32 = Float32Array();
+var f32 = new Float32Array();
 var FloatArr0 = Array;
 makeArrayLength({ prop1: arrObj0.method1(ary.splice(12, 14, arrObj0.method1())) });
 try {

@@ -58,7 +58,7 @@ namespace Js
         template <typename SizePolicy> bool TryWriteAsmTypedArr  ( OpCodeAsmJs op, RegSlot value, uint32 slotIndex, ArrayBufferView::ViewType viewType);
         template <typename SizePolicy> bool TryWriteAsmSimdTypedArr (OpCodeAsmJs op, RegSlot value, uint32 slotIndex, uint8 dataWidth, ArrayBufferView::ViewType viewType);
         template <typename SizePolicy> bool TryWriteAsmJsUnsigned1(OpCodeAsmJs op, uint C1);
-        void AddJumpOffset(Js::OpCodeAsmJs op, ByteCodeLabel labelId, size_t fieldByteOffset);
+        void AddJumpOffset(Js::OpCodeAsmJs op, ByteCodeLabel labelId, uint fieldByteOffset);
     };
 }
 

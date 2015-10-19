@@ -772,6 +772,8 @@ private:
     template<bool buildAST> ParseNodePtr ParsePostfixOperators(ParseNodePtr pnode,
         BOOL fAllowCall, BOOL fInNew, BOOL *pfCanAssign, _Inout_ IdentToken* pToken);
 
+    void ThrowNewTargetSyntaxErrForGlobalScope();
+
     template<bool buildAST> ParseNodePtr ParseMetaProperty(
         tokens metaParentKeyword,
         charcount_t ichMin,

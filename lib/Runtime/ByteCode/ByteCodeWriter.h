@@ -14,17 +14,17 @@ namespace Js
         private:
             byte* currentByte;
             byte* buffer;
-            size_t byteSize;
+            uint byteSize;
         public:
             DataChunk* nextChunk;
-            DataChunk(ArenaAllocator* allocator, size_t initSize) :
+            DataChunk(ArenaAllocator* allocator, uint initSize) :
                 nextChunk(nullptr),
                 byteSize(initSize)
             {
                 buffer = AnewArray(allocator, byte, initSize);
                 currentByte = buffer;
             }
-            inline size_t GetSize()
+            inline uint GetSize()
             {
                 return byteSize;
             }
@@ -36,23 +36,23 @@ namespace Js
             {
                 currentByte = buffer;
             }
-            inline size_t RemainingBytes()
+            inline uint RemainingBytes()
             {
                 Assert(byteSize >= GetCurrentOffset());
                 return byteSize - GetCurrentOffset();
             }
-            inline size_t GetCurrentOffset()
+            inline uint GetCurrentOffset()
             {
                 Assert(currentByte >= buffer);
-                return (size_t) (currentByte - buffer);
+                return (uint) (currentByte - buffer);
             }
-            inline void SetCurrentOffset(size_t offset)
+            inline void SetCurrentOffset(uint offset)
             {
                 currentByte = buffer + offset;
             }
 
             /// This does not do check if there is enough space for the copy to succeed.
-            __inline void WriteUnsafe(__in_bcount(byteSize) const void* data, __in size_t byteSize)
+            __inline void WriteUnsafe(__in_bcount(byteSize) const void* data, __in uint byteSize)
             {
                 AssertMsg(RemainingBytes() >= byteSize, "We do not have enough room");
 
@@ -70,12 +70,12 @@ namespace Js
             ArenaAllocator* tempAllocator;
             DataChunk* head;    // First chunk to be written to
             DataChunk* current; // The current chunk being written to
-            size_t currentOffset;  // The global offset of last byte written to in the linked data structure
+            uint currentOffset;  // The global offset of last byte written to in the linked data structure
             bool fixedGrowthPolicy;
 
-            __inline size_t Write(__in_bcount(byteSize) const void* data, __in size_t byteSize);
-            __declspec(noinline) void SlowWrite(__in_bcount(byteSize) const void* data, __in size_t byteSize);
-            void AddChunk(size_t byteSize);
+            __inline uint Write(__in_bcount(byteSize) const void* data, __in uint byteSize);
+            __declspec(noinline) void SlowWrite(__in_bcount(byteSize) const void* data, __in uint byteSize);
+            void AddChunk(uint byteSize);
 
         public:
             Data(bool fixedGrowthPolicy = false) : head(nullptr),
@@ -85,30 +85,30 @@ namespace Js
                 fixedGrowthPolicy(fixedGrowthPolicy)
             {
             }
-            void Create(size_t initSize, ArenaAllocator* tmpAlloc);
-            inline size_t GetCurrentOffset() const { return currentOffset; }
+            void Create(uint initSize, ArenaAllocator* tmpAlloc);
+            inline uint GetCurrentOffset() const { return currentOffset; }
             inline DataChunk * GetCurrentChunk() const { return &(*current); }
-            void SetCurrent(size_t offset, DataChunk* currChunk);
+            void SetCurrent(uint offset, DataChunk* currChunk);
             void Copy(Recycler* alloc, ByteBlock ** finalBlock);
-            size_t Encode(OpCode op, ByteCodeWriter* writer)
+            uint Encode(OpCode op, ByteCodeWriter* writer)
             {
                 return EncodeT<Js::SmallLayout>(op, writer);
             }
-            size_t Encode(OpCode op, const void * rawData, int byteSize, ByteCodeWriter* writer)
+            uint Encode(OpCode op, const void * rawData, int byteSize, ByteCodeWriter* writer)
             {
                 return EncodeT<Js::SmallLayout>(op, rawData, byteSize, writer);
             }
-            size_t Encode(const void * rawData, int byteSize);
+            uint Encode(const void * rawData, int byteSize);
 
-            template <LayoutSize layoutSize> size_t EncodeT(OpCode op, ByteCodeWriter* writer);
-            template <> size_t EncodeT<SmallLayout>(OpCode op, ByteCodeWriter* writer);
-            template <LayoutSize layoutSize> size_t EncodeT(OpCode op, const void * rawData, int byteSize, ByteCodeWriter* writer);
+            template <LayoutSize layoutSize> uint EncodeT(OpCode op, ByteCodeWriter* writer);
+            template <> uint EncodeT<SmallLayout>(OpCode op, ByteCodeWriter* writer);
+            template <LayoutSize layoutSize> uint EncodeT(OpCode op, const void * rawData, int byteSize, ByteCodeWriter* writer);
             // asm.js encoding
-            size_t Encode(OpCodeAsmJs op, ByteCodeWriter* writer){ return EncodeT<Js::SmallLayout>(op, writer); }
-            size_t Encode(OpCodeAsmJs op, const void * rawData, int byteSize, ByteCodeWriter* writer, bool isPatching = false){ return EncodeT<Js::SmallLayout>(op, rawData, byteSize, writer, isPatching); }
-            template <LayoutSize layoutSize> size_t EncodeT(OpCodeAsmJs op, ByteCodeWriter* writer, bool isPatching = false);
-            template <> size_t EncodeT<SmallLayout>(OpCodeAsmJs op, ByteCodeWriter* writer, bool isPatching);
-            template <LayoutSize layoutSize> size_t EncodeT(OpCodeAsmJs op, const void * rawData, int byteSize, ByteCodeWriter* writer, bool isPatching = false);
+            uint Encode(OpCodeAsmJs op, ByteCodeWriter* writer){ return EncodeT<Js::SmallLayout>(op, writer); }
+            uint Encode(OpCodeAsmJs op, const void * rawData, int byteSize, ByteCodeWriter* writer, bool isPatching = false){ return EncodeT<Js::SmallLayout>(op, rawData, byteSize, writer, isPatching); }
+            template <LayoutSize layoutSize> uint EncodeT(OpCodeAsmJs op, ByteCodeWriter* writer, bool isPatching = false);
+            template <> uint EncodeT<SmallLayout>(OpCodeAsmJs op, ByteCodeWriter* writer, bool isPatching);
+            template <LayoutSize layoutSize> uint EncodeT(OpCodeAsmJs op, const void * rawData, int byteSize, ByteCodeWriter* writer, bool isPatching = false);
 
             void Reset();
         };
@@ -121,11 +121,11 @@ namespace Js
             LoopHeaderData(uint startOffset, uint endOffset, bool isNested) : startOffset(startOffset), endOffset(endOffset), isNested(isNested){}
         };
 
-        JsUtil::List<size_t, ArenaAllocator> * m_labelOffsets;          // Label offsets, once defined
+        JsUtil::List<uint, ArenaAllocator> * m_labelOffsets;          // Label offsets, once defined
         struct JumpInfo
         {
             ByteCodeLabel labelId;
-            size_t patchOffset;
+            uint patchOffset;
         };
 #ifdef BYTECODE_BRANCH_ISLAND
         bool useBranchIsland;
@@ -197,7 +197,7 @@ namespace Js
 #endif
 
         void IncreaseByteCodeCount();
-        void AddJumpOffset(Js::OpCode op, ByteCodeLabel labelId, size_t fieldByteOffset);
+        void AddJumpOffset(Js::OpCode op, ByteCodeLabel labelId, uint fieldByteOffset);
 
         RegSlot ConsumeReg(RegSlot reg);
 
@@ -209,11 +209,11 @@ namespace Js
         bool DoDynamicProfileOpcode(Phase tag, bool noHeuristics = false) const;
 
         template <typename T>
-        void PatchJumpOffset(JsUtil::List<JumpInfo, ArenaAllocator> * jumpOffsets, byte * byteBuffer, int byteCount);
+        void PatchJumpOffset(JsUtil::List<JumpInfo, ArenaAllocator> * jumpOffsets, byte * byteBuffer, uint byteCount);
 
 #ifdef BYTECODE_BRANCH_ISLAND
         static int32 GetBranchLimit();
-        void AddLongJumpOffset(ByteCodeLabel labelId, size_t fieldByteOffset);
+        void AddLongJumpOffset(ByteCodeLabel labelId, uint fieldByteOffset);
         void EnsureLongBranch(Js::OpCode op);
         void UpdateNextBranchIslandOffset(uint firstUnknownJumpInfo, uint firstUnknownJumpOffset);
 #endif
@@ -241,9 +241,9 @@ namespace Js
         void AllocateLoopHeaders();
 
 #if DBG_DUMP
-        size_t ByteCodeDataSize();
-        size_t AuxiliaryDataSize();
-        size_t AuxiliaryContextDataSize();
+        uint ByteCodeDataSize();
+        uint AuxiliaryDataSize();
+        uint AuxiliaryContextDataSize();
 #endif
         void Empty(OpCode op);
         void Reg1(OpCode op, RegSlot R0);
@@ -269,7 +269,7 @@ namespace Js
         void BrProperty(OpCode op, ByteCodeLabel labelID, RegSlot R1, PropertyIdIndexType propertyIdIndex);
         void StartCall(OpCode op, ArgSlot ArgCount);
         void CallI(OpCode op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount, ProfileId callSiteId, CallFlags callFlags = CallFlags_None);
-        void CallIExtended(OpCode op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount, CallIExtendedOptions options, const void *buffer, size_t byteCount, ProfileId callSiteId, CallFlags callFlags = CallFlags_None);
+        void CallIExtended(OpCode op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount, CallIExtendedOptions options, const void *buffer, uint byteCount, ProfileId callSiteId, CallFlags callFlags = CallFlags_None);
         void RemoveEntryForRegSlotFromCacheIdMap(RegSlot functionRegister);
         void Element(OpCode op, RegSlot value, RegSlot instance, RegSlot element, bool instanceAtReturnRegOK = false);
         void ElementUnsigned1(OpCode op, RegSlot value, RegSlot instance, uint32 element);
@@ -322,11 +322,11 @@ namespace Js
         template <typename SizePolicy> bool TryWriteReg2Int1(OpCode op, RegSlot R0, RegSlot R1, int C1);
 
         void AuxiliaryContext(OpCode op, RegSlot destinationRegister, const void* buffer, int byteCount, Js::RegSlot C1);
-        int Auxiliary(OpCode op, RegSlot destinationRegister, const void* buffer, int byteCount, int size);
+        void Auxiliary(OpCode op, RegSlot destinationRegister, const void* buffer, int byteCount, int size);
         void Auxiliary(OpCode op, RegSlot destinationRegister, uint byteOffset, int size);
         int Reg2Aux(OpCode op, RegSlot R0, RegSlot R1, const void* buffer, int byteCount, int size);
         void Reg2Aux(OpCode op, RegSlot R0, RegSlot R1, uint byteOffset, int size);
-        size_t InsertAuxiliaryData(const void* buffer, size_t byteCount);
+        uint InsertAuxiliaryData(const void* buffer, uint byteCount);
 
         void Reg1NoComsumeReg(OpCode op, RegSlot R0);
 
@@ -393,7 +393,7 @@ namespace Js
                 (op == OpCode::NewScIntArray || op == OpCode::NewScFltArray || op == OpCode::NewScArray);
         }
 
-        size_t ByteCodeWriter::GetTotalSize()
+        uint ByteCodeWriter::GetTotalSize()
         {
             return m_byteCodeData.GetCurrentOffset() + m_auxiliaryData.GetCurrentOffset() + m_auxContextData.GetCurrentOffset();
         }

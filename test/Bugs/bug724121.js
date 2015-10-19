@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 //Configuration: lessmath_variableMRU.xml
 //Testcase Number: 19319
 //Switches: -maxinterpretcount:1 -maxsimplejitruncount:1  -MinSwitchJumpTableSize:3 -forcedeferparse -force:fieldhoist -MaxLinearStringCaseCount:2 -MaxLinearIntCaseCount:2 -bgjit- -loopinterpretcount:1 -force:fieldcopyprop -force:polymorphicinlinecache -force:interpreterautoprofile -force:inline -force:atom -force:rejit -off:lossyinttypespec -off:BoundCheckElimination -off:ArrayCheckHoist -off:ArrayLengthHoist -off:aggressiveinttypespec -force:fixdataprops -force:ScriptFunctionWithInlineCache -off:trackintusage -off:fefixedmethods -ForceArrayBTree -off:BoundCheckHoist -off:checkthis

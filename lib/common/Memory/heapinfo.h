@@ -65,7 +65,7 @@ public:
     void ScanNewImplicitRoots();
 
 #if defined(PARTIAL_GC_ENABLED) || defined(CONCURRENT_GC_ENABLED)
-    uint Rescan(RescanFlags flags);
+    size_t Rescan(RescanFlags flags);
     void SweepPendingObjects(RecyclerSweep& recyclerSweep);
 #endif
     void Sweep(RecyclerSweep& recyclerSweep, bool concurrent);

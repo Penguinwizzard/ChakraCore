@@ -405,6 +405,7 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Library\JavascriptObject.h"
 #include "Library\BuiltInFlags.h"
 #include "Library\CharStringCache.h"
+#include "Library\ExternalLibraryBase.h"
 #include "Library\JavascriptLibraryBase.h"
 #include "Library\JavascriptLibrary.h"
 
@@ -420,6 +421,7 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Library\WindowsGlobalizationAdapter.h"
 #include "Library\WindowsFoundationAdapter.h"
 #include "Library\EngineInterfaceObject.h"
+#include "Library\IntlEngineInterfaceExtensionObject.h"
 #include "Library\Debug.h"
 
 #ifdef _M_X64

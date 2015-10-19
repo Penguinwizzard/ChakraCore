@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 try { var f = Function("const x = 10; return x;"); WScript.Echo("Syntax check succeeded"); } catch (e) { WScript.Echo(e); }
 try { var f = Function("{const x = 10; return x;}"); WScript.Echo("Syntax check succeeded"); } catch (e) { WScript.Echo(e); }
 try { var f = Function("const x = 10; x = 20;"); WScript.Echo("Syntax check succeeded"); } catch (e) { WScript.Echo(e); }

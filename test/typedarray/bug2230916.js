@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 var isPassed1 = false;
 var isPassed2 = false;
 function test1() {
@@ -14,7 +19,7 @@ function test1() {
 }
 
 function test2() {
-  ejdmhf_0 = Uint8Array();
+  ejdmhf_0 = new Uint8Array();
   try 
   {
 	ejdmhf_0[50341] = Symbol();

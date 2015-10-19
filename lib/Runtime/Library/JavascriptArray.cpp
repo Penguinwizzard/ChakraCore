@@ -4,8 +4,6 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 
-#pragma warning(disable:4302)  // truncation from 'pointer' to 'integral'
-
 #ifdef _M_X64_OR_ARM64
 // TODO: Clean this warning up
 #pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
@@ -602,8 +600,8 @@ namespace Js
 
     void JavascriptCopyOnAccessNativeIntArray::ConvertCopyOnAccessSegment()
     {
-        Assert(this->GetScriptContext()->GetLibrary()->cacheForCopyOnAccessArraySegments->IsValidIndex(reinterpret_cast<byte>(this->GetHead())));
-        SparseArraySegment<int32> *seg = this->GetScriptContext()->GetLibrary()->cacheForCopyOnAccessArraySegments->GetSegmentByIndex(reinterpret_cast<byte>(this->GetHead()));
+        Assert(this->GetScriptContext()->GetLibrary()->cacheForCopyOnAccessArraySegments->IsValidIndex(::Math::PointerCastToIntegral<uint32>(this->GetHead())));
+        SparseArraySegment<int32> *seg = this->GetScriptContext()->GetLibrary()->cacheForCopyOnAccessArraySegments->GetSegmentByIndex(::Math::PointerCastToIntegral<byte>(this->GetHead()));
         SparseArraySegment<int32> *newSeg = SparseArraySegment<int32>::AllocateLiteralHeadSegment(this->GetRecycler(), seg->length);
 
 #if ENABLE_DEBUG_CONFIG_OPTIONS
@@ -645,8 +643,8 @@ namespace Js
 
     BOOL JavascriptCopyOnAccessNativeIntArray::DirectGetItemAt(uint32 index, int* outVal)
     {
-        Assert(this->GetScriptContext()->GetLibrary()->cacheForCopyOnAccessArraySegments->IsValidIndex(reinterpret_cast<byte>(this->GetHead())));
-        SparseArraySegment<int32> *seg = this->GetScriptContext()->GetLibrary()->cacheForCopyOnAccessArraySegments->GetSegmentByIndex(reinterpret_cast<byte>(this->GetHead()));
+        Assert(this->GetScriptContext()->GetLibrary()->cacheForCopyOnAccessArraySegments->IsValidIndex(::Math::PointerCastToIntegral<uint32>(this->GetHead())));
+        SparseArraySegment<int32> *seg = this->GetScriptContext()->GetLibrary()->cacheForCopyOnAccessArraySegments->GetSegmentByIndex(::Math::PointerCastToIntegral<byte>(this->GetHead()));
 
         if (this->length == 0 || index == Js::JavascriptArray::InvalidIndex || index >= this->length)
         {

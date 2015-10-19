@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 try{eval("");}catch(ex){}
 try{eval("if((false.valueOf(\"number\"))) {return; } else  if ( /x/ .unwatch(\"x\")) {continue M;return; }");}catch(ex){}
 try{eval("throw StopIteration;");}catch(ex){}

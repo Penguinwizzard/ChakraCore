@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 var asmModule = 
 (function(stdlib, foreign, heap) { 'use asm';   var Uint8ArrayView = new stdlib.Uint8Array(heap);
   var Int16ArrayView = new stdlib.Int16Array(heap);

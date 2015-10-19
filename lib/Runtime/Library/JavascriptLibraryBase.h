@@ -14,7 +14,6 @@
 namespace Js
 {
     class EngineInterfaceObject;
-    class DiagnosticsScriptObject;
 
     class JavascriptLibraryBase : public FinalizableObject
     {
@@ -80,7 +79,6 @@ namespace Js
         JavascriptFunction* GetSyntaxErrorConstructor() const { return syntaxErrorConstructor; }
         JavascriptFunction* GetTypeErrorConstructor() const { return typeErrorConstructor; }
         JavascriptFunction* GetURIErrorConstructor() const { return uriErrorConstructor; }
-        JavascriptFunction* GetWinRTErrorConstructor() const { return winrtErrorConstructor; }
 
         DynamicObject* GetMathObject() { return mathObject; }
         DynamicObject* GetJSONObject() { return JSONObject; }
@@ -90,7 +88,6 @@ namespace Js
 #if defined(ENABLE_INTL_OBJECT) || defined(ENABLE_PROJECTION)
         EngineInterfaceObject* GetEngineInterfaceObject() { return engineInterfaceObject; }
 #endif
-        DiagnosticsScriptObject* GetDiagnosticsScriptObect() { return diagnosticsScriptObject; }
 
         DynamicObject* GetArrayPrototype() { return arrayPrototype; }
         DynamicObject* GetBooleanPrototype() { return booleanPrototype; }
@@ -122,9 +119,6 @@ namespace Js
         DynamicObject* GetSyntaxErrorPrototype() const { return syntaxErrorPrototype; }
         DynamicObject* GetTypeErrorPrototype() const { return typeErrorPrototype; }
         DynamicObject* GetURIErrorPrototype() const { return uriErrorPrototype; }
-#ifdef ENABLE_PROJECTION
-        DynamicObject* GetWinRTErrorPrototype() const { return winrtErrorPrototype; }
-#endif
 
     protected:
         GlobalObject* globalObject;
@@ -162,10 +156,6 @@ namespace Js
         RuntimeFunction* syntaxErrorConstructor;
         RuntimeFunction* typeErrorConstructor;
         RuntimeFunction* uriErrorConstructor;        
-        RuntimeFunction* winrtErrorConstructor;
-#ifdef ENABLE_PROJECTION
-        JavascriptFunction* winRTPromiseConstructor;
-#endif
         RuntimeFunction* proxyConstructor;
         RuntimeFunction* promiseConstructor;
         RuntimeFunction* generatorFunctionConstructor;
@@ -184,7 +174,7 @@ namespace Js
         DynamicObject* mathObject;
         // SIMD_JS
         DynamicObject* simdObject;
-
+        // TODO: move the debugObject out
         DynamicObject* debugObject;
         DynamicObject* JSONObject;
 #ifdef ENABLE_INTL_OBJECT
@@ -194,7 +184,6 @@ namespace Js
         EngineInterfaceObject* engineInterfaceObject;
 #endif
         DynamicObject* reflectObject;
-        DiagnosticsScriptObject * diagnosticsScriptObject;
 
         DynamicObject* arrayPrototype;
 
@@ -244,9 +233,6 @@ namespace Js
         DynamicObject* syntaxErrorPrototype;
         DynamicObject* typeErrorPrototype;
         DynamicObject* uriErrorPrototype; 
-#ifdef ENABLE_PROJECTION
-        DynamicObject* winrtErrorPrototype;
-#endif
 
         JavascriptBoolean* booleanTrue;
         JavascriptBoolean* booleanFalse;

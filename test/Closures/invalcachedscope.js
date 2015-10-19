@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // "outer" is called in a loop but can't re-use its scope because "inner" escapes.
 // The escape isn't detected with /forcedeferparse, because inner2 isn't visible to the
 // byte code gen.

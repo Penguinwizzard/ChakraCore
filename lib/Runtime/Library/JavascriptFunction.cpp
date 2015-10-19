@@ -2118,7 +2118,7 @@ LABEL1:
 
     bool JavascriptFunction::HasRestrictedProperties() const
     {
-        return !(this->functionInfo->IsClassMethod() || this->functionInfo->IsClassConstructor() || this->functionInfo->IsLambda());
+        return !(this->functionInfo->IsClassMethod() || this->functionInfo->IsClassConstructor() || this->functionInfo->IsLambda() || this->IsGeneratorFunction() || this->IsBoundFunction() || this->IsStrictMode());
     }
 
     BOOL JavascriptFunction::HasProperty(PropertyId propertyId)
@@ -2127,7 +2127,7 @@ LABEL1:
         {
         case PropertyIds::caller:
         case PropertyIds::arguments:
-            if (this->HasRestrictedProperties() && !this->IsStrictMode())
+            if (this->HasRestrictedProperties())
             {
                 return true;
             }
@@ -2178,7 +2178,7 @@ LABEL1:
     DescriptorFlags JavascriptFunction::GetSetter(PropertyId propertyId, Var *setterValue, PropertyValueInfo* info, ScriptContext* requestContext)
     {
         DescriptorFlags flags;
-        if (this->HasRestrictedProperties() && GetSetterBuiltIns(propertyId, setterValue, info, requestContext, &flags))
+        if (GetSetterBuiltIns(propertyId, setterValue, info, requestContext, &flags))
         {
             return flags;
         }
@@ -2192,7 +2192,7 @@ LABEL1:
         PropertyRecord const* propertyRecord;
         this->GetScriptContext()->FindPropertyRecord(propertyNameString, &propertyRecord);
 
-        if (this->HasRestrictedProperties() && propertyRecord != nullptr && GetSetterBuiltIns(propertyRecord->GetPropertyId(), setterValue, info, requestContext, &flags))
+        if (propertyRecord != nullptr && GetSetterBuiltIns(propertyRecord->GetPropertyId(), setterValue, info, requestContext, &flags))
         {
             return flags;
         }
@@ -2209,30 +2209,36 @@ LABEL1:
         switch (propertyId)
         {
         case PropertyIds::caller:
-            PropertyValueInfo::SetNoCache(info, this);
-            if (IsStrictMode())
-            {
-                *setterValue = requestContext->GetLibrary()->GetThrowTypeErrorCallerAccessorFunction();
-                *descriptorFlags = Accessor;
+            if (this->HasRestrictedProperties()) {
+                PropertyValueInfo::SetNoCache(info, this);
+                if (this->GetEntryPoint() == JavascriptFunction::PrototypeEntryPoint)
+                {
+                    *setterValue = requestContext->GetLibrary()->GetThrowTypeErrorCallerAccessorFunction();
+                    *descriptorFlags = Accessor;
+                }
+                else
+                {
+                    *descriptorFlags = Data;
+                }
+                return true;
             }
-            else
-            {
-                *descriptorFlags = Data;
-            }
-            return true;
+            break;
 
         case PropertyIds::arguments:
-            PropertyValueInfo::SetNoCache(info, this);
-            if (IsStrictMode())
-            {
-                *setterValue = requestContext->GetLibrary()->GetThrowTypeErrorArgumentsAccessorFunction();
-                *descriptorFlags = Accessor;
+            if (this->HasRestrictedProperties()) {
+                PropertyValueInfo::SetNoCache(info, this);
+                if (this->GetEntryPoint() == JavascriptFunction::PrototypeEntryPoint)
+                {
+                    *setterValue = requestContext->GetLibrary()->GetThrowTypeErrorArgumentsAccessorFunction();
+                    *descriptorFlags = Accessor;
+                }
+                else
+                {
+                    *descriptorFlags = Data;
+                }
+                return true;
             }
-            else
-            {
-                *descriptorFlags = Data;
-            }
-            return true;
+            break;
         }
 
         return false;
@@ -2338,9 +2344,7 @@ LABEL1:
     // Returns the number of special non-enumerable properties this type has.
     uint JavascriptFunction::GetSpecialPropertyCount() const
     {
-        return (this->HasRestrictedProperties() && !this->IsStrictMode()) ?
-            _countof(specialPropertyIds) :
-            0;
+        return this->HasRestrictedProperties() ? _countof(specialPropertyIds) : 0;
     }
 
     // Returns the list of special non-enumerable properties for the type.
@@ -2579,19 +2583,16 @@ LABEL1:
 
     bool JavascriptFunction::GetPropertyBuiltIns(Var originalInstance, PropertyId propertyId, Var* value, ScriptContext* requestContext, BOOL* result)
     {
-        if (this->HasRestrictedProperties())
+        if (propertyId == PropertyIds::caller && this->HasRestrictedProperties())
         {
-            if (propertyId == PropertyIds::caller)
-            {
-                *result = GetCallerProperty(originalInstance, value, requestContext);
-                return true;
-            }
+            *result = GetCallerProperty(originalInstance, value, requestContext);
+            return true;
+        }
 
-            if (propertyId == PropertyIds::arguments)
-            {
-                *result = GetArgumentsProperty(originalInstance, value, requestContext);
-                return true;
-            }
+        if (propertyId == PropertyIds::arguments && this->HasRestrictedProperties())
+        {
+            *result = GetArgumentsProperty(originalInstance, value, requestContext);
+            return true;
         }
 
         if (propertyId == PropertyIds::length)
@@ -2616,12 +2617,6 @@ LABEL1:
         case PropertyIds::caller:
             if (this->HasRestrictedProperties())
             {
-                if (IsStrictMode())
-                {
-                    const auto thrower = GetLibrary()->GetThrowTypeErrorCallerAccessorFunction();
-                    thrower->GetEntryPoint()(thrower, 1, this);
-                    return false;
-                }
                 isReadOnly = true;
             }
             break;
@@ -2629,12 +2624,6 @@ LABEL1:
         case PropertyIds::arguments:
             if (this->HasRestrictedProperties())
             {
-                if (IsStrictMode())
-                {
-                    const auto thrower = GetLibrary()->GetThrowTypeErrorArgumentsAccessorFunction();
-                    thrower->GetEntryPoint()(thrower, 1, this);
-                    return false;
-                }
                 isReadOnly = true;
             }
             break;

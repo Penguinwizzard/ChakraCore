@@ -1,0 +1,5 @@
+PerfHint: Not optimized : Function has with statement {
+      Function : foo5 [try_with_eval_perfhint.js @ 50, 5]
+  Consequences : Slower lookups, high overhead in the JIT code
+    Suggestion : Avoid using with statement
+}

@@ -22,13 +22,13 @@
 #pragma warning(disable:4075)       // initializers put in unrecognized initialization area on purpose
 #pragma init_seg(".CRT$XCAB")
 
-
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 
 AutoSystemInfo AutoSystemInfo::Data;
 WCHAR AutoSystemInfo::binaryName[MAX_PATH + 1];
 DWORD AutoSystemInfo::majorVersion = 0;
 DWORD AutoSystemInfo::minorVersion = 0;
+
 
 void 
 AutoSystemInfo::Initialize()
@@ -70,27 +70,14 @@ AutoSystemInfo::Initialize()
         disableDebugScopeCapture = false;
     }
 
-    HMODULE hModNtDll = GetModuleHandle(L"ntdll.dll");
-    if (hModNtDll == nullptr)
-    {
-        RaiseException(0, EXCEPTION_NONCONTINUABLE, 0, 0);
-    }
-    typedef void(*PFNRTLGETDEVICEFAMILYINFOENUM)(ULONGLONG*, ULONG*, ULONG*);
-    PFNRTLGETDEVICEFAMILYINFOENUM pfnRtlGetDeviceFamilyInfoEnum =
-        reinterpret_cast<PFNRTLGETDEVICEFAMILYINFOENUM>(GetProcAddress(hModNtDll, "RtlGetDeviceFamilyInfoEnum"));
-
-    if (pfnRtlGetDeviceFamilyInfoEnum)
-    {
-        pfnRtlGetDeviceFamilyInfoEnum(&this->UAPInfo, &this->DeviceFamily, &this->DeviceForm);
-        deviceInfoRetrived = true;
-    }
-    else
-    {
-        deviceInfoRetrived = false;
-    }
+    this->shouldQCMoreFrequently = false;
+    this->supportsOnlyMultiThreadedCOM = false;
+    this->isLowMemoryDevice = false;
 
     // 0 indicates we haven't retrieved the available commit. We get it lazily.
     this->availableCommit = 0;
+
+    ::ChakraInitPerImageSystemPolicy(this);
 }
 
 

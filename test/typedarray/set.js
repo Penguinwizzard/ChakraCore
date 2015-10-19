@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 var typedArrays = [Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array,
         Uint32Array, Float32Array, Float64Array];
 for (var single in typedArrays) {
@@ -81,9 +86,9 @@ function testSetZero(single) {
 
 function testSameArrayBuffer() {
   WScript.Echo('Testing two different types with the same arraybuffer');
-  var buffer = ArrayBuffer(4);
-  var int8array = Int8Array(buffer);
-  var int16array = Int16Array(buffer);
+  var buffer = new ArrayBuffer(4);
+  var int8array = new Int8Array(buffer);
+  var int16array = new Int16Array(buffer);
   int16array[0] = 123;
   int16array[1] = 456;
   int8array[3] = 100;

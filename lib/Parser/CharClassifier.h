@@ -181,7 +181,7 @@ namespace Js
         const OLECHAR* (*skipIdentifierFunc)(LPCOLESTR pcz, const CharClassifier* instance);
         const LPCUTF8 (*skipIdentifierStartEndFunc)(LPCUTF8 psz, LPCUTF8 end, const CharClassifier* instance);
 
-        void initClassifier(WindowsGlobalizationAdapter* globalizationAdapter, DelayLoadWindowsGlobalization *globLibrary, CharClassifierModes identifierSupport, 
+        void initClassifier(ScriptContext* scriptContext, CharClassifierModes identifierSupport, 
             CharClassifierModes whiteSpaceSupport, CharClassifierModes generalCharClassificationSupport, bool codePointSupport, bool isES6UnicodeVerboseEnabled, CharClassifierModes fallbackMode = CharClassifierModes::ES5);
 
     public:

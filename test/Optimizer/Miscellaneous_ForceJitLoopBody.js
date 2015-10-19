@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 function test0() {
     var obj0 = {};
     var obj1 = {};
@@ -55,7 +60,7 @@ test0();
 function test7() {
     var e = -1458200662;
     for(var i = 0; i < 1; ++i) {
-        Int16Array()[e, {}, 2147483650] ? Int16Array()[(-1458200662, 2147483650) & 255] : 0;
+        new Int16Array()[e, {}, 2147483650] ? new Int16Array()[(-1458200662, 2147483650) & 255] : 0;
     }
     function test7a() { e; }
 }

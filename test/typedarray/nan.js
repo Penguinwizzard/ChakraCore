@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 var arrayBuffer = new ArrayBuffer(8);
 var floatArray = new Float32Array(arrayBuffer);
 var doubleArray = new Float64Array(arrayBuffer);

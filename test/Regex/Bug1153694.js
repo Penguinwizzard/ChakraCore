@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 try {
     for (var loopVar2 = 0; loopVar2 < 10; loopVar2++) {
         for (var zdmuqp = 0; zdmuqp < 10; ++zdmuqp) {

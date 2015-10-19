@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 WScript.LoadScriptFile("util.js");
 
 function oneTest(a)
@@ -103,7 +108,7 @@ WScript.Echo("succeed with catching" + e);
 WScript.Echo("test11");
 try
 {
-var test11 = Uint32Array('abcdefg');
+var test11 = new Uint32Array('abcdefg');
 oneTest(test11);
 }
 catch(e)
@@ -112,7 +117,7 @@ WScript.Echo("succeed with catching" + e);
 }
 
 WScript.Echo("test11.1");
-var test11 = Uint32Array(new String('abcdefg'));
+var test11 = new Uint32Array(new String('abcdefg'));
 oneTest(test11);
 
 

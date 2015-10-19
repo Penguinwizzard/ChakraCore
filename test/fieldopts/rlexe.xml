@@ -443,14 +443,6 @@
   </test>
   <test>
     <default>
-      <files>objtypespec-add-3.js</files>
-      <baseline>objtypespec-add-3.baseline</baseline>
-      <compile-flags>-maxinterpretcount:2</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
-    </default>
-  </test>
-  <test>
-    <default>
       <files>objtypespec-add-4.js</files>
       <baseline>objtypespec-add-4.baseline</baseline>
       <compile-flags>-maxinterpretcount:2</compile-flags>

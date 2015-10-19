@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 //FileName: \\bptweb02\users\runtimetoolsbugs\casanalyzed\exprgen\fbl_ie_stage_dev3\150420-1820\x86\nebularun_x86\201504220412425151\ddltd1_bff740d5-3d7b-4ddf-8474-03f7995b9307\bug0.js
 //Configuration: lessmath_variableMRU.xml
 //Testcase Number: 10687

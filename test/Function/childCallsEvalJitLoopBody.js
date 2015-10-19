@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // Due to the eval, 'a' get put in a slot and should not be assigned a non-temp register. The uses of 'a' in the loop should be
 // given a temp register so that they are not loaded/restored from the jitted loop body.
 (function(){

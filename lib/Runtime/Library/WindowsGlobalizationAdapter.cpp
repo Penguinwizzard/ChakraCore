@@ -12,11 +12,6 @@
 
 #include <wrl\implements.h>
 
-#ifdef _M_X64_OR_ARM64
-// TODO: Clean this warning up
-#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
-#endif
-
 #ifdef NTBUILD
 using namespace Windows::Globalization;
 using namespace Windows::Foundation::Collections;
@@ -33,6 +28,7 @@ using namespace ABI::Windows::Foundation::Collections;
 
 #define IfNullReturnError(EXPR, ERROR) do { if (!(EXPR)) { return (ERROR); } } while(FALSE)
 #define IfFailedReturn(EXPR) do { hr = (EXPR); if (FAILED(hr)) { return hr; }} while(FALSE)
+#define IfFailedSetErrorCodeAndReturn(EXPR, hrVariable) do { hr = (EXPR); if (FAILED(hr)) { hrVariable = hr; return hr; }} while(FALSE)
 #define IfFailedGoLabel(expr, label) if (FAILED(expr)) { goto label; }
 #define IfFailedGo(expr) IfFailedGoLabel(expr, LReturn)
 
@@ -260,51 +256,68 @@ namespace Js
         HSTRING_HEADER hStringHdr;
         HRESULT hr;
 
-        IfFailedReturn(delayLoadLibrary->WindowsCreateStringReference(factoryName, wcslen(factoryName), &hStringHdr, &hString));
+        // factoryName will never get truncated as the name of interfaces in Windows.globalization are not that long.
+        IfFailedReturn(delayLoadLibrary->WindowsCreateStringReference(factoryName, static_cast<UINT32>(wcslen(factoryName)), &hStringHdr, &hString));
         AnalysisAssert(hString);
         IfFailedReturn(delayLoadLibrary->DllGetActivationFactory(hString, &factory));
 
         return factory->QueryInterface(__uuidof(T), reinterpret_cast<void**>(instance));
     }
 
-    HRESULT WindowsGlobalizationAdapter::EnsureInitialized(ScriptContext *scriptContext)
+    HRESULT WindowsGlobalizationAdapter::EnsureGlobObjectsInitialized(ScriptContext *scriptContext)
     {
-        return this->EnsureInitialized(this->GetWindowsGlobalizationLibrary(scriptContext), scriptContext->GetConfig()->IsES6UnicodeExtensionsEnabled());
-    }
-
-    HRESULT WindowsGlobalizationAdapter::EnsureInitialized(DelayLoadWindowsGlobalization *library, bool isES6Mode)
-    {
+        DelayLoadWindowsGlobalization *library = this->GetWindowsGlobalizationLibrary(scriptContext);
+        bool isES6Mode = scriptContext->GetConfig()->IsES6UnicodeExtensionsEnabled();
         HRESULT hr = S_OK;
 
-        if (initialized)
+        if (initializedGlobObjects)
         {
             return hr;
         }
-        else if (failedToInitialize)
+        else if (hrForGlobObjectsInit != S_OK)
         {
-            return S_FALSE;
+            return hrForGlobObjectsInit;
         }
 
-        failedToInitialize = true;
 #ifdef ENABLE_INTL_OBJECT
-        IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_Language, &languageFactory));
-        IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_Language, &languageStatics));
-        IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_NumberFormatting_CurrencyFormatter, &currencyFormatterFactory));
-        IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_NumberFormatting_DecimalFormatter, &decimalFormatterFactory));
-        IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_NumberFormatting_PercentFormatter, &percentFormatterFactory));
-        IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_DateTimeFormatting_DateTimeFormatter, &dateTimeFormatterFactory));
-        IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_Calendar, &calendarFactory));
-        IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_NumberFormatting_SignificantDigitsNumberRounder, &significantDigitsRounderActivationFactory));
-        IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_NumberFormatting_IncrementNumberRounder, &incrementNumberRounderActivationFactory));
-       
+        IfFailedSetErrorCodeAndReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_Language, &languageFactory), hrForGlobObjectsInit);
+        IfFailedSetErrorCodeAndReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_Language, &languageStatics), hrForGlobObjectsInit);
+        IfFailedSetErrorCodeAndReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_NumberFormatting_CurrencyFormatter, &currencyFormatterFactory), hrForGlobObjectsInit);
+        IfFailedSetErrorCodeAndReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_NumberFormatting_DecimalFormatter, &decimalFormatterFactory), hrForGlobObjectsInit);
+        IfFailedSetErrorCodeAndReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_NumberFormatting_PercentFormatter, &percentFormatterFactory), hrForGlobObjectsInit);
+        IfFailedSetErrorCodeAndReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_DateTimeFormatting_DateTimeFormatter, &dateTimeFormatterFactory), hrForGlobObjectsInit);
+        IfFailedSetErrorCodeAndReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_NumberFormatting_SignificantDigitsNumberRounder, &significantDigitsRounderActivationFactory), hrForGlobObjectsInit);
+        IfFailedSetErrorCodeAndReturn(GetActivationFactory(library, RuntimeClass_Windows_Globalization_NumberFormatting_IncrementNumberRounder, &incrementNumberRounderActivationFactory), hrForGlobObjectsInit);
 #endif
-        if(isES6Mode)
+        if (isES6Mode)
         {
-            IfFailedReturn(GetActivationFactory(library, RuntimeClass_Windows_Data_Text_UnicodeCharacters, &unicodeStatics));
+            IfFailedSetErrorCodeAndReturn(EnsureDataTextObjectsInitialized(library), hrForGlobObjectsInit);
         }
 
-        failedToInitialize = false;
-        initialized = true;
+        hrForGlobObjectsInit = S_OK;
+        initializedGlobObjects = true;
+
+        return hr;
+        
+    }
+
+    HRESULT WindowsGlobalizationAdapter::EnsureDataTextObjectsInitialized(DelayLoadWindowsGlobalization *library)
+    {
+        HRESULT hr = S_OK;
+
+        if (initializedDataTextObjects)
+        {
+            return hr;
+        }
+        else if (hrForDataTextObjectsInit != S_OK)
+        {
+            return hrForDataTextObjectsInit;
+        }
+
+        IfFailedSetErrorCodeAndReturn(GetActivationFactory(library, RuntimeClass_Windows_Data_Text_UnicodeCharacters, &unicodeStatics), hrForDataTextObjectsInit);
+
+        hrForDataTextObjectsInit = S_OK;
+        initializedDataTextObjects = true;
 
         return hr;
     }
@@ -315,7 +328,10 @@ namespace Js
         HRESULT hr = S_OK;
         HSTRING hString;
         HSTRING_HEADER hStringHdr;
-        IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(languageTag, wcslen(languageTag), &hStringHdr, &hString));
+
+        // OK for languageTag to get truncated as it would pass incomplete languageTag below which
+        // will be rejected by globalization dll
+        IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(languageTag, static_cast<UINT32>(wcslen(languageTag)), &hStringHdr, &hString));
         AnalysisAssert(hString);
         IfFailedReturn(this->languageFactory->CreateLanguage(hString, language));
         return hr;
@@ -327,72 +343,16 @@ namespace Js
         HRESULT hr;
         HSTRING hString;
         HSTRING_HEADER hStringHdr;
-        IfFailThrowHr(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(languageTag, wcslen(languageTag), &hStringHdr, &hString));
+        // OK for languageTag to get truncated as it would pass incomplete languageTag below which
+        // will be rejected by globalization dll
+        IfFailThrowHr(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(languageTag, static_cast<UINT32>(wcslen(languageTag)), &hStringHdr, &hString));
         AnalysisAssert(hString);
         IfFailThrowHr(this->languageStatics->IsWellFormed(hString, &retVal));
         return retVal;
     }
-
-
-    boolean WindowsGlobalizationAdapter::ValidateAndCanonicalizeTimeZone(_In_ ScriptContext* scriptContext, _In_z_ PCWSTR timeZoneId, HSTRING *result)
-    {
-        HRESULT hr = S_OK;
-        HSTRING timeZone;
-        HSTRING_HEADER timeZoneHeader;
-
-        // Construct HSTRING of timeZoneId passed
-        IfFailThrowHr(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(timeZoneId, wcslen(timeZoneId), &timeZoneHeader, &timeZone));
-        Assert(timeZone);
-
-        if (timeZoneCalendar == nullptr)
-        {
-            IfFailThrowHr(this->CreateTimeZoneOnCalendar(this->GetWindowsGlobalizationLibrary(scriptContext), &timeZoneCalendar));
-        }
-        // ChangeTimeZone should fail if this is not a valid time zone
-        hr = timeZoneCalendar->ChangeTimeZone(timeZone);
-        if (hr != S_OK)
-        {
-            return false;
-        }
-        // Retrieve canonicalize timeZone name
-        IfFailThrowHr(timeZoneCalendar->GetTimeZone(result));
-        return true;
-    }
-
-    void WindowsGlobalizationAdapter::GetDefaultTimeZoneId(_In_ ScriptContext* scriptContext, HSTRING *result)
-    {
-        HRESULT hr = S_OK;
-        if (defaultTimeZoneCalendar == nullptr)
-        {
-            IfFailThrowHr(this->CreateTimeZoneOnCalendar(this->GetWindowsGlobalizationLibrary(scriptContext), &defaultTimeZoneCalendar));
-        }
-
-        IfFailThrowHr(defaultTimeZoneCalendar->GetTimeZone(result));
-    }
-
-    void WindowsGlobalizationAdapter::ReleaseWindowsGlobalizationObjects()
-    {
-        if (this->dateTimeFormatterFactory != nullptr)
-        {
-            this->dateTimeFormatterFactory.Detach()->Release();
-        }
-
-        if (this->calendarFactory != nullptr)
-        {
-            this->calendarFactory.Detach()->Release();
-        }
-
-        if (this->timeZoneCalendar != nullptr)
-        {
-            this->timeZoneCalendar.Detach()->Release();
-        }
-
-        if (this->defaultTimeZoneCalendar != nullptr)
-        {
-            this->defaultTimeZoneCalendar.Detach()->Release();
-        }
-    }
    
+        // OK for timeZoneId to get truncated as it would pass incomplete timeZoneId below which
+        // will be rejected by globalization dll
     HRESULT WindowsGlobalizationAdapter::NormalizeLanguageTag(_In_ ScriptContext* scriptContext, _In_z_ PCWSTR languageTag, HSTRING *result)
     {
         HRESULT hr;
@@ -409,7 +369,10 @@ namespace Js
         HRESULT hr;
         HSTRING hString;
         HSTRING_HEADER hStringHdr;
-        IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(currencyCode, wcslen(currencyCode), &hStringHdr, &hString));
+
+        // OK for currencyCode to get truncated as it would pass incomplete currencyCode below which
+        // will be rejected by globalization dll
+        IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(currencyCode, static_cast<UINT32>(wcslen(currencyCode)), &hStringHdr, &hString));
         AnalysisAssert(hString);
         IfFailedReturn(this->currencyFormatterFactory->CreateCurrencyFormatterCode(hString, currencyFormatter));
         return hr;
@@ -425,7 +388,9 @@ namespace Js
         AutoArrayPtr<HSTRING_HEADER> headers(HeapNewArray(HSTRING_HEADER, numLocaleStrings), numLocaleStrings);
         for(uint32 i = 0; i< numLocaleStrings; i++)
         {
-            IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(localeStrings[i],  wcslen(localeStrings[i]), (headers + i), (arr + i)));
+            // OK for localeString to get truncated as it would pass incomplete localeString below which
+            // will be rejected by globalization dll.
+            IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(localeStrings[i], static_cast<UINT32>(wcslen(localeStrings[i])), (headers + i), (arr + i)));
         }
 
         Microsoft::WRL::ComPtr<IIterable<HSTRING>> languages(nullptr);
@@ -435,7 +400,7 @@ namespace Js
         HSTRING_HEADER geoStringHeader;
         IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(L"ZZ", 2, &geoStringHeader, &geoString));
 
-        IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(currencyCode, wcslen(currencyCode), &hStringHdr, &hString));
+        IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(currencyCode, static_cast<UINT32>(wcslen(currencyCode)), &hStringHdr, &hString));
         IfFailedReturn(this->currencyFormatterFactory->CreateCurrencyFormatterCodeContext(hString, languages.Get(), geoString, currencyFormatter));
         return hr;
     }
@@ -448,7 +413,7 @@ namespace Js
         AutoArrayPtr<HSTRING_HEADER> headers(HeapNewArray(HSTRING_HEADER, numLocaleStrings), numLocaleStrings);
         for(uint32 i = 0; i< numLocaleStrings; i++)
         {
-            IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(localeStrings[i],  wcslen(localeStrings[i]), (headers + i), (arr + i)));
+            IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(localeStrings[i], static_cast<UINT32>(wcslen(localeStrings[i])), (headers + i), (arr + i)));
         }
 
         Microsoft::WRL::ComPtr<IIterable<HSTRING>> languages(nullptr);
@@ -470,7 +435,9 @@ namespace Js
         AutoArrayPtr<HSTRING_HEADER> headers(HeapNewArray(HSTRING_HEADER, numLocaleStrings), numLocaleStrings);
         for(uint32 i = 0; i< numLocaleStrings; i++)
         {
-            IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(localeStrings[i],  wcslen(localeStrings[i]), (headers + i), (arr + i)));
+            // OK for localeString to get truncated as it would pass incomplete localeString below which
+            // will be rejected by globalization dll.
+            IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(localeStrings[i], static_cast<UINT32>(wcslen(localeStrings[i])), (headers + i), (arr + i)));
         }
 
         Microsoft::WRL::ComPtr<IIterable<HSTRING>> languages(nullptr);
@@ -497,13 +464,17 @@ namespace Js
         HSTRING fsHString;
         HSTRING_HEADER fsHStringHdr;
 
-        IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(formatString, wcslen(formatString), &fsHStringHdr, &fsHString));
+        // OK for formatString to get truncated as it would pass incomplete formatString below which
+        // will be rejected by globalization dll.
+        IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(formatString, static_cast<UINT32>(wcslen(formatString)), &fsHStringHdr, &fsHString));
 
         AutoArrayPtr<HSTRING> arr(HeapNewArray(HSTRING, numLocaleStrings), numLocaleStrings);
         AutoArrayPtr<HSTRING_HEADER> headers(HeapNewArray(HSTRING_HEADER, numLocaleStrings), numLocaleStrings);
         for(uint32 i = 0; i< numLocaleStrings; i++)
         {
-            IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(localeStrings[i],  wcslen(localeStrings[i]), (headers + i), (arr + i)));
+            // OK for localeString to get truncated as it would pass incomplete localeString below which
+            // will be rejected by globalization dll.
+            IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(localeStrings[i], static_cast<UINT32>(wcslen(localeStrings[i])), (headers + i), (arr + i)));
         }
 
         Microsoft::WRL::ComPtr<IIterable<HSTRING>> languages(nullptr);
@@ -523,32 +494,13 @@ namespace Js
             HSTRING_HEADER clockStringHeader;
 
             IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(L"ZZ", 2, &geoStringHeader, &geoString));
-            IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(calendar, wcslen(calendar), &calStringHeader, &calString));
-            IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(clock, wcslen(clock), &clockStringHeader, &clockString));
+
+            // OK for calendar/clock to get truncated as it would pass incomplete text below which
+            // will be rejected by globalization dll.
+            IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(calendar, static_cast<UINT32>(wcslen(calendar)), &calStringHeader, &calString));
+            IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(clock, static_cast<UINT32>(wcslen(clock)), &clockStringHeader, &clockString));
             IfFailedReturn(this->dateTimeFormatterFactory->CreateDateTimeFormatterContext(fsHString, languages.Get(), geoString, calString, clockString, result));
         }
-        return hr;
-    }
-
-    HRESULT WindowsGlobalizationAdapter::CreateTimeZoneOnCalendar(_In_ DelayLoadWindowsGlobalization *library, __out ::ITimeZoneOnCalendar**  result)
-    {
-        AutoCOMPtr<::ICalendar> calendar;
-
-        HRESULT hr = S_OK;
-
-        // initialize hard-coded default languages
-        AutoArrayPtr<HSTRING> arr(HeapNewArray(HSTRING, 1), 1);
-        AutoArrayPtr<HSTRING_HEADER> headers(HeapNewArray(HSTRING_HEADER, 1), 1);
-        IfFailedReturn(library->WindowsCreateStringReference(L"en-US", _countof(L"en-US") - 1, (headers), (arr)));
-        Microsoft::WRL::ComPtr<IIterable<HSTRING>> defaultLanguages;
-        IfFailedReturn(Microsoft::WRL::MakeAndInitialize<HSTRINGIterable>(&defaultLanguages, arr, 1));
-
-        // Create calendar object
-        IfFailedReturn(this->calendarFactory->CreateCalendarDefaultCalendarAndClock(defaultLanguages.Get(), &calendar));
-
-        // Get ITimeZoneOnCalendar part of calendar object
-        IfFailedReturn(calendar->QueryInterface(__uuidof(::ITimeZoneOnCalendar), reinterpret_cast<void**>(result)));
-
         return hr;
     }
 

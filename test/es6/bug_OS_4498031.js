@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 //Switches: -MaxinterpretCount:1 -MaxSimpleJITRunCount:1 
 //MachineName: BPT48305
 //Build: 150906-1800

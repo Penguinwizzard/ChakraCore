@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // Note: run this using jshost.exe, jc.exe wouldn't find WScript.LoadScriptFile.
 if (typeof(WScript) != "undefined") {
   WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");

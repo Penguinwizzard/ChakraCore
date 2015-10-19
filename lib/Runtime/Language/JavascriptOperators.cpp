@@ -460,7 +460,7 @@ namespace Js
                 JavascriptString* indexStr = JavascriptConversion::ToString(index, scriptContext);
                 PropertyRecord const * debugPropertyRecord;
                 scriptContext->GetOrAddPropertyRecord(indexStr->GetString(), indexStr->GetLength(), &debugPropertyRecord);
-                AssertMsg(!JavascriptOperators::GetProperty(instance, object, debugPropertyRecord->GetPropertyId(), &member, scriptContext), "how did this property come");
+                AssertMsg(!JavascriptOperators::GetProperty(instance, object, debugPropertyRecord->GetPropertyId(), &member, scriptContext), "how did this property come? See OS Bug 2727708 if you see this come from the web");
 #endif
 
                 // If the instance doesn't have the property, typeof result is "undefined".
@@ -2612,23 +2612,6 @@ CommonNumber:
         }
 
         RecyclableObject *recyclableObject = RecyclableObject::FromVar(instance);
-        if (ScriptFunction::Is(instance) && ScriptFunction::FromVar(instance)->GetHomeObj() == instance)
-        {
-            // Only do a prop lookup on a class constructor.
-            if (Var prop = JavascriptOperators::GetProperty(recyclableObject, propertyId, scriptContext))
-            {
-                if (ScriptFunction::Is(prop))
-                {
-                    // Properties that reference super cannot be deleted.
-                    ScriptFunction *scriptFunction = ScriptFunction::FromVar(prop);
-                    if (scriptFunction->HasSuperReference())
-                    {
-                        JavascriptError::ThrowReferenceError(scriptContext, JSERR_DeletePropertyWithSuper,
-                            scriptContext->GetPropertyName(propertyId)->GetBuffer());
-                    }
-                }
-            }
-        }
 
         return scriptContext->GetLibrary()->CreateBoolean(
             JavascriptOperators::DeleteProperty(recyclableObject, propertyId, propertyOperationFlags));
@@ -2649,6 +2632,11 @@ CommonNumber:
         // Set the property using a scope stack rather than an individual instance.
         // Walk the stack until we find an instance that has the property and store
         // the new value there.
+        //
+        // To propagate 'this' pointer, walk up the stack and update scopes
+        // where field '_lexicalThisSlotSymbol' exists and stop at the
+        // scope where field '_lexicalNewTargetSymbol' also exists, which
+        // indicates class constructor.
 
         ScriptContext *const scriptContext = functionBody->GetScriptContext();
 
@@ -2659,6 +2647,7 @@ CommonNumber:
         PropertyValueInfo::SetCacheInfo(&info, functionBody, inlineCache, inlineCacheIndex, !IsFromFullJit);
 
         bool allowUndecInConsoleScope = (propertyOperationFlags & PropertyOperation_AllowUndeclInConsoleScope) == PropertyOperation_AllowUndeclInConsoleScope;
+        bool isLexicalThisSlotSymbol = (propertyId == PropertyIds::_lexicalThisSlotSymbol);
 
         for (uint16 i = 0; i < length; i++)
         {
@@ -2670,6 +2659,11 @@ CommonNumber:
             if (CacheOperators::TrySetProperty<true, true, true, true, true, !TInlineCache::IsPolymorphic, TInlineCache::IsPolymorphic, false>(
                     object, false, propertyId, newValue, scriptContext, propertyOperationFlags, nullptr, &info))
             {
+                if (isLexicalThisSlotSymbol && !JavascriptOperators::HasProperty(object, PropertyIds::_lexicalNewTargetSymbol))
+                {
+                    continue;
+                }
+
                 return;
             }
 
@@ -2691,6 +2685,8 @@ CommonNumber:
                         CacheOperators::CachePropertyWrite(object, false, type, propertyId, &info, scriptContext);
                         JavascriptOperators::CallSetter(func, object, newValue, scriptContext);
                     }
+
+                    Assert(!isLexicalThisSlotSymbol);
                     return;
                 }
                 else if ((flags & Proxy) == Proxy)
@@ -2715,6 +2711,8 @@ CommonNumber:
                         {
                             JavascriptError::ThrowReferenceError(scriptContext, ERRAssignmentToConst);
                         }
+
+                        Assert(!isLexicalThisSlotSymbol);
                         return;
                     }
                 }
@@ -2741,7 +2739,7 @@ CommonNumber:
 
                     scriptContext->GetThreadContext()->SetDisableImplicitFlags(disableImplicitFlags);
 
-                    if (result && scriptContext->IsUndeclBlockVar(value) && !allowUndecInConsoleScope && propertyId != PropertyIds::_lexicalThisSlotSymbol)
+                    if (result && scriptContext->IsUndeclBlockVar(value) && !allowUndecInConsoleScope && !isLexicalThisSlotSymbol)
                     {
                         JavascriptError::ThrowReferenceError(scriptContext, JSERR_UseBeforeDeclaration);
                     }
@@ -2761,9 +2759,17 @@ CommonNumber:
                 {
                     CacheOperators::CachePropertyWrite(object, false, type, propertyId, &info, scriptContext);
                 }
+
+                if (isLexicalThisSlotSymbol && !JavascriptOperators::HasProperty(object, PropertyIds::_lexicalNewTargetSymbol))
+                {
+                    continue;
+                }
+
                 return;
             }
         }
+
+        Assert(!isLexicalThisSlotSymbol);
 
         // If we have console scope and no one in the scope had the property add it to console scope
         if ((length > 0) && ConsoleScopeActivationObject::Is(pDisplay->GetItem(length - 1)))
@@ -3025,9 +3031,22 @@ CommonNumber:
         {
             return HasItem(object, indexVal);
         }
+        else if (propertyRecord == nullptr)
+        {
+            Assert(IsJsNativeObject(object));
+
+#if DBG
+            JavascriptString* indexStr = JavascriptConversion::ToString(index, scriptContext);
+            PropertyRecord const * debugPropertyRecord;
+            scriptContext->GetOrAddPropertyRecord(indexStr->GetString(), indexStr->GetLength(), &debugPropertyRecord);
+            AssertMsg(!JavascriptOperators::HasProperty(object, debugPropertyRecord->GetPropertyId()), "how did this property come? See OS Bug 2727708 if you see this come from the web");
+#endif
+
+            return FALSE;
+        }
         else
         {
-            return propertyRecord && HasProperty(object, propertyRecord->GetPropertyId());
+            return HasProperty(object, propertyRecord->GetPropertyId());
         }
     }
 
@@ -3801,7 +3820,7 @@ CommonNumber:
                 PropertyRecord const * debugPropertyRecord;
                 scriptContext->GetOrAddPropertyRecord(indexStr->GetString(), indexStr->GetLength(), &debugPropertyRecord);
                 AssertMsg(!JavascriptOperators::GetPropertyReference(instance, object, debugPropertyRecord->GetPropertyId(), &value, scriptContext, NULL),
-                          "how did this property come?");
+                          "how did this property come? See OS Bug 2727708 if you see this come from the web");
             }
 #endif
         }
@@ -4427,6 +4446,12 @@ CommonNumber:
                 // This is not supported, Bailout
                 break;
             }
+            // Upper bounds check for source array
+            uint32 end;
+            if (UInt32Math::Add(srcStart, length, &end) || end > ((ArrayObject*)srcInstance)->GetLength())
+            {
+                return false;
+            }
             if (scriptContext->optimizationOverrides.IsEnabledArraySetElementFastPath())
             {
                 INT_PTR vt = VirtualTableInfoBase::GetVirtualTable(dstInstance);
@@ -4605,7 +4630,7 @@ CommonNumber:
                 JavascriptString* indexStr = JavascriptConversion::ToString(index, scriptContext);
                 PropertyRecord const * debugPropertyRecord;
                 scriptContext->GetOrAddPropertyRecord(indexStr->GetString(), indexStr->GetLength(), &debugPropertyRecord);
-                AssertMsg(JavascriptOperators::DeleteProperty(object, debugPropertyRecord->GetPropertyId(), propertyOperationFlags), "delete should have been true");
+                AssertMsg(JavascriptOperators::DeleteProperty(object, debugPropertyRecord->GetPropertyId(), propertyOperationFlags), "delete should have been true. See OS Bug 2727708 if you see this come from the web");
             }
 #endif
         }
@@ -7926,13 +7951,13 @@ CommonNumber:
         }
 
         // TODO (EquivObjTypeSpec): Invent some form of least recently used eviction scheme.
-        uint index = (reinterpret_cast<uint>(type) >> 4) & (EQUIVALENT_TYPE_CACHE_SIZE - 1);
+        uintptr_t index = (reinterpret_cast<uintptr_t>(type) >> 4) & (EQUIVALENT_TYPE_CACHE_SIZE - 1);
         if (cache->nextEvictionVictim == EQUIVALENT_TYPE_CACHE_SIZE)
         {
             __analysis_assume(index < EQUIVALENT_TYPE_CACHE_SIZE);
             if (equivTypes[index] != nullptr)
             {
-                uint initialIndex = index;
+                uintptr_t initialIndex = index;
                 index = (initialIndex + 1) & (EQUIVALENT_TYPE_CACHE_SIZE - 1);
                 for (; index != initialIndex; index = (index + 1) & (EQUIVALENT_TYPE_CACHE_SIZE - 1))
                 {

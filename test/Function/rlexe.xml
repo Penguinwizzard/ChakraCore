@@ -153,14 +153,6 @@
   </test>
   <test>
     <default>
-      <files>deferNestedJitLoopBody.js</files>
-      <baseline>deferNestedJitLoopBody.baseline</baseline>
-      <compile-flags>-force:deferparse -deferNested -forceJitLoopBody</compile-flags>
-      <tags>exclude_ship</tags>
-    </default>
-  </test>
-  <test>
-    <default>
       <files>deferredParsing.js</files>
       <compile-flags>-force:deferparse</compile-flags>
       <baseline>deferredParsing_3.baseline</baseline>
@@ -303,16 +295,6 @@
     <default>
       <files>FuncBody.bug133933.js</files>
       <baseline>FuncBody.bug133933.baseline</baseline>
-      <!--Top Level function parsing on first call to script is turned off here, as this tests order of functions executed-->
-      <compile-flags>-DeferTopLevelTillFirstCall- -trace:FunctionSourceInfoParse</compile-flags>
-      <!-- bug: prints no output for ch -->
-      <tags>exclude_fre,exclude_dynapogo,exclude_ch</tags>
-    </default>
-  </test>
-  <test>
-    <default>
-      <files>FuncBody.bug133933.2.js</files>
-      <baseline>FuncBody.bug133933.2.baseline</baseline>
       <compile-flags>-trace:FunctionSourceInfoParse -off:deferparse</compile-flags>
       <tags>exclude_fre,exclude_dynapogo</tags>
     </default>
@@ -390,12 +372,6 @@
       <baseline />
       <compile-flags>-prejit</compile-flags>
       <tags>exclude_fre,exclude_dynapogo</tags>
-    </default>
-  </test>
-  <test>
-    <default>
-      <files>repro.bug188541.js</files>
-      <baseline>repro.bug188541.baseline</baseline>
     </default>
   </test>
   <test>

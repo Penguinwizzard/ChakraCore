@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="Common.Build.Default.props"/>
   <PropertyGroup>
     <WindowsTargetPlatformVersion Condition="'$(Platform)'=='ARM'">10.0.10240.0</WindowsTargetPlatformVersion>
@@ -15,9 +15,5 @@
     <BuildMachine>$(BranchName)</BuildMachine>
     <BuildMachine Condition="'$(OfficialBuild)'!='true'">$(BuildMachine)($(UserName))</BuildMachine>
     <BuildDate>$([System.DateTime]::Now.ToString("yyMMdd-hhmm"))</BuildDate>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <USE_EXTERNAL_DEPENDENCIES>yes</USE_EXTERNAL_DEPENDENCIES>
   </PropertyGroup>
 </Project> 

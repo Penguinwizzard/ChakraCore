@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // Some of the Array.prototype built-in functions set the length property of the array object and 
 // should throw a TypeError if setting the length property fails. Tests in this file verify that 
 // we throw TypeError when we're supposed to.

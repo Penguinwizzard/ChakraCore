@@ -71,8 +71,7 @@
     <ResourceCompile Include="$(MsBuildThisFileDirectory)ChakraCore.rc">
       <AdditionalIncludeDirectories>
         $(ChakraCoreRootDirectory)lib\common;
-        $(ChakraParserIntDir);
-        $(ManifestsInboxIncludeDirectory);
+        $(ChakraParserIntDir);        
         %(AdditionalIncludeDirectories)
       </AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(BuildMachine)'!=''">%(PreprocessorDefinitions);__BUILDMACHINE__=$(BuildMachine)</PreprocessorDefinitions>

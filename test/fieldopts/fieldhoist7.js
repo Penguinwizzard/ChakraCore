@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 (function(){
   for(var __loopvar0 = 0; obj3.c < (1) && __loopvar0 < 3; obj3.c++ + __loopvar0++) {
     if((obj7.d ^= (1 ? 1 : obj8.length))) {

@@ -93,6 +93,11 @@ public:
     virtual HRESULT HostExceptionFromHRESULT(HRESULT hr, Js::Var* outError) = 0;
 
     virtual HRESULT GetExternalJitData(ExternalJitData id, void *data) = 0;
+    virtual HRESULT SetDispatchInvoke(Js::JavascriptMethod dispatchInvoke) = 0;
+    virtual HRESULT ArrayBufferFromExternalObject(__in Js::RecyclableObject *obj,
+        __out Js::ArrayBuffer **ppArrayBuffer) = 0;
+    virtual Js::JavascriptError* CreateWinRTError(IErrorInfo* perrinfo, Js::RestrictedErrorStrings * proerrstr) = 0;
+    virtual Js::JavascriptFunction* InitializeHostPromiseContinuationFunction() = 0;
 
     Js::ScriptContext* GetScriptContext() { return scriptContext; }
 
@@ -1347,6 +1352,8 @@ private:
         static void RecyclerEnumClassEnumeratorCallback(void *address, size_t size);
         static void RecyclerFunctionCallbackForDebugger(void *address, size_t size);
 
+        static ushort ProcessNameAndGetLength(Js::StringBuilder<ArenaAllocator>* nameBuffer, const WCHAR* name);
+
 #ifdef ASMJS_PLAT
         void TransitionEnvironmentForDebugger(ScriptFunction * scriptFunction);
 #endif
@@ -1409,6 +1416,7 @@ private:
         Js::PropertyId GetFunctionNumber(JavascriptMethod entryPoint);
         
         static const wchar_t* CopyString(const wchar_t* str, size_t charCount, ArenaAllocator* alloc);
+        static charcount_t AppendWithEscapeCharacters(Js::StringBuilder<ArenaAllocator>* stringBuilder, const WCHAR* sourceString, charcount_t sourceStringLen, WCHAR escapeChar, WCHAR charToEscape);
 
     public:
         JavascriptMethod GetNextDynamicAsmJsInterpreterThunk(PVOID* ppDynamicInterpreterThunk);

@@ -37,153 +37,78 @@ Nested templates with substitutions:
 this is a nested (nested template funcreturn!) string template... funcreturns!
 
 Verifying siteObj against a known set of cooked and raw values...
-siteObj[0] = somestring
-siteObj.raw[0] = somestring
 PASSED
 
 Verifying siteObj against a known set of cooked and raw values...
-siteObj[0] = \
-siteObj.raw[0] = \\
 PASSED
 
 Verifying siteObj against a known set of cooked and raw values...
-siteObj[0] = 
-siteObj.raw[0] = 
 PASSED
 
 Verifying siteObj against a known set of cooked and raw values...
-siteObj[0] = ±
-siteObj.raw[0] = \u00b1
 PASSED
 
 Verifying siteObj against a known set of cooked and raw values...
-siteObj[0] = 
-siteObj.raw[0] = \ua48c
 PASSED
 
 Verifying siteObj against a known set of cooked and raw values...
-siteObj[0] = #
-siteObj.raw[0] = \u0023
 PASSED
 
 Verifying siteObj against a known set of cooked and raw values...
-siteObj[0] = ø
-siteObj.raw[0] = \xF8
 PASSED
 
 Verifying siteObj against a known set of cooked and raw values...
-siteObj[0] = h
-siteObj.raw[0] = \h
 PASSED
 
 Verifying siteObj against a known set of cooked and raw values...
-siteObj[0] = "
-siteObj.raw[0] = \"
 PASSED
 
 Verifying siteObj against a known set of cooked and raw values...
-siteObj[0] = 
-
-siteObj.raw[0] = \n
 PASSED
 
 Verifying siteObj against a known set of cooked and raw values...
-siteObj[0] = 
-siteObj.raw[0] = \r
 PASSED
 
 Verifying siteObj against a known set of cooked and raw values...
-siteObj[0] = 
-
-siteObj.raw[0] = \r\n
 PASSED
 
 Verifying siteObj against a known set of cooked and raw values...
-siteObj[0] = 
-
-
-siteObj.raw[0] = \r\n\r\n
 PASSED
 
 Verifying siteObj against a known set of cooked and raw values...
-siteObj[0] = 
-
-
-
-
-
-
-
-
-
-
-siteObj.raw[0] = \n\n\n\n\n\n\n\n\n\n
 PASSED
 
 Verifying siteObj against a known set of cooked and raw values...
-siteObj[0] = $
-siteObj.raw[0] = $
 PASSED
 
 Verifying siteObj against a known set of cooked and raw values...
-siteObj[0] = "bunch of escape chars 	
-a"
-siteObj.raw[0] = \"bunch of escape chars \v\t\n\b\a\"
 PASSED
 
 Verifying siteObj against a known set of cooked and raw values...
-siteObj[0] = rest of escape chars 	
-siteObj.raw[0] = rest of escape chars \b\t\f\r
 PASSED
 
 Verifying siteObj against a known set of cooked and raw values...
-siteObj[0] = 
-siteObj.raw[0] = \
-
 PASSED
 
 Verifying siteObj against a known set of cooked and raw values...
-siteObj[0] = 
-
-siteObj.raw[0] = 
-
 PASSED
 
 Verifying siteObj against a known set of cooked and raw values...
-siteObj[0] = 
-
-siteObj.raw[0] = 
-
 PASSED
 
 Verifying siteObj against a known set of cooked and raw values...
-siteObj[0] = 
-siteObj.raw[0] = \
-
 PASSED
 
 Verifying siteObj against a known set of cooked and raw values...
-siteObj[0] = 
-
-
-siteObj.raw[0] = 
-
-
 PASSED
 
 Verifying siteObj against a known set of cooked and raw values...
-siteObj[0] = 
-siteObj.raw[0] = 
 PASSED
 
 Verifying siteObj against a known set of cooked and raw values...
-siteObj[0] = 
-siteObj.raw[0] = 
 PASSED
 
 Verifying siteObj against a known set of cooked and raw values...
-siteObj[0] = $ $ $ {} } { }} {{
-siteObj.raw[0] = $ $ $ {} } { }} {{
 PASSED
 
 string literal pre string expression pre \0 string expression post string literal post

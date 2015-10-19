@@ -58,6 +58,13 @@ __declspec(noinline) void Amd64StackWalkerOutOfContexts_fatal_error(
     ReportFatalException(context, E_UNEXPECTED, Fatal_Amd64StackWalkerOutOfContexts, scenario);
 }
 
+__declspec(noinline) void FailedToBox_OOM_fatal_error(
+    __in ULONG_PTR context)
+{
+    int scenario = 1;
+    ReportFatalException(context, E_UNEXPECTED, Fatal_FailedToBox_OUTOFMEMORY, scenario);
+}
+
 #if defined(RECYCLER_WRITE_BARRIER) && defined(_M_X64_OR_ARM64)
 __declspec(noinline) void X64WriteBarrier_OOM_fatal_error()
 {

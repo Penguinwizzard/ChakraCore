@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // BLUE 535258
 var test = function()
 {
@@ -190,7 +195,7 @@ function test0() {
   };
   
   obj1.method1 = func4;
-  var ui16 = Uint16Array();
+  var ui16 = new Uint16Array();
   var func12 = function () {
     // bar();
     obj1.method1.apply({}, arguments);

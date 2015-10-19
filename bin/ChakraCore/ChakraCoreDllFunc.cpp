@@ -140,3 +140,8 @@ EXTERN_C BOOL WINAPI DllMain(HINSTANCE hmod, DWORD dwReason, PVOID pvReserved)
     }
 }
 #endif // _WIN32 || _WIN64
+
+void ChakraInitPerImageSystemPolicy(AutoSystemInfo * autoSystemInfo)
+{
+    /* Do Nothing */
+}

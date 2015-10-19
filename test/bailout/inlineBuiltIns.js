@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // Notes on running this script:
 // - rldirs.xml is set up in the following way so that this script is called 2 times:
 //   - First, it's called for interpreted variant.

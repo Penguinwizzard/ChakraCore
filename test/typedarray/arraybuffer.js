@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 WScript.Echo("new ArrayBuffer without argument");
 var a = new ArrayBuffer();
 WScript.Echo(a.byteLength);
@@ -39,7 +44,7 @@ WScript.Echo(i);
 
 WScript.Echo("arraybuffer.prototype")
 var f = Object.getPrototypeOf(e);
-var g = f.constructor(20);
+var g = new f.constructor(20);
 WScript.Echo(g)
 WScript.Echo(g.byteLength);
 WScript.Echo(typeof f);

@@ -19,7 +19,6 @@
     <ClCompile Include="$(MsBuildThisFileDirectory)SIMDInt16x8OperationX86X64.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)CharStringCache.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)ArrayBuffer.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)AsyncDebug.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)BoundFunction.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)BufferStringBuilder.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)CommonExternalApiImpl.cpp" />
@@ -33,12 +32,10 @@
     <ClCompile Include="$(MsBuildThisFileDirectory)EtwTrace.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)Exception.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)ExpirableObject.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)HostLogger.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)IteratorObjectEnumerator.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptArrayIterator.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptBuiltInFunctions.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptEnumeratorIterator.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptErrorDebug.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptExternalFunction.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptGenerator.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptGeneratorFunction.cpp" />
@@ -63,7 +60,6 @@
     <ClCompile Include="$(MsBuildThisFileDirectory)JSONScanner.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JSONString.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)ProfileString.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)RoCausality.Win7.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)RootObjectBase.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)RuntimeFunction.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)ScriptFunction.cpp" />
@@ -132,6 +128,9 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)SIMDInt8x16OperationX86X64.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSIMDInt8x16.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)RuntimeLibraryPch.cpp" />
+    <ClCompile Include="ExternalLibraryBase.cpp" />
+    <ClCompile Include="IntlEngineInterfaceExtensionObject.cpp" />
+    <ClCompile Include="JavascriptErrorDebug.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\DiagGlobalList.h" />
@@ -152,9 +151,7 @@
     <ClInclude Include="SIMDInt16x8Lib.h" />
     <ClInclude Include="SIMDInt16x8Operation.h" />
     <ClInclude Include="SIMDShuffleMasks.h" />
-    <ClInclude Include="LibraryFunction.h" />
     <ClInclude Include="ArrayBuffer.h" />
-    <ClInclude Include="AsyncDebug.h" />
     <ClInclude Include="BoundFunction.h" />
     <ClInclude Include="BufferStringBuilder.h" />
     <ClInclude Include="BuiltInFlags.h" />
@@ -166,14 +163,12 @@
     <ClInclude Include="DelayLoadLibrary.h" />
     <ClInclude Include="DOMFastPathInfo.h" />
     <ClInclude Include="EngineInterfaceObject.h" />
-    <ClInclude Include="EngineInterfaceObjectBuiltIns.h" />
     <ClInclude Include="Entropy.h" />
     <ClInclude Include="ES5ArrayIndexEnumerator.h" />
     <ClInclude Include="ES5ArrayNonIndexEnumerator.h" />
     <ClInclude Include="EtwTrace.h" />
     <ClInclude Include="Exception.h" />
     <ClInclude Include="ExpirableObject.h" />
-    <ClInclude Include="HostLogger.h" />
     <ClInclude Include="HostObjectBase.h" />
     <ClInclude Include="InJavascript\intl.js.bc.32b.h" />
     <ClInclude Include="InJavascript\intl.js.bc.64b.h" />
@@ -188,7 +183,6 @@
     <ClInclude Include="JavascriptBuiltInFunctionList.h" />
     <ClInclude Include="JavascriptBuiltInFunctions.h" />
     <ClInclude Include="JavascriptEnumeratorIterator.h" />
-    <ClInclude Include="JavascriptErrorDebug.h" />
     <ClInclude Include="JavascriptExternalFunction.h" />
     <ClInclude Include="JavascriptGenerator.h" />
     <ClInclude Include="JavascriptGeneratorFunction.h" />
@@ -209,13 +203,11 @@
     <ClInclude Include="JavascriptTypedObjectSlotAccessorFunction.h" />
     <ClInclude Include="JavascriptWeakMap.h" />
     <ClInclude Include="JavascriptWeakSet.h" />
-    <ClInclude Include="JavascriptWinRTFunction.h" />
     <ClInclude Include="JSONParser.h" />
     <ClInclude Include="JSONScanner.h" />
     <ClInclude Include="JSONString.h" />
     <ClInclude Include="MapOrSetDataList.h" />
     <ClInclude Include="ProfileString.h" />
-    <ClInclude Include="RoCausality.Win7.h" />
     <ClInclude Include="RootObjectBase.h" />
     <ClInclude Include="RuntimeFunction.h" />
     <ClInclude Include="SameValueComparer.h" />
@@ -285,6 +277,9 @@
     <ClInclude Include="SIMDInt8x16Operation.h" />
     <ClInclude Include="JavascriptSIMDInt8x16.h" />
     <ClInclude Include="RuntimeLibraryPch.h" />
+    <ClInclude Include="ExternalLibraryBase.h" />
+    <ClInclude Include="IntlEngineInterfaceExtensionObject.h" />
+    <ClInclude Include="JavascriptErrorDebug.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ConcatString.inl" />

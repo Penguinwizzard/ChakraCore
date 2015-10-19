@@ -5,8 +5,10 @@
 //----------------------------------------------------------------------------
 // Automatic system info getter at startup
 //----------------------------------------------------------------------------
+
 class AutoSystemInfo : public SYSTEM_INFO
 {
+    friend void ChakraInitPerImageSystemPolicy(AutoSystemInfo *);  // The hosting DLL provides the implementation of this function.
 public:
     static AutoSystemInfo Data;       
     uint GetAllocationGranularityPageCount() const;
@@ -98,29 +100,25 @@ private:
 
     static const DWORD INVALID_VERSION = (DWORD)-1;
 
-    ULONG64 availableCommit;
-    ULONGLONG UAPInfo;
-    ULONG DeviceFamily;
-    ULONG DeviceForm;
-    bool deviceInfoRetrived;
+    ULONG64 availableCommit;    
+    bool shouldQCMoreFrequently;
+    bool supportsOnlyMultiThreadedCOM;
+    bool isLowMemoryDevice;
 
 public:
     static bool ShouldQCMoreFrequently()
     { 
-        return Data.deviceInfoRetrived
-            && (Data.DeviceFamily == 0x00000004 /*DEVICEFAMILYINFOENUM_MOBILE*/);
+        return Data.shouldQCMoreFrequently;
     }
 
     static bool SupportsOnlyMultiThreadedCOM()
     {
-        return Data.deviceInfoRetrived
-            && (Data.DeviceFamily == 0x00000004 /*DEVICEFAMILYINFOENUM_MOBILE*/); //TODO: pick some other platform to the list
+        return Data.supportsOnlyMultiThreadedCOM;
     }
 
     static bool IsLowMemoryDevice()
     {
-        return Data.deviceInfoRetrived
-            && (Data.DeviceFamily == 0x00000004 /*DEVICEFAMILYINFOENUM_MOBILE*/); //TODO: pick some other platform to the list
+        return Data.isLowMemoryDevice;
     }
 };
 

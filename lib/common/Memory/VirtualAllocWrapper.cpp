@@ -4,10 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 #include "CommonMemoryPch.h"
 
-#ifdef _M_X64_OR_ARM64
-// TODO: Clean this warning up
-#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
-#endif
+
 
 
 /*
@@ -187,7 +184,8 @@ LPVOID PreReservedVirtualAllocWrapper::Alloc(LPVOID lpAddress, size_t dwSize, DW
         char * addressToCommit = nullptr;
 
         uint freeSegmentsBVIndex = BVInvalidIndex;
-        uint requestedNumOfSegments = dwSize / (AutoSystemInfo::Data.GetAllocationGranularityPageSize());
+        size_t requestedNumOfSegments = dwSize / (AutoSystemInfo::Data.GetAllocationGranularityPageSize());
+        Assert(requestedNumOfSegments <= MAXUINT32);
 
         if (lpAddress == nullptr)
         {
@@ -204,7 +202,7 @@ LPVOID PreReservedVirtualAllocWrapper::Alloc(LPVOID lpAddress, size_t dwSize, DW
                     PreReservedHeapTrace(L"No more space to commit in PreReserved Memory region.\n");
                     return nullptr;
                 }
-            } while (!freeSegments.TestRange(freeSegmentsBVIndex, requestedNumOfSegments));
+            } while (!freeSegments.TestRange(freeSegmentsBVIndex, static_cast<uint>(requestedNumOfSegments)));
 
             uint offset = freeSegmentsBVIndex * AutoSystemInfo::Data.GetAllocationGranularityPageSize();
             addressToCommit = (char*) preReservedStartAddress + offset;
@@ -261,7 +259,7 @@ LPVOID PreReservedVirtualAllocWrapper::Alloc(LPVOID lpAddress, size_t dwSize, DW
         {
             Assert(commitedAddress == addressToCommit);
             Assert(requestedNumOfSegments != 0);
-            freeSegments.ClearRange(freeSegmentsBVIndex, requestedNumOfSegments);
+            freeSegments.ClearRange(freeSegmentsBVIndex, static_cast<uint>(requestedNumOfSegments));
         }
 
         PreReservedHeapTrace(L"MEM_COMMIT: StartAddress: 0x%p of size: 0x%x * 0x%x bytes \n", commitedAddress, requestedNumOfSegments, AutoSystemInfo::Data.GetAllocationGranularityPageSize());
@@ -298,7 +296,8 @@ PreReservedVirtualAllocWrapper::Free(LPVOID lpAddress, size_t dwSize, DWORD dwFr
         Assert(dwSize % AutoSystemInfo::PageSize == 0);
 #pragma warning(suppress: 6250)
         BOOL success = VirtualFree(lpAddress, dwSize, MEM_DECOMMIT);
-        uint requestedNumOfSegments = dwSize / AutoSystemInfo::Data.GetAllocationGranularityPageSize();
+        size_t requestedNumOfSegments = dwSize / AutoSystemInfo::Data.GetAllocationGranularityPageSize();
+        Assert(requestedNumOfSegments <= MAXUINT32);
 
         if (success)
         {
@@ -314,7 +313,7 @@ PreReservedVirtualAllocWrapper::Free(LPVOID lpAddress, size_t dwSize, DWORD dwFr
 
             BVIndex freeSegmentsBVIndex = (BVIndex) (((uintptr_t) lpAddress - (uintptr_t) preReservedStartAddress) / AutoSystemInfo::Data.GetAllocationGranularityPageSize());
             AssertMsg(freeSegmentsBVIndex < PreReservedAllocationSegmentCount, "Invalid Index ?");
-            freeSegments.SetRange(freeSegmentsBVIndex, requestedNumOfSegments);
+            freeSegments.SetRange(freeSegmentsBVIndex, static_cast<uint>(requestedNumOfSegments));
             PreReservedHeapTrace(L"MEM_RELEASE: Address: 0x%p of size: 0x%x * 0x%x bytes\n", lpAddress, requestedNumOfSegments, AutoSystemInfo::Data.GetAllocationGranularityPageSize());
         }
         return success;

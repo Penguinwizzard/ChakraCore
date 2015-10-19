@@ -1173,6 +1173,8 @@ template<typename EncodingPolicy>
 template<bool stringTemplateMode, bool createRawString>
 tokens Scanner<EncodingPolicy>::ScanStringConstant(OLECHAR delim, EncodedCharPtr *pp)
 {
+    static_assert((stringTemplateMode && createRawString) || (!stringTemplateMode && !createRawString), "stringTemplateMode and createRawString must have the same value");
+
     OLECHAR ch, c, rawch;
     int wT;
     EncodedCharPtr p = *pp;
@@ -1440,31 +1442,30 @@ LTwoHex:
             case '3':
                 // 1 to 3 octal digits
 
+                ch -= '0';
+
                 // Octal escape sequences are not allowed inside string template literals
                 if (stringTemplateMode)
                 {
-                    errorType = (uint)ERRES5NoOctal;
-                    goto ReturnScanError;
+                    c = PeekFirst(p, last);
+                    if (ch != 0 || (c >= '0' && c <= '7'))
+                    {
+                        errorType = (uint)ERRES5NoOctal;
+                        goto ReturnScanError;
+                    }
+                    break;
                 }
 
-                ch -= '0';
                 wT = (c = ReadFirst(p, last)) - '0';
                 if ((wchar_t)wT > 7)
                 {
-                    if (ch != 0  || ((wchar_t)wT <= 9))
+                    if (ch != 0 || ((wchar_t)wT <= 9))
                     {
                         m_OctOrLeadingZeroOnLastTKNumber = true;
                     }
                     p--;
                     break;
                 }
-
-                // Append the first digit (use non-processed char)
-                m_tempChBufSecondary.AppendCh<createRawString>(rawch);
-
-                // Keep the digit character for the raw string - we don't convert the value to octal for raw.
-                if (createRawString)
-                    rawch = c;
 
                 m_OctOrLeadingZeroOnLastTKNumber = true;
                 ch = static_cast< OLECHAR >(ch * 8 + wT);
@@ -1493,13 +1494,6 @@ LOneOctal:
                     p--;
                     break;
                 }
-                
-                // Append the first (or second) digit (saved from above case or from the original read)
-                m_tempChBufSecondary.AppendCh<createRawString>(rawch);
-
-                // Keep the digit character for the raw string - we don't convert the value to octal for raw.
-                if (createRawString)
-                    rawch = c;
 
                 ch = static_cast< OLECHAR >(ch * 8 + wT);
                 break;

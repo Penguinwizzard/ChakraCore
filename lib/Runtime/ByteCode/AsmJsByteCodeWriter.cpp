@@ -5,19 +5,15 @@
 #include "RuntimeByteCodePch.h"
 #include "ByteCode\AsmJsByteCodeWriter.h"
 
-#ifdef _M_X64_OR_ARM64
-// TODO: Clean this warning up
-#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
-#endif
 
 namespace Js {
 
     template <>
-    __inline size_t ByteCodeWriter::Data::EncodeT<SmallLayout>(OpCodeAsmJs op, ByteCodeWriter* writer, bool isPatching)
+    __inline uint ByteCodeWriter::Data::EncodeT<SmallLayout>(OpCodeAsmJs op, ByteCodeWriter* writer, bool isPatching)
     {
         Assert(op < Js::OpCodeAsmJs::ByteCodeLast);
 
-        size_t offset;
+        uint offset;
         if (op <= Js::OpCode::MaxByteSizedOpcodes)
         {
             byte byteop = (byte)op;
@@ -38,7 +34,7 @@ namespace Js {
     }
 
     template <LayoutSize layoutSize>
-    __inline size_t ByteCodeWriter::Data::EncodeT(OpCodeAsmJs op, ByteCodeWriter* writer, bool isPatching)
+    __inline uint ByteCodeWriter::Data::EncodeT(OpCodeAsmJs op, ByteCodeWriter* writer, bool isPatching)
     {
         Assert(op < Js::OpCodeAsmJs::ByteCodeLast);
 
@@ -47,7 +43,7 @@ namespace Js {
             (layoutSize == LargeLayout? Js::OpCodeAsmJs::LargeLayoutPrefix : Js::OpCodeAsmJs::MediumLayoutPrefix) :
             (layoutSize == LargeLayout? Js::OpCodeAsmJs::ExtendedLargeLayoutPrefix : Js::OpCodeAsmJs::ExtendedMediumLayoutPrefix));
 
-        size_t offset = Write(&exop, sizeof(byte));
+        uint offset = Write(&exop, sizeof(byte));
         byte byteop = (byte)op;
         Write(&byteop, sizeof(byte));
 
@@ -59,11 +55,11 @@ namespace Js {
     }
 
     template <LayoutSize layoutSize>
-    __inline size_t ByteCodeWriter::Data::EncodeT(OpCodeAsmJs op, const void* rawData, int byteSize, ByteCodeWriter* writer, bool isPatching)
+    __inline uint ByteCodeWriter::Data::EncodeT(OpCodeAsmJs op, const void* rawData, int byteSize, ByteCodeWriter* writer, bool isPatching)
     {
         AssertMsg((rawData != nullptr) && (byteSize < 100), "Ensure valid data for opcode");
 
-        size_t offset = EncodeT<layoutSize>(op, writer, isPatching);
+        uint offset = EncodeT<layoutSize>(op, writer, isPatching);
         Write(rawData, byteSize);
         return offset;
     }
@@ -464,13 +460,13 @@ namespace Js {
         m_loopHeaders->Item(loopId).endOffset = m_byteCodeData.GetCurrentOffset();
     }
 
-    void AsmJsByteCodeWriter::AddJumpOffset( Js::OpCodeAsmJs op, ByteCodeLabel labelId, size_t fieldByteOffset )
+    void AsmJsByteCodeWriter::AddJumpOffset( Js::OpCodeAsmJs op, ByteCodeLabel labelId, uint fieldByteOffset )
     {
         AssertMsg(fieldByteOffset < 100, "Ensure valid field offset");
         CheckOpen();
         CheckLabel(labelId);
 
-        size_t jumpByteOffset = m_byteCodeData.GetCurrentOffset() - fieldByteOffset;
+        uint jumpByteOffset = m_byteCodeData.GetCurrentOffset() - fieldByteOffset;
 
         //
         // Branch targets are created in two passes:

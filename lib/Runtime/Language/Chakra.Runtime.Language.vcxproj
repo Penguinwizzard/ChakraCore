@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Condition="'$(ChakraBuildPathImported)'!='true'" Project="$(SolutionDir)Chakra.Build.Paths.props" />
   <Import Project="$(BuildConfigPropsPath)Chakra.Build.ProjectConfiguration.props" />
   <PropertyGroup Label="Globals">
@@ -29,8 +29,6 @@
           $(MSBuildThisFileDirectory)..\..\Common;
           $(MSBuildThisFileDirectory)..\..\Parser;
           $(MSBuildThisFileDirectory)..\..\Backend;
-          $(ChakraManifestsIncludeDirectory);
-          $(ManifestsInboxIncludeDirectory);
           %(AdditionalIncludeDirectories)
       </AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -204,18 +202,11 @@
     <None Include="InlineCachePointerArray.inl" />
     <None Include="InterpreterHandler.inl" />
     <None Include="InterpreterHandlerAsmJs.inl" />
-    <None Include="InterpreterLoop.inl" />
-    <None Include="JavascriptExceptionOperators.inl" />
+    <None Include="InterpreterLoop.inl" />    
     <None Include="JavascriptMathOperators.inl" />    
     <None Include="JavascriptConversion.inl" />
     <None Include="JavascriptOperators.inl" />
     <None Include="ScriptContext.inl" />    
-  </ItemGroup>
-  <!-- In Razzle build, we are still rely on the publish directory -->
-  <ItemGroup>
-    <ProjectReference Condition="'$(USE_EXTERNAL_DEPENDENCIES)'!='yes'" Include="..\..\..\..\publish\Publish.vcxproj">
-      <Project>{1876e800-ad77-48c4-a2f7-e5265f24ac35}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(BuildConfigPropsPath)Chakra.Build.targets" Condition="exists('$(BuildConfigPropsPath)Chakra.Build.targets')"/>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 //Configuration: TrackIntUsage.xml
 //Testcase Number: 27886
 //Switches:   -maxinterpretcount:1 -maxsimplejitruncount:2  -force:rejit -on:fieldpre  -force:atom -force:fixdataprops

@@ -25,41 +25,39 @@ namespace Js
         int32 mappedLength;
         int32 offset = 0;
         double numberOffset = 0;
-        ArrayBuffer* arrayBuffer = NULL;
+        ArrayBuffer* arrayBuffer = nullptr;
         DataView* dataView;
+
+        //1.    If NewTarget is undefined, throw a TypeError exception.
+        if (!(callInfo.Flags & CallFlags_New) || (newTarget && JavascriptOperators::IsUndefinedObject(newTarget)))
+        {
+            JavascriptError::ThrowTypeError(scriptContext, JSERR_ClassConstructorCannotBeCalledWithoutNew, L"DataView");
+        }
 
         if (args.Info.Count < 2)
         {
-            JavascriptError::ThrowTypeError(scriptContext, JSERR_DataView_NeedArgument, L"arrayBuffer");
+            JavascriptError::ThrowTypeError(scriptContext, JSERR_DataView_NeedArgument, L"buffer");
         }
 
-#ifdef ENABLE_PROJECTION
         // Currently the only reason we check for an external object is projection related, so it remains under conditional compilation.
         RecyclableObject* jsArraySource = NULL;
         if (JavascriptOperators::IsObject(args[1]) && JavascriptConversion::ToObject(args[1], scriptContext, &jsArraySource))
         {
-            JavascriptLibrary::ArrayBufferFromExternalObject pfArrayBufferFromExternalObject = jsArraySource->GetLibrary()->getpfArrayBufferFromExternalObject();
-            // If the function pointer is null then Projection has not been initialized yet and we are not interested in this object.
-            if (pfArrayBufferFromExternalObject != nullptr && jsArraySource->IsExternal())
+            HRESULT hr = scriptContext->GetHostScriptContext()->ArrayBufferFromExternalObject(jsArraySource, &arrayBuffer);
+            switch (hr)
             {
-                OUTPUT_TRACE(TypedArrayPhase, L"Suspected Projection ArrayBuffer source - attempting to get buffer\n");
-                // Check for potential external object ArrayBuffer
-                HRESULT hr = (*pfArrayBufferFromExternalObject)(jsArraySource, &arrayBuffer);
-                switch (hr)
-                {
-                case S_OK:
-                case S_FALSE:
-                    // Both of these cases will be handled by the arrayBuffer null check.
-                    break;
+            case S_OK:
+            case S_FALSE:
+                // Both of these cases will be handled by the arrayBuffer null check.
+                break;
 
-                default:
-                    // Any FAILURE HRESULT or unexpected HRESULT.
-                    JavascriptError::ThrowTypeError(scriptContext, JSERR_DataView_InvalidArugment, L"arrayBuffer");
-                    break;
-                }
+            default:
+                // Any FAILURE HRESULT or unexpected HRESULT.
+                JavascriptError::ThrowTypeError(scriptContext, JSERR_DataView_InvalidArugment, L"buffer");
+                break;
             }
         }
-#endif
+
         //2.    If Type(buffer) is not Object, throw a TypeError exception.
         //3.    If buffer does not have an [[ArrayBufferData]] internal slot, throw a TypeError exception.
         if (arrayBuffer == nullptr)
@@ -70,7 +68,7 @@ namespace Js
             }
             else
             {
-                JavascriptError::ThrowTypeError(scriptContext, JSERR_DataView_NeedArgument, L"arrayBuffer");
+                JavascriptError::ThrowTypeError(scriptContext, JSERR_DataView_NeedArgument, L"buffer");
             }
         }
 
@@ -88,7 +86,7 @@ namespace Js
                 numberOffset != offset)
             {
                 JavascriptError::ThrowRangeError(
-                    scriptContext, JSERR_DataView_InvalidArugment, L"offset");
+                    scriptContext, JSERR_DataView_InvalidArugment, L"byteOffset");
             }
         }
 
@@ -105,7 +103,7 @@ namespace Js
         if ((uint32)offset > byteLength)
         {
             JavascriptError::ThrowRangeError(
-                scriptContext, JSERR_DataView_InvalidArugment, L"offset");
+                scriptContext, JSERR_DataView_InvalidArugment, L"byteOffset");
         }
 
         //11.   If byteLength is undefined, then
@@ -125,7 +123,7 @@ namespace Js
                 if ((uint32)(mappedLength + offset) > byteLength)
                 {
                     JavascriptError::ThrowRangeError(
-                        scriptContext, JSERR_DataView_InvalidArugment, L"length");
+                        scriptContext, JSERR_DataView_InvalidArugment, L"byteLength");
                 }
             }
         else

@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 function test0() {
   var obj0 = {};
   var obj1 = {};
@@ -17,8 +22,8 @@ function test0() {
   obj0.method1 = func2;
   obj1.method0 = func4;
   Object.prototype.method1 = obj0.method1;
-  var f32 = Float32Array();
-  var uic8 = Uint8ClampedArray();
+  var f32 = new Float32Array();
+  var uic8 = new Uint8ClampedArray();
   var IntArr0 = [];
   var d = -522312766;
   var e = -3112571546786760000;

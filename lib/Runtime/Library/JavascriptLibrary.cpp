@@ -338,9 +338,6 @@ namespace Js
                 DeferredTypeHandler<InitializeDatePrototype>::GetDefaultInstance()));   
         }
 
-#ifdef ENABLE_PROJECTION
-        winrtErrorPrototype = nullptr;
-#endif
         if (scriptContext->GetConfig()->IsES6PrototypeChain())
         {
             errorPrototype = DynamicObject::New(recycler,
@@ -370,15 +367,6 @@ namespace Js
             uriErrorPrototype = DynamicObject::New(recycler,
                 DynamicType::New(scriptContext, TypeIds_Object, errorPrototype, nullptr,
                 DeferredTypeHandler<InitializeURIErrorPrototype>::GetDefaultInstance()));
-
-#ifdef ENABLE_PROJECTION
-            if (scriptContext->GetConfig()->IsWinRTEnabled())
-            {
-                winrtErrorPrototype = DynamicObject::New(recycler,
-                    DynamicType::New(scriptContext, TypeIds_Object, errorPrototype, nullptr,
-                    DeferredTypeHandler<InitializeWinRTErrorPrototype>::GetDefaultInstance()));
-            }
-#endif
         }
         else
         {
@@ -416,16 +404,6 @@ namespace Js
                 DynamicType::New(scriptContext, TypeIds_Error, errorPrototype, nullptr,
                 DeferredTypeHandler<InitializeURIErrorPrototype>::GetDefaultInstance()),
                 /*isExternalError*/FALSE, /*isPrototype*/TRUE);
-
-#ifdef ENABLE_PROJECTION
-            if (scriptContext->GetConfig()->IsWinRTEnabled())
-            {
-                winrtErrorPrototype = RecyclerNew(this->GetRecycler(), JavascriptError,
-                    DynamicType::New(scriptContext, TypeIds_Error, errorPrototype, nullptr,
-                    DeferredTypeHandler<InitializeWinRTErrorPrototype>::GetDefaultInstance()),
-                    /*isExternalError*/FALSE, /*isPrototype*/TRUE);
-            }
-#endif
         }
 
         functionPrototype = RecyclerNew(recycler, JavascriptFunction,
@@ -619,14 +597,6 @@ namespace Js
         uriErrorType = DynamicType::New(scriptContext, TypeIds_Error, uriErrorPrototype, nullptr,
             SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
 
-#ifdef ENABLE_PROJECTION
-        if (config->IsWinRTEnabled())
-        {
-            winrtErrorType = DynamicType::New(scriptContext, TypeIds_Error, winrtErrorPrototype, nullptr,
-                SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
-        }
-#endif
-
         symbolTypeStatic = nullptr;
         symbolTypeDynamic = nullptr;
         withType    = nullptr;
@@ -675,10 +645,6 @@ namespace Js
         // Initialize Date types
         dateType = DynamicType::New(scriptContext, TypeIds_Date, datePrototype, nullptr,
             SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
-#ifdef ENABLE_PROJECTION
-        winrtDateType = DynamicType::New(scriptContext, TypeIds_WinRTDate, datePrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
-#endif
         variantDateType = StaticType::New(scriptContext, TypeIds_VariantDate, nullValue, nullptr);
 
         anonymousFunctionTypeHandler = NullTypeHandler<false>::GetDefaultInstance();
@@ -1013,7 +979,6 @@ namespace Js
 
         if (hasPrototype)
         {
-
             scriptFunctionTypeHandler = isAnonymousFunction ?
                 this->GetDeferredAnonymousFunctionTypeHandler() : this->GetDeferredFunctionTypeHandler();
         }
@@ -1376,7 +1341,6 @@ namespace Js
         }
 
         debugObject = nullptr;
-        diagnosticsScriptObject = nullptr;
 
         numberConstructor = CreateBuiltinConstructor(&JavascriptNumber::EntryInfo::NewInstance,
             DeferredTypeHandler<InitializeNumberConstructor>::GetDefaultInstance());
@@ -1499,14 +1463,15 @@ namespace Js
         }
 #endif
 
-#ifdef ENABLE_PROJECTION
-        winRTPromiseConstructor = nullptr;
-#endif
-
 #if defined(ENABLE_INTL_OBJECT) || defined(ENABLE_PROJECTION)
         engineInterfaceObject = EngineInterfaceObject::New(recycler,
             DynamicType::New(scriptContext, TypeIds_EngineInterfaceObject, objectPrototype, nullptr,
             DeferredTypeHandler<InitializeEngineInterfaceObject>::GetDefaultInstance()));
+
+#ifdef ENABLE_INTL_OBJECT
+        IntlEngineInterfaceExtensionObject* intlExtension = RecyclerNew(recycler, IntlEngineInterfaceExtensionObject, scriptContext);
+        engineInterfaceObject->SetEngineExtension(EngineInterfaceExtensionKind_Intl, intlExtension);
+#endif
 #endif
 
         mapConstructor = nullptr;
@@ -1555,10 +1520,6 @@ namespace Js
             DeferredTypeHandler<InitializeErrorConstructor>::GetDefaultInstance());
         AddFunction(globalObject, PropertyIds::Error, errorConstructor);
 
-#ifdef ENABLE_PROJECTION
-        winrtErrorConstructor = nullptr;
-#endif
-
         RuntimeFunction* nativeErrorPrototype = nullptr;
         if (scriptContext->GetConfig()->IsES6PrototypeChain())
         {
@@ -1595,15 +1556,6 @@ namespace Js
             nativeErrorPrototype);
         AddFunction(globalObject, PropertyIds::URIError, uriErrorConstructor);
 
-#ifdef ENABLE_PROJECTION
-        if (scriptContext->GetConfig()->IsWinRTEnabled())
-        {
-            winrtErrorConstructor = CreateBuiltinConstructor(&JavascriptError::EntryInfo::NewWinRTErrorInstance,
-                DeferredTypeHandler<InitializeWinRTErrorConstructor>::GetDefaultInstance(),
-                nativeErrorPrototype);
-            AddFunction(globalObject, PropertyIds::WinRTError, winrtErrorConstructor);
-        }
-#endif
         nullEnumerator = RecyclerNew(this->recycler, NullEnumerator, scriptContext);
     }
 
@@ -1616,13 +1568,6 @@ namespace Js
             this->debugObject = newDebugObject;
             AddMember(globalObject, PropertyIds::Debug, debugObject);
         }
-    }
-
-    void JavascriptLibrary::InitializeDiagnosticsScriptObject(DiagnosticsScriptObject* newDiagnosticsScriptObject)
-    {
-        Assert(this->diagnosticsScriptObject == nullptr);
-        this->diagnosticsScriptObject = newDiagnosticsScriptObject;
-        AddMember(globalObject, globalObject->GetScriptContext()->GetOrAddPropertyIdTracked(L"diagnosticsScript"), this->diagnosticsScriptObject);
     }
 
     void JavascriptLibrary::SetDebugObjectNonUserAccessor(FunctionInfo *funcGetter, FunctionInfo *funcSetter)
@@ -1762,7 +1707,8 @@ namespace Js
 
         if (scriptContext->GetConfig()->IsES6UnscopablesEnabled())
         {
-            DynamicObject* unscopables_blacklist = scriptContext->GetLibrary()->CreateObject(true, 7);
+            DynamicType* dynamicType = DynamicType::New(scriptContext, TypeIds_Object, library->nullValue, nullptr, NullTypeHandler<false>::GetDefaultInstance(), false);
+            DynamicObject* unscopables_blacklist = DynamicObject::New(library->GetRecycler(), dynamicType);
             unscopables_blacklist->SetProperty(PropertyIds::find, JavascriptBoolean::ToVar(true, scriptContext), PropertyOperation_None, nullptr);
             unscopables_blacklist->SetProperty(PropertyIds::findIndex, JavascriptBoolean::ToVar(true, scriptContext), PropertyOperation_None, nullptr);
             unscopables_blacklist->SetProperty(PropertyIds::fill, JavascriptBoolean::ToVar(true, scriptContext), PropertyOperation_None, nullptr);
@@ -1770,7 +1716,7 @@ namespace Js
             unscopables_blacklist->SetProperty(PropertyIds::entries, JavascriptBoolean::ToVar(true, scriptContext), PropertyOperation_None, nullptr);
             unscopables_blacklist->SetProperty(PropertyIds::keys, JavascriptBoolean::ToVar(true, scriptContext), PropertyOperation_None, nullptr);
             unscopables_blacklist->SetProperty(PropertyIds::values, JavascriptBoolean::ToVar(true, scriptContext), PropertyOperation_None, nullptr);
-            library->AddMember(arrayPrototype, PropertyIds::_symbolUnscopables, unscopables_blacklist);
+            library->AddMember(arrayPrototype, PropertyIds::_symbolUnscopables, unscopables_blacklist, PropertyConfigurable);
         }
 
         if (scriptContext->GetConfig()->IsES6TypedArrayExtensionsEnabled()) // This is not a typo, Array.prototype.fill and .copyWithin are part of the ES6 TypedArray feature
@@ -2119,9 +2065,6 @@ namespace Js
     INIT_ERROR_CONSTRUCTOR(SyntaxError);
     INIT_ERROR_CONSTRUCTOR(TypeError);
     INIT_ERROR_CONSTRUCTOR(URIError);
-#ifdef ENABLE_PROJECTION
-    INIT_ERROR_CONSTRUCTOR(WinRTError);
-#endif
 
 #define INIT_ERROR_PROTOTYPE(error) \
     void JavascriptLibrary::Initialize##error##Prototype(DynamicObject* prototype, DeferredTypeHandlerBase* typeHandler, DeferredInitializeMode mode) \
@@ -2143,9 +2086,6 @@ namespace Js
     INIT_ERROR_PROTOTYPE(SyntaxError);
     INIT_ERROR_PROTOTYPE(TypeError);
     INIT_ERROR_PROTOTYPE(URIError);
-#ifdef ENABLE_PROJECTION
-    INIT_ERROR_PROTOTYPE(WinRTError);
-#endif
 
     void JavascriptLibrary::InitializeBooleanConstructor(DynamicObject* booleanConstructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
@@ -2555,6 +2495,11 @@ namespace Js
 
         library->AddMember(functionPrototype, PropertyIds::constructor, library->functionConstructor);
         library->AddMember(functionPrototype, PropertyIds::length, TaggedInt::ToVarUnchecked(0), PropertyConfigurable);
+        
+        if (scriptContext->GetConfig()->IsES6FunctionNameEnabled())
+        {
+            library->AddMember(functionPrototype, PropertyIds::name, LiteralString::CreateEmptyString(scriptContext->GetLibrary()->GetStringTypeStatic()), PropertyConfigurable);
+        }
 
         JavascriptFunction *func = library->AddFunctionToLibraryObject(functionPrototype, PropertyIds::apply, &JavascriptFunction::EntryInfo::Apply, 2);
         builtinFuncs[BuiltinFunction::Function_Apply] = func;
@@ -3261,9 +3206,6 @@ namespace Js
             this->syntaxErrorPrototype,
             this->typeErrorPrototype,
             this->uriErrorPrototype,
-#ifdef ENABLE_PROJECTION
-            this->winrtErrorPrototype,
-#endif
             this->objectConstructor,
             this->arrayConstructor,
             this->booleanConstructor,
@@ -3305,9 +3247,6 @@ namespace Js
             this->syntaxErrorConstructor,
             this->typeErrorConstructor,
             this->uriErrorConstructor,
-#ifdef ENABLE_PROJECTION
-            this->winrtErrorConstructor
-#endif
         };
 
         Assert(!scriptContext->GetThreadContext()->IsDisableImplicitCall());
@@ -4508,84 +4447,16 @@ namespace Js
     }
 #endif
 
-#ifdef ENABLE_PROJECTION
-    void JavascriptLibrary::InitializeWinRTPromiseConstructor()
-    {
-        Assert(this->engineInterfaceObject != nullptr);
-
-        this->winRTPromiseConstructor = JavascriptFunction::FromVar(this->engineInterfaceObject->GetPromiseConstructor(scriptContext));
-    }
-
-    JavascriptFunction* JavascriptLibrary::GetWinRTPromiseConstructor()
-    {
-        if (this->winRTPromiseConstructor == nullptr)
-        {
-            this->InitializeWinRTPromiseConstructor();
-        }
-
-        Assert(this->winRTPromiseConstructor != nullptr);
-
-        return this->winRTPromiseConstructor;
-    }
-#endif
-#ifdef NTBUILD
-    void JavascriptLibrary::InitializeHostPromiseContinuationFunction()
-    {
-        // TODO: Below loads and returns WScript.SetTimeout or window.setTimeout. Later, we should instead use the task queue.
-        // NOTE: The code here is placeholder until we get the task queue from trident.
-        //       If user code changes WScript.SetTimeout or window.setTimeout, the Promise feature won't work!
-        PropertyId windowId = scriptContext->GetOrAddPropertyIdTracked(L"window");
-        PropertyId setTimeoutId = scriptContext->GetOrAddPropertyIdTracked(L"setTimeout");
-        Var global = this->GetGlobalObject();
-        Var window;
-        Var setTimeout;
-
-        // Try to load window.setTimeout
-        if (JavascriptOperators::GetRootProperty(global, windowId, &window, scriptContext) &&
-            RecyclableObject::Is(window) &&
-            JavascriptOperators::GetProperty(RecyclableObject::FromVar(window), setTimeoutId, &setTimeout, scriptContext) &&
-            JavascriptConversion::IsCallable(setTimeout))
-        {
-            this->hostPromiseContinuationFunction = JavascriptFunction::FromVar(setTimeout);
-            return;
-        }
-        else if (JavascriptOperators::GetRootProperty(global, setTimeoutId, &setTimeout, scriptContext) &&
-                 JavascriptConversion::IsCallable(setTimeout))
-        {
-            // Workers do not have a window property, but they do have setTimeout on their global
-            this->hostPromiseContinuationFunction = JavascriptFunction::FromVar(setTimeout);
-            return;
-        }
-
-        PropertyId wscriptId = scriptContext->GetOrAddPropertyIdTracked(L"WScript");
-        setTimeoutId = scriptContext->GetOrAddPropertyIdTracked(L"SetTimeout");
-        Var wscript;
-
-        // Try to load WScript.SetTimeout
-        if (JavascriptOperators::GetRootProperty(global, wscriptId, &wscript, scriptContext) &&
-            RecyclableObject::Is(wscript) &&
-            JavascriptOperators::GetProperty(RecyclableObject::FromVar(wscript), setTimeoutId, &setTimeout, scriptContext) &&
-            JavascriptConversion::IsCallable(setTimeout))
-        {
-            this->hostPromiseContinuationFunction = JavascriptFunction::FromVar(setTimeout);
-            return;
-        }
-
-        // If we couldn't load either WScript.SetTimeout or window.setTimeout the Promise feature is not going to work.
-        // We do need to use some kind of function here, so let's just use a thrower.
-        this->hostPromiseContinuationFunction = this->throwerFunction;
-    }
-
     JavascriptFunction* JavascriptLibrary::GetHostPromiseContinuationFunction()
     {
         if (this->hostPromiseContinuationFunction == nullptr)
         {
-            this->InitializeHostPromiseContinuationFunction();
+            this->hostPromiseContinuationFunction = scriptContext->GetHostScriptContext()->InitializeHostPromiseContinuationFunction();
         }
 
         return this->hostPromiseContinuationFunction;
     }
-#endif
+
     void JavascriptLibrary::SetNativeHostPromiseContinuationFunction(PromiseContinuationCallback function, void *state)
     {
         this->nativeHostPromiseContinuationFunction = function;
@@ -4630,7 +4501,6 @@ namespace Js
             }
             END_LEAVE_SCRIPT(scriptContext);
         }
-#ifdef NTBUILD
         else
         {
             JavascriptFunction* hostPromiseContinuationFunction = this->GetHostPromiseContinuationFunction();
@@ -4643,7 +4513,6 @@ namespace Js
                 taskVar,
                 JavascriptNumber::ToVar(0, scriptContext));
         }
-#endif
     }
 
 #ifdef ENABLE_INTL_OBJECT
@@ -4686,7 +4555,8 @@ namespace Js
         {
             JavascriptLibrary* library = IntlObject->GetLibrary();
             Assert(library->engineInterfaceObject != nullptr);
-            library->engineInterfaceObject->InjectIntlLibraryCode(scriptContext, IntlObject);
+            IntlEngineInterfaceExtensionObject* intlExtension = static_cast<IntlEngineInterfaceExtensionObject*>(library->GetEngineInterfaceObject()->GetEngineExtension(EngineInterfaceExtensionKind_Intl));
+            intlExtension->InjectIntlLibraryCode(scriptContext, IntlObject);
         }
     }
 #endif
@@ -4701,7 +4571,7 @@ namespace Js
         if (!fSet)
         {
             this->inDispatchProfileMode = false;
-            this->SetDispatchInvoke(dispatchInvoke);
+            this->GetScriptContext()->GetHostScriptContext()->SetDispatchInvoke(dispatchInvoke);
             idMappedFunctionWithPrototypeType->SetEntryPoint(JavascriptExternalFunction::ExternalFunctionThunk);
             externalFunctionWithDeferredPrototypeType->SetEntryPoint(JavascriptExternalFunction::ExternalFunctionThunk);
             stdCallFunctionWithDeferredPrototypeType->SetEntryPoint(JavascriptExternalFunction::StdCallExternalFunctionThunk);
@@ -4709,7 +4579,7 @@ namespace Js
         else
         {
             this->inDispatchProfileMode = true;
-            this->SetDispatchInvoke(dispatchInvoke);
+            this->GetScriptContext()->GetHostScriptContext()->SetDispatchInvoke(dispatchInvoke);
             idMappedFunctionWithPrototypeType->SetEntryPoint(ProfileEntryThunk);
             externalFunctionWithDeferredPrototypeType->SetEntryPoint(ProfileEntryThunk);
             stdCallFunctionWithDeferredPrototypeType->SetEntryPoint(ProfileEntryThunk);
@@ -4724,14 +4594,6 @@ namespace Js
     {
         return RecyclerNew(scriptContext->GetRecycler(), JavascriptRegExp, emptyRegexPattern,
                            this->GetRegexType());
-    }
-
-    void JavascriptLibrary::SetDispatchInvoke(Js::JavascriptMethod dispatchInvoke)
-    {
-        if (this->dispMemberProxyType != nullptr)
-        {
-            this->dispMemberProxyType->SetDispatchInvoke(dispatchInvoke);
-        }
     }
 
     void JavascriptLibrary::SetCrossSiteForSharedFunctionType(JavascriptFunction * function, bool useSlotAccessCrossSiteThunk)
@@ -5615,22 +5477,6 @@ namespace Js
         JavascriptError::SetErrorMessage(outOfMemoryError, VBSERR_OutOfMemory, NULL, scriptContext);
         return outOfMemoryError;
     }
-
-#ifdef ENABLE_PROJECTION
-    // Should only be called when WinRT is enabled
-    JavascriptError* JavascriptLibrary::CreateWinRTError()
-    {
-        // If WinRT isn't enabled, create an error of type kjstError instead.
-        if (!scriptContext->GetConfig()->IsWinRTEnabled())
-        {
-            return scriptContext->GetLibrary()->CreateError();
-        }
-        AssertMsg(winrtErrorType, "Where's winrtErrorType?");
-        JavascriptError *pError = RecyclerNew(this->GetRecycler(), JavascriptError, winrtErrorType);
-        JavascriptError::SetErrorType(pError, kjstWinRTError);
-        return pError;
-    }
-#endif
 
     JavascriptFunction* JavascriptLibrary::CreateNonProfiledFunction(FunctionInfo * functionInfo)
     {

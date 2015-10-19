@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 var jsonBlobL1AsString = "{\"a\":1, \"b\":2}"
 var jsonBlobL2AsString = "{\"a\":{\"aa\":10, \"ab\":11}, \"b\":{\"ba\":\"this is\\t a test!\", \"bb\":\"a\"}}"
 

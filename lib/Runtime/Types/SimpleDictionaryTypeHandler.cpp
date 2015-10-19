@@ -337,11 +337,7 @@ namespace Js
             //
             PropertyId propertyId = propIds->elements[i];
             const PropertyRecord* propertyRecord = propertyId == Constants::NoProperty ? NULL : scriptContext->GetPropertyName(propertyId);
-            //
-            // If the property name is __proto__, it could be either [[prototype]] or ignored, or become a local property depending
-            // on later environment and property value. To maintain enumeration order when it becomes a local property, add the entry as deleted.
-            //
-            PropertyAttributes attr = (check__proto__ && propertyId == PropertyIds::__proto__) ? PropertyDeletedDefaults : PropertyDynamicTypeDefaults;
+            PropertyAttributes attr = PropertyRecord::DefaultAttributesForPropertyId(propertyId, check__proto__);
             typeHandler->Add(propertyRecord, attr, shareType, false, false, scriptContext);
         }
 

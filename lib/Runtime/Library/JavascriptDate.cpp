@@ -1316,7 +1316,8 @@ namespace Js
             EngineInterfaceObject* nativeEngineInterfaceObj = scriptContext->GetLibrary()->GetEngineInterfaceObject();
             if (nativeEngineInterfaceObj)
             {
-                JavascriptFunction* func = nativeEngineInterfaceObj->GetDateToLocaleDateString();
+                IntlEngineInterfaceExtensionObject* extensionObject = static_cast<IntlEngineInterfaceExtensionObject*>(nativeEngineInterfaceObj->GetEngineExtension(EngineInterfaceExtensionKind_Intl));
+                JavascriptFunction* func = extensionObject->GetDateToLocaleDateString();
                 if (func)
                 {
                     return func->CallFunction(args);
@@ -1358,7 +1359,8 @@ namespace Js
             EngineInterfaceObject* nativeEngineInterfaceObj = scriptContext->GetLibrary()->GetEngineInterfaceObject();
             if (nativeEngineInterfaceObj)
             {
-                JavascriptFunction* func = nativeEngineInterfaceObj->GetDateToLocaleString();
+                IntlEngineInterfaceExtensionObject* extensionObject = static_cast<IntlEngineInterfaceExtensionObject*>(nativeEngineInterfaceObj->GetEngineExtension(EngineInterfaceExtensionKind_Intl));
+                JavascriptFunction* func = extensionObject->GetDateToLocaleString();
                 if (func)
                 {
                     return func->CallFunction(args);
@@ -1409,7 +1411,8 @@ namespace Js
             EngineInterfaceObject* nativeEngineInterfaceObj = scriptContext->GetLibrary()->GetEngineInterfaceObject();
             if (nativeEngineInterfaceObj)
             {
-                JavascriptFunction* func = nativeEngineInterfaceObj->GetDateToLocaleTimeString();
+                IntlEngineInterfaceExtensionObject* extensionObject = static_cast<IntlEngineInterfaceExtensionObject*>(nativeEngineInterfaceObj->GetEngineExtension(EngineInterfaceExtensionKind_Intl));
+                JavascriptFunction* func = extensionObject->GetDateToLocaleTimeString();
                 if (func)
                 {
                     return func->CallFunction(args);

@@ -29,14 +29,6 @@
   </test>
   <test>
     <default>
-      <files>dumpGlobOptAssertTest.js</files>
-      <baseline />
-      <compile-flags>-mic:1 -dump:globopt -off:simplejit</compile-flags>
-      <tags>exclude_ship,exclude_dynapogo,Slow</tags>
-    </default>
-  </test>
-  <test>
-    <default>
       <files>oom.js</files>
       <baseline>oom.baseline</baseline>
       <compile-flags>-forcefragmentaddressspace:8000000</compile-flags>

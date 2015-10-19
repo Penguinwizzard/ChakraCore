@@ -4,11 +4,6 @@
 //-------------------------------------------------------------------------------------------------------
 #include "CommonMemoryPch.h"
 
-#ifdef _M_X64_OR_ARM64
-// TODO: Clean this warning up
-#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
-#endif
-
 //=====================================================================================================
 // Initialization
 //=====================================================================================================
@@ -733,14 +728,14 @@ LargeHeapBucket::Rescan(LargeHeapBlock * list, Recycler * recycler, bool isParti
     return scannedPageCount;
 }
 
-uint
+size_t
 LargeHeapBucket::Rescan(RescanFlags flags)
 {
 #ifdef CONCURRENT_GC_ENABLED
     Assert(pendingSweepLargeBlockList == nullptr);
 #endif    
 
-    uint scannedPageCount = 0;
+    size_t scannedPageCount = 0;
     Recycler* recycler = this->heapInfo->recycler;
 
     scannedPageCount += LargeHeapBucket::Rescan(largeBlockList, recycler, false, flags);
@@ -979,7 +974,7 @@ LargeHeapBucket::GetLargeHeapBlockCount(bool checkCount) const
 #endif
 
 #ifdef RECYCLER_SLOW_CHECK_ENABLED
-uint
+size_t
 LargeHeapBucket::Check()
 {
     size_t currentLargeHeapBlockCount = Check(false, false, largeBlockList);

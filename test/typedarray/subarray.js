@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // basic test of subarray with a begin index beyond the length of the typed array
 WScript.Echo('var u8 = new Uint8Array(64); u8[63] = 45;');
 var u8 = new Uint8Array(64);

@@ -3212,7 +3212,7 @@ void ByteCodeCache::PopulateLookupPropertyId(ScriptContext * scriptContext, int 
 }
 
 // Serialize function body
-HRESULT ByteCodeSerializer::SerializeToBuffer(ScriptContext * scriptContext, ArenaAllocator * alloc, DWORD sourceCodeLength, LPCUTF8 utf8Source, DWORD dwFunctionTableLength, BYTE * functionTable, FunctionBody * function, SRCINFO const* srcInfo, bool allocateBuffer, byte ** buffer, DWORD * bufferBytes, DWORD dwFlags)
+HRESULT ByteCodeSerializer::SerializeToBuffer(ScriptContext * scriptContext, ArenaAllocator * alloc, DWORD sourceByteLength, LPCUTF8 utf8Source, DWORD dwFunctionTableLength, BYTE * functionTable, FunctionBody * function, SRCINFO const* srcInfo, bool allocateBuffer, byte ** buffer, DWORD * bufferBytes, DWORD dwFlags)
 {
     
     int builtInPropertyCount = (dwFlags & GENERATE_BYTE_CODE_BUFFER_LIBRARY) != 0 ?  PropertyIds::_countJSOnlyProperty : TotalNumberOfBuiltInProperties;
@@ -3227,7 +3227,7 @@ HRESULT ByteCodeSerializer::SerializeToBuffer(ScriptContext * scriptContext, Are
     }
 
     int32 sourceCharLength = utf8SourceInfo->GetCchLength();
-    ByteCodeBufferBuilder builder(sourceCodeLength, sourceCharLength, utf8Source, dwFunctionTableLength, functionTable, utf8SourceInfo, scriptContext, alloc, dwFlags, builtInPropertyCount);
+    ByteCodeBufferBuilder builder(sourceByteLength, sourceCharLength, utf8Source, dwFunctionTableLength, functionTable, utf8SourceInfo, scriptContext, alloc, dwFlags, builtInPropertyCount);
     hr = builder.AddTopFunctionBody(function, srcInfo);
 
     if (SUCCEEDED(hr))

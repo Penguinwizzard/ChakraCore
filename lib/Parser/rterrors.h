@@ -319,7 +319,7 @@ RT_ERROR_MSG(JSERR_ClassThisAlreadyAssigned, 5628, "", "Multiple calls to 'super
 RT_ERROR_MSG(JSERR_ClassSuperInBaseClass, 5629, "", "Unexpected call to 'super' in a base class constructor", kjstReferenceError, 0)
 RT_ERROR_MSG(JSERR_ClassDerivedConstructorInvalidReturnType, 5630, "", "Derived class constructor can return only object or undefined", kjstTypeError, 0)
 RT_ERROR_MSG(JSERR_ClassStaticMethodCannotBePrototype, 5631, "", "Class static member cannot be named 'prototype'", kjstTypeError, 0)
-RT_ERROR_MSG(JSERR_ClassConstructorCannotBeCalledWithoutNew, 5632, "", "Class constructor cannot be called without the new keyword", kjstTypeError, 0)
+RT_ERROR_MSG(JSERR_ClassConstructorCannotBeCalledWithoutNew, 5632, "%s: cannot be called without the new keyword", "Class constructor cannot be called without the new keyword", kjstTypeError, 0)
 
 RT_ERROR_MSG(JSERR_SimdBool32x4TypeMismatch, 5633, "SIMD.Bool32x4.%s: Invalid SIMD types for operation", "Expecting Bool32x4 values", kjstTypeError, 0)
 RT_ERROR_MSG(JSERR_SimdBool16x8TypeMismatch, 5634, "SIMD.Bool16x8.%s: Invalid SIMD types for operation", "Expecting Bool16x8 values", kjstTypeError, 0)

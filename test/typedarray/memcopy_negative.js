@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // Compares the value set by interpreter with the jitted code
 // need to run with -mic:1 -off:simplejit -off:JITLoopBody
 // Run locally with -trace:memop -trace:bailout to help find bugs
@@ -5,15 +10,15 @@
 const Type = Int32Array;
 const n = 100;
 
-function test0(a, b) { for (let i = -50 , j = 0   ; i < n     ; i++, j++) b[i] = a[j]; }
-function test1(a, b) { for (let i = -150, j = 0   ; i < n     ; i++, j++) b[i] = a[j]; }
-function test2(a, b) { for (let i = 0   , j = -50 ; i < n     ; i++, j++) b[i] = a[j]; }
-function test3(a, b) { for (let i = 0   , j = -150; i < n     ; i++, j++) b[i] = a[j]; }
-function test4(a, b) { for (let i = -50 , j = -50 ; i < n     ; i++, j++) b[i] = a[j]; }
-function test5(a, b) { for (let i = -100, j = -50 ; i < n     ; i++, j++) b[i] = a[j]; }
-function test6(a, b) { for (let i = -50 , j = 50  ; i < n     ; i++, j++) b[i] = a[j]; }
-function test7(a, b) { for (let i = -50 , j = 50  ; i < n + 50; i++, j++) b[i] = a[j]; }
-function test8(a, b) { for (let i = 50  , j = -50 ; i < n + 50; i++, j++) b[i] = a[j]; }
+function test0(a, b) { for (let i = -50 ; i < n     ; i++) b[i] = a[i]; }
+function test1(a, b) { for (let i = -150; i < n     ; i++) b[i] = a[i]; }
+function test2(a, b) { for (let i = 0   ; i < n     ; i++) b[i] = a[i]; }
+function test3(a, b) { for (let i = 0   ; i < n     ; i++) b[i] = a[i]; }
+function test4(a, b) { for (let i = -50 ; i < n     ; i++) b[i] = a[i]; }
+function test5(a, b) { for (let i = -100; i < n     ; i++) b[i] = a[i]; }
+function test6(a, b) { for (let i = -50 ; i < n     ; i++) b[i] = a[i]; }
+function test7(a, b) { for (let i = -50 ; i < n + 50; i++) b[i] = a[i]; }
+function test8(a, b) { for (let i = 50  ; i < n + 50; i++) b[i] = a[i]; }
 
 const testCases = [
   test0,

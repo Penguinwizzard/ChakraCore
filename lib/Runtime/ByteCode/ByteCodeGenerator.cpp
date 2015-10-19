@@ -1914,7 +1914,18 @@ void ByteCodeGenerator::CheckDeferParseHasMaybeEscapedNestedFunc()
                     functionBody->GetDisplayName(), functionBody->GetDebugNumberSet(debugStringBuffer));
                 Output::Flush();
             }
-            Js::StackScriptFunction::Box(functionBody, functionRef);
+
+            // During the box workflow we reset all the parents of all nested functions and up. If a fault occurs when the stack function
+            // is created this will cause further issues when trying to use the function object again. So failing faster seems to make more sense
+            try
+            {
+                Js::StackScriptFunction::Box(functionBody, functionRef);
+            }
+            catch (Js::OutOfMemoryException)
+            {
+                FailedToBox_OOM_fatal_error((ULONG_PTR)functionBody);
+            }
+
             return;
         }
     }

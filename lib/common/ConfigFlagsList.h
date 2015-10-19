@@ -524,7 +524,6 @@ PHASE(All)
 
 #define DEFAULT_CONFIG_AsyncDebugging           (true)
 #define DEFAULT_CONFIG_TraceAsyncDebugCalls     (false)
-#define DEFAULT_CONFIG_ForceDownlevelAsyncDebug (false)
 #define DEFAULT_CONFIG_ForcePostLowerGlobOptInstrString (false)
 #define DEFAULT_CONFIG_EnumerateSpecialPropertiesInDebugger (true)
 #endif
@@ -638,7 +637,7 @@ PHASE(All)
 
 #define DEFAULT_CONFIG_MaxCopyOnAccessArrayLength (32U)
 #define DEFAULT_CONFIG_MinCopyOnAccessArrayLength (5U)
-#define DEFAULT_CONFIG_CopyOnAccessArraySegmentCacheSize (16)
+#define DEFAULT_CONFIG_CopyOnAccessArraySegmentCacheSize (16U)
 
 #if defined(_M_IX86) || defined(_M_X64)
 #define DEFAULT_CONFIG_LoopAlignNopLimit (6)
@@ -931,7 +930,6 @@ FLAGNR(Boolean, ForceDeferParse       , "Defer parsing of all function bodies", 
 FLAGNR(Boolean, ForceDiagnosticsMode  , "Enable diagnostics mode and debug interpreter loop", false)
 FLAGNR(Boolean, ForceGetWriteWatchOOM , "Force GetWriteWatch to go into OOM codepath in HeapBlockMap rescan", false)
 FLAGNR(Boolean, DumpDbgControllerBytecode, "Dump dbgcontroller.js bytecode when -dump:bytecode is specified (default false)", false)
-FLAGNR(Boolean, ForceDownlevelAsyncDebug, "Force async debug feature to use downlevel interface", DEFAULT_CONFIG_ForceDownlevelAsyncDebug)
 FLAGNR(Boolean, ForcePostLowerGlobOptInstrString, "Force tracking of globop tinstr string post lower", DEFAULT_CONFIG_ForcePostLowerGlobOptInstrString)
 FLAGNR(Boolean, EnumerateSpecialPropertiesInDebugger, "Enable enumeration of special debug properties", DEFAULT_CONFIG_EnumerateSpecialPropertiesInDebugger)
 FLAGNR(Boolean, EnableJitInDiagMode   , "Enable Fast F12 (only applicable with ForceDiagnosticsMode or while under debugger)", DEFAULT_CONFIG_EnableJitInDiagMode)

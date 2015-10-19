@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 function test1() {
     var intArray = Array(0x100); //[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
     var arrayBuffer = (new Uint32Array(intArray)).buffer;
@@ -27,7 +32,7 @@ function test2() {
         var view1 = new DataView(arrayBuffer, undefined);
     } catch (e) {
         if (e instanceof RangeError) {
-            if(e.message !== "DataView constructor argument offset is invalid"){
+            if(e.message !== "DataView constructor argument byteOffset is invalid"){
                 WScript.Echo('FAIL');
             }
         } else {
@@ -39,7 +44,7 @@ function test2() {
         var view2 = new DataView(arrayBuffer, 1.5);
     } catch (e) {
         if (e instanceof RangeError) {
-            if (e.message !== "DataView constructor argument offset is invalid") {
+            if (e.message !== "DataView constructor argument byteOffset is invalid") {
                 WScript.Echo('FAIL');
             }
         } else {

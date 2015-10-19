@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // -version:2 -forcedeferparse z:\temp\bug24359.unformatted.reduce.4.js
 function test0(x) {
     with (x)

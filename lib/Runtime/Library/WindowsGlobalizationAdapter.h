@@ -21,8 +21,10 @@ namespace Js
     class WindowsGlobalizationAdapter
     {
     private:
-        bool initialized;
-        bool failedToInitialize;
+        bool initializedGlobObjects;
+        HRESULT hrForGlobObjectsInit;
+        bool initializedDataTextObjects;
+        HRESULT hrForDataTextObjectsInit;
 #ifdef ENABLE_INTL_OBJECT
         AutoCOMPtr<Windows::Globalization::ILanguageFactory> languageFactory;
         AutoCOMPtr<Windows::Globalization::ILanguageStatics> languageStatics;
@@ -30,9 +32,6 @@ namespace Js
         AutoCOMPtr<Windows::Globalization::NumberFormatting::IDecimalFormatterFactory> decimalFormatterFactory;
         AutoCOMPtr<Windows::Globalization::NumberFormatting::IPercentFormatterFactory> percentFormatterFactory;
         AutoCOMPtr<Windows::Globalization::DateTimeFormatting::IDateTimeFormatterFactory> dateTimeFormatterFactory;
-        AutoCOMPtr<Windows::Globalization::ICalendarFactory> calendarFactory;
-        AutoCOMPtr<Windows::Globalization::ITimeZoneOnCalendar> timeZoneCalendar; // use to validate timeZone
-        AutoCOMPtr<Windows::Globalization::ITimeZoneOnCalendar> defaultTimeZoneCalendar; // default current time zone
         AutoCOMPtr<IActivationFactory> incrementNumberRounderActivationFactory;
         AutoCOMPtr<IActivationFactory> significantDigitsRounderActivationFactory;
 #endif
@@ -43,31 +42,27 @@ namespace Js
         template <typename T>
         HRESULT GetActivationFactory(DelayLoadWindowsGlobalization *library, LPCWSTR factoryName, T** instance);
 
-#ifdef ENABLE_INTL_OBJECT
-        HRESULT CreateTimeZoneOnCalendar(_In_ DelayLoadWindowsGlobalization *library, __out Windows::Globalization::ITimeZoneOnCalendar**  result);
-#endif // ENABLE_INTL_OBJECT
     public:
         WindowsGlobalizationAdapter()
-            : initialized(false),
-            failedToInitialize(false),
+            : initializedGlobObjects(false),
+            hrForGlobObjectsInit(S_OK),
+            initializedDataTextObjects(false),
+            hrForDataTextObjectsInit(S_OK),
 #ifdef ENABLE_INTL_OBJECT
             languageFactory(nullptr),
             languageStatics(nullptr),
             currencyFormatterFactory(nullptr),
             decimalFormatterFactory(nullptr),
             percentFormatterFactory(nullptr),
-            calendarFactory(nullptr),
             dateTimeFormatterFactory(nullptr),
-            timeZoneCalendar(nullptr),
-            defaultTimeZoneCalendar(nullptr),
             incrementNumberRounderActivationFactory(nullptr),
             significantDigitsRounderActivationFactory(nullptr),
 #endif // ENABLE_INTL_OBJECT
             unicodeStatics(nullptr)
         { }
 
-        HRESULT EnsureInitialized(ScriptContext *scriptContext);
-        HRESULT EnsureInitialized(DelayLoadWindowsGlobalization *library, bool isES6Mode);
+        HRESULT EnsureGlobObjectsInitialized(ScriptContext *scriptContext);
+        HRESULT EnsureDataTextObjectsInitialized(DelayLoadWindowsGlobalization *library);
 #ifdef ENABLE_INTL_OBJECT
         HRESULT CreateLanguage(_In_ ScriptContext* scriptContext, _In_z_ PCWSTR languageTag, Windows::Globalization::ILanguage** language);
         boolean IsWellFormedLanguageTag(_In_ ScriptContext* scriptContext, _In_z_ PCWSTR languageTag);
@@ -80,9 +75,6 @@ namespace Js
             _In_opt_z_ PCWSTR calendar, _In_opt_z_ PCWSTR clock, _Out_ Windows::Globalization::DateTimeFormatting::IDateTimeFormatter** formatter);
         HRESULT CreateIncrementNumberRounder(_In_ ScriptContext* scriptContext, Windows::Globalization::NumberFormatting::INumberRounder** numberRounder);
         HRESULT CreateSignificantDigitsRounder(_In_ ScriptContext* scriptContext, Windows::Globalization::NumberFormatting::INumberRounder** numberRounder);
-        boolean ValidateAndCanonicalizeTimeZone(_In_ ScriptContext* scriptContext, _In_z_ PCWSTR timeZoneId, HSTRING* result);
-        void GetDefaultTimeZoneId(_In_ ScriptContext* scriptContext, HSTRING* result);
-        void ReleaseWindowsGlobalizationObjects();
 #endif // ENABLE_INTL_OBJECT
         Windows::Data::Text::IUnicodeCharactersStatics* GetUnicodeStatics()
         {

@@ -264,9 +264,7 @@ namespace Js
 
     BOOL BoundFunction::HasProperty(PropertyId propertyId)
     {
-        if (propertyId == PropertyIds::length ||
-            propertyId == PropertyIds::caller ||
-            propertyId == PropertyIds::arguments)
+        if (propertyId == PropertyIds::length)
         {
             return true;
         }
@@ -320,11 +318,6 @@ namespace Js
             return true;
         }
 
-        if (propertyId == PropertyIds::caller || propertyId == PropertyIds::arguments)
-        {
-            JavascriptError::ThrowTypeError(this->GetScriptContext(), VBSERR_ActionNotSupported);
-        }
-
         return false;
     }
 
@@ -368,54 +361,21 @@ namespace Js
             return true;
         }
 
-        if (propertyId == PropertyIds::caller || propertyId == PropertyIds::arguments)
-        {
-            JavascriptError::ThrowTypeError(this->GetScriptContext(), VBSERR_ActionNotSupported);
-        }
-
         return false;
     }
 
     BOOL BoundFunction::GetAccessors(PropertyId propertyId, Var *getter, Var *setter, ScriptContext * requestContext)
     {
-        if (propertyId == PropertyIds::caller || propertyId == PropertyIds::arguments)
-        {
-            *setter = *getter = requestContext->GetLibrary()->GetThrowTypeErrorAccessorFunction();
-            return true;
-        }
-
-        // JavascriptFunction has special case for caller and arguments
-        // TODO: Remove this, once that is removed
         return DynamicObject::GetAccessors(propertyId, getter, setter, requestContext);
     }
 
     DescriptorFlags BoundFunction::GetSetter(PropertyId propertyId, Var *setterValue, PropertyValueInfo* info, ScriptContext* requestContext)
     {
-        if (propertyId == PropertyIds::caller || propertyId == PropertyIds::arguments)
-        {
-            *setterValue = requestContext->GetLibrary()->GetThrowTypeErrorAccessorFunction();
-            return DescriptorFlags::Accessor;
-        }
-
         return DynamicObject::GetSetter(propertyId, setterValue, info, requestContext);
     }
 
     DescriptorFlags BoundFunction::GetSetter(JavascriptString* propertyNameString, Var *setterValue, PropertyValueInfo* info, ScriptContext* requestContext)
     {
-        PropertyRecord const* propertyRecord;
-        this->GetScriptContext()->FindPropertyRecord(propertyNameString, &propertyRecord);
-
-        if (propertyRecord != nullptr)
-        {
-            PropertyId propertyId = propertyRecord->GetPropertyId();
-
-            if (propertyId == PropertyIds::caller || propertyId == PropertyIds::arguments)
-            {
-                *setterValue = requestContext->GetLibrary()->GetThrowTypeErrorAccessorFunction();
-                return DescriptorFlags::Accessor;
-            }
-        }
-
         return DynamicObject::GetSetter(propertyNameString, setterValue, info, requestContext);
     }
 
@@ -431,26 +391,12 @@ namespace Js
             return false;
         }
 
-        // JavascriptFunction has special case for caller and arguments
-        // TODO: Remove this, once that is removed
-        if (propertyId == PropertyIds::caller || propertyId == PropertyIds::arguments)
-        {
-            return false;
-        }
-
         return JavascriptFunction::DeleteProperty(propertyId, flags);
     }
 
     BOOL BoundFunction::IsWritable(PropertyId propertyId)
     {
         if (propertyId == PropertyIds::length)
-        {
-            return false;
-        }
-
-        // JavascriptFunction has special case for caller and arguments
-        // TODO: Remove this, once that is removed
-        if (propertyId == PropertyIds::caller || propertyId == PropertyIds::arguments)
         {
             return false;
         }
@@ -465,26 +411,12 @@ namespace Js
             return false;
         }
 
-        // JavascriptFunction has special case for caller and arguments
-        // TODO: Remove this, once that is removed
-        if (propertyId == PropertyIds::caller || propertyId == PropertyIds::arguments)
-        {
-            return false;
-        }
-
         return JavascriptFunction::IsConfigurable(propertyId);
     }
 
     BOOL BoundFunction::IsEnumerable(PropertyId propertyId)
     {
         if (propertyId == PropertyIds::length)
-        {
-            return false;
-        }
-
-        // JavascriptFunction has special case for caller and arguments
-        // TODO: Remove this, once that is removed
-        if (propertyId == PropertyIds::caller || propertyId == PropertyIds::arguments)
         {
             return false;
         }

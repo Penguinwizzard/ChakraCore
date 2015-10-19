@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 var maxPushArgs = 3;  // Maximum number of arguments to push supported by this test case.  Cannot be greater than 6.
 
 for (var b = 0; b <= 1; b++) {

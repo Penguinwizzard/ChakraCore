@@ -35,7 +35,17 @@ namespace Js
             L"<DeferDeserialize>" : function->GetParseableFunctionInfo()->GetDisplayName(),
             function->GetFunctionProxy()->GetDebugNumberSet(debugStringBuffer));
 
-        return StackScriptFunction::Box(stackScriptFunction, returnAddress);
+        // During the box workflow we reset all the parents of all nested functions and up. If a fault occurs when the stack function
+        // is created this will cause further issues when trying to use the function object again. So failing faster seems to make more sense
+        try
+        {
+           boxedFunction = StackScriptFunction::Box(stackScriptFunction, returnAddress);
+        }
+        catch (Js::OutOfMemoryException)
+        {
+           FailedToBox_OOM_fatal_error((ULONG_PTR)stackScriptFunction);
+        }
+        return boxedFunction;
     }
 
     JavascriptFunction *

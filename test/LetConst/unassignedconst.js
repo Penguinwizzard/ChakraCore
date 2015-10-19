@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 var passed = true;
 try { eval('const x;'); } catch (e) { if (e.message != "Const must be initialized") { passed = false; } }
 try { eval('function a() { const x; }'); } catch (e) { if (e.message != "Const must be initialized") { passed = false; } }

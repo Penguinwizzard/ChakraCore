@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 //FileName: \\bptweb02\users\runtimetoolsbugs\casanalyzed\exprgen\fbl_ie_script_dev\131026-2030\x86\nebularun_x86\201310272250\ddltd2_989b46d9-3aae-4e3c-9bde-dc3a2669265d\bug2.js
 //Configuration: full_with_eh.xml
 //Testcase Number: 23327

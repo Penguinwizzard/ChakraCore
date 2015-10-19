@@ -895,7 +895,6 @@ LowererMDArch::LowerAsmJsLdElemHelper(IR::Instr * instr, bool isSimdLoad /*= fal
     }
     else
     {
-        Assert(!m_func->GetJnFunction()->GetAsmJsFunctionInfo()->IsHeapBufferConst());
         cmpOpnd = IR::IntConstOpnd::New(src1->AsIndirOpnd()->GetOffset(), TyUint32, m_func);
     }
     
@@ -967,7 +966,6 @@ LowererMDArch::LowerAsmJsStElemHelper(IR::Instr * instr, bool isSimdStore /*= fa
     }
     else
     {
-        Assert(!m_func->GetJnFunction()->GetAsmJsFunctionInfo()->IsHeapBufferConst());
         cmpOpnd = IR::IntConstOpnd::New(dst->AsIndirOpnd()->GetOffset(), TyUint32, m_func);
     }
     if (isSimdStore && checkEndOffset)

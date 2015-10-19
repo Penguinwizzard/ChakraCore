@@ -1486,21 +1486,21 @@ private:
     bool                    ShouldExpectConventionalArrayIndexValue(IR::IndirOpnd *const indirOpnd);
     ValueType               GetDivValueType(IR::Instr* instr, Value* src1Val, Value* src2Val, bool specialize);
 
-    bool                    CollectMemOpInfo(IR::Instr *);
-    void                    CollectMemOpStElementI(IR::Instr *, Loop *);
-    void                    CollectMemsetStElementI(IR::Instr *, Loop *);
-    void                    CollectMemcopyStElementI(IR::Instr *, Loop *);
-    void                    CollectMemOpLdElementI(IR::Instr *, Loop *);
-    void                    CollectMemsetLdElementI(IR::Instr *, Loop *);
-    void                    CollectMemcopyLdElementI(IR::Instr *, Loop *);
+    bool                    CollectMemOpInfo(IR::Instr *, Value *, Value *);
+    bool                    CollectMemOpStElementI(IR::Instr *, Loop *);
+    bool                    CollectMemsetStElementI(IR::Instr *, Loop *);
+    bool                    CollectMemcopyStElementI(IR::Instr *, Loop *);
+    bool                    CollectMemOpLdElementI(IR::Instr *, Loop *);
+    bool                    CollectMemcopyLdElementI(IR::Instr *, Loop *);
     SymID                   GetVarSymID(StackSym *);
-    SymID                   GetInductionVariableSymID(SymID, Loop *);
-    bool                    IsAllowedTypeForMemOpt(IR::Opnd *baseOpnd, IR::Opnd *indexOpnd);
+    const InductionVariable* GetInductionVariable(SymID, Loop *);
+    bool                    IsSymIDInductionVariable(SymID, Loop *);
+    bool                    IsAllowedForMemOpt(IR::Instr* instr, IR::RegOpnd *baseOpnd, IR::Opnd *indexOpnd);
 
     void                    ProcessMemOp();
+    bool                    ValidateMemOpCandidates(Loop * loop, struct MemOpEmitData** emitData, int& iEmitData);
     void                    HoistHeadSegmentForMemOp(IR::Instr *instr, IR::ArrayRegOpnd *arrayRegOpnd, IR::Instr *insertBeforeInstr);
-    bool                    EmitMemset(Loop * loop, LoopCount *loopcount, SymID base, SymID index, int constant, byte unroll, bool isInductionVariableChangeIncremental, bool bIndexAlreadyChanged);
-    bool                    EmitMemcopy(Loop * loop, LoopCount *loopcount, SymID ldBase, SymID ldIndex, SymID stBase, SymID stIndex, byte unroll, bool bLdIndexAlreadyChanged, bool bStIndexAlreadyChanged, bool isLdInductionVariableChangeIncremental, bool isStInductionVariableChangeIncremental);
+    void                    EmitMemop(Loop * loop, LoopCount *loopCount, const struct MemOpEmitData* emitData);
     IR::Opnd*               GenerateInductionVariableChangeForMemOp(Loop *loop, byte unroll, IR::Instr *insertBeforeInstr = nullptr);
     IR::RegOpnd*            GenerateStartIndexOpndForMemop(Loop *loop, IR::Opnd *indexOpnd, IR::Opnd *sizeOpnd, bool isInductionVariableChangeIncremental, bool bIndexAlreadyChanged, IR::Instr *insertBeforeInstr = nullptr);
     LoopCount*              GetOrGenerateLoopCountForMemOp(Loop *loop);

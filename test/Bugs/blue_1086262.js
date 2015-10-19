@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 ﻿// Switches: -off:insertnops -bgjit- -fja:2 -off:simplejit -force:fieldcopyprop -off:aggressiveinttypespec
 // Repros pretty consistently on x86chk, if not use -loop:50
 var __counter = 0;
@@ -34,8 +39,8 @@ function test0() {
     prototype = arrObj0;
     var ary = Array();
     var i8 = new Int8Array();
-    var i16 = Int16Array();
-    var i32 = Int32Array(256);
+    var i16 = new Int16Array();
+    var i32 = new Int32Array(256);
     var IntArr0 = [];
     var IntArr1 = new Array();
     var FloatArr0 = Array();

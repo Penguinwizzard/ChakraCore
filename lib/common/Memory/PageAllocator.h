@@ -449,10 +449,10 @@ public:
 
     void Release(void * address, size_t pageCount, void * segment);
 
-    char * AllocPages(uint pageCount, PageSegmentBase<TVirtualAlloc> ** pageSegment);
-    char * AllocPagesPageAligned(uint pageCount, PageSegmentBase<TVirtualAlloc> ** pageSegment, PageHeapMode pageHeapFlags);
+    char * AllocPages(size_t pageCount, PageSegmentBase<TVirtualAlloc> ** pageSegment);
+    char * AllocPagesPageAligned(size_t pageCount, PageSegmentBase<TVirtualAlloc> ** pageSegment, PageHeapMode pageHeapFlags);
 
-    void ReleasePages(__in void * address, uint pageCount, __in void * pageSegment);
+    void ReleasePages(__in void * address, size_t pageCount, __in void * pageSegment);
     void BackgroundReleasePages(void * address, uint pageCount, PageSegmentBase<TVirtualAlloc> * pageSegment);
 
     // Decommit
@@ -745,7 +745,7 @@ public:
     bool AllocSecondary(void* segment, ULONG_PTR functionStart, DWORD functionSize, ushort pdataCount, ushort xdataSize, SecondaryAllocation* allocation);
     void ReleaseSecondary(const SecondaryAllocation& allocation, void* segment);
     void TrackDecommitedPages(void * address, uint pageCount, __in void* segment);
-    void DecommitPages(__in char* address, int pageCount = 1);
+    void DecommitPages(__in char* address, size_t pageCount = 1);
 
     // Release pages that has already been decommited
     void    ReleaseDecommited(void * address, size_t pageCount, __in void * segment);

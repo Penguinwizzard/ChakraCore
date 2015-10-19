@@ -267,7 +267,7 @@ public:
     void EmitBaseClassConstructorThisObject(FuncInfo *funcInfo);
 
     // TODO: home the 'this' argument
-    void EmitLoadFormalIntoRegister(ParseNode *pnodeFormal, Js::ArgSlot pos, FuncInfo *funcInfo);
+    void EmitLoadFormalIntoRegister(ParseNode *pnodeFormal, Js::RegSlot pos, FuncInfo *funcInfo);
     void HomeArguments(FuncInfo *funcInfo);
 
     void EnsureNoRedeclarations(ParseNode *pnodeBlock, FuncInfo *funcInfo);

@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 function write(v) { WScript.Echo(v + ""); }
 
 function printDesc(d) {
@@ -14,7 +19,7 @@ function printDesc(d) {
 function f() { return true; };
 var g = f.bind();
 
-var callerDesc = Object.getOwnPropertyDescriptor(g, 'caller');
+var callerDesc = Object.getOwnPropertyDescriptor(g.__proto__, 'caller');
 var getter = callerDesc.get;
 
 write("***************** getter ***************** ");
@@ -26,7 +31,7 @@ write("***************** g.caller ***************** ");
 printDesc(callerDesc);
 
 write("***************** g.arguments ***************** ");
-printDesc(Object.getOwnPropertyDescriptor(g, 'arguments'));
+printDesc(Object.getOwnPropertyDescriptor(g.__proto__, 'arguments'));
 
 write("***************** try to set/get the caller/arguments *****************");
 try {

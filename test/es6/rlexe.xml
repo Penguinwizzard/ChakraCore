@@ -396,14 +396,19 @@
       <files>stringtemplate_basic.js</files>
       <baseline>stringtemplate_basic.baseline</baseline>
       <compile-flags> -ES6StringTemplate</compile-flags>
-      <!-- ch prints ? chars -->
-      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>
     <default>
       <files>ES6StringTemplate.js</files>
       <compile-flags> -ES6StringTemplate -args summary -endargs</compile-flags>
+    </default>
+  </test>
+  <test>
+    <default>
+      <files>ES6StringTemplateSlow.js</files>
+      <compile-flags> -ES6StringTemplate -args summary -endargs</compile-flags>
+      <tags>Nightly</tags>
     </default>
   </test>
   <test>
@@ -462,6 +467,7 @@
       <files>es6_stable.js</files>
       <compile-flags>-verbose -es6 -WERExceptionSupport</compile-flags>
       <baseline>es6_stable.baseline</baseline>
+      <tags>exclude_dynapogo</tags>
     </default>
   </test>
   <test>
@@ -469,6 +475,7 @@
       <files>es6_stable.js</files>
       <compile-flags>-verbose -es6 -es6- -ES6StringTemplate -WERExceptionSupport</compile-flags>
       <baseline>es6_stable.enable_disable.baseline</baseline>
+      <tags>exclude_dynapogo</tags>
     </default>
   </test>
   <test>
@@ -476,6 +483,7 @@
       <files>es6_all.js</files>
       <compile-flags>-verbose -es6all -WERExceptionSupport</compile-flags>
       <baseline>es6_all.baseline</baseline>
+      <tags>exclude_dynapogo</tags>
     </default>
   </test>
   <test>
@@ -490,8 +498,7 @@
       <files>unicode_escape_sequences.js</files>
       <baseline>unicode_escape_sequences.baseline</baseline>
       <compile-flags> -ES6Unicode -ES6RegExSticky</compile-flags>
-      <!-- prints ? in ch where jshost prints nothing -->
-      <tags>exclude_ship,exclude_ch</tags>
+      <tags>exclude_ship</tags>
     </default>
   </test>
   <test>
@@ -622,14 +629,6 @@
       <baseline>unicode_regex_surrogate.baseline</baseline>
       <compile-flags> -ES6Unicode -ES6RegExSticky</compile-flags>
       <tags>exclude_ship,Slow</tags>
-    </default>
-  </test>
-  <test>
-    <default>
-      <files>unicode_sunspider_regexp-dna.js</files>
-      <baseline />
-      <compile-flags> -ES6Unicode -ES6RegExSticky</compile-flags>
-      <tags>exclude_ship</tags>
     </default>
   </test>
   <test>
@@ -1014,7 +1013,7 @@
 <test>
     <default>
         <files>ES6NewTarget.js</files>
-        <compile-flags>-es6classes -args summary -endargs -es6generators</compile-flags>
+        <compile-flags>-es6classes -ES6Destructuring -args summary -endargs -es6generators</compile-flags>
     </default>
 </test>
 
@@ -1051,6 +1050,21 @@
         <files>globalNewTargetSyntaxError.js</files>
         <baseline>globalNewTargetSyntaxError.baseline</baseline>
         <tags>exclude_dynapogo</tags>
+    </default>
+</test>
+<test>
+    <default>
+        <files>globalCatchNewTargetSyntaxError.js</files>
+        <baseline>globalCatchNewTargetSyntaxError.baseline</baseline>
+        <tags>exclude_dynapogo</tags>
+    </default>
+</test>
+<test>
+    <default>
+        <files>globalParamCatchNewTargetSyntaxError.js</files>
+        <baseline>globalParamCatchNewTargetSyntaxError.baseline</baseline>
+        <tags>exclude_dynapogo</tags>
+        <compile-flags>-ES6Destructuring</compile-flags>
     </default>
 </test>
 <test>

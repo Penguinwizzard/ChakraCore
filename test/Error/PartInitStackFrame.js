@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // -nonative -InjectExceptionAtPartiallyInitializedInterpreterFrame:3 -InjectPartiallyInitializedInterpreterFrameErrorType:1
 
 // We only check interpreter frame which ret addr matches one from frames pushed to scriptContext.

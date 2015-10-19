@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // Confirm that we can continue executing function calls and loop bodies when we fail
 // to install jitted code after the native code gen job has succeeded. (Written to run
 // with /mic:2 /lic:1 /on:failnativecodeinstall.)

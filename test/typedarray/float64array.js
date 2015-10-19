@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 WScript.LoadScriptFile("util.js");
 
 function oneTest(a)
@@ -168,7 +173,7 @@ printObj(test20);
 
 
 WScript.Echo("test21");
-var test21 = test5.constructor(2);
+var test21 = new test5.constructor(2);
 
 try {
     WScript.Echo(Object.getPrototypeOf(test21));

@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 function a() { }
 a.prototype.x = function () { WScript.Echo(1); this.y(); };
 a.prototype.y = function () { WScript.Echo("a"); };

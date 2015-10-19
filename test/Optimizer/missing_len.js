@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 //FileName: \\ezeqasrv1\users\runtimetoolsbugs\casanalyzed\exprgen\fbl_ie_script_dev\130228-2030\x86\nebularun_x86\201303012321\ddltd2_0c68bf08-e27f-4a80-b0be-afca5b36c627\bug0.js
 //Configuration: cse.xml
 //Testcase Number: 8661

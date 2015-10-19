@@ -7055,7 +7055,7 @@ BackwardPass::DoDeadStoreLdStForMemop(IR::Instr *instr)
 
             FOREACH_MEMCOPY_CANDIDATES(candidate, loop)
             {
-                if (base == candidate->ldBase && index == candidate->ldIndex)
+                if (base == candidate->ldBase && index == candidate->index)
                 {
                     return true;
                 }
@@ -7130,6 +7130,8 @@ BackwardPass::IsEmptyLoopAfterMemOp(Loop *loop)
                 {
                     switch (instr->m_opcode)
                     {
+                    case Js::OpCode::Nop:
+                        break;
                     case Js::OpCode::Ld_I4:
                     case Js::OpCode::Add_I4:
                     case Js::OpCode::Sub_I4:
@@ -7202,18 +7204,6 @@ BackwardPass::RemoveEmptyLoops()
         {
             loop->memOpInfo->inductionVariableChangeInfoMap->Clear();
             JitAdelete(alloc, loop->memOpInfo->inductionVariableChangeInfoMap);
-        }
-
-        if (loop->memOpInfo->memsetIgnore)
-        {
-            loop->memOpInfo->memsetIgnore->Clear();
-            JitAdelete(alloc, loop->memOpInfo->memsetIgnore);
-        }
-
-        if (loop->memOpInfo->memcopyIgnore)
-        {
-            loop->memOpInfo->memcopyIgnore->Clear();
-            JitAdelete(alloc, loop->memOpInfo->memcopyIgnore);
         }
 
         if (loop->memOpInfo->inductionVariablesUsedAfterLoop)

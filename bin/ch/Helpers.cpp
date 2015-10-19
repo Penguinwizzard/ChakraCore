@@ -3,6 +3,7 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "StdAfx.h"
+#include "codex\Utf8Codex.h"
 
 HRESULT Helpers::LoadScriptFromFile(LPCWSTR filename, LPCWSTR& contents, bool* isUtf8Out, LPCWSTR* contentsRawOut, UINT* lengthBytesOut, bool printFileOpenError)
 {
@@ -97,21 +98,17 @@ HRESULT Helpers::LoadScriptFromFile(LPCWSTR filename, LPCWSTR& contents, bool* i
 
     if (isUtf8)
     {
-        UINT cAnsiChars = lengthBytes + 1;
-        contents = (LPCWSTR)HeapAlloc(GetProcessHeap(), 0, cAnsiChars * sizeof(WCHAR)); // Simulate Trident buffer, allocate by HeapAlloc
+        utf8::DecodeOptions decodeOptions = utf8::doAllowInvalidWCHARs;
+
+        UINT cUtf16Chars = utf8::ByteIndexIntoCharacterIndex(pRawBytes, lengthBytes, decodeOptions);
+        contents = (LPCWSTR)HeapAlloc(GetProcessHeap(), 0, (cUtf16Chars + 1) * sizeof(WCHAR)); // Simulate Trident buffer, allocate by HeapAlloc
         if (nullptr == contents)
         {
             fwprintf(stderr, L"out of memory");
             IfFailGo(E_OUTOFMEMORY);
         }
 
-        // Covert to Unicode.
-        if (0 == MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)contentsRaw, cAnsiChars,
-            (LPWSTR)contents, cAnsiChars))
-        {
-            fwprintf(stderr, L"failed MultiByteToWideChar conversion");
-            IfFailGo(HRESULT_FROM_WIN32(GetLastError()));
-        }
+        utf8::DecodeIntoAndNullTerminate((wchar_t*) contents, pRawBytes, cUtf16Chars, decodeOptions);
     }
 
 Error:

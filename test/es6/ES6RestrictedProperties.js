@@ -1,7 +1,121 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // ES6 restricted property tests 
 
 if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
     this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
+}
+
+function verifyAttributes(obj, prop, attribs, name) {
+    var p = Object.getOwnPropertyDescriptor(obj, prop);
+
+    assert.areNotEqual(undefined, p, name + " does not have property named " + prop);
+
+    assert.areEqual(attribs.writable, p.writable, name + " has property named " + prop + " with writable = " + attribs.writable);
+    assert.areEqual(attribs.enumerable, p.enumerable, name + " has property named " + prop + " with enumerable = " + attribs.enumerable);
+    assert.areEqual(attribs.configurable, p.configurable, name + " has property named " + prop + " with configurable = " + attribs.configurable);
+}
+
+function verifyHasRestrictedOwnProperties(obj, name) {
+    assert.isTrue(obj.hasOwnProperty('caller'), name + " reports that it has own property 'caller'")
+    assert.isTrue(obj.hasOwnProperty('arguments'), name + " reports that it has own property 'arguments'")
+    
+    var names = Object.getOwnPropertyNames(obj);
+    assert.areNotEqual(-1, names.findIndex((e) => { return e === 'arguments'; }), name + " has 'arguments' own property");
+    assert.areNotEqual(-1, names.findIndex((e) => { return e === 'caller'; }), name + " has 'caller' own property");
+    
+    verifyAttributes(obj, 'caller', { writable: false, enumerable: false, configurable: false }, name);
+    assert.isFalse(obj.propertyIsEnumerable('caller'), name + " says 'caller' property is not enumerable");
+    verifyAttributes(obj, 'arguments', { writable: false, enumerable: false, configurable: false }, name);
+    assert.isFalse(obj.propertyIsEnumerable('arguments'), name + " says 'arguments' property is not enumerable");
+    
+    assert.areEqual(null, obj.caller, name + " says 'caller' property is null")
+    assert.areEqual(null, obj.arguments, name + " says 'arguments' property is null")
+    
+    assert.doesNotThrow(function() { obj.caller = 'something'; }, name + " has 'caller' property which can't be assigned to");
+    assert.doesNotThrow(function() { obj.arguments = 'something'; }, name + " has 'arguments' property which  can't be assigned to");
+    
+    assert.throws(function() { 'use strict'; obj.caller = 'something'; }, TypeError, name + " has 'caller' own property but it is not configurable so we will throw in strict mode", "Assignment to read-only properties is not allowed in strict mode");
+    assert.throws(function() { 'use strict'; obj.arguments = 'something'; }, TypeError, name + " has 'arguments' own property but it is not configurable so we will throw in strict mode", "Assignment to read-only properties is not allowed in strict mode");
+    
+    assert.areEqual(null, obj.caller, name + " says 'caller' property is null")
+    assert.areEqual(null, obj.arguments, name + " says 'arguments' property is null")
+    
+    assert.throws(function() { Object.defineProperty(obj, 'arguments', { value: 123 }); }, TypeError, name + " has 'arguments' property as non-writable, non-configurable", "Cannot modify non-writable property 'arguments'");
+    assert.throws(function() { Object.defineProperty(obj, 'caller', { value: 123 }); }, TypeError, name + " has 'caller' property as non-writable, non-configurable", "Cannot modify non-writable property 'caller'");
+    
+    assert.isFalse(delete obj.arguments, name + " has 'arguments' property as non-configurable so delete returns false");
+    assert.isFalse(delete obj.caller, name + " has 'caller' property as non-configurable so delete returns false");
+    
+    assert.throws(function() { 'use strict'; delete obj.caller; }, TypeError, name + " has 'caller' own property but it is not configurable so we will throw in strict mode", "Calling delete on 'caller' is not allowed in strict mode");
+    assert.throws(function() { 'use strict'; delete obj.arguments; }, TypeError, name + " has 'arguments' own property but it is not configurable so we will throw in strict mode", "Calling delete on 'arguments' is not allowed in strict mode");
+}
+
+function verifyDoesNotHaveRestrictedOwnProperties(obj, name) {
+    assert.isFalse(obj.hasOwnProperty('caller'), name + " does not report that it has own property 'caller'")
+    assert.isFalse(obj.hasOwnProperty('arguments'), name + " does not report that it has own property 'arguments'")
+    
+    var names = Object.getOwnPropertyNames(obj);
+    assert.areEqual(-1, names.findIndex((e) => { return e === 'arguments'; }), name + " does not have 'arguments' own property");
+    assert.areEqual(-1, names.findIndex((e) => { return e === 'caller'; }), name + " does not have 'caller' own property");
+    
+    assert.areEqual(undefined, Object.getOwnPropertyDescriptor(obj, 'caller'), name + " does not have 'caller' own property")
+    assert.isFalse(obj.propertyIsEnumerable('caller'), name + " says 'caller' property is not enumerable");
+    assert.areEqual(undefined, Object.getOwnPropertyDescriptor(obj, 'arguments'), name + " does not have 'arguments' own property");
+    assert.isFalse(obj.propertyIsEnumerable('arguments'), name + " says 'arguments' property is not enumerable");
+    
+    assert.throws(function() { obj.caller; }, TypeError, name + " throws on access to 'caller' property", "Accessing the 'caller' property is restricted in this context");
+    assert.throws(function() { obj.arguments; }, TypeError, name + " throws on access to 'arguments' property", "Accessing the 'arguments' property is restricted in this context");
+    
+    assert.throws(function() { 'use strict'; obj.caller; }, TypeError, name + " throws on access to 'caller' property in strict mode", "Accessing the 'caller' property is restricted in this context");
+    assert.throws(function() { 'use strict'; obj.arguments; }, TypeError, name + " throws on access to 'arguments' property in strict mode", "Accessing the 'arguments' property is restricted in this context");
+    
+    assert.throws(function() { obj.caller = 'something'; }, TypeError, name + " throws trying to assign to 'caller' property", "Accessing the 'caller' property is restricted in this context");
+    assert.throws(function() { obj.arguments = 'something'; }, TypeError, name + " throws trying to assign to 'arguments' property", "Accessing the 'arguments' property is restricted in this context");
+    
+    assert.throws(function() { 'use strict'; obj.caller = 'something'; }, TypeError, name + " throws trying to assign to 'caller' property in strict mode", "Accessing the 'caller' property is restricted in this context");
+    assert.throws(function() { 'use strict'; obj.arguments = 'something'; }, TypeError, name + " throws trying to assign to 'arguments' property in strict mode", "Accessing the 'arguments' property is restricted in this context");
+        
+    assert.isTrue(delete obj.arguments, name + " allows deleting own property named 'arguments' if that property doesn't exist");
+    assert.doesNotThrow(function() { Object.defineProperty(obj, 'arguments', { value: 123, writable: true, enumerable: true, configurable: true }); }, name + " doesn't have own 'arguments' property");
+    assert.isTrue(obj.hasOwnProperty('arguments'), name + " has own property 'arguments' after defineProperty")
+    assert.isTrue(obj.propertyIsEnumerable('arguments'), name + " says 'arguments' property is enumerable if it is an enumerable own property");
+    assert.areEqual(123, obj.arguments, name + " can have an own property defined for 'arguments'")
+    verifyAttributes(obj, 'arguments', { writable: true, enumerable: true, configurable: true }, name);
+    assert.isTrue(delete obj.arguments, name + " allows deleting own property named 'arguments' if that property does exist");
+    assert.isFalse(obj.hasOwnProperty('arguments'), name + " doesn't have own property 'arguments' after delete")
+    
+    assert.isTrue(delete obj.caller, name + " allows deleting own property named 'caller' if that property doesn't exist");
+    assert.doesNotThrow(function() { Object.defineProperty(obj, 'caller', { value: 123, writable: true, enumerable: true, configurable: true }); }, name + " doesn't have own 'caller' property");
+    assert.isTrue(obj.hasOwnProperty('caller'), name + " has own property 'caller' after defineProperty")
+    assert.isTrue(obj.propertyIsEnumerable('caller'), name + " says 'caller' property is enumerable if it is an enumerable own property");
+    assert.areEqual(123, obj.caller, name + " can have an own property defined for 'caller'")
+    verifyAttributes(obj, 'caller', { writable: true, enumerable: true, configurable: true }, name);
+    assert.isTrue(delete obj.caller, name + " allows deleting own property named 'caller' if that property does exist");
+    assert.isFalse(obj.hasOwnProperty('caller'), name + " doesn't have own property 'caller' after delete")
+
+    // Remove Function.prototype from the prototype chain.
+    Object.setPrototypeOf(obj, Object.prototype);
+    assert.areEqual(undefined, obj.arguments, name + " does not initially have 'arguments' property when disconnected from Function.prototype");
+    assert.doesNotThrow(function() { obj.arguments = 'abc'; }, name + " can set the 'arguments' property when disconnected from Function.prototype");
+    assert.areEqual('abc', obj.arguments, name + " can set the 'arguments' property when disconnected from Function.prototype");
+    assert.isTrue(obj.hasOwnProperty('arguments'), name + " has 'arguments' own property")
+    assert.isTrue(obj.propertyIsEnumerable('arguments'), name + " says 'arguments' property is enumerable if it is an enumerable own property");
+    verifyAttributes(obj, 'arguments', { writable: true, enumerable: true, configurable: true }, name);
+    assert.isTrue(delete obj.arguments, name + " allows deleting own property named 'arguments' if that property does exist");
+    assert.isFalse(obj.hasOwnProperty('arguments'), name + " doesn't have own property 'arguments' after delete")
+    
+    assert.areEqual(undefined, obj.caller, name + " does not initially have 'caller' property when disconnected from Function.prototype");
+    assert.doesNotThrow(function() { obj.caller = 'abc'; }, name + " can set the 'caller' property when disconnected from Function.prototype");
+    assert.areEqual('abc', obj.caller, name + " can set the 'caller' property when disconnected from Function.prototype");
+    assert.isTrue(obj.hasOwnProperty('caller'), name + " has 'caller' own property")
+    assert.isTrue(obj.propertyIsEnumerable('caller'), name + " says 'caller' property is enumerable if it is an enumerable own property");
+    verifyAttributes(obj, 'caller', { writable: true, enumerable: true, configurable: true }, name);
+    assert.isTrue(delete obj.caller, name + " allows deleting own property named 'caller' if that property does exist");
+    assert.isFalse(obj.hasOwnProperty('caller'), name + " doesn't have own property 'caller' after delete")
 }
 
 var tests = [
@@ -10,93 +124,74 @@ var tests = [
         body: function () {
             var obj = Function.prototype;
             
-            assert.isFalse(Object.hasOwnProperty(obj, 'caller'), "Function.prototype does not report that it has own property 'caller'")
-            assert.isFalse(Object.hasOwnProperty(obj, 'arguments'), "Function.prototype does not report that it has own property 'arguments'")
+            assert.isTrue(obj.hasOwnProperty('caller'), "Function.prototype has own property 'caller'")
+            assert.isTrue(obj.hasOwnProperty('arguments'), "Function.prototype has own property 'arguments'")
             
             var p = Object.getOwnPropertyDescriptor(obj, 'caller');
-            assert.areEqual('{"enumerable":false,"configurable":false}', JSON.stringify(p), "Function.prototype function has 'caller' own property")
+            assert.isFalse(p.enumerable, "Function.prototype function has 'caller' own property which is not enumerable");
+            assert.isFalse(p.configurable, "Function.prototype function has 'caller' own property which is not configurable");
+            assert.isFalse(obj.propertyIsEnumerable('caller'), "Function.prototype says 'caller' property is not enumerable");
             assert.areEqual('function', typeof p.get, "Function.prototype['caller'] has get accessor function");
             assert.areEqual('function', typeof p.set, "Function.prototype['caller'] has set accessor function");
             assert.throws(function() { p.get(); }, TypeError, "Function.prototype['caller'] has get accessor which throws");
             assert.throws(function() { p.set(); }, TypeError, "Function.prototype['caller'] has set accessor which throws");
             assert.isTrue(p.get === p.set, "Function.prototype returns the same ThrowTypeError function for get/set accessor of 'caller' property");
             
-            p = Object.getOwnPropertyDescriptor(obj, 'arguments');
-            assert.areEqual('{"enumerable":false,"configurable":false}', JSON.stringify(p), "Function.prototype function has 'arguments' own property")
-            assert.areEqual('function', typeof p.get, "Function.prototype['arguments'] has get accessor function");
-            assert.areEqual('function', typeof p.set, "Function.prototype['arguments'] has set accessor function");
-            assert.throws(function() { p.get(); }, TypeError, "Function.prototype['arguments'] has get accessor which throws");
-            assert.throws(function() { p.set(); }, TypeError, "Function.prototype['arguments'] has set accessor which throws");
-            assert.isTrue(p.get === p.set, "Function.prototype returns the same ThrowTypeError function for get/set accessor of 'arguments' property");
+            var p2 = Object.getOwnPropertyDescriptor(obj, 'arguments');
+            assert.isFalse(p2.enumerable, "Function.prototype function has 'arguments' own property which is not enumerable");
+            assert.isFalse(p2.configurable, "Function.prototype function has 'arguments' own property which is not configurable");
+            assert.isFalse(obj.propertyIsEnumerable('arguments'), "Function.prototype says 'arguments' property is not enumerable");
+            assert.areEqual('function', typeof p2.get, "Function.prototype['arguments'] has get accessor function");
+            assert.areEqual('function', typeof p2.set, "Function.prototype['arguments'] has set accessor function");
+            assert.throws(function() { p2.get(); }, TypeError, "Function.prototype['arguments'] has get accessor which throws");
+            assert.throws(function() { p2.set(); }, TypeError, "Function.prototype['arguments'] has set accessor which throws");
+            assert.isTrue(p2.get === p2.set, "Function.prototype returns the same ThrowTypeError function for get/set accessor of 'arguments' property");
             
-            assert.areEqual('["apply","arguments","bind","call","caller","constructor","length","toString"]', JSON.stringify(Object.getOwnPropertyNames(obj).sort()), "Function.prototype function has 'caller' and 'arguments' own properties");
+            assert.isTrue(p.get === p2.get, "Function.prototype returns the same ThrowTypeError function for accessor of both 'arguments' and 'caller' properties");
+            
+            var names = Object.getOwnPropertyNames(obj);
+            assert.areNotEqual(-1, names.findIndex((e) => { return e === 'arguments'; }), "Function.prototype has 'arguments' own property");
+            assert.areNotEqual(-1, names.findIndex((e) => { return e === 'caller'; }), "Function.prototype has 'caller' own property");
             
             assert.throws(function() { obj.caller; }, TypeError, "Function.prototype throws on access to 'caller' property", "Accessing the 'caller' property is restricted in this context");
             assert.throws(function() { obj.arguments; }, TypeError, "Function.prototype throws on access to 'arguments' property", "Accessing the 'arguments' property is restricted in this context");
             
+            assert.throws(function() { obj.caller = 'something'; }, TypeError, "Function.prototype throws trying to assign to 'caller' property", "Accessing the 'caller' property is restricted in this context");
+            assert.throws(function() { obj.arguments = 'something'; }, TypeError, "Function.prototype throws trying to assign to 'arguments' property", "Accessing the 'arguments' property is restricted in this context");
+            
+            // TODO: These descriptors should have configurable set to true so remaining asserts in this test should actually succeed
             assert.throws(function() { Object.defineProperty(obj, 'arguments', { value: 123 }); }, TypeError, "Function.prototype has 'arguments' property as non-configurable", "Cannot redefine non-configurable property 'arguments'");
             assert.throws(function() { Object.defineProperty(obj, 'caller', { value: 123 }); }, TypeError, "Function.prototype has 'caller' property as non-configurable", "Cannot redefine non-configurable property 'caller'");
+            
+            assert.isFalse(delete obj.arguments, "Function.prototype has 'arguments' property as non-configurable so delete returns false");
+            assert.isFalse(delete obj.caller, "Function.prototype has 'caller' property as non-configurable so delete returns false");
+            
+            assert.throws(function() { 'use strict'; delete obj.caller; }, TypeError, "Function.prototype has 'caller' own property but it is not configurable so we will throw in strict mode", "Calling delete on 'caller' is not allowed in strict mode");
+            assert.throws(function() { 'use strict'; delete obj.arguments; }, TypeError, "Function.prototype has 'arguments' own property but it is not configurable so we will throw in strict mode", "Calling delete on 'arguments' is not allowed in strict mode");
         }
     },
     {
         name: "Restricted properties of non-strict function",
         body: function () {
-            var obj = function() {};
+            function obj() {};
             
-            assert.isFalse(Object.hasOwnProperty(obj, 'caller'), "non-strict function does not report that it has own property 'caller'")
-            assert.isFalse(Object.hasOwnProperty(obj, 'arguments'), "non-strict function does not report that it has own property 'arguments'")
-            
-            assert.areEqual('{"value":null,"writable":false,"enumerable":false,"configurable":false}', JSON.stringify(Object.getOwnPropertyDescriptor(obj, 'caller')), "non-strict function has 'caller' own property")
-            assert.areEqual('{"value":null,"writable":false,"enumerable":false,"configurable":false}', JSON.stringify(Object.getOwnPropertyDescriptor(obj, 'arguments')), "non-strict function has 'arguments' own property");
-            assert.areEqual('["arguments","caller","length","name","prototype"]', JSON.stringify(Object.getOwnPropertyNames(obj).sort()), "non-strict function has 'caller' and 'arguments' own properties");
-            
-            assert.areEqual(null, obj.caller, "'caller' property of non-strict function is null")
-            assert.areEqual(null, obj.arguments, "'arguments' property of non-strict function is null")
-            
-            assert.throws(function() { Object.defineProperty(obj, 'arguments', { value: 123 }); }, TypeError, "non-strict function has 'arguments' property as non-writable, non-configurable", "Cannot modify non-writable property 'arguments'");
-            assert.throws(function() { Object.defineProperty(obj, 'caller', { value: 123 }); }, TypeError, "non-strict function has 'caller' property as non-writable, non-configurable", "Cannot modify non-writable property 'caller'");
+            verifyHasRestrictedOwnProperties(obj, "Non-strict function");
         }
     },
     {
         name: "Restricted properties of strict function",
         body: function () {
-            var obj = function() { 'use strict'; };
+            function foo() { 'use strict'; };
             
-            assert.isFalse(Object.hasOwnProperty(obj, 'caller'), "Strict function does not report that it has own property 'caller'")
-            assert.isFalse(Object.hasOwnProperty(obj, 'arguments'), "Strict function does not report that it has own property 'arguments'")
-            
-            assert.areEqual(undefined, JSON.stringify(Object.getOwnPropertyDescriptor(obj, 'caller')), "Strict function does not have 'caller' own property")
-            assert.areEqual(undefined, JSON.stringify(Object.getOwnPropertyDescriptor(obj, 'arguments')), "Strict function does not have 'arguments' own property");
-            assert.areEqual('["length","name","prototype"]', JSON.stringify(Object.getOwnPropertyNames(obj).sort()), "Strict function does not have 'caller' and 'arguments' own properties");
-            
-            assert.throws(function() { obj.caller; }, TypeError, "Strict function throws on access to 'caller' property", "Accessing the 'caller' property is restricted in this context");
-            assert.throws(function() { obj.arguments; }, TypeError, "Strict function throws on access to 'arguments' property", "Accessing the 'arguments' property is restricted in this context");
-            
-            assert.doesNotThrow(function() { Object.defineProperty(obj, 'arguments', { value: 123 }); }, "Strict function has doesn't have own 'arguments' property");
-            assert.areEqual(123, obj.arguments, "Strict function can have an own property defined for 'arguments'")
-            assert.doesNotThrow(function() { Object.defineProperty(obj, 'caller', { value: 123 }); }, "Strict function doesn't have own 'caller' property");
-            assert.areEqual(123, obj.caller, "Strict function can have an own property defined for 'caller'")
+            verifyDoesNotHaveRestrictedOwnProperties(foo, "Strict function");
         }
     },
     {
         name: "Restricted properties of class",
         body: function () {
-            var obj = class A { };
+            class A { };
             
-            assert.isFalse(Object.hasOwnProperty(obj, 'caller'), "Class does not report that it has own property 'caller'")
-            assert.isFalse(Object.hasOwnProperty(obj, 'arguments'), "Class does not report that it has own property 'arguments'")
-            
-            assert.areEqual(undefined, JSON.stringify(Object.getOwnPropertyDescriptor(obj, 'caller')), "Class does not have 'caller' own property")
-            assert.areEqual(undefined, JSON.stringify(Object.getOwnPropertyDescriptor(obj, 'arguments')), "Class does not have 'arguments' own property");
-            assert.areEqual('["length","name","prototype"]', JSON.stringify(Object.getOwnPropertyNames(obj).sort()), "Class does not have 'caller' and 'arguments' own properties");
-            
-            assert.throws(function() { obj.caller; }, TypeError, "Class throws on access to 'caller' property", "Accessing the 'caller' property is restricted in this context");
-            assert.throws(function() { obj.arguments; }, TypeError, "Class throws on access to 'arguments' property", "Accessing the 'arguments' property is restricted in this context");
-            
-            assert.doesNotThrow(function() { Object.defineProperty(obj, 'arguments', { value: 123 }); }, "Class has doesn't have own 'arguments' property");
-            assert.areEqual(123, obj.arguments, "Class can have an own property defined for 'arguments'")
-            assert.doesNotThrow(function() { Object.defineProperty(obj, 'caller', { value: 123 }); }, "Class doesn't have own 'caller' property");
-            assert.areEqual(123, obj.caller, "Class can have an own property defined for 'caller'")
+            verifyDoesNotHaveRestrictedOwnProperties(A, "Class");
         }
     },
     {
@@ -105,22 +200,18 @@ var tests = [
             class A {
                 static static_method() { }
             };
-            var obj = A.static_method;
             
-            assert.isFalse(Object.hasOwnProperty(obj, 'caller'), "Class static method does not report that it has own property 'caller'")
-            assert.isFalse(Object.hasOwnProperty(obj, 'arguments'), "Class static method does not report that it has own property 'arguments'")
+            verifyDoesNotHaveRestrictedOwnProperties(A.static_method, "Class static method");
+        }
+    },
+    {
+        name: "Restricted properties of strict-mode class static method",
+        body: function () {
+            class A {
+                static static_method() { 'use strict'; }
+            };
             
-            assert.areEqual(undefined, JSON.stringify(Object.getOwnPropertyDescriptor(obj, 'caller')), "Class static method does not have 'caller' own property")
-            assert.areEqual(undefined, JSON.stringify(Object.getOwnPropertyDescriptor(obj, 'arguments')), "Class static method does not have 'arguments' own property");
-            assert.areEqual('["length","name"]', JSON.stringify(Object.getOwnPropertyNames(obj).sort()), "Class static method does not have 'caller' and 'arguments' own properties");
-            
-            assert.throws(function() { obj.caller; }, TypeError, "Class static method throws on access to 'caller' property", "Accessing the 'caller' property is restricted in this context");
-            assert.throws(function() { obj.arguments; }, TypeError, "Class static method throws on access to 'arguments' property", "Accessing the 'arguments' property is restricted in this context");
-            
-            assert.doesNotThrow(function() { Object.defineProperty(obj, 'arguments', { value: 123 }); }, "Class static method doesn't have own 'arguments' property");
-            assert.areEqual(123, obj.arguments, "Class static method can have an own property defined for 'arguments'")
-            assert.doesNotThrow(function() { Object.defineProperty(obj, 'caller', { value: 123 }); }, "Class static method doesn't have own 'caller' property");
-            assert.areEqual(123, obj.caller, "Class static method can have an own property defined for 'caller'")
+            verifyDoesNotHaveRestrictedOwnProperties(A.static_method, "Class strict-mode static method");
         }
     },
     {
@@ -129,22 +220,18 @@ var tests = [
             class A {
                 method() { }
             };
-            var obj = new A().method;
             
-            assert.isFalse(Object.hasOwnProperty(obj, 'caller'), "Class method does not report that it has own property 'caller'")
-            assert.isFalse(Object.hasOwnProperty(obj, 'arguments'), "Class method does not report that it has own property 'arguments'")
+            verifyDoesNotHaveRestrictedOwnProperties(A.prototype.method, "Class method");
+        }
+    },
+    {
+        name: "Restricted properties of strict-mode class method",
+        body: function () {
+            class A {
+                method() { 'use strict'; }
+            };
             
-            assert.areEqual(undefined, JSON.stringify(Object.getOwnPropertyDescriptor(obj, 'caller')), "Class method does not have 'caller' own property")
-            assert.areEqual(undefined, JSON.stringify(Object.getOwnPropertyDescriptor(obj, 'arguments')), "Class method does not have 'arguments' own property");
-            assert.areEqual('["length","name"]', JSON.stringify(Object.getOwnPropertyNames(obj).sort()), "Class method does not have 'caller' and 'arguments' own properties");
-            
-            assert.throws(function() { obj.caller; }, TypeError, "Class method throws on access to 'caller' property", "Accessing the 'caller' property is restricted in this context");
-            assert.throws(function() { obj.arguments; }, TypeError, "Class method throws on access to 'arguments' property", "Accessing the 'arguments' property is restricted in this context");
-            
-            assert.doesNotThrow(function() { Object.defineProperty(obj, 'arguments', { value: 123 }); }, "Class method doesn't have own 'arguments' property");
-            assert.areEqual(123, obj.arguments, "Class method can have an own property defined for 'arguments'")
-            assert.doesNotThrow(function() { Object.defineProperty(obj, 'caller', { value: 123 }); }, "Class method doesn't have own 'caller' property");
-            assert.areEqual(123, obj.caller, "Class method can have an own property defined for 'caller'")
+            verifyDoesNotHaveRestrictedOwnProperties(A.prototype.method, "Class strict-mode method");
         }
     },
     {
@@ -154,8 +241,8 @@ var tests = [
                 static caller() { return 42; }
             };
             
-            assert.isFalse(Object.hasOwnProperty(obj, 'caller'), "Class does not report that it has own property 'caller'")
-            assert.isFalse(Object.hasOwnProperty(obj, 'arguments'), "Class does not report that it has own property 'arguments'")
+            assert.isTrue(obj.hasOwnProperty('caller'), "Class does has own property 'caller'")
+            assert.isFalse(obj.hasOwnProperty('arguments'), "Class does not report that it has own property 'arguments'")
             
             assert.areEqual('{"writable":true,"enumerable":false,"configurable":true}', JSON.stringify(Object.getOwnPropertyDescriptor(obj, 'caller')), "Class does not have 'caller' own property")
             assert.areEqual(undefined, JSON.stringify(Object.getOwnPropertyDescriptor(obj, 'arguments')), "Class does not have 'arguments' own property");
@@ -172,8 +259,8 @@ var tests = [
                 static get arguments() { return 42; }
             };
             
-            assert.isFalse(Object.hasOwnProperty(obj, 'caller'), "Class does not report that it has own property 'caller'")
-            assert.isFalse(Object.hasOwnProperty(obj, 'arguments'), "Class does not report that it has own property 'arguments'")
+            assert.isFalse(obj.hasOwnProperty('caller'), "Class does not report that it has own property 'caller'")
+            assert.isTrue(obj.hasOwnProperty('arguments'), "Class has own property 'arguments'")
             
             assert.areEqual(undefined, JSON.stringify(Object.getOwnPropertyDescriptor(obj, 'caller')), "Class does not have 'caller' own property")
             assert.areEqual('{"enumerable":false,"configurable":true}', JSON.stringify(Object.getOwnPropertyDescriptor(obj, 'arguments')), "Class has 'arguments' own property");
@@ -192,8 +279,8 @@ var tests = [
             };
             var obj = A;
             
-            assert.isFalse(Object.hasOwnProperty(obj, 'caller'), "Class does not report that it has own property 'caller'")
-            assert.isFalse(Object.hasOwnProperty(obj, 'arguments'), "Class does not report that it has own property 'arguments'")
+            assert.isFalse(obj.hasOwnProperty('caller'), "Class does not report that it has own property 'caller'")
+            assert.isFalse(obj.hasOwnProperty('arguments'), "Class does not report that it has own property 'arguments'")
             
             assert.areEqual(undefined, JSON.stringify(Object.getOwnPropertyDescriptor(obj, 'caller')), "Class does not have 'caller' own property")
             assert.areEqual(undefined, JSON.stringify(Object.getOwnPropertyDescriptor(obj, 'arguments')), "Class has 'arguments' own property");
@@ -202,8 +289,22 @@ var tests = [
             assert.throws(function() { obj.caller; }, TypeError, "Class method throws on access to 'caller' property", "Accessing the 'caller' property is restricted in this context");
             assert.throws(function() { obj.arguments; }, TypeError, "Class method throws on access to 'arguments' property", "Accessing the 'arguments' property is restricted in this context");
             
-            new A().arguments = 50;
+            var a = new A();
+            
+            assert.isFalse(a.hasOwnProperty('caller'), "Class instance does not report that it has own property 'caller'")
+            assert.isFalse(a.hasOwnProperty('arguments'), "Class instance does not report that it has own property 'arguments'")
+            
+            assert.isFalse(a.__proto__.hasOwnProperty('caller'), "Class prototype does not report that it has own property 'caller'")
+            assert.isTrue(a.__proto__.hasOwnProperty('arguments'), "Class prototype has own property 'arguments'")
+            
+            a.arguments = 50;
             assert.areEqual(50, my_v, "Accessing the 'arguments' property was not restricted");
+            
+            assert.areEqual(undefined, a.caller, "Access to class instance 'caller' property doesn't throw - instance is not a function");
+            
+            a.caller = 123;
+            
+            assert.areEqual(123, a.caller, "Assignment to class instance 'caller' property works normally");
         }
     },
     {
@@ -211,20 +312,65 @@ var tests = [
         body: function () {
             var obj = () => { }
             
-            assert.isFalse(Object.hasOwnProperty(obj, 'caller'), "Lambda does not report that it has own property 'caller'")
-            assert.isFalse(Object.hasOwnProperty(obj, 'arguments'), "Lambda does not report that it has own property 'arguments'")
+            verifyDoesNotHaveRestrictedOwnProperties(obj, "Lambda");
+        }
+    },
+    {
+        name: "Restricted properties of strict-mode lambda",
+        body: function () {
+            var obj = () => { 'use strict'; }
             
-            assert.areEqual(undefined, JSON.stringify(Object.getOwnPropertyDescriptor(obj, 'caller')), "Lambda does not have 'caller' own property")
-            assert.areEqual(undefined, JSON.stringify(Object.getOwnPropertyDescriptor(obj, 'arguments')), "Lambda does not have 'arguments' own property");
-            assert.areEqual('["length","name"]', JSON.stringify(Object.getOwnPropertyNames(obj).sort()), "Lambda does not have 'caller' and 'arguments' own properties");
+            verifyDoesNotHaveRestrictedOwnProperties(obj, "Strict-mode lambda");
+        }
+    },
+    {
+        name: "Restricted properties of bound function",
+        body: function () {
+            function target() {}
+            var obj = target.bind(null);
             
-            assert.throws(function() { obj.caller; }, TypeError, "Lambda throws on access to 'caller' property", "Accessing the 'caller' property is restricted in this context");
-            assert.throws(function() { obj.arguments; }, TypeError, "Lambda throws on access to 'arguments' property", "Accessing the 'arguments' property is restricted in this context");
+            verifyDoesNotHaveRestrictedOwnProperties(obj, "Bound function");
+        }
+    },
+    {
+        name: "Restricted properties of bound strict-mode function",
+        body: function () {
+            function target() { 'use strict'; }
+            var obj = target.bind(null);
             
-            assert.doesNotThrow(function() { Object.defineProperty(obj, 'arguments', { value: 123 }); }, "Lambda doesn't have own 'arguments' property");
-            assert.areEqual(123, obj.arguments, "Lambda can have an own property defined for 'arguments'")
-            assert.doesNotThrow(function() { Object.defineProperty(obj, 'caller', { value: 123 }); }, "Lambda doesn't have own 'caller' property");
-            assert.areEqual(123, obj.caller, "Lambda can have an own property defined for 'caller'")
+            verifyDoesNotHaveRestrictedOwnProperties(obj, "Bound strict-mode function");
+        }
+    },
+    {
+        name: "Restricted properties of generator function",
+        body: function () {
+            function* gf() { }
+            
+            verifyDoesNotHaveRestrictedOwnProperties(gf, "Generator function");
+        }
+    },
+    {
+        name: "Restricted properties of strict-mode generator function",
+        body: function () {
+            function* gf() { 'use strict'; }
+            
+            verifyDoesNotHaveRestrictedOwnProperties(gf, "Generator strict-mode function");
+        }
+    },
+    {
+        name: "Restricted properties of object-literal function",
+        body: function () {
+            var obj = { func() { } }
+            
+            verifyHasRestrictedOwnProperties(obj.func, "Object-literal function");
+        }
+    },
+    {
+        name: "Restricted properties of strict-mode object-literal function",
+        body: function () {
+            var obj = { func() { 'use strict'; } }
+            
+            verifyDoesNotHaveRestrictedOwnProperties(obj.func, "Object-literal strict-mode function");
         }
     },
 ];

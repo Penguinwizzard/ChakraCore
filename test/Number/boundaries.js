@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 for (var numDigitsAfterDecimal = -1; numDigitsAfterDecimal <= 2; ++numDigitsAfterDecimal) {
     for (var lastDigit = 0; lastDigit <= (numDigitsAfterDecimal <= 0 ? 0 : 1); ++lastDigit) {
         for (var numDigits = 20; numDigits <= 23; ++numDigits) {

@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // NOTE: because vdates are timezone specific, this test will might only work in PST
 // not sure about DST.  If you see a failure, that would be my first suspicion
 

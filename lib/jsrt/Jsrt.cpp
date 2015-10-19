@@ -22,11 +22,6 @@
 #include "TestHooksRt.h"
 #endif
 
-#ifdef _M_X64_OR_ARM64
-// TODO: Clean this warning up
-#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
-#endif
-
 JsErrorCode CheckContext(JsrtContext *currentContext, bool verifyRuntimeState, bool allowInObjectBeforeCollectCallback)
 {
     if (currentContext == nullptr)
@@ -1250,7 +1245,7 @@ STDAPI_(JsErrorCode) JsCreateTypedArray(_In_ JsTypedArrayType arrayType, _In_ Js
             values[3] = Js::JavascriptNumber::ToVar(elementLength, scriptContext);
         }
 
-        Js::CallInfo info(Js::CallFlags_Value, fromArrayBuffer ? 4 : 2);
+        Js::CallInfo info(Js::CallFlags_New, fromArrayBuffer ? 4 : 2);
         Js::Arguments args(info, values);
 
         switch (arrayType)
@@ -1286,7 +1281,7 @@ STDAPI_(JsErrorCode) JsCreateTypedArray(_In_ JsTypedArrayType arrayType, _In_ Js
             return JsErrorInvalidArgument;
         }
 
-        *result = Js::JavascriptFunction::CallFunction<true>(constructorFunc, constructorFunc->GetEntryPoint(), args);
+        *result = Js::JavascriptFunction::CallAsConstructor(constructorFunc, /* overridingNewTarget = */nullptr, args, scriptContext);
 
         JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(*result));
         return JsNoError;
@@ -2255,8 +2250,20 @@ STDAPI_(JsErrorCode) JsGetPropertyIdFromName(_In_z_ const wchar_t *name, _Out_ J
         PARAM_NOT_NULL(propertyId);
         *propertyId = nullptr;
 
-        scriptContext->GetOrAddPropertyRecord(name, wcslen(name), (Js::PropertyRecord const **)propertyId);
-        return JsNoError;
+        size_t cPropertyNameLength = wcslen(name);
+
+        if (cPropertyNameLength <= INT_MAX)
+        {
+            scriptContext->GetOrAddPropertyRecord(name, static_cast<int>(cPropertyNameLength), (Js::PropertyRecord const **)propertyId);
+
+            return JsNoError;
+        } 
+        else
+        {
+            return JsErrorOutOfMemory;
+        }
+        
+        
     });
 }
 
@@ -2421,7 +2428,7 @@ JsErrorCode RunScriptCore(const wchar_t *script, JsSourceContext sourceContext, 
             /* ulColumnHost        */ 0,
             /* lnMinHost           */ 0,
             /* ichMinHost          */ 0,
-            /* ichLimHost          */ wcslen(script),
+            /* ichLimHost          */ static_cast<ULONG>(wcslen(script)), // OK to truncate since this is used to limit sourceText in debugDocument/compilation errors.
             /* ulCharOffset        */ 0,
             /* mod                 */ kmodGlobal,
             /* grfsi               */ 0
@@ -2515,7 +2522,7 @@ JsErrorCode JsSerializeScriptCore(const wchar_t *script, BYTE *functionTable, in
             /* ulColumnHost        */ 0,
             /* lnMinHost           */ 0,
             /* ichMinHost          */ 0,
-            /* ichLimHost          */ wcslen(script),
+            /* ichLimHost          */ static_cast<ULONG>(wcslen(script)), // OK to truncate since this is used to limit sourceText in debugDocument/compilation errors.
             /* ulCharOffset        */ 0,
             /* mod                 */ kmodGlobal,
             /* grfsi               */ 0
@@ -2548,7 +2555,14 @@ JsErrorCode JsSerializeScriptCore(const wchar_t *script, BYTE *functionTable, in
         }
         Js::FunctionBody *functionBody = function->GetFunctionBody();
         const Js::Utf8SourceInfo *sourceInfo = functionBody->GetUtf8SourceInfo();
-        DWORD dwSourceCodeLength = sourceInfo->GetCbLength(L"JsSerializeScript");
+        size_t cSourceCodeLength = sourceInfo->GetCbLength(L"JsSerializeScript");
+
+        // trucation of code length can lead to accessing random memory. Reject the call.
+        if (cSourceCodeLength > DWORD_MAX)
+        {
+            return JsErrorOutOfMemory;
+        }
+
         LPCUTF8 utf8Code = sourceInfo->GetSource(L"JsSerializeScript");
         DWORD dwFlags = 0;
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
@@ -2556,7 +2570,7 @@ JsErrorCode JsSerializeScriptCore(const wchar_t *script, BYTE *functionTable, in
 #endif
 
         BEGIN_TEMP_ALLOCATOR(tempAllocator, scriptContext, L"ByteCodeSerializer");
-        HRESULT hr = Js::ByteCodeSerializer::SerializeToBuffer(scriptContext, tempAllocator, dwSourceCodeLength, utf8Code, 0, nullptr, functionBody, functionBody->GetHostSrcInfo(), false, &buffer, bufferSize, dwFlags);
+        HRESULT hr = Js::ByteCodeSerializer::SerializeToBuffer(scriptContext, tempAllocator, static_cast<DWORD>(cSourceCodeLength), utf8Code, 0, nullptr, functionBody, functionBody->GetHostSrcInfo(), false, &buffer, bufferSize, dwFlags);
         END_TEMP_ALLOCATOR(tempAllocator, scriptContext);
 
         if (SUCCEEDED(hr))
@@ -2621,14 +2635,14 @@ JsErrorCode RunSerializedScriptCore(const wchar_t *script, JsSerializedScriptLoa
         {
             sourceContextInfo = scriptContext->CreateSourceContextInfo(sourceContext, sourceUrl, wcslen(sourceUrl), nullptr);
         }
-                
+         
         SRCINFO si = {
             /* sourceContextInfo   */ sourceContextInfo,
             /* dlnHost             */ 0,
             /* ulColumnHost        */ 0,
             /* lnMinHost           */ 0,
             /* ichMinHost          */ 0,
-            /* ichLimHost          */ length, // REVIEW: Currently 0 for Callback case.  Determine what is best to set this value.
+            /* ichLimHost          */ static_cast<ULONG>(length), // OK to truncate since this is used to limit sourceText in debugDocument/compilation errors.
             /* ulCharOffset        */ 0,
             /* mod                 */ kmodGlobal,
             /* grfsi               */ 0

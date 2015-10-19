@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // 1. Use eval to initialize an object.
 var x = eval("({" + '"' + "3d-cube" + '"' + ":[1]})");
 WScript.Echo(x["3d-cube"][0]);

@@ -1,6 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Condition="'$(BuildingWithBuildExe)'=='true'" Project="..\..\..\Build\Chakra.Build.Paths.props" />
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">  
   <Import Condition="'$(ChakraBuildPathImported)'!='true'" Project="$(SolutionDir)Chakra.Build.Paths.props" />
   <Import Project="$(BuildConfigPropsPath)Chakra.Build.ProjectConfiguration.props" />
   <PropertyGroup Label="Globals">
@@ -8,12 +7,8 @@
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
   <PropertyGroup Label="Configuration">
+    <TargetName>rl</TargetName>
     <ConfigurationType>Application</ConfigurationType>
-    <BuildForCoreSystem>true</BuildForCoreSystem>
-    <TestCode Condition="'$(BuildingWithBuildExe)'=='true'">true</TestCode>
-    <!-- TestCode does not demote OACR errors to warnings like TEST_CODE=1
-         does in a sources build so for now disable oacr directly -->
-    <BUILD_OACR Condition="'$(BuildingWithBuildExe)'=='true'">0</BUILD_OACR>
   </PropertyGroup>
   <Import Project="$(BuildConfigPropsPath)Chakra.Build.Default.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -21,9 +16,6 @@
   <Import Project="$(BuildConfigPropsPath)Chakra.Build.props" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
-  </PropertyGroup>
-  <PropertyGroup>
-    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <Link>
@@ -37,20 +29,14 @@
       </AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
-  <!-- Razzle binplace -->
-  <ItemGroup Condition="'$(BuildingWithBuildExe)'=='true'">
-    <BinplaceLinked Include="$(ObjectPath)\$(ObjectDirectory)$(TargetFileName)">
-      <DestinationFolder>jscript</DestinationFolder>
-    </BinplaceLinked>
-  </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="HostSysInfo.cpp" />
-    <ClCompile Include="rl.cpp" />
-    <ClCompile Include="rlfeint.cpp" />
-    <ClCompile Include="rlmp.cpp" />
-    <ClCompile Include="rlrun.cpp" />
-    <ClCompile Include="rlregr.cpp" />
-    <ClCompile Include="xmlreader.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)HostSysInfo.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)rl.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)rlfeint.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)rlmp.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)rlrun.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)rlregr.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)xmlreader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="HostSysInfo.h" />
@@ -60,4 +46,7 @@
   </ItemGroup>
   <Import Project="$(BuildConfigPropsPath)Chakra.Build.targets" Condition="exists('$(BuildConfigPropsPath)Chakra.Build.targets')"/>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <PropertyGroup>
+    <RunCodeAnalysisOnThisProject>false</RunCodeAnalysisOnThisProject>
+  </PropertyGroup>
 </Project>

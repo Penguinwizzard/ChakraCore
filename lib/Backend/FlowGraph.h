@@ -626,10 +626,8 @@ public:
     struct MemCopyCandidate : public MemOpCandidate
     {
         SymID ldBase;
-        SymID ldIndex;
-        SymID transferSym;
+        StackSym* transferSym;
         byte ldCount;
-        bool bLdIndexAlreadyChanged;
         MemCopyCandidate() : MemOpCandidate(MemOpCandidate::MEMCOPY) {}
     };
 
@@ -658,13 +656,9 @@ public:
 
     typedef JsUtil::BaseDictionary<SymID, InductionVariableChangeInfo, JitArenaAllocator> InductionVariableChangeInfoMap;
     typedef SListCounted<MemOpCandidate *>  MemOpList;
-    typedef JsUtil::BaseHashSet<SymID, JitArenaAllocator> MemOpIgnoreSet;
     typedef struct
     {
         MemOpList *candidates;
-        uint memsetCandidatesCount, memcopyCandidatesCount;
-        MemOpIgnoreSet *memsetIgnore;
-        MemOpIgnoreSet *memcopyIgnore;
         BVSparse<JitArenaAllocator> *inductionVariablesUsedAfterLoop;
         InductionVariableChangeInfoMap *inductionVariableChangeInfoMap;
         bool doMemOp : 1;
@@ -726,11 +720,9 @@ public:
     bool                IsDescendentOrSelf(Loop const * loop) const;
 
     bool                EnsureMemOpVariablesInitialized();
-    void                InvalidateMemsetCandidate(SymID symId, MemSetCandidate *memsetCandidate = nullptr);
-    void                InvalidateMemcopyCandidate(SymID);
 
     Js::ImplicitCallFlags GetImplicitCallFlags();
-    void                SetImplicitCallFlags(Js::ImplicitCallFlags flags);
+    void                SetImplicitCallFlags(Js::ImplicitCallFlags flags);    
     Js::LoopFlags GetLoopFlags() const { return loopFlags; }
     void SetLoopFlags(Js::LoopFlags val) { loopFlags = val; }
     bool                CanHoistInvariants();
@@ -747,6 +739,59 @@ public:
 private:
     void                InsertLandingPad(FlowGraph *fg);
     bool                RemoveBreakBlocks(FlowGraph *fg);
+};
+
+// Structure definition cannot be inside Loop in order to use it as a parameter in GlobOpt
+struct MemOpEmitData
+{
+    Loop::MemOpCandidate* candidate;
+    IR::IndirOpnd* dstOpnd;
+    Loop::InductionVariableChangeInfo inductionVar;
+    IR::BailOutKind bailoutKind;
+    // Constructor
+    MemOpEmitData(
+        Loop::MemOpCandidate* candidate,
+        IR::IndirOpnd* dstOpnd,
+        Loop::InductionVariableChangeInfo inductionVar,
+        IR::BailOutKind bailoutKind
+        ) :
+        candidate(candidate),
+        dstOpnd(dstOpnd),
+        inductionVar(inductionVar),
+        bailoutKind(bailoutKind)
+    {
+    }
+};
+
+struct MemSetEmitData : public MemOpEmitData
+{
+    // Constructor
+    MemSetEmitData(
+        Loop::MemSetCandidate* candidate,
+        IR::IndirOpnd* dstOpnd,
+        Loop::InductionVariableChangeInfo inductionVar,
+        IR::BailOutKind bailoutKind
+        ) :
+        MemOpEmitData(candidate, dstOpnd, inductionVar, bailoutKind)
+    {
+    }
+};
+
+struct MemCopyEmitData : public MemOpEmitData
+{
+    IR::IndirOpnd* srcOpnd;
+    // Constructor
+    MemCopyEmitData(
+        Loop::MemCopyCandidate* candidate,
+        IR::IndirOpnd* dstOpnd,
+        Loop::InductionVariableChangeInfo inductionVar,
+        IR::BailOutKind bailoutKind,
+        IR::IndirOpnd* srcOpnd
+        ) :
+        MemOpEmitData(candidate, dstOpnd, inductionVar, bailoutKind),
+        srcOpnd(srcOpnd)
+    {
+    }
 };
 
 #define FOREACH_BLOCK_IN_FUNC(block, func)\

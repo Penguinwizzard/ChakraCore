@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="Common.Build.props"/>
   <PropertyGroup>
     <Win32_WinNTVersion Condition="'$(NtTargetVersion)'=='$(NtTargetVersion_Win7)'">0x0601</Win32_WinNTVersion>
@@ -9,12 +9,9 @@
   <PropertyGroup>
     <NoThrowNewLib>nothrownew.obj</NoThrowNewLib>
   </PropertyGroup>
-  <PropertyGroup>
+  <!-- Allow prefast only for x86 debug for now, unless RunCodeAnalysis is defined explicitly -->
+  <PropertyGroup Condition="'$(RunCodeAnalysis)'=='' AND '$(Platform)'=='Win32' AND '$(Configuration)'=='Debug'">
     <RunCodeAnalysis>$(BuildWithCodeAnalysis)</RunCodeAnalysis>
-  </PropertyGroup>
-  <!-- Allow prefast only for x86 debug for now -->
-  <PropertyGroup Condition="'$(Platform)'!='Win32' OR '$(Configuration)'!='Debug'">
-    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>

@@ -60,6 +60,7 @@ namespace Js
 
         virtual BOOL IsWritable(PropertyId propertyId) override;
         virtual BOOL IsEnumerable(PropertyId propertyId) override;
+        virtual bool IsGeneratorFunction() const { return true; };
 
         class EntryInfo
         {

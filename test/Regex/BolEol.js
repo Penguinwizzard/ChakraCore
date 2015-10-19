@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // WOOB 1147829 - these cause a crash in the compat regex engine, but they don't repro the crash most of the time
 match(/^a/m, "b");
 match(/$a?/m, "");

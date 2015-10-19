@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 WScript.Echo("Scenario: Multiple closures, with variables that are modified in the parent function");
 
 function write(x) { WScript.Echo(x + ""); }

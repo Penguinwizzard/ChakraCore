@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Condition="'$(ChakraBuildPathImported)'!='true'" Project="$(SolutionDir)Chakra.Build.Paths.props" />
   <Import Project="$(BuildConfigPropsPath)Chakra.Build.ProjectConfiguration.props" />
   <PropertyGroup Label="Globals">
@@ -26,8 +26,6 @@
         $(MSBuildThisFileDirectory)..\Common;
         $(MSBuildThisFileDirectory)..\Parser;
         $(MSBuildThisFileDirectory)..\Backend;
-        $(ChakraManifestsIncludeDirectory);
-        $(ManifestsInboxIncludeDirectory);
         %(AdditionalIncludeDirectories)
       </AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -49,7 +47,6 @@
   <ItemGroup>
     <ClInclude Include="chakrart.h" />
     <ClInclude Include="JsrtContext.h" />
-    <ClInclude Include="JsrtCustomEnumerator.h" />
     <ClInclude Include="JsrtExternalArrayBuffer.h" />
     <ClInclude Include="JsrtExternalObject.h" />
     <ClInclude Include="JsrtRuntime.h" />
@@ -59,11 +56,6 @@
     <ClInclude Include="JsrtExceptionBase.h" />
     <ClInclude Include="JsrtPch.h" />
     <ClInclude Include="TestHooksRt.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Condition="'$(USE_EXTERNAL_DEPENDENCIES)'!='yes'" Include="..\..\..\publish\Publish.vcxproj">
-      <Project>{1876e800-ad77-48c4-a2f7-e5265f24ac35}</Project>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="JsrtCommonExports.inc" />

@@ -129,6 +129,32 @@ public:
         return E_NOTIMPL;
     }
 
+    HRESULT SetDispatchInvoke(Js::JavascriptMethod dispatchInvoke) override
+    {
+        AssertMsg(false, "no hostdispatch in jsrt");
+        return E_NOTIMPL;
+    }
+
+    HRESULT ArrayBufferFromExternalObject(__in Js::RecyclableObject *obj,
+        __out Js::ArrayBuffer **ppArrayBuffer) override
+    {
+        // there is no IBuffer in chakracore.
+        *ppArrayBuffer = nullptr;
+        return S_FALSE;
+    }
+
+    Js::JavascriptError* CreateWinRTError(IErrorInfo* perrinfo, Js::RestrictedErrorStrings * proerrstr) override
+    {
+        AssertMsg(false, "no winrt support in chakracore");
+        return nullptr;
+    }
+
+    Js::JavascriptFunction* InitializeHostPromiseContinuationFunction() override
+    {
+        AssertMsg(false, "jsrt should have set the promise callback");
+        return GetScriptContext()->GetLibrary()->GetThrowerFunction();
+    }
+
 #if DBG_DUMP || defined(PROFILE_EXEC) || defined(PROFILE_MEM)
     void EnsureParentInfo(Js::ScriptContext* scriptContext = NULL) override
     {

@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 // Tests that bug 56025 is fixed in the minimal repro case with "with" object property usage.
 // [fuzz]:AV@JSCRIPT9TEST!Js::JavascriptLibrary::GetScriptContext+c [d:\7757\inetcore\jscript\lib\runtime\library\javascriptlibrary.h @ 288]
 // http://bugcheck/bugs/WindowsBlueBugs/56026

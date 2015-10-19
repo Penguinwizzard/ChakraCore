@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 //Test odd parameters
 var a = [0.6, 1.34, 2.5, 3.34, 4.454, 5.65, 6.634];
 var x = a.splice(-100, -100);

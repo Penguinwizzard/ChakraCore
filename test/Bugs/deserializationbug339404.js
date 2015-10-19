@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 //reduced switches: -maxinterpretcount:1 -force:fieldcopyprop -forceserialized
 var lol = function() {
     var n = function() {}
@@ -41,7 +46,7 @@ protoObj0.method1.prototype = {
         }
     }
 };
-for(var _strvar22 in Int8Array(1)) {
+for(var _strvar22 in (new Int8Array(1))) {
     var n = function() {}
     var m = function() {}
     n(m(new protoObj0.method1().method1()));

@@ -1,25 +1,14 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in
   // jc/jshost
   this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 }
 
 var tests = [
-  {
-    name: "BLUE: 516448 Deleting properties which references to super should be a ReferenceError",
-    body: function () {
-      class a {
-        static b(){ }
-      };
-
-      class b extends a {
-        static test(){
-          super.b();
-        }
-      };
-
-      assert.throws(function () { delete b.test; }, ReferenceError);
-    }
-  },
   {
     name: "BLUE 540289: AV on deferred parse of first class method",
     body: function () {
