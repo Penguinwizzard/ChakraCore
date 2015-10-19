@@ -202,8 +202,7 @@
     <None Include="InlineCachePointerArray.inl" />
     <None Include="InterpreterHandler.inl" />
     <None Include="InterpreterHandlerAsmJs.inl" />
-    <None Include="InterpreterLoop.inl" />
-    <None Include="JavascriptExceptionOperators.inl" />
+    <None Include="InterpreterLoop.inl" />    
     <None Include="JavascriptMathOperators.inl" />    
     <None Include="JavascriptConversion.inl" />
     <None Include="JavascriptOperators.inl" />

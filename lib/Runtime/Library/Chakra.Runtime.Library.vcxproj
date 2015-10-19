@@ -179,8 +179,8 @@
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSIMDInt8x16.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ExternalLibraryBase.cpp" />
-    <ClCompile Include="IntlEngineInterfaceExtensionObject.cpp" />
-    <ClCompile Include="JavascriptErrorDebug.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)IntlEngineInterfaceExtensionObject.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptErrorDebug.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\DiagGlobalList.h" />
@@ -359,6 +359,7 @@
     <None Include="SparseArraySegment.inl" />
     <None Include="TaggedInt.inl" />
     <None Include="JavascriptArray.inl" />
+    <None Include="JavascriptBoolean.inl" />
     <None Include="JavascriptLibrary.inl" />
     <None Include="JavascriptNumber.inl" />
     <None Include="JavascriptString.inl" />
