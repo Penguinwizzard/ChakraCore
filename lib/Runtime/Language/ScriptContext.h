@@ -97,6 +97,7 @@ public:
     virtual HRESULT ArrayBufferFromExternalObject(__in Js::RecyclableObject *obj,
         __out Js::ArrayBuffer **ppArrayBuffer) = 0;
     virtual Js::JavascriptError* CreateWinRTError(IErrorInfo* perrinfo, Js::RestrictedErrorStrings * proerrstr) = 0;
+    virtual Js::JavascriptFunction* InitializeHostPromiseContinuationFunction() = 0;
 
     Js::ScriptContext* GetScriptContext() { return scriptContext; }
 

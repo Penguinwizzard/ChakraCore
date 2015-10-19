@@ -330,9 +330,7 @@ namespace Js
         JavascriptFunction* arrayPrototypeToLocaleStringFunction;
         JavascriptFunction* identityFunction;
         JavascriptFunction* throwerFunction;
-#ifdef NTBUILD
         JavascriptFunction* hostPromiseContinuationFunction;
-#endif
         JavascriptFunction* promiseResolveFunction;
 
         JavascriptFunction* objectValueOfFunction;
@@ -663,10 +661,7 @@ namespace Js
         JavascriptFunction* GetIdentityFunction() const { return identityFunction; }
         JavascriptFunction* GetThrowerFunction() const { return throwerFunction; }
 
-#ifdef NTBUILD
-        void InitializeHostPromiseContinuationFunction();
         JavascriptFunction* GetHostPromiseContinuationFunction();
-#endif
         void SetNativeHostPromiseContinuationFunction(PromiseContinuationCallback function, void *state);
 
         void PinJsrtContextObject(FinalizableObject* jsrtContext);

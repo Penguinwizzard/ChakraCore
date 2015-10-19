@@ -126,7 +126,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)RuntimeLibraryPch.cpp" />
     <ClCompile Include="ExternalLibraryBase.cpp" />
     <ClCompile Include="IntlEngineInterfaceExtensionObject.cpp" />
-    <ClCompile Include="RoCausality.Win7.cpp" />
     <ClCompile Include="JavascriptErrorDebug.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -273,7 +272,6 @@
     <ClInclude Include="RuntimeLibraryPch.h" />
     <ClInclude Include="ExternalLibraryBase.h" />
     <ClInclude Include="IntlEngineInterfaceExtensionObject.h" />
-    <ClInclude Include="RoCausality.Win7.h" />
     <ClInclude Include="JavascriptErrorDebug.h" />
   </ItemGroup>
   <ItemGroup>

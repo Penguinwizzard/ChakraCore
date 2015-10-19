@@ -179,9 +179,8 @@
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSIMDInt8x16.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ExternalLibraryBase.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)IntlEngineInterfaceExtensionObject.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptErrorDebug.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)RoCausality.Win7.cpp" />
+    <ClCompile Include="IntlEngineInterfaceExtensionObject.cpp" />
+    <ClCompile Include="JavascriptErrorDebug.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\DiagGlobalList.h" />
@@ -196,7 +195,6 @@
     <ClInclude Include="JavascriptSIMDFloat64x2.h" />
     <ClInclude Include="JavascriptSIMDInt32x4.h" />
     <ClInclude Include="JavascriptSIMDInt8x16.h" />
-    <ClInclude Include="RoCausality.Win7.h" />
     <ClInclude Include="SIMDFloat32x4Lib.h" />
     <ClInclude Include="SIMDFloat32x4Operation.h" />
     <ClInclude Include="SIMDFloat64x2Lib.h" />

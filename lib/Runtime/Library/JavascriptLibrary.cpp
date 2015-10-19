@@ -4298,64 +4298,16 @@ namespace Js
     }
 #endif
 
-#ifdef NTBUILD
-    void JavascriptLibrary::InitializeHostPromiseContinuationFunction()
-    {
-        // TODO: Below loads and returns WScript.SetTimeout or window.setTimeout. Later, we should instead use the task queue.
-        // NOTE: The code here is placeholder until we get the task queue from trident.
-        //       If user code changes WScript.SetTimeout or window.setTimeout, the Promise feature won't work!
-        PropertyId windowId = scriptContext->GetOrAddPropertyIdTracked(L"window");
-        PropertyId setTimeoutId = scriptContext->GetOrAddPropertyIdTracked(L"setTimeout");
-        Var global = this->GetGlobalObject();
-        Var window;
-        Var setTimeout;
-
-        // Try to load window.setTimeout
-        if (JavascriptOperators::GetRootProperty(global, windowId, &window, scriptContext) &&
-            RecyclableObject::Is(window) &&
-            JavascriptOperators::GetProperty(RecyclableObject::FromVar(window), setTimeoutId, &setTimeout, scriptContext) &&
-            JavascriptConversion::IsCallable(setTimeout))
-        {
-            this->hostPromiseContinuationFunction = JavascriptFunction::FromVar(setTimeout);
-            return;
-        }
-        else if (JavascriptOperators::GetRootProperty(global, setTimeoutId, &setTimeout, scriptContext) &&
-                 JavascriptConversion::IsCallable(setTimeout))
-        {
-            // Workers do not have a window property, but they do have setTimeout on their global
-            this->hostPromiseContinuationFunction = JavascriptFunction::FromVar(setTimeout);
-            return;
-        }
-
-        PropertyId wscriptId = scriptContext->GetOrAddPropertyIdTracked(L"WScript");
-        setTimeoutId = scriptContext->GetOrAddPropertyIdTracked(L"SetTimeout");
-        Var wscript;
-
-        // Try to load WScript.SetTimeout
-        if (JavascriptOperators::GetRootProperty(global, wscriptId, &wscript, scriptContext) &&
-            RecyclableObject::Is(wscript) &&
-            JavascriptOperators::GetProperty(RecyclableObject::FromVar(wscript), setTimeoutId, &setTimeout, scriptContext) &&
-            JavascriptConversion::IsCallable(setTimeout))
-        {
-            this->hostPromiseContinuationFunction = JavascriptFunction::FromVar(setTimeout);
-            return;
-        }
-
-        // If we couldn't load either WScript.SetTimeout or window.setTimeout the Promise feature is not going to work.
-        // We do need to use some kind of function here, so let's just use a thrower.
-        this->hostPromiseContinuationFunction = this->throwerFunction;
-    }
-
     JavascriptFunction* JavascriptLibrary::GetHostPromiseContinuationFunction()
     {
         if (this->hostPromiseContinuationFunction == nullptr)
         {
-            this->InitializeHostPromiseContinuationFunction();
+            this->hostPromiseContinuationFunction = scriptContext->GetHostScriptContext()->InitializeHostPromiseContinuationFunction();
         }
 
         return this->hostPromiseContinuationFunction;
     }
-#endif
+
     void JavascriptLibrary::SetNativeHostPromiseContinuationFunction(PromiseContinuationCallback function, void *state)
     {
         this->nativeHostPromiseContinuationFunction = function;
@@ -4400,7 +4352,6 @@ namespace Js
             }
             END_LEAVE_SCRIPT(scriptContext);
         }
-#ifdef NTBUILD
         else
         {
             JavascriptFunction* hostPromiseContinuationFunction = this->GetHostPromiseContinuationFunction();
@@ -4413,7 +4364,6 @@ namespace Js
                 taskVar,
                 JavascriptNumber::ToVar(0, scriptContext));
         }
-#endif
     }
 
 #ifdef ENABLE_INTL_OBJECT

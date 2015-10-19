@@ -149,6 +149,12 @@ public:
         return nullptr;
     }
 
+    Js::JavascriptFunction* InitializeHostPromiseContinuationFunction() override
+    {
+        AssertMsg(false, "jsrt should have set the promise callback");
+        return GetScriptContext()->GetLibrary()->GetThrowerFunction();
+    }
+
 #if DBG_DUMP || defined(PROFILE_EXEC) || defined(PROFILE_MEM)
     void EnsureParentInfo(Js::ScriptContext* scriptContext = NULL) override
     {
