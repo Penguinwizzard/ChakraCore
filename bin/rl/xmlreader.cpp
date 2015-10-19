@@ -3,7 +3,6 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "rl.h"
-#include "HostSysInfo.h"
 
 #include <msxml6.h>
 
@@ -286,17 +285,12 @@ Init()
 {
    HRESULT hr;
 
-   CoInitializeEx(NULL, HostSystemInfo::SupportsOnlyMultiThreadedCOM() ? COINIT_MULTITHREADED : COINIT_APARTMENTTHREADED);
-   hr = CoCreateInstance(HostSystemInfo::SupportsOnlyMultiThreadedCOM() ?
-#if defined (_M_AMD64) || defined(_M_ARM64)
-       __uuidof(DOMDocument)
-#else
-       __uuidof(DOMDocument60)
-#endif
-       : __uuidof(DOMDocument), NULL, CLSCTX_INPROC_SERVER,
+   CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+   hr = CoCreateInstance(
+       __uuidof(DOMDocument), NULL, CLSCTX_INPROC_SERVER,
        __uuidof(IXMLDOMDocument), (void**)&pDoc);
 
-   return hr == 0 ? true : false;
+   return hr == 0;
 }
 
 Node *

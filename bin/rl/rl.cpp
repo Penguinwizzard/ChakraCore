@@ -195,7 +195,6 @@
 
 #include "rl.h"
 #include "strsafe.h"
-#include "HostSysInfo.h"
 
 #pragma warning(disable: 4474) // 'fprintf' : too many arguments passed for format string
 
@@ -823,29 +822,7 @@ mytmpnam(
    sprintf_s(threadPrefix, "%s%X", prefix, ThreadId);
 
    // NOTE: GetTempFileName actually creates a file when it succeeds.
-   if (HostSystemInfo::SupportsOnlyMultiThreadedCOM())
-   {
-       const size_t newsize = 100;
-       size_t convertedChars = 0;
-       size_t origsize = 0;
-
-       origsize = strlen(directory) + 1;
-       wchar_t _wdirectory[newsize];
-       mbstowcs_s(&convertedChars, _wdirectory, origsize, directory, _TRUNCATE);
-
-       origsize = strlen(threadPrefix) + 1;
-       wchar_t _wthreadPrefix[newsize];
-       mbstowcs_s(&convertedChars, _wthreadPrefix, origsize, threadPrefix, _TRUNCATE);
-
-       wchar_t _wfilename[MAX_PATH + 1];
-       r = GetTempFileNameW(_wdirectory, _wthreadPrefix, 0, _wfilename);
-       origsize = wcslen(_wfilename) + 1;
-       wcstombs_s(&convertedChars, filename, origsize, _wfilename, _TRUNCATE);
-   }
-   else
-   {
-       r = GetTempFileNameA(directory, threadPrefix, 0, filename);
-   }
+   r = GetTempFileNameA(directory, threadPrefix, 0, filename);
 
    if (r == 0) {
       return NULL;

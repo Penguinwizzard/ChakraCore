@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">  
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Condition="'$(ChakraBuildPathImported)'!='true'" Project="$(SolutionDir)Chakra.Build.Paths.props" />
   <Import Project="$(BuildConfigPropsPath)Chakra.Build.ProjectConfiguration.props" />
   <PropertyGroup Label="Globals">
@@ -19,7 +19,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <Link>
-      <SubSystem>Console</SubSystem>     
+      <SubSystem>Console</SubSystem>
       <AdditionalDependencies>
         %(AdditionalDependencies);
         oleaut32.lib;
@@ -30,7 +30,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="$(MSBuildThisFileDirectory)HostSysInfo.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)rl.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)rlfeint.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)rlmp.cpp" />
@@ -39,12 +38,11 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)xmlreader.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="HostSysInfo.h" />
     <ClInclude Include="rl.h" />
     <ClInclude Include="rlfeint.h" />
     <ClInclude Include="xmlreader.h" />
   </ItemGroup>
-  <Import Project="$(BuildConfigPropsPath)Chakra.Build.targets" Condition="exists('$(BuildConfigPropsPath)Chakra.Build.targets')"/>
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.targets" Condition="exists('$(BuildConfigPropsPath)Chakra.Build.targets')" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <PropertyGroup>
     <RunCodeAnalysisOnThisProject>false</RunCodeAnalysisOnThisProject>
