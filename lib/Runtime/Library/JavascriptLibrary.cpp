@@ -2478,6 +2478,11 @@ namespace Js
 
         library->AddMember(functionPrototype, PropertyIds::constructor, library->functionConstructor);
         library->AddMember(functionPrototype, PropertyIds::length, TaggedInt::ToVarUnchecked(0), PropertyConfigurable);
+        
+        if (scriptContext->GetConfig()->IsES6FunctionNameEnabled())
+        {
+            library->AddMember(functionPrototype, PropertyIds::name, LiteralString::CreateEmptyString(scriptContext->GetLibrary()->GetStringTypeStatic()), PropertyConfigurable);
+        }
 
         JavascriptFunction *func = library->AddFunctionToLibraryObject(functionPrototype, PropertyIds::apply, &JavascriptFunction::EntryInfo::Apply, 2);
         builtinFuncs[BuiltinFunction::Function_Apply] = func;
