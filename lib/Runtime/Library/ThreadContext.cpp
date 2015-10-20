@@ -26,8 +26,7 @@
 
 
 #ifdef ENABLE_BASIC_TELEMETRY
-// REVIEW: ChakraCore Dependency
-#include "..\..\..\private\lib\Telemetry\Telemetry.h"
+#include "Telemetry.h"
 #endif
 
 int TotalNumberOfBuiltInProperties = Js::PropertyIds::_countJSOnlyProperty;
@@ -489,16 +488,22 @@ ThreadContext::~ThreadContext()
     ReleasePreReservedSegment();
 }
 
+void
+ThreadContext::SetJSRTRuntime(void* runtime) 
+{ 
+    Assert(jsrtRuntime == nullptr); jsrtRuntime = runtime; 
+#ifdef ENABLE_BASIC_TELEMETRY
+    Telemetry::EnsureInitializeForJSRT();
+#endif
+}
+
 void ThreadContext::CloseForJSRT()
 {
     // This is used for JSRT APIs only. 
     Assert(this->jsrtRuntime);
 #ifdef ENABLE_BASIC_TELEMETRY
     // log any relevant telemetry before disposing the current thread for cases which are properly shutdown
-    if (g_TraceLoggingClient != nullptr && !(g_TraceLoggingClient->IsPackageTelemetryFired()))
-    {
-        firePackageTelemetry();
-    }
+    Telemetry::OnJSRTThreadContextClose();
 #endif
     ShutdownThreads();
 }

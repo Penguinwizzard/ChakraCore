@@ -396,6 +396,7 @@ public:
     void SetHeapEnum(IActiveScriptProfilerHeapEnum* newHeapEnum);
     void ClearHeapEnum();
 
+#ifdef ENABLE_BASIC_TELEMETRY
     Js::LanguageStats* GetLanguageStats()
     {
         return langTel.GetLanguageStats();
@@ -405,6 +406,7 @@ public:
     {
         this->langTel.Reset();
     }
+#endif
 
     bool CanPreReserveSegmentForCustomHeap();
 
@@ -426,7 +428,9 @@ private:
     // The current heap enumeration object being used during enumeration.
     IActiveScriptProfilerHeapEnum* heapEnum;
 
+#ifdef ENABLE_BASIC_TELEMETRY
     Js::LanguageTelemetry langTel;
+#endif
 
     struct PropertyGuardEntry
     {
@@ -1481,7 +1485,7 @@ public:
     }
 
     void* GetJSRTRuntime() const { return jsrtRuntime; }
-    void SetJSRTRuntime(void* runtime) { Assert(jsrtRuntime == nullptr); jsrtRuntime = runtime; }
+    void SetJSRTRuntime(void* runtime);
 
     bool CanBeFalsy(Js::TypeId typeId);
 private:

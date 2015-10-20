@@ -974,7 +974,9 @@ private:
     RecyclerMemoryData * memoryData;
 #endif
     ThreadContextId mainThreadId;
+#ifdef ENABLE_BASIC_TELEMETRY
     Js::GCTelemetry gcTel;
+#endif
 
 #if DBG
     uint heapBlockCount;
@@ -1444,6 +1446,7 @@ public:
     }
     void CaptureCollectionParam(CollectionFlags flags, bool repeat = false);
 #endif
+#ifdef ENABLE_BASIC_TELEMETRY
     Js::GCPauseStats GetGCPauseStats()
     {
         return gcTel.GetGCPauseStats(); // returns the maxGCpause time in ms
@@ -1458,7 +1461,7 @@ public:
     {
         gcTel.SetIsScriptSiteCloseGC(val);
     }
-
+#endif
 private:
     // RecyclerRootPtr has implicit conversion to pointers, prevent it to be 
     // pass to RootAddRef/RootRelease directly

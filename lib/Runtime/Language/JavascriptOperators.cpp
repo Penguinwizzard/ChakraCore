@@ -4,7 +4,6 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLanguagePch.h"
 
-#include "Memory\LanguageTelemetry.h"
 #include "Types\PathTypeHandler.h"
 #include "Types\PropertyIndexRanges.h"
 #include "Types\WithScopeObject.h"

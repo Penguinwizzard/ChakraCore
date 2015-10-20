@@ -107,13 +107,8 @@
 
 #include "Language\JavascriptStackWalker.h"
 
-#ifdef ENABLE_BASIC_TELEMETRY
-#include "..\..\..\private\lib\Telemetry\ScriptContextTelemetry.h"
-#endif
-
 // .inl files
 #include "Library\JavascriptString.inl"
 #include "Library\ConcatString.inl"
 
 #endif // !IsJsDiag
-

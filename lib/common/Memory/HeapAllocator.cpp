@@ -5,8 +5,8 @@
 #include "CommonMemoryPch.h"
 
 #ifdef INTERNAL_MEM_PROTECT_HEAP_ALLOC
-// REVIEW: ChakraCore Dependency
-#include "..\..\..\private\lib\MemProtectHeap\MemProtectHeap.h"
+// Not enabled in ChakraCore
+#include "MemProtectHeap.h"
 #endif
 
 // Initialization order

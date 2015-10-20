@@ -81,7 +81,6 @@ namespace Js
 #include "DataStructures\SimpleHashTable.h"
 #include "Memory\XDataAllocator.h"
 #include "Memory\CustomHeap.h"
-#include "Memory\LanguageTelemetry.h"
 
 #include "Core\FinalizableObject.h"
 #include "Memory\RecyclerRootPtr.h"

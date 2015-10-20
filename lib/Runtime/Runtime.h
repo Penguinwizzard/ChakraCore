@@ -396,8 +396,11 @@ enum tagDEBUG_EVENT_INFO_TYPE
 
 #include "Library\Entropy.h"
 #ifdef ENABLE_BASIC_TELEMETRY
-// REVIEW: ChakraCore Dependency
-#include "..\..\..\private\lib\Telemetry\DirectCall.h"
+#include "DirectCall.h"
+#include "LanguageTelemetry.h"
+#else
+#define CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(builtin)
+#define CHAKRATEL_LANGSTATS_INC_LANGFEATURECOUNT(feature, m_scriptContext)
 #endif
 #include "Library\ThreadContext.h"
 

@@ -3748,11 +3748,12 @@ Recycler::CollectionBegin()
 {
     RECYCLER_PROFILE_EXEC_BEGIN2(this, Js::RecyclerPhase, phase);
     GCETW(GC_START, (this, GetETWEventGCActivationKind<phase>()));
+#ifdef ENABLE_BASIC_TELEMETRY
     if (this->IsMemProtectMode() == false)
     {
         gcTel.LogGCPauseStartTime();
     }
-
+#endif
 }
 
 template <Js::Phase phase>
@@ -3760,10 +3761,12 @@ void
 Recycler::CollectionEnd()
 {
     GCETW(GC_STOP, (this, GetETWEventGCActivationKind<phase>()));
+#ifdef ENABLE_BASIC_TELEMETRY
     if (GetCurrentThreadContextId() == mainThreadId && IsMemProtectMode() == false)
     {
         gcTel.LogGCPauseEndTime();
     }
+#endif
     RECYCLER_PROFILE_EXEC_END2(this, phase, Js::RecyclerPhase);
 }
 
@@ -5109,11 +5112,13 @@ Recycler::FinishConcurrentCollect(CollectionFlags flags)
     bool needConcurrentSweep = false;
     if (collectionState == CollectionStateRescanWait)
     {
-        GCETW(GC_START, (this, ETWEvent_ConcurrentRescan));        
+        GCETW(GC_START, (this, ETWEvent_ConcurrentRescan));      
+#ifdef ENABLE_BASIC_TELEMETRY
         if(GetCurrentThreadContextId()==mainThreadId && IsMemProtectMode()==false)
         {
             gcTel.LogGCPauseStartTime();
         }
+#endif
 
 #ifdef RECYCLER_TRACE
         PrintCollectTrace(this->inPartialCollectMode ? Js::ConcurrentPartialCollectPhase : Js::ConcurrentMarkPhase, true);
@@ -5140,10 +5145,12 @@ Recycler::FinishConcurrentCollect(CollectionFlags flags)
             Assert(this->IsMarkState());
             RECYCLER_PROFILE_EXEC_END2(this, concurrentPhase, Js::RecyclerPhase);
             GCETW(GC_STOP, (this, ETWEvent_ConcurrentRescan));
+#ifdef ENABLE_BASIC_TELEMETRY
             if (GetCurrentThreadContextId() == mainThreadId && IsMemProtectMode() == false)
             {
                gcTel.LogGCPauseEndTime();
             }
+#endif
             // we timeout trying to mark.
             return false;
         }
@@ -5169,10 +5176,12 @@ Recycler::FinishConcurrentCollect(CollectionFlags flags)
     else
     {
         GCETW(GC_START, (this, ETWEvent_ConcurrentTransferSwept));
+#ifdef ENABLE_BASIC_TELEMETRY
         if(GetCurrentThreadContextId()==mainThreadId && IsMemProtectMode()==false)
         {
             gcTel.LogGCPauseStartTime();
         } 
+#endif
         GCETW(GC_FLUSHZEROPAGE_START, (this));
 
         Assert(collectionState == CollectionStateTransferSweptWait);
@@ -5206,10 +5215,12 @@ Recycler::FinishConcurrentCollect(CollectionFlags flags)
         GCETW(GC_TRANSFERSWEPTOBJECTS_STOP, (this));
 
         GCETW(GC_STOP, (this, ETWEvent_ConcurrentTransferSwept));
+#ifdef ENABLE_BASIC_TELEMETRY
         if (GetCurrentThreadContextId() == mainThreadId && IsMemProtectMode() == false)
         {
             gcTel.LogGCPauseEndTime();
         }
+#endif
     }
 
     RECYCLER_PROFILE_EXEC_END2(this, concurrentPhase, Js::RecyclerPhase);
@@ -5314,11 +5325,13 @@ Recycler::DoBackgroundWork(bool forceForeground)
     {
         RECYCLER_PROFILE_EXEC_BACKGROUND_BEGIN(this, this->collectionState == CollectionStateConcurrentFinishMark? 
             Js::BackgroundFinishMarkPhase : Js::ConcurrentMarkPhase);
-        GCETW(GC_START, (this, BackgroundMarkETWEventGCActivationKind(this->collectionState)));            
+        GCETW(GC_START, (this, BackgroundMarkETWEventGCActivationKind(this->collectionState)));    
+#ifdef ENABLE_BASIC_TELEMETRY
         if (GetCurrentThreadContextId() == mainThreadId && IsMemProtectMode() == false)
         {
             gcTel.LogGCPauseStartTime();
         } 
+#endif
         DebugOnly(this->markContext.GetPageAllocator()->SetConcurrentThreadId(::GetCurrentThreadId()));
         Assert(this->enableConcurrentMark);       
         if (this->collectionState != CollectionStateConcurrentFinishMark)
@@ -5351,10 +5364,12 @@ Recycler::DoBackgroundWork(bool forceForeground)
             break;
         };
         GCETW(GC_STOP, (this, BackgroundMarkETWEventGCActivationKind(this->collectionState)));
+#ifdef ENABLE_BASIC_TELEMETRY
         if (GetCurrentThreadContextId() == mainThreadId && IsMemProtectMode() == false)
         {
             gcTel.LogGCPauseEndTime();
         }
+#endif
         RECYCLER_PROFILE_EXEC_BACKGROUND_END(this, this->collectionState == CollectionStateConcurrentFinishMark? 
             Js::BackgroundFinishMarkPhase : Js::ConcurrentMarkPhase);
 
@@ -5365,10 +5380,12 @@ Recycler::DoBackgroundWork(bool forceForeground)
     {
         RECYCLER_PROFILE_EXEC_BACKGROUND_BEGIN(this, Js::ConcurrentSweepPhase);
         GCETW(GC_START, (this, ETWEvent_ConcurrentSweep));
+#ifdef ENABLE_BASIC_TELEMETRY
         if (GetCurrentThreadContextId() == mainThreadId && IsMemProtectMode() == false)
         {
             gcTel.LogGCPauseStartTime();
         } 
+#endif
         GCETW(GC_BACKGROUNDZEROPAGE_START, (this));
 
         Assert(this->enableConcurrentSweep);
@@ -5404,10 +5421,12 @@ Recycler::DoBackgroundWork(bool forceForeground)
         recyclerLargeBlockPageAllocator.BackgroundZeroQueuedPages();
         GCETW(GC_BACKGROUNDZEROPAGE_STOP, (this));
         GCETW(GC_STOP, (this, ETWEvent_ConcurrentSweep));
+#ifdef ENABLE_BASIC_TELEMETRY
         if (GetCurrentThreadContextId() == mainThreadId && IsMemProtectMode() == false)
         {
             gcTel.LogGCPauseEndTime();
         }
+#endif
 
         Assert(this->collectionState == CollectionStateConcurrentSweep);
         this->collectionState = CollectionStateTransferSweptWait;

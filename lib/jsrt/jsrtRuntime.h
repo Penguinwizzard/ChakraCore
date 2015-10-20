@@ -4,7 +4,6 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
-// REVIEW: ChakraCore Dependency
 #define _JSRT_
 #include "chakrart.h"
 

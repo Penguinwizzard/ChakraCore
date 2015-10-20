@@ -79,7 +79,7 @@
 #include "Debug\DebugContext.h"
 
 #ifdef ENABLE_BASIC_TELEMETRY
-#include "..\..\..\private\lib\Telemetry\ScriptContextTelemetry.h"
+#include "ScriptContextTelemetry.h"
 #endif
 
 // .inl files

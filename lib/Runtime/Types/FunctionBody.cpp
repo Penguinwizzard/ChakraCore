@@ -4319,8 +4319,8 @@ namespace Js
 #define ORIGINAL_CDECL CDECL
 #undef CDECL
 #endif
-// REVIEW: ChakraCore Dependency
-#include "..\..\..\tools\external\inc\jitProfiling.h"
+    // Not enabled in ChakraCore
+#include "jitProfiling.h"
 #ifdef ORIGINAL_CDECL
 #undef CDECL
 #endif
