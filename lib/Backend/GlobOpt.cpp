@@ -11316,8 +11316,13 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
 
                     // CSE only if two MULs have the same overflow check behavior.
                     // Currently this is set to be ignore int32 overflow, but not 53-bit, or int32 overflow matters.
-                    if (!instr->ShouldCheckFor32BitOverflow() && instr->ignoreOverflowBitCount == 53)
+                    if (!instr->ShouldCheckFor32BitOverflow() && instr->ShouldCheckForNon32BitOverflow())
+                    {
+                        // If we allow int to overflow then there can be anything in the resulting int
+                        newMin = IntConstMin;
+                        newMax = IntConstMax;
                         ignoredIntOverflow = true;
+                    }
                 }
 
                 if (newMin <= 0 && newMax >= 0 &&                   // new range crosses zero
