@@ -51,7 +51,7 @@ HRESULT Helpers::LoadScriptFromFile(LPCWSTR filename, LPCWSTR& contents, bool* i
     fseek(file, 0, SEEK_END);
     lengthBytes = ftell(file);
     fseek(file, 0, SEEK_SET);
-    contentsRaw = (LPCWSTR)HeapAlloc(GetProcessHeap(), 0, lengthBytes + sizeof(WCHAR)); // Simulate Trident buffer, allocate by HeapAlloc
+    contentsRaw = (LPCWSTR)HeapAlloc(GetProcessHeap(), 0, lengthBytes + sizeof(WCHAR));
     if (nullptr == contentsRaw)
     {
         fwprintf(stderr, L"out of memory");
@@ -69,9 +69,8 @@ HRESULT Helpers::LoadScriptFromFile(LPCWSTR filename, LPCWSTR& contents, bool* i
     // Read encoding, handling any conversion to Unicode.
     //
     // Warning: The UNICODE buffer for parsing is supposed to be provided by the host.
-    // this is temporary code to read from Unicode and ANSI files.
-    // It is not a complete read of the encoding. Some encodings like UTF7, UTF1, EBCDIC, SCSU, BOCU could be
-    // wrongly classified as ANSI.
+    // This is not a complete read of the encoding. Some encodings like UTF7, UTF1, EBCDIC, SCSU, BOCU could be
+    // wrongly classified as ANSI
     //
     byte * pRawBytes = (byte*)contentsRaw;
     if ((0xEF == *pRawBytes && 0xBB == *(pRawBytes + 1) && 0xBF == *(pRawBytes + 2)))
@@ -101,7 +100,7 @@ HRESULT Helpers::LoadScriptFromFile(LPCWSTR filename, LPCWSTR& contents, bool* i
         utf8::DecodeOptions decodeOptions = utf8::doAllowInvalidWCHARs;
 
         UINT cUtf16Chars = utf8::ByteIndexIntoCharacterIndex(pRawBytes, lengthBytes, decodeOptions);
-        contents = (LPCWSTR)HeapAlloc(GetProcessHeap(), 0, (cUtf16Chars + 1) * sizeof(WCHAR)); // Simulate Trident buffer, allocate by HeapAlloc
+        contents = (LPCWSTR)HeapAlloc(GetProcessHeap(), 0, (cUtf16Chars + 1) * sizeof(WCHAR));
         if (nullptr == contents)
         {
             fwprintf(stderr, L"out of memory");

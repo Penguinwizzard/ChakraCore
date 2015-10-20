@@ -24,7 +24,7 @@ void HostConfigFlags::Parse<int>(ICmdLineArgsParser * parser, int* value)
     }
     catch (...)
     {
-        // Not doing anything, the *value will remain the default one.
+        // Don't do anything, *value will remain its default value.
     }
 }
 

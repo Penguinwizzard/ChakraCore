@@ -88,7 +88,9 @@ public:
         while(!IsEmpty())
         {
             MessageBase *msg = PopAndWait();
-            msg->Call(fileName); // Omitting return value, its async function call it shouldn't affect others.
+
+            // Omit checking return value for async function, since it shouldn't affect others.
+            msg->Call(fileName);
             delete msg;
         }
         return S_OK;

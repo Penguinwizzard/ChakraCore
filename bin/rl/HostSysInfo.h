@@ -10,7 +10,7 @@ public:
     static bool SupportsOnlyMultiThreadedCOM()
     {
         return Data.deviceInfoRetrieved
-            && (Data.deviceFamily == 0x00000004 /*DEVICEFAMILYINFOENUM_MOBILE*/); //TODO: pick some other platform to the list
+            && (Data.deviceFamily == 0x00000004 /*DEVICEFAMILYINFOENUM_MOBILE*/);
     }
 
     HostSystemInfo();

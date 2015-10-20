@@ -27,7 +27,7 @@ static BOOL AttachProcess(HANDLE hmod)
 
 #if defined(_M_IX86)
     // Enable SSE2 math functions in CRT if SSE2 is available
-#pragma prefast(suppress:6031, "We don't care if this succeeded or not")
+#pragma prefast(suppress:6031, "We don't require SSE2, but will use it if available")
     _set_SSE2_enable(TRUE);
 #endif
 
@@ -81,7 +81,7 @@ static void DetachProcess()
 
     // In JScript, we never unload except for when the app shuts down
     // because DllCanUnloadNow always returns S_FALSE. As a result
-    // its okay that we never try to cleanup. Attempting to cleanup on
+    // it's okay that we never try to cleanup. Attempting to cleanup on
     // shutdown is bad because we shouldn't free objects built into
     // other dlls.
     JsrtRuntime::Uninitialize();
