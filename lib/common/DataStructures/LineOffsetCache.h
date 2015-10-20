@@ -79,7 +79,7 @@ namespace JsUtil
         {
             Assert(this->lineOffsetCacheList->Count() > 0);
             
-                        // The list is sorted, so binary search to find the line info.
+            // The list is sorted, so binary search to find the line info.
             int closestIndex = -1;
             int minRange = INT_MAX;
 

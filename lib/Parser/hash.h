@@ -282,7 +282,6 @@ public:
     Js::PropertyId GetPropertyId() const { return m_propertyId; }
     void SetPropertyId(Js::PropertyId id) { m_propertyId = id; }
 
-    // REVIEW-CLEANUP: Only used by ASTBuilder, might clean it up later.
     void SetIsEval() { m_grfid |= fidEval; }
     BOOL GetIsEval() const { return m_grfid & fidEval; }
 
@@ -381,7 +380,7 @@ private:
     // Automatically grow the table if a bucket's length grows beyond BucketLengthLimit and the table is densely populated.
     static const uint BucketLengthLimit = 5;
 
-    // When growing the bucket size will grow by GrowFactor. GrowFactor MUST be a power of 2.
+    // When growing the bucket size we'll grow by GrowFactor. GrowFactor MUST be a power of 2.
     static const uint GrowFactor = 4;
 
 #if DEBUG

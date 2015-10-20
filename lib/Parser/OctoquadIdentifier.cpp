@@ -321,7 +321,7 @@ namespace UnifiedRegex
 #endif
 
 #ifndef USE_BITCOUNTS
-    // This version of popcnt courtesy of Paul Harrington, inspired by Steve Steiner, inspired by HACKMEM169.
+    // This version of popcnt is courtesy of Paul Harrington.
     // It exploits the fact that each quad of bits has at most only one bit set.
     __inline bool oneBitSetInEveryQuad(uint32 x)
     {

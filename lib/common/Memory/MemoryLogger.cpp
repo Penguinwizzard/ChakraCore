@@ -93,7 +93,6 @@ namespace Js
             s_stackBackTrace = StackBackTrace::Create(m_alloc, frameCount);
         }
 
-        // TODO: framesToCapture is only used for 1st call, so that on next calls it can be different.
         Assert(s_stackBackTrace->GetRequestedFrameCount() >= frameCount);
 
         return s_stackBackTrace;

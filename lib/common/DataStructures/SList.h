@@ -48,7 +48,7 @@ public:
     SListNodeBase<TData> * Next() const { return next.base; }
     SListNodeBase<TData> *& Next() { return next.base; }
 protected:
-    // The next node can be a real node with data, or  it point back to the start of the list
+    // The next node can be a real node with data, or it point back to the start of the list
     // Use a union to show it in the debugger (instead of casting everywhere)
     union
     {
@@ -105,7 +105,8 @@ public:
         {
             current = list;
         }
-        // TODO: only needed for SListBase<FlowEdge *, RealCount>::Iterator::Next()
+
+        // forceinline only needed for SListBase<FlowEdge *, RealCount>::Iterator::Next()
         __forceinline
         bool Next()
         {
@@ -510,7 +511,7 @@ public:
             CopyElement(iter.Data(), node->data);
             *next = node;
             next = &node->Next();
-            *next = &to;            // Do this every time in case OOM exception occur to keep the list correct
+            *next = &to;            // Do this every time, in case an OOM exception occurs, to keep the list correct
             to.IncrementCount();
         }
         return true;

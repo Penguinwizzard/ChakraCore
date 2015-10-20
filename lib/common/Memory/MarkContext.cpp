@@ -93,9 +93,6 @@ void MarkContext::ProcessTracked()
     while (trackStack.Pop(&trackedObject))
     {
         MarkTrackedObject(trackedObject);
-
-        // TODO: Stats etc
-//            RECYCLER_STATS_INC(this, trackedObjectCount);
     }
 
     Assert(trackStack.IsEmpty());

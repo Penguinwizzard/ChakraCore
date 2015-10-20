@@ -100,7 +100,7 @@ namespace MarkStack
         __forceinline MarkCandidate* Pop() throw()
         {
             // TODO: Can we make this faster?
-            // One option (at the expense of wasting another 4K/Chunk is to use a guard page at the start of the chunk too
+            // One option (at the expense of wasting another 4K/Chunk) is to use a guard page at the start of the chunk too
             // Then we can eliminate this bound-check
             // Currently, the fast case takes 5 instructions:
             // 2 to load stack and start

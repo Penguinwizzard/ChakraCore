@@ -10,7 +10,7 @@ namespace Js
     // Logs in memory/inproc into StringBuilder.
     // Thread safe.
     // Uses Arena but can be templatized for other allocators.
-    // TODO: currently there is no limitation on trace size, and it can cause OOM, consider unchaining and using circular buffer when reaching limit.
+    // TODO: Consider unchaining and using circular buffer when reaching limit.
     class MemoryLogger : public ILogger
     {
         typedef ArenaAllocator TAllocator;

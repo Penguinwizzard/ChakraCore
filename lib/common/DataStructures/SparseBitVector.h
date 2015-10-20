@@ -65,7 +65,7 @@ struct BVSparseNode
 {
     BVIndex         startIndex;
 #if defined(_M_ARM64) || defined(_M_X64)
-    //X64 the order changed to make sure it fits in 16 bytes
+    //64-bit: the order is changed to make sure it fits in 16 bytes
     SparseBVUnit    data;
     BVSparseNode *  next;
 #else //_M_IX86 and _M_ARM32

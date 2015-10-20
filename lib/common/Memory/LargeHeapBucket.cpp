@@ -74,7 +74,7 @@ LargeHeapBucket::SnailAlloc(Recycler * recycler, size_t sizeCat, ObjectInfoBits 
             return memBlock;
         }
         // Can't even allocate a new block, we need force a collection and
-        //allocate some free memory, add a new heap block again, or throw out of memory
+        // allocate some free memory, add a new heap block again, or throw out of memory
         AllocationVerboseTrace(recycler->GetRecyclerFlagsTable(), L"LargeHeapBucket::AddLargeHeapBlock failed, forcing in-thread collection\n");
         recycler->CollectNow<CollectNowForceInThread>();
     }
@@ -797,7 +797,7 @@ LargeHeapBucket::ConcurrentPartialTransferSweptObjects(RecyclerSweep& recyclerSw
     this->pendingSweepLargeBlockList = nullptr;
     HeapBlockList::ForEachEditing(list, [this](LargeHeapBlock * heapBlock)
     {
-        // GC-TODO: We don't reuse the large objects
+        // GC-REVIEW: We could maybe reuse the large objects
         heapBlock->PartialTransferSweptObjects();
         heapBlock->SetNextBlock(this->partialSweptLargeBlockList);
         this->partialSweptLargeBlockList = heapBlock;

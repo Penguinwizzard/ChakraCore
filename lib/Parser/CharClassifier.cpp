@@ -18,11 +18,11 @@ static const CharTypeFlags charFlags[128] =
     UnknownChar,                 /* 0x06   */
     UnknownChar,                 /* 0x07   */
     UnknownChar,                 /* 0x08   */
-    SpaceChar,            /* 0x09   */
-    LineCharGroup,        /* 0x0A   */
-    SpaceChar,            /* 0x0B   */
-    SpaceChar,            /* 0x0C   */
-    LineCharGroup,        /* 0x0D   */
+    SpaceChar,                   /* 0x09   */
+    LineCharGroup,               /* 0x0A   */
+    SpaceChar,                   /* 0x0B   */
+    SpaceChar,                   /* 0x0C   */
+    LineCharGroup,               /* 0x0D   */
     UnknownChar,                 /* 0x0E   */
     UnknownChar,                 /* 0x0F   */
     UnknownChar,                 /* 0x10   */
@@ -41,11 +41,11 @@ static const CharTypeFlags charFlags[128] =
     UnknownChar,                 /* 0x1D   */
     UnknownChar,                 /* 0x1E   */
     UnknownChar,                 /* 0x1F   */
-    SpaceChar,            /* 0x20   */
+    SpaceChar,                   /* 0x20   */
     UnknownChar,                 /* 0x21 ! */
     UnknownChar,                 /* 0x22   */
     UnknownChar,                 /* 0x23 # */
-    LetterCharGroup,      /* 0x24 $ */
+    LetterCharGroup,             /* 0x24 $ */
     UnknownChar,                 /* 0x25 % */
     UnknownChar,                 /* 0x26 & */
     UnknownChar,                 /* 0x27   */
@@ -57,16 +57,16 @@ static const CharTypeFlags charFlags[128] =
     UnknownChar,                 /* 0x2D   */
     UnknownChar,                 /* 0x2E   */
     UnknownChar,                 /* 0x2F   */
-    DecimalCharGroup,     /* 0x30 0 */
-    DecimalCharGroup,     /* 0x31 1 */
-    DecimalCharGroup,     /* 0x32 2 */
-    DecimalCharGroup,     /* 0x33 3 */
-    DecimalCharGroup,     /* 0x34 4 */
-    DecimalCharGroup,     /* 0x35 5 */
-    DecimalCharGroup,     /* 0x36 6 */
-    DecimalCharGroup,     /* 0x37 7 */
-    DecimalCharGroup,     /* 0x38 8 */
-    DecimalCharGroup,     /* 0x39 9 */
+    DecimalCharGroup,            /* 0x30 0 */
+    DecimalCharGroup,            /* 0x31 1 */
+    DecimalCharGroup,            /* 0x32 2 */
+    DecimalCharGroup,            /* 0x33 3 */
+    DecimalCharGroup,            /* 0x34 4 */
+    DecimalCharGroup,            /* 0x35 5 */
+    DecimalCharGroup,            /* 0x36 6 */
+    DecimalCharGroup,            /* 0x37 7 */
+    DecimalCharGroup,            /* 0x38 8 */
+    DecimalCharGroup,            /* 0x39 9 */
     UnknownChar,                 /* 0x3A   */
     UnknownChar,                 /* 0x3B   */
     UnknownChar,                 /* 0x3C < */
@@ -74,64 +74,64 @@ static const CharTypeFlags charFlags[128] =
     UnknownChar,                 /* 0x3E > */
     UnknownChar,                 /* 0x3F   */
     UnknownChar,                 /* 0x40 @ */
-    HexCharGroup,         /* 0x41 A */
-    HexCharGroup,         /* 0x42 B */
-    HexCharGroup,         /* 0x43 C */
-    HexCharGroup,         /* 0x44 D */
-    HexCharGroup,         /* 0x45 E */
-    HexCharGroup,         /* 0x46 F */
-    LetterCharGroup,      /* 0x47 G */
-    LetterCharGroup,      /* 0x48 H */
-    LetterCharGroup,      /* 0x49 I */
-    LetterCharGroup,      /* 0x4A J */
-    LetterCharGroup,      /* 0x4B K */
-    LetterCharGroup,      /* 0x4C L */
-    LetterCharGroup,      /* 0x4D M */
-    LetterCharGroup,      /* 0x4E N */
-    LetterCharGroup,      /* 0x4F O */
-    LetterCharGroup,      /* 0x50 P */
-    LetterCharGroup,      /* 0x51 Q */
-    LetterCharGroup,      /* 0x52 R */
-    LetterCharGroup,      /* 0x53 S */
-    LetterCharGroup,      /* 0x54 T */
-    LetterCharGroup,      /* 0x55 U */
-    LetterCharGroup,      /* 0x56 V */
-    LetterCharGroup,      /* 0x57 W */
-    LetterCharGroup,      /* 0x58 X */
-    LetterCharGroup,      /* 0x59 Y */
-    LetterCharGroup,      /* 0x5A Z */
+    HexCharGroup,                /* 0x41 A */
+    HexCharGroup,                /* 0x42 B */
+    HexCharGroup,                /* 0x43 C */
+    HexCharGroup,                /* 0x44 D */
+    HexCharGroup,                /* 0x45 E */
+    HexCharGroup,                /* 0x46 F */
+    LetterCharGroup,             /* 0x47 G */
+    LetterCharGroup,             /* 0x48 H */
+    LetterCharGroup,             /* 0x49 I */
+    LetterCharGroup,             /* 0x4A J */
+    LetterCharGroup,             /* 0x4B K */
+    LetterCharGroup,             /* 0x4C L */
+    LetterCharGroup,             /* 0x4D M */
+    LetterCharGroup,             /* 0x4E N */
+    LetterCharGroup,             /* 0x4F O */
+    LetterCharGroup,             /* 0x50 P */
+    LetterCharGroup,             /* 0x51 Q */
+    LetterCharGroup,             /* 0x52 R */
+    LetterCharGroup,             /* 0x53 S */
+    LetterCharGroup,             /* 0x54 T */
+    LetterCharGroup,             /* 0x55 U */
+    LetterCharGroup,             /* 0x56 V */
+    LetterCharGroup,             /* 0x57 W */
+    LetterCharGroup,             /* 0x58 X */
+    LetterCharGroup,             /* 0x59 Y */
+    LetterCharGroup,             /* 0x5A Z */
     UnknownChar,                 /* 0x5B   */
     UnknownChar,                 /* 0x5C   */
     UnknownChar,                 /* 0x5D   */
     UnknownChar,                 /* 0x5E   */
-    LetterCharGroup,      /* 0x5F _ */
+    LetterCharGroup,             /* 0x5F _ */
     UnknownChar,                 /* 0x60   */
-    HexCharGroup,         /* 0x61 a */
-    HexCharGroup,         /* 0x62 b */
-    HexCharGroup,         /* 0x63 c */
-    HexCharGroup,         /* 0x64 d */
-    HexCharGroup,         /* 0x65 e */
-    HexCharGroup,         /* 0x66 f */
-    LetterCharGroup,      /* 0x67 g */
-    LetterCharGroup,      /* 0x68 h */
-    LetterCharGroup,      /* 0x69 i */
-    LetterCharGroup,      /* 0x6A j */
-    LetterCharGroup,      /* 0x6B k */
-    LetterCharGroup,      /* 0x6C l */
-    LetterCharGroup,      /* 0x6D m */
-    LetterCharGroup,      /* 0x6E n */
-    LetterCharGroup,      /* 0x6F o */
-    LetterCharGroup,      /* 0x70 p */
-    LetterCharGroup,      /* 0x71 q */
-    LetterCharGroup,      /* 0x72 r */
-    LetterCharGroup,      /* 0x73 s */
-    LetterCharGroup,      /* 0x74 t */
-    LetterCharGroup,      /* 0x75 u */
-    LetterCharGroup,      /* 0x76 v */
-    LetterCharGroup,      /* 0x77 w */
-    LetterCharGroup,      /* 0x78 x */
-    LetterCharGroup,      /* 0x79 y */
-    LetterCharGroup,      /* 0x7A z */
+    HexCharGroup,                /* 0x61 a */
+    HexCharGroup,                /* 0x62 b */
+    HexCharGroup,                /* 0x63 c */
+    HexCharGroup,                /* 0x64 d */
+    HexCharGroup,                /* 0x65 e */
+    HexCharGroup,                /* 0x66 f */
+    LetterCharGroup,             /* 0x67 g */
+    LetterCharGroup,             /* 0x68 h */
+    LetterCharGroup,             /* 0x69 i */
+    LetterCharGroup,             /* 0x6A j */
+    LetterCharGroup,             /* 0x6B k */
+    LetterCharGroup,             /* 0x6C l */
+    LetterCharGroup,             /* 0x6D m */
+    LetterCharGroup,             /* 0x6E n */
+    LetterCharGroup,             /* 0x6F o */
+    LetterCharGroup,             /* 0x70 p */
+    LetterCharGroup,             /* 0x71 q */
+    LetterCharGroup,             /* 0x72 r */
+    LetterCharGroup,             /* 0x73 s */
+    LetterCharGroup,             /* 0x74 t */
+    LetterCharGroup,             /* 0x75 u */
+    LetterCharGroup,             /* 0x76 v */
+    LetterCharGroup,             /* 0x77 w */
+    LetterCharGroup,             /* 0x78 x */
+    LetterCharGroup,             /* 0x79 y */
+    LetterCharGroup,             /* 0x7A z */
     UnknownChar,                 /* 0x7B   */
     UnknownChar,                 /* 0x7C   */
     UnknownChar,                 /* 0x7D   */
@@ -266,7 +266,6 @@ BOOL oGetCharType( DWORD dwInfoType, OLECHAR ch, LPWORD lpwCharType )
 {
     BOOL res = GetStringTypeW( dwInfoType, &ch, 1, lpwCharType );
     // BOM ( 0xfeff) is recognized as GetStringTypeW as WS.
-    // TODO ES5:  check the old types
     if ((0x03FF & *lpwCharType) == 0x0200)
     {
         // Some of the char types changed for Whistler (Unicode 3.0).

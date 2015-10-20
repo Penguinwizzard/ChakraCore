@@ -88,7 +88,7 @@ void RecyclerMemoryTracking::ReportFree(Recycler * recycler, __in void *address,
 
 void RecyclerMemoryTracking::ReportUnallocated(Recycler * recycler, __in void* address, __in void *endAddress, size_t sizeCat)
 {
-    // Even though them memory is not really allocated between address and endAddress,
+    // Even though the memory is not really allocated between address and endAddress,
     // the recycler initially treats it as allocated and a ReportFree() will be called on it even
     // though ReportAllocation() is never called. This can be treated as equivalent of the parent
     // requesting the following be performed:

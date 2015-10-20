@@ -976,7 +976,7 @@ PageAllocatorBase<T>::AllocSegment(size_t pageCount)
     Assert(!isClosed);
     ASSERT_THREAD();
 
-    // Even though we don't idle decommit large segments, we still need to consider these allocation
+    // Even though we don't idle decommit large segments, we still need to consider these allocations
     // as using the page allocator
     this->isUsed = true;
 
@@ -1216,7 +1216,7 @@ PageAllocatorBase<T>::SnailAllocPages(uint pageCount, PageSegmentBase<T> ** page
     pages = TryAllocDecommitedPages<notPageAligned>(pageCount, pageSegment, pageHeapFlags);
     if (pages != nullptr)
     {
-        // TryAllocDecommitedPages may give out a mixed of free pages and decommit pages.
+        // TryAllocDecommitedPages may give out a mix of free pages and decommitted pages.
         // Free pages are filled with 0xFE in debug build, so we need to zero them
         // out before giving it out. In release build, free page is already zeroed
         // in ReleasePages
@@ -1226,8 +1226,8 @@ PageAllocatorBase<T>::SnailAllocPages(uint pageCount, PageSegmentBase<T> ** page
 
     Assert(pages == nullptr);
 
-    // At this point, we haven't been able to allocate neither from the
-    // decommitted pages, nor from the empty segment list, so we'll
+    // At this point, we haven't been able to allocate either from the 
+    // decommitted pages, or from the empty segment list, so we'll 
     // try allocating a segment. In a page allocator with a pre-reserved segment,
     // we're not allowed to allocate additional segments so return here.
     // Otherwise, add a new segment and allocate from it
@@ -1650,7 +1650,7 @@ PageAllocatorBase<T>::DecommitNow(bool all)
             TransferSegment(segment, fromSegmentList);
         }
 
-        // Take the lock to make sure the recycler thread has finish zeroing out the pages after
+        // Take the lock to make sure the recycler thread has finished zeroing out the pages after
         // we drained the queue
         backgroundPageQueue->backgroundPageQueueCriticalSection.Enter();
         this->hasZeroQueuedPages = false;
@@ -2224,7 +2224,7 @@ HeapPageAllocator<T>::ProtectPages(__in char* address, size_t pageCount, __in vo
     }
 #endif
 
-    // check address alignment, and address in correct range
+    // check address alignment, and that the address is in correct range
     if (((uintptr_t)address & (AutoSystemInfo::PageSize - 1)) != 0
         || address < segment->GetAddress()
         || ((uint)(((char *)address) - segment->GetAddress()) > (segment->GetPageCount() - pageCount) * AutoSystemInfo::PageSize))
@@ -2235,7 +2235,7 @@ HeapPageAllocator<T>::ProtectPages(__in char* address, size_t pageCount, __in vo
 
     MEMORY_BASIC_INFORMATION memBasicInfo;
 
-    // check old protection on all pages about to change, make sure the fidelity
+    // check old protection on all pages about to change, ensure the fidelity
     size_t bytes = VirtualQuery(address, &memBasicInfo, sizeof(memBasicInfo));
     if (bytes == 0
         || memBasicInfo.RegionSize < pageCount * AutoSystemInfo::PageSize

@@ -244,8 +244,8 @@ namespace UnifiedRegex
         {
             return 0;
         }
-
-        //The first character is mandatory to consume escape sequence, so we check for it above, at this stage we can set it as we already checked.
+        
+        // The first character is mandatory to consume escape sequence, so we check for it above, at this stage we can set it as we already checked.
         codepoint_t codePoint = standardEncodedChars->DigitValue(ECLookahead(1));
 
         int i = 2;
@@ -279,7 +279,7 @@ namespace UnifiedRegex
         wchar_t other;
         // Generally if this code point is a single character, then we take it and return.
         // If the character is made up of two characters then we emit the first and backtrack to the start of th escape sequence;
-        // Following that we check if we already seen the first character, and if so emit the second and consume the entire escape sequence.
+        // Following that we check if we have already seen the first character, and if so emit the second and consume the entire escape sequence.
         if (codePoint < 0x10000)
         {
             c = UTC(codePoint);
@@ -439,8 +439,8 @@ namespace UnifiedRegex
         {
             Node* prefixNode = nullptr, *suffixNode = nullptr;
             const bool twoConsecutiveRanges = minorBoundary == majorBoundary;
-
-            //For minorBoundary,
+            
+            // For minorBoundary, 
             if (minorBoundary - minorCodePoint == 1) // Single character in minor range
             {
                 // The prefix is only a surrogate pair atom
@@ -853,8 +853,6 @@ namespace UnifiedRegex
     {
         if (node == deferredLiteralNode)
         {
-            // Compiler bug? Need to outline.
-            // Assert(deferredLiteralNode->length > 0);
 #if DBG
             if (deferredLiteralNode->length == 0)
                 Assert(false);
@@ -1529,8 +1527,8 @@ namespace UnifiedRegex
                 {
                     if (surrogateEncountered)
                     {
-                        //If we don't have an allocator, we don't create nodes
-                        //Asserts in place as extra checks for when we do have an allocator
+                        // If we don't have an allocator, we don't create nodes
+                        // Asserts in place as extra checks for when we do have an allocator
                         Assert(this->ctAllocator == nullptr || this->currentSurrogatePairNode != nullptr);
                         Assert(this->ctAllocator == nullptr || current == this->currentSurrogatePairNode->location);
                         ECConsume(lengthOfSurrogate);
@@ -1616,7 +1614,7 @@ namespace UnifiedRegex
             do
             {
                 uint m = n * 8  + standardEncodedChars->DigitValue(ECLookahead());
-                if (m > Chars<uint8>::MaxUChar) //Regex octal codes only support single byte (ASCII) characters.
+                if (m > Chars<uint8>::MaxUChar) // Regex octal codes only support single byte (ASCII) characters.
                     break;
                 n = m;
                 ECConsume();
@@ -1901,7 +1899,7 @@ namespace UnifiedRegex
                 {
                     // Last codepoint isn't a singleton, so no codepoint tracking for the sake of ranges is needed.
                     lastCodepoint = INVALID_CODEPOINT;
-                    //Unless we have a possible range end, cancel our range tracking.
+                    // Unless we have a possible range end, cancel our range tracking.
                     if (pendingRangeEnd == INVALID_CODEPOINT)
                     {
                         pendingRangeStart = INVALID_CODEPOINT;
@@ -1967,7 +1965,7 @@ namespace UnifiedRegex
                     pendingRangeStart = lastCodepoint = INVALID_CODEPOINT;
                 }
             }
-            //We have a candidate for range end, and we have a range start.
+            // We have a candidate for range end, and we have a range start.
             else if (pendingRangeStart != INVALID_CODEPOINT && (lastCodepoint != INVALID_CODEPOINT || pendingRangeEnd != INVALID_CODEPOINT))
             {
                 // The following will be true at the end of each surrogate pair parse.
@@ -2031,7 +2029,7 @@ namespace UnifiedRegex
 
                     pendingRangeStart = pendingRangeEnd = INVALID_CODEPOINT;
                 }
-                //The current char <0x10000 is a candidate for the range end, but we need to iterate one more time.
+                //The current char < 0x10000 is a candidate for the range end, but we need to iterate one more time.
                 else
                 {
                     pendingRangeEnd = lastCodepoint;
@@ -2168,7 +2166,7 @@ namespace UnifiedRegex
         // characters (< 0x10000) and supplementary characters (>= 0x10000)
         // However, it might still be the case, and this has to be handled.
 
-        // On the other hand, we don't want prevent optimizations from happening that expect non-casefolded sets.
+        // On the other hand, we don't want to prevent optimizations that expect non-casefolded sets from happening.
         // At least for simple characters.
 
         // The simple case, is when the unicode flag isn't specified, we can go ahead and return the simple set.
@@ -2359,14 +2357,14 @@ namespace UnifiedRegex
             }
             while (digits < 3 && standardEncodedChars->IsOctal(ECLookahead())); // terminating 0 is not octal
             singleton = UTC((UChar)n);
-            //Clear possible pair
+            // Clear possible pair
             this->tempLocationOfSurrogatePair = nullptr;
             return true;
         }
         else
         {
             const EncodedChar* location = this->tempLocationOfSurrogatePair;
-            //Clear it for now, otherwise to many branches to clear it on.
+            // Clear it for now, otherwise to many branches to clear it on.
             this->tempLocationOfSurrogatePair = nullptr;
             // An escaped '/' is ok
             Char c = NextChar();
@@ -2455,7 +2453,7 @@ namespace UnifiedRegex
                         // Current location
                         TrackIfSurrogatePair(singleton, (next - 1), 5);
                     }
-                    //The above if statement, if true, will clear tempLocationOfSurrogatePair if needs to.
+                    // The above if statement, if true, will clear tempLocationOfSurrogatePair if needs to.
                     ECConsume(4);
                 }
                 else
@@ -2686,7 +2684,7 @@ namespace UnifiedRegex
                         Fail(JSERR_RegExpSyntax);
                     }
                     flags = (RegexFlags)(flags | UnicodeRegexFlag);
-                    //For telemetry
+                    // For telemetry
                     CHAKRATEL_LANGSTATS_INC_LANGFEATURECOUNT(UnicodeRegexFlagCount, scriptContext);
 
                     break;
@@ -2699,7 +2697,7 @@ namespace UnifiedRegex
                         Fail(JSERR_RegExpSyntax);
                     }
                     flags = (RegexFlags)(flags | StickyRegexFlag);
-                    //For telemetry
+                    // For telemetry
                     CHAKRATEL_LANGSTATS_INC_LANGFEATURECOUNT(StickyRegexFlagCount, scriptContext);
 
                     break;
@@ -2822,7 +2820,7 @@ namespace UnifiedRegex
             throw ParseError(*deferredIfUnicodeError);
         }
 
-        //Used below to proceed to the end of the regex
+        // Used below to proceed to the end of the regex
         const EncodedChar *pastOptions = next;
 
         this->currentSurrogatePairNode = this->surrogatePairList;

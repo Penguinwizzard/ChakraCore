@@ -464,7 +464,7 @@ namespace UnifiedRegex
                 }
             }
 
-            // If the second character in the buffer match the first in the pattern continue
+            // If the second character in the buffer matches the first in the pattern, continue
             // to see if the next character has the second in the pattern
             currentInput++;
             while (currentInput < endInput)
@@ -2445,7 +2445,7 @@ namespace UnifiedRegex
         // If loop has outer loops, the continuation stack may have choicepoints from an earlier "run" of this loop
         // which, when backtracked to, may expect the loopInfo state to be as it was at the time the choicepoint was
         // pushed.
-        //  - If the loop is greedy with deterministic body, there may be Resume's into the follow of the loop, but
+        //  - If the loop is greedy with deterministic body, there may be Resumes into the follow of the loop, but
         //    they won't look at the loopInfo state so there's nothing to do.
         //  - If the loop is greedy, or if it is non-greedy with lower > 0, AND it has a non-deterministic body,
         //    we may have Resume entries which will resume inside the loop body, which may then run to a
@@ -2560,10 +2560,6 @@ namespace UnifiedRegex
             //   - With non-greedy, we're trying an additional iteration because the follow failed. But
             //     since we didn't consume anything the follow will fail again, so fail
             //
-            // TODO: Actually, if the body of the non-greedy look has a positive assertion with a group
-            //       definition, and the follow has a group reference used in a negative assertion,
-            //       it could be possible to make progress even with an empty loop. But need an example.
-            //
             return matcher.Fail(FAIL_PARAMETERS);
         }
         else if (begin->repeats.upper != CharCountFlag && loopInfo->number >= (CharCount)begin->repeats.upper)
@@ -2580,7 +2576,7 @@ namespace UnifiedRegex
 #endif
             loopInfo->startInputOffset = inputOffset;
 
-            // If backtrack must continue with previous group bindings
+            // If backtrack, we must continue with previous group bindings
             matcher.SaveInnerGroups(begin->minBodyGroupId, begin->maxBodyGroupId, true, input, contStack);
             instPointer = matcher.LabelToInstPointer(beginLabel + sizeof(BeginLoopInst));
         }
@@ -2627,9 +2623,6 @@ namespace UnifiedRegex
                 Assert(matcher.GroupIdToGroupInfo(i)->IsUndefined());
             }
 #endif
-
-            // There's no need to save the starting input offset since we don't need to check for progress
-            // loopInfo->startInputOffset = inputOffset;
             loopInfo->number = 0;
             instPointer += sizeof(*this);
             return false;
@@ -2738,7 +2731,6 @@ namespace UnifiedRegex
             }
 
             // Commit to one more iteration
-            // loopInfo->startInputOffset = inputOffset;
             if(begin->hasInnerNondet)
             {
                 // If it backtracks into the loop body of an earlier iteration, it must restore inner groups for that iteration.
@@ -2806,7 +2798,6 @@ namespace UnifiedRegex
             }
 
             // Commit to one more iteration
-            // loopInfo->startInputOffset = inputOffset;
             if(begin->hasInnerNondet)
             {
                 // If it backtracks into the loop body of an earlier iteration, it must restore inner groups for that iteration.
@@ -3200,8 +3191,8 @@ namespace UnifiedRegex
         }
         else
         {
-            // CHOICEPOINT: Try one more iteration of body, if backtrack continue from here with no more iterations.
-            // Since the loop body is deterministic and group free, it won't have left any continuation records.
+            // CHOICEPOINT: Try one more iteration of body, if backtrack, continue from here with no more iterations.
+            // Since the loop body is deterministic and group free, it wouldn't have left any continuation records.
             // Therefore we can simply update the Resume continuation still on the top of the stack with the current
             // input pointer.
             Cont* top = contStack.Top();
@@ -4039,12 +4030,12 @@ namespace UnifiedRegex
         if (tryingBody)
         {
             tryingBody = false;
-            // number is the number of iterations completed before trying body
+            // loopInfo->number is the number of iterations completed before trying body
             Assert(loopInfo->number >= begin->repeats.lower);
         }
         else
         {
-            // number is the number of iterations completed before trying follow
+            // loopInfo->number is the number of iterations completed before trying follow
             Assert(loopInfo->number > begin->repeats.lower);
             // Try follow with one fewer iteration
             loopInfo->number--;
@@ -4086,7 +4077,7 @@ namespace UnifiedRegex
         LoopSetInst* begin = matcher.L2I(LoopSet, beginLabel);
         LoopInfo* loopInfo = matcher.LoopIdToLoopInfo(begin->loopId);
 
-        // number is the number of iterations completed before trying follow
+        // >loopInfonumber is the number of iterations completed before trying follow
         Assert(loopInfo->number > begin->repeats.lower);
         // Try follow with one fewer iteration
         loopInfo->number--;
@@ -4131,12 +4122,12 @@ namespace UnifiedRegex
         if (tryingBody)
         {
             tryingBody = false;
-            // number is the number of iterations completed before current attempt of body
+            // loopInfo->number is the number of iterations completed before current attempt of body
             Assert(loopInfo->number >= begin->repeats.lower);
         }
         else
         {
-            // number is the number of iterations completed before trying follow
+            // loopInfo->number is the number of iterations completed before trying follow
             Assert(loopInfo->number > begin->repeats.lower);
             // Try follow with one fewer iteration
             loopInfo->number--;
@@ -4358,8 +4349,8 @@ namespace UnifiedRegex
 #include "RegexContcodes.h"
 #undef M
             default:
-                Assert(false); // should never reached
-                return false;  // however, can't use complier optimization if we want to return false here
+                Assert(false); // should never be reached
+                return false;  // however, can't use complier optimization if we wnat to return false here
             }
         }
         return true;
@@ -4452,7 +4443,7 @@ namespace UnifiedRegex
     {
         CaseInsensitive::MappingSource mappingSource = program->GetCaseMappingSource();
 
-        // If sticky flag present, break since the 1st character didn't match the pattern character
+        // If sticky flag is present, break since the 1st character didn't match the pattern character
         if ((program->flags & StickyRegexFlag) != 0)
         {
 #if ENABLE_REGEX_CONFIG_OPTIONS
@@ -4502,7 +4493,7 @@ namespace UnifiedRegex
 
     __inline bool Matcher::MatchSingleCharCaseSensitive(const Char* const input, const CharCount inputLength, CharCount offset, const Char c)
     {
-        // If sticky flag present, break since the 1st character didn't match the pattern character
+        // If sticky flag is present, break since the 1st character didn't match the pattern character
         if ((program->flags & StickyRegexFlag) != 0)
         {
 #if ENABLE_REGEX_CONFIG_OPTIONS
@@ -4560,7 +4551,7 @@ namespace UnifiedRegex
         {
             // Already at start of word
         }
-        // If sticky flag present, return false since we are not at the beginning of the word yet
+        // If sticky flag is present, return false since we are not at the beginning of the word yet
         else if ((program->flags & StickyRegexFlag) == StickyRegexFlag)
         {
             ResetGroup(0);

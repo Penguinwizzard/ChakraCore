@@ -90,7 +90,7 @@ public:
         return (left * mul) + add;
     }
 
-    // Convenience functions which use the default overflow policy (throw OutOfMemoryException)
+    // Convenience functions which use the DefaultOverflowPolicy (throw OOM upon overflow)
     template< uint32 add, uint32 mul >
     static uint32 AddMul(uint32 left)
     {
@@ -127,7 +127,8 @@ public:
         *result = Mul(lhs, rhs, overflowGuard);
         return overflowGuard.HasOverflowed();
     }
-        // Convenience function which uses DefaultOverflowPolicy (throws OOM when overflow)
+
+    // Convenience function which uses DefaultOverflowPolicy (throws OOM upon overflow)
     static void Inc(uint32& lhs)
     {
         Inc(lhs, ::Math::DefaultOverflowPolicy);

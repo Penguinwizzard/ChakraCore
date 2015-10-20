@@ -64,7 +64,7 @@ namespace UnifiedRegex
         Assert(prevConsumes.IsExact(0));
 
         if (thisConsumes.CouldMatchEmpty())
-            // Can't be sure will consume something in FIRST
+            // Can't be sure of consuming something in FIRST
             return 0;
 
         if (firstSet->Count() > maxSyncToSetSize)
@@ -223,7 +223,6 @@ namespace UnifiedRegex
         if (tag != Node::Alt)
             return false;
 
-        // We don't have support for this optimization for multiline regex yet.
         if (compiler.program->flags & MultilineRegexFlag)
             return false;
 
@@ -2031,7 +2030,7 @@ namespace UnifiedRegex
         PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         if (cont != 0)
-            // We don't want to managed a stack of continuations
+            // We don't want to manage a stack of continuations
             return false;
         // NOTE: This is the only place we use an internal node of a concat sequence as a sub-concat sequence
         return head->BuildCharTrie(compiler, trie, tail, isAcceptFirst);
@@ -2241,7 +2240,7 @@ namespace UnifiedRegex
         //
         // Compilation scheme: Switch/Chain/Set, not isOptional
         //
-        // If no item can match empty and all items FIRST sets are pairwise disjoint then we can
+        // If no item can match empty and all items' FIRST sets are pairwise disjoint then we can
         // commit to an item using a 1 char lookahead. We can fall-through to the last
         // item without guarding it since it will fail if the next character cannot match.
         // E.g.: (abc|def)
@@ -3403,7 +3402,7 @@ namespace UnifiedRegex
         firstSet = body->firstSet;
         isFirstExact = repeats.lower > 0 && body->isFirstExact;
         isThisIrrefutable = repeats.CouldMatchEmpty() || body->isThisIrrefutable;
-        // Watch out! Even if a greedy loop has a 'isThisWillNotProgress' body, if the body has choicepoints then
+        // Caution: Even if a greedy loop has a 'isThisWillNotProgress' body, if the body has choicepoints then
         // a backtrack could resume execution at an earlier loop iteration, which may then continue to repeat
         // the loop beyond the input offset which triggered the backtrack. Ideally we'd use the body's isDeterministic
         // flag to tell us when that can't happen, but it's not available till pass 4, so we must make do with

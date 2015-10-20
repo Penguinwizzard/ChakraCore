@@ -575,7 +575,7 @@ namespace UnifiedRegex
         for (uint i = 0; i < branchingPerInnerLevel; i++)
         {
             if (children[i] == nullptr)
-                // Watch out! Part of the range for this child may overlap with direct vector
+                // Caution: Part of the range for this child may overlap with direct vector
                 result.SetRange(allocator, UTC(max(base, directSize)), UTC(base + delta - 1));
             else
                 children[i]->ToComplement(allocator, level, base, result);
@@ -1086,7 +1086,7 @@ namespace UnifiedRegex
                     for (i = 0; i < this->GetCompactLength(); i++)
                     {
                         __assume(l <= MaxUChar);
-                        if (l <= MaxUChar && i < MaxCompact) // always true, keep prefast happy
+                        if (l <= MaxUChar && i < MaxCompact)
                         {
                             if (this->GetCompactCharU(i) == l)
                                 break;
@@ -1439,10 +1439,10 @@ namespace UnifiedRegex
             return -1;
 
         uint count = min(max, (uint)(this->GetCompactLength()));
-        __analysis_assume(count <= max); // on fre PREFAST fails to detect this (filed Win8: 682136)
+        __analysis_assume(count <= max);
         for (uint i = 0; i < count; i++)
         {
-            // Bug in oacr. it can't figure out count is less equal to max
+            // Bug in oacr. it can't figure out count is less than or equal to max
 #pragma warning(suppress: 22102)
             entries[i] = this->GetCompactChar(i);
         }
@@ -1504,7 +1504,7 @@ namespace UnifiedRegex
     }
 
 #if ENABLE_REGEX_CONFIG_OPTIONS
-    // CAUTION: Very slow! No, really.
+    // CAUTION: This method is very slow.
     void CharSet<wchar_t>::Print(DebugWriter* w) const
     {
         w->Print(L"[");
@@ -1699,7 +1699,7 @@ namespace UnifiedRegex
         *outLowerChar = this->AddOffset(currentLowChar, index);
         *outHigherChar = this->AddOffset(currentHighChar, index);
 
-        //Check if range crosses plane boundaries
+        // Check if range crosses plane boundaries
         index ++;
         for (; index < NumberOfPlanes; index++)
         {
@@ -1839,7 +1839,7 @@ namespace UnifiedRegex
     }
 
 #if ENABLE_REGEX_CONFIG_OPTIONS
-    // CAUTION: Very slow! No, really.
+    // CAUTION: This method is very slow.
     void RuntimeCharSet<wchar_t>::Print(DebugWriter* w) const
     {
         w->Print(L"[");

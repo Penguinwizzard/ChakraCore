@@ -8,7 +8,7 @@ class AllocSizeMath
 
 public:
     // Works for both 32bit and 64bit size_t arithmetic. It's also pretty
-    // optimal in the cases where either left or right are small, compile-
+    // optimal in the cases where either left or right or both are small, compile-
     // time constants.
     static size_t Add(size_t left, size_t right)
     {

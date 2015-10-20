@@ -45,8 +45,8 @@ PHASE(All)
             PHASE(BackendConcatExprOpt)
         PHASE(Inline)
             PHASE(InlineRecursive)
-            PHASE(InlineAtEveryCaller)     //Inlines a function say foo at every caller of foo. Doesn't guarantee all the calls within foo are inlined too.
-            PHASE(InlineTree)               //Inlines every function within a top function say foo (which needs to be top function) Note: -force:inline achieves  the effect of both -force:InlineTree & -force:InlineAtEveryCaller
+            PHASE(InlineAtEveryCaller)      //Inlines a function, say, foo at every caller of foo. Doesn't guarantee all the calls within foo are inlined too.
+            PHASE(InlineTree)               //Inlines every function within a top function, say, foo (which needs to be top function) Note: -force:inline achieves the effect of both -force:InlineTree & -force:InlineAtEveryCaller
             PHASE(TryAggressiveInlining)
             PHASE(InlineConstructors)
             PHASE(InlineBuiltIn)
@@ -453,7 +453,7 @@ PHASE(All)
 #define DEFAULT_CONFIG_AsmGoptCleanupThreshold  (500)
 #define DEFAULT_CONFIG_OptimizeForManyInstances (false)
 
-#define DEFAULT_CONFIG_DeferParseThreshold             (4 * 1024) // Unit is number of characters (Verify codeload/octane to change the heuristics)
+#define DEFAULT_CONFIG_DeferParseThreshold             (4 * 1024) // Unit is number of characters
 #define DEFAULT_CONFIG_ProfileBasedDeferParseThreshold (100)      // Unit is number of characters
 
 #define DEFAULT_CONFIG_ProfileBasedSpeculativeJit (true)
@@ -475,7 +475,6 @@ PHASE(All)
 #define DEFAULT_CONFIG_ES6                     (true)  // master flag to gate all P0-spec-test compliant ES6 features
 
 //CollectGarbage is legacy IE specific global function disabled in Edge.
-//Disabled due to security implications.
 #define DEFAULT_CONFIG_CollectGarbage          (false)
 
 // ES6 sub-feature gate - to enable-disable ES6 sub-feature when ES6 flag is enabled
@@ -514,13 +513,13 @@ PHASE(All)
 #define DEFAULT_CONFIG_ES6Unscopables          (true)
 #define DEFAULT_CONFIG_ES6WeakSet              (true)
 #define DEFAULT_CONFIG_ES6RegExSticky          (true)
-#define DEFAULT_CONFIG_ES6HasInstanceOf        (false) // Before making this default, once we address instanceof inline cache
+#define DEFAULT_CONFIG_ES6HasInstanceOf        (false)
 #define DEFAULT_CONFIG_ArrayBufferTransfer     (false)
 #define DEFAULT_CONFIG_ES7ExponentionOperator  (false)
 
 #define DEFAULT_CONFIG_ES6Verbose              (false)
 #define DEFAULT_CONFIG_ES6All                  (false)
-// /ES6 DEFAULT BEHAVIOR
+// ES6 DEFAULT BEHAVIOR
 
 #define DEFAULT_CONFIG_AsyncDebugging           (true)
 #define DEFAULT_CONFIG_TraceAsyncDebugCalls     (false)
@@ -534,11 +533,11 @@ PHASE(All)
 
 #define DEFAULT_CONFIG_FullJitRequeueThreshold (25)     // Minimum number of times a function needs to be executed before it is re-added to the jit queue
 
-#define DEFAULT_CONFIG_MinTemplatizedJitRunCount      (100)     // Minimum number of times a function needs to be interpreted before its jitted
-#define DEFAULT_CONFIG_MinAsmJsInterpreterRunCount      (10)     // Minimum number of times a function needs to be Asm interpreted before its jitted
-#define DEFAULT_CONFIG_MinTemplatizedJitLoopRunCount      (500)     // Minimum number of times a function needs to be interpreted before its jitted
-#define DEFAULT_CONFIG_MaxTemplatizedJitRunCount      (-1)     // Maximum number of times a function needs to be TJ before its jitted
-#define DEFAULT_CONFIG_MaxAsmJsInterpreterRunCount      (-1)     // Maximum number of times a function needs to be Asm interpreted before its jitted
+#define DEFAULT_CONFIG_MinTemplatizedJitRunCount      (100)     // Minimum number of times a function needs to be interpreted before it is jitted
+#define DEFAULT_CONFIG_MinAsmJsInterpreterRunCount      (10)     // Minimum number of times a function needs to be Asm interpreted before it is jitted
+#define DEFAULT_CONFIG_MinTemplatizedJitLoopRunCount      (500)     // Minimum number of times a function needs to be interpreted before it is jitted
+#define DEFAULT_CONFIG_MaxTemplatizedJitRunCount      (-1)     // Maximum number of times a function can be TJ before it is jitted
+#define DEFAULT_CONFIG_MaxAsmJsInterpreterRunCount      (-1)     // Maximum number of times a function can be Asm interpreted before it is jitted
 
 // Note: The following defaults only apply when the NewSimpleJit is on. The defaults for when it's off are computed in
 // ConfigFlagsTable::TranslateFlagConfiguration.
@@ -560,8 +559,8 @@ PHASE(All)
 #define DEFAULT_CONFIG_MaxLinearIntCaseCount     (3)       // Maximum number of cases (in switch statement) for which instructions can be generated linearly.
 #define DEFAULT_CONFIG_MaxSingleCharStrJumpTableRatio  (2)       // Maximum single char string jump table size as multiples of the actual case arm
 #define DEFAULT_CONFIG_MaxSingleCharStrJumpTableSize  (128)       // Maximum single char string jump table size
-#define DEFAULT_CONFIG_MinSwitchJumpTableSize   (9)     //Minimum number of case target entries in the jump table(this may also include values that are missing in the consecutive set of integer case arms)
-#define DEFAULT_CONFIG_SwitchOptHolesThreshold  (50)     //Maximum percentage of holes (missing case values in a switch statement) with which a jump table can be created
+#define DEFAULT_CONFIG_MinSwitchJumpTableSize   (9)     // Minimum number of case target entries in the jump table(this may also include values that are missing in the consecutive set of integer case arms)
+#define DEFAULT_CONFIG_SwitchOptHolesThreshold  (50)     // Maximum percentage of holes (missing case values in a switch statement) with which a jump table can be created
 #define DEFAULT_CONFIG_MaxLinearStringCaseCount (4)     // Maximum number of String cases (in switch statement) for which instructions can be generated linearly.
 
 #define DEFAULT_CONFIG_MinDeferredFuncTokenCount (20)   // Minimum size in tokens of a defer-parsed function
@@ -975,7 +974,6 @@ FLAGNR(String,  FaultInjectionStackFile   , "Stacks to match, default: stack.txt
 FLAGNR(Number,  FaultInjectionStackLineCount   , "Count of lines in the stack file used for matching", -1)
 FLAGNR(String,  FaultInjectionStackHash, "Match stacks hash on Chakra frames to inject the fault, hex string", L"0")
 FLAGNR(Number,  FaultInjectionScriptContextToTerminateCount, "Script context# COUNT % (Number of script contexts) to terminate", 1)
-//FLAGNR(Number,  FaultInjectionStackHashFrameCount , "Stack frame count for FaultInjectionStackHash, default: MAX_FRAME_COUNT",64)
 #endif
 FLAGNR(Number, InduceCodeGenFailure, "Probability of a codegen job failing.", DEFAULT_CONFIG_InduceCodeGenFailure)
 FLAGNR(Number, InduceCodeGenFailureSeed, "Seed used while calculating codegen failure probability", 0)
