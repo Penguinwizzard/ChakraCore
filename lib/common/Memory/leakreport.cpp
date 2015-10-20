@@ -130,8 +130,6 @@ LeakReport::EnsureLeakReportFile()
         return true;
     }
 
-    // REVIEW: Can't think of a clean way to do this
-    // Leaving as is so that we just use the default filename
     wchar_t const * filename = Js::Configuration::Global.flags.LeakReport;
     wchar_t const * openMode = L"w+";
     wchar_t defaultFilename[_MAX_PATH];
@@ -171,9 +169,9 @@ LeakReport::LogUrl(wchar_t const * url, void * globalObject)
     record->url = urlCopy;
     record->time = _time64(NULL);
     record->tid = ::GetCurrentThreadId();
-    record->next = nullptr;       
+    record->next = nullptr;
     record->scriptEngine = nullptr;
-    record->globalObject = globalObject;        // TODO: Switch it to JavascriptLibrary when Yong change to use Library in the type
+    record->globalObject = globalObject;
    
     AutoCriticalSection autocs(&s_cs);
     if (LeakReport::urlRecordHead == nullptr)

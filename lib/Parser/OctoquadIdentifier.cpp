@@ -313,23 +313,13 @@ namespace UnifiedRegex
         return RecyclerNewLeaf(recycler, OctoquadMatcher, standardChars, mappingSource, identifier);
     }
 
-#if defined(_M_IX86) &&  defined(USE_POPCNT_INSTRUCTION)
-    extern "C" {
-        unsigned int __popcnt(unsigned int value);
-    }
-#pragma intrinsic (__popcnt)
-#endif
-
-#ifndef USE_BITCOUNTS
-    // This version of popcnt courtesy of Paul Harrington, inspired by Steve Steiner, inspired by HACKMEM169.
+    // This version of popcnt is courtesy of Paul Harrington, inspired by Steve Steiner, inspired by HACKMEM169.
     // It exploits the fact that each quad of bits has at most only one bit set.
     __inline bool oneBitSetInEveryQuad(uint32 x)
     {
         x -= 0x11111111;
         return (x & 0x88888888u) == 0;
     }
-
-#endif
 
     bool OctoquadMatcher::Match
         ( const Char* const input
@@ -364,41 +354,9 @@ namespace UnifiedRegex
         const uint32 rp = patterns[1];
         CharCount next = offset + TrigramInfo::PatternLength;
 
-#if defined(_M_IX86) && defined(USE_POPCNT_INSTRUCTION)
-        if (AutoSystemInfo::Data.PopCntAvailable())
-        {
-            while (true)
-            {
-                if (__popcnt(v & lp) == TrigramInfo::PatternLength ||
-                    __popcnt(v & rp) == TrigramInfo::PatternLength)
-                {
-                    offset = next - TrigramInfo::PatternLength;
-                    return true;
-                }
-                if (next >= inputLength)
-                    return false;
-#if ENABLE_REGEX_CONFIG_OPTIONS
-                if (stats != 0)
-                    stats->numCompares++;
-#endif
-                v <<= 4;
-                if (CTU(input[next]) < TrigramAlphabet::AsciiTableSize)
-                    v |= charToBits[CTU(input[next])];
-                next++;
-            }
-        }
-#endif
-
         while (true)
         {
-#ifdef USE_BITCOUNTS
-            if ((bitcounts[(uint16)(v & lp)] == TrigramInfo::PatternLength / 2 &&
-                 bitcounts[(v & lp) >> 16] == TrigramInfo::PatternLength / 2) ||
-                (bitcounts[(uint16)(v & rp)] == TrigramInfo::PatternLength / 2 &&
-                 bitcounts[(v & rp) >> 16] == TrigramInfo::PatternLength / 2))
-#else
             if (oneBitSetInEveryQuad(v & lp) || oneBitSetInEveryQuad(v & rp))
-#endif
             {
                 offset = next - TrigramInfo::PatternLength;
                 return true;

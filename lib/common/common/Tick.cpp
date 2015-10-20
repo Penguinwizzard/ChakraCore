@@ -41,7 +41,7 @@ namespace Js {
     ///
     /// Tick::Tick
     ///
-    /// Tick() initializes a new Tick instance to an specific time, in native
+    /// Tick() initializes a new Tick instance to a specific time, in native
     /// time units.
     ///
     ///----------------------------------------------------------------------------
@@ -57,7 +57,7 @@ namespace Js {
     ///
     /// Tick::FromMicroseconds
     ///
-    /// FromMicroseconds() returns a Tick instance from a given time, in
+    /// FromMicroseconds() returns a Tick instance from a given time in
     /// microseconds.
     ///
     ///----------------------------------------------------------------------------
@@ -295,7 +295,7 @@ namespace Js {
     ///
     /// TickDelta::TickDelta
     ///
-    /// TickDelta() initializes a new TickDelta instance to specific time delta,
+    /// TickDelta() initializes a new TickDelta instance to a specific time delta,
     /// in native time units.
     ///
     ///----------------------------------------------------------------------------
@@ -312,7 +312,7 @@ namespace Js {
     ///
     /// TickDelta::ToMicroseconds
     ///
-    /// ToMicroseconds() returns the time delta, in microseconds.  The time is
+    /// ToMicroseconds() returns the time delta, in microseconds. The time is
     /// rounded to the nearest available whole units.
     ///
     ///----------------------------------------------------------------------------
@@ -349,14 +349,14 @@ namespace Js {
     ///
     /// TickDelta::FromMicroseconds
     ///
-    /// FromMicroseconds() returns a TickDelta instance from a given delta, in
+    /// FromMicroseconds() returns a TickDelta instance from a given delta in
     /// microseconds.
     ///
     ///----------------------------------------------------------------------------
 
     TickDelta
     TickDelta::FromMicroseconds(
-        int64 lnTimeDelta)                  // Time delta, in 1000^2 sec
+        int64 lnTimeDelta)                  // Time delta, in 1/1000^2 sec
     {
         AssertMsg(lnTimeDelta != _I64_MAX, "Use Infinite() to create an infinite TickDelta");
 
@@ -390,14 +390,14 @@ namespace Js {
     ///
     /// TickDelta::FromMicroseconds
     ///
-    /// FromMicroseconds() returns a TickDelta instance from a given delta, in
+    /// FromMicroseconds() returns a TickDelta instance from a given delta in
     /// microseconds.
     ///
     ///----------------------------------------------------------------------------
 
     TickDelta
     TickDelta::FromMicroseconds(
-        int nTimeDelta)                     // Tick delta, in 1000^2 sec
+        int nTimeDelta)                     // Tick delta, in 1/1000^2 sec
     {
         AssertMsg(nTimeDelta != _I32_MAX, "Use Infinite() to create an infinite TickDelta");
 
@@ -409,14 +409,14 @@ namespace Js {
     ///
     /// TickDelta::FromMilliseconds
     ///
-    /// FromMilliseconds() returns a TickDelta instance from a given delta, in
+    /// FromMilliseconds() returns a TickDelta instance from a given delta in
     /// milliseconds.
     ///
     ///----------------------------------------------------------------------------
 
     TickDelta
     TickDelta::FromMilliseconds(
-        int nTimeDelta)                     // Tick delta, in 1000^1 sec
+        int nTimeDelta)                     // Tick delta, in 1/1000^1 sec
     {
         AssertMsg(nTimeDelta != _I32_MAX, "Use Infinite() to create an infinite TickDelta");
 

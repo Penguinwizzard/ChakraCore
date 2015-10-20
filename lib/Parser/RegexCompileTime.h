@@ -162,7 +162,7 @@ namespace UnifiedRegex
 
         // Transfer pass 0:
         //  - synthesize the total number of characters required to store all literals, including case-invariant
-        //    expansions where require
+        //    expansions where required
         //  - adjust match char nodes to account for case invariance if necessary
         virtual CharCount TransferPass0(Compiler& compiler, const Char* litbuf) = 0;
         // Transfer pass 1:
@@ -222,10 +222,10 @@ namespace UnifiedRegex
         // Emit code to consume this pattern. The first skipped characters of pattern have been consumed by context.
         virtual void Emit(Compiler& compiler, CharCount& skipped) = 0;
 
-        // Emit code to scan forwards for the first occurance of pattern, or hard fail if no such occurance.
-        //  - if isHeadSyncronizingNode, also consume the occurance and leave input pointer at first char after it
+        // Emit code to scan forward for the first occurence of pattern, or hard fail if no such occurence.
+        //  - if isHeadSyncronizingNode, also consume the occurence and leave input pointer at first char after it
         //  - otherwise, leave input pointer at the latest point of input which could match the overall pattern
-        //    (ie rewind from start of occurance accerding to the prevConsumes range)
+        //    (ie rewind from start of occurence accerding to the prevConsumes range)
         //  - may actually do nothing if nothing worthwhile to scan to
         // Return number of characters consumed.
         virtual CharCount EmitScan(Compiler& compiler, bool isHeadSyncronizingNode) = 0;
@@ -347,7 +347,7 @@ namespace UnifiedRegex
         CharCount offset;  // into literal buffer (initially parser's, then program's)
         CharCount length;  // always > 1
         bool isEquivClass; // True if each consecutive triplet of characters of literal represents equivalence
-                           // class of characters to match against. Actual literal length will be 3 times length
+                           // class of characters to match against. Actual literal length will be 3 times the length
                            // given above
 
         inline MatchLiteralNode(CharCount offset, CharCount length)

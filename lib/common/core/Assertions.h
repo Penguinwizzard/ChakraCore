@@ -75,7 +75,6 @@ _declspec(thread, selectany) int IsInAssert = false;
 #define CompileAssert(e) static_assert(e, #e)
 #endif
 
-// Trick adopted from windows.foundations.collections.h
 // We set IsPointer<T>::IsTrue to true if T is a pointer type
 // Otherwise, it's set to false
 template <class T>

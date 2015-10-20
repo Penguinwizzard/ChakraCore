@@ -404,7 +404,7 @@ struct RecyclerCollectionStats
     size_t stackCount;
     size_t remarkCount;
 
-    size_t scanCount;           // non-leaf object marked.
+    size_t scanCount;           // non-leaf objects marked.
     size_t trackCount;
     size_t finalizeCount;
     size_t markThruNewObjCount;
@@ -422,7 +422,7 @@ struct RecyclerCollectionStats
         size_t rescanLargeByteCount;
 #endif
         size_t markCount;           // total number of object marked
-        size_t markBytes;           // size of all object marked.
+        size_t markBytes;           // size of all objects marked.
     } markData;
 
 #ifdef CONCURRENT_GC_ENABLED
@@ -435,17 +435,17 @@ struct RecyclerCollectionStats
 #endif
 
     // Sweep stats
-    size_t heapBlockCount[HeapBlock::BlockTypeCount];                       // number of heap block (processed during swept)
-    size_t heapBlockFreeCount[HeapBlock::BlockTypeCount];                   // number of heap block deleted
+    size_t heapBlockCount[HeapBlock::BlockTypeCount];                       // number of heap blocks (processed during swept)
+    size_t heapBlockFreeCount[HeapBlock::BlockTypeCount];                   // number of heap blocks deleted
     size_t heapBlockConcurrentSweptCount[HeapBlock::SmallBlockTypeCount];
-    size_t heapBlockSweptCount[HeapBlock::SmallBlockTypeCount];             // number of heap block swept
+    size_t heapBlockSweptCount[HeapBlock::SmallBlockTypeCount];             // number of heap blocks swept
 
-    size_t objectSweptCount;                // object freed (free list + whole page freed)
+    size_t objectSweptCount;                // objects freed (free list + whole page freed)
     size_t objectSweptBytes;
-    size_t objectSweptFreeListCount;        // object freed (free list)
+    size_t objectSweptFreeListCount;        // objects freed (free list)
     size_t objectSweptFreeListBytes;
-    size_t objectSweepScanCount;            // number of object walked for sweeping (exclude whole page freed)
-    size_t finalizeSweepCount;              // number of object finalizer/dispose called
+    size_t objectSweepScanCount;            // number of objects walked for sweeping (exclude whole page freed)
+    size_t finalizeSweepCount;              // number of objects finalizer/dispose called
 
 #ifdef PARTIAL_GC_ENABLED
     size_t smallNonLeafHeapBlockPartialReuseCount[HeapBlock::SmallBlockTypeCount];
@@ -576,10 +576,10 @@ private:
 private:
     WorkFunc workFunc;
     Recycler * recycler;
-    HANDLE concurrentWorkReadyEvent;// main thread use this event to tell concurrent thread the work is ready
-    HANDLE concurrentWorkDoneEvent;// concurrent thread use this event to tell main thread the work allocated is done
+    HANDLE concurrentWorkReadyEvent;// main thread uses this event to tell concurrent threads that the work is ready
+    HANDLE concurrentWorkDoneEvent;// concurrent threads use this event to tell main thread that the work allocated is done
     HANDLE concurrentThread;
-    bool synchronizeOnStartup; // Do we synchronize on startup
+    bool synchronizeOnStartup;
 };
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
@@ -861,8 +861,8 @@ private:
     byte backgroundRescanCount;             // for ETW events and stats
     byte backgroundFinishMarkCount;
     size_t backgroundRescanRootBytes;
-    HANDLE concurrentWorkReadyEvent; // main thread use this event to tell concurrent thread the work is ready
-    HANDLE concurrentWorkDoneEvent; // concurrent thread use this event to tell main thread the work allocated is done
+    HANDLE concurrentWorkReadyEvent; // main thread uses this event to tell concurrent threads that the work is ready
+    HANDLE concurrentWorkDoneEvent; // concurrent threads use this event to tell main thread that the work allocated is done
     HANDLE concurrentThread;
     HANDLE mainThreadHandle;
 
@@ -933,7 +933,6 @@ private:
     bool isAborting;
 #endif
 
-    // Consider allocating this in an arena allocator temporary
     RecyclerSweep recyclerSweepInstance;
     RecyclerSweep * recyclerSweep;
 
@@ -1348,11 +1347,9 @@ public:
 
     void Free(void* buffer, size_t size)
     {
-        // Consider switching caller to call one of either FreeLeaf or FreeNonLeaf
         Assert(false);
     }
 
-    //void ExplicitFreeNoOp(void* buffer, size_t size) { }
     bool ExplicitFreeLeaf(void* buffer, size_t size);
     bool ExplicitFreeNonLeaf(void* buffer, size_t size);
 
@@ -1463,8 +1460,8 @@ public:
     }
 #endif
 private:
-    // RecyclerRootPtr has implicit conversion to pointers, prevent it to be
-    // pass to RootAddRef/RootRelease directly
+    // RecyclerRootPtr has implicit conversion to pointers, prevent it to be 
+    // passed to RootAddRef/RootRelease directly
     template <typename T>
     void RootAddRef(RecyclerRootPtr<T>& ptr, uint *count = nullptr);
     template <typename T>
@@ -1754,7 +1751,6 @@ private:
 #if DBG_DUMP
     bool forceTraceMark;
 #endif
-    // TODO: This really should have been a CollectionState
     bool isHeapEnumInProgress;
 #if DBG
     bool allowAllocationDuringHeapEnum;
@@ -2230,13 +2226,13 @@ public:
     }
 };
 
-// This is used by the compiler when T when it is NOT a pointer i.e. a value type - it causes leaf allocation
+// This is used by the compiler; when T is NOT a pointer i.e. a value type - it causes leaf allocation
 template <typename T>
 class TypeAllocatorFunc<Recycler, T> : public _RecyclerAllocatorFunc<_RecyclerLeafPolicy>
 {
 };
 
-// Partial template specialization applies to T when it is a pointer
+// Partial template specialization; applies to T when it is a pointer
 template <typename T>
 class TypeAllocatorFunc<Recycler, T *> : public _RecyclerAllocatorFunc<_RecyclerNonLeafPolicy>
 {
@@ -2348,31 +2344,6 @@ struct ForceLeafAllocator<RecyclerNonLeafAllocator>
 #define RECYCLER_PROFILE_EXEC_THREAD_END(background, recycler, phase)
 #endif
 }
-
-//we don't need these for the Recycler
-
-#if 0
-inline void __cdecl
-operator delete(void * obj, Recycler * alloc, char * (Recycler::*AllocFunc)(size_t))
-{
-}
-
-inline void __cdecl
-operator delete(void * obj, Recycler * alloc, char * (Recycler::*AllocFunc)(size_t), size_t plusSize)
-{
-}
-
-inline void __cdecl
-operator delete(void * obj, Recycler * recycler, ObjectInfoBits enumClassBits)
-{
-}
-
-template <typename T>
-inline void __cdecl
-operator delete(void * obj, RecyclerFastAllocator<T> * alloc, char * (RecyclerFastAllocator<T>::*AllocFunc)(size_t))
-{
-}
-#endif
 
 _Ret_notnull_ inline void * __cdecl
 operator new(size_t byteSize, Recycler * alloc, HeapInfo * heapInfo)

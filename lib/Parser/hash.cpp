@@ -55,7 +55,7 @@ BOOL HashTbl::Init(uint cidHash)
 
     // (Bug 1117873 - Windows OS Bugs)
     // Prefast: Verify that cidHash * sizeof(Ident *) does not cause an integer overflow
-    //NoReleaseAllocator( ) takes long - so check for LONG_MAX
+    // NoReleaseAllocator( ) takes long - so check for LONG_MAX
     // Win8 730594 - Use intsafe function to check for overflow.
     uint cbTemp;
     if (FAILED(UIntMult(cidHash, sizeof(Ident *), &cbTemp)) || cbTemp > LONG_MAX)
@@ -76,7 +76,7 @@ BOOL HashTbl::Init(uint cidHash)
 void HashTbl::Grow()
 {
     // Grow the bucket size by grow factor
-    // Has the side-effect of inverting the order the pid's appear in their respective buckets.
+    // Has the side-effect of inverting the order the pids appear in their respective buckets.
     uint cidHash = m_luMask + 1;
     uint n_cidHash = cidHash * GrowFactor;
     Assert(n_cidHash > 0 && 0 == (n_cidHash & (n_cidHash - 1)));
@@ -97,7 +97,7 @@ void HashTbl::Grow()
     // Clear the array
     memset(n_prgpidName, 0, cb);
 
-    // Place each entry it's new bucket.
+    // Place each entry its new bucket.
     for (uint i = 0; i < cidHash; i++)
     {
         for (IdentPtr pid = m_prgpidName[i], next = pid ? pid->m_pidNext : nullptr; pid; pid = next, next = pid ? pid->m_pidNext : nullptr)

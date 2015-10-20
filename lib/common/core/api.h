@@ -16,7 +16,7 @@ extern void __stdcall js_wmemcpy_s(__ecount(sizeInWords) wchar_t *dst, size_t si
 typedef void * ThreadContextId;
 #define NoThreadContextId (ThreadContextId)NULL
 
-// Functions that needs to be implemented by user of Common library
+// Functions that need to be implemented by user of Common library
 namespace Js
 {
     // Forward declaration

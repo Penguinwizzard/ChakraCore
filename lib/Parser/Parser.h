@@ -5,8 +5,6 @@
 #pragma once
 
 #define REGEX_TRIGRAMS 1 
-// #define USE_POPCNT_INSTRUCTION 1
-// #define USE_BITCOUNTS 1
 
 #include "Common.h"
 

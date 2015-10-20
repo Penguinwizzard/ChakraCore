@@ -124,7 +124,7 @@ namespace JsUtil
             return false;
         }
 
-        // Checks if any of the elements satisfy the passed in condition.
+        // Checks if any of the elements satisfy the condition in the passed in function.
         template <typename TConditionalFunction>
         bool Any(TConditionalFunction function)
         {
@@ -139,7 +139,7 @@ namespace JsUtil
             return false;
         }
 
-        // Checks if all of the elements satisfy the passed in condition.
+        // Checks if all of the elements satisfy the condition in the passed in function.
         template <typename TConditionalFunction>
         bool All(TConditionalFunction function)
         {
@@ -326,7 +326,7 @@ namespace JsUtil
             return this->Item(count - 1);
         }
 
-        // Finds the last element that satisfies the passed in condition.
+        // Finds the last element that satisfies the condition in the passed in function.
         // Returns true if the element was found; false otherwise.
         template <typename TConditionalFunction>
         bool Last(TConditionalFunction function, T& outElement)

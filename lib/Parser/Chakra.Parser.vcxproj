@@ -32,7 +32,6 @@
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)alloc.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)BackgroundParser.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)BitCounts.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)CaseInsensitive.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)CharClassifier.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)CharSet.cpp" />
@@ -62,7 +61,6 @@
   <ItemGroup>
     <ClInclude Include="alloc.h" />
     <ClInclude Include="BackgroundParser.h" />
-    <ClInclude Include="BitCounts.h" />
     <ClInclude Include="CaseInsensitive.h" />
     <ClInclude Include="CharClassifier.h" />
     <ClInclude Include="CharMap.h" />

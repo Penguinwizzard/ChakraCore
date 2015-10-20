@@ -28,7 +28,7 @@
 #define DEBUG 1
 #endif
 
-// if test hook is enabled, enable debug config options are enabled too
+// if test hook is enabled, debug config options are enabled too
 #ifdef ENABLE_TEST_HOOKS
 #ifndef ENABLE_DEBUG_CONFIG_OPTIONS
 #define ENABLE_DEBUG_CONFIG_OPTIONS 1
@@ -103,17 +103,14 @@
 #define ENABLE_NATIVE_CODEGEN 1                     // *** TODO: Won't build if disabled currently
 
 // Other features
-//saravind: Uncomment the following to build ChakraCore with CFG APIs to Delay Load.
 // #define CHAKRA_CORE_DOWN_COMPAT 1
 
 #if defined(ENABLE_DEBUG_CONFIG_OPTIONS) || defined(CHAKRA_CORE_DOWN_COMPAT)
 #define DELAYLOAD_SET_CFG_TARGET 1
 #endif
 
-// The feature below are disabled for ChakraCore
 #ifdef NTBUILD
-// These are only enable in full Chakra but not ChakraCore
-#define ENABLE_PROJECTION
+#define ENABLE_PROJECTION 
 #define ENABLE_FOUNDATION_OBJECT
 #define ENABLE_EXPERIMENTAL_FLAGS
 #define ENABLE_WININET_PROFILE_DATA_CACHE
@@ -459,7 +456,7 @@
 
 #if defined(HEAP_TRACK_ALLOC) || defined(PROFILE_RECYCLER_ALLOC)
 #define TRACK_ALLOC
-#define TRACE_OBJECT_LIFETIME           // track a particular objects lifetime
+#define TRACE_OBJECT_LIFETIME           // track a particular object's lifetime
 #endif
 
 #if defined(USED_IN_STATIC_LIB)

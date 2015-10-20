@@ -248,7 +248,7 @@ namespace Js
         
         const OLECHAR* SkipWhiteSpace(LPCOLESTR psz) const
         {
-            // Fast path for first character is not space
+            // Fast path for the case in which first character is not space
             wchar_t firstChar = *psz;
             if (firstChar == 0)
             {
@@ -265,7 +265,7 @@ namespace Js
 
         const OLECHAR* SkipWhiteSpace(_In_reads_(pStrEnd - pStr) LPCOLESTR pStr, _In_ LPCOLESTR pStrEnd) const
         {
-            // Fast path for first character is not space
+            // Fast path for the case in which first character is not space
             if (pStr == pStrEnd)
             {
                 return pStr;
