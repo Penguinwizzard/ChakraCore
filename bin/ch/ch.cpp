@@ -3,6 +3,7 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "stdafx.h"
+#include "core/AtomLockGuids.h"
 
 unsigned int MessageBase::s_messageCount = 0;
 
@@ -478,6 +479,9 @@ int _cdecl wmain(int argc, __in_ecount(argc) LPWSTR argv[])
         PrintUsage();
         return EXIT_FAILURE;
     }
+
+    ATOM lock = ::AddAtom(szChakraCoreLock);
+    AssertMsg(lock, "failed to lock chakracore.dll");
 
     HostConfigFlags::HandleArgsFlag(argc, argv);
 

@@ -3,6 +3,7 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "Runtime.h"
+#include "core\AtomLockGuids.h"
 #include "core\ConfigParser.h"
 #include "Library\ThreadContextTLSEntry.h"
 #include "Library\ThreadBoundThreadContextManager.h"
@@ -13,7 +14,7 @@
 #include "TestHooks.h"
 
 extern HANDLE g_hInstance;
-
+static ATOM  lockedDll = 0;
 static BOOL AttachProcess(HANDLE hmod)
 {
     if (!ThreadContextTLSEntry::InitializeProcess() || !JsrtContext::Initialize())
@@ -48,6 +49,20 @@ static BOOL AttachProcess(HANDLE hmod)
 #endif
     ValueType::Initialize();
     ThreadContext::GlobalInitialize();
+
+    wchar_t *engine = szChakraCoreLock;
+    if (::FindAtom(szJScript9Lock) != 0)
+    {
+        AssertMsg(FALSE, "Expecting to load chakracore.dll but process already loaded jscript9.dll");
+        Binary_Inconsistency_fatal_error();
+    }
+    if (::FindAtom(szChakraLock) != 0)
+    {
+        AssertMsg(FALSE, "Expecting to load chakracore.dll but process already loaded chakra.dll");
+        Binary_Inconsistency_fatal_error();
+    }
+    lockedDll = ::AddAtom(engine);
+    AssertMsg(lockedDll, "Failed to lock chakracore.dll");
 
 #ifdef ENABLE_BASIC_TELEMETRY
     g_TraceLoggingClient = NoCheckHeapNewStruct(TraceLoggingClient);
@@ -112,6 +127,10 @@ EXTERN_C BOOL WINAPI DllMain(HINSTANCE hmod, DWORD dwReason, PVOID pvReserved)
         return TRUE;
 
     case DLL_PROCESS_DETACH:
+
+        lockedDll = ::DeleteAtom(lockedDll);
+        AssertMsg(lockedDll == 0, "Failed to release the lock for chakracore.dll");
+
 #ifdef DYNAMIC_PROFILE_STORAGE    
         DynamicProfileStorage::Uninitialize();
 #endif
