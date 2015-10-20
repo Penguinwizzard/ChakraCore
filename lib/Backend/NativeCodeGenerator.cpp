@@ -1223,14 +1223,13 @@ NativeCodeGenerator::CheckCodeGenDone(
     if (!entryPointInfo->IsCodeGenDone())
     {        
         // TODO 603650 - assert that the entry point is in the state we expect it to be when code gen fails.
-        // this happens if the codegen failed, install the profile thunk 
-        // or use the original entry point, which should be the delay interpreter thunk or dynamic interpreter thunk 
-        address = functionBody->GetScriptContext()->CurrentThunk == ProfileEntryThunk ? ProfileEntryThunk : functionBody->GetOriginalEntryPoint();
-        entryPointInfo->address = address;
+        // this happens if the codegen failed, do not update the entry point info and continue with original entry point
         if (entryPointInfo->IsPendingCleanup())
         {
             entryPointInfo->Cleanup(false /* isShutdown */, true /* capture cleanup stack */);
         }
+        address = functionBody->GetScriptContext()->CurrentThunk == ProfileEntryThunk ? ProfileEntryThunk : functionBody->GetOriginalEntryPoint();
+        return address;
     }    
     else
     {
