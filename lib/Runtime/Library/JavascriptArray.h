@@ -2,6 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
+
 #pragma once
 
 #define ARRAY_CROSSOVER_FOR_VALIDATE 0
@@ -21,7 +22,7 @@ namespace Js
 
     protected:
         uint32*              keys;           // keys[i] == segments[i]->left
-        SparseArraySegmentBase** segments;       // Length of segmentCount.
+        SparseArraySegmentBase** segments;   // Length of segmentCount.
         SegmentBTree*        children;       // Length of segmentCount+1.
         uint32               segmentCount;   // number of sparseArray segments in the Node
 
@@ -114,7 +115,7 @@ namespace Js
         static uint32 const InvalidIndex = 0xFFFFFFFF;
         static uint32 const MaxArrayLength = InvalidIndex;
         static uint32 const MaxInitialDenseLength=1<<18;
-        static ushort const MergeSegmentsLengthHeuristics = 128; //If the length is less than MergeSegmentsLengthHeuristics then try to merge the segments
+        static ushort const MergeSegmentsLengthHeuristics = 128; // If the length is less than MergeSegmentsLengthHeuristics then try to merge the segments
 
         static const Var MissingItem;
         template<typename T> static T GetMissingItem();
@@ -281,7 +282,6 @@ namespace Js
         static Var EntryPopNonJavascriptArray(ScriptContext * scriptContext, Var object);
 
 #if DEBUG
-        // deprecated, for verification only
         static BOOL GetIndex(const wchar_t* propName, ulong *pIndex);
 #endif
 
@@ -519,7 +519,7 @@ namespace Js
         SparseArraySegmentBase * GetBeginLookupSegment(uint32 index, const bool useSegmentMap = true) const;
         SegmentBTreeRoot *  BuildSegmentMap();
         void InvalidateLastUsedSegment();
-        inline BOOL IsFullArray() const; //no missing elements till array length
+        inline BOOL IsFullArray() const; // no missing elements till array length
         inline BOOL IsSingleSegmentArray() const;
 
         template<typename T> void AllocateHead();
@@ -793,7 +793,7 @@ namespace Js
     };
 
     // Ideally we would propagate the throw flag setting of true from the array operations down to the [[Delete]]/[[Put]]/... methods. But that is a big change
-    // so we are checking for failure on DeleteProperty/DeleteItem/... etc instead and will fix properly for IE10. This helper makes that checking a little less intrusive.
+    // so we are checking for failure on DeleteProperty/DeleteItem/... etc instead. This helper makes that checking a little less intrusive.
     class ThrowTypeErrorOnFailureHelper
     {
         ScriptContext *m_scriptContext;
@@ -855,7 +855,7 @@ namespace Js
         void CopyArrayProfileInfo(Js::JavascriptNativeArray* baseArray);
 
         Var FindMinOrMax(Js::ScriptContext * scriptContext, bool findMax);
-        template<typename T, bool checkNaNAndNegZero> Var FindMinOrMax(Js::ScriptContext * scriptContext, bool findMax); //NativeInt arrays can't have NaNs or -0
+        template<typename T, bool checkNaNAndNegZero> Var FindMinOrMax(Js::ScriptContext * scriptContext, bool findMax); // NativeInt arrays can't have NaNs or -0
 
         static void PopWithNoDst(Var nativeArray);
     };

@@ -24,7 +24,6 @@ extern "C" void __cdecl _alloca_probe_16();
 #endif
 
 #ifdef _M_X64_OR_ARM64
-// TODO: Clean this warning up
 #pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
 #endif
 
@@ -46,8 +45,8 @@ namespace Js
         this->GetTypeHandler()->ClearHasOnlyWritableDataProperties(); // length is non-writable
         if (GetTypeHandler()->GetFlags() & DynamicTypeHandler::IsPrototypeFlag)
         {
-            // No need to invalidate store field caches for non-writable properties here.  Since this type is just being created, it cannot represent
-            // an object that is already a prototype.  If it becomes a prototype and then we attempt to add a property to an object derived from this
+            // No need to invalidate store field caches for non-writable properties here. Since this type is just being created, it cannot represent
+            // an object that is already a prototype. If it becomes a prototype and then we attempt to add a property to an object derived from this
             // object, then we will check if this property is writable, and only if it is will we do the fast path for add property.
             // GetScriptContext()->InvalidateStoreFieldCaches(PropertyIds::length);
             GetLibrary()->NoPrototypeChainsAreEnsuredToHaveOnlyWritableDataProperties();
@@ -62,8 +61,8 @@ namespace Js
         this->GetTypeHandler()->ClearHasOnlyWritableDataProperties(); // length is non-writable
         if (GetTypeHandler()->GetFlags() & DynamicTypeHandler::IsPrototypeFlag)
         {
-            // No need to invalidate store field caches for non-writable properties here.  Since this type is just being created, it cannot represent
-            // an object that is already a prototype.  If it becomes a prototype and then we attempt to add a property to an object derived from this
+            // No need to invalidate store field caches for non-writable properties here. Since this type is just being created, it cannot represent
+            // an object that is already a prototype. If it becomes a prototype and then we attempt to add a property to an object derived from this
             // object, then we will check if this property is writable, and only if it is will we do the fast path for add property.
             // GetScriptContext()->InvalidateStoreFieldCaches(PropertyIds::length);
             GetLibrary()->NoPrototypeChainsAreEnsuredToHaveOnlyWritableDataProperties();
@@ -158,7 +157,6 @@ namespace Js
         Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == nullptr
             || JavascriptOperators::GetTypeId(args[0]) == TypeIds_HostDispatch);
 
-        // Legacy engine uses comma with a space, while ES5 spec specifies comma to be used.
         JavascriptString* separator = library->GetCommaDisplayString();
 
         // Gather all the formals into a string like (fml1, fml2, fml3)
@@ -198,10 +196,6 @@ namespace Js
         // Bug 1105479. Get the module id from the caller
         ModuleID moduleID = kmodGlobal;
 
-        // In IE9 mode, it should always be evaluated in the global context
-        //
-
-        // TODO: Enable strictMode for new Function
         BOOL strictMode = FALSE;
 
         JavascriptFunction *pfuncScript;
@@ -213,7 +207,7 @@ namespace Js
         {
             // ES3 and ES5 specs require validation of the formal list and the function body
 
-            // Validate fmls here....
+            // Validate fmls here
             scriptContext->GetGlobalObject()->ValidateSyntax(scriptContext, fmls->GetSz(), fmls->GetLength(), isGenerator, &Parser::ValidateFormals);
             if (fnBody != NULL)
             {
@@ -341,14 +335,6 @@ namespace Js
     //    11.   Return the result of calling the [[Call]] internal method of func, providing thisArg as the this value and argList as the list of arguments.
     //    The length property of the apply method is 2.
 
-    // TODO:  this implementation follows V5.8. there are several differences between V5.8, ES3 and ES5 to be addressed here:
-    // 1. in V5.8 and ES3, if no 'this' argument is passed, the global object is used for 'this'.
-    //      Passing global object could pose a security risk. It allows a quick access to the global object for code that is intended to be denied access to the global object.
-    //      ES5 removes the automatically provided 'this'. Make sure to apply ES5 spec to both Function.prototype.apply and Function.prototype.call()
-    // 2. V5.8 and ES3 allows only arrays and Arguments object as 'argArray'.  ES5 allows any array like object, i.e. any object that has a length.
-    //      Question: what about external objects that have a 'length' property?
-    // 3. ES3 has no restriction on argArray.length. V5.8 check the length to be a non negative value and limited by 'LONG_MAX/sizeof(VARIANT)'. ES5 has clause 7,
-    //    which restricts the length to be a 32 unsigned value.
     Var JavascriptFunction::EntryApply(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -422,13 +408,6 @@ namespace Js
             {
                 JavascriptError::ThrowTypeError(scriptContext, JSERR_FunctionArgument_NeedObject, L"Function.prototype.apply");
             }
-
-            // argArray is array or object, check length prop for object case
-            // TODO v5.8 (ES3) mode: add  check for 'arguments' object when 'arguments' obj identity is available
-            //
-            // TODO v5.8 mode:  enforce the argArray to be an internal JScript object or a an object array. V5.8 doesn't allow external object to be passed as arg arrays.
-            // HostDisptach objects that wrap Jscript objects or JScript arrays should be looked into because V5.8 doesn't use wrapping.
-            // HostDisptach objects that wrap true external objects should be rejected.
 
             int64 len;
             JavascriptArray* arr = NULL;
@@ -671,7 +650,6 @@ namespace Js
         }
 #endif
 
-        // work around overzealous C4701 warning
         Var varResult = nullptr;
         ThreadContext *threadContext;
         threadContext = scriptContext->GetThreadContext();
@@ -689,7 +667,6 @@ namespace Js
                     CallAsConstructor(this, /* overridingNewTarget = */nullptr, args, scriptContext) :
                     CallFunction<true>(this, this->GetEntryPoint(), args);
 
-                // Win8 976001: Temporary work around for post-Dev11 compiler bug 470304.
                 if (threadContext == NULL)
                 {
                     throw (JavascriptExceptionObject*)NULL;
@@ -733,7 +710,7 @@ namespace Js
                 && jsFunction->GetFunctionInfo() != &JavascriptExternalFunction::EntryInfo::WrappedFunctionThunk)
             {
                 Js::FunctionProxy *proxy = jsFunction->GetFunctionProxy();
-                if (proxy)          // Need to look at this one again, why this is null.
+                if (proxy)
                 {
                     AssertMsg(proxy->HasValidEntryPoint(), "Function does not have valid entrypoint");
                 }
@@ -863,7 +840,6 @@ namespace Js
     {
         Assert(constructorReturnValue);
 
-        // TODO (jedmiad): Consider using constructorCache->ctorHasNoExplicitReturnValue to speed up this interpreter code path.
         if (JavascriptOperators::IsObject(constructorReturnValue))
         {
             newObject = constructorReturnValue;
@@ -968,8 +944,6 @@ namespace Js
 
                     if (arr != nullptr && !arr->IsCrossSiteObject())
                     {
-                        // TODO (tcare): Optimize by creating a JavascriptArray routine which allows
-                        // memcpy-like semantics in optimal situations (no gaps, etc.)
                         for (uint32 j = 0; j < arr->GetLength(); j++)
                         {
                             Var element;
@@ -984,7 +958,6 @@ namespace Js
                     }
                     else
                     {
-                        // Try to use the spread argument as an object with a length property.
                         RecyclableObject *propertyObject;
                         if (!JavascriptOperators::GetPropertyObject(instance, scriptContext, &propertyObject))
                         {
@@ -1411,14 +1384,12 @@ LABEL1:
     }
 #endif
 
-    // TODO: Move this to ScriptFunction
     Js::JavascriptMethod JavascriptFunction::DeferredParse(ScriptFunction** functionRef)
     {
         BOOL fParsed;
         return Js::ScriptFunction::DeferredParseCore(functionRef, fParsed);
     }
 
-    // TODO: Move this to ScriptFunction
     Js::JavascriptMethod JavascriptFunction::DeferredParseCore(ScriptFunction** functionRef, BOOL &fParsed)
     {
         // Do the actual deferred parsing and byte code generation, passing the new entry point to the caller.
@@ -1598,17 +1569,6 @@ LABEL1:
 #if DBG_DUMP
     void JavascriptFunction::Dump()
     {
-        //Note: This code has been commented since August 2010; if it becomes uncommented it can be decided at that time if the function body has to be deserialized at this point.
-        FunctionBody* pFuncBody = this->GetFunctionBody();
-        if(pFuncBody)
-        {
-            //FunctionBody::SourceInfo* pSourceInfo = pFuncBody;
-            //charcount_t cchLength = pSourceInfo->LengthInChars();
-            //LPOLESTR pszBuffer = reinterpret_cast<LPOLESTR>(malloc((cchLength + 1) * sizeof(WCHAR)));
-            //utf8::DecodeIntoAndNulTerminate(pszBuffer, pSourceInfo->GetSource(), cchLength);
-            //Output::Print(L"%s ", pszBuffer);
-            //free(pszBuffer);
-        }
     }
 
 #endif
@@ -1908,7 +1868,7 @@ LABEL1:
             instrData.bufferValue = exceptionInfo->ContextRecord->Rsp;
             break;
         case 0x5:
-            // RBP wouldn't point to an array buffer....
+            // RBP wouldn't point to an array buffer
             instrData.bufferValue = NULL;
             break;
         case 0x6:
@@ -2430,13 +2390,6 @@ LABEL1:
         BOOL foundThis = FALSE;
         JavascriptFunction* funcCaller = FindCaller(&foundThis, nullValue, requestContext);
 
-        // WOOB #1142373. We are trying to get the caller in window.onerror = function(){alert(arguments.callee.caller);} case
-        // window.onerror is called outside of JavascriptFunction::CallFunction loop, so the caller information is not available
-        // in the stack to be found by the stack walker. We are doing minimal fix here by retrieving the caller information stored
-        // in the exception object, as we already walk the stack at throw time.
-        // The down side is that we can only find the top level caller at thrown time, and won't be able to find caller.caller etc.
-        // We'll try to fetch the caller only if we can find the function on the stack, but we can't find the caller, and we are in
-        // window.onerror scenario.
         *value = funcCaller;
         if (foundThis && funcCaller == nullValue && scriptContext->GetThreadContext()->HasUnhandledException())
         {
@@ -2444,9 +2397,6 @@ LABEL1:
             if (unhandledExceptionObject)
             {
                 JavascriptFunction* exceptionFunction = unhandledExceptionObject->GetFunction();
-                // this is for getcaller in window.onError. in IE8 mode we never return cross site caller; the behavior is different in
-                // different browser, and neither FF & chrome can get the caller here.
-                // we should be fine just return NULL.
                 if (exceptionFunction && scriptContext == exceptionFunction->GetScriptContext())
                 {
                     *value = exceptionFunction;
@@ -2713,17 +2663,11 @@ LABEL1:
 
         BOOL result = DynamicObject::DeleteProperty(propertyId, flags);
 
-#if TRUE
-        // It looks like in certain legacy modes (-version:1) we actually permit the prototype property to be deleted.
-        // If that happens, we better invalidate relevant caches.
         if (result && propertyId == PropertyIds::prototype)
         {
             InvalidateConstructorCacheOnPrototypeChange();
             this->GetScriptContext()->GetThreadContext()->InvalidateIsInstInlineCachesForFunction(this);
         }
-#else
-        AssertMsg(propertyId != PropertyIds::prototype || !result, "It shouldn't be possible to delete a prototype property of a function.");
-#endif
 
         return result;
     }
@@ -2774,8 +2718,6 @@ LABEL1:
         JavascriptString * pString = NULL;
 
         Var sourceString = this->GetSourceString();
-
-        // Taken mostly from JavascriptFunction::EntryToString, but this function will not change the state of pFunc->sourceString
 
         if (sourceString == nullptr)
         {
@@ -2929,7 +2871,6 @@ LABEL1:
     }
 
     // Implementation of Function.prototype[@@hasInstance](V) as specified in 19.2.3.6 of ES6 spec
-    // dated April 3rd 2015.
     Var JavascriptFunction::EntrySymbolHasInstance(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -3023,8 +2964,8 @@ LABEL1:
         // c) the cache has been populated, but for a different function,
         // d) the cache has been populated, even for the same object type and function, but has since been invalidated, because the function's
         //    prototype property has been changed (see JavascriptFunction::SetProperty and ThreadContext::InvalidateIsInstInlineCachesForFunction).
-        // TODO (jedmiad): Create unit tests for each of the above conditions.
-        // Curiously, we may even miss the cache if we ask again about the very same object the very same function the cache was populated with.
+
+        // We may even miss the cache if we ask again about the very same object the very same function the cache was populated with.
         // This subtlety arises when a function is called from two (or more) different script contexts.
         // Suppose we called function foo from script context A, and passed it an object o created in the same script context.
         // When function foo checks if object o is an instance of itself (function foo) for the first time (from context A) we will

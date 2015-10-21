@@ -90,9 +90,6 @@ namespace Js
             JavascriptDate* pDate = NewInstanceAsConstructor(args, scriptContext, /* forceCurrentDate */ true);
 
             return JavascriptDate::ToString(pDate);
-
-            // Note: alternative a bit better for perf but less modification-stable approach:
-            // return DateImplementation::Now(scriptContext).GetString(DateImplementation::DateStringFormat::Default);
         }
         else
         {
@@ -122,8 +119,6 @@ namespace Js
         //
         if (forceCurrentDate || args.Info.Count == 1)
         {
-            //pDate->m_value = Tick::Now();
-            // TODO: rewrite this to avoid the indirection
             pDate->m_date.SetTvUtc(DateImplementation::NowFromHiResTimer(scriptContext));
             return pDate;
         }
@@ -409,7 +404,6 @@ namespace Js
             return date->m_date.GetDateMilliSeconds();
         }
         return scriptContext->GetLibrary()->GetNaN();
-
     }
 
     Var JavascriptDate::EntryGetMinutes(RecyclableObject* function, CallInfo callInfo, ...)
@@ -794,9 +788,6 @@ namespace Js
         return JavascriptNumber::ToVarNoCheck(dblRetVal,scriptContext);
     }
 
-    //
-    // TODO: Do the IsoString parsing
-    //
     double JavascriptDate::ParseHelper(ScriptContext *scriptContext, JavascriptString *str)
     {
 #ifdef ENABLE_BASIC_TELEMETRY
@@ -1459,8 +1450,6 @@ namespace Js
             DateImplementation::DateTimeFlag::NoDate);
     }
 
-    // TODO: ToGMTString and ToUTCString is the same, but currently the profiler use the entry point address to identify
-    // the entry point.  So we will have to make the function different.  Consider using FunctionInfo to identify the function
     Var JavascriptDate::EntryToGMTString(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);

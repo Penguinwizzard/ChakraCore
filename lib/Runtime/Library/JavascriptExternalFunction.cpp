@@ -111,7 +111,7 @@ namespace Js
         Var &thisVar = args->Values[0];
 
         Js::TypeId typeId = Js::JavascriptOperators::GetTypeId(thisVar);
-        // TODO: JIT heuristic
+
         this->callCount++;
         if (IS_JS_ETW(EventEnabledJSCRIPT_HOSTING_EXTERNAL_FUNCTION_CALL_START()))
         {

@@ -29,7 +29,6 @@ namespace Js
             {
             case TypeIds_Undefined:
             case TypeIds_Null:
-                // return a new Object
                 break;
 
             case TypeIds_StringObject:
@@ -494,7 +493,6 @@ namespace Js
 
     Var JavascriptObject::ToStringHelper(Var thisArg, ScriptContext* scriptContext)
     {
-        // TODO: Replace this switch statement with a polymorphic call on RecyclableObject.
         TypeId type = JavascriptOperators::GetTypeId(thisArg);
         JavascriptLibrary* library = scriptContext->GetLibrary();
         switch (type)
@@ -679,10 +677,6 @@ namespace Js
         }
         else
         {
-            // TODO:
-            // ES5 allows implementation-defined treatment for host objects.
-            // For now, we can follow v5.8.
-            // We may consider to look into the external objects, later.
             return JavascriptOperators::ToObject(args[0], scriptContext);
         }
     }
@@ -1304,7 +1298,6 @@ namespace Js
         propertyDescriptor.SetConfigurable(true);
         propertyDescriptor.SetGetter(getterFunc);
 
-        // TODO: We might be able to optimize here, doing less work than the general purpose DefineOwnPropertyHelper does
         DefineOwnPropertyHelper(obj, propertyRecord->GetPropertyId(), propertyDescriptor, scriptContext);
 
         return obj->GetLibrary()->GetUndefined();
@@ -1348,7 +1341,6 @@ namespace Js
         propertyDescriptor.SetConfigurable(true);
         propertyDescriptor.SetSetter(setterFunc);
 
-        // TODO: We might be able to optimize here, doing less work than the general purpose DefineOwnPropertyHelper does
         DefineOwnPropertyHelper(obj, propertyRecord->GetPropertyId(), propertyDescriptor, scriptContext);
 
         return obj->GetLibrary()->GetUndefined();
@@ -1676,7 +1668,6 @@ namespace Js
 
         JavascriptEnumerator *pEnumerator = JavascriptEnumerator::FromVar(tempVar);
 
-        // TODO: use Recycler::Free when we implemented that.
         ENTER_PINNED_SCOPE(DescriptorMap, descriptors);
         descriptors = RecyclerNewArray(scriptContext->GetRecycler(), DescriptorMap, descSize);
 
@@ -1780,7 +1771,6 @@ namespace Js
         }
         uint32 length = keys->GetLength();
 
-        // TODO: use Recycler::Free when we implemented that.
         ENTER_PINNED_SCOPE(DescriptorMap, descriptors);
         descriptors = RecyclerNewArray(scriptContext->GetRecycler(), DescriptorMap, length);
 

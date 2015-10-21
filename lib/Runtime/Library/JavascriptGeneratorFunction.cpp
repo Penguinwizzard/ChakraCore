@@ -75,7 +75,6 @@ namespace Js
 
         // InterpreterStackFrame takes a pointer to the args, so copy them to the recycler heap
         // and use that buffer for this InterpreterStackFrame.
-        // TODO[ianhall][generators]: Investigate if there are optimizations that assume these args are on the stack
         Var* argsHeapCopy = RecyclerNewArray(scriptContext->GetRecycler(), Var, stackArgs.Info.Count);
         js_memcpy_s(argsHeapCopy, sizeof(Var) * stackArgs.Info.Count, stackArgs.Values, sizeof(Var) * stackArgs.Info.Count);
         Arguments heapArgs(callInfo, argsHeapCopy);

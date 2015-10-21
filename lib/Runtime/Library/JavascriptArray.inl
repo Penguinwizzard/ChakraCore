@@ -2,6 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
+
 #pragma once
 
 namespace Js
@@ -537,7 +538,7 @@ SECOND_PASS:
                 }
                 else if (segmentMap && !first_pass)
                 {
-                    Assert(/*v_btree == v &&*/ seg_btree == nextSeg);
+                    Assert(seg_btree == nextSeg);
                 }
 #endif
                 if (SparseArraySegment<T>::IsMissingItem(v)) 
@@ -553,7 +554,6 @@ SECOND_PASS:
             if (!segmentMap)
             {
                 probeCost++;
-                // ToDo JenH: Remove check for HeapEnumInProgress with fix for bug 785095
                 if (probeCost > SegmentBTree::GetLazyCrossOverLimit() && this->head != EmptySegment && !this->GetScriptContext()->IsHeapEnumInProgress())
                 {
                     // Build a SegmentMap

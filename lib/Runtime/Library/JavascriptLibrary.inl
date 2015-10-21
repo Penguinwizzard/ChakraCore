@@ -45,8 +45,6 @@ namespace Js
     template <typename T>
     void JavascriptLibrary::CheckAndConvertCopyOnAccessNativeIntArray(const T instance)
     {
-        // dummy template function
-        // Js::SCAEngine::Clone() to convert JavascriptCopyOnAccessNativeIntArray only if src is a 'Var'
     }
 
 }

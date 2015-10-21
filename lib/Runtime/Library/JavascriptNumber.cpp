@@ -610,12 +610,6 @@ namespace Js
         }
         if(args.Info.Count < 2 || JavascriptOperators::GetTypeId(args[1]) == TypeIds_Undefined)
         {
-            // .toPrecision(undefined):
-            //   - IE7 compat: throws a range error.
-            //   - In ES5 the spec explicitly says to use toString().
-            //   - IE8 works same as ES5.
-            // .toPrecision():
-            //   - IE7, IE8 and ES5 work same way: no error, return same number.
             return JavascriptConversion::ToString(args[0], scriptContext);
         }
 
@@ -807,7 +801,7 @@ namespace Js
 
     JavascriptString* JavascriptNumber::ToString(double value, ScriptContext* scriptContext)
     {
-        wchar_t szBuffer[256]; //TODO: This seems overly generous
+        wchar_t szBuffer[256];
         int cchWritten = swprintf_s(szBuffer, _countof(szBuffer), L"%g", value);
 
         return JavascriptString::NewCopyBuffer(szBuffer, cchWritten, scriptContext);
@@ -842,11 +836,11 @@ namespace Js
         string = scriptContext->GetLastNumberToStringRadix10(value);
         if (string == nullptr)
         {
-            wchar_t szBuffer[bufSize]; //TODO: This seems overly generous
+            wchar_t szBuffer[bufSize];
 
             if(!Js::NumberUtilities::FNonZeroFiniteDblToStr(value, szBuffer, bufSize))
             {
-                Js::JavascriptError::ThrowOutOfMemoryError(scriptContext);  // out of memory is for back compat with V5.8
+                Js::JavascriptError::ThrowOutOfMemoryError(scriptContext);
             }
             string = JavascriptString::NewCopySz(szBuffer, scriptContext);
             scriptContext->SetLastNumberToStringRadix10(value, string);
@@ -869,7 +863,6 @@ namespace Js
 
         if (!Js::NumberUtilities::FNonZeroFiniteDblToStr(value, radix, szBuffer, _countof(szBuffer)))
         {
-            //We run out of buffer size. Throw OutOfMemory same as IE8
             Js::JavascriptError::ThrowOutOfMemoryError(scriptContext);
         }
 
@@ -939,7 +932,7 @@ namespace Js
 
             if (bstr == nullptr)
             {
-                Js::JavascriptError::ThrowTypeError(scriptContext, VBSERR_InternalError /* TODO-ERROR: L"NEED MESSAGE" */);
+                Js::JavascriptError::ThrowTypeError(scriptContext, VBSERR_InternalError);
             }
             JavascriptString* str = JavascriptString::NewCopyBuffer(bstr, SysStringLen(bstr), scriptContext);
             SysFreeString(bstr);
@@ -973,10 +966,6 @@ namespace Js
 
         if( count <= 0 )
         {
-            //
-            // Old engine used to call VariantChangeTypeEx
-            // Returning dblStr as that will be string equivalent of value
-            //
             return dblStr;
         }
         else
@@ -994,7 +983,6 @@ namespace Js
 
             if (newCount <= 0 )
             {
-                // This shouldn't happen.
                 AssertMsg(false, "GetNumberFormatEx failed");
                 JavascriptError::ThrowError(scriptContext, VBSERR_InternalError);
             }

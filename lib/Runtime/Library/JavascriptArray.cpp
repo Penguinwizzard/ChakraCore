@@ -2,6 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
+
 #include "RuntimeLibraryPch.h"
 #include "Types\PathTypeHandler.h"
 #include "Types\SpreadArgument.h"
@@ -1059,7 +1060,7 @@ namespace Js
             {
                 //
                 // First element is not int/double
-                // create a array of length 1.
+                // create an array of length 1.
                 // Set first element as the passed Var
                 //
 
@@ -1195,7 +1196,7 @@ namespace Js
             {
                 //
                 // First element is not int/double
-                // create a array of length 1.
+                // create an array of length 1.
                 // Set first element as the passed Var
                 //
 
@@ -1270,7 +1271,7 @@ namespace Js
             {
                 //
                 // First element is not int/double
-                // create a array of length 1.
+                // create an array of length 1.
                 // Set first element as the passed Var
                 //
 
@@ -1313,7 +1314,7 @@ namespace Js
 #endif
             if (isTaggedInt && !isTaggedIntMissingValue)
             {
-                //This is taggedInt case and we verified that item is not missing value in AMD64.
+                // This is taggedInt case and we verified that item is not missing value in AMD64.
                 this->DirectSetItemAt(i, TaggedInt::ToInt32(item));
             }
             else if (!isTaggedIntMissingValue && JavascriptNumber::Is_NoTaggedIntCheck(item))
@@ -1726,7 +1727,7 @@ namespace Js
             prevSeg = seg;
         }
 
-        //Update the type of the Array
+        // Update the type of the Array
         ChangeArrayTypeToNativeArray<T>(varArray, scriptContext);
 
         return (NativeArrayType*)varArray;
@@ -2100,11 +2101,11 @@ namespace Js
     }
 
     // Convert Var to index in the Array.
-    // Note: Spec calls out some weird rules for these parameters:
+    // Note: Spec calls out few rules for these parameters:
     // 1. if (arg > length) { return length; }
-    //    // clamp to length, not length-1
+    // clamp to length, not length-1
     // 2. if (arg < 0) { return max(0, length + arg); }
-    //    // treat negative arg as index from the end of the array (with -1 mapping to length-1)
+    // treat negative arg as index from the end of the array (with -1 mapping to length-1)
     // Effectively, this function will return a value between 0 and length, inclusive.
     int64 JavascriptArray::GetIndexFromVar(Js::Var arg, int64 length, ScriptContext* scriptContext)
     {
@@ -2530,8 +2531,8 @@ namespace Js
         return JavascriptArray::InvalidIndex;
     }
 
-    //If new length > length, we just reset the length
-    //If new length < length, we need remove rest element and segment
+    // If new length > length, we just reset the length
+    // If new length < length, we need to remove rest of the elements and segment
     void JavascriptArray::SetLength(uint32 newLength)
     {
         if (newLength == length)
@@ -2797,7 +2798,7 @@ namespace Js
 
     template <> uint32 JavascriptArray::ConvertToIndex(BigIndex idxDest, ScriptContext* scriptContext)
     {
-        //Note this is only for setting Array length which is a uint32
+        // Note this is only for setting Array length which is a uint32
         return idxDest.IsSmallIndex() ? idxDest.GetSmallIndex() : UINT_MAX;
     }
 
@@ -2849,9 +2850,9 @@ namespace Js
             BOOL spreadable = false;
             if (scriptContext->GetConfig()->IsES6IsConcatSpreadableEnabled())
             {
-                // firstPromotedItemIsSpreadable is ONLY used to resume  after a type promotion from uint32 to uint64
-                // we do this b\c calls to IsConcatSpreadable are observable (a big deal for proxies) and we don't want to do the work a second time
-                // as soon as we record the length  we clear the flag.
+                // firstPromotedItemIsSpreadable is ONLY used to resume after a type promotion from uint32 to uint64
+                // we do this because calls to IsConcatSpreadable are observable (a big deal for proxies) and we don't
+                // want to do the work a second time as soon as we record the length we clear the flag.
                 spreadable = firstPromotedItemIsSpreadable || JavascriptOperators::IsConcatSpreadable(aItem);
 
                 if (!spreadable)
@@ -2888,7 +2889,6 @@ namespace Js
                 // Flatten if other array or remote array (marked with TypeIds_Array)
                 if (DynamicObject::IsAnyArray(aItem) || remoteTypeIds[idxArg] == TypeIds_Array || spreadable)
                 {
-                    //CONSIDER: enumerating remote array instead of walking all indices
                     BigIndex length;
                     if (firstPromotedItemIsSpreadable)
                     {
@@ -2898,7 +2898,7 @@ namespace Js
                     else if (scriptContext->GetConfig()->IsES6ToLengthEnabled())
                     {
                         // we can cast to uin64 without fear of converting negative numbers to large positive ones
-                        // from int64 b\c ToLength makes negative lengths 0
+                        // from int64 because ToLength makes negative lengths 0
                         length = (uint64) JavascriptConversion::ToLength(JavascriptOperators::OP_GetLength(aItem, scriptContext), scriptContext);
                     }
                     else
@@ -2910,7 +2910,7 @@ namespace Js
                     {
                         // This is a special case for spreadable objects. We do not pre-calculate the length
                         // in EntryConcat like we do with Arrays because a getProperty on an object Length
-                        // is observable. The result is we have to check for overflows separately for
+                        // is observable. The result is we have to check for overflows seperately for
                         // spreadable objects and promote to a bigger index type when we find them.
                         ConcatArgs<BigIndex>(pDestArray, remoteTypeIds, args, scriptContext, idxArg, idxDest, /*firstPromotedItemIsSpreadable*/true, length);
                         return;
@@ -2998,7 +2998,7 @@ namespace Js
             {
                 pDestArray->SetItem(idxDest, aItem, PropertyOperation_ThrowIfNotExtensible);
                 idxDest = idxDest + 1;
-                if (!JavascriptNativeIntArray::Is(pDestArray)) //SetItem could convert pDestArray to a var array if aItem is not an integer if so fall back
+                if (!JavascriptNativeIntArray::Is(pDestArray)) // SetItem could convert pDestArray to a var array if aItem is not an integer if so fall back
                 {
                     ConcatArgs<uint>(pDestArray, remoteTypeIds, args, scriptContext, idxArg + 1, idxDest);
                     return;
@@ -3013,7 +3013,7 @@ namespace Js
                 idxDest = idxDest + pItemArray->length;
                 if (converted)
                 {
-                    // Copying the last array forced a conversion, so kick over to the var version
+                    // Copying the last array forced a conversion, so switch over to the var version
                     // to finish.
                     ConcatArgs<uint>(pDestArray, remoteTypeIds, args, scriptContext, idxArg + 1, idxDest);
                     return;
@@ -3059,7 +3059,7 @@ namespace Js
                 pDestArray->SetItem(idxDest, aItem, PropertyOperation_ThrowIfNotExtensible);
 
                 idxDest = idxDest + 1;
-                if (!JavascriptNativeFloatArray::Is(pDestArray)) //SetItem could convert pDestArray to a var array if aItem is not an integer if so fall back
+                if (!JavascriptNativeFloatArray::Is(pDestArray)) // SetItem could convert pDestArray to a var array if aItem is not an integer if so fall back
                 {
                     ConcatArgs<uint>(pDestArray, remoteTypeIds, args, scriptContext, idxArg + 1, idxDest);
                     return;
@@ -3084,7 +3084,7 @@ namespace Js
                 }
                 if (converted)
                 {
-                    // Copying the last array forced a conversion, so kick over to the var version
+                    // Copying the last array forced a conversion, so switch over to the var version
                     // to finish.
                     ConcatArgs<uint>(pDestArray, remoteTypeIds, args, scriptContext, idxArg + 1, idxDest);
                     return;
@@ -3249,7 +3249,7 @@ namespace Js
         if (pDestObj)
         {
             isInt = JavascriptNativeIntArray::Is(pDestObj);
-            isFloat = !isInt && JavascriptNativeFloatArray::Is(pDestObj); //if we know it is an int short the condition to avoid a function call
+            isFloat = !isInt && JavascriptNativeFloatArray::Is(pDestObj); // if we know it is an int short the condition to avoid a function call
             isArray = isInt || isFloat || JavascriptArray::Is(pDestObj);
         }
 
@@ -3273,7 +3273,7 @@ namespace Js
             {
 
                 pDestArray = isArray ?  JavascriptArray::FromVar(pDestObj) : scriptContext->GetLibrary()->CreateArray(cDestLength);
-                //if the constructor has changed then we no longer specialize for ints and floats
+                // if the constructor has changed then we no longer specialize for ints and floats
                 pDestArray->EnsureHead<Var>();
                 ConcatArgsCallingHelper(pDestArray, remoteTypeIds, args, scriptContext, destLengthOverflow);
             }
@@ -3378,7 +3378,6 @@ namespace Js
         return fromIndex;
     }
 
-    // This might be better done using the preprocessor
     uint64 JavascriptArray::GetFromIndex(Var arg, uint64 length, ScriptContext *scriptContext)
     {
         uint64 fromIndex;
@@ -3714,7 +3713,6 @@ namespace Js
         Var element = nullptr;
         bool isSearchTaggedInt = TaggedInt::Is(search);
 
-        //Consider: enumerating instead of walking all indices
         for (P i = fromIndex; i < toIndex; i++)
         {
             if (!TemplatedGetItem(pArr, i, &element, scriptContext))
@@ -3933,7 +3931,7 @@ namespace Js
         bool isProxy = JavascriptProxy::Is(thisArg) && (scriptContext == JavascriptProxy::FromVar(thisArg)->GetScriptContext());
         Var target = NULL;
         bool isTargetObjectPushed = false;
-        // if we are vising proxy object, track that we have visited target object as well so the next time we call
+        // if we are visiting proxy object, track that we have visited target object as well so the next time we call
         // join helper for target of this proxy, we will return above.
         if (isProxy)
         {
@@ -4397,7 +4395,7 @@ Case0:
 
         double element = Js::JavascriptOperators::OP_GetNativeFloatElementI_UInt32(object, index, scriptContext);
 
-        //If it is a missing item, then don't update the length - Pre-op Bail out will happen.
+        // If it is a missing item, then don't update the length - Pre-op Bail out will happen.
         if(!SparseArraySegment<double>::IsMissingItem(&element))
         {
             arr->SetLength(index);
@@ -4536,14 +4534,14 @@ Case0:
     */
     Var JavascriptNativeIntArray::Push(ScriptContext * scriptContext, Var array, int value)
     {
-        //Only handle, native int arrays here,and the array is not a crossSiteObject
+        // Only handle, native int arrays here,and the array is not a crossSiteObject
         if (JavascriptNativeIntArray::IsNonCrossSite(array))
         {
             JavascriptNativeIntArray * nativeIntArray = JavascriptNativeIntArray::FromVar(array);
             Assert(!nativeIntArray->IsCrossSiteObject());
             uint32 n = nativeIntArray->length;
 
-            //Only handle, if the length is within MaxArrayLength
+            // Only handle, if the length is within MaxArrayLength
             if(n < JavascriptArray::MaxArrayLength)
             {
                 nativeIntArray->SetItem(n, value);
@@ -4565,14 +4563,14 @@ Case0:
     */
     Var JavascriptNativeFloatArray::Push(ScriptContext * scriptContext, Var * array, double value)
     {
-        //Only handle native float arrays here.
+        // Only handle native float arrays here.
         if(JavascriptNativeFloatArray::IsNonCrossSite(array))
         {
             JavascriptNativeFloatArray * nativeFloatArray = JavascriptNativeFloatArray::FromVar(array);
             Assert(!nativeFloatArray->IsCrossSiteObject());
             uint32 n = nativeFloatArray->length;
 
-            //Only handle, if the length is within MaxArrayLength and the array is not a crossSiteObject
+            // Only handle, if the length is within MaxArrayLength and the array is not a crossSiteObject
             if(n < JavascriptArray::MaxArrayLength)
             {
                 nativeFloatArray->SetItem(n, value);
@@ -5135,7 +5133,7 @@ Case0:
             next = (SparseArraySegment<T>*)next->next;
         }
 
-        //head and next might overlap as the next segment left is decremented
+        // head and next might overlap as the next segment left is decremented
         next = (SparseArraySegment<T>*)pArr->head->next;
         if (next && (pArr->head->size > next->left))
         {
@@ -5143,12 +5141,12 @@ Case0:
             AssertMsg(pArr->head->size == next->left + 1, "Shift next->left overlaps current segment by more than 1 element");
 
             SparseArraySegment<T> *head = (SparseArraySegment<T>*)pArr->head;
-            //Merge the two adjacent segments
+            // Merge the two adjacent segments
             if (next->length != 0)
             {
                 uint32 offset = head->size - 1;
-                //There is room for one unshifted element in head segment.
-                //Hence its enough if we grow the head segment by next->length - 1
+                // There is room for one unshifted element in head segment.
+                // Hence its enough if we grow the head segment by next->length - 1
 
                 if (next->next)
                 {
@@ -5213,7 +5211,7 @@ Case0:
 
             if(pArr->IsFillFromPrototypes())
             {
-                pArr->FillFromPrototypes(0, pArr->length); //We need find all missing value from [[proto]] object
+                pArr->FillFromPrototypes(0, pArr->length); // We need find all missing value from [[proto]] object
             }
 
             if(pArr->HasNoMissingValues() && pArr->head && pArr->head->next)
@@ -5407,12 +5405,12 @@ Case0:
         SparseArraySegment<T>* headSeg = (SparseArraySegment<T>*)pArr->head;
         SparseArraySegment<T>* pnewHeadSeg = (SparseArraySegment<T>*)pnewArr->head;
 
-        //Fill the newly created sliced array
+        // Fill the newly created sliced array
         js_memcpy_s(pnewHeadSeg->elements, sizeof(T) * newLen, headSeg->elements + start, sizeof(T) * newLen);
         pnewHeadSeg->length = newLen;
 
         Assert(pnewHeadSeg->length <= pnewHeadSeg->size);
-        //Prototype lookup for missing elements
+        // Prototype lookup for missing elements
         if (!pArr->HasNoMissingValues())
         {
             for (uint32 i = 0; i < newLen; i++)
@@ -5947,7 +5945,7 @@ Case0:
         uint32 countUndefined = 0;
         SparseArraySegment<Var>* startSeg = (SparseArraySegment<Var>*)head;
 
-        //Sort may have side effects on the array. Setting a dummy head so that original array is not affected
+        // Sort may have side effects on the array. Setting a dummy head so that original array is not affected
         uint32 saveLength = length;
         // that if compare function tries to modify the array it won't AV.
         head = const_cast<SparseArraySegmentBase*>(EmptySegment);
@@ -5958,7 +5956,7 @@ Case0:
         __try
         {
             //The array is a continuous array if there is only one segment
-            if (startSeg->next == nullptr) //Single segment fast path
+            if (startSeg->next == nullptr) // Single segment fast path
             {
                 if (compFn != nullptr)
                 {
@@ -5981,7 +5979,7 @@ Case0:
                 SparseArraySegment<Var>* next = startSeg;
 
                 uint32 nextIndex = 0;
-                //copy all the elements to single segment
+                // copy all the elements to single segment
                 while (next)
                 {
                     countUndefined += next->RemoveUndefined(scriptContext);
@@ -6040,7 +6038,7 @@ Case0:
 
         if (countUndefined != 0)
         {
-            //fill undefined at the end
+            // fill undefined at the end
             uint32 newLength = head->length + countUndefined;
             if (newLength > head->size)
             {
@@ -6094,7 +6092,7 @@ Case0:
 
         if (count == 0)
         {
-            *len = 0; //set the length to zero
+            *len = 0; // set the length to zero
             return countUndefined;
         }
 
@@ -6105,7 +6103,7 @@ Case0:
             orig[i] = elements[i].Value;
         }
 
-        *len = count; //set the correct length
+        *len = count; // set the correct length
         return countUndefined;
     }
 
@@ -6139,7 +6137,6 @@ Case0:
 
         if (args.Info.Count == 0)
         {
-            //TODO: we should throw an exception here since this is an internal engine error
             return res;
         }
 
@@ -6177,13 +6174,13 @@ Case0:
 
             if(arr->IsFillFromPrototypes())
             {
-                arr->FillFromPrototypes(0, arr->length); //We need find all missing value from [[proto]] object
+                arr->FillFromPrototypes(0, arr->length); // We need find all missing value from [[proto]] object
             }
 
-            //Maintain nativity of the array only for the following cases (To favor inplace conversions - keeps the conversion cost less):
+            // Maintain nativity of the array only for the following cases (To favor inplace conversions - keeps the conversion cost less):
             // -    int cases for X86 and
             // -    FloatArray for AMD64
-            //We convert the entire array back and forth once here O(n), rather than doing the costly conversion down the call stack which is O(nlogn)
+            // We convert the entire array back and forth once here O(n), rather than doing the costly conversion down the call stack which is O(nlogn)
 
 #if defined(_M_X64_OR_ARM64)
             if(compFn && JavascriptNativeFloatArray::Is(arr))
@@ -6242,7 +6239,7 @@ Case0:
                 {
                     if (sortArray->length > 1)
                     {
-                        sortArray->FillFromPrototypes(0, sortArray->length); //We need find all missing value from [[proto]] object
+                        sortArray->FillFromPrototypes(0, sortArray->length); // We need find all missing value from [[proto]] object
                     }
                     sortArray->Sort(compFn);
 
@@ -6282,7 +6279,6 @@ Case0:
 
         if (args.Info.Count == 0)
         {
-            //TODO: we should throw an exception here since this is an internal engine error
             return res;
         }
 
@@ -6313,7 +6309,7 @@ Case0:
             if (scriptContext->GetConfig()->IsES6ToLengthEnabled())
             {
                 int64 len64 = JavascriptConversion::ToLength(JavascriptOperators::OP_GetLength(pObj, scriptContext), scriptContext);
-                len = len64 > UINT_MAX ? UINT_MAX : (uint)len64; // TODO: clipping is incorrect here, will fix
+                len = len64 > UINT_MAX ? UINT_MAX : (uint)len64;
             }
             else
             {
@@ -6381,7 +6377,7 @@ Case0:
         uint32 insertLen = args.Info.Count > 3 ? args.Info.Count - 3 : 0;
 
         ::Math::RecordOverflowPolicy newLenOverflow;
-        uint32 newLen = UInt32Math::Add(len - deleteLen, insertLen, newLenOverflow); //new length of the array after splice
+        uint32 newLen = UInt32Math::Add(len - deleteLen, insertLen, newLenOverflow); // new length of the array after splice
 
         if (isArr)
         {
@@ -6469,8 +6465,8 @@ Case0:
             if (newArr)
             {
 
-                //Array has a single segment (need not start at 0) and splice start lies in the range
-                //of that segment we optimize splice - Fast path.
+                // Array has a single segment (need not start at 0) and splice start lies in the range
+                // of that segment we optimize splice - Fast path.
                 if (pArr->IsSingleSegmentArray() && pArr->head->HasIndex(start))
                 {
                     if (isIntArray)
@@ -6580,16 +6576,16 @@ Case0:
     void JavascriptArray::ArraySegmentSpliceHelper(JavascriptArray *pnewArr, SparseArraySegment<T> *seg, SparseArraySegment<T> **prev,
                                                     uint32 start, uint32 deleteLen, Var* insertArgs, uint32 insertLen, Recycler *recycler)
     {
-        //book keeping variables
-        uint32 relativeStart    = start - seg->left;  //This will be different from start when head->left is non zero -
+        // book keeping variables
+        uint32 relativeStart    = start - seg->left;  // This will be different from start when head->left is non zero -
                                                       //(Missing elements at the beginning)
 
-        uint32 headDeleteLen    = min(start + deleteLen , seg->left + seg->length) - start;   //actual number of elements to delete in
-                                                                                                //head if deleteLen overflows the length of head
+        uint32 headDeleteLen    = min(start + deleteLen , seg->left + seg->length) - start;   // actual number of elements to delete in
+                                                                                              // head if deleteLen overflows the length of head
 
-        uint32 newHeadLen       = seg->length - headDeleteLen + insertLen;     //new length of the head after splice
+        uint32 newHeadLen       = seg->length - headDeleteLen + insertLen;     // new length of the head after splice
 
-        //Save the deleted elements
+        // Save the deleted elements
         if (headDeleteLen != 0)
         {
             pnewArr->InvalidateLastUsedSegment();
@@ -6665,7 +6661,7 @@ Case0:
             rightLimit = JavascriptArray::MaxArrayLength;
         }
 
-        //Find out the segment to start delete
+        // Find out the segment to start delete
         while (startSeg && (rightLimit <= start))
         {
             savePrev = startSeg;
@@ -6682,7 +6678,7 @@ Case0:
             }
         }
 
-        //handle inlined segment
+        // handle inlined segment
         SparseArraySegmentBase* inlineHeadSegment = nullptr;
         bool hasInlineSegment = false;
         // The following if else set is used to determine whether a shallow or hard copy is needed
@@ -6711,16 +6707,16 @@ Case0:
 
         if (startSeg)
         {
-            //Delete Phase
+            // Delete Phase
             if (startSeg->left <= start && (startSeg->left + startSeg->length) >= limit)
             {
-                //All splice happens in one segment.
+                // All splice happens in one segment.
                 SparseArraySegmentBase *nextSeg = startSeg->next;
                 // Splice the segment first, which might OOM throw but the array would be intact.
                 JavascriptArray::ArraySegmentSpliceHelper(pnewArr, (SparseArraySegment<T>*)startSeg, (SparseArraySegment<T>**)prevSeg, start, deleteLen, insertArgs, insertLen, recycler);
                 while (nextSeg)
                 {
-                    //adjust next segments left
+                    // adjust next segments left
                     nextSeg->left = nextSeg->left - deleteLen + insertLen;
                     if (nextSeg->next == nullptr)
                     {
@@ -6736,16 +6732,16 @@ Case0:
             }
             else
             {
-                SparseArraySegment<T>* newHeadSeg = nullptr; //pnewArr->head is null
+                SparseArraySegment<T>* newHeadSeg = nullptr; // pnewArr->head is null
                 SparseArraySegmentBase** prevNewHeadSeg = &(pnewArr->head);
 
-                //delete till deleteLen and reuse segments for new array if it is possible.
-                //3 steps -
+                // delete till deleteLen and reuse segments for new array if it is possible.
+                // 3 steps -
                 //1. delete 1st segment (which may be partial delete)
-                //2. delete next n complete segments
-                //3. delete last segment (which again may be partial delete)
+                // 2. delete next n complete segments
+                // 3. delete last segment (which again may be partial delete)
 
-                //Step (1)  -- WOOB 1116297: When left >= start, step (1) is skipped, resulting in pNewArr->head->left != 0. We need to touch up pNewArr.
+                // Step (1)  -- WOOB 1116297: When left >= start, step (1) is skipped, resulting in pNewArr->head->left != 0. We need to touch up pNewArr.
                 if (startSeg->left < start)
                 {
                     if (start < startSeg->left + startSeg->length)
@@ -6773,7 +6769,7 @@ Case0:
                     startSeg = (SparseArraySegment<T>*)startSeg->next;
                 }
 
-                //Step (2) first we should do a hard copy if we have an inline head Segment
+                // Step (2) first we should do a hard copy if we have an inline head Segment
                 else if (hasInlineSegment && nullptr != startSeg)
                 {
                     // start should be in between left and left + length
@@ -6793,7 +6789,7 @@ Case0:
                         *prevNewHeadSeg = newHeadSeg;
                         prevNewHeadSeg = &newHeadSeg->next;
 
-                        //Remove the entire segment from the original array
+                        // Remove the entire segment from the original array
                         *prevSeg = startSeg->next;
                         startSeg = (SparseArraySegment<T>*)startSeg->next;
                     }
@@ -6805,19 +6801,19 @@ Case0:
                         startSeg = (SparseArraySegment<T>*)startSeg->next;
                     }
                 }
-                //Step (2) proper
+                // Step (2) proper
                 SparseArraySegmentBase *temp = nullptr;
                 while (startSeg && (startSeg->left + startSeg->length) <= limit)
                 {
                     temp = startSeg->next;
 
-                    //move that entire segment to new array
+                    // move that entire segment to new array
                     startSeg->left = startSeg->left - start;
                     startSeg->next = nullptr;
                     *prevNewHeadSeg = startSeg;
                     prevNewHeadSeg = &startSeg->next;
 
-                    //Remove the entire segment from the original array
+                    // Remove the entire segment from the original array
                     *prevSeg = temp;
                     startSeg = (SparseArraySegment<T>*)temp;
                 }
@@ -6951,7 +6947,7 @@ Case0:
             pnewArr = JavascriptArray::FromVar(pNewObj);
         }
 
-        //copy elements to delete to new array
+        // copy elements to delete to new array
         if (deleteLen > 0)
         {
             for (uint32 i = 0; i < deleteLen; i++)
@@ -6981,7 +6977,7 @@ Case0:
             h.ThrowTypeErrorOnFailure(JavascriptOperators::SetProperty(pNewObj, pNewObj, PropertyIds::length, JavascriptNumber::ToVar(deleteLen, scriptContext), scriptContext, PropertyOperation_ThrowIfNotExtensible));
         }
 
-        //Now we need reserve room if it is necessary
+        // Now we need reserve room if it is necessary
         if (insertLen > deleteLen) // Might overflow max array length
         {
             // Unshift [start + deleteLen, len) to start + insertLen
@@ -7145,17 +7141,17 @@ Case0:
     static void JavascriptArray::UnshiftHelper(JavascriptArray* pArr, uint32 unshiftElements, Js::Var * elements)
     {
         SparseArraySegment<T>* head = (SparseArraySegment<T>*)pArr->head;
-        //Make enough room in the head segment to insert new elements at the front
+        // Make enough room in the head segment to insert new elements at the front
         memmove(head->elements + unshiftElements, head->elements, sizeof(T) * pArr->head->length);
         uint32 oldHeadLength = head->length;
         head->length += unshiftElements;
 
-        /*Set head segment as the last used segment*/
+        /* Set head segment as the last used segment */
         pArr->InvalidateLastUsedSegment();
 
         bool hasNoMissingValues = pArr->HasNoMissingValues();
 
-        /*Set HasNoMissingValues to false -> Since we shifted elements right, we might have missing values after the memmove*/
+        /* Set HasNoMissingValues to false -> Since we shifted elements right, we might have missing values after the memmove */
         if(unshiftElements > oldHeadLength)
         {
             pArr->SetHasNoMissingValues(false);
@@ -7163,7 +7159,7 @@ Case0:
 
         pArr->FillFromArgs(unshiftElements, 0, elements, nullptr, true/*dontCreateNewArray*/);
 
-        //Setting back to the old value
+        // Setting back to the old value
         pArr->SetHasNoMissingValues(hasNoMissingValues);
     }
 
@@ -7193,7 +7189,7 @@ Case0:
             {
                 if (pArr->IsFillFromPrototypes())
                 {
-                    pArr->FillFromPrototypes(0, pArr->length); //We need find all missing value from [[proto]] object
+                    pArr->FillFromPrototypes(0, pArr->length); // We need find all missing value from [[proto]] object
                 }
 
                 // Pre-process: truncate overflowing elements to properties
@@ -7202,7 +7198,7 @@ Case0:
                 if (pArr->length > maxLen)
                 {
                     newLenOverflowed = true;
-                    //Ensure the array is non-native when overflow happens
+                    // Ensure the array is non-native when overflow happens
                     EnsureNonNativeArray(pArr);
                     pArr->TruncateToProperties(MaxArrayLength, maxLen);
                     Assert(pArr->length + unshiftElements == MaxArrayLength);
@@ -7226,8 +7222,8 @@ Case0:
                     isFloatArray = true;
                 }
 
-                //If we need to grow head segment and there is already a next segment, then allocate the new head segment upfront
-                //If there is OOM in array allocation, then array consistency is maintained.
+                // If we need to grow head segment and there is already a next segment, then allocate the new head segment upfront
+                // If there is OOM in array allocation, then array consistency is maintained.
                 if (pArr->head->size < pArr->head->length + unshiftElements)
                 {
                     if (isIntArray)
@@ -9739,8 +9735,8 @@ Case0:
         return !(this->head->next == nullptr && this->HasNoMissingValues() && this->length == this->head->length);
     }
 
-    //Fill all missing value in the array and fill it from prototype between startIndex and limitIndex
-    //typically startIndex = 0 and limitIndex = length. From start of the array till end of the array.
+    // Fill all missing value in the array and fill it from prototype between startIndex and limitIndex
+    // typically startIndex = 0 and limitIndex = length. From start of the array till end of the array.
     void JavascriptArray::FillFromPrototypes(uint32 startIndex, uint32 limitIndex)
     {
         if (startIndex >= limitIndex)
@@ -9750,11 +9746,10 @@ Case0:
 
         RecyclableObject* prototype = this->GetPrototype();
 
-        //Fill all missing values by walking through prototype
+        // Fill all missing values by walking through prototype
         while (JavascriptOperators::GetTypeId(prototype) != TypeIds_Null)
         {
             ForEachOwnMissingArrayIndexOfObject(this, nullptr, prototype, startIndex, limitIndex,0, [this](uint32 index, Var value) {
-                // CONSIDER: Not creating the Var as part of GetVarItemAt is an option if this becomes a perf issue.
                 this->SetItem(index, value, PropertyOperation_None);
             });
 
@@ -9799,9 +9794,6 @@ Case0:
     {
         if (Configuration::Global.flags.ForceES5Array)
         {
-            // There's a bad interaction with the jitted code for native array creation here.
-            // TODO: Decide how/whether to re-enable, or perhaps use the debug switch only when the
-            // function that creates the array can't be jitted.
             if (PHASE_OFF1(NativeArrayPhase))
             {
                 GetTypeHandler()->ConvertToTypeWithItemAttributes(this);
@@ -10153,7 +10145,7 @@ Case0:
             }
             else
             {
-                return newIndex; //ok if newIndex == InvalidIndex
+                return newIndex; // ok if newIndex == InvalidIndex
             }
         }
         else
@@ -10170,12 +10162,12 @@ Case0:
         }
         else if (rhs.IsSmallIndex() && !this->IsSmallIndex())
         {
-            //if lhs is big promote rhs
+            // if lhs is big promote rhs
             return this->GetBigIndex() == (uint64) rhs.GetSmallIndex();
         }
         else if (!rhs.IsSmallIndex() && this->IsSmallIndex())
         {
-            //if rhs is big promote lhs
+            // if rhs is big promote lhs
             return ((uint64)this->GetSmallIndex()) == rhs.GetBigIndex();
         }
         return this->GetBigIndex() == rhs.GetBigIndex();
@@ -10189,12 +10181,12 @@ Case0:
         }
         else if (rhs.IsSmallIndex() && !this->IsSmallIndex())
         {
-            //if lhs is big promote rhs
+            // if lhs is big promote rhs
             return this->GetBigIndex() > (uint64)rhs.GetSmallIndex();
         }
         else if (!rhs.IsSmallIndex() && this->IsSmallIndex())
         {
-            //if rhs is big promote lhs
+            // if rhs is big promote lhs
             return ((uint64)this->GetSmallIndex()) > rhs.GetBigIndex();
         }
         return this->GetBigIndex() > rhs.GetBigIndex();
@@ -10208,12 +10200,12 @@ Case0:
         }
         else if (rhs.IsSmallIndex() && !this->IsSmallIndex())
         {
-            //if lhs is big promote rhs
+            // if lhs is big promote rhs
             return this->GetBigIndex() < (uint64)rhs.GetSmallIndex();
         }
         else if (!rhs.IsSmallIndex() && this->IsSmallIndex())
         {
-            //if rhs is big promote lhs
+            // if rhs is big promote lhs
             return ((uint64)this->GetSmallIndex()) < rhs.GetBigIndex();
         }
         return this->GetBigIndex() < rhs.GetBigIndex();
@@ -10227,12 +10219,12 @@ Case0:
         }
         else if (rhs.IsSmallIndex() && !this->IsSmallIndex())
         {
-            //if lhs is big promote rhs
+            // if lhs is big promote rhs
             return this->GetBigIndex() <= (uint64)rhs.GetSmallIndex();
         }
         else if (!rhs.IsSmallIndex() && !this->IsSmallIndex())
         {
-            //if rhs is big promote lhs
+            // if rhs is big promote lhs
             return ((uint64)this->GetSmallIndex()) <= rhs.GetBigIndex();
         }
         return this->GetBigIndex() <= rhs.GetBigIndex();
@@ -10246,12 +10238,12 @@ Case0:
         }
         else if (rhs.IsSmallIndex() && !this->IsSmallIndex())
         {
-            //if lhs is big promote rhs
+            // if lhs is big promote rhs
             return this->GetBigIndex() >= (uint64)rhs.GetSmallIndex();
         }
         else if (!rhs.IsSmallIndex() && this->IsSmallIndex())
         {
-            //if rhs is big promote lhs
+            // if rhs is big promote lhs
             return ((uint64)this->GetSmallIndex()) >= rhs.GetBigIndex();
         }
         return this->GetBigIndex() >= rhs.GetBigIndex();
@@ -10858,8 +10850,6 @@ Case0:
                     {
                         // The only things that should be hitting this else statement are strings, arguments, typed arrays, & cross site arrays
                         // Objects Need an @@iterator property now and thus hit the above iterator codepath.
-                        // TODO if CopyAnyArrayElementsToVar is really more performant than the code below we should add a function like this
-                        // for typed arrays, strings, & arguments.
                         uint32 len = GetSpreadArgLen(instance, scriptContext);
                         slowCopy(result, resultIndex, instance, 0, len);
                         resultIndex += len;

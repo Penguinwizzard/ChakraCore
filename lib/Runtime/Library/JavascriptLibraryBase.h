@@ -3,12 +3,9 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-//////////////////////////////////////////////////////////
 // JavascriptLibraryBase.h is used by static lib shared between Trident and Chakra. We need to keep
 // the size consistent and try not to change its size. We need to have matching mshtml.dll
 // if the size changed here.
-/////////////////////////////////////////////////////////
-#pragma once
 #pragma once
 
 namespace Js
@@ -20,7 +17,7 @@ namespace Js
         friend class JavascriptLibrary;
         friend class ScriptSite;
     public:
-        JavascriptLibraryBase(GlobalObject* globalObject)  :
+        JavascriptLibraryBase(GlobalObject* globalObject):
             globalObject(globalObject)
         {
         }
@@ -174,7 +171,7 @@ namespace Js
         DynamicObject* mathObject;
         // SIMD_JS
         DynamicObject* simdObject;
-        // TODO: move the debugObject out
+
         DynamicObject* debugObject;
         DynamicObject* JSONObject;
 #ifdef ENABLE_INTL_OBJECT

@@ -40,7 +40,7 @@ namespace Js
         };
 
         ExternalMethod GetNativeMethod() { return nativeMethod; }
-        BOOL SetLengthProperty(Var length);        
+        BOOL SetLengthProperty(Var length);
 
         void SetPrototypeTypeId(JavascriptTypeId prototypeTypeId) { this->prototypeTypeId = prototypeTypeId; }
         void SetExternalFlags(UINT64 flags) { this->flags = flags; }
@@ -67,7 +67,7 @@ namespace Js
         unsigned int callCount:15;
 
         JavascriptTypeId prototypeTypeId;
-        UINT64 flags;  // TODO: use 32 bit instead if the memory impact is significant and we don't need that many flag bits
+        UINT64 flags;
 
         static Var ExternalFunctionThunk(RecyclableObject* function, CallInfo callInfo, ...);
         static Var WrappedFunctionThunk(RecyclableObject* function, CallInfo callInfo, ...);

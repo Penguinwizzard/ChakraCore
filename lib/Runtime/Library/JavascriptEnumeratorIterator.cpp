@@ -16,7 +16,6 @@ namespace Js
             library->GetJavascriptEnumeratorIteratorType(),
             enumerator,
             target);
-
     }
 
 

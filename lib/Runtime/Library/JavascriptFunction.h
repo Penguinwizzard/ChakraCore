@@ -107,7 +107,6 @@ namespace Js
 #ifdef ENABLE_NATIVE_CODEGEN
         static BOOL IsNativeAddress(ScriptContext * scriptContext, void * codeAddr);
 #endif
-        // TODO: Move these to ScriptFunction
         static Var DeferredParsingThunk(RecyclableObject* function, CallInfo callInfo, ...);
         static JavascriptMethod DeferredParse(ScriptFunction** function);
         static JavascriptMethod DeferredParseCore(ScriptFunction** function, BOOL &fParsed);
