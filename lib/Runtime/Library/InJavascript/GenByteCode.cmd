@@ -3,6 +3,9 @@ set _HASERROR=0
 
 :: This script will expect ch.exe to be built for x86_debug and x64_debug
 set _BinLocation=%~dp0..\..\..\..\Build\VcBuild\bin
+if "%OutBaseDir%" NEQ "" (
+  set _BinLocation=%OutBaseDir%\Chakra.Core\bin
+)
 if not exist %_BinLocation%\x86_debug\ch.exe (
     echo Error: %_BinLocation%\x86_debug\ch.exe not found, please build sources. Exiting ...
     exit /b 1
