@@ -401,6 +401,11 @@ HeapBlockMap32::L2MapChunk::Set(uint id2, uint pageCount, HeapBlock * heapBlock,
         // If it's not FreeBlock, then we expect bucketIndex and heapBlock to be valid.
         map[i] = heapBlock;
         blockInfo[i].bucketIndex = bucketIndex;
+
+        // We need memory barrier here for ARM to ensure that the blockType is set last.
+#if defined(_M_ARM32_OR_ARM64)
+        MemoryBarrier();
+#endif
         blockInfo[i].blockType = blockType;
     }
 }
