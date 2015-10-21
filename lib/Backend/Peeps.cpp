@@ -104,7 +104,7 @@ Peeps::PeepFunc()
         }
 
         case IR::InstrKindBranch:
-            if (!peepsEnabled || instr->m_opcode == Js::OpCode::Leave) // TODO: enable RetargetBrToBr for Leaves
+            if (!peepsEnabled || instr->m_opcode == Js::OpCode::Leave)
             {
                 break;
             }
@@ -256,7 +256,7 @@ Peeps::PeepFunc()
                     && ((instr->GetSrc2()->AsIntConstOpnd()->m_value & 0xFFFFFF00) == 0)
                     && instr->GetSrc1()->IsRegOpnd() && (LinearScan::GetRegAttribs(instr->GetSrc1()->AsRegOpnd()->GetReg()) & RA_BYTEABLE))
                 {
-                    // REVIEW: For now only support if the branch is JEQ or JNE to ensure we don't look at the sign flag
+                    // Only support if the branch is JEQ or JNE to ensure we don't look at the sign flag
                     if (instrNext->IsBranchInstr() &&
                         (instrNext->m_opcode == Js::OpCode::JNE || instrNext->m_opcode == Js::OpCode::JEQ))
                     {
@@ -736,8 +736,7 @@ Peeps::RetargetBrToBr(IR::BranchInstr *branchInstr, IR::LabelInstr * targetInstr
     IR::Instr *targetInstrNext = targetInstr->GetNextRealInstr();
     AssertMsg(targetInstrNext, "GetNextRealInstr() failed to get next target");
 
-    // REVIEW: Removing branch to branch breaks some lexical assumptions about loop in sccliveness/linearscan/second chance.
-    //         For now, let's just skip doing this on un-lowered branches.
+    // Removing branch to branch breaks some lexical assumptions about loop in sccliveness/linearscan/second chance.
     if (!branchInstr->IsLowered())
     {
         return targetInstr;
@@ -813,8 +812,7 @@ Peeps::RetargetBrToBr(IR::BranchInstr *branchInstr, IR::LabelInstr * targetInstr
     return targetInstr;
 }
 
-// TODO: looks like we don't peep standalone unreachable labels (not as part of peep branch), make sure we do that.
-IR::Instr *
+IR::Instr * 
 Peeps::PeepUnreachableLabel(IR::LabelInstr *deadLabel, const bool isInHelper, bool *const peepedRef)
 {
     Assert(deadLabel);
@@ -1011,7 +1009,7 @@ Peeps::PeepRedundant(IR::Instr *instr)
                 break;
             }
         } while(!instr->StartsBasicBlock());
-        // TODO: (michhol) could probably cut this search down if we set src1 and use that as differentiator
+
         if (found)
         {
             retInstr = nopInstr->m_next;

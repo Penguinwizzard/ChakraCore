@@ -37,7 +37,6 @@ enum RoundMode : BYTE {
 
 class Lowerer
 {
-    // review: remove this friendship? used only for m_func
     friend class LowererMD;
     friend class LowererMDArch;
     friend class Encoder;

@@ -8,7 +8,6 @@
 #include "Types\DOMFastPath.h"
 #endif
 // Parser includes
-// TODO: clean up the need of these regex related header here just for GroupInfo needed in RegexHelper
 #include "RegexCommon.h"
 
 #include "Library\RegexHelper.h"

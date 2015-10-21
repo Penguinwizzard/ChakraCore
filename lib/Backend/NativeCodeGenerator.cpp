@@ -192,14 +192,12 @@ extern Func *CurrentFunc;
 JsFunctionCodeGen *
 NativeCodeGenerator::NewFunctionCodeGen(Js::FunctionBody *functionBody, Js::EntryPointInfo* info)
 {
-    // TODO-BGJIT: free list?
     return HeapNewNoThrow(JsFunctionCodeGen, this, functionBody, info, this->IsInDebugMode());
 }
 
 JsLoopBodyCodeGen *
 NativeCodeGenerator::NewLoopBodyCodeGen(Js::FunctionBody *functionBody, Js::EntryPointInfo* info)
 {
-    // TODO - BGJIT: free list?
     return HeapNewNoThrow(JsLoopBodyCodeGen, this, functionBody, info, this->IsInDebugMode());
 }
 
@@ -1221,10 +1219,7 @@ NativeCodeGenerator::CheckCodeGenDone(
     // Replace the entry point
     Js::JavascriptMethod address;
     if (!entryPointInfo->IsCodeGenDone())
-    {
-        // TODO 603650 - assert that the entry point is in the state we expect it to be when code gen fails.
-        // this happens if the codegen failed, install the profile thunk
-        // or use the original entry point, which should be the delay interpreter thunk or dynamic interpreter thunk
+    {        
         address = functionBody->GetScriptContext()->CurrentThunk == ProfileEntryThunk ? ProfileEntryThunk : functionBody->GetOriginalEntryPoint();
         entryPointInfo->address = address;
         if (entryPointInfo->IsPendingCleanup())
@@ -1348,7 +1343,6 @@ NativeCodeGenerator::AfterWaitForJob(Js::EntryPointInfo *const entryPoint) const
 bool
 NativeCodeGenerator::WorkItemExceedsJITLimits(CodeGenWorkItem *const codeGenWork)
 {
-    // TODO: SimpleJit: Do we need a separate limit for simple JIT, or no limit at all?
     return
         (codeGenWork->GetScriptContext()->GetThreadContext()->GetCodeSize() >= Js::Constants::MaxThreadJITCodeHeapSize) ||
         (ThreadContext::GetProcessCodeSize() >= Js::Constants::MaxProcessJITCodeHeapSize) ||
@@ -1462,21 +1456,6 @@ NativeCodeGenerator::Prioritize(JsUtil::Job *const job, const bool forceAddJobTo
     }
 }
 
-
-// TODO: Fast F12: still, we have minor race condition because we call into ScriptContext:
-// - when we attach:
-//   - we bring ScriptContext to debug mode.
-//   - then re-create native code gen which will cause drain the queue.
-//     - problem is that queue may be running; as ScriptContext is already in debug mode, new work items will be created in debug mode,
-//       i.e. earlier in the same queue work items were in non-debug, and now they are in debug.
-//     - the good part is that at least once work item is created its isInDebug mode stays for the rest of its lifetime,
-//       and during draining the queue, there is no execution so that we don't have some functions running in different yes/no debug modes.
-//   - (just for info) then call UpdateNativeCodeGeneratorForDebugMode which is only used for removing n.c.g from the manager.
-// - same issue when we detach.
-// - one way to fix this would be first drain the queue and after than change ScritContext debug yes/no state,
-//   so that ScriptContext can change its state only when there are no job in the queue.
-// - another way could be to keep isInDebugMode in n.c.g. and never call to ScriptContext, and add assert that S.C.IsInDebug() is called from main thread.
-//   make sure this works for scenarios: launch, attach and refresh.
 bool
 NativeCodeGenerator::IsInDebugMode() const
 {
@@ -2630,7 +2609,6 @@ NativeCodeGenerator::EnterScriptStart()
     }
 
     // We've already done a few calls to this scriptContext, don't bother waiting.
-    // TOOD JenH: Remove check for HeapEnumInProgress with fix for bug 785095
     if (scriptContext->callCount >= 3)
     {
         return;
@@ -3090,8 +3068,6 @@ bool NativeCodeGenerator::TryAggressiveInlining(Js::FunctionBody *const topFunct
 
     if (inlineeFunctionBody->GetProfiledSwitchCount())
     {
-        //This is hacky, though typescript has regressions if we inline aggressively with functions with switch statement.
-        //Revisit in future.
 #if defined(DBG_DUMP) || defined(ENABLE_DEBUG_CONFIG_OPTIONS)
         trace.TraceFailure(L"Switch statement in inlinee");
 #endif

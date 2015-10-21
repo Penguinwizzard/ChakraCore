@@ -8,14 +8,8 @@
 #include "Debug\DebugManager.h"
 
 // Parser includes
-// TODO: clean up the need of these regex related header here just for GroupInfo needed in RegexPattern
 #include "RegexCommon.h"
 #include "RegexPattern.h"
-
-#ifdef _M_X64_OR_ARM64
-// TODO: Clean this warning up
-#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
-#endif
 
 ///----------------------------------------------------------------------------
 ///
@@ -201,8 +195,8 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             Loop * loop = instr->AsBranchInstr()->GetTarget()->GetLoop();
             if (this->outerMostLoopLabel == nullptr && !loop->isProcessed)
             {
-                while (loop && loop->GetLoopTopInstr()) // some loops are optimized away so that they are not loops anymore.
-                                                                    // They do, however, stay in the loop graph but don't have loop top labels assigned to them
+               while (loop && loop->GetLoopTopInstr()) // some loops are optimized away so that they are not loops anymore. 
+                                                        // They do, however, stay in the loop graph but don't have loop top labels assigned to them
                 {
                     this->outerMostLoopLabel = loop->GetLoopTopInstr();
                     Assert(this->outerMostLoopLabel->m_isLoopTop);
@@ -548,7 +542,6 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             instrPrev = this->LowerArraySegmentVars(instr);
             break;
 
-        // TODO: consider adding another column to OpCodes.h and getting helper method from there instead of multiple switch labels.
         case Js::OpCode::InlineMathAcos:
             m_lowererMD.GenerateFastInlineBuiltInCall(instr, IR::HelperDirectMath_Acos);
             break;
@@ -830,9 +823,6 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             src1 = instr->UnlinkSrc1();
             AssertMsg(src1->IsIntConstOpnd(), "Source of LdC_A_I4 should be an IntConst...");
 
-            //
-            // REVIEW: the static cast must go once we have full 64 bit integer support.
-            //
             instrPrev = this->LowerLoadVar(instr,
                 IR::AddrOpnd::NewFromNumber(static_cast<int32>(src1->AsIntConstOpnd()->m_value), this->m_func));
             src1->Free(this->m_func);
@@ -1717,9 +1707,6 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
                 {
                     // Bail out instead of calling a helper
                     Assert(instr->GetBailOutKind() == IR::BailOutIntOnly || instr->GetBailOutKind() == IR::BailOutExpectingInteger);
-                    // REVIEW: The assert bellow is commented because we can get into this situation with field hoisting (Blue:179036)
-                    //         of because of not having initial values for fields and loosing the on merges.
-                    //Assert(!instr->GetSrc1()->IsNotInt());              // when we know it's not an int, it should not have been int-specialized, to avoid the guaranteed bailout
                     Assert(!instr->GetSrc1()->GetValueType().IsInt());  // when we know it's an int, it should not have bailout info, to avoid generating a bailout path that will never be taken
                     instr->UnlinkSrc1();
                     instr->UnlinkDst();
@@ -1763,8 +1750,6 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
                 // ArgOut/StartCall are normally lowered by the lowering of the associated call instr.
                 // If the call becomes unreachable, we could end up with an orphan ArgOut or StartCall.
                 // Change the ArgOut into a store to the stack for bailouts
-                // REVIEW: we could possibly enregister these, but this is unlikely to be on a hot path
-                //         as we are likely about to throw or bailout.
                 instr->FreeSrc2();
                 StackSym *argSym = instr->GetDst()->AsSymOpnd()->m_sym->AsStackSym();
                 argSym->m_offset = this->m_func->StackAllocate(sizeof(Js::Var));
@@ -2290,7 +2275,6 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
                 const auto dobailoutType = TyUint8;
                 Assert(dobailout->GetType() == TyUint8 && sizeof(decltype(Js::SimpleJitHelpers::IsLoopCodeGenDone(nullptr))) == 1);
 
-                //TODO: Simplejit: Optimization: Skip recording the loop implicit call flags on the first loop iteration (the interpreter does)
                 m_lowererMD.LoadHelperArgument(instr, IR::IntConstOpnd::New(0, TyUint32, m_func)); // zero indicates that we do not want to add flags back in
                 m_lowererMD.LoadHelperArgument(instr, IR::IntConstOpnd::New(loopNum, TyUint32, m_func));
                 m_lowererMD.LoadHelperArgument(instr, IR::Opnd::CreateFramePointerOpnd(m_func));
@@ -2326,9 +2310,6 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
                 }
                 else
                 {
-                    // TODO: SimpleJit: Optimization: instead of using a boolean flag sort of thing, just jump to or past the
-                    //     bailout logic depending on the return of IsLoopCodeGenDone/the increment.
-
                     // Put in the labels
                     auto entryPointIsNull = IR::LabelInstr::New(Js::OpCode::Label, m_func);
                     auto checkDoBailout = IR::LabelInstr::New(Js::OpCode::Label, m_func);
@@ -3406,7 +3387,6 @@ Lowerer::GenerateDynamicObjectAlloc(IR::Instr * newObjInstr, uint inlineSlotCoun
         size_t auxSlotsAllocSize = (slotCount - inlineSlotCount) * sizeof(Js::Var);
         IR::RegOpnd* auxSlots = IR::RegOpnd::New(TyMachPtr, m_func);
 
-        // TODO: We do RecyclerFree on aux slots.  Let's not stack allocate them for now.
         GenerateRecyclerAllocAligned(IR::HelperAllocMemForVarArray, auxSlotsAllocSize, auxSlots, newObjInstr);
         GenerateMemInit(newObjDst, Js::DynamicObject::GetOffsetOfAuxSlots(), auxSlots, newObjInstr, isZeroed);
 
@@ -4251,7 +4231,6 @@ Lowerer::LowerNewScObject(IR::Instr *newObjInstr, bool callCtor, bool hasArgs, b
             LoadScriptContext(newObjInstr);
             m_lowererMD.LoadHelperArgument(newObjInstr, newObjInstr->GetSrc1());
 
-            // TODO (jedmiad): Avoid register shuffling when we skip default object or know that we'll return the default object.
             newScObjCall = IR::Instr::New(Js::OpCode::Call, createObjDst, IR::HelperCallOpnd::New(newScHelper, func), func);
             newObjInstr->InsertBefore(newScObjCall);
             m_lowererMD.LowerCall(newScObjCall, 0);
@@ -4343,16 +4322,11 @@ Lowerer::LowerNewScObject(IR::Instr *newObjInstr, bool callCtor, bool hasArgs, b
 
             if (returnNewScObj)
             {
-                // TODO (jedmiad): In this case just pass newObjDst to TryLowerNewScObjectWithFixedCtorCache, get the allocated object
-                // stored there, assert here that createObjDst == newObjDst, and skip the assign.
                 // MOV newObjDst, createObjDst
                 this->m_lowererMD.CreateAssign(newObjDst, createObjDst, insertAfterCtorInstr);
             }
             else
             {
-                // Review (jedmiad): Why couldn't we just pass newObjDst as the first argument to LowerGetNewScObjectCommon?
-                // Does it really need to be a register?
-                // newObjDst = isObject(ctorResultObjOpnd) ? ctorResultObjOpnd : createObjDst
                 LowerGetNewScObjectCommon(ctorResultObjOpnd, ctorResultObjOpnd, createObjDst, insertAfterCtorInstr);
                 this->m_lowererMD.CreateAssign(newObjDst, ctorResultObjOpnd, insertAfterCtorInstr);
             }
@@ -4362,8 +4336,6 @@ Lowerer::LowerNewScObject(IR::Instr *newObjInstr, bool callCtor, bool hasArgs, b
         // don't get cloned, and those that don't require update will never need one anymore.
         if (!usedFixedCtorCache)
         {
-            // if (constructorCache->updateAfterCtor) UpdateNewScObjectCache(newObjInstr->m_src1, newObjDst, scriptContext)
-            // TODO (jedmiad): Consider passing isCtorFunction == true anytime ctorOpnd->IsAddrOpnd() && ctorOpnd->AsAddrOpnd()->m_isFunction.
             LowerUpdateNewScObjectCache(insertAfterCtorInstr, newObjDst, ctorOpnd, false /* isCtorFunction */);
         }
     }
@@ -4408,18 +4380,6 @@ Lowerer::LowerNewScObject(IR::Instr *newObjInstr, bool callCtor, bool hasArgs, b
                 newObjInstr);
         }
 
-        // Leave the StartCall orphaned for the peeps to take out later.  We need it here, because it was captured
-        // in the bailout info, if we have a bailout between a StartCall and NewScObject without arguments.  This
-        // only happens if we've injected an artificial bailout.
-#if FALSE
-        else if (startCallInstr != nullptr)
-        {
-            // Review (NewScObject): Remove the StartCall or just leave it orphaned for the peeps to take out later?
-            startCallInstr->Remove();
-        }
-#endif
-
-        // TODO (jedmiad): Avoid register shuffling when we skip the constructor and return the default object.
         // MOV newObjDst, createObjDst
         if (!skipNewScObj && createObjDst != newObjDst)
         {
@@ -4432,7 +4392,6 @@ Lowerer::LowerNewScObject(IR::Instr *newObjInstr, bool callCtor, bool hasArgs, b
     return RemoveLoweredRegionStartMarker(startMarkerInstr);
 }
 
-//(void** framePtr, ProfileId profileId, Var retval, JavascriptFunction* callee, CallInfo info)
 IR::Instr*
 Lowerer::GenerateCallProfiling(Js::ProfileId profileId, Js::InlineCacheIndex inlineCacheIndex, IR::Opnd* retval, IR::Opnd*calleeFunctionObjOpnd, IR::Opnd* callInfo, bool returnTypeOnly, IR::Instr*callInstr,IR::Instr*insertAfter)
 {
@@ -4547,7 +4506,6 @@ bool Lowerer::TryLowerNewScObjectWithFixedCtorCache(IR::Instr* newObjInstr, IR::
         if (newObjInstr->m_opcode == Js::OpCode::NewScObjArray || newObjInstr->m_opcode == Js::OpCode::NewScObjArraySpread)
         {
             // These instr's carry a profile that indexes the array call site info, not the ctor cache.
-            // TODO: Consider carrying both profile ID's if the non-built-in case is ever important.
             return false;
         }
 
@@ -4600,7 +4558,6 @@ bool Lowerer::TryLowerNewScObjectWithFixedCtorCache(IR::Instr* newObjInstr, IR::
         // we could have a dedicated cache for each built-in constructor, populate it and invalidate it as any other constructor cache.
         AssertMsg(!emitBailOut, "Can't bail out on constructor cache guard for built-in constructors.");
 
-        // TODO (jedmiad): Consider optimizing this away, by allowing this function to create and return an AddrOpnd for newObjDst.
         skipNewScObj = true;
         IR::AddrOpnd* zeroOpnd = IR::AddrOpnd::NewNull(this->m_func);
         this->m_lowererMD.CreateAssign(newObjDst, zeroOpnd, newObjInstr);
@@ -4646,9 +4603,7 @@ bool Lowerer::TryLowerNewScObjectWithFixedCtorCache(IR::Instr* newObjInstr, IR::
         IR::AddrOpndKindDynamicGuardValueRef);
     IR::AddrOpnd* zeroOpnd = IR::AddrOpnd::NewNull(this->m_func);
     InsertCompareBranch(guardOpnd, zeroOpnd, Js::OpCode::BrEq_A, helperOrBailoutLabel, newObjInstr);
-
-    // TODO (jedmiad): Consider allowing the cache to be repopulated if the type got collected.  This would require that we load
-    // the type from the cache rather than hard-code it.
+    
     const Js::DynamicType* newObjectType = ctorCache->type;
     Assert(newObjectType->GetIsShared());
 
@@ -4819,7 +4774,6 @@ Lowerer::LowerUpdateNewScObjectCache(IR::Instr * insertInstr, IR::Opnd *dst, IR:
         src1 = srcRegOpnd;
     }
 
-    // TODO (jedmiad): Rename this to ctorIsFunction.  Pass true whenever we have a fixed function (even if we didn't clone the cache).
     // Check if constructor is a function if we don't already know it.
     if (!isCtorFunction)
     {
@@ -5125,7 +5079,6 @@ Lowerer::LowerGeneratorResumeJumpTable()
         uint32 offset = yorl.First();
         IR::LabelInstr * label = yorl.Second();
 
-        // TODO using m_hasNonBranchRef is a really bad hack; please find another way, Ian
         if (label != nullptr && label->m_hasNonBranchRef)
         {
             // Also fix up the bailout at the label with the jump to epilog that was not emitted in GenerateBailOut()
@@ -5165,11 +5118,6 @@ Lowerer::DoInterruptProbes()
                 //   call JavascriptOperators::ScriptAbort
                 //   b $exit
                 // $continue:
-
-                // TODO: Consider finding a different point in the loop body for probe insertion.
-                // We avoid inserting at back branches as this may block branch-to-branch peeps.
-                // But we could put the probe at the latest point that dominates all back branches,
-                // and this may allow some loops that exit early to avoid the probe.
 
                 IR::LabelInstr *newLabel = IR::LabelInstr::New(Js::OpCode::Label, this->m_func);
                 labelInstr->InsertAfter(newLabel);
@@ -5570,16 +5518,12 @@ Lowerer::GenerateLdFldWithCachedType(IR::Instr * instrLdFld, bool* continueAsHel
         propertySymOpnd->UpdateSlotForFinalType();
     }
 
-    // TODO (ObjTypeSpec): If ((PropertySym*)propertySymOpnd->m_sym)->m_stackSym->m_isIntConst consider emitting a direct
-    // jump to helper or bailout.  If we have a type check bailout, we could even abort compilation.
-
     bool hasTypeCheckBailout = instrLdFld->HasBailOutInfo() && IR::IsTypeCheckBailOutKind(instrLdFld->GetBailOutKind());
 
     // If the hard-coded type is not available here, do a type check, and branch to the helper if the check fails.
     // In the prototype case, we have to check the type even if it was checked upstream, to cover the case where
-    // the property has been added locally. This is slightly conservative but doesn't impact benchmarks. Note that
-    // this is not necessary if the proto chain has been checked, because then we know there's been no store of the
-    // property since the type was checked.
+    // the property has been added locally. Note that this is not necessary if the proto chain has been checked,
+    // because then we know there's been no store of the property since the type was checked.
     bool emitPrimaryTypeCheck = propertySymOpnd->NeedsPrimaryTypeCheck();
     bool emitLocalTypeCheck = propertySymOpnd->NeedsLocalTypeCheck();
     bool emitLoadFromProtoTypeCheck = propertySymOpnd->NeedsLoadFromProtoTypeCheck();
@@ -6169,7 +6113,6 @@ Lowerer::GenerateNewStackScFunc(IR::Instr * newScFuncInstr)
         IR::IntConstOpnd::New(Js::FunctionBody::Flags_StackNestedFunc, TyInt8, func, true),
         Js::OpCode::BrEq_A, labelNoStackFunc, newScFuncInstr);
 
-    // TODO: This can be done when we LdFrameDisplay for the corresponding function, instead of here
     InsertMove(IR::SymOpnd::New(stackSym, Js::ScriptFunction::GetOffsetOfEnvironment(), TyMachPtr, func),
         envOpnd,
         newScFuncInstr);
@@ -6643,9 +6586,6 @@ Lowerer::GenerateStFldWithCachedType(IR::Instr *instrStFld, bool* continueAsHelp
 
     Func* func = instrStFld->m_func;
 
-    // TODO (ObjTypeSpec): If ((PropertySym*)propertySymOpnd->m_sym)->m_stackSym->m_isIntConst consider emitting a direct
-    // jump to helper or bailout.  If we have a type check bailout, we could even abort compilation.
-
     bool hasTypeCheckBailout = instrStFld->HasBailOutInfo() && IR::IsTypeCheckBailOutKind(instrStFld->GetBailOutKind());
 
     // If the type hasn't been checked upstream, see if it makes sense to check it here.
@@ -6837,10 +6777,6 @@ Lowerer::GenerateCachedTypeCheck(IR::Instr *instrChk, IR::PropertySymOpnd *prope
 
     if (doEquivTypeCheck)
     {
-        // TODO (ObjTypeSpec): For isolated equivalent type checks it would be good to emit a check if the cache is still valid, and
-        // if not go straight to live polymorphic cache.  This way we wouldn't have to bail out and re-JIT, and also wouldn't continue
-        // to try the equivalent type cache, miss it and do the slow comparison. This may be as easy as sticking a null on the main
-        // type in the equivalent type cache.
         IR::LabelInstr* labelCheckEquivalentType = IR::LabelInstr::New(Js::OpCode::Label, func, true);
         InsertCompareBranch(typeOpnd, expectedTypeOpnd, Js::OpCode::BrNeq_A, labelCheckEquivalentType, instrChk);
 
@@ -6859,11 +6795,6 @@ Lowerer::GenerateCachedTypeCheck(IR::Instr *instrChk, IR::PropertySymOpnd *prope
         this->m_lowererMD.LowerCall(equivalentTypeCheckCallInstr, 0);
 
         InsertTestBranch(equivalentTypeCheckResultOpnd, equivalentTypeCheckResultOpnd, Js::OpCode::BrEq_A, labelTypeCheckFailed, instrChk);
-
-        // TODO (ObjTypeSpec): Consider emitting a shared bailout to which a specific bailout kind is written at runtime. This would allow us to distinguish
-        // between non-equivalent type and other cases, such as invalidated guard (due to fixed field overwrite, perhaps) or too much thrashing on the
-        // equivalent type cache. We could determine bailout kind based on the value returned by the helper. In the case of cache thrashing we could just
-        // turn off the whole optimization for a given function.
 
         instrChk->InsertBefore(labelTypeCheckSucceeded);
     }
@@ -6970,11 +6901,6 @@ Lowerer::CreateTypePropertyGuardForGuardedProperties(Js::Type* type, IR::Propert
 
     if (entryPointInfo->HasSharedPropertyGuards())
     {
-        // Consider (ObjTypeSpec): Because we allocate these guards from the JIT thread we can't share guards for the same type across multiple functions.
-        // This leads to proliferation of property guards on the thread context.  The alternative would be to pre-allocate shared (by value) guards
-        // from the thread context during work item creation.  We would create too many of them (because some types aren't actually used as guards),
-        // but we could share a guard for a given type between functions.  This may ultimately be better.
-
         LinkGuardToGuardedProperties(entryPointInfo, propertySymOpnd->GetGuardedPropOps(), [this, type, &guard](Js::PropertyId propertyId)
         {
             if (DoLazyFixedTypeBailout(this->m_func))
@@ -7038,11 +6964,6 @@ Lowerer::CreateEquivalentTypeGuardAndLinkToGuardedProperties(Js::Type* type, IR:
 
     Assert(guard->GetCache() != nullptr);
     Js::EquivalentTypeCache* cache = guard->GetCache();
-
-    // TODO (ObjTypeSpec): If we delayed populating the types until encoder, we could bulk allocate all equivalent type caches
-    // in one block from the heap. This would allow us to not allocate them from the native code data allocator and free them
-    // when no longer needed. However, we would need to store the global property operation ID in the guard, so we can look up
-    // the info in the encoder. Perhaps we could overload the cache pointer to be the ID until encoder.
 
     // Copy types from the type set to the guard's cache
     Js::EquivalentTypeSet* typeSet = propertySymOpnd->GetEquivalentTypeSet();
@@ -7877,7 +7798,7 @@ Lowerer::LowerAddLeftDeadForString(IR::Instr *instr)
 
     // if ownsLastBlock != 0
     InsertCompareBranch(
-        IR::IndirOpnd::New(opndLeft->AsRegOpnd(), Js::CompoundString::GetOffsetOfOwnsLastBlock(), TyUint8, m_func),
+        IR::IndirOpnd::New(opndLeft->AsRegOpnd(), (int32)Js::CompoundString::GetOffsetOfOwnsLastBlock(), TyUint8, m_func),
         IR::IntConstOpnd::New(0, TyUint8, m_func),
         Js::OpCode::BrEq_A,
         labelHelper,
@@ -7890,16 +7811,16 @@ Lowerer::LowerAddLeftDeadForString(IR::Instr *instr)
 
 
     // if left->m_directCharLength == -1
-    InsertCompareBranch(IR::IndirOpnd::New(opndLeft->AsRegOpnd(), Js::CompoundString::GetOffsetOfDirectCharLength(), TyUint32, m_func),
-        IR::IntConstOpnd::New(-1, TyUint32, m_func),
+    InsertCompareBranch(IR::IndirOpnd::New(opndLeft->AsRegOpnd(), (int32)Js::CompoundString::GetOffsetOfDirectCharLength(), TyUint32, m_func),
+        IR::IntConstOpnd::New(-1, TyUint32, m_func), 
         Js::OpCode::BrNeq_A, labelHelper, insertBeforeInstr);
 
     // if lastBlockInfo.charLength < lastBlockInfo.charCapacity
-    IR::IndirOpnd *indirCharLength = IR::IndirOpnd::New(opndLeft->AsRegOpnd(), Js::CompoundString::GetOffsetOfLastBlockInfo()+ Js::CompoundString::GetOffsetOfLastBlockInfoCharLength(), TyMachPtr, m_func);
+    IR::IndirOpnd *indirCharLength = IR::IndirOpnd::New(opndLeft->AsRegOpnd(), (int32)Js::CompoundString::GetOffsetOfLastBlockInfo()+ (int32)Js::CompoundString::GetOffsetOfLastBlockInfoCharLength(), TyMachPtr, m_func);
     IR::RegOpnd *charLengthOpnd = IR::RegOpnd::New(TyUint32, this->m_func);
     InsertMove(charLengthOpnd, indirCharLength, insertBeforeInstr);
-    InsertCompareBranch(charLengthOpnd, IR::IndirOpnd::New(opndLeft->AsRegOpnd(), Js::CompoundString::GetOffsetOfLastBlockInfo() + Js::CompoundString::GetOffsetOfLastBlockInfoCharCapacity(), TyMachPtr, m_func), Js::OpCode::BrGe_A, labelHelper, insertBeforeInstr);
-
+    InsertCompareBranch(charLengthOpnd, IR::IndirOpnd::New(opndLeft->AsRegOpnd(), (int32)Js::CompoundString::GetOffsetOfLastBlockInfo() + (int32)Js::CompoundString::GetOffsetOfLastBlockInfoCharCapacity(), TyMachPtr, m_func), Js::OpCode::BrGe_A, labelHelper, insertBeforeInstr);
+        
     // load c= right->m_pszValue[0]
     IR::RegOpnd *pszValue0Opnd = IR::RegOpnd::New(TyMachPtr, this->m_func);
     IR::IndirOpnd *indirRightPszOpnd = IR::IndirOpnd::New(opndRight->AsRegOpnd(), offsetof(Js::JavascriptString, m_pszValue), TyMachPtr, this->m_func);
@@ -7910,7 +7831,7 @@ Lowerer::LowerAddLeftDeadForString(IR::Instr *instr)
 
     // lastBlockInfo.buffer[blockCharLength] = c;
     IR::RegOpnd *baseOpnd = IR::RegOpnd::New(TyMachPtr, this->m_func);
-    InsertMove(baseOpnd, IR::IndirOpnd::New(opndLeft->AsRegOpnd(), Js::CompoundString::GetOffsetOfLastBlockInfo() + Js::CompoundString::GetOffsetOfLastBlockInfoBuffer(), TyMachPtr, m_func), insertBeforeInstr);
+    InsertMove(baseOpnd, IR::IndirOpnd::New(opndLeft->AsRegOpnd(), (int32)Js::CompoundString::GetOffsetOfLastBlockInfo() + (int32)Js::CompoundString::GetOffsetOfLastBlockInfoBuffer(), TyMachPtr, m_func), insertBeforeInstr);
     IR::IndirOpnd *indirBufferToStore = IR::IndirOpnd::New(baseOpnd, charLengthOpnd, (byte)Math::Log2(sizeof(wchar_t)), TyUint16, m_func);
     InsertMove(indirBufferToStore, charResultOpnd, insertBeforeInstr);
 
@@ -8520,15 +8441,6 @@ Lowerer::LowerMemOp(IR::Instr * instr)
             bailOutKind ^= IR::BailOutOnInvalidatedArrayLength;
             Assert(!bailOutKind || instr->GetBailOutKind() == bailOutKind);
         }
-        /* TODO:: Figure out what to do with other bailouts that could come through here
-        if (bailOutKind & IR::BailOutConventionalNativeArrayAccessOnly)
-        {
-
-            //LowerBailOnInvalidatedArrayLength(instr, isHelper);
-            bailOutKind ^= IR::BailOutConventionalNativeArrayAccessOnly;
-            Assert(!bailOutKind || instr->GetBailOutKind() == bailOutKind);
-        }
-        Assert(!bailOutKind);*/
 
         AssertMsg(bailOutKind & IR::BailOutOnMemOpError, "Expected BailOutOnMemOpError on MemOp instruction");
         if (bailOutKind & IR::BailOutOnMemOpError)
@@ -9823,8 +9735,6 @@ Lowerer::LowerArgIn(IR::Instr *instrArgIn)
     LowererMD::CreateAssign(opndUndef, opndUndefAddress, labelNormal);
 
 
-    // REVIEW: Note that this is allocated unnecessarily in the func's arena, but it's small, once per func, and we
-    //         don't have a temp arena handy...
     BVSparse<JitArenaAllocator> *formalsBv = JitAnew(this->m_func->m_alloc, BVSparse<JitArenaAllocator>, this->m_func->m_alloc);
     while (formalsCount > 2)
     {
@@ -10077,7 +9987,6 @@ Lowerer::InlineBuiltInLibraryCall(IR::Instr *callInstr)
                arrayOpnd->GetValueType().IsLikelyNativeArray())
             {
                 // Rejecting native array for now, since we have to do a FromVar at the call site and bail out.
-                // TODO: Inline the Push call up front and let type spec kick in.
                 return false;
             }
 
@@ -11116,8 +11025,6 @@ Lowerer::LowerBailOnIntMin(IR::Instr *instr, IR::BranchInstr *branchInstr  /* = 
         if (instr->GetSrc1()->IsIntConstOpnd())
         {
             // For consts we can check the value at JIT time. Note: without this check we'll have to legalize the CMP instr.
-            // TODO: implement const folding for inline built-ins, for abs/const this would help avoid bailout completely.
-            //       Note that we still need to keep this code in lowerer, as const fold phase can be turned off.
             IR::IntConstOpnd* intConst = instr->UnlinkSrc1()->AsIntConstOpnd();
             if (intConst->m_value == INT_MIN)
             {
@@ -11842,7 +11749,7 @@ Lowerer::SplitBailOnImplicitCall(IR::Instr *& instr)
     IR::IntConstOpnd * noImplicitCall = IR::IntConstOpnd::New(Js::ImplicitCall_None, TyInt8, this->m_func, true);
     const IR::AutoReuseOpnd autoReuseNoImplicitCall(noImplicitCall, instr->m_func);
 
-    // FIELDHOIST-TODO: For now reset the implicit call flag on every helper call
+    // Reset the implicit call flag on every helper call
     LowererMD::CreateAssign(implicitCallFlags, noImplicitCall, instr);
 
     IR::Instr *disableImplicitCallsInstr = nullptr, *enableImplicitCallsInstr = nullptr;
@@ -11909,7 +11816,7 @@ Lowerer::SplitBailOnImplicitCall(IR::Instr * instr, IR::Instr * helperCall, IR::
     IR::IntConstOpnd * noImplicitCall = IR::IntConstOpnd::New(Js::ImplicitCall_None, TyInt8, this->m_func, true);
     const IR::AutoReuseOpnd autoReuseNoImplicitCall(noImplicitCall, instr->m_func);
 
-    // FIELDHOIST-TODO: For now reset the implicit call flag on every helper call
+    // Reset the implicit call flag on every helper call
     LowererMD::CreateAssign(implicitCallFlags, noImplicitCall, helperCall->m_prev);
 
     BailOutInfo * bailOutInfo = instr->GetBailOutInfo();
@@ -12169,37 +12076,30 @@ Lowerer::GenerateBailOut(IR::Instr * instr, IR::BranchInstr * branchInstr, IR::L
     {
         // this bailOutInfo is shared, just jump to the bailout target
 
-#if 0
-        // Disabling this line because of the effect it had on Octane\crypto.js with native arrays.
-        // In some cases, we would bail out without setting the proper bailout kind in the profile,
-        // so we would never re-jit. TODO: See whether the sharedBailOutKind flag can capture this case.
-        if (!bailOutInfo->sharedBailOutKind)
-#endif
+        // Add helper label to trigger layout.
+        collectRuntimeStatsLabel = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, true);
+        instr->InsertBefore(collectRuntimeStatsLabel);
+
+        IR::MemRefOpnd *pIndexOpndForBailOutKind =
+            IR::MemRefOpnd::New((BYTE*)bailOutInfo->bailOutRecord + BailOutRecord::GetOffsetOfBailOutKind(), TyUint32, this->m_func, IR::AddrOpndKindDynamicBailOutKindRef);
+        m_lowererMD.CreateAssign(
+            pIndexOpndForBailOutKind, IR::IntConstOpnd::New(instr->GetBailOutKind(), pIndexOpndForBailOutKind->GetType(), this->m_func), instr);
+
+        // No point in doing this for BailOutFailedEquivalentTypeCheck or BailOutFailedEquivalentFixedFieldTypeCheck,
+        // because the respective inline cache is already polymorphic, anyway.
+        if (instr->GetBailOutKind() == IR::BailOutFailedTypeCheck || instr->GetBailOutKind() == IR::BailOutFailedFixedFieldTypeCheck)
         {
-            // Add helper label to trigger layout.
-            collectRuntimeStatsLabel = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, true);
-            instr->InsertBefore(collectRuntimeStatsLabel);
+            // We have a type check bailout that shares a bailout record with other instructions.
+            // Generate code to write the cache index into the bailout record before we jump to the call site.
+            Assert(bailOutInfo->polymorphicCacheIndex != (uint)-1);
+            Assert(bailOutInfo->bailOutRecord);
 
-            IR::MemRefOpnd *pIndexOpndForBailOutKind =
-                IR::MemRefOpnd::New((BYTE*)bailOutInfo->bailOutRecord + BailOutRecord::GetOffsetOfBailOutKind(), TyUint32, this->m_func, IR::AddrOpndKindDynamicBailOutKindRef);
+            IR::MemRefOpnd *pIndexOpnd =
+                IR::MemRefOpnd::New((BYTE*)bailOutInfo->bailOutRecord + BailOutRecord::GetOffsetOfPolymorphicCacheIndex(), TyUint32, this->m_func);
             m_lowererMD.CreateAssign(
-                pIndexOpndForBailOutKind, IR::IntConstOpnd::New(instr->GetBailOutKind(), pIndexOpndForBailOutKind->GetType(), this->m_func), instr);
-
-            // No point in doing this for BailOutFailedEquivalentTypeCheck or BailOutFailedEquivalentFixedFieldTypeCheck,
-            // because the respective inline cache is already polymorphic, anyway.
-            if (instr->GetBailOutKind() == IR::BailOutFailedTypeCheck || instr->GetBailOutKind() == IR::BailOutFailedFixedFieldTypeCheck)
-            {
-                // We have a type check bailout that shares a bailout record with other instructions.
-                // Generate code to write the cache index into the bailout record before we jump to the call site.
-                Assert(bailOutInfo->polymorphicCacheIndex != (uint)-1);
-                Assert(bailOutInfo->bailOutRecord);
-
-                IR::MemRefOpnd *pIndexOpnd =
-                    IR::MemRefOpnd::New((BYTE*)bailOutInfo->bailOutRecord + BailOutRecord::GetOffsetOfPolymorphicCacheIndex(), TyUint32, this->m_func);
-                m_lowererMD.CreateAssign(
-                    pIndexOpnd, IR::IntConstOpnd::New(bailOutInfo->polymorphicCacheIndex, TyUint32, this->m_func), instr);
-            }
+                pIndexOpnd, IR::IntConstOpnd::New(bailOutInfo->polymorphicCacheIndex, TyUint32, this->m_func), instr);
         }
+
         // GenerateBailOut should have replaced this as a label as we should have already lowered
         // the main bailOutInstr.
         IR::LabelInstr * bailOutTargetLabel = bailOutInstr->AsLabelInstr();
@@ -14118,8 +14018,6 @@ Lowerer::GenerateFastElemIIntIndexCommon(
         return nullptr;
     }
 
-    // TODO: Deal with the fact that storing to a native array can change the array value type,
-    // so that we can actually omit some of these vtable checks in native array cases.
     IR::RegOpnd *arrayOpnd = baseOpnd;
     IR::RegOpnd *headSegmentOpnd = nullptr;
     IR::Opnd *headSegmentLengthOpnd = nullptr;
@@ -15285,8 +15183,7 @@ Lowerer::GenerateFastLdElemI(IR::Instr *& ldElem, bool *instrIsInHelperBlockRef)
         IR::Instr *const insertBeforeInstr = ldElem->m_next;
 
         // Do missing value check on value returned from helper so that we don't have to check the index against
-        // array length. (We already checked it above against the segment length.) Reg alloc goes nuts if we check
-        // the array length in Navier-Stokes. TODO: investigate that.
+        // array length. (We already checked it above against the segment length.) 
 
         bool hasBeenUndefined = ldElem->AsProfiledInstr()->u.ldElemInfo->GetElementType().HasBeenUndefined();
         if (hasBeenUndefined)
@@ -15304,7 +15201,7 @@ Lowerer::GenerateFastLdElemI(IR::Instr *& ldElem, bool *instrIsInHelperBlockRef)
             if(labelMissingNative)
             {
                 // We're going to bail out on a load from a gap, but convert the array to Var first, so we don't just
-                // bail here over and over. (See pdfjs.js.) Gappy arrays are not well suited to nativeness.
+                // bail here over and over. Gappy arrays are not well suited to nativeness.
                 // NOTE: only emit this call if the profile tells us that this has happened before ("hasBeenUndefined").
                 // Emitting this in Navier-Stokes brutalizes the score.
                 insertBeforeInstr->InsertBefore(labelMissingNative);
@@ -15571,8 +15468,6 @@ Lowerer::GenerateFastStElemI(IR::Instr *& stElem, bool *instrIsInHelperBlockRef)
                 regSrc = IR::RegOpnd::New(StackSym::New(src->GetType(), m_func), src->GetType(), m_func);
                 autoReuseRegSrc.Initialize(regSrc, m_func);
 
-                // For now, just move the value into a reg
-                // TODO: optimize for constant values
                 InsertMove(regSrc, src, stElem);
             }
 
@@ -15693,22 +15588,6 @@ Lowerer::GenerateFastStElemI(IR::Instr *& stElem, bool *instrIsInHelperBlockRef)
                     // $handleOutOfBounds [isHelper = true]
                     IR::LabelInstr *labelHandleOutOfBounds = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, true);
                     stElem->InsertBefore(labelHandleOutOfBounds);
-
-                    // TODO: Consider the following alternative.  It doesn't require a memory load and may be
-                    // faster.  Currently our liveness checks assert that regTmp is not initialized.
-                    //// XORPS regTmp, regTmp
-                    //IR::RegOpnd * regTmp = IR::RegOpnd::New(TyFloat64, this->m_func);
-                    //instr = IR::Instr::New(Js::OpCode::XORPS, regTmp, regTmp, regTmp, this->m_func);
-                    //stElem->InsertBefore(instr);
-                    //instr = IR::Instr::New(Js::OpCode::COMISD, regSrc, regTmp, this->m_func);
-                    //stElem->InsertBefore(instr);
-                    //
-                    // JB checks the CF flag.  Any comparison involving NaN also sets this flag. Hence,
-                    // JB will jump if regSrc is NaN, and we will correctly write 0 to the array.
-                    //
-                    // Float comparisons result in 'false' when either side is NaN (unordered). Since we want to branch on
-                    // negative or NaN, we use BrNotGe(src, zero), which means branch if !BrGe(src, zero), which in turn expands
-                    // to !(src != NaN && zero != NaN && src >= zero).
 
                     // COMISD regSrc, FloatZero
                     // JB labelHandleNegative
@@ -18021,7 +17900,7 @@ Lowerer::GenerateFastArgumentsLdElemI(IR::Instr* ldElem, IR::LabelInstr * labelH
     // First check the slot on the frame to see if there is a heap arguments object.
     IR::Opnd       *cachedArgsObjectSlotOpnd = isInlinee? ldElem->m_func->GetInlineeArgumentsObjectSlotOpnd() : this->m_lowererMD.CreateStackArgumentsSlotOpnd() ;
     // Re-use the base pointer here so that we're loading the current heap args into the reg we will pass
-    // to the helper if necessary. Creating a new temp lifetime here seems to do worse on benchmarks (i.e., earley-boyer).
+    // to the helper if necessary.
     IR::RegOpnd    *argsObjRegOpnd           = indirOpnd->GetBaseOpnd();
     LowererMD::CreateAssign(argsObjRegOpnd, cachedArgsObjectSlotOpnd, ldElem);
 
@@ -18164,7 +18043,7 @@ Lowerer::GenerateFastArgumentsLdLen(IR::Instr *ldLen, IR::LabelInstr* labelHelpe
     {
         IR::Opnd       *cachedArgsObjectSlotOpnd = ldLen->m_func->GetInlineeArgumentsObjectSlotOpnd();
         // Re-use the LdLen_A source here so that we're loading the current heap args into the reg we will pass
-        // to the helper if necessary. Creating a new temp lifetime here seems to do worse on benchmarks (i.e., Earley-Boyer).
+        // to the helper if necessary.
         IR::RegOpnd    *argsObjectRegOpnd        = ldLen->GetSrc1()->AsRegOpnd();
 
         LowererMD::CreateAssign(argsObjectRegOpnd, cachedArgsObjectSlotOpnd, ldLen);
@@ -18180,7 +18059,7 @@ Lowerer::GenerateFastArgumentsLdLen(IR::Instr *ldLen, IR::LabelInstr* labelHelpe
     {
         IR::Opnd       *cachedArgsObjectSlotOpnd = this->m_lowererMD.CreateStackArgumentsSlotOpnd();
         // Re-use the LdLen_A source here so that we're loading the current heap args into the reg we will pass
-        // to the helper if necessary. Creating a new temp lifetime here seems to do worse on benchmarks (i.e., Earley-Boyer).
+        // to the helper if necessary.
         IR::RegOpnd    *argsObjectRegOpnd        = ldLen->GetSrc1()->AsRegOpnd();
         LowererMD::CreateAssign(argsObjectRegOpnd, cachedArgsObjectSlotOpnd, ldLen);
         InsertTest(argsObjectRegOpnd, argsObjectRegOpnd, ldLen);
@@ -19036,8 +18915,6 @@ bool Lowerer::GenerateFastBrEqLikely(IR::BranchInstr * instrBranch, bool *pNeedH
 
         if (isStrictMode)
         {
-            // REVIEW: Unfortunately, we'd need to get rid of the JavascriptFunction::IsThrowTypeErrorFunctionIsThrowTypeErrorFunction()
-            //         hack to make this work for functions under strict mode.
             labelTypeIdCheck->isOpHelper = true;
             IR::BranchInstr *branchToHelper = IR::BranchInstr::New(LowererMD::MDUncondBranchOpcode, labelHelper, this->m_func);
             instrBranch->InsertBefore(branchToHelper);
@@ -19123,8 +19000,8 @@ Lowerer::GenerateFastExternalEqTest(
         instrBranch);
 
     // Check for CustomExternalType -- see if operations field is non-null.
-    opnd =
-        IR::IndirOpnd::New(typeRegOpnd, Js::ExternalType::GetOffsetOfOperations(), TyMachReg, this->m_func);
+    opnd = 
+        IR::IndirOpnd::New(typeRegOpnd, (int32)Js::ExternalType::GetOffsetOfOperations(), TyMachReg, this->m_func);
     InsertCompareBranch(
         opnd,
         IR::AddrOpnd::New(nullptr, IR::AddrOpndKindConstantVar, this->m_func, true),
@@ -19134,7 +19011,7 @@ Lowerer::GenerateFastExternalEqTest(
 
     // Check CustomExternalType's operations usage. We need data from the hosting layer for this.
     IntConstType operationFlag = isStrictBr ? pData->operationFlagStrictEquals : pData->operationFlagEquals;
-    opnd = IR::IndirOpnd::New(typeRegOpnd, pData->offsetOfOperationsUsage, TyUint32, this->m_func);
+    opnd = IR::IndirOpnd::New(typeRegOpnd, (int32)pData->offsetOfOperationsUsage, TyUint32, this->m_func);
     if (fallThroughOnSuccess)
     {
         InsertTestBranch(
@@ -19319,8 +19196,8 @@ bool Lowerer::GenerateFastBrBool(IR::BranchInstr *const instr)
     {
         // if(srcValueType.IsFloat()) // skip tagged int check?
         //
-        // ValueType::IsFloat() does not guarantee that the storage is not in a tagged int. See TODO in ValueType::IsFloat().
-        // For now, the tagged int check still needs to be done. It does, however, guarantee that as long as the value is not
+        // ValueType::IsFloat() does not guarantee that the storage is not in a tagged int.
+        // The tagged int check is necessary. It does, however, guarantee that as long as the value is not
         // stored in a tagged int, that it is definitely stored in a JavascriptNumber/TaggedFloat.
 
         IR::LabelInstr *const notFloatLabel = IR::LabelInstr::New(Js::OpCode::Label, func);
@@ -20077,7 +19954,6 @@ Lowerer::GenerateLoadNewTarget(IR::Instr* instrInsert)
 
     if (func->GetJnFunction()->IsGenerator())
     {
-        //TODO: If generator can be instantiated through new, then we need to load the function object.
         instrInsert->SetSrc1(opndUndefAddress);
         LowererMD::ChangeToAssign(instrInsert);
         return;
@@ -20594,7 +20470,6 @@ void
 Lowerer::GenerateMemInit(IR::RegOpnd * opnd, int32 offset, IR::Opnd * value, IR::Instr * insertBeforeInstr, bool isZeroed)
 {
     IRType type = value->GetType();
-    // TODO: reduce the opnd size if the address range is smaller and the memory is already is zero
 
     Func * func = this->m_func;
     InsertMove(IR::IndirOpnd::New(opnd, offset, type, func), value, insertBeforeInstr);
@@ -20746,7 +20621,6 @@ Lowerer::ValidOpcodeAfterLower(IR::Instr* instr, Func * func)
     case Js::OpCode::Catch:
     case Js::OpCode::GeneratorResumeJumpTable:
 
-    // TODO: remove these in lower?
     case Js::OpCode::Break:
 
 #ifdef _M_X64

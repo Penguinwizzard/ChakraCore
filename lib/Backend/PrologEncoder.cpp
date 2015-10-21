@@ -96,7 +96,7 @@ void PrologEncoder::EncodeInstr(IR::Instr *instr, unsigned __int8 size)
     {
         unwindCode       = GetUnwindCode(2);
         unwindCodeOpInfo = PrologEncoderMD::GetXmmRegToSave(instr, &uint16Val);
-        // TODO: Fix the helper.
+
         *((unsigned __int16 *)&((UNWIND_CODE *)unwindCode)[1]) = uint16Val;
         break;
     }
@@ -126,7 +126,6 @@ void PrologEncoder::EncodeInstr(IR::Instr *instr, unsigned __int8 size)
             uint32Val        = TO_UINT32(allocaSize);
             unwindCodeOpInfo = 1;
 
-            // TODO: Use the helper.
             unwindCode->SetOp(TO_UNIBBLE(unwindCodeOp));
             *((unsigned __int32 *)&((UNWIND_CODE *)unwindCode)[1]) = uint32Val;
         }
@@ -136,7 +135,6 @@ void PrologEncoder::EncodeInstr(IR::Instr *instr, unsigned __int8 size)
             uint16Val        = TO_UINT16(slots);
             unwindCodeOpInfo = 0;
 
-            // TODO: Use the helper.
             unwindCode->SetOp(TO_UNIBBLE(unwindCodeOp));
             *((unsigned __int16 *)&((UNWIND_CODE *)unwindCode)[1]) = uint16Val;
         }

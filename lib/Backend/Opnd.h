@@ -498,10 +498,6 @@ public:
     {
         struct
         {
-            // TODO (ObjTypeSpec): These two bits (isTypeCheckOnly and usesFixedValue) really shouldn't be here as they are a function
-            // of the instruction's opcode.  Create a set of ObjTypeSpecUtils that will answer questions like NeedsTypeCheck based on
-            // instruction's opcode and the operand.  Make sure all object type spec methods in GlobOpt and Lower have access to both
-            // the operand and the instruction.
             bool isTypeCheckOnly: 1;
             // Note that even usesFixedValue cannot live on ObjTypeSpecFldInfo, because we may share a cache between
             // e.g. Object.prototype and new Object(), and only the latter actually uses the fixed value, even though both have it.
@@ -996,9 +992,6 @@ public:
     // fall back on live cache.  Similarly, for fixed method checks.
     bool MayHaveImplicitCall() const
     {
-        // Review (ObjTypeSpec): This is a bit conservative now that we don't revert from obj type specialized operations to live cache
-        // access even if the operation is isolated.  Once we decide a given instruction is an object type spec candidate, we know it
-        // will never need an implicit call bailout.  We could basically return IsObjTypeSpecOptimized.
         return !IsRootObjectNonConfigurableFieldLoad() && !UsesFixedValue() && (!IsTypeCheckSeqCandidate() || !IsTypeCheckProtected());
     }
 

@@ -177,7 +177,6 @@ LowererMD::LowerCallHelper(IR::Instr *instrCall)
     instrCall->FreeSrc1();
 
 #ifndef _M_X64
-    // TODO: Really fix this in IRBuilder.
     prevInstr = ChangeToHelperCall(instrCall, helperMethod);
 #endif
 
@@ -938,8 +937,7 @@ LowererMD::LowerCondBranch(IR::Instr * instr)
 ///
 /// LowererMD::MDBranchOpcode
 ///
-///     Map HIR branch opcode to machine-dependent equivalent. TODO: Consider
-/// replacing the switch with a table-driven solution.
+///     Map HIR branch opcode to machine-dependent equivalent. 
 ///
 ///----------------------------------------------------------------------------
 
@@ -1265,8 +1263,6 @@ LowererMD::Legalize(IR::Instr *const instr, bool fPostRegAlloc)
             {
                 if (verify)
                 {
-                    // TODO: Enable this assert when we clear out all the legal instance
-                    // AssertMsg(false, "Missing legalization");
                     return;
                 }
             #if DBG
@@ -1566,8 +1562,6 @@ LowererMD::Legalize(IR::Instr *const instr, bool fPostRegAlloc)
         case Js::OpCode::SAR:
             if (verify)
             {
-                // TODO: Enable this assert when we clear all the violating instance
-                //Assert(instr->GetSrc2()->GetType() == TyUint8);
                 Assert(instr->GetSrc2()->IsIntConstOpnd()
                     || instr->GetSrc2()->AsRegOpnd()->GetReg() == LowererMDArch::GetRegShiftCount());
             }
@@ -2345,7 +2339,6 @@ LowererMD::GenerateFastBrString(IR::BranchInstr *branchInstr)
         this->m_func), this->m_func);
     instrInsert->InsertBefore(loadSrc1CharInstr);
 
-    //TODO: Change TyUint16 comparison to TyUint32 - requires zero length string to be terminated with two nulls.
     IR::Instr * compareFirstCharInstr = IR::Instr::New(Js::OpCode::CMP, this->m_func);
     compareFirstCharInstr->SetSrc1(IR::IndirOpnd::New(src2FlatString, 0, TyUint16, this->m_func));
     compareFirstCharInstr->SetSrc2(src1FirstChar);
@@ -4251,9 +4244,6 @@ LowererMD::GenerateFastLdMethodFromFlags(IR::Instr * instrLdFld)
 
     Assert(!instrLdFld->DoStackArgsOpt(this->m_func));
 
-    // TODO (jedmiad): LdMethodFromFlags doesn't participate in object type specialization.  We should be using a temporary
-    // register without a type sym here.
-    // Assert(!propertySymOpnd->IsTypeCheckSeqCandidate())?
     if (propertySymOpnd->IsTypeCheckSeqCandidate())
     {
         AssertMsg(propertySymOpnd->HasObjectTypeSym(), "Type optimized property sym operand without a type sym?");
@@ -4625,9 +4615,6 @@ LowererMD::GenerateFastScopedLdFld(IR::Instr * instrLdScopedFld)
 
     IR::PropertySymOpnd * propertySymOpnd = propertySrc->AsPropertySymOpnd();
 
-    // TODO (jedmiad): Assert(!propertySymOpnd->IsTypeCheckSeqCandidate())?
-
-    //src->Free(this->m_func);
     opndBase = propertySymOpnd->CreatePropertyOwnerOpnd(m_func);
 
     IR::Opnd *srcBase =    instrLdScopedFld->GetSrc2();
@@ -4730,8 +4717,6 @@ LowererMD::GenerateFastScopedStFld(IR::Instr * instrStScopedFld)
               "Expected property sym operand as dst of StScoped");
 
     IR::PropertySymOpnd * propertySymOpnd = opndDst->AsPropertySymOpnd();
-
-    // TODO (jedmiad): Assert(!propertySymOpnd->IsTypeCheckSeqCandidate())?
 
     opndBase = propertySymOpnd->CreatePropertyOwnerOpnd(m_func);
 
@@ -7902,8 +7887,6 @@ LowererMD::GetImplicitParamSlotSym(Js::ArgSlot argSlot, Func * func)
     // Stack looks like (EBP chain)+0, (return addr)+4, (function object)+8, (arg count)+12, (this)+16, actual args
     // Pass in the EBP+8 to start at the function object, the start of the implicit param slots
 
-    // TODO: Consider not to use the argSlot number for the param slot sym, which can
-    // be confused with arg slot number from javascript
     StackSym * stackSym = StackSym::NewParamSlotSym(argSlot, func);
     func->SetArgOffset(stackSym, (2 + argSlot) * MachPtr);
     return stackSym;

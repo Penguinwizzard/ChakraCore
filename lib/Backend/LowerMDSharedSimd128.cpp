@@ -188,9 +188,6 @@ IR::Instr* LowererMD::Simd128LoadConst(IR::Instr* instr)
 
         AsmJsSIMDValue value = instr->GetSrc1()->AsSimd128ConstOpnd()->m_value;
 
-        // TODO: Optimize loading zero. MOVUPS_ZERO peeped into XORPS
-        // TODO: Avoid replicating constants. Map constants to memory locations and re-use them.
-
         // MOVUPS dst, [const]
         AsmJsSIMDValue *pValue = NativeCodeDataNew(instr->m_func->GetNativeCodeDataAllocator(), AsmJsSIMDValue);
         pValue->SetValue(value);
@@ -235,8 +232,8 @@ IR::Instr* LowererMD::Simd128LowerConstructor(IR::Instr *instr)
 
         if (instr->m_opcode == Js::OpCode::Simd128_FloatsToF4)
         {
-            // REVIEW: We don't have f32 type-spec, so we type-spec to f64 and convert to f32 before use.
-
+            // We don't have f32 type-spec, so we type-spec to f64 and convert to f32 before use.
+            
             if (src1->IsFloat64())
             {
                 // CVTSD2SS regOpnd32.f32, src.f64    -- Convert regOpnd from f64 to f32
@@ -1311,9 +1308,6 @@ void LowererMD::GenerateCheckedSimdLoad(IR::Instr * instr)
 // ToVar
 void LowererMD::GenerateSimdStore(IR::Instr * instr)
 {
-    // REVIEW: This is naive implementation. We always allocate a new SIMD primitive and store in it.
-    // Is it possible to check if the Var sym is alive, and re-use it?
-
     IR::RegOpnd *dst, *src;
     IRType type;
     dst = instr->GetDst()->AsRegOpnd();

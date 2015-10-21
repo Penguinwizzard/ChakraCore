@@ -458,9 +458,6 @@ StackSym::CloneDef(Func *func)
 
         // NOTE: It is not clear what the right thing to do is here...
         newSym->m_equivNext = newSym;
-
-        // REVIEW: should m_tempNumberSym be copied here?
-
         cloner->symMap->FindOrInsert(newSym, m_id);
     }
 

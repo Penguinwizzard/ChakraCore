@@ -208,7 +208,7 @@ namespace Js
         auto layout = JavascriptCallStackLayout::FromFramePointer(framePtr);
         FunctionBody* functionBody = layout->functionObject->GetFunctionBody();
 
-        // TODO: Simplejit: Optimization: Don't emit this call if this is true during JIT time
+        //REVIEW: Simplejit: Optimization: Don't emit this call if this is true during JIT time
 
         auto loopHeader = functionBody->GetLoopHeader(loopnum);
         LoopEntryPointInfo * entryPointInfo = loopHeader->GetCurrentEntryPointInfo();
