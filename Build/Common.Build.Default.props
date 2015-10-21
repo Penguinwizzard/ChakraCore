@@ -67,4 +67,13 @@
 
     <ChakraParserIntDir>$(IntDir)..\Chakra.Parser</ChakraParserIntDir>
   </PropertyGroup>
+
+  <!-- Version string definitions -->
+  <PropertyGroup Condition="'$(TF_BUILD_SOURCEGETVERSION)'!=''">
+    <!-- remove LG:refs/heads/ prefix-->
+    <ChakraVersionBuildCommit>$(TF_BUILD_SOURCEGETVERSION.SubString(14))</ChakraVersionBuildCommit>
+  </PropertyGroup>  
+  <PropertyGroup>    
+    <ChakraVersionBuildDate>$([System.DateTime]::Now.ToString("yyMMdd-HHmm"))</ChakraVersionBuildDate>
+  </PropertyGroup>
 </Project>

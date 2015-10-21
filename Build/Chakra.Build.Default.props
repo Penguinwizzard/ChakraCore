@@ -8,12 +8,4 @@
     <EventManifestXmlPath>$(WindowsSDK80Path)Include\um</EventManifestXmlPath>
     
   </PropertyGroup>
-
-  <PropertyGroup>
-    <!-- Real branch name? -->
-    <BranchName>chakracore</BranchName>
-    <BuildMachine>$(BranchName)</BuildMachine>
-    <BuildMachine Condition="'$(OfficialBuild)'!='true'">$(BuildMachine)($(UserName))</BuildMachine>
-    <BuildDate>$([System.DateTime]::Now.ToString("yyMMdd-hhmm"))</BuildDate>
-  </PropertyGroup>
 </Project> 
