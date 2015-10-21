@@ -68,7 +68,6 @@ LAYOUT_TYPE_WMS    ( Reg1Double1   ) // 1 var register and 1 double register
 LAYOUT_TYPE_WMS    ( Reg1Float1    ) // 1 var register and 1 Float register
 LAYOUT_TYPE_WMS    ( Reg1Int1      ) // 1 var register and 1 int register
 LAYOUT_TYPE_WMS    ( Int1Const1    ) // 1 int register and 1 const int value
-LAYOUT_TYPE_WMS    ( Double1Addr1  ) // 1 double register and 1 const double* value
 LAYOUT_TYPE_WMS    ( Int1Double2   ) // 1 int register and 2 double register ( double comparisons )
 LAYOUT_TYPE_WMS    ( Int1Float2    ) // 1 int register and 2 float register ( float comparisons )
 LAYOUT_TYPE_WMS    ( Int2          ) // 2 int register

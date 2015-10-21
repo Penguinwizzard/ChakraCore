@@ -886,8 +886,8 @@ namespace Js
 
         // on x64, AsmJsExternalEntryPoint reads first 3 elements to figure out how to shadow args on stack
         // always alloc space for these such that we need to do less work in the entrypoint
-        uint argSizeAlloc = max(mArgCount, 3U);
-        mArgSizes = RecyclerNewArrayLeafZ(recycler, uint, argSizeAlloc);
+        mArgSizesLength = max(mArgCount, 3U);
+        mArgSizes = RecyclerNewArrayLeafZ(recycler, uint, mArgSizesLength);
 
         mbyteCodeTJMap = RecyclerNew(recycler, ByteCodeToTJMap,recycler);
 

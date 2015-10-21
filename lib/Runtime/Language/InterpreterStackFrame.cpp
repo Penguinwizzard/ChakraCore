@@ -2003,19 +2003,20 @@ namespace Js
         for (int i = 0; i < info->GetVarCount(); i++)
         {
             const auto& var = info->GetVar( i );
-            if( var.type.isInt() )
+            const AsmJsVarType type(var.type);
+            if(type.isInt() )
             {
                 localIntSlots[var.location] = var.initialiser.intInit;
             }
-            else if (var.type.isFloat())
+            else if (type.isFloat())
             {
                 localFloatSlots[var.location] = var.initialiser.floatInit;
             }
-            else if (var.type.isDouble())
+            else if (type.isDouble())
             {
                 localDoubleSlots[var.location] = var.initialiser.doubleInit;
             }
-            else if (scriptContext->GetConfig()->IsSimdjsEnabled() && var.type.isSIMD())
+            else if (scriptContext->GetConfig()->IsSimdjsEnabled() && type.isSIMD())
             {
                 // e.g. var g = f4(0.0, 0.0, 0.0, 0.0);
                 localSimdSlots[var.location] = var.initialiser.simdInit;
@@ -2029,6 +2030,7 @@ namespace Js
         for( int i = 0; i < info->GetVarImportCount(); i++ )
         {
             const auto& import = info->GetVarImport( i );
+            const AsmJsVarType type(import.type);
             // this might throw, but it would anyway in non-asm.js
             Var value = JavascriptOperators::OP_GetProperty( foreign, import.field, scriptContext );
             // check if there is implicit call and if there is implicit call then clear the disableimplicitcall flag
@@ -2047,28 +2049,28 @@ namespace Js
                 }
             }
 
-            if( import.type.isInt() )
+            if(type.isInt() )
             {
                 int val = JavascriptMath::ToInt32( value, scriptContext );
                 localIntSlots[import.location] = val;
             }
-            else if (import.type.isFloat())
+            else if (type.isFloat())
             {
                 float val = (float)JavascriptConversion::ToNumber(value, scriptContext);
                 localFloatSlots[import.location] = val;
             }
-            else if (import.type.isDouble())
+            else if (type.isDouble())
             {
                 double val = JavascriptConversion::ToNumber( value, scriptContext );
                 localDoubleSlots[import.location] = val;
             }
-            else if (scriptContext->GetConfig()->IsSimdjsEnabled() && import.type.isSIMD())
+            else if (scriptContext->GetConfig()->IsSimdjsEnabled() && type.isSIMD())
             {
                 // e.g. var g = f4(imports.v);
                 bool valid = false;
                 AsmJsSIMDValue val;
                 val.Zero();
-                switch (import.type.which())
+                switch (type.which())
                 {
                     case AsmJsVarType::Int32x4:
                         valid = JavascriptSIMDInt32x4::Is(value);
@@ -2136,16 +2138,21 @@ namespace Js
 
             // Todo:: add more runtime check here
             auto proxy = m_functionBody->GetNestedFuncReference(i);
+            
             AsmJsScriptFunction* scriptFuncObj = (AsmJsScriptFunction*)ScriptFunction::OP_NewScFunc(pDisplay, (FunctionProxy**)proxy);
             localModuleFunctions[modFunc.location] = scriptFuncObj;
-
             if (i == 0 && info->GetUsesChangeHeap())
             {
                 scriptFuncObj->GetDynamicType()->SetEntryPoint(AsmJsChangeHeapBuffer);
             }
             else
             {
+                if (scriptFuncObj->GetDynamicType()->GetEntryPoint() == DefaultDeferredDeserializeThunk)
+                {
+                    JavascriptFunction::DeferredDeserialize(scriptFuncObj);
+                }
                 scriptFuncObj->GetDynamicType()->SetEntryPoint(AsmJsExternalEntryPoint);
+                scriptFuncObj->GetFunctionBody()->GetAsmJsFunctionInfo()->SetModuleFunctionBody(asmJsModuleFunctionBody);
             }
             scriptFuncObj->SetModuleMemory(moduleMemoryPtr);
             if (!info->IsRuntimeProcessed())
@@ -2734,8 +2741,9 @@ namespace Js
 #endif 
                 return returnVar;
             }
-            else if( functionBody->GetAsmJsModuleInfo() )
+            else
             {
+                Assert(functionBody->GetAsmJsModuleInfo());
                 return ProcessAsmJsModule();
             }
         }

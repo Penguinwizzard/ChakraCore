@@ -7,6 +7,7 @@
 #include "CommonExceptionsPch.h"
 #include <strsafe.h>
 #include "StackOverflowException.h"
+#include "AsmJsParseException.h"
 #include "InternalErrorException.h"
 #include "OutOfMemoryException.h"
 #include "NotImplementedException.h"

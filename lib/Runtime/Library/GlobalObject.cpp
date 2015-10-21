@@ -905,6 +905,12 @@ namespace Js
         }
         else if (!SUCCEEDED(hrCodeGen))
         {
+            if (hrCodeGen == JSERR_AsmJsCompileError)
+            {
+                // if asm.js compilation succeeded, retry with asm.js disabled
+                grfscr |= fscrNoAsmJs;
+                return DefaultEvalHelper(scriptContext, source, sourceLength, moduleID, grfscr, pszTitle, registerDocument, isIndirect, strictMode);
+            }
             Assert(hrCodeGen == SCRIPT_E_RECORDED);
             hrCodeGen = se.ei.scode;
             /*

@@ -125,6 +125,10 @@ namespace Js {
     catch (Js::ScriptAbortException)  \
     {   \
         hr = E_ABORT; \
+    }  \
+    catch (Js::AsmJsParseException)  \
+    {   \
+        hr = JSERR_AsmJsCompileError; \
     } 
 
 #define CATCH_UNHANDLED_EXCEPTION(hr) \
