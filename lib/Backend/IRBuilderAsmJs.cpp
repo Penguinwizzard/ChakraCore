@@ -2124,6 +2124,31 @@ IRBuilderAsmJs::BuildInt1Const1(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::Re
 
 template <typename SizePolicy>
 void
+IRBuilderAsmJs::BuildDouble1Addr1(Js::OpCodeAsmJs newOpcode, uint32 offset)
+{
+    Assert(OpCodeAttrAsmJs::HasMultiSizeLayout(newOpcode));
+    auto layout = m_jnReader.GetLayout<Js::OpLayoutT_Double1Addr1<SizePolicy>>();
+    BuildDouble1Addr1(newOpcode, offset, layout->D0, layout->A1);
+}
+
+void
+IRBuilderAsmJs::BuildDouble1Addr1(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegSlot dstDoubleReg, const double * addr)
+{
+    Assert(newOpcode == Js::OpCodeAsmJs::Ld_DbAddr);
+
+    Js::RegSlot dstRegSlot = GetRegSlotFromDoubleReg(dstDoubleReg);
+
+    IR::RegOpnd * dstOpnd = BuildDstOpnd(dstRegSlot, TyFloat64);
+    dstOpnd->SetValueType(ValueType::Float);
+
+    IR::MemRefOpnd * memRefOpnd = IR::MemRefOpnd::New((void*)addr, TyMachDouble, m_func);
+
+    IR::Instr * instr = IR::Instr::New(Js::OpCode::Ld_A, dstOpnd, memRefOpnd, m_func);
+    AddInstr(instr, offset);
+}
+
+template <typename SizePolicy>
+void
 IRBuilderAsmJs::BuildInt1Double2(Js::OpCodeAsmJs newOpcode, uint32 offset)
 {
     Assert(OpCodeAttrAsmJs::HasMultiSizeLayout(newOpcode));

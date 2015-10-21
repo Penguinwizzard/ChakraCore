@@ -47,6 +47,7 @@ EXDEF2    (NOPASMJS          , NopEx        , Empty                             
   DEF3_WMS( CUSTOM_ASMJS     , StArr        , OP_StArrGeneric              , AsmTypedArr         )
   DEF3_WMS( CUSTOM_ASMJS     , StArrConst   , OP_StArrConstIndex           , AsmTypedArr         )
 
+  DEF2_WMS( A1toD1           , Ld_DbAddr    , None                                               )
   DEF2_WMS( C1toI1           , Ld_IntConst  , None                                               )
   DEF2_WMS( BR_ASM_MemStack  , BrTrue_Int   , None                                               ) // Jumps to location if int reg is true
   DEF2_WMS( BR_ASM_Mem       , BrEq_Int     , AsmJsMath::CmpEq<int>                              ) // Jumps to location if both int reg are equal

@@ -1111,6 +1111,8 @@ FuncInfo * ByteCodeGenerator::StartBindFunction(const wchar_t *name, int nameLen
 
         if (parsedFunctionBody->GetBoundPropertyRecords() == nullptr)
         {
+            Assert(!IsInNonDebugMode());
+
             // This happens when we try to re-use the function body which was created due to serialized bytecode.
             parsedFunctionBody->SetBoundPropertyRecords(EnsurePropertyRecordList());
         }
@@ -1991,10 +1993,6 @@ HRESULT GenerateByteCode(__in ParseNode *pnode, __in ulong grfscr, __in Js::Scri
     }
     END_TRANSLATE_EXCEPTION_TO_HRESULT(hr);
 
-    if (hr == JSERR_AsmJsCompileError)
-    {
-        return hr;
-    }
     if (FAILED(hr))
     {
         hr = pse->ProcessError(nullptr, hr, nullptr);

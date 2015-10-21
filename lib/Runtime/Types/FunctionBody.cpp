@@ -1832,7 +1832,7 @@ namespace Js
                         {
                             fParsed = TRUE;
                         }
-                        else if(hrParseCodeGen != JSERR_AsmJsCompileError)
+                        else
                         {
                             Assert(hrParseCodeGen == SCRIPT_E_RECORDED);
                             hrParseCodeGen = se.ei.scode;
@@ -1842,13 +1842,6 @@ namespace Js
                 END_TRANSLATE_EXCEPTION_TO_HRESULT(hr);
             }
             END_LEAVE_SCRIPT_INTERNAL(m_scriptContext);
-
-            if (hrParseCodeGen == JSERR_AsmJsCompileError)
-            {
-                // if asm.js compilation failed, reparse without asm.js
-                m_grfscr |= fscrNoAsmJs;
-                return Parse(functionRef, isByteCodeDeserialization);
-            }
 
             if (hr == E_OUTOFMEMORY)
             {
@@ -1862,7 +1855,7 @@ namespace Js
             {
                 throw Js::ScriptAbortException();
             }
-            else if(FAILED(hr))
+                else if(FAILED(hr))
             {
                 throw Js::InternalErrorException();
             }

@@ -64,7 +64,7 @@ namespace Js
         bool mIsCallLegal;
     public:
         AsmJSByteCodeGenerator(AsmJsFunc* func, AsmJsModuleCompiler* compiler);
-        static void EmitEmptyByteCode(FuncInfo* funcInfo, ByteCodeGenerator* byteCodeGen, ParseNode* funcNode);
+        static void EmitEmptyByteCode( FuncInfo* funcInfo, ByteCodeGenerator* byteCodeGen );
 
         bool EmitOneFunction();
     private:

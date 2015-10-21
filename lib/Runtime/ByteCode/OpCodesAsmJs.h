@@ -128,6 +128,7 @@ MACRO_WMS   ( Div_UInt                  , Int3         , None            ) // un
 MACRO_WMS   ( Rem_UInt                  , Int3         , None            ) // unsigned int32 Arithmetic '%'
 
 // Double math
+MACRO_WMS   ( Ld_DbAddr                 , Double1Addr1  , None           ) // Sets a double register from a const double*
 MACRO_WMS   ( Ld_Db                     , Double2       , None           ) // Sets a double from another double register
 MACRO_WMS   ( Neg_Db                    , Double2       , None           ) // Double Unary '-'
 MACRO_WMS   ( Add_Db                    , Double3       , None           ) // Double Arithmetic '+'

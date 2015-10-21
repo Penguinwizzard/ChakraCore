@@ -386,7 +386,7 @@ namespace Js
                             Assert(initSym->GetSymbolType() == AsmJsSymbol::MathConstant);
                             Assert(initSym->GetType() == AsmJsType::Double);
                             AsmJsMathConst* initConst = initSym->Cast<AsmJsMathConst>();
-                            mWriter.AsmReg2(Js::OpCodeAsmJs::Ld_Db, var->GetLocation(), mFunction->GetConstRegister<double>(*initConst->GetVal()));
+                            mWriter.AsmDouble1Addr1(Js::OpCodeAsmJs::Ld_DbAddr, var->GetLocation(), initConst->GetVal());
                         }
                     }
                     else
@@ -537,14 +537,12 @@ namespace Js
         case knopIndex:
             return EmitLdArrayBuffer( pnode );
         case knopEndCode:
-            StartStatement(pnode);
             if( mFunction->GetReturnType() == AsmJsRetType::Void )
             {
                 mWriter.AsmReg1( Js::OpCodeAsmJs::LdUndef, AsmJsFunctionMemory::ReturnRegister );
             }
             mWriter.MarkAsmJsLabel( mFunction->GetFuncInfo()->singleExit );
             mWriter.EmptyAsm( OpCodeAsmJs::Ret );
-            EndStatement(pnode);
             break;
         case knopAsg:
             return EmitAssignment( pnode );
@@ -2028,8 +2026,7 @@ namespace Js
 
         switch( sym->GetSymbolType() )
         {
-        case AsmJsSymbol::Variable:
-        {
+        case AsmJsSymbol::Variable:{
             AsmJsVar * var = sym->Cast<AsmJsVar>();
             if (!var->isMutable())
             {
@@ -2058,8 +2055,7 @@ namespace Js
             // else fall through
         }
         case AsmJsSymbol::Argument:
-        case AsmJsSymbol::ConstantImport:
-        {
+        case AsmJsSymbol::ConstantImport:{
             AsmJsVarBase* var = sym->Cast<AsmJsVarBase>();
             if( source == AsmJsLookupSource::AsmJsFunction )
             {
@@ -2097,24 +2093,35 @@ namespace Js
             }
             break;
         }
-        case AsmJsSymbol::MathConstant:
-        {
+        case AsmJsSymbol::MathConstant:{
             AsmJsMathConst* mathConst = sym->Cast<AsmJsMathConst>();
-            Assert(mathConst->GetType().isDouble());
-            RegSlot loc = mFunction->AcquireTmpRegister<double>();
-            mWriter.AsmReg2( OpCodeAsmJs::Ld_Db, loc, mFunction->GetConstRegister<double>(*mathConst->GetVal()) );
-            return EmitExpressionInfo(loc, AsmJsType::Double);
+            
+            if( mathConst->GetType().isDouble() )
+            {
+                RegSlot loc = mFunction->AcquireTmpRegister<double>();
+                mWriter.AsmDouble1Addr1( OpCodeAsmJs::Ld_DbAddr, loc, mathConst->GetVal() );
+                return EmitExpressionInfo( loc, AsmJsType::Double );
+            }
+            else
+            {
+                Assert( false ); // Currently all math const are doubles
+            }
+            break;
         }
 
         case AsmJsSymbol::SIMDBuiltinFunction:
-        case AsmJsSymbol::ImportFunction:
-        case AsmJsSymbol::FuncPtrTable:
-        case AsmJsSymbol::ModuleFunction:
-        case AsmJsSymbol::ArrayView:
+        case AsmJsSymbol::ImportFunction     :
+        case AsmJsSymbol::FuncPtrTable       :
+        case AsmJsSymbol::ModuleFunction     :
+        case AsmJsSymbol::ArrayView          :
         case AsmJsSymbol::MathBuiltinFunction:
         default:
             throw AsmJsCompilationException( L"Cannot use identifier %s in this context", name->Psz() );
+            break;
         }
+
+        Assert( false ); // all cases should be handled
+        return EmitExpressionInfo();
     }
 
     static const OpCodeAsmJs typedArrayOp[2][2] =
@@ -3077,7 +3084,7 @@ namespace Js
         return EmitExpressionInfo( AsmJsType::Void );
     }
 
-    void AsmJSByteCodeGenerator::EmitEmptyByteCode(FuncInfo * funcInfo, ByteCodeGenerator * byteCodeGen, ParseNode * functionNode)
+    void AsmJSByteCodeGenerator::EmitEmptyByteCode(FuncInfo * funcInfo, ByteCodeGenerator * byteCodeGen)
     {
         funcInfo->byteCodeFunction->SetGrfscr(byteCodeGen->GetFlags());
         funcInfo->byteCodeFunction->SetSourceInfo(byteCodeGen->GetCurrentSourceIndex(),
@@ -3112,9 +3119,6 @@ namespace Js
         } autoCleanup(functionBody, byteCodeGen);
 
         byteCodeGen->Writer()->Begin(byteCodeGen, functionBody, byteCodeGen->GetAllocator(), false, false);
-        byteCodeGen->Writer()->StartStatement(functionNode, 0);
-        byteCodeGen->Writer()->Empty(OpCode::Nop);
-        byteCodeGen->Writer()->EndStatement(functionNode);
         byteCodeGen->Writer()->End();
 
         autoCleanup.Done();

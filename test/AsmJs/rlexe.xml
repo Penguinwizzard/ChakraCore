@@ -150,20 +150,6 @@
   </test>
   <test>
     <default>
-      <files>relink.js</files>
-      <baseline>relink.baseline</baseline>
-      <compile-flags>-forceserialized -testtrace:asmjs -simdjs</compile-flags>
-    </default>
-  </test>
-  <test>
-    <default>
-      <files>relink.js</files>
-      <baseline>relink.baseline</baseline>
-      <compile-flags>-forceserialized -testtrace:asmjs -simdjs -maic:0</compile-flags>
-    </default>
-  </test>
-  <test>
-    <default>
       <files>WriteArrayView.js</files>
       <baseline>WriteArrayView.baseline</baseline>
       <compile-flags>-testtrace:asmjs -simdjs -maic:0</compile-flags>
@@ -573,13 +559,6 @@
   </test>
   <test>
     <default>
-      <files>invalidIntLiteral.js</files>
-      <baseline>invalidIntLiteral.baseline</baseline>
-      <compile-flags>-forceserialized -testtrace:asmjs -simdjs</compile-flags>
-    </default>
-  </test>
-  <test>
-    <default>
       <files>fstpbug.js</files>
       <baseline>fstpbug.baseline</baseline>
       <compile-flags>-testtrace:asmjs -simdjs</compile-flags>
@@ -719,7 +698,7 @@
     <default>
       <files>shadowingBug.js</files>
       <baseline>shadowingBug.baseline</baseline>
-      <compile-flags>-forcedeferparse -testtrace:asmjs -simdjs</compile-flags>
+      <compile-flags>-testtrace:asmjs -simdjs</compile-flags>
     </default>
   </test>
   <test>
@@ -754,7 +733,7 @@
     <default>
       <files>qmarkbug.js</files>
       <baseline>qmarkbug.baseline</baseline>
-      <compile-flags>-forcedeferparse -testtrace:asmjs -simdjs</compile-flags>
+      <compile-flags>-testtrace:asmjs -simdjs</compile-flags>
     </default>
   </test>
 </regress-exe>

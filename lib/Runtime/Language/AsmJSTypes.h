@@ -190,7 +190,7 @@ namespace Js
     class AsmJsVarType
     {
     public:
-        enum Which : byte
+        enum Which
         {
             Int = AsmJsType::Int,
             Double = AsmJsType::Double,
@@ -830,7 +830,6 @@ namespace Js
         int             mArgOutDepth;
         int             mMaxArgOutDepth;
         ULONG           mOrigParseFlags;
-        bool            mDeferred;
         bool            mDefined : 1; // true when compiled completely without any errors
     public:
         AsmJsFunc( PropertyName name, ParseNode* pnodeFnc, ArenaAllocator* allocator );
@@ -851,8 +850,6 @@ namespace Js
         inline void SetBodyNode( ParseNode* val ){mBodyNode = val;}
         inline void Finish() { mDefined = true; }
         inline bool IsDefined()const { return mDefined; }
-        inline void SetDeferred() { mDeferred = true; }
-        inline bool IsDeferred()const { return mDeferred; }
         template<typename T> inline AsmJsRegisterSpace<T>& GetRegisterSpace() {return *(AsmJsRegisterSpace<T>*)&mIntRegisterSpace;}
         template<> inline AsmJsRegisterSpace<int>& GetRegisterSpace(){return mIntRegisterSpace;}
         template<> inline AsmJsRegisterSpace<double>& GetRegisterSpace(){return mDoubleRegisterSpace;}
@@ -951,7 +948,6 @@ namespace Js
         uint mArgCount;
         int mIntVarCount, mDoubleVarCount, mFloatVarCount, mIntTmpCount, mDoubleTmpCount, mFloatTmpCount;
         AsmJsVarType::Which * mArgType;
-        uint mArgSizesLength;
         uint * mArgSizes;
         int mArgByteSize;
         // offset in Byte from the beggining of the stack aka R0
@@ -978,35 +974,20 @@ namespace Js
         ByteCodeToTJMap* mbyteCodeTJMap;
         BYTE* mTJBeginAddress;
         inline int GetDoubleConstCount() const{ return mDoubleConstCount; }
-        inline void SetDoubleConstCount(int val) { mDoubleConstCount = val; }
         inline int GetFloatConstCount() const{ return mFloatConstCount; }
-        inline void SetFloatConstCount(int val) { mFloatConstCount = val; }
         inline int GetIntConstCount() const{return mIntConstCount;}
-        inline void SetIntConstCount(int val) { mIntConstCount = val; }
         inline int GetIntVarCount()const { return mIntVarCount; }
-        inline void SetIntVarCount(int val) { mIntVarCount = val; }
         inline int GetFloatVarCount()const { return mFloatVarCount; }
-        inline void SetFloatVarCount(int val) { mFloatVarCount = val; }
         inline int GetDoubleVarCount()const { return mDoubleVarCount; }
-        inline void SetDoubleVarCount(int val) { mDoubleVarCount = val; }
         inline int GetIntTmpCount()const { return mIntTmpCount; }
-        inline void SetIntTmpCount(int val) { mIntTmpCount = val; }
         inline int GetFloatTmpCount()const { return mFloatTmpCount; }
-        inline void SetFloatTmpCount(int val) { mFloatTmpCount = val; }
         inline int GetDoubleTmpCount()const { return mDoubleTmpCount; }
-        inline void SetDoubleTmpCount(int val) { mDoubleTmpCount = val; }
         inline uint GetArgCount() const{ return mArgCount; }
-        inline void SetArgCount(uint val) { mArgCount = val; }
         inline AsmJsRetType GetReturnType() const{return mReturnType;}
-        inline void SetReturnType(AsmJsRetType val) { mReturnType = val; }
         inline int GetArgByteSize() const{return mArgByteSize;}
-        inline void SetArgByteSize(int val) { mArgByteSize = val; }
         inline int GetDoubleByteOffset() const{ return mDoubleByteOffset; }
-        inline void SetDoubleByteOffset(int val) { mDoubleByteOffset = val; }
         inline int GetFloatByteOffset() const{ return mFloatByteOffset; }
-        inline void SetFloatByteOffset(int val) { mFloatByteOffset = val; }
         inline int GetIntByteOffset() const{ return mIntByteOffset; }
-        inline void SetIntByteOffset(int val) { mIntByteOffset = val; }
 
         inline void SetIsHeapBufferConst(bool val) { mIsHeapBufferConst = val; }
         inline bool IsHeapBufferConst() const{ return mIsHeapBufferConst; }
@@ -1015,13 +996,9 @@ namespace Js
         inline bool UsesHeapBuffer() const{ return mUsesHeapBuffer; }
 
         inline int GetSimdConstCount() const { return mSimdConstCount;  }
-        inline void SetSimdConstCount(int val) { mSimdConstCount = val; }
         inline int GetSimdVarCount() const { return mSimdVarCount; }
-        inline void SetSimdVarCount(int val) { mSimdVarCount = val; }
         inline int GetSimdTmpCount() const { return mSimdTmpCount; }
-        inline void SetSimdTmpCount(int val) { mSimdTmpCount = val; }
         inline int GetSimdByteOffset() const { return mSimdByteOffset; }
-        inline void SetSimdByteOffset(int val) { mSimdByteOffset = val; }
         inline int GetSimdAllCount() const { return GetSimdConstCount() + GetSimdVarCount() + GetSimdTmpCount(); }
 
         int GetTotalSizeinBytes()const;
@@ -1036,32 +1013,10 @@ namespace Js
         void SetModuleFunctionBody(FunctionBody* body){ asmJsModuleFunctionBody = body; };
         FunctionBody* GetModuleFunctionBody()const{ return asmJsModuleFunctionBody; };
 
-        uint GetArgSizeArrayLength()
-        {
-            return mArgSizesLength;
-        }
-        void SetArgSizeArrayLength(uint val)
-        {
-            mArgSizesLength = val;
-        }
-
         uint* GetArgsSizesArray()
         {
             return mArgSizes;
         }
-        void SetArgsSizesArray(uint* val)
-        {
-            mArgSizes = val;
-        }
-        AsmJsVarType::Which * GetArgTypeArray()
-        {
-            return mArgType;
-        }
-        void SetArgTypeArray(AsmJsVarType::Which* val)
-        {
-            mArgType = val;
-        }
-
 
     };
 
