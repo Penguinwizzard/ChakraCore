@@ -770,16 +770,19 @@ namespace Js
         Assert(!(callInfo.Flags & CallFlags_New));
         CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(ObjectGetPrototypeOfCount);
 
+        // 19.1.2.9 
+        // Object.getPrototypeOf ( O )
+        // When the getPrototypeOf function is called with argument O, the following steps are taken:
         RecyclableObject *object = nullptr;
-        if (args.Info.Count < 2)
+
+        // 1. Let obj be ToObject(O).
+        // 2. ReturnIfAbrupt(obj).
+        if (args.Info.Count < 2 || !JavascriptConversion::ToObject(args[1], scriptContext, &object))
         {
-            object = RecyclableObject::FromVar(JavascriptOperators::ToObject(scriptContext->GetLibrary()->GetUndefined(), scriptContext));
-        }
-        else
-        {
-            object = RecyclableObject::FromVar(JavascriptOperators::ToObject(args[1], scriptContext));
+            JavascriptError::ThrowTypeError(scriptContext, JSERR_FunctionArgument_NeedObject, L"Object.getPrototypeOf");
         }
 
+        // 3. Return obj.[[GetPrototypeOf]]().
         return CrossSite::MarshalVar(scriptContext, GetPrototypeOf(object, scriptContext));
     }
 
@@ -791,12 +794,15 @@ namespace Js
         Assert(!(callInfo.Flags & CallFlags_New));
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        // 15.2.3.2 Object.setPrototypeOf ( O, proto )
+        // 19.1.2.18 
+        // Object.setPrototypeOf ( O, proto )
         // When the setPrototypeOf function is called with arguments O and proto, the following steps are taken:
-        // 1.   If Type(O) is not Object, then throw a TypeError exception.
-        // 2.   If Type(proto) is neither Object or Null, then throw a TypeError exception.
+        // 1. Let O be RequireObjectCoercible(O).
+        // 2. ReturnIfAbrupt(O).
+        // 3. If Type(proto) is neither Object or Null, then throw a TypeError exception.
         long errCode = NOERROR;
-        if (args.Info.Count < 2 || !JavascriptOperators::IsObject(args[1]))
+        
+        if (args.Info.Count < 2 || !JavascriptConversion::CheckObjectCoercible(args[1], scriptContext))
         {
             errCode = JSERR_FunctionArgument_NeedObject;
         }
@@ -810,16 +816,22 @@ namespace Js
             JavascriptError::ThrowTypeError(scriptContext, errCode, L"Object.setPrototypeOf");
         }
 
+        // 4. If Type(O) is not Object, return O.
+        if (!JavascriptOperators::IsObject(args[1]))
+        {
+            return args[1];
+        }
+
         JavascriptLibrary::CheckAndConvertCopyOnAccessNativeIntArray<Var>(args[1]);
         RecyclableObject* object = RecyclableObject::FromVar(args[1]);
         RecyclableObject* newPrototype = RecyclableObject::FromVar(args[2]);
 
-        // 3.   Let status be the result of calling the [[SetInheritance]] internal method of O with argument proto.
-        // 4.   ReturnIfAbrupt(status).
-        // 5.   If status is false, then throw a TypeError exception.
-        ChangePrototype(object, newPrototype, /*validate*/true, scriptContext);
+        // 5. Let status be O.[[SetPrototypeOf]](proto).
+        // 6. ReturnIfAbrupt(status).
+        // 7. If status is false, throw a TypeError exception.
+        ChangePrototype(object, newPrototype, /*shouldThrow*/true, scriptContext);
 
-        // 6.   Return O.
+        // 8. Return O.
         return object;
     }
 

@@ -190,14 +190,12 @@ if (helpers.isVersion10OrLater) { // TODO: Change to _11_OrLater
             ].forEach(function (proto) {
                 assertThrowAndNoChange(proto);
 
-                // side test -- try to change these primitive's __proto__ should pass (but has no effect since objects (ToObject) are lost)
+                // side test -- try to change these primitive's __proto__ should pass (but has no effect)
                 if (proto !== undefined) {
                     proto.__proto__ = {}; // This is ok
                     __proto__setter.apply(proto, [{}]); // This is ok
+                    Object.setPrototypeOf(proto, {});
                 }
-                assert.throws__proto__ArgNotObject(function () {
-                    Object.setPrototypeOf(proto, {}); // But this throws
-                });
             });
         }
     },

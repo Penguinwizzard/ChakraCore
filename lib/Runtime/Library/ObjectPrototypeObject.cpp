@@ -31,18 +31,19 @@ namespace Js
 #else
         Var arg0 = args[0];
 #endif
-        // B.2.2.1
+        // B.2.2.1.1
         // get Object.prototype.__proto__ 
         // The value of the [[Get]] attribute is a built-in function that requires no arguments. It performs the following steps:
-        // 1.   Let O be the this value.
-        // 2.   If Type(O) is not Object, then throw a TypeError exception.
+
+        // 1. Let O be ToObject(this value).
+        // 2. ReturnIfAbrupt(O).
         RecyclableObject* object;
-        if (args.Info.Count < 1 || !JavascriptConversion::ToObject(arg0, scriptContext, &object)) // NOTE: ToObject for compat, in es-discuss
+        if (args.Info.Count < 1 || !JavascriptConversion::ToObject(arg0, scriptContext, &object))
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NeedObject, L"Object.prototype.__proto__");
         }
 
-        // 3.   Return the result of calling the [[GetInheritance]] internal method of O.
+        // 3. Return O.[[GetPrototypeOf]]().
         return JavascriptObject::GetPrototypeOf(object, scriptContext);
     }
 
@@ -54,15 +55,9 @@ namespace Js
         Assert(!(callInfo.Flags & CallFlags_New));
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        // Note the recent spec adjustment to conform to existing implementations:
+        // B.2.2.1.2 
+        // set Object.prototype.__proto__ ( proto )
         // The value of the [[Set]] attribute is a built-in function that takes an argument proto. It performs the following steps:
-        //-1.Let O be the this value.
-        //-2.If Type(O) is not Object, then throw a TypeError exception.
-        //-3.If Type(proto) is neither Object or Null, then throw a TypeError exception
-        //+1.Let O be CheckObjectCoercible(this value).
-        //+2.ReturnIfAbrupt(O).
-        //+3.If Type(proto) is neither Object or Null, then return proto.
-        //+4.If Type(O) is not Object, then return proto.
 
 #if !FLOATVAR
         // Mark temp number will stack allocate number that is used as the object ptr.
@@ -72,29 +67,29 @@ namespace Js
         Var arg0 = args[0];
 #endif
 
-        RecyclableObject* object = nullptr;
-        if (args.Info.Count < 1 || !JavascriptConversion::ToObject(arg0, scriptContext, &object)) // NOTE: ToObject for compat, in es-discuss
+        // 1. Let O be RequireObjectCoercible(this value).
+        // 2. ReturnIfAbrupt(O).
+        // 3. If Type(proto) is neither Object nor Null, return undefined.
+        // 4. If Type(O) is not Object, return undefined.
+        if (args.Info.Count < 1 || !JavascriptConversion::CheckObjectCoercible(arg0, scriptContext))
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NeedObject, L"Object.prototype.__proto__");
         }
-        else if (args.Info.Count < 2)
+        else if (args.Info.Count < 2 || !JavascriptOperators::IsObjectOrNull(args[1]) || !JavascriptOperators::IsObject(arg0))
         {
             return scriptContext->GetLibrary()->GetUndefined();
         }
-        else if (!JavascriptOperators::IsObjectOrNull(args[1]))
-        {
-            return args[1];
-        }
 
+        RecyclableObject* object = RecyclableObject::FromVar(arg0);
         RecyclableObject* newPrototype = RecyclableObject::FromVar(args[1]);
 
-        // 4.   Let status be the result of calling the [[SetInheritance]] internal method of O with argument proto.
-        // 5.   ReturnIfAbrupt(status).
-        // 6.   If status is false, then throw a TypeError exception.
-        JavascriptObject::ChangePrototype(object, newPrototype, /*validate*/true, scriptContext);
+        // 5. Let status be O.[[SetPrototypeOf]](proto).
+        // 6. ReturnIfAbrupt(status).
+        // 7. If status is false, throw a TypeError exception.
+        JavascriptObject::ChangePrototype(object, newPrototype, /*shouldThrow*/true, scriptContext);
 
-        // 7.   Return proto.
-        return newPrototype;
+        // 8.   Return undefined.
+        return scriptContext->GetLibrary()->GetUndefined();
     }
 
     BOOL ObjectPrototypeObject::DeleteProperty(PropertyId propertyId, PropertyOperationFlags flags)
